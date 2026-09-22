@@ -8,6 +8,8 @@ export default defineConfig(({ command }) => ({
   // Production consumes dist, so browser checks exercise the package exports.
   resolve: command === 'serve' ? { conditions: ['@numior/source'] } : {},
   build: {
+    // Keep light-dark(), oklch() and color-mix() native: the token contract targets these browsers.
+    cssTarget: ['chrome123', 'firefox120', 'safari17.5'],
     rolldownOptions: {
       input: {
         main: fileURLToPath(new URL('./index.html', import.meta.url)),

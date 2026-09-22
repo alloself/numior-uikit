@@ -1,3 +1,4 @@
+/* Optional nui-* utilities. They only read @numior/tokens variables; load theme.css first. */
 .nui-flex {
   display: flex;
 }
@@ -7,21 +8,135 @@
 .nui-items-center {
   align-items: center;
 }
+.nui-gap-1 {
+  gap: var(--nui-space-1);
+}
 .nui-gap-2 {
-  gap: 0.5rem;
+  gap: var(--nui-space-2);
+}
+.nui-gap-3 {
+  gap: var(--nui-space-3);
+}
+.nui-gap-4 {
+  gap: var(--nui-space-4);
 }
 .nui-bg-surface {
   background-color: var(--nui-surface);
 }
+.nui-bg-surface-muted {
+  background-color: var(--nui-surface-muted);
+}
+.nui-bg-surface-elevated {
+  background-color: var(--nui-surface-elevated);
+}
 .nui-bg-primary {
   background-color: var(--nui-primary);
 }
-.nui-text-primary-foreground {
-  color: var(--nui-primary-foreground);
+.nui-bg-primary-soft {
+  background-color: var(--nui-primary-soft);
+}
+.nui-bg-secondary {
+  background-color: var(--nui-secondary);
+}
+.nui-bg-secondary-soft {
+  background-color: var(--nui-secondary-soft);
+}
+.nui-bg-success {
+  background-color: var(--nui-success);
+}
+.nui-bg-success-soft {
+  background-color: var(--nui-success-soft);
+}
+.nui-bg-warning {
+  background-color: var(--nui-warning);
+}
+.nui-bg-warning-soft {
+  background-color: var(--nui-warning-soft);
+}
+.nui-bg-error {
+  background-color: var(--nui-error);
+}
+.nui-bg-error-soft {
+  background-color: var(--nui-error-soft);
+}
+.nui-bg-info {
+  background-color: var(--nui-info);
+}
+.nui-bg-info-soft {
+  background-color: var(--nui-info-soft);
+}
+.nui-bg-neutral {
+  background-color: var(--nui-neutral);
+}
+.nui-bg-neutral-soft {
+  background-color: var(--nui-neutral-soft);
+}
+.nui-text {
+  color: var(--nui-text);
 }
 .nui-text-muted {
   color: var(--nui-text-muted);
 }
+.nui-text-subtle {
+  color: var(--nui-text-subtle);
+}
+.nui-text-primary {
+  color: var(--nui-primary);
+}
+.nui-text-primary-foreground {
+  color: var(--nui-primary-foreground);
+}
+.nui-text-secondary-foreground {
+  color: var(--nui-secondary-foreground);
+}
+.nui-text-success {
+  color: var(--nui-success);
+}
+.nui-text-success-foreground {
+  color: var(--nui-success-foreground);
+}
+.nui-text-warning {
+  color: var(--nui-warning);
+}
+.nui-text-warning-foreground {
+  color: var(--nui-warning-foreground);
+}
+.nui-text-error {
+  color: var(--nui-error);
+}
+.nui-text-error-foreground {
+  color: var(--nui-error-foreground);
+}
+.nui-text-info {
+  color: var(--nui-info);
+}
+.nui-text-info-foreground {
+  color: var(--nui-info-foreground);
+}
+.nui-text-neutral-foreground {
+  color: var(--nui-neutral-foreground);
+}
+.nui-border {
+  border: 1px solid var(--nui-border);
+}
+.nui-border-strong {
+  border: 1px solid var(--nui-border-strong);
+}
+.nui-rounded-sm {
+  border-radius: var(--nui-radius-sm);
+}
 .nui-rounded {
   border-radius: var(--nui-radius);
+}
+.nui-rounded-lg {
+  border-radius: var(--nui-radius-lg);
+}
+.nui-rounded-full {
+  border-radius: var(--nui-radius-full);
+}
+.nui-shadow-sm {
+  box-shadow: var(--nui-shadow-sm);
+}
+.nui-shadow-md {
+  box-shadow: var(--nui-shadow-md);
 }

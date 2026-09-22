@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { AxeBuilder } from '@axe-core/playwright';
+import { expectRgb } from './helpers/color';
 
 test('standalone button activates by keyboard and loading blocks activation', async ({
   page,
@@ -28,14 +29,14 @@ test('theme, scoped overrides, density and RTL work without Tailwind', async ({ 
   await page.goto('/');
   const workspace = page.getByRole('main');
   const primary = page.getByTestId('primary');
-  await expect(workspace).toHaveCSS('background-color', 'rgb(24, 24, 27)');
+  await expectRgb(workspace, 'background-color', [24, 24, 27]);
   await page.getByTestId('theme').selectOption('light');
-  await expect(workspace).toHaveCSS('background-color', 'rgb(255, 255, 255)');
-  await expect(page.getByTestId('nested')).toHaveCSS('background-color', 'rgb(165, 180, 252)');
+  await expectRgb(workspace, 'background-color', [255, 255, 255]);
+  await expectRgb(page.getByTestId('nested'), 'background-color', [165, 180, 252]);
   await page.getByTestId('accent').selectOption('emerald');
-  await expect(primary).toHaveCSS('background-color', 'rgb(4, 120, 87)');
-  await expect(page.getByTestId('utility')).toHaveCSS('background-color', 'rgb(4, 120, 87)');
-  await expect(page.getByTestId('nested')).toHaveCSS('background-color', 'rgb(165, 180, 252)');
+  await expectRgb(primary, 'background-color', [4, 120, 87]);
+  await expectRgb(page.getByTestId('utility'), 'background-color', [4, 120, 87]);
+  await expectRgb(page.getByTestId('nested'), 'background-color', [165, 180, 252]);
   await page.getByTestId('density').selectOption('compact');
   await expect(primary).toHaveCSS('min-block-size', '32px');
   await page.getByTestId('direction').selectOption('rtl');
@@ -50,8 +51,8 @@ test('Tailwind utilities consume the same runtime tokens as native CSS', async (
   await page.getByTestId('theme').selectOption('light');
   await page.getByTestId('accent').selectOption('rose');
   for (const id of ['primary', 'utility', 'tailwind']) {
-    await expect(page.getByTestId(id)).toHaveCSS('background-color', 'rgb(190, 18, 60)');
-    await expect(page.getByTestId(id)).toHaveCSS('color', 'rgb(255, 255, 255)');
+    await expectRgb(page.getByTestId(id), 'background-color', [190, 18, 60]);
+    await expectRgb(page.getByTestId(id), 'color', [255, 255, 255]);
   }
 });
 
