@@ -2,8 +2,10 @@
 
 The kit is not tied to one icon set. Every icon a component needs is requested by
 alias through a registry: `check`, `minus`, `loader`, `chevron-down`, `x`, `search`.
-By default the aliases point to [Lucide](https://lucide.dev) (ISC), which
-`@numior/vue` declares as a dependency and imports icon by icon.
+By default the aliases point to [Lucide](https://lucide.dev) (ISC): each icon loads on
+demand as a separate module the first time its alias is used and is reused from the
+cache afterwards; only requested glyphs reach the bundle, and the server renders the
+icon immediately.
 
 <div class="nui-demo" data-nui-theme="light">
   <NuiIcon alias="check" />
@@ -59,7 +61,9 @@ createApp(App)
 ```
 
 Custom aliases work too: `provideNuiConfig({ icons: { 'my-app:save': SaveIcon } })`
-and then `<NuiIcon alias="my-app:save" />`. An unknown alias renders nothing.
+and then `<NuiIcon alias="my-app:save" />`. An unknown alias renders nothing. Load heavy
+sets lazily: `lazyIcon(() => import('./icons/SaveIcon.vue'))` returns a component that
+loads once on first render.
 
 ## API
 

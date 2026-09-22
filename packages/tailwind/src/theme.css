@@ -1,4 +1,3 @@
-/* Import after tailwindcss and @numior/tokens/theme.css in a Tailwind 4 consumer. */
 @theme inline {
   --color-surface: var(--nui-surface);
   --color-surface-muted: var(--nui-surface-muted);

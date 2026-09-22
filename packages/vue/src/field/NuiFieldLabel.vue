@@ -3,7 +3,6 @@ import { computed } from 'vue';
 import { useField } from '@numior/primitives';
 
 const field = useField();
-// A group field renders a legend; a labelable field a label pointing at its control.
 const tag = computed(() => (field && !field.labelable.value ? 'legend' : 'label'));
 const htmlFor = computed(() => (field?.labelable.value ? field.id.value : undefined));
 const id = computed(() => field?.labelId.value);

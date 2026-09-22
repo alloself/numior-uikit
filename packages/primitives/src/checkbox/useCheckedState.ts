@@ -5,11 +5,6 @@ export interface CheckedState {
   setChecked(next: boolean): void;
 }
 
-/**
- * Checked state over a v-model that is either a boolean or an array of selected values.
- * With an array model the control's own `value` is added or removed; other entries and
- * their order are preserved.
- */
 export function useCheckedState<T>(
   model: Ref<boolean | T[] | undefined>,
   value?: MaybeRefOrGetter<T | undefined>,

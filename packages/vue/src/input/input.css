@@ -16,19 +16,20 @@
   font-family: var(--nui-font);
   font-size: var(--_font-size);
   line-height: var(--nui-line-height-tight);
-  transition: border-color var(--nui-duration-fast) var(--nui-easing);
+  transition:
+    border-color var(--nui-duration-fast) var(--nui-easing),
+    outline-color var(--nui-duration-fast) var(--nui-easing);
 }
-.nui-input[data-size='sm'] {
+.nui-input--size-sm {
   --_height: var(--nui-control-height-sm);
   --_padding: var(--nui-control-padding-sm);
   --_font-size: var(--nui-control-font-size-sm);
 }
-.nui-input[data-size='lg'] {
+.nui-input--size-lg {
   --_height: var(--nui-control-height-lg);
   --_padding: var(--nui-control-padding-lg);
   --_font-size: var(--nui-control-font-size-lg);
 }
-
 .nui-input__control {
   flex: 1 1 auto;
   min-inline-size: 0;
@@ -53,12 +54,11 @@
 .nui-input__prefix,
 .nui-input__suffix {
   display: inline-flex;
-  align-items: center;
   flex: none;
+  align-items: center;
   color: var(--nui-text-muted);
 }
-
-.nui-input:hover:not([data-disabled]) {
+.nui-input:hover:not(.nui-input--disabled) {
   border-color: var(--nui-border-strong);
 }
 .nui-input:focus-within {
@@ -66,16 +66,16 @@
   outline: var(--nui-focus-ring-width) solid var(--nui-focus);
   outline-offset: var(--nui-focus-ring-offset);
 }
-.nui-input[data-invalid] {
+.nui-input--invalid {
   border-color: var(--nui-error);
 }
-.nui-input[data-invalid]:focus-within {
+.nui-input--invalid:focus-within {
   outline-color: var(--nui-error);
 }
-.nui-input[data-disabled] {
+.nui-input--disabled {
   opacity: var(--nui-disabled-opacity);
   cursor: not-allowed;
 }
-.nui-input[data-disabled] .nui-input__control {
+.nui-input--disabled .nui-input__control {
   cursor: not-allowed;
 }

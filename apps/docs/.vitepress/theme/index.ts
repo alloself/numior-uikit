@@ -2,6 +2,7 @@ import DefaultTheme from 'vitepress/theme';
 import type { Theme } from 'vitepress';
 import {
   NuiButton,
+  NuiCheckbox,
   NuiConfigProvider,
   NuiField,
   NuiFieldDescription,
@@ -9,6 +10,9 @@ import {
   NuiFieldLabel,
   NuiIcon,
   NuiInput,
+  NuiRadio,
+  NuiRadioGroup,
+  NuiSwitch,
   NuiTextarea,
 } from '@numior/vue';
 import '@numior/tokens/theme.css';
@@ -28,5 +32,9 @@ export default {
     app.component('NuiFieldError', NuiFieldError);
     app.component('NuiInput', NuiInput);
     app.component('NuiTextarea', NuiTextarea);
+    app.component('NuiCheckbox', NuiCheckbox);
+    app.component('NuiRadioGroup', NuiRadioGroup);
+    app.component('NuiRadio', NuiRadio);
+    app.component('NuiSwitch', NuiSwitch);
   },
 } satisfies Theme;

@@ -1,7 +1,6 @@
 import { inject, provide, type ComputedRef, type InjectionKey, type Ref } from 'vue';
 
 export interface RadioGroupContext<T = unknown> {
-  /** Shared native name: it is what gives radios arrow-key navigation for free. */
   readonly name: ComputedRef<string>;
   readonly modelValue: Ref<T | undefined>;
   readonly disabled: ComputedRef<boolean>;
@@ -12,9 +11,9 @@ export interface RadioGroupContext<T = unknown> {
 export const RADIO_GROUP_KEY: InjectionKey<RadioGroupContext> = Symbol('nui:radio-group');
 
 export function provideRadioGroup<T>(context: RadioGroupContext<T>): void {
-  provide(RADIO_GROUP_KEY, context as RadioGroupContext);
+  provide(RADIO_GROUP_KEY, context);
 }
 
-export function useRadioGroup<T = unknown>(): RadioGroupContext<T> | null {
-  return inject(RADIO_GROUP_KEY, null) as RadioGroupContext<T> | null;
+export function useRadioGroup(): RadioGroupContext | null {
+  return inject(RADIO_GROUP_KEY, null);
 }

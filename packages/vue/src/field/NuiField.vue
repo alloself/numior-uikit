@@ -6,24 +6,29 @@ import NuiFieldError from './NuiFieldError.vue';
 import NuiFieldLabel from './NuiFieldLabel.vue';
 import type { NuiFieldProps } from './field.types';
 
-const props = withDefaults(defineProps<NuiFieldProps>(), {
-  invalid: false,
-  required: false,
-  disabled: false,
-  group: false,
-});
+const {
+  id,
+  label,
+  description,
+  error,
+  invalid = false,
+  required = false,
+  disabled = false,
+  group = false,
+} = defineProps<NuiFieldProps>();
 const slots = useSlots();
-const hasLabel = () => Boolean(props.label || slots.label);
-const hasDescription = () => Boolean(props.description || slots.description);
-const hasError = () => Boolean(props.error || slots.error);
+const hasLabel = () => Boolean(label || slots.label);
+const hasDescription = () => Boolean(description || slots.description);
+const hasError = () => Boolean(error || slots.error);
 const field = provideField({
-  id: () => props.id,
-  invalid: () => props.invalid,
-  required: () => props.required,
-  disabled: () => props.disabled,
+  id: () => id,
+  invalid: () => invalid,
+  required: () => required,
+  disabled: () => disabled,
+  hasLabel,
   hasDescription,
   hasError,
-  labelable: () => !props.group,
+  labelable: () => !group,
 });
 const isInvalid = field.invalid;
 const isRequired = field.required;
@@ -34,9 +39,12 @@ const isDisabled = field.disabled;
   <component
     :is="group ? 'fieldset' : 'div'"
     class="nui-field"
-    :data-invalid="isInvalid || undefined"
-    :data-required="isRequired || undefined"
-    :data-disabled="isDisabled || undefined"
+    :class="{
+      'nui-field--group': group,
+      'nui-field--invalid': isInvalid,
+      'nui-field--required': isRequired,
+      'nui-field--disabled': isDisabled,
+    }"
     :disabled="group && isDisabled ? true : undefined"
   >
     <NuiFieldLabel v-if="hasLabel()">

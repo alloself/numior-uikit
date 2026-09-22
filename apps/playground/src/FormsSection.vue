@@ -1,17 +1,39 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { NuiButton, NuiField, NuiInput, NuiTextarea } from '@numior/vue';
+import {
+  NuiButton,
+  NuiCheckbox,
+  NuiField,
+  NuiInput,
+  NuiRadio,
+  NuiRadioGroup,
+  NuiSwitch,
+  NuiTextarea,
+} from '@numior/vue';
 
 const name = ref('');
 const email = ref('');
 const bio = ref('');
+const terms = ref(false);
+const channels = ref<string[]>([]);
+const plan = ref('free');
+const notifications = ref(true);
 const submitted = ref(0);
 const emailError = computed(() =>
   email.value && !email.value.includes('@') ? 'Укажите адрес с символом @' : undefined,
 );
 const output = computed(() =>
   JSON.stringify(
-    { name: name.value, email: email.value, bio: bio.value, submitted: submitted.value },
+    {
+      name: name.value,
+      email: email.value,
+      bio: bio.value,
+      terms: terms.value,
+      channels: channels.value,
+      plan: plan.value,
+      notifications: notifications.value,
+      submitted: submitted.value,
+    },
     null,
     2,
   ),
@@ -20,6 +42,10 @@ function reset() {
   name.value = '';
   email.value = '';
   bio.value = '';
+  terms.value = false;
+  channels.value = [];
+  plan.value = 'free';
+  notifications.value = true;
 }
 </script>
 
@@ -27,7 +53,9 @@ function reset() {
   <section class="panel" aria-labelledby="forms-title">
     <div class="section-heading">
       <h2 id="forms-title">Формы</h2>
-      <span class="tag">NuiField · NuiInput · NuiTextarea</span>
+      <span class="tag"
+        >NuiField · NuiInput · NuiTextarea · NuiCheckbox · NuiRadio · NuiSwitch</span
+      >
     </div>
     <form class="form" @submit.prevent="submitted++" @reset.prevent="reset">
       <NuiField label="Имя" description="Как к вам обращаться" required>
@@ -52,6 +80,24 @@ function reset() {
       <NuiField label="Недоступное поле" disabled>
         <NuiInput model-value="Нельзя изменить" />
       </NuiField>
+      <NuiCheckbox v-model="terms" data-testid="checkbox-terms">Принимаю условия</NuiCheckbox>
+      <NuiCheckbox indeterminate data-testid="checkbox-indeterminate">Частично выбрано</NuiCheckbox>
+      <NuiField group label="Каналы">
+        <NuiCheckbox v-model="channels" value="email" data-testid="checkbox-channel-email"
+          >Почта</NuiCheckbox
+        >
+        <NuiCheckbox v-model="channels" value="sms" data-testid="checkbox-channel-sms"
+          >SMS</NuiCheckbox
+        >
+      </NuiField>
+      <NuiField group label="Тариф" description="Можно изменить позже">
+        <NuiRadioGroup v-model="plan" data-testid="radio-group">
+          <NuiRadio value="free" data-testid="radio-free">Бесплатный</NuiRadio>
+          <NuiRadio value="team" data-testid="radio-team">Команда</NuiRadio>
+          <NuiRadio value="business" data-testid="radio-business">Бизнес</NuiRadio>
+        </NuiRadioGroup>
+      </NuiField>
+      <NuiSwitch v-model="notifications" data-testid="switch-notifications">Уведомления</NuiSwitch>
       <div class="nui-flex nui-gap-2">
         <NuiButton type="submit" data-testid="submit">Отправить</NuiButton>
         <NuiButton type="reset" variant="ghost" tone="neutral">Сбросить</NuiButton>

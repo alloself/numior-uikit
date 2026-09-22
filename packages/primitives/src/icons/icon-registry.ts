@@ -1,5 +1,6 @@
 import {
   computed,
+  defineAsyncComponent,
   inject,
   provide,
   toValue,
@@ -9,7 +10,6 @@ import {
   type MaybeRefOrGetter,
 } from 'vue';
 
-/** Aliases the kit's own components resolve; any other string is a consumer-defined alias. */
 export type IconAlias =
   | 'check'
   | 'minus'
@@ -21,11 +21,12 @@ export type IconAlias =
 
 export type IconRegistry = Readonly<Record<string, Component>>;
 
+export type IconLoader = () => Promise<Component | { default: Component }>;
+
 export const ICONS_KEY: InjectionKey<IconRegistry> = Symbol('nui:icons');
 
 const EMPTY: IconRegistry = Object.freeze({});
 
-/** Provide aliases for descendants, layered over any registry provided further up. */
 export function provideIcons(registry: IconRegistry): IconRegistry {
   const merged: IconRegistry = { ...inject(ICONS_KEY, EMPTY), ...registry };
   provide(ICONS_KEY, merged);
@@ -44,4 +45,8 @@ export function useIcon(
     const key = toValue(alias);
     return key === undefined ? undefined : icons[key];
   });
+}
+
+export function lazyIcon(loader: IconLoader): Component {
+  return defineAsyncComponent<Component>({ loader, suspensible: false });
 }

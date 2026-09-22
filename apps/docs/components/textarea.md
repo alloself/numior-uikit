@@ -38,5 +38,6 @@ const bio = ref('')
 | `invalid`  | `boolean`                        | из поля      | `aria-invalid` и красная рамка    |
 | `readonly` | `boolean`                        | `false`      | Только чтение                     |
 
-Метод `focus()` доступен через template ref. Атрибуты `data-size`, `data-resize` и
-`data-invalid` используются стилями и доступны для собственных правил.
+Метод `focus()` доступен через template ref. Модификаторы `nui-textarea--size-sm`,
+`nui-textarea--resize-none` и `nui-textarea--invalid` управляют стилями и доступны для
+собственных правил.

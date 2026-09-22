@@ -1,0 +1,93 @@
+.nui-radio-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--nui-space-2);
+  min-inline-size: 0;
+}
+.nui-radio-group--orientation-horizontal {
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: var(--nui-space-4);
+}
+
+.nui-radio {
+  --_size: 1.25rem;
+  --_font-size: var(--nui-font-size-sm);
+
+  position: relative;
+  display: inline-flex;
+  align-items: flex-start;
+  gap: var(--nui-space-2);
+  color: var(--nui-text);
+  font-family: var(--nui-font);
+  font-size: var(--_font-size);
+  line-height: var(--nui-line-height);
+  cursor: pointer;
+}
+.nui-radio-group--size-sm .nui-radio {
+  --_size: 1rem;
+  --_font-size: var(--nui-font-size-xs);
+}
+.nui-radio-group--size-lg .nui-radio {
+  --_size: 1.5rem;
+  --_font-size: var(--nui-font-size-md);
+}
+.nui-radio__control {
+  position: absolute;
+  z-index: 1;
+  inset-block-start: calc((1lh - var(--_size)) / 2);
+  inset-inline-start: 0;
+  inline-size: var(--_size);
+  block-size: var(--_size);
+  margin: 0;
+  opacity: 0;
+  appearance: none;
+  cursor: inherit;
+}
+.nui-radio__dot {
+  pointer-events: none;
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  inline-size: var(--_size);
+  block-size: var(--_size);
+  margin-block-start: calc((1lh - var(--_size)) / 2);
+  border: 1px solid var(--nui-border-strong);
+  border-radius: var(--nui-radius-full);
+  background: var(--nui-surface);
+  transition:
+    border-color var(--nui-duration-fast) var(--nui-easing),
+    scale var(--nui-duration-fast) var(--nui-easing);
+}
+.nui-radio__dot::after {
+  content: '';
+  inline-size: 50%;
+  block-size: 50%;
+  border-radius: inherit;
+  background: var(--nui-primary);
+  scale: 0;
+  transition: scale var(--nui-duration-normal) var(--nui-easing);
+}
+.nui-radio__control:checked + .nui-radio__dot {
+  border-color: var(--nui-primary);
+}
+.nui-radio__control:checked + .nui-radio__dot::after {
+  scale: 1;
+}
+.nui-radio__control:active:not(:disabled) + .nui-radio__dot {
+  scale: 0.92;
+}
+.nui-radio:hover:not(.nui-radio--disabled) .nui-radio__dot {
+  border-color: var(--nui-primary);
+}
+.nui-radio__control:focus-visible + .nui-radio__dot {
+  outline: var(--nui-focus-ring-width) solid var(--nui-focus);
+  outline-offset: var(--nui-focus-ring-offset);
+}
+.nui-radio--invalid .nui-radio__dot {
+  border-color: var(--nui-error);
+}
+.nui-radio--disabled {
+  opacity: var(--nui-disabled-opacity);
+  cursor: not-allowed;
+}

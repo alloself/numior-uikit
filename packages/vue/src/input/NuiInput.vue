@@ -1,72 +1,74 @@
-<script lang="ts">
-import {
-  defineComponent,
-  h,
-  mergeProps,
-  ref,
-  useModel,
-  vModelText,
-  withDirectives,
-  type PropType,
-  type VNode,
-} from 'vue';
+<script setup lang="ts">
+import { ref, useTemplateRef, watch } from 'vue';
 import { useFieldControl, useSplitAttrs } from '@numior/primitives';
-import { inputProps, type NuiInputModifiers } from './input.props';
+import type { NuiInputModifiers, NuiInputProps } from './input.types';
 
-/**
- * A native input inside a wrapper that hosts prefix and suffix content. Vue's own v-model
- * directive owns the DOM value, so IME composition, `lazy` and `trim` behave exactly like
- * `<input v-model>`, on the server as well as during hydration.
- */
-export default defineComponent({
-  name: 'NuiInput',
-  inheritAttrs: false,
-  props: {
-    ...inputProps,
-    modelValue: { type: String, default: '' },
-    modelModifiers: { type: Object as PropType<NuiInputModifiers>, default: () => ({}) },
-  },
-  emits: { 'update:modelValue': (value: string) => typeof value === 'string' },
-  setup(props, { slots, expose }) {
-    const model = useModel(props, 'modelValue');
-    const split = useSplitAttrs();
-    const { attrs: fieldAttrs, invalid, disabled } = useFieldControl(props);
-    const control = ref<HTMLInputElement | null>(null);
-    expose({ focus: () => control.value?.focus() });
+defineOptions({ inheritAttrs: false });
+const {
+  id,
+  size = 'md',
+  disabled = undefined,
+  required = undefined,
+  invalid = undefined,
+  type = 'text',
+  readonly = false,
+} = defineProps<NuiInputProps>();
+const [model, modifiers] = defineModel<string, NuiInputModifiers>({ default: '' });
+const split = useSplitAttrs();
+const {
+  attrs: controlAttrs,
+  invalid: isInvalid,
+  disabled: isDisabled,
+} = useFieldControl(() => ({ id, disabled, required, invalid }));
+const inputElement = useTemplateRef<HTMLInputElement>('input');
+const draft = ref(model.value);
 
-    const affix = (name: 'prefix' | 'suffix'): VNode | null => {
-      const slot = slots[name];
-      return slot ? h('span', { class: `nui-input__${name}` }, slot()) : null;
-    };
-
-    return () =>
-      h(
-        'div',
-        mergeProps({ class: 'nui-input' }, split.rootAttrs(), {
-          'data-size': props.size,
-          'data-invalid': invalid.value || undefined,
-          'data-disabled': disabled.value || undefined,
-        }),
-        [
-          affix('prefix'),
-          withDirectives(
-            h(
-              'input',
-              mergeProps({ ...fieldAttrs.value }, split.controlAttrs(), {
-                ref: control,
-                class: 'nui-input__control',
-                type: props.type,
-                readonly: props.readonly || undefined,
-                'onUpdate:modelValue': (value: string) => {
-                  model.value = value;
-                },
-              }),
-            ),
-            [[vModelText, model.value, '', props.modelModifiers]],
-          ),
-          affix('suffix'),
-        ],
-      );
-  },
+watch(model, (value) => {
+  if (!(modifiers.trim && draft.value.trim() === value)) draft.value = value;
 });
+
+function onInput(): void {
+  const element = inputElement.value;
+  if (!element) return;
+  draft.value = element.value;
+  if (!modifiers.lazy) model.value = element.value;
+}
+
+function onChange(): void {
+  const element = inputElement.value;
+  if (!element) return;
+  if (modifiers.trim) element.value = element.value.trim();
+  draft.value = element.value;
+  model.value = element.value;
+}
+
+defineExpose({ focus: () => inputElement.value?.focus() });
 </script>
+
+<template>
+  <div
+    class="nui-input"
+    :class="[
+      `nui-input--size-${size}`,
+      { 'nui-input--invalid': isInvalid, 'nui-input--disabled': isDisabled },
+    ]"
+    v-bind="split.rootAttrs()"
+  >
+    <span v-if="$slots.prefix" class="nui-input__prefix">
+      <slot name="prefix" />
+    </span>
+    <input
+      ref="input"
+      class="nui-input__control"
+      v-bind="{ ...controlAttrs, ...split.controlAttrs() }"
+      :type="type"
+      :readonly="readonly || undefined"
+      :value="draft"
+      @input="onInput"
+      @change="onChange"
+    />
+    <span v-if="$slots.suffix" class="nui-input__suffix">
+      <slot name="suffix" />
+    </span>
+  </div>
+</template>

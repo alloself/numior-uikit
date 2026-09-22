@@ -25,14 +25,14 @@ Playground: `http://localhost:5173`. Автономный CSS — `/`, Tailwind 
 
 ## Структура
 
-| Каталог           | Содержимое                                                                     |
-| ----------------- | ------------------------------------------------------------------------------ |
-| `.archcore`       | Согласованный roadmap, архитектурные решения и стандарты                       |
-| `packages`        | Tokens, Vue-компоненты, утилиты, Tailwind; [карта модулей](packages/README.md) |
-| `apps/playground` | Исполняемые примеры и browser fixtures                                         |
-| `apps/docs`       | VitePress, RU/EN, локальный поиск, живой Vue-пример                            |
-| `tests/e2e`       | Chromium/Firefox/WebKit и мобильные профили                                    |
-| `scripts`         | Сборка CSS и проверка выходных artifacts                                       |
+| Каталог           | Содержимое                                                                        |
+| ----------------- | --------------------------------------------------------------------------------- |
+| `.archcore`       | Согласованный roadmap, архитектурные решения и стандарты                          |
+| `packages`        | Tokens, примитивы, Vue-компоненты, утилиты, Tailwind; [карта](packages/README.md) |
+| `apps/playground` | Исполняемые примеры и browser fixtures                                            |
+| `apps/docs`       | VitePress, RU/EN, локальный поиск, живой Vue-пример                               |
+| `tests/e2e`       | Chromium/Firefox/WebKit и мобильные профили                                       |
+| `scripts`         | Сборка CSS и проверка выходных artifacts                                          |
 
 Импорт `@numior/vue` не включает CSS автоматически. Подключайте
 `@numior/tokens/theme.css` и `@numior/vue/styles.css`. Tailwind и `nui-*` утилиты
@@ -87,11 +87,8 @@ optional peer TypeScript 7 не предоставляет нужный Vue SFC 
 
 ## Границы готовности
 
-Доступен начальный `NuiButton`, semantic tokens, scoped light/dark/system,
-плотность и runtime accent, базовые утилиты и Tailwind 4. Полные примитивы,
-формы, редактор, таблицы, XLSX, offline, collaboration, Nuxt-модуль и CLI ещё
-не реализованы. Их обязательства сохранены в полном плане. Нет заявлений
-о готовом WCAG-соответствии, Excel-совместимости или достигнутых benchmark targets.
-
-Все пакеты защищены `private: true`; имя `@numior` используется внутри workspace
-и не означает резервирование публичного npm scope.
+Реализованы токены v2, headless-примитивы и первые компоненты: кнопка (variant × tone ×
+size), иконки с ленивой загрузкой Lucide и реестром алиасов, поле формы с частями,
+текстовые поля, чекбокс, радиогруппа и переключатель. Всё это проходит unit, SSR, e2e и
+axe, но остаётся закрытой разработкой без публикации: overlays, навигация, данные,
+select/date/upload, формы как пакет и тяжёлые модули плана ещё не начаты.

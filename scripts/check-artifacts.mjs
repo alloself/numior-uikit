@@ -3,7 +3,6 @@ import { readFile, readdir } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-// Subpath patterns such as ./dist/styles/*.css expand against the built directory.
 async function artifactPaths(root, target) {
   if (!target.includes('*')) return [target];
   const [prefix, suffix] = target.split('*');
@@ -38,7 +37,6 @@ for (const name of await readdir('packages')) {
   }
 }
 
-// Import the actual ESM builds without a DOM: this catches SSR-unsafe top-level code.
 async function importBuild(name, expectedExports) {
   const file = resolve(`packages/${name}/dist/index.js`);
   const module = await import(pathToFileURL(file).href);

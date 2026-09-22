@@ -1,28 +1,17 @@
-/*
- * All appearance consumers share these semantic values. No reset or runtime JS.
- * Only semantic tokens are public. Colors are oklch() inside light-dark(); derived
- * states (soft, hover, active, disabled) come from color-mix() on the role token.
- * var() inside a custom property resolves on the element that declares it: override
- * role tokens on an element carrying data-nui-theme, or override the *-soft pair too.
- */
 :root,
 [data-nui-theme] {
-  /* Surfaces */
   --nui-surface: light-dark(oklch(1 0 0), oklch(0.21 0.006 285.89));
   --nui-surface-muted: light-dark(oklch(0.967 0.001 286.38), oklch(0.274 0.005 286.03));
   --nui-surface-elevated: light-dark(oklch(1 0 0), oklch(0.274 0.005 286.03));
   --nui-surface-overlay: light-dark(oklch(1 0 0), oklch(0.274 0.005 286.03));
 
-  /* Text */
   --nui-text: light-dark(oklch(0.21 0.006 285.89), oklch(0.985 0 0));
   --nui-text-muted: light-dark(oklch(0.442 0.015 285.79), oklch(0.712 0.013 286.07));
   --nui-text-subtle: light-dark(oklch(0.552 0.014 285.94), oklch(0.65 0.013 286.03));
 
-  /* Borders */
   --nui-border: light-dark(oklch(0.871 0.005 286.29), oklch(0.442 0.015 285.79));
   --nui-border-strong: light-dark(oklch(0.712 0.013 286.07), oklch(0.552 0.014 285.94));
 
-  /* Roles: solid color, its foreground, and a soft tint with its foreground */
   --nui-primary: light-dark(oklch(0.457 0.215 277.02), oklch(0.785 0.104 274.71));
   --nui-primary-foreground: light-dark(oklch(1 0 0), oklch(0.257 0.086 281.29));
   --nui-primary-soft: color-mix(in oklab, var(--nui-primary) 14%, var(--nui-surface));
@@ -52,20 +41,17 @@
   --nui-neutral-soft: color-mix(in oklab, var(--nui-neutral) 10%, var(--nui-surface));
   --nui-neutral-soft-foreground: var(--nui-text);
 
-  /* Focus and states */
   --nui-focus: var(--nui-primary);
   --nui-focus-ring-width: 2px;
   --nui-focus-ring-offset: 2px;
   --nui-disabled-opacity: 0.5;
 
-  /* Radius */
   --nui-radius-sm: 0.25rem;
   --nui-radius-md: 0.5rem;
   --nui-radius-lg: 0.75rem;
   --nui-radius-full: 9999px;
   --nui-radius: var(--nui-radius-md);
 
-  /* Space */
   --nui-space-1: 0.25rem;
   --nui-space-2: 0.5rem;
   --nui-space-3: 0.75rem;
@@ -74,7 +60,6 @@
   --nui-space-6: 1.5rem;
   --nui-space-8: 2rem;
 
-  /* Typography */
   --nui-font: Inter, ui-sans-serif, system-ui, sans-serif;
   --nui-font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   --nui-font-size-xs: 0.75rem;
@@ -84,17 +69,14 @@
   --nui-line-height: 1.5;
   --nui-line-height-tight: 1.25;
 
-  /* Elevation */
   --nui-shadow-sm: 0 1px 2px oklch(0 0 0 / 0.08);
   --nui-shadow-md: 0 4px 12px oklch(0 0 0 / 0.12);
   --nui-shadow-lg: 0 12px 32px oklch(0 0 0 / 0.18);
 
-  /* Motion */
   --nui-duration-fast: 120ms;
   --nui-duration-normal: 200ms;
   --nui-easing: cubic-bezier(0.2, 0, 0, 1);
 
-  /* Layers */
   --nui-z-dropdown: 1000;
   --nui-z-overlay: 1100;
   --nui-z-toast: 1200;
@@ -113,10 +95,6 @@
   color-scheme: dark;
 }
 
-/*
- * Density shifts the whole control scale and inherits through nested theme scopes.
- * Components read the sized tokens; the unsuffixed aliases equal the md step.
- */
 :root,
 [data-nui-density='comfortable'] {
   --nui-control-height-sm: 2rem;

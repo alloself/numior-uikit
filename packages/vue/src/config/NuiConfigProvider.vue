@@ -2,8 +2,8 @@
 import { provideNuiConfig } from '@numior/primitives';
 import type { NuiConfigProviderProps } from './config.types';
 
-const props = defineProps<NuiConfigProviderProps>();
-provideNuiConfig({ icons: props.icons });
+const { icons } = defineProps<NuiConfigProviderProps>();
+provideNuiConfig({ icons });
 </script>
 
 <template>

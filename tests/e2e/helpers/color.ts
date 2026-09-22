@@ -2,11 +2,6 @@ import { expect, type Locator } from '@playwright/test';
 
 export type Rgb = readonly [number, number, number];
 
-/**
- * Resolve a computed color to sRGB bytes through a canvas pixel. Browsers serialize
- * oklch() and color-mix() results in their own color spaces, so comparing the
- * computed-style string is not portable across engines.
- */
 export function rgbOf(locator: Locator, property: string): Promise<Rgb> {
   return locator.evaluate((element, prop) => {
     const value = getComputedStyle(element).getPropertyValue(prop);
@@ -19,8 +14,8 @@ export function rgbOf(locator: Locator, property: string): Promise<Rgb> {
     context.fillStyle = value;
     if (context.fillStyle === '#010203') throw new Error(`Unparseable color: ${value}`);
     context.fillRect(0, 0, 1, 1);
-    const [r, g, b] = context.getImageData(0, 0, 1, 1).data;
-    return [r, g, b] as unknown as [number, number, number];
+    const [r = 0, g = 0, b = 0] = context.getImageData(0, 0, 1, 1).data;
+    return [r, g, b];
   }, property);
 }
 
@@ -34,7 +29,9 @@ export async function expectRgb(
     .poll(
       async () => {
         const actual = await rgbOf(locator, property);
-        const matches = actual.every((channel, i) => Math.abs(channel - expected[i]!) <= tolerance);
+        const matches = actual.every(
+          (channel, i) => Math.abs(channel - (expected[i] ?? 0)) <= tolerance,
+        );
         return matches ? 'match' : `rgb(${actual.join(', ')})`;
       },
       { message: `${property} should be rgb(${expected.join(', ')}) ±${tolerance}` },

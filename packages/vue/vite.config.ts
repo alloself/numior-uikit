@@ -6,16 +6,19 @@ import { defineConfig, type Plugin } from 'vite';
 const packageRoot = new URL('./', import.meta.url);
 const RELATIVE_IMPORT = /^@import\s+['"](\.{1,2}\/[^'"]+\.css)['"]\s*;\s*$/;
 
-/** Inline relative @import lines so a stylesheet becomes self-contained. */
+function importTarget(line: string, from: URL): URL | null {
+  const [, specifier = ''] = RELATIVE_IMPORT.exec(line) ?? [];
+  return specifier ? new URL(specifier, from) : null;
+}
+
 async function inlineCss(file: URL, seen = new Set<string>()): Promise<string> {
   const output: string[] = [];
   for (const line of (await readFile(file, 'utf8')).split('\n')) {
-    const match = RELATIVE_IMPORT.exec(line);
-    if (!match) {
+    const target = importTarget(line, file);
+    if (!target) {
       output.push(line);
       continue;
     }
-    const target = new URL(match[1]!, file);
     if (seen.has(target.href)) continue;
     seen.add(target.href);
     output.push(await inlineCss(target, seen));
@@ -23,10 +26,6 @@ async function inlineCss(file: URL, seen = new Set<string>()): Promise<string> {
   return output.join('\n');
 }
 
-/**
- * CSS stays opt-in: nothing imports it from JavaScript. The build emits the LICENSE, a flat
- * styles.css with every component, and one standalone stylesheet per component under styles/.
- */
 function explicitCss(): Plugin {
   return {
     name: 'explicit-css',
@@ -39,9 +38,8 @@ function explicitCss(): Plugin {
       const manifest = new URL('./src/styles.css', packageRoot);
       this.emitFile({ type: 'asset', fileName: 'styles.css', source: await inlineCss(manifest) });
       for (const line of (await readFile(manifest, 'utf8')).split('\n')) {
-        const match = RELATIVE_IMPORT.exec(line);
-        if (!match) continue;
-        const target = new URL(match[1]!, manifest);
+        const target = importTarget(line, manifest);
+        if (!target) continue;
         const name = target.pathname.slice(target.pathname.lastIndexOf('/') + 1);
         this.emitFile({
           type: 'asset',
@@ -62,7 +60,6 @@ export default defineConfig({
       fileName: 'index',
     },
     sourcemap: true,
-    // Externals keep a single copy of the primitives' injection keys in every app.
-    rolldownOptions: { external: ['vue', '@numior/primitives', 'lucide-vue-next'] },
+    rolldownOptions: { external: [/^vue$/, /^@numior\/primitives$/, /^lucide-vue-next(\/|$)/] },
   },
 });

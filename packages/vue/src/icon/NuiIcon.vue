@@ -4,21 +4,16 @@ import { useIcons } from '@numior/primitives';
 import { defaultIcons } from './default-icons';
 import type { NuiIconProps } from './icon.types';
 
-const props = defineProps<NuiIconProps>();
+const { alias, icon } = defineProps<NuiIconProps>();
 const icons = useIcons();
-const resolved = computed(() => {
-  if (props.icon) return props.icon;
-  return props.alias ? (icons[props.alias] ?? defaultIcons[props.alias]) : undefined;
+const glyph = computed(() => {
+  if (icon) return icon;
+  return alias === undefined ? undefined : (icons[alias] ?? defaultIcons[alias]);
 });
 </script>
 
 <template>
-  <component
-    :is="resolved"
-    v-if="resolved"
-    class="nui-icon"
-    aria-hidden="true"
-    focusable="false"
-    :data-alias="alias"
-  />
+  <span class="nui-icon" aria-hidden="true">
+    <component :is="glyph" v-if="glyph" class="nui-icon__glyph" focusable="false" />
+  </span>
 </template>

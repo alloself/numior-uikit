@@ -1,4 +1,3 @@
-/* Optional nui-* utilities. They only read @numior/tokens variables; load theme.css first. */
 .nui-flex {
   display: flex;
 }

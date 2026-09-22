@@ -1,7 +1,5 @@
-/** Size step inside the current density scale. */
 export type NuiSize = 'sm' | 'md' | 'lg';
 
-/** Semantic role that picks the color tokens of a component. */
 export type NuiTone =
   | 'primary'
   | 'secondary'
@@ -10,3 +8,11 @@ export type NuiTone =
   | 'error'
   | 'info'
   | 'neutral';
+
+export interface NuiFieldControlProps {
+  id?: string | undefined;
+  size?: NuiSize | undefined;
+  disabled?: boolean | undefined;
+  required?: boolean | undefined;
+  invalid?: boolean | undefined;
+}

@@ -47,9 +47,9 @@ import '@numior/vue/styles/button.css';
 ## Состояния
 
 `disabled` блокирует активацию. `loading` также блокирует кнопку, устанавливает
-`aria-busy="true"` и показывает иконку `loader` из реестра иконок перед содержимым
-слота. `type` по умолчанию `button`, поэтому кнопка внутри формы не отправляет её
-случайно; доступны `submit` и `reset`.
+`aria-busy="true"`, прячет содержимое через `opacity` и показывает иконку `loader` из
+реестра поверх него по центру, поэтому ширина кнопки не меняется. `type` по умолчанию
+`button`, поэтому кнопка внутри формы не отправляет её случайно; доступны `submit` и `reset`.
 
 <div class="nui-demo" data-nui-theme="light">
   <NuiButton disabled>Недоступна</NuiButton>
@@ -76,5 +76,9 @@ import '@numior/vue/styles/button.css';
 | `loading`  | `boolean`                                                                              | `false`      |
 
 Слот по умолчанию — содержимое кнопки. Нативные атрибуты, классы и обработчики
-событий передаются элементу `<button>`. Атрибуты `data-variant`, `data-tone` и
-`data-size` доступны для стилизации и Tailwind-вариантов вида `data-[tone=error]:`.
+событий передаются элементу `<button>`. Оформление построено на BEM: блок `nui-button`,
+элементы `nui-button__content`, `nui-button__loader`, `nui-button__spinner`,
+модификаторы `nui-button--variant-soft`, `nui-button--tone-error`, `nui-button--size-sm`
+и `nui-button--loading`. Модификаторы задают приватные CSS-переменные (`--_tone`,
+`--_height`), которые читают остальные правила, поэтому свой вариант — это ещё один
+класс-модификатор.

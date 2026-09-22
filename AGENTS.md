@@ -1,10 +1,22 @@
 # Numior UI
 
-Read `.archcore/numior-ui.plan.md`, `.archcore/modular-foundation.adr.md` and
-`.archcore/engineering-quality.rule.md` before changing architecture or public APIs.
-An accepted plan is not a statement that its features are implemented.
+Read `.archcore/numior-ui.plan.md`, `.archcore/modular-foundation.adr.md`,
+`.archcore/engineering-quality.rule.md` and `.archcore/component-authoring.rule.md` before
+changing architecture, public APIs or components. An accepted plan is not a statement
+that its features are implemented. Component and test conventions live in the skills
+`.claude/skills/nui-component` and `.claude/skills/nui-testing`.
 
 - Write new code; do not copy SaleHub/Ln implementations.
+- Props: `defineProps<Props>()` with reactive destructure defaults and `defineModel`;
+  never `withDefaults`, runtime prop objects or `PropType`. Tri-state booleans use `= undefined`.
+- No `as` or `!` type assertions anywhere (tests and configs included); `as const` only.
+- CSS is BEM (`nui-block`, `nui-block__part`, `nui-block--key-value`, `nui-block--state`)
+  with modifiers setting private custom properties; no `data-*` for variants or states.
+- Every state change moves through the motion tokens; icons resolve through the alias
+  registry and load on demand; a loading button keeps its width.
+- No comments in source files; explanations go to docs and Archcore.
+- Tests read as scenarios through drivers (`packages/*/test/drivers`), harnesses and
+  Playwright page objects (`tests/e2e/pages`); every component gets unit, SSR, e2e and axe.
 - Keep Vue 3.5+, SSR, keyboard access, RTL, light/dark/system themes and optional Tailwind.
 - Keep public exports explicit, CSS opt-in and heavy engines outside base UI imports.
 - Record architecture changes in Archcore; use its MCP tools when available.

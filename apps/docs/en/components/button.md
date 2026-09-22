@@ -48,9 +48,10 @@ in `compact`.
 ## States
 
 `disabled` prevents activation. `loading` also blocks the button, sets
-`aria-busy="true"` and shows the `loader` icon from the icon registry before the slot
-content. `type` defaults to `button`, so a button inside a form never submits it by
-accident; `submit` and `reset` are available.
+`aria-busy="true"`, fades the content out with `opacity` and centers the `loader` icon
+from the registry on top of it, so the button keeps its width. `type` defaults to
+`button`, so a button inside a form never submits it by accident; `submit` and `reset`
+are available.
 
 <div class="nui-demo" data-nui-theme="light">
   <NuiButton disabled>Disabled</NuiButton>
@@ -77,5 +78,8 @@ scan in the playground; that does not replace a manual review.
 | `loading`  | `boolean`                                                                              | `false`     |
 
 The default slot is the button content. Native attributes, classes and event listeners
-reach the `<button>` element. The `data-variant`, `data-tone` and `data-size`
-attributes are available for styling and for Tailwind variants such as `data-[tone=error]:`.
+reach the `<button>` element. Styling follows BEM: block `nui-button`, elements
+`nui-button__content`, `nui-button__loader`, `nui-button__spinner`, modifiers
+`nui-button--variant-soft`, `nui-button--tone-error`, `nui-button--size-sm` and
+`nui-button--loading`. Modifiers set private CSS variables (`--_tone`, `--_height`)
+that the remaining rules read, so a custom variant is just another modifier class.

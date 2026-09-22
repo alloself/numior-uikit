@@ -1,5 +1,17 @@
 .nui-icon {
+  display: inline-flex;
+  flex: none;
   inline-size: 1.25em;
   block-size: 1.25em;
-  flex: none;
+}
+.nui-icon__glyph {
+  inline-size: 100%;
+  block-size: 100%;
+  animation: nui-icon-appear var(--nui-duration-fast) var(--nui-easing);
+}
+@keyframes nui-icon-appear {
+  from {
+    opacity: 0;
+    scale: 0.8;
+  }
 }

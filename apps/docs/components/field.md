@@ -70,5 +70,6 @@ const email = ref('')
 | `disabled`    | `boolean` | `false`      | Отключает контрол; для группы — весь `fieldset`  |
 | `group`       | `boolean` | `false`      | `fieldset` + `legend` вместо `label`             |
 
-Атрибуты `data-invalid`, `data-required` и `data-disabled` на корне доступны для
-стилизации. Внутри доступны `useField()` и `useFieldControl()` из `@numior/vue`.
+Состояния отражаются модификаторами `nui-field--invalid`, `nui-field--required`,
+`nui-field--disabled` и `nui-field--group`. Внутри доступны `useField()` и
+`useFieldControl()` из `@numior/vue`.

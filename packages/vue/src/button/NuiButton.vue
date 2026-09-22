@@ -2,27 +2,34 @@
 import NuiIcon from '../icon/NuiIcon.vue';
 import type { NuiButtonProps } from './button.types';
 
-withDefaults(defineProps<NuiButtonProps>(), {
-  variant: 'solid',
-  tone: 'primary',
-  size: 'md',
-  type: 'button',
-  disabled: false,
-  loading: false,
-});
+const {
+  variant = 'solid',
+  tone = 'primary',
+  size = 'md',
+  type = 'button',
+  disabled = false,
+  loading = false,
+} = defineProps<NuiButtonProps>();
 </script>
 
 <template>
   <button
     class="nui-button"
-    :data-variant="variant"
-    :data-tone="tone"
-    :data-size="size"
+    :class="[
+      `nui-button--variant-${variant}`,
+      `nui-button--tone-${tone}`,
+      `nui-button--size-${size}`,
+      { 'nui-button--loading': loading },
+    ]"
     :type="type"
     :disabled="disabled || loading"
     :aria-busy="loading || undefined"
   >
-    <NuiIcon v-if="loading" alias="loader" class="nui-button__spinner" />
-    <slot />
+    <span class="nui-button__content">
+      <slot />
+    </span>
+    <span v-if="loading" class="nui-button__loader">
+      <NuiIcon alias="loader" class="nui-button__spinner" />
+    </span>
   </button>
 </template>

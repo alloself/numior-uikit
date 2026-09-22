@@ -2,7 +2,6 @@ import { fileURLToPath } from 'node:url';
 import { readFile } from 'node:fs/promises';
 import { defineConfig } from 'vite';
 
-// Headless primitives ship JavaScript and declarations only: no CSS, no Vue SFCs.
 export default defineConfig({
   plugins: [
     {

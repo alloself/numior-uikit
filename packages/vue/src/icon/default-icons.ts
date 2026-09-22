@@ -1,12 +1,10 @@
-import type { IconRegistry } from '@numior/primitives';
-import { Check, ChevronDown, LoaderCircle, Minus, Search, X } from 'lucide-vue-next';
+import { lazyIcon, type IconRegistry } from '@numior/primitives';
 
-/** Kit defaults from Lucide (ISC). Any registry provided by the app overrides an alias. */
 export const defaultIcons: IconRegistry = {
-  check: Check,
-  minus: Minus,
-  loader: LoaderCircle,
-  'chevron-down': ChevronDown,
-  x: X,
-  search: Search,
+  check: lazyIcon(() => import('lucide-vue-next/dist/esm/icons/check.js')),
+  minus: lazyIcon(() => import('lucide-vue-next/dist/esm/icons/minus.js')),
+  loader: lazyIcon(() => import('lucide-vue-next/dist/esm/icons/loader-circle.js')),
+  'chevron-down': lazyIcon(() => import('lucide-vue-next/dist/esm/icons/chevron-down.js')),
+  x: lazyIcon(() => import('lucide-vue-next/dist/esm/icons/x.js')),
+  search: lazyIcon(() => import('lucide-vue-next/dist/esm/icons/search.js')),
 };

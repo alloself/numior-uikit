@@ -1,0 +1,112 @@
+import { expect, test } from '@playwright/test';
+import { PlaygroundPage } from './pages/playground';
+
+test.describe('form controls', () => {
+  test('field wiring: labels focus controls, output follows input, errors are announced', async ({
+    page,
+  }) => {
+    const playground = new PlaygroundPage(page);
+    await playground.open();
+    const { forms } = playground;
+    await forms.label('Имя').click();
+    await expect(forms.nameInput).toBeFocused();
+    await forms.nameInput.fill('Алексей');
+    await expect.poll(async () => (await forms.readOutput()).name).toBe('Алексей');
+    await forms.emailInput.fill('nope');
+    await expect(forms.emailInput).toHaveAttribute('aria-invalid', 'true');
+    const describedBy = await forms.emailInput.getAttribute('aria-describedby');
+    expect(describedBy?.split(' ')).toHaveLength(2);
+    await expect(page.getByText('Укажите адрес с символом @')).toBeVisible();
+    await forms.emailInput.fill('a@b.co');
+    await expect(forms.emailInput).not.toHaveAttribute('aria-invalid', 'true');
+    await expect.poll(async () => (await forms.readOutput()).email).toBe('a@b.co');
+  });
+
+  test('checkboxes toggle boolean and array models and expose indeterminate', async ({
+    page,
+    isMobile,
+  }) => {
+    const playground = new PlaygroundPage(page);
+    await playground.open();
+    const { forms } = playground;
+    if (isMobile) {
+      await forms.terms.tap();
+    } else {
+      await forms.terms.focus();
+      await page.keyboard.press('Space');
+    }
+    await expect(forms.terms).toBeChecked();
+    await expect.poll(async () => (await forms.readOutput()).terms).toBe(true);
+    expect(
+      await forms.indeterminate.evaluate(
+        (element) => element instanceof HTMLInputElement && element.indeterminate,
+      ),
+    ).toBe(true);
+    await forms.channelEmail.check();
+    await forms.channelSms.check();
+    await expect.poll(async () => (await forms.readOutput()).channels).toEqual(['email', 'sms']);
+    await forms.channelEmail.uncheck();
+    await expect.poll(async () => (await forms.readOutput()).channels).toEqual(['sms']);
+  });
+
+  test('radio group is a labelled native group with arrow-key navigation', async ({
+    page,
+    isMobile,
+  }) => {
+    const playground = new PlaygroundPage(page);
+    await playground.open();
+    const { forms } = playground;
+    await expect(forms.radioGroup).toHaveRole('radiogroup');
+    await expect(forms.radioGroup).toHaveAccessibleName('Тариф');
+    await expect(forms.radios.free).toBeChecked();
+    if (isMobile) {
+      await forms.radios.team.tap();
+    } else {
+      await forms.radios.free.focus();
+      await page.keyboard.press('ArrowDown');
+    }
+    await expect(forms.radios.team).toBeChecked();
+    await expect.poll(async () => (await forms.readOutput()).plan).toBe('team');
+    const names = await Promise.all(
+      Object.values(forms.radios).map((radio) => radio.getAttribute('name')),
+    );
+    expect(new Set(names).size).toBe(1);
+  });
+
+  test('switch is a native switch and stays inside its track in RTL', async ({ page }) => {
+    const playground = new PlaygroundPage(page);
+    await playground.open();
+    const { forms } = playground;
+    await expect(forms.notifications).toHaveRole('switch');
+    await expect(forms.notifications).toBeChecked();
+    await forms.notifications.uncheck();
+    await expect.poll(async () => (await forms.readOutput()).notifications).toBe(false);
+    await playground.setDirection('rtl');
+    await forms.notifications.check();
+    await expect(forms.notifications).toBeChecked();
+    expect(await playground.hasHorizontalOverflow()).toBe(false);
+  });
+
+  test('controls follow density and size steps', async ({ page }) => {
+    const playground = new PlaygroundPage(page);
+    await playground.open();
+    const { forms } = playground;
+    await expect(forms.wrapperOf(forms.nameInput)).toHaveCSS('min-block-size', '40px');
+    await expect(forms.wrapperOf(forms.largeInput)).toHaveCSS('min-block-size', '48px');
+    await playground.setDensity('compact');
+    await expect(forms.wrapperOf(forms.nameInput)).toHaveCSS('min-block-size', '32px');
+    await expect(forms.wrapperOf(forms.largeInput)).toHaveCSS('min-block-size', '40px');
+  });
+
+  test('forms with a visible error have no detectable WCAG AA violations', async ({ page }) => {
+    const playground = new PlaygroundPage(page);
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    await playground.forms.emailInput.fill('nope');
+    await expect(playground.forms.emailInput).toHaveAttribute('aria-invalid', 'true');
+    for (const theme of ['light', 'dark'] as const) {
+      await playground.setTheme(theme);
+      expect(await playground.wcagViolations()).toEqual([]);
+    }
+  });
+});

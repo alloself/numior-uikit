@@ -1,4 +1,3 @@
-/* Live examples render inside an explicit Numior scope, independent of the VitePress theme. */
 .nui-demo {
   display: flex;
   flex-wrap: wrap;

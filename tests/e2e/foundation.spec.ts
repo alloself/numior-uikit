@@ -1,74 +1,77 @@
 import { expect, test } from '@playwright/test';
-import { AxeBuilder } from '@axe-core/playwright';
 import { expectRgb } from './helpers/color';
+import { PlaygroundPage } from './pages/playground';
 
 test('standalone button activates by keyboard and loading blocks activation', async ({
   page,
   isMobile,
 }) => {
-  await page.goto('/');
-  const button = page.getByTestId('primary');
+  const playground = new PlaygroundPage(page);
+  await playground.open();
+  const { primary, loading, loadingToggle } = playground.buttons;
   if (isMobile) {
-    await button.tap();
+    await primary.tap();
   } else {
-    await button.focus();
-    await expect(button).toBeFocused();
+    await primary.focus();
+    await expect(primary).toBeFocused();
     await page.keyboard.press('Enter');
-    await expect(button).toHaveCSS('outline-style', 'solid');
+    await expect(primary).toHaveCSS('outline-style', 'solid');
   }
-  await expect(page.getByRole('status')).toHaveText('Нажатий: 1');
-  await page.getByTestId('loading').click();
-  await expect(page.getByTestId('loading')).toBeDisabled();
-  await expect(page.getByTestId('loading')).toHaveAttribute('aria-busy', 'true');
-  await page.getByTestId('loading-toggle').uncheck();
-  await expect(page.getByTestId('loading')).toBeEnabled();
+  await expect(playground.clickCount).toHaveText('Нажатий: 1');
+  const idleBox = await loading.boundingBox();
+  await loading.click();
+  await expect(loading).toBeDisabled();
+  await expect(loading).toHaveAttribute('aria-busy', 'true');
+  expect((await loading.boundingBox())?.width).toBe(idleBox?.width);
+  await loadingToggle.uncheck();
+  await expect(loading).toBeEnabled();
 });
 
 test('theme, scoped overrides, density and RTL work without Tailwind', async ({ page }) => {
-  await page.emulateMedia({ colorScheme: 'dark' });
-  await page.goto('/');
-  const workspace = page.getByRole('main');
-  const primary = page.getByTestId('primary');
-  await expectRgb(workspace, 'background-color', [24, 24, 27]);
-  await page.getByTestId('theme').selectOption('light');
-  await expectRgb(workspace, 'background-color', [255, 255, 255]);
-  await expectRgb(page.getByTestId('nested'), 'background-color', [165, 180, 252]);
-  await page.getByTestId('accent').selectOption('emerald');
+  const playground = new PlaygroundPage(page);
+  await playground.emulate({ colorScheme: 'dark' });
+  await playground.open();
+  const { primary, nested, large } = playground.buttons;
+  await expectRgb(playground.workspace, 'background-color', [24, 24, 27]);
+  await playground.setTheme('light');
+  await expectRgb(playground.workspace, 'background-color', [255, 255, 255]);
+  await expectRgb(nested, 'background-color', [165, 180, 252]);
+  await playground.setAccent('emerald');
   await expectRgb(primary, 'background-color', [4, 120, 87]);
-  await expectRgb(page.getByTestId('utility'), 'background-color', [4, 120, 87]);
-  await expectRgb(page.getByTestId('nested'), 'background-color', [165, 180, 252]);
-  await expect(page.getByTestId('large')).toHaveCSS('min-block-size', '48px');
-  await page.getByTestId('density').selectOption('compact');
+  await expectRgb(playground.swatches.utility, 'background-color', [4, 120, 87]);
+  await expectRgb(nested, 'background-color', [165, 180, 252]);
+  await expect(large).toHaveCSS('min-block-size', '48px');
+  await playground.setDensity('compact');
   await expect(primary).toHaveCSS('min-block-size', '32px');
-  await expect(page.getByTestId('large')).toHaveCSS('min-block-size', '40px');
-  await page.getByTestId('direction').selectOption('rtl');
-  await expect(workspace).toHaveCSS('direction', 'rtl');
-  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(
-    true,
-  );
+  await expect(large).toHaveCSS('min-block-size', '40px');
+  await playground.setDirection('rtl');
+  await expect(playground.workspace).toHaveCSS('direction', 'rtl');
+  expect(await playground.hasHorizontalOverflow()).toBe(false);
 });
 
 test('Tailwind utilities consume the same runtime tokens as native CSS', async ({ page }) => {
-  await page.goto('/tailwind.html');
-  await page.getByTestId('theme').selectOption('light');
-  await page.getByTestId('accent').selectOption('rose');
-  for (const id of ['primary', 'utility', 'tailwind']) {
-    await expectRgb(page.getByTestId(id), 'background-color', [190, 18, 60]);
-    await expectRgb(page.getByTestId(id), 'color', [255, 255, 255]);
+  const playground = new PlaygroundPage(page);
+  await playground.open('/tailwind.html');
+  await playground.setTheme('light');
+  await playground.setAccent('rose');
+  for (const target of [
+    playground.buttons.primary,
+    playground.swatches.utility,
+    playground.swatches.tailwind,
+  ]) {
+    await expectRgb(target, 'background-color', [190, 18, 60]);
+    await expectRgb(target, 'color', [255, 255, 255]);
   }
 });
 
 test('light and dark playground have no automatically detectable WCAG AA violations', async ({
   page,
 }) => {
-  // Reduced motion zeroes the motion tokens, so axe never samples colors mid-transition.
-  await page.emulateMedia({ reducedMotion: 'reduce' });
-  await page.goto('/');
-  for (const theme of ['light', 'dark']) {
-    await page.getByTestId('theme').selectOption(theme);
-    const results = await new AxeBuilder({ page })
-      .withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa'])
-      .analyze();
-    expect(results.violations).toEqual([]);
+  const playground = new PlaygroundPage(page);
+  await playground.emulate({ reducedMotion: 'reduce' });
+  await playground.open();
+  for (const theme of ['light', 'dark'] as const) {
+    await playground.setTheme(theme);
+    expect(await playground.wcagViolations()).toEqual([]);
   }
 });

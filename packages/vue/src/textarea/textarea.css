@@ -14,20 +14,22 @@
   line-height: var(--nui-line-height);
   resize: vertical;
   appearance: none;
-  transition: border-color var(--nui-duration-fast) var(--nui-easing);
+  transition:
+    border-color var(--nui-duration-fast) var(--nui-easing),
+    outline-color var(--nui-duration-fast) var(--nui-easing);
 }
-.nui-textarea[data-size='sm'] {
+.nui-textarea--size-sm {
   --_padding: var(--nui-control-padding-sm);
   --_font-size: var(--nui-control-font-size-sm);
 }
-.nui-textarea[data-size='lg'] {
+.nui-textarea--size-lg {
   --_padding: var(--nui-control-padding-lg);
   --_font-size: var(--nui-control-font-size-lg);
 }
-.nui-textarea[data-resize='none'] {
+.nui-textarea--resize-none {
   resize: none;
 }
-.nui-textarea[data-resize='both'] {
+.nui-textarea--resize-both {
   resize: both;
 }
 .nui-textarea::placeholder {
@@ -42,10 +44,10 @@
   outline: var(--nui-focus-ring-width) solid var(--nui-focus);
   outline-offset: var(--nui-focus-ring-offset);
 }
-.nui-textarea[data-invalid] {
+.nui-textarea--invalid {
   border-color: var(--nui-error);
 }
-.nui-textarea[data-invalid]:focus-visible {
+.nui-textarea--invalid:focus-visible {
   outline-color: var(--nui-error);
 }
 .nui-textarea:disabled {

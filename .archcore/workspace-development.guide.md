@@ -18,11 +18,29 @@ Node 24.15+; проверенная и закреплённая версия 24.
 
 ## Verification
 
-Реализовано только основание: @packages/tokens, @packages/vue с NuiButton, @packages/utilities, @packages/tailwind; документация, playground, конфигурации и CI. Будущие модули перечислены в @packages/README.md; готовность 1.0 не заявляется.
+Реализованы токены v2, @packages/primitives (контекст поля, checked state, radio-группа,
+реестр иконок с ленивой загрузкой, split attrs) и компоненты @packages/vue: `NuiButton`
+(variant × tone × size, loading без изменения ширины), `NuiIcon`, `NuiConfigProvider`,
+`NuiField` с частями, `NuiInput`, `NuiTextarea`, `NuiCheckbox`, `NuiRadioGroup`/`NuiRadio`,
+`NuiSwitch`. Конвенции — @.archcore/component-conventions.adr.md и
+@.archcore/component-authoring.rule.md. Будущие модули перечислены в @packages/README.md;
+готовность 1.0 не заявляется.
 
-Публичный контракт защищён explicit exports и private manifests; CSS opt-in. Fallow сохраняет public entry exports и использует @numior/source при анализе, не требует заранее собранного dist. Дополнительная entry CSS fixture объясняется HTML-подключением. Все остальные исходники остаются в анализе, disabled rules для маскировки ошибок не вводятся.
+Публичный контракт защищён explicit exports и private manifests; CSS opt-in: `styles.css`
+и `styles/<name>.css`. Fallow сохраняет public entry exports, анализирует CSS-манифест и
+использует @numior/source; в Vitest исходники подключаются и для node-окружения
+(`ssr.resolve.conditions`, `server.deps.inline`).
 
-На 2026-09-22 браузерная матрица 20/20 прошла в Docker: клавиатура/touch, loading, темы/system/nesting, accent, density, RTL, Tailwind parity и axe на light/dark. Это эмуляция мобильных профилей, а не тест реальных телефонов; axe не заменяет ручную доступность и проверку screen reader.
+Тесты: unit через драйверы и харнессы (`packages/*/test`), SSR через `renderMarkup`, e2e
+через page object `tests/e2e/pages/playground.ts` (`foundation.spec.ts`, `forms.spec.ts`),
+цвета сравниваются через canvas-пиксель (`tests/e2e/helpers/color.ts`), axe в light/dark под
+`reducedMotion: 'reduce'`. Production-сборка playground держит `build.cssTarget`, чтобы
+lightningcss не переписывал `light-dark()`, `oklch()` и `color-mix()`.
+
+На 2026-09-22 браузерная матрица прошла в Docker (Ubuntu 20.04 хоста Playwright не
+поддерживает): снимок рабочего дерева с `node_modules` монтируется в
+`mcr.microsoft.com/playwright:v1.63.0-noble` вместе с каталогом pnpm, запускается
+`pnpm test:e2e`. Это эмуляция мобильных профилей; axe не заменяет ручную проверку.
 
 ## Common Issues
 

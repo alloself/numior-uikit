@@ -1,0 +1,87 @@
+.nui-checkbox {
+  --_size: 1.25rem;
+  --_font-size: var(--nui-font-size-sm);
+
+  position: relative;
+  display: inline-flex;
+  align-items: flex-start;
+  gap: var(--nui-space-2);
+  color: var(--nui-text);
+  font-family: var(--nui-font);
+  font-size: var(--_font-size);
+  line-height: var(--nui-line-height);
+  cursor: pointer;
+}
+.nui-checkbox--size-sm {
+  --_size: 1rem;
+  --_font-size: var(--nui-font-size-xs);
+}
+.nui-checkbox--size-lg {
+  --_size: 1.5rem;
+  --_font-size: var(--nui-font-size-md);
+}
+.nui-checkbox__control {
+  position: absolute;
+  z-index: 1;
+  inset-block-start: calc((1lh - var(--_size)) / 2);
+  inset-inline-start: 0;
+  inline-size: var(--_size);
+  block-size: var(--_size);
+  margin: 0;
+  opacity: 0;
+  appearance: none;
+  cursor: inherit;
+}
+.nui-checkbox__box {
+  pointer-events: none;
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  inline-size: var(--_size);
+  block-size: var(--_size);
+  margin-block-start: calc((1lh - var(--_size)) / 2);
+  border: 1px solid var(--nui-border-strong);
+  border-radius: var(--nui-radius-sm);
+  background: var(--nui-surface);
+  color: var(--nui-primary-foreground);
+  transition:
+    background-color var(--nui-duration-fast) var(--nui-easing),
+    border-color var(--nui-duration-fast) var(--nui-easing),
+    scale var(--nui-duration-fast) var(--nui-easing);
+}
+.nui-checkbox__mark {
+  inline-size: 75%;
+  block-size: 75%;
+  opacity: 0;
+  scale: 0.5;
+  transition:
+    opacity var(--nui-duration-fast) var(--nui-easing),
+    scale var(--nui-duration-normal) var(--nui-easing);
+}
+.nui-checkbox__control:checked + .nui-checkbox__box,
+.nui-checkbox__control:indeterminate + .nui-checkbox__box {
+  border-color: var(--nui-primary);
+  background: var(--nui-primary);
+}
+.nui-checkbox__control:checked + .nui-checkbox__box .nui-checkbox__mark,
+.nui-checkbox__control:indeterminate + .nui-checkbox__box .nui-checkbox__mark {
+  opacity: 1;
+  scale: 1;
+}
+.nui-checkbox__control:active:not(:disabled) + .nui-checkbox__box {
+  scale: 0.92;
+}
+.nui-checkbox:hover:not(.nui-checkbox--disabled) .nui-checkbox__box {
+  border-color: var(--nui-primary);
+}
+.nui-checkbox__control:focus-visible + .nui-checkbox__box {
+  outline: var(--nui-focus-ring-width) solid var(--nui-focus);
+  outline-offset: var(--nui-focus-ring-offset);
+}
+.nui-checkbox--invalid .nui-checkbox__box {
+  border-color: var(--nui-error);
+}
+.nui-checkbox--disabled {
+  opacity: var(--nui-disabled-opacity);
+  cursor: not-allowed;
+}

@@ -38,5 +38,6 @@ const bio = ref('')
 | `invalid`  | `boolean`                        | from field   | `aria-invalid` and an error border |
 | `readonly` | `boolean`                        | `false`      | Read-only                          |
 
-A `focus()` method is exposed through the template ref. The `data-size`, `data-resize`
-and `data-invalid` attributes drive the styles and are available for your own rules.
+A `focus()` method is exposed through the template ref. The `nui-textarea--size-sm`,
+`nui-textarea--resize-none` and `nui-textarea--invalid` modifiers drive the styles and
+are available for your own rules.
