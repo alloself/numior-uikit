@@ -125,6 +125,16 @@ importers:
         specifier: ^4.0.0
         version: 4.3.3
 
+  packages/primitives:
+    dependencies:
+      vue:
+        specifier: ^3.5.0
+        version: 3.5.43(typescript@5.9.3)
+    devDependencies:
+      '@vue/test-utils':
+        specifier: 2.5.1
+        version: 2.5.1(@vue/compiler-dom@3.5.43)(@vue/server-renderer@3.5.43)(vue@3.5.43(typescript@5.9.3))
+
   packages/tailwind:
     dependencies:
       '@numior/tokens':

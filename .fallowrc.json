@@ -1,6 +1,10 @@
 {
   "$schema": "./node_modules/fallow/schema.json",
-  "entry": ["packages/vue/src/index.ts", "apps/playground/src/tailwind.css"],
+  "entry": [
+    "packages/primitives/src/index.ts",
+    "packages/vue/src/index.ts",
+    "apps/playground/src/tailwind.css"
+  ],
   "includeEntryExports": false,
   "ignorePatterns": [
     "**/dist/**",
@@ -26,6 +30,10 @@
       {
         "name": "tokens",
         "patterns": ["packages/tokens/**"]
+      },
+      {
+        "name": "primitives",
+        "patterns": ["packages/primitives/**"]
       },
       {
         "name": "utilities",
@@ -54,6 +62,10 @@
         "allow": []
       },
       {
+        "from": "primitives",
+        "allow": ["primitives"]
+      },
+      {
         "from": "utilities",
         "allow": ["tokens"]
       },
@@ -63,15 +75,15 @@
       },
       {
         "from": "vue",
-        "allow": ["tokens", "vue"]
+        "allow": ["tokens", "primitives", "vue"]
       },
       {
         "from": "apps",
-        "allow": ["tokens", "utilities", "tailwind", "vue", "apps"]
+        "allow": ["tokens", "primitives", "utilities", "tailwind", "vue", "apps"]
       },
       {
         "from": "tests",
-        "allow": ["tokens", "utilities", "tailwind", "vue", "apps", "tests"]
+        "allow": ["tokens", "primitives", "utilities", "tailwind", "vue", "apps", "tests"]
       }
     ]
   },

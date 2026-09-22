@@ -3,6 +3,20 @@ import { readFile, readdir } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
+// Subpath patterns such as ./dist/styles/*.css expand against the built directory.
+async function artifactPaths(root, target) {
+  if (!target.includes('*')) return [target];
+  const [prefix, suffix] = target.split('*');
+  const slash = prefix.lastIndexOf('/');
+  const dir = prefix.slice(0, slash + 1);
+  const start = prefix.slice(slash + 1);
+  const names = (await readdir(resolve(root, dir))).filter(
+    (name) => name.startsWith(start) && name.endsWith(suffix),
+  );
+  assert.ok(names.length > 0, `No artifacts match ${target}`);
+  return names.map((name) => `${dir}${name}`);
+}
+
 for (const name of await readdir('packages')) {
   if (name === 'README.md') continue;
   const root = resolve('packages', name);
@@ -14,16 +28,25 @@ for (const name of await readdir('packages')) {
   );
   assert.equal(await readFile(`${root}/dist/LICENSE`, 'utf8'), await readFile('LICENSE', 'utf8'));
   for (const entry of Object.values(manifest.exports)) {
-    const paths = typeof entry === 'string' ? [entry] : [entry.types, entry.import, entry.default];
-    for (const path of paths.filter(Boolean)) {
-      assert.ok((await readFile(resolve(root, path))).length, `Empty artifact: ${name}/${path}`);
+    const targets =
+      typeof entry === 'string' ? [entry] : [entry.types, entry.import, entry.default];
+    for (const target of targets.filter(Boolean)) {
+      for (const path of await artifactPaths(root, target)) {
+        assert.ok((await readFile(resolve(root, path))).length, `Empty artifact: ${name}/${path}`);
+      }
     }
   }
 }
 
-// Import the actual ESM build without a DOM: this catches SSR-unsafe top-level code.
-const { NuiButton } = await import(pathToFileURL(resolve('packages/vue/dist/index.js')).href);
-assert.ok(NuiButton);
-const code = await readFile('packages/vue/dist/index.js', 'utf8');
+// Import the actual ESM builds without a DOM: this catches SSR-unsafe top-level code.
+async function importBuild(name, expectedExports) {
+  const file = resolve(`packages/${name}/dist/index.js`);
+  const module = await import(pathToFileURL(file).href);
+  for (const key of expectedExports) assert.ok(module[key], `${name} must export ${key}`);
+  return readFile(file, 'utf8');
+}
+
+await importBuild('primitives', ['provideField', 'useFieldControl', 'provideIcons']);
+const code = await importBuild('vue', ['NuiButton']);
 assert.doesNotMatch(code, /(?:tiptap|prosemirror|reka-ui|spreadsheet|tailwindcss)/i);
-console.log('Package exports, CSS artifacts and DOM-free ESM import verified.');
+console.log('Package exports, CSS artifacts and DOM-free ESM imports verified.');

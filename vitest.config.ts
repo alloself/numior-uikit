@@ -7,6 +7,9 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     include: ['packages/**/*.test.ts'],
-    coverage: { provider: 'v8', include: ['packages/vue/src/**/*.vue'] },
+    coverage: {
+      provider: 'v8',
+      include: ['packages/primitives/src/**/*.ts', 'packages/vue/src/**/*.vue'],
+    },
   },
 });

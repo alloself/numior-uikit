@@ -2,16 +2,18 @@
 
 Работающие пакеты основания:
 
-| Пакет               | Назначение                                                      |
-| ------------------- | --------------------------------------------------------------- |
-| `@numior/tokens`    | CSS-токены, light/dark/system, semantic roles и плотность       |
-| `@numior/vue`       | Начальный `NuiButton`, Vue 3.5 peer, отдельные CSS и декларации |
-| `@numior/utilities` | Опциональные утилиты `nui-*` на тех же токенах                  |
-| `@numior/tailwind`  | Опциональная карта токенов для Tailwind 4                       |
+| Пакет                | Назначение                                                                    |
+| -------------------- | ----------------------------------------------------------------------------- |
+| `@numior/tokens`     | CSS-токены, light/dark/system, semantic roles и плотность                     |
+| `@numior/primitives` | Headless-поведение: контекст поля, checked state, группа radio, реестр иконок |
+| `@numior/vue`        | Стилизованные компоненты `Nui*`, Vue 3.5 peer, отдельные CSS и декларации     |
+| `@numior/utilities`  | Опциональные утилиты `nui-*` на тех же токенах                                |
+| `@numior/tailwind`   | Опциональная карта токенов для Tailwind 4                                     |
 
-Будущие независимые пакеты из принятого плана: `primitives`, `forms`, `grid`,
-`spreadsheet`, `editor-core`, `editor-vue`, `content`, `collaboration`, `offline`,
-`nuxt`, `cli`. Они ещё не реализованы. Их манифесты и API появятся вместе с первым
+`@numior/primitives` зависит только от Vue и не содержит CSS и визуальных решений;
+`@numior/vue` потребляет его и добавляет стили. Будущие независимые пакеты из
+принятого плана: `forms`, `grid`, `spreadsheet`, `editor-core`, `editor-vue`,
+`content`, `collaboration`, `offline`, `nuxt`, `cli`. Они ещё не реализованы. Их манифесты и API появятся вместе с первым
 рабочим кодом, а не как пустые publishable пакеты.
 
 Все текущие workspace приватные. CSS подключается явно; исходники доступны
