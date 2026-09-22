@@ -1,0 +1,81 @@
+.nui-input {
+  --_height: var(--nui-control-height-md);
+  --_padding: var(--nui-control-padding-md);
+  --_font-size: var(--nui-control-font-size-md);
+
+  display: inline-flex;
+  align-items: center;
+  gap: var(--nui-space-2);
+  inline-size: 100%;
+  min-block-size: var(--_height);
+  padding-inline: var(--_padding);
+  border: 1px solid var(--nui-border);
+  border-radius: var(--nui-radius);
+  background: var(--nui-surface);
+  color: var(--nui-text);
+  font-family: var(--nui-font);
+  font-size: var(--_font-size);
+  line-height: var(--nui-line-height-tight);
+  transition: border-color var(--nui-duration-fast) var(--nui-easing);
+}
+.nui-input[data-size='sm'] {
+  --_height: var(--nui-control-height-sm);
+  --_padding: var(--nui-control-padding-sm);
+  --_font-size: var(--nui-control-font-size-sm);
+}
+.nui-input[data-size='lg'] {
+  --_height: var(--nui-control-height-lg);
+  --_padding: var(--nui-control-padding-lg);
+  --_font-size: var(--nui-control-font-size-lg);
+}
+
+.nui-input__control {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+  inline-size: 100%;
+  min-block-size: calc(var(--_height) - 2px);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  appearance: none;
+  outline: none;
+}
+.nui-input__control::placeholder {
+  color: var(--nui-text-muted);
+  opacity: 1;
+}
+.nui-input__control::-webkit-search-decoration,
+.nui-input__control::-webkit-search-cancel-button {
+  appearance: none;
+}
+.nui-input__prefix,
+.nui-input__suffix {
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+  color: var(--nui-text-muted);
+}
+
+.nui-input:hover:not([data-disabled]) {
+  border-color: var(--nui-border-strong);
+}
+.nui-input:focus-within {
+  border-color: var(--nui-focus);
+  outline: var(--nui-focus-ring-width) solid var(--nui-focus);
+  outline-offset: var(--nui-focus-ring-offset);
+}
+.nui-input[data-invalid] {
+  border-color: var(--nui-error);
+}
+.nui-input[data-invalid]:focus-within {
+  outline-color: var(--nui-error);
+}
+.nui-input[data-disabled] {
+  opacity: var(--nui-disabled-opacity);
+  cursor: not-allowed;
+}
+.nui-input[data-disabled] .nui-input__control {
+  cursor: not-allowed;
+}

@@ -1,27 +1,30 @@
 // @vitest-environment node
 import { describe, expect, it } from 'vitest';
-import { createSSRApp, h, type Component } from 'vue';
+import { createSSRApp, h, type VNode } from 'vue';
 import { renderToString } from 'vue/server-renderer';
-import { NuiButton, NuiConfigProvider, NuiIcon } from './index';
+import { NuiButton, NuiConfigProvider, NuiField, NuiIcon, NuiInput, NuiTextarea } from './index';
 
 interface Case {
   readonly name: string;
-  readonly component: Component;
-  readonly props?: Record<string, unknown>;
-  readonly slot?: string;
+  render(): VNode;
 }
 
 const ssrCases: Case[] = [
-  { name: 'NuiButton', component: NuiButton, props: { loading: true }, slot: 'Save' },
-  { name: 'NuiIcon', component: NuiIcon, props: { alias: 'check' } },
-  { name: 'NuiConfigProvider', component: NuiConfigProvider, slot: 'content' },
+  { name: 'NuiButton', render: () => h(NuiButton, { loading: true }, () => 'Save') },
+  { name: 'NuiIcon', render: () => h(NuiIcon, { alias: 'check' }) },
+  { name: 'NuiConfigProvider', render: () => h(NuiConfigProvider, null, () => 'content') },
+  {
+    name: 'NuiField with NuiInput',
+    render: () =>
+      h(NuiField, { label: 'Email', description: 'Work', error: 'Required' }, () =>
+        h(NuiInput, { modelValue: 'a', placeholder: 'name@example.com' }),
+      ),
+  },
+  { name: 'NuiTextarea', render: () => h(NuiTextarea, { modelValue: 'text', invalid: true }) },
 ];
 
-function render({ component, props, slot }: Case): Promise<string> {
-  const app = createSSRApp({
-    render: () => h(component, props ?? {}, slot === undefined ? undefined : () => slot),
-  });
-  return renderToString(app);
+function render(testCase: Case): Promise<string> {
+  return renderToString(createSSRApp({ render: testCase.render }));
 }
 
 describe('server rendering', () => {
@@ -33,4 +36,14 @@ describe('server rendering', () => {
       expect(first).not.toMatch(/aria-describedby=""|id=""/);
     });
   }
+
+  it('wires field ids on the server so hydration needs no client-side fixups', async () => {
+    const html = await render(ssrCases[3]!);
+    const [, controlId] = /<label[^>]* for="([^"]+)"/.exec(html) ?? [];
+    expect(controlId).toBeTruthy();
+    expect(html).toContain(`id="${controlId}"`);
+    expect(html).toContain(`aria-describedby="${controlId}-description ${controlId}-error"`);
+    expect(html).toContain('aria-invalid="true"');
+    expect(html).toContain('value="a"');
+  });
 });

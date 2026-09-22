@@ -15,3 +15,8 @@
 .nui-demo[data-nui-theme='dark'] {
   color-scheme: dark;
 }
+.nui-demo--stack {
+  display: grid;
+  align-items: stretch;
+  max-inline-size: 28rem;
+}

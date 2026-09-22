@@ -84,6 +84,19 @@ select {
 .loading-toggle {
   font-size: 0.875rem;
 }
+.form {
+  display: grid;
+  gap: var(--nui-space-4);
+  max-inline-size: 28rem;
+}
+.output {
+  margin-block: var(--nui-space-4) 0;
+  padding: var(--nui-space-3);
+  border-radius: var(--nui-radius);
+  background: var(--nui-surface-muted);
+  font: 0.8125rem / 1.5 var(--nui-font-mono);
+  overflow: auto;
+}
 .swatch {
   padding: 1rem;
 }

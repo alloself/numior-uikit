@@ -23,6 +23,9 @@ export default defineConfig({
             items: [
               { text: 'Кнопка', link: '/components/button' },
               { text: 'Иконки и конфигурация', link: '/components/icon' },
+              { text: 'Поле формы', link: '/components/field' },
+              { text: 'Текстовое поле', link: '/components/input' },
+              { text: 'Многострочное поле', link: '/components/textarea' },
             ],
           },
         ],
@@ -46,6 +49,9 @@ export default defineConfig({
             items: [
               { text: 'Button', link: '/en/components/button' },
               { text: 'Icons and configuration', link: '/en/components/icon' },
+              { text: 'Field', link: '/en/components/field' },
+              { text: 'Input', link: '/en/components/input' },
+              { text: 'Textarea', link: '/en/components/textarea' },
             ],
           },
         ],

@@ -47,6 +47,13 @@ async function importBuild(name, expectedExports) {
 }
 
 await importBuild('primitives', ['provideField', 'useFieldControl', 'provideIcons']);
-const code = await importBuild('vue', ['NuiButton', 'NuiIcon', 'NuiConfigProvider']);
+const code = await importBuild('vue', [
+  'NuiButton',
+  'NuiIcon',
+  'NuiConfigProvider',
+  'NuiField',
+  'NuiInput',
+  'NuiTextarea',
+]);
 assert.doesNotMatch(code, /(?:tiptap|prosemirror|reka-ui|spreadsheet|tailwindcss)/i);
 console.log('Package exports, CSS artifacts and DOM-free ESM imports verified.');

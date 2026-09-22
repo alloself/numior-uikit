@@ -1,0 +1,38 @@
+.nui-field {
+  display: grid;
+  gap: var(--nui-space-1);
+  min-inline-size: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font-family: var(--nui-font);
+  color: var(--nui-text);
+}
+.nui-field__label {
+  font-size: var(--nui-font-size-sm);
+  font-weight: 500;
+  line-height: var(--nui-line-height);
+}
+legend.nui-field__label {
+  padding: 0;
+  margin-block-end: var(--nui-space-1);
+}
+.nui-field__required {
+  margin-inline-start: 0.2em;
+  color: var(--nui-error);
+}
+.nui-field__description,
+.nui-field__error {
+  margin: 0;
+  font-size: var(--nui-font-size-sm);
+  line-height: var(--nui-line-height);
+}
+.nui-field__description {
+  color: var(--nui-text-muted);
+}
+.nui-field__error {
+  color: var(--nui-error);
+}
+.nui-field[data-disabled] > .nui-field__label {
+  opacity: var(--nui-disabled-opacity);
+}

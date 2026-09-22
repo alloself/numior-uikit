@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { NuiButton } from '@numior/vue';
+import FormsSection from './FormsSection.vue';
 
 const theme = ref('system');
 const density = ref('comfortable');
@@ -96,6 +97,8 @@ const accents: Record<string, Record<string, string>> = {
         загрузки</label
       >
     </section>
+
+    <FormsSection />
 
     <section class="panel" aria-labelledby="tokens-title">
       <h2 id="tokens-title">Один акцент — разные способы использования</h2>
