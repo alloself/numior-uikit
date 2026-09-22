@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "files": {},
+  "relations": [
+    {
+      "source": "numior-ui.plan.md",
+      "target": "modular-foundation.adr.md",
+      "type": "depends_on"
+    },
+    {
+      "source": "engineering-quality.rule.md",
+      "target": "modular-foundation.adr.md",
+      "type": "implements"
+    },
+    {
+      "source": "engineering-quality.rule.md",
+      "target": "numior-ui.plan.md",
+      "type": "related"
+    },
+    {
+      "source": "workspace-development.guide.md",
+      "target": "modular-foundation.adr.md",
+      "type": "depends_on"
+    },
+    {
+      "source": "semantic-release.adr.md",
+      "target": "numior-ui.plan.md",
+      "type": "implements"
+    }
+  ]
+}

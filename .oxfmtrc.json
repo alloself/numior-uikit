@@ -1,0 +1,16 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "semi": true,
+  "singleQuote": true,
+  "printWidth": 100,
+  "ignorePatterns": [
+    "pnpm-lock.yaml",
+    ".archcore/**",
+    "**/dist/**",
+    "**/coverage/**",
+    "**/.vitepress/cache/**",
+    "playwright-report/**",
+    "test-results/**",
+    ".release/**"
+  ]
+}

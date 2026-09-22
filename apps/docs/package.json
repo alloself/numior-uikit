@@ -1,0 +1,19 @@
+{
+  "name": "@numior/docs",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vitepress dev",
+    "build": "vitepress build",
+    "preview": "vitepress preview"
+  },
+  "dependencies": {
+    "@numior/tokens": "workspace:*",
+    "@numior/vue": "workspace:*",
+    "vue": "3.5.43"
+  },
+  "devDependencies": {
+    "vitepress": "1.6.4"
+  }
+}

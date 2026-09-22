@@ -1,0 +1,47 @@
+.nui-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-block-size: var(--nui-control-height);
+  padding-block: 0.375rem;
+  padding-inline: var(--nui-control-padding);
+  border: 1px solid transparent;
+  border-radius: var(--nui-radius);
+  background: var(--nui-primary);
+  color: var(--nui-primary-foreground);
+  font-family: var(--nui-font);
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.25rem;
+  cursor: pointer;
+}
+
+.nui-button[data-variant='secondary'] {
+  background: var(--nui-secondary);
+  color: var(--nui-secondary-foreground);
+  border-color: var(--nui-border);
+}
+
+.nui-button[data-variant='ghost'] {
+  background: transparent;
+  color: var(--nui-text);
+}
+
+.nui-button:hover:not(:disabled) {
+  background-image: linear-gradient(#80808018, #80808018);
+}
+
+.nui-button:active:not(:disabled) {
+  background-image: linear-gradient(#80808030, #80808030);
+}
+
+.nui-button:focus-visible {
+  outline: 2px solid var(--nui-focus);
+  outline-offset: 3px;
+}
+
+.nui-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

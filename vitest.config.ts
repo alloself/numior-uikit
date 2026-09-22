@@ -1,0 +1,12 @@
+import vue from '@vitejs/plugin-vue';
+import { defineConfig } from 'vitest/config';
+
+export default defineConfig({
+  plugins: [vue()],
+  resolve: { conditions: ['@numior/source'] },
+  test: {
+    environment: 'jsdom',
+    include: ['packages/**/*.test.ts'],
+    coverage: { provider: 'v8', include: ['packages/vue/src/**/*.vue'] },
+  },
+});

@@ -1,0 +1,25 @@
+{
+  "name": "@numior/utilities",
+  "version": "0.0.0",
+  "private": true,
+  "license": "MIT",
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "exports": {
+    "./utilities.css": {
+      "@numior/source": "./src/utilities.css",
+      "default": "./dist/utilities.css"
+    }
+  },
+  "scripts": {
+    "build": "pnpm -w build:css utilities"
+  },
+  "peerDependencies": {
+    "@numior/tokens": "workspace:*"
+  }
+}

@@ -1,0 +1,11 @@
+packages:
+  - packages/*
+  - apps/*
+
+onlyBuiltDependencies:
+  - esbuild
+
+# Vue's SFC compiler needs the TypeScript JS compiler API, including ts.sys.
+# Prevent optional peer auto-installation from selecting the native TS 7 package.
+overrides:
+  typescript: 5.9.3

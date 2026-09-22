@@ -1,0 +1,95 @@
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  font-family: var(--nui-font);
+  background: var(--nui-surface);
+  color: var(--nui-text);
+}
+a {
+  color: inherit;
+  text-underline-offset: 0.2em;
+}
+.workspace {
+  min-block-size: 100dvh;
+  padding: clamp(1.25rem, 5vw, 4rem);
+  background: var(--nui-surface);
+  color: var(--nui-text);
+}
+.workspace > * {
+  max-inline-size: 64rem;
+  margin-inline: auto;
+}
+.intro {
+  padding-block: 1rem 2.5rem;
+}
+.eyebrow {
+  color: var(--nui-text-muted);
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+}
+h1 {
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  letter-spacing: -0.045em;
+  line-height: 1.1;
+  margin-block: 1rem;
+}
+h2 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-block: 0 1.25rem;
+}
+.description {
+  color: var(--nui-text-muted);
+  max-inline-size: 36rem;
+}
+.panel {
+  border: 1px solid var(--nui-border);
+  border-radius: calc(var(--nui-radius) * 1.5);
+  padding: 1.5rem;
+  margin-block-end: 1rem;
+}
+.settings {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: 1rem;
+}
+.settings label {
+  display: grid;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+}
+select {
+  min-block-size: 2.5rem;
+  border: 1px solid var(--nui-border);
+  border-radius: var(--nui-radius);
+  padding-inline: 0.75rem;
+  font: inherit;
+  color: var(--nui-text);
+  background: var(--nui-surface);
+}
+.section-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.tag {
+  font-size: 0.75rem;
+  color: var(--nui-text-muted);
+}
+.loading-toggle {
+  font-size: 0.875rem;
+}
+.swatch {
+  padding: 1rem;
+}
+.nested-theme {
+  background: var(--nui-surface);
+  color: var(--nui-text);
+}
+footer {
+  padding-block: 1.5rem;
+  font-size: 0.875rem;
+  color: var(--nui-text-muted);
+}

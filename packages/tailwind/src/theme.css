@@ -1,0 +1,22 @@
+/* Import after tailwindcss and @numior/tokens/theme.css in a Tailwind 4 consumer. */
+@theme inline {
+  --color-surface: var(--nui-surface);
+  --color-surface-muted: var(--nui-surface-muted);
+  --color-foreground: var(--nui-text);
+  --color-muted-foreground: var(--nui-text-muted);
+  --color-border: var(--nui-border);
+  --color-primary: var(--nui-primary);
+  --color-primary-foreground: var(--nui-primary-foreground);
+  --color-secondary: var(--nui-secondary);
+  --color-secondary-foreground: var(--nui-secondary-foreground);
+  --color-success: var(--nui-success);
+  --color-success-foreground: var(--nui-success-foreground);
+  --color-warning: var(--nui-warning);
+  --color-warning-foreground: var(--nui-warning-foreground);
+  --color-error: var(--nui-error);
+  --color-error-foreground: var(--nui-error-foreground);
+  --color-info: var(--nui-info);
+  --color-info-foreground: var(--nui-info-foreground);
+  --color-ring: var(--nui-focus);
+  --radius-nui: var(--nui-radius);
+}

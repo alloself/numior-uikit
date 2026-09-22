@@ -1,0 +1,22 @@
+{
+  "name": "@numior/playground",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "vite build",
+    "preview": "vite preview --host 127.0.0.1 --port 4173 --strictPort"
+  },
+  "dependencies": {
+    "@numior/tailwind": "workspace:*",
+    "@numior/tokens": "workspace:*",
+    "@numior/utilities": "workspace:*",
+    "@numior/vue": "workspace:*",
+    "vue": "3.5.43"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.0.0",
+    "tailwindcss": "^4.0.0"
+  }
+}

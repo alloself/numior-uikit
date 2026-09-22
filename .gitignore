@@ -1,0 +1,15 @@
+node_modules/
+dist/
+coverage/
+.fallow/
+.pnpm-store/
+.cache/
+*.tsbuildinfo
+apps/docs/.vitepress/cache/
+playwright-report/
+test-results/
+.release/
+.env
+.env.*
+!.env.example
+.DS_Store

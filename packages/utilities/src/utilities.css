@@ -1,0 +1,27 @@
+.nui-flex {
+  display: flex;
+}
+.nui-wrap {
+  flex-wrap: wrap;
+}
+.nui-items-center {
+  align-items: center;
+}
+.nui-gap-2 {
+  gap: 0.5rem;
+}
+.nui-bg-surface {
+  background-color: var(--nui-surface);
+}
+.nui-bg-primary {
+  background-color: var(--nui-primary);
+}
+.nui-text-primary-foreground {
+  color: var(--nui-primary-foreground);
+}
+.nui-text-muted {
+  color: var(--nui-text-muted);
+}
+.nui-rounded {
+  border-radius: var(--nui-radius);
+}

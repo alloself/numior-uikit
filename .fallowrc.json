@@ -1,0 +1,90 @@
+{
+  "$schema": "./node_modules/fallow/schema.json",
+  "entry": ["packages/vue/src/index.ts", "apps/playground/src/tailwind.css"],
+  "includeEntryExports": false,
+  "ignorePatterns": [
+    "**/dist/**",
+    "**/coverage/**",
+    "**/.vitepress/cache/**",
+    "playwright-report/**",
+    "test-results/**",
+    ".release/**"
+  ],
+  "rules": {
+    "unused-files": "error",
+    "unused-exports": "error",
+    "unused-types": "error",
+    "unused-dependencies": "error",
+    "unused-dev-dependencies": "error",
+    "unlisted-dependencies": "error",
+    "unresolved-imports": "error",
+    "circular-dependencies": "error",
+    "boundary-violation": "error"
+  },
+  "boundaries": {
+    "zones": [
+      {
+        "name": "tokens",
+        "patterns": ["packages/tokens/**"]
+      },
+      {
+        "name": "utilities",
+        "patterns": ["packages/utilities/**"]
+      },
+      {
+        "name": "tailwind",
+        "patterns": ["packages/tailwind/**"]
+      },
+      {
+        "name": "vue",
+        "patterns": ["packages/vue/**"]
+      },
+      {
+        "name": "apps",
+        "patterns": ["apps/**"]
+      },
+      {
+        "name": "tests",
+        "patterns": ["tests/**"]
+      }
+    ],
+    "rules": [
+      {
+        "from": "tokens",
+        "allow": []
+      },
+      {
+        "from": "utilities",
+        "allow": ["tokens"]
+      },
+      {
+        "from": "tailwind",
+        "allow": ["tokens"]
+      },
+      {
+        "from": "vue",
+        "allow": ["tokens", "vue"]
+      },
+      {
+        "from": "apps",
+        "allow": ["tokens", "utilities", "tailwind", "vue", "apps"]
+      },
+      {
+        "from": "tests",
+        "allow": ["tokens", "utilities", "tailwind", "vue", "apps", "tests"]
+      }
+    ]
+  },
+  "duplicates": {
+    "minTokens": 100
+  },
+  "health": {
+    "maxCyclomatic": 15,
+    "maxCognitive": 15,
+    "maxUnitSize": 80
+  },
+  "resolve": {
+    "conditions": ["@numior/source"]
+  },
+  "ignoreDependencies": ["conventional-changelog-conventionalcommits"]
+}
