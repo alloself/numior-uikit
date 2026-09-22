@@ -1,0 +1,151 @@
+/* Tone picks the color tokens, variant the shape, size the step in the density scale. */
+.nui-button {
+  --_tone: var(--nui-primary);
+  --_tone-foreground: var(--nui-primary-foreground);
+  --_tone-soft: var(--nui-primary-soft);
+  --_tone-soft-foreground: var(--nui-primary-soft-foreground);
+  --_height: var(--nui-control-height-md);
+  --_padding: var(--nui-control-padding-md);
+  --_font-size: var(--nui-control-font-size-md);
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--nui-space-2);
+  min-block-size: var(--_height);
+  padding-block: 0.375rem;
+  padding-inline: var(--_padding);
+  border: 1px solid transparent;
+  border-radius: var(--nui-radius);
+  background: var(--_tone);
+  color: var(--_tone-foreground);
+  font-family: var(--nui-font);
+  font-size: var(--_font-size);
+  font-weight: 500;
+  line-height: var(--nui-line-height-tight);
+  cursor: pointer;
+  transition:
+    background-color var(--nui-duration-fast) var(--nui-easing),
+    border-color var(--nui-duration-fast) var(--nui-easing),
+    color var(--nui-duration-fast) var(--nui-easing);
+}
+
+.nui-button[data-tone='secondary'] {
+  --_tone: var(--nui-secondary);
+  --_tone-foreground: var(--nui-secondary-foreground);
+  --_tone-soft: var(--nui-secondary-soft);
+  --_tone-soft-foreground: var(--nui-secondary-soft-foreground);
+}
+.nui-button[data-tone='success'] {
+  --_tone: var(--nui-success);
+  --_tone-foreground: var(--nui-success-foreground);
+  --_tone-soft: var(--nui-success-soft);
+  --_tone-soft-foreground: var(--nui-success-soft-foreground);
+}
+.nui-button[data-tone='warning'] {
+  --_tone: var(--nui-warning);
+  --_tone-foreground: var(--nui-warning-foreground);
+  --_tone-soft: var(--nui-warning-soft);
+  --_tone-soft-foreground: var(--nui-warning-soft-foreground);
+}
+.nui-button[data-tone='error'] {
+  --_tone: var(--nui-error);
+  --_tone-foreground: var(--nui-error-foreground);
+  --_tone-soft: var(--nui-error-soft);
+  --_tone-soft-foreground: var(--nui-error-soft-foreground);
+}
+.nui-button[data-tone='info'] {
+  --_tone: var(--nui-info);
+  --_tone-foreground: var(--nui-info-foreground);
+  --_tone-soft: var(--nui-info-soft);
+  --_tone-soft-foreground: var(--nui-info-soft-foreground);
+}
+.nui-button[data-tone='neutral'] {
+  --_tone: var(--nui-neutral);
+  --_tone-foreground: var(--nui-neutral-foreground);
+  --_tone-soft: var(--nui-neutral-soft);
+  --_tone-soft-foreground: var(--nui-neutral-soft-foreground);
+}
+
+.nui-button[data-size='sm'] {
+  --_height: var(--nui-control-height-sm);
+  --_padding: var(--nui-control-padding-sm);
+  --_font-size: var(--nui-control-font-size-sm);
+}
+.nui-button[data-size='lg'] {
+  --_height: var(--nui-control-height-lg);
+  --_padding: var(--nui-control-padding-lg);
+  --_font-size: var(--nui-control-font-size-lg);
+}
+
+.nui-button[data-variant='soft'] {
+  background: var(--_tone-soft);
+  color: var(--_tone-soft-foreground);
+}
+.nui-button[data-variant='outline'] {
+  background: transparent;
+  color: var(--_tone-soft-foreground);
+  border-color: color-mix(in oklab, var(--_tone) 50%, var(--nui-border));
+}
+.nui-button[data-variant='ghost'] {
+  background: transparent;
+  color: var(--_tone-soft-foreground);
+}
+.nui-button[data-variant='link'] {
+  min-block-size: auto;
+  padding: 0;
+  border-radius: var(--nui-radius-sm);
+  background: transparent;
+  color: var(--_tone-soft-foreground);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.nui-button:hover:not(:disabled) {
+  background: color-mix(in oklab, var(--_tone), var(--nui-text) 10%);
+}
+.nui-button:active:not(:disabled) {
+  background: color-mix(in oklab, var(--_tone), var(--nui-text) 16%);
+}
+.nui-button[data-variant='soft']:hover:not(:disabled) {
+  background: color-mix(in oklab, var(--_tone-soft), var(--_tone) 10%);
+}
+.nui-button[data-variant='soft']:active:not(:disabled) {
+  background: color-mix(in oklab, var(--_tone-soft), var(--_tone) 16%);
+}
+.nui-button[data-variant='outline']:hover:not(:disabled),
+.nui-button[data-variant='ghost']:hover:not(:disabled) {
+  background: var(--_tone-soft);
+}
+.nui-button[data-variant='outline']:active:not(:disabled),
+.nui-button[data-variant='ghost']:active:not(:disabled) {
+  background: color-mix(in oklab, var(--_tone-soft), var(--_tone) 10%);
+}
+.nui-button[data-variant='link']:hover:not(:disabled),
+.nui-button[data-variant='link']:active:not(:disabled) {
+  background: transparent;
+  text-decoration-thickness: 2px;
+}
+
+.nui-button:focus-visible {
+  outline: var(--nui-focus-ring-width) solid var(--nui-focus);
+  outline-offset: var(--nui-focus-ring-offset);
+}
+.nui-button:disabled {
+  opacity: var(--nui-disabled-opacity);
+  cursor: not-allowed;
+}
+
+.nui-button__spinner {
+  animation: nui-spin 0.8s linear infinite;
+}
+@keyframes nui-spin {
+  to {
+    transform: rotate(1turn);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .nui-button__spinner {
+    animation-duration: 1.6s;
+  }
+}

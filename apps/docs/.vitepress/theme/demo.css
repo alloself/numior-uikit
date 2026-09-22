@@ -1,0 +1,17 @@
+/* Live examples render inside an explicit Numior scope, independent of the VitePress theme. */
+.nui-demo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--nui-space-2);
+  margin-block: var(--nui-space-4);
+  padding: var(--nui-space-4);
+  border: 1px solid var(--nui-border);
+  border-radius: var(--nui-radius-lg);
+  background: var(--nui-surface);
+  color: var(--nui-text);
+  font-family: var(--nui-font);
+}
+.nui-demo[data-nui-theme='dark'] {
+  color-scheme: dark;
+}

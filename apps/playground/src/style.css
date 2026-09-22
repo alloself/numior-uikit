@@ -78,6 +78,9 @@ select {
   font-size: 0.75rem;
   color: var(--nui-text-muted);
 }
+.tones {
+  margin-block-start: var(--nui-space-3);
+}
 .loading-toggle {
   font-size: 0.875rem;
 }

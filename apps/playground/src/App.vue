@@ -73,16 +73,27 @@ const accents: Record<string, Record<string, string>> = {
       </div>
       <div class="nui-flex nui-wrap nui-items-center nui-gap-2">
         <NuiButton data-testid="primary" @click="count++">Добавить</NuiButton>
-        <NuiButton variant="secondary">Вторичная</NuiButton>
+        <NuiButton tone="secondary">Вторичная</NuiButton>
+        <NuiButton variant="soft">Мягкая</NuiButton>
+        <NuiButton variant="outline">Контурная</NuiButton>
         <NuiButton variant="ghost">Без фона</NuiButton>
+        <NuiButton variant="link">Ссылка</NuiButton>
         <NuiButton disabled>Недоступна</NuiButton>
         <NuiButton :loading="loading" data-testid="loading" @click="loading = true"
           >Сохранить</NuiButton
         >
       </div>
+      <div class="nui-flex nui-wrap nui-items-center nui-gap-2 tones">
+        <NuiButton tone="success" size="sm">Успех</NuiButton>
+        <NuiButton tone="warning" variant="soft">Внимание</NuiButton>
+        <NuiButton tone="error" variant="outline">Удалить</NuiButton>
+        <NuiButton tone="info" variant="ghost">Инфо</NuiButton>
+        <NuiButton tone="neutral" size="lg" data-testid="large">Нейтральная</NuiButton>
+      </div>
       <p role="status">Нажатий: {{ count }}</p>
       <label class="loading-toggle"
-        ><input v-model="loading" type="checkbox" /> Состояние загрузки</label
+        ><input v-model="loading" type="checkbox" data-testid="loading-toggle" /> Состояние
+        загрузки</label
       >
     </section>
 

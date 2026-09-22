@@ -34,11 +34,12 @@ import '@numior/vue/styles.css';
   <NuiButton>Save</NuiButton>
 </div>
 
-`variant`: `primary | secondary | ghost`. `type` defaults to `button`; `submit`
-and `reset` are supported. `disabled` prevents activation. `loading` disables the
-button and sets `aria-busy`; the slot provides its label and indicator. Native
-attributes, events and classes reach the button. Controls without visible text
-need an accessible name, such as `aria-label`.
+Components are styled along two axes: `variant` picks the shape and `tone` the
+semantic role, while `size` picks a step inside the current density. Details and
+live examples live in the Components section, starting with the
+[button](/en/components/button). Native attributes, events and classes reach the
+root element. Controls without visible text need an accessible name, such as
+`aria-label`.
 
 ## Current verification
 

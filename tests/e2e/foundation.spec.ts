@@ -20,7 +20,7 @@ test('standalone button activates by keyboard and loading blocks activation', as
   await page.getByTestId('loading').click();
   await expect(page.getByTestId('loading')).toBeDisabled();
   await expect(page.getByTestId('loading')).toHaveAttribute('aria-busy', 'true');
-  await page.getByRole('checkbox').uncheck();
+  await page.getByTestId('loading-toggle').uncheck();
   await expect(page.getByTestId('loading')).toBeEnabled();
 });
 
@@ -37,8 +37,10 @@ test('theme, scoped overrides, density and RTL work without Tailwind', async ({ 
   await expectRgb(primary, 'background-color', [4, 120, 87]);
   await expectRgb(page.getByTestId('utility'), 'background-color', [4, 120, 87]);
   await expectRgb(page.getByTestId('nested'), 'background-color', [165, 180, 252]);
+  await expect(page.getByTestId('large')).toHaveCSS('min-block-size', '48px');
   await page.getByTestId('density').selectOption('compact');
   await expect(primary).toHaveCSS('min-block-size', '32px');
+  await expect(page.getByTestId('large')).toHaveCSS('min-block-size', '40px');
   await page.getByTestId('direction').selectOption('rtl');
   await expect(workspace).toHaveCSS('direction', 'rtl');
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(
@@ -59,6 +61,8 @@ test('Tailwind utilities consume the same runtime tokens as native CSS', async (
 test('light and dark playground have no automatically detectable WCAG AA violations', async ({
   page,
 }) => {
+  // Reduced motion zeroes the motion tokens, so axe never samples colors mid-transition.
+  await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto('/');
   for (const theme of ['light', 'dark']) {
     await page.getByTestId('theme').selectOption(theme);

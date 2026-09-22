@@ -18,6 +18,13 @@ export default defineConfig({
               { text: 'Темизация', link: '/theming' },
             ],
           },
+          {
+            text: 'Компоненты',
+            items: [
+              { text: 'Кнопка', link: '/components/button' },
+              { text: 'Иконки и конфигурация', link: '/components/icon' },
+            ],
+          },
         ],
       },
     },
@@ -32,6 +39,13 @@ export default defineConfig({
             items: [
               { text: 'Getting started', link: '/en/guide' },
               { text: 'Theming', link: '/en/theming' },
+            ],
+          },
+          {
+            text: 'Components',
+            items: [
+              { text: 'Button', link: '/en/components/button' },
+              { text: 'Icons and configuration', link: '/en/components/icon' },
             ],
           },
         ],

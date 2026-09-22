@@ -19,10 +19,18 @@
     "./styles.css": {
       "@numior/source": "./src/styles.css",
       "default": "./dist/styles.css"
+    },
+    "./styles/*.css": {
+      "@numior/source": "./src/*/*.css",
+      "default": "./dist/styles/*.css"
     }
   },
   "scripts": {
     "build": "vite build && vue-tsc -p tsconfig.build.json"
+  },
+  "dependencies": {
+    "@numior/primitives": "workspace:*",
+    "lucide-vue-next": "1.0.0"
   },
   "devDependencies": {
     "@vue/test-utils": "2.5.1"
