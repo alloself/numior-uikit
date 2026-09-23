@@ -1,0 +1,135 @@
+.nui-toaster {
+  --_inset: var(--nui-space-4);
+  --_width: 22rem;
+  --_gap: var(--nui-space-2);
+
+  position: fixed;
+  inset: auto;
+  inset-block-start: var(--_inset);
+  inset-inline-end: var(--_inset);
+  display: flex;
+  flex-direction: column;
+  gap: var(--_gap);
+  inline-size: min(var(--_width), calc(100vw - 2 * var(--_inset)));
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  overflow: visible;
+  pointer-events: none;
+}
+.nui-toaster--placement-top-start {
+  inset-inline: var(--_inset) auto;
+}
+.nui-toaster--placement-top {
+  inset-inline: 0;
+  margin-inline: auto;
+}
+.nui-toaster--placement-bottom-start,
+.nui-toaster--placement-bottom,
+.nui-toaster--placement-bottom-end {
+  inset-block: auto var(--_inset);
+  flex-direction: column-reverse;
+}
+.nui-toaster--placement-bottom-start {
+  inset-inline: var(--_inset) auto;
+}
+.nui-toaster--placement-bottom {
+  inset-inline: 0;
+  margin-inline: auto;
+}
+.nui-toaster--placement-bottom-start .nui-toast,
+.nui-toaster--placement-bottom .nui-toast,
+.nui-toaster--placement-bottom-end .nui-toast {
+  --_shift: 0 var(--nui-space-3);
+}
+@media (max-width: 40rem) {
+  .nui-toaster {
+    --_inset: var(--nui-space-2);
+    --_width: 100%;
+  }
+}
+
+.nui-toast {
+  --_tone: var(--nui-neutral);
+  --_shift: 0 calc(-1 * var(--nui-space-3));
+
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--nui-space-3);
+  padding: var(--nui-space-3);
+  padding-inline-start: var(--nui-space-4);
+  border: 1px solid var(--nui-border);
+  border-inline-start: 3px solid var(--_tone);
+  border-radius: var(--nui-radius);
+  background: var(--nui-surface-overlay);
+  color: var(--nui-text);
+  font-family: var(--nui-font);
+  font-size: var(--nui-font-size-sm);
+  line-height: var(--nui-line-height);
+  box-shadow: var(--nui-shadow-md);
+  pointer-events: auto;
+  opacity: 1;
+  translate: 0 0;
+  transition:
+    opacity var(--nui-duration-normal) var(--nui-easing),
+    translate var(--nui-duration-normal) var(--nui-easing),
+    visibility var(--nui-duration-normal);
+}
+@starting-style {
+  .nui-toast {
+    opacity: 0;
+    translate: var(--_shift);
+  }
+}
+.nui-toast--leaving {
+  opacity: 0;
+  translate: var(--_shift);
+  visibility: hidden;
+  pointer-events: none;
+}
+.nui-toast--tone-info {
+  --_tone: var(--nui-info);
+}
+.nui-toast--tone-success {
+  --_tone: var(--nui-success);
+}
+.nui-toast--tone-warning {
+  --_tone: var(--nui-warning);
+}
+.nui-toast--tone-error {
+  --_tone: var(--nui-error);
+}
+.nui-toast:focus-visible {
+  outline: var(--nui-focus-ring-width) solid var(--nui-focus);
+  outline-offset: var(--nui-focus-ring-offset);
+}
+.nui-toast__icon {
+  margin-block-start: 0.125rem;
+  color: var(--_tone);
+}
+.nui-toast__body {
+  display: grid;
+  flex: 1 1 auto;
+  gap: var(--nui-space-1);
+  min-inline-size: 0;
+}
+.nui-toast__title {
+  margin: 0;
+  font-weight: 600;
+}
+.nui-toast__description {
+  margin: 0;
+  color: var(--nui-text-muted);
+}
+.nui-toast__action {
+  flex: none;
+  align-self: center;
+}
+.nui-toast__close {
+  flex: none;
+  margin-block-start: calc(-1 * var(--nui-space-1));
+  margin-inline-end: calc(-1 * var(--nui-space-1));
+}

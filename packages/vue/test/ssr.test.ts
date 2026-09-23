@@ -15,6 +15,8 @@ import {
   NuiRadioGroup,
   NuiSwitch,
   NuiTextarea,
+  NuiToast,
+  NuiToaster,
   NuiTooltip,
   type NuiPopoverTriggerSlot,
   type NuiTooltipTriggerSlot,
@@ -73,6 +75,23 @@ const scenarios: Scenario[] = [
   },
   { name: 'NuiDrawer', render: () => h(NuiDrawer, { open: true, side: 'start' }, () => 'Body') },
   { name: 'NuiPopover', render: renderPopover },
+  { name: 'NuiToaster', render: () => h(NuiToaster, { label: 'Notifications' }) },
+  {
+    name: 'NuiToast',
+    render: () =>
+      h(NuiToast, {
+        toast: {
+          id: 'saved',
+          title: 'Failed',
+          description: undefined,
+          tone: 'error',
+          duration: 0,
+          action: undefined,
+          dismissible: true,
+          leaving: false,
+        },
+      }),
+  },
   {
     name: 'NuiTooltip',
     render: () =>
@@ -137,6 +156,13 @@ describe('server rendering', () => {
     expect(tooltip).toContain('aria-describedby="hint"');
     expect(tooltip).toContain('role="tooltip"');
     expect(tooltip).toContain('popover="manual"');
+  });
+
+  it('renders the toaster as an empty manual live region', async () => {
+    const html = await renderMarkup(() => h(NuiToaster, { label: 'Notifications' }));
+    expect(html).toContain('popover="manual"');
+    expect(html).toContain('aria-live="polite"');
+    expect(html).not.toContain('nui-toast ');
   });
 
   it('renders lazy default icons on the server', async () => {

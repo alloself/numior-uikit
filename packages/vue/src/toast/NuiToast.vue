@@ -1,0 +1,72 @@
+<template>
+  <div
+    ref="root"
+    class="nui-toast"
+    :class="[`nui-toast--tone-${toast.tone}`, { 'nui-toast--leaving': toast.leaving }]"
+    :role="toast.tone === 'error' ? 'alert' : undefined"
+    tabindex="-1"
+    @pointerenter="store.pause(toast.id)"
+    @pointerleave="store.resume(toast.id)"
+    @focusin="store.pause(toast.id)"
+    @focusout="store.resume(toast.id)"
+    @keydown.escape="onEscape"
+  >
+    <NuiIcon v-if="icon" :alias="icon" class="nui-toast__icon" />
+    <div class="nui-toast__body">
+      <p class="nui-toast__title">{{ toast.title }}</p>
+      <p v-if="toast.description" class="nui-toast__description">{{ toast.description }}</p>
+    </div>
+    <NuiButton
+      v-if="toast.action"
+      variant="link"
+      size="sm"
+      class="nui-toast__action"
+      @click="runAction"
+    >
+      {{ toast.action.label }}
+    </NuiButton>
+    <NuiButton
+      v-if="toast.dismissible"
+      variant="ghost"
+      tone="neutral"
+      size="sm"
+      class="nui-toast__close"
+      :aria-label="closeLabel"
+      @click="dismiss"
+    >
+      <NuiIcon alias="x" />
+    </NuiButton>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { computed, useTemplateRef } from 'vue';
+import { useToastStore } from '@numior/primitives';
+import NuiButton from '../button/NuiButton.vue';
+import NuiIcon from '../icon/NuiIcon.vue';
+import { toneIcon } from '../shared/tone-icon';
+import { focusNeighbour } from './focus-neighbour';
+import type { NuiToastProps } from './toast.types';
+
+const { toast, closeLabel = 'Close' } = defineProps<NuiToastProps>();
+const store = useToastStore();
+const rootElement = useTemplateRef<HTMLElement>('root');
+const icon = computed(() => toneIcon(toast.tone));
+
+const dismiss = (): void => {
+  const element = rootElement.value;
+  if (element && element.contains(document.activeElement)) {
+    focusNeighbour(element);
+  }
+  store.dismiss(toast.id);
+};
+const runAction = (): void => {
+  toast.action?.onClick();
+  dismiss();
+};
+const onEscape = (): void => {
+  if (toast.dismissible) {
+    dismiss();
+  }
+};
+</script>

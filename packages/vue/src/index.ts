@@ -46,11 +46,20 @@ export type {
   NuiTooltipTriggerSlot,
 } from './tooltip/tooltip.types';
 export type { NuiTriggerRef } from './shared/trigger-ref';
+export { default as NuiToaster } from './toast/NuiToaster.vue';
+export { default as NuiToast } from './toast/NuiToast.vue';
+export type {
+  NuiToastProps,
+  NuiToasterPlacement,
+  NuiToasterProps,
+  NuiToasterSlot,
+} from './toast/toast.types';
 export type { NuiFieldControlProps, NuiSize, NuiTone } from './shared/types';
 export {
   createNuiConfig,
   lazyIcon,
   provideNuiConfig,
+  createToastStore,
   useColorScheme,
   useDialog,
   useField,
@@ -59,6 +68,8 @@ export {
   useIcons,
   usePopover,
   useRadioGroup,
+  useToast,
+  useToastStore,
 } from '@numior/primitives';
 export type {
   ColorScheme,
@@ -70,4 +81,12 @@ export type {
   NuiConfigOptions,
   PopoverMode,
   ResolvedColorScheme,
+  Toast,
+  ToastAction,
+  ToastMessageOptions,
+  ToastOptions,
+  ToastService,
+  ToastStore,
+  ToastStoreOptions,
+  ToastTone,
 } from '@numior/primitives';
