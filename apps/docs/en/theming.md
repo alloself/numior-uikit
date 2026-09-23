@@ -41,7 +41,7 @@ If you override `--nui-primary` on a plain element, the inherited
 | Space      | `--nui-space-1` … `--nui-space-6`, `--nui-space-8` (0.25rem steps)                                                                                                                     |
 | Typography | `--nui-font`, `--nui-font-mono`, `--nui-font-size-xs/sm/md/lg`, `--nui-line-height`, `--nui-line-height-tight`                                                                         |
 | Shadows    | `--nui-shadow-sm`, `--nui-shadow-md`, `--nui-shadow-lg`                                                                                                                                |
-| Motion     | `--nui-duration-fast`, `--nui-duration-normal`, `--nui-easing`; under `prefers-reduced-motion: reduce` durations become `0ms`                                                          |
+| Motion     | `--nui-duration-fast`, `--nui-duration-normal`, `--nui-duration-slow`, `--nui-easing`; under `prefers-reduced-motion: reduce` durations become `0ms`                                   |
 | Layers     | `--nui-z-dropdown`, `--nui-z-overlay`, `--nui-z-toast`                                                                                                                                 |
 | Controls   | `--nui-control-height-sm/md/lg`, `--nui-control-padding-sm/md/lg`, `--nui-control-font-size-sm/md/lg`; `--nui-control-height`, `--nui-control-padding`, `--nui-control-font-size` = md |
 

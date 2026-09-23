@@ -78,6 +78,11 @@
   --_font-size: var(--nui-control-font-size-lg);
 }
 
+.nui-button--icon-only {
+  inline-size: var(--_height);
+  padding-inline: 0;
+}
+
 .nui-button--variant-soft {
   background: var(--_tone-soft);
   color: var(--_tone-soft-foreground);

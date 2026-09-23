@@ -56,6 +56,23 @@ import '@numior/vue/styles/button.css';
   <NuiButton loading>Сохранение</NuiButton>
 </div>
 
+## Только иконка
+
+`icon-only` делает кнопку квадратной: ширина равна высоте ступени, горизонтальные отступы
+убираются, содержимое центрируется. Такой кнопке обязателен `aria-label`.
+
+<div class="nui-demo" data-nui-theme="light">
+  <NuiButton icon-only aria-label="Закрыть"><NuiIcon alias="x" /></NuiButton>
+  <NuiButton icon-only variant="outline" tone="neutral" size="sm" aria-label="Закрыть"><NuiIcon alias="x" /></NuiButton>
+  <NuiButton icon-only variant="ghost" tone="neutral" size="lg" aria-label="Закрыть"><NuiIcon alias="x" /></NuiButton>
+</div>
+
+```vue
+<NuiButton icon-only variant="ghost" tone="neutral" aria-label="Закрыть">
+  <NuiIcon alias="x" />
+</NuiButton>
+```
+
 ## Доступность
 
 Компонент остаётся нативной кнопкой: клавиатура, фокус и screen reader работают
@@ -74,11 +91,12 @@ import '@numior/vue/styles/button.css';
 | `type`     | `'button' \| 'submit' \| 'reset'`                                                      | `'button'`   |
 | `disabled` | `boolean`                                                                              | `false`      |
 | `loading`  | `boolean`                                                                              | `false`      |
+| `iconOnly` | `boolean`                                                                              | `false`      |
 
 Слот по умолчанию — содержимое кнопки. Нативные атрибуты, классы и обработчики
 событий передаются элементу `<button>`. Оформление построено на BEM: блок `nui-button`,
 элементы `nui-button__content`, `nui-button__loader`, `nui-button__spinner`,
-модификаторы `nui-button--variant-soft`, `nui-button--tone-error`, `nui-button--size-sm`
-и `nui-button--loading`. Модификаторы задают приватные CSS-переменные (`--_tone`,
+модификаторы `nui-button--variant-soft`, `nui-button--tone-error`, `nui-button--size-sm`,
+`nui-button--icon-only` и `nui-button--loading`. Модификаторы задают приватные CSS-переменные (`--_tone`,
 `--_height`), которые читают остальные правила, поэтому свой вариант — это ещё один
 класс-модификатор.

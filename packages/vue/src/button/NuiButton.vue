@@ -5,7 +5,7 @@
       `nui-button--variant-${variant}`,
       `nui-button--tone-${tone}`,
       `nui-button--size-${size}`,
-      { 'nui-button--loading': loading },
+      { 'nui-button--loading': loading, 'nui-button--icon-only': iconOnly },
     ]"
     :type="type"
     :disabled="disabled || loading"
@@ -31,5 +31,6 @@ const {
   type = 'button',
   disabled = false,
   loading = false,
+  iconOnly = false,
 } = defineProps<NuiButtonProps>();
 </script>

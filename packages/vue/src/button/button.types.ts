@@ -9,4 +9,5 @@ export interface NuiButtonProps {
   type?: 'button' | 'submit' | 'reset' | undefined;
   disabled?: boolean | undefined;
   loading?: boolean | undefined;
+  iconOnly?: boolean | undefined;
 }

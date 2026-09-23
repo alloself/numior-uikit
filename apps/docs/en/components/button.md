@@ -58,6 +58,23 @@ are available.
   <NuiButton loading>Saving</NuiButton>
 </div>
 
+## Icon only
+
+`icon-only` makes the button square: the width equals the step height, horizontal padding
+is removed and the content is centred. Such a button needs an `aria-label`.
+
+<div class="nui-demo" data-nui-theme="light">
+  <NuiButton icon-only aria-label="Close"><NuiIcon alias="x" /></NuiButton>
+  <NuiButton icon-only variant="outline" tone="neutral" size="sm" aria-label="Close"><NuiIcon alias="x" /></NuiButton>
+  <NuiButton icon-only variant="ghost" tone="neutral" size="lg" aria-label="Close"><NuiIcon alias="x" /></NuiButton>
+</div>
+
+```vue
+<NuiButton icon-only variant="ghost" tone="neutral" aria-label="Close">
+  <NuiIcon alias="x" />
+</NuiButton>
+```
+
 ## Accessibility
 
 The component stays a native button: keyboard, focus and screen readers work without
@@ -76,10 +93,11 @@ scan in the playground; that does not replace a manual review.
 | `type`     | `'button' \| 'submit' \| 'reset'`                                                      | `'button'`  |
 | `disabled` | `boolean`                                                                              | `false`     |
 | `loading`  | `boolean`                                                                              | `false`     |
+| `iconOnly` | `boolean`                                                                              | `false`     |
 
 The default slot is the button content. Native attributes, classes and event listeners
 reach the `<button>` element. Styling follows BEM: block `nui-button`, elements
 `nui-button__content`, `nui-button__loader`, `nui-button__spinner`, modifiers
-`nui-button--variant-soft`, `nui-button--tone-error`, `nui-button--size-sm` and
-`nui-button--loading`. Modifiers set private CSS variables (`--_tone`, `--_height`)
+`nui-button--variant-soft`, `nui-button--tone-error`, `nui-button--size-sm`,
+`nui-button--icon-only` and `nui-button--loading`. Modifiers set private CSS variables (`--_tone`, `--_height`)
 that the remaining rules read, so a custom variant is just another modifier class.

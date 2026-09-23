@@ -76,6 +76,7 @@
 
   --nui-duration-fast: 120ms;
   --nui-duration-normal: 200ms;
+  --nui-duration-slow: 320ms;
   --nui-easing: cubic-bezier(0.2, 0, 0, 1);
 
   --nui-z-dropdown: 1000;
@@ -132,5 +133,6 @@
   [data-nui-theme] {
     --nui-duration-fast: 0ms;
     --nui-duration-normal: 0ms;
+    --nui-duration-slow: 0ms;
   }
 }

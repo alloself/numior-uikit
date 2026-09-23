@@ -50,4 +50,13 @@ describe('NuiButton', () => {
     expect(custom.hasModifier('size-sm')).toBe(true);
     expect(custom.hasModifier('variant-solid')).toBe(false);
   });
+
+  it('marks icon-only buttons so the stylesheet can square them', () => {
+    const icon = ButtonDriver.mount({
+      props: { iconOnly: true },
+      attrs: { 'aria-label': 'Close' },
+    });
+    expect(icon.hasModifier('icon-only')).toBe(true);
+    expect(ButtonDriver.mount().hasModifier('icon-only')).toBe(false);
+  });
 });

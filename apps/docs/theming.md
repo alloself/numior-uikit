@@ -41,7 +41,7 @@
 | Отступы     | `--nui-space-1` … `--nui-space-6`, `--nui-space-8` (шаг 0.25rem)                                                                                                                       |
 | Типографика | `--nui-font`, `--nui-font-mono`, `--nui-font-size-xs/sm/md/lg`, `--nui-line-height`, `--nui-line-height-tight`                                                                         |
 | Тени        | `--nui-shadow-sm`, `--nui-shadow-md`, `--nui-shadow-lg`                                                                                                                                |
-| Движение    | `--nui-duration-fast`, `--nui-duration-normal`, `--nui-easing`; при `prefers-reduced-motion: reduce` длительности равны `0ms`                                                          |
+| Движение    | `--nui-duration-fast`, `--nui-duration-normal`, `--nui-duration-slow`, `--nui-easing`; при `prefers-reduced-motion: reduce` длительности равны `0ms`                                   |
 | Слои        | `--nui-z-dropdown`, `--nui-z-overlay`, `--nui-z-toast`                                                                                                                                 |
 | Контролы    | `--nui-control-height-sm/md/lg`, `--nui-control-padding-sm/md/lg`, `--nui-control-font-size-sm/md/lg`; `--nui-control-height`, `--nui-control-padding`, `--nui-control-font-size` = md |
 

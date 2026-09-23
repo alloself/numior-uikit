@@ -65,8 +65,14 @@ const {
   for states. No `data-*` attributes for variants or states.
 - Modifiers set private variables (`--_height`, `--_tone`); base rules read them. Native
   state comes from pseudo-classes (`:checked`, `:disabled`, `:focus-visible`).
-- Every state change has `transition`/`animation` via `--nui-duration-fast|normal` and
-  `--nui-easing`; infinite animations only slow down under reduced motion.
+- Every state change has `transition`/`animation` via `--nui-duration-fast|normal|slow` and
+  `--nui-easing` (`slow` for layout moves such as stacks and layers); infinite animations
+  only slow down under reduced motion, and a sweep (skeleton, indeterminate progress)
+  leaves the box fully before it re-enters so the loop has no visible seam.
+- A button that shows only an icon is `<NuiButton icon-only aria-label="…">`: square, no
+  horizontal padding. Close buttons in cards align their glyph with the first text line
+  (`margin-block-start: calc((font-size * line-height - var(--_height)) / 2)`) and with the
+  padding edge (negative `margin-inline-end`).
 - Focus ring: `outline: var(--nui-focus-ring-width) solid var(--nui-focus); outline-offset:
 var(--nui-focus-ring-offset)`. Disabled: `opacity: var(--nui-disabled-opacity)`.
 - Logical properties only (`inline-size`, `inset-inline-start`, `padding-inline`).
