@@ -11,13 +11,14 @@ export type NuiToasterPlacement =
 export interface NuiToasterProps {
   id?: string | undefined;
   placement?: NuiToasterPlacement | undefined;
+  expand?: boolean | undefined;
   label?: string | undefined;
   closeLabel?: string | undefined;
 }
 
 export interface NuiToasterSlot {
-  readonly toasts: readonly Toast[];
-  dismiss(id: string): void;
+  readonly toast: Toast;
+  dismiss(): void;
 }
 
 export interface NuiToastProps {

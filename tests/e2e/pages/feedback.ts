@@ -1,5 +1,12 @@
 import type { Locator, Page } from '@playwright/test';
 
+export interface Box {
+  readonly x: number;
+  readonly y: number;
+  readonly width: number;
+  readonly height: number;
+}
+
 export interface FeedbackOutput {
   readonly placement: string;
   readonly toastCount: number;
@@ -27,8 +34,17 @@ const parseFeedbackOutput = (text: string): FeedbackOutput => {
   return { placement, toastCount, alertOpen, progress };
 };
 
+const readBoxes = (elements: readonly Element[]): Box[] =>
+  elements.map((element) => {
+    const rect = element.getBoundingClientRect();
+    return { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
+  });
+
+export const bottomOf = (box: Box): number => box.y + box.height;
+
 export class FeedbackSection {
   readonly toaster: Locator;
+  readonly stackItems: Locator;
   readonly toastShow: Locator;
   readonly toastQuick: Locator;
   readonly toastError: Locator;
@@ -46,6 +62,7 @@ export class FeedbackSection {
 
   constructor(page: Page) {
     this.toaster = page.getByTestId('toaster');
+    this.stackItems = this.toaster.locator('.nui-toaster__item');
     this.toastShow = page.getByTestId('toast-show');
     this.toastQuick = page.getByTestId('toast-quick');
     this.toastError = page.getByTestId('toast-error');
@@ -84,6 +101,22 @@ export class FeedbackSection {
 
   async setProgress(value: string): Promise<void> {
     await this.progressInput.fill(value);
+  }
+
+  async stackBox(index: number): Promise<Box> {
+    const boxes = await this.stackItems.evaluateAll(readBoxes);
+    const box = boxes[index];
+    if (!box) {
+      throw new Error(`No stack item at index ${index}`);
+    }
+    return box;
+  }
+
+  isSquare(target: Locator): Promise<boolean> {
+    return target.evaluate((element) => {
+      const rect = element.getBoundingClientRect();
+      return Math.round(rect.width) === Math.round(rect.height);
+    });
   }
 
   animationName(target: Locator): Promise<string> {

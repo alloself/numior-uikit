@@ -3,7 +3,6 @@ import { vi } from 'vitest';
 import { defineComponent, h, nextTick } from 'vue';
 import {
   createNuiConfig,
-  NuiToast,
   NuiToaster,
   useToast,
   type NuiToasterProps,
@@ -22,15 +21,26 @@ export interface ToasterMountOptions {
   readonly storeOptions?: ToastStoreOptions;
   readonly withPlugin?: boolean;
   readonly modalOpen?: boolean;
-  readonly customLayout?: boolean;
+  readonly customToast?: boolean;
 }
 
-const customLayout = (slot: NuiToasterSlot) =>
-  h(
-    'ul',
-    { class: 'custom-layout' },
-    slot.toasts.map((toast) => h('li', { key: toast.id }, [h(NuiToast, { toast })])),
-  );
+export interface StackItemView {
+  readonly index: number;
+  readonly behind: boolean;
+  readonly leaving: boolean;
+}
+
+const customToast = (slot: NuiToasterSlot) =>
+  h('article', { class: 'custom-toast' }, [
+    slot.toast.title,
+    h('button', { class: 'custom-dismiss', type: 'button', onClick: slot.dismiss }, 'x'),
+  ]);
+
+const readItem = (item: DOMWrapper<HTMLElement>): StackItemView => ({
+  index: Number(item.element.style.getPropertyValue('--_index')),
+  behind: item.classes().includes('nui-toaster__item--behind'),
+  leaving: item.classes().includes('nui-toaster__item--leaving'),
+});
 
 class ToastView {
   constructor(readonly root: DOMWrapper<HTMLElement>) {}
@@ -63,12 +73,8 @@ class ToastView {
     return document.activeElement === this.root.element;
   }
 
-  async hover(): Promise<void> {
-    await this.root.trigger('pointerenter');
-  }
-
-  async leave(): Promise<void> {
-    await this.root.trigger('pointerleave');
+  get closeIsIconOnly(): boolean {
+    return this.root.find('.nui-toast__close').classes().includes('nui-button--icon-only');
   }
 
   async focus(): Promise<void> {
@@ -97,7 +103,7 @@ export class ToasterDriver extends ComponentDriver {
     storeOptions,
     withPlugin = true,
     modalOpen = false,
-    customLayout: custom = false,
+    customToast: custom = false,
   }: ToasterMountOptions = {}) {
     const stubs = new TopLayerStubs();
     const dialog = modalOpen ? document.createElement('dialog') : null;
@@ -109,7 +115,7 @@ export class ToasterDriver extends ComponentDriver {
     const Host = defineComponent({
       setup() {
         services.push(useToast());
-        return () => h(NuiToaster, props, custom ? { default: customLayout } : undefined);
+        return () => h(NuiToaster, props, custom ? { default: customToast } : undefined);
       },
     });
     const wrapper = mount(Host, {
@@ -148,12 +154,16 @@ export class ToasterDriver extends ComponentDriver {
     return view;
   }
 
+  get items(): StackItemView[] {
+    return this.wrapper.findAll<HTMLElement>('.nui-toaster__item').map(readItem);
+  }
+
   get popoverCalls(): { show: number; hide: number } {
     return this.stubs.popoverCalls;
   }
 
-  get customLayout(): DOMWrapper<Element> {
-    return this.wrapper.find('.custom-layout');
+  get customToasts(): string[] {
+    return this.wrapper.findAll('.custom-toast').map((toast) => toast.text());
   }
 
   show(options: ToastOptions): string {
@@ -166,6 +176,22 @@ export class ToasterDriver extends ComponentDriver {
 
   error(title: string, options?: ToastMessageOptions): string {
     return this.service.error(title, options);
+  }
+
+  async hoverStack(): Promise<void> {
+    await this.region.trigger('pointerenter');
+  }
+
+  async leaveStack(): Promise<void> {
+    await this.region.trigger('pointerleave');
+  }
+
+  async dismissCustom(index: number): Promise<void> {
+    const button = this.wrapper.findAll('.custom-dismiss')[index];
+    if (!button) {
+      throw new Error(`No custom toast at index ${index}`);
+    }
+    await button.trigger('click');
   }
 
   async advance(ms: number): Promise<void> {

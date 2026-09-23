@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { paintedRgb, rgbDelta } from './helpers/color';
+import { bottomOf } from './pages/feedback';
 import { PlaygroundPage } from './pages/playground';
 
 test.describe('feedback', () => {
@@ -21,6 +22,34 @@ test.describe('feedback', () => {
     await feedback.closeButtonOf(toast).click();
     await expect(toast).toBeHidden();
     await expect.poll(async () => (await feedback.readOutput()).toastCount).toBe(0);
+  });
+
+  test('toasts stack behind the newest one, expand on hover and close with square buttons', async ({
+    page,
+    isMobile,
+  }) => {
+    const playground = new PlaygroundPage(page);
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    const { feedback } = playground;
+    await feedback.toastShow.click();
+    await feedback.toastShow.click();
+    await feedback.toastError.click();
+    const front = feedback.toastByText('Не удалось сохранить');
+    await expect(front).toBeVisible();
+    expect(await feedback.isSquare(feedback.closeButtonOf(front))).toBe(true);
+    await expect(feedback.stackItems).toHaveCount(3);
+    const [frontBox, behindBox] = [await feedback.stackBox(0), await feedback.stackBox(1)];
+    expect(behindBox.y).toBeLessThan(bottomOf(frontBox));
+    expect(bottomOf(behindBox)).toBeGreaterThan(bottomOf(frontBox));
+    expect(behindBox.width).toBeLessThan(frontBox.width);
+    if (!isMobile) {
+      await front.hover();
+      await expect
+        .poll(async () => (await feedback.stackBox(1)).y)
+        .toBeGreaterThanOrEqual(bottomOf(await feedback.stackBox(0)));
+      expect(Math.round((await feedback.stackBox(1)).width)).toBe(Math.round(frontBox.width));
+    }
   });
 
   test('toasts auto-dismiss after their duration and pause while hovered', async ({

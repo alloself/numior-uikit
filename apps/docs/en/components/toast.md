@@ -68,31 +68,45 @@ replaces the toast and restarts its timer.
 | `dismissible` | `boolean`                                        | Close button (`true` by default)                 |
 | `id`          | `string`                                         | Stable id for replacement                        |
 
+## Stack
+
+A new toast appears at the edge and becomes the front one; earlier toasts slide behind it
+as scaled-down cards, two of them peeking out. Hovering or focusing inside the region
+expands the stack into a spaced list, and `expand` keeps it expanded permanently. Card
+heights are measured with `ResizeObserver`, so re-layout moves at `--nui-duration-slow`
+while enter and exit use `--nui-duration-normal`.
+
 ## Behavior
 
-The timer pauses on hover, while focus is inside the toast and while the tab is hidden.
-Escape closes the focused toast and moves focus to a neighbour; toasts never steal focus
+While the stack is hovered or contains focus every timer pauses, as it does while the tab
+is hidden. Escape closes the focused toast and moves focus to a neighbour; toasts never steal focus
 when they appear. A toast shown above an open modal dialog is raised above it but stays
 inert (not clickable, not announced) until the dialog closes; that is platform behavior.
 
-## Custom layout
+## Custom card
 
-The region slot receives `{ toasts, dismiss }`; `NuiToast` is exported as a part.
+The slot runs once per toast with `{ toast, dismiss }` inside a stack item, so placement,
+layering and motion stay with the region. `NuiToast` is exported as a part in case you
+want to wrap the standard card.
 
 ```vue
-<NuiToaster placement="bottom" v-slot="{ toasts }">
-  <ul class="my-stack">
-    <li v-for="toast in toasts" :key="toast.id"><NuiToast :toast="toast" /></li>
-  </ul>
+<NuiToaster placement="bottom" v-slot="{ toast, dismiss }">
+  <article class="my-toast">
+    <strong>{{ toast.title }}</strong>
+    <button type="button" @click="dismiss">Hide</button>
+  </article>
 </NuiToaster>
 ```
 
 ## API
 
 `NuiToaster`: `placement` (`top-start | top | top-end | bottom-start | bottom | bottom-end`,
-default `top-end`), `label` (region `aria-label`), `closeLabel`, `id`. On narrow screens the
-region spans the full width. Block `nui-toaster` with `--placement-*` modifiers.
+default `top-end`), `expand` (keeps the stack expanded), `label` (region `aria-label`),
+`closeLabel`, `id`. On narrow screens the region spans the full width. Block `nui-toaster`
+with `--placement-*` and `--expanded` modifiers, element `__item` with `--behind` and
+`--leaving` modifiers; region variables `--_inset`, `--_width`, `--_gap`, `--_peek`,
+`--_direction`, `--_front-size`, item variables `--_index`, `--_offset`, `--_size`.
 
 `NuiToast`: `toast` (store record), `closeLabel`. Block `nui-toast`, modifiers `--tone-*`,
 `--leaving`; elements `__icon`, `__body`, `__title`, `__description`, `__action`, `__close`;
-variables `--_tone`, `--_shift`.
+variable `--_tone`.

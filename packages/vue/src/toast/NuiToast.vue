@@ -5,10 +5,6 @@
     :class="[`nui-toast--tone-${toast.tone}`, { 'nui-toast--leaving': toast.leaving }]"
     :role="toast.tone === 'error' ? 'alert' : undefined"
     tabindex="-1"
-    @pointerenter="store.pause(toast.id)"
-    @pointerleave="store.resume(toast.id)"
-    @focusin="store.pause(toast.id)"
-    @focusout="store.resume(toast.id)"
     @keydown.escape="onEscape"
   >
     <NuiIcon v-if="icon" :alias="icon" class="nui-toast__icon" />
@@ -30,6 +26,7 @@
       variant="ghost"
       tone="neutral"
       size="sm"
+      icon-only
       class="nui-toast__close"
       :aria-label="closeLabel"
       @click="dismiss"
