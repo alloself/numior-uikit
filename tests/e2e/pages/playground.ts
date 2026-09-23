@@ -3,6 +3,7 @@ import type { Locator, Page } from '@playwright/test';
 import { FeedbackSection } from './feedback';
 import { NavigationSection } from './navigation';
 import { OverlaysSection } from './overlays';
+import { PickersSection } from './pickers';
 
 export type Theme = 'system' | 'light' | 'dark';
 export type Accent = 'indigo' | 'emerald' | 'rose';
@@ -127,6 +128,7 @@ export class PlaygroundPage {
   readonly overlays: OverlaysSection;
   readonly feedback: FeedbackSection;
   readonly navigation: NavigationSection;
+  readonly pickers: PickersSection;
 
   constructor(readonly page: Page) {
     this.workspace = page.getByRole('main');
@@ -153,6 +155,7 @@ export class PlaygroundPage {
     this.overlays = new OverlaysSection(page);
     this.feedback = new FeedbackSection(page);
     this.navigation = new NavigationSection(page);
+    this.pickers = new PickersSection(page);
   }
 
   async open(path: '/' | '/tailwind.html' = '/'): Promise<void> {

@@ -91,6 +91,7 @@
 
     <FeedbackSection />
     <NavigationSection />
+    <PickersSection />
 
     <section class="panel" aria-labelledby="tokens-title">
       <h2 id="tokens-title">Один акцент — разные способы использования</h2>
@@ -143,6 +144,7 @@ import FormsSection from './FormsSection.vue';
 import OverlaysSection from './OverlaysSection.vue';
 import FeedbackSection from './FeedbackSection.vue';
 import NavigationSection from './NavigationSection.vue';
+import PickersSection from './PickersSection.vue';
 
 const density = ref('comfortable');
 const direction = ref<'ltr' | 'rtl'>('ltr');
