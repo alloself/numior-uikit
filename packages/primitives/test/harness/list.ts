@@ -25,13 +25,6 @@ type Outcome = { readonly ran: true; readonly value: ListNavigation } | { readon
 
 export class ListHarness {
   static mount(options: ListHarnessOptions = {}): ListHarness {
-    const scroll = { calls: 0 };
-    Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', {
-      configurable: true,
-      value: () => {
-        scroll.calls += 1;
-      },
-    });
     const labels = options.labels ?? DEFAULT_LABELS;
     const role = options.role ?? 'option';
     const outcome: { current: Outcome } = { current: { ran: false } };
@@ -78,13 +71,12 @@ export class ListHarness {
     if (!outcome.current.ran) {
       throw new Error('setup did not run');
     }
-    return new ListHarness(wrapper, outcome.current.value, scroll);
+    return new ListHarness(wrapper, outcome.current.value);
   }
 
   private constructor(
     private readonly wrapper: VueWrapper,
     readonly navigation: ListNavigation,
-    private readonly scroll: { calls: number },
   ) {}
 
   private get container(): HTMLElement {
@@ -114,10 +106,6 @@ export class ListHarness {
 
   get activeDescendant(): string | undefined {
     return this.navigation.activeId.value;
-  }
-
-  get scrollCalls(): number {
-    return this.scroll.calls;
   }
 
   get query(): string {
@@ -150,7 +138,6 @@ export class ListHarness {
   }
 
   unmount(): void {
-    Reflect.deleteProperty(HTMLElement.prototype, 'scrollIntoView');
     this.wrapper.unmount();
   }
 }

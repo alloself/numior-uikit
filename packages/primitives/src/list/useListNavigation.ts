@@ -124,9 +124,42 @@ const applyTabStop = (
   }
 };
 
-const scrollTo = (element: HTMLElement | null): void => {
-  if (element && typeof element.scrollIntoView === 'function') {
-    element.scrollIntoView({ block: 'nearest' });
+const revealAxis = (
+  start: number,
+  size: number,
+  scroll: number,
+  viewport: number,
+): number | undefined => {
+  if (start < scroll) {
+    return start;
+  }
+  if (start + size > scroll + viewport) {
+    return start + size - viewport;
+  }
+  return undefined;
+};
+
+const reveal = (container: HTMLElement, element: HTMLElement | null): void => {
+  if (!element || element.offsetParent !== container) {
+    return;
+  }
+  const top = revealAxis(
+    element.offsetTop,
+    element.offsetHeight,
+    container.scrollTop,
+    container.clientHeight,
+  );
+  if (top !== undefined) {
+    container.scrollTop = top;
+  }
+  const left = revealAxis(
+    element.offsetLeft,
+    element.offsetWidth,
+    container.scrollLeft,
+    container.clientWidth,
+  );
+  if (left !== undefined) {
+    container.scrollLeft = left;
   }
 };
 
@@ -165,7 +198,10 @@ export const useListNavigation = (
     if (roving()) {
       applyTabStop(active, element, settings.focus ?? true);
     }
-    scrollTo(element);
+    const root = toValue(container);
+    if (root) {
+      reveal(root, element);
+    }
     active = element;
     activeIndex.value = element ? list.indexOf(element) : -1;
     activeId.value = idOf(element);

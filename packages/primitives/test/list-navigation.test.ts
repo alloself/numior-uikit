@@ -84,7 +84,6 @@ describe('useListNavigation', () => {
     expect(list.activeIndex).toBe(1);
     expect(list.focusedText).toBeUndefined();
     expect(list.tabIndexes).toEqual([-1, -1, -1, -1, -1]);
-    expect(list.scrollCalls).toBe(2);
     list.unmount();
   });
 

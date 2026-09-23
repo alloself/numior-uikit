@@ -63,8 +63,7 @@ it('waits for a commit with the lazy modifier', async () => {
   event through an element that has its own handler, call `vi.advanceTimersByTime(1)` (see
   `MenuDriver.press`).
 - Native popover and dialog APIs are stubbed by `TopLayerStubs` (vue) and `installTopLayer`
-  (primitives); both dispatch `beforetoggle` and `toggle`. `scrollIntoView` is absent in
-  jsdom: stub it in the harness and restore it in `unmount()`.
+  (primitives); both dispatch `beforetoggle` and `toggle`.
 
 - Default icons are preloaded by `test/support/preload-icons.ts` (Vitest `setupFiles`) so
   lazy icon imports resolve from cache; a new default alias goes there too, otherwise a
