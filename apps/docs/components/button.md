@@ -58,17 +58,19 @@ import '@numior/vue/styles/button.css';
 
 ## Только иконка
 
-`icon-only` делает кнопку квадратной: ширина равна высоте ступени, горизонтальные отступы
-убираются, содержимое центрируется. Такой кнопке обязателен `aria-label`.
+Кнопка, в слоте которой только `NuiIcon`, становится квадратной сама: ширина равна высоте
+ступени, горизонтальные отступы убираются, содержимое центрируется. `icon-only`
+принудительно включает режим, `:icon-only="false"` отключает. Такой кнопке обязателен
+`aria-label`.
 
 <div class="nui-demo" data-nui-theme="light">
-  <NuiButton icon-only aria-label="Закрыть"><NuiIcon alias="x" /></NuiButton>
-  <NuiButton icon-only variant="outline" tone="neutral" size="sm" aria-label="Закрыть"><NuiIcon alias="x" /></NuiButton>
-  <NuiButton icon-only variant="ghost" tone="neutral" size="lg" aria-label="Закрыть"><NuiIcon alias="x" /></NuiButton>
+  <NuiButton aria-label="Закрыть"><NuiIcon alias="x" /></NuiButton>
+  <NuiButton variant="outline" tone="neutral" size="sm" aria-label="Закрыть"><NuiIcon alias="x" /></NuiButton>
+  <NuiButton variant="ghost" tone="neutral" size="lg" aria-label="Закрыть"><NuiIcon alias="x" /></NuiButton>
 </div>
 
 ```vue
-<NuiButton icon-only variant="ghost" tone="neutral" aria-label="Закрыть">
+<NuiButton variant="ghost" tone="neutral" aria-label="Закрыть">
   <NuiIcon alias="x" />
 </NuiButton>
 ```
@@ -91,7 +93,7 @@ import '@numior/vue/styles/button.css';
 | `type`     | `'button' \| 'submit' \| 'reset'`                                                      | `'button'`   |
 | `disabled` | `boolean`                                                                              | `false`      |
 | `loading`  | `boolean`                                                                              | `false`      |
-| `iconOnly` | `boolean`                                                                              | `false`      |
+| `iconOnly` | `boolean`                                                                              | авто         |
 
 Слот по умолчанию — содержимое кнопки. Нативные атрибуты, классы и обработчики
 событий передаются элементу `<button>`. Оформление построено на BEM: блок `nui-button`,

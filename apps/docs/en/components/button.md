@@ -60,17 +60,18 @@ are available.
 
 ## Icon only
 
-`icon-only` makes the button square: the width equals the step height, horizontal padding
-is removed and the content is centred. Such a button needs an `aria-label`.
+A button whose slot holds only a `NuiIcon` becomes square by itself: the width equals the
+step height, horizontal padding is removed and the content is centred. `icon-only` forces
+the mode and `:icon-only="false"` disables it. Such a button needs an `aria-label`.
 
 <div class="nui-demo" data-nui-theme="light">
-  <NuiButton icon-only aria-label="Close"><NuiIcon alias="x" /></NuiButton>
-  <NuiButton icon-only variant="outline" tone="neutral" size="sm" aria-label="Close"><NuiIcon alias="x" /></NuiButton>
-  <NuiButton icon-only variant="ghost" tone="neutral" size="lg" aria-label="Close"><NuiIcon alias="x" /></NuiButton>
+  <NuiButton aria-label="Close"><NuiIcon alias="x" /></NuiButton>
+  <NuiButton variant="outline" tone="neutral" size="sm" aria-label="Close"><NuiIcon alias="x" /></NuiButton>
+  <NuiButton variant="ghost" tone="neutral" size="lg" aria-label="Close"><NuiIcon alias="x" /></NuiButton>
 </div>
 
 ```vue
-<NuiButton icon-only variant="ghost" tone="neutral" aria-label="Close">
+<NuiButton variant="ghost" tone="neutral" aria-label="Close">
   <NuiIcon alias="x" />
 </NuiButton>
 ```
@@ -93,7 +94,7 @@ scan in the playground; that does not replace a manual review.
 | `type`     | `'button' \| 'submit' \| 'reset'`                                                      | `'button'`  |
 | `disabled` | `boolean`                                                                              | `false`     |
 | `loading`  | `boolean`                                                                              | `false`     |
-| `iconOnly` | `boolean`                                                                              | `false`     |
+| `iconOnly` | `boolean`                                                                              | auto        |
 
 The default slot is the button content. Native attributes, classes and event listeners
 reach the `<button>` element. Styling follows BEM: block `nui-button`, elements
