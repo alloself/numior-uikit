@@ -1,3 +1,4 @@
+import type { Component } from 'vue';
 import type { FloatingPlacement, IconAlias, PopoverInvokerAttrs } from '@numior/primitives';
 import type { NuiTriggerRef } from '../shared/trigger-ref';
 
@@ -13,6 +14,7 @@ export interface NuiMenuItemEntry {
   readonly tone?: NuiMenuItemTone | undefined;
   readonly href?: string | undefined;
   readonly to?: unknown;
+  readonly as?: string | Component | undefined;
   readonly closeOnSelect?: boolean | undefined;
   readonly onSelect?: (() => void) | undefined;
 }
@@ -101,6 +103,7 @@ export interface NuiMenuItemProps {
   closeOnSelect?: boolean | undefined;
   href?: string | undefined;
   to?: unknown;
+  as?: string | Component | undefined;
 }
 
 export interface NuiMenuCheckboxItemProps {

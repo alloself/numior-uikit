@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { h, type VNode } from 'vue';
 import {
   NuiAlert,
+  NuiBreadcrumbs,
   NuiButton,
   NuiCheckbox,
   NuiConfigProvider,
@@ -118,6 +119,17 @@ const scenarios: Scenario[] = [
   { name: 'NuiPopover', render: renderPopover },
   { name: 'NuiMenu', render: renderMenu },
   { name: 'NuiTabs', render: renderTabs },
+  {
+    name: 'NuiBreadcrumbs',
+    render: () =>
+      h(NuiBreadcrumbs, {
+        items: [
+          { label: 'Home', href: '/' },
+          { label: 'Projects', href: '/p' },
+          { label: 'Numior' },
+        ],
+      }),
+  },
   { name: 'NuiToaster', render: () => h(NuiToaster, { label: 'Notifications' }) },
   {
     name: 'NuiAlert',
@@ -228,6 +240,25 @@ describe('server rendering', () => {
     expect(html).toContain('aria-labelledby="settings-tab-team"');
     expect(html).toContain('role="tabpanel"');
     expect(html).toContain('display:none');
+  });
+
+  it('renders breadcrumbs as a labelled nav with the current page marked', async () => {
+    const html = await renderMarkup(() =>
+      h(NuiBreadcrumbs, {
+        items: [
+          { label: 'Home', href: '/' },
+          { label: 'Projects', href: '/p' },
+          { label: 'Numior' },
+        ],
+        maxItems: 2,
+      }),
+    );
+    expect(html).toContain('aria-label="Breadcrumb"');
+    expect(html).toContain('aria-current="page"');
+    expect(html).toContain('href="/"');
+    expect(html).toContain('aria-haspopup="menu"');
+    expect(html).toContain('role="menuitem"');
+    expect(html).toContain('href="/p"');
   });
 
   it('renders the toaster as an empty manual live region', async () => {

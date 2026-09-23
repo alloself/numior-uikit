@@ -13,6 +13,7 @@
 @import './tooltip/tooltip.css';
 @import './menu/menu.css';
 @import './tabs/tabs.css';
+@import './breadcrumbs/breadcrumbs.css';
 @import './toast/toast.css';
 @import './alert/alert.css';
 @import './progress/progress.css';

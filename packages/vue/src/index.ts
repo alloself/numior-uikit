@@ -89,6 +89,12 @@ export type {
   NuiTabsProps,
   NuiTabsVariant,
 } from './tabs/tabs.types';
+export { default as NuiBreadcrumbs } from './breadcrumbs/NuiBreadcrumbs.vue';
+export type {
+  NuiBreadcrumbItem,
+  NuiBreadcrumbsItemSlot,
+  NuiBreadcrumbsProps,
+} from './breadcrumbs/breadcrumbs.types';
 export { default as NuiToaster } from './toast/NuiToaster.vue';
 export { default as NuiToast } from './toast/NuiToast.vue';
 export type {

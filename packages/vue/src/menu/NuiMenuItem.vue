@@ -1,6 +1,7 @@
 <template>
   <NuiLink
     v-if="href !== undefined || to !== undefined"
+    :as="as"
     :href="href"
     :to="to"
     tone="neutral"
@@ -44,6 +45,7 @@ const {
   closeOnSelect = undefined,
   href,
   to,
+  as = 'a',
 } = defineProps<NuiMenuItemProps>();
 const emit = defineEmits<{ select: [] }>();
 const menu = useMenu();

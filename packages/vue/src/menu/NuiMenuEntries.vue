@@ -29,6 +29,7 @@
       :tone="entry.tone"
       :href="entry.href"
       :to="entry.to"
+      :as="entry.as"
       :close-on-select="entry.closeOnSelect"
       @select="entry.onSelect?.()"
     >

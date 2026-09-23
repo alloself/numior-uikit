@@ -29,13 +29,19 @@ const {
   disabled = false,
 } = defineProps<NuiLinkProps>();
 
+const destination = (url: string | undefined, route: unknown): Record<string, unknown> => {
+  if (route !== undefined) {
+    return { to: route };
+  }
+  return url === undefined ? {} : { href: url };
+};
+
 const linkAttrs = computed(() => {
   if (disabled) {
     return { 'aria-disabled': 'true', tabindex: -1 };
   }
   return {
-    ...(href === undefined ? {} : { href }),
-    ...(to === undefined ? {} : { to }),
+    ...destination(href, to),
     ...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {}),
   };
 });
