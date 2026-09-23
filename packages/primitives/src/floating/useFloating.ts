@@ -96,6 +96,11 @@ const sizeStyles = (size: FloatingSize | undefined, bounds: Bounds): Record<stri
   ...(size?.fitHeight && bounds.height !== undefined ? { maxBlockSize: `${bounds.height}px` } : {}),
 });
 
+const roundToPixel = (value: number): number => {
+  const ratio = typeof window === 'undefined' ? 1 : window.devicePixelRatio || 1;
+  return Math.round(value * ratio) / ratio;
+};
+
 const pxStyles = (position: ArrowPosition): Record<string, string> => ({
   ...(position.x === undefined ? {} : { left: `${position.x}px` }),
   ...(position.y === undefined ? {} : { top: `${position.y}px` }),
@@ -132,9 +137,13 @@ export const useFloating = (
         bounds.value = next;
       }),
     });
-    position.value = { x: result.x, y: result.y };
+    position.value = { x: roundToPixel(result.x), y: roundToPixel(result.y) };
     placement.value = result.placement;
-    arrowPosition.value = result.middlewareData.arrow ?? {};
+    const arrow: ArrowPosition = result.middlewareData.arrow ?? {};
+    arrowPosition.value = {
+      x: arrow.x === undefined ? undefined : roundToPixel(arrow.x),
+      y: arrow.y === undefined ? undefined : roundToPixel(arrow.y),
+    };
   };
 
   onMounted(() => {
