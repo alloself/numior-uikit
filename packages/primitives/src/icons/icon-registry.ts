@@ -21,6 +21,12 @@ export type IconAlias =
   | 'success'
   | 'warning'
   | 'error'
+  | 'chevron-right'
+  | 'chevron-left'
+  | 'chevrons-left'
+  | 'chevrons-right'
+  | 'ellipsis'
+  | 'external-link'
   | (string & NonNullable<unknown>);
 
 export type IconRegistry = Readonly<Record<string, Component>>;

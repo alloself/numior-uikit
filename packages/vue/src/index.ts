@@ -1,5 +1,7 @@
 export { default as NuiButton } from './button/NuiButton.vue';
 export type { NuiButtonProps, NuiButtonVariant } from './button/button.types';
+export { default as NuiLink } from './link/NuiLink.vue';
+export type { NuiLinkProps, NuiLinkUnderline } from './link/link.types';
 export { default as NuiIcon } from './icon/NuiIcon.vue';
 export type { NuiIconProps } from './icon/icon.types';
 export { defaultIcons } from './icon/default-icons';

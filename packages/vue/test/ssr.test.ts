@@ -11,6 +11,7 @@ import {
   NuiField,
   NuiIcon,
   NuiInput,
+  NuiLink,
   NuiPopover,
   NuiProgress,
   NuiRadio,
@@ -49,6 +50,10 @@ const renderPopover = () =>
 const scenarios: Scenario[] = [
   { name: 'NuiButton', render: () => h(NuiButton, { loading: true }, () => 'Save') },
   { name: 'NuiIcon', render: () => h(NuiIcon, { alias: 'check' }) },
+  {
+    name: 'NuiLink',
+    render: () => h(NuiLink, { href: 'https://example.com', external: true }, () => 'Docs'),
+  },
   { name: 'NuiConfigProvider', render: () => h(NuiConfigProvider, null, () => 'content') },
   { name: 'NuiField with NuiInput', render: fieldWithInput },
   { name: 'NuiTextarea', render: () => h(NuiTextarea, { modelValue: 'text', invalid: true }) },

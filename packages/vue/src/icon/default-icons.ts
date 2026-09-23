@@ -11,4 +11,10 @@ export const defaultIcons: IconRegistry = {
   success: lazyIcon(() => import('lucide-vue-next/dist/esm/icons/circle-check.js')),
   warning: lazyIcon(() => import('lucide-vue-next/dist/esm/icons/triangle-alert.js')),
   error: lazyIcon(() => import('lucide-vue-next/dist/esm/icons/circle-x.js')),
+  'chevron-right': lazyIcon(() => import('lucide-vue-next/dist/esm/icons/chevron-right.js')),
+  'chevron-left': lazyIcon(() => import('lucide-vue-next/dist/esm/icons/chevron-left.js')),
+  'chevrons-left': lazyIcon(() => import('lucide-vue-next/dist/esm/icons/chevrons-left.js')),
+  'chevrons-right': lazyIcon(() => import('lucide-vue-next/dist/esm/icons/chevrons-right.js')),
+  ellipsis: lazyIcon(() => import('lucide-vue-next/dist/esm/icons/ellipsis.js')),
+  'external-link': lazyIcon(() => import('lucide-vue-next/dist/esm/icons/external-link.js')),
 };
