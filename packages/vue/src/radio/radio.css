@@ -12,6 +12,7 @@
 
 .nui-radio {
   --_size: 1.25rem;
+  --_dot: 0.5rem;
   --_font-size: var(--nui-font-size-sm);
 
   position: relative;
@@ -26,10 +27,12 @@
 }
 .nui-radio-group--size-sm .nui-radio {
   --_size: 1rem;
+  --_dot: 0.375rem;
   --_font-size: var(--nui-font-size-xs);
 }
 .nui-radio-group--size-lg .nui-radio {
   --_size: 1.5rem;
+  --_dot: 0.625rem;
   --_font-size: var(--nui-font-size-md);
 }
 .nui-radio__control {
@@ -61,8 +64,8 @@
 }
 .nui-radio__dot::after {
   content: '';
-  inline-size: 50%;
-  block-size: 50%;
+  inline-size: var(--_dot);
+  block-size: var(--_dot);
   border-radius: inherit;
   background: var(--nui-primary);
   scale: 0;
