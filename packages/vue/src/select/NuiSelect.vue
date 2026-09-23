@@ -42,7 +42,7 @@
     </NuiButton>
     <NuiListbox
       :ref="setListbox"
-      class="nui-select__listbox"
+      class="nui-select__listbox nui-listbox--floating"
       :style="floatingStyles"
       :options="options"
       :selected-keys="selectedKeys"
@@ -84,7 +84,8 @@ import NuiButton from '../button/NuiButton.vue';
 import NuiIcon from '../icon/NuiIcon.vue';
 import NuiListbox from '../listbox/NuiListbox.vue';
 import { optionIndexOf } from '../listbox/listbox.types';
-import { defaultOptionKey, flattenOptions, type NuiOption } from '../shared/options';
+import type { NuiOption } from '../shared/options';
+import { useOptionSelection } from '../shared/use-option-selection';
 import { useTriggerElement } from '../shared/trigger-ref';
 import type { NuiSelectProps } from './select.types';
 
@@ -118,20 +119,20 @@ const {
   disabled: isDisabled,
 } = useFieldControl(() => ({ id, disabled, required, invalid }));
 const listboxId = computed(() => `${controlAttrs.value.id}-listbox`);
-const keyOf = (value: T): string => (getKey ?? defaultOptionKey)(value);
-
-const flat = computed(() => flattenOptions(options));
-const selectedValues = computed<T[]>(() => {
-  const current = model.value;
-  if (Array.isArray(current)) {
-    return multiple ? current : current.slice(0, 1);
-  }
-  return current === undefined ? [] : [current];
+const {
+  keyOf,
+  flat,
+  selectedValues,
+  selectedKeys,
+  selectedOptions,
+  toggle,
+  clear: clearSelection,
+} = useOptionSelection<T>({
+  options: () => options,
+  model,
+  multiple: () => multiple,
+  getKey: () => getKey,
 });
-const selectedKeys = computed(() => new Set(selectedValues.value.map(keyOf)));
-const selectedOptions = computed(() =>
-  flat.value.filter((option) => selectedKeys.value.has(keyOf(option.value))),
-);
 const displayLabel = computed(() => {
   const labels = selectedOptions.value.map((option) => option.label);
   if (labels.length === 0) {
@@ -169,14 +170,11 @@ const state = { pending: 'selected', inside: false };
 const optionOf = (element: HTMLElement | null): NuiOption<T> | undefined =>
   element ? flat.value[optionIndexOf(element)] : undefined;
 const commit = (option: NuiOption<T>): void => {
-  if (!multiple) {
+  if (multiple) {
+    toggle(option);
+  } else {
     model.value = option.value;
-    return;
   }
-  const key = keyOf(option.value);
-  model.value = selectedKeys.value.has(key)
-    ? selectedValues.value.filter((value) => keyOf(value) !== key)
-    : [...selectedValues.value, option.value];
 };
 const choose = (option: NuiOption<T>): void => {
   if (option.disabled) {
@@ -188,7 +186,7 @@ const choose = (option: NuiOption<T>): void => {
   }
 };
 const clear = (): void => {
-  model.value = multiple ? [] : undefined;
+  clearSelection();
   triggerElement.value?.focus({ preventScroll: true });
 };
 

@@ -7,6 +7,36 @@
   line-height: var(--nui-line-height);
   outline: none;
 }
+.nui-listbox--floating {
+  --_shift: 0 calc(-1 * var(--nui-space-1));
+
+  position: fixed;
+  inset: auto;
+  margin: 0;
+  padding: var(--nui-space-1);
+  border: 1px solid var(--nui-border);
+  border-radius: var(--nui-radius);
+  background: var(--nui-surface-overlay);
+  box-shadow: var(--nui-shadow-md);
+  overflow-y: auto;
+  opacity: 0;
+  translate: var(--_shift);
+  transition:
+    opacity var(--nui-duration-fast) var(--nui-easing),
+    translate var(--nui-duration-normal) var(--nui-easing),
+    display var(--nui-duration-fast) allow-discrete,
+    overlay var(--nui-duration-fast) allow-discrete;
+}
+.nui-listbox--floating:popover-open {
+  opacity: 1;
+  translate: 0 0;
+}
+@starting-style {
+  .nui-listbox--floating:popover-open {
+    opacity: 0;
+    translate: var(--_shift);
+  }
+}
 .nui-listbox__group-label {
   padding: var(--nui-space-1) var(--nui-space-2);
   color: var(--nui-text-muted);

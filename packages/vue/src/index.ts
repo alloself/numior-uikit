@@ -97,6 +97,8 @@ export type {
 } from './breadcrumbs/breadcrumbs.types';
 export { default as NuiSelect } from './select/NuiSelect.vue';
 export type { NuiSelectProps, NuiSelectValueSlot } from './select/select.types';
+export { default as NuiCombobox } from './combobox/NuiCombobox.vue';
+export type { NuiComboboxFilter, NuiComboboxProps } from './combobox/combobox.types';
 export type { NuiListboxOptionSlot } from './listbox/listbox.types';
 export type { NuiOption, NuiOptionGroup, NuiOptionKey, NuiOptionSource } from './shared/options';
 export { default as NuiToaster } from './toast/NuiToaster.vue';

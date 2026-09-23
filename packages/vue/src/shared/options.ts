@@ -33,6 +33,18 @@ const isOptionGroup = <T>(entry: NuiOption<T> | NuiOptionGroup<T>): entry is Nui
 export const flattenOptions = <T>(source: NuiOptionSource<T>): NuiOption<T>[] =>
   source.flatMap((entry) => (isOptionGroup(entry) ? [...entry.options] : [entry]));
 
+export const filterOptions = <T>(
+  source: NuiOptionSource<T>,
+  keep: (option: NuiOption<T>) => boolean,
+): NuiOptionSource<T> =>
+  source.flatMap((entry): Array<NuiOption<T> | NuiOptionGroup<T>> => {
+    if (!isOptionGroup(entry)) {
+      return keep(entry) ? [entry] : [];
+    }
+    const options = entry.options.filter(keep);
+    return options.length === 0 ? [] : [{ label: entry.label, options }];
+  });
+
 export const defaultOptionKey = (value: unknown): string => {
   if (typeof value === 'string') {
     return value;

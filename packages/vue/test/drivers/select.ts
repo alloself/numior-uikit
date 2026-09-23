@@ -1,13 +1,8 @@
 import { mount, type DOMWrapper, type VueWrapper } from '@vue/test-utils';
 import { vi } from 'vitest';
 import { defineComponent, h, nextTick, ref, type Ref } from 'vue';
-import {
-  NuiField,
-  NuiSelect,
-  type NuiFieldProps,
-  type NuiOptionSource,
-  type NuiSelectProps,
-} from '../../src';
+import { NuiField, NuiSelect, type NuiFieldProps, type NuiSelectProps } from '../../src';
+import { FRUITS } from '../support/options';
 import { TopLayerStubs } from '../support/top-layer';
 import { ComponentDriver } from './component';
 
@@ -18,19 +13,6 @@ export interface SelectMountOptions {
   readonly modelValue?: SelectValue;
   readonly field?: NuiFieldProps;
 }
-
-const FRUITS: NuiOptionSource<string> = [
-  { value: 'apple', label: 'Apple', icon: 'check' },
-  { value: 'banana', label: 'Banana', description: 'Yellow' },
-  { value: 'blueberry', label: 'Blueberry', disabled: true },
-  {
-    label: 'Citrus',
-    options: [
-      { value: 'lemon', label: 'Lemon' },
-      { value: 'lime', label: 'Lime' },
-    ],
-  },
-];
 
 const isSelectValue = (value: unknown): value is SelectValue =>
   value === undefined ||

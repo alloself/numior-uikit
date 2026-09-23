@@ -6,6 +6,7 @@ import {
   NuiBreadcrumbs,
   NuiButton,
   NuiCheckbox,
+  NuiCombobox,
   NuiConfigProvider,
   NuiDialog,
   NuiDrawer,
@@ -84,6 +85,18 @@ const renderSelect = () =>
     }),
   );
 
+const renderCombobox = () =>
+  h(NuiField, { label: 'Fruit' }, () =>
+    h(NuiCombobox, {
+      modelValue: 'banana',
+      name: 'fruit',
+      options: [
+        { value: 'apple', label: 'Apple' },
+        { value: 'banana', label: 'Banana' },
+      ],
+    }),
+  );
+
 const renderPopover = () =>
   h(
     NuiPopover,
@@ -133,6 +146,7 @@ const scenarios: Scenario[] = [
   { name: 'NuiMenu', render: renderMenu },
   { name: 'NuiTabs', render: renderTabs },
   { name: 'NuiSelect in a field', render: renderSelect },
+  { name: 'NuiCombobox in a field', render: renderCombobox },
   {
     name: 'NuiBreadcrumbs',
     render: () =>
@@ -284,6 +298,16 @@ describe('server rendering', () => {
     expect(html).toContain('aria-selected="true"');
     expect(html).toContain('class="nui-select__value"');
     expect(html).toContain('Banana');
+  });
+
+  it('renders a combobox input with its selected label and no active descendant', async () => {
+    const html = await renderMarkup(renderCombobox);
+    expect(html).toContain('role="combobox"');
+    expect(html).toContain('aria-autocomplete="list"');
+    expect(html).toContain('popover="manual"');
+    expect(html).toContain('value="Banana"');
+    expect(html).toContain('type="hidden" name="fruit" value="banana"');
+    expect(html).not.toContain('aria-activedescendant');
   });
 
   it('renders the toaster as an empty manual live region', async () => {
