@@ -48,6 +48,32 @@ export type {
   NuiTooltipTriggerSlot,
 } from './tooltip/tooltip.types';
 export type { NuiTriggerRef } from './shared/trigger-ref';
+export { default as NuiMenu } from './menu/NuiMenu.vue';
+export { default as NuiMenuItem } from './menu/NuiMenuItem.vue';
+export { default as NuiMenuCheckboxItem } from './menu/NuiMenuCheckboxItem.vue';
+export { default as NuiMenuRadioGroup } from './menu/NuiMenuRadioGroup.vue';
+export { default as NuiMenuRadioItem } from './menu/NuiMenuRadioItem.vue';
+export { default as NuiMenuSeparator } from './menu/NuiMenuSeparator.vue';
+export { default as NuiMenuLabel } from './menu/NuiMenuLabel.vue';
+export { default as NuiMenuSub } from './menu/NuiMenuSub.vue';
+export type {
+  NuiMenuCheckboxEntry,
+  NuiMenuCheckboxItemProps,
+  NuiMenuEntry,
+  NuiMenuItemEntry,
+  NuiMenuItemProps,
+  NuiMenuItemTone,
+  NuiMenuLabelEntry,
+  NuiMenuProps,
+  NuiMenuRadioGroupEntry,
+  NuiMenuRadioItemProps,
+  NuiMenuRadioOption,
+  NuiMenuSeparatorEntry,
+  NuiMenuSubEntry,
+  NuiMenuSubProps,
+  NuiMenuTriggerAttrs,
+  NuiMenuTriggerSlot,
+} from './menu/menu.types';
 export { default as NuiToaster } from './toast/NuiToaster.vue';
 export { default as NuiToast } from './toast/NuiToast.vue';
 export type {

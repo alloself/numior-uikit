@@ -1,8 +1,13 @@
-const toggleEvent = (newState: 'open' | 'closed') =>
-  Object.assign(new Event('beforetoggle'), { newState });
+const toggleEvent = (type: 'beforetoggle' | 'toggle', newState: 'open' | 'closed') =>
+  Object.assign(new Event(type), { newState });
+
+const announce = (element: HTMLElement, newState: 'open' | 'closed'): boolean => {
+  element.dispatchEvent(toggleEvent('beforetoggle', newState));
+  return element.dispatchEvent(toggleEvent('toggle', newState));
+};
 
 export const dismissPopoverNatively = (element: HTMLElement): boolean =>
-  element.dispatchEvent(toggleEvent('closed'));
+  announce(element, 'closed');
 
 export class TopLayerStubs {
   readonly showModalCalls: { count: number };
@@ -20,13 +25,13 @@ export class TopLayerStubs {
     this.define(HTMLElement.prototype, 'showPopover', {
       value(this: HTMLElement) {
         popoverCalls.show += 1;
-        this.dispatchEvent(toggleEvent('open'));
+        announce(this, 'open');
       },
     });
     this.define(HTMLElement.prototype, 'hidePopover', {
       value(this: HTMLElement) {
         popoverCalls.hide += 1;
-        this.dispatchEvent(toggleEvent('closed'));
+        announce(this, 'closed');
       },
     });
     this.define(HTMLDialogElement.prototype, 'open', {

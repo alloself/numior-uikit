@@ -5,8 +5,13 @@ export interface TopLayerLog {
   readonly close: string[];
 }
 
-const toggleEvent = (newState: 'open' | 'closed') =>
-  Object.assign(new Event('beforetoggle'), { newState });
+const toggleEvent = (type: 'beforetoggle' | 'toggle', newState: 'open' | 'closed') =>
+  Object.assign(new Event(type), { newState });
+
+const announce = (element: HTMLElement, newState: 'open' | 'closed'): boolean => {
+  element.dispatchEvent(toggleEvent('beforetoggle', newState));
+  return element.dispatchEvent(toggleEvent('toggle', newState));
+};
 
 export const installTopLayer = (): { readonly log: TopLayerLog; restore(): void } => {
   const log = { showPopover: 0, hidePopover: 0, showModal: 0, close: new Array<string>() };
@@ -18,13 +23,13 @@ export const installTopLayer = (): { readonly log: TopLayerLog; restore(): void 
   define(HTMLElement.prototype, 'showPopover', {
     value(this: HTMLElement) {
       log.showPopover += 1;
-      this.dispatchEvent(toggleEvent('open'));
+      announce(this, 'open');
     },
   });
   define(HTMLElement.prototype, 'hidePopover', {
     value(this: HTMLElement) {
       log.hidePopover += 1;
-      this.dispatchEvent(toggleEvent('closed'));
+      announce(this, 'closed');
     },
   });
   define(HTMLDialogElement.prototype, 'open', {
@@ -57,5 +62,4 @@ export const installTopLayer = (): { readonly log: TopLayerLog; restore(): void 
   };
 };
 
-export const dismissNatively = (element: HTMLElement): boolean =>
-  element.dispatchEvent(toggleEvent('closed'));
+export const dismissNatively = (element: HTMLElement): boolean => announce(element, 'closed');

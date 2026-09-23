@@ -58,6 +58,14 @@ it('waits for a commit with the lazy modifier', async () => {
 });
 ```
 
+- Under `vi.useFakeTimers()` Vue skips a bubbled event on an ancestor when the event's
+  timestamp equals the listener's attach time (frozen clock). Before dispatching a bubbling
+  event through an element that has its own handler, call `vi.advanceTimersByTime(1)` (see
+  `MenuDriver.press`).
+- Native popover and dialog APIs are stubbed by `TopLayerStubs` (vue) and `installTopLayer`
+  (primitives); both dispatch `beforetoggle` and `toggle`. `scrollIntoView` is absent in
+  jsdom: stub it in the harness and restore it in `unmount()`.
+
 ## Composable tests (`packages/primitives/test`)
 
 Use `captureSetup(() => useThing(), { wrap: providing(() => provideThing(...)) })` from

@@ -12,6 +12,7 @@ import {
   NuiIcon,
   NuiInput,
   NuiLink,
+  NuiMenu,
   NuiPopover,
   NuiProgress,
   NuiRadio,
@@ -22,6 +23,8 @@ import {
   NuiToast,
   NuiToaster,
   NuiTooltip,
+  type NuiMenuEntry,
+  type NuiMenuTriggerSlot,
   type NuiPopoverTriggerSlot,
   type NuiTooltipTriggerSlot,
 } from '../src';
@@ -35,6 +38,20 @@ interface Scenario {
 const fieldWithInput = () =>
   h(NuiField, { label: 'Email', description: 'Work', error: 'Required' }, () =>
     h(NuiInput, { modelValue: 'a', placeholder: 'name@example.com' }),
+  );
+
+const menuEntries: NuiMenuEntry[] = [
+  { label: 'Copy', shortcut: '⌘C' },
+  { type: 'separator' },
+  { type: 'checkbox', label: 'Grid', checked: true, onCheckedChange: () => undefined },
+  { type: 'sub', label: 'Export', items: [{ label: 'PDF' }] },
+];
+
+const renderMenu = () =>
+  h(
+    NuiMenu,
+    { id: 'actions', items: menuEntries },
+    { trigger: (slot: NuiMenuTriggerSlot) => h('button', slot.attrs, 'Actions') },
   );
 
 const renderPopover = () =>
@@ -83,6 +100,7 @@ const scenarios: Scenario[] = [
   },
   { name: 'NuiDrawer', render: () => h(NuiDrawer, { open: true, side: 'start' }, () => 'Body') },
   { name: 'NuiPopover', render: renderPopover },
+  { name: 'NuiMenu', render: renderMenu },
   { name: 'NuiToaster', render: () => h(NuiToaster, { label: 'Notifications' }) },
   {
     name: 'NuiAlert',
@@ -171,6 +189,18 @@ describe('server rendering', () => {
     expect(tooltip).toContain('aria-describedby="hint"');
     expect(tooltip).toContain('role="tooltip"');
     expect(tooltip).toContain('popover="manual"');
+  });
+
+  it('renders a menu with its parts closed and without a live tab stop', async () => {
+    const html = await renderMarkup(renderMenu);
+    expect(html).toContain('role="menu"');
+    expect(html).toContain('popover="auto"');
+    expect(html).toContain('aria-haspopup="menu"');
+    expect(html).toContain('aria-labelledby="actions-trigger"');
+    expect(html).toContain('role="menuitemcheckbox"');
+    expect(html).toContain('aria-checked="true"');
+    expect(html).toContain('aria-expanded="false"');
+    expect(html).not.toContain('tabindex="0"');
   });
 
   it('renders the toaster as an empty manual live region', async () => {

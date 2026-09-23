@@ -65,6 +65,7 @@ await importBuild('primitives', [
 const code = await importBuild('vue', [
   'NuiButton',
   'NuiLink',
+  'NuiMenu',
   'NuiIcon',
   'NuiConfigProvider',
   'NuiField',
