@@ -1,6 +1,8 @@
 import DefaultTheme from 'vitepress/theme';
 import type { Theme } from 'vitepress';
 import {
+  createNuiConfig,
+  NuiAlert,
   NuiButton,
   NuiCheckbox,
   NuiConfigProvider,
@@ -13,10 +15,14 @@ import {
   NuiIcon,
   NuiInput,
   NuiPopover,
+  NuiProgress,
   NuiRadio,
   NuiRadioGroup,
+  NuiSkeleton,
   NuiSwitch,
   NuiTextarea,
+  NuiToast,
+  NuiToaster,
   NuiTooltip,
 } from '@numior/vue';
 import '@numior/tokens/theme.css';
@@ -27,6 +33,7 @@ import './demo.css';
 export default {
   extends: DefaultTheme,
   enhanceApp({ app }) {
+    app.use(createNuiConfig({}));
     app.component('NuiButton', NuiButton);
     app.component('NuiIcon', NuiIcon);
     app.component('NuiConfigProvider', NuiConfigProvider);
@@ -44,5 +51,10 @@ export default {
     app.component('NuiDrawer', NuiDrawer);
     app.component('NuiPopover', NuiPopover);
     app.component('NuiTooltip', NuiTooltip);
+    app.component('NuiToaster', NuiToaster);
+    app.component('NuiToast', NuiToast);
+    app.component('NuiAlert', NuiAlert);
+    app.component('NuiProgress', NuiProgress);
+    app.component('NuiSkeleton', NuiSkeleton);
   },
 } satisfies Theme;

@@ -40,6 +40,15 @@ export default defineConfig({
               { text: 'Подсказка', link: '/components/tooltip' },
             ],
           },
+          {
+            text: 'Обратная связь',
+            items: [
+              { text: 'Уведомления', link: '/components/toast' },
+              { text: 'Алерт', link: '/components/alert' },
+              { text: 'Прогресс', link: '/components/progress' },
+              { text: 'Скелетон', link: '/components/skeleton' },
+            ],
+          },
         ],
       },
     },
@@ -76,6 +85,15 @@ export default defineConfig({
               { text: 'Drawer', link: '/en/components/drawer' },
               { text: 'Popover', link: '/en/components/popover' },
               { text: 'Tooltip', link: '/en/components/tooltip' },
+            ],
+          },
+          {
+            text: 'Feedback',
+            items: [
+              { text: 'Toast', link: '/en/components/toast' },
+              { text: 'Alert', link: '/en/components/alert' },
+              { text: 'Progress', link: '/en/components/progress' },
+              { text: 'Skeleton', link: '/en/components/skeleton' },
             ],
           },
         ],
