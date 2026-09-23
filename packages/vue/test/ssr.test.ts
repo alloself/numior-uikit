@@ -19,6 +19,7 @@ import {
   NuiSkeleton,
   NuiRadioGroup,
   NuiSwitch,
+  NuiTabs,
   NuiTextarea,
   NuiToast,
   NuiToaster,
@@ -26,6 +27,7 @@ import {
   type NuiMenuEntry,
   type NuiMenuTriggerSlot,
   type NuiPopoverTriggerSlot,
+  type NuiTabsPanelSlot,
   type NuiTooltipTriggerSlot,
 } from '../src';
 import { labelTarget, popoverTarget, renderMarkup } from './support/ssr';
@@ -52,6 +54,20 @@ const renderMenu = () =>
     NuiMenu,
     { id: 'actions', items: menuEntries },
     { trigger: (slot: NuiMenuTriggerSlot) => h('button', slot.attrs, 'Actions') },
+  );
+
+const renderTabs = () =>
+  h(
+    NuiTabs,
+    {
+      id: 'settings',
+      modelValue: 'team',
+      tabs: [
+        { value: 'general', label: 'General' },
+        { value: 'team', label: 'Team' },
+      ],
+    },
+    { panel: (slot: NuiTabsPanelSlot) => `${slot.tab.label} panel` },
   );
 
 const renderPopover = () =>
@@ -101,6 +117,7 @@ const scenarios: Scenario[] = [
   { name: 'NuiDrawer', render: () => h(NuiDrawer, { open: true, side: 'start' }, () => 'Body') },
   { name: 'NuiPopover', render: renderPopover },
   { name: 'NuiMenu', render: renderMenu },
+  { name: 'NuiTabs', render: renderTabs },
   { name: 'NuiToaster', render: () => h(NuiToaster, { label: 'Notifications' }) },
   {
     name: 'NuiAlert',
@@ -201,6 +218,16 @@ describe('server rendering', () => {
     expect(html).toContain('aria-checked="true"');
     expect(html).toContain('aria-expanded="false"');
     expect(html).not.toContain('tabindex="0"');
+  });
+
+  it('renders tabs with one selected tab stop and hidden inactive panels', async () => {
+    const html = await renderMarkup(renderTabs);
+    expect(html.match(/aria-selected="true"/g)).toHaveLength(1);
+    expect(html.match(/tabindex="0"/g)).toHaveLength(3);
+    expect(html).toContain('id="settings-tab-team"');
+    expect(html).toContain('aria-labelledby="settings-tab-team"');
+    expect(html).toContain('role="tabpanel"');
+    expect(html).toContain('display:none');
   });
 
   it('renders the toaster as an empty manual live region', async () => {

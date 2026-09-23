@@ -74,6 +74,21 @@ export type {
   NuiMenuTriggerAttrs,
   NuiMenuTriggerSlot,
 } from './menu/menu.types';
+export { default as NuiTabs } from './tabs/NuiTabs.vue';
+export { default as NuiTabList } from './tabs/NuiTabList.vue';
+export { default as NuiTab } from './tabs/NuiTab.vue';
+export { default as NuiTabPanel } from './tabs/NuiTabPanel.vue';
+export type {
+  NuiTabDescriptor,
+  NuiTabListProps,
+  NuiTabPanelProps,
+  NuiTabProps,
+  NuiTabsActivation,
+  NuiTabsOrientation,
+  NuiTabsPanelSlot,
+  NuiTabsProps,
+  NuiTabsVariant,
+} from './tabs/tabs.types';
 export { default as NuiToaster } from './toast/NuiToaster.vue';
 export { default as NuiToast } from './toast/NuiToast.vue';
 export type {
