@@ -17,6 +17,7 @@
 @import './listbox/listbox.css';
 @import './select/select.css';
 @import './combobox/combobox.css';
+@import './pagination/pagination.css';
 @import './toast/toast.css';
 @import './alert/alert.css';
 @import './progress/progress.css';

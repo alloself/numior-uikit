@@ -14,6 +14,7 @@ import {
   NuiIcon,
   NuiInput,
   NuiLink,
+  NuiPagination,
   NuiMenu,
   NuiPopover,
   NuiProgress,
@@ -147,6 +148,10 @@ const scenarios: Scenario[] = [
   { name: 'NuiTabs', render: renderTabs },
   { name: 'NuiSelect in a field', render: renderSelect },
   { name: 'NuiCombobox in a field', render: renderCombobox },
+  {
+    name: 'NuiPagination',
+    render: () => h(NuiPagination, { total: 60, page: 2, href: (page: number) => `#page-${page}` }),
+  },
   {
     name: 'NuiBreadcrumbs',
     render: () =>
@@ -308,6 +313,16 @@ describe('server rendering', () => {
     expect(html).toContain('value="Banana"');
     expect(html).toContain('type="hidden" name="fruit" value="banana"');
     expect(html).not.toContain('aria-activedescendant');
+  });
+
+  it('renders pagination links with the current page marked', async () => {
+    const html = await renderMarkup(() =>
+      h(NuiPagination, { total: 60, page: 2, href: (page: number) => `#page-${page}` }),
+    );
+    expect(html).toContain('aria-label="Pagination"');
+    expect(html).toContain('aria-current="page"');
+    expect(html).toContain('href="#page-3"');
+    expect(html).toContain('21–40 of 60');
   });
 
   it('renders the toaster as an empty manual live region', async () => {

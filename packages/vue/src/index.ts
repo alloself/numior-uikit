@@ -100,6 +100,8 @@ export type { NuiSelectProps, NuiSelectValueSlot } from './select/select.types';
 export { default as NuiCombobox } from './combobox/NuiCombobox.vue';
 export type { NuiComboboxFilter, NuiComboboxProps } from './combobox/combobox.types';
 export type { NuiListboxOptionSlot } from './listbox/listbox.types';
+export { default as NuiPagination } from './pagination/NuiPagination.vue';
+export type { NuiPaginationProps } from './pagination/pagination.types';
 export type { NuiOption, NuiOptionGroup, NuiOptionKey, NuiOptionSource } from './shared/options';
 export { default as NuiToaster } from './toast/NuiToaster.vue';
 export { default as NuiToast } from './toast/NuiToast.vue';
