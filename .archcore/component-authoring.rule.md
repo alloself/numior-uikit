@@ -7,7 +7,9 @@ status: accepted
 
 Компоненты `@numior/vue` и примитивы `@numior/primitives`:
 
-- Только `<script setup lang="ts">`. Props объявляются `defineProps<Props>()` с reactive
+- В каждом SFC порядок блоков: сначала `<template>`, затем `<script setup lang="ts">`,
+  затем `<style>` (если он вообще нужен); линтер проверяет это правилом `vue/block-order`.
+  Props объявляются `defineProps<Props>()` с reactive
   destructure для дефолтов: `const { size = 'md', disabled = undefined } = defineProps<Props>()`.
   Интерфейс props лежит в `<name>.types.ts`, необязательные поля объявлены с `| undefined`.
   Boolean, который должен наследоваться из контекста поля, получает дефолт `= undefined`

@@ -1,54 +1,3 @@
-<script setup lang="ts">
-import { computed, ref } from 'vue';
-import {
-  NuiButton,
-  NuiCheckbox,
-  NuiField,
-  NuiInput,
-  NuiRadio,
-  NuiRadioGroup,
-  NuiSwitch,
-  NuiTextarea,
-} from '@numior/vue';
-
-const name = ref('');
-const email = ref('');
-const bio = ref('');
-const terms = ref(false);
-const channels = ref<string[]>([]);
-const plan = ref('free');
-const notifications = ref(true);
-const submitted = ref(0);
-const emailError = computed(() =>
-  email.value && !email.value.includes('@') ? 'Укажите адрес с символом @' : undefined,
-);
-const output = computed(() =>
-  JSON.stringify(
-    {
-      name: name.value,
-      email: email.value,
-      bio: bio.value,
-      terms: terms.value,
-      channels: channels.value,
-      plan: plan.value,
-      notifications: notifications.value,
-      submitted: submitted.value,
-    },
-    null,
-    2,
-  ),
-);
-function reset() {
-  name.value = '';
-  email.value = '';
-  bio.value = '';
-  terms.value = false;
-  channels.value = [];
-  plan.value = 'free';
-  notifications.value = true;
-}
-</script>
-
 <template>
   <section class="panel" aria-labelledby="forms-title">
     <div class="section-heading">
@@ -106,3 +55,54 @@ function reset() {
     <pre class="output" data-testid="forms-output">{{ output }}</pre>
   </section>
 </template>
+
+<script setup lang="ts">
+import { computed, ref } from 'vue';
+import {
+  NuiButton,
+  NuiCheckbox,
+  NuiField,
+  NuiInput,
+  NuiRadio,
+  NuiRadioGroup,
+  NuiSwitch,
+  NuiTextarea,
+} from '@numior/vue';
+
+const name = ref('');
+const email = ref('');
+const bio = ref('');
+const terms = ref(false);
+const channels = ref<string[]>([]);
+const plan = ref('free');
+const notifications = ref(true);
+const submitted = ref(0);
+const emailError = computed(() =>
+  email.value && !email.value.includes('@') ? 'Укажите адрес с символом @' : undefined,
+);
+const output = computed(() =>
+  JSON.stringify(
+    {
+      name: name.value,
+      email: email.value,
+      bio: bio.value,
+      terms: terms.value,
+      channels: channels.value,
+      plan: plan.value,
+      notifications: notifications.value,
+      submitted: submitted.value,
+    },
+    null,
+    2,
+  ),
+);
+function reset() {
+  name.value = '';
+  email.value = '';
+  bio.value = '';
+  terms.value = false;
+  channels.value = [];
+  plan.value = 'free';
+  notifications.value = true;
+}
+</script>

@@ -1,26 +1,3 @@
-<script setup lang="ts" generic="T">
-import { computed, useTemplateRef } from 'vue';
-import { useControlId, useRadioGroup, useSplitAttrs } from '@numior/primitives';
-import type { NuiRadioProps } from './radio.types';
-
-defineOptions({ inheritAttrs: false });
-const { value, id, disabled = undefined } = defineProps<NuiRadioProps<T>>();
-const group = useRadioGroup();
-const split = useSplitAttrs();
-const controlId = useControlId(() => id);
-const checked = computed(() => group !== null && group.modelValue.value === value);
-const isDisabled = computed(() => disabled ?? group?.disabled.value ?? false);
-const isInvalid = computed(() => group?.invalid.value ?? false);
-const groupAttrs = computed(() =>
-  group ? { name: group.name.value, checked: checked.value } : {},
-);
-const radioElement = useTemplateRef<HTMLInputElement>('radio');
-
-function onChange(): void {
-  if (radioElement.value?.checked) group?.select(value);
-}
-</script>
-
 <template>
   <label
     class="nui-radio"
@@ -48,3 +25,26 @@ function onChange(): void {
     </span>
   </label>
 </template>
+
+<script setup lang="ts" generic="T">
+import { computed, useTemplateRef } from 'vue';
+import { useControlId, useRadioGroup, useSplitAttrs } from '@numior/primitives';
+import type { NuiRadioProps } from './radio.types';
+
+defineOptions({ inheritAttrs: false });
+const { value, id, disabled = undefined } = defineProps<NuiRadioProps<T>>();
+const group = useRadioGroup();
+const split = useSplitAttrs();
+const controlId = useControlId(() => id);
+const checked = computed(() => group !== null && group.modelValue.value === value);
+const isDisabled = computed(() => disabled ?? group?.disabled.value ?? false);
+const isInvalid = computed(() => group?.invalid.value ?? false);
+const groupAttrs = computed(() =>
+  group ? { name: group.name.value, checked: checked.value } : {},
+);
+const radioElement = useTemplateRef<HTMLInputElement>('radio');
+
+function onChange(): void {
+  if (radioElement.value?.checked) group?.select(value);
+}
+</script>

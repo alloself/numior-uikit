@@ -1,3 +1,31 @@
+<template>
+  <div
+    class="nui-input"
+    :class="[
+      `nui-input--size-${size}`,
+      { 'nui-input--invalid': isInvalid, 'nui-input--disabled': isDisabled },
+    ]"
+    v-bind="split.rootAttrs()"
+  >
+    <span v-if="$slots.prefix" class="nui-input__prefix">
+      <slot name="prefix" />
+    </span>
+    <input
+      ref="input"
+      class="nui-input__control"
+      v-bind="{ ...controlAttrs, ...split.controlAttrs() }"
+      :type="type"
+      :readonly="readonly || undefined"
+      :value="draft"
+      @input="onInput"
+      @change="onChange"
+    />
+    <span v-if="$slots.suffix" class="nui-input__suffix">
+      <slot name="suffix" />
+    </span>
+  </div>
+</template>
+
 <script setup lang="ts">
 import { ref, useTemplateRef, watch } from 'vue';
 import { useFieldControl, useSplitAttrs } from '@numior/primitives';
@@ -44,31 +72,3 @@ function onChange(): void {
 
 defineExpose({ focus: () => inputElement.value?.focus() });
 </script>
-
-<template>
-  <div
-    class="nui-input"
-    :class="[
-      `nui-input--size-${size}`,
-      { 'nui-input--invalid': isInvalid, 'nui-input--disabled': isDisabled },
-    ]"
-    v-bind="split.rootAttrs()"
-  >
-    <span v-if="$slots.prefix" class="nui-input__prefix">
-      <slot name="prefix" />
-    </span>
-    <input
-      ref="input"
-      class="nui-input__control"
-      v-bind="{ ...controlAttrs, ...split.controlAttrs() }"
-      :type="type"
-      :readonly="readonly || undefined"
-      :value="draft"
-      @input="onInput"
-      @change="onChange"
-    />
-    <span v-if="$slots.suffix" class="nui-input__suffix">
-      <slot name="suffix" />
-    </span>
-  </div>
-</template>

@@ -1,3 +1,28 @@
+<template>
+  <component
+    :is="group ? 'fieldset' : 'div'"
+    class="nui-field"
+    :class="{
+      'nui-field--group': group,
+      'nui-field--invalid': isInvalid,
+      'nui-field--required': isRequired,
+      'nui-field--disabled': isDisabled,
+    }"
+    :disabled="group && isDisabled ? true : undefined"
+  >
+    <NuiFieldLabel v-if="hasLabel()">
+      <slot name="label">{{ label }}</slot>
+    </NuiFieldLabel>
+    <slot />
+    <NuiFieldDescription v-if="hasDescription()">
+      <slot name="description">{{ description }}</slot>
+    </NuiFieldDescription>
+    <NuiFieldError v-if="hasError()">
+      <slot name="error">{{ error }}</slot>
+    </NuiFieldError>
+  </component>
+</template>
+
 <script setup lang="ts">
 import { useSlots } from 'vue';
 import { provideField } from '@numior/primitives';
@@ -34,28 +59,3 @@ const isInvalid = field.invalid;
 const isRequired = field.required;
 const isDisabled = field.disabled;
 </script>
-
-<template>
-  <component
-    :is="group ? 'fieldset' : 'div'"
-    class="nui-field"
-    :class="{
-      'nui-field--group': group,
-      'nui-field--invalid': isInvalid,
-      'nui-field--required': isRequired,
-      'nui-field--disabled': isDisabled,
-    }"
-    :disabled="group && isDisabled ? true : undefined"
-  >
-    <NuiFieldLabel v-if="hasLabel()">
-      <slot name="label">{{ label }}</slot>
-    </NuiFieldLabel>
-    <slot />
-    <NuiFieldDescription v-if="hasDescription()">
-      <slot name="description">{{ description }}</slot>
-    </NuiFieldDescription>
-    <NuiFieldError v-if="hasError()">
-      <slot name="error">{{ error }}</slot>
-    </NuiFieldError>
-  </component>
-</template>

@@ -1,17 +1,3 @@
-<script setup lang="ts">
-import NuiIcon from '../icon/NuiIcon.vue';
-import type { NuiButtonProps } from './button.types';
-
-const {
-  variant = 'solid',
-  tone = 'primary',
-  size = 'md',
-  type = 'button',
-  disabled = false,
-  loading = false,
-} = defineProps<NuiButtonProps>();
-</script>
-
 <template>
   <button
     class="nui-button"
@@ -33,3 +19,17 @@ const {
     </span>
   </button>
 </template>
+
+<script setup lang="ts">
+import NuiIcon from '../icon/NuiIcon.vue';
+import type { NuiButtonProps } from './button.types';
+
+const {
+  variant = 'solid',
+  tone = 'primary',
+  size = 'md',
+  type = 'button',
+  disabled = false,
+  loading = false,
+} = defineProps<NuiButtonProps>();
+</script>

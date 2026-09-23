@@ -17,7 +17,15 @@ and its types from `packages/vue/src/index.ts`, add the export name to
 
 ## Script
 
+The template comes first in every SFC, the script second (`vue/block-order` enforces it).
+
 ```vue
+<template>
+  <div class="nui-thing" :class="[`nui-thing--size-${size}`, { 'nui-thing--invalid': isInvalid }]">
+    ...
+  </div>
+</template>
+
 <script setup lang="ts">
 import { useFieldControl, useSplitAttrs } from '@numior/primitives';
 import type { NuiThingProps } from './thing.types';

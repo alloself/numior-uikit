@@ -1,3 +1,23 @@
+<template>
+  <div
+    :id="attrs.id"
+    role="radiogroup"
+    class="nui-radio-group"
+    :class="[
+      `nui-radio-group--orientation-${orientation}`,
+      `nui-radio-group--size-${size}`,
+      { 'nui-radio-group--invalid': isInvalid, 'nui-radio-group--disabled': isDisabled },
+    ]"
+    :aria-labelledby="labelledBy"
+    :aria-describedby="attrs['aria-describedby']"
+    :aria-invalid="attrs['aria-invalid']"
+    :aria-required="isRequired || undefined"
+    :aria-disabled="isDisabled || undefined"
+  >
+    <slot />
+  </div>
+</template>
+
 <script setup lang="ts" generic="T">
 import { computed } from 'vue';
 import { provideRadioGroup, useField, useFieldControl } from '@numior/primitives';
@@ -32,23 +52,3 @@ provideRadioGroup<T>({
   },
 });
 </script>
-
-<template>
-  <div
-    :id="attrs.id"
-    role="radiogroup"
-    class="nui-radio-group"
-    :class="[
-      `nui-radio-group--orientation-${orientation}`,
-      `nui-radio-group--size-${size}`,
-      { 'nui-radio-group--invalid': isInvalid, 'nui-radio-group--disabled': isDisabled },
-    ]"
-    :aria-labelledby="labelledBy"
-    :aria-describedby="attrs['aria-describedby']"
-    :aria-invalid="attrs['aria-invalid']"
-    :aria-required="isRequired || undefined"
-    :aria-disabled="isDisabled || undefined"
-  >
-    <slot />
-  </div>
-</template>

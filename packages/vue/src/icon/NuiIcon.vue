@@ -1,3 +1,9 @@
+<template>
+  <span class="nui-icon" aria-hidden="true">
+    <component :is="glyph" v-if="glyph" class="nui-icon__glyph" focusable="false" />
+  </span>
+</template>
+
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useIcons } from '@numior/primitives';
@@ -11,9 +17,3 @@ const glyph = computed(() => {
   return alias === undefined ? undefined : (icons[alias] ?? defaultIcons[alias]);
 });
 </script>
-
-<template>
-  <span class="nui-icon" aria-hidden="true">
-    <component :is="glyph" v-if="glyph" class="nui-icon__glyph" focusable="false" />
-  </span>
-</template>

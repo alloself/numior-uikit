@@ -1,22 +1,3 @@
-<script setup lang="ts">
-import { ref } from 'vue';
-import { NuiButton } from '@numior/vue';
-import FormsSection from './FormsSection.vue';
-
-const theme = ref('system');
-const density = ref('comfortable');
-const direction = ref<'ltr' | 'rtl'>('ltr');
-const accent = ref('indigo');
-const count = ref(0);
-const loading = ref(false);
-
-const accents: Record<string, Record<string, string>> = {
-  indigo: {},
-  emerald: { '--nui-primary': '#047857', '--nui-primary-foreground': '#ffffff' },
-  rose: { '--nui-primary': '#be123c', '--nui-primary-foreground': '#ffffff' },
-};
-</script>
-
 <template>
   <main
     class="workspace"
@@ -127,3 +108,22 @@ const accents: Record<string, Record<string, string>> = {
     <footer>Закрытая разработка · MIT · <a href="/">Автономный CSS</a></footer>
   </main>
 </template>
+
+<script setup lang="ts">
+import { ref } from 'vue';
+import { NuiButton } from '@numior/vue';
+import FormsSection from './FormsSection.vue';
+
+const theme = ref('system');
+const density = ref('comfortable');
+const direction = ref<'ltr' | 'rtl'>('ltr');
+const accent = ref('indigo');
+const count = ref(0);
+const loading = ref(false);
+
+const accents: Record<string, Record<string, string>> = {
+  indigo: {},
+  emerald: { '--nui-primary': '#047857', '--nui-primary-foreground': '#ffffff' },
+  rose: { '--nui-primary': '#be123c', '--nui-primary-foreground': '#ffffff' },
+};
+</script>

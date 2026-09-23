@@ -1,3 +1,21 @@
+<template>
+  <textarea
+    ref="textarea"
+    class="nui-textarea"
+    :class="[
+      `nui-textarea--size-${size}`,
+      `nui-textarea--resize-${resize}`,
+      { 'nui-textarea--invalid': isInvalid },
+    ]"
+    v-bind="controlAttrs"
+    :rows="rows"
+    :readonly="readonly || undefined"
+    :value="draft"
+    @input="onInput"
+    @change="onChange"
+  />
+</template>
+
 <script setup lang="ts">
 import { ref, useTemplateRef, watch } from 'vue';
 import { useFieldControl } from '@numior/primitives';
@@ -44,21 +62,3 @@ function onChange(): void {
 
 defineExpose({ focus: () => textareaElement.value?.focus() });
 </script>
-
-<template>
-  <textarea
-    ref="textarea"
-    class="nui-textarea"
-    :class="[
-      `nui-textarea--size-${size}`,
-      `nui-textarea--resize-${resize}`,
-      { 'nui-textarea--invalid': isInvalid },
-    ]"
-    v-bind="controlAttrs"
-    :rows="rows"
-    :readonly="readonly || undefined"
-    :value="draft"
-    @input="onInput"
-    @change="onChange"
-  />
-</template>

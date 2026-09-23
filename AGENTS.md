@@ -7,6 +7,7 @@ that its features are implemented. Component and test conventions live in the sk
 `.claude/skills/nui-component` and `.claude/skills/nui-testing`.
 
 - Write new code; do not copy SaleHub/Ln implementations.
+- SFC block order is `<template>`, then `<script setup lang="ts">` (ESLint `vue/block-order`).
 - Props: `defineProps<Props>()` with reactive destructure defaults and `defineModel`;
   never `withDefaults`, runtime prop objects or `PropType`. Tri-state booleans use `= undefined`.
 - No `as` or `!` type assertions anywhere (tests and configs included); `as const` only.
