@@ -12,10 +12,12 @@ import {
   NuiFieldLabel,
   NuiIcon,
   NuiInput,
+  NuiPopover,
   NuiRadio,
   NuiRadioGroup,
   NuiSwitch,
   NuiTextarea,
+  NuiTooltip,
 } from '@numior/vue';
 import '@numior/tokens/theme.css';
 import '@numior/vue/styles.css';
@@ -40,5 +42,7 @@ export default {
     app.component('NuiSwitch', NuiSwitch);
     app.component('NuiDialog', NuiDialog);
     app.component('NuiDrawer', NuiDrawer);
+    app.component('NuiPopover', NuiPopover);
+    app.component('NuiTooltip', NuiTooltip);
   },
 } satisfies Theme;

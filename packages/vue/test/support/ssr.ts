@@ -9,3 +9,8 @@ export function labelTarget(html: string): string | undefined {
   const [, id] = /<label[^>]* for="([^"]+)"/.exec(html) ?? [];
   return id;
 }
+
+export function popoverTarget(html: string): string | undefined {
+  const [, id] = /popovertarget="([^"]+)"/.exec(html) ?? [];
+  return id;
+}

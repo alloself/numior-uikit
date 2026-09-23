@@ -36,6 +36,8 @@ export default defineConfig({
             items: [
               { text: 'Диалог', link: '/components/dialog' },
               { text: 'Выдвижная панель', link: '/components/drawer' },
+              { text: 'Поповер', link: '/components/popover' },
+              { text: 'Подсказка', link: '/components/tooltip' },
             ],
           },
         ],
@@ -72,6 +74,8 @@ export default defineConfig({
             items: [
               { text: 'Dialog', link: '/en/components/dialog' },
               { text: 'Drawer', link: '/en/components/drawer' },
+              { text: 'Popover', link: '/en/components/popover' },
+              { text: 'Tooltip', link: '/en/components/tooltip' },
             ],
           },
         ],

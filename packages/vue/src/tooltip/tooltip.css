@@ -1,0 +1,64 @@
+.nui-tooltip {
+  --_shift: 0 var(--nui-space-1);
+  --_arrow: 0.5rem;
+
+  position: fixed;
+  inset: auto;
+  max-inline-size: min(18rem, calc(100vw - var(--nui-space-4)));
+  margin: 0;
+  padding: var(--nui-space-1) var(--nui-space-2);
+  border: 0;
+  border-radius: var(--nui-radius-sm);
+  background: var(--nui-neutral);
+  color: var(--nui-neutral-foreground);
+  font-family: var(--nui-font);
+  font-size: var(--nui-font-size-xs);
+  line-height: var(--nui-line-height);
+  box-shadow: var(--nui-shadow-sm);
+  overflow: visible;
+  opacity: 0;
+  translate: var(--_shift);
+  transition:
+    opacity var(--nui-duration-fast) var(--nui-easing),
+    translate var(--nui-duration-fast) var(--nui-easing),
+    display var(--nui-duration-fast) allow-discrete,
+    overlay var(--nui-duration-fast) allow-discrete;
+}
+.nui-tooltip--side-bottom {
+  --_shift: 0 calc(-1 * var(--nui-space-1));
+}
+.nui-tooltip--side-left {
+  --_shift: var(--nui-space-1) 0;
+}
+.nui-tooltip--side-right {
+  --_shift: calc(-1 * var(--nui-space-1)) 0;
+}
+.nui-tooltip:popover-open {
+  opacity: 1;
+  translate: 0 0;
+}
+@starting-style {
+  .nui-tooltip:popover-open {
+    opacity: 0;
+    translate: var(--_shift);
+  }
+}
+.nui-tooltip__arrow {
+  position: absolute;
+  inline-size: var(--_arrow);
+  block-size: var(--_arrow);
+  background: inherit;
+  rotate: 45deg;
+}
+.nui-tooltip--side-top .nui-tooltip__arrow {
+  bottom: calc(var(--_arrow) / -2);
+}
+.nui-tooltip--side-bottom .nui-tooltip__arrow {
+  top: calc(var(--_arrow) / -2);
+}
+.nui-tooltip--side-left .nui-tooltip__arrow {
+  right: calc(var(--_arrow) / -2);
+}
+.nui-tooltip--side-right .nui-tooltip__arrow {
+  left: calc(var(--_arrow) / -2);
+}

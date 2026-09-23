@@ -33,6 +33,19 @@ export { default as NuiDialog } from './dialog/NuiDialog.vue';
 export type { NuiDialogProps } from './dialog/dialog.types';
 export { default as NuiDrawer } from './drawer/NuiDrawer.vue';
 export type { NuiDrawerProps, NuiDrawerSide } from './drawer/drawer.types';
+export { default as NuiPopover } from './popover/NuiPopover.vue';
+export type {
+  NuiPopoverProps,
+  NuiPopoverTriggerAttrs,
+  NuiPopoverTriggerSlot,
+} from './popover/popover.types';
+export { default as NuiTooltip } from './tooltip/NuiTooltip.vue';
+export type {
+  NuiTooltipProps,
+  NuiTooltipTriggerAttrs,
+  NuiTooltipTriggerSlot,
+} from './tooltip/tooltip.types';
+export type { NuiTriggerRef } from './shared/trigger-ref';
 export type { NuiFieldControlProps, NuiSize, NuiTone } from './shared/types';
 export {
   createNuiConfig,

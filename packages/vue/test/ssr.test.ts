@@ -10,12 +10,16 @@ import {
   NuiField,
   NuiIcon,
   NuiInput,
+  NuiPopover,
   NuiRadio,
   NuiRadioGroup,
   NuiSwitch,
   NuiTextarea,
+  NuiTooltip,
+  type NuiPopoverTriggerSlot,
+  type NuiTooltipTriggerSlot,
 } from '../src';
-import { labelTarget, renderMarkup } from './support/ssr';
+import { labelTarget, popoverTarget, renderMarkup } from './support/ssr';
 
 interface Scenario {
   readonly name: string;
@@ -25,6 +29,16 @@ interface Scenario {
 const fieldWithInput = () =>
   h(NuiField, { label: 'Email', description: 'Work', error: 'Required' }, () =>
     h(NuiInput, { modelValue: 'a', placeholder: 'name@example.com' }),
+  );
+
+const renderPopover = () =>
+  h(
+    NuiPopover,
+    { open: true },
+    {
+      trigger: (slot: NuiPopoverTriggerSlot) => h('button', slot.attrs, 'Open'),
+      default: () => 'Content',
+    },
   );
 
 const scenarios: Scenario[] = [
@@ -58,6 +72,19 @@ const scenarios: Scenario[] = [
       ),
   },
   { name: 'NuiDrawer', render: () => h(NuiDrawer, { open: true, side: 'start' }, () => 'Body') },
+  { name: 'NuiPopover', render: renderPopover },
+  {
+    name: 'NuiTooltip',
+    render: () =>
+      h(
+        NuiTooltip,
+        { id: 'hint' },
+        {
+          trigger: (slot: NuiTooltipTriggerSlot) => h('button', slot.attrs, 'Save'),
+          default: () => 'Saves the document',
+        },
+      ),
+  },
 ];
 
 describe('server rendering', () => {
@@ -88,6 +115,28 @@ describe('server rendering', () => {
     expect(html).not.toMatch(/<dialog[^>]* open/);
     expect(html).toContain('aria-labelledby="confirm-title"');
     expect(html).toContain('id="confirm-title"');
+  });
+
+  it('links popover triggers and content by id on the server and keeps them hidden', async () => {
+    const html = await renderMarkup(renderPopover);
+    const id = popoverTarget(html);
+    expect(id).toBeTruthy();
+    expect(html).toContain(`id="${id}"`);
+    expect(html).toContain('popover="auto"');
+    expect(html).toContain('aria-expanded="true"');
+    const tooltip = await renderMarkup(() =>
+      h(
+        NuiTooltip,
+        { id: 'hint' },
+        {
+          trigger: (slot: NuiTooltipTriggerSlot) => h('button', slot.attrs, 'Save'),
+          default: () => 'Saves the document',
+        },
+      ),
+    );
+    expect(tooltip).toContain('aria-describedby="hint"');
+    expect(tooltip).toContain('role="tooltip"');
+    expect(tooltip).toContain('popover="manual"');
   });
 
   it('renders lazy default icons on the server', async () => {

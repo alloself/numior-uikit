@@ -102,6 +102,70 @@ test.describe('layers', () => {
     await expectRgb(playground.workspace, 'background-color', [255, 255, 255]);
   });
 
+  test('popover opens from its native invoker, positions in view and light-dismisses', async ({
+    page,
+  }) => {
+    const playground = new PlaygroundPage(page);
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    const { overlays } = playground;
+    await overlays.popoverTrigger.click();
+    await expect(overlays.popover).toBeVisible();
+    await expect(overlays.popoverTrigger).toHaveAttribute('aria-expanded', 'true');
+    expect(await overlays.isInsideViewport(overlays.popover)).toBe(true);
+    await expect.poll(async () => (await overlays.readOutput()).popoverOpen).toBe(true);
+    await overlays.pressEscape();
+    await expect(overlays.popover).toBeHidden();
+    await expect(overlays.popoverTrigger).toHaveAttribute('aria-expanded', 'false');
+    await overlays.popoverTrigger.click();
+    await expect(overlays.popover).toBeVisible();
+    await overlays.clickBackdrop();
+    await expect(overlays.popover).toBeHidden();
+    await expect.poll(async () => (await overlays.readOutput()).popoverOpen).toBe(false);
+  });
+
+  test('popover content follows the trigger in the tab order', async ({ page, isMobile }) => {
+    test.skip(isMobile, 'keyboard navigation is a desktop scenario');
+    const playground = new PlaygroundPage(page);
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    const { overlays } = playground;
+    await overlays.popoverTrigger.focus();
+    await page.keyboard.press('Enter');
+    await expect(overlays.popover).toBeVisible();
+    await page.keyboard.press('Tab');
+    await expect(overlays.popoverInput).toBeFocused();
+  });
+
+  test('tooltip appears on hover and focus, hides on leave and Escape, ignores touch', async ({
+    page,
+    isMobile,
+  }) => {
+    const playground = new PlaygroundPage(page);
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    const { overlays } = playground;
+    if (isMobile) {
+      await overlays.tooltipTrigger.tap();
+      await page.waitForTimeout(500);
+      await expect(overlays.tooltip).toBeHidden();
+      return;
+    }
+    await overlays.tooltipTrigger.hover();
+    await expect(overlays.tooltip).toBeVisible();
+    await expect(overlays.tooltip).toHaveRole('tooltip');
+    await expect(overlays.tooltipTrigger).toHaveAccessibleDescription(
+      'Сохраняет документ и историю',
+    );
+    await page.mouse.move(0, 0);
+    await expect(overlays.tooltip).toBeHidden();
+    await overlays.tooltipTrigger.focus();
+    await expect(overlays.tooltip).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(overlays.tooltip).toBeHidden();
+    await expect(overlays.tooltipTrigger).toBeFocused();
+  });
+
   test('open layers have no automatically detectable WCAG AA violations', async ({ page }) => {
     const playground = new PlaygroundPage(page);
     await playground.emulate({ reducedMotion: 'reduce' });
@@ -109,6 +173,11 @@ test.describe('layers', () => {
     const { overlays } = playground;
     for (const theme of ['light', 'dark'] as const) {
       await playground.setTheme(theme);
+      await overlays.popoverTrigger.click();
+      await expect(overlays.popover).toBeVisible();
+      expect(await playground.wcagViolations()).toEqual([]);
+      await overlays.pressEscape();
+      await expect(overlays.popover).toBeHidden();
       await overlays.dialogOpen.click();
       await expect(overlays.dialog).toBeVisible();
       expect(await playground.wcagViolations()).toEqual([]);

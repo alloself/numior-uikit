@@ -2,7 +2,7 @@
   <section class="panel" aria-labelledby="overlays-title">
     <div class="section-heading">
       <h2 id="overlays-title">Слои</h2>
-      <span class="tag">NuiDialog · NuiDrawer</span>
+      <span class="tag">NuiDialog · NuiDrawer · NuiPopover · NuiTooltip</span>
     </div>
     <div class="nui-flex nui-wrap nui-items-center nui-gap-2">
       <NuiButton data-testid="dialog-open" @click="dialogOpen = true">Открыть диалог</NuiButton>
@@ -63,6 +63,26 @@
         <NuiInput placeholder="Название" data-testid="drawer-input" />
       </NuiField>
     </NuiDrawer>
+    <div class="nui-flex nui-wrap nui-items-center nui-gap-2 tones">
+      <NuiPopover v-model:open="popoverOpen" placement="bottom-start" arrow data-testid="popover">
+        <template #trigger="{ attrs }">
+          <NuiButton v-bind="attrs" variant="outline" data-testid="popover-trigger"
+            >Фильтры</NuiButton
+          >
+        </template>
+        <NuiField label="Автор">
+          <NuiInput placeholder="Имя" data-testid="popover-input" />
+        </NuiField>
+      </NuiPopover>
+      <NuiTooltip v-model:open="tooltipOpen" data-testid="tooltip">
+        <template #trigger="{ attrs }">
+          <NuiButton v-bind="attrs" variant="ghost" tone="neutral" data-testid="tooltip-trigger"
+            >Сохранить</NuiButton
+          >
+        </template>
+        Сохраняет документ и историю
+      </NuiTooltip>
+    </div>
     <pre class="output" data-testid="overlays-output">{{ output }}</pre>
   </section>
 </template>
@@ -75,6 +95,8 @@ import {
   NuiDrawer,
   NuiField,
   NuiInput,
+  NuiPopover,
+  NuiTooltip,
   type NuiDrawerSide,
 } from '@numior/vue';
 
@@ -83,6 +105,8 @@ const dialogResult = ref('');
 const persistentOpen = ref(false);
 const drawerOpen = ref(false);
 const side = ref<NuiDrawerSide>('end');
+const popoverOpen = ref(false);
+const tooltipOpen = ref(false);
 const output = computed(() =>
   JSON.stringify(
     {
@@ -91,6 +115,8 @@ const output = computed(() =>
       persistentOpen: persistentOpen.value,
       drawerOpen: drawerOpen.value,
       side: side.value,
+      popoverOpen: popoverOpen.value,
+      tooltipOpen: tooltipOpen.value,
     },
     null,
     2,

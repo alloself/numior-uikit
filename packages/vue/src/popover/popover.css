@@ -1,0 +1,74 @@
+.nui-popover {
+  --_shift: 0 calc(-1 * var(--nui-space-1));
+  --_arrow: 0.625rem;
+
+  position: fixed;
+  inset: auto;
+  min-inline-size: 8rem;
+  max-inline-size: min(20rem, calc(100vw - var(--nui-space-4)));
+  margin: 0;
+  padding: var(--nui-space-3);
+  border: 1px solid var(--nui-border);
+  border-radius: var(--nui-radius);
+  background: var(--nui-surface-overlay);
+  color: var(--nui-text);
+  font-family: var(--nui-font);
+  font-size: var(--nui-font-size-sm);
+  line-height: var(--nui-line-height);
+  box-shadow: var(--nui-shadow-md);
+  overflow: visible;
+  opacity: 0;
+  translate: var(--_shift);
+  transition:
+    opacity var(--nui-duration-fast) var(--nui-easing),
+    translate var(--nui-duration-normal) var(--nui-easing),
+    display var(--nui-duration-fast) allow-discrete,
+    overlay var(--nui-duration-fast) allow-discrete;
+}
+.nui-popover--side-top {
+  --_shift: 0 var(--nui-space-1);
+}
+.nui-popover--side-left {
+  --_shift: var(--nui-space-1) 0;
+}
+.nui-popover--side-right {
+  --_shift: calc(-1 * var(--nui-space-1)) 0;
+}
+.nui-popover:popover-open {
+  opacity: 1;
+  translate: 0 0;
+}
+@starting-style {
+  .nui-popover:popover-open {
+    opacity: 0;
+    translate: var(--_shift);
+  }
+}
+.nui-popover__arrow {
+  position: absolute;
+  inline-size: var(--_arrow);
+  block-size: var(--_arrow);
+  border: 1px solid var(--nui-border);
+  background: inherit;
+  rotate: 45deg;
+}
+.nui-popover--side-bottom .nui-popover__arrow {
+  top: calc(var(--_arrow) / -2);
+  border-right-color: transparent;
+  border-bottom-color: transparent;
+}
+.nui-popover--side-top .nui-popover__arrow {
+  bottom: calc(var(--_arrow) / -2);
+  border-top-color: transparent;
+  border-left-color: transparent;
+}
+.nui-popover--side-left .nui-popover__arrow {
+  right: calc(var(--_arrow) / -2);
+  border-bottom-color: transparent;
+  border-left-color: transparent;
+}
+.nui-popover--side-right .nui-popover__arrow {
+  left: calc(var(--_arrow) / -2);
+  border-top-color: transparent;
+  border-right-color: transparent;
+}

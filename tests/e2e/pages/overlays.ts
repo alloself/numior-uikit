@@ -8,6 +8,8 @@ export interface OverlaysOutput {
   readonly persistentOpen: boolean;
   readonly drawerOpen: boolean;
   readonly side: string;
+  readonly popoverOpen: boolean;
+  readonly tooltipOpen: boolean;
 }
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
@@ -16,17 +18,20 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
 function parseOverlaysOutput(text: string): OverlaysOutput {
   const data: unknown = JSON.parse(text);
   if (!isRecord(data)) throw new Error('Overlays output is not an object');
-  const { dialogOpen, dialogResult, persistentOpen, drawerOpen, side } = data;
+  const { dialogOpen, dialogResult, persistentOpen, drawerOpen, side, popoverOpen, tooltipOpen } =
+    data;
   if (
     typeof dialogOpen !== 'boolean' ||
     typeof dialogResult !== 'string' ||
     typeof persistentOpen !== 'boolean' ||
     typeof drawerOpen !== 'boolean' ||
-    typeof side !== 'string'
+    typeof side !== 'string' ||
+    typeof popoverOpen !== 'boolean' ||
+    typeof tooltipOpen !== 'boolean'
   ) {
     throw new Error(`Unexpected overlays output: ${text}`);
   }
-  return { dialogOpen, dialogResult, persistentOpen, drawerOpen, side };
+  return { dialogOpen, dialogResult, persistentOpen, drawerOpen, side, popoverOpen, tooltipOpen };
 }
 
 export class OverlaysSection {
@@ -42,6 +47,11 @@ export class OverlaysSection {
   readonly drawerSide: Locator;
   readonly nestedDialogOpen: Locator;
   readonly nestedDialog: Locator;
+  readonly popoverTrigger: Locator;
+  readonly popover: Locator;
+  readonly popoverInput: Locator;
+  readonly tooltipTrigger: Locator;
+  readonly tooltip: Locator;
   readonly output: Locator;
 
   constructor(private readonly page: Page) {
@@ -57,6 +67,11 @@ export class OverlaysSection {
     this.drawerSide = page.getByTestId('drawer-side');
     this.nestedDialogOpen = page.getByTestId('nested-dialog-open');
     this.nestedDialog = page.getByTestId('nested-dialog');
+    this.popoverTrigger = page.getByTestId('popover-trigger');
+    this.popover = page.getByTestId('popover');
+    this.popoverInput = page.getByTestId('popover-input');
+    this.tooltipTrigger = page.getByTestId('tooltip-trigger');
+    this.tooltip = page.getByTestId('tooltip');
     this.output = page.getByTestId('overlays-output');
   }
 
@@ -88,6 +103,18 @@ export class OverlaysSection {
       const width = probe.getBoundingClientRect().width;
       probe.remove();
       return Math.round(width);
+    });
+  }
+
+  isInsideViewport(surface: Locator): Promise<boolean> {
+    return surface.evaluate((element) => {
+      const rect = element.getBoundingClientRect();
+      return (
+        rect.left >= 0 &&
+        rect.top >= 0 &&
+        rect.right <= window.innerWidth &&
+        rect.bottom <= window.innerHeight
+      );
     });
   }
 
