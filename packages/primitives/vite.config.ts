@@ -22,6 +22,6 @@ export default defineConfig({
       fileName: 'index',
     },
     sourcemap: true,
-    rolldownOptions: { external: ['vue'] },
+    rolldownOptions: { external: ['vue', '@floating-ui/dom'] },
   },
 });

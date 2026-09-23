@@ -44,7 +44,15 @@ async function importBuild(name, expectedExports) {
   return readFile(file, 'utf8');
 }
 
-await importBuild('primitives', ['provideField', 'useFieldControl', 'provideIcons']);
+await importBuild('primitives', [
+  'provideField',
+  'useFieldControl',
+  'provideIcons',
+  'useFloating',
+  'usePopover',
+  'useDialog',
+  'useColorScheme',
+]);
 const code = await importBuild('vue', [
   'NuiButton',
   'NuiIcon',
