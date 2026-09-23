@@ -101,6 +101,7 @@ export class FormsSection {
 
 export class PlaygroundPage {
   readonly workspace: Locator;
+  readonly resolvedScheme: Locator;
   readonly clickCount: Locator;
   readonly settings: {
     readonly theme: Locator;
@@ -121,6 +122,7 @@ export class PlaygroundPage {
 
   constructor(readonly page: Page) {
     this.workspace = page.getByRole('main');
+    this.resolvedScheme = page.getByTestId('resolved-scheme');
     this.clickCount = page.getByRole('status');
     this.settings = {
       theme: page.getByTestId('theme'),

@@ -1,7 +1,8 @@
 <template>
   <main
+    ref="workspace"
     class="workspace"
-    :data-nui-theme="theme"
+    data-nui-theme="system"
     :data-nui-density="density"
     :dir="direction"
     :style="accents[accent]"
@@ -13,11 +14,16 @@
     </header>
 
     <section class="panel" aria-labelledby="settings-title">
-      <h2 id="settings-title">Настройки</h2>
+      <div class="section-heading">
+        <h2 id="settings-title">Настройки</h2>
+        <span class="tag"
+          >Схема: <span data-testid="resolved-scheme">{{ resolved }}</span></span
+        >
+      </div>
       <div class="settings">
         <label
           >Тема
-          <select v-model="theme" data-testid="theme">
+          <select v-model="scheme" data-testid="theme">
             <option value="system">Системная</option>
             <option value="light">Светлая</option>
             <option value="dark">Тёмная</option>
@@ -128,18 +134,19 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
-import { NuiButton, NuiDialog } from '@numior/vue';
+import { ref, useTemplateRef } from 'vue';
+import { NuiButton, NuiDialog, useColorScheme } from '@numior/vue';
 import FormsSection from './FormsSection.vue';
 import OverlaysSection from './OverlaysSection.vue';
 
-const theme = ref('system');
 const density = ref('comfortable');
 const direction = ref<'ltr' | 'rtl'>('ltr');
 const accent = ref('indigo');
 const count = ref(0);
 const loading = ref(false);
 const nestedDialogOpen = ref(false);
+const workspace = useTemplateRef<HTMLElement>('workspace');
+const { scheme, resolved } = useColorScheme({ scope: workspace });
 
 const accents: Record<string, Record<string, string>> = {
   indigo: {},

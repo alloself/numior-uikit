@@ -33,8 +33,10 @@ test('theme, scoped overrides, density and RTL work without Tailwind', async ({ 
   await playground.open();
   const { primary, nested, large } = playground.buttons;
   await expectRgb(playground.workspace, 'background-color', [24, 24, 27]);
+  await expect(playground.resolvedScheme).toHaveText('dark');
   await playground.setTheme('light');
   await expectRgb(playground.workspace, 'background-color', [255, 255, 255]);
+  await expect(playground.resolvedScheme).toHaveText('light');
   await expectRgb(nested, 'background-color', [165, 180, 252]);
   await playground.setAccent('emerald');
   await expectRgb(primary, 'background-color', [4, 120, 87]);

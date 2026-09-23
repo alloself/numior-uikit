@@ -45,6 +45,33 @@ If you override `--nui-primary` on a plain element, the inherited
 | Layers     | `--nui-z-dropdown`, `--nui-z-overlay`, `--nui-z-toast`                                                                                                                                 |
 | Controls   | `--nui-control-height-sm/md/lg`, `--nui-control-padding-sm/md/lg`, `--nui-control-font-size-sm/md/lg`; `--nui-control-height`, `--nui-control-padding`, `--nui-control-font-size` = md |
 
+## Switching the color scheme
+
+`useColorScheme` from `@numior/vue` drives `data-nui-theme` on a scope: it reads the
+current attribute or a stored choice, follows `prefers-color-scheme` and writes changes
+back. On the server it returns `system`/`light` without touching the DOM.
+
+```vue
+<script setup lang="ts">
+import { useTemplateRef } from 'vue';
+import { useColorScheme } from '@numior/vue';
+
+const root = useTemplateRef<HTMLElement>('root');
+const { scheme, resolved, toggle } = useColorScheme({ scope: root, storageKey: 'theme' });
+</script>
+
+<template>
+  <div ref="root" data-nui-theme="system">
+    <button @click="toggle()">Now {{ resolved }}</button>
+  </div>
+</template>
+```
+
+Without `scope` the root element is `document.documentElement`; `storageKey` enables
+`localStorage` persistence. Layers (`NuiDialog`, `NuiDrawer`, `NuiPopover`, `NuiTooltip`)
+stay in the initiator's DOM and inherit its theme, density and `dir` in the top layer
+with no extra code.
+
 ## Density and sizes
 
 `data-nui-density="comfortable|compact"` shifts the whole control scale and is

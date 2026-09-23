@@ -45,6 +45,32 @@
 | Слои        | `--nui-z-dropdown`, `--nui-z-overlay`, `--nui-z-toast`                                                                                                                                 |
 | Контролы    | `--nui-control-height-sm/md/lg`, `--nui-control-padding-sm/md/lg`, `--nui-control-font-size-sm/md/lg`; `--nui-control-height`, `--nui-control-padding`, `--nui-control-font-size` = md |
 
+## Переключение схемы
+
+`useColorScheme` из `@numior/vue` управляет `data-nui-theme` на области: читает текущее
+значение атрибута или сохранённый выбор, следит за `prefers-color-scheme` и пишет
+изменения обратно. На сервере возвращает `system`/`light` без обращения к DOM.
+
+```vue
+<script setup lang="ts">
+import { useTemplateRef } from 'vue';
+import { useColorScheme } from '@numior/vue';
+
+const root = useTemplateRef<HTMLElement>('root');
+const { scheme, resolved, toggle } = useColorScheme({ scope: root, storageKey: 'theme' });
+</script>
+
+<template>
+  <div ref="root" data-nui-theme="system">
+    <button @click="toggle()">Сейчас {{ resolved }}</button>
+  </div>
+</template>
+```
+
+Без `scope` используется `document.documentElement`; `storageKey` включает сохранение в
+`localStorage`. Слои (`NuiDialog`, `NuiDrawer`, `NuiPopover`, `NuiTooltip`) остаются в DOM
+инициатора и наследуют его тему, плотность и `dir` в top layer без дополнительного кода.
+
 ## Плотность и размеры
 
 `data-nui-density="comfortable|compact"` сдвигает всю шкалу контролов и наследуется
