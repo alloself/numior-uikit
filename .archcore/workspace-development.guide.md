@@ -22,7 +22,8 @@ Node 24.15+; проверенная и закреплённая версия 24.
 реестр иконок с ленивой загрузкой, split attrs) и компоненты @packages/vue: `NuiButton`
 (variant × tone × size, loading без изменения ширины), `NuiIcon`, `NuiConfigProvider`,
 `NuiField` с частями, `NuiInput`, `NuiTextarea`, `NuiCheckbox`, `NuiRadioGroup`/`NuiRadio`,
-`NuiSwitch`. Конвенции — @.archcore/component-conventions.adr.md и
+`NuiSwitch`, слои `NuiDialog`, `NuiDrawer`, `NuiPopover`, `NuiTooltip` на нативном top layer
+(@.archcore/overlays.adr.md) и `useColorScheme`. Конвенции — @.archcore/component-conventions.adr.md и
 @.archcore/component-authoring.rule.md. Будущие модули перечислены в @packages/README.md;
 готовность 1.0 не заявляется.
 
@@ -32,7 +33,7 @@ Node 24.15+; проверенная и закреплённая версия 24.
 (`ssr.resolve.conditions`, `server.deps.inline`).
 
 Тесты: unit через драйверы и харнессы (`packages/*/test`), SSR через `renderMarkup`, e2e
-через page object `tests/e2e/pages/playground.ts` (`foundation.spec.ts`, `forms.spec.ts`),
+через page objects `tests/e2e/pages/*` (`foundation.spec.ts`, `forms.spec.ts`, `overlays.spec.ts`),
 цвета сравниваются через canvas-пиксель (`tests/e2e/helpers/color.ts`), axe в light/dark под
 `reducedMotion: 'reduce'`. Production-сборка playground держит `build.cssTarget`, чтобы
 lightningcss не переписывал `light-dark()`, `oklch()` и `color-mix()`.
