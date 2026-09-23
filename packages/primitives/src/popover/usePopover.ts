@@ -38,6 +38,7 @@ export interface PopoverControl {
   show(): void;
   hide(): void;
   toggle(): void;
+  raise(): void;
 }
 
 const canToggle = (element: HTMLElement | null | undefined): element is HTMLElement =>
@@ -75,6 +76,15 @@ export const usePopover = (
     watch(() => options.open.value, sync, { immediate: true, flush: 'post' });
   });
 
+  const raise = (): void => {
+    const element = toValue(content);
+    if (!canToggle(element) || !visible.value) {
+      return;
+    }
+    element.hidePopover();
+    element.showPopover();
+  };
+
   const onBeforetoggle = (event: Event): void => {
     const next = 'newState' in event && event.newState === 'open';
     visible.value = next;
@@ -93,5 +103,6 @@ export const usePopover = (
     show: () => setOpen(true),
     hide: () => setOpen(false),
     toggle: () => setOpen(!options.open.value),
+    raise,
   };
 };

@@ -33,6 +33,28 @@ describe('usePopover', () => {
     capture.unmount();
   });
 
+  it('raises an open popover by hiding and showing it again', async () => {
+    const open = ref(false);
+    const capture = captureWithElements((_, content) => usePopover(content, { open }));
+    capture.second.addEventListener(
+      'beforetoggle',
+      capture.value.contentAttrs.value.onBeforetoggle,
+    );
+    open.value = true;
+    await nextTick();
+    capture.value.raise();
+    expect(topLayer.log.hidePopover).toBe(1);
+    expect(topLayer.log.showPopover).toBe(2);
+    expect(open.value).toBe(true);
+    await nextTick();
+    expect(topLayer.log.showPopover).toBe(2);
+    capture.value.hide();
+    await nextTick();
+    capture.value.raise();
+    expect(topLayer.log.showPopover).toBe(2);
+    capture.unmount();
+  });
+
   it('follows native light dismiss and honors manual mode', async () => {
     const open = ref(true);
     const capture = captureWithElements((_, content) =>

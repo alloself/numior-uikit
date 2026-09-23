@@ -17,6 +17,10 @@ export type IconAlias =
   | 'chevron-down'
   | 'x'
   | 'search'
+  | 'info'
+  | 'success'
+  | 'warning'
+  | 'error'
   | (string & NonNullable<unknown>);
 
 export type IconRegistry = Readonly<Record<string, Component>>;
