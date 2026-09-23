@@ -58,7 +58,7 @@
   align-items: center;
   color: var(--nui-text-muted);
 }
-.nui-input:hover:not(.nui-input--disabled) {
+.nui-input:hover:not(.nui-input--disabled):not(:focus-within) {
   border-color: var(--nui-border-strong);
 }
 .nui-input:focus-within {

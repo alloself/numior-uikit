@@ -24,6 +24,8 @@
   font-size: var(--_font-size);
   line-height: var(--nui-line-height);
   cursor: pointer;
+  -webkit-user-select: none;
+  user-select: none;
 }
 .nui-radio-group--size-sm .nui-radio {
   --_size: 1rem;

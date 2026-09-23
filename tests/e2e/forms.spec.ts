@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { expectRgb } from './helpers/color';
 import { PlaygroundPage } from './pages/playground';
 
 test.describe('form controls', () => {
@@ -85,6 +86,23 @@ test.describe('form controls', () => {
     await forms.notifications.check();
     await expect(forms.notifications).toBeChecked();
     expect(await playground.hasHorizontalOverflow()).toBe(false);
+  });
+
+  test('focused input keeps the focus border under the pointer', async ({ page }) => {
+    const playground = new PlaygroundPage(page);
+    await playground.open();
+    await playground.setTheme('light');
+    const { forms } = playground;
+    await forms.nameInput.focus();
+    await forms.nameInput.hover();
+    await expectRgb(forms.wrapperOf(forms.nameInput), 'border-top-color', [67, 56, 202]);
+  });
+
+  test('double-clicking a toggle label does not select its text', async ({ page }) => {
+    const playground = new PlaygroundPage(page);
+    await playground.open();
+    await playground.forms.label('Принимаю условия').dblclick();
+    expect(await page.evaluate(() => document.getSelection()?.isCollapsed ?? true)).toBe(true);
   });
 
   test('controls follow density and size steps', async ({ page }) => {
