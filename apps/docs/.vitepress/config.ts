@@ -29,6 +29,8 @@ export default defineConfig({
               { text: 'Чекбокс', link: '/components/checkbox' },
               { text: 'Радиогруппа', link: '/components/radio-group' },
               { text: 'Переключатель', link: '/components/switch' },
+              { text: 'Выбор из списка', link: '/components/select' },
+              { text: 'Комбобокс', link: '/components/combobox' },
             ],
           },
           {
@@ -56,6 +58,7 @@ export default defineConfig({
               { text: 'Меню', link: '/components/menu' },
               { text: 'Вкладки', link: '/components/tabs' },
               { text: 'Хлебные крошки', link: '/components/breadcrumbs' },
+              { text: 'Пагинация', link: '/components/pagination' },
             ],
           },
         ],
@@ -85,6 +88,8 @@ export default defineConfig({
               { text: 'Checkbox', link: '/en/components/checkbox' },
               { text: 'Radio group', link: '/en/components/radio-group' },
               { text: 'Switch', link: '/en/components/switch' },
+              { text: 'Select', link: '/en/components/select' },
+              { text: 'Combobox', link: '/en/components/combobox' },
             ],
           },
           {
@@ -112,6 +117,7 @@ export default defineConfig({
               { text: 'Menu', link: '/en/components/menu' },
               { text: 'Tabs', link: '/en/components/tabs' },
               { text: 'Breadcrumbs', link: '/en/components/breadcrumbs' },
+              { text: 'Pagination', link: '/en/components/pagination' },
             ],
           },
         ],

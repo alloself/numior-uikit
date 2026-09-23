@@ -91,6 +91,21 @@
       "source": "navigation.adr.md",
       "target": "component-authoring.rule.md",
       "type": "related"
+    },
+    {
+      "source": "pickers.adr.md",
+      "target": "numior-ui.plan.md",
+      "type": "implements"
+    },
+    {
+      "source": "pickers.adr.md",
+      "target": "navigation.adr.md",
+      "type": "depends_on"
+    },
+    {
+      "source": "pickers.adr.md",
+      "target": "component-authoring.rule.md",
+      "type": "related"
     }
   ]
 }

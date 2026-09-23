@@ -6,6 +6,7 @@ import {
   NuiBreadcrumbs,
   NuiButton,
   NuiCheckbox,
+  NuiCombobox,
   NuiConfigProvider,
   NuiDialog,
   NuiDrawer,
@@ -24,10 +25,12 @@ import {
   NuiMenuRadioItem,
   NuiMenuSeparator,
   NuiMenuSub,
+  NuiPagination,
   NuiPopover,
   NuiProgress,
   NuiRadio,
   NuiRadioGroup,
+  NuiSelect,
   NuiSkeleton,
   NuiSwitch,
   NuiTab,
@@ -84,5 +87,8 @@ export default {
     app.component('NuiTab', NuiTab);
     app.component('NuiTabPanel', NuiTabPanel);
     app.component('NuiBreadcrumbs', NuiBreadcrumbs);
+    app.component('NuiSelect', NuiSelect);
+    app.component('NuiCombobox', NuiCombobox);
+    app.component('NuiPagination', NuiPagination);
   },
 } satisfies Theme;

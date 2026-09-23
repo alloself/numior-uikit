@@ -69,6 +69,9 @@ const {
   `--nui-easing` (`slow` for layout moves such as stacks and layers); infinite animations
   only slow down under reduced motion, and a sweep (skeleton, indeterminate progress)
   leaves the box fully before it re-enters so the loop has no visible seam.
+- A prop typed as `Function | false` (or any union with `boolean`) gets a destructure default
+  `= undefined`, exactly like tri-state booleans: Vue's Boolean casting turns an absent prop
+  into `false` otherwise (`filter` in NuiCombobox).
 - A button whose slot holds only `NuiIcon` squares itself (`nui-button--icon-only`, no
   horizontal padding); `:icon-only` forces or disables it. It always needs `aria-label`. Close buttons in cards align their glyph with the first text line
   (`margin-block-start: calc((font-size * line-height - var(--_height)) / 2)`) and with the
