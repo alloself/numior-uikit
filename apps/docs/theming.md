@@ -31,7 +31,7 @@
 
 | Группа      | Токены                                                                                                                                                                                 |
 | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Поверхности | `--nui-surface`, `--nui-surface-muted`, `--nui-surface-elevated`, `--nui-surface-overlay`                                                                                              |
+| Поверхности | `--nui-surface`, `--nui-surface-muted`, `--nui-surface-elevated`, `--nui-surface-overlay`, `--nui-backdrop` (затемнение под модальными слоями)                                         |
 | Текст       | `--nui-text`, `--nui-text-muted`, `--nui-text-subtle`                                                                                                                                  |
 | Границы     | `--nui-border`, `--nui-border-strong`                                                                                                                                                  |
 | Роли        | `primary`, `secondary`, `success`, `warning`, `error`, `info`, `neutral`: `--nui-<role>`, `--nui-<role>-foreground`, `--nui-<role>-soft`, `--nui-<role>-soft-foreground`               |

@@ -4,6 +4,7 @@
   --nui-surface-muted: light-dark(oklch(0.967 0.001 286.38), oklch(0.274 0.005 286.03));
   --nui-surface-elevated: light-dark(oklch(1 0 0), oklch(0.274 0.005 286.03));
   --nui-surface-overlay: light-dark(oklch(1 0 0), oklch(0.274 0.005 286.03));
+  --nui-backdrop: light-dark(oklch(0.21 0.006 285.89 / 0.45), oklch(0 0 0 / 0.6));
 
   --nui-text: light-dark(oklch(0.21 0.006 285.89), oklch(0.985 0 0));
   --nui-text-muted: light-dark(oklch(0.442 0.015 285.79), oklch(0.712 0.013 286.07));

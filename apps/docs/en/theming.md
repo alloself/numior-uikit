@@ -31,7 +31,7 @@ If you override `--nui-primary` on a plain element, the inherited
 
 | Group      | Tokens                                                                                                                                                                                 |
 | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Surfaces   | `--nui-surface`, `--nui-surface-muted`, `--nui-surface-elevated`, `--nui-surface-overlay`                                                                                              |
+| Surfaces   | `--nui-surface`, `--nui-surface-muted`, `--nui-surface-elevated`, `--nui-surface-overlay`, `--nui-backdrop` (dimming under modal layers)                                               |
 | Text       | `--nui-text`, `--nui-text-muted`, `--nui-text-subtle`                                                                                                                                  |
 | Borders    | `--nui-border`, `--nui-border-strong`                                                                                                                                                  |
 | Roles      | `primary`, `secondary`, `success`, `warning`, `error`, `info`, `neutral`: `--nui-<role>`, `--nui-<role>-foreground`, `--nui-<role>-soft`, `--nui-<role>-soft-foreground`               |

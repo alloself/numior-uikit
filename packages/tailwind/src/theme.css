@@ -3,6 +3,7 @@
   --color-surface-muted: var(--nui-surface-muted);
   --color-surface-elevated: var(--nui-surface-elevated);
   --color-surface-overlay: var(--nui-surface-overlay);
+  --color-backdrop: var(--nui-backdrop);
   --color-foreground: var(--nui-text);
   --color-muted-foreground: var(--nui-text-muted);
   --color-subtle-foreground: var(--nui-text-subtle);
