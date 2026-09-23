@@ -19,6 +19,7 @@ import {
   NuiRadio,
   NuiSkeleton,
   NuiRadioGroup,
+  NuiSelect,
   NuiSwitch,
   NuiTabs,
   NuiTextarea,
@@ -71,6 +72,18 @@ const renderTabs = () =>
     { panel: (slot: NuiTabsPanelSlot) => `${slot.tab.label} panel` },
   );
 
+const renderSelect = () =>
+  h(NuiField, { label: 'Fruit' }, () =>
+    h(NuiSelect, {
+      modelValue: 'banana',
+      name: 'fruit',
+      options: [
+        { value: 'apple', label: 'Apple' },
+        { value: 'banana', label: 'Banana' },
+      ],
+    }),
+  );
+
 const renderPopover = () =>
   h(
     NuiPopover,
@@ -119,6 +132,7 @@ const scenarios: Scenario[] = [
   { name: 'NuiPopover', render: renderPopover },
   { name: 'NuiMenu', render: renderMenu },
   { name: 'NuiTabs', render: renderTabs },
+  { name: 'NuiSelect in a field', render: renderSelect },
   {
     name: 'NuiBreadcrumbs',
     render: () =>
@@ -259,6 +273,17 @@ describe('server rendering', () => {
     expect(html).toContain('aria-haspopup="menu"');
     expect(html).toContain('role="menuitem"');
     expect(html).toContain('href="/p"');
+  });
+
+  it('renders a select as a closed combobox with its value in a hidden input', async () => {
+    const html = await renderMarkup(renderSelect);
+    expect(html).toContain('role="combobox"');
+    expect(html).toContain('aria-haspopup="listbox"');
+    expect(html).toContain('aria-expanded="false"');
+    expect(html).toContain('type="hidden" name="fruit" value="banana"');
+    expect(html).toContain('aria-selected="true"');
+    expect(html).toContain('class="nui-select__value"');
+    expect(html).toContain('Banana');
   });
 
   it('renders the toaster as an empty manual live region', async () => {

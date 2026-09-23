@@ -95,6 +95,10 @@ export type {
   NuiBreadcrumbsItemSlot,
   NuiBreadcrumbsProps,
 } from './breadcrumbs/breadcrumbs.types';
+export { default as NuiSelect } from './select/NuiSelect.vue';
+export type { NuiSelectProps, NuiSelectValueSlot } from './select/select.types';
+export type { NuiListboxOptionSlot } from './listbox/listbox.types';
+export type { NuiOption, NuiOptionGroup, NuiOptionKey, NuiOptionSource } from './shared/options';
 export { default as NuiToaster } from './toast/NuiToaster.vue';
 export { default as NuiToast } from './toast/NuiToast.vue';
 export type {

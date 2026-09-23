@@ -1,0 +1,89 @@
+.nui-listbox {
+  --_indicator: 1.25rem;
+
+  color: var(--nui-text);
+  font-family: var(--nui-font);
+  font-size: var(--nui-font-size-sm);
+  line-height: var(--nui-line-height);
+  outline: none;
+}
+.nui-listbox__group-label {
+  padding: var(--nui-space-1) var(--nui-space-2);
+  color: var(--nui-text-muted);
+  font-size: var(--nui-font-size-xs);
+  font-weight: 600;
+}
+.nui-listbox__option {
+  display: flex;
+  align-items: center;
+  gap: var(--nui-space-2);
+  min-block-size: 2rem;
+  padding: var(--nui-space-1) var(--nui-space-2);
+  border-radius: var(--nui-radius-sm);
+  cursor: default;
+  user-select: none;
+  outline: none;
+  transition:
+    background-color var(--nui-duration-fast) var(--nui-easing),
+    color var(--nui-duration-fast) var(--nui-easing);
+}
+.nui-listbox__option--active,
+.nui-listbox__option:hover {
+  background: var(--nui-neutral-soft);
+}
+.nui-listbox__option--selected {
+  font-weight: 500;
+}
+.nui-listbox__option--disabled,
+.nui-listbox__option--disabled:hover {
+  background: transparent;
+  color: var(--nui-text-muted);
+  opacity: var(--nui-disabled-opacity);
+  cursor: not-allowed;
+}
+.nui-listbox__check {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  inline-size: var(--_indicator);
+  block-size: var(--_indicator);
+  color: var(--nui-primary);
+}
+.nui-listbox__icon {
+  color: var(--nui-text-muted);
+}
+.nui-listbox__body {
+  display: grid;
+  flex: 1 1 auto;
+  min-inline-size: 0;
+}
+.nui-listbox__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.nui-listbox__description {
+  color: var(--nui-text-muted);
+  font-size: var(--nui-font-size-xs);
+}
+.nui-listbox__status {
+  display: flex;
+  align-items: center;
+  gap: var(--nui-space-2);
+  padding: var(--nui-space-2);
+  color: var(--nui-text-muted);
+}
+.nui-listbox__spinner {
+  animation: nui-listbox-spin 0.8s linear infinite;
+}
+@keyframes nui-listbox-spin {
+  to {
+    rotate: 1turn;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .nui-listbox__spinner {
+    animation-duration: 1.6s;
+  }
+}
