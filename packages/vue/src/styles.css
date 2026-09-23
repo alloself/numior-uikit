@@ -11,3 +11,6 @@
 @import './popover/popover.css';
 @import './tooltip/tooltip.css';
 @import './toast/toast.css';
+@import './alert/alert.css';
+@import './progress/progress.css';
+@import './skeleton/skeleton.css';

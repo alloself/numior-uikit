@@ -2,6 +2,7 @@
 import { describe, expect, it } from 'vitest';
 import { h, type VNode } from 'vue';
 import {
+  NuiAlert,
   NuiButton,
   NuiCheckbox,
   NuiConfigProvider,
@@ -11,7 +12,9 @@ import {
   NuiIcon,
   NuiInput,
   NuiPopover,
+  NuiProgress,
   NuiRadio,
+  NuiSkeleton,
   NuiRadioGroup,
   NuiSwitch,
   NuiTextarea,
@@ -76,6 +79,13 @@ const scenarios: Scenario[] = [
   { name: 'NuiDrawer', render: () => h(NuiDrawer, { open: true, side: 'start' }, () => 'Body') },
   { name: 'NuiPopover', render: renderPopover },
   { name: 'NuiToaster', render: () => h(NuiToaster, { label: 'Notifications' }) },
+  {
+    name: 'NuiAlert',
+    render: () => h(NuiAlert, { tone: 'error', title: 'Failed', dismissible: true }),
+  },
+  { name: 'NuiProgress determinate', render: () => h(NuiProgress, { value: 40, label: 'Upload' }) },
+  { name: 'NuiProgress indeterminate', render: () => h(NuiProgress, { label: 'Loading' }) },
+  { name: 'NuiSkeleton', render: () => h(NuiSkeleton, { lines: 2 }) },
   {
     name: 'NuiToast',
     render: () =>
@@ -163,6 +173,17 @@ describe('server rendering', () => {
     expect(html).toContain('popover="manual"');
     expect(html).toContain('aria-live="polite"');
     expect(html).not.toContain('nui-toast ');
+  });
+
+  it('renders feedback components with their native semantics on the server', async () => {
+    const alert = await renderMarkup(() => h(NuiAlert, { tone: 'error', title: 'Failed' }));
+    expect(alert).toContain('role="alert"');
+    const determinate = await renderMarkup(() => h(NuiProgress, { value: 40 }));
+    expect(determinate).toContain('value="40"');
+    const indeterminate = await renderMarkup(() => h(NuiProgress, {}));
+    expect(indeterminate).not.toContain('value=');
+    const skeleton = await renderMarkup(() => h(NuiSkeleton, {}));
+    expect(skeleton).toContain('aria-hidden="true"');
   });
 
   it('renders lazy default icons on the server', async () => {

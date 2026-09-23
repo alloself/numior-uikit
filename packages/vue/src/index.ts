@@ -54,6 +54,12 @@ export type {
   NuiToasterProps,
   NuiToasterSlot,
 } from './toast/toast.types';
+export { default as NuiAlert } from './alert/NuiAlert.vue';
+export type { NuiAlertProps, NuiAlertVariant } from './alert/alert.types';
+export { default as NuiProgress } from './progress/NuiProgress.vue';
+export type { NuiProgressProps } from './progress/progress.types';
+export { default as NuiSkeleton } from './skeleton/NuiSkeleton.vue';
+export type { NuiSkeletonProps, NuiSkeletonShape } from './skeleton/skeleton.types';
 export type { NuiFieldControlProps, NuiSize, NuiTone } from './shared/types';
 export {
   createNuiConfig,

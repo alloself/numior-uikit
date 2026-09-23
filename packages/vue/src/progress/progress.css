@@ -1,0 +1,78 @@
+.nui-progress {
+  --_height: 0.5rem;
+  --_tone: var(--nui-primary);
+  --_track: var(--nui-surface-muted);
+
+  display: block;
+  inline-size: 100%;
+  block-size: var(--_height);
+  border: 0;
+  border-radius: var(--nui-radius-full);
+  background: var(--_track);
+  color: var(--_tone);
+  appearance: none;
+  overflow: hidden;
+}
+.nui-progress--size-sm {
+  --_height: 0.25rem;
+}
+.nui-progress--size-lg {
+  --_height: 0.75rem;
+}
+.nui-progress--tone-secondary {
+  --_tone: var(--nui-secondary);
+}
+.nui-progress--tone-success {
+  --_tone: var(--nui-success);
+}
+.nui-progress--tone-warning {
+  --_tone: var(--nui-warning);
+}
+.nui-progress--tone-error {
+  --_tone: var(--nui-error);
+}
+.nui-progress--tone-info {
+  --_tone: var(--nui-info);
+}
+.nui-progress--tone-neutral {
+  --_tone: var(--nui-neutral);
+}
+.nui-progress::-webkit-progress-bar {
+  border-radius: inherit;
+  background: var(--_track);
+}
+.nui-progress::-webkit-progress-value {
+  border-radius: inherit;
+  background: var(--_tone);
+  transition: inline-size var(--nui-duration-normal) var(--nui-easing);
+}
+.nui-progress::-moz-progress-bar {
+  border-radius: inherit;
+  background: var(--_tone);
+  transition: inline-size var(--nui-duration-normal) var(--nui-easing);
+}
+.nui-progress:indeterminate {
+  background: linear-gradient(90deg, var(--_track) 0%, var(--_tone) 50%, var(--_track) 100%);
+  background-repeat: no-repeat;
+  background-size: 40% 100%;
+  animation: nui-progress-slide 1.2s var(--nui-easing) infinite;
+}
+.nui-progress:indeterminate::-webkit-progress-bar {
+  background: transparent;
+}
+.nui-progress:indeterminate::-moz-progress-bar {
+  background: transparent;
+}
+@keyframes nui-progress-slide {
+  from {
+    background-position: -40% 0;
+  }
+  to {
+    background-position: 140% 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .nui-progress:indeterminate {
+    animation-duration: 2.4s;
+  }
+}
