@@ -76,6 +76,21 @@
       "source": "feedback.adr.md",
       "target": "component-authoring.rule.md",
       "type": "related"
+    },
+    {
+      "source": "navigation.adr.md",
+      "target": "numior-ui.plan.md",
+      "type": "implements"
+    },
+    {
+      "source": "navigation.adr.md",
+      "target": "overlays.adr.md",
+      "type": "depends_on"
+    },
+    {
+      "source": "navigation.adr.md",
+      "target": "component-authoring.rule.md",
+      "type": "related"
     }
   ]
 }

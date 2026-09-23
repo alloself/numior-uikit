@@ -49,6 +49,15 @@ export default defineConfig({
               { text: 'Скелетон', link: '/components/skeleton' },
             ],
           },
+          {
+            text: 'Навигация',
+            items: [
+              { text: 'Ссылка', link: '/components/link' },
+              { text: 'Меню', link: '/components/menu' },
+              { text: 'Вкладки', link: '/components/tabs' },
+              { text: 'Хлебные крошки', link: '/components/breadcrumbs' },
+            ],
+          },
         ],
       },
     },
@@ -94,6 +103,15 @@ export default defineConfig({
               { text: 'Alert', link: '/en/components/alert' },
               { text: 'Progress', link: '/en/components/progress' },
               { text: 'Skeleton', link: '/en/components/skeleton' },
+            ],
+          },
+          {
+            text: 'Navigation',
+            items: [
+              { text: 'Link', link: '/en/components/link' },
+              { text: 'Menu', link: '/en/components/menu' },
+              { text: 'Tabs', link: '/en/components/tabs' },
+              { text: 'Breadcrumbs', link: '/en/components/breadcrumbs' },
             ],
           },
         ],

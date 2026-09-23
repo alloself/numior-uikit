@@ -1,0 +1,63 @@
+---
+title: "Навигация: примитив списка, меню, вкладки, крошки и ссылка"
+status: accepted
+---
+
+## Context
+
+Волна 3a закрывает навигационную часть плана 1.0: меню, вкладки, хлебные крошки и ссылку.
+Все они требуют одинаковой клавиатурной модели по списку, а меню и крошки — слоёв из
+@.archcore/overlays.adr.md. Решения согласованы 2026-09-23 и рассчитаны на повторное
+использование в select и combobox (волна 3b).
+
+## Decision
+
+- `useListNavigation` в `@numior/primitives` — единственный примитив клавиатурной навигации.
+  Элементы собираются из DOM по селектору ARIA-ролей в порядке документа при каждом
+  нажатии (без MutationObserver и регистрации через inject), `aria-disabled` пропускаются,
+  опция `scope` оставляет только элементы своего контейнера (вложенные меню). Два режима:
+  roving tabindex (императивный `tabIndex`, шаблоны рендерят статический дефолт для SSR) и
+  виртуальный `aria-activedescendant`. Ориентации vertical/horizontal/both с зеркалом
+  ArrowLeft/Right в RTL, loop, Home/End, PageUp/Down, typeahead с окном 500 мс. Enter, Space,
+  Escape и Tab примитив не трогает: пункты и вкладки — нативные кнопки.
+- `NuiMenu` — `role="menu"` в `popover="auto"`, части `NuiMenuItem`, `NuiMenuCheckboxItem`,
+  `NuiMenuRadioGroup`/`NuiMenuRadioItem`, `NuiMenuSeparator`, `NuiMenuLabel`, `NuiMenuSub`,
+  плюс проп `items`, который рендерит те же части. Подменю — вложенный нативный popover
+  внутри DOM родителя: light dismiss закрывает цепочку, клик в родителе — только ребёнка.
+  Hover-intent 100/300 мс без safe-triangle. Фокус при открытии ставится из post-flush
+  watch на состояние `open`, а не из события `toggle`: в браузерах `toggle` асинхронен и
+  быстрые нажатия успевали уйти на триггер. Возврат фокуса на триггер при закрытии явный
+  (Safari не фокусирует кнопки по клику). Сброс подсветки по `pointerleave` действует
+  только для подсветки, созданной указателем: Firefox шлёт синтетический `pointerleave`,
+  когда подменю скрывается под курсором.
+- `NuiTabs` — части `NuiTabList`, `NuiTab`, `NuiTabPanel`, автоактивация по умолчанию и
+  `manual`, индикатор измеряется по выбранной вкладке (offsetLeft/offsetWidth) и едет по
+  `--nui-duration-slow`, панели остаются в DOM с `v-show`, `lazy` монтирует при первом
+  показе. Горизонтальный список прокручивается на узких экранах. Значения вкладок —
+  строки: generic-компоненты с `defineSlots` не принимаются `h()` в тестах и SSR.
+- `NuiBreadcrumbs` — `<nav aria-label>` + `<ol>`, `aria-current="page"` у последнего, `maxItems`
+  сворачивает середину в icon-only кнопку с `NuiMenu :items`; ссылки не ниже 24px (WCAG
+  2.5.8 для отдельно стоящих целей).
+- `NuiLink` — `<a>` или компонент через `as`; `to` побеждает `href`, чтобы роутер владел
+  адресом; тот же контракт у пунктов меню и крошек. Реестр иконок получает `chevron-right`,
+  `chevron-left`, `chevrons-left`, `chevrons-right`, `ellipsis`, `external-link`.
+- Тесты: Playwright `keyboard.type` вставляет не-латинские символы как текст без `keydown`,
+  поэтому typeahead в e2e идёт через `dispatchEvent('keydown')`; под fake timers Vue
+  пропускает всплывшее событие с меткой времени, равной времени подписки, — драйверы
+  сдвигают часы на 1 мс перед нажатием; дефолтные иконки предзагружаются в `setupFiles`.
+
+## Alternatives Considered
+
+- Регистрация элементов через provide/inject (как у Radix): точнее для виртуализации, но
+  требует обёрток вокруг произвольного слотового содержимого.
+- MutationObserver для пересбора элементов: асинхронность делала сценарии в jsdom
+  зависимыми от порядка; компоненты и так знают, когда меняются данные.
+- Фокус в `toggle`: соответствует спецификации, но проигрывает гонку быстрым нажатиям.
+- Generic `NuiTabs<T>`: ломает `h()` из-за `defineSlots`; строковые значения проще.
+
+## Consequences
+
+Select и combobox переиспользуют `useListNavigation` (roving и virtual) и `useFloating` с
+опцией `size`. Меню в jsdom проверяется через стабы popover с событиями `toggle`; порядок
+отрисовки, hover-intent, light dismiss и RTL — в e2e (`tests/e2e/navigation.spec.ts`).
+Следующая подволна: `NuiSelect`, `NuiCombobox`, `NuiPagination`.

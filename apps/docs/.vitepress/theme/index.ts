@@ -3,6 +3,7 @@ import type { Theme } from 'vitepress';
 import {
   createNuiConfig,
   NuiAlert,
+  NuiBreadcrumbs,
   NuiButton,
   NuiCheckbox,
   NuiConfigProvider,
@@ -14,12 +15,25 @@ import {
   NuiFieldLabel,
   NuiIcon,
   NuiInput,
+  NuiLink,
+  NuiMenu,
+  NuiMenuCheckboxItem,
+  NuiMenuItem,
+  NuiMenuLabel,
+  NuiMenuRadioGroup,
+  NuiMenuRadioItem,
+  NuiMenuSeparator,
+  NuiMenuSub,
   NuiPopover,
   NuiProgress,
   NuiRadio,
   NuiRadioGroup,
   NuiSkeleton,
   NuiSwitch,
+  NuiTab,
+  NuiTabList,
+  NuiTabPanel,
+  NuiTabs,
   NuiTextarea,
   NuiToast,
   NuiToaster,
@@ -56,5 +70,19 @@ export default {
     app.component('NuiAlert', NuiAlert);
     app.component('NuiProgress', NuiProgress);
     app.component('NuiSkeleton', NuiSkeleton);
+    app.component('NuiLink', NuiLink);
+    app.component('NuiMenu', NuiMenu);
+    app.component('NuiMenuItem', NuiMenuItem);
+    app.component('NuiMenuCheckboxItem', NuiMenuCheckboxItem);
+    app.component('NuiMenuRadioGroup', NuiMenuRadioGroup);
+    app.component('NuiMenuRadioItem', NuiMenuRadioItem);
+    app.component('NuiMenuSeparator', NuiMenuSeparator);
+    app.component('NuiMenuLabel', NuiMenuLabel);
+    app.component('NuiMenuSub', NuiMenuSub);
+    app.component('NuiTabs', NuiTabs);
+    app.component('NuiTabList', NuiTabList);
+    app.component('NuiTab', NuiTab);
+    app.component('NuiTabPanel', NuiTabPanel);
+    app.component('NuiBreadcrumbs', NuiBreadcrumbs);
   },
 } satisfies Theme;
