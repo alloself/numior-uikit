@@ -57,15 +57,21 @@ const { checked, setChecked } = useCheckedState<T>(model, () => value);
 const checkboxElement = useTemplateRef<HTMLInputElement>('checkbox');
 
 watchPostEffect(() => {
-  if (checkboxElement.value) checkboxElement.value.indeterminate = indeterminate;
+  if (checkboxElement.value) {
+    checkboxElement.value.indeterminate = indeterminate;
+  }
 });
 
-function onChange(): void {
+const onChange = (): void => {
   const element = checkboxElement.value;
-  if (!element) return;
+  if (!element) {
+    return;
+  }
   setChecked(element.checked);
   void nextTick(() => {
-    if (checkboxElement.value) checkboxElement.value.checked = checked.value;
+    if (checkboxElement.value) {
+      checkboxElement.value.checked = checked.value;
+    }
   });
-}
+};
 </script>

@@ -32,7 +32,9 @@ const isColorScheme = (value: unknown): value is ColorScheme =>
   value === 'system' || value === 'light' || value === 'dark';
 
 const readStored = (key: string | undefined): ColorScheme | undefined => {
-  if (!key) return undefined;
+  if (!key) {
+    return undefined;
+  }
   try {
     const value = localStorage.getItem(key);
     return isColorScheme(value) ? value : undefined;
@@ -42,7 +44,9 @@ const readStored = (key: string | undefined): ColorScheme | undefined => {
 };
 
 const writeStored = (key: string | undefined, value: ColorScheme): void => {
-  if (!key) return;
+  if (!key) {
+    return;
+  }
   try {
     localStorage.setItem(key, value);
   } catch {
@@ -50,7 +54,7 @@ const writeStored = (key: string | undefined, value: ColorScheme): void => {
   }
 };
 
-export function useColorScheme(options: ColorSchemeOptions = {}): ColorSchemeControl {
+export const useColorScheme = (options: ColorSchemeOptions = {}): ColorSchemeControl => {
   const scheme = ref<ColorScheme>(options.initial ?? 'system');
   const systemDark = ref(false);
   const resolved = computed<ResolvedColorScheme>(() =>
@@ -89,4 +93,4 @@ export function useColorScheme(options: ColorSchemeOptions = {}): ColorSchemeCon
       scheme.value = resolved.value === 'dark' ? 'light' : 'dark';
     },
   };
-}
+};

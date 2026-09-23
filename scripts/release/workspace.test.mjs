@@ -13,7 +13,7 @@ import releaseConfig from '../../release.config.mjs';
 
 const logger = { log() {}, error() {}, success() {} };
 
-async function fixture(t, isPrivate = true) {
+const fixture = async (t, isPrivate = true) => {
   const cwd = await mkdtemp(join(tmpdir(), 'numior-release-'));
   t.after(() => rm(cwd, { recursive: true, force: true }));
   await writeFile(join(cwd, 'pnpm-workspace.yaml'), 'packages:\n  - packages/*\n');
@@ -44,7 +44,7 @@ async function fixture(t, isPrivate = true) {
     options: { dryRun: false, repositoryUrl: 'https://github.com/example/numior-ui.git' },
     nextRelease: { version: '1.0.0' },
   };
-}
+};
 
 test('conventional commits produce patch, minor, major and no release', async () => {
   const [, options] = releaseConfig.plugins[0];

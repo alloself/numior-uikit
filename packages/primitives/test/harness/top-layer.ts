@@ -8,7 +8,7 @@ export interface TopLayerLog {
 const toggleEvent = (newState: 'open' | 'closed') =>
   Object.assign(new Event('beforetoggle'), { newState });
 
-export function installTopLayer(): { readonly log: TopLayerLog; restore(): void } {
+export const installTopLayer = (): { readonly log: TopLayerLog; restore(): void } => {
   const log = { showPopover: 0, hidePopover: 0, showModal: 0, close: new Array<string>() };
   const defined: Array<[object, string]> = [];
   const define = (target: object, key: string, descriptor: PropertyDescriptor): void => {
@@ -50,10 +50,12 @@ export function installTopLayer(): { readonly log: TopLayerLog; restore(): void 
   return {
     log,
     restore: () => {
-      for (const [target, key] of defined) Reflect.deleteProperty(target, key);
+      for (const [target, key] of defined) {
+        Reflect.deleteProperty(target, key);
+      }
     },
   };
-}
+};
 
 export const dismissNatively = (element: HTMLElement): boolean =>
   element.dispatchEvent(toggleEvent('closed'));

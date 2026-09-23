@@ -29,7 +29,9 @@ export class FieldHarness {
 
   private get context(): FieldContext {
     const context = this.capture.value;
-    if (!context) throw new Error('No field context was provided');
+    if (!context) {
+      throw new Error('No field context was provided');
+    }
     return context;
   }
 

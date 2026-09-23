@@ -10,10 +10,10 @@ export interface RadioGroupContext<T = unknown> {
 
 export const RADIO_GROUP_KEY: InjectionKey<RadioGroupContext> = Symbol('nui:radio-group');
 
-export function provideRadioGroup<T>(context: RadioGroupContext<T>): void {
+export const provideRadioGroup = <T>(context: RadioGroupContext<T>): void => {
   provide(RADIO_GROUP_KEY, context);
-}
+};
 
-export function useRadioGroup(): RadioGroupContext | null {
+export const useRadioGroup = (): RadioGroupContext | null => {
   return inject(RADIO_GROUP_KEY, null);
-}
+};

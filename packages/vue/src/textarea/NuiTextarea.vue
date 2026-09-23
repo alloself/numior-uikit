@@ -42,23 +42,33 @@ const textareaElement = useTemplateRef<HTMLTextAreaElement>('textarea');
 const draft = ref(model.value);
 
 watch(model, (value) => {
-  if (!(modifiers.trim && draft.value.trim() === value)) draft.value = value;
+  if (!(modifiers.trim && draft.value.trim() === value)) {
+    draft.value = value;
+  }
 });
 
-function onInput(): void {
+const onInput = (): void => {
   const element = textareaElement.value;
-  if (!element) return;
+  if (!element) {
+    return;
+  }
   draft.value = element.value;
-  if (!modifiers.lazy) model.value = element.value;
-}
+  if (!modifiers.lazy) {
+    model.value = element.value;
+  }
+};
 
-function onChange(): void {
+const onChange = (): void => {
   const element = textareaElement.value;
-  if (!element) return;
-  if (modifiers.trim) element.value = element.value.trim();
+  if (!element) {
+    return;
+  }
+  if (modifiers.trim) {
+    element.value = element.value.trim();
+  }
   draft.value = element.value;
   model.value = element.value;
-}
+};
 
 defineExpose({ focus: () => textareaElement.value?.focus() });
 </script>

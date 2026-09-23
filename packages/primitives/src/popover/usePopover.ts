@@ -46,23 +46,30 @@ const canToggle = (element: HTMLElement | null | undefined): element is HTMLElem
   typeof element.showPopover === 'function' &&
   element.isConnected;
 
-export function usePopover(
+export const usePopover = (
   content: MaybeRefOrGetter<HTMLElement | null | undefined>,
   options: PopoverOptions,
-): PopoverControl {
+): PopoverControl => {
   const id = useControlId(options.id);
   const mode = computed<PopoverMode>(() => toValue(options.mode) ?? 'auto');
   const visible = ref(false);
   const setOpen = (next: boolean): void => {
-    if (options.open.value !== next) options.open.value = next;
+    if (options.open.value !== next) {
+      options.open.value = next;
+    }
   };
 
-  function sync(next: boolean): void {
+  const sync = (next: boolean): void => {
     const element = toValue(content);
-    if (!canToggle(element)) return;
-    if (next && !visible.value) element.showPopover();
-    else if (!next && visible.value) element.hidePopover();
-  }
+    if (!canToggle(element)) {
+      return;
+    }
+    if (next && !visible.value) {
+      element.showPopover();
+    } else if (!next && visible.value) {
+      element.hidePopover();
+    }
+  };
 
   onMounted(() => {
     watch(() => options.open.value, sync, { immediate: true, flush: 'post' });
@@ -87,4 +94,4 @@ export function usePopover(
     hide: () => setOpen(false),
     toggle: () => setOpen(!options.open.value),
   };
-}
+};

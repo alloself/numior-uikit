@@ -6,7 +6,8 @@ description: Write or extend tests for Numior UI - unit tests through component 
 # Numior testing patterns
 
 Specs read as scenarios: driver calls plus `expect`. No DOM poking, no `as`, no inline
-helper lambdas, no `page.getByTestId` inside specs.
+helper lambdas, no `page.getByTestId` inside specs. Arrow constants everywhere (prototype
+stubs that need `this` use method shorthand), every block braced.
 
 ## Unit tests for components (`packages/vue/test`)
 

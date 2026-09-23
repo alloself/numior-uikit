@@ -96,7 +96,7 @@ const output = computed(() =>
     2,
   ),
 );
-function reset() {
+const reset = () => {
   name.value = '';
   email.value = '';
   bio.value = '';
@@ -104,5 +104,5 @@ function reset() {
   channels.value = [];
   plan.value = 'free';
   notifications.value = true;
-}
+};
 </script>

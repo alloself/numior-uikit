@@ -52,6 +52,9 @@ const {
   `extends NuiFieldControlProps` for form controls. Generic components use
   `<script setup lang="ts" generic="T">` and `defineProps<NuiThingProps<T>>()`.
 - Never `withDefaults`, runtime prop objects, `PropType`, `as`, `!`, or comments.
+- Arrow constants for every function (`const onInput = (): void => {...}`); no `function`
+  declarations unless an own `this` is needed; helpers without closure state go to module
+  level; every `if`/`for` body is braced.
 - Read DOM state through `useTemplateRef<HTMLInputElement>('input')`, not `event.target`.
 - Composables receive destructured props through a getter, as above.
 

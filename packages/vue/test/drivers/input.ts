@@ -79,7 +79,7 @@ export class InputDriver extends ComponentDriver {
   }
 }
 
-export function mountInputWithFocusHandle() {
+export const mountInputWithFocusHandle = () => {
   const Host = defineComponent({
     setup() {
       const input = useTemplateRef<InstanceType<typeof NuiInput>>('input');
@@ -95,4 +95,4 @@ export function mountInputWithFocusHandle() {
     control: wrapper.find<HTMLInputElement>('input'),
     unmount: () => wrapper.unmount(),
   };
-}
+};

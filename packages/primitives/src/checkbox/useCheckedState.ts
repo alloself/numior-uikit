@@ -5,10 +5,10 @@ export interface CheckedState {
   setChecked(next: boolean): void;
 }
 
-export function useCheckedState<T>(
+export const useCheckedState = <T>(
   model: Ref<boolean | T[] | undefined>,
   value?: MaybeRefOrGetter<T | undefined>,
-): CheckedState {
+): CheckedState => {
   const checked = computed(() => {
     const current = model.value;
     if (Array.isArray(current)) {
@@ -17,16 +17,18 @@ export function useCheckedState<T>(
     }
     return current === true;
   });
-  function setChecked(next: boolean): void {
+  const setChecked = (next: boolean): void => {
     const current = model.value;
     if (!Array.isArray(current)) {
       model.value = next;
       return;
     }
     const own = toValue(value);
-    if (own === undefined) return;
+    if (own === undefined) {
+      return;
+    }
     const others = current.filter((item) => item !== own);
     model.value = next ? [...others, own] : others;
-  }
+  };
   return { checked, setChecked };
-}
+};

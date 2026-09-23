@@ -26,19 +26,23 @@ const isNumber = (value: unknown): value is number => typeof value === 'number';
 const isStringArray = (value: unknown): value is string[] =>
   Array.isArray(value) && value.every(isString);
 
-function field<T>(
+const field = <T>(
   data: Record<string, unknown>,
   key: string,
   guard: (value: unknown) => value is T,
-): T {
+): T => {
   const value = data[key];
-  if (!guard(value)) throw new Error(`Unexpected ${key} in forms output: ${String(value)}`);
+  if (!guard(value)) {
+    throw new Error(`Unexpected ${key} in forms output: ${String(value)}`);
+  }
   return value;
-}
+};
 
-function parseFormsOutput(text: string): FormsOutput {
+const parseFormsOutput = (text: string): FormsOutput => {
   const data: unknown = JSON.parse(text);
-  if (!isRecord(data)) throw new Error('Forms output is not an object');
+  if (!isRecord(data)) {
+    throw new Error('Forms output is not an object');
+  }
   return {
     name: field(data, 'name', isString),
     email: field(data, 'email', isString),
@@ -49,7 +53,7 @@ function parseFormsOutput(text: string): FormsOutput {
     notifications: field(data, 'notifications', isBoolean),
     submitted: field(data, 'submitted', isNumber),
   };
-}
+};
 
 export class FormsSection {
   readonly nameInput: Locator;

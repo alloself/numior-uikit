@@ -3,7 +3,7 @@ import { execFileSync } from 'node:child_process';
 import { access, mkdir, readFile, readdir, writeFile } from 'node:fs/promises';
 import { join, relative, resolve } from 'node:path';
 
-function repositoryUrl(options) {
+const repositoryUrl = (options) => {
   // semantic-release rewrites repositoryUrl to an authenticated push URL.
   // Only a credential-free URL may enter published package metadata.
   const source = options.originalRepositoryURL ?? options.repositoryUrl;
@@ -11,9 +11,9 @@ function repositoryUrl(options) {
   const parsed = new URL(source.replace(/^git\+/, '').replace(/^git@([^:]+):/, 'https://$1/'));
   assert.ok(['https:', 'ssh:'].includes(parsed.protocol), 'Expected an HTTPS or SSH repository');
   return `https://${parsed.host}${parsed.pathname}`;
-}
+};
 
-async function packages(cwd) {
+const packages = async (cwd) => {
   const entries = await readdir(join(cwd, 'packages'), { withFileTypes: true });
   const result = [];
   for (const entry of entries.filter((item) => item.isDirectory())) {
@@ -26,11 +26,13 @@ async function packages(cwd) {
   assert.ok(result.length > 0, 'No library packages found');
   assert.equal(new Set(result.map(({ manifest }) => manifest.name)).size, result.length);
   return result;
-}
+};
 
-export async function verifyConditions(_config, context) {
+export const verifyConditions = async (_config, context) => {
   const libraries = await packages(context.cwd);
-  if (context.options?.dryRun) return;
+  if (context.options?.dryRun) {
+    return;
+  }
   assert.equal(
     context.env.NUMIOR_RELEASE_ENABLED,
     'true',
@@ -39,9 +41,9 @@ export async function verifyConditions(_config, context) {
   for (const { manifest } of libraries) {
     assert.equal(manifest.private, false, `${manifest.name} is not approved for publication`);
   }
-}
+};
 
-export async function prepare(config, context) {
+export const prepare = async (config, context) => {
   // Defense in depth: a direct hook call must not bypass the publication gate.
   assert.ok(!context.options?.dryRun, 'prepare must not run during a dry run');
   await verifyConditions(config, context);
@@ -75,9 +77,9 @@ export async function prepare(config, context) {
     });
   }
   context.logger.log('Prepared %d workspace packages at %s', libraries.length, version);
-}
+};
 
-export async function publish(config, context) {
+export const publish = async (config, context) => {
   assert.ok(!context.options?.dryRun, 'publish must not run during a dry run');
   await verifyConditions(config, context);
   for (const { manifest } of await packages(context.cwd)) {
@@ -102,4 +104,4 @@ export async function publish(config, context) {
     context.logger.log('Published %s@%s', manifest.name, manifest.version);
   }
   return { name: 'Numior UI workspace packages' };
-}
+};

@@ -74,7 +74,9 @@ export class RadioGroupDriver extends ComponentDriver {
 
   radio(value: string): DOMWrapper<HTMLInputElement> {
     const radio = this.radios.find((candidate) => candidate.element.value === value);
-    if (!radio) throw new Error(`No radio with value ${value}`);
+    if (!radio) {
+      throw new Error(`No radio with value ${value}`);
+    }
     return radio;
   }
 

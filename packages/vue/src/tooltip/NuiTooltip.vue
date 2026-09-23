@@ -59,7 +59,9 @@ const triggerAttrs = computed<NuiTooltipTriggerAttrs>(() => ({
   'aria-describedby': tooltipId.value,
   ref: setTrigger,
   onPointerenter: (event) => {
-    if (event.pointerType !== 'touch') delay.scheduleOpen();
+    if (event.pointerType !== 'touch') {
+      delay.scheduleOpen();
+    }
   },
   onPointerleave: () => delay.scheduleClose(),
   onPointerdown: () => {
@@ -67,11 +69,15 @@ const triggerAttrs = computed<NuiTooltipTriggerAttrs>(() => ({
     delay.closeNow();
   },
   onFocus: () => {
-    if (Date.now() - pointerPressedAt.value > POINTER_FOCUS_WINDOW) delay.openNow();
+    if (Date.now() - pointerPressedAt.value > POINTER_FOCUS_WINDOW) {
+      delay.openNow();
+    }
   },
   onBlur: () => delay.closeNow(),
   onKeydown: (event) => {
-    if (event.key === 'Escape') delay.closeNow();
+    if (event.key === 'Escape') {
+      delay.closeNow();
+    }
   },
 }));
 </script>

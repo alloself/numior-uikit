@@ -15,9 +15,11 @@ export interface OverlaysOutput {
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null;
 
-function parseOverlaysOutput(text: string): OverlaysOutput {
+const parseOverlaysOutput = (text: string): OverlaysOutput => {
   const data: unknown = JSON.parse(text);
-  if (!isRecord(data)) throw new Error('Overlays output is not an object');
+  if (!isRecord(data)) {
+    throw new Error('Overlays output is not an object');
+  }
   const { dialogOpen, dialogResult, persistentOpen, drawerOpen, side, popoverOpen, tooltipOpen } =
     data;
   if (
@@ -32,7 +34,7 @@ function parseOverlaysOutput(text: string): OverlaysOutput {
     throw new Error(`Unexpected overlays output: ${text}`);
   }
   return { dialogOpen, dialogResult, persistentOpen, drawerOpen, side, popoverOpen, tooltipOpen };
-}
+};
 
 export class OverlaysSection {
   readonly dialogOpen: Locator;
@@ -120,7 +122,9 @@ export class OverlaysSection {
 
   async edges(surface: Locator): Promise<{ readonly right: number; readonly top: number }> {
     const box = await surface.boundingBox();
-    if (!box) throw new Error('Surface has no bounding box');
+    if (!box) {
+      throw new Error('Surface has no bounding box');
+    }
     return { right: Math.round(box.x + box.width), top: Math.round(box.y) };
   }
 

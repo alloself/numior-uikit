@@ -10,10 +10,10 @@ export interface SurfaceMountOptions<P> {
   readonly slots?: Record<string, () => unknown>;
 }
 
-function mountSurface<P extends object>(
+const mountSurface = <P extends object>(
   component: Component,
   { props, open = true, slots = {} }: SurfaceMountOptions<P>,
-): [VueWrapper, TopLayerStubs] {
+): [VueWrapper, TopLayerStubs] => {
   const stubs = new TopLayerStubs();
   const wrapper = mount(component, {
     props: { ...props, open },
@@ -21,7 +21,7 @@ function mountSurface<P extends object>(
     attachTo: document.body,
   });
   return [wrapper, stubs];
-}
+};
 
 const press = (element: HTMLElement, clientX: number): void => {
   element.dispatchEvent(new PointerEvent('pointerdown', { clientX, clientY: 0, bubbles: true }));
@@ -93,7 +93,9 @@ abstract class SurfaceDriver extends ComponentDriver {
   pressEscape(): boolean {
     const event = new Event('cancel', { cancelable: true });
     this.dialog.element.dispatchEvent(event);
-    if (!event.defaultPrevented) this.dialog.element.close();
+    if (!event.defaultPrevented) {
+      this.dialog.element.close();
+    }
     return event.defaultPrevented;
   }
 

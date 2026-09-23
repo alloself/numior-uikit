@@ -44,7 +44,9 @@ const groupAttrs = computed(() =>
 );
 const radioElement = useTemplateRef<HTMLInputElement>('radio');
 
-function onChange(): void {
-  if (radioElement.value?.checked) group?.select(value);
-}
+const onChange = (): void => {
+  if (radioElement.value?.checked) {
+    group?.select(value);
+  }
+};
 </script>

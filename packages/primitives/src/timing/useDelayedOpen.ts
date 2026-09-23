@@ -13,10 +13,15 @@ export interface DelayedOpen {
   cancel(): void;
 }
 
-export function useDelayedOpen(open: Ref<boolean>, options: DelayedOpenOptions = {}): DelayedOpen {
+export const useDelayedOpen = (
+  open: Ref<boolean>,
+  options: DelayedOpenOptions = {},
+): DelayedOpen => {
   let timer: ReturnType<typeof setTimeout> | undefined;
   const cancel = (): void => {
-    if (timer === undefined) return;
+    if (timer === undefined) {
+      return;
+    }
     clearTimeout(timer);
     timer = undefined;
   };
@@ -31,7 +36,9 @@ export function useDelayedOpen(open: Ref<boolean>, options: DelayedOpenOptions =
       open.value = next;
     }, delay);
   };
-  if (getCurrentScope()) onScopeDispose(cancel);
+  if (getCurrentScope()) {
+    onScopeDispose(cancel);
+  }
   return {
     scheduleOpen: () => schedule(true, toValue(options.openDelay) ?? 0),
     scheduleClose: () => schedule(false, toValue(options.closeDelay) ?? 0),
@@ -39,4 +46,4 @@ export function useDelayedOpen(open: Ref<boolean>, options: DelayedOpenOptions =
     closeNow: () => schedule(false, 0),
     cancel,
   };
-}
+};

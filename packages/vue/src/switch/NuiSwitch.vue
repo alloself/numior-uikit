@@ -51,12 +51,16 @@ const {
 } = useFieldControl(() => ({ id, disabled, required, invalid }));
 const switchElement = useTemplateRef<HTMLInputElement>('switch');
 
-function onChange(): void {
+const onChange = (): void => {
   const element = switchElement.value;
-  if (!element) return;
+  if (!element) {
+    return;
+  }
   model.value = element.checked;
   void nextTick(() => {
-    if (switchElement.value) switchElement.value.checked = model.value;
+    if (switchElement.value) {
+      switchElement.value.checked = model.value;
+    }
   });
-}
+};
 </script>

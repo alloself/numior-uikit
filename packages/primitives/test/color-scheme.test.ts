@@ -3,7 +3,7 @@ import { nextTick } from 'vue';
 import { useColorScheme } from '../src';
 import { captureSetup } from './harness/capture';
 
-function fakeMedia(matches: boolean) {
+const fakeMedia = (matches: boolean) => {
   const listeners = new Set<() => void>();
   const media = {
     matches,
@@ -11,12 +11,14 @@ function fakeMedia(matches: boolean) {
     removeEventListener: (_type: string, listener: () => void) => listeners.delete(listener),
     change(next: boolean) {
       media.matches = next;
-      for (const listener of listeners) listener();
+      for (const listener of listeners) {
+        listener();
+      }
     },
   };
   vi.stubGlobal('matchMedia', () => media);
   return media;
-}
+};
 
 describe('useColorScheme', () => {
   afterEach(() => {

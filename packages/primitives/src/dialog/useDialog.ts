@@ -48,24 +48,29 @@ const outside = (element: HTMLDialogElement, point: { clientX: number; clientY: 
   );
 };
 
-export function useDialog(element: DialogRef, options: DialogOptions): DialogControl {
+export const useDialog = (element: DialogRef, options: DialogOptions): DialogControl => {
   const returnValue = ref('');
   const pressedOutside = ref(false);
   const dismissible = (): boolean => toValue(options.dismissible) !== false;
   const closeOnBackdrop = (): boolean => toValue(options.closeOnBackdrop) !== false;
 
-  function sync(next: boolean): void {
+  const sync = (next: boolean): void => {
     const dialog = toValue(element);
-    if (!modalCapable(dialog)) return;
-    if (next && !dialog.open) dialog.showModal();
-    else if (!next && dialog.open) dialog.close();
-  }
+    if (!modalCapable(dialog)) {
+      return;
+    }
+    if (next && !dialog.open) {
+      dialog.showModal();
+    } else if (!next && dialog.open) {
+      dialog.close();
+    }
+  };
 
   onMounted(() => {
     watch(() => options.open.value, sync, { immediate: true, flush: 'post' });
   });
 
-  function close(value?: string): void {
+  const close = (value?: string): void => {
     const dialog = toValue(element);
     if (modalCapable(dialog) && dialog.open) {
       dialog.close(value);
@@ -73,11 +78,13 @@ export function useDialog(element: DialogRef, options: DialogOptions): DialogCon
     }
     returnValue.value = value ?? '';
     options.open.value = false;
-  }
+  };
 
   const attrs: DialogAttrs = {
     onCancel: (event) => {
-      if (!dismissible()) event.preventDefault();
+      if (!dismissible()) {
+        event.preventDefault();
+      }
     },
     onClose: () => {
       returnValue.value = toValue(element)?.returnValue ?? '';
@@ -94,7 +101,9 @@ export function useDialog(element: DialogRef, options: DialogOptions): DialogCon
         return;
       }
       pressedOutside.value = false;
-      if (dismissible() && closeOnBackdrop()) close();
+      if (dismissible() && closeOnBackdrop()) {
+        close();
+      }
     },
   };
 
@@ -107,4 +116,4 @@ export function useDialog(element: DialogRef, options: DialogOptions): DialogCon
     },
     close,
   };
-}
+};

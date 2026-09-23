@@ -15,7 +15,7 @@ export class Capture<T> {
   ) {}
 }
 
-export function captureSetup<T>(setup: () => T, options: CaptureOptions = {}): Capture<T> {
+export const captureSetup = <T>(setup: () => T, options: CaptureOptions = {}): Capture<T> => {
   const outcome: { current: Outcome<T> } = { current: { ran: false } };
   const Probe = defineComponent({
     setup() {
@@ -26,9 +26,11 @@ export function captureSetup<T>(setup: () => T, options: CaptureOptions = {}): C
   const wrapper = mount(options.wrap ? options.wrap(Probe) : Probe, {
     global: { plugins: options.plugins ?? [] },
   });
-  if (!outcome.current.ran) throw new Error('setup did not run');
+  if (!outcome.current.ran) {
+    throw new Error('setup did not run');
+  }
   return new Capture(outcome.current.value, wrapper);
-}
+};
 
 export const providing =
   (provide: () => void) =>

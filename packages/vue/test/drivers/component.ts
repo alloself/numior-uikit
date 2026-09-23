@@ -18,8 +18,8 @@ export abstract class ComponentDriver {
   }
 }
 
-export function emittedStrings(wrapper: VueWrapper, event: string): string[] {
+export const emittedStrings = (wrapper: VueWrapper, event: string): string[] => {
   return (wrapper.emitted(event) ?? []).flatMap(([value]) =>
     typeof value === 'string' ? [value] : [],
   );
-}
+};

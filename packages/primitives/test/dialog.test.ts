@@ -7,7 +7,7 @@ import { installTopLayer } from './harness/top-layer';
 const asDialog = (element: HTMLElement | null): HTMLDialogElement | null =>
   element instanceof HTMLDialogElement ? element : null;
 
-function mountDialog(options: DialogOptions) {
+const mountDialog = (options: DialogOptions) => {
   const capture = captureWithElements(
     (_, dialog) => useDialog(() => asDialog(dialog.value), options),
     ['button', 'dialog'],
@@ -18,7 +18,7 @@ function mountDialog(options: DialogOptions) {
   capture.second.addEventListener('pointerdown', attrs.onPointerdown);
   capture.second.addEventListener('click', attrs.onClick);
   return capture;
-}
+};
 
 const press = (dialog: HTMLElement, clientX: number) => {
   dialog.dispatchEvent(new PointerEvent('pointerdown', { clientX, clientY: 0, bubbles: true }));

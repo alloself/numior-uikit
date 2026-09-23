@@ -7,11 +7,11 @@ export interface TriggerElement {
   readonly setTrigger: NuiTriggerRef;
 }
 
-export function useTriggerElement(): TriggerElement {
+export const useTriggerElement = (): TriggerElement => {
   const trigger = shallowRef<HTMLElement | null>(null);
   const setTrigger: NuiTriggerRef = (value) => {
     const candidate: unknown = value instanceof Element ? value : value?.$el;
     trigger.value = candidate instanceof HTMLElement ? candidate : null;
   };
   return { trigger, setTrigger };
-}
+};

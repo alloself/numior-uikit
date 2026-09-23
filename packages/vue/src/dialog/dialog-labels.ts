@@ -14,10 +14,10 @@ export interface DialogLabels {
   readonly describedBy: ComputedRef<string | undefined>;
 }
 
-export function useDialogLabels(
+export const useDialogLabels = (
   explicitId: MaybeRefOrGetter<string | undefined>,
   has: DialogLabelSources,
-): DialogLabels {
+): DialogLabels => {
   const id = useControlId(explicitId);
   const titleId = computed(() => `${id.value}-title`);
   const descriptionId = computed(() => `${id.value}-description`);
@@ -28,4 +28,4 @@ export function useDialogLabels(
     labelledBy: computed(() => (has.title() ? titleId.value : undefined)),
     describedBy: computed(() => (has.description() ? descriptionId.value : undefined)),
   };
-}
+};

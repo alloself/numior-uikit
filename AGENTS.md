@@ -10,6 +10,9 @@ that its features are implemented. Component and test conventions live in the sk
 - SFC block order is `<template>`, then `<script setup lang="ts">` (ESLint `vue/block-order`).
 - Props: `defineProps<Props>()` with reactive destructure defaults and `defineModel`;
   never `withDefaults`, runtime prop objects or `PropType`. Tri-state booleans use `= undefined`.
+- Arrow functions only (`const f = () => {}`); `function` solely where an own `this` is
+  required. No nested function declarations: closure-free helpers live at module level.
+  Every block is braced (`curly: all`, `func-style: expression` in Oxlint).
 - No `as` or `!` type assertions anywhere (tests and configs included); `as const` only.
 - CSS is BEM (`nui-block`, `nui-block__part`, `nui-block--key-value`, `nui-block--state`)
   with modifiers setting private custom properties; no `data-*` for variants or states.

@@ -12,11 +12,13 @@ export interface IconMountOptions {
 
 const GLYPH = '.nui-icon__glyph';
 
-export async function waitForGlyph(wrapper: VueWrapper, selector = GLYPH): Promise<void> {
+export const waitForGlyph = async (wrapper: VueWrapper, selector = GLYPH): Promise<void> => {
   await vi.waitFor(() => {
-    if (!wrapper.find(selector).exists()) throw new Error(`Glyph ${selector} is still loading`);
+    if (!wrapper.find(selector).exists()) {
+      throw new Error(`Glyph ${selector} is still loading`);
+    }
   });
-}
+};
 
 export class IconDriver extends ComponentDriver {
   protected readonly block = 'nui-icon';
@@ -42,8 +44,11 @@ export class IconDriver extends ComponentDriver {
   }
 
   async ready(): Promise<void> {
-    if (this.expectGlyph) await waitForGlyph(this.wrapper);
-    else await flushPromises();
+    if (this.expectGlyph) {
+      await waitForGlyph(this.wrapper);
+    } else {
+      await flushPromises();
+    }
   }
 
   get decorative(): boolean {

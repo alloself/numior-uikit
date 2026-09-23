@@ -38,7 +38,7 @@ export const FIELD_KEY: InjectionKey<FieldContext> = Symbol('nui:field');
 const flag = (source: MaybeRefOrGetter<boolean | undefined>): ComputedRef<boolean> =>
   computed(() => toValue(source) === true);
 
-export function createFieldContext(options: FieldOptions = {}): FieldContext {
+export const createFieldContext = (options: FieldOptions = {}): FieldContext => {
   const id = useControlId(options.id);
   const hasLabel = flag(options.hasLabel);
   const hasDescription = flag(options.hasDescription);
@@ -64,14 +64,14 @@ export function createFieldContext(options: FieldOptions = {}): FieldContext {
     disabled: flag(options.disabled),
     labelable: computed(() => toValue(options.labelable) !== false),
   };
-}
+};
 
-export function provideField(options: FieldOptions = {}): FieldContext {
+export const provideField = (options: FieldOptions = {}): FieldContext => {
   const context = createFieldContext(options);
   provide(FIELD_KEY, context);
   return context;
-}
+};
 
-export function useField(): FieldContext | null {
+export const useField = (): FieldContext | null => {
   return inject(FIELD_KEY, null);
-}
+};

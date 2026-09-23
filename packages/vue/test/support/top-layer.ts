@@ -57,6 +57,8 @@ export class TopLayerStubs {
   }
 
   restore(): void {
-    for (const restore of this.restorers) restore();
+    for (const restore of this.restorers) {
+      restore();
+    }
   }
 }

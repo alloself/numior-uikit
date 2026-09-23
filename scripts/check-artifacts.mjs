@@ -3,8 +3,10 @@ import { readFile, readdir } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-async function artifactPaths(root, target) {
-  if (!target.includes('*')) return [target];
+const artifactPaths = async (root, target) => {
+  if (!target.includes('*')) {
+    return [target];
+  }
   const [prefix, suffix] = target.split('*');
   const slash = prefix.lastIndexOf('/');
   const dir = prefix.slice(0, slash + 1);
@@ -14,10 +16,12 @@ async function artifactPaths(root, target) {
   );
   assert.ok(names.length > 0, `No artifacts match ${target}`);
   return names.map((name) => `${dir}${name}`);
-}
+};
 
 for (const name of await readdir('packages')) {
-  if (name === 'README.md') continue;
+  if (name === 'README.md') {
+    continue;
+  }
   const root = resolve('packages', name);
   const manifest = JSON.parse(await readFile(`${root}/package.json`, 'utf8'));
   assert.equal(
@@ -37,12 +41,14 @@ for (const name of await readdir('packages')) {
   }
 }
 
-async function importBuild(name, expectedExports) {
+const importBuild = async (name, expectedExports) => {
   const file = resolve(`packages/${name}/dist/index.js`);
   const module = await import(pathToFileURL(file).href);
-  for (const key of expectedExports) assert.ok(module[key], `${name} must export ${key}`);
+  for (const key of expectedExports) {
+    assert.ok(module[key], `${name} must export ${key}`);
+  }
   return readFile(file, 'utf8');
-}
+};
 
 await importBuild('primitives', [
   'provideField',

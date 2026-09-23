@@ -27,26 +27,26 @@ export const ICONS_KEY: InjectionKey<IconRegistry> = Symbol('nui:icons');
 
 const EMPTY: IconRegistry = Object.freeze({});
 
-export function provideIcons(registry: IconRegistry): IconRegistry {
+export const provideIcons = (registry: IconRegistry): IconRegistry => {
   const merged: IconRegistry = { ...inject(ICONS_KEY, EMPTY), ...registry };
   provide(ICONS_KEY, merged);
   return merged;
-}
+};
 
-export function useIcons(): IconRegistry {
+export const useIcons = (): IconRegistry => {
   return inject(ICONS_KEY, EMPTY);
-}
+};
 
-export function useIcon(
+export const useIcon = (
   alias: MaybeRefOrGetter<IconAlias | undefined>,
-): ComputedRef<Component | undefined> {
+): ComputedRef<Component | undefined> => {
   const icons = useIcons();
   return computed(() => {
     const key = toValue(alias);
     return key === undefined ? undefined : icons[key];
   });
-}
+};
 
-export function lazyIcon(loader: IconLoader): Component {
+export const lazyIcon = (loader: IconLoader): Component => {
   return defineAsyncComponent<Component>({ loader, suspensible: false });
-}
+};

@@ -11,10 +11,10 @@ export interface ElementsCapture<T> {
   unmount(): void;
 }
 
-export function captureWithElements<T>(
+export const captureWithElements = <T>(
   setup: (first: Ref<HTMLElement | null>, second: Ref<HTMLElement | null>) => T,
   tags: readonly [string, string] = ['button', 'div'],
-): ElementsCapture<T> {
+): ElementsCapture<T> => {
   const outcome: { current: Outcome<T> } = { current: { ran: false } };
   const Host = defineComponent({
     setup() {
@@ -25,7 +25,9 @@ export function captureWithElements<T>(
     },
   });
   const wrapper = mount(Host, { attachTo: document.body });
-  if (!outcome.current.ran) throw new Error('setup did not run');
+  if (!outcome.current.ran) {
+    throw new Error('setup did not run');
+  }
   return {
     value: outcome.current.value,
     wrapper,
@@ -33,4 +35,4 @@ export function captureWithElements<T>(
     second: wrapper.find<HTMLElement>(tags[1]).element,
     unmount: () => wrapper.unmount(),
   };
-}
+};

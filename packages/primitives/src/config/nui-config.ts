@@ -5,14 +5,18 @@ export interface NuiConfigOptions {
   readonly icons?: IconRegistry | undefined;
 }
 
-export function provideNuiConfig(options: NuiConfigOptions): void {
-  if (options.icons) provideIcons(options.icons);
-}
+export const provideNuiConfig = (options: NuiConfigOptions): void => {
+  if (options.icons) {
+    provideIcons(options.icons);
+  }
+};
 
-export function createNuiConfig(options: NuiConfigOptions): Plugin {
+export const createNuiConfig = (options: NuiConfigOptions): Plugin => {
   return {
     install(app) {
-      if (options.icons) app.provide(ICONS_KEY, { ...options.icons });
+      if (options.icons) {
+        app.provide(ICONS_KEY, { ...options.icons });
+      }
     },
   };
-}
+};

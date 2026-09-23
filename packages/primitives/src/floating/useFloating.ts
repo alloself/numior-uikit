@@ -63,7 +63,9 @@ const middleware = (options: FloatingOptions): Middleware[] => {
     shift({ padding: 8 }),
   ];
   const element = toValue(options.arrow);
-  if (element) list.push(arrowMiddleware({ element }));
+  if (element) {
+    list.push(arrowMiddleware({ element }));
+  }
   return list;
 };
 
@@ -72,11 +74,11 @@ const pxStyles = (position: ArrowPosition): Record<string, string> => ({
   ...(position.y === undefined ? {} : { top: `${position.y}px` }),
 });
 
-export function useFloating(
+export const useFloating = (
   reference: MaybeRefOrGetter<HTMLElement | null | undefined>,
   floating: MaybeRefOrGetter<HTMLElement | null | undefined>,
   options: FloatingOptions = {},
-): Floating {
+): Floating => {
   const strategy = options.strategy ?? 'fixed';
   const requested = (): FloatingPlacement => toValue(options.placement) ?? 'bottom';
   const placement = ref<FloatingPlacement>(requested());
@@ -90,9 +92,11 @@ export function useFloating(
       : null;
   };
 
-  async function update(): Promise<void> {
+  const update = async (): Promise<void> => {
     const pair = elements();
-    if (!pair) return;
+    if (!pair) {
+      return;
+    }
     const result = await computePosition(pair.reference, pair.floating, {
       placement: requested(),
       strategy,
@@ -101,13 +105,15 @@ export function useFloating(
     position.value = { x: result.x, y: result.y };
     placement.value = result.placement;
     arrowPosition.value = result.middlewareData.arrow ?? {};
-  }
+  };
 
   onMounted(() => {
     watch(
       [elements, () => toValue(options.enabled) ?? true],
       ([pair, enabled], _, onCleanup) => {
-        if (!pair || !enabled) return;
+        if (!pair || !enabled) {
+          return;
+        }
         onCleanup(autoUpdate(pair.reference, pair.floating, () => void update()));
       },
       { immediate: true, flush: 'post' },
@@ -129,4 +135,4 @@ export function useFloating(
     arrowStyles: computed(() => pxStyles(arrowPosition.value)),
     update,
   };
-}
+};

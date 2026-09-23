@@ -16,6 +16,13 @@ status: accepted
   (тристейт). `withDefaults`, runtime-объекты props и `PropType` запрещены. v-model только
   через `defineModel`. Композаблы получают destructured props через getter:
   `useFieldControl(() => ({ id, disabled, required, invalid }))`.
+- Функции — только стрелочные константы (`const sync = (): void => {...}`, `export const
+  useX = () => {...}`); объявление `function` допустимо лишь там, где нужен собственный
+  `this` (method shorthand в объектах, стабы прототипов). Хелперы без замыкания живут на
+  уровне модуля, вложенные объявления функций внутри функций не пишутся; замыкания над
+  состоянием композабла — минимальные стрелочные константы. Любой блок `if`/`else`/`for`/
+  `while` заключён в `{}`. Линтер держит это правилами `func-style: expression`,
+  `curly: all`, `prefer-arrow-callback`.
 - Приведения типов `as` и постфиксный `!` запрещены во всём репозитории, включая тесты и
   конфиги; единственное исключение — `as const`. Нужен тип — generic, type guard,
   `useTemplateRef<HTMLInputElement>()`, `wrapper.find<HTMLInputElement>()`, дискриминированное
@@ -66,7 +73,8 @@ Good: `const { size = 'md', disabled = undefined } = defineProps<NuiInputProps>(
 `const input = InputDriver.mount({ modifiers: { lazy: true } }); await input.type('a')`;
 `useTemplateRef<HTMLInputElement>('input')` вместо `event.target as HTMLInputElement`.
 
-Bad: `withDefaults(defineProps<Props>(), {...})`; `defineProps({ size: { type: String as PropType<Size> } })`;
+Bad: `function sync(next) {...}` внутри композабла и `if (!el) return;` без скобок;
+`withDefaults(defineProps<Props>(), {...})`; `defineProps({ size: { type: String as PropType<Size> } })`;
 `:data-variant="variant"`; `(wrapper.element as HTMLInputElement).value`;
 `import { Check } from 'lucide-vue-next'` в компоненте; комментарий с объяснением «почему» в SFC.
 

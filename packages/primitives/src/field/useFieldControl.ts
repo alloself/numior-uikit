@@ -30,10 +30,10 @@ export interface FieldControl {
   readonly attrs: ComputedRef<FieldControlAttrs>;
 }
 
-export function useFieldControl(
+export const useFieldControl = (
   props: MaybeRefOrGetter<FieldControlProps>,
   options: FieldControlOptions = {},
-): FieldControl {
+): FieldControl => {
   const field = useField();
   const linked = computed<FieldContext | null>(() =>
     field !== null && (field.labelable.value || options.group === true) ? field : null,
@@ -66,4 +66,4 @@ export function useFieldControl(
     disabled: disabled.value,
   }));
   return { id, invalid, required, disabled, describedBy, attrs };
-}
+};
