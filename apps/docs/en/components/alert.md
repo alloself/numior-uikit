@@ -14,7 +14,7 @@ const open = ref(true)
   <NuiAlert tone="success" variant="outline" title="Project published" />
   <NuiAlert tone="warning" title="Draft not saved" dismissible dismiss-label="Close" v-model:open="open">
     Changes are lost when you leave the page.
-    <template #actions><NuiButton size="sm" variant="soft" tone="warning" @click="open = false">Save</NuiButton></template>
+    <template #actions><NuiButton size="sm" variant="outline" tone="warning" @click="open = false">Save</NuiButton></template>
   </NuiAlert>
   <NuiButton v-if="!open" size="sm" variant="ghost" tone="neutral" @click="open = true">Show again</NuiButton>
   <NuiAlert tone="error" variant="solid" title="Could not connect" description="Check the network and retry." />
@@ -24,7 +24,7 @@ const open = ref(true)
 <NuiAlert tone="warning" title="Draft not saved" dismissible v-model:open="open">
   Changes are lost when you leave the page.
   <template #actions>
-    <NuiButton size="sm" variant="soft" tone="warning">Save</NuiButton>
+    <NuiButton size="sm" variant="outline" tone="warning">Save</NuiButton>
   </template>
 </NuiAlert>
 ```
@@ -32,6 +32,9 @@ const open = ref(true)
 `dismissible` adds a close button that sets `v-model:open` to `false` and emits
 `dismiss`. A closed alert hides with a transition and stays in the DOM; remove it with
 `v-if` when needed.
+
+Actions inside a soft alert use `outline` or `solid`: a `soft` button of the same tone
+blends into the background.
 
 ## API
 

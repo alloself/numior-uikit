@@ -49,7 +49,7 @@
         data-testid="alert"
       >
         <template #actions>
-          <NuiButton size="sm" variant="soft" tone="warning" @click="alertOpen = false"
+          <NuiButton size="sm" variant="outline" tone="warning" @click="alertOpen = false"
             >Сохранить</NuiButton
           >
         </template>

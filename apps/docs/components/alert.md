@@ -14,7 +14,7 @@ const open = ref(true)
   <NuiAlert tone="success" variant="outline" title="Проект опубликован" />
   <NuiAlert tone="warning" title="Черновик не сохранён" dismissible dismiss-label="Закрыть" v-model:open="open">
     Изменения пропадут при выходе со страницы.
-    <template #actions><NuiButton size="sm" variant="soft" tone="warning" @click="open = false">Сохранить</NuiButton></template>
+    <template #actions><NuiButton size="sm" variant="outline" tone="warning" @click="open = false">Сохранить</NuiButton></template>
   </NuiAlert>
   <NuiButton v-if="!open" size="sm" variant="ghost" tone="neutral" @click="open = true">Показать снова</NuiButton>
   <NuiAlert tone="error" variant="solid" title="Не удалось подключиться" description="Проверьте сеть и повторите." />
@@ -24,7 +24,7 @@ const open = ref(true)
 <NuiAlert tone="warning" title="Черновик не сохранён" dismissible v-model:open="open">
   Изменения пропадут при выходе со страницы.
   <template #actions>
-    <NuiButton size="sm" variant="soft" tone="warning">Сохранить</NuiButton>
+    <NuiButton size="sm" variant="outline" tone="warning">Сохранить</NuiButton>
   </template>
 </NuiAlert>
 ```
@@ -32,6 +32,9 @@ const open = ref(true)
 `dismissible` добавляет кнопку закрытия: она переводит `v-model:open` в `false` и
 генерирует событие `dismiss`. Закрытый алерт скрывается анимацией и остаётся в DOM;
 уберите его через `v-if`, если нужно.
+
+Действия внутри мягкого алерта берут `outline` или `solid`: `soft`-кнопка того же тона
+сливается с фоном.
 
 ## API
 

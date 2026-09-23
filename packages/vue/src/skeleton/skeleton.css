@@ -18,12 +18,12 @@
   border-radius: var(--_radius);
   background: linear-gradient(
     90deg,
-    var(--nui-surface-muted) 0%,
+    var(--nui-surface-muted) 35%,
     color-mix(in oklab, var(--nui-surface-muted), var(--nui-text) 6%) 50%,
-    var(--nui-surface-muted) 100%
+    var(--nui-surface-muted) 65%
   );
   background-size: 200% 100%;
-  animation: nui-skeleton-shimmer 1.4s linear infinite;
+  animation: nui-skeleton-shimmer 2s linear infinite;
 }
 .nui-skeleton__line:last-child:not(:only-child) {
   inline-size: 60%;
@@ -44,10 +44,10 @@
 }
 @keyframes nui-skeleton-shimmer {
   from {
-    background-position: 200% 0;
+    background-position: 150% 0;
   }
   to {
-    background-position: -200% 0;
+    background-position: -50% 0;
   }
 }
 @media (prefers-reduced-motion: reduce) {

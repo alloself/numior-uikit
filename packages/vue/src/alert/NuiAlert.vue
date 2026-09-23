@@ -25,6 +25,7 @@
       variant="ghost"
       tone="neutral"
       size="sm"
+      icon-only
       class="nui-alert__close"
       :aria-label="dismissLabel"
       @click="dismiss"
