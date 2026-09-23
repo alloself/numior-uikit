@@ -66,11 +66,11 @@ than a lock.
 
 ## Stacked dialogs
 
-A dialog opened above another modal dialog sits higher in the top layer but does not draw
-a second dimming layer: one overlay serves the whole stack. Upper dialogs get the
-`nui-dialog--nested` modifier with a transparent `::backdrop`, and when the lower dialog
-closes the overlay moves to the next one. Escape closes only the top level and focus
-returns to the button that opened it.
+A dialog opened above another modal dialog sits higher in the top layer, and there is
+always a single dimming layer, right below the topmost dialog of the stack. Covered dialogs
+get the `nui-dialog--covered` modifier with a transparent `::backdrop`, so the first dialog
+ends up under the overlay of the second; when the top one closes the overlay returns to the
+next. Escape closes only the top level and focus returns to the button that opened it.
 
 ## Top layer and motion
 

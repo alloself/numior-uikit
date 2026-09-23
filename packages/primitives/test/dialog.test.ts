@@ -32,19 +32,19 @@ describe('useDialog', () => {
   });
   afterEach(() => topLayer.restore());
 
-  it('marks dialogs opened above another modal as nested until the one below closes', async () => {
+  it('marks a modal as covered while another modal is open above it', async () => {
     const firstOpen = ref(true);
     const secondOpen = ref(false);
     const first = mountDialog({ open: firstOpen });
     const second = mountDialog({ open: secondOpen });
-    expect(first.value.nested.value).toBe(false);
+    expect(first.value.covered.value).toBe(false);
     secondOpen.value = true;
     await nextTick();
-    expect(second.value.nested.value).toBe(true);
-    expect(first.value.nested.value).toBe(false);
-    first.value.close();
+    expect(first.value.covered.value).toBe(true);
+    expect(second.value.covered.value).toBe(false);
+    second.value.close();
     await nextTick();
-    expect(second.value.nested.value).toBe(false);
+    expect(first.value.covered.value).toBe(false);
     second.unmount();
     first.unmount();
   });

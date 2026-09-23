@@ -45,13 +45,14 @@
   opacity: 0;
   transition:
     opacity var(--nui-duration-normal) var(--nui-easing),
+    background-color var(--nui-duration-normal) var(--nui-easing),
     display var(--nui-duration-normal) allow-discrete,
     overlay var(--nui-duration-normal) allow-discrete;
 }
 .nui-dialog[open]::backdrop {
   opacity: 1;
 }
-.nui-dialog--nested::backdrop {
+.nui-dialog--covered::backdrop {
   background: transparent;
 }
 @starting-style {

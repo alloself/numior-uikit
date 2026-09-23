@@ -3,7 +3,7 @@
     :id="dialogId"
     ref="dialog"
     class="nui-dialog"
-    :class="[`nui-dialog--size-${size}`, { 'nui-dialog--nested': control.nested.value }]"
+    :class="[`nui-dialog--size-${size}`, { 'nui-dialog--covered': control.covered.value }]"
     :aria-labelledby="labelledBy"
     :aria-describedby="describedBy"
     v-bind="control.attrs"

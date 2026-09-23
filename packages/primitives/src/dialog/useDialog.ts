@@ -27,7 +27,7 @@ export interface DialogAttrs {
 
 export interface DialogControl {
   readonly open: ComputedRef<boolean>;
-  readonly nested: ComputedRef<boolean>;
+  readonly covered: ComputedRef<boolean>;
   readonly returnValue: Readonly<Ref<string>>;
   readonly attrs: DialogAttrs;
   show(): void;
@@ -130,9 +130,10 @@ export const useDialog = (element: DialogRef, options: DialogOptions): DialogCon
 
   return {
     open: computed(() => options.open.value),
-    nested: computed(() => {
+    covered: computed(() => {
       const dialog = toValue(element);
-      return dialog ? openModals.value.indexOf(dialog) > 0 : false;
+      const index = dialog ? openModals.value.indexOf(dialog) : -1;
+      return index >= 0 && index < openModals.value.length - 1;
     }),
     returnValue,
     attrs,

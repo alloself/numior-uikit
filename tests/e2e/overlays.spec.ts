@@ -50,13 +50,14 @@ test.describe('layers', () => {
     await overlays.dialogOpen.click();
     await overlays.stackedOpen.click();
     await expect(overlays.stackedDialog).toBeVisible();
-    await expect(overlays.stackedDialog).toHaveClass(/nui-dialog--nested/);
-    expect(await overlays.backdropColor(overlays.stackedDialog)).toBe('rgba(0, 0, 0, 0)');
-    expect(await overlays.backdropColor(overlays.dialog)).not.toBe('rgba(0, 0, 0, 0)');
+    await expect(overlays.dialog).toHaveClass(/nui-dialog--covered/);
+    expect(await overlays.backdropColor(overlays.dialog)).toBe('rgba(0, 0, 0, 0)');
+    expect(await overlays.backdropColor(overlays.stackedDialog)).not.toBe('rgba(0, 0, 0, 0)');
     expect(await overlays.focusIsInside(overlays.stackedDialog)).toBe(true);
     await overlays.pressEscape();
     await expect(overlays.stackedDialog).toBeHidden();
     await expect(overlays.dialog).toBeVisible();
+    await expect(overlays.dialog).not.toHaveClass(/nui-dialog--covered/);
     await expect(overlays.stackedOpen).toBeFocused();
     await expect.poll(async () => (await overlays.readOutput()).stackedOpen).toBe(false);
     await overlays.pressEscape();
