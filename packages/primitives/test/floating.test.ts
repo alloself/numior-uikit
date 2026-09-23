@@ -4,9 +4,15 @@ import { nextTick, ref } from 'vue';
 import { useFloating } from '../src';
 import { captureWithElements } from './harness/elements';
 
-const { cleanup, computePosition } = vi.hoisted(() => ({
+interface SizeApplyArgs {
+  readonly rects: { readonly reference: { readonly width: number } };
+  readonly availableHeight: number;
+}
+
+const { cleanup, computePosition, sizeHooks } = vi.hoisted(() => ({
   cleanup: vi.fn<() => void>(),
   computePosition: vi.fn<(...args: unknown[]) => Promise<unknown>>(),
+  sizeHooks: new Array<(args: SizeApplyArgs) => void>(),
 }));
 
 vi.mock('@floating-ui/dom', () => ({
@@ -19,6 +25,10 @@ vi.mock('@floating-ui/dom', () => ({
   flip: () => ({ name: 'flip' }),
   shift: () => ({ name: 'shift' }),
   arrow: () => ({ name: 'arrow' }),
+  size: (options: { apply: (args: SizeApplyArgs) => void }) => {
+    sizeHooks.push(options.apply);
+    return { name: 'size' };
+  },
 }));
 
 describe('useFloating', () => {
@@ -58,6 +68,29 @@ describe('useFloating', () => {
     await nextTick();
     expect(cleanup).toHaveBeenCalledTimes(1);
     capture.unmount();
+  });
+
+  it('matches the reference width and caps the height when size is requested', async () => {
+    sizeHooks.length = 0;
+    computePosition.mockImplementation(async () => {
+      for (const hook of sizeHooks) {
+        hook({ rects: { reference: { width: 240 } }, availableHeight: 320 });
+      }
+      return { x: 0, y: 0, placement: 'bottom-start', strategy: 'fixed', middlewareData: {} };
+    });
+    const capture = captureWithElements((reference, floating) =>
+      useFloating(reference, floating, { size: { matchWidth: true, fitHeight: true } }),
+    );
+    await flushPromises();
+    expect(capture.value.floatingStyles.value).toMatchObject({
+      minInlineSize: '240px',
+      maxBlockSize: '320px',
+    });
+    capture.unmount();
+    const plain = captureWithElements((reference, floating) => useFloating(reference, floating));
+    await flushPromises();
+    expect(plain.value.floatingStyles.value).not.toHaveProperty('minInlineSize');
+    plain.unmount();
   });
 
   it('starts from the requested placement with neutral coordinates', () => {
