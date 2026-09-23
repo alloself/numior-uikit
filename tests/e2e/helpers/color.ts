@@ -42,3 +42,29 @@ export const expectRgb = async (
     )
     .toBe('match');
 };
+
+const readBottomPixel = async (base64: string): Promise<Rgb> => {
+  const image = new Image();
+  image.src = `data:image/png;base64,${base64}`;
+  await image.decode();
+  const canvas = document.createElement('canvas');
+  canvas.width = image.naturalWidth;
+  canvas.height = image.naturalHeight;
+  const context = canvas.getContext('2d', { willReadFrequently: true });
+  if (!context) {
+    throw new Error('2D canvas is unavailable');
+  }
+  context.drawImage(image, 0, 0);
+  const x = Math.floor(canvas.width / 2);
+  const y = canvas.height - Math.round(6 * devicePixelRatio);
+  const [r = 0, g = 0, b = 0] = context.getImageData(x, y, 1, 1).data;
+  return [r, g, b];
+};
+
+export const paintedRgb = async (locator: Locator): Promise<Rgb> => {
+  const png = await locator.screenshot({ animations: 'disabled' });
+  return locator.page().evaluate(readBottomPixel, png.toString('base64'));
+};
+
+export const rgbDelta = (a: Rgb, b: Rgb): number =>
+  a.reduce((max, channel, i) => Math.max(max, Math.abs(channel - (b[i] ?? 0))), 0);

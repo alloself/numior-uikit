@@ -1,5 +1,6 @@
 import { AxeBuilder } from '@axe-core/playwright';
 import type { Locator, Page } from '@playwright/test';
+import { FeedbackSection } from './feedback';
 import { OverlaysSection } from './overlays';
 
 export type Theme = 'system' | 'light' | 'dark';
@@ -123,6 +124,7 @@ export class PlaygroundPage {
   readonly swatches: { readonly utility: Locator; readonly tailwind: Locator };
   readonly forms: FormsSection;
   readonly overlays: OverlaysSection;
+  readonly feedback: FeedbackSection;
 
   constructor(readonly page: Page) {
     this.workspace = page.getByRole('main');
@@ -147,6 +149,7 @@ export class PlaygroundPage {
     };
     this.forms = new FormsSection(page);
     this.overlays = new OverlaysSection(page);
+    this.feedback = new FeedbackSection(page);
   }
 
   async open(path: '/' | '/tailwind.html' = '/'): Promise<void> {

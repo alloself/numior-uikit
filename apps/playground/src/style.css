@@ -97,6 +97,11 @@ select {
   font: 0.8125rem / 1.5 var(--nui-font-mono);
   overflow: auto;
 }
+.skeleton-row {
+  display: flex;
+  align-items: center;
+  gap: var(--nui-space-3);
+}
 .swatch {
   padding: 1rem;
 }
