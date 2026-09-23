@@ -29,14 +29,32 @@ export type {
 } from './radio/radio.types';
 export { default as NuiSwitch } from './switch/NuiSwitch.vue';
 export type { NuiSwitchProps } from './switch/switch.types';
+export { default as NuiDialog } from './dialog/NuiDialog.vue';
+export type { NuiDialogProps } from './dialog/dialog.types';
+export { default as NuiDrawer } from './drawer/NuiDrawer.vue';
+export type { NuiDrawerProps, NuiDrawerSide } from './drawer/drawer.types';
 export type { NuiFieldControlProps, NuiSize, NuiTone } from './shared/types';
 export {
   createNuiConfig,
   lazyIcon,
   provideNuiConfig,
+  useColorScheme,
+  useDialog,
   useField,
   useFieldControl,
+  useFloating,
   useIcons,
+  usePopover,
   useRadioGroup,
 } from '@numior/primitives';
-export type { IconAlias, IconLoader, IconRegistry, NuiConfigOptions } from '@numior/primitives';
+export type {
+  ColorScheme,
+  FloatingPlacement,
+  FloatingSide,
+  IconAlias,
+  IconLoader,
+  IconRegistry,
+  NuiConfigOptions,
+  PopoverMode,
+  ResolvedColorScheme,
+} from '@numior/primitives';

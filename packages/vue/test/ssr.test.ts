@@ -5,6 +5,8 @@ import {
   NuiButton,
   NuiCheckbox,
   NuiConfigProvider,
+  NuiDialog,
+  NuiDrawer,
   NuiField,
   NuiIcon,
   NuiInput,
@@ -46,6 +48,16 @@ const scenarios: Scenario[] = [
       ),
   },
   { name: 'NuiSwitch', render: () => h(NuiSwitch, { modelValue: true }, () => 'Notify') },
+  {
+    name: 'NuiDialog',
+    render: () =>
+      h(
+        NuiDialog,
+        { open: true, id: 'confirm', title: 'Delete?', description: 'Sure?' },
+        () => 'Body',
+      ),
+  },
+  { name: 'NuiDrawer', render: () => h(NuiDrawer, { open: true, side: 'start' }, () => 'Body') },
 ];
 
 describe('server rendering', () => {
@@ -66,6 +78,16 @@ describe('server rendering', () => {
     expect(html).toContain(`aria-describedby="${controlId}-description ${controlId}-error"`);
     expect(html).toContain('aria-invalid="true"');
     expect(html).toContain('value="a"');
+  });
+
+  it('renders dialogs closed with their labels resolved on the server', async () => {
+    const html = await renderMarkup(() =>
+      h(NuiDialog, { open: true, id: 'confirm', title: 'Delete?' }, () => 'Body'),
+    );
+    expect(html).toMatch(/<dialog[^>]*id="confirm"/);
+    expect(html).not.toMatch(/<dialog[^>]* open/);
+    expect(html).toContain('aria-labelledby="confirm-title"');
+    expect(html).toContain('id="confirm-title"');
   });
 
   it('renders lazy default icons on the server', async () => {

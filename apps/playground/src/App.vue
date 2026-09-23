@@ -81,6 +81,8 @@
 
     <FormsSection />
 
+    <OverlaysSection />
+
     <section class="panel" aria-labelledby="tokens-title">
       <h2 id="tokens-title">Один акцент — разные способы использования</h2>
       <div class="nui-flex nui-wrap nui-gap-2">
@@ -103,7 +105,23 @@
     <section class="panel nested-theme" data-nui-theme="dark" aria-labelledby="nested-title">
       <h2 id="nested-title">Локальная тёмная тема</h2>
       <p>Тема этой области независима от внешней.</p>
-      <NuiButton data-testid="nested">Вложенный компонент</NuiButton>
+      <div class="nui-flex nui-wrap nui-gap-2">
+        <NuiButton data-testid="nested">Вложенный компонент</NuiButton>
+        <NuiButton
+          variant="outline"
+          data-testid="nested-dialog-open"
+          @click="nestedDialogOpen = true"
+          >Диалог в этой теме</NuiButton
+        >
+      </div>
+      <NuiDialog
+        v-model:open="nestedDialogOpen"
+        title="Тёмный диалог"
+        description="Наследует тему и направление своей области."
+        data-testid="nested-dialog"
+      >
+        <p>Слой остаётся в DOM инициатора, поэтому тема не теряется.</p>
+      </NuiDialog>
     </section>
     <footer>Закрытая разработка · MIT · <a href="/">Автономный CSS</a></footer>
   </main>
@@ -111,8 +129,9 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { NuiButton } from '@numior/vue';
+import { NuiButton, NuiDialog } from '@numior/vue';
 import FormsSection from './FormsSection.vue';
+import OverlaysSection from './OverlaysSection.vue';
 
 const theme = ref('system');
 const density = ref('comfortable');
@@ -120,6 +139,7 @@ const direction = ref<'ltr' | 'rtl'>('ltr');
 const accent = ref('indigo');
 const count = ref(0);
 const loading = ref(false);
+const nestedDialogOpen = ref(false);
 
 const accents: Record<string, Record<string, string>> = {
   indigo: {},

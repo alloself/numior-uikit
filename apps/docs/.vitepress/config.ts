@@ -31,6 +31,13 @@ export default defineConfig({
               { text: 'Переключатель', link: '/components/switch' },
             ],
           },
+          {
+            text: 'Слои',
+            items: [
+              { text: 'Диалог', link: '/components/dialog' },
+              { text: 'Выдвижная панель', link: '/components/drawer' },
+            ],
+          },
         ],
       },
     },
@@ -58,6 +65,13 @@ export default defineConfig({
               { text: 'Checkbox', link: '/en/components/checkbox' },
               { text: 'Radio group', link: '/en/components/radio-group' },
               { text: 'Switch', link: '/en/components/switch' },
+            ],
+          },
+          {
+            text: 'Layers',
+            items: [
+              { text: 'Dialog', link: '/en/components/dialog' },
+              { text: 'Drawer', link: '/en/components/drawer' },
             ],
           },
         ],

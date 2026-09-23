@@ -1,5 +1,6 @@
 import { AxeBuilder } from '@axe-core/playwright';
 import type { Locator, Page } from '@playwright/test';
+import { OverlaysSection } from './overlays';
 
 export type Theme = 'system' | 'light' | 'dark';
 export type Accent = 'indigo' | 'emerald' | 'rose';
@@ -116,6 +117,7 @@ export class PlaygroundPage {
   };
   readonly swatches: { readonly utility: Locator; readonly tailwind: Locator };
   readonly forms: FormsSection;
+  readonly overlays: OverlaysSection;
 
   constructor(readonly page: Page) {
     this.workspace = page.getByRole('main');
@@ -138,6 +140,7 @@ export class PlaygroundPage {
       tailwind: page.getByTestId('tailwind'),
     };
     this.forms = new FormsSection(page);
+    this.overlays = new OverlaysSection(page);
   }
 
   async open(path: '/' | '/tailwind.html' = '/'): Promise<void> {

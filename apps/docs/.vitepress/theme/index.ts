@@ -4,6 +4,8 @@ import {
   NuiButton,
   NuiCheckbox,
   NuiConfigProvider,
+  NuiDialog,
+  NuiDrawer,
   NuiField,
   NuiFieldDescription,
   NuiFieldError,
@@ -36,5 +38,7 @@ export default {
     app.component('NuiRadioGroup', NuiRadioGroup);
     app.component('NuiRadio', NuiRadio);
     app.component('NuiSwitch', NuiSwitch);
+    app.component('NuiDialog', NuiDialog);
+    app.component('NuiDrawer', NuiDrawer);
   },
 } satisfies Theme;
