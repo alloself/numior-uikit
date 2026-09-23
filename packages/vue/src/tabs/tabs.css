@@ -32,12 +32,17 @@
   position: relative;
   display: flex;
   gap: var(--nui-space-1);
+  max-inline-size: 100%;
   border-block-end: 1px solid var(--nui-border);
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
 }
 .nui-tab-list--orientation-vertical {
   flex-direction: column;
   border-block-end: 0;
   border-inline-end: 1px solid var(--nui-border);
+  overflow-x: visible;
 }
 .nui-tabs--variant-soft .nui-tab-list {
   padding: var(--nui-space-1);
@@ -94,7 +99,7 @@
 
 .nui-tab-list__indicator {
   position: absolute;
-  inset-block-end: -1px;
+  inset-block-end: 0;
   left: var(--_indicator-start);
   inline-size: var(--_indicator-size);
   block-size: var(--_indicator-thickness);
@@ -109,7 +114,7 @@
 }
 .nui-tab-list--orientation-vertical .nui-tab-list__indicator {
   inset-block-end: auto;
-  inset-inline-end: -1px;
+  inset-inline-end: 0;
   top: var(--_indicator-start);
   left: auto;
   inline-size: var(--_indicator-thickness);

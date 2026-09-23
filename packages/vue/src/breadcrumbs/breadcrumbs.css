@@ -8,7 +8,7 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--nui-space-1);
+  gap: var(--nui-space-2);
   margin: 0;
   padding: 0;
   list-style: none;
@@ -16,7 +16,7 @@
 .nui-breadcrumbs__item {
   display: inline-flex;
   align-items: center;
-  gap: var(--nui-space-1);
+  gap: var(--nui-space-2);
 }
 .nui-breadcrumbs__link {
   --_tone: var(--nui-text-muted);
@@ -24,6 +24,9 @@
   display: inline-flex;
   align-items: center;
   gap: var(--nui-space-1);
+  min-block-size: 1.5rem;
+  padding-inline: var(--nui-space-1);
+  margin-inline: calc(-1 * var(--nui-space-1));
 }
 .nui-breadcrumbs__link:hover {
   color: var(--nui-text);
@@ -32,6 +35,7 @@
   display: inline-flex;
   align-items: center;
   gap: var(--nui-space-1);
+  min-block-size: 1.5rem;
   color: var(--nui-text);
   font-weight: 500;
 }
@@ -48,5 +52,5 @@
   rotate: 180deg;
 }
 .nui-breadcrumbs__more {
-  margin-inline: calc(-1 * var(--nui-space-1));
+  flex: none;
 }

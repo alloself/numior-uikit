@@ -1,4 +1,12 @@
-import { computed, toValue, type MaybeRefOrGetter, type Ref, type ShallowRef } from 'vue';
+import {
+  computed,
+  onMounted,
+  toValue,
+  watch,
+  type MaybeRefOrGetter,
+  type Ref,
+  type ShallowRef,
+} from 'vue';
 import {
   useFloating,
   useListNavigation,
@@ -29,7 +37,6 @@ export interface MenuSurfaceOptions {
 }
 
 export interface MenuSurfaceAttrs {
-  readonly onToggle: (event: Event) => void;
   readonly onKeydown: (event: KeyboardEvent) => void;
   readonly onFocusin: (event: FocusEvent) => void;
   readonly onFocusout: (event: FocusEvent) => void;
@@ -75,7 +82,7 @@ export const useMenuSurface = (options: MenuSurfaceOptions): MenuSurface => {
     typeahead: options.typeahead,
     itemText: labelOf,
   });
-  const state = { pending: 'none' satisfies MenuFocusRequest, inside: false };
+  const state = { pending: 'none' satisfies MenuFocusRequest, inside: false, pointer: false };
   const close = (): void => (options.close ?? control.hide)();
   const context: MenuContext = {
     level: (options.parent?.level ?? -1) + 1,
@@ -101,17 +108,26 @@ export const useMenuSurface = (options: MenuSurfaceOptions): MenuSurface => {
     }
     state.pending = 'none';
   };
-  const onToggle = (event: Event): void => {
-    if ('newState' in event && event.newState === 'open') {
-      focusOnOpen();
-      return;
-    }
+  const onClosed = (): void => {
     navigation.reset();
     if (state.inside) {
       state.inside = false;
       focusElement(options.trigger.value);
     }
   };
+  onMounted(() => {
+    watch(
+      () => options.open.value,
+      (isOpen) => {
+        if (isOpen) {
+          focusOnOpen();
+        } else {
+          onClosed();
+        }
+      },
+      { flush: 'post' },
+    );
+  });
   const within = (node: EventTarget | null): boolean =>
     node instanceof Node &&
     (options.content.value?.contains(node) === true ||
@@ -123,8 +139,8 @@ export const useMenuSurface = (options: MenuSurfaceOptions): MenuSurface => {
     navigation,
     context,
     attrs: {
-      onToggle,
       onKeydown: (event) => {
+        state.pointer = false;
         if (event.key === 'Tab') {
           context.closeAll();
           return;
@@ -147,13 +163,15 @@ export const useMenuSurface = (options: MenuSurfaceOptions): MenuSurface => {
       onPointermove: (event) => {
         const item = itemAt(event.target);
         if (item && item !== navigation.activeElement() && navigation.items().includes(item)) {
+          state.pointer = true;
           navigation.setActive(item);
         }
       },
       onPointerleave: () => {
-        if (holdsOpenSubmenu(navigation.activeElement())) {
+        if (!state.pointer || holdsOpenSubmenu(navigation.activeElement())) {
           return;
         }
+        state.pointer = false;
         navigation.reset();
         focusElement(options.content.value);
       },

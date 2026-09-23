@@ -90,6 +90,7 @@
     <OverlaysSection />
 
     <FeedbackSection />
+    <NavigationSection />
 
     <section class="panel" aria-labelledby="tokens-title">
       <h2 id="tokens-title">Один акцент — разные способы использования</h2>
@@ -141,6 +142,7 @@ import { NuiButton, NuiDialog, useColorScheme } from '@numior/vue';
 import FormsSection from './FormsSection.vue';
 import OverlaysSection from './OverlaysSection.vue';
 import FeedbackSection from './FeedbackSection.vue';
+import NavigationSection from './NavigationSection.vue';
 
 const density = ref('comfortable');
 const direction = ref<'ltr' | 'rtl'>('ltr');

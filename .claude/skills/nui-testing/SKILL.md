@@ -70,6 +70,10 @@ it('waits for a commit with the lazy modifier', async () => {
   lazy icon imports resolve from cache; a new default alias goes there too, otherwise a
   test file can tear down while lucide is still loading.
 
+- Playwright's `keyboard.type` inserts non-Latin characters as text without `keydown`, so
+  typeahead with Cyrillic labels is driven by `locator.dispatchEvent('keydown', { key })`
+  from the page object (`NavigationSection.typeInMenu`).
+
 ## Composable tests (`packages/primitives/test`)
 
 Use `captureSetup(() => useThing(), { wrap: providing(() => provideThing(...)) })` from
