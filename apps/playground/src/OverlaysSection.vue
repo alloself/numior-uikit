@@ -30,6 +30,14 @@
       @close="dialogResult = $event"
     >
       <p>Все данные проекта будут удалены вместе с историей изменений.</p>
+      <NuiButton
+        variant="soft"
+        tone="neutral"
+        size="sm"
+        data-testid="stacked-open"
+        @click="stackedOpen = true"
+        >Открыть второй уровень</NuiButton
+      >
       <template #footer>
         <form method="dialog" class="nui-flex nui-gap-2">
           <NuiButton type="submit" value="cancel" variant="ghost" tone="neutral">Отмена</NuiButton>
@@ -37,6 +45,18 @@
             >Удалить</NuiButton
           >
         </form>
+      </template>
+    </NuiDialog>
+    <NuiDialog
+      v-model:open="stackedOpen"
+      size="sm"
+      title="Второй уровень"
+      description="Оверлей один на всю стопку."
+      data-testid="stacked-dialog"
+    >
+      <p>Esc закрывает только этот уровень и возвращает фокус вниз.</p>
+      <template #footer>
+        <NuiButton data-testid="stacked-close" @click="stackedOpen = false">Закрыть</NuiButton>
       </template>
     </NuiDialog>
     <NuiDialog
@@ -103,6 +123,7 @@ import {
 const dialogOpen = ref(false);
 const dialogResult = ref('');
 const persistentOpen = ref(false);
+const stackedOpen = ref(false);
 const drawerOpen = ref(false);
 const side = ref<NuiDrawerSide>('end');
 const popoverOpen = ref(false);
@@ -113,6 +134,7 @@ const output = computed(() =>
       dialogOpen: dialogOpen.value,
       dialogResult: dialogResult.value,
       persistentOpen: persistentOpen.value,
+      stackedOpen: stackedOpen.value,
       drawerOpen: drawerOpen.value,
       side: side.value,
       popoverOpen: popoverOpen.value,

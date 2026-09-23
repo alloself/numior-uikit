@@ -6,6 +6,7 @@ export interface OverlaysOutput {
   readonly dialogOpen: boolean;
   readonly dialogResult: string;
   readonly persistentOpen: boolean;
+  readonly stackedOpen: boolean;
   readonly drawerOpen: boolean;
   readonly side: string;
   readonly popoverOpen: boolean;
@@ -15,25 +16,35 @@ export interface OverlaysOutput {
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null;
 
+const BOOLEAN_KEYS = [
+  'dialogOpen',
+  'persistentOpen',
+  'stackedOpen',
+  'drawerOpen',
+  'popoverOpen',
+  'tooltipOpen',
+] as const;
+const STRING_KEYS = ['dialogResult', 'side'] as const;
+
 const parseOverlaysOutput = (text: string): OverlaysOutput => {
   const data: unknown = JSON.parse(text);
-  if (!isRecord(data)) {
-    throw new Error('Overlays output is not an object');
-  }
-  const { dialogOpen, dialogResult, persistentOpen, drawerOpen, side, popoverOpen, tooltipOpen } =
-    data;
   if (
-    typeof dialogOpen !== 'boolean' ||
-    typeof dialogResult !== 'string' ||
-    typeof persistentOpen !== 'boolean' ||
-    typeof drawerOpen !== 'boolean' ||
-    typeof side !== 'string' ||
-    typeof popoverOpen !== 'boolean' ||
-    typeof tooltipOpen !== 'boolean'
+    !isRecord(data) ||
+    !BOOLEAN_KEYS.every((key) => typeof data[key] === 'boolean') ||
+    !STRING_KEYS.every((key) => typeof data[key] === 'string')
   ) {
     throw new Error(`Unexpected overlays output: ${text}`);
   }
-  return { dialogOpen, dialogResult, persistentOpen, drawerOpen, side, popoverOpen, tooltipOpen };
+  return {
+    dialogOpen: data.dialogOpen === true,
+    dialogResult: String(data.dialogResult),
+    persistentOpen: data.persistentOpen === true,
+    stackedOpen: data.stackedOpen === true,
+    drawerOpen: data.drawerOpen === true,
+    side: String(data.side),
+    popoverOpen: data.popoverOpen === true,
+    tooltipOpen: data.tooltipOpen === true,
+  };
 };
 
 export class OverlaysSection {
@@ -43,6 +54,9 @@ export class OverlaysSection {
   readonly persistentOpen: Locator;
   readonly persistentDialog: Locator;
   readonly persistentClose: Locator;
+  readonly stackedOpen: Locator;
+  readonly stackedDialog: Locator;
+  readonly stackedClose: Locator;
   readonly drawerOpen: Locator;
   readonly drawer: Locator;
   readonly drawerInput: Locator;
@@ -63,6 +77,9 @@ export class OverlaysSection {
     this.persistentOpen = page.getByTestId('persistent-open');
     this.persistentDialog = page.getByTestId('persistent-dialog');
     this.persistentClose = page.getByTestId('persistent-close');
+    this.stackedOpen = page.getByTestId('stacked-open');
+    this.stackedDialog = page.getByTestId('stacked-dialog');
+    this.stackedClose = page.getByTestId('stacked-close');
     this.drawerOpen = page.getByTestId('drawer-open');
     this.drawer = page.getByTestId('drawer');
     this.drawerInput = page.getByTestId('drawer-input');
@@ -126,6 +143,10 @@ export class OverlaysSection {
       throw new Error('Surface has no bounding box');
     }
     return { right: Math.round(box.x + box.width), top: Math.round(box.y) };
+  }
+
+  backdropColor(dialog: Locator): Promise<string> {
+    return dialog.evaluate((element) => getComputedStyle(element, '::backdrop').backgroundColor);
   }
 
   async readOutput(): Promise<OverlaysOutput> {

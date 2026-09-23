@@ -1,7 +1,9 @@
 import {
   computed,
   onMounted,
+  onScopeDispose,
   ref,
+  shallowRef,
   toValue,
   watch,
   type ComputedRef,
@@ -25,6 +27,7 @@ export interface DialogAttrs {
 
 export interface DialogControl {
   readonly open: ComputedRef<boolean>;
+  readonly nested: ComputedRef<boolean>;
   readonly returnValue: Readonly<Ref<string>>;
   readonly attrs: DialogAttrs;
   show(): void;
@@ -37,6 +40,13 @@ const modalCapable = (
   element: HTMLDialogElement | null | undefined,
 ): element is HTMLDialogElement =>
   element !== null && element !== undefined && typeof element.showModal === 'function';
+
+const openModals = shallowRef<readonly HTMLDialogElement[]>([]);
+
+const track = (dialog: HTMLDialogElement, isOpen: boolean): void => {
+  const others = openModals.value.filter((entry) => entry !== dialog);
+  openModals.value = isOpen ? [...others, dialog] : others;
+};
 
 const outside = (element: HTMLDialogElement, point: { clientX: number; clientY: number }) => {
   const rect = element.getBoundingClientRect();
@@ -61,6 +71,7 @@ export const useDialog = (element: DialogRef, options: DialogOptions): DialogCon
     }
     if (next && !dialog.open) {
       dialog.showModal();
+      track(dialog, true);
     } else if (!next && dialog.open) {
       dialog.close();
     }
@@ -68,6 +79,12 @@ export const useDialog = (element: DialogRef, options: DialogOptions): DialogCon
 
   onMounted(() => {
     watch(() => options.open.value, sync, { immediate: true, flush: 'post' });
+  });
+  onScopeDispose(() => {
+    const dialog = toValue(element);
+    if (dialog) {
+      track(dialog, false);
+    }
   });
 
   const close = (value?: string): void => {
@@ -87,7 +104,11 @@ export const useDialog = (element: DialogRef, options: DialogOptions): DialogCon
       }
     },
     onClose: () => {
-      returnValue.value = toValue(element)?.returnValue ?? '';
+      const dialog = toValue(element);
+      if (dialog) {
+        track(dialog, false);
+      }
+      returnValue.value = dialog?.returnValue ?? '';
       options.open.value = false;
       options.onClose?.(returnValue.value);
     },
@@ -109,6 +130,10 @@ export const useDialog = (element: DialogRef, options: DialogOptions): DialogCon
 
   return {
     open: computed(() => options.open.value),
+    nested: computed(() => {
+      const dialog = toValue(element);
+      return dialog ? openModals.value.indexOf(dialog) > 0 : false;
+    }),
     returnValue,
     attrs,
     show: () => {

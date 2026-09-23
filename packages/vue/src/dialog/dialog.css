@@ -51,6 +51,9 @@
 .nui-dialog[open]::backdrop {
   opacity: 1;
 }
+.nui-dialog--nested::backdrop {
+  background: transparent;
+}
 @starting-style {
   .nui-dialog[open]::backdrop {
     opacity: 0;

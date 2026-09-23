@@ -63,4 +63,17 @@ describe('NuiDialog', () => {
     expect(dialog.footer.text()).toBe('Actions');
     dialog.unmount();
   });
+
+  it('draws a single backdrop for stacked dialogs by marking the upper ones nested', async () => {
+    const base = DialogDriver.mount({ props: { title: 'Base' } });
+    const upper = DialogDriver.mount({ props: { title: 'Upper' } });
+    await upper.settle();
+    expect(base.hasModifier('nested')).toBe(false);
+    expect(upper.hasModifier('nested')).toBe(true);
+    await base.receiveOpen(false);
+    await upper.settle();
+    expect(upper.hasModifier('nested')).toBe(false);
+    upper.unmount();
+    base.unmount();
+  });
 });

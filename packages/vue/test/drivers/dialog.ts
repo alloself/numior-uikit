@@ -117,6 +117,10 @@ abstract class SurfaceDriver extends ComponentDriver {
     await nextTick();
   }
 
+  async settle(): Promise<void> {
+    await nextTick();
+  }
+
   override unmount(): void {
     this.stubs.restore();
     super.unmount();

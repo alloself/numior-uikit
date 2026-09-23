@@ -34,6 +34,10 @@ status: accepted
   `overflow: hidden; scrollbar-gutter: stable`.
 - `useColorScheme` — минимальный композабл: чтение/запись `data-nui-theme` на scope,
   `prefers-color-scheme`, опциональный `storageKey`; playground переключает тему через него.
+- Стопка модальных диалогов: `useDialog` ведёт модульный стек открытых `<dialog>`; все,
+  кроме нижнего, получают `nested` и модификатор `nui-dialog--nested` с прозрачным
+  `::backdrop`, поэтому оверлей один на любое число уровней, а Esc и возврат фокуса
+  остаются нативными (добавлено 2026-09-23 по замечанию о вложенных модалках).
 - Тесты: jsdom не реализует `showModal`, `showPopover` и `ToggleEvent`, поэтому unit-тесты
   ставят заглушки прототипов через драйверы и проверяют контракт (id, aria, вызовы,
   синхронизацию модели), а поведение (фокус, Esc, backdrop, light dismiss, порядок Tab,

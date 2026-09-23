@@ -32,6 +32,23 @@ describe('useDialog', () => {
   });
   afterEach(() => topLayer.restore());
 
+  it('marks dialogs opened above another modal as nested until the one below closes', async () => {
+    const firstOpen = ref(true);
+    const secondOpen = ref(false);
+    const first = mountDialog({ open: firstOpen });
+    const second = mountDialog({ open: secondOpen });
+    expect(first.value.nested.value).toBe(false);
+    secondOpen.value = true;
+    await nextTick();
+    expect(second.value.nested.value).toBe(true);
+    expect(first.value.nested.value).toBe(false);
+    first.value.close();
+    await nextTick();
+    expect(second.value.nested.value).toBe(false);
+    second.unmount();
+    first.unmount();
+  });
+
   it('opens modally from the model and reports the return value on close', async () => {
     const open = ref(true);
     const onClose = vi.fn<(value: string) => void>();
