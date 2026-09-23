@@ -24,6 +24,7 @@ export type {
   FloatingOptions,
   FloatingPlacement,
   FloatingSide,
+  FloatingSize,
   FloatingStrategy,
 } from './floating/useFloating';
 export { usePopover } from './popover/usePopover';
@@ -43,6 +44,14 @@ export type {
   ColorSchemeOptions,
   ResolvedColorScheme,
 } from './color-scheme/useColorScheme';
+export { useListNavigation } from './list/useListNavigation';
+export type {
+  ListFocusMode,
+  ListNavigation,
+  ListNavigationOptions,
+  ListOrientation,
+  SetActiveOptions,
+} from './list/useListNavigation';
 export { useDelayedOpen } from './timing/useDelayedOpen';
 export type { DelayedOpen, DelayedOpenOptions } from './timing/useDelayedOpen';
 export { createToastStore } from './toast/toast-store';

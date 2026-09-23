@@ -60,6 +60,7 @@ await importBuild('primitives', [
   'useColorScheme',
   'createToastStore',
   'useToast',
+  'useListNavigation',
 ]);
 const code = await importBuild('vue', [
   'NuiButton',
