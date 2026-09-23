@@ -20,6 +20,7 @@ export interface OptionSelection<T> {
   readonly selectedValues: ComputedRef<T[]>;
   readonly selectedKeys: ComputedRef<Set<string>>;
   readonly selectedOptions: ComputedRef<NuiOption<T>[]>;
+  optionOf(value: T): NuiOption<T> | undefined;
   toggle(option: NuiOption<T>): void;
   clear(): void;
 }
@@ -48,6 +49,7 @@ export const useOptionSelection = <T>(options: OptionSelectionOptions<T>): Optio
     selectedValues,
     selectedKeys,
     selectedOptions,
+    optionOf: (value) => byKey.value.get(keyOf(value)),
     toggle: (option) => {
       const key = keyOf(option.value);
       options.model.value = selectedKeys.value.has(key)

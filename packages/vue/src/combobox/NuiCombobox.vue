@@ -15,21 +15,17 @@
   >
     <div ref="field" class="nui-combobox__field">
       <template v-if="multiple">
-        <span
-          v-for="option in selectedOptions"
-          :key="keyOf(option.value)"
-          class="nui-combobox__chip"
-        >
-          <span class="nui-combobox__chip-label">{{ option.label }}</span>
+        <span v-for="chip in chips" :key="chip.key" class="nui-combobox__chip">
+          <span class="nui-combobox__chip-label">{{ chip.label }}</span>
           <NuiButton
             variant="ghost"
             tone="neutral"
             size="sm"
             class="nui-combobox__chip-remove"
-            :aria-label="`${removeLabel} ${option.label}`"
+            :aria-label="`${removeLabel} ${chip.label}`"
             tabindex="-1"
             :disabled="isDisabled"
-            @click="toggleSelection(option)"
+            @click="toggleSelection(chip)"
           >
             <NuiIcon alias="x" />
           </NuiButton>
@@ -44,7 +40,7 @@
         :aria-expanded="open ? 'true' : 'false'"
         :aria-controls="listboxId"
         :aria-activedescendant="open ? navigation.activeId.value : undefined"
-        :placeholder="selectedOptions.length === 0 ? placeholder : undefined"
+        :placeholder="selectedValues.length === 0 ? placeholder : undefined"
         :value="query"
         v-bind="{ ...controlAttrs, ...split.controlAttrs() }"
         @input="onInput"
@@ -164,7 +160,7 @@ const {
   flat,
   selectedValues,
   selectedKeys,
-  selectedOptions,
+  optionOf: optionForValue,
   toggle: toggleSelection,
   clear: clearSelection,
 } = useOptionSelection<T>({
@@ -173,7 +169,14 @@ const {
   multiple: () => multiple,
   getKey: () => getKey,
 });
-const singleLabel = computed(() => (multiple ? '' : (selectedOptions.value[0]?.label ?? '')));
+const labelFor = (value: T): string => optionForValue(value)?.label ?? keyOf(value);
+const chips = computed(() =>
+  selectedValues.value.map((value) => ({ key: keyOf(value), value, label: labelFor(value) })),
+);
+const singleLabel = computed(() => {
+  const [first] = selectedValues.value;
+  return multiple || first === undefined ? '' : labelFor(first);
+});
 const query = ref('');
 const filtering = ref(false);
 watch(
@@ -320,7 +323,7 @@ const onEscape = (event: KeyboardEvent): void => {
   }
 };
 const onBackspace = (): void => {
-  const last = selectedOptions.value.at(-1);
+  const last = chips.value.at(-1);
   if (multiple && query.value === '' && last) {
     toggleSelection(last);
   }

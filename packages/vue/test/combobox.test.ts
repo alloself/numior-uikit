@@ -84,8 +84,15 @@ describe('NuiCombobox', () => {
     await free.type('Mango');
     await free.press('Enter');
     expect(free.value).toBe('Mango');
+    expect(free.text).toBe('Mango');
     expect(free.expanded).toBe(false);
     free.unmount();
+    const tags = ComboboxDriver.mount({ custom: true, props: { multiple: true } });
+    await tags.type('Nuxt');
+    await tags.press('Enter');
+    expect(tags.value).toEqual(['Nuxt']);
+    expect(tags.chips).toEqual(['Nuxt']);
+    tags.unmount();
     const strict = ComboboxDriver.mount({ modelValue: 'apple', props: { clearable: true } });
     await strict.type('xyz');
     await strict.focusOutside();
