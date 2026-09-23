@@ -66,6 +66,10 @@ it('waits for a commit with the lazy modifier', async () => {
   (primitives); both dispatch `beforetoggle` and `toggle`. `scrollIntoView` is absent in
   jsdom: stub it in the harness and restore it in `unmount()`.
 
+- Default icons are preloaded by `test/support/preload-icons.ts` (Vitest `setupFiles`) so
+  lazy icon imports resolve from cache; a new default alias goes there too, otherwise a
+  test file can tear down while lucide is still loading.
+
 ## Composable tests (`packages/primitives/test`)
 
 Use `captureSetup(() => useThing(), { wrap: providing(() => provideThing(...)) })` from

@@ -8,6 +8,7 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     include: ['packages/**/*.test.ts'],
+    setupFiles: ['./packages/vue/test/support/preload-icons.ts'],
     server: { deps: { inline: [/^@numior\//] } },
     coverage: {
       provider: 'v8',
