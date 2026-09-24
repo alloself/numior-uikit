@@ -63,7 +63,11 @@ export class PickersSection {
   }
 
   get listbox(): Locator {
-    return this.page.getByRole('listbox');
+    return this.page.getByRole('listbox').and(this.page.locator('.nui-listbox'));
+  }
+
+  get emptyState(): Locator {
+    return this.listbox.locator('.nui-empty');
   }
 
   option(label: string): Locator {

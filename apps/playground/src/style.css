@@ -97,6 +97,33 @@ select {
   font: 0.8125rem / 1.5 var(--nui-font-mono);
   overflow: auto;
 }
+.data-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--nui-space-3);
+  margin-block-end: var(--nui-space-4);
+}
+.floating-host {
+  position: relative;
+  display: inline-flex;
+}
+.card-grid,
+.data-lists {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: var(--nui-space-4);
+  align-items: start;
+  margin-block-end: var(--nui-space-4);
+}
+.data-stack {
+  display: grid;
+  gap: var(--nui-space-2);
+  justify-items: start;
+}
+.data-stack > .nui-list {
+  justify-self: stretch;
+}
 .skeleton-row {
   display: flex;
   align-items: center;
