@@ -150,7 +150,7 @@ const pinned: Person[] = [person(0, 'Итого по отделу', '—', 0, 43
 
 const columns: NuiTableColumn<Person>[] = [
   { key: 'name', label: 'Имя', sortable: true, resizable: true, reorderable: true, minWidth: 120 },
-  { key: 'role', label: 'Роль', resizable: true, reorderable: true },
+  { key: 'role', label: 'Роль', width: 160, resizable: true, reorderable: true },
   {
     key: 'age',
     label: 'Возраст',
