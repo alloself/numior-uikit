@@ -328,13 +328,11 @@ export class TableDriver extends ComponentDriver {
     await nextTick();
   }
 
-  async dragRow(name: string, from: number, to: number): Promise<void> {
+  async grabRow(name: string, from: number, to: number): Promise<void> {
     this.rowGrip(name).element.dispatchEvent(pointerAt('pointerdown', 0, from));
     await nextTick();
     window.dispatchEvent(pointerAt('pointermove', 0, from + Math.sign(to - from) * 3));
     window.dispatchEvent(pointerAt('pointermove', 0, to));
-    await nextTick();
-    window.dispatchEvent(pointerAt('pointerup', 0, to));
     await nextTick();
   }
 
@@ -405,6 +403,15 @@ export class TableDriver extends ComponentDriver {
     return this.row(name).find('.nui-table__cell--select').classes();
   }
 
+  selectCellStyle(name: string): string {
+    return this.row(name).find('.nui-table__cell--select').attributes('style') ?? '';
+  }
+
+  get ghostText(): string | undefined {
+    const ghost = this.wrapper.find('.nui-table__ghost');
+    return ghost.exists() ? ghost.text().trim() : undefined;
+  }
+
   resizer(label: string): DOMWrapper<Element> {
     return this.header(label).find('.nui-table__resizer');
   }
@@ -445,15 +452,23 @@ export class TableDriver extends ComponentDriver {
     await nextTick();
   }
 
-  async dragHeader(label: string, from: number, to: number): Promise<void> {
+  async grabHeader(label: string, from: number, to: number): Promise<void> {
     const cell = this.header(label).element;
     cell.dispatchEvent(pointer('pointerdown', from));
     await nextTick();
     window.dispatchEvent(pointer('pointermove', from + Math.sign(to - from) * 3));
     window.dispatchEvent(pointer('pointermove', to));
     await nextTick();
-    window.dispatchEvent(pointer('pointerup', to));
+  }
+
+  async dropAt(x: number, y: number): Promise<void> {
+    window.dispatchEvent(pointerAt('pointerup', x, y));
     await nextTick();
+  }
+
+  async dragHeader(label: string, from: number, to: number): Promise<void> {
+    await this.grabHeader(label, from, to);
+    await this.dropAt(to, 0);
   }
 
   get headerCheckbox(): { readonly checked: boolean; readonly indeterminate: boolean } {

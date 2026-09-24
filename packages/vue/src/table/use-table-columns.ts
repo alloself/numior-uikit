@@ -7,7 +7,6 @@ import type {
   NuiTableSticky,
 } from './table.types';
 
-const UTILITY_WIDTH = 40;
 const MIN_WIDTH = 64;
 
 export interface ColumnLayoutOptions<T> {
@@ -81,6 +80,13 @@ const clampWidth = <T>(column: NuiTableColumn<T>, px: number): number =>
     Math.max(column.minWidth ?? MIN_WIDTH, Math.round(px)),
   );
 
+const utilityInset = (utilities: number, px: number): string =>
+  utilities > 0 ? `calc(${utilities} * var(--_util) + ${px}px)` : `${px}px`;
+
+const utilityStyle = (position: number): NuiTableCellStyle => ({
+  insetInlineStart: utilityInset(position, 0),
+});
+
 const stickyClasses = (sticky: NuiTableSticky, edge: boolean): string[] => [
   'nui-table__cell--sticky',
   `nui-table__cell--sticky-${sticky}`,
@@ -103,17 +109,18 @@ export const useTableColumns = <T>(options: ColumnLayoutOptions<T>): ColumnLayou
   );
   const stickyStart = computed(() => ordered.value.some((column) => column.sticky === 'start'));
 
-  const renderedWidth = (column: NuiTableColumn<T>): number | undefined =>
-    measured.value[column.key] ??
+  const declaredWidth = (column: NuiTableColumn<T>): number | undefined =>
     options.widths.value[column.key] ??
-    (typeof column.width === 'number' ? column.width : natural.value[column.key]);
+    (typeof column.width === 'number' ? column.width : undefined);
+  const renderedWidth = (column: NuiTableColumn<T>): number | undefined =>
+    measured.value[column.key] ?? declaredWidth(column) ?? natural.value[column.key];
   const widthOf = (column: NuiTableColumn<T>): number | undefined => {
-    const width = options.widths.value[column.key] ?? renderedWidth(column);
+    const width = declaredWidth(column) ?? measured.value[column.key] ?? natural.value[column.key];
     return width === undefined ? undefined : Math.round(width);
   };
   const offsetBefore = (column: NuiTableColumn<T>, sticky: NuiTableSticky): number => {
     const list = sticky === 'start' ? ordered.value : ordered.value.toReversed();
-    let sum = sticky === 'start' ? options.utilities() * UTILITY_WIDTH : 0;
+    let sum = 0;
     for (const candidate of list) {
       if (candidate === column) {
         break;
@@ -133,14 +140,16 @@ export const useTableColumns = <T>(options: ColumnLayoutOptions<T>): ColumnLayou
     if (column.sticky === undefined) {
       return undefined;
     }
-    const offset = `${offsetBefore(column, column.sticky)}px`;
-    return column.sticky === 'start' ? { insetInlineStart: offset } : { insetInlineEnd: offset };
+    const px = offsetBefore(column, column.sticky);
+    if (column.sticky === 'end') {
+      return { insetInlineEnd: `${px}px` };
+    }
+    return { insetInlineStart: utilityInset(options.utilities(), px) };
   };
   const cellClass = (column: NuiTableColumn<T>): string[] =>
     column.sticky === undefined ? [] : stickyClasses(column.sticky, isEdge(column));
-  const utilityStyle = (position: number): NuiTableCellStyle =>
-    stickyStart.value ? { insetInlineStart: `${position * UTILITY_WIDTH}px` } : undefined;
-  const utilityClass = (): string[] => (stickyStart.value ? stickyClasses('start', false) : []);
+  const utilityClass = (position: number): string[] =>
+    stickyClasses('start', !stickyStart.value && position === options.utilities() - 1);
   const colStyle = (column: NuiTableColumn<T>): NuiTableCellStyle => {
     const value = colWidth(column);
     return value === undefined ? undefined : { inlineSize: value };

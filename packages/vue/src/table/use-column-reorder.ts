@@ -1,5 +1,6 @@
 import { ref, type Ref } from 'vue';
 import { useReorder, type ReorderState } from '@numior/primitives';
+import { ghostAt, grabOf, NO_GRAB, type DragGrab, type NuiTableGhost } from './ghost';
 import type { NuiTableAnnouncement, NuiTableColumn } from './table.types';
 
 export interface ColumnReorderOptions<T> {
@@ -15,6 +16,7 @@ export interface ColumnReorderOptions<T> {
 export interface ColumnReorder {
   readonly state: Readonly<Ref<ReorderState>>;
   readonly indicator: Readonly<Ref<number | undefined>>;
+  readonly ghost: Readonly<Ref<NuiTableGhost | undefined>>;
   dragStart(index: number, event: PointerEvent): void;
   dragKeydown(index: number, event: KeyboardEvent): void;
   headClick(event: MouseEvent): void;
@@ -55,6 +57,8 @@ const indicatorAt = (
 
 export const useColumnReorder = <T>(options: ColumnReorderOptions<T>): ColumnReorder => {
   const indicator = ref<number>();
+  const ghost = ref<NuiTableGhost>();
+  const grabbed: { current: DragGrab } = { current: NO_GRAB };
   const flags = { dragged: false, moved: false };
   let previous: ReorderState = { phase: 'idle', from: -1, to: -1, position: 0 };
 
@@ -77,9 +81,15 @@ export const useColumnReorder = <T>(options: ColumnReorderOptions<T>): ColumnReo
         ? indicatorAt(scroller, cell, state.to > state.from, options.rtl())
         : undefined;
   };
+  const float = (state: ReorderState): void => {
+    ghost.value =
+      state.phase === 'dragging'
+        ? ghostAt(options.scroller(), 'x', state.position, grabbed.current, labelOf(state.from))
+        : undefined;
+  };
   const announceTransition = (state: ReorderState): void => {
-    const grabbed = state.phase === 'keyboard' && previous.phase !== 'keyboard';
-    if (grabbed) {
+    const taken = state.phase === 'keyboard' && previous.phase !== 'keyboard';
+    if (taken) {
       flags.moved = false;
       say('grabbed', state.from, state.to);
     } else if (state.phase === 'keyboard' && state.to !== previous.to) {
@@ -102,6 +112,7 @@ export const useColumnReorder = <T>(options: ColumnReorderOptions<T>): ColumnReo
     } else if (state.phase !== 'pending') {
       place(state);
     }
+    float(state);
     previous = state;
   };
 
@@ -129,8 +140,10 @@ export const useColumnReorder = <T>(options: ColumnReorderOptions<T>): ColumnReo
   return {
     state: reorder.state,
     indicator,
+    ghost,
     dragStart: (index, event) => {
       flags.dragged = false;
+      grabbed.current = grabOf(event, 'x', 'th');
       reorder.onPointerdown(index, event);
     },
     dragKeydown: (index, event) => {

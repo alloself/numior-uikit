@@ -101,6 +101,16 @@
         :style="drop.style"
         aria-hidden="true"
       ></div>
+      <div
+        v-if="ghost"
+        class="nui-table__ghost"
+        :class="`nui-table__ghost--${ghost.axis}`"
+        :style="ghost.style"
+        aria-hidden="true"
+      >
+        <NuiIcon alias="grip" class="nui-table__ghost-grip" />
+        <span class="nui-table__ghost-label">{{ ghost.label }}</span>
+      </div>
     </div>
     <div v-if="paginationProps" class="nui-table__footer">
       <NuiPagination
@@ -118,12 +128,14 @@
 <script setup lang="ts" generic="T">
 import { computed, onMounted, onScopeDispose, ref, useSlots, useTemplateRef, watch } from 'vue';
 import { useVirtualList } from '@numior/primitives';
+import NuiIcon from '../icon/NuiIcon.vue';
 import NuiPagination from '../pagination/NuiPagination.vue';
 import { defaultOptionKey } from '../shared/options';
 import NuiTableBody from './NuiTableBody.vue';
 import NuiTableHead from './NuiTableHead.vue';
 import { defaultAnnounce } from './announce';
 import { cellText, cellValue, slotNamesWithPrefix } from './cells';
+import { visibleStart } from './ghost';
 import { pageSlice, resolvePagination } from './page';
 import type { NuiTableRowView } from './rows';
 import { selectionStateOf, toggleRow, toggleRows } from './selection';
@@ -307,9 +319,11 @@ const dragging = computed(
   () => columnDrag.state.value.phase === 'dragging' || rowReorder.state.value.phase === 'dragging',
 );
 const headSize = ref(0);
+const captionSize = ref(0);
 const rootStyle = computed(() => ({
   '--_indent': `${indent}px`,
   '--_head-size': `${headSize.value}px`,
+  '--_caption-size': `${captionSize.value}px`,
 }));
 const scrolled = ref({ start: false, end: false });
 const rootClasses = computed(() => [
@@ -334,6 +348,36 @@ const utilityCols = computed(() => [
   ...(rowDrag ? ['drag'] : []),
   ...(selectable ? ['select'] : []),
 ]);
+const ghost = computed(() => {
+  const column = columnDrag.ghost.value;
+  if (column) {
+    return {
+      axis: 'column',
+      label: column.label,
+      style: {
+        left: `${column.offset}px`,
+        width: `${column.size}px`,
+        top: `${captionSize.value}px`,
+        height: `${headSize.value}px`,
+      },
+    };
+  }
+  const row = rowReorder.ghost.value;
+  const element = scroller.value;
+  if (!row || !element) {
+    return undefined;
+  }
+  return {
+    axis: 'row',
+    label: row.label,
+    style: {
+      top: `${row.offset}px`,
+      height: `${row.size}px`,
+      left: `${visibleStart(element, isRtl())}px`,
+      width: `${element.clientWidth}px`,
+    },
+  };
+});
 const dropIndicators = computed(() => [
   ...(columnDrag.indicator.value === undefined
     ? []
@@ -369,9 +413,12 @@ const bodySlotNames = (): string[] => [
 
 onMounted(() => {
   const measure = (): void => {
-    layout.measure(tableElement.value);
-    headSize.value =
-      tableElement.value?.querySelector('thead')?.getBoundingClientRect().height ?? 0;
+    const table = tableElement.value;
+    layout.measure(table);
+    const head = table?.querySelector('thead')?.getBoundingClientRect();
+    headSize.value = head?.height ?? 0;
+    captionSize.value =
+      head && table ? Math.max(0, head.top - table.getBoundingClientRect().top) : 0;
   };
   watch([() => layout.ordered.value, widths], measure, { immediate: true, flush: 'post' });
   trackScroll();

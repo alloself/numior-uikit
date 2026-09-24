@@ -39,6 +39,13 @@ test.describe('table', () => {
     expect((await table.readOutput()).lastRowClick).toBeNull();
     await table.row('Глеб').getByText('Глеб', { exact: true }).click();
     await expect.poll(async () => (await table.readOutput()).lastRowClick).toBe('Глеб');
+    if (await table.overflowsHorizontally(table.table)) {
+      const before = await table.selectAll.boundingBox();
+      await table.scrollHorizontally(table.table, 150);
+      const after = await table.selectAll.boundingBox();
+      expect(before && after && Math.abs(after.x - before.x) <= 1).toBe(true);
+      await expect(table.table).toHaveClass(/nui-table--scrolled-start/);
+    }
   });
 
   test('pagination moves between pages and changes the page size', async ({ page }) => {
@@ -135,6 +142,9 @@ test.describe('table', () => {
     const { table } = playground;
     expect(await table.headerLabels()).toEqual(['', 'Имя', 'Роль', 'Возраст', 'Балл']);
     if (!isMobile) {
+      expect(await table.opacityOf(table.columnGrip('Имя'))).toBe('0');
+      await table.header('Имя').hover();
+      await expect.poll(() => table.opacityOf(table.columnGrip('Имя'))).toBe('1');
       await table.columnGrip('Балл').focus();
       await page.keyboard.press('Space');
       await expect(table.table.locator('.nui-table__live')).toContainText('Балл grabbed');
@@ -145,7 +155,13 @@ test.describe('table', () => {
         .toEqual(['name', 'role', 'score', 'age']);
       expect(await table.headerLabels()).toEqual(['', 'Имя', 'Роль', 'Балл', 'Возраст']);
     }
-    await table.dragBetween(table.header('Имя'), table.header('Роль'), 20, 0);
+    await table.dragBetween(table.header('Имя'), table.header('Роль'), 20, 0, async () => {
+      await expect(table.ghost).toContainText('Имя');
+      const line = await table.dropLine(table.table).boundingBox();
+      const head = await table.table.locator('thead').boundingBox();
+      expect(line && head && line.y >= head.y - 1).toBe(true);
+    });
+    await expect(table.ghost).toHaveCount(0);
     await expect.poll(async () => (await table.readOutput()).columnOrder.indexOf('name')).toBe(1);
     expect((await table.readOutput()).sort).toBeNull();
   });
@@ -176,7 +192,10 @@ test.describe('table', () => {
         .poll(async () => (await table.readOutput()).teamOrder)
         .toEqual(['Анна', 'Вера', 'Борис']);
     }
-    await table.dragBetween(table.gripOf('Айгуль'), table.gripOf('Артём'), 0, 8);
+    await table.dragBetween(table.gripOf('Айгуль'), table.gripOf('Артём'), 0, 8, async () => {
+      await expect(table.ghost).toContainText('Айгуль');
+    });
+    await expect(table.ghost).toHaveCount(0);
     await expect.poll(async () => (await table.readOutput()).lastReorder).toBe('Айгуль:0->1');
     await table
       .header('Возраст', table.treeTable)

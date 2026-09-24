@@ -245,8 +245,11 @@ describe('NuiTable columns', () => {
         'nui-table__cell--sticky-edge',
       ]),
     );
-    expect(table.cellStyle('Анна', 'Имя')).toContain('inset-inline-start: 40px');
+    expect(table.cellStyle('Анна', 'Имя')).toContain(
+      'inset-inline-start: calc(1 * var(--_util) + 0px)',
+    );
     expect(table.selectCellClasses('Анна')).toContain('nui-table__cell--sticky-start');
+    expect(table.selectCellClasses('Анна')).not.toContain('nui-table__cell--sticky-edge');
     expect(table.headerClasses('Имя')).toContain('nui-table__cell--sticky-edge');
     expect(table.cellStyle('Анна', 'Балл')).toContain('inset-inline-end: 0px');
     expect(table.cellStyle('Анна', 'Возраст')).toContain('inset-inline-end: 80px');
@@ -254,6 +257,16 @@ describe('NuiTable columns', () => {
     expect(table.cellClasses('Анна', 'Балл')).not.toContain('nui-table__cell--sticky-edge');
     expect(table.cellClasses('Анна', 'Роль')).toEqual(['nui-table__cell']);
     table.unmount();
+    const plain = TableDriver.mount({ props: { selectable: 'multiple', rowDrag: true } });
+    expect(plain.hasModifier('fixed')).toBe(false);
+    expect(plain.selectCellClasses('Анна')).toEqual(
+      expect.arrayContaining(['nui-table__cell--sticky-start', 'nui-table__cell--sticky-edge']),
+    );
+    expect(plain.selectCellStyle('Анна')).toContain(
+      'inset-inline-start: calc(1 * var(--_util) + 0px)',
+    );
+    expect(plain.rowGrip('Анна').classes()).toContain('nui-table__grip');
+    plain.unmount();
   });
 
   it('reorders columns from the keyboard with announcements and keeps pinned groups apart', async () => {
@@ -307,7 +320,11 @@ describe('NuiTable columns', () => {
     await table.dragHeader('Имя', 50, 53);
     expect(table.columnOrder).toEqual([]);
     expect(table.sort).toBeNull();
-    await table.dragHeader('Имя', 50, 360);
+    await table.grabHeader('Имя', 50, 360);
+    expect(table.ghostText).toBe('Имя');
+    expect(table.hasModifier('dragging')).toBe(true);
+    await table.dropAt(360, 0);
+    expect(table.ghostText).toBeUndefined();
     expect(table.columnOrder).toEqual(['role', 'age', 'score', 'name']);
     expect(table.hasModifier('dragging')).toBe(false);
     await table.clickHeader('Имя');
@@ -398,7 +415,10 @@ describe('NuiTable rows', () => {
     table.unmount();
     const flat = TableDriver.mount({ props: { rowDrag: true } });
     flat.layoutRows(40);
-    await flat.dragRow('Анна', 20, 110);
+    await flat.grabRow('Анна', 20, 110);
+    expect(flat.ghostText).toBe('Анна');
+    await flat.dropAt(0, 110);
+    expect(flat.ghostText).toBeUndefined();
     expect(flat.reorders).toEqual(['Анна:0->2@root']);
     expect(flat.clicks).toEqual([]);
     flat.unmount();

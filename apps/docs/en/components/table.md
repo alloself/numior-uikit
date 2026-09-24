@@ -84,7 +84,10 @@ offsets are computed from the neighbouring pinned widths and the edge shadow app
 once scrolled. `reorderable` lets you drag a header with the pointer or grab it from the
 keyboard through the grip button: Space grabs, ←/→ move, Space drops, Escape cancels; the
 order lives in `v-model:columnOrder` (keys) and pinned columns only move within their group.
-Every step is announced through `aria-live`, with `announce` providing the text.
+The grip appears on header hover and on keyboard focus (touch screens always show it), an
+opaque ghost with the column label follows the pointer while dragging, and the insertion
+line starts below the `caption`. Every step is announced through `aria-live`, with `announce`
+providing the text.
 
 ## Rows: tree, pinning, order
 
@@ -98,7 +101,10 @@ header, are never sorted or paged, and stay in place while scrolling under `stic
 `rowDrag` adds a grip column: drag a row with the pointer or grab it from the keyboard
 (Space, ↑/↓, Space, Escape) to move it among the siblings of one parent; the table emits
 `reorder({ row, from, to, parent })` with sibling indices and the consumer updates the data.
-While a sort is active the grips are disabled.
+While a sort is active the grips are disabled. The row grip shows on row hover, the row ghost
+keeps the row height and carries the label from `rowLabel` or the first column. Utility
+columns with checkboxes and grips are pinned to the start by default, so selection and
+dragging stay at hand while the table scrolls horizontally.
 
 ## Behaviour
 
@@ -171,6 +177,7 @@ Column options: `key`, `label`, `sortable`, `align`, `width` (px or CSS), `minWi
 `__cell` (`--head`, `--select`, `--drag`, `--tree`, `--status`, `--align-*`, `--sticky`,
 `--sticky-start`, `--sticky-end`, `--sticky-edge`, `--resizing`, `--dragging`), `__sort`
 (`--active`, `--desc`), `__sort-icon`, `__resizer`, `__grip`, `__toggle` (`--expanded`,
-`--loading`, `--leaf`), `__drop` (`--column`, `--row`), `__live`, `__spacer`, `__footer`;
-variables `--_row`, `--_pad-x`, `--_height`, `--_stripe`, `--_hover`, `--_head-bg`,
-`--_indent`, `--_level`, `--_head-size`.
+`--loading`, `--leaf`), `__drop` (`--column`, `--row`), `__ghost` (`--column`, `--row`),
+`__ghost-grip`, `__ghost-label`, `__live`, `__spacer`, `__footer`; variables `--_row`,
+`--_pad-x`, `--_height`, `--_stripe`, `--_hover`, `--_head-bg`, `--_indent`, `--_level`,
+`--_head-size`, `--_caption-size`.

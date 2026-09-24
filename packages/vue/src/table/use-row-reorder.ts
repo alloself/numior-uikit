@@ -1,5 +1,6 @@
 import { ref, type Ref } from 'vue';
 import { useReorder, type ReorderState } from '@numior/primitives';
+import { ghostAt, grabOf, NO_GRAB, type DragGrab, type NuiTableGhost } from './ghost';
 import type { NuiTableRowView } from './rows';
 import type { NuiTableAnnouncement, NuiTableReorderEvent } from './table.types';
 
@@ -18,6 +19,7 @@ export interface RowReorderOptions<T> {
 export interface RowReorder {
   readonly state: Readonly<Ref<ReorderState>>;
   readonly indicator: Readonly<Ref<number | undefined>>;
+  readonly ghost: Readonly<Ref<NuiTableGhost | undefined>>;
   dragStart(index: number, event: PointerEvent): void;
   dragKeydown(index: number, event: KeyboardEvent): void;
 }
@@ -34,6 +36,8 @@ const renderedRows = (body: HTMLElement | null): HTMLElement[] =>
 
 export const useRowReorder = <T>(options: RowReorderOptions<T>): RowReorder => {
   const indicator = ref<number>();
+  const ghost = ref<NuiTableGhost>();
+  const grabbed: { current: DragGrab } = { current: NO_GRAB };
   const flags = { moved: false };
   let previous: ReorderState = { phase: 'idle', from: -1, to: -1, position: 0 };
 
@@ -79,6 +83,13 @@ export const useRowReorder = <T>(options: RowReorderOptions<T>): RowReorder => {
     indicator.value = (forward ? rect.bottom : rect.top) + base;
   };
 
+  const float = (state: ReorderState): void => {
+    const view = options.views()[state.from];
+    ghost.value =
+      state.phase === 'dragging' && view
+        ? ghostAt(options.scroller(), 'y', state.position, grabbed.current, options.labelOf(view))
+        : undefined;
+  };
   const say = (phase: NuiTableAnnouncement['phase'], from: number, to: number): void => {
     const view = options.views()[from];
     if (!view) {
@@ -115,6 +126,7 @@ export const useRowReorder = <T>(options: RowReorderOptions<T>): RowReorder => {
     } else if (state.phase !== 'pending') {
       place(state);
     }
+    float(state);
     previous = state;
   };
   const canMove = (from: number, to: number): boolean => {
@@ -155,8 +167,10 @@ export const useRowReorder = <T>(options: RowReorderOptions<T>): RowReorder => {
   return {
     state: reorder.state,
     indicator,
+    ghost,
     dragStart: (index, event) => {
       if (options.enabled()) {
+        grabbed.current = grabOf(event, 'y', 'tr');
         reorder.onPointerdown(index, event);
       }
     },

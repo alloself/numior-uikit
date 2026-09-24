@@ -17,15 +17,6 @@
   >
     <span class="nui-table__head-content">
       <button
-        v-if="column.reorderable"
-        type="button"
-        class="nui-table__grip"
-        :aria-label="reorderLabel(column)"
-        @keydown="actions.dragKeydown(index, $event)"
-      >
-        <NuiIcon alias="grip" />
-      </button>
-      <button
         v-if="column.sortable"
         type="button"
         class="nui-table__sort"
@@ -42,6 +33,15 @@
         />
       </button>
       <slot v-else :column="column" :sort="undefined">{{ column.label }}</slot>
+      <button
+        v-if="column.reorderable"
+        type="button"
+        class="nui-table__grip"
+        :aria-label="reorderLabel(column)"
+        @keydown="actions.dragKeydown(index, $event)"
+      >
+        <NuiIcon alias="grip" />
+      </button>
     </span>
     <span
       v-if="column.resizable"

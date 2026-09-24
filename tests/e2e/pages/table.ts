@@ -180,7 +180,13 @@ export class TableSection {
     );
   }
 
-  async dragBetween(source: Locator, target: Locator, dx = 0, dy = 0): Promise<void> {
+  async dragBetween(
+    source: Locator,
+    target: Locator,
+    dx = 0,
+    dy = 0,
+    whileDragging?: () => Promise<void>,
+  ): Promise<void> {
     await source.scrollIntoViewIfNeeded();
     const from = await source.boundingBox();
     const to = await target.boundingBox();
@@ -193,7 +199,20 @@ export class TableSection {
     await this.page.mouse.down();
     await this.page.mouse.move(startX + 4, startY + 4);
     await this.page.mouse.move(to.x + to.width / 2 + dx, to.y + to.height / 2 + dy, { steps: 8 });
+    await whileDragging?.();
     await this.page.mouse.up();
+  }
+
+  get ghost(): Locator {
+    return this.page.locator('.nui-table__ghost');
+  }
+
+  dropLine(table: Locator): Locator {
+    return table.locator('.nui-table__drop--column');
+  }
+
+  opacityOf(locator: Locator): Promise<string> {
+    return locator.evaluate((element) => getComputedStyle(element).opacity);
   }
 
   async dragBy(source: Locator, dx: number): Promise<void> {
