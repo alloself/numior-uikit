@@ -6,7 +6,7 @@
 tables and dropdowns: the [list](/en/components/list) shows it for empty `items`, and
 `NuiSelect` and `NuiCombobox` show it when nothing matches.
 
-<div class="nui-demo nui-demo--stack" data-nui-theme="light">
+<div class="vp-raw nui-demo nui-demo--stack" data-nui-theme="light">
   <NuiEmpty title="Nothing here yet" description="Create your first project to see it here.">
     <template #actions>
       <NuiButton size="sm">Create project</NuiButton>

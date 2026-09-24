@@ -4,7 +4,7 @@
 built from the surface tokens. Under `prefers-reduced-motion` the shimmer is switched off
 entirely, and `animated="false"` does the same explicitly.
 
-<div class="nui-demo nui-demo--stack" data-nui-theme="light">
+<div class="vp-raw nui-demo nui-demo--stack" data-nui-theme="light">
   <div style="display: flex; gap: 0.75rem; align-items: center">
     <NuiSkeleton shape="circle" />
     <NuiSkeleton :lines="2" />

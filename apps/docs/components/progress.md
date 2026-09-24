@@ -8,7 +8,7 @@ import { ref } from 'vue'
 const value = ref(40)
 </script>
 
-<div class="nui-demo nui-demo--stack" data-nui-theme="light">
+<div class="vp-raw nui-demo nui-demo--stack" data-nui-theme="light">
   <NuiProgress :value="value" label="Загрузка" :value-text="`${value}%`" />
   <NuiProgress :value="value" tone="success" size="lg" label="Готово" />
   <NuiProgress label="Подготовка" size="sm" tone="info" />

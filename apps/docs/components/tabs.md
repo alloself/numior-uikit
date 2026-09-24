@@ -16,7 +16,7 @@ const periods = [
 ]
 </script>
 
-<div class="nui-demo nui-demo--stack" data-nui-theme="light">
+<div class="vp-raw nui-demo nui-demo--stack" data-nui-theme="light">
   <NuiTabs v-model="tab">
     <NuiTabList label="Настройки проекта">
       <NuiTab value="general" icon="info">Общие</NuiTab>

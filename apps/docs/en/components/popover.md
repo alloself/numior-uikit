@@ -11,7 +11,7 @@ import { ref } from 'vue'
 const open = ref(false)
 </script>
 
-<div class="nui-demo" data-nui-theme="light">
+<div class="vp-raw nui-demo" data-nui-theme="light">
   <NuiPopover v-model:open="open" placement="bottom-start" arrow>
     <template #trigger="{ attrs }">
       <NuiButton v-bind="attrs" variant="outline">Filters</NuiButton>

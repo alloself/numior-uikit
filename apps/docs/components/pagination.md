@@ -13,7 +13,7 @@ const pageSize = ref(20)
 const linkPage = ref(2)
 </script>
 
-<div class="nui-demo nui-demo--stack" data-nui-theme="light">
+<div class="vp-raw nui-demo nui-demo--stack" data-nui-theme="light">
   <NuiPagination v-model:page="page" v-model:page-size="pageSize" :total="240" :page-sizes="[10, 20, 50]" label="Страницы" previous-label="Предыдущая" next-label="Следующая" page-size-label="На странице" :page-label="(p) => `Страница ${p}`" :range-label="(from, to, total) => `${from}–${to} из ${total}`" />
   <NuiPagination :page="linkPage" :total="60" :show-range="false" :href="(p) => `#page-${p}`" label="По ссылкам" previous-label="Предыдущая" next-label="Следующая" :page-label="(p) => `Страница ${p}`" @update:page="linkPage = $event" />
 </div>

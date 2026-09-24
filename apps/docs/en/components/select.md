@@ -23,7 +23,7 @@ const tagOptions = [
 ]
 </script>
 
-<div class="nui-demo nui-demo--stack" data-nui-theme="light">
+<div class="vp-raw nui-demo nui-demo--stack" data-nui-theme="light">
   <NuiField label="Country">
     <NuiSelect v-model="country" :options="countries" placeholder="Pick a country" clearable />
   </NuiField>

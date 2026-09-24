@@ -24,7 +24,7 @@ const links = [
 ]
 </script>
 
-<div class="nui-demo" data-nui-theme="light" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); align-items: start">
+<div class="vp-raw nui-demo" data-nui-theme="light" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); align-items: start">
   <NuiList variant="divided" :items="links" />
   <NuiList v-model="picked" selectable="multiple" variant="bordered" label="Языки" :items="languages" />
   <NuiList v-model="channel" selectable="single" variant="bordered" label="Канал">

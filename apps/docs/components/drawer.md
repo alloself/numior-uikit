@@ -10,7 +10,7 @@ const open = ref(false)
 const side = ref('end')
 </script>
 
-<div class="nui-demo" data-nui-theme="light">
+<div class="vp-raw nui-demo" data-nui-theme="light">
   <NuiButton @click="open = true">Открыть панель</NuiButton>
   <label>Сторона
     <select v-model="side">

@@ -12,7 +12,7 @@ const toast = useToast()
 const undo = () => toast.success('Удаление отменено')
 </script>
 
-<div class="nui-demo" data-nui-theme="light">
+<div class="vp-raw nui-demo" data-nui-theme="light">
   <NuiButton @click="toast.info('Черновик сохранён', { description: 'Синхронизация через минуту' })">Информация</NuiButton>
   <NuiButton variant="soft" tone="success" @click="toast.success('Проект опубликован')">Успех</NuiButton>
   <NuiButton variant="outline" tone="error" @click="toast.error('Не удалось сохранить', { duration: 0, action: { label: 'Повторить', onClick: undo } })">Ошибка с действием</NuiButton>

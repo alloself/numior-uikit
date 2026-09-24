@@ -12,7 +12,7 @@ const toast = useToast()
 const undo = () => toast.success('Deletion undone')
 </script>
 
-<div class="nui-demo" data-nui-theme="light">
+<div class="vp-raw nui-demo" data-nui-theme="light">
   <NuiButton @click="toast.info('Draft saved', { description: 'Sync in a minute' })">Info</NuiButton>
   <NuiButton variant="soft" tone="success" @click="toast.success('Project published')">Success</NuiButton>
   <NuiButton variant="outline" tone="error" @click="toast.error('Could not save', { duration: 0, action: { label: 'Retry', onClick: undo } })">Error with action</NuiButton>

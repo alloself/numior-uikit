@@ -10,7 +10,7 @@ const open = ref(false)
 const side = ref('end')
 </script>
 
-<div class="nui-demo" data-nui-theme="light">
+<div class="vp-raw nui-demo" data-nui-theme="light">
   <NuiButton @click="open = true">Open drawer</NuiButton>
   <label>Side
     <select v-model="side">

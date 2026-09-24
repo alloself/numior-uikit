@@ -10,7 +10,7 @@ import { ref } from 'vue'
 const plan = ref('team')
 </script>
 
-<div class="nui-demo nui-demo--stack" data-nui-theme="light">
+<div class="vp-raw nui-demo nui-demo--stack" data-nui-theme="light">
   <NuiField group label="Plan" description="Selected: {{ plan }}">
     <NuiRadioGroup v-model="plan">
       <NuiRadio value="free">Free</NuiRadio>

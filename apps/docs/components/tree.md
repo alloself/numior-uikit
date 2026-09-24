@@ -30,7 +30,7 @@ const load = ({ value }) => setTimeout(() => {
 const nodes = Array.from({ length: 5000 }, (_, i) => ({ value: `n${i}`, label: `Узел ${i + 1}`, children: [{ value: `n${i}-leaf`, label: `Лист ${i + 1}` }] }))
 </script>
 
-<div class="nui-demo" data-nui-theme="light" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); align-items: start">
+<div class="vp-raw nui-demo" data-nui-theme="light" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); align-items: start">
   <NuiTree v-model="selected" v-model:expanded="expanded" :items="files" label="Файлы" @load="load" />
   <NuiTree v-model:checked="checked" :items="files" :selectable="false" checkable label="Экспорт" />
   <NuiTree :items="nodes" virtual height="12rem" label="Большое дерево" />

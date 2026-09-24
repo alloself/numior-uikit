@@ -22,7 +22,7 @@ const entries = [
 ]
 </script>
 
-<div class="nui-demo" data-nui-theme="light">
+<div class="vp-raw nui-demo" data-nui-theme="light">
   <NuiMenu>
     <template #trigger="{ attrs }">
       <NuiButton v-bind="attrs" variant="outline" tone="neutral">Actions</NuiButton>

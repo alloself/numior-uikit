@@ -9,7 +9,7 @@
 алиаса и затем переиспользуется из кэша; в bundle попадают только запрошенные глифы,
 а на сервере иконка рендерится сразу.
 
-<div class="nui-demo" data-nui-theme="light">
+<div class="vp-raw nui-demo" data-nui-theme="light">
   <NuiIcon alias="check" />
   <NuiIcon alias="minus" />
   <NuiIcon alias="loader" />

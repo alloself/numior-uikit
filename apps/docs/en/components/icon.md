@@ -10,7 +10,7 @@ demand as a separate module the first time its alias is used and is reused from 
 cache afterwards; only requested glyphs reach the bundle, and the server renders the
 icon immediately.
 
-<div class="nui-demo" data-nui-theme="light">
+<div class="vp-raw nui-demo" data-nui-theme="light">
   <NuiIcon alias="check" />
   <NuiIcon alias="minus" />
   <NuiIcon alias="loader" />

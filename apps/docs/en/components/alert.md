@@ -9,7 +9,7 @@ import { ref } from 'vue'
 const open = ref(true)
 </script>
 
-<div class="nui-demo nui-demo--stack" data-nui-theme="light">
+<div class="vp-raw nui-demo nui-demo--stack" data-nui-theme="light">
   <NuiAlert title="Draft saved" description="Server sync in a minute." />
   <NuiAlert tone="success" variant="outline" title="Project published" />
   <NuiAlert tone="warning" title="Draft not saved" dismissible dismiss-label="Close" v-model:open="open">

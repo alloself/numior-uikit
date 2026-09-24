@@ -6,7 +6,7 @@ height, 1.25rem or 1rem. `count` with `max` renders a number and "99+", `dot` dr
 `floating` pins the badge to a corner of its parent. Removable values use the
 [chip](/en/components/chip).
 
-<div class="nui-demo" data-nui-theme="light">
+<div class="vp-raw nui-demo" data-nui-theme="light">
   <NuiBadge>Draft</NuiBadge>
   <NuiBadge tone="primary" icon="check">Done</NuiBadge>
   <NuiBadge tone="success" variant="outline">Paid</NuiBadge>

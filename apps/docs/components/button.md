@@ -6,7 +6,7 @@
 По умолчанию `solid` + `primary`. Цвета каждой роли берутся из токенов
 `--nui-<role>`, поэтому runtime-смена акцента затрагивает все варианты сразу.
 
-<div class="nui-demo" data-nui-theme="light">
+<div class="vp-raw nui-demo" data-nui-theme="light">
   <NuiButton>Сохранить</NuiButton>
   <NuiButton variant="soft" tone="success">Готово</NuiButton>
   <NuiButton variant="outline" tone="error">Удалить</NuiButton>
@@ -38,7 +38,7 @@ import '@numior/vue/styles/button.css';
 `size` выбирает ступень `sm`, `md` или `lg` внутри текущей шкалы; `data-nui-density`
 сдвигает всю шкалу. Высоты: 2 / 2.5 / 3rem в `comfortable`, 1.75 / 2 / 2.5rem в `compact`.
 
-<div class="nui-demo" data-nui-theme="light">
+<div class="vp-raw nui-demo" data-nui-theme="light">
   <NuiButton size="sm">Маленькая</NuiButton>
   <NuiButton>Обычная</NuiButton>
   <NuiButton size="lg">Большая</NuiButton>
@@ -51,7 +51,7 @@ import '@numior/vue/styles/button.css';
 реестра поверх него по центру, поэтому ширина кнопки не меняется. `type` по умолчанию
 `button`, поэтому кнопка внутри формы не отправляет её случайно; доступны `submit` и `reset`.
 
-<div class="nui-demo" data-nui-theme="light">
+<div class="vp-raw nui-demo" data-nui-theme="light">
   <NuiButton disabled>Недоступна</NuiButton>
   <NuiButton loading>Сохранение</NuiButton>
 </div>
@@ -63,7 +63,7 @@ import '@numior/vue/styles/button.css';
 принудительно включает режим, `:icon-only="false"` отключает. Такой кнопке обязателен
 `aria-label`.
 
-<div class="nui-demo" data-nui-theme="light">
+<div class="vp-raw nui-demo" data-nui-theme="light">
   <NuiButton aria-label="Закрыть"><NuiIcon alias="x" /></NuiButton>
   <NuiButton variant="outline" tone="neutral" size="sm" aria-label="Закрыть"><NuiIcon alias="x" /></NuiButton>
   <NuiButton variant="ghost" tone="neutral" size="lg" aria-label="Закрыть"><NuiIcon alias="x" /></NuiButton>

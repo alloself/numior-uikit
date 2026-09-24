@@ -13,7 +13,7 @@ const pageSize = ref(20)
 const linkPage = ref(2)
 </script>
 
-<div class="nui-demo nui-demo--stack" data-nui-theme="light">
+<div class="vp-raw nui-demo nui-demo--stack" data-nui-theme="light">
   <NuiPagination v-model:page="page" v-model:page-size="pageSize" :total="240" :page-sizes="[10, 20, 50]" />
   <NuiPagination :page="linkPage" :total="60" :show-range="false" :href="(p) => `#page-${p}`" label="Linked pages" @update:page="linkPage = $event" />
 </div>

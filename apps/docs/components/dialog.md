@@ -12,7 +12,7 @@ const result = ref('')
 const strict = ref(false)
 </script>
 
-<div class="nui-demo" data-nui-theme="light">
+<div class="vp-raw nui-demo" data-nui-theme="light">
   <NuiButton @click="open = true">Удалить проект</NuiButton>
   <span>Результат: {{ result || '—' }}</span>
   <NuiDialog v-model:open="open" title="Удалить проект?" description="Действие нельзя отменить." @close="result = $event">
@@ -53,7 +53,7 @@ const strict = ref(false)
 действия пользователя всё же закроет диалог по правилам close watcher, поэтому считайте
 это подсказкой, а не запретом.
 
-<div class="nui-demo" data-nui-theme="light">
+<div class="vp-raw nui-demo" data-nui-theme="light">
   <NuiButton variant="outline" @click="strict = true">Открыть</NuiButton>
   <NuiDialog v-model:open="strict" :closable="false" title="Подтвердите условия">
     <p>Продолжить можно только после подтверждения.</p>

@@ -33,6 +33,10 @@ Node 24.15+; проверенная и закреплённая версия 24.
 @.archcore/component-authoring.rule.md. Будущие модули перечислены в @packages/README.md;
 готовность 1.0 не заявляется.
 
+Документация изолирует демо от стилей VitePress: контейнеры `.nui-demo` несут `vp-raw`, а
+`apps/docs/postcss.config.mjs` подключает `postcssIsolateStyles`; новый демо-блок обязан
+получить оба класса, иначе `.vp-doc p` перебьёт отступы компонентов.
+
 Публичный контракт защищён explicit exports и private manifests; CSS opt-in: `styles.css`
 и `styles/<name>.css`. Fallow сохраняет public entry exports, анализирует CSS-манифест и
 использует @numior/source; в Vitest исходники подключаются и для node-окружения

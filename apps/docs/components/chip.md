@@ -5,7 +5,7 @@
 кнопку удаления с доступным именем из `removeLabel` и событием `remove`. Тот же чип
 показывает выбранные значения в `NuiCombobox`.
 
-<div class="nui-demo" data-nui-theme="light">
+<div class="vp-raw nui-demo" data-nui-theme="light">
   <NuiChip>Нейтральный</NuiChip>
   <NuiChip tone="primary" icon="check">С иконкой</NuiChip>
   <NuiChip tone="success" variant="outline">Контур</NuiChip>

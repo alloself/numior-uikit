@@ -4,7 +4,7 @@
 на токенах поверхности. Под `prefers-reduced-motion` мерцание отключается полностью, а
 `animated="false"` делает то же явно.
 
-<div class="nui-demo nui-demo--stack" data-nui-theme="light">
+<div class="vp-raw nui-demo nui-demo--stack" data-nui-theme="light">
   <div style="display: flex; gap: 0.75rem; align-items: center">
     <NuiSkeleton shape="circle" />
     <NuiSkeleton :lines="2" />

@@ -10,7 +10,7 @@ const notifications = ref(true)
 const compact = ref(false)
 </script>
 
-<div class="nui-demo nui-demo--stack" data-nui-theme="light">
+<div class="vp-raw nui-demo nui-demo--stack" data-nui-theme="light">
   <NuiSwitch v-model="notifications">Notifications: {{ notifications ? 'on' : 'off' }}</NuiSwitch>
   <NuiSwitch v-model="compact" size="sm">Compact mode</NuiSwitch>
   <NuiSwitch size="lg" disabled>Unavailable</NuiSwitch>

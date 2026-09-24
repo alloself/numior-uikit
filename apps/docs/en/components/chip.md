@@ -5,7 +5,7 @@
 remove button with an accessible name from `removeLabel` and a `remove` event. The same chip
 shows selected values in `NuiCombobox`.
 
-<div class="nui-demo" data-nui-theme="light">
+<div class="vp-raw nui-demo" data-nui-theme="light">
   <NuiChip>Neutral</NuiChip>
   <NuiChip tone="primary" icon="check">With icon</NuiChip>
   <NuiChip tone="success" variant="outline">Outline</NuiChip>

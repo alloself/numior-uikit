@@ -6,7 +6,7 @@
 [бейдж](/components/badge). `NuiAvatarGroup` накладывает аватары друг на друга, сворачивает
 лишние в «+N» и раздаёт детям общие `size` и `shape`.
 
-<div class="nui-demo" data-nui-theme="light">
+<div class="vp-raw nui-demo" data-nui-theme="light">
   <NuiAvatar src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%234f46e5'/%3E%3Ccircle cx='32' cy='24' r='11' fill='%23fff'/%3E%3Cellipse cx='32' cy='54' rx='20' ry='14' fill='%23fff'/%3E%3C/svg%3E" name="Анна Смирнова" status="online" status-label="В сети" />
   <NuiAvatar src="/missing.png" name="Анна Смирнова" />
   <NuiAvatar shape="square" />

@@ -5,7 +5,7 @@ through `as` and `to`. `tone` picks the colour, `underline` decides when the und
 `external` opens the address in a new tab with `rel="noopener noreferrer"` and an icon, and
 `disabled` drops the address and marks the link `aria-disabled`.
 
-<div class="nui-demo" data-nui-theme="light">
+<div class="vp-raw nui-demo" data-nui-theme="light">
   <NuiLink href="#">Plain link</NuiLink>
   <NuiLink href="#" underline="hover" tone="neutral">Underline on hover</NuiLink>
   <NuiLink href="https://lucide.dev" external>External</NuiLink>

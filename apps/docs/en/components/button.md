@@ -6,7 +6,7 @@
 The default is `solid` + `primary`. Each role reads its `--nui-<role>` tokens, so a
 runtime accent change affects every variant at once.
 
-<div class="nui-demo" data-nui-theme="light">
+<div class="vp-raw nui-demo" data-nui-theme="light">
   <NuiButton>Save</NuiButton>
   <NuiButton variant="soft" tone="success">Done</NuiButton>
   <NuiButton variant="outline" tone="error">Delete</NuiButton>
@@ -39,7 +39,7 @@ loads only the button. CSS is never imported from JavaScript automatically.
 shifts the whole scale. Heights are 2 / 2.5 / 3rem in `comfortable` and 1.75 / 2 / 2.5rem
 in `compact`.
 
-<div class="nui-demo" data-nui-theme="light">
+<div class="vp-raw nui-demo" data-nui-theme="light">
   <NuiButton size="sm">Small</NuiButton>
   <NuiButton>Default</NuiButton>
   <NuiButton size="lg">Large</NuiButton>
@@ -53,7 +53,7 @@ from the registry on top of it, so the button keeps its width. `type` defaults t
 `button`, so a button inside a form never submits it by accident; `submit` and `reset`
 are available.
 
-<div class="nui-demo" data-nui-theme="light">
+<div class="vp-raw nui-demo" data-nui-theme="light">
   <NuiButton disabled>Disabled</NuiButton>
   <NuiButton loading>Saving</NuiButton>
 </div>
@@ -64,7 +64,7 @@ A button whose slot holds only a `NuiIcon` becomes square by itself: the width e
 step height, horizontal padding is removed and the content is centred. `icon-only` forces
 the mode and `:icon-only="false"` disables it. Such a button needs an `aria-label`.
 
-<div class="nui-demo" data-nui-theme="light">
+<div class="vp-raw nui-demo" data-nui-theme="light">
   <NuiButton aria-label="Close"><NuiIcon alias="x" /></NuiButton>
   <NuiButton variant="outline" tone="neutral" size="sm" aria-label="Close"><NuiIcon alias="x" /></NuiButton>
   <NuiButton variant="ghost" tone="neutral" size="lg" aria-label="Close"><NuiIcon alias="x" /></NuiButton>

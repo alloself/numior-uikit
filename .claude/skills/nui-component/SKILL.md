@@ -87,7 +87,9 @@ var(--nui-focus-ring-offset)`. Disabled: `opacity: var(--nui-disabled-opacity)`.
 
 - Playground: add a demo with `data-testid` in `apps/playground/src/*.vue`.
 - Docs: `apps/docs/components/<name>.md` and `apps/docs/en/components/<name>.md` with a live
-  demo, API table and modifier list; register the component in
+  demo (`<div class="vp-raw nui-demo" data-nui-theme="light">`: `vp-raw` opts the demo out
+  of VitePress element styles, which otherwise beat component classes), API table and
+  modifier list; register the component in
   `apps/docs/.vitepress/theme/index.ts`; add both sidebar entries in
   `apps/docs/.vitepress/config.ts`.
 - Tests: follow the `nui-testing` skill (driver, unit spec, SSR scenario, e2e via page object).

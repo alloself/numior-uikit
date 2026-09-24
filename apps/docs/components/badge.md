@@ -5,7 +5,7 @@
 или 1rem. `count` с `max` показывает число и «99+», `dot` рисует только точку, `floating`
 сажает бейдж в угол родителя. Для удаляемых значений есть [чип](/components/chip).
 
-<div class="nui-demo" data-nui-theme="light">
+<div class="vp-raw nui-demo" data-nui-theme="light">
   <NuiBadge>Черновик</NuiBadge>
   <NuiBadge tone="primary" icon="check">Готово</NuiBadge>
   <NuiBadge tone="success" variant="outline">Оплачен</NuiBadge>

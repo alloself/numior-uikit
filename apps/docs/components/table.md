@@ -32,7 +32,7 @@ const selected = ref([])
 const pagination = { pageSizes: [5, 10], label: 'Страницы', previousLabel: 'Предыдущая', nextLabel: 'Следующая', pageSizeLabel: 'На странице', pageLabel: (p) => `Страница ${p}`, rangeLabel: (from, to, total) => `${from}–${to} из ${total}` }
 </script>
 
-<div class="nui-demo nui-demo--stack" data-nui-theme="light" style="max-inline-size: none">
+<div class="vp-raw nui-demo nui-demo--stack" data-nui-theme="light" style="max-inline-size: none">
   <NuiTable v-model:sort="sort" v-model:selected="selected" :columns="columns" :rows="people" :get-key="(row) => String(row.id)" :page-size="5" selectable="multiple" :pagination="pagination" caption="Команда" hoverable striped empty-label="Нет данных" select-label="Выбрать строку" select-all-label="Выбрать все строки">
     <template #cell-role="{ value }"><NuiChip size="sm" tone="info">{{ value }}</NuiChip></template>
   </NuiTable>

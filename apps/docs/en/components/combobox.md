@@ -23,7 +23,7 @@ const words = [
 ]
 </script>
 
-<div class="nui-demo nui-demo--stack" data-nui-theme="light">
+<div class="vp-raw nui-demo nui-demo--stack" data-nui-theme="light">
   <NuiField label="City">
     <NuiCombobox v-model="city" :options="cities" placeholder="Start typing" clearable />
   </NuiField>

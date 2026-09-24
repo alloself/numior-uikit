@@ -12,7 +12,7 @@ const result = ref('')
 const strict = ref(false)
 </script>
 
-<div class="nui-demo" data-nui-theme="light">
+<div class="vp-raw nui-demo" data-nui-theme="light">
   <NuiButton @click="open = true">Delete project</NuiButton>
   <span>Result: {{ result || '—' }}</span>
   <NuiDialog v-model:open="open" title="Delete project?" description="This cannot be undone." @close="result = $event">
@@ -54,7 +54,7 @@ dialog closes only through your own button. Chromium still closes it on a second
 without new user activation, per its close-watcher rules, so treat this as a hint rather
 than a lock.
 
-<div class="nui-demo" data-nui-theme="light">
+<div class="vp-raw nui-demo" data-nui-theme="light">
   <NuiButton variant="outline" @click="strict = true">Open</NuiButton>
   <NuiDialog v-model:open="strict" :closable="false" title="Confirm the terms">
     <p>You can continue only after confirming.</p>

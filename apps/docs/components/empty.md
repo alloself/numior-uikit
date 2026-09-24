@@ -6,7 +6,7 @@
 списки, таблицы и выпадающие списки: его показывают [список](/components/list) с пустыми
 `items`, а также `NuiSelect` и `NuiCombobox` без совпадений.
 
-<div class="nui-demo nui-demo--stack" data-nui-theme="light">
+<div class="vp-raw nui-demo nui-demo--stack" data-nui-theme="light">
   <NuiEmpty title="Пока пусто" description="Создайте первый проект, чтобы увидеть его здесь.">
     <template #actions>
       <NuiButton size="sm">Создать проект</NuiButton>

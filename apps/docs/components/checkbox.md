@@ -10,7 +10,7 @@ const terms = ref(false)
 const channels = ref(['email'])
 </script>
 
-<div class="nui-demo nui-demo--stack" data-nui-theme="light">
+<div class="vp-raw nui-demo nui-demo--stack" data-nui-theme="light">
   <NuiCheckbox v-model="terms">Принимаю условия использования</NuiCheckbox>
   <NuiField group label="Каналы уведомлений" description="Выбрано: {{ channels.join(', ') || 'ничего' }}">
     <NuiCheckbox v-model="channels" value="email">Почта</NuiCheckbox>

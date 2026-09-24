@@ -5,7 +5,7 @@
 открывает адрес в новой вкладке с `rel="noopener noreferrer"` и иконкой, `disabled` убирает
 адрес и помечает ссылку `aria-disabled`.
 
-<div class="nui-demo" data-nui-theme="light">
+<div class="vp-raw nui-demo" data-nui-theme="light">
   <NuiLink href="#">Обычная ссылка</NuiLink>
   <NuiLink href="#" underline="hover" tone="neutral">Подчёркивание при наведении</NuiLink>
   <NuiLink href="https://lucide.dev" external>Внешняя</NuiLink>

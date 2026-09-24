@@ -10,7 +10,7 @@ import { ref } from 'vue'
 const email = ref('')
 </script>
 
-<div class="nui-demo nui-demo--stack" data-nui-theme="light">
+<div class="vp-raw nui-demo nui-demo--stack" data-nui-theme="light">
   <NuiField
     label="Рабочая почта"
     description="Письма приходят только на подтверждённые адреса"

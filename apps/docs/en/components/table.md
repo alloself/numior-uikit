@@ -31,7 +31,7 @@ const sort = ref(null)
 const selected = ref([])
 </script>
 
-<div class="nui-demo nui-demo--stack" data-nui-theme="light" style="max-inline-size: none">
+<div class="vp-raw nui-demo nui-demo--stack" data-nui-theme="light" style="max-inline-size: none">
   <NuiTable v-model:sort="sort" v-model:selected="selected" :columns="columns" :rows="people" :get-key="(row) => String(row.id)" :page-size="5" selectable="multiple" :pagination="{ pageSizes: [5, 10] }" caption="Team" hoverable striped>
     <template #cell-role="{ value }"><NuiChip size="sm" tone="info">{{ value }}</NuiChip></template>
   </NuiTable>

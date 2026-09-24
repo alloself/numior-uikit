@@ -10,7 +10,7 @@ import { ref } from 'vue'
 const open = ref(false)
 </script>
 
-<div class="nui-demo" data-nui-theme="light">
+<div class="vp-raw nui-demo" data-nui-theme="light">
   <NuiTooltip v-model:open="open">
     <template #trigger="{ attrs }">
       <NuiButton v-bind="attrs" variant="ghost" tone="neutral">Сохранить</NuiButton>

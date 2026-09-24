@@ -15,7 +15,7 @@ const path = [
 ]
 </script>
 
-<div class="nui-demo nui-demo--stack" data-nui-theme="light">
+<div class="vp-raw nui-demo nui-demo--stack" data-nui-theme="light">
   <NuiBreadcrumbs :items="path.slice(0, 3)" label="Путь" />
   <NuiBreadcrumbs :items="path" :max-items="3" label="Полный путь" more-label="Показать путь" />
 </div>
