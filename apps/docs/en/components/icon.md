@@ -3,7 +3,8 @@
 The kit is not tied to one icon set. Every icon a component needs is requested by
 alias through a registry: `check`, `minus`, `loader`, `chevron-down`, `x`, `search`,
 `info`, `success`, `warning`, `error`, `chevron-right`, `chevron-left`, `chevrons-left`,
-`chevrons-right`, `ellipsis`, `external-link`.
+`chevrons-right`, `ellipsis`, `external-link`, `user`, `image`, `inbox`, `folder`, `folder-open`,
+`file`, `arrow-up`, `arrow-up-down`.
 By default the aliases point to [Lucide](https://lucide.dev) (ISC): each icon loads on
 demand as a separate module the first time its alias is used and is reused from the
 cache afterwards; only requested glyphs reach the bundle, and the server renders the
@@ -19,6 +20,10 @@ icon immediately.
   <NuiIcon alias="chevron-right" />
   <NuiIcon alias="ellipsis" />
   <NuiIcon alias="external-link" />
+  <NuiIcon alias="user" />
+  <NuiIcon alias="inbox" />
+  <NuiIcon alias="folder" />
+  <NuiIcon alias="arrow-up-down" />
 </div>
 
 ## NuiIcon

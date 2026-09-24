@@ -17,4 +17,12 @@ export const defaultIcons: IconRegistry = {
   'chevrons-right': lazyIcon(() => import('lucide-vue-next/dist/esm/icons/chevrons-right.js')),
   ellipsis: lazyIcon(() => import('lucide-vue-next/dist/esm/icons/ellipsis.js')),
   'external-link': lazyIcon(() => import('lucide-vue-next/dist/esm/icons/external-link.js')),
+  user: lazyIcon(() => import('lucide-vue-next/dist/esm/icons/user.js')),
+  image: lazyIcon(() => import('lucide-vue-next/dist/esm/icons/image.js')),
+  inbox: lazyIcon(() => import('lucide-vue-next/dist/esm/icons/inbox.js')),
+  folder: lazyIcon(() => import('lucide-vue-next/dist/esm/icons/folder.js')),
+  'folder-open': lazyIcon(() => import('lucide-vue-next/dist/esm/icons/folder-open.js')),
+  file: lazyIcon(() => import('lucide-vue-next/dist/esm/icons/file.js')),
+  'arrow-up': lazyIcon(() => import('lucide-vue-next/dist/esm/icons/arrow-up.js')),
+  'arrow-up-down': lazyIcon(() => import('lucide-vue-next/dist/esm/icons/arrow-up-down.js')),
 };

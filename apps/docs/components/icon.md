@@ -3,7 +3,8 @@
 Компоненты kit не привязаны к одному набору иконок. Каждая нужная им иконка
 запрашивается по алиасу через реестр: `check`, `minus`, `loader`, `chevron-down`,
 `x`, `search`, `info`, `success`, `warning`, `error`, `chevron-right`, `chevron-left`,
-`chevrons-left`, `chevrons-right`, `ellipsis`, `external-link`. По умолчанию алиасы указывают на [Lucide](https://lucide.dev) (ISC):
+`chevrons-left`, `chevrons-right`, `ellipsis`, `external-link`, `user`, `image`, `inbox`,
+`folder`, `folder-open`, `file`, `arrow-up`, `arrow-up-down`. По умолчанию алиасы указывают на [Lucide](https://lucide.dev) (ISC):
 каждая иконка загружается по требованию отдельным модулем при первом использовании
 алиаса и затем переиспользуется из кэша; в bundle попадают только запрошенные глифы,
 а на сервере иконка рендерится сразу.
@@ -18,6 +19,10 @@
   <NuiIcon alias="chevron-right" />
   <NuiIcon alias="ellipsis" />
   <NuiIcon alias="external-link" />
+  <NuiIcon alias="user" />
+  <NuiIcon alias="inbox" />
+  <NuiIcon alias="folder" />
+  <NuiIcon alias="arrow-up-down" />
 </div>
 
 ## NuiIcon

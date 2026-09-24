@@ -15,6 +15,14 @@ const loaders = [
   () => import('lucide-vue-next/dist/esm/icons/chevrons-right.js'),
   () => import('lucide-vue-next/dist/esm/icons/ellipsis.js'),
   () => import('lucide-vue-next/dist/esm/icons/external-link.js'),
+  () => import('lucide-vue-next/dist/esm/icons/user.js'),
+  () => import('lucide-vue-next/dist/esm/icons/image.js'),
+  () => import('lucide-vue-next/dist/esm/icons/inbox.js'),
+  () => import('lucide-vue-next/dist/esm/icons/folder.js'),
+  () => import('lucide-vue-next/dist/esm/icons/folder-open.js'),
+  () => import('lucide-vue-next/dist/esm/icons/file.js'),
+  () => import('lucide-vue-next/dist/esm/icons/arrow-up.js'),
+  () => import('lucide-vue-next/dist/esm/icons/arrow-up-down.js'),
 ];
 
 await Promise.all(loaders.map((load) => load()));

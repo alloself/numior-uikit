@@ -27,6 +27,14 @@ export type IconAlias =
   | 'chevrons-right'
   | 'ellipsis'
   | 'external-link'
+  | 'user'
+  | 'image'
+  | 'inbox'
+  | 'folder'
+  | 'folder-open'
+  | 'file'
+  | 'arrow-up'
+  | 'arrow-up-down'
   | (string & NonNullable<unknown>);
 
 export type IconRegistry = Readonly<Record<string, Component>>;
