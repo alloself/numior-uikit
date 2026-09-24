@@ -29,21 +29,21 @@ If you override `--nui-primary` on a plain element, the inherited
 
 ## Tokens
 
-| Group      | Tokens                                                                                                                                                                                 |
-| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Surfaces   | `--nui-surface`, `--nui-surface-muted`, `--nui-surface-elevated`, `--nui-surface-overlay`, `--nui-backdrop` (dimming under modal layers)                                               |
-| Text       | `--nui-text`, `--nui-text-muted`, `--nui-text-subtle`                                                                                                                                  |
-| Borders    | `--nui-border`, `--nui-border-strong`                                                                                                                                                  |
-| Roles      | `primary`, `secondary`, `success`, `warning`, `error`, `info`, `neutral`: `--nui-<role>`, `--nui-<role>-foreground`, `--nui-<role>-soft`, `--nui-<role>-soft-foreground`               |
-| Focus      | `--nui-focus`, `--nui-focus-ring-width`, `--nui-focus-ring-offset`                                                                                                                     |
-| States     | `--nui-disabled-opacity`                                                                                                                                                               |
-| Radius     | `--nui-radius-sm`, `--nui-radius-md`, `--nui-radius-lg`, `--nui-radius-full`; `--nui-radius` = md                                                                                      |
-| Space      | `--nui-space-1` … `--nui-space-6`, `--nui-space-8` (0.25rem steps)                                                                                                                     |
-| Typography | `--nui-font`, `--nui-font-mono`, `--nui-font-size-xs/sm/md/lg`, `--nui-line-height`, `--nui-line-height-tight`                                                                         |
-| Shadows    | `--nui-shadow-sm`, `--nui-shadow-md`, `--nui-shadow-lg`                                                                                                                                |
-| Motion     | `--nui-duration-fast`, `--nui-duration-normal`, `--nui-duration-slow`, `--nui-easing`; under `prefers-reduced-motion: reduce` durations become `0ms`                                   |
-| Layers     | `--nui-z-dropdown`, `--nui-z-overlay`, `--nui-z-toast`                                                                                                                                 |
-| Controls   | `--nui-control-height-sm/md/lg`, `--nui-control-padding-sm/md/lg`, `--nui-control-font-size-sm/md/lg`; `--nui-control-height`, `--nui-control-padding`, `--nui-control-font-size` = md |
+| Group      | Tokens                                                                                                                                                                                    |
+| ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Surfaces   | `--nui-surface`, `--nui-surface-muted`, `--nui-surface-elevated`, `--nui-surface-overlay`, `--nui-ring` (ring around overlapping elements), `--nui-backdrop` (dimming under modal layers) |
+| Text       | `--nui-text`, `--nui-text-muted`, `--nui-text-subtle`                                                                                                                                     |
+| Borders    | `--nui-border`, `--nui-border-strong`                                                                                                                                                     |
+| Roles      | `primary`, `secondary`, `success`, `warning`, `error`, `info`, `neutral`: `--nui-<role>`, `--nui-<role>-foreground`, `--nui-<role>-soft`, `--nui-<role>-soft-foreground`                  |
+| Focus      | `--nui-focus`, `--nui-focus-ring-width`, `--nui-focus-ring-offset`                                                                                                                        |
+| States     | `--nui-disabled-opacity`                                                                                                                                                                  |
+| Radius     | `--nui-radius-sm`, `--nui-radius-md`, `--nui-radius-lg`, `--nui-radius-full`; `--nui-radius` = md                                                                                         |
+| Space      | `--nui-space-1` … `--nui-space-6`, `--nui-space-8` (0.25rem steps)                                                                                                                        |
+| Typography | `--nui-font`, `--nui-font-mono`, `--nui-font-size-xs/sm/md/lg`, `--nui-line-height`, `--nui-line-height-tight`                                                                            |
+| Shadows    | `--nui-shadow-sm`, `--nui-shadow-md`, `--nui-shadow-lg`                                                                                                                                   |
+| Motion     | `--nui-duration-fast`, `--nui-duration-normal`, `--nui-duration-slow`, `--nui-easing`; under `prefers-reduced-motion: reduce` durations become `0ms`                                      |
+| Layers     | `--nui-z-dropdown`, `--nui-z-overlay`, `--nui-z-toast`                                                                                                                                    |
+| Controls   | `--nui-control-height-sm/md/lg`, `--nui-control-padding-sm/md/lg`, `--nui-control-font-size-sm/md/lg`; `--nui-control-height`, `--nui-control-padding`, `--nui-control-font-size` = md    |
 
 ## Switching the color scheme
 

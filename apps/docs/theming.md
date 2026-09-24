@@ -29,21 +29,21 @@
 
 ## Токены
 
-| Группа      | Токены                                                                                                                                                                                 |
-| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Поверхности | `--nui-surface`, `--nui-surface-muted`, `--nui-surface-elevated`, `--nui-surface-overlay`, `--nui-backdrop` (затемнение под модальными слоями)                                         |
-| Текст       | `--nui-text`, `--nui-text-muted`, `--nui-text-subtle`                                                                                                                                  |
-| Границы     | `--nui-border`, `--nui-border-strong`                                                                                                                                                  |
-| Роли        | `primary`, `secondary`, `success`, `warning`, `error`, `info`, `neutral`: `--nui-<role>`, `--nui-<role>-foreground`, `--nui-<role>-soft`, `--nui-<role>-soft-foreground`               |
-| Фокус       | `--nui-focus`, `--nui-focus-ring-width`, `--nui-focus-ring-offset`                                                                                                                     |
-| Состояния   | `--nui-disabled-opacity`                                                                                                                                                               |
-| Радиусы     | `--nui-radius-sm`, `--nui-radius-md`, `--nui-radius-lg`, `--nui-radius-full`; `--nui-radius` = md                                                                                      |
-| Отступы     | `--nui-space-1` … `--nui-space-6`, `--nui-space-8` (шаг 0.25rem)                                                                                                                       |
-| Типографика | `--nui-font`, `--nui-font-mono`, `--nui-font-size-xs/sm/md/lg`, `--nui-line-height`, `--nui-line-height-tight`                                                                         |
-| Тени        | `--nui-shadow-sm`, `--nui-shadow-md`, `--nui-shadow-lg`                                                                                                                                |
-| Движение    | `--nui-duration-fast`, `--nui-duration-normal`, `--nui-duration-slow`, `--nui-easing`; при `prefers-reduced-motion: reduce` длительности равны `0ms`                                   |
-| Слои        | `--nui-z-dropdown`, `--nui-z-overlay`, `--nui-z-toast`                                                                                                                                 |
-| Контролы    | `--nui-control-height-sm/md/lg`, `--nui-control-padding-sm/md/lg`, `--nui-control-font-size-sm/md/lg`; `--nui-control-height`, `--nui-control-padding`, `--nui-control-font-size` = md |
+| Группа      | Токены                                                                                                                                                                                                 |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Поверхности | `--nui-surface`, `--nui-surface-muted`, `--nui-surface-elevated`, `--nui-surface-overlay`, `--nui-ring` (кольцо вокруг перекрывающихся элементов), `--nui-backdrop` (затемнение под модальными слоями) |
+| Текст       | `--nui-text`, `--nui-text-muted`, `--nui-text-subtle`                                                                                                                                                  |
+| Границы     | `--nui-border`, `--nui-border-strong`                                                                                                                                                                  |
+| Роли        | `primary`, `secondary`, `success`, `warning`, `error`, `info`, `neutral`: `--nui-<role>`, `--nui-<role>-foreground`, `--nui-<role>-soft`, `--nui-<role>-soft-foreground`                               |
+| Фокус       | `--nui-focus`, `--nui-focus-ring-width`, `--nui-focus-ring-offset`                                                                                                                                     |
+| Состояния   | `--nui-disabled-opacity`                                                                                                                                                                               |
+| Радиусы     | `--nui-radius-sm`, `--nui-radius-md`, `--nui-radius-lg`, `--nui-radius-full`; `--nui-radius` = md                                                                                                      |
+| Отступы     | `--nui-space-1` … `--nui-space-6`, `--nui-space-8` (шаг 0.25rem)                                                                                                                                       |
+| Типографика | `--nui-font`, `--nui-font-mono`, `--nui-font-size-xs/sm/md/lg`, `--nui-line-height`, `--nui-line-height-tight`                                                                                         |
+| Тени        | `--nui-shadow-sm`, `--nui-shadow-md`, `--nui-shadow-lg`                                                                                                                                                |
+| Движение    | `--nui-duration-fast`, `--nui-duration-normal`, `--nui-duration-slow`, `--nui-easing`; при `prefers-reduced-motion: reduce` длительности равны `0ms`                                                   |
+| Слои        | `--nui-z-dropdown`, `--nui-z-overlay`, `--nui-z-toast`                                                                                                                                                 |
+| Контролы    | `--nui-control-height-sm/md/lg`, `--nui-control-padding-sm/md/lg`, `--nui-control-font-size-sm/md/lg`; `--nui-control-height`, `--nui-control-padding`, `--nui-control-font-size` = md                 |
 
 ## Переключение схемы
 
