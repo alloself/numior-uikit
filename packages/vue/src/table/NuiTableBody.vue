@@ -21,6 +21,7 @@
         :index="firstIndex + offset"
         :row-index="rowIndexOf(offset)"
         :columns="columns"
+        :layout="layout"
         :selectable="selectable"
         :selected="isSelected(row)"
         :select-label="selectLabel"
@@ -48,6 +49,7 @@ const {
   columns,
   rows,
   keyOf,
+  layout,
   selectable,
   selectedKeys,
   loading,

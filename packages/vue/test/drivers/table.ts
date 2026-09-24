@@ -14,8 +14,53 @@ export interface TableMountOptions {
   readonly selected?: readonly Person[];
   readonly page?: number;
   readonly pageSize?: number;
+  readonly columnOrder?: readonly string[];
+  readonly widths?: Record<string, number>;
   readonly slots?: Record<string, (context: Record<string, unknown>) => unknown>;
 }
+
+interface Box {
+  readonly left: number;
+  readonly top: number;
+  readonly width: number;
+  readonly height: number;
+}
+
+const isStringList = (value: unknown): value is string[] =>
+  Array.isArray(value) && value.every((entry) => typeof entry === 'string');
+
+const isWidths = (value: unknown): value is Record<string, number> =>
+  typeof value === 'object' &&
+  value !== null &&
+  Object.values(value).every((entry) => typeof entry === 'number');
+
+const defineRect = (element: HTMLElement, box: Box): void => {
+  const rect: DOMRect = {
+    x: box.left,
+    y: box.top,
+    width: box.width,
+    height: box.height,
+    top: box.top,
+    left: box.left,
+    right: box.left + box.width,
+    bottom: box.top + box.height,
+    toJSON: () => ({}),
+  };
+  Object.defineProperty(element, 'getBoundingClientRect', {
+    value: () => rect,
+    configurable: true,
+  });
+};
+
+const pointer = (type: string, clientX: number, pointerId = 7): PointerEvent =>
+  new PointerEvent(type, {
+    bubbles: true,
+    cancelable: true,
+    pointerId,
+    button: 0,
+    clientX,
+    clientY: 0,
+  });
 
 const isSort = (value: unknown): value is NuiTableSort =>
   value === null ||
@@ -39,6 +84,8 @@ export class TableDriver extends ComponentDriver {
     selected = [],
     page = 1,
     pageSize = 20,
+    columnOrder = [],
+    widths = {},
     slots = {},
   }: TableMountOptions = {}) {
     const stubs = new TopLayerStubs();
@@ -46,6 +93,8 @@ export class TableDriver extends ComponentDriver {
     const selectedRef = ref<Person[]>([...selected]);
     const pageRef = ref(page);
     const pageSizeRef = ref(pageSize);
+    const orderRef = ref<string[]>([...columnOrder]);
+    const widthsRef = ref<Record<string, number>>({ ...widths });
     const propsRef = ref(props);
     const rowsRef = ref<readonly Person[]>(rows);
     const clicks: string[] = [];
@@ -61,6 +110,18 @@ export class TableDriver extends ComponentDriver {
             selected: selectedRef.value,
             page: pageRef.value,
             pageSize: pageSizeRef.value,
+            columnOrder: orderRef.value,
+            widths: widthsRef.value,
+            'onUpdate:columnOrder': (value: unknown) => {
+              if (isStringList(value)) {
+                orderRef.value = value;
+              }
+            },
+            'onUpdate:widths': (value: unknown) => {
+              if (isWidths(value)) {
+                widthsRef.value = value;
+              }
+            },
             'onUpdate:sort': (value: unknown) => {
               if (isSort(value)) {
                 sortRef.value = value;
@@ -93,7 +154,14 @@ export class TableDriver extends ComponentDriver {
     return new TableDriver(
       mount(Host, { attachTo: document.body }),
       stubs,
-      { sort: sortRef, selected: selectedRef, page: pageRef, pageSize: pageSizeRef },
+      {
+        sort: sortRef,
+        selected: selectedRef,
+        page: pageRef,
+        pageSize: pageSizeRef,
+        order: orderRef,
+        widths: widthsRef,
+      },
       propsRef,
       rowsRef,
       clicks,
@@ -108,6 +176,8 @@ export class TableDriver extends ComponentDriver {
       readonly selected: Ref<Person[]>;
       readonly page: Ref<number>;
       readonly pageSize: Ref<number>;
+      readonly order: Ref<string[]>;
+      readonly widths: Ref<Record<string, number>>;
     },
     private readonly propsRef: Ref<TableMountOptions['props']>,
     private readonly rowsRef: Ref<readonly Person[]>,
@@ -184,6 +254,86 @@ export class TableDriver extends ComponentDriver {
 
   get pageSize(): number {
     return this.models.pageSize.value;
+  }
+
+  get columnOrder(): string[] {
+    return this.models.order.value;
+  }
+
+  get widths(): Record<string, number> {
+    return this.models.widths.value;
+  }
+
+  get liveText(): string {
+    return this.wrapper.find('.nui-table__live').text();
+  }
+
+  colStyle(label: string): string {
+    const col = this.wrapper.findAll('colgroup col')[this.columnIndex(label)];
+    return col?.attributes('style') ?? '';
+  }
+
+  headerClasses(label: string): string[] {
+    return this.header(label).classes();
+  }
+
+  cellClasses(name: string, label: string): string[] {
+    return this.row(name).findAll('td')[this.columnIndex(label)]?.classes() ?? [];
+  }
+
+  cellStyle(name: string, label: string): string {
+    return this.row(name).findAll('td')[this.columnIndex(label)]?.attributes('style') ?? '';
+  }
+
+  selectCellClasses(name: string): string[] {
+    return this.row(name).find('.nui-table__cell--select').classes();
+  }
+
+  resizer(label: string): DOMWrapper<Element> {
+    return this.header(label).find('.nui-table__resizer');
+  }
+
+  layoutHeaders(width: number): void {
+    const cells = this.wrapper.findAll<HTMLElement>('thead th');
+    cells.forEach((cell, index) => {
+      defineRect(cell.element, { left: index * width, top: 0, width, height: 40 });
+    });
+    defineRect(this.scroller.element, {
+      left: 0,
+      top: 0,
+      width: width * cells.length,
+      height: 400,
+    });
+  }
+
+  async pressResizer(label: string, key: string, shiftKey = false): Promise<void> {
+    await this.resizer(label).trigger('keydown', { key, shiftKey });
+    await nextTick();
+  }
+
+  async dragResizer(label: string, from: number, to: number): Promise<void> {
+    this.resizer(label).element.dispatchEvent(pointer('pointerdown', from));
+    await nextTick();
+    window.dispatchEvent(pointer('pointermove', to));
+    await nextTick();
+    window.dispatchEvent(pointer('pointerup', to));
+    await nextTick();
+  }
+
+  async pressGrip(label: string, key: string): Promise<void> {
+    await this.header(label).find('.nui-table__grip').trigger('keydown', { key });
+    await nextTick();
+  }
+
+  async dragHeader(label: string, from: number, to: number): Promise<void> {
+    const cell = this.header(label).element;
+    cell.dispatchEvent(pointer('pointerdown', from));
+    await nextTick();
+    window.dispatchEvent(pointer('pointermove', from + Math.sign(to - from) * 3));
+    window.dispatchEvent(pointer('pointermove', to));
+    await nextTick();
+    window.dispatchEvent(pointer('pointerup', to));
+    await nextTick();
   }
 
   get headerCheckbox(): { readonly checked: boolean; readonly indeterminate: boolean } {

@@ -23,6 +23,7 @@ const loaders = [
   () => import('lucide-vue-next/dist/esm/icons/file.js'),
   () => import('lucide-vue-next/dist/esm/icons/arrow-up.js'),
   () => import('lucide-vue-next/dist/esm/icons/arrow-up-down.js'),
+  () => import('lucide-vue-next/dist/esm/icons/grip-vertical.js'),
 ];
 
 await Promise.all(loaders.map((load) => load()));

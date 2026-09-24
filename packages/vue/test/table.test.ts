@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { h } from 'vue';
-import { NuiChip } from '../src';
+import { NuiChip, type NuiTableColumn } from '../src';
 import { pageSlice } from '../src/table/page';
 import { selectionStateOf, toggleRows } from '../src/table/selection';
 import { defaultCompare, nextSort } from '../src/table/sort';
@@ -35,9 +35,7 @@ describe('NuiTable', () => {
     expect(table.cellText('Анна', 'Роль')).toBe('Дизайн');
     expect(table.cellText('Борис', 'Балл')).toBe('');
     expect(table.wrapper.findAll('.nui-table__cell--align-end').length).toBeGreaterThan(0);
-    expect(table.wrapper.find('thead th[style]').attributes('style')).toContain(
-      'inline-size: 6rem',
-    );
+    expect(table.colStyle('Возраст, лет')).toContain('inline-size: 6rem');
     table.unmount();
   });
 
@@ -180,6 +178,128 @@ describe('NuiTable', () => {
     await table.scrollTo(199_800);
     expect(table.columnTexts('Имя').at(-1)).toBe('Сотрудник 5000');
     expect(table.spacers).toEqual([`${4991 * 40}px`]);
+    table.unmount();
+  });
+});
+
+const withOptions = (
+  overrides: Record<string, Partial<NuiTableColumn<unknown>>>,
+): NuiTableColumn<unknown>[] => COLUMNS.map((column) => ({ ...column, ...overrides[column.key] }));
+
+describe('NuiTable columns', () => {
+  it('resizes columns from the keyboard and the pointer within bounds and exposes widths', async () => {
+    const table = TableDriver.mount({
+      columns: withOptions({ age: { resizable: true, width: 100, minWidth: 80, maxWidth: 300 } }),
+    });
+    expect(table.hasModifier('fixed')).toBe(true);
+    expect(table.resizer('Возраст').attributes('role')).toBe('separator');
+    expect(table.resizer('Возраст').attributes('aria-valuenow')).toBe('100');
+    expect(table.resizer('Имя').exists()).toBe(false);
+    await table.pressResizer('Возраст', 'ArrowRight');
+    expect(table.widths).toEqual({ age: 110 });
+    await table.pressResizer('Возраст', 'ArrowRight', true);
+    expect(table.widths).toEqual({ age: 160 });
+    await table.pressResizer('Возраст', 'ArrowLeft');
+    expect(table.widths).toEqual({ age: 150 });
+    expect(table.colStyle('Возраст')).toContain('inline-size: 150px');
+    expect(table.resizer('Возраст').attributes('aria-valuenow')).toBe('150');
+    await table.pressResizer('Возраст', 'Enter');
+    expect(table.widths).toEqual({});
+    await table.dragResizer('Возраст', 200, 260);
+    expect(table.widths).toEqual({ age: 160 });
+    expect(table.headerClasses('Возраст')).not.toContain('nui-table__cell--resizing');
+    await table.dragResizer('Возраст', 200, -500);
+    expect(table.widths).toEqual({ age: 80 });
+    await table.dragResizer('Возраст', 0, 900);
+    expect(table.widths).toEqual({ age: 300 });
+    table.unmount();
+  });
+
+  it('pins columns with offsets computed from their neighbours and marks the edges', () => {
+    const table = TableDriver.mount({
+      columns: withOptions({
+        name: { sticky: 'start', width: 120 },
+        score: { sticky: 'end', width: 80 },
+        age: { sticky: 'end', width: 90 },
+      }),
+      props: { selectable: 'multiple' },
+    });
+    expect(table.cellClasses('Анна', 'Имя')).toEqual(
+      expect.arrayContaining([
+        'nui-table__cell--sticky',
+        'nui-table__cell--sticky-start',
+        'nui-table__cell--sticky-edge',
+      ]),
+    );
+    expect(table.cellStyle('Анна', 'Имя')).toContain('inset-inline-start: 40px');
+    expect(table.selectCellClasses('Анна')).toContain('nui-table__cell--sticky-start');
+    expect(table.headerClasses('Имя')).toContain('nui-table__cell--sticky-edge');
+    expect(table.cellStyle('Анна', 'Балл')).toContain('inset-inline-end: 0px');
+    expect(table.cellStyle('Анна', 'Возраст')).toContain('inset-inline-end: 80px');
+    expect(table.cellClasses('Анна', 'Возраст')).toContain('nui-table__cell--sticky-edge');
+    expect(table.cellClasses('Анна', 'Балл')).not.toContain('nui-table__cell--sticky-edge');
+    expect(table.cellClasses('Анна', 'Роль')).toEqual(['nui-table__cell']);
+    table.unmount();
+  });
+
+  it('reorders columns from the keyboard with announcements and keeps pinned groups apart', async () => {
+    const table = TableDriver.mount({
+      columns: withOptions({
+        name: { reorderable: true },
+        role: { reorderable: true },
+        age: { reorderable: true },
+        score: { reorderable: true },
+      }),
+    });
+    await table.pressGrip('Балл', ' ');
+    expect(table.liveText).toContain('Балл grabbed, position 4 of 4');
+    await table.pressGrip('Балл', 'ArrowLeft');
+    expect(table.liveText).toContain('position 3 of 4');
+    expect(table.columnOrder).toEqual([]);
+    await table.pressGrip('Балл', ' ');
+    expect(table.columnOrder).toEqual(['name', 'role', 'score', 'age']);
+    expect(table.headers).toEqual(['Имя', 'Роль', 'Балл', 'Возраст']);
+    expect(table.liveText).toContain('dropped at position 3 of 4');
+    await table.pressGrip('Имя', 'Enter');
+    await table.pressGrip('Имя', 'ArrowRight');
+    await table.pressGrip('Имя', 'Escape');
+    expect(table.liveText).toContain('cancelled');
+    expect(table.columnOrder).toEqual(['name', 'role', 'score', 'age']);
+    table.unmount();
+    const pinned = TableDriver.mount({
+      columns: withOptions({
+        name: { reorderable: true, sticky: 'start' },
+        role: { reorderable: true },
+      }),
+    });
+    await pinned.pressGrip('Имя', ' ');
+    await pinned.pressGrip('Имя', 'ArrowRight');
+    expect(pinned.liveText).toContain('grabbed');
+    await pinned.pressGrip('Имя', ' ');
+    expect(pinned.columnOrder).toEqual([]);
+    pinned.unmount();
+  });
+
+  it('reorders columns by dragging a header and swallows the click that ends the drag', async () => {
+    const table = TableDriver.mount({
+      columns: withOptions({
+        name: { reorderable: true },
+        role: { reorderable: true },
+        age: { reorderable: true },
+        score: { reorderable: true },
+      }),
+    });
+    table.layoutHeaders(100);
+    await table.dragHeader('Имя', 50, 53);
+    expect(table.columnOrder).toEqual([]);
+    expect(table.sort).toBeNull();
+    await table.dragHeader('Имя', 50, 350);
+    expect(table.columnOrder).toEqual(['role', 'age', 'score', 'name']);
+    expect(table.hasModifier('dragging')).toBe(false);
+    await table.clickHeader('Имя');
+    expect(table.sort).toBeNull();
+    await table.clickHeader('Имя');
+    expect(table.sort).toEqual({ key: 'name', direction: 'asc' });
     table.unmount();
   });
 });

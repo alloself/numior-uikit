@@ -1,5 +1,6 @@
 .nui-table {
   --_row: var(--nui-control-height-md);
+  --_util: 2.5rem;
   --_pad-x: var(--nui-space-3);
   --_font-size: var(--nui-font-size-sm);
   --_height: auto;
@@ -7,6 +8,7 @@
   --_hover: var(--nui-neutral-soft);
   --_head-bg: var(--nui-surface);
 
+  position: relative;
   display: grid;
   gap: var(--nui-space-3);
   color: var(--nui-text);
@@ -41,6 +43,19 @@
   border-collapse: separate;
   border-spacing: 0;
 }
+.nui-table--fixed .nui-table__table {
+  table-layout: fixed;
+}
+.nui-table__col--utility {
+  inline-size: 2.5rem;
+}
+.nui-table--dragging {
+  cursor: grabbing;
+  user-select: none;
+}
+.nui-table--dragging .nui-table__cell--head {
+  cursor: grabbing;
+}
 .nui-table__caption {
   padding: var(--nui-space-2) var(--_pad-x);
   color: var(--nui-text-muted);
@@ -69,7 +84,7 @@
   text-align: end;
 }
 .nui-table__cell--select {
-  inline-size: 2.5rem;
+  inline-size: var(--_util);
   padding-inline-end: 0;
 }
 .nui-table__cell--status {
@@ -92,10 +107,127 @@
 .nui-table--hoverable .nui-table__body .nui-table__row--selected:hover {
   background: var(--nui-primary-soft);
 }
+.nui-table__cell--head {
+  position: relative;
+}
 .nui-table--sticky-header .nui-table__cell--head {
   position: sticky;
   inset-block-start: 0;
   z-index: 1;
+}
+.nui-table__cell--sticky {
+  position: sticky;
+  z-index: 1;
+  background: inherit;
+}
+.nui-table__body .nui-table__row {
+  background: var(--nui-surface);
+}
+.nui-table--sticky-header .nui-table__cell--head.nui-table__cell--sticky {
+  z-index: 2;
+}
+.nui-table__cell--sticky-start.nui-table__cell--sticky-edge,
+.nui-table__cell--sticky-end.nui-table__cell--sticky-edge {
+  transition: box-shadow var(--nui-duration-fast) var(--nui-easing);
+}
+.nui-table--scrolled-start .nui-table__cell--sticky-start.nui-table__cell--sticky-edge {
+  box-shadow:
+    inset -1px 0 var(--nui-border),
+    6px 0 8px -6px rgb(0 0 0 / 0.2);
+}
+.nui-table--scrolled-end .nui-table__cell--sticky-end.nui-table__cell--sticky-edge {
+  box-shadow:
+    inset 1px 0 var(--nui-border),
+    -6px 0 8px -6px rgb(0 0 0 / 0.2);
+}
+.nui-table__cell--reorderable {
+  cursor: grab;
+  touch-action: none;
+}
+.nui-table__cell--dragging {
+  opacity: 0.5;
+}
+.nui-table__head-content {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--nui-space-1);
+  max-inline-size: 100%;
+}
+.nui-table__grip {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  inline-size: 1.25rem;
+  block-size: 1.25rem;
+  margin-inline-start: calc(-1 * var(--nui-space-1));
+  padding: 0;
+  border: 0;
+  border-radius: var(--nui-radius-sm);
+  background: none;
+  color: var(--nui-text-subtle);
+  font-size: 0.875rem;
+  cursor: grab;
+  touch-action: none;
+  transition: color var(--nui-duration-fast) var(--nui-easing);
+}
+.nui-table__grip:hover {
+  color: var(--nui-text);
+}
+.nui-table__grip:focus-visible {
+  outline: var(--nui-focus-ring-width) solid var(--nui-focus);
+  outline-offset: 0;
+}
+.nui-table__resizer {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-end: -0.25rem;
+  z-index: 1;
+  inline-size: 0.5rem;
+  cursor: col-resize;
+  touch-action: none;
+  outline: none;
+}
+.nui-table__resizer::after {
+  content: '';
+  position: absolute;
+  inset-block: 25%;
+  inset-inline-start: 0.1875rem;
+  inline-size: 2px;
+  border-radius: 1px;
+  background: var(--nui-border-strong);
+  opacity: 0;
+  transition:
+    opacity var(--nui-duration-fast) var(--nui-easing),
+    background-color var(--nui-duration-fast) var(--nui-easing);
+}
+.nui-table__cell--head:hover .nui-table__resizer::after,
+.nui-table__resizer:focus-visible::after,
+.nui-table__cell--resizing .nui-table__resizer::after {
+  opacity: 1;
+}
+.nui-table__resizer:focus-visible::after,
+.nui-table__cell--resizing .nui-table__resizer::after {
+  background: var(--nui-focus);
+}
+.nui-table__drop {
+  position: absolute;
+  z-index: 3;
+  background: var(--nui-primary);
+  pointer-events: none;
+}
+.nui-table__drop--column {
+  inset-block: 0;
+  inline-size: 2px;
+  margin-inline-start: -1px;
+}
+.nui-table__live {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 .nui-table__spacer td {
   padding: 0;

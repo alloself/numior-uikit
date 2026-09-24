@@ -9,14 +9,51 @@ export type NuiTableSort = { readonly key: string; readonly direction: NuiSortDi
 export type NuiTableSelection = 'single' | 'multiple';
 export type NuiTablePagination = Partial<Omit<NuiPaginationProps, 'total' | 'size'>>;
 
+export type NuiTableSticky = 'start' | 'end';
+
 export interface NuiTableColumn<T> {
   readonly key: string;
   readonly label: string;
   readonly sortable?: boolean | undefined;
   readonly align?: NuiTableAlign | undefined;
-  readonly width?: string | undefined;
+  readonly width?: number | string | undefined;
+  readonly minWidth?: number | undefined;
+  readonly maxWidth?: number | undefined;
+  readonly resizable?: boolean | undefined;
+  readonly reorderable?: boolean | undefined;
+  readonly sticky?: NuiTableSticky | undefined;
   readonly value?: ((row: T) => unknown) | undefined;
   readonly sort?: ((a: T, b: T) => number) | undefined;
+}
+
+export type NuiTableAnnouncePhase = 'grabbed' | 'moved' | 'dropped' | 'cancelled';
+
+export interface NuiTableAnnouncement {
+  readonly kind: 'column' | 'row';
+  readonly phase: NuiTableAnnouncePhase;
+  readonly label: string;
+  readonly from: number;
+  readonly to: number;
+  readonly count: number;
+}
+
+export type NuiTableCellStyle = Record<string, string> | undefined;
+
+export interface NuiTableCellLayout<T> {
+  widthOf(column: NuiTableColumn<T>): number | undefined;
+  cellStyle(column: NuiTableColumn<T>): NuiTableCellStyle;
+  cellClass(column: NuiTableColumn<T>): string[];
+  utilityStyle(position: number): NuiTableCellStyle;
+  utilityClass(position: number): string[];
+}
+
+export interface NuiTableHeadActions<T> {
+  resizeStart(column: NuiTableColumn<T>, event: PointerEvent): void;
+  resizeKeydown(column: NuiTableColumn<T>, event: KeyboardEvent): void;
+  resizeReset(column: NuiTableColumn<T>): void;
+  dragStart(index: number, event: PointerEvent): void;
+  dragKeydown(index: number, event: KeyboardEvent): void;
+  headClick(event: MouseEvent): void;
 }
 
 export interface NuiTableProps<T> {
@@ -40,6 +77,9 @@ export interface NuiTableProps<T> {
   rowHeight?: number | undefined;
   selectLabel?: string | undefined;
   selectAllLabel?: string | undefined;
+  resizeLabel?: ((column: NuiTableColumn<T>) => string) | undefined;
+  reorderLabel?: ((column: NuiTableColumn<T>) => string) | undefined;
+  announce?: ((announcement: NuiTableAnnouncement) => string) | undefined;
 }
 
 export interface NuiTableCellSlot<T> {
@@ -66,12 +106,31 @@ export interface NuiTableHeadProps<T> {
   selectionState: CheckState;
   selectionDisabled: boolean;
   selectAllLabel: string;
+  layout: NuiTableCellLayout<T>;
+  actions: NuiTableHeadActions<T>;
+  resizing: string | undefined;
+  dragging: number;
+  resizeLabel: (column: NuiTableColumn<T>) => string;
+  reorderLabel: (column: NuiTableColumn<T>) => string;
+}
+
+export interface NuiTableHeadCellProps<T> {
+  column: NuiTableColumn<T>;
+  index: number;
+  sort: NuiTableSort;
+  layout: NuiTableCellLayout<T>;
+  actions: NuiTableHeadActions<T>;
+  resizing: boolean;
+  dragging: boolean;
+  resizeLabel: (column: NuiTableColumn<T>) => string;
+  reorderLabel: (column: NuiTableColumn<T>) => string;
 }
 
 export interface NuiTableBodyProps<T> {
   columns: readonly NuiTableColumn<T>[];
   rows: readonly T[];
   keyOf: NuiOptionKey<T>;
+  layout: NuiTableCellLayout<T>;
   selectable: NuiTableSelection | undefined;
   selectedKeys: ReadonlySet<string>;
   loading: boolean;
@@ -96,6 +155,7 @@ export interface NuiTableRowProps<T> {
   index: number;
   rowIndex: number | undefined;
   columns: readonly NuiTableColumn<T>[];
+  layout: NuiTableCellLayout<T>;
   selectable: NuiTableSelection | undefined;
   selected: boolean;
   selectLabel: string;

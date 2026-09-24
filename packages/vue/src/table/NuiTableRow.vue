@@ -6,7 +6,12 @@
     :aria-rowindex="rowIndex"
     @click="onClick"
   >
-    <td v-if="selectable" class="nui-table__cell nui-table__cell--select">
+    <td
+      v-if="selectable"
+      class="nui-table__cell nui-table__cell--select"
+      :class="layout.utilityClass(0)"
+      :style="layout.utilityStyle(0)"
+    >
       <NuiCheckbox
         size="sm"
         :model-value="selected"
@@ -18,7 +23,8 @@
       v-for="column in columns"
       :key="column.key"
       class="nui-table__cell"
-      :class="alignClass(column)"
+      :class="[alignClass(column), ...layout.cellClass(column)]"
+      :style="layout.cellStyle(column)"
     >
       <slot
         :name="`cell-${column.key}`"
@@ -38,7 +44,7 @@ import NuiCheckbox from '../checkbox/NuiCheckbox.vue';
 import { alignClass, cellText, cellValue } from './cells';
 import type { NuiTableRowProps } from './table.types';
 
-const { row, index, rowIndex, columns, selectable, selected, selectLabel } =
+const { row, index, rowIndex, columns, layout, selectable, selected, selectLabel } =
   defineProps<NuiTableRowProps<T>>();
 const emit = defineEmits<{ toggle: []; rowClick: [event: MouseEvent] }>();
 

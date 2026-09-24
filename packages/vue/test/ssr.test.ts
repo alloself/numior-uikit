@@ -538,6 +538,29 @@ describe('server rendering', () => {
     expect(windowed).toContain('aria-rowcount="1001"');
     expect(windowed).toContain('nui-table__spacer');
     expect(windowed.match(/aria-rowindex=/g)).toHaveLength(20);
+    const pinned = await renderMarkup(() =>
+      h(NuiTable, {
+        columns: [
+          {
+            key: 'name',
+            label: 'Имя',
+            sticky: 'start',
+            width: 120,
+            resizable: true,
+            reorderable: true,
+          },
+          { key: 'age', label: 'Возраст' },
+        ],
+        rows: PEOPLE.slice(0, 2),
+      }),
+    );
+    expect(pinned).toContain('<colgroup>');
+    expect(pinned).toContain('inline-size:120px');
+    expect(pinned).toContain('nui-table__cell--sticky-start');
+    expect(pinned).toContain('inset-inline-start:0px');
+    expect(pinned).toContain('role="separator"');
+    expect(pinned).toContain('aria-valuenow="120"');
+    expect(pinned).toContain('aria-label="Reorder Имя"');
   });
 
   it('renders lazy default icons on the server', async () => {

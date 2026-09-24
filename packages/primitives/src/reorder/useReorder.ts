@@ -149,10 +149,10 @@ export const useReorder = (options: ReorderOptions): Reorder => {
       return;
     }
     const { phase, from, to } = state.value;
-    finish(IDLE);
     if (phase === 'dragging' && to !== from && allowed(from, to)) {
       options.onMove(from, to);
     }
+    finish(IDLE);
   };
   const onWindowKeydown = (event: KeyboardEvent): void => {
     if (event.key === 'Escape' && state.value.phase !== 'keyboard') {
@@ -177,10 +177,10 @@ export const useReorder = (options: ReorderOptions): Reorder => {
     publish({ phase: 'keyboard', from: index, to: index, position: 0 });
   };
   const drop = (current: ReorderState): void => {
-    finish(IDLE);
     if (current.to !== current.from) {
       options.onMove(current.from, current.to);
     }
+    finish(IDLE);
   };
   const nudge = (current: ReorderState, step: number): void => {
     const target = current.to + step;
