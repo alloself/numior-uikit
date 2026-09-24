@@ -71,6 +71,37 @@ const selected = ref<Person[]>([]);
 </template>
 ```
 
+## Колонки: ширина, закрепление, порядок
+
+Опции колонки `resizable`, `sticky` и `reorderable` включаются по отдельности.
+`resizable` добавляет ручку у правого края заголовка: перетаскивание мышью или пальцем,
+клавиши ←/→ на сфокусированной ручке (`role="separator"` с `aria-valuenow`) меняют ширину
+на 10px, с Shift — на 50px, Enter возвращает исходную. Ширины живут в `v-model:widths`
+(`Record<key, px>`), стартовое значение — `column.width`, пределы — `minWidth` (64px) и
+`maxWidth`. Колонки без `width` один раз замеряются в авто-раскладке, после чего таблица
+переходит на `table-layout: fixed`: на узком экране колонки не схлопываются, а таблица
+прокручивается по горизонтали. `sticky: 'start' | 'end'` прижимает колонку к краю
+скроллера, отступы считаются из ширин соседних закреплённых колонок, а тень на кромке
+появляется только после прокрутки. `reorderable` позволяет тянуть заголовок мышью или
+взять его кнопкой-ручкой с клавиатуры: Space берёт, ←/→ двигают, Space кладёт, Escape
+отменяет; порядок хранится в `v-model:columnOrder` (ключи), закреплённые колонки меняются
+местами только внутри своей группы. Каждое действие озвучивается через `aria-live`, текст
+задаёт `announce`.
+
+## Строки: дерево, закрепление, порядок
+
+`getChildren(row)` включает дерево: строки с детьми получают кнопку раскрытия
+(`aria-expanded`) и отступ по уровню (`indent`, 20px), раскрытые хранятся в
+`v-model:expanded`. `isExpandable(row)` объявляет узел раскрываемым до загрузки детей:
+такой узел при раскрытии эмитит `load` и крутит спиннер, пока `getChildren` не вернёт
+массив. Сортировка применяется внутри каждого уровня, пагинация и виртуализация работают по
+плоскому списку видимых строк, выбор не каскадируется. `pinnedRows` рендерятся отдельным
+`tbody` под шапкой, не сортируются и не режутся на страницы, а при `stickyHeader` остаются
+на месте при прокрутке. `rowDrag` добавляет колонку с ручкой: строку можно перетащить
+мышью или взять с клавиатуры (Space, ↑/↓, Space, Escape) и переставить среди соседей
+одного родителя; таблица эмитит `reorder({ row, from, to, parent })` с индексами среди
+соседей, а данные меняет потребитель. При активной сортировке ручки отключены.
+
 ## Поведение
 
 Значение ячейки — `column.value(row)` или `row[key]`; сравнение по умолчанию ставит `null`
@@ -99,31 +130,49 @@ const selected = ref<Person[]>([]);
 
 ## API
 
-| Prop                                   | Тип                             | По умолчанию                        | Описание                              |
-| -------------------------------------- | ------------------------------- | ----------------------------------- | ------------------------------------- |
-| `columns`                              | `NuiTableColumn<T>[]`           | —                                   | Колонки                               |
-| `rows`                                 | `T[]`                           | —                                   | Строки                                |
-| `getKey`                               | `(row: T) => string`            | JSON                                | Ключ строки                           |
-| `sort`                                 | `NuiTableSort`                  | `null`                              | `v-model:sort`                        |
-| `selectable`                           | `'single' \| 'multiple'`        | —                                   | Выбор строк                           |
-| `selected`                             | `T[]`                           | `[]`                                | `v-model:selected`                    |
-| `pagination`                           | `NuiTablePagination \| boolean` | —                                   | Футер с `NuiPagination` и его пропами |
-| `page`, `pageSize`                     | `number`                        | `1`, `20`                           | `v-model:page`, `v-model:pageSize`    |
-| `remote`                               | `boolean`                       | `false`                             | Не сортировать и не резать самой      |
-| `total`                                | `number`                        | `rows.length`                       | Всего строк в `remote`                |
-| `loading`                              | `boolean`                       | `false`                             | Скелетоны и `aria-busy`               |
-| `loadingRows`                          | `number`                        | `5`                                 | Число скелетонов                      |
-| `emptyLabel`                           | `string`                        | `'No data'`                         | Заголовок пустого состояния           |
-| `caption`                              | `string`                        | —                                   | Подпись таблицы                       |
-| `stickyHeader`, `striped`, `hoverable` | `boolean`                       | `false`                             | Внешний вид                           |
-| `size`                                 | `'sm' \| 'md' \| 'lg'`          | `'md'`                              | Высота строки                         |
-| `virtual`, `height`, `rowHeight`       | `boolean`, `string`, `number`   | `false`, —, `40`                    | Виртуализация                         |
-| `selectLabel`, `selectAllLabel`        | `string`                        | `'Select row'`, `'Select all rows'` | Имена чекбоксов                       |
+| Prop                                   | Тип                                   | По умолчанию                                   | Описание                                   |
+| -------------------------------------- | ------------------------------------- | ---------------------------------------------- | ------------------------------------------ |
+| `columns`                              | `NuiTableColumn<T>[]`                 | —                                              | Колонки                                    |
+| `rows`                                 | `T[]`                                 | —                                              | Строки                                     |
+| `getKey`                               | `(row: T) => string`                  | JSON                                           | Ключ строки                                |
+| `sort`                                 | `NuiTableSort`                        | `null`                                         | `v-model:sort`                             |
+| `selectable`                           | `'single' \| 'multiple'`              | —                                              | Выбор строк                                |
+| `selected`                             | `T[]`                                 | `[]`                                           | `v-model:selected`                         |
+| `pagination`                           | `NuiTablePagination \| boolean`       | —                                              | Футер с `NuiPagination` и его пропами      |
+| `page`, `pageSize`                     | `number`                              | `1`, `20`                                      | `v-model:page`, `v-model:pageSize`         |
+| `remote`                               | `boolean`                             | `false`                                        | Не сортировать и не резать самой           |
+| `total`                                | `number`                              | `rows.length`                                  | Всего строк в `remote`                     |
+| `loading`                              | `boolean`                             | `false`                                        | Скелетоны и `aria-busy`                    |
+| `loadingRows`                          | `number`                              | `5`                                            | Число скелетонов                           |
+| `emptyLabel`                           | `string`                              | `'No data'`                                    | Заголовок пустого состояния                |
+| `caption`                              | `string`                              | —                                              | Подпись таблицы                            |
+| `stickyHeader`, `striped`, `hoverable` | `boolean`                             | `false`                                        | Внешний вид                                |
+| `size`                                 | `'sm' \| 'md' \| 'lg'`                | `'md'`                                         | Высота строки                              |
+| `virtual`, `height`, `rowHeight`       | `boolean`, `string`, `number`         | `false`, —, `40`                               | Виртуализация                              |
+| `widths`                               | `Record<string, number>`              | `{}`                                           | `v-model:widths`, px                       |
+| `columnOrder`                          | `string[]`                            | `[]`                                           | `v-model:columnOrder`                      |
+| `getChildren`                          | `(row: T) => T[] \| undefined`        | —                                              | Дети строки (дерево)                       |
+| `isExpandable`                         | `(row: T) => boolean`                 | по детям                                       | Узел раскрываем до загрузки                |
+| `expanded`                             | `T[]`                                 | `[]`                                           | `v-model:expanded`                         |
+| `indent`                               | `number`                              | `20`                                           | Отступ уровня, px                          |
+| `pinnedRows`                           | `T[]`                                 | `[]`                                           | Строки под шапкой                          |
+| `rowDrag`                              | `boolean`                             | `false`                                        | Колонка с ручкой перестановки строк        |
+| `resizeLabel`, `reorderLabel`          | `(column) => string`                  | `Resize …`, `Reorder …`                        | Имена ручек колонок                        |
+| `expandLabel`, `dragLabel`, `rowLabel` | `(row) => string`                     | `'Toggle row'`, `'Reorder row'`, первая ячейка | Имена кнопок строк и подпись в объявлениях |
+| `announce`                             | `(a: NuiTableAnnouncement) => string` | английский текст                               | Текст `aria-live` при перестановке         |
+| `selectLabel`, `selectAllLabel`        | `string`                              | `'Select row'`, `'Select all rows'`            | Имена чекбоксов                            |
 
-Событие `rowClick(row, event)`. Слоты `cell-<key>` (`{ row, value, column, index }`),
-`header-<key>` (`{ column, sort }`), `empty`, `loading`, `caption`. Блок `nui-table`,
-модификаторы `--size-*`, `--striped`, `--hoverable`, `--sticky-header`, `--virtual`,
-`--selectable`, `--loading`; элементы `__scroller`, `__table`, `__caption`, `__head`, `__body`,
-`__row` (`--head`, `--selected`, `--status`, `--loading`), `__cell` (`--head`, `--select`,
-`--status`, `--align-*`), `__sort` (`--active`, `--desc`), `__sort-icon`, `__spacer`, `__footer`;
-переменные `--_row`, `--_pad-x`, `--_height`, `--_stripe`, `--_hover`, `--_head-bg`.
+Опции колонки: `key`, `label`, `sortable`, `align`, `width` (px или CSS), `minWidth`,
+`maxWidth`, `resizable`, `reorderable`, `sticky`, `value`, `sort`. События
+`rowClick(row, event)`, `reorder({ row, from, to, parent })`, `load(row)`. Слоты
+`cell-<key>` (`{ row, value, column, index }`), `header-<key>` (`{ column, sort }`), `empty`,
+`loading`, `caption`. Блок `nui-table`, модификаторы `--size-*`, `--striped`, `--hoverable`,
+`--sticky-header`, `--virtual`, `--selectable`, `--loading`, `--fixed`, `--dragging`,
+`--scrolled-start`, `--scrolled-end`; элементы `__scroller`, `__table`, `__caption`, `__head`,
+`__body` (`--pinned`), `__row` (`--head`, `--selected`, `--status`, `--loading`, `--dragging`),
+`__cell` (`--head`, `--select`, `--drag`, `--tree`, `--status`, `--align-*`, `--sticky`,
+`--sticky-start`, `--sticky-end`, `--sticky-edge`, `--resizing`, `--dragging`), `__sort`
+(`--active`, `--desc`), `__sort-icon`, `__resizer`, `__grip`, `__toggle` (`--expanded`,
+`--loading`, `--leaf`), `__drop` (`--column`, `--row`), `__live`, `__spacer`, `__footer`;
+переменные `--_row`, `--_pad-x`, `--_height`, `--_stripe`, `--_hover`, `--_head-bg`,
+`--_indent`, `--_level`, `--_head-size`.

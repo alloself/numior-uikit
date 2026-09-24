@@ -109,3 +109,13 @@ that the label `for` matches the control id and that values render on the server
   navigation, so reach a control with `Tab`, not `locator.focus()`, before asserting a ring.
 - axe `scrollable-region-focusable`: a scroll container with no focusable content needs
   `tabindex="0"` (the table scroller with `height`); the tree root already has it.
+- A page object's output guard with many `&&` checks trips fallow's CRAP threshold; keep a
+  `Record<keyof Output, guard>` and `Object.entries(...).every(...)` instead (`TableSection`).
+- Drag gestures use `page.mouse` (down, a 4px nudge past the threshold, a stepped move, up)
+  from the page object (`TableSection.dragBetween`/`dragBy`); in jsdom the drivers dispatch
+  `PointerEvent`s on the handle and `pointermove`/`pointerup` on `window`, with
+  `getBoundingClientRect` defined per cell or row (`TableDriver.layoutHeaders`/`layoutRows`).
+- Measurements taken synchronously in `onMounted` (the table's natural column widths) happen
+  before a driver can touch elements, so stub the prototype before mounting through
+  `TopLayerStubs.define(HTMLTableCellElement.prototype, 'getBoundingClientRect', …)`
+  (`TableDriver.mount({ headerWidth })`) and `await driver.settle()` for the re-render.
