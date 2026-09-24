@@ -145,6 +145,18 @@ export type {
   NuiTreeSelectable,
 } from './tree/tree.types';
 export type { CheckState } from './tree/cascade';
+export { default as NuiTable } from './table/NuiTable.vue';
+export type {
+  NuiSortDirection,
+  NuiTableAlign,
+  NuiTableCellSlot,
+  NuiTableColumn,
+  NuiTableHeaderSlot,
+  NuiTablePagination,
+  NuiTableProps,
+  NuiTableSelection,
+  NuiTableSort,
+} from './table/table.types';
 export { default as NuiChip } from './chip/NuiChip.vue';
 export type { NuiChipProps, NuiChipSize, NuiChipVariant } from './chip/chip.types';
 export { default as NuiCombobox } from './combobox/NuiCombobox.vue';

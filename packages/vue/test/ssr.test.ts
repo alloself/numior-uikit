@@ -32,6 +32,7 @@ import {
   NuiRadioGroup,
   NuiSelect,
   NuiSwitch,
+  NuiTable,
   NuiTabs,
   NuiTextarea,
   NuiToast,
@@ -45,6 +46,7 @@ import {
   type NuiTooltipTriggerSlot,
 } from '../src';
 import { labelTarget, popoverTarget, renderMarkup } from './support/ssr';
+import { COLUMNS, manyPeople, PEOPLE } from './support/rows';
 import { FILES, manyNodes } from './support/tree-items';
 
 interface Scenario {
@@ -146,6 +148,19 @@ const scenarios: Scenario[] = [
   {
     name: 'NuiTree',
     render: () => h(NuiTree, { id: 'files', items: FILES, expanded: ['src'], modelValue: 'index' }),
+  },
+  {
+    name: 'NuiTable',
+    render: () =>
+      h(NuiTable, {
+        columns: COLUMNS,
+        rows: PEOPLE,
+        selectable: 'multiple',
+        sort: { key: 'name', direction: 'asc' },
+        pagination: true,
+        pageSize: 5,
+        caption: 'Команда',
+      }),
   },
   {
     name: 'NuiCard',
@@ -495,6 +510,34 @@ describe('server rendering', () => {
     );
     expect(windowed.match(/role="treeitem"/g)).toHaveLength(20);
     expect(windowed).toContain('block-size:16000px');
+  });
+
+  it('renders a sorted, selectable and paginated table and windows long ones on the server', async () => {
+    const html = await renderMarkup(() =>
+      h(NuiTable, {
+        columns: COLUMNS,
+        rows: PEOPLE,
+        selectable: 'multiple',
+        sort: { key: 'age', direction: 'desc' },
+        pagination: true,
+        pageSize: 5,
+        caption: 'Команда',
+      }),
+    );
+    expect(html).toContain('<table');
+    expect(html).toContain('<caption');
+    expect(html).toContain('aria-sort="descending"');
+    expect(html).toContain('aria-label="Select all rows"');
+    expect(html).toContain('aria-label="Select row"');
+    expect(html).toContain('aria-label="Pagination"');
+    expect(html.indexOf('Жанна')).toBeLessThan(html.indexOf('Мария'));
+    expect(html.match(/nui-table__row--selected/g)).toBeNull();
+    const windowed = await renderMarkup(() =>
+      h(NuiTable, { columns: COLUMNS, rows: manyPeople(1000), virtual: true, height: '10rem' }),
+    );
+    expect(windowed).toContain('aria-rowcount="1001"');
+    expect(windowed).toContain('nui-table__spacer');
+    expect(windowed.match(/aria-rowindex=/g)).toHaveLength(20);
   });
 
   it('renders lazy default icons on the server', async () => {

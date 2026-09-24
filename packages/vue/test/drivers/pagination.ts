@@ -1,6 +1,7 @@
 import { mount, type DOMWrapper, type VueWrapper } from '@vue/test-utils';
-import { defineComponent, h, nextTick, ref, type Ref } from 'vue';
+import { defineComponent, h, ref, type Ref } from 'vue';
 import { NuiPagination, type NuiPaginationProps } from '../../src';
+import { choosePageSize } from '../support/page-size';
 import { TopLayerStubs } from '../support/top-layer';
 import { ComponentDriver } from './component';
 
@@ -135,16 +136,7 @@ export class PaginationDriver extends ComponentDriver {
   }
 
   async choosePageSize(size: number): Promise<void> {
-    await this.wrapper.find('[role="combobox"]').trigger('keydown', { key: 'ArrowDown' });
-    await nextTick();
-    const option = this.wrapper
-      .findAll<HTMLElement>('[role="option"]')
-      .find((entry) => entry.text() === String(size));
-    if (!option) {
-      throw new Error(`No page size ${size}`);
-    }
-    await option.trigger('click');
-    await nextTick();
+    await choosePageSize(this.wrapper, size);
   }
 
   override unmount(): void {
