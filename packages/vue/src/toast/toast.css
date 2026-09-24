@@ -185,8 +185,14 @@
   color: var(--nui-text-muted);
 }
 .nui-toast__action {
+  --_height: 1.5rem;
+  --_padding: var(--nui-space-2);
+  --_font-size: var(--nui-font-size-xs);
+
   flex: none;
   align-self: center;
+  padding-block: 0;
+  border-radius: var(--nui-radius-sm);
 }
 .nui-toast__close {
   flex: none;

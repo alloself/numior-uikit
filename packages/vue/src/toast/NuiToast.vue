@@ -14,7 +14,8 @@
     </div>
     <NuiButton
       v-if="toast.action"
-      variant="link"
+      variant="solid"
+      tone="neutral"
       size="sm"
       class="nui-toast__action"
       @click="runAction"

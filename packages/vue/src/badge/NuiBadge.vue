@@ -5,7 +5,11 @@
       `nui-badge--tone-${tone}`,
       `nui-badge--variant-${variant}`,
       `nui-badge--size-${size}`,
-      { 'nui-badge--dot': dot, 'nui-badge--floating': floating },
+      {
+        'nui-badge--dot': dot,
+        'nui-badge--floating': floating,
+        'nui-badge--count': count !== undefined && !$slots.default,
+      },
     ]"
     :role="dot && label ? 'img' : undefined"
     :aria-label="dot ? label : undefined"

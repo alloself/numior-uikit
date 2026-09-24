@@ -81,6 +81,11 @@
   background: var(--_tone);
   color: var(--_tone-foreground);
 }
+.nui-badge--count {
+  --_padding: var(--nui-space-1);
+
+  font-variant-numeric: tabular-nums;
+}
 .nui-badge--dot {
   inline-size: var(--_dot-size);
   min-inline-size: 0;

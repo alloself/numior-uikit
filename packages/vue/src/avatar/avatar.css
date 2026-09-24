@@ -83,11 +83,21 @@
 .nui-avatar__badge:dir(rtl) {
   translate: -30% -30%;
 }
-.nui-avatar--grouped .nui-avatar__figure {
-  box-shadow: 0 0 0 2px var(--nui-surface);
-}
 .nui-avatar--grouped:not(:first-child) {
   margin-inline-start: calc(-1 * var(--_overlap, 0.5rem));
+}
+.nui-avatar--grouped:not(:last-child) .nui-avatar__figure {
+  --_carve: calc(var(--_size) / 2 + 2px);
+  --_carve-x: calc(var(--_size) * 1.5 - var(--_overlap, 0.5rem));
+
+  mask-image: radial-gradient(
+    circle at var(--_carve-x) 50%,
+    transparent var(--_carve),
+    #000 calc(var(--_carve) + 0.5px)
+  );
+}
+.nui-avatar--grouped:not(:last-child) .nui-avatar__figure:dir(rtl) {
+  --_carve-x: calc(var(--_overlap, 0.5rem) - var(--_size) / 2);
 }
 .nui-avatar-group {
   --_overlap: 0.5rem;

@@ -61,9 +61,6 @@
 .nui-listbox__option:hover {
   background: var(--nui-neutral-soft);
 }
-.nui-listbox__option--selected {
-  font-weight: 500;
-}
 .nui-listbox__option--disabled,
 .nui-listbox__option--disabled:hover {
   background: transparent;

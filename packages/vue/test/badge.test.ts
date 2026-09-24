@@ -23,7 +23,12 @@ describe('NuiBadge', () => {
   });
 
   it('formats the count against max and lets slot content win over the count', () => {
-    expect(BadgeDriver.mount({ props: { count: 5 } }).text).toBe('5');
+    const single = BadgeDriver.mount({ props: { count: 5 } });
+    expect(single.text).toBe('5');
+    expect(single.hasModifier('count')).toBe(true);
+    expect(BadgeDriver.mount({ props: { count: 10 }, label: 'Ten' }).hasModifier('count')).toBe(
+      false,
+    );
     expect(BadgeDriver.mount({ props: { count: 120 } }).text).toBe('99+');
     expect(BadgeDriver.mount({ props: { count: 10, max: 9 } }).text).toBe('9+');
     expect(BadgeDriver.mount({ props: { count: 0 } }).text).toBe('0');
