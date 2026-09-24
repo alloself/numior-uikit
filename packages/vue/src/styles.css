@@ -4,6 +4,7 @@
 @import './field/field.css';
 @import './input/input.css';
 @import './textarea/textarea.css';
+@import './number-field/number-field.css';
 @import './checkbox/checkbox.css';
 @import './radio/radio.css';
 @import './switch/switch.css';

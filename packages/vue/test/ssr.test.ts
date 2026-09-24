@@ -25,6 +25,7 @@ import {
   NuiList,
   NuiPagination,
   NuiMenu,
+  NuiNumberField,
   NuiPopover,
   NuiProgress,
   NuiRadio,
@@ -186,6 +187,17 @@ const scenarios: Scenario[] = [
   { name: 'NuiConfigProvider', render: () => h(NuiConfigProvider, null, () => 'content') },
   { name: 'NuiField with NuiInput', render: fieldWithInput },
   { name: 'NuiTextarea', render: () => h(NuiTextarea, { modelValue: 'text', invalid: true }) },
+  {
+    name: 'NuiNumberField',
+    render: () =>
+      h(NuiNumberField, {
+        modelValue: 1234.5,
+        locale: 'de-DE',
+        formatOptions: { style: 'currency', currency: 'EUR' },
+        name: 'price',
+        min: 0,
+      }),
+  },
   {
     name: 'NuiCheckbox',
     render: () => h(NuiCheckbox, { modelValue: true, indeterminate: true }, () => 'Terms'),
@@ -371,6 +383,24 @@ describe('server rendering', () => {
     expect(html).toContain('aria-selected="true"');
     expect(html).toContain('class="nui-select__value"');
     expect(html).toContain('Banana');
+  });
+
+  it('renders a number field formatted on the server with spinbutton semantics', async () => {
+    const html = await renderMarkup(() =>
+      h(NuiNumberField, {
+        modelValue: 1234.5,
+        locale: 'de-DE',
+        formatOptions: { style: 'currency', currency: 'EUR' },
+        name: 'price',
+        min: 0,
+      }),
+    );
+    expect(html).toContain('role="spinbutton"');
+    expect(html).toMatch(/value="1\.234,50\s€"/);
+    expect(html).toContain('aria-valuenow="1234.5"');
+    expect(html).toContain('type="hidden" name="price" value="1234.5"');
+    expect(html).toContain('aria-hidden="true"');
+    expect(html).toContain('tabindex="-1"');
   });
 
   it('renders a combobox input with its selected label and no active descendant', async () => {

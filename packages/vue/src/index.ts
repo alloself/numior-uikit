@@ -14,6 +14,8 @@ export { default as NuiFieldError } from './field/NuiFieldError.vue';
 export type { NuiFieldProps } from './field/field.types';
 export { default as NuiInput } from './input/NuiInput.vue';
 export type { NuiInputModifiers, NuiInputProps, NuiInputType } from './input/input.types';
+export { default as NuiNumberField } from './number-field/NuiNumberField.vue';
+export type { NuiNumberFieldProps } from './number-field/number-field.types';
 export { default as NuiTextarea } from './textarea/NuiTextarea.vue';
 export type {
   NuiTextareaModifiers,
