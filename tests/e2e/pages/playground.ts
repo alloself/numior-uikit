@@ -5,6 +5,8 @@ import { FeedbackSection } from './feedback';
 import { NavigationSection } from './navigation';
 import { OverlaysSection } from './overlays';
 import { PickersSection } from './pickers';
+import { TableSection } from './table';
+import { TreeSection } from './tree';
 
 export type Theme = 'system' | 'light' | 'dark';
 export type Accent = 'indigo' | 'emerald' | 'rose';
@@ -131,6 +133,8 @@ export class PlaygroundPage {
   readonly navigation: NavigationSection;
   readonly pickers: PickersSection;
   readonly data: DataSection;
+  readonly tree: TreeSection;
+  readonly table: TableSection;
 
   constructor(readonly page: Page) {
     this.workspace = page.getByRole('main');
@@ -159,6 +163,8 @@ export class PlaygroundPage {
     this.navigation = new NavigationSection(page);
     this.pickers = new PickersSection(page);
     this.data = new DataSection(page);
+    this.tree = new TreeSection(page);
+    this.table = new TableSection(page);
   }
 
   async open(path: '/' | '/tailwind.html' = '/'): Promise<void> {

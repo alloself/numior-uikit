@@ -116,6 +116,11 @@ select {
   align-items: start;
   margin-block-end: var(--nui-space-4);
 }
+.tree-box {
+  padding: var(--nui-space-1);
+  border: 1px solid var(--nui-border);
+  border-radius: var(--nui-radius);
+}
 .data-stack {
   display: grid;
   gap: var(--nui-space-2);

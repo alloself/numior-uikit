@@ -93,6 +93,8 @@
     <NavigationSection />
     <PickersSection />
     <DataSection />
+    <TreeSection />
+    <TableSection />
 
     <section class="panel" aria-labelledby="tokens-title">
       <h2 id="tokens-title">Один акцент — разные способы использования</h2>
@@ -147,6 +149,8 @@ import FeedbackSection from './FeedbackSection.vue';
 import NavigationSection from './NavigationSection.vue';
 import PickersSection from './PickersSection.vue';
 import DataSection from './DataSection.vue';
+import TreeSection from './TreeSection.vue';
+import TableSection from './TableSection.vue';
 
 const density = ref('comfortable');
 const direction = ref<'ltr' | 'rtl'>('ltr');
