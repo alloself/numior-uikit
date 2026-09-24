@@ -42,7 +42,7 @@
   overflow: hidden;
   border-radius: var(--_radius);
   background: var(--nui-neutral-soft);
-  color: var(--nui-text-muted);
+  color: var(--nui-text);
   font-size: var(--_font-size);
   font-weight: 600;
   line-height: 1;
@@ -60,6 +60,7 @@
 .nui-avatar__icon {
   inline-size: 55%;
   block-size: 55%;
+  color: var(--nui-text-muted);
 }
 .nui-avatar__status {
   position: absolute;
@@ -104,5 +105,5 @@
   --_font-size: calc(var(--_size) * 0.34);
 
   background: var(--nui-surface-muted);
-  color: var(--nui-text-muted);
+  color: var(--nui-text);
 }
