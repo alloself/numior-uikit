@@ -8,6 +8,9 @@ import {
   NuiBadge,
   NuiBreadcrumbs,
   NuiButton,
+  NuiCard,
+  NuiCardContent,
+  NuiCardMedia,
   NuiCheckbox,
   NuiChip,
   NuiCombobox,
@@ -125,6 +128,14 @@ const scenarios: Scenario[] = [
   {
     name: 'NuiEmpty',
     render: () => h(NuiEmpty, { title: 'Nothing here', description: 'Add an item' }),
+  },
+  {
+    name: 'NuiCard',
+    render: () =>
+      h(NuiCard, { href: '/plans', title: 'Plans', description: 'Pick one' }, () => [
+        h(NuiCardMedia, { src: '/cover.png', alt: 'Cover' }),
+        h(NuiCardContent, null, () => 'Body'),
+      ]),
   },
   {
     name: 'NuiAvatar',
@@ -408,6 +419,24 @@ describe('server rendering', () => {
     );
     expect(select).toContain('nui-listbox__empty');
     expect(select).toContain('No options');
+  });
+
+  it('renders a linked card with its stretched action and a plain card without one', async () => {
+    const linked = await renderMarkup(() =>
+      h(NuiCard, { href: '/plans', title: 'Plans', description: 'Pick one' }, () =>
+        h(NuiCardMedia, { src: '/cover.png', alt: 'Cover' }),
+      ),
+    );
+    expect(linked).toContain('nui-card--interactive');
+    expect(linked).toContain(
+      'class="nui-link nui-link--tone-neutral nui-link--underline-none nui-card__action"',
+    );
+    expect(linked).toContain('href="/plans"');
+    expect(linked).toContain('<h3');
+    expect(linked).toContain('<img');
+    const plain = await renderMarkup(() => h(NuiCard, { title: 'Plans' }));
+    expect(plain).not.toContain('nui-card__action');
+    expect(plain).not.toContain('nui-card--interactive');
   });
 
   it('renders lazy default icons on the server', async () => {

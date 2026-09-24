@@ -1,6 +1,6 @@
 import { mount } from '@vue/test-utils';
-import { defineComponent, h, markRaw } from 'vue';
 import { NuiLink, type NuiLinkProps } from '../../src';
+import { RouterStub } from '../support/router-stub';
 import { ComponentDriver } from './component';
 
 export interface LinkMountOptions {
@@ -9,15 +9,6 @@ export interface LinkMountOptions {
   readonly label?: string;
   readonly viaRouter?: boolean;
 }
-
-const RouterStub = markRaw(
-  defineComponent({
-    props: { to: { type: String, required: true } },
-    setup(props, { slots }) {
-      return () => h('a', { href: `/router${props.to}` }, slots.default?.());
-    },
-  }),
-);
 
 export class LinkDriver extends ComponentDriver {
   protected readonly block = 'nui-link';

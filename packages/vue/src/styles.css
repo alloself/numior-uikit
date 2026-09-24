@@ -20,6 +20,7 @@
 @import './chip/chip.css';
 @import './badge/badge.css';
 @import './avatar/avatar.css';
+@import './card/card.css';
 @import './combobox/combobox.css';
 @import './pagination/pagination.css';
 @import './toast/toast.css';

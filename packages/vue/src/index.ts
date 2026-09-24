@@ -111,6 +111,21 @@ export type {
 } from './avatar/avatar.types';
 export { default as NuiEmpty } from './empty/NuiEmpty.vue';
 export type { NuiEmptyProps, NuiEmptySize } from './empty/empty.types';
+export { default as NuiCard } from './card/NuiCard.vue';
+export { default as NuiCardHeader } from './card/NuiCardHeader.vue';
+export { default as NuiCardTitle } from './card/NuiCardTitle.vue';
+export { default as NuiCardDescription } from './card/NuiCardDescription.vue';
+export { default as NuiCardContent } from './card/NuiCardContent.vue';
+export { default as NuiCardFooter } from './card/NuiCardFooter.vue';
+export { default as NuiCardMedia } from './card/NuiCardMedia.vue';
+export type {
+  NuiCardMediaProps,
+  NuiCardPadding,
+  NuiCardProps,
+  NuiCardTitleProps,
+  NuiCardTitleTag,
+  NuiCardVariant,
+} from './card/card.types';
 export { default as NuiChip } from './chip/NuiChip.vue';
 export type { NuiChipProps, NuiChipSize, NuiChipVariant } from './chip/chip.types';
 export { default as NuiCombobox } from './combobox/NuiCombobox.vue';
