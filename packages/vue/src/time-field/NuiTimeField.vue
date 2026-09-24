@@ -279,7 +279,7 @@ const control = usePopover(listboxElement, { open, id: listboxId, mode: 'auto' }
 const { floatingStyles } = useFloating(rootElement, listboxElement, {
   placement: () => placement,
   offset: 4,
-  size: { matchWidth: true, fitHeight: true },
+  size: { matchWidth: true, fitHeight: true, maxBlockSize: 288 },
   enabled: open,
 });
 const selectedElement = (): HTMLElement | null => {

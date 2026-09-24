@@ -29,6 +29,7 @@ export type FloatingStrategy = 'fixed' | 'absolute';
 export interface FloatingSize {
   readonly matchWidth?: boolean | undefined;
   readonly fitHeight?: boolean | undefined;
+  readonly maxBlockSize?: number | undefined;
 }
 
 export interface FloatingOptions {
@@ -91,9 +92,14 @@ const middleware = (options: FloatingOptions, onBounds: (bounds: Bounds) => void
   return list;
 };
 
+const cappedHeight = (size: FloatingSize, height: number): number =>
+  size.maxBlockSize === undefined ? height : Math.min(height, size.maxBlockSize);
+
 const sizeStyles = (size: FloatingSize | undefined, bounds: Bounds): Record<string, string> => ({
   ...(size?.matchWidth && bounds.width !== undefined ? { minInlineSize: `${bounds.width}px` } : {}),
-  ...(size?.fitHeight && bounds.height !== undefined ? { maxBlockSize: `${bounds.height}px` } : {}),
+  ...(size?.fitHeight && bounds.height !== undefined
+    ? { maxBlockSize: `${cappedHeight(size, bounds.height)}px` }
+    : {}),
 });
 
 const roundToPixel = (value: number): number => {

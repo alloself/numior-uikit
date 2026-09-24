@@ -42,6 +42,7 @@
   font-variant-numeric: tabular-nums;
 }
 .nui-time-field__segment {
+  box-sizing: content-box;
   inline-size: 2ch;
   padding: 0.125rem;
   border: 0;

@@ -87,6 +87,12 @@ describe('useFloating', () => {
       maxBlockSize: '320px',
     });
     capture.unmount();
+    const capped = captureWithElements((reference, floating) =>
+      useFloating(reference, floating, { size: { fitHeight: true, maxBlockSize: 200 } }),
+    );
+    await flushPromises();
+    expect(capped.value.floatingStyles.value).toMatchObject({ maxBlockSize: '200px' });
+    capped.unmount();
     const plain = captureWithElements((reference, floating) => useFloating(reference, floating));
     await flushPromises();
     expect(plain.value.floatingStyles.value).not.toHaveProperty('minInlineSize');

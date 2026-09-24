@@ -137,10 +137,13 @@ const canDecrement = computed(
     (min === undefined || model.value === null || model.value > min),
 );
 
-watch([model, locale, options], ([value]) => {
+watch(model, (value) => {
   if (parse(draft.value) !== value) {
     draft.value = format(value);
   }
+});
+watch([locale, options], () => {
+  draft.value = format(model.value);
 });
 
 const apply = (value: number | null): void => {
