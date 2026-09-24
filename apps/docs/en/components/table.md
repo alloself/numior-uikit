@@ -84,9 +84,10 @@ offsets are computed from the neighbouring pinned widths and the edge shadow app
 once scrolled. `reorderable` lets you drag a header with the pointer or grab it from the
 keyboard through the grip button: Space grabs, ←/→ move, Space drops, Escape cancels; the
 order lives in `v-model:columnOrder` (keys) and pinned columns only move within their group.
-The grip appears on header hover and on keyboard focus (touch screens always show it), an
-opaque ghost with the column label follows the pointer while dragging, and the insertion
-line starts below the `caption`. Every step is announced through `aria-live`, with `announce`
+The grip sits before the label and appears on header hover and on keyboard focus (touch
+screens always show it); while dragging, the grips of the other columns and rows are hidden,
+an opaque ghost with the column label follows the pointer, and the insertion line starts
+below the `caption`. Every step is announced through `aria-live`, with `announce`
 providing the text.
 
 ## Rows: tree, pinning, order

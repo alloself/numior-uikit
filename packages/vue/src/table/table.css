@@ -105,6 +105,16 @@
 .nui-table__body .nui-table__row:hover .nui-table__grip:disabled {
   opacity: var(--nui-disabled-opacity);
 }
+.nui-table--dragging .nui-table__cell--head:not(.nui-table__cell--dragging) .nui-table__grip,
+.nui-table--dragging
+  .nui-table__body
+  .nui-table__row:not(.nui-table__row--dragging)
+  .nui-table__grip {
+  opacity: 0;
+}
+.nui-table__cell--head .nui-table__grip {
+  margin-inline-start: calc(-1 * var(--nui-space-1));
+}
 @media (hover: none) {
   .nui-table__grip {
     opacity: 1;
@@ -359,9 +369,6 @@
   flex: none;
   color: var(--nui-text-subtle);
   font-size: 0.875rem;
-}
-.nui-table__ghost--column .nui-table__ghost-grip {
-  order: 1;
 }
 .nui-table__ghost-label {
   overflow: hidden;
