@@ -3,6 +3,8 @@ import { describe, expect, it } from 'vitest';
 import { h, type VNode } from 'vue';
 import {
   NuiAlert,
+  NuiAvatar,
+  NuiAvatarGroup,
   NuiBadge,
   NuiBreadcrumbs,
   NuiButton,
@@ -119,6 +121,15 @@ const scenarios: Scenario[] = [
       h(NuiChip, { tone: 'success', removable: true, removeLabel: 'Remove Vue' }, () => 'Vue'),
   },
   { name: 'NuiBadge', render: () => h(NuiBadge, { count: 120, tone: 'error' }) },
+  {
+    name: 'NuiAvatar',
+    render: () => h(NuiAvatar, { src: '/alice.png', name: 'Alice Brown', status: 'online' }),
+  },
+  {
+    name: 'NuiAvatarGroup',
+    render: () =>
+      h(NuiAvatarGroup, { items: [{ name: 'Alice Brown' }, { name: 'Bob Stone' }], max: 1 }),
+  },
   {
     name: 'NuiLink',
     render: () => h(NuiLink, { href: 'https://example.com', external: true }, () => 'Docs'),
@@ -357,6 +368,30 @@ describe('server rendering', () => {
     const dot = await renderMarkup(() => h(NuiBadge, { dot: true, label: 'Online' }));
     expect(dot).toContain('role="img"');
     expect(dot).toContain('aria-label="Online"');
+  });
+
+  it('renders avatars with their image, initials or icon and groups with the overflow count', async () => {
+    const image = await renderMarkup(() =>
+      h(NuiAvatar, { src: '/alice.png', name: 'Alice Brown' }),
+    );
+    expect(image).toContain('<img');
+    expect(image).toContain('alt="Alice Brown"');
+    expect(image).not.toContain('nui-avatar__initials');
+    expect(await renderMarkup(() => h(NuiAvatar, { name: 'Alice Brown' }))).toContain('AB');
+    expect(await renderMarkup(() => h(NuiAvatar, {}))).toContain('lucide-user');
+    const items = await renderMarkup(() =>
+      h(NuiAvatarGroup, { items: [{ name: 'Alice' }, { name: 'Bob' }, { name: 'Cara' }], max: 1 }),
+    );
+    expect(items).toContain('+2');
+    const slotted = await renderMarkup(() =>
+      h(NuiAvatarGroup, { max: 1, size: 'lg' }, () => [
+        h(NuiAvatar, { name: 'Alice' }),
+        h(NuiAvatar, { name: 'Bob' }),
+        h(NuiAvatar, { name: 'Cara' }),
+      ]),
+    );
+    expect(slotted).toContain('+2');
+    expect(slotted.match(/nui-avatar--size-lg/g)).toHaveLength(2);
   });
 
   it('renders lazy default icons on the server', async () => {
