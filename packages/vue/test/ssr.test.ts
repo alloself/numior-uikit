@@ -6,6 +6,7 @@ import {
   NuiBreadcrumbs,
   NuiButton,
   NuiCheckbox,
+  NuiChip,
   NuiCombobox,
   NuiConfigProvider,
   NuiDialog,
@@ -111,6 +112,11 @@ const renderPopover = () =>
 const scenarios: Scenario[] = [
   { name: 'NuiButton', render: () => h(NuiButton, { loading: true }, () => 'Save') },
   { name: 'NuiIcon', render: () => h(NuiIcon, { alias: 'check' }) },
+  {
+    name: 'NuiChip',
+    render: () =>
+      h(NuiChip, { tone: 'success', removable: true, removeLabel: 'Remove Vue' }, () => 'Vue'),
+  },
   {
     name: 'NuiLink',
     render: () => h(NuiLink, { href: 'https://example.com', external: true }, () => 'Docs'),

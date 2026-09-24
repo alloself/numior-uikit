@@ -1,0 +1,107 @@
+.nui-chip {
+  --_tone: var(--nui-neutral);
+  --_tone-foreground: var(--nui-neutral-foreground);
+  --_tone-soft: var(--nui-neutral-soft);
+  --_tone-soft-foreground: var(--nui-neutral-soft-foreground);
+  --_height: 1.5rem;
+  --_padding: var(--nui-space-2);
+  --_font-size: var(--nui-font-size-xs);
+
+  display: inline-flex;
+  align-items: center;
+  gap: var(--nui-space-1);
+  max-inline-size: 100%;
+  block-size: var(--_height);
+  padding-inline: var(--_padding);
+  border: 1px solid transparent;
+  border-radius: var(--nui-radius-sm);
+  background: var(--_tone-soft);
+  color: var(--_tone-soft-foreground);
+  font-family: var(--nui-font);
+  font-size: var(--_font-size);
+  font-weight: 500;
+  line-height: var(--nui-line-height-tight);
+  white-space: nowrap;
+  transition:
+    background-color var(--nui-duration-fast) var(--nui-easing),
+    border-color var(--nui-duration-fast) var(--nui-easing),
+    color var(--nui-duration-fast) var(--nui-easing);
+}
+.nui-chip--size-sm {
+  --_height: 1.25rem;
+  --_padding: var(--nui-space-1);
+}
+.nui-chip--tone-primary {
+  --_tone: var(--nui-primary);
+  --_tone-foreground: var(--nui-primary-foreground);
+  --_tone-soft: var(--nui-primary-soft);
+  --_tone-soft-foreground: var(--nui-primary-soft-foreground);
+}
+.nui-chip--tone-secondary {
+  --_tone: var(--nui-secondary);
+  --_tone-foreground: var(--nui-secondary-foreground);
+  --_tone-soft: var(--nui-secondary-soft);
+  --_tone-soft-foreground: var(--nui-secondary-soft-foreground);
+}
+.nui-chip--tone-success {
+  --_tone: var(--nui-success);
+  --_tone-foreground: var(--nui-success-foreground);
+  --_tone-soft: var(--nui-success-soft);
+  --_tone-soft-foreground: var(--nui-success-soft-foreground);
+}
+.nui-chip--tone-warning {
+  --_tone: var(--nui-warning);
+  --_tone-foreground: var(--nui-warning-foreground);
+  --_tone-soft: var(--nui-warning-soft);
+  --_tone-soft-foreground: var(--nui-warning-soft-foreground);
+}
+.nui-chip--tone-error {
+  --_tone: var(--nui-error);
+  --_tone-foreground: var(--nui-error-foreground);
+  --_tone-soft: var(--nui-error-soft);
+  --_tone-soft-foreground: var(--nui-error-soft-foreground);
+}
+.nui-chip--tone-info {
+  --_tone: var(--nui-info);
+  --_tone-foreground: var(--nui-info-foreground);
+  --_tone-soft: var(--nui-info-soft);
+  --_tone-soft-foreground: var(--nui-info-soft-foreground);
+}
+.nui-chip--variant-outline {
+  border-color: color-mix(in oklab, var(--_tone) 50%, var(--nui-border));
+  background: transparent;
+}
+.nui-chip--variant-solid {
+  background: var(--_tone);
+  color: var(--_tone-foreground);
+}
+.nui-chip--removable {
+  padding-inline-end: 0;
+}
+.nui-chip--disabled {
+  opacity: var(--nui-disabled-opacity);
+}
+.nui-chip__icon {
+  inline-size: 1em;
+  block-size: 1em;
+}
+.nui-chip__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.nui-chip__remove {
+  --_height: 1.5rem;
+
+  border-radius: var(--nui-radius-sm);
+  color: inherit;
+  font-size: 0.8rem;
+}
+.nui-chip--size-sm .nui-chip__remove {
+  --_height: 1.25rem;
+
+  font-size: 0.7rem;
+}
+.nui-chip--variant-solid .nui-chip__remove:hover:not(:disabled) {
+  background: color-mix(in oklab, var(--_tone), var(--nui-text) 16%);
+  color: inherit;
+}

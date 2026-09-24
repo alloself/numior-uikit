@@ -69,8 +69,9 @@ const search = async (query: string) => {
   selection, the label is restored on blur.
 - `customValue` maps text to a value: then Enter without an active option, or blur, adds the
   typed text (`(text) => text` for string models).
-- In `multiple`, selected values are shown as chips in selection order; the chip button and
-  Backspace in an empty field remove, Enter adds and keeps the list open.
+- In `multiple`, selected values are shown as `NuiChip`s in selection order; the chip button
+  and Backspace in an empty field remove, Enter adds and keeps the list open. A click anywhere
+  in the field focuses the input and opens the list.
 - Debounce and caching stay with the application: `search` fires on every input.
 
 ## Accessibility
@@ -106,5 +107,5 @@ lengthen the Tab path.
 Event `search(query)`. Plus `id`, `size`, `disabled`, `required`, `invalid`; slot
 `option="{ option, selected, active }"`; `focus()` through a ref. Block `nui-combobox`
 (modifiers `--size-*`, `--open`, `--multiple`, `--invalid`, `--disabled`; elements `__field`,
-`__input`, `__chip`, `__chip-label`, `__chip-remove`, `__clear`, `__toggle`, `__chevron`,
-`__listbox`) on top of the shared `nui-listbox`.
+`__input`, `__chip` (a `NuiChip`), `__clear`, `__toggle`, `__chevron`, `__listbox`) on top of
+the shared `nui-listbox`.

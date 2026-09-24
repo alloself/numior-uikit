@@ -28,7 +28,8 @@ status: accepted
 - `NuiCombobox`: `<input role="combobox" aria-autocomplete="list">` с `aria-activedescendant`
   (виртуальный режим примитива), встроенный фильтр по подписи (`filter` заменяет или
   отключает), `search` на каждый ввод без дебаунса, `loading`/пустое состояние, чипы в
-  порядке выбора в `multiple`, Backspace удаляет последний. Свои значения — через
+  порядке выбора в `multiple` (отдельный `NuiChip` с `removable`), Backspace удаляет
+  последний, клик по полю фокусирует ввод и открывает список. Свои значения — через
   `customValue: (text) => T`, а не boolean: строковую модель нельзя вывести из `T` без
   приведения типов. Список — `popover="manual"`: текстовое поле не может быть invoker'ом
   автопопапа, поэтому закрытие следует за фокусом (`focusout` корня), а `pointerdown` по
@@ -37,6 +38,8 @@ status: accepted
   MUI, страница всегда зажата в `1…pageCount` (в том числе при смене `pageSize`), `href(page)`
   переключает кнопки на `NuiLink` (роутер через `as`), размер страницы выбирается `NuiSelect`,
   компактный режим — `@container (max-width: 28rem)` на самом компоненте.
+- `NuiSelect` держит кнопку очистки абсолютно позиционированной рядом с шевроном:
+  отступ считается на корне (`--_clear-inset`), а не на кнопке, у которой свои `--_padding`.
 - Props с типом «функция или `false`» (`filter`) обязаны иметь destructure-дефолт
   `= undefined`: иначе Vue приводит отсутствующий проп к `false` из-за `Boolean` в runtime-типе.
 
@@ -46,7 +49,6 @@ status: accepted
   по-разному в браузерах.
 - `popover="auto"` для combobox с программным показом: каждый клик в поле закрывал список
   light dismiss'ом.
-- Чипы отдельным `NuiChip`: компонент появится в волне данных; пока чип — элемент combobox.
 - Boolean `allowCustomValue`: невозможно типизировать без `as`.
 
 ## Consequences

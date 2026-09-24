@@ -31,6 +31,7 @@ export default defineConfig({
               { text: 'Переключатель', link: '/components/switch' },
               { text: 'Выбор из списка', link: '/components/select' },
               { text: 'Комбобокс', link: '/components/combobox' },
+              { text: 'Чип', link: '/components/chip' },
             ],
           },
           {
@@ -90,6 +91,7 @@ export default defineConfig({
               { text: 'Switch', link: '/en/components/switch' },
               { text: 'Select', link: '/en/components/select' },
               { text: 'Combobox', link: '/en/components/combobox' },
+              { text: 'Chip', link: '/en/components/chip' },
             ],
           },
           {

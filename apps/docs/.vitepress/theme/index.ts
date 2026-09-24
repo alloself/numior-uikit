@@ -6,6 +6,7 @@ import {
   NuiBreadcrumbs,
   NuiButton,
   NuiCheckbox,
+  NuiChip,
   NuiCombobox,
   NuiConfigProvider,
   NuiDialog,
@@ -89,6 +90,7 @@ export default {
     app.component('NuiBreadcrumbs', NuiBreadcrumbs);
     app.component('NuiSelect', NuiSelect);
     app.component('NuiCombobox', NuiCombobox);
+    app.component('NuiChip', NuiChip);
     app.component('NuiPagination', NuiPagination);
   },
 } satisfies Theme;

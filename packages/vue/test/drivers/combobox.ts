@@ -112,7 +112,7 @@ export class ComboboxDriver extends ComponentDriver {
   }
 
   get chips(): string[] {
-    return this.wrapper.findAll('.nui-combobox__chip-label').map((chip) => chip.text());
+    return this.wrapper.findAll('.nui-chip__label').map((chip) => chip.text());
   }
 
   get hiddenValues(): string[] {
@@ -159,6 +159,11 @@ export class ComboboxDriver extends ComponentDriver {
     await this.option(label).trigger('pointermove');
   }
 
+  async clickField(): Promise<void> {
+    await this.wrapper.find('.nui-combobox__field').trigger('click');
+    await nextTick();
+  }
+
   async clickToggle(): Promise<void> {
     await this.wrapper.find('.nui-combobox__toggle').trigger('click');
     await nextTick();
@@ -171,12 +176,12 @@ export class ComboboxDriver extends ComponentDriver {
 
   async removeChip(label: string): Promise<void> {
     const chip = this.wrapper
-      .findAll('.nui-combobox__chip')
-      .find((entry) => entry.find('.nui-combobox__chip-label').text() === label);
+      .findAll('.nui-chip')
+      .find((entry) => entry.find('.nui-chip__label').text() === label);
     if (!chip) {
       throw new Error(`No chip labelled ${label}`);
     }
-    await chip.find('.nui-combobox__chip-remove').trigger('click');
+    await chip.find('.nui-chip__remove').trigger('click');
     await nextTick();
   }
 

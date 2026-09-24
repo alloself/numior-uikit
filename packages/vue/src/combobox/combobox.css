@@ -74,27 +74,7 @@
   cursor: not-allowed;
 }
 .nui-combobox__chip {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--nui-space-1);
-  max-inline-size: 100%;
-  block-size: 1.5rem;
-  padding-inline-start: var(--nui-space-2);
-  border-radius: var(--nui-radius-sm);
-  background: var(--nui-neutral-soft);
-  color: var(--nui-neutral-soft-foreground);
-  font-size: var(--nui-font-size-xs);
-}
-.nui-combobox__chip-label {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.nui-combobox__chip-remove {
-  --_height: 1.5rem;
-
-  min-block-size: 1.5rem;
-  border-radius: var(--nui-radius-sm);
+  flex: none;
 }
 .nui-combobox__clear,
 .nui-combobox__toggle {

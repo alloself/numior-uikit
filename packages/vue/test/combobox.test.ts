@@ -45,6 +45,11 @@ describe('NuiCombobox', () => {
   it('shows loading and empty states and clears the active option when nothing matches', async () => {
     const combobox = ComboboxDriver.mount();
     await combobox.receive({ loading: true });
+    await combobox.clickField();
+    expect(combobox.expanded).toBe(true);
+    expect(combobox.inputFocused).toBe(true);
+    await combobox.clickToggle();
+    expect(combobox.expanded).toBe(false);
     await combobox.clickToggle();
     expect(combobox.expanded).toBe(true);
     expect(combobox.statusText).toBe('Loading');

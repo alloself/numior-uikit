@@ -13,23 +13,19 @@
     v-bind="split.rootAttrs()"
     @focusout="onFocusout"
   >
-    <div ref="field" class="nui-combobox__field">
+    <div ref="field" class="nui-combobox__field" @click="onFieldClick">
       <template v-if="multiple">
-        <span v-for="chip in chips" :key="chip.key" class="nui-combobox__chip">
-          <span class="nui-combobox__chip-label">{{ chip.label }}</span>
-          <NuiButton
-            variant="ghost"
-            tone="neutral"
-            size="sm"
-            class="nui-combobox__chip-remove"
-            :aria-label="`${removeLabel} ${chip.label}`"
-            tabindex="-1"
-            :disabled="isDisabled"
-            @click="toggleSelection(chip)"
-          >
-            <NuiIcon alias="x" />
-          </NuiButton>
-        </span>
+        <NuiChip
+          v-for="chip in chips"
+          :key="chip.key"
+          removable
+          :remove-label="`${removeLabel} ${chip.label}`"
+          :disabled="isDisabled"
+          class="nui-combobox__chip"
+          @remove="toggleSelection(chip)"
+        >
+          {{ chip.label }}
+        </NuiChip>
       </template>
       <input
         ref="input"
@@ -114,6 +110,7 @@ import {
   useSplitAttrs,
 } from '@numior/primitives';
 import NuiButton from '../button/NuiButton.vue';
+import NuiChip from '../chip/NuiChip.vue';
 import NuiIcon from '../icon/NuiIcon.vue';
 import NuiListbox from '../listbox/NuiListbox.vue';
 import { optionIndexOf } from '../listbox/listbox.types';
@@ -339,6 +336,17 @@ const KEY_HANDLERS: Record<string, (event: KeyboardEvent) => void> = {
 const onKeydown = (event: KeyboardEvent): void => {
   if (!openFromKey(event)) {
     KEY_HANDLERS[event.key]?.(event);
+  }
+};
+const onFieldClick = (event: MouseEvent): void => {
+  const onButton = event.target instanceof Element && event.target.closest('button') !== null;
+  if (isDisabled.value || onButton) {
+    return;
+  }
+  focusInput();
+  if (!open.value) {
+    state.pending = 'first';
+    open.value = true;
   }
 };
 const onPointermove = (event: PointerEvent): void => {

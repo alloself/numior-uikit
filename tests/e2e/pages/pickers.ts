@@ -75,7 +75,7 @@ export class PickersSection {
   }
 
   chips(input: Locator): Locator {
-    return input.locator(ROOT).locator('.nui-combobox__chip-label');
+    return input.locator(ROOT).locator('.nui-chip__label');
   }
 
   get loadingStatus(): Locator {
