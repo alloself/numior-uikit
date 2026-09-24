@@ -19,6 +19,27 @@ export type { NuiConfigOptions } from './config/nui-config';
 export { DEFAULT_LOCALE, LOCALE_KEY, provideLocale, useLocale } from './locale/locale-context';
 export { TODAY_KEY, localToday, provideToday, useToday } from './date/today';
 export type { TodayProvider } from './date/today';
+export {
+  formatNumber,
+  isPartialNumber,
+  numberSymbols,
+  parseNumber,
+  withStepPrecision,
+} from './intl/number-format';
+export type { NumberSymbols } from './intl/number-format';
+export { clampNumber, decimalPlaces, snapToStep, stepNumber } from './intl/number-step';
+export type { NumberBounds, SnapMode } from './intl/number-step';
+export type {
+  DigitEntry,
+  DigitResult,
+  HourCycle,
+  SegmentBounds,
+  TimeDraft,
+  TimeLayout,
+  TimeLayoutOptions,
+  TimeSegment,
+  TimeSegmentType,
+} from './intl/time-segments';
 export { useSplitAttrs } from './attrs/useSplitAttrs';
 export type { AttrRecord, SplitAttrs } from './attrs/useSplitAttrs';
 export { useFloating } from './floating/useFloating';
