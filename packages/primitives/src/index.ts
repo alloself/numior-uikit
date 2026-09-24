@@ -18,6 +18,53 @@ export { createNuiConfig, provideNuiConfig } from './config/nui-config';
 export type { NuiConfigOptions } from './config/nui-config';
 export { DEFAULT_LOCALE, LOCALE_KEY, provideLocale, useLocale } from './locale/locale-context';
 export { applyMask, maskCaret } from './mask/mask';
+export {
+  clampIsoDate,
+  compareIsoDates,
+  formatIsoDate,
+  isIsoDate,
+  isWithin,
+  normalizeRange,
+  parseIsoDate,
+} from './date/iso';
+export type { DateParts, DateRange } from './date/iso';
+export {
+  addDays,
+  addMonthKeys,
+  addMonths,
+  addYears,
+  daysInMonth,
+  differenceInDays,
+  endOfMonth,
+  firstOfMonth,
+  monthKeyOf,
+  startOfMonth,
+} from './date/arithmetic';
+export { endOfWeek, isoWeekOf, startOfWeek, weekdayOf } from './date/week';
+export type { Weekday } from './date/week';
+export {
+  cellMoveFor,
+  cellTargetIndex,
+  gridMoveFor,
+  gridTargetDate,
+  monthGrid,
+  weekNumberOfRow,
+} from './date/grid';
+export type { CellMove, GridMove, MonthGridOptions } from './date/grid';
+export {
+  formatDateLabel,
+  formatDayNumber,
+  formatMonthLabel,
+  monthLabels,
+  weekStartOf,
+  weekStartOfRegion,
+  weekdayLabels,
+} from './date/locale';
+export type { MonthWidth, WeekdayWidth } from './date/locale';
+export { datePatternOf, formatDateText, parseDateText } from './date/text';
+export type { DateTextPart } from './date/text';
+export { joinDateTime, splitDateTime } from './date/datetime';
+export type { DateTimeParts } from './date/datetime';
 export type { MaskResult } from './mask/mask';
 export {
   formatNumber,

@@ -60,6 +60,8 @@ await importBuild('primitives', [
   'useFieldControl',
   'provideIcons',
   'useLocale',
+  'monthGrid',
+  'parseDateText',
   'useFloating',
   'usePopover',
   'useDialog',
