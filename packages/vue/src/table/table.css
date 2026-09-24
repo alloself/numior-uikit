@@ -42,6 +42,9 @@
   overflow: auto;
   outline: none;
 }
+.nui-table--virtual .nui-table__scroller {
+  overflow-anchor: none;
+}
 .nui-table__table {
   inline-size: 100%;
   border-collapse: separate;

@@ -226,6 +226,23 @@ describe('NuiTree', () => {
     expect(tree.activeLabel).toBe('Узел 5');
     tree.unmount();
   });
+
+  it('renders windowed rows instantly on scroll and fades in only rows revealed by expanding', async () => {
+    const tree = TreeDriver.mount({
+      items: manyNodes(2000),
+      props: { virtual: true, height: '160px', itemHeight: 32 },
+    });
+    await tree.setHeight(160);
+    await tree.scrollTo(3200);
+    expect(tree.labels).toContain('Узел 100');
+    expect(tree.labels.some((label) => tree.isRevealing(label))).toBe(false);
+    await tree.clickToggle('Узел 100');
+    expect(tree.isRevealing('Лист 100')).toBe(true);
+    expect(tree.isRevealing('Узел 100')).toBe(false);
+    await tree.advance(50);
+    expect(tree.isRevealing('Лист 100')).toBe(false);
+    tree.unmount();
+  });
 });
 
 describe('tree cascade', () => {

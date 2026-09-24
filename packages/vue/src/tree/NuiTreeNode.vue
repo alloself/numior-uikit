@@ -8,6 +8,7 @@
       'nui-tree__item--disabled': node.item.disabled,
       'nui-tree__item--expanded': node.expanded,
       'nui-tree__item--loading': node.loading,
+      'nui-tree__item--revealing': revealing,
     }"
     role="treeitem"
     :aria-level="node.level"
@@ -73,7 +74,7 @@ import NuiCheckbox from '../checkbox/NuiCheckbox.vue';
 import NuiIcon from '../icon/NuiIcon.vue';
 import type { NuiTreeNodeProps } from './tree.types';
 
-const { node, id, active, selected, selectable, checked, icon, folder, start } =
+const { node, id, active, selected, selectable, checked, icon, folder, start, revealing } =
   defineProps<NuiTreeNodeProps<T>>();
 
 const checkedAttr = computed(() => {

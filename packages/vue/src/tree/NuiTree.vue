@@ -48,6 +48,7 @@
         :icon="iconFor(entry.node)"
         :folder="folderFor(entry.node)"
         :start="entry.start"
+        :revealing="revealing.has(entry.node.key)"
       >
         <template #default="slot"><slot name="item" v-bind="slot" /></template>
       </NuiTreeNode>
@@ -56,7 +57,7 @@
 </template>
 
 <script setup lang="ts" generic="T">
-import { computed, onMounted, ref, shallowReactive, useTemplateRef } from 'vue';
+import { computed, onMounted, ref, shallowReactive, useTemplateRef, watch } from 'vue';
 import { useControlId, useVirtualList, type IconAlias } from '@numior/primitives';
 import { useOptionSelection } from '../shared/use-option-selection';
 import NuiTreeNode from './NuiTreeNode.vue';
@@ -70,6 +71,14 @@ interface RenderedNode {
   readonly index: number;
   readonly start: number | undefined;
 }
+
+const afterPaint = (callback: () => void): void => {
+  if (typeof requestAnimationFrame === 'undefined') {
+    callback();
+    return;
+  }
+  requestAnimationFrame(() => requestAnimationFrame(callback));
+};
 
 const {
   id,
@@ -110,6 +119,7 @@ const { keyOf, selectedKeys, selectedValues, toggle } = useOptionSelection<T>({
 const expandedKeys = computed(() => new Set(expanded.value.map(keyOf)));
 const checkedKeys = computed(() => new Set(checked.value.map(keyOf)));
 const pending = shallowReactive(new Set<string>());
+const revealing = shallowReactive(new Set<string>());
 const visible = computed(() => flattenTree(items, keyOf, expandedKeys.value, pending));
 const activeKey = ref<string>();
 const activeIndex = computed(() => visible.value.findIndex((node) => node.key === activeKey.value));
@@ -168,6 +178,23 @@ const setActive = (index: number): void => {
 };
 const isRtl = (): boolean => root.value?.closest('[dir]')?.getAttribute('dir') === 'rtl';
 
+const revealAdded = (added: readonly string[]): void => {
+  for (const key of added) {
+    revealing.add(key);
+  }
+  afterPaint(() => {
+    for (const key of added) {
+      revealing.delete(key);
+    }
+  });
+};
+watch(visible, (next, previous) => {
+  if (!virtual) {
+    return;
+  }
+  const before = new Set(previous.map((node) => node.key));
+  revealAdded(next.flatMap((node) => (before.has(node.key) ? [] : [node.key])));
+});
 const expandItems = (targets: readonly TreeNode<T>[]): void => {
   const fresh = targets.filter((node) => node.hasChildren && !node.expanded);
   if (fresh.length === 0) {

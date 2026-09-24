@@ -52,4 +52,5 @@ export interface NuiTreeNodeProps<T> {
   icon?: IconAlias | undefined;
   folder: boolean;
   start?: number | undefined;
+  revealing?: boolean | undefined;
 }

@@ -45,7 +45,7 @@
   pointer-events: none;
 }
 @starting-style {
-  .nui-tree--virtual .nui-tree__item {
+  .nui-tree--virtual .nui-tree__item--revealing {
     opacity: 0;
   }
 }
@@ -56,6 +56,9 @@
   min-block-size: 0;
   padding-inline: calc(var(--nui-space-2) + var(--_indent) * (var(--_level) - 1)) var(--nui-space-2);
   overflow: hidden;
+}
+.nui-tree--virtual {
+  overflow-anchor: none;
 }
 .nui-tree--virtual .nui-tree__item {
   position: absolute;

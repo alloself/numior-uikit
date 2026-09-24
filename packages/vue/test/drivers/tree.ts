@@ -173,6 +173,10 @@ export class TreeDriver extends ComponentDriver {
     return this.node(label).find(`.nui-tree__${part}`).exists();
   }
 
+  isRevealing(label: string): boolean {
+    return this.node(label).classes().includes('nui-tree__item--revealing');
+  }
+
   async iconOf(label: string): Promise<string | undefined> {
     await flushPromises();
     const node = this.node(label);
