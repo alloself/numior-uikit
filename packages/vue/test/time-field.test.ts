@@ -97,6 +97,20 @@ describe('NuiTimeField', () => {
     field.unmount();
   });
 
+  it('focuses the first empty segment, or the hours, when the field itself is clicked', async () => {
+    const filled = TimeFieldDriver.mount({ locale: 'de-DE', modelValue: '13:05' });
+    await filled.clickField();
+    expect(filled.focusedSegment).toBe(0);
+    filled.unmount();
+    const partial = TimeFieldDriver.mount({ locale: 'de-DE' });
+    await partial.focusSegment(0);
+    await partial.typeText('10');
+    await partial.focusOutside();
+    await partial.clickField();
+    expect(partial.focusedSegment).toBe(1);
+    partial.unmount();
+  });
+
   it('shifts the whole time by the step with PageUp and PageDown inside the bounds', async () => {
     const field = TimeFieldDriver.mount({
       locale: 'de-DE',

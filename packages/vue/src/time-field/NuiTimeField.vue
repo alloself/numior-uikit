@@ -12,6 +12,7 @@
       },
     ]"
     v-bind="split.rootAttrs()"
+    @pointerdown="onRootPointerdown"
   >
     <div
       ref="group"
@@ -230,6 +231,25 @@ const focusHour = (): void => {
   if (hour instanceof HTMLElement) {
     navigation.setActive(hour);
   }
+};
+const focusFromClick = (): void => {
+  const empty = navigation
+    .items()
+    .find((item) => item instanceof HTMLInputElement && item.value === '');
+  if (empty) {
+    navigation.setActive(empty);
+  } else {
+    focusHour();
+  }
+};
+const onRootPointerdown = (event: PointerEvent): void => {
+  const target = event.target;
+  const interactive = '.nui-time-field__segment, .nui-time-field__clock, [role="listbox"]';
+  if (isDisabled.value || !(target instanceof Element) || target.closest(interactive)) {
+    return;
+  }
+  event.preventDefault();
+  focusFromClick();
 };
 const hasNextSegment = (): boolean => {
   const items = navigation.items();

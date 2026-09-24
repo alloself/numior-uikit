@@ -137,6 +137,13 @@ export class TimeFieldDriver extends ComponentDriver {
     return hidden.exists() ? hidden.element.value : undefined;
   }
 
+  async clickField(): Promise<void> {
+    this.wrapper
+      .find('.nui-time-field')
+      .element.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, cancelable: true }));
+    await nextTick();
+  }
+
   async focusSegment(index: number): Promise<void> {
     this.segments[index]?.element.focus();
     await nextTick();
