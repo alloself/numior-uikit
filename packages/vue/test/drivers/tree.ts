@@ -124,7 +124,7 @@ export class TreeDriver extends ComponentDriver {
   }
 
   private get nodes(): DOMWrapper<HTMLElement>[] {
-    return this.wrapper.findAll<HTMLElement>('[role="treeitem"]');
+    return this.wrapper.findAll<HTMLElement>('[role="treeitem"]:not(.nui-tree__item--leaving)');
   }
 
   get labels(): string[] {
@@ -175,7 +175,12 @@ export class TreeDriver extends ComponentDriver {
 
   async iconOf(label: string): Promise<string | undefined> {
     await flushPromises();
-    const glyph = this.node(label).find('.nui-tree__icon svg');
+    const node = this.node(label);
+    const expanded = node.classes().includes('nui-tree__item--expanded');
+    const pair = node.find(
+      expanded ? '.nui-tree__glyph--open svg' : '.nui-tree__glyph--closed svg',
+    );
+    const glyph = pair.exists() ? pair : node.find('.nui-tree__icon svg');
     return glyph.exists()
       ? glyph
           .classes()

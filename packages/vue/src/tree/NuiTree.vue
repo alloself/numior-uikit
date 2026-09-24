@@ -23,7 +23,19 @@
     @click="onClick"
     @dblclick="onDblclick"
   >
-    <div class="nui-tree__list" :style="listStyle">
+    <TransitionGroup
+      tag="div"
+      class="nui-tree__list"
+      :style="listStyle"
+      :css="!virtual"
+      enter-from-class="nui-tree__item--folded"
+      enter-active-class="nui-tree__item--entering"
+      enter-to-class="nui-tree__item--unfolded"
+      leave-from-class="nui-tree__item--unfolded"
+      leave-active-class="nui-tree__item--leaving"
+      leave-to-class="nui-tree__item--folded"
+      move-class="nui-tree__item--moving"
+    >
       <NuiTreeNode
         v-for="entry in rendered"
         :id="nodeId(entry.node.key)"
@@ -39,7 +51,7 @@
       >
         <template #default="slot"><slot name="item" v-bind="slot" /></template>
       </NuiTreeNode>
-    </div>
+    </TransitionGroup>
   </div>
 </template>
 

@@ -4,9 +4,10 @@
 `disabled`, `children`, `lazy`): expansion lives in `v-model:expanded`, selection in
 `v-model` (`selectable` is `single`, `multiple` or `false`) and cascading checkboxes in
 `v-model:checked` with `checkable`. A `lazy` node without `children` emits `load` when
-expanded and spins until the children arrive. The `folder`/`file` icons are picked
-automatically and stay put on expansion, only the chevron shows the state (`icons="false"`
-or `icon: false` on a node turns them off). `virtual`
+expanded and spins until the children arrive. Child rows unfold and fold by height over
+`--nui-duration-normal` together with the chevron rotation; the `folder`/`folder-open`/`file`
+icons are picked automatically and swap instantly without an appear animation
+(`icons="false"` or `icon: false` on a node turns them off). `virtual`
 with `height` windows long trees on the `useVirtualList` primitive.
 
 <script setup>

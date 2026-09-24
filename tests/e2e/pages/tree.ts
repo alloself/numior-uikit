@@ -49,7 +49,7 @@ export class TreeSection {
 
   item(tree: Locator, label: string): Locator {
     const escaped = label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    return tree.locator('[role="treeitem"]', {
+    return tree.locator('[role="treeitem"]:not(.nui-tree__item--leaving)', {
       has: tree.page().locator('.nui-tree__label', { hasText: new RegExp(`^${escaped}$`) }),
     });
   }
@@ -79,7 +79,7 @@ export class TreeSection {
   }
 
   renderedCount(tree: Locator): Promise<number> {
-    return tree.getByRole('treeitem').count();
+    return tree.locator('[role="treeitem"]:not(.nui-tree__item--leaving)').count();
   }
 
   async readOutput(): Promise<TreeOutput> {
