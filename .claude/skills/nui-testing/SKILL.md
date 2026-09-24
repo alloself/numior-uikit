@@ -115,6 +115,10 @@ that the label `for` matches the control id and that values render on the server
   from the page object (`TableSection.dragBetween`/`dragBy`); in jsdom the drivers dispatch
   `PointerEvent`s on the handle and `pointermove`/`pointerup` on `window`, with
   `getBoundingClientRect` defined per cell or row (`TableDriver.layoutHeaders`/`layoutRows`).
+  Mid-drag state (ghost, drop line) is asserted through the `whileDragging` callback of
+  `dragBetween` in e2e and through `grabHeader`/`grabRow` + `ghostText` + `dropAt` in jsdom.
+  Hover-only affordances are checked with computed `opacity`, since Playwright treats
+  `opacity: 0` elements as visible.
 - Measurements taken synchronously in `onMounted` (the table's natural column widths) happen
   before a driver can touch elements, so stub the prototype before mounting through
   `TopLayerStubs.define(HTMLTableCellElement.prototype, 'getBoundingClientRect', …)`
