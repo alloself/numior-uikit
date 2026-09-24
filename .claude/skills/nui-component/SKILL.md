@@ -73,7 +73,8 @@ const {
   `= undefined`, exactly like tri-state booleans: Vue's Boolean casting turns an absent prop
   into `false` otherwise (`filter` in NuiCombobox).
 - A button whose slot holds only `NuiIcon` squares itself (`nui-button--icon-only`, no
-  horizontal padding); `:icon-only` forces or disables it. It always needs `aria-label`. Close buttons in cards align their glyph with the first text line
+  horizontal padding); `:icon-only` forces or disables it. It always needs `aria-label`.
+  Icon-only buttons skip the press `scale`: on a 16px glyph it reads as the icon jumping. Close buttons in cards align their glyph with the first text line
   (`margin-block-start: calc((font-size * line-height - var(--_height)) / 2)`) and with the
   padding edge (negative `margin-inline-end`).
 - Focus ring: `outline: var(--nui-focus-ring-width) solid var(--nui-focus); outline-offset:
