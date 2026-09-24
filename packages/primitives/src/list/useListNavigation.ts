@@ -1,4 +1,5 @@
 import { computed, ref, toValue, type ComputedRef, type MaybeRefOrGetter, type Ref } from 'vue';
+import { listMoveFor, listTargetIndex, type ListMove, type ListOrientation } from './moves';
 import {
   emptyTypeahead,
   extendTypeahead,
@@ -7,7 +8,7 @@ import {
   type TypeaheadState,
 } from './typeahead';
 
-export type ListOrientation = 'vertical' | 'horizontal' | 'both';
+export type { ListOrientation } from './moves';
 export type ListFocusMode = 'roving' | 'virtual';
 
 export interface ListNavigationOptions {
@@ -46,8 +47,6 @@ export interface ListNavigation {
   onFocusin(event: FocusEvent): void;
 }
 
-type Move = 'first' | 'last' | 'next' | 'prev' | 'page-next' | 'page-prev';
-
 const isUsable = (element: HTMLElement): boolean =>
   element.getAttribute('aria-disabled') !== 'true' &&
   !element.hasAttribute('disabled') &&
@@ -70,42 +69,6 @@ const defaultText = (element: HTMLElement): string =>
 
 const isRtl = (container: HTMLElement, explicit: boolean | undefined): boolean =>
   explicit ?? container.closest('[dir]')?.getAttribute('dir') === 'rtl';
-
-const horizontalMoves = (rtl: boolean): Record<string, Move> =>
-  rtl ? { ArrowLeft: 'next', ArrowRight: 'prev' } : { ArrowRight: 'next', ArrowLeft: 'prev' };
-
-const movesFor = (orientation: ListOrientation, rtl: boolean): Record<string, Move> => ({
-  ...(orientation === 'horizontal' ? {} : { ArrowDown: 'next', ArrowUp: 'prev' }),
-  ...(orientation === 'vertical' ? {} : horizontalMoves(rtl)),
-  Home: 'first',
-  End: 'last',
-  PageDown: 'page-next',
-  PageUp: 'page-prev',
-});
-
-const clamp = (value: number, last: number): number => Math.min(last, Math.max(0, value));
-
-const wrapIndex = (value: number, length: number, loop: boolean): number =>
-  loop ? (value + length) % length : clamp(value, length - 1);
-
-const targetIndex = (
-  move: Move,
-  current: number,
-  length: number,
-  loop: boolean,
-  page: number,
-): number => {
-  const last = length - 1;
-  const targets: Record<Move, number> = {
-    first: 0,
-    last,
-    next: current < 0 ? 0 : wrapIndex(current + 1, length, loop),
-    prev: current < 0 ? last : wrapIndex(current - 1, length, loop),
-    'page-next': clamp(Math.max(0, current) + page, last),
-    'page-prev': Math.max(0, current - page),
-  };
-  return targets[move];
-};
 
 const applyTabStop = (
   previous: HTMLElement | null,
@@ -208,12 +171,12 @@ export const useListNavigation = (
     options.onActiveChange?.(element);
   };
 
-  const move = (kind: Move): void => {
+  const move = (kind: ListMove): void => {
     const list = items();
     if (list.length === 0) {
       return;
     }
-    const index = targetIndex(
+    const index = listTargetIndex(
       kind,
       currentIndex(list),
       list.length,
@@ -253,7 +216,7 @@ export const useListNavigation = (
       return;
     }
     const orientation = toValue(options.orientation) ?? 'vertical';
-    const kind = movesFor(orientation, isRtl(root, toValue(options.rtl)))[event.key];
+    const kind = listMoveFor(event.key, orientation, isRtl(root, toValue(options.rtl)));
     if (kind) {
       event.preventDefault();
       move(kind);

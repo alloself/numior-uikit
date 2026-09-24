@@ -52,6 +52,24 @@ export type {
   ListOrientation,
   SetActiveOptions,
 } from './list/useListNavigation';
+export { listMoveFor, listTargetIndex } from './list/moves';
+export type { ListMove } from './list/moves';
+export {
+  emptyTypeahead,
+  extendTypeahead,
+  isTypeaheadActive,
+  matchTypeahead,
+} from './list/typeahead';
+export type { TypeaheadState } from './list/typeahead';
+export { useVirtualList } from './virtual/useVirtualList';
+export type {
+  VirtualAlign,
+  VirtualItem,
+  VirtualList,
+  VirtualListOptions,
+  VirtualRange,
+  VirtualScrollOptions,
+} from './virtual/useVirtualList';
 export { useDelayedOpen } from './timing/useDelayedOpen';
 export type { DelayedOpen, DelayedOpenOptions } from './timing/useDelayedOpen';
 export { createToastStore } from './toast/toast-store';
