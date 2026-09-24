@@ -4,7 +4,9 @@
 `name`, а без имени — иконку `user`. `size` (`sm`…`xl`) и `shape` (`circle`, `square`) задают
 геометрию, `status` рисует точку состояния с подписью, слот `badge` кладёт в угол
 [бейдж](/components/badge). `NuiAvatarGroup` накладывает аватары друг на друга, сворачивает
-лишние в «+N» и раздаёт детям общие `size` и `shape`.
+лишние в «+N» и раздаёт детям общие `size` и `shape`. Аватары в группе и точка статуса
+обведены кольцом цвета `--nui-ring`: это третий цвет, отличный и от поверхности, и от
+приглушённой карточки, поэтому перекрытие читается на любом фоне.
 
 <div class="vp-raw nui-demo" data-nui-theme="light">
   <NuiAvatar src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%234f46e5'/%3E%3Ccircle cx='32' cy='24' r='11' fill='%23fff'/%3E%3Cellipse cx='32' cy='54' rx='20' ry='14' fill='%23fff'/%3E%3C/svg%3E" name="Анна Смирнова" status="online" status-label="В сети" />

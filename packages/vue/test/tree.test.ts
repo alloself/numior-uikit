@@ -37,7 +37,7 @@ describe('NuiTree', () => {
     expect(tree.nodeId('src')).toBe('files-node-src');
     expect(tree.hasPart('src', 'chevron')).toBe(true);
     expect(tree.hasPart('README.md', 'chevron')).toBe(false);
-    expect(await tree.iconOf('src')).toBe('folder-open');
+    expect(await tree.iconOf('src')).toBe('folder');
     expect(await tree.iconOf('components')).toBe('folder');
     expect(await tree.iconOf('README.md')).toBe('file');
     tree.unmount();

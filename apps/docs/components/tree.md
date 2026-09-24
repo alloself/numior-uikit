@@ -4,7 +4,8 @@
 `disabled`, `children`, `lazy`): раскрытие в `v-model:expanded`, выбор в `v-model` (`selectable`
 — `single`, `multiple` или `false`), чекбоксы с каскадом в `v-model:checked` при `checkable`.
 Узел с `lazy` без `children` при раскрытии эмитит `load` и крутит спиннер, пока дети не
-придут. Иконки `folder`/`folder-open`/`file` подставляются сами (`icons="false"` или
+придут. Иконки `folder`/`file` подставляются сами и не меняются при раскрытии, состояние
+показывает только шеврон (`icons="false"` или
 `icon: false` у узла отключают). `virtual` с `height` включает виртуализацию длинных деревьев
 на примитиве `useVirtualList`.
 

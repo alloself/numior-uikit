@@ -64,7 +64,8 @@ reachable by Tab as they are. In the `selectable` mode items with a `value` get
 Enter and Space select (toggle in `multiple`), and so does a click. An item without a `value`
 inside a selectable list stays a plain `li`, and `href`/`@click` of an item with a `value`
 are ignored: selection and navigation are not meant to mix. Object values are compared
-through `getKey`.
+through `getKey`. A selected item gets the `--nui-primary-soft` background while its title,
+icons and check take `--nui-primary-soft-foreground`.
 
 ## Accessibility
 

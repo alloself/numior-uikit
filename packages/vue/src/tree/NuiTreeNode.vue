@@ -42,10 +42,7 @@
         aria-hidden="true"
       />
     </span>
-    <span v-if="folder" class="nui-tree__icon nui-tree__icon--folder" aria-hidden="true">
-      <NuiIcon alias="folder" class="nui-tree__glyph nui-tree__glyph--closed" />
-      <NuiIcon alias="folder-open" class="nui-tree__glyph nui-tree__glyph--open" />
-    </span>
+    <NuiIcon v-if="folder" alias="folder" class="nui-tree__icon" />
     <NuiIcon v-else-if="icon" :alias="icon" class="nui-tree__icon" />
     <span class="nui-tree__text">
       <slot

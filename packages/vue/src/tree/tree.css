@@ -112,22 +112,6 @@
   block-size: 1rem;
   color: var(--nui-text-muted);
 }
-.nui-tree__icon--folder {
-  display: inline-grid;
-}
-.nui-tree__glyph {
-  grid-area: 1 / 1;
-  inline-size: 100%;
-  block-size: 100%;
-  transition: opacity var(--nui-duration-fast) var(--nui-easing);
-}
-.nui-tree__glyph--open,
-.nui-tree__item--expanded .nui-tree__glyph--closed {
-  opacity: 0;
-}
-.nui-tree__item--expanded .nui-tree__glyph--open {
-  opacity: 1;
-}
 .nui-tree__text {
   display: flex;
   align-items: baseline;
