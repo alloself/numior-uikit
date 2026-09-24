@@ -29,6 +29,27 @@ export {
 export type { NumberSymbols } from './intl/number-format';
 export { clampNumber, decimalPlaces, snapToStep, stepNumber } from './intl/number-step';
 export type { NumberBounds, SnapMode } from './intl/number-step';
+export {
+  clampTime,
+  compareTime,
+  formatTimeLabel,
+  formatTimeModel,
+  parseTime,
+  shiftTime,
+  timeOptions,
+} from './intl/time-model';
+export type { TimeOptionsInput, TimeValue } from './intl/time-model';
+export {
+  draftToTime,
+  enterDigit,
+  formatSegment,
+  resolveHourCycle,
+  segmentBounds,
+  segmentLabels,
+  stepSegment,
+  timeLayout,
+  timeToDraft,
+} from './intl/time-segments';
 export type {
   DigitEntry,
   DigitResult,
