@@ -1,7 +1,8 @@
 import { flushPromises, mount, type VueWrapper } from '@vue/test-utils';
 import { vi } from 'vitest';
 import { h } from 'vue';
-import { NuiConfigProvider, NuiIcon, type IconRegistry, type NuiIconProps } from '../../src';
+import { NuiIcon, type IconRegistry, type NuiIconProps } from '../../src';
+import { configScope } from '../support/config-scope';
 import { ComponentDriver } from './component';
 
 export interface IconMountOptions {
@@ -28,10 +29,7 @@ export class IconDriver extends ComponentDriver {
     { icons, attrs = {}, expectGlyph = true }: IconMountOptions = {},
   ) {
     const wrapper: VueWrapper = icons
-      ? mount(NuiConfigProvider, {
-          props: { icons },
-          slots: { default: () => h(NuiIcon, { ...props, ...attrs }) },
-        })
+      ? mount(configScope({ icons }, () => h(NuiIcon, { ...props, ...attrs })))
       : mount(NuiIcon, { props, attrs });
     return new IconDriver(wrapper, expectGlyph);
   }

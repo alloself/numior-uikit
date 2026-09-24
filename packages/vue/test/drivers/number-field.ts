@@ -1,12 +1,7 @@
 import { mount, type DOMWrapper, type VueWrapper } from '@vue/test-utils';
 import { defineComponent, h, nextTick, ref, type Ref } from 'vue';
-import {
-  NuiConfigProvider,
-  NuiField,
-  NuiNumberField,
-  type NuiFieldProps,
-  type NuiNumberFieldProps,
-} from '../../src';
+import { NuiField, NuiNumberField, type NuiFieldProps, type NuiNumberFieldProps } from '../../src';
+import { configScope } from '../support/config-scope';
 import { ComponentDriver } from './component';
 
 export interface NumberFieldMountOptions {
@@ -52,9 +47,7 @@ export class NumberFieldDriver extends ComponentDriver {
     const Host = defineComponent({
       setup: () => () =>
         h('div', [
-          localeRef.value === undefined
-            ? inField()
-            : h(NuiConfigProvider, { locale: localeRef.value }, inField),
+          h(configScope({ locale: () => localeRef.value }, inField)),
           h('button', { type: 'button', class: 'outside' }, 'Outside'),
         ]),
     });

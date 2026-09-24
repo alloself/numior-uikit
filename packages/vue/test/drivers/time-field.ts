@@ -1,12 +1,7 @@
 import { mount, type DOMWrapper, type VueWrapper } from '@vue/test-utils';
 import { defineComponent, h, nextTick, ref, type Ref } from 'vue';
-import {
-  NuiConfigProvider,
-  NuiField,
-  NuiTimeField,
-  type NuiFieldProps,
-  type NuiTimeFieldProps,
-} from '../../src';
+import { NuiField, NuiTimeField, type NuiFieldProps, type NuiTimeFieldProps } from '../../src';
+import { configScope } from '../support/config-scope';
 import { TopLayerStubs, dismissPopoverNatively, openPopoverNatively } from '../support/top-layer';
 import { ComponentDriver } from './component';
 
@@ -47,9 +42,7 @@ export class TimeFieldDriver extends ComponentDriver {
     const Host = defineComponent({
       setup: () => () =>
         h('div', { dir }, [
-          localeRef.value === undefined
-            ? inField()
-            : h(NuiConfigProvider, { locale: localeRef.value }, inField),
+          h(configScope({ locale: () => localeRef.value }, inField)),
           h('button', { type: 'button', class: 'outside' }, 'Outside'),
         ]),
     });

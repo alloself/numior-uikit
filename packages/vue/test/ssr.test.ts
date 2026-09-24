@@ -14,7 +14,6 @@ import {
   NuiCheckbox,
   NuiChip,
   NuiCombobox,
-  NuiConfigProvider,
   NuiDialog,
   NuiDrawer,
   NuiEmpty,
@@ -47,6 +46,7 @@ import {
   type NuiTabsPanelSlot,
   type NuiTooltipTriggerSlot,
 } from '../src';
+import { configScope } from './support/config-scope';
 import { labelTarget, popoverTarget, renderMarkup } from './support/ssr';
 import { childrenOf, COLUMNS, manyPeople, PEOPLE, TEAM } from './support/rows';
 import { FILES, manyNodes } from './support/tree-items';
@@ -185,7 +185,11 @@ const scenarios: Scenario[] = [
     name: 'NuiLink',
     render: () => h(NuiLink, { href: 'https://example.com', external: true }, () => 'Docs'),
   },
-  { name: 'NuiConfigProvider', render: () => h(NuiConfigProvider, null, () => 'content') },
+  {
+    name: 'provideNuiConfig scope',
+    render: () =>
+      h(configScope({ locale: 'de-DE' }, () => h(NuiNumberField, { modelValue: 1234.5 }))),
+  },
   { name: 'NuiField with NuiInput', render: fieldWithInput },
   { name: 'NuiTextarea', render: () => h(NuiTextarea, { modelValue: 'text', invalid: true }) },
   {

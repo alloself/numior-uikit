@@ -5,8 +5,6 @@ export type { NuiLinkProps, NuiLinkUnderline } from './link/link.types';
 export { default as NuiIcon } from './icon/NuiIcon.vue';
 export type { NuiIconProps } from './icon/icon.types';
 export { defaultIcons } from './icon/default-icons';
-export { default as NuiConfigProvider } from './config/NuiConfigProvider.vue';
-export type { NuiConfigProviderProps } from './config/config.types';
 export { default as NuiField } from './field/NuiField.vue';
 export { default as NuiFieldLabel } from './field/NuiFieldLabel.vue';
 export { default as NuiFieldDescription } from './field/NuiFieldDescription.vue';

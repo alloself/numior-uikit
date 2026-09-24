@@ -18,7 +18,6 @@ import {
   NuiCheckbox,
   NuiChip,
   NuiCombobox,
-  NuiConfigProvider,
   NuiDialog,
   NuiDrawer,
   NuiEmpty,
@@ -71,7 +70,6 @@ export default {
     app.use(createNuiConfig({}));
     app.component('NuiButton', NuiButton);
     app.component('NuiIcon', NuiIcon);
-    app.component('NuiConfigProvider', NuiConfigProvider);
     app.component('NuiField', NuiField);
     app.component('NuiFieldLabel', NuiFieldLabel);
     app.component('NuiFieldDescription', NuiFieldDescription);
