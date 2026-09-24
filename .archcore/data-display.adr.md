@@ -154,6 +154,17 @@ status: accepted
   пагинация и `virtual` взаимоисключающие, пагинация побеждает. Динамические слоты
   `cell-*`/`header-*` пробрасываются через `v-for` по именам слотов без `defineSlots`.
 
+- Одна строка на все списки (2026-09-25). Внутренний блок `NuiRow` (`nui-row`, корень
+  `display: contents`, элементы `__leading`, `__body`, `__title`, `__description`,
+  `__trailing`, `__check`, модификаторы `--nowrap` и `--inline`) рендерит анатомию
+  «иконка · заголовок · описание · хвост · галочка» для `NuiListItem`, `NuiListboxOption`
+  и текста `NuiTreeNode`; контейнеры задают только состояния и цвета через приватные
+  `--_row-icon`, `--_row-muted`, `--_row-check`, `--_row-weight`,
+  `--_row-description-size`. Галочка выбора стоит справа (`margin-inline-start: auto`),
+  чтобы текст не сдвигался под пустой индикатор. Логика выбора и клавиатуры остаётся общей
+  (`useOptionSelection`, `useListNavigation`), а разные контейнеры (`NuiList` на странице,
+  `NuiListbox` в поповере, дерево) — это разные роли и модели данных, не дубли.
+
 ## Alternatives Considered
 
 - Корень карточки как `<a>`/`<button>`: шумное имя ссылки и невалидные вложенные контролы.

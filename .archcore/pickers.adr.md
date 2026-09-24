@@ -43,6 +43,12 @@ status: accepted
 - Props с типом «функция или `false`» (`filter`) обязаны иметь destructure-дефолт
   `= undefined`: иначе Vue приводит отсутствующий проп к `false` из-за `Boolean` в runtime-типе.
 
+- Общая обвязка списка в поповере — `useListboxSurface` (2026-09-25): элемент списка через
+  `useTriggerElement`, `usePopover` (`auto`/`manual`), `useFloating` с `matchWidth`,
+  `fitHeight` и опциональным `maxBlockSize`, `useListNavigation` по `[role="option"]` с
+  покоем на выбранной опции и активация опции под курсором. `NuiSelect`, `NuiCombobox` и
+  `NuiTimeField` держат только свои обработчики клавиш и фокуса.
+
 ## Alternatives Considered
 
 - Нативный `<select>` со стилизованным триггером: список опций не держит тему и выглядит
