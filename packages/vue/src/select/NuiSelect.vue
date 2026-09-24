@@ -52,7 +52,7 @@
       v-bind="control.contentAttrs.value"
       @select="choose"
       @keydown="onListboxKeydown"
-      @pointermove="onPointermove"
+      @pointermove="activateHovered"
       @focusin="onFocusin"
       @focusout="onFocusout"
     >
@@ -72,21 +72,14 @@
 
 <script setup lang="ts" generic="T">
 import { computed, onMounted, ref, useTemplateRef, watch } from 'vue';
-import {
-  useField,
-  useFieldControl,
-  useFloating,
-  useListNavigation,
-  usePopover,
-  useSplitAttrs,
-} from '@numior/primitives';
+import { useField, useFieldControl, useSplitAttrs } from '@numior/primitives';
 import NuiButton from '../button/NuiButton.vue';
 import NuiIcon from '../icon/NuiIcon.vue';
 import NuiListbox from '../listbox/NuiListbox.vue';
 import { optionIndexOf } from '../listbox/listbox.types';
 import type { NuiOption } from '../shared/options';
+import { useListboxSurface } from '../shared/use-listbox-surface';
 import { useOptionSelection } from '../shared/use-option-selection';
-import { useTriggerElement } from '../shared/trigger-ref';
 import type { NuiSelectProps } from './select.types';
 
 defineOptions({ inheritAttrs: false });
@@ -147,24 +140,17 @@ const showClear = computed(() => clearable && selectedValues.value.length > 0 &&
 
 const open = ref(false);
 const triggerElement = useTemplateRef<HTMLButtonElement>('trigger');
-const { trigger: listboxElement, setTrigger: setListbox } = useTriggerElement();
-const control = usePopover(listboxElement, { open, id: listboxId, mode: 'auto' });
-const { floatingStyles } = useFloating(triggerElement, listboxElement, {
-  placement: () => placement,
-  offset: 4,
-  size: { matchWidth: true, fitHeight: true },
-  enabled: open,
-});
-const selectedElement = (): HTMLElement | null => {
-  const found = listboxElement.value?.querySelector('[role="option"][aria-selected="true"]');
-  return found instanceof HTMLElement ? found : null;
-};
-const navigation = useListNavigation(listboxElement, {
-  selector: '[role="option"]',
-  loop: () => loop,
-  typeahead: true,
-  resting: selectedElement,
-});
+const { listboxElement, setListbox, control, floatingStyles, navigation, activateHovered } =
+  useListboxSurface({
+    anchor: triggerElement,
+    open,
+    id: listboxId,
+    mode: 'auto',
+    placement: () => placement,
+    loop: () => loop,
+    typeahead: true,
+    restOnSelected: true,
+  });
 const state = { pending: 'selected', inside: false };
 
 const optionOf = (element: HTMLElement | null): NuiOption<T> | undefined =>
@@ -260,13 +246,6 @@ const onListboxKeydown = (event: KeyboardEvent): void => {
     control.hide();
   } else if (active) {
     choose(active);
-  }
-};
-const onPointermove = (event: PointerEvent): void => {
-  const option =
-    event.target instanceof HTMLElement ? event.target.closest('[role="option"]') : null;
-  if (option instanceof HTMLElement && option !== navigation.activeElement()) {
-    navigation.setActive(option);
   }
 };
 const onFocusin = (event: FocusEvent): void => {

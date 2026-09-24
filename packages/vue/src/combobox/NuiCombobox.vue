@@ -83,7 +83,7 @@
       :loading-label="loadingLabel"
       v-bind="control.contentAttrs.value"
       @select="choose"
-      @pointermove="onPointermove"
+      @pointermove="activateHovered"
       @pointerdown.prevent
     >
       <template #option="slot"><slot name="option" v-bind="slot" /></template>
@@ -102,21 +102,15 @@
 
 <script setup lang="ts" generic="T">
 import { computed, onMounted, ref, useTemplateRef, watch } from 'vue';
-import {
-  useFieldControl,
-  useFloating,
-  useListNavigation,
-  usePopover,
-  useSplitAttrs,
-} from '@numior/primitives';
+import { useFieldControl, useSplitAttrs } from '@numior/primitives';
 import NuiButton from '../button/NuiButton.vue';
 import NuiChip from '../chip/NuiChip.vue';
 import NuiIcon from '../icon/NuiIcon.vue';
 import NuiListbox from '../listbox/NuiListbox.vue';
 import { optionIndexOf } from '../listbox/listbox.types';
 import { filterOptions, flattenOptions, type NuiOption } from '../shared/options';
+import { useListboxSurface } from '../shared/use-listbox-surface';
 import { useOptionSelection } from '../shared/use-option-selection';
-import { useTriggerElement } from '../shared/trigger-ref';
 import type { NuiComboboxProps } from './combobox.types';
 
 defineOptions({ inheritAttrs: false });
@@ -199,20 +193,18 @@ const showClear = computed(() => clearable && selectedValues.value.length > 0 &&
 const open = ref(false);
 const fieldElement = useTemplateRef<HTMLElement>('field');
 const inputElement = useTemplateRef<HTMLInputElement>('input');
-const { trigger: listboxElement, setTrigger: setListbox } = useTriggerElement();
-const control = usePopover(listboxElement, { open, id: listboxId, mode: 'manual' });
-const { floatingStyles } = useFloating(fieldElement, listboxElement, {
-  placement: () => placement,
-  offset: 4,
-  size: { matchWidth: true, fitHeight: true },
-  enabled: open,
-});
-const navigation = useListNavigation(listboxElement, {
-  selector: '[role="option"]',
-  mode: 'virtual',
-  typeahead: false,
-  loop: true,
-});
+const { listboxElement, setListbox, control, floatingStyles, navigation, activateHovered } =
+  useListboxSurface({
+    anchor: fieldElement,
+    open,
+    id: listboxId,
+    mode: 'manual',
+    placement: () => placement,
+    focus: 'virtual',
+    loop: true,
+    typeahead: false,
+    restOnSelected: false,
+  });
 const state = { pending: 'first' };
 
 const focusInput = (): void => inputElement.value?.focus({ preventScroll: true });
@@ -347,13 +339,6 @@ const onFieldClick = (event: MouseEvent): void => {
   if (!open.value) {
     state.pending = 'first';
     open.value = true;
-  }
-};
-const onPointermove = (event: PointerEvent): void => {
-  const option =
-    event.target instanceof HTMLElement ? event.target.closest('[role="option"]') : null;
-  if (option instanceof HTMLElement && option !== navigation.activeElement()) {
-    navigation.setActive(option);
   }
 };
 const onFocusout = (event: FocusEvent): void => {

@@ -76,7 +76,7 @@
       v-bind="control.contentAttrs.value"
       @select="choose"
       @keydown="onListboxKeydown"
-      @pointermove="onPointermove"
+      @pointermove="activateHovered"
       @focusin="onListFocusin"
       @focusout="onListFocusout"
     />
@@ -97,10 +97,8 @@ import {
   timeOptions,
   useField,
   useFieldControl,
-  useFloating,
   useListNavigation,
   useLocale,
-  usePopover,
   useSplitAttrs,
   type TimeSegmentType,
 } from '@numior/primitives';
@@ -109,7 +107,7 @@ import NuiIcon from '../icon/NuiIcon.vue';
 import NuiListbox from '../listbox/NuiListbox.vue';
 import { optionIndexOf } from '../listbox/listbox.types';
 import type { NuiOption } from '../shared/options';
-import { useTriggerElement } from '../shared/trigger-ref';
+import { useListboxSurface } from '../shared/use-listbox-surface';
 import NuiTimeSegment from './NuiTimeSegment.vue';
 import type { NuiTimeFieldProps } from './time-field.types';
 import { useTimeDraft, type TimePeriod } from './use-time-draft';
@@ -294,23 +292,23 @@ const onGroupFocusout = (event: FocusEvent): void => {
 
 const open = ref(false);
 const listboxId = computed(() => `${controlAttrs.value.id}-listbox`);
-const { trigger: listboxElement, setTrigger: setListbox } = useTriggerElement();
-const control = usePopover(listboxElement, { open, id: listboxId, mode: 'auto' });
-const { floatingStyles } = useFloating(rootElement, listboxElement, {
+const {
+  listboxElement,
+  setListbox,
+  control,
+  floatingStyles,
+  navigation: list,
+  activateHovered,
+} = useListboxSurface({
+  anchor: rootElement,
+  open,
+  id: listboxId,
+  mode: 'auto',
   placement: () => placement,
-  offset: 4,
-  size: { matchWidth: true, fitHeight: true, maxBlockSize: 288 },
-  enabled: open,
-});
-const selectedElement = (): HTMLElement | null => {
-  const found = listboxElement.value?.querySelector('[role="option"][aria-selected="true"]');
-  return found instanceof HTMLElement ? found : null;
-};
-const list = useListNavigation(listboxElement, {
-  selector: '[role="option"]',
+  maxBlockSize: 288,
   loop: true,
   typeahead: false,
-  resting: selectedElement,
+  restOnSelected: true,
 });
 const state = { inside: false };
 const suggestions = computed<NuiOption<string>[]>(() =>
@@ -343,13 +341,6 @@ const onListboxKeydown = (event: KeyboardEvent): void => {
   const option = active ? suggestions.value[optionIndexOf(active)] : undefined;
   if (option) {
     choose(option);
-  }
-};
-const onPointermove = (event: PointerEvent): void => {
-  const option =
-    event.target instanceof HTMLElement ? event.target.closest('[role="option"]') : null;
-  if (option instanceof HTMLElement && option !== list.activeElement()) {
-    list.setActive(option);
   }
 };
 const onListFocusin = (event: FocusEvent): void => {
