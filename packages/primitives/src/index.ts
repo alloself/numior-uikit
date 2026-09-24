@@ -70,6 +70,14 @@ export type {
   VirtualRange,
   VirtualScrollOptions,
 } from './virtual/useVirtualList';
+export { useReorder } from './reorder/useReorder';
+export type {
+  Reorder,
+  ReorderAxis,
+  ReorderOptions,
+  ReorderPhase,
+  ReorderState,
+} from './reorder/useReorder';
 export { useDelayedOpen } from './timing/useDelayedOpen';
 export type { DelayedOpen, DelayedOpenOptions } from './timing/useDelayedOpen';
 export { createToastStore } from './toast/toast-store';
