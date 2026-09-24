@@ -26,4 +26,6 @@ export const defaultIcons: IconRegistry = {
   'arrow-up': lazyIcon(() => import('lucide-vue-next/dist/esm/icons/arrow-up.js')),
   'arrow-up-down': lazyIcon(() => import('lucide-vue-next/dist/esm/icons/arrow-up-down.js')),
   grip: lazyIcon(() => import('lucide-vue-next/dist/esm/icons/grip-vertical.js')),
+  plus: lazyIcon(() => import('lucide-vue-next/dist/esm/icons/plus.js')),
+  clock: lazyIcon(() => import('lucide-vue-next/dist/esm/icons/clock.js')),
 };

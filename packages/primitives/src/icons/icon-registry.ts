@@ -36,6 +36,8 @@ export type IconAlias =
   | 'arrow-up'
   | 'arrow-up-down'
   | 'grip'
+  | 'plus'
+  | 'clock'
   | (string & NonNullable<unknown>);
 
 export type IconRegistry = Readonly<Record<string, Component>>;
