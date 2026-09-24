@@ -137,6 +137,14 @@ export type {
   NuiListTag,
   NuiListVariant,
 } from './list/list.types';
+export { default as NuiTree } from './tree/NuiTree.vue';
+export type {
+  NuiTreeItem,
+  NuiTreeItemSlot,
+  NuiTreeProps,
+  NuiTreeSelectable,
+} from './tree/tree.types';
+export type { CheckState } from './tree/cascade';
 export { default as NuiChip } from './chip/NuiChip.vue';
 export type { NuiChipProps, NuiChipSize, NuiChipVariant } from './chip/chip.types';
 export { default as NuiCombobox } from './combobox/NuiCombobox.vue';

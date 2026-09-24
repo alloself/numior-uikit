@@ -37,6 +37,7 @@ import {
   NuiToast,
   NuiToaster,
   NuiTooltip,
+  NuiTree,
   type NuiMenuEntry,
   type NuiMenuTriggerSlot,
   type NuiPopoverTriggerSlot,
@@ -44,6 +45,7 @@ import {
   type NuiTooltipTriggerSlot,
 } from '../src';
 import { labelTarget, popoverTarget, renderMarkup } from './support/ssr';
+import { FILES, manyNodes } from './support/tree-items';
 
 interface Scenario {
   readonly name: string;
@@ -140,6 +142,10 @@ const scenarios: Scenario[] = [
         ],
         variant: 'divided',
       }),
+  },
+  {
+    name: 'NuiTree',
+    render: () => h(NuiTree, { id: 'files', items: FILES, expanded: ['src'], modelValue: 'index' }),
   },
   {
     name: 'NuiCard',
@@ -471,6 +477,24 @@ describe('server rendering', () => {
     const empty = await renderMarkup(() => h(NuiList, { items: [], emptyLabel: 'Nothing' }));
     expect(empty).toContain('nui-empty');
     expect(empty).toContain('Nothing');
+  });
+
+  it('renders a tree flat with levels and one selected node and windows long trees', async () => {
+    const html = await renderMarkup(() =>
+      h(NuiTree, { id: 'files', items: FILES, expanded: ['src'], modelValue: 'index' }),
+    );
+    expect(html).toContain('role="tree"');
+    expect(html).toContain('tabindex="0"');
+    expect(html).toContain('aria-level="2"');
+    expect(html).toContain('id="files-node-src"');
+    expect(html).toContain('aria-expanded="true"');
+    expect(html.match(/aria-selected="true"/g)).toHaveLength(1);
+    expect(html).not.toContain('aria-activedescendant');
+    const windowed = await renderMarkup(() =>
+      h(NuiTree, { items: manyNodes(500), virtual: true, height: '10rem' }),
+    );
+    expect(windowed.match(/role="treeitem"/g)).toHaveLength(20);
+    expect(windowed).toContain('block-size:16000px');
   });
 
   it('renders lazy default icons on the server', async () => {

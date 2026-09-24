@@ -1,0 +1,246 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { applyCheck, checkStateOf } from '../src/tree/cascade';
+import { defaultOptionKey } from '../src/shared/options';
+import { TreeDriver } from './drivers/tree';
+import { FILES, manyNodes, withDocs } from './support/tree-items';
+
+describe('NuiTree', () => {
+  beforeEach(() => vi.useFakeTimers());
+  afterEach(() => vi.useRealTimers());
+
+  it('renders a flat treeview with levels, set sizes, expansion state and deterministic ids', async () => {
+    const tree = TreeDriver.mount({ props: { id: 'files', label: 'Файлы' }, expanded: ['src'] });
+    expect(tree.tree.attributes('role')).toBe('tree');
+    expect(tree.tree.attributes('tabindex')).toBe('0');
+    expect(tree.tree.attributes('aria-label')).toBe('Файлы');
+    expect(tree.tree.attributes('aria-multiselectable')).toBeUndefined();
+    expect(tree.labels).toEqual([
+      'src',
+      'components',
+      'index.ts',
+      'docs',
+      'README.md',
+      'legacy',
+      'empty',
+      'Дизайн',
+    ]);
+    expect(tree.attr('components', 'aria-level')).toBe('2');
+    expect(tree.attr('index.ts', 'aria-setsize')).toBe('2');
+    expect(tree.attr('index.ts', 'aria-posinset')).toBe('2');
+    expect(tree.hasPart('index.ts', 'description')).toBe(true);
+    expect(tree.attr('src', 'aria-expanded')).toBe('true');
+    expect(tree.attr('components', 'aria-expanded')).toBe('false');
+    expect(tree.attr('docs', 'aria-expanded')).toBe('false');
+    expect(tree.attr('README.md', 'aria-expanded')).toBeUndefined();
+    expect(tree.attr('empty', 'aria-expanded')).toBeUndefined();
+    expect(tree.attr('legacy', 'aria-disabled')).toBe('true');
+    expect(tree.nodeId('src')).toBe('files-node-src');
+    expect(tree.hasPart('src', 'chevron')).toBe(true);
+    expect(tree.hasPart('README.md', 'chevron')).toBe(false);
+    expect(await tree.iconOf('src')).toBe('folder-open');
+    expect(await tree.iconOf('components')).toBe('folder');
+    expect(await tree.iconOf('README.md')).toBe('file');
+    tree.unmount();
+    const bare = TreeDriver.mount({ props: { icons: false } });
+    expect(bare.hasPart('src', 'icon')).toBe(false);
+    bare.unmount();
+  });
+
+  it('moves the active descendant with arrows, Home, End and PageDown while skipping disabled nodes', async () => {
+    const tree = TreeDriver.mount({ modelValue: 'readme' });
+    await tree.focus();
+    expect(tree.activeLabel).toBe('README.md');
+    await tree.press('Home');
+    expect(tree.activeLabel).toBe('src');
+    await tree.press('ArrowDown');
+    expect(tree.activeLabel).toBe('docs');
+    await tree.press('ArrowDown');
+    await tree.press('ArrowDown');
+    expect(tree.activeLabel).toBe('empty');
+    await tree.press('End');
+    expect(tree.activeLabel).toBe('Дизайн');
+    await tree.press('ArrowDown');
+    expect(tree.activeLabel).toBe('Дизайн');
+    await tree.press('PageUp');
+    expect(tree.activeLabel).toBe('src');
+    await tree.press('ArrowUp');
+    expect(tree.activeLabel).toBe('src');
+    tree.unmount();
+    const looping = TreeDriver.mount({ props: { loop: true } });
+    await looping.focus();
+    expect(looping.activeLabel).toBe('src');
+    await looping.press('ArrowUp');
+    expect(looping.activeLabel).toBe('Дизайн');
+    looping.unmount();
+  });
+
+  it('expands and collapses with the horizontal arrows and opens every sibling with the asterisk', async () => {
+    const tree = TreeDriver.mount();
+    await tree.focus();
+    await tree.press('ArrowRight');
+    expect(tree.expandedValues).toEqual(['src']);
+    expect(tree.events).toEqual(['expand:src']);
+    await tree.press('ArrowRight');
+    expect(tree.activeLabel).toBe('components');
+    await tree.press('ArrowLeft');
+    expect(tree.activeLabel).toBe('src');
+    await tree.press('ArrowLeft');
+    expect(tree.expandedValues).toEqual([]);
+    expect(tree.events).toEqual(['expand:src', 'collapse:src']);
+    await tree.press('*');
+    expect(tree.expandedValues).toEqual(['src', 'docs', 'design']);
+    expect(tree.loads).toEqual(['docs']);
+    expect(tree.labels).toContain('logo.svg');
+    tree.unmount();
+    const rtl = TreeDriver.mount({ dir: 'rtl' });
+    await rtl.focus();
+    await rtl.press('ArrowLeft');
+    expect(rtl.expandedValues).toEqual(['src']);
+    await rtl.press('ArrowRight');
+    expect(rtl.expandedValues).toEqual([]);
+    rtl.unmount();
+  });
+
+  it('finds nodes by typeahead in Latin and Cyrillic and selects with Enter in single and multiple modes', async () => {
+    const tree = TreeDriver.mount();
+    await tree.focus();
+    await tree.press('d');
+    expect(tree.activeLabel).toBe('docs');
+    await tree.advance(600);
+    await tree.press('д');
+    expect(tree.activeLabel).toBe('Дизайн');
+    await tree.press('Enter');
+    expect(tree.value).toBe('design');
+    expect(tree.attr('Дизайн', 'aria-selected')).toBe('true');
+    expect(tree.attr('src', 'aria-selected')).toBe('false');
+    expect(tree.events).toEqual(['select:Дизайн']);
+    tree.unmount();
+    const multiple = TreeDriver.mount({ props: { selectable: 'multiple' }, modelValue: ['src'] });
+    expect(multiple.tree.attributes('aria-multiselectable')).toBe('true');
+    await multiple.focus();
+    await multiple.press('End');
+    await multiple.press('Enter');
+    expect(multiple.value).toEqual(['src', 'design']);
+    await multiple.press(' ');
+    expect(multiple.value).toEqual(['src']);
+    multiple.unmount();
+    const passive = TreeDriver.mount({ props: { selectable: false } });
+    expect(passive.attr('src', 'aria-selected')).toBeUndefined();
+    await passive.focus();
+    await passive.press('Enter');
+    expect(passive.value).toBeUndefined();
+    passive.unmount();
+  });
+
+  it('cascades checkboxes through enabled descendants and reports mixed ancestors', async () => {
+    const tree = TreeDriver.mount({
+      props: { checkable: true },
+      expanded: ['src', 'components'],
+    });
+    expect(tree.hasModifier('checkable')).toBe(true);
+    expect(tree.attr('src', 'aria-checked')).toBe('false');
+    await tree.clickCheckbox('src');
+    expect(tree.checkedValues).toEqual(['src', 'components', 'button', 'index']);
+    expect(tree.attr('src', 'aria-checked')).toBe('true');
+    expect(tree.value).toBeUndefined();
+    await tree.clickCheckbox('Button.vue');
+    expect(tree.checkedValues).toEqual(['index']);
+    expect(tree.attr('src', 'aria-checked')).toBe('mixed');
+    expect(tree.hasPart('src', 'checkbox--indeterminate')).toBe(true);
+    expect(tree.attr('components', 'aria-checked')).toBe('false');
+    expect(tree.attr('index.ts', 'aria-checked')).toBe('true');
+    await tree.clickCheckbox('Button.vue');
+    expect(tree.checkedValues).toEqual(['src', 'components', 'button', 'index']);
+    await tree.clickCheckbox('legacy');
+    expect(tree.checkedValues).toEqual(['src', 'components', 'button', 'index']);
+    await tree.focus();
+    await tree.press('End');
+    await tree.press(' ');
+    expect(tree.checkedValues).toEqual(['src', 'components', 'button', 'index', 'design', 'logo']);
+    tree.unmount();
+    const only = TreeDriver.mount({ props: { checkable: true, selectable: false } });
+    await only.focus();
+    await only.press('Enter');
+    expect(only.checkedValues).toEqual(['src', 'components', 'button', 'index']);
+    expect(only.value).toBeUndefined();
+    only.unmount();
+  });
+
+  it('loads lazy children on expand, shows a spinner meanwhile and turns empty results into a leaf', async () => {
+    const tree = TreeDriver.mount();
+    await tree.clickToggle('docs');
+    expect(tree.loads).toEqual(['docs']);
+    expect(tree.attr('docs', 'aria-busy')).toBe('true');
+    expect(tree.attr('docs', 'aria-expanded')).toBe('true');
+    expect(tree.hasPart('docs', 'spinner')).toBe(true);
+    expect(tree.value).toBeUndefined();
+    await tree.receiveItems(withDocs([{ value: 'guide', label: 'guide.md' }]));
+    expect(tree.labels).toContain('guide.md');
+    expect(tree.attr('docs', 'aria-busy')).toBeUndefined();
+    expect(tree.hasPart('docs', 'spinner')).toBe(false);
+    await tree.receiveItems(withDocs([]));
+    expect(tree.attr('docs', 'aria-expanded')).toBeUndefined();
+    expect(tree.labels).not.toContain('guide.md');
+    tree.unmount();
+  });
+
+  it('selects on click, toggles on the chevron and on double click and renders the item slot', async () => {
+    const tree = TreeDriver.mount({
+      itemSlot: ({ item, level }) =>
+        `${typeof item === 'object' && item && 'label' in item ? String(item.label) : ''}@${level}`,
+    });
+    expect(tree.labels[0]).toBe('src@1');
+    await tree.clickToggle('src@1');
+    expect(tree.expandedValues).toEqual(['src']);
+    expect(tree.value).toBeUndefined();
+    expect(tree.labels[1]).toBe('components@2');
+    await tree.click('README.md@1');
+    expect(tree.value).toBe('readme');
+    expect(tree.activeLabel).toBe('README.md@1');
+    await tree.dblclick('src@1');
+    expect(tree.expandedValues).toEqual([]);
+    await tree.click('legacy@1');
+    expect(tree.value).toBe('readme');
+    tree.unmount();
+  });
+
+  it('windows long trees, keeps the active row rendered and pages by the viewport', async () => {
+    const tree = TreeDriver.mount({
+      items: manyNodes(2000),
+      props: { virtual: true, height: '160px', itemHeight: 32 },
+    });
+    expect(tree.hasModifier('virtual')).toBe(true);
+    await tree.setHeight(160);
+    expect(tree.renderedCount).toBe(10);
+    await tree.focus();
+    await tree.press('End');
+    expect(tree.activeLabel).toBe('Узел 1999');
+    expect(tree.renderedCount).toBeLessThan(20);
+    await tree.press('ArrowUp');
+    expect(tree.activeLabel).toBe('Узел 1998');
+    await tree.scrollTo(0);
+    expect(tree.labels).toContain('Узел 1998');
+    expect(tree.labels).toContain('Узел 0');
+    await tree.press('Home');
+    await tree.press('PageDown');
+    expect(tree.activeLabel).toBe('Узел 5');
+    tree.unmount();
+  });
+});
+
+describe('tree cascade', () => {
+  it('normalises ancestors bottom-up and ignores disabled subtrees', () => {
+    const src = FILES[0];
+    if (!src?.children?.[0]) {
+      throw new Error('fixture changed');
+    }
+    const components = src.children[0];
+    const checked = applyCheck(FILES, new Set(), components, defaultOptionKey);
+    expect([...checked]).toEqual(['components', 'button']);
+    expect(checkStateOf(src, checked, defaultOptionKey)).toBe('indeterminate');
+    const all = applyCheck(FILES, checked, src, defaultOptionKey);
+    expect([...all].toSorted()).toEqual(['button', 'components', 'index', 'src']);
+    const none = applyCheck(FILES, all, src, defaultOptionKey);
+    expect(none.size).toBe(0);
+  });
+});
