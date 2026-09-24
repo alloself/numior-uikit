@@ -14,6 +14,7 @@ import {
   NuiConfigProvider,
   NuiDialog,
   NuiDrawer,
+  NuiEmpty,
   NuiField,
   NuiIcon,
   NuiInput,
@@ -121,6 +122,10 @@ const scenarios: Scenario[] = [
       h(NuiChip, { tone: 'success', removable: true, removeLabel: 'Remove Vue' }, () => 'Vue'),
   },
   { name: 'NuiBadge', render: () => h(NuiBadge, { count: 120, tone: 'error' }) },
+  {
+    name: 'NuiEmpty',
+    render: () => h(NuiEmpty, { title: 'Nothing here', description: 'Add an item' }),
+  },
   {
     name: 'NuiAvatar',
     render: () => h(NuiAvatar, { src: '/alice.png', name: 'Alice Brown', status: 'online' }),
@@ -392,6 +397,17 @@ describe('server rendering', () => {
     );
     expect(slotted).toContain('+2');
     expect(slotted.match(/nui-avatar--size-lg/g)).toHaveLength(2);
+  });
+
+  it('renders the empty state with its icon and inside an empty listbox', async () => {
+    const empty = await renderMarkup(() => h(NuiEmpty, { title: 'Nothing here' }));
+    expect(empty).toContain('lucide-inbox');
+    expect(empty).toContain('Nothing here');
+    const select = await renderMarkup(() =>
+      h(NuiSelect, { options: [], emptyLabel: 'No options' }),
+    );
+    expect(select).toContain('nui-listbox__empty');
+    expect(select).toContain('No options');
   });
 
   it('renders lazy default icons on the server', async () => {

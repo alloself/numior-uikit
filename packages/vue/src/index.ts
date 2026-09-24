@@ -109,6 +109,8 @@ export type {
   NuiAvatarSize,
   NuiAvatarStatus,
 } from './avatar/avatar.types';
+export { default as NuiEmpty } from './empty/NuiEmpty.vue';
+export type { NuiEmptyProps, NuiEmptySize } from './empty/empty.types';
 export { default as NuiChip } from './chip/NuiChip.vue';
 export type { NuiChipProps, NuiChipSize, NuiChipVariant } from './chip/chip.types';
 export { default as NuiCombobox } from './combobox/NuiCombobox.vue';

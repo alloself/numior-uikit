@@ -107,7 +107,7 @@ export class ComboboxDriver extends ComponentDriver {
   }
 
   get statusText(): string {
-    const status = this.wrapper.find('.nui-listbox__status');
+    const status = this.wrapper.find('.nui-listbox__status, .nui-listbox__empty');
     return status.exists() ? status.text() : '';
   }
 

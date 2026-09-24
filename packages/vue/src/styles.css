@@ -14,6 +14,7 @@
 @import './menu/menu.css';
 @import './tabs/tabs.css';
 @import './breadcrumbs/breadcrumbs.css';
+@import './empty/empty.css';
 @import './listbox/listbox.css';
 @import './select/select.css';
 @import './chip/chip.css';

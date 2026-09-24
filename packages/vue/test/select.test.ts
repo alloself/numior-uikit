@@ -26,6 +26,15 @@ describe('NuiSelect', () => {
     select.unmount();
   });
 
+  it('shows the empty state inside the listbox when there are no options', () => {
+    const select = SelectDriver.mount({ props: { options: [] } });
+    expect(select.emptyText).toBe('No options');
+    select.unmount();
+    const labelled = SelectDriver.mount({ props: { options: [], emptyLabel: 'Пусто' } });
+    expect(labelled.emptyText).toBe('Пусто');
+    labelled.unmount();
+  });
+
   it('shows the placeholder without a value and picks options by typeahead while closed', async () => {
     const select = SelectDriver.mount({ props: { placeholder: 'Pick a fruit' } });
     expect(select.valueText).toBe('Pick a fruit');

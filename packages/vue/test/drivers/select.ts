@@ -116,6 +116,11 @@ export class SelectDriver extends ComponentDriver {
       .map((input) => input.element.value);
   }
 
+  get emptyText(): string {
+    const empty = this.wrapper.find('.nui-listbox__empty');
+    return empty.exists() ? empty.text() : '';
+  }
+
   get clearButton(): DOMWrapper<Element> {
     return this.wrapper.find('.nui-select__clear');
   }

@@ -104,6 +104,13 @@
   padding: var(--nui-space-2);
   color: var(--nui-text-muted);
 }
+.nui-listbox__empty {
+  padding: var(--nui-space-2);
+  color: var(--nui-text-muted);
+}
+.nui-listbox__empty .nui-empty__title {
+  font-weight: 400;
+}
 .nui-listbox__spinner {
   animation: nui-listbox-spin 0.8s linear infinite;
 }
@@ -113,6 +120,13 @@
   }
 }
 @media (prefers-reduced-motion: reduce) {
+  .nui-listbox__empty {
+    padding: var(--nui-space-2);
+    color: var(--nui-text-muted);
+  }
+  .nui-listbox__empty .nui-empty__title {
+    font-weight: 400;
+  }
   .nui-listbox__spinner {
     animation-duration: 1.6s;
   }

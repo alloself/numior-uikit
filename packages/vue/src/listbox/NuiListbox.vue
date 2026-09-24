@@ -29,12 +29,19 @@
       <NuiIcon alias="loader" class="nui-listbox__spinner" />
       {{ loadingLabel }}
     </div>
-    <div v-else-if="groups.length === 0" class="nui-listbox__status">{{ emptyLabel }}</div>
+    <NuiEmpty
+      v-else-if="groups.length === 0"
+      size="sm"
+      hide-icon
+      :title="emptyLabel"
+      class="nui-listbox__empty"
+    />
   </div>
 </template>
 
 <script setup lang="ts" generic="T">
 import { computed } from 'vue';
+import NuiEmpty from '../empty/NuiEmpty.vue';
 import NuiIcon from '../icon/NuiIcon.vue';
 import { groupOptions, type NuiOption, type OptionGroupView } from '../shared/options';
 import NuiListboxEntries from './NuiListboxEntries.vue';
