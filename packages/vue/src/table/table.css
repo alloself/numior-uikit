@@ -32,6 +32,10 @@
   border-radius: var(--nui-radius);
   background: var(--nui-surface);
 }
+.nui-table__scroller:focus-visible {
+  outline: var(--nui-focus-ring-width) solid var(--nui-focus);
+  outline-offset: var(--nui-focus-ring-offset);
+}
 .nui-table__table {
   inline-size: 100%;
   border-collapse: separate;

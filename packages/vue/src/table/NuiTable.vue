@@ -13,7 +13,12 @@
       },
     ]"
   >
-    <div ref="scroller" class="nui-table__scroller" :style="{ '--_height': height }">
+    <div
+      ref="scroller"
+      class="nui-table__scroller"
+      :style="{ '--_height': height }"
+      :tabindex="height === undefined ? undefined : 0"
+    >
       <table
         class="nui-table__table"
         :style="isVirtual ? { '--_row': `${rowHeight}px` } : undefined"
