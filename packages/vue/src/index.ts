@@ -126,6 +126,17 @@ export type {
   NuiCardTitleTag,
   NuiCardVariant,
 } from './card/card.types';
+export { default as NuiList } from './list/NuiList.vue';
+export { default as NuiListItem } from './list/NuiListItem.vue';
+export type {
+  NuiListEntry,
+  NuiListItemProps,
+  NuiListItemSlot,
+  NuiListProps,
+  NuiListSelectable,
+  NuiListTag,
+  NuiListVariant,
+} from './list/list.types';
 export { default as NuiChip } from './chip/NuiChip.vue';
 export type { NuiChipProps, NuiChipSize, NuiChipVariant } from './chip/chip.types';
 export { default as NuiCombobox } from './combobox/NuiCombobox.vue';

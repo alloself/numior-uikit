@@ -75,6 +75,7 @@ const code = await importBuild('vue', [
   'NuiAvatar',
   'NuiEmpty',
   'NuiCard',
+  'NuiList',
   'NuiPagination',
   'NuiIcon',
   'NuiConfigProvider',

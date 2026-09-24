@@ -22,6 +22,7 @@ import {
   NuiIcon,
   NuiInput,
   NuiLink,
+  NuiList,
   NuiPagination,
   NuiMenu,
   NuiPopover,
@@ -128,6 +129,17 @@ const scenarios: Scenario[] = [
   {
     name: 'NuiEmpty',
     render: () => h(NuiEmpty, { title: 'Nothing here', description: 'Add an item' }),
+  },
+  {
+    name: 'NuiList',
+    render: () =>
+      h(NuiList, {
+        items: [
+          { title: 'Docs', href: '/docs', description: 'Guides' },
+          { title: 'Plain', icon: 'check' },
+        ],
+        variant: 'divided',
+      }),
   },
   {
     name: 'NuiCard',
@@ -437,6 +449,28 @@ describe('server rendering', () => {
     const plain = await renderMarkup(() => h(NuiCard, { title: 'Plans' }));
     expect(plain).not.toContain('nui-card__action');
     expect(plain).not.toContain('nui-card--interactive');
+  });
+
+  it('renders a selectable list with one selected option and one tab stop', async () => {
+    const items = [
+      { title: 'Go', value: 'go' },
+      { title: 'Rust', value: 'rust' },
+    ];
+    const html = await renderMarkup(() =>
+      h(NuiList, { items, selectable: 'single', modelValue: 'rust', label: 'Languages' }),
+    );
+    expect(html).toContain('role="listbox"');
+    expect(html.match(/aria-selected="true"/g)).toHaveLength(1);
+    expect(html.match(/tabindex="0"/g)).toHaveLength(1);
+    expect(html).toContain('aria-label="Languages"');
+    const links = await renderMarkup(() =>
+      h(NuiList, { items: [{ title: 'Docs', href: '/docs' }] }),
+    );
+    expect(links).toContain('href="/docs"');
+    expect(links).not.toContain('role="listbox"');
+    const empty = await renderMarkup(() => h(NuiList, { items: [], emptyLabel: 'Nothing' }));
+    expect(empty).toContain('nui-empty');
+    expect(empty).toContain('Nothing');
   });
 
   it('renders lazy default icons on the server', async () => {
