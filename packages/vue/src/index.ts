@@ -16,6 +16,8 @@ export { default as NuiInput } from './input/NuiInput.vue';
 export type { NuiInputModifiers, NuiInputProps, NuiInputType } from './input/input.types';
 export { default as NuiNumberField } from './number-field/NuiNumberField.vue';
 export type { NuiNumberFieldProps } from './number-field/number-field.types';
+export { default as NuiTimeField } from './time-field/NuiTimeField.vue';
+export type { NuiTimeFieldProps } from './time-field/time-field.types';
 export { default as NuiTextarea } from './textarea/NuiTextarea.vue';
 export type {
   NuiTextareaModifiers,
@@ -208,6 +210,7 @@ export {
 export type {
   ColorScheme,
   FloatingPlacement,
+  HourCycle,
   FloatingSide,
   IconAlias,
   IconLoader,

@@ -9,6 +9,8 @@ const announce = (element: HTMLElement, newState: 'open' | 'closed'): boolean =>
 export const dismissPopoverNatively = (element: HTMLElement): boolean =>
   announce(element, 'closed');
 
+export const openPopoverNatively = (element: HTMLElement): boolean => announce(element, 'open');
+
 export class TopLayerStubs {
   readonly showModalCalls: { count: number };
   readonly closedWith: string[];

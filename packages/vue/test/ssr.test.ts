@@ -36,6 +36,7 @@ import {
   NuiTable,
   NuiTabs,
   NuiTextarea,
+  NuiTimeField,
   NuiToast,
   NuiToaster,
   NuiTooltip,
@@ -187,6 +188,10 @@ const scenarios: Scenario[] = [
   { name: 'NuiConfigProvider', render: () => h(NuiConfigProvider, null, () => 'content') },
   { name: 'NuiField with NuiInput', render: fieldWithInput },
   { name: 'NuiTextarea', render: () => h(NuiTextarea, { modelValue: 'text', invalid: true }) },
+  {
+    name: 'NuiTimeField',
+    render: () => h(NuiTimeField, { modelValue: '13:05', locale: 'en-US', name: 'start' }),
+  },
   {
     name: 'NuiNumberField',
     render: () =>
@@ -401,6 +406,27 @@ describe('server rendering', () => {
     expect(html).toContain('type="hidden" name="price" value="1234.5"');
     expect(html).toContain('aria-hidden="true"');
     expect(html).toContain('tabindex="-1"');
+  });
+
+  it('renders a time field with one tab stop, filled segments and a closed list', async () => {
+    const html = await renderMarkup(() =>
+      h(NuiTimeField, { modelValue: '13:05', locale: 'en-US', name: 'start' }),
+    );
+    expect(html).toContain('role="group"');
+    expect(html.match(/role="spinbutton"/g)).toHaveLength(3);
+    expect(html).toContain('value="01"');
+    expect(html).toContain('value="05"');
+    expect(html).toContain('value="PM"');
+    expect(html.match(/tabindex="0"/g)).toHaveLength(1);
+    expect(html).toContain('type="hidden" name="start" value="13:05"');
+    expect(html).toContain('popover="auto"');
+    expect(html).toContain('aria-expanded="false"');
+    expect(html).not.toContain('aria-activedescendant');
+    const german = await renderMarkup(() =>
+      h(NuiTimeField, { modelValue: '13:05', locale: 'de-DE' }),
+    );
+    expect(german).toContain('value="13"');
+    expect(german.match(/role="spinbutton"/g)).toHaveLength(2);
   });
 
   it('renders a combobox input with its selected label and no active descendant', async () => {

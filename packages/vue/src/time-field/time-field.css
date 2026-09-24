@@ -1,0 +1,109 @@
+.nui-time-field {
+  --_height: var(--nui-control-height-md);
+  --_padding: var(--nui-control-padding-md);
+  --_font-size: var(--nui-control-font-size-md);
+  --_segment-radius: var(--nui-radius-sm);
+
+  display: inline-flex;
+  align-items: center;
+  gap: var(--nui-space-1);
+  inline-size: 100%;
+  min-block-size: var(--_height);
+  padding-inline: var(--_padding) var(--nui-space-1);
+  border: 1px solid var(--nui-border);
+  border-radius: var(--nui-radius);
+  background: var(--nui-surface);
+  color: var(--nui-text);
+  font-family: var(--nui-font);
+  font-size: var(--_font-size);
+  line-height: var(--nui-line-height-tight);
+  transition:
+    border-color var(--nui-duration-fast) var(--nui-easing),
+    outline-color var(--nui-duration-fast) var(--nui-easing);
+}
+.nui-time-field--size-sm {
+  --_height: var(--nui-control-height-sm);
+  --_padding: var(--nui-control-padding-sm);
+  --_font-size: var(--nui-control-font-size-sm);
+}
+.nui-time-field--size-lg {
+  --_height: var(--nui-control-height-lg);
+  --_padding: var(--nui-control-padding-lg);
+  --_font-size: var(--nui-control-font-size-lg);
+}
+.nui-time-field__segments {
+  display: inline-flex;
+  flex: 1 1 auto;
+  align-items: center;
+  min-inline-size: 0;
+  min-block-size: calc(var(--_height) - 2px);
+  direction: ltr;
+  unicode-bidi: isolate;
+  font-variant-numeric: tabular-nums;
+}
+.nui-time-field__segment {
+  inline-size: 2ch;
+  padding: 0.125rem;
+  border: 0;
+  border-radius: var(--_segment-radius);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: center;
+  caret-color: transparent;
+  appearance: none;
+  outline: none;
+  transition:
+    background-color var(--nui-duration-fast) var(--nui-easing),
+    color var(--nui-duration-fast) var(--nui-easing);
+}
+.nui-time-field__segment::placeholder {
+  color: var(--nui-text-muted);
+  opacity: 1;
+}
+.nui-time-field__segment::selection {
+  background: transparent;
+}
+.nui-time-field__segment:focus {
+  background: var(--nui-primary-soft);
+  color: var(--nui-primary-soft-foreground);
+}
+.nui-time-field__segment--type-dayPeriod {
+  inline-size: auto;
+  min-inline-size: 2.5ch;
+  field-sizing: content;
+}
+.nui-time-field__literal {
+  color: var(--nui-text-muted);
+}
+.nui-time-field__clock {
+  flex: none;
+  margin-inline-start: auto;
+}
+.nui-time-field--open .nui-time-field__clock {
+  color: var(--nui-primary);
+}
+.nui-time-field:hover:not(.nui-time-field--disabled):not(:focus-within) {
+  border-color: var(--nui-border-strong);
+}
+.nui-time-field:focus-within {
+  border-color: var(--nui-focus);
+  outline: var(--nui-focus-ring-width) solid var(--nui-focus);
+  outline-offset: var(--nui-focus-ring-offset);
+}
+.nui-time-field--invalid {
+  border-color: var(--nui-error);
+}
+.nui-time-field--invalid:focus-within {
+  outline-color: var(--nui-error);
+}
+.nui-time-field--readonly {
+  cursor: default;
+}
+.nui-time-field--disabled {
+  opacity: var(--nui-disabled-opacity);
+  cursor: not-allowed;
+}
+.nui-time-field--disabled .nui-time-field__segment {
+  cursor: not-allowed;
+}
