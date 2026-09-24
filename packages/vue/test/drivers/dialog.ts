@@ -15,11 +15,13 @@ const mountSurface = <P extends object>(
   { props, open = true, slots = {} }: SurfaceMountOptions<P>,
 ): [VueWrapper, TopLayerStubs] => {
   const stubs = new TopLayerStubs();
+
   const wrapper = mount(component, {
     props: { ...props, open },
     slots: { default: 'Body', ...slots },
     attachTo: document.body,
   });
+
   return [wrapper, stubs];
 };
 

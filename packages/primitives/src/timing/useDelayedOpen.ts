@@ -18,6 +18,7 @@ export const useDelayedOpen = (
   options: DelayedOpenOptions = {},
 ): DelayedOpen => {
   let timer: ReturnType<typeof setTimeout> | undefined;
+
   const cancel = (): void => {
     if (timer === undefined) {
       return;
@@ -25,17 +26,20 @@ export const useDelayedOpen = (
     clearTimeout(timer);
     timer = undefined;
   };
+
   const schedule = (next: boolean, delay: number): void => {
     cancel();
     if (delay <= 0) {
       open.value = next;
       return;
     }
+
     timer = setTimeout(() => {
       timer = undefined;
       open.value = next;
     }, delay);
   };
+
   if (getCurrentScope()) {
     onScopeDispose(cancel);
   }

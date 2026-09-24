@@ -109,12 +109,14 @@ const countries: NuiOptionSource<string> = [
     ],
   },
 ];
+
 const tagOptions: NuiOption<string>[] = [
   { value: 'frontend', label: 'Фронтенд' },
   { value: 'backend', label: 'Бэкенд' },
   { value: 'design', label: 'Дизайн' },
   { value: 'qa', label: 'Тесты' },
 ];
+
 const cities: NuiOption<string>[] = [
   { value: 'kazan', label: 'Казань' },
   { value: 'kaluga', label: 'Калуга' },
@@ -123,6 +125,7 @@ const cities: NuiOption<string>[] = [
   { value: 'samara', label: 'Самара' },
   { value: 'sochi', label: 'Сочи' },
 ];
+
 const keywordOptions: NuiOption<string>[] = [
   { value: 'vue', label: 'Vue' },
   { value: 'vite', label: 'Vite' },
@@ -146,6 +149,7 @@ const searchCities = (query: string): void => {
   if (searchTimer !== undefined) {
     clearTimeout(searchTimer);
   }
+
   searchTimer = setTimeout(() => {
     const needle = query.trim().toLowerCase();
     cityOptions.value = cities.filter((option) => option.label.toLowerCase().includes(needle));

@@ -46,6 +46,7 @@ const {
   moreLabel = 'Show path',
   as = 'a',
 } = defineProps<NuiBreadcrumbsProps>();
+
 defineSlots<{ item(props: NuiBreadcrumbsItemSlot): unknown }>();
 
 const entries = computed(() => layoutBreadcrumbs(items, maxItems, as));

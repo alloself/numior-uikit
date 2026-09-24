@@ -60,6 +60,7 @@ export class TabsDriver extends ComponentDriver {
     lazyPanels = [],
   }: TabsMountOptions = {}) {
     const model = ref(modelValue);
+
     const tabsProps = () => ({
       ...props,
       ...(data ? { tabs: DESCRIPTORS, label: 'Settings' } : {}),
@@ -68,6 +69,7 @@ export class TabsDriver extends ComponentDriver {
         model.value = value;
       },
     });
+
     const Host = defineComponent({
       setup: () => () =>
         h('div', { dir }, [
@@ -77,6 +79,7 @@ export class TabsDriver extends ComponentDriver {
           h('button', { type: 'button', class: 'outside' }, 'Outside'),
         ]),
     });
+
     return new TabsDriver(mount(Host, { attachTo: document.body }), model);
   }
 
@@ -142,6 +145,7 @@ export class TabsDriver extends ComponentDriver {
     const found = this.wrapper
       .findAll<HTMLElement>('[role="tabpanel"]')
       .find((panel) => panel.attributes('id')?.endsWith(`-panel-${value}`));
+
     if (!found) {
       throw new Error(`No panel for ${value}`);
     }

@@ -6,6 +6,7 @@ describe('NuiEmpty', () => {
     const empty = EmptyDriver.mount({
       props: { title: 'Nothing here', description: 'Add your first item' },
     });
+
     expect(empty.hasModifier('size-md')).toBe(true);
     expect(empty.hasIcon).toBe(true);
     expect(empty.titleText).toBe('Nothing here');
@@ -28,6 +29,7 @@ describe('NuiEmpty', () => {
         actions: '<button type="button">Повторить</button>',
       },
     });
+
     expect(empty.hasMedia).toBe(true);
     expect(empty.hasIcon).toBe(false);
     expect(empty.wrapper.find('.art').exists()).toBe(true);

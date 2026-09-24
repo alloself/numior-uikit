@@ -19,6 +19,7 @@ import {
 
 const displayNames = Object.getOwnPropertyDescriptor(Intl, 'DisplayNames');
 const at = (hour: number, minute: number, second = 0) => ({ hour, minute, second });
+
 const types = (locale: string, seconds = false, hourCycle?: 'h12' | 'h23') =>
   timeLayout(locale, { seconds, hourCycle }).segments.map((segment) =>
     segment.type === 'literal' ? segment.text.replace(/\s/u, ' ') : segment.type,
@@ -47,6 +48,7 @@ describe('time model', () => {
       at(9, 30),
       at(10, 0),
     ]);
+
     expect(timeOptions({ step: 15, min: null, max: null })).toHaveLength(96);
     expect(timeOptions({ step: 0, min: null, max: null })).toHaveLength(1440);
     expect(formatTimeLabel(at(13, 5), 'en-US', 'h12', false)).toBe('1:05 PM');
@@ -84,26 +86,32 @@ describe('time segments', () => {
     expect(first).toEqual({ value: 1, typed: 1, advance: false });
     expect(enterDigit(first, 5, hours)).toEqual({ value: 15, typed: 2, advance: true });
     expect(enterDigit({ value: null, typed: 0 }, 3, hours).advance).toBe(true);
+
     expect(enterDigit({ value: 2, typed: 1 }, 5, hours)).toEqual({
       value: 5,
       typed: 1,
       advance: true,
     });
+
     const minutes = segmentBounds('minute', 'h23');
     expect(enterDigit({ value: null, typed: 0 }, 6, minutes).advance).toBe(true);
+
     expect(enterDigit({ value: 5, typed: 1 }, 9, minutes)).toEqual({
       value: 59,
       typed: 2,
       advance: true,
     });
+
     const twelve = segmentBounds('hour', 'h12');
     expect(enterDigit({ value: null, typed: 0 }, 0, twelve).advance).toBe(false);
     expect(enterDigit({ value: null, typed: 0 }, 9, twelve).advance).toBe(true);
+
     expect(enterDigit({ value: 1, typed: 1 }, 2, twelve)).toEqual({
       value: 12,
       typed: 2,
       advance: true,
     });
+
     expect(stepSegment(23, 1, hours)).toBe(0);
     expect(stepSegment(12, 1, twelve)).toBe(1);
     expect(stepSegment(0, -1, minutes)).toBe(59);
@@ -120,33 +128,42 @@ describe('time segments', () => {
       second: 0,
       period: 'am',
     });
+
     expect(timeToDraft(at(12, 30), 'h12')).toEqual({
       hour: 12,
       minute: 30,
       second: 0,
       period: 'pm',
     });
+
     expect(timeToDraft(at(13, 0), 'h12').hour).toBe(1);
     expect(timeToDraft(at(13, 0), 'h23')).toEqual({ hour: 13, minute: 0, second: 0, period: null });
     expect(timeToDraft(null, 'h12').hour).toBeNull();
+
     expect(draftToTime({ hour: 12, minute: 30, second: null, period: 'am' }, 'h12', false)).toEqual(
       at(0, 30),
     );
+
     expect(draftToTime({ hour: 12, minute: 30, second: null, period: 'pm' }, 'h12', false)).toEqual(
       at(12, 30),
     );
+
     expect(draftToTime({ hour: 1, minute: 0, second: null, period: 'pm' }, 'h12', false)).toEqual(
       at(13, 0),
     );
+
     expect(
       draftToTime({ hour: 1, minute: 0, second: null, period: null }, 'h12', false),
     ).toBeNull();
+
     expect(
       draftToTime({ hour: 13, minute: null, second: null, period: null }, 'h23', false),
     ).toBeNull();
+
     expect(
       draftToTime({ hour: 13, minute: 5, second: null, period: null }, 'h23', true),
     ).toBeNull();
+
     expect(draftToTime({ hour: 13, minute: 5, second: null, period: null }, 'h23', false)).toEqual(
       at(13, 5),
     );
@@ -156,6 +173,7 @@ describe('time segments', () => {
     expect(segmentLabels('de-DE').hour).toBe('Stunde');
     expect(segmentLabels('en-US').dayPeriod).toBe('AM/PM');
     Object.defineProperty(Intl, 'DisplayNames', { value: undefined, configurable: true });
+
     expect(segmentLabels('de-DE')).toEqual({
       hour: 'hour',
       minute: 'minute',

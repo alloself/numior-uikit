@@ -47,8 +47,10 @@ const {
   to,
   as = 'a',
 } = defineProps<NuiMenuItemProps>();
+
 const emit = defineEmits<{ select: [] }>();
 const menu = useMenu();
+
 const classes = computed(() => [
   `nui-menu-item--tone-${tone}`,
   { 'nui-menu-item--disabled': disabled },
@@ -64,6 +66,7 @@ const onClick = (event: Event): void => {
     menu.closeAll();
   }
 };
+
 const onSpace = (event: KeyboardEvent): void => {
   if (event.currentTarget instanceof HTMLElement) {
     event.currentTarget.click();

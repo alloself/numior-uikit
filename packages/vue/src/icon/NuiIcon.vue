@@ -12,6 +12,7 @@ import type { NuiIconProps } from './icon.types';
 
 const { alias, icon } = defineProps<NuiIconProps>();
 const icons = useIcons();
+
 const glyph = computed(() => {
   if (icon) {
     return icon;

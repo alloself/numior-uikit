@@ -21,25 +21,30 @@ export const paginationRange = (
   }
   const startPages = range(1, boundaries);
   const endPages = range(pageCount - boundaries + 1, pageCount);
+
   const siblingsStart = Math.max(
     Math.min(page - siblings, pageCount - boundaries - siblings * 2 - 1),
     boundaries + 2,
   );
+
   const siblingsEnd = Math.min(
     Math.max(page + siblings, boundaries + siblings * 2 + 2),
     pageCount - boundaries - 1,
   );
+
   const before: PaginationEntry[] =
     siblingsStart > boundaries + 2
       ? ['start-ellipsis']
       : boundaries + 1 < pageCount - boundaries
         ? [boundaries + 1]
         : [];
+
   const after: PaginationEntry[] =
     siblingsEnd < pageCount - boundaries - 1
       ? ['end-ellipsis']
       : pageCount - boundaries > boundaries
         ? [pageCount - boundaries]
         : [];
+
   return [...startPages, ...before, ...range(siblingsStart, siblingsEnd), ...after, ...endPages];
 };

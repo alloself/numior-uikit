@@ -10,9 +10,11 @@ describe('NuiChip', () => {
     expect(chip.hasModifier('size-md')).toBe(true);
     expect(chip.removeButton.exists()).toBe(false);
     expect(chip.hasIcon).toBe(false);
+
     const custom = ChipDriver.mount({
       props: { tone: 'success', variant: 'outline', size: 'sm', icon: 'check' },
     });
+
     expect(custom.hasModifier('tone-success')).toBe(true);
     expect(custom.hasModifier('variant-outline')).toBe(true);
     expect(custom.hasModifier('size-sm')).toBe(true);

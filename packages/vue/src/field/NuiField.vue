@@ -41,10 +41,12 @@ const {
   disabled = false,
   group = false,
 } = defineProps<NuiFieldProps>();
+
 const slots = useSlots();
 const hasLabel = () => Boolean(label || slots.label);
 const hasDescription = () => Boolean(description || slots.description);
 const hasError = () => Boolean(error || slots.error);
+
 const field = provideField({
   id: () => id,
   invalid: () => invalid,
@@ -55,6 +57,7 @@ const field = provideField({
   hasError,
   labelable: () => !group,
 });
+
 const isInvalid = field.invalid;
 const isRequired = field.required;
 const isDisabled = field.disabled;

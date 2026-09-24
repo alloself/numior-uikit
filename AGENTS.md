@@ -13,6 +13,10 @@ that its features are implemented. Component and test conventions live in the sk
 - Arrow functions only (`const f = () => {}`); `function` solely where an own `this` is
   required. No nested function declarations: closure-free helpers live at module level.
   Every block is braced (`curly: all`, `func-style: expression` in Oxlint).
+- Blank lines separate multi-line declarations, calls, imports and exports
+  (`@stylistic/padding-line-between-statements` in ESLint); a `<script setup>` reads as
+  logical sections (props and models, state, derived values, handlers, lifecycle), not as a
+  flat stream of statements.
 - No `as` or `!` type assertions anywhere (tests and configs included); `as const` only.
 - CSS is BEM (`nui-block`, `nui-block__part`, `nui-block--key-value`, `nui-block--state`)
   with modifiers setting private custom properties; no `data-*` for variants or states.

@@ -34,6 +34,7 @@ import type { NuiListItemProps } from './list.types';
 type ListItemMode = 'option' | 'link' | 'button' | 'plain';
 
 defineOptions({ inheritAttrs: false });
+
 const {
   value,
   id,
@@ -54,6 +55,7 @@ const list = useList();
 const size = computed(() => list?.size.value ?? 'md');
 const selected = computed(() => value !== undefined && (list?.isSelected(value) ?? false));
 const active = computed(() => id !== undefined && list?.activeId.value === id);
+
 const tabStop = computed(
   () => list !== null && value !== undefined && list.tabStopKey.value === list.keyOf(value),
 );
@@ -67,8 +69,10 @@ const mode = (): ListItemMode => {
   }
   return interactive || attrs.onClick !== undefined ? 'button' : 'plain';
 };
+
 const isOption = (): boolean => mode() === 'option';
 const hasAction = (): boolean => mode() === 'link' || mode() === 'button';
+
 const classes = () => [
   `nui-list-item--size-${size.value}`,
   `nui-list-item--mode-${mode()}`,
@@ -78,6 +82,7 @@ const classes = () => [
     'nui-list-item--disabled': disabled,
   },
 ];
+
 const optionAttrs = (): AttrRecord =>
   isOption()
     ? {
@@ -87,7 +92,9 @@ const optionAttrs = (): AttrRecord =>
         'aria-disabled': disabled ? 'true' : undefined,
       }
     : {};
+
 const rootAttrs = (): AttrRecord => (hasAction() ? split.rootAttrs() : attrs);
+
 const innerIs = () => {
   const current = mode();
   if (current === 'link') {
@@ -95,6 +102,7 @@ const innerIs = () => {
   }
   return current === 'button' ? 'button' : 'div';
 };
+
 const innerAttrs = (): AttrRecord => {
   const current = mode();
   if (current === 'link') {
@@ -114,6 +122,7 @@ const innerAttrs = (): AttrRecord => {
   }
   return {};
 };
+
 const onClick = (): void => {
   if (mode() === 'option' && !disabled && value !== undefined) {
     list?.select(value);

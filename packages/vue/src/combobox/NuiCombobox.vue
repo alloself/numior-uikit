@@ -117,6 +117,7 @@ import { useOptionSelection } from '../shared/use-option-selection';
 import type { NuiComboboxProps } from './combobox.types';
 
 defineOptions({ inheritAttrs: false });
+
 const {
   id,
   size = 'md',
@@ -139,16 +140,20 @@ const {
   removeLabel = 'Remove',
   toggleLabel = 'Show options',
 } = defineProps<NuiComboboxProps<T>>();
+
 const model = defineModel<T | T[]>();
 const emit = defineEmits<{ search: [query: string] }>();
 
 const split = useSplitAttrs();
+
 const {
   attrs: controlAttrs,
   invalid: isInvalid,
   disabled: isDisabled,
 } = useFieldControl(() => ({ id, disabled, required, invalid }));
+
 const listboxId = computed(() => `${controlAttrs.value.id}-listbox`);
+
 const {
   keyOf,
   selectedValues,
@@ -161,16 +166,21 @@ const {
   multiple: () => multiple,
   getKey: () => getKey,
 });
+
 const labelFor = (value: T): string => optionForValue(value)?.label ?? keyOf(value);
+
 const chips = computed(() =>
   selectedValues.value.map((value) => ({ key: keyOf(value), value, label: labelFor(value) })),
 );
+
 const singleLabel = computed(() => {
   const [first] = selectedValues.value;
   return multiple || first === undefined ? '' : labelFor(first);
 });
+
 const query = ref('');
 const filtering = ref(false);
+
 watch(
   singleLabel,
   (label) => {
@@ -180,8 +190,10 @@ watch(
   },
   { immediate: true },
 );
+
 const defaultFilter = (option: NuiOption<T>, needle: string): boolean =>
   option.label.toLowerCase().includes(needle);
+
 const filtered = computed(() => {
   const needle = query.value.trim().toLowerCase();
   if (filter === false || !filtering.value || needle === '') {
@@ -189,11 +201,13 @@ const filtered = computed(() => {
   }
   return filterOptions(options, (option) => (filter ?? defaultFilter)(option, needle));
 });
+
 const showClear = computed(() => clearable && selectedValues.value.length > 0 && !isDisabled.value);
 
 const open = ref(false);
 const fieldElement = useTemplateRef<HTMLElement>('field');
 const inputElement = useTemplateRef<HTMLInputElement>('input');
+
 const { listboxElement, setListbox, control, floatingStyles, navigation, activateHovered } =
   useListboxSurface({
     anchor: fieldElement,
@@ -206,13 +220,16 @@ const { listboxElement, setListbox, control, floatingStyles, navigation, activat
     typeahead: false,
     restOnSelected: false,
   });
+
 const state = { pending: 'first' };
 
 const focusInput = (): void => inputElement.value?.focus({ preventScroll: true });
+
 const settleQuery = (): void => {
   filtering.value = false;
   query.value = singleLabel.value;
 };
+
 const onSelect = (option: NuiOption<T>): void => {
   filtering.value = false;
   if (multiple) {
@@ -223,6 +240,7 @@ const onSelect = (option: NuiOption<T>): void => {
   }
   focusInput();
 };
+
 const commitCustom = (): boolean => {
   const text = query.value.trim();
   if (!customValue || text === '') {
@@ -239,12 +257,14 @@ const commitCustom = (): boolean => {
   open.value = false;
   return true;
 };
+
 const clear = (): void => {
   clearSelection();
   filtering.value = false;
   query.value = '';
   focusInput();
 };
+
 const toggle = (): void => {
   open.value = !open.value;
   focusInput();
@@ -262,6 +282,7 @@ onMounted(() => {
     },
     { flush: 'post' },
   );
+
   watch(filtered, () => navigation.reset(), { flush: 'post' });
 });
 
@@ -272,6 +293,7 @@ const onInput = (): void => {
   open.value = true;
   emit('search', text);
 };
+
 const openFromKey = (event: KeyboardEvent): boolean => {
   if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') {
     return false;
@@ -285,6 +307,7 @@ const openFromKey = (event: KeyboardEvent): boolean => {
   }
   return true;
 };
+
 const onEnter = (event: KeyboardEvent): void => {
   const active = open.value ? navigation.activeElement() : null;
   if (active) {
@@ -294,18 +317,21 @@ const onEnter = (event: KeyboardEvent): void => {
     event.preventDefault();
   }
 };
+
 const onEscape = (event: KeyboardEvent): void => {
   if (open.value) {
     event.preventDefault();
     open.value = false;
   }
 };
+
 const onBackspace = (): void => {
   const last = chips.value.at(-1);
   if (multiple && query.value === '' && last) {
     toggleSelection(last);
   }
 };
+
 const KEY_HANDLERS: Record<string, (event: KeyboardEvent) => void> = {
   Enter: onEnter,
   Escape: onEscape,
@@ -314,11 +340,13 @@ const KEY_HANDLERS: Record<string, (event: KeyboardEvent) => void> = {
   },
   Backspace: onBackspace,
 };
+
 const onKeydown = (event: KeyboardEvent): void => {
   if (!openFromKey(event)) {
     KEY_HANDLERS[event.key]?.(event);
   }
 };
+
 const onFieldClick = (event: MouseEvent): void => {
   const onButton = event.target instanceof Element && event.target.closest('button') !== null;
   if (isDisabled.value || onButton) {
@@ -330,11 +358,14 @@ const onFieldClick = (event: MouseEvent): void => {
     open.value = true;
   }
 };
+
 const onFocusout = (event: FocusEvent): void => {
   const next = event.relatedTarget;
+
   const within =
     next instanceof Node &&
     (fieldElement.value?.contains(next) === true || listboxElement.value?.contains(next) === true);
+
   if (within) {
     return;
   }

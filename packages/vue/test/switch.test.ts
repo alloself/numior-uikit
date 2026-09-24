@@ -18,6 +18,7 @@ describe('NuiSwitch', () => {
       props: { disabled: true, invalid: true, size: 'sm' },
       attrs: { 'aria-label': 'Notify', class: 'compact' },
     });
+
     expect(toggle.wrapper.classes()).toContain('compact');
     expect(toggle.control.attributes('aria-label')).toBe('Notify');
     expect(toggle.control.attributes('disabled')).toBe('');

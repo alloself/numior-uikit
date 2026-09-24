@@ -49,6 +49,7 @@ describe('number formatting and parsing', () => {
       ['hi-IN', { numberingSystem: 'deva' }],
       ['en-US', PERCENT],
     ] as const;
+
     for (const [locale, options] of matrix) {
       for (const value of [0, -0.5, 1234.5678, 1e6]) {
         const text = formatNumber(value, locale, options);
@@ -84,9 +85,11 @@ describe('number formatting and parsing', () => {
     expect(decimalPlaces(1e-7)).toBe(7);
     expect(decimalPlaces(0.001)).toBe(3);
     expect(withStepPrecision(undefined, 0.0001)).toEqual({ maximumFractionDigits: 4 });
+
     expect(withStepPrecision({ maximumFractionDigits: 1 }, 0.0001)).toEqual({
       maximumFractionDigits: 1,
     });
+
     expect(withStepPrecision(EUR, 0.001)).toBe(EUR);
   });
 });

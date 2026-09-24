@@ -19,6 +19,7 @@ import {
 
 const names = (people: readonly { readonly name: string }[]): string[] =>
   people.map((person) => person.name);
+
 const idOf = (person: (typeof PEOPLE)[number]): string => String(person.id);
 
 describe('NuiTable', () => {
@@ -32,6 +33,7 @@ describe('NuiTable', () => {
           `${typeof column === 'object' && column && 'label' in column ? String(column.label) : ''}, лет`,
       },
     });
+
     expect(table.captionText).toBe('Команда');
     expect(table.headers).toEqual(['Имя', 'Роль', 'Возраст, лет', 'Балл']);
     expect(table.wrapper.findAll('thead th[scope="col"]')).toHaveLength(4);
@@ -68,6 +70,7 @@ describe('NuiTable', () => {
     expect(table.sort).toEqual({ key: 'name', direction: 'asc' });
     expect(table.columnTexts('Имя').slice(0, 2)).toEqual(['Анна', 'Борис']);
     table.unmount();
+
     const custom = TableDriver.mount({
       columns: [
         {
@@ -78,6 +81,7 @@ describe('NuiTable', () => {
         },
       ],
     });
+
     await custom.clickHeader('Имя');
     expect(custom.columnTexts('Имя').slice(0, 2)).toEqual(['Зоя', 'Лев']);
     custom.unmount();
@@ -93,6 +97,7 @@ describe('NuiTable', () => {
       props: { selectable: 'multiple', pagination: true },
       pageSize: 5,
     });
+
     expect(table.hasModifier('selectable')).toBe(true);
     expect(table.wrapper.find('thead input').attributes('aria-label')).toBe('Select all rows');
     expect(table.wrapper.find('tbody input').attributes('aria-label')).toBe('Select row');
@@ -127,6 +132,7 @@ describe('NuiTable', () => {
       props: { pagination: { pageSizes: [5, 10] }, virtual: true, height: '10rem' },
       pageSize: 5,
     });
+
     expect(table.renderedRowCount).toBe(5);
     expect(table.rangeText).toBe('1–5 of 12');
     expect(table.hasModifier('virtual')).toBe(false);
@@ -148,6 +154,7 @@ describe('NuiTable', () => {
     const table = TableDriver.mount({
       props: { loading: true, loadingRows: 3, selectable: 'multiple' },
     });
+
     expect(table.busy).toBe(true);
     expect(table.hasModifier('loading')).toBe(true);
     expect(table.skeletonRows).toBe(3);
@@ -160,11 +167,13 @@ describe('NuiTable', () => {
     expect(table.statusText).toBe('No data');
     expect(table.wrapper.find('.nui-empty').exists()).toBe(true);
     table.unmount();
+
     const custom = TableDriver.mount({
       rows: [],
       props: { loading: true, emptyLabel: 'Пусто' },
       slots: { loading: () => 'Загружаем…', empty: () => 'Совсем пусто' },
     });
+
     expect(custom.statusText).toBe('Загружаем…');
     await custom.receive({ loading: false });
     expect(custom.statusText).toBe('Совсем пусто');
@@ -176,6 +185,7 @@ describe('NuiTable', () => {
       rows: manyPeople(5000),
       props: { virtual: true, height: '200px', rowHeight: 40 },
     });
+
     expect(table.hasModifier('virtual')).toBe(true);
     expect(table.ariaRowCount).toBe('5001');
     await table.setHeight(200);
@@ -202,6 +212,7 @@ describe('NuiTable columns', () => {
       columns: withOptions({ age: { resizable: true, width: 100, minWidth: 80, maxWidth: 300 } }),
       headerWidth: 100,
     });
+
     expect(table.hasModifier('fixed')).toBe(false);
     await table.settle();
     expect(table.hasModifier('fixed')).toBe(true);
@@ -238,6 +249,7 @@ describe('NuiTable columns', () => {
       }),
       props: { selectable: 'multiple' },
     });
+
     expect(table.cellClasses('Анна', 'Имя')).toEqual(
       expect.arrayContaining([
         'nui-table__cell--sticky',
@@ -245,9 +257,11 @@ describe('NuiTable columns', () => {
         'nui-table__cell--sticky-edge',
       ]),
     );
+
     expect(table.cellStyle('Анна', 'Имя')).toContain(
       'inset-inline-start: calc(1 * var(--_util) + 0px)',
     );
+
     expect(table.selectCellClasses('Анна')).toContain('nui-table__cell--sticky-start');
     expect(table.selectCellClasses('Анна')).not.toContain('nui-table__cell--sticky-edge');
     expect(table.headerClasses('Имя')).toContain('nui-table__cell--sticky-edge');
@@ -259,12 +273,15 @@ describe('NuiTable columns', () => {
     table.unmount();
     const plain = TableDriver.mount({ props: { selectable: 'multiple', rowDrag: true } });
     expect(plain.hasModifier('fixed')).toBe(false);
+
     expect(plain.selectCellClasses('Анна')).toEqual(
       expect.arrayContaining(['nui-table__cell--sticky-start', 'nui-table__cell--sticky-edge']),
     );
+
     expect(plain.selectCellStyle('Анна')).toContain(
       'inset-inline-start: calc(1 * var(--_util) + 0px)',
     );
+
     expect(plain.rowGrip('Анна').classes()).toContain('nui-table__grip');
     plain.unmount();
   });
@@ -278,6 +295,7 @@ describe('NuiTable columns', () => {
         score: { reorderable: true },
       }),
     });
+
     await table.pressGrip('Балл', ' ');
     expect(table.liveText).toContain('Балл grabbed, position 4 of 4');
     await table.pressGrip('Балл', 'ArrowLeft');
@@ -293,12 +311,14 @@ describe('NuiTable columns', () => {
     expect(table.liveText).toContain('cancelled');
     expect(table.columnOrder).toEqual(['name', 'role', 'score', 'age']);
     table.unmount();
+
     const pinned = TableDriver.mount({
       columns: withOptions({
         name: { reorderable: true, sticky: 'start' },
         role: { reorderable: true },
       }),
     });
+
     await pinned.pressGrip('Имя', ' ');
     await pinned.pressGrip('Имя', 'ArrowRight');
     expect(pinned.liveText).toContain('grabbed');
@@ -316,6 +336,7 @@ describe('NuiTable columns', () => {
         score: { reorderable: true },
       }),
     });
+
     table.layoutHeaders(100);
     await table.dragHeader('Имя', 50, 53);
     expect(table.columnOrder).toEqual([]);
@@ -341,6 +362,7 @@ describe('NuiTable rows', () => {
       rows: TEAM,
       props: { getChildren: childrenOf, isExpandable: expandableTeam },
     });
+
     expect(table.columnTexts('Имя')).toEqual(['Анна', 'Борис', 'Вера']);
     expect(table.toggleOf('Анна').attributes('aria-expanded')).toBe('false');
     expect(table.toggleOf('Борис').exists()).toBe(false);
@@ -375,6 +397,7 @@ describe('NuiTable rows', () => {
       props: { pinnedRows: PEOPLE.slice(0, 2), stickyHeader: true, pagination: true },
       pageSize: 5,
     });
+
     expect(table.pinnedNames).toEqual(['Анна', 'Борис']);
     expect(table.renderedRowCount).toBe(5);
     await table.clickHeader('Возраст');
@@ -390,6 +413,7 @@ describe('NuiTable rows', () => {
       expanded: TEAM.slice(0, 1),
       props: { rowDrag: true, getChildren: childrenOf },
     });
+
     expect(table.rowGrip('Анна').attributes('aria-label')).toBe('Reorder row');
     expect(table.headers).toEqual(['', 'Имя', 'Роль', 'Возраст', 'Балл']);
     await table.pressRowGrip('Борис', ' ');

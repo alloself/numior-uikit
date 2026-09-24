@@ -28,6 +28,7 @@ export class SelectDriver extends ComponentDriver {
   static mount({ props = {}, modelValue, field }: SelectMountOptions = {}) {
     const stubs = new TopLayerStubs();
     const model = ref<SelectValue>(modelValue);
+
     const select = () =>
       h(NuiSelect, {
         options: FRUITS,
@@ -39,6 +40,7 @@ export class SelectDriver extends ComponentDriver {
           }
         },
       });
+
     const Host = defineComponent({
       setup: () => () =>
         h('div', [
@@ -46,6 +48,7 @@ export class SelectDriver extends ComponentDriver {
           h('button', { type: 'button', class: 'outside' }, 'Outside'),
         ]),
     });
+
     return new SelectDriver(mount(Host, { attachTo: document.body }), stubs, model);
   }
 
@@ -129,6 +132,7 @@ export class SelectDriver extends ComponentDriver {
     const found = this.wrapper
       .findAll<HTMLElement>('[role="option"]')
       .find((option) => labelOf(option.element) === label);
+
     if (!found) {
       throw new Error(`No option labelled ${label}`);
     }

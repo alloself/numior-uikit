@@ -55,6 +55,9 @@ const {
 - Arrow constants for every function (`const onInput = (): void => {...}`); no `function`
   declarations unless an own `this` is needed; helpers without closure state go to module
   level; every `if`/`for` body is braced.
+- Blank lines between multi-line declarations, calls, imports and exports (ESLint
+  `@stylistic/padding-line-between-statements`); group `<script setup>` into sections:
+  props and models, state, derived values, handlers, lifecycle.
 - Read DOM state through `useTemplateRef<HTMLInputElement>('input')`, not `event.target`.
 - Composables receive destructured props through a getter, as above.
 

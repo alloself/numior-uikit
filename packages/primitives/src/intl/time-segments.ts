@@ -45,12 +45,14 @@ export interface DigitResult {
 }
 
 const EMPTY_DRAFT: TimeDraft = { hour: null, minute: null, second: null, period: null };
+
 const FALLBACK_LABELS: Record<TimeSegmentType, string> = {
   hour: 'hour',
   minute: 'minute',
   second: 'second',
   dayPeriod: 'AM/PM',
 };
+
 const SAMPLE = new Date(Date.UTC(2000, 0, 1, 13, 5, 9));
 
 const isSegmentType = (type: string): type is TimeSegmentType =>
@@ -71,6 +73,7 @@ const periodOf = (formatter: Intl.DateTimeFormat, hour: number): string | undefi
 
 export const timeLayout = (locale: string, options: TimeLayoutOptions): TimeLayout => {
   const cycle = resolveHourCycle(locale, options.hourCycle);
+
   const formatter = new Intl.DateTimeFormat(locale, {
     hour: 'numeric',
     minute: '2-digit',
@@ -78,12 +81,14 @@ export const timeLayout = (locale: string, options: TimeLayoutOptions): TimeLayo
     hourCycle: cycle,
     timeZone: 'UTC',
   });
+
   const segments = formatter.formatToParts(SAMPLE).flatMap((part): TimeSegment[] => {
     if (isSegmentType(part.type)) {
       return [{ type: part.type }];
     }
     return part.type === 'literal' ? [{ type: 'literal', text: part.value }] : [];
   });
+
   return {
     cycle,
     segments,

@@ -103,6 +103,7 @@ const periods: NuiTabDescriptor[] = [
   { value: 'week', label: 'Неделя' },
   { value: 'month', label: 'Месяц' },
 ];
+
 const path: NuiBreadcrumbItem[] = [
   { label: 'Главная', href: '#home' },
   { label: 'Проекты', href: '#projects' },
@@ -110,15 +111,18 @@ const path: NuiBreadcrumbItem[] = [
   { label: 'Настройки', href: '#settings' },
   { label: 'Оплата' },
 ];
+
 const menuOpen = ref(false);
 const gridOn = ref(false);
 const sort = ref('name');
 const lastAction = ref('');
 const tab = ref('overview');
 const manualTab = ref('day');
+
 const act = (name: string): void => {
   lastAction.value = name;
 };
+
 const output = computed(() =>
   JSON.stringify(
     {

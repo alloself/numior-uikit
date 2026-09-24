@@ -20,6 +20,7 @@ describe('NuiList', () => {
         { label: 'Beta', icon: 'check', trailing: 'New' },
       ],
     });
+
     expect(list.tag).toBe('ul');
     expect(list.role).toBeUndefined();
     expect(list.hasModifier('variant-plain')).toBe(true);
@@ -32,10 +33,12 @@ describe('NuiList', () => {
     expect(list.wrapper.find('.nui-row__trailing').text()).toBe('New');
     expect(list.wrapper.find('.nui-row__leading').text()).toBe('A');
     list.unmount();
+
     const ordered = ListDriver.mount({
       props: { as: 'ol', variant: 'bordered', size: 'sm' },
       parts: [{ label: 'One' }],
     });
+
     expect(ordered.tag).toBe('ol');
     expect(ordered.hasModifier('variant-bordered')).toBe(true);
     expect(ordered.modifierOf('One', 'size-sm')).toBe(true);
@@ -51,6 +54,7 @@ describe('NuiList', () => {
         { label: 'Stop', clickable: true, disabled: true },
       ],
     });
+
     expect(list.innerTag('Docs')).toBe('a');
     expect(list.inner('Docs').attributes('href')).toBe('/docs');
     expect(list.modifierOf('Docs', 'mode-link')).toBe(true);
@@ -70,6 +74,7 @@ describe('NuiList', () => {
 
   it('renders items data as parts, replaces bodies through the item slot and shows the empty state', async () => {
     let runs = 0;
+
     const list = ListDriver.mount({
       props: {
         items: [
@@ -85,6 +90,7 @@ describe('NuiList', () => {
       },
       itemSlot: ({ item }) => `${item.label}!`,
     });
+
     expect(list.titles).toEqual(['Docs!', 'Run!', 'Plain!']);
     expect(list.innerTag('Docs!')).toBe('a');
     expect(list.innerTag('Run!')).toBe('button');
@@ -107,6 +113,7 @@ describe('NuiList', () => {
       props: { items: LANGUAGES, selectable: 'single', label: 'Languages' },
       modelValue: 'rust',
     });
+
     expect(list.role).toBe('listbox');
     expect(list.listAttr('aria-label')).toBe('Languages');
     expect(list.listAttr('aria-multiselectable')).toBeUndefined();
@@ -143,6 +150,7 @@ describe('NuiList', () => {
       props: { items: LANGUAGES, selectable: 'multiple' },
       modelValue: ['rust'],
     });
+
     expect(list.listAttr('aria-multiselectable')).toBe('true');
     await list.click('Go');
     expect(list.value).toEqual(['rust', 'go']);
@@ -163,6 +171,7 @@ describe('NuiList', () => {
       props: { selectable: 'single' },
       parts: [{ label: 'Docs', value: 'docs', href: '/docs' }, { label: 'Heading' }],
     });
+
     expect(list.item('Docs').attributes('role')).toBe('option');
     expect(list.innerTag('Docs')).toBe('div');
     expect(list.item('Heading').attributes('role')).toBeUndefined();

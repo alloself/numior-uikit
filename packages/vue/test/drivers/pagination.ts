@@ -18,6 +18,7 @@ export class PaginationDriver extends ComponentDriver {
     const stubs = new TopLayerStubs();
     const pageModel = ref(page);
     const sizeModel = ref(pageSize);
+
     const Host = defineComponent({
       setup: () => () =>
         h(NuiPagination, {
@@ -32,6 +33,7 @@ export class PaginationDriver extends ComponentDriver {
           },
         }),
     });
+
     return new PaginationDriver(
       mount(Host, { attachTo: document.body }),
       stubs,
@@ -108,6 +110,7 @@ export class PaginationDriver extends ComponentDriver {
     const found = this.wrapper
       .findAll<HTMLElement>('.nui-pagination__page')
       .find((control) => control.text() === String(page));
+
     if (!found) {
       throw new Error(`Page ${page} is not rendered`);
     }

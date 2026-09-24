@@ -6,12 +6,14 @@ describe('NuiBreadcrumbs', () => {
     const crumbs = BreadcrumbsDriver.mount();
     expect(crumbs.nav.attributes('aria-label')).toBe('Путь');
     expect(crumbs.crumbs).toEqual(['Home', 'Projects', 'Numior', 'Settings', 'Billing']);
+
     expect(crumbs.hrefs).toEqual([
       '/',
       '/projects',
       '/projects/numior',
       '/projects/numior/settings',
     ]);
+
     expect(crumbs.currentLabel).toBe('Billing');
     expect(crumbs.separatorCount).toBe(4);
     expect(crumbs.moreButton.exists()).toBe(false);
@@ -26,11 +28,13 @@ describe('NuiBreadcrumbs', () => {
     expect(crumbs.moreButton.attributes('aria-haspopup')).toBe('menu');
     await crumbs.openMore();
     expect(crumbs.menuLabels).toEqual(['Projects', 'Numior', 'Settings']);
+
     expect(crumbs.menuHrefs).toEqual([
       '/projects',
       '/projects/numior',
       '/projects/numior/settings',
     ]);
+
     crumbs.unmount();
     const wide = BreadcrumbsDriver.mount({ maxItems: 4 });
     expect(wide.crumbs).toEqual(['Home', 'Settings', 'Billing']);
@@ -48,11 +52,13 @@ describe('NuiBreadcrumbs', () => {
     const crumbs = BreadcrumbsDriver.mount({ viaRouter: true, maxItems: 3 });
     expect(crumbs.hrefs).toEqual(['/router/']);
     await crumbs.openMore();
+
     expect(crumbs.menuHrefs).toEqual([
       '/router/projects',
       '/router/projects/numior',
       '/router/projects/numior/settings',
     ]);
+
     crumbs.unmount();
   });
 });

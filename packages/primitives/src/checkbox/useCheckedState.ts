@@ -17,6 +17,7 @@ export const useCheckedState = <T>(
     }
     return current === true;
   });
+
   const setChecked = (next: boolean): void => {
     const current = model.value;
     if (!Array.isArray(current)) {
@@ -30,5 +31,6 @@ export const useCheckedState = <T>(
     const others = current.filter((item) => item !== own);
     model.value = next ? [...others, own] : others;
   };
+
   return { checked, setChecked };
 };

@@ -7,6 +7,7 @@ describe('NuiTextarea', () => {
       props: { rows: 5, resize: 'none', size: 'sm', invalid: true, readonly: true },
       attrs: { class: 'tall', placeholder: 'Bio', 'aria-label': 'Bio' },
     });
+
     expect(textarea.element.tagName).toBe('TEXTAREA');
     expect(textarea.wrapper.classes()).toContain('tall');
     expect(textarea.attribute('placeholder')).toBe('Bio');

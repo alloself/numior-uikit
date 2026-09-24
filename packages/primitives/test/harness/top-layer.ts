@@ -16,34 +16,41 @@ const announce = (element: HTMLElement, newState: 'open' | 'closed'): boolean =>
 export const installTopLayer = (): { readonly log: TopLayerLog; restore(): void } => {
   const log = { showPopover: 0, hidePopover: 0, showModal: 0, close: new Array<string>() };
   const defined: Array<[object, string]> = [];
+
   const define = (target: object, key: string, descriptor: PropertyDescriptor): void => {
     Object.defineProperty(target, key, { configurable: true, ...descriptor });
     defined.push([target, key]);
   };
+
   define(HTMLElement.prototype, 'showPopover', {
     value(this: HTMLElement) {
       log.showPopover += 1;
       announce(this, 'open');
     },
   });
+
   define(HTMLElement.prototype, 'hidePopover', {
     value(this: HTMLElement) {
       log.hidePopover += 1;
       announce(this, 'closed');
     },
   });
+
   define(HTMLDialogElement.prototype, 'open', {
     get(this: HTMLDialogElement) {
       return this.hasAttribute('open');
     },
   });
+
   define(HTMLDialogElement.prototype, 'returnValue', { writable: true, value: '' });
+
   define(HTMLDialogElement.prototype, 'showModal', {
     value(this: HTMLDialogElement) {
       log.showModal += 1;
       this.setAttribute('open', '');
     },
   });
+
   define(HTMLDialogElement.prototype, 'close', {
     value(this: HTMLDialogElement, value = '') {
       log.close.push(value);
@@ -52,6 +59,7 @@ export const installTopLayer = (): { readonly log: TopLayerLog; restore(): void 
       this.dispatchEvent(new Event('close'));
     },
   });
+
   return {
     log,
     restore: () => {

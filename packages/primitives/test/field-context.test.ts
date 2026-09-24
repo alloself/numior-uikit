@@ -16,6 +16,7 @@ describe('field context', () => {
       hasError: true,
       required: true,
     });
+
     expect(field.id).toBe('email');
     expect(field.labelId).toBe('email-label');
     expect(field.labelledBy).toBe('email-label');
@@ -27,12 +28,14 @@ describe('field context', () => {
 
   it('follows reactive options and marks group fields as not labelable', async () => {
     const hasError = ref(false);
+
     const field = FieldHarness.inside({
       id: 'plan',
       hasError,
       labelable: false,
       disabled: () => true,
     });
+
     expect(field.describedBy).toBeUndefined();
     expect(field.labelledBy).toBeUndefined();
     expect(field.invalid).toBe(false);

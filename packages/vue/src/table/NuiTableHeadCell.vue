@@ -74,9 +74,11 @@ import type { NuiTableHeadCellProps } from './table.types';
 
 const { column, index, sort, layout, actions, resizing, dragging, resizeLabel, reorderLabel } =
   defineProps<NuiTableHeadCellProps<T>>();
+
 const emit = defineEmits<{ sort: [key: string] }>();
 
 const direction = computed(() => directionOf(sort, column.key));
+
 const onPointerdown = (event: PointerEvent): void => {
   if (column.reorderable) {
     actions.dragStart(index, event);

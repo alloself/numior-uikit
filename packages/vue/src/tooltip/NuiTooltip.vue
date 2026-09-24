@@ -26,6 +26,7 @@ import type {
 } from './tooltip.types';
 
 defineOptions({ inheritAttrs: false });
+
 const {
   id,
   placement = 'top',
@@ -33,28 +34,34 @@ const {
   openDelay = 300,
   closeDelay = 100,
 } = defineProps<NuiTooltipProps>();
+
 const open = defineModel<boolean>('open', { default: false });
 defineSlots<{ trigger(props: NuiTooltipTriggerSlot): unknown; default(): unknown }>();
 const { trigger, setTrigger } = useTriggerElement();
 const contentElement = useTemplateRef<HTMLElement>('content');
 const arrowNode = useTemplateRef<HTMLElement>('arrow-node');
+
 const { contentAttrs, id: tooltipId } = usePopover(contentElement, {
   open,
   id: () => id,
   mode: 'manual',
 });
+
 const { side, floatingStyles, arrowStyles } = useFloating(trigger, contentElement, {
   placement: () => placement,
   offset: () => offset,
   arrow: arrowNode,
   enabled: open,
 });
+
 const delay = useDelayedOpen(open, {
   openDelay: () => openDelay,
   closeDelay: () => closeDelay,
 });
+
 const pointerPressedAt = ref(0);
 const POINTER_FOCUS_WINDOW = 500;
+
 const triggerAttrs = computed<NuiTooltipTriggerAttrs>(() => ({
   'aria-describedby': tooltipId.value,
   ref: setTrigger,

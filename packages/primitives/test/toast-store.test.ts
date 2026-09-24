@@ -11,12 +11,14 @@ describe('toast store', () => {
     const toasts = ToastHarness.create();
     const id = toasts.show({ title: 'Saved' });
     expect(id).toBe('nui-toast-1');
+
     expect(toasts.record(id)).toMatchObject({
       tone: 'neutral',
       duration: 5000,
       dismissible: true,
       leaving: false,
     });
+
     toasts.advance(4999);
     expect(toasts.leavingIds).toEqual([]);
     toasts.advance(1);
@@ -76,15 +78,19 @@ describe('toast store', () => {
 
   it('exposes tone helpers through useToast', () => {
     const plugin = ToastHarness.viaPlugin({ duration: 1000 });
+
     const service = captureSetup(() => useToast(), {
       plugins: [],
     }).value;
+
     const id = service.error('Failed', { description: 'Retry later' });
     expect(service).toBeTruthy();
+
     expect(ToastHarness.shared().record(id)).toMatchObject({
       tone: 'error',
       description: 'Retry later',
     });
+
     expect(plugin.ids).toEqual([]);
   });
 

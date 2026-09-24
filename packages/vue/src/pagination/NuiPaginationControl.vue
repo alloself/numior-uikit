@@ -41,5 +41,6 @@ const {
   href,
   as = 'a',
 } = defineProps<NuiPaginationControlProps>();
+
 const emit = defineEmits<{ select: [page: number] }>();
 </script>

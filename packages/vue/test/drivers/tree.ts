@@ -57,6 +57,7 @@ export class TreeDriver extends ComponentDriver {
     const itemsRef = ref<readonly NuiTreeItem<string>[]>(items);
     const loads: string[] = [];
     const events: string[] = [];
+
     const Host = defineComponent({
       setup: () => () =>
         h('div', { dir }, [
@@ -92,6 +93,7 @@ export class TreeDriver extends ComponentDriver {
           ),
         ]),
     });
+
     return new TreeDriver(
       mount(Host, { attachTo: document.body }),
       model,
@@ -185,9 +187,11 @@ export class TreeDriver extends ComponentDriver {
     await flushPromises();
     const node = this.node(label);
     const expanded = node.classes().includes('nui-tree__item--expanded');
+
     const pair = node.find(
       expanded ? '.nui-tree__glyph--open svg' : '.nui-tree__glyph--closed svg',
     );
+
     const glyph = pair.exists() ? pair : node.find('.nui-tree__icon svg');
     return glyph.exists()
       ? glyph

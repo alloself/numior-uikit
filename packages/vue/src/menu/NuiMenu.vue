@@ -26,6 +26,7 @@ import { useMenuSurface } from './use-menu-surface';
 import type { NuiMenuProps, NuiMenuTriggerAttrs, NuiMenuTriggerSlot } from './menu.types';
 
 defineOptions({ inheritAttrs: false });
+
 const {
   id,
   placement = 'bottom-start',
@@ -36,12 +37,14 @@ const {
   typeahead = true,
   label,
 } = defineProps<NuiMenuProps>();
+
 const open = defineModel<boolean>('open', { default: false });
 defineSlots<{ trigger(props: NuiMenuTriggerSlot): unknown; default(): unknown }>();
 
 const { trigger, setTrigger } = useTriggerElement();
 const contentElement = useTemplateRef<HTMLElement>('content');
 const triggerId = useControlId(() => (id === undefined ? undefined : `${id}-trigger`));
+
 const {
   control,
   floating,
@@ -59,6 +62,7 @@ const {
   closeOnSelect: () => closeOnSelect,
   parent: null,
 });
+
 provideMenu(context);
 const contentAttrs = control.contentAttrs;
 const { side, floatingStyles } = floating;
@@ -72,6 +76,7 @@ const onTriggerKeydown = (event: KeyboardEvent): void => {
     context.requestFocus('first');
   }
 };
+
 const triggerAttrs = computed<NuiMenuTriggerAttrs>(() => ({
   ...control.invokerAttrs.value,
   id: triggerId.value,

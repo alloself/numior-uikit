@@ -87,14 +87,17 @@ export const useTimeDraft = (options: TimeDraftOptions): TimeDraftControl => {
     lastEmitted = time ? formatTimeModel(time, options.seconds()) : null;
     options.model.value = lastEmitted;
   };
+
   const resetTyping = (): void => {
     typing.type = null;
     typing.count = 0;
   };
+
   const setTime = (time: TimeValue): void => {
     resetTyping();
     publish(timeToDraft(time, cycle()));
   };
+
   const complete = (): TimeValue | null => draftToTime(draft.value, cycle(), options.seconds());
 
   const typeDigit = (type: TimeSegmentType, digit: number): boolean => {
@@ -111,26 +114,32 @@ export const useTimeDraft = (options: TimeDraftOptions): TimeDraftControl => {
     publish(withValue(draft.value, type, result.value));
     return result.advance;
   };
+
   const step = (type: TimeSegmentType, delta: number): void => {
     resetTyping();
     const current = segmentValue(draft.value, type);
+
     const next =
       type === 'dayPeriod'
         ? togglePeriod(current, delta)
         : stepSegment(current, delta, segmentBounds(type, cycle()));
+
     publish(withValue(draft.value, type, next));
   };
+
   const setEdge = (type: TimeSegmentType, edge: TimeEdge): void => {
     resetTyping();
     const bounds = segmentBounds(type, cycle());
     publish(withValue(draft.value, type, edge === 'min' ? bounds.min : bounds.max));
   };
+
   const shift = (minutes: number): void => {
     const time = complete();
     if (time) {
       setTime(clampTime(shiftTime(time, minutes), options.min(), options.max()));
     }
   };
+
   const settle = (): void => {
     resetTyping();
     const time = complete();
@@ -149,6 +158,7 @@ export const useTimeDraft = (options: TimeDraftOptions): TimeDraftControl => {
       draft.value = fromModel();
     }
   });
+
   watch([cycle, () => options.seconds()], () => {
     draft.value = fromModel();
   });

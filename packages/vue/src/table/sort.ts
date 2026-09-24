@@ -47,8 +47,10 @@ export const sortRows = <T>(
     return [...rows];
   }
   const sign = sort.direction === 'asc' ? 1 : -1;
+
   const compare =
     column.sort ?? ((a: T, b: T) => defaultCompare(cellValue(a, column), cellValue(b, column)));
+
   return rows.toSorted((a, b) => compare(a, b) * sign);
 };
 

@@ -31,6 +31,7 @@ export class IconDriver extends ComponentDriver {
     const wrapper: VueWrapper = icons
       ? mount(configScope({ icons }, () => h(NuiIcon, { ...props, ...attrs })))
       : mount(NuiIcon, { props, attrs });
+
     return new IconDriver(wrapper, expectGlyph);
   }
 

@@ -5,6 +5,7 @@ import { paginationRange } from '../src/pagination/pagination-range';
 describe('paginationRange', () => {
   it('keeps boundaries and siblings around the current page and collapses the rest', () => {
     expect(paginationRange(1, 12, 1, 1)).toEqual([1, 2, 3, 4, 5, 'end-ellipsis', 12]);
+
     expect(paginationRange(6, 12, 1, 1)).toEqual([
       1,
       'start-ellipsis',
@@ -14,8 +15,10 @@ describe('paginationRange', () => {
       'end-ellipsis',
       12,
     ]);
+
     expect(paginationRange(12, 12, 1, 1)).toEqual([1, 'start-ellipsis', 8, 9, 10, 11, 12]);
     expect(paginationRange(3, 5, 1, 1)).toEqual([1, 2, 3, 4, 5]);
+
     expect(paginationRange(25, 50, 2, 2)).toEqual([
       1,
       2,
@@ -38,6 +41,7 @@ describe('NuiPagination', () => {
       props: { total: 240, label: 'Страницы' },
       page: 6,
     });
+
     expect(pagination.nav.attributes('aria-label')).toBe('Страницы');
     expect(pagination.entries).toEqual(['1', '…', '5', '6', '7', '…', '12']);
     expect(pagination.currentPage).toBe('6');
@@ -61,7 +65,9 @@ describe('NuiPagination', () => {
       page: 25,
       pageSize: 10,
     });
+
     expect(pagination.edgeControls).toBe(2);
+
     expect(pagination.entries).toEqual([
       '1',
       '2',
@@ -75,6 +81,7 @@ describe('NuiPagination', () => {
       '49',
       '50',
     ]);
+
     await pagination.clickEdge('first');
     expect(pagination.page).toBe(1);
     expect(pagination.previousDisabled).toBe(true);
@@ -88,6 +95,7 @@ describe('NuiPagination', () => {
       props: { total: 60, href: (page) => `#page-${page}`, showRange: false },
       page: 2,
     });
+
     expect(pagination.hrefs).toEqual(['#page-1', '#page-2', '#page-3']);
     expect(pagination.currentPage).toBe('2');
     await pagination.clickPage(3);
@@ -100,6 +108,7 @@ describe('NuiPagination', () => {
       props: { total: 240, pageSizes: [10, 20, 50], pageSizeLabel: 'На странице' },
       page: 12,
     });
+
     expect(pagination.rangeText).toBe('221–240 of 240');
     await pagination.choosePageSize(50);
     expect(pagination.pageSize).toBe(50);
@@ -113,6 +122,7 @@ describe('NuiPagination', () => {
     const pagination = PaginationDriver.mount({
       props: { total: 0, rangeLabel: (from, to, total) => `${from}–${to} из ${total}` },
     });
+
     expect(pagination.entries).toEqual(['1']);
     expect(pagination.rangeText).toBe('0–0 из 0');
     expect(pagination.previousDisabled).toBe(true);

@@ -96,9 +96,11 @@ const {
   label,
   labelledBy,
 } = defineProps<NuiTreeProps<T>>();
+
 const model = defineModel<T | T[]>();
 const expanded = defineModel<T[]>('expanded', { default: () => [] });
 const checked = defineModel<T[]>('checked', { default: () => [] });
+
 const emit = defineEmits<{
   expand: [item: NuiTreeItem<T>];
   collapse: [item: NuiTreeItem<T>];
@@ -110,12 +112,14 @@ const baseId = useControlId(() => id);
 const root = useTemplateRef<HTMLElement>('root');
 const mounted = ref(false);
 const mode = computed(() => (selectable === undefined ? 'single' : selectable));
+
 const { keyOf, selectedKeys, selectedValues, toggle } = useOptionSelection<T>({
   options: () => [],
   model,
   multiple: () => mode.value === 'multiple',
   getKey: () => getKey,
 });
+
 const expandedKeys = computed(() => new Set(expanded.value.map(keyOf)));
 const checkedKeys = computed(() => new Set(checked.value.map(keyOf)));
 const pending = shallowReactive(new Set<string>());
@@ -124,6 +128,7 @@ const visible = computed(() => flattenTree(items, keyOf, expandedKeys.value, pen
 const activeKey = ref<string>();
 const activeIndex = computed(() => visible.value.findIndex((node) => node.key === activeKey.value));
 const nodeId = (key: string): string => `${baseId.value}-node-${encodeURIComponent(key)}`;
+
 const activeDescendant = computed(() => {
   const node = visible.value[activeIndex.value];
   return mounted.value && node ? nodeId(node.key) : undefined;
@@ -135,6 +140,7 @@ const windowing = useVirtualList(root, {
   enabled: () => virtual,
   pinned: () => (activeIndex.value >= 0 ? activeIndex.value : undefined),
 });
+
 const rendered = computed<RenderedNode[]>(() =>
   virtual
     ? windowing.items.value.flatMap(({ index, start }) => {
@@ -143,16 +149,19 @@ const rendered = computed<RenderedNode[]>(() =>
       })
     : visible.value.map((node, index) => ({ node, index, start: undefined })),
 );
+
 const rootStyle = computed(() => ({
   '--_height': height,
   ...(virtual ? { '--_row': `${itemHeight}px` } : {}),
 }));
+
 const listStyle = computed(() =>
   virtual ? { blockSize: `${windowing.totalSize.value}px` } : undefined,
 );
 
 const folderFor = (node: TreeNode<T>): boolean =>
   icons && node.item.icon === undefined && node.hasChildren;
+
 const iconFor = (node: TreeNode<T>): IconAlias | undefined => {
   if (!icons || node.item.icon === false) {
     return undefined;
@@ -172,22 +181,26 @@ const revealNode = (index: number): void => {
   const element = node ? document.getElementById(nodeId(node.key)) : null;
   element?.scrollIntoView?.({ block: 'nearest' });
 };
+
 const setActive = (index: number): void => {
   activeKey.value = visible.value[index]?.key;
   revealNode(index);
 };
+
 const isRtl = (): boolean => root.value?.closest('[dir]')?.getAttribute('dir') === 'rtl';
 
 const revealAdded = (added: readonly string[]): void => {
   for (const key of added) {
     revealing.add(key);
   }
+
   afterPaint(() => {
     for (const key of added) {
       revealing.delete(key);
     }
   });
 };
+
 watch(visible, (next, previous) => {
   if (!virtual) {
     return;
@@ -195,6 +208,7 @@ watch(visible, (next, previous) => {
   const before = new Set(previous.map((node) => node.key));
   revealAdded(next.flatMap((node) => (before.has(node.key) ? [] : [node.key])));
 });
+
 const expandItems = (targets: readonly TreeNode<T>[]): void => {
   const fresh = targets.filter((node) => node.hasChildren && !node.expanded);
   if (fresh.length === 0) {
@@ -211,12 +225,14 @@ const expandItems = (targets: readonly TreeNode<T>[]): void => {
     emit('expand', node.item);
   }
 };
+
 const expandNode = (index: number): void => {
   const node = visible.value[index];
   if (node) {
     expandItems([node]);
   }
 };
+
 const collapseNode = (index: number): void => {
   const node = visible.value[index];
   if (!node || !node.expanded) {
@@ -225,6 +241,7 @@ const collapseNode = (index: number): void => {
   expanded.value = expanded.value.filter((value) => keyOf(value) !== node.key);
   emit('collapse', node.item);
 };
+
 const toggleExpand = (index: number): void => {
   if (visible.value[index]?.expanded) {
     collapseNode(index);
@@ -232,6 +249,7 @@ const toggleExpand = (index: number): void => {
     expandNode(index);
   }
 };
+
 const expandSiblings = (index: number): void => {
   const nodes = visible.value;
   expandItems(siblingIndicesOf(nodes, index).flatMap((position) => nodes[position] ?? []));
@@ -241,6 +259,7 @@ const toggleCheck = (node: TreeNode<T>): void => {
   const next = applyCheck(items, checkedKeys.value, node.item, keyOf);
   checked.value = collectCheckedValues(items, next, keyOf);
 };
+
 const activate = (index: number, key: TreeActivationKey): void => {
   const node = visible.value[index];
   if (!node || node.item.disabled) {
@@ -283,13 +302,17 @@ const onFocus = (): void => {
   const selected = nodes.find((node) => selectedKeys.value.has(node.key) && !node.item.disabled);
   activeKey.value = (selected ?? nodes.find((node) => !node.item.disabled))?.key;
 };
+
 const hitNode = (event: Event): number => {
   const element =
     event.target instanceof Element ? event.target.closest('[role="treeitem"]') : null;
+
   return element ? visible.value.findIndex((node) => nodeId(node.key) === element.id) : -1;
 };
+
 const partOf = (event: Event, part: string): boolean =>
   event.target instanceof Element && event.target.closest(`.nui-tree__${part}`) !== null;
+
 const onClick = (event: MouseEvent): void => {
   const index = hitNode(event);
   const node = visible.value[index];
@@ -305,6 +328,7 @@ const onClick = (event: MouseEvent): void => {
     activate(index, 'Enter');
   }
 };
+
 const onDblclick = (event: MouseEvent): void => {
   const index = hitNode(event);
   const node = visible.value[index];

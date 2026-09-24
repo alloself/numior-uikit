@@ -14,6 +14,7 @@ export const LOCALE_KEY: InjectionKey<ComputedRef<string>> = Symbol('nui:locale'
 
 export const provideLocale = (locale: MaybeRefOrGetter<string | undefined>): void => {
   const parent = inject(LOCALE_KEY, null);
+
   provide(
     LOCALE_KEY,
     computed(() => toValue(locale) || parent?.value || DEFAULT_LOCALE),

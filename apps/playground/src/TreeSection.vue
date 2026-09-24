@@ -71,10 +71,12 @@ const base: NuiTreeItem<string>[] = [
     children: [{ value: 'logo', label: 'logo.svg', icon: 'image' }],
   },
 ];
+
 const docs: NuiTreeItem<string>[] = [
   { value: 'guide', label: 'Руководство.md' },
   { value: 'api', label: 'API.md' },
 ];
+
 const nodes: NuiTreeItem<string>[] = Array.from({ length: 10_000 }, (_, index) => ({
   value: `n${index + 1}`,
   label: `Узел ${index + 1}`,
@@ -92,10 +94,12 @@ const loadDocs = ({ value }: { readonly value: string | undefined }): void => {
   if (value === undefined) {
     return;
   }
+
   setTimeout(() => {
     files.value = files.value.map((entry) =>
       entry.value === value ? { ...entry, children: docs } : entry,
     );
+
     loaded.value = [...loaded.value, value];
   }, 400);
 };

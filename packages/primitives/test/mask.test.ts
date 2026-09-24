@@ -10,6 +10,7 @@ describe('input mask', () => {
       raw: '9991234567',
       complete: true,
     });
+
     expect(applyMask('999', PHONE)).toEqual({ masked: '+7 (999', raw: '999', complete: false });
     expect(applyMask('+7 (999) 12', PHONE).masked).toBe('+7 (999) 12');
     expect(applyMask('99912345678901', PHONE).masked).toBe('+7 (999) 123-45-67');

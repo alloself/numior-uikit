@@ -67,5 +67,6 @@ const {
   resizeLabel,
   reorderLabel,
 } = defineProps<NuiTableHeadProps<T>>();
+
 const emit = defineEmits<{ sort: [key: string]; toggleAll: [] }>();
 </script>

@@ -32,6 +32,7 @@ describe('NuiCard', () => {
         media: { src: '/cover.png', alt: 'Cover', aspect: '4 / 3' },
       },
     });
+
     expect(card.titleTag).toBe('h2');
     expect(card.hasImage).toBe(true);
     expect(card.mediaAspect).toBe('4 / 3');
@@ -50,6 +51,7 @@ describe('NuiCard', () => {
     const card = CardDriver.mount({
       props: { href: '/plans/team', title: 'Team', description: 'Seats' },
     });
+
     expect(card.hasModifier('interactive')).toBe(true);
     expect(card.actionTag).toBe('a');
     expect(card.action.attributes('href')).toBe('/plans/team');
@@ -69,6 +71,7 @@ describe('NuiCard', () => {
       props: { interactive: true },
       parts: { title: 'Open', actions: true, content: 'Body' },
     });
+
     expect(card.actionTag).toBe('button');
     expect(card.action.attributes('type')).toBe('button');
     await card.clickAction();

@@ -42,11 +42,13 @@ const visit = <T>(
   out: NuiTableRowView<T>[],
 ): void => {
   const ordered = options.sortLevel(frame.rows);
+
   ordered.forEach((row, index) => {
     const key = options.keyOf(row);
     const children = options.getChildren?.(row);
     const hasChildren = expandable(row, options);
     const expanded = hasChildren && options.expandedKeys.has(key);
+
     out.push({
       row,
       key,
@@ -59,6 +61,7 @@ const visit = <T>(
       siblingIndex: index,
       siblingCount: ordered.length,
     });
+
     if (expanded && children) {
       visit({ rows: children, level: frame.level + 1, parent: row, parentKey: key }, options, out);
     }

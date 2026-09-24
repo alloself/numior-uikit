@@ -72,11 +72,13 @@ export class ListDriver extends ComponentDriver {
     const model = ref<ListValue>(modelValue);
     const clicks = ref(0);
     const items = ref<NuiListSource<NuiListEntry<unknown>> | undefined>(props.items);
+
     const slots = {
       default: () =>
         parts.map((part) => h(NuiListItem, partProps(part, clicks, viaRouter), partSlots(part))),
       ...(itemSlot ? { item: itemSlot } : {}),
     };
+
     const Host = defineComponent({
       setup: () => () =>
         h('div', [
@@ -98,6 +100,7 @@ export class ListDriver extends ComponentDriver {
           h('button', { type: 'button', class: 'outside' }, 'Outside'),
         ]),
     });
+
     return new ListDriver(mount(Host, { attachTo: document.body }), model, clicks, items);
   }
 

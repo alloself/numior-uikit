@@ -52,10 +52,12 @@ export const useRowReorder = <T>(options: RowReorderOptions<T>): RowReorder => {
       return Math.min(count - 1, Math.max(0, passed));
     }
     const first = options.firstIndex();
+
     const passed = renderedRows(body).filter((row, offset) => {
       const rect = row.getBoundingClientRect();
       return first + offset !== from && rect.top + rect.height / 2 < client;
     }).length;
+
     return Math.min(count - 1, first + passed);
   };
 
@@ -85,17 +87,20 @@ export const useRowReorder = <T>(options: RowReorderOptions<T>): RowReorder => {
 
   const float = (state: ReorderState): void => {
     const view = options.views()[state.from];
+
     ghost.value =
       state.phase === 'dragging' && view
         ? ghostAt(options.scroller(), 'y', state.position, grabbed.current, options.labelOf(view))
         : undefined;
   };
+
   const say = (phase: NuiTableAnnouncement['phase'], from: number, to: number): void => {
     const view = options.views()[from];
     if (!view) {
       return;
     }
     const target = options.views()[to];
+
     options.announce({
       kind: 'row',
       phase,
@@ -105,6 +110,7 @@ export const useRowReorder = <T>(options: RowReorderOptions<T>): RowReorder => {
       count: view.siblingCount,
     });
   };
+
   const announceTransition = (state: ReorderState): void => {
     if (state.phase === 'keyboard' && previous.phase !== 'keyboard') {
       flags.moved = false;
@@ -116,6 +122,7 @@ export const useRowReorder = <T>(options: RowReorderOptions<T>): RowReorder => {
       say('cancelled', previous.from, previous.from);
     }
   };
+
   const onChange = (state: ReorderState): void => {
     if (state.phase === 'pending') {
       flags.moved = false;
@@ -129,6 +136,7 @@ export const useRowReorder = <T>(options: RowReorderOptions<T>): RowReorder => {
     float(state);
     previous = state;
   };
+
   const canMove = (from: number, to: number): boolean => {
     const source = options.views()[from];
     const target = options.views()[to];
@@ -153,12 +161,14 @@ export const useRowReorder = <T>(options: RowReorderOptions<T>): RowReorder => {
         return;
       }
       flags.moved = true;
+
       options.onReorder({
         row: source.row,
         from: source.siblingIndex,
         to: target.siblingIndex,
         parent: source.parent,
       });
+
       say('dropped', from, to);
     },
     onChange,

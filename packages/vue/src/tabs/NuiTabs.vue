@@ -46,11 +46,13 @@ const {
   tabs,
   label,
 } = defineProps<NuiTabsProps>();
+
 const model = defineModel<string>();
 defineSlots<{ default(): unknown; panel(props: NuiTabsPanelSlot): unknown }>();
 
 const baseId = useControlId(() => id);
 const visited = shallowReactive(new Set<string>());
+
 watch(
   () => model.value,
   (value) => {

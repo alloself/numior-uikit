@@ -90,6 +90,7 @@ export const formatTimeLabel = (
       hourCycle: cycle,
       timeZone: 'UTC',
     });
+
     labelFormatters.set(key, formatter);
   }
   return formatter.format(new Date(Date.UTC(2000, 0, 1, time.hour, time.minute, time.second)));

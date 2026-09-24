@@ -14,6 +14,7 @@ describe('NuiTree', () => {
     expect(tree.tree.attributes('tabindex')).toBe('0');
     expect(tree.tree.attributes('aria-label')).toBe('Файлы');
     expect(tree.tree.attributes('aria-multiselectable')).toBeUndefined();
+
     expect(tree.labels).toEqual([
       'src',
       'components',
@@ -24,6 +25,7 @@ describe('NuiTree', () => {
       'empty',
       'Дизайн',
     ]);
+
     expect(tree.attr('components', 'aria-level')).toBe('2');
     expect(tree.attr('index.ts', 'aria-setsize')).toBe('2');
     expect(tree.attr('index.ts', 'aria-posinset')).toBe('2');
@@ -137,6 +139,7 @@ describe('NuiTree', () => {
       props: { checkable: true },
       expanded: ['src', 'components'],
     });
+
     expect(tree.hasModifier('checkable')).toBe(true);
     expect(tree.attr('src', 'aria-checked')).toBe('false');
     await tree.clickCheckbox('src');
@@ -189,6 +192,7 @@ describe('NuiTree', () => {
       itemSlot: ({ item, level }) =>
         `${typeof item === 'object' && item && 'label' in item ? String(item.label) : ''}@${level}`,
     });
+
     expect(tree.labels[0]).toBe('src@1');
     await tree.clickToggle('src@1');
     expect(tree.expandedValues).toEqual(['src']);
@@ -209,6 +213,7 @@ describe('NuiTree', () => {
       items: manyNodes(2000),
       props: { virtual: true, height: '160px', itemHeight: 32 },
     });
+
     expect(tree.hasModifier('virtual')).toBe(true);
     await tree.setHeight(160);
     expect(tree.renderedCount).toBe(10);
@@ -232,6 +237,7 @@ describe('NuiTree', () => {
       items: manyNodes(2000),
       props: { virtual: true, height: '160px', itemHeight: 32 },
     });
+
     await tree.setHeight(160);
     await tree.scrollTo(3200);
     expect(tree.labels).toContain('Узел 100');

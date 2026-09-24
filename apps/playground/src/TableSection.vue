@@ -108,6 +108,7 @@ interface Person {
 
 const ROLES = ['Дизайн', 'Разработка', 'Тесты', 'Поддержка'];
 const CITIES = ['Казань', 'Москва', 'Самара', 'Сочи'];
+
 const person = (
   id: number,
   name: string,
@@ -137,6 +138,7 @@ const people: Person[] = [
   person(11, 'Лев', 'Поддержка', 29, 77),
   person(12, 'Мария', 'Разработка', 48, 90),
 ];
+
 const manyRows: Person[] = Array.from({ length: 5000 }, (_, index) =>
   person(
     index + 1,
@@ -146,6 +148,7 @@ const manyRows: Person[] = Array.from({ length: 5000 }, (_, index) =>
     index % 7 === 0 ? null : index % 100,
   ),
 );
+
 const pinned: Person[] = [person(0, 'Итого по отделу', '—', 0, 4321)];
 
 const columns: NuiTableColumn<Person>[] = [
@@ -170,11 +173,13 @@ const columns: NuiTableColumn<Person>[] = [
     reorderable: true,
   },
 ];
+
 const treeColumns: NuiTableColumn<Person>[] = [
   { key: 'name', label: 'Имя', sortable: true },
   { key: 'role', label: 'Роль' },
   { key: 'age', label: 'Возраст', sortable: true, align: 'end', width: 112 },
 ];
+
 const wideColumns: NuiTableColumn<Person>[] = [
   { key: 'id', label: '№', width: 72, align: 'end', sticky: 'start' },
   { key: 'name', label: 'Имя', width: 192, sticky: 'start' },
@@ -191,6 +196,7 @@ const wideColumns: NuiTableColumn<Person>[] = [
     value: (row) => (row.score === null ? '—' : 'ок'),
   },
 ];
+
 const paginationLabels: NuiTablePagination = {
   pageSizes: [5, 10],
   label: 'Страницы',
@@ -203,6 +209,7 @@ const paginationLabels: NuiTablePagination = {
 
 const keyOf = (row: Person): string => String(row.id);
 const childrenOf = (row: Person): readonly Person[] | undefined => row.children;
+
 const expandable = (row: Person): boolean =>
   row.children === undefined ? row.id === 300 : row.children.length > 0;
 
@@ -220,6 +227,7 @@ const team = ref<Person[]>([
   person(200, 'Борис', 'Разработка', 28, null),
   person(300, 'Вера', 'Разработка', 45, 92),
 ]);
+
 const expanded = ref<Person[]>([]);
 const loaded = ref<string[]>([]);
 const lastReorder = ref<string>();
@@ -229,6 +237,7 @@ const withRows = (rows: readonly Person[], id: number, update: (row: Person) => 
     const next = row.id === id ? update(row) : row;
     return next.children ? { ...next, children: withRows(next.children, id, update) } : next;
   });
+
 const moveWithin = (rows: readonly Person[], from: number, to: number): Person[] => {
   const next = [...rows];
   const [row] = next.splice(from, 1);
@@ -237,17 +246,21 @@ const moveWithin = (rows: readonly Person[], from: number, to: number): Person[]
   }
   return next;
 };
+
 const loadChildren = (row: Person): void => {
   setTimeout(() => {
     team.value = withRows(team.value, row.id, (entry) => ({
       ...entry,
       children: [person(301, 'Влад', 'Разработка', 24, 66), person(302, 'Галя', 'Тесты', 27, 71)],
     }));
+
     loaded.value = [...loaded.value, row.name];
   }, 400);
 };
+
 const onReorder = ({ row, from, to, parent }: NuiTableReorderEvent<Person>): void => {
   lastReorder.value = `${row.name}:${from}->${to}`;
+
   team.value = parent
     ? withRows(team.value, parent.id, (entry) => ({
         ...entry,
@@ -265,6 +278,7 @@ const widths = ref<Record<string, number>>({});
 const loading = ref(false);
 const empty = ref(false);
 const lastRowClick = ref<string>();
+
 const onRowClick = (row: Person): void => {
   lastRowClick.value = row.name;
 };

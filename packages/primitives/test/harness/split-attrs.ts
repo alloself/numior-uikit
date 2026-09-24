@@ -18,6 +18,7 @@ export class SplitAttrsHarness {
   constructor() {
     const placeholder = this.placeholder;
     const focusCount = this.focusCount;
+
     this.wrapper = mount(
       defineComponent({
         setup: () => () =>

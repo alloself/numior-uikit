@@ -106,6 +106,7 @@ const placements: NuiToasterPlacement[] = [
   'bottom',
   'bottom-start',
 ];
+
 const toast = useToast();
 const store = useToastStore();
 const placement = ref<NuiToasterPlacement>('top-end');
@@ -114,13 +115,16 @@ const alertOpen = ref(true);
 const progressInput = ref('40');
 const sequence = ref(0);
 const progressValue = computed(() => Math.min(100, Math.max(0, Number(progressInput.value) || 0)));
+
 const notify = (): void => {
   sequence.value += 1;
   toast.info(`Уведомление №${sequence.value}`, { description: 'Обычное уведомление' });
 };
+
 const quick = (): void => {
   toast.success('Быстрое уведомление', { duration: 1500 });
 };
+
 const failure = (): void => {
   toast.error('Не удалось сохранить', {
     duration: 0,
@@ -132,6 +136,7 @@ const failure = (): void => {
     },
   });
 };
+
 const output = computed(() =>
   JSON.stringify(
     {

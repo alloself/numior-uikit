@@ -15,13 +15,16 @@ interface Entry {
 
 export const createTimers = (): Timers => {
   const entries = new Map<string, Entry>();
+
   const arm = (id: string, entry: Entry): void => {
     entry.startedAt = Date.now();
+
     entry.handle = setTimeout(() => {
       entries.delete(id);
       entry.onDone();
     }, entry.remaining);
   };
+
   const clear = (id: string): void => {
     const entry = entries.get(id);
     if (!entry) {
@@ -32,6 +35,7 @@ export const createTimers = (): Timers => {
     }
     entries.delete(id);
   };
+
   return {
     start: (id, ms, onDone) => {
       clear(id);

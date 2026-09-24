@@ -17,6 +17,7 @@ describe('NuiLink', () => {
     const link = LinkDriver.mount({
       props: { href: 'https://example.com', external: true, underline: 'hover', tone: 'neutral' },
     });
+
     expect(link.target).toBe('_blank');
     expect(link.rel).toBe('noopener noreferrer');
     expect(link.hasExternalIcon).toBe(true);

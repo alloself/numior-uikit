@@ -45,9 +45,11 @@ test.describe('feedback', () => {
     expect(behindBox.width).toBeLessThan(frontBox.width);
     if (!isMobile) {
       await front.hover();
+
       await expect
         .poll(async () => (await feedback.stackBox(1)).y)
         .toBeGreaterThanOrEqual(bottomOf(await feedback.stackBox(0)));
+
       expect(Math.round((await feedback.stackBox(1)).width)).toBe(Math.round(frontBox.width));
     }
   });
@@ -135,10 +137,12 @@ test.describe('feedback', () => {
     await expect(feedback.progressDeterminate).toHaveAccessibleName('Загрузка');
     await expect(feedback.progressDeterminate).toHaveAttribute('aria-valuetext', '65%');
     await expect(feedback.progressIndeterminate).toHaveJSProperty('position', -1);
+
     await expect(feedback.skeleton.locator('.nui-skeleton').first()).toHaveAttribute(
       'aria-hidden',
       'true',
     );
+
     expect(await feedback.animationName(feedback.skeletonLine)).toBe('none');
   });
 

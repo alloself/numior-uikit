@@ -92,12 +92,14 @@ const locales: NuiOption<string>[] = [
   { value: 'de-DE', label: 'de-DE', description: 'Deutsch' },
   { value: 'ar-EG', label: 'ar-EG', description: 'العربية' },
 ];
+
 const locale = ref('ru-RU');
 const price = ref<number | null>(1234.5);
 const quantity = ref<number | null>(null);
 const discount = ref<number | null>(0.15);
 const start = ref<string | null>(null);
 const precise = ref<string | null>('13:05:09');
+
 const output = computed(() =>
   JSON.stringify(
     {

@@ -24,9 +24,11 @@ export class VirtualHarness {
     const pinned = ref(options.pinned);
     const height = options.height ?? 200;
     const outcome: { current: Outcome } = { current: { ran: false } };
+
     const Host = defineComponent({
       setup() {
         const container = shallowRef<HTMLElement | null>(null);
+
         const virtual = useVirtualList(container, {
           count,
           itemSize: () => options.itemSize ?? 20,
@@ -35,7 +37,9 @@ export class VirtualHarness {
           enabled: () => options.enabled,
           pinned,
         });
+
         outcome.current = { ran: true, value: virtual };
+
         const setContainer = (element: unknown): void => {
           if (element instanceof HTMLElement) {
             defineSize(element, 'clientHeight', height);
@@ -44,6 +48,7 @@ export class VirtualHarness {
             container.value = null;
           }
         };
+
         return () =>
           h('div', { ref: setContainer, class: 'viewport' }, [
             h(
@@ -65,6 +70,7 @@ export class VirtualHarness {
           ]);
       },
     });
+
     const wrapper = mount(Host, { attachTo: document.body });
     if (!outcome.current.ran) {
       throw new Error('useVirtualList did not run');

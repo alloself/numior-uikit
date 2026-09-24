@@ -33,9 +33,11 @@ export const expectRgb = async (
     .poll(
       async () => {
         const actual = await rgbOf(locator, property);
+
         const matches = actual.every(
           (channel, i) => Math.abs(channel - (expected[i] ?? 0)) <= tolerance,
         );
+
         return matches ? 'match' : `rgb(${actual.join(', ')})`;
       },
       { message: `${property} should be rgb(${expected.join(', ')}) ±${tolerance}` },

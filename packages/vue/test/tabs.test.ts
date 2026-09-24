@@ -59,10 +59,12 @@ describe('NuiTabs', () => {
     await rtl.press('ArrowRight');
     expect(rtl.selected).toBe('general');
     rtl.unmount();
+
     const vertical = TabsDriver.mount({
       modelValue: 'general',
       props: { orientation: 'vertical' },
     });
+
     expect(vertical.list.attributes('aria-orientation')).toBe('vertical');
     await vertical.focusTab('General');
     await vertical.press('ArrowDown');
@@ -90,6 +92,7 @@ describe('NuiTabs', () => {
       fromData: true,
       props: { variant: 'soft' },
     });
+
     expect(tabs.labels).toEqual(['General', 'Billing', 'Team', 'Danger']);
     expect(tabs.panelText('team')).toBe('Team panel');
     expect(tabs.hasRootModifier('variant-soft')).toBe(true);

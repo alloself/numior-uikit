@@ -179,9 +179,11 @@ test.describe('layers', () => {
     await overlays.tooltipTrigger.hover();
     await expect(overlays.tooltip).toBeVisible();
     await expect(overlays.tooltip).toHaveRole('tooltip');
+
     await expect(overlays.tooltipTrigger).toHaveAccessibleDescription(
       'Сохраняет документ и историю',
     );
+
     await page.mouse.move(0, 0);
     await expect(overlays.tooltip).toBeHidden();
     await overlays.tooltipTrigger.focus();

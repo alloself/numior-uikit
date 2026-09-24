@@ -30,9 +30,11 @@ export class ReorderHarness {
     const moves: Array<readonly [number, number]> = [];
     const changes: ReorderState[] = [];
     const outcome: { current: Outcome } = { current: { ran: false } };
+
     const Host = defineComponent({
       setup() {
         const container = shallowRef<HTMLElement | null>(null);
+
         const reorder = useReorder({
           axis,
           count: () => count,
@@ -43,6 +45,7 @@ export class ReorderHarness {
           onChange: (state) => changes.push(state),
           rtl: () => options.rtl,
         });
+
         outcome.current = { ran: true, value: reorder };
         return () =>
           h(
@@ -67,6 +70,7 @@ export class ReorderHarness {
           );
       },
     });
+
     const wrapper = mount(Host, { attachTo: document.body });
     if (!outcome.current.ran) {
       throw new Error('useReorder did not run');

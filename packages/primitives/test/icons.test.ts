@@ -11,6 +11,7 @@ describe('icon registry', () => {
     const outerCheck = glyph('OuterCheck');
     const outerX = glyph('OuterX');
     const innerCheck = glyph('InnerCheck');
+
     const icons = captureSetup(
       () => ({ check: useIcon('check'), x: useIcon('x'), missing: useIcon('missing') }),
       {
@@ -20,6 +21,7 @@ describe('icon registry', () => {
         ),
       },
     ).value;
+
     expect(icons.check.value).toBe(innerCheck);
     expect(icons.x.value).toBe(outerX);
     expect(icons.missing.value).toBeUndefined();
@@ -27,18 +29,22 @@ describe('icon registry', () => {
 
   it('accepts app-level configuration through the plugin', () => {
     const appCheck = glyph('AppCheck');
+
     const icon = captureSetup(() => useIcon('check'), {
       plugins: [createNuiConfig({ icons: { check: appCheck } })],
     }).value;
+
     expect(icon.value).toBe(appCheck);
   });
 
   it('loads a lazy icon once and renders it after resolution', async () => {
     const loads = { count: 0 };
+
     const Lazy = lazyIcon(() => {
       loads.count += 1;
       return Promise.resolve(glyph('LazyCheck'));
     });
+
     const rendered = mount(defineComponent({ setup: () => () => [h(Lazy), h(Lazy)] }));
     await vi.waitFor(() => expect(rendered.findAll('svg')).toHaveLength(2));
     expect(loads.count).toBe(1);

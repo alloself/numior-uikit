@@ -24,6 +24,7 @@ const BOOLEAN_KEYS = [
   'popoverOpen',
   'tooltipOpen',
 ] as const;
+
 const STRING_KEYS = ['dialogResult', 'side'] as const;
 
 const parseOverlaysOutput = (text: string): OverlaysOutput => {

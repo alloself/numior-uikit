@@ -59,12 +59,14 @@ const {
   invalid,
   required,
 } = defineProps<NuiTimeSegmentProps>();
+
 const emit = defineEmits<{
   char: [char: string];
   step: [delta: 1 | -1];
   edge: [edge: 'min' | 'max'];
   clear: [];
 }>();
+
 const inputElement = useTemplateRef<HTMLInputElement>('input');
 
 const feed = (chars: string): void => {
@@ -72,6 +74,7 @@ const feed = (chars: string): void => {
     emit('char', char);
   }
 };
+
 const onBeforeinput = (event: InputEvent): void => {
   if (!event.inputType.startsWith('insert') || event.inputType.includes('Composition')) {
     return;
@@ -81,6 +84,7 @@ const onBeforeinput = (event: InputEvent): void => {
     feed(event.data);
   }
 };
+
 const onInput = (): void => {
   const element = inputElement.value;
   if (!element || element.value === text) {
@@ -90,6 +94,7 @@ const onInput = (): void => {
   element.value = text;
   feed(extra);
 };
+
 const onKeydown = (event: KeyboardEvent): void => {
   const action = SEGMENT_KEYS[event.key];
   if (action === undefined || readonly || event.altKey) {
@@ -106,5 +111,6 @@ const onKeydown = (event: KeyboardEvent): void => {
     emit('edge', action);
   }
 };
+
 const select = (): void => inputElement.value?.select();
 </script>

@@ -24,6 +24,7 @@ export const useTableRows = <T>(options: TableRowsOptions<T>): TableRows<T> => {
   const pending = shallowReactive(new Set<string>());
   const expandedKeys = computed(() => new Set(options.expanded.value.map(options.keyOf)));
   const tree = computed(() => options.getChildren() !== undefined);
+
   const views = computed(() =>
     flattenRows(options.rows(), {
       keyOf: options.keyOf,
@@ -34,6 +35,7 @@ export const useTableRows = <T>(options: TableRowsOptions<T>): TableRows<T> => {
       sortLevel: options.sortLevel,
     }),
   );
+
   const pinned = computed(() => leafViews(options.pinnedRows(), options.keyOf));
 
   const toggle = (view: NuiTableRowView<T>): void => {
@@ -44,6 +46,7 @@ export const useTableRows = <T>(options: TableRowsOptions<T>): TableRows<T> => {
       options.expanded.value = options.expanded.value.filter(
         (row) => options.keyOf(row) !== view.key,
       );
+
       return;
     }
     if (options.getChildren()?.(view.row) === undefined) {

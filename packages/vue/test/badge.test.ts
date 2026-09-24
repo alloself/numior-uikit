@@ -10,10 +10,12 @@ describe('NuiBadge', () => {
     expect(badge.hasModifier('size-md')).toBe(true);
     expect(badge.hasIcon).toBe(false);
     expect(badge.attribute('role')).toBeUndefined();
+
     const custom = BadgeDriver.mount({
       props: { tone: 'success', variant: 'outline', size: 'sm', icon: 'check' },
       label: 'Done',
     });
+
     expect(custom.hasModifier('tone-success')).toBe(true);
     expect(custom.hasModifier('variant-outline')).toBe(true);
     expect(custom.hasModifier('size-sm')).toBe(true);
@@ -26,9 +28,11 @@ describe('NuiBadge', () => {
     const single = BadgeDriver.mount({ props: { count: 5 } });
     expect(single.text).toBe('5');
     expect(single.hasModifier('count')).toBe(true);
+
     expect(BadgeDriver.mount({ props: { count: 10 }, label: 'Ten' }).hasModifier('count')).toBe(
       false,
     );
+
     expect(BadgeDriver.mount({ props: { count: 120 } }).text).toBe('99+');
     expect(BadgeDriver.mount({ props: { count: 10, max: 9 } }).text).toBe('9+');
     expect(BadgeDriver.mount({ props: { count: 0 } }).text).toBe('0');

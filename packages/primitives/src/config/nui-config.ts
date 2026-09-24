@@ -30,6 +30,7 @@ export const createNuiConfig = (options: NuiConfigOptions): Plugin => ({
     app.provide(TOASTS_KEY, createToastStore(options.toasts));
     if (options.locale !== undefined) {
       const locale = options.locale;
+
       app.provide(
         LOCALE_KEY,
         computed(() => toValue(locale) || DEFAULT_LOCALE),

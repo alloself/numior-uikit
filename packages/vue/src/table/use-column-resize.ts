@@ -51,10 +51,12 @@ export const useColumnResize = <T>(options: ColumnResizeOptions<T>): ColumnResiz
       window.removeEventListener('pointercancel', stop);
     }
   };
+
   const stop = (): void => {
     detach();
     active.value = undefined;
   };
+
   const onPointermove = (event: PointerEvent): void => {
     if (event.pointerId !== origin.pointerId) {
       return;

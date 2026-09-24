@@ -33,6 +33,7 @@ const {
   closeLabel = 'Close',
   side = 'end',
 } = defineProps<NuiDrawerProps>();
+
 const open = defineModel<boolean>('open', { default: false });
 const emit = defineEmits<{ close: [returnValue: string] }>();
 const slots = useSlots();

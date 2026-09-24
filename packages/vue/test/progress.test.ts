@@ -11,6 +11,7 @@ describe('NuiProgress', () => {
       size: 'lg',
       tone: 'success',
     });
+
     expect(progress.element.tagName).toBe('PROGRESS');
     expect(progress.valueAttribute).toBe('40');
     expect(progress.maxAttribute).toBe('200');

@@ -19,6 +19,7 @@ describe('useFieldControl', () => {
       required: true,
       disabled: true,
     });
+
     expect(control.id).toBe('name');
     expect(control.describedBy).toBe('name-description name-error');
     expect(control.ariaInvalid).toBe('true');
@@ -31,6 +32,7 @@ describe('useFieldControl', () => {
       { id: 'name', hasError: true, required: true },
       { id: 'custom', invalid: false, required: false },
     );
+
     expect(control.id).toBe('custom');
     expect(control.ariaInvalid).toBeUndefined();
     expect(control.required).toBe(false);

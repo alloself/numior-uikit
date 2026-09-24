@@ -40,8 +40,10 @@ describe('useFloating', () => {
       strategy: 'fixed',
       middlewareData: { arrow: { x: 5 } },
     });
+
     const enabled = ref(true);
     const arrowElement = document.createElement('span');
+
     const capture = captureWithElements((reference, floating) =>
       useFloating(reference, floating, {
         placement: 'bottom',
@@ -50,20 +52,25 @@ describe('useFloating', () => {
         enabled,
       }),
     );
+
     await flushPromises();
+
     expect(capture.value.floatingStyles.value).toEqual({
       position: 'fixed',
       left: '10px',
       top: '20px',
     });
+
     expect(capture.value.placement.value).toBe('top');
     expect(capture.value.side.value).toBe('top');
     expect(capture.value.arrowStyles.value).toEqual({ left: '5px' });
+
     expect(computePosition).toHaveBeenCalledWith(
       capture.first,
       capture.second,
       expect.objectContaining({ placement: 'bottom', strategy: 'fixed' }),
     );
+
     enabled.value = false;
     await nextTick();
     expect(cleanup).toHaveBeenCalledTimes(1);
@@ -72,24 +79,31 @@ describe('useFloating', () => {
 
   it('matches the reference width and caps the height when size is requested', async () => {
     sizeHooks.length = 0;
+
     computePosition.mockImplementation(async () => {
       for (const hook of sizeHooks) {
         hook({ rects: { reference: { width: 240 } }, availableHeight: 320 });
       }
       return { x: 0, y: 0, placement: 'bottom-start', strategy: 'fixed', middlewareData: {} };
     });
+
     const capture = captureWithElements((reference, floating) =>
       useFloating(reference, floating, { size: { matchWidth: true, fitHeight: true } }),
     );
+
     await flushPromises();
+
     expect(capture.value.floatingStyles.value).toMatchObject({
       minInlineSize: '240px',
       maxBlockSize: '320px',
     });
+
     capture.unmount();
+
     const capped = captureWithElements((reference, floating) =>
       useFloating(reference, floating, { size: { fitHeight: true, maxBlockSize: 200 } }),
     );
+
     await flushPromises();
     expect(capped.value.floatingStyles.value).toMatchObject({ maxBlockSize: '200px' });
     capped.unmount();
@@ -103,12 +117,15 @@ describe('useFloating', () => {
     const capture = captureWithElements((reference, floating) =>
       useFloating(reference, floating, { placement: 'right-start', enabled: false }),
     );
+
     expect(capture.value.side.value).toBe('right');
+
     expect(capture.value.floatingStyles.value).toEqual({
       position: 'fixed',
       left: '0px',
       top: '0px',
     });
+
     capture.unmount();
   });
 });

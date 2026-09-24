@@ -112,16 +112,19 @@ export class ToasterDriver extends ComponentDriver {
       document.body.append(dialog);
     }
     const services: ToastService[] = [];
+
     const Host = defineComponent({
       setup() {
         services.push(useToast());
         return () => h(NuiToaster, props, custom ? { default: customToast } : undefined);
       },
     });
+
     const wrapper = mount(Host, {
       attachTo: document.body,
       global: { plugins: withPlugin ? [createNuiConfig({ toasts: storeOptions })] : [] },
     });
+
     const [service] = services;
     if (!service) {
       throw new Error('useToast did not run');

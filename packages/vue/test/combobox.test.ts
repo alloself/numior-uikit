@@ -67,6 +67,7 @@ describe('NuiCombobox', () => {
       modelValue: ['apple', 'lemon'],
       props: { multiple: true, name: 'fruits' },
     });
+
     expect(combobox.chips).toEqual(['Apple', 'Lemon']);
     expect(combobox.hasModifier('multiple')).toBe(true);
     await combobox.type('ba');

@@ -55,6 +55,7 @@ describe('NuiSelect', () => {
       modelValue: ['apple'],
       props: { multiple: true, name: 'fruits' },
     });
+
     expect(select.valueText).toBe('Apple');
     expect(select.listbox.attributes('aria-multiselectable')).toBe('true');
     await select.pressTrigger('ArrowDown');
@@ -80,6 +81,7 @@ describe('NuiSelect', () => {
       modelValue: 'lime',
       props: { clearable: true, invalid: true },
     });
+
     expect(select.hasModifier('invalid')).toBe(true);
     expect(select.clearButton.exists()).toBe(true);
     await select.pressTrigger('ArrowDown');

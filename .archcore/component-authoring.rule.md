@@ -22,7 +22,11 @@ status: accepted
   уровне модуля, вложенные объявления функций внутри функций не пишутся; замыкания над
   состоянием композабла — минимальные стрелочные константы. Любой блок `if`/`else`/`for`/
   `while` заключён в `{}`. Линтер держит это правилами `func-style: expression`,
-  `curly: all`, `prefer-arrow-callback`.
+  `curly: all`, `prefer-arrow-callback`. Многострочные объявления, вызовы, импорты и экспорты
+  отделяются пустыми строками (`@stylistic/padding-line-between-statements`,
+  `lines-between-class-members` в ESLint): `<script setup>` читается как логические секции —
+  пропы и модели, состояние, производные, обработчики, жизненный цикл, — а не как сплошной
+  поток в духе Options API.
 - Приведения типов `as` и постфиксный `!` запрещены во всём репозитории, включая тесты и
   конфиги; единственное исключение — `as const`. Нужен тип — generic, type guard,
   `useTemplateRef<HTMLInputElement>()`, `wrapper.find<HTMLInputElement>()`, дискриминированное

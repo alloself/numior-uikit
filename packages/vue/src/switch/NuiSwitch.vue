@@ -35,6 +35,7 @@ import { useFieldControl, useSplitAttrs } from '@numior/primitives';
 import type { NuiSwitchProps } from './switch.types';
 
 defineOptions({ inheritAttrs: false });
+
 const {
   id,
   size = 'md',
@@ -42,13 +43,16 @@ const {
   required = undefined,
   invalid = undefined,
 } = defineProps<NuiSwitchProps>();
+
 const model = defineModel<boolean>({ default: false });
 const split = useSplitAttrs();
+
 const {
   attrs: controlAttrs,
   invalid: isInvalid,
   disabled: isDisabled,
 } = useFieldControl(() => ({ id, disabled, required, invalid }));
+
 const switchElement = useTemplateRef<HTMLInputElement>('switch');
 
 const onChange = (): void => {
@@ -57,6 +61,7 @@ const onChange = (): void => {
     return;
   }
   model.value = element.checked;
+
   void nextTick(() => {
     if (switchElement.value) {
       switchElement.value.checked = model.value;

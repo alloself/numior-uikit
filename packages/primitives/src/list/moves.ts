@@ -32,6 +32,7 @@ export const listTargetIndex = (
   page: number,
 ): number => {
   const last = length - 1;
+
   const targets: Record<ListMove, number> = {
     first: 0,
     last,
@@ -40,5 +41,6 @@ export const listTargetIndex = (
     'page-next': clamp(Math.max(0, current) + page, last),
     'page-prev': Math.max(0, current - page),
   };
+
   return targets[move];
 };

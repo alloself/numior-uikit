@@ -75,6 +75,7 @@ const middleware = (options: FloatingOptions, onBounds: (bounds: Bounds) => void
     flip(),
     shift({ padding: 8 }),
   ];
+
   const size = toValue(options.size);
   if (size?.matchWidth || size?.fitHeight) {
     list.push(
@@ -123,6 +124,7 @@ export const useFloating = (
   const position = shallowRef({ x: 0, y: 0 });
   const arrowPosition = shallowRef<ArrowPosition>({});
   const bounds = shallowRef<Bounds>({});
+
   const elements = (): Elements | null => {
     const referenceElement = toValue(reference);
     const floatingElement = toValue(floating);
@@ -136,6 +138,7 @@ export const useFloating = (
     if (!pair) {
       return;
     }
+
     const result = await computePosition(pair.reference, pair.floating, {
       placement: requested(),
       strategy,
@@ -143,9 +146,11 @@ export const useFloating = (
         bounds.value = next;
       }),
     });
+
     position.value = { x: roundToPixel(result.x), y: roundToPixel(result.y) };
     placement.value = result.placement;
     const arrow: ArrowPosition = result.middlewareData.arrow ?? {};
+
     arrowPosition.value = {
       x: arrow.x === undefined ? undefined : roundToPixel(arrow.x),
       y: arrow.y === undefined ? undefined : roundToPixel(arrow.y),
@@ -163,6 +168,7 @@ export const useFloating = (
       },
       { immediate: true, flush: 'post' },
     );
+
     watch(
       [
         requested,

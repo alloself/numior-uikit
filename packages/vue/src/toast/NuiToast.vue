@@ -57,10 +57,12 @@ const dismiss = (): void => {
   }
   store.dismiss(toast.id);
 };
+
 const runAction = (): void => {
   toast.action?.onClick();
   dismiss();
 };
+
 const onEscape = (): void => {
   if (toast.dismissible) {
     dismiss();

@@ -28,9 +28,11 @@ export interface FormsOutput {
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null;
+
 const isString = (value: unknown): value is string => typeof value === 'string';
 const isBoolean = (value: unknown): value is boolean => typeof value === 'boolean';
 const isNumber = (value: unknown): value is number => typeof value === 'number';
+
 const isStringArray = (value: unknown): value is string[] =>
   Array.isArray(value) && value.every(isString);
 
@@ -91,11 +93,13 @@ export class FormsSection {
     this.channelEmail = page.getByTestId('checkbox-channel-email');
     this.channelSms = page.getByTestId('checkbox-channel-sms');
     this.radioGroup = page.getByTestId('radio-group');
+
     this.radios = {
       free: page.getByTestId('radio-free'),
       team: page.getByTestId('radio-team'),
       business: page.getByTestId('radio-business'),
     };
+
     this.notifications = page.getByTestId('switch-notifications');
     this.submit = page.getByTestId('submit');
     this.output = page.getByTestId('forms-output');
@@ -124,6 +128,7 @@ export class PlaygroundPage {
     readonly density: Locator;
     readonly direction: Locator;
   };
+
   readonly buttons: {
     readonly primary: Locator;
     readonly loading: Locator;
@@ -131,6 +136,7 @@ export class PlaygroundPage {
     readonly nested: Locator;
     readonly large: Locator;
   };
+
   readonly swatches: { readonly utility: Locator; readonly tailwind: Locator };
   readonly forms: FormsSection;
   readonly overlays: OverlaysSection;
@@ -146,12 +152,14 @@ export class PlaygroundPage {
     this.workspace = page.getByRole('main');
     this.resolvedScheme = page.getByTestId('resolved-scheme');
     this.clickCount = page.getByRole('status');
+
     this.settings = {
       theme: page.getByTestId('theme'),
       accent: page.getByTestId('accent'),
       density: page.getByTestId('density'),
       direction: page.getByTestId('direction'),
     };
+
     this.buttons = {
       primary: page.getByTestId('primary'),
       loading: page.getByTestId('loading'),
@@ -159,10 +167,12 @@ export class PlaygroundPage {
       nested: page.getByTestId('nested'),
       large: page.getByTestId('large'),
     };
+
     this.swatches = {
       utility: page.getByTestId('utility'),
       tailwind: page.getByTestId('tailwind'),
     };
+
     this.forms = new FormsSection(page);
     this.overlays = new OverlaysSection(page);
     this.feedback = new FeedbackSection(page);
@@ -209,6 +219,7 @@ export class PlaygroundPage {
     const results = await new AxeBuilder({ page: this.page })
       .withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa'])
       .analyze();
+
     return results.violations;
   }
 }

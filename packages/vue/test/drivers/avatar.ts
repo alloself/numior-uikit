@@ -74,6 +74,7 @@ export class AvatarGroupDriver extends ComponentDriver {
   static mount({ props = {}, children = [] }: AvatarGroupMountOptions = {}) {
     const slots =
       children.length === 0 ? {} : { default: () => children.map((child) => h(NuiAvatar, child)) };
+
     return new AvatarGroupDriver(mount(NuiAvatarGroup, { props, slots }));
   }
 

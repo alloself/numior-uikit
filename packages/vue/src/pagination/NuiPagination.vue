@@ -103,12 +103,14 @@ const {
   pageLabel = (target: number) => `Page ${target}`,
   rangeLabel = (from: number, to: number, count: number) => `${from}–${to} of ${count}`,
 } = defineProps<NuiPaginationProps>();
+
 const pageModel = defineModel<number>('page', { default: 1 });
 const pageSize = defineModel<number>('pageSize', { default: 20 });
 
 const baseId = useControlId();
 const pageCount = computed(() => pageCountOf(total, pageSize.value));
 const page = computed(() => clampPage(pageModel.value, pageCount.value));
+
 watch(
   [page, () => pageModel.value],
   ([clamped, requested]) => {
@@ -118,12 +120,15 @@ watch(
   },
   { immediate: true },
 );
+
 const entries = computed(() => paginationRange(page.value, pageCount.value, siblings, boundaries));
+
 const rangeText = computed(() => {
   const from = total === 0 ? 0 : (page.value - 1) * pageSize.value + 1;
   const to = Math.min(page.value * pageSize.value, total);
   return rangeLabel(from, to, total);
 });
+
 const sizeOptions = computed<NuiOption<number>[]>(() =>
   (pageSizes ?? []).map((value) => ({ value, label: String(value) })),
 );
@@ -131,11 +136,13 @@ const sizeOptions = computed<NuiOption<number>[]>(() =>
 const go = (target: number): void => {
   pageModel.value = clampPage(target, pageCount.value);
 };
+
 const changePageSize = (value: number | number[] | undefined): void => {
   if (typeof value === 'number') {
     pageSize.value = value;
   }
 };
+
 const controlProps = (target: number, name: string, disabled: boolean) => ({
   page: target,
   label: name,

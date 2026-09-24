@@ -76,6 +76,7 @@ import type { NuiTableCellStyle, NuiTableColumn, NuiTableRowProps } from './tabl
 
 const { view, index, rowIndex, columns, layout, options, selectable, selected, dragging } =
   defineProps<NuiTableRowProps<T>>();
+
 const emit = defineEmits<{
   toggle: [];
   rowClick: [event: MouseEvent];
@@ -85,6 +86,7 @@ const emit = defineEmits<{
 }>();
 
 const selectPosition = computed(() => (options.rowDrag ? 1 : 0));
+
 const cellStyle = (column: NuiTableColumn<T>, position: number): NuiTableCellStyle => {
   const sticky = layout.cellStyle(column);
   if (!options.tree || position !== 0) {
@@ -92,6 +94,7 @@ const cellStyle = (column: NuiTableColumn<T>, position: number): NuiTableCellSty
   }
   return { ...sticky, '--_level': String(view.level) };
 };
+
 const onClick = (event: MouseEvent): void => {
   if (
     event.target instanceof Element &&

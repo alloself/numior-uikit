@@ -32,14 +32,17 @@ const {
   name,
   orientation = 'vertical',
 } = defineProps<NuiRadioGroupProps>();
+
 const model = defineModel<T>();
 const field = useField();
+
 const {
   attrs,
   invalid: isInvalid,
   required: isRequired,
   disabled: isDisabled,
 } = useFieldControl(() => ({ id, disabled, required, invalid }), { group: true });
+
 const labelledBy = computed(() => field?.labelledBy.value);
 
 provideRadioGroup<T>({

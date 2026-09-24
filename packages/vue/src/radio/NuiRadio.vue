@@ -39,9 +39,11 @@ const controlId = useControlId(() => id);
 const checked = computed(() => group !== null && group.modelValue.value === value);
 const isDisabled = computed(() => disabled ?? group?.disabled.value ?? false);
 const isInvalid = computed(() => group?.invalid.value ?? false);
+
 const groupAttrs = computed(() =>
   group ? { name: group.name.value, checked: checked.value } : {},
 );
+
 const radioElement = useTemplateRef<HTMLInputElement>('radio');
 
 const onChange = (): void => {

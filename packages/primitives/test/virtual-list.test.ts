@@ -37,6 +37,7 @@ describe('useVirtualList', () => {
       height: 100,
       overscan: 0,
     });
+
     await list.settle();
     expect(list.totalSize).toBe(180);
     expect(list.offsetOf(3)).toBe(90);
@@ -97,12 +98,14 @@ describe('useVirtualList', () => {
     await list.resize(60);
     expect(list.range).toEqual({ start: 0, end: 6 });
     list.unmount();
+
     const plain = VirtualHarness.mount({
       count: 30,
       height: 200,
       itemSize: 20,
       enabled: false,
     });
+
     await plain.settle();
     expect(plain.renderedIndices).toEqual(range(0, 30));
     await plain.scroll(500);

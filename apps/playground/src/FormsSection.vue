@@ -87,9 +87,11 @@ const channels = ref<string[]>([]);
 const plan = ref('free');
 const notifications = ref(true);
 const submitted = ref(0);
+
 const emailError = computed(() =>
   email.value && !email.value.includes('@') ? 'Укажите адрес с символом @' : undefined,
 );
+
 const output = computed(() =>
   JSON.stringify(
     {
@@ -107,6 +109,7 @@ const output = computed(() =>
     2,
   ),
 );
+
 const reset = () => {
   name.value = '';
   email.value = '';

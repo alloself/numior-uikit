@@ -40,6 +40,7 @@ const {
 } = defineProps<NuiAvatarGroupProps>();
 
 const slots = useSlots();
+
 provideAvatarGroup({
   size: computed(() => size),
   shape: computed(() => shape),
@@ -51,8 +52,10 @@ const visibleItems = computed(() => {
   }
   return max === undefined ? items : items.slice(0, Math.max(0, max));
 });
+
 const sliced = () => sliceChildren(slots.default, max);
 const hidden = computed(() => (items ? items.length - visibleItems.value.length : sliced().hidden));
+
 const overflowText = computed(() =>
   overflowLabel === undefined ? `+${hidden.value}` : overflowLabel(hidden.value),
 );

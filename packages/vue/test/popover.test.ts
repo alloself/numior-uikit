@@ -24,6 +24,7 @@ describe('NuiPopover', () => {
       open: true,
       props: { placement: 'right-start', arrow: true },
     });
+
     expect(popover.popoverCalls.show).toBe(1);
     expect(popover.sideModifier).toBe('nui-popover--side-right');
     expect(popover.arrow.exists()).toBe(true);

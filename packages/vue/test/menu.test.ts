@@ -105,6 +105,7 @@ describe('NuiMenu', () => {
 
   it('renders data entries as parts and hides on Tab', async () => {
     const log: string[] = [];
+
     const entries: NuiMenuEntry[] = [
       { label: 'Copy', shortcut: '⌘C', onSelect: () => log.push('Copy') },
       { type: 'separator' },
@@ -126,6 +127,7 @@ describe('NuiMenu', () => {
       },
       { type: 'sub', label: 'Export', items: [{ label: 'PDF', onSelect: () => log.push('PDF') }] },
     ];
+
     const menu = MenuDriver.mount({ entries });
     await menu.open();
     expect(menu.labels).toEqual(['Copy', 'Grid', 'Name', 'Date', 'Export']);

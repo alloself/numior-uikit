@@ -35,6 +35,7 @@ const isBackspace = (event: Event): boolean =>
   event instanceof InputEvent && event.inputType === 'deleteContentBackward';
 
 defineOptions({ inheritAttrs: false });
+
 const {
   id,
   size = 'md',
@@ -45,17 +46,22 @@ const {
   readonly = false,
   mask,
 } = defineProps<NuiInputProps>();
+
 const [model, modifiers] = defineModel<string, NuiInputModifiers>({ default: '' });
 const split = useSplitAttrs();
+
 const {
   attrs: controlAttrs,
   invalid: isInvalid,
   disabled: isDisabled,
 } = useFieldControl(() => ({ id, disabled, required, invalid }));
+
 const inputElement = useTemplateRef<HTMLInputElement>('input');
 const display = (value: string): string => (mask ? applyMask(value, mask).masked : value);
+
 const outgoing = (text: string): string =>
   mask && modifiers.unmasked ? applyMask(text, mask).raw : text;
+
 const draft = ref(display(model.value));
 const state = { raw: mask ? applyMask(model.value, mask).raw : '' };
 

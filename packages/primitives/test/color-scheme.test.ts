@@ -5,6 +5,7 @@ import { captureSetup } from './harness/capture';
 
 const fakeMedia = (matches: boolean) => {
   const listeners = new Set<() => void>();
+
   const media = {
     matches,
     addEventListener: (_type: string, listener: () => void) => listeners.add(listener),
@@ -16,6 +17,7 @@ const fakeMedia = (matches: boolean) => {
       }
     },
   };
+
   vi.stubGlobal('matchMedia', () => media);
   return media;
 };
@@ -57,16 +59,21 @@ describe('useColorScheme', () => {
 
   it('survives storage that throws', async () => {
     fakeMedia(true);
+
     vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
       throw new Error('blocked');
     });
+
     vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
       throw new Error('blocked');
     });
+
     const scope = document.createElement('div');
+
     const control = captureSetup(() =>
       useColorScheme({ scope, storageKey: 'nui-theme', initial: 'system' }),
     ).value;
+
     expect(control.resolved.value).toBe('dark');
     control.set('light');
     await nextTick();

@@ -28,6 +28,7 @@ export class TimeFieldDriver extends ComponentDriver {
     const stubs = new TopLayerStubs();
     const model = ref<string | null>(modelValue);
     const localeRef = ref(locale);
+
     const control = () =>
       h(NuiTimeField, {
         ...props,
@@ -38,7 +39,9 @@ export class TimeFieldDriver extends ComponentDriver {
           }
         },
       });
+
     const inField = () => (field ? h(NuiField, field, control) : control());
+
     const Host = defineComponent({
       setup: () => () =>
         h('div', { dir }, [
@@ -46,6 +49,7 @@ export class TimeFieldDriver extends ComponentDriver {
           h('button', { type: 'button', class: 'outside' }, 'Outside'),
         ]),
     });
+
     return new TimeFieldDriver(mount(Host, { attachTo: document.body }), stubs, model, localeRef);
   }
 
@@ -141,6 +145,7 @@ export class TimeFieldDriver extends ComponentDriver {
     this.wrapper
       .find('.nui-time-field')
       .element.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, cancelable: true }));
+
     await nextTick();
   }
 
@@ -156,6 +161,7 @@ export class TimeFieldDriver extends ComponentDriver {
       cancelable: true,
       bubbles: true,
     });
+
     document.activeElement?.dispatchEvent(event);
     await nextTick();
     await nextTick();
@@ -190,6 +196,7 @@ export class TimeFieldDriver extends ComponentDriver {
     const option = this.wrapper
       .findAll('[role="option"]')
       .find((candidate) => labelOf(candidate.element) === label);
+
     if (!option) {
       throw new Error(`No option labelled ${label}`);
     }

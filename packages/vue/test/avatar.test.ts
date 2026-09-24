@@ -50,6 +50,7 @@ describe('NuiAvatar', () => {
       props: { name: 'Alice', status: 'online', shape: 'square', size: 'xl' },
       badge: '3',
     });
+
     expect(avatar.hasModifier('status-online')).toBe(true);
     expect(avatar.statusLabel).toBe('Online');
     expect(avatar.hasModifier('shape-square')).toBe(true);
@@ -66,6 +67,7 @@ describe('NuiAvatarGroup', () => {
     const group = AvatarGroupDriver.mount({
       props: { items: PEOPLE, max: 3, size: 'lg', shape: 'square', label: 'Team' },
     });
+
     expect(group.attribute('role')).toBe('group');
     expect(group.attribute('aria-label')).toBe('Team');
     expect(group.avatars).toHaveLength(4);
@@ -80,17 +82,21 @@ describe('NuiAvatarGroup', () => {
 
   it('slices slotted avatars the same way and lets a child keep its own size', () => {
     const children = PEOPLE.map(({ name }) => ({ name }));
+
     const group = AvatarGroupDriver.mount({
       props: { max: 3, size: 'sm', overflowLabel: (count: number) => `ещё ${count}` },
       children: [...children.slice(0, 4), { name: 'Eve Park', size: 'xl' }],
     });
+
     expect(group.avatars).toHaveLength(4);
     expect(group.overflowText).toBe('ещё 2');
     expect(group.sizes).toEqual(Array.from({ length: 4 }, () => 'nui-avatar--size-sm'));
+
     const mixed = AvatarGroupDriver.mount({
       props: { size: 'sm' },
       children: [{ name: 'Alice' }, { name: 'Bob', size: 'xl' }],
     });
+
     expect(mixed.sizes).toEqual(['nui-avatar--size-sm', 'nui-avatar--size-xl']);
   });
 });

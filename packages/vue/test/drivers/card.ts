@@ -38,6 +38,7 @@ const renderHeader = (parts: CardParts, nested: Ref<number>): VNode | undefined 
   if (parts.title === undefined && parts.description === undefined) {
     return undefined;
   }
+
   const heading = [
     ...(parts.title === undefined
       ? []
@@ -46,6 +47,7 @@ const renderHeader = (parts: CardParts, nested: Ref<number>): VNode | undefined 
       ? []
       : [h(NuiCardDescription, null, () => parts.description)]),
   ];
+
   const slots = {
     default: () => heading,
     ...(parts.actions
@@ -65,6 +67,7 @@ const renderHeader = (parts: CardParts, nested: Ref<number>): VNode | undefined 
         }
       : {}),
   };
+
   return h(NuiCardHeader, null, slots);
 };
 
@@ -85,6 +88,7 @@ export class CardDriver extends ComponentDriver {
     const clicks = ref(0);
     const nested = ref(0);
     const cardProps = viaRouter ? { ...props, as: RouterStub } : props;
+
     const Host = defineComponent({
       setup: () => () =>
         h(
@@ -100,6 +104,7 @@ export class CardDriver extends ComponentDriver {
           () => renderParts(parts, nested),
         ),
     });
+
     return new CardDriver(mount(Host, { attachTo: document.body }), clicks, nested);
   }
 

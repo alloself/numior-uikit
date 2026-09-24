@@ -92,6 +92,7 @@ import type { NuiNumberFieldProps } from './number-field.types';
 const KEY_STEPS: Record<string, number> = { ArrowUp: 1, ArrowDown: -1, PageUp: 10, PageDown: -10 };
 
 defineOptions({ inheritAttrs: false });
+
 const {
   id,
   size = 'md',
@@ -109,13 +110,16 @@ const {
   incrementLabel = 'Increment',
   decrementLabel = 'Decrement',
 } = defineProps<NuiNumberFieldProps>();
+
 const model = defineModel<number | null>({ default: null });
 const split = useSplitAttrs();
+
 const {
   attrs: controlAttrs,
   invalid: isInvalid,
   disabled: isDisabled,
 } = useFieldControl(() => ({ id, disabled, required, invalid }));
+
 const inputElement = useTemplateRef<HTMLInputElement>('input');
 const locale = useLocale(() => localeProp);
 const options = computed(() => withStepPrecision(formatOptions, step));
@@ -124,12 +128,14 @@ const format = (value: number | null): string => formatNumber(value, locale.valu
 const parse = (text: string): number | null => parseNumber(text, locale.value, options.value);
 const draft = ref(format(model.value));
 const valueText = computed(() => format(model.value));
+
 const canIncrement = computed(
   () =>
     !isDisabled.value &&
     !readonly &&
     (max === undefined || model.value === null || model.value < max),
 );
+
 const canDecrement = computed(
   () =>
     !isDisabled.value &&
@@ -142,6 +148,7 @@ watch(model, (value) => {
     draft.value = format(value);
   }
 });
+
 watch([locale, options], () => {
   draft.value = format(model.value);
 });
@@ -150,6 +157,7 @@ const apply = (value: number | null): void => {
   model.value = value;
   draft.value = format(value);
 };
+
 const commit = (): void => {
   const parsed = parse(draft.value);
   if (parsed === null) {
@@ -161,25 +169,30 @@ const commit = (): void => {
   model.value = parse(text) ?? clamped;
   draft.value = text;
 };
+
 const stepBy = (steps: number): void => {
   if (isDisabled.value || readonly) {
     return;
   }
   apply(stepNumber(parse(draft.value), steps, { step, min, max }));
 };
+
 const onInput = (): void => {
   const element = inputElement.value;
   if (element) {
     draft.value = element.value;
   }
 };
+
 const onBeforeinput = (event: InputEvent): void => {
   const inserting =
     event.inputType.startsWith('insert') && !event.inputType.includes('Composition');
+
   if (inserting && event.data !== null && !isPartialNumber(event.data, symbols.value)) {
     event.preventDefault();
   }
 };
+
 const onKeydown = (event: KeyboardEvent): void => {
   if (event.key === 'Enter') {
     commit();

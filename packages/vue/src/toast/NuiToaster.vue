@@ -47,6 +47,7 @@ import { frontSize, itemStyle, layoutStack } from './toast-stack';
 import type { NuiToasterProps, NuiToasterSlot } from './toast.types';
 
 defineOptions({ inheritAttrs: false });
+
 const {
   id,
   placement = 'top-end',
@@ -54,6 +55,7 @@ const {
   label = 'Notifications',
   closeLabel = 'Close',
 } = defineProps<NuiToasterProps>();
+
 defineSlots<{ default(props: NuiToasterSlot): unknown }>();
 const store = useToastStore();
 const visible = store.visible;
@@ -63,12 +65,14 @@ const { contentAttrs, raise } = usePopover(regionElement, { open, id: () => id, 
 
 const sizes = shallowReactive(new Map<string, number>());
 const items = computed(() => layoutStack(visible.value, sizes));
+
 const regionStyle = computed(() => {
   const front = frontSize(items.value, sizes);
   return front === undefined ? {} : { '--_front-size': `${front}px` };
 });
 
 const observed = new Map<Element, string>();
+
 const measure = (entries: readonly ResizeObserverEntry[]): void => {
   for (const entry of entries) {
     const toastId = observed.get(entry.target);
@@ -77,7 +81,9 @@ const measure = (entries: readonly ResizeObserverEntry[]): void => {
     }
   }
 };
+
 const observer = typeof ResizeObserver === 'undefined' ? undefined : new ResizeObserver(measure);
+
 const track = (toastId: string, element: unknown): void => {
   const target = element instanceof HTMLElement ? element.firstElementChild : null;
   if (target) {
@@ -95,9 +101,11 @@ const track = (toastId: string, element: unknown): void => {
   }
   sizes.delete(toastId);
 };
+
 onScopeDispose(() => observer?.disconnect());
 
 const modalOpen = (): boolean => document.querySelector('dialog[open]') !== null;
+
 watch(
   () => store.toasts.value.length,
   (next, previous) => {
@@ -112,8 +120,10 @@ const applyToVisible = (apply: (toastId: string) => void): void => {
     apply(toast.id);
   }
 };
+
 const pauseAll = (): void => applyToVisible(store.pause);
 const resumeAll = (): void => applyToVisible(store.resume);
+
 const onVisibilityChange = (): void => {
   if (document.hidden) {
     pauseAll();
@@ -121,6 +131,7 @@ const onVisibilityChange = (): void => {
     resumeAll();
   }
 };
+
 onMounted(() => {
   document.addEventListener('visibilitychange', onVisibilityChange);
   onScopeDispose(() => document.removeEventListener('visibilitychange', onVisibilityChange));

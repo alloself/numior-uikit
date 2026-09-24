@@ -7,6 +7,7 @@ import { useVirtualList } from '../src';
 describe('useVirtualList on the server', () => {
   it('renders the initial window without measuring anything', async () => {
     const seen = { viewport: -1, total: -1, rendered: -1 };
+
     const Probe = defineComponent({
       setup() {
         const container = ref<HTMLElement | null>(null);
@@ -22,6 +23,7 @@ describe('useVirtualList on the server', () => {
           );
       },
     });
+
     const html = await renderToString(h(Probe));
     expect(seen).toEqual({ viewport: 0, total: 10_000, rendered: 12 });
     expect(html).toContain('Row 11');

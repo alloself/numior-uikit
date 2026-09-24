@@ -47,11 +47,13 @@ describe('NuiNumberField', () => {
     await field.setLocale('en-US');
     expect(field.text).toBe('2,500.75');
     field.unmount();
+
     const explicit = NumberFieldDriver.mount({
       modelValue: 1234.5,
       locale: 'de-DE',
       props: { locale: 'en-US' },
     });
+
     expect(explicit.text).toBe('1,234.5');
     explicit.unmount();
   });
@@ -69,16 +71,19 @@ describe('NuiNumberField', () => {
       locale: 'de-DE',
       props: { formatOptions: EUR },
     });
+
     expect(price.text).toMatch(/^1\.234,50\s€$/);
     await price.type('99,9');
     await price.blur();
     expect(price.value).toBe(99.9);
     expect(price.text).toMatch(/^99,90\s€$/);
     price.unmount();
+
     const percent = NumberFieldDriver.mount({
       modelValue: 0.26,
       props: { formatOptions: { style: 'percent' }, step: 0.01 },
     });
+
     expect(percent.text).toBe('26%');
     await percent.type('30');
     await percent.blur();
@@ -92,6 +97,7 @@ describe('NuiNumberField', () => {
       modelValue: 0.7,
       props: { step: 0.1, min: 0, max: 5 },
     });
+
     await field.press('ArrowUp');
     expect(field.value).toBe(0.8);
     await field.press('ArrowUp', { shiftKey: true });
@@ -153,6 +159,7 @@ describe('NuiNumberField', () => {
       field: { label: 'Price', description: 'Net' },
       slots: { prefix: () => h('span', '$') },
     });
+
     expect(field.fieldLabelFor).toBe(field.control.attributes('id'));
     expect(field.describedBy).toBeDefined();
     expect(field.control.attributes('aria-invalid')).toBe('true');

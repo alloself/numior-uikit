@@ -15,6 +15,7 @@ export class TooltipDriver extends ComponentDriver {
   static mount({ props = {} }: TooltipMountOptions = {}) {
     const stubs = new TopLayerStubs();
     const model = ref(false);
+
     const Host = defineComponent({
       setup: () => () =>
         h(
@@ -32,6 +33,7 @@ export class TooltipDriver extends ComponentDriver {
           },
         ),
     });
+
     return new TooltipDriver(mount(Host, { attachTo: document.body }), stubs, model);
   }
 

@@ -40,5 +40,6 @@ const {
   removeLabel = 'Remove',
   disabled = false,
 } = defineProps<NuiChipProps>();
+
 const emit = defineEmits<{ remove: [] }>();
 </script>

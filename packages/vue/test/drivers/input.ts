@@ -74,9 +74,11 @@ export class InputDriver extends ComponentDriver {
     const element = this.control.element;
     element.value = value;
     element.setSelectionRange(caret, caret);
+
     element.dispatchEvent(
       new InputEvent('input', { inputType: 'deleteContentBackward', bubbles: true }),
     );
+
     await nextTick();
   }
 
@@ -103,6 +105,7 @@ export const mountInputWithFocusHandle = () => {
       return h(NuiInput, { ref: 'input' });
     },
   });
+
   const wrapper = mount(Host, { attachTo: document.body });
   return {
     focus: () => wrapper.vm.focusInput(),

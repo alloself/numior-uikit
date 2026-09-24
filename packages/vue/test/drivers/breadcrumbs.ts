@@ -43,6 +43,7 @@ export class BreadcrumbsDriver extends ComponentDriver {
     dir = 'ltr',
   }: BreadcrumbsMountOptions = {}) {
     const stubs = new TopLayerStubs();
+
     const Host = defineComponent({
       setup: () => () =>
         h('div', { dir }, [
@@ -59,6 +60,7 @@ export class BreadcrumbsDriver extends ComponentDriver {
           ),
         ]),
     });
+
     return new BreadcrumbsDriver(mount(Host, { attachTo: document.body }), stubs);
   }
 

@@ -128,6 +128,7 @@ const drawerOpen = ref(false);
 const side = ref<NuiDrawerSide>('end');
 const popoverOpen = ref(false);
 const tooltipOpen = ref(false);
+
 const output = computed(() =>
   JSON.stringify(
     {

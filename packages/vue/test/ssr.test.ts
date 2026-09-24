@@ -314,6 +314,7 @@ describe('server rendering', () => {
     const html = await renderMarkup(() =>
       h(NuiDialog, { open: true, id: 'confirm', title: 'Delete?' }, () => 'Body'),
     );
+
     expect(html).toMatch(/<dialog[^>]*id="confirm"/);
     expect(html).not.toMatch(/<dialog[^>]* open/);
     expect(html).toContain('aria-labelledby="confirm-title"');
@@ -327,6 +328,7 @@ describe('server rendering', () => {
     expect(html).toContain(`id="${id}"`);
     expect(html).toContain('popover="auto"');
     expect(html).toContain('aria-expanded="true"');
+
     const tooltip = await renderMarkup(() =>
       h(
         NuiTooltip,
@@ -337,6 +339,7 @@ describe('server rendering', () => {
         },
       ),
     );
+
     expect(tooltip).toContain('aria-describedby="hint"');
     expect(tooltip).toContain('role="tooltip"');
     expect(tooltip).toContain('popover="manual"');
@@ -375,6 +378,7 @@ describe('server rendering', () => {
         maxItems: 2,
       }),
     );
+
     expect(html).toContain('aria-label="Breadcrumb"');
     expect(html).toContain('aria-current="page"');
     expect(html).toContain('href="/"');
@@ -404,6 +408,7 @@ describe('server rendering', () => {
         min: 0,
       }),
     );
+
     expect(html).toContain('role="spinbutton"');
     expect(html).toMatch(/value="1\.234,50\s€"/);
     expect(html).toContain('aria-valuenow="1234.5"');
@@ -416,6 +421,7 @@ describe('server rendering', () => {
     const html = await renderMarkup(() =>
       h(NuiTimeField, { modelValue: '13:05', locale: 'en-US', name: 'start' }),
     );
+
     expect(html).toContain('role="group"');
     expect(html.match(/role="spinbutton"/g)).toHaveLength(3);
     expect(html).toContain('value="01"');
@@ -426,9 +432,11 @@ describe('server rendering', () => {
     expect(html).toContain('popover="auto"');
     expect(html).toContain('aria-expanded="false"');
     expect(html).not.toContain('aria-activedescendant');
+
     const german = await renderMarkup(() =>
       h(NuiTimeField, { modelValue: '13:05', locale: 'de-DE' }),
     );
+
     expect(german).toContain('value="13"');
     expect(german.match(/role="spinbutton"/g)).toHaveLength(2);
   });
@@ -447,6 +455,7 @@ describe('server rendering', () => {
     const html = await renderMarkup(() =>
       h(NuiPagination, { total: 60, page: 2, href: (page: number) => `#page-${page}` }),
     );
+
     expect(html).toContain('aria-label="Pagination"');
     expect(html).toContain('aria-current="page"');
     expect(html).toContain('href="#page-3"');
@@ -483,15 +492,19 @@ describe('server rendering', () => {
     const image = await renderMarkup(() =>
       h(NuiAvatar, { src: '/alice.png', name: 'Alice Brown' }),
     );
+
     expect(image).toContain('<img');
     expect(image).toContain('alt="Alice Brown"');
     expect(image).not.toContain('nui-avatar__initials');
     expect(await renderMarkup(() => h(NuiAvatar, { name: 'Alice Brown' }))).toContain('AB');
     expect(await renderMarkup(() => h(NuiAvatar, {}))).toContain('lucide-user');
+
     const items = await renderMarkup(() =>
       h(NuiAvatarGroup, { items: [{ name: 'Alice' }, { name: 'Bob' }, { name: 'Cara' }], max: 1 }),
     );
+
     expect(items).toContain('+2');
+
     const slotted = await renderMarkup(() =>
       h(NuiAvatarGroup, { max: 1, size: 'lg' }, () => [
         h(NuiAvatar, { name: 'Alice' }),
@@ -499,6 +512,7 @@ describe('server rendering', () => {
         h(NuiAvatar, { name: 'Cara' }),
       ]),
     );
+
     expect(slotted).toContain('+2');
     expect(slotted.match(/nui-avatar--size-lg/g)).toHaveLength(2);
   });
@@ -507,9 +521,11 @@ describe('server rendering', () => {
     const empty = await renderMarkup(() => h(NuiEmpty, { title: 'Nothing here' }));
     expect(empty).toContain('lucide-inbox');
     expect(empty).toContain('Nothing here');
+
     const select = await renderMarkup(() =>
       h(NuiSelect, { options: [], emptyLabel: 'No options' }),
     );
+
     expect(select).toContain('nui-list__empty');
     expect(select).toContain('No options');
   });
@@ -520,10 +536,13 @@ describe('server rendering', () => {
         h(NuiCardMedia, { src: '/cover.png', alt: 'Cover' }),
       ),
     );
+
     expect(linked).toContain('nui-card--interactive');
+
     expect(linked).toContain(
       'class="nui-link nui-link--tone-neutral nui-link--underline-none nui-card__action"',
     );
+
     expect(linked).toContain('href="/plans"');
     expect(linked).toContain('<h3');
     expect(linked).toContain('<img');
@@ -537,16 +556,20 @@ describe('server rendering', () => {
       { label: 'Go', value: 'go' },
       { label: 'Rust', value: 'rust' },
     ];
+
     const html = await renderMarkup(() =>
       h(NuiList, { items, selectable: 'single', modelValue: 'rust', label: 'Languages' }),
     );
+
     expect(html).toContain('role="listbox"');
     expect(html.match(/aria-selected="true"/g)).toHaveLength(1);
     expect(html.match(/tabindex="0"/g)).toHaveLength(1);
     expect(html).toContain('aria-label="Languages"');
+
     const links = await renderMarkup(() =>
       h(NuiList, { items: [{ label: 'Docs', href: '/docs' }] }),
     );
+
     expect(links).toContain('href="/docs"');
     expect(links).not.toContain('role="listbox"');
     const empty = await renderMarkup(() => h(NuiList, { items: [], emptyLabel: 'Nothing' }));
@@ -558,6 +581,7 @@ describe('server rendering', () => {
     const html = await renderMarkup(() =>
       h(NuiTree, { id: 'files', items: FILES, expanded: ['src'], modelValue: 'index' }),
     );
+
     expect(html).toContain('role="tree"');
     expect(html).toContain('tabindex="0"');
     expect(html).toContain('aria-level="2"');
@@ -565,9 +589,11 @@ describe('server rendering', () => {
     expect(html).toContain('aria-expanded="true"');
     expect(html.match(/aria-selected="true"/g)).toHaveLength(1);
     expect(html).not.toContain('aria-activedescendant');
+
     const windowed = await renderMarkup(() =>
       h(NuiTree, { items: manyNodes(500), virtual: true, height: '10rem' }),
     );
+
     expect(windowed.match(/role="treeitem"/g)).toHaveLength(20);
     expect(windowed).toContain('block-size:16000px');
   });
@@ -584,6 +610,7 @@ describe('server rendering', () => {
         caption: 'Команда',
       }),
     );
+
     expect(html).toContain('<table');
     expect(html).toContain('<caption');
     expect(html).toContain('aria-sort="descending"');
@@ -592,12 +619,15 @@ describe('server rendering', () => {
     expect(html).toContain('aria-label="Pagination"');
     expect(html.indexOf('Жанна')).toBeLessThan(html.indexOf('Мария'));
     expect(html.match(/nui-table__row--selected/g)).toBeNull();
+
     const windowed = await renderMarkup(() =>
       h(NuiTable, { columns: COLUMNS, rows: manyPeople(1000), virtual: true, height: '10rem' }),
     );
+
     expect(windowed).toContain('aria-rowcount="1001"');
     expect(windowed).toContain('nui-table__spacer');
     expect(windowed.match(/aria-rowindex=/g)).toHaveLength(20);
+
     const pinned = await renderMarkup(() =>
       h(NuiTable, {
         columns: [
@@ -614,6 +644,7 @@ describe('server rendering', () => {
         rows: PEOPLE.slice(0, 2),
       }),
     );
+
     expect(pinned).toContain('<colgroup>');
     expect(pinned).toContain('inline-size:120px');
     expect(pinned).toContain('nui-table__cell--sticky-start');
@@ -621,6 +652,7 @@ describe('server rendering', () => {
     expect(pinned).toContain('role="separator"');
     expect(pinned).toContain('aria-valuenow="120"');
     expect(pinned).toContain('aria-label="Reorder Имя"');
+
     const tree = await renderMarkup(() =>
       h(NuiTable, {
         columns: COLUMNS,
@@ -631,6 +663,7 @@ describe('server rendering', () => {
         rowDrag: true,
       }),
     );
+
     expect(tree).toContain('aria-expanded="true"');
     expect(tree).toContain('nui-table__toggle--leaf');
     expect(tree).toContain('--_level:1');

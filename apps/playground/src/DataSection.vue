@@ -160,6 +160,7 @@ import {
 
 const AVATAR_SRC =
   "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%234f46e5'/%3E%3Ccircle cx='32' cy='24' r='11' fill='%23fff'/%3E%3Cellipse cx='32' cy='54' rx='20' ry='14' fill='%23fff'/%3E%3C/svg%3E";
+
 const COVER_SRC =
   "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 100'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' x2='1'%3E%3Cstop offset='0' stop-color='%234f46e5'/%3E%3Cstop offset='1' stop-color='%2306b6d4'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='300' height='100' fill='url(%23g)'/%3E%3C/svg%3E";
 
@@ -172,6 +173,7 @@ const team: NuiAvatarItem[] = [
 ];
 
 const runs = ref(0);
+
 const linkItems: NuiListEntry<string>[] = [
   { label: 'Документация', description: 'Руководства и API', href: '#docs', icon: 'file' },
   { label: 'Репозиторий', href: '#repo', icon: 'external-link' },
@@ -183,12 +185,14 @@ const linkItems: NuiListEntry<string>[] = [
     },
   },
 ];
+
 const languageItems: NuiListEntry<string>[] = [
   { label: 'Go', value: 'go' },
   { label: 'Rust', value: 'rust' },
   { label: 'Ruby', value: 'ruby', disabled: true },
   { label: 'Котлин', value: 'kotlin' },
 ];
+
 const tasks: NuiListEntry<string>[] = [
   { label: 'Проверить макеты', description: 'Сегодня' },
   { label: 'Ответить дизайнеру', description: 'Завтра' },

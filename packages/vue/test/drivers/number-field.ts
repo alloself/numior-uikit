@@ -28,6 +28,7 @@ export class NumberFieldDriver extends ComponentDriver {
     const model = ref<number | null>(modelValue);
     const history: Array<number | null> = [];
     const localeRef = ref(locale);
+
     const control = () =>
       h(
         NuiNumberField,
@@ -43,7 +44,9 @@ export class NumberFieldDriver extends ComponentDriver {
         },
         slots,
       );
+
     const inField = () => (field ? h(NuiField, field, control) : control());
+
     const Host = defineComponent({
       setup: () => () =>
         h('div', [
@@ -51,6 +54,7 @@ export class NumberFieldDriver extends ComponentDriver {
           h('button', { type: 'button', class: 'outside' }, 'Outside'),
         ]),
     });
+
     return new NumberFieldDriver(
       mount(Host, { attachTo: document.body }),
       model,
@@ -144,6 +148,7 @@ export class NumberFieldDriver extends ComponentDriver {
       cancelable: true,
       bubbles: true,
     });
+
     this.control.element.dispatchEvent(event);
     await nextTick();
     return event.defaultPrevented;

@@ -30,6 +30,7 @@ const visit = <T>(
     const hasChildren = hasTreeChildren(item);
     const expanded = hasChildren && expandedKeys.has(key);
     const loading = item.children === undefined && item.lazy === true && pendingKeys.has(key);
+
     out.push({
       item,
       key,
@@ -41,6 +42,7 @@ const visit = <T>(
       expanded,
       loading,
     });
+
     if (expanded && item.children) {
       visit(item.children, level + 1, key, keyOf, expandedKeys, pendingKeys, out);
     }

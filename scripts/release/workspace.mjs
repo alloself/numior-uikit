@@ -33,11 +33,13 @@ export const verifyConditions = async (_config, context) => {
   if (context.options?.dryRun) {
     return;
   }
+
   assert.equal(
     context.env.NUMIOR_RELEASE_ENABLED,
     'true',
     'Public releases are disabled until 1.0 readiness',
   );
+
   for (const { manifest } of libraries) {
     assert.equal(manifest.private, false, `${manifest.name} is not approved for publication`);
   }
@@ -49,26 +51,31 @@ export const prepare = async (config, context) => {
   await verifyConditions(config, context);
   const version = context.nextRelease.version;
   const repository = repositoryUrl(context.options);
+
   assert.match(
     version,
     /^[1-9]\d*\.\d+\.\d+$/,
     'Only stable releases starting at 1.0.0 are supported',
   );
+
   const libraries = await packages(context.cwd);
   const destination = resolve(context.cwd, '.release');
   await mkdir(destination, { recursive: true });
   // Update every manifest before packing, so workspace:* references resolve consistently.
   for (const library of libraries) {
     library.manifest.version = version;
+
     library.manifest.repository = {
       type: 'git',
       url: repository,
       directory: relative(context.cwd, library.directory).replaceAll('\\', '/'),
     };
+
     await writeFile(library.path, `${JSON.stringify(library.manifest, null, 2)}\n`);
   }
   for (const { directory } of libraries) {
     await access(join(directory, 'dist/LICENSE'));
+
     execFileSync('pnpm', ['pack', '--pack-destination', destination], {
       cwd: directory,
       env: context.env,
@@ -88,9 +95,11 @@ export const publish = async (config, context) => {
       context.nextRelease.version,
       'Package was not prepared for this release',
     );
+
     const filename = `${manifest.name.slice(1).replace('/', '-')}-${manifest.version}.tgz`;
     const tarball = join(context.cwd, '.release', filename);
     await access(tarball);
+
     execFileSync(
       'npm',
       ['publish', tarball, '--access', 'public', '--provenance', '--tag', 'latest'],
@@ -101,6 +110,7 @@ export const publish = async (config, context) => {
         encoding: 'utf8',
       },
     );
+
     context.logger.log('Published %s@%s', manifest.name, manifest.version);
   }
   return { name: 'Numior UI workspace packages' };

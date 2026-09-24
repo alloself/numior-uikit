@@ -30,12 +30,14 @@ const { trigger, setTrigger } = useTriggerElement();
 const contentElement = useTemplateRef<HTMLElement>('content');
 const arrowNode = useTemplateRef<HTMLElement>('arrow-node');
 const { contentAttrs, invokerAttrs } = usePopover(contentElement, { open, id: () => id });
+
 const { side, floatingStyles, arrowStyles } = useFloating(trigger, contentElement, {
   placement: () => placement,
   offset: () => offset,
   arrow: arrowNode,
   enabled: open,
 });
+
 const triggerAttrs = computed<NuiPopoverTriggerAttrs>(() => ({
   ...invokerAttrs.value,
   ref: setTrigger,

@@ -16,6 +16,7 @@ describe('NuiRadioGroup and NuiRadio', () => {
       props: { name: 'plan', orientation: 'horizontal', size: 'sm', disabled: true },
       disabledValues: ['c'],
     });
+
     expect(group.names).toEqual(['plan', 'plan', 'plan']);
     expect(group.group.classes()).toContain('nui-radio-group--orientation-horizontal');
     expect(group.group.classes()).toContain('nui-radio-group--size-sm');
@@ -27,6 +28,7 @@ describe('NuiRadioGroup and NuiRadio', () => {
     const group = RadioGroupDriver.mount({
       field: { id: 'plan', label: 'Plan', group: true, description: 'Pick one', required: true },
     });
+
     expect(group.legendText).toContain('Plan');
     expect(group.group.attributes('role')).toBe('radiogroup');
     expect(group.group.attributes('id')).toBe('plan');

@@ -81,6 +81,7 @@ const checkedAttr = computed(() => {
   }
   return checked === 'indeterminate' ? 'mixed' : checked === 'checked';
 });
+
 const style = computed(() => ({
   '--_level': String(node.level),
   ...(start === undefined ? {} : { '--_start': `${start}px` }),

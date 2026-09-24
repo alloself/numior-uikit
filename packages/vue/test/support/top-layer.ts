@@ -24,30 +24,36 @@ export class TopLayerStubs {
     this.showModalCalls = showModalCalls;
     this.closedWith = closedWith;
     this.popoverCalls = popoverCalls;
+
     this.define(HTMLElement.prototype, 'showPopover', {
       value(this: HTMLElement) {
         popoverCalls.show += 1;
         announce(this, 'open');
       },
     });
+
     this.define(HTMLElement.prototype, 'hidePopover', {
       value(this: HTMLElement) {
         popoverCalls.hide += 1;
         announce(this, 'closed');
       },
     });
+
     this.define(HTMLDialogElement.prototype, 'open', {
       get(this: HTMLDialogElement) {
         return this.hasAttribute('open');
       },
     });
+
     this.define(HTMLDialogElement.prototype, 'returnValue', { writable: true, value: '' });
+
     this.define(HTMLDialogElement.prototype, 'showModal', {
       value(this: HTMLDialogElement) {
         showModalCalls.count += 1;
         this.setAttribute('open', '');
       },
     });
+
     this.define(HTMLDialogElement.prototype, 'close', {
       value(this: HTMLDialogElement, value = '') {
         closedWith.push(value);

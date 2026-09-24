@@ -31,13 +31,16 @@ const {
   resize = 'vertical',
   readonly = false,
 } = defineProps<NuiTextareaProps>();
+
 const [model, modifiers] = defineModel<string, NuiTextareaModifiers>({ default: '' });
+
 const { attrs: controlAttrs, invalid: isInvalid } = useFieldControl(() => ({
   id,
   disabled,
   required,
   invalid,
 }));
+
 const textareaElement = useTemplateRef<HTMLTextAreaElement>('textarea');
 const draft = ref(model.value);
 

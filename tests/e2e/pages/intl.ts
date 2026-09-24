@@ -13,8 +13,10 @@ type Guard<T> = (value: unknown) => value is T;
 
 const isNullableNumber: Guard<number | null> = (value): value is number | null =>
   value === null || typeof value === 'number';
+
 const isNullableString: Guard<string | null> = (value): value is string | null =>
   value === null || typeof value === 'string';
+
 const isString: Guard<string> = (value): value is string => typeof value === 'string';
 
 const OUTPUT_GUARDS: { readonly [K in keyof IntlOutput]: Guard<IntlOutput[K]> } = {
@@ -90,6 +92,7 @@ export class IntlSection {
 
   async setLocale(locale: string): Promise<void> {
     await this.localeSelect.click();
+
     await this.page
       .locator('.nui-select__listbox')
       .getByRole('option', { name: new RegExp(`^${locale}\\s`) })

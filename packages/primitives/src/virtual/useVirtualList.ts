@@ -89,11 +89,13 @@ export const useVirtualList = (
     const overscan = toValue(options.overscan) ?? DEFAULT_OVERSCAN;
     return rangeFor(model.value, scrollTop.value, viewport.value, overscan);
   });
+
   const itemAt = (index: number): VirtualItem => ({
     index,
     start: offsetAt(model.value, index),
     size: sizeAt(model.value, index),
   });
+
   const items = computed(() => {
     const { start, end } = range.value;
     const list = Array.from({ length: end - start }, (_, offset) => itemAt(start + offset));
@@ -101,6 +103,7 @@ export const useVirtualList = (
     const valid = pinned !== undefined && pinned >= 0 && pinned < countOf(model.value);
     return withPinned(list, range.value, valid ? itemAt(pinned) : undefined);
   });
+
   const totalSize = computed(() => totalSizeOf(model.value));
   const startSize = computed(() => offsetAt(model.value, range.value.start));
   const endSize = computed(() => totalSize.value - offsetAt(model.value, range.value.end));
@@ -112,6 +115,7 @@ export const useVirtualList = (
       scrollTop.value = element.scrollTop;
     }
   };
+
   const scrollTo = (index: number, { align = 'auto' }: VirtualScrollOptions = {}): void => {
     const element = toValue(container);
     if (!element) {
@@ -134,9 +138,12 @@ export const useVirtualList = (
         }
         measure();
         element.addEventListener('scroll', measure, { passive: true });
+
         const observer =
           typeof ResizeObserver === 'undefined' ? undefined : new ResizeObserver(measure);
+
         observer?.observe(element);
+
         onCleanup(() => {
           element.removeEventListener('scroll', measure);
           observer?.disconnect();

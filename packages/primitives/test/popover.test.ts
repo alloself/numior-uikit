@@ -6,9 +6,11 @@ import { dismissNatively, installTopLayer } from './harness/top-layer';
 
 describe('usePopover', () => {
   let topLayer = installTopLayer();
+
   beforeEach(() => {
     topLayer = installTopLayer();
   });
+
   afterEach(() => topLayer.restore());
 
   it('drives the native popover from the model and exposes invoker attributes', async () => {
@@ -16,11 +18,13 @@ describe('usePopover', () => {
     const capture = captureWithElements((_, content) => usePopover(content, { open, id: 'menu' }));
     const control = capture.value;
     expect(control.contentAttrs.value).toMatchObject({ id: 'menu', popover: 'auto' });
+
     expect(control.invokerAttrs.value).toEqual({
       popovertarget: 'menu',
       'aria-expanded': 'false',
       'aria-controls': 'menu',
     });
+
     capture.second.addEventListener('beforetoggle', control.contentAttrs.value.onBeforetoggle);
     open.value = true;
     await nextTick();
@@ -36,10 +40,12 @@ describe('usePopover', () => {
   it('raises an open popover by hiding and showing it again', async () => {
     const open = ref(false);
     const capture = captureWithElements((_, content) => usePopover(content, { open }));
+
     capture.second.addEventListener(
       'beforetoggle',
       capture.value.contentAttrs.value.onBeforetoggle,
     );
+
     open.value = true;
     await nextTick();
     capture.value.raise();
@@ -57,13 +63,16 @@ describe('usePopover', () => {
 
   it('follows native light dismiss and honors manual mode', async () => {
     const open = ref(true);
+
     const capture = captureWithElements((_, content) =>
       usePopover(content, { open, mode: 'manual' }),
     );
+
     capture.second.addEventListener(
       'beforetoggle',
       capture.value.contentAttrs.value.onBeforetoggle,
     );
+
     expect(capture.value.contentAttrs.value.popover).toBe('manual');
     expect(topLayer.log.showPopover).toBe(1);
     dismissNatively(capture.second);

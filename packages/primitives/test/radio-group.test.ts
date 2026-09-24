@@ -10,6 +10,7 @@ describe('radio group context', () => {
 
   it('shares name and selection with the radios inside', () => {
     const model = ref<string | undefined>('a');
+
     const group = captureSetup(() => useRadioGroup(), {
       wrap: providing(() =>
         provideRadioGroup<string>({
@@ -23,6 +24,7 @@ describe('radio group context', () => {
         }),
       ),
     }).value;
+
     expect(group?.name.value).toBe('plan');
     expect(group?.modelValue.value).toBe('a');
     group?.select('b');

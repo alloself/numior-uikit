@@ -35,9 +35,11 @@ export const useFieldControl = (
   options: FieldControlOptions = {},
 ): FieldControl => {
   const field = useField();
+
   const linked = computed<FieldContext | null>(() =>
     field !== null && (field.labelable.value || options.group === true) ? field : null,
   );
+
   const resolve = (
     explicit: (current: FieldControlProps) => boolean | undefined,
     inherited: (source: FieldContext) => boolean,
@@ -45,19 +47,24 @@ export const useFieldControl = (
     computed(() => explicit(toValue(props)) ?? (linked.value ? inherited(linked.value) : false));
 
   const id = useControlId(() => toValue(props).id ?? linked.value?.id.value);
+
   const invalid = resolve(
     (current) => current.invalid,
     (source) => source.invalid.value,
   );
+
   const required = resolve(
     (current) => current.required,
     (source) => source.required.value,
   );
+
   const disabled = resolve(
     (current) => current.disabled,
     (source) => source.disabled.value,
   );
+
   const describedBy = computed(() => linked.value?.describedBy.value);
+
   const attrs = computed<FieldControlAttrs>(() => ({
     id: id.value,
     'aria-describedby': describedBy.value,
@@ -65,5 +72,6 @@ export const useFieldControl = (
     required: required.value,
     disabled: disabled.value,
   }));
+
   return { id, invalid, required, disabled, describedBy, attrs };
 };

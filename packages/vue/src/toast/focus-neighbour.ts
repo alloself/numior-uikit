@@ -11,7 +11,9 @@ const toastIn = (element: Element | null): HTMLElement | null => {
 
 export const focusNeighbour = (element: HTMLElement): void => {
   const parent = element.parentElement;
+
   const neighbour =
     toastIn(siblingOf(element)) ?? (parent === null ? null : toastIn(siblingOf(parent)));
+
   neighbour?.focus();
 };

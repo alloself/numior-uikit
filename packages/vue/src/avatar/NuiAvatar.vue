@@ -57,6 +57,7 @@ const {
 
 const group = useAvatarGroup();
 const failed = ref(false);
+
 watch(
   () => src,
   () => {
@@ -69,6 +70,7 @@ const resolvedShape = computed(() => shape ?? group?.shape.value ?? 'circle');
 const label = computed(() => alt ?? name ?? '');
 const showImage = computed(() => src !== undefined && src !== '' && !failed.value);
 const initials = computed(() => (name === undefined ? '' : initialsOf(name)));
+
 const fail = (): void => {
   failed.value = true;
 };

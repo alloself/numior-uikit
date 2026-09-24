@@ -115,6 +115,7 @@ import type { NuiTimeFieldProps } from './time-field.types';
 import { useTimeDraft, type TimePeriod } from './use-time-draft';
 
 defineOptions({ inheritAttrs: false });
+
 const {
   id,
   size = 'md',
@@ -133,28 +134,35 @@ const {
   clockLabel = 'Choose time',
   emptyLabel = 'No times',
 } = defineProps<NuiTimeFieldProps>();
+
 const model = defineModel<string | null>({ default: null });
 
 const split = useSplitAttrs();
 const field = useField();
+
 const {
   attrs: controlAttrs,
   invalid: isInvalid,
   required: isRequired,
   disabled: isDisabled,
 } = useFieldControl(() => ({ id, disabled, required, invalid }));
+
 const locale = useLocale(() => localeProp);
 const layout = computed(() => timeLayout(locale.value, { seconds, hourCycle }));
 const labels = computed(() => segmentLabels(locale.value));
+
 const firstSegment = computed(() =>
   layout.value.segments.findIndex((segment) => segment.type !== 'literal'),
 );
+
 const segmentTypes = computed(() =>
   layout.value.segments.flatMap((segment) => (segment.type === 'literal' ? [] : [segment.type])),
 );
+
 const flow: { type: TimeSegmentType | null } = { type: null };
 const minTime = computed(() => parseTime(min));
 const maxTime = computed(() => parseTime(max));
+
 const times = useTimeDraft({
   model,
   layout: () => layout.value,
@@ -165,6 +173,7 @@ const times = useTimeDraft({
 
 const rootElement = useTemplateRef<HTMLDivElement>('root');
 const groupElement = useTemplateRef<HTMLDivElement>('group');
+
 const navigation = useListNavigation(groupElement, {
   selector: '.nui-time-field__segment',
   orientation: 'horizontal',
@@ -180,6 +189,7 @@ const segmentText = (type: TimeSegmentType): string => {
   const period = times.draft.value.period;
   return period === null ? '' : layout.value.periods[period === 'am' ? 0 : 1];
 };
+
 const digitOf = (char: string): number | null => {
   const ascii = '0123456789'.indexOf(char);
   if (ascii >= 0) {
@@ -188,20 +198,25 @@ const digitOf = (char: string): number | null => {
   const local = layout.value.digits.indexOf(char);
   return local >= 0 ? local : null;
 };
+
 const periodOf = (char: string): TimePeriod | null => {
   const lower = char.toLocaleLowerCase(locale.value);
+
   const initials = layout.value.periods.map((period) =>
     period.charAt(0).toLocaleLowerCase(locale.value),
   );
+
   if (lower === 'a' || lower === initials[0]) {
     return 'am';
   }
   return lower === 'p' || lower === initials[1] ? 'pm' : null;
 };
+
 const nextType = (type: TimeSegmentType): TimeSegmentType | null => {
   const index = segmentTypes.value.indexOf(type);
   return segmentTypes.value[index + 1] ?? null;
 };
+
 const onChar = (type: TimeSegmentType, char: string): void => {
   if (readonly) {
     return;
@@ -220,26 +235,31 @@ const onChar = (type: TimeSegmentType, char: string): void => {
     times.setPeriod(period);
   }
 };
+
 const onGroupFocusin = (event: FocusEvent): void => {
   flow.type = null;
   navigation.onFocusin(event);
 };
+
 const focusHour = (): void => {
   const hour = groupElement.value?.querySelector('.nui-time-field__segment--type-hour');
   if (hour instanceof HTMLElement) {
     navigation.setActive(hour);
   }
 };
+
 const focusFromClick = (): void => {
   const empty = navigation
     .items()
     .find((item) => item instanceof HTMLInputElement && item.value === '');
+
   if (empty) {
     navigation.setActive(empty);
   } else {
     focusHour();
   }
 };
+
 const onRootPointerdown = (event: PointerEvent): void => {
   const target = event.target;
   const interactive = '.nui-time-field__segment, .nui-time-field__clock, [role="listbox"]';
@@ -249,11 +269,13 @@ const onRootPointerdown = (event: PointerEvent): void => {
   event.preventDefault();
   focusFromClick();
 };
+
 const hasNextSegment = (): boolean => {
   const items = navigation.items();
   const active = navigation.activeElement();
   return active !== null && items.indexOf(active) < items.length - 1;
 };
+
 const shiftByPage = (event: KeyboardEvent): boolean => {
   if (event.key !== 'PageUp' && event.key !== 'PageDown') {
     return false;
@@ -264,6 +286,7 @@ const shiftByPage = (event: KeyboardEvent): boolean => {
   }
   return true;
 };
+
 const onGroupKeydown = (event: KeyboardEvent): void => {
   if (isDisabled.value || shiftByPage(event)) {
     return;
@@ -282,6 +305,7 @@ const onGroupKeydown = (event: KeyboardEvent): void => {
     navigation.onKeydown(event);
   }
 };
+
 const onGroupFocusout = (event: FocusEvent): void => {
   const next = event.relatedTarget;
   if (!(next instanceof Node && groupElement.value?.contains(next) === true)) {
@@ -292,6 +316,7 @@ const onGroupFocusout = (event: FocusEvent): void => {
 
 const open = ref(false);
 const listboxId = computed(() => `${controlAttrs.value.id}-listbox`);
+
 const {
   listboxElement,
   setListbox,
@@ -310,7 +335,9 @@ const {
   typeahead: false,
   restOnSelected: true,
 });
+
 const state = { inside: false };
+
 const suggestions = computed<NuiOption<string>[]>(() =>
   timeOptions({ step, min: minTime.value, max: maxTime.value }).map((time) => ({
     value: formatTimeModel(time, seconds),
@@ -326,6 +353,7 @@ const choose = (option: NuiOption<string>): void => {
   control.hide();
   focusHour();
 };
+
 const onListboxKeydown = (event: KeyboardEvent): void => {
   if (event.key === 'Tab') {
     control.hide();
@@ -338,15 +366,19 @@ const onListboxKeydown = (event: KeyboardEvent): void => {
   event.preventDefault();
   list.activeElement()?.click();
 };
+
 const onListFocusin = (event: FocusEvent): void => {
   state.inside = true;
   list.onFocusin(event);
 };
+
 const onListFocusout = (event: FocusEvent): void => {
   const next = event.relatedTarget;
+
   const within =
     next instanceof Node &&
     (listboxElement.value?.contains(next) === true || rootElement.value?.contains(next) === true);
+
   if (!within) {
     state.inside = false;
     control.hide();

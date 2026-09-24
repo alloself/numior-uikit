@@ -15,6 +15,7 @@ test.describe('data display', () => {
     await expect(data.badgeDot).toHaveText('');
     const host = await data.badgeFloating.locator('..').boundingBox();
     const badge = await data.badgeFloating.boundingBox();
+
     expect(host && badge && badge.y < host.y && badge.x + badge.width > host.x + host.width).toBe(
       true,
     );

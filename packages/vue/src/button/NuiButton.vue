@@ -38,5 +38,6 @@ const {
   loading = false,
   iconOnly = undefined,
 } = defineProps<NuiButtonProps>();
+
 const slots = useSlots();
 </script>

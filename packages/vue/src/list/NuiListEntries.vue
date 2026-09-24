@@ -31,11 +31,14 @@ const { entries, listId, linkAs, indexOf } = defineProps<{
   linkAs: string | Component;
   indexOf: (entry: E) => number;
 }>();
+
 const list = useList();
 
 const idFor = (entry: E): string => optionElementId(listId, indexOf(entry));
+
 const isSelected = (entry: E): boolean =>
   entry.value !== undefined && (list?.isSelected(entry.value) ?? false);
+
 const isActive = (entry: E): boolean =>
   list?.activeId.value !== undefined && list.activeId.value === idFor(entry);
 </script>

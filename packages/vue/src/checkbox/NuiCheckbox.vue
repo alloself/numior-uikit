@@ -37,6 +37,7 @@ import NuiIcon from '../icon/NuiIcon.vue';
 import type { NuiCheckboxProps } from './checkbox.types';
 
 defineOptions({ inheritAttrs: false });
+
 const {
   id,
   size = 'md',
@@ -46,13 +47,16 @@ const {
   indeterminate = false,
   value,
 } = defineProps<NuiCheckboxProps<T>>();
+
 const model = defineModel<boolean | T[]>();
 const split = useSplitAttrs();
+
 const {
   attrs: controlAttrs,
   invalid: isInvalid,
   disabled: isDisabled,
 } = useFieldControl(() => ({ id, disabled, required, invalid }));
+
 const { checked, setChecked } = useCheckedState<T>(model, () => value);
 const checkboxElement = useTemplateRef<HTMLInputElement>('checkbox');
 
@@ -68,6 +72,7 @@ const onChange = (): void => {
     return;
   }
   setChecked(element.checked);
+
   void nextTick(() => {
     if (checkboxElement.value) {
       checkboxElement.value.checked = checked.value;

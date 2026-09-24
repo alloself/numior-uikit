@@ -27,6 +27,7 @@ const {
   description,
   size = 'md',
 } = defineProps<NuiEmptyProps>();
+
 const slots = useSlots();
 const hasMedia = (): boolean => Boolean(slots.media) || !hideIcon;
 const hasTitle = (): boolean => Boolean(title || slots.title);

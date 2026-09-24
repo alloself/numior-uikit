@@ -86,6 +86,7 @@ export class MenuDriver extends ComponentDriver {
     const stubs = new TopLayerStubs();
     const model = ref(open);
     const state: PartsState = { log: [], bold: ref(false), align: ref('left') };
+
     const Host = defineComponent({
       setup: () => () =>
         h(
@@ -105,6 +106,7 @@ export class MenuDriver extends ComponentDriver {
           },
         ),
     });
+
     return new MenuDriver(mount(Host, { attachTo: document.body }), stubs, model, state);
   }
 
@@ -169,6 +171,7 @@ export class MenuDriver extends ComponentDriver {
     const found = this.wrapper
       .findAll<HTMLElement>(ITEM)
       .find((entry) => labelText(entry.element) === label);
+
     if (!found) {
       throw new Error(`No menu item labelled ${label}`);
     }

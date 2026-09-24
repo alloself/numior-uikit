@@ -117,6 +117,7 @@ describe('NuiTimeField', () => {
       modelValue: '17:45',
       props: { min: '09:00', max: '18:00', step: 30 },
     });
+
     await field.focusSegment(1);
     await field.press('PageUp');
     expect(field.value).toBe('18:00');
@@ -136,6 +137,7 @@ describe('NuiTimeField', () => {
       modelValue: '09:30',
       props: { min: '09:00', max: '10:00', step: 30 },
     });
+
     expect(field.listbox.attributes('popover')).toBe('auto');
     expect(field.expanded).toBe(false);
     await field.clickClock();
@@ -160,9 +162,11 @@ describe('NuiTimeField', () => {
     await field.focusOutside();
     expect(field.expanded).toBe(false);
     field.unmount();
+
     const none = TimeFieldDriver.mount({
       props: { min: '12:00', max: '09:00', emptyLabel: 'Nothing' },
     });
+
     expect(none.optionLabels).toEqual([]);
     expect(none.emptyText).toBe('Nothing');
     none.unmount();
@@ -173,6 +177,7 @@ describe('NuiTimeField', () => {
       locale: 'de-DE',
       props: { min: '09:00', max: '18:00' },
     });
+
     await field.focusSegment(0);
     await field.typeText('0730');
     expect(field.value).toBe('07:30');
@@ -195,25 +200,32 @@ describe('NuiTimeField', () => {
       props: { name: 'start', invalid: true },
       field: { label: 'Start', description: 'Local time' },
     });
+
     expect(field.fieldLabelFor).toBe(field.hourId);
     expect(field.group.attributes('aria-labelledby')).toBeDefined();
     expect(field.group.attributes('aria-describedby')).toBeDefined();
+
     expect(field.segments.every((segment) => segment.attributes('aria-invalid') === 'true')).toBe(
       true,
     );
+
     expect(field.hiddenValue).toBe('13:05');
     field.unmount();
     const disabled = TimeFieldDriver.mount({ props: { disabled: true } });
+
     expect(disabled.segments.every((segment) => segment.attributes('disabled') !== undefined)).toBe(
       true,
     );
+
     expect(disabled.clockButton.attributes('disabled')).toBeDefined();
     disabled.unmount();
+
     const readonly = TimeFieldDriver.mount({
       locale: 'de-DE',
       modelValue: '10:00',
       props: { readonly: true },
     });
+
     await readonly.focusSegment(0);
     await readonly.press('ArrowUp');
     await readonly.typeText('5');

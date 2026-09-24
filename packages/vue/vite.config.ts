@@ -37,6 +37,7 @@ const explicitCss = (): Plugin => {
         fileName: 'LICENSE',
         source: await readFile(new URL('../../LICENSE', packageRoot), 'utf8'),
       });
+
       const manifest = new URL('./src/styles.css', packageRoot);
       this.emitFile({ type: 'asset', fileName: 'styles.css', source: await inlineCss(manifest) });
       for (const line of (await readFile(manifest, 'utf8')).split('\n')) {
@@ -45,6 +46,7 @@ const explicitCss = (): Plugin => {
           continue;
         }
         const name = target.pathname.slice(target.pathname.lastIndexOf('/') + 1);
+
         this.emitFile({
           type: 'asset',
           fileName: `styles/${name}`,

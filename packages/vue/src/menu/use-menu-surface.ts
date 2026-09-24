@@ -69,12 +69,14 @@ const labelOf = (element: HTMLElement): string =>
 
 export const useMenuSurface = (options: MenuSurfaceOptions): MenuSurface => {
   const control = usePopover(options.content, { open: options.open, id: options.id, mode: 'auto' });
+
   const floating = useFloating(options.trigger, options.content, {
     placement: options.placement,
     offset: options.offset,
     size: options.size,
     enabled: options.open,
   });
+
   const navigation = useListNavigation(options.content, {
     selector: MENU_ITEMS,
     scope: '[role="menu"]',
@@ -82,8 +84,10 @@ export const useMenuSurface = (options: MenuSurfaceOptions): MenuSurface => {
     typeahead: options.typeahead,
     itemText: labelOf,
   });
+
   const state = { pending: 'none' satisfies MenuFocusRequest, inside: false, pointer: false };
   const close = (): void => (options.close ?? control.hide)();
+
   const context: MenuContext = {
     level: (options.parent?.level ?? -1) + 1,
     closeOnSelect: computed(() => toValue(options.closeOnSelect)),
@@ -108,6 +112,7 @@ export const useMenuSurface = (options: MenuSurfaceOptions): MenuSurface => {
     }
     state.pending = 'none';
   };
+
   const onClosed = (): void => {
     navigation.reset();
     if (state.inside) {
@@ -115,6 +120,7 @@ export const useMenuSurface = (options: MenuSurfaceOptions): MenuSurface => {
       focusElement(options.trigger.value);
     }
   };
+
   onMounted(() => {
     watch(
       () => options.open.value,
@@ -128,6 +134,7 @@ export const useMenuSurface = (options: MenuSurfaceOptions): MenuSurface => {
       { flush: 'post' },
     );
   });
+
   const within = (node: EventTarget | null): boolean =>
     node instanceof Node &&
     (options.content.value?.contains(node) === true ||

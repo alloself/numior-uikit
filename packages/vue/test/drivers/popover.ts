@@ -15,6 +15,7 @@ export class PopoverDriver extends ComponentDriver {
   static mount({ props = {}, open = false }: PopoverMountOptions = {}) {
     const stubs = new TopLayerStubs();
     const model = ref(open);
+
     const Host = defineComponent({
       setup: () => () =>
         h(
@@ -32,6 +33,7 @@ export class PopoverDriver extends ComponentDriver {
           },
         ),
     });
+
     return new PopoverDriver(mount(Host, { attachTo: document.body }), stubs, model);
   }
 

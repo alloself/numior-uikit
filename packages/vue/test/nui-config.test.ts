@@ -18,6 +18,7 @@ describe('provideNuiConfig', () => {
         ),
       ),
     );
+
     await vi.waitFor(() =>
       expect(wrapper.findAll('svg').map((svg) => svg.attributes('data-icon'))).toEqual([
         'inner',
@@ -33,9 +34,11 @@ describe('provideNuiConfig', () => {
         return () => h('output', locale.value);
       },
     });
+
     const wrapper = mount(
       configScope({ locale: 'de-DE' }, () => h(configScope({}, () => h(Probe)))),
     );
+
     expect(wrapper.find('output').text()).toBe('de-DE');
   });
 });

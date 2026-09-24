@@ -92,11 +92,13 @@ export const createToastStore = (options: ToastStoreOptions = {}): ToastStore =>
       }
     }
   };
+
   const remove = (id: string): void => {
     removals.delete(id);
     toasts.value = toasts.value.filter((toast) => toast.id !== id);
     settle();
   };
+
   const dismiss = (id: string): void => {
     const target = toasts.value.find((toast) => toast.id === id);
     if (!target || target.leaving) {
@@ -113,10 +115,12 @@ export const createToastStore = (options: ToastStoreOptions = {}): ToastStore =>
       remove(id);
     }
   };
+
   const nextId = (): string => {
     counter += 1;
     return `nui-toast-${counter}`;
   };
+
   const show = (input: ToastOptions): string => {
     const id = input.id ?? nextId();
     const pending = removals.get(id);

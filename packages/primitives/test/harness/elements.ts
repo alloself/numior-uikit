@@ -16,6 +16,7 @@ export const captureWithElements = <T>(
   tags: readonly [string, string] = ['button', 'div'],
 ): ElementsCapture<T> => {
   const outcome: { current: Outcome<T> } = { current: { ran: false } };
+
   const Host = defineComponent({
     setup() {
       const first = shallowRef<HTMLElement | null>(null);
@@ -24,6 +25,7 @@ export const captureWithElements = <T>(
       return () => [h(tags[0], { ref: first }), h(tags[1], { ref: second })];
     },
   });
+
   const wrapper = mount(Host, { attachTo: document.body });
   if (!outcome.current.ran) {
     throw new Error('setup did not run');

@@ -17,15 +17,18 @@ const fixture = async (t, isPrivate = true) => {
   const cwd = await mkdtemp(join(tmpdir(), 'numior-release-'));
   t.after(() => rm(cwd, { recursive: true, force: true }));
   await writeFile(join(cwd, 'pnpm-workspace.yaml'), 'packages:\n  - packages/*\n');
+
   await writeFile(
     join(cwd, 'package.json'),
     JSON.stringify({ private: true, packageManager: 'pnpm@10.31.0' }),
   );
+
   for (const name of ['tokens', 'vue']) {
     const directory = join(cwd, 'packages', name);
     await mkdir(join(directory, 'dist'), { recursive: true });
     await writeFile(join(directory, 'dist/LICENSE'), 'MIT fixture');
     await writeFile(join(directory, 'dist/index.js'), 'export const ready = true;');
+
     await writeFile(
       join(directory, 'package.json'),
       JSON.stringify({
@@ -79,27 +82,34 @@ test('disabled and private packages cannot reach prepare or publish', async (t) 
 test('packing synchronizes versions and replaces workspace protocols without publishing', async (t) => {
   const context = await fixture(t, false);
   context.env.NUMIOR_RELEASE_ENABLED = 'true';
+
   context.options.repositoryUrl =
     'https://x-access-token:fixture-secret@github.com/example/numior-ui.git';
+
   execFileSync('pnpm', ['install', '--offline', '--ignore-scripts'], {
     cwd: context.cwd,
     env: context.env,
     encoding: 'utf8',
   });
+
   await prepare({}, context);
   const tarball = join(context.cwd, '.release/numior-vue-1.0.0.tgz');
+
   const packed = JSON.parse(
     execFileSync('tar', ['-xOf', tarball, 'package/package.json'], { encoding: 'utf8' }),
   );
+
   assert.equal(packed.version, '1.0.0');
   assert.equal(packed.peerDependencies['@numior/tokens'], '1.0.0');
   assert.equal(packed.repository.url, 'https://github.com/example/numior-ui.git');
   assert.ok(!JSON.stringify(packed).includes('fixture-secret'));
   assert.equal(packed.repository.directory, 'packages/vue');
+
   assert.equal(
     execFileSync('tar', ['-xOf', tarball, 'package/dist/LICENSE'], { encoding: 'utf8' }),
     'MIT fixture',
   );
+
   assert.equal(JSON.parse(await readFile(join(context.cwd, 'package.json'), 'utf8')).private, true);
 });
 
@@ -108,6 +118,7 @@ test('prerelease versions are rejected before changing package versions', async 
   context.env.NUMIOR_RELEASE_ENABLED = 'true';
   context.nextRelease.version = '1.0.0-beta.1';
   await assert.rejects(prepare({}, context), /Only stable releases/);
+
   assert.equal(
     JSON.parse(await readFile(join(context.cwd, 'packages/vue/package.json'), 'utf8')).version,
     '0.0.0',
@@ -116,12 +127,14 @@ test('prerelease versions are rejected before changing package versions', async 
 
 test('semantic-release calculates the first 1.0.0 in dry-run without tags or package mutations', async (t) => {
   const context = await fixture(t);
+
   const git = (...args) =>
     execFileSync('git', args, {
       cwd: context.cwd,
       encoding: 'utf8',
       stdio: ['ignore', 'pipe', 'pipe'],
     });
+
   const remote = join(context.cwd, 'remote.git');
   git('init', '--bare', remote);
   git('init');
@@ -133,6 +146,7 @@ test('semantic-release calculates the first 1.0.0 in dry-run without tags or pac
   git('remote', 'add', 'origin', remote);
   git('push', '-u', 'origin', 'master');
   const before = await readFile(join(context.cwd, 'packages/vue/package.json'), 'utf8');
+
   const result = await semanticRelease(
     {
       ...releaseConfig,
@@ -146,6 +160,7 @@ test('semantic-release calculates the first 1.0.0 in dry-run without tags or pac
     },
     { ...context, stdout: new PassThrough(), stderr: new PassThrough() },
   );
+
   assert.equal(result.nextRelease.version, '1.0.0');
   assert.equal(git('tag', '--list'), '');
   assert.equal(await readFile(join(context.cwd, 'packages/vue/package.json'), 'utf8'), before);

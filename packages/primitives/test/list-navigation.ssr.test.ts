@@ -7,6 +7,7 @@ import { useListNavigation } from '../src';
 describe('useListNavigation on the server', () => {
   it('renders without touching the DOM and reports no active item', async () => {
     const seen = { activeId: 'unset', items: -1 };
+
     const Probe = defineComponent({
       setup() {
         const container = ref<HTMLElement | null>(null);
@@ -17,6 +18,7 @@ describe('useListNavigation on the server', () => {
           h('div', { ref: container, role: 'listbox' }, [h('div', { role: 'option' }, 'A')]);
       },
     });
+
     const html = await renderToString(h(Probe));
     expect(html).toContain('role="option"');
     expect(seen).toEqual({ activeId: 'none', items: 0 });

@@ -4,12 +4,14 @@ import { ButtonDriver } from './drivers/button';
 describe('NuiButton', () => {
   it('is a native button that never submits by accident and forwards attributes and clicks', async () => {
     const clicks = { count: 0 };
+
     const button = ButtonDriver.mount({
       attrs: { 'aria-label': 'Save document' },
       onClick: () => {
         clicks.count += 1;
       },
     });
+
     expect(button.type).toBe('button');
     expect(button.attribute('aria-label')).toBe('Save document');
     expect(button.text).toBe('Save');
@@ -19,12 +21,14 @@ describe('NuiButton', () => {
 
   it('blocks activation while loading and recovers afterwards', async () => {
     const clicks = { count: 0 };
+
     const button = ButtonDriver.mount({
       props: { loading: true, type: 'submit' },
       onClick: () => {
         clicks.count += 1;
       },
     });
+
     button.clickNatively();
     expect(clicks.count).toBe(0);
     expect(button.busy).toBe(true);

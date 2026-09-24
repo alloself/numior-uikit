@@ -87,6 +87,7 @@ import { useOptionSelection } from '../shared/use-option-selection';
 import type { NuiSelectProps } from './select.types';
 
 defineOptions({ inheritAttrs: false });
+
 const {
   id,
   size = 'md',
@@ -105,17 +106,21 @@ const {
   clearLabel = 'Clear',
   countLabel,
 } = defineProps<NuiSelectProps<T>>();
+
 const model = defineModel<T | T[]>();
 
 const split = useSplitAttrs();
 const field = useField();
+
 const {
   attrs: controlAttrs,
   invalid: isInvalid,
   required: isRequired,
   disabled: isDisabled,
 } = useFieldControl(() => ({ id, disabled, required, invalid }));
+
 const listboxId = computed(() => `${controlAttrs.value.id}-listbox`);
+
 const {
   keyOf,
   flat,
@@ -128,6 +133,7 @@ const {
   multiple: () => multiple,
   getKey: () => getKey,
 });
+
 const displayLabel = computed(() => {
   const labels = selectedOptions.value.map((option) => option.label);
   if (labels.length === 0) {
@@ -138,10 +144,12 @@ const displayLabel = computed(() => {
   }
   return countLabel ? countLabel(labels.length) : `${labels.length} selected`;
 });
+
 const showClear = computed(() => clearable && selectedValues.value.length > 0 && !isDisabled.value);
 
 const open = ref(false);
 const triggerElement = useTemplateRef<HTMLButtonElement>('trigger');
+
 const { listboxElement, setListbox, control, floatingStyles, navigation, activateHovered } =
   useListboxSurface({
     anchor: triggerElement,
@@ -153,15 +161,18 @@ const { listboxElement, setListbox, control, floatingStyles, navigation, activat
     typeahead: true,
     restOnSelected: true,
   });
+
 const state = { pending: 'selected', inside: false };
 
 const optionOf = (element: HTMLElement | null): NuiOption<T> | undefined =>
   element ? flat.value[optionIndexOf(element)] : undefined;
+
 const onSelect = (): void => {
   if (!multiple) {
     control.hide();
   }
 };
+
 const clear = (): void => {
   clearSelection();
   triggerElement.value?.focus({ preventScroll: true });
@@ -192,12 +203,14 @@ onMounted(() => {
 
 const isPrintable = (event: KeyboardEvent): boolean =>
   event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey;
+
 const OPENERS: Record<string, string> = {
   ArrowDown: 'selected',
   ArrowUp: 'last',
   Home: 'first',
   End: 'last',
 };
+
 const pickByTypeahead = (event: KeyboardEvent): void => {
   const element = navigation.matchTypeahead(event.key);
   const match = optionOf(element);
@@ -207,6 +220,7 @@ const pickByTypeahead = (event: KeyboardEvent): void => {
     model.value = match.value;
   }
 };
+
 const onTriggerKeydown = (event: KeyboardEvent): void => {
   if (isDisabled.value) {
     return;
@@ -222,6 +236,7 @@ const onTriggerKeydown = (event: KeyboardEvent): void => {
     pickByTypeahead(event);
   }
 };
+
 const onListboxKeydown = (event: KeyboardEvent): void => {
   if (event.key === 'Tab') {
     control.hide();
@@ -238,16 +253,20 @@ const onListboxKeydown = (event: KeyboardEvent): void => {
     navigation.activeElement()?.click();
   }
 };
+
 const onFocusin = (event: FocusEvent): void => {
   state.inside = true;
   navigation.onFocusin(event);
 };
+
 const onFocusout = (event: FocusEvent): void => {
   const next = event.relatedTarget;
+
   const within =
     next instanceof Node &&
     (listboxElement.value?.contains(next) === true ||
       triggerElement.value?.contains(next) === true);
+
   if (!within) {
     state.inside = false;
     control.hide();

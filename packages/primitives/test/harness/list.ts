@@ -28,9 +28,11 @@ export class ListHarness {
     const labels = options.labels ?? DEFAULT_LABELS;
     const role = options.role ?? 'option';
     const outcome: { current: Outcome } = { current: { ran: false } };
+
     const Host = defineComponent({
       setup() {
         const container = shallowRef<HTMLElement | null>(null);
+
         const navigation = useListNavigation(container, {
           selector: `[role="${role}"]`,
           mode: () => options.mode,
@@ -38,6 +40,7 @@ export class ListHarness {
           loop: () => options.loop,
           pageSize: () => options.pageSize,
         });
+
         outcome.current = { ran: true, value: navigation };
         return () =>
           h('div', { dir: options.dir }, [
@@ -67,6 +70,7 @@ export class ListHarness {
           ]);
       },
     });
+
     const wrapper = mount(Host, { attachTo: document.body });
     if (!outcome.current.ran) {
       throw new Error('setup did not run');

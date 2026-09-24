@@ -7,6 +7,7 @@ describe('NuiAlert', () => {
     const alert = AlertDriver.mount({
       props: { title: 'Heads up', description: 'Something changed' },
     });
+
     expect(alert.hasModifier('variant-soft')).toBe(true);
     expect(alert.hasModifier('tone-info')).toBe(true);
     expect(alert.hasIcon).toBe(true);
@@ -31,6 +32,7 @@ describe('NuiAlert', () => {
       props: { title: 'Saved', dismissible: true, dismissLabel: 'Закрыть' },
       slots: { actions: () => h('button', 'Undo') },
     });
+
     expect(alert.actions.text()).toBe('Undo');
     expect(alert.closeButton.attributes('aria-label')).toBe('Закрыть');
     await alert.clickClose();

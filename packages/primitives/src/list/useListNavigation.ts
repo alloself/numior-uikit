@@ -106,21 +106,25 @@ const reveal = (container: HTMLElement, element: HTMLElement | null): void => {
   if (!element || element.offsetParent !== container) {
     return;
   }
+
   const top = revealAxis(
     element.offsetTop,
     element.offsetHeight,
     container.scrollTop,
     container.clientHeight,
   );
+
   if (top !== undefined) {
     container.scrollTop = top;
   }
+
   const left = revealAxis(
     element.offsetLeft,
     element.offsetWidth,
     container.scrollLeft,
     container.clientWidth,
   );
+
   if (left !== undefined) {
     container.scrollLeft = left;
   }
@@ -146,10 +150,12 @@ export const useListNavigation = (
   const typeahead = ref<TypeaheadState>(emptyTypeahead);
   let active: HTMLElement | null = null;
   const roving = (): boolean => (toValue(options.mode) ?? 'roving') === 'roving';
+
   const items = (): HTMLElement[] => {
     const root = toValue(container);
     return root ? collect(root, options.selector, options.scope) : [];
   };
+
   const currentIndex = (list: HTMLElement[]): number => (active ? list.indexOf(active) : -1);
 
   const setActive = (
@@ -176,6 +182,7 @@ export const useListNavigation = (
     if (list.length === 0) {
       return;
     }
+
     const index = listTargetIndex(
       kind,
       currentIndex(list),
@@ -183,6 +190,7 @@ export const useListNavigation = (
       toValue(options.loop) ?? false,
       toValue(options.pageSize) ?? 10,
     );
+
     setActive(list[index] ?? null);
   };
 

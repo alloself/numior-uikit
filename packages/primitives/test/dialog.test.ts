@@ -12,6 +12,7 @@ const mountDialog = (options: DialogOptions) => {
     (_, dialog) => useDialog(() => asDialog(dialog.value), options),
     ['button', 'dialog'],
   );
+
   const { attrs } = capture.value;
   capture.second.addEventListener('cancel', attrs.onCancel);
   capture.second.addEventListener('close', attrs.onClose);
@@ -27,9 +28,11 @@ const press = (dialog: HTMLElement, clientX: number) => {
 
 describe('useDialog', () => {
   let topLayer = installTopLayer();
+
   beforeEach(() => {
     topLayer = installTopLayer();
   });
+
   afterEach(() => topLayer.restore());
 
   it('marks a modal as covered while another modal is open above it', async () => {
@@ -69,11 +72,13 @@ describe('useDialog', () => {
   it('blocks Escape only when not dismissible', () => {
     const dismissible = ref(true);
     const capture = mountDialog({ open: ref(true), dismissible });
+
     const cancel = () => {
       const event = new Event('cancel', { cancelable: true });
       capture.second.dispatchEvent(event);
       return event.defaultPrevented;
     };
+
     expect(cancel()).toBe(false);
     dismissible.value = false;
     expect(cancel()).toBe(true);

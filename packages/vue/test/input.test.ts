@@ -23,6 +23,7 @@ describe('NuiInput', () => {
       modifiers: { trim: true },
       attachToBody: true,
     });
+
     input.focusNatively();
     expect(input.focused).toBe(true);
     await input.type(' a ');
@@ -42,6 +43,7 @@ describe('NuiInput', () => {
 
   it('routes class and style to the wrapper and other attributes to the native input', async () => {
     const focuses = { count: 0 };
+
     const input = InputDriver.mount({
       props: { type: 'email', size: 'lg', readonly: true },
       attrs: {
@@ -55,6 +57,7 @@ describe('NuiInput', () => {
         },
       },
     });
+
     expect(input.wrapper.classes()).toContain('wide');
     expect(input.attribute('style')).toContain('max-width');
     expect(input.hasModifier('size-lg')).toBe(true);
@@ -99,11 +102,13 @@ describe('NuiInput', () => {
     await phone.receiveModelValue('9995550000');
     expect(phone.value).toBe('+7 (999) 555-00-00');
     phone.unmount();
+
     const raw = InputDriver.mount({
       modelValue: '',
       props: { mask: '+7 (###) ###-##-##' },
       modifiers: { unmasked: true },
     });
+
     await raw.type('999123');
     expect(raw.value).toBe('+7 (999) 123');
     expect(raw.emittedValues.at(-1)).toBe('999123');

@@ -29,9 +29,11 @@ test.describe('table', () => {
     const { table } = playground;
     await expect(table.selectAll).toHaveAccessibleName('Выбрать все строки');
     await table.selectAll.click();
+
     await expect
       .poll(async () => (await table.readOutput()).selected)
       .toEqual(['Анна', 'Борис', 'Вера', 'Глеб', 'Дина']);
+
     await expect(table.row('Вера')).toHaveAttribute('aria-selected', 'true');
     await table.row('Вера').getByRole('checkbox').click();
     await expect.poll(() => table.indeterminate(table.selectAll)).toBe(true);
@@ -135,9 +137,11 @@ test.describe('table', () => {
     await table.dragBy(resizer, -400);
     await expect.poll(async () => (await table.readOutput()).widths.age).toBe(64);
     const label = table.header('Возраст').locator('.nui-table__label');
+
     expect(await label.evaluate((element) => getComputedStyle(element).textOverflow)).toBe(
       'ellipsis',
     );
+
     expect(await label.evaluate((element) => element.scrollWidth > element.clientWidth)).toBe(true);
     expect(await table.scrollSlack(table.table)).toBeLessThanOrEqual(1);
   });
@@ -157,17 +161,21 @@ test.describe('table', () => {
       await expect(table.table.locator('.nui-table__live')).toContainText('Балл grabbed');
       await page.keyboard.press('ArrowLeft');
       await page.keyboard.press('Space');
+
       await expect
         .poll(async () => (await table.readOutput()).columnOrder)
         .toEqual(['name', 'role', 'score', 'age']);
+
       expect(await table.headerLabels()).toEqual(['', 'Имя', 'Роль', 'Балл', 'Возраст']);
     }
+
     await table.dragBetween(table.header('Имя'), table.header('Роль'), 20, 0, async () => {
       await expect(table.ghost).toContainText('Имя');
       const line = await table.dropLine(table.table).boundingBox();
       const head = await table.table.locator('thead').boundingBox();
       expect(line && head && line.y >= head.y - 1).toBe(true);
     });
+
     await expect(table.ghost).toHaveCount(0);
     await expect.poll(async () => (await table.readOutput()).columnOrder.indexOf('name')).toBe(1);
     expect((await table.readOutput()).sort).toBeNull();
@@ -195,19 +203,24 @@ test.describe('table', () => {
       await page.keyboard.press('ArrowDown');
       await page.keyboard.press('Space');
       await expect.poll(async () => (await table.readOutput()).lastReorder).toBe('Борис:1->2');
+
       await expect
         .poll(async () => (await table.readOutput()).teamOrder)
         .toEqual(['Анна', 'Вера', 'Борис']);
     }
+
     await table.dragBetween(table.gripOf('Айгуль'), table.gripOf('Артём'), 0, 8, async () => {
       await expect(table.ghost).toContainText('Айгуль');
     });
+
     await expect(table.ghost).toHaveCount(0);
     await expect.poll(async () => (await table.readOutput()).lastReorder).toBe('Айгуль:0->1');
+
     await table
       .header('Возраст', table.treeTable)
       .getByRole('button', { name: 'Возраст', exact: true })
       .click();
+
     await expect(table.gripOf('Анна')).toBeDisabled();
   });
 
@@ -230,6 +243,7 @@ test.describe('table', () => {
     await expect(pinned).toContainText('Итого по отделу');
     const pinnedBox = await pinned.boundingBox();
     const header = await virtual.locator('thead').boundingBox();
+
     expect(pinnedBox && header && Math.abs(pinnedBox.y - (header.y + header.height)) <= 1).toBe(
       true,
     );

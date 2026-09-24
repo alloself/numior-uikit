@@ -54,6 +54,7 @@ export const usePopover = (
   const id = useControlId(options.id);
   const mode = computed<PopoverMode>(() => toValue(options.mode) ?? 'auto');
   const visible = ref(false);
+
   const setOpen = (next: boolean): void => {
     if (options.open.value !== next) {
       options.open.value = next;

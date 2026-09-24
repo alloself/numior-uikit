@@ -78,6 +78,7 @@ export class ControlHarness {
       () => useFieldControl(() => props, options),
       field ? { wrap: providing(() => provideField(field)) } : {},
     );
+
     return new ControlHarness(capture.value);
   }
 

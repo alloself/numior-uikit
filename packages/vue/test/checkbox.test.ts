@@ -42,6 +42,7 @@ describe('NuiCheckbox', () => {
       props: { disabled: true, invalid: true, size: 'lg' },
       attrs: { class: 'inline', 'aria-label': 'Accept', name: 'accept' },
     });
+
     await checkbox.ready();
     expect(checkbox.wrapper.classes()).toContain('inline');
     expect(checkbox.control.attributes('aria-label')).toBe('Accept');

@@ -57,6 +57,7 @@ export const createFieldContext = (options: FieldOptions = {}): FieldContext => 
         ...(hasDescription.value ? [descriptionId.value] : []),
         ...(hasError.value ? [errorId.value] : []),
       ];
+
       return ids.length > 0 ? ids.join(' ') : undefined;
     }),
     invalid: computed(() => toValue(options.invalid) === true || hasError.value),

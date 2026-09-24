@@ -41,6 +41,7 @@ const slotIndex = (
     const center = rect.left + rect.width / 2;
     return rtl ? center > client : center < client;
   }).length;
+
   return Math.min(cells.length - 1, passed);
 };
 
@@ -68,6 +69,7 @@ export const useColumnReorder = <T>(options: ColumnReorderOptions<T>): ColumnReo
   let previous: ReorderState = { phase: 'idle', from: -1, to: -1, position: 0 };
 
   const labelOf = (index: number): string => options.columns()[index]?.label ?? '';
+
   const say = (phase: NuiTableAnnouncement['phase'], from: number, to: number): void => {
     options.announce({
       kind: 'column',
@@ -78,20 +80,24 @@ export const useColumnReorder = <T>(options: ColumnReorderOptions<T>): ColumnReo
       count: options.columns().length,
     });
   };
+
   const place = (state: ReorderState): void => {
     const scroller = options.scroller();
     const cell = headerCells(scroller, options.utilities())[state.to];
+
     indicator.value =
       scroller && cell
         ? indicatorAt(scroller, cell, state.to > state.from, options.rtl())
         : undefined;
   };
+
   const float = (state: ReorderState): void => {
     ghost.value =
       state.phase === 'dragging'
         ? ghostAt(options.scroller(), 'x', state.position, grabbed.current, labelOf(state.from))
         : undefined;
   };
+
   const announceTransition = (state: ReorderState): void => {
     const taken = state.phase === 'keyboard' && previous.phase !== 'keyboard';
     if (taken) {
@@ -103,6 +109,7 @@ export const useColumnReorder = <T>(options: ColumnReorderOptions<T>): ColumnReo
       say('cancelled', previous.from, previous.from);
     }
   };
+
   const onChange = (state: ReorderState): void => {
     if (state.phase === 'dragging') {
       flags.dragged = true;

@@ -80,6 +80,7 @@ export const useDialog = (element: DialogRef, options: DialogOptions): DialogCon
   onMounted(() => {
     watch(() => options.open.value, sync, { immediate: true, flush: 'post' });
   });
+
   onScopeDispose(() => {
     const dialog = toValue(element);
     if (dialog) {

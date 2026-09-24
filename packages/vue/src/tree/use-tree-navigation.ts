@@ -88,6 +88,7 @@ export const useTreeNavigation = <T>(options: TreeNavigationOptions<T>): TreeNav
       return true;
     }
     const position = enabled.indexOf(options.activeIndex());
+
     const target = listTargetIndex(
       move,
       position,
@@ -95,6 +96,7 @@ export const useTreeNavigation = <T>(options: TreeNavigationOptions<T>): TreeNav
       options.loop(),
       options.pageSize(),
     );
+
     moveTo(enabled[target] ?? -1);
     return true;
   };
@@ -103,11 +105,13 @@ export const useTreeNavigation = <T>(options: TreeNavigationOptions<T>): TreeNav
     const enabled = enabledIndices(options.nodes());
     typeahead.value = extendTypeahead(typeahead.value, key, Date.now());
     const labels = enabled.map((index) => options.nodes()[index]?.item.label ?? '');
+
     const found = matchTypeahead(
       labels,
       typeahead.value.query,
       enabled.indexOf(options.activeIndex()),
     );
+
     if (found >= 0) {
       moveTo(enabled[found] ?? -1);
     }

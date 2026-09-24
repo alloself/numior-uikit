@@ -55,11 +55,13 @@ test.describe('form controls', () => {
     }
     await expect(forms.terms).toBeChecked();
     await expect.poll(async () => (await forms.readOutput()).terms).toBe(true);
+
     expect(
       await forms.indeterminate.evaluate(
         (element) => element instanceof HTMLInputElement && element.indeterminate,
       ),
     ).toBe(true);
+
     await forms.channelEmail.check();
     await forms.channelSms.check();
     await expect.poll(async () => (await forms.readOutput()).channels).toEqual(['email', 'sms']);
@@ -85,9 +87,11 @@ test.describe('form controls', () => {
     }
     await expect(forms.radios.team).toBeChecked();
     await expect.poll(async () => (await forms.readOutput()).plan).toBe('team');
+
     const names = await Promise.all(
       Object.values(forms.radios).map((radio) => radio.getAttribute('name')),
     );
+
     expect(new Set(names).size).toBe(1);
   });
 

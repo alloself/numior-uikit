@@ -30,6 +30,7 @@ export class ComboboxDriver extends ComponentDriver {
     const model = ref<ComboboxValue>(modelValue);
     const extra = ref<Partial<NuiComboboxProps<unknown>>>({});
     const searches: string[] = [];
+
     const combobox = () =>
       h(NuiCombobox, {
         options: FRUITS,
@@ -46,6 +47,7 @@ export class ComboboxDriver extends ComponentDriver {
           searches.push(query);
         },
       });
+
     const Host = defineComponent({
       setup: () => () =>
         h('div', [
@@ -53,6 +55,7 @@ export class ComboboxDriver extends ComponentDriver {
           h('button', { type: 'button', class: 'outside' }, 'Outside'),
         ]),
     });
+
     return new ComboboxDriver(
       mount(Host, { attachTo: document.body }),
       stubs,
@@ -129,6 +132,7 @@ export class ComboboxDriver extends ComponentDriver {
     const found = this.wrapper
       .findAll<HTMLElement>('[role="option"]')
       .find((option) => labelOf(option.element) === label);
+
     if (!found) {
       throw new Error(`No option labelled ${label}`);
     }
@@ -178,6 +182,7 @@ export class ComboboxDriver extends ComponentDriver {
     const chip = this.wrapper
       .findAll('.nui-chip')
       .find((entry) => entry.find('.nui-chip__label').text() === label);
+
     if (!chip) {
       throw new Error(`No chip labelled ${label}`);
     }

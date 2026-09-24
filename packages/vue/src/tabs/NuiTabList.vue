@@ -27,6 +27,7 @@ const tabs = useTabs();
 const orientation = computed(() => tabs.orientation.value);
 const listElement = useTemplateRef<HTMLElement>('list');
 const indicator = ref<{ start: number; size: number } | null>(null);
+
 const indicatorStyle = computed(() =>
   indicator.value === null
     ? {}
@@ -40,6 +41,7 @@ const selectedTab = (): HTMLElement | null => {
   const found = listElement.value?.querySelector('[role="tab"][aria-selected="true"]');
   return found instanceof HTMLElement ? found : null;
 };
+
 const navigation = useListNavigation(listElement, {
   selector: '[role="tab"]',
   orientation,
@@ -54,11 +56,13 @@ const measure = (): void => {
     indicator.value = null;
     return;
   }
+
   indicator.value =
     orientation.value === 'vertical'
       ? { start: tab.offsetTop, size: tab.offsetHeight }
       : { start: tab.offsetLeft, size: tab.offsetWidth };
 };
+
 const onFocusout = (event: FocusEvent): void => {
   const next = event.relatedTarget;
   if (!(next instanceof Node && listElement.value?.contains(next))) {

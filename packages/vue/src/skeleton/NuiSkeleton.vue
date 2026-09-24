@@ -20,7 +20,9 @@ const {
   lines = 1,
   animated = true,
 } = defineProps<NuiSkeletonProps>();
+
 const lineCount = computed(() => (shape === 'text' ? Math.max(1, lines) : 0));
+
 const sizing = computed(() => ({
   ...(width === undefined ? {} : { '--_inline-size': width }),
   ...(height === undefined ? {} : { '--_block-size': height }),

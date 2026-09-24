@@ -77,9 +77,11 @@ test.describe('tree', () => {
     await tree.toggleOf(sources).click();
     await tree.toggleOf(tree.item(tree.checkTree, 'Компоненты')).click();
     await tree.checkboxOf(sources).click();
+
     await expect
       .poll(async () => (await tree.readOutput()).checked)
       .toEqual(['src', 'components', 'button', 'index']);
+
     await expect(sources).toHaveAttribute('aria-checked', 'true');
     await expect(tree.item(tree.checkTree, 'Поле.vue')).toHaveAttribute('aria-checked', 'false');
     await tree.checkboxOf(tree.item(tree.checkTree, 'Кнопка.vue')).click();

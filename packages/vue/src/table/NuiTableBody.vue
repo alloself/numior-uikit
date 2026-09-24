@@ -64,6 +64,7 @@ const {
   dragging,
   pinned,
 } = defineProps<NuiTableBodyProps<T>>();
+
 const emit = defineEmits<{
   toggle: [row: T];
   rowClick: [row: T, event: MouseEvent];
@@ -71,13 +72,16 @@ const emit = defineEmits<{
   dragStart: [index: number, event: PointerEvent];
   dragKeydown: [index: number, event: KeyboardEvent];
 }>();
+
 const slots = useSlots();
 
 const span = computed(() => columns.length + (selectable ? 1 : 0) + (options.rowDrag ? 1 : 0));
 const showStatus = computed(() => !pinned && (loading || rows.length === 0));
 const startSpacer = computed(() => spacers?.start ?? 0);
 const endSpacer = computed(() => spacers?.end ?? 0);
+
 const rowIndexOf = (offset: number): number | undefined =>
   spacers ? firstIndex + offset + 2 : undefined;
+
 const cellSlotNames = (): string[] => slotNamesWithPrefix(slots, 'cell-');
 </script>

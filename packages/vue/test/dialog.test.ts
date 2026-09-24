@@ -6,6 +6,7 @@ describe('NuiDialog', () => {
     const dialog = DialogDriver.mount({
       props: { id: 'confirm', title: 'Delete project?', description: 'Cannot be undone.' },
     });
+
     expect(dialog.showModalCalls).toBe(1);
     expect(dialog.isOpen).toBe(true);
     expect(dialog.labelledBy).toBe('confirm-title');
@@ -58,6 +59,7 @@ describe('NuiDialog', () => {
     const dialog = DialogDriver.mount({
       slots: { title: () => 'Custom title', footer: () => 'Actions' },
     });
+
     expect(dialog.titleText).toBe('Custom title');
     expect(dialog.labelledBy).toBeTruthy();
     expect(dialog.footer.text()).toBe('Actions');

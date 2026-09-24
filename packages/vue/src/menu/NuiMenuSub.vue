@@ -58,6 +58,7 @@ const {
   openDelay = 100,
   closeDelay = 300,
 } = defineProps<NuiMenuSubProps>();
+
 defineSlots<{ label(): unknown; default(): unknown }>();
 
 const parent = useMenu();
@@ -66,10 +67,12 @@ const rtl = ref(false);
 const triggerElement = useTemplateRef<HTMLElement>('trigger');
 const contentElement = useTemplateRef<HTMLElement>('content');
 const triggerId = useControlId(() => (id === undefined ? undefined : `${id}-trigger`));
+
 const delay = useDelayedOpen(open, {
   openDelay: () => openDelay,
   closeDelay: () => closeDelay,
 });
+
 const {
   control,
   floating,
@@ -89,6 +92,7 @@ const {
   parent,
   close: () => delay.closeNow(),
 });
+
 provideMenu(context);
 const contentAttrs = control.contentAttrs;
 const { side, floatingStyles } = floating;
@@ -104,11 +108,13 @@ const onTriggerEnter = (): void => {
     delay.scheduleOpen();
   }
 };
+
 const openFromPointer = (): void => {
   if (!disabled) {
     delay.openNow();
   }
 };
+
 const onTriggerKeydown = (event: KeyboardEvent): void => {
   const opens = event.key === forwardKey.value || event.key === 'Enter' || event.key === ' ';
   if (!opens || disabled) {
@@ -118,12 +124,14 @@ const onTriggerKeydown = (event: KeyboardEvent): void => {
   context.requestFocus('first');
   delay.openNow();
 };
+
 const onTriggerFocusout = (event: FocusEvent): void => {
   const next = event.relatedTarget;
   if (!(next instanceof Node && contentElement.value?.contains(next))) {
     delay.scheduleClose();
   }
 };
+
 const onContentKeydown = (event: KeyboardEvent): void => {
   event.stopPropagation();
   if (event.key === backKey.value) {

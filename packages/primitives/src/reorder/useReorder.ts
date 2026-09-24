@@ -67,6 +67,7 @@ export const useReorder = (options: ReorderOptions): Reorder => {
     state.value = next;
     options.onChange?.(next);
   };
+
   const allowed = (from: number, to: number): boolean =>
     to >= 0 && to < toValue(options.count) && (options.canMove?.(from, to) ?? true);
 
@@ -76,6 +77,7 @@ export const useReorder = (options: ReorderOptions): Reorder => {
     }
     frame = undefined;
   };
+
   const scrollBy = (delta: number): void => {
     const container = toValue(options.container);
     if (!container || delta === 0) {
@@ -101,32 +103,38 @@ export const useReorder = (options: ReorderOptions): Reorder => {
     window.removeEventListener('pointercancel', cancel);
     window.removeEventListener('keydown', onWindowKeydown);
   };
+
   const finish = (next: ReorderState): void => {
     stopScrolling();
     detach();
     publish(next);
   };
+
   const cancel = (): void => {
     if (state.value.phase !== 'idle') {
       finish(IDLE);
     }
   };
+
   const track = (event: PointerEvent): void => {
     const client = clientOf(event, options.axis);
     const target = options.indexAt(client);
     const { from, to } = state.value;
+
     publish({
       phase: 'dragging',
       from,
       to: allowed(from, target) ? target : to,
       position: client,
     });
+
     const container = toValue(options.container);
     stopScrolling();
     if (container) {
       scrollBy(edgeDelta(container, client, options.axis));
     }
   };
+
   const onPointermove = (event: PointerEvent): void => {
     if (event.pointerId !== origin.pointerId) {
       return;
@@ -144,6 +152,7 @@ export const useReorder = (options: ReorderOptions): Reorder => {
       track(event);
     }
   };
+
   const onPointerup = (event: PointerEvent): void => {
     if (event.pointerId !== origin.pointerId) {
       return;
@@ -154,6 +163,7 @@ export const useReorder = (options: ReorderOptions): Reorder => {
     }
     finish(IDLE);
   };
+
   const onWindowKeydown = (event: KeyboardEvent): void => {
     if (event.key === 'Escape' && state.value.phase !== 'keyboard') {
       cancel();
@@ -176,18 +186,21 @@ export const useReorder = (options: ReorderOptions): Reorder => {
   const grab = (index: number): void => {
     publish({ phase: 'keyboard', from: index, to: index, position: 0 });
   };
+
   const drop = (current: ReorderState): void => {
     if (current.to !== current.from) {
       options.onMove(current.from, current.to);
     }
     finish(IDLE);
   };
+
   const nudge = (current: ReorderState, step: number): void => {
     const target = current.to + step;
     if (allowed(current.from, target)) {
       publish({ ...current, to: target });
     }
   };
+
   const handleActive = (current: ReorderState, key: string): boolean => {
     if (isSelectKey(key)) {
       drop(current);
@@ -203,6 +216,7 @@ export const useReorder = (options: ReorderOptions): Reorder => {
     }
     return step !== 0;
   };
+
   const onKeydown = (index: number, event: KeyboardEvent): boolean => {
     const current = state.value;
     if (current.phase === 'idle') {

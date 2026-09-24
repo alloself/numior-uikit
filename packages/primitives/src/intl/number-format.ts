@@ -11,6 +11,7 @@ export interface NumberSymbols {
 const formatters = new Map<string, Intl.NumberFormat>();
 const BIDI_MARKS = /[؜‎‏‪-‮]/g;
 const LITERAL_PARTS = new Set(['currency', 'percentSign', 'literal', 'unit', 'plusSign']);
+
 const PRECISION_KEYS = [
   'minimumFractionDigits',
   'maximumFractionDigits',
@@ -38,16 +39,19 @@ export const numberSymbols = (
 ): NumberSymbols => {
   const formatter = formatterFor(locale, options);
   const numberingSystem = formatter.resolvedOptions().numberingSystem;
+
   const decimalParts = formatterFor(locale, {
     numberingSystem,
     minimumFractionDigits: 1,
     maximumFractionDigits: 1,
   }).formatToParts(-1234567.8);
+
   const digitFormatter = formatterFor(locale, {
     numberingSystem,
     useGrouping: false,
     maximumFractionDigits: 0,
   });
+
   return {
     decimal: partValue(decimalParts, 'decimal') ?? '.',
     group: partValue(decimalParts, 'group') ?? ',',
@@ -123,6 +127,7 @@ export const isPartialNumber = (text: string, symbols: NumberSymbols): boolean =
     ...'.,-−+   ()',
     ...symbols.literals,
   ]);
+
   return [...text].every((char) => allowed.has(char));
 };
 
@@ -133,6 +138,7 @@ export const withStepPrecision = (
   const explicit =
     options !== undefined &&
     (PRECISION_KEYS.some((key) => options[key] !== undefined) || options.style === 'currency');
+
   if (explicit) {
     return options;
   }

@@ -28,6 +28,7 @@ export interface OptionSelection<T> {
 export const useOptionSelection = <T>(options: OptionSelectionOptions<T>): OptionSelection<T> => {
   const keyOf = (value: T): string => (toValue(options.getKey) ?? defaultOptionKey)(value);
   const flat = computed(() => flattenEntries(toValue(options.options)));
+
   const selectedValues = computed<T[]>(() => {
     const current = options.model.value;
     if (Array.isArray(current)) {
@@ -35,14 +36,17 @@ export const useOptionSelection = <T>(options: OptionSelectionOptions<T>): Optio
     }
     return current === undefined ? [] : [current];
   });
+
   const selectedKeys = computed(() => new Set(selectedValues.value.map(keyOf)));
   const byKey = computed(() => new Map(flat.value.map((option) => [keyOf(option.value), option])));
+
   const selectedOptions = computed(() =>
     selectedValues.value.flatMap((value) => {
       const option = byKey.value.get(keyOf(value));
       return option ? [option] : [];
     }),
   );
+
   return {
     keyOf,
     flat,
@@ -52,6 +56,7 @@ export const useOptionSelection = <T>(options: OptionSelectionOptions<T>): Optio
     optionOf: (value) => byKey.value.get(keyOf(value)),
     toggle: (option) => {
       const key = keyOf(option.value);
+
       options.model.value = selectedKeys.value.has(key)
         ? selectedValues.value.filter((value) => keyOf(value) !== key)
         : [...selectedValues.value, option.value];

@@ -32,6 +32,7 @@ const activate = (): void => {
     tabs.select(value);
   }
 };
+
 const onFocus = (): void => {
   if (tabs.activation.value === 'automatic') {
     activate();

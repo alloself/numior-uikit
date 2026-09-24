@@ -49,17 +49,21 @@ describe('NuiToaster and NuiToast', () => {
     await toaster.advance(0);
     expect(toaster.hasModifier('expanded')).toBe(true);
     expect(toaster.toasts.map((toast) => toast.title)).toEqual(['Third', 'Second', 'First']);
+
     expect(toaster.items).toEqual([
       { index: 0, behind: false, leaving: false },
       { index: 1, behind: true, leaving: false },
       { index: 2, behind: true, leaving: false },
     ]);
+
     await toaster.toast(1).clickClose();
+
     expect(toaster.items).toEqual([
       { index: 0, behind: false, leaving: false },
       { index: 1, behind: true, leaving: true },
       { index: 1, behind: true, leaving: false },
     ]);
+
     toaster.unmount();
   });
 

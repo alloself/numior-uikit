@@ -190,6 +190,7 @@ const {
   rowLabel = undefined,
   announce = undefined,
 } = defineProps<NuiTableProps<T>>();
+
 const sort = defineModel<NuiTableSort>('sort', { default: null });
 const selected = defineModel<T[]>('selected', { default: () => [] });
 const expanded = defineModel<T[]>('expanded', { default: () => [] });
@@ -197,11 +198,13 @@ const page = defineModel<number>('page', { default: 1 });
 const pageSize = defineModel<number>('pageSize', { default: 20 });
 const columnOrder = defineModel<string[]>('columnOrder', { default: () => [] });
 const widths = defineModel<Record<string, number>>('widths', { default: () => ({}) });
+
 const emit = defineEmits<{
   rowClick: [row: T, event: MouseEvent];
   reorder: [event: NuiTableReorderEvent<T>];
   load: [row: T];
 }>();
+
 const slots = useSlots();
 const scroller = useTemplateRef<HTMLElement>('scroller');
 const tableElement = useTemplateRef<HTMLTableElement>('table');
@@ -209,8 +212,10 @@ const tableElement = useTemplateRef<HTMLTableElement>('table');
 const keyOf = (row: T): string => (getKey ?? defaultOptionKey)(row);
 const selectedKeys = computed(() => new Set(selected.value.map(keyOf)));
 const paginationProps = computed(() => resolvePagination(pagination));
+
 const sortLevel = (level: readonly T[]): T[] =>
   remote ? [...level] : sortRows(level, sort.value, columns);
+
 const tableRows = useTableRows<T>({
   rows: () => rows,
   pinnedRows: () => pinnedRows,
@@ -221,50 +226,62 @@ const tableRows = useTableRows<T>({
   sortLevel,
   onLoad: (row) => emit('load', row),
 });
+
 const visibleRows = computed(() =>
   paginationProps.value && !remote
     ? pageSlice(tableRows.views.value, page.value, pageSize.value)
     : tableRows.views.value,
 );
+
 const visibleData = computed(() => visibleRows.value.map((view) => view.row));
 const totalCount = computed(() => (remote ? (total ?? rows.length) : tableRows.views.value.length));
 const isVirtual = computed(() => virtual && paginationProps.value === undefined);
+
 const windowing = useVirtualList(scroller, {
   count: () => visibleRows.value.length,
   itemSize: () => rowHeight,
   enabled: isVirtual,
 });
+
 const renderedRows = computed(() =>
   isVirtual.value
     ? visibleRows.value.slice(windowing.range.value.start, windowing.range.value.end)
     : visibleRows.value,
 );
+
 const firstIndex = computed(() => (isVirtual.value ? windowing.range.value.start : 0));
+
 const spacers = computed(() =>
   isVirtual.value ? { start: windowing.startSize.value, end: windowing.endSize.value } : undefined,
 );
+
 const selectionState = computed(() =>
   selectionStateOf(selectedKeys.value, visibleData.value, keyOf),
 );
 
 const utilities = (): number => (selectable ? 1 : 0) + (rowDrag ? 1 : 0);
 const isRtl = (): boolean => scroller.value?.closest('[dir]')?.getAttribute('dir') === 'rtl';
+
 const layout = useTableColumns<T>({
   columns: () => columns,
   order: columnOrder,
   widths,
   utilities,
 });
+
 const resize = useColumnResize<T>({
   widthOf: layout.widthOf,
   setWidth: layout.setWidth,
   resetWidth: layout.resetWidth,
   rtl: isRtl,
 });
+
 const announcement = ref('');
+
 const say = (message: NuiTableAnnouncement): void => {
   announcement.value = (announce ?? defaultAnnounce)(message);
 };
+
 const columnDrag = useColumnReorder<T>({
   scroller: () => scroller.value,
   columns: () => layout.ordered.value,
@@ -274,6 +291,7 @@ const columnDrag = useColumnReorder<T>({
   move: layout.moveColumn,
   announce: say,
 });
+
 const headActions: NuiTableHeadActions<T> = {
   resizeStart: resize.start,
   resizeKeydown: resize.onKeydown,
@@ -287,16 +305,20 @@ const firstColumnText = (view: NuiTableRowView<T>): string => {
   const column = layout.ordered.value[0];
   return column ? cellText(cellValue(view.row, column)) : view.key;
 };
+
 const revealRow = (index: number): void => {
   if (isVirtual.value) {
     windowing.scrollTo(index);
     return;
   }
+
   const row = scroller.value?.querySelectorAll(
     'tbody.nui-table__body:not(.nui-table__body--pinned) > .nui-table__row',
   )[index];
+
   row?.scrollIntoView?.({ block: 'nearest' });
 };
+
 const rowReorder = useRowReorder<T>({
   scroller: () => scroller.value,
   views: () => visibleRows.value,
@@ -308,6 +330,7 @@ const rowReorder = useRowReorder<T>({
   onReorder: (event) => emit('reorder', event),
   announce: say,
 });
+
 const rowOptions = computed<NuiTableRowOptions<T>>(() => ({
   tree: tableRows.tree.value,
   rowDrag,
@@ -316,18 +339,24 @@ const rowOptions = computed<NuiTableRowOptions<T>>(() => ({
   expandLabel,
   dragLabel,
 }));
+
 const rowDragging = computed(() => rowReorder.state.value.from);
+
 const dragging = computed(
   () => columnDrag.state.value.phase === 'dragging' || rowReorder.state.value.phase === 'dragging',
 );
+
 const headSize = ref(0);
 const captionSize = ref(0);
+
 const rootStyle = computed(() => ({
   '--_indent': `${indent}px`,
   '--_head-size': `${headSize.value}px`,
   '--_caption-size': `${captionSize.value}px`,
 }));
+
 const scrolled = ref({ start: false, end: false });
+
 const rootClasses = computed(() => [
   `nui-table--size-${size}`,
   {
@@ -343,13 +372,16 @@ const rootClasses = computed(() => [
     'nui-table--scrolled-end': scrolled.value.end,
   },
 ]);
+
 const scrollerTabindex = computed(() => (height === undefined ? undefined : 0));
 const tableStyle = computed(() => (isVirtual.value ? { '--_row': `${rowHeight}px` } : undefined));
 const rowCount = computed(() => (isVirtual.value ? visibleRows.value.length + 1 : undefined));
+
 const utilityCols = computed(() => [
   ...(rowDrag ? ['drag'] : []),
   ...(selectable ? ['select'] : []),
 ]);
+
 const ghost = computed(() => {
   const column = columnDrag.ghost.value;
   if (column) {
@@ -380,6 +412,7 @@ const ghost = computed(() => {
     },
   };
 });
+
 const dropIndicators = computed(() => [
   ...(columnDrag.indicator.value === undefined
     ? []
@@ -388,6 +421,7 @@ const dropIndicators = computed(() => [
     ? []
     : [{ axis: 'row', style: { top: `${rowReorder.indicator.value}px` } }]),
 ]);
+
 const trackScroll = (): void => {
   const element = scroller.value;
   if (!element) {
@@ -401,13 +435,17 @@ const trackScroll = (): void => {
 const cycle = (key: string): void => {
   sort.value = nextSort(sort.value, key);
 };
+
 const toggleOne = (row: T): void => {
   selected.value = toggleRow(selected.value, row, keyOf, selectable === 'multiple');
 };
+
 const toggleAll = (): void => {
   selected.value = toggleRows(selected.value, visibleData.value, keyOf);
 };
+
 const headerSlotNames = (): string[] => slotNamesWithPrefix(slots, 'header-');
+
 const bodySlotNames = (): string[] => [
   ...slotNamesWithPrefix(slots, 'cell-'),
   ...['empty', 'loading'].filter((name) => slots[name] !== undefined),
@@ -419,18 +457,22 @@ onMounted(() => {
     layout.measure(table);
     const head = table?.querySelector('thead')?.getBoundingClientRect();
     headSize.value = head?.height ?? 0;
+
     captionSize.value =
       head && table ? Math.max(0, head.top - table.getBoundingClientRect().top) : 0;
   };
+
   watch([() => layout.ordered.value, widths], measure, { immediate: true, flush: 'post' });
   trackScroll();
   if (typeof ResizeObserver === 'undefined' || !tableElement.value) {
     return;
   }
+
   const observer = new ResizeObserver(() => {
     measure();
     trackScroll();
   });
+
   observer.observe(tableElement.value);
   onScopeDispose(() => observer.disconnect());
 });

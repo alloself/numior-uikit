@@ -93,6 +93,7 @@ const {
   emptyLabel = 'No items',
   linkAs = 'a',
 } = defineProps<NuiListProps<T, E>>();
+
 const model = defineModel<T | T[] | undefined>();
 const emit = defineEmits<{ select: [item: E] }>();
 
@@ -103,6 +104,7 @@ const groups = computed(() => (items ? groupEntries(items) : []));
 const indices = computed(() => new Map(flat.value.map((entry, index) => [entry, index])));
 const indexOf = (entry: E): number => indices.value.get(entry) ?? -1;
 const isEmpty = computed(() => items !== undefined && flat.value.length === 0);
+
 const { keyOf, selectedKeys, selectedValues, toggle } = useOptionSelection<T>({
   options: () => [],
   model,
@@ -112,12 +114,15 @@ const { keyOf, selectedKeys, selectedValues, toggle } = useOptionSelection<T>({
 
 const firstEnabled = (): T | undefined =>
   flat.value.find((entry) => entry.value !== undefined && !entry.disabled)?.value;
+
 const tabStopKey = computed(() => {
   const value = selectedValues.value[0] ?? firstEnabled();
   return value === undefined ? undefined : keyOf(value);
 });
+
 const entryOf = (value: T): E | undefined =>
   flat.value.find((entry) => entry.value !== undefined && keyOf(entry.value) === keyOf(value));
+
 const select = (value: T): void => {
   if (selectable === 'multiple') {
     toggle({ value, label: '' });
@@ -129,6 +134,7 @@ const select = (value: T): void => {
     emit('select', entry);
   }
 };
+
 provideList<T>({
   selectable: computed(() => selectable),
   variant: computed(() => variant),
@@ -142,10 +148,12 @@ provideList<T>({
 
 const itemTitle = (element: HTMLElement): string =>
   element.querySelector('.nui-row__title')?.textContent ?? '';
+
 const firstSelected = (): HTMLElement | null => {
   const found = rootElement.value?.querySelector('[role="option"][aria-selected="true"]');
   return found instanceof HTMLElement ? found : null;
 };
+
 const navigation = useListNavigation(rootElement, {
   selector: '[role="option"]',
   scope: '.nui-list',
@@ -154,10 +162,12 @@ const navigation = useListNavigation(rootElement, {
   resting: firstSelected,
   itemText: itemTitle,
 });
+
 const owns = (): boolean => keyboard && selectable !== undefined;
 
 const isOption = (target: EventTarget | null): target is HTMLElement =>
   target instanceof HTMLElement && target.getAttribute('role') === 'option';
+
 const onKeydown = (event: KeyboardEvent): void => {
   if (!owns()) {
     return;
@@ -171,11 +181,13 @@ const onKeydown = (event: KeyboardEvent): void => {
     event.target.click();
   }
 };
+
 const onFocusin = (event: FocusEvent): void => {
   if (owns()) {
     navigation.onFocusin(event);
   }
 };
+
 const onFocusout = (event: FocusEvent): void => {
   const next = event.relatedTarget;
   if (owns() && !(next instanceof Node && rootElement.value?.contains(next))) {

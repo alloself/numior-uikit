@@ -13,6 +13,7 @@ describe('NuiField', () => {
         required: true,
       },
     });
+
     expect(field.label.attributes('for')).toBe('email');
     expect(field.label.attributes('id')).toBe('email-label');
     expect(field.label.text()).toContain('Email');
@@ -41,6 +42,7 @@ describe('NuiField', () => {
     const field = FieldDriver.mount({
       props: { id: 'plan', label: 'Plan', group: true, disabled: true },
     });
+
     expect(field.tagName).toBe('FIELDSET');
     expect(field.nativelyDisabled).toBe(true);
     expect(field.hasModifier('group')).toBe(true);
@@ -60,6 +62,7 @@ describe('NuiField', () => {
         error: () => 'Too long',
       },
     });
+
     expect(field.label.text()).toBe('Bio');
     expect(field.description.find('em').text()).toBe('Markdown ok');
     expect(field.error.text()).toBe('Too long');

@@ -62,6 +62,7 @@ const rectOf = (box: Box): DOMRect => ({
 
 const defineRect = (element: HTMLElement, box: Box): void => {
   const rect = rectOf(box);
+
   Object.defineProperty(element, 'getBoundingClientRect', {
     value: () => rect,
     configurable: true,
@@ -111,6 +112,7 @@ export class TableDriver extends ComponentDriver {
     const stubs = new TopLayerStubs();
     if (headerWidth !== undefined) {
       const rect = rectOf({ left: 0, top: 0, width: headerWidth, height: 40 });
+
       stubs.define(HTMLTableCellElement.prototype, 'getBoundingClientRect', {
         value: () => rect,
       });
@@ -127,6 +129,7 @@ export class TableDriver extends ComponentDriver {
     const clicks: string[] = [];
     const reorders: string[] = [];
     const loads: string[] = [];
+
     const Host = defineComponent({
       setup: () => () =>
         h(
@@ -199,6 +202,7 @@ export class TableDriver extends ComponentDriver {
           slots,
         ),
     });
+
     return new TableDriver(
       mount(Host, { attachTo: document.body }),
       stubs,
@@ -260,6 +264,7 @@ export class TableDriver extends ComponentDriver {
     const found = this.wrapper
       .findAll<HTMLElement>('thead th')
       .find((cell) => cell.text() === label);
+
     if (!found) {
       throw new Error(`No column labelled ${label}`);
     }
@@ -306,15 +311,18 @@ export class TableDriver extends ComponentDriver {
 
   layoutRows(height: number): void {
     const body = this.wrapper.find<HTMLElement>('tbody:not(.nui-table__body--pinned)');
+
     defineRect(body.element, {
       left: 0,
       top: 0,
       width: 400,
       height: height * this.bodyRows.length,
     });
+
     this.bodyRows.forEach((row, index) => {
       defineRect(row.element, { left: 0, top: index * height, width: 400, height });
     });
+
     defineRect(this.scroller.element, { left: 0, top: 0, width: 400, height: 400 });
   }
 
@@ -418,9 +426,11 @@ export class TableDriver extends ComponentDriver {
 
   layoutHeaders(width: number): void {
     const cells = this.wrapper.findAll<HTMLElement>('thead th');
+
     cells.forEach((cell, index) => {
       defineRect(cell.element, { left: index * width, top: 0, width, height: 40 });
     });
+
     defineRect(this.scroller.element, {
       left: 0,
       top: 0,

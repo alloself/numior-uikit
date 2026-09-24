@@ -15,9 +15,11 @@ test.describe('pickers', () => {
     await expect(trigger).toHaveText('Выберите страну');
     await trigger.click();
     await expect(pickers.listbox).toBeVisible();
+
     expect(await pickers.widthOf(pickers.listbox)).toBeGreaterThanOrEqual(
       await pickers.widthOf(trigger),
     );
+
     await pickers.option('Германия').click();
     await expect(pickers.listbox).toBeHidden();
     await expect(trigger).toHaveText('Германия');

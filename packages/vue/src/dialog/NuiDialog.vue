@@ -53,11 +53,13 @@ const {
   closeOnBackdrop = true,
   closeLabel = 'Close',
 } = defineProps<NuiDialogProps>();
+
 const open = defineModel<boolean>('open', { default: false });
 const emit = defineEmits<{ close: [returnValue: string] }>();
 const slots = useSlots();
 const hasTitle = () => Boolean(title || slots.title);
 const hasDescription = () => Boolean(description || slots.description);
+
 const {
   id: dialogId,
   titleId,
@@ -65,7 +67,9 @@ const {
   labelledBy,
   describedBy,
 } = useDialogLabels(() => id, { title: hasTitle, description: hasDescription });
+
 const dialogElement = useTemplateRef<HTMLDialogElement>('dialog');
+
 const control = useDialog(dialogElement, {
   open,
   dismissible: () => closable,

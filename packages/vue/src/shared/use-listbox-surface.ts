@@ -40,17 +40,20 @@ const selectedOptionIn = (container: HTMLElement | null): HTMLElement | null => 
 
 export const useListboxSurface = (options: ListboxSurfaceOptions): ListboxSurface => {
   const { trigger: listboxElement, setTrigger: setListbox } = useTriggerElement();
+
   const control = usePopover(listboxElement, {
     open: options.open,
     id: options.id,
     mode: options.mode,
   });
+
   const { floatingStyles } = useFloating(options.anchor, listboxElement, {
     placement: () => toValue(options.placement),
     offset: 4,
     size: { matchWidth: true, fitHeight: true, maxBlockSize: options.maxBlockSize },
     enabled: options.open,
   });
+
   const navigation = useListNavigation(listboxElement, {
     selector: '[role="option"]',
     mode: options.focus,
@@ -58,12 +61,15 @@ export const useListboxSurface = (options: ListboxSurfaceOptions): ListboxSurfac
     typeahead: options.typeahead,
     ...(options.restOnSelected ? { resting: () => selectedOptionIn(listboxElement.value) } : {}),
   });
+
   const activateHovered = (event: PointerEvent): void => {
     const option =
       event.target instanceof HTMLElement ? event.target.closest('[role="option"]') : null;
+
     if (option instanceof HTMLElement && option !== navigation.activeElement()) {
       navigation.setActive(option);
     }
   };
+
   return { listboxElement, setListbox, control, floatingStyles, navigation, activateHovered };
 };

@@ -40,5 +40,6 @@ const action = computed<CardAction | undefined>(() => {
   }
   return interactive ? { kind: 'button' } : undefined;
 });
+
 provideCard({ action });
 </script>

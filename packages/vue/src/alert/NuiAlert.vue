@@ -51,12 +51,14 @@ const {
   dismissible = false,
   dismissLabel = 'Close',
 } = defineProps<NuiAlertProps>();
+
 const open = defineModel<boolean>('open', { default: true });
 const emit = defineEmits<{ dismiss: [] }>();
 const slots = useSlots();
 const hasTitle = (): boolean => Boolean(title || slots.title);
 const hasBody = (): boolean => Boolean(description || slots.default);
 const iconAlias = computed(() => (hideIcon ? undefined : (icon ?? toneIcon(tone))));
+
 const dismiss = (): void => {
   open.value = false;
   emit('dismiss');
