@@ -1,6 +1,6 @@
 .nui-number-field {
   --_height: var(--nui-control-height-md);
-  --_padding: var(--nui-control-padding-md);
+  --_padding: var(--nui-field-padding-md);
   --_font-size: var(--nui-control-font-size-md);
   --_stepper: 2rem;
 
@@ -24,13 +24,13 @@
 }
 .nui-number-field--size-sm {
   --_height: var(--nui-control-height-sm);
-  --_padding: var(--nui-control-padding-sm);
+  --_padding: var(--nui-field-padding-sm);
   --_font-size: var(--nui-control-font-size-sm);
   --_stepper: 1.75rem;
 }
 .nui-number-field--size-lg {
   --_height: var(--nui-control-height-lg);
-  --_padding: var(--nui-control-padding-lg);
+  --_padding: var(--nui-field-padding-lg);
   --_font-size: var(--nui-control-font-size-lg);
   --_stepper: 2.25rem;
 }

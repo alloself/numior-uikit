@@ -1,6 +1,6 @@
 .nui-select {
   --_height: var(--nui-control-height-md);
-  --_padding: var(--nui-control-padding-md);
+  --_padding: var(--nui-field-padding-md);
   --_font-size: var(--nui-control-font-size-md);
   --_chevron: 1.25rem;
   --_clear-inset: calc(var(--_padding) + var(--_chevron) + var(--nui-space-2));
@@ -12,12 +12,12 @@
 }
 .nui-select--size-sm {
   --_height: var(--nui-control-height-sm);
-  --_padding: var(--nui-control-padding-sm);
+  --_padding: var(--nui-field-padding-sm);
   --_font-size: var(--nui-control-font-size-sm);
 }
 .nui-select--size-lg {
   --_height: var(--nui-control-height-lg);
-  --_padding: var(--nui-control-padding-lg);
+  --_padding: var(--nui-field-padding-lg);
   --_font-size: var(--nui-control-font-size-lg);
 }
 .nui-select__trigger {

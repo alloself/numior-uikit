@@ -1,6 +1,6 @@
 .nui-combobox {
   --_height: var(--nui-control-height-md);
-  --_padding: var(--nui-control-padding-md);
+  --_padding: var(--nui-field-padding-md);
   --_font-size: var(--nui-control-font-size-md);
 
   position: relative;
@@ -9,12 +9,12 @@
 }
 .nui-combobox--size-sm {
   --_height: var(--nui-control-height-sm);
-  --_padding: var(--nui-control-padding-sm);
+  --_padding: var(--nui-field-padding-sm);
   --_font-size: var(--nui-control-font-size-sm);
 }
 .nui-combobox--size-lg {
   --_height: var(--nui-control-height-lg);
-  --_padding: var(--nui-control-padding-lg);
+  --_padding: var(--nui-field-padding-lg);
   --_font-size: var(--nui-control-font-size-lg);
 }
 .nui-combobox__field {

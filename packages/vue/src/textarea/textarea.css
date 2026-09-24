@@ -1,5 +1,5 @@
 .nui-textarea {
-  --_padding: var(--nui-control-padding-md);
+  --_padding: var(--nui-field-padding-md);
   --_font-size: var(--nui-control-font-size-md);
 
   display: block;
@@ -19,11 +19,11 @@
     outline-color var(--nui-duration-fast) var(--nui-easing);
 }
 .nui-textarea--size-sm {
-  --_padding: var(--nui-control-padding-sm);
+  --_padding: var(--nui-field-padding-sm);
   --_font-size: var(--nui-control-font-size-sm);
 }
 .nui-textarea--size-lg {
-  --_padding: var(--nui-control-padding-lg);
+  --_padding: var(--nui-field-padding-lg);
   --_font-size: var(--nui-control-font-size-lg);
 }
 .nui-textarea--resize-none {

@@ -106,6 +106,9 @@
   --nui-control-padding-sm: 0.75rem;
   --nui-control-padding-md: 1rem;
   --nui-control-padding-lg: 1.25rem;
+  --nui-field-padding-sm: 0.625rem;
+  --nui-field-padding-md: 0.75rem;
+  --nui-field-padding-lg: 1rem;
   --nui-control-font-size-sm: var(--nui-font-size-sm);
   --nui-control-font-size-md: var(--nui-font-size-sm);
   --nui-control-font-size-lg: var(--nui-font-size-md);
@@ -121,6 +124,9 @@
   --nui-control-padding-sm: 0.625rem;
   --nui-control-padding-md: 0.75rem;
   --nui-control-padding-lg: 1rem;
+  --nui-field-padding-sm: 0.5rem;
+  --nui-field-padding-md: 0.625rem;
+  --nui-field-padding-lg: 0.75rem;
   --nui-control-font-size-sm: var(--nui-font-size-xs);
   --nui-control-font-size-md: var(--nui-font-size-sm);
   --nui-control-font-size-lg: var(--nui-font-size-sm);
