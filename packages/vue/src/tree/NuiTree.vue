@@ -34,6 +34,7 @@
         :selectable="mode !== false"
         :checked="checkable ? checkStateOf(entry.node.item, checkedKeys, keyOf) : undefined"
         :icon="iconFor(entry.node)"
+        :folder="folderFor(entry.node)"
         :start="entry.start"
       >
         <template #default="slot"><slot name="item" v-bind="slot" /></template>
@@ -128,6 +129,8 @@ const listStyle = computed(() =>
   virtual ? { blockSize: `${windowing.totalSize.value}px` } : undefined,
 );
 
+const folderFor = (node: TreeNode<T>): boolean =>
+  icons && node.item.icon === undefined && node.hasChildren;
 const iconFor = (node: TreeNode<T>): IconAlias | undefined => {
   if (!icons || node.item.icon === false) {
     return undefined;
@@ -135,10 +138,7 @@ const iconFor = (node: TreeNode<T>): IconAlias | undefined => {
   if (node.item.icon) {
     return node.item.icon;
   }
-  if (!node.hasChildren) {
-    return 'file';
-  }
-  return node.expanded ? 'folder-open' : 'folder';
+  return node.hasChildren ? undefined : 'file';
 };
 
 const revealNode = (index: number): void => {

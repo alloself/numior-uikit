@@ -31,15 +31,22 @@
         'nui-tree__checkbox--checked': checked === 'checked',
         'nui-tree__checkbox--indeterminate': checked === 'indeterminate',
       }"
-      aria-hidden="true"
     >
-      <NuiIcon
-        v-if="checked !== 'unchecked'"
-        :alias="checked === 'checked' ? 'check' : 'minus'"
-        class="nui-tree__mark"
+      <NuiCheckbox
+        size="sm"
+        class="nui-tree__box"
+        :model-value="checked === 'checked'"
+        :indeterminate="checked === 'indeterminate'"
+        :disabled="node.item.disabled"
+        tabindex="-1"
+        aria-hidden="true"
       />
     </span>
-    <NuiIcon v-if="icon" :alias="icon" class="nui-tree__icon" />
+    <span v-if="folder" class="nui-tree__icon nui-tree__icon--folder" aria-hidden="true">
+      <NuiIcon alias="folder" class="nui-tree__glyph nui-tree__glyph--closed" />
+      <NuiIcon alias="folder-open" class="nui-tree__glyph nui-tree__glyph--open" />
+    </span>
+    <NuiIcon v-else-if="icon" :alias="icon" class="nui-tree__icon" />
     <span class="nui-tree__text">
       <slot
         :item="node.item"
@@ -60,10 +67,11 @@
 
 <script setup lang="ts" generic="T">
 import { computed } from 'vue';
+import NuiCheckbox from '../checkbox/NuiCheckbox.vue';
 import NuiIcon from '../icon/NuiIcon.vue';
 import type { NuiTreeNodeProps } from './tree.types';
 
-const { node, id, active, selected, selectable, checked, icon, start } =
+const { node, id, active, selected, selectable, checked, icon, folder, start } =
   defineProps<NuiTreeNodeProps<T>>();
 
 const checkedAttr = computed(() => {

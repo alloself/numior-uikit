@@ -50,5 +50,6 @@ export interface NuiTreeNodeProps<T> {
   selectable: boolean;
   checked?: CheckState | undefined;
   icon?: IconAlias | undefined;
+  folder: boolean;
   start?: number | undefined;
 }

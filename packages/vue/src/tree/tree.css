@@ -98,37 +98,35 @@
   animation: nui-tree-spin 0.8s linear infinite;
 }
 .nui-tree__checkbox {
-  display: inline-grid;
+  display: inline-flex;
   flex: none;
-  place-items: center;
-  inline-size: 1rem;
-  block-size: 1rem;
-  border: 1px solid var(--nui-border-strong);
-  border-radius: var(--nui-radius-sm);
-  background: var(--nui-surface);
-  color: var(--nui-primary-foreground);
-  transition:
-    background-color var(--nui-duration-fast) var(--nui-easing),
-    border-color var(--nui-duration-fast) var(--nui-easing);
+  align-items: center;
 }
-.nui-tree__item:hover .nui-tree__checkbox {
-  border-color: var(--nui-primary);
-}
-.nui-tree__checkbox--checked,
-.nui-tree__checkbox--indeterminate {
-  border-color: var(--nui-primary);
-  background: var(--nui-primary);
-}
-.nui-tree__mark {
-  inline-size: 75%;
-  block-size: 75%;
-  animation: nui-tree-mark var(--nui-duration-normal) var(--nui-easing);
+.nui-tree__box {
+  line-height: var(--_size);
+  pointer-events: none;
 }
 .nui-tree__icon {
   flex: none;
   inline-size: 1rem;
   block-size: 1rem;
   color: var(--nui-text-muted);
+}
+.nui-tree__icon--folder {
+  display: inline-grid;
+}
+.nui-tree__glyph {
+  grid-area: 1 / 1;
+  inline-size: 100%;
+  block-size: 100%;
+  transition: opacity var(--nui-duration-fast) var(--nui-easing);
+}
+.nui-tree__glyph--open,
+.nui-tree__item--expanded .nui-tree__glyph--closed {
+  opacity: 0;
+}
+.nui-tree__item--expanded .nui-tree__glyph--open {
+  opacity: 1;
 }
 .nui-tree__text {
   display: flex;
@@ -149,12 +147,6 @@
 @keyframes nui-tree-spin {
   to {
     rotate: 1turn;
-  }
-}
-@keyframes nui-tree-mark {
-  from {
-    opacity: 0;
-    scale: 0.5;
   }
 }
 @media (prefers-reduced-motion: reduce) {
