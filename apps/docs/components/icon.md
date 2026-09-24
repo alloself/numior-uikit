@@ -74,13 +74,31 @@ createApp(App)
 наборы подключайте лениво: `lazyIcon(() => import('./icons/SaveIcon.vue'))` возвращает
 компонент, который загружается один раз при первом рендере.
 
+## Локаль
+
+Числа, время и даты форматируются по локали из той же конфигурации:
+`createNuiConfig({ locale: 'ru-RU' })` для приложения, `<NuiConfigProvider locale="de-DE">`
+для поддерева, проп `locale` на компоненте для точечного переопределения. Без настройки
+действует `en-US`. `navigator.language` кит не читает: сервер и клиент должны форматировать
+одинаково, поэтому локаль запроса передавайте в конфиг явно. Там же задаётся `today` —
+функция, возвращающая сегодняшнюю дату `YYYY-MM-DD` для календарей и детерминированных
+тестов; по умолчанию берётся локальная дата устройства.
+
+```ts
+createApp(App)
+  .use(createNuiConfig({ locale: 'ru-RU', today: () => serverDate }))
+  .mount('#app');
+```
+
 ## API
 
-| Компонент           | Prop    | Тип                         | Описание                               |
-| ------------------- | ------- | --------------------------- | -------------------------------------- |
-| `NuiIcon`           | `alias` | `IconAlias` (`string`)      | Алиас из реестра или дефолтного набора |
-| `NuiIcon`           | `icon`  | `Component`                 | Явный компонент, приоритетнее `alias`  |
-| `NuiConfigProvider` | `icons` | `Record<string, Component>` | Алиасы для поддерева                   |
+| Компонент           | Prop     | Тип                         | Описание                               |
+| ------------------- | -------- | --------------------------- | -------------------------------------- |
+| `NuiIcon`           | `alias`  | `IconAlias` (`string`)      | Алиас из реестра или дефолтного набора |
+| `NuiIcon`           | `icon`   | `Component`                 | Явный компонент, приоритетнее `alias`  |
+| `NuiConfigProvider` | `icons`  | `Record<string, Component>` | Алиасы для поддерева                   |
+| `NuiConfigProvider` | `locale` | `string`                    | Локаль чисел, времени и дат            |
+| `NuiConfigProvider` | `today`  | `() => string`              | Сегодняшняя дата `YYYY-MM-DD`          |
 
-Из `@numior/vue` также экспортируются `createNuiConfig`, `provideNuiConfig`,
-`useIcons` и `defaultIcons`.
+Из `@numior/vue` также экспортируются `createNuiConfig`, `provideNuiConfig`, `useIcons`,
+`defaultIcons`, `useLocale` и `useToday`.

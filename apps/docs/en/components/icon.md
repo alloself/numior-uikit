@@ -75,13 +75,31 @@ and then `<NuiIcon alias="my-app:save" />`. An unknown alias renders nothing. Lo
 sets lazily: `lazyIcon(() => import('./icons/SaveIcon.vue'))` returns a component that
 loads once on first render.
 
+## Locale
+
+Numbers, time and dates format through the locale of the same configuration:
+`createNuiConfig({ locale: 'ru-RU' })` for the app, `<NuiConfigProvider locale="de-DE">` for
+a subtree, and the `locale` prop on a component for a local override. Without any setup
+`en-US` applies. The kit never reads `navigator.language`: server and client must format
+identically, so pass the request locale into the config explicitly. The same place takes
+`today`, a function returning today's `YYYY-MM-DD` for calendars and deterministic tests;
+by default it is the device's local date.
+
+```ts
+createApp(App)
+  .use(createNuiConfig({ locale: 'ru-RU', today: () => serverDate }))
+  .mount('#app');
+```
+
 ## API
 
-| Component           | Prop    | Type                        | Description                                |
-| ------------------- | ------- | --------------------------- | ------------------------------------------ |
-| `NuiIcon`           | `alias` | `IconAlias` (`string`)      | Alias from the registry or the default set |
-| `NuiIcon`           | `icon`  | `Component`                 | Explicit component, wins over `alias`      |
-| `NuiConfigProvider` | `icons` | `Record<string, Component>` | Aliases for the subtree                    |
+| Component           | Prop     | Type                        | Description                                |
+| ------------------- | -------- | --------------------------- | ------------------------------------------ |
+| `NuiIcon`           | `alias`  | `IconAlias` (`string`)      | Alias from the registry or the default set |
+| `NuiIcon`           | `icon`   | `Component`                 | Explicit component, wins over `alias`      |
+| `NuiConfigProvider` | `icons`  | `Record<string, Component>` | Aliases for the subtree                    |
+| `NuiConfigProvider` | `locale` | `string`                    | Locale for numbers, time and dates         |
+| `NuiConfigProvider` | `today`  | `() => string`              | Today's date as `YYYY-MM-DD`               |
 
-`@numior/vue` also exports `createNuiConfig`, `provideNuiConfig`, `useIcons` and
-`defaultIcons`.
+`@numior/vue` also exports `createNuiConfig`, `provideNuiConfig`, `useIcons`,
+`defaultIcons`, `useLocale` and `useToday`.

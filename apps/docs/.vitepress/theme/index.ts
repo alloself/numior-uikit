@@ -39,6 +39,7 @@ import {
   NuiMenuRadioItem,
   NuiMenuSeparator,
   NuiMenuSub,
+  NuiNumberField,
   NuiPagination,
   NuiPopover,
   NuiProgress,
@@ -53,6 +54,7 @@ import {
   NuiTabPanel,
   NuiTabs,
   NuiTextarea,
+  NuiTimeField,
   NuiToast,
   NuiToaster,
   NuiTooltip,
@@ -76,6 +78,8 @@ export default {
     app.component('NuiFieldError', NuiFieldError);
     app.component('NuiInput', NuiInput);
     app.component('NuiTextarea', NuiTextarea);
+    app.component('NuiNumberField', NuiNumberField);
+    app.component('NuiTimeField', NuiTimeField);
     app.component('NuiCheckbox', NuiCheckbox);
     app.component('NuiRadioGroup', NuiRadioGroup);
     app.component('NuiRadio', NuiRadio);

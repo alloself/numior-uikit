@@ -29,7 +29,8 @@ Node 24.15+; проверенная и закреплённая версия 24.
 (@.archcore/navigation.adr.md), выбор `NuiSelect`, `NuiCombobox` и `NuiPagination` на общей
 модели опций (@.archcore/pickers.adr.md), представление данных `NuiBadge`, `NuiAvatar` с
 `NuiAvatarGroup`, `NuiCard` с частями, `NuiList`/`NuiListItem`, `NuiEmpty`, `NuiTree` и
-`NuiTable` на примитивах `useVirtualList` и `useReorder` (@.archcore/data-display.adr.md). Конвенции — @.archcore/component-conventions.adr.md и
+`NuiTable` на примитивах `useVirtualList` и `useReorder` (@.archcore/data-display.adr.md), локаль,
+`NuiNumberField` и `NuiTimeField` на Intl-хелперах примитивов (@.archcore/intl-fields.adr.md). Конвенции — @.archcore/component-conventions.adr.md и
 @.archcore/component-authoring.rule.md. Будущие модули перечислены в @packages/README.md;
 готовность 1.0 не заявляется.
 
@@ -43,7 +44,7 @@ Node 24.15+; проверенная и закреплённая версия 24.
 (`ssr.resolve.conditions`, `server.deps.inline`).
 
 Тесты: unit через драйверы и харнессы (`packages/*/test`), SSR через `renderMarkup`, e2e
-через page objects `tests/e2e/pages/*` (`foundation.spec.ts`, `forms.spec.ts`, `overlays.spec.ts`, `feedback.spec.ts`, `navigation.spec.ts`, `pickers.spec.ts`, `data.spec.ts`, `tree.spec.ts`, `table.spec.ts`),
+через page objects `tests/e2e/pages/*` (`foundation.spec.ts`, `forms.spec.ts`, `overlays.spec.ts`, `feedback.spec.ts`, `navigation.spec.ts`, `pickers.spec.ts`, `intl.spec.ts`, `data.spec.ts`, `tree.spec.ts`, `table.spec.ts`),
 цвета сравниваются через canvas-пиксель (`tests/e2e/helpers/color.ts`), axe в light/dark под
 `reducedMotion: 'reduce'`. Production-сборка playground держит `build.cssTarget`, чтобы
 lightningcss не переписывал `light-dark()`, `oklch()` и `color-mix()`.

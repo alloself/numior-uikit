@@ -60,5 +60,6 @@ value on the control overrides the field. `readonly` keeps the text selectable. 
 | `invalid`  | `boolean`                                                       | from field | `aria-invalid` and an error border |
 | `readonly` | `boolean`                                                       | `false`    | Read-only                          |
 
-Slots: `prefix`, `suffix`. Number fields, dates and file upload are separate components
-in later waves.
+Slots: `prefix`, `suffix`. Numbers and time are separate components:
+[number field](/en/components/number-field) and [time field](/en/components/time-field);
+dates and file upload follow in later steps.

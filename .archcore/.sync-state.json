@@ -126,6 +126,26 @@
       "source": "data-display.adr.md",
       "target": "component-authoring.rule.md",
       "type": "related"
+    },
+    {
+      "source": "intl-fields.adr.md",
+      "target": "numior-ui.plan.md",
+      "type": "implements"
+    },
+    {
+      "source": "intl-fields.adr.md",
+      "target": "pickers.adr.md",
+      "type": "depends_on"
+    },
+    {
+      "source": "intl-fields.adr.md",
+      "target": "component-conventions.adr.md",
+      "type": "depends_on"
+    },
+    {
+      "source": "intl-fields.adr.md",
+      "target": "component-authoring.rule.md",
+      "type": "related"
     }
   ]
 }
