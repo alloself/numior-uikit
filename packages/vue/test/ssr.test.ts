@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { h, type VNode } from 'vue';
 import {
   NuiAlert,
+  NuiBadge,
   NuiBreadcrumbs,
   NuiButton,
   NuiCheckbox,
@@ -117,6 +118,7 @@ const scenarios: Scenario[] = [
     render: () =>
       h(NuiChip, { tone: 'success', removable: true, removeLabel: 'Remove Vue' }, () => 'Vue'),
   },
+  { name: 'NuiBadge', render: () => h(NuiBadge, { count: 120, tone: 'error' }) },
   {
     name: 'NuiLink',
     render: () => h(NuiLink, { href: 'https://example.com', external: true }, () => 'Docs'),
@@ -347,6 +349,14 @@ describe('server rendering', () => {
     expect(indeterminate).not.toContain('value=');
     const skeleton = await renderMarkup(() => h(NuiSkeleton, {}));
     expect(skeleton).toContain('aria-hidden="true"');
+  });
+
+  it('renders badge counts and dot labels on the server', async () => {
+    const count = await renderMarkup(() => h(NuiBadge, { count: 120, tone: 'error' }));
+    expect(count).toContain('99+');
+    const dot = await renderMarkup(() => h(NuiBadge, { dot: true, label: 'Online' }));
+    expect(dot).toContain('role="img"');
+    expect(dot).toContain('aria-label="Online"');
   });
 
   it('renders lazy default icons on the server', async () => {

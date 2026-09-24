@@ -97,6 +97,8 @@ export type {
 } from './breadcrumbs/breadcrumbs.types';
 export { default as NuiSelect } from './select/NuiSelect.vue';
 export type { NuiSelectProps, NuiSelectValueSlot } from './select/select.types';
+export { default as NuiBadge } from './badge/NuiBadge.vue';
+export type { NuiBadgeProps, NuiBadgeSize, NuiBadgeVariant } from './badge/badge.types';
 export { default as NuiChip } from './chip/NuiChip.vue';
 export type { NuiChipProps, NuiChipSize, NuiChipVariant } from './chip/chip.types';
 export { default as NuiCombobox } from './combobox/NuiCombobox.vue';
