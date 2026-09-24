@@ -101,6 +101,114 @@ test.describe('table', () => {
     }
   });
 
+  test('columns resize from the keyboard and the pointer within their limits', async ({
+    page,
+    isMobile,
+  }) => {
+    const playground = new PlaygroundPage(page);
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    const { table } = playground;
+    const resizer = table.resizer('Возраст');
+    await expect(resizer).toHaveAttribute('aria-valuenow', '112');
+    if (!isMobile) {
+      await resizer.focus();
+      await page.keyboard.press('ArrowRight');
+      await expect.poll(async () => (await table.readOutput()).widths.age).toBe(122);
+      await page.keyboard.press('Shift+ArrowLeft');
+      await expect.poll(async () => (await table.readOutput()).widths.age).toBe(72);
+      await page.keyboard.press('Enter');
+      await expect.poll(async () => (await table.readOutput()).widths.age).toBeUndefined();
+    }
+    await table.dragBy(resizer, 40);
+    await expect.poll(async () => (await table.readOutput()).widths.age).toBe(152);
+    const box = await table.header('Возраст').boundingBox();
+    expect(box && Math.abs(box.width - 152) <= 1).toBe(true);
+    await table.dragBy(resizer, -400);
+    await expect.poll(async () => (await table.readOutput()).widths.age).toBe(64);
+  });
+
+  test('columns reorder by keyboard grab and by dragging a header', async ({ page, isMobile }) => {
+    const playground = new PlaygroundPage(page);
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    const { table } = playground;
+    expect(await table.headerLabels()).toEqual(['', 'Имя', 'Роль', 'Возраст', 'Балл']);
+    if (!isMobile) {
+      await table.columnGrip('Балл').focus();
+      await page.keyboard.press('Space');
+      await expect(table.table.locator('.nui-table__live')).toContainText('Балл grabbed');
+      await page.keyboard.press('ArrowLeft');
+      await page.keyboard.press('Space');
+      await expect
+        .poll(async () => (await table.readOutput()).columnOrder)
+        .toEqual(['name', 'role', 'score', 'age']);
+      expect(await table.headerLabels()).toEqual(['', 'Имя', 'Роль', 'Балл', 'Возраст']);
+    }
+    await table.dragBetween(table.header('Имя'), table.header('Роль'), 20, 0);
+    await expect.poll(async () => (await table.readOutput()).columnOrder.indexOf('name')).toBe(1);
+    expect((await table.readOutput()).sort).toBeNull();
+  });
+
+  test('tree rows expand, load lazily and reorder among siblings', async ({ page, isMobile }) => {
+    const playground = new PlaygroundPage(page);
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    const { table } = playground;
+    await expect(table.rows(table.treeTable)).toHaveCount(3);
+    await table.toggleOf('Анна').click();
+    await expect(table.rows(table.treeTable)).toHaveCount(5);
+    await expect(table.toggleOf('Анна')).toHaveAttribute('aria-expanded', 'true');
+    const rootToggle = await table.treeRow('Анна').locator('.nui-table__toggle').boundingBox();
+    const childToggle = await table.treeRow('Айгуль').locator('.nui-table__toggle').boundingBox();
+    expect(rootToggle && childToggle && childToggle.x > rootToggle.x + 16).toBe(true);
+    await table.toggleOf('Вера').click();
+    await expect(table.toggleOf('Вера')).toHaveAttribute('aria-busy', 'true');
+    await expect(table.treeRow('Влад')).toBeVisible();
+    await expect.poll(async () => (await table.readOutput()).loaded).toEqual(['Вера']);
+    if (!isMobile) {
+      await table.gripOf('Борис').focus();
+      await page.keyboard.press('Space');
+      await page.keyboard.press('ArrowDown');
+      await page.keyboard.press('Space');
+      await expect.poll(async () => (await table.readOutput()).lastReorder).toBe('Борис:1->2');
+      await expect
+        .poll(async () => (await table.readOutput()).teamOrder)
+        .toEqual(['Анна', 'Вера', 'Борис']);
+    }
+    await table.dragBetween(table.gripOf('Айгуль'), table.gripOf('Артём'), 0, 8);
+    await expect.poll(async () => (await table.readOutput()).lastReorder).toBe('Айгуль:0->1');
+    await table
+      .header('Возраст', table.treeTable)
+      .getByRole('button', { name: 'Возраст', exact: true })
+      .click();
+    await expect(table.gripOf('Анна')).toBeDisabled();
+  });
+
+  test('pinned columns and pinned rows stay in place while the virtual table scrolls', async ({
+    page,
+  }) => {
+    const playground = new PlaygroundPage(page);
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    const { table } = playground;
+    const virtual = table.virtualTable;
+    await virtual.scrollIntoViewIfNeeded();
+    const before = await table.header('№', virtual).boundingBox();
+    await table.scrollHorizontally(virtual, 300);
+    const after = await table.header('№', virtual).boundingBox();
+    expect(before && after && Math.abs(after.x - before.x) <= 1).toBe(true);
+    await expect(virtual).toHaveClass(/nui-table--scrolled-start/);
+    await table.scrollToBottom(virtual);
+    const pinned = virtual.locator('.nui-table__body--pinned .nui-table__row');
+    await expect(pinned).toContainText('Итого по отделу');
+    const pinnedBox = await pinned.boundingBox();
+    const header = await virtual.locator('thead').boundingBox();
+    expect(pinnedBox && header && Math.abs(pinnedBox.y - (header.y + header.height)) <= 1).toBe(
+      true,
+    );
+  });
+
   test('table has no automatically detectable WCAG AA violations', async ({ page }) => {
     const playground = new PlaygroundPage(page);
     await playground.emulate({ reducedMotion: 'reduce' });
@@ -108,6 +216,7 @@ test.describe('table', () => {
     const { table } = playground;
     await table.sortButton('Имя').click();
     await table.row('Анна').getByRole('checkbox').click();
+    await table.toggleOf('Анна').click();
     for (const theme of ['light', 'dark'] as const) {
       await playground.setTheme(theme);
       expect(await playground.wcagViolations()).toEqual([]);
