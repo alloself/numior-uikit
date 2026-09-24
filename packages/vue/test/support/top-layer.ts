@@ -56,7 +56,7 @@ export class TopLayerStubs {
     });
   }
 
-  private define(target: object, key: string, descriptor: PropertyDescriptor): void {
+  define(target: object, key: string, descriptor: PropertyDescriptor): void {
     Object.defineProperty(target, key, { configurable: true, ...descriptor });
     this.restorers.push(() => Reflect.deleteProperty(target, key));
   }

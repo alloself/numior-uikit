@@ -25,13 +25,21 @@ const headerCells = (scroller: HTMLElement | null | undefined, skip: number): HT
     .slice(skip)
     .filter((cell): cell is HTMLElement => cell instanceof HTMLElement);
 
-const nearestIndex = (cells: readonly HTMLElement[], client: number, rtl: boolean): number => {
-  const found = cells.findIndex((cell) => {
+const slotIndex = (
+  cells: readonly HTMLElement[],
+  client: number,
+  rtl: boolean,
+  from: number,
+): number => {
+  const passed = cells.filter((cell, index) => {
+    if (index === from) {
+      return false;
+    }
     const rect = cell.getBoundingClientRect();
     const center = rect.left + rect.width / 2;
-    return rtl ? center < client : center > client;
-  });
-  return found < 0 ? cells.length - 1 : found;
+    return rtl ? center > client : center < client;
+  }).length;
+  return Math.min(cells.length - 1, passed);
 };
 
 const indicatorAt = (
@@ -102,7 +110,12 @@ export const useColumnReorder = <T>(options: ColumnReorderOptions<T>): ColumnReo
     count: () => options.columns().length,
     container: options.scroller,
     indexAt: (client) =>
-      nearestIndex(headerCells(options.scroller(), options.utilities()), client, options.rtl()),
+      slotIndex(
+        headerCells(options.scroller(), options.utilities()),
+        client,
+        options.rtl(),
+        reorder.state.value.from,
+      ),
     canMove: options.canMove,
     onMove: (from, to) => {
       flags.moved = true;

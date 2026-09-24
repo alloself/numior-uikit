@@ -45,6 +45,36 @@ const orderColumns = <T>(
 const cssWidth = (width: number | string | undefined): string | undefined =>
   typeof width === 'number' ? `${width}px` : width;
 
+const colWidthOf = <T>(
+  column: NuiTableColumn<T>,
+  px: number | undefined,
+  natural: number | undefined,
+): string | undefined => {
+  if (px !== undefined) {
+    return `${px}px`;
+  }
+  if (column.width !== undefined) {
+    return cssWidth(column.width);
+  }
+  return natural === undefined ? undefined : `${natural}px`;
+};
+
+const measureHeaders = <T>(
+  table: HTMLTableElement,
+  columns: readonly NuiTableColumn<T>[],
+  offset: number,
+): Record<string, number> => {
+  const cells = table.querySelectorAll('thead th');
+  const next: Record<string, number> = {};
+  columns.forEach((column, index) => {
+    const width = cells.item(index + offset)?.getBoundingClientRect().width ?? 0;
+    if (width > 0) {
+      next[column.key] = width;
+    }
+  });
+  return next;
+};
+
 const clampWidth = <T>(column: NuiTableColumn<T>, px: number): number =>
   Math.min(
     column.maxWidth ?? Number.POSITIVE_INFINITY,
@@ -59,17 +89,28 @@ const stickyClasses = (sticky: NuiTableSticky, edge: boolean): string[] => [
 
 export const useTableColumns = <T>(options: ColumnLayoutOptions<T>): ColumnLayout<T> => {
   const measured = ref<Record<string, number>>({});
+  const natural = ref<Record<string, number>>({});
   const ordered = computed(() => orderColumns(options.columns(), options.order.value));
-  const fixed = computed(
+  const wantsFixed = computed(
     () =>
       Object.keys(options.widths.value).length > 0 ||
       ordered.value.some((column) => column.resizable || column.sticky !== undefined),
   );
+  const colWidth = (column: NuiTableColumn<T>): string | undefined =>
+    colWidthOf(column, options.widths.value[column.key], natural.value[column.key]);
+  const fixed = computed(
+    () => wantsFixed.value && ordered.value.every((column) => colWidth(column) !== undefined),
+  );
   const stickyStart = computed(() => ordered.value.some((column) => column.sticky === 'start'));
 
-  const widthOf = (column: NuiTableColumn<T>): number | undefined =>
+  const renderedWidth = (column: NuiTableColumn<T>): number | undefined =>
+    measured.value[column.key] ??
     options.widths.value[column.key] ??
-    (typeof column.width === 'number' ? column.width : measured.value[column.key]);
+    (typeof column.width === 'number' ? column.width : natural.value[column.key]);
+  const widthOf = (column: NuiTableColumn<T>): number | undefined => {
+    const width = options.widths.value[column.key] ?? renderedWidth(column);
+    return width === undefined ? undefined : Math.round(width);
+  };
   const offsetBefore = (column: NuiTableColumn<T>, sticky: NuiTableSticky): number => {
     const list = sticky === 'start' ? ordered.value : ordered.value.toReversed();
     let sum = sticky === 'start' ? options.utilities() * UTILITY_WIDTH : 0;
@@ -78,7 +119,7 @@ export const useTableColumns = <T>(options: ColumnLayoutOptions<T>): ColumnLayou
         break;
       }
       if (candidate.sticky === sticky) {
-        sum += widthOf(candidate) ?? 0;
+        sum += renderedWidth(candidate) ?? 0;
       }
     }
     return sum;
@@ -101,8 +142,7 @@ export const useTableColumns = <T>(options: ColumnLayoutOptions<T>): ColumnLayou
     stickyStart.value ? { insetInlineStart: `${position * UTILITY_WIDTH}px` } : undefined;
   const utilityClass = (): string[] => (stickyStart.value ? stickyClasses('start', false) : []);
   const colStyle = (column: NuiTableColumn<T>): NuiTableCellStyle => {
-    const width = options.widths.value[column.key];
-    const value = width === undefined ? cssWidth(column.width) : `${width}px`;
+    const value = colWidth(column);
     return value === undefined ? undefined : { inlineSize: value };
   };
 
@@ -121,16 +161,10 @@ export const useTableColumns = <T>(options: ColumnLayoutOptions<T>): ColumnLayou
     if (!table) {
       return;
     }
-    const cells = table.querySelectorAll('thead th');
-    const offset = options.utilities();
-    const next: Record<string, number> = {};
-    ordered.value.forEach((column, index) => {
-      const cell = cells[index + offset];
-      if (cell instanceof HTMLElement && cell.offsetWidth > 0) {
-        next[column.key] = cell.offsetWidth;
-      }
-    });
-    measured.value = next;
+    measured.value = measureHeaders(table, ordered.value, options.utilities());
+    if (!fixed.value) {
+      natural.value = { ...natural.value, ...measured.value };
+    }
   };
 
   const canMoveColumn = (from: number, to: number): boolean => {

@@ -41,16 +41,18 @@ export const useRowReorder = <T>(options: RowReorderOptions<T>): RowReorder => {
     const body = bodyOf(options.scroller());
     const size = options.rowHeight();
     const count = options.views().length;
+    const from = reorder.state.value.from;
     if (body && size !== undefined) {
-      const offset = Math.floor((client - body.getBoundingClientRect().top) / size);
-      return Math.min(count - 1, Math.max(0, offset));
+      const slot = Math.round((client - body.getBoundingClientRect().top) / size);
+      const passed = from >= 0 && from < slot ? slot - 1 : slot;
+      return Math.min(count - 1, Math.max(0, passed));
     }
-    const rows = renderedRows(body);
-    const found = rows.findIndex((row) => {
+    const first = options.firstIndex();
+    const passed = renderedRows(body).filter((row, offset) => {
       const rect = row.getBoundingClientRect();
-      return rect.top + rect.height / 2 > client;
-    });
-    return options.firstIndex() + (found < 0 ? rows.length - 1 : found);
+      return first + offset !== from && rect.top + rect.height / 2 < client;
+    }).length;
+    return Math.min(count - 1, first + passed);
   };
 
   const place = (state: ReorderState): void => {

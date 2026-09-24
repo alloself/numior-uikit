@@ -17,6 +17,7 @@ export interface TableMountOptions {
   readonly columnOrder?: readonly string[];
   readonly widths?: Record<string, number>;
   readonly expanded?: readonly Person[];
+  readonly headerWidth?: number;
   readonly slots?: Record<string, (context: Record<string, unknown>) => unknown>;
 }
 
@@ -47,18 +48,20 @@ const isWidths = (value: unknown): value is Record<string, number> =>
   value !== null &&
   Object.values(value).every((entry) => typeof entry === 'number');
 
+const rectOf = (box: Box): DOMRect => ({
+  x: box.left,
+  y: box.top,
+  width: box.width,
+  height: box.height,
+  top: box.top,
+  left: box.left,
+  right: box.left + box.width,
+  bottom: box.top + box.height,
+  toJSON: () => ({}),
+});
+
 const defineRect = (element: HTMLElement, box: Box): void => {
-  const rect: DOMRect = {
-    x: box.left,
-    y: box.top,
-    width: box.width,
-    height: box.height,
-    top: box.top,
-    left: box.left,
-    right: box.left + box.width,
-    bottom: box.top + box.height,
-    toJSON: () => ({}),
-  };
+  const rect = rectOf(box);
   Object.defineProperty(element, 'getBoundingClientRect', {
     value: () => rect,
     configurable: true,
@@ -102,9 +105,16 @@ export class TableDriver extends ComponentDriver {
     columnOrder = [],
     widths = {},
     expanded = [],
+    headerWidth,
     slots = {},
   }: TableMountOptions = {}) {
     const stubs = new TopLayerStubs();
+    if (headerWidth !== undefined) {
+      const rect = rectOf({ left: 0, top: 0, width: headerWidth, height: 40 });
+      stubs.define(HTMLTableCellElement.prototype, 'getBoundingClientRect', {
+        value: () => rect,
+      });
+    }
     const sortRef = ref<NuiTableSort>(sort);
     const selectedRef = ref<Person[]>([...selected]);
     const pageRef = ref(page);
@@ -410,6 +420,10 @@ export class TableDriver extends ComponentDriver {
       width: width * cells.length,
       height: 400,
     });
+  }
+
+  async settle(): Promise<void> {
+    await nextTick();
   }
 
   async pressResizer(label: string, key: string, shiftKey = false): Promise<void> {

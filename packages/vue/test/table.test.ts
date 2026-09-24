@@ -200,8 +200,12 @@ describe('NuiTable columns', () => {
   it('resizes columns from the keyboard and the pointer within bounds and exposes widths', async () => {
     const table = TableDriver.mount({
       columns: withOptions({ age: { resizable: true, width: 100, minWidth: 80, maxWidth: 300 } }),
+      headerWidth: 100,
     });
+    expect(table.hasModifier('fixed')).toBe(false);
+    await table.settle();
     expect(table.hasModifier('fixed')).toBe(true);
+    expect(table.colStyle('Имя')).toContain('inline-size: 100px');
     expect(table.resizer('Возраст').attributes('role')).toBe('separator');
     expect(table.resizer('Возраст').attributes('aria-valuenow')).toBe('100');
     expect(table.resizer('Имя').exists()).toBe(false);
@@ -303,7 +307,7 @@ describe('NuiTable columns', () => {
     await table.dragHeader('Имя', 50, 53);
     expect(table.columnOrder).toEqual([]);
     expect(table.sort).toBeNull();
-    await table.dragHeader('Имя', 50, 350);
+    await table.dragHeader('Имя', 50, 360);
     expect(table.columnOrder).toEqual(['role', 'age', 'score', 'name']);
     expect(table.hasModifier('dragging')).toBe(false);
     await table.clickHeader('Имя');
@@ -394,7 +398,7 @@ describe('NuiTable rows', () => {
     table.unmount();
     const flat = TableDriver.mount({ props: { rowDrag: true } });
     flat.layoutRows(40);
-    await flat.dragRow('Анна', 20, 90);
+    await flat.dragRow('Анна', 20, 110);
     expect(flat.reorders).toEqual(['Анна:0->2@root']);
     expect(flat.clicks).toEqual([]);
     flat.unmount();
