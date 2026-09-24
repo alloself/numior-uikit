@@ -1,5 +1,5 @@
 import { mount, type DOMWrapper } from '@vue/test-utils';
-import { defineComponent, h, useTemplateRef } from 'vue';
+import { defineComponent, h, nextTick, useTemplateRef } from 'vue';
 import { NuiInput, type NuiInputModifiers, type NuiInputProps } from '../../src';
 import { ComponentDriver, emittedStrings } from './component';
 
@@ -68,6 +68,20 @@ export class InputDriver extends ComponentDriver {
 
   async commit(): Promise<void> {
     await this.control.trigger('change');
+  }
+
+  async deleteBackward(value: string, caret: number): Promise<void> {
+    const element = this.control.element;
+    element.value = value;
+    element.setSelectionRange(caret, caret);
+    element.dispatchEvent(
+      new InputEvent('input', { inputType: 'deleteContentBackward', bubbles: true }),
+    );
+    await nextTick();
+  }
+
+  get caret(): number | null {
+    return this.control.element.selectionStart;
   }
 
   focusNatively(): void {

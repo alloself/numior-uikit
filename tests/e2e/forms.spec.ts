@@ -23,6 +23,23 @@ test.describe('form controls', () => {
     await expect.poll(async () => (await forms.readOutput()).email).toBe('a@b.co');
   });
 
+  test('masked input formats while typing and keeps the raw digits in the model', async ({
+    page,
+  }) => {
+    const playground = new PlaygroundPage(page);
+    await playground.open();
+    const { forms } = playground;
+    await forms.phoneInput.click();
+    await forms.phoneInput.pressSequentially('999123');
+    await expect(forms.phoneInput).toHaveValue('+7 (999) 123');
+    await expect.poll(async () => (await forms.readOutput()).phone).toBe('999123');
+    await page.keyboard.press('Backspace');
+    await expect(forms.phoneInput).toHaveValue('+7 (999) 12');
+    await forms.phoneInput.pressSequentially('x34567');
+    await expect(forms.phoneInput).toHaveValue('+7 (999) 123-45-67');
+    await expect.poll(async () => (await forms.readOutput()).phone).toBe('9991234567');
+  });
+
   test('checkboxes toggle boolean and array models and expose indeterminate', async ({
     page,
     isMobile,

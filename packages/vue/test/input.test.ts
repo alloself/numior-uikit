@@ -88,6 +88,38 @@ describe('NuiInput', () => {
     expect(input.suffix.find('b').text()).toBe('.ru');
   });
 
+  it('formats typed text through a mask and can emit the raw value', async () => {
+    const phone = InputDriver.mount({ modelValue: '', props: { mask: '+7 (###) ###-##-##' } });
+    await phone.type('9991234567');
+    expect(phone.value).toBe('+7 (999) 123-45-67');
+    expect(phone.emittedValues.at(-1)).toBe('+7 (999) 123-45-67');
+    expect(phone.caret).toBe(18);
+    await phone.type('abc9');
+    expect(phone.value).toBe('+7 (9');
+    await phone.receiveModelValue('9995550000');
+    expect(phone.value).toBe('+7 (999) 555-00-00');
+    phone.unmount();
+    const raw = InputDriver.mount({
+      modelValue: '',
+      props: { mask: '+7 (###) ###-##-##' },
+      modifiers: { unmasked: true },
+    });
+    await raw.type('999123');
+    expect(raw.value).toBe('+7 (999) 123');
+    expect(raw.emittedValues.at(-1)).toBe('999123');
+    raw.unmount();
+  });
+
+  it('deletes the character before a mask literal on Backspace', async () => {
+    const phone = InputDriver.mount({ modelValue: '', props: { mask: '+7 (###) ###-##-##' } });
+    await phone.type('99912');
+    expect(phone.value).toBe('+7 (999) 12');
+    await phone.deleteBackward('+7 (999)12', 8);
+    expect(phone.value).toBe('+7 (991) 2');
+    expect(phone.caret).toBe(6);
+    phone.unmount();
+  });
+
   it('exposes focus() to template refs', () => {
     const host = mountInputWithFocusHandle();
     host.focus();

@@ -20,6 +20,15 @@
           <template #prefix>@</template>
         </NuiInput>
       </NuiField>
+      <NuiField label="Телефон" description="Маска +7 (###) ###-##-##, в модели только цифры">
+        <NuiInput
+          v-model.unmasked="phone"
+          type="tel"
+          mask="+7 (###) ###-##-##"
+          data-testid="input-phone"
+          autocomplete="tel"
+        />
+      </NuiField>
       <NuiField label="О себе">
         <NuiTextarea v-model="bio" data-testid="textarea-bio" />
       </NuiField>
@@ -71,6 +80,7 @@ import {
 
 const name = ref('');
 const email = ref('');
+const phone = ref('');
 const bio = ref('');
 const terms = ref(false);
 const channels = ref<string[]>([]);
@@ -85,6 +95,7 @@ const output = computed(() =>
     {
       name: name.value,
       email: email.value,
+      phone: phone.value,
       bio: bio.value,
       terms: terms.value,
       channels: channels.value,
@@ -99,6 +110,7 @@ const output = computed(() =>
 const reset = () => {
   name.value = '';
   email.value = '';
+  phone.value = '';
   bio.value = '';
   terms.value = false;
   channels.value = [];

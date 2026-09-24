@@ -28,8 +28,11 @@
 
 <script setup lang="ts">
 import { ref, useTemplateRef, watch } from 'vue';
-import { useFieldControl, useSplitAttrs } from '@numior/primitives';
+import { applyMask, maskCaret, useFieldControl, useSplitAttrs } from '@numior/primitives';
 import type { NuiInputModifiers, NuiInputProps } from './input.types';
+
+const isBackspace = (event: Event): boolean =>
+  event instanceof InputEvent && event.inputType === 'deleteContentBackward';
 
 defineOptions({ inheritAttrs: false });
 const {
@@ -40,6 +43,7 @@ const {
   invalid = undefined,
   type = 'text',
   readonly = false,
+  mask,
 } = defineProps<NuiInputProps>();
 const [model, modifiers] = defineModel<string, NuiInputModifiers>({ default: '' });
 const split = useSplitAttrs();
@@ -49,22 +53,46 @@ const {
   disabled: isDisabled,
 } = useFieldControl(() => ({ id, disabled, required, invalid }));
 const inputElement = useTemplateRef<HTMLInputElement>('input');
-const draft = ref(model.value);
+const display = (value: string): string => (mask ? applyMask(value, mask).masked : value);
+const outgoing = (text: string): string =>
+  mask && modifiers.unmasked ? applyMask(text, mask).raw : text;
+const draft = ref(display(model.value));
+const state = { raw: mask ? applyMask(model.value, mask).raw : '' };
 
 watch(model, (value) => {
-  if (!(modifiers.trim && draft.value.trim() === value)) {
-    draft.value = value;
+  const mirrored = outgoing(modifiers.trim ? draft.value.trim() : draft.value);
+  if (mirrored !== value) {
+    draft.value = display(value);
+    state.raw = mask ? applyMask(value, mask).raw : '';
   }
 });
 
-const onInput = (): void => {
+const reformat = (element: HTMLInputElement, pattern: string, event: Event): void => {
+  const caret = element.selectionStart ?? element.value.length;
+  let count = applyMask(element.value.slice(0, caret), pattern).raw.length;
+  let raw = applyMask(element.value, pattern).raw;
+  if (isBackspace(event) && raw === state.raw && count > 0) {
+    raw = raw.slice(0, count - 1) + raw.slice(count);
+    count -= 1;
+  }
+  const result = applyMask(raw, pattern);
+  state.raw = result.raw;
+  element.value = result.masked;
+  const position = maskCaret(pattern, count, result.masked.length);
+  element.setSelectionRange(position, position);
+};
+
+const onInput = (event: Event): void => {
   const element = inputElement.value;
   if (!element) {
     return;
   }
+  if (mask) {
+    reformat(element, mask, event);
+  }
   draft.value = element.value;
   if (!modifiers.lazy) {
-    model.value = element.value;
+    model.value = outgoing(element.value);
   }
 };
 
@@ -73,11 +101,11 @@ const onChange = (): void => {
   if (!element) {
     return;
   }
-  if (modifiers.trim) {
+  if (modifiers.trim && !mask) {
     element.value = element.value.trim();
   }
   draft.value = element.value;
-  model.value = element.value;
+  model.value = outgoing(element.value);
 };
 
 defineExpose({ focus: () => inputElement.value?.focus() });

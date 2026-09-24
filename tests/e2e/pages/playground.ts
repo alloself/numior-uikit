@@ -17,6 +17,7 @@ export type Direction = 'ltr' | 'rtl';
 export interface FormsOutput {
   readonly name: string;
   readonly email: string;
+  readonly phone: string;
   readonly bio: string;
   readonly terms: boolean;
   readonly channels: string[];
@@ -53,6 +54,7 @@ const parseFormsOutput = (text: string): FormsOutput => {
   return {
     name: field(data, 'name', isString),
     email: field(data, 'email', isString),
+    phone: field(data, 'phone', isString),
     bio: field(data, 'bio', isString),
     terms: field(data, 'terms', isBoolean),
     channels: field(data, 'channels', isStringArray),
@@ -65,6 +67,7 @@ const parseFormsOutput = (text: string): FormsOutput => {
 export class FormsSection {
   readonly nameInput: Locator;
   readonly emailInput: Locator;
+  readonly phoneInput: Locator;
   readonly bio: Locator;
   readonly largeInput: Locator;
   readonly terms: Locator;
@@ -80,6 +83,7 @@ export class FormsSection {
   constructor(private readonly page: Page) {
     this.nameInput = page.getByTestId('input-name');
     this.emailInput = page.getByTestId('input-email');
+    this.phoneInput = page.getByTestId('input-phone');
     this.bio = page.getByTestId('textarea-bio');
     this.largeInput = page.getByTestId('input-lg');
     this.terms = page.getByTestId('checkbox-terms');
