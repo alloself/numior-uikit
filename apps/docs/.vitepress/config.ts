@@ -62,6 +62,16 @@ export default defineConfig({
               { text: 'Пагинация', link: '/components/pagination' },
             ],
           },
+          {
+            text: 'Данные',
+            items: [
+              { text: 'Бейдж', link: '/components/badge' },
+              { text: 'Аватар', link: '/components/avatar' },
+              { text: 'Карточка', link: '/components/card' },
+              { text: 'Список', link: '/components/list' },
+              { text: 'Пустое состояние', link: '/components/empty' },
+            ],
+          },
         ],
       },
     },
@@ -120,6 +130,16 @@ export default defineConfig({
               { text: 'Tabs', link: '/en/components/tabs' },
               { text: 'Breadcrumbs', link: '/en/components/breadcrumbs' },
               { text: 'Pagination', link: '/en/components/pagination' },
+            ],
+          },
+          {
+            text: 'Data',
+            items: [
+              { text: 'Badge', link: '/en/components/badge' },
+              { text: 'Avatar', link: '/en/components/avatar' },
+              { text: 'Card', link: '/en/components/card' },
+              { text: 'List', link: '/en/components/list' },
+              { text: 'Empty state', link: '/en/components/empty' },
             ],
           },
         ],

@@ -106,6 +106,26 @@
       "source": "pickers.adr.md",
       "target": "component-authoring.rule.md",
       "type": "related"
+    },
+    {
+      "source": "data-display.adr.md",
+      "target": "numior-ui.plan.md",
+      "type": "implements"
+    },
+    {
+      "source": "data-display.adr.md",
+      "target": "pickers.adr.md",
+      "type": "depends_on"
+    },
+    {
+      "source": "data-display.adr.md",
+      "target": "navigation.adr.md",
+      "type": "depends_on"
+    },
+    {
+      "source": "data-display.adr.md",
+      "target": "component-authoring.rule.md",
+      "type": "related"
     }
   ]
 }

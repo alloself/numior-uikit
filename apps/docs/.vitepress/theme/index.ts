@@ -3,14 +3,25 @@ import type { Theme } from 'vitepress';
 import {
   createNuiConfig,
   NuiAlert,
+  NuiAvatar,
+  NuiAvatarGroup,
+  NuiBadge,
   NuiBreadcrumbs,
   NuiButton,
+  NuiCard,
+  NuiCardContent,
+  NuiCardDescription,
+  NuiCardFooter,
+  NuiCardHeader,
+  NuiCardMedia,
+  NuiCardTitle,
   NuiCheckbox,
   NuiChip,
   NuiCombobox,
   NuiConfigProvider,
   NuiDialog,
   NuiDrawer,
+  NuiEmpty,
   NuiField,
   NuiFieldDescription,
   NuiFieldError,
@@ -18,6 +29,8 @@ import {
   NuiIcon,
   NuiInput,
   NuiLink,
+  NuiList,
+  NuiListItem,
   NuiMenu,
   NuiMenuCheckboxItem,
   NuiMenuItem,
@@ -92,5 +105,18 @@ export default {
     app.component('NuiCombobox', NuiCombobox);
     app.component('NuiChip', NuiChip);
     app.component('NuiPagination', NuiPagination);
+    app.component('NuiBadge', NuiBadge);
+    app.component('NuiAvatar', NuiAvatar);
+    app.component('NuiAvatarGroup', NuiAvatarGroup);
+    app.component('NuiCard', NuiCard);
+    app.component('NuiCardHeader', NuiCardHeader);
+    app.component('NuiCardTitle', NuiCardTitle);
+    app.component('NuiCardDescription', NuiCardDescription);
+    app.component('NuiCardContent', NuiCardContent);
+    app.component('NuiCardFooter', NuiCardFooter);
+    app.component('NuiCardMedia', NuiCardMedia);
+    app.component('NuiList', NuiList);
+    app.component('NuiListItem', NuiListItem);
+    app.component('NuiEmpty', NuiEmpty);
   },
 } satisfies Theme;
