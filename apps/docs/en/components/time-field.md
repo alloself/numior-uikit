@@ -13,21 +13,15 @@ const precise = ref('13:05:09')
 </script>
 
 <div class="vp-raw nui-demo nui-demo--stack" data-nui-theme="light">
-  <NuiConfigProvider locale="en-US">
-    <NuiField label="Start" description="From 09:00 to 18:00, 30-minute steps">
-      <NuiTimeField v-model="start" min="09:00" max="18:00" :step="30" />
-    </NuiField>
-  </NuiConfigProvider>
-  <NuiConfigProvider locale="de-DE">
-    <NuiField label="Termin" description="24-hour cycle from the locale">
-      <NuiTimeField v-model="meeting" />
-    </NuiField>
-  </NuiConfigProvider>
-  <NuiConfigProvider locale="ar-EG">
-    <NuiField label="الوقت" description="Arabic digits and periods">
-      <NuiTimeField v-model="precise" seconds />
-    </NuiField>
-  </NuiConfigProvider>
+  <NuiField label="Start" description="From 09:00 to 18:00, 30-minute steps">
+    <NuiTimeField locale="en-US" v-model="start" min="09:00" max="18:00" :step="30" />
+  </NuiField>
+  <NuiField label="Termin" description="24-hour cycle from the locale">
+    <NuiTimeField locale="de-DE" v-model="meeting" />
+  </NuiField>
+  <NuiField label="الوقت" description="Arabic digits and periods">
+    <NuiTimeField locale="ar-EG" v-model="precise" seconds />
+  </NuiField>
 </div>
 
 ```vue
@@ -43,7 +37,9 @@ not continue the number (`1` waits, `3` advances at once), and a pasted `0930` s
 the segments. The letters `a`/`p` and the first letters of the localized periods set AM/PM.
 ↑/↓ step a segment with wrap-around (`23` → `00`), Home/End jump to the segment bounds,
 Backspace and Delete clear it, ←/→ and Enter move between segments, PageUp/PageDown shift
-the whole time by `step` minutes within `min`/`max`, and Alt+↓ opens the suggestions. The
+the whole time by `step` minutes within `min`/`max`, and Alt+↓ opens the suggestions. A click
+on the empty part of the field focuses the first empty segment, or the hours when all are
+filled. The
 model is `null` while any segment is empty, and a complete value outside `min`/`max` is
 clamped when focus leaves the field. The locale comes from the config or the `locale` prop,
 `hourCycle` forces 12 or 24 hours, `seconds` adds the seconds segment; changing the locale

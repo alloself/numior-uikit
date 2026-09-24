@@ -49,9 +49,10 @@ import { Trash2 } from 'lucide-vue-next';
 
 ## Your own icon set
 
-The registry is a plain object mapping alias to component. Provide it for a subtree
-with `NuiConfigProvider` or for the whole app with the `createNuiConfig` plugin.
-Nested providers layer: the closest one overrides only the aliases it defines.
+The registry is a plain object mapping alias to component. The `createNuiConfig` plugin
+installs it for the whole app; for a subtree call `provideNuiConfig` in the `setup` of your
+own wrapper component, since the kit ships no React-style provider components. Nested calls
+layer: the closest one overrides only the aliases it defines.
 
 ```ts
 import { createApp } from 'vue';
@@ -65,9 +66,14 @@ createApp(App)
 ```
 
 ```vue
-<NuiConfigProvider :icons="{ check: CheckIcon }">
-  <!-- checkboxes and buttons in here use CheckIcon -->
-</NuiConfigProvider>
+<template><slot /></template>
+
+<script setup lang="ts">
+import { provideNuiConfig } from '@numior/vue';
+import CheckIcon from './icons/CheckIcon.vue';
+
+provideNuiConfig({ icons: { check: CheckIcon } });
+</script>
 ```
 
 Custom aliases work too: `provideNuiConfig({ icons: { 'my-app:save': SaveIcon } })`
@@ -78,8 +84,9 @@ loads once on first render.
 ## Locale
 
 Numbers, time and dates format through the locale of the same configuration:
-`createNuiConfig({ locale: 'ru-RU' })` for the app, `<NuiConfigProvider locale="de-DE">` for
-a subtree, and the `locale` prop on a component for a local override. Without any setup
+`createNuiConfig({ locale: 'ru-RU' })` for the app, `provideNuiConfig({ locale })` in a
+component's `setup` for a subtree (a value, ref or getter), and the `locale` prop on a
+component for a local override. Without any setup
 `en-US` applies. The kit never reads `navigator.language`: server and client must format
 identically, so pass the request locale into the config explicitly. The same place takes
 `today`, a function returning today's `YYYY-MM-DD` for calendars and deterministic tests;
@@ -93,13 +100,13 @@ createApp(App)
 
 ## API
 
-| Component           | Prop     | Type                        | Description                                |
-| ------------------- | -------- | --------------------------- | ------------------------------------------ |
-| `NuiIcon`           | `alias`  | `IconAlias` (`string`)      | Alias from the registry or the default set |
-| `NuiIcon`           | `icon`   | `Component`                 | Explicit component, wins over `alias`      |
-| `NuiConfigProvider` | `icons`  | `Record<string, Component>` | Aliases for the subtree                    |
-| `NuiConfigProvider` | `locale` | `string`                    | Locale for numbers, time and dates         |
-| `NuiConfigProvider` | `today`  | `() => string`              | Today's date as `YYYY-MM-DD`               |
+| Where                                  | Option   | Type                        | Description                                |
+| -------------------------------------- | -------- | --------------------------- | ------------------------------------------ |
+| `NuiIcon`                              | `alias`  | `IconAlias` (`string`)      | Alias from the registry or the default set |
+| `NuiIcon`                              | `icon`   | `Component`                 | Explicit component, wins over `alias`      |
+| `createNuiConfig` / `provideNuiConfig` | `icons`  | `Record<string, Component>` | Aliases for the app or the subtree         |
+| `createNuiConfig` / `provideNuiConfig` | `toasts` | `ToastStoreOptions`         | Toast service options                      |
+| `createNuiConfig` / `provideNuiConfig` | `locale` | `string` (ref or getter)    | Locale for numbers, time and dates         |
+| `createNuiConfig` / `provideNuiConfig` | `today`  | `() => string`              | Today's date as `YYYY-MM-DD`               |
 
-`@numior/vue` also exports `createNuiConfig`, `provideNuiConfig`, `useIcons`,
-`defaultIcons`, `useLocale` and `useToday`.
+`@numior/vue` also exports `useIcons`, `defaultIcons`, `useLocale` and `useToday`.

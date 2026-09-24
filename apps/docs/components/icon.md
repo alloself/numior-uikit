@@ -48,9 +48,10 @@ import { Trash2 } from 'lucide-vue-next';
 
 ## Свой набор иконок
 
-Реестр — обычный объект «алиас → компонент». Его можно подключить для поддерева
-через `NuiConfigProvider` или для всего приложения через плагин `createNuiConfig`.
-Вложенные провайдеры наслаиваются: ближайший переопределяет только заданные алиасы.
+Реестр — обычный объект «алиас → компонент». Для всего приложения его подключает плагин
+`createNuiConfig`, для поддерева — вызов `provideNuiConfig` в `setup` собственного
+компонента-обёртки: компонентов-провайдеров в духе React кит не поставляет. Вложенные вызовы
+наслаиваются: ближайший переопределяет только заданные алиасы.
 
 ```ts
 import { createApp } from 'vue';
@@ -64,9 +65,14 @@ createApp(App)
 ```
 
 ```vue
-<NuiConfigProvider :icons="{ check: CheckIcon }">
-  <!-- здесь checkbox и кнопки используют CheckIcon -->
-</NuiConfigProvider>
+<template><slot /></template>
+
+<script setup lang="ts">
+import { provideNuiConfig } from '@numior/vue';
+import CheckIcon from './icons/CheckIcon.vue';
+
+provideNuiConfig({ icons: { check: CheckIcon } });
+</script>
 ```
 
 Собственные алиасы тоже допустимы: `provideNuiConfig({ icons: { 'my-app:save': SaveIcon } })`
@@ -77,8 +83,9 @@ createApp(App)
 ## Локаль
 
 Числа, время и даты форматируются по локали из той же конфигурации:
-`createNuiConfig({ locale: 'ru-RU' })` для приложения, `<NuiConfigProvider locale="de-DE">`
-для поддерева, проп `locale` на компоненте для точечного переопределения. Без настройки
+`createNuiConfig({ locale: 'ru-RU' })` для приложения, `provideNuiConfig({ locale })` в
+`setup` компонента для поддерева (значение, ref или геттер), проп `locale` на компоненте
+для точечного переопределения. Без настройки
 действует `en-US`. `navigator.language` кит не читает: сервер и клиент должны форматировать
 одинаково, поэтому локаль запроса передавайте в конфиг явно. Там же задаётся `today` —
 функция, возвращающая сегодняшнюю дату `YYYY-MM-DD` для календарей и детерминированных
@@ -92,13 +99,13 @@ createApp(App)
 
 ## API
 
-| Компонент           | Prop     | Тип                         | Описание                               |
-| ------------------- | -------- | --------------------------- | -------------------------------------- |
-| `NuiIcon`           | `alias`  | `IconAlias` (`string`)      | Алиас из реестра или дефолтного набора |
-| `NuiIcon`           | `icon`   | `Component`                 | Явный компонент, приоритетнее `alias`  |
-| `NuiConfigProvider` | `icons`  | `Record<string, Component>` | Алиасы для поддерева                   |
-| `NuiConfigProvider` | `locale` | `string`                    | Локаль чисел, времени и дат            |
-| `NuiConfigProvider` | `today`  | `() => string`              | Сегодняшняя дата `YYYY-MM-DD`          |
+| Где                                    | Опция    | Тип                         | Описание                               |
+| -------------------------------------- | -------- | --------------------------- | -------------------------------------- |
+| `NuiIcon`                              | `alias`  | `IconAlias` (`string`)      | Алиас из реестра или дефолтного набора |
+| `NuiIcon`                              | `icon`   | `Component`                 | Явный компонент, приоритетнее `alias`  |
+| `createNuiConfig` / `provideNuiConfig` | `icons`  | `Record<string, Component>` | Алиасы для приложения или поддерева    |
+| `createNuiConfig` / `provideNuiConfig` | `toasts` | `ToastStoreOptions`         | Настройки сервиса уведомлений          |
+| `createNuiConfig` / `provideNuiConfig` | `locale` | `string` (ref или геттер)   | Локаль чисел, времени и дат            |
+| `createNuiConfig` / `provideNuiConfig` | `today`  | `() => string`              | Сегодняшняя дата `YYYY-MM-DD`          |
 
-Из `@numior/vue` также экспортируются `createNuiConfig`, `provideNuiConfig`, `useIcons`,
-`defaultIcons`, `useLocale` и `useToday`.
+Из `@numior/vue` также экспортируются `useIcons`, `defaultIcons`, `useLocale` и `useToday`.

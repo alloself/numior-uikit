@@ -6,7 +6,7 @@ status: accepted
 ## Context
 
 После основания реализованы токены v2, пакет `@numior/primitives` и первые компоненты:
-`NuiButton`, `NuiIcon`, `NuiConfigProvider`, `NuiField` с частями, `NuiInput`, `NuiTextarea`,
+`NuiButton`, `NuiIcon`, `NuiField` с частями, `NuiInput`, `NuiTextarea`,
 `NuiCheckbox`, `NuiRadioGroup`/`NuiRadio`, `NuiSwitch`. Решения ниже согласованы в интервью
 2026-09-22 и определяют форму всех следующих компонентов.
 
@@ -32,8 +32,10 @@ status: accepted
   CSS-переменные. Упаковка CSS: манифест `src/styles.css`, плоский `dist/styles.css` и
   `dist/styles/<name>.css` через export `./styles/*.css`.
 - Иконки: алиасы `check`, `minus`, `loader`, `chevron-down`, `x`, `search`; дефолт — Lucide,
-  загружаемый по требованию пофайловыми `import()`; переопределение через
-  `NuiConfigProvider` или плагин `createNuiConfig`.
+  загружаемый по требованию пофайловыми `import()`; переопределение через плагин
+  `createNuiConfig` для приложения и `provideNuiConfig` в `setup` для поддерева.
+  Компонентов-провайдеров в духе React кит не поставляет (2026-09-25: `NuiConfigProvider`
+  удалён, конфигурация — только опции плагина и композабл).
 - Текстовые поля синхронизируют DOM и модель через локальный `draft`: DOM ведёт при вводе,
   внешние изменения модели записываются обратно, `lazy` откладывает до `change`, `trim`
   применяет Vue при эмиссии и контрол при `change`.

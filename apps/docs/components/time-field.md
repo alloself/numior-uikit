@@ -13,21 +13,15 @@ const precise = ref('13:05:09')
 </script>
 
 <div class="vp-raw nui-demo nui-demo--stack" data-nui-theme="light">
-  <NuiConfigProvider locale="ru-RU">
-    <NuiField label="Начало" description="С 09:00 до 18:00, шаг 30 минут">
-      <NuiTimeField v-model="start" min="09:00" max="18:00" :step="30" clock-label="Выбрать время" empty-label="Нет времени" />
-    </NuiField>
-  </NuiConfigProvider>
-  <NuiConfigProvider locale="en-US">
-    <NuiField label="Meeting" description="12-hour cycle from the locale">
-      <NuiTimeField v-model="meeting" />
-    </NuiField>
-  </NuiConfigProvider>
-  <NuiConfigProvider locale="ar-EG">
-    <NuiField label="الوقت" description="Арабские цифры и периоды">
-      <NuiTimeField v-model="precise" seconds />
-    </NuiField>
-  </NuiConfigProvider>
+  <NuiField label="Начало" description="С 09:00 до 18:00, шаг 30 минут">
+    <NuiTimeField locale="ru-RU" v-model="start" min="09:00" max="18:00" :step="30" clock-label="Выбрать время" empty-label="Нет времени" />
+  </NuiField>
+  <NuiField label="Meeting" description="12-hour cycle from the locale">
+    <NuiTimeField locale="en-US" v-model="meeting" />
+  </NuiField>
+  <NuiField label="الوقت" description="Арабские цифры и периоды">
+    <NuiTimeField locale="ar-EG" v-model="precise" seconds />
+  </NuiField>
 </div>
 
 ```vue
@@ -43,7 +37,8 @@ const precise = ref('13:05:09')
 растекается по сегментам. Буквы `a`/`p` и первые буквы локальных подписей задают период. ↑/↓
 меняют сегмент с переносом (`23` → `00`), Home/End ведут к границам сегмента, Backspace и
 Delete очищают его, ←/→ и Enter переключают сегменты, PageUp/PageDown сдвигают всё время на
-`step` минут в пределах `min`/`max`, Alt+↓ открывает подсказки. Модель становится `null`,
+`step` минут в пределах `min`/`max`, Alt+↓ открывает подсказки. Клик по пустому месту поля
+ставит фокус в первый незаполненный сегмент, а если всё заполнено — в часы. Модель становится `null`,
 пока хотя бы один сегмент пуст, а полное значение, вышедшее за `min`/`max`, зажимается,
 когда фокус покидает поле. Локаль берётся из конфига или пропа `locale`, `hourCycle`
 принудительно задаёт 12 или 24 часа, `seconds` добавляет сегмент секунд; при смене локали

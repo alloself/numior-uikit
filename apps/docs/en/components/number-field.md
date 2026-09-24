@@ -13,17 +13,15 @@ const discount = ref(0.15)
 </script>
 
 <div class="vp-raw nui-demo nui-demo--stack" data-nui-theme="light">
-  <NuiConfigProvider locale="en-US">
-    <NuiField label="Price" description="Euro, step 0.5">
-      <NuiNumberField v-model="price" :min="0" :step="0.5" :format-options="{ style: 'currency', currency: 'EUR' }" />
-    </NuiField>
-    <NuiField label="Quantity" description="From 0 to 10">
-      <NuiNumberField v-model="quantity" :min="0" :max="10" />
-    </NuiField>
-    <NuiField label="Discount" description="Percent without steppers">
-      <NuiNumberField v-model="discount" :min="0" :max="1" :step="0.01" :steppers="false" :format-options="{ style: 'percent' }" />
-    </NuiField>
-  </NuiConfigProvider>
+  <NuiField label="Price" description="Euro, step 0.5">
+    <NuiNumberField locale="en-US" v-model="price" :min="0" :step="0.5" :format-options="{ style: 'currency', currency: 'EUR' }" />
+  </NuiField>
+  <NuiField label="Quantity" description="From 0 to 10">
+    <NuiNumberField locale="en-US" v-model="quantity" :min="0" :max="10" />
+  </NuiField>
+  <NuiField label="Discount" description="Percent without steppers">
+    <NuiNumberField locale="en-US" v-model="discount" :min="0" :max="1" :step="0.01" :steppers="false" :format-options="{ style: 'percent' }" />
+  </NuiField>
 </div>
 
 ```vue
@@ -39,7 +37,7 @@ const discount = ref(0.15)
 
 ## Behaviour
 
-The locale comes from `createNuiConfig({ locale })` or the closest `NuiConfigProvider`, the
+The locale comes from `createNuiConfig({ locale })` or the closest `provideNuiConfig({ locale })`, the
 `locale` prop overrides it per field, and `en-US` applies without any setup;
 `navigator.language` is never read so server and client format identically. Parsing
 accepts local and ASCII digits and the locale decimal separator (plus a dot where it is not

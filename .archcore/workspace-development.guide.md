@@ -20,7 +20,7 @@ Node 24.15+; проверенная и закреплённая версия 24.
 
 Реализованы токены v2, @packages/primitives (контекст поля, checked state, radio-группа,
 реестр иконок с ленивой загрузкой, split attrs) и компоненты @packages/vue: `NuiButton`
-(variant × tone × size, loading без изменения ширины), `NuiIcon`, `NuiConfigProvider`,
+(variant × tone × size, loading без изменения ширины), `NuiIcon`,
 `NuiField` с частями, `NuiInput`, `NuiTextarea`, `NuiCheckbox`, `NuiRadioGroup`/`NuiRadio`,
 `NuiSwitch`, слои `NuiDialog`, `NuiDrawer`, `NuiPopover`, `NuiTooltip` на нативном top layer
 (@.archcore/overlays.adr.md), `useColorScheme`, а также обратная связь `NuiToaster`/`NuiToast` с

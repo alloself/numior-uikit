@@ -14,17 +14,15 @@ const discount = ref(0.15)
 </script>
 
 <div class="vp-raw nui-demo nui-demo--stack" data-nui-theme="light">
-  <NuiConfigProvider locale="ru-RU">
-    <NuiField label="Цена" description="Евро, шаг 0,5">
-      <NuiNumberField v-model="price" :min="0" :step="0.5" :format-options="{ style: 'currency', currency: 'EUR' }" increment-label="Увеличить" decrement-label="Уменьшить" />
-    </NuiField>
-    <NuiField label="Количество" description="От 0 до 10">
-      <NuiNumberField v-model="quantity" :min="0" :max="10" increment-label="Увеличить" decrement-label="Уменьшить" />
-    </NuiField>
-    <NuiField label="Скидка" description="Проценты без степперов">
-      <NuiNumberField v-model="discount" :min="0" :max="1" :step="0.01" :steppers="false" :format-options="{ style: 'percent' }" />
-    </NuiField>
-  </NuiConfigProvider>
+  <NuiField label="Цена" description="Евро, шаг 0,5">
+    <NuiNumberField locale="ru-RU" v-model="price" :min="0" :step="0.5" :format-options="{ style: 'currency', currency: 'EUR' }" increment-label="Увеличить" decrement-label="Уменьшить" />
+  </NuiField>
+  <NuiField label="Количество" description="От 0 до 10">
+    <NuiNumberField locale="ru-RU" v-model="quantity" :min="0" :max="10" increment-label="Увеличить" decrement-label="Уменьшить" />
+  </NuiField>
+  <NuiField label="Скидка" description="Проценты без степперов">
+    <NuiNumberField locale="ru-RU" v-model="discount" :min="0" :max="1" :step="0.01" :steppers="false" :format-options="{ style: 'percent' }" />
+  </NuiField>
 </div>
 
 ```vue
@@ -40,7 +38,7 @@ const discount = ref(0.15)
 
 ## Поведение
 
-Локаль берётся из `createNuiConfig({ locale })` или ближайшего `NuiConfigProvider`, проп
+Локаль берётся из `createNuiConfig({ locale })` или ближайшего `provideNuiConfig({ locale })`, проп
 `locale` переопределяет её точечно, без настройки действует `en-US`; `navigator.language`
 не читается, чтобы сервер и клиент форматировали одинаково. При разборе принимаются
 локальные и ASCII-цифры, разделитель дробной части локали (и точка там, где она не
