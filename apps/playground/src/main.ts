@@ -7,5 +7,5 @@ import './style.css';
 import App from './App.vue';
 
 createApp(App)
-  .use(createNuiConfig({ toasts: { duration: 4000 } }))
+  .use(createNuiConfig({ toasts: { duration: 4000 }, locale: 'ru-RU' }))
   .mount('#app');

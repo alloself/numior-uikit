@@ -92,6 +92,7 @@
     <FeedbackSection />
     <NavigationSection />
     <PickersSection />
+    <IntlSection />
     <DataSection />
     <TreeSection />
     <TableSection />
@@ -147,6 +148,7 @@ import FormsSection from './FormsSection.vue';
 import OverlaysSection from './OverlaysSection.vue';
 import FeedbackSection from './FeedbackSection.vue';
 import NavigationSection from './NavigationSection.vue';
+import IntlSection from './IntlSection.vue';
 import PickersSection from './PickersSection.vue';
 import DataSection from './DataSection.vue';
 import TreeSection from './TreeSection.vue';
