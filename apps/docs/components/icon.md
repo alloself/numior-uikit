@@ -87,13 +87,11 @@ provideNuiConfig({ icons: { check: CheckIcon } });
 `setup` компонента для поддерева (значение, ref или геттер), проп `locale` на компоненте
 для точечного переопределения. Без настройки
 действует `en-US`. `navigator.language` кит не читает: сервер и клиент должны форматировать
-одинаково, поэтому локаль запроса передавайте в конфиг явно. Там же задаётся `today` —
-функция, возвращающая сегодняшнюю дату `YYYY-MM-DD` для календарей и детерминированных
-тестов; по умолчанию берётся локальная дата устройства.
+одинаково, поэтому локаль запроса передавайте в конфиг явно.
 
 ```ts
 createApp(App)
-  .use(createNuiConfig({ locale: 'ru-RU', today: () => serverDate }))
+  .use(createNuiConfig({ locale: 'ru-RU' }))
   .mount('#app');
 ```
 
@@ -106,6 +104,5 @@ createApp(App)
 | `createNuiConfig` / `provideNuiConfig` | `icons`  | `Record<string, Component>` | Алиасы для приложения или поддерева    |
 | `createNuiConfig` / `provideNuiConfig` | `toasts` | `ToastStoreOptions`         | Настройки сервиса уведомлений          |
 | `createNuiConfig` / `provideNuiConfig` | `locale` | `string` (ref или геттер)   | Локаль чисел, времени и дат            |
-| `createNuiConfig` / `provideNuiConfig` | `today`  | `() => string`              | Сегодняшняя дата `YYYY-MM-DD`          |
 
-Из `@numior/vue` также экспортируются `useIcons`, `defaultIcons`, `useLocale` и `useToday`.
+Из `@numior/vue` также экспортируются `useIcons`, `defaultIcons` и `useLocale`.

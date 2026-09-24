@@ -88,13 +88,11 @@ Numbers, time and dates format through the locale of the same configuration:
 component's `setup` for a subtree (a value, ref or getter), and the `locale` prop on a
 component for a local override. Without any setup
 `en-US` applies. The kit never reads `navigator.language`: server and client must format
-identically, so pass the request locale into the config explicitly. The same place takes
-`today`, a function returning today's `YYYY-MM-DD` for calendars and deterministic tests;
-by default it is the device's local date.
+identically, so pass the request locale into the config explicitly.
 
 ```ts
 createApp(App)
-  .use(createNuiConfig({ locale: 'ru-RU', today: () => serverDate }))
+  .use(createNuiConfig({ locale: 'ru-RU' }))
   .mount('#app');
 ```
 
@@ -107,6 +105,5 @@ createApp(App)
 | `createNuiConfig` / `provideNuiConfig` | `icons`  | `Record<string, Component>` | Aliases for the app or the subtree         |
 | `createNuiConfig` / `provideNuiConfig` | `toasts` | `ToastStoreOptions`         | Toast service options                      |
 | `createNuiConfig` / `provideNuiConfig` | `locale` | `string` (ref or getter)    | Locale for numbers, time and dates         |
-| `createNuiConfig` / `provideNuiConfig` | `today`  | `() => string`              | Today's date as `YYYY-MM-DD`               |
 
-`@numior/vue` also exports `useIcons`, `defaultIcons`, `useLocale` and `useToday`.
+`@numior/vue` also exports `useIcons`, `defaultIcons` and `useLocale`.

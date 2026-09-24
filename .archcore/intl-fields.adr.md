@@ -16,8 +16,10 @@ status: accepted
 - Локаль живёт в контексте `LOCALE_KEY`: `createNuiConfig({ locale })` и
   `provideNuiConfig({ locale })` провайдят её (компонента-провайдера нет), `useLocale(explicit?)` берёт явное значение, затем
   ближайший провайдер, затем `en-US`. `navigator.language` не читается: сервер и клиент
-  форматируют одинаково, локаль запроса передаётся явно. Рядом `useToday()` отдаёт
-  инжектированную функцию сегодняшней даты `YYYY-MM-DD` (`TODAY_KEY`) или `localToday()`.
+  форматируют одинаково, локаль запроса передаётся явно. Сегодняшняя дата через конфиг не
+  инжектируется (2026-09-25: `useToday`/`TODAY_KEY` удалены как API без потребителя):
+  календарь возьмёт локальную дату и получит проп `today` для тестов и «бизнес-даты», а
+  метку «сегодня» отрисует после mount, чтобы SSR не зависел от часового пояса сервера.
 - Intl-хелперы — чистые функции в `packages/primitives/src/intl`: `numberSymbols`
   (разделители, минус, цифры и литералы из `formatToParts`), `formatNumber`, `parseNumber`
   (bidi-метки, локальные цифры, минус в любой форме, скобки, проценты), `withStepPrecision`,
@@ -65,7 +67,7 @@ status: accepted
 
 ## Consequences
 
-Даты (5b) переиспользуют `useLocale`/`useToday`, `parseTime`/`formatTimeModel` и сам
+Даты (5b) переиспользуют `useLocale`, `parseTime`/`formatTimeModel` и сам
 `NuiTimeField` под календарём при `time`. Проверка: харнесы `locale`, чистые тесты
 `intl-number`/`intl-time`, драйверы `number-field`/`time-field`, SSR-сценарии, e2e
 `tests/e2e/intl.spec.ts` с axe в light/dark.
