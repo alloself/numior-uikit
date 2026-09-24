@@ -13,7 +13,7 @@
     <NuiButton
       v-if="removable"
       variant="ghost"
-      tone="neutral"
+      :tone="tone"
       size="sm"
       class="nui-chip__remove"
       :aria-label="removeLabel"

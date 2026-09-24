@@ -81,7 +81,8 @@
   --_height: 1.75rem;
 
   flex: none;
-  min-block-size: 1.75rem;
+  block-size: var(--_height);
+  padding-block: 0;
   margin-inline-start: auto;
 }
 .nui-combobox__clear {

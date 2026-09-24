@@ -92,6 +92,8 @@
 .nui-chip__remove {
   --_height: 1.5rem;
 
+  block-size: var(--_height);
+  padding-block: 0;
   border-radius: var(--nui-radius-sm);
   color: inherit;
   font-size: 0.8rem;
@@ -101,7 +103,12 @@
 
   font-size: 0.7rem;
 }
-.nui-chip--variant-solid .nui-chip__remove:hover:not(:disabled) {
-  background: color-mix(in oklab, var(--_tone), var(--nui-text) 16%);
+.nui-chip__remove:hover:not(:disabled),
+.nui-chip__remove:active:not(:disabled) {
+  background: color-mix(in oklab, var(--_tone-soft), var(--_tone) 14%);
   color: inherit;
+}
+.nui-chip--variant-solid .nui-chip__remove:hover:not(:disabled),
+.nui-chip--variant-solid .nui-chip__remove:active:not(:disabled) {
+  background: color-mix(in oklab, var(--_tone), var(--nui-text) 16%);
 }
