@@ -19,8 +19,6 @@ export type { NuiConfigOptions } from './config/nui-config';
 export { DEFAULT_LOCALE, LOCALE_KEY, provideLocale, useLocale } from './locale/locale-context';
 export { applyMask, maskCaret } from './mask/mask';
 export type { MaskResult } from './mask/mask';
-export { TODAY_KEY, localToday, provideToday, useToday } from './date/today';
-export type { TodayProvider } from './date/today';
 export {
   formatNumber,
   isPartialNumber,
