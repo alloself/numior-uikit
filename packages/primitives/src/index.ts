@@ -16,6 +16,9 @@ export { ICONS_KEY, lazyIcon, provideIcons, useIcon, useIcons } from './icons/ic
 export type { IconAlias, IconLoader, IconRegistry } from './icons/icon-registry';
 export { createNuiConfig, provideNuiConfig } from './config/nui-config';
 export type { NuiConfigOptions } from './config/nui-config';
+export { DEFAULT_LOCALE, LOCALE_KEY, provideLocale, useLocale } from './locale/locale-context';
+export { TODAY_KEY, localToday, provideToday, useToday } from './date/today';
+export type { TodayProvider } from './date/today';
 export { useSplitAttrs } from './attrs/useSplitAttrs';
 export type { AttrRecord, SplitAttrs } from './attrs/useSplitAttrs';
 export { useFloating } from './floating/useFloating';

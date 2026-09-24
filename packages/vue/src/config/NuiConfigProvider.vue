@@ -6,6 +6,6 @@
 import { provideNuiConfig } from '@numior/primitives';
 import type { NuiConfigProviderProps } from './config.types';
 
-const { icons } = defineProps<NuiConfigProviderProps>();
-provideNuiConfig({ icons });
+const { icons, locale, today } = defineProps<NuiConfigProviderProps>();
+provideNuiConfig({ icons, locale: () => locale, today });
 </script>

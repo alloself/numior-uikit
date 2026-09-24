@@ -54,6 +54,7 @@ await importBuild('primitives', [
   'provideField',
   'useFieldControl',
   'provideIcons',
+  'useLocale',
   'useFloating',
   'usePopover',
   'useDialog',

@@ -187,19 +187,21 @@ export type { NuiSkeletonProps, NuiSkeletonShape } from './skeleton/skeleton.typ
 export type { NuiFieldControlProps, NuiSize, NuiTone } from './shared/types';
 export {
   createNuiConfig,
+  createToastStore,
   lazyIcon,
   provideNuiConfig,
-  createToastStore,
   useColorScheme,
   useDialog,
   useField,
   useFieldControl,
   useFloating,
   useIcons,
+  useLocale,
   usePopover,
   useRadioGroup,
   useToast,
   useToastStore,
+  useToday,
 } from '@numior/primitives';
 export type {
   ColorScheme,
