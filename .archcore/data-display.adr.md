@@ -46,9 +46,9 @@ status: accepted
   пункт без `value` остаётся обычным `li`. `items` — сахар над частями (`NuiListEntries`),
   пустой массив показывает `NuiEmpty`.
 - `NuiEmpty` — иконка или слот `media`, `title` как `<p>` (не heading), описание, `actions`,
-  размеры `md`/`sm`. `hideIcon` вместо `icon: false` из-за Boolean-каста Vue. Внутренний
-  `NuiListbox` показывает пустое состояние через `NuiEmpty size="sm" hide-icon`
-  (`nui-listbox__empty`), поэтому select и combobox получили его без изменения API.
+  размеры `md`/`sm`. `hideIcon` вместо `icon: false` из-за Boolean-каста Vue. Список в
+  варианте `floating` показывает пустое состояние через `NuiEmpty size="sm" hide-icon`
+  (`nui-list__empty`), поэтому select и combobox получили его без изменения API.
 - Группа аватаров не рисует кольцо цветом поверхности: на карточках и в тёмной теме оно
   промахивается мимо фона. Перекрытие показывает реальный фон через `mask-image` с
   радиальным вырезом на закрытом соседом аватаре (2px), позиция зеркалится в RTL.
@@ -157,13 +157,15 @@ status: accepted
 - Одна строка на все списки (2026-09-25). Внутренний блок `NuiRow` (`nui-row`, корень
   `display: contents`, элементы `__leading`, `__body`, `__title`, `__description`,
   `__trailing`, `__check`, модификаторы `--nowrap` и `--inline`) рендерит анатомию
-  «иконка · заголовок · описание · хвост · галочка» для `NuiListItem`, `NuiListboxOption`
-  и текста `NuiTreeNode`; контейнеры задают только состояния и цвета через приватные
+  «иконка · заголовок · описание · хвост · галочка» для `NuiListItem` и текста
+  `NuiTreeNode`; контейнеры задают только состояния и цвета через приватные
   `--_row-icon`, `--_row-muted`, `--_row-check`, `--_row-weight`,
   `--_row-description-size`. Галочка выбора стоит справа (`margin-inline-start: auto`),
   чтобы текст не сдвигался под пустой индикатор. Логика выбора и клавиатуры остаётся общей
-  (`useOptionSelection`, `useListNavigation`), а разные контейнеры (`NuiList` на странице,
-  `NuiListbox` в поповере, дерево) — это разные роли и модели данных, не дубли.
+  (`useOptionSelection`, `useListNavigation`). Список один: `NuiList` на странице и он же в
+  варианте `floating` внутри select, combobox и поля времени (2026-09-25: `NuiListbox`
+  удалён, модель пункта общая — `NuiListEntry` с `label`, `NuiOption` требует `value`,
+  группы `{ label, items }`); дерево остаётся отдельным контейнером из-за вложенности.
 
 ## Alternatives Considered
 

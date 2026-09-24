@@ -14,7 +14,7 @@ const countries = [
   { value: 'at', label: 'Austria' },
   { value: 'de', label: 'Germany', description: 'Berlin' },
   { value: 'dk', label: 'Denmark', disabled: true },
-  { label: 'Asia', options: [{ value: 'vn', label: 'Vietnam' }, { value: 'jp', label: 'Japan' }] },
+  { label: 'Asia', items: [{ value: 'vn', label: 'Vietnam' }, { value: 'jp', label: 'Japan' }] },
 ]
 const tagOptions = [
   { value: 'frontend', label: 'Frontend' },
@@ -41,7 +41,7 @@ const country = ref<string>();
 const countries: NuiOptionSource<string> = [
   { value: 'at', label: 'Austria' },
   { value: 'de', label: 'Germany', description: 'Berlin' },
-  { label: 'Asia', options: [{ value: 'vn', label: 'Vietnam' }] },
+  { label: 'Asia', items: [{ value: 'vn', label: 'Vietnam' }] },
 ];
 </script>
 
@@ -94,6 +94,6 @@ otherwise JSON becomes the key.
 Plus `id`, `size`, `disabled`, `required`, `invalid` like every field control. Slots
 `value="{ selected }"` and `option="{ option, selected, active }"`. Block `nui-select`
 (modifiers `--size-*`, `--open`, `--empty`, `--clearable`, `--invalid`, `--disabled`; elements
-`__trigger`, `__value`, `__chevron`, `__clear`, `__listbox`) and the shared list `nui-listbox`
-(`--floating`; elements `__group`, `__group-label`, `__option` with `--active`, `--selected`,
-`--disabled`, `__check`, `__icon`, `__body`, `__label`, `__description`, `__status`).
+`__trigger`, `__value`, `__chevron`, `__clear`, `__listbox`). The dropdown is
+[`NuiList`](/en/components/list) in its `floating` variant: the same groups, `nui-list-item`
+rows with `--active`, `--selected`, `--disabled` and the `__status`/`__empty` states.

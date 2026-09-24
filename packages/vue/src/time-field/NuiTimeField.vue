@@ -64,13 +64,16 @@
     >
       <NuiIcon alias="clock" />
     </NuiButton>
-    <NuiListbox
+    <NuiList
       :ref="setListbox"
-      class="nui-time-field__listbox nui-listbox--floating"
+      class="nui-time-field__listbox"
+      variant="floating"
       :style="floatingStyles"
-      :options="suggestions"
-      :selected-keys="selectedKeys"
-      :key-of="identity"
+      :model-value="model ?? undefined"
+      :items="suggestions"
+      selectable="single"
+      :keyboard="false"
+      :active-id="list.activeId.value"
       :empty-label="emptyLabel"
       :labelled-by="field?.labelledBy.value"
       v-bind="control.contentAttrs.value"
@@ -104,15 +107,12 @@ import {
 } from '@numior/primitives';
 import NuiButton from '../button/NuiButton.vue';
 import NuiIcon from '../icon/NuiIcon.vue';
-import NuiListbox from '../listbox/NuiListbox.vue';
-import { optionIndexOf } from '../listbox/listbox.types';
+import NuiList from '../list/NuiList.vue';
 import type { NuiOption } from '../shared/options';
 import { useListboxSurface } from '../shared/use-listbox-surface';
 import NuiTimeSegment from './NuiTimeSegment.vue';
 import type { NuiTimeFieldProps } from './time-field.types';
 import { useTimeDraft, type TimePeriod } from './use-time-draft';
-
-const identity = (value: string): string => value;
 
 defineOptions({ inheritAttrs: false });
 const {
@@ -317,7 +317,6 @@ const suggestions = computed<NuiOption<string>[]>(() =>
     label: formatTimeLabel(time, locale.value, layout.value.cycle, seconds),
   })),
 );
-const selectedKeys = computed(() => new Set(model.value === null ? [] : [model.value]));
 
 const choose = (option: NuiOption<string>): void => {
   const time = parseTime(option.value);
@@ -337,11 +336,7 @@ const onListboxKeydown = (event: KeyboardEvent): void => {
     return;
   }
   event.preventDefault();
-  const active = list.activeElement();
-  const option = active ? suggestions.value[optionIndexOf(active)] : undefined;
-  if (option) {
-    choose(option);
-  }
+  list.activeElement()?.click();
 };
 const onListFocusin = (event: FocusEvent): void => {
   state.inside = true;

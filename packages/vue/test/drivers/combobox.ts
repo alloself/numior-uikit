@@ -81,7 +81,7 @@ export class ComboboxDriver extends ComponentDriver {
   }
 
   get listbox(): DOMWrapper<HTMLElement> {
-    return this.wrapper.find<HTMLElement>('[role="listbox"]');
+    return this.wrapper.find<HTMLElement>('.nui-combobox__listbox');
   }
 
   get expanded(): boolean {
@@ -107,7 +107,7 @@ export class ComboboxDriver extends ComponentDriver {
   }
 
   get statusText(): string {
-    const status = this.wrapper.find('.nui-listbox__status, .nui-listbox__empty');
+    const status = this.wrapper.find('.nui-list__status, .nui-list__empty');
     return status.exists() ? status.text() : '';
   }
 

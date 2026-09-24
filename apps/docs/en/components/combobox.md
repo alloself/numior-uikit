@@ -108,4 +108,4 @@ Event `search(query)`. Plus `id`, `size`, `disabled`, `required`, `invalid`; slo
 `option="{ option, selected, active }"`; `focus()` through a ref. Block `nui-combobox`
 (modifiers `--size-*`, `--open`, `--multiple`, `--invalid`, `--disabled`; elements `__field`,
 `__input`, `__chip` (a `NuiChip`), `__clear`, `__toggle`, `__chevron`, `__listbox`) on top of
-the shared `nui-listbox`.
+[`NuiList`](/en/components/list) in its `floating` variant.

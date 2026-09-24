@@ -6,7 +6,7 @@ export const FRUITS: NuiOptionSource<string> = [
   { value: 'blueberry', label: 'Blueberry', disabled: true },
   {
     label: 'Citrus',
-    options: [
+    items: [
       { value: 'lemon', label: 'Lemon' },
       { value: 'lime', label: 'Lime' },
     ],

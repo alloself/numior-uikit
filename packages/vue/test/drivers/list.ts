@@ -8,6 +8,7 @@ import {
   type NuiListItemProps,
   type NuiListItemSlot,
   type NuiListProps,
+  type NuiListSource,
 } from '../../src';
 import { RouterStub } from '../support/router-stub';
 import { ComponentDriver } from './component';
@@ -24,7 +25,7 @@ export interface ListMountOptions {
   readonly props?: Partial<NuiListProps<unknown>>;
   readonly modelValue?: ListValue;
   readonly parts?: readonly ListPart[];
-  readonly itemSlot?: ((slot: NuiListItemSlot<unknown>) => string) | undefined;
+  readonly itemSlot?: ((slot: NuiListItemSlot<NuiListEntry<unknown>>) => string) | undefined;
   readonly viaRouter?: boolean;
 }
 
@@ -70,7 +71,7 @@ export class ListDriver extends ComponentDriver {
   }: ListMountOptions = {}) {
     const model = ref<ListValue>(modelValue);
     const clicks = ref(0);
-    const items = ref<readonly NuiListEntry<unknown>[] | undefined>(props.items);
+    const items = ref<NuiListSource<NuiListEntry<unknown>> | undefined>(props.items);
     const slots = {
       default: () =>
         parts.map((part) => h(NuiListItem, partProps(part, clicks, viaRouter), partSlots(part))),
@@ -104,7 +105,7 @@ export class ListDriver extends ComponentDriver {
     wrapper: VueWrapper,
     private readonly model: Ref<ListValue>,
     private readonly clickCount: Ref<number>,
-    private readonly itemsRef: Ref<readonly NuiListEntry<unknown>[] | undefined>,
+    private readonly itemsRef: Ref<NuiListSource<NuiListEntry<unknown>> | undefined>,
   ) {
     super(wrapper);
   }
@@ -118,11 +119,15 @@ export class ListDriver extends ComponentDriver {
   }
 
   get tag(): string {
-    return this.root.element.tagName.toLowerCase();
+    return this.root.find('.nui-list__items').element.tagName.toLowerCase();
   }
 
   get role(): string | undefined {
-    return this.root.attributes('role');
+    return this.listAttr('role');
+  }
+
+  listAttr(name: string): string | undefined {
+    return this.root.attributes(name);
   }
 
   private get items(): DOMWrapper<HTMLElement>[] {
@@ -219,7 +224,7 @@ export class ListDriver extends ComponentDriver {
     await nextTick();
   }
 
-  async receiveItems(items: readonly NuiListEntry<string>[]): Promise<void> {
+  async receiveItems(items: NuiListSource<NuiListEntry<string>>): Promise<void> {
     this.itemsRef.value = items;
     await nextTick();
     await nextTick();

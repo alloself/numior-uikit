@@ -1,45 +1,81 @@
 <template>
   <div
-    v-if="items && items.length === 0"
-    class="nui-list nui-list--empty"
-    :class="`nui-list--variant-${variant}`"
-  >
-    <slot name="empty"><NuiEmpty size="sm" :title="emptyLabel" /></slot>
-  </div>
-  <component
-    :is="as"
-    v-else
-    ref="list"
+    :id="listId"
+    ref="root"
     class="nui-list"
     :class="[
       `nui-list--variant-${variant}`,
       `nui-list--size-${size}`,
-      { 'nui-list--selectable': selectable !== undefined },
+      { 'nui-list--selectable': selectable !== undefined, 'nui-list--empty': isEmpty },
     ]"
     :role="selectable ? 'listbox' : undefined"
     :aria-multiselectable="selectable === 'multiple' || undefined"
+    :aria-busy="loading || undefined"
     :aria-label="label"
+    :aria-labelledby="labelledBy"
     @keydown="onKeydown"
     @focusin="onFocusin"
     @focusout="onFocusout"
   >
-    <NuiListEntries v-if="items" :items="items" :link-as="linkAs">
-      <template #item="slot"><slot name="item" v-bind="slot" /></template>
-    </NuiListEntries>
-    <slot />
-  </component>
+    <component :is="as" class="nui-list__items" :role="selectable ? 'presentation' : undefined">
+      <template v-for="(group, position) in groups" :key="position">
+        <li
+          v-if="group.label !== undefined"
+          class="nui-list__group"
+          :role="selectable ? 'group' : undefined"
+          :aria-labelledby="`${listId}-group-${position}`"
+        >
+          <div :id="`${listId}-group-${position}`" class="nui-list__group-label">
+            {{ group.label }}
+          </div>
+          <ul class="nui-list__group-items" :role="selectable ? 'presentation' : undefined">
+            <NuiListEntries
+              :entries="group.items"
+              :list-id="listId"
+              :link-as="linkAs"
+              :index-of="indexOf"
+            >
+              <template #item="slot"><slot name="item" v-bind="slot" /></template>
+            </NuiListEntries>
+          </ul>
+        </li>
+        <NuiListEntries
+          v-else
+          :entries="group.items"
+          :list-id="listId"
+          :link-as="linkAs"
+          :index-of="indexOf"
+        >
+          <template #item="slot"><slot name="item" v-bind="slot" /></template>
+        </NuiListEntries>
+      </template>
+      <slot />
+      <li v-if="loading" class="nui-list__status" role="presentation">
+        <NuiIcon alias="loader" class="nui-list__spinner" />
+        {{ loadingLabel }}
+      </li>
+      <li v-else-if="isEmpty" class="nui-list__empty" role="presentation">
+        <slot name="empty">
+          <NuiEmpty size="sm" :hide-icon="variant === 'floating'" :title="emptyLabel" />
+        </slot>
+      </li>
+    </component>
+  </div>
 </template>
 
-<script setup lang="ts" generic="T">
+<script setup lang="ts" generic="T, E extends NuiListEntry<T> = NuiListEntry<T>">
 import { computed, onMounted, useTemplateRef, watch } from 'vue';
-import { useListNavigation } from '@numior/primitives';
+import { useControlId, useListNavigation } from '@numior/primitives';
 import NuiEmpty from '../empty/NuiEmpty.vue';
+import NuiIcon from '../icon/NuiIcon.vue';
+import { flattenEntries, groupEntries, type NuiListEntry } from '../shared/options';
 import { useOptionSelection } from '../shared/use-option-selection';
 import NuiListEntries from './NuiListEntries.vue';
 import { provideList } from './list-context';
-import type { NuiListEntry, NuiListProps } from './list.types';
+import type { NuiListProps } from './list.types';
 
 const {
+  id,
   as = 'ul',
   variant = 'plain',
   size = 'md',
@@ -48,13 +84,25 @@ const {
   getKey,
   loop = true,
   typeahead = true,
+  keyboard = true,
+  activeId,
+  loading = false,
+  loadingLabel = 'Loading',
   label,
+  labelledBy,
   emptyLabel = 'No items',
   linkAs = 'a',
-} = defineProps<NuiListProps<T>>();
-const model = defineModel<T | T[]>();
+} = defineProps<NuiListProps<T, E>>();
+const model = defineModel<T | T[] | undefined>();
+const emit = defineEmits<{ select: [item: E] }>();
 
-const listElement = useTemplateRef<HTMLElement>('list');
+const listId = useControlId(() => id);
+const rootElement = useTemplateRef<HTMLElement>('root');
+const flat = computed<E[]>(() => (items ? flattenEntries(items) : []));
+const groups = computed(() => (items ? groupEntries(items) : []));
+const indices = computed(() => new Map(flat.value.map((entry, index) => [entry, index])));
+const indexOf = (entry: E): number => indices.value.get(entry) ?? -1;
+const isEmpty = computed(() => items !== undefined && flat.value.length === 0);
 const { keyOf, selectedKeys, selectedValues, toggle } = useOptionSelection<T>({
   options: () => [],
   model,
@@ -62,23 +110,31 @@ const { keyOf, selectedKeys, selectedValues, toggle } = useOptionSelection<T>({
   getKey: () => getKey,
 });
 
-const firstEnabled = (entries: readonly NuiListEntry<T>[] | undefined): T | undefined =>
-  entries?.find((entry) => entry.value !== undefined && !entry.disabled)?.value;
+const firstEnabled = (): T | undefined =>
+  flat.value.find((entry) => entry.value !== undefined && !entry.disabled)?.value;
 const tabStopKey = computed(() => {
-  const value = selectedValues.value[0] ?? firstEnabled(items);
+  const value = selectedValues.value[0] ?? firstEnabled();
   return value === undefined ? undefined : keyOf(value);
 });
+const entryOf = (value: T): E | undefined =>
+  flat.value.find((entry) => entry.value !== undefined && keyOf(entry.value) === keyOf(value));
 const select = (value: T): void => {
   if (selectable === 'multiple') {
     toggle({ value, label: '' });
   } else {
     model.value = value;
   }
+  const entry = entryOf(value);
+  if (entry) {
+    emit('select', entry);
+  }
 };
 provideList<T>({
   selectable: computed(() => selectable),
+  variant: computed(() => variant),
   size: computed(() => size),
   tabStopKey,
+  activeId: computed(() => activeId),
   keyOf,
   isSelected: (value) => selectedKeys.value.has(keyOf(value)),
   select,
@@ -87,10 +143,10 @@ provideList<T>({
 const itemTitle = (element: HTMLElement): string =>
   element.querySelector('.nui-row__title')?.textContent ?? '';
 const firstSelected = (): HTMLElement | null => {
-  const found = listElement.value?.querySelector('[role="option"][aria-selected="true"]');
+  const found = rootElement.value?.querySelector('[role="option"][aria-selected="true"]');
   return found instanceof HTMLElement ? found : null;
 };
-const navigation = useListNavigation(listElement, {
+const navigation = useListNavigation(rootElement, {
   selector: '[role="option"]',
   scope: '.nui-list',
   loop: () => loop,
@@ -98,11 +154,12 @@ const navigation = useListNavigation(listElement, {
   resting: firstSelected,
   itemText: itemTitle,
 });
+const owns = (): boolean => keyboard && selectable !== undefined;
 
 const isOption = (target: EventTarget | null): target is HTMLElement =>
   target instanceof HTMLElement && target.getAttribute('role') === 'option';
 const onKeydown = (event: KeyboardEvent): void => {
-  if (!selectable) {
+  if (!owns()) {
     return;
   }
   navigation.onKeydown(event);
@@ -115,22 +172,22 @@ const onKeydown = (event: KeyboardEvent): void => {
   }
 };
 const onFocusin = (event: FocusEvent): void => {
-  if (selectable) {
+  if (owns()) {
     navigation.onFocusin(event);
   }
 };
 const onFocusout = (event: FocusEvent): void => {
   const next = event.relatedTarget;
-  if (selectable && !(next instanceof Node && listElement.value?.contains(next))) {
+  if (owns() && !(next instanceof Node && rootElement.value?.contains(next))) {
     navigation.reset();
   }
 };
 
 onMounted(() => {
   watch(
-    () => [selectable, items?.length],
+    () => [owns(), flat.value.length],
     () => {
-      if (selectable) {
+      if (owns()) {
         navigation.reset();
       }
     },

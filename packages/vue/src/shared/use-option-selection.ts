@@ -1,7 +1,7 @@
 import { computed, toValue, type ComputedRef, type MaybeRefOrGetter, type Ref } from 'vue';
 import {
   defaultOptionKey,
-  flattenOptions,
+  flattenEntries,
   type NuiOption,
   type NuiOptionKey,
   type NuiOptionSource,
@@ -27,7 +27,7 @@ export interface OptionSelection<T> {
 
 export const useOptionSelection = <T>(options: OptionSelectionOptions<T>): OptionSelection<T> => {
   const keyOf = (value: T): string => (toValue(options.getKey) ?? defaultOptionKey)(value);
-  const flat = computed(() => flattenOptions(toValue(options.options)));
+  const flat = computed(() => flattenEntries(toValue(options.options)));
   const selectedValues = computed<T[]>(() => {
     const current = options.model.value;
     if (Array.isArray(current)) {

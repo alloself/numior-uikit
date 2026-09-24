@@ -131,7 +131,6 @@ export type {
 export { default as NuiList } from './list/NuiList.vue';
 export { default as NuiListItem } from './list/NuiListItem.vue';
 export type {
-  NuiListEntry,
   NuiListItemProps,
   NuiListItemSlot,
   NuiListProps,
@@ -168,10 +167,17 @@ export { default as NuiChip } from './chip/NuiChip.vue';
 export type { NuiChipProps, NuiChipSize, NuiChipVariant } from './chip/chip.types';
 export { default as NuiCombobox } from './combobox/NuiCombobox.vue';
 export type { NuiComboboxFilter, NuiComboboxProps } from './combobox/combobox.types';
-export type { NuiListboxOptionSlot } from './listbox/listbox.types';
 export { default as NuiPagination } from './pagination/NuiPagination.vue';
 export type { NuiPaginationProps } from './pagination/pagination.types';
-export type { NuiOption, NuiOptionGroup, NuiOptionKey, NuiOptionSource } from './shared/options';
+export type {
+  NuiListEntry,
+  NuiListGroup,
+  NuiListSource,
+  NuiOption,
+  NuiOptionGroup,
+  NuiOptionKey,
+  NuiOptionSource,
+} from './shared/options';
 export { default as NuiToaster } from './toast/NuiToaster.vue';
 export { default as NuiToast } from './toast/NuiToast.vue';
 export type {

@@ -1,48 +1,72 @@
 import type { IconAlias } from '@numior/primitives';
 
-export interface NuiOption<T = string> {
-  readonly value: T;
+export interface NuiListEntry<T = string> {
+  readonly key?: string | undefined;
+  readonly value?: T | undefined;
   readonly label: string;
   readonly description?: string | undefined;
-  readonly disabled?: boolean | undefined;
   readonly icon?: IconAlias | undefined;
+  readonly disabled?: boolean | undefined;
+  readonly href?: string | undefined;
+  readonly to?: unknown;
+  readonly onClick?: (() => void) | undefined;
 }
 
-export interface NuiOptionGroup<T = string> {
+export interface NuiOption<T = string> extends NuiListEntry<T> {
+  readonly value: T;
+}
+
+export interface NuiListGroup<E> {
   readonly label: string;
-  readonly options: readonly NuiOption<T>[];
+  readonly items: readonly E[];
 }
 
-export type NuiOptionSource<T = string> = ReadonlyArray<NuiOption<T> | NuiOptionGroup<T>>;
+export type NuiListSource<E> = ReadonlyArray<E | NuiListGroup<E>>;
+
+export type NuiOptionGroup<T = string> = NuiListGroup<NuiOption<T>>;
+
+export type NuiOptionSource<T = string> = NuiListSource<NuiOption<T>>;
 
 export type NuiOptionKey<T> = (value: T) => string;
 
-export interface OptionEntry<T> {
-  readonly option: NuiOption<T>;
-  readonly index: number;
-}
+const isListGroup = <E>(entry: E | NuiListGroup<E>): entry is NuiListGroup<E> =>
+  typeof entry === 'object' && entry !== null && 'items' in entry && Array.isArray(entry.items);
 
-export interface OptionGroupView<T> {
+export const flattenEntries = <E>(source: NuiListSource<E>): E[] =>
+  source.flatMap((entry) => (isListGroup(entry) ? [...entry.items] : [entry]));
+
+interface EntryGroup<E> {
   readonly label: string | undefined;
-  readonly entries: readonly OptionEntry<T>[];
+  readonly items: readonly E[];
 }
 
-const isOptionGroup = <T>(entry: NuiOption<T> | NuiOptionGroup<T>): entry is NuiOptionGroup<T> =>
-  'options' in entry;
+export const groupEntries = <E>(source: NuiListSource<E>): EntryGroup<E>[] => {
+  const groups: Array<{ label: string | undefined; items: E[] }> = [];
+  for (const entry of source) {
+    if (isListGroup(entry)) {
+      groups.push({ label: entry.label, items: [...entry.items] });
+      continue;
+    }
+    const last = groups.at(-1);
+    if (last && last.label === undefined) {
+      last.items.push(entry);
+    } else {
+      groups.push({ label: undefined, items: [entry] });
+    }
+  }
+  return groups;
+};
 
-export const flattenOptions = <T>(source: NuiOptionSource<T>): NuiOption<T>[] =>
-  source.flatMap((entry) => (isOptionGroup(entry) ? [...entry.options] : [entry]));
-
-export const filterOptions = <T>(
-  source: NuiOptionSource<T>,
-  keep: (option: NuiOption<T>) => boolean,
-): NuiOptionSource<T> =>
-  source.flatMap((entry): Array<NuiOption<T> | NuiOptionGroup<T>> => {
-    if (!isOptionGroup(entry)) {
+export const filterOptions = <E>(
+  source: NuiListSource<E>,
+  keep: (entry: E) => boolean,
+): NuiListSource<E> =>
+  source.flatMap((entry): Array<E | NuiListGroup<E>> => {
+    if (!isListGroup(entry)) {
       return keep(entry) ? [entry] : [];
     }
-    const options = entry.options.filter(keep);
-    return options.length === 0 ? [] : [{ label: entry.label, options }];
+    const items = entry.items.filter(keep);
+    return items.length === 0 ? [] : [{ label: entry.label, items }];
   });
 
 export const defaultOptionKey = (value: unknown): string => {
@@ -55,23 +79,8 @@ export const defaultOptionKey = (value: unknown): string => {
   return JSON.stringify(value) ?? '';
 };
 
-export const groupOptions = <T>(source: NuiOptionSource<T>): OptionGroupView<T>[] => {
-  const groups: Array<{ label: string | undefined; entries: OptionEntry<T>[] }> = [];
-  let index = 0;
-  for (const entry of source) {
-    if (isOptionGroup(entry)) {
-      groups.push({
-        label: entry.label,
-        entries: entry.options.map((option) => ({ option, index: index++ })),
-      });
-      continue;
-    }
-    const last = groups.at(-1);
-    const target = last && last.label === undefined ? last : { label: undefined, entries: [] };
-    if (target !== last) {
-      groups.push(target);
-    }
-    target.entries.push({ option: entry, index: index++ });
-  }
-  return groups;
-};
+export const optionElementId = (listId: string, index: number): string =>
+  `${listId}-option-${index}`;
+
+export const optionIndexOf = (element: Element): number =>
+  Number(element.id.slice(element.id.lastIndexOf('-') + 1));

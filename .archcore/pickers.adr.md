@@ -16,10 +16,12 @@ status: accepted
   `getKey`, по умолчанию строки и числа как есть, объекты — через JSON. Выбор
   инкапсулирован в `useOptionSelection` (плоский список, ключи, выбранные опции в порядке
   модели, toggle, clear) и используется select и combobox.
-- Внутренний `NuiListbox` (не экспортируется) рендерит `role="listbox"` с группами,
-  опциями `role="option"` (индикатор выбора, описание, disabled), состояниями загрузки и
-  пустого списка; плавающая поверхность — модификатор `nui-listbox--floating`, общий для
-  обоих потребителей.
+- Выпадающий список — публичный `NuiList` в варианте `floating` (2026-09-25: отдельный
+  внутренний `NuiListbox` удалён как дубль). Список рендерит `role="listbox"` с группами
+  `{ label, items }`, пунктами `role="option"`, состояниями загрузки и пустого списка;
+  владелец передаёт `keyboard=false`, `activeId` для виртуального фокуса и `v-model`, а
+  корень-поповер с рамкой и тенью держит `overflow: hidden`, внутренний `ul` скроллится,
+  поэтому скроллбар не выходит за скруглённые углы.
 - `NuiSelect`: `<button role="combobox" aria-haspopup="listbox">` + listbox в `popover="auto"`
   шириной не меньше триггера (`useFloating` с `size`), roving-фокус по опциям, typeahead на
   закрытом триггере без открытия, `multiple` с подписью `countLabel`, `clearable`, скрытые

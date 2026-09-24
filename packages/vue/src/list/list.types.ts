@@ -1,46 +1,42 @@
 import type { IconAlias } from '@numior/primitives';
 import type { Component } from 'vue';
-import type { NuiOptionKey } from '../shared/options';
+import type { NuiListEntry, NuiListSource, NuiOptionKey } from '../shared/options';
 import type { NuiSize } from '../shared/types';
 
-export type NuiListVariant = 'plain' | 'divided' | 'bordered';
+export type NuiListVariant = 'plain' | 'divided' | 'bordered' | 'floating';
 export type NuiListSelectable = 'single' | 'multiple';
 export type NuiListTag = 'ul' | 'ol';
 
-export interface NuiListEntry<T = string> {
-  readonly key?: string | undefined;
-  readonly title: string;
-  readonly description?: string | undefined;
-  readonly icon?: IconAlias | undefined;
-  readonly value?: T | undefined;
-  readonly href?: string | undefined;
-  readonly to?: unknown;
-  readonly disabled?: boolean | undefined;
-  readonly onClick?: (() => void) | undefined;
-}
-
-export interface NuiListProps<T> {
+export interface NuiListProps<T, E extends NuiListEntry<T> = NuiListEntry<T>> {
+  id?: string | undefined;
   as?: NuiListTag | undefined;
   variant?: NuiListVariant | undefined;
   size?: NuiSize | undefined;
-  items?: readonly NuiListEntry<T>[] | undefined;
+  items?: NuiListSource<E> | undefined;
   selectable?: NuiListSelectable | undefined;
   getKey?: NuiOptionKey<T> | undefined;
   loop?: boolean | undefined;
   typeahead?: boolean | undefined;
+  keyboard?: boolean | undefined;
+  activeId?: string | undefined;
+  loading?: boolean | undefined;
+  loadingLabel?: string | undefined;
   label?: string | undefined;
+  labelledBy?: string | undefined;
   emptyLabel?: string | undefined;
   linkAs?: string | Component | undefined;
 }
 
-export interface NuiListItemSlot<T> {
-  readonly item: NuiListEntry<T>;
+export interface NuiListItemSlot<E> {
+  readonly item: E;
   readonly selected: boolean;
+  readonly active: boolean;
 }
 
 export interface NuiListItemProps {
   value?: unknown;
-  title?: string | undefined;
+  id?: string | undefined;
+  label?: string | undefined;
   description?: string | undefined;
   icon?: IconAlias | undefined;
   href?: string | undefined;

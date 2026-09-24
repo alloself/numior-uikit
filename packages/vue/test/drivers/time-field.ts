@@ -111,7 +111,7 @@ export class TimeFieldDriver extends ComponentDriver {
   }
 
   get listbox(): DOMWrapper<HTMLElement> {
-    return this.wrapper.find<HTMLElement>('[role="listbox"]');
+    return this.wrapper.find<HTMLElement>('.nui-time-field__listbox');
   }
 
   get expanded(): boolean {
@@ -129,7 +129,7 @@ export class TimeFieldDriver extends ComponentDriver {
   }
 
   get emptyText(): string {
-    return this.wrapper.find('.nui-listbox__empty').text();
+    return this.wrapper.find('.nui-list__empty').text();
   }
 
   get hiddenValue(): string | undefined {

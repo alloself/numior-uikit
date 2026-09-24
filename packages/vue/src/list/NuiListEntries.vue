@@ -1,9 +1,10 @@
 <template>
   <NuiListItem
-    v-for="(entry, index) in items"
-    :key="entry.key ?? index"
+    v-for="(entry, position) in entries"
+    :id="idFor(entry)"
+    :key="entry.key ?? position"
     :value="entry.value"
-    :title="entry.title"
+    :label="entry.label"
     :description="entry.description"
     :icon="entry.icon"
     :href="entry.href"
@@ -13,22 +14,28 @@
     v-on="entry.onClick ? { click: entry.onClick } : {}"
   >
     <template v-if="$slots.item" #default>
-      <slot name="item" :item="entry" :selected="isSelected(entry)" />
+      <slot name="item" :item="entry" :selected="isSelected(entry)" :active="isActive(entry)" />
     </template>
   </NuiListItem>
 </template>
 
-<script setup lang="ts" generic="T">
+<script setup lang="ts" generic="E extends NuiListEntry<unknown>">
 import type { Component } from 'vue';
+import { optionElementId, type NuiListEntry } from '../shared/options';
 import NuiListItem from './NuiListItem.vue';
 import { useList } from './list-context';
-import type { NuiListEntry } from './list.types';
 
-const { items, linkAs } = defineProps<{
-  items: readonly NuiListEntry<T>[];
+const { entries, listId, linkAs, indexOf } = defineProps<{
+  entries: readonly E[];
+  listId: string;
   linkAs: string | Component;
+  indexOf: (entry: E) => number;
 }>();
 const list = useList();
-const isSelected = (entry: NuiListEntry<T>): boolean =>
+
+const idFor = (entry: E): string => optionElementId(listId, indexOf(entry));
+const isSelected = (entry: E): boolean =>
   entry.value !== undefined && (list?.isSelected(entry.value) ?? false);
+const isActive = (entry: E): boolean =>
+  list?.activeId.value !== undefined && list.activeId.value === idFor(entry);
 </script>

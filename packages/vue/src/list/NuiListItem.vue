@@ -1,5 +1,6 @@
 <template>
   <li
+    :id="id"
     class="nui-list-item"
     :class="classes()"
     v-bind="{ ...optionAttrs(), ...rootAttrs() }"
@@ -8,9 +9,10 @@
     <component :is="innerIs()" class="nui-list-item__inner" v-bind="innerAttrs()">
       <NuiRow
         :icon="icon"
-        :title="title"
+        :title="label"
         :description="description"
         :check="isOption() ? selected : undefined"
+        :nowrap="list?.variant.value === 'floating'"
       >
         <template v-if="$slots.leading" #leading><slot name="leading" /></template>
         <template v-if="$slots.default" #default><slot /></template>
@@ -34,7 +36,8 @@ type ListItemMode = 'option' | 'link' | 'button' | 'plain';
 defineOptions({ inheritAttrs: false });
 const {
   value,
-  title,
+  id,
+  label,
   description,
   icon,
   href,
@@ -50,6 +53,7 @@ const list = useList();
 
 const size = computed(() => list?.size.value ?? 'md');
 const selected = computed(() => value !== undefined && (list?.isSelected(value) ?? false));
+const active = computed(() => id !== undefined && list?.activeId.value === id);
 const tabStop = computed(
   () => list !== null && value !== undefined && list.tabStopKey.value === list.keyOf(value),
 );
@@ -68,7 +72,11 @@ const hasAction = (): boolean => mode() === 'link' || mode() === 'button';
 const classes = () => [
   `nui-list-item--size-${size.value}`,
   `nui-list-item--mode-${mode()}`,
-  { 'nui-list-item--selected': selected.value, 'nui-list-item--disabled': disabled },
+  {
+    'nui-list-item--selected': selected.value,
+    'nui-list-item--active': active.value,
+    'nui-list-item--disabled': disabled,
+  },
 ];
 const optionAttrs = (): AttrRecord =>
   isOption()

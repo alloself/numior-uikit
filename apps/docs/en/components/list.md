@@ -1,27 +1,29 @@
 # List
 
-`NuiList` is a semantic `ul`/`ol` (`as`) with the variants `plain`, `divided` and `bordered`
-and `NuiListItem` items: the slots `leading`, `default`, `description`, `trailing` or the
-props `title`, `description`, `icon`. An item with `href`/`to` becomes a link, one with
-`@click` or `interactive` a button. The `items` prop renders the same items from data, and
-an empty array shows the [empty state](/en/components/empty). The `selectable` mode
-(`single` or `multiple`) turns the list into a `role="listbox"` with `v-model`, keyboard
-navigation and typeahead.
+`NuiList` is a semantic `ul`/`ol` (`as`) with the variants `plain`, `divided`, `bordered`
+and `floating` and `NuiListItem` items: the slots `leading`, `default`, `description`,
+`trailing` or the props `label`, `description`, `icon`. An item with `href`/`to` becomes a
+link, one with `@click` or `interactive` a button. The `items` prop renders the same items
+from data, accepts groups `{ label, items }`, and an empty array shows the
+[empty state](/en/components/empty). The `selectable` mode (`single` or `multiple`) turns the
+list into a `role="listbox"` with `v-model`, keyboard navigation and typeahead. The same
+component in its `floating` variant is the dropdown of `NuiSelect`, `NuiCombobox` and
+`NuiTimeField`: the kit has no second option list.
 
 <script setup>
 import { ref } from 'vue'
 const picked = ref(['go'])
 const channel = ref('push')
 const languages = [
-  { title: 'Go', value: 'go' },
-  { title: 'Rust', value: 'rust' },
-  { title: 'Ruby', value: 'ruby', disabled: true },
-  { title: 'Kotlin', value: 'kotlin' },
+  { label: 'Go', value: 'go' },
+  { label: 'Rust', value: 'rust' },
+  { label: 'Ruby', value: 'ruby', disabled: true },
+  { label: 'Kotlin', value: 'kotlin' },
 ]
 const links = [
-  { title: 'Documentation', description: 'Guides and API', href: '#docs', icon: 'file' },
-  { title: 'Repository', href: '#repo', icon: 'external-link' },
-  { title: 'Run checks', description: 'A button inside the list', onClick: () => {} },
+  { label: 'Documentation', description: 'Guides and API', href: '#docs', icon: 'file' },
+  { label: 'Repository', href: '#repo', icon: 'external-link' },
+  { label: 'Run checks', description: 'A button inside the list', onClick: () => {} },
 ]
 </script>
 
@@ -29,9 +31,9 @@ const links = [
   <NuiList variant="divided" :items="links" />
   <NuiList v-model="picked" selectable="multiple" variant="bordered" label="Languages" :items="languages" />
   <NuiList v-model="channel" selectable="single" variant="bordered" label="Channel">
-    <NuiListItem value="email" title="Email" description="Daily digest" icon="inbox" />
-    <NuiListItem value="push" title="Push" description="Instant" />
-    <NuiListItem value="none" title="Do not send" />
+    <NuiListItem value="email" label="Email" description="Daily digest" icon="inbox" />
+    <NuiListItem value="push" label="Push" description="Instant" />
+    <NuiListItem value="none" label="Do not send" />
   </NuiList>
   <NuiList :items="[]" variant="bordered" empty-label="No tasks" />
 </div>
@@ -44,12 +46,12 @@ import '@numior/vue/styles/list.css';
 
 <template>
   <NuiList variant="divided">
-    <NuiListItem title="Documentation" description="Guides and API" href="/docs" icon="file" />
-    <NuiListItem title="Profile" :to="{ name: 'profile' }" :as="RouterLink">
+    <NuiListItem label="Documentation" description="Guides and API" href="/docs" icon="file" />
+    <NuiListItem label="Profile" :to="{ name: 'profile' }" :as="RouterLink">
       <template #leading><NuiAvatar :name="user.name" size="sm" /></template>
       <template #trailing><NuiBadge tone="success" dot label="Online" /></template>
     </NuiListItem>
-    <NuiListItem title="Sign out" @click="logout" />
+    <NuiListItem label="Sign out" @click="logout" />
   </NuiList>
   <NuiList v-model="channel" selectable="single" label="Channel" :items="channels" />
 </template>
@@ -65,7 +67,10 @@ Enter and Space select (toggle in `multiple`), and so does a click. An item with
 inside a selectable list stays a plain `li`, and `href`/`@click` of an item with a `value`
 are ignored: selection and navigation are not meant to mix. Object values are compared
 through `getKey`. A selected item gets the `--nui-primary-soft` background while its title,
-icons and check take `--nui-primary-soft-foreground`.
+icons and check take `--nui-primary-soft-foreground`; the check sits at the inline end so the
+text never shifts. The `select(item)` event fires on every pick of an `items` entry. An owner
+that drives the keyboard itself (select, combobox) passes `keyboard=false`, highlights the
+active item through `activeId` and shows loading through `loading`.
 
 ## Accessibility
 
@@ -76,25 +81,33 @@ selectable list is a `role="listbox"` (`aria-multiselectable` for `multiple`) na
 
 ## API
 
-| Prop         | Type                                 | Default      | Description                                 |
-| ------------ | ------------------------------------ | ------------ | ------------------------------------------- |
-| `as`         | `'ul' \| 'ol'`                       | `'ul'`       | List tag                                    |
-| `variant`    | `'plain' \| 'divided' \| 'bordered'` | `'plain'`    | Dividers and border                         |
-| `size`       | `'sm' \| 'md' \| 'lg'`               | `'md'`       | Row height (control tokens)                 |
-| `items`      | `NuiListEntry<T>[]`                  | —            | Items from data; `[]` shows the empty state |
-| `selectable` | `'single' \| 'multiple'`             | —            | Selection mode                              |
-| `modelValue` | `T \| T[]`                           | —            | Selection (`v-model`)                       |
-| `getKey`     | `(value: T) => string`               | —            | Key of object values                        |
-| `loop`       | `boolean`                            | `true`       | Arrows wrap around                          |
-| `typeahead`  | `boolean`                            | `true`       | Search by first letters                     |
-| `label`      | `string`                             | —            | Name of the list                            |
-| `emptyLabel` | `string`                             | `'No items'` | Title of the empty state                    |
-| `linkAs`     | `string \| Component`                | `'a'`        | Router component for `items` entries        |
+| Prop           | Type                                               | Default      | Description                                                     |
+| -------------- | -------------------------------------------------- | ------------ | --------------------------------------------------------------- |
+| `id`           | `string`                                           | generated    | Root id and the base of item ids                                |
+| `as`           | `'ul' \| 'ol'`                                     | `'ul'`       | List tag                                                        |
+| `variant`      | `'plain' \| 'divided' \| 'bordered' \| 'floating'` | `'plain'`    | Dividers, border or a floating surface                          |
+| `size`         | `'sm' \| 'md' \| 'lg'`                             | `'md'`       | Row height (control tokens)                                     |
+| `items`        | `NuiListSource<E>`                                 | —            | Items and `{ label, items }` groups; `[]` shows the empty state |
+| `selectable`   | `'single' \| 'multiple'`                           | —            | Selection mode                                                  |
+| `modelValue`   | `T \| T[]`                                         | —            | Selection (`v-model`)                                           |
+| `getKey`       | `(value: T) => string`                             | —            | Key of object values                                            |
+| `loop`         | `boolean`                                          | `true`       | Arrows wrap around                                              |
+| `typeahead`    | `boolean`                                          | `true`       | Search by first letters                                         |
+| `keyboard`     | `boolean`                                          | `true`       | `false` lets the owner drive the keyboard                       |
+| `activeId`     | `string`                                           | —            | Id of the virtually focused item                                |
+| `loading`      | `boolean`                                          | `false`      | Loading row instead of the empty state                          |
+| `loadingLabel` | `string`                                           | `'Loading'`  | Loading label                                                   |
+| `label`        | `string`                                           | —            | Name of the list                                                |
+| `labelledBy`   | `string`                                           | —            | Id of an external label                                         |
+| `emptyLabel`   | `string`                                           | `'No items'` | Title of the empty state                                        |
+| `linkAs`       | `string \| Component`                              | `'a'`        | Router component for `items` entries                            |
 
-`NuiListItem`: `value`, `title`, `description`, `icon`, `href`, `to`, `as`, `interactive`,
-`disabled`; slots `leading`, `default`, `description`, `trailing`. List slots: `item`
-(`{ item, selected }`) for `items` entries and `empty`. Blocks `nui-list` (modifiers
-`--variant-*`, `--size-*`, `--selectable`, `--empty`) and `nui-list-item` (`--size-*`,
-`--mode-*`, `--selected`, `--disabled`; elements `__inner`, `__action`, `__leading`, `__body`,
+`NuiListItem`: `value`, `id`, `label`, `description`, `icon`, `href`, `to`, `as`,
+`interactive`, `disabled`; slots `leading`, `default`, `description`, `trailing`. List slots:
+`item` (`{ item, selected, active }`) for `items` entries and `empty`; event `select(item)`.
+Blocks `nui-list` (modifiers `--variant-*`, `--size-*`, `--selectable`, `--empty`; elements
+`__items`, `__group`, `__group-label`, `__group-items`, `__status`, `__spinner`, `__empty`)
+and `nui-list-item` (`--size-*`, `--mode-*`, `--selected`, `--active`, `--disabled`; elements
+`__inner`, `__action`; the row is the shared `nui-row` block with `__leading`, `__body`,
 `__title`, `__description`, `__trailing`, `__check`; variables `--_divider`,
-`--_padding-inline`, `--_min-size`, `--_hover`).
+`--_padding-inline`, `--_padding-block`, `--_gap`, `--_min-size`, `--_hover`).

@@ -103,7 +103,7 @@ const countries: NuiOptionSource<string> = [
   { value: 'dk', label: 'Дания', disabled: true },
   {
     label: 'Азия',
-    options: [
+    items: [
       { value: 'vn', label: 'Вьетнам' },
       { value: 'jp', label: 'Япония' },
     ],

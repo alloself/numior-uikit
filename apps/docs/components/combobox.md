@@ -108,4 +108,4 @@ invoker'ом попапа: закрытие следует за фокусом, 
 `option="{ option, selected, active }"`; `focus()` через ref. Блок `nui-combobox`
 (модификаторы `--size-*`, `--open`, `--multiple`, `--invalid`, `--disabled`; элементы
 `__field`, `__input`, `__chip` (это `NuiChip`), `__clear`, `__toggle`, `__chevron`, `__listbox`)
-поверх общего `nui-listbox`.
+поверх [`NuiList`](/components/list) в варианте `floating`.

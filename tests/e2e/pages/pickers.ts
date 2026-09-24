@@ -63,7 +63,7 @@ export class PickersSection {
   }
 
   get listbox(): Locator {
-    return this.page.getByRole('listbox').and(this.page.locator('.nui-listbox'));
+    return this.page.getByRole('listbox').and(this.page.locator('.nui-list--variant-floating'));
   }
 
   get emptyState(): Locator {
@@ -83,7 +83,7 @@ export class PickersSection {
   }
 
   get loadingStatus(): Locator {
-    return this.listbox.locator('.nui-listbox__status');
+    return this.listbox.locator('.nui-list__status');
   }
 
   pageButton(page: number): Locator {

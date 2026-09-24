@@ -141,8 +141,8 @@ const scenarios: Scenario[] = [
     render: () =>
       h(NuiList, {
         items: [
-          { title: 'Docs', href: '/docs', description: 'Guides' },
-          { title: 'Plain', icon: 'check' },
+          { label: 'Docs', href: '/docs', description: 'Guides' },
+          { label: 'Plain', icon: 'check' },
         ],
         variant: 'divided',
       }),
@@ -510,7 +510,7 @@ describe('server rendering', () => {
     const select = await renderMarkup(() =>
       h(NuiSelect, { options: [], emptyLabel: 'No options' }),
     );
-    expect(select).toContain('nui-listbox__empty');
+    expect(select).toContain('nui-list__empty');
     expect(select).toContain('No options');
   });
 
@@ -534,8 +534,8 @@ describe('server rendering', () => {
 
   it('renders a selectable list with one selected option and one tab stop', async () => {
     const items = [
-      { title: 'Go', value: 'go' },
-      { title: 'Rust', value: 'rust' },
+      { label: 'Go', value: 'go' },
+      { label: 'Rust', value: 'rust' },
     ];
     const html = await renderMarkup(() =>
       h(NuiList, { items, selectable: 'single', modelValue: 'rust', label: 'Languages' }),
@@ -545,7 +545,7 @@ describe('server rendering', () => {
     expect(html.match(/tabindex="0"/g)).toHaveLength(1);
     expect(html).toContain('aria-label="Languages"');
     const links = await renderMarkup(() =>
-      h(NuiList, { items: [{ title: 'Docs', href: '/docs' }] }),
+      h(NuiList, { items: [{ label: 'Docs', href: '/docs' }] }),
     );
     expect(links).toContain('href="/docs"');
     expect(links).not.toContain('role="listbox"');

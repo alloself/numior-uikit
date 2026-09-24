@@ -3,10 +3,10 @@ import type { NuiListEntry } from '../src';
 import { ListDriver } from './drivers/list';
 
 const LANGUAGES: readonly NuiListEntry<string>[] = [
-  { title: 'Go', value: 'go', description: 'Compiled' },
-  { title: 'Rust', value: 'rust' },
-  { title: 'Ruby', value: 'ruby', disabled: true },
-  { title: 'Котлин', value: 'kotlin' },
+  { label: 'Go', value: 'go', description: 'Compiled' },
+  { label: 'Rust', value: 'rust' },
+  { label: 'Ruby', value: 'ruby', disabled: true },
+  { label: 'Котлин', value: 'kotlin' },
 ];
 
 describe('NuiList', () => {
@@ -16,8 +16,8 @@ describe('NuiList', () => {
   it('renders a plain semantic list from parts with leading, description and trailing content', () => {
     const list = ListDriver.mount({
       parts: [
-        { title: 'Alpha', description: 'First', leading: 'A' },
-        { title: 'Beta', icon: 'check', trailing: 'New' },
+        { label: 'Alpha', description: 'First', leading: 'A' },
+        { label: 'Beta', icon: 'check', trailing: 'New' },
       ],
     });
     expect(list.tag).toBe('ul');
@@ -34,7 +34,7 @@ describe('NuiList', () => {
     list.unmount();
     const ordered = ListDriver.mount({
       props: { as: 'ol', variant: 'bordered', size: 'sm' },
-      parts: [{ title: 'One' }],
+      parts: [{ label: 'One' }],
     });
     expect(ordered.tag).toBe('ol');
     expect(ordered.hasModifier('variant-bordered')).toBe(true);
@@ -45,10 +45,10 @@ describe('NuiList', () => {
   it('turns parts with a destination or a click handler into links and buttons', async () => {
     const list = ListDriver.mount({
       parts: [
-        { title: 'Docs', href: '/docs' },
-        { title: 'Run', clickable: true },
-        { title: 'Off', href: '/off', disabled: true },
-        { title: 'Stop', clickable: true, disabled: true },
+        { label: 'Docs', href: '/docs' },
+        { label: 'Run', clickable: true },
+        { label: 'Off', href: '/off', disabled: true },
+        { label: 'Stop', clickable: true, disabled: true },
       ],
     });
     expect(list.innerTag('Docs')).toBe('a');
@@ -63,7 +63,7 @@ describe('NuiList', () => {
     expect(list.inner('Stop').attributes('disabled')).toBeDefined();
     expect(list.modifierOf('Stop', 'disabled')).toBe(true);
     list.unmount();
-    const routed = ListDriver.mount({ parts: [{ title: 'Guide', to: '/guide' }], viaRouter: true });
+    const routed = ListDriver.mount({ parts: [{ label: 'Guide', to: '/guide' }], viaRouter: true });
     expect(routed.inner('Guide').attributes('href')).toBe('/router/guide');
     routed.unmount();
   });
@@ -73,17 +73,17 @@ describe('NuiList', () => {
     const list = ListDriver.mount({
       props: {
         items: [
-          { title: 'Docs', href: '/docs' },
+          { label: 'Docs', href: '/docs' },
           {
-            title: 'Run',
+            label: 'Run',
             onClick: () => {
               runs += 1;
             },
           },
-          { title: 'Plain' },
+          { label: 'Plain' },
         ],
       },
-      itemSlot: ({ item }) => `${item.title}!`,
+      itemSlot: ({ item }) => `${item.label}!`,
     });
     expect(list.titles).toEqual(['Docs!', 'Run!', 'Plain!']);
     expect(list.innerTag('Docs!')).toBe('a');
@@ -94,7 +94,7 @@ describe('NuiList', () => {
     await list.receiveItems([]);
     expect(list.hasModifier('empty')).toBe(true);
     expect(list.emptyText).toBe('No items');
-    await list.receiveItems([{ title: 'Back' }]);
+    await list.receiveItems([{ label: 'Back' }]);
     expect(list.titles).toEqual(['Back!']);
     list.unmount();
     const labelled = ListDriver.mount({ props: { items: [], emptyLabel: 'Пусто' } });
@@ -108,8 +108,8 @@ describe('NuiList', () => {
       modelValue: 'rust',
     });
     expect(list.role).toBe('listbox');
-    expect(list.root.attributes('aria-label')).toBe('Languages');
-    expect(list.root.attributes('aria-multiselectable')).toBeUndefined();
+    expect(list.listAttr('aria-label')).toBe('Languages');
+    expect(list.listAttr('aria-multiselectable')).toBeUndefined();
     expect(list.hasModifier('selectable')).toBe(true);
     expect(list.selectedTitles).toEqual(['Rust']);
     expect(list.tabIndexes).toEqual([-1, 0, -1, -1]);
@@ -143,7 +143,7 @@ describe('NuiList', () => {
       props: { items: LANGUAGES, selectable: 'multiple' },
       modelValue: ['rust'],
     });
-    expect(list.root.attributes('aria-multiselectable')).toBe('true');
+    expect(list.listAttr('aria-multiselectable')).toBe('true');
     await list.click('Go');
     expect(list.value).toEqual(['rust', 'go']);
     expect(list.selectedTitles).toEqual(['Go', 'Rust']);
@@ -161,7 +161,7 @@ describe('NuiList', () => {
   it('keeps option semantics over links inside a selectable list and leaves value-less parts plain', () => {
     const list = ListDriver.mount({
       props: { selectable: 'single' },
-      parts: [{ title: 'Docs', value: 'docs', href: '/docs' }, { title: 'Heading' }],
+      parts: [{ label: 'Docs', value: 'docs', href: '/docs' }, { label: 'Heading' }],
     });
     expect(list.item('Docs').attributes('role')).toBe('option');
     expect(list.innerTag('Docs')).toBe('div');

@@ -99,9 +99,9 @@
         label="Канал"
         data-testid="data-list-single"
       >
-        <NuiListItem value="email" title="Почта" description="Ежедневный дайджест" icon="inbox" />
-        <NuiListItem value="push" title="Push" description="Мгновенно" />
-        <NuiListItem value="none" title="Не присылать" />
+        <NuiListItem value="email" label="Почта" description="Ежедневный дайджест" icon="inbox" />
+        <NuiListItem value="push" label="Push" description="Мгновенно" />
+        <NuiListItem value="none" label="Не присылать" />
       </NuiList>
       <div class="data-stack">
         <NuiButton
@@ -173,10 +173,10 @@ const team: NuiAvatarItem[] = [
 
 const runs = ref(0);
 const linkItems: NuiListEntry<string>[] = [
-  { title: 'Документация', description: 'Руководства и API', href: '#docs', icon: 'file' },
-  { title: 'Репозиторий', href: '#repo', icon: 'external-link' },
+  { label: 'Документация', description: 'Руководства и API', href: '#docs', icon: 'file' },
+  { label: 'Репозиторий', href: '#repo', icon: 'external-link' },
   {
-    title: 'Запустить проверку',
+    label: 'Запустить проверку',
     description: 'Кнопка внутри списка',
     onClick: () => {
       runs.value += 1;
@@ -184,14 +184,14 @@ const linkItems: NuiListEntry<string>[] = [
   },
 ];
 const languageItems: NuiListEntry<string>[] = [
-  { title: 'Go', value: 'go' },
-  { title: 'Rust', value: 'rust' },
-  { title: 'Ruby', value: 'ruby', disabled: true },
-  { title: 'Котлин', value: 'kotlin' },
+  { label: 'Go', value: 'go' },
+  { label: 'Rust', value: 'rust' },
+  { label: 'Ruby', value: 'ruby', disabled: true },
+  { label: 'Котлин', value: 'kotlin' },
 ];
 const tasks: NuiListEntry<string>[] = [
-  { title: 'Проверить макеты', description: 'Сегодня' },
-  { title: 'Ответить дизайнеру', description: 'Завтра' },
+  { label: 'Проверить макеты', description: 'Сегодня' },
+  { label: 'Ответить дизайнеру', description: 'Завтра' },
 ];
 
 const picked = ref<string[]>([]);

@@ -66,7 +66,7 @@ export class SelectDriver extends ComponentDriver {
   }
 
   get listbox(): DOMWrapper<HTMLElement> {
-    return this.wrapper.find<HTMLElement>('[role="listbox"]');
+    return this.wrapper.find<HTMLElement>('.nui-select__listbox');
   }
 
   get expanded(): boolean {
@@ -107,7 +107,7 @@ export class SelectDriver extends ComponentDriver {
   }
 
   get groupLabels(): string[] {
-    return this.wrapper.findAll('.nui-listbox__group-label').map((label) => label.text());
+    return this.wrapper.findAll('.nui-list__group-label').map((label) => label.text());
   }
 
   get hiddenValues(): string[] {
@@ -117,7 +117,7 @@ export class SelectDriver extends ComponentDriver {
   }
 
   get emptyText(): string {
-    const empty = this.wrapper.find('.nui-listbox__empty');
+    const empty = this.wrapper.find('.nui-list__empty');
     return empty.exists() ? empty.text() : '';
   }
 

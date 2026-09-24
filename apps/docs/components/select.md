@@ -14,7 +14,7 @@ const countries = [
   { value: 'at', label: 'Австрия' },
   { value: 'de', label: 'Германия', description: 'Берлин' },
   { value: 'dk', label: 'Дания', disabled: true },
-  { label: 'Азия', options: [{ value: 'vn', label: 'Вьетнам' }, { value: 'jp', label: 'Япония' }] },
+  { label: 'Азия', items: [{ value: 'vn', label: 'Вьетнам' }, { value: 'jp', label: 'Япония' }] },
 ]
 const tagOptions = [
   { value: 'frontend', label: 'Фронтенд' },
@@ -41,7 +41,7 @@ const country = ref<string>();
 const countries: NuiOptionSource<string> = [
   { value: 'at', label: 'Австрия' },
   { value: 'de', label: 'Германия', description: 'Берлин' },
-  { label: 'Азия', options: [{ value: 'vn', label: 'Вьетнам' }] },
+  { label: 'Азия', items: [{ value: 'vn', label: 'Вьетнам' }] },
 ];
 </script>
 
@@ -92,6 +92,6 @@ const countries: NuiOptionSource<string> = [
 Плюс `id`, `size`, `disabled`, `required`, `invalid` как у остальных контролов поля. Слоты
 `value="{ selected }"` и `option="{ option, selected, active }"`. Блок `nui-select`
 (модификаторы `--size-*`, `--open`, `--empty`, `--clearable`, `--invalid`, `--disabled`;
-элементы `__trigger`, `__value`, `__chevron`, `__clear`, `__listbox`) и общий список
-`nui-listbox` (`--floating`; элементы `__group`, `__group-label`, `__option` с `--active`,
-`--selected`, `--disabled`, `__check`, `__icon`, `__body`, `__label`, `__description`, `__status`).
+элементы `__trigger`, `__value`, `__chevron`, `__clear`, `__listbox`). Выпадающий список — это
+[`NuiList`](/components/list) в варианте `floating`: те же группы, пункты `nui-list-item` с
+`--active`, `--selected`, `--disabled` и состояния `__status`/`__empty`.

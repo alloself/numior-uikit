@@ -40,24 +40,29 @@
     >
       <NuiIcon alias="x" />
     </NuiButton>
-    <NuiListbox
+    <NuiList
       :ref="setListbox"
-      class="nui-select__listbox nui-listbox--floating"
+      v-model="model"
+      class="nui-select__listbox"
+      variant="floating"
       :style="floatingStyles"
-      :options="options"
-      :selected-keys="selectedKeys"
-      :key-of="keyOf"
-      :multiple="multiple"
+      :items="options"
+      :selectable="multiple ? 'multiple' : 'single'"
+      :get-key="getKey"
+      :keyboard="false"
+      :active-id="navigation.activeId.value"
       :empty-label="emptyLabel"
       v-bind="control.contentAttrs.value"
-      @select="choose"
+      @select="onSelect"
       @keydown="onListboxKeydown"
       @pointermove="activateHovered"
       @focusin="onFocusin"
       @focusout="onFocusout"
     >
-      <template #option="slot"><slot name="option" v-bind="slot" /></template>
-    </NuiListbox>
+      <template #item="slot">
+        <slot name="option" :option="slot.item" :selected="slot.selected" :active="slot.active" />
+      </template>
+    </NuiList>
     <template v-if="name">
       <input
         v-for="value in selectedValues"
@@ -75,9 +80,8 @@ import { computed, onMounted, ref, useTemplateRef, watch } from 'vue';
 import { useField, useFieldControl, useSplitAttrs } from '@numior/primitives';
 import NuiButton from '../button/NuiButton.vue';
 import NuiIcon from '../icon/NuiIcon.vue';
-import NuiListbox from '../listbox/NuiListbox.vue';
-import { optionIndexOf } from '../listbox/listbox.types';
-import type { NuiOption } from '../shared/options';
+import NuiList from '../list/NuiList.vue';
+import { optionIndexOf, type NuiOption } from '../shared/options';
 import { useListboxSurface } from '../shared/use-listbox-surface';
 import { useOptionSelection } from '../shared/use-option-selection';
 import type { NuiSelectProps } from './select.types';
@@ -116,9 +120,7 @@ const {
   keyOf,
   flat,
   selectedValues,
-  selectedKeys,
   selectedOptions,
-  toggle,
   clear: clearSelection,
 } = useOptionSelection<T>({
   options: () => options,
@@ -155,18 +157,7 @@ const state = { pending: 'selected', inside: false };
 
 const optionOf = (element: HTMLElement | null): NuiOption<T> | undefined =>
   element ? flat.value[optionIndexOf(element)] : undefined;
-const commit = (option: NuiOption<T>): void => {
-  if (multiple) {
-    toggle(option);
-  } else {
-    model.value = option.value;
-  }
-};
-const choose = (option: NuiOption<T>): void => {
-  if (option.disabled) {
-    return;
-  }
-  commit(option);
+const onSelect = (): void => {
   if (!multiple) {
     control.hide();
   }
@@ -213,7 +204,7 @@ const pickByTypeahead = (event: KeyboardEvent): void => {
   if (match && !match.disabled) {
     event.preventDefault();
     navigation.setActive(element, { focus: false });
-    commit(match);
+    model.value = match.value;
   }
 };
 const onTriggerKeydown = (event: KeyboardEvent): void => {
@@ -241,11 +232,10 @@ const onListboxKeydown = (event: KeyboardEvent): void => {
     return;
   }
   event.preventDefault();
-  const active = optionOf(navigation.activeElement());
   if (event.key === 'Enter' && multiple) {
     control.hide();
-  } else if (active) {
-    choose(active);
+  } else {
+    navigation.activeElement()?.click();
   }
 };
 const onFocusin = (event: FocusEvent): void => {
