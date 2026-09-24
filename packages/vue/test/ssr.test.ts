@@ -46,7 +46,7 @@ import {
   type NuiTooltipTriggerSlot,
 } from '../src';
 import { labelTarget, popoverTarget, renderMarkup } from './support/ssr';
-import { COLUMNS, manyPeople, PEOPLE } from './support/rows';
+import { childrenOf, COLUMNS, manyPeople, PEOPLE, TEAM } from './support/rows';
 import { FILES, manyNodes } from './support/tree-items';
 
 interface Scenario {
@@ -561,6 +561,22 @@ describe('server rendering', () => {
     expect(pinned).toContain('role="separator"');
     expect(pinned).toContain('aria-valuenow="120"');
     expect(pinned).toContain('aria-label="Reorder Имя"');
+    const tree = await renderMarkup(() =>
+      h(NuiTable, {
+        columns: COLUMNS,
+        rows: TEAM,
+        getChildren: childrenOf,
+        expanded: TEAM.slice(0, 1),
+        pinnedRows: PEOPLE.slice(5, 6),
+        rowDrag: true,
+      }),
+    );
+    expect(tree).toContain('aria-expanded="true"');
+    expect(tree).toContain('nui-table__toggle--leaf');
+    expect(tree).toContain('--_level:1');
+    expect(tree).toContain('nui-table__body--pinned');
+    expect(tree).toContain('aria-label="Reorder row"');
+    expect(tree.indexOf('Егор')).toBeLessThan(tree.indexOf('Анна'));
   });
 
   it('renders lazy default icons on the server', async () => {

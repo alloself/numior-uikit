@@ -1,55 +1,102 @@
 <template>
   <tr
     class="nui-table__row"
-    :class="{ 'nui-table__row--selected': selected }"
+    :class="{ 'nui-table__row--selected': selected, 'nui-table__row--dragging': dragging }"
     :aria-selected="selectable ? selected : undefined"
     :aria-rowindex="rowIndex"
     @click="onClick"
   >
     <td
-      v-if="selectable"
-      class="nui-table__cell nui-table__cell--select"
+      v-if="options.rowDrag"
+      class="nui-table__cell nui-table__cell--drag"
       :class="layout.utilityClass(0)"
       :style="layout.utilityStyle(0)"
+    >
+      <button
+        type="button"
+        class="nui-table__grip"
+        :aria-label="options.dragLabel(view.row)"
+        :disabled="options.dragDisabled"
+        @pointerdown="emit('dragStart', $event)"
+        @keydown="emit('dragKeydown', $event)"
+      >
+        <NuiIcon alias="grip" />
+      </button>
+    </td>
+    <td
+      v-if="selectable"
+      class="nui-table__cell nui-table__cell--select"
+      :class="layout.utilityClass(selectPosition)"
+      :style="layout.utilityStyle(selectPosition)"
     >
       <NuiCheckbox
         size="sm"
         :model-value="selected"
-        :aria-label="selectLabel"
+        :aria-label="options.selectLabel"
         @update:model-value="emit('toggle')"
       />
     </td>
     <td
-      v-for="column in columns"
+      v-for="(column, position) in columns"
       :key="column.key"
       class="nui-table__cell"
-      :class="[alignClass(column), ...layout.cellClass(column)]"
-      :style="layout.cellStyle(column)"
+      :class="[
+        alignClass(column),
+        ...layout.cellClass(column),
+        { 'nui-table__cell--tree': options.tree && position === 0 },
+      ]"
+      :style="cellStyle(column, position)"
     >
+      <NuiTableToggle
+        v-if="options.tree && position === 0"
+        :view="view"
+        :label="options.expandLabel(view.row)"
+        @expand="emit('expand')"
+      />
       <slot
         :name="`cell-${column.key}`"
-        :row="row"
-        :value="cellValue(row, column)"
+        :row="view.row"
+        :value="cellValue(view.row, column)"
         :column="column"
         :index="index"
       >
-        {{ cellText(cellValue(row, column)) }}
+        {{ cellText(cellValue(view.row, column)) }}
       </slot>
     </td>
   </tr>
 </template>
 
 <script setup lang="ts" generic="T">
+import { computed } from 'vue';
 import NuiCheckbox from '../checkbox/NuiCheckbox.vue';
+import NuiIcon from '../icon/NuiIcon.vue';
+import NuiTableToggle from './NuiTableToggle.vue';
 import { alignClass, cellText, cellValue } from './cells';
-import type { NuiTableRowProps } from './table.types';
+import type { NuiTableCellStyle, NuiTableColumn, NuiTableRowProps } from './table.types';
 
-const { row, index, rowIndex, columns, layout, selectable, selected, selectLabel } =
+const { view, index, rowIndex, columns, layout, options, selectable, selected, dragging } =
   defineProps<NuiTableRowProps<T>>();
-const emit = defineEmits<{ toggle: []; rowClick: [event: MouseEvent] }>();
+const emit = defineEmits<{
+  toggle: [];
+  rowClick: [event: MouseEvent];
+  expand: [];
+  dragStart: [event: PointerEvent];
+  dragKeydown: [event: KeyboardEvent];
+}>();
 
+const selectPosition = computed(() => (options.rowDrag ? 1 : 0));
+const cellStyle = (column: NuiTableColumn<T>, position: number): NuiTableCellStyle => {
+  const sticky = layout.cellStyle(column);
+  if (!options.tree || position !== 0) {
+    return sticky;
+  }
+  return { ...sticky, '--_level': String(view.level) };
+};
 const onClick = (event: MouseEvent): void => {
-  if (event.target instanceof Element && event.target.closest('.nui-table__cell--select')) {
+  if (
+    event.target instanceof Element &&
+    event.target.closest('.nui-table__cell--select, .nui-table__cell--drag, .nui-table__toggle')
+  ) {
     return;
   }
   emit('rowClick', event);

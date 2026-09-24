@@ -149,14 +149,19 @@ export { default as NuiTable } from './table/NuiTable.vue';
 export type {
   NuiSortDirection,
   NuiTableAlign,
+  NuiTableAnnouncement,
+  NuiTableAnnouncePhase,
   NuiTableCellSlot,
   NuiTableColumn,
   NuiTableHeaderSlot,
   NuiTablePagination,
   NuiTableProps,
+  NuiTableReorderEvent,
   NuiTableSelection,
   NuiTableSort,
+  NuiTableSticky,
 } from './table/table.types';
+export type { NuiTableRowView } from './table/rows';
 export { default as NuiChip } from './chip/NuiChip.vue';
 export type { NuiChipProps, NuiChipSize, NuiChipVariant } from './chip/chip.types';
 export { default as NuiCombobox } from './combobox/NuiCombobox.vue';

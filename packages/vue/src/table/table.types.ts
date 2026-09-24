@@ -2,6 +2,7 @@ import type { NuiPaginationProps } from '../pagination/pagination.types';
 import type { NuiOptionKey } from '../shared/options';
 import type { NuiSize } from '../shared/types';
 import type { CheckState } from '../tree/cascade';
+import type { NuiTableRowView } from './rows';
 
 export type NuiTableAlign = 'start' | 'center' | 'end';
 export type NuiSortDirection = 'asc' | 'desc';
@@ -56,10 +57,22 @@ export interface NuiTableHeadActions<T> {
   headClick(event: MouseEvent): void;
 }
 
+export interface NuiTableReorderEvent<T> {
+  readonly row: T;
+  readonly from: number;
+  readonly to: number;
+  readonly parent: T | undefined;
+}
+
 export interface NuiTableProps<T> {
   columns: readonly NuiTableColumn<T>[];
   rows: readonly T[];
   getKey?: NuiOptionKey<T> | undefined;
+  getChildren?: ((row: T) => readonly T[] | undefined) | undefined;
+  isExpandable?: ((row: T) => boolean) | undefined;
+  pinnedRows?: readonly T[] | undefined;
+  rowDrag?: boolean | undefined;
+  indent?: number | undefined;
   selectable?: NuiTableSelection | undefined;
   pagination?: NuiTablePagination | boolean | undefined;
   remote?: boolean | undefined;
@@ -79,6 +92,9 @@ export interface NuiTableProps<T> {
   selectAllLabel?: string | undefined;
   resizeLabel?: ((column: NuiTableColumn<T>) => string) | undefined;
   reorderLabel?: ((column: NuiTableColumn<T>) => string) | undefined;
+  expandLabel?: ((row: T) => string) | undefined;
+  dragLabel?: ((row: T) => string) | undefined;
+  rowLabel?: ((row: T) => string) | undefined;
   announce?: ((announcement: NuiTableAnnouncement) => string) | undefined;
 }
 
@@ -102,6 +118,7 @@ export interface NuiTableSpacers {
 export interface NuiTableHeadProps<T> {
   columns: readonly NuiTableColumn<T>[];
   sort: NuiTableSort;
+  rowDrag: boolean;
   selectable: NuiTableSelection | undefined;
   selectionState: CheckState;
   selectionDisabled: boolean;
@@ -126,19 +143,29 @@ export interface NuiTableHeadCellProps<T> {
   reorderLabel: (column: NuiTableColumn<T>) => string;
 }
 
+export interface NuiTableRowOptions<T> {
+  readonly tree: boolean;
+  readonly rowDrag: boolean;
+  readonly dragDisabled: boolean;
+  readonly selectLabel: string;
+  readonly expandLabel: (row: T) => string;
+  readonly dragLabel: (row: T) => string;
+}
+
 export interface NuiTableBodyProps<T> {
   columns: readonly NuiTableColumn<T>[];
-  rows: readonly T[];
-  keyOf: NuiOptionKey<T>;
+  rows: readonly NuiTableRowView<T>[];
   layout: NuiTableCellLayout<T>;
+  options: NuiTableRowOptions<T>;
   selectable: NuiTableSelection | undefined;
   selectedKeys: ReadonlySet<string>;
   loading: boolean;
   loadingRows: number;
   emptyLabel: string;
-  selectLabel: string;
   firstIndex: number;
   spacers: NuiTableSpacers | undefined;
+  dragging: number;
+  pinned: boolean;
 }
 
 export interface NuiTableStatusProps<T> {
@@ -146,17 +173,17 @@ export interface NuiTableStatusProps<T> {
   loading: boolean;
   loadingRows: number;
   columns: readonly NuiTableColumn<T>[];
-  selectable: NuiTableSelection | undefined;
   emptyLabel: string;
 }
 
 export interface NuiTableRowProps<T> {
-  row: T;
+  view: NuiTableRowView<T>;
   index: number;
   rowIndex: number | undefined;
   columns: readonly NuiTableColumn<T>[];
   layout: NuiTableCellLayout<T>;
+  options: NuiTableRowOptions<T>;
   selectable: NuiTableSelection | undefined;
   selected: boolean;
-  selectLabel: string;
+  dragging: boolean;
 }

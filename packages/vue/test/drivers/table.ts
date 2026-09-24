@@ -16,8 +16,21 @@ export interface TableMountOptions {
   readonly pageSize?: number;
   readonly columnOrder?: readonly string[];
   readonly widths?: Record<string, number>;
+  readonly expanded?: readonly Person[];
   readonly slots?: Record<string, (context: Record<string, unknown>) => unknown>;
 }
+
+const isReorderEvent = (
+  value: unknown,
+): value is { row: Person; from: number; to: number; parent: Person | undefined } =>
+  typeof value === 'object' &&
+  value !== null &&
+  'row' in value &&
+  isPerson(value.row) &&
+  'from' in value &&
+  typeof value.from === 'number' &&
+  'to' in value &&
+  typeof value.to === 'number';
 
 interface Box {
   readonly left: number;
@@ -52,15 +65,17 @@ const defineRect = (element: HTMLElement, box: Box): void => {
   });
 };
 
-const pointer = (type: string, clientX: number, pointerId = 7): PointerEvent =>
+const pointerAt = (type: string, clientX: number, clientY: number): PointerEvent =>
   new PointerEvent(type, {
     bubbles: true,
     cancelable: true,
-    pointerId,
+    pointerId: 7,
     button: 0,
     clientX,
-    clientY: 0,
+    clientY,
   });
+
+const pointer = (type: string, clientX: number): PointerEvent => pointerAt(type, clientX, 0);
 
 const isSort = (value: unknown): value is NuiTableSort =>
   value === null ||
@@ -86,6 +101,7 @@ export class TableDriver extends ComponentDriver {
     pageSize = 20,
     columnOrder = [],
     widths = {},
+    expanded = [],
     slots = {},
   }: TableMountOptions = {}) {
     const stubs = new TopLayerStubs();
@@ -95,9 +111,12 @@ export class TableDriver extends ComponentDriver {
     const pageSizeRef = ref(pageSize);
     const orderRef = ref<string[]>([...columnOrder]);
     const widthsRef = ref<Record<string, number>>({ ...widths });
+    const expandedRef = ref<Person[]>([...expanded]);
     const propsRef = ref(props);
     const rowsRef = ref<readonly Person[]>(rows);
     const clicks: string[] = [];
+    const reorders: string[] = [];
+    const loads: string[] = [];
     const Host = defineComponent({
       setup: () => () =>
         h(
@@ -105,6 +124,7 @@ export class TableDriver extends ComponentDriver {
           {
             columns,
             rows: rowsRef.value,
+            getKey: (row: unknown) => (isPerson(row) ? String(row.id) : String(row)),
             ...propsRef.value,
             sort: sortRef.value,
             selected: selectedRef.value,
@@ -112,6 +132,24 @@ export class TableDriver extends ComponentDriver {
             pageSize: pageSizeRef.value,
             columnOrder: orderRef.value,
             widths: widthsRef.value,
+            expanded: expandedRef.value,
+            'onUpdate:expanded': (value: unknown) => {
+              if (isPeople(value)) {
+                expandedRef.value = value;
+              }
+            },
+            onReorder: (event: unknown) => {
+              if (isReorderEvent(event)) {
+                reorders.push(
+                  `${event.row.name}:${event.from}->${event.to}@${event.parent?.name ?? 'root'}`,
+                );
+              }
+            },
+            onLoad: (row: unknown) => {
+              if (isPerson(row)) {
+                loads.push(row.name);
+              }
+            },
             'onUpdate:columnOrder': (value: unknown) => {
               if (isStringList(value)) {
                 orderRef.value = value;
@@ -161,10 +199,13 @@ export class TableDriver extends ComponentDriver {
         pageSize: pageSizeRef,
         order: orderRef,
         widths: widthsRef,
+        expanded: expandedRef,
       },
       propsRef,
       rowsRef,
       clicks,
+      reorders,
+      loads,
     );
   }
 
@@ -178,10 +219,13 @@ export class TableDriver extends ComponentDriver {
       readonly pageSize: Ref<number>;
       readonly order: Ref<string[]>;
       readonly widths: Ref<Record<string, number>>;
+      readonly expanded: Ref<Person[]>;
     },
     private readonly propsRef: Ref<TableMountOptions['props']>,
     private readonly rowsRef: Ref<readonly Person[]>,
     readonly clicks: string[],
+    readonly reorders: string[],
+    readonly loads: string[],
   ) {
     super(wrapper);
   }
@@ -218,8 +262,70 @@ export class TableDriver extends ComponentDriver {
 
   private get bodyRows(): DOMWrapper<HTMLElement>[] {
     return this.wrapper.findAll<HTMLElement>(
-      'tbody .nui-table__row:not(.nui-table__row--status):not(.nui-table__row--loading)',
+      'tbody:not(.nui-table__body--pinned) .nui-table__row:not(.nui-table__row--status):not(.nui-table__row--loading)',
     );
+  }
+
+  get pinnedNames(): string[] {
+    const index = this.columnIndex('Имя');
+    return this.wrapper
+      .findAll('.nui-table__body--pinned .nui-table__row')
+      .map((row) => row.findAll('td')[index]?.text() ?? '');
+  }
+
+  get expandedNames(): string[] {
+    return this.models.expanded.value.map((person) => person.name);
+  }
+
+  levelOf(name: string): string | undefined {
+    const style = this.row(name).find('.nui-table__cell--tree').attributes('style') ?? '';
+    return /--_level: (\d+)/.exec(style)?.[1];
+  }
+
+  toggleOf(name: string): DOMWrapper<Element> {
+    return this.row(name).find('button.nui-table__toggle');
+  }
+
+  toggleBusy(name: string): boolean {
+    return this.toggleOf(name).attributes('aria-busy') === 'true';
+  }
+
+  rowGrip(name: string): DOMWrapper<Element> {
+    return this.row(name).find('.nui-table__cell--drag .nui-table__grip');
+  }
+
+  layoutRows(height: number): void {
+    const body = this.wrapper.find<HTMLElement>('tbody:not(.nui-table__body--pinned)');
+    defineRect(body.element, {
+      left: 0,
+      top: 0,
+      width: 400,
+      height: height * this.bodyRows.length,
+    });
+    this.bodyRows.forEach((row, index) => {
+      defineRect(row.element, { left: 0, top: index * height, width: 400, height });
+    });
+    defineRect(this.scroller.element, { left: 0, top: 0, width: 400, height: 400 });
+  }
+
+  async clickToggle(name: string): Promise<void> {
+    await this.toggleOf(name).trigger('click');
+    await nextTick();
+  }
+
+  async pressRowGrip(name: string, key: string): Promise<void> {
+    await this.rowGrip(name).trigger('keydown', { key });
+    await nextTick();
+  }
+
+  async dragRow(name: string, from: number, to: number): Promise<void> {
+    this.rowGrip(name).element.dispatchEvent(pointerAt('pointerdown', 0, from));
+    await nextTick();
+    window.dispatchEvent(pointerAt('pointermove', 0, from + Math.sign(to - from) * 3));
+    window.dispatchEvent(pointerAt('pointermove', 0, to));
+    await nextTick();
+    window.dispatchEvent(pointerAt('pointerup', 0, to));
+    await nextTick();
   }
 
   private columnIndex(label: string): number {

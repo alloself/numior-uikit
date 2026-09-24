@@ -83,9 +83,91 @@
 .nui-table__cell--align-end {
   text-align: end;
 }
-.nui-table__cell--select {
+.nui-table__cell--select,
+.nui-table__cell--drag {
   inline-size: var(--_util);
   padding-inline-end: 0;
+}
+.nui-table__cell--drag {
+  padding-inline-start: var(--nui-space-2);
+}
+.nui-table__cell--drag .nui-table__grip {
+  margin: 0;
+  cursor: grab;
+}
+.nui-table__grip:disabled {
+  color: var(--nui-text-subtle);
+  opacity: var(--nui-disabled-opacity);
+  cursor: not-allowed;
+}
+.nui-table__row--dragging {
+  opacity: 0.5;
+}
+.nui-table__body--pinned .nui-table__cell {
+  background: var(--_stripe);
+  border-block-end: 1px solid var(--nui-border-strong);
+}
+.nui-table--sticky-header .nui-table__body--pinned .nui-table__cell {
+  position: sticky;
+  inset-block-start: var(--_head-size, 0px);
+  z-index: 1;
+}
+.nui-table__cell--tree {
+  padding-inline-start: calc(var(--_pad-x) + var(--_level, 0) * var(--_indent, 20px));
+}
+.nui-table__toggle {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  inline-size: 1.25rem;
+  block-size: 1.25rem;
+  margin-inline-end: var(--nui-space-1);
+  padding: 0;
+  border: 0;
+  border-radius: var(--nui-radius-sm);
+  background: none;
+  color: var(--nui-text-muted);
+  vertical-align: middle;
+  cursor: pointer;
+  transition:
+    background-color var(--nui-duration-fast) var(--nui-easing),
+    color var(--nui-duration-fast) var(--nui-easing);
+}
+.nui-table__toggle:hover {
+  background: var(--nui-neutral-soft);
+  color: var(--nui-text);
+}
+.nui-table__toggle:focus-visible {
+  outline: var(--nui-focus-ring-width) solid var(--nui-focus);
+  outline-offset: 0;
+}
+.nui-table__toggle--leaf {
+  visibility: hidden;
+}
+.nui-table__toggle-icon {
+  inline-size: 1rem;
+  block-size: 1rem;
+  transition: rotate var(--nui-duration-normal) var(--nui-easing);
+}
+.nui-table__toggle:dir(rtl) .nui-table__toggle-icon {
+  scale: -1 1;
+}
+.nui-table__toggle--expanded .nui-table__toggle-icon {
+  rotate: 90deg;
+}
+.nui-table__toggle--loading .nui-table__toggle-icon {
+  animation: nui-table-spin 0.8s linear infinite;
+}
+@keyframes nui-table-spin {
+  to {
+    rotate: 1turn;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .nui-table__toggle--loading .nui-table__toggle-icon {
+    animation-duration: 1.6s;
+  }
 }
 .nui-table__cell--status {
   padding: 0;
@@ -220,6 +302,11 @@
   inset-block: 0;
   inline-size: 2px;
   margin-inline-start: -1px;
+}
+.nui-table__drop--row {
+  inset-inline: 0;
+  block-size: 2px;
+  margin-block-start: -1px;
 }
 .nui-table__live {
   position: absolute;

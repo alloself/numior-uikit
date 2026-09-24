@@ -7,6 +7,7 @@ export interface Person {
   readonly age: number;
   readonly joined: Date;
   readonly score: number | null;
+  readonly children?: readonly Person[] | undefined;
 }
 
 const person = (
@@ -54,3 +55,37 @@ export const manyPeople = (count: number): Person[] =>
       index,
     ),
   );
+
+export const TEAM: readonly Person[] = [
+  {
+    ...person(1, 'Анна', 'Дизайн', 34, '2021-03-01', 88),
+    children: [
+      person(11, 'Айгуль', 'Дизайн', 26, '2023-01-01', 70),
+      {
+        ...person(12, 'Артём', 'Дизайн', 31, '2022-01-01', 75),
+        children: [person(121, 'Ася', 'Дизайн', 22, '2024-01-01', 60)],
+      },
+    ],
+  },
+  person(2, 'Борис', 'Разработка', 28, '2022-07-15', null),
+  person(3, 'Вера', 'Разработка', 45, '2019-01-20', 92),
+];
+
+export const childrenOf = (row: unknown): readonly Person[] | undefined =>
+  isPerson(row) ? row.children : undefined;
+
+export const expandableTeam = (row: unknown): boolean =>
+  isPerson(row) && (row.id === 3 || (row.children?.length ?? 0) > 0);
+
+export const withChildren = (
+  rows: readonly Person[],
+  id: number,
+  children: readonly Person[],
+): Person[] =>
+  rows.map((row) => ({
+    ...row,
+    ...(row.id === id ? { children } : {}),
+    ...(row.children ? { children: withChildren(row.children, id, children) } : {}),
+  }));
+
+export const newcomer = person(31, 'Влад', 'Разработка', 24, '2025-01-01', 66);

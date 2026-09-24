@@ -11,7 +11,7 @@
       class="nui-table__row nui-table__row--loading"
       aria-hidden="true"
     >
-      <td v-if="selectable" class="nui-table__cell nui-table__cell--select">
+      <td v-if="span > columns.length" class="nui-table__cell nui-table__cell--select">
         <NuiSkeleton shape="rect" width="1rem" height="1rem" />
       </td>
       <td v-for="column in columns" :key="column.key" class="nui-table__cell">
@@ -31,6 +31,5 @@ import NuiEmpty from '../empty/NuiEmpty.vue';
 import NuiSkeleton from '../skeleton/NuiSkeleton.vue';
 import type { NuiTableStatusProps } from './table.types';
 
-const { span, loading, loadingRows, columns, selectable, emptyLabel } =
-  defineProps<NuiTableStatusProps<T>>();
+const { span, loading, loadingRows, columns, emptyLabel } = defineProps<NuiTableStatusProps<T>>();
 </script>

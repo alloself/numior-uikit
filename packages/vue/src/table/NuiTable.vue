@@ -1,41 +1,24 @@
 <template>
-  <div
-    class="nui-table"
-    :class="[
-      `nui-table--size-${size}`,
-      {
-        'nui-table--striped': striped,
-        'nui-table--hoverable': hoverable,
-        'nui-table--sticky-header': stickyHeader,
-        'nui-table--virtual': isVirtual,
-        'nui-table--selectable': selectable !== undefined,
-        'nui-table--loading': loading,
-        'nui-table--fixed': layout.fixed.value,
-        'nui-table--dragging': columnDrag.state.value.phase === 'dragging',
-        'nui-table--scrolled-start': scrolled.start,
-        'nui-table--scrolled-end': scrolled.end,
-      },
-    ]"
-  >
+  <div class="nui-table" :class="rootClasses" :style="rootStyle">
     <div
       ref="scroller"
       class="nui-table__scroller"
       :style="{ '--_height': height }"
-      :tabindex="height === undefined ? undefined : 0"
+      :tabindex="scrollerTabindex"
       @scroll="trackScroll"
     >
       <table
         ref="table"
         class="nui-table__table"
-        :style="isVirtual ? { '--_row': `${rowHeight}px` } : undefined"
+        :style="tableStyle"
         :aria-busy="loading || undefined"
-        :aria-rowcount="isVirtual ? visibleRows.length + 1 : undefined"
+        :aria-rowcount="rowCount"
       >
         <caption v-if="caption || $slots.caption" class="nui-table__caption">
           <slot name="caption">{{ caption }}</slot>
         </caption>
         <colgroup>
-          <col v-if="selectable" class="nui-table__col--utility" />
+          <col v-for="name in utilityCols" :key="name" class="nui-table__col--utility" />
           <col
             v-for="column in layout.ordered.value"
             :key="column.key"
@@ -45,6 +28,7 @@
         <NuiTableHead
           :columns="layout.ordered.value"
           :sort="sort"
+          :row-drag="rowDrag"
           :selectable="selectable"
           :selection-state="selectionState"
           :selection-disabled="loading || visibleRows.length === 0"
@@ -63,18 +47,20 @@
           </template>
         </NuiTableHead>
         <NuiTableBody
+          v-if="tableRows.pinned.value.length > 0"
           :columns="layout.ordered.value"
-          :rows="renderedRows"
-          :key-of="keyOf"
+          :rows="tableRows.pinned.value"
           :layout="layout"
+          :options="rowOptions"
           :selectable="selectable"
           :selected-keys="selectedKeys"
-          :loading="loading"
-          :loading-rows="loadingRows"
+          :loading="false"
+          :loading-rows="0"
           :empty-label="emptyLabel"
-          :select-label="selectLabel"
-          :first-index="firstIndex"
-          :spacers="spacers"
+          :first-index="0"
+          :spacers="undefined"
+          :dragging="-1"
+          pinned
           @toggle="toggleOne"
           @row-click="(row, event) => emit('rowClick', row, event)"
         >
@@ -82,11 +68,37 @@
             <slot :name="name" v-bind="ctx" />
           </template>
         </NuiTableBody>
+        <NuiTableBody
+          :columns="layout.ordered.value"
+          :rows="renderedRows"
+          :layout="layout"
+          :options="rowOptions"
+          :selectable="selectable"
+          :selected-keys="selectedKeys"
+          :loading="loading"
+          :loading-rows="loadingRows"
+          :empty-label="emptyLabel"
+          :first-index="firstIndex"
+          :spacers="spacers"
+          :dragging="rowDragging"
+          :pinned="false"
+          @toggle="toggleOne"
+          @row-click="(row, event) => emit('rowClick', row, event)"
+          @expand="tableRows.toggle"
+          @drag-start="rowReorder.dragStart"
+          @drag-keydown="rowReorder.dragKeydown"
+        >
+          <template v-for="name in bodySlotNames()" #[name]="ctx">
+            <slot :name="name" v-bind="ctx" />
+          </template>
+        </NuiTableBody>
       </table>
       <div
-        v-if="columnDrag.indicator.value !== undefined"
-        class="nui-table__drop nui-table__drop--column"
-        :style="{ left: `${columnDrag.indicator.value}px` }"
+        v-for="drop in dropIndicators"
+        :key="drop.axis"
+        class="nui-table__drop"
+        :class="`nui-table__drop--${drop.axis}`"
+        :style="drop.style"
         aria-hidden="true"
       ></div>
     </div>
@@ -111,8 +123,9 @@ import { defaultOptionKey } from '../shared/options';
 import NuiTableBody from './NuiTableBody.vue';
 import NuiTableHead from './NuiTableHead.vue';
 import { defaultAnnounce } from './announce';
-import { slotNamesWithPrefix } from './cells';
+import { cellText, cellValue, slotNamesWithPrefix } from './cells';
 import { pageSlice, resolvePagination } from './page';
+import type { NuiTableRowView } from './rows';
 import { selectionStateOf, toggleRow, toggleRows } from './selection';
 import { nextSort, sortRows } from './sort';
 import type {
@@ -120,16 +133,25 @@ import type {
   NuiTableColumn,
   NuiTableHeadActions,
   NuiTableProps,
+  NuiTableReorderEvent,
+  NuiTableRowOptions,
   NuiTableSort,
 } from './table.types';
 import { useColumnReorder } from './use-column-reorder';
 import { useColumnResize } from './use-column-resize';
+import { useRowReorder } from './use-row-reorder';
 import { useTableColumns } from './use-table-columns';
+import { useTableRows } from './use-table-rows';
 
 const {
   columns,
   rows,
   getKey,
+  getChildren,
+  isExpandable,
+  pinnedRows = [],
+  rowDrag = false,
+  indent = 20,
   selectable,
   pagination = undefined,
   remote = false,
@@ -149,15 +171,23 @@ const {
   selectAllLabel = 'Select all rows',
   resizeLabel = (column: NuiTableColumn<T>) => `Resize ${column.label}`,
   reorderLabel = (column: NuiTableColumn<T>) => `Reorder ${column.label}`,
+  expandLabel = () => 'Toggle row',
+  dragLabel = () => 'Reorder row',
+  rowLabel = undefined,
   announce = undefined,
 } = defineProps<NuiTableProps<T>>();
 const sort = defineModel<NuiTableSort>('sort', { default: null });
 const selected = defineModel<T[]>('selected', { default: () => [] });
+const expanded = defineModel<T[]>('expanded', { default: () => [] });
 const page = defineModel<number>('page', { default: 1 });
 const pageSize = defineModel<number>('pageSize', { default: 20 });
 const columnOrder = defineModel<string[]>('columnOrder', { default: () => [] });
 const widths = defineModel<Record<string, number>>('widths', { default: () => ({}) });
-const emit = defineEmits<{ rowClick: [row: T, event: MouseEvent] }>();
+const emit = defineEmits<{
+  rowClick: [row: T, event: MouseEvent];
+  reorder: [event: NuiTableReorderEvent<T>];
+  load: [row: T];
+}>();
 const slots = useSlots();
 const scroller = useTemplateRef<HTMLElement>('scroller');
 const tableElement = useTemplateRef<HTMLTableElement>('table');
@@ -165,13 +195,25 @@ const tableElement = useTemplateRef<HTMLTableElement>('table');
 const keyOf = (row: T): string => (getKey ?? defaultOptionKey)(row);
 const selectedKeys = computed(() => new Set(selected.value.map(keyOf)));
 const paginationProps = computed(() => resolvePagination(pagination));
-const sorted = computed(() => (remote ? [...rows] : sortRows(rows, sort.value, columns)));
+const sortLevel = (level: readonly T[]): T[] =>
+  remote ? [...level] : sortRows(level, sort.value, columns);
+const tableRows = useTableRows<T>({
+  rows: () => rows,
+  pinnedRows: () => pinnedRows,
+  keyOf,
+  getChildren: () => getChildren,
+  isExpandable: () => isExpandable,
+  expanded,
+  sortLevel,
+  onLoad: (row) => emit('load', row),
+});
 const visibleRows = computed(() =>
   paginationProps.value && !remote
-    ? pageSlice(sorted.value, page.value, pageSize.value)
-    : sorted.value,
+    ? pageSlice(tableRows.views.value, page.value, pageSize.value)
+    : tableRows.views.value,
 );
-const totalCount = computed(() => (remote ? (total ?? rows.length) : rows.length));
+const visibleData = computed(() => visibleRows.value.map((view) => view.row));
+const totalCount = computed(() => (remote ? (total ?? rows.length) : tableRows.views.value.length));
 const isVirtual = computed(() => virtual && paginationProps.value === undefined);
 const windowing = useVirtualList(scroller, {
   count: () => visibleRows.value.length,
@@ -188,10 +230,10 @@ const spacers = computed(() =>
   isVirtual.value ? { start: windowing.startSize.value, end: windowing.endSize.value } : undefined,
 );
 const selectionState = computed(() =>
-  selectionStateOf(selectedKeys.value, visibleRows.value, keyOf),
+  selectionStateOf(selectedKeys.value, visibleData.value, keyOf),
 );
 
-const utilities = (): number => (selectable ? 1 : 0);
+const utilities = (): number => (selectable ? 1 : 0) + (rowDrag ? 1 : 0);
 const isRtl = (): boolean => scroller.value?.closest('[dir]')?.getAttribute('dir') === 'rtl';
 const layout = useTableColumns<T>({
   columns: () => columns,
@@ -226,7 +268,80 @@ const headActions: NuiTableHeadActions<T> = {
   dragKeydown: columnDrag.dragKeydown,
   headClick: columnDrag.headClick,
 };
+
+const firstColumnText = (view: NuiTableRowView<T>): string => {
+  const column = layout.ordered.value[0];
+  return column ? cellText(cellValue(view.row, column)) : view.key;
+};
+const revealRow = (index: number): void => {
+  if (isVirtual.value) {
+    windowing.scrollTo(index);
+    return;
+  }
+  const row = scroller.value?.querySelectorAll(
+    'tbody.nui-table__body:not(.nui-table__body--pinned) > .nui-table__row',
+  )[index];
+  row?.scrollIntoView?.({ block: 'nearest' });
+};
+const rowReorder = useRowReorder<T>({
+  scroller: () => scroller.value,
+  views: () => visibleRows.value,
+  firstIndex: () => firstIndex.value,
+  rowHeight: () => (isVirtual.value ? rowHeight : undefined),
+  enabled: () => rowDrag && sort.value === null,
+  labelOf: (view) => (rowLabel ? rowLabel(view.row) : firstColumnText(view)),
+  reveal: revealRow,
+  onReorder: (event) => emit('reorder', event),
+  announce: say,
+});
+const rowOptions = computed<NuiTableRowOptions<T>>(() => ({
+  tree: tableRows.tree.value,
+  rowDrag,
+  dragDisabled: sort.value !== null,
+  selectLabel,
+  expandLabel,
+  dragLabel,
+}));
+const rowDragging = computed(() => rowReorder.state.value.from);
+const dragging = computed(
+  () => columnDrag.state.value.phase === 'dragging' || rowReorder.state.value.phase === 'dragging',
+);
+const headSize = ref(0);
+const rootStyle = computed(() => ({
+  '--_indent': `${indent}px`,
+  '--_head-size': `${headSize.value}px`,
+}));
 const scrolled = ref({ start: false, end: false });
+const rootClasses = computed(() => [
+  `nui-table--size-${size}`,
+  {
+    'nui-table--striped': striped,
+    'nui-table--hoverable': hoverable,
+    'nui-table--sticky-header': stickyHeader,
+    'nui-table--virtual': isVirtual.value,
+    'nui-table--selectable': selectable !== undefined,
+    'nui-table--loading': loading,
+    'nui-table--fixed': layout.fixed.value,
+    'nui-table--dragging': dragging.value,
+    'nui-table--scrolled-start': scrolled.value.start,
+    'nui-table--scrolled-end': scrolled.value.end,
+  },
+]);
+const scrollerTabindex = computed(() => (height === undefined ? undefined : 0));
+const tableStyle = computed(() => (isVirtual.value ? { '--_row': `${rowHeight}px` } : undefined));
+const rowCount = computed(() => (isVirtual.value ? visibleRows.value.length + 1 : undefined));
+const utilityCols = computed(() => [
+  ...(rowDrag ? ['drag'] : []),
+  ...(selectable ? ['select'] : []),
+]);
+const dropIndicators = computed(() => [
+  ...(columnDrag.indicator.value === undefined
+    ? []
+    : [{ axis: 'column', style: { left: `${columnDrag.indicator.value}px` } }]),
+  ...(rowReorder.indicator.value === undefined
+    ? []
+    : [{ axis: 'row', style: { top: `${rowReorder.indicator.value}px` } }]),
+]);
 const trackScroll = (): void => {
   const element = scroller.value;
   if (!element) {
@@ -244,7 +359,7 @@ const toggleOne = (row: T): void => {
   selected.value = toggleRow(selected.value, row, keyOf, selectable === 'multiple');
 };
 const toggleAll = (): void => {
-  selected.value = toggleRows(selected.value, visibleRows.value, keyOf);
+  selected.value = toggleRows(selected.value, visibleData.value, keyOf);
 };
 const headerSlotNames = (): string[] => slotNamesWithPrefix(slots, 'header-');
 const bodySlotNames = (): string[] => [
@@ -253,7 +368,11 @@ const bodySlotNames = (): string[] => [
 ];
 
 onMounted(() => {
-  const measure = (): void => layout.measure(tableElement.value);
+  const measure = (): void => {
+    layout.measure(tableElement.value);
+    headSize.value =
+      tableElement.value?.querySelector('thead')?.getBoundingClientRect().height ?? 0;
+  };
   watch([() => layout.ordered.value, widths], measure, { immediate: true, flush: 'post' });
   trackScroll();
   if (typeof ResizeObserver === 'undefined' || !tableElement.value) {

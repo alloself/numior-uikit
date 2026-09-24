@@ -5,7 +5,17 @@ import { pageSlice } from '../src/table/page';
 import { selectionStateOf, toggleRows } from '../src/table/selection';
 import { defaultCompare, nextSort } from '../src/table/sort';
 import { TableDriver } from './drivers/table';
-import { COLUMNS, isPerson, manyPeople, PEOPLE } from './support/rows';
+import {
+  childrenOf,
+  COLUMNS,
+  expandableTeam,
+  isPerson,
+  manyPeople,
+  newcomer,
+  PEOPLE,
+  TEAM,
+  withChildren,
+} from './support/rows';
 
 const names = (people: readonly { readonly name: string }[]): string[] =>
   people.map((person) => person.name);
@@ -301,6 +311,93 @@ describe('NuiTable columns', () => {
     await table.clickHeader('Имя');
     expect(table.sort).toEqual({ key: 'name', direction: 'asc' });
     table.unmount();
+  });
+});
+
+describe('NuiTable rows', () => {
+  it('renders tree rows with toggles, indentation, per-level sorting and lazy loading', async () => {
+    const table = TableDriver.mount({
+      rows: TEAM,
+      props: { getChildren: childrenOf, isExpandable: expandableTeam },
+    });
+    expect(table.columnTexts('Имя')).toEqual(['Анна', 'Борис', 'Вера']);
+    expect(table.toggleOf('Анна').attributes('aria-expanded')).toBe('false');
+    expect(table.toggleOf('Борис').exists()).toBe(false);
+    expect(table.levelOf('Анна')).toBe('0');
+    await table.clickToggle('Анна');
+    expect(table.expandedNames).toEqual(['Анна']);
+    expect(table.columnTexts('Имя')).toEqual(['Анна', 'Айгуль', 'Артём', 'Борис', 'Вера']);
+    expect(table.toggleOf('Анна').attributes('aria-expanded')).toBe('true');
+    expect(table.levelOf('Айгуль')).toBe('1');
+    await table.clickToggle('Артём');
+    expect(table.columnTexts('Имя')).toEqual(['Анна', 'Айгуль', 'Артём', 'Ася', 'Борис', 'Вера']);
+    expect(table.levelOf('Ася')).toBe('2');
+    expect(table.clicks).toEqual([]);
+    await table.clickHeader('Возраст');
+    expect(table.columnTexts('Имя')).toEqual(['Борис', 'Анна', 'Айгуль', 'Артём', 'Ася', 'Вера']);
+    await table.clickHeader('Возраст');
+    await table.clickHeader('Возраст');
+    await table.clickToggle('Вера');
+    expect(table.loads).toEqual(['Вера']);
+    expect(table.toggleBusy('Вера')).toBe(true);
+    await table.receiveRows(withChildren(TEAM, 3, [newcomer]));
+    expect(table.columnTexts('Имя')).toContain('Влад');
+    expect(table.toggleBusy('Вера')).toBe(false);
+    await table.clickToggle('Анна');
+    expect(table.columnTexts('Имя')).toEqual(['Анна', 'Борис', 'Вера', 'Влад']);
+    expect(table.expandedNames).toEqual(['Артём', 'Вера']);
+    table.unmount();
+  });
+
+  it('pins rows in their own body that sorting and pages leave alone', async () => {
+    const table = TableDriver.mount({
+      props: { pinnedRows: PEOPLE.slice(0, 2), stickyHeader: true, pagination: true },
+      pageSize: 5,
+    });
+    expect(table.pinnedNames).toEqual(['Анна', 'Борис']);
+    expect(table.renderedRowCount).toBe(5);
+    await table.clickHeader('Возраст');
+    await table.clickHeader('Возраст');
+    expect(table.pinnedNames).toEqual(['Анна', 'Борис']);
+    expect(table.columnTexts('Имя')[0]).toBe('Жанна');
+    table.unmount();
+  });
+
+  it('reorders rows with the grip among siblings, announces moves and refuses while sorted', async () => {
+    const table = TableDriver.mount({
+      rows: TEAM,
+      expanded: TEAM.slice(0, 1),
+      props: { rowDrag: true, getChildren: childrenOf },
+    });
+    expect(table.rowGrip('Анна').attributes('aria-label')).toBe('Reorder row');
+    expect(table.headers).toEqual(['', 'Имя', 'Роль', 'Возраст', 'Балл']);
+    await table.pressRowGrip('Борис', ' ');
+    expect(table.liveText).toContain('Борис grabbed, position 2 of 3');
+    await table.pressRowGrip('Борис', 'ArrowDown');
+    expect(table.liveText).toContain('position 3 of 3');
+    await table.pressRowGrip('Борис', ' ');
+    expect(table.reorders).toEqual(['Борис:1->2@root']);
+    await table.pressRowGrip('Айгуль', ' ');
+    await table.pressRowGrip('Айгуль', 'ArrowUp');
+    expect(table.liveText).toContain('Айгуль grabbed, position 1 of 2');
+    await table.pressRowGrip('Айгуль', 'ArrowDown');
+    expect(table.liveText).toContain('position 2 of 2');
+    await table.pressRowGrip('Айгуль', ' ');
+    expect(table.reorders).toEqual(['Борис:1->2@root', 'Айгуль:0->1@Анна']);
+    await table.pressRowGrip('Вера', 'Enter');
+    await table.pressRowGrip('Вера', 'Escape');
+    expect(table.liveText).toContain('cancelled');
+    await table.clickHeader('Возраст');
+    expect(table.rowGrip('Анна').attributes('disabled')).toBeDefined();
+    await table.pressRowGrip('Анна', ' ');
+    expect(table.liveText).toContain('cancelled');
+    table.unmount();
+    const flat = TableDriver.mount({ props: { rowDrag: true } });
+    flat.layoutRows(40);
+    await flat.dragRow('Анна', 20, 90);
+    expect(flat.reorders).toEqual(['Анна:0->2@root']);
+    expect(flat.clicks).toEqual([]);
+    flat.unmount();
   });
 });
 

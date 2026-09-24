@@ -2,11 +2,18 @@
   <thead class="nui-table__head" @click.capture="actions.headClick">
     <tr class="nui-table__row nui-table__row--head">
       <th
+        v-if="rowDrag"
+        scope="col"
+        class="nui-table__cell nui-table__cell--head nui-table__cell--drag"
+        :class="layout.utilityClass(0)"
+        :style="layout.utilityStyle(0)"
+      ></th>
+      <th
         v-if="selectable"
         scope="col"
         class="nui-table__cell nui-table__cell--head nui-table__cell--select"
-        :class="layout.utilityClass(0)"
-        :style="layout.utilityStyle(0)"
+        :class="layout.utilityClass(rowDrag ? 1 : 0)"
+        :style="layout.utilityStyle(rowDrag ? 1 : 0)"
       >
         <NuiCheckbox
           v-if="selectable === 'multiple'"
@@ -48,6 +55,7 @@ import type { NuiTableHeadProps } from './table.types';
 const {
   columns,
   sort,
+  rowDrag,
   selectable,
   selectionState,
   selectionDisabled,
