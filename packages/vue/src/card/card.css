@@ -54,10 +54,6 @@
   border-color: var(--_hover-border);
   box-shadow: var(--_hover-shadow);
 }
-.nui-card--interactive:has(.nui-card__action:focus-visible) {
-  outline: var(--nui-focus-ring-width) solid var(--nui-focus);
-  outline-offset: var(--nui-focus-ring-offset);
-}
 .nui-card--interactive
   :where(a, button, input, select, textarea, summary, [tabindex]):not(.nui-card__action) {
   position: relative;
@@ -105,6 +101,10 @@
 }
 .nui-card .nui-card__action:focus-visible {
   outline: none;
+}
+.nui-card .nui-card__action:focus-visible::after {
+  outline: var(--nui-focus-ring-width) solid var(--nui-focus);
+  outline-offset: calc(var(--nui-focus-ring-offset) + 1px);
 }
 .nui-card .nui-card__action:hover {
   color: inherit;
