@@ -4,18 +4,10 @@
       <h2 id="intl-title">Числа и время</h2>
       <span class="tag">NuiNumberField · NuiTimeField · locale</span>
     </div>
-    <div class="settings">
-      <label
-        >Локаль
-        <select v-model="locale" data-testid="intl-locale">
-          <option value="ru-RU">ru-RU</option>
-          <option value="en-US">en-US</option>
-          <option value="de-DE">de-DE</option>
-          <option value="ar-EG">ar-EG</option>
-        </select>
-      </label>
-    </div>
     <div class="form">
+      <NuiField label="Локаль" description="Передаётся каждому полю пропом locale">
+        <NuiSelect v-model="locale" :options="locales" data-testid="intl-locale" />
+      </NuiField>
       <NuiField label="Цена" description="Евро, шаг 0,5">
         <NuiNumberField
           v-model="price"
@@ -92,8 +84,14 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { NuiField, NuiNumberField, NuiTimeField } from '@numior/vue';
+import { NuiField, NuiNumberField, NuiSelect, NuiTimeField, type NuiOption } from '@numior/vue';
 
+const locales: NuiOption<string>[] = [
+  { value: 'ru-RU', label: 'ru-RU', description: 'Русский' },
+  { value: 'en-US', label: 'en-US', description: 'English (US)' },
+  { value: 'de-DE', label: 'de-DE', description: 'Deutsch' },
+  { value: 'ar-EG', label: 'ar-EG', description: 'العربية' },
+];
 const locale = ref('ru-RU');
 const price = ref<number | null>(1234.5);
 const quantity = ref<number | null>(null);

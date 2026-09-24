@@ -50,7 +50,7 @@ export class IntlSection {
   readonly precise: Locator;
   readonly output: Locator;
 
-  constructor(page: Page) {
+  constructor(private readonly page: Page) {
     this.localeSelect = page.getByTestId('intl-locale');
     this.price = page.getByTestId('number-price');
     this.quantity = page.getByTestId('number-quantity');
@@ -89,7 +89,11 @@ export class IntlSection {
   }
 
   async setLocale(locale: string): Promise<void> {
-    await this.localeSelect.selectOption(locale);
+    await this.localeSelect.click();
+    await this.page
+      .locator('.nui-select__listbox')
+      .getByRole('option', { name: new RegExp(`^${locale}\\s`) })
+      .click();
   }
 
   async readOutput(): Promise<IntlOutput> {
