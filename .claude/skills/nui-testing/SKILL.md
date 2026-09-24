@@ -72,6 +72,15 @@ it('waits for a commit with the lazy modifier', async () => {
 - Playwright's `keyboard.type` inserts non-Latin characters as text without `keydown`, so
   typeahead with Cyrillic labels is driven by `locator.dispatchEvent('keydown', { key })`
   from the page object (`NavigationSection.typeInMenu`).
+- Keep static `mount()` factories synchronous: fallow cannot follow member accesses through
+  an awaited `Promise<Driver>` and reports every getter as unused. When the first render
+  needs a post-mount flush (virtualisation measures the viewport after mount), expose
+  `settle()` and await it in the spec (`VirtualHarness`).
+- jsdom has no layout: give a scroll container a size with `Object.defineProperty(el,
+'clientHeight', { value })` and dispatch `scroll`; `useVirtualList` re-measures on every
+  scroll event, so no internal API is needed (`TreeDriver.setHeight`, `TableDriver.setHeight`).
+- Leftover trees from a failed test share generated ids across apps, so resolve
+  `aria-activedescendant` inside the driver's wrapper, never via `document.getElementById`.
 
 ## Composable tests (`packages/primitives/test`)
 
@@ -92,3 +101,11 @@ that the label `for` matches the control id and that values render on the server
 - Colors through `expectRgb` (`tests/e2e/helpers/color.ts`); axe through
   `playground.wcagViolations()` after `playground.emulate({ reducedMotion: 'reduce' })`.
 - Cover keyboard and tap (`isMobile`), RTL overflow, density steps, then run in Docker.
+- `getByRole(..., { name })` matches substrings (`Узел 1` also finds `Узел 10`); for item
+  lookups by label use `exact: true` or filter by an anchored `hasText` RegExp (`TreeSection.item`).
+- A pointer click on a stretched-link surface is refused by actionability checks because the
+  action intercepts it; use `page.mouse.click` on the target's box after `scrollIntoViewIfNeeded`
+  (`DataSection.clickSurface`). Firefox applies `:focus-visible` only after real keyboard
+  navigation, so reach a control with `Tab`, not `locator.focus()`, before asserting a ring.
+- axe `scrollable-region-focusable`: a scroll container with no focusable content needs
+  `tabindex="0"` (the table scroller with `height`); the tree root already has it.

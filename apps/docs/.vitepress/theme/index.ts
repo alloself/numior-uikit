@@ -48,6 +48,7 @@ import {
   NuiSkeleton,
   NuiSwitch,
   NuiTab,
+  NuiTable,
   NuiTabList,
   NuiTabPanel,
   NuiTabs,
@@ -55,6 +56,7 @@ import {
   NuiToast,
   NuiToaster,
   NuiTooltip,
+  NuiTree,
 } from '@numior/vue';
 import '@numior/tokens/theme.css';
 import '@numior/vue/styles.css';
@@ -118,5 +120,7 @@ export default {
     app.component('NuiList', NuiList);
     app.component('NuiListItem', NuiListItem);
     app.component('NuiEmpty', NuiEmpty);
+    app.component('NuiTree', NuiTree);
+    app.component('NuiTable', NuiTable);
   },
 } satisfies Theme;
