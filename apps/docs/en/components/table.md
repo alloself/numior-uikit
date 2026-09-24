@@ -79,13 +79,16 @@ or press ←/→ on the focused handle (`role="separator"` with `aria-valuenow`)
 (`Record<key, px>`), start from `column.width` and stay within `minWidth` (64px) and
 `maxWidth`. Columns without `width` are measured once in the automatic layout, then the
 table switches to `table-layout: fixed`: on a narrow screen the columns keep their width and
-the table scrolls horizontally. `sticky: 'start' | 'end'` pins a column to the scroller edge,
+the table scrolls horizontally. Free space is shared by the columns without `width`, so give
+compact columns a width and let one column stretch. A header label in a narrow column is
+truncated with an ellipsis and shows the full text in a tooltip, while body cells wrap. `sticky: 'start' | 'end'` pins a column to the scroller edge,
 offsets are computed from the neighbouring pinned widths and the edge shadow appears only
 once scrolled. `reorderable` lets you drag a header with the pointer or grab it from the
 keyboard through the grip button: Space grabs, ←/→ move, Space drops, Escape cancels; the
 order lives in `v-model:columnOrder` (keys) and pinned columns only move within their group.
-The grip sits before the label and appears on header hover and on keyboard focus (touch
-screens always show it); while dragging, the grips of the other columns and rows are hidden,
+The grip sits before the label, takes no space while hidden and pushes the header content
+aside when it appears on hover or keyboard focus (touch screens always show it); while
+dragging, the grips of the other columns and rows are hidden,
 an opaque ghost with the column label follows the pointer, and the insertion line starts
 below the `caption`. Every step is announced through `aria-live`, with `announce`
 providing the text.

@@ -134,6 +134,12 @@ test.describe('table', () => {
     expect(box && Math.abs(box.width - 152) <= 1).toBe(true);
     await table.dragBy(resizer, -400);
     await expect.poll(async () => (await table.readOutput()).widths.age).toBe(64);
+    const label = table.header('Возраст').locator('.nui-table__label');
+    expect(await label.evaluate((element) => getComputedStyle(element).textOverflow)).toBe(
+      'ellipsis',
+    );
+    expect(await label.evaluate((element) => element.scrollWidth > element.clientWidth)).toBe(true);
+    expect(await table.scrollSlack(table.table)).toBeLessThanOrEqual(1);
   });
 
   test('columns reorder by keyboard grab and by dragging a header', async ({ page, isMobile }) => {

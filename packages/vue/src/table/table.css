@@ -116,9 +116,6 @@
   .nui-table__grip {
   opacity: 0;
 }
-.nui-table__cell--head .nui-table__grip {
-  margin-inline-start: calc(-1 * var(--nui-space-1));
-}
 @media (hover: none) {
   .nui-table__grip {
     opacity: 1;
@@ -267,7 +264,14 @@
   display: inline-flex;
   align-items: center;
   gap: var(--nui-space-1);
+  min-inline-size: 0;
   max-inline-size: 100%;
+}
+.nui-table__label {
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .nui-table__grip {
   display: inline-flex;
@@ -288,7 +292,30 @@
   touch-action: none;
   transition:
     color var(--nui-duration-fast) var(--nui-easing),
-    opacity var(--nui-duration-fast) var(--nui-easing);
+    opacity var(--nui-duration-fast) var(--nui-easing),
+    inline-size var(--nui-duration-fast) var(--nui-easing),
+    margin var(--nui-duration-fast) var(--nui-easing);
+}
+.nui-table__cell--head .nui-table__grip {
+  inline-size: 0;
+  margin-inline-end: calc(-1 * var(--nui-space-1));
+  overflow: hidden;
+}
+.nui-table__cell--head:hover .nui-table__grip,
+.nui-table__cell--head .nui-table__grip:focus-visible,
+.nui-table__cell--dragging .nui-table__grip {
+  inline-size: 1.5rem;
+  margin-inline-end: 0;
+}
+.nui-table--dragging .nui-table__cell--head:not(.nui-table__cell--dragging) .nui-table__grip {
+  inline-size: 0;
+  margin-inline-end: calc(-1 * var(--nui-space-1));
+}
+@media (hover: none) {
+  .nui-table__cell--head .nui-table__grip {
+    inline-size: 1.5rem;
+    margin-inline-end: 0;
+  }
 }
 .nui-table__grip:hover {
   color: var(--nui-text);
@@ -402,6 +429,7 @@
   display: inline-flex;
   align-items: center;
   gap: var(--nui-space-1);
+  min-inline-size: 0;
   min-block-size: 1.5rem;
   margin: calc(-1 * var(--nui-space-1));
   padding: var(--nui-space-1);
@@ -428,6 +456,7 @@
   color: var(--nui-text);
 }
 .nui-table__sort-icon {
+  flex: none;
   inline-size: 0.875rem;
   block-size: 0.875rem;
   opacity: 0.45;

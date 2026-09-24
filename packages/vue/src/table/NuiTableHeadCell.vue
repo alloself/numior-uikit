@@ -35,13 +35,17 @@
         }"
         @click="emit('sort', column.key)"
       >
-        <slot :column="column" :sort="direction">{{ column.label }}</slot>
+        <span class="nui-table__label" :title="column.label">
+          <slot :column="column" :sort="direction">{{ column.label }}</slot>
+        </span>
         <NuiIcon
           :alias="direction === undefined ? 'arrow-up-down' : 'arrow-up'"
           class="nui-table__sort-icon"
         />
       </button>
-      <slot v-else :column="column" :sort="undefined">{{ column.label }}</slot>
+      <span v-else class="nui-table__label" :title="column.label">
+        <slot :column="column" :sort="undefined">{{ column.label }}</slot>
+      </span>
     </span>
     <span
       v-if="column.resizable"
