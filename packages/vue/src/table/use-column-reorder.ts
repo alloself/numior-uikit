@@ -1,6 +1,6 @@
 import { ref, type Ref } from 'vue';
 import { useReorder, type ReorderState } from '@numior/primitives';
-import { ghostAt, grabOf, NO_GRAB, type DragGrab, type NuiTableGhost } from './ghost';
+import { clampInside, ghostAt, grabOf, NO_GRAB, type DragGrab, type NuiTableGhost } from './ghost';
 import type { NuiTableAnnouncement, NuiTableColumn } from './table.types';
 
 export interface ColumnReorderOptions<T> {
@@ -52,7 +52,12 @@ const indicatorAt = (
 ): number => {
   const rect = cell.getBoundingClientRect();
   const edge = forward !== rtl ? rect.right : rect.left;
-  return edge - scroller.getBoundingClientRect().left + scroller.scrollLeft;
+  return clampInside(
+    scroller,
+    'x',
+    edge - scroller.getBoundingClientRect().left + scroller.scrollLeft,
+    2,
+  );
 };
 
 export const useColumnReorder = <T>(options: ColumnReorderOptions<T>): ColumnReorder => {

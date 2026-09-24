@@ -118,6 +118,7 @@ test.describe('table', () => {
     const { table } = playground;
     const resizer = table.resizer('Возраст');
     await expect(resizer).toHaveAttribute('aria-valuenow', '112');
+    expect(await table.scrollSlack(table.table)).toBeLessThanOrEqual(1);
     if (!isMobile) {
       await resizer.focus();
       await page.keyboard.press('ArrowRight');

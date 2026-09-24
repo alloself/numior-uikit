@@ -24,6 +24,19 @@ export const grabOf = (event: PointerEvent, axis: ReorderAxis, selector: string)
     : { offset: event.clientY - rect.top, size: rect.height };
 };
 
+const contentSize = (scroller: HTMLElement, axis: ReorderAxis): number => {
+  const rect = scroller.firstElementChild?.getBoundingClientRect();
+  const size = axis === 'x' ? rect?.width : rect?.height;
+  return size !== undefined && size > 0 ? size : Number.POSITIVE_INFINITY;
+};
+
+export const clampInside = (
+  scroller: HTMLElement,
+  axis: ReorderAxis,
+  value: number,
+  size: number,
+): number => Math.min(Math.max(0, value), Math.max(0, contentSize(scroller, axis) - size));
+
 export const ghostAt = (
   scroller: HTMLElement | null | undefined,
   axis: ReorderAxis,
@@ -36,7 +49,8 @@ export const ghostAt = (
   }
   const rect = scroller.getBoundingClientRect();
   const base = axis === 'x' ? rect.left - scroller.scrollLeft : rect.top - scroller.scrollTop;
-  return { label, offset: position - grab.offset - base, size: grab.size };
+  const offset = clampInside(scroller, axis, position - grab.offset - base, grab.size);
+  return { label, offset, size: grab.size };
 };
 
 export const visibleStart = (scroller: HTMLElement, rtl: boolean): number =>

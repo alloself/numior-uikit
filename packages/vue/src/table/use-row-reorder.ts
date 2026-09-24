@@ -1,6 +1,6 @@
 import { ref, type Ref } from 'vue';
 import { useReorder, type ReorderState } from '@numior/primitives';
-import { ghostAt, grabOf, NO_GRAB, type DragGrab, type NuiTableGhost } from './ghost';
+import { clampInside, ghostAt, grabOf, NO_GRAB, type DragGrab, type NuiTableGhost } from './ghost';
 import type { NuiTableRowView } from './rows';
 import type { NuiTableAnnouncement, NuiTableReorderEvent } from './table.types';
 
@@ -71,7 +71,7 @@ export const useRowReorder = <T>(options: RowReorderOptions<T>): RowReorder => {
     const base = scroller.scrollTop - scroller.getBoundingClientRect().top;
     if (size !== undefined) {
       const top = body.getBoundingClientRect().top + (state.to + (forward ? 1 : 0)) * size;
-      indicator.value = top + base;
+      indicator.value = clampInside(scroller, 'y', top + base, 2);
       return;
     }
     const row = renderedRows(body)[state.to - options.firstIndex()];
@@ -80,7 +80,7 @@ export const useRowReorder = <T>(options: RowReorderOptions<T>): RowReorder => {
       return;
     }
     const rect = row.getBoundingClientRect();
-    indicator.value = (forward ? rect.bottom : rect.top) + base;
+    indicator.value = clampInside(scroller, 'y', (forward ? rect.bottom : rect.top) + base, 2);
   };
 
   const float = (state: ReorderState): void => {

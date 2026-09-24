@@ -1,115 +1,117 @@
 <template>
   <div class="nui-table" :class="rootClasses" :style="rootStyle">
-    <div
-      ref="scroller"
-      class="nui-table__scroller"
-      :style="{ '--_height': height }"
-      :tabindex="scrollerTabindex"
-      @scroll="trackScroll"
-    >
-      <table
-        ref="table"
-        class="nui-table__table"
-        :style="tableStyle"
-        :aria-busy="loading || undefined"
-        :aria-rowcount="rowCount"
-      >
-        <caption v-if="caption || $slots.caption" class="nui-table__caption">
-          <slot name="caption">{{ caption }}</slot>
-        </caption>
-        <colgroup>
-          <col v-for="name in utilityCols" :key="name" class="nui-table__col--utility" />
-          <col
-            v-for="column in layout.ordered.value"
-            :key="column.key"
-            :style="layout.colStyle(column)"
-          />
-        </colgroup>
-        <NuiTableHead
-          :columns="layout.ordered.value"
-          :sort="sort"
-          :row-drag="rowDrag"
-          :selectable="selectable"
-          :selection-state="selectionState"
-          :selection-disabled="loading || visibleRows.length === 0"
-          :select-all-label="selectAllLabel"
-          :layout="layout"
-          :actions="headActions"
-          :resizing="resize.active.value"
-          :dragging="columnDrag.state.value.from"
-          :resize-label="resizeLabel"
-          :reorder-label="reorderLabel"
-          @sort="cycle"
-          @toggle-all="toggleAll"
-        >
-          <template v-for="name in headerSlotNames()" #[name]="ctx">
-            <slot :name="name" v-bind="ctx" />
-          </template>
-        </NuiTableHead>
-        <NuiTableBody
-          v-if="tableRows.pinned.value.length > 0"
-          :columns="layout.ordered.value"
-          :rows="tableRows.pinned.value"
-          :layout="layout"
-          :options="rowOptions"
-          :selectable="selectable"
-          :selected-keys="selectedKeys"
-          :loading="false"
-          :loading-rows="0"
-          :empty-label="emptyLabel"
-          :first-index="0"
-          :spacers="undefined"
-          :dragging="-1"
-          pinned
-          @toggle="toggleOne"
-          @row-click="(row, event) => emit('rowClick', row, event)"
-        >
-          <template v-for="name in bodySlotNames()" #[name]="ctx">
-            <slot :name="name" v-bind="ctx" />
-          </template>
-        </NuiTableBody>
-        <NuiTableBody
-          :columns="layout.ordered.value"
-          :rows="renderedRows"
-          :layout="layout"
-          :options="rowOptions"
-          :selectable="selectable"
-          :selected-keys="selectedKeys"
-          :loading="loading"
-          :loading-rows="loadingRows"
-          :empty-label="emptyLabel"
-          :first-index="firstIndex"
-          :spacers="spacers"
-          :dragging="rowDragging"
-          :pinned="false"
-          @toggle="toggleOne"
-          @row-click="(row, event) => emit('rowClick', row, event)"
-          @expand="tableRows.toggle"
-          @drag-start="rowReorder.dragStart"
-          @drag-keydown="rowReorder.dragKeydown"
-        >
-          <template v-for="name in bodySlotNames()" #[name]="ctx">
-            <slot :name="name" v-bind="ctx" />
-          </template>
-        </NuiTableBody>
-      </table>
+    <div class="nui-table__frame">
       <div
-        v-for="drop in dropIndicators"
-        :key="drop.axis"
-        class="nui-table__drop"
-        :class="`nui-table__drop--${drop.axis}`"
-        :style="drop.style"
-        aria-hidden="true"
-      ></div>
-      <div
-        v-if="ghost"
-        class="nui-table__ghost"
-        :class="`nui-table__ghost--${ghost.axis}`"
-        :style="ghost.style"
-        aria-hidden="true"
+        ref="scroller"
+        class="nui-table__scroller"
+        :style="{ '--_height': height }"
+        :tabindex="scrollerTabindex"
+        @scroll="trackScroll"
       >
-        <NuiIcon alias="grip" class="nui-table__ghost-grip" />
-        <span class="nui-table__ghost-label">{{ ghost.label }}</span>
+        <table
+          ref="table"
+          class="nui-table__table"
+          :style="tableStyle"
+          :aria-busy="loading || undefined"
+          :aria-rowcount="rowCount"
+        >
+          <caption v-if="caption || $slots.caption" class="nui-table__caption">
+            <slot name="caption">{{ caption }}</slot>
+          </caption>
+          <colgroup>
+            <col v-for="name in utilityCols" :key="name" class="nui-table__col--utility" />
+            <col
+              v-for="column in layout.ordered.value"
+              :key="column.key"
+              :style="layout.colStyle(column)"
+            />
+          </colgroup>
+          <NuiTableHead
+            :columns="layout.ordered.value"
+            :sort="sort"
+            :row-drag="rowDrag"
+            :selectable="selectable"
+            :selection-state="selectionState"
+            :selection-disabled="loading || visibleRows.length === 0"
+            :select-all-label="selectAllLabel"
+            :layout="layout"
+            :actions="headActions"
+            :resizing="resize.active.value"
+            :dragging="columnDrag.state.value.from"
+            :resize-label="resizeLabel"
+            :reorder-label="reorderLabel"
+            @sort="cycle"
+            @toggle-all="toggleAll"
+          >
+            <template v-for="name in headerSlotNames()" #[name]="ctx">
+              <slot :name="name" v-bind="ctx" />
+            </template>
+          </NuiTableHead>
+          <NuiTableBody
+            v-if="tableRows.pinned.value.length > 0"
+            :columns="layout.ordered.value"
+            :rows="tableRows.pinned.value"
+            :layout="layout"
+            :options="rowOptions"
+            :selectable="selectable"
+            :selected-keys="selectedKeys"
+            :loading="false"
+            :loading-rows="0"
+            :empty-label="emptyLabel"
+            :first-index="0"
+            :spacers="undefined"
+            :dragging="-1"
+            pinned
+            @toggle="toggleOne"
+            @row-click="(row, event) => emit('rowClick', row, event)"
+          >
+            <template v-for="name in bodySlotNames()" #[name]="ctx">
+              <slot :name="name" v-bind="ctx" />
+            </template>
+          </NuiTableBody>
+          <NuiTableBody
+            :columns="layout.ordered.value"
+            :rows="renderedRows"
+            :layout="layout"
+            :options="rowOptions"
+            :selectable="selectable"
+            :selected-keys="selectedKeys"
+            :loading="loading"
+            :loading-rows="loadingRows"
+            :empty-label="emptyLabel"
+            :first-index="firstIndex"
+            :spacers="spacers"
+            :dragging="rowDragging"
+            :pinned="false"
+            @toggle="toggleOne"
+            @row-click="(row, event) => emit('rowClick', row, event)"
+            @expand="tableRows.toggle"
+            @drag-start="rowReorder.dragStart"
+            @drag-keydown="rowReorder.dragKeydown"
+          >
+            <template v-for="name in bodySlotNames()" #[name]="ctx">
+              <slot :name="name" v-bind="ctx" />
+            </template>
+          </NuiTableBody>
+        </table>
+        <div
+          v-for="drop in dropIndicators"
+          :key="drop.axis"
+          class="nui-table__drop"
+          :class="`nui-table__drop--${drop.axis}`"
+          :style="drop.style"
+          aria-hidden="true"
+        ></div>
+        <div
+          v-if="ghost"
+          class="nui-table__ghost"
+          :class="`nui-table__ghost--${ghost.axis}`"
+          :style="ghost.style"
+          aria-hidden="true"
+        >
+          <NuiIcon alias="grip" class="nui-table__ghost-grip" />
+          <span class="nui-table__ghost-label">{{ ghost.label }}</span>
+        </div>
       </div>
     </div>
     <div v-if="paginationProps" class="nui-table__footer">

@@ -170,6 +170,13 @@ export class TableSection {
     }, left);
   }
 
+  scrollSlack(table: Locator): Promise<number> {
+    return this.scroller(table).evaluate(
+      (element) =>
+        element.scrollWidth - (element.firstElementChild?.getBoundingClientRect().width ?? 0),
+    );
+  }
+
   overflowsHorizontally(table: Locator): Promise<boolean> {
     return this.scroller(table).evaluate((element) => element.scrollWidth > element.clientWidth);
   }

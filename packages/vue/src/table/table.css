@@ -26,17 +26,21 @@
   --_pad-x: var(--nui-space-4);
   --_font-size: var(--nui-font-size-md);
 }
-.nui-table__scroller {
-  position: relative;
-  block-size: var(--_height);
-  overflow: auto;
+.nui-table__frame {
+  overflow: hidden;
   border: 1px solid var(--nui-border);
   border-radius: var(--nui-radius);
   background: var(--nui-surface);
 }
-.nui-table__scroller:focus-visible {
+.nui-table__frame:has(.nui-table__scroller:focus-visible) {
   outline: var(--nui-focus-ring-width) solid var(--nui-focus);
   outline-offset: var(--nui-focus-ring-offset);
+}
+.nui-table__scroller {
+  position: relative;
+  block-size: var(--_height);
+  overflow: auto;
+  outline: none;
 }
 .nui-table__table {
   inline-size: 100%;
@@ -303,6 +307,13 @@
   touch-action: none;
   outline: none;
 }
+.nui-table__cell--head:last-child .nui-table__resizer {
+  inset-inline-end: 0;
+}
+.nui-table__cell--head:last-child .nui-table__resizer::after {
+  inset-inline-start: auto;
+  inset-inline-end: 0;
+}
 .nui-table__resizer::after {
   content: '';
   position: absolute;
@@ -335,12 +346,10 @@
   inset-block-start: var(--_caption-size, 0px);
   inset-block-end: 0;
   inline-size: 2px;
-  margin-inline-start: -1px;
 }
 .nui-table__drop--row {
   inset-inline: 0;
   block-size: 2px;
-  margin-block-start: -1px;
 }
 .nui-table__ghost {
   position: absolute;

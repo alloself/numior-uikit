@@ -173,7 +173,7 @@ Column options: `key`, `label`, `sortable`, `align`, `width` (px or CSS), `minWi
 (`{ row, value, column, index }`), `header-<key>` (`{ column, sort }`), `empty`, `loading`,
 `caption`. Block `nui-table`, modifiers `--size-*`, `--striped`, `--hoverable`,
 `--sticky-header`, `--virtual`, `--selectable`, `--loading`, `--fixed`, `--dragging`,
-`--scrolled-start`, `--scrolled-end`; elements `__scroller`, `__table`, `__caption`, `__head`,
+`--scrolled-start`, `--scrolled-end`; elements `__frame`, `__scroller`, `__table`, `__caption`, `__head`,
 `__body` (`--pinned`), `__row` (`--head`, `--selected`, `--status`, `--loading`, `--dragging`),
 `__cell` (`--head`, `--select`, `--drag`, `--tree`, `--status`, `--align-*`, `--sticky`,
 `--sticky-start`, `--sticky-end`, `--sticky-edge`, `--resizing`, `--dragging`), `__sort`
