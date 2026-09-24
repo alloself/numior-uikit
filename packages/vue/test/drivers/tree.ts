@@ -30,7 +30,7 @@ const labelOfItem = (item: unknown): string =>
 
 const textOf = (element: Element): string =>
   (
-    element.querySelector('.nui-tree__label')?.textContent ??
+    element.querySelector('.nui-row__title')?.textContent ??
     element.querySelector('.nui-tree__text')?.textContent ??
     ''
   ).trim();
@@ -171,6 +171,10 @@ export class TreeDriver extends ComponentDriver {
 
   hasPart(label: string, part: string): boolean {
     return this.node(label).find(`.nui-tree__${part}`).exists();
+  }
+
+  hasDescription(label: string): boolean {
+    return this.node(label).find('.nui-row__description').exists();
   }
 
   isRevealing(label: string): boolean {

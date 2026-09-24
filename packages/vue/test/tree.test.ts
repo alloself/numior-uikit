@@ -27,7 +27,7 @@ describe('NuiTree', () => {
     expect(tree.attr('components', 'aria-level')).toBe('2');
     expect(tree.attr('index.ts', 'aria-setsize')).toBe('2');
     expect(tree.attr('index.ts', 'aria-posinset')).toBe('2');
-    expect(tree.hasPart('index.ts', 'description')).toBe(true);
+    expect(tree.hasDescription('index.ts')).toBe(true);
     expect(tree.attr('src', 'aria-expanded')).toBe('true');
     expect(tree.attr('components', 'aria-expanded')).toBe('false');
     expect(tree.attr('docs', 'aria-expanded')).toBe('false');

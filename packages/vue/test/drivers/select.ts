@@ -20,7 +20,7 @@ const isSelectValue = (value: unknown): value is SelectValue =>
   (Array.isArray(value) && value.every((entry) => typeof entry === 'string'));
 
 const labelOf = (element: Element): string =>
-  (element.querySelector('.nui-listbox__label')?.textContent ?? '').trim();
+  (element.querySelector('.nui-row__title')?.textContent ?? '').trim();
 
 export class SelectDriver extends ComponentDriver {
   protected readonly block = 'nui-select';

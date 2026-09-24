@@ -58,10 +58,7 @@
           :checked="checked ?? 'unchecked'"
           :loading="node.loading"
         >
-          <span class="nui-tree__label">{{ node.item.label }}</span>
-          <span v-if="node.item.description" class="nui-tree__description">
-            {{ node.item.description }}
-          </span>
+          <NuiRow :title="node.item.label" :description="node.item.description" inline nowrap />
         </slot>
       </span>
     </div>
@@ -72,6 +69,7 @@
 import { computed } from 'vue';
 import NuiCheckbox from '../checkbox/NuiCheckbox.vue';
 import NuiIcon from '../icon/NuiIcon.vue';
+import NuiRow from '../row/NuiRow.vue';
 import type { NuiTreeNodeProps } from './tree.types';
 
 const { node, id, active, selected, selectable, checked, icon, folder, start, revealing } =

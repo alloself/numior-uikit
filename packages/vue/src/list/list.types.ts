@@ -49,9 +49,3 @@ export interface NuiListItemProps {
   interactive?: boolean | undefined;
   disabled?: boolean | undefined;
 }
-
-export interface NuiListRowProps {
-  title?: string | undefined;
-  description?: string | undefined;
-  icon?: IconAlias | undefined;
-}

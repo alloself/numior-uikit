@@ -19,7 +19,7 @@ const isModel = (value: unknown): value is string | null =>
 const normalize = (text: string): string => text.replace(/\s/gu, ' ').trim();
 
 const labelOf = (element: Element): string =>
-  normalize(element.querySelector('.nui-listbox__label')?.textContent ?? '');
+  normalize(element.querySelector('.nui-row__title')?.textContent ?? '');
 
 export class TimeFieldDriver extends ComponentDriver {
   protected readonly block = 'nui-time-field';

@@ -13,23 +13,20 @@
     :aria-disabled="option.disabled || undefined"
     @click="choose"
   >
-    <span class="nui-listbox__check">
-      <NuiIcon v-if="selected" alias="check" />
-    </span>
-    <NuiIcon v-if="option.icon" :alias="option.icon" class="nui-listbox__icon" />
-    <span class="nui-listbox__body">
-      <span class="nui-listbox__label"
-        ><slot>{{ option.label }}</slot></span
-      >
-      <span v-if="option.description" class="nui-listbox__description">
-        {{ option.description }}
-      </span>
-    </span>
+    <NuiRow
+      :icon="option.icon"
+      :title="option.label"
+      :description="option.description"
+      :check="selected"
+      nowrap
+    >
+      <slot />
+    </NuiRow>
   </div>
 </template>
 
 <script setup lang="ts" generic="T">
-import NuiIcon from '../icon/NuiIcon.vue';
+import NuiRow from '../row/NuiRow.vue';
 import type { NuiListboxOptionProps } from './listbox.types';
 
 const { option, id, selected, active } = defineProps<NuiListboxOptionProps<T>>();

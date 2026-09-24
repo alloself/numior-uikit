@@ -6,17 +6,17 @@
     @click="onClick"
   >
     <component :is="innerIs()" class="nui-list-item__inner" v-bind="innerAttrs()">
-      <NuiListRow :icon="icon" :title="title" :description="description">
+      <NuiRow
+        :icon="icon"
+        :title="title"
+        :description="description"
+        :check="isOption() ? selected : undefined"
+      >
         <template v-if="$slots.leading" #leading><slot name="leading" /></template>
         <template v-if="$slots.default" #default><slot /></template>
         <template v-if="$slots.description" #description><slot name="description" /></template>
-        <template v-if="$slots.trailing || isOption()" #trailing>
-          <slot name="trailing" />
-          <span v-if="isOption()" class="nui-list-item__check">
-            <NuiIcon v-if="selected" alias="check" />
-          </span>
-        </template>
-      </NuiListRow>
+        <template v-if="$slots.trailing" #trailing><slot name="trailing" /></template>
+      </NuiRow>
     </component>
   </li>
 </template>
@@ -24,9 +24,8 @@
 <script setup lang="ts">
 import { computed, useAttrs } from 'vue';
 import { useSplitAttrs, type AttrRecord } from '@numior/primitives';
-import NuiIcon from '../icon/NuiIcon.vue';
 import NuiLink from '../link/NuiLink.vue';
-import NuiListRow from './NuiListRow.vue';
+import NuiRow from '../row/NuiRow.vue';
 import { useList } from './list-context';
 import type { NuiListItemProps } from './list.types';
 

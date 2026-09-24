@@ -29,8 +29,8 @@ describe('NuiList', () => {
     expect(list.innerTag('Alpha')).toBe('div');
     expect(list.modifierOf('Alpha', 'mode-plain')).toBe(true);
     expect(list.modifierOf('Beta', 'size-md')).toBe(true);
-    expect(list.wrapper.find('.nui-list-item__trailing').text()).toBe('New');
-    expect(list.wrapper.find('.nui-list-item__leading').text()).toBe('A');
+    expect(list.wrapper.find('.nui-row__trailing').text()).toBe('New');
+    expect(list.wrapper.find('.nui-row__leading').text()).toBe('A');
     list.unmount();
     const ordered = ListDriver.mount({
       props: { as: 'ol', variant: 'bordered', size: 'sm' },

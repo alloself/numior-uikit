@@ -34,7 +34,7 @@ const isListValue = (value: unknown): value is ListValue =>
   (Array.isArray(value) && value.every((entry) => typeof entry === 'string'));
 
 const titleOf = (element: Element): string =>
-  (element.querySelector('.nui-list-item__title')?.textContent ?? '').trim();
+  (element.querySelector('.nui-row__title')?.textContent ?? '').trim();
 
 const partSlots = (part: ListPart) => ({
   ...(part.leading === undefined ? {} : { leading: () => part.leading }),
@@ -164,7 +164,7 @@ export class ListDriver extends ComponentDriver {
   }
 
   get checkCount(): number {
-    return this.wrapper.findAll('.nui-list-item__check .nui-icon').length;
+    return this.wrapper.findAll('.nui-row__check .nui-icon').length;
   }
 
   item(title: string): DOMWrapper<HTMLElement> {
@@ -188,7 +188,7 @@ export class ListDriver extends ComponentDriver {
   }
 
   descriptionOf(title: string): string {
-    const description = this.item(title).find('.nui-list-item__description');
+    const description = this.item(title).find('.nui-row__description');
     return description.exists() ? description.text() : '';
   }
 

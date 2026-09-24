@@ -1,6 +1,4 @@
 .nui-listbox {
-  --_indicator: 1.25rem;
-
   color: var(--nui-text);
   font-family: var(--nui-font);
   font-size: var(--nui-font-size-sm);
@@ -67,32 +65,6 @@
   color: var(--nui-text-muted);
   opacity: var(--nui-disabled-opacity);
   cursor: not-allowed;
-}
-.nui-listbox__check {
-  display: inline-flex;
-  flex: none;
-  align-items: center;
-  justify-content: center;
-  inline-size: var(--_indicator);
-  block-size: var(--_indicator);
-  color: var(--nui-primary);
-}
-.nui-listbox__icon {
-  color: var(--nui-text-muted);
-}
-.nui-listbox__body {
-  display: grid;
-  flex: 1 1 auto;
-  min-inline-size: 0;
-}
-.nui-listbox__label {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.nui-listbox__description {
-  color: var(--nui-text-muted);
-  font-size: var(--nui-font-size-xs);
 }
 .nui-listbox__status {
   display: flex;

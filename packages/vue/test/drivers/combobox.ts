@@ -20,7 +20,7 @@ const isComboboxValue = (value: unknown): value is ComboboxValue =>
   (Array.isArray(value) && value.every((entry) => typeof entry === 'string'));
 
 const labelOf = (element: Element): string =>
-  (element.querySelector('.nui-listbox__label')?.textContent ?? '').trim();
+  (element.querySelector('.nui-row__title')?.textContent ?? '').trim();
 
 export class ComboboxDriver extends ComponentDriver {
   protected readonly block = 'nui-combobox';

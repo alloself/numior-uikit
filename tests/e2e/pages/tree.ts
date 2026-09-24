@@ -50,7 +50,7 @@ export class TreeSection {
   item(tree: Locator, label: string): Locator {
     const escaped = label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     return tree.locator('[role="treeitem"]:not(.nui-tree__item--leaving)', {
-      has: tree.page().locator('.nui-tree__label', { hasText: new RegExp(`^${escaped}$`) }),
+      has: tree.page().locator('.nui-row__title', { hasText: new RegExp(`^${escaped}$`) }),
     });
   }
 
@@ -63,14 +63,14 @@ export class TreeSection {
   }
 
   labelOf(item: Locator): Locator {
-    return item.locator('.nui-tree__label');
+    return item.locator('.nui-row__title');
   }
 
   activeLabel(tree: Locator): Promise<string | null> {
     return tree.evaluate((element) => {
       const id = element.getAttribute('aria-activedescendant');
       const active = id === null ? null : document.getElementById(id);
-      return active?.querySelector('.nui-tree__label')?.textContent?.trim() ?? null;
+      return active?.querySelector('.nui-row__title')?.textContent?.trim() ?? null;
     });
   }
 

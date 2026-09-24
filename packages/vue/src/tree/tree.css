@@ -150,16 +150,6 @@
   min-inline-size: 0;
   padding-block: calc((var(--_row) - var(--_font-size) * var(--nui-line-height-tight)) / 2);
 }
-.nui-tree__label {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.nui-tree__description {
-  color: var(--nui-text-muted);
-  font-size: var(--nui-font-size-xs);
-  white-space: nowrap;
-}
 @keyframes nui-tree-spin {
   to {
     rotate: 1turn;

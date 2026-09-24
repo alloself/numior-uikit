@@ -85,7 +85,7 @@ provideList<T>({
 });
 
 const itemTitle = (element: HTMLElement): string =>
-  element.querySelector('.nui-list-item__title')?.textContent ?? '';
+  element.querySelector('.nui-row__title')?.textContent ?? '';
 const firstSelected = (): HTMLElement | null => {
   const found = listElement.value?.querySelector('[role="option"][aria-selected="true"]');
   return found instanceof HTMLElement ? found : null;
