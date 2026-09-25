@@ -166,6 +166,21 @@ export class ListDriver extends ComponentDriver {
     return this.clickCount.value;
   }
 
+  get groupLabels(): string[] {
+    return this.wrapper.findAll('.nui-list__group-label').map((label) => label.text());
+  }
+
+  groupAttr(label: string, name: string): string | undefined {
+    return this.wrapper
+      .findAll('.nui-list__group')
+      .find((group) => group.find('.nui-list__group-label').text() === label)
+      ?.attributes(name);
+  }
+
+  get optionIds(): string[] {
+    return this.wrapper.findAll('[role="option"]').map((option) => option.attributes('id') ?? '');
+  }
+
   get emptyText(): string {
     const empty = this.wrapper.find('.nui-empty');
     return empty.exists() ? empty.text() : '';
@@ -219,7 +234,6 @@ export class ListDriver extends ComponentDriver {
     const event = new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true });
     (document.activeElement ?? document.body).dispatchEvent(event);
     await nextTick();
-    await nextTick();
   }
 
   async focusOutside(): Promise<void> {
@@ -229,7 +243,6 @@ export class ListDriver extends ComponentDriver {
 
   async receiveItems(items: NuiListSource<NuiListEntry<string>>): Promise<void> {
     this.itemsRef.value = items;
-    await nextTick();
     await nextTick();
   }
 }

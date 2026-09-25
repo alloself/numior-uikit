@@ -9,6 +9,7 @@ export interface CalendarMountOptions {
   readonly month?: string;
   readonly dir?: 'ltr' | 'rtl';
   readonly actions?: string;
+  readonly clock?: boolean;
 }
 
 export interface CellState {
@@ -33,7 +34,14 @@ const pointer = (type: string): PointerEvent =>
 export class CalendarDriver extends ComponentDriver {
   protected readonly block = 'nui-calendar';
 
-  static mount({ props = {}, modelValue = null, month, dir, actions }: CalendarMountOptions = {}) {
+  static mount({
+    props = {},
+    modelValue = null,
+    month,
+    dir,
+    actions,
+    clock = false,
+  }: CalendarMountOptions = {}) {
     const model = ref<NuiCalendarValue>(modelValue);
     const monthRef = ref<string | undefined>(month);
 
@@ -44,7 +52,7 @@ export class CalendarDriver extends ComponentDriver {
             NuiCalendar,
             {
               locale: 'ru-RU',
-              today: '2026-09-24',
+              ...(clock ? {} : { today: '2026-09-24' }),
               ...props,
               modelValue: model.value,
               'onUpdate:modelValue': (value: unknown) => {
@@ -236,7 +244,6 @@ export class CalendarDriver extends ComponentDriver {
 
     (document.activeElement ?? document.body).dispatchEvent(event);
     await nextTick();
-    await nextTick();
   }
 
   async clickDay(date: string): Promise<void> {
@@ -270,7 +277,6 @@ export class CalendarDriver extends ComponentDriver {
   async clickTitle(part: 'month' | 'year'): Promise<void> {
     await this.wrapper.find(`.nui-calendar__title-button--${part}`).trigger('click');
     await nextTick();
-    await nextTick();
   }
 
   async clickOption(label: string): Promise<void> {
@@ -281,7 +287,6 @@ export class CalendarDriver extends ComponentDriver {
     }
 
     await option.trigger('click');
-    await nextTick();
     await nextTick();
   }
 
@@ -304,7 +309,6 @@ export class CalendarDriver extends ComponentDriver {
 
   async receive(value: NuiCalendarValue): Promise<void> {
     this.model.value = value;
-    await nextTick();
     await nextTick();
   }
 }

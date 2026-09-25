@@ -1,4 +1,4 @@
-import { toValue, type ComputedRef, type MaybeRefOrGetter, type Ref, type ShallowRef } from 'vue';
+import { toValue, type MaybeRefOrGetter, type Ref, type ShallowRef } from 'vue';
 import {
   useFloating,
   useListNavigation,
@@ -28,9 +28,9 @@ export interface ListboxSurface {
   readonly listboxElement: ShallowRef<HTMLElement | null>;
   readonly setListbox: NuiTriggerRef;
   readonly control: PopoverControl;
-  readonly floatingStyles: ComputedRef<Record<string, string>>;
   readonly navigation: ListNavigation;
   activateHovered(event: PointerEvent): void;
+  restActive(): void;
 }
 
 const selectedOptionIn = (container: HTMLElement | null): HTMLElement | null => {
@@ -47,7 +47,7 @@ export const useListboxSurface = (options: ListboxSurfaceOptions): ListboxSurfac
     mode: options.mode,
   });
 
-  const { floatingStyles } = useFloating(options.anchor, listboxElement, {
+  useFloating(options.anchor, listboxElement, {
     placement: () => toValue(options.placement),
     offset: 4,
     size: { matchWidth: true, fitHeight: true, maxBlockSize: options.maxBlockSize },
@@ -71,5 +71,12 @@ export const useListboxSurface = (options: ListboxSurfaceOptions): ListboxSurfac
     }
   };
 
-  return { listboxElement, setListbox, control, floatingStyles, navigation, activateHovered };
+  return {
+    listboxElement,
+    setListbox,
+    control,
+    navigation,
+    activateHovered,
+    restActive: () => navigation.reset(),
+  };
 };

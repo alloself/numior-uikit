@@ -29,8 +29,6 @@
     role="menu"
     tabindex="-1"
     class="nui-menu nui-menu--sub"
-    :class="`nui-menu--side-${side}`"
-    :style="floatingStyles"
     :aria-labelledby="triggerId"
     v-bind="{ ...contentAttrs, ...surfaceAttrs }"
     @keydown="onContentKeydown"
@@ -42,7 +40,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, useTemplateRef } from 'vue';
+import { ref, useTemplateRef } from 'vue';
 import { useControlId, useDelayedOpen, useDirection } from '@numior/primitives';
 import NuiIcon from '../icon/NuiIcon.vue';
 import NuiMenuRow from './NuiMenuRow.vue';
@@ -63,7 +61,6 @@ defineSlots<{ label(): unknown; default(): unknown }>();
 
 const parent = useMenu();
 const open = ref(false);
-const rtl = ref(false);
 const triggerElement = useTemplateRef<HTMLElement>('trigger');
 const direction = useDirection(triggerElement);
 const contentElement = useTemplateRef<HTMLElement>('content');
@@ -76,7 +73,6 @@ const delay = useDelayedOpen(open, {
 
 const {
   control,
-  floating,
   context,
   attrs: surfaceAttrs,
 } = useMenuSurface({
@@ -84,7 +80,7 @@ const {
   id: () => id,
   trigger: triggerElement,
   content: contentElement,
-  placement: () => (rtl.value ? 'left-start' : 'right-start'),
+  placement: () => (direction.isRtl() ? 'left-start' : 'right-start'),
   offset: -4,
   size: { fitHeight: true },
   loop: true,
@@ -96,13 +92,8 @@ const {
 
 provideMenu(context);
 const contentAttrs = control.contentAttrs;
-const { side, floatingStyles } = floating;
-const forwardKey = computed(() => (rtl.value ? 'ArrowLeft' : 'ArrowRight'));
-const backKey = computed(() => (rtl.value ? 'ArrowRight' : 'ArrowLeft'));
-
-onMounted(() => {
-  rtl.value = direction.isRtl();
-});
+const forwardKey = (): string => (direction.isRtl() ? 'ArrowLeft' : 'ArrowRight');
+const backKey = (): string => (direction.isRtl() ? 'ArrowRight' : 'ArrowLeft');
 
 const onTriggerEnter = (): void => {
   if (!disabled) {
@@ -117,7 +108,7 @@ const openFromPointer = (): void => {
 };
 
 const onTriggerKeydown = (event: KeyboardEvent): void => {
-  const opens = event.key === forwardKey.value || event.key === 'Enter' || event.key === ' ';
+  const opens = event.key === forwardKey() || event.key === 'Enter' || event.key === ' ';
   if (!opens || disabled) {
     return;
   }
@@ -135,7 +126,7 @@ const onTriggerFocusout = (event: FocusEvent): void => {
 
 const onContentKeydown = (event: KeyboardEvent): void => {
   event.stopPropagation();
-  if (event.key === backKey.value) {
+  if (event.key === backKey()) {
     event.preventDefault();
     delay.closeNow();
     triggerElement.value?.focus({ preventScroll: true });

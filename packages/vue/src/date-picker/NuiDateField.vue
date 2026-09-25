@@ -51,7 +51,6 @@
       aria-modal="false"
       :aria-label="labelledBy ? undefined : dialogLabel"
       :aria-labelledby="labelledBy"
-      :style="popover.floatingStyles.value"
       v-bind="popover.control.contentAttrs.value"
       @keydown="onPanelKeydown"
     >

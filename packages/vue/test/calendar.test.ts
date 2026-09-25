@@ -240,6 +240,27 @@ describe('NuiCalendar', () => {
     calendar.unmount();
   });
 
+  it('renders function presets before today is known and resolves them from the clock after mount', async () => {
+    const calendar = CalendarDriver.mount({
+      clock: true,
+      props: {
+        mode: 'range',
+        presets: [{ label: 'Сегодня', range: (today) => ({ start: today, end: today }) }],
+      },
+    });
+
+    expect(calendar.presetLabels).toEqual(['Сегодня']);
+    expect(calendar.presetPressed('Сегодня')).toBe(false);
+    await calendar.clickPreset('Сегодня');
+
+    expect(calendar.value).toEqual(
+      expect.objectContaining({ start: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/) }),
+    );
+
+    expect(calendar.presetPressed('Сегодня')).toBe(true);
+    calendar.unmount();
+  });
+
   it('follows external model changes without stealing focus', async () => {
     const calendar = CalendarDriver.mount({ modelValue: '2026-09-24' });
 

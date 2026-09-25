@@ -48,6 +48,39 @@ export const selectedDatesOf = (value: NuiCalendarValue): string[] => {
   return [value.start, value.end].flatMap((date) => (date === null ? [] : [date]));
 };
 
+type ValueShape = 'none' | 'single' | 'multiple' | 'range';
+
+const shapeOf = (value: NuiCalendarValue): ValueShape => {
+  if (value === null) {
+    return 'none';
+  }
+
+  if (typeof value === 'string') {
+    return 'single';
+  }
+
+  return Array.isArray(value) ? 'multiple' : 'range';
+};
+
+const partsOf = (value: NuiCalendarValue): readonly (string | null)[] => {
+  if (value === null || typeof value === 'string') {
+    return value === null ? [] : [value];
+  }
+
+  return Array.isArray(value) ? value : [value.start, value.end];
+};
+
+export const sameCalendarValue = (a: NuiCalendarValue, b: NuiCalendarValue): boolean => {
+  const left = partsOf(a);
+  const right = partsOf(b);
+
+  return (
+    shapeOf(a) === shapeOf(b) &&
+    left.length === right.length &&
+    left.every((part, index) => part === right[index])
+  );
+};
+
 const bandOf = (input: DayStateInput): DateRange | null =>
   input.range?.start && input.range.end ? normalizeRange(input.range) : input.preview;
 

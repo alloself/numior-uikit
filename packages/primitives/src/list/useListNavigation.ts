@@ -1,4 +1,5 @@
 import { computed, ref, toValue, type ComputedRef, type MaybeRefOrGetter, type Ref } from 'vue';
+import { useDirection } from '../direction/direction-context';
 import { listMoveFor, listTargetIndex, type ListMove, type ListOrientation } from './moves';
 import {
   emptyTypeahead,
@@ -22,26 +23,26 @@ export interface ListNavigationOptions {
   readonly rtl?: MaybeRefOrGetter<boolean | undefined>;
   readonly resting?: (() => HTMLElement | null | undefined) | undefined;
   readonly itemText?: ((element: HTMLElement) => string) | undefined;
-  readonly onActiveChange?: ((element: HTMLElement | null) => void) | undefined;
 }
 
 export interface SetActiveOptions {
   readonly focus?: boolean | undefined;
 }
 
+export type ListActiveTarget = HTMLElement | number | string | null;
+
 export interface ListNavigation {
   readonly activeId: Readonly<Ref<string | undefined>>;
-  readonly activeIndex: Readonly<Ref<number>>;
   readonly typeaheadQuery: ComputedRef<string>;
   items(): HTMLElement[];
   activeElement(): HTMLElement | null;
-  setActive(target: HTMLElement | number | null, options?: SetActiveOptions): void;
+  setActive(target: ListActiveTarget, options?: SetActiveOptions): void;
+  reveal(): void;
   focusFirst(): void;
   focusLast(): void;
   focusNext(): void;
   focusPrev(): void;
   matchTypeahead(key: string): HTMLElement | null;
-  sync(): void;
   reset(): void;
   onKeydown(event: KeyboardEvent): void;
   onFocusin(event: FocusEvent): void;
@@ -67,9 +68,6 @@ const collect = (
 const defaultText = (element: HTMLElement): string =>
   (element.getAttribute('aria-label') ?? element.textContent ?? '').trim();
 
-const isRtl = (container: HTMLElement, explicit: boolean | undefined): boolean =>
-  explicit ?? container.closest('[dir]')?.getAttribute('dir') === 'rtl';
-
 const applyTabStop = (
   previous: HTMLElement | null,
   next: HTMLElement | null,
@@ -78,10 +76,13 @@ const applyTabStop = (
   if (previous && previous !== next) {
     previous.tabIndex = -1;
   }
+
   if (!next) {
     return;
   }
+
   next.tabIndex = 0;
+
   if (focus) {
     next.focus({ preventScroll: true });
   }
@@ -96,13 +97,15 @@ const revealAxis = (
   if (start < scroll) {
     return start;
   }
+
   if (start + size > scroll + viewport) {
     return start + size - viewport;
   }
+
   return undefined;
 };
 
-const reveal = (container: HTMLElement, element: HTMLElement | null): void => {
+const revealIn = (container: HTMLElement, element: HTMLElement | null): void => {
   if (!element || element.offsetParent !== container) {
     return;
   }
@@ -141,14 +144,26 @@ const itemFrom = (target: EventTarget | null, selector: string): HTMLElement | n
   return item instanceof HTMLElement ? item : null;
 };
 
+const resolveTarget = (target: ListActiveTarget, list: HTMLElement[]): HTMLElement | null => {
+  if (typeof target === 'number') {
+    return list[target] ?? null;
+  }
+
+  if (typeof target === 'string') {
+    return list.find((item) => item.id === target) ?? null;
+  }
+
+  return target;
+};
+
 export const useListNavigation = (
   container: MaybeRefOrGetter<HTMLElement | null | undefined>,
   options: ListNavigationOptions,
 ): ListNavigation => {
   const activeId = ref<string | undefined>();
-  const activeIndex = ref(-1);
   const typeahead = ref<TypeaheadState>(emptyTypeahead);
-  let active: HTMLElement | null = null;
+  const direction = useDirection(container);
+  const held: { node: HTMLElement | null } = { node: null };
   const roving = (): boolean => (toValue(options.mode) ?? 'roving') === 'roving';
 
   const items = (): HTMLElement[] => {
@@ -156,29 +171,44 @@ export const useListNavigation = (
     return root ? collect(root, options.selector, options.scope) : [];
   };
 
-  const currentIndex = (list: HTMLElement[]): number => (active ? list.indexOf(active) : -1);
+  const activeElement = (): HTMLElement | null => {
+    if (held.node?.isConnected) {
+      return held.node;
+    }
 
-  const setActive = (
-    target: HTMLElement | number | null,
-    settings: SetActiveOptions = {},
-  ): void => {
-    const list = items();
-    const element = typeof target === 'number' ? (list[target] ?? null) : target;
-    if (roving()) {
-      applyTabStop(active, element, settings.focus ?? true);
-    }
+    held.node = activeId.value === undefined ? null : resolveTarget(activeId.value, items());
+
+    return held.node;
+  };
+
+  const currentIndex = (list: HTMLElement[]): number => {
+    const active = activeElement();
+    return active ? list.indexOf(active) : -1;
+  };
+
+  const reveal = (): void => {
     const root = toValue(container);
+
     if (root) {
-      reveal(root, element);
+      revealIn(root, activeElement());
     }
-    active = element;
-    activeIndex.value = element ? list.indexOf(element) : -1;
-    activeId.value = idOf(element);
-    options.onActiveChange?.(element);
+  };
+
+  const setActive = (target: ListActiveTarget, settings: SetActiveOptions = {}): void => {
+    const element = resolveTarget(target, items());
+
+    if (roving()) {
+      applyTabStop(activeElement(), element, settings.focus ?? true);
+    }
+
+    held.node = element;
+    activeId.value = typeof target === 'string' ? target : idOf(element);
+    reveal();
   };
 
   const move = (kind: ListMove): void => {
     const list = items();
+
     if (list.length === 0) {
       return;
     }
@@ -207,53 +237,49 @@ export const useListNavigation = (
     setActive(options.resting?.() ?? items()[0] ?? null, { focus: false });
   };
 
-  const sync = (): void => {
-    if (!active || !active.isConnected || !items().includes(active)) {
-      reset();
-    }
-  };
-
   const typing = (event: KeyboardEvent): boolean =>
     (toValue(options.typeahead) ?? true) &&
     isPrintable(event) &&
     (event.key !== ' ' || isTypeaheadActive(typeahead.value, Date.now()));
 
   const onKeydown = (event: KeyboardEvent): void => {
-    const root = toValue(container);
-    if (!root || event.defaultPrevented) {
+    if (!toValue(container) || event.defaultPrevented) {
       return;
     }
+
     const orientation = toValue(options.orientation) ?? 'vertical';
-    const kind = listMoveFor(event.key, orientation, isRtl(root, toValue(options.rtl)));
+    const rtl = toValue(options.rtl) ?? direction.isRtl();
+    const kind = listMoveFor(event.key, orientation, rtl);
+
     if (kind) {
       event.preventDefault();
       move(kind);
     } else if (typing(event)) {
       event.preventDefault();
-      setActive(match(event.key) ?? active);
+      setActive(match(event.key) ?? activeElement());
     }
   };
 
   const onFocusin = (event: FocusEvent): void => {
     const item = itemFrom(event.target, options.selector);
-    if (roving() && item && item !== active && items().includes(item)) {
+
+    if (roving() && item && item !== activeElement() && items().includes(item)) {
       setActive(item, { focus: false });
     }
   };
 
   return {
     activeId,
-    activeIndex,
     typeaheadQuery: computed(() => typeahead.value.query),
     items,
-    activeElement: () => active,
+    activeElement,
     setActive,
+    reveal,
     focusFirst: () => move('first'),
     focusLast: () => move('last'),
     focusNext: () => move('next'),
     focusPrev: () => move('prev'),
     matchTypeahead: match,
-    sync,
     reset,
     onKeydown,
     onFocusin,

@@ -1,3 +1,4 @@
+import { flushPromises } from '@vue/test-utils';
 import { describe, expect, it } from 'vitest';
 import { PopoverDriver } from './drivers/popover';
 
@@ -19,25 +20,26 @@ describe('NuiPopover', () => {
     popover.unmount();
   });
 
-  it('follows native light dismiss and exposes placement as a side modifier', async () => {
+  it('follows native light dismiss and writes the resolved side onto the element', async () => {
     const popover = PopoverDriver.mount({
       open: true,
       props: { placement: 'right-start', arrow: true },
     });
 
     expect(popover.popoverCalls.show).toBe(1);
-    expect(popover.sideModifier).toBe('nui-popover--side-right');
+    expect(popover.sideVector).toBe('1 0');
     expect(popover.arrow.exists()).toBe(true);
     popover.dismissNatively();
     expect(popover.modelOpen).toBe(false);
     popover.unmount();
   });
 
-  it('positions with fixed strategy and generates an id when none is given', () => {
-    const popover = PopoverDriver.mount();
+  it('positions with fixed strategy once open and generates an id when none is given', async () => {
+    const popover = PopoverDriver.mount({ open: true });
     const id = popover.content.attributes('id');
     expect(id).toBeTruthy();
     expect(popover.trigger.attributes('popovertarget')).toBe(id);
+    await flushPromises();
     expect(popover.content.attributes('style')).toContain('position: fixed');
     expect(popover.arrow.exists()).toBe(false);
     popover.unmount();

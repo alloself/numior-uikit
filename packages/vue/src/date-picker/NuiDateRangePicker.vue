@@ -70,7 +70,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, useTemplateRef, watch } from 'vue';
+import { computed, ref, useTemplateRef, watch } from 'vue';
 import {
   normalizeRange,
   useField,
@@ -191,16 +191,10 @@ const onInputKeydown = (event: KeyboardEvent): void => {
   }
 };
 
-onMounted(() => {
-  watch(
-    popover.open,
-    (isOpen) => {
-      if (isOpen) {
-        calendar.value?.focus(model.value.start ?? undefined);
-      }
-    },
-    { flush: 'post' },
-  );
+watch(popover.open, (isOpen) => {
+  if (isOpen) {
+    calendar.value?.focus(model.value.start ?? undefined);
+  }
 });
 
 defineExpose({

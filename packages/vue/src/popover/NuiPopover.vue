@@ -1,14 +1,8 @@
 <template>
   <slot name="trigger" :attrs="triggerAttrs" :open="open" />
-  <div
-    ref="content"
-    class="nui-popover"
-    :class="`nui-popover--side-${side}`"
-    :style="floatingStyles"
-    v-bind="{ ...contentAttrs, ...$attrs }"
-  >
+  <div ref="content" class="nui-popover" v-bind="{ ...contentAttrs, ...$attrs }">
     <slot />
-    <span v-if="arrow" ref="arrow-node" class="nui-popover__arrow" :style="arrowStyles"></span>
+    <span v-if="arrow" ref="arrow-node" class="nui-popover__arrow"></span>
   </div>
 </template>
 
@@ -31,7 +25,7 @@ const contentElement = useTemplateRef<HTMLElement>('content');
 const arrowNode = useTemplateRef<HTMLElement>('arrow-node');
 const { contentAttrs, invokerAttrs } = usePopover(contentElement, { open, id: () => id });
 
-const { side, floatingStyles, arrowStyles } = useFloating(trigger, contentElement, {
+useFloating(trigger, contentElement, {
   placement: () => placement,
   offset: () => offset,
   arrow: arrowNode,

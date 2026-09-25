@@ -5,6 +5,7 @@ import type { DayState } from './day-state';
 
 export interface RequestOptions {
   readonly focus?: boolean | undefined;
+  readonly take?: boolean | undefined;
 }
 
 export interface CalendarContext {

@@ -33,6 +33,12 @@ describe('NuiDateRangePicker', () => {
     await picker.clickOpen();
     expect(picker.isOpen).toBe(true);
     expect(picker.months).toBe(2);
+    await picker.clickDay('2026-08-31');
+    expect(picker.isOpen).toBe(true);
+    expect(picker.value).toEqual({ start: '2026-08-31', end: null });
+    await picker.clickClear();
+    expect(picker.isOpen).toBe(true);
+    expect(picker.value).toEqual({ start: null, end: null });
     expect(picker.presetLabels).toEqual(['Неделя']);
     await picker.clickDay('2026-09-10');
     expect(picker.isOpen).toBe(true);

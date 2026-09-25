@@ -211,7 +211,6 @@ export class TreeDriver extends ComponentDriver {
     const event = new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true });
     (document.activeElement ?? document.body).dispatchEvent(event);
     await nextTick();
-    await nextTick();
   }
 
   async clickToggle(label: string): Promise<void> {
@@ -237,20 +236,17 @@ export class TreeDriver extends ComponentDriver {
   async receiveItems(items: readonly NuiTreeItem<string>[]): Promise<void> {
     this.itemsRef.value = items;
     await nextTick();
-    await nextTick();
   }
 
   async setHeight(height: number): Promise<void> {
     defineSize(this.tree.element, 'clientHeight', height);
     this.tree.element.dispatchEvent(new Event('scroll'));
     await nextTick();
-    await nextTick();
   }
 
   async scrollTo(top: number): Promise<void> {
     defineSize(this.tree.element, 'scrollTop', top);
     this.tree.element.dispatchEvent(new Event('scroll'));
-    await nextTick();
     await nextTick();
   }
 

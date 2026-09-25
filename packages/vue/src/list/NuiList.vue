@@ -64,7 +64,7 @@
 </template>
 
 <script setup lang="ts" generic="T, E extends NuiListEntry<T> = NuiListEntry<T>">
-import { computed, onMounted, useTemplateRef, watch } from 'vue';
+import { computed, onMounted, useTemplateRef } from 'vue';
 import { useControlId, useListNavigation } from '@numior/primitives';
 import NuiEmpty from '../empty/NuiEmpty.vue';
 import NuiIcon from '../icon/NuiIcon.vue';
@@ -196,14 +196,8 @@ const onFocusout = (event: FocusEvent): void => {
 };
 
 onMounted(() => {
-  watch(
-    () => [owns(), flat.value.length],
-    () => {
-      if (owns()) {
-        navigation.reset();
-      }
-    },
-    { immediate: true, flush: 'post' },
-  );
+  if (owns()) {
+    navigation.reset();
+  }
 });
 </script>

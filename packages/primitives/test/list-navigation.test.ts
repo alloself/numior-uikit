@@ -81,26 +81,35 @@ describe('useListNavigation', () => {
     list.press('ArrowDown');
     list.press('ArrowDown');
     expect(list.activeDescendant).toBe('item-1');
-    expect(list.activeIndex).toBe(1);
     expect(list.focusedText).toBeUndefined();
     expect(list.tabIndexes).toEqual([-1, -1, -1, -1, -1]);
     list.unmount();
   });
 
-  it('adopts a pointer-focused item and falls back to the first item when the active one leaves', async () => {
+  it('adopts a pointer-focused item and starts over when the active one leaves', async () => {
     const list = ListHarness.mount();
     list.focusItem(3);
     expect(list.activeText).toBe('Cherry');
     expect(list.tabIndexes).toEqual([-1, -1, -1, 0, -1]);
     await list.remove(3);
-    list.navigation.sync();
-    expect(list.activeText).toBe('Apple');
-    expect(list.tabIndexes).toEqual([0, -1, -1, -1]);
+    expect(list.activeText).toBeUndefined();
     list.press('ArrowDown');
-    expect(list.focusedText).toBe('Banana');
+    expect(list.focusedText).toBe('Apple');
     list.navigation.reset();
     expect(list.activeText).toBe('Apple');
     expect(list.query).toBe('');
+    list.unmount();
+  });
+
+  it('activates an item by id before it exists and resolves it once rendered', async () => {
+    const list = ListHarness.mount({ mode: 'virtual' });
+    list.navigation.setActive('item-7', { focus: false });
+    expect(list.activeDescendant).toBe('item-7');
+    expect(list.activeText).toBeUndefined();
+    await list.append('Elderberry', 'Fig', 'Grape');
+    expect(list.activeText).toBe('Grape');
+    list.press('ArrowUp');
+    expect(list.activeDescendant).toBe('item-6');
     list.unmount();
   });
 });

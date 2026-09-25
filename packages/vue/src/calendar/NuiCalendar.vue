@@ -6,10 +6,10 @@
     :class="[
       `nui-calendar--size-${size}`,
       `nui-calendar--mode-${mode}`,
-      `nui-calendar--view-${view}`,
+      `nui-calendar--view-${calendarView.view.value}`,
       {
         'nui-calendar--week-numbers': weekNumbers,
-        'nui-calendar--multi': visibleMonths.length > 1,
+        'nui-calendar--multi': calendarView.visibleMonths.value.length > 1,
         'nui-calendar--picking': selection.picking.value,
         'nui-calendar--presets': presetList.length > 0,
         'nui-calendar--disabled': disabled,
@@ -35,11 +35,11 @@
     </aside>
     <div class="nui-calendar__months">
       <NuiCalendarMonth
-        v-for="(key, index) in visibleMonths"
+        v-for="(key, index) in calendarView.visibleMonths.value"
         :key="index"
         :month="key"
         :first="index === 0"
-        :last="index === visibleMonths.length - 1"
+        :last="index === calendarView.visibleMonths.value.length - 1"
       />
     </div>
     <div v-if="showToday || $slots.actions" class="nui-calendar__footer">
@@ -78,7 +78,7 @@ import NuiButton from '../button/NuiButton.vue';
 import NuiCalendarMonth from './NuiCalendarMonth.vue';
 import { provideCalendar, type RequestOptions } from './calendar-context';
 import type { NuiCalendarProps, NuiCalendarValue, NuiDatePreset } from './calendar.types';
-import { dayStateOf, selectedDatesOf } from './day-state';
+import { dayStateOf, sameCalendarValue, selectedDatesOf } from './day-state';
 import { useCalendarSelection } from './use-calendar-selection';
 import { useCalendarView } from './use-calendar-view';
 
@@ -129,8 +129,6 @@ const calendarView = useCalendarView({
   months: () => months,
 });
 
-const { view, month, visibleMonths, yearPage, slide, setMonth, setView, shift } = calendarView;
-
 const selection = useCalendarSelection({
   model,
   mode: () => mode,
@@ -138,8 +136,9 @@ const selection = useCalendarSelection({
 });
 
 const focused = ref(initialDate());
-const pending = ref(false);
-const lastPick = ref<NuiCalendarValue>(model.value);
+const focusRequests = ref(0);
+const focusState = { pending: false, take: false };
+const picks: { last: NuiCalendarValue } = { last: model.value };
 
 const isDisabled = (date: string): boolean =>
   !isWithin(date, min, max) || (isDateDisabled?.(date) ?? false);
@@ -147,6 +146,8 @@ const isDisabled = (date: string): boolean =>
 const { isRtl } = useDirection(root);
 
 const reveal = (key: string): void => {
+  const { visibleMonths, month, setMonth } = calendarView;
+
   if (visibleMonths.value.includes(key)) {
     return;
   }
@@ -161,31 +162,52 @@ const request = (date: string, options: RequestOptions = {}): void => {
 
   reveal(monthKeyOf(target));
   focused.value = target;
-  pending.value = options.focus ?? true;
+  focusState.pending = options.focus ?? true;
+  focusState.take = options.take ?? false;
+
+  if (focusState.pending) {
+    focusRequests.value += 1;
+  }
+};
+
+const holdsFocus = (): boolean => {
+  const active = document.activeElement;
+
+  return active === null || active === document.body || root.value?.contains(active) === true;
 };
 
 const settle = (): void => {
-  if (!pending.value || view.value !== 'days') {
+  if (!focusState.pending || calendarView.view.value !== 'days') {
+    return;
+  }
+
+  if (!focusState.take && !holdsFocus()) {
+    focusState.pending = false;
+
     return;
   }
 
   const button = root.value?.querySelector(`time[datetime="${focused.value}"]`)?.closest('button');
 
   if (button instanceof HTMLButtonElement) {
-    pending.value = false;
+    focusState.pending = false;
     button.focus({ preventScroll: true });
   }
 };
 
+const remember = (value: NuiCalendarValue | undefined): void => {
+  if (value !== undefined) {
+    picks.last = value;
+  }
+};
+
 const pick = (date: string): void => {
-  selection.pick(date);
-  lastPick.value = model.value;
+  remember(selection.pick(date));
   request(date);
 };
 
 const click = (date: string): void => {
-  selection.click(date);
-  lastPick.value = model.value;
+  remember(selection.click(date));
   request(date);
 };
 
@@ -194,7 +216,7 @@ const pickMonth = (key: string): void => {
   const year = Number(key.slice(0, 4));
   const monthNumber = Number(key.slice(5, 7));
 
-  setView('days');
+  calendarView.setView('days');
 
   request(
     formatIsoDate({ year, month: monthNumber, day: Math.min(day, daysInMonth(year, monthNumber)) }),
@@ -202,8 +224,8 @@ const pickMonth = (key: string): void => {
 };
 
 const pickYear = (year: number): void => {
-  setMonth(`${String(year).padStart(4, '0')}-${month.value.slice(5, 7)}`);
-  setView('months');
+  calendarView.setMonth(`${String(year).padStart(4, '0')}-${calendarView.month.value.slice(5, 7)}`);
+  calendarView.setView('months');
 };
 
 const goToday = (): void => {
@@ -214,7 +236,7 @@ const goToday = (): void => {
   if (mode === 'single' && !isDisabled(todayDate.value)) {
     pick(todayDate.value);
   } else {
-    setView('days');
+    calendarView.setView('days');
     request(todayDate.value);
   }
 };
@@ -228,8 +250,12 @@ const onPointerup = (event: PointerEvent): void => {
 const applyPreset = (preset: NuiDatePreset): void => {
   const range = selection.resolvePreset(preset);
 
+  if (!range) {
+    return;
+  }
+
   model.value = range;
-  lastPick.value = range;
+  picks.last = range;
 
   if (range.start) {
     request(range.start, { focus: false });
@@ -251,10 +277,7 @@ provideCalendar({
     year: yearLabel,
     week: weekLabel,
   }),
-  view,
-  month,
-  yearPage,
-  slide,
+  ...calendarView,
   focused,
   isRtl,
   isDisabled,
@@ -266,8 +289,6 @@ provideCalendar({
       range: selection.range.value,
       preview: selection.preview.value,
     }),
-  shift,
-  setView,
   pickMonth,
   pickYear,
   request,
@@ -275,25 +296,20 @@ provideCalendar({
   hover: (date) => {
     selection.hovered.value = date;
   },
-  arm: (date) => {
-    selection.arm(date);
-    lastPick.value = model.value;
-  },
-  release: (date) => {
-    selection.release(date);
-    lastPick.value = model.value;
-  },
+  arm: (date) => remember(selection.arm(date)),
+  release: (date) => remember(selection.release(date)),
 });
 
 onMounted(() => {
   mounted.value = true;
-  watch([focused, month, view, pending], settle, { flush: 'post' });
+  watch([focusRequests, calendarView.month, calendarView.view], settle, { flush: 'post' });
 
   watch(model, (value) => {
-    if (value === lastPick.value) {
+    if (sameCalendarValue(value, picks.last)) {
       return;
     }
 
+    picks.last = value;
     const first = selectedDatesOf(value)[0];
 
     if (first) {
@@ -302,5 +318,5 @@ onMounted(() => {
   });
 });
 
-defineExpose({ focus: (date?: string) => request(date ?? focused.value) });
+defineExpose({ focus: (date?: string) => request(date ?? focused.value, { take: true }) });
 </script>

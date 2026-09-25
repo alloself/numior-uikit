@@ -4,14 +4,12 @@
     ref="content"
     role="tooltip"
     class="nui-tooltip"
-    :class="`nui-tooltip--side-${side}`"
-    :style="floatingStyles"
     v-bind="{ ...contentAttrs, ...$attrs }"
     @pointerenter="delay.cancel()"
     @pointerleave="delay.scheduleClose()"
   >
     <slot />
-    <span ref="arrow-node" class="nui-tooltip__arrow" :style="arrowStyles"></span>
+    <span ref="arrow-node" class="nui-tooltip__arrow"></span>
   </div>
 </template>
 
@@ -47,7 +45,7 @@ const { contentAttrs, id: tooltipId } = usePopover(contentElement, {
   mode: 'manual',
 });
 
-const { side, floatingStyles, arrowStyles } = useFloating(trigger, contentElement, {
+useFloating(trigger, contentElement, {
   placement: () => placement,
   offset: () => offset,
   arrow: arrowNode,

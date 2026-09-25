@@ -7,18 +7,9 @@ import {
   shift,
   size as sizeMiddleware,
   type Middleware,
+  type MiddlewareData,
 } from '@floating-ui/dom';
-import {
-  computed,
-  onMounted,
-  ref,
-  shallowRef,
-  toValue,
-  watch,
-  type ComputedRef,
-  type MaybeRefOrGetter,
-  type Ref,
-} from 'vue';
+import { onMounted, toValue, watch, type MaybeRefOrGetter } from 'vue';
 
 export type FloatingSide = 'top' | 'bottom' | 'left' | 'right';
 
@@ -41,35 +32,59 @@ export interface FloatingOptions {
   readonly strategy?: FloatingStrategy | undefined;
 }
 
-export interface Floating {
-  readonly placement: Readonly<Ref<FloatingPlacement>>;
-  readonly side: ComputedRef<FloatingSide>;
-  readonly floatingStyles: ComputedRef<Record<string, string>>;
-  readonly arrowStyles: ComputedRef<Record<string, string>>;
-  update(): Promise<void>;
-}
-
 interface Elements {
   readonly reference: HTMLElement;
   readonly floating: HTMLElement;
 }
 
-interface ArrowPosition {
-  readonly x?: number | undefined;
-  readonly y?: number | undefined;
+interface SideVector {
+  readonly x: number;
+  readonly y: number;
 }
 
-interface Bounds {
-  readonly width?: number | undefined;
-  readonly height?: number | undefined;
-}
+const SIDE_VECTORS: Record<FloatingSide, SideVector> = {
+  top: { x: 0, y: -1 },
+  bottom: { x: 0, y: 1 },
+  left: { x: -1, y: 0 },
+  right: { x: 1, y: 0 },
+};
+
+const STATIC_SIDES: Record<FloatingSide, FloatingSide> = {
+  top: 'bottom',
+  bottom: 'top',
+  left: 'right',
+  right: 'left',
+};
 
 const sideOf = (placement: FloatingPlacement): FloatingSide => {
   const [side] = placement.split('-');
   return side === 'top' || side === 'left' || side === 'right' ? side : 'bottom';
 };
 
-const middleware = (options: FloatingOptions, onBounds: (bounds: Bounds) => void): Middleware[] => {
+const roundToPixel = (value: number): number => {
+  const ratio = typeof window === 'undefined' ? 1 : window.devicePixelRatio || 1;
+  return Math.round(value * ratio) / ratio;
+};
+
+const cappedHeight = (size: FloatingSize, height: number): number =>
+  size.maxBlockSize === undefined ? height : Math.min(height, size.maxBlockSize);
+
+const applySize = (
+  floating: HTMLElement,
+  size: FloatingSize,
+  referenceWidth: number,
+  availableHeight: number,
+): void => {
+  if (size.matchWidth) {
+    floating.style.minInlineSize = `${referenceWidth}px`;
+  }
+
+  if (size.fitHeight) {
+    floating.style.maxBlockSize = `${cappedHeight(size, availableHeight)}px`;
+  }
+};
+
+const middleware = (options: FloatingOptions, floating: HTMLElement): Middleware[] => {
   const list: Middleware[] = [
     offsetMiddleware(toValue(options.offset) ?? 0),
     flip(),
@@ -77,57 +92,66 @@ const middleware = (options: FloatingOptions, onBounds: (bounds: Bounds) => void
   ];
 
   const size = toValue(options.size);
+
   if (size?.matchWidth || size?.fitHeight) {
     list.push(
       sizeMiddleware({
         padding: 8,
         apply: ({ rects, availableHeight }) =>
-          onBounds({ width: rects.reference.width, height: availableHeight }),
+          applySize(floating, size, rects.reference.width, availableHeight),
       }),
     );
   }
+
   const element = toValue(options.arrow);
+
   if (element) {
     list.push(arrowMiddleware({ element }));
   }
+
   return list;
 };
 
-const cappedHeight = (size: FloatingSize, height: number): number =>
-  size.maxBlockSize === undefined ? height : Math.min(height, size.maxBlockSize);
+const applySide = (floating: HTMLElement, side: FloatingSide): void => {
+  const vector = SIDE_VECTORS[side];
 
-const sizeStyles = (size: FloatingSize | undefined, bounds: Bounds): Record<string, string> => ({
-  ...(size?.matchWidth && bounds.width !== undefined ? { minInlineSize: `${bounds.width}px` } : {}),
-  ...(size?.fitHeight && bounds.height !== undefined
-    ? { maxBlockSize: `${cappedHeight(size, bounds.height)}px` }
-    : {}),
-});
-
-const roundToPixel = (value: number): number => {
-  const ratio = typeof window === 'undefined' ? 1 : window.devicePixelRatio || 1;
-  return Math.round(value * ratio) / ratio;
+  floating.style.setProperty('--_side-x', String(vector.x));
+  floating.style.setProperty('--_side-y', String(vector.y));
 };
 
-const pxStyles = (position: ArrowPosition): Record<string, string> => ({
-  ...(position.x === undefined ? {} : { left: `${position.x}px` }),
-  ...(position.y === undefined ? {} : { top: `${position.y}px` }),
-});
+const applyPosition = (floating: HTMLElement, strategy: FloatingStrategy, x: number, y: number) => {
+  floating.style.position = strategy;
+  floating.style.left = `${roundToPixel(x)}px`;
+  floating.style.top = `${roundToPixel(y)}px`;
+};
+
+const applyArrow = (
+  arrow: HTMLElement,
+  side: FloatingSide,
+  data: MiddlewareData['arrow'] | undefined,
+): void => {
+  const vertical = side === 'top' || side === 'bottom';
+  const half = (vertical ? arrow.offsetHeight : arrow.offsetWidth) / 2;
+
+  arrow.style.left = data?.x === undefined ? '' : `${roundToPixel(data.x)}px`;
+  arrow.style.top = data?.y === undefined ? '' : `${roundToPixel(data.y)}px`;
+  arrow.style.right = '';
+  arrow.style.bottom = '';
+  arrow.style[STATIC_SIDES[side]] = `${-half}px`;
+};
 
 export const useFloating = (
   reference: MaybeRefOrGetter<HTMLElement | null | undefined>,
   floating: MaybeRefOrGetter<HTMLElement | null | undefined>,
   options: FloatingOptions = {},
-): Floating => {
+): void => {
   const strategy = options.strategy ?? 'fixed';
   const requested = (): FloatingPlacement => toValue(options.placement) ?? 'bottom';
-  const placement = ref<FloatingPlacement>(requested());
-  const position = shallowRef({ x: 0, y: 0 });
-  const arrowPosition = shallowRef<ArrowPosition>({});
-  const bounds = shallowRef<Bounds>({});
 
   const elements = (): Elements | null => {
     const referenceElement = toValue(reference);
     const floatingElement = toValue(floating);
+
     return referenceElement && floatingElement
       ? { reference: referenceElement, floating: floatingElement }
       : null;
@@ -135,6 +159,7 @@ export const useFloating = (
 
   const update = async (): Promise<void> => {
     const pair = elements();
+
     if (!pair) {
       return;
     }
@@ -142,19 +167,18 @@ export const useFloating = (
     const result = await computePosition(pair.reference, pair.floating, {
       placement: requested(),
       strategy,
-      middleware: middleware(options, (next) => {
-        bounds.value = next;
-      }),
+      middleware: middleware(options, pair.floating),
     });
 
-    position.value = { x: roundToPixel(result.x), y: roundToPixel(result.y) };
-    placement.value = result.placement;
-    const arrow: ArrowPosition = result.middlewareData.arrow ?? {};
+    const side = sideOf(result.placement);
+    const arrow = toValue(options.arrow);
 
-    arrowPosition.value = {
-      x: arrow.x === undefined ? undefined : roundToPixel(arrow.x),
-      y: arrow.y === undefined ? undefined : roundToPixel(arrow.y),
-    };
+    applyPosition(pair.floating, strategy, result.x, result.y);
+    applySide(pair.floating, side);
+
+    if (arrow) {
+      applyArrow(arrow, side, result.middlewareData.arrow);
+    }
   };
 
   onMounted(() => {
@@ -164,6 +188,8 @@ export const useFloating = (
         if (!pair || !enabled) {
           return;
         }
+
+        applySide(pair.floating, sideOf(requested()));
         onCleanup(autoUpdate(pair.reference, pair.floating, () => void update()));
       },
       { immediate: true, flush: 'post' },
@@ -179,17 +205,4 @@ export const useFloating = (
       () => void update(),
     );
   });
-
-  return {
-    placement,
-    side: computed(() => sideOf(placement.value)),
-    floatingStyles: computed(() => ({
-      position: strategy,
-      left: `${position.value.x}px`,
-      top: `${position.value.y}px`,
-      ...sizeStyles(toValue(options.size), bounds.value),
-    })),
-    arrowStyles: computed(() => pxStyles(arrowPosition.value)),
-    update,
-  };
 };

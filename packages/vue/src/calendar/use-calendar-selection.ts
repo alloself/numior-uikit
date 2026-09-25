@@ -15,12 +15,12 @@ export interface CalendarSelection {
   readonly picking: ComputedRef<boolean>;
   readonly preview: ComputedRef<DateRange | null>;
   readonly hovered: Ref<string | undefined>;
-  pick(date: string): void;
-  click(date: string): void;
-  arm(date: string): void;
-  release(date: string): void;
+  pick(date: string): NuiCalendarValue;
+  click(date: string): NuiCalendarValue | undefined;
+  arm(date: string): NuiCalendarValue | undefined;
+  release(date: string): NuiCalendarValue | undefined;
   clearArm(): void;
-  resolvePreset(preset: NuiDatePreset): DateRange;
+  resolvePreset(preset: NuiDatePreset): DateRange | null;
   isPresetActive(preset: NuiDatePreset): boolean;
 }
 
@@ -52,49 +52,71 @@ export const useCalendarSelection = (options: CalendarSelectionOptions): Calenda
       : [...current, date].toSorted();
   };
 
-  const pick = (date: string): void => {
+  const nextValue = (date: string): NuiCalendarValue => {
     const mode = options.mode();
 
     if (mode === 'single') {
-      options.model.value = date;
-    } else if (mode === 'multiple') {
-      options.model.value = toggleMultiple(date);
-    } else {
-      const current = range.value;
-
-      options.model.value =
-        current?.start && !current.end
-          ? normalizeRange({ start: current.start, end: date })
-          : { start: date, end: null };
+      return date;
     }
+
+    if (mode === 'multiple') {
+      return toggleMultiple(date);
+    }
+
+    const current = range.value;
+
+    return current?.start && !current.end
+      ? normalizeRange({ start: current.start, end: date })
+      : { start: date, end: null };
   };
 
-  const click = (date: string): void => {
+  const pick = (date: string): NuiCalendarValue => {
+    const value = nextValue(date);
+
+    options.model.value = value;
+
+    return value;
+  };
+
+  const click = (date: string): NuiCalendarValue | undefined => {
     if (armed.value === date) {
       armed.value = undefined;
 
-      return;
+      return undefined;
     }
 
-    pick(date);
+    return pick(date);
   };
 
-  const arm = (date: string): void => {
-    if (options.mode() === 'range' && !picking.value) {
-      pick(date);
-      armed.value = date;
+  const arm = (date: string): NuiCalendarValue | undefined => {
+    if (options.mode() !== 'range' || picking.value) {
+      return undefined;
     }
+
+    armed.value = date;
+
+    return pick(date);
   };
 
-  const release = (date: string): void => {
-    if (armed.value !== undefined && armed.value !== date && picking.value) {
-      pick(date);
-      armed.value = undefined;
+  const release = (date: string): NuiCalendarValue | undefined => {
+    if (armed.value === undefined || armed.value === date || !picking.value) {
+      return undefined;
     }
+
+    armed.value = undefined;
+
+    return pick(date);
   };
 
-  const resolvePreset = (preset: NuiDatePreset): DateRange =>
-    typeof preset.range === 'function' ? preset.range(options.today() ?? '') : preset.range;
+  const resolvePreset = (preset: NuiDatePreset): DateRange | null => {
+    if (typeof preset.range !== 'function') {
+      return preset.range;
+    }
+
+    const today = options.today();
+
+    return today === undefined ? null : preset.range(today);
+  };
 
   return {
     selected,
@@ -110,6 +132,10 @@ export const useCalendarSelection = (options: CalendarSelectionOptions): Calenda
       armed.value = undefined;
     },
     resolvePreset,
-    isPresetActive: (preset) => sameRange(range.value, resolvePreset(preset)),
+    isPresetActive: (preset) => {
+      const resolved = resolvePreset(preset);
+
+      return resolved !== null && sameRange(range.value, resolved);
+    },
   };
 };

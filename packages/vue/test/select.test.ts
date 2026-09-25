@@ -105,6 +105,9 @@ describe('NuiSelect', () => {
     expect(select.focusedOption).toBe('Lime');
     await select.hoverOption('Lemon');
     expect(select.focusedOption).toBe('Lemon');
+    expect(select.activeLabel).toBe('Lemon');
+    await select.leaveListbox();
+    expect(select.activeLabel).toBe('Apple');
     await select.focusOutside();
     expect(select.expanded).toBe(false);
     select.unmount();

@@ -1,6 +1,6 @@
 import { mount, type VueWrapper } from '@vue/test-utils';
 import { vi } from 'vitest';
-import { defineComponent, h, nextTick, shallowRef } from 'vue';
+import { defineComponent, h, nextTick, ref, shallowRef, type Ref } from 'vue';
 import {
   useListNavigation,
   type ListFocusMode,
@@ -25,7 +25,7 @@ type Outcome = { readonly ran: true; readonly value: ListNavigation } | { readon
 
 export class ListHarness {
   static mount(options: ListHarnessOptions = {}): ListHarness {
-    const labels = options.labels ?? DEFAULT_LABELS;
+    const labels = ref([...(options.labels ?? DEFAULT_LABELS)]);
     const role = options.role ?? 'option';
     const outcome: { current: Outcome } = { current: { ran: false } };
 
@@ -52,7 +52,7 @@ export class ListHarness {
                 onKeydown: navigation.onKeydown,
                 onFocusin: navigation.onFocusin,
               },
-              labels.map((label, index) =>
+              labels.value.map((label, index) =>
                 h(
                   'button',
                   {
@@ -75,12 +75,13 @@ export class ListHarness {
     if (!outcome.current.ran) {
       throw new Error('setup did not run');
     }
-    return new ListHarness(wrapper, outcome.current.value);
+    return new ListHarness(wrapper, outcome.current.value, labels);
   }
 
   private constructor(
     private readonly wrapper: VueWrapper,
     readonly navigation: ListNavigation,
+    private readonly labels: Ref<string[]>,
   ) {}
 
   private get container(): HTMLElement {
@@ -89,10 +90,6 @@ export class ListHarness {
 
   private get buttons(): HTMLElement[] {
     return this.wrapper.findAll<HTMLElement>('button').map((button) => button.element);
-  }
-
-  get activeIndex(): number {
-    return this.navigation.activeIndex.value;
   }
 
   get activeText(): string | undefined {
@@ -138,6 +135,11 @@ export class ListHarness {
 
   async remove(index: number): Promise<void> {
     this.buttons[index]?.remove();
+    await nextTick();
+  }
+
+  async append(...labels: string[]): Promise<void> {
+    this.labels.value = [...this.labels.value, ...labels];
     await nextTick();
   }
 

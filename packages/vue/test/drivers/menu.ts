@@ -210,7 +210,6 @@ export class MenuDriver extends ComponentDriver {
     const event = new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true });
     (document.activeElement ?? document.body).dispatchEvent(event);
     await nextTick();
-    await nextTick();
     return event.defaultPrevented;
   }
 
@@ -237,7 +236,6 @@ export class MenuDriver extends ComponentDriver {
 
   async advance(ms: number): Promise<void> {
     vi.advanceTimersByTime(ms);
-    await nextTick();
     await nextTick();
   }
 

@@ -31,8 +31,11 @@ vi.mock('@floating-ui/dom', () => ({
   },
 }));
 
+const sideVector = (element: HTMLElement): string =>
+  `${element.style.getPropertyValue('--_side-x')} ${element.style.getPropertyValue('--_side-y')}`;
+
 describe('useFloating', () => {
-  it('positions the floating element, reports the resolved side and stops when disabled', async () => {
+  it('writes the position, the resolved side and the arrow straight to the elements', async () => {
     computePosition.mockResolvedValue({
       x: 10,
       y: 20,
@@ -53,17 +56,16 @@ describe('useFloating', () => {
       }),
     );
 
+    expect(sideVector(capture.second)).toBe('0 1');
     await flushPromises();
 
-    expect(capture.value.floatingStyles.value).toEqual({
-      position: 'fixed',
-      left: '10px',
-      top: '20px',
-    });
-
-    expect(capture.value.placement.value).toBe('top');
-    expect(capture.value.side.value).toBe('top');
-    expect(capture.value.arrowStyles.value).toEqual({ left: '5px' });
+    expect(capture.second.style.position).toBe('fixed');
+    expect(capture.second.style.left).toBe('10px');
+    expect(capture.second.style.top).toBe('20px');
+    expect(sideVector(capture.second)).toBe('0 -1');
+    expect(arrowElement.style.left).toBe('5px');
+    expect(arrowElement.style.bottom).toBe('0px');
+    expect(arrowElement.style.top).toBe('');
 
     expect(computePosition).toHaveBeenCalledWith(
       capture.first,
@@ -92,12 +94,8 @@ describe('useFloating', () => {
     );
 
     await flushPromises();
-
-    expect(capture.value.floatingStyles.value).toMatchObject({
-      minInlineSize: '240px',
-      maxBlockSize: '320px',
-    });
-
+    expect(capture.second.style.minInlineSize).toBe('240px');
+    expect(capture.second.style.maxBlockSize).toBe('320px');
     capture.unmount();
 
     const capped = captureWithElements((reference, floating) =>
@@ -105,27 +103,24 @@ describe('useFloating', () => {
     );
 
     await flushPromises();
-    expect(capped.value.floatingStyles.value).toMatchObject({ maxBlockSize: '200px' });
+    expect(capped.second.style.maxBlockSize).toBe('200px');
     capped.unmount();
     const plain = captureWithElements((reference, floating) => useFloating(reference, floating));
     await flushPromises();
-    expect(plain.value.floatingStyles.value).not.toHaveProperty('minInlineSize');
+    expect(plain.second.style.minInlineSize).toBe('');
     plain.unmount();
   });
 
-  it('starts from the requested placement with neutral coordinates', () => {
+  it('announces the requested side before measuring and stays idle while disabled', () => {
+    computePosition.mockClear();
+
     const capture = captureWithElements((reference, floating) =>
       useFloating(reference, floating, { placement: 'right-start', enabled: false }),
     );
 
-    expect(capture.value.side.value).toBe('right');
-
-    expect(capture.value.floatingStyles.value).toEqual({
-      position: 'fixed',
-      left: '0px',
-      top: '0px',
-    });
-
+    expect(sideVector(capture.second)).toBe(' ');
+    expect(capture.second.style.left).toBe('');
+    expect(computePosition).not.toHaveBeenCalled();
     capture.unmount();
   });
 });

@@ -149,12 +149,22 @@ export class SelectDriver extends ComponentDriver {
     const event = new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true });
     (document.activeElement ?? document.body).dispatchEvent(event);
     await nextTick();
-    await nextTick();
   }
 
   async clickOption(label: string): Promise<void> {
     await this.option(label).trigger('click');
     await nextTick();
+  }
+
+  async leaveListbox(): Promise<void> {
+    await this.listbox.trigger('pointerleave');
+    await nextTick();
+  }
+
+  get activeLabel(): string | undefined {
+    const active = this.wrapper.find('.nui-list-item--active');
+
+    return active.exists() ? labelOf(active.element) : undefined;
   }
 
   async hoverOption(label: string): Promise<void> {

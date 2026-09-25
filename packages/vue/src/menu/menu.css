@@ -1,5 +1,8 @@
 .nui-menu {
-  --_shift: 0 calc(-1 * var(--nui-space-1));
+  --_side-x: 0;
+  --_side-y: 1;
+  --_shift: calc(-1 * var(--_side-x) * var(--nui-space-1))
+    calc(-1 * var(--_side-y) * var(--nui-space-1));
 
   position: fixed;
   inset: auto;
@@ -24,15 +27,6 @@
     translate var(--nui-duration-normal) var(--nui-easing),
     display var(--nui-duration-fast) allow-discrete,
     overlay var(--nui-duration-fast) allow-discrete;
-}
-.nui-menu--side-top {
-  --_shift: 0 var(--nui-space-1);
-}
-.nui-menu--side-left {
-  --_shift: var(--nui-space-1) 0;
-}
-.nui-menu--side-right {
-  --_shift: calc(-1 * var(--nui-space-1)) 0;
 }
 .nui-menu:popover-open {
   opacity: 1;

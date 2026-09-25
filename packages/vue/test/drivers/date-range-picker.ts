@@ -122,14 +122,14 @@ export class DateRangePickerDriver extends ComponentDriver {
   async clickOpen(): Promise<void> {
     await this.wrapper.find('.nui-date-picker__open').trigger('click');
     await nextTick();
-    await nextTick();
   }
 
   async clickDay(date: string): Promise<void> {
     const day = this.wrapper.find(`time[datetime="${date}"]`).element.closest('button');
 
+    day?.focus();
     day?.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
-    await nextTick();
+    day?.dispatchEvent(new FocusEvent('focusout', { bubbles: true, relatedTarget: null }));
     await nextTick();
   }
 
@@ -137,7 +137,6 @@ export class DateRangePickerDriver extends ComponentDriver {
     const preset = this.wrapper.findAll('.nui-calendar__preset').find((el) => el.text() === label);
 
     await preset?.trigger('click');
-    await nextTick();
     await nextTick();
   }
 

@@ -45,7 +45,6 @@
       v-model="model"
       class="nui-select__listbox"
       variant="floating"
-      :style="floatingStyles"
       :items="options"
       :selectable="multiple ? 'multiple' : 'single'"
       :get-key="getKey"
@@ -56,6 +55,7 @@
       @select="onSelect"
       @keydown="onListboxKeydown"
       @pointermove="activateHovered"
+      @pointerleave="restActive"
       @focusin="onFocusin"
       @focusout="onFocusout"
     >
@@ -150,7 +150,7 @@ const showClear = computed(() => clearable && selectedValues.value.length > 0 &&
 const open = ref(false);
 const triggerElement = useTemplateRef<HTMLButtonElement>('trigger');
 
-const { listboxElement, setListbox, control, floatingStyles, navigation, activateHovered } =
+const { listboxElement, setListbox, control, navigation, activateHovered, restActive } =
   useListboxSurface({
     anchor: triggerElement,
     open,
@@ -163,6 +163,26 @@ const { listboxElement, setListbox, control, floatingStyles, navigation, activat
   });
 
 const state = { pending: 'selected', inside: false };
+
+const activate = (): void => {
+  navigation.reset();
+
+  if (state.pending === 'first') {
+    navigation.setActive(0, { focus: false });
+  } else if (state.pending === 'last') {
+    navigation.setActive(navigation.items().length - 1, { focus: false });
+  }
+
+  state.pending = 'selected';
+};
+
+watch(open, (isOpen) => {
+  if (isOpen) {
+    activate();
+  } else {
+    navigation.reset();
+  }
+});
 
 const optionOf = (element: HTMLElement | null): NuiOption<T> | undefined =>
   element ? flat.value[optionIndexOf(element)] : undefined;
@@ -182,16 +202,9 @@ onMounted(() => {
   watch(
     open,
     (isOpen) => {
-      navigation.reset();
       if (isOpen) {
-        if (state.pending === 'last') {
-          navigation.focusLast();
-        } else if (state.pending === 'first') {
-          navigation.focusFirst();
-        } else {
-          navigation.setActive(navigation.activeElement());
-        }
-        state.pending = 'selected';
+        navigation.reveal();
+        navigation.activeElement()?.focus({ preventScroll: true });
       } else if (state.inside) {
         state.inside = false;
         triggerElement.value?.focus({ preventScroll: true });

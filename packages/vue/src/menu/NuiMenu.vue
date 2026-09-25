@@ -5,8 +5,6 @@
     role="menu"
     tabindex="-1"
     class="nui-menu"
-    :class="`nui-menu--side-${side}`"
-    :style="floatingStyles"
     :aria-label="label"
     :aria-labelledby="label === undefined ? triggerId : undefined"
     v-bind="{ ...contentAttrs, ...surfaceAttrs, ...$attrs }"
@@ -47,7 +45,6 @@ const triggerId = useControlId(() => (id === undefined ? undefined : `${id}-trig
 
 const {
   control,
-  floating,
   context,
   attrs: surfaceAttrs,
 } = useMenuSurface({
@@ -65,7 +62,6 @@ const {
 
 provideMenu(context);
 const contentAttrs = control.contentAttrs;
-const { side, floatingStyles } = floating;
 
 const onTriggerKeydown = (event: KeyboardEvent): void => {
   if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {

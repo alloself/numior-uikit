@@ -1,5 +1,8 @@
 .nui-popover {
-  --_shift: 0 calc(-1 * var(--nui-space-1));
+  --_side-x: 0;
+  --_side-y: 1;
+  --_shift: calc(-1 * var(--_side-x) * var(--nui-space-1))
+    calc(-1 * var(--_side-y) * var(--nui-space-1));
   --_arrow: 0.625rem;
 
   position: fixed;
@@ -25,15 +28,6 @@
     display var(--nui-duration-fast) allow-discrete,
     overlay var(--nui-duration-fast) allow-discrete;
 }
-.nui-popover--side-top {
-  --_shift: 0 var(--nui-space-1);
-}
-.nui-popover--side-left {
-  --_shift: var(--nui-space-1) 0;
-}
-.nui-popover--side-right {
-  --_shift: calc(-1 * var(--nui-space-1)) 0;
-}
 .nui-popover:popover-open {
   opacity: 1;
   translate: 0 0;
@@ -49,26 +43,8 @@
   inline-size: var(--_arrow);
   block-size: var(--_arrow);
   border: 1px solid var(--nui-border);
+  border-right-color: transparent;
+  border-bottom-color: transparent;
   background: inherit;
-  rotate: 45deg;
-}
-.nui-popover--side-bottom .nui-popover__arrow {
-  top: calc(var(--_arrow) / -2);
-  border-right-color: transparent;
-  border-bottom-color: transparent;
-}
-.nui-popover--side-top .nui-popover__arrow {
-  bottom: calc(var(--_arrow) / -2);
-  border-top-color: transparent;
-  border-left-color: transparent;
-}
-.nui-popover--side-left .nui-popover__arrow {
-  right: calc(var(--_arrow) / -2);
-  border-bottom-color: transparent;
-  border-left-color: transparent;
-}
-.nui-popover--side-right .nui-popover__arrow {
-  left: calc(var(--_arrow) / -2);
-  border-top-color: transparent;
-  border-right-color: transparent;
+  rotate: calc(45deg - atan2(var(--_side-x), var(--_side-y)));
 }

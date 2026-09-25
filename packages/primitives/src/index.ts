@@ -115,7 +115,6 @@ export { useSplitAttrs } from './attrs/useSplitAttrs';
 export type { AttrRecord, SplitAttrs } from './attrs/useSplitAttrs';
 export { useFloating } from './floating/useFloating';
 export type {
-  Floating,
   FloatingOptions,
   FloatingPlacement,
   FloatingSide,

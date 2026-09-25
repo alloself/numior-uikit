@@ -1,11 +1,4 @@
-import {
-  ref,
-  toValue,
-  type ComputedRef,
-  type MaybeRefOrGetter,
-  type Ref,
-  type ShallowRef,
-} from 'vue';
+import { ref, toValue, type MaybeRefOrGetter, type Ref, type ShallowRef } from 'vue';
 import {
   useFloating,
   usePopover,
@@ -30,7 +23,6 @@ export interface PickerPopover {
   readonly panelElement: ShallowRef<HTMLElement | null>;
   readonly setPanel: NuiTriggerRef;
   readonly control: PopoverControl;
-  readonly floatingStyles: ComputedRef<Record<string, string>>;
   show(): void;
   hide(options?: HideOptions): void;
   toggle(): void;
@@ -43,7 +35,7 @@ export const usePickerPopover = (options: PickerPopoverOptions): PickerPopover =
   const { trigger: panelElement, setTrigger: setPanel } = useTriggerElement();
   const control = usePopover(panelElement, { open, id: options.id, mode: 'manual' });
 
-  const { floatingStyles } = useFloating(options.anchor, panelElement, {
+  useFloating(options.anchor, panelElement, {
     placement: () => toValue(options.placement),
     offset: 4,
     size: { fitHeight: true },
@@ -68,9 +60,21 @@ export const usePickerPopover = (options: PickerPopoverOptions): PickerPopover =
   };
 
   const onFocusout = (event: FocusEvent): void => {
-    if (!contains(event.relatedTarget)) {
-      hide();
+    if (contains(event.relatedTarget)) {
+      return;
     }
+
+    if (event.relatedTarget !== null) {
+      hide();
+
+      return;
+    }
+
+    queueMicrotask(() => {
+      if (!contains(document.activeElement)) {
+        hide();
+      }
+    });
   };
 
   return {
@@ -78,7 +82,6 @@ export const usePickerPopover = (options: PickerPopoverOptions): PickerPopover =
     panelElement,
     setPanel,
     control,
-    floatingStyles,
     show: () => control.show(),
     hide,
     toggle: () => (open.value ? hide({ focus: true }) : control.show()),

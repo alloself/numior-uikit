@@ -74,7 +74,6 @@
       v-model="model"
       class="nui-combobox__listbox"
       variant="floating"
-      :style="floatingStyles"
       :items="filtered"
       :selectable="multiple ? 'multiple' : 'single'"
       :get-key="getKey"
@@ -86,6 +85,7 @@
       v-bind="control.contentAttrs.value"
       @select="onSelect"
       @pointermove="activateHovered"
+      @pointerleave="restActive"
       @pointerdown.prevent
     >
       <template #item="slot">
@@ -111,7 +111,7 @@ import NuiButton from '../button/NuiButton.vue';
 import NuiChip from '../chip/NuiChip.vue';
 import NuiIcon from '../icon/NuiIcon.vue';
 import NuiList from '../list/NuiList.vue';
-import { filterOptions, type NuiOption } from '../shared/options';
+import { filterOptions, flattenEntries, optionElementId, type NuiOption } from '../shared/options';
 import { useListboxSurface } from '../shared/use-listbox-surface';
 import { useOptionSelection } from '../shared/use-option-selection';
 import type { NuiComboboxProps } from './combobox.types';
@@ -194,6 +194,8 @@ watch(
 const defaultFilter = (option: NuiOption<T>, needle: string): boolean =>
   option.label.toLowerCase().includes(needle);
 
+const isEnabled = (option: NuiOption<T>): boolean => !option.disabled;
+
 const filtered = computed(() => {
   const needle = query.value.trim().toLowerCase();
   if (filter === false || !filtering.value || needle === '') {
@@ -208,7 +210,7 @@ const open = ref(false);
 const fieldElement = useTemplateRef<HTMLElement>('field');
 const inputElement = useTemplateRef<HTMLInputElement>('input');
 
-const { listboxElement, setListbox, control, floatingStyles, navigation, activateHovered } =
+const { listboxElement, setListbox, control, navigation, activateHovered, restActive } =
   useListboxSurface({
     anchor: fieldElement,
     open,
@@ -222,6 +224,34 @@ const { listboxElement, setListbox, control, floatingStyles, navigation, activat
   });
 
 const state = { pending: 'first' };
+const filteredFlat = computed(() => flattenEntries(filtered.value));
+
+const activate = (position: 'first' | 'last'): void => {
+  const entries = filteredFlat.value;
+
+  const index =
+    position === 'first' ? entries.findIndex(isEnabled) : entries.findLastIndex(isEnabled);
+
+  navigation.setActive(index < 0 ? null : optionElementId(listboxId.value, index), {
+    focus: false,
+  });
+};
+
+watch(open, (isOpen) => {
+  if (isOpen) {
+    activate(state.pending === 'last' ? 'last' : 'first');
+  } else {
+    navigation.setActive(null, { focus: false });
+  }
+
+  state.pending = 'first';
+});
+
+watch(filtered, () => {
+  if (open.value) {
+    activate('first');
+  }
+});
 
 const focusInput = (): void => inputElement.value?.focus({ preventScroll: true });
 
@@ -272,18 +302,14 @@ const toggle = (): void => {
 
 onMounted(() => {
   watch(
-    open,
-    (isOpen) => {
-      navigation.reset();
-      if (isOpen && state.pending === 'last') {
-        navigation.focusLast();
+    [open, filtered],
+    () => {
+      if (open.value) {
+        navigation.reveal();
       }
-      state.pending = 'first';
     },
     { flush: 'post' },
   );
-
-  watch(filtered, () => navigation.reset(), { flush: 'post' });
 });
 
 const onInput = (): void => {

@@ -68,7 +68,6 @@
       :ref="setListbox"
       class="nui-time-field__listbox"
       variant="floating"
-      :style="floatingStyles"
       :model-value="model ?? undefined"
       :items="suggestions"
       selectable="single"
@@ -80,6 +79,7 @@
       @select="choose"
       @keydown="onListboxKeydown"
       @pointermove="activateHovered"
+      @pointerleave="restActive"
       @focusin="onListFocusin"
       @focusout="onListFocusout"
     />
@@ -321,9 +321,9 @@ const {
   listboxElement,
   setListbox,
   control,
-  floatingStyles,
   navigation: list,
   activateHovered,
+  restActive,
 } = useListboxSurface({
   anchor: rootElement,
   open,
@@ -337,6 +337,8 @@ const {
 });
 
 const state = { inside: false };
+
+watch(open, () => list.reset());
 
 const suggestions = computed<NuiOption<string>[]>(() =>
   timeOptions({ step, min: minTime.value, max: maxTime.value }).map((time) => ({
@@ -389,9 +391,9 @@ onMounted(() => {
   watch(
     open,
     (isOpen) => {
-      list.reset();
       if (isOpen) {
-        list.setActive(list.activeElement());
+        list.reveal();
+        list.activeElement()?.focus({ preventScroll: true });
       } else if (state.inside) {
         state.inside = false;
         focusHour();

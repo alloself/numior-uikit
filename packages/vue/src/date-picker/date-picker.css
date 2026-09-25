@@ -2,7 +2,10 @@
   --_height: var(--nui-control-height-md);
   --_padding: var(--nui-field-padding-md);
   --_font-size: var(--nui-control-font-size-md);
-  --_shift: 0 calc(-1 * var(--nui-space-1));
+  --_side-x: 0;
+  --_side-y: 1;
+  --_shift: calc(-1 * var(--_side-x) * var(--nui-space-1))
+    calc(-1 * var(--_side-y) * var(--nui-space-1));
 
   position: relative;
   display: inline-flex;

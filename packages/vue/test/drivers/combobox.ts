@@ -150,7 +150,6 @@ export class ComboboxDriver extends ComponentDriver {
     const event = new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true });
     this.input.element.dispatchEvent(event);
     await nextTick();
-    await nextTick();
     return event.defaultPrevented;
   }
 

@@ -11,7 +11,6 @@ import {
   useFloating,
   useListNavigation,
   usePopover,
-  type Floating,
   type FloatingPlacement,
   type FloatingSize,
   type ListNavigation,
@@ -46,7 +45,6 @@ export interface MenuSurfaceAttrs {
 
 export interface MenuSurface {
   readonly control: PopoverControl;
-  readonly floating: Floating;
   readonly navigation: ListNavigation;
   readonly context: MenuContext;
   readonly attrs: MenuSurfaceAttrs;
@@ -70,7 +68,7 @@ const labelOf = (element: HTMLElement): string =>
 export const useMenuSurface = (options: MenuSurfaceOptions): MenuSurface => {
   const control = usePopover(options.content, { open: options.open, id: options.id, mode: 'auto' });
 
-  const floating = useFloating(options.trigger, options.content, {
+  useFloating(options.trigger, options.content, {
     placement: options.placement,
     offset: options.offset,
     size: options.size,
@@ -101,25 +99,38 @@ export const useMenuSurface = (options: MenuSurfaceOptions): MenuSurface => {
     },
   };
 
-  const focusOnOpen = (): void => {
+  const activateOnOpen = (): void => {
     navigation.reset();
+
     if (state.pending === 'first') {
-      navigation.focusFirst();
+      navigation.setActive(0, { focus: false });
     } else if (state.pending === 'last') {
-      navigation.focusLast();
-    } else {
-      focusElement(options.content.value);
+      navigation.setActive(navigation.items().length - 1, { focus: false });
     }
+  };
+
+  const focusOnOpen = (): void => {
+    focusElement(state.pending === 'none' ? options.content.value : navigation.activeElement());
     state.pending = 'none';
   };
 
   const onClosed = (): void => {
-    navigation.reset();
     if (state.inside) {
       state.inside = false;
       focusElement(options.trigger.value);
     }
   };
+
+  watch(
+    () => options.open.value,
+    (isOpen) => {
+      if (isOpen) {
+        activateOnOpen();
+      } else {
+        navigation.reset();
+      }
+    },
+  );
 
   onMounted(() => {
     watch(
@@ -142,7 +153,6 @@ export const useMenuSurface = (options: MenuSurfaceOptions): MenuSurface => {
 
   return {
     control,
-    floating,
     navigation,
     context,
     attrs: {

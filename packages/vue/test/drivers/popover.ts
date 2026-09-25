@@ -61,8 +61,10 @@ export class PopoverDriver extends ComponentDriver {
     return this.stubs.popoverCalls;
   }
 
-  get sideModifier(): string | undefined {
-    return this.content.classes().find((name) => name.startsWith('nui-popover--side-'));
+  get sideVector(): string {
+    const style = this.content.element.style;
+
+    return `${style.getPropertyValue('--_side-x')} ${style.getPropertyValue('--_side-y')}`;
   }
 
   get arrow(): DOMWrapper<Element> {

@@ -127,7 +127,6 @@ export class DatePickerDriver extends ComponentDriver {
     );
 
     await nextTick();
-    await nextTick();
   }
 
   get hiddenValue(): string | undefined {
@@ -155,7 +154,6 @@ export class DatePickerDriver extends ComponentDriver {
   async pressInput(key: string): Promise<void> {
     await this.input.trigger('keydown', { key });
     await nextTick();
-    await nextTick();
   }
 
   async pressInPanel(key: string): Promise<void> {
@@ -163,12 +161,10 @@ export class DatePickerDriver extends ComponentDriver {
 
     (document.activeElement ?? document.body).dispatchEvent(event);
     await nextTick();
-    await nextTick();
   }
 
   async clickOpen(): Promise<void> {
     await this.openButton.trigger('click');
-    await nextTick();
     await nextTick();
   }
 
@@ -181,7 +177,6 @@ export class DatePickerDriver extends ComponentDriver {
     const day = this.wrapper.find(`time[datetime="${date}"]`).element.closest('button');
 
     day?.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
-    await nextTick();
     await nextTick();
   }
 

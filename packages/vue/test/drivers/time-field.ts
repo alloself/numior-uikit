@@ -164,7 +164,6 @@ export class TimeFieldDriver extends ComponentDriver {
 
     document.activeElement?.dispatchEvent(event);
     await nextTick();
-    await nextTick();
   }
 
   async typeText(text: string): Promise<void> {
@@ -177,18 +176,15 @@ export class TimeFieldDriver extends ComponentDriver {
     const event = new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true, ...init });
     (document.activeElement ?? document.body).dispatchEvent(event);
     await nextTick();
-    await nextTick();
   }
 
   async clickClock(): Promise<void> {
     openPopoverNatively(this.listbox.element);
     await nextTick();
-    await nextTick();
   }
 
   async dismissNatively(): Promise<void> {
     dismissPopoverNatively(this.listbox.element);
-    await nextTick();
     await nextTick();
   }
 
@@ -206,7 +202,6 @@ export class TimeFieldDriver extends ComponentDriver {
 
   async focusOutside(): Promise<void> {
     this.wrapper.find<HTMLButtonElement>('.outside').element.focus();
-    await nextTick();
     await nextTick();
   }
 

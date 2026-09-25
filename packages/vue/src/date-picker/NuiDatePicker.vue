@@ -65,7 +65,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, useTemplateRef, watch } from 'vue';
+import { computed, ref, useTemplateRef, watch } from 'vue';
 import {
   joinDateTime,
   splitDateTime,
@@ -197,16 +197,10 @@ const onTimeKeydown = (event: KeyboardEvent): void => {
   }
 };
 
-onMounted(() => {
-  watch(
-    popover.open,
-    (isOpen) => {
-      if (isOpen) {
-        calendar.value?.focus(dateValue.value ?? undefined);
-      }
-    },
-    { flush: 'post' },
-  );
+watch(popover.open, (isOpen) => {
+  if (isOpen) {
+    calendar.value?.focus(dateValue.value ?? undefined);
+  }
 });
 
 defineExpose({
