@@ -94,6 +94,7 @@
     <PickersSection />
     <IntlSection />
     <DatesSection />
+    <UploadSection />
     <DataSection />
     <TreeSection />
     <TableSection />
@@ -151,6 +152,7 @@ import FeedbackSection from './FeedbackSection.vue';
 import NavigationSection from './NavigationSection.vue';
 import IntlSection from './IntlSection.vue';
 import DatesSection from './DatesSection.vue';
+import UploadSection from './UploadSection.vue';
 import PickersSection from './PickersSection.vue';
 import DataSection from './DataSection.vue';
 import TreeSection from './TreeSection.vue';

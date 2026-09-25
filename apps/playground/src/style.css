@@ -89,6 +89,11 @@ select {
   gap: var(--nui-space-4);
   max-inline-size: 28rem;
 }
+.upload-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--nui-space-3);
+}
 .output {
   margin-block: var(--nui-space-4) 0;
   padding: var(--nui-space-3);

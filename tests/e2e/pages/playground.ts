@@ -9,6 +9,7 @@ import { OverlaysSection } from './overlays';
 import { PickersSection } from './pickers';
 import { TableSection } from './table';
 import { TreeSection } from './tree';
+import { UploadSection } from './upload';
 
 export type Theme = 'system' | 'light' | 'dark';
 export type Accent = 'indigo' | 'emerald' | 'rose';
@@ -146,6 +147,7 @@ export class PlaygroundPage {
   readonly pickers: PickersSection;
   readonly intl: IntlSection;
   readonly dates: DatesSection;
+  readonly upload: UploadSection;
   readonly data: DataSection;
   readonly tree: TreeSection;
   readonly table: TableSection;
@@ -182,6 +184,7 @@ export class PlaygroundPage {
     this.pickers = new PickersSection(page);
     this.intl = new IntlSection(page);
     this.dates = new DatesSection(page);
+    this.upload = new UploadSection(page);
     this.data = new DataSection(page);
     this.tree = new TreeSection(page);
     this.table = new TableSection(page);
