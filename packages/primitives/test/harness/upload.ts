@@ -33,12 +33,13 @@ type Outcome<T> = { readonly ran: true; readonly value: T } | { readonly ran: fa
 export const fileOf = (name: string, size = 3, type = 'text/plain'): File =>
   new File([new Uint8Array(size)], name, { type });
 
+const noop = (): void => {};
+
 const controlledModel = (initial: UploadItem<string>[]): ControlledModel => {
-  const state = { committed: initial, pending: initial };
-  let notify = (): void => {};
+  const state = { committed: initial, pending: initial, notify: noop };
 
   const items = customRef<UploadItem<string>[]>((track, trigger) => {
-    notify = trigger;
+    state.notify = trigger;
 
     return {
       get: () => {
@@ -55,7 +56,7 @@ const controlledModel = (initial: UploadItem<string>[]): ControlledModel => {
     items,
     commit: () => {
       state.committed = state.pending;
-      notify();
+      state.notify();
     },
   };
 };

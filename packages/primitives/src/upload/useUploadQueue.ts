@@ -95,7 +95,7 @@ export const useUploadQueue = <R>(options: UploadQueueOptions<R>): UploadQueue<R
     return find(id);
   };
 
-  const run = (item: UploadItem<R>, file: File): void => {
+  const run = async (item: UploadItem<R>, file: File): Promise<void> => {
     const controller = new AbortController();
 
     controllers.set(item.id, controller);
@@ -104,36 +104,34 @@ export const useUploadQueue = <R>(options: UploadQueueOptions<R>): UploadQueue<R
     const settled = (changes: Partial<UploadItem<R>>): UploadItem<R> | undefined =>
       controller.signal.aborted ? undefined : finish(item.id, changes);
 
-    options
-      .upload(file, {
-        onProgress: (fraction) => {
-          if (!controller.signal.aborted) {
-            patch(item.id, { progress: clampFraction(fraction) });
-          }
-        },
-        signal: controller.signal,
-      })
-      .then(
-        (result) => {
-          const done = settled({ status: 'done', progress: 1, result });
+    const context = {
+      onProgress: (fraction: number): void => {
+        if (!controller.signal.aborted) {
+          patch(item.id, { progress: clampFraction(fraction) });
+        }
+      },
+      signal: controller.signal,
+    };
 
-          if (done) {
-            options.onDone?.(done);
-            pump();
-          }
-        },
-        (error: unknown) => {
-          const failed = settled({
-            status: 'error',
-            error: { reason: 'upload', message: messageOf(error) },
-          });
+    try {
+      const result = await options.upload(file, context);
+      const done = settled({ status: 'done', progress: 1, result });
 
-          if (failed) {
-            options.onError?.(failed);
-            pump();
-          }
-        },
-      );
+      if (done) {
+        options.onDone?.(done);
+        pump();
+      }
+    } catch (error: unknown) {
+      const failed = settled({
+        status: 'error',
+        error: { reason: 'upload', message: messageOf(error) },
+      });
+
+      if (failed) {
+        options.onError?.(failed);
+        pump();
+      }
+    }
   };
 
   const fill = (): void => {
@@ -145,7 +143,7 @@ export const useUploadQueue = <R>(options: UploadQueueOptions<R>): UploadQueue<R
       }
 
       if (item.status === 'queued' && item.file && !controllers.has(item.id)) {
-        run(item, item.file);
+        void run(item, item.file);
       }
     }
   };
