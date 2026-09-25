@@ -73,6 +73,7 @@ await importBuild('primitives', [
   'useVirtualList',
   'useReorder',
   'useUploadQueue',
+  'useMediaQuery',
 ]);
 
 const code = await importBuild('vue', [

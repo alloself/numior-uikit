@@ -190,6 +190,7 @@ export type {
   ReorderState,
 } from './reorder/useReorder';
 export { useDelayedOpen } from './timing/useDelayedOpen';
+export { useMediaQuery } from './media/useMediaQuery';
 export type { DelayedOpen, DelayedOpenOptions } from './timing/useDelayedOpen';
 export { createToastStore } from './toast/toast-store';
 export type {
