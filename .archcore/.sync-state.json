@@ -3,6 +3,26 @@
   "files": {},
   "relations": [
     {
+      "source": "dates.adr.md",
+      "target": "numior-ui.plan.md",
+      "type": "implements"
+    },
+    {
+      "source": "dates.adr.md",
+      "target": "pickers.adr.md",
+      "type": "depends_on"
+    },
+    {
+      "source": "dates.adr.md",
+      "target": "intl-fields.adr.md",
+      "type": "depends_on"
+    },
+    {
+      "source": "dates.adr.md",
+      "target": "component-authoring.rule.md",
+      "type": "related"
+    },
+    {
       "source": "numior-ui.plan.md",
       "target": "modular-foundation.adr.md",
       "type": "depends_on"

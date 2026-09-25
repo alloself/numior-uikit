@@ -8,6 +8,7 @@ import {
   NuiBadge,
   NuiBreadcrumbs,
   NuiButton,
+  NuiCalendar,
   NuiCard,
   NuiCardContent,
   NuiCardDescription,
@@ -18,6 +19,8 @@ import {
   NuiCheckbox,
   NuiChip,
   NuiCombobox,
+  NuiDatePicker,
+  NuiDateRangePicker,
   NuiDialog,
   NuiDrawer,
   NuiEmpty,
@@ -78,6 +81,9 @@ export default {
     app.component('NuiTextarea', NuiTextarea);
     app.component('NuiNumberField', NuiNumberField);
     app.component('NuiTimeField', NuiTimeField);
+    app.component('NuiCalendar', NuiCalendar);
+    app.component('NuiDatePicker', NuiDatePicker);
+    app.component('NuiDateRangePicker', NuiDateRangePicker);
     app.component('NuiCheckbox', NuiCheckbox);
     app.component('NuiRadioGroup', NuiRadioGroup);
     app.component('NuiRadio', NuiRadio);

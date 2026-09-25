@@ -77,7 +77,12 @@ export default defineConfig({
           },
           {
             text: 'Даты и время',
-            items: [{ text: 'Поле времени', link: '/components/time-field' }],
+            items: [
+              { text: 'Поле времени', link: '/components/time-field' },
+              { text: 'Календарь', link: '/components/calendar' },
+              { text: 'Выбор даты', link: '/components/date-picker' },
+              { text: 'Выбор периода', link: '/components/date-range-picker' },
+            ],
           },
         ],
       },
@@ -154,7 +159,12 @@ export default defineConfig({
           },
           {
             text: 'Dates and time',
-            items: [{ text: 'Time field', link: '/en/components/time-field' }],
+            items: [
+              { text: 'Time field', link: '/en/components/time-field' },
+              { text: 'Calendar', link: '/en/components/calendar' },
+              { text: 'Date picker', link: '/en/components/date-picker' },
+              { text: 'Date range picker', link: '/en/components/date-range-picker' },
+            ],
           },
         ],
       },
