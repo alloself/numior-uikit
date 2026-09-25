@@ -5,7 +5,7 @@
 `x`, `search`, `info`, `success`, `warning`, `error`, `chevron-right`, `chevron-left`,
 `chevrons-left`, `chevrons-right`, `ellipsis`, `external-link`, `user`, `image`, `inbox`,
 `folder`, `folder-open`, `file`, `arrow-up`, `arrow-up-down`, `grip`, `plus`, `clock`,
-`calendar`. По умолчанию алиасы указывают на [Lucide](https://lucide.dev) (ISC):
+`calendar`, `upload`, `refresh`. По умолчанию алиасы указывают на [Lucide](https://lucide.dev) (ISC):
 каждая иконка загружается по требованию отдельным модулем при первом использовании
 алиаса и затем переиспользуется из кэша; в bundle попадают только запрошенные глифы,
 а на сервере иконка рендерится сразу.

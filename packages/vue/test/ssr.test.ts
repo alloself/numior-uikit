@@ -40,6 +40,7 @@ import {
   NuiTextarea,
   NuiTimeField,
   NuiToast,
+  NuiUpload,
   NuiToaster,
   NuiTooltip,
   NuiTree,
@@ -218,6 +219,25 @@ const scenarios: Scenario[] = [
         startName: 'from',
         endName: 'to',
         today: '2026-09-24',
+      }),
+  },
+  {
+    name: 'NuiUpload',
+    render: () =>
+      h(NuiUpload<string>, {
+        upload: () => Promise.resolve('ok'),
+        hint: 'PDF up to 1 MB',
+        modelValue: [
+          {
+            id: 'existing-1',
+            name: 'report.pdf',
+            size: 2048,
+            type: 'application/pdf',
+            status: 'done',
+            progress: 1,
+            url: 'https://cdn.example/report.pdf',
+          },
+        ],
       }),
   },
   {
@@ -493,6 +513,37 @@ describe('server rendering', () => {
     expect(html).toContain('type="hidden" name="price" value="1234.5"');
     expect(html).toContain('aria-hidden="true"');
     expect(html).toContain('tabindex="-1"');
+  });
+
+  it('renders an upload zone with a labelled button and existing files without previews', async () => {
+    const html = await renderMarkup(() =>
+      h(NuiUpload<string>, {
+        upload: () => Promise.resolve('ok'),
+        id: 'attachments',
+        hint: 'PDF up to 1 MB',
+        modelValue: [
+          {
+            id: 'existing-1',
+            name: 'report.pdf',
+            size: 2048,
+            type: 'application/pdf',
+            status: 'done',
+            progress: 1,
+            url: 'https://cdn.example/report.pdf',
+          },
+        ],
+      }),
+    );
+
+    expect(html).toContain('type="file"');
+    expect(html).toContain('id="attachments"');
+    expect(html).toContain('Choose files');
+    expect(html).toContain('PDF up to 1 MB');
+    expect(html).toContain('nui-upload-item--status-done');
+    expect(html).toContain('report.pdf');
+    expect(html).toContain('2 kB');
+    expect(html).not.toContain('<img');
+    expect(html).not.toContain('<progress');
   });
 
   it('renders a time field with one tab stop, filled segments and a closed list', async () => {

@@ -15,6 +15,7 @@ export type { NuiInputModifiers, NuiInputProps, NuiInputType } from './input/inp
 export { default as NuiNumberField } from './number-field/NuiNumberField.vue';
 export type { NuiNumberFieldProps } from './number-field/number-field.types';
 export { default as NuiTimeField } from './time-field/NuiTimeField.vue';
+export { default as NuiUpload } from './upload/NuiUpload.vue';
 export {
   addDays,
   addMonths,
@@ -43,6 +44,16 @@ export type {
   NuiDateRange,
 } from './calendar/calendar.types';
 export type { NuiTimeFieldProps } from './time-field/time-field.types';
+export type {
+  NuiUploadAdapter,
+  NuiUploadError,
+  NuiUploadItem,
+  NuiUploadItemSlot,
+  NuiUploadLayout,
+  NuiUploadProps,
+  NuiUploadRejected,
+  NuiUploadZoneSlot,
+} from './upload/upload.types';
 export { default as NuiTextarea } from './textarea/NuiTextarea.vue';
 export type {
   NuiTextareaModifiers,
