@@ -97,10 +97,15 @@ import {
 } from '@numior/vue';
 
 const countries: NuiOptionSource<string> = [
-  { value: 'at', label: 'Австрия' },
-  { value: 'be', label: 'Бельгия' },
-  { value: 'de', label: 'Германия', description: 'Берлин' },
-  { value: 'dk', label: 'Дания', disabled: true },
+  {
+    label: 'Европа',
+    items: [
+      { value: 'at', label: 'Австрия' },
+      { value: 'be', label: 'Бельгия' },
+      { value: 'de', label: 'Германия' },
+      { value: 'dk', label: 'Дания', disabled: true },
+    ],
+  },
   {
     label: 'Азия',
     items: [

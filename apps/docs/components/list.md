@@ -20,9 +20,17 @@ const languages = [
   { label: 'Котлин', value: 'kotlin' },
 ]
 const links = [
-  { label: 'Документация', description: 'Руководства и API', href: '#docs', icon: 'file' },
-  { label: 'Репозиторий', href: '#repo', icon: 'external-link' },
-  { label: 'Запустить проверку', description: 'Кнопка внутри списка', onClick: () => {} },
+  {
+    label: 'Ссылки',
+    items: [
+      { label: 'Документация', description: 'Руководства и API', href: '#docs', icon: 'file' },
+      { label: 'Репозиторий', href: '#repo', icon: 'external-link' },
+    ],
+  },
+  {
+    label: 'Действия',
+    items: [{ label: 'Запустить проверку', description: 'Кнопка внутри списка', onClick: () => {} }],
+  },
 ]
 </script>
 
@@ -53,8 +61,21 @@ import '@numior/vue/styles/list.css';
     <NuiListItem label="Выйти" @click="logout" />
   </NuiList>
   <NuiList v-model="channel" selectable="single" label="Канал" :items="channels" />
+  <NuiList
+    variant="bordered"
+    :items="[
+      { label: 'Ссылки', items: [{ label: 'Документация', href: '/docs' }] },
+      { label: 'Действия', items: [{ label: 'Выйти', onClick: logout }] },
+    ]"
+  />
 </template>
 ```
+
+Группы `{ label, items }` рисуются заголовком секции `nui-list__group-label`, пункты группы
+сдвинуты на `--_indent` (во всплывающем списке отступ меньше), между группами —
+разделитель. В выбираемом списке группа получает `role="group"` с этой подписью, а id опций
+остаются сквозными, поэтому select и combobox навигируют по группам без дополнительной
+логики.
 
 ## Поведение
 

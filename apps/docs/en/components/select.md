@@ -12,7 +12,7 @@ const country = ref()
 const tags = ref(['frontend'])
 const countries = [
   { value: 'at', label: 'Austria' },
-  { value: 'de', label: 'Germany', description: 'Berlin' },
+  { value: 'de', label: 'Germany' },
   { value: 'dk', label: 'Denmark', disabled: true },
   { label: 'Asia', items: [{ value: 'vn', label: 'Vietnam' }, { value: 'jp', label: 'Japan' }] },
 ]
@@ -40,7 +40,7 @@ import { NuiField, NuiSelect, type NuiOptionSource } from '@numior/vue';
 const country = ref<string>();
 const countries: NuiOptionSource<string> = [
   { value: 'at', label: 'Austria' },
-  { value: 'de', label: 'Germany', description: 'Berlin' },
+  { value: 'de', label: 'Germany' },
   { label: 'Asia', items: [{ value: 'vn', label: 'Vietnam' }] },
 ];
 </script>

@@ -156,6 +156,7 @@ import {
   NuiListItem,
   type NuiAvatarItem,
   type NuiListEntry,
+  type NuiListSource,
 } from '@numior/vue';
 
 const AVATAR_SRC =
@@ -174,15 +175,25 @@ const team: NuiAvatarItem[] = [
 
 const runs = ref(0);
 
-const linkItems: NuiListEntry<string>[] = [
-  { label: 'Документация', description: 'Руководства и API', href: '#docs', icon: 'file' },
-  { label: 'Репозиторий', href: '#repo', icon: 'external-link' },
+const linkItems: NuiListSource<NuiListEntry<string>> = [
   {
-    label: 'Запустить проверку',
-    description: 'Кнопка внутри списка',
-    onClick: () => {
-      runs.value += 1;
-    },
+    label: 'Ссылки',
+    items: [
+      { label: 'Документация', description: 'Руководства и API', href: '#docs', icon: 'file' },
+      { label: 'Репозиторий', href: '#repo', icon: 'external-link' },
+    ],
+  },
+  {
+    label: 'Действия',
+    items: [
+      {
+        label: 'Запустить проверку',
+        description: 'Кнопка внутри списка',
+        onClick: () => {
+          runs.value += 1;
+        },
+      },
+    ],
   },
 ];
 

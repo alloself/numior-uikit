@@ -108,6 +108,51 @@ describe('NuiList', () => {
     labelled.unmount();
   });
 
+  it('renders groups with captions, nests their items and keeps option ids sequential', async () => {
+    const list = ListDriver.mount({
+      props: {
+        items: [
+          { label: 'Ссылки', items: [{ label: 'Документация', href: '/docs' }] },
+          { label: 'Действия', items: [{ label: 'Выйти', onClick: () => {} }] },
+        ],
+      },
+    });
+
+    expect(list.groupLabels).toEqual(['Ссылки', 'Действия']);
+    expect(list.groupAttr('Ссылки', 'role')).toBeUndefined();
+    expect(list.titles).toEqual(['Документация', 'Выйти']);
+    expect(list.innerTag('Документация')).toBe('a');
+    list.unmount();
+
+    const grouped = ListDriver.mount({
+      props: {
+        id: 'langs',
+        selectable: 'single',
+        items: [
+          { label: 'Go', value: 'go' },
+          {
+            label: 'JVM',
+            items: [
+              { label: 'Kotlin', value: 'kotlin' },
+              { label: 'Scala', value: 'scala' },
+            ],
+          },
+        ],
+      },
+      modelValue: 'kotlin',
+    });
+
+    expect(grouped.groupAttr('JVM', 'role')).toBe('group');
+    expect(grouped.optionIds).toEqual(['langs-option-0', 'langs-option-1', 'langs-option-2']);
+    await grouped.focusItem('Kotlin');
+    await grouped.press('ArrowUp');
+    expect(grouped.focusedTitle).toBe('Go');
+    await grouped.press('ArrowDown');
+    await grouped.press('ArrowDown');
+    expect(grouped.focusedTitle).toBe('Scala');
+    grouped.unmount();
+  });
+
   it('becomes a single-select listbox with one roving tab stop, arrows, typeahead and Enter', async () => {
     const list = ListDriver.mount({
       props: { items: LANGUAGES, selectable: 'single', label: 'Languages' },

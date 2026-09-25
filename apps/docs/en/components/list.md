@@ -21,9 +21,17 @@ const languages = [
   { label: 'Kotlin', value: 'kotlin' },
 ]
 const links = [
-  { label: 'Documentation', description: 'Guides and API', href: '#docs', icon: 'file' },
-  { label: 'Repository', href: '#repo', icon: 'external-link' },
-  { label: 'Run checks', description: 'A button inside the list', onClick: () => {} },
+  {
+    label: 'Links',
+    items: [
+      { label: 'Documentation', description: 'Guides and API', href: '#docs', icon: 'file' },
+      { label: 'Repository', href: '#repo', icon: 'external-link' },
+    ],
+  },
+  {
+    label: 'Actions',
+    items: [{ label: 'Run checks', description: 'A button inside the list', onClick: () => {} }],
+  },
 ]
 </script>
 
@@ -54,8 +62,20 @@ import '@numior/vue/styles/list.css';
     <NuiListItem label="Sign out" @click="logout" />
   </NuiList>
   <NuiList v-model="channel" selectable="single" label="Channel" :items="channels" />
+  <NuiList
+    variant="bordered"
+    :items="[
+      { label: 'Links', items: [{ label: 'Documentation', href: '/docs' }] },
+      { label: 'Actions', items: [{ label: 'Sign out', onClick: logout }] },
+    ]"
+  />
 </template>
 ```
+
+Groups `{ label, items }` render a `nui-list__group-label` section heading, indent their
+items by `--_indent` (smaller in the floating list) and separate groups with a divider. In a
+selectable list the group gets `role="group"` named by that caption and option ids stay
+sequential, so select and combobox navigate across groups without extra logic.
 
 ## Behaviour
 

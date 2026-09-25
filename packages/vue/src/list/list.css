@@ -3,6 +3,7 @@
   --_padding-inline: var(--nui-space-4);
   --_padding-block: var(--nui-space-3);
   --_gap: var(--nui-space-3);
+  --_indent: var(--nui-space-4);
 
   color: var(--nui-text);
   font-family: var(--nui-font);
@@ -28,10 +29,14 @@
   overflow: hidden;
 }
 .nui-list--variant-floating {
-  --_shift: 0 calc(-1 * var(--nui-space-1));
+  --_side-x: 0;
+  --_side-y: 1;
+  --_shift: calc(-1 * var(--_side-x) * var(--nui-space-1))
+    calc(-1 * var(--_side-y) * var(--nui-space-1));
   --_padding-inline: var(--nui-space-2);
   --_padding-block: var(--nui-space-1);
   --_gap: var(--nui-space-2);
+  --_indent: var(--nui-space-3);
 
   position: fixed;
   inset: auto;
@@ -69,11 +74,26 @@
   overflow-y: auto;
   scrollbar-width: thin;
 }
+.nui-list__group + .nui-list__group {
+  margin-block-start: var(--_padding-block);
+  padding-block-start: var(--_padding-block);
+  border-block-start: 1px solid var(--_divider);
+}
+.nui-list--variant-floating .nui-list__group + .nui-list__group {
+  border-block-start-color: var(--nui-border);
+}
 .nui-list__group-label {
-  padding: var(--_padding-block) var(--_padding-inline);
+  padding: var(--_padding-block) var(--_padding-inline) var(--nui-space-1);
   color: var(--nui-text-muted);
   font-size: var(--nui-font-size-xs);
   font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.nui-list__group .nui-list-item__inner {
+  padding-inline-start: calc(var(--_padding-inline) + var(--_indent));
+}
+.nui-list__group .nui-list-item:first-child {
+  border-block-start-color: transparent;
 }
 .nui-list__status {
   display: flex;
