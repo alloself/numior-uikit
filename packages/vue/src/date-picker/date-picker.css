@@ -53,14 +53,16 @@
   opacity: 1;
 }
 .nui-date-picker__separator {
+  margin-inline: var(--nui-space-1);
   color: var(--nui-text-muted);
 }
 .nui-date-picker__clear,
 .nui-date-picker__open {
   flex: none;
-}
-.nui-date-picker__open {
   margin-inline-start: auto;
+}
+.nui-date-picker__clear + .nui-date-picker__open {
+  margin-inline-start: 0;
 }
 .nui-date-picker--open .nui-date-picker__open {
   color: var(--nui-primary);
@@ -124,9 +126,7 @@
   inline-size: auto;
 }
 .nui-date-picker--range .nui-date-picker__input {
-  flex: 1 1 0;
-  text-align: center;
-}
-.nui-date-picker--range .nui-date-picker__input:first-of-type {
-  text-align: start;
+  flex: 0 1 auto;
+  inline-size: auto;
+  field-sizing: content;
 }

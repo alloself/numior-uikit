@@ -7,6 +7,7 @@
     autocomplete="off"
     :value="text.draft.value"
     :placeholder="placeholder ?? pattern"
+    :size="pattern.length + 2"
     :disabled="disabled || undefined"
     :readonly="readonly || undefined"
     :aria-label="label"
