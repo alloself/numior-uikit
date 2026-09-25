@@ -43,4 +43,16 @@ describe('NuiTooltip', () => {
     expect(tooltip.modelOpen).toBe(false);
     tooltip.unmount();
   });
+
+  it('stays silent while disabled and drops the description from its trigger', async () => {
+    const tooltip = TooltipDriver.mount({ props: { disabled: true } });
+    expect(tooltip.trigger.attributes('aria-describedby')).toBeUndefined();
+    await tooltip.hover();
+    await tooltip.advance(400);
+    expect(tooltip.modelOpen).toBe(false);
+    await tooltip.focus();
+    expect(tooltip.modelOpen).toBe(false);
+    expect(tooltip.popoverCalls.show).toBe(0);
+    tooltip.unmount();
+  });
 });

@@ -14,7 +14,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, useTemplateRef } from 'vue';
+import { computed, ref, useTemplateRef, watch } from 'vue';
 import { useDelayedOpen, useFloating, usePopover } from '@numior/primitives';
 import { useTriggerElement } from '../shared/trigger-ref';
 import type {
@@ -31,6 +31,7 @@ const {
   offset = 6,
   openDelay = 300,
   closeDelay = 100,
+  disabled = false,
 } = defineProps<NuiTooltipProps>();
 
 const open = defineModel<boolean>('open', { default: false });
@@ -60,11 +61,20 @@ const delay = useDelayedOpen(open, {
 const pointerPressedAt = ref(0);
 const POINTER_FOCUS_WINDOW = 500;
 
+watch(
+  () => disabled,
+  (isDisabled) => {
+    if (isDisabled) {
+      delay.closeNow();
+    }
+  },
+);
+
 const triggerAttrs = computed<NuiTooltipTriggerAttrs>(() => ({
-  'aria-describedby': tooltipId.value,
+  'aria-describedby': disabled ? undefined : tooltipId.value,
   ref: setTrigger,
   onPointerenter: (event) => {
-    if (event.pointerType !== 'touch') {
+    if (event.pointerType !== 'touch' && !disabled) {
       delay.scheduleOpen();
     }
   },
@@ -74,7 +84,7 @@ const triggerAttrs = computed<NuiTooltipTriggerAttrs>(() => ({
     delay.closeNow();
   },
   onFocus: () => {
-    if (Date.now() - pointerPressedAt.value > POINTER_FOCUS_WINDOW) {
+    if (!disabled && Date.now() - pointerPressedAt.value > POINTER_FOCUS_WINDOW) {
       delay.openNow();
     }
   },

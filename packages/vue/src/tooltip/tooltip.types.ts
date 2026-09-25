@@ -7,10 +7,11 @@ export interface NuiTooltipProps {
   offset?: number | undefined;
   openDelay?: number | undefined;
   closeDelay?: number | undefined;
+  disabled?: boolean | undefined;
 }
 
 export interface NuiTooltipTriggerAttrs {
-  readonly 'aria-describedby': string;
+  readonly 'aria-describedby': string | undefined;
   readonly ref: NuiTriggerRef;
   readonly onPointerenter: (event: PointerEvent) => void;
   readonly onPointerleave: () => void;
