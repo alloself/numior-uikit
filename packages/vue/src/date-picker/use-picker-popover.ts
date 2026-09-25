@@ -46,6 +46,7 @@ export const usePickerPopover = (options: PickerPopoverOptions): PickerPopover =
   const { floatingStyles } = useFloating(options.anchor, panelElement, {
     placement: () => toValue(options.placement),
     offset: 4,
+    size: { fitHeight: true },
     enabled: open,
   });
 

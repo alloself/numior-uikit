@@ -221,6 +221,11 @@ export class CalendarDriver extends ComponentDriver {
     };
   }
 
+  async focusDay(date: string): Promise<void> {
+    this.day(date).element.focus();
+    await nextTick();
+  }
+
   async focusGrid(): Promise<void> {
     this.dayButtons.find((button) => button.element.tabIndex === 0)?.element.focus();
     await nextTick();

@@ -75,6 +75,12 @@ const slideClass = computed(() =>
     : `nui-calendar__grid--slide-${calendar.slide.value}`,
 );
 
+const dateOfTarget = (target: EventTarget | null): string | undefined =>
+  target instanceof Element
+    ? (target.closest('.nui-calendar__day')?.querySelector('time')?.getAttribute('datetime') ??
+      undefined)
+    : undefined;
+
 const onGridKeydown = (event: KeyboardEvent): void => {
   const move = gridMoveFor(event.key, event.shiftKey, calendar.isRtl());
 
@@ -83,6 +89,8 @@ const onGridKeydown = (event: KeyboardEvent): void => {
   }
 
   event.preventDefault();
-  calendar.request(gridTargetDate(move, calendar.focused.value, calendar.weekStart.value));
+  const origin = dateOfTarget(event.target) ?? calendar.focused.value;
+
+  calendar.request(gridTargetDate(move, origin, calendar.weekStart.value));
 };
 </script>

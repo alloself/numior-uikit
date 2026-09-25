@@ -86,6 +86,9 @@ describe('NuiCalendar', () => {
     await calendar.focusGrid();
     await calendar.press('ArrowLeft');
     expect(calendar.focusedDate).toBe('2026-09-25');
+    await calendar.focusDay('2026-09-10');
+    await calendar.press('ArrowRight');
+    expect(calendar.focusedDate).toBe('2026-09-09');
     expect(calendar.dayAttr('2026-09-25', 'aria-disabled')).toBe('true');
     await calendar.clickDay('2026-09-25');
     expect(calendar.value).toBe('2026-09-24');

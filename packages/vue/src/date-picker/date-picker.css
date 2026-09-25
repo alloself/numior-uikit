@@ -96,6 +96,8 @@
   background: var(--nui-surface-overlay);
   color: var(--nui-text);
   box-shadow: var(--nui-shadow-md);
+  overflow: auto;
+  overscroll-behavior: contain;
   opacity: 0;
   translate: var(--_shift);
   transition:
