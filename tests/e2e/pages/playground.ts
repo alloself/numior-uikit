@@ -10,6 +10,7 @@ import { PickersSection } from './pickers';
 import { TableSection } from './table';
 import { TreeSection } from './tree';
 import { UploadSection } from './upload';
+import { LayoutSection } from './layout';
 
 export type Theme = 'system' | 'light' | 'dark';
 export type Accent = 'indigo' | 'emerald' | 'rose';
@@ -148,6 +149,7 @@ export class PlaygroundPage {
   readonly intl: IntlSection;
   readonly dates: DatesSection;
   readonly upload: UploadSection;
+  readonly layout: LayoutSection;
   readonly data: DataSection;
   readonly tree: TreeSection;
   readonly table: TableSection;
@@ -185,6 +187,7 @@ export class PlaygroundPage {
     this.intl = new IntlSection(page);
     this.dates = new DatesSection(page);
     this.upload = new UploadSection(page);
+    this.layout = new LayoutSection(page);
     this.data = new DataSection(page);
     this.tree = new TreeSection(page);
     this.table = new TableSection(page);

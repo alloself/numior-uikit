@@ -89,10 +89,60 @@ select {
   gap: var(--nui-space-4);
   max-inline-size: 28rem;
 }
-.upload-controls {
+.upload-controls,
+.layout-controls {
   display: flex;
   flex-wrap: wrap;
   gap: var(--nui-space-3);
+}
+.layout-controls {
+  margin-block-end: var(--nui-space-4);
+}
+.layout-controls label {
+  display: grid;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+}
+.layout-frame {
+  block-size: 24rem;
+  border: 1px solid var(--nui-border);
+  border-radius: var(--nui-radius);
+  overflow: hidden;
+}
+.layout-frame .nui-layout {
+  block-size: 100%;
+}
+.layout-frame .nui-layout__content {
+  overflow: auto;
+}
+.layout-page {
+  padding: var(--nui-space-4);
+}
+.layout-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--nui-space-2);
+  min-block-size: 2.25rem;
+  padding-inline: var(--nui-space-1);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.layout-brand__mark {
+  display: inline-grid;
+  place-items: center;
+  inline-size: 1.75rem;
+  block-size: 1.75rem;
+  border-radius: var(--nui-radius-sm);
+  background: var(--nui-primary);
+  color: var(--nui-primary-foreground);
+  font-size: 0.875rem;
+}
+.nui-sidebar--rail .layout-brand {
+  justify-content: center;
+  padding-inline: 0;
+}
+.nui-sidebar--rail .layout-brand__name {
+  display: none;
 }
 .output {
   margin-block: var(--nui-space-4) 0;
