@@ -111,6 +111,23 @@ export type {
   TimeSegment,
   TimeSegmentType,
 } from './intl/time-segments';
+export { formatFileSize } from './intl/file-size';
+export { validateFiles } from './upload/validate-files';
+export type { ValidateFilesOptions, ValidatedFiles } from './upload/validate-files';
+export { useFileDrop } from './upload/useFileDrop';
+export type { FileDrop, FileDropAttrs, FileDropOptions } from './upload/useFileDrop';
+export { useUploadQueue } from './upload/useUploadQueue';
+export type { UploadQueue, UploadQueueOptions } from './upload/useUploadQueue';
+export type {
+  FileRejection,
+  UploadAdapter,
+  UploadContext,
+  UploadEntry,
+  UploadError,
+  UploadItem,
+  UploadReason,
+  UploadStatus,
+} from './upload/upload-types';
 export { useSplitAttrs } from './attrs/useSplitAttrs';
 export type { AttrRecord, SplitAttrs } from './attrs/useSplitAttrs';
 export { useFloating } from './floating/useFloating';
