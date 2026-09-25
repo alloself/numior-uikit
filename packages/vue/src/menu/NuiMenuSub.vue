@@ -43,7 +43,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref, useTemplateRef } from 'vue';
-import { useControlId, useDelayedOpen } from '@numior/primitives';
+import { useControlId, useDelayedOpen, useDirection } from '@numior/primitives';
 import NuiIcon from '../icon/NuiIcon.vue';
 import NuiMenuRow from './NuiMenuRow.vue';
 import { provideMenu, useMenu } from './menu-context';
@@ -65,6 +65,7 @@ const parent = useMenu();
 const open = ref(false);
 const rtl = ref(false);
 const triggerElement = useTemplateRef<HTMLElement>('trigger');
+const direction = useDirection(triggerElement);
 const contentElement = useTemplateRef<HTMLElement>('content');
 const triggerId = useControlId(() => (id === undefined ? undefined : `${id}-trigger`));
 
@@ -100,7 +101,7 @@ const forwardKey = computed(() => (rtl.value ? 'ArrowLeft' : 'ArrowRight'));
 const backKey = computed(() => (rtl.value ? 'ArrowRight' : 'ArrowLeft'));
 
 onMounted(() => {
-  rtl.value = triggerElement.value?.closest('[dir]')?.getAttribute('dir') === 'rtl';
+  rtl.value = direction.isRtl();
 });
 
 const onTriggerEnter = (): void => {

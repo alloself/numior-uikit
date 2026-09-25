@@ -98,12 +98,13 @@ createApp(App)
 
 ## API
 
-| Where                                  | Option   | Type                        | Description                                |
-| -------------------------------------- | -------- | --------------------------- | ------------------------------------------ |
-| `NuiIcon`                              | `alias`  | `IconAlias` (`string`)      | Alias from the registry or the default set |
-| `NuiIcon`                              | `icon`   | `Component`                 | Explicit component, wins over `alias`      |
-| `createNuiConfig` / `provideNuiConfig` | `icons`  | `Record<string, Component>` | Aliases for the app or the subtree         |
-| `createNuiConfig` / `provideNuiConfig` | `toasts` | `ToastStoreOptions`         | Toast service options                      |
-| `createNuiConfig` / `provideNuiConfig` | `locale` | `string` (ref or getter)    | Locale for numbers, time and dates         |
+| Where                                  | Option   | Type                             | Description                                             |
+| -------------------------------------- | -------- | -------------------------------- | ------------------------------------------------------- |
+| `NuiIcon`                              | `alias`  | `IconAlias` (`string`)           | Alias from the registry or the default set              |
+| `NuiIcon`                              | `icon`   | `Component`                      | Explicit component, wins over `alias`                   |
+| `createNuiConfig` / `provideNuiConfig` | `icons`  | `Record<string, Component>`      | Aliases for the app or the subtree                      |
+| `createNuiConfig` / `provideNuiConfig` | `toasts` | `ToastStoreOptions`              | Toast service options                                   |
+| `createNuiConfig` / `provideNuiConfig` | `locale` | `string` (ref or getter)         | Locale for numbers, time and dates                      |
+| `createNuiConfig` / `provideNuiConfig` | `dir`    | `'ltr' \| 'rtl'` (ref or getter) | Writing direction; without it the nearest `dir` is read |
 
-`@numior/vue` also exports `useIcons`, `defaultIcons` and `useLocale`.
+`@numior/vue` also exports `useIcons`, `defaultIcons`, `useLocale` and `useDirection`.

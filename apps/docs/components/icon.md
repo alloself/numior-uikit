@@ -98,12 +98,13 @@ createApp(App)
 
 ## API
 
-| Где                                    | Опция    | Тип                         | Описание                               |
-| -------------------------------------- | -------- | --------------------------- | -------------------------------------- |
-| `NuiIcon`                              | `alias`  | `IconAlias` (`string`)      | Алиас из реестра или дефолтного набора |
-| `NuiIcon`                              | `icon`   | `Component`                 | Явный компонент, приоритетнее `alias`  |
-| `createNuiConfig` / `provideNuiConfig` | `icons`  | `Record<string, Component>` | Алиасы для приложения или поддерева    |
-| `createNuiConfig` / `provideNuiConfig` | `toasts` | `ToastStoreOptions`         | Настройки сервиса уведомлений          |
-| `createNuiConfig` / `provideNuiConfig` | `locale` | `string` (ref или геттер)   | Локаль чисел, времени и дат            |
+| Где                                    | Опция    | Тип                               | Описание                                              |
+| -------------------------------------- | -------- | --------------------------------- | ----------------------------------------------------- |
+| `NuiIcon`                              | `alias`  | `IconAlias` (`string`)            | Алиас из реестра или дефолтного набора                |
+| `NuiIcon`                              | `icon`   | `Component`                       | Явный компонент, приоритетнее `alias`                 |
+| `createNuiConfig` / `provideNuiConfig` | `icons`  | `Record<string, Component>`       | Алиасы для приложения или поддерева                   |
+| `createNuiConfig` / `provideNuiConfig` | `toasts` | `ToastStoreOptions`               | Настройки сервиса уведомлений                         |
+| `createNuiConfig` / `provideNuiConfig` | `locale` | `string` (ref или геттер)         | Локаль чисел, времени и дат                           |
+| `createNuiConfig` / `provideNuiConfig` | `dir`    | `'ltr' \| 'rtl'` (ref или геттер) | Направление письма; без него читается ближайший `dir` |
 
-Из `@numior/vue` также экспортируются `useIcons`, `defaultIcons` и `useLocale`.
+Из `@numior/vue` также экспортируются `useIcons`, `defaultIcons`, `useLocale` и `useDirection`.

@@ -58,7 +58,7 @@
 
 <script setup lang="ts" generic="T">
 import { computed, onMounted, ref, shallowReactive, useTemplateRef, watch } from 'vue';
-import { useControlId, useVirtualList, type IconAlias } from '@numior/primitives';
+import { useControlId, useDirection, useVirtualList, type IconAlias } from '@numior/primitives';
 import { useOptionSelection } from '../shared/use-option-selection';
 import NuiTreeNode from './NuiTreeNode.vue';
 import { applyCheck, checkStateOf, collectCheckedValues } from './cascade';
@@ -187,7 +187,7 @@ const setActive = (index: number): void => {
   revealNode(index);
 };
 
-const isRtl = (): boolean => root.value?.closest('[dir]')?.getAttribute('dir') === 'rtl';
+const { isRtl } = useDirection(root);
 
 const revealAdded = (added: readonly string[]): void => {
   for (const key of added) {

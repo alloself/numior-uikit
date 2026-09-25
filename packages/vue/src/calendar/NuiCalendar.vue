@@ -70,6 +70,7 @@ import {
   localToday,
   monthKeyOf,
   useControlId,
+  useDirection,
   useLocale,
   weekStartOf,
 } from '@numior/primitives';
@@ -143,7 +144,7 @@ const lastPick = ref<NuiCalendarValue>(model.value);
 const isDisabled = (date: string): boolean =>
   !isWithin(date, min, max) || (isDateDisabled?.(date) ?? false);
 
-const isRtl = (): boolean => root.value?.closest('[dir]')?.getAttribute('dir') === 'rtl';
+const { isRtl } = useDirection(root);
 
 const reveal = (key: string): void => {
   if (visibleMonths.value.includes(key)) {

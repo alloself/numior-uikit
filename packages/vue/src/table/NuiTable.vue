@@ -129,7 +129,7 @@
 
 <script setup lang="ts" generic="T">
 import { computed, onMounted, onScopeDispose, ref, useSlots, useTemplateRef, watch } from 'vue';
-import { useVirtualList } from '@numior/primitives';
+import { useDirection, useVirtualList } from '@numior/primitives';
 import NuiIcon from '../icon/NuiIcon.vue';
 import NuiPagination from '../pagination/NuiPagination.vue';
 import { defaultOptionKey } from '../shared/options';
@@ -260,7 +260,7 @@ const selectionState = computed(() =>
 );
 
 const utilities = (): number => (selectable ? 1 : 0) + (rowDrag ? 1 : 0);
-const isRtl = (): boolean => scroller.value?.closest('[dir]')?.getAttribute('dir') === 'rtl';
+const { isRtl } = useDirection(scroller);
 
 const layout = useTableColumns<T>({
   columns: () => columns,

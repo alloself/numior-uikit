@@ -1,4 +1,5 @@
 import { computed, toValue, type MaybeRefOrGetter, type Plugin } from 'vue';
+import { DIRECTION_KEY, provideDirection, type Direction } from '../direction/direction-context';
 import { ICONS_KEY, provideIcons, type IconRegistry } from '../icons/icon-registry';
 import { DEFAULT_LOCALE, LOCALE_KEY, provideLocale } from '../locale/locale-context';
 import { createToastStore, type ToastStoreOptions } from '../toast/toast-store';
@@ -8,6 +9,7 @@ export interface NuiConfigOptions {
   readonly icons?: IconRegistry | undefined;
   readonly toasts?: ToastStoreOptions | undefined;
   readonly locale?: MaybeRefOrGetter<string | undefined> | undefined;
+  readonly dir?: MaybeRefOrGetter<Direction | undefined> | undefined;
 }
 
 export const provideNuiConfig = (options: NuiConfigOptions): void => {
@@ -19,6 +21,9 @@ export const provideNuiConfig = (options: NuiConfigOptions): void => {
   }
   if (options.locale !== undefined) {
     provideLocale(options.locale);
+  }
+  if (options.dir !== undefined) {
+    provideDirection(options.dir);
   }
 };
 
@@ -34,6 +39,14 @@ export const createNuiConfig = (options: NuiConfigOptions): Plugin => ({
       app.provide(
         LOCALE_KEY,
         computed(() => toValue(locale) || DEFAULT_LOCALE),
+      );
+    }
+    if (options.dir !== undefined) {
+      const dir = options.dir;
+
+      app.provide(
+        DIRECTION_KEY,
+        computed(() => toValue(dir)),
       );
     }
   },

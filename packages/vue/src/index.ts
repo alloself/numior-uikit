@@ -231,6 +231,7 @@ export {
   useFieldControl,
   useFloating,
   useIcons,
+  useDirection,
   useLocale,
   usePopover,
   useRadioGroup,
