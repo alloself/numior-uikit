@@ -28,4 +28,5 @@ export const defaultIcons: IconRegistry = {
   grip: lazyIcon(() => import('lucide-vue-next/dist/esm/icons/grip-vertical.js')),
   plus: lazyIcon(() => import('lucide-vue-next/dist/esm/icons/plus.js')),
   clock: lazyIcon(() => import('lucide-vue-next/dist/esm/icons/clock.js')),
+  calendar: lazyIcon(() => import('lucide-vue-next/dist/esm/icons/calendar.js')),
 };

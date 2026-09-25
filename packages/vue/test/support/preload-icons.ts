@@ -26,6 +26,7 @@ const loaders = [
   () => import('lucide-vue-next/dist/esm/icons/grip-vertical.js'),
   () => import('lucide-vue-next/dist/esm/icons/plus.js'),
   () => import('lucide-vue-next/dist/esm/icons/clock.js'),
+  () => import('lucide-vue-next/dist/esm/icons/calendar.js'),
 ];
 
 await Promise.all(loaders.map((load) => load()));
