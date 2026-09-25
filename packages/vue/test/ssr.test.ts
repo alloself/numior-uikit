@@ -726,7 +726,7 @@ describe('server rendering', () => {
     expect(pinned).toContain('<colgroup>');
     expect(pinned).toContain('inline-size:120px');
     expect(pinned).toContain('nui-table__cell--sticky-start');
-    expect(pinned).toContain('inset-inline-start:0px');
+    expect(pinned).toContain('inset-inline-start:var(--_sticky-0, 0px)');
     expect(pinned).toContain('role="separator"');
     expect(pinned).toContain('aria-valuenow="120"');
     expect(pinned).toContain('aria-label="Reorder Имя"');

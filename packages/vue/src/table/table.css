@@ -50,9 +50,6 @@
   border-collapse: separate;
   border-spacing: 0;
 }
-.nui-table--fixed .nui-table__table {
-  table-layout: fixed;
-}
 .nui-table__col--utility {
   inline-size: 2.5rem;
 }

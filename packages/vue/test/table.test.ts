@@ -213,9 +213,7 @@ describe('NuiTable columns', () => {
       headerWidth: 100,
     });
 
-    expect(table.hasModifier('fixed')).toBe(false);
-    await table.settle();
-    expect(table.hasModifier('fixed')).toBe(true);
+    expect(table.fixedLayout).toBe(true);
     expect(table.colStyle('Имя')).toContain('inline-size: 100px');
     expect(table.resizer('Возраст').attributes('role')).toBe('separator');
     expect(table.resizer('Возраст').attributes('aria-valuenow')).toBe('100');
@@ -259,20 +257,24 @@ describe('NuiTable columns', () => {
     );
 
     expect(table.cellStyle('Анна', 'Имя')).toContain(
-      'inset-inline-start: calc(1 * var(--_util) + 0px)',
+      'inset-inline-start: calc(1 * var(--_util) + var(--_sticky-0, 0px))',
     );
+
+    expect(table.tableVar('--_sticky-0')).toBe('0px');
 
     expect(table.selectCellClasses('Анна')).toContain('nui-table__cell--sticky-start');
     expect(table.selectCellClasses('Анна')).not.toContain('nui-table__cell--sticky-edge');
     expect(table.headerClasses('Имя')).toContain('nui-table__cell--sticky-edge');
-    expect(table.cellStyle('Анна', 'Балл')).toContain('inset-inline-end: 0px');
-    expect(table.cellStyle('Анна', 'Возраст')).toContain('inset-inline-end: 80px');
+    expect(table.cellStyle('Анна', 'Балл')).toContain('inset-inline-end: var(--_sticky-3, 0px)');
+    expect(table.tableVar('--_sticky-3')).toBe('0px');
+    expect(table.cellStyle('Анна', 'Возраст')).toContain('inset-inline-end: var(--_sticky-2, 0px)');
+    expect(table.tableVar('--_sticky-2')).toBe('80px');
     expect(table.cellClasses('Анна', 'Возраст')).toContain('nui-table__cell--sticky-edge');
     expect(table.cellClasses('Анна', 'Балл')).not.toContain('nui-table__cell--sticky-edge');
     expect(table.cellClasses('Анна', 'Роль')).toEqual(['nui-table__cell']);
     table.unmount();
     const plain = TableDriver.mount({ props: { selectable: 'multiple', rowDrag: true } });
-    expect(plain.hasModifier('fixed')).toBe(false);
+    expect(plain.fixedLayout).toBe(false);
 
     expect(plain.selectCellClasses('Анна')).toEqual(
       expect.arrayContaining(['nui-table__cell--sticky-start', 'nui-table__cell--sticky-edge']),

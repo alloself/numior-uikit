@@ -176,7 +176,7 @@ const selected = ref<Person[]>([]);
 `rowClick(row, event)`, `reorder({ row, from, to, parent })`, `load(row)`. Слоты
 `cell-<key>` (`{ row, value, column, index }`), `header-<key>` (`{ column, sort }`), `empty`,
 `loading`, `caption`. Блок `nui-table`, модификаторы `--size-*`, `--striped`, `--hoverable`,
-`--sticky-header`, `--virtual`, `--selectable`, `--loading`, `--fixed`, `--dragging`,
+`--sticky-header`, `--virtual`, `--selectable`, `--loading`, `--dragging`,
 `--scrolled-start`, `--scrolled-end`; элементы `__frame`, `__scroller`, `__table`, `__caption`, `__head`,
 `__body` (`--pinned`), `__row` (`--head`, `--selected`, `--status`, `--loading`, `--dragging`),
 `__cell` (`--head`, `--select`, `--drag`, `--tree`, `--status`, `--align-*`, `--sticky`,

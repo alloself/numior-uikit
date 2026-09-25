@@ -1,5 +1,5 @@
 <template>
-  <div class="nui-table" :class="rootClasses" :style="rootStyle">
+  <div ref="root" class="nui-table" :class="rootClasses" :style="rootStyle">
     <div class="nui-table__frame">
       <div
         ref="scroller"
@@ -208,6 +208,7 @@ const emit = defineEmits<{
 const slots = useSlots();
 const scroller = useTemplateRef<HTMLElement>('scroller');
 const tableElement = useTemplateRef<HTMLTableElement>('table');
+const rootElement = useTemplateRef<HTMLElement>('root');
 
 const keyOf = (row: T): string => (getKey ?? defaultOptionKey)(row);
 const selectedKeys = computed(() => new Set(selected.value.map(keyOf)));
@@ -346,14 +347,18 @@ const dragging = computed(
   () => columnDrag.state.value.phase === 'dragging' || rowReorder.state.value.phase === 'dragging',
 );
 
-const headSize = ref(0);
-const captionSize = ref(0);
+const rootStyle = computed(() => ({ '--_indent': `${indent}px` }));
 
-const rootStyle = computed(() => ({
-  '--_indent': `${indent}px`,
-  '--_head-size': `${headSize.value}px`,
-  '--_caption-size': `${captionSize.value}px`,
-}));
+const headBand = (): { top: number; height: number } => {
+  const table = tableElement.value;
+  const head = table?.querySelector('thead')?.getBoundingClientRect();
+
+  if (!table || !head) {
+    return { top: 0, height: 0 };
+  }
+
+  return { top: Math.max(0, head.top - table.getBoundingClientRect().top), height: head.height };
+};
 
 const scrolled = ref({ start: false, end: false });
 
@@ -366,7 +371,6 @@ const rootClasses = computed(() => [
     'nui-table--virtual': isVirtual.value,
     'nui-table--selectable': selectable !== undefined,
     'nui-table--loading': loading,
-    'nui-table--fixed': layout.fixed.value,
     'nui-table--dragging': dragging.value,
     'nui-table--scrolled-start': scrolled.value.start,
     'nui-table--scrolled-end': scrolled.value.end,
@@ -385,14 +389,16 @@ const utilityCols = computed(() => [
 const ghost = computed(() => {
   const column = columnDrag.ghost.value;
   if (column) {
+    const band = headBand();
+
     return {
       axis: 'column',
       label: column.label,
       style: {
         left: `${column.offset}px`,
         width: `${column.size}px`,
-        top: `${captionSize.value}px`,
-        height: `${headSize.value}px`,
+        top: `${band.top}px`,
+        height: `${band.height}px`,
       },
     };
   }
@@ -453,13 +459,11 @@ const bodySlotNames = (): string[] => [
 
 onMounted(() => {
   const measure = (): void => {
-    const table = tableElement.value;
-    layout.measure(table);
-    const head = table?.querySelector('thead')?.getBoundingClientRect();
-    headSize.value = head?.height ?? 0;
+    layout.measure(tableElement.value);
+    const band = headBand();
 
-    captionSize.value =
-      head && table ? Math.max(0, head.top - table.getBoundingClientRect().top) : 0;
+    rootElement.value?.style.setProperty('--_head-size', `${band.height}px`);
+    rootElement.value?.style.setProperty('--_caption-size', `${band.top}px`);
   };
 
   watch([() => layout.ordered.value, widths], measure, { immediate: true, flush: 'post' });

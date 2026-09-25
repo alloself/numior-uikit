@@ -6,7 +6,6 @@
     :class="`nui-tab-list--orientation-${orientation}`"
     :aria-orientation="orientation"
     :aria-label="label"
-    :style="indicatorStyle"
     @keydown="navigation.onKeydown"
     @focusin="navigation.onFocusin"
     @focusout="onFocusout"
@@ -17,7 +16,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onScopeDispose, ref, useTemplateRef, watch } from 'vue';
+import { computed, onMounted, onScopeDispose, useTemplateRef, watch } from 'vue';
 import { useListNavigation } from '@numior/primitives';
 import { useTabs } from './tabs-context';
 import type { NuiTabListProps } from './tabs.types';
@@ -26,16 +25,6 @@ const { label } = defineProps<NuiTabListProps>();
 const tabs = useTabs();
 const orientation = computed(() => tabs.orientation.value);
 const listElement = useTemplateRef<HTMLElement>('list');
-const indicator = ref<{ start: number; size: number } | null>(null);
-
-const indicatorStyle = computed(() =>
-  indicator.value === null
-    ? {}
-    : {
-        '--_indicator-start': `${indicator.value.start}px`,
-        '--_indicator-size': `${indicator.value.size}px`,
-      },
-);
 
 const selectedTab = (): HTMLElement | null => {
   const found = listElement.value?.querySelector('[role="tab"][aria-selected="true"]');
@@ -51,16 +40,24 @@ const navigation = useListNavigation(listElement, {
 });
 
 const measure = (): void => {
+  const list = listElement.value;
   const tab = selectedTab();
-  if (!tab) {
-    indicator.value = null;
+
+  if (!list) {
     return;
   }
 
-  indicator.value =
-    orientation.value === 'vertical'
-      ? { start: tab.offsetTop, size: tab.offsetHeight }
-      : { start: tab.offsetLeft, size: tab.offsetWidth };
+  if (!tab) {
+    list.style.removeProperty('--_indicator-start');
+    list.style.removeProperty('--_indicator-size');
+
+    return;
+  }
+
+  const vertical = orientation.value === 'vertical';
+
+  list.style.setProperty('--_indicator-start', `${vertical ? tab.offsetTop : tab.offsetLeft}px`);
+  list.style.setProperty('--_indicator-size', `${vertical ? tab.offsetHeight : tab.offsetWidth}px`);
 };
 
 const onFocusout = (event: FocusEvent): void => {

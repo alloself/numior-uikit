@@ -390,6 +390,14 @@ export class TableDriver extends ComponentDriver {
     return this.wrapper.find('.nui-table__live').text();
   }
 
+  get fixedLayout(): boolean {
+    return this.wrapper.find<HTMLTableElement>('table').element.style.tableLayout === 'fixed';
+  }
+
+  tableVar(name: string): string {
+    return this.wrapper.find<HTMLTableElement>('table').element.style.getPropertyValue(name);
+  }
+
   colStyle(label: string): string {
     const col = this.wrapper.findAll('colgroup col')[this.columnIndex(label)];
     return col?.attributes('style') ?? '';
@@ -437,10 +445,6 @@ export class TableDriver extends ComponentDriver {
       width: width * cells.length,
       height: 400,
     });
-  }
-
-  async settle(): Promise<void> {
-    await nextTick();
   }
 
   async pressResizer(label: string, key: string, shiftKey = false): Promise<void> {
@@ -586,13 +590,11 @@ export class TableDriver extends ComponentDriver {
     defineSize(this.scroller.element, 'clientHeight', height);
     this.scroller.element.dispatchEvent(new Event('scroll'));
     await nextTick();
-    await nextTick();
   }
 
   async scrollTo(top: number): Promise<void> {
     defineSize(this.scroller.element, 'scrollTop', top);
     this.scroller.element.dispatchEvent(new Event('scroll'));
-    await nextTick();
     await nextTick();
   }
 
