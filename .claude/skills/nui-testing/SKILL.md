@@ -45,6 +45,10 @@ export class ThingDriver extends ComponentDriver {
   `await driver.ready()` (see `IconDriver`, `CheckboxDriver`).
 - Typed access: `find<HTMLInputElement>()`, `emitted()` filtered by type guards, exposed
   methods through a host component with `useTemplateRef<InstanceType<typeof NuiThing>>`.
+- One driver action awaits exactly one `nextTick()`. If an assertion needs a second tick,
+  the component chains renders (a post-flush watcher writes reactive state); fix the
+  component, never add a second tick or a helper that hides it. `pnpm test:ticks` fails on
+  two consecutive `nextTick()` calls.
 - Assert modifiers with `driver.hasModifier('size-sm')`, native state with element getters.
 - Spec file `test/<name>.test.ts`:
 
@@ -74,8 +78,9 @@ it('waits for a commit with the lazy modifier', async () => {
   from the page object (`NavigationSection.typeInMenu`).
 - Keep static `mount()` factories synchronous: fallow cannot follow member accesses through
   an awaited `Promise<Driver>` and reports every getter as unused. When the first render
-  needs a post-mount flush (virtualisation measures the viewport after mount), expose
-  `settle()` and await it in the spec (`VirtualHarness`).
+  needs a post-mount flush (virtualisation measures the viewport after mount and the
+  measurement is state by design), expose a single-tick `settle()` and await it in the spec
+  (`VirtualHarness`).
 - jsdom has no layout: give a scroll container a size with `Object.defineProperty(el,
 'clientHeight', { value })` and dispatch `scroll`; `useVirtualList` re-measures on every
   scroll event, so no internal API is needed (`TreeDriver.setHeight`, `TableDriver.setHeight`).
@@ -122,4 +127,7 @@ that the label `for` matches the control id and that values render on the server
 - Measurements taken synchronously in `onMounted` (the table's natural column widths) happen
   before a driver can touch elements, so stub the prototype before mounting through
   `TopLayerStubs.define(HTMLTableCellElement.prototype, 'getBoundingClientRect', …)`
-  (`TableDriver.mount({ headerWidth })`) and `await driver.settle()` for the re-render.
+  (`TableDriver.mount({ headerWidth })`). Measured values land in the DOM directly
+  (`table.style.tableLayout`, `col.style.inlineSize`, `--_sticky-<index>` on the table,
+  `--_side-x`/`--_side-y` on floating elements), so assert them through element style
+  getters (`fixedLayout`, `tableVar`, `sideVector`), never through classes.

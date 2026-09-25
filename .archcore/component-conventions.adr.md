@@ -42,6 +42,13 @@ status: accepted
 - Следующие волны: overlays (dialog, popover, tooltip, toast с наследованием темы
   инициатора), навигация, представление данных, select/combobox/date/upload/number,
   пакет `@numior/forms`.
+- Рендер-эффекты (2026-09-25): post-flush watcher'ы только трогают DOM. `useFloating`
+  пишет позицию, размеры, стрелку и сторону (`--_side-x`/`--_side-y`) прямо в элементы и
+  ничего не возвращает; `useListNavigation` хранит активную опцию по id и умеет назначить
+  её до рендера; таблица пишет `table-layout`, естественные ширины колонок, sticky-смещения
+  (`--_sticky-<index>`) и `aria-valuenow` ресайзеров в DOM из `measure()`; индикатор табов
+  и размеры шапки таблицы — custom properties на элементе. Направление письма — опция `dir`
+  конфига и `useDirection(anchor)`.
 
 ## Alternatives Considered
 

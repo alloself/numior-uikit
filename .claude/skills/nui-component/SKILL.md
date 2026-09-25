@@ -60,6 +60,14 @@ const {
   props and models, state, derived values, handlers, lifecycle.
 - Read DOM state through `useTemplateRef<HTMLInputElement>('input')`, not `event.target`.
 - Composables receive destructured props through a getter, as above.
+- One action, one render: decide activation and focus targets before the render (handler or
+  a plain `watch`), let a `flush: 'post'` watcher only call `focus()`/`showPopover()` or
+  write measurements straight into `element.style`/custom properties. Never write reactive
+  state from a post-flush watcher. Activate a not-yet-rendered option by id
+  (`navigation.setActive(optionElementId(listId, index), { focus: false })`) and reveal it
+  in the post-flush step (`navigation.reveal()`).
+- Reading direction comes from `useDirection(anchor)`; floating elements get their side as
+  `--_side-x`/`--_side-y` from `useFloating`, CSS derives the shift and the arrow from them.
 
 ## Template and CSS
 
