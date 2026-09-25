@@ -4,6 +4,57 @@
       <h2 id="dates-title">Даты</h2>
       <span class="tag">NuiCalendar · NuiDatePicker · NuiDateRangePicker</span>
     </div>
+    <div class="form">
+      <NuiField label="Дата поездки" description="Введите или выберите в календаре">
+        <NuiDatePicker
+          v-model="picked"
+          clearable
+          placeholder="ДД.ММ.ГГГГ"
+          open-label="Открыть календарь"
+          clear-label="Очистить"
+          dialog-label="Календарь"
+          today-label="Сегодня"
+          previous-label="Предыдущий месяц"
+          next-label="Следующий месяц"
+          month-label="Выбрать месяц"
+          year-label="Выбрать год"
+          data-testid="date-picker"
+        />
+      </NuiField>
+      <NuiField label="Период отчёта" description="Два месяца и пресеты">
+        <NuiDateRangePicker
+          v-model="period"
+          :presets="presets"
+          clearable
+          end-label="Конец периода"
+          open-label="Открыть календарь"
+          clear-label="Очистить"
+          dialog-label="Календарь"
+          today-label="Сегодня"
+          previous-label="Предыдущий месяц"
+          next-label="Следующий месяц"
+          month-label="Выбрать месяц"
+          year-label="Выбрать год"
+          data-testid="date-range-picker"
+        />
+      </NuiField>
+      <NuiField label="Встреча" description="Дата и время">
+        <NuiDatePicker
+          v-model="moment"
+          time
+          :time-step="30"
+          time-label="Выбрать время"
+          open-label="Открыть календарь"
+          dialog-label="Календарь"
+          today-label="Сегодня"
+          previous-label="Предыдущий месяц"
+          next-label="Следующий месяц"
+          month-label="Выбрать месяц"
+          year-label="Выбрать год"
+          data-testid="date-time-picker"
+        />
+      </NuiField>
+    </div>
     <div class="dates-grid">
       <NuiCalendar
         v-model="date"
@@ -53,6 +104,9 @@
 import { computed, ref } from 'vue';
 import {
   NuiCalendar,
+  NuiDatePicker,
+  NuiDateRangePicker,
+  NuiField,
   addDays,
   localToday,
   startOfMonth,
@@ -73,6 +127,9 @@ const date = ref<string | null>('2026-09-24');
 const month = ref<string>();
 const dates = ref<string[]>(['2026-09-03', '2026-09-10']);
 const range = ref<NuiDateRange>({ start: null, end: null });
+const picked = ref<string | null>(null);
+const period = ref<NuiDateRange>({ start: null, end: null });
+const moment = ref<string | null>('2026-09-24T09:30');
 
 const output = computed(() =>
   JSON.stringify(
@@ -81,6 +138,9 @@ const output = computed(() =>
       month: month.value ?? null,
       dates: dates.value,
       range: range.value,
+      picked: picked.value,
+      period: period.value,
+      moment: moment.value,
       today: localToday(),
     },
     null,

@@ -1,6 +1,7 @@
 import { AxeBuilder } from '@axe-core/playwright';
 import type { Locator, Page } from '@playwright/test';
 import { DataSection } from './data';
+import { DatesSection } from './dates';
 import { FeedbackSection } from './feedback';
 import { IntlSection } from './intl';
 import { NavigationSection } from './navigation';
@@ -144,6 +145,7 @@ export class PlaygroundPage {
   readonly navigation: NavigationSection;
   readonly pickers: PickersSection;
   readonly intl: IntlSection;
+  readonly dates: DatesSection;
   readonly data: DataSection;
   readonly tree: TreeSection;
   readonly table: TableSection;
@@ -179,6 +181,7 @@ export class PlaygroundPage {
     this.navigation = new NavigationSection(page);
     this.pickers = new PickersSection(page);
     this.intl = new IntlSection(page);
+    this.dates = new DatesSection(page);
     this.data = new DataSection(page);
     this.tree = new TreeSection(page);
     this.table = new TableSection(page);
