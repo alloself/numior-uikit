@@ -41,6 +41,8 @@ export type IconAlias =
   | 'calendar'
   | 'upload'
   | 'refresh'
+  | 'sidebar'
+  | 'menu'
   | (string & NonNullable<unknown>);
 
 export type IconRegistry = Readonly<Record<string, Component>>;

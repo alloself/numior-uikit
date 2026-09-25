@@ -38,6 +38,13 @@ import {
   NuiTable,
   NuiTabs,
   NuiTextarea,
+  NuiAppBar,
+  NuiLayout,
+  NuiSidebar,
+  NuiSidebarContent,
+  NuiSidebarGroup,
+  NuiSidebarItem,
+  NuiSidebarTrigger,
   NuiTimeField,
   NuiToast,
   NuiUpload,
@@ -239,6 +246,28 @@ const scenarios: Scenario[] = [
           },
         ],
       }),
+  },
+  {
+    name: 'NuiLayout',
+    render: () =>
+      h(
+        NuiLayout,
+        { id: 'shell', contentAs: 'div' },
+        {
+          sidebar: () =>
+            h(NuiSidebar, { collapsible: 'icon', label: 'Sections' }, () =>
+              h(NuiSidebarContent, () =>
+                h(NuiSidebarGroup, { label: 'Overview' }, () => [
+                  h(NuiSidebarItem, { label: 'Inbox', icon: 'inbox', active: true }),
+                  h(NuiSidebarItem, { label: 'Docs', href: '#docs' }),
+                ]),
+              ),
+            ),
+          header: () =>
+            h(NuiAppBar, null, { start: () => h(NuiSidebarTrigger), default: () => 'Inbox' }),
+          default: () => h('p', 'Content'),
+        },
+      ),
   },
   {
     name: 'NuiDatePicker with time',
@@ -513,6 +542,39 @@ describe('server rendering', () => {
     expect(html).toContain('type="hidden" name="price" value="1234.5"');
     expect(html).toContain('aria-hidden="true"');
     expect(html).toContain('tabindex="-1"');
+  });
+
+  it('renders the app shell with an expanded sidebar and no drawer on the server', async () => {
+    const html = await renderMarkup(() =>
+      h(
+        NuiLayout,
+        { id: 'shell', contentAs: 'div' },
+        {
+          sidebar: () =>
+            h(NuiSidebar, { collapsible: 'icon', label: 'Sections' }, () =>
+              h(NuiSidebarContent, () =>
+                h(NuiSidebarGroup, { label: 'Overview' }, () => [
+                  h(NuiSidebarItem, { label: 'Inbox', icon: 'inbox', active: true }),
+                  h(NuiSidebarItem, { label: 'Docs', href: '#docs' }),
+                ]),
+              ),
+            ),
+          header: () =>
+            h(NuiAppBar, null, { start: () => h(NuiSidebarTrigger), default: () => 'Inbox' }),
+          default: () => h('p', 'Content'),
+        },
+      ),
+    );
+
+    expect(html).toContain('<aside');
+    expect(html).toContain('aria-label="Sections"');
+    expect(html).toContain('aria-expanded="true"');
+    expect(html).toContain('aria-controls="shell-sidebar"');
+    expect(html).toContain('id="shell-sidebar"');
+    expect(html).toContain('aria-current="page"');
+    expect(html).toContain('href="#docs"');
+    expect(html).not.toContain('nui-sidebar--rail');
+    expect(html).not.toContain('<dialog');
   });
 
   it('renders an upload zone with a labelled button and existing files without previews', async () => {

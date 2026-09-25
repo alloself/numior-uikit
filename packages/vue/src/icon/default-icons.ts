@@ -31,4 +31,6 @@ export const defaultIcons: IconRegistry = {
   calendar: lazyIcon(() => import('lucide-vue-next/dist/esm/icons/calendar.js')),
   upload: lazyIcon(() => import('lucide-vue-next/dist/esm/icons/upload.js')),
   refresh: lazyIcon(() => import('lucide-vue-next/dist/esm/icons/rotate-cw.js')),
+  sidebar: lazyIcon(() => import('lucide-vue-next/dist/esm/icons/panel-left.js')),
+  menu: lazyIcon(() => import('lucide-vue-next/dist/esm/icons/menu.js')),
 };

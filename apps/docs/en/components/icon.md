@@ -5,7 +5,7 @@ alias through a registry: `check`, `minus`, `loader`, `chevron-down`, `x`, `sear
 `info`, `success`, `warning`, `error`, `chevron-right`, `chevron-left`, `chevrons-left`,
 `chevrons-right`, `ellipsis`, `external-link`, `user`, `image`, `inbox`, `folder`, `folder-open`,
 `file`, `arrow-up`, `arrow-up-down`, `grip`, `plus`, `clock`, `calendar`, `upload`,
-`refresh`.
+`refresh`, `sidebar`, `menu`.
 By default the aliases point to [Lucide](https://lucide.dev) (ISC): each icon loads on
 demand as a separate module the first time its alias is used and is reused from the
 cache afterwards; only requested glyphs reach the bundle, and the server renders the

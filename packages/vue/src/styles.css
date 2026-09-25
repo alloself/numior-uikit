@@ -9,6 +9,8 @@
 @import './calendar/calendar.css';
 @import './date-picker/date-picker.css';
 @import './upload/upload.css';
+@import './layout/layout.css';
+@import './sidebar/sidebar.css';
 @import './checkbox/checkbox.css';
 @import './radio/radio.css';
 @import './switch/switch.css';

@@ -16,6 +16,16 @@ export { default as NuiNumberField } from './number-field/NuiNumberField.vue';
 export type { NuiNumberFieldProps } from './number-field/number-field.types';
 export { default as NuiTimeField } from './time-field/NuiTimeField.vue';
 export { default as NuiUpload } from './upload/NuiUpload.vue';
+export { default as NuiLayout } from './layout/NuiLayout.vue';
+export { default as NuiAppBar } from './layout/NuiAppBar.vue';
+export { default as NuiSidebar } from './sidebar/NuiSidebar.vue';
+export { default as NuiSidebarHeader } from './sidebar/NuiSidebarHeader.vue';
+export { default as NuiSidebarContent } from './sidebar/NuiSidebarContent.vue';
+export { default as NuiSidebarFooter } from './sidebar/NuiSidebarFooter.vue';
+export { default as NuiSidebarGroup } from './sidebar/NuiSidebarGroup.vue';
+export { default as NuiSidebarItem } from './sidebar/NuiSidebarItem.vue';
+export { default as NuiSidebarSub } from './sidebar/NuiSidebarSub.vue';
+export { default as NuiSidebarTrigger } from './sidebar/NuiSidebarTrigger.vue';
 export {
   addDays,
   addMonths,
@@ -54,6 +64,17 @@ export type {
   NuiUploadRejected,
   NuiUploadZoneSlot,
 } from './upload/upload.types';
+export type { NuiAppBarProps, NuiLayoutProps } from './layout/layout.types';
+export type {
+  NuiSidebarCollapsible,
+  NuiSidebarContentProps,
+  NuiSidebarGroupProps,
+  NuiSidebarItemProps,
+  NuiSidebarProps,
+  NuiSidebarSide,
+  NuiSidebarSubProps,
+  NuiSidebarTriggerProps,
+} from './sidebar/sidebar.types';
 export { default as NuiTextarea } from './textarea/NuiTextarea.vue';
 export type {
   NuiTextareaModifiers,
@@ -244,6 +265,7 @@ export {
   useIcons,
   useDirection,
   useLocale,
+  useMediaQuery,
   usePopover,
   useRadioGroup,
   useToast,

@@ -1,0 +1,57 @@
+.nui-layout {
+  --_sidebar-size: 16rem;
+  --_rail-size: 3.5rem;
+  --_bar-size: 3.5rem;
+
+  display: flex;
+  min-block-size: 100%;
+  background: var(--nui-surface);
+  color: var(--nui-text);
+  font-family: var(--nui-font);
+  font-size: var(--nui-font-size-sm);
+  line-height: var(--nui-line-height);
+}
+.nui-layout__body {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-inline-size: 0;
+}
+.nui-layout__content {
+  flex: 1 1 auto;
+  min-block-size: 0;
+}
+.nui-app-bar {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: var(--nui-space-2);
+  min-block-size: var(--_bar-size, 3.5rem);
+  padding-inline: var(--nui-space-3);
+  border-block-end: 1px solid var(--nui-border);
+  background: var(--nui-surface);
+  color: var(--nui-text);
+  font-family: var(--nui-font);
+  font-size: var(--nui-font-size-sm);
+  line-height: var(--nui-line-height);
+}
+.nui-app-bar--sticky {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 1;
+}
+.nui-app-bar__start,
+.nui-app-bar__end {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: var(--nui-space-2);
+}
+.nui-app-bar__body {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  gap: var(--nui-space-2);
+  min-inline-size: 0;
+  font-weight: 600;
+}
