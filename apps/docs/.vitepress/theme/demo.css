@@ -19,3 +19,11 @@
   align-items: stretch;
   max-inline-size: 28rem;
 }
+.nui-demo--frame {
+  display: block;
+  padding: 0;
+  overflow: hidden;
+}
+.nui-demo--frame .nui-layout {
+  block-size: 100%;
+}
