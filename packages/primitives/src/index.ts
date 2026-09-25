@@ -24,6 +24,7 @@ export {
   formatIsoDate,
   isIsoDate,
   isWithin,
+  localToday,
   normalizeRange,
   parseIsoDate,
 } from './date/iso';

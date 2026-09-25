@@ -8,6 +8,7 @@ import {
   NuiBadge,
   NuiBreadcrumbs,
   NuiButton,
+  NuiCalendar,
   NuiCard,
   NuiCardContent,
   NuiCardMedia,
@@ -195,6 +196,19 @@ const scenarios: Scenario[] = [
   {
     name: 'NuiTimeField',
     render: () => h(NuiTimeField, { modelValue: '13:05', locale: 'en-US', name: 'start' }),
+  },
+  {
+    name: 'NuiCalendar',
+    render: () =>
+      h(NuiCalendar, {
+        modelValue: { start: '2026-09-21', end: '2026-09-25' },
+        mode: 'range',
+        month: '2026-09',
+        locale: 'ru-RU',
+        today: '2026-09-24',
+        weekNumbers: true,
+        months: 2,
+      }),
   },
   {
     name: 'NuiNumberField',
@@ -396,6 +410,24 @@ describe('server rendering', () => {
     expect(html).toContain('aria-selected="true"');
     expect(html).toContain('class="nui-select__value"');
     expect(html).toContain('Banana');
+  });
+
+  it('renders a calendar grid with one tab stop and a deterministic today marker', async () => {
+    const html = await renderMarkup(() =>
+      h(NuiCalendar, { modelValue: '2026-09-24', locale: 'ru-RU', today: '2026-09-24' }),
+    );
+
+    expect(html).toContain('role="grid"');
+    expect(html.match(/tabindex="0"/g)).toHaveLength(1);
+    expect(html).toContain('aria-current="date"');
+    expect(html).toContain('datetime="2026-09-24"');
+    expect(html).toContain('сентябрь');
+    expect(html).not.toContain('nui-calendar__picker');
+
+    const bare = await renderMarkup(() => h(NuiCalendar, { month: '2026-09', locale: 'en-US' }));
+
+    expect(bare).not.toContain('aria-current');
+    expect(bare).toContain('September');
   });
 
   it('renders a number field formatted on the server with spinbutton semantics', async () => {

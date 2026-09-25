@@ -34,6 +34,12 @@ export const partsOf = (parts: DateParts): DateParts | null => {
     : null;
 };
 
+export const localToday = (): string => {
+  const now = new Date();
+
+  return formatIsoDate({ year: now.getFullYear(), month: now.getMonth() + 1, day: now.getDate() });
+};
+
 export const parseIsoDate = (text: string | null | undefined): DateParts | null => {
   const match = ISO_PATTERN.exec(text ?? '');
 

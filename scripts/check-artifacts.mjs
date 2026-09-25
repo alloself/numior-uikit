@@ -96,6 +96,7 @@ const code = await importBuild('vue', [
   'NuiTextarea',
   'NuiNumberField',
   'NuiTimeField',
+  'NuiCalendar',
 ]);
 
 assert.doesNotMatch(code, /(?:tiptap|prosemirror|reka-ui|spreadsheet|tailwindcss)/i);
