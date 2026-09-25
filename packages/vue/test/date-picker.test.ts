@@ -100,6 +100,31 @@ describe('NuiDatePicker', () => {
     disabled.unmount();
   });
 
+  it('combines a date with a time when time is on and keeps the dialog open after picking a day', async () => {
+    const picker = DatePickerDriver.mount({
+      modelValue: '2026-09-24T09:30',
+      props: { time: true, timeLabel: 'Время' },
+    });
+
+    expect(picker.text).toBe('24.09.2026 09:30');
+    expect(picker.input.attributes('placeholder')).toBe('DD.MM.YYYY HH:mm');
+    await picker.type('25.09.2026 10:15');
+    expect(picker.value).toBe('2026-09-25T10:15');
+    await picker.type('26.09.2026');
+    expect(picker.value).toBe('2026-09-26T10:15');
+    await picker.blur();
+    expect(picker.text).toBe('26.09.2026 10:15');
+    await picker.clickOpen();
+    expect(picker.timeSegments).toEqual(['10', '15']);
+    await picker.clickDay('2026-09-30');
+    expect(picker.value).toBe('2026-09-30T10:15');
+    expect(picker.isOpen).toBe(true);
+    await picker.pressInTime('Enter');
+    expect(picker.isOpen).toBe(false);
+    expect(picker.inputFocused).toBe(true);
+    picker.unmount();
+  });
+
   it('follows external model changes in the text and the calendar', async () => {
     const picker = DatePickerDriver.mount({ modelValue: '2026-09-24' });
 

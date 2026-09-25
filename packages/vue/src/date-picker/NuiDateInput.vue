@@ -3,7 +3,7 @@
     ref="input"
     class="nui-date-picker__input"
     type="text"
-    inputmode="numeric"
+    :inputmode="time ? undefined : 'numeric'"
     autocomplete="off"
     :value="text.draft.value"
     :placeholder="placeholder ?? pattern"
@@ -27,6 +27,7 @@ const PLACEHOLDER_GLYPHS = { year: 'Y', month: 'M', day: 'D' };
 const {
   modelValue,
   locale,
+  time = false,
   placeholder,
   disabled = false,
   readonly = false,
@@ -41,16 +42,19 @@ const localeRef = computed(() => locale);
 const text = useDateText({
   value: () => modelValue,
   locale: localeRef,
+  time: () => time,
   commit: (date) => emit('update:modelValue', date),
 });
 
-const pattern = computed(() =>
-  datePatternOf(locale)
+const pattern = computed(() => {
+  const date = datePatternOf(locale)
     .map((part) =>
       part.type === 'literal' ? part.text : PLACEHOLDER_GLYPHS[part.type].repeat(part.length),
     )
-    .join(''),
-);
+    .join('');
+
+  return time ? `${date} HH:mm` : date;
+});
 
 const onInput = (): void => {
   const element = inputElement.value;

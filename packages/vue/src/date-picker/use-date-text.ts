@@ -1,9 +1,17 @@
 import { ref, watch, type ComputedRef, type Ref } from 'vue';
-import { formatDateText, parseDateText } from '@numior/primitives';
+import {
+  formatDateText,
+  formatTimeModel,
+  joinDateTime,
+  parseDateText,
+  parseTime,
+  splitDateTime,
+} from '@numior/primitives';
 
 export interface DateTextOptions {
   readonly value: () => string | null;
   readonly locale: ComputedRef<string>;
+  readonly time: () => boolean;
   readonly commit: (date: string | null) => void;
 }
 
@@ -13,9 +21,43 @@ export interface DateText {
   settle(): void;
 }
 
+const displayDateTime = (value: string, locale: string): string => {
+  const parts = splitDateTime(value);
+
+  return parts ? `${formatDateText(parts.date, locale)} ${parts.time}` : '';
+};
+
+const parseDateTimeText = (text: string, locale: string, fallback: string): string | null => {
+  const trimmed = text.trim();
+  const at = trimmed.search(/\s\S+$/u);
+  const datePart = at < 0 ? trimmed : trimmed.slice(0, at);
+  const timePart = at < 0 ? fallback : trimmed.slice(at + 1);
+  const date = parseDateText(datePart, locale);
+  const time = parseTime(timePart);
+
+  return date && time ? joinDateTime(date, formatTimeModel(time, false)) : null;
+};
+
 export const useDateText = (options: DateTextOptions): DateText => {
-  const display = (value: string | null): string =>
-    value === null ? '' : formatDateText(value, options.locale.value);
+  const display = (value: string | null): string => {
+    if (value === null) {
+      return '';
+    }
+
+    return options.time()
+      ? displayDateTime(value, options.locale.value)
+      : formatDateText(value, options.locale.value);
+  };
+
+  const parse = (text: string): string | null => {
+    if (!options.time()) {
+      return parseDateText(text, options.locale.value);
+    }
+
+    const current = splitDateTime(options.value())?.time ?? '00:00';
+
+    return parseDateTimeText(text, options.locale.value, current);
+  };
 
   const draft = ref(display(options.value()));
 
@@ -24,7 +66,7 @@ export const useDateText = (options: DateTextOptions): DateText => {
     () => {
       const value = options.value();
 
-      if (parseDateText(draft.value, options.locale.value) !== value) {
+      if (parse(draft.value) !== value) {
         draft.value = display(value);
       }
     },
@@ -32,7 +74,7 @@ export const useDateText = (options: DateTextOptions): DateText => {
 
   const input = (text: string): void => {
     draft.value = text;
-    const parsed = parseDateText(text, options.locale.value);
+    const parsed = parse(text);
 
     if (parsed !== null) {
       options.commit(parsed);
@@ -42,7 +84,7 @@ export const useDateText = (options: DateTextOptions): DateText => {
   };
 
   const settle = (): void => {
-    const parsed = parseDateText(draft.value, options.locale.value);
+    const parsed = parse(draft.value);
 
     if (parsed === null && draft.value.trim() !== '') {
       draft.value = display(options.value());

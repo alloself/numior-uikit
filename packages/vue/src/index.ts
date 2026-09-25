@@ -28,6 +28,7 @@ export {
 } from '@numior/primitives';
 export { default as NuiCalendar } from './calendar/NuiCalendar.vue';
 export { default as NuiDatePicker } from './date-picker/NuiDatePicker.vue';
+export { default as NuiDateRangePicker } from './date-picker/NuiDateRangePicker.vue';
 export type {
   NuiDatePickerBaseProps,
   NuiDatePickerProps,

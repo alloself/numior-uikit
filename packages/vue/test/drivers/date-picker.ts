@@ -113,6 +113,23 @@ export class DatePickerDriver extends ComponentDriver {
     return document.activeElement === this.input.element;
   }
 
+  get timeSegments(): string[] {
+    return this.wrapper
+      .findAll<HTMLInputElement>('.nui-time-field__segment')
+      .map((segment) => segment.element.value);
+  }
+
+  async pressInTime(key: string): Promise<void> {
+    const segment = this.wrapper.find('.nui-time-field__segment');
+
+    segment.element.dispatchEvent(
+      new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }),
+    );
+
+    await nextTick();
+    await nextTick();
+  }
+
   get hiddenValue(): string | undefined {
     const hidden = this.wrapper.find<HTMLInputElement>('input[type="hidden"]');
 

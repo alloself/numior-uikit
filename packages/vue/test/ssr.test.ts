@@ -16,6 +16,7 @@ import {
   NuiChip,
   NuiCombobox,
   NuiDatePicker,
+  NuiDateRangePicker,
   NuiDialog,
   NuiDrawer,
   NuiEmpty,
@@ -205,6 +206,27 @@ const scenarios: Scenario[] = [
         modelValue: '2026-09-24',
         locale: 'ru-RU',
         name: 'trip',
+        today: '2026-09-24',
+      }),
+  },
+  {
+    name: 'NuiDateRangePicker',
+    render: () =>
+      h(NuiDateRangePicker, {
+        modelValue: { start: '2026-09-21', end: '2026-09-27' },
+        locale: 'en-US',
+        startName: 'from',
+        endName: 'to',
+        today: '2026-09-24',
+      }),
+  },
+  {
+    name: 'NuiDatePicker with time',
+    render: () =>
+      h(NuiDatePicker, {
+        modelValue: '2026-09-24T09:30',
+        locale: 'ru-RU',
+        time: true,
         today: '2026-09-24',
       }),
   },

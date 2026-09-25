@@ -115,5 +115,13 @@
   }
 }
 .nui-date-picker__time {
-  padding: 0 var(--nui-space-3) var(--nui-space-3);
+  margin: 0 var(--nui-space-3) var(--nui-space-3);
+  inline-size: auto;
+}
+.nui-date-picker--range .nui-date-picker__input {
+  flex: 1 1 0;
+  text-align: center;
+}
+.nui-date-picker--range .nui-date-picker__input:first-of-type {
+  text-align: start;
 }

@@ -1,73 +1,35 @@
 <template>
-  <div
-    ref="root"
-    class="nui-date-picker"
-    :class="[
-      `nui-date-picker--size-${size}`,
-      {
-        'nui-date-picker--open': popover.open.value,
-        'nui-date-picker--invalid': isInvalid,
-        'nui-date-picker--disabled': isDisabled,
-        'nui-date-picker--readonly': readonly,
-        'nui-date-picker--clearable': showClear,
-      },
-    ]"
+  <NuiDateField
+    ref="frame"
+    :popover="popover"
+    :size="size"
+    :invalid="isInvalid"
+    :disabled="isDisabled"
+    :readonly="readonly"
+    :clearable="showClear"
+    :open-label="openLabel"
+    :clear-label="clearLabel"
+    :dialog-label="dialogLabel"
+    :labelled-by="field?.labelledBy.value"
     v-bind="split.rootAttrs()"
-    @focusout="popover.onFocusout"
+    @clear="clear"
   >
     <NuiDateInput
       ref="input"
       :model-value="model"
       :locale="locale"
+      :time="time"
       :placeholder="placeholder"
       :readonly="readonly"
       v-bind="{ ...controlAttrs, ...split.controlAttrs() }"
-      @update:model-value="setDate"
+      @update:model-value="setValue"
       @keydown="onInputKeydown"
     />
-    <NuiButton
-      v-if="showClear"
-      variant="ghost"
-      tone="neutral"
-      size="sm"
-      icon-only
-      class="nui-date-picker__clear"
-      :aria-label="clearLabel"
-      tabindex="-1"
-      @click="clear"
-    >
-      <NuiIcon alias="x" />
-    </NuiButton>
-    <NuiButton
-      variant="ghost"
-      tone="neutral"
-      size="sm"
-      icon-only
-      class="nui-date-picker__open"
-      :aria-label="openLabel"
-      aria-haspopup="dialog"
-      :aria-expanded="popover.open.value ? 'true' : 'false'"
-      :aria-controls="panelId"
-      :disabled="isDisabled || readonly"
-      @click="popover.toggle"
-    >
-      <NuiIcon alias="calendar" />
-    </NuiButton>
-    <div
-      :ref="popover.setPanel"
-      class="nui-date-picker__panel"
-      role="dialog"
-      aria-modal="false"
-      :aria-label="field?.labelledBy.value ? undefined : dialogLabel"
-      :aria-labelledby="field?.labelledBy.value"
-      :style="popover.floatingStyles.value"
-      v-bind="popover.control.contentAttrs.value"
-      @keydown="onPanelKeydown"
-    >
+    <template #panel>
       <NuiCalendar
         ref="calendar"
         v-model:month="month"
-        :model-value="model"
+        :model-value="dateValue"
         :locale="locale"
         :week-start="weekStart"
         :min="min"
@@ -86,18 +48,36 @@
       >
         <template v-if="$slots.actions" #actions><slot name="actions" /></template>
       </NuiCalendar>
-    </div>
+      <NuiTimeField
+        v-if="time"
+        class="nui-date-picker__time"
+        :model-value="timeValue"
+        :locale="locale"
+        :step="timeStep"
+        :clock-label="timeLabel"
+        size="sm"
+        @update:model-value="pickTime"
+        @keydown="onTimeKeydown"
+      />
+    </template>
     <input v-if="name" type="hidden" :name="name" :value="model ?? ''" />
-  </div>
+  </NuiDateField>
 </template>
 
 <script setup lang="ts">
 import { computed, onMounted, ref, useTemplateRef, watch } from 'vue';
-import { useField, useFieldControl, useLocale, useSplitAttrs } from '@numior/primitives';
-import NuiButton from '../button/NuiButton.vue';
+import {
+  joinDateTime,
+  splitDateTime,
+  useField,
+  useFieldControl,
+  useLocale,
+  useSplitAttrs,
+} from '@numior/primitives';
 import NuiCalendar from '../calendar/NuiCalendar.vue';
 import type { NuiCalendarValue } from '../calendar/calendar.types';
-import NuiIcon from '../icon/NuiIcon.vue';
+import NuiTimeField from '../time-field/NuiTimeField.vue';
+import NuiDateField from './NuiDateField.vue';
 import NuiDateInput from './NuiDateInput.vue';
 import type { NuiDatePickerProps } from './date-picker.types';
 import { usePickerPopover } from './use-picker-popover';
@@ -124,6 +104,9 @@ const {
   placement = 'bottom-start',
   placeholder,
   name,
+  time = false,
+  timeStep = 15,
+  timeLabel = 'Choose time',
   openLabel = 'Choose date',
   clearLabel = 'Clear',
   dialogLabel = 'Calendar',
@@ -147,7 +130,7 @@ const {
 } = useFieldControl(() => ({ id, disabled, required, invalid }));
 
 const locale = useLocale(() => localeProp);
-const root = useTemplateRef<HTMLElement>('root');
+const frame = useTemplateRef<{ root: HTMLElement | null }>('frame');
 const input = useTemplateRef<{ focus: () => void }>('input');
 const calendar = useTemplateRef<{ focus: (date?: string) => void }>('calendar');
 const month = ref<string>();
@@ -157,21 +140,38 @@ const showClear = computed(
   () => clearable && model.value !== null && !isDisabled.value && !readonly,
 );
 
+const dateValue = computed(() => (time ? (splitDateTime(model.value)?.date ?? null) : model.value));
+const timeValue = computed(() => splitDateTime(model.value)?.time ?? null);
+
 const popover = usePickerPopover({
-  anchor: root,
+  anchor: () => frame.value?.root ?? null,
   id: panelId,
   placement: () => placement,
   returnFocus: () => input.value?.focus(),
 });
 
-const setDate = (date: string | null): void => {
-  model.value = date;
+const setValue = (value: string | null): void => {
+  model.value = value;
 };
 
 const pickDate = (value: NuiCalendarValue): void => {
-  if (typeof value === 'string') {
-    model.value = value;
-    popover.hide({ focus: true });
+  if (typeof value !== 'string') {
+    return;
+  }
+
+  if (time) {
+    model.value = joinDateTime(value, timeValue.value ?? '00:00');
+
+    return;
+  }
+
+  model.value = value;
+  popover.hide({ focus: true });
+};
+
+const pickTime = (value: string | null): void => {
+  if (value !== null && dateValue.value !== null) {
+    model.value = joinDateTime(dateValue.value, value);
   }
 };
 
@@ -190,8 +190,8 @@ const onInputKeydown = (event: KeyboardEvent): void => {
   }
 };
 
-const onPanelKeydown = (event: KeyboardEvent): void => {
-  if (event.key === 'Escape' && !event.defaultPrevented) {
+const onTimeKeydown = (event: KeyboardEvent): void => {
+  if (event.key === 'Enter' && !event.defaultPrevented) {
     event.preventDefault();
     popover.hide({ focus: true });
   }
@@ -202,7 +202,7 @@ onMounted(() => {
     popover.open,
     (isOpen) => {
       if (isOpen) {
-        calendar.value?.focus(model.value ?? undefined);
+        calendar.value?.focus(dateValue.value ?? undefined);
       }
     },
     { flush: 'post' },
