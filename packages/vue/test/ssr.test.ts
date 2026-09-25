@@ -15,6 +15,7 @@ import {
   NuiCheckbox,
   NuiChip,
   NuiCombobox,
+  NuiDatePicker,
   NuiDialog,
   NuiDrawer,
   NuiEmpty,
@@ -196,6 +197,16 @@ const scenarios: Scenario[] = [
   {
     name: 'NuiTimeField',
     render: () => h(NuiTimeField, { modelValue: '13:05', locale: 'en-US', name: 'start' }),
+  },
+  {
+    name: 'NuiDatePicker',
+    render: () =>
+      h(NuiDatePicker, {
+        modelValue: '2026-09-24',
+        locale: 'ru-RU',
+        name: 'trip',
+        today: '2026-09-24',
+      }),
   },
   {
     name: 'NuiCalendar',
@@ -428,6 +439,19 @@ describe('server rendering', () => {
 
     expect(bare).not.toContain('aria-current');
     expect(bare).toContain('September');
+  });
+
+  it('renders a date picker closed with localised text and a hidden ISO value', async () => {
+    const html = await renderMarkup(() =>
+      h(NuiDatePicker, { modelValue: '2026-09-24', locale: 'ru-RU', name: 'trip' }),
+    );
+
+    expect(html).toContain('value="24.09.2026"');
+    expect(html).toContain('popover="manual"');
+    expect(html).toContain('role="dialog"');
+    expect(html).toContain('aria-expanded="false"');
+    expect(html).toContain('name="trip"');
+    expect(html).toContain('value="2026-09-24"');
   });
 
   it('renders a number field formatted on the server with spinbutton semantics', async () => {

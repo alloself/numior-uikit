@@ -15,7 +15,24 @@ export type { NuiInputModifiers, NuiInputProps, NuiInputType } from './input/inp
 export { default as NuiNumberField } from './number-field/NuiNumberField.vue';
 export type { NuiNumberFieldProps } from './number-field/number-field.types';
 export { default as NuiTimeField } from './time-field/NuiTimeField.vue';
+export {
+  addDays,
+  addMonths,
+  endOfMonth,
+  formatDateLabel,
+  formatDateText,
+  localToday,
+  parseDateText,
+  startOfMonth,
+  weekdayOf,
+} from '@numior/primitives';
 export { default as NuiCalendar } from './calendar/NuiCalendar.vue';
+export { default as NuiDatePicker } from './date-picker/NuiDatePicker.vue';
+export type {
+  NuiDatePickerBaseProps,
+  NuiDatePickerProps,
+  NuiDateRangePickerProps,
+} from './date-picker/date-picker.types';
 export type {
   NuiCalendarMode,
   NuiCalendarProps,

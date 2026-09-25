@@ -235,6 +235,10 @@ export class CalendarDriver extends ComponentDriver {
   }
 
   async clickDay(date: string): Promise<void> {
+    const element = this.day(date).element;
+
+    element.dispatchEvent(pointer('pointerdown'));
+    element.dispatchEvent(pointer('pointerup'));
     await this.day(date).trigger('click');
     await nextTick();
   }

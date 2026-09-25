@@ -40,6 +40,7 @@
 }
 .nui-calendar__months {
   display: flex;
+  flex-wrap: wrap;
   grid-area: months;
   gap: var(--nui-space-6);
 }

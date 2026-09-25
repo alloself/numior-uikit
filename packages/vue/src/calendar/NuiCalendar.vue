@@ -16,7 +16,7 @@
       },
     ]"
     :inert="disabled || undefined"
-    @pointerup="selection.clearArm"
+    @pointerup="onPointerup"
     @pointerleave="selection.hovered.value = undefined"
   >
     <aside v-if="presetList.length > 0" class="nui-calendar__presets">
@@ -109,7 +109,7 @@ const {
 } = defineProps<NuiCalendarProps>();
 
 const model = defineModel<NuiCalendarValue>({ default: null });
-const monthModel = defineModel<string>('month');
+const monthModel = defineModel<string | undefined>('month');
 
 const baseId = useControlId(() => id);
 const root = useTemplateRef<HTMLElement>('root');
@@ -218,6 +218,12 @@ const goToday = (): void => {
   }
 };
 
+const onPointerup = (event: PointerEvent): void => {
+  if (!(event.target instanceof Element && event.target.closest('.nui-calendar__day'))) {
+    selection.clearArm();
+  }
+};
+
 const applyPreset = (preset: NuiDatePreset): void => {
   const range = selection.resolvePreset(preset);
 
@@ -280,7 +286,7 @@ provideCalendar({
 
 onMounted(() => {
   mounted.value = true;
-  watch([focused, month, view], settle, { flush: 'post' });
+  watch([focused, month, view, pending], settle, { flush: 'post' });
 
   watch(model, (value) => {
     if (value === lastPick.value) {

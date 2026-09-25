@@ -89,9 +89,8 @@ export const useCalendarSelection = (options: CalendarSelectionOptions): Calenda
   const release = (date: string): void => {
     if (armed.value !== undefined && armed.value !== date && picking.value) {
       pick(date);
+      armed.value = undefined;
     }
-
-    armed.value = undefined;
   };
 
   const resolvePreset = (preset: NuiDatePreset): DateRange =>
