@@ -2,12 +2,15 @@ import { firstAsyncFailure } from '../rules/async-rule';
 import type { FormIssue } from '../schema/standard';
 import { cloneValue } from '../values/clone';
 import { isEqualValue } from '../values/equal';
+import { readsHold, recordReads } from '../values/reads';
 import type { FormCore } from './form-core';
 import type { PendingTracker } from './pending';
 import type { Entry } from './registry';
+import { validatesOnChange } from './timing';
 
 interface AsyncResult {
   readonly value: unknown;
+  readonly reads: ReadonlyMap<string, unknown>;
   readonly message: string | undefined;
 }
 
@@ -28,6 +31,7 @@ export interface AsyncChecks<V extends object> {
   issues(active: readonly Entry<V>[]): FormIssue[];
   schedule(entry: Entry<V>, delay: number): void;
   settle(entries: readonly Entry<V>[]): Promise<boolean>;
+  refresh(changed: readonly Entry<V>[]): void;
   cancel(entry: Entry<V>): void;
   forget(entry: Entry<V>): void;
   reset(): void;
@@ -57,7 +61,12 @@ export const createAsyncChecks = <V extends object, O>(
 
   const freshResult = (entry: Entry<V>): AsyncResult | undefined => {
     const result = states.get(entry)?.result;
-    return result && isEqualValue(entry.value(), result.value) ? result : undefined;
+
+    return result &&
+      isEqualValue(entry.value(), result.value) &&
+      readsHold(result.reads, core.engine.raw)
+      ? result
+      : undefined;
   };
 
   const needsCheck = (entry: Entry<V>): boolean =>
@@ -118,11 +127,12 @@ export const createAsyncChecks = <V extends object, O>(
   ): Promise<void> => {
     const controller = new AbortController();
     const value = cloneValue(entry.value());
+    const log = recordReads(values);
 
     const context = {
       name: entry.path(),
       label: entry.label(),
-      values,
+      values: log.view,
       messages: core.messages.value,
       signal: controller.signal,
     };
@@ -135,7 +145,7 @@ export const createAsyncChecks = <V extends object, O>(
         (await entry.checkAsync(context));
 
       if (token === state.token) {
-        state.result = { value, message };
+        state.result = { value, reads: log.reads(), message };
       }
     } catch (error) {
       if (!controller.signal.aborted) {
@@ -173,25 +183,41 @@ export const createAsyncChecks = <V extends object, O>(
     }
   };
 
+  const schedule = (entry: Entry<V>, delay: number): void => {
+    if (!needsCheck(entry)) {
+      cancel(entry);
+      return;
+    }
+
+    const [state, token] = start(entry);
+
+    void core.tracker.track(
+      delayed(entry, state, token, delay).finally(() => {
+        finish(entry, state, token);
+      }),
+    );
+  };
+
+  const outdated = (entry: Entry<V>, state: AsyncState): boolean =>
+    state.result !== undefined &&
+    state.phase.kind === 'idle' &&
+    entry.active() &&
+    validatesOnChange(entry.validateOn(), entry.state.attempted.value) &&
+    freshResult(entry) === undefined;
+
   return {
     issues: (active) =>
       active.flatMap((entry) => {
         const message = freshResult(entry)?.message;
         return message === undefined || entry.disabled() ? [] : [{ path: entry.path(), message }];
       }),
-    schedule: (entry, delay) => {
-      if (!needsCheck(entry)) {
-        cancel(entry);
-        return;
+    schedule,
+    refresh: (changed) => {
+      for (const [entry, state] of states) {
+        if (!changed.includes(entry) && outdated(entry, state)) {
+          schedule(entry, entry.debounce());
+        }
       }
-
-      const [state, token] = start(entry);
-
-      void core.tracker.track(
-        delayed(entry, state, token, delay).finally(() => {
-          finish(entry, state, token);
-        }),
-      );
     },
     settle: async (entries) => {
       const due = entries.filter(needsCheck);

@@ -3,6 +3,7 @@ import { reactive, readonly } from 'vue';
 import { deleteAt, expandPattern, getAt } from '../src/values/access';
 import { cloneValue } from '../src/values/clone';
 import { isEqualValue } from '../src/values/equal';
+import { readsHold, recordReads } from '../src/values/reads';
 
 class Money {
   constructor(
@@ -112,5 +113,52 @@ describe('value equality', () => {
     expect(isEqualValue(new Set([1]), new Set([2]))).toBe(false);
     expect(isEqualValue(new Money(5, 'EUR'), new Money(5, 'EUR'))).toBe(true);
     expect(isEqualValue(new Money(5, 'EUR'), { amount: 5, currency: 'EUR' })).toBe(false);
+  });
+});
+
+const formValues = () => ({
+  country: 'fr',
+  address: { city: 'Paris', zip: '75001' },
+  tags: ['a', 'b'],
+  since: new Date(0),
+});
+
+describe('read log', () => {
+  it('keeps the leaves a check read, not the containers it walked through', () => {
+    const log = recordReads(formValues());
+
+    expect(log.view.address.city).toBe('Paris');
+    expect(log.view.tags.map((tag) => tag.toUpperCase())).toEqual(['A', 'B']);
+    expect(log.view.since.getTime()).toBe(0);
+
+    expect([...log.reads().keys()].toSorted()).toEqual([
+      'address.city',
+      'since',
+      'tags.0',
+      'tags.1',
+      'tags.length',
+    ]);
+  });
+
+  it('keeps a container whose keys were listed or probed', () => {
+    const log = recordReads(formValues());
+
+    expect(Object.keys(log.view.address)).toEqual(['city', 'zip']);
+    expect('state' in log.view.address).toBe(false);
+    expect([...log.reads().keys()].toSorted()).toEqual(['address', 'address.state']);
+  });
+
+  it('holds while every read value is the same and breaks when one changes', () => {
+    const log = recordReads(formValues());
+
+    expect(log.view.address.city).toBe('Paris');
+
+    const reads = log.reads();
+
+    expect(readsHold(reads, { ...formValues(), country: 'de' })).toBe(true);
+
+    expect(readsHold(reads, { ...formValues(), address: { city: 'Lyon', zip: '69001' } })).toBe(
+      false,
+    );
   });
 });

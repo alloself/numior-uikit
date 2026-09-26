@@ -215,8 +215,11 @@ const loginRules = [
 `customAsync` runs only once the field's synchronous rules pass. After a change it waits for
 `debounce` (300 ms, a field prop), after a leave it runs at once, and on submit and
 `validate()` it runs at once and is awaited. The latest run wins, earlier ones get `abort()`
-through `signal`, and the answer is remembered for the value. While a check runs, `pending` in
-the field slot is true — show an indicator in the control's `suffix`.
+through `signal`. The answer is remembered for the field value and for every form value the
+check read from `values`: when, say, the country a document number depends on changes after the
+answer, submission asks again, and a field that was already attempted is rechecked after
+`debounce`. While a check runs, `pending` in the field slot is true — show an indicator in the
+control's `suffix`.
 
 ## Submission
 

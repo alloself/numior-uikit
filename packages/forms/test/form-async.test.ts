@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { required } from '../src';
+import { DocumentCheck } from './harness/document';
 import { FormHarness, type FieldSpec } from './harness/form';
 import { LoginCheck } from './harness/login';
 
@@ -10,6 +11,20 @@ const mountLogin = (
   FormHarness.mount({
     initialValues: { login: '' },
     fields: [{ path: 'login', rules: [required(), check.rule], ...field }],
+  });
+
+const PASSPORTS: ReadonlyMap<string, readonly string[]> = new Map([
+  ['fr', ['A123']],
+  ['de', ['B456']],
+]);
+
+const mountDocument = (
+  check: DocumentCheck,
+  document: Partial<FieldSpec> = {},
+): FormHarness<{ country: string; document: string }> =>
+  FormHarness.mount({
+    initialValues: { country: 'fr', document: '' },
+    fields: ['country', { path: 'document', rules: [check.rule], ...document }],
   });
 
 describe('asynchronous checks', () => {
@@ -119,6 +134,48 @@ describe('asynchronous checks', () => {
     await first;
     expect((await form.submit()).status).toBe('invalid');
     expect(check.calls).toEqual(['ann']);
+  });
+
+  it('asks again at submit when a value the check read has changed since its answer', async () => {
+    const check = new DocumentCheck(PASSPORTS);
+    const form = mountDocument(check, { validateOn: 'blur' });
+
+    await form.type('document', 'A123');
+    await form.blur('document');
+    await form.wait(100);
+    await form.settle();
+    expect(form.error('document')).toBeUndefined();
+
+    await form.type('country', 'de');
+
+    const submitting = form.startSubmit();
+
+    await form.wait(100);
+    expect((await submitting).status).toBe('invalid');
+    expect(form.error('document')).toBe('Unknown document for this country');
+    expect(check.calls).toEqual(['fr:A123', 'de:A123']);
+  });
+
+  it('rechecks an attempted field when a value its check read changes, and reuses that answer', async () => {
+    const check = new DocumentCheck(PASSPORTS);
+    const form = mountDocument(check);
+
+    await form.type('document', 'A123');
+
+    const first = form.startSubmit();
+
+    await form.wait(100);
+    expect((await first).status).toBe('submitted');
+
+    await form.type('country', 'de');
+    await form.wait(300);
+    expect(check.calls).toEqual(['fr:A123', 'de:A123']);
+
+    await form.wait(100);
+    await form.settle();
+    expect(form.error('document')).toBe('Unknown document for this country');
+    expect((await form.submit()).status).toBe('invalid');
+    expect(check.calls).toEqual(['fr:A123', 'de:A123']);
   });
 
   it('checks right away when a blur field is left', async () => {
