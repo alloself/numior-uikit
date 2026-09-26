@@ -244,4 +244,15 @@ describe('NuiTimeField', () => {
     expect(field.value).toBe('09:30');
     field.unmount();
   });
+
+  it('names the clock button and the empty list in the configured language', () => {
+    const field = TimeFieldDriver.mount({
+      props: { min: '12:00', max: '09:00' },
+      locale: 'ru-RU',
+    });
+
+    expect(field.clockButton.attributes('aria-label')).toBe('Выбрать время');
+    expect(field.emptyText).toBe('Нет доступного времени');
+    field.unmount();
+  });
 });

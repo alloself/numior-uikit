@@ -196,4 +196,13 @@ describe('NuiNumberField', () => {
     expect(field.value).toBe(7.5);
     field.unmount();
   });
+
+  it('names its steppers in the configured language and follows a locale change', async () => {
+    const field = NumberFieldDriver.mount({ modelValue: 1, locale: 'en-US' });
+    expect(field.incrementButton.attributes('aria-label')).toBe('Increment');
+    await field.setLocale('ru-RU');
+    expect(field.incrementButton.attributes('aria-label')).toBe('Увеличить');
+    expect(field.decrementButton.attributes('aria-label')).toBe('Уменьшить');
+    field.unmount();
+  });
 });

@@ -556,6 +556,8 @@ describe('server rendering', () => {
     expect(html).toContain('aria-expanded="false"');
     expect(html).toContain('name="trip"');
     expect(html).toContain('value="2026-09-24"');
+    expect(html).toContain('aria-label="Выбрать дату"');
+    expect(html).toContain('placeholder="ДД.ММ.ГГГГ"');
   });
 
   it('renders a number field formatted on the server with spinbutton semantics', async () => {

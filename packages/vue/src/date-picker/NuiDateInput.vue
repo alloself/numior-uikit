@@ -19,11 +19,10 @@
 
 <script setup lang="ts">
 import { computed, useTemplateRef } from 'vue';
-import { datePatternOf } from '@numior/primitives';
+import { datePatternOf, useMessages } from '@numior/primitives';
+import { datePickerMessages } from './date-picker.messages';
 import type { NuiDateInputProps } from './date-picker.types';
 import { useDateText } from './use-date-text';
-
-const PLACEHOLDER_GLYPHS = { year: 'Y', month: 'M', day: 'D' };
 
 const {
   modelValue,
@@ -39,6 +38,7 @@ const emit = defineEmits<{ 'update:modelValue': [value: string | null] }>();
 
 const inputElement = useTemplateRef<HTMLInputElement>('input');
 const localeRef = computed(() => locale);
+const messages = useMessages(datePickerMessages, localeRef);
 
 const text = useDateText({
   value: () => modelValue,
@@ -48,13 +48,17 @@ const text = useDateText({
 });
 
 const pattern = computed(() => {
+  const glyphs = {
+    year: messages.value.yearGlyph,
+    month: messages.value.monthGlyph,
+    day: messages.value.dayGlyph,
+  };
+
   const date = datePatternOf(locale)
-    .map((part) =>
-      part.type === 'literal' ? part.text : PLACEHOLDER_GLYPHS[part.type].repeat(part.length),
-    )
+    .map((part) => (part.type === 'literal' ? part.text : glyphs[part.type].repeat(part.length)))
     .join('');
 
-  return time ? `${date} HH:mm` : date;
+  return time ? `${date} ${messages.value.timeGlyphs}` : date;
 });
 
 const onInput = (): void => {

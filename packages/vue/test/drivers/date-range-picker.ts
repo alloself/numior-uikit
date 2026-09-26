@@ -73,6 +73,10 @@ export class DateRangePickerDriver extends ComponentDriver {
     return this.wrapper.find('.nui-date-picker').classes().includes(`nui-date-picker--${modifier}`);
   }
 
+  get openLabel(): string | undefined {
+    return this.wrapper.find('.nui-date-picker__open').attributes('aria-label');
+  }
+
   get inputs(): DOMWrapper<HTMLInputElement>[] {
     return this.wrapper.findAll<HTMLInputElement>('.nui-date-picker__input');
   }

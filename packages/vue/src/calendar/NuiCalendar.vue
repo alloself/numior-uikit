@@ -51,7 +51,7 @@
         class="nui-calendar__today"
         @click="goToday"
       >
-        {{ todayLabel }}
+        {{ todayText }}
       </NuiButton>
       <div v-if="$slots.actions" class="nui-calendar__actions"><slot name="actions" /></div>
     </div>
@@ -72,11 +72,13 @@ import {
   useControlId,
   useDirection,
   useLocale,
+  useMessages,
   weekStartOf,
 } from '@numior/primitives';
 import NuiButton from '../button/NuiButton.vue';
 import NuiCalendarMonth from './NuiCalendarMonth.vue';
 import { provideCalendar, type RequestOptions } from './calendar-context';
+import { calendarMessages } from './calendar.messages';
 import type { NuiCalendarProps, NuiCalendarValue, NuiDatePreset } from './calendar.types';
 import { dayStateOf, sameCalendarValue, selectedDatesOf } from './day-state';
 import { useCalendarSelection } from './use-calendar-selection';
@@ -101,12 +103,12 @@ const {
   presets,
   size = 'md',
   disabled = false,
-  previousLabel = 'Previous month',
-  nextLabel = 'Next month',
-  monthLabel = 'Choose month',
-  yearLabel = 'Choose year',
-  todayLabel = 'Today',
-  weekLabel = 'Week',
+  previousLabel,
+  nextLabel,
+  monthLabel,
+  yearLabel,
+  todayLabel,
+  weekLabel,
 } = defineProps<NuiCalendarProps>();
 
 const model = defineModel<NuiCalendarValue>({ default: null });
@@ -115,6 +117,9 @@ const monthModel = defineModel<string | undefined>('month');
 const baseId = useControlId(() => id);
 const root = useTemplateRef<HTMLElement>('root');
 const locale = useLocale(() => localeProp);
+const messages = useMessages(calendarMessages, locale);
+
+const todayText = computed(() => todayLabel ?? messages.value.today);
 const weekStart = computed(() => weekStartProp ?? weekStartOf(locale.value));
 const mounted = ref(false);
 const todayDate = computed(() => today ?? (mounted.value ? localToday() : undefined));
@@ -271,11 +276,11 @@ provideCalendar({
   fixedWeeks: () => fixedWeeks,
   showOutsideDays: () => showOutsideDays,
   labels: () => ({
-    previous: previousLabel,
-    next: nextLabel,
-    month: monthLabel,
-    year: yearLabel,
-    week: weekLabel,
+    previous: previousLabel ?? messages.value.previous,
+    next: nextLabel ?? messages.value.next,
+    month: monthLabel ?? messages.value.month,
+    year: yearLabel ?? messages.value.year,
+    week: weekLabel ?? messages.value.week,
   }),
   ...calendarView,
   focused,

@@ -7,9 +7,9 @@
     :disabled="isDisabled"
     :readonly="readonly"
     :clearable="showClear"
-    :open-label="openLabel"
-    :clear-label="clearLabel"
-    :dialog-label="dialogLabel"
+    :open-label="texts.open"
+    :clear-label="texts.clear"
+    :dialog-label="texts.dialog"
     :labelled-by="field?.labelledBy.value"
     v-bind="split.rootAttrs()"
     @clear="clear"
@@ -72,6 +72,7 @@ import {
   useField,
   useFieldControl,
   useLocale,
+  useMessages,
   useSplitAttrs,
 } from '@numior/primitives';
 import NuiCalendar from '../calendar/NuiCalendar.vue';
@@ -79,6 +80,7 @@ import type { NuiCalendarValue } from '../calendar/calendar.types';
 import NuiTimeField from '../time-field/NuiTimeField.vue';
 import NuiDateField from './NuiDateField.vue';
 import NuiDateInput from './NuiDateInput.vue';
+import { datePickerMessages } from './date-picker.messages';
 import type { NuiDatePickerProps } from './date-picker.types';
 import { usePickerPopover } from './use-picker-popover';
 
@@ -106,16 +108,16 @@ const {
   name,
   time = false,
   timeStep = 15,
-  timeLabel = 'Choose time',
-  openLabel = 'Choose date',
-  clearLabel = 'Clear',
-  dialogLabel = 'Calendar',
-  todayLabel = 'Today',
-  previousLabel = 'Previous month',
-  nextLabel = 'Next month',
-  monthLabel = 'Choose month',
-  yearLabel = 'Choose year',
-  weekLabel = 'Week',
+  timeLabel,
+  openLabel,
+  clearLabel,
+  dialogLabel,
+  todayLabel,
+  previousLabel,
+  nextLabel,
+  monthLabel,
+  yearLabel,
+  weekLabel,
 } = defineProps<NuiDatePickerProps>();
 
 const model = defineModel<string | null>({ default: null });
@@ -130,11 +132,18 @@ const {
 } = useFieldControl(() => ({ id, disabled, required, invalid }));
 
 const locale = useLocale(() => localeProp);
+const messages = useMessages(datePickerMessages, locale);
 const frame = useTemplateRef<{ root: HTMLElement | null }>('frame');
 const input = useTemplateRef<{ focus: () => void }>('input');
 const calendar = useTemplateRef<{ focus: (date?: string) => void }>('calendar');
 const month = ref<string>();
 const panelId = computed(() => `${controlAttrs.value.id}-panel`);
+
+const texts = computed(() => ({
+  open: openLabel ?? messages.value.open,
+  clear: clearLabel ?? messages.value.clear,
+  dialog: dialogLabel ?? messages.value.dialog,
+}));
 
 const showClear = computed(
   () => clearable && model.value !== null && !isDisabled.value && !readonly,

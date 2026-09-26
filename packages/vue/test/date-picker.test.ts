@@ -6,7 +6,7 @@ describe('NuiDatePicker', () => {
     const picker = DatePickerDriver.mount({ modelValue: '2026-09-24', field: { label: 'Дата' } });
 
     expect(picker.text).toBe('24.09.2026');
-    expect(picker.input.attributes('placeholder')).toBe('DD.MM.YYYY');
+    expect(picker.input.attributes('placeholder')).toBe('ДД.ММ.ГГГГ');
     expect(picker.input.attributes('id')).toBeDefined();
     await picker.type('05.10.2026');
     expect(picker.value).toBe('2026-10-05');
@@ -107,7 +107,7 @@ describe('NuiDatePicker', () => {
     });
 
     expect(picker.text).toBe('24.09.2026 09:30');
-    expect(picker.input.attributes('placeholder')).toBe('DD.MM.YYYY HH:mm');
+    expect(picker.input.attributes('placeholder')).toBe('ДД.ММ.ГГГГ ЧЧ:ММ');
     await picker.type('25.09.2026 10:15');
     expect(picker.value).toBe('2026-09-25T10:15');
     await picker.type('26.09.2026');
@@ -133,5 +133,26 @@ describe('NuiDatePicker', () => {
     await picker.clickOpen();
     expect(picker.focusedDate).toBe('2026-12-31');
     picker.unmount();
+  });
+
+  it('speaks the configured language and switches with its own locale prop', () => {
+    const russian = DatePickerDriver.mount({
+      modelValue: '2026-09-24',
+      props: { clearable: true },
+    });
+
+    expect(russian.openButton.attributes('aria-label')).toBe('Выбрать дату');
+    expect(russian.clearButton.attributes('aria-label')).toBe('Очистить');
+    expect(russian.panel.attributes('aria-label')).toBe('Календарь');
+    russian.unmount();
+
+    const english = DatePickerDriver.mount({ props: { locale: 'en-US' } });
+    expect(english.openButton.attributes('aria-label')).toBe('Choose date');
+    expect(english.input.attributes('placeholder')).toBe('MM/DD/YYYY');
+    english.unmount();
+
+    const labelled = DatePickerDriver.mount({ props: { openLabel: 'Открыть календарь' } });
+    expect(labelled.openButton.attributes('aria-label')).toBe('Открыть календарь');
+    labelled.unmount();
   });
 });

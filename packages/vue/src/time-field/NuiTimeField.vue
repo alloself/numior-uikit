@@ -58,7 +58,7 @@
       size="sm"
       icon-only
       class="nui-time-field__clock"
-      :aria-label="clockLabel"
+      :aria-label="clockText"
       :disabled="isDisabled || readonly"
       v-bind="control.invokerAttrs.value"
     >
@@ -73,7 +73,7 @@
       selectable="single"
       :keyboard="false"
       :active-id="list.activeId.value"
-      :empty-label="emptyLabel"
+      :empty-label="emptyText"
       :labelled-by="field?.labelledBy.value"
       v-bind="control.contentAttrs.value"
       @select="choose"
@@ -102,6 +102,7 @@ import {
   useFieldControl,
   useListNavigation,
   useLocale,
+  useMessages,
   useSplitAttrs,
   type TimeSegmentType,
 } from '@numior/primitives';
@@ -111,6 +112,7 @@ import NuiList from '../list/NuiList.vue';
 import type { NuiOption } from '../shared/options';
 import { useListboxSurface } from '../shared/use-listbox-surface';
 import NuiTimeSegment from './NuiTimeSegment.vue';
+import { timeFieldMessages } from './time-field.messages';
 import type { NuiTimeFieldProps } from './time-field.types';
 import { useTimeDraft, type TimePeriod } from './use-time-draft';
 
@@ -131,8 +133,8 @@ const {
   readonly = false,
   name,
   placement = 'bottom-start',
-  clockLabel = 'Choose time',
-  emptyLabel = 'No times',
+  clockLabel,
+  emptyLabel,
 } = defineProps<NuiTimeFieldProps>();
 
 const model = defineModel<string | null>({ default: null });
@@ -148,6 +150,10 @@ const {
 } = useFieldControl(() => ({ id, disabled, required, invalid }));
 
 const locale = useLocale(() => localeProp);
+const messages = useMessages(timeFieldMessages, locale);
+
+const clockText = computed(() => clockLabel ?? messages.value.clock);
+const emptyText = computed(() => emptyLabel ?? messages.value.empty);
 const layout = computed(() => timeLayout(locale.value, { seconds, hourCycle }));
 const labels = computed(() => segmentLabels(locale.value));
 

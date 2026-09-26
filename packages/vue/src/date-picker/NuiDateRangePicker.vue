@@ -8,9 +8,9 @@
     :disabled="isDisabled"
     :readonly="readonly"
     :clearable="showClear"
-    :open-label="openLabel"
-    :clear-label="clearLabel"
-    :dialog-label="dialogLabel"
+    :open-label="texts.open"
+    :clear-label="texts.clear"
+    :dialog-label="texts.dialog"
     :labelled-by="field?.labelledBy.value"
     v-bind="split.rootAttrs()"
     @clear="clear"
@@ -32,7 +32,7 @@
       :placeholder="endPlaceholder"
       :readonly="readonly"
       :disabled="isDisabled"
-      :label="endLabel"
+      :label="texts.end"
       :aria-describedby="controlAttrs['aria-describedby']"
       :aria-invalid="controlAttrs['aria-invalid']"
       @update:model-value="setEnd"
@@ -76,6 +76,7 @@ import {
   useField,
   useFieldControl,
   useLocale,
+  useMessages,
   useSplitAttrs,
 } from '@numior/primitives';
 import NuiCalendar from '../calendar/NuiCalendar.vue';
@@ -83,6 +84,7 @@ import type { NuiCalendarValue, NuiDateRange } from '../calendar/calendar.types'
 import { isDateRange } from '../calendar/day-state';
 import NuiDateField from './NuiDateField.vue';
 import NuiDateInput from './NuiDateInput.vue';
+import { datePickerMessages } from './date-picker.messages';
 import type { NuiDateRangePickerProps } from './date-picker.types';
 import { usePickerPopover } from './use-picker-popover';
 
@@ -110,17 +112,17 @@ const {
   endPlaceholder,
   startName,
   endName,
-  endLabel = 'End date',
+  endLabel,
   presets,
-  openLabel = 'Choose dates',
-  clearLabel = 'Clear',
-  dialogLabel = 'Calendar',
-  todayLabel = 'Today',
-  previousLabel = 'Previous month',
-  nextLabel = 'Next month',
-  monthLabel = 'Choose month',
-  yearLabel = 'Choose year',
-  weekLabel = 'Week',
+  openLabel,
+  clearLabel,
+  dialogLabel,
+  todayLabel,
+  previousLabel,
+  nextLabel,
+  monthLabel,
+  yearLabel,
+  weekLabel,
 } = defineProps<NuiDateRangePickerProps>();
 
 const model = defineModel<NuiDateRange>({ default: () => ({ start: null, end: null }) });
@@ -135,11 +137,19 @@ const {
 } = useFieldControl(() => ({ id, disabled, required, invalid }));
 
 const locale = useLocale(() => localeProp);
+const messages = useMessages(datePickerMessages, locale);
 const frame = useTemplateRef<{ root: HTMLElement | null }>('frame');
 const input = useTemplateRef<{ focus: () => void }>('input');
 const calendar = useTemplateRef<{ focus: (date?: string) => void }>('calendar');
 const month = ref<string>();
 const panelId = computed(() => `${controlAttrs.value.id}-panel`);
+
+const texts = computed(() => ({
+  open: openLabel ?? messages.value.openRange,
+  clear: clearLabel ?? messages.value.clear,
+  dialog: dialogLabel ?? messages.value.dialog,
+  end: endLabel ?? messages.value.end,
+}));
 
 const showClear = computed(
   () =>

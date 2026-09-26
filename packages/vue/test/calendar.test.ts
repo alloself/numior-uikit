@@ -271,4 +271,15 @@ describe('NuiCalendar', () => {
     expect(calendar.focusedDate).toBeUndefined();
     calendar.unmount();
   });
+
+  it('names its controls in its locale and lets label props win', () => {
+    const russian = CalendarDriver.mount();
+    expect(russian.navLabel('previous')).toBe('Предыдущий месяц');
+    expect(russian.navLabel('next')).toBe('Следующий месяц');
+    expect(russian.todayButton.text()).toBe('Сегодня');
+
+    const english = CalendarDriver.mount({ props: { locale: 'en-GB', todayLabel: 'Now' } });
+    expect(english.navLabel('previous')).toBe('Previous month');
+    expect(english.todayButton.text()).toBe('Now');
+  });
 });

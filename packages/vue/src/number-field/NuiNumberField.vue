@@ -45,7 +45,7 @@
         icon-only
         class="nui-number-field__stepper nui-number-field__stepper--down"
         tabindex="-1"
-        :aria-label="decrementLabel"
+        :aria-label="decrementText"
         :disabled="!canDecrement"
         @pointerdown.prevent
         @click="stepBy(-1)"
@@ -59,7 +59,7 @@
         icon-only
         class="nui-number-field__stepper nui-number-field__stepper--up"
         tabindex="-1"
-        :aria-label="incrementLabel"
+        :aria-label="incrementText"
         :disabled="!canIncrement"
         @pointerdown.prevent
         @click="stepBy(1)"
@@ -82,11 +82,13 @@ import {
   stepNumber,
   useFieldControl,
   useLocale,
+  useMessages,
   useSplitAttrs,
   withStepPrecision,
 } from '@numior/primitives';
 import NuiButton from '../button/NuiButton.vue';
 import NuiIcon from '../icon/NuiIcon.vue';
+import { numberFieldMessages } from './number-field.messages';
 import type { NuiNumberFieldProps } from './number-field.types';
 
 const KEY_STEPS: Record<string, number> = { ArrowUp: 1, ArrowDown: -1, PageUp: 10, PageDown: -10 };
@@ -107,8 +109,8 @@ const {
   readonly = false,
   steppers = true,
   name,
-  incrementLabel = 'Increment',
-  decrementLabel = 'Decrement',
+  incrementLabel,
+  decrementLabel,
 } = defineProps<NuiNumberFieldProps>();
 
 const model = defineModel<number | null>({ default: null });
@@ -122,6 +124,10 @@ const {
 
 const inputElement = useTemplateRef<HTMLInputElement>('input');
 const locale = useLocale(() => localeProp);
+const messages = useMessages(numberFieldMessages, locale);
+
+const incrementText = computed(() => incrementLabel ?? messages.value.increment);
+const decrementText = computed(() => decrementLabel ?? messages.value.decrement);
 const options = computed(() => withStepPrecision(formatOptions, step));
 const symbols = computed(() => numberSymbols(locale.value, options.value));
 const format = (value: number | null): string => formatNumber(value, locale.value, options.value);

@@ -4,28 +4,36 @@ import type { NuiVueMessages } from '../src';
 import { alertMessages } from '../src/alert/alert.messages';
 import { avatarMessages } from '../src/avatar/avatar.messages';
 import { breadcrumbsMessages } from '../src/breadcrumbs/breadcrumbs.messages';
+import { calendarMessages } from '../src/calendar/calendar.messages';
 import { chipMessages } from '../src/chip/chip.messages';
 import { comboboxMessages } from '../src/combobox/combobox.messages';
+import { datePickerMessages } from '../src/date-picker/date-picker.messages';
 import { dialogMessages } from '../src/dialog/dialog.messages';
 import { listMessages } from '../src/list/list.messages';
+import { numberFieldMessages } from '../src/number-field/number-field.messages';
 import { paginationMessages } from '../src/pagination/pagination.messages';
 import { selectMessages } from '../src/select/select.messages';
 import { sidebarMessages } from '../src/sidebar/sidebar.messages';
 import { tableMessages } from '../src/table/table.messages';
+import { timeFieldMessages } from '../src/time-field/time-field.messages';
 import { toastMessages } from '../src/toast/toast.messages';
 
 const catalogs: { readonly [N in keyof NuiVueMessages]: NuiMessageCatalog<N> } = {
   alert: alertMessages,
   avatar: avatarMessages,
   breadcrumbs: breadcrumbsMessages,
+  calendar: calendarMessages,
   chip: chipMessages,
   combobox: comboboxMessages,
+  datePicker: datePickerMessages,
   dialog: dialogMessages,
   list: listMessages,
+  numberField: numberFieldMessages,
   pagination: paginationMessages,
   select: selectMessages,
   sidebar: sidebarMessages,
   table: tableMessages,
+  timeField: timeFieldMessages,
   toast: toastMessages,
 };
 

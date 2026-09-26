@@ -171,6 +171,10 @@ export class CalendarDriver extends ComponentDriver {
     return this.wrapper.findAll('.nui-calendar__preset').map((preset) => preset.text());
   }
 
+  navLabel(direction: 'previous' | 'next'): string | undefined {
+    return this.wrapper.find(`.nui-calendar__nav--${direction}`).attributes('aria-label');
+  }
+
   get todayButton(): DOMWrapper<Element> {
     return this.wrapper.find('.nui-calendar__today');
   }

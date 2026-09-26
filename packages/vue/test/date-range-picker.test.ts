@@ -58,4 +58,11 @@ describe('NuiDateRangePicker', () => {
     expect(picker.hiddenValues).toEqual(['', '']);
     picker.unmount();
   });
+
+  it('names the end input and the open button in the configured language', () => {
+    const picker = DateRangePickerDriver.mount();
+    expect(picker.inputs[1]?.attributes('aria-label')).toBe('Дата окончания');
+    expect(picker.openLabel).toBe('Выбрать период');
+    picker.unmount();
+  });
 });
