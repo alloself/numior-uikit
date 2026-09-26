@@ -216,7 +216,7 @@ describe('forms on the server', () => {
     expect(html).toContain('aria-current="step"');
     expect(html).toContain('value="Ann"');
     expect(html).toContain('value="ann@example.com"');
-    expect(html.match(/display:none/g)).toHaveLength(1);
+    expect(html.match(/<div(?=[^>]*nui-smart-form__step)(?=[^>]*\shidden)[^>]*>/g)).toHaveLength(1);
     expect(html).toContain('Step 1 of 2: Who');
   });
 

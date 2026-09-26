@@ -7,7 +7,7 @@
   />
   <div
     v-for="(item, index) in steps"
-    v-show="index === current"
+    :hidden="index !== current"
     ref="panels"
     :key="item.value"
     class="nui-smart-form__step"

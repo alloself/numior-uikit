@@ -115,7 +115,7 @@ export class SmartFormDriver<V extends object> {
   get currentStep(): string | undefined {
     return this.wrapper
       .findAll<HTMLElement>('.nui-smart-form__step')
-      .find((panel) => panel.element.style.display !== 'none')
+      .find((panel) => !panel.element.hidden)
       ?.attributes('aria-label');
   }
 
