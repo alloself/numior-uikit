@@ -13,7 +13,7 @@ import releaseConfig from '../../release.config.mjs';
 
 const logger = { log() {}, error() {}, success() {} };
 
-const fixture = async (t, isPrivate = true) => {
+const fixture = async (t, isPrivate = true, dependencies = {}) => {
   const cwd = await mkdtemp(join(tmpdir(), 'numior-release-'));
   t.after(() => rm(cwd, { recursive: true, force: true }));
   await writeFile(join(cwd, 'pnpm-workspace.yaml'), 'packages:\n  - packages/*\n');
@@ -37,6 +37,7 @@ const fixture = async (t, isPrivate = true) => {
         private: isPrivate,
         files: ['dist'],
         ...(name === 'vue' ? { peerDependencies: { '@numior/tokens': 'workspace:*' } } : {}),
+        ...(name === 'vue' ? { dependencies } : {}),
       }),
     );
   }
@@ -111,6 +112,19 @@ test('packing synchronizes versions and replaces workspace protocols without pub
   );
 
   assert.equal(JSON.parse(await readFile(join(context.cwd, 'package.json'), 'utf8')).private, true);
+});
+
+test('a prerelease dependency blocks publication but not a dry run', async (t) => {
+  const context = await fixture(t, false, { 'vee-validate': '5.0.0-beta.1' });
+  context.env.NUMIOR_RELEASE_ENABLED = 'true';
+
+  await assert.rejects(
+    verifyConditions({}, context),
+    /prerelease dependency vee-validate@5\.0\.0-beta\.1/,
+  );
+
+  await assert.rejects(prepare({}, context), /prerelease dependency/);
+  await verifyConditions({}, { ...context, options: { dryRun: true } });
 });
 
 test('prerelease versions are rejected before changing package versions', async (t) => {

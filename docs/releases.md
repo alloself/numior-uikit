@@ -9,7 +9,10 @@
 Пакеты остаются `private: true`, repository variable `NUMIOR_RELEASE_ENABLED`
 не задана. CI выполняет проверки, но release job пропускается. Сам release plugin
 дополнительно блокирует prepare/publish без переменной `true` и требует
-`private: false` у **всех** библиотек. Тесты и dry-run ничего не публикуют.
+`private: false` у **всех** библиотек. Тесты и dry-run ничего не публикуют. Кроме того,
+plugin не выпускает библиотеку, у которой в `dependencies` или `peerDependencies` стоит
+prerelease-версия вроде `5.0.0-beta.1`: пакет на бете внешней библиотеки ждёт её стабильного
+релиза. Dry-run и `pnpm release:check` такую зависимость пропускают.
 
 - `pnpm release:check` проверяет правила SemVer, блокировки, синхронные версии и
   реальные tarball с заменой `workspace:*`, не обращаясь к npm/GitHub для публикации.

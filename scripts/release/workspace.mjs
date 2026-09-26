@@ -13,6 +13,8 @@ const repositoryUrl = (options) => {
   return `https://${parsed.host}${parsed.pathname}`;
 };
 
+const PRERELEASE = /\d+\.\d+\.\d+-[0-9A-Za-z.-]+/;
+
 const packages = async (cwd) => {
   const entries = await readdir(join(cwd, 'packages'), { withFileTypes: true });
   const result = [];
@@ -26,6 +28,19 @@ const packages = async (cwd) => {
   assert.ok(result.length > 0, 'No library packages found');
   assert.equal(new Set(result.map(({ manifest }) => manifest.name)).size, result.length);
   return result;
+};
+
+const assertStableDependencies = (manifest) => {
+  for (const [name, range] of Object.entries({
+    ...manifest.dependencies,
+    ...manifest.peerDependencies,
+  })) {
+    assert.doesNotMatch(
+      String(range),
+      PRERELEASE,
+      `${manifest.name} has a prerelease dependency ${name}@${range}`,
+    );
+  }
 };
 
 export const verifyConditions = async (_config, context) => {
@@ -42,6 +57,7 @@ export const verifyConditions = async (_config, context) => {
 
   for (const { manifest } of libraries) {
     assert.equal(manifest.private, false, `${manifest.name} is not approved for publication`);
+    assertStableDependencies(manifest);
   }
 };
 
