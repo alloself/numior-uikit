@@ -91,6 +91,50 @@
   padding-block-start: calc(var(--nui-font-size-sm) * var(--nui-line-height) + var(--nui-space-1));
 }
 
+.nui-smart-form__stepper {
+  margin-block-end: var(--nui-space-2);
+}
+
+.nui-smart-form__step {
+  --_slide: 1;
+}
+
+.nui-smart-form__step:dir(rtl) {
+  --_slide: -1;
+}
+
+.nui-smart-form--back .nui-smart-form__step {
+  --_slide: -1;
+}
+
+.nui-smart-form--back .nui-smart-form__step:dir(rtl) {
+  --_slide: 1;
+}
+
+.nui-smart-form--navigated .nui-smart-form__step {
+  animation: nui-smart-form-step var(--nui-duration-normal) var(--nui-easing);
+}
+
+.nui-smart-form--steps .nui-smart-form__next {
+  margin-inline-start: auto;
+}
+
+.nui-smart-form__live {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@keyframes nui-smart-form-step {
+  from {
+    opacity: 0;
+    translate: calc(var(--_slide) * var(--nui-space-4)) 0;
+  }
+}
+
 @container (max-width: 36rem) {
   .nui-smart-form__grid--layout {
     --_columns: 1;
@@ -104,5 +148,9 @@
 
   .nui-smart-form--inline .nui-smart-form__cell {
     flex-basis: 100%;
+  }
+
+  .nui-smart-form--steps .nui-form__actions > * {
+    flex: 1 1 0;
   }
 }

@@ -1,3 +1,4 @@
+import type { NuiStepperStatus } from '@numior/vue';
 import type { Component } from 'vue';
 import type { ValidateOn } from '../../core/types';
 import type { FieldArrayRow } from '../../field/use-field-array';
@@ -65,13 +66,32 @@ export type NuiSmartFormEntry<S = unknown> =
   | NuiSmartFormSection<S>
   | NuiSmartFormArray<S>;
 
+export interface NuiSmartFormStep<S = unknown> {
+  readonly value: string;
+  readonly label: string;
+  readonly description?: string | undefined;
+  readonly layout?: string | undefined;
+  readonly fields: readonly NuiSmartFormEntry<S>[];
+}
+
 export interface NuiSmartFormProps<T extends object> {
   form: FormContext<T>;
   fields?: readonly NuiSmartFormEntry<T>[] | undefined;
+  steps?: readonly NuiSmartFormStep<T>[] | undefined;
   layout?: string | undefined;
   inline?: boolean | 'grow' | undefined;
   disabled?: boolean | undefined;
   submitLabel?: string | undefined;
+  nextLabel?: string | undefined;
+  backLabel?: string | undefined;
+}
+
+export interface NuiSmartFormStepsProps {
+  steps: readonly NuiSmartFormStep[];
+  current: number;
+  scope: SmartScope;
+  statuses: readonly (NuiStepperStatus | undefined)[];
+  live: string;
 }
 
 export interface SmartScope {

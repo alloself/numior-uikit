@@ -126,9 +126,11 @@ export const createViews = <V extends object, O>(core: FormCore<V, O>): FormView
         .active()
         .some((entry) => isUnder(entry.path(), normalizePath(path)) && entry.state.touched.value),
     isFieldDirty: (path) => isPathDirty(core, normalizePath(path)),
-    focusField: (path) => {
-      const entry = core.registry.active().find((item) => item.path() === normalizePath(path));
-      return entry !== undefined && focusEntry(entry);
-    },
+    focusField: (path) =>
+      core.registry
+        .active()
+        .filter((item) => item.path() === normalizePath(path))
+        .toReversed()
+        .some(focusEntry),
   };
 };

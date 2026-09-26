@@ -129,6 +129,26 @@ const Smart = defineComponent({
   },
 });
 
+const WIZARD_STEPS = [
+  { value: 'who', label: 'Who', fields: [signup.field(NuiInput, { name: 'name', label: 'Name' })] },
+  {
+    value: 'reach',
+    label: 'Reach',
+    fields: [signup.field(NuiInput, { name: 'email', label: 'Email' })],
+  },
+];
+
+const Wizard = defineComponent({
+  setup: () => {
+    const form = useForm({
+      initialValues: { kind: 'person', name: 'Ann', email: 'ann@example.com', company: '' },
+      onSubmit: noop,
+    });
+
+    return () => h(NuiSmartForm<Signup>, { form, steps: WIZARD_STEPS });
+  },
+});
+
 const labelTarget = (html: string): string | undefined =>
   /<label[^>]* for="([^"]+)"/.exec(html)?.[1];
 
@@ -187,6 +207,17 @@ describe('forms on the server', () => {
     expect(first.indexOf('value="ann@example.com"')).toBeLessThan(first.indexOf('value="Ann"'));
     expect(first).not.toContain('Acme');
     expect(first).not.toContain('undefined');
+  });
+
+  it('renders every step panel of a wizard and hides all but the current one', async () => {
+    const html = await renderToString(createSSRApp(Wizard));
+
+    expect(html).toBe(await renderToString(createSSRApp(Wizard)));
+    expect(html).toContain('aria-current="step"');
+    expect(html).toContain('value="Ann"');
+    expect(html).toContain('value="ann@example.com"');
+    expect(html.match(/display:none/g)).toHaveLength(1);
+    expect(html).toContain('Step 1 of 2: Who');
   });
 
   it('renders the rows of a field array', async () => {

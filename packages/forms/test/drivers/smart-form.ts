@@ -1,12 +1,22 @@
 import { mount, type DOMWrapper, type VueWrapper } from '@vue/test-utils';
 import { defineComponent, h, nextTick, shallowRef, type VNode } from 'vue';
-import { NuiSmartForm, useForm, type FormContext, type NuiSmartFormEntry } from '../../src';
+import {
+  NuiSmartForm,
+  useForm,
+  type FormContext,
+  type NuiSmartFormEntry,
+  type NuiSmartFormStep,
+  type SubmitHandler,
+} from '../../src';
 
 type SlotRender = (props: Record<string, unknown>) => VNode | VNode[];
 
 export interface SmartFormDriverOptions<V extends object> {
   readonly initialValues: V;
-  readonly fields: readonly NuiSmartFormEntry<V>[];
+  readonly fields?: readonly NuiSmartFormEntry<V>[];
+  readonly steps?: readonly NuiSmartFormStep<V>[];
+  readonly step?: string;
+  readonly onSubmit?: SubmitHandler<V, unknown>;
   readonly layout?: string;
   readonly inline?: boolean | 'grow';
   readonly slots?: Readonly<Record<string, SlotRender>>;
@@ -16,13 +26,15 @@ export class SmartFormDriver<V extends object> {
   static mount<V extends object>(options: SmartFormDriverOptions<V>): SmartFormDriver<V> {
     const submissions: V[] = [];
     const captured = shallowRef<FormContext<V> | null>(null);
+    const step = shallowRef(options.step);
 
     const Host = defineComponent({
       setup: () => {
         const form = useForm<V, unknown>({
           initialValues: options.initialValues,
-          onSubmit: (values) => {
+          onSubmit: (values, helpers) => {
             submissions.push(values);
+            return options.onSubmit?.(values, helpers);
           },
         });
 
@@ -30,7 +42,17 @@ export class SmartFormDriver<V extends object> {
         return () =>
           h(
             NuiSmartForm<V>,
-            { form, fields: options.fields, layout: options.layout, inline: options.inline },
+            {
+              form,
+              fields: options.fields,
+              steps: options.steps,
+              layout: options.layout,
+              inline: options.inline,
+              ...(step.value === undefined ? {} : { step: step.value }),
+              'onUpdate:step': (value: string | undefined) => {
+                step.value = value;
+              },
+            },
             options.slots ?? {},
           );
       },
@@ -90,6 +112,40 @@ export class SmartFormDriver<V extends object> {
     return this.grid.element.style.getPropertyValue('--_layout-columns') || undefined;
   }
 
+  get currentStep(): string | undefined {
+    return this.wrapper
+      .findAll<HTMLElement>('.nui-smart-form__step')
+      .find((panel) => panel.element.style.display !== 'none')
+      ?.attributes('aria-label');
+  }
+
+  get stepStatuses(): string[] {
+    return this.wrapper.findAll('.nui-stepper__item').map((item) =>
+      item
+        .classes()
+        .filter((name) => /--(complete|error|upcoming)$/.test(name))
+        .map((name) => name.slice(name.lastIndexOf('--') + 2))
+        .join(''),
+    );
+  }
+
+  get live(): string {
+    return this.text('.nui-smart-form__live');
+  }
+
+  get actions(): string[] {
+    return this.wrapper.findAll('.nui-form__actions button').map((button) => button.text());
+  }
+
+  get focused(): string | undefined {
+    const active = document.activeElement;
+    return active instanceof HTMLInputElement ? active.name : undefined;
+  }
+
+  error(path: string): string | undefined {
+    return this.cellOf(path).querySelector('.nui-field__error')?.textContent?.trim();
+  }
+
   get legends(): string[] {
     return this.wrapper.findAll('.nui-smart-form__legend').map((legend) => legend.text());
   }
@@ -138,6 +194,27 @@ export class SmartFormDriver<V extends object> {
 
   async submit(): Promise<void> {
     await this.click('button[type="submit"]');
+  }
+
+  async requestSubmit(): Promise<void> {
+    this.wrapper.find<HTMLFormElement>('form').element.requestSubmit();
+    await this.settle();
+  }
+
+  async back(): Promise<void> {
+    await this.click('.nui-smart-form__back');
+  }
+
+  async pickStep(index: number): Promise<void> {
+    const step = this.wrapper.findAll<HTMLElement>('.nui-stepper__step')[index];
+
+    step?.element.click();
+    await this.settle();
+  }
+
+  async reset(): Promise<void> {
+    this.wrapper.find<HTMLFormElement>('form').element.reset();
+    await this.settle();
   }
 
   async settle(): Promise<void> {

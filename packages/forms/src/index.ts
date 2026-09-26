@@ -21,7 +21,9 @@ export type {
   NuiSmartFormProps,
   NuiSmartFormPropsFactory,
   NuiSmartFormSection,
+  NuiSmartFormStep,
 } from './components/smart-form/smart-form.types';
+export type { NuiSmartFormMessages } from './components/smart-form/smart-form.messages';
 export { NuiFormError } from './core/form-error';
 export type { FormErrorMessages } from './core/form-error';
 export type { EntryKind } from './core/registry';
