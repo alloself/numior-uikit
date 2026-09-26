@@ -74,7 +74,14 @@ const renderControl = (kind: ControlKind, scope: FieldScope): VNode[] => {
   return [h(NuiInput, scope.field), ...pending];
 };
 
-const renderField = (config: FormFieldConfig): VNode =>
+interface View {
+  readonly hidden: Set<string>;
+  readonly rules: Map<string, readonly AnyFieldRule[]>;
+  readonly validateOn: Map<string, ValidateOn>;
+  disabled: boolean;
+}
+
+const renderField = (config: FormFieldConfig, view: View): VNode =>
   h(
     NuiFormField,
     {
@@ -82,8 +89,8 @@ const renderField = (config: FormFieldConfig): VNode =>
       id: fieldId(config.path),
       name: config.path,
       label: config.label,
-      rules: config.rules,
-      validateOn: config.validateOn,
+      rules: view.rules.get(config.path) ?? config.rules,
+      validateOn: view.validateOn.get(config.path) ?? config.validateOn,
       keepValue: config.keepValue,
     },
     { default: (scope: FieldScope) => renderControl(config.control ?? 'input', scope) },
@@ -92,7 +99,14 @@ const renderField = (config: FormFieldConfig): VNode =>
 export class FormDriver<V extends object> {
   static mount<V extends object>(options: FormDriverOptions<V>): FormDriver<V> {
     const submissions: V[] = [];
-    const view = reactive({ hidden: new Set<string>(), disabled: options.disabled ?? false });
+
+    const view: View = reactive({
+      hidden: new Set<string>(),
+      rules: new Map<string, readonly AnyFieldRule[]>(),
+      validateOn: new Map<string, ValidateOn>(),
+      disabled: options.disabled ?? false,
+    });
+
     const captured = shallowRef<FormContext<V> | null>(null);
 
     const Host = defineComponent({
@@ -119,7 +133,9 @@ export class FormDriver<V extends object> {
                 errorTitle: options.errorTitle,
               },
               () =>
-                options.fields.filter((config) => !view.hidden.has(config.path)).map(renderField),
+                options.fields
+                  .filter((config) => !view.hidden.has(config.path))
+                  .map((config) => renderField(config, view)),
             ),
             h('button', { type: 'button', class: 'outside' }, 'Outside'),
           ]);
@@ -141,7 +157,7 @@ export class FormDriver<V extends object> {
     private readonly wrapper: VueWrapper,
     readonly form: FormContext<V>,
     readonly submissions: readonly V[],
-    private readonly view: { hidden: Set<string>; disabled: boolean },
+    private readonly view: View,
   ) {}
 
   private control(path: string): DOMWrapper<HTMLElement> {
@@ -316,6 +332,16 @@ export class FormDriver<V extends object> {
   async reset(): Promise<void> {
     this.formElement.element.reset();
     await this.settle();
+  }
+
+  async setRules(path: string, rules: readonly AnyFieldRule[]): Promise<void> {
+    this.view.rules.set(path, rules);
+    await nextTick();
+  }
+
+  async setValidateOn(path: string, mode: ValidateOn): Promise<void> {
+    this.view.validateOn.set(path, mode);
+    await nextTick();
   }
 
   async hide(path: string): Promise<void> {

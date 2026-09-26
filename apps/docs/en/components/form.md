@@ -173,11 +173,15 @@ useForm<Signup>({
 });
 ```
 
-A field reads its rules, `validateOn`, `debounce` and `keepValue` when it mounts. A rule that
-depends on other values reads them from its context — `custom((value, { values }) => …)`:
-after a submit attempt every change revalidates the whole form, so “Passwords do not match”
-disappears as soon as the password is fixed. To swap the rules themselves, recreate the field
-with a `key`.
+Rules, `validateOn`, `debounce` and `keepValue` are reactive: a field takes them from its props
+(or from a ref or a getter in `useField`), and new rules recheck the field at once when its errors
+are already showing. Lists are compared rule by rule rather than as arrays: `[required(), min(3)]`
+created anew on every render stays the same, and so does `custom(check)` with the same `check`.
+Declare the function of an asynchronous check in `<script setup>`: written inline in the template
+it is new on every render and restarts the check. A rule that depends on other values reads them
+from its context — `custom((value, { values }) => …)`: after a submit attempt every change
+revalidates the whole form, so “Passwords do not match” disappears as soon as the password is
+fixed.
 
 `schema` takes any Standard Schema v1 — zod, valibot, arktype — with no adapter. A schema issue
 goes to the nearest visible field on its path; an issue without a path becomes a form error; an

@@ -64,7 +64,7 @@ export const createAsyncChecks = <V extends object, O>(
 
   const needsCheck = (entry: Entry): boolean =>
     !entry.disabled() &&
-    (entry.checkAsync !== undefined || formRules(entry).length > 0) &&
+    (entry.hasAsync() || formRules(entry).length > 0) &&
     freshResult(entry) === undefined;
 
   const release = (entry: Entry, state: AsyncState): void => {
@@ -116,7 +116,7 @@ export const createAsyncChecks = <V extends object, O>(
     try {
       const message =
         (await firstAsyncFailure(formRules(entry), value, context)) ??
-        (await entry.checkAsync?.(context));
+        (await entry.checkAsync(context));
 
       if (token === state.token) {
         state.result = { value, message };

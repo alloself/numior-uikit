@@ -27,10 +27,11 @@ export interface EntrySpec {
   readonly flush: FieldFlush | undefined;
   readonly value: () => unknown;
   readonly check: (context: FieldRuleContext) => string | undefined;
-  readonly checkAsync: ((context: AsyncRuleContext) => Promise<string | undefined>) | undefined;
-  readonly debounce: number | undefined;
-  readonly validateOn: ValidateOn | undefined;
-  readonly keepValue: boolean;
+  readonly checkAsync: (context: AsyncRuleContext) => Promise<string | undefined>;
+  readonly hasAsync: () => boolean;
+  readonly debounce: () => number | undefined;
+  readonly validateOn: () => ValidateOn | undefined;
+  readonly keepValue: () => boolean;
   readonly state: EntryState;
 }
 
@@ -43,6 +44,7 @@ export interface FormHost {
   blur(entry: Entry): Promise<void>;
   validateEntry(entry: Entry): Promise<FieldValidation>;
   revalidate(entries: readonly Entry[], scope?: ApplyScope): Promise<void>;
+  rulesChanged(entry: Entry): Promise<void>;
   flush(entries: readonly Entry[]): Promise<void>;
   guard(entry: Entry): (value: unknown) => boolean;
   isDirty(path: string): boolean;
@@ -87,7 +89,7 @@ export const createHost = <V extends object, O>(
   };
 
   const release = (entry: Entry): void => {
-    if (!entry.keepValue) {
+    if (!entry.keepValue()) {
       core.engine.unsetValue(entry.path());
     }
   };
@@ -111,7 +113,7 @@ export const createHost = <V extends object, O>(
 
   const revalidate = (entries: readonly Entry[], scope?: ApplyScope): Promise<void> => {
     const due = entries.filter((entry) =>
-      validatesOnChange(entry.validateOn, entry.state.attempted.value),
+      validatesOnChange(entry.validateOn(), entry.state.attempted.value),
     );
 
     return due.length === 0
@@ -125,17 +127,17 @@ export const createHost = <V extends object, O>(
       const entry: Entry = {
         ...spec,
         id: core.registry.nextId(),
-        validateOn: spec.validateOn ?? core.validateOn,
-        debounce: spec.debounce ?? DEBOUNCE,
+        validateOn: () => spec.validateOn() ?? core.validateOn,
+        debounce: () => spec.debounce() ?? DEBOUNCE,
         fieldEpoch: 0,
       };
 
       restore(entry);
       core.registry.add(entry);
 
-      if (!entry.keepValue && getCurrentScope()) {
+      if (getCurrentScope()) {
         watch(entry.active, (active) => {
-          if (!active && !claimed(entry.path(), entry)) {
+          if (!active && !entry.keepValue() && !claimed(entry.path(), entry)) {
             release(entry);
           }
         });
@@ -168,7 +170,7 @@ export const createHost = <V extends object, O>(
     },
     blur: (entry) => {
       entry.state.setTouched(true);
-      return validatesOnBlur(entry.validateOn, entry.state.attempted.value)
+      return validatesOnBlur(entry.validateOn(), entry.state.attempted.value)
         ? validation.validateEntries([entry], 'blur').then(toVoid)
         : Promise.resolve();
     },
@@ -181,6 +183,13 @@ export const createHost = <V extends object, O>(
       return { valid: errors.length === 0, errors };
     },
     revalidate,
+    rulesChanged: (entry) => {
+      validation.async.forget(entry);
+
+      return entry.state.attempted.value
+        ? core.tracker.track(validation.validateEntries([entry], 'change').then(toVoid))
+        : Promise.resolve();
+    },
     flush,
     guard: commitFor,
     isDirty: (path) => isPathDirty(core, path),

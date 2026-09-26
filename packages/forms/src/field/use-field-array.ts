@@ -1,15 +1,9 @@
 import { computed, onBeforeUnmount, toValue, type ComputedRef, type MaybeRefOrGetter } from 'vue';
 import { createOwnerState } from '../core/owner-state';
-import { firstFailure } from '../core/rules';
-import type { FieldRule, ValidateOn } from '../core/types';
+import type { ValidateOn } from '../core/types';
 import type { FormContext } from '../form/form-context';
 import { joinPath, normalizePath } from '../paths/paths';
-import {
-  firstAsyncFailure,
-  isAsyncRule,
-  isSyncRule,
-  type AsyncFieldRule,
-} from '../rules/async-rule';
+import { createRuleSet, type RuleSource } from './rule-set';
 import { resolveHost } from './use-field';
 
 export interface FieldArrayRow<T> {
@@ -22,8 +16,8 @@ export interface FieldArrayRow<T> {
 }
 
 export interface UseFieldArrayOptions<T> {
-  readonly rules?: readonly (FieldRule<readonly T[]> | AsyncFieldRule<readonly T[]>)[] | undefined;
-  readonly validateOn?: ValidateOn | undefined;
+  readonly rules?: RuleSource<readonly T[]>;
+  readonly validateOn?: MaybeRefOrGetter<ValidateOn | undefined>;
   readonly label?: MaybeRefOrGetter<string | undefined>;
   readonly element?: MaybeRefOrGetter<HTMLElement | null | undefined>;
   readonly focus?: (() => void) | undefined;
@@ -55,9 +49,7 @@ export const useFieldArray = <T = unknown>(
   const array = host.engine.array<T>(() => arrayPath.value);
   const state = createOwnerState();
   const items = (): T[] => array.rows.value.map((row) => row.value);
-  const rules = options.rules ?? [];
-  const syncRules = rules.filter(isSyncRule);
-  const asyncRules = rules.filter(isAsyncRule);
+  const rules = createRuleSet(options.rules);
 
   const entry = host.add({
     kind: 'array',
@@ -69,15 +61,17 @@ export const useFieldArray = <T = unknown>(
     focus: options.focus,
     flush: undefined,
     value: items,
-    check: (context) => firstFailure(syncRules, items(), context),
-    checkAsync:
-      asyncRules.length === 0
-        ? undefined
-        : (context) => firstAsyncFailure(asyncRules, items(), context),
-    debounce: undefined,
-    validateOn: options.validateOn,
-    keepValue: true,
+    check: (context) => rules.check(items(), context),
+    checkAsync: (context) => rules.checkAsync(items(), context),
+    hasAsync: rules.hasAsync,
+    debounce: () => undefined,
+    validateOn: () => toValue(options.validateOn),
+    keepValue: () => true,
     state,
+  });
+
+  rules.onChange(() => {
+    void host.rulesChanged(entry);
   });
 
   const mutate = (change: () => void): Promise<void> => {

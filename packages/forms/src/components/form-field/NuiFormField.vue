@@ -58,10 +58,10 @@ const isDisabled = computed(() => disabled ?? formScope?.disabled.value ?? false
 
 const control = useField<NuiFormFieldValue<T, P>>(() => name, {
   form,
-  rules,
-  validateOn,
-  debounce,
-  keepValue,
+  rules: () => rules,
+  validateOn: () => validateOn,
+  debounce: () => debounce,
+  keepValue: () => keepValue,
   label: () => label,
   element: root,
   focus: () => focusControl(root()),

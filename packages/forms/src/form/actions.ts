@@ -4,10 +4,9 @@ import type { FormCore } from '../core/form-core';
 import type { FormHost } from '../core/host';
 import { toMessages } from '../core/messages';
 import { createOwnerState } from '../core/owner-state';
-import { firstFailure } from '../core/rules';
-import { firstAsyncFailure, isAsyncRule, isSyncRule } from '../rules/async-rule';
 import { inScope, summarize } from '../core/summary';
 import type { Validation } from '../core/validation';
+import { createRuleSet } from '../field/rule-set';
 import { normalizePath } from '../paths/paths';
 import { getAt } from '../values/access';
 import type { FormContext } from './form-context';
@@ -33,9 +32,7 @@ export const createActions = <V extends object, O>(
   register: (rawPath, options = {}) => {
     const path = (): string => normalizePath(toValue(rawPath));
     const value = (): unknown => getAt(core.engine.values, path());
-    const rules = options.rules ?? [];
-    const syncRules = rules.filter(isSyncRule);
-    const asyncRules = rules.filter(isAsyncRule);
+    const rules = createRuleSet(options.rules);
 
     const entry = host.add({
       kind: options.kind ?? 'group',
@@ -47,15 +44,17 @@ export const createActions = <V extends object, O>(
       focus: options.focus,
       flush: undefined,
       value,
-      check: (context) => firstFailure(syncRules, getAt(context.values, path()), context),
-      checkAsync:
-        asyncRules.length === 0
-          ? undefined
-          : (context) => firstAsyncFailure(asyncRules, value(), context),
-      debounce: options.debounce,
-      validateOn: options.validateOn,
-      keepValue: options.keepValue ?? true,
+      check: (context) => rules.check(getAt(context.values, path()), context),
+      checkAsync: (context) => rules.checkAsync(value(), context),
+      hasAsync: rules.hasAsync,
+      debounce: () => toValue(options.debounce),
+      validateOn: () => toValue(options.validateOn),
+      keepValue: () => toValue(options.keepValue) ?? true,
       state: createOwnerState(),
+    });
+
+    rules.onChange(() => {
+      void host.rulesChanged(entry);
     });
 
     const unregister = (): void => {

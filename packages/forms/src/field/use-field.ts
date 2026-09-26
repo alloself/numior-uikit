@@ -8,22 +8,16 @@ import {
   type MaybeRefOrGetter,
 } from 'vue';
 import type { FormHost } from '../core/host';
-import { firstFailure } from '../core/rules';
-import type { FieldFlush, FieldMeta, FieldRule, FieldValidation, ValidateOn } from '../core/types';
+import type { FieldFlush, FieldMeta, FieldValidation, ValidateOn } from '../core/types';
 import { FORM_KEY, hostOf, type FormContext } from '../form/form-context';
 import { normalizePath } from '../paths/paths';
-import {
-  firstAsyncFailure,
-  isAsyncRule,
-  isSyncRule,
-  type AsyncFieldRule,
-} from '../rules/async-rule';
+import { createRuleSet, type RuleSource } from './rule-set';
 
 export interface UseFieldOptions<T> {
-  readonly rules?: readonly (FieldRule<T> | AsyncFieldRule<T>)[] | undefined;
-  readonly validateOn?: ValidateOn | undefined;
-  readonly debounce?: number | undefined;
-  readonly keepValue?: boolean | undefined;
+  readonly rules?: RuleSource<T>;
+  readonly validateOn?: MaybeRefOrGetter<ValidateOn | undefined>;
+  readonly debounce?: MaybeRefOrGetter<number | undefined>;
+  readonly keepValue?: MaybeRefOrGetter<boolean | undefined>;
   readonly label?: MaybeRefOrGetter<string | undefined>;
   readonly element?: MaybeRefOrGetter<HTMLElement | null | undefined>;
   readonly focus?: (() => void) | undefined;
@@ -69,9 +63,7 @@ export const useField = <T = unknown>(
   const fieldPath = computed(() => normalizePath(toValue(path)));
   const label = (): string | undefined => toValue(options.label);
   const field = host.engine.field<T>(() => fieldPath.value, label);
-  const rules = options.rules ?? [];
-  const syncRules = rules.filter(isSyncRule);
-  const asyncRules = rules.filter(isAsyncRule);
+  const rules = createRuleSet(options.rules);
 
   const entry = host.add({
     kind: 'field',
@@ -83,15 +75,17 @@ export const useField = <T = unknown>(
     focus: options.focus,
     flush: options.flush,
     value: () => field.value.value,
-    check: (context) => firstFailure(syncRules, field.value.value, context),
-    checkAsync:
-      asyncRules.length === 0
-        ? undefined
-        : (context) => firstAsyncFailure(asyncRules, field.value.value, context),
-    debounce: options.debounce,
-    validateOn: options.validateOn,
-    keepValue: options.keepValue ?? true,
+    check: (context) => rules.check(field.value.value, context),
+    checkAsync: (context) => rules.checkAsync(field.value.value, context),
+    hasAsync: rules.hasAsync,
+    debounce: () => toValue(options.debounce),
+    validateOn: () => toValue(options.validateOn),
+    keepValue: () => toValue(options.keepValue) ?? true,
     state: field,
+  });
+
+  rules.onChange(() => {
+    void host.rulesChanged(entry);
   });
 
   const value = computed(() => field.value.value);

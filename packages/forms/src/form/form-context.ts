@@ -34,10 +34,10 @@ export interface RegisterOptions {
   readonly kind?: EntryKind | undefined;
   readonly active?: MaybeRefOrGetter<boolean | undefined>;
   readonly disabled?: MaybeRefOrGetter<boolean | undefined>;
-  readonly keepValue?: boolean | undefined;
-  readonly validateOn?: ValidateOn | undefined;
-  readonly rules?: readonly AnyFieldRule[] | undefined;
-  readonly debounce?: number | undefined;
+  readonly keepValue?: MaybeRefOrGetter<boolean | undefined>;
+  readonly validateOn?: MaybeRefOrGetter<ValidateOn | undefined>;
+  readonly rules?: MaybeRefOrGetter<readonly AnyFieldRule[] | undefined>;
+  readonly debounce?: MaybeRefOrGetter<number | undefined>;
   readonly label?: MaybeRefOrGetter<string | undefined>;
   readonly element?: MaybeRefOrGetter<HTMLElement | null | undefined>;
   readonly focus?: (() => void) | undefined;

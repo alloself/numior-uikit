@@ -17,10 +17,11 @@ export interface Entry {
   readonly flush: FieldFlush | undefined;
   readonly value: () => unknown;
   readonly check: (context: FieldRuleContext) => string | undefined;
-  readonly checkAsync: ((context: AsyncRuleContext) => Promise<string | undefined>) | undefined;
-  readonly debounce: number;
-  readonly validateOn: ValidateOn;
-  readonly keepValue: boolean;
+  readonly checkAsync: (context: AsyncRuleContext) => Promise<string | undefined>;
+  readonly hasAsync: () => boolean;
+  readonly debounce: () => number;
+  readonly validateOn: () => ValidateOn;
+  readonly keepValue: () => boolean;
   readonly state: EntryState;
   fieldEpoch: number;
 }

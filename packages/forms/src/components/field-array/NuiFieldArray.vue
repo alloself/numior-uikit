@@ -170,8 +170,8 @@ const focusArray = (): void => {
 };
 
 const array = useFieldArray<R>(() => name, {
-  rules,
-  validateOn,
+  rules: () => rules,
+  validateOn: () => validateOn,
   form,
   label: () => label,
   element: () => root.value,

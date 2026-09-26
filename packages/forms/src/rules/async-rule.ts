@@ -1,4 +1,5 @@
 import type { AsyncRuleContext, FieldRule } from '../core/types';
+import { marked } from './origin';
 
 const ASYNC_RULE: unique symbol = Symbol('nui:async-rule');
 
@@ -18,10 +19,13 @@ export const isSyncRule = <T, V>(rule: AnyFieldRule<T, V>): rule is FieldRule<T,
 export const customAsync = <T = unknown, V = unknown>(
   check: (value: T, context: AsyncRuleContext<V>) => Promise<string | undefined>,
 ): AsyncFieldRule<T, V> =>
-  Object.assign(
-    async (value: T, context: AsyncRuleContext<V>): Promise<true | string> =>
-      (await check(value, context)) ?? true,
-    { [ASYNC_RULE]: true as const },
+  marked(
+    Object.assign(
+      async (value: T, context: AsyncRuleContext<V>): Promise<true | string> =>
+        (await check(value, context)) ?? true,
+      { [ASYNC_RULE]: true as const },
+    ),
+    check,
   );
 
 export const firstAsyncFailure = async <T, V>(

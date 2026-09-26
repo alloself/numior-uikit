@@ -176,7 +176,7 @@ export const createValidation = <V extends object, O>(core: FormCore<V, O>): Val
       if (result.byOwner.has(entry.path())) {
         asyncChecks.cancel(entry);
       } else {
-        asyncChecks.schedule(entry, trigger === 'change' ? entry.debounce : 0);
+        asyncChecks.schedule(entry, trigger === 'change' ? entry.debounce() : 0);
       }
     }
     return result;
