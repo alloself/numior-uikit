@@ -41,16 +41,16 @@ playground проверяет реальный `dist`, типы и внешню�
 
 ## Команды качества
 
-| Команда                             | Проверка                                                   |
-| ----------------------------------- | ---------------------------------------------------------- |
-| `pnpm check`                        | Формат, lint, типы, анализ, unit, build, artifacts, docs   |
-| `pnpm lint`                         | Oxlint для JS/TS и eslint-plugin-vue для шаблонов          |
-| `pnpm format` / `pnpm format:check` | Oxfmt: запись / проверка                                   |
-| `pnpm typecheck`                    | Vue SFC и TypeScript strict                                |
-| `pnpm analyze`                      | Fallow: dead code/deps/cycles/boundaries, дубли, сложность |
-| `pnpm test` / `pnpm test:coverage`  | Vitest и V8 coverage                                       |
-| `pnpm test:e2e`                     | Playwright по production build, темы, RTL, Tailwind, axe   |
-| `pnpm arch:check`                   | Archcore CLI: структура и связи                            |
+| Команда                             | Проверка                                                                                  |
+| ----------------------------------- | ----------------------------------------------------------------------------------------- |
+| `pnpm check`                        | Формат, lint, типы, анализ, unit, build, artifacts, docs                                  |
+| `pnpm lint`                         | Oxlint для JS/TS и eslint-plugin-vue для шаблонов                                         |
+| `pnpm format` / `pnpm format:check` | Oxfmt: запись / проверка                                                                  |
+| `pnpm typecheck`                    | Vue SFC и TypeScript strict                                                               |
+| `pnpm analyze`                      | Fallow: dead code/deps/cycles/boundaries, дубли, сложность и CRAP по покрытию unit-тестов |
+| `pnpm test` / `pnpm test:coverage`  | Vitest; coverage V8 в формате Istanbul для Fallow                                         |
+| `pnpm test:e2e`                     | Playwright по production build, темы, RTL, Tailwind, axe                                  |
+| `pnpm arch:check`                   | Archcore CLI: структура и связи                                                           |
 
 Перед браузерными тестами: `pnpm exec playwright install`.
 В Linux при отсутствии системных библиотек: `pnpm exec playwright install --with-deps`.

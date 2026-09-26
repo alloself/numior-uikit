@@ -99,7 +99,9 @@
     ]
   },
   "duplicates": {
-    "minTokens": 100
+    "minTokens": 100,
+    "threshold": 0.001,
+    "ignore": ["**/*.messages.ts"]
   },
   "health": {
     "maxCyclomatic": 15,

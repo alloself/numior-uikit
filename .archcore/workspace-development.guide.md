@@ -12,9 +12,9 @@ Node 24.15+; проверенная и закреплённая версия 24.
 1. Выполнить `nvm install`, `nvm use`, `corepack enable`, `pnpm install --frozen-lockfile` в корне. Системный pnpm может содержать встроенный старый Node; использовать Corepack выбранной версии Node.
 2. `pnpm dev` запускает @apps/playground. `/` проверяет автономный CSS, `/tailwind.html` — Tailwind 4. В dev включён source export condition; production импортирует dist.
 3. `pnpm build && pnpm docs:dev` запускает RU/EN VitePress с локальным поиском и Vue-примером. `pnpm docs:build` собирает статические страницы с SSR.
-4. `pnpm check` включает release:check (SemVer, блокировки, tarballs, dry-run) и проверяет Oxfmt, Oxlint + Vue template ESLint, vue-tsc, Fallow dead-code/dupes/health, Vitest, build, exports/CSS/LICENSE и docs.
+4. `pnpm check` включает release:check (SemVer, блокировки, tarballs, dry-run) и проверяет Oxfmt, Oxlint + Vue template ESLint, vue-tsc, Fallow dead-code/dupes, Vitest с coverage и Fallow health (CRAP по этому покрытию), build, exports/CSS/LICENSE и docs.
 5. `pnpm exec playwright install` и `pnpm test:e2e` запускают Chromium, Firefox, WebKit и два мобильных профиля по production-сборке. Для Ubuntu 20.04 использовать Docker: текущий Playwright не поддерживает эту ОС. Проверенный образ — mcr.microsoft.com/playwright:v1.63.0-noble.
-6. `pnpm test:coverage` создаёт V8 coverage. `pnpm arch:check` проверяет документы и связи. CI @.github/workflows/ci.yml выполняет quality и browser jobs; release job выключен до готовности 1.0 через NUMIOR_RELEASE_ENABLED. Релизные команды, npm OIDC и правила восстановления: @docs/releases.md.
+6. `pnpm test:coverage` создаёт V8 coverage и `coverage/coverage-final.json` в формате Istanbul; `pnpm analyze:health` запускает его сам и считает по нему CRAP, без файла Fallow оценивал бы покрытие статически. `pnpm arch:check` проверяет документы и связи. CI @.github/workflows/ci.yml выполняет quality и browser jobs; release job выключен до готовности 1.0 через NUMIOR_RELEASE_ENABLED. Релизные команды, npm OIDC и правила восстановления: @docs/releases.md.
 
 ## Verification
 
@@ -41,7 +41,10 @@ Node 24.15+; проверенная и закреплённая версия 24.
 Публичный контракт защищён explicit exports и private manifests; CSS opt-in: `styles.css`
 и `styles/<name>.css`. Fallow сохраняет public entry exports, анализирует CSS-манифест и
 использует @numior/source; в Vitest исходники подключаются и для node-окружения
-(`ssr.resolve.conditions`, `server.deps.inline`).
+(`ssr.resolve.conditions`, `server.deps.inline`). Порог дублей `duplicates.threshold` равен 0.001%:
+при нулевом пороге Fallow только печатает клоны, а так любой клон от 100 токенов валит
+`pnpm check`. Общие куски выносятся в composable или общий CSS (`shared/segmented-field.css`
+у выбора даты и поля времени), а не прячутся исключениями.
 
 Тесты: unit через драйверы и харнессы (`packages/*/test`), SSR через `renderMarkup`, e2e
 через page objects `tests/e2e/pages/*` (`foundation.spec.ts`, `forms.spec.ts`, `overlays.spec.ts`, `feedback.spec.ts`, `navigation.spec.ts`, `pickers.spec.ts`, `intl.spec.ts`, `data.spec.ts`, `tree.spec.ts`, `table.spec.ts`),
