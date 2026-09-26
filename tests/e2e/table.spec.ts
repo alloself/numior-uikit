@@ -158,7 +158,7 @@ test.describe('table', () => {
       await expect.poll(() => table.opacityOf(table.columnGrip('Имя'))).toBe('1');
       await table.columnGrip('Балл').focus();
       await page.keyboard.press('Space');
-      await expect(table.table.locator('.nui-table__live')).toContainText('Балл grabbed');
+      await expect(table.table.locator('.nui-table__live')).toContainText('Колонка «Балл» взята');
       await page.keyboard.press('ArrowLeft');
       await page.keyboard.press('Space');
 

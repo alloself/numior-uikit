@@ -20,29 +20,19 @@
         <NuiIcon v-else :alias="icon" class="nui-avatar__icon" />
       </slot>
     </span>
-    <span
-      v-if="status"
-      class="nui-avatar__status"
-      role="img"
-      :aria-label="statusLabel ?? STATUS_LABELS[status]"
-    />
+    <span v-if="status" class="nui-avatar__status" role="img" :aria-label="statusText" />
     <span v-if="$slots.badge" class="nui-avatar__badge"><slot name="badge" /></span>
   </span>
 </template>
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
+import { useMessages } from '@numior/primitives';
 import NuiIcon from '../icon/NuiIcon.vue';
 import { useAvatarGroup } from './avatar-context';
-import type { NuiAvatarProps, NuiAvatarStatus } from './avatar.types';
+import { avatarMessages } from './avatar.messages';
+import type { NuiAvatarProps } from './avatar.types';
 import { initialsOf } from './initials';
-
-const STATUS_LABELS: Record<NuiAvatarStatus, string> = {
-  online: 'Online',
-  offline: 'Offline',
-  busy: 'Busy',
-  away: 'Away',
-};
 
 const {
   src,
@@ -56,6 +46,7 @@ const {
 } = defineProps<NuiAvatarProps>();
 
 const group = useAvatarGroup();
+const messages = useMessages(avatarMessages);
 const failed = ref(false);
 
 watch(
@@ -70,6 +61,10 @@ const resolvedShape = computed(() => shape ?? group?.shape.value ?? 'circle');
 const label = computed(() => alt ?? name ?? '');
 const showImage = computed(() => src !== undefined && src !== '' && !failed.value);
 const initials = computed(() => (name === undefined ? '' : initialsOf(name)));
+
+const statusText = computed(() =>
+  status === undefined ? undefined : (statusLabel ?? messages.value[status]),
+);
 
 const fail = (): void => {
   failed.value = true;

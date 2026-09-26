@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { NuiMessageCatalog } from '@numior/primitives';
 import type { NuiVueMessages } from '../src';
 import { alertMessages } from '../src/alert/alert.messages';
+import { avatarMessages } from '../src/avatar/avatar.messages';
 import { breadcrumbsMessages } from '../src/breadcrumbs/breadcrumbs.messages';
 import { chipMessages } from '../src/chip/chip.messages';
 import { comboboxMessages } from '../src/combobox/combobox.messages';
@@ -10,10 +11,12 @@ import { listMessages } from '../src/list/list.messages';
 import { paginationMessages } from '../src/pagination/pagination.messages';
 import { selectMessages } from '../src/select/select.messages';
 import { sidebarMessages } from '../src/sidebar/sidebar.messages';
+import { tableMessages } from '../src/table/table.messages';
 import { toastMessages } from '../src/toast/toast.messages';
 
 const catalogs: { readonly [N in keyof NuiVueMessages]: NuiMessageCatalog<N> } = {
   alert: alertMessages,
+  avatar: avatarMessages,
   breadcrumbs: breadcrumbsMessages,
   chip: chipMessages,
   combobox: comboboxMessages,
@@ -22,6 +25,7 @@ const catalogs: { readonly [N in keyof NuiVueMessages]: NuiMessageCatalog<N> } =
   pagination: paginationMessages,
   select: selectMessages,
   sidebar: sidebarMessages,
+  table: tableMessages,
   toast: toastMessages,
 };
 

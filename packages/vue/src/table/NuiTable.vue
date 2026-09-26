@@ -33,13 +33,13 @@
             :selectable="selectable"
             :selection-state="selectionState"
             :selection-disabled="loading || visibleRows.length === 0"
-            :select-all-label="selectAllLabel"
+            :select-all-label="texts.selectAll"
             :layout="layout"
             :actions="headActions"
             :resizing="resize.active.value"
             :dragging="columnDrag.state.value.from"
-            :resize-label="resizeLabel"
-            :reorder-label="reorderLabel"
+            :resize-label="resizeText"
+            :reorder-label="reorderText"
             @sort="cycle"
             @toggle-all="toggleAll"
           >
@@ -57,7 +57,7 @@
             :selected-keys="selectedKeys"
             :loading="false"
             :loading-rows="0"
-            :empty-label="emptyLabel"
+            :empty-label="texts.empty"
             :first-index="0"
             :spacers="undefined"
             :dragging="-1"
@@ -78,7 +78,7 @@
             :selected-keys="selectedKeys"
             :loading="loading"
             :loading-rows="loadingRows"
-            :empty-label="emptyLabel"
+            :empty-label="texts.empty"
             :first-index="firstIndex"
             :spacers="spacers"
             :dragging="rowDragging"
@@ -129,19 +129,19 @@
 
 <script setup lang="ts" generic="T">
 import { computed, onMounted, onScopeDispose, ref, useSlots, useTemplateRef, watch } from 'vue';
-import { useDirection, useVirtualList } from '@numior/primitives';
+import { useDirection, useMessages, useVirtualList } from '@numior/primitives';
 import NuiIcon from '../icon/NuiIcon.vue';
 import NuiPagination from '../pagination/NuiPagination.vue';
 import { defaultOptionKey } from '../shared/options';
 import NuiTableBody from './NuiTableBody.vue';
 import NuiTableHead from './NuiTableHead.vue';
-import { defaultAnnounce } from './announce';
 import { cellText, cellValue, slotNamesWithPrefix } from './cells';
 import { visibleStart } from './ghost';
 import { pageSlice, resolvePagination } from './page';
 import type { NuiTableRowView } from './rows';
 import { selectionStateOf, toggleRow, toggleRows } from './selection';
 import { nextSort, sortRows } from './sort';
+import { tableMessages } from './table.messages';
 import type {
   NuiTableAnnouncement,
   NuiTableColumn,
@@ -172,7 +172,7 @@ const {
   total,
   loading = false,
   loadingRows = 5,
-  emptyLabel = 'No data',
+  emptyLabel,
   caption,
   stickyHeader = false,
   striped = false,
@@ -181,14 +181,14 @@ const {
   virtual = false,
   height,
   rowHeight = 40,
-  selectLabel = 'Select row',
-  selectAllLabel = 'Select all rows',
-  resizeLabel = (column: NuiTableColumn<T>) => `Resize ${column.label}`,
-  reorderLabel = (column: NuiTableColumn<T>) => `Reorder ${column.label}`,
-  expandLabel = () => 'Toggle row',
-  dragLabel = () => 'Reorder row',
-  rowLabel = undefined,
-  announce = undefined,
+  selectLabel,
+  selectAllLabel,
+  resizeLabel,
+  reorderLabel,
+  expandLabel,
+  dragLabel,
+  rowLabel,
+  announce,
 } = defineProps<NuiTableProps<T>>();
 
 const sort = defineModel<NuiTableSort>('sort', { default: null });
@@ -206,6 +206,7 @@ const emit = defineEmits<{
 }>();
 
 const slots = useSlots();
+const messages = useMessages(tableMessages);
 const scroller = useTemplateRef<HTMLElement>('scroller');
 const tableElement = useTemplateRef<HTMLTableElement>('table');
 const rootElement = useTemplateRef<HTMLElement>('root');
@@ -213,6 +214,21 @@ const rootElement = useTemplateRef<HTMLElement>('root');
 const keyOf = (row: T): string => (getKey ?? defaultOptionKey)(row);
 const selectedKeys = computed(() => new Set(selected.value.map(keyOf)));
 const paginationProps = computed(() => resolvePagination(pagination));
+
+const texts = computed(() => ({
+  empty: emptyLabel ?? messages.value.empty,
+  select: selectLabel ?? messages.value.select,
+  selectAll: selectAllLabel ?? messages.value.selectAll,
+}));
+
+const resizeText = (column: NuiTableColumn<T>): string =>
+  resizeLabel ? resizeLabel(column) : messages.value.resize({ label: column.label });
+
+const reorderText = (column: NuiTableColumn<T>): string =>
+  reorderLabel ? reorderLabel(column) : messages.value.reorder({ label: column.label });
+
+const expandText = (row: T): string => (expandLabel ? expandLabel(row) : messages.value.expand);
+const dragText = (row: T): string => (dragLabel ? dragLabel(row) : messages.value.drag);
 
 const sortLevel = (level: readonly T[]): T[] =>
   remote ? [...level] : sortRows(level, sort.value, columns);
@@ -280,7 +296,7 @@ const resize = useColumnResize<T>({
 const announcement = ref('');
 
 const say = (message: NuiTableAnnouncement): void => {
-  announcement.value = (announce ?? defaultAnnounce)(message);
+  announcement.value = announce ? announce(message) : messages.value.announce(message);
 };
 
 const columnDrag = useColumnReorder<T>({
@@ -336,9 +352,9 @@ const rowOptions = computed<NuiTableRowOptions<T>>(() => ({
   tree: tableRows.tree.value,
   rowDrag,
   dragDisabled: sort.value !== null,
-  selectLabel,
-  expandLabel,
-  dragLabel,
+  selectLabel: texts.value.select,
+  expandLabel: expandText,
+  dragLabel: dragText,
 }));
 
 const rowDragging = computed(() => rowReorder.state.value.from);

@@ -59,6 +59,13 @@ describe('NuiAvatar', () => {
     const custom = AvatarDriver.mount({ props: { status: 'busy', statusLabel: 'Занят' } });
     expect(custom.statusLabel).toBe('Занят');
     expect(AvatarDriver.mount().statusLabel).toBeUndefined();
+
+    const russian = AvatarDriver.mount({
+      props: { name: 'Alice', status: 'away' },
+      config: { locale: 'ru-RU' },
+    });
+
+    expect(russian.statusLabel).toBe('Нет на месте');
   });
 });
 

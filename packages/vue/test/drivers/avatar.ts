@@ -5,12 +5,15 @@ import {
   NuiAvatarGroup,
   type NuiAvatarGroupProps,
   type NuiAvatarProps,
+  type NuiConfigOptions,
 } from '../../src';
+import { configPlugins } from '../support/config';
 import { ComponentDriver } from './component';
 
 export interface AvatarMountOptions {
   readonly props?: NuiAvatarProps;
   readonly badge?: string | undefined;
+  readonly config?: NuiConfigOptions;
 }
 
 export interface AvatarGroupMountOptions {
@@ -24,9 +27,11 @@ const modifierOf = (wrapper: DOMWrapper<Element>, prefix: string): string =>
 export class AvatarDriver extends ComponentDriver {
   protected readonly block = 'nui-avatar';
 
-  static mount({ props = {}, badge }: AvatarMountOptions = {}) {
+  static mount({ props = {}, badge, config }: AvatarMountOptions = {}) {
     const slots = badge === undefined ? {} : { badge };
-    return new AvatarDriver(mount(NuiAvatar, { props, slots }));
+    return new AvatarDriver(
+      mount(NuiAvatar, { props, slots, global: { plugins: configPlugins(config) } }),
+    );
   }
 
   get image(): DOMWrapper<HTMLImageElement> {

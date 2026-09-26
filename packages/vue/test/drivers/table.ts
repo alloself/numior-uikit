@@ -1,6 +1,7 @@
 import { mount, type DOMWrapper, type VueWrapper } from '@vue/test-utils';
 import { defineComponent, h, nextTick, ref, type Ref } from 'vue';
-import { NuiTable, type NuiTableProps, type NuiTableSort } from '../../src';
+import { NuiTable, type NuiConfigOptions, type NuiTableProps, type NuiTableSort } from '../../src';
+import { configPlugins } from '../support/config';
 import { COLUMNS, isPerson, PEOPLE, type Person } from '../support/rows';
 import { choosePageSize } from '../support/page-size';
 import { TopLayerStubs } from '../support/top-layer';
@@ -19,6 +20,7 @@ export interface TableMountOptions {
   readonly expanded?: readonly Person[];
   readonly headerWidth?: number;
   readonly slots?: Record<string, (context: Record<string, unknown>) => unknown>;
+  readonly config?: NuiConfigOptions;
 }
 
 const isReorderEvent = (
@@ -108,6 +110,7 @@ export class TableDriver extends ComponentDriver {
     expanded = [],
     headerWidth,
     slots = {},
+    config,
   }: TableMountOptions = {}) {
     const stubs = new TopLayerStubs();
     if (headerWidth !== undefined) {
@@ -204,7 +207,7 @@ export class TableDriver extends ComponentDriver {
     });
 
     return new TableDriver(
-      mount(Host, { attachTo: document.body }),
+      mount(Host, { attachTo: document.body, global: { plugins: configPlugins(config) } }),
       stubs,
       {
         sort: sortRef,
@@ -384,6 +387,30 @@ export class TableDriver extends ComponentDriver {
 
   get widths(): Record<string, number> {
     return this.models.widths.value;
+  }
+
+  get selectAllLabel(): string | undefined {
+    return this.wrapper.find("thead input[type='checkbox']").attributes('aria-label');
+  }
+
+  selectLabelOf(name: string): string | undefined {
+    return this.row(name).find("input[type='checkbox']").attributes('aria-label');
+  }
+
+  reorderLabelOf(label: string): string | undefined {
+    return this.header(label).find('.nui-table__grip').attributes('aria-label');
+  }
+
+  resizeLabelOf(label: string): string | undefined {
+    return this.resizer(label).attributes('aria-label');
+  }
+
+  expandLabelOf(name: string): string | undefined {
+    return this.toggleOf(name).attributes('aria-label');
+  }
+
+  dragLabelOf(name: string): string | undefined {
+    return this.rowGrip(name).attributes('aria-label');
   }
 
   get liveText(): string {

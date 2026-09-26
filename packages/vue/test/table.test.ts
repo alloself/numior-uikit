@@ -451,6 +451,65 @@ describe('NuiTable rows', () => {
   });
 });
 
+describe('NuiTable texts', () => {
+  it('speaks the configured language for its controls and the empty state', () => {
+    const table = TableDriver.mount({
+      config: { locale: 'ru-RU' },
+      rows: TEAM,
+      expanded: TEAM.slice(0, 1),
+      columns: withOptions({ score: { reorderable: true, resizable: true } }),
+      props: { selectable: 'multiple', rowDrag: true, getChildren: childrenOf },
+    });
+
+    expect(table.selectAllLabel).toBe('Выбрать все строки');
+    expect(table.selectLabelOf('Борис')).toBe('Выбрать строку');
+    expect(table.reorderLabelOf('Балл')).toBe('Переставить колонку Балл');
+    expect(table.resizeLabelOf('Балл')).toBe('Ширина колонки Балл');
+    expect(table.expandLabelOf('Анна')).toBe('Развернуть строку');
+    expect(table.dragLabelOf('Борис')).toBe('Переставить строку');
+    table.unmount();
+
+    const empty = TableDriver.mount({ config: { locale: 'ru-RU' }, rows: [] });
+    expect(empty.statusText).toBe('Нет данных');
+    empty.unmount();
+  });
+
+  it('announces column and row moves in the configured language unless announce is given', async () => {
+    const table = TableDriver.mount({
+      config: { locale: 'ru-RU' },
+      rows: TEAM,
+      columns: withOptions({ score: { reorderable: true } }),
+      props: { rowDrag: true, getChildren: childrenOf },
+    });
+
+    await table.pressGrip('Балл', ' ');
+
+    expect(table.liveText).toBe(
+      'Колонка «Балл» взята, позиция 4 из 4. Стрелки перемещают, Пробел отпускает, Escape отменяет.',
+    );
+
+    await table.pressGrip('Балл', 'ArrowLeft');
+    expect(table.liveText).toBe('Колонка «Балл»: позиция 3 из 4.');
+    await table.pressGrip('Балл', 'Escape');
+    expect(table.liveText).toBe('Колонка «Балл»: перемещение отменено.');
+    await table.pressRowGrip('Борис', ' ');
+    await table.pressRowGrip('Борис', 'ArrowUp');
+    await table.pressRowGrip('Борис', ' ');
+    expect(table.liveText).toBe('Строка «Борис» перемещена на позицию 1 из 3.');
+    table.unmount();
+
+    const custom = TableDriver.mount({
+      config: { locale: 'ru-RU' },
+      columns: withOptions({ score: { reorderable: true } }),
+      props: { announce: ({ label, phase }) => `${label}: ${phase}` },
+    });
+
+    await custom.pressGrip('Балл', ' ');
+    expect(custom.liveText).toBe('Балл: grabbed');
+    custom.unmount();
+  });
+});
+
 describe('table helpers', () => {
   it('compares mixed values with nullish last and cycles sort state', () => {
     expect(defaultCompare(1, 2)).toBeLessThan(0);
