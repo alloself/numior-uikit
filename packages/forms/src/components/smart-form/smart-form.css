@@ -43,13 +43,13 @@
   border: 0;
 }
 
-.nui-smart-form__section + .nui-smart-form__section {
-  padding-block-start: var(--nui-space-6);
-  border-block-start: 1px solid var(--nui-border);
+.nui-smart-form__section:has(+ .nui-smart-form__section) {
+  padding-block-end: calc(var(--nui-control-height) / 2);
+  border-block-end: 1px solid var(--nui-border);
 }
 
 .nui-smart-form__legend {
-  padding: 0;
+  padding: 0 0 var(--nui-space-3);
   color: var(--nui-text);
   font-size: var(--nui-font-size-md);
   font-weight: 600;
