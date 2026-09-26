@@ -3,7 +3,15 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createSSRApp, defineComponent, h } from 'vue';
 import { renderToString } from 'vue/server-renderer';
 import { NuiInput } from '@numior/vue';
-import { NuiForm, NuiFormField, useField, useFieldArray, useForm } from '../src';
+import {
+  NuiFieldArray,
+  NuiForm,
+  NuiFormField,
+  useField,
+  useFieldArray,
+  useForm,
+  type FieldArrayRow,
+} from '../src';
 
 const noop = (): void => undefined;
 
@@ -59,6 +67,33 @@ const Signup = defineComponent({
   },
 });
 
+const newContact = () => ({ name: '' });
+
+const contactField = ({ row }: { readonly row: FieldArrayRow<{ name: string }> }) =>
+  h(
+    NuiFormField,
+    { name: `${row.path}.name`, label: 'Name' },
+    { default: (scope: { field: object }) => h(NuiInput, { ...scope.field }) },
+  );
+
+const Team = defineComponent({
+  setup: () => {
+    const form = useForm({
+      initialValues: { contacts: [{ name: 'Ann' }, { name: 'Bob' }] },
+      onSubmit: noop,
+    });
+
+    return () =>
+      h(NuiForm, { form }, () =>
+        h(
+          NuiFieldArray<{ name: string }>,
+          { name: 'contacts', label: 'Contacts', newRow: newContact, reorderable: true },
+          { default: contactField },
+        ),
+      );
+  },
+});
+
 const labelTarget = (html: string): string | undefined =>
   /<label[^>]* for="([^"]+)"/.exec(html)?.[1];
 
@@ -95,6 +130,17 @@ describe('forms on the server', () => {
     expect(first).not.toContain('aria-busy');
     expect(first).not.toContain('nui-form__errors');
     expect(first).not.toContain('undefined');
+  });
+
+  it('renders field array rows with their controls the same way twice', async () => {
+    const first = await renderToString(createSSRApp(Team));
+
+    expect(first).toBe(await renderToString(createSSRApp(Team)));
+    expect(first).toContain('value="Ann"');
+    expect(first).toContain('value="Bob"');
+    expect(first).toContain('aria-label="Remove row 2"');
+    expect(first).not.toContain('undefined');
+    expect(first).not.toContain('nui-field-array__ghost');
   });
 
   it('renders the rows of a field array', async () => {

@@ -1,3 +1,6 @@
+export { default as NuiFieldArray } from './components/field-array/NuiFieldArray.vue';
+export type { NuiFieldArrayMessages } from './components/field-array/field-array.messages';
+export type { NuiFieldArrayProps } from './components/field-array/field-array.types';
 export { default as NuiForm } from './components/form/NuiForm.vue';
 export type { NuiFormMessages } from './components/form/form.messages';
 export type { NuiFormProps } from './components/form/form.types';

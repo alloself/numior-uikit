@@ -113,6 +113,7 @@ assert.doesNotMatch(code, /(?:tiptap|prosemirror|reka-ui|spreadsheet|tailwindcss
 const formsCode = await importBuild('forms', [
   'NuiForm',
   'NuiFormField',
+  'NuiFieldArray',
   'useForm',
   'useField',
   'useFieldArray',

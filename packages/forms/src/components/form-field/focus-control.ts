@@ -1,4 +1,4 @@
-const FOCUSABLE =
+export const FOCUSABLE =
   'input:not([type="hidden"]):not(:disabled), select:not(:disabled), textarea:not(:disabled), button:not(:disabled), [tabindex]:not([tabindex="-1"])';
 
 const labelledControl = (root: HTMLElement): Element | null => {

@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import type { NuiMessageCatalog } from '@numior/primitives';
 import type { NuiFormsMessages } from '../src';
+import { fieldArrayMessages } from '../src/components/field-array/field-array.messages';
 import { formMessages } from '../src/components/form/form.messages';
 import { formRulesMessages } from '../src/rules/form-rules.messages';
 
 const catalogs: { readonly [N in keyof NuiFormsMessages]: NuiMessageCatalog<N> } = {
+  fieldArray: fieldArrayMessages,
   form: formMessages,
   formRules: formRulesMessages,
 };
