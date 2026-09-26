@@ -9,6 +9,8 @@ export interface NuiListEntry<T = string> {
   readonly disabled?: boolean | undefined;
   readonly href?: string | undefined;
   readonly to?: unknown;
+  readonly current?: boolean | undefined;
+  readonly badge?: string | number | undefined;
   readonly onClick?: (() => void) | undefined;
 }
 

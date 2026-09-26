@@ -159,6 +159,17 @@ const scenarios: Scenario[] = [
       }),
   },
   {
+    name: 'NuiList nav',
+    render: () =>
+      h(NuiList, {
+        items: [
+          { label: 'Inbox', href: '/inbox', icon: 'inbox', current: true, badge: 3 },
+          { label: 'Drafts', href: '/drafts' },
+        ],
+        variant: 'nav',
+      }),
+  },
+  {
     name: 'NuiTree',
     render: () => h(NuiTree, { id: 'files', items: FILES, expanded: ['src'], modelValue: 'index' }),
   },

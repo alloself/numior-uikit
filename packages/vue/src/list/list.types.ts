@@ -3,7 +3,7 @@ import type { Component } from 'vue';
 import type { NuiListEntry, NuiListSource, NuiOptionKey } from '../shared/options';
 import type { NuiSize } from '../shared/types';
 
-export type NuiListVariant = 'plain' | 'divided' | 'bordered' | 'floating';
+export type NuiListVariant = 'plain' | 'divided' | 'bordered' | 'floating' | 'nav';
 export type NuiListSelectable = 'single' | 'multiple';
 export type NuiListTag = 'ul' | 'ol';
 
@@ -44,4 +44,6 @@ export interface NuiListItemProps {
   as?: string | Component | undefined;
   interactive?: boolean | undefined;
   disabled?: boolean | undefined;
+  current?: boolean | undefined;
+  badge?: string | number | undefined;
 }

@@ -72,6 +72,43 @@ describe('NuiList', () => {
     routed.unmount();
   });
 
+  it('marks the current page, carries badges and nests content inside a navigation list', () => {
+    const list = ListDriver.mount({
+      props: { variant: 'nav' },
+      parts: [
+        { label: 'Inbox', href: '/inbox', current: true, badge: 3, nested: 'Unread' },
+        { label: 'Drafts', clickable: true, badge: 'new' },
+        { label: 'Archive', href: '/archive' },
+      ],
+    });
+
+    expect(list.hasModifier('variant-nav')).toBe(true);
+    expect(list.inner('Inbox').attributes('aria-current')).toBe('page');
+    expect(list.modifierOf('Inbox', 'current')).toBe(true);
+    expect(list.inner('Archive').attributes('aria-current')).toBeUndefined();
+    expect(list.modifierOf('Archive', 'current')).toBe(false);
+    expect(list.badgeOf('Inbox')).toBe('3');
+    expect(list.badgeOf('Drafts')).toBe('new');
+    expect(list.badgeOf('Archive')).toBe('');
+    expect(list.nestedOf('Inbox')).toBe('Unread');
+    list.unmount();
+
+    const data = ListDriver.mount({
+      props: {
+        variant: 'nav',
+        items: [
+          { label: 'Home', href: '/home', current: true, badge: 120 },
+          { label: 'Reports', href: '/reports' },
+        ],
+      },
+    });
+
+    expect(data.inner('Home').attributes('aria-current')).toBe('page');
+    expect(data.badgeOf('Home')).toBe('99+');
+    expect(data.inner('Reports').attributes('aria-current')).toBeUndefined();
+    data.unmount();
+  });
+
   it('renders items data as parts, replaces bodies through the item slot and shows the empty state', async () => {
     let runs = 0;
 

@@ -67,6 +67,26 @@
     translate: var(--_shift);
   }
 }
+.nui-list--variant-nav {
+  --_padding-inline: var(--nui-space-2);
+  --_padding-block: var(--nui-space-1);
+  --_gap: var(--nui-space-2);
+  --_indent: 0px;
+}
+.nui-list--variant-nav .nui-list__items,
+.nui-list--variant-nav .nui-list__group-items {
+  display: grid;
+  gap: 2px;
+}
+.nui-list--variant-nav .nui-list-item {
+  --_min-size: 2.25rem;
+
+  border-block-start: 0;
+  border-radius: var(--nui-radius-sm);
+}
+.nui-list--variant-nav .nui-list-item__inner {
+  border-radius: inherit;
+}
 .nui-list--variant-floating .nui-list__items {
   flex: 1 1 auto;
   min-block-size: 0;
@@ -189,6 +209,14 @@
 .nui-list-item--mode-option:not(.nui-list-item--selected):focus-visible,
 .nui-list-item--active:not(.nui-list-item--selected) {
   background: var(--_hover);
+}
+.nui-list-item--current {
+  --_row-icon: currentColor;
+  --_row-weight: 500;
+  --_hover: color-mix(in oklab, var(--nui-primary-soft), var(--nui-primary) 8%);
+
+  background: var(--nui-primary-soft);
+  color: var(--nui-primary-soft-foreground);
 }
 .nui-list-item--selected {
   --_row-icon: var(--nui-primary-soft-foreground);

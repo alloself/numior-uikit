@@ -11,6 +11,8 @@
     :to="entry.to"
     :as="linkAs"
     :disabled="entry.disabled"
+    :current="entry.current"
+    :badge="entry.badge"
     v-on="entry.onClick ? { click: entry.onClick } : {}"
   >
     <template v-if="$slots.item" #default>

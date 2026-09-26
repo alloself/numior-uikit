@@ -1,7 +1,7 @@
 # Список
 
 `NuiList` — семантический `ul`/`ol` (`as`) с вариантами `plain`, `divided`, `bordered`,
-`floating` и пунктами `NuiListItem`: слоты `leading`, `default`, `description`, `trailing`
+`floating`, `nav` и пунктами `NuiListItem`: слоты `leading`, `default`, `description`, `trailing`
 или пропы `label`, `description`, `icon`. Пункт с `href`/`to` становится ссылкой, с `@click`
 или `interactive` — кнопкой. Проп `items` рисует те же пункты из данных, принимает группы
 `{ label, items }`, а пустой массив показывает [пустое состояние](/components/empty).
@@ -18,6 +18,11 @@ const languages = [
   { label: 'Rust', value: 'rust' },
   { label: 'Ruby', value: 'ruby', disabled: true },
   { label: 'Котлин', value: 'kotlin' },
+]
+const sections = [
+  { label: 'Входящие', href: '#inbox', icon: 'inbox', current: true, badge: 3 },
+  { label: 'Календарь', href: '#calendar', icon: 'calendar' },
+  { label: 'Файлы', href: '#files', icon: 'folder-open', badge: 'новое' },
 ]
 const links = [
   {
@@ -43,6 +48,7 @@ const links = [
     <NuiListItem value="none" label="Не присылать" />
   </NuiList>
   <NuiList :items="[]" variant="bordered" empty-label="Задач нет" />
+  <NuiList variant="nav" label="Разделы" :items="sections" />
 </div>
 
 ```vue
@@ -70,6 +76,13 @@ import '@numior/vue/styles/list.css';
   />
 </template>
 ```
+
+Вариант `nav` — компактные скруглённые строки навигации без разделителей; на нём построена
+[боковая панель](/components/layout). Проп `current` отмечает текущую страницу:
+`aria-current="page"` на ссылке или кнопке и фон `--nui-primary-soft`. Проп `badge`
+показывает `NuiBadge` в конце строки (число — счётчик с пределом `99+`), слот `nested`
+рисует содержимое внутри `li` после строки — например вложенный список. Те же `current` и
+`badge` понимают записи `items`.
 
 Группы `{ label, items }` рисуются заголовком секции `nui-list__group-label`, пункты группы
 сдвинуты на `--_indent` (во всплывающем списке отступ меньше), между группами —
@@ -101,33 +114,34 @@ Tab как есть. В режиме `selectable` пункты с `value` пол
 
 ## API
 
-| Prop           | Тип                                                | По умолчанию | Описание                                                    |
-| -------------- | -------------------------------------------------- | ------------ | ----------------------------------------------------------- |
-| `id`           | `string`                                           | генерируется | Id корня и основа id пунктов                                |
-| `as`           | `'ul' \| 'ol'`                                     | `'ul'`       | Тег списка                                                  |
-| `variant`      | `'plain' \| 'divided' \| 'bordered' \| 'floating'` | `'plain'`    | Разделители, рамка или всплывающая поверхность              |
-| `size`         | `'sm' \| 'md' \| 'lg'`                             | `'md'`       | Высота строки (токены контролов)                            |
-| `items`        | `NuiListSource<E>`                                 | —            | Пункты и группы `{ label, items }`; `[]` — пустое состояние |
-| `selectable`   | `'single' \| 'multiple'`                           | —            | Режим выбора                                                |
-| `modelValue`   | `T \| T[]`                                         | —            | Выбор (`v-model`)                                           |
-| `getKey`       | `(value: T) => string`                             | —            | Ключ объектных значений                                     |
-| `loop`         | `boolean`                                          | `true`       | Циклические стрелки                                         |
-| `typeahead`    | `boolean`                                          | `true`       | Поиск по первым буквам                                      |
-| `keyboard`     | `boolean`                                          | `true`       | `false` — клавиатурой управляет владелец                    |
-| `activeId`     | `string`                                           | —            | Id пункта с виртуальным фокусом                             |
-| `loading`      | `boolean`                                          | `false`      | Строка загрузки вместо пустого состояния                    |
-| `loadingLabel` | `string`                                           | `'Loading'`  | Подпись загрузки                                            |
-| `label`        | `string`                                           | —            | Имя списка                                                  |
-| `labelledBy`   | `string`                                           | —            | Id внешней подписи                                          |
-| `emptyLabel`   | `string`                                           | `'No items'` | Заголовок пустого состояния                                 |
-| `linkAs`       | `string \| Component`                              | `'a'`        | Компонент роутера для пунктов из `items`                    |
+| Prop           | Тип                                                         | По умолчанию | Описание                                                    |
+| -------------- | ----------------------------------------------------------- | ------------ | ----------------------------------------------------------- |
+| `id`           | `string`                                                    | генерируется | Id корня и основа id пунктов                                |
+| `as`           | `'ul' \| 'ol'`                                              | `'ul'`       | Тег списка                                                  |
+| `variant`      | `'plain' \| 'divided' \| 'bordered' \| 'floating' \| 'nav'` | `'plain'`    | Разделители, рамка, всплывающая поверхность или навигация   |
+| `size`         | `'sm' \| 'md' \| 'lg'`                                      | `'md'`       | Высота строки (токены контролов)                            |
+| `items`        | `NuiListSource<E>`                                          | —            | Пункты и группы `{ label, items }`; `[]` — пустое состояние |
+| `selectable`   | `'single' \| 'multiple'`                                    | —            | Режим выбора                                                |
+| `modelValue`   | `T \| T[]`                                                  | —            | Выбор (`v-model`)                                           |
+| `getKey`       | `(value: T) => string`                                      | —            | Ключ объектных значений                                     |
+| `loop`         | `boolean`                                                   | `true`       | Циклические стрелки                                         |
+| `typeahead`    | `boolean`                                                   | `true`       | Поиск по первым буквам                                      |
+| `keyboard`     | `boolean`                                                   | `true`       | `false` — клавиатурой управляет владелец                    |
+| `activeId`     | `string`                                                    | —            | Id пункта с виртуальным фокусом                             |
+| `loading`      | `boolean`                                                   | `false`      | Строка загрузки вместо пустого состояния                    |
+| `loadingLabel` | `string`                                                    | `'Loading'`  | Подпись загрузки                                            |
+| `label`        | `string`                                                    | —            | Имя списка                                                  |
+| `labelledBy`   | `string`                                                    | —            | Id внешней подписи                                          |
+| `emptyLabel`   | `string`                                                    | `'No items'` | Заголовок пустого состояния                                 |
+| `linkAs`       | `string \| Component`                                       | `'a'`        | Компонент роутера для пунктов из `items`                    |
 
 `NuiListItem`: `value`, `id`, `label`, `description`, `icon`, `href`, `to`, `as`, `interactive`,
-`disabled`; слоты `leading`, `default`, `description`, `trailing`. Слоты списка: `item`
+`disabled`, `current`, `badge`; слоты `leading`, `default`, `description`, `trailing`,
+`nested`; через template ref отдаёт `action` — элемент ссылки или кнопки. Слоты списка: `item`
 (`{ item, selected, active }`) для пунктов из `items`, `empty`; событие `select(item)`. Блоки
 `nui-list` (модификаторы `--variant-*`, `--size-*`, `--selectable`, `--empty`; элементы
 `__items`, `__group`, `__group-label`, `__group-items`, `__status`, `__spinner`, `__empty`)
-и `nui-list-item` (`--size-*`, `--mode-*`, `--selected`, `--active`, `--disabled`; элементы
+и `nui-list-item` (`--size-*`, `--mode-*`, `--selected`, `--active`, `--current`, `--disabled`; элементы
 `__inner`, `__action`; строка — общий блок `nui-row` с `__leading`, `__body`, `__title`,
 `__description`, `__trailing`, `__check`; переменные `--_divider`, `--_padding-inline`,
 `--_padding-block`, `--_gap`, `--_min-size`, `--_hover`).

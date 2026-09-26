@@ -18,6 +18,7 @@ type ListValue = string | string[] | undefined;
 export interface ListPart extends NuiListItemProps {
   readonly leading?: string | undefined;
   readonly trailing?: string | undefined;
+  readonly nested?: string | undefined;
   readonly clickable?: boolean | undefined;
 }
 
@@ -40,12 +41,16 @@ const titleOf = (element: Element): string =>
 const partSlots = (part: ListPart) => ({
   ...(part.leading === undefined ? {} : { leading: () => part.leading }),
   ...(part.trailing === undefined ? {} : { trailing: () => part.trailing }),
+  ...(part.nested === undefined
+    ? {}
+    : { nested: () => h('ul', { class: 'nested' }, [h('li', part.nested)]) }),
 });
 
 const partProps = (part: ListPart, clicks: Ref<number>, viaRouter: boolean) => {
-  const { leading, trailing, clickable, ...props } = part;
+  const { leading, trailing, nested, clickable, ...props } = part;
   void leading;
   void trailing;
+  void nested;
   return {
     ...props,
     ...(viaRouter ? { as: RouterStub } : {}),
@@ -208,6 +213,16 @@ export class ListDriver extends ComponentDriver {
 
   modifierOf(title: string, modifier: string): boolean {
     return this.item(title).classes().includes(`nui-list-item--${modifier}`);
+  }
+
+  badgeOf(title: string): string {
+    const badge = this.item(title).find('.nui-badge');
+    return badge.exists() ? badge.text() : '';
+  }
+
+  nestedOf(title: string): string {
+    const nested = this.item(title).find('.nested');
+    return nested.exists() ? nested.text() : '';
   }
 
   descriptionOf(title: string): string {
