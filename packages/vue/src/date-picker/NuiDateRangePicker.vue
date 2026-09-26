@@ -70,23 +70,15 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, useTemplateRef, watch } from 'vue';
-import {
-  normalizeRange,
-  useFieldContext,
-  useFieldControl,
-  useLocale,
-  useMessages,
-  useSplitAttrs,
-} from '@numior/primitives';
+import { computed } from 'vue';
+import { normalizeRange } from '@numior/primitives';
 import NuiCalendar from '../calendar/NuiCalendar.vue';
 import type { NuiCalendarValue, NuiDateRange } from '../calendar/calendar.types';
 import { isDateRange } from '../calendar/day-state';
 import NuiDateField from './NuiDateField.vue';
 import NuiDateInput from './NuiDateInput.vue';
-import { datePickerMessages } from './date-picker.messages';
 import type { NuiDateRangePickerProps } from './date-picker.types';
-import { usePickerPopover } from './use-picker-popover';
+import { useDatePickerShell } from './use-date-picker-shell';
 
 defineOptions({ inheritAttrs: false });
 defineSlots<{ actions(): unknown }>();
@@ -127,22 +119,26 @@ const {
 
 const model = defineModel<NuiDateRange>({ default: () => ({ start: null, end: null }) });
 
-const split = useSplitAttrs();
-const field = useFieldContext();
-
 const {
-  attrs: controlAttrs,
-  invalid: isInvalid,
-  disabled: isDisabled,
-} = useFieldControl(() => ({ id, disabled, required, invalid }));
-
-const locale = useLocale(() => localeProp);
-const messages = useMessages(datePickerMessages, locale);
-const frame = useTemplateRef<{ root: HTMLElement | null }>('frame');
-const input = useTemplateRef<{ focus: () => void }>('input');
-const calendar = useTemplateRef<{ focus: (date?: string) => void }>('calendar');
-const month = ref<string>();
-const panelId = computed(() => `${controlAttrs.value.id}-panel`);
+  split,
+  field,
+  controlAttrs,
+  isInvalid,
+  isDisabled,
+  locale,
+  messages,
+  month,
+  popover,
+  exposed,
+  focusInput,
+  onInputKeydown,
+} = useDatePickerShell({
+  control: () => ({ id, disabled, required, invalid }),
+  locale: () => localeProp,
+  placement: () => placement,
+  readonly: () => readonly,
+  focusDate: () => model.value.start,
+});
 
 const texts = computed(() => ({
   open: openLabel ?? messages.value.openRange,
@@ -158,13 +154,6 @@ const showClear = computed(
     !isDisabled.value &&
     !readonly,
 );
-
-const popover = usePickerPopover({
-  anchor: () => frame.value?.root ?? null,
-  id: panelId,
-  placement: () => placement,
-  returnFocus: () => input.value?.focus(),
-});
 
 const setStart = (date: string | null): void => {
   model.value = normalizeRange({ start: date, end: model.value.end });
@@ -188,28 +177,8 @@ const pickRange = (value: NuiCalendarValue): void => {
 
 const clear = (): void => {
   model.value = { start: null, end: null };
-  input.value?.focus();
+  focusInput();
 };
 
-const onInputKeydown = (event: KeyboardEvent): void => {
-  if (event.key === 'ArrowDown' && !popover.open.value && !readonly && !isDisabled.value) {
-    event.preventDefault();
-    popover.show();
-  } else if (event.key === 'Escape' && popover.open.value) {
-    event.preventDefault();
-    popover.hide({ focus: true });
-  }
-};
-
-watch(popover.open, (isOpen) => {
-  if (isOpen) {
-    calendar.value?.focus(model.value.start ?? undefined);
-  }
-});
-
-defineExpose({
-  focus: () => input.value?.focus(),
-  open: () => popover.show(),
-  close: () => popover.hide(),
-});
+defineExpose(exposed);
 </script>

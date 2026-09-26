@@ -65,24 +65,15 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, useTemplateRef, watch } from 'vue';
-import {
-  joinDateTime,
-  splitDateTime,
-  useFieldContext,
-  useFieldControl,
-  useLocale,
-  useMessages,
-  useSplitAttrs,
-} from '@numior/primitives';
+import { computed } from 'vue';
+import { joinDateTime, splitDateTime } from '@numior/primitives';
 import NuiCalendar from '../calendar/NuiCalendar.vue';
 import type { NuiCalendarValue } from '../calendar/calendar.types';
 import NuiTimeField from '../time-field/NuiTimeField.vue';
 import NuiDateField from './NuiDateField.vue';
 import NuiDateInput from './NuiDateInput.vue';
-import { datePickerMessages } from './date-picker.messages';
 import type { NuiDatePickerProps } from './date-picker.types';
-import { usePickerPopover } from './use-picker-popover';
+import { useDatePickerShell } from './use-date-picker-shell';
 
 defineOptions({ inheritAttrs: false });
 defineSlots<{ actions(): unknown }>();
@@ -122,22 +113,29 @@ const {
 
 const model = defineModel<string | null>({ default: null });
 
-const split = useSplitAttrs();
-const field = useFieldContext();
+const dateValue = computed(() => (time ? (splitDateTime(model.value)?.date ?? null) : model.value));
+const timeValue = computed(() => splitDateTime(model.value)?.time ?? null);
 
 const {
-  attrs: controlAttrs,
-  invalid: isInvalid,
-  disabled: isDisabled,
-} = useFieldControl(() => ({ id, disabled, required, invalid }));
-
-const locale = useLocale(() => localeProp);
-const messages = useMessages(datePickerMessages, locale);
-const frame = useTemplateRef<{ root: HTMLElement | null }>('frame');
-const input = useTemplateRef<{ focus: () => void }>('input');
-const calendar = useTemplateRef<{ focus: (date?: string) => void }>('calendar');
-const month = ref<string>();
-const panelId = computed(() => `${controlAttrs.value.id}-panel`);
+  split,
+  field,
+  controlAttrs,
+  isInvalid,
+  isDisabled,
+  locale,
+  messages,
+  month,
+  popover,
+  exposed,
+  focusInput,
+  onInputKeydown,
+} = useDatePickerShell({
+  control: () => ({ id, disabled, required, invalid }),
+  locale: () => localeProp,
+  placement: () => placement,
+  readonly: () => readonly,
+  focusDate: () => dateValue.value,
+});
 
 const texts = computed(() => ({
   open: openLabel ?? messages.value.open,
@@ -148,16 +146,6 @@ const texts = computed(() => ({
 const showClear = computed(
   () => clearable && model.value !== null && !isDisabled.value && !readonly,
 );
-
-const dateValue = computed(() => (time ? (splitDateTime(model.value)?.date ?? null) : model.value));
-const timeValue = computed(() => splitDateTime(model.value)?.time ?? null);
-
-const popover = usePickerPopover({
-  anchor: () => frame.value?.root ?? null,
-  id: panelId,
-  placement: () => placement,
-  returnFocus: () => input.value?.focus(),
-});
 
 const setValue = (value: string | null): void => {
   model.value = value;
@@ -186,17 +174,7 @@ const pickTime = (value: string | null): void => {
 
 const clear = (): void => {
   model.value = null;
-  input.value?.focus();
-};
-
-const onInputKeydown = (event: KeyboardEvent): void => {
-  if (event.key === 'ArrowDown' && !popover.open.value && !readonly && !isDisabled.value) {
-    event.preventDefault();
-    popover.show();
-  } else if (event.key === 'Escape' && popover.open.value) {
-    event.preventDefault();
-    popover.hide({ focus: true });
-  }
+  focusInput();
 };
 
 const onTimeKeydown = (event: KeyboardEvent): void => {
@@ -206,15 +184,5 @@ const onTimeKeydown = (event: KeyboardEvent): void => {
   }
 };
 
-watch(popover.open, (isOpen) => {
-  if (isOpen) {
-    calendar.value?.focus(dateValue.value ?? undefined);
-  }
-});
-
-defineExpose({
-  focus: () => input.value?.focus(),
-  open: () => popover.show(),
-  close: () => popover.hide(),
-});
+defineExpose(exposed);
 </script>
