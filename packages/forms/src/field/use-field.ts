@@ -35,7 +35,7 @@ export interface UseFieldOptions<T> {
 
 export interface FieldBinding<T> {
   readonly modelValue: T;
-  readonly 'onUpdate:modelValue': (value: T) => void;
+  readonly 'onUpdate:modelValue': (value: unknown) => void;
   readonly onBlur: () => void;
 }
 
@@ -97,7 +97,7 @@ export const useField = <T = unknown>(
   const value = computed(() => field.value.value);
   const errors = computed(() => field.errors.value);
 
-  const setValue = (next: T): Promise<void> => host.change(entry, next);
+  const update = (next: unknown): Promise<void> => host.change(entry, next);
   const handleBlur = (): Promise<void> => host.blur(entry);
 
   onBeforeUnmount(() => {
@@ -116,8 +116,8 @@ export const useField = <T = unknown>(
       pending: field.pending,
       validated: field.attempted,
     }),
-    binding: reactive({ modelValue: value, 'onUpdate:modelValue': setValue, onBlur: handleBlur }),
-    setValue,
+    binding: reactive({ modelValue: value, 'onUpdate:modelValue': update, onBlur: handleBlur }),
+    setValue: update,
     handleBlur,
     validate: () => host.validateEntry(entry),
     guard: () => host.guard(entry),

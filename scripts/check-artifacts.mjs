@@ -110,7 +110,9 @@ const code = await importBuild('vue', [
 
 assert.doesNotMatch(code, /(?:tiptap|prosemirror|reka-ui|spreadsheet|tailwindcss|vee-validate)/i);
 
-await importBuild('forms', [
+const formsCode = await importBuild('forms', [
+  'NuiForm',
+  'NuiFormField',
   'useForm',
   'useField',
   'useFieldArray',
@@ -126,6 +128,8 @@ await importBuild('forms', [
   'custom',
   'customAsync',
 ]);
+
+assert.match(formsCode, /from ['"]@numior\/vue['"]/, 'forms must keep @numior/vue external');
 
 const formsTypes = (await readdir('packages/forms/dist', { recursive: true })).filter((file) =>
   file.endsWith('.d.ts'),

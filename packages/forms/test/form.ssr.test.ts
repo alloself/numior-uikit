@@ -2,7 +2,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createSSRApp, defineComponent, h } from 'vue';
 import { renderToString } from 'vue/server-renderer';
-import { useField, useFieldArray, useForm } from '../src';
+import { NuiInput } from '@numior/vue';
+import { NuiForm, NuiFormField, useField, useFieldArray, useForm } from '../src';
 
 const noop = (): void => undefined;
 
@@ -43,6 +44,24 @@ const ContactList = defineComponent({
   },
 });
 
+const Signup = defineComponent({
+  setup: () => {
+    const form = useForm({ initialValues: { email: 'ann@example.com' }, onSubmit: noop });
+
+    return () =>
+      h(NuiForm, { form }, () =>
+        h(
+          NuiFormField,
+          { name: 'email', label: 'Email' },
+          { default: (scope: { field: object }) => h(NuiInput, { ...scope.field }) },
+        ),
+      );
+  },
+});
+
+const labelTarget = (html: string): string | undefined =>
+  /<label[^>]* for="([^"]+)"/.exec(html)?.[1];
+
 describe('forms on the server', () => {
   afterEach(() => {
     vi.useRealTimers();
@@ -61,6 +80,21 @@ describe('forms on the server', () => {
     );
 
     expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it('renders a form with labelled fields and values and no pending or error state', async () => {
+    const first = await renderToString(createSSRApp(Signup));
+    const second = await renderToString(createSSRApp(Signup));
+    const target = labelTarget(first);
+
+    expect(first).toBe(second);
+    expect(first).toContain('novalidate');
+    expect(first).toContain('value="ann@example.com"');
+    expect(target).toBeTruthy();
+    expect(first).toContain(`id="${target}"`);
+    expect(first).not.toContain('aria-busy');
+    expect(first).not.toContain('nui-form__errors');
+    expect(first).not.toContain('undefined');
   });
 
   it('renders the rows of a field array', async () => {

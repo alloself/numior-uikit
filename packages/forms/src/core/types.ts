@@ -113,7 +113,7 @@ type Child<T, K extends string> = T extends readonly (infer Item)[]
     ? T[K]
     : never;
 
-export type FormPathValue<T, P extends string> = string extends P
+export type FormPathValue<T, P extends string> = string extends P | FormPath<T>
   ? unknown
   : P extends `${infer Head}.${infer Rest}`
     ? FormPathValue<NonNullable<Child<T, Head>>, Rest>

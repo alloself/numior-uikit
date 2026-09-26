@@ -1,3 +1,8 @@
+export { default as NuiForm } from './components/form/NuiForm.vue';
+export type { NuiFormMessages } from './components/form/form.messages';
+export type { NuiFormProps } from './components/form/form.types';
+export { default as NuiFormField } from './components/form-field/NuiFormField.vue';
+export type { NuiFormFieldProps } from './components/form-field/form-field.types';
 export { NuiFormError } from './core/form-error';
 export type { FormErrorMessages } from './core/form-error';
 export type { EntryKind } from './core/registry';

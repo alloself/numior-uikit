@@ -186,8 +186,13 @@ export const createValidation = <V extends object, O>(core: FormCore<V, O>): Val
     async: asyncChecks,
     run,
     execute: () => execute(),
-    validateEntries: async (entries, trigger, scope) =>
-      followAsync(entries, await attempt(entries, scope), trigger),
+    validateEntries: (entries, trigger, scope) => {
+      const outcome = attempt(entries, scope);
+
+      return isPromise(outcome)
+        ? outcome.then((result) => followAsync(entries, result, trigger))
+        : Promise.resolve(followAsync(entries, outcome, trigger));
+    },
     validateFully: async (entries) => {
       const first = await attempt(entries);
       const failing = entries.filter((entry) => first.byOwner.has(entry.path()));

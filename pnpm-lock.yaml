@@ -136,6 +136,12 @@ importers:
       '@numior/primitives':
         specifier: workspace:*
         version: link:../primitives
+      '@numior/tokens':
+        specifier: workspace:*
+        version: link:../tokens
+      '@numior/vue':
+        specifier: workspace:*
+        version: link:../vue
       klona:
         specifier: 2.0.6
         version: 2.0.6

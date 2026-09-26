@@ -46,6 +46,7 @@ export interface FormHost {
   flush(entries: readonly Entry[]): Promise<void>;
   guard(entry: Entry): (value: unknown) => boolean;
   isDirty(path: string): boolean;
+  track<T>(work: Promise<T>): Promise<T>;
 }
 
 const DEBOUNCE = 300;
@@ -183,5 +184,6 @@ export const createHost = <V extends object, O>(
     flush,
     guard: commitFor,
     isDirty: (path) => isPathDirty(core, path),
+    track: (work) => core.tracker.track(work),
   };
 };
