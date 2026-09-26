@@ -32,10 +32,13 @@
   --_font-size: var(--nui-control-font-size-lg);
 }
 .nui-time-field__segments {
+  --_segment-padding: 0.125rem;
+
   display: inline-flex;
-  flex: 1 1 auto;
+  flex: 0 1 auto;
   align-items: center;
   min-inline-size: 0;
+  margin-inline: calc(var(--_segment-padding) * -1);
   min-block-size: calc(var(--_height) - 2px);
   direction: ltr;
   unicode-bidi: isolate;
@@ -44,7 +47,7 @@
 .nui-time-field__segment {
   box-sizing: content-box;
   inline-size: 2ch;
-  padding: 0.125rem;
+  padding: var(--_segment-padding);
   border: 0;
   border-radius: var(--_segment-radius);
   background: transparent;
