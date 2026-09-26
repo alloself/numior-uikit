@@ -15,6 +15,22 @@ export interface EngineField<T> extends EntryState {
   readonly value: Readonly<Ref<T>>;
 }
 
+export interface EngineRow<T> {
+  readonly key: string | number;
+  readonly value: T;
+}
+
+export interface EngineArray<T> {
+  readonly rows: Readonly<Ref<readonly EngineRow<T>[]>>;
+  push(value: T): void;
+  prepend(value: T): void;
+  insert(index: number, value: T): void;
+  remove(index: number): void;
+  move(from: number, to: number): void;
+  swap(first: number, second: number): void;
+  replace(values: readonly T[]): void;
+}
+
 export interface FormEngine<V extends object> {
   readonly values: V;
   readonly submitCount: Readonly<Ref<number>>;
@@ -24,4 +40,5 @@ export interface FormEngine<V extends object> {
   reset(values: V): void;
   countSubmit(): void;
   field<T>(path: () => string, label: () => string | undefined): EngineField<T>;
+  array<T>(path: () => string): EngineArray<T>;
 }

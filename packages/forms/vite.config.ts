@@ -12,7 +12,7 @@ export default defineConfig({
     },
     sourcemap: true,
     rolldownOptions: {
-      external: [/^vue$/, /^vee-validate$/, /^klona(\/|$)/],
+      external: [/^vue$/, /^@numior\/primitives$/, /^vee-validate$/, /^klona(\/|$)/],
     },
   },
 });

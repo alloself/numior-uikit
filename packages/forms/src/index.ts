@@ -4,6 +4,7 @@ export type { EntryKind } from './core/registry';
 export type { FormRules } from './core/rules';
 export type { SubmitHandler, SubmitHelpers } from './core/submit';
 export type {
+  AsyncRuleContext,
   DeepPartial,
   FieldFlush,
   FieldMeta,
@@ -24,6 +25,8 @@ export type {
 } from './core/types';
 export { useField } from './field/use-field';
 export type { FieldBinding, FormField, UseFieldOptions } from './field/use-field';
+export { useFieldArray } from './field/use-field-array';
+export type { FieldArray, FieldArrayRow, UseFieldArrayOptions } from './field/use-field-array';
 export { FORM_KEY, provideForm, useFormContext } from './form/form-context';
 export type {
   FieldRegistration,
@@ -32,6 +35,12 @@ export type {
   UseFormOptions,
 } from './form/form-context';
 export { useForm } from './form/use-form';
+export type { NuiFormsMessages } from './messages';
+export { customAsync } from './rules/async-rule';
+export type { AnyFieldRule, AsyncFieldRule } from './rules/async-rule';
+export type { NuiFormRulesMessages } from './rules/form-rules.messages';
+export { custom, email, max, min, pattern, required } from './rules/rules';
+export type { RuleOptions } from './rules/rules';
 export type {
   StandardIssue,
   StandardPathSegment,

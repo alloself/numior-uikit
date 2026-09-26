@@ -24,7 +24,7 @@ describe('form context', () => {
     expect(contextOutsideForm()).toBeNull();
 
     expect(fieldOutsideForm()).toEqual(
-      new Error('useField needs a form: call useForm in an ancestor or pass the form option'),
+      new Error('a form field needs useForm in an ancestor or the form option'),
     );
   });
 

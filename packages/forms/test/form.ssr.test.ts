@@ -2,7 +2,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createSSRApp, defineComponent, h } from 'vue';
 import { renderToString } from 'vue/server-renderer';
-import { useField, useForm } from '../src';
+import { useField, useFieldArray, useForm } from '../src';
 
 const noop = (): void => undefined;
 
@@ -25,6 +25,24 @@ const Profile = defineComponent({
   },
 });
 
+const Contacts = defineComponent({
+  setup: () => {
+    useForm({ initialValues: { contacts: [{ name: 'Ann' }, { name: 'Bob' }] }, onSubmit: noop });
+    return () => h(ContactList);
+  },
+});
+
+const ContactList = defineComponent({
+  setup: () => {
+    const list = useFieldArray<{ name: string }>('contacts');
+    return () =>
+      h(
+        'ol',
+        list.fields.value.map((row) => h('li', { key: row.key }, row.value.name)),
+      );
+  },
+});
+
 describe('forms on the server', () => {
   afterEach(() => {
     vi.useRealTimers();
@@ -43,5 +61,9 @@ describe('forms on the server', () => {
     );
 
     expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it('renders the rows of a field array', async () => {
+    expect(await renderToString(createSSRApp(Contacts))).toBe('<ol><li>Ann</li><li>Bob</li></ol>');
   });
 });

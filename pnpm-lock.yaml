@@ -133,6 +133,9 @@ importers:
 
   packages/forms:
     dependencies:
+      '@numior/primitives':
+        specifier: workspace:*
+        version: link:../primitives
       klona:
         specifier: 2.0.6
         version: 2.0.6

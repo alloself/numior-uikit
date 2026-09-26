@@ -3,9 +3,9 @@ import type { FormHost } from '../core/host';
 import type { EntryKind } from '../core/registry';
 import type { FormRules } from '../core/rules';
 import type { SubmitHandler } from '../core/submit';
+import type { AnyFieldRule } from '../rules/async-rule';
 import type {
   DeepPartial,
-  FieldRule,
   FieldValidation,
   FormMessage,
   FormMeta,
@@ -34,7 +34,8 @@ export interface RegisterOptions {
   readonly disabled?: MaybeRefOrGetter<boolean | undefined>;
   readonly keepValue?: boolean | undefined;
   readonly validateOn?: ValidateOn | undefined;
-  readonly rules?: readonly FieldRule[] | undefined;
+  readonly rules?: readonly AnyFieldRule[] | undefined;
+  readonly debounce?: number | undefined;
   readonly label?: MaybeRefOrGetter<string | undefined>;
   readonly element?: MaybeRefOrGetter<HTMLElement | null | undefined>;
   readonly focus?: (() => void) | undefined;

@@ -12,10 +12,17 @@ import { firstFailure } from '../core/rules';
 import type { FieldFlush, FieldMeta, FieldRule, FieldValidation, ValidateOn } from '../core/types';
 import { FORM_KEY, hostOf, type FormContext } from '../form/form-context';
 import { normalizePath } from '../paths/paths';
+import {
+  firstAsyncFailure,
+  isAsyncRule,
+  isSyncRule,
+  type AsyncFieldRule,
+} from '../rules/async-rule';
 
 export interface UseFieldOptions<T> {
-  readonly rules?: readonly FieldRule<T>[] | undefined;
+  readonly rules?: readonly (FieldRule<T> | AsyncFieldRule<T>)[] | undefined;
   readonly validateOn?: ValidateOn | undefined;
+  readonly debounce?: number | undefined;
   readonly keepValue?: boolean | undefined;
   readonly label?: MaybeRefOrGetter<string | undefined>;
   readonly element?: MaybeRefOrGetter<HTMLElement | null | undefined>;
@@ -45,11 +52,11 @@ export interface FormField<T> {
   guard(): (value: T) => boolean;
 }
 
-const resolveHost = (form: FormContext | undefined): FormHost => {
+export const resolveHost = (form: FormContext | undefined): FormHost => {
   const context = form ?? inject(FORM_KEY, null);
 
   if (!context) {
-    throw new Error('useField needs a form: call useForm in an ancestor or pass the form option');
+    throw new Error('a form field needs useForm in an ancestor or the form option');
   }
   return hostOf(context);
 };
@@ -63,6 +70,8 @@ export const useField = <T = unknown>(
   const label = (): string | undefined => toValue(options.label);
   const field = host.engine.field<T>(() => fieldPath.value, label);
   const rules = options.rules ?? [];
+  const syncRules = rules.filter(isSyncRule);
+  const asyncRules = rules.filter(isAsyncRule);
 
   const entry = host.add({
     kind: 'field',
@@ -73,7 +82,13 @@ export const useField = <T = unknown>(
     element: () => toValue(options.element),
     focus: options.focus,
     flush: options.flush,
-    check: (context) => firstFailure(rules, field.value.value, context),
+    value: () => field.value.value,
+    check: (context) => firstFailure(syncRules, field.value.value, context),
+    checkAsync:
+      asyncRules.length === 0
+        ? undefined
+        : (context) => firstAsyncFailure(asyncRules, field.value.value, context),
+    debounce: options.debounce,
     validateOn: options.validateOn,
     keepValue: options.keepValue ?? true,
     state: field,

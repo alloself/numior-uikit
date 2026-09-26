@@ -231,6 +231,11 @@
       "source": "forms.adr.md",
       "target": "engineering-quality.rule.md",
       "type": "related"
+    },
+    {
+      "source": "forms.adr.md",
+      "target": "messages.adr.md",
+      "type": "depends_on"
     }
   ]
 }

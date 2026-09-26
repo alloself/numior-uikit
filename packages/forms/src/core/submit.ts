@@ -102,7 +102,7 @@ export const createSubmit = <V extends object, O>(deps: SubmitDeps<V, O>) => {
     }
     attemptAll();
 
-    const result = await deps.validation.execute();
+    const result = await deps.validation.validateFully(core.registry.active());
 
     if (epoch !== core.session.epoch) {
       return outcome('aborted');

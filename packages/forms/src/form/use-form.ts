@@ -16,7 +16,7 @@ export const useForm = <V extends object, O = V>(options: UseFormOptions<V, O>):
   const host = createHost(core, validation);
   const views = createViews(core);
   const actions = createActions(core, validation, host, errors);
-  const resetForm = createReset(core);
+  const resetForm = createReset(core, validation);
 
   const submit = createSubmit({
     core,

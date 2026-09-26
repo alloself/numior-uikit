@@ -1,6 +1,8 @@
-import { shallowRef, type ShallowRef } from 'vue';
+import { useMessages } from '@numior/primitives';
+import { shallowRef, type ComputedRef, type ShallowRef } from 'vue';
 import type { FormEngine } from '../engine/engine';
 import { createVeeEngine } from '../engine/vee-engine';
+import { formRulesMessages, type NuiFormRulesMessages } from '../rules/form-rules.messages';
 import type { StandardSchema } from '../schema/standard';
 import { cloneValue } from '../values/clone';
 import { createRegistry, type Registry } from './registry';
@@ -41,6 +43,7 @@ export interface FormCore<V extends object, O> {
   readonly schema: StandardSchema<unknown, O> | undefined;
   readonly rules: FormRules<V>;
   readonly validateOn: ValidateOn;
+  readonly messages: ComputedRef<NuiFormRulesMessages>;
   readonly initial: ShallowRef<V>;
   readonly schemaFormErrors: ShallowRef<readonly FormMessage[]>;
   readonly serverFormErrors: ShallowRef<readonly FormMessage[]>;
@@ -60,6 +63,7 @@ export const createFormCore = <V extends object, O>(
   schema: options.schema,
   rules: options.rules ?? {},
   validateOn: options.validateOn ?? 'submit',
+  messages: useMessages(formRulesMessages),
   initial: shallowRef(cloneValue(options.initialValues)),
   schemaFormErrors: shallowRef<readonly FormMessage[]>([]),
   serverFormErrors: shallowRef<readonly FormMessage[]>([]),

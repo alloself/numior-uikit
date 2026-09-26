@@ -113,10 +113,18 @@ assert.doesNotMatch(code, /(?:tiptap|prosemirror|reka-ui|spreadsheet|tailwindcss
 await importBuild('forms', [
   'useForm',
   'useField',
+  'useFieldArray',
   'provideForm',
   'useFormContext',
   'FORM_KEY',
   'NuiFormError',
+  'required',
+  'min',
+  'max',
+  'email',
+  'pattern',
+  'custom',
+  'customAsync',
 ]);
 
 const formsTypes = (await readdir('packages/forms/dist', { recursive: true })).filter((file) =>

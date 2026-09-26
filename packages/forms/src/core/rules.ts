@@ -1,7 +1,8 @@
 import { matchesPattern } from '../paths/paths';
+import type { AnyFieldRule } from '../rules/async-rule';
 import type { FieldRule, FieldRuleContext } from './types';
 
-export type FormRules<V> = Readonly<Record<string, readonly FieldRule<unknown, V>[]>>;
+export type FormRules<V> = Readonly<Record<string, readonly AnyFieldRule<unknown, V>[]>>;
 
 export const firstFailure = <T, V>(
   rules: readonly FieldRule<T, V>[],
@@ -18,7 +19,7 @@ export const firstFailure = <T, V>(
   return undefined;
 };
 
-export const rulesFor = <V>(rules: FormRules<V>, path: string): FieldRule<unknown, V>[] =>
+export const rulesFor = <V>(rules: FormRules<V>, path: string): AnyFieldRule<unknown, V>[] =>
   Object.entries(rules).flatMap(([pattern, list]) =>
     pattern === path || matchesPattern(path, pattern) ? list : [],
   );

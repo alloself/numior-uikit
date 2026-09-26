@@ -1,7 +1,7 @@
 import { shallowRef, type ShallowRef } from 'vue';
 import type { EntryState } from '../engine/engine';
-import { patternOf } from '../paths/paths';
-import type { FieldFlush, FieldRuleContext, ValidateOn } from './types';
+import { isUnder, patternOf } from '../paths/paths';
+import type { AsyncRuleContext, FieldFlush, FieldRuleContext, ValidateOn } from './types';
 
 export type EntryKind = 'field' | 'array' | 'group';
 
@@ -15,7 +15,10 @@ export interface Entry {
   readonly element: () => HTMLElement | null | undefined;
   readonly focus: (() => void) | undefined;
   readonly flush: FieldFlush | undefined;
+  readonly value: () => unknown;
   readonly check: (context: FieldRuleContext) => string | undefined;
+  readonly checkAsync: ((context: AsyncRuleContext) => Promise<string | undefined>) | undefined;
+  readonly debounce: number;
   readonly validateOn: ValidateOn;
   readonly keepValue: boolean;
   readonly state: EntryState;
@@ -30,6 +33,9 @@ export interface Registry {
   active(): Entry[];
   nextId(): number;
 }
+
+const insideAny = (path: string, containers: readonly string[]): boolean =>
+  containers.some((container) => path !== container && isUnder(path, container));
 
 export const createRegistry = (): Registry => {
   const entries = shallowRef<readonly Entry[]>([]);
@@ -46,7 +52,13 @@ export const createRegistry = (): Registry => {
     remove: (entry) => {
       entries.value = entries.value.filter((item) => item !== entry);
     },
-    active: () => entries.value.filter((entry) => entry.active()),
+    active: () => {
+      const inactive = entries.value
+        .filter((entry) => !entry.active())
+        .map((entry) => entry.path());
+
+      return entries.value.filter((entry) => entry.active() && !insideAny(entry.path(), inactive));
+    },
     nextId: () => {
       counter += 1;
       return counter;

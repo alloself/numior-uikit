@@ -1,4 +1,6 @@
+import { createNuiConfig, type NuiConfigOptions } from '@numior/primitives';
 import { mount, type DOMWrapper, type VueWrapper } from '@vue/test-utils';
+import { vi } from 'vitest';
 import {
   defineComponent,
   h,
@@ -11,8 +13,8 @@ import {
 import {
   useField,
   useForm,
+  type AnyFieldRule,
   type FieldFlush,
-  type FieldRule,
   type FormContext,
   type FormField,
   type FormMessage,
@@ -29,7 +31,8 @@ export interface FieldSpec {
   readonly path: string;
   readonly validateOn?: ValidateOn;
   readonly keepValue?: boolean;
-  readonly rules?: readonly FieldRule[];
+  readonly debounce?: number;
+  readonly rules?: readonly AnyFieldRule[];
   readonly label?: string;
   readonly flush?: FieldFlush;
 }
@@ -40,6 +43,7 @@ export interface FormHarnessOptions<V extends object, O> extends Omit<
 > {
   readonly fields: readonly (string | FieldSpec)[];
   readonly hidden?: readonly string[];
+  readonly config?: NuiConfigOptions;
   readonly onSubmit?: UseFormOptions<V, O>['onSubmit'];
 }
 
@@ -103,7 +107,7 @@ const probeFor = (spec: FieldSpec, view: View, { fields, work }: Probes) =>
 
 export class FormHarness<V extends object> {
   static mount<V extends object, O = V>(options: FormHarnessOptions<V, O>): FormHarness<V> {
-    const { fields: inputs, hidden = [], onSubmit, ...formOptions } = options;
+    const { fields: inputs, hidden = [], config, onSubmit, ...formOptions } = options;
     const probes: Probes = { fields: new Map(), work: new Map() };
     const submissions: V[] = [];
 
@@ -140,7 +144,10 @@ export class FormHarness<V extends object> {
       },
     });
 
-    const wrapper = mount(Host, { attachTo: document.body });
+    const wrapper = mount(Host, {
+      attachTo: document.body,
+      global: { plugins: config === undefined ? [] : [createNuiConfig(config)] },
+    });
 
     if (!captured.value) {
       throw new Error('useForm did not run');
@@ -277,6 +284,11 @@ export class FormHarness<V extends object> {
 
   async disable(path: string): Promise<void> {
     this.view.disabled.add(path);
+    await nextTick();
+  }
+
+  async wait(milliseconds: number): Promise<void> {
+    await vi.advanceTimersByTimeAsync(milliseconds);
     await nextTick();
   }
 

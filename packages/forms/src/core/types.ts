@@ -1,4 +1,5 @@
 import type { DeepReadonly, UnwrapNestedRefs } from 'vue';
+import type { NuiFormRulesMessages } from '../rules/form-rules.messages';
 
 export type ValidateOn = 'submit' | 'blur' | 'change';
 
@@ -6,6 +7,11 @@ export interface FieldRuleContext<V = unknown> {
   readonly name: string;
   readonly label: string | undefined;
   readonly values: V;
+  readonly messages: NuiFormRulesMessages;
+}
+
+export interface AsyncRuleContext<V = unknown> extends FieldRuleContext<V> {
+  readonly signal: AbortSignal;
 }
 
 export type FieldRule<T = unknown, V = unknown> = (

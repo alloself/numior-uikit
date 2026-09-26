@@ -1,44 +1,99 @@
-import { reactive, toRaw, toRef } from 'vue';
+import { provide, reactive, toRaw, toRef } from 'vue';
 import {
+  FormContextKey,
   useField,
+  useFieldArray,
   useForm,
   type FieldContext,
+  type FieldMeta,
   type FormContext,
   type GenericObject,
+  type PrivateFormContext,
 } from 'vee-validate';
 import { toVeePath } from '../paths/paths';
 import { deleteAt } from '../values/access';
 import { cloneValue } from '../values/clone';
-import type { EngineField, FormEngine } from './engine';
+import type { EngineArray, EngineField, FormEngine } from './engine';
 
-const engineField = <T>(field: FieldContext<T>): EngineField<T> => ({
-  value: field.value,
-  touched: toRef(field.meta, 'touched'),
-  attempted: toRef(field.meta, 'validated'),
-  errors: field.errors,
-  pending: toRef(field.meta, 'pending'),
-  setTouched: (touched) => {
-    field.setTouched(touched);
-  },
-  setAttempted: (attempted) => {
-    field.meta.validated = attempted;
-  },
-  setErrors: (messages) => {
-    field.setErrors([...messages]);
-  },
-  setPending: (pending) => {
-    field.meta.pending = pending;
-  },
-});
+type VeeForm = FormContext<GenericObject> & PrivateFormContext<GenericObject>;
+
+type PathStateMeta<T> = FieldMeta<T> & { errors: string[] };
+
+const isPrivate = (form: FormContext<GenericObject>): form is VeeForm =>
+  'createPathState' in form && 'fieldArrays' in form;
+
+const holdsErrors = <T>(meta: FieldMeta<T>): meta is PathStateMeta<T> => 'errors' in meta;
+
+const writable = (form: FormContext<GenericObject>): VeeForm => {
+  if (!isPrivate(form)) {
+    throw new Error('vee-validate no longer exposes the form internals the adapter needs');
+  }
+  return { ...form, values: reactive(toRaw(form.values)) };
+};
+
+const engineField = <T>(field: FieldContext<T>): EngineField<T> => {
+  const { meta } = field;
+
+  if (!holdsErrors(meta)) {
+    throw new Error('vee-validate no longer keeps field errors on the path state');
+  }
+  return {
+    value: field.value,
+    touched: toRef(meta, 'touched'),
+    attempted: toRef(meta, 'validated'),
+    errors: toRef(meta, 'errors'),
+    pending: toRef(meta, 'pending'),
+    setTouched: (touched) => {
+      meta.touched = touched;
+    },
+    setAttempted: (attempted) => {
+      meta.validated = attempted;
+    },
+    setErrors: (messages) => {
+      meta.errors = [...messages];
+      meta.valid = messages.length === 0;
+    },
+    setPending: (pending) => {
+      meta.pending = pending;
+    },
+  };
+};
+
+const engineArray = <T>(form: VeeForm, path: () => string): EngineArray<T> => {
+  provide(FormContextKey, form);
+
+  const array = useFieldArray<T>(() => toVeePath(path()));
+
+  return {
+    rows: array.fields,
+    push: (value) => {
+      array.push(value);
+    },
+    prepend: (value) => {
+      array.prepend(value);
+    },
+    insert: (index, value) => {
+      array.insert(index, value);
+    },
+    remove: (index) => {
+      array.remove(index);
+    },
+    move: (from, to) => {
+      array.move(from, to);
+    },
+    swap: (first, second) => {
+      array.swap(first, second);
+    },
+    replace: (values) => {
+      array.replace([...values]);
+    },
+  };
+};
 
 export const createVeeEngine = <V extends object>(initialValues: V): FormEngine<V> => {
   const form = useForm<V>({ keepValuesOnUnmount: true });
   const untyped: FormContext<GenericObject> = form;
-
-  const writable: FormContext<GenericObject> = {
-    ...untyped,
-    values: reactive(toRaw(untyped.values)),
-  };
+  const internal = writable(untyped);
 
   untyped.setValues(cloneValue(initialValues), false);
 
@@ -49,7 +104,7 @@ export const createVeeEngine = <V extends object>(initialValues: V): FormEngine<
       untyped.setFieldValue(toVeePath(path), value, false);
     },
     unsetValue: (path) => {
-      deleteAt(writable.values, path);
+      deleteAt(internal.values, path);
     },
     mergeValues: (values) => {
       untyped.setValues(values, false);
@@ -66,11 +121,12 @@ export const createVeeEngine = <V extends object>(initialValues: V): FormEngine<
     field: <T>(path: () => string, label: () => string | undefined) =>
       engineField(
         useField<T>(() => toVeePath(path()), undefined, {
-          form: writable,
+          form: internal,
           label,
           validateOnValueUpdate: false,
           keepValueOnUnmount: true,
         }),
       ),
+    array: <T>(path: () => string) => engineArray<T>(internal, path),
   };
 };
