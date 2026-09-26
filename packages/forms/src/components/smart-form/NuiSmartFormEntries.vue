@@ -8,7 +8,12 @@
     enter-active-class="nui-smart-form__cell--entering"
   >
     <template v-for="entry in ordered" :key="keyOf(entry)">
-      <NuiSmartFormCell v-if="entry.kind === 'field'" :entry="entry" :scope="scope" />
+      <NuiSmartFormCell
+        v-if="entry.kind === 'field'"
+        :entry="entry"
+        :scope="scope"
+        :area="areaFor(entry)"
+      />
       <fieldset
         v-else-if="entry.kind === 'section'"
         class="nui-smart-form__cell nui-smart-form__section"
@@ -74,6 +79,7 @@ if (declares && form) {
 const shown = computed(() => entries.filter((entry) => isShown(entry, scope)));
 const plan = computed(() => planLayout(layout, new Set(shown.value.map(areaOf))));
 const ordered = computed(() => orderEntries(shown.value, plan.value.order));
+const planned = computed(() => new Set(plan.value.order));
 
 const gridClass = computed(() => ({
   'nui-smart-form__grid--layout': plan.value.areas !== undefined,
@@ -88,7 +94,12 @@ const gridStyle = computed(() =>
 const keyOf = (entry: NuiSmartFormEntry): string =>
   `${entry.kind}:${entry.name ?? (entry.kind === 'section' ? entry.title : '')}`;
 
-const cellStyle = (entry: NuiSmartFormEntry) => ({ '--_area': areaOf(entry) || 'auto' });
+const areaFor = (entry: NuiSmartFormEntry): string => {
+  const area = areaOf(entry);
+  return planned.value.has(area) ? area : 'auto';
+};
+
+const cellStyle = (entry: NuiSmartFormEntry) => ({ '--_area': areaFor(entry) });
 
 const pathOf = (entry: NuiSmartFormArray): string => joinPath(scope.prefix, entry.name);
 

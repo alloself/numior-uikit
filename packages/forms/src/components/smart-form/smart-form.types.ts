@@ -111,4 +111,5 @@ export interface NuiSmartFormEntriesProps {
 export interface NuiSmartFormCellProps {
   entry: NuiSmartFormField;
   scope: SmartScope;
+  area: string;
 }

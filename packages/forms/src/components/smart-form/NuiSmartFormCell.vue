@@ -25,17 +25,15 @@
 import { computed } from 'vue';
 import { joinPath } from '../../paths/paths';
 import NuiFormField from '../form-field/NuiFormField.vue';
-import { areaOf } from './layout';
 import type { NuiSmartFormCellProps } from './smart-form.types';
 import { SmartSlot, useSmartSlots } from './smart-slots';
 
-const { entry, scope } = defineProps<NuiSmartFormCellProps>();
+const { entry, scope, area } = defineProps<NuiSmartFormCellProps>();
 
 const slots = useSmartSlots();
 
 const path = computed(() => joinPath(scope.prefix, entry.name));
 const slotName = computed(() => joinPath(scope.slotPrefix, entry.name));
-const area = computed(() => areaOf(entry) || 'auto');
 
 const controlProps = computed(() =>
   typeof entry.props === 'function' ? entry.props(scope.values) : (entry.props ?? {}),

@@ -91,6 +91,34 @@ describe('NuiSmartForm', () => {
     expect(form.area('bio')).toBe('bio');
   });
 
+  it('leaves cells without a place in the layout to automatic placement', () => {
+    const plain = SmartFormDriver.mount({
+      initialValues: blank,
+      fields: [
+        field(NuiInput, { name: 'name', label: 'Name' }),
+        field(NuiInput, { name: 'bio', label: 'Bio' }),
+      ],
+    });
+
+    const partial = SmartFormDriver.mount({
+      initialValues: blank,
+      layout: '"email name"',
+      fields: [
+        field(NuiInput, { name: 'name', label: 'Name' }),
+        field(NuiInput, { name: 'email', label: 'Email' }),
+        field(NuiInput, { name: 'bio', label: 'Bio' }),
+      ],
+    });
+
+    expect([plain.area('name'), plain.area('bio')]).toEqual(['auto', 'auto']);
+
+    expect([partial.area('email'), partial.area('name'), partial.area('bio')]).toEqual([
+      'email',
+      'name',
+      'auto',
+    ]);
+  });
+
   it('drops a layout row whose fields are hidden and brings it back in one tick', async () => {
     const form = SmartFormDriver.mount({
       initialValues: blank,
