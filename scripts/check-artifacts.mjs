@@ -133,6 +133,22 @@ const formsCode = await importBuild('forms', [
 ]);
 
 assert.match(formsCode, /from ['"]@numior\/vue['"]/, 'forms must keep @numior/vue external');
+assert.doesNotMatch(formsCode, /vee-validate/, 'the forms entry must not load vee-validate');
+
+const veeEntry = resolve('packages/forms/dist/vee-validate.js');
+const veeAdapter = await import(pathToFileURL(veeEntry).href);
+
+assert.equal(
+  typeof veeAdapter.veeValidateEngine,
+  'function',
+  'forms must export veeValidateEngine',
+);
+
+assert.match(
+  await readFile(veeEntry, 'utf8'),
+  /from ['"]vee-validate['"]/,
+  'the vee-validate adapter must keep vee-validate external',
+);
 
 const formsTypes = (await readdir('packages/forms/dist', { recursive: true })).filter((file) =>
   file.endsWith('.d.ts'),
@@ -142,7 +158,12 @@ assert.ok(formsTypes.length > 0, 'forms must ship declarations');
 
 for (const file of formsTypes) {
   const declaration = await readFile(resolve('packages/forms/dist', file), 'utf8');
-  assert.doesNotMatch(declaration, /vee-validate/, `forms declarations leak vee-validate: ${file}`);
+
+  assert.doesNotMatch(
+    declaration,
+    /(?:from |import\()['"]vee-validate['"]/,
+    `forms declarations leak vee-validate: ${file}`,
+  );
 }
 
 const PROBE = '\0nui-probe';

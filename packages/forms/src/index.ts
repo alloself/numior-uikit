@@ -30,6 +30,14 @@ export type {
 } from './components/smart-form/smart-form.types';
 export type { NuiSmartFormMessages } from './components/smart-form/smart-form.messages';
 export { NuiFormError } from './core/form-error';
+export type {
+  EngineArray,
+  EngineField,
+  EngineRow,
+  EntryState,
+  FormEngine,
+  FormEngineFactory,
+} from './engine/engine';
 export type { FormErrorMessages } from './core/form-error';
 export type { EntryKind } from './core/registry';
 export type { FormRules } from './core/rules';

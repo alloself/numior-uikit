@@ -78,7 +78,7 @@ export const createValidation = <V extends object, O>(core: FormCore<V, O>): Val
       : chain(core.schema['~standard'].validate(submitted), toOutcome);
 
   const run = (): MaybePromise<RunResult<V, O>> => {
-    const input = cloneValue(core.engine.values);
+    const input = core.engine.snapshot();
     const submitted = cloneValue(input);
     const active = core.registry.active();
 

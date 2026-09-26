@@ -1,7 +1,7 @@
 import { useMessages } from '@numior/primitives';
 import { shallowRef, type ComputedRef, type ShallowRef } from 'vue';
-import type { FormEngine } from '../engine/engine';
-import { createVeeEngine } from '../engine/vee-engine';
+import type { FormEngine, FormEngineFactory } from '../engine/engine';
+import { createFormEngine } from '../engine/form-engine';
 import { formRulesMessages, type NuiFormRulesMessages } from '../rules/form-rules.messages';
 import type { StandardSchema } from '../schema/standard';
 import { cloneValue } from '../values/clone';
@@ -34,6 +34,7 @@ export interface FormCoreOptions<V extends object, O> {
   readonly schema?: StandardSchema<unknown, O> | undefined;
   readonly rules?: FormRules<V> | undefined;
   readonly validateOn?: ValidateOn | undefined;
+  readonly engine?: FormEngineFactory | undefined;
 }
 
 export interface FormCore<V extends object, O> {
@@ -57,7 +58,7 @@ export interface FormCore<V extends object, O> {
 export const createFormCore = <V extends object, O>(
   options: FormCoreOptions<V, O>,
 ): FormCore<V, O> => ({
-  engine: createVeeEngine(options.initialValues),
+  engine: (options.engine ?? createFormEngine)(options.initialValues),
   registry: createRegistry(),
   tracker: createTracker(),
   schema: options.schema,

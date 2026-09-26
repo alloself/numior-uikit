@@ -11,6 +11,73 @@ export const getAt = (source: unknown, path: string): unknown =>
     source,
   );
 
+const NOWHERE: object = Object.freeze(Object.create(null));
+
+export const readAt = <T>(source: unknown, path: string): T => {
+  const segments = segmentsOf(path);
+  const last = segments.pop();
+  const parent = getAt(source, segments.join('.'));
+
+  return Reflect.get(last !== undefined && isContainer(parent) ? parent : NOWHERE, last ?? '');
+};
+
+const containerAt = (current: object, segment: string, next: string): object => {
+  const existing: unknown = Reflect.get(current, segment);
+
+  if (isContainer(existing)) {
+    return existing;
+  }
+  Reflect.set(current, segment, isIndexSegment(next) ? [] : {});
+
+  const created: unknown = Reflect.get(current, segment);
+
+  return isContainer(created) ? created : current;
+};
+
+export const setAt = (target: object, path: string, value: unknown): void => {
+  const segments = segmentsOf(path);
+  const last = segments.at(-1);
+
+  if (last === undefined) {
+    return;
+  }
+
+  const parent = segments
+    .slice(0, -1)
+    .reduce<object>(
+      (current, segment, index) => containerAt(current, segment, segments[index + 1] ?? last),
+      target,
+    );
+
+  Reflect.set(parent, last, value);
+};
+
+const isRecord = (value: unknown): value is object =>
+  isContainer(value) && !Array.isArray(value) && Object.getPrototypeOf(value) === Object.prototype;
+
+export const mergeInto = (target: object, source: object): void => {
+  for (const [key, value] of Object.entries(source)) {
+    const current: unknown = Reflect.get(target, key);
+
+    if (isRecord(current) && isRecord(value)) {
+      mergeInto(current, value);
+    } else {
+      Reflect.set(target, key, value);
+    }
+  }
+};
+
+export const replaceContents = (target: object, source: object): void => {
+  for (const key of Object.keys(target)) {
+    if (!Object.hasOwn(source, key)) {
+      Reflect.deleteProperty(target, key);
+    }
+  }
+  for (const [key, value] of Object.entries(source)) {
+    Reflect.set(target, key, value);
+  }
+};
+
 export const deleteAt = (target: object, path: string): void => {
   const segments = segmentsOf(path);
   const last = segments.pop();

@@ -1,4 +1,4 @@
-import type { Ref } from 'vue';
+import type { Reactive, Ref } from 'vue';
 
 export interface EntryState {
   readonly touched: Readonly<Ref<boolean>>;
@@ -32,7 +32,8 @@ export interface EngineArray<T> {
 }
 
 export interface FormEngine<V extends object> {
-  readonly values: V;
+  readonly values: Reactive<V>;
+  snapshot(): V;
   readonly submitCount: Readonly<Ref<number>>;
   setValue(path: string, value: unknown): void;
   unsetValue(path: string): void;
@@ -42,3 +43,5 @@ export interface FormEngine<V extends object> {
   field<T>(path: () => string, label: () => string | undefined): EngineField<T>;
   array<T>(path: () => string): EngineArray<T>;
 }
+
+export type FormEngineFactory = <V extends object>(initialValues: V) => FormEngine<V>;

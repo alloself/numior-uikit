@@ -2,9 +2,9 @@
 
 `@numior/forms` собирает формы из контролов кита. `useForm` держит значения, ошибки и отправку,
 `NuiForm` рендерит нативный `<form>` с блоком ошибок и кнопкой, `NuiFormField` связывает путь
-формы с любым контролом через `v-bind="field"`, `NuiFieldArray` повторяет группу полей. Ядро
-построено на vee-validate 5 за собственным адаптером: API и типы свои, vee-validate наружу не
-выходит. Формы из конфигурации — на странице [умной формы](/components/smart-form).
+формы с любым контролом через `v-bind="field"`, `NuiFieldArray` повторяет группу полей. У пакета
+нет внешних зависимостей: значения держит собственный движок, а vee-validate подключается по
+желанию (см. «Движок»). Формы из конфигурации — на странице [умной формы](/components/smart-form).
 
 <script setup>
 import { ref } from 'vue'
@@ -274,6 +274,26 @@ Escape отменяет. Грип виден при наведении и фок
 ним. `useFieldArray` даёт то же без разметки: `fields`, `push`, `prepend`, `insert`, `remove`,
 `move`, `swap`, `replace`, `update`.
 
+## Движок
+
+Значения, состояние полей и ключи строк держит движок формы. По умолчанию это собственный движок
+пакета. Если приложение уже живёт на vee-validate, подключите его движок из отдельной точки
+входа — основная точка входа vee-validate не загружает:
+
+```ts
+import { useForm } from '@numior/forms';
+import { veeValidateEngine } from '@numior/forms/vee-validate';
+
+const form = useForm({ initialValues, engine: veeValidateEngine, onSubmit });
+```
+
+Проверки, отправка, ошибки и фокус остаются за `@numior/forms`, а vee-validate хранит значения и
+состояние полей. Ваши компоненты на `useField` из vee-validate внутри такой формы читают и пишут
+те же значения, devtools vee-validate её показывают; собственные правила таких полей в проверки
+`@numior/forms` не входят — задайте их через `NuiFormField` или `useField` пакета. Нужен
+`vee-validate` 5 (необязательная peer-зависимость); адаптер проверен на `5.0.0-beta.1`. Свой
+движок — например, хранилище в Pinia — подключается так же: фабрика с типом `FormEngineFactory`.
+
 ## Доступность
 
 Ошибки связаны с контролом через `aria-describedby` и `aria-invalid`; блок ошибок формы —
@@ -294,6 +314,7 @@ Escape отменяет. Грип виден при наведении и фок
 | `schema`        | Standard Schema v1                | —            | Схема значений                  |
 | `rules`         | `Record<путь \| шаблон, правила>` | —            | Правила формы                   |
 | `validateOn`    | `'submit' \| 'blur' \| 'change'`  | `'submit'`   | Когда поля начинают проверяться |
+| `engine`        | `FormEngineFactory`               | свой движок  | Движок значений, см. «Движок»   |
 
 Контекст формы: `values`, `errors`, `errorBag`, `formErrors`, `touched`, `meta` (`valid`,
 `dirty`, `touched`, `pending`, `submitCount`, `submitted`), `setFieldValue`, `setValues`,

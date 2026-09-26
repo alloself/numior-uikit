@@ -10,6 +10,7 @@ import {
   type AnyFieldRule,
   type FieldArrayRow,
   type FormContext,
+  type FormEngineFactory,
   type StandardSchema,
 } from '../../src';
 
@@ -31,6 +32,7 @@ export interface FieldArrayDriverOptions {
   readonly listRules?: readonly AnyFieldRule<readonly Contact[]>[];
   readonly schema?: StandardSchema<unknown, unknown>;
   readonly config?: NuiConfigOptions;
+  readonly engine?: FormEngineFactory;
 }
 
 interface FieldScope {
@@ -87,6 +89,7 @@ export class FieldArrayDriver {
         const form = useForm<Contacts, unknown>({
           initialValues: { contacts: options.names.map((name) => ({ name })) },
           schema: options.schema,
+          engine: options.engine,
           onSubmit: () => undefined,
         });
 

@@ -16,6 +16,11 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
+    "./vee-validate": {
+      "@numior/source": "./src/vee-validate.ts",
+      "types": "./dist/vee-validate.d.ts",
+      "import": "./dist/vee-validate.js"
+    },
     "./styles.css": {
       "@numior/source": "./src/styles.css",
       "default": "./dist/styles.css"
@@ -30,16 +35,22 @@
   },
   "dependencies": {
     "@numior/primitives": "workspace:*",
-    "@numior/vue": "workspace:*",
-    "vee-validate": "5.0.0-beta.1"
+    "@numior/vue": "workspace:*"
   },
   "devDependencies": {
     "@vue/test-utils": "2.5.1",
+    "vee-validate": "5.0.0-beta.1",
     "zod": "4.6.5"
   },
   "peerDependencies": {
     "@numior/tokens": "workspace:*",
+    "vee-validate": "^5.0.0",
     "vue": "^3.5.0"
   },
-  "//": "vee-validate is pinned to 5.0.0-beta.1 (no 5.x GA yet); the reason and the upgrade trigger live in .archcore/forms.adr.md"
+  "peerDependenciesMeta": {
+    "vee-validate": {
+      "optional": true
+    }
+  },
+  "//": "vee-validate is only an optional peer of @numior/forms/vee-validate; the adapter is tested against 5.0.0-beta.1, see .archcore/forms.adr.md"
 }

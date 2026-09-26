@@ -1,5 +1,6 @@
 import { inject, provide, type ComputedRef, type InjectionKey, type MaybeRefOrGetter } from 'vue';
 import type { FormHost } from '../core/host';
+import type { FormEngineFactory } from '../engine/engine';
 import type { EntryKind } from '../core/registry';
 import type { FormRules } from '../core/rules';
 import type { SubmitHandler } from '../core/submit';
@@ -25,6 +26,7 @@ export interface UseFormOptions<V extends object, O = V> {
   readonly schema?: StandardSchema<unknown, O> | undefined;
   readonly rules?: FormRules<V> | undefined;
   readonly validateOn?: ValidateOn | undefined;
+  readonly engine?: FormEngineFactory | undefined;
   readonly onSubmit: SubmitHandler<V, O>;
 }
 

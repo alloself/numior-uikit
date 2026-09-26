@@ -14,6 +14,7 @@ import {
   useForm,
   type AnyFieldRule,
   type FormContext,
+  type FormEngineFactory,
   type StandardSchema,
   type SubmitHandler,
   type ValidateOn,
@@ -39,6 +40,7 @@ export interface FormDriverOptions<V extends object> {
   readonly submitLabel?: string;
   readonly errorTitle?: string;
   readonly config?: NuiConfigOptions;
+  readonly engine?: FormEngineFactory;
 }
 
 interface FieldScope {
@@ -98,6 +100,7 @@ export class FormDriver<V extends object> {
         const form = useForm<V, unknown>({
           initialValues: options.initialValues,
           schema: options.schema,
+          engine: options.engine,
           onSubmit: (values, helpers) => {
             submissions.push(values);
             return options.onSubmit?.(values, helpers);

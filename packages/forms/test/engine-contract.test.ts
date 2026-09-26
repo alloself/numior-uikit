@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest';
+import { createFormEngine } from '../src/engine/form-engine';
+import { veeValidateEngine } from '../src/vee-validate';
 import { EngineHarness } from './harness/engine';
 
 const marked = ['Taken'];
@@ -10,10 +12,13 @@ interface Draft {
 
 const stale: Draft = { name: 'Ann', stale: true };
 
-describe('vee-validate engine contract (5.0.0-beta.1)', () => {
+describe.each([
+  ['own engine', createFormEngine],
+  ['vee-validate 5.0.0-beta.1 engine', veeValidateEngine],
+])('%s contract', (_, factory) => {
   it('seeds the store from a copy and exposes it read-only', () => {
     const initial = { name: 'Ann', tags: ['a'] };
-    const harness = EngineHarness.mount(initial, ['name']);
+    const harness = EngineHarness.mount(factory, initial, ['name']);
 
     initial.tags.push('b');
     expect(harness.engine.values).toEqual({ name: 'Ann', tags: ['a'] });
@@ -21,7 +26,7 @@ describe('vee-validate engine contract (5.0.0-beta.1)', () => {
   });
 
   it('writes a copy of a value and never touches the field state while doing so', async () => {
-    const harness = EngineHarness.mount({ name: 'Ann', tags: ['a'] }, ['name']);
+    const harness = EngineHarness.mount(factory, { name: 'Ann', tags: ['a'] }, ['name']);
     const tags = ['x'];
     const name = harness.field('name');
 
@@ -37,7 +42,7 @@ describe('vee-validate engine contract (5.0.0-beta.1)', () => {
   });
 
   it('keeps our field state through its own background runs on mount and unmount', async () => {
-    const harness = EngineHarness.mount({ name: 'Ann', email: '' }, ['name', 'email']);
+    const harness = EngineHarness.mount(factory, { name: 'Ann', email: '' }, ['name', 'email']);
     const name = harness.field('name');
 
     name.setErrors(marked);
@@ -50,7 +55,7 @@ describe('vee-validate engine contract (5.0.0-beta.1)', () => {
   });
 
   it('replaces the values on reset and clears field state and the submit count', async () => {
-    const harness = EngineHarness.mount(stale, ['name']);
+    const harness = EngineHarness.mount(factory, stale, ['name']);
     const name = harness.field('name');
 
     name.setErrors(marked);
@@ -71,7 +76,11 @@ describe('vee-validate engine contract (5.0.0-beta.1)', () => {
   });
 
   it('unsets object keys and leaves array positions in place', () => {
-    const harness = EngineHarness.mount({ address: { city: 'Paris' }, tags: ['a', 'b'] }, []);
+    const harness = EngineHarness.mount(
+      factory,
+      { address: { city: 'Paris' }, tags: ['a', 'b'] },
+      [],
+    );
 
     harness.engine.unsetValue('address.city');
     harness.engine.unsetValue('tags.1');
@@ -80,19 +89,59 @@ describe('vee-validate engine contract (5.0.0-beta.1)', () => {
   });
 
   it('merges partial values into the store', () => {
-    const harness = EngineHarness.mount({ name: 'Ann', address: { city: 'Paris', zip: '75' } }, []);
+    const harness = EngineHarness.mount(
+      factory,
+      { name: 'Ann', address: { city: 'Paris', zip: '75' } },
+      [],
+    );
 
     harness.engine.mergeValues({ address: { city: 'Lyon' } });
     expect(harness.engine.values).toEqual({ name: 'Ann', address: { city: 'Lyon', zip: '75' } });
   });
 
   it('carries field state along when the field path changes', async () => {
-    const harness = EngineHarness.mount({ rows: [{ name: 'a' }, { name: 'b' }] }, ['rows.1.name']);
+    const harness = EngineHarness.mount(factory, { rows: [{ name: 'a' }, { name: 'b' }] }, [
+      'rows.1.name',
+    ]);
+
     const row = harness.field('rows.1.name');
 
     row.setErrors(marked);
     await harness.move('rows.1.name', 'rows.0.name');
     expect(row.value.value).toBe('a');
     expect(row.errors.value).toEqual(marked);
+  });
+
+  it('keeps row keys through inserts, moves, swaps and removals and copies new rows', async () => {
+    const harness = EngineHarness.mount(factory, { rows: ['a', 'b', 'c'] }, [], ['rows']);
+    const list = harness.array('rows');
+    const values = () => list.rows.value.map((row) => row.value);
+    const keys = () => list.rows.value.map((row) => row.key);
+    const [a, b, c] = keys();
+    const added = { name: 'x' };
+
+    list.move(0, 2);
+    await harness.tick();
+
+    expect([values(), keys()]).toEqual([
+      ['b', 'c', 'a'],
+      [b, c, a],
+    ]);
+
+    list.remove(1);
+    list.swap(0, 1);
+    await harness.tick();
+
+    expect([values(), keys()]).toEqual([
+      ['a', 'b'],
+      [a, b],
+    ]);
+
+    list.insert(1, added);
+    added.name = 'changed';
+    await harness.tick();
+    expect(values()).toEqual(['a', { name: 'x' }, 'b']);
+    expect(new Set(keys()).size).toBe(3);
+    expect(keys()).not.toContain(c);
   });
 });

@@ -3,8 +3,8 @@
 `@numior/forms` builds forms from the kit's controls. `useForm` holds the values, errors and
 submission, `NuiForm` renders a native `<form>` with an error block and a button,
 `NuiFormField` binds a form path to any control through `v-bind="field"`, and `NuiFieldArray`
-repeats a group of fields. The core runs on vee-validate 5 behind its own adapter: the API and
-types are the kit's own, and vee-validate never leaks out. Forms built from a config live on
+repeats a group of fields. The package has no outside dependencies: its own engine holds the
+values, and vee-validate plugs in on request (see “Engine”). Forms built from a config live on
 the [smart form](/en/components/smart-form) page.
 
 <script setup>
@@ -276,6 +276,27 @@ nowhere to go. A row error (`guests.1`) shows inside the row, a list error below
 `useFieldArray` gives the same without markup: `fields`, `push`, `prepend`, `insert`,
 `remove`, `move`, `swap`, `replace`, `update`.
 
+## Engine
+
+The form engine holds the values, the field state and the row keys. By default it is the
+package's own engine. If your app already runs on vee-validate, plug in its engine from a
+separate entry point — the main entry never loads vee-validate:
+
+```ts
+import { useForm } from '@numior/forms';
+import { veeValidateEngine } from '@numior/forms/vee-validate';
+
+const form = useForm({ initialValues, engine: veeValidateEngine, onSubmit });
+```
+
+Checks, submission, errors and focus stay with `@numior/forms`, while vee-validate keeps the
+values and the field state. Your own components built on vee-validate's `useField` read and write
+the same values inside such a form, and vee-validate's devtools show it; the rules of such fields
+do not join the checks of `@numior/forms` — give them through `NuiFormField` or the package's
+`useField`. It needs `vee-validate` 5 (an optional peer dependency); the adapter is tested against
+`5.0.0-beta.1`. Your own engine — a store in Pinia, say — plugs in the same way, as a factory
+typed `FormEngineFactory`.
+
 ## Accessibility
 
 Errors are tied to the control through `aria-describedby` and `aria-invalid`; the form error
@@ -296,6 +317,7 @@ to the grip after a move.
 | `schema`        | Standard Schema v1               | —          | Schema of the values            |
 | `rules`         | `Record<path \| pattern, rules>` | —          | Form rules                      |
 | `validateOn`    | `'submit' \| 'blur' \| 'change'` | `'submit'` | When fields start being checked |
+| `engine`        | `FormEngineFactory`              | own engine | The value engine, see “Engine”  |
 
 The form context: `values`, `errors`, `errorBag`, `formErrors`, `touched`, `meta` (`valid`,
 `dirty`, `touched`, `pending`, `submitCount`, `submitted`), `setFieldValue`, `setValues`,

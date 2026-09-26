@@ -1,4 +1,4 @@
-import type { DeepReadonly, UnwrapNestedRefs } from 'vue';
+import type { DeepReadonly, Reactive, UnwrapNestedRefs } from 'vue';
 import type { NuiFormRulesMessages } from '../rules/form-rules.messages';
 
 export type ValidateOn = 'submit' | 'blur' | 'change';
@@ -73,7 +73,7 @@ export interface ResetOptions<V> {
   readonly keepErrors?: boolean | undefined;
 }
 
-export type FormValues<V> = DeepReadonly<UnwrapNestedRefs<V>>;
+export type FormValues<V> = DeepReadonly<UnwrapNestedRefs<Reactive<V>>>;
 
 type Leaf =
   | string

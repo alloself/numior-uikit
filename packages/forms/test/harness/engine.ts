@@ -1,7 +1,11 @@
 import { mount } from '@vue/test-utils';
 import { defineComponent, h, nextTick, shallowRef, type Ref } from 'vue';
-import type { EngineField, FormEngine } from '../../src/engine/engine';
-import { createVeeEngine } from '../../src/engine/vee-engine';
+import type {
+  EngineArray,
+  EngineField,
+  FormEngine,
+  FormEngineFactory,
+} from '../../src/engine/engine';
 
 interface Slot {
   readonly path: Ref<string>;
@@ -9,8 +13,14 @@ interface Slot {
 }
 
 export class EngineHarness<V extends object> {
-  static mount<V extends object>(initialValues: V, names: readonly string[]): EngineHarness<V> {
+  static mount<V extends object>(
+    factory: FormEngineFactory,
+    initialValues: V,
+    names: readonly string[],
+    arrays: readonly string[] = [],
+  ): EngineHarness<V> {
     const fields = new Map<string, EngineField<unknown>>();
+    const lists = new Map<string, EngineArray<unknown>>();
 
     const slots = new Map<string, Slot>(
       names.map((name) => [name, { path: shallowRef(name), visible: shallowRef(true) }]),
@@ -20,7 +30,14 @@ export class EngineHarness<V extends object> {
 
     const Host = defineComponent({
       setup: () => {
-        const engine = createVeeEngine(initialValues);
+        const engine = factory(initialValues);
+
+        for (const path of arrays) {
+          lists.set(
+            path,
+            engine.array<unknown>(() => path),
+          );
+        }
 
         const probe = (name: string, slot: Slot) =>
           defineComponent({
@@ -52,12 +69,13 @@ export class EngineHarness<V extends object> {
     if (!captured.value) {
       throw new Error('the engine was not created');
     }
-    return new EngineHarness(captured.value, fields, slots);
+    return new EngineHarness(captured.value, fields, lists, slots);
   }
 
   private constructor(
     readonly engine: FormEngine<V>,
     private readonly fields: Map<string, EngineField<unknown>>,
+    private readonly lists: Map<string, EngineArray<unknown>>,
     private readonly slots: Map<string, Slot>,
   ) {}
 
@@ -68,6 +86,15 @@ export class EngineHarness<V extends object> {
       throw new Error(`no field ${name}`);
     }
     return field;
+  }
+
+  array(path: string): EngineArray<unknown> {
+    const list = this.lists.get(path);
+
+    if (!list) {
+      throw new Error(`no array ${path}`);
+    }
+    return list;
   }
 
   private slot(name: string): Slot {

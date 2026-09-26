@@ -10,10 +10,10 @@ import {
   type GenericObject,
   type PrivateFormContext,
 } from 'vee-validate';
-import { toVeePath } from '../paths/paths';
-import { deleteAt } from '../values/access';
-import { cloneValue } from '../values/clone';
-import type { EngineArray, EngineField, FormEngine } from './engine';
+import type { EngineArray, EngineField, FormEngineFactory } from './engine/engine';
+import { toVeePath } from './paths/paths';
+import { deleteAt } from './values/access';
+import { cloneValue } from './values/clone';
 
 type VeeForm = FormContext<GenericObject> & PrivateFormContext<GenericObject>;
 
@@ -90,7 +90,7 @@ const engineArray = <T>(form: VeeForm, path: () => string): EngineArray<T> => {
   };
 };
 
-export const createVeeEngine = <V extends object>(initialValues: V): FormEngine<V> => {
+export const veeValidateEngine: FormEngineFactory = <V extends object>(initialValues: V) => {
   const form = useForm<V>({ keepValuesOnUnmount: true });
   const untyped: FormContext<GenericObject> = form;
   const internal = writable(untyped);
@@ -98,7 +98,8 @@ export const createVeeEngine = <V extends object>(initialValues: V): FormEngine<
   untyped.setValues(cloneValue(initialValues), false);
 
   return {
-    values: form.values,
+    values: reactive(toRaw(form.values)),
+    snapshot: () => cloneValue(toRaw(form.values)),
     submitCount: form.submitCount,
     setValue: (path, value) => {
       untyped.setFieldValue(toVeePath(path), value, false);

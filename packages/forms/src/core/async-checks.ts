@@ -106,7 +106,7 @@ export const createAsyncChecks = <V extends object, O>(
     const context = {
       name: entry.path(),
       label: entry.label(),
-      values: cloneValue(core.engine.values),
+      values: core.engine.snapshot(),
       messages: core.messages.value,
       signal: controller.signal,
     };
