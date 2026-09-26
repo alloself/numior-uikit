@@ -3,6 +3,7 @@ import type { Theme } from 'vitepress';
 import {
   createNuiConfig,
   NuiAlert,
+  NuiAppBar,
   NuiAvatar,
   NuiAvatarGroup,
   NuiBadge,
@@ -30,6 +31,7 @@ import {
   NuiFieldLabel,
   NuiIcon,
   NuiInput,
+  NuiLayout,
   NuiLink,
   NuiList,
   NuiListItem,
@@ -48,6 +50,14 @@ import {
   NuiRadio,
   NuiRadioGroup,
   NuiSelect,
+  NuiSidebar,
+  NuiSidebarContent,
+  NuiSidebarFooter,
+  NuiSidebarGroup,
+  NuiSidebarHeader,
+  NuiSidebarItem,
+  NuiSidebarSub,
+  NuiSidebarTrigger,
   NuiSkeleton,
   NuiSwitch,
   NuiTab,
@@ -61,6 +71,7 @@ import {
   NuiToaster,
   NuiTooltip,
   NuiTree,
+  NuiUpload,
 } from '@numior/vue';
 import '@numior/tokens/theme.css';
 import '@numior/vue/styles.css';
@@ -130,5 +141,16 @@ export default {
     app.component('NuiEmpty', NuiEmpty);
     app.component('NuiTree', NuiTree);
     app.component('NuiTable', NuiTable);
+    app.component('NuiUpload', NuiUpload);
+    app.component('NuiLayout', NuiLayout);
+    app.component('NuiAppBar', NuiAppBar);
+    app.component('NuiSidebar', NuiSidebar);
+    app.component('NuiSidebarHeader', NuiSidebarHeader);
+    app.component('NuiSidebarContent', NuiSidebarContent);
+    app.component('NuiSidebarFooter', NuiSidebarFooter);
+    app.component('NuiSidebarGroup', NuiSidebarGroup);
+    app.component('NuiSidebarItem', NuiSidebarItem);
+    app.component('NuiSidebarSub', NuiSidebarSub);
+    app.component('NuiSidebarTrigger', NuiSidebarTrigger);
   },
 } satisfies Theme;
