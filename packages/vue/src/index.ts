@@ -230,6 +230,7 @@ export type {
   NuiTableProps,
   NuiTableReorderEvent,
   NuiTableSelection,
+  NuiTableSlots,
   NuiTableSort,
   NuiTableSticky,
 } from './table/table.types';

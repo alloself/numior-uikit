@@ -1,7 +1,7 @@
 <template>
-  <tr v-if="loading && $slots.loading" class="nui-table__row nui-table__row--status">
+  <tr v-if="loading && slots.loading" class="nui-table__row nui-table__row--status">
     <td :colspan="span" class="nui-table__cell nui-table__cell--status">
-      <slot name="loading" />
+      <TableSlot :render="slots.loading" :scope="{}" />
     </td>
   </tr>
   <template v-else-if="loading">
@@ -21,7 +21,9 @@
   </template>
   <tr v-else class="nui-table__row nui-table__row--status">
     <td :colspan="span" class="nui-table__cell nui-table__cell--status">
-      <slot name="empty"><NuiEmpty size="sm" :title="emptyLabel" /></slot>
+      <TableSlot :render="slots.empty" :scope="{}">
+        <NuiEmpty size="sm" :title="emptyLabel" />
+      </TableSlot>
     </td>
   </tr>
 </template>
@@ -29,7 +31,10 @@
 <script setup lang="ts" generic="T">
 import NuiEmpty from '../empty/NuiEmpty.vue';
 import NuiSkeleton from '../skeleton/NuiSkeleton.vue';
+import { TableSlot, useTableSlots } from './table-slots';
 import type { NuiTableStatusProps } from './table.types';
 
 const { span, loading, loadingRows, columns, emptyLabel } = defineProps<NuiTableStatusProps<T>>();
+
+const slots = useTableSlots();
 </script>

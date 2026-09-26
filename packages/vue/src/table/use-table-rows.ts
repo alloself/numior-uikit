@@ -9,7 +9,7 @@ export interface TableRowsOptions<T> {
   readonly getChildren: () => ((row: T) => readonly T[] | undefined) | undefined;
   readonly isExpandable: () => ((row: T) => boolean) | undefined;
   readonly expanded: Ref<T[]>;
-  readonly sortLevel: (rows: readonly T[]) => T[];
+  readonly sortLevel: (rows: readonly T[]) => readonly T[];
   readonly onLoad: (row: T) => void;
 }
 

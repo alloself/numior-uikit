@@ -37,7 +37,7 @@
       />
     </td>
     <td
-      v-for="(column, position) in columns"
+      v-for="({ column, value, text }, position) in cells"
       :key="column.key"
       class="nui-table__cell"
       :class="[
@@ -53,15 +53,12 @@
         :label="options.expandLabel(view.row)"
         @expand="emit('expand')"
       />
-      <slot
-        :name="`cell-${column.key}`"
-        :row="view.row"
-        :value="cellValue(view.row, column)"
-        :column="column"
-        :index="index"
+      <TableSlot
+        :render="slots[`cell-${column.key}`]"
+        :scope="{ row: view.row, value, column, index }"
       >
-        {{ cellText(cellValue(view.row, column)) }}
-      </slot>
+        {{ text }}
+      </TableSlot>
     </td>
   </tr>
 </template>
@@ -71,6 +68,7 @@ import { computed } from 'vue';
 import NuiCheckbox from '../checkbox/NuiCheckbox.vue';
 import NuiIcon from '../icon/NuiIcon.vue';
 import NuiTableToggle from './NuiTableToggle.vue';
+import { TableSlot, useTableSlots } from './table-slots';
 import { alignClass, cellText, cellValue } from './cells';
 import type { NuiTableCellStyle, NuiTableColumn, NuiTableRowProps } from './table.types';
 
@@ -85,7 +83,15 @@ const emit = defineEmits<{
   dragKeydown: [event: KeyboardEvent];
 }>();
 
+const slots = useTableSlots();
 const selectPosition = computed(() => (options.rowDrag ? 1 : 0));
+
+const cells = computed(() =>
+  columns.map((column) => {
+    const value = cellValue(view.row, column);
+    return { column, value, text: cellText(value) };
+  }),
+);
 
 const cellStyle = (column: NuiTableColumn<T>, position: number): NuiTableCellStyle => {
   const sticky = layout.cellStyle(column);

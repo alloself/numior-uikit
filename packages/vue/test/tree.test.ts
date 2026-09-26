@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { applyCheck, checkStateOf } from '../src/tree/cascade';
+import { applyCheck, checkStates } from '../src/tree/cascade';
 import { defaultOptionKey } from '../src/shared/options';
 import { TreeDriver } from './drivers/tree';
 import { FILES, manyNodes, withDocs } from './support/tree-items';
@@ -260,7 +260,14 @@ describe('tree cascade', () => {
     const components = src.children[0];
     const checked = applyCheck(FILES, new Set(), components, defaultOptionKey);
     expect([...checked]).toEqual(['components', 'button']);
-    expect(checkStateOf(src, checked, defaultOptionKey)).toBe('indeterminate');
+    const states = checkStates(FILES, checked, defaultOptionKey);
+
+    expect([states.get('src'), states.get('components'), states.get('index')]).toEqual([
+      'indeterminate',
+      'checked',
+      'unchecked',
+    ]);
+
     const all = applyCheck(FILES, checked, src, defaultOptionKey);
     expect([...all].toSorted()).toEqual(['button', 'components', 'index', 'src']);
     const none = applyCheck(FILES, all, src, defaultOptionKey);

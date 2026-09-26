@@ -137,8 +137,8 @@ Tab как есть. В режиме `selectable` пункты с `value` пол
 | `linkAs`       | `string \| Component`                                       | `'a'`                                        | Компонент роутера для пунктов из `items`                    |
 
 `NuiListItem`: `value`, `id`, `label`, `description`, `icon`, `href`, `to`, `as`, `interactive`,
-`disabled`, `current`, `badge`; слоты `leading`, `default`, `description`, `trailing`,
-`nested`; через template ref отдаёт `action` — элемент ссылки или кнопки. Слоты списка: `item`
+`disabled`, `current`, `badge`; слоты `leading`, `default` (`{ selected, active }`), `description`,
+`trailing`, `nested`; через template ref отдаёт `action` — элемент ссылки или кнопки. Слоты списка: `item`
 (`{ item, selected, active }`) для пунктов из `items`, `empty`; событие `select(item)`. Блоки
 `nui-list` (модификаторы `--variant-*`, `--size-*`, `--selectable`, `--empty`; элементы
 `__items`, `__group`, `__group-label`, `__group-items`, `__status`, `__spinner`, `__empty`)

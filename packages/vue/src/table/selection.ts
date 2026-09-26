@@ -28,14 +28,20 @@ export const toggleRows = <T>(
   return [...selected, ...visible.filter((row) => !keys.has(keyOf(row)))];
 };
 
-export const selectionStateOf = <T>(
+export const selectionStateOf = (
   selectedKeys: ReadonlySet<string>,
-  visible: readonly T[],
-  keyOf: NuiOptionKey<T>,
+  visibleKeys: readonly string[],
 ): CheckState => {
-  const count = visible.filter((row) => selectedKeys.has(keyOf(row))).length;
-  if (count === 0) {
+  const first = visibleKeys[0];
+
+  if (first === undefined) {
     return 'unchecked';
   }
-  return count === visible.length ? 'checked' : 'indeterminate';
+
+  const on = selectedKeys.has(first);
+
+  if (visibleKeys.some((key) => selectedKeys.has(key) !== on)) {
+    return 'indeterminate';
+  }
+  return on ? 'checked' : 'unchecked';
 };

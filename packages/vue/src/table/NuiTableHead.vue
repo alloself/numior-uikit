@@ -44,7 +44,9 @@
         @sort="emit('sort', $event)"
       >
         <template #default="ctx">
-          <slot :name="`header-${column.key}`" v-bind="ctx">{{ column.label }}</slot>
+          <TableSlot :render="slots[`header-${column.key}`]" :scope="ctx">
+            {{ column.label }}
+          </TableSlot>
         </template>
       </NuiTableHeadCell>
     </tr>
@@ -54,6 +56,7 @@
 <script setup lang="ts" generic="T">
 import NuiCheckbox from '../checkbox/NuiCheckbox.vue';
 import NuiTableHeadCell from './NuiTableHeadCell.vue';
+import { TableSlot, useTableSlots } from './table-slots';
 import type { NuiTableHeadProps } from './table.types';
 
 const {
@@ -73,4 +76,6 @@ const {
 } = defineProps<NuiTableHeadProps<T>>();
 
 const emit = defineEmits<{ sort: [key: string]; toggleAll: [] }>();
+
+const slots = useTableSlots();
 </script>

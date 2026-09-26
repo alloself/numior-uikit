@@ -532,10 +532,11 @@ describe('table helpers', () => {
     const visible = PEOPLE.slice(0, 3);
     const all = toggleRows(PEOPLE.slice(5, 6), visible, idOf);
     expect(names(all)).toEqual(['Егор', 'Анна', 'Борис', 'Вера']);
-    expect(selectionStateOf(new Set(all.map(idOf)), visible, idOf)).toBe('checked');
+    expect(selectionStateOf(new Set(all.map(idOf)), visible.map(idOf))).toBe('checked');
     expect(names(toggleRows(all, visible, idOf))).toEqual(['Егор']);
-    expect(selectionStateOf(new Set(['1']), visible, idOf)).toBe('indeterminate');
-    expect(selectionStateOf(new Set(), [], idOf)).toBe('unchecked');
+    expect(selectionStateOf(new Set(['1']), visible.map(idOf))).toBe('indeterminate');
+    expect(selectionStateOf(new Set(['9']), visible.map(idOf))).toBe('unchecked');
+    expect(selectionStateOf(new Set(), [])).toBe('unchecked');
     expect(COLUMNS).toHaveLength(4);
   });
 });

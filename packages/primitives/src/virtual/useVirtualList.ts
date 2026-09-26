@@ -78,7 +78,7 @@ export const useVirtualList = (
   const model = computed(() => buildSizeModel(toValue(options.count), toValue(options.itemSize)));
   const enabled = (): boolean => toValue(options.enabled) ?? true;
 
-  const range = computed<VirtualRange>(() => {
+  const nextRange = (): VirtualRange => {
     const count = countOf(model.value);
     if (!enabled()) {
       return { start: 0, end: count };
@@ -88,6 +88,14 @@ export const useVirtualList = (
     }
     const overscan = toValue(options.overscan) ?? DEFAULT_OVERSCAN;
     return rangeFor(model.value, scrollTop.value, viewport.value, overscan);
+  };
+
+  const range = computed<VirtualRange>((previous) => {
+    const next = nextRange();
+
+    return previous !== undefined && previous.start === next.start && previous.end === next.end
+      ? previous
+      : next;
   });
 
   const itemAt = (index: number): VirtualItem => ({

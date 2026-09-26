@@ -3,6 +3,15 @@ import type { NuiSortDirection, NuiTableColumn, NuiTableSort } from './table.typ
 
 type Primitive = number | string | boolean;
 
+type SortKey = { readonly nullish: true } | { readonly nullish: false; readonly value: Primitive };
+
+interface Decorated<T> {
+  readonly row: T;
+  readonly key: SortKey;
+}
+
+const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' });
+
 const isNullish = (value: unknown): boolean => value === null || value === undefined;
 
 const primitiveOf = (value: unknown): Primitive => {
@@ -15,20 +24,20 @@ const primitiveOf = (value: unknown): Primitive => {
   return typeof value === 'bigint' ? Number(value) : String(value);
 };
 
-const compareText = (left: string, right: string): number =>
-  left.localeCompare(right, undefined, { numeric: true, sensitivity: 'base' });
+const keyOf = (value: unknown): SortKey =>
+  isNullish(value) ? { nullish: true } : { nullish: false, value: primitiveOf(value) };
 
-export const defaultCompare = (a: unknown, b: unknown): number => {
-  if (isNullish(a) || isNullish(b)) {
-    return Number(isNullish(a)) - Number(isNullish(b));
+const compareKeys = (left: SortKey, right: SortKey): number => {
+  if (left.nullish || right.nullish) {
+    return Number(left.nullish) - Number(right.nullish);
   }
-  const left = primitiveOf(a);
-  const right = primitiveOf(b);
-  if (typeof left === 'string' || typeof right === 'string') {
-    return compareText(String(left), String(right));
+  if (typeof left.value === 'string' || typeof right.value === 'string') {
+    return collator.compare(String(left.value), String(right.value));
   }
-  return Number(left) - Number(right);
+  return Number(left.value) - Number(right.value);
 };
+
+export const defaultCompare = (a: unknown, b: unknown): number => compareKeys(keyOf(a), keyOf(b));
 
 export const nextSort = (current: NuiTableSort, key: string): NuiTableSort => {
   if (current === null || current.key !== key) {
@@ -41,17 +50,24 @@ export const sortRows = <T>(
   rows: readonly T[],
   sort: NuiTableSort,
   columns: readonly NuiTableColumn<T>[],
-): T[] => {
+): readonly T[] => {
   const column = sort === null ? undefined : columns.find((entry) => entry.key === sort.key);
+
   if (!column || sort === null) {
-    return [...rows];
+    return rows;
   }
+
   const sign = sort.direction === 'asc' ? 1 : -1;
+  const custom = column.sort;
 
-  const compare =
-    column.sort ?? ((a: T, b: T) => defaultCompare(cellValue(a, column), cellValue(b, column)));
+  if (custom) {
+    return rows.toSorted((a, b) => custom(a, b) * sign);
+  }
 
-  return rows.toSorted((a, b) => compare(a, b) * sign);
+  return rows
+    .map((row): Decorated<T> => ({ row, key: keyOf(cellValue(row, column)) }))
+    .toSorted((left, right) => compareKeys(left.key, right.key) * sign)
+    .map(({ row }) => row);
 };
 
 export const directionOf = (sort: NuiTableSort, key: string): NuiSortDirection | undefined =>

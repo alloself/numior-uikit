@@ -15,7 +15,9 @@
         :nowrap="nowrap"
       >
         <template v-if="$slots.leading" #leading><slot name="leading" /></template>
-        <template v-if="$slots.default" #default><slot /></template>
+        <template v-if="$slots.default" #default>
+          <slot :selected="selected" :active="active" />
+        </template>
         <template v-if="$slots.description" #description><slot name="description" /></template>
         <template v-if="$slots.trailing || badge !== undefined" #trailing>
           <slot name="trailing">

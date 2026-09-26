@@ -117,11 +117,6 @@ const defaultErrorLabel: ErrorLabel = (error, texts, context) =>
 const canPreview = (item: NuiUploadItem<unknown>): boolean =>
   item.type.startsWith('image/') && typeof URL.createObjectURL === 'function';
 
-const isRejectionOf =
-  (file: File) =>
-  (rejection: FileRejection): boolean =>
-    rejection.file === file;
-
 defineOptions({ inheritAttrs: false });
 
 const {
@@ -255,11 +250,10 @@ const receive = (files: File[]): void => {
     validate,
   });
 
+  const reasons = new Map(outcome.rejected.map((rejection) => [rejection.file, rejection.error]));
+
   const entries = files
-    .map((file): UploadEntry => ({
-      file,
-      error: outcome.rejected.find(isRejectionOf(file))?.error,
-    }))
+    .map((file): UploadEntry => ({ file, error: reasons.get(file) }))
     .filter((entry) => rejected === 'list' || entry.error === undefined);
 
   remember(queue.add(entries));

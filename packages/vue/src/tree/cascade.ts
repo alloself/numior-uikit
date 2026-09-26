@@ -22,17 +22,35 @@ const enabledDescendantKeys = <T>(item: NuiTreeItem<T>, keyOf: NuiOptionKey<T>):
   return out;
 };
 
-export const checkStateOf = <T>(
-  item: NuiTreeItem<T>,
+export const checkStates = <T>(
+  items: readonly NuiTreeItem<T>[],
   checked: ReadonlySet<string>,
   keyOf: NuiOptionKey<T>,
-): CheckState => {
-  if (checked.has(keyOf(item.value))) {
-    return 'checked';
+): ReadonlyMap<string, CheckState> => {
+  const states = new Map<string, CheckState>();
+
+  const visit = (item: NuiTreeItem<T>): boolean => {
+    const key = keyOf(item.value);
+    let below = false;
+
+    for (const child of item.children ?? []) {
+      const marked = visit(child);
+
+      if (marked && !child.disabled) {
+        below = true;
+      }
+    }
+
+    const own = checked.has(key);
+
+    states.set(key, own ? 'checked' : below ? 'indeterminate' : 'unchecked');
+    return own || below;
+  };
+
+  for (const item of items) {
+    visit(item);
   }
-  return enabledDescendantKeys(item, keyOf).some((key) => checked.has(key))
-    ? 'indeterminate'
-    : 'unchecked';
+  return states;
 };
 
 const normalize = <T>(
@@ -77,12 +95,26 @@ export const applyCheck = <T>(
   return next;
 };
 
+const pushChecked = <T>(
+  items: readonly NuiTreeItem<T>[],
+  checked: ReadonlySet<string>,
+  keyOf: NuiOptionKey<T>,
+  out: T[],
+): void => {
+  for (const item of items) {
+    if (checked.has(keyOf(item.value))) {
+      out.push(item.value);
+    }
+    pushChecked(item.children ?? [], checked, keyOf, out);
+  }
+};
+
 export const collectCheckedValues = <T>(
   items: readonly NuiTreeItem<T>[],
   checked: ReadonlySet<string>,
   keyOf: NuiOptionKey<T>,
-): T[] =>
-  items.flatMap((item) => [
-    ...(checked.has(keyOf(item.value)) ? [item.value] : []),
-    ...collectCheckedValues(item.children ?? [], checked, keyOf),
-  ]);
+): T[] => {
+  const out: T[] = [];
+  pushChecked(items, checked, keyOf, out);
+  return out;
+};

@@ -19,7 +19,7 @@ export interface FlattenRowsOptions<T> {
   readonly isExpandable: ((row: T) => boolean) | undefined;
   readonly expandedKeys: ReadonlySet<string>;
   readonly pendingKeys: ReadonlySet<string>;
-  readonly sortLevel: (rows: readonly T[]) => T[];
+  readonly sortLevel: (rows: readonly T[]) => readonly T[];
 }
 
 interface Frame<T> {

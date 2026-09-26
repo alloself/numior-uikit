@@ -15,8 +15,8 @@
     :badge="entry.badge"
     v-on="entry.onClick ? { click: entry.onClick } : {}"
   >
-    <template v-if="$slots.item" #default>
-      <slot name="item" :item="entry" :selected="isSelected(entry)" :active="isActive(entry)" />
+    <template v-if="$slots.item" #default="{ selected, active }">
+      <slot name="item" :item="entry" :selected="selected" :active="active" />
     </template>
   </NuiListItem>
 </template>
@@ -25,7 +25,6 @@
 import type { Component } from 'vue';
 import { optionElementId, type NuiListEntry } from '../shared/options';
 import NuiListItem from './NuiListItem.vue';
-import { useList } from './list-context';
 
 const { entries, listId, linkAs, indexOf } = defineProps<{
   entries: readonly E[];
@@ -34,13 +33,5 @@ const { entries, listId, linkAs, indexOf } = defineProps<{
   indexOf: (entry: E) => number;
 }>();
 
-const list = useList();
-
 const idFor = (entry: E): string => optionElementId(listId, indexOf(entry));
-
-const isSelected = (entry: E): boolean =>
-  entry.value !== undefined && (list?.isSelected(entry.value) ?? false);
-
-const isActive = (entry: E): boolean =>
-  list?.activeId.value !== undefined && list.activeId.value === idFor(entry);
 </script>

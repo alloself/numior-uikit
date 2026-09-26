@@ -21,6 +21,3 @@ export const alignClass = <T>(column: NuiTableColumn<T>): string | undefined =>
   column.align === undefined || column.align === 'start'
     ? undefined
     : `nui-table__cell--align-${column.align}`;
-
-export const slotNamesWithPrefix = (slots: Record<string, unknown>, prefix: string): string[] =>
-  Object.keys(slots).filter((name) => name.startsWith(prefix));

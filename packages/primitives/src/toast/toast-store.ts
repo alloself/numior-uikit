@@ -62,8 +62,8 @@ const normalizeToast = (options: ToastOptions, id: string, fallbackDuration: num
   leaving: false,
 });
 
-const withLeaving = (toasts: readonly Toast[], id: string): readonly Toast[] =>
-  toasts.map((toast) => (toast.id === id ? { ...toast, leaving: true } : toast));
+const withLeaving = (toasts: readonly Toast[], ids: ReadonlySet<string>): readonly Toast[] =>
+  toasts.map((toast) => (ids.has(toast.id) ? { ...toast, leaving: true } : toast));
 
 const upsert = (toasts: readonly Toast[], next: Toast): readonly Toast[] =>
   toasts.some((toast) => toast.id === next.id)
@@ -93,26 +93,40 @@ export const createToastStore = (options: ToastStoreOptions = {}): ToastStore =>
     }
   };
 
-  const remove = (id: string): void => {
-    removals.delete(id);
-    toasts.value = toasts.value.filter((toast) => toast.id !== id);
+  const removeAll = (ids: ReadonlySet<string>): void => {
+    for (const id of ids) {
+      removals.delete(id);
+    }
+    toasts.value = toasts.value.filter((toast) => !ids.has(toast.id));
     settle();
+  };
+
+  const leave = (ids: ReadonlySet<string>): void => {
+    if (ids.size === 0) {
+      return;
+    }
+    for (const id of ids) {
+      timers.clear(id);
+    }
+    toasts.value = withLeaving(toasts.value, ids);
+
+    if (!canSchedule()) {
+      removeAll(ids);
+      return;
+    }
+    for (const id of ids) {
+      removals.set(
+        id,
+        setTimeout(() => removeAll(new Set([id])), exitDuration),
+      );
+    }
   };
 
   const dismiss = (id: string): void => {
     const target = toasts.value.find((toast) => toast.id === id);
-    if (!target || target.leaving) {
-      return;
-    }
-    timers.clear(id);
-    toasts.value = withLeaving(toasts.value, id);
-    if (canSchedule()) {
-      removals.set(
-        id,
-        setTimeout(() => remove(id), exitDuration),
-      );
-    } else {
-      remove(id);
+
+    if (target && !target.leaving) {
+      leave(new Set([id]));
     }
   };
 
@@ -141,9 +155,7 @@ export const createToastStore = (options: ToastStoreOptions = {}): ToastStore =>
     show,
     dismiss,
     clear: () => {
-      for (const toast of toasts.value) {
-        dismiss(toast.id);
-      }
+      leave(new Set(toasts.value.filter((toast) => !toast.leaving).map((toast) => toast.id)));
     },
     pause: (id) => timers.pause(id),
     resume: (id) => timers.resume(id),

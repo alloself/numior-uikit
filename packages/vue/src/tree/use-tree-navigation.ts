@@ -4,8 +4,8 @@ import {
   extendTypeahead,
   isTypeaheadActive,
   listMoveFor,
-  listTargetIndex,
   matchTypeahead,
+  type ListMove,
   type TypeaheadState,
 } from '@numior/primitives';
 import { firstChildIndexOf, parentIndexOf, type TreeNode } from './flatten';
@@ -37,6 +37,65 @@ const isPrintable = (event: KeyboardEvent): boolean =>
 
 const enabledIndices = <T>(nodes: readonly TreeNode<T>[]): number[] =>
   nodes.flatMap((node, index) => (node.item.disabled ? [] : [index]));
+
+const isEnabled = <T>(nodes: readonly TreeNode<T>[], index: number): boolean => {
+  const node = nodes[index];
+  return node !== undefined && !node.item.disabled;
+};
+
+const walk = <T>(
+  nodes: readonly TreeNode<T>[],
+  from: number,
+  direction: 1 | -1,
+  count: number,
+): number => {
+  let found = -1;
+  let seen = 0;
+
+  for (let index = from; index >= 0 && index < nodes.length && seen < count; index += direction) {
+    if (isEnabled(nodes, index)) {
+      found = index;
+      seen += 1;
+    }
+  }
+  return found;
+};
+
+interface Cursor<T> {
+  readonly nodes: readonly TreeNode<T>[];
+  readonly current: number;
+  readonly loop: boolean;
+  readonly page: number;
+}
+
+const firstOf = <T>(nodes: readonly TreeNode<T>[]): number => walk(nodes, 0, 1, 1);
+
+const lastOf = <T>(nodes: readonly TreeNode<T>[]): number => walk(nodes, nodes.length - 1, -1, 1);
+
+const stepFrom = <T>({ nodes, current, loop }: Cursor<T>, direction: 1 | -1): number => {
+  const edge = direction === 1 ? firstOf(nodes) : lastOf(nodes);
+
+  if (current < 0) {
+    return edge;
+  }
+
+  const next = walk(nodes, current + direction, direction, 1);
+
+  if (next >= 0) {
+    return next;
+  }
+  return loop ? edge : current;
+};
+
+const MOVES: Readonly<Record<ListMove, <T>(cursor: Cursor<T>) => number>> = {
+  first: ({ nodes }) => firstOf(nodes),
+  last: ({ nodes }) => lastOf(nodes),
+  next: (cursor) => stepFrom(cursor, 1),
+  prev: (cursor) => stepFrom(cursor, -1),
+  'page-next': ({ nodes, current, page }) => walk(nodes, Math.max(0, current), 1, page + 1),
+  'page-prev': ({ nodes, current, page }) =>
+    current < 0 ? firstOf(nodes) : walk(nodes, current, -1, page + 1),
+};
 
 export const useTreeNavigation = <T>(options: TreeNavigationOptions<T>): TreeNavigation => {
   const typeahead = ref<TypeaheadState>(emptyTypeahead);
@@ -83,21 +142,19 @@ export const useTreeNavigation = <T>(options: TreeNavigationOptions<T>): TreeNav
     if (!move) {
       return false;
     }
-    const enabled = enabledIndices(options.nodes());
-    if (enabled.length === 0) {
-      return true;
-    }
-    const position = enabled.indexOf(options.activeIndex());
 
-    const target = listTargetIndex(
-      move,
-      position,
-      enabled.length,
-      options.loop(),
-      options.pageSize(),
+    const nodes = options.nodes();
+    const active = options.activeIndex();
+
+    moveTo(
+      MOVES[move]({
+        nodes,
+        current: isEnabled(nodes, active) ? active : -1,
+        loop: options.loop(),
+        page: options.pageSize(),
+      }),
     );
 
-    moveTo(enabled[target] ?? -1);
     return true;
   };
 

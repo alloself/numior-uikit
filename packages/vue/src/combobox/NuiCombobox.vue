@@ -202,8 +202,12 @@ const typing = computed(() => draft.value.kind === 'typed');
 
 const query = computed(() => (draft.value.kind === 'typed' ? draft.value.text : singleLabel.value));
 
+const lowered = computed(
+  () => new Map(flattenEntries(options).map((option) => [option, option.label.toLowerCase()])),
+);
+
 const defaultFilter = (option: NuiOption<T>, needle: string): boolean =>
-  option.label.toLowerCase().includes(needle);
+  (lowered.value.get(option) ?? option.label.toLowerCase()).includes(needle);
 
 const isEnabled = (option: NuiOption<T>): boolean => !option.disabled;
 

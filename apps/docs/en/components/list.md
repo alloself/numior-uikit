@@ -137,8 +137,8 @@ selectable list is a `role="listbox"` (`aria-multiselectable` for `multiple`) na
 | `linkAs`       | `string \| Component`                                       | `'a'`                                           | Router component for `items` entries                            |
 
 `NuiListItem`: `value`, `id`, `label`, `description`, `icon`, `href`, `to`, `as`,
-`interactive`, `disabled`, `current`, `badge`; slots `leading`, `default`, `description`,
-`trailing`, `nested`; a template ref exposes `action`, the link or button element. List slots:
+`interactive`, `disabled`, `current`, `badge`; slots `leading`, `default` (`{ selected, active }`),
+`description`, `trailing`, `nested`; a template ref exposes `action`, the link or button element. List slots:
 `item` (`{ item, selected, active }`) for `items` entries and `empty`; event `select(item)`.
 Blocks `nui-list` (modifiers `--variant-*`, `--size-*`, `--selectable`, `--empty`; elements
 `__items`, `__group`, `__group-label`, `__group-items`, `__status`, `__spinner`, `__empty`)

@@ -1,3 +1,4 @@
+import type { ComputedRef } from 'vue';
 import type { NuiPaginationProps } from '../pagination/pagination.types';
 import type { NuiOptionKey } from '../shared/options';
 import type { NuiSize } from '../shared/scale.types';
@@ -109,6 +110,38 @@ export interface NuiTableCellSlot<T> {
 export interface NuiTableHeaderSlot<T> {
   readonly column: NuiTableColumn<T>;
   readonly sort: NuiSortDirection | undefined;
+}
+
+export type NuiTableSlots<T> = {
+  caption?: () => unknown;
+  loading?: () => unknown;
+  empty?: () => unknown;
+} & {
+  [name: `cell-${string}`]: ((scope: NuiTableCellSlot<T>) => unknown) | undefined;
+} & {
+  [name: `header-${string}`]: ((scope: NuiTableHeaderSlot<T>) => unknown) | undefined;
+};
+
+export type NuiTableAxis = 'column' | 'row';
+
+export interface NuiTableGhostView {
+  readonly axis: NuiTableAxis;
+  readonly label: string;
+  readonly style: Readonly<Record<string, string>>;
+}
+
+export interface NuiTableDropView {
+  readonly axis: NuiTableAxis;
+  readonly style: Readonly<Record<string, string>>;
+}
+
+export interface NuiTableDragView {
+  readonly ghost: ComputedRef<NuiTableGhostView | undefined>;
+  readonly drops: ComputedRef<readonly NuiTableDropView[]>;
+}
+
+export interface NuiTableDragLayerProps {
+  layer: NuiTableDragView;
 }
 
 export interface NuiTableSpacers {

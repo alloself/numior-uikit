@@ -110,26 +110,34 @@ export const useTableColumns = <T>(options: ColumnLayoutOptions<T>): ColumnLayou
     return width === undefined ? undefined : Math.round(width);
   };
 
-  const offsetBefore = (column: NuiTableColumn<T>, sticky: NuiTableSticky): number => {
-    const list = sticky === 'start' ? ordered.value : ordered.value.toReversed();
-    let sum = 0;
+  const positions = computed(
+    () => new Map(ordered.value.map((column, index) => [column, index] as const)),
+  );
 
-    for (const candidate of list) {
-      if (candidate === column) {
-        break;
+  const edges = computed(() => {
+    const starts = ordered.value.filter((column) => column.sticky === 'start');
+    const ends = ordered.value.filter((column) => column.sticky === 'end');
+
+    return new Set([starts.at(-1), ends[0]]);
+  });
+
+  const stickyOffsets = (): Map<NuiTableColumn<T>, number> => {
+    const offsets = new Map<NuiTableColumn<T>, number>();
+
+    const add = (columns: readonly NuiTableColumn<T>[], sticky: NuiTableSticky): void => {
+      let sum = 0;
+
+      for (const column of columns) {
+        if (column.sticky === sticky) {
+          offsets.set(column, sum);
+          sum += widthOf(column) ?? 0;
+        }
       }
+    };
 
-      if (candidate.sticky === sticky) {
-        sum += widthOf(candidate) ?? 0;
-      }
-    }
-
-    return sum;
-  };
-
-  const isEdge = (column: NuiTableColumn<T>): boolean => {
-    const group = ordered.value.filter((candidate) => candidate.sticky === column.sticky);
-    return column.sticky === 'start' ? group.at(-1) === column : group[0] === column;
+    add(ordered.value, 'start');
+    add(ordered.value.toReversed(), 'end');
+    return offsets;
   };
 
   const cellStyle = (column: NuiTableColumn<T>): NuiTableCellStyle => {
@@ -137,7 +145,7 @@ export const useTableColumns = <T>(options: ColumnLayoutOptions<T>): ColumnLayou
       return undefined;
     }
 
-    const offset = `var(${stickyVar(ordered.value.indexOf(column))}, 0px)`;
+    const offset = `var(${stickyVar(positions.value.get(column) ?? 0)}, 0px)`;
 
     if (column.sticky === 'end') {
       return { insetInlineEnd: offset };
@@ -147,7 +155,7 @@ export const useTableColumns = <T>(options: ColumnLayoutOptions<T>): ColumnLayou
   };
 
   const cellClass = (column: NuiTableColumn<T>): string[] =>
-    column.sticky === undefined ? [] : stickyClasses(column.sticky, isEdge(column));
+    column.sticky === undefined ? [] : stickyClasses(column.sticky, edges.value.has(column));
 
   const utilityClass = (position: number): string[] =>
     stickyClasses('start', !stickyStart.value && position === options.utilities() - 1);
@@ -204,15 +212,16 @@ export const useTableColumns = <T>(options: ColumnLayoutOptions<T>): ColumnLayou
 
   const writeSticky = (table: HTMLTableElement): void => {
     const columns = ordered.value;
+    const offsets = stickyOffsets();
 
     for (let index = 0; index < Math.max(columns.length, state.sticky); index += 1) {
-      const sticky = columns[index]?.sticky;
       const column = columns[index];
+      const offset = column === undefined ? undefined : offsets.get(column);
 
-      if (column && sticky) {
-        table.style.setProperty(stickyVar(index), `${offsetBefore(column, sticky)}px`);
-      } else {
+      if (offset === undefined) {
         table.style.removeProperty(stickyVar(index));
+      } else {
+        table.style.setProperty(stickyVar(index), `${offset}px`);
       }
     }
 

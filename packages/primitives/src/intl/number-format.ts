@@ -19,7 +19,10 @@ const PRECISION_KEYS = [
   'maximumSignificantDigits',
 ] as const;
 
-const formatterFor = (locale: string, options?: Intl.NumberFormatOptions): Intl.NumberFormat => {
+export const formatterFor = (
+  locale: string,
+  options?: Intl.NumberFormatOptions,
+): Intl.NumberFormat => {
   const key = `${locale}|${JSON.stringify(options ?? {})}`;
   const cached = formatters.get(key);
   if (cached) {

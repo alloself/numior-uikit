@@ -23,18 +23,11 @@
     @click="onClick"
     @dblclick="onDblclick"
   >
-    <TransitionGroup
-      tag="div"
+    <component
+      :is="virtual ? 'div' : TransitionGroup"
       class="nui-tree__list"
       :style="listStyle"
-      :css="!virtual"
-      enter-from-class="nui-tree__item--folded"
-      enter-active-class="nui-tree__item--entering"
-      enter-to-class="nui-tree__item--unfolded"
-      leave-from-class="nui-tree__item--unfolded"
-      leave-active-class="nui-tree__item--leaving"
-      leave-to-class="nui-tree__item--folded"
-      move-class="nui-tree__item--moving"
+      v-bind="virtual ? {} : FOLDING"
     >
       <NuiTreeNode
         v-for="entry in rendered"
@@ -44,7 +37,7 @@
         :active="entry.index === activeIndex"
         :selected="selectedKeys.has(entry.node.key)"
         :selectable="mode !== false"
-        :checked="checkable ? checkStateOf(entry.node.item, checkedKeys, keyOf) : undefined"
+        :checked="checkable ? checkStates.get(entry.node.key) : undefined"
         :icon="iconFor(entry.node)"
         :folder="folderFor(entry.node)"
         :start="entry.start"
@@ -52,16 +45,24 @@
       >
         <template #default="slot"><slot name="item" v-bind="slot" /></template>
       </NuiTreeNode>
-    </TransitionGroup>
+    </component>
   </div>
 </template>
 
 <script setup lang="ts" generic="T">
-import { computed, onMounted, ref, shallowReactive, useTemplateRef, watch } from 'vue';
+import {
+  TransitionGroup,
+  computed,
+  onMounted,
+  ref,
+  shallowReactive,
+  useTemplateRef,
+  watch,
+} from 'vue';
 import { useControlId, useDirection, useVirtualList, type IconAlias } from '@numior/primitives';
 import { useOptionSelection } from '../shared/use-option-selection';
 import NuiTreeNode from './NuiTreeNode.vue';
-import { applyCheck, checkStateOf, collectCheckedValues } from './cascade';
+import { applyCheck, checkStates as checkStatesOf, collectCheckedValues } from './cascade';
 import { flattenTree, siblingIndicesOf, type TreeNode } from './flatten';
 import type { NuiTreeItem, NuiTreeProps } from './tree.types';
 import { useTreeNavigation, type TreeActivationKey } from './use-tree-navigation';
@@ -79,6 +80,16 @@ const afterPaint = (callback: () => void): void => {
   }
   requestAnimationFrame(() => requestAnimationFrame(callback));
 };
+
+const FOLDING = {
+  tag: 'div',
+  enterFromClass: 'nui-tree__item--folded',
+  enterActiveClass: 'nui-tree__item--entering',
+  enterToClass: 'nui-tree__item--unfolded',
+  leaveFromClass: 'nui-tree__item--unfolded',
+  leaveActiveClass: 'nui-tree__item--leaving',
+  leaveToClass: 'nui-tree__item--folded',
+} as const;
 
 const {
   id,
@@ -124,11 +135,21 @@ const { keyOf, selectedKeys, selectedValues, choose } = useOptionSelection<T>({
 
 const expandedKeys = computed(() => new Set(expanded.value.map(keyOf)));
 const checkedKeys = computed(() => new Set(checked.value.map(keyOf)));
+
+const checkStates = computed(() =>
+  checkable ? checkStatesOf(items, checkedKeys.value, keyOf) : new Map(),
+);
+
 const pending = shallowReactive(new Set<string>());
 const revealing = shallowReactive(new Set<string>());
 const visible = computed(() => flattenTree(items, keyOf, expandedKeys.value, pending));
 const activeKey = ref<string>();
-const activeIndex = computed(() => visible.value.findIndex((node) => node.key === activeKey.value));
+const indexByKey = computed(() => new Map(visible.value.map((node, index) => [node.key, index])));
+
+const activeIndex = computed(() =>
+  activeKey.value === undefined ? -1 : (indexByKey.value.get(activeKey.value) ?? -1),
+);
+
 const nodeId = (key: string): string => `${baseId.value}-node-${encodeURIComponent(key)}`;
 
 const activeDescendant = computed(() => {
@@ -305,7 +326,11 @@ const hitNode = (event: Event): number => {
   const element =
     event.target instanceof Element ? event.target.closest('[role="treeitem"]') : null;
 
-  return element ? visible.value.findIndex((node) => nodeId(node.key) === element.id) : -1;
+  const prefix = `${baseId.value}-node-`;
+
+  return element?.id.startsWith(prefix)
+    ? (indexByKey.value.get(decodeURIComponent(element.id.slice(prefix.length))) ?? -1)
+    : -1;
 };
 
 const partOf = (event: Event, part: string): boolean =>
