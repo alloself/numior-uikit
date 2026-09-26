@@ -28,7 +28,7 @@
       />
       <slot :open="open" :dragging="drop.dragging.value">
         <NuiIcon alias="upload" class="nui-upload__icon" />
-        <span class="nui-upload__text">{{ dropLabel }}</span>
+        <span class="nui-upload__text">{{ texts.drop }}</span>
         <NuiButton
           :id="controlAttrs.id"
           variant="outline"
@@ -41,7 +41,7 @@
           v-bind="split.controlAttrs()"
           @click="open"
         >
-          {{ browseLabel }}
+          {{ texts.browse }}
         </NuiButton>
         <span v-if="hint" class="nui-upload__hint">{{ hint }}</span>
       </slot>
@@ -53,9 +53,9 @@
         :item="item"
         :preview="previewOf(item)"
         :description="describe(item)"
-        :cancel-label="cancelLabel"
-        :retry-label="retryLabel"
-        :remove-label="removeLabel"
+        :cancel-label="texts.cancel"
+        :retry-label="texts.retry"
+        :remove-label="texts.remove"
         @cancel="discard(item)"
         @retry="queue.retry(item.id)"
         @remove="discard(item)"
@@ -68,12 +68,13 @@
 </template>
 
 <script setup lang="ts" generic="R = unknown">
-import { onScopeDispose, ref, useTemplateRef } from 'vue';
+import { computed, onScopeDispose, ref, useTemplateRef } from 'vue';
 import {
   formatFileSize,
   useFieldControl,
   useFileDrop,
   useLocale,
+  useMessages,
   useSplitAttrs,
   useUploadQueue,
   validateFiles,
@@ -83,6 +84,7 @@ import {
 import NuiButton from '../button/NuiButton.vue';
 import NuiIcon from '../icon/NuiIcon.vue';
 import NuiUploadRow from './NuiUploadRow.vue';
+import { uploadMessages, type NuiUploadMessages } from './upload.messages';
 import type { NuiUploadError, NuiUploadItem, NuiUploadProps } from './upload.types';
 
 interface ErrorLabelContext {
@@ -91,24 +93,28 @@ interface ErrorLabelContext {
   readonly locale: string;
 }
 
-const defaultErrorLabel = (error: NuiUploadError, context: ErrorLabelContext): string => {
+const defaultErrorLabel = (
+  error: NuiUploadError,
+  texts: NuiUploadMessages,
+  context: ErrorLabelContext,
+): string => {
   if (error.reason === 'type') {
-    return 'Unsupported file type';
+    return texts.typeError;
   }
 
   if (error.reason === 'size') {
     return context.maxSize === undefined
-      ? 'File is too large'
-      : `Larger than ${formatFileSize(context.maxSize, context.locale)}`;
+      ? texts.tooLarge
+      : texts.largerThan({ size: formatFileSize(context.maxSize, context.locale) });
   }
 
   if (error.reason === 'count') {
     return context.maxFiles === undefined
-      ? 'Too many files'
-      : `More than ${context.maxFiles} files`;
+      ? texts.tooMany
+      : texts.moreThan({ count: context.maxFiles });
   }
 
-  return error.message ?? (error.reason === 'custom' ? 'File rejected' : 'Upload failed');
+  return error.message ?? (error.reason === 'custom' ? texts.rejected : texts.failed);
 };
 
 const canPreview = (item: NuiUploadItem<unknown>): boolean =>
@@ -137,13 +143,13 @@ const {
   concurrency = 3,
   layout = 'list',
   size = 'md',
-  dropLabel = 'Drop files here',
-  browseLabel = 'Choose files',
+  dropLabel,
+  browseLabel,
   hint,
-  cancelLabel = 'Cancel upload',
-  retryLabel = 'Retry',
-  removeLabel = 'Remove',
-  doneLabel = 'Uploaded',
+  cancelLabel,
+  retryLabel,
+  removeLabel,
+  doneLabel,
   errorLabel,
 } = defineProps<NuiUploadProps<R>>();
 
@@ -158,6 +164,7 @@ const emit = defineEmits<{
 
 const split = useSplitAttrs();
 const locale = useLocale();
+const messages = useMessages(uploadMessages, locale);
 
 const {
   attrs: controlAttrs,
@@ -169,10 +176,19 @@ const inputElement = useTemplateRef<HTMLInputElement>('input');
 const announcement = ref('');
 const previews = new Map<string, string>();
 
+const texts = computed(() => ({
+  drop: dropLabel ?? messages.value.drop,
+  browse: browseLabel ?? messages.value.browse,
+  cancel: cancelLabel ?? messages.value.cancel,
+  retry: retryLabel ?? messages.value.retry,
+  remove: removeLabel ?? messages.value.remove,
+  done: doneLabel ?? messages.value.done,
+}));
+
 const describeError = (error: NuiUploadError, item: NuiUploadItem<R>): string =>
   errorLabel
     ? errorLabel(error, item)
-    : defaultErrorLabel(error, { maxSize, maxFiles, locale: locale.value });
+    : defaultErrorLabel(error, messages.value, { maxSize, maxFiles, locale: locale.value });
 
 const describe = (item: NuiUploadItem<R>): string =>
   item.error ? describeError(item.error, item) : formatFileSize(item.size, locale.value);
@@ -183,7 +199,7 @@ const queue = useUploadQueue<R>({
   concurrency: () => concurrency,
   auto: () => auto,
   onDone: (item) => {
-    announcement.value = `${item.name}: ${doneLabel}`;
+    announcement.value = `${item.name}: ${texts.value.done}`;
     emit('done', item);
   },
   onError: (item) => {

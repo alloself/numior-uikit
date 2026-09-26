@@ -60,7 +60,7 @@ describe('NuiUpload', () => {
     expect(listed.statuses).toEqual(['error', 'error', 'uploading', 'error']);
     expect(listed.description('big.txt')).toBe('Larger than 1 kB');
     expect(listed.description('clip.mp4')).toBe('Unsupported file type');
-    expect(listed.description('extra.txt')).toBe('More than 1 files');
+    expect(listed.description('extra.txt')).toBe('More than 1 file');
     expect(listed.actions('big.txt')).toEqual(['Remove']);
     expect(listed.calls).toHaveLength(1);
     expect(listed.events).toEqual(['reject:big.txt,clip.mp4,extra.txt']);
@@ -170,5 +170,31 @@ describe('NuiUpload', () => {
     await disabled.dropFiles(fileOf('a.txt'));
     expect(disabled.names).toEqual([]);
     disabled.unmount();
+  });
+
+  it('speaks the configured language for the zone, actions, rejections and announcements', async () => {
+    const upload = UploadDriver.mount({
+      props: { accept: '.txt', maxSize: 1024, maxFiles: 2 },
+      config: { locale: 'ru-RU' },
+    });
+
+    expect(upload.zone.text()).toContain('Перетащите файлы сюда');
+    expect(upload.browse.text()).toBe('Выбрать файлы');
+
+    await upload.dropFiles(
+      fileOf('big.txt', 4096),
+      fileOf('clip.mp4', 3, 'video/mp4'),
+      fileOf('a.txt'),
+      fileOf('b.txt'),
+      fileOf('c.txt'),
+    );
+
+    expect(upload.description('big.txt')).toBe('Файл больше 1 кБ');
+    expect(upload.description('clip.mp4')).toBe('Неподдерживаемый тип файла');
+    expect(upload.description('c.txt')).toBe('Не больше 2 файлов');
+    expect(upload.actions('big.txt')).toEqual(['Удалить']);
+    await upload.resolve(0, 'ok');
+    expect(upload.liveText).toBe('a.txt: Загружено');
+    upload.unmount();
   });
 });

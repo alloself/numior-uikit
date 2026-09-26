@@ -8,7 +8,9 @@ import {
   type NuiUploadAdapter,
   type NuiUploadItem,
   type NuiUploadProps,
+  type NuiConfigOptions,
 } from '../../src';
+import { configPlugins } from '../support/config';
 import { ComponentDriver } from './component';
 
 type UploadProps = Omit<NuiUploadProps<string>, 'upload'>;
@@ -18,6 +20,7 @@ export interface UploadMountOptions {
   readonly props?: UploadProps;
   readonly modelValue?: NuiUploadItem<string>[];
   readonly field?: NuiFieldProps;
+  readonly config?: NuiConfigOptions;
 }
 
 interface AdapterCall {
@@ -95,7 +98,12 @@ const transferEvent = (type: string, files: File[]): Event => {
 export class UploadDriver extends ComponentDriver {
   protected readonly block = 'nui-upload';
 
-  static mount({ props = {}, modelValue = [], field }: UploadMountOptions = {}): UploadDriver {
+  static mount({
+    props = {},
+    modelValue = [],
+    field,
+    config,
+  }: UploadMountOptions = {}): UploadDriver {
     const model = ref<NuiUploadItem<string>[]>(modelValue);
     const calls: AdapterCall[] = [];
     const events: string[] = [];
@@ -131,7 +139,11 @@ export class UploadDriver extends ComponentDriver {
       },
     });
 
-    const wrapper = mount(Host, { attachTo: document.body });
+    const wrapper = mount(Host, {
+      attachTo: document.body,
+      global: { plugins: configPlugins(config) },
+    });
+
     const driver = new UploadDriver(wrapper, model, calls, events, urls, exposed, restoreUrls);
 
     Object.defineProperty(driver.input.element, 'click', {

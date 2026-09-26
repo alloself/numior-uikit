@@ -14,6 +14,7 @@ import type { NuiSidebarMessages } from './sidebar/sidebar.messages';
 import type { NuiTableMessages } from './table/table.messages';
 import type { NuiTimeFieldMessages } from './time-field/time-field.messages';
 import type { NuiToastMessages } from './toast/toast.messages';
+import type { NuiUploadMessages } from './upload/upload.messages';
 
 export interface NuiVueMessages {
   readonly alert: NuiAlertMessages;
@@ -32,6 +33,7 @@ export interface NuiVueMessages {
   readonly table: NuiTableMessages;
   readonly timeField: NuiTimeFieldMessages;
   readonly toast: NuiToastMessages;
+  readonly upload: NuiUploadMessages;
 }
 
 declare module '@numior/primitives' {

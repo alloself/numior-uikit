@@ -17,6 +17,7 @@ import { sidebarMessages } from '../src/sidebar/sidebar.messages';
 import { tableMessages } from '../src/table/table.messages';
 import { timeFieldMessages } from '../src/time-field/time-field.messages';
 import { toastMessages } from '../src/toast/toast.messages';
+import { uploadMessages } from '../src/upload/upload.messages';
 
 const catalogs: { readonly [N in keyof NuiVueMessages]: NuiMessageCatalog<N> } = {
   alert: alertMessages,
@@ -35,6 +36,7 @@ const catalogs: { readonly [N in keyof NuiVueMessages]: NuiMessageCatalog<N> } =
   table: tableMessages,
   timeField: timeFieldMessages,
   toast: toastMessages,
+  upload: uploadMessages,
 };
 
 const untranslated = (): string[] =>
