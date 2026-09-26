@@ -12,7 +12,7 @@
       class="nui-field-array__grip"
       variant="ghost"
       tone="neutral"
-      size="sm"
+      size="md"
       :aria-label="moveLabel"
       :disabled="gripDisabled"
       @pointerdown="emit('grab', $event)"
@@ -30,7 +30,7 @@
         class="nui-field-array__remove"
         variant="ghost"
         tone="neutral"
-        size="sm"
+        size="md"
         :aria-label="removeLabel"
         @click="emit('remove')"
       >

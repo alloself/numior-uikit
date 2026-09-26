@@ -72,6 +72,10 @@ test.describe('smart form', () => {
     await page.keyboard.type('Борис');
     await expect(smartForm.addContact).toBeDisabled();
     await expect(smartForm.limit).toHaveText('Достигнут предел строк: 3');
+    const name = await smartForm.boxOf(smartForm.control('contacts.1.name').locator('..'));
+    const remove = await smartForm.boxOf(smartForm.remove(2));
+    expect(remove.height).toBeCloseTo(name.height, 0);
+    expect(remove.y).toBeCloseTo(name.y, 0);
     await smartForm.grip(2).focus();
     await page.keyboard.press('Space');
     await expect(smartForm.live).toContainText('Строка 2 захвачена, позиция 2 из 3.');
