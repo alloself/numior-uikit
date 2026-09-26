@@ -85,21 +85,21 @@ const strict = ref(false)
 
 `title` и `description` (или одноимённые слоты) связываются через `aria-labelledby` и
 `aria-describedby` с id, известными уже на сервере. Первым фокус получает первый
-интерактивный элемент тела, кнопка закрытия идёт последней в DOM. Кнопке закрытия нужен
-`closeLabel` на языке интерфейса.
+интерактивный элемент тела, кнопка закрытия идёт последней в DOM. Имя кнопки закрытия
+берётся из [словаря](/localization#dialog) на языке конфигурации, `closeLabel` его заменяет.
 
 ## API
 
-| Prop              | Тип                    | По умолчанию | Описание                                     |
-| ----------------- | ---------------------- | ------------ | -------------------------------------------- |
-| `v-model:open`    | `boolean`              | `false`      | Открыт ли диалог                             |
-| `id`              | `string`               | генерируется | Id элемента; от него образуются id заголовка |
-| `title`           | `string`               | —            | Заголовок; слот `title`                      |
-| `description`     | `string`               | —            | Описание; слот `description`                 |
-| `size`            | `'sm' \| 'md' \| 'lg'` | `'md'`       | Ширина 24 / 32 / 48rem                       |
-| `closable`        | `boolean`              | `true`       | Крест, Esc и клик по фону                    |
-| `closeOnBackdrop` | `boolean`              | `true`       | Закрытие кликом по фону при `closable`       |
-| `closeLabel`      | `string`               | `'Close'`    | Доступное имя кнопки закрытия                |
+| Prop              | Тип                    | По умолчанию                               | Описание                                     |
+| ----------------- | ---------------------- | ------------------------------------------ | -------------------------------------------- |
+| `v-model:open`    | `boolean`              | `false`                                    | Открыт ли диалог                             |
+| `id`              | `string`               | генерируется                               | Id элемента; от него образуются id заголовка |
+| `title`           | `string`               | —                                          | Заголовок; слот `title`                      |
+| `description`     | `string`               | —                                          | Описание; слот `description`                 |
+| `size`            | `'sm' \| 'md' \| 'lg'` | `'md'`                                     | Ширина 24 / 32 / 48rem                       |
+| `closable`        | `boolean`              | `true`                                     | Крест, Esc и клик по фону                    |
+| `closeOnBackdrop` | `boolean`              | `true`                                     | Закрытие кликом по фону при `closable`       |
+| `closeLabel`      | `string`               | [словарь](/localization#dialog): «Закрыть» | Доступное имя кнопки закрытия                |
 
 Событие `close(returnValue: string)`. Слоты: `default`, `title`, `description`, `footer`.
 Модификаторы `nui-dialog--size-*`; элементы `__header`, `__title`, `__description`,

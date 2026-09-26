@@ -103,27 +103,27 @@ native `<progress>` named after the file. Cancel, retry and remove buttons carry
 
 ## API
 
-| Prop                                       | Type                                           | Default             | Description                               |
-| ------------------------------------------ | ---------------------------------------------- | ------------------- | ----------------------------------------- |
-| `v-model`                                  | `NuiUploadItem<R>[]`                           | `[]`                | Items with statuses                       |
-| `upload`                                   | `(file, { onProgress, signal }) => Promise<R>` | —                   | Upload adapter                            |
-| `accept`                                   | `string`                                       | —                   | Comma-separated extensions and types      |
-| `multiple`                                 | `boolean`                                      | `true`              | Several files; `false` replaces the file  |
-| `maxSize`                                  | `number`                                       | —                   | Size limit in bytes                       |
-| `maxFiles`                                 | `number`                                       | —                   | Limit on the number of files in the model |
-| `validate`                                 | `(file) => string \| undefined`                | —                   | Custom check, a string is the error text  |
-| `rejected`                                 | `'list' \| 'drop'`                             | `'list'`            | Show rejected files or drop them          |
-| `auto`                                     | `boolean`                                      | `true`              | Upload at once                            |
-| `concurrency`                              | `number`                                       | `3`                 | Parallel uploads                          |
-| `layout`                                   | `'list' \| 'grid'`                             | `'list'`            | List or a grid of thumbnails              |
-| `size`                                     | `'sm' \| 'md' \| 'lg'`                         | `'md'`              | Size step                                 |
-| `dropLabel`                                | `string`                                       | `'Drop files here'` | Zone text                                 |
-| `browseLabel`                              | `string`                                       | `'Choose files'`    | Button label                              |
-| `hint`                                     | `string`                                       | —                   | Hint under the button                     |
-| `cancelLabel`, `retryLabel`, `removeLabel` | `string`                                       | English labels      | `aria-label` of the actions               |
-| `doneLabel`                                | `string`                                       | `'Uploaded'`        | Announcement once a file is done          |
-| `errorLabel`                               | `(error, item) => string`                      | English texts       | Error text by reason                      |
-| `id`, `disabled`, `required`, `invalid`    | from the field                                 | —                   | Link to `NuiField`                        |
+| Prop                                       | Type                                           | Default                                                  | Description                               |
+| ------------------------------------------ | ---------------------------------------------- | -------------------------------------------------------- | ----------------------------------------- |
+| `v-model`                                  | `NuiUploadItem<R>[]`                           | `[]`                                                     | Items with statuses                       |
+| `upload`                                   | `(file, { onProgress, signal }) => Promise<R>` | —                                                        | Upload adapter                            |
+| `accept`                                   | `string`                                       | —                                                        | Comma-separated extensions and types      |
+| `multiple`                                 | `boolean`                                      | `true`                                                   | Several files; `false` replaces the file  |
+| `maxSize`                                  | `number`                                       | —                                                        | Size limit in bytes                       |
+| `maxFiles`                                 | `number`                                       | —                                                        | Limit on the number of files in the model |
+| `validate`                                 | `(file) => string \| undefined`                | —                                                        | Custom check, a string is the error text  |
+| `rejected`                                 | `'list' \| 'drop'`                             | `'list'`                                                 | Show rejected files or drop them          |
+| `auto`                                     | `boolean`                                      | `true`                                                   | Upload at once                            |
+| `concurrency`                              | `number`                                       | `3`                                                      | Parallel uploads                          |
+| `layout`                                   | `'list' \| 'grid'`                             | `'list'`                                                 | List or a grid of thumbnails              |
+| `size`                                     | `'sm' \| 'md' \| 'lg'`                         | `'md'`                                                   | Size step                                 |
+| `dropLabel`                                | `string`                                       | [dictionary](/en/localization#upload): “Drop files here” | Zone text                                 |
+| `browseLabel`                              | `string`                                       | [dictionary](/en/localization#upload): “Choose files”    | Button label                              |
+| `hint`                                     | `string`                                       | —                                                        | Hint under the button                     |
+| `cancelLabel`, `retryLabel`, `removeLabel` | `string`                                       | [dictionary](/en/localization#upload)                    | `aria-label` of the actions               |
+| `doneLabel`                                | `string`                                       | [dictionary](/en/localization#upload): “Uploaded”        | Announcement once a file is done          |
+| `errorLabel`                               | `(error, item) => string`                      | [dictionary](/en/localization#upload)                    | Error text by reason                      |
+| `id`, `disabled`, `required`, `invalid`    | from the field                                 | —                                                        | Link to `NuiField`                        |
 
 Events: `update:modelValue`, `reject(rejections)`, `done(item)`, `error(item)`,
 `remove(item)`. Slots: default (`{ open, dragging }`) replaces the zone content, `item`

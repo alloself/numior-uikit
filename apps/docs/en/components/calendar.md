@@ -61,25 +61,25 @@ is deterministic already on the server.
 
 ## API
 
-| Prop              | Type                                         | Default        | Description                                          |
-| ----------------- | -------------------------------------------- | -------------- | ---------------------------------------------------- |
-| `v-model`         | `string \| string[] \| NuiDateRange \| null` | `null`         | Value per `mode`                                     |
-| `v-model:month`   | `string`                                     | month of value | Shown month `YYYY-MM`                                |
-| `mode`            | `'single' \| 'multiple' \| 'range'`          | `'single'`     | Selection mode                                       |
-| `locale`          | `string`                                     | from config    | Locale for labels and formats                        |
-| `weekStart`       | `1…7`                                        | from locale    | First day of the week (ISO)                          |
-| `min` / `max`     | `string`                                     | —              | Selection bounds                                     |
-| `isDateDisabled`  | `(date: string) => boolean`                  | —              | Closed dates                                         |
-| `months`          | `number`                                     | `1`            | Months to show                                       |
-| `weekNumbers`     | `boolean`                                    | `false`        | ISO week number column                               |
-| `fixedWeeks`      | `boolean`                                    | `true`         | Always six rows                                      |
-| `showOutsideDays` | `boolean`                                    | `true`         | Days of the neighbouring months                      |
-| `showToday`       | `boolean`                                    | `true`         | Today button                                         |
-| `today`           | `string`                                     | local date     | Today as `YYYY-MM-DD`                                |
-| `presets`         | `NuiDatePreset[]`                            | —              | Range presets                                        |
-| `size`            | `'sm' \| 'md' \| 'lg'`                       | `'md'`         | Cell size                                            |
-| `disabled`        | `boolean`                                    | `false`        | Whole calendar inert                                 |
-| `*Label`          | `string`                                     | English texts  | `previous`, `next`, `month`, `year`, `today`, `week` |
+| Prop              | Type                                         | Default                                 | Description                                          |
+| ----------------- | -------------------------------------------- | --------------------------------------- | ---------------------------------------------------- |
+| `v-model`         | `string \| string[] \| NuiDateRange \| null` | `null`                                  | Value per `mode`                                     |
+| `v-model:month`   | `string`                                     | month of value                          | Shown month `YYYY-MM`                                |
+| `mode`            | `'single' \| 'multiple' \| 'range'`          | `'single'`                              | Selection mode                                       |
+| `locale`          | `string`                                     | from config                             | Locale for labels and formats                        |
+| `weekStart`       | `1…7`                                        | from locale                             | First day of the week (ISO)                          |
+| `min` / `max`     | `string`                                     | —                                       | Selection bounds                                     |
+| `isDateDisabled`  | `(date: string) => boolean`                  | —                                       | Closed dates                                         |
+| `months`          | `number`                                     | `1`                                     | Months to show                                       |
+| `weekNumbers`     | `boolean`                                    | `false`                                 | ISO week number column                               |
+| `fixedWeeks`      | `boolean`                                    | `true`                                  | Always six rows                                      |
+| `showOutsideDays` | `boolean`                                    | `true`                                  | Days of the neighbouring months                      |
+| `showToday`       | `boolean`                                    | `true`                                  | Today button                                         |
+| `today`           | `string`                                     | local date                              | Today as `YYYY-MM-DD`                                |
+| `presets`         | `NuiDatePreset[]`                            | —                                       | Range presets                                        |
+| `size`            | `'sm' \| 'md' \| 'lg'`                       | `'md'`                                  | Cell size                                            |
+| `disabled`        | `boolean`                                    | `false`                                 | Whole calendar inert                                 |
+| `*Label`          | `string`                                     | [dictionary](/en/localization#calendar) | `previous`, `next`, `month`, `year`, `today`, `week` |
 
 Slot `actions` in the footer. Method `focus(date?)` through a ref. Block `nui-calendar`
 (modifiers `--size-*`, `--mode-*`, `--view-*`, `--week-numbers`, `--multi`, `--picking`,

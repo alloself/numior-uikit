@@ -17,7 +17,7 @@ const path = [
 
 <div class="vp-raw nui-demo nui-demo--stack" data-nui-theme="light">
   <NuiBreadcrumbs :items="path.slice(0, 3)" label="Path" />
-  <NuiBreadcrumbs :items="path" :max-items="3" label="Full path" more-label="Show path" />
+  <NuiBreadcrumbs :items="path" :max-items="3" label="Full path" />
 </div>
 
 ```vue
@@ -34,7 +34,7 @@ const path: NuiBreadcrumbItem[] = [
 </script>
 
 <template>
-  <NuiBreadcrumbs :items="path" :max-items="3" label="Path" more-label="Show path" />
+  <NuiBreadcrumbs :items="path" :max-items="3" label="Path" />
 </template>
 ```
 
@@ -60,14 +60,14 @@ and an accessible name from `moreLabel`.
 
 ## API
 
-| Prop        | Type                             | Default           | Description                            |
-| ----------- | -------------------------------- | ----------------- | -------------------------------------- |
-| `items`     | `{ label, href?, to?, icon? }[]` | —                 | The trail; the last item is the page   |
-| `maxItems`  | `number`                         | —                 | Beyond it the middle collapses         |
-| `separator` | `IconAlias`                      | `'chevron-right'` | Separator icon                         |
-| `label`     | `string`                         | `'Breadcrumb'`    | `aria-label` of the nav                |
-| `moreLabel` | `string`                         | `'Show path'`     | Accessible name of the ellipsis button |
-| `as`        | `string \| Component`            | `'a'`             | Link component for a router            |
+| Prop        | Type                             | Default                                                  | Description                            |
+| ----------- | -------------------------------- | -------------------------------------------------------- | -------------------------------------- |
+| `items`     | `{ label, href?, to?, icon? }[]` | —                                                        | The trail; the last item is the page   |
+| `maxItems`  | `number`                         | —                                                        | Beyond it the middle collapses         |
+| `separator` | `IconAlias`                      | `'chevron-right'`                                        | Separator icon                         |
+| `label`     | `string`                         | [dictionary](/en/localization#breadcrumbs): “Breadcrumb” | `aria-label` of the nav                |
+| `moreLabel` | `string`                         | [dictionary](/en/localization#breadcrumbs): “Show path”  | Accessible name of the ellipsis button |
+| `as`        | `string \| Component`            | `'a'`                                                    | Link component for a router            |
 
 Slot `item="{ item, index, current }"`. Block `nui-breadcrumbs`, elements `__list`, `__item`,
 `__link`, `__current`, `__icon`, `__separator`, `__more`.

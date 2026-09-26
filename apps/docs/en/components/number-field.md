@@ -64,23 +64,23 @@ attribute when negative values are expected.
 
 ## API
 
-| Prop             | Type                       | Default       | Description                            |
-| ---------------- | -------------------------- | ------------- | -------------------------------------- |
-| `v-model`        | `number \| null`           | `null`        | Value                                  |
-| `min`, `max`     | `number`                   | —             | Bounds, clamped on commit and stepping |
-| `step`           | `number`                   | `1`           | Step for keys and steppers             |
-| `formatOptions`  | `Intl.NumberFormatOptions` | —             | Currency, percent, digits              |
-| `locale`         | `string`                   | from config   | Locale for formatting and parsing      |
-| `steppers`       | `boolean`                  | `true`        | ± buttons at the end edge              |
-| `readonly`       | `boolean`                  | `false`       | Read-only, steppers disabled           |
-| `name`           | `string`                   | —             | Hidden `input` with the number         |
-| `incrementLabel` | `string`                   | `'Increment'` | Label of the "+" button                |
-| `decrementLabel` | `string`                   | `'Decrement'` | Label of the "−" button                |
-| `size`           | `'sm' \| 'md' \| 'lg'`     | `'md'`        | Size step                              |
-| `id`             | `string`                   | from field    | Explicit control id                    |
-| `disabled`       | `boolean`                  | from field    | Disabled state                         |
-| `required`       | `boolean`                  | from field    | Required state                         |
-| `invalid`        | `boolean`                  | from field    | `aria-invalid` and an error border     |
+| Prop             | Type                       | Default                                                 | Description                            |
+| ---------------- | -------------------------- | ------------------------------------------------------- | -------------------------------------- |
+| `v-model`        | `number \| null`           | `null`                                                  | Value                                  |
+| `min`, `max`     | `number`                   | —                                                       | Bounds, clamped on commit and stepping |
+| `step`           | `number`                   | `1`                                                     | Step for keys and steppers             |
+| `formatOptions`  | `Intl.NumberFormatOptions` | —                                                       | Currency, percent, digits              |
+| `locale`         | `string`                   | from config                                             | Locale for formatting and parsing      |
+| `steppers`       | `boolean`                  | `true`                                                  | ± buttons at the end edge              |
+| `readonly`       | `boolean`                  | `false`                                                 | Read-only, steppers disabled           |
+| `name`           | `string`                   | —                                                       | Hidden `input` with the number         |
+| `incrementLabel` | `string`                   | [dictionary](/en/localization#numberfield): “Increment” | Label of the "+" button                |
+| `decrementLabel` | `string`                   | [dictionary](/en/localization#numberfield): “Decrement” | Label of the "−" button                |
+| `size`           | `'sm' \| 'md' \| 'lg'`     | `'md'`                                                  | Size step                              |
+| `id`             | `string`                   | from field                                              | Explicit control id                    |
+| `disabled`       | `boolean`                  | from field                                              | Disabled state                         |
+| `required`       | `boolean`                  | from field                                              | Required state                         |
+| `invalid`        | `boolean`                  | from field                                              | `aria-invalid` and an error border     |
 
 Slots: `prefix`, `suffix`. `focus()` is available through a template ref. Block
 `nui-number-field` (modifiers `--size-*`, `--invalid`, `--disabled`, `--readonly`,

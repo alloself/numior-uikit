@@ -16,7 +16,7 @@ const undo = () => toast.success('Удаление отменено')
   <NuiButton @click="toast.info('Черновик сохранён', { description: 'Синхронизация через минуту' })">Информация</NuiButton>
   <NuiButton variant="soft" tone="success" @click="toast.success('Проект опубликован')">Успех</NuiButton>
   <NuiButton variant="outline" tone="error" @click="toast.error('Не удалось сохранить', { duration: 0, action: { label: 'Повторить', onClick: undo } })">Ошибка с действием</NuiButton>
-  <NuiToaster label="Уведомления" close-label="Закрыть" />
+  <NuiToaster />
 </div>
 
 ```vue
@@ -29,7 +29,7 @@ const save = () => toast.success('Проект опубликован');
 
 <template>
   <NuiButton @click="save">Опубликовать</NuiButton>
-  <NuiToaster label="Уведомления" close-label="Закрыть" />
+  <NuiToaster />
 </template>
 ```
 
@@ -103,8 +103,8 @@ createApp(App)
 ## API
 
 `NuiToaster`: `placement` (`top-start | top | top-end | bottom-start | bottom | bottom-end`,
-по умолчанию `top-end`), `expand` (стопка всегда раскрыта), `label` (`aria-label` региона),
-`closeLabel`, `id`. На узких экранах регион занимает всю ширину. Блок `nui-toaster` с
+по умолчанию `top-end`), `expand` (стопка всегда раскрыта), `label` (`aria-label` региона,
+[словарь](/localization#toast): «Уведомления»), `closeLabel`, `id`. На узких экранах регион занимает всю ширину. Блок `nui-toaster` с
 модификаторами `--placement-*` и `--expanded`, элемент `__item` с модификаторами `--behind`
 и `--leaving`; переменные региона `--_inset`, `--_width`, `--_gap`, `--_peek`,
 `--_direction`, `--_front-size`, элемента — `--_index`, `--_offset`, `--_size`.

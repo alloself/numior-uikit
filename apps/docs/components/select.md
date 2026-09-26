@@ -25,10 +25,10 @@ const tagOptions = [
 
 <div class="vp-raw nui-demo nui-demo--stack" data-nui-theme="light">
   <NuiField label="Страна">
-    <NuiSelect v-model="country" :options="countries" placeholder="Выберите страну" clearable clear-label="Очистить" />
+    <NuiSelect v-model="country" :options="countries" placeholder="Выберите страну" clearable />
   </NuiField>
   <NuiField label="Теги">
-    <NuiSelect v-model="tags" :options="tagOptions" multiple :count-label="(n) => `${n} выбрано`" />
+    <NuiSelect v-model="tags" :options="tagOptions" multiple />
   </NuiField>
 </div>
 
@@ -74,20 +74,20 @@ const countries: NuiOptionSource<string> = [
 
 ## API
 
-| Prop          | Тип                         | По умолчанию     | Описание                         |
-| ------------- | --------------------------- | ---------------- | -------------------------------- |
-| `v-model`     | `T \| T[]`                  | —                | Значение или массив в `multiple` |
-| `options`     | `NuiOptionSource<T>`        | —                | Опции и группы                   |
-| `multiple`    | `boolean`                   | `false`          | Несколько значений               |
-| `clearable`   | `boolean`                   | `false`          | Кнопка очистки                   |
-| `placeholder` | `string`                    | —                | Текст без значения               |
-| `name`        | `string`                    | —                | Скрытые поля формы               |
-| `getKey`      | `(value: T) => string`      | по значению      | Ключ для объектов                |
-| `loop`        | `boolean`                   | `true`           | Зацикливание стрелок             |
-| `placement`   | `FloatingPlacement`         | `'bottom-start'` | Сторона списка                   |
-| `countLabel`  | `(count: number) => string` | `N selected`     | Подпись при нескольких значениях |
-| `emptyLabel`  | `string`                    | `'No options'`   | Текст пустого списка             |
-| `clearLabel`  | `string`                    | `'Clear'`        | Доступное имя кнопки очистки     |
+| Prop          | Тип                         | По умолчанию                                     | Описание                         |
+| ------------- | --------------------------- | ------------------------------------------------ | -------------------------------- |
+| `v-model`     | `T \| T[]`                  | —                                                | Значение или массив в `multiple` |
+| `options`     | `NuiOptionSource<T>`        | —                                                | Опции и группы                   |
+| `multiple`    | `boolean`                   | `false`                                          | Несколько значений               |
+| `clearable`   | `boolean`                   | `false`                                          | Кнопка очистки                   |
+| `placeholder` | `string`                    | —                                                | Текст без значения               |
+| `name`        | `string`                    | —                                                | Скрытые поля формы               |
+| `getKey`      | `(value: T) => string`      | по значению                                      | Ключ для объектов                |
+| `loop`        | `boolean`                   | `true`                                           | Зацикливание стрелок             |
+| `placement`   | `FloatingPlacement`         | `'bottom-start'`                                 | Сторона списка                   |
+| `countLabel`  | `(count: number) => string` | [словарь](/localization#select): «Выбрано: N»    | Подпись при нескольких значениях |
+| `emptyLabel`  | `string`                    | [словарь](/localization#select): «Нет вариантов» | Текст пустого списка             |
+| `clearLabel`  | `string`                    | [словарь](/localization#select): «Очистить»      | Доступное имя кнопки очистки     |
 
 Плюс `id`, `size`, `disabled`, `required`, `invalid` как у остальных контролов поля. Слоты
 `value="{ selected }"` и `option="{ option, selected, active }"`. Блок `nui-select`

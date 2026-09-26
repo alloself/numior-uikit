@@ -35,16 +35,16 @@ start input, the end input is named by `endLabel`.
 
 ## API
 
-| Prop                                  | Type              | Default          | Description                 |
-| ------------------------------------- | ----------------- | ---------------- | --------------------------- |
-| `v-model`                             | `NuiDateRange`    | `{ start, end }` | Range                       |
-| `months`                              | `number`          | `2`              | Months in the calendar      |
-| `presets`                             | `NuiDatePreset[]` | —                | Presets beside the calendar |
-| `startPlaceholder` / `endPlaceholder` | `string`          | locale pattern   | Field placeholders          |
-| `startName` / `endName`               | `string`          | —                | Hidden inputs for forms     |
-| `endLabel`                            | `string`          | `'End date'`     | Name of the end input       |
-| `clearable`                           | `boolean`         | `false`          | Clear button                |
-| `openLabel`                           | `string`          | `'Choose dates'` | Name of the calendar button |
+| Prop                                  | Type              | Default                                                   | Description                 |
+| ------------------------------------- | ----------------- | --------------------------------------------------------- | --------------------------- |
+| `v-model`                             | `NuiDateRange`    | `{ start, end }`                                          | Range                       |
+| `months`                              | `number`          | `2`                                                       | Months in the calendar      |
+| `presets`                             | `NuiDatePreset[]` | —                                                         | Presets beside the calendar |
+| `startPlaceholder` / `endPlaceholder` | `string`          | locale pattern                                            | Field placeholders          |
+| `startName` / `endName`               | `string`          | —                                                         | Hidden inputs for forms     |
+| `endLabel`                            | `string`          | [dictionary](/en/localization#datepicker): “End date”     | Name of the end input       |
+| `clearable`                           | `boolean`         | `false`                                                   | Clear button                |
+| `openLabel`                           | `string`          | [dictionary](/en/localization#datepicker): “Choose dates” | Name of the calendar button |
 
 The remaining props, the `actions` slot, the methods and the block match the
 [date picker](/en/components/date-picker); the root carries the `nui-date-picker--range`

@@ -88,7 +88,8 @@ provideNuiConfig({ icons: { check: CheckIcon } });
 `setup` компонента для поддерева (значение, ref или геттер), проп `locale` на компоненте
 для точечного переопределения. Без настройки
 действует `en-US`. `navigator.language` кит не читает: сервер и клиент должны форматировать
-одинаково, поэтому локаль запроса передавайте в конфиг явно.
+одинаково, поэтому локаль запроса передавайте в конфиг явно. Та же локаль выбирает язык
+встроенных текстов компонентов — см. [Локализация](/localization).
 
 ```ts
 createApp(App)
@@ -98,13 +99,16 @@ createApp(App)
 
 ## API
 
-| Где                                    | Опция    | Тип                               | Описание                                              |
-| -------------------------------------- | -------- | --------------------------------- | ----------------------------------------------------- |
-| `NuiIcon`                              | `alias`  | `IconAlias` (`string`)            | Алиас из реестра или дефолтного набора                |
-| `NuiIcon`                              | `icon`   | `Component`                       | Явный компонент, приоритетнее `alias`                 |
-| `createNuiConfig` / `provideNuiConfig` | `icons`  | `Record<string, Component>`       | Алиасы для приложения или поддерева                   |
-| `createNuiConfig` / `provideNuiConfig` | `toasts` | `ToastStoreOptions`               | Настройки сервиса уведомлений                         |
-| `createNuiConfig` / `provideNuiConfig` | `locale` | `string` (ref или геттер)         | Локаль чисел, времени и дат                           |
-| `createNuiConfig` / `provideNuiConfig` | `dir`    | `'ltr' \| 'rtl'` (ref или геттер) | Направление письма; без него читается ближайший `dir` |
+| Где                                    | Опция       | Тип                                  | Описание                                               |
+| -------------------------------------- | ----------- | ------------------------------------ | ------------------------------------------------------ |
+| `NuiIcon`                              | `alias`     | `IconAlias` (`string`)               | Алиас из реестра или дефолтного набора                 |
+| `NuiIcon`                              | `icon`      | `Component`                          | Явный компонент, приоритетнее `alias`                  |
+| `createNuiConfig` / `provideNuiConfig` | `icons`     | `Record<string, Component>`          | Алиасы для приложения или поддерева                    |
+| `createNuiConfig` / `provideNuiConfig` | `toasts`    | `ToastStoreOptions`                  | Настройки сервиса уведомлений                          |
+| `createNuiConfig` / `provideNuiConfig` | `locale`    | `string` (ref или геттер)            | Локаль чисел, времени и дат                            |
+| `createNuiConfig` / `provideNuiConfig` | `dir`       | `'ltr' \| 'rtl'` (ref или геттер)    | Направление письма; без него читается ближайший `dir`  |
+| `createNuiConfig` / `provideNuiConfig` | `messages`  | `NuiLocaleMessages` (ref или геттер) | Переопределения и новые языки [словаря](/localization) |
+| `createNuiConfig` / `provideNuiConfig` | `translate` | `NuiTranslate`                       | Тексты из i18n-библиотеки приложения, раньше словаря   |
 
-Из `@numior/vue` также экспортируются `useIcons`, `defaultIcons`, `useLocale` и `useDirection`.
+Из `@numior/vue` также экспортируются `useIcons`, `defaultIcons`, `useLocale`, `useDirection` и
+`plural`.

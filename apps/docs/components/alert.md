@@ -12,7 +12,7 @@ const open = ref(true)
 <div class="vp-raw nui-demo nui-demo--stack" data-nui-theme="light">
   <NuiAlert title="Черновик сохранён" description="Синхронизация с сервером через минуту." />
   <NuiAlert tone="success" variant="outline" title="Проект опубликован" />
-  <NuiAlert tone="warning" title="Черновик не сохранён" dismissible dismiss-label="Закрыть" v-model:open="open">
+  <NuiAlert tone="warning" title="Черновик не сохранён" dismissible v-model:open="open">
     Изменения пропадут при выходе со страницы.
     <template #actions><NuiButton size="sm" variant="outline" tone="warning" @click="open = false">Сохранить</NuiButton></template>
   </NuiAlert>
@@ -38,17 +38,17 @@ const open = ref(true)
 
 ## API
 
-| Prop           | Тип                              | По умолчанию | Описание                      |
-| -------------- | -------------------------------- | ------------ | ----------------------------- |
-| `variant`      | `'soft' \| 'outline' \| 'solid'` | `'soft'`     | Форма                         |
-| `tone`         | `NuiTone`                        | `'info'`     | Роль, цвета и иконка          |
-| `title`        | `string`                         | —            | Заголовок; слот `title`       |
-| `description`  | `string`                         | —            | Текст; слот по умолчанию      |
-| `icon`         | `IconAlias`                      | иконка тона  | Своя иконка                   |
-| `hideIcon`     | `boolean`                        | `false`      | Без иконки                    |
-| `dismissible`  | `boolean`                        | `false`      | Кнопка закрытия               |
-| `dismissLabel` | `string`                         | `'Close'`    | Доступное имя кнопки закрытия |
-| `v-model:open` | `boolean`                        | `true`       | Показан ли алерт              |
+| Prop           | Тип                              | По умолчанию                              | Описание                      |
+| -------------- | -------------------------------- | ----------------------------------------- | ----------------------------- |
+| `variant`      | `'soft' \| 'outline' \| 'solid'` | `'soft'`                                  | Форма                         |
+| `tone`         | `NuiTone`                        | `'info'`                                  | Роль, цвета и иконка          |
+| `title`        | `string`                         | —                                         | Заголовок; слот `title`       |
+| `description`  | `string`                         | —                                         | Текст; слот по умолчанию      |
+| `icon`         | `IconAlias`                      | иконка тона                               | Своя иконка                   |
+| `hideIcon`     | `boolean`                        | `false`                                   | Без иконки                    |
+| `dismissible`  | `boolean`                        | `false`                                   | Кнопка закрытия               |
+| `dismissLabel` | `string`                         | [словарь](/localization#alert): «Закрыть» | Доступное имя кнопки закрытия |
+| `v-model:open` | `boolean`                        | `true`                                    | Показан ли алерт              |
 
 Событие `dismiss`. Слоты `title`, `default`, `actions`. Блок `nui-alert`, модификаторы
 `--variant-*`, `--tone-*`, `--closed`; элементы `__icon`, `__body`, `__title`,

@@ -56,24 +56,24 @@ and focus returning to the hours.
 
 ## API
 
-| Prop         | Type                   | Default          | Description                         |
-| ------------ | ---------------------- | ---------------- | ----------------------------------- |
-| `v-model`    | `string \| null`       | `null`           | `HH:mm` or `HH:mm:ss`               |
-| `seconds`    | `boolean`              | `false`          | Seconds segment                     |
-| `hourCycle`  | `'h12' \| 'h23'`       | from locale      | Forced hour cycle                   |
-| `locale`     | `string`               | from config      | Locale for layout and labels        |
-| `min`, `max` | `string`               | —                | Bounds for clamping and suggestions |
-| `step`       | `number`               | `15`             | Suggestion and PageUp/PageDown step |
-| `readonly`   | `boolean`              | `false`          | Read-only                           |
-| `name`       | `string`               | —                | Hidden `input` with the value       |
-| `placement`  | `FloatingPlacement`    | `'bottom-start'` | Side of the suggestion list         |
-| `clockLabel` | `string`               | `'Choose time'`  | Label of the clock button           |
-| `emptyLabel` | `string`               | `'No times'`     | Text of the empty list              |
-| `size`       | `'sm' \| 'md' \| 'lg'` | `'md'`           | Size step                           |
-| `id`         | `string`               | from field       | Explicit id (placed on the hours)   |
-| `disabled`   | `boolean`              | from field       | Disabled state                      |
-| `required`   | `boolean`              | from field       | `aria-required` on the segments     |
-| `invalid`    | `boolean`              | from field       | `aria-invalid` and an error border  |
+| Prop         | Type                   | Default                                                 | Description                         |
+| ------------ | ---------------------- | ------------------------------------------------------- | ----------------------------------- |
+| `v-model`    | `string \| null`       | `null`                                                  | `HH:mm` or `HH:mm:ss`               |
+| `seconds`    | `boolean`              | `false`                                                 | Seconds segment                     |
+| `hourCycle`  | `'h12' \| 'h23'`       | from locale                                             | Forced hour cycle                   |
+| `locale`     | `string`               | from config                                             | Locale for layout and labels        |
+| `min`, `max` | `string`               | —                                                       | Bounds for clamping and suggestions |
+| `step`       | `number`               | `15`                                                    | Suggestion and PageUp/PageDown step |
+| `readonly`   | `boolean`              | `false`                                                 | Read-only                           |
+| `name`       | `string`               | —                                                       | Hidden `input` with the value       |
+| `placement`  | `FloatingPlacement`    | `'bottom-start'`                                        | Side of the suggestion list         |
+| `clockLabel` | `string`               | [dictionary](/en/localization#timefield): “Choose time” | Label of the clock button           |
+| `emptyLabel` | `string`               | [dictionary](/en/localization#timefield): “No times”    | Text of the empty list              |
+| `size`       | `'sm' \| 'md' \| 'lg'` | `'md'`                                                  | Size step                           |
+| `id`         | `string`               | from field                                              | Explicit id (placed on the hours)   |
+| `disabled`   | `boolean`              | from field                                              | Disabled state                      |
+| `required`   | `boolean`              | from field                                              | `aria-required` on the segments     |
+| `invalid`    | `boolean`              | from field                                              | `aria-invalid` and an error border  |
 
 `focus()` focuses the hours. Block `nui-time-field` (modifiers `--size-*`, `--open`,
 `--invalid`, `--disabled`, `--readonly`; elements `__segments`, `__segment` with `--type-*`,

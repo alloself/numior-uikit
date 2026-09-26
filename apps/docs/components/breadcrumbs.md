@@ -17,7 +17,7 @@ const path = [
 
 <div class="vp-raw nui-demo nui-demo--stack" data-nui-theme="light">
   <NuiBreadcrumbs :items="path.slice(0, 3)" label="Путь" />
-  <NuiBreadcrumbs :items="path" :max-items="3" label="Полный путь" more-label="Показать путь" />
+  <NuiBreadcrumbs :items="path" :max-items="3" label="Полный путь" />
 </div>
 
 ```vue
@@ -34,7 +34,7 @@ const path: NuiBreadcrumbItem[] = [
 </script>
 
 <template>
-  <NuiBreadcrumbs :items="path" :max-items="3" label="Путь" more-label="Показать путь" />
+  <NuiBreadcrumbs :items="path" :max-items="3" label="Путь" />
 </template>
 ```
 
@@ -60,14 +60,14 @@ const path: NuiBreadcrumbItem[] = [
 
 ## API
 
-| Prop        | Тип                              | По умолчанию      | Описание                                   |
-| ----------- | -------------------------------- | ----------------- | ------------------------------------------ |
-| `items`     | `{ label, href?, to?, icon? }[]` | —                 | Путь; последний элемент — текущая страница |
-| `maxItems`  | `number`                         | —                 | При превышении середина сворачивается      |
-| `separator` | `IconAlias`                      | `'chevron-right'` | Иконка-разделитель                         |
-| `label`     | `string`                         | `'Breadcrumb'`    | `aria-label` навигации                     |
-| `moreLabel` | `string`                         | `'Show path'`     | Доступное имя кнопки «…»                   |
-| `as`        | `string \| Component`            | `'a'`             | Компонент ссылки для роутера               |
+| Prop        | Тип                              | По умолчанию                                                  | Описание                                   |
+| ----------- | -------------------------------- | ------------------------------------------------------------- | ------------------------------------------ |
+| `items`     | `{ label, href?, to?, icon? }[]` | —                                                             | Путь; последний элемент — текущая страница |
+| `maxItems`  | `number`                         | —                                                             | При превышении середина сворачивается      |
+| `separator` | `IconAlias`                      | `'chevron-right'`                                             | Иконка-разделитель                         |
+| `label`     | `string`                         | [словарь](/localization#breadcrumbs): «Навигационная цепочка» | `aria-label` навигации                     |
+| `moreLabel` | `string`                         | [словарь](/localization#breadcrumbs): «Показать путь»         | Доступное имя кнопки «…»                   |
+| `as`        | `string \| Component`            | `'a'`                                                         | Компонент ссылки для роутера               |
 
 Слот `item="{ item, index, current }"`. Блок `nui-breadcrumbs`, элементы `__list`, `__item`,
 `__link`, `__current`, `__icon`, `__separator`, `__more`.

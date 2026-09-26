@@ -44,20 +44,20 @@ date (`HH:mm`), and Enter in the time field closes the dialog.
 
 ## API
 
-| Prop          | Type                | Default          | Description                                          |
-| ------------- | ------------------- | ---------------- | ---------------------------------------------------- |
-| `v-model`     | `string \| null`    | `null`           | Date `YYYY-MM-DD`, or `YYYY-MM-DDTHH:mm` with `time` |
-| `time`        | `boolean`           | `false`          | Date and time                                        |
-| `timeStep`    | `number`            | `15`             | Step of the time suggestions in minutes              |
-| `placeholder` | `string`            | locale pattern   | Field placeholder                                    |
-| `clearable`   | `boolean`           | `false`          | Clear button                                         |
-| `readonly`    | `boolean`           | `false`          | Read-only                                            |
-| `name`        | `string`            | —                | Hidden input for forms                               |
-| `placement`   | `FloatingPlacement` | `'bottom-start'` | Dialog side                                          |
-| `openLabel`   | `string`            | `'Choose date'`  | Name of the calendar button                          |
-| `clearLabel`  | `string`            | `'Clear'`        | Name of the clear button                             |
-| `dialogLabel` | `string`            | `'Calendar'`     | Dialog name outside a `NuiField`                     |
-| `timeLabel`   | `string`            | `'Choose time'`  | Name of the clock button                             |
+| Prop          | Type                | Default                                                  | Description                                          |
+| ------------- | ------------------- | -------------------------------------------------------- | ---------------------------------------------------- |
+| `v-model`     | `string \| null`    | `null`                                                   | Date `YYYY-MM-DD`, or `YYYY-MM-DDTHH:mm` with `time` |
+| `time`        | `boolean`           | `false`                                                  | Date and time                                        |
+| `timeStep`    | `number`            | `15`                                                     | Step of the time suggestions in minutes              |
+| `placeholder` | `string`            | locale pattern                                           | Field placeholder                                    |
+| `clearable`   | `boolean`           | `false`                                                  | Clear button                                         |
+| `readonly`    | `boolean`           | `false`                                                  | Read-only                                            |
+| `name`        | `string`            | —                                                        | Hidden input for forms                               |
+| `placement`   | `FloatingPlacement` | `'bottom-start'`                                         | Dialog side                                          |
+| `openLabel`   | `string`            | [dictionary](/en/localization#datepicker): “Choose date” | Name of the calendar button                          |
+| `clearLabel`  | `string`            | [dictionary](/en/localization#datepicker): “Clear”       | Name of the clear button                             |
+| `dialogLabel` | `string`            | [dictionary](/en/localization#datepicker): “Calendar”    | Dialog name outside a `NuiField`                     |
+| `timeLabel`   | `string`            | [dictionary](/en/localization#timefield): “Choose time”  | Name of the clock button                             |
 
 Plus `id`, `size`, `disabled`, `required`, `invalid` like every field control and the
 calendar props `locale`, `weekStart`, `min`, `max`, `isDateDisabled`, `weekNumbers`,

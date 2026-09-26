@@ -16,6 +16,7 @@ export default defineConfig({
             items: [
               { text: 'Начало работы', link: '/guide' },
               { text: 'Темизация', link: '/theming' },
+              { text: 'Локализация', link: '/localization' },
             ],
           },
           {
@@ -100,6 +101,7 @@ export default defineConfig({
             items: [
               { text: 'Getting started', link: '/en/guide' },
               { text: 'Theming', link: '/en/theming' },
+              { text: 'Localization', link: '/en/localization' },
             ],
           },
           {

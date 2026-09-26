@@ -85,24 +85,24 @@ lengthen the Tab path.
 
 ## API
 
-| Prop           | Type                                  | Default          | Description                    |
-| -------------- | ------------------------------------- | ---------------- | ------------------------------ |
-| `v-model`      | `T \| T[]`                            | —                | Value, or array in `multiple`  |
-| `options`      | `NuiOptionSource<T>`                  | —                | Options and groups             |
-| `multiple`     | `boolean`                             | `false`          | Chips and several values       |
-| `filter`       | `(option, query) => boolean \| false` | by label         | Custom filter or none          |
-| `loading`      | `boolean`                             | `false`          | Loading state                  |
-| `customValue`  | `(text: string) => T`                 | —                | Allow free values              |
-| `clearable`    | `boolean`                             | `false`          | Clear button                   |
-| `placeholder`  | `string`                              | —                | Text without a value           |
-| `name`         | `string`                              | —                | Hidden form fields             |
-| `getKey`       | `(value: T) => string`                | by value         | Key for object values          |
-| `placement`    | `FloatingPlacement`                   | `'bottom-start'` | Side of the list               |
-| `emptyLabel`   | `string`                              | `'No matches'`   | Empty list text                |
-| `loadingLabel` | `string`                              | `'Loading'`      | Loading text                   |
-| `clearLabel`   | `string`                              | `'Clear'`        | Clear button name              |
-| `removeLabel`  | `string`                              | `'Remove'`       | Prefix of the chip button name |
-| `toggleLabel`  | `string`                              | `'Show options'` | Toggle button name             |
+| Prop           | Type                                  | Default                                                 | Description                    |
+| -------------- | ------------------------------------- | ------------------------------------------------------- | ------------------------------ |
+| `v-model`      | `T \| T[]`                            | —                                                       | Value, or array in `multiple`  |
+| `options`      | `NuiOptionSource<T>`                  | —                                                       | Options and groups             |
+| `multiple`     | `boolean`                             | `false`                                                 | Chips and several values       |
+| `filter`       | `(option, query) => boolean \| false` | by label                                                | Custom filter or none          |
+| `loading`      | `boolean`                             | `false`                                                 | Loading state                  |
+| `customValue`  | `(text: string) => T`                 | —                                                       | Allow free values              |
+| `clearable`    | `boolean`                             | `false`                                                 | Clear button                   |
+| `placeholder`  | `string`                              | —                                                       | Text without a value           |
+| `name`         | `string`                              | —                                                       | Hidden form fields             |
+| `getKey`       | `(value: T) => string`                | by value                                                | Key for object values          |
+| `placement`    | `FloatingPlacement`                   | `'bottom-start'`                                        | Side of the list               |
+| `emptyLabel`   | `string`                              | [dictionary](/en/localization#combobox): “No matches”   | Empty list text                |
+| `loadingLabel` | `string`                              | [dictionary](/en/localization#list): “Loading”          | Loading text                   |
+| `clearLabel`   | `string`                              | [dictionary](/en/localization#combobox): “Clear”        | Clear button name              |
+| `removeLabel`  | `string`                              | [dictionary](/en/localization#combobox): “Remove”       | Prefix of the chip button name |
+| `toggleLabel`  | `string`                              | [dictionary](/en/localization#combobox): “Show options” | Toggle button name             |
 
 Event `search(query)`. Plus `id`, `size`, `disabled`, `required`, `invalid`; slot
 `option="{ option, selected, active }"`; `focus()` through a ref. Block `nui-combobox`

@@ -138,37 +138,37 @@ scrolling, so pagination is the better fit for keyboard-heavy selection.
 
 ## API
 
-| Prop                                   | Type                                  | Default                                     | Description                               |
-| -------------------------------------- | ------------------------------------- | ------------------------------------------- | ----------------------------------------- |
-| `columns`                              | `NuiTableColumn<T>[]`                 | —                                           | Columns                                   |
-| `rows`                                 | `T[]`                                 | —                                           | Rows                                      |
-| `getKey`                               | `(row: T) => string`                  | JSON                                        | Row key                                   |
-| `sort`                                 | `NuiTableSort`                        | `null`                                      | `v-model:sort`                            |
-| `selectable`                           | `'single' \| 'multiple'`              | —                                           | Row selection                             |
-| `selected`                             | `T[]`                                 | `[]`                                        | `v-model:selected`                        |
-| `pagination`                           | `NuiTablePagination \| boolean`       | —                                           | Footer with `NuiPagination` and its props |
-| `page`, `pageSize`                     | `number`                              | `1`, `20`                                   | `v-model:page`, `v-model:pageSize`        |
-| `remote`                               | `boolean`                             | `false`                                     | Do not sort or slice locally              |
-| `total`                                | `number`                              | `rows.length`                               | Total rows in `remote`                    |
-| `loading`                              | `boolean`                             | `false`                                     | Skeletons and `aria-busy`                 |
-| `loadingRows`                          | `number`                              | `5`                                         | Number of skeleton rows                   |
-| `emptyLabel`                           | `string`                              | `'No data'`                                 | Title of the empty state                  |
-| `caption`                              | `string`                              | —                                           | Table caption                             |
-| `stickyHeader`, `striped`, `hoverable` | `boolean`                             | `false`                                     | Look                                      |
-| `size`                                 | `'sm' \| 'md' \| 'lg'`                | `'md'`                                      | Row height                                |
-| `virtual`, `height`, `rowHeight`       | `boolean`, `string`, `number`         | `false`, —, `40`                            | Windowing                                 |
-| `widths`                               | `Record<string, number>`              | `{}`                                        | `v-model:widths`, px                      |
-| `columnOrder`                          | `string[]`                            | `[]`                                        | `v-model:columnOrder`                     |
-| `getChildren`                          | `(row: T) => T[] \| undefined`        | —                                           | Children of a row (tree)                  |
-| `isExpandable`                         | `(row: T) => boolean`                 | by children                                 | Node expandable before loading            |
-| `expanded`                             | `T[]`                                 | `[]`                                        | `v-model:expanded`                        |
-| `indent`                               | `number`                              | `20`                                        | Indent per level, px                      |
-| `pinnedRows`                           | `T[]`                                 | `[]`                                        | Rows under the header                     |
-| `rowDrag`                              | `boolean`                             | `false`                                     | Grip column for row reordering            |
-| `resizeLabel`, `reorderLabel`          | `(column) => string`                  | `Resize …`, `Reorder …`                     | Names of the column handles               |
-| `expandLabel`, `dragLabel`, `rowLabel` | `(row) => string`                     | `'Toggle row'`, `'Reorder row'`, first cell | Row button names and the announced label  |
-| `announce`                             | `(a: NuiTableAnnouncement) => string` | English text                                | `aria-live` text while reordering         |
-| `selectLabel`, `selectAllLabel`        | `string`                              | `'Select row'`, `'Select all rows'`         | Checkbox names                            |
+| Prop                                   | Type                                  | Default                                          | Description                               |
+| -------------------------------------- | ------------------------------------- | ------------------------------------------------ | ----------------------------------------- |
+| `columns`                              | `NuiTableColumn<T>[]`                 | —                                                | Columns                                   |
+| `rows`                                 | `T[]`                                 | —                                                | Rows                                      |
+| `getKey`                               | `(row: T) => string`                  | JSON                                             | Row key                                   |
+| `sort`                                 | `NuiTableSort`                        | `null`                                           | `v-model:sort`                            |
+| `selectable`                           | `'single' \| 'multiple'`              | —                                                | Row selection                             |
+| `selected`                             | `T[]`                                 | `[]`                                             | `v-model:selected`                        |
+| `pagination`                           | `NuiTablePagination \| boolean`       | —                                                | Footer with `NuiPagination` and its props |
+| `page`, `pageSize`                     | `number`                              | `1`, `20`                                        | `v-model:page`, `v-model:pageSize`        |
+| `remote`                               | `boolean`                             | `false`                                          | Do not sort or slice locally              |
+| `total`                                | `number`                              | `rows.length`                                    | Total rows in `remote`                    |
+| `loading`                              | `boolean`                             | `false`                                          | Skeletons and `aria-busy`                 |
+| `loadingRows`                          | `number`                              | `5`                                              | Number of skeleton rows                   |
+| `emptyLabel`                           | `string`                              | [dictionary](/en/localization#table): “No data”  | Title of the empty state                  |
+| `caption`                              | `string`                              | —                                                | Table caption                             |
+| `stickyHeader`, `striped`, `hoverable` | `boolean`                             | `false`                                          | Look                                      |
+| `size`                                 | `'sm' \| 'md' \| 'lg'`                | `'md'`                                           | Row height                                |
+| `virtual`, `height`, `rowHeight`       | `boolean`, `string`, `number`         | `false`, —, `40`                                 | Windowing                                 |
+| `widths`                               | `Record<string, number>`              | `{}`                                             | `v-model:widths`, px                      |
+| `columnOrder`                          | `string[]`                            | `[]`                                             | `v-model:columnOrder`                     |
+| `getChildren`                          | `(row: T) => T[] \| undefined`        | —                                                | Children of a row (tree)                  |
+| `isExpandable`                         | `(row: T) => boolean`                 | by children                                      | Node expandable before loading            |
+| `expanded`                             | `T[]`                                 | `[]`                                             | `v-model:expanded`                        |
+| `indent`                               | `number`                              | `20`                                             | Indent per level, px                      |
+| `pinnedRows`                           | `T[]`                                 | `[]`                                             | Rows under the header                     |
+| `rowDrag`                              | `boolean`                             | `false`                                          | Grip column for row reordering            |
+| `resizeLabel`, `reorderLabel`          | `(column) => string`                  | [dictionary](/en/localization#table)             | Names of the column handles               |
+| `expandLabel`, `dragLabel`, `rowLabel` | `(row) => string`                     | [dictionary](/en/localization#table), first cell | Row button names and the announced label  |
+| `announce`                             | `(a: NuiTableAnnouncement) => string` | [dictionary](/en/localization#table)             | `aria-live` text while reordering         |
+| `selectLabel`, `selectAllLabel`        | `string`                              | [dictionary](/en/localization#table)             | Checkbox names                            |
 
 Column options: `key`, `label`, `sortable`, `align`, `width` (px or CSS), `minWidth`,
 `maxWidth`, `resizable`, `reorderable`, `sticky`, `value`, `sort`. Events

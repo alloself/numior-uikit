@@ -76,20 +76,20 @@ otherwise JSON becomes the key.
 
 ## API
 
-| Prop          | Type                        | Default          | Description                         |
-| ------------- | --------------------------- | ---------------- | ----------------------------------- |
-| `v-model`     | `T \| T[]`                  | —                | Value, or array in `multiple`       |
-| `options`     | `NuiOptionSource<T>`        | —                | Options and groups                  |
-| `multiple`    | `boolean`                   | `false`          | Several values                      |
-| `clearable`   | `boolean`                   | `false`          | Clear button                        |
-| `placeholder` | `string`                    | —                | Text without a value                |
-| `name`        | `string`                    | —                | Hidden form fields                  |
-| `getKey`      | `(value: T) => string`      | by value         | Key for object values               |
-| `loop`        | `boolean`                   | `true`           | Arrow looping                       |
-| `placement`   | `FloatingPlacement`         | `'bottom-start'` | Side of the list                    |
-| `countLabel`  | `(count: number) => string` | `N selected`     | Label for several values            |
-| `emptyLabel`  | `string`                    | `'No options'`   | Empty list text                     |
-| `clearLabel`  | `string`                    | `'Clear'`        | Accessible name of the clear button |
+| Prop          | Type                        | Default                                             | Description                         |
+| ------------- | --------------------------- | --------------------------------------------------- | ----------------------------------- |
+| `v-model`     | `T \| T[]`                  | —                                                   | Value, or array in `multiple`       |
+| `options`     | `NuiOptionSource<T>`        | —                                                   | Options and groups                  |
+| `multiple`    | `boolean`                   | `false`                                             | Several values                      |
+| `clearable`   | `boolean`                   | `false`                                             | Clear button                        |
+| `placeholder` | `string`                    | —                                                   | Text without a value                |
+| `name`        | `string`                    | —                                                   | Hidden form fields                  |
+| `getKey`      | `(value: T) => string`      | by value                                            | Key for object values               |
+| `loop`        | `boolean`                   | `true`                                              | Arrow looping                       |
+| `placement`   | `FloatingPlacement`         | `'bottom-start'`                                    | Side of the list                    |
+| `countLabel`  | `(count: number) => string` | [dictionary](/en/localization#select): “N selected” | Label for several values            |
+| `emptyLabel`  | `string`                    | [dictionary](/en/localization#select): “No options” | Empty list text                     |
+| `clearLabel`  | `string`                    | [dictionary](/en/localization#select): “Clear”      | Accessible name of the clear button |
 
 Plus `id`, `size`, `disabled`, `required`, `invalid` like every field control. Slots
 `value="{ selected }"` and `option="{ option, selected, active }"`. Block `nui-select`

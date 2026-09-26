@@ -48,21 +48,22 @@ regular `NuiAvatar` with the text `+N` (`overflowLabel` changes the format). A c
 
 The avatar figure is `role="img"` named by `alt ?? name`; without a name it is decorative
 (`aria-hidden="true"`). The status dot is a separate `role="img"` labelled by `statusLabel`
-or the built-in map (`Online`, `Offline`, `Busy`, `Away`); pass localised text. The group is
+or the [dictionary](/en/localization#avatar) in the configured language (“Online”, “Offline”,
+“Busy”, “Away”). The group is
 `role="group"` with `label`.
 
 ## API
 
-| Prop          | Type                                        | Default    | Description                     |
-| ------------- | ------------------------------------------- | ---------- | ------------------------------- |
-| `src`         | `string`                                    | —          | Picture                         |
-| `alt`         | `string`                                    | `name`     | Name of the picture and figure  |
-| `name`        | `string`                                    | —          | Source of the initials and name |
-| `size`        | `'sm' \| 'md' \| 'lg' \| 'xl'`              | `'md'`     | 1.5 / 2 / 2.5 / 3.5rem          |
-| `shape`       | `'circle' \| 'square'`                      | `'circle'` | Shape                           |
-| `status`      | `'online' \| 'offline' \| 'busy' \| 'away'` | —          | Status dot                      |
-| `statusLabel` | `string`                                    | map        | Label of the dot                |
-| `icon`        | `IconAlias`                                 | `'user'`   | Icon of the last fallback       |
+| Prop          | Type                                        | Default                               | Description                     |
+| ------------- | ------------------------------------------- | ------------------------------------- | ------------------------------- |
+| `src`         | `string`                                    | —                                     | Picture                         |
+| `alt`         | `string`                                    | `name`                                | Name of the picture and figure  |
+| `name`        | `string`                                    | —                                     | Source of the initials and name |
+| `size`        | `'sm' \| 'md' \| 'lg' \| 'xl'`              | `'md'`                                | 1.5 / 2 / 2.5 / 3.5rem          |
+| `shape`       | `'circle' \| 'square'`                      | `'circle'`                            | Shape                           |
+| `status`      | `'online' \| 'offline' \| 'busy' \| 'away'` | —                                     | Status dot                      |
+| `statusLabel` | `string`                                    | [dictionary](/en/localization#avatar) | Label of the dot                |
+| `icon`        | `IconAlias`                                 | `'user'`                              | Icon of the last fallback       |
 
 `NuiAvatarGroup`: `items?: NuiAvatarItem[]`, `max`, `size`, `shape`, `label`,
 `overflowLabel?: (count) => string`. Blocks `nui-avatar` (modifiers `--size-*`, `--shape-*`,

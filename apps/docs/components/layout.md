@@ -18,7 +18,7 @@ const titles = { inbox: 'Входящие', calendar: 'Календарь', sale
 <div class="vp-raw nui-demo nui-demo--frame" data-nui-theme="light">
   <NuiLayout v-model:open="open" content-as="div" style="block-size: 22rem">
     <template #sidebar>
-      <NuiSidebar collapsible="icon" label="Разделы" close-label="Закрыть">
+      <NuiSidebar collapsible="icon" label="Разделы">
         <NuiSidebarHeader><strong style="padding-inline: 0.5rem">Numior</strong></NuiSidebarHeader>
         <NuiSidebarContent>
           <NuiSidebarGroup label="Обзор">
@@ -40,7 +40,7 @@ const titles = { inbox: 'Входящие', calendar: 'Календарь', sale
     </template>
     <template #header>
       <NuiAppBar>
-        <template #start><NuiSidebarTrigger label="Переключить панель" /></template>
+        <template #start><NuiSidebarTrigger /></template>
         {{ titles[active] }}
       </NuiAppBar>
     </template>
@@ -80,7 +80,7 @@ const open = ref(true);
     </template>
     <template #header>
       <NuiAppBar>
-        <template #start><NuiSidebarTrigger label="Переключить панель" /></template>
+        <template #start><NuiSidebarTrigger /></template>
         Входящие
       </NuiAppBar>
     </template>
@@ -118,12 +118,13 @@ const open = ref(true);
 
 `NuiAppBar`: `sticky` (`true`); слоты `start`, default, `end`.
 
-`NuiSidebar`: `collapsible` (`offcanvas`), `side` (`start`), `label` (`Navigation`), `title`,
+`NuiSidebar`: `collapsible` (`offcanvas`), `side` (`start`), `label` (словарь: «Навигация»), `title`,
 `closeLabel`. Части: `NuiSidebarHeader`, `NuiSidebarContent` (`label`), `NuiSidebarFooter`,
 `NuiSidebarGroup` (`label`, `items` — записи `NuiListEntry` вместо слота), `NuiSidebarItem`
 (`label`, `icon`, `href`, `to`, `as`, `current`, `disabled`, `badge`, `tooltip`; слоты default и
 `trailing`), `NuiSidebarSub` (`label`, `icon`, `active` — внутри текущая страница, `id`,
-`v-model:open`), `NuiSidebarTrigger` (`label`).
+`v-model:open`), `NuiSidebarTrigger` (`label`, словарь: «Переключить боковую панель»). Тексты — из
+[словаря](/localization#sidebar).
 
 Блоки `nui-layout` (`--mobile`, `--sidebar-open`; `__body`, `__content`; переменные
 `--_sidebar-size`, `--_rail-size`, `--_bar-size`), `nui-app-bar` (`--sticky`; `__start`,

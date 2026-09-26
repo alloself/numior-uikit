@@ -119,12 +119,13 @@ hint without `aria-describedby`.
 
 `NuiAppBar`: `sticky` (`true`); slots `start`, default, `end`.
 
-`NuiSidebar`: `collapsible` (`offcanvas`), `side` (`start`), `label` (`Navigation`), `title`,
+`NuiSidebar`: `collapsible` (`offcanvas`), `side` (`start`), `label` (dictionary: “Navigation”), `title`,
 `closeLabel`. Parts: `NuiSidebarHeader`, `NuiSidebarContent` (`label`), `NuiSidebarFooter`,
 `NuiSidebarGroup` (`label`, `items` — `NuiListEntry` records instead of the slot),
 `NuiSidebarItem` (`label`, `icon`, `href`, `to`, `as`, `current`, `disabled`, `badge`,
 `tooltip`; default and `trailing` slots), `NuiSidebarSub` (`label`, `icon`, `active` — the
-current page is inside, `id`, `v-model:open`), `NuiSidebarTrigger` (`label`).
+current page is inside, `id`, `v-model:open`), `NuiSidebarTrigger` (`label`, dictionary: “Toggle sidebar”). Texts come from the
+[dictionary](/en/localization#sidebar).
 
 Blocks `nui-layout` (`--mobile`, `--sidebar-open`; `__body`, `__content`; variables
 `--_sidebar-size`, `--_rail-size`, `--_bar-size`), `nui-app-bar` (`--sticky`; `__start`,

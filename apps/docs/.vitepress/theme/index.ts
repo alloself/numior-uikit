@@ -80,8 +80,13 @@ import './demo.css';
 
 export default {
   extends: DefaultTheme,
-  enhanceApp({ app }) {
-    app.use(createNuiConfig({}));
+  enhanceApp({ app, router }) {
+    app.use(
+      createNuiConfig({
+        locale: () => (router.route.path.startsWith('/en/') ? 'en-US' : 'ru-RU'),
+      }),
+    );
+
     app.component('NuiButton', NuiButton);
     app.component('NuiIcon', NuiIcon);
     app.component('NuiField', NuiField);

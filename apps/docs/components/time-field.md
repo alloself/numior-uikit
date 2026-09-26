@@ -14,7 +14,7 @@ const precise = ref('13:05:09')
 
 <div class="vp-raw nui-demo nui-demo--stack" data-nui-theme="light">
   <NuiField label="Начало" description="С 09:00 до 18:00, шаг 30 минут">
-    <NuiTimeField locale="ru-RU" v-model="start" min="09:00" max="18:00" :step="30" clock-label="Выбрать время" empty-label="Нет времени" />
+    <NuiTimeField locale="ru-RU" v-model="start" min="09:00" max="18:00" :step="30" />
   </NuiField>
   <NuiField label="Meeting" description="12-hour cycle from the locale">
     <NuiTimeField locale="en-US" v-model="meeting" />
@@ -55,24 +55,24 @@ Delete очищают его, ←/→ и Enter переключают сегме
 
 ## API
 
-| Prop         | Тип                    | По умолчанию     | Описание                        |
-| ------------ | ---------------------- | ---------------- | ------------------------------- |
-| `v-model`    | `string \| null`       | `null`           | `HH:mm` или `HH:mm:ss`          |
-| `seconds`    | `boolean`              | `false`          | Сегмент секунд                  |
-| `hourCycle`  | `'h12' \| 'h23'`       | из локали        | Принудительный цикл             |
-| `locale`     | `string`               | из конфига       | Локаль раскладки и подписей     |
-| `min`, `max` | `string`               | —                | Границы для зажима и подсказок  |
-| `step`       | `number`               | `15`             | Шаг подсказок и PageUp/PageDown |
-| `readonly`   | `boolean`              | `false`          | Только чтение                   |
-| `name`       | `string`               | —                | Скрытый `input` со значением    |
-| `placement`  | `FloatingPlacement`    | `'bottom-start'` | Сторона списка подсказок        |
-| `clockLabel` | `string`               | `'Choose time'`  | Подпись кнопки с часами         |
-| `emptyLabel` | `string`               | `'No times'`     | Текст пустого списка            |
-| `size`       | `'sm' \| 'md' \| 'lg'` | `'md'`           | Ступень размера                 |
-| `id`         | `string`               | из поля          | Явный id (ставится на часы)     |
-| `disabled`   | `boolean`              | из поля          | Отключение                      |
-| `required`   | `boolean`              | из поля          | `aria-required` на сегментах    |
-| `invalid`    | `boolean`              | из поля          | `aria-invalid` и красная рамка  |
+| Prop         | Тип                    | По умолчанию                                                 | Описание                        |
+| ------------ | ---------------------- | ------------------------------------------------------------ | ------------------------------- |
+| `v-model`    | `string \| null`       | `null`                                                       | `HH:mm` или `HH:mm:ss`          |
+| `seconds`    | `boolean`              | `false`                                                      | Сегмент секунд                  |
+| `hourCycle`  | `'h12' \| 'h23'`       | из локали                                                    | Принудительный цикл             |
+| `locale`     | `string`               | из конфига                                                   | Локаль раскладки и подписей     |
+| `min`, `max` | `string`               | —                                                            | Границы для зажима и подсказок  |
+| `step`       | `number`               | `15`                                                         | Шаг подсказок и PageUp/PageDown |
+| `readonly`   | `boolean`              | `false`                                                      | Только чтение                   |
+| `name`       | `string`               | —                                                            | Скрытый `input` со значением    |
+| `placement`  | `FloatingPlacement`    | `'bottom-start'`                                             | Сторона списка подсказок        |
+| `clockLabel` | `string`               | [словарь](/localization#timefield): «Выбрать время»          | Подпись кнопки с часами         |
+| `emptyLabel` | `string`               | [словарь](/localization#timefield): «Нет доступного времени» | Текст пустого списка            |
+| `size`       | `'sm' \| 'md' \| 'lg'` | `'md'`                                                       | Ступень размера                 |
+| `id`         | `string`               | из поля                                                      | Явный id (ставится на часы)     |
+| `disabled`   | `boolean`              | из поля                                                      | Отключение                      |
+| `required`   | `boolean`              | из поля                                                      | `aria-required` на сегментах    |
+| `invalid`    | `boolean`              | из поля                                                      | `aria-invalid` и красная рамка  |
 
 Метод `focus()` фокусирует часы. Блок `nui-time-field` (модификаторы `--size-*`, `--open`,
 `--invalid`, `--disabled`, `--readonly`; элементы `__segments`, `__segment` с `--type-*`,

@@ -12,7 +12,7 @@ const open = ref(true)
 <div class="vp-raw nui-demo nui-demo--stack" data-nui-theme="light">
   <NuiAlert title="Draft saved" description="Server sync in a minute." />
   <NuiAlert tone="success" variant="outline" title="Project published" />
-  <NuiAlert tone="warning" title="Draft not saved" dismissible dismiss-label="Close" v-model:open="open">
+  <NuiAlert tone="warning" title="Draft not saved" dismissible v-model:open="open">
     Changes are lost when you leave the page.
     <template #actions><NuiButton size="sm" variant="outline" tone="warning" @click="open = false">Save</NuiButton></template>
   </NuiAlert>
@@ -38,17 +38,17 @@ blends into the background.
 
 ## API
 
-| Prop           | Type                             | Default   | Description                         |
-| -------------- | -------------------------------- | --------- | ----------------------------------- |
-| `variant`      | `'soft' \| 'outline' \| 'solid'` | `'soft'`  | Shape                               |
-| `tone`         | `NuiTone`                        | `'info'`  | Role, colors and icon               |
-| `title`        | `string`                         | —         | Heading; `title` slot               |
-| `description`  | `string`                         | —         | Text; default slot                  |
-| `icon`         | `IconAlias`                      | tone icon | Custom icon                         |
-| `hideIcon`     | `boolean`                        | `false`   | No icon                             |
-| `dismissible`  | `boolean`                        | `false`   | Close button                        |
-| `dismissLabel` | `string`                         | `'Close'` | Accessible name of the close button |
-| `v-model:open` | `boolean`                        | `true`    | Whether the alert is shown          |
+| Prop           | Type                             | Default                                       | Description                         |
+| -------------- | -------------------------------- | --------------------------------------------- | ----------------------------------- |
+| `variant`      | `'soft' \| 'outline' \| 'solid'` | `'soft'`                                      | Shape                               |
+| `tone`         | `NuiTone`                        | `'info'`                                      | Role, colors and icon               |
+| `title`        | `string`                         | —                                             | Heading; `title` slot               |
+| `description`  | `string`                         | —                                             | Text; default slot                  |
+| `icon`         | `IconAlias`                      | tone icon                                     | Custom icon                         |
+| `hideIcon`     | `boolean`                        | `false`                                       | No icon                             |
+| `dismissible`  | `boolean`                        | `false`                                       | Close button                        |
+| `dismissLabel` | `string`                         | [dictionary](/en/localization#alert): “Close” | Accessible name of the close button |
+| `v-model:open` | `boolean`                        | `true`                                        | Whether the alert is shown          |
 
 Event `dismiss`. Slots `title`, `default`, `actions`. Block `nui-alert`, modifiers
 `--variant-*`, `--tone-*`, `--closed`; elements `__icon`, `__body`, `__title`,

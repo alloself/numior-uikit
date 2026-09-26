@@ -89,7 +89,8 @@ Numbers, time and dates format through the locale of the same configuration:
 component's `setup` for a subtree (a value, ref or getter), and the `locale` prop on a
 component for a local override. Without any setup
 `en-US` applies. The kit never reads `navigator.language`: server and client must format
-identically, so pass the request locale into the config explicitly.
+identically, so pass the request locale into the config explicitly. The same locale picks
+the language of built-in component texts; see [Localization](/en/localization).
 
 ```ts
 createApp(App)
@@ -99,13 +100,16 @@ createApp(App)
 
 ## API
 
-| Where                                  | Option   | Type                             | Description                                             |
-| -------------------------------------- | -------- | -------------------------------- | ------------------------------------------------------- |
-| `NuiIcon`                              | `alias`  | `IconAlias` (`string`)           | Alias from the registry or the default set              |
-| `NuiIcon`                              | `icon`   | `Component`                      | Explicit component, wins over `alias`                   |
-| `createNuiConfig` / `provideNuiConfig` | `icons`  | `Record<string, Component>`      | Aliases for the app or the subtree                      |
-| `createNuiConfig` / `provideNuiConfig` | `toasts` | `ToastStoreOptions`              | Toast service options                                   |
-| `createNuiConfig` / `provideNuiConfig` | `locale` | `string` (ref or getter)         | Locale for numbers, time and dates                      |
-| `createNuiConfig` / `provideNuiConfig` | `dir`    | `'ltr' \| 'rtl'` (ref or getter) | Writing direction; without it the nearest `dir` is read |
+| Where                                  | Option      | Type                                | Description                                                        |
+| -------------------------------------- | ----------- | ----------------------------------- | ------------------------------------------------------------------ |
+| `NuiIcon`                              | `alias`     | `IconAlias` (`string`)              | Alias from the registry or the default set                         |
+| `NuiIcon`                              | `icon`      | `Component`                         | Explicit component, wins over `alias`                              |
+| `createNuiConfig` / `provideNuiConfig` | `icons`     | `Record<string, Component>`         | Aliases for the app or the subtree                                 |
+| `createNuiConfig` / `provideNuiConfig` | `toasts`    | `ToastStoreOptions`                 | Toast service options                                              |
+| `createNuiConfig` / `provideNuiConfig` | `locale`    | `string` (ref or getter)            | Locale for numbers, time and dates                                 |
+| `createNuiConfig` / `provideNuiConfig` | `dir`       | `'ltr' \| 'rtl'` (ref or getter)    | Writing direction; without it the nearest `dir` is read            |
+| `createNuiConfig` / `provideNuiConfig` | `messages`  | `NuiLocaleMessages` (ref or getter) | Overrides and new languages for the [dictionary](/en/localization) |
+| `createNuiConfig` / `provideNuiConfig` | `translate` | `NuiTranslate`                      | Texts from the app i18n library, asked before the dictionary       |
 
-`@numior/vue` also exports `useIcons`, `defaultIcons`, `useLocale` and `useDirection`.
+`@numior/vue` also exports `useIcons`, `defaultIcons`, `useLocale`, `useDirection` and
+`plural`.
