@@ -117,6 +117,10 @@
   opacity: 1;
 }
 
+.nui-field-array__grip:disabled {
+  visibility: hidden;
+}
+
 .nui-field-array--reordering
   .nui-field-array__row:not(.nui-field-array__row--dragging)
   .nui-field-array__grip {
