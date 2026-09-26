@@ -11,6 +11,7 @@ export interface ButtonMountOptions {
   readonly label?: string;
   readonly content?: ButtonContent;
   readonly onClick?: () => void;
+  readonly attached?: boolean;
 }
 
 const slotFor = (content: ButtonContent, label: string) => {
@@ -30,12 +31,14 @@ export class ButtonDriver extends ComponentDriver {
     label = 'Save',
     content = 'text',
     onClick,
+    attached = false,
   }: ButtonMountOptions = {}) {
     return new ButtonDriver(
       mount(NuiButton, {
         props,
         attrs: onClick ? { ...attrs, onClick } : attrs,
         slots: { default: slotFor(content, label) },
+        ...(attached ? { attachTo: document.body } : {}),
       }),
     );
   }
@@ -56,6 +59,14 @@ export class ButtonDriver extends ComponentDriver {
     return this.element.disabled;
   }
 
+  get ariaDisabled(): string | undefined {
+    return this.attribute('aria-disabled');
+  }
+
+  get focused(): boolean {
+    return document.activeElement === this.element;
+  }
+
   get text(): string {
     return this.wrapper.find('.nui-button__content').text();
   }
@@ -68,8 +79,15 @@ export class ButtonDriver extends ComponentDriver {
     await this.wrapper.trigger('click');
   }
 
-  clickNatively(): void {
-    this.element.click();
+  clickNatively(): boolean {
+    const event = new MouseEvent('click', { bubbles: true, cancelable: true });
+
+    this.element.dispatchEvent(event);
+    return event.defaultPrevented;
+  }
+
+  focus(): void {
+    this.element.focus();
   }
 
   async update(props: NuiButtonProps): Promise<void> {

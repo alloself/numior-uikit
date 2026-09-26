@@ -29,15 +29,17 @@ describe('NuiButton', () => {
       },
     });
 
-    button.clickNatively();
+    expect(button.clickNatively()).toBe(true);
     expect(clicks.count).toBe(0);
     expect(button.busy).toBe(true);
-    expect(button.disabled).toBe(true);
+    expect(button.disabled).toBe(false);
+    expect(button.ariaDisabled).toBe('true');
     expect(button.showsSpinner).toBe(true);
     expect(button.hasModifier('loading')).toBe(true);
     await button.update({ loading: false });
-    button.clickNatively();
+    expect(button.clickNatively()).toBe(false);
     expect(clicks.count).toBe(1);
+    expect(button.ariaDisabled).toBeUndefined();
     expect(button.busy).toBe(false);
     expect(button.showsSpinner).toBe(false);
     expect(button.type).toBe('submit');
@@ -63,5 +65,28 @@ describe('NuiButton', () => {
     const wide = ButtonDriver.mount({ content: 'icon', props: { iconOnly: false } });
     expect(wide.hasModifier('icon-only')).toBe(false);
     expect(ButtonDriver.mount({ props: { iconOnly: true } }).hasModifier('icon-only')).toBe(true);
+  });
+
+  it('keeps focus on a loading button and cancels its clicks so a form submits once', async () => {
+    const clicks = { count: 0 };
+
+    const button = ButtonDriver.mount({
+      props: { type: 'submit' },
+      attached: true,
+      onClick: () => {
+        clicks.count += 1;
+      },
+    });
+
+    button.focus();
+    await button.update({ loading: true });
+    expect(button.focused).toBe(true);
+    expect(button.clickNatively()).toBe(true);
+    expect(clicks.count).toBe(0);
+    await button.update({ loading: false });
+    expect(button.focused).toBe(true);
+    expect(button.clickNatively()).toBe(false);
+    expect(clicks.count).toBe(1);
+    button.unmount();
   });
 });

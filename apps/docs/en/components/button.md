@@ -47,9 +47,11 @@ in `compact`.
 
 ## States
 
-`disabled` prevents activation. `loading` also blocks the button, sets
-`aria-busy="true"`, fades the content out with `opacity` and centers the `loader` icon
-from the registry on top of it, so the button keeps its width. `type` defaults to
+`disabled` prevents activation. `loading` swallows presses too but keeps the button
+focusable: instead of `disabled` it gets `aria-disabled="true"` and `aria-busy="true"` and
+cancels the click, so a pressed submit button keeps focus and the form never submits twice.
+The content fades out with `opacity` and the `loader` icon from the registry sits centred on
+top, so the button keeps its width. `type` defaults to
 `button`, so a button inside a form never submits it by accident; `submit` and `reset`
 are available.
 

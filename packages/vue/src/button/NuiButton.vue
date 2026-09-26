@@ -11,8 +11,10 @@
       },
     ]"
     :type="type"
-    :disabled="disabled || loading"
+    :disabled="disabled"
+    :aria-disabled="loading ? 'true' : undefined"
     :aria-busy="loading || undefined"
+    @click="onClick"
   >
     <span class="nui-button__content">
       <slot />
@@ -40,4 +42,11 @@ const {
 } = defineProps<NuiButtonProps>();
 
 const slots = useSlots();
+
+const onClick = (event: MouseEvent): void => {
+  if (loading) {
+    event.preventDefault();
+    event.stopImmediatePropagation();
+  }
+};
 </script>

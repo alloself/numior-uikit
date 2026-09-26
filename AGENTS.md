@@ -21,7 +21,7 @@ that its features are implemented. Component and test conventions live in the sk
 - CSS is BEM (`nui-block`, `nui-block__part`, `nui-block--key-value`, `nui-block--state`)
   with modifiers setting private custom properties; no `data-*` for variants or states.
 - Every state change moves through the motion tokens; icons resolve through the alias
-  registry and load on demand; a loading button keeps its width.
+  registry and load on demand; a loading button keeps its width and focus.
 - No comments in source files; explanations go to docs and Archcore.
 - Built-in texts live in `<comp>.messages.ts` catalogs (RU and EN) resolved by `useMessages`;
   text props have no default, a prop wins over the dictionary.

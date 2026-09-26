@@ -19,7 +19,13 @@ test('standalone button activates by keyboard and loading blocks activation', as
   }
   await expect(playground.clickCount).toHaveText('Нажатий: 1');
   const idleBox = await loading.boundingBox();
-  await loading.click();
+  if (isMobile) {
+    await loading.tap();
+  } else {
+    await loading.focus();
+    await page.keyboard.press('Enter');
+    await expect(loading).toBeFocused();
+  }
   await expect(loading).toBeDisabled();
   await expect(loading).toHaveAttribute('aria-busy', 'true');
   expect((await loading.boundingBox())?.width).toBe(idleBox?.width);
