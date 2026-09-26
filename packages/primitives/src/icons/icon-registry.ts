@@ -43,6 +43,7 @@ export type IconAlias =
   | 'refresh'
   | 'sidebar'
   | 'menu'
+  | 'trash'
   | (string & NonNullable<unknown>);
 
 export type IconRegistry = Readonly<Record<string, Component>>;

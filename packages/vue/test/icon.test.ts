@@ -10,6 +10,9 @@ describe('NuiIcon', () => {
     await icon.ready();
     expect(icon.decorative).toBe(true);
     expect(icon.glyphClasses).toContain('lucide-check');
+    const trash = IconDriver.mount({ alias: 'trash' });
+    await trash.ready();
+    expect(trash.glyphClasses).toContain('lucide-trash-2');
   });
 
   it('prefers the provided registry, then an explicit component, and stays empty otherwise', async () => {

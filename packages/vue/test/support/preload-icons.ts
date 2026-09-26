@@ -27,6 +27,11 @@ const loaders = [
   () => import('lucide-vue-next/dist/esm/icons/plus.js'),
   () => import('lucide-vue-next/dist/esm/icons/clock.js'),
   () => import('lucide-vue-next/dist/esm/icons/calendar.js'),
+  () => import('lucide-vue-next/dist/esm/icons/upload.js'),
+  () => import('lucide-vue-next/dist/esm/icons/rotate-cw.js'),
+  () => import('lucide-vue-next/dist/esm/icons/panel-left.js'),
+  () => import('lucide-vue-next/dist/esm/icons/menu.js'),
+  () => import('lucide-vue-next/dist/esm/icons/trash-2.js'),
 ];
 
 await Promise.all(loaders.map((load) => load()));

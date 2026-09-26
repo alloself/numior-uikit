@@ -33,4 +33,5 @@ export const defaultIcons: IconRegistry = {
   refresh: lazyIcon(() => import('lucide-vue-next/dist/esm/icons/rotate-cw.js')),
   sidebar: lazyIcon(() => import('lucide-vue-next/dist/esm/icons/panel-left.js')),
   menu: lazyIcon(() => import('lucide-vue-next/dist/esm/icons/menu.js')),
+  trash: lazyIcon(() => import('lucide-vue-next/dist/esm/icons/trash-2.js')),
 };
