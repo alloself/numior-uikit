@@ -1,5 +1,6 @@
 import type { IconAlias } from '@numior/primitives';
 import type { Component } from 'vue';
+import type { NuiListEntry } from '../shared/options';
 
 export type NuiSidebarCollapsible = 'icon' | 'offcanvas' | 'none';
 export type NuiSidebarSide = 'start' | 'end';
@@ -18,6 +19,7 @@ export interface NuiSidebarContentProps {
 
 export interface NuiSidebarGroupProps {
   label?: string | undefined;
+  items?: readonly NuiListEntry<unknown>[] | undefined;
 }
 
 export interface NuiSidebarItemProps {
@@ -26,7 +28,7 @@ export interface NuiSidebarItemProps {
   href?: string | undefined;
   to?: unknown;
   as?: string | Component | undefined;
-  active?: boolean | undefined;
+  current?: boolean | undefined;
   disabled?: boolean | undefined;
   badge?: string | number | undefined;
   tooltip?: string | undefined;

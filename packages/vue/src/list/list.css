@@ -139,8 +139,8 @@
   --_row-description-size: var(--nui-font-size-sm);
 
   position: relative;
-  display: flex;
-  align-items: stretch;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
   border-block-start: 1px solid var(--_divider);
   transition:
     background-color var(--nui-duration-fast) var(--nui-easing),
@@ -172,7 +172,6 @@
 }
 .nui-list-item__inner {
   display: flex;
-  flex: 1 1 auto;
   align-items: center;
   gap: var(--_gap);
   min-inline-size: 0;

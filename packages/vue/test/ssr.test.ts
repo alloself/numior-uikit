@@ -269,7 +269,7 @@ const scenarios: Scenario[] = [
             h(NuiSidebar, { collapsible: 'icon', label: 'Sections' }, () =>
               h(NuiSidebarContent, () =>
                 h(NuiSidebarGroup, { label: 'Overview' }, () => [
-                  h(NuiSidebarItem, { label: 'Inbox', icon: 'inbox', active: true }),
+                  h(NuiSidebarItem, { label: 'Inbox', icon: 'inbox', current: true }),
                   h(NuiSidebarItem, { label: 'Docs', href: '#docs' }),
                 ]),
               ),
@@ -565,7 +565,7 @@ describe('server rendering', () => {
             h(NuiSidebar, { collapsible: 'icon', label: 'Sections' }, () =>
               h(NuiSidebarContent, () =>
                 h(NuiSidebarGroup, { label: 'Overview' }, () => [
-                  h(NuiSidebarItem, { label: 'Inbox', icon: 'inbox', active: true }),
+                  h(NuiSidebarItem, { label: 'Inbox', icon: 'inbox', current: true }),
                   h(NuiSidebarItem, { label: 'Docs', href: '#docs' }),
                 ]),
               ),

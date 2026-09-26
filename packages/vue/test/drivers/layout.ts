@@ -66,7 +66,7 @@ export class LayoutDriver extends ComponentDriver {
       h(NuiSidebarItem, {
         label,
         icon: 'inbox',
-        active: active.value === key,
+        current: active.value === key,
         onClick: () => {
           active.value = key;
         },
@@ -189,9 +189,9 @@ export class LayoutDriver extends ComponentDriver {
     return this.stubs.showModalCalls.count;
   }
 
-  action(label: string): DOMWrapper<Element> {
+  action(label: string): DOMWrapper<HTMLElement> {
     const found = this.wrapper
-      .findAll('.nui-sidebar-item__action')
+      .findAll<HTMLElement>('.nui-list-item__action')
       .find((action) => action.find('.nui-row__title').text() === label);
 
     if (!found) {
@@ -202,11 +202,20 @@ export class LayoutDriver extends ComponentDriver {
   }
 
   get subItems(): DOMWrapper<Element> {
-    return this.wrapper.find('.nui-sidebar-sub__items');
+    return this.wrapper.find('.nui-sidebar-sub__list');
   }
 
   get subToggle(): DOMWrapper<Element> {
-    return this.wrapper.find('.nui-sidebar-sub__toggle');
+    return this.wrapper.find('.nui-sidebar-sub > .nui-list-item__action');
+  }
+
+  get tooltipShows(): number {
+    return this.stubs.popoverCalls.show;
+  }
+
+  async focusItem(label: string): Promise<void> {
+    this.action(label).element.focus();
+    await nextTick();
   }
 
   async clickTrigger(): Promise<void> {

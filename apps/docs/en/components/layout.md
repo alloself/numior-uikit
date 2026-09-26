@@ -22,13 +22,13 @@ const titles = { inbox: 'Inbox', calendar: 'Calendar', sales: 'Report: sales', t
         <NuiSidebarHeader><strong style="padding-inline: 0.5rem">Numior</strong></NuiSidebarHeader>
         <NuiSidebarContent>
           <NuiSidebarGroup label="Overview">
-            <NuiSidebarItem label="Inbox" icon="inbox" :badge="3" :active="active === 'inbox'" @click="active = 'inbox'" />
-            <NuiSidebarItem label="Calendar" icon="calendar" :active="active === 'calendar'" @click="active = 'calendar'" />
+            <NuiSidebarItem label="Inbox" icon="inbox" :badge="3" :current="active === 'inbox'" @click="active = 'inbox'" />
+            <NuiSidebarItem label="Calendar" icon="calendar" :current="active === 'calendar'" @click="active = 'calendar'" />
           </NuiSidebarGroup>
           <NuiSidebarGroup label="Data">
             <NuiSidebarSub v-model:open="reports" label="Reports" icon="folder" :active="active === 'sales' || active === 'team'">
-              <NuiSidebarItem label="Sales" :active="active === 'sales'" @click="active = 'sales'" />
-              <NuiSidebarItem label="Team" :active="active === 'team'" @click="active = 'team'" />
+              <NuiSidebarItem label="Sales" :current="active === 'sales'" @click="active = 'sales'" />
+              <NuiSidebarItem label="Team" :current="active === 'team'" @click="active = 'team'" />
             </NuiSidebarSub>
             <NuiSidebarItem label="Documentation" icon="file" href="#docs" />
           </NuiSidebarGroup>
@@ -72,7 +72,7 @@ const open = ref(true);
       <NuiSidebar collapsible="icon" label="Sections">
         <NuiSidebarContent>
           <NuiSidebarGroup label="Overview">
-            <NuiSidebarItem label="Inbox" icon="inbox" to="/inbox" as="RouterLink" active />
+            <NuiSidebarItem label="Inbox" icon="inbox" to="/inbox" as="RouterLink" current />
             <NuiSidebarItem label="Calendar" icon="calendar" to="/calendar" as="RouterLink" />
           </NuiSidebarGroup>
         </NuiSidebarContent>
@@ -103,12 +103,13 @@ screen, so the server markup and the first frame agree.
 
 ## Accessibility
 
-The panel is an `aside` with `aria-label`, its content a `nav`, groups are lists labelled
-through `aria-labelledby`. The active item carries `aria-current="page"`; items with a
-destination render through `NuiLink` (`href`, `to`, `as`), the rest are buttons. The trigger
-button keeps `aria-expanded` and `aria-controls` of the panel or the drawer. In the rail
-every item is described by a tooltip; outside the rail the tooltip is disabled and adds no
-`aria-describedby`.
+The panel is an `aside` with `aria-label`, its content a `nav`, a group is a
+`NuiList variant="nav"` labelled through `aria-labelledby`, and an item is a `NuiListItem`:
+the current one carries `aria-current="page"`, items with a destination render through
+`NuiLink` (`href`, `to`, `as`), the rest are buttons. The trigger button keeps
+`aria-expanded` and `aria-controls` of the panel or the drawer. In the rail item labels are
+visually hidden but stay their accessible names, and the tooltip with the label is a visual
+hint without `aria-describedby`.
 
 ## API
 
@@ -120,16 +121,18 @@ every item is described by a tooltip; outside the rail the tooltip is disabled a
 
 `NuiSidebar`: `collapsible` (`offcanvas`), `side` (`start`), `label` (`Navigation`), `title`,
 `closeLabel`. Parts: `NuiSidebarHeader`, `NuiSidebarContent` (`label`), `NuiSidebarFooter`,
-`NuiSidebarGroup` (`label`), `NuiSidebarItem` (`label`, `icon`, `href`, `to`, `as`, `active`,
-`disabled`, `badge`, `tooltip`; default and `trailing` slots), `NuiSidebarSub` (`label`,
-`icon`, `active`, `id`, `v-model:open`), `NuiSidebarTrigger` (`label`).
+`NuiSidebarGroup` (`label`, `items` — `NuiListEntry` records instead of the slot),
+`NuiSidebarItem` (`label`, `icon`, `href`, `to`, `as`, `current`, `disabled`, `badge`,
+`tooltip`; default and `trailing` slots), `NuiSidebarSub` (`label`, `icon`, `active` — the
+current page is inside, `id`, `v-model:open`), `NuiSidebarTrigger` (`label`).
 
 Blocks `nui-layout` (`--mobile`, `--sidebar-open`; `__body`, `__content`; variables
 `--_sidebar-size`, `--_rail-size`, `--_bar-size`), `nui-app-bar` (`--sticky`; `__start`,
 `__body`, `__end`), `nui-sidebar` (`--side-*`, `--collapsible-*`, `--collapsed`, `--rail`,
-`--mobile`; `__header`, `__content`, `__footer`), `nui-sidebar-group` (`__label`, `__items`),
-`nui-sidebar-item` (`--active`, `--disabled`; `__action`, `__badge`), `nui-sidebar-sub`
-(`--open`, `--active`; `__toggle`, `__chevron`, `__panel`, `__items`), `nui-sidebar-trigger`.
+`--mobile`; `__header`, `__content`, `__footer`), `nui-sidebar-group` (`__label`),
+`nui-sidebar-sub` (`--open`, `--active`; `__chevron`, `__panel`, `__list`),
+`nui-sidebar-trigger`; rows are the [list](/en/components/list) blocks
+`nui-list--variant-nav` and `nui-list-item` (`--current`, `--disabled`).
 
 The `useMediaQuery(query)` primitive from `@numior/primitives` returns `false` before mount
 and follows `matchMedia` afterwards.

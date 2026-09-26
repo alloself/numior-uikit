@@ -28,13 +28,18 @@ date: 2026-09-25
   закрывает ящик. Панель отдаёт своим частям контекст `rail/mobile`, сторону для тултипов,
   `expand()` и `closeMobile()`.
 - Части: `NuiSidebarHeader`/`NuiSidebarFooter` (блоки), `NuiSidebarContent` (`nav`),
-  `NuiSidebarGroup` (подпись + `ul` с `aria-labelledby`), `NuiSidebarItem` (`li` с
-  `NuiLink` при `href`/`to`, иначе `button`; `NuiRow` для иконки, подписи и бейджа;
-  `aria-current="page"` у активного; тултип с подписью включён только в режиме иконок через
-  `NuiTooltip disabled`), `NuiSidebarSub` (кнопка с `aria-expanded`/`aria-controls`, панель
-  на `grid-template-rows: 0fr → 1fr`, вложенный `ul` `inert` пока закрыт; в режиме иконок
-  нажатие сначала раскрывает панель), `NuiSidebarTrigger` (иконки `sidebar`/`menu`,
-  `aria-expanded`, `aria-controls`).
+  `NuiSidebarGroup` (подпись + `NuiList variant="nav"` с `aria-labelledby`, слот или `items`),
+  `NuiSidebarItem` (`NuiListItem`: ссылка через `NuiLink` при `href`/`to`, иначе кнопка;
+  `current` → `aria-current="page"`; `badge` → `NuiBadge`; в слоте `nested` — визуальный
+  `NuiTooltip` с `anchor` на действие пункта, включённый только в режиме иконок),
+  `NuiSidebarSub` (`NuiListItem interactive` с `aria-expanded`/`aria-controls`, в `nested` —
+  панель на `grid-template-rows: 0fr → 1fr` с `NuiList variant="nav"`, `inert` и `visibility:
+  hidden`, пока закрыт; в режиме иконок нажатие сначала раскрывает панель),
+  `NuiSidebarTrigger` (иконки `sidebar`/`menu`, `aria-expanded`, `aria-controls`).
+- 2026-09-26: первая версия дублировала строку списка (свой `ul`, своя кнопка-строка, свой
+  бейдж) — переделано на `NuiList`/`NuiListItem`. В режиме иконок подписи визуально скрыты
+  (clip), а не `display: none`: иначе ссылки и кнопки теряют доступное имя; тултип в полосе —
+  визуальная подсказка без `aria-describedby`.
 - `NuiAppBar` — `header` со слотами `start`/default/`end`, липкий по умолчанию.
 - Измерения не хранятся: ширины приходят custom properties `--_sidebar-size`/`--_rail-size`
   от каркаса, переходы ширины и `visibility` идут по токенам движения.

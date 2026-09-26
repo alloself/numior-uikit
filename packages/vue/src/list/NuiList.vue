@@ -8,16 +8,12 @@
       `nui-list--size-${size}`,
       { 'nui-list--selectable': selectable !== undefined, 'nui-list--empty': isEmpty },
     ]"
-    :role="selectable ? 'listbox' : undefined"
-    :aria-multiselectable="selectable === 'multiple' || undefined"
-    :aria-busy="loading || undefined"
-    :aria-label="label"
-    :aria-labelledby="labelledBy"
+    v-bind="rootAria"
     @keydown="onKeydown"
     @focusin="onFocusin"
     @focusout="onFocusout"
   >
-    <component :is="as" class="nui-list__items" :role="selectable ? 'presentation' : undefined">
+    <component :is="as" class="nui-list__items" v-bind="itemsAria">
       <template v-for="(group, position) in groups" :key="position">
         <li
           v-if="group.label !== undefined"
@@ -98,6 +94,20 @@ const model = defineModel<T | T[] | undefined>();
 const emit = defineEmits<{ select: [item: E] }>();
 
 const listId = useControlId(() => id);
+const naming = computed(() => ({ 'aria-label': label, 'aria-labelledby': labelledBy }));
+
+const rootAria = computed(() =>
+  selectable
+    ? {
+        role: 'listbox',
+        'aria-multiselectable': selectable === 'multiple' || undefined,
+        'aria-busy': loading || undefined,
+        ...naming.value,
+      }
+    : { 'aria-busy': loading || undefined },
+);
+
+const itemsAria = computed(() => (selectable ? { role: 'presentation' } : naming.value));
 const rootElement = useTemplateRef<HTMLElement>('root');
 const flat = computed<E[]>(() => (items ? flattenEntries(items) : []));
 const groups = computed(() => (items ? groupEntries(items) : []));

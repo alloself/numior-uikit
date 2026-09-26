@@ -17,7 +17,11 @@ test.describe('layout', () => {
     await layout.trigger.click();
     await expect(layout.trigger).toHaveAttribute('aria-expanded', 'false');
     await expect.poll(() => layout.sidebarWidth()).toBeLessThan(80);
-    await expect(layout.itemLabel('overview')).toBeHidden();
+    await expect.poll(() => layout.labelWidth('overview')).toBeLessThanOrEqual(1);
+    await expect(layout.item('overview')).toHaveAccessibleName(/Обзор/);
+    for (const target of [layout.item('overview'), layout.subToggle, layout.item('docs')]) {
+      await expect.poll(() => layout.iconOffset(target)).toBeLessThan(1);
+    }
     await layout.item('calendar').hover();
     await expect(layout.tooltip('Календарь')).toBeVisible();
     await layout.item('calendar').click();
@@ -48,6 +52,7 @@ test.describe('layout', () => {
     await layout.subToggle.click();
     await expect(layout.subToggle).toHaveAttribute('aria-expanded', 'true');
     await expect(layout.item('report-sales')).toBeVisible();
+    expect(await layout.opensUnderToggle('report-sales')).toBe(true);
     await layout.item('report-sales').click();
     await expect(layout.heading).toHaveText('Отчёт: продажи');
     const contentBox = await layout.content().boundingBox();
@@ -97,6 +102,11 @@ test.describe('layout', () => {
     }
     for (const theme of ['light', 'dark'] as const) {
       await playground.setTheme(theme);
+      expect(await playground.wcagViolations()).toEqual([]);
+    }
+    if (!isMobile) {
+      await layout.trigger.click();
+      await expect.poll(() => layout.sidebarWidth()).toBeLessThan(80);
       expect(await playground.wcagViolations()).toEqual([]);
     }
   });

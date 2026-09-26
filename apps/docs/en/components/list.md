@@ -82,8 +82,8 @@ The `nav` variant renders compact rounded navigation rows without dividers; the
 [sidebar](/en/components/layout) is built on it. The `current` prop marks the current page:
 `aria-current="page"` on the link or button and a `--nui-primary-soft` background. The
 `badge` prop shows a `NuiBadge` at the end of the row (a number becomes a count capped at
-`99+`), and the `nested` slot renders content inside the `li` after the row, such as a nested
-list. `items` entries understand the same `current` and `badge`.
+`99+`), and the `nested` slot renders content inside the `li` below the row at its full
+width, such as a nested list. `items` entries understand the same `current` and `badge`.
 
 Groups `{ label, items }` render a `nui-list__group-label` section heading, indent their
 items by `--_indent` (smaller in the floating list) and separate groups with a divider. In a

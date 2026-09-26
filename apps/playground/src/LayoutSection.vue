@@ -45,7 +45,7 @@
                   :label="item.label"
                   :icon="item.icon"
                   :badge="item.badge"
-                  :active="active === item.key"
+                  :current="active === item.key"
                   :data-testid="`layout-item-${item.key}`"
                   @click="active = item.key"
                 />
@@ -60,13 +60,13 @@
                 >
                   <NuiSidebarItem
                     label="Продажи"
-                    :active="active === 'report-sales'"
+                    :current="active === 'report-sales'"
                     data-testid="layout-item-report-sales"
                     @click="active = 'report-sales'"
                   />
                   <NuiSidebarItem
                     label="Команда"
-                    :active="active === 'report-team'"
+                    :current="active === 'report-team'"
                     @click="active = 'report-team'"
                   />
                 </NuiSidebarSub>

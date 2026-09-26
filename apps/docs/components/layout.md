@@ -22,13 +22,13 @@ const titles = { inbox: 'Входящие', calendar: 'Календарь', sale
         <NuiSidebarHeader><strong style="padding-inline: 0.5rem">Numior</strong></NuiSidebarHeader>
         <NuiSidebarContent>
           <NuiSidebarGroup label="Обзор">
-            <NuiSidebarItem label="Входящие" icon="inbox" :badge="3" :active="active === 'inbox'" @click="active = 'inbox'" />
-            <NuiSidebarItem label="Календарь" icon="calendar" :active="active === 'calendar'" @click="active = 'calendar'" />
+            <NuiSidebarItem label="Входящие" icon="inbox" :badge="3" :current="active === 'inbox'" @click="active = 'inbox'" />
+            <NuiSidebarItem label="Календарь" icon="calendar" :current="active === 'calendar'" @click="active = 'calendar'" />
           </NuiSidebarGroup>
           <NuiSidebarGroup label="Данные">
             <NuiSidebarSub v-model:open="reports" label="Отчёты" icon="folder" :active="active.startsWith('sales') || active === 'team'">
-              <NuiSidebarItem label="Продажи" :active="active === 'sales'" @click="active = 'sales'" />
-              <NuiSidebarItem label="Команда" :active="active === 'team'" @click="active = 'team'" />
+              <NuiSidebarItem label="Продажи" :current="active === 'sales'" @click="active = 'sales'" />
+              <NuiSidebarItem label="Команда" :current="active === 'team'" @click="active = 'team'" />
             </NuiSidebarSub>
             <NuiSidebarItem label="Документация" icon="file" href="#docs" />
           </NuiSidebarGroup>
@@ -72,7 +72,7 @@ const open = ref(true);
       <NuiSidebar collapsible="icon" label="Разделы">
         <NuiSidebarContent>
           <NuiSidebarGroup label="Обзор">
-            <NuiSidebarItem label="Входящие" icon="inbox" to="/inbox" as="RouterLink" active />
+            <NuiSidebarItem label="Входящие" icon="inbox" to="/inbox" as="RouterLink" current />
             <NuiSidebarItem label="Календарь" icon="calendar" to="/calendar" as="RouterLink" />
           </NuiSidebarGroup>
         </NuiSidebarContent>
@@ -103,11 +103,12 @@ const open = ref(true);
 
 ## Доступность
 
-Панель — `aside` с `aria-label`, содержимое — `nav`, группы — списки с подписью через
-`aria-labelledby`. Активный пункт получает `aria-current="page"`; пункты со ссылкой
-рендерятся через `NuiLink` (`href`, `to`, `as`), остальные — кнопками. Кнопка-триггер
-держит `aria-expanded` и `aria-controls` панели или ящика. В режиме иконок каждый пункт
-описан тултипом, вне его тултип отключён и не добавляет `aria-describedby`.
+Панель — `aside` с `aria-label`, содержимое — `nav`, группа — `NuiList variant="nav"` с
+подписью через `aria-labelledby`, пункт — `NuiListItem`: текущий получает
+`aria-current="page"`, пункты со ссылкой рендерятся через `NuiLink` (`href`, `to`, `as`),
+остальные — кнопками. Кнопка-триггер держит `aria-expanded` и `aria-controls` панели или
+ящика. В режиме иконок подписи пунктов визуально скрыты, но остаются их доступным именем, а
+тултип с подписью — только визуальная подсказка без `aria-describedby`.
 
 ## API
 
@@ -119,16 +120,18 @@ const open = ref(true);
 
 `NuiSidebar`: `collapsible` (`offcanvas`), `side` (`start`), `label` (`Navigation`), `title`,
 `closeLabel`. Части: `NuiSidebarHeader`, `NuiSidebarContent` (`label`), `NuiSidebarFooter`,
-`NuiSidebarGroup` (`label`), `NuiSidebarItem` (`label`, `icon`, `href`, `to`, `as`, `active`,
-`disabled`, `badge`, `tooltip`; слоты default и `trailing`), `NuiSidebarSub` (`label`, `icon`,
-`active`, `id`, `v-model:open`), `NuiSidebarTrigger` (`label`).
+`NuiSidebarGroup` (`label`, `items` — записи `NuiListEntry` вместо слота), `NuiSidebarItem`
+(`label`, `icon`, `href`, `to`, `as`, `current`, `disabled`, `badge`, `tooltip`; слоты default и
+`trailing`), `NuiSidebarSub` (`label`, `icon`, `active` — внутри текущая страница, `id`,
+`v-model:open`), `NuiSidebarTrigger` (`label`).
 
 Блоки `nui-layout` (`--mobile`, `--sidebar-open`; `__body`, `__content`; переменные
 `--_sidebar-size`, `--_rail-size`, `--_bar-size`), `nui-app-bar` (`--sticky`; `__start`,
 `__body`, `__end`), `nui-sidebar` (`--side-*`, `--collapsible-*`, `--collapsed`, `--rail`,
-`--mobile`; `__header`, `__content`, `__footer`), `nui-sidebar-group` (`__label`, `__items`),
-`nui-sidebar-item` (`--active`, `--disabled`; `__action`, `__badge`), `nui-sidebar-sub`
-(`--open`, `--active`; `__toggle`, `__chevron`, `__panel`, `__items`), `nui-sidebar-trigger`.
+`--mobile`; `__header`, `__content`, `__footer`), `nui-sidebar-group` (`__label`),
+`nui-sidebar-sub` (`--open`, `--active`; `__chevron`, `__panel`, `__list`),
+`nui-sidebar-trigger`; строки — блоки [списка](/components/list) `nui-list--variant-nav` и
+`nui-list-item` (`--current`, `--disabled`).
 
 Примитив `useMediaQuery(query)` из `@numior/primitives` возвращает `false` до монтирования и
 следит за `matchMedia` после.
