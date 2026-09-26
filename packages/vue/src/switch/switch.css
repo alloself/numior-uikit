@@ -5,6 +5,7 @@
   --_inset: 0.1875rem;
   --_font-size: var(--nui-font-size-sm);
 
+  box-sizing: border-box;
   position: relative;
   display: inline-flex;
   align-items: flex-start;

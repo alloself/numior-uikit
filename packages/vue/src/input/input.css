@@ -3,6 +3,7 @@
   --_padding: var(--nui-field-padding-md);
   --_font-size: var(--nui-control-font-size-md);
 
+  box-sizing: border-box;
   display: inline-flex;
   align-items: center;
   gap: var(--nui-space-2);

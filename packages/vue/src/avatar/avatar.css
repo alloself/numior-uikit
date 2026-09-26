@@ -4,6 +4,7 @@
   --_font-size: calc(var(--_size) * 0.4);
   --_status-tone: var(--nui-text-subtle);
 
+  box-sizing: border-box;
   position: relative;
   display: inline-flex;
   flex: none;
@@ -92,6 +93,7 @@
 .nui-avatar-group {
   --_overlap: 0.5rem;
 
+  box-sizing: border-box;
   display: inline-flex;
   align-items: center;
 }

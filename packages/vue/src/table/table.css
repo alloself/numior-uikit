@@ -8,6 +8,7 @@
   --_hover: var(--nui-neutral-soft);
   --_head-bg: var(--nui-surface);
 
+  box-sizing: border-box;
   position: relative;
   display: grid;
   gap: var(--nui-space-3);
@@ -27,6 +28,7 @@
   --_font-size: var(--nui-font-size-md);
 }
 .nui-table__frame {
+  box-sizing: border-box;
   overflow: hidden;
   border: 1px solid var(--nui-border);
   border-radius: var(--nui-radius);
@@ -61,6 +63,7 @@
   cursor: grabbing;
 }
 .nui-table__caption {
+  box-sizing: border-box;
   padding: var(--nui-space-2) var(--_pad-x);
   color: var(--nui-text-muted);
   font-size: var(--nui-font-size-xs);
@@ -68,6 +71,7 @@
   caption-side: top;
 }
 .nui-table__cell {
+  box-sizing: border-box;
   block-size: var(--_row);
   padding: var(--nui-space-1) var(--_pad-x);
   border-block-end: 1px solid var(--nui-border);
@@ -426,6 +430,7 @@
   pointer-events: none;
 }
 .nui-table__sort {
+  box-sizing: border-box;
   display: inline-flex;
   align-items: center;
   gap: var(--nui-space-1);

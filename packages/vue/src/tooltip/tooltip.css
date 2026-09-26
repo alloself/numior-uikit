@@ -5,6 +5,7 @@
     calc(-1 * var(--_side-y) * var(--nui-space-1));
   --_arrow: 0.5rem;
 
+  box-sizing: border-box;
   position: fixed;
   inset: auto;
   max-inline-size: min(18rem, calc(100vw - var(--nui-space-4)));

@@ -2,6 +2,7 @@
   --_indicator: var(--nui-control-height-sm);
   --_pad: var(--nui-space-1);
 
+  box-sizing: border-box;
   color: var(--nui-text);
   font-family: var(--nui-font);
   font-size: var(--nui-font-size-sm);
@@ -26,6 +27,7 @@
   --_connector-fill: 0%;
   --_row-weight: 400;
 
+  box-sizing: border-box;
   display: flex;
   flex: 1 1 0;
   align-items: flex-start;
@@ -63,6 +65,7 @@
   opacity: var(--nui-disabled-opacity);
 }
 .nui-stepper__step {
+  box-sizing: border-box;
   display: flex;
   align-items: center;
   gap: var(--nui-space-2);
@@ -90,6 +93,7 @@
   outline-offset: calc(-1 * var(--nui-focus-ring-width));
 }
 .nui-stepper__indicator {
+  box-sizing: border-box;
   display: inline-grid;
   flex: none;
   place-items: center;

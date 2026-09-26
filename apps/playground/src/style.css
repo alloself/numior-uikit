@@ -1,6 +1,3 @@
-* {
-  box-sizing: border-box;
-}
 body {
   margin: 0;
   font-family: var(--nui-font);
@@ -12,6 +9,7 @@ a {
   text-underline-offset: 0.2em;
 }
 .workspace {
+  box-sizing: border-box;
   min-block-size: 100dvh;
   padding: clamp(1.25rem, 5vw, 4rem);
   background: var(--nui-surface);
@@ -45,6 +43,7 @@ h2 {
   max-inline-size: 36rem;
 }
 .panel {
+  box-sizing: border-box;
   border: 1px solid var(--nui-border);
   border-radius: calc(var(--nui-radius) * 1.5);
   padding: 1.5rem;
@@ -154,6 +153,7 @@ select {
   font-size: 0.875rem;
 }
 .layout-frame {
+  box-sizing: border-box;
   block-size: 24rem;
   border: 1px solid var(--nui-border);
   border-radius: var(--nui-radius);

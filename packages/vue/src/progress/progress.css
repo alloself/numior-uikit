@@ -3,6 +3,7 @@
   --_tone: var(--nui-primary);
   --_track: var(--nui-surface-muted);
 
+  box-sizing: border-box;
   display: block;
   inline-size: 100%;
   block-size: var(--_height);

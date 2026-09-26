@@ -4,6 +4,7 @@
   --_thumb: 2.5rem;
   --_icon: 2rem;
 
+  box-sizing: border-box;
   display: grid;
   gap: var(--_gap);
   color: var(--nui-text);
@@ -27,6 +28,7 @@
   font-size: var(--nui-font-size-md);
 }
 .nui-upload__zone {
+  box-sizing: border-box;
   position: relative;
   display: grid;
   justify-items: center;
@@ -102,6 +104,7 @@
 .nui-upload-item {
   --_row-weight: 500;
 
+  box-sizing: border-box;
   position: relative;
   display: grid;
   grid-template-areas:

@@ -97,6 +97,9 @@ commitDraft() })`; `NuiFormField` runs these commits before a programmatic submi
   for states. No `data-*` attributes for variants or states.
 - Modifiers set private variables (`--_height`, `--_tone`); base rules read them. Native
   state comes from pseudo-classes (`:checked`, `:disabled`, `:focus-visible`).
+- The block root and every part with padding or a border declare `box-sizing: border-box`;
+  never rely on a page reset. The playground has none, so a missing declaration shows up in
+  e2e sizes and screenshots.
 - Every state change has `transition`/`animation` via `--nui-duration-fast|normal|slow` and
   `--nui-easing` (`slow` for layout moves such as stacks and layers); infinite animations
   only slow down under reduced motion, and a sweep (skeleton, indeterminate progress)

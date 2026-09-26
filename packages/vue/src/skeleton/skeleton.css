@@ -3,6 +3,7 @@
   --_block-size: 1em;
   --_radius: var(--nui-radius-sm);
 
+  box-sizing: border-box;
   display: block;
   inline-size: var(--_inline-size);
 }

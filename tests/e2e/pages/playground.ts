@@ -121,6 +121,21 @@ export class FormsSection {
     return control.locator('..');
   }
 
+  fieldOf(control: Locator): Locator {
+    return control.locator(
+      'xpath=ancestor::*[contains(concat(" ", @class, " "), " nui-field ")][1]',
+    );
+  }
+
+  async boxOf(target: Locator): Promise<{ readonly width: number; readonly height: number }> {
+    const box = await target.boundingBox();
+
+    if (!box) {
+      throw new Error('Element has no bounding box');
+    }
+    return box;
+  }
+
   async readOutput(): Promise<FormsOutput> {
     return parseFormsOutput(await this.output.innerText());
   }

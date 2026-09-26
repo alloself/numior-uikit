@@ -5,6 +5,7 @@
   --_peek: 0.875rem;
   --_direction: 1;
 
+  box-sizing: border-box;
   position: fixed;
   inset: auto;
   inset-block-start: var(--_inset);
@@ -127,6 +128,7 @@
 .nui-toast {
   --_tone: var(--nui-neutral);
 
+  box-sizing: border-box;
   display: flex;
   align-items: flex-start;
   gap: var(--nui-space-3);

@@ -7,6 +7,7 @@
   --_shift: calc(-1 * var(--_side-x) * var(--nui-space-1))
     calc(-1 * var(--_side-y) * var(--nui-space-1));
 
+  box-sizing: border-box;
   position: relative;
   display: inline-flex;
   align-items: center;
@@ -93,6 +94,7 @@
   cursor: not-allowed;
 }
 .nui-date-picker__panel {
+  box-sizing: border-box;
   position: fixed;
   inset: auto;
   margin: 0;

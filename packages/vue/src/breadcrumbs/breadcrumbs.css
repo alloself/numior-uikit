@@ -1,4 +1,5 @@
 .nui-breadcrumbs {
+  box-sizing: border-box;
   color: var(--nui-text-muted);
   font-family: var(--nui-font);
   font-size: var(--nui-font-size-sm);
@@ -21,6 +22,7 @@
 .nui-breadcrumbs__link {
   --_tone: var(--nui-text-muted);
 
+  box-sizing: border-box;
   display: inline-flex;
   align-items: center;
   gap: var(--nui-space-1);

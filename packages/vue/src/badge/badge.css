@@ -9,6 +9,7 @@
   --_dot-size: 0.625rem;
   --_float-x: 50%;
 
+  box-sizing: border-box;
   display: inline-flex;
   align-items: center;
   justify-content: center;

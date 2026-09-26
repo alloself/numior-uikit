@@ -2,6 +2,7 @@
   --_size: 1.25rem;
   --_font-size: var(--nui-font-size-sm);
 
+  box-sizing: border-box;
   position: relative;
   display: inline-flex;
   align-items: flex-start;
@@ -35,6 +36,7 @@
   cursor: inherit;
 }
 .nui-checkbox__box {
+  box-sizing: border-box;
   pointer-events: none;
   display: inline-grid;
   flex: none;

@@ -5,6 +5,7 @@
   --_font-size: var(--nui-font-size-sm);
   --_control: 1.25rem;
 
+  box-sizing: border-box;
   position: relative;
   block-size: var(--_height);
   overflow: auto;
@@ -50,6 +51,7 @@
   }
 }
 .nui-tree__row {
+  box-sizing: border-box;
   display: flex;
   align-items: center;
   gap: var(--nui-space-2);
@@ -144,6 +146,7 @@
   opacity: 1;
 }
 .nui-tree__text {
+  box-sizing: border-box;
   display: flex;
   align-items: baseline;
   gap: var(--nui-space-2);

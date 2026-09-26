@@ -2,6 +2,7 @@
   --_padding: var(--nui-field-padding-md);
   --_font-size: var(--nui-control-font-size-md);
 
+  box-sizing: border-box;
   display: block;
   inline-size: 100%;
   padding: var(--nui-space-2) var(--_padding);

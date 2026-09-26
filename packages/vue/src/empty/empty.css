@@ -4,6 +4,7 @@
   --_media-size: 2.5rem;
   --_title-size: var(--nui-font-size-md);
 
+  box-sizing: border-box;
   display: grid;
   justify-items: center;
   gap: var(--_gap);

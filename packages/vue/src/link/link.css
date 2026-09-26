@@ -1,6 +1,7 @@
 .nui-link {
   --_tone: var(--nui-primary);
 
+  box-sizing: border-box;
   border-radius: var(--nui-radius-sm);
   color: var(--_tone);
   font: inherit;

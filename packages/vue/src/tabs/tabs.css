@@ -3,6 +3,7 @@
   --_padding: var(--nui-control-padding-md);
   --_font-size: var(--nui-control-font-size-md);
 
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
   gap: var(--nui-space-3);
@@ -29,6 +30,7 @@
   --_indicator-size: 0px;
   --_indicator-thickness: 2px;
 
+  box-sizing: border-box;
   position: relative;
   display: flex;
   gap: var(--nui-space-1);
@@ -52,6 +54,7 @@
 }
 
 .nui-tab {
+  box-sizing: border-box;
   position: relative;
   z-index: 1;
   display: inline-flex;
@@ -136,6 +139,7 @@
 }
 
 .nui-tab-panel {
+  box-sizing: border-box;
   min-inline-size: 0;
   flex: 1 1 auto;
   border-radius: var(--nui-radius-sm);

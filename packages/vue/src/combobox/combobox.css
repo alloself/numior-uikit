@@ -3,6 +3,7 @@
   --_padding: var(--nui-field-padding-md);
   --_font-size: var(--nui-control-font-size-md);
 
+  box-sizing: border-box;
   position: relative;
   inline-size: 100%;
   font-family: var(--nui-font);
@@ -18,6 +19,7 @@
   --_font-size: var(--nui-control-font-size-lg);
 }
 .nui-combobox__field {
+  box-sizing: border-box;
   display: flex;
   flex-wrap: wrap;
   align-items: center;

@@ -4,6 +4,7 @@
   --_font-size: var(--nui-control-font-size-md);
   --_segment-radius: var(--nui-radius-sm);
 
+  box-sizing: border-box;
   display: inline-flex;
   align-items: center;
   gap: var(--nui-space-1);

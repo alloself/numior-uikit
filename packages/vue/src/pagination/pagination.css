@@ -2,6 +2,7 @@
   --_height: var(--nui-control-height-md);
   --_font-size: var(--nui-control-font-size-md);
 
+  box-sizing: border-box;
   container-type: inline-size;
   display: flex;
   flex-wrap: wrap;
@@ -47,6 +48,7 @@
 .nui-pagination__control {
   --_tone: var(--nui-text);
 
+  box-sizing: border-box;
   display: inline-flex;
   align-items: center;
   justify-content: center;

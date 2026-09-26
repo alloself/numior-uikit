@@ -4,6 +4,7 @@
   --_font-size: var(--nui-control-font-size-md);
   --_stepper: 2rem;
 
+  box-sizing: border-box;
   display: inline-flex;
   align-items: center;
   gap: var(--nui-space-2);
@@ -63,12 +64,14 @@
   color: var(--nui-text-muted);
 }
 .nui-number-field__steppers {
+  box-sizing: border-box;
   display: inline-flex;
   flex: none;
   align-self: stretch;
   border-inline-start: 1px solid var(--nui-border);
 }
 .nui-number-field__stepper {
+  box-sizing: border-box;
   min-block-size: 0;
   block-size: 100%;
   inline-size: var(--_stepper);

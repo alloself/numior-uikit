@@ -8,6 +8,7 @@
   --_range-fg: var(--nui-primary-soft-foreground);
   --_slide: 0.75rem;
 
+  box-sizing: border-box;
   display: grid;
   grid-template-areas:
     'months'
@@ -69,6 +70,7 @@
   font-weight: 500;
 }
 .nui-calendar__title-button {
+  box-sizing: border-box;
   padding: var(--nui-space-1) var(--nui-space-2);
   border: 0;
   border-radius: var(--_radius);
@@ -109,6 +111,7 @@
 .nui-calendar__weekday,
 .nui-calendar__week-head,
 .nui-calendar__week {
+  box-sizing: border-box;
   inline-size: var(--_cell);
   padding: 0 0 var(--nui-space-1);
   color: var(--nui-text-muted);
@@ -129,6 +132,7 @@
   white-space: nowrap;
 }
 .nui-calendar__cell {
+  box-sizing: border-box;
   block-size: calc(var(--_cell) + 2px);
   padding: 1px 0;
   text-align: center;
@@ -205,6 +209,7 @@
   align-content: center;
 }
 .nui-calendar__option {
+  box-sizing: border-box;
   min-block-size: var(--_cell);
   padding: 0 var(--nui-space-2);
   border: 0;
@@ -227,6 +232,7 @@
   color: var(--_selected-fg);
 }
 .nui-calendar__presets {
+  box-sizing: border-box;
   display: grid;
   grid-area: presets;
   gap: var(--nui-space-1);

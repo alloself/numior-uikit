@@ -137,6 +137,18 @@ test.describe('form controls', () => {
     await expect(forms.wrapperOf(forms.largeInput)).toHaveCSS('min-block-size', '40px');
   });
 
+  test('controls keep their size and fit their field without a page-wide box-sizing reset', async ({
+    page,
+  }) => {
+    const playground = new PlaygroundPage(page);
+    await playground.open();
+    const { forms } = playground;
+    const frame = await forms.boxOf(forms.wrapperOf(forms.nameInput));
+    const field = await forms.boxOf(forms.fieldOf(forms.nameInput));
+    expect(frame.height).toBe(40);
+    expect(frame.width).toBeCloseTo(field.width, 0);
+  });
+
   test('forms with a visible error have no detectable WCAG AA violations', async ({ page }) => {
     const playground = new PlaygroundPage(page);
     await playground.emulate({ reducedMotion: 'reduce' });

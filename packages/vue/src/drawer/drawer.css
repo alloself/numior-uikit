@@ -2,6 +2,7 @@
   --_size: 20rem;
   --_shift: 100% 0;
 
+  box-sizing: border-box;
   inset: auto;
   inset-block: 0;
   inset-inline-end: 0;

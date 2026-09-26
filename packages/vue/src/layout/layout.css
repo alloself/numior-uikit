@@ -3,6 +3,7 @@
   --_rail-size: 3.5rem;
   --_bar-size: 3.5rem;
 
+  box-sizing: border-box;
   display: flex;
   min-block-size: 100%;
   background: var(--nui-surface);
@@ -22,6 +23,7 @@
   min-block-size: 0;
 }
 .nui-app-bar {
+  box-sizing: border-box;
   display: flex;
   flex: none;
   align-items: center;

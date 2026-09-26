@@ -1,4 +1,5 @@
 .nui-row {
+  box-sizing: border-box;
   display: contents;
 }
 .nui-row__leading {
