@@ -76,18 +76,19 @@
         </NuiFormField>
       </div>
       <NuiFormField
-        v-slot="{ field }"
+        v-slot="{ value, setValue }"
         :form="form"
         name="tags"
         label="Интересы"
         description="Можно выбрать из списка или добавить свой"
       >
         <NuiCombobox
-          v-bind="field"
+          :values="value"
           multiple
           :options="TAG_OPTIONS"
           :custom-value="asTag"
           data-testid="signup-tags"
+          @update:values="setValue"
         />
       </NuiFormField>
       <NuiFormField v-slot="{ field }" :form="form" name="call" label="Удобное время звонка">

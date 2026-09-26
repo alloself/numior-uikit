@@ -1,6 +1,6 @@
 import { mount, type DOMWrapper, type VueWrapper } from '@vue/test-utils';
 import { vi } from 'vitest';
-import { defineComponent, h, nextTick, ref, type Ref } from 'vue';
+import { defineComponent, h, nextTick } from 'vue';
 import {
   NuiField,
   NuiSelect,
@@ -11,21 +11,15 @@ import {
 import { configPlugins } from '../support/config';
 import { FRUITS } from '../support/options';
 import { TopLayerStubs } from '../support/top-layer';
+import { createSelection, type Selection, type SelectionValue } from '../support/selection';
 import { ComponentDriver } from './component';
-
-type SelectValue = string | string[] | undefined;
 
 export interface SelectMountOptions {
   readonly props?: Partial<NuiSelectProps<unknown>>;
-  readonly modelValue?: SelectValue;
+  readonly modelValue?: SelectionValue;
   readonly field?: NuiFieldProps;
   readonly config?: NuiConfigOptions;
 }
-
-const isSelectValue = (value: unknown): value is SelectValue =>
-  value === undefined ||
-  typeof value === 'string' ||
-  (Array.isArray(value) && value.every((entry) => typeof entry === 'string'));
 
 const labelOf = (element: Element): string =>
   (element.querySelector('.nui-row__title')?.textContent ?? '').trim();
@@ -35,18 +29,13 @@ export class SelectDriver extends ComponentDriver {
 
   static mount({ props = {}, modelValue, field, config }: SelectMountOptions = {}) {
     const stubs = new TopLayerStubs();
-    const model = ref<SelectValue>(modelValue);
+    const selection = createSelection(modelValue, props.multiple === true);
 
     const select = () =>
       h(NuiSelect, {
         options: FRUITS,
         ...props,
-        ...(model.value === undefined ? {} : { modelValue: model.value }),
-        'onUpdate:modelValue': (value: unknown) => {
-          if (isSelectValue(value)) {
-            model.value = value;
-          }
-        },
+        ...selection.props(),
       });
 
     const Host = defineComponent({
@@ -60,14 +49,14 @@ export class SelectDriver extends ComponentDriver {
     return new SelectDriver(
       mount(Host, { attachTo: document.body, global: { plugins: configPlugins(config) } }),
       stubs,
-      model,
+      selection,
     );
   }
 
   private constructor(
     wrapper: VueWrapper,
     private readonly stubs: TopLayerStubs,
-    private readonly model: Ref<SelectValue>,
+    private readonly selection: Selection,
   ) {
     super(wrapper);
   }
@@ -92,8 +81,8 @@ export class SelectDriver extends ComponentDriver {
     return this.wrapper.find('.nui-select__value').text();
   }
 
-  get value(): SelectValue {
-    return this.model.value;
+  get value(): SelectionValue {
+    return this.selection.value();
   }
 
   get labelledBy(): string | undefined {

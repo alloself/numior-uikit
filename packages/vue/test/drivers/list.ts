@@ -13,9 +13,8 @@ import {
 } from '../../src';
 import { configPlugins } from '../support/config';
 import { RouterStub } from '../support/router-stub';
+import { createSelection, type Selection, type SelectionValue } from '../support/selection';
 import { ComponentDriver } from './component';
-
-type ListValue = string | string[] | undefined;
 
 export interface ListPart extends NuiListItemProps {
   readonly leading?: string | undefined;
@@ -26,17 +25,12 @@ export interface ListPart extends NuiListItemProps {
 
 export interface ListMountOptions {
   readonly props?: Partial<NuiListProps<unknown>>;
-  readonly modelValue?: ListValue;
+  readonly modelValue?: SelectionValue;
   readonly parts?: readonly ListPart[];
   readonly itemSlot?: ((slot: NuiListItemSlot<NuiListEntry<unknown>>) => string) | undefined;
   readonly viaRouter?: boolean;
   readonly config?: NuiConfigOptions;
 }
-
-const isListValue = (value: unknown): value is ListValue =>
-  value === undefined ||
-  typeof value === 'string' ||
-  (Array.isArray(value) && value.every((entry) => typeof entry === 'string'));
 
 const titleOf = (element: Element): string =>
   (element.querySelector('.nui-row__title')?.textContent ?? '').trim();
@@ -78,7 +72,7 @@ export class ListDriver extends ComponentDriver {
     viaRouter = false,
     config,
   }: ListMountOptions = {}) {
-    const model = ref<ListValue>(modelValue);
+    const selection = createSelection(modelValue, props.selectable === 'multiple');
     const clicks = ref(0);
     const items = ref<NuiListSource<NuiListEntry<unknown>> | undefined>(props.items);
 
@@ -97,12 +91,7 @@ export class ListDriver extends ComponentDriver {
               ...props,
               ...(viaRouter ? { linkAs: RouterStub } : {}),
               ...(items.value === undefined ? {} : { items: items.value }),
-              ...(model.value === undefined ? {} : { modelValue: model.value }),
-              'onUpdate:modelValue': (value: unknown) => {
-                if (isListValue(value)) {
-                  model.value = value;
-                }
-              },
+              ...selection.props(),
             },
             slots,
           ),
@@ -112,7 +101,7 @@ export class ListDriver extends ComponentDriver {
 
     return new ListDriver(
       mount(Host, { attachTo: document.body, global: { plugins: configPlugins(config) } }),
-      model,
+      selection,
       clicks,
       items,
     );
@@ -120,7 +109,7 @@ export class ListDriver extends ComponentDriver {
 
   private constructor(
     wrapper: VueWrapper,
-    private readonly model: Ref<ListValue>,
+    private readonly selection: Selection,
     private readonly clickCount: Ref<number>,
     private readonly itemsRef: Ref<NuiListSource<NuiListEntry<unknown>> | undefined>,
   ) {
@@ -172,8 +161,8 @@ export class ListDriver extends ComponentDriver {
       : undefined;
   }
 
-  get value(): ListValue {
-    return this.model.value;
+  get value(): SelectionValue {
+    return this.selection.value();
   }
 
   get clicks(): number {

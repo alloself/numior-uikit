@@ -98,8 +98,12 @@ export class FormsSection {
     this.largeInput = page.getByTestId('input-lg');
     this.terms = page.getByTestId('checkbox-terms');
     this.indeterminate = page.getByTestId('checkbox-indeterminate');
-    this.channelEmail = page.getByTestId('checkbox-channel-email');
-    this.channelSms = page.getByTestId('checkbox-channel-sms');
+
+    this.channelEmail = page
+      .getByTestId('checkbox-channels')
+      .getByRole('checkbox', { name: 'Почта' });
+
+    this.channelSms = page.getByTestId('checkbox-channels').getByRole('checkbox', { name: 'SMS' });
     this.radioGroup = page.getByTestId('radio-group');
 
     this.radios = {

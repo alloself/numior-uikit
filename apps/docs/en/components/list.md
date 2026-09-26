@@ -42,7 +42,7 @@ const links = [
 
 <div class="vp-raw nui-demo" data-nui-theme="light" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); align-items: start">
   <NuiList variant="divided" :items="links" />
-  <NuiList v-model="picked" selectable="multiple" variant="bordered" label="Languages" :items="languages" />
+  <NuiList v-model:values="picked" selectable="multiple" variant="bordered" label="Languages" :items="languages" />
   <NuiList v-model="channel" selectable="single" variant="bordered" label="Channel">
     <NuiListItem value="email" label="Email" description="Daily digest" icon="inbox" />
     <NuiListItem value="push" label="Push" description="Instant" />
@@ -122,7 +122,8 @@ selectable list is a `role="listbox"` (`aria-multiselectable` for `multiple`) na
 | `size`         | `'sm' \| 'md' \| 'lg'`                                      | `'md'`                                          | Row height (control tokens)                                     |
 | `items`        | `NuiListSource<E>`                                          | —                                               | Items and `{ label, items }` groups; `[]` shows the empty state |
 | `selectable`   | `'single' \| 'multiple'`                                    | —                                               | Selection mode                                                  |
-| `modelValue`   | `T \| T[]`                                                  | —                                               | Selection (`v-model`)                                           |
+| `modelValue`   | `T \| null`                                                 | `null`                                          | Value in single mode (`v-model`)                                |
+| `values`       | `T[]`                                                       | `[]`                                            | Values in `multiple` (`v-model:values`)                         |
 | `getKey`       | `(value: T) => string`                                      | —                                               | Key of object values                                            |
 | `loop`         | `boolean`                                                   | `true`                                          | Arrows wrap around                                              |
 | `typeahead`    | `boolean`                                                   | `true`                                          | Search by first letters                                         |

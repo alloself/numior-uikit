@@ -12,6 +12,7 @@ export interface FieldControlProps {
 
 export interface FieldControlOptions {
   readonly group?: boolean | undefined;
+  readonly detached?: boolean | undefined;
   readonly commit?: (() => void) | undefined;
 }
 
@@ -41,7 +42,9 @@ export const useFieldControl = (
   useDraftCommit(options.commit);
 
   const linked = computed<FieldContext | null>(() =>
-    field !== null && (field.labelable.value || options.group === true) ? field : null,
+    field !== null && options.detached !== true && (field.labelable.value || options.group === true)
+      ? field
+      : null,
   );
 
   const resolve = (

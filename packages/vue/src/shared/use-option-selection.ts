@@ -9,7 +9,8 @@ import {
 
 export interface OptionSelectionOptions<T> {
   readonly options: MaybeRefOrGetter<NuiOptionSource<T>>;
-  readonly model: Ref<T | T[] | undefined>;
+  readonly model: Ref<T | null>;
+  readonly values: Ref<T[]>;
   readonly multiple: MaybeRefOrGetter<boolean>;
   readonly getKey?: MaybeRefOrGetter<NuiOptionKey<T> | undefined>;
 }
@@ -17,24 +18,28 @@ export interface OptionSelectionOptions<T> {
 export interface OptionSelection<T> {
   keyOf(value: T): string;
   readonly flat: ComputedRef<NuiOption<T>[]>;
-  readonly selectedValues: ComputedRef<T[]>;
+  readonly selectedValues: ComputedRef<readonly T[]>;
   readonly selectedKeys: ComputedRef<Set<string>>;
   readonly selectedOptions: ComputedRef<NuiOption<T>[]>;
   optionOf(value: T): NuiOption<T> | undefined;
-  toggle(option: NuiOption<T>): void;
+  choose(value: T): void;
+  add(value: T): void;
   clear(): void;
 }
 
 export const useOptionSelection = <T>(options: OptionSelectionOptions<T>): OptionSelection<T> => {
   const keyOf = (value: T): string => (toValue(options.getKey) ?? defaultOptionKey)(value);
+  const multiple = (): boolean => toValue(options.multiple);
   const flat = computed(() => flattenEntries(toValue(options.options)));
 
-  const selectedValues = computed<T[]>(() => {
-    const current = options.model.value;
-    if (Array.isArray(current)) {
-      return toValue(options.multiple) ? current : current.slice(0, 1);
+  const selectedValues = computed((): readonly T[] => {
+    if (multiple()) {
+      return options.values.value;
     }
-    return current === undefined ? [] : [current];
+
+    const current = options.model.value;
+
+    return current === null ? [] : [current];
   });
 
   const selectedKeys = computed(() => new Set(selectedValues.value.map(keyOf)));
@@ -47,6 +52,14 @@ export const useOptionSelection = <T>(options: OptionSelectionOptions<T>): Optio
     }),
   );
 
+  const toggled = (value: T): T[] => {
+    const key = keyOf(value);
+
+    return selectedKeys.value.has(key)
+      ? selectedValues.value.filter((item) => keyOf(item) !== key)
+      : [...selectedValues.value, value];
+  };
+
   return {
     keyOf,
     flat,
@@ -54,15 +67,26 @@ export const useOptionSelection = <T>(options: OptionSelectionOptions<T>): Optio
     selectedKeys,
     selectedOptions,
     optionOf: (value) => byKey.value.get(keyOf(value)),
-    toggle: (option) => {
-      const key = keyOf(option.value);
-
-      options.model.value = selectedKeys.value.has(key)
-        ? selectedValues.value.filter((value) => keyOf(value) !== key)
-        : [...selectedValues.value, option.value];
+    choose: (value) => {
+      if (multiple()) {
+        options.values.value = toggled(value);
+      } else {
+        options.model.value = value;
+      }
+    },
+    add: (value) => {
+      if (!multiple()) {
+        options.model.value = value;
+      } else if (!selectedKeys.value.has(keyOf(value))) {
+        options.values.value = [...selectedValues.value, value];
+      }
     },
     clear: () => {
-      options.model.value = toValue(options.multiple) ? [] : undefined;
+      if (multiple()) {
+        options.values.value = [];
+      } else {
+        options.model.value = null;
+      }
     },
   };
 };

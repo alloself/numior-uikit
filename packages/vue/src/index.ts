@@ -82,7 +82,12 @@ export type {
   NuiTextareaResize,
 } from './textarea/textarea.types';
 export { default as NuiCheckbox } from './checkbox/NuiCheckbox.vue';
-export type { NuiCheckboxProps } from './checkbox/checkbox.types';
+export { default as NuiCheckboxGroup } from './checkbox/NuiCheckboxGroup.vue';
+export type {
+  NuiCheckboxGroupOrientation,
+  NuiCheckboxGroupProps,
+  NuiCheckboxProps,
+} from './checkbox/checkbox.types';
 export { default as NuiRadioGroup } from './radio/NuiRadioGroup.vue';
 export { default as NuiRadio } from './radio/NuiRadio.vue';
 export type {

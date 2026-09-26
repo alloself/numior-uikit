@@ -41,7 +41,7 @@ const links = [
 
 <div class="vp-raw nui-demo" data-nui-theme="light" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); align-items: start">
   <NuiList variant="divided" :items="links" />
-  <NuiList v-model="picked" selectable="multiple" variant="bordered" label="Языки" :items="languages" />
+  <NuiList v-model:values="picked" selectable="multiple" variant="bordered" label="Языки" :items="languages" />
   <NuiList v-model="channel" selectable="single" variant="bordered" label="Канал">
     <NuiListItem value="email" label="Почта" description="Ежедневный дайджест" icon="inbox" />
     <NuiListItem value="push" label="Push" description="Мгновенно" />
@@ -122,7 +122,8 @@ Tab как есть. В режиме `selectable` пункты с `value` пол
 | `size`         | `'sm' \| 'md' \| 'lg'`                                      | `'md'`                                       | Высота строки (токены контролов)                            |
 | `items`        | `NuiListSource<E>`                                          | —                                            | Пункты и группы `{ label, items }`; `[]` — пустое состояние |
 | `selectable`   | `'single' \| 'multiple'`                                    | —                                            | Режим выбора                                                |
-| `modelValue`   | `T \| T[]`                                                  | —                                            | Выбор (`v-model`)                                           |
+| `modelValue`   | `T \| null`                                                 | `null`                                       | Значение в одиночном режиме (`v-model`)                     |
+| `values`       | `T[]`                                                       | `[]`                                         | Значения в `multiple` (`v-model:values`)                    |
 | `getKey`       | `(value: T) => string`                                      | —                                            | Ключ объектных значений                                     |
 | `loop`         | `boolean`                                                   | `true`                                       | Циклические стрелки                                         |
 | `typeahead`    | `boolean`                                                   | `true`                                       | Поиск по первым буквам                                      |

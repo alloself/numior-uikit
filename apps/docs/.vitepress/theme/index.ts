@@ -18,6 +18,7 @@ import {
   NuiCardMedia,
   NuiCardTitle,
   NuiCheckbox,
+  NuiCheckboxGroup,
   NuiChip,
   NuiCombobox,
   NuiDatePicker,
@@ -104,6 +105,7 @@ export default {
     app.component('NuiDatePicker', NuiDatePicker);
     app.component('NuiDateRangePicker', NuiDateRangePicker);
     app.component('NuiCheckbox', NuiCheckbox);
+    app.component('NuiCheckboxGroup', NuiCheckboxGroup);
     app.component('NuiRadioGroup', NuiRadioGroup);
     app.component('NuiRadio', NuiRadio);
     app.component('NuiSwitch', NuiSwitch);

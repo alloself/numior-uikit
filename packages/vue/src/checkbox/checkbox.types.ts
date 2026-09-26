@@ -1,6 +1,16 @@
+import type { NuiOption, NuiOptionKey } from '../shared/options';
 import type { NuiFieldControlProps } from '../shared/types';
 
-export interface NuiCheckboxProps<T = unknown> extends NuiFieldControlProps {
+export type NuiCheckboxGroupOrientation = 'vertical' | 'horizontal';
+
+export interface NuiCheckboxProps extends NuiFieldControlProps {
   indeterminate?: boolean | undefined;
-  value?: T | undefined;
+  value?: string | undefined;
+}
+
+export interface NuiCheckboxGroupProps<T> extends NuiFieldControlProps {
+  options: readonly NuiOption<T>[];
+  name?: string | undefined;
+  orientation?: NuiCheckboxGroupOrientation | undefined;
+  getKey?: NuiOptionKey<T> | undefined;
 }

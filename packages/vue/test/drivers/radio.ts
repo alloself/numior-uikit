@@ -36,13 +36,12 @@ export class RadioGroupDriver extends ComponentDriver {
         ),
       );
 
-    const group = () =>
-      h(NuiRadioGroup, { ...props, ...(modelValue === undefined ? {} : { modelValue }) }, radios);
+    const group = () => h(NuiRadioGroup<string | undefined>, { ...props, modelValue }, radios);
 
     const wrapper = field
       ? mount(NuiField, { props: field, slots: { default: group } })
-      : mount(NuiRadioGroup, {
-          props: { ...props, ...(modelValue === undefined ? {} : { modelValue }) },
+      : mount(NuiRadioGroup<string | undefined>, {
+          props: { ...props, modelValue },
           slots: { default: radios },
         });
 

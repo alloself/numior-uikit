@@ -16,7 +16,7 @@
       </NuiField>
       <NuiField label="Теги" description="Несколько значений">
         <NuiSelect
-          v-model="tags"
+          v-model:values="tags"
           :options="tagOptions"
           multiple
           placeholder="Выберите теги"
@@ -38,7 +38,7 @@
       </NuiField>
       <NuiField label="Ключевые слова" description="Чипы и свои значения">
         <NuiCombobox
-          v-model="keywords"
+          v-model:values="keywords"
           :options="keywordOptions"
           multiple
           :custom-value="(text) => text"

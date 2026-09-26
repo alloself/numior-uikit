@@ -130,7 +130,7 @@ describe('NuiTree', () => {
     expect(passive.attr('src', 'aria-selected')).toBeUndefined();
     await passive.focus();
     await passive.press('Enter');
-    expect(passive.value).toBeUndefined();
+    expect(passive.value).toBeNull();
     passive.unmount();
   });
 
@@ -145,7 +145,7 @@ describe('NuiTree', () => {
     await tree.clickCheckbox('src');
     expect(tree.checkedValues).toEqual(['src', 'components', 'button', 'index']);
     expect(tree.attr('src', 'aria-checked')).toBe('true');
-    expect(tree.value).toBeUndefined();
+    expect(tree.value).toBeNull();
     await tree.clickCheckbox('Button.vue');
     expect(tree.checkedValues).toEqual(['index']);
     expect(tree.attr('src', 'aria-checked')).toBe('mixed');
@@ -165,7 +165,7 @@ describe('NuiTree', () => {
     await only.focus();
     await only.press('Enter');
     expect(only.checkedValues).toEqual(['src', 'components', 'button', 'index']);
-    expect(only.value).toBeUndefined();
+    expect(only.value).toBeNull();
     only.unmount();
   });
 
@@ -176,7 +176,7 @@ describe('NuiTree', () => {
     expect(tree.attr('docs', 'aria-busy')).toBe('true');
     expect(tree.attr('docs', 'aria-expanded')).toBe('true');
     expect(tree.hasPart('docs', 'spinner')).toBe(true);
-    expect(tree.value).toBeUndefined();
+    expect(tree.value).toBeNull();
     await tree.receiveItems(withDocs([{ value: 'guide', label: 'guide.md' }]));
     expect(tree.labels).toContain('guide.md');
     expect(tree.attr('docs', 'aria-busy')).toBeUndefined();
@@ -196,7 +196,7 @@ describe('NuiTree', () => {
     expect(tree.labels[0]).toBe('src@1');
     await tree.clickToggle('src@1');
     expect(tree.expandedValues).toEqual(['src']);
-    expect(tree.value).toBeUndefined();
+    expect(tree.value).toBeNull();
     expect(tree.labels[1]).toBe('components@2');
     await tree.click('README.md@1');
     expect(tree.value).toBe('readme');

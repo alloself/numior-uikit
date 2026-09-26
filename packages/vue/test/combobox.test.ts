@@ -106,7 +106,7 @@ describe('NuiCombobox', () => {
     expect(strict.text).toBe('Apple');
     expect(strict.expanded).toBe(false);
     await strict.clickClear();
-    expect(strict.value).toBeUndefined();
+    expect(strict.value).toBeNull();
     expect(strict.text).toBe('');
     strict.unmount();
   });

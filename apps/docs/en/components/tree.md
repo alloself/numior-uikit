@@ -2,7 +2,7 @@
 
 `NuiTree` shows a hierarchy from `items` data (`value`, `label`, `description`, `icon`,
 `disabled`, `children`, `lazy`): expansion lives in `v-model:expanded`, selection in
-`v-model` (`selectable` is `single`, `multiple` or `false`) and cascading checkboxes in
+`v-model` and `v-model:values` (`selectable` is `single`, `multiple` or `false`) and cascading checkboxes in
 `v-model:checked` with `checkable`. A `lazy` node without `children` emits `load` when
 expanded and spins until the children arrive. Child rows unfold and fold by height over
 `--nui-duration-normal` together with the chevron rotation; the `folder`/`folder-open`/`file`
@@ -104,23 +104,24 @@ uses the same primitive.
 
 ## API
 
-| Prop                        | Type                              | Default    | Description                         |
-| --------------------------- | --------------------------------- | ---------- | ----------------------------------- |
-| `items`                     | `NuiTreeItem<T>[]`                | —          | Nodes                               |
-| `modelValue`                | `T \| T[]`                        | —          | Selection (`v-model`)               |
-| `expanded`                  | `T[]`                             | `[]`       | Expanded nodes (`v-model:expanded`) |
-| `checked`                   | `T[]`                             | `[]`       | Checked nodes (`v-model:checked`)   |
-| `selectable`                | `'single' \| 'multiple' \| false` | `'single'` | Selection mode                      |
-| `checkable`                 | `boolean`                         | `false`    | Cascading checkboxes                |
-| `getKey`                    | `(value: T) => string`            | —          | Key of object values                |
-| `icons`                     | `boolean`                         | `true`     | Folder and file icons               |
-| `virtual`                   | `boolean`                         | `false`    | Windowing (needs `height`)          |
-| `height`                    | `string`                          | —          | Height of the scrolling area        |
-| `itemHeight`                | `number`                          | `32`       | Row height in px under `virtual`    |
-| `size`                      | `'sm' \| 'md' \| 'lg'`            | `'md'`     | Row height                          |
-| `loop`                      | `boolean`                         | `false`    | ↑/↓ wrap around                     |
-| `typeahead`                 | `boolean`                         | `true`     | Search by first letters             |
-| `label`, `labelledBy`, `id` | `string`                          | —          | Name and identifier                 |
+| Prop                        | Type                              | Default    | Description                             |
+| --------------------------- | --------------------------------- | ---------- | --------------------------------------- |
+| `items`                     | `NuiTreeItem<T>[]`                | —          | Nodes                                   |
+| `modelValue`                | `T \| null`                       | `null`     | Value in single mode (`v-model`)        |
+| `values`                    | `T[]`                             | `[]`       | Values in `multiple` (`v-model:values`) |
+| `expanded`                  | `T[]`                             | `[]`       | Expanded nodes (`v-model:expanded`)     |
+| `checked`                   | `T[]`                             | `[]`       | Checked nodes (`v-model:checked`)       |
+| `selectable`                | `'single' \| 'multiple' \| false` | `'single'` | Selection mode                          |
+| `checkable`                 | `boolean`                         | `false`    | Cascading checkboxes                    |
+| `getKey`                    | `(value: T) => string`            | —          | Key of object values                    |
+| `icons`                     | `boolean`                         | `true`     | Folder and file icons                   |
+| `virtual`                   | `boolean`                         | `false`    | Windowing (needs `height`)              |
+| `height`                    | `string`                          | —          | Height of the scrolling area            |
+| `itemHeight`                | `number`                          | `32`       | Row height in px under `virtual`        |
+| `size`                      | `'sm' \| 'md' \| 'lg'`            | `'md'`     | Row height                              |
+| `loop`                      | `boolean`                         | `false`    | ↑/↓ wrap around                         |
+| `typeahead`                 | `boolean`                         | `true`     | Search by first letters                 |
+| `label`, `labelledBy`, `id` | `string`                          | —          | Name and identifier                     |
 
 Events `expand`, `collapse`, `load` and `select` carry the node. Slot `item`
 (`{ item, level, expanded, selected, checked, loading }`). Block `nui-tree`, modifiers

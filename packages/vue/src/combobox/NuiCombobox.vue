@@ -22,7 +22,7 @@
           :remove-label="`${texts.remove} ${chip.label}`"
           :disabled="isDisabled"
           class="nui-combobox__chip"
-          @remove="toggleSelection(chip)"
+          @remove="choose(chip.value)"
         >
           {{ chip.label }}
         </NuiChip>
@@ -72,6 +72,7 @@
     <NuiList
       :ref="setListbox"
       v-model="model"
+      v-model:values="values"
       class="nui-combobox__listbox"
       variant="floating"
       :items="filtered"
@@ -143,7 +144,8 @@ const {
   toggleLabel,
 } = defineProps<NuiComboboxProps<T>>();
 
-const model = defineModel<T | T[]>();
+const model = defineModel<T | null>({ default: null });
+const values = defineModel<T[]>('values', { default: () => [] });
 const emit = defineEmits<{ search: [query: string] }>();
 
 const split = useSplitAttrs();
@@ -170,11 +172,13 @@ const {
   keyOf,
   selectedValues,
   optionOf: optionForValue,
-  toggle: toggleSelection,
+  choose,
+  add,
   clear: clearSelection,
 } = useOptionSelection<T>({
   options: () => options,
   model,
+  values,
   multiple: () => multiple,
   getKey: () => getKey,
 });
@@ -294,12 +298,10 @@ const commitCustom = (): boolean => {
   if (!customValue || text === '') {
     return false;
   }
-  const value = customValue(text);
+  add(customValue(text));
+
   if (multiple) {
-    model.value = [...selectedValues.value, value];
     query.value = '';
-  } else {
-    model.value = value;
   }
   filtering.value = false;
   open.value = false;
@@ -387,7 +389,7 @@ const onEscape = (event: KeyboardEvent): void => {
 const onBackspace = (): void => {
   const last = chips.value.at(-1);
   if (multiple && query.value === '' && last) {
-    toggleSelection(last);
+    choose(last.value);
   }
 };
 

@@ -3,14 +3,13 @@ import { vi } from 'vitest';
 import { defineComponent, h, nextTick, ref, type Ref } from 'vue';
 import { NuiTree, type NuiTreeItem, type NuiTreeItemSlot, type NuiTreeProps } from '../../src';
 import { FILES } from '../support/tree-items';
+import { createSelection, type Selection, type SelectionValue } from '../support/selection';
 import { ComponentDriver } from './component';
-
-type TreeValue = string | string[] | undefined;
 
 export interface TreeMountOptions {
   readonly props?: Partial<Omit<NuiTreeProps<unknown>, 'items'>>;
   readonly items?: readonly NuiTreeItem<string>[];
-  readonly modelValue?: TreeValue;
+  readonly modelValue?: SelectionValue;
   readonly expanded?: readonly string[];
   readonly checked?: readonly string[];
   readonly dir?: 'ltr' | 'rtl';
@@ -19,9 +18,6 @@ export interface TreeMountOptions {
 
 const isStringList = (value: unknown): value is string[] =>
   Array.isArray(value) && value.every((entry) => typeof entry === 'string');
-
-const isTreeValue = (value: unknown): value is TreeValue =>
-  value === undefined || typeof value === 'string' || isStringList(value);
 
 const labelOfItem = (item: unknown): string =>
   typeof item === 'object' && item !== null && 'label' in item && typeof item.label === 'string'
@@ -51,7 +47,7 @@ export class TreeDriver extends ComponentDriver {
     dir,
     itemSlot,
   }: TreeMountOptions = {}) {
-    const model = ref<TreeValue>(modelValue);
+    const selection = createSelection(modelValue, props.selectable === 'multiple');
     const expandedRef = ref<string[]>([...expanded]);
     const checkedRef = ref<string[]>([...checked]);
     const itemsRef = ref<readonly NuiTreeItem<string>[]>(items);
@@ -66,14 +62,9 @@ export class TreeDriver extends ComponentDriver {
             {
               ...props,
               items: itemsRef.value,
-              ...(model.value === undefined ? {} : { modelValue: model.value }),
+              ...selection.props(),
               expanded: expandedRef.value,
               checked: checkedRef.value,
-              'onUpdate:modelValue': (value: unknown) => {
-                if (isTreeValue(value)) {
-                  model.value = value;
-                }
-              },
               'onUpdate:expanded': (value: unknown) => {
                 if (isStringList(value)) {
                   expandedRef.value = value;
@@ -96,7 +87,7 @@ export class TreeDriver extends ComponentDriver {
 
     return new TreeDriver(
       mount(Host, { attachTo: document.body }),
-      model,
+      selection,
       expandedRef,
       checkedRef,
       itemsRef,
@@ -107,7 +98,7 @@ export class TreeDriver extends ComponentDriver {
 
   private constructor(
     wrapper: VueWrapper,
-    private readonly model: Ref<TreeValue>,
+    private readonly selection: Selection,
     private readonly expandedRef: Ref<string[]>,
     private readonly checkedRef: Ref<string[]>,
     private readonly itemsRef: Ref<readonly NuiTreeItem<string>[]>,
@@ -143,8 +134,8 @@ export class TreeDriver extends ComponentDriver {
     return active?.exists() ? textOf(active.element) : undefined;
   }
 
-  get value(): TreeValue {
-    return this.model.value;
+  get value(): SelectionValue {
+    return this.selection.value();
   }
 
   get expandedValues(): string[] {

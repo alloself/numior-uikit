@@ -15,8 +15,6 @@ export type {
   FieldControlOptions,
   FieldControlProps,
 } from './field/useFieldControl';
-export { useCheckedState } from './checkbox/useCheckedState';
-export type { CheckedState } from './checkbox/useCheckedState';
 export { RADIO_GROUP_KEY, provideRadioGroup, useRadioGroup } from './radio/radio-group-context';
 export type { RadioGroupContext } from './radio/radio-group-context';
 export { ICONS_KEY, lazyIcon, provideIcons, useIcon, useIcons } from './icons/icon-registry';

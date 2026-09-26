@@ -91,7 +91,8 @@ const {
   linkAs = 'a',
 } = defineProps<NuiListProps<T, E>>();
 
-const model = defineModel<T | T[] | undefined>();
+const model = defineModel<T | null>({ default: null });
+const values = defineModel<T[]>('values', { default: () => [] });
 const emit = defineEmits<{ select: [item: E] }>();
 
 const listId = useControlId(() => id);
@@ -120,9 +121,10 @@ const indices = computed(() => new Map(flat.value.map((entry, index) => [entry, 
 const indexOf = (entry: E): number => indices.value.get(entry) ?? -1;
 const isEmpty = computed(() => items !== undefined && flat.value.length === 0);
 
-const { keyOf, selectedKeys, selectedValues, toggle } = useOptionSelection<T>({
+const { keyOf, selectedKeys, selectedValues, choose } = useOptionSelection<T>({
   options: () => [],
   model,
+  values,
   multiple: () => selectable === 'multiple',
   getKey: () => getKey,
 });
@@ -139,11 +141,8 @@ const entryOf = (value: T): E | undefined =>
   flat.value.find((entry) => entry.value !== undefined && keyOf(entry.value) === keyOf(value));
 
 const select = (value: T): void => {
-  if (selectable === 'multiple') {
-    toggle({ value, label: '' });
-  } else {
-    model.value = value;
-  }
+  choose(value);
+
   const entry = entryOf(value);
   if (entry) {
     emit('select', entry);

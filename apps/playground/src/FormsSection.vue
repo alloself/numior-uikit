@@ -41,12 +41,12 @@
       <NuiCheckbox v-model="terms" data-testid="checkbox-terms">Принимаю условия</NuiCheckbox>
       <NuiCheckbox indeterminate data-testid="checkbox-indeterminate">Частично выбрано</NuiCheckbox>
       <NuiField group label="Каналы">
-        <NuiCheckbox v-model="channels" value="email" data-testid="checkbox-channel-email"
-          >Почта</NuiCheckbox
-        >
-        <NuiCheckbox v-model="channels" value="sms" data-testid="checkbox-channel-sms"
-          >SMS</NuiCheckbox
-        >
+        <NuiCheckboxGroup
+          v-model="channels"
+          :options="CHANNELS"
+          orientation="horizontal"
+          data-testid="checkbox-channels"
+        />
       </NuiField>
       <NuiField group label="Тариф" description="Можно изменить позже">
         <NuiRadioGroup v-model="plan" data-testid="radio-group">
@@ -70,13 +70,20 @@ import { computed, ref } from 'vue';
 import {
   NuiButton,
   NuiCheckbox,
+  NuiCheckboxGroup,
   NuiField,
   NuiInput,
   NuiRadio,
   NuiRadioGroup,
   NuiSwitch,
   NuiTextarea,
+  type NuiOption,
 } from '@numior/vue';
+
+const CHANNELS: readonly NuiOption<string>[] = [
+  { value: 'email', label: 'Почта' },
+  { value: 'sms', label: 'SMS' },
+];
 
 const name = ref('');
 const email = ref('');

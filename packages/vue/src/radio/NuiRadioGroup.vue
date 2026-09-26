@@ -33,7 +33,7 @@ const {
   orientation = 'vertical',
 } = defineProps<NuiRadioGroupProps>();
 
-const model = defineModel<T>();
+const model = defineModel<T>({ required: true });
 const field = useFieldContext();
 
 const {

@@ -43,6 +43,7 @@
     <NuiList
       :ref="setListbox"
       v-model="model"
+      v-model:values="values"
       class="nui-select__listbox"
       variant="floating"
       :items="options"
@@ -108,7 +109,8 @@ const {
   countLabel,
 } = defineProps<NuiSelectProps<T>>();
 
-const model = defineModel<T | T[]>();
+const model = defineModel<T | null>({ default: null });
+const values = defineModel<T[]>('values', { default: () => [] });
 
 const split = useSplitAttrs();
 const field = useFieldContext();
@@ -132,6 +134,7 @@ const {
 } = useOptionSelection<T>({
   options: () => options,
   model,
+  values,
   multiple: () => multiple,
   getKey: () => getKey,
 });

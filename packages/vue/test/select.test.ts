@@ -88,7 +88,7 @@ describe('NuiSelect', () => {
     await select.clickOption('Blueberry');
     expect(select.value).toBe('lime');
     await select.clickClear();
-    expect(select.value).toBeUndefined();
+    expect(select.value).toBeNull();
     expect(select.clearButton.exists()).toBe(false);
     select.unmount();
     const off = SelectDriver.mount({ props: { disabled: true } });

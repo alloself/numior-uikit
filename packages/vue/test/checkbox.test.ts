@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { CheckboxDriver } from './drivers/checkbox';
+import { CheckboxDriver, CheckboxGroupDriver } from './drivers/checkbox';
 
 describe('NuiCheckbox', () => {
   it('toggles a boolean model and mirrors it in the native control', async () => {
@@ -12,18 +12,6 @@ describe('NuiCheckbox', () => {
     await checkbox.receive({ modelValue: true });
     expect(checkbox.checked).toBe(true);
     expect(checkbox.hasModifier('checked')).toBe(true);
-  });
-
-  it('adds and removes its value in an array model', async () => {
-    const checkbox = CheckboxDriver.mount({ modelValue: ['b'], props: { value: 'a' } });
-    await checkbox.ready();
-    expect(checkbox.checked).toBe(false);
-    await checkbox.toggle();
-    expect(checkbox.emittedModels).toEqual([['b', 'a']]);
-    await checkbox.receive({ modelValue: ['b', 'a'] });
-    expect(checkbox.checked).toBe(true);
-    await checkbox.toggle();
-    expect(checkbox.emittedModels.at(-1)).toEqual(['b']);
   });
 
   it('applies indeterminate as a DOM property with the minus glyph', async () => {
@@ -52,5 +40,47 @@ describe('NuiCheckbox', () => {
     expect(checkbox.hasModifier('disabled')).toBe(true);
     expect(checkbox.hasModifier('invalid')).toBe(true);
     expect(checkbox.hasModifier('size-lg')).toBe(true);
+  });
+});
+
+describe('NuiCheckboxGroup', () => {
+  it('adds and removes option values in its array model', async () => {
+    const group = CheckboxGroupDriver.mount({ modelValue: ['b'] });
+
+    expect(group.checked).toEqual(['b']);
+    await group.toggle(0);
+    expect(group.emittedModels).toEqual([['b', 'a']]);
+    await group.receive(['b', 'a']);
+    expect(group.checked).toEqual(['a', 'b']);
+    await group.toggle(1);
+    expect(group.emittedModels.at(-1)).toEqual(['a']);
+  });
+
+  it('names its checkboxes after the group and keeps disabled options out of reach', () => {
+    const group = CheckboxGroupDriver.mount({
+      props: { name: 'channels' },
+      disabledValues: ['c'],
+    });
+
+    expect(group.names).toEqual(['channels', 'channels', 'channels']);
+
+    expect(group.checkboxes.map((box) => box.attributes('disabled') !== undefined)).toEqual([
+      false,
+      false,
+      true,
+    ]);
+  });
+
+  it('takes its name and description from a group field', () => {
+    const group = CheckboxGroupDriver.mount({
+      field: { label: 'Channels', description: 'Pick any', group: true },
+    });
+
+    expect(group.group.attributes('aria-labelledby')).toBeDefined();
+    expect(group.group.attributes('aria-describedby')).toBeDefined();
+
+    expect(group.checkboxes.every((box) => box.attributes('aria-describedby') === undefined)).toBe(
+      true,
+    );
   });
 });

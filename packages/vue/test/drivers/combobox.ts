@@ -10,22 +10,16 @@ import {
 import { configPlugins } from '../support/config';
 import { FRUITS } from '../support/options';
 import { TopLayerStubs } from '../support/top-layer';
+import { createSelection, type Selection, type SelectionValue } from '../support/selection';
 import { ComponentDriver } from './component';
-
-type ComboboxValue = string | string[] | undefined;
 
 export interface ComboboxMountOptions {
   readonly props?: Partial<NuiComboboxProps<unknown>>;
-  readonly modelValue?: ComboboxValue;
+  readonly modelValue?: SelectionValue;
   readonly field?: NuiFieldProps;
   readonly custom?: boolean;
   readonly config?: NuiConfigOptions;
 }
-
-const isComboboxValue = (value: unknown): value is ComboboxValue =>
-  value === undefined ||
-  typeof value === 'string' ||
-  (Array.isArray(value) && value.every((entry) => typeof entry === 'string'));
 
 const labelOf = (element: Element): string =>
   (element.querySelector('.nui-row__title')?.textContent ?? '').trim();
@@ -41,7 +35,7 @@ export class ComboboxDriver extends ComponentDriver {
     config,
   }: ComboboxMountOptions = {}) {
     const stubs = new TopLayerStubs();
-    const model = ref<ComboboxValue>(modelValue);
+    const selection = createSelection(modelValue, props.multiple === true);
     const extra = ref<Partial<NuiComboboxProps<unknown>>>({});
     const searches: string[] = [];
 
@@ -51,12 +45,7 @@ export class ComboboxDriver extends ComponentDriver {
         ...props,
         ...extra.value,
         ...(custom ? { customValue: (text: string) => text } : {}),
-        ...(model.value === undefined ? {} : { modelValue: model.value }),
-        'onUpdate:modelValue': (value: unknown) => {
-          if (isComboboxValue(value)) {
-            model.value = value;
-          }
-        },
+        ...selection.props(),
         onSearch: (query: string) => {
           searches.push(query);
         },
@@ -73,7 +62,7 @@ export class ComboboxDriver extends ComponentDriver {
     return new ComboboxDriver(
       mount(Host, { attachTo: document.body, global: { plugins: configPlugins(config) } }),
       stubs,
-      model,
+      selection,
       extra,
       searches,
     );
@@ -82,7 +71,7 @@ export class ComboboxDriver extends ComponentDriver {
   private constructor(
     wrapper: VueWrapper,
     private readonly stubs: TopLayerStubs,
-    private readonly model: Ref<ComboboxValue>,
+    private readonly selection: Selection,
     private readonly extra: Ref<Partial<NuiComboboxProps<unknown>>>,
     readonly searches: string[],
   ) {
@@ -109,8 +98,8 @@ export class ComboboxDriver extends ComponentDriver {
     return this.input.element.value;
   }
 
-  get value(): ComboboxValue {
-    return this.model.value;
+  get value(): SelectionValue {
+    return this.selection.value();
   }
 
   get activeLabel(): string | undefined {

@@ -1,7 +1,7 @@
 # Дерево
 
 `NuiTree` показывает иерархию из данных `items` (`value`, `label`, `description`, `icon`,
-`disabled`, `children`, `lazy`): раскрытие в `v-model:expanded`, выбор в `v-model` (`selectable`
+`disabled`, `children`, `lazy`): раскрытие в `v-model:expanded`, выбор в `v-model` и `v-model:values` (`selectable`
 — `single`, `multiple` или `false`), чекбоксы с каскадом в `v-model:checked` при `checkable`.
 Узел с `lazy` без `children` при раскрытии эмитит `load` и крутит спиннер, пока дети не
 придут. Дочерние строки разворачиваются и сворачиваются по высоте за
@@ -102,23 +102,24 @@ PageUp/PageDown, → раскрывает или входит в первого 
 
 ## API
 
-| Prop                        | Тип                               | По умолчанию | Описание                            |
-| --------------------------- | --------------------------------- | ------------ | ----------------------------------- |
-| `items`                     | `NuiTreeItem<T>[]`                | —            | Узлы                                |
-| `modelValue`                | `T \| T[]`                        | —            | Выбор (`v-model`)                   |
-| `expanded`                  | `T[]`                             | `[]`         | Раскрытые узлы (`v-model:expanded`) |
-| `checked`                   | `T[]`                             | `[]`         | Отмеченные узлы (`v-model:checked`) |
-| `selectable`                | `'single' \| 'multiple' \| false` | `'single'`   | Режим выбора                        |
-| `checkable`                 | `boolean`                         | `false`      | Чекбоксы с каскадом                 |
-| `getKey`                    | `(value: T) => string`            | —            | Ключ объектных значений             |
-| `icons`                     | `boolean`                         | `true`       | Иконки папок и файлов               |
-| `virtual`                   | `boolean`                         | `false`      | Виртуализация (нужен `height`)      |
-| `height`                    | `string`                          | —            | Высота прокручиваемой области       |
-| `itemHeight`                | `number`                          | `32`         | Высота строки в px при `virtual`    |
-| `size`                      | `'sm' \| 'md' \| 'lg'`            | `'md'`       | Высота строки                       |
-| `loop`                      | `boolean`                         | `false`      | Циклические ↑/↓                     |
-| `typeahead`                 | `boolean`                         | `true`       | Поиск по первым буквам              |
-| `label`, `labelledBy`, `id` | `string`                          | —            | Имя и идентификатор                 |
+| Prop                        | Тип                               | По умолчанию | Описание                                 |
+| --------------------------- | --------------------------------- | ------------ | ---------------------------------------- |
+| `items`                     | `NuiTreeItem<T>[]`                | —            | Узлы                                     |
+| `modelValue`                | `T \| null`                       | `null`       | Значение в одиночном режиме (`v-model`)  |
+| `values`                    | `T[]`                             | `[]`         | Значения в `multiple` (`v-model:values`) |
+| `expanded`                  | `T[]`                             | `[]`         | Раскрытые узлы (`v-model:expanded`)      |
+| `checked`                   | `T[]`                             | `[]`         | Отмеченные узлы (`v-model:checked`)      |
+| `selectable`                | `'single' \| 'multiple' \| false` | `'single'`   | Режим выбора                             |
+| `checkable`                 | `boolean`                         | `false`      | Чекбоксы с каскадом                      |
+| `getKey`                    | `(value: T) => string`            | —            | Ключ объектных значений                  |
+| `icons`                     | `boolean`                         | `true`       | Иконки папок и файлов                    |
+| `virtual`                   | `boolean`                         | `false`      | Виртуализация (нужен `height`)           |
+| `height`                    | `string`                          | —            | Высота прокручиваемой области            |
+| `itemHeight`                | `number`                          | `32`         | Высота строки в px при `virtual`         |
+| `size`                      | `'sm' \| 'md' \| 'lg'`            | `'md'`       | Высота строки                            |
+| `loop`                      | `boolean`                         | `false`      | Циклические ↑/↓                          |
+| `typeahead`                 | `boolean`                         | `true`       | Поиск по первым буквам                   |
+| `label`, `labelledBy`, `id` | `string`                          | —            | Имя и идентификатор                      |
 
 События `expand`, `collapse`, `load`, `select` с узлом. Слот `item`
 (`{ item, level, expanded, selected, checked, loading }`). Блок `nui-tree`, модификаторы

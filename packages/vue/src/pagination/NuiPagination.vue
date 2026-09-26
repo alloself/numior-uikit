@@ -154,8 +154,8 @@ const go = (target: number): void => {
   pageModel.value = clampPage(target, pageCount.value);
 };
 
-const changePageSize = (value: number | number[] | undefined): void => {
-  if (typeof value === 'number') {
+const changePageSize = (value: number | null): void => {
+  if (value !== null) {
     pageSize.value = value;
   }
 };

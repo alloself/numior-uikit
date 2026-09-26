@@ -49,7 +49,7 @@ disables only that radio.
 
 | Prop          | Type                         | Default      | Description                           |
 | ------------- | ---------------------------- | ------------ | ------------------------------------- |
-| `v-model`     | `T`                          | —            | Selected value                        |
+| `v-model`     | `T`                          | required     | Selected value                        |
 | `name`        | `string`                     | group id     | Shared native name of the radios      |
 | `orientation` | `'vertical' \| 'horizontal'` | `'vertical'` | Layout                                |
 | `size`        | `'sm' \| 'md' \| 'lg'`       | `'md'`       | Size of the radios inside             |

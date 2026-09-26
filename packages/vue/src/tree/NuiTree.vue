@@ -97,7 +97,8 @@ const {
   labelledBy,
 } = defineProps<NuiTreeProps<T>>();
 
-const model = defineModel<T | T[]>();
+const model = defineModel<T | null>({ default: null });
+const values = defineModel<T[]>('values', { default: () => [] });
 const expanded = defineModel<T[]>('expanded', { default: () => [] });
 const checked = defineModel<T[]>('checked', { default: () => [] });
 
@@ -113,9 +114,10 @@ const root = useTemplateRef<HTMLElement>('root');
 const mounted = ref(false);
 const mode = computed(() => (selectable === undefined ? 'single' : selectable));
 
-const { keyOf, selectedKeys, selectedValues, toggle } = useOptionSelection<T>({
+const { keyOf, selectedKeys, selectedValues, choose } = useOptionSelection<T>({
   options: () => [],
   model,
+  values,
   multiple: () => mode.value === 'multiple',
   getKey: () => getKey,
 });
@@ -272,11 +274,7 @@ const activate = (index: number, key: TreeActivationKey): void => {
   if (mode.value === false) {
     return;
   }
-  if (mode.value === 'multiple') {
-    toggle({ value: node.item.value, label: node.item.label });
-  } else {
-    model.value = node.item.value;
-  }
+  choose(node.item.value);
   emit('select', node.item);
 };
 

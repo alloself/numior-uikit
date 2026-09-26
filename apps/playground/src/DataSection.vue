@@ -83,7 +83,7 @@
     <div class="data-lists">
       <NuiList variant="divided" :items="linkItems" data-testid="data-list" />
       <NuiList
-        v-model="picked"
+        v-model:values="picked"
         selectable="multiple"
         variant="bordered"
         label="Языки"
