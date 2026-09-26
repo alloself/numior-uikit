@@ -25,6 +25,7 @@ export interface NuiTimeSegmentProps {
   valueText?: string | undefined;
   id?: string | undefined;
   tabStop: boolean;
+  last?: boolean | undefined;
   disabled: boolean;
   readonly: boolean;
   invalid: boolean;

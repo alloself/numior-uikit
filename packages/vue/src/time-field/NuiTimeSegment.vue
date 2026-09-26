@@ -8,7 +8,7 @@
     spellcheck="false"
     role="spinbutton"
     :inputmode="type === 'dayPeriod' ? 'text' : 'numeric'"
-    enterkeyhint="next"
+    :enterkeyhint="last ? 'done' : 'next'"
     placeholder="--"
     :id="id"
     :tabindex="tabStop ? 0 : -1"
@@ -54,6 +54,7 @@ const {
   valueText,
   id,
   tabStop,
+  last = false,
   disabled,
   readonly,
   invalid,

@@ -41,6 +41,7 @@
           :value-text="segmentText(segment.type) || undefined"
           :id="segment.type === 'hour' ? controlAttrs.id : undefined"
           :tab-stop="index === firstSegment"
+          :last="index === lastSegment"
           :disabled="isDisabled"
           :readonly="readonly"
           :invalid="isInvalid"
@@ -159,6 +160,10 @@ const labels = computed(() => segmentLabels(locale.value));
 
 const firstSegment = computed(() =>
   layout.value.segments.findIndex((segment) => segment.type !== 'literal'),
+);
+
+const lastSegment = computed(() =>
+  layout.value.segments.findLastIndex((segment) => segment.type !== 'literal'),
 );
 
 const segmentTypes = computed(() =>
@@ -307,9 +312,11 @@ const onGroupKeydown = (event: KeyboardEvent): void => {
     navigation.focusNext();
     return;
   }
-  if (event.key !== 'Enter') {
-    navigation.onKeydown(event);
+  if (event.key === 'Enter') {
+    times.settle();
+    return;
   }
+  navigation.onKeydown(event);
 };
 
 const onGroupFocusout = (event: FocusEvent): void => {

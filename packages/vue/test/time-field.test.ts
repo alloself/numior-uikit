@@ -255,4 +255,22 @@ describe('NuiTimeField', () => {
     expect(field.emptyText).toBe('Нет доступного времени');
     field.unmount();
   });
+
+  it('clamps the time on Enter in the last segment so a form submits the settled value', async () => {
+    const field = TimeFieldDriver.mount({ locale: 'de-DE', props: { min: '09:00', max: '18:00' } });
+
+    expect(field.enterHints).toEqual(['next', 'done']);
+    await field.focusSegment(0);
+    await field.typeText('0730');
+    expect(field.value).toBe('07:30');
+    expect(field.focusedSegment).toBe(1);
+    await field.press('Enter');
+    expect(field.value).toBe('09:00');
+    expect(field.focusedSegment).toBe(1);
+    field.unmount();
+
+    const us = TimeFieldDriver.mount({ locale: 'en-US' });
+    expect(us.enterHints).toEqual(['next', 'next', 'done']);
+    us.unmount();
+  });
 });

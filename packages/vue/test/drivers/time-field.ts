@@ -70,6 +70,10 @@ export class TimeFieldDriver extends ComponentDriver {
     return this.wrapper.findAll<HTMLInputElement>('.nui-time-field__segment');
   }
 
+  get enterHints(): string[] {
+    return this.segments.map((segment) => segment.attributes('enterkeyhint') ?? '');
+  }
+
   get segmentTexts(): string[] {
     return this.segments.map((segment) => segment.element.value);
   }
