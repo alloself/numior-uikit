@@ -101,6 +101,30 @@ select {
   grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
   gap: var(--nui-space-4);
 }
+.smart-demo {
+  max-inline-size: 48rem;
+}
+.smart-demo__filter {
+  max-inline-size: 48rem;
+  margin-block-end: var(--nui-space-6);
+  padding-block-end: var(--nui-space-6);
+  border-block-end: 1px solid var(--nui-border);
+}
+.smart-demo__counter {
+  margin: calc(var(--nui-space-1) * -1) 0 0;
+  color: var(--nui-text-muted);
+  font-size: var(--nui-font-size-sm);
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+}
+.wizard-demo {
+  max-inline-size: 36rem;
+}
+.wizard-demo__note {
+  margin-block: 0 var(--nui-space-5);
+  color: var(--nui-text-muted);
+  font-size: var(--nui-font-size-sm);
+}
 .form-demo__spinner {
   color: var(--nui-text-muted);
   animation: form-demo-spin 0.8s linear infinite;

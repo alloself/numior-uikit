@@ -8,9 +8,11 @@ import { NavigationSection } from './navigation';
 import { OverlaysSection } from './overlays';
 import { PickersSection } from './pickers';
 import { SignupSection } from './signup';
+import { SmartFormSection } from './smart-form';
 import { TableSection } from './table';
 import { TreeSection } from './tree';
 import { UploadSection } from './upload';
+import { WizardSection } from './wizard';
 import { LayoutSection } from './layout';
 
 export type Theme = 'system' | 'light' | 'dark';
@@ -146,6 +148,8 @@ export class PlaygroundPage {
   readonly swatches: { readonly utility: Locator; readonly tailwind: Locator };
   readonly forms: FormsSection;
   readonly signup: SignupSection;
+  readonly smartForm: SmartFormSection;
+  readonly wizard: WizardSection;
   readonly overlays: OverlaysSection;
   readonly feedback: FeedbackSection;
   readonly navigation: NavigationSection;
@@ -185,6 +189,8 @@ export class PlaygroundPage {
 
     this.forms = new FormsSection(page);
     this.signup = new SignupSection(page);
+    this.smartForm = new SmartFormSection(page);
+    this.wizard = new WizardSection(page);
     this.overlays = new OverlaysSection(page);
     this.feedback = new FeedbackSection(page);
     this.navigation = new NavigationSection(page);
