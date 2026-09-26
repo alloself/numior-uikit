@@ -1,20 +1,9 @@
 import { fileURLToPath } from 'node:url';
-import { readFile } from 'node:fs/promises';
 import { defineConfig } from 'vite';
+import { packageAssets } from '../../scripts/vite-package-assets';
 
 export default defineConfig({
-  plugins: [
-    {
-      name: 'license',
-      async generateBundle() {
-        this.emitFile({
-          type: 'asset',
-          fileName: 'LICENSE',
-          source: await readFile(new URL('../../LICENSE', import.meta.url), 'utf8'),
-        });
-      },
-    },
-  ],
+  plugins: [packageAssets({ root: new URL('./', import.meta.url) })],
   build: {
     lib: {
       entry: fileURLToPath(new URL('./src/index.ts', import.meta.url)),

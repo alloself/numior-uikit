@@ -3,7 +3,8 @@
   "entry": [
     "packages/primitives/src/index.ts",
     "packages/vue/src/index.ts",
-    "apps/playground/src/tailwind.css"
+    "apps/playground/src/tailwind.css",
+    "scripts/vite-package-assets.ts"
   ],
   "includeEntryExports": false,
   "ignorePatterns": [
