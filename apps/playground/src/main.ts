@@ -2,6 +2,7 @@ import { createApp } from 'vue';
 import { createNuiConfig, type NuiLocaleMessages } from '@numior/vue';
 import '@numior/tokens/theme.css';
 import '@numior/vue/styles.css';
+import '@numior/forms/styles.css';
 import '@numior/utilities/utilities.css';
 import './style.css';
 import App from './App.vue';

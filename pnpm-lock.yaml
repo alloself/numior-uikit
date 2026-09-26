@@ -108,6 +108,9 @@ importers:
 
   apps/playground:
     dependencies:
+      '@numior/forms':
+        specifier: workspace:*
+        version: link:../../packages/forms
       '@numior/tailwind':
         specifier: workspace:*
         version: link:../../packages/tailwind

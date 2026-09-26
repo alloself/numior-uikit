@@ -7,6 +7,7 @@ import { IntlSection } from './intl';
 import { NavigationSection } from './navigation';
 import { OverlaysSection } from './overlays';
 import { PickersSection } from './pickers';
+import { SignupSection } from './signup';
 import { TableSection } from './table';
 import { TreeSection } from './tree';
 import { UploadSection } from './upload';
@@ -70,6 +71,7 @@ const parseFormsOutput = (text: string): FormsOutput => {
 };
 
 export class FormsSection {
+  readonly root: Locator;
   readonly nameInput: Locator;
   readonly emailInput: Locator;
   readonly phoneInput: Locator;
@@ -85,7 +87,8 @@ export class FormsSection {
   readonly submit: Locator;
   readonly output: Locator;
 
-  constructor(private readonly page: Page) {
+  constructor(page: Page) {
+    this.root = page.locator('section[aria-labelledby="forms-title"]');
     this.nameInput = page.getByTestId('input-name');
     this.emailInput = page.getByTestId('input-email');
     this.phoneInput = page.getByTestId('input-phone');
@@ -109,7 +112,7 @@ export class FormsSection {
   }
 
   label(text: string): Locator {
-    return this.page.locator('label', { hasText: text });
+    return this.root.locator('label', { hasText: text });
   }
 
   wrapperOf(control: Locator): Locator {
@@ -142,6 +145,7 @@ export class PlaygroundPage {
 
   readonly swatches: { readonly utility: Locator; readonly tailwind: Locator };
   readonly forms: FormsSection;
+  readonly signup: SignupSection;
   readonly overlays: OverlaysSection;
   readonly feedback: FeedbackSection;
   readonly navigation: NavigationSection;
@@ -180,6 +184,7 @@ export class PlaygroundPage {
     };
 
     this.forms = new FormsSection(page);
+    this.signup = new SignupSection(page);
     this.overlays = new OverlaysSection(page);
     this.feedback = new FeedbackSection(page);
     this.navigation = new NavigationSection(page);

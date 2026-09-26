@@ -86,6 +86,7 @@
     </section>
 
     <FormsSection />
+    <SignupSection />
 
     <OverlaysSection />
 
@@ -148,6 +149,7 @@
 import { ref, useTemplateRef } from 'vue';
 import { NuiButton, NuiDialog, useColorScheme } from '@numior/vue';
 import FormsSection from './FormsSection.vue';
+import SignupSection from './SignupSection.vue';
 import OverlaysSection from './OverlaysSection.vue';
 import FeedbackSection from './FeedbackSection.vue';
 import NavigationSection from './NavigationSection.vue';

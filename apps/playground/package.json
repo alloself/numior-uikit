@@ -9,6 +9,7 @@
     "preview": "vite preview --host 127.0.0.1 --port 4173 --strictPort"
   },
   "dependencies": {
+    "@numior/forms": "workspace:*",
     "@numior/tailwind": "workspace:*",
     "@numior/tokens": "workspace:*",
     "@numior/utilities": "workspace:*",

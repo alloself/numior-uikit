@@ -89,6 +89,32 @@ select {
   gap: var(--nui-space-4);
   max-inline-size: 28rem;
 }
+.form-demo {
+  max-inline-size: 36rem;
+}
+.form-demo__server {
+  max-inline-size: 16rem;
+  margin-block-end: var(--nui-space-5);
+}
+.form-demo__pair {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: var(--nui-space-4);
+}
+.form-demo__spinner {
+  color: var(--nui-text-muted);
+  animation: form-demo-spin 0.8s linear infinite;
+}
+@keyframes form-demo-spin {
+  to {
+    rotate: 1turn;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .form-demo__spinner {
+    animation-duration: 1.6s;
+  }
+}
 .upload-controls,
 .layout-controls {
   display: flex;
@@ -160,7 +186,10 @@ select {
   border-radius: var(--nui-radius);
   background: var(--nui-surface-muted);
   font: 0.8125rem / 1.5 var(--nui-font-mono);
-  overflow: auto;
+  direction: ltr;
+  unicode-bidi: isolate;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 .data-row {
   display: flex;
