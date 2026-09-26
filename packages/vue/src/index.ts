@@ -261,7 +261,7 @@ export {
   provideNuiConfig,
   useColorScheme,
   useDialog,
-  useField,
+  useFieldContext,
   useFieldControl,
   useFloating,
   useIcons,

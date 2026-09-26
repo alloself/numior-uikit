@@ -99,7 +99,7 @@ import {
   segmentLabels,
   timeLayout,
   timeOptions,
-  useField,
+  useFieldContext,
   useFieldControl,
   useListNavigation,
   useLocale,
@@ -141,7 +141,7 @@ const {
 const model = defineModel<string | null>({ default: null });
 
 const split = useSplitAttrs();
-const field = useField();
+const field = useFieldContext();
 
 const {
   attrs: controlAttrs,

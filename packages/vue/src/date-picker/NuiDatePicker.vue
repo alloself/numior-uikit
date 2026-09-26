@@ -69,7 +69,7 @@ import { computed, ref, useTemplateRef, watch } from 'vue';
 import {
   joinDateTime,
   splitDateTime,
-  useField,
+  useFieldContext,
   useFieldControl,
   useLocale,
   useMessages,
@@ -123,7 +123,7 @@ const {
 const model = defineModel<string | null>({ default: null });
 
 const split = useSplitAttrs();
-const field = useField();
+const field = useFieldContext();
 
 const {
   attrs: controlAttrs,

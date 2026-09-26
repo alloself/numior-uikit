@@ -1,5 +1,10 @@
 export { useControlId } from './id/useControlId';
-export { FIELD_KEY, createFieldContext, provideField, useField } from './field/field-context';
+export {
+  FIELD_KEY,
+  createFieldContext,
+  provideField,
+  useFieldContext,
+} from './field/field-context';
 export type { FieldContext, FieldOptions } from './field/field-context';
 export { useFieldControl } from './field/useFieldControl';
 export type {

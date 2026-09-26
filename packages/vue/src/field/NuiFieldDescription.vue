@@ -6,8 +6,8 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import { useField } from '@numior/primitives';
+import { useFieldContext } from '@numior/primitives';
 
-const field = useField();
+const field = useFieldContext();
 const id = computed(() => field?.descriptionId.value);
 </script>

@@ -77,7 +77,7 @@
 
 <script setup lang="ts" generic="T">
 import { computed, onMounted, ref, useTemplateRef, watch } from 'vue';
-import { useField, useFieldControl, useMessages, useSplitAttrs } from '@numior/primitives';
+import { useFieldContext, useFieldControl, useMessages, useSplitAttrs } from '@numior/primitives';
 import NuiButton from '../button/NuiButton.vue';
 import NuiIcon from '../icon/NuiIcon.vue';
 import NuiList from '../list/NuiList.vue';
@@ -111,7 +111,7 @@ const {
 const model = defineModel<T | T[]>();
 
 const split = useSplitAttrs();
-const field = useField();
+const field = useFieldContext();
 const messages = useMessages(selectMessages);
 
 const {

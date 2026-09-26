@@ -73,7 +73,7 @@
 import { computed, ref, useTemplateRef, watch } from 'vue';
 import {
   normalizeRange,
-  useField,
+  useFieldContext,
   useFieldControl,
   useLocale,
   useMessages,
@@ -128,7 +128,7 @@ const {
 const model = defineModel<NuiDateRange>({ default: () => ({ start: null, end: null }) });
 
 const split = useSplitAttrs();
-const field = useField();
+const field = useFieldContext();
 
 const {
   attrs: controlAttrs,

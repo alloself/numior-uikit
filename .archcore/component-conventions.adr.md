@@ -17,7 +17,7 @@ status: accepted
   `-soft`/`-soft-foreground`; density сдвигает всю шкалу контролов и наследуется через
   вложенные темы; размер элемента — `size: sm | md | lg`.
 - `@numior/primitives` — headless-пакет (Vue peer, без CSS): контекст поля
-  (`provideField`/`useField`/`useFieldControl`), `useCheckedState`, контекст radio-группы,
+  (`provideField`/`useFieldContext`/`useFieldControl`), `useCheckedState`, контекст radio-группы,
   реестр иконок (`provideIcons`, `useIcon`, `lazyIcon`, `createNuiConfig`), `useSplitAttrs`,
   `useControlId`. `@numior/vue` потребляет его и объявляет `@numior/primitives` и
   `lucide-vue-next` external в сборке, чтобы injection-ключи существовали в одном экземпляре.

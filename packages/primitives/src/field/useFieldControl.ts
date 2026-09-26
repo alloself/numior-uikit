@@ -1,6 +1,6 @@
 import { computed, toValue, type ComputedRef, type MaybeRefOrGetter } from 'vue';
 import { useControlId } from '../id/useControlId';
-import { useField, type FieldContext } from './field-context';
+import { useFieldContext, type FieldContext } from './field-context';
 
 export interface FieldControlProps {
   readonly id?: string | undefined;
@@ -34,7 +34,7 @@ export const useFieldControl = (
   props: MaybeRefOrGetter<FieldControlProps>,
   options: FieldControlOptions = {},
 ): FieldControl => {
-  const field = useField();
+  const field = useFieldContext();
 
   const linked = computed<FieldContext | null>(() =>
     field !== null && (field.labelable.value || options.group === true) ? field : null,

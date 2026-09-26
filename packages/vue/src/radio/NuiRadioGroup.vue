@@ -20,7 +20,7 @@
 
 <script setup lang="ts" generic="T">
 import { computed } from 'vue';
-import { provideRadioGroup, useField, useFieldControl } from '@numior/primitives';
+import { provideRadioGroup, useFieldContext, useFieldControl } from '@numior/primitives';
 import type { NuiRadioGroupProps } from './radio.types';
 
 const {
@@ -34,7 +34,7 @@ const {
 } = defineProps<NuiRadioGroupProps>();
 
 const model = defineModel<T>();
-const field = useField();
+const field = useFieldContext();
 
 const {
   attrs,

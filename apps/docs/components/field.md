@@ -71,5 +71,5 @@ const email = ref('')
 | `group`       | `boolean` | `false`      | `fieldset` + `legend` вместо `label`             |
 
 Состояния отражаются модификаторами `nui-field--invalid`, `nui-field--required`,
-`nui-field--disabled` и `nui-field--group`. Внутри доступны `useField()` и
+`nui-field--disabled` и `nui-field--group`. Внутри доступны `useFieldContext()` и
 `useFieldControl()` из `@numior/vue`.

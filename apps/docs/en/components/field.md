@@ -71,5 +71,5 @@ from `@numior/primitives`; inside `NuiField` prefer props and named slots so tha
 | `group`       | `boolean` | `false`   | `fieldset` + `legend` instead of `label`              |
 
 State is reflected by the `nui-field--invalid`, `nui-field--required`,
-`nui-field--disabled` and `nui-field--group` modifiers. `useField()` and
+`nui-field--disabled` and `nui-field--group` modifiers. `useFieldContext()` and
 `useFieldControl()` are exported from `@numior/vue`.

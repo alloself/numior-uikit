@@ -1,6 +1,6 @@
 import {
   provideField,
-  useField,
+  useFieldContext,
   useFieldControl,
   type FieldContext,
   type FieldControl,
@@ -13,12 +13,12 @@ import { captureSetup, providing, type Capture } from './capture';
 export class FieldHarness {
   static inside(options: FieldOptions): FieldHarness {
     return new FieldHarness(
-      captureSetup(() => useField(), { wrap: providing(() => provideField(options)) }),
+      captureSetup(() => useFieldContext(), { wrap: providing(() => provideField(options)) }),
     );
   }
 
   static outside(): FieldHarness {
-    return new FieldHarness(captureSetup(() => useField()));
+    return new FieldHarness(captureSetup(() => useFieldContext()));
   }
 
   private constructor(private readonly capture: Capture<FieldContext | null>) {}

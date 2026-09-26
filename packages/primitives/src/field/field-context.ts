@@ -73,6 +73,6 @@ export const provideField = (options: FieldOptions = {}): FieldContext => {
   return context;
 };
 
-export const useField = (): FieldContext | null => {
+export const useFieldContext = (): FieldContext | null => {
   return inject(FIELD_KEY, null);
 };
