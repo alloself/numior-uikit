@@ -131,31 +131,38 @@ describe('NuiTimeField', () => {
     empty.unmount();
   });
 
-  it('suggests times by step and picks one with the pointer or the keyboard', async () => {
+  it('picks a time on wheels by click and keys, dims times out of range and closes on Enter', async () => {
     const field = TimeFieldDriver.mount({
-      locale: 'en-US',
+      locale: 'de-DE',
       modelValue: '09:30',
       props: { min: '09:00', max: '10:00', step: 30 },
     });
 
-    expect(field.listbox.attributes('popover')).toBe('auto');
+    expect(field.panel.attributes('popover')).toBe('auto');
     expect(field.expanded).toBe(false);
     await field.clickClock();
     expect(field.expanded).toBe(true);
     expect(field.hasModifier('open')).toBe(true);
-    expect(field.optionLabels).toEqual(['9:00 AM', '9:30 AM', '10:00 AM']);
-    expect(field.selectedLabels).toEqual(['9:30 AM']);
-    await field.clickOption('10:00 AM');
+    expect(field.wheelLabels).toEqual(['Stunde', 'Minute']);
+    expect(field.wheelTexts('Stunde')).toEqual(['09', '10']);
+    expect(field.wheelTexts('Minute')).toEqual(['00', '30']);
+    expect(field.wheelValue('Minute')).toBe('30');
+    expect(field.focusedWheel).toBe('Stunde');
+    await field.pickOnWheel('Stunde', '10');
     expect(field.value).toBe('10:00');
+    expect(field.dimmedOn('Minute')).toEqual(['30']);
+    await field.press('ArrowUp');
+    expect(field.value).toBe('09:00');
+    await field.press('ArrowRight');
+    expect(field.focusedWheel).toBe('Minute');
+    await field.press('ArrowDown');
+    expect(field.value).toBe('09:30');
+    await field.press('Enter');
     expect(field.expanded).toBe(false);
-    expect(field.focusedSegment).toBe(0);
+    expect(field.focusedSegment).toBe(1);
     await field.press('ArrowDown', { altKey: true });
     expect(field.expanded).toBe(true);
-    await field.press('ArrowDown');
-    await field.press('Enter');
-    expect(field.value).toBe('09:00');
-    expect(field.focusedSegment).toBe(0);
-    await field.clickClock();
+    expect(field.focusedWheel).toBe('Minute');
     await field.dismissNatively();
     expect(field.expanded).toBe(false);
     await field.clickClock();
@@ -167,9 +174,28 @@ describe('NuiTimeField', () => {
       props: { min: '12:00', max: '09:00', emptyLabel: 'Nothing' },
     });
 
-    expect(none.optionLabels).toEqual([]);
+    await none.clickClock();
+    expect(none.wheelLabels).toEqual([]);
     expect(none.emptyText).toBe('Nothing');
     none.unmount();
+  });
+
+  it('adds a day period wheel on a 12-hour clock and takes the shown time on Enter when empty', async () => {
+    const field = TimeFieldDriver.mount({ locale: 'en-US' });
+
+    await field.clickClock();
+    expect(field.wheelLabels).toEqual(['hour', 'minute', 'AM/PM']);
+    expect(field.wheelTexts('hour').slice(0, 3)).toEqual(['12', '01', '02']);
+    expect(field.wheelTexts('minute')).toEqual(['00', '15', '30', '45']);
+    expect(field.wheelValue('AM/PM')).toBe('AM');
+    await field.press('Enter');
+    expect(field.value).toBe('00:00');
+    await field.clickClock();
+    await field.pickOnWheel('AM/PM', 'PM');
+    expect(field.value).toBe('12:00');
+    await field.pickOnWheel('hour', '09');
+    expect(field.value).toBe('21:00');
+    field.unmount();
   });
 
   it('clamps a complete time into the range when focus leaves and mirrors external changes', async () => {
@@ -245,13 +271,90 @@ describe('NuiTimeField', () => {
     field.unmount();
   });
 
-  it('names the clock button and the empty list in the configured language', () => {
+  it('settles a scrolled wheel on its row and springs back from a dimmed one', async () => {
+    const field = TimeFieldDriver.mount({
+      locale: 'de-DE',
+      modelValue: '10:00',
+      props: { min: '09:00', max: '10:00', step: 30 },
+    });
+
+    await field.clickClock();
+    await field.scrollWheel('Stunde', -1);
+    expect(field.value).toBe('09:00');
+    await field.scrollWheel('Minute', 1);
+    expect(field.value).toBe('09:30');
+    await field.scrollWheel('Stunde', 1);
+    expect(field.value).toBe('10:00');
+    await field.scrollWheel('Minute', 1);
+    expect(field.value).toBe('10:00');
+    expect(field.wheelRow('Minute')).toBe(0);
+    await field.finishScroll('Minute');
+    expect(field.value).toBe('10:00');
+    field.unmount();
+  });
+
+  it('drags a wheel with the mouse, snaps to the nearest row and ignores the click that ends the drag', async () => {
+    const field = TimeFieldDriver.mount({
+      locale: 'de-DE',
+      modelValue: '09:00',
+      props: { step: 30 },
+    });
+
+    await field.clickClock();
+    await field.dragWheel('Stunde', -40);
+    expect(field.value).toBe('09:00');
+    expect(field.wheelRow('Stunde')).toBe(10);
+    await field.finishScroll('Stunde');
+    expect(field.value).toBe('10:00');
+    field.unmount();
+  });
+
+  it('shows a minute off the step as its own row until another minute is picked', async () => {
+    const field = TimeFieldDriver.mount({
+      locale: 'de-DE',
+      modelValue: '10:31',
+      props: { step: 30 },
+    });
+
+    await field.clickClock();
+    expect(field.wheelTexts('Minute')).toEqual(['00', '30', '31']);
+    expect(field.wheelValue('Minute')).toBe('31');
+    await field.pickOnWheel('Minute', '30');
+    expect(field.value).toBe('10:30');
+    expect(field.wheelTexts('Minute')).toEqual(['00', '30']);
+    field.unmount();
+  });
+
+  it('moves a wheel by pages and to its ends from the keyboard', async () => {
+    const field = TimeFieldDriver.mount({
+      locale: 'de-DE',
+      modelValue: '12:00',
+      props: { step: 1 },
+    });
+
+    await field.clickClock();
+    await field.press('PageDown');
+    expect(field.value).toBe('17:00');
+    await field.press('PageUp');
+    expect(field.value).toBe('12:00');
+    await field.press('End');
+    expect(field.value).toBe('23:00');
+    await field.press('Home');
+    expect(field.value).toBe('00:00');
+    await field.press('Tab');
+    expect(field.expanded).toBe(false);
+    field.unmount();
+  });
+
+  it('names the clock button and the empty panel in the configured language', async () => {
     const field = TimeFieldDriver.mount({
       props: { min: '12:00', max: '09:00' },
       locale: 'ru-RU',
     });
 
     expect(field.clockButton.attributes('aria-label')).toBe('Выбрать время');
+    await field.clickClock();
+    expect(field.panel.attributes('aria-label')).toBe('Выбрать время');
     expect(field.emptyText).toBe('Нет доступного времени');
     field.unmount();
   });

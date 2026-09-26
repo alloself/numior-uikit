@@ -1,5 +1,6 @@
 import type { FloatingPlacement, HourCycle, TimeSegmentType } from '@numior/primitives';
 import type { NuiFieldControlProps } from '../shared/field-control.types';
+import type { WheelColumn, WheelOption } from './time-wheels';
 
 export interface NuiTimeFieldProps extends NuiFieldControlProps {
   seconds?: boolean | undefined;
@@ -30,4 +31,17 @@ export interface NuiTimeSegmentProps {
   readonly: boolean;
   invalid: boolean;
   required: boolean;
+}
+
+export interface NuiTimeWheelProps {
+  options: readonly WheelOption[];
+  selected: number;
+  label: string;
+  tabStop: boolean;
+}
+
+export interface NuiTimeWheelsProps {
+  columns: readonly WheelColumn[];
+  labels: Readonly<Record<TimeSegmentType, string>>;
+  emptyText: string;
 }

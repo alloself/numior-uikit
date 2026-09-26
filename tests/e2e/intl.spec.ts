@@ -36,7 +36,7 @@ test.describe('numbers and time', () => {
     await expect(intl.clockOf(intl.start, 'Uhrzeit wählen')).toHaveCount(1);
   });
 
-  test('time field types with auto-advance, steps and picks a suggestion', async ({
+  test('time field types with auto-advance, steps and picks on the wheels', async ({
     page,
     isMobile,
   }) => {
@@ -52,10 +52,32 @@ test.describe('numbers and time', () => {
     await page.keyboard.press('ArrowUp');
     await expect.poll(async () => (await intl.readOutput()).start).toBe('09:31');
     await intl.clockOf(intl.start, 'Выбрать время').click();
-    await expect(intl.listboxOf(intl.start)).toBeVisible();
-    await intl.option(intl.start, '10:00').click();
+    await expect(intl.panelOf(intl.start)).toBeVisible();
+    await expect(intl.wheelOf(intl.start, 'минута')).toBeFocused();
+    await expect(intl.wheelOf(intl.start, 'минута')).toHaveAttribute('aria-valuetext', '31');
+    await page.keyboard.press('ArrowUp');
+    await expect.poll(async () => (await intl.readOutput()).start).toBe('09:30');
+    if (!isMobile) {
+      await intl.turnWheel(intl.start, 'минута', -1);
+      await expect.poll(async () => (await intl.readOutput()).start).toBe('09:00');
+    }
+    await page.keyboard.press('Home');
+    await intl.wheelItem(intl.start, 'час', '10').click();
     await expect.poll(async () => (await intl.readOutput()).start).toBe('10:00');
-    await expect(intl.listboxOf(intl.start)).toBeHidden();
+    await intl.wheelOf(intl.start, 'час').focus();
+    await page.keyboard.press('End');
+    await expect.poll(async () => (await intl.readOutput()).start).toBe('18:00');
+    await expect(intl.wheelItem(intl.start, 'минута', '30')).toHaveClass(/--disabled/);
+    await page.keyboard.press('Home');
+    await page.keyboard.press('Enter');
+    await expect.poll(async () => (await intl.readOutput()).start).toBe('09:00');
+    await expect(intl.panelOf(intl.start)).toBeHidden();
+    await expect(intl.segment(intl.start, 'час')).toBeFocused();
+    await intl.clockOf(intl.start, 'Выбрать время').click();
+    await intl.wheelItem(intl.start, 'час', '10').click();
+    await expect.poll(async () => (await intl.readOutput()).start).toBe('10:00');
+    await page.keyboard.press('Escape');
+    await expect(intl.panelOf(intl.start)).toBeHidden();
     await intl.setLocale('en-US');
     await expect(intl.segments(intl.start)).toHaveCount(3);
     await expect(intl.segment(intl.start, 'hour')).toHaveValue('10');
@@ -101,7 +123,7 @@ test.describe('numbers and time', () => {
     await playground.open();
     const { intl } = playground;
     await intl.clockOf(intl.start, 'Выбрать время').click();
-    await expect(intl.listboxOf(intl.start)).toBeVisible();
+    await expect(intl.panelOf(intl.start)).toBeVisible();
     for (const theme of ['light', 'dark'] as const) {
       await playground.setTheme(theme);
       expect(await playground.wcagViolations()).toEqual([]);

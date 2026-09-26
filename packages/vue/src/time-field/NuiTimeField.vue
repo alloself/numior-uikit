@@ -65,25 +65,26 @@
     >
       <NuiIcon alias="clock" />
     </NuiButton>
-    <NuiList
-      :ref="setListbox"
-      class="nui-time-field__listbox"
-      variant="floating"
-      :model-value="model ?? undefined"
-      :items="suggestions"
-      selectable="single"
-      :keyboard="false"
-      :active-id="list.activeId.value"
-      :empty-label="emptyText"
-      :labelled-by="field?.labelledBy.value"
+    <div
+      :ref="setPanel"
+      class="nui-time-field__panel"
+      role="group"
+      :aria-label="clockText"
       v-bind="control.contentAttrs.value"
-      @select="choose"
-      @keydown="onListboxKeydown"
-      @pointermove="activateHovered"
-      @pointerleave="restActive"
-      @focusin="onListFocusin"
-      @focusout="onListFocusout"
-    />
+      @keydown="onPanelKeydown"
+      @focusout="onPanelFocusout"
+      @toggle="onPanelToggle"
+    >
+      <NuiTimeWheels
+        v-if="open || rendered"
+        ref="wheels"
+        :columns="columns"
+        :labels="labels"
+        :empty-text="emptyText"
+        @pick="pickWheel"
+        @focus-wheel="onFocusWheel"
+      />
+    </div>
     <input v-if="name" type="hidden" :name="name" :value="model ?? ''" />
   </div>
 </template>
@@ -92,29 +93,30 @@
 import { computed, onMounted, ref, useTemplateRef, watch } from 'vue';
 import {
   formatSegment,
-  formatTimeLabel,
   formatTimeModel,
   parseTime,
   segmentBounds,
   segmentLabels,
   timeLayout,
-  timeOptions,
   useFieldContext,
   useFieldControl,
+  useFloating,
   useListNavigation,
   useLocale,
   useMessages,
+  usePopover,
   useSplitAttrs,
   type TimeSegmentType,
+  type TimeValue,
 } from '@numior/primitives';
 import NuiButton from '../button/NuiButton.vue';
 import NuiIcon from '../icon/NuiIcon.vue';
-import NuiList from '../list/NuiList.vue';
-import type { NuiOption } from '../shared/options';
-import { useListboxSurface } from '../shared/use-listbox-surface';
+import { useTriggerElement } from '../shared/trigger-ref';
 import NuiTimeSegment from './NuiTimeSegment.vue';
+import NuiTimeWheels from './NuiTimeWheels.vue';
 import { timeFieldMessages } from './time-field.messages';
 import type { NuiTimeFieldProps } from './time-field.types';
+import { hasWheelTimes, pickedTime, settledTime, wheelColumns } from './time-wheels';
 import { useTimeDraft, type TimePeriod } from './use-time-draft';
 
 defineOptions({ inheritAttrs: false });
@@ -249,16 +251,30 @@ const onChar = (type: TimeSegmentType, char: string): void => {
   }
 };
 
-const onGroupFocusin = (event: FocusEvent): void => {
-  flow.type = null;
-  navigation.onFocusin(event);
+const segmentTypeOf = (target: EventTarget | null): TimeSegmentType | undefined =>
+  target instanceof HTMLElement
+    ? segmentTypes.value.find((type) =>
+        target.classList.contains(`nui-time-field__segment--type-${type}`),
+      )
+    : undefined;
+
+const focusSegment = (type: TimeSegmentType): void => {
+  const segment = groupElement.value?.querySelector(`.nui-time-field__segment--type-${type}`);
+  if (segment instanceof HTMLElement) {
+    navigation.setActive(segment);
+  }
 };
 
 const focusHour = (): void => {
-  const hour = groupElement.value?.querySelector('.nui-time-field__segment--type-hour');
-  if (hour instanceof HTMLElement) {
-    navigation.setActive(hour);
-  }
+  focusSegment('hour');
+};
+
+const state: { inside: boolean; segment: TimeSegmentType } = { inside: false, segment: 'hour' };
+
+const onGroupFocusin = (event: FocusEvent): void => {
+  flow.type = null;
+  state.segment = segmentTypeOf(event.target) ?? state.segment;
+  navigation.onFocusin(event);
 };
 
 const focusFromClick = (): void => {
@@ -275,7 +291,7 @@ const focusFromClick = (): void => {
 
 const onRootPointerdown = (event: PointerEvent): void => {
   const target = event.target;
-  const interactive = '.nui-time-field__segment, .nui-time-field__clock, [role="listbox"]';
+  const interactive = '.nui-time-field__segment, .nui-time-field__clock, .nui-time-field__panel';
   if (isDisabled.value || !(target instanceof Element) || target.closest(interactive)) {
     return;
   }
@@ -330,71 +346,92 @@ const onGroupFocusout = (event: FocusEvent): void => {
 };
 
 const open = ref(false);
-const listboxId = computed(() => `${controlAttrs.value.id}-listbox`);
+const rendered = ref(false);
+const panelId = computed(() => `${controlAttrs.value.id}-wheels`);
+const { trigger: panelElement, setTrigger: setPanel } = useTriggerElement();
+const control = usePopover(panelElement, { open, id: panelId, mode: 'auto' });
 
-const {
-  listboxElement,
-  setListbox,
-  control,
-  navigation: list,
-  activateHovered,
-  restActive,
-} = useListboxSurface({
-  anchor: rootElement,
-  open,
-  id: listboxId,
-  mode: 'auto',
+useFloating(rootElement, panelElement, {
   placement: () => placement,
-  maxBlockSize: 288,
-  loop: true,
-  typeahead: false,
-  restOnSelected: true,
+  offset: 4,
+  enabled: open,
 });
 
-const state = { inside: false };
-
-watch(open, () => list.reset());
-
-const suggestions = computed<NuiOption<string>[]>(() =>
-  timeOptions({ step, min: minTime.value, max: maxTime.value }).map((time) => ({
-    value: formatTimeModel(time, seconds),
-    label: formatTimeLabel(time, locale.value, layout.value.cycle, seconds),
-  })),
+const wheels = useTemplateRef<{ focus: (type: TimeSegmentType) => void; reveal: () => void }>(
+  'wheels',
 );
 
-const choose = (option: NuiOption<string>): void => {
-  const time = parseTime(option.value);
-  if (time) {
+const wheelInput = computed(() => ({
+  layout: layout.value,
+  draft: times.draft.value,
+  seconds,
+  step,
+  min: minTime.value,
+  max: maxTime.value,
+}));
+
+const columns = computed(() => wheelColumns(wheelInput.value));
+
+const setWheelTime = (time: TimeValue): void => {
+  if (!readonly && formatTimeModel(time, seconds) !== model.value) {
     times.setTime(time);
   }
-  control.hide();
-  focusHour();
 };
 
-const onListboxKeydown = (event: KeyboardEvent): void => {
-  if (event.key === 'Tab') {
-    control.hide();
-    return;
+const pickWheel = (type: TimeSegmentType, index: number): void => {
+  const option = columns.value.find((column) => column.type === type)?.options[index];
+
+  if (option) {
+    setWheelTime(pickedTime(wheelInput.value, type, option.value));
   }
-  if (event.key !== 'Enter' && event.key !== ' ') {
-    list.onKeydown(event);
-    return;
-  }
-  event.preventDefault();
-  list.activeElement()?.click();
 };
 
-const onListFocusin = (event: FocusEvent): void => {
+const onFocusWheel = (type: TimeSegmentType): void => {
   state.inside = true;
-  list.onFocusin(event);
+  state.segment = type;
 };
 
-const onListFocusout = (event: FocusEvent): void => {
+const returnFocus = (): void => {
+  if (state.inside) {
+    state.inside = false;
+    focusSegment(state.segment);
+  }
+};
+
+const confirmWheels = (): void => {
+  if (hasWheelTimes(columns.value)) {
+    setWheelTime(settledTime(wheelInput.value));
+  }
+  returnFocus();
+  control.hide();
+};
+
+const onPanelToggle = (event: Event): void => {
+  if ('newState' in event && event.newState === 'open') {
+    rendered.value = true;
+    wheels.value?.reveal();
+    wheels.value?.focus(state.segment);
+  } else {
+    returnFocus();
+  }
+};
+
+const onPanelKeydown = (event: KeyboardEvent): void => {
+  if (event.key === 'Enter') {
+    event.preventDefault();
+    confirmWheels();
+  } else if (event.key === 'Tab') {
+    state.inside = false;
+    control.hide();
+  }
+};
+
+const onPanelFocusout = (event: FocusEvent): void => {
   const next = event.relatedTarget;
 
   const within =
     next instanceof Node &&
-    (listboxElement.value?.contains(next) === true || rootElement.value?.contains(next) === true);
+    (panelElement.value?.contains(next) === true || rootElement.value?.contains(next) === true);
 
   if (!within) {
     state.inside = false;
@@ -407,11 +444,7 @@ onMounted(() => {
     open,
     (isOpen) => {
       if (isOpen) {
-        list.reveal();
-        list.activeElement()?.focus({ preventScroll: true });
-      } else if (state.inside) {
-        state.inside = false;
-        focusHour();
+        wheels.value?.focus(state.segment);
       }
     },
     { flush: 'post' },

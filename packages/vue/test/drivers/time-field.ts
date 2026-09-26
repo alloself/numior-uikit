@@ -18,8 +18,39 @@ const isModel = (value: unknown): value is string | null =>
 
 const normalize = (text: string): string => text.replace(/\s/gu, ' ').trim();
 
-const labelOf = (element: Element): string =>
-  normalize(element.querySelector('.nui-row__title')?.textContent ?? '');
+const ROW = 36;
+
+const stubWheelLayout = (wheel: HTMLElement): void => {
+  const first = wheel.querySelector('.nui-time-field__wheel-item');
+  const box = { top: wheel.scrollTop };
+
+  if (first instanceof HTMLElement) {
+    Object.defineProperty(first, 'offsetHeight', { value: ROW, configurable: true });
+  }
+
+  Object.defineProperty(wheel, 'scrollTop', {
+    get: () => box.top,
+    set: (value: number) => {
+      box.top = value;
+    },
+    configurable: true,
+  });
+};
+
+const selectedRow = (wheel: HTMLElement): number =>
+  [...wheel.querySelectorAll('.nui-time-field__wheel-item')].findIndex((item) =>
+    item.classList.contains('nui-time-field__wheel-item--selected'),
+  );
+
+const mousePointer = (type: string, clientY: number): PointerEvent =>
+  new PointerEvent(type, {
+    bubbles: true,
+    cancelable: true,
+    pointerId: 3,
+    pointerType: 'mouse',
+    button: 0,
+    clientY,
+  });
 
 export class TimeFieldDriver extends ComponentDriver {
   protected readonly block = 'nui-time-field';
@@ -118,26 +149,93 @@ export class TimeFieldDriver extends ComponentDriver {
     return this.wrapper.find<HTMLButtonElement>('.nui-time-field__clock');
   }
 
-  get listbox(): DOMWrapper<HTMLElement> {
-    return this.wrapper.find<HTMLElement>('.nui-time-field__listbox');
+  get panel(): DOMWrapper<HTMLElement> {
+    return this.wrapper.find<HTMLElement>('.nui-time-field__panel');
   }
 
   get expanded(): boolean {
     return this.clockButton.attributes('aria-expanded') === 'true';
   }
 
-  get optionLabels(): string[] {
-    return this.wrapper.findAll('[role="option"]').map((option) => labelOf(option.element));
+  private get wheels(): DOMWrapper<HTMLElement>[] {
+    return this.wrapper.findAll<HTMLElement>('.nui-time-field__wheel');
   }
 
-  get selectedLabels(): string[] {
-    return this.wrapper
-      .findAll('[role="option"][aria-selected="true"]')
-      .map((option) => labelOf(option.element));
+  private wheel(label: string): DOMWrapper<HTMLElement> {
+    const found = this.wheels.find((wheel) => wheel.attributes('aria-label') === label);
+
+    if (!found) {
+      throw new Error(`No wheel labelled ${label}`);
+    }
+    return found;
+  }
+
+  get wheelLabels(): string[] {
+    return this.wheels.map((wheel) => wheel.attributes('aria-label') ?? '');
+  }
+
+  wheelTexts(label: string): string[] {
+    return this.wheel(label)
+      .findAll('.nui-time-field__wheel-item')
+      .map((item) => normalize(item.text()));
+  }
+
+  dimmedOn(label: string): string[] {
+    return this.wheel(label)
+      .findAll('.nui-time-field__wheel-item--disabled')
+      .map((item) => normalize(item.text()));
+  }
+
+  wheelValue(label: string): string | undefined {
+    return this.wheel(label).attributes('aria-valuetext');
+  }
+
+  get focusedWheel(): string | undefined {
+    const focused = document.activeElement;
+
+    return focused instanceof HTMLElement && focused.classList.contains('nui-time-field__wheel')
+      ? (focused.getAttribute('aria-label') ?? undefined)
+      : undefined;
   }
 
   get emptyText(): string {
-    return this.wrapper.find('.nui-list__empty').text();
+    return this.wrapper.find('.nui-time-field__empty').text();
+  }
+
+  wheelRow(label: string): number {
+    return Math.round(this.wheel(label).element.scrollTop / ROW);
+  }
+
+  async scrollWheel(label: string, rows: number): Promise<void> {
+    const wheel = this.wheel(label).element;
+
+    stubWheelLayout(wheel);
+    wheel.scrollTop = (selectedRow(wheel) + rows) * ROW;
+    wheel.dispatchEvent(new Event('scroll'));
+    wheel.dispatchEvent(new Event('scrollend'));
+    await nextTick();
+  }
+
+  async finishScroll(label: string): Promise<void> {
+    this.wheel(label).element.dispatchEvent(new Event('scrollend'));
+    await nextTick();
+  }
+
+  async dragWheel(label: string, distance: number): Promise<void> {
+    const wheel = this.wheel(label).element;
+
+    stubWheelLayout(wheel);
+    wheel.scrollTop = selectedRow(wheel) * ROW;
+    wheel.dispatchEvent(mousePointer('pointerdown', 100));
+    window.dispatchEvent(mousePointer('pointermove', 101));
+    window.dispatchEvent(mousePointer('pointermove', 100 + distance));
+    window.dispatchEvent(mousePointer('pointerup', 100 + distance));
+
+    wheel
+      .querySelector('.nui-time-field__wheel-item')
+      ?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+
+    await nextTick();
   }
 
   get hiddenValue(): string | undefined {
@@ -183,24 +281,24 @@ export class TimeFieldDriver extends ComponentDriver {
   }
 
   async clickClock(): Promise<void> {
-    openPopoverNatively(this.listbox.element);
+    openPopoverNatively(this.panel.element);
     await nextTick();
   }
 
   async dismissNatively(): Promise<void> {
-    dismissPopoverNatively(this.listbox.element);
+    dismissPopoverNatively(this.panel.element);
     await nextTick();
   }
 
-  async clickOption(label: string): Promise<void> {
-    const option = this.wrapper
-      .findAll('[role="option"]')
-      .find((candidate) => labelOf(candidate.element) === label);
+  async pickOnWheel(label: string, text: string): Promise<void> {
+    const item = this.wheel(label)
+      .findAll<HTMLElement>('.nui-time-field__wheel-item')
+      .find((candidate) => normalize(candidate.text()) === text);
 
-    if (!option) {
-      throw new Error(`No option labelled ${label}`);
+    if (!item) {
+      throw new Error(`No ${text} on the ${label} wheel`);
     }
-    await option.trigger('click');
+    item.element.click();
     await nextTick();
   }
 

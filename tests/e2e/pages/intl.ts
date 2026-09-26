@@ -78,12 +78,26 @@ export class IntlSection {
     return group.locator('..').getByRole('button', { name: label });
   }
 
-  listboxOf(group: Locator): Locator {
-    return group.locator('..').getByRole('listbox');
+  panelOf(group: Locator): Locator {
+    return group.locator('..').locator('.nui-time-field__panel');
   }
 
-  option(group: Locator, label: string): Locator {
-    return this.listboxOf(group).getByRole('option', { name: label });
+  wheelOf(group: Locator, label: string): Locator {
+    return this.panelOf(group).getByRole('spinbutton', { name: label });
+  }
+
+  wheelItem(group: Locator, label: string, text: string): Locator {
+    return this.wheelOf(group, label)
+      .locator('.nui-time-field__wheel-item')
+      .filter({ hasText: new RegExp(`^\\s*${text}\\s*$`) });
+  }
+
+  async turnWheel(group: Locator, label: string, rows: number): Promise<void> {
+    const wheel = this.wheelOf(group, label);
+    const row = await wheel.locator('.nui-time-field__wheel-item').first().boundingBox();
+
+    await wheel.hover();
+    await this.page.mouse.wheel(0, rows * (row?.height ?? 36));
   }
 
   frameOf(control: Locator): Locator {
