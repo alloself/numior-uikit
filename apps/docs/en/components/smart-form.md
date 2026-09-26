@@ -197,7 +197,9 @@ const form = useForm<Profile>({
 control's `props`, `when` and `area`. `props` are typed from the component without the keys the
 form controls (`modelValue`, `id`, `name`, `invalid`, `required`, `disabled`) and with native
 attributes; instead of an object you can pass a function of the values —
-`props: (values) => ({ options: citiesOf(values.country) })`.
+`props: (values) => ({ options: citiesOf(values.country) })`. `rules` are typed by the field
+value: a `custom((value, { values }) => …)` rule written in the config gets `value` of the field's
+type and `values` of the config's type, and a typo such as `value.lenght` fails the type check.
 
 `section({ title, description, layout, fields })` renders a `fieldset` with a legend, and a
 divider runs between neighbouring sections. `array({ name, label, description, min, max,
@@ -210,7 +212,8 @@ fields, and their paths are relative to the row.
 `when(values, row)` shows a field, a section or a group while it returns `true`. A hidden field
 drops out of validation and submission even if it was never shown, yet its value stays: a field
 that comes back shows the old text. `keepValue: false` clears the value when the field hides. A
-row field's `when` also gets the row's value. The condition is recomputed in the same render as
+row field's `when` also gets the row's value, and in the rules of a row field `values` is the row
+itself, so a rule like “the phone is required once an email is set” lives in the row config. The condition is recomputed in the same render as
 the value change, and an appearing field moves through the motion tokens.
 
 ## Layout

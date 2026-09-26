@@ -1,5 +1,6 @@
 import type { Component, InputHTMLAttributes } from 'vue';
 import type { FormPath, FormPathValue } from '../../core/types';
+import type { AnyFieldRule } from '../../rules/async-rule';
 import type {
   NuiSmartFormArray,
   NuiSmartFormEntry,
@@ -34,10 +35,11 @@ type RowOf<S, P extends string> = FormPathValue<S, P> extends readonly (infer R)
 
 export interface SmartFieldConfig<S, P extends string, C> extends Omit<
   NuiSmartFormField<S>,
-  'kind' | 'component' | 'name' | 'props'
+  'kind' | 'component' | 'name' | 'props' | 'rules'
 > {
   readonly name: P;
   readonly props?: ControlProps<C> | NuiSmartFormPropsFactory<S, ControlProps<C>> | undefined;
+  readonly rules?: readonly AnyFieldRule<FormPathValue<S, P>, S>[] | undefined;
 }
 
 export interface SmartArrayConfig<S, P extends string> extends Omit<

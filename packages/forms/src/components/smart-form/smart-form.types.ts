@@ -3,7 +3,7 @@ import type { Component } from 'vue';
 import type { FormAfterSlotPath, FormMessage, FormSlotPath, ValidateOn } from '../../core/types';
 import type { FieldArrayRow } from '../../field/use-field-array';
 import type { FormContext } from '../../form/form-context';
-import type { AnyFieldRule } from '../../rules/async-rule';
+import type { LooseFieldRule } from '../../rules/async-rule';
 
 type Bivariant<Args extends unknown[], R> = {
   bivarianceHack(...args: Args): R;
@@ -27,7 +27,7 @@ export interface NuiSmartFormField<S = unknown> {
   readonly group?: boolean | undefined;
   readonly area?: string | undefined;
   readonly when?: NuiSmartFormCondition<S> | undefined;
-  readonly rules?: readonly AnyFieldRule[] | undefined;
+  readonly rules?: readonly LooseFieldRule<S>[] | undefined;
   readonly validateOn?: ValidateOn | undefined;
   readonly keepValue?: boolean | undefined;
 }

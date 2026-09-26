@@ -1,4 +1,4 @@
-import type { AsyncRuleContext, FieldRule } from '../core/types';
+import type { AsyncRuleContext, FieldRule, FieldRuleContext } from '../core/types';
 import { marked } from './origin';
 
 const ASYNC_RULE: unique symbol = Symbol('nui:async-rule');
@@ -9,6 +9,16 @@ export type AsyncFieldRule<T = unknown, V = unknown> = ((
 ) => Promise<true | string>) & { readonly [ASYNC_RULE]: true };
 
 export type AnyFieldRule<T = unknown, V = unknown> = FieldRule<T, V> | AsyncFieldRule<T, V>;
+
+type Bivariant<Args extends unknown[], R> = {
+  bivarianceHack(...args: Args): R;
+}['bivarianceHack'];
+
+export type LooseFieldRule<V = unknown> =
+  | Bivariant<[value: unknown, context: FieldRuleContext<V>], true | string>
+  | (Bivariant<[value: unknown, context: AsyncRuleContext<V>], Promise<true | string>> & {
+      readonly [ASYNC_RULE]: true;
+    });
 
 export const isAsyncRule = <T, V>(rule: AnyFieldRule<T, V>): rule is AsyncFieldRule<T, V> =>
   ASYNC_RULE in rule;

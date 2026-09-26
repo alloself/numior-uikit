@@ -1,7 +1,7 @@
 import { NuiInput } from '@numior/vue';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, expectTypeOf, it } from 'vitest';
 import { h } from 'vue';
-import { formConfig } from '../src';
+import { custom, formConfig } from '../src';
 import { SmartFormDriver } from './drivers/smart-form';
 
 interface Contact {
@@ -188,6 +188,50 @@ describe('NuiSmartForm', () => {
     await form.type('contacts.0.email', 'ann@example.ru');
     await form.click('.nui-field-array__add');
     expect(form.fields).toEqual(['contacts.0.email', 'contacts.0.phone', 'contacts.1.email']);
+  });
+
+  it('types config rules by the field value and gives row rules their row as values', async () => {
+    const form = SmartFormDriver.mount({
+      initialValues: { ...blank, name: 'A' },
+      fields: [
+        field(NuiInput, {
+          name: 'name',
+          label: 'Name',
+          rules: [
+            custom((value, { values }) => {
+              expectTypeOf(value).toEqualTypeOf<string>();
+              expectTypeOf(values).toEqualTypeOf<Account>();
+              return value.length > 1 || 'Too short';
+            }),
+          ],
+        }),
+        array({
+          name: 'contacts',
+          label: 'Contacts',
+          newRow: () => ({ email: '' }),
+          fields: [
+            contact.field(NuiInput, { name: 'email', label: 'Email' }),
+            contact.field(NuiInput, {
+              name: 'phone',
+              label: 'Phone',
+              rules: [
+                custom((value, { values }) => {
+                  expectTypeOf(value).toEqualTypeOf<string | undefined>();
+                  expectTypeOf(values).toEqualTypeOf<Contact>();
+                  return (
+                    values.email === '' || (value !== undefined && value !== '') || 'Phone please'
+                  );
+                }),
+              ],
+            }),
+          ],
+        }),
+      ],
+    });
+
+    await form.submit();
+    expect(form.error('name')).toBe('Too short');
+    expect(form.error('contacts.0.phone')).toBe('Phone please');
   });
 
   it('marks inline and growing forms', () => {
