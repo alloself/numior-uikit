@@ -132,7 +132,8 @@ Events: `update:modelValue`, `reject(rejections)`, `done(item)`, `error(item)`,
 and `file?`, `url?` plus the fields of its `status`: `queued` has none, `uploading` has `progress`
 `0…1`, `done` has `result?` and `error` has `error` (`reason`: `type` | `size` | `count` |
 `custom` | `upload`, `message?`). An item never carries the fields of another status, so an
-error does not linger after a retry.
+error does not linger after a retry. Progress reaches the model at most once a frame: the
+`onProgress` reports between frames are folded, and the item keeps the latest one.
 
 Block `nui-upload` (modifiers `--layout-*`, `--size-*`, `--dragging`, `--busy`, `--invalid`,
 `--disabled`; elements `__zone`, `__input`, `__icon`, `__text`, `__browse`, `__hint`,

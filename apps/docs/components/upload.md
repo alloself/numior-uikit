@@ -131,6 +131,8 @@ URL, который отзывается при удалении и размон
 и `file?`, `url?` плюс поля своего `status`: `queued` — ничего, `uploading` — `progress` `0…1`,
 `done` — `result?`, `error` — `error` (`reason`: `type` | `size` | `count` | `custom` | `upload`,
 `message?`). Поля чужого статуса у элемента нет, поэтому ошибка не остаётся после повтора.
+Прогресс попадает в модель не чаще одного раза за кадр: отчёты `onProgress` между кадрами
+складываются, в элементе остаётся последний.
 
 Блок `nui-upload` (модификаторы `--layout-*`, `--size-*`, `--dragging`, `--busy`,
 `--invalid`, `--disabled`; элементы `__zone`, `__input`, `__icon`, `__text`, `__browse`,

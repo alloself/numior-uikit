@@ -1,5 +1,5 @@
 import { mount, type VueWrapper } from '@vue/test-utils';
-import { customRef, defineComponent, h, nextTick, ref, type Ref } from 'vue';
+import { customRef, defineComponent, h, nextTick, ref, watch, type Ref } from 'vue';
 import {
   useFileDrop,
   useUploadQueue,
@@ -34,6 +34,16 @@ export const fileOf = (name: string, size = 3, type = 'text/plain'): File =>
   new File([new Uint8Array(size)], name, { type });
 
 const noop = (): void => {};
+
+const nextFrame = async (): Promise<void> => {
+  await new Promise<void>((resolve) => {
+    requestAnimationFrame(() => {
+      resolve();
+    });
+  });
+
+  await nextTick();
+};
 
 const controlledModel = (initial: UploadItem<string>[]): ControlledModel => {
   const state = { committed: initial, pending: initial, notify: noop };
@@ -71,6 +81,7 @@ export class UploadQueueHarness {
     const model = (options.controlled ? controlledModel : plainModel)(options.initial ?? []);
     const calls: AdapterCall[] = [];
     const settled: string[] = [];
+    const writes = { count: 0 };
     const outcome: { current: Outcome<UploadQueue<string>> } = { current: { ran: false } };
 
     const Probe = defineComponent({
@@ -87,6 +98,14 @@ export class UploadQueueHarness {
           onError: (item) => settled.push(`error:${item.name}`),
         });
 
+        watch(
+          model.items,
+          () => {
+            writes.count += 1;
+          },
+          { flush: 'sync' },
+        );
+
         outcome.current = { ran: true, value: queue };
         return () => h('i');
       },
@@ -98,7 +117,7 @@ export class UploadQueueHarness {
       throw new Error('useUploadQueue did not run');
     }
 
-    return new UploadQueueHarness(wrapper, outcome.current.value, model, calls, settled);
+    return new UploadQueueHarness(wrapper, outcome.current.value, model, calls, settled, writes);
   }
 
   private constructor(
@@ -107,7 +126,19 @@ export class UploadQueueHarness {
     private readonly model: ControlledModel,
     readonly calls: AdapterCall[],
     readonly settled: string[],
+    private readonly writes: { count: number },
   ) {}
+
+  get modelWrites(): number {
+    return this.writes.count;
+  }
+
+  async progressBurst(call: number, fractions: readonly number[]): Promise<void> {
+    for (const fraction of fractions) {
+      this.calls[call]?.context.onProgress(fraction);
+    }
+    await nextFrame();
+  }
 
   get items(): UploadItem<string>[] {
     return this.model.items.value;
@@ -150,6 +181,11 @@ export class UploadQueueHarness {
 
   async flush(): Promise<void> {
     await nextTick();
+  }
+
+  async progress(call: number, fraction: number): Promise<void> {
+    this.calls[call]?.context.onProgress(fraction);
+    await nextFrame();
   }
 
   unmount(): void {

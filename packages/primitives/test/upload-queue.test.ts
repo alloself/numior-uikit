@@ -10,9 +10,9 @@ describe('useUploadQueue', () => {
     expect(queue.statuses).toEqual(['uploading', 'uploading', 'queued']);
     expect(queue.calls.map((call) => call.file.name)).toEqual(['a.txt', 'b.txt']);
     expect(queue.busy).toBe(true);
-    queue.calls[0]?.context.onProgress(0.5);
+    await queue.progress(0, 0.5);
     expect(queue.item('a.txt')).toMatchObject({ status: 'uploading', progress: 0.5 });
-    queue.calls[0]?.context.onProgress(7);
+    await queue.progress(0, 7);
     expect(queue.item('a.txt')).toMatchObject({ status: 'uploading', progress: 1 });
     queue.calls[0]?.resolve('ok');
     await queue.flush();
@@ -32,6 +32,20 @@ describe('useUploadQueue', () => {
     queue.calls[2]?.resolve('ok');
     await queue.flush();
     expect(queue.busy).toBe(false);
+    queue.unmount();
+  });
+
+  it('folds the progress reports of one frame into a single model write with the latest value', async () => {
+    const queue = UploadQueueHarness.mount({ concurrency: 2 });
+    queue.add('a.txt', 'b.txt');
+
+    const before = queue.modelWrites;
+
+    await queue.progressBurst(0, [0.1, 0.2, 0.3]);
+
+    expect(queue.modelWrites - before).toBe(1);
+    expect(queue.item('a.txt')).toMatchObject({ status: 'uploading', progress: 0.3 });
+    expect(queue.item('b.txt')).toMatchObject({ status: 'uploading', progress: 0 });
     queue.unmount();
   });
 

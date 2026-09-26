@@ -314,6 +314,13 @@ export class UploadDriver extends ComponentDriver {
 
   async progress(index: number, fraction: number): Promise<void> {
     this.calls[index]?.context.onProgress(fraction);
+
+    await new Promise<void>((resolve) => {
+      requestAnimationFrame(() => {
+        resolve();
+      });
+    });
+
     await nextTick();
   }
 
