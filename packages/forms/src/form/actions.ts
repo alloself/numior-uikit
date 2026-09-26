@@ -1,4 +1,4 @@
-import { getCurrentScope, onScopeDispose, toValue } from 'vue';
+import { computed, getCurrentScope, onScopeDispose, toValue } from 'vue';
 import type { ErrorControls } from '../core/errors';
 import type { FormCore } from '../core/form-core';
 import type { FormHost } from '../core/host';
@@ -26,17 +26,17 @@ export type FormActions<V extends object> = Pick<
 export const createActions = <V extends object, O>(
   core: FormCore<V, O>,
   validation: Validation<V, O>,
-  host: FormHost,
+  host: FormHost<V>,
   errors: ErrorControls,
 ): FormActions<V> => ({
   register: (rawPath, options = {}) => {
-    const path = (): string => normalizePath(toValue(rawPath));
-    const value = (): unknown => getAt(core.engine.values, path());
+    const path = computed(() => normalizePath(toValue(rawPath)));
+    const value = (): unknown => getAt(core.engine.raw, path.value);
     const rules = createRuleSet(options.rules);
 
     const entry = host.add({
       kind: options.kind ?? 'group',
-      path,
+      path: () => path.value,
       active: () => toValue(options.active) ?? true,
       disabled: () => toValue(options.disabled) ?? false,
       label: () => toValue(options.label),
@@ -44,7 +44,7 @@ export const createActions = <V extends object, O>(
       focus: options.focus,
       flush: undefined,
       value,
-      check: (context) => rules.check(getAt(context.values, path()), context),
+      check: (context) => rules.check(getAt(context.values, path.value), context),
       checkAsync: (context) => rules.checkAsync(value(), context),
       hasAsync: rules.hasAsync,
       debounce: () => toValue(options.debounce),

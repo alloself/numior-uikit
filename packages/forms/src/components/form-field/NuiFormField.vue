@@ -20,15 +20,14 @@
   </NuiField>
 </template>
 
-<script setup lang="ts" generic="T extends object = object, P extends FormPath<T> = FormPath<T>">
-import { computed, useTemplateRef } from 'vue';
+<script setup lang="ts" generic="T extends object, R">
+import { computed, toRef, useTemplateRef } from 'vue';
 import { provideDraftCommits } from '@numior/primitives';
 import { NuiField } from '@numior/vue';
-import type { FormPath } from '../../core/types';
 import { useField } from '../../field/use-field';
 import { useFormScope } from '../form/form-scope';
 import { focusControl } from './focus-control';
-import type { NuiFormFieldProps, NuiFormFieldValue } from './form-field.types';
+import type { NuiFormFieldProps } from './form-field.types';
 
 const {
   name,
@@ -43,7 +42,7 @@ const {
   rules,
   validateOn,
   debounce,
-} = defineProps<NuiFormFieldProps<T, P>>();
+} = defineProps<NuiFormFieldProps<T, R>>();
 
 const fieldRef = useTemplateRef<InstanceType<typeof NuiField>>('field');
 const formScope = useFormScope();
@@ -56,22 +55,25 @@ const root = (): HTMLElement | null => {
 
 const isDisabled = computed(() => disabled ?? formScope?.disabled.value ?? false);
 
-const control = useField<NuiFormFieldValue<T, P>>(() => name, {
-  form,
-  rules: () => rules,
-  validateOn: () => validateOn,
-  debounce: () => debounce,
-  keepValue: () => keepValue,
-  label: () => label,
-  element: root,
-  focus: () => focusControl(root()),
-  flush: () => drafts.commitAll(),
-  disabled: () => isDisabled.value,
-});
+const control = useField(
+  toRef(() => name),
+  {
+    form,
+    rules: () => rules,
+    validateOn: () => validateOn,
+    debounce: () => debounce,
+    keepValue: () => keepValue,
+    label: () => label,
+    element: root,
+    focus: () => focusControl(root()),
+    flush: () => drafts.commitAll(),
+    disabled: () => isDisabled.value,
+  },
+);
 
 const scope = computed(() => ({
   field: {
-    name,
+    name: control.path.value,
     modelValue: control.value.value,
     'onUpdate:modelValue': control.binding['onUpdate:modelValue'],
   },

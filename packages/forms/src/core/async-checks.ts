@@ -20,12 +20,12 @@ interface AsyncState {
   result: AsyncResult | undefined;
 }
 
-export interface AsyncChecks {
-  issues(active: readonly Entry[]): FormIssue[];
-  schedule(entry: Entry, delay: number): void;
-  settle(entries: readonly Entry[]): Promise<boolean>;
-  cancel(entry: Entry): void;
-  forget(entry: Entry): void;
+export interface AsyncChecks<V extends object> {
+  issues(active: readonly Entry<V>[]): FormIssue[];
+  schedule(entry: Entry<V>, delay: number): void;
+  settle(entries: readonly Entry<V>[]): Promise<boolean>;
+  cancel(entry: Entry<V>): void;
+  forget(entry: Entry<V>): void;
   reset(): void;
 }
 
@@ -33,10 +33,10 @@ export const createAsyncChecks = <V extends object, O>(
   core: FormCore<V, O>,
   pending: PendingTracker,
   revalidate: () => void,
-): AsyncChecks => {
-  const states = new Map<Entry, AsyncState>();
+): AsyncChecks<V> => {
+  const states = new Map<Entry<V>, AsyncState>();
 
-  const stateOf = (entry: Entry): AsyncState => {
+  const stateOf = (entry: Entry<V>): AsyncState => {
     const known = states.get(entry);
 
     if (known) {
@@ -55,26 +55,26 @@ export const createAsyncChecks = <V extends object, O>(
     return created;
   };
 
-  const formRules = (entry: Entry) => rulesFor(core.rules, entry.path()).filter(isAsyncRule);
+  const formRules = (entry: Entry<V>) => rulesFor(core.rules, entry.path()).filter(isAsyncRule);
 
-  const freshResult = (entry: Entry): AsyncResult | undefined => {
+  const freshResult = (entry: Entry<V>): AsyncResult | undefined => {
     const result = states.get(entry)?.result;
     return result && isEqualValue(entry.value(), result.value) ? result : undefined;
   };
 
-  const needsCheck = (entry: Entry): boolean =>
+  const needsCheck = (entry: Entry<V>): boolean =>
     !entry.disabled() &&
     (entry.hasAsync() || formRules(entry).length > 0) &&
     freshResult(entry) === undefined;
 
-  const release = (entry: Entry, state: AsyncState): void => {
+  const release = (entry: Entry<V>, state: AsyncState): void => {
     if (state.held) {
       state.held = false;
       pending.release(entry);
     }
   };
 
-  const cancel = (entry: Entry): void => {
+  const cancel = (entry: Entry<V>): void => {
     const state = states.get(entry);
 
     if (!state) {
@@ -88,7 +88,7 @@ export const createAsyncChecks = <V extends object, O>(
     release(entry, state);
   };
 
-  const start = (entry: Entry): readonly [AsyncState, number] => {
+  const start = (entry: Entry<V>): readonly [AsyncState, number] => {
     cancel(entry);
 
     const state = stateOf(entry);
@@ -99,7 +99,7 @@ export const createAsyncChecks = <V extends object, O>(
     return [state, state.token];
   };
 
-  const run = async (entry: Entry, state: AsyncState, token: number): Promise<void> => {
+  const run = async (entry: Entry<V>, state: AsyncState, token: number): Promise<void> => {
     const controller = new AbortController();
     const value = cloneValue(entry.value());
 
@@ -128,7 +128,7 @@ export const createAsyncChecks = <V extends object, O>(
     }
   };
 
-  const delayed = async (entry: Entry, state: AsyncState, token: number, delay: number) => {
+  const delayed = async (entry: Entry<V>, state: AsyncState, token: number, delay: number) => {
     await new Promise<void>((resolve) => {
       const timer = setTimeout(resolve, delay);
 
@@ -148,7 +148,7 @@ export const createAsyncChecks = <V extends object, O>(
     }
   };
 
-  const finish = (entry: Entry, state: AsyncState, token: number): void => {
+  const finish = (entry: Entry<V>, state: AsyncState, token: number): void => {
     if (token === state.token) {
       state.controller = undefined;
       release(entry, state);

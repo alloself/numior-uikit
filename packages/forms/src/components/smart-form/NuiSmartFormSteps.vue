@@ -14,18 +14,18 @@
     role="group"
     :aria-label="item.label"
   >
-    <NuiSmartFormEntries :entries="item.fields" :scope="scope" :layout="item.layout" />
+    <NuiSmartFormEntries :form="form" :entries="item.fields" :layout="item.layout" />
   </div>
   <span class="nui-smart-form__live" aria-live="polite">{{ live }}</span>
 </template>
 
-<script setup lang="ts">
+<script setup lang="ts" generic="T extends object">
 import { computed, useTemplateRef } from 'vue';
 import { NuiStepper } from '@numior/vue';
 import NuiSmartFormEntries from './NuiSmartFormEntries.vue';
 import type { NuiSmartFormStepsProps } from './smart-form.types';
 
-const { steps, current, scope, statuses, live } = defineProps<NuiSmartFormStepsProps>();
+const { form, steps, current, statuses, live } = defineProps<NuiSmartFormStepsProps<T>>();
 
 const emit = defineEmits<{ select: [value: string] }>();
 

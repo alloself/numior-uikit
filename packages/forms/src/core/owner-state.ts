@@ -1,5 +1,5 @@
 import { shallowRef } from 'vue';
-import type { EntryState } from '../engine/engine';
+import type { EntryState } from '../engine/engine.types';
 
 export const createOwnerState = (): EntryState => {
   const touched = shallowRef(false);

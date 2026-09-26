@@ -1,5 +1,3 @@
-import type { NuiSmartFormEntry } from './smart-form.types';
-
 export interface LayoutPlan {
   readonly areas: string | undefined;
   readonly columns: number;
@@ -12,8 +10,7 @@ const NOT_IDENT = /[^\w-]/g;
 
 const NO_LAYOUT: LayoutPlan = { areas: undefined, columns: 1, order: [] };
 
-export const areaOf = (entry: NuiSmartFormEntry): string =>
-  entry.area ?? (entry.name ?? '').replace(NOT_IDENT, '-');
+export const areaName = (name: string): string => name.replace(NOT_IDENT, '-');
 
 export const parseLayout = (layout: string): string[][] =>
   [...layout.matchAll(ROW)].map(([, row = '']) => row.split(/\s+/).filter((cell) => cell !== ''));
@@ -45,17 +42,14 @@ export const planLayout = (
   };
 };
 
-export const orderEntries = <E extends NuiSmartFormEntry>(
-  entries: readonly E[],
+export const orderByArea = <E extends { readonly area: string }>(
+  items: readonly E[],
   order: readonly string[],
 ): E[] => {
-  const rank = (entry: E): number => {
-    const index = order.indexOf(areaOf(entry));
-    return index === -1 ? order.length : index;
-  };
+  const ranks = new Map(order.map((area, index) => [area, index]));
 
-  return entries
-    .map((entry, index) => ({ entry, index }))
-    .toSorted((left, right) => rank(left.entry) - rank(right.entry) || left.index - right.index)
-    .map(({ entry }) => entry);
+  return items
+    .map((item, index) => ({ item, index, rank: ranks.get(item.area) ?? order.length }))
+    .toSorted((left, right) => left.rank - right.rank || left.index - right.index)
+    .map(({ item }) => item);
 };

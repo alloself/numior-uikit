@@ -4,7 +4,7 @@ import { cloneValue } from '../values/clone';
 import type { FormCore } from './form-core';
 import { unique, writeErrors } from './messages';
 import { targetOf } from './owners';
-import type { Entry } from './registry';
+import type { AnyEntry } from './registry';
 
 export interface ErrorControls {
   setFieldError(path: string, messages: readonly string[]): void;
@@ -14,7 +14,7 @@ export interface ErrorControls {
 }
 
 export const createErrorControls = <V extends object, O>(core: FormCore<V, O>): ErrorControls => {
-  const setOwnerError = (entry: Entry, messages: readonly string[]): void => {
+  const setOwnerError = (entry: AnyEntry, messages: readonly string[]): void => {
     const path = entry.path();
     const previous = core.external.get(path)?.messages ?? [];
     const kept = entry.state.errors.value.filter((message) => !previous.includes(message));

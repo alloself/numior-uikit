@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest';
-import { contextOutsideForm, fieldOutsideForm, TwoFormsHarness } from './harness/context';
+import { describe, expect, expectTypeOf, it } from 'vitest';
+import { contextOutsideForm, TwoFormsHarness } from './harness/context';
 import { FormHarness } from './harness/form';
 import { issue, probeSchema, type SchemaValues } from './harness/schema';
 
@@ -11,21 +11,19 @@ describe('form context', () => {
     const harness = TwoFormsHarness.mount({ name: 'first' }, { name: 'second' });
     const [first, second] = harness.forms;
 
-    expect(harness.field('explicit').value.value).toBe('first');
-    expect(harness.field('injected').value.value).toBe('second');
-    expect(harness.field('provided').value.value).toBe('first');
+    expectTypeOf(harness.field.value.value).toEqualTypeOf<string>();
+    expectTypeOf(harness.field.binding['onUpdate:modelValue']).parameter(0).toEqualTypeOf<string>();
+    expect(harness.field.value.value).toBe('first');
+    expect(harness.context('injected')).toBe(second);
+    expect(harness.context('provided')).toBe(first);
 
-    await harness.field('explicit').setValue('changed');
+    await harness.field.setValue('changed');
     expect(first.values).toEqual({ name: 'changed' });
     expect(second.values).toEqual({ name: 'second' });
   });
 
-  it('has no context outside a form and refuses a field there', () => {
+  it('has no context outside a form', () => {
     expect(contextOutsideForm()).toBeNull();
-
-    expect(fieldOutsideForm()).toEqual(
-      new Error('a form field needs useForm in an ancestor or the form option'),
-    );
   });
 
   it('lets a declared owner take container issues and leaves its value out while inactive', async () => {

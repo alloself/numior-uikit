@@ -20,19 +20,19 @@ const STEPS = [
     value: 'account',
     label: 'Account',
     fields: [
-      field(NuiInput, { name: 'email', label: 'Email', rules: [required()] }),
-      field(NuiInput, { name: 'password', label: 'Password', rules: [required()] }),
+      field(NuiInput, (values) => values.email, { label: 'Email', rules: [required()] }),
+      field(NuiInput, (values) => values.password, { label: 'Password', rules: [required()] }),
     ],
   },
   {
     value: 'profile',
     label: 'Profile',
-    fields: [field(NuiInput, { name: 'name', label: 'Name', rules: [required()] })],
+    fields: [field(NuiInput, (values) => values.name, { label: 'Name', rules: [required()] })],
   },
   {
     value: 'confirm',
     label: 'Confirm',
-    fields: [field(NuiCheckbox, { name: 'terms', label: 'I accept the terms' })],
+    fields: [field(NuiCheckbox, (values) => values.terms, { label: 'I accept the terms' })],
   },
 ];
 

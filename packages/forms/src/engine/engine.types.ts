@@ -1,4 +1,4 @@
-import type { Reactive, Ref } from 'vue';
+import type { Ref } from 'vue';
 
 export interface EntryState {
   readonly touched: Readonly<Ref<boolean>>;
@@ -11,28 +11,23 @@ export interface EntryState {
   setPending(pending: boolean): void;
 }
 
-export interface EngineField<T> extends EntryState {
-  readonly value: Readonly<Ref<T>>;
-}
+export type EngineKey = string | number;
 
-export interface EngineRow<T> {
-  readonly key: string | number;
-  readonly value: T;
-}
-
-export interface EngineArray<T> {
-  readonly rows: Readonly<Ref<readonly EngineRow<T>[]>>;
-  push(value: T): void;
-  prepend(value: T): void;
-  insert(index: number, value: T): void;
+export interface EngineArray {
+  readonly keys: Readonly<Ref<readonly EngineKey[]>>;
+  push(value: unknown): void;
+  prepend(value: unknown): void;
+  insert(index: number, value: unknown): void;
   remove(index: number): void;
   move(from: number, to: number): void;
   swap(first: number, second: number): void;
-  replace(values: readonly T[]): void;
+  replace(values: readonly unknown[]): void;
 }
 
 export interface FormEngine<V extends object> {
-  readonly values: Reactive<V>;
+  readonly raw: V;
+  readonly values: V;
+  readonly version: Readonly<Ref<number>>;
   snapshot(): V;
   readonly submitCount: Readonly<Ref<number>>;
   setValue(path: string, value: unknown): void;
@@ -40,8 +35,8 @@ export interface FormEngine<V extends object> {
   mergeValues(values: object): void;
   reset(values: V): void;
   countSubmit(): void;
-  field<T>(path: () => string, label: () => string | undefined): EngineField<T>;
-  array<T>(path: () => string): EngineArray<T>;
+  field(path: () => string, label: () => string | undefined): EntryState;
+  array(path: () => string): EngineArray;
 }
 
 export type FormEngineFactory = <V extends object>(initialValues: V) => FormEngine<V>;

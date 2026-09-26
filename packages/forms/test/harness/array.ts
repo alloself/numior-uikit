@@ -1,5 +1,5 @@
 import { mount, type DOMWrapper, type VueWrapper } from '@vue/test-utils';
-import { defineComponent, h, nextTick, onBeforeUnmount, shallowRef } from 'vue';
+import { defineComponent, h, nextTick, onBeforeUnmount, shallowRef, toRef } from 'vue';
 import {
   useField,
   useFieldArray,
@@ -12,31 +12,38 @@ import {
   type SubmitResult,
 } from '../../src';
 
-type Values = Readonly<Record<string, unknown>>;
+export interface Contact {
+  name: string;
+}
+
+export interface Team {
+  title: string;
+  contacts: Contact[];
+}
 
 export interface ArrayHarnessOptions {
-  readonly initialValues: Values;
-  readonly path: string;
-  readonly field: string;
-  readonly listRules?: readonly AnyFieldRule<readonly unknown[]>[];
-  readonly rowRules?: readonly AnyFieldRule[];
+  readonly initialValues: Team;
+  readonly listRules?: readonly AnyFieldRule<readonly Contact[], Team>[];
+  readonly rowRules?: readonly AnyFieldRule<string | undefined, Team>[];
 }
 
 interface Parts {
-  readonly rows: Map<string, FormField<unknown>>;
+  readonly rows: Map<string, FormField<string | undefined>>;
   readonly work: Map<string, Promise<void>>;
   readonly active: { value: boolean };
-  readonly submissions: Values[];
+  readonly submissions: Team[];
+  readonly form: () => FormContext<Team>;
 }
 
 const text = (value: unknown): string => (typeof value === 'string' ? value : '');
 
 const rowComponent = (options: ArrayHarnessOptions, parts: Parts) =>
   defineComponent(
-    (props: { readonly row: FieldArrayRow<unknown> }) => {
-      const field = useField<unknown>(() => `${props.row.path}.${options.field}`, {
-        rules: options.rowRules ?? [],
-      });
+    (props: { readonly row: FieldArrayRow<Contact> }) => {
+      const field = useField(
+        toRef(() => (values: Team) => values.contacts[props.row.index]?.name),
+        { form: parts.form(), rules: options.rowRules ?? [] },
+      );
 
       const { key } = props.row;
 
@@ -67,20 +74,29 @@ const rowComponent = (options: ArrayHarnessOptions, parts: Parts) =>
 export class ArrayHarness {
   static mount(options: ArrayHarnessOptions): ArrayHarness {
     const active = shallowRef(true);
+    const form = shallowRef<FormContext<Team> | null>(null);
+    const list = shallowRef<FieldArray<Contact> | null>(null);
+
+    const current = (): FormContext<Team> => {
+      if (!form.value) {
+        throw new Error('useForm did not run');
+      }
+      return form.value;
+    };
 
     const parts: Parts = {
       rows: new Map(),
       work: new Map(),
       active,
       submissions: [],
+      form: current,
     };
 
-    const form = shallowRef<FormContext<Values> | null>(null);
-    const list = shallowRef<FieldArray<unknown> | null>(null);
     const Row = rowComponent(options, parts);
 
     const List = defineComponent(() => {
-      const array = useFieldArray<unknown>(options.path, {
+      const array = useFieldArray((values: Team) => values.contacts, {
+        form: current(),
         rules: options.listRules ?? [],
         active: () => active.value,
       });
@@ -99,7 +115,7 @@ export class ArrayHarness {
     });
 
     const Host = defineComponent(() => {
-      form.value = useForm<Values>({
+      form.value = useForm<Team>({
         initialValues: options.initialValues,
         onSubmit: (values) => {
           parts.submissions.push(values);
@@ -111,16 +127,16 @@ export class ArrayHarness {
 
     const wrapper = mount(Host, { attachTo: document.body });
 
-    if (!form.value || !list.value) {
+    if (!list.value) {
       throw new Error('useFieldArray did not run');
     }
-    return new ArrayHarness(wrapper, form.value, list.value, parts);
+    return new ArrayHarness(wrapper, current(), list.value, parts);
   }
 
   private constructor(
     private readonly wrapper: VueWrapper,
-    readonly form: FormContext<Values>,
-    readonly list: FieldArray<unknown>,
+    readonly form: FormContext<Team>,
+    readonly list: FieldArray<Contact>,
     private readonly parts: Parts,
   ) {}
 
@@ -128,11 +144,11 @@ export class ArrayHarness {
     return this.list.fields.value.map((row) => row.key);
   }
 
-  get values(): Values {
+  get values(): FormContext<Team>['values'] {
     return this.form.values;
   }
 
-  get submissions(): readonly Values[] {
+  get submissions(): readonly Team[] {
     return this.parts.submissions;
   }
 
@@ -154,7 +170,7 @@ export class ArrayHarness {
     return this.wrapper.find<HTMLInputElement>(`#row-${this.keyAt(index)}`);
   }
 
-  row(index: number): FormField<unknown> {
+  row(index: number): FormField<string | undefined> {
     const field = this.parts.rows.get(this.keyAt(index));
 
     if (!field) {
@@ -183,17 +199,17 @@ export class ArrayHarness {
     await nextTick();
   }
 
-  async push(value: unknown): Promise<void> {
+  async push(value: Contact): Promise<void> {
     await this.list.push(value);
     await nextTick();
   }
 
-  async prepend(value: unknown): Promise<void> {
+  async prepend(value: Contact): Promise<void> {
     await this.list.prepend(value);
     await nextTick();
   }
 
-  async insert(index: number, value: unknown): Promise<void> {
+  async insert(index: number, value: Contact): Promise<void> {
     await this.list.insert(index, value);
     await nextTick();
   }
@@ -213,12 +229,12 @@ export class ArrayHarness {
     await nextTick();
   }
 
-  async replace(values: readonly unknown[]): Promise<void> {
+  async replace(values: readonly Contact[]): Promise<void> {
     await this.list.replace(values);
     await nextTick();
   }
 
-  async update(index: number, value: unknown): Promise<void> {
+  async update(index: number, value: Contact): Promise<void> {
     await this.list.update(index, value);
     await nextTick();
   }

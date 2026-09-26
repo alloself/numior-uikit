@@ -11,6 +11,7 @@ import { defineComponent, h, nextTick, reactive, shallowRef, type VNode } from '
 import {
   NuiForm,
   NuiFormField,
+  byPath,
   useForm,
   type AnyFieldRule,
   type FormContext,
@@ -44,11 +45,9 @@ export interface FormDriverOptions<V extends object> {
 }
 
 interface FieldScope {
-  readonly field: {
-    readonly name: string;
-    readonly modelValue: never;
-    readonly 'onUpdate:modelValue': (value: unknown) => void;
-  };
+  readonly field: { readonly name: string };
+  readonly value: unknown;
+  readonly setValue: (value: unknown) => void;
   readonly pending: boolean;
 }
 
@@ -59,20 +58,31 @@ const PLANS: NuiOptionSource<string> = [
 
 const fieldId = (path: string): string => `field-${path.replaceAll('.', '-')}`;
 
-const renderControl = (kind: ControlKind, scope: FieldScope): VNode[] => {
-  const pending = scope.pending ? [h('span', { class: 'pending-mark' })] : [];
+const textOf = (value: unknown): string => (typeof value === 'string' ? value : '');
+
+const controlFor = (kind: ControlKind, { field, value, setValue }: FieldScope): VNode => {
+  const bound = { name: field.name, 'onUpdate:modelValue': setValue };
 
   if (kind === 'select') {
-    return [h(NuiSelect, { ...scope.field, options: PLANS }), ...pending];
+    return h(NuiSelect<string>, {
+      ...bound,
+      modelValue: typeof value === 'string' ? value : null,
+      options: PLANS,
+    });
   }
   if (kind === 'checkbox') {
-    return [h(NuiCheckbox, scope.field), ...pending];
+    return h(NuiCheckbox, { ...bound, modelValue: value === true });
   }
   if (kind === 'number') {
-    return [h(NuiNumberField, scope.field), ...pending];
+    return h(NuiNumberField, { ...bound, modelValue: typeof value === 'number' ? value : null });
   }
-  return [h(NuiInput, scope.field), ...pending];
+  return h(NuiInput, { ...bound, modelValue: textOf(value) });
 };
+
+const renderControl = (kind: ControlKind, scope: FieldScope): VNode[] => [
+  controlFor(kind, scope),
+  ...(scope.pending ? [h('span', { class: 'pending-mark' })] : []),
+];
 
 interface View {
   readonly hidden: Set<string>;
@@ -81,13 +91,18 @@ interface View {
   disabled: boolean;
 }
 
-const renderField = (config: FormFieldConfig, view: View): VNode =>
+const renderField = <V extends object>(
+  form: FormContext<V>,
+  config: FormFieldConfig,
+  view: View,
+): VNode =>
   h(
-    NuiFormField,
+    NuiFormField<V, unknown>,
     {
       key: config.path,
+      form,
       id: fieldId(config.path),
-      name: config.path,
+      name: byPath(config.path),
       label: config.label,
       rules: view.rules.get(config.path) ?? config.rules,
       validateOn: view.validateOn.get(config.path) ?? config.validateOn,
@@ -125,7 +140,7 @@ export class FormDriver<V extends object> {
         return () =>
           h('div', [
             h(
-              NuiForm,
+              NuiForm<V>,
               {
                 form,
                 disabled: view.disabled,
@@ -135,7 +150,7 @@ export class FormDriver<V extends object> {
               () =>
                 options.fields
                   .filter((config) => !view.hidden.has(config.path))
-                  .map((config) => renderField(config, view)),
+                  .map((config) => renderField(form, config, view)),
             ),
             h('button', { type: 'button', class: 'outside' }, 'Outside'),
           ]);

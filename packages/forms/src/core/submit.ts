@@ -21,7 +21,7 @@ export type SubmitHandler<V, O> = (values: V, helpers: SubmitHelpers<V, O>) => u
 export interface SubmitDeps<V extends object, O> {
   readonly core: FormCore<V, O>;
   readonly validation: Validation<V, O>;
-  readonly host: FormHost;
+  readonly host: FormHost<V>;
   readonly errors: ErrorControls;
   readonly onSubmit: SubmitHandler<V, O>;
   readonly helpers: Omit<SubmitHelpers<V, O>, 'output' | 'signal'>;

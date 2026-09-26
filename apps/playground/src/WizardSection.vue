@@ -16,9 +16,7 @@
       aria-label="Создание команды"
       data-testid="wizard-form"
     >
-      <template #rules="{ field }">
-        <NuiCheckbox v-bind="field">Согласен с правилами команды</NuiCheckbox>
-      </template>
+      <template #rules>Согласен с правилами команды</template>
     </NuiSmartForm>
     <pre class="output" data-testid="wizard-output">{{ output }}</pre>
   </section>
@@ -69,15 +67,13 @@ const STEPS: NuiSmartFormStep<Onboarding>[] = [
     label: 'Аккаунт',
     description: 'Почта и пароль',
     fields: [
-      field(NuiInput, {
-        name: 'email',
+      field(NuiInput, (v) => v.email, {
         label: 'Почта',
         required: true,
         rules: [required(), email()],
         props: { type: 'email', autocomplete: 'email' },
       }),
-      field(NuiInput, {
-        name: 'password',
+      field(NuiInput, (v) => v.password, {
         label: 'Пароль',
         description: 'Не короче 8 символов',
         required: true,
@@ -92,26 +88,23 @@ const STEPS: NuiSmartFormStep<Onboarding>[] = [
     description: 'Название и роль',
     layout: '"team team" "size role"',
     fields: [
-      field(NuiInput, {
-        name: 'team',
+      field(NuiInput, (v) => v.team, {
         label: 'Название команды',
         required: true,
         rules: [required()],
       }),
-      field(NuiNumberField, {
-        name: 'size',
+      field(NuiNumberField, (v) => v.size, {
         label: 'Сколько человек',
         props: { min: 1, max: 500 },
       }),
-      field(NuiSelect, { name: 'role', label: 'Ваша роль', props: { options: ROLES } }),
+      field(NuiSelect, (v) => v.role, { label: 'Ваша роль', props: { options: ROLES } }),
     ],
   },
   {
     value: 'confirm',
     label: 'Подтверждение',
     fields: [
-      field(NuiCheckbox, {
-        name: 'rules',
+      field(NuiCheckbox, (v) => v.rules, {
         rules: [required({ message: 'Подтвердите согласие с правилами' })],
       }),
     ],

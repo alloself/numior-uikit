@@ -1,97 +1,92 @@
 import {
   computed,
-  inject,
   onBeforeUnmount,
   reactive,
   toValue,
+  unref,
   type ComputedRef,
+  type MaybeRef,
   type MaybeRefOrGetter,
 } from 'vue';
-import type { FormHost } from '../core/host';
 import type { FieldFlush, FieldMeta, FieldValidation, ValidateOn } from '../core/types';
-import { FORM_KEY, hostOf, type FormContext } from '../form/form-context';
-import { normalizePath } from '../paths/paths';
+import { FORM_HOST, type FormContext } from '../form/form-context';
+import { readSelected, recordPath, type FieldSelector } from '../paths/selector';
 import { createRuleSet, type RuleSource } from './rule-set';
 
-export interface UseFieldOptions<T> {
-  readonly rules?: RuleSource<T>;
+export interface UseFieldOptions<V extends object, R> {
+  readonly form: FormContext<V>;
+  readonly rules?: RuleSource<R, V>;
   readonly validateOn?: MaybeRefOrGetter<ValidateOn | undefined>;
   readonly debounce?: MaybeRefOrGetter<number | undefined>;
   readonly keepValue?: MaybeRefOrGetter<boolean | undefined>;
   readonly label?: MaybeRefOrGetter<string | undefined>;
   readonly element?: MaybeRefOrGetter<HTMLElement | null | undefined>;
   readonly focus?: (() => void) | undefined;
-  readonly flush?: FieldFlush<T> | undefined;
+  readonly flush?: FieldFlush<R> | undefined;
   readonly active?: MaybeRefOrGetter<boolean | undefined>;
   readonly disabled?: MaybeRefOrGetter<boolean | undefined>;
-  readonly form?: FormContext | undefined;
 }
 
-export interface FieldBinding<T> {
-  readonly modelValue: T;
-  readonly 'onUpdate:modelValue': (value: unknown) => void;
+export interface FieldBinding<R> {
+  readonly modelValue: R;
+  readonly 'onUpdate:modelValue': (value: R) => void;
   readonly onBlur: () => void;
 }
 
-export interface FormField<T> {
+export interface FormField<R> {
   readonly path: ComputedRef<string>;
-  readonly value: ComputedRef<T>;
+  readonly value: ComputedRef<R>;
   readonly errorMessage: ComputedRef<string | undefined>;
   readonly errors: ComputedRef<readonly string[]>;
   readonly meta: FieldMeta;
-  readonly binding: FieldBinding<T>;
-  setValue(value: T): Promise<void>;
+  readonly binding: FieldBinding<R>;
+  setValue(value: R): Promise<void>;
   handleBlur(): Promise<void>;
   validate(): Promise<FieldValidation>;
-  guard(): (value: T) => boolean;
+  guard(): (value: R) => boolean;
 }
 
-export const resolveHost = (form: FormContext | undefined): FormHost => {
-  const context = form ?? inject(FORM_KEY, null);
-
-  if (!context) {
-    throw new Error('a form field needs useForm in an ancestor or the form option');
-  }
-  return hostOf(context);
-};
-
-export const useField = <T = unknown>(
-  path: MaybeRefOrGetter<string>,
-  options: UseFieldOptions<T> = {},
-): FormField<T> => {
-  const host = resolveHost(options.form);
-  const fieldPath = computed(() => normalizePath(toValue(path)));
+export const useField = <V extends object, R>(
+  selector: MaybeRef<FieldSelector<V, R>>,
+  options: UseFieldOptions<V, R>,
+): FormField<R> => {
+  const host = options.form[FORM_HOST];
+  const { engine } = host;
+  const select = computed(() => unref(selector));
+  const path = computed(() => recordPath(engine.raw, select.value));
   const label = (): string | undefined => toValue(options.label);
-  const field = host.engine.field<T>(() => fieldPath.value, label);
+  const state = engine.field(() => path.value, label);
   const rules = createRuleSet(options.rules);
+  const value = computed(() => readSelected(engine.values, select.value, path.value));
 
   const entry = host.add({
     kind: 'field',
-    path: () => fieldPath.value,
+    path: () => path.value,
     active: () => toValue(options.active) ?? true,
     disabled: () => toValue(options.disabled) ?? false,
     label,
     element: () => toValue(options.element),
     focus: options.focus,
     flush: options.flush,
-    value: () => field.value.value,
-    check: (context) => rules.check(field.value.value, context),
-    checkAsync: (context) => rules.checkAsync(field.value.value, context),
+    value: () => value.value,
+    check: (context) =>
+      rules.check(readSelected(context.values, select.value, path.value), context),
+    checkAsync: (context) =>
+      rules.checkAsync(readSelected(context.values, select.value, path.value), context),
     hasAsync: rules.hasAsync,
     debounce: () => toValue(options.debounce),
     validateOn: () => toValue(options.validateOn),
     keepValue: () => toValue(options.keepValue) ?? true,
-    state: field,
+    state,
   });
 
   rules.onChange(() => {
     void host.rulesChanged(entry);
   });
 
-  const value = computed(() => field.value.value);
-  const errors = computed(() => field.errors.value);
+  const errors = computed(() => state.errors.value);
 
-  const update = (next: unknown): Promise<void> => host.change(entry, next);
+  const update = (next: R): Promise<void> => host.change(entry, next);
   const handleBlur = (): Promise<void> => host.blur(entry);
 
   onBeforeUnmount(() => {
@@ -99,16 +94,16 @@ export const useField = <T = unknown>(
   });
 
   return {
-    path: fieldPath,
+    path,
     value,
     errorMessage: computed(() => errors.value[0]),
     errors,
     meta: reactive({
-      touched: field.touched,
-      dirty: computed(() => host.isDirty(fieldPath.value)),
+      touched: state.touched,
+      dirty: computed(() => host.isDirty(path.value)),
       valid: computed(() => errors.value.length === 0),
-      pending: field.pending,
-      validated: field.attempted,
+      pending: state.pending,
+      validated: state.attempted,
     }),
     binding: reactive({ modelValue: value, 'onUpdate:modelValue': update, onBlur: handleBlur }),
     setValue: update,

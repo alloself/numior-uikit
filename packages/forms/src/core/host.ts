@@ -1,5 +1,5 @@
 import { getCurrentScope, watch } from 'vue';
-import type { EntryState, FormEngine } from '../engine/engine';
+import type { EntryState, FormEngine } from '../engine/engine.types';
 import { isUnder } from '../paths/paths';
 import { getAt } from '../values/access';
 import { isPathDirty } from './dirty';
@@ -16,7 +16,7 @@ import type {
 } from './types';
 import type { ApplyScope, Validation } from './validation';
 
-export interface EntrySpec {
+export interface EntrySpec<V extends object> {
   readonly kind: EntryKind;
   readonly path: () => string;
   readonly active: () => boolean;
@@ -26,8 +26,8 @@ export interface EntrySpec {
   readonly focus: (() => void) | undefined;
   readonly flush: FieldFlush | undefined;
   readonly value: () => unknown;
-  readonly check: (context: FieldRuleContext) => string | undefined;
-  readonly checkAsync: (context: AsyncRuleContext) => Promise<string | undefined>;
+  readonly check: (context: FieldRuleContext<V>) => string | undefined;
+  readonly checkAsync: (context: AsyncRuleContext<V>) => Promise<string | undefined>;
   readonly hasAsync: () => boolean;
   readonly debounce: () => number | undefined;
   readonly validateOn: () => ValidateOn | undefined;
@@ -35,18 +35,18 @@ export interface EntrySpec {
   readonly state: EntryState;
 }
 
-export interface FormHost {
-  readonly engine: FormEngine<object>;
-  add(spec: EntrySpec): Entry;
-  remove(entry: Entry): void;
-  change(entry: Entry, value: unknown): Promise<void>;
+export interface FormHost<V extends object> {
+  readonly engine: FormEngine<V>;
+  add(spec: EntrySpec<V>): Entry<V>;
+  remove(entry: Entry<V>): void;
+  change(entry: Entry<V>, value: unknown): Promise<void>;
   write(path: string, value: unknown): Promise<void>;
-  blur(entry: Entry): Promise<void>;
-  validateEntry(entry: Entry): Promise<FieldValidation>;
-  revalidate(entries: readonly Entry[], scope?: ApplyScope): Promise<void>;
-  rulesChanged(entry: Entry): Promise<void>;
-  flush(entries: readonly Entry[]): Promise<void>;
-  guard(entry: Entry): (value: unknown) => boolean;
+  blur(entry: Entry<V>): Promise<void>;
+  validateEntry(entry: Entry<V>): Promise<FieldValidation>;
+  revalidate(entries: readonly Entry<V>[], scope?: ApplyScope): Promise<void>;
+  rulesChanged(entry: Entry<V>): Promise<void>;
+  flush(entries: readonly Entry<V>[]): Promise<void>;
+  guard(entry: Entry<V>): (value: unknown) => boolean;
   isDirty(path: string): boolean;
   track<T>(work: Promise<T>): Promise<T>;
 }
@@ -58,14 +58,14 @@ const toVoid = (): void => undefined;
 export const createHost = <V extends object, O>(
   core: FormCore<V, O>,
   validation: Validation<V, O>,
-): FormHost => {
-  const claimed = (path: string, except: Entry): boolean =>
+): FormHost<V> => {
+  const claimed = (path: string, except: Entry<V>): boolean =>
     core.registry.active().some((entry) => entry !== except && entry.path() === path);
 
   const containerExists = (path: string): boolean =>
     getAt(core.engine.values, path.split('.').slice(0, -1).join('.')) !== undefined;
 
-  const restore = (entry: Entry): void => {
+  const restore = (entry: Entry<V>): void => {
     const saved = core.retained.get(entry.path());
 
     if (saved) {
@@ -76,7 +76,7 @@ export const createHost = <V extends object, O>(
     }
   };
 
-  const retain = (entry: Entry): void => {
+  const retain = (entry: Entry<V>): void => {
     const { touched, attempted, errors } = entry.state;
 
     if (touched.value || attempted.value || errors.value.length > 0) {
@@ -88,13 +88,13 @@ export const createHost = <V extends object, O>(
     }
   };
 
-  const release = (entry: Entry): void => {
+  const release = (entry: Entry<V>): void => {
     if (!entry.keepValue()) {
       core.engine.unsetValue(entry.path());
     }
   };
 
-  const commitFor = (entry: Entry): ((value: unknown) => boolean) => {
+  const commitFor = (entry: Entry<V>): ((value: unknown) => boolean) => {
     const { epoch } = core.session;
     const { fieldEpoch } = entry;
 
@@ -107,11 +107,11 @@ export const createHost = <V extends object, O>(
     };
   };
 
-  const flush = async (entries: readonly Entry[]): Promise<void> => {
+  const flush = async (entries: readonly Entry<V>[]): Promise<void> => {
     await Promise.all(entries.map((entry) => entry.flush?.(commitFor(entry))));
   };
 
-  const revalidate = (entries: readonly Entry[], scope?: ApplyScope): Promise<void> => {
+  const revalidate = (entries: readonly Entry<V>[], scope?: ApplyScope): Promise<void> => {
     const due = entries.filter((entry) =>
       validatesOnChange(entry.validateOn(), entry.state.attempted.value),
     );
@@ -124,7 +124,7 @@ export const createHost = <V extends object, O>(
   return {
     engine: core.engine,
     add: (spec) => {
-      const entry: Entry = {
+      const entry: Entry<V> = {
         ...spec,
         id: core.registry.nextId(),
         validateOn: () => spec.validateOn() ?? core.validateOn,

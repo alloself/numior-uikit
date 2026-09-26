@@ -1,4 +1,4 @@
-import type { EntryState } from '../engine/engine';
+import type { EntryState } from '../engine/engine.types';
 
 export const toMessages = (value: string | readonly string[] | undefined): readonly string[] => {
   if (value === undefined) {

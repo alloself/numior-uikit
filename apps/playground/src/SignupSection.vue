@@ -11,7 +11,7 @@
       <NuiFormField
         v-slot="{ field, pending }"
         :form="form"
-        name="login"
+        :name="(v) => v.login"
         label="Логин"
         description="Проверяем, свободен ли он, когда вы уходите из поля"
         validate-on="blur"
@@ -27,7 +27,7 @@
       <NuiFormField
         v-slot="{ field }"
         :form="form"
-        name="email"
+        :name="(v) => v.email"
         label="Почта"
         :rules="emailRules"
         required
@@ -38,7 +38,7 @@
         <NuiFormField
           v-slot="{ field }"
           :form="form"
-          name="password"
+          :name="(v) => v.password"
           label="Пароль"
           description="Не короче 8 символов"
           :rules="passwordRules"
@@ -51,7 +51,13 @@
             autocomplete="new-password"
           />
         </NuiFormField>
-        <NuiFormField v-slot="{ field }" :form="form" name="confirm" label="Повтор пароля" required>
+        <NuiFormField
+          v-slot="{ field }"
+          :form="form"
+          :name="(v) => v.confirm"
+          label="Повтор пароля"
+          required
+        >
           <NuiInput
             v-bind="field"
             type="password"
@@ -60,7 +66,7 @@
           />
         </NuiFormField>
       </div>
-      <NuiFormField v-slot="{ field }" :form="form" name="plan" label="Тариф" group>
+      <NuiFormField v-slot="{ field }" :form="form" :name="(v) => v.plan" label="Тариф" group>
         <NuiRadioGroup v-bind="field" data-testid="signup-plan">
           <NuiRadio value="free">Бесплатный</NuiRadio>
           <NuiRadio value="team">Команда</NuiRadio>
@@ -68,17 +74,27 @@
         </NuiRadioGroup>
       </NuiFormField>
       <div class="form-demo__pair">
-        <NuiFormField v-slot="{ field }" :form="form" name="birthday" label="Дата рождения">
+        <NuiFormField
+          v-slot="{ field }"
+          :form="form"
+          :name="(v) => v.birthday"
+          label="Дата рождения"
+        >
           <NuiDatePicker v-bind="field" data-testid="signup-birthday" />
         </NuiFormField>
-        <NuiFormField v-slot="{ field }" :form="form" name="seats" label="Места в команде">
+        <NuiFormField
+          v-slot="{ field }"
+          :form="form"
+          :name="(v) => v.seats"
+          label="Места в команде"
+        >
           <NuiNumberField v-bind="field" :min="1" :max="50" data-testid="signup-seats" />
         </NuiFormField>
       </div>
       <NuiFormField
         v-slot="{ value, setValue }"
         :form="form"
-        name="tags"
+        :name="(v) => v.tags"
         label="Интересы"
         description="Можно выбрать из списка или добавить свой"
       >
@@ -91,10 +107,15 @@
           @update:values="setValue"
         />
       </NuiFormField>
-      <NuiFormField v-slot="{ field }" :form="form" name="call" label="Удобное время звонка">
+      <NuiFormField
+        v-slot="{ field }"
+        :form="form"
+        :name="(v) => v.call"
+        label="Удобное время звонка"
+      >
         <NuiTimeField v-bind="field" data-testid="signup-call" />
       </NuiFormField>
-      <NuiFormField v-slot="{ field }" :form="form" name="terms" :rules="termsRules">
+      <NuiFormField v-slot="{ field }" :form="form" :name="(v) => v.terms" :rules="termsRules">
         <NuiCheckbox v-bind="field" data-testid="signup-terms"
           >Принимаю условия сервиса</NuiCheckbox
         >

@@ -24,15 +24,15 @@ export interface RunResult<V, O> extends Classified {
 }
 
 export interface Validation<V extends object, O> {
-  readonly async: AsyncChecks;
-  run(): MaybePromise<RunResult<V, O>>;
+  readonly async: AsyncChecks<V>;
+  run(checked?: readonly Entry<V>[]): MaybePromise<RunResult<V, O>>;
   execute(): MaybePromise<RunResult<V, O>>;
   validateEntries(
-    entries: readonly Entry[],
+    entries: readonly Entry<V>[],
     trigger: Trigger,
     scope?: ApplyScope,
   ): Promise<RunResult<V, O>>;
-  validateFully(entries: readonly Entry[]): Promise<RunResult<V, O>>;
+  validateFully(entries: readonly Entry<V>[]): Promise<RunResult<V, O>>;
 }
 
 export const isClean = (result: Classified): boolean =>
@@ -45,7 +45,7 @@ export const createValidation = <V extends object, O>(core: FormCore<V, O>): Val
     void execute();
   });
 
-  const ruleIssues = (submitted: V, active: readonly Entry[]): FormIssue[] =>
+  const ruleIssues = (submitted: V, active: readonly Entry<V>[]): FormIssue[] =>
     active
       .filter((entry) => !entry.disabled())
       .flatMap((entry) => {
@@ -77,17 +77,18 @@ export const createValidation = <V extends object, O>(core: FormCore<V, O>): Val
       ? { ok: true, output: undefined }
       : chain(core.schema['~standard'].validate(submitted), toOutcome);
 
-  const run = (): MaybePromise<RunResult<V, O>> => {
+  const run = (checked?: readonly Entry<V>[]): MaybePromise<RunResult<V, O>> => {
     const input = core.engine.snapshot();
     const submitted = cloneValue(input);
     const active = core.registry.active();
+    const targets = checked ?? active;
 
     prune(submitted, core.registry.known, active);
 
     const extra = [
-      ...ruleIssues(submitted, active),
+      ...ruleIssues(submitted, targets),
       ...externalIssues(),
-      ...asyncChecks.issues(active),
+      ...asyncChecks.issues(targets),
     ];
 
     return chain(schemaOutcome(submitted), (outcome) => {
@@ -110,7 +111,7 @@ export const createValidation = <V extends object, O>(core: FormCore<V, O>): Val
     }
   };
 
-  const applyTo = (entries: readonly Entry[], result: RunResult<V, O>): void => {
+  const applyTo = (entries: readonly Entry<V>[], result: RunResult<V, O>): void => {
     for (const entry of entries) {
       if (entry.state.attempted.value) {
         writeErrors(entry.state, result.byOwner.get(entry.path()) ?? []);
@@ -127,7 +128,7 @@ export const createValidation = <V extends object, O>(core: FormCore<V, O>): Val
     dropStaleExternal();
   };
 
-  const execute = (own?: readonly Entry[]): MaybePromise<RunResult<V, O>> => {
+  const execute = (own?: readonly Entry<V>[]): MaybePromise<RunResult<V, O>> => {
     const epoch = core.session.epoch;
 
     core.session.started += 1;
@@ -147,13 +148,13 @@ export const createValidation = <V extends object, O>(core: FormCore<V, O>): Val
       return result;
     };
 
-    const outcome = chain(run(), settle);
+    const outcome = chain(run(own), settle);
 
     return isPromise(outcome) ? core.tracker.track(outcome) : outcome;
   };
 
   const attempt = (
-    entries: readonly Entry[],
+    entries: readonly Entry<V>[],
     scope: ApplyScope = 'attempted',
   ): MaybePromise<RunResult<V, O>> => {
     for (const entry of entries) {
@@ -171,7 +172,7 @@ export const createValidation = <V extends object, O>(core: FormCore<V, O>): Val
     });
   };
 
-  const followAsync = (entries: readonly Entry[], result: RunResult<V, O>, trigger: Trigger) => {
+  const followAsync = (entries: readonly Entry<V>[], result: RunResult<V, O>, trigger: Trigger) => {
     for (const entry of entries) {
       if (result.byOwner.has(entry.path())) {
         asyncChecks.cancel(entry);

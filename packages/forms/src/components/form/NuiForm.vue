@@ -40,7 +40,7 @@ import { computed, shallowRef, useTemplateRef, watch } from 'vue';
 import { useMessages } from '@numior/primitives';
 import { NuiAlert, NuiButton } from '@numior/vue';
 import type { SubmitResult } from '../../core/types';
-import { hostOf, provideForm } from '../../form/form-context';
+import { FORM_HOST, provideForm } from '../../form/form-context';
 import { provideFormScope } from './form-scope';
 import { formMessages } from './form.messages';
 import type { NuiFormProps } from './form.types';
@@ -58,7 +58,7 @@ const emit = defineEmits<{ reset: [] }>();
 provideForm(form);
 provideFormScope(() => disabled);
 
-const host = hostOf(form);
+const host = form[FORM_HOST];
 const root = useTemplateRef<HTMLFormElement>('root');
 const errorsBox = useTemplateRef<HTMLElement>('errors');
 const localized = useMessages(formMessages);

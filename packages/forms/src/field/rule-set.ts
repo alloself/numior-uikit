@@ -4,25 +4,28 @@ import type { AsyncRuleContext, FieldRuleContext } from '../core/types';
 import { firstAsyncFailure, isAsyncRule, isSyncRule, type AnyFieldRule } from '../rules/async-rule';
 import { originOf } from '../rules/origin';
 
-export type RuleSource<T> = MaybeRefOrGetter<readonly AnyFieldRule<T>[] | undefined>;
+export type RuleSource<T, V> = MaybeRefOrGetter<readonly AnyFieldRule<T, V>[] | undefined>;
 
-export interface RuleSet<T> {
-  check(value: T, context: FieldRuleContext): string | undefined;
-  checkAsync(value: T, context: AsyncRuleContext): Promise<string | undefined>;
+export interface RuleSet<T, V> {
+  check(value: T, context: FieldRuleContext<V>): string | undefined;
+  checkAsync(value: T, context: AsyncRuleContext<V>): Promise<string | undefined>;
   hasAsync(): boolean;
   onChange(react: () => void): void;
 }
 
-const sameRule = <T>(left: AnyFieldRule<T>, right: AnyFieldRule<T> | undefined): boolean =>
+const sameRule = <T, V>(left: AnyFieldRule<T, V>, right: AnyFieldRule<T, V> | undefined): boolean =>
   right !== undefined &&
   originOf(left) === originOf(right) &&
   isAsyncRule(left) === isAsyncRule(right);
 
-const sameRules = <T>(left: readonly AnyFieldRule<T>[], right: readonly AnyFieldRule<T>[]) =>
+const sameRules = <T, V>(
+  left: readonly AnyFieldRule<T, V>[],
+  right: readonly AnyFieldRule<T, V>[],
+): boolean =>
   left.length === right.length && left.every((rule, index) => sameRule(rule, right[index]));
 
-export const createRuleSet = <T>(source: RuleSource<T>): RuleSet<T> => {
-  const rules = computed((): readonly AnyFieldRule<T>[] => toValue(source) ?? []);
+export const createRuleSet = <T, V>(source: RuleSource<T, V>): RuleSet<T, V> => {
+  const rules = computed((): readonly AnyFieldRule<T, V>[] => toValue(source) ?? []);
   const sync = computed(() => rules.value.filter(isSyncRule));
   const pending = computed(() => rules.value.filter(isAsyncRule));
 

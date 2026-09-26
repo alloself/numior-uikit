@@ -7,25 +7,39 @@ import {
   useFormContext,
   type FormContext,
   type FormField,
+  type FormHandle,
 } from '../../src';
 
-export type Binding = 'explicit' | 'injected' | 'provided';
+export type Lookup = 'injected' | 'provided';
 
 interface Names {
   readonly name: string;
 }
 
+interface Found {
+  readonly contexts: Map<Lookup, FormHandle | null>;
+  field: FormField<string> | null;
+}
+
 const noop = (): void => undefined;
 
-const fieldProbe = (binding: Binding, sink: Map<Binding, FormField<unknown>>, form?: FormContext) =>
+const lookup = (kind: Lookup, found: Found) =>
   defineComponent({
     setup: () => {
-      sink.set(binding, useField('name', form === undefined ? {} : { form }));
+      found.contexts.set(kind, useFormContext());
       return () => h('i');
     },
   });
 
-const providing = (form: FormContext, child: Component): Component =>
+const fieldOf = (form: FormContext<Names>, found: Found) =>
+  defineComponent({
+    setup: () => {
+      found.field = useField((values: Names) => values.name, { form });
+      return () => h('i');
+    },
+  });
+
+const providing = (form: FormHandle, child: Component): Component =>
   defineComponent({
     setup: () => {
       provideForm(form);
@@ -35,7 +49,7 @@ const providing = (form: FormContext, child: Component): Component =>
 
 export class TwoFormsHarness {
   static mount(first: Names, second: Names): TwoFormsHarness {
-    const fields = new Map<Binding, FormField<unknown>>();
+    const found: Found = { contexts: new Map(), field: null };
     const forms = shallowRef<readonly [FormContext<Names>, FormContext<Names>] | null>(null);
 
     const Host = defineComponent({
@@ -47,38 +61,34 @@ export class TwoFormsHarness {
 
         forms.value = pair;
         return () => [
-          h(fieldProbe('explicit', fields, pair[0])),
-          h(fieldProbe('injected', fields)),
-          h(providing(pair[0], fieldProbe('provided', fields))),
+          h(fieldOf(pair[0], found)),
+          h(lookup('injected', found)),
+          h(providing(pair[0], lookup('provided', found))),
         ];
       },
     });
 
     mount(Host);
 
-    if (!forms.value) {
+    if (!forms.value || !found.field) {
       throw new Error('useForm did not run');
     }
-    return new TwoFormsHarness(forms.value, fields);
+    return new TwoFormsHarness(forms.value, found.field, found.contexts);
   }
 
   private constructor(
     readonly forms: readonly [FormContext<Names>, FormContext<Names>],
-    private readonly fields: Map<Binding, FormField<unknown>>,
+    readonly field: FormField<string>,
+    private readonly contexts: Map<Lookup, FormHandle | null>,
   ) {}
 
-  field(binding: Binding): FormField<unknown> {
-    const field = this.fields.get(binding);
-
-    if (!field) {
-      throw new Error(`no ${binding} field`);
-    }
-    return field;
+  context(kind: Lookup): FormHandle | null {
+    return this.contexts.get(kind) ?? null;
   }
 }
 
-export const contextOutsideForm = (): FormContext | null => {
-  const captured = shallowRef<FormContext | null>(null);
+export const contextOutsideForm = (): FormHandle | null => {
+  const captured = shallowRef<FormHandle | null>(null);
 
   mount(
     defineComponent({
@@ -90,23 +100,4 @@ export const contextOutsideForm = (): FormContext | null => {
   );
 
   return captured.value;
-};
-
-export const fieldOutsideForm = (): unknown => {
-  const failure = shallowRef<unknown>(undefined);
-
-  mount(
-    defineComponent({
-      setup: () => {
-        try {
-          useField('name');
-        } catch (error) {
-          failure.value = error;
-        }
-        return () => h('i');
-      },
-    }),
-  );
-
-  return failure.value;
 };

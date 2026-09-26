@@ -21,20 +21,16 @@
       aria-label="Профиль"
       data-testid="smart-profile"
     >
-      <template #kind="{ field }">
-        <NuiRadioGroup v-bind="field" orientation="horizontal">
-          <NuiRadio value="person">Частное лицо</NuiRadio>
-          <NuiRadio value="company">Компания</NuiRadio>
-        </NuiRadioGroup>
+      <template #kind>
+        <NuiRadio value="person">Частное лицо</NuiRadio>
+        <NuiRadio value="company">Компания</NuiRadio>
       </template>
       <template #[ABOUT_AFTER]>
         <p class="smart-demo__counter" data-testid="smart-about-counter">
           {{ aboutLength }} / {{ ABOUT_LIMIT }}
         </p>
       </template>
-      <template #newsletter="{ field }">
-        <NuiCheckbox v-bind="field">Присылать новости раз в месяц</NuiCheckbox>
-      </template>
+      <template #newsletter>Присылать новости раз в месяц</template>
     </NuiSmartForm>
     <pre class="output" data-testid="smart-output">{{ output }}</pre>
   </section>
@@ -105,31 +101,31 @@ const PROFILE_FIELDS = [
     description: 'Как к вам обращаться и куда писать',
     layout: '"kind kind" "name email" "company vat"',
     fields: [
-      field(NuiRadioGroup, { name: 'kind', label: 'Тип аккаунта', group: true }),
-      field(NuiInput, {
-        name: 'name',
+      field(NuiRadioGroup, (v) => v.kind, {
+        label: 'Тип аккаунта',
+        group: true,
+        props: { orientation: 'horizontal' },
+      }),
+      field(NuiInput, (v) => v.name, {
         label: 'Имя',
         required: true,
         rules: [required()],
         props: { autocomplete: 'name' },
       }),
-      field(NuiInput, {
-        name: 'email',
+      field(NuiInput, (v) => v.email, {
         label: 'Почта',
         required: true,
         rules: [required(), email()],
         props: { type: 'email', autocomplete: 'email' },
       }),
-      field(NuiInput, {
-        name: 'company',
+      field(NuiInput, (v) => v.company, {
         label: 'Компания',
         required: true,
         when: isCompany,
         rules: [required()],
         props: { autocomplete: 'organization' },
       }),
-      field(NuiInput, {
-        name: 'vat',
+      field(NuiInput, (v) => v.vat, {
         label: 'ИНН',
         description: '10 цифр',
         when: isCompany,
@@ -142,20 +138,18 @@ const PROFILE_FIELDS = [
     title: 'Адрес',
     layout: '"country city"',
     fields: [
-      field(NuiSelect, {
-        name: 'country',
+      field(NuiSelect, (v) => v.country, {
         label: 'Страна',
         props: { options: COUNTRIES, placeholder: 'Выберите страну' },
       }),
-      field(NuiInput, { name: 'city', label: 'Город', props: { autocomplete: 'address-level2' } }),
+      field(NuiInput, (v) => v.city, { label: 'Город', props: { autocomplete: 'address-level2' } }),
     ],
   }),
   section({
     title: 'Контактные лица',
     description: 'От одного до трёх, порядок можно менять',
     fields: [
-      array({
-        name: 'contacts',
+      array((v) => v.contacts, {
         min: 1,
         max: 3,
         reorderable: true,
@@ -163,14 +157,12 @@ const PROFILE_FIELDS = [
         addLabel: 'Добавить контакт',
         newRow: () => ({ name: '', phone: '' }),
         fields: [
-          contact.field(NuiInput, {
-            name: 'name',
+          contact.field(NuiInput, (row) => row.name, {
             label: 'Имя',
             required: true,
             rules: [required()],
           }),
-          contact.field(NuiInput, {
-            name: 'phone',
+          contact.field(NuiInput, (row) => row.phone, {
             label: 'Телефон',
             props: { type: 'tel', mask: '+7 (###) ###-##-##' },
           }),
@@ -181,25 +173,22 @@ const PROFILE_FIELDS = [
   section({
     title: 'Дополнительно',
     fields: [
-      field(NuiTextarea, {
-        name: 'about',
+      field(NuiTextarea, (v) => v.about, {
         label: 'О себе',
         rules: [max(ABOUT_LIMIT)],
         props: { rows: 3 },
       }),
-      field(NuiCheckbox, { name: 'newsletter' }),
+      field(NuiCheckbox, (v) => v.newsletter),
     ],
   }),
 ];
 
 const FILTER_FIELDS = [
-  filterConfig.field(NuiInput, {
-    name: 'query',
+  filterConfig.field(NuiInput, (v) => v.query, {
     label: 'Поиск',
     props: { type: 'search', placeholder: 'Имя или почта' },
   }),
-  filterConfig.field(NuiSelect, {
-    name: 'status',
+  filterConfig.field(NuiSelect, (v) => v.status, {
     label: 'Статус',
     props: { options: STATUSES, placeholder: 'Любой' },
   }),

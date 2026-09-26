@@ -1,17 +1,14 @@
-import {
-  computed,
-  getCurrentScope,
-  onScopeDispose,
-  reactive,
-  shallowRef,
-  type Reactive,
-} from 'vue';
-import { deleteAt, mergeInto, readAt, replaceContents, setAt } from '../values/access';
+import { computed, getCurrentScope, onScopeDispose, shallowRef } from 'vue';
+import { deleteAt, getAt, mergeInto, replaceContents, setAt } from '../values/access';
 import { cloneValue } from '../values/clone';
-import type { EngineArray, EngineRow, EntryState, FormEngine } from './engine';
+import { reactiveView } from '../values/view';
+import type { EngineArray, EngineKey, EntryState, FormEngine } from './engine.types';
 
-interface Counter {
-  next: number;
+interface ArrayHost {
+  readonly raw: object;
+  readonly values: object;
+  fresh(): number;
+  write(path: string, list: readonly unknown[]): void;
 }
 
 const createState = (): EntryState => {
@@ -66,65 +63,65 @@ const swapped = <T>(items: readonly T[], first: number, second: number): T[] => 
     : items.map((item, index) => (index === first ? right : index === second ? left : item));
 };
 
-const createArray = <T>(
-  values: Reactive<object>,
-  path: () => string,
-  counter: Counter,
-): EngineArray<T> => {
-  const keys: number[] = [];
+const lengthAt = (values: object, path: string): number => {
+  const list = getAt(values, path);
+  return Array.isArray(list) ? list.length : 0;
+};
 
-  const fresh = (): number => {
-    counter.next += 1;
-    return counter.next;
+const listAt = (raw: object, path: string): readonly unknown[] => {
+  const list = getAt(raw, path);
+  return Array.isArray(list) ? list : [];
+};
+
+const createArray = (host: ArrayHost, path: () => string): EngineArray => {
+  const order: EngineKey[] = [];
+  const current = (): readonly unknown[] => listAt(host.raw, path());
+
+  const write = (next: readonly unknown[]): void => {
+    host.write(path(), next);
   };
 
-  const items = (): readonly T[] => readAt<readonly T[] | undefined>(values, path()) ?? [];
+  const keys = computed((): readonly EngineKey[] => {
+    const length = lengthAt(host.values, path());
 
-  const write = (next: readonly T[]): void => {
-    setAt(values, path(), next);
-  };
+    order.splice(length);
 
-  const rows = computed((): readonly EngineRow<T>[] => {
-    const current = items();
-
-    keys.splice(current.length);
-
-    while (keys.length < current.length) {
-      keys.push(fresh());
+    while (order.length < length) {
+      order.push(host.fresh());
     }
-    return current.map((value, index) => ({ key: keys[index] ?? index, value }));
+    return [...order];
   });
 
   return {
-    rows,
+    keys,
     push: (value) => {
-      const current = items();
+      const list = current();
 
-      keys.splice(current.length, keys.length, fresh());
-      write([...current, cloneValue(value)]);
+      order.splice(list.length, order.length, host.fresh());
+      write([...list, cloneValue(value)]);
     },
     prepend: (value) => {
-      keys.splice(0, 0, fresh());
-      write([cloneValue(value), ...items()]);
+      order.splice(0, 0, host.fresh());
+      write([cloneValue(value), ...current()]);
     },
     insert: (index, value) => {
-      keys.splice(index, 0, fresh());
-      write(items().toSpliced(index, 0, cloneValue(value)));
+      order.splice(index, 0, host.fresh());
+      write(current().toSpliced(index, 0, cloneValue(value)));
     },
     remove: (index) => {
-      keys.splice(index, 1);
-      write(items().toSpliced(index, 1));
+      order.splice(index, 1);
+      write(current().toSpliced(index, 1));
     },
     move: (from, to) => {
-      keys.splice(0, keys.length, ...moved(keys, from, to));
-      write(moved(items(), from, to));
+      order.splice(0, order.length, ...moved(order, from, to));
+      write(moved(current(), from, to));
     },
     swap: (first, second) => {
-      keys.splice(0, keys.length, ...swapped(keys, first, second));
-      write(swapped(items(), first, second));
+      order.splice(0, order.length, ...swapped(order, first, second));
+      write(swapped(current(), first, second));
     },
     replace: (next) => {
-      keys.splice(0, keys.length, ...next.map(fresh));
+      order.splice(0, order.length, ...next.map(host.fresh));
       write(next.map(cloneValue));
     },
   };
@@ -132,33 +129,57 @@ const createArray = <T>(
 
 export const createFormEngine = <V extends object>(initialValues: V): FormEngine<V> => {
   const raw = cloneValue(initialValues);
-  const values = reactive(raw);
+  const values = reactiveView(raw);
+  const version = shallowRef(0);
   const submitCount = shallowRef(0);
   const live = new Set<EntryState>();
-  const counter: Counter = { next: 0 };
+  let counter = 0;
+
+  const changed = (): void => {
+    version.value += 1;
+  };
+
+  const host: ArrayHost = {
+    raw,
+    values,
+    fresh: () => {
+      counter += 1;
+      return counter;
+    },
+    write: (path, list) => {
+      setAt(values, path, list);
+      changed();
+    },
+  };
 
   return {
+    raw,
     values,
+    version,
     snapshot: () => cloneValue(raw),
     submitCount,
     setValue: (path, value) => {
       setAt(values, path, cloneValue(value));
+      changed();
     },
     unsetValue: (path) => {
       deleteAt(values, path);
+      changed();
     },
     mergeValues: (next) => {
       mergeInto(values, cloneValue(next));
+      changed();
     },
     reset: (next) => {
       replaceContents(values, cloneValue(next));
+      changed();
       submitCount.value = 0;
       live.forEach(clearState);
     },
     countSubmit: () => {
       submitCount.value += 1;
     },
-    field: <T>(path: () => string) => {
+    field: () => {
       const state = createState();
 
       live.add(state);
@@ -168,8 +189,8 @@ export const createFormEngine = <V extends object>(initialValues: V): FormEngine
           live.delete(state);
         });
       }
-      return { ...state, value: computed(() => readAt<T>(values, path())) };
+      return state;
     },
-    array: <T>(path: () => string) => createArray<T>(values, path, counter),
+    array: (path) => createArray(host, path),
   };
 };

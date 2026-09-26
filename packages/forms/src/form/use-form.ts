@@ -1,4 +1,4 @@
-import { readonly } from 'vue';
+import { reactive, readonly } from 'vue';
 import { createErrorControls } from '../core/errors';
 import { createFormCore } from '../core/form-core';
 import { createHost } from '../core/host';
@@ -6,7 +6,7 @@ import { createReset } from '../core/reset';
 import { createSubmit } from '../core/submit';
 import { createValidation } from '../core/validation';
 import { createActions } from './actions';
-import { bindHost, provideForm, type FormContext, type UseFormOptions } from './form-context';
+import { FORM_HOST, provideForm, type FormContext, type UseFormOptions } from './form-context';
 import { createViews } from './views';
 
 export const useForm = <V extends object, O = V>(options: UseFormOptions<V, O>): FormContext<V> => {
@@ -36,7 +36,8 @@ export const useForm = <V extends object, O = V>(options: UseFormOptions<V, O>):
 
   const form: FormContext<V> = {
     ...actions,
-    values: readonly(core.engine.values),
+    [FORM_HOST]: host,
+    values: readonly(reactive(core.engine.raw)),
     errors: views.errors,
     errorBag: views.errorBag,
     formErrors: views.formErrors,
@@ -53,7 +54,6 @@ export const useForm = <V extends object, O = V>(options: UseFormOptions<V, O>):
     settled: core.tracker.settled,
   };
 
-  bindHost(form, host);
   provideForm(form);
   return form;
 };

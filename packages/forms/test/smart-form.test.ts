@@ -1,4 +1,4 @@
-import { NuiInput } from '@numior/vue';
+import { NuiInput, NuiRadio, NuiRadioGroup } from '@numior/vue';
 import { describe, expect, expectTypeOf, it } from 'vitest';
 import { h } from 'vue';
 import { custom, formConfig } from '../src';
@@ -34,11 +34,10 @@ const blank: Account = {
   contacts: [{ email: 'ann@example.com' }],
 };
 
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null;
-
-const customEmail = (props: Record<string, unknown>) =>
-  h('input', { ...(isRecord(props.field) ? props.field : {}), class: 'custom' });
+const kindOptions = () => [
+  h(NuiRadio, { value: 'person' }, () => 'Person'),
+  h(NuiRadio, { value: 'company' }, () => 'Company'),
+];
 
 const markdownHint = () => h('p', { class: 'hint' }, 'Markdown works');
 
@@ -52,25 +51,28 @@ const isCompany = (values: Account): boolean => values.kind === 'company';
 const isRussian = (row: Contact): boolean => row.email.endsWith('.ru');
 
 const COMPANY = [
-  field(NuiInput, { name: 'kind', label: 'Kind' }),
-  field(NuiInput, { name: 'company', label: 'Company', when: isCompany }),
-  field(NuiInput, { name: 'vat', label: 'VAT', when: isCompany }),
+  field(NuiInput, (values) => values.kind, { label: 'Kind' }),
+  field(NuiInput, (values) => values.company, { label: 'Company', when: isCompany }),
+  field(NuiInput, (values) => values.vat, { label: 'VAT', when: isCompany }),
 ];
 
 describe('NuiSmartForm', () => {
-  it('renders config fields with typed props, a replacing slot and an after slot', () => {
+  it('renders config fields with typed props, slot content inside the control and an after slot', () => {
     const form = SmartFormDriver.mount({
       initialValues: blank,
       fields: [
-        field(NuiInput, { name: 'name', label: 'Name', props: { placeholder: 'Ann Lee' } }),
-        field(NuiInput, { name: 'email', label: 'Email' }),
-        field(NuiInput, { name: 'bio', label: 'Bio' }),
+        field(NuiInput, (values) => values.name, {
+          label: 'Name',
+          props: { placeholder: 'Ann Lee' },
+        }),
+        field(NuiRadioGroup, (values) => values.kind, { label: 'Kind', group: true }),
+        field(NuiInput, (values) => values.bio, { label: 'Bio' }),
       ],
-      slots: { email: customEmail, 'bio:after': markdownHint },
+      slots: { kind: kindOptions, 'bio:after': markdownHint },
     });
 
     expect(form.attribute('name', 'placeholder')).toBe('Ann Lee');
-    expect(form.has('input.custom[name="email"]')).toBe(true);
+    expect(form.has('[role="radiogroup"] input[type="radio"][value="company"]')).toBe(true);
     expect(form.cellText('bio')).toContain('Markdown works');
   });
 
@@ -79,9 +81,9 @@ describe('NuiSmartForm', () => {
       initialValues: blank,
       layout: '"email name" "bio bio"',
       fields: [
-        field(NuiInput, { name: 'name', label: 'Name' }),
-        field(NuiInput, { name: 'email', label: 'Email' }),
-        field(NuiInput, { name: 'bio', label: 'Bio' }),
+        field(NuiInput, (values) => values.name, { label: 'Name' }),
+        field(NuiInput, (values) => values.email, { label: 'Email' }),
+        field(NuiInput, (values) => values.bio, { label: 'Bio' }),
       ],
     });
 
@@ -95,8 +97,8 @@ describe('NuiSmartForm', () => {
     const plain = SmartFormDriver.mount({
       initialValues: blank,
       fields: [
-        field(NuiInput, { name: 'name', label: 'Name' }),
-        field(NuiInput, { name: 'bio', label: 'Bio' }),
+        field(NuiInput, (values) => values.name, { label: 'Name' }),
+        field(NuiInput, (values) => values.bio, { label: 'Bio' }),
       ],
     });
 
@@ -104,9 +106,9 @@ describe('NuiSmartForm', () => {
       initialValues: blank,
       layout: '"email name"',
       fields: [
-        field(NuiInput, { name: 'name', label: 'Name' }),
-        field(NuiInput, { name: 'email', label: 'Email' }),
-        field(NuiInput, { name: 'bio', label: 'Bio' }),
+        field(NuiInput, (values) => values.name, { label: 'Name' }),
+        field(NuiInput, (values) => values.email, { label: 'Email' }),
+        field(NuiInput, (values) => values.bio, { label: 'Bio' }),
       ],
     });
 
@@ -152,8 +154,8 @@ describe('NuiSmartForm', () => {
           description: 'Where we ship',
           layout: '"zip city"',
           fields: [
-            field(NuiInput, { name: 'address.city', label: 'City', area: 'city' }),
-            field(NuiInput, { name: 'address.zip', label: 'ZIP', area: 'zip' }),
+            field(NuiInput, (values) => values.address.city, { label: 'City', area: 'city' }),
+            field(NuiInput, (values) => values.address.zip, { label: 'ZIP', area: 'zip' }),
           ],
         }),
       ],
@@ -169,13 +171,12 @@ describe('NuiSmartForm', () => {
     const form = SmartFormDriver.mount({
       initialValues: blank,
       fields: [
-        array({
-          name: 'contacts',
+        array((values) => values.contacts, {
           label: 'Contacts',
           newRow: () => ({ email: '' }),
           fields: [
-            contact.field(NuiInput, { name: 'email', label: 'Email' }),
-            contact.field(NuiInput, { name: 'phone', label: 'Phone', when: isRussian }),
+            contact.field(NuiInput, (row) => row.email, { label: 'Email' }),
+            contact.field(NuiInput, (row) => row.phone, { label: 'Phone', when: isRussian }),
           ],
         }),
       ],
@@ -194,8 +195,7 @@ describe('NuiSmartForm', () => {
     const form = SmartFormDriver.mount({
       initialValues: { ...blank, name: 'A' },
       fields: [
-        field(NuiInput, {
-          name: 'name',
+        field(NuiInput, (values) => values.name, {
           label: 'Name',
           rules: [
             custom((value, { values }) => {
@@ -205,14 +205,12 @@ describe('NuiSmartForm', () => {
             }),
           ],
         }),
-        array({
-          name: 'contacts',
+        array((values) => values.contacts, {
           label: 'Contacts',
           newRow: () => ({ email: '' }),
           fields: [
-            contact.field(NuiInput, { name: 'email', label: 'Email' }),
-            contact.field(NuiInput, {
-              name: 'phone',
+            contact.field(NuiInput, (row) => row.email, { label: 'Email' }),
+            contact.field(NuiInput, (row) => row.phone, {
               label: 'Phone',
               rules: [
                 custom((value, { values }) => {
@@ -238,7 +236,7 @@ describe('NuiSmartForm', () => {
     const form = SmartFormDriver.mount({
       initialValues: blank,
       inline: 'grow',
-      fields: [field(NuiInput, { name: 'name', label: 'Name' })],
+      fields: [field(NuiInput, (values) => values.name, { label: 'Name' })],
     });
 
     expect([form.hasModifier('inline'), form.hasModifier('grow')]).toEqual([true, true]);
@@ -247,7 +245,7 @@ describe('NuiSmartForm', () => {
   it('hands pending and dirty to a custom actions slot', async () => {
     const form = SmartFormDriver.mount({
       initialValues: blank,
-      fields: [field(NuiInput, { name: 'name', label: 'Name' })],
+      fields: [field(NuiInput, (values) => values.name, { label: 'Name' })],
       slots: { actions: actionState },
     });
 

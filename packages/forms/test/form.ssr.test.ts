@@ -13,44 +13,76 @@ import {
   useFieldArray,
   useForm,
   type FieldArrayRow,
+  type FieldSelector,
+  type FormContext,
 } from '../src';
 
 const noop = (): void => undefined;
 
-const input = (path: string) =>
+interface ProfileValues {
+  email: string;
+  address: { city: string };
+}
+
+interface Contact {
+  name: string;
+}
+
+interface Team {
+  contacts: Contact[];
+}
+
+interface Binding<R> {
+  readonly name: string;
+  readonly modelValue: R;
+  readonly 'onUpdate:modelValue': (value: R) => void;
+}
+
+const input = (form: FormContext<ProfileValues>, select: FieldSelector<ProfileValues, string>) =>
   defineComponent({
     setup: () => {
-      const field = useField<string>(path);
+      const field = useField(select, { form });
       return () => h('input', { name: field.path.value, value: field.value.value });
     },
   });
 
 const Profile = defineComponent({
   setup: () => {
-    useForm({
+    const form = useForm<ProfileValues>({
       initialValues: { email: 'ann@example.com', address: { city: 'Paris' } },
       onSubmit: noop,
     });
 
-    return () => h('form', [h(input('email')), h(input('address.city'))]);
+    const Email = input(form, (values) => values.email);
+    const City = input(form, (values) => values.address.city);
+
+    return () => h('form', [h(Email), h(City)]);
   },
 });
+
+const contactList = (form: FormContext<Team>) =>
+  defineComponent({
+    setup: () => {
+      const list = useFieldArray((values: Team) => values.contacts, { form });
+
+      return () =>
+        h(
+          'ol',
+          list.fields.value.map((row) => h('li', { key: row.key }, row.value.name)),
+        );
+    },
+  });
 
 const Contacts = defineComponent({
   setup: () => {
-    useForm({ initialValues: { contacts: [{ name: 'Ann' }, { name: 'Bob' }] }, onSubmit: noop });
-    return () => h(ContactList);
-  },
-});
+    const form = useForm<Team>({
+      initialValues: { contacts: [{ name: 'Ann' }, { name: 'Bob' }] },
+      onSubmit: noop,
+    });
 
-const ContactList = defineComponent({
-  setup: () => {
-    const list = useFieldArray<{ name: string }>('contacts');
-    return () =>
-      h(
-        'ol',
-        list.fields.value.map((row) => h('li', { key: row.key }, row.value.name)),
-      );
+    const List = contactList(form);
+
+    return () => h(List);
   },
 });
 
@@ -59,38 +91,49 @@ const Signup = defineComponent({
     const form = useForm({ initialValues: { email: 'ann@example.com' }, onSubmit: noop });
 
     return () =>
-      h(NuiForm, { form }, () =>
+      h(NuiForm<{ email: string }>, { form }, () =>
         h(
-          NuiFormField,
-          { name: 'email', label: 'Email' },
-          { default: (scope: { field: object }) => h(NuiInput, { ...scope.field }) },
+          NuiFormField<{ email: string }, string>,
+          { form, name: (values) => values.email, label: 'Email' },
+          { default: ({ field }: { field: Binding<string> }) => h(NuiInput, field) },
         ),
       );
   },
 });
 
-const newContact = () => ({ name: '' });
+const newContact = (): Contact => ({ name: '' });
 
-const contactField = ({ row }: { readonly row: FieldArrayRow<{ name: string }> }) =>
-  h(
-    NuiFormField,
-    { name: `${row.path}.name`, label: 'Name' },
-    { default: (scope: { field: object }) => h(NuiInput, { ...scope.field }) },
-  );
+const contactField =
+  (form: FormContext<Team>) =>
+  ({ row }: { readonly row: FieldArrayRow<Contact> }) =>
+    h(
+      NuiFormField<Team, string | undefined>,
+      { form, name: (values) => values.contacts[row.index]?.name, label: 'Name' },
+      {
+        default: ({ field }: { field: Binding<string | undefined> }) =>
+          h(NuiInput, { ...field, modelValue: field.modelValue ?? '' }),
+      },
+    );
 
-const Team = defineComponent({
+const TeamForm = defineComponent({
   setup: () => {
-    const form = useForm({
+    const form = useForm<Team>({
       initialValues: { contacts: [{ name: 'Ann' }, { name: 'Bob' }] },
       onSubmit: noop,
     });
 
     return () =>
-      h(NuiForm, { form }, () =>
+      h(NuiForm<Team>, { form }, () =>
         h(
-          NuiFieldArray<{ name: string }>,
-          { name: 'contacts', label: 'Contacts', newRow: newContact, reorderable: true },
-          { default: contactField },
+          NuiFieldArray<Team, Contact>,
+          {
+            form,
+            name: (values) => values.contacts,
+            label: 'Contacts',
+            newRow: newContact,
+            reorderable: true,
+          },
+          { default: contactField(form) },
         ),
       );
   },
@@ -108,9 +151,9 @@ const signup = formConfig<Signup>();
 const isCompany = (values: Signup): boolean => values.kind === 'company';
 
 const SIGNUP_FIELDS = [
-  signup.field(NuiInput, { name: 'name', label: 'Name' }),
-  signup.field(NuiInput, { name: 'email', label: 'Email' }),
-  signup.field(NuiInput, { name: 'company', label: 'Company', when: isCompany }),
+  signup.field(NuiInput, (values) => values.name, { label: 'Name' }),
+  signup.field(NuiInput, (values) => values.email, { label: 'Email' }),
+  signup.field(NuiInput, (values) => values.company, { label: 'Company', when: isCompany }),
 ];
 
 const Smart = defineComponent({
@@ -130,11 +173,15 @@ const Smart = defineComponent({
 });
 
 const WIZARD_STEPS = [
-  { value: 'who', label: 'Who', fields: [signup.field(NuiInput, { name: 'name', label: 'Name' })] },
+  {
+    value: 'who',
+    label: 'Who',
+    fields: [signup.field(NuiInput, (values) => values.name, { label: 'Name' })],
+  },
   {
     value: 'reach',
     label: 'Reach',
-    fields: [signup.field(NuiInput, { name: 'email', label: 'Email' })],
+    fields: [signup.field(NuiInput, (values) => values.email, { label: 'Email' })],
   },
 ];
 
@@ -188,9 +235,9 @@ describe('forms on the server', () => {
   });
 
   it('renders field array rows with their controls the same way twice', async () => {
-    const first = await renderToString(createSSRApp(Team));
+    const first = await renderToString(createSSRApp(TeamForm));
 
-    expect(first).toBe(await renderToString(createSSRApp(Team)));
+    expect(first).toBe(await renderToString(createSSRApp(TeamForm)));
     expect(first).toContain('value="Ann"');
     expect(first).toContain('value="Bob"');
     expect(first).toContain('aria-label="Remove row 2"');

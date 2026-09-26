@@ -1,18 +1,19 @@
 import type { ValidateOn } from '../../core/types';
-import type { FormContext } from '../../form/form-context';
+import type { FormContext, FormHandle } from '../../form/form-context';
+import type { FieldSelector } from '../../paths/selector';
 import type { AnyFieldRule } from '../../rules/async-rule';
 
-export interface NuiFieldArrayProps<R> {
-  name: string;
-  form?: FormContext | undefined;
+export interface NuiFieldArrayProps<T extends object, Row> {
+  form: FormContext<T>;
+  name: FieldSelector<T, readonly Row[] | undefined>;
   label?: string | undefined;
   description?: string | undefined;
   min?: number | undefined;
   max?: number | undefined;
-  newRow?: (() => R) | undefined;
+  newRow?: (() => Row) | undefined;
   reorderable?: boolean | undefined;
   disabled?: boolean | undefined;
-  rules?: readonly AnyFieldRule<readonly R[]>[] | undefined;
+  rules?: readonly AnyFieldRule<readonly Row[], T>[] | undefined;
   validateOn?: ValidateOn | undefined;
   addLabel?: string | undefined;
   emptyLabel?: string | undefined;
@@ -23,7 +24,7 @@ export interface NuiFieldArrayProps<R> {
 export interface NuiFieldArrayRowProps {
   id: string;
   path: string;
-  form: FormContext;
+  form: FormHandle;
   dragging?: boolean | undefined;
   reorderable?: boolean | undefined;
   removable?: boolean | undefined;

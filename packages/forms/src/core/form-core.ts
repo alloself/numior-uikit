@@ -1,6 +1,6 @@
 import { useMessages } from '@numior/primitives';
 import { shallowRef, type ComputedRef, type ShallowRef } from 'vue';
-import type { FormEngine, FormEngineFactory } from '../engine/engine';
+import type { FormEngine, FormEngineFactory } from '../engine/engine.types';
 import { createFormEngine } from '../engine/form-engine';
 import { formRulesMessages, type NuiFormRulesMessages } from '../rules/form-rules.messages';
 import type { StandardSchema } from '../schema/standard';
@@ -39,7 +39,7 @@ export interface FormCoreOptions<V extends object, O> {
 
 export interface FormCore<V extends object, O> {
   readonly engine: FormEngine<V>;
-  readonly registry: Registry;
+  readonly registry: Registry<V>;
   readonly tracker: Tracker;
   readonly schema: StandardSchema<unknown, O> | undefined;
   readonly rules: FormRules<V>;

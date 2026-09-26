@@ -1,13 +1,11 @@
-import type { FormPath, FormPathValue, ValidateOn } from '../../core/types';
+import type { ValidateOn } from '../../core/types';
 import type { FormContext } from '../../form/form-context';
+import type { FieldSelector } from '../../paths/selector';
 import type { AnyFieldRule } from '../../rules/async-rule';
 
-export type NuiFormFieldValue<T extends object, P extends string> =
-  string extends FormPath<T> ? never : FormPathValue<T, P>;
-
-export interface NuiFormFieldProps<T extends object, P extends FormPath<T>> {
-  name: P;
-  form?: FormContext<T> | undefined;
+export interface NuiFormFieldProps<T extends object, R> {
+  form: FormContext<T>;
+  name: FieldSelector<T, R>;
   id?: string | undefined;
   label?: string | undefined;
   description?: string | undefined;
@@ -15,7 +13,7 @@ export interface NuiFormFieldProps<T extends object, P extends FormPath<T>> {
   disabled?: boolean | undefined;
   group?: boolean | undefined;
   keepValue?: boolean | undefined;
-  rules?: readonly AnyFieldRule<FormPathValue<T, P>>[] | undefined;
+  rules?: readonly AnyFieldRule<R, T>[] | undefined;
   validateOn?: ValidateOn | undefined;
   debounce?: number | undefined;
 }

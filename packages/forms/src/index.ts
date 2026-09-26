@@ -10,6 +10,7 @@ export { default as NuiSmartForm } from './components/smart-form/NuiSmartForm.vu
 export { formConfig } from './components/smart-form/config';
 export type {
   ControlProps,
+  ControlValue,
   SmartArrayConfig,
   SmartFieldConfig,
 } from './components/smart-form/config';
@@ -17,7 +18,6 @@ export type {
   NuiSmartFormActionsScope,
   NuiSmartFormAfterScope,
   NuiSmartFormArray,
-  NuiSmartFormBinding,
   NuiSmartFormCondition,
   NuiSmartFormEntry,
   NuiSmartFormField,
@@ -32,12 +32,11 @@ export type { NuiSmartFormMessages } from './components/smart-form/smart-form.me
 export { NuiFormError } from './core/form-error';
 export type {
   EngineArray,
-  EngineField,
-  EngineRow,
+  EngineKey,
   EntryState,
   FormEngine,
   FormEngineFactory,
-} from './engine/engine';
+} from './engine/engine.types';
 export type { FormErrorMessages } from './core/form-error';
 export type { EntryKind } from './core/registry';
 export type { FormRules } from './core/rules';
@@ -72,11 +71,15 @@ export { FORM_KEY, provideForm, useFormContext } from './form/form-context';
 export type {
   FieldRegistration,
   FormContext,
+  FormHandle,
+  FormResetOptions,
   RegisterOptions,
   UseFormOptions,
 } from './form/form-context';
 export { useForm } from './form/use-form';
 export type { NuiFormsMessages } from './messages';
+export { byPath } from './paths/selector';
+export type { FieldSelector } from './paths/selector';
 export { customAsync } from './rules/async-rule';
 export type { AnyFieldRule, AsyncFieldRule } from './rules/async-rule';
 export type { NuiFormRulesMessages } from './rules/form-rules.messages';

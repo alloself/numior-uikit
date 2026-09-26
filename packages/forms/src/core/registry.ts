@@ -1,11 +1,11 @@
 import { shallowRef, type ShallowRef } from 'vue';
-import type { EntryState } from '../engine/engine';
+import type { EntryState } from '../engine/engine.types';
 import { isUnder, patternOf } from '../paths/paths';
 import type { AsyncRuleContext, FieldFlush, FieldRuleContext, ValidateOn } from './types';
 
 export type EntryKind = 'field' | 'array' | 'group';
 
-export interface Entry {
+export interface Entry<V extends object> {
   readonly id: number;
   readonly kind: EntryKind;
   readonly path: () => string;
@@ -16,8 +16,8 @@ export interface Entry {
   readonly focus: (() => void) | undefined;
   readonly flush: FieldFlush | undefined;
   readonly value: () => unknown;
-  readonly check: (context: FieldRuleContext) => string | undefined;
-  readonly checkAsync: (context: AsyncRuleContext) => Promise<string | undefined>;
+  readonly check: (context: FieldRuleContext<V>) => string | undefined;
+  readonly checkAsync: (context: AsyncRuleContext<V>) => Promise<string | undefined>;
   readonly hasAsync: () => boolean;
   readonly debounce: () => number;
   readonly validateOn: () => ValidateOn;
@@ -26,20 +26,22 @@ export interface Entry {
   fieldEpoch: number;
 }
 
-export interface Registry {
-  readonly entries: ShallowRef<readonly Entry[]>;
+export type AnyEntry = Entry<never>;
+
+export interface Registry<V extends object> {
+  readonly entries: ShallowRef<readonly Entry<V>[]>;
   readonly known: ReadonlySet<string>;
-  add(entry: Entry): void;
-  remove(entry: Entry): void;
-  active(): Entry[];
+  add(entry: Entry<V>): void;
+  remove(entry: Entry<V>): void;
+  active(): Entry<V>[];
   nextId(): number;
 }
 
 const insideAny = (path: string, containers: readonly string[]): boolean =>
   containers.some((container) => path !== container && isUnder(path, container));
 
-export const createRegistry = (): Registry => {
-  const entries = shallowRef<readonly Entry[]>([]);
+export const createRegistry = <V extends object>(): Registry<V> => {
+  const entries = shallowRef<readonly Entry<V>[]>([]);
   const known = new Set<string>();
   let counter = 0;
 

@@ -22,7 +22,7 @@ describe.each([
 
     initial.tags.push('b');
     expect(harness.engine.values).toEqual({ name: 'Ann', tags: ['a'] });
-    expect(harness.field('name').value.value).toBe('Ann');
+    expect(harness.valueAt('name')).toBe('Ann');
   });
 
   it('writes a copy of a value and never touches the field state while doing so', async () => {
@@ -108,15 +108,14 @@ describe.each([
 
     row.setErrors(marked);
     await harness.move('rows.1.name', 'rows.0.name');
-    expect(row.value.value).toBe('a');
     expect(row.errors.value).toEqual(marked);
   });
 
   it('keeps row keys through inserts, moves, swaps and removals and copies new rows', async () => {
     const harness = EngineHarness.mount(factory, { rows: ['a', 'b', 'c'] }, [], ['rows']);
     const list = harness.array('rows');
-    const values = () => list.rows.value.map((row) => row.value);
-    const keys = () => list.rows.value.map((row) => row.key);
+    const values = () => harness.valueAt('rows');
+    const keys = () => list.keys.value;
     const [a, b, c] = keys();
     const added = { name: 'x' };
 

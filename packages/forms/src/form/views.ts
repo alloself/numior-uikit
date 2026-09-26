@@ -1,7 +1,7 @@
 import { computed, type ComputedRef } from 'vue';
 import { isPathDirty } from '../core/dirty';
 import type { FormCore } from '../core/form-core';
-import type { Entry } from '../core/registry';
+import type { AnyEntry } from '../core/registry';
 import type { FormMessage, FormMeta } from '../core/types';
 import { isUnder, normalizePath } from '../paths/paths';
 import { isEqualValue } from '../values/equal';
@@ -20,12 +20,12 @@ export interface FormViews {
   focusField(path: string): boolean;
 }
 
-const connected = (entry: Entry): HTMLElement | undefined => {
+const connected = (entry: AnyEntry): HTMLElement | undefined => {
   const element = entry.element();
   return element?.isConnected ? element : undefined;
 };
 
-const documentOrder = (left: Entry, right: Entry): number => {
+const documentOrder = (left: AnyEntry, right: AnyEntry): number => {
   const first = connected(left);
   const second = connected(right);
 
@@ -41,7 +41,7 @@ const documentOrder = (left: Entry, right: Entry): number => {
   return left.id - right.id;
 };
 
-const focusEntry = (entry: Entry): boolean => {
+const focusEntry = (entry: AnyEntry): boolean => {
   if (entry.focus) {
     entry.focus();
     return true;
@@ -71,7 +71,10 @@ export const createViews = <V extends object, O>(core: FormCore<V, O>): FormView
     ...core.serverFormErrors.value,
   ]);
 
-  const dirty = computed(() => !isEqualValue(core.engine.values, core.initial.value));
+  const dirty = computed(() => {
+    void core.engine.version.value;
+    return !isEqualValue(core.engine.raw, core.initial.value);
+  });
 
   const invalidPaths = (prefix = ''): string[] => {
     const scope = normalizePath(prefix);

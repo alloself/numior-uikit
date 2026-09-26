@@ -2,10 +2,11 @@ import { mount } from '@vue/test-utils';
 import { defineComponent, h, nextTick, shallowRef, type Ref } from 'vue';
 import type {
   EngineArray,
-  EngineField,
+  EntryState,
   FormEngine,
   FormEngineFactory,
-} from '../../src/engine/engine';
+} from '../../src/engine/engine.types';
+import { getAt } from '../../src/values/access';
 
 interface Slot {
   readonly path: Ref<string>;
@@ -19,8 +20,8 @@ export class EngineHarness<V extends object> {
     names: readonly string[],
     arrays: readonly string[] = [],
   ): EngineHarness<V> {
-    const fields = new Map<string, EngineField<unknown>>();
-    const lists = new Map<string, EngineArray<unknown>>();
+    const fields = new Map<string, EntryState>();
+    const lists = new Map<string, EngineArray>();
 
     const slots = new Map<string, Slot>(
       names.map((name) => [name, { path: shallowRef(name), visible: shallowRef(true) }]),
@@ -35,7 +36,7 @@ export class EngineHarness<V extends object> {
         for (const path of arrays) {
           lists.set(
             path,
-            engine.array<unknown>(() => path),
+            engine.array(() => path),
           );
         }
 
@@ -44,7 +45,7 @@ export class EngineHarness<V extends object> {
             setup: () => {
               fields.set(
                 name,
-                engine.field<unknown>(
+                engine.field(
                   () => slot.path.value,
                   () => undefined,
                 ),
@@ -74,12 +75,16 @@ export class EngineHarness<V extends object> {
 
   private constructor(
     readonly engine: FormEngine<V>,
-    private readonly fields: Map<string, EngineField<unknown>>,
-    private readonly lists: Map<string, EngineArray<unknown>>,
+    private readonly fields: Map<string, EntryState>,
+    private readonly lists: Map<string, EngineArray>,
     private readonly slots: Map<string, Slot>,
   ) {}
 
-  field(name: string): EngineField<unknown> {
+  valueAt(path: string): unknown {
+    return getAt(this.engine.values, path);
+  }
+
+  field(name: string): EntryState {
     const field = this.fields.get(name);
 
     if (!field) {
@@ -88,7 +93,7 @@ export class EngineHarness<V extends object> {
     return field;
   }
 
-  array(path: string): EngineArray<unknown> {
+  array(path: string): EngineArray {
     const list = this.lists.get(path);
 
     if (!list) {

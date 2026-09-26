@@ -3,21 +3,18 @@ import type { Component } from 'vue';
 import type { FormAfterSlotPath, FormMessage, FormSlotPath, ValidateOn } from '../../core/types';
 import type { FieldArrayRow } from '../../field/use-field-array';
 import type { FormContext } from '../../form/form-context';
-import type { LooseFieldRule } from '../../rules/async-rule';
-
-type Bivariant<Args extends unknown[], R> = {
-  bivarianceHack(...args: Args): R;
-}['bivarianceHack'];
+import type { FieldSelector } from '../../paths/selector';
+import type { AnyFieldRule } from '../../rules/async-rule';
 
 export type SmartRow = FieldArrayRow<unknown>;
 
-export type NuiSmartFormCondition<S> = Bivariant<[values: S, row: SmartRow | undefined], boolean>;
+export type NuiSmartFormCondition<S> = (values: S, row: SmartRow | undefined) => boolean;
 
-export type NuiSmartFormPropsFactory<S, P = object> = Bivariant<[values: S], P>;
+export type NuiSmartFormPropsFactory<S, P = object> = (values: S) => P;
 
-export interface NuiSmartFormField<S = unknown> {
+export interface NuiSmartFormField<S> {
   readonly kind: 'field';
-  readonly name: string;
+  readonly name: FieldSelector<S, unknown>;
   readonly component: Component;
   readonly props?: object | NuiSmartFormPropsFactory<S> | undefined;
   readonly label?: string | undefined;
@@ -27,12 +24,12 @@ export interface NuiSmartFormField<S = unknown> {
   readonly group?: boolean | undefined;
   readonly area?: string | undefined;
   readonly when?: NuiSmartFormCondition<S> | undefined;
-  readonly rules?: readonly LooseFieldRule<S>[] | undefined;
+  readonly rules?: readonly AnyFieldRule<unknown, S>[] | undefined;
   readonly validateOn?: ValidateOn | undefined;
   readonly keepValue?: boolean | undefined;
 }
 
-export interface NuiSmartFormSection<S = unknown> {
+export interface NuiSmartFormSection<S> {
   readonly kind: 'section';
   readonly name?: string | undefined;
   readonly title: string;
@@ -43,9 +40,9 @@ export interface NuiSmartFormSection<S = unknown> {
   readonly fields: readonly NuiSmartFormEntry<S>[];
 }
 
-export interface NuiSmartFormArray<S = unknown> {
+export interface NuiSmartFormArray<S> {
   readonly kind: 'array';
-  readonly name: string;
+  readonly name: FieldSelector<S, readonly unknown[] | undefined>;
   readonly label?: string | undefined;
   readonly description?: string | undefined;
   readonly area?: string | undefined;
@@ -55,18 +52,18 @@ export interface NuiSmartFormArray<S = unknown> {
   readonly max?: number | undefined;
   readonly reorderable?: boolean | undefined;
   readonly newRow: () => unknown;
-  readonly fields: readonly NuiSmartFormEntry[];
+  readonly rows: (row: () => SmartRow | undefined) => readonly NuiSmartFormEntry<S>[];
   readonly addLabel?: string | undefined;
   readonly removeLabel?: ((index: number) => string) | undefined;
   readonly moveLabel?: ((index: number) => string) | undefined;
 }
 
-export type NuiSmartFormEntry<S = unknown> =
+export type NuiSmartFormEntry<S> =
   | NuiSmartFormField<S>
   | NuiSmartFormSection<S>
   | NuiSmartFormArray<S>;
 
-export interface NuiSmartFormStep<S = unknown> {
+export interface NuiSmartFormStep<S> {
   readonly value: string;
   readonly label: string;
   readonly description?: string | undefined;
@@ -74,16 +71,7 @@ export interface NuiSmartFormStep<S = unknown> {
   readonly fields: readonly NuiSmartFormEntry<S>[];
 }
 
-export interface NuiSmartFormBinding {
-  readonly name: string;
-  readonly modelValue: never;
-  readonly 'onUpdate:modelValue': (value: unknown) => void;
-}
-
 export interface NuiSmartFormFieldScope {
-  readonly field: NuiSmartFormBinding;
-  readonly value: unknown;
-  readonly setValue: (value: unknown) => void;
   readonly error: string | undefined;
   readonly invalid: boolean;
   readonly touched: boolean;
@@ -127,30 +115,27 @@ export interface NuiSmartFormProps<T extends object> {
   backLabel?: string | undefined;
 }
 
-export interface NuiSmartFormStepsProps {
-  steps: readonly NuiSmartFormStep[];
+export interface NuiSmartFormStepsProps<T extends object> {
+  form: FormContext<T>;
+  steps: readonly NuiSmartFormStep<T>[];
   current: number;
-  scope: SmartScope;
   statuses: readonly (NuiStepperStatus | undefined)[];
   live: string;
 }
 
-export interface SmartScope {
-  readonly values: unknown;
-  readonly prefix: string;
-  readonly slotPrefix: string;
-  readonly row: SmartRow | undefined;
-}
-
-export interface NuiSmartFormEntriesProps {
-  entries: readonly NuiSmartFormEntry[];
-  scope: SmartScope;
+export interface NuiSmartFormEntriesProps<T extends object> {
+  form: FormContext<T>;
+  entries?: readonly NuiSmartFormEntry<T>[] | undefined;
+  array?: NuiSmartFormArray<T> | undefined;
   layout?: string | undefined;
-  declares?: boolean | undefined;
+  prefix?: string | undefined;
+  row?: SmartRow | undefined;
 }
 
-export interface NuiSmartFormCellProps {
-  entry: NuiSmartFormField;
-  scope: SmartScope;
+export interface NuiSmartFormCellProps<T extends object> {
+  form: FormContext<T>;
+  entry: NuiSmartFormField<T>;
+  path: string;
   area: string;
+  row?: SmartRow | undefined;
 }

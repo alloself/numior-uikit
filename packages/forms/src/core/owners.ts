@@ -1,10 +1,10 @@
 import { isUnder } from '../paths/paths';
 import type { FormIssue } from '../schema/standard';
-import type { Entry } from './registry';
+import type { AnyEntry } from './registry';
 import type { FormMessage } from './types';
 
 export type IssueTarget =
-  | { readonly kind: 'owner'; readonly entry: Entry }
+  | { readonly kind: 'owner'; readonly entry: AnyEntry }
   | { readonly kind: 'form'; readonly path: string | undefined }
   | { readonly kind: 'ignored'; readonly path: string };
 
@@ -14,16 +14,16 @@ export interface Classified {
   readonly ignored: readonly string[];
 }
 
-const deeper = (best: Entry | undefined, entry: Entry): Entry =>
+const deeper = (best: AnyEntry | undefined, entry: AnyEntry): AnyEntry =>
   best === undefined || entry.path().length >= best.path().length ? entry : best;
 
-const ownerOf = (path: string, owners: readonly Entry[]): Entry | undefined =>
-  owners.reduce<Entry | undefined>(
+const ownerOf = (path: string, owners: readonly AnyEntry[]): AnyEntry | undefined =>
+  owners.reduce<AnyEntry | undefined>(
     (best, entry) => (isUnder(path, entry.path()) ? deeper(best, entry) : best),
     undefined,
   );
 
-export const targetOf = (path: string, owners: readonly Entry[]): IssueTarget => {
+export const targetOf = (path: string, owners: readonly AnyEntry[]): IssueTarget => {
   if (path === '') {
     return { kind: 'form', path: undefined };
   }
@@ -57,7 +57,7 @@ const withFormMessage = (
 
 export const classifyIssues = (
   issues: readonly FormIssue[],
-  owners: readonly Entry[],
+  owners: readonly AnyEntry[],
 ): Classified => {
   const byOwner = new Map<string, string[]>();
   const ignored: string[] = [];

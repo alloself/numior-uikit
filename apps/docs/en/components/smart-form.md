@@ -2,8 +2,8 @@
 
 `NuiSmartForm` builds a form from a config: fields with any of the kit's controls, sections
 with their own layout, conditional fields, repeated groups and steps. `formConfig<Values>()`
-assembles the config: `name` is checked against the paths of the values and `props` against
-the props of the control itself. Underneath sit the same `useForm`, `NuiForm`, `NuiFormField`
+assembles the config: a field reads its value with a selector, `props` are checked against the
+props of the control itself, and the value type against what the control accepts and emits. Underneath sit the same `useForm`, `NuiForm`, `NuiFormField`
 and `NuiFieldArray` as in [hand-made forms](/en/components/form).
 
 <script setup>
@@ -21,19 +21,18 @@ const profileFields = [
     title: 'Profile',
     layout: '"kind kind" "name email" "company vat"',
     fields: [
-      field(NuiRadioGroup, { name: 'kind', label: 'Account type', group: true }),
-      field(NuiInput, { name: 'name', label: 'Name', required: true, rules: [required()] }),
-      field(NuiInput, { name: 'email', label: 'Email', required: true, rules: [required(), email()], props: { type: 'email' } }),
-      field(NuiInput, { name: 'company', label: 'Company', required: true, when: isCompany, rules: [required()] }),
-      field(NuiInput, { name: 'vat', label: 'VAT number', when: isCompany }),
+      field(NuiRadioGroup, (v) => v.kind, { label: 'Account type', group: true, props: { orientation: 'horizontal' } }),
+      field(NuiInput, (v) => v.name, { label: 'Name', required: true, rules: [required()] }),
+      field(NuiInput, (v) => v.email, { label: 'Email', required: true, rules: [required(), email()], props: { type: 'email' } }),
+      field(NuiInput, (v) => v.company, { label: 'Company', required: true, when: isCompany, rules: [required()] }),
+      field(NuiInput, (v) => v.vat, { label: 'VAT number', when: isCompany }),
     ],
   }),
   section({
     title: 'Contacts',
     description: 'One to three',
     fields: [
-      array({
-        name: 'contacts',
+      array((v) => v.contacts, {
         min: 1,
         max: 3,
         reorderable: true,
@@ -41,8 +40,8 @@ const profileFields = [
         addLabel: 'Add contact',
         newRow: () => ({ name: '', phone: '' }),
         fields: [
-          row.field(NuiInput, { name: 'name', label: 'Name', required: true, rules: [required()] }),
-          row.field(NuiInput, { name: 'phone', label: 'Phone', props: { type: 'tel' } }),
+          row.field(NuiInput, (r) => r.name, { label: 'Name', required: true, rules: [required()] }),
+          row.field(NuiInput, (r) => r.phone, { label: 'Phone', props: { type: 'tel' } }),
         ],
       }),
     ],
@@ -66,8 +65,8 @@ const wizardSteps = [
     label: 'Account',
     description: 'Email and password',
     fields: [
-      field(NuiInput, { name: 'email', label: 'Email', required: true, rules: [required(), email()], props: { type: 'email' } }),
-      field(NuiInput, { name: 'password', label: 'Password', required: true, rules: [required(), min(8)], props: { type: 'password' } }),
+      field(NuiInput, (v) => v.email, { label: 'Email', required: true, rules: [required(), email()], props: { type: 'email' } }),
+      field(NuiInput, (v) => v.password, { label: 'Password', required: true, rules: [required(), min(8)], props: { type: 'password' } }),
     ],
   },
   {
@@ -75,14 +74,14 @@ const wizardSteps = [
     label: 'Team',
     layout: '"team size"',
     fields: [
-      field(NuiInput, { name: 'team', label: 'Name', required: true, rules: [required()] }),
-      field(NuiNumberField, { name: 'size', label: 'People', props: { min: 1 } }),
+      field(NuiInput, (v) => v.team, { label: 'Name', required: true, rules: [required()] }),
+      field(NuiNumberField, (v) => v.size, { label: 'People', props: { min: 1 } }),
     ],
   },
   {
     value: 'confirm',
     label: 'Confirmation',
-    fields: [field(NuiCheckbox, { name: 'rules', rules: [required({ message: 'Accept the rules to go on' })] })],
+    fields: [field(NuiCheckbox, (v) => v.rules, { rules: [required({ message: 'Accept the rules to go on' })] })],
   },
 ]
 
@@ -102,11 +101,9 @@ const wizard = useForm({
 
 <div class="vp-raw nui-demo nui-demo--stack" data-nui-theme="light">
   <NuiSmartForm :form="profile" :fields="profileFields" submit-label="Save">
-    <template #kind="{ field }">
-      <NuiRadioGroup v-bind="field" orientation="horizontal">
-        <NuiRadio value="person">Person</NuiRadio>
-        <NuiRadio value="company">Company</NuiRadio>
-      </NuiRadioGroup>
+    <template #kind>
+      <NuiRadio value="person">Person</NuiRadio>
+      <NuiRadio value="company">Company</NuiRadio>
     </template>
   </NuiSmartForm>
   <pre v-if="saved" style="margin: 0">{{ JSON.stringify(saved, null, 2) }}</pre>
@@ -141,31 +138,33 @@ const fields = [
     title: 'Profile',
     layout: '"kind kind" "name email" "company vat"',
     fields: [
-      field(NuiRadioGroup, { name: 'kind', label: 'Account type', group: true }),
-      field(NuiInput, { name: 'name', label: 'Name', required: true, rules: [required()] }),
-      field(NuiInput, {
-        name: 'email',
+      field(NuiRadioGroup, (v) => v.kind, {
+        label: 'Account type',
+        group: true,
+        props: { orientation: 'horizontal' },
+      }),
+      field(NuiInput, (v) => v.name, { label: 'Name', required: true, rules: [required()] }),
+      field(NuiInput, (v) => v.email, {
         label: 'Email',
         rules: [required(), email()],
         props: { type: 'email' },
       }),
-      field(NuiInput, { name: 'company', label: 'Company', when: isCompany, rules: [required()] }),
-      field(NuiInput, { name: 'vat', label: 'VAT number', when: isCompany }),
+      field(NuiInput, (v) => v.company, { label: 'Company', when: isCompany, rules: [required()] }),
+      field(NuiInput, (v) => v.vat, { label: 'VAT number', when: isCompany }),
     ],
   }),
   section({
     title: 'Contacts',
     fields: [
-      array({
-        name: 'contacts',
+      array((v) => v.contacts, {
         min: 1,
         max: 3,
         reorderable: true,
         layout: '"name phone"',
         newRow: () => ({ name: '', phone: '' }),
         fields: [
-          row.field(NuiInput, { name: 'name', label: 'Name', rules: [required()] }),
-          row.field(NuiInput, { name: 'phone', label: 'Phone', props: { type: 'tel' } }),
+          row.field(NuiInput, (r) => r.name, { label: 'Name', rules: [required()] }),
+          row.field(NuiInput, (r) => r.phone, { label: 'Phone', props: { type: 'tel' } }),
         ],
       }),
     ],
@@ -180,11 +179,9 @@ const form = useForm<Profile>({
 
 <template>
   <NuiSmartForm :form="form" :fields="fields" submit-label="Save">
-    <template #kind="{ field }">
-      <NuiRadioGroup v-bind="field" orientation="horizontal">
-        <NuiRadio value="person">Person</NuiRadio>
-        <NuiRadio value="company">Company</NuiRadio>
-      </NuiRadioGroup>
+    <template #kind>
+      <NuiRadio value="person">Person</NuiRadio>
+      <NuiRadio value="company">Company</NuiRadio>
     </template>
   </NuiSmartForm>
 </template>
@@ -192,9 +189,13 @@ const form = useForm<Profile>({
 
 ## Config
 
-`field(Component, options)` describes a field: `name`, `label`, `description`, `required`,
-`disabled`, `group`, `rules`, `validateOn`, `keepValue` — as on `NuiFormField` — plus the
-control's `props`, `when` and `area`. `props` are typed from the component without the keys the
+`field(Component, (v) => v.email, options)` describes a field: the control, the value selector
+and optional `label`, `description`, `required`, `disabled`, `group`, `rules`, `validateOn`,
+`keepValue` — as on `NuiFormField` — plus the control's `props`, `when` and `area`. The selector
+is the second argument so that TypeScript infers the value type before the rules. The value type
+must fit the control: `field(NuiCheckbox, (v) => v.name)` for a string `name` fails the type
+check, and so does a control that emits a value wider than the field type in
+`update:modelValue`. `props` are typed from the component without the keys the
 form controls (`modelValue`, `id`, `name`, `invalid`, `required`, `disabled`) and with native
 attributes; instead of an object you can pass a function of the values —
 `props: (values) => ({ options: citiesOf(values.country) })`. `rules` are typed by the field
@@ -202,10 +203,10 @@ value: a `custom((value, { values }) => …)` rule written in the config gets `v
 type and `values` of the config's type, and a typo such as `value.lenght` fails the type check.
 
 `section({ title, description, layout, fields })` renders a `fieldset` with a legend, and a
-divider runs between neighbouring sections. `array({ name, label, description, min, max,
-reorderable, newRow, layout, fields })` renders a
+divider runs between neighbouring sections. `array((v) => v.contacts, { label, description, min,
+max, reorderable, newRow, layout, fields })` renders a
 [`NuiFieldArray`](/en/components/form#repeated-groups): `formConfig<Row>()` describes the row
-fields, and their paths are relative to the row.
+fields, and their selectors read the row — `row.field(NuiInput, (r) => r.phone)`.
 
 ## Conditions
 
@@ -219,7 +220,8 @@ the value change, and an appearing field moves through the motion tokens.
 ## Layout
 
 `layout` uses the `grid-template-areas` syntax: `'"name email" "about about"'`. Area names are
-field names (dots become hyphens) or the `area` from the config. The DOM follows the reading
+field paths relative to the form or the row (dots become hyphens) or the `area` from the
+config. The DOM follows the reading
 order of the layout, so Tab walks the fields left to right and top to bottom; rows whose
 fields are all hidden drop out, and a hidden field inside a row leaves an empty cell. A field
 without a place in the layout takes the first free cell after it, and a form without `layout`
@@ -232,14 +234,16 @@ below the fields.
 
 ## Slots
 
-A slot named after a field path replaces the control and gets what the `NuiFormField` slot
-gets: `field` for `v-bind`, `value`, `setValue`, `error`, `invalid`, `touched`, `pending`, and
-inside a group `row`. A `path:after` slot adds content to the cell under the field — a
+A slot named after a field path is the content of the control, that is its default slot: the
+radios of a group, the label of a checkbox. It gets `error`, `invalid`, `touched`, `pending`, and
+inside a group `row`. The slot gets no value or binding: the control from the config is already
+bound to the field, and a whole custom control goes to `field()` as a component, where its model
+type is checked the same way. A `path:after` slot adds content to the cell under the field — a
 character counter, a link, a hint. Row field paths drop the index (`contacts.phone`); a dotted
 name is written as a dynamic slot in a template: `<template #[PHONE_AFTER]>` with
 `const PHONE_AFTER = 'contacts.phone:after'`.
 
-Slot names come from the type of the values: a typo such as `#emial`, or reaching for `field`
+Slot names come from the type of the values: a typo such as `#emial`, or reaching for `pending`
 in an `:after` slot, fails the type check. The `actions` (`{ pending, dirty, submit, reset,
 step, first, last, back }`) and `form-errors` slots replace the buttons and the error block.
 
@@ -247,18 +251,14 @@ step, first, last, back }`) and `form-errors` slots replace the buttons and the 
 
 <div class="vp-raw nui-demo nui-demo--stack" data-nui-theme="light">
   <NuiSmartForm v-model:step="step" :form="wizard" :steps="wizardSteps" submit-label="Create team" style="max-inline-size: 36rem">
-    <template #rules="{ field }">
-      <NuiCheckbox v-bind="field">I accept the team rules</NuiCheckbox>
-    </template>
+    <template #rules>I accept the team rules</template>
   </NuiSmartForm>
   <p v-if="created">Team “{{ created }}” created.</p>
 </div>
 
 ```vue
 <NuiSmartForm v-model:step="step" :form="form" :steps="steps" submit-label="Create team">
-  <template #rules="{ field }">
-    <NuiCheckbox v-bind="field">I accept the team rules</NuiCheckbox>
-  </template>
+  <template #rules>I accept the team rules</template>
 </NuiSmartForm>
 ```
 

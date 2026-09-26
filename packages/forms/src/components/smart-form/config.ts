@@ -1,6 +1,8 @@
 import type { Component, InputHTMLAttributes } from 'vue';
-import type { FormPath, FormPathValue } from '../../core/types';
+import type { FieldSelector } from '../../paths/selector';
+import { adaptRule } from '../../rules/adapt-rule';
 import type { AnyFieldRule } from '../../rules/async-rule';
+import { liftEntry } from './lift';
 import type {
   NuiSmartFormArray,
   NuiSmartFormEntry,
@@ -27,41 +29,83 @@ type ControlKeys =
 export type ControlProps<C> = Omit<ComponentProps<C>, ControlKeys> &
   Omit<InputHTMLAttributes, ControlKeys | 'value'>;
 
-type ArrayPath<S> = {
-  [P in FormPath<S>]: FormPathValue<S, P> extends readonly unknown[] ? P : never;
-}[FormPath<S>];
+export type ControlValue<C> =
+  ComponentProps<C> extends { readonly modelValue: infer M }
+    ? M
+    : ComponentProps<C> extends { readonly modelValue?: infer M }
+      ? M | undefined
+      : unknown;
 
-type RowOf<S, P extends string> = FormPathValue<S, P> extends readonly (infer R)[] ? R : never;
+type ControlEmit<C> =
+  ComponentProps<C> extends {
+    readonly 'onUpdate:modelValue'?: (value: infer E) => unknown;
+  }
+    ? E
+    : unknown;
 
-export interface SmartFieldConfig<S, P extends string, C> extends Omit<
+type EmitsInto<C, R> =
+  unknown extends ControlEmit<C>
+    ? unknown
+    : [ControlEmit<C>] extends [R]
+      ? unknown
+      : { readonly updateModelValue: ControlEmit<C> };
+
+export interface SmartFieldConfig<S, R, C> extends Omit<
   NuiSmartFormField<S>,
   'kind' | 'component' | 'name' | 'props' | 'rules'
 > {
-  readonly name: P;
   readonly props?: ControlProps<C> | NuiSmartFormPropsFactory<S, ControlProps<C>> | undefined;
-  readonly rules?: readonly AnyFieldRule<FormPathValue<S, P>, S>[] | undefined;
+  readonly rules?: readonly AnyFieldRule<R, S>[] | undefined;
 }
 
-export interface SmartArrayConfig<S, P extends string> extends Omit<
+export interface SmartArrayConfig<S, Row> extends Omit<
   NuiSmartFormArray<S>,
-  'kind' | 'name' | 'newRow' | 'fields'
+  'kind' | 'name' | 'newRow' | 'rows'
 > {
-  readonly name: P;
-  readonly newRow: () => RowOf<S, P>;
-  readonly fields: readonly NuiSmartFormEntry<RowOf<S, P>>[];
+  readonly newRow: () => Row;
+  readonly fields: readonly NuiSmartFormEntry<Row>[];
 }
 
-export const formConfig = <S extends object>() => ({
-  field: <C extends Component, P extends FormPath<S>>(
-    component: C,
-    config: SmartFieldConfig<S, P, C>,
-  ): NuiSmartFormField<S> => ({ ...config, kind: 'field', component }),
+export const formConfig = <S>() => ({
+  field: <C extends Component, R extends ControlValue<C>>(
+    component: C & EmitsInto<C, R>,
+    name: FieldSelector<S, R>,
+    config: SmartFieldConfig<S, R, C> = {},
+  ): NuiSmartFormField<S> => {
+    const { rules, ...rest } = config;
+
+    return {
+      ...rest,
+      kind: 'field',
+      component,
+      name,
+      rules: rules?.map((rule) =>
+        adaptRule(rule, (_value: unknown, values: S) => [name(values), values] as const),
+      ),
+    };
+  },
   section: (config: Omit<NuiSmartFormSection<S>, 'kind'>): NuiSmartFormSection<S> => ({
     ...config,
     kind: 'section',
   }),
-  array: <P extends ArrayPath<S>>(config: SmartArrayConfig<S, P>): NuiSmartFormArray<S> => ({
-    ...config,
-    kind: 'array',
-  }),
+  array: <Row>(
+    name: FieldSelector<S, readonly Row[] | undefined>,
+    config: SmartArrayConfig<S, Row>,
+  ): NuiSmartFormArray<S> => {
+    const { fields, ...rest } = config;
+
+    return {
+      ...rest,
+      kind: 'array',
+      name,
+      rows: (row) => {
+        const rowOf = (values: S): Row | undefined => {
+          const current = row();
+          return current === undefined ? undefined : name(values)?.[current.index];
+        };
+
+        return fields.map((entry) => liftEntry(entry, rowOf, row));
+      },
+    };
+  },
 });

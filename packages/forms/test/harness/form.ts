@@ -11,6 +11,7 @@ import {
   type Component,
 } from 'vue';
 import {
+  byPath,
   useField,
   useForm,
   type AnyFieldRule,
@@ -63,14 +64,20 @@ interface Probes {
   readonly work: Map<string, Promise<void>>;
 }
 
-const probeFor = (spec: FieldSpec, view: View, { fields, work }: Probes) =>
+const probeFor = <V extends object>(
+  spec: FieldSpec,
+  view: View,
+  { fields, work }: Probes,
+  form: () => FormContext<V>,
+) =>
   defineComponent({
     setup: () => {
       const element = shallowRef<HTMLInputElement | null>(null);
       const { path, ...options } = spec;
 
-      const field = useField<unknown>(path, {
+      const field = useField(byPath(path), {
         ...options,
+        form: form(),
         element,
         active: () => !view.inactive.has(path),
         disabled: () => view.disabled.has(path),
@@ -117,11 +124,18 @@ export class FormHarness<V extends object> {
       disabled: new Set<string>(),
     });
 
+    const captured = shallowRef<FormContext<V> | null>(null);
+
+    const current = (): FormContext<V> => {
+      if (!captured.value) {
+        throw new Error('useForm did not run');
+      }
+      return captured.value;
+    };
+
     const components = inputs
       .map(specOf)
-      .map((spec) => [spec, probeFor(spec, view, probes)] as const);
-
-    const captured = shallowRef<FormContext<V> | null>(null);
+      .map((spec) => [spec, probeFor(spec, view, probes, current)] as const);
 
     const Host: Component = defineComponent({
       setup: () => {
@@ -149,10 +163,7 @@ export class FormHarness<V extends object> {
       global: { plugins: config === undefined ? [] : [createNuiConfig(config)] },
     });
 
-    if (!captured.value) {
-      throw new Error('useForm did not run');
-    }
-    return new FormHarness(captured.value, wrapper, probes, view, submissions);
+    return new FormHarness(current(), wrapper, probes, view, submissions);
   }
 
   private constructor(

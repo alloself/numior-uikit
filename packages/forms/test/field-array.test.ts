@@ -12,8 +12,6 @@ const mountContacts = (
 ): ArrayHarness =>
   ArrayHarness.mount({
     initialValues: { title: 'Team', contacts: named(...names) },
-    path: 'contacts',
-    field: 'name',
     ...options,
   });
 

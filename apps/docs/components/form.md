@@ -1,8 +1,8 @@
 # Формы
 
 `@numior/forms` собирает формы из контролов кита. `useForm` держит значения, ошибки и отправку,
-`NuiForm` рендерит нативный `<form>` с блоком ошибок и кнопкой, `NuiFormField` связывает путь
-формы с любым контролом через `v-bind="field"`, `NuiFieldArray` повторяет группу полей. У пакета
+`NuiForm` рендерит нативный `<form>` с блоком ошибок и кнопкой, `NuiFormField` связывает
+значение формы с контролом через `v-bind="field"`, `NuiFieldArray` повторяет группу полей. У пакета
 нет внешних зависимостей: значения держит собственный движок, а vee-validate подключается по
 желанию (см. «Движок»). Формы из конфигурации — на странице [умной формы](/components/smart-form).
 
@@ -36,12 +36,13 @@ const newGuest = () => ({ name: '' })
 
 <div class="vp-raw nui-demo nui-demo--stack" data-nui-theme="light">
   <NuiForm :form="signIn" submit-label="Войти" style="max-inline-size: 24rem">
-    <NuiFormField v-slot="{ field }" name="email" label="Почта" :rules="emailRules" required>
+    <NuiFormField v-slot="{ field }" :form="signIn" :name="(v) => v.email" label="Почта" :rules="emailRules" required>
       <NuiInput v-bind="field" type="email" autocomplete="email" />
     </NuiFormField>
     <NuiFormField
       v-slot="{ field }"
-      name="password"
+      :form="signIn"
+      :name="(v) => v.password"
       label="Пароль"
       description="Не короче 8 символов"
       :rules="passwordRules"
@@ -49,7 +50,7 @@ const newGuest = () => ({ name: '' })
     >
       <NuiInput v-bind="field" type="password" autocomplete="current-password" />
     </NuiFormField>
-    <NuiFormField v-slot="{ field }" name="remember">
+    <NuiFormField v-slot="{ field }" :form="signIn" :name="(v) => v.remember">
       <NuiCheckbox v-bind="field">Запомнить меня</NuiCheckbox>
     </NuiFormField>
   </NuiForm>
@@ -93,7 +94,7 @@ const passwordRules = [required(), min(8)];
     <NuiFormField
       v-slot="{ field }"
       :form="form"
-      name="email"
+      :name="(v) => v.email"
       label="Почта"
       :rules="emailRules"
       required
@@ -103,14 +104,14 @@ const passwordRules = [required(), min(8)];
     <NuiFormField
       v-slot="{ field }"
       :form="form"
-      name="password"
+      :name="(v) => v.password"
       label="Пароль"
       :rules="passwordRules"
       required
     >
       <NuiInput v-bind="field" type="password" autocomplete="current-password" />
     </NuiFormField>
-    <NuiFormField v-slot="{ field }" :form="form" name="remember">
+    <NuiFormField v-slot="{ field }" :form="form" :name="(v) => v.remember">
       <NuiCheckbox v-bind="field">Запомнить меня</NuiCheckbox>
     </NuiFormField>
   </NuiForm>
@@ -125,15 +126,25 @@ const passwordRules = [required(), min(8)];
 
 `NuiFormField` оборачивает [`NuiField`](/components/field): подпись, описание, ошибка,
 `aria-invalid`, `aria-describedby` и отметка обязательности идут через контекст поля, поэтому
-контрол внутри ничего не знает о форме. Слот получает `field` — привязку
-`{ name, modelValue, 'onUpdate:modelValue' }` для `v-bind` — и состояние: `value`,
-`setValue`, `error`, `invalid`, `touched`, `pending`. С `:form="form"` путь сверяется с
-путями значений, а значение типизировано; без него поле берёт ближайшую форму, которую
-открывают `useForm` и `NuiForm`, и привязка подходит любому контролу.
+контрол внутри ничего не знает о форме. Поле получает форму в `form` и селектор в `name` —
+функцию, которая читает значение: `:name="(v) => v.address.city"`. Тип значения TypeScript
+выводит из селектора, и по нему типизированы правила, `value`, `setValue` и привязка `field`
+(`{ name, modelValue, 'onUpdate:modelValue' }` для `v-bind`): контрол, который отдаёт значение
+другого типа, не пройдёт проверку типов. Ещё слот получает `error`, `invalid`, `touched` и
+`pending`.
 
-Пути пишутся через точку: `address.city`, `contacts.0.name`; скобочные пути сервера
-(`contacts[0].name`) приводятся к ним сами. Поле считается тронутым, когда фокус уходит из всего
-поля, а не из контрола: список select или сегменты времени поле не покидают.
+Селектор читает одну цепочку свойств, в том числе через индекс и `?.`:
+`(v) => v.contacts[i]?.name`. Путь поля (`contacts.0.name`) форма записывает, вызывая селектор
+на прокси, а при каждом чтении сверяет результат селектора со значением по этому пути. Селектор
+с ветвлением, вызовом метода или подменой (`v.nickname ?? v.name`) бросает ошибку, а не читает
+молча другое поле. Нетипизированный селектор по строковому пути даёт `byPath('contacts.0.name')`,
+значение такого поля — `unknown`; скобочные пути сервера (`contacts[0].name`) в `byPath`,
+`setFieldError` и `NuiFormError` приводятся к точкам. Форма передаётся явно, потому что тип
+значений не проходит через inject: `useFormContext()` отдаёт потомкам `FormHandle` — всё, кроме
+значений.
+
+Поле считается тронутым, когда фокус уходит из всего поля, а не из контрола: список select или
+сегменты времени поле не покидают.
 
 ## Когда видны ошибки
 
@@ -243,9 +254,9 @@ const loginRules = [
 
 <div class="vp-raw nui-demo nui-demo--stack" data-nui-theme="light">
   <NuiForm :form="guests" submit-label="Сохранить" style="max-inline-size: 28rem">
-    <NuiFieldArray v-slot="{ row }" name="guests" label="Гости" :min="1" :max="4" :new-row="newGuest" reorderable>
-      <NuiFormField v-slot="{ field }" :name="`${row.path}.name`" label="Имя" :rules="[required()]">
-        <NuiInput v-bind="field" />
+    <NuiFieldArray v-slot="{ row }" :form="guests" :name="(v) => v.guests" label="Гости" :min="1" :max="4" :new-row="newGuest" reorderable>
+      <NuiFormField v-slot="{ field }" :form="guests" :name="(v) => v.guests[row.index]?.name" label="Имя" :rules="[required()]">
+        <NuiInput v-bind="field" :model-value="field.modelValue ?? ''" />
       </NuiFormField>
     </NuiFieldArray>
   </NuiForm>
@@ -255,18 +266,27 @@ const loginRules = [
 <NuiFieldArray
   v-slot="{ row }"
   :form="form"
-  name="guests"
+  :name="(v) => v.guests"
   label="Гости"
   :min="1"
   :max="4"
   :new-row="() => ({ name: '' })"
   reorderable
 >
-  <NuiFormField v-slot="{ field }" :name="`${row.path}.name`" label="Имя" :rules="[required()]">
-    <NuiInput v-bind="field" />
+  <NuiFormField
+    v-slot="{ field }"
+    :form="form"
+    :name="(v) => v.guests[row.index]?.name"
+    label="Имя"
+    :rules="[required()]"
+  >
+    <NuiInput v-bind="field" :model-value="field.modelValue ?? ''" />
   </NuiFormField>
 </NuiFieldArray>
 ```
+
+Поле строки читает строку по индексу, поэтому в его типе есть `undefined`: в момент удаления
+строки уже нет. `?? ''` отдаёт текстовому полю пустую строку, а тип правил остаётся честным.
 
 `NuiFieldArray` — `fieldset` со строками-карточками. Состояние полей, их ошибки и фокус идут
 за строкой, а не за индексом. `min` прячет удаление, `max` выключает добавление и показывает
@@ -324,13 +344,15 @@ const form = useForm({ initialValues, engine: veeValidateEngine, onSubmit });
 `setFieldError`, `setErrors`, `setFormErrors`, `isFieldDirty`, `isFieldTouched`,
 `hasErrors(prefix?)`, `errorsUnder(prefix)`, `firstInvalidPath(prefix?)`, `focusField(path)`,
 `validate({ paths?, silent? })`, `validateField(path)`, `resetForm({ values?, keepErrors? })`,
-`submit()` и `settled()`. `useField(path, options)` связывает свой контрол без `NuiFormField`.
+`submit()` и `settled()`. `useField(selector, { form, … })` и `useFieldArray(selector, { form, … })`
+связывают свои контролы без компонентов, `byPath(path)` — нетипизированный селектор.
+`provideForm(form)` и `useFormContext()` передают потомкам `FormHandle` без типа значений.
 
 `NuiForm`:
 
 | Prop           | Тип                           | По умолчанию                                                | Описание                    |
 | -------------- | ----------------------------- | ----------------------------------------------------------- | --------------------------- |
-| `form`         | `FormContext`                 | —                                                           | Контекст из `useForm`       |
+| `form`         | `FormContext<T>`              | —                                                           | Контекст из `useForm`       |
 | `disabled`     | `boolean`                     | `false`                                                     | Отключает поля и отправку   |
 | `submitAction` | `() => Promise<SubmitResult>` | `form.submit`                                               | Своё действие отправки      |
 | `submitLabel`  | `string`                      | [словарь](/localization#form): «Отправить»                  | Подпись кнопки по умолчанию |
@@ -344,8 +366,8 @@ const form = useForm({ initialValues, engine: veeValidateEngine, onSubmit });
 
 | Prop                                              | Тип                              | По умолчанию | Описание                                  |
 | ------------------------------------------------- | -------------------------------- | ------------ | ----------------------------------------- |
-| `name`                                            | путь формы                       | —            | Путь значения                             |
-| `form`                                            | `FormContext`                    | ближайшая    | Типизирует путь и значение                |
+| `form`                                            | `FormContext<T>`                 | —            | Форма значения                            |
+| `name`                                            | `(values: T) => R`               | —            | Селектор значения                         |
 | `label`, `description`, `required`, `group`, `id` | как у `NuiField`                 | —            | Разметка поля                             |
 | `disabled`                                        | `boolean`                        | —            | Отправляется, но не проверяется           |
 | `rules`                                           | правила                          | —            | Правила поля                              |
@@ -355,19 +377,19 @@ const form = useForm({ initialValues, engine: veeValidateEngine, onSubmit });
 
 `NuiFieldArray`:
 
-| Prop                       | Тип                 | По умолчанию                                           | Описание                              |
-| -------------------------- | ------------------- | ------------------------------------------------------ | ------------------------------------- |
-| `name`                     | путь массива        | —                                                      | Путь значения                         |
-| `form`                     | `FormContext`       | ближайшая                                              | Форма                                 |
-| `label`, `description`     | `string`            | —                                                      | Подпись и описание `fieldset`         |
-| `newRow`                   | `() => Row`         | —                                                      | Новая строка; без него нет добавления |
-| `min`, `max`               | `number`            | —                                                      | Пределы числа строк                   |
-| `reorderable`              | `boolean`           | `false`                                                | Перестановка мышью и клавиатурой      |
-| `disabled`                 | `boolean`           | —                                                      | Отключает строки и действия           |
-| `rules`, `validateOn`      | правила списка      | —                                                      | Правила числа и состава строк         |
-| `addLabel`                 | `string`            | [словарь](/localization#fieldarray): «Добавить строку» | Кнопка добавления                     |
-| `emptyLabel`               | `string`            | [словарь](/localization#fieldarray): «Строк пока нет»  | Пустой список                         |
-| `removeLabel`, `moveLabel` | `(index) => string` | [словарь](/localization#fieldarray)                    | `aria-label` удаления и грипа         |
+| Prop                       | Тип                    | По умолчанию                                           | Описание                              |
+| -------------------------- | ---------------------- | ------------------------------------------------------ | ------------------------------------- |
+| `form`                     | `FormContext<T>`       | —                                                      | Форма значения                        |
+| `name`                     | `(values: T) => Row[]` | —                                                      | Селектор массива                      |
+| `label`, `description`     | `string`               | —                                                      | Подпись и описание `fieldset`         |
+| `newRow`                   | `() => Row`            | —                                                      | Новая строка; без него нет добавления |
+| `min`, `max`               | `number`               | —                                                      | Пределы числа строк                   |
+| `reorderable`              | `boolean`              | `false`                                                | Перестановка мышью и клавиатурой      |
+| `disabled`                 | `boolean`              | —                                                      | Отключает строки и действия           |
+| `rules`, `validateOn`      | правила списка         | —                                                      | Правила числа и состава строк         |
+| `addLabel`                 | `string`               | [словарь](/localization#fieldarray): «Добавить строку» | Кнопка добавления                     |
+| `emptyLabel`               | `string`               | [словарь](/localization#fieldarray): «Строк пока нет»  | Пустой список                         |
+| `removeLabel`, `moveLabel` | `(index) => string`    | [словарь](/localization#fieldarray)                    | `aria-label` удаления и грипа         |
 
 Слоты: default (`{ row, remove, first, last }`, `row` — `{ key, index, path, value }`),
 `row-actions` (`{ row, remove, canRemove }`), `add` (`{ push, canAdd }`), `empty`. Методы

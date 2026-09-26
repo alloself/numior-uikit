@@ -1,14 +1,14 @@
-import type { Entry } from './registry';
+import type { AnyEntry } from './registry';
 
 export interface PendingTracker {
-  hold(entry: Entry): void;
-  release(entry: Entry): void;
+  hold(entry: AnyEntry): void;
+  release(entry: AnyEntry): void;
 }
 
 export const createPendingTracker = (): PendingTracker => {
-  const counts = new Map<Entry, number>();
+  const counts = new Map<AnyEntry, number>();
 
-  const shift = (entry: Entry, delta: number): void => {
+  const shift = (entry: AnyEntry, delta: number): void => {
     const count = (counts.get(entry) ?? 0) + delta;
 
     if (count > 0) {

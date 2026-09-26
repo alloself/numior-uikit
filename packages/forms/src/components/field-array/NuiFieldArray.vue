@@ -32,7 +32,7 @@
           :id="rowId(row.key)"
           :key="row.key"
           :path="row.path"
-          :form="context"
+          :form="form"
           :dragging="row.key === grabbedKey"
           :reorderable="reorderable"
           :removable="canRemove"
@@ -93,12 +93,11 @@
   </fieldset>
 </template>
 
-<script setup lang="ts" generic="R">
-import { computed, shallowRef, useTemplateRef, watch } from 'vue';
+<script setup lang="ts" generic="T extends object, R">
+import { computed, shallowRef, toRef, useTemplateRef, watch } from 'vue';
 import { useControlId, useMessages, useReorder, type ReorderState } from '@numior/primitives';
 import { NuiButton, NuiIcon } from '@numior/vue';
 import { useFieldArray } from '../../field/use-field-array';
-import { useFormContext } from '../../form/form-context';
 import { useFormScope } from '../form/form-scope';
 import NuiFieldArrayRow from './NuiFieldArrayRow.vue';
 import { fieldArrayMessages } from './field-array.messages';
@@ -130,14 +129,12 @@ const {
   emptyLabel,
   removeLabel,
   moveLabel,
-} = defineProps<NuiFieldArrayProps<R>>();
+} = defineProps<NuiFieldArrayProps<T, R>>();
 
 const root = useTemplateRef<HTMLFieldSetElement>('root');
 const list = useTemplateRef<HTMLElement>('list');
 const addButton = useTemplateRef<InstanceType<typeof NuiButton>>('addButton');
 const formScope = useFormScope();
-const injected = useFormContext();
-const context = form ?? injected;
 const localized = useMessages(fieldArrayMessages);
 const baseId = useControlId(() => undefined);
 const announcement = shallowRef('');
@@ -149,10 +146,6 @@ const plan: { focus: FocusPlan | undefined; dropped: boolean; previous: ReorderS
 };
 
 const grab = { offset: 0, height: 0 };
-
-if (!context) {
-  throw new Error('NuiFieldArray needs useForm in an ancestor or the form prop');
-}
 
 const isDisabled = computed(() => disabled ?? formScope?.disabled.value ?? false);
 
@@ -169,15 +162,18 @@ const focusArray = (): void => {
   }
 };
 
-const array = useFieldArray<R>(() => name, {
-  rules: () => rules,
-  validateOn: () => validateOn,
-  form,
-  label: () => label,
-  element: () => root.value,
-  focus: focusArray,
-  disabled: () => isDisabled.value,
-});
+const array = useFieldArray(
+  toRef(() => name),
+  {
+    form,
+    rules: () => rules,
+    validateOn: () => validateOn,
+    label: () => label,
+    element: () => root.value,
+    focus: focusArray,
+    disabled: () => isDisabled.value,
+  },
+);
 
 const rows = array.fields;
 

@@ -11,16 +11,6 @@ export const getAt = (source: unknown, path: string): unknown =>
     source,
   );
 
-const NOWHERE: object = Object.freeze(Object.create(null));
-
-export const readAt = <T>(source: unknown, path: string): T => {
-  const segments = segmentsOf(path);
-  const last = segments.pop();
-  const parent = getAt(source, segments.join('.'));
-
-  return Reflect.get(last !== undefined && isContainer(parent) ? parent : NOWHERE, last ?? '');
-};
-
 const containerAt = (current: object, segment: string, next: string): object => {
   const existing: unknown = Reflect.get(current, segment);
 

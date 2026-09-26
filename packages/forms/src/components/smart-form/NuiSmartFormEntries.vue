@@ -7,43 +7,53 @@
     enter-from-class="nui-smart-form__cell--appearing"
     enter-active-class="nui-smart-form__cell--entering"
   >
-    <template v-for="entry in ordered" :key="keyOf(entry)">
+    <template v-for="item in ordered" :key="item.key">
       <NuiSmartFormCell
-        v-if="entry.kind === 'field'"
-        :entry="entry"
-        :scope="scope"
-        :area="areaFor(entry)"
+        v-if="item.kind === 'field'"
+        :form="form"
+        :entry="item.entry"
+        :path="item.path"
+        :area="areaFor(item)"
+        :row="row"
       />
       <fieldset
-        v-else-if="entry.kind === 'section'"
+        v-else-if="item.kind === 'section'"
         class="nui-smart-form__cell nui-smart-form__section"
-        :style="cellStyle(entry)"
+        :style="cellStyle(item)"
       >
-        <legend class="nui-smart-form__legend">{{ entry.title }}</legend>
-        <p v-if="entry.description" class="nui-smart-form__section-description">
-          {{ entry.description }}
+        <legend class="nui-smart-form__legend">{{ item.entry.title }}</legend>
+        <p v-if="item.entry.description" class="nui-smart-form__section-description">
+          {{ item.entry.description }}
         </p>
-        <NuiSmartFormEntries :entries="entry.fields" :scope="scope" :layout="entry.layout" />
+        <NuiSmartFormEntries
+          :form="form"
+          :entries="item.entry.fields"
+          :layout="item.entry.layout"
+          :prefix="prefix"
+          :row="row"
+        />
       </fieldset>
-      <div v-else class="nui-smart-form__cell" :style="cellStyle(entry)">
+      <div v-else class="nui-smart-form__cell" :style="cellStyle(item)">
         <NuiFieldArray
-          :name="pathOf(entry)"
-          :label="entry.label"
-          :description="entry.description"
-          :min="entry.min"
-          :max="entry.max"
-          :reorderable="entry.reorderable"
-          :new-row="entry.newRow"
-          :add-label="entry.addLabel"
-          :remove-label="entry.removeLabel"
-          :move-label="entry.moveLabel"
+          :form="form"
+          :name="item.entry.name"
+          :label="item.entry.label"
+          :description="item.entry.description"
+          :min="item.entry.min"
+          :max="item.entry.max"
+          :reorderable="item.entry.reorderable"
+          :new-row="item.entry.newRow"
+          :add-label="item.entry.addLabel"
+          :remove-label="item.entry.removeLabel"
+          :move-label="item.entry.moveLabel"
         >
-          <template #default="{ row }">
+          <template #default="{ row: current }">
             <NuiSmartFormEntries
-              :entries="entry.fields"
-              :scope="rowScope(entry, row)"
-              :layout="entry.layout"
-              declares
+              :form="form"
+              :array="item.entry"
+              :layout="item.entry.layout"
+              :prefix="current.path"
+              :row="current"
             />
           </template>
         </NuiFieldArray>
@@ -52,33 +62,32 @@
   </TransitionGroup>
 </template>
 
-<script setup lang="ts">
+<script setup lang="ts" generic="T extends object">
 import { computed } from 'vue';
-import { useFormContext } from '../../form/form-context';
-import { joinPath } from '../../paths/paths';
+import { FORM_HOST } from '../../form/form-context';
 import NuiFieldArray from '../field-array/NuiFieldArray.vue';
 import NuiSmartFormCell from './NuiSmartFormCell.vue';
 import { declareEntries, isShown } from './declarations';
-import { areaOf, orderEntries, planLayout } from './layout';
-import type {
-  NuiSmartFormArray,
-  NuiSmartFormEntriesProps,
-  NuiSmartFormEntry,
-  SmartRow,
-  SmartScope,
-} from './smart-form.types';
+import { itemOf, type SmartItem } from './items';
+import { orderByArea, planLayout } from './layout';
+import type { NuiSmartFormEntriesProps } from './smart-form.types';
 
-const { entries, scope, layout, declares = false } = defineProps<NuiSmartFormEntriesProps>();
+const {
+  form,
+  entries,
+  array,
+  layout,
+  prefix = '',
+  row,
+} = defineProps<NuiSmartFormEntriesProps<T>>();
 
-const form = useFormContext();
+const { raw, values } = form[FORM_HOST].engine;
 
-if (declares && form) {
-  declareEntries(form, entries, () => scope);
-}
-
-const shown = computed(() => entries.filter((entry) => isShown(entry, scope)));
-const plan = computed(() => planLayout(layout, new Set(shown.value.map(areaOf))));
-const ordered = computed(() => orderEntries(shown.value, plan.value.order));
+const list = computed(() => (array === undefined ? (entries ?? []) : array.rows(() => row)));
+const items = computed(() => list.value.map((entry) => itemOf(raw, entry, prefix)));
+const shown = computed(() => items.value.filter((item) => isShown(item.entry, values)));
+const plan = computed(() => planLayout(layout, new Set(shown.value.map((item) => item.area))));
+const ordered = computed(() => orderByArea(shown.value, plan.value.order));
 const planned = computed(() => new Set(plan.value.order));
 
 const gridClass = computed(() => ({
@@ -91,22 +100,11 @@ const gridStyle = computed(() =>
     : { '--_areas': plan.value.areas, '--_layout-columns': String(plan.value.columns) },
 );
 
-const keyOf = (entry: NuiSmartFormEntry): string =>
-  `${entry.kind}:${entry.name ?? (entry.kind === 'section' ? entry.title : '')}`;
+const areaFor = (item: SmartItem<T>): string => (planned.value.has(item.area) ? item.area : 'auto');
 
-const areaFor = (entry: NuiSmartFormEntry): string => {
-  const area = areaOf(entry);
-  return planned.value.has(area) ? area : 'auto';
-};
+const cellStyle = (item: SmartItem<T>) => ({ '--_area': areaFor(item) });
 
-const cellStyle = (entry: NuiSmartFormEntry) => ({ '--_area': areaFor(entry) });
-
-const pathOf = (entry: NuiSmartFormArray): string => joinPath(scope.prefix, entry.name);
-
-const rowScope = (entry: NuiSmartFormArray, row: SmartRow): SmartScope => ({
-  values: row.value,
-  prefix: row.path,
-  slotPrefix: joinPath(scope.slotPrefix, entry.name),
-  row,
-});
+if (array !== undefined) {
+  declareEntries(form, list.value);
+}
 </script>

@@ -2,7 +2,7 @@
 
 `@numior/forms` builds forms from the kit's controls. `useForm` holds the values, errors and
 submission, `NuiForm` renders a native `<form>` with an error block and a button,
-`NuiFormField` binds a form path to any control through `v-bind="field"`, and `NuiFieldArray`
+`NuiFormField` binds a form value to a control through `v-bind="field"`, and `NuiFieldArray`
 repeats a group of fields. The package has no outside dependencies: its own engine holds the
 values, and vee-validate plugs in on request (see “Engine”). Forms built from a config live on
 the [smart form](/en/components/smart-form) page.
@@ -37,12 +37,13 @@ const newGuest = () => ({ name: '' })
 
 <div class="vp-raw nui-demo nui-demo--stack" data-nui-theme="light">
   <NuiForm :form="signIn" submit-label="Sign in" style="max-inline-size: 24rem">
-    <NuiFormField v-slot="{ field }" name="email" label="Email" :rules="emailRules" required>
+    <NuiFormField v-slot="{ field }" :form="signIn" :name="(v) => v.email" label="Email" :rules="emailRules" required>
       <NuiInput v-bind="field" type="email" autocomplete="email" />
     </NuiFormField>
     <NuiFormField
       v-slot="{ field }"
-      name="password"
+      :form="signIn"
+      :name="(v) => v.password"
       label="Password"
       description="At least 8 characters"
       :rules="passwordRules"
@@ -50,7 +51,7 @@ const newGuest = () => ({ name: '' })
     >
       <NuiInput v-bind="field" type="password" autocomplete="current-password" />
     </NuiFormField>
-    <NuiFormField v-slot="{ field }" name="remember">
+    <NuiFormField v-slot="{ field }" :form="signIn" :name="(v) => v.remember">
       <NuiCheckbox v-bind="field">Remember me</NuiCheckbox>
     </NuiFormField>
   </NuiForm>
@@ -94,7 +95,7 @@ const passwordRules = [required(), min(8)];
     <NuiFormField
       v-slot="{ field }"
       :form="form"
-      name="email"
+      :name="(v) => v.email"
       label="Email"
       :rules="emailRules"
       required
@@ -104,14 +105,14 @@ const passwordRules = [required(), min(8)];
     <NuiFormField
       v-slot="{ field }"
       :form="form"
-      name="password"
+      :name="(v) => v.password"
       label="Password"
       :rules="passwordRules"
       required
     >
       <NuiInput v-bind="field" type="password" autocomplete="current-password" />
     </NuiFormField>
-    <NuiFormField v-slot="{ field }" :form="form" name="remember">
+    <NuiFormField v-slot="{ field }" :form="form" :name="(v) => v.remember">
       <NuiCheckbox v-bind="field">Remember me</NuiCheckbox>
     </NuiFormField>
   </NuiForm>
@@ -126,15 +127,25 @@ their own styles from `@numior/vue`.
 
 `NuiFormField` wraps [`NuiField`](/en/components/field): the label, description, error,
 `aria-invalid`, `aria-describedby` and the required mark go through the field context, so the
-control inside knows nothing about the form. The slot gets `field` — the binding
-`{ name, modelValue, 'onUpdate:modelValue' }` for `v-bind` — and the state: `value`,
-`setValue`, `error`, `invalid`, `touched`, `pending`. With `:form="form"` the path is checked
-against the paths of the values and the value is typed; without it the field takes the nearest
-form, which `useForm` and `NuiForm` provide, and the binding fits any control.
+control inside knows nothing about the form. A field gets the form in `form` and a selector in
+`name` — a function that reads the value: `:name="(v) => v.address.city"`. TypeScript infers
+the value type from the selector, and the rules, `value`, `setValue` and the `field` binding
+(`{ name, modelValue, 'onUpdate:modelValue' }` for `v-bind`) are typed by it: a control that
+emits a value of another type fails type checking. The slot also gets `error`, `invalid`,
+`touched` and `pending`.
 
-Paths use dots: `address.city`, `contacts.0.name`; bracket paths from a server
-(`contacts[0].name`) are normalised to them. A field counts as touched when focus leaves the
-whole field rather than the control, so a select list or the time segments never leave it.
+A selector reads one chain of properties, through indexes and `?.` too:
+`(v) => v.contacts[i]?.name`. The form records the field path (`contacts.0.name`) by calling the
+selector on a proxy and checks every read against the value stored at that path. A selector with
+a branch, a method call or a substitute (`v.nickname ?? v.name`) throws instead of silently
+reading another field. `byPath('contacts.0.name')` gives an untyped selector for a string path,
+and such a field holds an `unknown` value; bracket paths from a server (`contacts[0].name`) are
+normalised to dots in `byPath`, `setFieldError` and `NuiFormError`. The form is passed
+explicitly because the value type does not travel through inject: `useFormContext()` gives
+descendants a `FormHandle` — everything but the values.
+
+A field counts as touched when focus leaves the whole field rather than the control, so a
+select list or the time segments never leave it.
 
 ## When errors show
 
@@ -246,9 +257,9 @@ unconfirmed input until Enter or leave. `NuiFormField` commits it before submiss
 
 <div class="vp-raw nui-demo nui-demo--stack" data-nui-theme="light">
   <NuiForm :form="guests" submit-label="Save" style="max-inline-size: 28rem">
-    <NuiFieldArray v-slot="{ row }" name="guests" label="Guests" :min="1" :max="4" :new-row="newGuest" reorderable>
-      <NuiFormField v-slot="{ field }" :name="`${row.path}.name`" label="Name" :rules="[required()]">
-        <NuiInput v-bind="field" />
+    <NuiFieldArray v-slot="{ row }" :form="guests" :name="(v) => v.guests" label="Guests" :min="1" :max="4" :new-row="newGuest" reorderable>
+      <NuiFormField v-slot="{ field }" :form="guests" :name="(v) => v.guests[row.index]?.name" label="Name" :rules="[required()]">
+        <NuiInput v-bind="field" :model-value="field.modelValue ?? ''" />
       </NuiFormField>
     </NuiFieldArray>
   </NuiForm>
@@ -258,18 +269,28 @@ unconfirmed input until Enter or leave. `NuiFormField` commits it before submiss
 <NuiFieldArray
   v-slot="{ row }"
   :form="form"
-  name="guests"
+  :name="(v) => v.guests"
   label="Guests"
   :min="1"
   :max="4"
   :new-row="() => ({ name: '' })"
   reorderable
 >
-  <NuiFormField v-slot="{ field }" :name="`${row.path}.name`" label="Name" :rules="[required()]">
-    <NuiInput v-bind="field" />
+  <NuiFormField
+    v-slot="{ field }"
+    :form="form"
+    :name="(v) => v.guests[row.index]?.name"
+    label="Name"
+    :rules="[required()]"
+  >
+    <NuiInput v-bind="field" :model-value="field.modelValue ?? ''" />
   </NuiFormField>
 </NuiFieldArray>
 ```
+
+A row field reads its row by index, so its type includes `undefined`: while a row is being
+removed it is already gone. `?? ''` hands the text field an empty string, and the rule types stay
+honest.
 
 `NuiFieldArray` is a `fieldset` of row cards. Field state, errors and focus follow the row
 rather than its index. `min` hides removal, `max` switches adding off and shows the limit text.
@@ -328,14 +349,16 @@ The form context: `values`, `errors`, `errorBag`, `formErrors`, `touched`, `meta
 `setFieldError`, `setErrors`, `setFormErrors`, `isFieldDirty`, `isFieldTouched`,
 `hasErrors(prefix?)`, `errorsUnder(prefix)`, `firstInvalidPath(prefix?)`, `focusField(path)`,
 `validate({ paths?, silent? })`, `validateField(path)`, `resetForm({ values?, keepErrors? })`,
-`submit()` and `settled()`. `useField(path, options)` binds your own control without
-`NuiFormField`.
+`submit()` and `settled()`. `useField(selector, { form, … })` and
+`useFieldArray(selector, { form, … })` bind your own controls without the components, and
+`byPath(path)` is an untyped selector. `provideForm(form)` and `useFormContext()` pass
+descendants a `FormHandle` without the value type.
 
 `NuiForm`:
 
 | Prop           | Type                          | Default                                                          | Description                 |
 | -------------- | ----------------------------- | ---------------------------------------------------------------- | --------------------------- |
-| `form`         | `FormContext`                 | —                                                                | Context from `useForm`      |
+| `form`         | `FormContext<T>`              | —                                                                | Context from `useForm`      |
 | `disabled`     | `boolean`                     | `false`                                                          | Disables fields and submit  |
 | `submitAction` | `() => Promise<SubmitResult>` | `form.submit`                                                    | Your own submit action      |
 | `submitLabel`  | `string`                      | [dictionary](/en/localization#form): “Submit”                    | Label of the default button |
@@ -349,8 +372,8 @@ Slots: default — the fields; `form-errors` (`{ errors }`) replaces the error b
 
 | Prop                                              | Type                             | Default        | Description                          |
 | ------------------------------------------------- | -------------------------------- | -------------- | ------------------------------------ |
-| `name`                                            | form path                        | —              | Path of the value                    |
-| `form`                                            | `FormContext`                    | nearest        | Types the path and the value         |
+| `form`                                            | `FormContext<T>`                 | —              | The form of the value                |
+| `name`                                            | `(values: T) => R`               | —              | Selector of the value                |
 | `label`, `description`, `required`, `group`, `id` | as on `NuiField`                 | —              | Field markup                         |
 | `disabled`                                        | `boolean`                        | —              | Submitted, not validated             |
 | `rules`                                           | rules                            | —              | Field rules                          |
@@ -360,19 +383,19 @@ Slots: default — the fields; `form-errors` (`{ errors }`) replaces the error b
 
 `NuiFieldArray`:
 
-| Prop                       | Type                | Default                                                  | Description                            |
-| -------------------------- | ------------------- | -------------------------------------------------------- | -------------------------------------- |
-| `name`                     | array path          | —                                                        | Path of the value                      |
-| `form`                     | `FormContext`       | nearest                                                  | The form                               |
-| `label`, `description`     | `string`            | —                                                        | Legend and description of the fieldset |
-| `newRow`                   | `() => Row`         | —                                                        | A new row; without it there is no add  |
-| `min`, `max`               | `number`            | —                                                        | Limits of the row count                |
-| `reorderable`              | `boolean`           | `false`                                                  | Mouse and keyboard reordering          |
-| `disabled`                 | `boolean`           | —                                                        | Disables rows and actions              |
-| `rules`, `validateOn`      | list rules          | —                                                        | Rules for the count and the rows       |
-| `addLabel`                 | `string`            | [dictionary](/en/localization#fieldarray): “Add row”     | Add button                             |
-| `emptyLabel`               | `string`            | [dictionary](/en/localization#fieldarray): “No rows yet” | Empty list                             |
-| `removeLabel`, `moveLabel` | `(index) => string` | [dictionary](/en/localization#fieldarray)                | `aria-label` of remove and the grip    |
+| Prop                       | Type                   | Default                                                  | Description                            |
+| -------------------------- | ---------------------- | -------------------------------------------------------- | -------------------------------------- |
+| `form`                     | `FormContext<T>`       | —                                                        | The form of the value                  |
+| `name`                     | `(values: T) => Row[]` | —                                                        | Selector of the array                  |
+| `label`, `description`     | `string`               | —                                                        | Legend and description of the fieldset |
+| `newRow`                   | `() => Row`            | —                                                        | A new row; without it there is no add  |
+| `min`, `max`               | `number`               | —                                                        | Limits of the row count                |
+| `reorderable`              | `boolean`              | `false`                                                  | Mouse and keyboard reordering          |
+| `disabled`                 | `boolean`              | —                                                        | Disables rows and actions              |
+| `rules`, `validateOn`      | list rules             | —                                                        | Rules for the count and the rows       |
+| `addLabel`                 | `string`               | [dictionary](/en/localization#fieldarray): “Add row”     | Add button                             |
+| `emptyLabel`               | `string`               | [dictionary](/en/localization#fieldarray): “No rows yet” | Empty list                             |
+| `removeLabel`, `moveLabel` | `(index) => string`    | [dictionary](/en/localization#fieldarray)                | `aria-label` of remove and the grip    |
 
 Slots: default (`{ row, remove, first, last }`, where `row` is `{ key, index, path, value }`),
 `row-actions` (`{ row, remove, canRemove }`), `add` (`{ push, canAdd }`), `empty`. Methods

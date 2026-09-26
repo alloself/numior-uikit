@@ -12,14 +12,14 @@
     <NuiSmartFormSteps
       v-if="steps"
       ref="stepPanels"
+      :form="form"
       :steps="steps"
       :current="currentIndex"
-      :scope="scope"
       :statuses="statuses"
       :live="stepText"
       @select="select"
     />
-    <NuiSmartFormEntries v-else :entries="entries" :scope="scope" :layout="layout" />
+    <NuiSmartFormEntries v-else :form="form" :entries="entries" :layout="layout" />
     <template v-if="$slots['form-errors']" #form-errors="props">
       <slot name="form-errors" v-bind="props" />
     </template>
@@ -52,6 +52,7 @@ import { computed, shallowRef, useSlots, useTemplateRef, watch } from 'vue';
 import { useMessages } from '@numior/primitives';
 import { NuiButton } from '@numior/vue';
 import type { SubmitResult } from '../../core/types';
+import { FORM_HOST } from '../../form/form-context';
 import NuiForm from '../form/NuiForm.vue';
 import { formMessages } from '../form/form.messages';
 import { FOCUSABLE } from '../form-field/focus-control';
@@ -59,7 +60,7 @@ import NuiSmartFormEntries from './NuiSmartFormEntries.vue';
 import NuiSmartFormSteps from './NuiSmartFormSteps.vue';
 import { declareEntries } from './declarations';
 import { smartFormMessages } from './smart-form.messages';
-import type { NuiSmartFormProps, NuiSmartFormSlots, SmartScope } from './smart-form.types';
+import type { NuiSmartFormProps, NuiSmartFormSlots } from './smart-form.types';
 import { provideSmartSlots } from './smart-slots';
 import { stepOf, stepPaths } from './steps';
 
@@ -93,15 +94,10 @@ const direction = shallowRef<'forward' | 'back' | undefined>(undefined);
 const navigations = shallowRef(0);
 const focusPlan: { target: 'first' | 'invalid' | undefined } = { target: undefined };
 
+const { raw } = form[FORM_HOST].engine;
 const entries = computed(() => fields ?? []);
 const stepList = computed(() => steps ?? []);
-
-const scope = computed<SmartScope>(() => ({
-  values: form.values,
-  prefix: '',
-  slotPrefix: '',
-  row: undefined,
-}));
+const stepPathList = computed(() => stepList.value.map((item) => stepPaths(raw, item.fields)));
 
 const currentIndex = computed(() =>
   Math.max(
@@ -133,8 +129,8 @@ const stepText = computed(() => {
 });
 
 const statuses = computed(() =>
-  stepList.value.map((item) =>
-    stepPaths(item.fields).some((path) => form.hasErrors(path)) ? 'error' : undefined,
+  stepPathList.value.map((paths) =>
+    paths.some((path) => form.hasErrors(path)) ? 'error' : undefined,
   ),
 );
 
@@ -156,8 +152,7 @@ const goTo = (index: number, target: 'first' | 'invalid' | undefined): void => {
 const IGNORED: SubmitResult = { status: 'ignored', invalid: [], formErrors: [] };
 
 const advance = async (): Promise<SubmitResult> => {
-  const item = stepList.value[currentIndex.value];
-  const summary = await form.validate({ paths: stepPaths(item?.fields ?? []) });
+  const summary = await form.validate({ paths: stepPathList.value[currentIndex.value] ?? [] });
 
   if (summary.valid) {
     goTo(currentIndex.value + 1, 'first');
@@ -171,7 +166,7 @@ const advance = async (): Promise<SubmitResult> => {
 const finish = async (): Promise<SubmitResult> => {
   const result = await form.submit();
   const [path] = result.invalid;
-  const target = path === undefined ? -1 : stepOf(stepList.value, path);
+  const target = path === undefined ? -1 : stepOf(stepPathList.value, path);
 
   if (target !== -1 && target !== currentIndex.value) {
     goTo(target, undefined);
@@ -220,10 +215,10 @@ watch(
   { flush: 'post' },
 );
 
-declareEntries(form, entries.value, () => scope.value);
+declareEntries(form, entries.value);
 
 for (const item of stepList.value) {
-  declareEntries(form, item.fields, () => scope.value);
+  declareEntries(form, item.fields);
 }
 
 defineExpose({

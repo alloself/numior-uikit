@@ -1,11 +1,11 @@
 import { cloneValue } from '../values/clone';
 import type { FormCore } from './form-core';
 import { writeErrors } from './messages';
-import type { Entry } from './registry';
+import type { AnyEntry } from './registry';
 import type { ResetOptions } from './types';
 import type { Validation } from './validation';
 
-const clearState = (entry: Entry): void => {
+const clearState = (entry: AnyEntry): void => {
   entry.fieldEpoch += 1;
   entry.state.setTouched(false);
   entry.state.setAttempted(false);

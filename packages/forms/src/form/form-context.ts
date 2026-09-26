@@ -1,10 +1,8 @@
 import { inject, provide, type ComputedRef, type InjectionKey, type MaybeRefOrGetter } from 'vue';
 import type { FormHost } from '../core/host';
-import type { FormEngineFactory } from '../engine/engine';
 import type { EntryKind } from '../core/registry';
 import type { FormRules } from '../core/rules';
 import type { SubmitHandler } from '../core/submit';
-import type { AnyFieldRule } from '../rules/async-rule';
 import type {
   DeepPartial,
   FieldValidation,
@@ -19,6 +17,8 @@ import type {
   ValidateOptions,
   ValidationSummary,
 } from '../core/types';
+import type { FormEngineFactory } from '../engine/engine.types';
+import type { AnyFieldRule } from '../rules/async-rule';
 import type { StandardSchema } from '../schema/standard';
 
 export interface UseFormOptions<V extends object, O = V> {
@@ -30,13 +30,13 @@ export interface UseFormOptions<V extends object, O = V> {
   readonly onSubmit: SubmitHandler<V, O>;
 }
 
-export interface RegisterOptions {
+export interface RegisterOptions<V> {
   readonly kind?: EntryKind | undefined;
   readonly active?: MaybeRefOrGetter<boolean | undefined>;
   readonly disabled?: MaybeRefOrGetter<boolean | undefined>;
   readonly keepValue?: MaybeRefOrGetter<boolean | undefined>;
   readonly validateOn?: MaybeRefOrGetter<ValidateOn | undefined>;
-  readonly rules?: MaybeRefOrGetter<readonly AnyFieldRule[] | undefined>;
+  readonly rules?: MaybeRefOrGetter<readonly AnyFieldRule<unknown, V>[] | undefined>;
   readonly debounce?: MaybeRefOrGetter<number | undefined>;
   readonly label?: MaybeRefOrGetter<string | undefined>;
   readonly element?: MaybeRefOrGetter<HTMLElement | null | undefined>;
@@ -48,16 +48,17 @@ export interface FieldRegistration {
   unregister(): void;
 }
 
-export interface FormContext<V extends object = object> {
-  readonly values: FormValues<V>;
+export interface FormResetOptions {
+  readonly keepErrors?: boolean | undefined;
+}
+
+export interface FormHandle {
   readonly errors: ComputedRef<Readonly<Record<string, string>>>;
   readonly errorBag: ComputedRef<Readonly<Record<string, readonly string[]>>>;
   readonly formErrors: ComputedRef<readonly FormMessage[]>;
   readonly touched: ComputedRef<Readonly<Record<string, boolean>>>;
   readonly meta: ComputedRef<FormMeta>;
-  register(path: MaybeRefOrGetter<string>, options?: RegisterOptions): FieldRegistration;
-  setFieldValue<P extends FormPath<V>>(path: P, value: FormPathValue<V, P>): Promise<void>;
-  setValues(values: DeepPartial<V>): Promise<void>;
+  register(path: MaybeRefOrGetter<string>, options?: RegisterOptions<unknown>): FieldRegistration;
   setFieldError(path: string, message: string | readonly string[] | undefined): void;
   setErrors(errors: Readonly<Record<string, string | readonly string[] | undefined>>): void;
   setFormErrors(messages: readonly string[]): void;
@@ -69,30 +70,26 @@ export interface FormContext<V extends object = object> {
   focusField(path: string): boolean;
   validate(options?: ValidateOptions): Promise<ValidationSummary>;
   validateField(path: string): Promise<FieldValidation>;
-  resetForm(options?: ResetOptions<V>): void;
+  resetForm(options?: FormResetOptions): void;
   submit(event?: Event): Promise<SubmitResult>;
   settled(): Promise<void>;
 }
 
-export const FORM_KEY: InjectionKey<FormContext> = Symbol('nui:form');
+export const FORM_HOST: unique symbol = Symbol('nui:form-host');
 
-const hosts = new WeakMap<FormContext, FormHost>();
+export interface FormContext<V extends object> extends FormHandle {
+  readonly [FORM_HOST]: FormHost<V>;
+  readonly values: FormValues<V>;
+  register(path: MaybeRefOrGetter<string>, options?: RegisterOptions<V>): FieldRegistration;
+  setFieldValue<P extends FormPath<V>>(path: P, value: FormPathValue<V, P>): Promise<void>;
+  setValues(values: DeepPartial<V>): Promise<void>;
+  resetForm(options?: ResetOptions<V>): void;
+}
 
-export const bindHost = (form: FormContext, host: FormHost): void => {
-  hosts.set(form, host);
-};
+export const FORM_KEY: InjectionKey<FormHandle> = Symbol('nui:form');
 
-export const hostOf = (form: FormContext): FormHost => {
-  const host = hosts.get(form);
-
-  if (!host) {
-    throw new Error('the form was not created by useForm');
-  }
-  return host;
-};
-
-export const provideForm = (form: FormContext): void => {
+export const provideForm = (form: FormHandle): void => {
   provide(FORM_KEY, form);
 };
 
-export const useFormContext = (): FormContext | null => inject(FORM_KEY, null);
+export const useFormContext = (): FormHandle | null => inject(FORM_KEY, null);

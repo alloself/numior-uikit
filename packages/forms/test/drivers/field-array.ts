@@ -28,8 +28,8 @@ export interface FieldArrayDriverOptions {
   readonly max?: number;
   readonly reorderable?: boolean;
   readonly addable?: boolean;
-  readonly rowRules?: readonly AnyFieldRule[];
-  readonly listRules?: readonly AnyFieldRule<readonly Contact[]>[];
+  readonly rowRules?: readonly AnyFieldRule<string | undefined, Contacts>[];
+  readonly listRules?: readonly AnyFieldRule<readonly Contact[], Contacts>[];
   readonly schema?: StandardSchema<unknown, unknown>;
   readonly config?: NuiConfigOptions;
   readonly engine?: FormEngineFactory;
@@ -38,8 +38,8 @@ export interface FieldArrayDriverOptions {
 interface FieldScope {
   readonly field: {
     readonly name: string;
-    readonly modelValue: never;
-    readonly 'onUpdate:modelValue': (value: unknown) => void;
+    readonly modelValue: string | undefined;
+    readonly 'onUpdate:modelValue': (value: string | undefined) => void;
   };
 }
 
@@ -77,11 +77,26 @@ export class FieldArrayDriver {
   static mount(options: FieldArrayDriverOptions): FieldArrayDriver {
     const captured = shallowRef<FormContext<Contacts> | null>(null);
 
+    const current = (): FormContext<Contacts> => {
+      if (!captured.value) {
+        throw new Error('useForm did not run');
+      }
+      return captured.value;
+    };
+
     const renderRow = ({ row }: { readonly row: FieldArrayRow<Contact> }) =>
       h(
-        NuiFormField,
-        { name: `${row.path}.name`, label: 'Name', rules: options.rowRules },
-        { default: (scope: FieldScope) => h(NuiInput, scope.field) },
+        NuiFormField<Contacts, string | undefined>,
+        {
+          form: current(),
+          name: (values: Contacts) => values.contacts[row.index]?.name,
+          label: 'Name',
+          rules: options.rowRules,
+        },
+        {
+          default: ({ field }: FieldScope) =>
+            h(NuiInput, { ...field, modelValue: field.modelValue ?? '' }),
+        },
       );
 
     const Host = defineComponent({
@@ -95,11 +110,12 @@ export class FieldArrayDriver {
 
         captured.value = form;
         return () =>
-          h(NuiForm, { form }, () =>
+          h(NuiForm<Contacts>, { form }, () =>
             h(
-              NuiFieldArray<Contact>,
+              NuiFieldArray<Contacts, Contact>,
               {
-                name: 'contacts',
+                form,
+                name: (values: Contacts) => values.contacts,
                 label: 'Contacts',
                 min: options.min,
                 max: options.max,
@@ -118,10 +134,7 @@ export class FieldArrayDriver {
       global: { plugins: options.config === undefined ? [] : [createNuiConfig(options.config)] },
     });
 
-    if (!captured.value) {
-      throw new Error('useForm did not run');
-    }
-    return new FieldArrayDriver(wrapper, captured.value);
+    return new FieldArrayDriver(wrapper, current());
   }
 
   private constructor(
