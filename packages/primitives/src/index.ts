@@ -18,6 +18,16 @@ export { createNuiConfig, provideNuiConfig } from './config/nui-config';
 export type { NuiConfigOptions } from './config/nui-config';
 export { DEFAULT_LOCALE, LOCALE_KEY, provideLocale, useLocale } from './locale/locale-context';
 export { DIRECTION_KEY, provideDirection, useDirection } from './direction/direction-context';
+export { useMessages } from './messages/messages';
+export type {
+  NuiLocaleMessages,
+  NuiMessageCatalog,
+  NuiMessageNamespace,
+  NuiMessageOverrides,
+  NuiMessageParams,
+  NuiMessages,
+  NuiTranslate,
+} from './messages/messages';
 export type { Direction, DirectionControl } from './direction/direction-context';
 export { applyMask, maskCaret } from './mask/mask';
 export {

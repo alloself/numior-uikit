@@ -2,6 +2,13 @@ import { computed, toValue, type MaybeRefOrGetter, type Plugin } from 'vue';
 import { DIRECTION_KEY, provideDirection, type Direction } from '../direction/direction-context';
 import { ICONS_KEY, provideIcons, type IconRegistry } from '../icons/icon-registry';
 import { DEFAULT_LOCALE, LOCALE_KEY, provideLocale } from '../locale/locale-context';
+import {
+  MESSAGES_KEY,
+  createMessageLayers,
+  provideMessages,
+  type NuiLocaleMessages,
+  type NuiTranslate,
+} from '../messages/messages';
 import { createToastStore, type ToastStoreOptions } from '../toast/toast-store';
 import { TOASTS_KEY, provideToasts } from '../toast/useToast';
 
@@ -10,7 +17,12 @@ export interface NuiConfigOptions {
   readonly toasts?: ToastStoreOptions | undefined;
   readonly locale?: MaybeRefOrGetter<string | undefined> | undefined;
   readonly dir?: MaybeRefOrGetter<Direction | undefined> | undefined;
+  readonly messages?: MaybeRefOrGetter<NuiLocaleMessages | undefined> | undefined;
+  readonly translate?: NuiTranslate | undefined;
 }
+
+const hasMessages = (options: NuiConfigOptions): boolean =>
+  options.messages !== undefined || options.translate !== undefined;
 
 export const provideNuiConfig = (options: NuiConfigOptions): void => {
   if (options.icons) {
@@ -24,6 +36,9 @@ export const provideNuiConfig = (options: NuiConfigOptions): void => {
   }
   if (options.dir !== undefined) {
     provideDirection(options.dir);
+  }
+  if (hasMessages(options)) {
+    provideMessages(options);
   }
 };
 
@@ -48,6 +63,9 @@ export const createNuiConfig = (options: NuiConfigOptions): Plugin => ({
         DIRECTION_KEY,
         computed(() => toValue(dir)),
       );
+    }
+    if (hasMessages(options)) {
+      app.provide(MESSAGES_KEY, createMessageLayers(options));
     }
   },
 });
