@@ -72,7 +72,17 @@ const catalogTexts = {
 };
 
 export default [
-  { ignores: ['**/dist/**', '**/node_modules/**', '**/coverage/**', '**/.vitepress/cache/**'] },
+  {
+    ignores: [
+      '**/dist/**',
+      '**/node_modules/**',
+      '**/coverage/**',
+      '**/.vitepress/cache/**',
+      'playwright-report/**',
+      'test-results/**',
+      '.release/**',
+    ],
+  },
   ...vue.configs['flat/essential'],
   {
     files: ['**/*.vue'],
