@@ -14,6 +14,7 @@ import { numberFieldMessages } from '../src/number-field/number-field.messages';
 import { paginationMessages } from '../src/pagination/pagination.messages';
 import { selectMessages } from '../src/select/select.messages';
 import { sidebarMessages } from '../src/sidebar/sidebar.messages';
+import { stepperMessages } from '../src/stepper/stepper.messages';
 import { tableMessages } from '../src/table/table.messages';
 import { timeFieldMessages } from '../src/time-field/time-field.messages';
 import { toastMessages } from '../src/toast/toast.messages';
@@ -33,6 +34,7 @@ const catalogs: { readonly [N in keyof NuiVueMessages]: NuiMessageCatalog<N> } =
   pagination: paginationMessages,
   select: selectMessages,
   sidebar: sidebarMessages,
+  stepper: stepperMessages,
   table: tableMessages,
   timeField: timeFieldMessages,
   toast: toastMessages,

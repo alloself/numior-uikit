@@ -11,6 +11,7 @@ import type { NuiNumberFieldMessages } from './number-field/number-field.message
 import type { NuiPaginationMessages } from './pagination/pagination.messages';
 import type { NuiSelectMessages } from './select/select.messages';
 import type { NuiSidebarMessages } from './sidebar/sidebar.messages';
+import type { NuiStepperMessages } from './stepper/stepper.messages';
 import type { NuiTableMessages } from './table/table.messages';
 import type { NuiTimeFieldMessages } from './time-field/time-field.messages';
 import type { NuiToastMessages } from './toast/toast.messages';
@@ -30,6 +31,7 @@ export interface NuiVueMessages {
   readonly pagination: NuiPaginationMessages;
   readonly select: NuiSelectMessages;
   readonly sidebar: NuiSidebarMessages;
+  readonly stepper: NuiStepperMessages;
   readonly table: NuiTableMessages;
   readonly timeField: NuiTimeFieldMessages;
   readonly toast: NuiToastMessages;

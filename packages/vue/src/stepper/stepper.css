@@ -1,0 +1,214 @@
+.nui-stepper {
+  --_indicator: var(--nui-control-height-sm);
+  --_pad: var(--nui-space-1);
+
+  color: var(--nui-text);
+  font-family: var(--nui-font);
+  font-size: var(--nui-font-size-sm);
+  line-height: var(--nui-line-height);
+}
+.nui-stepper--orientation-horizontal {
+  container-type: inline-size;
+}
+.nui-stepper__list {
+  display: flex;
+  gap: var(--nui-space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.nui-stepper__item {
+  --_ring: var(--nui-border-strong);
+  --_fill: var(--nui-surface);
+  --_ink: var(--nui-text-muted);
+  --_label: var(--nui-text-muted);
+  --_halo: transparent;
+  --_connector-fill: 0%;
+  --_row-weight: 400;
+
+  display: flex;
+  flex: 1 1 0;
+  align-items: flex-start;
+  gap: var(--nui-space-3);
+  min-inline-size: 0;
+}
+.nui-stepper__item:last-child {
+  flex: 0 1 auto;
+}
+.nui-stepper__item--complete {
+  --_ring: var(--nui-primary-soft);
+  --_fill: var(--nui-primary-soft);
+  --_ink: var(--nui-primary-soft-foreground);
+  --_label: var(--nui-text);
+  --_connector-fill: 100%;
+}
+.nui-stepper__item--current {
+  --_ring: var(--nui-primary);
+  --_fill: var(--nui-primary);
+  --_ink: var(--nui-primary-foreground);
+  --_label: var(--nui-text);
+  --_halo: var(--nui-primary-soft);
+  --_row-weight: 500;
+}
+.nui-stepper__item--error {
+  --_ring: var(--nui-error);
+  --_fill: var(--nui-error-soft);
+  --_ink: var(--nui-error-soft-foreground);
+  --_label: var(--nui-error);
+}
+.nui-stepper__item--current.nui-stepper__item--error {
+  --_halo: var(--nui-error-soft);
+}
+.nui-stepper__item--disabled {
+  opacity: var(--nui-disabled-opacity);
+}
+.nui-stepper__step {
+  display: flex;
+  align-items: center;
+  gap: var(--nui-space-2);
+  min-inline-size: 0;
+  margin: calc(-1 * var(--_pad));
+  padding: var(--_pad);
+  border: 0;
+  border-radius: var(--nui-radius);
+  background: transparent;
+  color: var(--_label);
+  font: inherit;
+  text-align: start;
+  transition:
+    background-color var(--nui-duration-fast) var(--nui-easing),
+    color var(--nui-duration-normal) var(--nui-easing);
+}
+.nui-stepper__item--clickable .nui-stepper__step {
+  cursor: pointer;
+}
+.nui-stepper__item--clickable .nui-stepper__step:hover {
+  background: var(--nui-neutral-soft);
+}
+.nui-stepper__step:focus-visible {
+  outline: var(--nui-focus-ring-width) solid var(--nui-focus);
+  outline-offset: calc(-1 * var(--nui-focus-ring-width));
+}
+.nui-stepper__indicator {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  inline-size: var(--_indicator);
+  block-size: var(--_indicator);
+  border: 1px solid var(--_ring);
+  border-radius: var(--nui-radius-full);
+  background: var(--_fill);
+  box-shadow: 0 0 0 3px var(--_halo);
+  color: var(--_ink);
+  font-size: var(--nui-font-size-xs);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  transition:
+    background-color var(--nui-duration-normal) var(--nui-easing),
+    border-color var(--nui-duration-normal) var(--nui-easing),
+    box-shadow var(--nui-duration-normal) var(--nui-easing),
+    color var(--nui-duration-normal) var(--nui-easing);
+}
+.nui-stepper__mark {
+  inline-size: 1rem;
+  block-size: 1rem;
+  animation: nui-stepper-mark var(--nui-duration-normal) var(--nui-easing);
+}
+.nui-stepper__status {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.nui-stepper__connector {
+  position: relative;
+  flex: 1 1 auto;
+  min-inline-size: var(--nui-space-4);
+  block-size: 2px;
+  margin-block-start: calc(var(--_indicator) / 2 - 1px);
+  border-radius: var(--nui-radius-full);
+  background: var(--nui-border);
+  overflow: hidden;
+}
+.nui-stepper__connector::after {
+  content: '';
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  inline-size: var(--_connector-fill);
+  background: var(--nui-primary);
+  transition: inline-size var(--nui-duration-slow) var(--nui-easing);
+}
+.nui-stepper__summary {
+  display: none;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--nui-space-3);
+  margin: var(--nui-space-3) 0 0;
+}
+.nui-stepper__summary-label {
+  font-weight: 500;
+}
+.nui-stepper__summary-count {
+  color: var(--nui-text-muted);
+  font-size: var(--nui-font-size-xs);
+  font-variant-numeric: tabular-nums;
+}
+.nui-stepper--orientation-vertical .nui-stepper__list {
+  flex-direction: column;
+  gap: 0;
+}
+.nui-stepper--orientation-vertical .nui-stepper__item {
+  position: relative;
+  flex: none;
+  flex-direction: column;
+  gap: 0;
+  padding-block-end: var(--nui-space-5);
+}
+.nui-stepper--orientation-vertical .nui-stepper__item:last-child {
+  padding-block-end: 0;
+}
+.nui-stepper--orientation-vertical .nui-stepper__step {
+  align-items: flex-start;
+}
+.nui-stepper--orientation-vertical .nui-row__body {
+  padding-block-start: calc((var(--_indicator) - 1lh) / 2);
+}
+.nui-stepper--orientation-vertical .nui-stepper__connector {
+  position: absolute;
+  inset-block: calc(var(--_indicator) + var(--nui-space-1)) var(--nui-space-1);
+  inset-inline-start: calc(var(--_indicator) / 2 - 1px);
+  inline-size: 2px;
+  min-inline-size: 0;
+  block-size: auto;
+  margin: 0;
+}
+.nui-stepper--orientation-vertical .nui-stepper__connector::after {
+  inset-block: 0 auto;
+  inset-inline: 0;
+  inline-size: auto;
+  block-size: var(--_connector-fill);
+  transition: block-size var(--nui-duration-slow) var(--nui-easing);
+}
+@container (max-width: 32rem) {
+  .nui-stepper--orientation-horizontal .nui-row__body {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .nui-stepper--orientation-horizontal .nui-stepper__summary {
+    display: flex;
+  }
+}
+@keyframes nui-stepper-mark {
+  from {
+    opacity: 0;
+    scale: 0.6;
+  }
+}

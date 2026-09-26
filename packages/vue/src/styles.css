@@ -21,6 +21,7 @@
 @import './menu/menu.css';
 @import './tabs/tabs.css';
 @import './breadcrumbs/breadcrumbs.css';
+@import './stepper/stepper.css';
 @import './empty/empty.css';
 @import './row/row.css';
 @import './select/select.css';

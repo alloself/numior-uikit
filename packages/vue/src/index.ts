@@ -156,6 +156,13 @@ export type {
   NuiBreadcrumbsItemSlot,
   NuiBreadcrumbsProps,
 } from './breadcrumbs/breadcrumbs.types';
+export { default as NuiStepper } from './stepper/NuiStepper.vue';
+export type {
+  NuiStepperOrientation,
+  NuiStepperProps,
+  NuiStepperStatus,
+  NuiStepperStep,
+} from './stepper/stepper.types';
 export { default as NuiSelect } from './select/NuiSelect.vue';
 export type { NuiSelectProps, NuiSelectValueSlot } from './select/select.types';
 export { default as NuiBadge } from './badge/NuiBadge.vue';

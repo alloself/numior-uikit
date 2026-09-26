@@ -32,6 +32,7 @@ import {
   NuiProgress,
   NuiRadio,
   NuiSkeleton,
+  NuiStepper,
   NuiRadioGroup,
   NuiSelect,
   NuiSwitch,
@@ -61,6 +62,12 @@ import { configScope } from './support/config-scope';
 import { labelTarget, popoverTarget, renderMarkup } from './support/ssr';
 import { childrenOf, COLUMNS, manyPeople, PEOPLE, TEAM } from './support/rows';
 import { FILES, manyNodes } from './support/tree-items';
+
+const STEPPER_STEPS = [
+  { value: 'account', label: 'Account' },
+  { value: 'profile', label: 'Profile', description: 'Name and photo' },
+  { value: 'plan', label: 'Plan' },
+];
 
 interface Scenario {
   readonly name: string;
@@ -206,6 +213,10 @@ const scenarios: Scenario[] = [
   {
     name: 'NuiLink',
     render: () => h(NuiLink, { href: 'https://example.com', external: true }, () => 'Docs'),
+  },
+  {
+    name: 'NuiStepper',
+    render: () => h(NuiStepper, { steps: STEPPER_STEPS, modelValue: 'profile' }),
   },
   {
     name: 'NuiDialog in a Russian config',
@@ -448,6 +459,24 @@ describe('server rendering', () => {
 
     expect(russian).toContain('aria-label="Закрыть"');
     expect(overridden).toContain('aria-label="Скрыть"');
+  });
+
+  it('renders a stepper as a labelled list with the current step and localized numbers', async () => {
+    const html = await renderMarkup(() =>
+      h(
+        configScope({ locale: 'ar-EG' }, () =>
+          h(NuiStepper, { steps: STEPPER_STEPS, modelValue: 'plan' }),
+        ),
+      ),
+    );
+
+    expect(html).toContain(
+      '<nav class="nui-stepper nui-stepper--orientation-horizontal" aria-label="Steps">',
+    );
+
+    expect(html).toContain('<ol class="nui-stepper__list" role="list">');
+    expect(html).toContain('aria-current="step"');
+    expect(html).toContain('٣');
   });
 
   it('links popover triggers and content by id on the server and keeps them hidden', async () => {
