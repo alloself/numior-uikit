@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
-import type { SubmitHelpers } from '../src';
+import type { SubmitHelpers, SubmittedValues } from '../src';
 import { FormHarness } from './harness/form';
 
 interface Signup {
@@ -21,7 +21,7 @@ const blank: Signup = { email: '', age: '', tags: [] };
 
 const collectOutput =
   (sink: (SignupOutput | undefined)[]) =>
-  (_values: Signup, helpers: SubmitHelpers<Signup, SignupOutput>) => {
+  (_values: SubmittedValues<Signup>, helpers: SubmitHelpers<Signup, SignupOutput>) => {
     sink.push(helpers.output);
   };
 

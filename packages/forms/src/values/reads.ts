@@ -1,21 +1,12 @@
 import { joinPath } from '../paths/paths';
 import { getAt } from './access';
 import { isEqualValue } from './equal';
+import { isTraversable } from './kinds';
 
 export interface ReadLog<V extends object> {
   readonly view: V;
   reads(): ReadonlyMap<string, unknown>;
 }
-
-const isTraversable = (value: unknown): value is object => {
-  if (typeof value !== 'object' || value === null) {
-    return false;
-  }
-
-  const prototype: unknown = Object.getPrototypeOf(value);
-
-  return Array.isArray(value) || prototype === Object.prototype || prototype === null;
-};
 
 const recorder = <T extends object>(target: T, prefix: string, paths: Set<string>): T =>
   new Proxy(target, {

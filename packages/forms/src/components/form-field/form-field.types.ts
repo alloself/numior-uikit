@@ -1,5 +1,6 @@
 import type { ValidateOn } from '../../core/form.types';
 import type { FormContext } from '../../form/form-context';
+import type { KeepValue } from '../../paths/paths.types';
 import type { FieldSelector } from '../../paths/selector';
 import type { AnyFieldRule } from '../../rules/async-rule';
 
@@ -18,7 +19,7 @@ export interface NuiFormFieldProps<T extends object, R> {
   required?: boolean | undefined;
   disabled?: boolean | undefined;
   group?: boolean | undefined;
-  keepValue?: boolean | undefined;
+  keepValue?: KeepValue<R> | undefined;
   rules?: readonly AnyFieldRule<R, T>[] | undefined;
   validateOn?: ValidateOn | undefined;
   debounce?: number | undefined;

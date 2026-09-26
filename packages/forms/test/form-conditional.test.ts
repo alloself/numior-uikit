@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest';
-import { NuiFormError } from '../src';
+import { describe, expect, expectTypeOf, it } from 'vitest';
+import { NuiFormError, custom, type KeepValue } from '../src';
 import { FormHarness } from './harness/form';
 import { companySchema } from './harness/schemas';
 
@@ -7,7 +7,35 @@ const takenCompany = (): never => {
   throw new NuiFormError({ company: 'Company is taken' });
 };
 
+const companyOf = (values: unknown): unknown =>
+  typeof values === 'object' && values !== null && 'company' in values ? values.company : undefined;
+
+const differsFromCompany = custom(
+  (value, { values }) => value !== companyOf(values) || 'Pick a name that differs from the company',
+);
+
 describe('conditional fields', () => {
+  it('lets rules read every value while a hidden field stays out of the submission', async () => {
+    const form = FormHarness.mount({
+      initialValues: { name: 'Acme', company: 'Acme' },
+      fields: [{ path: 'name', rules: [differsFromCompany] }, 'company'],
+    });
+
+    await form.hide('company');
+    expect((await form.submit()).status).toBe('invalid');
+    expect(form.error('name')).toBe('Pick a name that differs from the company');
+
+    await form.type('name', 'Ann');
+    expect((await form.submit()).status).toBe('submitted');
+    expect(form.submissions).toEqual([{ name: 'Ann' }]);
+  });
+
+  it('allows clearing on hide only for a value type that admits undefined', () => {
+    expectTypeOf<KeepValue<string>>().toEqualTypeOf<true>();
+    expectTypeOf<KeepValue<string | undefined>>().toEqualTypeOf<boolean>();
+    expectTypeOf<KeepValue<unknown>>().toEqualTypeOf<boolean>();
+  });
+
   it('leaves a hidden field out of validation and submission but keeps its value', async () => {
     const form = FormHarness.mount({
       initialValues: { name: 'Ann', company: '' },

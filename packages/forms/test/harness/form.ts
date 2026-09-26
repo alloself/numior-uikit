@@ -26,6 +26,7 @@ import {
   type ValidateOn,
   type ValidateOptions,
   type ValidationSummary,
+  type SubmittedValues,
 } from '../../src';
 
 export interface FieldSpec {
@@ -116,7 +117,7 @@ export class FormHarness<V extends object> {
   static mount<V extends object, O = V>(options: FormHarnessOptions<V, O>): FormHarness<V> {
     const { fields: inputs, hidden = [], config, onSubmit, ...formOptions } = options;
     const probes: Probes = { fields: new Map(), work: new Map() };
-    const submissions: V[] = [];
+    const submissions: SubmittedValues<V>[] = [];
 
     const view: View = reactive({
       hidden: new Set(hidden),
@@ -171,7 +172,7 @@ export class FormHarness<V extends object> {
     private readonly wrapper: VueWrapper,
     private readonly probes: Probes,
     private readonly view: View,
-    readonly submissions: readonly V[],
+    readonly submissions: readonly SubmittedValues<V>[],
   ) {}
 
   field(path: string): FormField<unknown> {

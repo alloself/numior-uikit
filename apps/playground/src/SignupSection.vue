@@ -166,6 +166,7 @@ import {
   required,
   useForm,
   type FieldRule,
+  type SubmittedValues,
 } from '@numior/forms';
 
 interface Signup {
@@ -228,7 +229,14 @@ const termsRules = [required({ message: 'Нужно принять услови�
 
 const server = ref<ServerMode>('ok');
 const submitted = ref(0);
-const delivered = ref<Pick<Signup, 'seats' | 'tags'>>({ seats: null, tags: [] });
+type Delivered = Pick<SubmittedValues<Signup>, 'seats' | 'tags'>;
+
+const deliveredOf = (values: SubmittedValues<Signup>): Delivered => ({
+  seats: values.seats ?? null,
+  tags: values.tags ?? [],
+});
+
+const delivered = ref<Delivered>({ seats: null, tags: [] });
 
 const form = useForm<Signup>({
   initialValues: {
@@ -254,7 +262,7 @@ const form = useForm<Signup>({
       throw new NuiFormError({}, 'Сервис регистрации временно недоступен');
     }
     submitted.value += 1;
-    delivered.value = { seats: values.seats, tags: values.tags };
+    delivered.value = deliveredOf(values);
   },
 });
 

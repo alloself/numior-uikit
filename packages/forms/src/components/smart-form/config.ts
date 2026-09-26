@@ -1,4 +1,5 @@
 import type { Component, InputHTMLAttributes } from 'vue';
+import type { KeepValue } from '../../paths/paths.types';
 import type { FieldSelector } from '../../paths/selector';
 import { adaptRule } from '../../rules/adapt-rule';
 import type { AnyFieldRule } from '../../rules/async-rule';
@@ -58,9 +59,10 @@ type EmitsInto<C, R, M extends string> =
 
 export interface SmartFieldConfig<S, R, C, M extends string = 'modelValue'> extends Omit<
   NuiSmartFormField<S>,
-  'kind' | 'component' | 'name' | 'model' | 'props' | 'rules'
+  'kind' | 'component' | 'name' | 'model' | 'props' | 'rules' | 'keepValue'
 > {
   readonly model?: M | undefined;
+  readonly keepValue?: KeepValue<R> | undefined;
   readonly props?: ControlProps<C, M> | NuiSmartFormPropsFactory<S, ControlProps<C, M>> | undefined;
   readonly rules?: readonly AnyFieldRule<R, S>[] | undefined;
 }

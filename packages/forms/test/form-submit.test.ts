@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest';
-import { NuiFormError, type FieldFlush, type SubmitHelpers } from '../src';
+import { describe, expect, expectTypeOf, it } from 'vitest';
+import { NuiFormError, type FieldFlush, type SubmitHelpers, type SubmittedValues } from '../src';
 import { Deferred } from './harness/deferred';
 import { FormHarness } from './harness/form';
 import { transformSchema, type SchemaValues } from './harness/schema';
@@ -18,7 +18,7 @@ const rejectWith = (failure: Error) => () => Promise.reject(failure);
 
 const keepHelpers =
   (sink: SubmitHelpers<Values, unknown>[], gate?: Deferred, entered?: Deferred) =>
-  (_values: Values, helpers: SubmitHelpers<Values, unknown>) => {
+  (_values: SubmittedValues<Values>, helpers: SubmitHelpers<Values, unknown>) => {
     sink.push(helpers);
     entered?.resolve();
     return gate?.promise;
@@ -40,6 +40,20 @@ const commitLater =
 const trimmed = (values: SchemaValues) => ({ email: String(values.email).trim() });
 
 describe('submit', () => {
+  it('types the submitted values as a deep partial whose list items may be pruned away', () => {
+    interface Order {
+      title: string;
+      due: Date;
+      lines: { sku: string; count: number }[];
+    }
+
+    expectTypeOf<SubmittedValues<Order>>().toEqualTypeOf<{
+      title?: string;
+      due?: Date;
+      lines?: ({ sku?: string; count?: number } | undefined)[];
+    }>();
+  });
+
   it('ignores a second submit while the first is pending and keeps fields editable', async () => {
     const gate = new Deferred();
 

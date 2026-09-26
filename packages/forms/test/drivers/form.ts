@@ -19,6 +19,7 @@ import {
   type StandardSchema,
   type SubmitHandler,
   type ValidateOn,
+  type SubmittedValues,
 } from '../../src';
 
 export type ControlKind = 'input' | 'select' | 'checkbox' | 'number';
@@ -113,7 +114,7 @@ const renderField = <V extends object>(
 
 export class FormDriver<V extends object> {
   static mount<V extends object>(options: FormDriverOptions<V>): FormDriver<V> {
-    const submissions: V[] = [];
+    const submissions: SubmittedValues<V>[] = [];
 
     const view: View = reactive({
       hidden: new Set<string>(),
@@ -171,7 +172,7 @@ export class FormDriver<V extends object> {
   private constructor(
     private readonly wrapper: VueWrapper,
     readonly form: FormContext<V>,
-    readonly submissions: readonly V[],
+    readonly submissions: readonly SubmittedValues<V>[],
     private readonly view: View,
   ) {}
 

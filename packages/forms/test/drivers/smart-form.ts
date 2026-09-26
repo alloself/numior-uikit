@@ -7,6 +7,7 @@ import {
   type NuiSmartFormEntry,
   type NuiSmartFormStep,
   type SubmitHandler,
+  type SubmittedValues,
 } from '../../src';
 
 type SlotRender = (props: Record<string, unknown>) => VNode | VNode[];
@@ -24,7 +25,7 @@ export interface SmartFormDriverOptions<V extends object> {
 
 export class SmartFormDriver<V extends object> {
   static mount<V extends object>(options: SmartFormDriverOptions<V>): SmartFormDriver<V> {
-    const submissions: V[] = [];
+    const submissions: SubmittedValues<V>[] = [];
     const captured = shallowRef<FormContext<V> | null>(null);
     const step = shallowRef(options.step);
 
@@ -69,7 +70,7 @@ export class SmartFormDriver<V extends object> {
   private constructor(
     private readonly wrapper: VueWrapper,
     readonly form: FormContext<V>,
-    readonly submissions: readonly V[],
+    readonly submissions: readonly SubmittedValues<V>[],
   ) {}
 
   private get grid(): DOMWrapper<HTMLElement> {

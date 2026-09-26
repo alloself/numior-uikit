@@ -60,3 +60,13 @@ export type FormPathValue<T, P extends string> = string extends P | FormPath<T>
 export type DeepPartial<T> = T extends Leaf | readonly unknown[]
   ? T
   : { [K in keyof T]?: DeepPartial<T[K]> };
+
+type Opaque = Leaf | ReadonlyMap<unknown, unknown> | ReadonlySet<unknown>;
+
+export type SubmittedValues<T> = T extends Opaque
+  ? T
+  : T extends readonly (infer Item)[]
+    ? (SubmittedValues<Item> | undefined)[]
+    : { [K in keyof T]?: SubmittedValues<T[K]> };
+
+export type KeepValue<R> = undefined extends R ? boolean : true;

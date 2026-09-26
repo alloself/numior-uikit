@@ -4,6 +4,7 @@ import { deleteAt, expandPattern, getAt } from '../src/values/access';
 import { cloneValue } from '../src/values/clone';
 import { isEqualValue } from '../src/values/equal';
 import { readsHold, recordReads } from '../src/values/reads';
+import { isPrunedFrom, prune } from '../src/core/prune';
 
 class Money {
   constructor(
@@ -160,5 +161,30 @@ describe('read log', () => {
     expect(readsHold(reads, { ...formValues(), address: { city: 'Lyon', zip: '69001' } })).toBe(
       false,
     );
+  });
+});
+
+const account = () => ({
+  name: 'Ann',
+  company: 'Acme',
+  contacts: [{ email: 'a@example.com', phone: '1' }, { email: 'b@example.com' }],
+});
+
+describe('pruned values', () => {
+  it('accepts a copy with hidden paths removed and rejects a value the form never had', () => {
+    const original = account();
+    const pruned = account();
+
+    prune(pruned, ['company', 'contacts.*.phone', 'contacts.1'], new Set(['contacts.0.phone']));
+
+    expect(pruned).toEqual({
+      name: 'Ann',
+      contacts: [{ email: 'a@example.com', phone: '1' }, undefined],
+    });
+
+    expect(isPrunedFrom(pruned, original)).toBe(true);
+    expect(isPrunedFrom({ ...pruned, name: 'Bob' }, original)).toBe(false);
+    expect(isPrunedFrom({ ...pruned, extra: 1 }, original)).toBe(false);
+    expect(isPrunedFrom({ ...pruned, contacts: {} }, original)).toBe(false);
   });
 });

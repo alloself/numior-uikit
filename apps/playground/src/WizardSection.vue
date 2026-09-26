@@ -129,11 +129,11 @@ const form = useForm<Onboarding>({
       setTimeout(resolve, 400);
     });
 
-    if (values.email.trim() === TAKEN) {
+    if (values.email?.trim() === TAKEN) {
       throw new NuiFormError({ email: 'Этот адрес уже зарегистрирован' });
     }
     submitted.value += 1;
-    created.value = values.team;
+    created.value = values.team ?? null;
   },
 });
 

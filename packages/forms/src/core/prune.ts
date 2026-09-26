@@ -1,4 +1,7 @@
+import type { SubmittedValues } from '../paths/paths.types';
 import { deleteAt, expandPattern } from '../values/access';
+import { isEqualValue } from '../values/equal';
+import { isTraversable } from '../values/kinds';
 
 export const prune = (
   target: object,
@@ -13,3 +16,21 @@ export const prune = (
     }
   }
 };
+
+const within = (part: unknown, whole: unknown): boolean => {
+  if (part === undefined) {
+    return true;
+  }
+  if (!isTraversable(part) || !isTraversable(whole)) {
+    return isEqualValue(part, whole);
+  }
+  return (
+    Array.isArray(part) === Array.isArray(whole) &&
+    Object.keys(part).every(
+      (key) => Object.hasOwn(whole, key) && within(Reflect.get(part, key), Reflect.get(whole, key)),
+    )
+  );
+};
+
+export const isPrunedFrom = <V>(pruned: unknown, source: V): pruned is SubmittedValues<V> =>
+  within(pruned, source);

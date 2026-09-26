@@ -18,7 +18,7 @@ export type ApplyScope = 'attempted' | 'own';
 
 export interface RunResult<V, O> extends Classified {
   readonly baseline: V | undefined;
-  readonly submitted: V;
+  readonly submitted: object;
   readonly output: O | undefined;
 }
 
@@ -44,7 +44,7 @@ export const createValidation = <V extends object, O>(core: FormCore<V, O>): Val
     void execute();
   });
 
-  const ruleIssues = (submitted: V, active: readonly Entry<V>[]): FormIssue[] =>
+  const ruleIssues = (values: V, active: readonly Entry<V>[]): FormIssue[] =>
     active
       .filter((entry) => !entry.disabled())
       .flatMap((entry) => {
@@ -54,12 +54,11 @@ export const createValidation = <V extends object, O>(core: FormCore<V, O>): Val
         const context = {
           name: path,
           label: entry.label(),
-          values: submitted,
+          values,
           messages: core.messages.value,
         };
 
-        const message =
-          firstFailure(rules, getAt(submitted, path), context) ?? entry.check(context);
+        const message = firstFailure(rules, getAt(values, path), context) ?? entry.check(context);
 
         return message === undefined ? [] : [{ path, message }];
       });
@@ -71,24 +70,21 @@ export const createValidation = <V extends object, O>(core: FormCore<V, O>): Val
         : [],
     );
 
-  const schemaOutcome = (submitted: V): MaybePromise<SchemaOutcome<O | undefined>> =>
+  const schemaOutcome = (submitted: object): MaybePromise<SchemaOutcome<O | undefined>> =>
     core.schema === undefined
       ? { ok: true, output: undefined }
       : chain(core.schema['~standard'].validate(submitted), toOutcome);
 
   const run = (checked?: readonly Entry<V>[], keep = false): MaybePromise<RunResult<V, O>> => {
     const snapshot = core.engine.snapshot();
-    const submitted = keep ? cloneValue(snapshot) : snapshot;
     const index = core.registry.index();
     const targets = checked ?? index.active;
+    const ruled = ruleIssues(snapshot, targets);
+    const submitted: object = keep ? cloneValue(snapshot) : snapshot;
 
     prune(submitted, new Set([...core.registry.known, ...index.patterns]), index.covered);
 
-    const extra = [
-      ...ruleIssues(submitted, targets),
-      ...externalIssues(),
-      ...asyncChecks.issues(targets),
-    ];
+    const extra = [...ruled, ...externalIssues(), ...asyncChecks.issues(targets)];
 
     return chain(schemaOutcome(submitted), (outcome) => {
       const issues = outcome.ok ? extra : [...outcome.issues, ...extra];

@@ -218,7 +218,9 @@ fields, and their selectors read the row — `row.field(NuiInput, (r) => r.phone
 
 `when(values, row)` shows a field, a section or a group while it returns `true`. A hidden field
 drops out of validation and submission even if it was never shown, yet its value stays: a field
-that comes back shows the old text. `keepValue: false` clears the value when the field hides. A
+that comes back shows the old text. `keepValue: false` deletes the value when the field hides, so
+it is allowed only when the value type admits `undefined` (`company?: string`): otherwise
+`values` would lie about their type after the field hides, and the type check rejects it. A
 row field's `when` also gets the row's value, and in the rules of a row field `values` is the row
 itself, so a rule like “the phone is required once an email is set” lives in the row config. The condition is recomputed in the same render as
 the value change, and an appearing field moves through the motion tokens.

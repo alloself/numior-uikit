@@ -47,7 +47,16 @@ import {
   NuiTextarea,
   type NuiOptionSource,
 } from '@numior/vue';
-import { NuiSmartForm, email, formConfig, max, pattern, required, useForm } from '@numior/forms';
+import {
+  NuiSmartForm,
+  email,
+  formConfig,
+  max,
+  pattern,
+  required,
+  useForm,
+  type SubmittedValues,
+} from '@numior/forms';
 
 interface Contact {
   name: string;
@@ -194,8 +203,8 @@ const FILTER_FIELDS = [
   }),
 ];
 
-const applied = ref<Filter>({ query: '', status: null });
-const saved = ref<Partial<Profile> | null>(null);
+const applied = ref<SubmittedValues<Filter>>({ query: '', status: null });
+const saved = ref<SubmittedValues<Profile> | null>(null);
 
 const filter = useForm<Filter>({
   initialValues: { query: '', status: null },

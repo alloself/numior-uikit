@@ -60,6 +60,8 @@ export type {
 } from './core/form.types';
 export type {
   DeepPartial,
+  KeepValue,
+  SubmittedValues,
   FormAfterSlotPath,
   FormPath,
   FormPathValue,

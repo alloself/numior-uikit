@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { NuiFormError, required } from '../src';
+import { NuiFormError, required, type SubmittedValues } from '../src';
 import { veeValidateEngine } from '../src/vee-validate';
 import { FieldArrayDriver } from './drivers/field-array';
 import { FormDriver } from './drivers/form';
 import { VeeInterop } from './harness/vee-interop';
 
-const rejectTaken = (values: { name: string; email: string }): void => {
+const rejectTaken = (values: SubmittedValues<{ name: string; email: string }>): void => {
   if (values.email === 'taken@example.com') {
     throw new NuiFormError({ email: 'This address is taken' });
   }

@@ -9,6 +9,7 @@ import {
   type MaybeRefOrGetter,
 } from 'vue';
 import type { FieldFlush, FieldMeta, FieldValidation, ValidateOn } from '../core/form.types';
+import type { KeepValue } from '../paths/paths.types';
 import { FORM_HOST, type FormContext } from '../form/form-context';
 import { readSelected, recordPath, type FieldSelector } from '../paths/selector';
 import { createRuleSet, type RuleSource } from './rule-set';
@@ -18,7 +19,7 @@ export interface UseFieldOptions<V extends object, R> {
   readonly rules?: RuleSource<R, V>;
   readonly validateOn?: MaybeRefOrGetter<ValidateOn | undefined>;
   readonly debounce?: MaybeRefOrGetter<number | undefined>;
-  readonly keepValue?: MaybeRefOrGetter<boolean | undefined>;
+  readonly keepValue?: MaybeRefOrGetter<KeepValue<R> | undefined>;
   readonly label?: MaybeRefOrGetter<string | undefined>;
   readonly element?: MaybeRefOrGetter<HTMLElement | null | undefined>;
   readonly focus?: (() => void) | undefined;

@@ -192,7 +192,9 @@ Declare the function of an asynchronous check in `<script setup>`: written inlin
 it is new on every render and restarts the check. A rule that depends on other values reads them
 from its context — `custom((value, { values }) => …)`: after a submit attempt every change
 revalidates the whole form, so “Passwords do not match” disappears as soon as the password is
-fixed.
+fixed. `values` in the context are all current form values typed `V`, hidden fields included: a
+hidden field itself drops out of validation, but its value stays in the form and the rule of a
+neighbouring field sees it. The schema and the submission do not get hidden fields.
 
 `schema` takes any Standard Schema v1 — zod, valibot, arktype — with no adapter. A schema issue
 goes to the nearest visible field on its path; an issue without a path becomes a form error; an
@@ -227,7 +229,10 @@ control's `suffix`.
 form while the browser keeps its own bubbles away. The form owns submission:
 `onSubmit(values, helpers)` gets a copy of the entered values without hidden fields, and
 `helpers` holds `output`, `signal`, `setErrors`, `setFieldError`, `setFormErrors` and
-`resetForm`. While the handler runs the form is marked `aria-busy`, the button keeps its focus
+`resetForm`. Since hidden fields are cut out, `values` are typed `SubmittedValues<V>` — a deep
+partial copy in which list items may be `undefined` too; the copy is checked against the form
+values before the call. The fully validated form in the schema's type comes in
+`helpers.output`, present only when neither the schema nor the rules found an error. While the handler runs the form is marked `aria-busy`, the button keeps its focus
 and its width, and a second submission is ignored. After a success the submitted values become
 the initial ones, and edits made while waiting stay dirty.
 
@@ -382,7 +387,7 @@ Slots: default — the fields; `form-errors` (`{ errors }`) replaces the error b
 | `rules`                                           | rules                            | —              | Field rules                          |
 | `validateOn`                                      | `'submit' \| 'blur' \| 'change'` | as on the form | When the field starts being checked  |
 | `debounce`                                        | `number`                         | `300`          | Delay of an async check after typing |
-| `keepValue`                                       | `boolean`                        | `true`         | `false` clears the value when hidden |
+| `keepValue`                                       | `KeepValue<R>`                   | `true`         | `false` clears the value when hidden |
 
 `NuiFieldArray`:
 

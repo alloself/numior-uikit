@@ -10,6 +10,7 @@ import {
   type FormContext,
   type FormField,
   type SubmitResult,
+  type SubmittedValues,
 } from '../../src';
 
 export interface Contact {
@@ -31,7 +32,7 @@ interface Parts {
   readonly rows: Map<string, FormField<string | undefined>>;
   readonly work: Map<string, Promise<void>>;
   readonly active: { value: boolean };
-  readonly submissions: Team[];
+  readonly submissions: SubmittedValues<Team>[];
   readonly form: () => FormContext<Team>;
 }
 
@@ -148,7 +149,7 @@ export class ArrayHarness {
     return this.form.values;
   }
 
-  get submissions(): readonly Team[] {
+  get submissions(): readonly SubmittedValues<Team>[] {
     return this.parts.submissions;
   }
 

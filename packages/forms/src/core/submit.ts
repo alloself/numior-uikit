@@ -1,10 +1,12 @@
 import { normalizePath } from '../paths/paths';
+import type { SubmittedValues } from '../paths/paths.types';
 import type { ErrorControls } from './errors';
 import { NuiFormError } from './form-error';
 import { IDLE_SUBMISSION, type FormCore } from './form-core';
 import type { FormHost } from './host';
 import { toMessages } from './messages';
 import type { FormMessage, ResetOptions, SubmitResult, SubmitStatus } from './form.types';
+import { isPrunedFrom } from './prune';
 import { isClean, type RunResult, type Validation } from './validation';
 
 export interface SubmitHelpers<V, O> {
@@ -16,7 +18,10 @@ export interface SubmitHelpers<V, O> {
   resetForm(options?: ResetOptions<V>): void;
 }
 
-export type SubmitHandler<V, O> = (values: V, helpers: SubmitHelpers<V, O>) => unknown;
+export type SubmitHandler<V, O> = (
+  values: SubmittedValues<V>,
+  helpers: SubmitHelpers<V, O>,
+) => unknown;
 
 export interface SubmitDeps<V extends object, O> {
   readonly core: FormCore<V, O>;
@@ -30,6 +35,13 @@ export interface SubmitDeps<V extends object, O> {
 }
 
 const IGNORED: SubmitResult = { status: 'ignored', invalid: [], formErrors: [] };
+
+const payloadOf = <V, O>({ submitted, baseline }: RunResult<V, O>): SubmittedValues<V> => {
+  if (baseline === undefined || !isPrunedFrom(submitted, baseline)) {
+    throw new Error('The submitted values do not come from the form values');
+  }
+  return submitted;
+};
 
 export const createSubmit = <V extends object, O>(deps: SubmitDeps<V, O>) => {
   const { core } = deps;
@@ -72,7 +84,7 @@ export const createSubmit = <V extends object, O>(deps: SubmitDeps<V, O>) => {
     signal: AbortSignal,
   ): Promise<SubmitResult> => {
     try {
-      await deps.onSubmit(result.submitted, { ...deps.helpers, output: result.output, signal });
+      await deps.onSubmit(payloadOf(result), { ...deps.helpers, output: result.output, signal });
     } catch (error) {
       if (!(error instanceof NuiFormError)) {
         throw error;
