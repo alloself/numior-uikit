@@ -68,6 +68,11 @@ it('waits for a commit with the lazy modifier', async () => {
   `MenuDriver.press`).
 - Native popover and dialog APIs are stubbed by `TopLayerStubs` (vue) and `installTopLayer`
   (primitives); both dispatch `beforetoggle` and `toggle`.
+- Every component with a message catalog gets a scenario «speaks the configured language and a
+  prop still wins»: drivers take `config?: NuiConfigOptions` and mount with
+  `global: { plugins: configPlugins(config) }` (`test/support/config.ts`); English stays the
+  default, so existing assertions keep English texts. Components with a `locale` prop also
+  check that the prop, not the config, picks the language.
 
 - Default icons are preloaded by `test/support/preload-icons.ts` (Vitest `setupFiles`) so
   lazy icon imports resolve from cache; a new default alias goes there too, otherwise a
@@ -106,6 +111,8 @@ that the label `for` matches the control id and that values render on the server
 - Colors through `expectRgb` (`tests/e2e/helpers/color.ts`); axe through
   `playground.wcagViolations()` after `playground.emulate({ reducedMotion: 'reduce' })`.
 - Cover keyboard and tap (`isMobile`), RTL overflow, density steps, then run in Docker.
+- An element inside `aria-hidden` has an empty accessible name (the number field steppers), so
+  assert its `aria-label` attribute instead of `toHaveAccessibleName`.
 - `getByRole(..., { name })` matches substrings (`Узел 1` also finds `Узел 10`); for item
   lookups by label use `exact: true` or filter by an anchored `hasText` RegExp (`TreeSection.item`).
 - A pointer click on a stretched-link surface is refused by actionability checks because the

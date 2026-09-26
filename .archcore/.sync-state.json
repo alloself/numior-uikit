@@ -166,6 +166,51 @@
       "source": "intl-fields.adr.md",
       "target": "component-authoring.rule.md",
       "type": "related"
+    },
+    {
+      "source": "messages.adr.md",
+      "target": "numior-ui.plan.md",
+      "type": "implements"
+    },
+    {
+      "source": "messages.adr.md",
+      "target": "modular-foundation.adr.md",
+      "type": "depends_on"
+    },
+    {
+      "source": "messages.adr.md",
+      "target": "intl-fields.adr.md",
+      "type": "related"
+    },
+    {
+      "source": "messages.adr.md",
+      "target": "component-authoring.rule.md",
+      "type": "related"
+    },
+    {
+      "source": "upload.adr.md",
+      "target": "numior-ui.plan.md",
+      "type": "implements"
+    },
+    {
+      "source": "upload.adr.md",
+      "target": "component-authoring.rule.md",
+      "type": "related"
+    },
+    {
+      "source": "structure.adr.md",
+      "target": "numior-ui.plan.md",
+      "type": "implements"
+    },
+    {
+      "source": "structure.adr.md",
+      "target": "navigation.adr.md",
+      "type": "related"
+    },
+    {
+      "source": "structure.adr.md",
+      "target": "component-authoring.rule.md",
+      "type": "related"
     }
   ]
 }

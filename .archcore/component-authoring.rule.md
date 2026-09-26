@@ -54,6 +54,12 @@ status: accepted
   прямоугольная кнопка с одной иконкой не допускается.
 - Комментарии в коде (TS, Vue, CSS, конфиги) не пишутся; объяснения живут в `apps/docs`
   и Archcore. Имена несут смысл.
+- Тексты интерфейса (имена кнопок, пустые состояния, объявления, ошибки) живут в каталоге
+  `<comp>.messages.ts` (`NuiMessageCatalog` с `en` и `ru`), зарегистрированном в
+  `NuiVueMessages`. Текстовые пропы (`label`, `*Label`, `announce`) дефолта не имеют: компонент
+  берёт `prop ?? messages.value.key` из `useMessages(catalog, locale?)`, компонент с пропом
+  `locale` передаёт его в `useMessages`. Тексты с параметрами — функции одного объекта,
+  множественное число — `plural`. Решение — `messages.adr.md`.
 - Одно действие — один рендер. Watcher с `flush: 'post'` только трогает DOM: вызывает
   `focus()`, `showPopover()`, измеряет и пишет `element.style` или custom properties; он не
   пишет в реактивное состояние и не запускает второй рендер. Кто активен, где tab stop и
@@ -111,7 +117,9 @@ Bad: `function sync(next) {...}` внутри композабла и `if (!el) 
 ## Enforcement
 
 Самопроверка по этому документу перед передачей изменений; `pnpm check` (Fallow ловит
-неиспользуемые члены драйверов и дубли, `pnpm test:ticks` — двойные `nextTick()` в тестах);
+неиспользуемые члены драйверов и дубли, `pnpm test:ticks` — двойные `nextTick()` в тестах,
+ESLint — текстовые пропы с дефолтом и тексты вне каталогов, `check-artifacts` — tree-shaking
+каталогов);
 ревью пользователя. Практические шаблоны — в
 скиллах `.claude/skills/nui-component` и `.claude/skills/nui-testing`, краткая версия —
 в `AGENTS.md`.

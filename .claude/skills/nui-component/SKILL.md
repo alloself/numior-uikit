@@ -69,6 +69,24 @@ const {
 - Reading direction comes from `useDirection(anchor)`; floating elements get their side as
   `--_side-x`/`--_side-y` from `useFloating`, CSS derives the shift and the arrow from them.
 
+## Texts
+
+- Every user-facing text (button names, empty states, announcements, errors) lives in
+  `src/<name>/<name>.messages.ts`: an interface `Nui<Name>Messages` with flat keys and a typed
+  literal `export const <name>Messages: NuiMessageCatalog<'<name>'> = { namespace, en, ru }`.
+  Register the interface in `src/messages.ts` (`NuiVueMessages`); the registry test then asks
+  for the catalog and a Russian text for every English one.
+- Text props (`label`, `*Label`, `announce`) take no default. Resolve them in the script:
+  `const messages = useMessages(<name>Messages, locale?)` and
+  `const closeText = computed(() => closeLabel ?? messages.value.close)`; several texts share
+  one `texts` computed. A component with a `locale` prop passes its resolved locale; a prop
+  forwarded to a child stays `undefined` so the child resolves its own text.
+- Parameterised texts are functions of one object (`page: ({ page }) => ...`); counts go through
+  `plural(language, count, forms)` with the language of the text. Function props such as
+  `pageLabel` keep their signatures and wrap the dictionary when absent.
+- Intl texts (month names, segment names, numbers, file sizes) stay in Intl; neutral glyphs
+  (`…`, `+N`) are not translated.
+
 ## Template and CSS
 
 - Root class `nui-<name>`; parts `nui-<name>__<part>`; modifiers

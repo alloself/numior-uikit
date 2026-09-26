@@ -23,6 +23,8 @@ that its features are implemented. Component and test conventions live in the sk
 - Every state change moves through the motion tokens; icons resolve through the alias
   registry and load on demand; a loading button keeps its width.
 - No comments in source files; explanations go to docs and Archcore.
+- Built-in texts live in `<comp>.messages.ts` catalogs (RU and EN) resolved by `useMessages`;
+  text props have no default, a prop wins over the dictionary.
 - Tests read as scenarios through drivers (`packages/*/test/drivers`), harnesses and
   Playwright page objects (`tests/e2e/pages`); every component gets unit, SSR, e2e and axe.
 - Keep Vue 3.5+, SSR, keyboard access, RTL, light/dark/system themes and optional Tailwind.
