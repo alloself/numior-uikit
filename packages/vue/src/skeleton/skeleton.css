@@ -2,6 +2,8 @@
   --_inline-size: 100%;
   --_block-size: 1em;
   --_radius: var(--nui-radius-sm);
+  --_tint: color-mix(in oklab, var(--nui-text) 8%, transparent);
+  --_shine: color-mix(in oklab, var(--nui-text) 13%, transparent);
 
   box-sizing: border-box;
   display: block;
@@ -17,12 +19,7 @@
   display: block;
   block-size: var(--_block-size);
   border-radius: var(--_radius);
-  background: linear-gradient(
-    90deg,
-    var(--nui-surface-muted) 35%,
-    color-mix(in oklab, var(--nui-surface-muted), var(--nui-text) 6%) 50%,
-    var(--nui-surface-muted) 65%
-  );
+  background: linear-gradient(90deg, var(--_tint) 35%, var(--_shine) 50%, var(--_tint) 65%);
   background-size: 200% 100%;
   animation: nui-skeleton-shimmer 2s linear infinite;
 }

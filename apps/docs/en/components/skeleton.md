@@ -35,4 +35,7 @@ process.
 | `lines`    | `number`                       | `1`       | Lines for `text`; the last one is shorter |
 | `animated` | `boolean`                      | `true`    | Shimmer                                   |
 
-Block `nui-skeleton`, modifiers `--shape-*`, `--static`; element `__line`.
+Block `nui-skeleton`, modifiers `--shape-*`, `--static`; element `__line`. The fill is a
+translucent tint of the text colour (`--_tint`, highlight `--_shine`) rather than a surface
+colour, so the placeholder shows on any background, the grey stripes of `NuiTable striped` and
+the dark theme included.

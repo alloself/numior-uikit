@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { paintedRgb, rgbDelta } from './helpers/color';
 import { PlaygroundPage } from './pages/playground';
 
 test.describe('table', () => {
@@ -77,6 +78,9 @@ test.describe('table', () => {
     await table.loadingToggle.click();
     await expect(table.table.locator('table')).toHaveAttribute('aria-busy', 'true');
     await expect(table.skeletons).toHaveCount(5);
+    const stripe = await paintedRgb(table.skeletonCell(1));
+    const skeleton = await paintedRgb(table.skeletonCell(1).locator('.nui-skeleton'));
+    expect(rgbDelta(skeleton, stripe)).toBeGreaterThan(8);
     await expect(table.selectAll).toBeDisabled();
     await table.loadingToggle.click();
     await expect(table.rows(table.table)).toHaveCount(5);

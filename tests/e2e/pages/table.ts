@@ -154,6 +154,10 @@ export class TableSection {
     return this.table.locator('.nui-table__row--loading');
   }
 
+  skeletonCell(row: number): Locator {
+    return this.skeletons.nth(row).locator('.nui-table__cell').nth(1);
+  }
+
   scroller(table: Locator): Locator {
     return table.locator('.nui-table__scroller');
   }
