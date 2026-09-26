@@ -1,5 +1,10 @@
 import { matchesPattern } from '../paths/paths';
-import type { AnyFieldRule } from '../rules/async-rule';
+import {
+  isAsyncRule,
+  isSyncRule,
+  type AnyFieldRule,
+  type AsyncFieldRule,
+} from '../rules/async-rule';
 import type { FieldRule, FieldRuleContext } from './form.types';
 
 export type FormRules<V> = Readonly<Record<string, readonly AnyFieldRule<unknown, V>[]>>;
@@ -19,7 +24,30 @@ export const firstFailure = <T, V>(
   return undefined;
 };
 
-export const rulesFor = <V>(rules: FormRules<V>, path: string): AnyFieldRule<unknown, V>[] =>
+export interface PathRules<V> {
+  readonly sync: readonly FieldRule<unknown, V>[];
+  readonly async: readonly AsyncFieldRule<unknown, V>[];
+}
+
+const rulesFor = <V>(rules: FormRules<V>, path: string): AnyFieldRule<unknown, V>[] =>
   Object.entries(rules).flatMap(([pattern, list]) =>
     pattern === path || matchesPattern(path, pattern) ? list : [],
   );
+
+export const createRuleLookup = <V>(rules: FormRules<V>): ((path: string) => PathRules<V>) => {
+  const cache = new Map<string, PathRules<V>>();
+
+  return (path) => {
+    const known = cache.get(path);
+
+    if (known) {
+      return known;
+    }
+
+    const list = rulesFor(rules, path);
+    const found = { sync: list.filter(isSyncRule), async: list.filter(isAsyncRule) };
+
+    cache.set(path, found);
+    return found;
+  };
+};

@@ -44,7 +44,7 @@ export const createSubmit = <V extends object, O>(deps: SubmitDeps<V, O>) => {
     core.engine.countSubmit();
     core.session.formAttempted = true;
 
-    for (const entry of core.registry.entries.value) {
+    for (const entry of core.registry.all()) {
       entry.state.setTouched(true);
       entry.state.setAttempted(true);
     }
@@ -89,7 +89,9 @@ export const createSubmit = <V extends object, O>(deps: SubmitDeps<V, O>) => {
     if (deps.errors.hasServerErrors()) {
       return outcome('rejected');
     }
-    core.initial.value = result.input;
+    if (result.baseline !== undefined) {
+      core.initial.value = result.baseline;
+    }
     return outcome('submitted');
   };
 

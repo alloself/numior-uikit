@@ -1,7 +1,7 @@
-import { isUnder } from '../paths/paths';
+import { prefixesOf } from '../paths/paths';
 import type { FormIssue } from '../schema/standard';
-import type { AnyEntry } from './registry';
 import type { FormMessage } from './form.types';
+import type { AnyEntry, AnyIndex } from './registry';
 
 export type IssueTarget =
   | { readonly kind: 'owner'; readonly entry: AnyEntry }
@@ -14,64 +14,66 @@ export interface Classified {
   readonly ignored: readonly string[];
 }
 
-const deeper = (best: AnyEntry | undefined, entry: AnyEntry): AnyEntry =>
-  best === undefined || entry.path().length >= best.path().length ? entry : best;
+const ownerOf = (path: string, index: AnyIndex): AnyEntry | undefined => {
+  for (const prefix of prefixesOf(path).toReversed()) {
+    const owners = index.byPath.get(prefix);
 
-const ownerOf = (path: string, owners: readonly AnyEntry[]): AnyEntry | undefined =>
-  owners.reduce<AnyEntry | undefined>(
-    (best, entry) => (isUnder(path, entry.path()) ? deeper(best, entry) : best),
-    undefined,
-  );
+    if (owners) {
+      return owners.at(-1);
+    }
+  }
+  return undefined;
+};
 
-export const targetOf = (path: string, owners: readonly AnyEntry[]): IssueTarget => {
+export const targetOf = (path: string, index: AnyIndex): IssueTarget => {
   if (path === '') {
     return { kind: 'form', path: undefined };
   }
 
-  const owner = ownerOf(path, owners);
+  const owner = ownerOf(path, index);
 
   if (owner) {
     return owner.disabled() ? { kind: 'ignored', path } : { kind: 'owner', entry: owner };
   }
-  return owners.some((entry) => isUnder(entry.path(), path))
-    ? { kind: 'form', path }
-    : { kind: 'ignored', path };
+  return index.covered.has(path) ? { kind: 'form', path } : { kind: 'ignored', path };
 };
 
-const addMessage = (messages: Map<string, string[]>, path: string, message: string): void => {
-  const list = messages.get(path) ?? [];
-
-  if (!list.includes(message)) {
-    messages.set(path, [...list, message]);
-  }
-};
-
-const sameMessage = (left: FormMessage, right: FormMessage): boolean =>
-  left.path === right.path && left.message === right.message;
-
-const withFormMessage = (
-  messages: readonly FormMessage[],
-  message: FormMessage,
-): readonly FormMessage[] =>
-  messages.some((item) => sameMessage(item, message)) ? messages : [...messages, message];
-
-export const classifyIssues = (
-  issues: readonly FormIssue[],
-  owners: readonly AnyEntry[],
-): Classified => {
+export const classifyIssues = (issues: readonly FormIssue[], index: AnyIndex): Classified => {
   const byOwner = new Map<string, string[]>();
+  const formLevel: FormMessage[] = [];
   const ignored: string[] = [];
-  let formLevel: readonly FormMessage[] = [];
+  const seen = new Set<string>();
+
+  const once = (scope: string, message: string): boolean => {
+    const key = `${scope}\u0000${message}`;
+
+    if (seen.has(key)) {
+      return false;
+    }
+    seen.add(key);
+    return true;
+  };
 
   for (const issue of issues) {
-    const target = targetOf(issue.path, owners);
+    const target = targetOf(issue.path, index);
 
-    if (target.kind === 'owner') {
-      addMessage(byOwner, target.entry.path(), issue.message);
-    } else if (target.kind === 'form') {
-      formLevel = withFormMessage(formLevel, { path: target.path, message: issue.message });
-    } else {
-      ignored.push(target.path);
+    switch (target.kind) {
+      case 'owner': {
+        const path = target.entry.path();
+
+        if (once(`owner:${path}`, issue.message)) {
+          byOwner.set(path, [...(byOwner.get(path) ?? []), issue.message]);
+        }
+        break;
+      }
+      case 'form':
+        if (once(`form:${target.path ?? ''}`, issue.message)) {
+          formLevel.push({ path: target.path, message: issue.message });
+        }
+        break;
+      case 'ignored':
+        ignored.push(target.path);
+        break;
     }
   }
   return { byOwner, formLevel, ignored };

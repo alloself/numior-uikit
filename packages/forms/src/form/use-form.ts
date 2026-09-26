@@ -47,7 +47,7 @@ export const useForm = <V extends object, O = V>(options: UseFormOptions<V, O>):
     isFieldTouched: views.isFieldTouched,
     hasErrors: views.hasErrors,
     errorsUnder: views.errorsUnder,
-    firstInvalidPath: (prefix) => views.invalidPaths(prefix)[0],
+    firstInvalidPath: views.firstInvalidPath,
     focusField: views.focusField,
     resetForm,
     submit,

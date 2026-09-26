@@ -6,7 +6,7 @@ import { formRulesMessages, type NuiFormRulesMessages } from '../rules/form-rule
 import type { StandardSchema } from '../schema/standard';
 import { cloneValue } from '../values/clone';
 import { createRegistry, type Registry } from './registry';
-import type { FormRules } from './rules';
+import { createRuleLookup, type FormRules, type PathRules } from './rules';
 import { createTracker, type Tracker } from './tracker';
 import type { FormMessage, ValidateOn } from './form.types';
 
@@ -48,7 +48,7 @@ export interface FormCore<V extends object, O> {
   readonly registry: Registry<V>;
   readonly tracker: Tracker;
   readonly schema: StandardSchema<unknown, O> | undefined;
-  readonly rules: FormRules<V>;
+  readonly rulesAt: (path: string) => PathRules<V>;
   readonly validateOn: ValidateOn;
   readonly messages: ComputedRef<NuiFormRulesMessages>;
   readonly initial: ShallowRef<V>;
@@ -67,7 +67,7 @@ export const createFormCore = <V extends object, O>(
   registry: createRegistry(),
   tracker: createTracker(),
   schema: options.schema,
-  rules: options.rules ?? {},
+  rulesAt: createRuleLookup(options.rules ?? {}),
   validateOn: options.validateOn ?? 'submit',
   messages: useMessages(formRulesMessages),
   initial: shallowRef(cloneValue(options.initialValues)),

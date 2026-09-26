@@ -16,7 +16,7 @@ const clearState = (entry: AnyEntry): void => {
 export const createReset =
   <V extends object, O>(core: FormCore<V, O>, validation: Validation<V, O>) =>
   (options: ResetOptions<V> = {}): void => {
-    const entries = core.registry.entries.value;
+    const entries = [...core.registry.all()];
 
     const kept = options.keepErrors
       ? entries.map((entry) => [entry, entry.state.errors.value] as const)

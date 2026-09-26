@@ -1,5 +1,4 @@
 import { toOutcome, type FormIssue, type SchemaOutcome } from '../schema/standard';
-import { isSyncRule } from '../rules/async-rule';
 import { getAt } from '../values/access';
 import { cloneValue } from '../values/clone';
 import { isEqualValue } from '../values/equal';
@@ -11,14 +10,14 @@ import { classifyIssues, type Classified } from './owners';
 import { createPendingTracker } from './pending';
 import { prune } from './prune';
 import type { Entry } from './registry';
-import { firstFailure, rulesFor } from './rules';
+import { firstFailure } from './rules';
 
 export type Trigger = 'change' | 'blur';
 
 export type ApplyScope = 'attempted' | 'own';
 
 export interface RunResult<V, O> extends Classified {
-  readonly input: V;
+  readonly baseline: V | undefined;
   readonly submitted: V;
   readonly output: O | undefined;
 }
@@ -50,7 +49,7 @@ export const createValidation = <V extends object, O>(core: FormCore<V, O>): Val
       .filter((entry) => !entry.disabled())
       .flatMap((entry) => {
         const path = entry.path();
-        const rules = rulesFor(core.rules, path).filter(isSyncRule);
+        const rules = core.rulesAt(path).sync;
 
         const context = {
           name: path,
@@ -77,13 +76,13 @@ export const createValidation = <V extends object, O>(core: FormCore<V, O>): Val
       ? { ok: true, output: undefined }
       : chain(core.schema['~standard'].validate(submitted), toOutcome);
 
-  const run = (checked?: readonly Entry<V>[]): MaybePromise<RunResult<V, O>> => {
-    const input = core.engine.snapshot();
-    const submitted = cloneValue(input);
-    const active = core.registry.active();
-    const targets = checked ?? active;
+  const run = (checked?: readonly Entry<V>[], keep = false): MaybePromise<RunResult<V, O>> => {
+    const snapshot = core.engine.snapshot();
+    const submitted = keep ? cloneValue(snapshot) : snapshot;
+    const index = core.registry.index();
+    const targets = checked ?? index.active;
 
-    prune(submitted, core.registry.known, active);
+    prune(submitted, new Set([...core.registry.known, ...index.patterns]), index.covered);
 
     const extra = [
       ...ruleIssues(submitted, targets),
@@ -95,8 +94,8 @@ export const createValidation = <V extends object, O>(core: FormCore<V, O>): Val
       const issues = outcome.ok ? extra : [...outcome.issues, ...extra];
 
       return {
-        ...classifyIssues(issues, core.registry.active()),
-        input,
+        ...classifyIssues(issues, core.registry.index()),
+        baseline: keep ? snapshot : undefined,
         submitted,
         output: outcome.ok && issues.length === 0 ? outcome.output : undefined,
       };
@@ -128,7 +127,7 @@ export const createValidation = <V extends object, O>(core: FormCore<V, O>): Val
     dropStaleExternal();
   };
 
-  const execute = (own?: readonly Entry<V>[]): MaybePromise<RunResult<V, O>> => {
+  const execute = (own?: readonly Entry<V>[], keep = false): MaybePromise<RunResult<V, O>> => {
     const epoch = core.session.epoch;
 
     core.session.started += 1;
@@ -148,7 +147,7 @@ export const createValidation = <V extends object, O>(core: FormCore<V, O>): Val
       return result;
     };
 
-    const outcome = chain(run(own), settle);
+    const outcome = chain(run(own, keep), settle);
 
     return isPromise(outcome) ? core.tracker.track(outcome) : outcome;
   };
@@ -156,12 +155,13 @@ export const createValidation = <V extends object, O>(core: FormCore<V, O>): Val
   const attempt = (
     entries: readonly Entry<V>[],
     scope: ApplyScope = 'attempted',
+    keep = false,
   ): MaybePromise<RunResult<V, O>> => {
     for (const entry of entries) {
       entry.state.setAttempted(true);
     }
 
-    const outcome = execute(scope === 'own' ? entries : undefined);
+    const outcome = execute(scope === 'own' ? entries : undefined, keep);
 
     if (!isPromise(outcome)) {
       return outcome;
@@ -195,14 +195,20 @@ export const createValidation = <V extends object, O>(core: FormCore<V, O>): Val
         : Promise.resolve(followAsync(entries, outcome, trigger));
     },
     validateFully: async (entries) => {
-      const first = await attempt(entries);
-      const failing = entries.filter((entry) => first.byOwner.has(entry.path()));
+      const first = await attempt(entries, 'attempted', true);
+      const passing: Entry<V>[] = [];
 
-      failing.forEach(asyncChecks.cancel);
+      for (const entry of entries) {
+        if (first.byOwner.has(entry.path())) {
+          asyncChecks.cancel(entry);
+        } else {
+          passing.push(entry);
+        }
+      }
 
-      const checked = await asyncChecks.settle(entries.filter((entry) => !failing.includes(entry)));
+      const checked = await asyncChecks.settle(passing);
 
-      return checked ? execute() : first;
+      return checked ? execute(undefined, true) : first;
     },
   };
 };

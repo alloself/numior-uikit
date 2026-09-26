@@ -59,8 +59,7 @@ export const createHost = <V extends object, O>(
   core: FormCore<V, O>,
   validation: Validation<V, O>,
 ): FormHost<V> => {
-  const claimed = (path: string, except: Entry<V>): boolean =>
-    core.registry.active().some((entry) => entry !== except && entry.path() === path);
+  const claimed = (path: string, except: Entry<V>): boolean => core.registry.claimed(path, except);
 
   const containerExists = (path: string): boolean =>
     getAt(core.engine.values, path.split('.').slice(0, -1).join('.')) !== undefined;
@@ -158,7 +157,7 @@ export const createHost = <V extends object, O>(
       return revalidate([entry]);
     },
     write: (path, value) => {
-      const affected = core.registry.entries.value.filter(
+      const affected = [...core.registry.all()].filter(
         (entry) => isUnder(entry.path(), path) || isUnder(path, entry.path()),
       );
 

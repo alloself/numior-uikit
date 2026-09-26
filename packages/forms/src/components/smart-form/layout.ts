@@ -10,10 +10,24 @@ const NOT_IDENT = /[^\w-]/g;
 
 const NO_LAYOUT: LayoutPlan = { areas: undefined, columns: 1, order: [] };
 
+const parsed = new Map<string, readonly (readonly string[])[]>();
+
 export const areaName = (name: string): string => name.replace(NOT_IDENT, '-');
 
-export const parseLayout = (layout: string): string[][] =>
-  [...layout.matchAll(ROW)].map(([, row = '']) => row.split(/\s+/).filter((cell) => cell !== ''));
+export const parseLayout = (layout: string): readonly (readonly string[])[] => {
+  const known = parsed.get(layout);
+
+  if (known) {
+    return known;
+  }
+
+  const rows = [...layout.matchAll(ROW)].map(([, row = '']) =>
+    row.split(/\s+/).filter((cell) => cell !== ''),
+  );
+
+  parsed.set(layout, rows);
+  return rows;
+};
 
 const padded = (cells: readonly string[], columns: number): string[] => [
   ...cells,

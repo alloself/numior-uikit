@@ -68,7 +68,7 @@ export const createActions = <V extends object, O>(
   },
   setFieldValue: (path, value) => host.write(normalizePath(path), value),
   setValues: (values) => {
-    for (const entry of core.registry.entries.value) {
+    for (const entry of core.registry.all()) {
       entry.fieldEpoch += 1;
     }
     core.engine.mergeValues(values);
@@ -101,7 +101,7 @@ export const createActions = <V extends object, O>(
   },
   validateField: (rawPath) => {
     const path = normalizePath(rawPath);
-    const entry = core.registry.active().find((item) => item.path() === path);
+    const entry = core.registry.index().byPath.get(path)?.at(-1);
 
     return entry ? host.validateEntry(entry) : Promise.resolve({ valid: true, errors: [] });
   },

@@ -1,11 +1,10 @@
-import { firstAsyncFailure, isAsyncRule } from '../rules/async-rule';
+import { firstAsyncFailure } from '../rules/async-rule';
 import type { FormIssue } from '../schema/standard';
 import { cloneValue } from '../values/clone';
 import { isEqualValue } from '../values/equal';
 import type { FormCore } from './form-core';
 import type { PendingTracker } from './pending';
 import type { Entry } from './registry';
-import { rulesFor } from './rules';
 
 interface AsyncResult {
   readonly value: unknown;
@@ -54,7 +53,7 @@ export const createAsyncChecks = <V extends object, O>(
     return created;
   };
 
-  const formRules = (entry: Entry<V>) => rulesFor(core.rules, entry.path()).filter(isAsyncRule);
+  const formRules = (entry: Entry<V>) => core.rulesAt(entry.path()).async;
 
   const freshResult = (entry: Entry<V>): AsyncResult | undefined => {
     const result = states.get(entry)?.result;
@@ -111,14 +110,19 @@ export const createAsyncChecks = <V extends object, O>(
     return [state, state.token];
   };
 
-  const run = async (entry: Entry<V>, state: AsyncState, token: number): Promise<void> => {
+  const run = async (
+    entry: Entry<V>,
+    state: AsyncState,
+    token: number,
+    values: V,
+  ): Promise<void> => {
     const controller = new AbortController();
     const value = cloneValue(entry.value());
 
     const context = {
       name: entry.path(),
       label: entry.label(),
-      values: core.engine.snapshot(),
+      values,
       messages: core.messages.value,
       signal: controller.signal,
     };
@@ -156,7 +160,7 @@ export const createAsyncChecks = <V extends object, O>(
     if (token !== state.token) {
       return;
     }
-    await run(entry, state, token);
+    await run(entry, state, token, core.engine.snapshot());
 
     if (token === state.token) {
       revalidate();
@@ -192,16 +196,22 @@ export const createAsyncChecks = <V extends object, O>(
     settle: async (entries) => {
       const due = entries.filter(needsCheck);
 
+      if (due.length === 0) {
+        return false;
+      }
+
+      const values = core.engine.snapshot();
+
       await Promise.all(
         due.map((entry) => {
           const [state, token] = start(entry);
-          return run(entry, state, token).finally(() => {
+          return run(entry, state, token, values).finally(() => {
             finish(entry, state, token);
           });
         }),
       );
 
-      return due.length > 0;
+      return true;
     },
     cancel,
     forget: (entry) => {

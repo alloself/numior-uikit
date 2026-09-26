@@ -40,7 +40,7 @@ export const createErrorControls = <V extends object, O>(core: FormCore<V, O>): 
 
   return {
     setFieldError: (rawPath, messages) => {
-      const target = targetOf(normalizePath(rawPath), core.registry.active());
+      const target = targetOf(normalizePath(rawPath), core.registry.index());
 
       if (target.kind === 'owner') {
         setOwnerError(target.entry, messages);
