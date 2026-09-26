@@ -82,7 +82,7 @@
 .nui-radio__control:active:not(:disabled) + .nui-radio__dot {
   scale: 0.92;
 }
-.nui-radio:hover:not(.nui-radio--disabled) .nui-radio__dot {
+.nui-radio:hover:not(.nui-radio--disabled, .nui-radio--invalid) .nui-radio__dot {
   border-color: var(--nui-primary);
 }
 .nui-radio__control:focus-visible + .nui-radio__dot {
@@ -91,6 +91,9 @@
 }
 .nui-radio--invalid .nui-radio__dot {
   border-color: var(--nui-error);
+}
+.nui-radio--invalid .nui-radio__control:focus-visible + .nui-radio__dot {
+  outline-color: var(--nui-error);
 }
 .nui-radio--disabled {
   opacity: var(--nui-disabled-opacity);

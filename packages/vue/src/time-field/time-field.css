@@ -84,7 +84,7 @@
 .nui-time-field--open .nui-time-field__clock {
   color: var(--nui-primary);
 }
-.nui-time-field:hover:not(.nui-time-field--disabled):not(:focus-within) {
+.nui-time-field:hover:not(.nui-time-field--disabled, .nui-time-field--invalid, :focus-within) {
   border-color: var(--nui-border-strong);
 }
 .nui-time-field:focus-within {
@@ -96,6 +96,7 @@
   border-color: var(--nui-error);
 }
 .nui-time-field--invalid:focus-within {
+  border-color: var(--nui-error);
   outline-color: var(--nui-error);
 }
 .nui-time-field--readonly {

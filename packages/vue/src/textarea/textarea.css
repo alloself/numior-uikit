@@ -36,7 +36,7 @@
   color: var(--nui-text-muted);
   opacity: 1;
 }
-.nui-textarea:hover:not(:disabled):not(:focus-visible) {
+.nui-textarea:hover:not(:disabled, .nui-textarea--invalid, :focus-visible) {
   border-color: var(--nui-border-strong);
 }
 .nui-textarea:focus-visible {
@@ -48,6 +48,7 @@
   border-color: var(--nui-error);
 }
 .nui-textarea--invalid:focus-visible {
+  border-color: var(--nui-error);
   outline-color: var(--nui-error);
 }
 .nui-textarea:disabled {

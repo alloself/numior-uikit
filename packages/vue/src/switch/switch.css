@@ -81,6 +81,9 @@
 .nui-switch--invalid .nui-switch__track {
   background: var(--nui-error);
 }
+.nui-switch--invalid .nui-switch__control:focus-visible + .nui-switch__track {
+  outline-color: var(--nui-error);
+}
 .nui-switch--disabled {
   opacity: var(--nui-disabled-opacity);
   cursor: not-allowed;

@@ -73,7 +73,7 @@
 .nui-checkbox__control:active:not(:disabled) + .nui-checkbox__box {
   scale: 0.92;
 }
-.nui-checkbox:hover:not(.nui-checkbox--disabled) .nui-checkbox__box {
+.nui-checkbox:hover:not(.nui-checkbox--disabled, .nui-checkbox--invalid) .nui-checkbox__box {
   border-color: var(--nui-primary);
 }
 .nui-checkbox__control:focus-visible + .nui-checkbox__box {
@@ -82,6 +82,9 @@
 }
 .nui-checkbox--invalid .nui-checkbox__box {
   border-color: var(--nui-error);
+}
+.nui-checkbox--invalid .nui-checkbox__control:focus-visible + .nui-checkbox__box {
+  outline-color: var(--nui-error);
 }
 .nui-checkbox--disabled {
   opacity: var(--nui-disabled-opacity);

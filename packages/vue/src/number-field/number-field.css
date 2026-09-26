@@ -78,7 +78,11 @@
 .nui-number-field__stepper + .nui-number-field__stepper {
   border-inline-start: 1px solid var(--nui-border);
 }
-.nui-number-field:hover:not(.nui-number-field--disabled):not(:focus-within) {
+.nui-number-field:hover:not(
+    .nui-number-field--disabled,
+    .nui-number-field--invalid,
+    :focus-within
+  ) {
   border-color: var(--nui-border-strong);
 }
 .nui-number-field:focus-within {
@@ -90,6 +94,7 @@
   border-color: var(--nui-error);
 }
 .nui-number-field--invalid:focus-within {
+  border-color: var(--nui-error);
   outline-color: var(--nui-error);
 }
 .nui-number-field--readonly .nui-number-field__steppers {

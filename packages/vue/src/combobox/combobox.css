@@ -36,7 +36,7 @@
     border-color var(--nui-duration-fast) var(--nui-easing),
     outline-color var(--nui-duration-fast) var(--nui-easing);
 }
-.nui-combobox__field:hover:not(:focus-within) {
+.nui-combobox:not(.nui-combobox--invalid) .nui-combobox__field:hover:not(:focus-within) {
   border-color: var(--nui-border-strong);
 }
 .nui-combobox__field:focus-within {
@@ -48,6 +48,7 @@
   border-color: var(--nui-error);
 }
 .nui-combobox--invalid .nui-combobox__field:focus-within {
+  border-color: var(--nui-error);
   outline-color: var(--nui-error);
 }
 .nui-combobox--disabled .nui-combobox__field {

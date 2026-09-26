@@ -43,7 +43,7 @@
 .nui-select--clearable .nui-select__value {
   padding-inline-end: var(--nui-control-height-sm);
 }
-.nui-select__trigger:hover:not(:disabled):not(:focus-visible) {
+.nui-select:not(.nui-select--invalid) .nui-select__trigger:hover:not(:disabled, :focus-visible) {
   border-color: var(--nui-border-strong);
 }
 .nui-select__trigger:focus-visible,
@@ -57,6 +57,7 @@
 }
 .nui-select--invalid .nui-select__trigger:focus-visible,
 .nui-select--invalid.nui-select--open .nui-select__trigger {
+  border-color: var(--nui-error);
   outline-color: var(--nui-error);
 }
 .nui-select--disabled .nui-select__trigger {

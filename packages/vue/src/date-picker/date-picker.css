@@ -67,7 +67,7 @@
 .nui-date-picker--open .nui-date-picker__open {
   color: var(--nui-primary);
 }
-.nui-date-picker:hover:not(.nui-date-picker--disabled):not(:focus-within) {
+.nui-date-picker:hover:not(.nui-date-picker--disabled, .nui-date-picker--invalid, :focus-within) {
   border-color: var(--nui-border-strong);
 }
 .nui-date-picker:focus-within {
@@ -79,6 +79,7 @@
   border-color: var(--nui-error);
 }
 .nui-date-picker--invalid:focus-within {
+  border-color: var(--nui-error);
   outline-color: var(--nui-error);
 }
 .nui-date-picker--readonly {
