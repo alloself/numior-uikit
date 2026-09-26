@@ -120,7 +120,7 @@ const {
   attrs: controlAttrs,
   invalid: isInvalid,
   disabled: isDisabled,
-} = useFieldControl(() => ({ id, disabled, required, invalid }));
+} = useFieldControl(() => ({ id, disabled, required, invalid }), { commit: () => commit() });
 
 const inputElement = useTemplateRef<HTMLInputElement>('input');
 const locale = useLocale(() => localeProp);

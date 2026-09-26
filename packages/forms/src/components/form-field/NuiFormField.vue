@@ -22,6 +22,7 @@
 
 <script setup lang="ts" generic="T extends object = object, P extends FormPath<T> = FormPath<T>">
 import { computed, useTemplateRef } from 'vue';
+import { provideDraftCommits } from '@numior/primitives';
 import { NuiField } from '@numior/vue';
 import type { FormPath } from '../../core/types';
 import { useField } from '../../field/use-field';
@@ -46,6 +47,7 @@ const {
 
 const fieldRef = useTemplateRef<InstanceType<typeof NuiField>>('field');
 const formScope = useFormScope();
+const drafts = provideDraftCommits();
 
 const root = (): HTMLElement | null => {
   const element: unknown = fieldRef.value?.$el;
@@ -63,6 +65,7 @@ const control = useField<NuiFormFieldValue<T, P>>(() => name, {
   label: () => label,
   element: root,
   focus: () => focusControl(root()),
+  flush: () => drafts.commitAll(),
   disabled: () => isDisabled.value,
 });
 

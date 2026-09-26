@@ -177,6 +177,17 @@ describe('NuiForm and NuiFormField', () => {
     expect(form.values).toMatchObject({ plan: 'free' });
   });
 
+  it('commits a control draft before a programmatic submit', async () => {
+    const form = FormDriver.mount({
+      initialValues: { seats: 1 },
+      fields: [{ path: 'seats', label: 'Seats', control: 'number' }],
+    });
+
+    await form.edit('seats', '5');
+    await form.requestSubmit();
+    expect(form.submissions).toEqual([{ seats: 5 }]);
+  });
+
   it('speaks the configured language and a prop still wins', async () => {
     const russian = FormDriver.mount({
       initialValues: { ...blank, terms: true },

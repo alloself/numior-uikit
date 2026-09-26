@@ -1,5 +1,6 @@
 import { computed, toValue, type ComputedRef, type MaybeRefOrGetter } from 'vue';
 import { useControlId } from '../id/useControlId';
+import { useDraftCommit } from './draft-commits';
 import { useFieldContext, type FieldContext } from './field-context';
 
 export interface FieldControlProps {
@@ -11,6 +12,7 @@ export interface FieldControlProps {
 
 export interface FieldControlOptions {
   readonly group?: boolean | undefined;
+  readonly commit?: (() => void) | undefined;
 }
 
 export interface FieldControlAttrs {
@@ -35,6 +37,8 @@ export const useFieldControl = (
   options: FieldControlOptions = {},
 ): FieldControl => {
   const field = useFieldContext();
+
+  useDraftCommit(options.commit);
 
   const linked = computed<FieldContext | null>(() =>
     field !== null && (field.labelable.value || options.group === true) ? field : null,

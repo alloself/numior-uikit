@@ -1,7 +1,10 @@
+import { shallowRef } from 'vue';
 import {
+  provideDraftCommits,
   provideField,
   useFieldContext,
   useFieldControl,
+  type DraftCommits,
   type FieldContext,
   type FieldControl,
   type FieldControlOptions,
@@ -102,5 +105,35 @@ export class ControlHarness {
 
   get disabled(): boolean {
     return this.control.attrs.value.disabled;
+  }
+}
+
+export class DraftHarness {
+  static mount(commit: () => void): DraftHarness {
+    const drafts = shallowRef<DraftCommits | null>(null);
+
+    const capture = captureSetup(() => useFieldControl(() => ({}), { commit }), {
+      wrap: providing(() => {
+        drafts.value = provideDraftCommits();
+      }),
+    });
+
+    if (!drafts.value) {
+      throw new Error('the draft commits were not provided');
+    }
+    return new DraftHarness(drafts.value, capture);
+  }
+
+  private constructor(
+    private readonly drafts: DraftCommits,
+    private readonly capture: Capture<FieldControl>,
+  ) {}
+
+  flush(): void {
+    this.drafts.commitAll();
+  }
+
+  unmount(): void {
+    this.capture.wrapper.unmount();
   }
 }

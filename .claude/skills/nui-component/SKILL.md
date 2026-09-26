@@ -48,6 +48,9 @@ const {
 </script>
 ```
 
+- A control that holds an uncommitted draft (lazy text, a number before blur, custom combobox
+  text, an unclamped time) passes its commit to `useFieldControl(props, { commit: () =>
+commitDraft() })`; `NuiFormField` runs these commits before a programmatic submit.
 - Props interface in `<name>.types.ts`, optional keys typed `| undefined`,
   `extends NuiFieldControlProps` for form controls. Generic components use
   `<script setup lang="ts" generic="T">` and `defineProps<NuiThingProps<T>>()`.

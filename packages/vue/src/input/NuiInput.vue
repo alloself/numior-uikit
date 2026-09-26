@@ -54,7 +54,9 @@ const {
   attrs: controlAttrs,
   invalid: isInvalid,
   disabled: isDisabled,
-} = useFieldControl(() => ({ id, disabled, required, invalid }));
+} = useFieldControl(() => ({ id, disabled, required, invalid }), {
+  commit: () => commitDraft(),
+});
 
 const inputElement = useTemplateRef<HTMLInputElement>('input');
 const display = (value: string): string => (mask ? applyMask(value, mask).masked : value);
@@ -112,6 +114,12 @@ const onChange = (): void => {
   }
   draft.value = element.value;
   model.value = outgoing(element.value);
+};
+
+const commitDraft = (): void => {
+  if (modifiers.lazy) {
+    onChange();
+  }
 };
 
 defineExpose({ focus: () => inputElement.value?.focus() });

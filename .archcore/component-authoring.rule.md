@@ -15,7 +15,10 @@ status: accepted
   Boolean, который должен наследоваться из контекста поля, получает дефолт `= undefined`
   (тристейт). `withDefaults`, runtime-объекты props и `PropType` запрещены. v-model только
   через `defineModel`. Композаблы получают destructured props через getter:
-  `useFieldControl(() => ({ id, disabled, required, invalid }))`.
+  `useFieldControl(() => ({ id, disabled, required, invalid }))`. Контрол, который держит
+  неподтверждённый ввод (lazy-текст, число до blur, свой текст комбобокса, незажатое время),
+  передаёт его коммит вторым аргументом: `useFieldControl(props, { commit: () => commitDraft() })`;
+  поле формы вызывает эти коммиты перед программной отправкой.
 - Функции — только стрелочные константы (`const sync = (): void => {...}`, `export const
   useX = () => {...}`); объявление `function` допустимо лишь там, где нужен собственный
   `this` (method shorthand в объектах, стабы прототипов). Хелперы без замыкания живут на

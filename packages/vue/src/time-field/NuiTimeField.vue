@@ -148,7 +148,9 @@ const {
   invalid: isInvalid,
   required: isRequired,
   disabled: isDisabled,
-} = useFieldControl(() => ({ id, disabled, required, invalid }));
+} = useFieldControl(() => ({ id, disabled, required, invalid }), {
+  commit: () => times.settle(),
+});
 
 const locale = useLocale(() => localeProp);
 const messages = useMessages(timeFieldMessages, locale);

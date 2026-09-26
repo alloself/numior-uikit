@@ -153,7 +153,9 @@ const {
   attrs: controlAttrs,
   invalid: isInvalid,
   disabled: isDisabled,
-} = useFieldControl(() => ({ id, disabled, required, invalid }));
+} = useFieldControl(() => ({ id, disabled, required, invalid }), {
+  commit: () => commitDraft(),
+});
 
 const listboxId = computed(() => `${controlAttrs.value.id}-listbox`);
 
@@ -279,6 +281,12 @@ const onSelect = (option: NuiOption<T>): void => {
     open.value = false;
   }
   focusInput();
+};
+
+const commitDraft = (): void => {
+  if (filtering.value && !commitCustom()) {
+    settleQuery();
+  }
 };
 
 const commitCustom = (): boolean => {
@@ -425,9 +433,7 @@ const onFocusout = (event: FocusEvent): void => {
     return;
   }
   open.value = false;
-  if (filtering.value && !commitCustom()) {
-    settleQuery();
-  }
+  commitDraft();
 };
 
 defineExpose({ focus: focusInput });

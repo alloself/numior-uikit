@@ -6,6 +6,8 @@ export {
   useFieldContext,
 } from './field/field-context';
 export type { FieldContext, FieldOptions } from './field/field-context';
+export { provideDraftCommits } from './field/draft-commits';
+export type { DraftCommits } from './field/draft-commits';
 export { useFieldControl } from './field/useFieldControl';
 export type {
   FieldControl,

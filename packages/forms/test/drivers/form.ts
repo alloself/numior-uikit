@@ -1,5 +1,11 @@
 import { createNuiConfig, type NuiConfigOptions } from '@numior/primitives';
-import { NuiCheckbox, NuiInput, NuiSelect, type NuiOptionSource } from '@numior/vue';
+import {
+  NuiCheckbox,
+  NuiInput,
+  NuiNumberField,
+  NuiSelect,
+  type NuiOptionSource,
+} from '@numior/vue';
 import { mount, type DOMWrapper, type VueWrapper } from '@vue/test-utils';
 import { defineComponent, h, nextTick, reactive, shallowRef, type VNode } from 'vue';
 import {
@@ -13,7 +19,7 @@ import {
   type ValidateOn,
 } from '../../src';
 
-export type ControlKind = 'input' | 'select' | 'checkbox';
+export type ControlKind = 'input' | 'select' | 'checkbox' | 'number';
 
 export interface FormFieldConfig {
   readonly path: string;
@@ -59,6 +65,9 @@ const renderControl = (kind: ControlKind, scope: FieldScope): VNode[] => {
   }
   if (kind === 'checkbox') {
     return [h(NuiCheckbox, scope.field), ...pending];
+  }
+  if (kind === 'number') {
+    return [h(NuiNumberField, scope.field), ...pending];
   }
   return [h(NuiInput, scope.field), ...pending];
 };
@@ -288,6 +297,11 @@ export class FormDriver<V extends object> {
 
   async submit(): Promise<void> {
     this.wrapper.find<HTMLButtonElement>('button[type="submit"]').element.click();
+    await this.settle();
+  }
+
+  async requestSubmit(): Promise<void> {
+    this.formElement.element.requestSubmit();
     await this.settle();
   }
 

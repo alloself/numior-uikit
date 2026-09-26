@@ -34,12 +34,10 @@ const {
 
 const [model, modifiers] = defineModel<string, NuiTextareaModifiers>({ default: '' });
 
-const { attrs: controlAttrs, invalid: isInvalid } = useFieldControl(() => ({
-  id,
-  disabled,
-  required,
-  invalid,
-}));
+const { attrs: controlAttrs, invalid: isInvalid } = useFieldControl(
+  () => ({ id, disabled, required, invalid }),
+  { commit: () => commitDraft() },
+);
 
 const textareaElement = useTemplateRef<HTMLTextAreaElement>('textarea');
 const draft = ref(model.value);
@@ -71,6 +69,12 @@ const onChange = (): void => {
   }
   draft.value = element.value;
   model.value = element.value;
+};
+
+const commitDraft = (): void => {
+  if (modifiers.lazy) {
+    onChange();
+  }
 };
 
 defineExpose({ focus: () => textareaElement.value?.focus() });

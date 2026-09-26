@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ControlHarness } from './harness/field';
+import { ControlHarness, DraftHarness } from './harness/field';
 
 describe('useFieldControl', () => {
   it('works standalone with its own id and no field state', () => {
@@ -47,5 +47,15 @@ describe('useFieldControl', () => {
     expect(root.id).toBe('plan');
     expect(root.describedBy).toBe('plan-error');
     expect(root.ariaInvalid).toBe('true');
+  });
+
+  it('hands its draft commit to the surrounding form field until it unmounts', () => {
+    const commits: string[] = [];
+    const draft = DraftHarness.mount(() => commits.push('committed'));
+
+    draft.flush();
+    draft.unmount();
+    draft.flush();
+    expect(commits).toEqual(['committed']);
   });
 });
