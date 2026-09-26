@@ -37,7 +37,7 @@
             :layout="layout"
             :actions="headActions"
             :resizing="resize.active.value"
-            :dragging="columnDrag.state.value.from"
+            :dragging="columnDrag.source.value"
             :resize-label="resizeText"
             :reorder-label="reorderText"
             @sort="cycle"
@@ -60,7 +60,7 @@
             :empty-label="texts.empty"
             :first-index="0"
             :spacers="undefined"
-            :dragging="-1"
+            :dragging="undefined"
             pinned
             @toggle="toggleOne"
             @row-click="(row, event) => emit('rowClick', row, event)"
@@ -315,6 +315,7 @@ const headActions: NuiTableHeadActions<T> = {
   resizeReset: (column) => layout.resetWidth(column.key),
   dragStart: columnDrag.dragStart,
   dragKeydown: columnDrag.dragKeydown,
+  headPointerdown: columnDrag.headPointerdown,
   headClick: columnDrag.headClick,
 };
 
@@ -357,7 +358,7 @@ const rowOptions = computed<NuiTableRowOptions<T>>(() => ({
   dragLabel: dragText,
 }));
 
-const rowDragging = computed(() => rowReorder.state.value.from);
+const rowDragging = computed(() => rowReorder.source.value);
 
 const dragging = computed(
   () => columnDrag.state.value.phase === 'dragging' || rowReorder.state.value.phase === 'dragging',

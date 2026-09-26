@@ -78,7 +78,13 @@
 
 <script setup lang="ts" generic="T">
 import { computed, onMounted, ref, useTemplateRef, watch } from 'vue';
-import { useFieldContext, useFieldControl, useMessages, useSplitAttrs } from '@numior/primitives';
+import {
+  createIntent,
+  useFieldContext,
+  useFieldControl,
+  useMessages,
+  useSplitAttrs,
+} from '@numior/primitives';
 import NuiButton from '../button/NuiButton.vue';
 import NuiIcon from '../icon/NuiIcon.vue';
 import NuiList from '../list/NuiList.vue';
@@ -170,18 +176,22 @@ const { listboxElement, setListbox, control, navigation, activateHovered, restAc
     restOnSelected: true,
   });
 
-const state = { pending: 'selected', inside: false };
+const opening = createIntent<OpenFocus>();
+let inside = false;
 
 const activate = (): void => {
   navigation.reset();
 
-  if (state.pending === 'first') {
-    navigation.setActive(0, { focus: false });
-  } else if (state.pending === 'last') {
-    navigation.setActive(navigation.items().length - 1, { focus: false });
+  switch (opening.take() ?? 'selected') {
+    case 'first':
+      navigation.setActive(0, { focus: false });
+      break;
+    case 'last':
+      navigation.setActive(navigation.items().length - 1, { focus: false });
+      break;
+    case 'selected':
+      break;
   }
-
-  state.pending = 'selected';
 };
 
 watch(open, (isOpen) => {
@@ -213,8 +223,8 @@ onMounted(() => {
       if (isOpen) {
         navigation.reveal();
         navigation.activeElement()?.focus({ preventScroll: true });
-      } else if (state.inside) {
-        state.inside = false;
+      } else if (inside) {
+        inside = false;
         triggerElement.value?.focus({ preventScroll: true });
       }
     },
@@ -225,7 +235,9 @@ onMounted(() => {
 const isPrintable = (event: KeyboardEvent): boolean =>
   event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey;
 
-const OPENERS: Record<string, string> = {
+type OpenFocus = 'selected' | 'first' | 'last';
+
+const OPENERS: Readonly<Record<string, OpenFocus>> = {
   ArrowDown: 'selected',
   ArrowUp: 'last',
   Home: 'first',
@@ -249,10 +261,10 @@ const onTriggerKeydown = (event: KeyboardEvent): void => {
   const request = OPENERS[event.key];
   if (request !== undefined) {
     event.preventDefault();
-    state.pending = request;
+    opening.set(request);
     control.show();
   } else if (event.key === 'Enter' || event.key === ' ') {
-    state.pending = 'selected';
+    opening.set('selected');
   } else if (!multiple && isPrintable(event)) {
     pickByTypeahead(event);
   }
@@ -276,7 +288,7 @@ const onListboxKeydown = (event: KeyboardEvent): void => {
 };
 
 const onFocusin = (event: FocusEvent): void => {
-  state.inside = true;
+  inside = true;
   navigation.onFocusin(event);
 };
 
@@ -289,7 +301,7 @@ const onFocusout = (event: FocusEvent): void => {
       triggerElement.value?.contains(next) === true);
 
   if (!within) {
-    state.inside = false;
+    inside = false;
     control.hide();
   }
 };

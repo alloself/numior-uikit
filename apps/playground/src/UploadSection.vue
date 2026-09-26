@@ -59,7 +59,6 @@ const documents = ref<NuiUploadItem<string>[]>([
     size: 348_160,
     type: 'application/pdf',
     status: 'done',
-    progress: 1,
     url: '#brief',
   },
 ]);
@@ -101,6 +100,19 @@ const fakeUpload: NuiUploadAdapter<string> = async (file, { onProgress, signal }
   return `https://files.example/${encodeURIComponent(file.name)}`;
 };
 
+const progressOf = (item: NuiUploadItem<string>): number => {
+  if (item.status === 'uploading') {
+    return item.progress;
+  }
+  return item.status === 'done' ? 1 : 0;
+};
+
+const resultOf = (item: NuiUploadItem<string>): string | null =>
+  item.status === 'done' ? (item.result ?? null) : null;
+
+const reasonOf = (item: NuiUploadItem<string>): string | null =>
+  item.status === 'error' ? item.error.reason : null;
+
 const onReject = (entries: readonly { file: File }[]): void => {
   rejections.value = [...rejections.value, ...entries.map((entry) => entry.file.name)];
 };
@@ -111,9 +123,9 @@ const output = computed(() =>
       documents: documents.value.map((item) => ({
         name: item.name,
         status: item.status,
-        progress: item.progress,
-        result: item.result ?? null,
-        error: item.error?.reason ?? null,
+        progress: progressOf(item),
+        result: resultOf(item),
+        error: reasonOf(item),
       })),
       images: images.value.map((item) => ({ name: item.name, status: item.status })),
       rejections: rejections.value,

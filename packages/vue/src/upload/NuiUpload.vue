@@ -93,29 +93,26 @@ interface ErrorLabelContext {
   readonly locale: string;
 }
 
-const defaultErrorLabel = (
+type ErrorLabel = (
   error: NuiUploadError,
   texts: NuiUploadMessages,
   context: ErrorLabelContext,
-): string => {
-  if (error.reason === 'type') {
-    return texts.typeError;
-  }
+) => string;
 
-  if (error.reason === 'size') {
-    return context.maxSize === undefined
+const ERROR_LABELS: Readonly<Record<NuiUploadError['reason'], ErrorLabel>> = {
+  type: (_error, texts) => texts.typeError,
+  size: (_error, texts, { maxSize, locale }) =>
+    maxSize === undefined
       ? texts.tooLarge
-      : texts.largerThan({ size: formatFileSize(context.maxSize, context.locale) });
-  }
-
-  if (error.reason === 'count') {
-    return context.maxFiles === undefined
-      ? texts.tooMany
-      : texts.moreThan({ count: context.maxFiles });
-  }
-
-  return error.message ?? (error.reason === 'custom' ? texts.rejected : texts.failed);
+      : texts.largerThan({ size: formatFileSize(maxSize, locale) }),
+  count: (_error, texts, { maxFiles }) =>
+    maxFiles === undefined ? texts.tooMany : texts.moreThan({ count: maxFiles }),
+  custom: (error, texts) => error.message ?? texts.rejected,
+  upload: (error, texts) => error.message ?? texts.failed,
 };
+
+const defaultErrorLabel: ErrorLabel = (error, texts, context) =>
+  ERROR_LABELS[error.reason](error, texts, context);
 
 const canPreview = (item: NuiUploadItem<unknown>): boolean =>
   item.type.startsWith('image/') && typeof URL.createObjectURL === 'function';
@@ -191,7 +188,9 @@ const describeError = (error: NuiUploadError, item: NuiUploadItem<R>): string =>
     : defaultErrorLabel(error, messages.value, { maxSize, maxFiles, locale: locale.value });
 
 const describe = (item: NuiUploadItem<R>): string =>
-  item.error ? describeError(item.error, item) : formatFileSize(item.size, locale.value);
+  item.status === 'error'
+    ? describeError(item.error, item)
+    : formatFileSize(item.size, locale.value);
 
 const queue = useUploadQueue<R>({
   items: model,
@@ -203,7 +202,9 @@ const queue = useUploadQueue<R>({
     emit('done', item);
   },
   onError: (item) => {
-    announcement.value = item.error ? `${item.name}: ${describeError(item.error, item)}` : '';
+    announcement.value =
+      item.status === 'error' ? `${item.name}: ${describeError(item.error, item)}` : '';
+
     emit('error', item);
   },
 });

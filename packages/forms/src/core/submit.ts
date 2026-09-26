@@ -1,7 +1,7 @@
 import { normalizePath } from '../paths/paths';
 import type { ErrorControls } from './errors';
 import { NuiFormError } from './form-error';
-import type { FormCore } from './form-core';
+import { IDLE_SUBMISSION, type FormCore } from './form-core';
 import type { FormHost } from './host';
 import { toMessages } from './messages';
 import type { FormMessage, ResetOptions, SubmitResult, SubmitStatus } from './types';
@@ -90,7 +90,6 @@ export const createSubmit = <V extends object, O>(deps: SubmitDeps<V, O>) => {
       return outcome('rejected');
     }
     core.initial.value = result.input;
-    core.submitted.value = true;
     return outcome('submitted');
   };
 
@@ -113,25 +112,31 @@ export const createSubmit = <V extends object, O>(deps: SubmitDeps<V, O>) => {
   return (event?: Event): Promise<SubmitResult> => {
     event?.preventDefault();
 
-    if (core.submitting.value) {
+    if (core.submission.value.phase === 'running') {
       return Promise.resolve(IGNORED);
     }
 
     const controller = new AbortController();
     const { epoch } = core.session;
 
-    core.submitting.value = true;
-    core.submitted.value = false;
-    core.session.controller = controller;
+    core.submission.value = { phase: 'running', controller };
     deps.errors.clearServerErrors();
 
-    return core.tracker.track(
-      attempt(epoch, controller.signal).finally(() => {
-        if (epoch === core.session.epoch) {
-          core.submitting.value = false;
-          core.session.controller = undefined;
-        }
-      }),
-    );
+    const settle = (result: SubmitResult): SubmitResult => {
+      if (epoch === core.session.epoch) {
+        core.submission.value =
+          result.status === 'submitted' ? { phase: 'succeeded' } : IDLE_SUBMISSION;
+      }
+      return result;
+    };
+
+    const fail = (error: unknown): never => {
+      if (epoch === core.session.epoch) {
+        core.submission.value = IDLE_SUBMISSION;
+      }
+      throw error;
+    };
+
+    return core.tracker.track(attempt(epoch, controller.signal).then(settle, fail));
   };
 };

@@ -1,5 +1,5 @@
-import { ref, type Ref } from 'vue';
-import { useReorder, type ReorderState } from '@numior/primitives';
+import { ref, type ComputedRef, type Ref } from 'vue';
+import { useReorder, type ReorderEvent, type ReorderState } from '@numior/primitives';
 import { clampInside, ghostAt, grabOf, NO_GRAB, type DragGrab, type NuiTableGhost } from './ghost';
 import type { NuiTableAnnouncement, NuiTableColumn } from './table.types';
 
@@ -15,10 +15,12 @@ export interface ColumnReorderOptions<T> {
 
 export interface ColumnReorder {
   readonly state: Readonly<Ref<ReorderState>>;
+  readonly source: ComputedRef<number | undefined>;
   readonly indicator: Readonly<Ref<number | undefined>>;
   readonly ghost: Readonly<Ref<NuiTableGhost | undefined>>;
   dragStart(index: number, event: PointerEvent): void;
   dragKeydown(index: number, event: KeyboardEvent): void;
+  headPointerdown(): void;
   headClick(event: MouseEvent): void;
 }
 
@@ -65,8 +67,7 @@ export const useColumnReorder = <T>(options: ColumnReorderOptions<T>): ColumnReo
   const indicator = ref<number>();
   const ghost = ref<NuiTableGhost>();
   const grabbed: { current: DragGrab } = { current: NO_GRAB };
-  const flags = { dragged: false, moved: false };
-  let previous: ReorderState = { phase: 'idle', from: -1, to: -1, position: 0 };
+  let dragged = false;
 
   const labelOf = (index: number): string => options.columns()[index]?.label ?? '';
 
@@ -81,14 +82,12 @@ export const useColumnReorder = <T>(options: ColumnReorderOptions<T>): ColumnReo
     });
   };
 
-  const place = (state: ReorderState): void => {
+  const place = (from: number, to: number): void => {
     const scroller = options.scroller();
-    const cell = headerCells(scroller, options.utilities())[state.to];
+    const cell = headerCells(scroller, options.utilities())[to];
 
     indicator.value =
-      scroller && cell
-        ? indicatorAt(scroller, cell, state.to > state.from, options.rtl())
-        : undefined;
+      scroller && cell ? indicatorAt(scroller, cell, to > from, options.rtl()) : undefined;
   };
 
   const float = (state: ReorderState): void => {
@@ -98,63 +97,56 @@ export const useColumnReorder = <T>(options: ColumnReorderOptions<T>): ColumnReo
         : undefined;
   };
 
-  const announceTransition = (state: ReorderState): void => {
-    const taken = state.phase === 'keyboard' && previous.phase !== 'keyboard';
-    if (taken) {
-      flags.moved = false;
-      say('grabbed', state.from, state.to);
-    } else if (state.phase === 'keyboard' && state.to !== previous.to) {
-      say('moved', state.from, state.to);
-    } else if (state.phase === 'idle' && previous.phase === 'keyboard' && !flags.moved) {
-      say('cancelled', previous.from, previous.from);
-    }
-  };
-
   const onChange = (state: ReorderState): void => {
-    if (state.phase === 'dragging') {
-      flags.dragged = true;
-    }
-    if (state.phase === 'pending') {
-      flags.moved = false;
-    }
-    announceTransition(state);
-    if (state.phase === 'idle') {
-      flags.moved = false;
-      indicator.value = undefined;
-    } else if (state.phase !== 'pending') {
-      place(state);
+    switch (state.phase) {
+      case 'dragging':
+        dragged = true;
+        place(state.from, state.to);
+        break;
+      case 'keyboard':
+        place(state.from, state.to);
+        break;
+      case 'idle':
+        indicator.value = undefined;
+        break;
+      case 'pending':
+        break;
     }
     float(state);
-    previous = state;
+  };
+
+  const onEvent = (event: ReorderEvent): void => {
+    switch (event.type) {
+      case 'grabbed':
+      case 'cancelled':
+        say(event.type, event.from, event.from);
+        break;
+      case 'moved':
+      case 'dropped':
+        say(event.type, event.from, event.to);
+        break;
+    }
   };
 
   const reorder = useReorder({
     axis: 'x',
     count: () => options.columns().length,
     container: options.scroller,
-    indexAt: (client) =>
-      slotIndex(
-        headerCells(options.scroller(), options.utilities()),
-        client,
-        options.rtl(),
-        reorder.state.value.from,
-      ),
+    indexAt: (client, from) =>
+      slotIndex(headerCells(options.scroller(), options.utilities()), client, options.rtl(), from),
     canMove: options.canMove,
-    onMove: (from, to) => {
-      flags.moved = true;
-      options.move(from, to);
-      say('dropped', from, to);
-    },
+    onMove: options.move,
     onChange,
+    onEvent,
     rtl: options.rtl,
   });
 
   return {
     state: reorder.state,
+    source: reorder.source,
     indicator,
     ghost,
     dragStart: (index, event) => {
-      flags.dragged = false;
       grabbed.current = grabOf(event, 'x', 'th');
       reorder.onPointerdown(index, event);
     },
@@ -163,9 +155,12 @@ export const useColumnReorder = <T>(options: ColumnReorderOptions<T>): ColumnReo
         event.preventDefault();
       }
     },
+    headPointerdown: () => {
+      dragged = false;
+    },
     headClick: (event) => {
-      if (flags.dragged) {
-        flags.dragged = false;
+      if (dragged) {
+        dragged = false;
         event.stopPropagation();
         event.preventDefault();
       }

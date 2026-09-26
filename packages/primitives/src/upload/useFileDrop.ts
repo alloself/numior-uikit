@@ -1,4 +1,4 @@
-import { ref, toValue, type MaybeRefOrGetter, type Ref } from 'vue';
+import { computed, shallowRef, toValue, type MaybeRefOrGetter, type Ref } from 'vue';
 
 export interface FileDropOptions {
   readonly disabled?: MaybeRefOrGetter<boolean | undefined>;
@@ -33,13 +33,12 @@ const carriesFiles = (transfer: FileTransfer | null): transfer is FileTransfer =
   transfer !== null && Array.from(transfer.types).includes('Files');
 
 export const useFileDrop = (options: FileDropOptions): FileDrop => {
-  const dragging = ref(false);
-  const depth = { value: 0 };
+  const depth = shallowRef(0);
+  const dragging = computed(() => depth.value > 0);
   const active = (): boolean => !(toValue(options.disabled) ?? false);
 
   const settle = (): void => {
     depth.value = 0;
-    dragging.value = false;
   };
 
   const onDragenter = (event: Event): void => {
@@ -49,7 +48,6 @@ export const useFileDrop = (options: FileDropOptions): FileDrop => {
 
     event.preventDefault();
     depth.value += 1;
-    dragging.value = true;
   };
 
   const onDragover = (event: Event): void => {
@@ -69,10 +67,6 @@ export const useFileDrop = (options: FileDropOptions): FileDrop => {
     }
 
     depth.value -= 1;
-
-    if (depth.value === 0) {
-      dragging.value = false;
-    }
   };
 
   const onDrop = (event: Event): void => {

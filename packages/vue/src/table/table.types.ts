@@ -54,6 +54,7 @@ export interface NuiTableHeadActions<T> {
   resizeReset(column: NuiTableColumn<T>): void;
   dragStart(index: number, event: PointerEvent): void;
   dragKeydown(index: number, event: KeyboardEvent): void;
+  headPointerdown(): void;
   headClick(event: MouseEvent): void;
 }
 
@@ -126,7 +127,7 @@ export interface NuiTableHeadProps<T> {
   layout: NuiTableCellLayout<T>;
   actions: NuiTableHeadActions<T>;
   resizing: string | undefined;
-  dragging: number;
+  dragging: number | undefined;
   resizeLabel: (column: NuiTableColumn<T>) => string;
   reorderLabel: (column: NuiTableColumn<T>) => string;
 }
@@ -164,7 +165,7 @@ export interface NuiTableBodyProps<T> {
   emptyLabel: string;
   firstIndex: number;
   spacers: NuiTableSpacers | undefined;
-  dragging: number;
+  dragging: number | undefined;
   pinned: boolean;
 }
 

@@ -30,7 +30,7 @@ const demoUpload = async (file, { onProgress, signal }) => {
 }
 
 const documents = ref([
-  { id: 'brief', name: 'brief.pdf', size: 348160, type: 'application/pdf', status: 'done', progress: 1, url: '#brief' },
+  { id: 'brief', name: 'brief.pdf', size: 348160, type: 'application/pdf', status: 'done', url: '#brief' },
 ])
 const images = ref([])
 </script>
@@ -129,8 +129,10 @@ Events: `update:modelValue`, `reject(rejections)`, `done(item)`, `error(item)`,
 `remove(item)`. Slots: default (`{ open, dragging }`) replaces the zone content, `item`
 (`{ item, preview, cancel, retry, remove }`) the file row. Methods `open()`, `start()`,
 `retry(id)`, `remove(id)`. A `NuiUploadItem` holds `id`, `name`, `size`, `type`, `status`
-(`queued` | `uploading` | `done` | `error`), `progress` `0…1`, `file?`, `url?`, `result?`
-and `error?` (`reason`: `type` | `size` | `count` | `custom` | `upload`, `message?`).
+and `file?`, `url?` plus the fields of its `status`: `queued` has none, `uploading` has `progress`
+`0…1`, `done` has `result?` and `error` has `error` (`reason`: `type` | `size` | `count` |
+`custom` | `upload`, `message?`). An item never carries the fields of another status, so an
+error does not linger after a retry.
 
 Block `nui-upload` (modifiers `--layout-*`, `--size-*`, `--dragging`, `--busy`, `--invalid`,
 `--disabled`; elements `__zone`, `__input`, `__icon`, `__text`, `__browse`, `__hint`,

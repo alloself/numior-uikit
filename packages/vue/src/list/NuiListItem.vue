@@ -110,42 +110,45 @@ const optionAttrs = (): AttrRecord =>
 const rootAttrs = (): AttrRecord => (hasAction() ? split.rootAttrs() : attrs);
 
 const innerIs = () => {
-  const kind = mode();
-  if (kind === 'link') {
-    return NuiLink;
+  switch (mode()) {
+    case 'link':
+      return NuiLink;
+    case 'button':
+      return 'button';
+    case 'option':
+    case 'plain':
+      return 'div';
   }
-  return kind === 'button' ? 'button' : 'div';
 };
 
 const innerAttrs = (): AttrRecord => {
-  const kind = mode();
   const page = current ? { 'aria-current': 'page' } : {};
 
-  if (kind === 'link') {
-    return {
-      as,
-      href,
-      to,
-      tone: 'neutral',
-      underline: 'none',
-      disabled,
-      class: 'nui-list-item__action',
-      ...page,
-      ...split.controlAttrs(),
-    };
+  switch (mode()) {
+    case 'link':
+      return {
+        as,
+        href,
+        to,
+        tone: 'neutral',
+        underline: 'none',
+        disabled,
+        class: 'nui-list-item__action',
+        ...page,
+        ...split.controlAttrs(),
+      };
+    case 'button':
+      return {
+        type: 'button',
+        disabled,
+        class: 'nui-list-item__action',
+        ...page,
+        ...split.controlAttrs(),
+      };
+    case 'option':
+    case 'plain':
+      return {};
   }
-
-  if (kind === 'button') {
-    return {
-      type: 'button',
-      disabled,
-      class: 'nui-list-item__action',
-      ...page,
-      ...split.controlAttrs(),
-    };
-  }
-
-  return {};
 };
 
 const onClick = (): void => {

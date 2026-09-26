@@ -141,8 +141,10 @@ export type {
   UploadContext,
   UploadEntry,
   UploadError,
+  UploadFile,
   UploadItem,
   UploadReason,
+  UploadState,
   UploadStatus,
 } from './upload/upload-types';
 export { useSplitAttrs } from './attrs/useSplitAttrs';
@@ -198,10 +200,13 @@ export type {
   VirtualRange,
   VirtualScrollOptions,
 } from './virtual/useVirtualList';
+export { createIntent } from './intent/createIntent';
+export type { Intent } from './intent/createIntent';
 export { useReorder } from './reorder/useReorder';
 export type {
   Reorder,
   ReorderAxis,
+  ReorderEvent,
   ReorderOptions,
   ReorderPhase,
   ReorderState,

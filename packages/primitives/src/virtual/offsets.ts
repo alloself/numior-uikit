@@ -95,17 +95,18 @@ export const scrollTargetFor = (
   const end = start + sizeAt(model, index);
   const max = Math.max(0, totalSizeOf(model) - viewport);
   const bounded = (value: number): number => clamp(value, 0, max);
-  if (align === 'start') {
-    return bounded(start);
+
+  switch (align) {
+    case 'start':
+      return bounded(start);
+    case 'end':
+      return bounded(end - viewport);
+    case 'center':
+      return bounded(start - (viewport - (end - start)) / 2);
+    case 'auto':
+      if (start < scrollTop) {
+        return bounded(start);
+      }
+      return end > scrollTop + viewport ? bounded(end - viewport) : undefined;
   }
-  if (align === 'end') {
-    return bounded(end - viewport);
-  }
-  if (align === 'center') {
-    return bounded(start - (viewport - (end - start)) / 2);
-  }
-  if (start < scrollTop) {
-    return bounded(start);
-  }
-  return end > scrollTop + viewport ? bounded(end - viewport) : undefined;
 };

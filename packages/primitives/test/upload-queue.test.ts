@@ -11,12 +11,13 @@ describe('useUploadQueue', () => {
     expect(queue.calls.map((call) => call.file.name)).toEqual(['a.txt', 'b.txt']);
     expect(queue.busy).toBe(true);
     queue.calls[0]?.context.onProgress(0.5);
-    expect(queue.item('a.txt').progress).toBe(0.5);
+    expect(queue.item('a.txt')).toMatchObject({ status: 'uploading', progress: 0.5 });
     queue.calls[0]?.context.onProgress(7);
-    expect(queue.item('a.txt').progress).toBe(1);
+    expect(queue.item('a.txt')).toMatchObject({ status: 'uploading', progress: 1 });
     queue.calls[0]?.resolve('ok');
     await queue.flush();
-    expect(queue.item('a.txt')).toMatchObject({ status: 'done', progress: 1, result: 'ok' });
+    expect(queue.item('a.txt')).toEqual(expect.objectContaining({ status: 'done', result: 'ok' }));
+    expect(queue.item('a.txt')).not.toHaveProperty('progress');
     expect(queue.calls.map((call) => call.file.name)).toEqual(['a.txt', 'b.txt', 'c.txt']);
     expect(queue.settled).toEqual(['done:a.txt']);
     queue.calls[1]?.reject(new Error('boom'));
@@ -39,10 +40,16 @@ describe('useUploadQueue', () => {
     queue.add('a.txt', 'b.txt');
     queue.calls[0]?.reject('offline');
     await queue.flush();
-    expect(queue.item('a.txt').error).toEqual({ reason: 'upload', message: 'offline' });
+
+    expect(queue.item('a.txt')).toMatchObject({
+      status: 'error',
+      error: { reason: 'upload', message: 'offline' },
+    });
+
     expect(queue.item('b.txt').status).toBe('uploading');
     queue.queue.retry(queue.item('a.txt').id);
     expect(queue.item('a.txt').status).toBe('queued');
+    expect(queue.item('a.txt')).not.toHaveProperty('error');
     queue.queue.remove(queue.item('b.txt').id);
     expect(queue.calls[1]?.context.signal.aborted).toBe(true);
     expect(queue.items.map((item) => item.name)).toEqual(['a.txt']);
@@ -102,7 +109,7 @@ describe('useUploadQueue', () => {
       ['ok.txt', 'queued'],
     ]);
 
-    expect(queue.item('big.bin').error).toEqual({ reason: 'size' });
+    expect(queue.item('big.bin')).toMatchObject({ status: 'error', error: { reason: 'size' } });
     expect(queue.calls.map((call) => call.file.name)).toEqual(['ok.txt']);
     queue.queue.retry(queue.item('big.bin').id);
     expect(queue.item('big.bin').status).toBe('error');

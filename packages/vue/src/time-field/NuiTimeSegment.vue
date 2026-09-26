@@ -102,14 +102,21 @@ const onKeydown = (event: KeyboardEvent): void => {
     return;
   }
   event.preventDefault();
-  if (action === 'step-up') {
-    emit('step', 1);
-  } else if (action === 'step-down') {
-    emit('step', -1);
-  } else if (action === 'clear') {
-    emit('clear');
-  } else {
-    emit('edge', action);
+
+  switch (action) {
+    case 'step-up':
+      emit('step', 1);
+      break;
+    case 'step-down':
+      emit('step', -1);
+      break;
+    case 'clear':
+      emit('clear');
+      break;
+    case 'min':
+    case 'max':
+      emit('edge', action);
+      break;
   }
 };
 

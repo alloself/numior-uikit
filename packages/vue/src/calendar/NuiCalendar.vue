@@ -77,7 +77,7 @@ import {
 } from '@numior/primitives';
 import NuiButton from '../button/NuiButton.vue';
 import NuiCalendarMonth from './NuiCalendarMonth.vue';
-import { provideCalendar, type RequestOptions } from './calendar-context';
+import { provideCalendar, type FocusRequest, type RequestOptions } from './calendar-context';
 import { calendarMessages } from './calendar.messages';
 import type { NuiCalendarProps, NuiCalendarValue, NuiDatePreset } from './calendar.types';
 import { dayStateOf, sameCalendarValue, selectedDatesOf } from './day-state';
@@ -142,7 +142,7 @@ const selection = useCalendarSelection({
 
 const focused = ref(initialDate());
 const focusRequests = ref(0);
-const focusState = { pending: false, take: false };
+let focusIntent: Exclude<FocusRequest, 'none'> | undefined;
 const picks: { last: NuiCalendarValue } = { last: model.value };
 
 const isDisabled = (date: string): boolean =>
@@ -167,10 +167,12 @@ const request = (date: string, options: RequestOptions = {}): void => {
 
   reveal(monthKeyOf(target));
   focused.value = target;
-  focusState.pending = options.focus ?? true;
-  focusState.take = options.take ?? false;
 
-  if (focusState.pending) {
+  const focus = options.focus ?? 'follow';
+
+  focusIntent = focus === 'none' ? undefined : focus;
+
+  if (focusIntent !== undefined) {
     focusRequests.value += 1;
   }
 };
@@ -182,12 +184,12 @@ const holdsFocus = (): boolean => {
 };
 
 const settle = (): void => {
-  if (!focusState.pending || calendarView.view.value !== 'days') {
+  if (focusIntent === undefined || calendarView.view.value !== 'days') {
     return;
   }
 
-  if (!focusState.take && !holdsFocus()) {
-    focusState.pending = false;
+  if (focusIntent === 'follow' && !holdsFocus()) {
+    focusIntent = undefined;
 
     return;
   }
@@ -195,7 +197,7 @@ const settle = (): void => {
   const button = root.value?.querySelector(`time[datetime="${focused.value}"]`)?.closest('button');
 
   if (button instanceof HTMLButtonElement) {
-    focusState.pending = false;
+    focusIntent = undefined;
     button.focus({ preventScroll: true });
   }
 };
@@ -263,7 +265,7 @@ const applyPreset = (preset: NuiDatePreset): void => {
   picks.last = range;
 
   if (range.start) {
-    request(range.start, { focus: false });
+    request(range.start, { focus: 'none' });
   }
 };
 
@@ -318,10 +320,10 @@ onMounted(() => {
     const first = selectedDatesOf(value)[0];
 
     if (first) {
-      request(first, { focus: false });
+      request(first, { focus: 'none' });
     }
   });
 });
 
-defineExpose({ focus: (date?: string) => request(date ?? focused.value, { take: true }) });
+defineExpose({ focus: (date?: string) => request(date ?? focused.value, { focus: 'take' }) });
 </script>

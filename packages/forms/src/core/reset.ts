@@ -1,5 +1,5 @@
 import { cloneValue } from '../values/clone';
-import type { FormCore } from './form-core';
+import { IDLE_SUBMISSION, type FormCore } from './form-core';
 import { writeErrors } from './messages';
 import type { AnyEntry } from './registry';
 import type { ResetOptions } from './types';
@@ -22,15 +22,18 @@ export const createReset =
       ? entries.map((entry) => [entry, entry.state.errors.value] as const)
       : [];
 
+    const submission = core.submission.value;
+
     core.session.epoch += 1;
-    core.session.controller?.abort();
-    core.session.controller = undefined;
+
+    if (submission.phase === 'running') {
+      submission.controller.abort();
+    }
     validation.async.reset();
     core.initial.value = cloneValue(options.values ?? core.initial.value);
     core.engine.reset(core.initial.value);
     core.retained.clear();
-    core.submitting.value = false;
-    core.submitted.value = false;
+    core.submission.value = IDLE_SUBMISSION;
     entries.forEach(clearState);
 
     for (const [entry, errors] of kept) {

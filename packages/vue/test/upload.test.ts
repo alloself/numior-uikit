@@ -112,7 +112,6 @@ describe('NuiUpload', () => {
           size: 2048,
           type: 'image/jpeg',
           status: 'done',
-          progress: 1,
           url: 'https://cdn.example/cover.jpg',
         },
         {
@@ -121,7 +120,6 @@ describe('NuiUpload', () => {
           size: 4096,
           type: 'application/pdf',
           status: 'done',
-          progress: 1,
           url: 'https://cdn.example/report.pdf',
         },
       ],

@@ -12,13 +12,18 @@ interface AsyncResult {
   readonly message: string | undefined;
 }
 
+type AsyncPhase =
+  | { readonly kind: 'idle' }
+  | { readonly kind: 'debouncing'; readonly wake: () => void }
+  | { readonly kind: 'running'; readonly controller: AbortController };
+
 interface AsyncState {
   token: number;
-  held: boolean;
-  wake: (() => void) | undefined;
-  controller: AbortController | undefined;
+  phase: AsyncPhase;
   result: AsyncResult | undefined;
 }
+
+const IDLE: AsyncPhase = { kind: 'idle' };
 
 export interface AsyncChecks<V extends object> {
   issues(active: readonly Entry<V>[]): FormIssue[];
@@ -43,13 +48,7 @@ export const createAsyncChecks = <V extends object, O>(
       return known;
     }
 
-    const created: AsyncState = {
-      token: 0,
-      held: false,
-      wake: undefined,
-      controller: undefined,
-      result: undefined,
-    };
+    const created: AsyncState = { token: 0, phase: IDLE, result: undefined };
 
     states.set(entry, created);
     return created;
@@ -67,10 +66,15 @@ export const createAsyncChecks = <V extends object, O>(
     (entry.hasAsync() || formRules(entry).length > 0) &&
     freshResult(entry) === undefined;
 
-  const release = (entry: Entry<V>, state: AsyncState): void => {
-    if (state.held) {
-      state.held = false;
+  const settleAt = (entry: Entry<V>, state: AsyncState, phase: AsyncPhase): void => {
+    const held = state.phase.kind !== 'idle';
+
+    state.phase = phase;
+
+    if (held && phase.kind === 'idle') {
       pending.release(entry);
+    } else if (!held && phase.kind !== 'idle') {
+      pending.hold(entry);
     }
   };
 
@@ -80,12 +84,22 @@ export const createAsyncChecks = <V extends object, O>(
     if (!state) {
       return;
     }
+
+    const { phase } = state;
+
     state.token += 1;
-    state.controller?.abort();
-    state.controller = undefined;
-    state.wake?.();
-    state.wake = undefined;
-    release(entry, state);
+
+    switch (phase.kind) {
+      case 'debouncing':
+        phase.wake();
+        break;
+      case 'running':
+        phase.controller.abort();
+        break;
+      case 'idle':
+        break;
+    }
+    settleAt(entry, state, IDLE);
   };
 
   const start = (entry: Entry<V>): readonly [AsyncState, number] => {
@@ -94,8 +108,6 @@ export const createAsyncChecks = <V extends object, O>(
     const state = stateOf(entry);
 
     state.token += 1;
-    state.held = true;
-    pending.hold(entry);
     return [state, state.token];
   };
 
@@ -111,7 +123,7 @@ export const createAsyncChecks = <V extends object, O>(
       signal: controller.signal,
     };
 
-    state.controller = controller;
+    settleAt(entry, state, { kind: 'running', controller });
 
     try {
       const message =
@@ -132,10 +144,13 @@ export const createAsyncChecks = <V extends object, O>(
     await new Promise<void>((resolve) => {
       const timer = setTimeout(resolve, delay);
 
-      state.wake = () => {
-        clearTimeout(timer);
-        resolve();
-      };
+      settleAt(entry, state, {
+        kind: 'debouncing',
+        wake: () => {
+          clearTimeout(timer);
+          resolve();
+        },
+      });
     });
 
     if (token !== state.token) {
@@ -150,8 +165,7 @@ export const createAsyncChecks = <V extends object, O>(
 
   const finish = (entry: Entry<V>, state: AsyncState, token: number): void => {
     if (token === state.token) {
-      state.controller = undefined;
-      release(entry, state);
+      settleAt(entry, state, IDLE);
     }
   };
 

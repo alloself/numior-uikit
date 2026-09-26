@@ -37,10 +37,10 @@
 
 <script setup lang="ts" generic="T extends object">
 import { computed, shallowRef, useTemplateRef, watch } from 'vue';
-import { useMessages } from '@numior/primitives';
+import { createIntent, useMessages } from '@numior/primitives';
 import { NuiAlert, NuiButton } from '@numior/vue';
-import type { SubmitResult } from '../../core/types';
 import { FORM_HOST, provideForm } from '../../form/form-context';
+import { focusAfter, type FormFocus } from './focus-after';
 import { provideFormScope } from './form-scope';
 import { formMessages } from './form.messages';
 import type { NuiFormProps } from './form.types';
@@ -64,7 +64,7 @@ const errorsBox = useTemplateRef<HTMLElement>('errors');
 const localized = useMessages(formMessages);
 const busy = shallowRef(false);
 const attempt = shallowRef(0);
-const focusPlan: { path: string | undefined; errors: boolean } = { path: undefined, errors: false };
+const focus = createIntent<FormFocus>();
 
 const texts = computed(() => ({
   submit: submitLabel ?? localized.value.submit,
@@ -90,14 +90,9 @@ const actions = computed(() => ({
   reset,
 }));
 
-const planFocus = (result: SubmitResult): void => {
-  focusPlan.path = result.invalid[0];
-  focusPlan.errors = result.invalid.length === 0 && result.formErrors.length > 0;
-};
-
 const runSubmit = async (): Promise<void> => {
   try {
-    planFocus(await (submitAction ?? form.submit)());
+    focus.set(focusAfter(await (submitAction ?? form.submit)()));
   } finally {
     busy.value = false;
     attempt.value += 1;
@@ -127,15 +122,15 @@ const onReset = (event: Event): void => {
 watch(
   attempt,
   () => {
-    const { path, errors } = focusPlan;
+    const target = focus.take();
 
-    focusPlan.path = undefined;
-    focusPlan.errors = false;
-
-    if (path !== undefined) {
-      form.focusField(path);
-    } else if (errors) {
-      errorsBox.value?.focus();
+    switch (target?.kind) {
+      case 'field':
+        form.focusField(target.path);
+        break;
+      case 'errors':
+        errorsBox.value?.focus();
+        break;
     }
   },
   { flush: 'post' },

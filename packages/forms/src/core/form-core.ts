@@ -26,8 +26,14 @@ export interface Session {
   started: number;
   applied: number;
   formAttempted: boolean;
-  controller: AbortController | undefined;
 }
+
+export type Submission =
+  | { readonly phase: 'idle' }
+  | { readonly phase: 'running'; readonly controller: AbortController }
+  | { readonly phase: 'succeeded' };
+
+export const IDLE_SUBMISSION: Submission = { phase: 'idle' };
 
 export interface FormCoreOptions<V extends object, O> {
   readonly initialValues: V;
@@ -48,8 +54,7 @@ export interface FormCore<V extends object, O> {
   readonly initial: ShallowRef<V>;
   readonly schemaFormErrors: ShallowRef<readonly FormMessage[]>;
   readonly serverFormErrors: ShallowRef<readonly FormMessage[]>;
-  readonly submitting: ShallowRef<boolean>;
-  readonly submitted: ShallowRef<boolean>;
+  readonly submission: ShallowRef<Submission>;
   readonly external: Map<string, ExternalError>;
   readonly retained: Map<string, RetainedState>;
   readonly session: Session;
@@ -68,9 +73,8 @@ export const createFormCore = <V extends object, O>(
   initial: shallowRef(cloneValue(options.initialValues)),
   schemaFormErrors: shallowRef<readonly FormMessage[]>([]),
   serverFormErrors: shallowRef<readonly FormMessage[]>([]),
-  submitting: shallowRef(false),
-  submitted: shallowRef(false),
+  submission: shallowRef<Submission>(IDLE_SUBMISSION),
   external: new Map(),
   retained: new Map(),
-  session: { epoch: 0, started: 0, applied: 0, formAttempted: false, controller: undefined },
+  session: { epoch: 0, started: 0, applied: 0, formAttempted: false },
 });

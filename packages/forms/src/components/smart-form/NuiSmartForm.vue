@@ -49,7 +49,7 @@
 
 <script setup lang="ts" generic="T extends object">
 import { computed, shallowRef, useSlots, useTemplateRef, watch } from 'vue';
-import { useMessages } from '@numior/primitives';
+import { createIntent, useMessages } from '@numior/primitives';
 import { NuiButton } from '@numior/vue';
 import type { SubmitResult } from '../../core/types';
 import { FORM_HOST } from '../../form/form-context';
@@ -92,7 +92,7 @@ const localized = useMessages(smartFormMessages);
 const formTexts = useMessages(formMessages);
 const direction = shallowRef<'forward' | 'back' | undefined>(undefined);
 const navigations = shallowRef(0);
-const focusPlan: { target: 'first' | 'invalid' | undefined } = { target: undefined };
+const stepFocus = createIntent<StepFocus>();
 
 const { raw } = form[FORM_HOST].engine;
 const entries = computed(() => fields ?? []);
@@ -142,22 +142,29 @@ const classes = computed(() => ({
   'nui-smart-form--navigated': direction.value !== undefined,
 }));
 
-const goTo = (index: number, target: 'first' | 'invalid' | undefined): void => {
+const goTo = (index: number, target: StepFocus | undefined): void => {
   direction.value = index < currentIndex.value ? 'back' : 'forward';
-  focusPlan.target = target;
+  stepFocus.set(target);
   step.value = stepList.value[index]?.value;
   navigations.value += 1;
 };
 
 const IGNORED: SubmitResult = { status: 'ignored', invalid: [], formErrors: [] };
 
+type StepFocus = 'control' | 'invalid';
+
+const STEP_TARGETS: Readonly<Record<StepFocus, string>> = {
+  control: FOCUSABLE,
+  invalid: '[aria-invalid="true"]',
+};
+
 const advance = async (): Promise<SubmitResult> => {
   const summary = await form.validate({ paths: stepPathList.value[currentIndex.value] ?? [] });
 
   if (summary.valid) {
-    goTo(currentIndex.value + 1, 'first');
+    goTo(currentIndex.value + 1, 'control');
   } else {
-    focusPlan.target = 'invalid';
+    stepFocus.set('invalid');
     navigations.value += 1;
   }
   return IGNORED;
@@ -178,7 +185,7 @@ const runStep = (): Promise<SubmitResult> => (last.value ? finish() : advance())
 
 const back = (): void => {
   if (!first.value) {
-    goTo(currentIndex.value - 1, 'first');
+    goTo(currentIndex.value - 1, 'control');
   }
 };
 
@@ -186,7 +193,7 @@ const select = (value: string): void => {
   const index = stepList.value.findIndex((item) => item.value === value);
 
   if (index !== -1 && index !== currentIndex.value) {
-    goTo(index, 'first');
+    goTo(index, 'control');
   }
 };
 
@@ -198,15 +205,12 @@ const onReset = (): void => {
 watch(
   navigations,
   () => {
-    const { target } = focusPlan;
-    const selector = target === 'invalid' ? '[aria-invalid="true"]' : FOCUSABLE;
+    const target = stepFocus.take();
 
     const element =
       target === undefined
         ? null
-        : stepPanels.value?.panel(currentIndex.value)?.querySelector(selector);
-
-    focusPlan.target = undefined;
+        : stepPanels.value?.panel(currentIndex.value)?.querySelector(STEP_TARGETS[target]);
 
     if (element instanceof HTMLElement) {
       element.focus();

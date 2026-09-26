@@ -30,7 +30,7 @@ const demoUpload = async (file, { onProgress, signal }) => {
 }
 
 const documents = ref([
-  { id: 'brief', name: 'brief.pdf', size: 348160, type: 'application/pdf', status: 'done', progress: 1, url: '#brief' },
+  { id: 'brief', name: 'brief.pdf', size: 348160, type: 'application/pdf', status: 'done', url: '#brief' },
 ])
 const images = ref([])
 </script>
@@ -128,8 +128,9 @@ URL, который отзывается при удалении и размон
 `remove(item)`. Слоты: default (`{ open, dragging }`) заменяет содержимое зоны, `item`
 (`{ item, preview, cancel, retry, remove }`) — строку файла. Методы `open()`, `start()`,
 `retry(id)`, `remove(id)`. Элемент `NuiUploadItem`: `id`, `name`, `size`, `type`, `status`
-(`queued` | `uploading` | `done` | `error`), `progress` `0…1`, `file?`, `url?`, `result?`,
-`error?` (`reason`: `type` | `size` | `count` | `custom` | `upload`, `message?`).
+и `file?`, `url?` плюс поля своего `status`: `queued` — ничего, `uploading` — `progress` `0…1`,
+`done` — `result?`, `error` — `error` (`reason`: `type` | `size` | `count` | `custom` | `upload`,
+`message?`). Поля чужого статуса у элемента нет, поэтому ошибка не остаётся после повтора.
 
 Блок `nui-upload` (модификаторы `--layout-*`, `--size-*`, `--dragging`, `--busy`,
 `--invalid`, `--disabled`; элементы `__zone`, `__input`, `__icon`, `__text`, `__browse`,

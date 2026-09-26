@@ -6,31 +6,32 @@ export interface Timers {
   has(id: string): boolean;
 }
 
-interface Entry {
-  handle: ReturnType<typeof setTimeout> | undefined;
-  remaining: number;
-  startedAt: number;
-  readonly onDone: () => void;
-}
+type Entry =
+  | {
+      readonly state: 'running';
+      readonly handle: ReturnType<typeof setTimeout>;
+      readonly startedAt: number;
+      readonly remaining: number;
+      readonly onDone: () => void;
+    }
+  | { readonly state: 'paused'; readonly remaining: number; readonly onDone: () => void };
 
 export const createTimers = (): Timers => {
   const entries = new Map<string, Entry>();
 
-  const arm = (id: string, entry: Entry): void => {
-    entry.startedAt = Date.now();
-
-    entry.handle = setTimeout(() => {
+  const arm = (id: string, remaining: number, onDone: () => void): void => {
+    const handle = setTimeout(() => {
       entries.delete(id);
-      entry.onDone();
-    }, entry.remaining);
+      onDone();
+    }, remaining);
+
+    entries.set(id, { state: 'running', handle, startedAt: Date.now(), remaining, onDone });
   };
 
   const clear = (id: string): void => {
     const entry = entries.get(id);
-    if (!entry) {
-      return;
-    }
-    if (entry.handle !== undefined) {
+
+    if (entry?.state === 'running') {
       clearTimeout(entry.handle);
     }
     entries.delete(id);
@@ -39,25 +40,28 @@ export const createTimers = (): Timers => {
   return {
     start: (id, ms, onDone) => {
       clear(id);
-      const entry: Entry = { handle: undefined, remaining: ms, startedAt: 0, onDone };
-      entries.set(id, entry);
-      arm(id, entry);
+      arm(id, ms, onDone);
     },
     pause: (id) => {
       const entry = entries.get(id);
-      if (!entry || entry.handle === undefined) {
+
+      if (entry?.state !== 'running') {
         return;
       }
       clearTimeout(entry.handle);
-      entry.handle = undefined;
-      entry.remaining = Math.max(0, entry.remaining - (Date.now() - entry.startedAt));
+
+      entries.set(id, {
+        state: 'paused',
+        remaining: Math.max(0, entry.remaining - (Date.now() - entry.startedAt)),
+        onDone: entry.onDone,
+      });
     },
     resume: (id) => {
       const entry = entries.get(id);
-      if (!entry || entry.handle !== undefined) {
-        return;
+
+      if (entry?.state === 'paused') {
+        arm(id, entry.remaining, entry.onDone);
       }
-      arm(id, entry);
     },
     clear,
     has: (id) => entries.has(id),

@@ -1,6 +1,12 @@
 import { mount, type VueWrapper } from '@vue/test-utils';
 import { defineComponent, h, nextTick, shallowRef } from 'vue';
-import { useReorder, type Reorder, type ReorderAxis, type ReorderState } from '../../src';
+import {
+  useReorder,
+  type Reorder,
+  type ReorderAxis,
+  type ReorderEvent,
+  type ReorderState,
+} from '../../src';
 
 export interface ReorderHarnessOptions {
   readonly axis?: ReorderAxis;
@@ -29,6 +35,7 @@ export class ReorderHarness {
     const count = options.count ?? 5;
     const moves: Array<readonly [number, number]> = [];
     const changes: ReorderState[] = [];
+    const events: ReorderEvent[] = [];
     const outcome: { current: Outcome } = { current: { ran: false } };
 
     const Host = defineComponent({
@@ -43,6 +50,7 @@ export class ReorderHarness {
           canMove: options.canMove,
           onMove: (from, to) => moves.push([from, to]),
           onChange: (state) => changes.push(state),
+          onEvent: (event) => events.push(event),
           rtl: () => options.rtl,
         });
 
@@ -75,7 +83,7 @@ export class ReorderHarness {
     if (!outcome.current.ran) {
       throw new Error('useReorder did not run');
     }
-    return new ReorderHarness(wrapper, outcome.current.value, axis, moves, changes);
+    return new ReorderHarness(wrapper, outcome.current.value, axis, moves, changes, events);
   }
 
   private constructor(
@@ -84,10 +92,20 @@ export class ReorderHarness {
     private readonly axis: ReorderAxis,
     readonly moves: Array<readonly [number, number]>,
     readonly changes: ReorderState[],
+    readonly events: ReorderEvent[],
   ) {}
 
   get state(): ReorderState {
     return this.reorder.state.value;
+  }
+
+  get target(): number | undefined {
+    const { state } = this;
+    return state.phase === 'dragging' || state.phase === 'keyboard' ? state.to : undefined;
+  }
+
+  get source(): number | undefined {
+    return this.reorder.source.value;
   }
 
   private handle(index: number): HTMLElement {

@@ -3,9 +3,10 @@ import type { Weekday } from '@numior/primitives';
 import type { NuiCalendarLabels, NuiCalendarMode, NuiCalendarView } from './calendar.types';
 import type { DayState } from './day-state';
 
+export type FocusRequest = 'none' | 'follow' | 'take';
+
 export interface RequestOptions {
-  readonly focus?: boolean | undefined;
-  readonly take?: boolean | undefined;
+  readonly focus?: FocusRequest | undefined;
 }
 
 export interface CalendarContext {
@@ -17,7 +18,7 @@ export interface CalendarContext {
   readonly fixedWeeks: () => boolean;
   readonly showOutsideDays: () => boolean;
   readonly labels: () => NuiCalendarLabels;
-  readonly view: Ref<NuiCalendarView>;
+  readonly view: ComputedRef<NuiCalendarView>;
   readonly month: ComputedRef<string>;
   readonly yearPage: ComputedRef<number>;
   readonly slide: Ref<'next' | 'prev' | undefined>;

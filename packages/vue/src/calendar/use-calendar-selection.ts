@@ -52,22 +52,23 @@ export const useCalendarSelection = (options: CalendarSelectionOptions): Calenda
       : [...current, date].toSorted();
   };
 
-  const nextValue = (date: string): NuiCalendarValue => {
-    const mode = options.mode();
-
-    if (mode === 'single') {
-      return date;
-    }
-
-    if (mode === 'multiple') {
-      return toggleMultiple(date);
-    }
-
+  const nextRange = (date: string): NuiCalendarValue => {
     const current = range.value;
 
     return current?.start && !current.end
       ? normalizeRange({ start: current.start, end: date })
       : { start: date, end: null };
+  };
+
+  const nextValue = (date: string): NuiCalendarValue => {
+    switch (options.mode()) {
+      case 'single':
+        return date;
+      case 'multiple':
+        return toggleMultiple(date);
+      case 'range':
+        return nextRange(date);
+    }
   };
 
   const pick = (date: string): NuiCalendarValue => {

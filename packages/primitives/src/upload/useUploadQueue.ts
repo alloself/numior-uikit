@@ -8,7 +8,7 @@ import {
   type MaybeRefOrGetter,
   type Ref,
 } from 'vue';
-import type { UploadAdapter, UploadEntry, UploadItem } from './upload-types';
+import type { UploadAdapter, UploadEntry, UploadFile, UploadItem } from './upload-types';
 
 export interface UploadQueueOptions<R> {
   readonly items: Ref<UploadItem<R>[]>;
@@ -46,15 +46,27 @@ const messageOf = (error: unknown): string | undefined => {
   return typeof error === 'string' ? error : undefined;
 };
 
-const itemFor = <R>(id: string, entry: UploadEntry): UploadItem<R> => ({
-  id,
-  name: entry.file.name,
-  size: entry.file.size,
-  type: entry.file.type,
-  status: entry.error ? 'error' : 'queued',
-  progress: 0,
-  file: entry.file,
-  error: entry.error,
+const itemFor = <R>(id: string, entry: UploadEntry): UploadItem<R> => {
+  const file: UploadFile = {
+    id,
+    name: entry.file.name,
+    size: entry.file.size,
+    type: entry.file.type,
+    file: entry.file,
+  };
+
+  return entry.error
+    ? { ...file, status: 'error', error: entry.error }
+    : { ...file, status: 'queued' };
+};
+
+const fileOf = <R>(item: UploadItem<R>): UploadFile => ({
+  id: item.id,
+  name: item.name,
+  size: item.size,
+  type: item.type,
+  file: item.file,
+  url: item.url,
 });
 
 const isPending = (item: UploadItem<unknown>): boolean =>
@@ -70,8 +82,8 @@ export const useUploadQueue = <R>(options: UploadQueueOptions<R>): UploadQueue<R
     options.items.value = items;
   };
 
-  const patch = (id: string, changes: Partial<UploadItem<R>>): void => {
-    write(state.items.map((item) => (item.id === id ? { ...item, ...changes } : item)));
+  const replace = (id: string, next: (item: UploadItem<R>) => UploadItem<R>): void => {
+    write(state.items.map((item) => (item.id === id ? next(item) : item)));
   };
 
   const find = (id: string): UploadItem<R> | undefined =>
@@ -88,9 +100,12 @@ export const useUploadQueue = <R>(options: UploadQueueOptions<R>): UploadQueue<R
     controllers.delete(id);
   };
 
-  const finish = (id: string, changes: Partial<UploadItem<R>>): UploadItem<R> | undefined => {
+  const finish = (
+    id: string,
+    next: (item: UploadItem<R>) => UploadItem<R>,
+  ): UploadItem<R> | undefined => {
     controllers.delete(id);
-    patch(id, changes);
+    replace(id, next);
 
     return find(id);
   };
@@ -99,15 +114,19 @@ export const useUploadQueue = <R>(options: UploadQueueOptions<R>): UploadQueue<R
     const controller = new AbortController();
 
     controllers.set(item.id, controller);
-    patch(item.id, { status: 'uploading', progress: 0, error: undefined });
+    replace(item.id, (current) => ({ ...fileOf(current), status: 'uploading', progress: 0 }));
 
-    const settled = (changes: Partial<UploadItem<R>>): UploadItem<R> | undefined =>
-      controller.signal.aborted ? undefined : finish(item.id, changes);
+    const settled = (next: (item: UploadItem<R>) => UploadItem<R>): UploadItem<R> | undefined =>
+      controller.signal.aborted ? undefined : finish(item.id, next);
 
     const context = {
       onProgress: (fraction: number): void => {
         if (!controller.signal.aborted) {
-          patch(item.id, { progress: clampFraction(fraction) });
+          replace(item.id, (current) =>
+            current.status === 'uploading'
+              ? { ...current, progress: clampFraction(fraction) }
+              : current,
+          );
         }
       },
       signal: controller.signal,
@@ -115,17 +134,18 @@ export const useUploadQueue = <R>(options: UploadQueueOptions<R>): UploadQueue<R
 
     try {
       const result = await options.upload(file, context);
-      const done = settled({ status: 'done', progress: 1, result });
+      const done = settled((current) => ({ ...fileOf(current), status: 'done', result }));
 
       if (done) {
         options.onDone?.(done);
         pump();
       }
     } catch (error: unknown) {
-      const failed = settled({
+      const failed = settled((current) => ({
+        ...fileOf(current),
         status: 'error',
         error: { reason: 'upload', message: messageOf(error) },
-      });
+      }));
 
       if (failed) {
         options.onError?.(failed);
@@ -174,8 +194,8 @@ export const useUploadQueue = <R>(options: UploadQueueOptions<R>): UploadQueue<R
   const retry = (id: string): void => {
     const item = find(id);
 
-    if (item?.status === 'error' && item.error?.reason === 'upload' && item.file) {
-      patch(id, { status: 'queued', progress: 0, error: undefined });
+    if (item?.status === 'error' && item.error.reason === 'upload' && item.file) {
+      replace(id, (current) => ({ ...fileOf(current), status: 'queued' }));
       fill();
     }
   };

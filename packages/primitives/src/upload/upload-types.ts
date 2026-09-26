@@ -7,18 +7,22 @@ export interface UploadError {
   readonly message?: string | undefined;
 }
 
-export interface UploadItem<R = unknown> {
+export interface UploadFile {
   readonly id: string;
   readonly name: string;
   readonly size: number;
   readonly type: string;
-  readonly status: UploadStatus;
-  readonly progress: number;
   readonly file?: File | undefined;
   readonly url?: string | undefined;
-  readonly result?: R | undefined;
-  readonly error?: UploadError | undefined;
 }
+
+export type UploadState<R = unknown> =
+  | { readonly status: 'queued' }
+  | { readonly status: 'uploading'; readonly progress: number }
+  | { readonly status: 'done'; readonly result?: R | undefined }
+  | { readonly status: 'error'; readonly error: UploadError };
+
+export type UploadItem<R = unknown> = UploadFile & UploadState<R>;
 
 export interface UploadContext {
   readonly onProgress: (fraction: number) => void;

@@ -42,29 +42,29 @@ export interface TimeDraftControl {
 }
 
 const withValue = (current: TimeDraft, type: TimeSegmentType, value: number | null): TimeDraft => {
-  if (type === 'hour') {
-    return { ...current, hour: value };
+  switch (type) {
+    case 'hour':
+      return { ...current, hour: value };
+    case 'minute':
+      return { ...current, minute: value };
+    case 'second':
+      return { ...current, second: value };
+    case 'dayPeriod':
+      return { ...current, period: value === null ? null : value >= 12 ? 'pm' : 'am' };
   }
-  if (type === 'minute') {
-    return { ...current, minute: value };
-  }
-  if (type === 'second') {
-    return { ...current, second: value };
-  }
-  return { ...current, period: value === null ? null : value >= 12 ? 'pm' : 'am' };
 };
 
 const segmentValue = (current: TimeDraft, type: TimeSegmentType): number | null => {
-  if (type === 'hour') {
-    return current.hour;
+  switch (type) {
+    case 'hour':
+      return current.hour;
+    case 'minute':
+      return current.minute;
+    case 'second':
+      return current.second;
+    case 'dayPeriod':
+      return current.period === null ? null : current.period === 'pm' ? 12 : 0;
   }
-  if (type === 'minute') {
-    return current.minute;
-  }
-  if (type === 'second') {
-    return current.second;
-  }
-  return current.period === null ? null : current.period === 'pm' ? 12 : 0;
 };
 
 const togglePeriod = (current: number | null, delta: number): number => {
@@ -78,7 +78,7 @@ export const useTimeDraft = (options: TimeDraftOptions): TimeDraftControl => {
   const cycle = (): HourCycle => options.layout().cycle;
   const fromModel = (): TimeDraft => timeToDraft(parseTime(options.model.value), cycle());
   const draft = ref<TimeDraft>(fromModel());
-  const typing: { type: TimeSegmentType | null; count: number } = { type: null, count: 0 };
+  let typing: { readonly segment: TimeSegmentType; readonly digits: number } | undefined;
   let lastEmitted = options.model.value;
 
   const publish = (next: TimeDraft): void => {
@@ -89,8 +89,7 @@ export const useTimeDraft = (options: TimeDraftOptions): TimeDraftControl => {
   };
 
   const resetTyping = (): void => {
-    typing.type = null;
-    typing.count = 0;
+    typing = undefined;
   };
 
   const setTime = (time: TimeValue): void => {
@@ -104,13 +103,11 @@ export const useTimeDraft = (options: TimeDraftOptions): TimeDraftControl => {
     if (type === 'dayPeriod') {
       return false;
     }
-    if (typing.type !== type) {
-      typing.type = type;
-      typing.count = 0;
-    }
-    const entry = { value: segmentValue(draft.value, type), typed: typing.count };
+    const typed = typing?.segment === type ? typing.digits : 0;
+    const entry = { value: segmentValue(draft.value, type), typed };
     const result = enterDigit(entry, digit, segmentBounds(type, cycle()));
-    typing.count = result.advance ? 0 : result.typed;
+
+    typing = { segment: type, digits: result.advance ? 0 : result.typed };
     publish(withValue(draft.value, type, result.value));
     return result.advance;
   };

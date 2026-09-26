@@ -79,10 +79,10 @@ const { item, preview, description, cancelLabel, retryLabel, removeLabel } =
 const emit = defineEmits<{ cancel: []; retry: []; remove: [] }>();
 
 const isImage = computed(() => item.type.startsWith('image/'));
-const percent = computed(() => Math.round(item.progress * 100));
+const percent = computed(() => (item.status === 'uploading' ? Math.round(item.progress * 100) : 0));
 
 const canRetry = computed(
-  () => item.status === 'error' && item.error?.reason === 'upload' && item.file !== undefined,
+  () => item.status === 'error' && item.error.reason === 'upload' && item.file !== undefined,
 );
 
 const cancel = (): void => emit('cancel');

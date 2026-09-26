@@ -9,9 +9,10 @@ describe('useReorder', () => {
     await list.pointerMove(63);
     expect(list.state.phase).toBe('pending');
     expect(await list.pointerMove(130)).toBe(true);
-    expect(list.state).toEqual({ phase: 'dragging', from: 1, to: 3, position: 130 });
+    expect(list.state).toEqual({ phase: 'dragging', from: 1, to: 3, pointerId: 1, position: 130 });
+    expect(list.source).toBe(1);
     await list.pointerMove(190);
-    expect(list.state.to).toBe(4);
+    expect(list.target).toBe(4);
     await list.pointerUp(190);
     expect(list.state.phase).toBe('idle');
     expect(list.moves).toEqual([[1, 4]]);
@@ -42,9 +43,9 @@ describe('useReorder', () => {
     const list = ReorderHarness.mount({ canMove: (_from, to) => to < 3 });
     await list.pointerDown(0, 10);
     await list.pointerMove(90);
-    expect(list.state.to).toBe(2);
+    expect(list.target).toBe(2);
     await list.pointerMove(170);
-    expect(list.state.to).toBe(2);
+    expect(list.target).toBe(2);
     await list.pointerUp(170);
     expect(list.moves).toEqual([[0, 2]]);
     list.unmount();
@@ -54,17 +55,17 @@ describe('useReorder', () => {
     const list = ReorderHarness.mount();
     expect(await list.press(1, 'ArrowDown')).toBe(false);
     expect(await list.press(1, ' ')).toBe(true);
-    expect(list.state).toEqual({ phase: 'keyboard', from: 1, to: 1, position: 0 });
+    expect(list.state).toEqual({ phase: 'keyboard', from: 1, to: 1 });
     await list.press(1, 'ArrowDown');
     await list.press(1, 'ArrowDown');
-    expect(list.state.to).toBe(3);
+    expect(list.target).toBe(3);
     await list.press(1, 'ArrowUp');
-    expect(list.state.to).toBe(2);
+    expect(list.target).toBe(2);
     expect(await list.press(2, 'ArrowDown')).toBe(false);
     await list.press(1, 'ArrowUp');
     await list.press(1, 'ArrowUp');
     await list.press(1, 'ArrowUp');
-    expect(list.state.to).toBe(0);
+    expect(list.target).toBe(0);
     await list.press(1, 'Enter');
     expect(list.moves).toEqual([[1, 0]]);
     expect(list.state.phase).toBe('idle');
@@ -81,15 +82,46 @@ describe('useReorder', () => {
     const list = ReorderHarness.mount({ axis: 'x', rtl: true });
     await list.press(2, ' ');
     await list.press(2, 'ArrowLeft');
-    expect(list.state.to).toBe(3);
+    expect(list.target).toBe(3);
     await list.press(2, 'ArrowRight');
     await list.press(2, 'ArrowRight');
-    expect(list.state.to).toBe(1);
+    expect(list.target).toBe(1);
     list.unmount();
     const ltr = ReorderHarness.mount({ axis: 'x' });
     await ltr.press(2, ' ');
     await ltr.press(2, 'ArrowRight');
-    expect(ltr.state.to).toBe(3);
+    expect(ltr.target).toBe(3);
     ltr.unmount();
+  });
+
+  it('reports keyboard grabs, moves, drops and cancels and pointer drops as events', async () => {
+    const list = ReorderHarness.mount();
+
+    await list.press(1, ' ');
+    await list.press(1, 'ArrowDown');
+    await list.press(1, 'Enter');
+    await list.press(3, ' ');
+    await list.press(3, 'Escape');
+    await list.press(0, ' ');
+    await list.press(0, ' ');
+    await list.pointerDown(4, 170);
+    await list.pointerMove(10);
+    await list.pointerUp(10);
+    await list.pointerDown(2, 100);
+    await list.pointerUp(100);
+
+    expect(list.events).toEqual([
+      { type: 'grabbed', from: 1 },
+      { type: 'moved', from: 1, to: 2 },
+      { type: 'dropped', from: 1, to: 2 },
+      { type: 'grabbed', from: 3 },
+      { type: 'cancelled', from: 3 },
+      { type: 'grabbed', from: 0 },
+      { type: 'cancelled', from: 0 },
+      { type: 'dropped', from: 4, to: 0 },
+    ]);
+
+    expect(list.source).toBeUndefined();
+    list.unmount();
   });
 });

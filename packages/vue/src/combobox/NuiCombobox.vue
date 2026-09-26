@@ -106,8 +106,8 @@
 </template>
 
 <script setup lang="ts" generic="T">
-import { computed, onMounted, ref, useTemplateRef, watch } from 'vue';
-import { useFieldControl, useMessages, useSplitAttrs } from '@numior/primitives';
+import { computed, onMounted, ref, shallowRef, useTemplateRef, watch } from 'vue';
+import { createIntent, useFieldControl, useMessages, useSplitAttrs } from '@numior/primitives';
 import NuiButton from '../button/NuiButton.vue';
 import NuiChip from '../chip/NuiChip.vue';
 import NuiIcon from '../icon/NuiIcon.vue';
@@ -194,18 +194,13 @@ const singleLabel = computed(() => {
   return multiple || first === undefined ? '' : labelFor(first);
 });
 
-const query = ref('');
-const filtering = ref(false);
+type Draft = { readonly kind: 'label' } | { readonly kind: 'typed'; readonly text: string };
 
-watch(
-  singleLabel,
-  (label) => {
-    if (!filtering.value) {
-      query.value = label;
-    }
-  },
-  { immediate: true },
-);
+const LABEL: Draft = { kind: 'label' };
+const draft = shallowRef<Draft>(LABEL);
+const typing = computed(() => draft.value.kind === 'typed');
+
+const query = computed(() => (draft.value.kind === 'typed' ? draft.value.text : singleLabel.value));
 
 const defaultFilter = (option: NuiOption<T>, needle: string): boolean =>
   option.label.toLowerCase().includes(needle);
@@ -214,7 +209,7 @@ const isEnabled = (option: NuiOption<T>): boolean => !option.disabled;
 
 const filtered = computed(() => {
   const needle = query.value.trim().toLowerCase();
-  if (filter === false || !filtering.value || needle === '') {
+  if (filter === false || !typing.value || needle === '') {
     return options;
   }
   return filterOptions(options, (option) => (filter ?? defaultFilter)(option, needle));
@@ -239,7 +234,7 @@ const { listboxElement, setListbox, control, navigation, activateHovered, restAc
     restOnSelected: false,
   });
 
-const state = { pending: 'first' };
+const opening = createIntent<'first' | 'last'>();
 const filteredFlat = computed(() => flattenEntries(filtered.value));
 
 const activate = (position: 'first' | 'last'): void => {
@@ -254,13 +249,13 @@ const activate = (position: 'first' | 'last'): void => {
 };
 
 watch(open, (isOpen) => {
+  const position = opening.take() ?? 'first';
+
   if (isOpen) {
-    activate(state.pending === 'last' ? 'last' : 'first');
+    activate(position);
   } else {
     navigation.setActive(null, { focus: false });
   }
-
-  state.pending = 'first';
 });
 
 watch(filtered, () => {
@@ -272,23 +267,20 @@ watch(filtered, () => {
 const focusInput = (): void => inputElement.value?.focus({ preventScroll: true });
 
 const settleQuery = (): void => {
-  filtering.value = false;
-  query.value = singleLabel.value;
+  draft.value = LABEL;
 };
 
-const onSelect = (option: NuiOption<T>): void => {
-  filtering.value = false;
-  if (multiple) {
-    query.value = '';
-  } else {
-    query.value = option.label;
+const onSelect = (): void => {
+  draft.value = LABEL;
+
+  if (!multiple) {
     open.value = false;
   }
   focusInput();
 };
 
 const commitDraft = (): void => {
-  if (filtering.value && !commitCustom()) {
+  if (typing.value && !commitCustom()) {
     settleQuery();
   }
 };
@@ -299,19 +291,14 @@ const commitCustom = (): boolean => {
     return false;
   }
   add(customValue(text));
-
-  if (multiple) {
-    query.value = '';
-  }
-  filtering.value = false;
+  draft.value = LABEL;
   open.value = false;
   return true;
 };
 
 const clear = (): void => {
   clearSelection();
-  filtering.value = false;
-  query.value = '';
+  draft.value = LABEL;
   focusInput();
 };
 
@@ -334,8 +321,8 @@ onMounted(() => {
 
 const onInput = (): void => {
   const text = inputElement.value?.value ?? '';
-  query.value = text;
-  filtering.value = true;
+
+  draft.value = { kind: 'typed', text };
   open.value = true;
   emit('search', text);
 };
@@ -348,7 +335,7 @@ const openFromKey = (event: KeyboardEvent): boolean => {
     navigation.onKeydown(event);
   } else {
     event.preventDefault();
-    state.pending = event.key === 'ArrowUp' ? 'last' : 'first';
+    opening.set(event.key === 'ArrowUp' ? 'last' : 'first');
     open.value = true;
   }
   return true;
@@ -374,7 +361,7 @@ const onEnter = (event: KeyboardEvent): void => {
     return;
   }
 
-  if (filtering.value) {
+  if (typing.value) {
     settleQuery();
   }
 };
@@ -419,7 +406,7 @@ const onFieldClick = (event: MouseEvent): void => {
   }
   focusInput();
   if (!open.value) {
-    state.pending = 'first';
+    opening.set('first');
     open.value = true;
   }
 };

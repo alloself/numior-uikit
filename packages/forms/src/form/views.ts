@@ -105,9 +105,9 @@ export const createViews = <V extends object, O>(core: FormCore<V, O>): FormView
       valid: Object.keys(errorBag.value).length === 0 && formErrors.value.length === 0,
       dirty: dirty.value,
       touched: core.registry.active().some((entry) => entry.state.touched.value),
-      pending: core.submitting.value,
+      pending: core.submission.value.phase === 'running',
       submitCount: core.engine.submitCount.value,
-      submitted: core.submitted.value,
+      submitted: core.submission.value.phase === 'succeeded',
     })),
     hasErrors: (prefix = '') => {
       const scope = normalizePath(prefix);

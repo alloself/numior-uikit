@@ -1,5 +1,5 @@
-import { ref, type Ref } from 'vue';
-import { useReorder, type ReorderState } from '@numior/primitives';
+import { ref, type ComputedRef, type Ref } from 'vue';
+import { useReorder, type ReorderEvent, type ReorderState } from '@numior/primitives';
 import { clampInside, ghostAt, grabOf, NO_GRAB, type DragGrab, type NuiTableGhost } from './ghost';
 import type { NuiTableRowView } from './rows';
 import type { NuiTableAnnouncement, NuiTableReorderEvent } from './table.types';
@@ -18,6 +18,7 @@ export interface RowReorderOptions<T> {
 
 export interface RowReorder {
   readonly state: Readonly<Ref<ReorderState>>;
+  readonly source: ComputedRef<number | undefined>;
   readonly indicator: Readonly<Ref<number | undefined>>;
   readonly ghost: Readonly<Ref<NuiTableGhost | undefined>>;
   dragStart(index: number, event: PointerEvent): void;
@@ -38,14 +39,11 @@ export const useRowReorder = <T>(options: RowReorderOptions<T>): RowReorder => {
   const indicator = ref<number>();
   const ghost = ref<NuiTableGhost>();
   const grabbed: { current: DragGrab } = { current: NO_GRAB };
-  const flags = { moved: false };
-  let previous: ReorderState = { phase: 'idle', from: -1, to: -1, position: 0 };
 
-  const indexAt = (client: number): number => {
+  const indexAt = (client: number, from: number): number => {
     const body = bodyOf(options.scroller());
     const size = options.rowHeight();
     const count = options.views().length;
-    const from = reorder.state.value.from;
     if (body && size !== undefined) {
       const slot = Math.round((client - body.getBoundingClientRect().top) / size);
       const passed = from >= 0 && from < slot ? slot - 1 : slot;
@@ -61,7 +59,7 @@ export const useRowReorder = <T>(options: RowReorderOptions<T>): RowReorder => {
     return Math.min(count - 1, first + passed);
   };
 
-  const place = (state: ReorderState): void => {
+  const place = (from: number, to: number): void => {
     const scroller = options.scroller();
     const body = bodyOf(scroller);
     if (!scroller || !body) {
@@ -69,14 +67,14 @@ export const useRowReorder = <T>(options: RowReorderOptions<T>): RowReorder => {
       return;
     }
     const size = options.rowHeight();
-    const forward = state.to > state.from;
+    const forward = to > from;
     const base = scroller.scrollTop - scroller.getBoundingClientRect().top;
     if (size !== undefined) {
-      const top = body.getBoundingClientRect().top + (state.to + (forward ? 1 : 0)) * size;
+      const top = body.getBoundingClientRect().top + (to + (forward ? 1 : 0)) * size;
       indicator.value = clampInside(scroller, 'y', top + base, 2);
       return;
     }
-    const row = renderedRows(body)[state.to - options.firstIndex()];
+    const row = renderedRows(body)[to - options.firstIndex()];
     if (!row) {
       indicator.value = undefined;
       return;
@@ -86,7 +84,7 @@ export const useRowReorder = <T>(options: RowReorderOptions<T>): RowReorder => {
   };
 
   const float = (state: ReorderState): void => {
-    const view = options.views()[state.from];
+    const view = state.phase === 'dragging' ? options.views()[state.from] : undefined;
 
     ghost.value =
       state.phase === 'dragging' && view
@@ -111,30 +109,35 @@ export const useRowReorder = <T>(options: RowReorderOptions<T>): RowReorder => {
     });
   };
 
-  const announceTransition = (state: ReorderState): void => {
-    if (state.phase === 'keyboard' && previous.phase !== 'keyboard') {
-      flags.moved = false;
-      say('grabbed', state.from, state.to);
-    } else if (state.phase === 'keyboard' && state.to !== previous.to) {
-      say('moved', state.from, state.to);
-      options.reveal(state.to);
-    } else if (state.phase === 'idle' && previous.phase === 'keyboard' && !flags.moved) {
-      say('cancelled', previous.from, previous.from);
-    }
-  };
-
   const onChange = (state: ReorderState): void => {
-    if (state.phase === 'pending') {
-      flags.moved = false;
-    }
-    announceTransition(state);
-    if (state.phase === 'idle') {
-      indicator.value = undefined;
-    } else if (state.phase !== 'pending') {
-      place(state);
+    switch (state.phase) {
+      case 'dragging':
+      case 'keyboard':
+        place(state.from, state.to);
+        break;
+      case 'idle':
+        indicator.value = undefined;
+        break;
+      case 'pending':
+        break;
     }
     float(state);
-    previous = state;
+  };
+
+  const onEvent = (event: ReorderEvent): void => {
+    switch (event.type) {
+      case 'grabbed':
+      case 'cancelled':
+        say(event.type, event.from, event.from);
+        break;
+      case 'moved':
+        say(event.type, event.from, event.to);
+        options.reveal(event.to);
+        break;
+      case 'dropped':
+        say(event.type, event.from, event.to);
+        break;
+    }
   };
 
   const canMove = (from: number, to: number): boolean => {
@@ -160,7 +163,6 @@ export const useRowReorder = <T>(options: RowReorderOptions<T>): RowReorder => {
       if (!source || !target) {
         return;
       }
-      flags.moved = true;
 
       options.onReorder({
         row: source.row,
@@ -168,14 +170,14 @@ export const useRowReorder = <T>(options: RowReorderOptions<T>): RowReorder => {
         to: target.siblingIndex,
         parent: source.parent,
       });
-
-      say('dropped', from, to);
     },
     onChange,
+    onEvent,
   });
 
   return {
     state: reorder.state,
+    source: reorder.source,
     indicator,
     ghost,
     dragStart: (index, event) => {

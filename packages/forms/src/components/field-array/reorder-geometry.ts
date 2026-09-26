@@ -1,18 +1,17 @@
-import type { ReorderState } from '@numior/primitives';
 import { FOCUSABLE } from '../form-field/focus-control';
 
 export { FOCUSABLE };
 
-export type FocusPlan =
-  | { readonly key: string; readonly target: 'control' | 'grip' }
-  | { readonly key: undefined; readonly target: 'add' };
+export type RowPart = 'control' | 'grip';
 
-interface Grab {
+export type RowFocus =
+  | { readonly kind: 'row'; readonly key: string; readonly part: RowPart }
+  | { readonly kind: 'add' };
+
+export interface Grab {
   readonly offset: number;
   readonly height: number;
 }
-
-export const IDLE: ReorderState = { phase: 'idle', from: -1, to: -1, position: 0 };
 
 const ROWS =
   ':scope > .nui-field-array__rows > .nui-field-array__row:not(.nui-field-array__row--leaving)';
@@ -34,8 +33,8 @@ export const targetIndex = (rows: readonly HTMLElement[], from: number, client: 
 const halfGap = (element: Element | null): number =>
   element ? (Number.parseFloat(getComputedStyle(element).rowGap) || 0) / 2 : 0;
 
-export const indicatorOffset = (list: HTMLElement, state: ReorderState): number => {
-  const target = rowsOf(list)[state.to];
+export const indicatorOffset = (list: HTMLElement, from: number, to: number): number => {
+  const target = rowsOf(list)[to];
 
   if (!target) {
     return 0;
@@ -43,7 +42,7 @@ export const indicatorOffset = (list: HTMLElement, state: ReorderState): number 
 
   const rect = target.getBoundingClientRect();
   const half = halfGap(target.parentElement);
-  const edge = state.to > state.from ? rect.bottom + half : rect.top - half;
+  const edge = to > from ? rect.bottom + half : rect.top - half;
 
   return edge - list.getBoundingClientRect().top;
 };
@@ -56,9 +55,9 @@ export const ghostOffset = (list: HTMLElement, pointer: number, grab: Grab): num
   );
 };
 
-export const focusRow = (row: Element | null | undefined, target: 'control' | 'grip'): void => {
+export const focusRow = (row: Element | null | undefined, part: RowPart): void => {
   const element =
-    target === 'grip'
+    part === 'grip'
       ? row?.querySelector('.nui-field-array__grip')
       : row?.querySelector('.nui-field-array__content')?.querySelector(FOCUSABLE);
 

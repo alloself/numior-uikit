@@ -60,9 +60,9 @@
         </NuiFieldArrayRow>
       </TransitionGroup>
       <span class="nui-field-array__indicator" aria-hidden="true" />
-      <div v-if="ghostIndex >= 0" class="nui-field-array__ghost" aria-hidden="true">
+      <div v-if="ghostRow !== undefined" class="nui-field-array__ghost" aria-hidden="true">
         <NuiIcon alias="grip" class="nui-field-array__ghost-grip" />
-        <span>{{ localized.row({ index: ghostIndex + 1 }) }}</span>
+        <span>{{ localized.row({ index: ghostRow + 1 }) }}</span>
       </div>
     </div>
     <p v-if="array.errorMessage.value" :id="errorId" class="nui-field-array__error">
@@ -95,7 +95,14 @@
 
 <script setup lang="ts" generic="T extends object, R">
 import { computed, shallowRef, toRef, useTemplateRef, watch } from 'vue';
-import { useControlId, useMessages, useReorder, type ReorderState } from '@numior/primitives';
+import {
+  createIntent,
+  useControlId,
+  useMessages,
+  useReorder,
+  type ReorderEvent,
+  type ReorderState,
+} from '@numior/primitives';
 import { NuiButton, NuiIcon } from '@numior/vue';
 import { useFieldArray } from '../../field/use-field-array';
 import { useFormScope } from '../form/form-scope';
@@ -104,13 +111,13 @@ import { fieldArrayMessages } from './field-array.messages';
 import type { NuiFieldArrayProps } from './field-array.types';
 import {
   FOCUSABLE,
-  IDLE,
   focusRow,
   ghostOffset,
   indicatorOffset,
   rowsOf,
   targetIndex,
-  type FocusPlan,
+  type Grab,
+  type RowFocus,
 } from './reorder-geometry';
 
 const {
@@ -139,13 +146,8 @@ const localized = useMessages(fieldArrayMessages);
 const baseId = useControlId(() => undefined);
 const announcement = shallowRef('');
 
-const plan: { focus: FocusPlan | undefined; dropped: boolean; previous: ReorderState } = {
-  focus: undefined,
-  dropped: false,
-  previous: IDLE,
-};
-
-const grab = { offset: 0, height: 0 };
+const focus = createIntent<RowFocus>();
+let grab: Grab | undefined;
 
 const isDisabled = computed(() => disabled ?? formScope?.disabled.value ?? false);
 
@@ -209,59 +211,75 @@ const removeText = (index: number): string =>
 
 const moveText = (index: number): string => moveLabel?.(index) ?? localized.value.move({ index });
 
-const position = (state: ReorderState) => ({
-  index: state.from + 1,
-  position: state.to + 1,
+const position = (from: number, to: number) => ({
+  index: from + 1,
+  position: to + 1,
   count: rows.value.length,
 });
 
-const announce = (state: ReorderState): void => {
-  const { previous } = plan;
-
-  if (state.phase === 'keyboard' && previous.phase !== 'keyboard') {
-    plan.dropped = false;
-    announcement.value = localized.value.grabbed(position(state));
-  } else if (state.phase === 'keyboard' && state.to !== previous.to) {
-    announcement.value = localized.value.moved(position(state));
-  } else if (state.phase === 'idle' && previous.phase === 'keyboard' && !plan.dropped) {
-    announcement.value = localized.value.cancelled({ index: previous.from + 1 });
+const announce = (event: ReorderEvent): void => {
+  switch (event.type) {
+    case 'grabbed':
+      announcement.value = localized.value.grabbed(position(event.from, event.from));
+      break;
+    case 'moved':
+      announcement.value = localized.value.moved(position(event.from, event.to));
+      break;
+    case 'dropped':
+      announcement.value = localized.value.dropped(position(event.from, event.to));
+      break;
+    case 'cancelled':
+      announcement.value = localized.value.cancelled({ index: event.from + 1 });
+      break;
   }
 };
 
 const place = (state: ReorderState): void => {
   const element = list.value;
 
-  if (!element || state.phase === 'idle' || state.phase === 'pending') {
+  if (!element) {
     return;
   }
-  element.style.setProperty('--_indicator', `${indicatorOffset(element, state)}px`);
-  element.style.setProperty('--_ghost', `${ghostOffset(element, state.position, grab)}px`);
+
+  switch (state.phase) {
+    case 'dragging':
+      element.style.setProperty(
+        '--_indicator',
+        `${indicatorOffset(element, state.from, state.to)}px`,
+      );
+
+      if (grab) {
+        element.style.setProperty('--_ghost', `${ghostOffset(element, state.position, grab)}px`);
+      }
+      break;
+    case 'keyboard':
+      element.style.setProperty(
+        '--_indicator',
+        `${indicatorOffset(element, state.from, state.to)}px`,
+      );
+
+      break;
+    case 'idle':
+      grab = undefined;
+      break;
+    case 'pending':
+      break;
+  }
 };
 
 const reorder = useReorder({
   axis: 'y',
   count: () => rows.value.length,
   container: () => list.value,
-  indexAt: (client) => targetIndex(rowsOf(list.value), reorder.state.value.from, client),
+  indexAt: (client, from) => targetIndex(rowsOf(list.value), from, client),
   onMove: (from, to) => {
     const key = rows.value[from]?.key;
 
-    plan.dropped = true;
-    plan.focus = key === undefined ? undefined : { key, target: 'grip' };
-
-    announcement.value = localized.value.dropped({
-      index: from + 1,
-      position: to + 1,
-      count: rows.value.length,
-    });
-
+    focus.set(key === undefined ? undefined : { kind: 'row', key, part: 'grip' });
     void array.move(from, to);
   },
-  onChange: (state) => {
-    announce(state);
-    place(state);
-    plan.previous = state;
-  },
+  onChange: place,
+  onEvent: announce,
 });
 
 const reordering = computed(() => {
@@ -276,13 +294,18 @@ const classes = computed(() => ({
   'nui-field-array--invalid': array.errors.value.length > 0,
 }));
 
-const grabbedKey = computed(() =>
-  reordering.value ? rows.value[reorder.state.value.from]?.key : undefined,
-);
+const grabbedKey = computed(() => {
+  const state = reorder.state.value;
 
-const ghostIndex = computed(() =>
-  reorder.state.value.phase === 'dragging' ? reorder.state.value.from : -1,
-);
+  return state.phase === 'dragging' || state.phase === 'keyboard'
+    ? rows.value[state.from]?.key
+    : undefined;
+});
+
+const ghostRow = computed(() => {
+  const state = reorder.state.value;
+  return state.phase === 'dragging' ? state.from : undefined;
+});
 
 const add = (): void => {
   if (!canAdd.value || !newRow) {
@@ -295,7 +318,7 @@ const add = (): void => {
 
   const key = rows.value[index]?.key;
 
-  plan.focus = key === undefined ? undefined : { key, target: 'control' };
+  focus.set(key === undefined ? undefined : { kind: 'row', key, part: 'control' });
   announcement.value = localized.value.added({ index: index + 1 });
 };
 
@@ -306,7 +329,7 @@ const remove = (index: number): void => {
 
   const next = rows.value[index + 1] ?? rows.value[index - 1];
 
-  plan.focus = next ? { key: next.key, target: 'control' } : { key: undefined, target: 'add' };
+  focus.set(next ? { kind: 'row', key: next.key, part: 'control' } : { kind: 'add' });
   announcement.value = localized.value.removed({ index: index + 1 });
   void array.remove(index);
 };
@@ -320,8 +343,7 @@ const onGripPointerdown = (index: number, event: PointerEvent): void => {
 
   const rect = row.getBoundingClientRect();
 
-  grab.offset = event.clientY - rect.top;
-  grab.height = rect.height;
+  grab = { offset: event.clientY - rect.top, height: rect.height };
   reorder.onPointerdown(index, event);
 };
 
@@ -334,14 +356,15 @@ const onGripKeydown = (index: number, event: KeyboardEvent): void => {
 watch(
   () => rows.value.map((row) => row.key).join(' '),
   () => {
-    const focus = plan.focus;
+    const target = focus.take();
 
-    plan.focus = undefined;
-
-    if (focus?.target === 'add') {
-      focusArray();
-    } else if (focus) {
-      focusRow(list.value?.querySelector(`[id="${rowId(focus.key)}"]`), focus.target);
+    switch (target?.kind) {
+      case 'add':
+        focusArray();
+        break;
+      case 'row':
+        focusRow(list.value?.querySelector(`[id="${rowId(target.key)}"]`), target.part);
+        break;
     }
   },
   { flush: 'post' },

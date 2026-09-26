@@ -1,4 +1,4 @@
-import { onScopeDispose, ref, type Ref } from 'vue';
+import { computed, onScopeDispose, shallowRef, type ComputedRef } from 'vue';
 import type { NuiTableColumn } from './table.types';
 
 const STEP = 10;
@@ -11,8 +11,15 @@ export interface ColumnResizeOptions<T> {
   readonly rtl: () => boolean;
 }
 
+interface ResizeSession {
+  readonly key: string;
+  readonly pointerId: number;
+  readonly startX: number;
+  readonly startWidth: number;
+}
+
 export interface ColumnResize<T> {
-  readonly active: Ref<string | undefined>;
+  readonly active: ComputedRef<string | undefined>;
   start(column: NuiTableColumn<T>, event: PointerEvent): void;
   onKeydown(column: NuiTableColumn<T>, event: KeyboardEvent): void;
 }
@@ -41,8 +48,8 @@ const keyDelta = (event: KeyboardEvent, rtl: boolean): number => {
 };
 
 export const useColumnResize = <T>(options: ColumnResizeOptions<T>): ColumnResize<T> => {
-  const active = ref<string>();
-  const origin = { client: 0, width: 0, key: '', pointerId: -1 };
+  const session = shallowRef<ResizeSession>();
+  const active = computed(() => session.value?.key);
 
   const detach = (): void => {
     if (typeof window !== 'undefined') {
@@ -54,15 +61,19 @@ export const useColumnResize = <T>(options: ColumnResizeOptions<T>): ColumnResiz
 
   const stop = (): void => {
     detach();
-    active.value = undefined;
+    session.value = undefined;
   };
 
   const onPointermove = (event: PointerEvent): void => {
-    if (event.pointerId !== origin.pointerId) {
+    const current = session.value;
+
+    if (!current || event.pointerId !== current.pointerId) {
       return;
     }
-    const delta = event.clientX - origin.client;
-    options.setWidth(origin.key, origin.width + (options.rtl() ? -delta : delta));
+
+    const delta = event.clientX - current.startX;
+
+    options.setWidth(current.key, current.startWidth + (options.rtl() ? -delta : delta));
   };
 
   const start = (column: NuiTableColumn<T>, event: PointerEvent): void => {
@@ -70,11 +81,14 @@ export const useColumnResize = <T>(options: ColumnResizeOptions<T>): ColumnResiz
       return;
     }
     event.preventDefault();
-    origin.client = event.clientX;
-    origin.width = baseWidth(column, options.widthOf, event.currentTarget);
-    origin.key = column.key;
-    origin.pointerId = event.pointerId;
-    active.value = column.key;
+
+    session.value = {
+      key: column.key,
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startWidth: baseWidth(column, options.widthOf, event.currentTarget),
+    };
+
     window.addEventListener('pointermove', onPointermove);
     window.addEventListener('pointerup', stop);
     window.addEventListener('pointercancel', stop);
