@@ -7,28 +7,50 @@ export interface NavigationOutput {
   readonly lastAction: string;
   readonly tab: string;
   readonly manualTab: string;
+  readonly signupStep: string;
+  readonly settingsStep: string;
 }
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null;
 
+const flag = (data: Record<string, unknown>, key: string): boolean => {
+  const value = data[key];
+
+  if (typeof value !== 'boolean') {
+    throw new Error(`Unexpected ${key} in navigation output: ${String(value)}`);
+  }
+
+  return value;
+};
+
+const word = (data: Record<string, unknown>, key: string): string => {
+  const value = data[key];
+
+  if (typeof value !== 'string') {
+    throw new Error(`Unexpected ${key} in navigation output: ${String(value)}`);
+  }
+
+  return value;
+};
+
 const parseNavigationOutput = (text: string): NavigationOutput => {
   const data: unknown = JSON.parse(text);
+
   if (!isRecord(data)) {
     throw new Error('Navigation output is not an object');
   }
-  const { menuOpen, gridOn, sort, lastAction, tab, manualTab } = data;
-  if (
-    typeof menuOpen !== 'boolean' ||
-    typeof gridOn !== 'boolean' ||
-    typeof sort !== 'string' ||
-    typeof lastAction !== 'string' ||
-    typeof tab !== 'string' ||
-    typeof manualTab !== 'string'
-  ) {
-    throw new Error(`Unexpected navigation output: ${text}`);
-  }
-  return { menuOpen, gridOn, sort, lastAction, tab, manualTab };
+
+  return {
+    menuOpen: flag(data, 'menuOpen'),
+    gridOn: flag(data, 'gridOn'),
+    sort: word(data, 'sort'),
+    lastAction: word(data, 'lastAction'),
+    tab: word(data, 'tab'),
+    manualTab: word(data, 'manualTab'),
+    signupStep: word(data, 'signupStep'),
+    settingsStep: word(data, 'settingsStep'),
+  };
 };
 
 export interface Box {
@@ -48,6 +70,10 @@ export class NavigationSection {
   readonly manualTabs: Locator;
   readonly crumbs: Locator;
   readonly shortCrumbs: Locator;
+  readonly stepper: Locator;
+  readonly verticalStepper: Locator;
+  readonly stepperBack: Locator;
+  readonly stepperNext: Locator;
   readonly output: Locator;
 
   constructor(page: Page) {
@@ -60,6 +86,10 @@ export class NavigationSection {
     this.manualTabs = page.getByTestId('nav-tabs-manual');
     this.crumbs = page.getByTestId('nav-crumbs');
     this.shortCrumbs = page.getByTestId('nav-crumbs-short');
+    this.stepper = page.getByTestId('nav-stepper');
+    this.verticalStepper = page.getByTestId('nav-stepper-vertical');
+    this.stepperBack = page.getByTestId('nav-stepper-back');
+    this.stepperNext = page.getByTestId('nav-stepper-next');
     this.output = page.getByTestId('navigation-output');
   }
 
@@ -115,6 +145,22 @@ export class NavigationSection {
 
   hiddenCrumb(label: string): Locator {
     return this.moreMenu.locator('.nui-menu-item', { hasText: label });
+  }
+
+  step(stepper: Locator, name: string): Locator {
+    return stepper.locator('.nui-stepper__step').filter({ hasText: name });
+  }
+
+  stepButtons(stepper: Locator): Locator {
+    return stepper.getByRole('button');
+  }
+
+  currentStep(stepper: Locator): Locator {
+    return stepper.locator('[aria-current="step"]');
+  }
+
+  stepperSummary(stepper: Locator): Locator {
+    return stepper.locator('.nui-stepper__summary');
   }
 
   async typeInMenu(character: string): Promise<void> {

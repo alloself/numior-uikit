@@ -144,6 +144,16 @@ select {
 .nui-sidebar--rail .layout-brand__name {
   display: none;
 }
+.stepper-demo {
+  display: grid;
+  gap: var(--nui-space-5);
+  margin-block-start: var(--nui-space-5);
+}
+.stepper-demo__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--nui-space-2);
+}
 .output {
   margin-block: var(--nui-space-4) 0;
   padding: var(--nui-space-3);

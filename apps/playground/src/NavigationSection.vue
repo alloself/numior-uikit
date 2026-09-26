@@ -2,7 +2,7 @@
   <section class="panel" aria-labelledby="navigation-title">
     <div class="section-heading">
       <h2 id="navigation-title">Навигация</h2>
-      <span class="tag">NuiMenu · NuiTabs · NuiBreadcrumbs · NuiLink</span>
+      <span class="tag">NuiMenu · NuiTabs · NuiBreadcrumbs · NuiStepper · NuiLink</span>
     </div>
     <div class="nui-flex nui-wrap nui-items-center nui-gap-2">
       <NuiMenu v-model:open="menuOpen" data-testid="nav-menu">
@@ -66,6 +66,38 @@
       label="Короткий путь"
       data-testid="nav-crumbs-short"
     />
+    <div class="stepper-demo">
+      <NuiStepper
+        v-model="signupStep"
+        :steps="signupSteps"
+        label="Регистрация"
+        data-testid="nav-stepper"
+      />
+      <div class="stepper-demo__actions">
+        <NuiButton
+          variant="outline"
+          tone="neutral"
+          :disabled="signupIndex === 0"
+          data-testid="nav-stepper-back"
+          @click="moveSignup(-1)"
+          >Назад</NuiButton
+        >
+        <NuiButton
+          :disabled="signupIndex === signupSteps.length - 1"
+          data-testid="nav-stepper-next"
+          @click="moveSignup(1)"
+          >Далее</NuiButton
+        >
+      </div>
+      <NuiStepper
+        v-model="settingsStep"
+        :steps="settingsSteps"
+        orientation="vertical"
+        :linear="false"
+        label="Настройки проекта"
+        data-testid="nav-stepper-vertical"
+      />
+    </div>
     <pre class="output" data-testid="navigation-output">{{ output }}</pre>
   </section>
 </template>
@@ -84,11 +116,13 @@ import {
   NuiMenuRadioItem,
   NuiMenuSeparator,
   NuiMenuSub,
+  NuiStepper,
   NuiTab,
   NuiTabList,
   NuiTabPanel,
   NuiTabs,
   type NuiBreadcrumbItem,
+  type NuiStepperStep,
   type NuiTabDescriptor,
 } from '@numior/vue';
 
@@ -106,15 +140,43 @@ const path: NuiBreadcrumbItem[] = [
   { label: 'Оплата' },
 ];
 
+const signupSteps: NuiStepperStep[] = [
+  { value: 'account', label: 'Аккаунт', description: 'Почта и пароль' },
+  { value: 'profile', label: 'Профиль', description: 'Имя и фото' },
+  { value: 'plan', label: 'Тариф' },
+  { value: 'review', label: 'Проверка' },
+];
+
+const settingsSteps: NuiStepperStep[] = [
+  { value: 'general', label: 'Основное', description: 'Название и адрес', status: 'complete' },
+  { value: 'access', label: 'Доступ', description: 'Роли участников', status: 'error' },
+  { value: 'billing', label: 'Оплата', description: 'Карта и реквизиты' },
+  { value: 'danger', label: 'Удаление', description: 'Недоступно для гостей', disabled: true },
+];
+
 const menuOpen = ref(false);
 const gridOn = ref(false);
 const sort = ref('name');
 const lastAction = ref('');
 const tab = ref('overview');
 const manualTab = ref('day');
+const signupStep = ref('profile');
+const settingsStep = ref('access');
+
+const signupIndex = computed(() =>
+  signupSteps.findIndex((step) => step.value === signupStep.value),
+);
 
 const act = (name: string): void => {
   lastAction.value = name;
+};
+
+const moveSignup = (delta: number): void => {
+  const target = signupSteps[signupIndex.value + delta];
+
+  if (target) {
+    signupStep.value = target.value;
+  }
 };
 
 const output = computed(() =>
@@ -126,6 +188,8 @@ const output = computed(() =>
       lastAction: lastAction.value,
       tab: tab.value,
       manualTab: manualTab.value,
+      signupStep: signupStep.value,
+      settingsStep: settingsStep.value,
     },
     null,
     2,

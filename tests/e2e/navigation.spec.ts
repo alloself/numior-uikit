@@ -147,6 +147,40 @@ test.describe('navigation', () => {
     expect(page.url()).toContain('#numior');
   });
 
+  test('steppers advance with the actions, go back through completed steps and pick any step when not linear', async ({
+    page,
+    isMobile,
+  }) => {
+    const playground = new PlaygroundPage(page);
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    const { navigation } = playground;
+    const { stepper, verticalStepper } = navigation;
+    await stepper.scrollIntoViewIfNeeded();
+    await expect(stepper).toHaveAccessibleName('Регистрация');
+    await expect(navigation.currentStep(stepper)).toHaveAccessibleName(/^Профиль/);
+    await expect(navigation.stepButtons(stepper)).toHaveCount(2);
+    await navigation.stepperNext.click();
+    await expect(navigation.currentStep(stepper)).toHaveAccessibleName(/^Тариф/);
+    await expect(navigation.step(stepper, 'Профиль')).toHaveAccessibleName(/выполнено/);
+    await expect.poll(async () => (await navigation.readOutput()).signupStep).toBe('plan');
+    if (isMobile) {
+      await expect(navigation.stepperSummary(stepper)).toContainText('Шаг 3 из 4');
+      await navigation.step(stepper, 'Аккаунт').tap();
+    } else {
+      await expect(navigation.stepperSummary(stepper)).toBeHidden();
+      await navigation.step(stepper, 'Аккаунт').focus();
+      await page.keyboard.press('Enter');
+    }
+    await expect.poll(async () => (await navigation.readOutput()).signupStep).toBe('account');
+    await expect(navigation.stepperBack).toBeDisabled();
+    await expect(navigation.stepButtons(verticalStepper)).toHaveCount(4);
+    await expect(navigation.step(verticalStepper, 'Удаление')).toBeDisabled();
+    await navigation.step(verticalStepper, 'Оплата').click();
+    await expect.poll(async () => (await navigation.readOutput()).settingsStep).toBe('billing');
+    await expect(navigation.currentStep(verticalStepper)).toHaveAccessibleName(/^Оплата/);
+  });
+
   test('navigation has no automatically detectable WCAG AA violations', async ({ page }) => {
     const playground = new PlaygroundPage(page);
     await playground.emulate({ reducedMotion: 'reduce' });
