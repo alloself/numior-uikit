@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { readFile, readdir } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { build } from 'vite';
 
 const artifactPaths = async (root, target) => {
   if (!target.includes('*')) {
@@ -107,4 +108,54 @@ const code = await importBuild('vue', [
 ]);
 
 assert.doesNotMatch(code, /(?:tiptap|prosemirror|reka-ui|spreadsheet|tailwindcss)/i);
-console.log('Package exports, CSS artifacts and DOM-free ESM imports verified.');
+
+const PROBE = '\0nui-probe';
+
+const bundleOf = async (source) => {
+  const results = await build({
+    configFile: false,
+    logLevel: 'silent',
+    build: {
+      write: false,
+      minify: false,
+      rolldownOptions: {
+        input: 'nui-probe',
+        preserveEntrySignatures: 'strict',
+        external: [/^vue$/, /^@numior\/primitives$/, /^lucide-vue-next(\/|$)/],
+      },
+    },
+    plugins: [
+      {
+        name: 'nui-probe',
+        resolveId: (id) => (id === 'nui-probe' ? PROBE : undefined),
+        load: (id) => (id === PROBE ? source : undefined),
+      },
+    ],
+  });
+
+  return [results]
+    .flat()
+    .flatMap((result) => result.output)
+    .map((chunk) => (chunk.type === 'chunk' ? chunk.code : ''))
+    .join('\n');
+};
+
+const vueEntry = JSON.stringify(resolve('packages/vue/dist/index.js'));
+const buttonOnly = await bundleOf(`export { NuiButton } from ${vueEntry};`);
+const dialogOnly = await bundleOf(`export { NuiDialog } from ${vueEntry};`);
+
+assert.doesNotMatch(
+  buttonOnly,
+  /Закрыть|Навигационная цепочка/,
+  'NuiButton pulled dictionary texts',
+);
+
+assert.match(dialogOnly, /Закрыть/, 'NuiDialog lost its dictionary texts');
+
+assert.doesNotMatch(
+  dialogOnly,
+  /Навигационная цепочка|Перетащите файлы/,
+  'NuiDialog pulled other catalogs',
+);
+
+console.log('Package exports, CSS artifacts, DOM-free ESM imports and text tree-shaking verified.');
