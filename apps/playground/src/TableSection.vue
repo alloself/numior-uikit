@@ -35,16 +35,11 @@
       :rows="empty ? [] : people"
       :get-key="keyOf"
       selectable="multiple"
-      :pagination="paginationLabels"
+      :pagination="tablePagination"
       :loading="loading"
       caption="Команда"
       hoverable
       striped
-      empty-label="Нет данных"
-      select-label="Выбрать строку"
-      select-all-label="Выбрать все строки"
-      :resize-label="(column) => `Ширина колонки ${column.label}`"
-      :reorder-label="(column) => `Переставить колонку ${column.label}`"
       data-testid="data-table"
       @row-click="onRowClick"
     >
@@ -197,15 +192,7 @@ const wideColumns: NuiTableColumn<Person>[] = [
   },
 ];
 
-const paginationLabels: NuiTablePagination = {
-  pageSizes: [5, 10],
-  label: 'Страницы',
-  previousLabel: 'Предыдущая',
-  nextLabel: 'Следующая',
-  pageSizeLabel: 'На странице',
-  pageLabel: (target) => `Страница ${target}`,
-  rangeLabel: (from, to, total) => `${from}–${to} из ${total}`,
-};
+const tablePagination: NuiTablePagination = { pageSizes: [5, 10] };
 
 const keyOf = (row: Person): string => String(row.id);
 const childrenOf = (row: Person): readonly Person[] | undefined => row.children;

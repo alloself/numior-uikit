@@ -6,20 +6,7 @@
     </div>
     <div class="form">
       <NuiField label="Дата поездки" description="Введите или выберите в календаре">
-        <NuiDatePicker
-          v-model="picked"
-          clearable
-          placeholder="ДД.ММ.ГГГГ"
-          open-label="Открыть календарь"
-          clear-label="Очистить"
-          dialog-label="Календарь"
-          today-label="Сегодня"
-          previous-label="Предыдущий месяц"
-          next-label="Следующий месяц"
-          month-label="Выбрать месяц"
-          year-label="Выбрать год"
-          data-testid="date-picker"
-        />
+        <NuiDatePicker v-model="picked" clearable data-testid="date-picker" />
       </NuiField>
       <NuiField label="Период отчёта" description="Два месяца и пресеты">
         <NuiDateRangePicker
@@ -27,32 +14,11 @@
           :presets="presets"
           clearable
           end-label="Конец периода"
-          open-label="Открыть календарь"
-          clear-label="Очистить"
-          dialog-label="Календарь"
-          today-label="Сегодня"
-          previous-label="Предыдущий месяц"
-          next-label="Следующий месяц"
-          month-label="Выбрать месяц"
-          year-label="Выбрать год"
           data-testid="date-range-picker"
         />
       </NuiField>
       <NuiField label="Встреча" description="Дата и время">
-        <NuiDatePicker
-          v-model="moment"
-          time
-          :time-step="30"
-          time-label="Выбрать время"
-          open-label="Открыть календарь"
-          dialog-label="Календарь"
-          today-label="Сегодня"
-          previous-label="Предыдущий месяц"
-          next-label="Следующий месяц"
-          month-label="Выбрать месяц"
-          year-label="Выбрать год"
-          data-testid="date-time-picker"
-        />
+        <NuiDatePicker v-model="moment" time :time-step="30" data-testid="date-time-picker" />
       </NuiField>
     </div>
     <div class="dates-grid">

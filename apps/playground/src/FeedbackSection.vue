@@ -32,12 +32,7 @@
         <NuiButton data-testid="toast-from-dialog" @click="notify">Показать</NuiButton>
       </template>
     </NuiDialog>
-    <NuiToaster
-      :placement="placement"
-      label="Уведомления"
-      close-label="Закрыть"
-      data-testid="toaster"
-    />
+    <NuiToaster :placement="placement" data-testid="toaster" />
     <div class="form tones">
       <NuiAlert
         v-model:open="alertOpen"
@@ -45,7 +40,6 @@
         title="Черновик не сохранён"
         description="Изменения пропадут при выходе со страницы."
         dismissible
-        dismiss-label="Закрыть"
         data-testid="alert"
       >
         <template #actions>

@@ -25,11 +25,15 @@ test.describe('numbers and time', () => {
     await intl.stepperOf(intl.quantity, 'up').click();
     await expect.poll(async () => (await intl.readOutput()).quantity).toBe(1);
     await expect(intl.stepperOf(intl.quantity, 'down')).toBeEnabled();
+    await expect(intl.stepperOf(intl.quantity, 'up')).toHaveAttribute('aria-label', 'Увеличить');
     await intl.setLocale('en-US');
     await expect(intl.price).toHaveValue(/€(95\.00|99\.90)/);
     await expect(intl.discount).toHaveValue('15%');
+    await expect(intl.stepperOf(intl.quantity, 'up')).toHaveAttribute('aria-label', 'Increment');
     await intl.setLocale('de-DE');
     await expect(intl.price).toHaveValue(/(95,00|99,90)\s€/);
+    await expect(intl.stepperOf(intl.quantity, 'down')).toHaveAttribute('aria-label', 'Verringern');
+    await expect(intl.clockOf(intl.start, 'Uhrzeit wählen')).toHaveCount(1);
   });
 
   test('time field types with auto-advance, steps and picks a suggestion', async ({

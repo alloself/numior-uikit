@@ -13,14 +13,7 @@
           :max-size="1024 * 1024"
           :max-files="3"
           :rejected="rejectedMode"
-          drop-label="Перетащите файлы сюда"
-          browse-label="Выбрать файлы"
           hint="PDF или TXT, до 1 МБ"
-          cancel-label="Отменить загрузку"
-          retry-label="Повторить"
-          remove-label="Удалить"
-          done-label="Загружен"
-          :error-label="describeError"
           data-testid="upload-documents"
           @reject="onReject"
         />
@@ -34,11 +27,6 @@
           :concurrency="2"
           drop-label="Перетащите изображения"
           browse-label="Выбрать изображения"
-          cancel-label="Отменить загрузку"
-          retry-label="Повторить"
-          remove-label="Удалить"
-          done-label="Загружено"
-          :error-label="describeError"
           data-testid="upload-images"
         />
       </NuiField>
@@ -59,13 +47,7 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import {
-  NuiField,
-  NuiUpload,
-  type NuiUploadAdapter,
-  type NuiUploadError,
-  type NuiUploadItem,
-} from '@numior/vue';
+import { NuiField, NuiUpload, type NuiUploadAdapter, type NuiUploadItem } from '@numior/vue';
 
 const STEPS = 5;
 const STEP_DELAY = 120;
@@ -118,15 +100,6 @@ const fakeUpload: NuiUploadAdapter<string> = async (file, { onProgress, signal }
 
   return `https://files.example/${encodeURIComponent(file.name)}`;
 };
-
-const ERROR_TEXTS: Partial<Record<NuiUploadError['reason'], string>> = {
-  type: 'Неподдерживаемый тип файла',
-  size: 'Файл больше 1 МБ',
-  count: 'Не больше трёх файлов',
-};
-
-const describeError = (error: NuiUploadError): string =>
-  ERROR_TEXTS[error.reason] ?? error.message ?? 'Не удалось загрузить';
 
 const onReject = (entries: readonly { file: File }[]): void => {
   rejections.value = [...rejections.value, ...entries.map((entry) => entry.file.name)];

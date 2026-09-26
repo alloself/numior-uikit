@@ -53,7 +53,7 @@ test.describe('pickers', () => {
     await expect(pickers.listbox).toHaveAttribute('aria-multiselectable', 'true');
     await pickers.option('Дизайн').click();
     await expect(pickers.listbox).toBeVisible();
-    await expect(trigger).toHaveText('2 выбрано');
+    await expect(trigger).toHaveText('Выбрано: 2');
     await pickers.option('Фронтенд').click();
     await expect(trigger).toHaveText('Дизайн');
     await expect.poll(async () => (await pickers.readOutput()).tags).toEqual(['design']);
@@ -71,7 +71,7 @@ test.describe('pickers', () => {
     const city = pickers.cityInput;
     await city.click();
     await city.pressSequentially('ка');
-    await expect(pickers.loadingStatus).toHaveText('Ищем…');
+    await expect(pickers.loadingStatus).toHaveText('Загрузка');
     await expect(pickers.option('Казань')).toBeVisible();
     await expect(pickers.option('Москва')).toBeHidden();
     await expect(city).toHaveAttribute('aria-activedescendant', /option-0$/);

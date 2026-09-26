@@ -24,12 +24,11 @@
         :src="AVATAR_SRC"
         name="Анна Смирнова"
         status="online"
-        status-label="В сети"
         data-testid="data-avatar-image"
       />
       <NuiAvatar src="/missing.png" name="Анна Смирнова" data-testid="data-avatar-broken" />
       <NuiAvatar shape="square" data-testid="data-avatar-icon" />
-      <NuiAvatar name="Борис Ким" status="busy" status-label="Занят" size="lg">
+      <NuiAvatar name="Борис Ким" status="busy" size="lg">
         <template #badge><NuiBadge tone="error" :count="5" size="sm" /></template>
       </NuiAvatar>
       <NuiAvatar name="Вера Ли" status="away" status-label="Отошла" size="xl" shape="square" />
@@ -38,7 +37,6 @@
         :max="3"
         size="lg"
         label="Команда"
-        :overflow-label="(count) => `+${count}`"
         data-testid="data-avatar-group"
       />
     </div>

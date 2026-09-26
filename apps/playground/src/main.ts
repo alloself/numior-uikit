@@ -1,11 +1,18 @@
 import { createApp } from 'vue';
-import { createNuiConfig } from '@numior/vue';
+import { createNuiConfig, type NuiLocaleMessages } from '@numior/vue';
 import '@numior/tokens/theme.css';
 import '@numior/vue/styles.css';
 import '@numior/utilities/utilities.css';
 import './style.css';
 import App from './App.vue';
 
+const messages: NuiLocaleMessages = {
+  de: {
+    numberField: { increment: 'Erhöhen', decrement: 'Verringern' },
+    timeField: { clock: 'Uhrzeit wählen', empty: 'Keine Uhrzeiten verfügbar' },
+  },
+};
+
 createApp(App)
-  .use(createNuiConfig({ toasts: { duration: 4000 }, locale: 'ru-RU' }))
+  .use(createNuiConfig({ toasts: { duration: 4000 }, locale: 'ru-RU', messages }))
   .mount('#app');

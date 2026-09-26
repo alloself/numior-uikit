@@ -60,13 +60,7 @@
     >
       <template #panel="{ tab: period }">Период: {{ period.label }}</template>
     </NuiTabs>
-    <NuiBreadcrumbs
-      :items="path"
-      :max-items="3"
-      label="Путь"
-      more-label="Показать путь"
-      data-testid="nav-crumbs"
-    />
+    <NuiBreadcrumbs :items="path" :max-items="3" label="Путь" data-testid="nav-crumbs" />
     <NuiBreadcrumbs
       :items="path.slice(0, 3)"
       label="Короткий путь"

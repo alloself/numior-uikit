@@ -11,8 +11,6 @@
           :options="countries"
           placeholder="Выберите страну"
           clearable
-          clear-label="Очистить"
-          empty-label="Ничего нет"
           data-testid="pick-select"
         />
       </NuiField>
@@ -22,7 +20,6 @@
           :options="tagOptions"
           multiple
           placeholder="Выберите теги"
-          :count-label="(count) => `${count} выбрано`"
           data-testid="pick-multi"
         />
       </NuiField>
@@ -33,10 +30,7 @@
           :filter="false"
           :loading="cityLoading"
           placeholder="Начните вводить"
-          loading-label="Ищем…"
-          empty-label="Ничего не найдено"
           toggle-label="Показать города"
-          clear-label="Очистить"
           clearable
           data-testid="pick-combobox"
           @search="searchCities"
@@ -49,8 +43,6 @@
           multiple
           :custom-value="(text) => text"
           placeholder="Добавить"
-          remove-label="Убрать"
-          toggle-label="Показать варианты"
           empty-label="Enter добавит новое"
           data-testid="pick-keywords"
         />
@@ -61,12 +53,6 @@
       v-model:page-size="pageSize"
       :total="240"
       :page-sizes="[10, 20, 50]"
-      label="Страницы"
-      previous-label="Предыдущая"
-      next-label="Следующая"
-      page-size-label="На странице"
-      :page-label="(target) => `Страница ${target}`"
-      :range-label="(from, to, total) => `${from}–${to} из ${total}`"
       data-testid="pick-pagination"
     />
     <NuiPagination
@@ -75,9 +61,6 @@
       :show-range="false"
       :href="(target) => `#page-${target}`"
       label="Страницы по ссылкам"
-      previous-label="Предыдущая"
-      next-label="Следующая"
-      :page-label="(target) => `Страница ${target}`"
       data-testid="pick-pagination-links"
       @update:page="linkPage = $event"
     />

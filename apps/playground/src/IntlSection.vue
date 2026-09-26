@@ -16,8 +16,6 @@
           :min="0"
           :step="0.5"
           :format-options="{ style: 'currency', currency: 'EUR' }"
-          increment-label="Увеличить"
-          decrement-label="Уменьшить"
         />
       </NuiField>
       <NuiField label="Количество" description="От 0 до 10">
@@ -27,8 +25,6 @@
           data-testid="number-quantity"
           :min="0"
           :max="10"
-          increment-label="Увеличить"
-          decrement-label="Уменьшить"
         />
       </NuiField>
       <NuiField label="Скидка" description="Проценты без степперов">
@@ -51,8 +47,6 @@
           min="09:00"
           max="18:00"
           :step="30"
-          clock-label="Выбрать время"
-          empty-label="Нет времени"
         />
       </NuiField>
       <NuiField label="Точное время" description="Секунды и 24 часа">
@@ -66,16 +60,10 @@
         />
       </NuiField>
       <NuiField label="Только чтение">
-        <NuiNumberField
-          :model-value="42"
-          :locale="locale"
-          readonly
-          increment-label="Увеличить"
-          decrement-label="Уменьшить"
-        />
+        <NuiNumberField :model-value="42" :locale="locale" readonly />
       </NuiField>
       <NuiField label="Недоступно" disabled>
-        <NuiTimeField model-value="10:30" :locale="locale" clock-label="Выбрать время" />
+        <NuiTimeField model-value="10:30" :locale="locale" />
       </NuiField>
     </div>
     <pre class="output" data-testid="intl-output">{{ output }}</pre>

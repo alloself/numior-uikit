@@ -30,7 +30,7 @@
         data-testid="layout"
       >
         <template #sidebar>
-          <NuiSidebar :collapsible="collapsible" :side="side" label="Разделы" close-label="Закрыть">
+          <NuiSidebar :collapsible="collapsible" :side="side" label="Разделы">
             <NuiSidebarHeader>
               <div class="layout-brand">
                 <span class="layout-brand__mark" aria-hidden="true">N</span>
@@ -88,7 +88,7 @@
         <template #header>
           <NuiAppBar>
             <template #start>
-              <NuiSidebarTrigger label="Переключить боковую панель" data-testid="layout-trigger" />
+              <NuiSidebarTrigger data-testid="layout-trigger" />
             </template>
             <span data-testid="layout-heading">{{ titles[active] }}</span>
             <template #end>
