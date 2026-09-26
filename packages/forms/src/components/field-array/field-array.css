@@ -2,6 +2,7 @@
   --_gap: var(--nui-space-2);
   --_control-offset: 0px;
 
+  box-sizing: border-box;
   display: grid;
   gap: var(--nui-space-2);
   min-inline-size: 0;
@@ -52,6 +53,7 @@
 }
 
 .nui-field-array__row {
+  box-sizing: border-box;
   display: flex;
   align-items: flex-start;
   gap: var(--nui-space-2);
@@ -151,6 +153,7 @@
 }
 
 .nui-field-array__ghost {
+  box-sizing: border-box;
   position: absolute;
   z-index: 1;
   inset-inline: 0;
@@ -173,6 +176,7 @@
 }
 
 .nui-field-array__empty {
+  box-sizing: border-box;
   margin: 0;
   padding: var(--nui-space-4);
   border: 1px dashed var(--nui-border);

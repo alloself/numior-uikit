@@ -1,4 +1,5 @@
 .nui-smart-form {
+  box-sizing: border-box;
   container-type: inline-size;
 }
 
@@ -37,6 +38,7 @@
 }
 
 .nui-smart-form__section {
+  box-sizing: border-box;
   gap: var(--nui-space-3);
   margin: 0;
   padding: 0;
@@ -49,6 +51,7 @@
 }
 
 .nui-smart-form__legend {
+  box-sizing: border-box;
   padding: 0 0 var(--nui-space-3);
   color: var(--nui-text);
   font-size: var(--nui-font-size-md);

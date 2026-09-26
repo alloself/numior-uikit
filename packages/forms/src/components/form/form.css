@@ -1,6 +1,7 @@
 .nui-form {
   --_gap: calc(var(--nui-control-height) / 2);
 
+  box-sizing: border-box;
   display: grid;
   gap: var(--_gap);
   min-inline-size: 0;
@@ -21,6 +22,7 @@
 }
 
 .nui-form__error-list {
+  box-sizing: border-box;
   margin: 0;
   padding-inline-start: var(--nui-space-4);
 }
