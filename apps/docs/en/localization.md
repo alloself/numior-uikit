@@ -218,6 +218,15 @@ Keys are grouped by namespace; ƒ marks a function text, and the examples show i
 | `label`  | NuiSidebar `label`        | Navigation     | Навигация                  |
 | `toggle` | NuiSidebarTrigger `label` | Toggle sidebar | Переключить боковую панель |
 
+### stepper
+
+| Key         | Prop               | English                   | Russian                  |
+| ----------- | ------------------ | ------------------------- | ------------------------ |
+| `label`     | NuiStepper `label` | Steps                     | Шаги                     |
+| `complete`  | `completeLabel`    | completed                 | выполнено                |
+| `error`     | `errorLabel`       | has errors                | есть ошибки              |
+| `summary` ƒ | —                  | Step {current} of {total} | Шаг {current} из {total} |
+
 ### table
 
 | Key          | Prop             | English                                                                                        | Russian                                                                                         |

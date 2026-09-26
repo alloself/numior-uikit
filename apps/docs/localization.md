@@ -218,6 +218,15 @@ tree-shaking: `NuiButton` не тянет тексты диалога, это п
 | `label`  | NuiSidebar `label`        | Navigation     | Навигация                  |
 | `toggle` | NuiSidebarTrigger `label` | Toggle sidebar | Переключить боковую панель |
 
+### stepper
+
+| Ключ        | Проп               | English                   | Русский                  |
+| ----------- | ------------------ | ------------------------- | ------------------------ |
+| `label`     | NuiStepper `label` | Steps                     | Шаги                     |
+| `complete`  | `completeLabel`    | completed                 | выполнено                |
+| `error`     | `errorLabel`       | has errors                | есть ошибки              |
+| `summary` ƒ | —                  | Step {current} of {total} | Шаг {current} из {total} |
+
 ### table
 
 | Ключ         | Проп             | English                                                                                        | Русский                                                                                         |

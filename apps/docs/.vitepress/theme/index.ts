@@ -59,6 +59,7 @@ import {
   NuiSidebarSub,
   NuiSidebarTrigger,
   NuiSkeleton,
+  NuiStepper,
   NuiSwitch,
   NuiTab,
   NuiTable,
@@ -127,6 +128,7 @@ export default {
     app.component('NuiTab', NuiTab);
     app.component('NuiTabPanel', NuiTabPanel);
     app.component('NuiBreadcrumbs', NuiBreadcrumbs);
+    app.component('NuiStepper', NuiStepper);
     app.component('NuiSelect', NuiSelect);
     app.component('NuiCombobox', NuiCombobox);
     app.component('NuiChip', NuiChip);
