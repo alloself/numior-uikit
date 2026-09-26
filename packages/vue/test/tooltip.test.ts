@@ -55,4 +55,23 @@ describe('NuiTooltip', () => {
     expect(tooltip.popoverCalls.show).toBe(0);
     tooltip.unmount();
   });
+
+  it('follows an external anchor element without describing it and stops listening once unmounted', async () => {
+    const tooltip = TooltipDriver.mount({ anchored: true, props: { openDelay: 300 } });
+    expect(tooltip.trigger.attributes('aria-describedby')).toBeUndefined();
+    await tooltip.hover();
+    await tooltip.advance(300);
+    expect(tooltip.modelOpen).toBe(true);
+    await tooltip.pressEscape();
+    expect(tooltip.modelOpen).toBe(false);
+    await tooltip.focus();
+    expect(tooltip.modelOpen).toBe(true);
+    await tooltip.blur();
+    expect(tooltip.modelOpen).toBe(false);
+    tooltip.unmount();
+    const silent = TooltipDriver.mount({ anchored: true, props: { disabled: true } });
+    await silent.focus();
+    expect(silent.modelOpen).toBe(false);
+    silent.unmount();
+  });
 });

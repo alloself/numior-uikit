@@ -43,15 +43,21 @@ never show it.
 
 ## API
 
-| Prop           | Type                | Default   | Description                             |
-| -------------- | ------------------- | --------- | --------------------------------------- |
-| `v-model:open` | `boolean`           | `false`   | Whether the tooltip is shown            |
-| `id`           | `string`            | generated | Tooltip id and `aria-describedby` value |
-| `placement`    | `FloatingPlacement` | `'top'`   | Side and alignment                      |
-| `offset`       | `number`            | `6`       | Distance from the trigger in px         |
-| `openDelay`    | `number`            | `300`     | Hover delay before showing, ms          |
-| `closeDelay`   | `number`            | `100`     | Delay before hiding after leaving, ms   |
+| Prop           | Type                  | Default   | Description                                   |
+| -------------- | --------------------- | --------- | --------------------------------------------- |
+| `v-model:open` | `boolean`             | `false`   | Whether the tooltip is shown                  |
+| `id`           | `string`              | generated | Tooltip id and `aria-describedby` value       |
+| `placement`    | `FloatingPlacement`   | `'top'`   | Side and alignment                            |
+| `offset`       | `number`              | `6`       | Distance from the trigger in px               |
+| `openDelay`    | `number`              | `300`     | Hover delay before showing, ms                |
+| `closeDelay`   | `number`              | `100`     | Delay before hiding after leaving, ms         |
+| `disabled`     | `boolean`             | `false`   | Never show and don't describe the trigger     |
+| `anchor`       | `HTMLElement \| null` | —         | External anchor instead of the `trigger` slot |
 
 Slots: `trigger="{ attrs, open }"`, `default`. `attrs` carries `aria-describedby`, a
-function ref and the pointer/focus/keyboard handlers. Block `nui-tooltip`, modifiers
-`nui-tooltip--side-*`, element `__arrow`; colors come from `--nui-neutral`.
+function ref and the pointer/focus/keyboard handlers. With `anchor` the `trigger` slot is not
+needed: the tooltip sits next to the given element and listens to its hover, focus and
+Escape itself, but sets no `aria-describedby` — it is a visual hint, and the owner gives the
+element its name and description (this is how the sidebar labels icons when collapsed).
+Block `nui-tooltip`, element `__arrow`; `useFloating` writes the side into
+`--_side-x`/`--_side-y`, colors come from `--nui-neutral`.

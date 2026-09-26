@@ -8,6 +8,7 @@ export interface NuiTooltipProps {
   openDelay?: number | undefined;
   closeDelay?: number | undefined;
   disabled?: boolean | undefined;
+  anchor?: HTMLElement | null | undefined;
 }
 
 export interface NuiTooltipTriggerAttrs {

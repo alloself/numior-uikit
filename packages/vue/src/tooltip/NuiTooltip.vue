@@ -23,6 +23,8 @@ import type {
   NuiTooltipTriggerSlot,
 } from './tooltip.types';
 
+const POINTER_FOCUS_WINDOW = 500;
+
 defineOptions({ inheritAttrs: false });
 
 const {
@@ -32,13 +34,18 @@ const {
   openDelay = 300,
   closeDelay = 100,
   disabled = false,
+  anchor,
 } = defineProps<NuiTooltipProps>();
 
 const open = defineModel<boolean>('open', { default: false });
-defineSlots<{ trigger(props: NuiTooltipTriggerSlot): unknown; default(): unknown }>();
+
+defineSlots<{ trigger?(props: NuiTooltipTriggerSlot): unknown; default(): unknown }>();
+
 const { trigger, setTrigger } = useTriggerElement();
 const contentElement = useTemplateRef<HTMLElement>('content');
 const arrowNode = useTemplateRef<HTMLElement>('arrow-node');
+const pointerPressedAt = ref(0);
+const reference = (): HTMLElement | null => (anchor === undefined ? trigger.value : anchor);
 
 const { contentAttrs, id: tooltipId } = usePopover(contentElement, {
   open,
@@ -46,7 +53,7 @@ const { contentAttrs, id: tooltipId } = usePopover(contentElement, {
   mode: 'manual',
 });
 
-useFloating(trigger, contentElement, {
+useFloating(reference, contentElement, {
   placement: () => placement,
   offset: () => offset,
   arrow: arrowNode,
@@ -58,8 +65,32 @@ const delay = useDelayedOpen(open, {
   closeDelay: () => closeDelay,
 });
 
-const pointerPressedAt = ref(0);
-const POINTER_FOCUS_WINDOW = 500;
+const onPointerenter = (event: PointerEvent): void => {
+  if (event.pointerType !== 'touch' && !disabled) {
+    delay.scheduleOpen();
+  }
+};
+
+const onPointerleave = (): void => delay.scheduleClose();
+
+const onPointerdown = (): void => {
+  pointerPressedAt.value = Date.now();
+  delay.closeNow();
+};
+
+const onFocus = (): void => {
+  if (!disabled && Date.now() - pointerPressedAt.value > POINTER_FOCUS_WINDOW) {
+    delay.openNow();
+  }
+};
+
+const onBlur = (): void => delay.closeNow();
+
+const onKeydown = (event: KeyboardEvent): void => {
+  if (event.key === 'Escape') {
+    delay.closeNow();
+  }
+};
 
 watch(
   () => disabled,
@@ -70,29 +101,40 @@ watch(
   },
 );
 
+watch(
+  () => anchor,
+  (element, _previous, onCleanup) => {
+    if (!element) {
+      return;
+    }
+
+    element.addEventListener('pointerenter', onPointerenter);
+    element.addEventListener('pointerleave', onPointerleave);
+    element.addEventListener('pointerdown', onPointerdown);
+    element.addEventListener('focus', onFocus);
+    element.addEventListener('blur', onBlur);
+    element.addEventListener('keydown', onKeydown);
+
+    onCleanup(() => {
+      element.removeEventListener('pointerenter', onPointerenter);
+      element.removeEventListener('pointerleave', onPointerleave);
+      element.removeEventListener('pointerdown', onPointerdown);
+      element.removeEventListener('focus', onFocus);
+      element.removeEventListener('blur', onBlur);
+      element.removeEventListener('keydown', onKeydown);
+    });
+  },
+  { immediate: true },
+);
+
 const triggerAttrs = computed<NuiTooltipTriggerAttrs>(() => ({
   'aria-describedby': disabled ? undefined : tooltipId.value,
   ref: setTrigger,
-  onPointerenter: (event) => {
-    if (event.pointerType !== 'touch' && !disabled) {
-      delay.scheduleOpen();
-    }
-  },
-  onPointerleave: () => delay.scheduleClose(),
-  onPointerdown: () => {
-    pointerPressedAt.value = Date.now();
-    delay.closeNow();
-  },
-  onFocus: () => {
-    if (!disabled && Date.now() - pointerPressedAt.value > POINTER_FOCUS_WINDOW) {
-      delay.openNow();
-    }
-  },
-  onBlur: () => delay.closeNow(),
-  onKeydown: (event) => {
-    if (event.key === 'Escape') {
-      delay.closeNow();
-    }
-  },
+  onPointerenter,
+  onPointerleave,
+  onPointerdown,
+  onFocus,
+  onBlur,
+  onKeydown,
 }));
 </script>

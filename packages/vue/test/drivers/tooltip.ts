@@ -1,4 +1,4 @@
-import { mount, type DOMWrapper, type VueWrapper } from '@vue/test-utils';
+import { DOMWrapper, mount, type VueWrapper } from '@vue/test-utils';
 import { vi } from 'vitest';
 import { defineComponent, h, nextTick, ref, type Ref } from 'vue';
 import { NuiTooltip, type NuiTooltipProps, type NuiTooltipTriggerSlot } from '../../src';
@@ -7,14 +7,23 @@ import { ComponentDriver } from './component';
 
 export interface TooltipMountOptions {
   readonly props?: NuiTooltipProps;
+  readonly anchored?: boolean;
 }
 
 export class TooltipDriver extends ComponentDriver {
   protected readonly block = 'nui-tooltip';
 
-  static mount({ props = {} }: TooltipMountOptions = {}) {
+  static mount({ props = {}, anchored = false }: TooltipMountOptions = {}) {
     const stubs = new TopLayerStubs();
     const model = ref(false);
+    const anchor = anchored ? document.body.appendChild(document.createElement('button')) : null;
+
+    const slots = anchor
+      ? { default: () => 'Saves the document' }
+      : {
+          trigger: (slot: NuiTooltipTriggerSlot) => h('button', slot.attrs, 'Save'),
+          default: () => 'Saves the document',
+        };
 
     const Host = defineComponent({
       setup: () => () =>
@@ -22,31 +31,32 @@ export class TooltipDriver extends ComponentDriver {
           NuiTooltip,
           {
             ...props,
+            ...(anchor ? { anchor } : {}),
             open: model.value,
             'onUpdate:open': (value: boolean) => {
               model.value = value;
             },
           },
-          {
-            trigger: (slot: NuiTooltipTriggerSlot) => h('button', slot.attrs, 'Save'),
-            default: () => 'Saves the document',
-          },
+          slots,
         ),
     });
 
-    return new TooltipDriver(mount(Host, { attachTo: document.body }), stubs, model);
+    return new TooltipDriver(mount(Host, { attachTo: document.body }), stubs, model, anchor);
   }
 
   private constructor(
     wrapper: VueWrapper,
     private readonly stubs: TopLayerStubs,
     private readonly model: Ref<boolean>,
+    private readonly anchor: HTMLButtonElement | null,
   ) {
     super(wrapper);
   }
 
   get trigger(): DOMWrapper<HTMLButtonElement> {
-    return this.wrapper.find<HTMLButtonElement>('button');
+    return this.anchor
+      ? new DOMWrapper(this.anchor)
+      : this.wrapper.find<HTMLButtonElement>('button');
   }
 
   get content(): DOMWrapper<HTMLElement> {
@@ -102,5 +112,6 @@ export class TooltipDriver extends ComponentDriver {
   override unmount(): void {
     this.stubs.restore();
     super.unmount();
+    this.anchor?.remove();
   }
 }

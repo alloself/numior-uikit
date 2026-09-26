@@ -43,15 +43,21 @@ const open = ref(false)
 
 ## API
 
-| Prop           | Тип                 | По умолчанию | Описание                                   |
-| -------------- | ------------------- | ------------ | ------------------------------------------ |
-| `v-model:open` | `boolean`           | `false`      | Показана ли подсказка                      |
-| `id`           | `string`            | генерируется | Id подсказки и значение `aria-describedby` |
-| `placement`    | `FloatingPlacement` | `'top'`      | Сторона и выравнивание                     |
-| `offset`       | `number`            | `6`          | Расстояние до триггера в px                |
-| `openDelay`    | `number`            | `300`        | Задержка появления при наведении, мс       |
-| `closeDelay`   | `number`            | `100`        | Задержка скрытия при уходе курсора, мс     |
+| Prop           | Тип                   | По умолчанию | Описание                                   |
+| -------------- | --------------------- | ------------ | ------------------------------------------ |
+| `v-model:open` | `boolean`             | `false`      | Показана ли подсказка                      |
+| `id`           | `string`              | генерируется | Id подсказки и значение `aria-describedby` |
+| `placement`    | `FloatingPlacement`   | `'top'`      | Сторона и выравнивание                     |
+| `offset`       | `number`              | `6`          | Расстояние до триггера в px                |
+| `openDelay`    | `number`              | `300`        | Задержка появления при наведении, мс       |
+| `closeDelay`   | `number`              | `100`        | Задержка скрытия при уходе курсора, мс     |
+| `disabled`     | `boolean`             | `false`      | Не показывать и не описывать триггер       |
+| `anchor`       | `HTMLElement \| null` | —            | Внешний якорь вместо слота `trigger`       |
 
 Слоты: `trigger="{ attrs, open }"`, `default`. `attrs` содержит `aria-describedby`,
-function-ref и обработчики pointer/focus/keyboard. Блок `nui-tooltip`, модификаторы
-`nui-tooltip--side-*`, элемент `__arrow`; цвета берутся из `--nui-neutral`.
+function-ref и обработчики pointer/focus/keyboard. С `anchor` слот `trigger` не нужен:
+подсказка встаёт у переданного элемента и сама слушает его наведение, фокус и Escape, но
+`aria-describedby` не ставит — это визуальная подсказка, а имя и описание элемента задаёт
+владелец (так боковая панель подписывает иконки в свёрнутом виде). Блок `nui-tooltip`,
+элемент `__arrow`; сторону `useFloating` пишет в `--_side-x`/`--_side-y`, цвета берутся из
+`--nui-neutral`.
