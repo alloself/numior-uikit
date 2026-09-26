@@ -135,7 +135,7 @@
   }
 }
 
-@container (max-width: 36rem) {
+@container (width < 36rem) {
   .nui-smart-form__grid--layout {
     --_columns: 1;
 
@@ -148,6 +148,10 @@
 
   .nui-smart-form--inline .nui-smart-form__cell {
     flex-basis: 100%;
+  }
+
+  .nui-smart-form--inline:has(.nui-field__label) .nui-form__actions {
+    padding-block-start: 0;
   }
 
   .nui-smart-form--steps .nui-form__actions > * {
