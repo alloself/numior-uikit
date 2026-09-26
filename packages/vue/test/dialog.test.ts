@@ -78,4 +78,22 @@ describe('NuiDialog', () => {
     upper.unmount();
     base.unmount();
   });
+
+  it('names the close button in the configured language unless closeLabel is given', () => {
+    const english = DialogDriver.mount();
+    expect(english.closeLabel).toBe('Close');
+    english.unmount();
+
+    const russian = DialogDriver.mount({ config: { locale: 'ru-RU' } });
+    expect(russian.closeLabel).toBe('Закрыть');
+    russian.unmount();
+
+    const labelled = DialogDriver.mount({
+      config: { locale: 'ru-RU' },
+      props: { closeLabel: 'Скрыть' },
+    });
+
+    expect(labelled.closeLabel).toBe('Скрыть');
+    labelled.unmount();
+  });
 });

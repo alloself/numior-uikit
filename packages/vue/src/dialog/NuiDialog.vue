@@ -28,7 +28,7 @@
       tone="neutral"
       size="sm"
       class="nui-dialog__close"
-      :aria-label="closeLabel"
+      :aria-label="closeText"
       @click="control.close()"
     >
       <NuiIcon alias="x" />
@@ -37,11 +37,12 @@
 </template>
 
 <script setup lang="ts">
-import { useSlots, useTemplateRef } from 'vue';
-import { useDialog } from '@numior/primitives';
+import { computed, useSlots, useTemplateRef } from 'vue';
+import { useDialog, useMessages } from '@numior/primitives';
 import NuiButton from '../button/NuiButton.vue';
 import NuiIcon from '../icon/NuiIcon.vue';
 import { useDialogLabels } from './dialog-labels';
+import { dialogMessages } from './dialog.messages';
 import type { NuiDialogProps } from './dialog.types';
 
 const {
@@ -51,12 +52,17 @@ const {
   size = 'md',
   closable = true,
   closeOnBackdrop = true,
-  closeLabel = 'Close',
+  closeLabel,
 } = defineProps<NuiDialogProps>();
 
 const open = defineModel<boolean>('open', { default: false });
 const emit = defineEmits<{ close: [returnValue: string] }>();
+
 const slots = useSlots();
+const messages = useMessages(dialogMessages);
+const dialogElement = useTemplateRef<HTMLDialogElement>('dialog');
+
+const closeText = computed(() => closeLabel ?? messages.value.close);
 const hasTitle = () => Boolean(title || slots.title);
 const hasDescription = () => Boolean(description || slots.description);
 
@@ -67,8 +73,6 @@ const {
   labelledBy,
   describedBy,
 } = useDialogLabels(() => id, { title: hasTitle, description: hasDescription });
-
-const dialogElement = useTemplateRef<HTMLDialogElement>('dialog');
 
 const control = useDialog(dialogElement, {
   open,

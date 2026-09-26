@@ -5,6 +5,7 @@ import {
   createNuiConfig,
   NuiToaster,
   useToast,
+  type NuiConfigOptions,
   type NuiToasterProps,
   type NuiToasterSlot,
   type ToastMessageOptions,
@@ -22,6 +23,7 @@ export interface ToasterMountOptions {
   readonly withPlugin?: boolean;
   readonly modalOpen?: boolean;
   readonly customToast?: boolean;
+  readonly config?: NuiConfigOptions;
 }
 
 export interface StackItemView {
@@ -73,6 +75,10 @@ class ToastView {
     return document.activeElement === this.root.element;
   }
 
+  get closeLabel(): string | undefined {
+    return this.root.find('.nui-toast__close').attributes('aria-label');
+  }
+
   get closeIsIconOnly(): boolean {
     return this.root.find('.nui-toast__close').classes().includes('nui-button--icon-only');
   }
@@ -104,6 +110,7 @@ export class ToasterDriver extends ComponentDriver {
     withPlugin = true,
     modalOpen = false,
     customToast: custom = false,
+    config,
   }: ToasterMountOptions = {}) {
     const stubs = new TopLayerStubs();
     const dialog = modalOpen ? document.createElement('dialog') : null;
@@ -122,7 +129,7 @@ export class ToasterDriver extends ComponentDriver {
 
     const wrapper = mount(Host, {
       attachTo: document.body,
-      global: { plugins: withPlugin ? [createNuiConfig({ toasts: storeOptions })] : [] },
+      global: { plugins: withPlugin ? [createNuiConfig({ ...config, toasts: storeOptions })] : [] },
     });
 
     const [service] = services;
@@ -143,6 +150,10 @@ export class ToasterDriver extends ComponentDriver {
 
   get region(): DOMWrapper<HTMLElement> {
     return this.wrapper.find<HTMLElement>('.nui-toaster');
+  }
+
+  get label(): string | undefined {
+    return this.region.attributes('aria-label');
   }
 
   get toasts(): ToastView[] {

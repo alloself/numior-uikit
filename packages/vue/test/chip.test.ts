@@ -32,4 +32,12 @@ describe('NuiChip', () => {
     expect(off.hasModifier('disabled')).toBe(true);
     expect(off.removeButton.element.disabled).toBe(true);
   });
+
+  it('names the remove button in the configured language unless removeLabel is given', () => {
+    const english = ChipDriver.mount({ props: { removable: true } });
+    const russian = ChipDriver.mount({ props: { removable: true }, config: { locale: 'ru-RU' } });
+
+    expect(english.removeLabel).toBe('Remove');
+    expect(russian.removeLabel).toBe('Убрать');
+  });
 });

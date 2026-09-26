@@ -43,4 +43,22 @@ describe('NuiAlert', () => {
     await alert.receiveOpen(true);
     expect(alert.hasModifier('closed')).toBe(false);
   });
+
+  it('names the dismiss button in the configured language unless dismissLabel is given', () => {
+    const english = AlertDriver.mount({ props: { dismissible: true } });
+
+    const russian = AlertDriver.mount({
+      props: { dismissible: true },
+      config: { locale: 'ru-RU' },
+    });
+
+    const labelled = AlertDriver.mount({
+      props: { dismissible: true, dismissLabel: 'Скрыть' },
+      config: { locale: 'ru-RU' },
+    });
+
+    expect(english.closeLabel).toBe('Close');
+    expect(russian.closeLabel).toBe('Закрыть');
+    expect(labelled.closeLabel).toBe('Скрыть');
+  });
 });

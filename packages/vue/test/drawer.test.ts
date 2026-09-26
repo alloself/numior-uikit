@@ -21,4 +21,10 @@ describe('NuiDrawer', () => {
     expect(drawer.emittedClose).toEqual(['']);
     drawer.unmount();
   });
+
+  it('leaves the close text to the dialog dictionary', () => {
+    const drawer = DrawerDriver.mount({ config: { locale: 'ru-RU' } });
+    expect(drawer.closeLabel).toBe('Закрыть');
+    drawer.unmount();
+  });
 });

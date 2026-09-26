@@ -4,7 +4,8 @@ import { LayoutDriver } from './drivers/layout';
 describe('NuiLayout with NuiSidebar', () => {
   it('starts open, wires the trigger to the sidebar and collapses to a rail that describes its items', async () => {
     const layout = LayoutDriver.mount({ collapsible: 'icon' });
-    expect(layout.sidebar.attributes('aria-label')).toBe('Sections');
+    expect(layout.sidebarLabel).toBe('Navigation');
+    expect(layout.triggerLabel).toBe('Toggle sidebar');
     expect(layout.trigger.attributes('aria-expanded')).toBe('true');
     expect(layout.trigger.attributes('aria-controls')).toBe(layout.sidebar.attributes('id'));
     expect(layout.action('Inbox').attributes('aria-describedby')).toBeUndefined();
@@ -78,7 +79,7 @@ describe('NuiLayout with NuiSidebar', () => {
     await layout.setMobile(true);
     expect(layout.sidebar.exists()).toBe(false);
     expect(layout.drawer.exists()).toBe(true);
-    expect(layout.drawer.text()).toContain('Sections');
+    expect(layout.drawer.text()).toContain('Navigation');
     expect(layout.trigger.attributes('aria-expanded')).toBe('false');
     expect(layout.trigger.attributes('aria-controls')).toBe(layout.drawer.attributes('id'));
     await layout.clickTrigger();
@@ -94,5 +95,22 @@ describe('NuiLayout with NuiSidebar', () => {
     expect(layout.sidebar.exists()).toBe(true);
     expect(layout.open).toBe(true);
     layout.unmount();
+  });
+
+  it('names the sidebar, its trigger and the drawer in the configured language', async () => {
+    const russian = LayoutDriver.mount({ config: { locale: 'ru-RU' } });
+    expect(russian.sidebarLabel).toBe('Навигация');
+    expect(russian.triggerLabel).toBe('Переключить боковую панель');
+    russian.unmount();
+
+    const labelled = LayoutDriver.mount({ config: { locale: 'ru-RU' }, label: 'Разделы' });
+    expect(labelled.sidebarLabel).toBe('Разделы');
+    labelled.unmount();
+
+    const mobile = LayoutDriver.mount({ config: { locale: 'ru-RU' } });
+    await mobile.setMobile(true);
+    expect(mobile.drawer.text()).toContain('Навигация');
+    expect(mobile.drawerCloseLabel).toBe('Закрыть');
+    mobile.unmount();
   });
 });

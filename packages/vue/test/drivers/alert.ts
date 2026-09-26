@@ -1,19 +1,25 @@
 import { mount, type DOMWrapper } from '@vue/test-utils';
-import { NuiAlert, type NuiAlertProps } from '../../src';
+import { NuiAlert, type NuiAlertProps, type NuiConfigOptions } from '../../src';
+import { configPlugins } from '../support/config';
 import { ComponentDriver } from './component';
 
 export interface AlertMountOptions {
   readonly props?: NuiAlertProps;
   readonly open?: boolean;
   readonly slots?: Record<string, () => unknown>;
+  readonly config?: NuiConfigOptions;
 }
 
 export class AlertDriver extends ComponentDriver {
   protected readonly block = 'nui-alert';
 
-  static mount({ props = {}, open, slots = {} }: AlertMountOptions = {}) {
+  static mount({ props = {}, open, slots = {}, config }: AlertMountOptions = {}) {
     return new AlertDriver(
-      mount(NuiAlert, { props: { ...props, ...(open === undefined ? {} : { open }) }, slots }),
+      mount(NuiAlert, {
+        props: { ...props, ...(open === undefined ? {} : { open }) },
+        slots,
+        global: { plugins: configPlugins(config) },
+      }),
     );
   }
 
@@ -39,6 +45,10 @@ export class AlertDriver extends ComponentDriver {
 
   get closeButton(): DOMWrapper<Element> {
     return this.wrapper.find('.nui-alert__close');
+  }
+
+  get closeLabel(): string | undefined {
+    return this.closeButton.attributes('aria-label');
   }
 
   get emittedDismiss(): number {

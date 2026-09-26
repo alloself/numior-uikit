@@ -208,6 +208,11 @@ const scenarios: Scenario[] = [
     render: () => h(NuiLink, { href: 'https://example.com', external: true }, () => 'Docs'),
   },
   {
+    name: 'NuiDialog in a Russian config',
+    render: () =>
+      h(configScope({ locale: 'ru-RU' }, () => h(NuiDialog, { title: 'Удалить?' }, () => 'Текст'))),
+  },
+  {
     name: 'provideNuiConfig scope',
     render: () =>
       h(configScope({ locale: 'de-DE' }, () => h(NuiNumberField, { modelValue: 1234.5 }))),
@@ -426,6 +431,23 @@ describe('server rendering', () => {
     expect(html).not.toMatch(/<dialog[^>]* open/);
     expect(html).toContain('aria-labelledby="confirm-title"');
     expect(html).toContain('id="confirm-title"');
+  });
+
+  it('renders built-in texts in the configured language and with overrides', async () => {
+    const russian = await renderMarkup(() =>
+      h(configScope({ locale: 'ru-RU' }, () => h(NuiDialog))),
+    );
+
+    const overridden = await renderMarkup(() =>
+      h(
+        configScope({ locale: 'ru-RU', messages: { ru: { dialog: { close: 'Скрыть' } } } }, () =>
+          h(NuiDialog),
+        ),
+      ),
+    );
+
+    expect(russian).toContain('aria-label="Закрыть"');
+    expect(overridden).toContain('aria-label="Скрыть"');
   });
 
   it('links popover triggers and content by id on the server and keeps them hidden', async () => {

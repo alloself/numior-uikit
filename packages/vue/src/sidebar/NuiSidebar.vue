@@ -5,7 +5,7 @@
     v-model:open="layout.mobileOpen.value"
     :side="side"
     size="sm"
-    :title="title ?? label"
+    :title="title ?? labelText"
     :close-label="closeLabel"
     class="nui-sidebar-drawer"
   >
@@ -23,7 +23,7 @@
       `nui-sidebar--collapsible-${collapsible}`,
       { 'nui-sidebar--collapsed': collapsed, 'nui-sidebar--rail': rail },
     ]"
-    :aria-label="label"
+    :aria-label="labelText"
     :inert="hidden || undefined"
   >
     <slot />
@@ -32,18 +32,19 @@
 
 <script setup lang="ts">
 import { computed, useTemplateRef } from 'vue';
-import { useDirection } from '@numior/primitives';
+import { useDirection, useMessages } from '@numior/primitives';
 import NuiDrawer from '../drawer/NuiDrawer.vue';
 import { useLayout } from '../layout/layout-context';
 import { provideSidebar } from './sidebar-context';
+import { sidebarMessages } from './sidebar.messages';
 import type { NuiSidebarProps } from './sidebar.types';
 
 const {
   collapsible = 'offcanvas',
   side = 'start',
-  label = 'Navigation',
+  label,
   title,
-  closeLabel = 'Close',
+  closeLabel,
 } = defineProps<NuiSidebarProps>();
 
 defineSlots<{ default(): unknown }>();
@@ -51,7 +52,9 @@ defineSlots<{ default(): unknown }>();
 const layout = useLayout();
 const root = useTemplateRef<HTMLElement>('root');
 const direction = useDirection(root);
+const messages = useMessages(sidebarMessages);
 
+const labelText = computed(() => label ?? messages.value.label);
 const collapsed = computed(() => !layout.open.value && collapsible !== 'none');
 const rail = computed(() => collapsed.value && collapsible === 'icon');
 const hidden = computed(() => collapsed.value && collapsible === 'offcanvas');

@@ -252,6 +252,7 @@ export type { NuiProgressProps } from './progress/progress.types';
 export { default as NuiSkeleton } from './skeleton/NuiSkeleton.vue';
 export type { NuiSkeletonProps, NuiSkeletonShape } from './skeleton/skeleton.types';
 export type { NuiFieldControlProps, NuiSize, NuiTone } from './shared/types';
+export type { NuiVueMessages } from './messages';
 export {
   createNuiConfig,
   createToastStore,

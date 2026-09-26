@@ -26,7 +26,7 @@
       tone="neutral"
       size="sm"
       class="nui-alert__close"
-      :aria-label="dismissLabel"
+      :aria-label="dismissText"
       @click="dismiss"
     >
       <NuiIcon alias="x" />
@@ -36,9 +36,11 @@
 
 <script setup lang="ts">
 import { computed, useSlots } from 'vue';
+import { useMessages } from '@numior/primitives';
 import NuiButton from '../button/NuiButton.vue';
 import NuiIcon from '../icon/NuiIcon.vue';
 import { toneIcon } from '../shared/tone-icon';
+import { alertMessages } from './alert.messages';
 import type { NuiAlertProps } from './alert.types';
 
 const {
@@ -49,15 +51,19 @@ const {
   icon,
   hideIcon = false,
   dismissible = false,
-  dismissLabel = 'Close',
+  dismissLabel,
 } = defineProps<NuiAlertProps>();
 
 const open = defineModel<boolean>('open', { default: true });
 const emit = defineEmits<{ dismiss: [] }>();
+
 const slots = useSlots();
+const messages = useMessages(alertMessages);
+
+const dismissText = computed(() => dismissLabel ?? messages.value.dismiss);
+const iconAlias = computed(() => (hideIcon ? undefined : (icon ?? toneIcon(tone))));
 const hasTitle = (): boolean => Boolean(title || slots.title);
 const hasBody = (): boolean => Boolean(description || slots.default);
-const iconAlias = computed(() => (hideIcon ? undefined : (icon ?? toneIcon(tone))));
 
 const dismiss = (): void => {
   open.value = false;

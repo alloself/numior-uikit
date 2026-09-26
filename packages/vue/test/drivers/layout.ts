@@ -12,9 +12,11 @@ import {
   NuiSidebarItem,
   NuiSidebarSub,
   NuiSidebarTrigger,
+  type NuiConfigOptions,
   type NuiSidebarCollapsible,
   type NuiSidebarSide,
 } from '../../src';
+import { configPlugins } from '../support/config';
 import { TopLayerStubs } from '../support/top-layer';
 import { ComponentDriver } from './component';
 
@@ -24,6 +26,8 @@ export interface LayoutMountOptions {
   readonly open?: boolean;
   readonly mobile?: boolean;
   readonly shortcut?: boolean;
+  readonly label?: string;
+  readonly config?: NuiConfigOptions;
 }
 
 interface FakeMediaList {
@@ -53,6 +57,8 @@ export class LayoutDriver extends ComponentDriver {
     open: initialOpen = true,
     mobile = false,
     shortcut = true,
+    label,
+    config,
   }: LayoutMountOptions = {}): LayoutDriver {
     const stubs = new TopLayerStubs();
     const media = fakeMedia(mobile);
@@ -62,9 +68,9 @@ export class LayoutDriver extends ComponentDriver {
     const subOpen = ref(false);
     const active = ref('inbox');
 
-    const item = (label: string, key: string, extra: Record<string, unknown> = {}) =>
+    const item = (text: string, key: string, extra: Record<string, unknown> = {}) =>
       h(NuiSidebarItem, {
-        label,
+        label: text,
         icon: 'inbox',
         current: active.value === key,
         onClick: () => {
@@ -74,7 +80,7 @@ export class LayoutDriver extends ComponentDriver {
       });
 
     const sidebar = () =>
-      h(NuiSidebar, { collapsible, side, label: 'Sections', closeLabel: 'Close' }, () => [
+      h(NuiSidebar, { collapsible, side, label }, () => [
         h(NuiSidebarHeader, () => h('strong', 'Brand')),
         h(NuiSidebarContent, () => [
           h(NuiSidebarGroup, { label: 'Overview' }, () => [
@@ -124,7 +130,7 @@ export class LayoutDriver extends ComponentDriver {
             sidebar,
             header: () =>
               h(NuiAppBar, null, {
-                start: () => h(NuiSidebarTrigger, { label: 'Toggle sidebar' }),
+                start: () => h(NuiSidebarTrigger),
                 default: () => active.value,
               }),
             default: () => [h('input', { class: 'editor', type: 'text' }), h('p', 'Content')],
@@ -132,7 +138,10 @@ export class LayoutDriver extends ComponentDriver {
         ),
     });
 
-    const wrapper = mount(Host, { attachTo: document.body });
+    const wrapper = mount(Host, {
+      attachTo: document.body,
+      global: { plugins: configPlugins(config) },
+    });
 
     return new LayoutDriver(wrapper, stubs, media, open, mobileOpen, subOpen, active);
   }
@@ -175,6 +184,18 @@ export class LayoutDriver extends ComponentDriver {
 
   get trigger(): DOMWrapper<Element> {
     return this.wrapper.find('.nui-sidebar-trigger');
+  }
+
+  get sidebarLabel(): string | undefined {
+    return this.sidebar.attributes('aria-label');
+  }
+
+  get triggerLabel(): string | undefined {
+    return this.trigger.attributes('aria-label');
+  }
+
+  get drawerCloseLabel(): string | undefined {
+    return this.drawer.find('.nui-dialog__close').attributes('aria-label');
   }
 
   get heading(): string {

@@ -30,7 +30,7 @@ const {
   size = 'md',
   closable = true,
   closeOnBackdrop = true,
-  closeLabel = 'Close',
+  closeLabel,
   side = 'end',
 } = defineProps<NuiDrawerProps>();
 

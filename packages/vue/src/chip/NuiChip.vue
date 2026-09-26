@@ -16,7 +16,7 @@
       :tone="tone"
       size="sm"
       class="nui-chip__remove"
-      :aria-label="removeLabel"
+      :aria-label="removeText"
       tabindex="-1"
       :disabled="disabled"
       @click="emit('remove')"
@@ -27,8 +27,11 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue';
+import { useMessages } from '@numior/primitives';
 import NuiButton from '../button/NuiButton.vue';
 import NuiIcon from '../icon/NuiIcon.vue';
+import { chipMessages } from './chip.messages';
 import type { NuiChipProps } from './chip.types';
 
 const {
@@ -37,9 +40,12 @@ const {
   size = 'md',
   icon,
   removable = false,
-  removeLabel = 'Remove',
+  removeLabel,
   disabled = false,
 } = defineProps<NuiChipProps>();
 
 const emit = defineEmits<{ remove: [] }>();
+
+const messages = useMessages(chipMessages);
+const removeText = computed(() => removeLabel ?? messages.value.remove);
 </script>

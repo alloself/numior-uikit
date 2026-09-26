@@ -6,7 +6,7 @@
     :class="[`nui-toaster--placement-${placement}`, { 'nui-toaster--expanded': expand }]"
     :style="regionStyle"
     aria-live="polite"
-    :aria-label="label"
+    :aria-label="labelText"
     v-bind="{ ...contentAttrs, ...$attrs }"
     @pointerenter="pauseAll"
     @pointerleave="resumeAll"
@@ -41,9 +41,10 @@ import {
   useTemplateRef,
   watch,
 } from 'vue';
-import { usePopover, useToastStore } from '@numior/primitives';
+import { useMessages, usePopover, useToastStore } from '@numior/primitives';
 import NuiToast from './NuiToast.vue';
 import { frontSize, itemStyle, layoutStack } from './toast-stack';
+import { toastMessages } from './toast.messages';
 import type { NuiToasterProps, NuiToasterSlot } from './toast.types';
 
 defineOptions({ inheritAttrs: false });
@@ -52,18 +53,21 @@ const {
   id,
   placement = 'top-end',
   expand = false,
-  label = 'Notifications',
-  closeLabel = 'Close',
+  label,
+  closeLabel,
 } = defineProps<NuiToasterProps>();
 
 defineSlots<{ default(props: NuiToasterSlot): unknown }>();
+
 const store = useToastStore();
+const messages = useMessages(toastMessages);
 const visible = store.visible;
 const open = ref(true);
 const regionElement = useTemplateRef<HTMLElement>('region');
 const { contentAttrs, raise } = usePopover(regionElement, { open, id: () => id, mode: 'manual' });
 
 const sizes = shallowReactive(new Map<string, number>());
+const labelText = computed(() => label ?? messages.value.label);
 const items = computed(() => layoutStack(visible.value, sizes));
 
 const regionStyle = computed(() => {

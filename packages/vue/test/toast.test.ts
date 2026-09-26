@@ -138,4 +138,20 @@ describe('NuiToaster and NuiToast', () => {
     expect(toaster.toast(0).leaving).toBe(true);
     toaster.unmount();
   });
+
+  it('names the region and the close buttons in the configured language', async () => {
+    const english = ToasterDriver.mount();
+    english.success('Saved');
+    await english.advance(0);
+    expect(english.label).toBe('Notifications');
+    expect(english.toast(0).closeLabel).toBe('Close');
+    english.unmount();
+
+    const russian = ToasterDriver.mount({ config: { locale: 'ru-RU' } });
+    russian.success('Сохранено');
+    await russian.advance(0);
+    expect(russian.label).toBe('Уведомления');
+    expect(russian.toast(0).closeLabel).toBe('Закрыть');
+    russian.unmount();
+  });
 });

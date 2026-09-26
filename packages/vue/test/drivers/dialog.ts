@@ -1,6 +1,13 @@
 import { mount, type DOMWrapper, type VueWrapper } from '@vue/test-utils';
 import { nextTick, type Component } from 'vue';
-import { NuiDialog, NuiDrawer, type NuiDialogProps, type NuiDrawerProps } from '../../src';
+import {
+  NuiDialog,
+  NuiDrawer,
+  type NuiConfigOptions,
+  type NuiDialogProps,
+  type NuiDrawerProps,
+} from '../../src';
+import { configPlugins } from '../support/config';
 import { TopLayerStubs } from '../support/top-layer';
 import { ComponentDriver, emittedStrings } from './component';
 
@@ -8,11 +15,12 @@ export interface SurfaceMountOptions<P> {
   readonly props?: P;
   readonly open?: boolean;
   readonly slots?: Record<string, () => unknown>;
+  readonly config?: NuiConfigOptions;
 }
 
 const mountSurface = <P extends object>(
   component: Component,
-  { props, open = true, slots = {} }: SurfaceMountOptions<P>,
+  { props, open = true, slots = {}, config }: SurfaceMountOptions<P>,
 ): [VueWrapper, TopLayerStubs] => {
   const stubs = new TopLayerStubs();
 
@@ -20,6 +28,7 @@ const mountSurface = <P extends object>(
     props: { ...props, open },
     slots: { default: 'Body', ...slots },
     attachTo: document.body,
+    global: { plugins: configPlugins(config) },
   });
 
   return [wrapper, stubs];
@@ -64,6 +73,10 @@ abstract class SurfaceDriver extends ComponentDriver {
 
   get closeButton(): DOMWrapper<Element> {
     return this.wrapper.find('.nui-dialog__close');
+  }
+
+  get closeLabel(): string | undefined {
+    return this.closeButton.attributes('aria-label');
   }
 
   get footer(): DOMWrapper<Element> {
