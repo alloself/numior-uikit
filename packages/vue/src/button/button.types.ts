@@ -1,4 +1,4 @@
-import type { NuiSize, NuiTone } from '../shared/types';
+import type { NuiSize, NuiTone } from '../shared/scale.types';
 
 export type NuiButtonVariant = 'solid' | 'soft' | 'outline' | 'ghost' | 'link';
 

@@ -1,5 +1,5 @@
 import type { IconAlias } from '@numior/primitives';
-import type { NuiTone } from '../shared/types';
+import type { NuiTone } from '../shared/scale.types';
 
 export type NuiAlertVariant = 'soft' | 'outline' | 'solid';
 

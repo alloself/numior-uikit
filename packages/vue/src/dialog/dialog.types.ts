@@ -1,4 +1,4 @@
-import type { NuiSize } from '../shared/types';
+import type { NuiSize } from '../shared/scale.types';
 
 export interface NuiDialogProps {
   id?: string | undefined;

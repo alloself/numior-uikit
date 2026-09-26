@@ -1,7 +1,7 @@
 import type { IconAlias } from '@numior/primitives';
 import type { Component } from 'vue';
 import type { NuiListEntry, NuiListSource, NuiOptionKey } from '../shared/options';
-import type { NuiSize } from '../shared/types';
+import type { NuiSize } from '../shared/scale.types';
 
 export type NuiListVariant = 'plain' | 'divided' | 'bordered' | 'floating' | 'nav';
 export type NuiListSelectable = 'single' | 'multiple';

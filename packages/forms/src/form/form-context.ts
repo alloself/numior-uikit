@@ -3,20 +3,18 @@ import type { FormHost } from '../core/host';
 import type { EntryKind } from '../core/registry';
 import type { FormRules } from '../core/rules';
 import type { SubmitHandler } from '../core/submit';
+import type { DeepPartial, FormPath, FormPathValue } from '../paths/paths.types';
 import type {
-  DeepPartial,
   FieldValidation,
   FormMessage,
   FormMeta,
-  FormPath,
-  FormPathValue,
   FormValues,
   ResetOptions,
   SubmitResult,
   ValidateOn,
   ValidateOptions,
   ValidationSummary,
-} from '../core/types';
+} from '../core/form.types';
 import type { FormEngineFactory } from '../engine/engine.types';
 import type { AnyFieldRule } from '../rules/async-rule';
 import type { StandardSchema } from '../schema/standard';

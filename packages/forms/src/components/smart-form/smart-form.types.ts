@@ -1,6 +1,7 @@
 import type { NuiStepperStatus } from '@numior/vue';
 import type { Component } from 'vue';
-import type { FormAfterSlotPath, FormMessage, FormSlotPath, ValidateOn } from '../../core/types';
+import type { FormAfterSlotPath, FormSlotPath } from '../../paths/paths.types';
+import type { FormMessage, ValidateOn } from '../../core/form.types';
 import type { FieldArrayRow } from '../../field/use-field-array';
 import type { FormContext } from '../../form/form-context';
 import type { FieldSelector } from '../../paths/selector';

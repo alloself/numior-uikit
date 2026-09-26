@@ -13,7 +13,7 @@ import type {
   FieldRuleContext,
   FieldValidation,
   ValidateOn,
-} from './types';
+} from './form.types';
 import type { ApplyScope, Validation } from './validation';
 
 export interface EntrySpec<V extends object> {

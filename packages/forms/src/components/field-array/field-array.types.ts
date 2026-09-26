@@ -1,4 +1,4 @@
-import type { ValidateOn } from '../../core/types';
+import type { ValidateOn } from '../../core/form.types';
 import type { FormContext, FormHandle } from '../../form/form-context';
 import type { FieldSelector } from '../../paths/selector';
 import type { AnyFieldRule } from '../../rules/async-rule';

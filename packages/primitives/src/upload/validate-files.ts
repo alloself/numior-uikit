@@ -1,4 +1,4 @@
-import type { FileRejection, UploadError } from './upload-types';
+import type { FileRejection, UploadError } from './upload.types';
 
 export interface ValidateFilesOptions {
   readonly accept?: string | undefined;

@@ -43,18 +43,13 @@ export type { FormRules } from './core/rules';
 export type { SubmitHandler, SubmitHelpers } from './core/submit';
 export type {
   AsyncRuleContext,
-  DeepPartial,
   FieldFlush,
   FieldMeta,
   FieldRule,
   FieldRuleContext,
   FieldValidation,
-  FormAfterSlotPath,
   FormMessage,
   FormMeta,
-  FormPath,
-  FormPathValue,
-  FormSlotPath,
   FormValues,
   ResetOptions,
   SubmitResult,
@@ -62,7 +57,14 @@ export type {
   ValidateOn,
   ValidateOptions,
   ValidationSummary,
-} from './core/types';
+} from './core/form.types';
+export type {
+  DeepPartial,
+  FormAfterSlotPath,
+  FormPath,
+  FormPathValue,
+  FormSlotPath,
+} from './paths/paths.types';
 export { useField } from './field/use-field';
 export type { FieldBinding, FormField, UseFieldOptions } from './field/use-field';
 export { useFieldArray } from './field/use-field-array';
@@ -77,7 +79,7 @@ export type {
   UseFormOptions,
 } from './form/form-context';
 export { useForm } from './form/use-form';
-export type { NuiFormsMessages } from './messages';
+export type { NuiFormsMessages } from './messages.types';
 export { byPath } from './paths/selector';
 export type { FieldSelector } from './paths/selector';
 export { customAsync } from './rules/async-rule';

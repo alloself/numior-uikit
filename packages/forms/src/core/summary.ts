@@ -1,6 +1,6 @@
 import { isUnder } from '../paths/paths';
 import type { Classified } from './owners';
-import type { ValidationSummary } from './types';
+import type { ValidationSummary } from './form.types';
 
 export const inScope = (path: string, scope: readonly string[] | undefined): boolean =>
   scope === undefined || scope.some((prefix) => isUnder(path, prefix));

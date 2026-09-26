@@ -1,7 +1,7 @@
 import { isUnder } from '../paths/paths';
 import type { FormIssue } from '../schema/standard';
 import type { AnyEntry } from './registry';
-import type { FormMessage } from './types';
+import type { FormMessage } from './form.types';
 
 export type IssueTarget =
   | { readonly kind: 'owner'; readonly entry: AnyEntry }

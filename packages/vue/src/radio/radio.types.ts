@@ -1,4 +1,4 @@
-import type { NuiFieldControlProps } from '../shared/types';
+import type { NuiFieldControlProps } from '../shared/field-control.types';
 
 export type NuiRadioGroupOrientation = 'vertical' | 'horizontal';
 

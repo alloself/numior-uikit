@@ -2,7 +2,7 @@ import { computed, type ComputedRef } from 'vue';
 import { isPathDirty } from '../core/dirty';
 import type { FormCore } from '../core/form-core';
 import type { AnyEntry } from '../core/registry';
-import type { FormMessage, FormMeta } from '../core/types';
+import type { FormMessage, FormMeta } from '../core/form.types';
 import { isUnder, normalizePath } from '../paths/paths';
 import { isEqualValue } from '../values/equal';
 

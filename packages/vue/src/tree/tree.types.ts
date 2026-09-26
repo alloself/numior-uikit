@@ -1,6 +1,6 @@
 import type { IconAlias } from '@numior/primitives';
 import type { NuiOptionKey } from '../shared/options';
-import type { NuiSize } from '../shared/types';
+import type { NuiSize } from '../shared/scale.types';
 import type { CheckState } from './cascade';
 import type { TreeNode } from './flatten';
 

@@ -1,6 +1,6 @@
 import { matchesPattern } from '../paths/paths';
 import type { AnyFieldRule } from '../rules/async-rule';
-import type { FieldRule, FieldRuleContext } from './types';
+import type { FieldRule, FieldRuleContext } from './form.types';
 
 export type FormRules<V> = Readonly<Record<string, readonly AnyFieldRule<unknown, V>[]>>;
 

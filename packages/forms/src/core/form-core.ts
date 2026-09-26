@@ -8,7 +8,7 @@ import { cloneValue } from '../values/clone';
 import { createRegistry, type Registry } from './registry';
 import type { FormRules } from './rules';
 import { createTracker, type Tracker } from './tracker';
-import type { FormMessage, ValidateOn } from './types';
+import type { FormMessage, ValidateOn } from './form.types';
 
 export interface ExternalError {
   readonly messages: readonly string[];

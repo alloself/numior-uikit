@@ -1,5 +1,5 @@
 import type { UploadAdapter, UploadError, UploadItem } from '@numior/primitives';
-import type { NuiSize } from '../shared/types';
+import type { NuiSize } from '../shared/scale.types';
 
 export type NuiUploadItem<R = unknown> = UploadItem<R>;
 export type NuiUploadAdapter<R = unknown> = UploadAdapter<R>;

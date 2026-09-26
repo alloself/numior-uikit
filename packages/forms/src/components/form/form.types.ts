@@ -1,4 +1,4 @@
-import type { SubmitResult } from '../../core/types';
+import type { SubmitResult } from '../../core/form.types';
 import type { FormContext } from '../../form/form-context';
 
 export interface NuiFormProps<T extends object> {

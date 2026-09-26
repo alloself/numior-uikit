@@ -4,7 +4,7 @@ import { NuiFormError } from './form-error';
 import { IDLE_SUBMISSION, type FormCore } from './form-core';
 import type { FormHost } from './host';
 import { toMessages } from './messages';
-import type { FormMessage, ResetOptions, SubmitResult, SubmitStatus } from './types';
+import type { FormMessage, ResetOptions, SubmitResult, SubmitStatus } from './form.types';
 import { isClean, type RunResult, type Validation } from './validation';
 
 export interface SubmitHelpers<V, O> {

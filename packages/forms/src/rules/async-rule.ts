@@ -1,4 +1,4 @@
-import type { AsyncRuleContext, FieldRule } from '../core/types';
+import type { AsyncRuleContext, FieldRule } from '../core/form.types';
 import { marked } from './origin';
 
 const ASYNC_RULE: unique symbol = Symbol('nui:async-rule');

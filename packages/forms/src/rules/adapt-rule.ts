@@ -1,4 +1,4 @@
-import type { FieldRule } from '../core/types';
+import type { FieldRule } from '../core/form.types';
 import { asyncRule, isAsyncRule, type AnyFieldRule } from './async-rule';
 import { marked, originOf } from './origin';
 

@@ -1,6 +1,6 @@
 import type { NuiPaginationProps } from '../pagination/pagination.types';
 import type { NuiOptionKey } from '../shared/options';
-import type { NuiSize } from '../shared/types';
+import type { NuiSize } from '../shared/scale.types';
 import type { CheckState } from '../tree/cascade';
 import type { NuiTableRowView } from './rows';
 

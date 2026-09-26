@@ -1,6 +1,6 @@
 import type { FloatingPlacement } from '@numior/primitives';
 import type { NuiOption, NuiOptionKey, NuiOptionSource } from '../shared/options';
-import type { NuiFieldControlProps } from '../shared/types';
+import type { NuiFieldControlProps } from '../shared/field-control.types';
 
 export interface NuiSelectProps<T> extends NuiFieldControlProps {
   options: NuiOptionSource<T>;

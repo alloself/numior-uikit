@@ -51,7 +51,7 @@
 import { computed, shallowRef, useSlots, useTemplateRef, watch } from 'vue';
 import { createIntent, useMessages } from '@numior/primitives';
 import { NuiButton } from '@numior/vue';
-import type { SubmitResult } from '../../core/types';
+import type { SubmitResult } from '../../core/form.types';
 import { FORM_HOST } from '../../form/form-context';
 import NuiForm from '../form/NuiForm.vue';
 import { formMessages } from '../form/form.messages';

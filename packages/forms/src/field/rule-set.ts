@@ -1,6 +1,6 @@
 import { computed, getCurrentScope, toValue, watch, type MaybeRefOrGetter } from 'vue';
 import { firstFailure } from '../core/rules';
-import type { AsyncRuleContext, FieldRuleContext } from '../core/types';
+import type { AsyncRuleContext, FieldRuleContext } from '../core/form.types';
 import { firstAsyncFailure, isAsyncRule, isSyncRule, type AnyFieldRule } from '../rules/async-rule';
 import { originOf } from '../rules/origin';
 

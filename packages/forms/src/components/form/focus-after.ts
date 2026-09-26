@@ -1,4 +1,4 @@
-import type { SubmitResult } from '../../core/types';
+import type { SubmitResult } from '../../core/form.types';
 
 export type FormFocus =
   | { readonly kind: 'field'; readonly path: string }

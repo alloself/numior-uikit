@@ -146,7 +146,7 @@ export type {
   UploadReason,
   UploadState,
   UploadStatus,
-} from './upload/upload-types';
+} from './upload/upload.types';
 export { useSplitAttrs } from './attrs/useSplitAttrs';
 export type { AttrRecord, SplitAttrs } from './attrs/useSplitAttrs';
 export { useFloating } from './floating/useFloating';

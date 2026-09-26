@@ -77,7 +77,7 @@ commitDraft() })`; `NuiFormField` runs these commits before a programmatic submi
 - Every user-facing text (button names, empty states, announcements, errors) lives in
   `src/<name>/<name>.messages.ts`: an interface `Nui<Name>Messages` with flat keys and a typed
   literal `export const <name>Messages: NuiMessageCatalog<'<name>'> = { namespace, en, ru }`.
-  Register the interface in `src/messages.ts` (`NuiVueMessages`); the registry test then asks
+  Register the interface in `src/messages.types.ts` (`NuiVueMessages`); the registry test then asks
   for the catalog and a Russian text for every English one.
 - Text props (`label`, `*Label`, `announce`) take no default. Resolve them in the script:
   `const messages = useMessages(<name>Messages, locale?)` and

@@ -1,13 +1,4 @@
-export type NuiSize = 'sm' | 'md' | 'lg';
-
-export type NuiTone =
-  | 'primary'
-  | 'secondary'
-  | 'success'
-  | 'warning'
-  | 'error'
-  | 'info'
-  | 'neutral';
+import type { NuiSize } from './scale.types';
 
 export interface NuiFieldControlProps {
   id?: string | undefined;

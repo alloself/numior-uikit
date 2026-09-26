@@ -1,5 +1,5 @@
 import type { Component } from 'vue';
-import type { NuiTone } from '../shared/types';
+import type { NuiTone } from '../shared/scale.types';
 
 export type NuiLinkUnderline = 'always' | 'hover' | 'none';
 

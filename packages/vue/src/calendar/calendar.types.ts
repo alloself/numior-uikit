@@ -1,5 +1,5 @@
 import type { DateRange, Weekday } from '@numior/primitives';
-import type { NuiSize } from '../shared/types';
+import type { NuiSize } from '../shared/scale.types';
 
 export type NuiCalendarMode = 'single' | 'multiple' | 'range';
 

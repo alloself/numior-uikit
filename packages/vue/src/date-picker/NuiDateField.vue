@@ -63,7 +63,7 @@
 import { useTemplateRef } from 'vue';
 import NuiButton from '../button/NuiButton.vue';
 import NuiIcon from '../icon/NuiIcon.vue';
-import type { NuiSize } from '../shared/types';
+import type { NuiSize } from '../shared/scale.types';
 import type { PickerPopover } from './use-picker-popover';
 
 defineSlots<{ default(): unknown; panel(): unknown }>();

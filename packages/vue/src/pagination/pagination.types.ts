@@ -1,5 +1,5 @@
 import type { Component } from 'vue';
-import type { NuiSize } from '../shared/types';
+import type { NuiSize } from '../shared/scale.types';
 
 export interface NuiPaginationProps {
   total: number;

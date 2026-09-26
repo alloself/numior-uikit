@@ -1,5 +1,5 @@
 import { inject, provide, type ComputedRef, type InjectionKey } from 'vue';
-import type { NuiSize } from '../shared/types';
+import type { NuiSize } from '../shared/scale.types';
 import type { NuiListSelectable, NuiListVariant } from './list.types';
 
 export interface ListContext<T = unknown> {

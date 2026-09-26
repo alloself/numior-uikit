@@ -1,5 +1,5 @@
 import type { FloatingPlacement, HourCycle, TimeSegmentType } from '@numior/primitives';
-import type { NuiFieldControlProps } from '../shared/types';
+import type { NuiFieldControlProps } from '../shared/field-control.types';
 
 export interface NuiTimeFieldProps extends NuiFieldControlProps {
   seconds?: boolean | undefined;

@@ -1,4 +1,4 @@
-import type { ValidateOn } from './types';
+import type { ValidateOn } from './form.types';
 
 export const validatesOnChange = (mode: ValidateOn, attempted: boolean): boolean =>
   mode === 'change' || attempted;

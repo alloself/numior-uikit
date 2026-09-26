@@ -8,7 +8,7 @@ import {
   type MaybeRefOrGetter,
 } from 'vue';
 import { createOwnerState } from '../core/owner-state';
-import type { ValidateOn } from '../core/types';
+import type { ValidateOn } from '../core/form.types';
 import { FORM_HOST, type FormContext } from '../form/form-context';
 import { joinPath } from '../paths/paths';
 import { readSelected, recordPath, type FieldSelector } from '../paths/selector';

@@ -1,5 +1,5 @@
 import type { IconAlias } from '@numior/primitives';
-import type { NuiSize } from '../shared/types';
+import type { NuiSize } from '../shared/scale.types';
 
 export type NuiTabsActivation = 'automatic' | 'manual';
 export type NuiTabsOrientation = 'horizontal' | 'vertical';

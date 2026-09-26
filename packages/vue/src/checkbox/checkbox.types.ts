@@ -1,5 +1,5 @@
 import type { NuiOption, NuiOptionKey } from '../shared/options';
-import type { NuiFieldControlProps } from '../shared/types';
+import type { NuiFieldControlProps } from '../shared/field-control.types';
 
 export type NuiCheckboxGroupOrientation = 'vertical' | 'horizontal';
 

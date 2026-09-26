@@ -1,4 +1,4 @@
-import type { FieldRule, FieldRuleContext } from '../core/types';
+import type { FieldRule, FieldRuleContext } from '../core/form.types';
 import { marked } from './origin';
 
 export interface RuleOptions {

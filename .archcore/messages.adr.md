@@ -18,7 +18,7 @@ date: 2026-09-26
   augmentation; `NuiMessageCatalog<N>` — типизированный литерал `{ namespace, en, ru }` рядом с
   компонентом (`<comp>.messages.ts`) без вызова фабрики, чтобы неиспользуемый каталог уходил при
   tree-shaking. Пропущенный ключ или неверная сигнатура в `en` или `ru` — ошибка typecheck.
-  Реестр `@numior/vue` — `NuiVueMessages` в `src/messages.ts`, экспортируется типом, поэтому
+  Реестр `@numior/vue` — `NuiVueMessages` в `src/messages.types.ts`, экспортируется типом, поэтому
   аугментация видна потребителю через `index.d.ts`.
 - `useMessages(catalog, locale?)` → `ComputedRef<NuiMessages[N]>`. Локаль — проп, конфиг или
   `en-US`; цепочка тегов `en → язык → полный тег` строится через `Intl.Locale().baseName`; на

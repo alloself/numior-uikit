@@ -8,7 +8,7 @@ import {
   type MaybeRef,
   type MaybeRefOrGetter,
 } from 'vue';
-import type { FieldFlush, FieldMeta, FieldValidation, ValidateOn } from '../core/types';
+import type { FieldFlush, FieldMeta, FieldValidation, ValidateOn } from '../core/form.types';
 import { FORM_HOST, type FormContext } from '../form/form-context';
 import { readSelected, recordPath, type FieldSelector } from '../paths/selector';
 import { createRuleSet, type RuleSource } from './rule-set';

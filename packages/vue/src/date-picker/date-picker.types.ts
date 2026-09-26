@@ -1,6 +1,6 @@
 import type { FloatingPlacement, Weekday } from '@numior/primitives';
 import type { NuiDatePreset } from '../calendar/calendar.types';
-import type { NuiFieldControlProps } from '../shared/types';
+import type { NuiFieldControlProps } from '../shared/field-control.types';
 
 export interface NuiDatePickerBaseProps extends NuiFieldControlProps {
   locale?: string | undefined;

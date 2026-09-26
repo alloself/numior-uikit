@@ -1,7 +1,7 @@
 import { shallowRef, type ShallowRef } from 'vue';
 import type { EntryState } from '../engine/engine.types';
 import { isUnder, patternOf } from '../paths/paths';
-import type { AsyncRuleContext, FieldFlush, FieldRuleContext, ValidateOn } from './types';
+import type { AsyncRuleContext, FieldFlush, FieldRuleContext, ValidateOn } from './form.types';
 
 export type EntryKind = 'field' | 'array' | 'group';
 

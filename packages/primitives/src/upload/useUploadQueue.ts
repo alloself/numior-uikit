@@ -8,7 +8,7 @@ import {
   type MaybeRefOrGetter,
   type Ref,
 } from 'vue';
-import type { UploadAdapter, UploadEntry, UploadFile, UploadItem } from './upload-types';
+import type { UploadAdapter, UploadEntry, UploadFile, UploadItem } from './upload.types';
 
 export interface UploadQueueOptions<R> {
   readonly items: Ref<UploadItem<R>[]>;

@@ -2,7 +2,7 @@ import { cloneValue } from '../values/clone';
 import { IDLE_SUBMISSION, type FormCore } from './form-core';
 import { writeErrors } from './messages';
 import type { AnyEntry } from './registry';
-import type { ResetOptions } from './types';
+import type { ResetOptions } from './form.types';
 import type { Validation } from './validation';
 
 const clearState = (entry: AnyEntry): void => {
