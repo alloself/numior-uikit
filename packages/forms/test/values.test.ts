@@ -15,6 +15,8 @@ class Money {
   }
 }
 
+const format = (): string => 'x';
+
 const file = (name: string, lastModified = 1): File =>
   new File(['content'], name, { type: 'text/plain', lastModified });
 
@@ -65,6 +67,30 @@ describe('value copies', () => {
     expect(copy.due.getTime()).toBe(0);
     expect(copy.attachment).toBe(attachment);
     expect(copy.price.format()).toBe('5 EUR');
+  });
+});
+
+describe('value copies of collections', () => {
+  it('copies maps and keeps set members, functions and files by reference', () => {
+    const inner = { n: 1 };
+    const member = { id: 1 };
+    const attachment = file('b.txt');
+
+    const source = {
+      lookup: new Map([['a', inner]]),
+      picked: new Set([member]),
+      format,
+      attachment,
+    };
+
+    const copy = cloneValue(source);
+
+    inner.n = 2;
+    expect(copy.lookup.get('a')).toEqual({ n: 1 });
+    expect(copy.picked).not.toBe(source.picked);
+    expect(copy.picked.has(member)).toBe(true);
+    expect(copy.format).toBe(format);
+    expect(copy.attachment).toBe(attachment);
   });
 });
 

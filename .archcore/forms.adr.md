@@ -23,11 +23,12 @@ date: 2026-09-26
 
 ## Decision
 
-- `@numior/forms` зависит от `vee-validate` с точным пином `5.0.0-beta.1`, от
-  `@numior/primitives` (словарь текстов правил) и от `klona` 2.0.6 —
-  того же глубокого клона, который vee-validate встраивает в своё хранилище; он даёт
-  типизированный снимок значений без приведения типов, сохраняет прототипы и копирует файлы по
-  ссылке. `package.json` держит указатель `"//"` на этот документ.
+- `@numior/forms` зависит от `vee-validate` с точным пином `5.0.0-beta.1` и от
+  `@numior/primitives` (словарь текстов правил). Снимки значений делает собственная копия:
+  простые объекты, массивы, даты и `Map` копируются вглубь, члены `Set`, экземпляры классов,
+  файлы и функции переходят по ссылке; копия сверяется с оригиналом через `isEqualValue`, и
+  только эта проверка сужает её тип до типа оригинала, без приведения. `package.json` держит
+  указатель `"//"` на этот документ.
 - vee-validate импортирует только `src/engine/vee-engine.ts` за интерфейсом `FormEngine`.
   vee-validate держит хранилище значений (`useForm` без схемы, `keepValuesOnUnmount: true`),
   состояние смонтированных полей (`touched`, `validated`, ошибки, `pending` через `useField` с
@@ -169,7 +170,7 @@ date: 2026-09-26
 ## Consequences
 
 Сборка со всеми экспортами ядра (Vue и `@numior/primitives` external, production, минификация
-Vite): слой форм 22,1 KB / 8,0 KB gzip, вместе с vee-validate и klona 56,6 KB / 18,6 KB gzip; базовый
+Vite): слой форм 22,1 KB / 8,0 KB gzip, вместе с vee-validate 56,6 KB / 18,6 KB gzip; базовый
 UI (`@numior/vue`) не тянет vee-validate, это проверяет `test:artifacts`. В dev-режиме vee-validate
 подгружает `@vue/devtools-api` и ставит таймеры инспектора; на сервере и в production их нет,
 SSR-тест проверяет отсутствие таймеров. Правила поля, `validateOn`, `debounce` и `keepValue`
