@@ -1,4 +1,5 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, expectTypeOf, it } from 'vitest';
+import type { FormAfterSlotPath, FormPath, FormSlotPath } from '../src';
 import {
   isUnder,
   joinPath,
@@ -7,6 +8,12 @@ import {
   patternOf,
   toVeePath,
 } from '../src/paths/paths';
+
+interface Team {
+  name: string;
+  owner: { email: string };
+  members: { email: string; tags: string[] }[];
+}
 
 describe('paths', () => {
   it('accepts bracket indexes from servers and keeps dots as the canonical form', () => {
@@ -34,5 +41,18 @@ describe('paths', () => {
     expect(toVeePath('items.0.name')).toBe('items[0].name');
     expect(toVeePath('matrix.1.2')).toBe('matrix[1][2]');
     expect(toVeePath('name')).toBe('name');
+  });
+
+  it('names smart form slots by the paths of a row, without row indexes', () => {
+    expectTypeOf<FormSlotPath<Team>>().toEqualTypeOf<
+      'name' | 'owner' | 'owner.email' | 'members' | 'members.email' | 'members.tags'
+    >();
+
+    expectTypeOf<FormAfterSlotPath<Pick<Team, 'owner'>>>().toEqualTypeOf<
+      'owner:after' | 'owner.email:after'
+    >();
+
+    expectTypeOf<'members.0.email'>().toMatchTypeOf<FormPath<Team>>();
+    expectTypeOf<FormSlotPath<Record<string, unknown>>>().toEqualTypeOf<string>();
   });
 });

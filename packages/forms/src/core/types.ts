@@ -105,6 +105,21 @@ export type FormPath<T> = string extends keyof T
     ? string
     : PathsOf<T, 7>;
 
+type SlotPathsOf<T, D extends number> = [D] extends [never]
+  ? never
+  : T extends Leaf
+    ? never
+    : T extends readonly (infer Item)[]
+      ? SlotPathsOf<NonNullable<Item>, Depth[D]>
+      : {
+          [K in keyof T & string]-?: K | `${K}.${SlotPathsOf<NonNullable<T[K]>, Depth[D]>}`;
+        }[keyof T & string];
+
+export type FormSlotPath<T> = string extends FormPath<T> ? string : SlotPathsOf<T, 7>;
+
+export type FormAfterSlotPath<T> =
+  FormSlotPath<T> extends infer P extends string ? `${P}:after` : never;
+
 type Child<T, K extends string> = T extends readonly (infer Item)[]
   ? K extends `${number}`
     ? Item

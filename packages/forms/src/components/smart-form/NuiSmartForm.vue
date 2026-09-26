@@ -59,7 +59,7 @@ import NuiSmartFormEntries from './NuiSmartFormEntries.vue';
 import NuiSmartFormSteps from './NuiSmartFormSteps.vue';
 import { declareEntries } from './declarations';
 import { smartFormMessages } from './smart-form.messages';
-import type { NuiSmartFormProps, SmartScope } from './smart-form.types';
+import type { NuiSmartFormProps, NuiSmartFormSlots, SmartScope } from './smart-form.types';
 import { provideSmartSlots } from './smart-slots';
 import { stepOf, stepPaths } from './steps';
 
@@ -75,7 +75,9 @@ const {
   backLabel,
 } = defineProps<NuiSmartFormProps<T>>();
 
-const step = defineModel<string>('step');
+const step = defineModel<string | undefined>('step');
+
+defineSlots<NuiSmartFormSlots<T>>();
 
 provideSmartSlots(useSlots());
 

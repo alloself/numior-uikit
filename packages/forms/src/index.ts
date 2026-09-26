@@ -14,13 +14,18 @@ export type {
   SmartFieldConfig,
 } from './components/smart-form/config';
 export type {
+  NuiSmartFormActionsScope,
+  NuiSmartFormAfterScope,
   NuiSmartFormArray,
+  NuiSmartFormBinding,
   NuiSmartFormCondition,
   NuiSmartFormEntry,
   NuiSmartFormField,
+  NuiSmartFormFieldScope,
   NuiSmartFormProps,
   NuiSmartFormPropsFactory,
   NuiSmartFormSection,
+  NuiSmartFormSlots,
   NuiSmartFormStep,
 } from './components/smart-form/smart-form.types';
 export type { NuiSmartFormMessages } from './components/smart-form/smart-form.messages';
@@ -37,10 +42,12 @@ export type {
   FieldRule,
   FieldRuleContext,
   FieldValidation,
+  FormAfterSlotPath,
   FormMessage,
   FormMeta,
   FormPath,
   FormPathValue,
+  FormSlotPath,
   FormValues,
   ResetOptions,
   SubmitResult,

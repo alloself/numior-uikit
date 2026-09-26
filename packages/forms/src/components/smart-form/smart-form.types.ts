@@ -1,6 +1,6 @@
 import type { NuiStepperStatus } from '@numior/vue';
 import type { Component } from 'vue';
-import type { ValidateOn } from '../../core/types';
+import type { FormAfterSlotPath, FormMessage, FormSlotPath, ValidateOn } from '../../core/types';
 import type { FieldArrayRow } from '../../field/use-field-array';
 import type { FormContext } from '../../form/form-context';
 import type { AnyFieldRule } from '../../rules/async-rule';
@@ -73,6 +73,47 @@ export interface NuiSmartFormStep<S = unknown> {
   readonly layout?: string | undefined;
   readonly fields: readonly NuiSmartFormEntry<S>[];
 }
+
+export interface NuiSmartFormBinding {
+  readonly name: string;
+  readonly modelValue: never;
+  readonly 'onUpdate:modelValue': (value: unknown) => void;
+}
+
+export interface NuiSmartFormFieldScope {
+  readonly field: NuiSmartFormBinding;
+  readonly value: unknown;
+  readonly setValue: (value: unknown) => void;
+  readonly error: string | undefined;
+  readonly invalid: boolean;
+  readonly touched: boolean;
+  readonly pending: boolean;
+  readonly row: SmartRow | undefined;
+}
+
+export interface NuiSmartFormAfterScope {
+  readonly row: SmartRow | undefined;
+}
+
+export interface NuiSmartFormActionsScope {
+  readonly pending: boolean;
+  readonly dirty: boolean;
+  readonly submit: () => void;
+  readonly reset: () => void;
+  readonly step: string | undefined;
+  readonly first: boolean;
+  readonly last: boolean;
+  readonly back: () => void;
+}
+
+export type NuiSmartFormSlots<T extends object> = {
+  [P in FormSlotPath<T>]?: (scope: NuiSmartFormFieldScope) => unknown;
+} & {
+  [P in FormAfterSlotPath<T>]?: (scope: NuiSmartFormAfterScope) => unknown;
+} & {
+  'form-errors'?: (scope: { readonly errors: readonly FormMessage[] }) => unknown;
+  actions?: (scope: NuiSmartFormActionsScope) => unknown;
+};
 
 export interface NuiSmartFormProps<T extends object> {
   form: FormContext<T>;
