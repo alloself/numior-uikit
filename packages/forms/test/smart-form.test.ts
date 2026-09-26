@@ -1,7 +1,7 @@
 import { NuiInput, NuiList, NuiRadio, NuiRadioGroup } from '@numior/vue';
 import { describe, expect, expectTypeOf, it } from 'vitest';
 import { h } from 'vue';
-import { custom, formConfig, type ControlProps, type ControlValue } from '../src';
+import { custom, formConfig, required, type ControlProps, type ControlValue } from '../src';
 import { SmartFormDriver } from './drivers/smart-form';
 
 interface Contact {
@@ -87,6 +87,24 @@ describe('NuiSmartForm', () => {
 
     expect(smart.selectedOptions).toEqual(['Vue', 'Vite']);
     expect(smart.form.values.topics).toEqual(['vue', 'vite']);
+  });
+
+  it('reserves the error line of every field when asked, and an error takes that line', async () => {
+    const smart = SmartFormDriver.mount<Account>({
+      initialValues: blank,
+      reserveError: true,
+      fields: [
+        field(NuiInput, (values) => values.name, { label: 'Name', rules: [required()] }),
+        field(NuiInput, (values) => values.email, { label: 'Email' }),
+      ],
+    });
+
+    expect(smart.reservedLines).toBe(2);
+
+    await smart.submit();
+
+    expect(smart.error('name')).toBe('Fill in this field');
+    expect(smart.reservedLines).toBe(1);
   });
 
   it('types a named model by its own prop', () => {

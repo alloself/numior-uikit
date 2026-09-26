@@ -229,6 +229,10 @@ const scenarios: Scenario[] = [
       h(configScope({ locale: 'de-DE' }, () => h(NuiNumberField, { modelValue: 1234.5 }))),
   },
   { name: 'NuiField with NuiInput', render: fieldWithInput },
+  {
+    name: 'NuiField keeping room for an error',
+    render: () => h(NuiField, { label: 'Email', reserveError: true }, () => h(NuiInput)),
+  },
   { name: 'NuiTextarea', render: () => h(NuiTextarea, { modelValue: 'text', invalid: true }) },
   {
     name: 'NuiTimeField',
@@ -430,6 +434,16 @@ describe('server rendering', () => {
     expect(html).toContain(`aria-describedby="${controlId}-description ${controlId}-error"`);
     expect(html).toContain('aria-invalid="true"');
     expect(html).toContain('value="a"');
+  });
+
+  it('renders the room kept for an error as a hidden line on the server', async () => {
+    const html = await renderMarkup(() =>
+      h(NuiField, { label: 'Email', reserveError: true }, () => h(NuiInput)),
+    );
+
+    expect(html).toContain('nui-field--reserve-error');
+    expect(html).toContain('<span class="nui-field__reserve" aria-hidden="true"></span>');
+    expect(html).not.toContain('aria-describedby');
   });
 
   it('renders dialogs closed with their labels resolved on the server', async () => {

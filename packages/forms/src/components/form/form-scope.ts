@@ -2,12 +2,21 @@ import { computed, inject, provide, type ComputedRef, type InjectionKey } from '
 
 export interface FormScope {
   readonly disabled: ComputedRef<boolean>;
+  readonly reserveError: ComputedRef<boolean>;
+}
+
+export interface FormScopeOptions {
+  readonly disabled: () => boolean;
+  readonly reserveError: () => boolean;
 }
 
 const FORM_SCOPE_KEY: InjectionKey<FormScope> = Symbol('nui:form-scope');
 
-export const provideFormScope = (disabled: () => boolean): void => {
-  provide(FORM_SCOPE_KEY, { disabled: computed(disabled) });
+export const provideFormScope = (options: FormScopeOptions): void => {
+  provide(FORM_SCOPE_KEY, {
+    disabled: computed(options.disabled),
+    reserveError: computed(options.reserveError),
+  });
 };
 
 export const useFormScope = (): FormScope | null => inject(FORM_SCOPE_KEY, null);

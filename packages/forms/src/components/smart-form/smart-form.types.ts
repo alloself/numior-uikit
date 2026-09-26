@@ -112,6 +112,7 @@ export interface NuiSmartFormProps<T extends object> {
   layout?: string | undefined;
   inline?: boolean | 'grow' | undefined;
   disabled?: boolean | undefined;
+  reserveError?: boolean | undefined;
   submitLabel?: string | undefined;
   nextLabel?: string | undefined;
   backLabel?: string | undefined;

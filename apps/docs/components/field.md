@@ -49,6 +49,19 @@ const email = ref('')
 </NuiField>
 ```
 
+## Место под ошибку
+
+`reserve-error` держит под контролом пустую строку высотой в одну строку ошибки. Ошибка
+занимает её, поэтому соседние поля и кнопки не сдвигаются, когда после отправки появляются
+сообщения; ошибка длиннее строки всё же добавит высоту. В формах проп берут `NuiForm` и
+`NuiSmartForm`, и он доходит до всех полей внутри.
+
+```vue
+<NuiField label="Почта" :error="error" reserve-error>
+  <NuiInput v-model="email" type="email" />
+</NuiField>
+```
+
 ## Слоты и части
 
 Подпись, описание и ошибку можно передать слотами `label`, `description` и `error`,
@@ -59,17 +72,19 @@ const email = ref('')
 
 ## API
 
-| Prop          | Тип       | По умолчанию | Описание                                         |
-| ------------- | --------- | ------------ | ------------------------------------------------ |
-| `id`          | `string`  | генерируется | Id контрола; от него образуются остальные id     |
-| `label`       | `string`  | —            | Подпись; альтернатива — слот `label`             |
-| `description` | `string`  | —            | Описание под контролом; слот `description`       |
-| `error`       | `string`  | —            | Текст ошибки; делает поле и контрол `invalid`    |
-| `invalid`     | `boolean` | `false`      | Пометить поле недействительным без текста ошибки |
-| `required`    | `boolean` | `false`      | Маркер обязательности и атрибут `required`       |
-| `disabled`    | `boolean` | `false`      | Отключает контрол; для группы — весь `fieldset`  |
-| `group`       | `boolean` | `false`      | `fieldset` + `legend` вместо `label`             |
+| Prop           | Тип       | По умолчанию | Описание                                         |
+| -------------- | --------- | ------------ | ------------------------------------------------ |
+| `id`           | `string`  | генерируется | Id контрола; от него образуются остальные id     |
+| `label`        | `string`  | —            | Подпись; альтернатива — слот `label`             |
+| `description`  | `string`  | —            | Описание под контролом; слот `description`       |
+| `error`        | `string`  | —            | Текст ошибки; делает поле и контрол `invalid`    |
+| `invalid`      | `boolean` | `false`      | Пометить поле недействительным без текста ошибки |
+| `required`     | `boolean` | `false`      | Маркер обязательности и атрибут `required`       |
+| `disabled`     | `boolean` | `false`      | Отключает контрол; для группы — весь `fieldset`  |
+| `group`        | `boolean` | `false`      | `fieldset` + `legend` вместо `label`             |
+| `reserveError` | `boolean` | `false`      | Держит строку под ошибку, даже пока её нет       |
 
 Состояния отражаются модификаторами `nui-field--invalid`, `nui-field--required`,
-`nui-field--disabled` и `nui-field--group`. Внутри доступны `useFieldContext()` и
+`nui-field--disabled`, `nui-field--group` и `nui-field--reserve-error` (пустая строка —
+элемент `nui-field__reserve`). Внутри доступны `useFieldContext()` и
 `useFieldControl()` из `@numior/vue`.

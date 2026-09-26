@@ -5,6 +5,7 @@
     class="nui-smart-form"
     :class="classes"
     :disabled="disabled"
+    :reserve-error="reserveError"
     :submit-label="submitLabel"
     :submit-action="steps ? runStep : undefined"
     @reset="onReset"
@@ -71,6 +72,7 @@ const {
   layout,
   inline = undefined,
   disabled = false,
+  reserveError = false,
   submitLabel,
   nextLabel,
   backLabel,

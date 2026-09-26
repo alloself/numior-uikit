@@ -49,6 +49,19 @@ and sets of checkboxes are labelled. Controls inside a group keep their own `id`
 </NuiField>
 ```
 
+## Room for the error
+
+`reserve-error` keeps an empty line under the control, one error line high. The error takes
+it, so neighbouring fields and buttons stay put when messages appear after a submit; an error
+longer than a line still adds height. In forms `NuiForm` and `NuiSmartForm` take the prop and
+it reaches every field inside.
+
+```vue
+<NuiField label="Email" :error="error" reserve-error>
+  <NuiInput v-model="email" type="email" />
+</NuiField>
+```
+
 ## Slots and parts
 
 Pass the label, description and error through the `label`, `description` and `error`
@@ -59,17 +72,19 @@ from `@numior/primitives`; inside `NuiField` prefer props and named slots so tha
 
 ## API
 
-| Prop          | Type      | Default   | Description                                           |
-| ------------- | --------- | --------- | ----------------------------------------------------- |
-| `id`          | `string`  | generated | Control id; the other ids derive from it              |
-| `label`       | `string`  | —         | Label text; the `label` slot is the alternative       |
-| `description` | `string`  | —         | Description below the control; `description` slot     |
-| `error`       | `string`  | —         | Error text; makes the field and control `invalid`     |
-| `invalid`     | `boolean` | `false`   | Mark the field invalid without an error text          |
-| `required`    | `boolean` | `false`   | Required marker and the `required` attribute          |
-| `disabled`    | `boolean` | `false`   | Disables the control; for a group, the whole fieldset |
-| `group`       | `boolean` | `false`   | `fieldset` + `legend` instead of `label`              |
+| Prop           | Type      | Default   | Description                                           |
+| -------------- | --------- | --------- | ----------------------------------------------------- |
+| `id`           | `string`  | generated | Control id; the other ids derive from it              |
+| `label`        | `string`  | —         | Label text; the `label` slot is the alternative       |
+| `description`  | `string`  | —         | Description below the control; `description` slot     |
+| `error`        | `string`  | —         | Error text; makes the field and control `invalid`     |
+| `invalid`      | `boolean` | `false`   | Mark the field invalid without an error text          |
+| `required`     | `boolean` | `false`   | Required marker and the `required` attribute          |
+| `disabled`     | `boolean` | `false`   | Disables the control; for a group, the whole fieldset |
+| `group`        | `boolean` | `false`   | `fieldset` + `legend` instead of `label`              |
+| `reserveError` | `boolean` | `false`   | Keeps a line for the error even while there is none   |
 
 State is reflected by the `nui-field--invalid`, `nui-field--required`,
-`nui-field--disabled` and `nui-field--group` modifiers. `useFieldContext()` and
+`nui-field--disabled`, `nui-field--group` and `nui-field--reserve-error` modifiers (the
+empty line is the `nui-field__reserve` element). `useFieldContext()` and
 `useFieldControl()` are exported from `@numior/vue`.

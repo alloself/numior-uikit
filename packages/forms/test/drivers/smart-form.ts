@@ -20,6 +20,7 @@ export interface SmartFormDriverOptions<V extends object> {
   readonly onSubmit?: SubmitHandler<V, unknown>;
   readonly layout?: string;
   readonly inline?: boolean | 'grow';
+  readonly reserveError?: boolean;
   readonly slots?: Readonly<Record<string, SlotRender>>;
 }
 
@@ -49,6 +50,7 @@ export class SmartFormDriver<V extends object> {
               steps: options.steps,
               layout: options.layout,
               inline: options.inline,
+              reserveError: options.reserveError,
               ...(step.value === undefined ? {} : { step: step.value }),
               'onUpdate:step': (value: string | undefined) => {
                 step.value = value;
@@ -145,6 +147,10 @@ export class SmartFormDriver<V extends object> {
 
   error(path: string): string | undefined {
     return this.cellOf(path).querySelector('.nui-field__error')?.textContent?.trim();
+  }
+
+  get reservedLines(): number {
+    return this.wrapper.findAll('.nui-field__reserve').length;
   }
 
   get selectedOptions(): string[] {

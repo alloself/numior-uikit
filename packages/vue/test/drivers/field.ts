@@ -1,5 +1,5 @@
 import { mount, type DOMWrapper } from '@vue/test-utils';
-import { h, type VNode } from 'vue';
+import { h, nextTick, type VNode } from 'vue';
 import { NuiField, NuiInput, type NuiFieldProps } from '../../src';
 import { ComponentDriver } from './component';
 
@@ -42,6 +42,15 @@ export class FieldDriver extends ComponentDriver {
 
   get error(): DOMWrapper<Element> {
     return this.wrapper.find('.nui-field__error');
+  }
+
+  get reservedLine(): DOMWrapper<Element> {
+    return this.wrapper.find('.nui-field__reserve');
+  }
+
+  async setError(error: string | undefined): Promise<void> {
+    await this.wrapper.setProps({ error });
+    await nextTick();
   }
 
   get showsRequiredMark(): boolean {

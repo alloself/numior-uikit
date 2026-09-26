@@ -28,6 +28,28 @@ describe('NuiField', () => {
     expect(field.hasModifier('required')).toBe(true);
   });
 
+  it('keeps a hidden line for the error when asked, and the error takes that line', async () => {
+    const field = FieldDriver.mount({ props: { label: 'Email', reserveError: true } });
+
+    expect(field.hasModifier('reserve-error')).toBe(true);
+    expect(field.reservedLine.attributes('aria-hidden')).toBe('true');
+    expect(field.error.exists()).toBe(false);
+    expect(field.describedBy).toBeUndefined();
+
+    await field.setError('Required');
+
+    expect(field.reservedLine.exists()).toBe(false);
+    expect(field.error.text()).toBe('Required');
+
+    await field.setError(undefined);
+
+    expect(field.reservedLine.exists()).toBe(true);
+  });
+
+  it('leaves no reserved line by default', () => {
+    expect(FieldDriver.mount({ props: { label: 'Email' } }).reservedLine.exists()).toBe(false);
+  });
+
   it('generates matching ids and omits describedby when nothing describes the control', () => {
     const field = FieldDriver.mount({ props: { label: 'Name' } });
     const id = field.control.attributes('id');

@@ -52,6 +52,7 @@ const parseSignupOutput = (text: string): SignupOutput => {
 export class SignupSection {
   readonly form: Locator;
   readonly server: Locator;
+  readonly reserve: Locator;
   readonly login: Locator;
   readonly email: Locator;
   readonly password: Locator;
@@ -68,6 +69,7 @@ export class SignupSection {
   constructor(private readonly page: Page) {
     this.form = page.getByTestId('signup-form');
     this.server = page.getByTestId('signup-server');
+    this.reserve = page.getByTestId('signup-reserve');
     this.login = page.getByTestId('signup-login');
     this.email = page.getByTestId('signup-email');
     this.password = page.getByTestId('signup-password');

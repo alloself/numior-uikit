@@ -301,6 +301,7 @@ waiting button — works as on [`NuiForm`](/en/components/form#accessibility).
 | `layout`       | `string`                      | —                                                | Layout in the `grid-template-areas` syntax |
 | `inline`       | `boolean \| 'grow'`           | —                                                | Fields in a row                            |
 | `disabled`     | `boolean`                     | `false`                                          | Disables fields and buttons                |
+| `reserveError` | `boolean`                     | `false`                                          | Room for errors in every field             |
 | `submitLabel`  | `string`                      | [dictionary](/en/localization#form): “Submit”    | Submit button                              |
 | `nextLabel`    | `string`                      | [dictionary](/en/localization#smartform): “Next” | Next step button                           |
 | `backLabel`    | `string`                      | [dictionary](/en/localization#smartform): “Back” | Previous step button                       |

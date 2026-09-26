@@ -364,13 +364,14 @@ descendants a `FormHandle` without the value type.
 
 `NuiForm`:
 
-| Prop           | Type                          | Default                                                          | Description                 |
-| -------------- | ----------------------------- | ---------------------------------------------------------------- | --------------------------- |
-| `form`         | `FormContext<T>`              | —                                                                | Context from `useForm`      |
-| `disabled`     | `boolean`                     | `false`                                                          | Disables fields and submit  |
-| `submitAction` | `() => Promise<SubmitResult>` | `form.submit`                                                    | Your own submit action      |
-| `submitLabel`  | `string`                      | [dictionary](/en/localization#form): “Submit”                    | Label of the default button |
-| `errorTitle`   | `string`                      | [dictionary](/en/localization#form): “Could not submit the form” | Title of the error block    |
+| Prop           | Type                          | Default                                                          | Description                    |
+| -------------- | ----------------------------- | ---------------------------------------------------------------- | ------------------------------ |
+| `form`         | `FormContext<T>`              | —                                                                | Context from `useForm`         |
+| `disabled`     | `boolean`                     | `false`                                                          | Disables fields and submit     |
+| `reserveError` | `boolean`                     | `false`                                                          | Room for errors in every field |
+| `submitAction` | `() => Promise<SubmitResult>` | `form.submit`                                                    | Your own submit action         |
+| `submitLabel`  | `string`                      | [dictionary](/en/localization#form): “Submit”                    | Label of the default button    |
+| `errorTitle`   | `string`                      | [dictionary](/en/localization#form): “Could not submit the form” | Title of the error block       |
 
 Slots: default — the fields; `form-errors` (`{ errors }`) replaces the error block; `actions`
 (`{ pending, dirty, submit, reset }`) replaces the button. Event `reset`. Methods
@@ -378,16 +379,17 @@ Slots: default — the fields; `form-errors` (`{ errors }`) replaces the error b
 
 `NuiFormField`:
 
-| Prop                                              | Type                             | Default        | Description                          |
-| ------------------------------------------------- | -------------------------------- | -------------- | ------------------------------------ |
-| `form`                                            | `FormContext<T>`                 | —              | The form of the value                |
-| `name`                                            | `(values: T) => R`               | —              | Selector of the value                |
-| `label`, `description`, `required`, `group`, `id` | as on `NuiField`                 | —              | Field markup                         |
-| `disabled`                                        | `boolean`                        | —              | Submitted, not validated             |
-| `rules`                                           | rules                            | —              | Field rules                          |
-| `validateOn`                                      | `'submit' \| 'blur' \| 'change'` | as on the form | When the field starts being checked  |
-| `debounce`                                        | `number`                         | `300`          | Delay of an async check after typing |
-| `keepValue`                                       | `KeepValue<R>`                   | `true`         | `false` clears the value when hidden |
+| Prop                                              | Type                             | Default        | Description                            |
+| ------------------------------------------------- | -------------------------------- | -------------- | -------------------------------------- |
+| `form`                                            | `FormContext<T>`                 | —              | The form of the value                  |
+| `name`                                            | `(values: T) => R`               | —              | Selector of the value                  |
+| `label`, `description`, `required`, `group`, `id` | as on `NuiField`                 | —              | Field markup                           |
+| `disabled`                                        | `boolean`                        | —              | Submitted, not validated               |
+| `rules`                                           | rules                            | —              | Field rules                            |
+| `validateOn`                                      | `'submit' \| 'blur' \| 'change'` | as on the form | When the field starts being checked    |
+| `debounce`                                        | `number`                         | `300`          | Delay of an async check after typing   |
+| `keepValue`                                       | `KeepValue<R>`                   | `true`         | `false` clears the value when hidden   |
+| `reserveError`                                    | `boolean`                        | as on the form | Room for the error while there is none |
 
 `NuiFieldArray`:
 

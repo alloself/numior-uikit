@@ -7,6 +7,7 @@
       'nui-field--invalid': isInvalid,
       'nui-field--required': isRequired,
       'nui-field--disabled': isDisabled,
+      'nui-field--reserve-error': reserveError,
     }"
     :disabled="group && isDisabled ? true : undefined"
   >
@@ -20,6 +21,7 @@
     <NuiFieldError v-if="hasError()">
       <slot name="error">{{ error }}</slot>
     </NuiFieldError>
+    <span v-else-if="reserveError" class="nui-field__reserve" aria-hidden="true"></span>
   </component>
 </template>
 
@@ -40,6 +42,7 @@ const {
   required = false,
   disabled = false,
   group = false,
+  reserveError = false,
 } = defineProps<NuiFieldProps>();
 
 const slots = useSlots();

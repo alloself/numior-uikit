@@ -19,6 +19,7 @@ export interface NuiFormFieldProps<T extends object, R> {
   required?: boolean | undefined;
   disabled?: boolean | undefined;
   group?: boolean | undefined;
+  reserveError?: boolean | undefined;
   keepValue?: KeepValue<R> | undefined;
   rules?: readonly AnyFieldRule<R, T>[] | undefined;
   validateOn?: ValidateOn | undefined;

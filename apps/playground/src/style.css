@@ -91,9 +91,16 @@ select {
 .form-demo {
   max-inline-size: 36rem;
 }
-.form-demo__server {
-  max-inline-size: 16rem;
+.form-demo__options {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: var(--nui-space-3) var(--nui-space-5);
   margin-block-end: var(--nui-space-5);
+}
+.form-demo__server {
+  flex: 1 1 12rem;
+  max-inline-size: 16rem;
 }
 .form-demo__pair {
   display: grid;

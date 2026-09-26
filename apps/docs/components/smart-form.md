@@ -308,6 +308,7 @@ first, last, back }`) и `form-errors` заменяют кнопки и блок
 | `layout`       | `string`                      | —                                           | Макет в синтаксисе `grid-template-areas` |
 | `inline`       | `boolean \| 'grow'`           | —                                           | Поля в строку                            |
 | `disabled`     | `boolean`                     | `false`                                     | Отключает поля и кнопки                  |
+| `reserveError` | `boolean`                     | `false`                                     | Место под ошибку у всех полей            |
 | `submitLabel`  | `string`                      | [словарь](/localization#form): «Отправить»  | Кнопка отправки                          |
 | `nextLabel`    | `string`                      | [словарь](/localization#smartform): «Далее» | Кнопка следующего шага                   |
 | `backLabel`    | `string`                      | [словарь](/localization#smartform): «Назад» | Кнопка предыдущего шага                  |

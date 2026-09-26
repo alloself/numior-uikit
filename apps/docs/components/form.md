@@ -360,13 +360,14 @@ const form = useForm({ initialValues, engine: veeValidateEngine, onSubmit });
 
 `NuiForm`:
 
-| Prop           | Тип                           | По умолчанию                                                | Описание                    |
-| -------------- | ----------------------------- | ----------------------------------------------------------- | --------------------------- |
-| `form`         | `FormContext<T>`              | —                                                           | Контекст из `useForm`       |
-| `disabled`     | `boolean`                     | `false`                                                     | Отключает поля и отправку   |
-| `submitAction` | `() => Promise<SubmitResult>` | `form.submit`                                               | Своё действие отправки      |
-| `submitLabel`  | `string`                      | [словарь](/localization#form): «Отправить»                  | Подпись кнопки по умолчанию |
-| `errorTitle`   | `string`                      | [словарь](/localization#form): «Не удалось отправить форму» | Заголовок блока ошибок      |
+| Prop           | Тип                           | По умолчанию                                                | Описание                      |
+| -------------- | ----------------------------- | ----------------------------------------------------------- | ----------------------------- |
+| `form`         | `FormContext<T>`              | —                                                           | Контекст из `useForm`         |
+| `disabled`     | `boolean`                     | `false`                                                     | Отключает поля и отправку     |
+| `reserveError` | `boolean`                     | `false`                                                     | Место под ошибку у всех полей |
+| `submitAction` | `() => Promise<SubmitResult>` | `form.submit`                                               | Своё действие отправки        |
+| `submitLabel`  | `string`                      | [словарь](/localization#form): «Отправить»                  | Подпись кнопки по умолчанию   |
+| `errorTitle`   | `string`                      | [словарь](/localization#form): «Не удалось отправить форму» | Заголовок блока ошибок        |
 
 Слоты: default — поля; `form-errors` (`{ errors }`) заменяет блок ошибок; `actions`
 (`{ pending, dirty, submit, reset }`) заменяет кнопку. Событие `reset`. Методы
@@ -384,6 +385,7 @@ const form = useForm({ initialValues, engine: veeValidateEngine, onSubmit });
 | `validateOn`                                      | `'submit' \| 'blur' \| 'change'` | как у формы  | Когда поле начинает проверяться           |
 | `debounce`                                        | `number`                         | `300`        | Задержка асинхронной проверки после ввода |
 | `keepValue`                                       | `KeepValue<R>`                   | `true`       | `false` очищает значение при скрытии      |
+| `reserveError`                                    | `boolean`                        | как у формы  | Место под ошибку, даже пока её нет        |
 
 `NuiFieldArray`:
 

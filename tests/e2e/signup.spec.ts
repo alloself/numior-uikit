@@ -166,6 +166,19 @@ test.describe('signup form', () => {
     await expect.poll(async () => (await signup.readOutput()).dirty).toBe(false);
   });
 
+  test('with room kept for errors a failed submit leaves the form height as it was', async ({
+    page,
+  }) => {
+    const { signup } = await openSignup(page);
+    await signup.reserve.check();
+    const before = await signup.boxOf(signup.form);
+    await signup.submit.click();
+    await expect(signup.errorOf(signup.login)).toHaveText('Заполните поле');
+    await expect(signup.errorOf(signup.terms)).toHaveText('Нужно принять условия');
+    const after = await signup.boxOf(signup.form);
+    expect(after.height).toBeCloseTo(before.height, 0);
+  });
+
   test('paired fields keep their controls level when only one has a description', async ({
     page,
     isMobile,

@@ -8,6 +8,7 @@
     :required="required"
     :disabled="isDisabled"
     :group="group"
+    :reserve-error="reservesError"
     @focusout="onFocusout"
   >
     <template v-if="$slots.label" #label>
@@ -38,6 +39,7 @@ const {
   required = undefined,
   disabled = undefined,
   group = false,
+  reserveError = undefined,
   keepValue = undefined,
   rules,
   validateOn,
@@ -54,6 +56,7 @@ const root = (): HTMLElement | null => {
 };
 
 const isDisabled = computed(() => disabled ?? formScope?.disabled.value ?? false);
+const reservesError = computed(() => reserveError ?? formScope?.reserveError.value ?? false);
 
 const control = useField(
   toRef(() => name),

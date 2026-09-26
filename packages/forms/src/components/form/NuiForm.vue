@@ -48,6 +48,7 @@ import type { NuiFormProps } from './form.types';
 const {
   form,
   disabled = false,
+  reserveError = false,
   submitAction,
   submitLabel,
   errorTitle,
@@ -56,7 +57,7 @@ const {
 const emit = defineEmits<{ reset: [] }>();
 
 provideForm(form);
-provideFormScope(() => disabled);
+provideFormScope({ disabled: () => disabled, reserveError: () => reserveError });
 
 const host = form[FORM_HOST];
 const root = useTemplateRef<HTMLFormElement>('root');

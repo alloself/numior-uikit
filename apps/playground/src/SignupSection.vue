@@ -4,10 +4,13 @@
       <h2 id="signup-title">Регистрация</h2>
       <span class="tag">NuiForm · NuiFormField · useForm</span>
     </div>
-    <NuiField label="Ответ сервера" class="form-demo__server">
-      <NuiSelect v-model="server" :options="SERVER_OPTIONS" data-testid="signup-server" />
-    </NuiField>
-    <NuiForm :form="form" class="form-demo" data-testid="signup-form">
+    <div class="form-demo__options">
+      <NuiField label="Ответ сервера" class="form-demo__server">
+        <NuiSelect v-model="server" :options="SERVER_OPTIONS" data-testid="signup-server" />
+      </NuiField>
+      <NuiSwitch v-model="reserveError" data-testid="signup-reserve">Место под ошибки</NuiSwitch>
+    </div>
+    <NuiForm :form="form" :reserve-error="reserveError" class="form-demo" data-testid="signup-form">
       <NuiFormField
         v-slot="{ field, pending }"
         :form="form"
@@ -153,6 +156,7 @@ import {
   NuiRadio,
   NuiRadioGroup,
   NuiSelect,
+  NuiSwitch,
   NuiTimeField,
   type NuiOptionSource,
 } from '@numior/vue';
@@ -228,6 +232,7 @@ const passwordRules = [required(), min(8)];
 const termsRules = [required({ message: 'Нужно принять условия' })];
 
 const server = ref<ServerMode>('ok');
+const reserveError = ref(false);
 const submitted = ref(0);
 type Delivered = Pick<SubmittedValues<Signup>, 'seats' | 'tags'>;
 

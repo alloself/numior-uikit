@@ -33,6 +33,10 @@
 .nui-field__description {
   color: var(--nui-text-muted);
 }
+.nui-field__reserve {
+  display: block;
+  min-block-size: calc(var(--nui-font-size-sm) * var(--nui-line-height));
+}
 .nui-field__error {
   color: var(--nui-error);
   animation: nui-field-reveal var(--nui-duration-normal) var(--nui-easing);
