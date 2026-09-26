@@ -66,7 +66,9 @@ createNuiConfig({
 ```
 
 Частичный язык берёт недостающие тексты из английского. Полный словарь удобно описать
-типом `NuiVueMessages` — TypeScript покажет пропущенные ключи.
+типом `NuiVueMessages` — TypeScript покажет пропущенные ключи. `@numior/forms` добавляет в тот
+же словарь пространства `form`, `formRules`, `fieldArray` и `smartForm`, их тип —
+`NuiFormsMessages`.
 
 Тексты с параметрами — функции одного объекта: `range: ({ from, to, total }) => …`.
 `plural(language, count, forms)` выбирает форму через `Intl.PluralRules` (`zero`, `one`,
@@ -176,6 +178,45 @@ tree-shaking: `NuiButton` не тянет тексты диалога, это п
 | ------- | --------------------------------------------- | ------- | ------- |
 | `close` | NuiDialog, NuiDrawer, NuiSidebar `closeLabel` | Close   | Закрыть |
 
+### fieldArray
+
+| Ключ          | Проп                     | English                                                                                                                          | Русский                                                                                                                         |
+| ------------- | ------------------------ | -------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `add`         | NuiFieldArray `addLabel` | Add row                                                                                                                          | Добавить строку                                                                                                                 |
+| `remove` ƒ    | `removeLabel`            | Remove row `{index}`                                                                                                             | Удалить строку `{index}`                                                                                                        |
+| `move` ƒ      | `moveLabel`              | Move row `{index}`                                                                                                               | Переместить строку `{index}`                                                                                                    |
+| `row` ƒ       | —                        | Row `{index}`                                                                                                                    | Строка `{index}`                                                                                                                |
+| `empty`       | `emptyLabel`             | No rows yet                                                                                                                      | Строк пока нет                                                                                                                  |
+| `limit` ƒ     | —                        | Row limit reached: `{max}`                                                                                                       | Достигнут предел строк: `{max}`                                                                                                 |
+| `added` ƒ     | —                        | Row `{index}` added.                                                                                                             | Строка `{index}` добавлена.                                                                                                     |
+| `removed` ƒ   | —                        | Row `{index}` removed.                                                                                                           | Строка `{index}` удалена.                                                                                                       |
+| `grabbed` ƒ   | —                        | Row `{index}` grabbed, position `{position}` of `{count}`. Use the arrow keys to move, Space or Enter to drop, Escape to cancel. | Строка `{index}` захвачена, позиция `{position}` из `{count}`. Стрелки перемещают, пробел или Enter отпускают, Escape отменяет. |
+| `moved` ƒ     | —                        | Row `{index}`, position `{position}` of `{count}`.                                                                               | Строка `{index}`, позиция `{position}` из `{count}`.                                                                            |
+| `dropped` ƒ   | —                        | Row `{index}` dropped at position `{position}` of `{count}`.                                                                     | Строка `{index}` перемещена на позицию `{position}` из `{count}`.                                                               |
+| `cancelled` ƒ | —                        | Row `{index}`, move cancelled.                                                                                                   | Строка `{index}`: перемещение отменено.                                                                                         |
+
+### form
+
+| Ключ         | Проп                                | English                   | Русский                    |
+| ------------ | ----------------------------------- | ------------------------- | -------------------------- |
+| `submit`     | NuiForm, NuiSmartForm `submitLabel` | Submit                    | Отправить                  |
+| `errorTitle` | NuiForm `errorTitle`                | Could not submit the form | Не удалось отправить форму |
+
+### formRules
+
+| Ключ          | Проп                                | English                     | Русский                                    |
+| ------------- | ----------------------------------- | --------------------------- | ------------------------------------------ |
+| `required`    | `required({ message })`             | Fill in this field          | Заполните поле                             |
+| `minLength` ƒ | `min(n, { message })`               | Enter at least 3 characters | Введите не меньше 3 символов               |
+| `maxLength` ƒ | `max(n, { message })`               | Enter at most 3 characters  | Введите не больше 3 символов               |
+| `minValue` ƒ  | `min(n, { message })`               | Enter `{min}` or more       | Введите число не меньше `{min}`            |
+| `maxValue` ƒ  | `max(n, { message })`               | Enter `{max}` or less       | Введите число не больше `{max}`            |
+| `minItems` ƒ  | `min(n, { message })`               | Add at least 3 items        | Добавьте не меньше 3 элементов             |
+| `maxItems` ƒ  | `max(n, { message })`               | Keep at most 3 items        | Оставьте не больше 3 элементов             |
+| `email`       | `email({ message })`                | Enter a valid email address | Введите корректный адрес электронной почты |
+| `pattern`     | `pattern(re, { message })`          | Use the expected format     | Значение не соответствует формату          |
+| `invalid`     | `custom` (проверка вернула `false`) | Check this value            | Проверьте значение                         |
+
 ### list
 
 | Ключ      | Проп                                | English  | Русский     |
@@ -192,16 +233,16 @@ tree-shaking: `NuiButton` не тянет тексты диалога, это п
 
 ### pagination
 
-| Ключ       | Проп            | English                | Русский                |
-| ---------- | --------------- | ---------------------- | ---------------------- |
-| `label`    | `label`         | Pagination             | Постраничная навигация |
-| `previous` | `previousLabel` | Previous page          | Предыдущая страница    |
-| `next`     | `nextLabel`     | Next page              | Следующая страница     |
-| `first`    | `firstLabel`    | First page             | Первая страница        |
-| `last`     | `lastLabel`     | Last page              | Последняя страница     |
-| `pageSize` | `pageSizeLabel` | Rows per page          | Строк на странице      |
-| `page` ƒ   | `pageLabel`     | Page {page}            | Страница {page}        |
-| `range` ƒ  | `rangeLabel`    | {from}–{to} of {total} | {from}–{to} из {total} |
+| Ключ       | Проп            | English                      | Русский                      |
+| ---------- | --------------- | ---------------------------- | ---------------------------- |
+| `label`    | `label`         | Pagination                   | Постраничная навигация       |
+| `previous` | `previousLabel` | Previous page                | Предыдущая страница          |
+| `next`     | `nextLabel`     | Next page                    | Следующая страница           |
+| `first`    | `firstLabel`    | First page                   | Первая страница              |
+| `last`     | `lastLabel`     | Last page                    | Последняя страница           |
+| `pageSize` | `pageSizeLabel` | Rows per page                | Строк на странице            |
+| `page` ƒ   | `pageLabel`     | Page `{page}`                | Страница `{page}`            |
+| `range` ƒ  | `rangeLabel`    | `{from}`–`{to}` of `{total}` | `{from}`–`{to}` из `{total}` |
 
 ### select
 
@@ -218,27 +259,35 @@ tree-shaking: `NuiButton` не тянет тексты диалога, это п
 | `label`  | NuiSidebar `label`        | Navigation     | Навигация                  |
 | `toggle` | NuiSidebarTrigger `label` | Toggle sidebar | Переключить боковую панель |
 
+### smartForm
+
+| Ключ            | Проп                     | English                                  | Русский                                 |
+| --------------- | ------------------------ | ---------------------------------------- | --------------------------------------- |
+| `next`          | NuiSmartForm `nextLabel` | Next                                     | Далее                                   |
+| `back`          | `backLabel`              | Back                                     | Назад                                   |
+| `stepChanged` ƒ | —                        | Step `{current}` of `{total}`: `{label}` | Шаг `{current}` из `{total}`: `{label}` |
+
 ### stepper
 
-| Ключ        | Проп               | English                   | Русский                  |
-| ----------- | ------------------ | ------------------------- | ------------------------ |
-| `label`     | NuiStepper `label` | Steps                     | Шаги                     |
-| `complete`  | `completeLabel`    | completed                 | выполнено                |
-| `error`     | `errorLabel`       | has errors                | есть ошибки              |
-| `summary` ƒ | —                  | Step {current} of {total} | Шаг {current} из {total} |
+| Ключ        | Проп               | English                       | Русский                      |
+| ----------- | ------------------ | ----------------------------- | ---------------------------- |
+| `label`     | NuiStepper `label` | Steps                         | Шаги                         |
+| `complete`  | `completeLabel`    | completed                     | выполнено                    |
+| `error`     | `errorLabel`       | has errors                    | есть ошибки                  |
+| `summary` ƒ | —                  | Step `{current}` of `{total}` | Шаг `{current}` из `{total}` |
 
 ### table
 
-| Ключ         | Проп             | English                                                                                        | Русский                                                                                         |
-| ------------ | ---------------- | ---------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| `empty`      | `emptyLabel`     | No data                                                                                        | Нет данных                                                                                      |
-| `select`     | `selectLabel`    | Select row                                                                                     | Выбрать строку                                                                                  |
-| `selectAll`  | `selectAllLabel` | Select all rows                                                                                | Выбрать все строки                                                                              |
-| `expand`     | `expandLabel`    | Toggle row                                                                                     | Развернуть строку                                                                               |
-| `drag`       | `dragLabel`      | Reorder row                                                                                    | Переставить строку                                                                              |
-| `resize` ƒ   | `resizeLabel`    | Resize {label}                                                                                 | Ширина колонки {label}                                                                          |
-| `reorder` ƒ  | `reorderLabel`   | Reorder {label}                                                                                | Переставить колонку {label}                                                                     |
-| `announce` ƒ | `announce`       | {label} grabbed, position 2 of 4. Use the arrow keys to move, Space to drop, Escape to cancel. | Колонка «{label}» взята, позиция 2 из 4. Стрелки перемещают, Пробел отпускает, Escape отменяет. |
+| Ключ         | Проп             | English                                                                                          | Русский                                                                                           |
+| ------------ | ---------------- | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------- |
+| `empty`      | `emptyLabel`     | No data                                                                                          | Нет данных                                                                                        |
+| `select`     | `selectLabel`    | Select row                                                                                       | Выбрать строку                                                                                    |
+| `selectAll`  | `selectAllLabel` | Select all rows                                                                                  | Выбрать все строки                                                                                |
+| `expand`     | `expandLabel`    | Toggle row                                                                                       | Развернуть строку                                                                                 |
+| `drag`       | `dragLabel`      | Reorder row                                                                                      | Переставить строку                                                                                |
+| `resize` ƒ   | `resizeLabel`    | Resize `{label}`                                                                                 | Ширина колонки `{label}`                                                                          |
+| `reorder` ƒ  | `reorderLabel`   | Reorder `{label}`                                                                                | Переставить колонку `{label}`                                                                     |
+| `announce` ƒ | `announce`       | `{label}` grabbed, position 2 of 4. Use the arrow keys to move, Space to drop, Escape to cancel. | Колонка «`{label}`» взята, позиция 2 из 4. Стрелки перемещают, Пробел отпускает, Escape отменяет. |
 
 ### timeField
 
@@ -266,7 +315,7 @@ tree-shaking: `NuiButton` не тянет тексты диалога, это п
 | `done`         | `doneLabel`   | Uploaded              | Загружено                  |
 | `typeError`    | `errorLabel`  | Unsupported file type | Неподдерживаемый тип файла |
 | `tooLarge`     | `errorLabel`  | File is too large     | Файл слишком большой       |
-| `largerThan` ƒ | `errorLabel`  | Larger than {size}    | Файл больше {size}         |
+| `largerThan` ƒ | `errorLabel`  | Larger than `{size}`  | Файл больше `{size}`       |
 | `tooMany`      | `errorLabel`  | Too many files        | Слишком много файлов       |
 | `moreThan` ƒ   | `errorLabel`  | More than 3 files     | Не больше 3 файлов         |
 | `rejected`     | `errorLabel`  | File rejected         | Файл отклонён              |

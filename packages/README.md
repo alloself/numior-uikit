@@ -12,10 +12,10 @@
 | `@numior/tailwind`   | Опциональная карта токенов для Tailwind 4                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 
 `@numior/primitives` зависит только от Vue и не содержит CSS и визуальных решений;
-`@numior/vue` потребляет его и добавляет стили. `@numior/forms` не зависит от `@numior/vue`
-и не попадает в его сборку; решение о vee-validate записано в
-[ADR форм](../.archcore/forms.adr.md). Будущие независимые пакеты из
-принятого плана: `grid`, `spreadsheet`, `editor-core`, `editor-vue`,
+`@numior/vue` потребляет его и добавляет стили. `@numior/forms` строится на `@numior/vue` и
+`@numior/primitives`, а `@numior/vue` от форм не зависит, и vee-validate в его сборку не
+попадает; решение о vee-validate записано в [ADR форм](../.archcore/forms.adr.md). Будущие
+независимые пакеты из принятого плана: `grid`, `spreadsheet`, `editor-core`, `editor-vue`,
 `content`, `collaboration`, `offline`, `nuxt`, `cli`. Они ещё не реализованы. Их манифесты и API появятся вместе с первым
 рабочим кодом, а не как пустые publishable пакеты.
 

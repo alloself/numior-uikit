@@ -38,6 +38,13 @@ export default defineConfig({
             ],
           },
           {
+            text: 'Формы',
+            items: [
+              { text: 'Формы', link: '/components/form' },
+              { text: 'Умная форма', link: '/components/smart-form' },
+            ],
+          },
+          {
             text: 'Слои',
             items: [
               { text: 'Диалог', link: '/components/dialog' },
@@ -121,6 +128,13 @@ export default defineConfig({
               { text: 'Combobox', link: '/en/components/combobox' },
               { text: 'Upload', link: '/en/components/upload' },
               { text: 'Chip', link: '/en/components/chip' },
+            ],
+          },
+          {
+            text: 'Forms',
+            items: [
+              { text: 'Forms', link: '/en/components/form' },
+              { text: 'Smart form', link: '/en/components/smart-form' },
             ],
           },
           {

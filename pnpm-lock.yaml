@@ -89,6 +89,9 @@ importers:
 
   apps/docs:
     dependencies:
+      '@numior/forms':
+        specifier: workspace:*
+        version: link:../../packages/forms
       '@numior/tokens':
         specifier: workspace:*
         version: link:../../packages/tokens

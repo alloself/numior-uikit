@@ -9,6 +9,7 @@
     "preview": "vitepress preview"
   },
   "dependencies": {
+    "@numior/forms": "workspace:*",
     "@numior/tokens": "workspace:*",
     "@numior/utilities": "workspace:*",
     "@numior/vue": "workspace:*",

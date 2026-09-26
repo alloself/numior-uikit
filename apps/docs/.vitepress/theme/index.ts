@@ -74,8 +74,10 @@ import {
   NuiTree,
   NuiUpload,
 } from '@numior/vue';
+import { NuiFieldArray, NuiForm, NuiFormField, NuiSmartForm } from '@numior/forms';
 import '@numior/tokens/theme.css';
 import '@numior/vue/styles.css';
+import '@numior/forms/styles.css';
 import '@numior/utilities/utilities.css';
 import './demo.css';
 
@@ -159,5 +161,9 @@ export default {
     app.component('NuiSidebarItem', NuiSidebarItem);
     app.component('NuiSidebarSub', NuiSidebarSub);
     app.component('NuiSidebarTrigger', NuiSidebarTrigger);
+    app.component('NuiForm', NuiForm);
+    app.component('NuiFormField', NuiFormField);
+    app.component('NuiFieldArray', NuiFieldArray);
+    app.component('NuiSmartForm', NuiSmartForm);
   },
 } satisfies Theme;
