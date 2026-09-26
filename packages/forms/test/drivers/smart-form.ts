@@ -146,6 +146,24 @@ export class SmartFormDriver<V extends object> {
     return this.cellOf(path).querySelector('.nui-field__error')?.textContent?.trim();
   }
 
+  get selectedOptions(): string[] {
+    return this.wrapper
+      .findAll('[role="option"][aria-selected="true"]')
+      .map((option) => option.text());
+  }
+
+  async pickOption(label: string): Promise<void> {
+    const option = this.wrapper
+      .findAll<HTMLElement>('[role="option"]')
+      .find((candidate) => candidate.text() === label);
+
+    if (!option) {
+      throw new Error(`no option ${label}`);
+    }
+    option.element.click();
+    await this.settle();
+  }
+
   get legends(): string[] {
     return this.wrapper.findAll('.nui-smart-form__legend').map((legend) => legend.text());
   }

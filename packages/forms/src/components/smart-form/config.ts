@@ -17,44 +17,51 @@ type ComponentProps<C> = C extends new (...args: never[]) => { $props: infer P }
     ? P
     : object;
 
-type ControlKeys =
-  | 'modelValue'
-  | 'onUpdate:modelValue'
-  | 'id'
-  | 'name'
-  | 'invalid'
-  | 'required'
-  | 'disabled';
+type ModelKeys<M extends string> = M | `onUpdate:${M}`;
 
-export type ControlProps<C> = Omit<ComponentProps<C>, ControlKeys> &
-  Omit<InputHTMLAttributes, ControlKeys | 'value'>;
+type ControlKeys = ModelKeys<'modelValue'> | 'id' | 'name' | 'invalid' | 'required' | 'disabled';
 
-export type ControlValue<C> =
-  ComponentProps<C> extends { readonly modelValue: infer M }
-    ? M
-    : ComponentProps<C> extends { readonly modelValue?: infer M }
-      ? M | undefined
+export type ControlProps<C, M extends string = 'modelValue'> = Omit<
+  ComponentProps<C>,
+  ControlKeys | ModelKeys<M>
+> &
+  Omit<InputHTMLAttributes, ControlKeys | ModelKeys<M> | 'value'>;
+
+export type ControlValue<C, M extends string = 'modelValue'> =
+  ComponentProps<C> extends { readonly [K in M]: infer V }
+    ? V
+    : ComponentProps<C> extends { readonly [K in M]?: infer V }
+      ? V | undefined
       : unknown;
 
-type ControlEmit<C> =
+type ControlEmit<C, M extends string> =
   ComponentProps<C> extends {
-    readonly 'onUpdate:modelValue'?: (value: infer E) => unknown;
+    readonly [K in `onUpdate:${M}`]?: (value: infer E) => unknown;
   }
     ? E
     : unknown;
 
-type EmitsInto<C, R> =
-  unknown extends ControlEmit<C>
-    ? unknown
-    : [ControlEmit<C>] extends [R]
-      ? unknown
-      : { readonly updateModelValue: ControlEmit<C> };
+type Unchecked<E> = unknown extends E
+  ? true
+  : E extends readonly (infer I)[]
+    ? unknown extends I
+      ? true
+      : false
+    : false;
 
-export interface SmartFieldConfig<S, R, C> extends Omit<
+type EmitsInto<C, R, M extends string> =
+  Unchecked<ControlEmit<C, M>> extends true
+    ? unknown
+    : [ControlEmit<C, M>] extends [R]
+      ? unknown
+      : { readonly updateModel: ControlEmit<C, M> };
+
+export interface SmartFieldConfig<S, R, C, M extends string = 'modelValue'> extends Omit<
   NuiSmartFormField<S>,
-  'kind' | 'component' | 'name' | 'props' | 'rules'
+  'kind' | 'component' | 'name' | 'model' | 'props' | 'rules'
 > {
-  readonly props?: ControlProps<C> | NuiSmartFormPropsFactory<S, ControlProps<C>> | undefined;
+  readonly model?: M | undefined;
+  readonly props?: ControlProps<C, M> | NuiSmartFormPropsFactory<S, ControlProps<C, M>> | undefined;
   readonly rules?: readonly AnyFieldRule<R, S>[] | undefined;
 }
 
@@ -67,10 +74,10 @@ export interface SmartArrayConfig<S, Row> extends Omit<
 }
 
 export const formConfig = <S>() => ({
-  field: <C extends Component, R extends ControlValue<C>>(
-    component: C & EmitsInto<C, R>,
+  field: <C extends Component, R extends ControlValue<C, M>, M extends string = 'modelValue'>(
+    component: C & EmitsInto<C, R, M>,
     name: FieldSelector<S, R>,
-    config: SmartFieldConfig<S, R, C> = {},
+    config: SmartFieldConfig<S, R, C, M> = {},
   ): NuiSmartFormField<S> => {
     const { rules, ...rest } = config;
 

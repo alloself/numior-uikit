@@ -27,7 +27,7 @@ import { NuiField } from '@numior/vue';
 import { useField } from '../../field/use-field';
 import { useFormScope } from '../form/form-scope';
 import { focusControl } from './focus-control';
-import type { NuiFormFieldProps } from './form-field.types';
+import type { FieldScopeBinding, NuiFormFieldProps } from './form-field.types';
 
 const {
   name,
@@ -76,7 +76,7 @@ const scope = computed(() => ({
     name: control.path.value,
     modelValue: control.value.value,
     'onUpdate:modelValue': control.binding['onUpdate:modelValue'],
-  },
+  } satisfies FieldScopeBinding<R>,
   value: control.value.value,
   setValue: control.binding['onUpdate:modelValue'],
   error: control.errorMessage.value,

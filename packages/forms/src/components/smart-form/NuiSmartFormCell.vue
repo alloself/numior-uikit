@@ -13,7 +13,7 @@
       :keep-value="entry.keepValue"
     >
       <template #default="{ field, error, invalid, touched, pending }">
-        <component :is="entry.component" v-bind="{ ...controlProps, ...field }">
+        <component :is="entry.component" v-bind="{ ...controlProps, ...bindModel(field) }">
           <template v-if="slots[slotName]" #default>
             <SmartSlot
               :render="slots[slotName]"
@@ -30,6 +30,7 @@
 <script setup lang="ts" generic="T extends object">
 import { computed } from 'vue';
 import { FORM_HOST } from '../../form/form-context';
+import type { FieldScopeBinding } from '../form-field/form-field.types';
 import NuiFormField from '../form-field/NuiFormField.vue';
 import { slotNameOf } from './items';
 import type { NuiSmartFormCellProps } from './smart-form.types';
@@ -45,4 +46,14 @@ const slotName = computed(() => slotNameOf(path));
 const controlProps = computed(() =>
   typeof entry.props === 'function' ? entry.props(values) : (entry.props ?? {}),
 );
+
+const bindModel = (field: FieldScopeBinding<unknown>): Record<string, unknown> => {
+  const model = entry.model ?? 'modelValue';
+
+  return {
+    name: field.name,
+    [model]: field.modelValue,
+    [`onUpdate:${model}`]: field['onUpdate:modelValue'],
+  };
+};
 </script>

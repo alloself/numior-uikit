@@ -1,7 +1,7 @@
-import { NuiInput, NuiRadio, NuiRadioGroup } from '@numior/vue';
+import { NuiInput, NuiList, NuiRadio, NuiRadioGroup } from '@numior/vue';
 import { describe, expect, expectTypeOf, it } from 'vitest';
 import { h } from 'vue';
-import { custom, formConfig } from '../src';
+import { custom, formConfig, type ControlProps, type ControlValue } from '../src';
 import { SmartFormDriver } from './drivers/smart-form';
 
 interface Contact {
@@ -56,7 +56,45 @@ const COMPANY = [
   field(NuiInput, (values) => values.vat, { label: 'VAT', when: isCompany }),
 ];
 
+interface Preferences {
+  topics: string[];
+}
+
+const preferences = formConfig<Preferences>();
+
+const TOPICS = [
+  { value: 'vue', label: 'Vue' },
+  { value: 'nuxt', label: 'Nuxt' },
+  { value: 'vite', label: 'Vite' },
+];
+
 describe('NuiSmartForm', () => {
+  it('binds a control through a named model: a multiple list shows the initial picks and writes new ones back', async () => {
+    const smart = SmartFormDriver.mount<Preferences>({
+      initialValues: { topics: ['vue'] },
+      fields: [
+        preferences.field(NuiList, (values) => values.topics, {
+          model: 'values',
+          label: 'Topics',
+          props: { selectable: 'multiple', items: TOPICS, label: 'Topics' },
+        }),
+      ],
+    });
+
+    expect(smart.selectedOptions).toEqual(['Vue']);
+
+    await smart.pickOption('Vite');
+
+    expect(smart.selectedOptions).toEqual(['Vue', 'Vite']);
+    expect(smart.form.values.topics).toEqual(['vue', 'vite']);
+  });
+
+  it('types a named model by its own prop', () => {
+    expectTypeOf<ControlValue<typeof NuiInput>>().toEqualTypeOf<string | undefined>();
+    expectTypeOf<ControlValue<typeof NuiList, 'values'>>().toEqualTypeOf<unknown[] | undefined>();
+    expectTypeOf<ControlProps<typeof NuiList, 'values'>>().toHaveProperty('selectable');
+  });
+
   it('renders config fields with typed props, slot content inside the control and an after slot', () => {
     const form = SmartFormDriver.mount({
       initialValues: blank,

@@ -202,6 +202,12 @@ attributes; instead of an object you can pass a function of the values —
 value: a `custom((value, { values }) => …)` rule written in the config gets `value` of the field's
 type and `values` of the config's type, and a typo such as `value.lenght` fails the type check.
 
+A control with a named model connects through `model`: multiple `NuiSelect`, `NuiCombobox`,
+`NuiList` and `NuiTree` keep their array in `v-model:values`, so
+`field(NuiSelect, (v) => v.topics, { model: 'values', props: { multiple: true, options } })`
+passes the value to `values` and listens to `update:values`. The value type and the event check
+come from that model, and `props` do not accept it.
+
 `section({ title, description, layout, fields })` renders a `fieldset` with a legend, and a
 divider runs between neighbouring sections. `array((v) => v.contacts, { label, description, min,
 max, reorderable, newRow, layout, fields })` renders a

@@ -17,6 +17,7 @@ export interface NuiSmartFormField<S> {
   readonly kind: 'field';
   readonly name: FieldSelector<S, unknown>;
   readonly component: Component;
+  readonly model?: string | undefined;
   readonly props?: object | NuiSmartFormPropsFactory<S> | undefined;
   readonly label?: string | undefined;
   readonly description?: string | undefined;

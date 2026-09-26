@@ -212,6 +212,12 @@ const form = useForm<Profile>({
 конфигурации, получает `value` типа поля и `values` типа конфигурации, а опечатка вроде
 `value.lenght` не пройдёт проверку типов.
 
+Контрол с именованной моделью подключается через `model`: множественные `NuiSelect`,
+`NuiCombobox`, `NuiList` и `NuiTree` держат массив в `v-model:values`, поэтому
+`field(NuiSelect, (v) => v.topics, { model: 'values', props: { multiple: true, options } })`
+передаёт значение в `values` и слушает `update:values`. Тип значения и проверка события берутся
+из этой модели, а `props` её не принимают.
+
 `section({ title, description, layout, fields })` рендерит `fieldset` с заголовком; между
 соседними секциями проходит разделитель. `array((v) => v.contacts, { label, description, min,
 max, reorderable, newRow, layout, fields })` рендерит

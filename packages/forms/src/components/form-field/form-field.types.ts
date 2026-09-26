@@ -3,6 +3,12 @@ import type { FormContext } from '../../form/form-context';
 import type { FieldSelector } from '../../paths/selector';
 import type { AnyFieldRule } from '../../rules/async-rule';
 
+export interface FieldScopeBinding<R> {
+  readonly name: string;
+  readonly modelValue: R;
+  readonly 'onUpdate:modelValue': (value: R) => void;
+}
+
 export interface NuiFormFieldProps<T extends object, R> {
   form: FormContext<T>;
   name: FieldSelector<T, R>;
