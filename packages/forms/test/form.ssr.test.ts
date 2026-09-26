@@ -4,9 +4,11 @@ import { createSSRApp, defineComponent, h } from 'vue';
 import { renderToString } from 'vue/server-renderer';
 import { NuiInput } from '@numior/vue';
 import {
+  formConfig,
   NuiFieldArray,
   NuiForm,
   NuiFormField,
+  NuiSmartForm,
   useField,
   useFieldArray,
   useForm,
@@ -94,6 +96,39 @@ const Team = defineComponent({
   },
 });
 
+interface Signup {
+  kind: string;
+  name: string;
+  email: string;
+  company: string;
+}
+
+const signup = formConfig<Signup>();
+
+const isCompany = (values: Signup): boolean => values.kind === 'company';
+
+const SIGNUP_FIELDS = [
+  signup.field(NuiInput, { name: 'name', label: 'Name' }),
+  signup.field(NuiInput, { name: 'email', label: 'Email' }),
+  signup.field(NuiInput, { name: 'company', label: 'Company', when: isCompany }),
+];
+
+const Smart = defineComponent({
+  setup: () => {
+    const form = useForm({
+      initialValues: { kind: 'person', name: 'Ann', email: 'ann@example.com', company: 'Acme' },
+      onSubmit: noop,
+    });
+
+    return () =>
+      h(NuiSmartForm<Signup>, {
+        form,
+        layout: '"email name" "company company"',
+        fields: SIGNUP_FIELDS,
+      });
+  },
+});
+
 const labelTarget = (html: string): string | undefined =>
   /<label[^>]* for="([^"]+)"/.exec(html)?.[1];
 
@@ -141,6 +176,17 @@ describe('forms on the server', () => {
     expect(first).toContain('aria-label="Remove row 2"');
     expect(first).not.toContain('undefined');
     expect(first).not.toContain('nui-field-array__ghost');
+  });
+
+  it('renders a smart form in layout order with areas and without hidden fields', async () => {
+    const first = await renderToString(createSSRApp(Smart));
+
+    expect(first).toBe(await renderToString(createSSRApp(Smart)));
+    expect(first).toContain('--_areas:&quot;email name&quot;');
+    expect(first).toContain('--_area:email');
+    expect(first.indexOf('value="ann@example.com"')).toBeLessThan(first.indexOf('value="Ann"'));
+    expect(first).not.toContain('Acme');
+    expect(first).not.toContain('undefined');
   });
 
   it('renders the rows of a field array', async () => {

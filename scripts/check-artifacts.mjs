@@ -114,6 +114,8 @@ const formsCode = await importBuild('forms', [
   'NuiForm',
   'NuiFormField',
   'NuiFieldArray',
+  'NuiSmartForm',
+  'formConfig',
   'useForm',
   'useField',
   'useFieldArray',

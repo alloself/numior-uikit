@@ -6,6 +6,22 @@ export type { NuiFormMessages } from './components/form/form.messages';
 export type { NuiFormProps } from './components/form/form.types';
 export { default as NuiFormField } from './components/form-field/NuiFormField.vue';
 export type { NuiFormFieldProps } from './components/form-field/form-field.types';
+export { default as NuiSmartForm } from './components/smart-form/NuiSmartForm.vue';
+export { formConfig } from './components/smart-form/config';
+export type {
+  ControlProps,
+  SmartArrayConfig,
+  SmartFieldConfig,
+} from './components/smart-form/config';
+export type {
+  NuiSmartFormArray,
+  NuiSmartFormCondition,
+  NuiSmartFormEntry,
+  NuiSmartFormField,
+  NuiSmartFormProps,
+  NuiSmartFormPropsFactory,
+  NuiSmartFormSection,
+} from './components/smart-form/smart-form.types';
 export { NuiFormError } from './core/form-error';
 export type { FormErrorMessages } from './core/form-error';
 export type { EntryKind } from './core/registry';
