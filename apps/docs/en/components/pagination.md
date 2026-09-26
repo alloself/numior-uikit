@@ -75,5 +75,5 @@ button is named by `pageLabel`, arrows by `previousLabel`/`nextLabel` and
 
 Plus `previousLabel`, `nextLabel`, `firstLabel`, `lastLabel`, `pageSizeLabel`. Block
 `nui-pagination` (modifier `--size-*`; elements `__range`, `__page-size`, `__page-size-label`,
-`__select`, `__list`, `__item` with `--page`, `--ellipsis`, `--edge`, `__control` with
+`__select`, `__list`, `__item` with `--page`, `--ellipsis`, `--edge`, `--status`, `__control` with
 `--current`, `__previous`, `__next`, `__page`, `__arrow`, `__ellipsis`, `__status`).

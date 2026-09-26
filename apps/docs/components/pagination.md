@@ -80,5 +80,5 @@ const pageSize = ref(20);
 
 А также `previousLabel`, `nextLabel`, `firstLabel`, `lastLabel`, `pageSizeLabel`. Блок
 `nui-pagination` (модификатор `--size-*`; элементы `__range`, `__page-size`, `__page-size-label`,
-`__select`, `__list`, `__item` с `--page`, `--ellipsis`, `--edge`, `__control` с `--current`,
+`__select`, `__list`, `__item` с `--page`, `--ellipsis`, `--edge`, `--status`, `__control` с `--current`,
 `__previous`, `__next`, `__page`, `__arrow`, `__ellipsis`, `__status`).

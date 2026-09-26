@@ -29,6 +29,9 @@
           <NuiIcon alias="chevron-left" class="nui-pagination__arrow" />
         </NuiPaginationControl>
       </li>
+      <li class="nui-pagination__item nui-pagination__item--status" aria-hidden="true">
+        <span class="nui-pagination__status">{{ page }} / {{ pageCount }}</span>
+      </li>
       <li
         v-for="entry in entries"
         :key="String(entry)"
@@ -70,7 +73,6 @@
         </NuiPaginationControl>
       </li>
     </ul>
-    <span class="nui-pagination__status" aria-hidden="true">{{ page }} / {{ pageCount }}</span>
   </nav>
 </template>
 
