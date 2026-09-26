@@ -110,4 +110,23 @@ describe('NuiCombobox', () => {
     expect(strict.text).toBe('');
     strict.unmount();
   });
+
+  it('speaks the configured language for its buttons, chips and list states', async () => {
+    const combobox = ComboboxDriver.mount({
+      props: { multiple: true, clearable: true },
+      modelValue: ['apple'],
+      config: { locale: 'ru-RU' },
+    });
+
+    expect(combobox.toggleLabel).toBe('Показать варианты');
+    expect(combobox.clearLabel).toBe('Очистить');
+    expect(combobox.chipRemoveLabels).toEqual(['Убрать Apple']);
+    await combobox.receive({ loading: true });
+    expect(combobox.statusText).toBe('Загрузка');
+    await combobox.receive({ loading: false, options: [] });
+    expect(combobox.statusText).toBe('Ничего не найдено');
+    await combobox.receive({ emptyLabel: 'Введите город' });
+    expect(combobox.statusText).toBe('Введите город');
+    combobox.unmount();
+  });
 });

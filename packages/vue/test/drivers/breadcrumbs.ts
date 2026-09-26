@@ -1,6 +1,12 @@
 import { mount, type DOMWrapper, type VueWrapper } from '@vue/test-utils';
 import { defineComponent, h, markRaw, nextTick } from 'vue';
-import { NuiBreadcrumbs, type NuiBreadcrumbItem, type NuiBreadcrumbsItemSlot } from '../../src';
+import {
+  NuiBreadcrumbs,
+  type NuiBreadcrumbItem,
+  type NuiBreadcrumbsItemSlot,
+  type NuiConfigOptions,
+} from '../../src';
+import { configPlugins } from '../support/config';
 import { TopLayerStubs } from '../support/top-layer';
 import { ComponentDriver } from './component';
 
@@ -10,6 +16,8 @@ export interface BreadcrumbsMountOptions {
   readonly customItems?: boolean;
   readonly viaRouter?: boolean;
   readonly dir?: 'ltr' | 'rtl';
+  readonly label?: string;
+  readonly config?: NuiConfigOptions;
 }
 
 const PATH: readonly NuiBreadcrumbItem[] = [
@@ -41,6 +49,8 @@ export class BreadcrumbsDriver extends ComponentDriver {
     customItems = false,
     viaRouter = false,
     dir = 'ltr',
+    label,
+    config,
   }: BreadcrumbsMountOptions = {}) {
     const stubs = new TopLayerStubs();
 
@@ -53,15 +63,17 @@ export class BreadcrumbsDriver extends ComponentDriver {
               items: viaRouter ? items.map((item) => ({ ...item, to: item.href })) : items,
               ...(maxItems === undefined ? {} : { maxItems }),
               ...(viaRouter ? { as: RouterStub } : {}),
-              label: 'Путь',
-              moreLabel: 'Показать путь',
+              label,
             },
             customItems ? { item: customItem } : undefined,
           ),
         ]),
     });
 
-    return new BreadcrumbsDriver(mount(Host, { attachTo: document.body }), stubs);
+    return new BreadcrumbsDriver(
+      mount(Host, { attachTo: document.body, global: { plugins: configPlugins(config) } }),
+      stubs,
+    );
   }
 
   private constructor(
@@ -73,6 +85,14 @@ export class BreadcrumbsDriver extends ComponentDriver {
 
   get nav(): DOMWrapper<HTMLElement> {
     return this.wrapper.find<HTMLElement>('nav');
+  }
+
+  get label(): string | undefined {
+    return this.nav.attributes('aria-label');
+  }
+
+  get moreLabel(): string | undefined {
+    return this.moreButton.attributes('aria-label');
   }
 
   get crumbs(): string[] {

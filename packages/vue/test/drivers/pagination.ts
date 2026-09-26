@@ -1,6 +1,7 @@
 import { mount, type DOMWrapper, type VueWrapper } from '@vue/test-utils';
 import { defineComponent, h, ref, type Ref } from 'vue';
-import { NuiPagination, type NuiPaginationProps } from '../../src';
+import { NuiPagination, type NuiConfigOptions, type NuiPaginationProps } from '../../src';
+import { configPlugins } from '../support/config';
 import { choosePageSize } from '../support/page-size';
 import { TopLayerStubs } from '../support/top-layer';
 import { ComponentDriver } from './component';
@@ -9,12 +10,13 @@ export interface PaginationMountOptions {
   readonly props: NuiPaginationProps;
   readonly page?: number;
   readonly pageSize?: number;
+  readonly config?: NuiConfigOptions;
 }
 
 export class PaginationDriver extends ComponentDriver {
   protected readonly block = 'nui-pagination';
 
-  static mount({ props, page = 1, pageSize = 20 }: PaginationMountOptions) {
+  static mount({ props, page = 1, pageSize = 20, config }: PaginationMountOptions) {
     const stubs = new TopLayerStubs();
     const pageModel = ref(page);
     const sizeModel = ref(pageSize);
@@ -35,7 +37,7 @@ export class PaginationDriver extends ComponentDriver {
     });
 
     return new PaginationDriver(
-      mount(Host, { attachTo: document.body }),
+      mount(Host, { attachTo: document.body, global: { plugins: configPlugins(config) } }),
       stubs,
       pageModel,
       sizeModel,
@@ -88,6 +90,22 @@ export class PaginationDriver extends ComponentDriver {
 
   private control(selector: string): DOMWrapper<HTMLElement> {
     return this.wrapper.find<HTMLElement>(selector);
+  }
+
+  get label(): string | undefined {
+    return this.nav.attributes('aria-label');
+  }
+
+  get previousLabel(): string | undefined {
+    return this.control('.nui-pagination__previous').attributes('aria-label');
+  }
+
+  get nextLabel(): string | undefined {
+    return this.control('.nui-pagination__next').attributes('aria-label');
+  }
+
+  get pageSizeText(): string {
+    return this.wrapper.find('.nui-pagination__page-size-label').text();
   }
 
   get previousDisabled(): boolean {

@@ -9,7 +9,9 @@ import {
   type NuiListItemSlot,
   type NuiListProps,
   type NuiListSource,
+  type NuiConfigOptions,
 } from '../../src';
+import { configPlugins } from '../support/config';
 import { RouterStub } from '../support/router-stub';
 import { ComponentDriver } from './component';
 
@@ -28,6 +30,7 @@ export interface ListMountOptions {
   readonly parts?: readonly ListPart[];
   readonly itemSlot?: ((slot: NuiListItemSlot<NuiListEntry<unknown>>) => string) | undefined;
   readonly viaRouter?: boolean;
+  readonly config?: NuiConfigOptions;
 }
 
 const isListValue = (value: unknown): value is ListValue =>
@@ -73,6 +76,7 @@ export class ListDriver extends ComponentDriver {
     parts = [],
     itemSlot,
     viaRouter = false,
+    config,
   }: ListMountOptions = {}) {
     const model = ref<ListValue>(modelValue);
     const clicks = ref(0);
@@ -106,7 +110,12 @@ export class ListDriver extends ComponentDriver {
         ]),
     });
 
-    return new ListDriver(mount(Host, { attachTo: document.body }), model, clicks, items);
+    return new ListDriver(
+      mount(Host, { attachTo: document.body, global: { plugins: configPlugins(config) } }),
+      model,
+      clicks,
+      items,
+    );
   }
 
   private constructor(
@@ -189,6 +198,10 @@ export class ListDriver extends ComponentDriver {
   get emptyText(): string {
     const empty = this.wrapper.find('.nui-empty');
     return empty.exists() ? empty.text() : '';
+  }
+
+  get loadingText(): string {
+    return this.wrapper.find('.nui-list__status').text();
   }
 
   get checkCount(): number {

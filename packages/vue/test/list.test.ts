@@ -260,4 +260,22 @@ describe('NuiList', () => {
     expect(list.tabIndexes).toEqual([0, -1]);
     list.unmount();
   });
+
+  it('speaks the configured language while loading and when empty unless labelled', () => {
+    const loading = ListDriver.mount({ props: { loading: true }, config: { locale: 'ru-RU' } });
+    expect(loading.loadingText).toBe('Загрузка');
+    loading.unmount();
+
+    const empty = ListDriver.mount({ props: { items: [] }, config: { locale: 'ru-RU' } });
+    expect(empty.emptyText).toBe('Список пуст');
+    empty.unmount();
+
+    const labelled = ListDriver.mount({
+      props: { items: [], emptyLabel: 'Задач нет' },
+      config: { locale: 'ru-RU' },
+    });
+
+    expect(labelled.emptyText).toBe('Задач нет');
+    labelled.unmount();
+  });
 });

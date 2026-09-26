@@ -112,4 +112,29 @@ describe('NuiSelect', () => {
     expect(select.expanded).toBe(false);
     select.unmount();
   });
+
+  it('speaks the configured language for the count, the clear button and the empty list', () => {
+    const russian = SelectDriver.mount({
+      props: { multiple: true, clearable: true },
+      modelValue: ['apple', 'banana'],
+      config: { locale: 'ru-RU' },
+    });
+
+    expect(russian.valueText).toBe('Выбрано: 2');
+    expect(russian.clearLabel).toBe('Очистить');
+    russian.unmount();
+
+    const empty = SelectDriver.mount({ props: { options: [] }, config: { locale: 'ru-RU' } });
+    expect(empty.emptyText).toBe('Нет вариантов');
+    empty.unmount();
+
+    const counted = SelectDriver.mount({
+      props: { multiple: true, countLabel: (count) => `${count} фрукта` },
+      modelValue: ['apple', 'banana'],
+      config: { locale: 'ru-RU' },
+    });
+
+    expect(counted.valueText).toBe('2 фрукта');
+    counted.unmount();
+  });
 });

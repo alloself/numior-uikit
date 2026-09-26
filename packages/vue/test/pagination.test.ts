@@ -129,4 +129,20 @@ describe('NuiPagination', () => {
     expect(pagination.nextDisabled).toBe(true);
     pagination.unmount();
   });
+
+  it('speaks the configured language for its labels, pages and range', () => {
+    const pagination = PaginationDriver.mount({
+      props: { total: 240, pageSizes: [10, 20, 50] },
+      page: 6,
+      config: { locale: 'ru-RU' },
+    });
+
+    expect(pagination.label).toBe('Постраничная навигация');
+    expect(pagination.previousLabel).toBe('Предыдущая страница');
+    expect(pagination.nextLabel).toBe('Следующая страница');
+    expect(pagination.pageSizeText).toBe('Строк на странице');
+    expect(pagination.labelOfPage(6)).toBe('Страница 6');
+    expect(pagination.rangeText).toBe('101–120 из 240');
+    pagination.unmount();
+  });
 });

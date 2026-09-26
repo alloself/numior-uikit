@@ -1,9 +1,9 @@
 <template>
-  <nav class="nui-pagination" :class="`nui-pagination--size-${size}`" :aria-label="label">
+  <nav class="nui-pagination" :class="`nui-pagination--size-${size}`" :aria-label="texts.label">
     <span v-if="showRange" class="nui-pagination__range">{{ rangeText }}</span>
     <div v-if="pageSizes" class="nui-pagination__page-size">
       <span :id="`${baseId}-page-size`" class="nui-pagination__page-size-label">
-        {{ pageSizeLabel }}
+        {{ texts.pageSize }}
       </span>
       <NuiSelect
         :model-value="pageSize"
@@ -16,13 +16,13 @@
     </div>
     <ul class="nui-pagination__list">
       <li v-if="edges" class="nui-pagination__item nui-pagination__item--edge">
-        <NuiPaginationControl v-bind="controlProps(1, firstLabel, page === 1)" @select="go">
+        <NuiPaginationControl v-bind="controlProps(1, texts.first, page === 1)" @select="go">
           <NuiIcon alias="chevrons-left" class="nui-pagination__arrow" />
         </NuiPaginationControl>
       </li>
       <li class="nui-pagination__item">
         <NuiPaginationControl
-          v-bind="controlProps(page - 1, previousLabel, page === 1)"
+          v-bind="controlProps(page - 1, texts.previous, page === 1)"
           class="nui-pagination__previous"
           @select="go"
         >
@@ -44,7 +44,7 @@
         </span>
         <NuiPaginationControl
           v-else
-          v-bind="controlProps(entry, pageLabel(entry), false)"
+          v-bind="controlProps(entry, pageText(entry), false)"
           :current="entry === page"
           class="nui-pagination__page"
           @select="go"
@@ -54,7 +54,7 @@
       </li>
       <li class="nui-pagination__item">
         <NuiPaginationControl
-          v-bind="controlProps(page + 1, nextLabel, page === pageCount)"
+          v-bind="controlProps(page + 1, texts.next, page === pageCount)"
           class="nui-pagination__next"
           @select="go"
         >
@@ -63,7 +63,7 @@
       </li>
       <li v-if="edges" class="nui-pagination__item nui-pagination__item--edge">
         <NuiPaginationControl
-          v-bind="controlProps(pageCount, lastLabel, page === pageCount)"
+          v-bind="controlProps(pageCount, texts.last, page === pageCount)"
           @select="go"
         >
           <NuiIcon alias="chevrons-right" class="nui-pagination__arrow" />
@@ -76,12 +76,13 @@
 
 <script setup lang="ts">
 import { computed, watch } from 'vue';
-import { useControlId } from '@numior/primitives';
+import { useControlId, useMessages } from '@numior/primitives';
 import NuiIcon from '../icon/NuiIcon.vue';
 import NuiSelect from '../select/NuiSelect.vue';
 import type { NuiOption } from '../shared/options';
 import NuiPaginationControl from './NuiPaginationControl.vue';
 import { clampPage, pageCountOf, paginationRange } from './pagination-range';
+import { paginationMessages } from './pagination.messages';
 import type { NuiPaginationProps } from './pagination.types';
 
 const {
@@ -94,20 +95,22 @@ const {
   pageSizes,
   showRange = true,
   size = 'md',
-  label = 'Pagination',
-  previousLabel = 'Previous page',
-  nextLabel = 'Next page',
-  firstLabel = 'First page',
-  lastLabel = 'Last page',
-  pageSizeLabel = 'Rows per page',
-  pageLabel = (target: number) => `Page ${target}`,
-  rangeLabel = (from: number, to: number, count: number) => `${from}–${to} of ${count}`,
+  label,
+  previousLabel,
+  nextLabel,
+  firstLabel,
+  lastLabel,
+  pageSizeLabel,
+  pageLabel,
+  rangeLabel,
 } = defineProps<NuiPaginationProps>();
 
 const pageModel = defineModel<number>('page', { default: 1 });
 const pageSize = defineModel<number>('pageSize', { default: 20 });
 
 const baseId = useControlId();
+const messages = useMessages(paginationMessages);
+
 const pageCount = computed(() => pageCountOf(total, pageSize.value));
 const page = computed(() => clampPage(pageModel.value, pageCount.value));
 
@@ -126,8 +129,20 @@ const entries = computed(() => paginationRange(page.value, pageCount.value, sibl
 const rangeText = computed(() => {
   const from = total === 0 ? 0 : (page.value - 1) * pageSize.value + 1;
   const to = Math.min(page.value * pageSize.value, total);
-  return rangeLabel(from, to, total);
+  return rangeLabel ? rangeLabel(from, to, total) : messages.value.range({ from, to, total });
 });
+
+const texts = computed(() => ({
+  label: label ?? messages.value.label,
+  previous: previousLabel ?? messages.value.previous,
+  next: nextLabel ?? messages.value.next,
+  first: firstLabel ?? messages.value.first,
+  last: lastLabel ?? messages.value.last,
+  pageSize: pageSizeLabel ?? messages.value.pageSize,
+}));
+
+const pageText = (target: number): string =>
+  pageLabel ? pageLabel(target) : messages.value.page({ page: target });
 
 const sizeOptions = computed<NuiOption<number>[]>(() =>
   (pageSizes ?? []).map((value) => ({ value, label: String(value) })),

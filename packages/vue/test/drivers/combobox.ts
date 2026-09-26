@@ -1,6 +1,13 @@
 import { mount, type DOMWrapper, type VueWrapper } from '@vue/test-utils';
 import { defineComponent, h, nextTick, ref, type Ref } from 'vue';
-import { NuiCombobox, NuiField, type NuiComboboxProps, type NuiFieldProps } from '../../src';
+import {
+  NuiCombobox,
+  NuiField,
+  type NuiComboboxProps,
+  type NuiConfigOptions,
+  type NuiFieldProps,
+} from '../../src';
+import { configPlugins } from '../support/config';
 import { FRUITS } from '../support/options';
 import { TopLayerStubs } from '../support/top-layer';
 import { ComponentDriver } from './component';
@@ -12,6 +19,7 @@ export interface ComboboxMountOptions {
   readonly modelValue?: ComboboxValue;
   readonly field?: NuiFieldProps;
   readonly custom?: boolean;
+  readonly config?: NuiConfigOptions;
 }
 
 const isComboboxValue = (value: unknown): value is ComboboxValue =>
@@ -25,7 +33,13 @@ const labelOf = (element: Element): string =>
 export class ComboboxDriver extends ComponentDriver {
   protected readonly block = 'nui-combobox';
 
-  static mount({ props = {}, modelValue, field, custom = false }: ComboboxMountOptions = {}) {
+  static mount({
+    props = {},
+    modelValue,
+    field,
+    custom = false,
+    config,
+  }: ComboboxMountOptions = {}) {
     const stubs = new TopLayerStubs();
     const model = ref<ComboboxValue>(modelValue);
     const extra = ref<Partial<NuiComboboxProps<unknown>>>({});
@@ -57,7 +71,7 @@ export class ComboboxDriver extends ComponentDriver {
     });
 
     return new ComboboxDriver(
-      mount(Host, { attachTo: document.body }),
+      mount(Host, { attachTo: document.body, global: { plugins: configPlugins(config) } }),
       stubs,
       model,
       extra,
@@ -112,6 +126,20 @@ export class ComboboxDriver extends ComponentDriver {
   get statusText(): string {
     const status = this.wrapper.find('.nui-list__status, .nui-list__empty');
     return status.exists() ? status.text() : '';
+  }
+
+  get toggleLabel(): string | undefined {
+    return this.wrapper.find('.nui-combobox__toggle').attributes('aria-label');
+  }
+
+  get clearLabel(): string | undefined {
+    return this.wrapper.find('.nui-combobox__clear').attributes('aria-label');
+  }
+
+  get chipRemoveLabels(): Array<string | undefined> {
+    return this.wrapper
+      .findAll('.nui-chip__remove')
+      .map((button) => button.attributes('aria-label'));
   }
 
   get chips(): string[] {

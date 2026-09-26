@@ -4,7 +4,7 @@ import { BreadcrumbsDriver } from './drivers/breadcrumbs';
 describe('NuiBreadcrumbs', () => {
   it('renders a labelled trail of links ending in the current page', () => {
     const crumbs = BreadcrumbsDriver.mount();
-    expect(crumbs.nav.attributes('aria-label')).toBe('Путь');
+    expect(crumbs.label).toBe('Breadcrumb');
     expect(crumbs.crumbs).toEqual(['Home', 'Projects', 'Numior', 'Settings', 'Billing']);
 
     expect(crumbs.hrefs).toEqual([
@@ -24,7 +24,7 @@ describe('NuiBreadcrumbs', () => {
     const crumbs = BreadcrumbsDriver.mount({ maxItems: 3 });
     expect(crumbs.crumbs).toEqual(['Home', 'Billing']);
     expect(crumbs.separatorCount).toBe(2);
-    expect(crumbs.moreButton.attributes('aria-label')).toBe('Показать путь');
+    expect(crumbs.moreLabel).toBe('Show path');
     expect(crumbs.moreButton.attributes('aria-haspopup')).toBe('menu');
     await crumbs.openMore();
     expect(crumbs.menuLabels).toEqual(['Projects', 'Numior', 'Settings']);
@@ -60,5 +60,16 @@ describe('NuiBreadcrumbs', () => {
     ]);
 
     crumbs.unmount();
+  });
+
+  it('names the trail and the collapsed part in the configured language unless labelled', () => {
+    const russian = BreadcrumbsDriver.mount({ maxItems: 3, config: { locale: 'ru-RU' } });
+    expect(russian.label).toBe('Навигационная цепочка');
+    expect(russian.moreLabel).toBe('Показать путь');
+    russian.unmount();
+
+    const labelled = BreadcrumbsDriver.mount({ label: 'Путь', config: { locale: 'ru-RU' } });
+    expect(labelled.label).toBe('Путь');
+    labelled.unmount();
   });
 });

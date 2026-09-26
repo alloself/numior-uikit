@@ -1,7 +1,14 @@
 import { mount, type DOMWrapper, type VueWrapper } from '@vue/test-utils';
 import { vi } from 'vitest';
 import { defineComponent, h, nextTick, ref, type Ref } from 'vue';
-import { NuiField, NuiSelect, type NuiFieldProps, type NuiSelectProps } from '../../src';
+import {
+  NuiField,
+  NuiSelect,
+  type NuiConfigOptions,
+  type NuiFieldProps,
+  type NuiSelectProps,
+} from '../../src';
+import { configPlugins } from '../support/config';
 import { FRUITS } from '../support/options';
 import { TopLayerStubs } from '../support/top-layer';
 import { ComponentDriver } from './component';
@@ -12,6 +19,7 @@ export interface SelectMountOptions {
   readonly props?: Partial<NuiSelectProps<unknown>>;
   readonly modelValue?: SelectValue;
   readonly field?: NuiFieldProps;
+  readonly config?: NuiConfigOptions;
 }
 
 const isSelectValue = (value: unknown): value is SelectValue =>
@@ -25,7 +33,7 @@ const labelOf = (element: Element): string =>
 export class SelectDriver extends ComponentDriver {
   protected readonly block = 'nui-select';
 
-  static mount({ props = {}, modelValue, field }: SelectMountOptions = {}) {
+  static mount({ props = {}, modelValue, field, config }: SelectMountOptions = {}) {
     const stubs = new TopLayerStubs();
     const model = ref<SelectValue>(modelValue);
 
@@ -49,7 +57,11 @@ export class SelectDriver extends ComponentDriver {
         ]),
     });
 
-    return new SelectDriver(mount(Host, { attachTo: document.body }), stubs, model);
+    return new SelectDriver(
+      mount(Host, { attachTo: document.body, global: { plugins: configPlugins(config) } }),
+      stubs,
+      model,
+    );
   }
 
   private constructor(
@@ -126,6 +138,10 @@ export class SelectDriver extends ComponentDriver {
 
   get clearButton(): DOMWrapper<Element> {
     return this.wrapper.find('.nui-select__clear');
+  }
+
+  get clearLabel(): string | undefined {
+    return this.clearButton.attributes('aria-label');
   }
 
   private option(label: string): DOMWrapper<HTMLElement> {

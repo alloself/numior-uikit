@@ -19,7 +19,7 @@
           v-for="chip in chips"
           :key="chip.key"
           removable
-          :remove-label="`${removeLabel} ${chip.label}`"
+          :remove-label="`${texts.remove} ${chip.label}`"
           :disabled="isDisabled"
           class="nui-combobox__chip"
           @remove="toggleSelection(chip)"
@@ -48,7 +48,7 @@
         tone="neutral"
         size="sm"
         class="nui-combobox__clear"
-        :aria-label="clearLabel"
+        :aria-label="texts.clear"
         tabindex="-1"
         @click="clear"
       >
@@ -59,7 +59,7 @@
         tone="neutral"
         size="sm"
         class="nui-combobox__toggle"
-        :aria-label="toggleLabel"
+        :aria-label="texts.toggle"
         :aria-expanded="open ? 'true' : 'false'"
         :aria-controls="listboxId"
         tabindex="-1"
@@ -81,7 +81,7 @@
       :active-id="navigation.activeId.value"
       :loading="loading"
       :loading-label="loadingLabel"
-      :empty-label="emptyLabel"
+      :empty-label="texts.empty"
       v-bind="control.contentAttrs.value"
       @select="onSelect"
       @pointermove="activateHovered"
@@ -106,7 +106,7 @@
 
 <script setup lang="ts" generic="T">
 import { computed, onMounted, ref, useTemplateRef, watch } from 'vue';
-import { useFieldControl, useSplitAttrs } from '@numior/primitives';
+import { useFieldControl, useMessages, useSplitAttrs } from '@numior/primitives';
 import NuiButton from '../button/NuiButton.vue';
 import NuiChip from '../chip/NuiChip.vue';
 import NuiIcon from '../icon/NuiIcon.vue';
@@ -114,6 +114,7 @@ import NuiList from '../list/NuiList.vue';
 import { filterOptions, flattenEntries, optionElementId, type NuiOption } from '../shared/options';
 import { useListboxSurface } from '../shared/use-listbox-surface';
 import { useOptionSelection } from '../shared/use-option-selection';
+import { comboboxMessages } from './combobox.messages';
 import type { NuiComboboxProps } from './combobox.types';
 
 defineOptions({ inheritAttrs: false });
@@ -134,17 +135,18 @@ const {
   loading = false,
   customValue,
   placement = 'bottom-start',
-  emptyLabel = 'No matches',
-  loadingLabel = 'Loading',
-  clearLabel = 'Clear',
-  removeLabel = 'Remove',
-  toggleLabel = 'Show options',
+  emptyLabel,
+  loadingLabel,
+  clearLabel,
+  removeLabel,
+  toggleLabel,
 } = defineProps<NuiComboboxProps<T>>();
 
 const model = defineModel<T | T[]>();
 const emit = defineEmits<{ search: [query: string] }>();
 
 const split = useSplitAttrs();
+const messages = useMessages(comboboxMessages);
 
 const {
   attrs: controlAttrs,
@@ -153,6 +155,13 @@ const {
 } = useFieldControl(() => ({ id, disabled, required, invalid }));
 
 const listboxId = computed(() => `${controlAttrs.value.id}-listbox`);
+
+const texts = computed(() => ({
+  empty: emptyLabel ?? messages.value.empty,
+  clear: clearLabel ?? messages.value.clear,
+  remove: removeLabel ?? messages.value.remove,
+  toggle: toggleLabel ?? messages.value.toggle,
+}));
 
 const {
   keyOf,

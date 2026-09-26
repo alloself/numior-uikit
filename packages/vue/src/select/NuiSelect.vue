@@ -35,7 +35,7 @@
       tone="neutral"
       size="sm"
       class="nui-select__clear"
-      :aria-label="clearLabel"
+      :aria-label="clearText"
       @click="clear"
     >
       <NuiIcon alias="x" />
@@ -50,7 +50,7 @@
       :get-key="getKey"
       :keyboard="false"
       :active-id="navigation.activeId.value"
-      :empty-label="emptyLabel"
+      :empty-label="emptyText"
       v-bind="control.contentAttrs.value"
       @select="onSelect"
       @keydown="onListboxKeydown"
@@ -77,13 +77,14 @@
 
 <script setup lang="ts" generic="T">
 import { computed, onMounted, ref, useTemplateRef, watch } from 'vue';
-import { useField, useFieldControl, useSplitAttrs } from '@numior/primitives';
+import { useField, useFieldControl, useMessages, useSplitAttrs } from '@numior/primitives';
 import NuiButton from '../button/NuiButton.vue';
 import NuiIcon from '../icon/NuiIcon.vue';
 import NuiList from '../list/NuiList.vue';
 import { optionIndexOf, type NuiOption } from '../shared/options';
 import { useListboxSurface } from '../shared/use-listbox-surface';
 import { useOptionSelection } from '../shared/use-option-selection';
+import { selectMessages } from './select.messages';
 import type { NuiSelectProps } from './select.types';
 
 defineOptions({ inheritAttrs: false });
@@ -102,8 +103,8 @@ const {
   getKey,
   loop = true,
   placement = 'bottom-start',
-  emptyLabel = 'No options',
-  clearLabel = 'Clear',
+  emptyLabel,
+  clearLabel,
   countLabel,
 } = defineProps<NuiSelectProps<T>>();
 
@@ -111,6 +112,7 @@ const model = defineModel<T | T[]>();
 
 const split = useSplitAttrs();
 const field = useField();
+const messages = useMessages(selectMessages);
 
 const {
   attrs: controlAttrs,
@@ -142,8 +144,11 @@ const displayLabel = computed(() => {
   if (labels.length === 1) {
     return labels[0];
   }
-  return countLabel ? countLabel(labels.length) : `${labels.length} selected`;
+  return countLabel ? countLabel(labels.length) : messages.value.count({ count: labels.length });
 });
+
+const emptyText = computed(() => emptyLabel ?? messages.value.empty);
+const clearText = computed(() => clearLabel ?? messages.value.clear);
 
 const showClear = computed(() => clearable && selectedValues.value.length > 0 && !isDisabled.value);
 

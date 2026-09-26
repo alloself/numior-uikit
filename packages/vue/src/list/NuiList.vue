@@ -48,11 +48,11 @@
       <slot />
       <li v-if="loading" class="nui-list__status" role="presentation">
         <NuiIcon alias="loader" class="nui-list__spinner" />
-        {{ loadingLabel }}
+        {{ loadingText }}
       </li>
       <li v-else-if="isEmpty" class="nui-list__empty" role="presentation">
         <slot name="empty">
-          <NuiEmpty size="sm" :hide-icon="variant === 'floating'" :title="emptyLabel" />
+          <NuiEmpty size="sm" :hide-icon="variant === 'floating'" :title="emptyText" />
         </slot>
       </li>
     </component>
@@ -61,13 +61,14 @@
 
 <script setup lang="ts" generic="T, E extends NuiListEntry<T> = NuiListEntry<T>">
 import { computed, onMounted, useTemplateRef } from 'vue';
-import { useControlId, useListNavigation } from '@numior/primitives';
+import { useControlId, useListNavigation, useMessages } from '@numior/primitives';
 import NuiEmpty from '../empty/NuiEmpty.vue';
 import NuiIcon from '../icon/NuiIcon.vue';
 import { flattenEntries, groupEntries, type NuiListEntry } from '../shared/options';
 import { useOptionSelection } from '../shared/use-option-selection';
 import NuiListEntries from './NuiListEntries.vue';
 import { provideList } from './list-context';
+import { listMessages } from './list.messages';
 import type { NuiListProps } from './list.types';
 
 const {
@@ -83,10 +84,10 @@ const {
   keyboard = true,
   activeId,
   loading = false,
-  loadingLabel = 'Loading',
+  loadingLabel,
   label,
   labelledBy,
-  emptyLabel = 'No items',
+  emptyLabel,
   linkAs = 'a',
 } = defineProps<NuiListProps<T, E>>();
 
@@ -94,6 +95,10 @@ const model = defineModel<T | T[] | undefined>();
 const emit = defineEmits<{ select: [item: E] }>();
 
 const listId = useControlId(() => id);
+const messages = useMessages(listMessages);
+
+const loadingText = computed(() => loadingLabel ?? messages.value.loading);
+const emptyText = computed(() => emptyLabel ?? messages.value.empty);
 const naming = computed(() => ({ 'aria-label': label, 'aria-labelledby': labelledBy }));
 
 const rootAria = computed(() =>
