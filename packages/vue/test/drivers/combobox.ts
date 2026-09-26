@@ -174,8 +174,8 @@ export class ComboboxDriver extends ComponentDriver {
     await nextTick();
   }
 
-  async press(key: string): Promise<boolean> {
-    const event = new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true });
+  async press(key: string, init: KeyboardEventInit = {}): Promise<boolean> {
+    const event = new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true, ...init });
     this.input.element.dispatchEvent(event);
     await nextTick();
     return event.defaultPrevented;

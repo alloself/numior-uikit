@@ -129,4 +129,24 @@ describe('NuiCombobox', () => {
     expect(combobox.statusText).toBe('Введите город');
     combobox.unmount();
   });
+
+  it('keeps Enter inside an open list, settles typed text before a submit and ignores IME', async () => {
+    const combobox = ComboboxDriver.mount({ modelValue: 'banana' });
+
+    await combobox.type('zzz');
+    expect(combobox.expanded).toBe(true);
+    expect(await combobox.press('Enter')).toBe(true);
+    expect(combobox.expanded).toBe(false);
+    expect(combobox.text).toBe('zzz');
+    expect(await combobox.press('Enter')).toBe(false);
+    expect(combobox.text).toBe('Banana');
+    expect(combobox.value).toBe('banana');
+    await combobox.type('ap');
+    expect(await combobox.press('Enter', { isComposing: true })).toBe(false);
+    expect(combobox.expanded).toBe(true);
+    expect(combobox.value).toBe('banana');
+    expect(await combobox.press('Enter')).toBe(true);
+    expect(combobox.value).toBe('apple');
+    combobox.unmount();
+  });
 });

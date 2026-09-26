@@ -111,6 +111,7 @@ import NuiButton from '../button/NuiButton.vue';
 import NuiChip from '../chip/NuiChip.vue';
 import NuiIcon from '../icon/NuiIcon.vue';
 import NuiList from '../list/NuiList.vue';
+import { isComposing } from '../shared/composition';
 import { filterOptions, flattenEntries, optionElementId, type NuiOption } from '../shared/options';
 import { useListboxSurface } from '../shared/use-listbox-surface';
 import { useOptionSelection } from '../shared/use-option-selection';
@@ -345,11 +346,26 @@ const openFromKey = (event: KeyboardEvent): boolean => {
 
 const onEnter = (event: KeyboardEvent): void => {
   const active = open.value ? navigation.activeElement() : null;
+
   if (active) {
     event.preventDefault();
     active.click();
-  } else if (commitCustom()) {
+    return;
+  }
+
+  if (commitCustom()) {
     event.preventDefault();
+    return;
+  }
+
+  if (open.value) {
+    event.preventDefault();
+    open.value = false;
+    return;
+  }
+
+  if (filtering.value) {
+    settleQuery();
   }
 };
 
@@ -377,6 +393,10 @@ const KEY_HANDLERS: Record<string, (event: KeyboardEvent) => void> = {
 };
 
 const onKeydown = (event: KeyboardEvent): void => {
+  if (isComposing(event)) {
+    return;
+  }
+
   if (!openFromKey(event)) {
     KEY_HANDLERS[event.key]?.(event);
   }
