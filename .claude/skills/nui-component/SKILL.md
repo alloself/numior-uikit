@@ -55,6 +55,15 @@ commitDraft() })`; `NuiFormField` runs these commits before a programmatic submi
   `extends NuiFieldControlProps` for form controls. Generic components use
   `<script setup lang="ts" generic="T">` and `defineProps<NuiThingProps<T>>()`.
 - Never `withDefaults`, runtime prop objects, `PropType`, `as`, `!`, or comments.
+- Nothing is typed on trust: when a value's type cannot be proven, change the API instead of
+  reading unchecked (form fields bind by selectors `(v) => v.contacts[i]?.name`, the recorded
+  path is checked on every read, string paths yield `unknown`).
+- Related flags or a pending "plan" become a tagged union `{ kind: … }`, taken and cleared in
+  one step (`createIntent().take()`) and read with a `switch` on `kind`.
+- A module that holds only types is named `<name>.types.ts`.
+- Hot paths (typing, row rendering, dragging, per-change validation) never rescan a collection:
+  build a key index once per source change, keep derived values identity-stable while their
+  content is the same, cache `Intl.Collator` and formatters.
 - Arrow constants for every function (`const onInput = (): void => {...}`); no `function`
   declarations unless an own `this` is needed; helpers without closure state go to module
   level; every `if`/`for` body is braced.
