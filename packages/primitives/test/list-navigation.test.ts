@@ -76,6 +76,38 @@ describe('useListNavigation', () => {
     list.unmount();
   });
 
+  it('sees items added, disabled or renamed in the same tick', () => {
+    const list = ListHarness.mount();
+    list.press('End');
+    list.appendNow('Elderberry');
+    list.press('ArrowDown');
+    expect(list.focusedText).toBe('Elderberry');
+    list.disableNow(3);
+    list.press('ArrowUp');
+    list.press('ArrowUp');
+    expect(list.focusedText).toBe('Blueberry');
+    list.relabelNow(0, 'Kiwi');
+    list.advance(600);
+    list.type('k');
+    expect(list.focusedText).toBe('Kiwi');
+    list.unmount();
+  });
+
+  it('walks and searches without reading the DOM again while the items stay the same', () => {
+    const list = ListHarness.mount();
+
+    const queries = list.countQueries(() => {
+      list.press('ArrowDown');
+      list.press('ArrowDown');
+      list.type('c');
+      list.press('End');
+    });
+
+    expect(queries).toBe(1);
+    expect(list.focusedText).toBe('Date');
+    list.unmount();
+  });
+
   it('points aria-activedescendant at options in virtual mode without moving focus', () => {
     const list = ListHarness.mount({ mode: 'virtual' });
     list.press('ArrowDown');

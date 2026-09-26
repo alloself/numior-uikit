@@ -19,22 +19,42 @@ export const extendTypeahead = (
   at: now,
 });
 
-const isRepeated = (query: string): boolean =>
-  query.length > 1 && [...query].every((char) => char === query[0]);
+const isRepeated = (query: string): boolean => {
+  if (query.length < 2) {
+    return false;
+  }
+  for (let index = 1; index < query.length; index += 1) {
+    if (query[index] !== query[0]) {
+      return false;
+    }
+  }
+  return true;
+};
 
-const rotated = (length: number, start: number): number[] =>
-  Array.from({ length }, (_, offset) => (start + offset) % length);
+export const lowerLabels = (labels: readonly string[]): readonly string[] =>
+  labels.map((label) => label.toLowerCase());
 
 export const matchTypeahead = (
-  labels: readonly string[],
+  lowered: readonly string[],
   query: string,
   activeIndex: number,
 ): number => {
-  if (labels.length === 0 || query.length === 0) {
+  const count = lowered.length;
+
+  if (count === 0 || query.length === 0) {
     return -1;
   }
-  const needle = (isRepeated(query) ? query[0] : query)?.toLowerCase() ?? '';
-  const start = query.length > 1 && !isRepeated(query) ? activeIndex : activeIndex + 1;
-  const order = rotated(labels.length, Math.max(0, start) % labels.length);
-  return order.find((index) => labels[index]?.toLowerCase().startsWith(needle)) ?? -1;
+
+  const repeated = isRepeated(query);
+  const needle = (repeated ? query.charAt(0) : query).toLowerCase();
+  const start = Math.max(0, query.length > 1 && !repeated ? activeIndex : activeIndex + 1) % count;
+
+  for (let offset = 0; offset < count; offset += 1) {
+    const index = (start + offset) % count;
+
+    if (lowered[index]?.startsWith(needle) === true) {
+      return index;
+    }
+  }
+  return -1;
 };

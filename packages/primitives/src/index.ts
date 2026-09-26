@@ -188,6 +188,7 @@ export {
   emptyTypeahead,
   extendTypeahead,
   isTypeaheadActive,
+  lowerLabels,
   matchTypeahead,
 } from './list/typeahead';
 export type { TypeaheadState } from './list/typeahead';

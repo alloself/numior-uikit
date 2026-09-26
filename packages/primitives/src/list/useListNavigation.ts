@@ -1,10 +1,20 @@
-import { computed, ref, toValue, type ComputedRef, type MaybeRefOrGetter, type Ref } from 'vue';
+import {
+  computed,
+  getCurrentScope,
+  onScopeDispose,
+  ref,
+  toValue,
+  type ComputedRef,
+  type MaybeRefOrGetter,
+  type Ref,
+} from 'vue';
 import { useDirection } from '../direction/direction-context';
 import { listMoveFor, listTargetIndex, type ListMove, type ListOrientation } from './moves';
 import {
   emptyTypeahead,
   extendTypeahead,
   isTypeaheadActive,
+  lowerLabels,
   matchTypeahead,
   type TypeaheadState,
 } from './typeahead';
@@ -34,7 +44,8 @@ export type ListActiveTarget = HTMLElement | number | string | null;
 export interface ListNavigation {
   readonly activeId: Readonly<Ref<string | undefined>>;
   readonly typeaheadQuery: ComputedRef<string>;
-  items(): HTMLElement[];
+  items(): readonly HTMLElement[];
+  has(element: HTMLElement): boolean;
   activeElement(): HTMLElement | null;
   setActive(target: ListActiveTarget, options?: SetActiveOptions): void;
   reveal(): void;
@@ -47,6 +58,33 @@ export interface ListNavigation {
   onKeydown(event: KeyboardEvent): void;
   onFocusin(event: FocusEvent): void;
 }
+
+interface ItemIndex {
+  readonly list: readonly HTMLElement[];
+  readonly positions: ReadonlyMap<HTMLElement, number>;
+  readonly ids: ReadonlyMap<string, HTMLElement>;
+  lowered: readonly string[] | undefined;
+}
+
+interface ItemWatch {
+  root: HTMLElement | null;
+  observer: MutationObserver | null;
+  index: ItemIndex | null;
+}
+
+const WATCHED: MutationObserverInit = {
+  subtree: true,
+  childList: true,
+  characterData: true,
+  attributeFilter: ['role', 'id', 'hidden', 'disabled', 'aria-disabled', 'aria-label'],
+};
+
+const EMPTY_INDEX: ItemIndex = {
+  list: [],
+  positions: new Map(),
+  ids: new Map(),
+  lowered: [],
+};
 
 const isUsable = (element: HTMLElement): boolean =>
   element.getAttribute('aria-disabled') !== 'true' &&
@@ -67,6 +105,33 @@ const collect = (
 
 const defaultText = (element: HTMLElement): string =>
   (element.getAttribute('aria-label') ?? element.textContent ?? '').trim();
+
+const indexItems = (list: readonly HTMLElement[]): ItemIndex => ({
+  list,
+  positions: new Map(list.map((element, position) => [element, position] as const)),
+  ids: new Map(
+    list.flatMap((element) => (element.id === '' ? [] : [[element.id, element] as const])),
+  ),
+  lowered: undefined,
+});
+
+const observe = (watch: ItemWatch, root: HTMLElement): void => {
+  watch.observer?.disconnect();
+  watch.root = root;
+  watch.index = null;
+
+  watch.observer =
+    typeof MutationObserver === 'undefined'
+      ? null
+      : new MutationObserver(() => {
+          watch.index = null;
+        });
+
+  watch.observer?.observe(root, WATCHED);
+};
+
+const settledIndex = (watch: ItemWatch): ItemIndex | null =>
+  watch.observer === null || watch.observer.takeRecords().length > 0 ? null : watch.index;
 
 const applyTabStop = (
   previous: HTMLElement | null,
@@ -144,13 +209,13 @@ const itemFrom = (target: EventTarget | null, selector: string): HTMLElement | n
   return item instanceof HTMLElement ? item : null;
 };
 
-const resolveTarget = (target: ListActiveTarget, list: HTMLElement[]): HTMLElement | null => {
+const resolveTarget = (target: ListActiveTarget, index: ItemIndex): HTMLElement | null => {
   if (typeof target === 'number') {
-    return list[target] ?? null;
+    return index.list[target] ?? null;
   }
 
   if (typeof target === 'string') {
-    return list.find((item) => item.id === target) ?? null;
+    return index.ids.get(target) ?? null;
   }
 
   return target;
@@ -164,26 +229,45 @@ export const useListNavigation = (
   const typeahead = ref<TypeaheadState>(emptyTypeahead);
   const direction = useDirection(container);
   const held: { node: HTMLElement | null } = { node: null };
+  const watch: ItemWatch = { root: null, observer: null, index: null };
   const roving = (): boolean => (toValue(options.mode) ?? 'roving') === 'roving';
 
-  const items = (): HTMLElement[] => {
+  const itemIndex = (): ItemIndex => {
     const root = toValue(container);
-    return root ? collect(root, options.selector, options.scope) : [];
+
+    if (!root) {
+      return EMPTY_INDEX;
+    }
+    if (watch.root !== root) {
+      observe(watch, root);
+    }
+
+    const index = settledIndex(watch) ?? indexItems(collect(root, options.selector, options.scope));
+
+    watch.index = index;
+    return index;
   };
+
+  const items = (): readonly HTMLElement[] => itemIndex().list;
 
   const activeElement = (): HTMLElement | null => {
     if (held.node?.isConnected) {
       return held.node;
     }
 
-    held.node = activeId.value === undefined ? null : resolveTarget(activeId.value, items());
+    held.node = activeId.value === undefined ? null : resolveTarget(activeId.value, itemIndex());
 
     return held.node;
   };
 
-  const currentIndex = (list: HTMLElement[]): number => {
+  const currentIndex = (index: ItemIndex): number => {
     const active = activeElement();
-    return active ? list.indexOf(active) : -1;
+    return active ? (index.positions.get(active) ?? -1) : -1;
+  };
+
+  const loweredOf = (index: ItemIndex): readonly string[] => {
+    index.lowered ??= lowerLabels(index.list.map(options.itemText ?? defaultText));
+    return index.lowered;
   };
 
   const reveal = (): void => {
@@ -195,7 +279,7 @@ export const useListNavigation = (
   };
 
   const setActive = (target: ListActiveTarget, settings: SetActiveOptions = {}): void => {
-    const element = resolveTarget(target, items());
+    const element = resolveTarget(target, itemIndex());
 
     if (roving()) {
       applyTabStop(activeElement(), element, settings.focus ?? true);
@@ -207,29 +291,31 @@ export const useListNavigation = (
   };
 
   const move = (kind: ListMove): void => {
-    const list = items();
+    const index = itemIndex();
 
-    if (list.length === 0) {
+    if (index.list.length === 0) {
       return;
     }
 
-    const index = listTargetIndex(
+    const target = listTargetIndex(
       kind,
-      currentIndex(list),
-      list.length,
+      currentIndex(index),
+      index.list.length,
       toValue(options.loop) ?? false,
       toValue(options.pageSize) ?? 10,
     );
 
-    setActive(list[index] ?? null);
+    setActive(index.list[target] ?? null);
   };
 
   const match = (key: string): HTMLElement | null => {
-    const list = items();
+    const index = itemIndex();
+
     typeahead.value = extendTypeahead(typeahead.value, key, Date.now());
-    const labels = list.map((element) => (options.itemText ?? defaultText)(element));
-    const found = matchTypeahead(labels, typeahead.value.query, currentIndex(list));
-    return found < 0 ? null : (list[found] ?? null);
+
+    const found = matchTypeahead(loweredOf(index), typeahead.value.query, currentIndex(index));
+
+    return found < 0 ? null : (index.list[found] ?? null);
   };
 
   const reset = (): void => {
@@ -263,15 +349,22 @@ export const useListNavigation = (
   const onFocusin = (event: FocusEvent): void => {
     const item = itemFrom(event.target, options.selector);
 
-    if (roving() && item && item !== activeElement() && items().includes(item)) {
+    if (roving() && item && item !== activeElement() && itemIndex().positions.has(item)) {
       setActive(item, { focus: false });
     }
   };
+
+  if (getCurrentScope()) {
+    onScopeDispose(() => {
+      watch.observer?.disconnect();
+    });
+  }
 
   return {
     activeId,
     typeaheadQuery: computed(() => typeahead.value.query),
     items,
+    has: (element) => itemIndex().positions.has(element),
     activeElement,
     setActive,
     reveal,

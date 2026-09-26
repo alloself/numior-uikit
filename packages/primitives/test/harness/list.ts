@@ -133,6 +133,40 @@ export class ListHarness {
     vi.advanceTimersByTime(ms);
   }
 
+  appendNow(label: string): void {
+    const button = document.createElement('button');
+
+    button.type = 'button';
+    button.setAttribute('role', 'option');
+    button.id = `item-${this.buttons.length}`;
+    button.tabIndex = -1;
+    button.textContent = label;
+    this.container.append(button);
+  }
+
+  disableNow(index: number): void {
+    this.buttons[index]?.setAttribute('aria-disabled', 'true');
+  }
+
+  relabelNow(index: number, label: string): void {
+    const button = this.buttons[index];
+
+    if (button) {
+      button.textContent = label;
+    }
+  }
+
+  countQueries(run: () => void): number {
+    const spy = vi.spyOn(this.container, 'querySelectorAll');
+
+    run();
+
+    const count = spy.mock.calls.length;
+
+    spy.mockRestore();
+    return count;
+  }
+
   async remove(index: number): Promise<void> {
     this.buttons[index]?.remove();
     await nextTick();

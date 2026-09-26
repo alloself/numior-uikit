@@ -186,7 +186,7 @@ export const useMenuSurface = (options: MenuSurfaceOptions): MenuSurface => {
       },
       onPointermove: (event) => {
         const item = itemAt(event.target);
-        if (item && item !== navigation.activeElement() && navigation.items().includes(item)) {
+        if (item && item !== navigation.activeElement() && navigation.has(item)) {
           pointer = true;
           navigation.setActive(item);
         }
