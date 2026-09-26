@@ -1,0 +1,33 @@
+{
+  "name": "@numior/forms",
+  "version": "0.0.0",
+  "private": true,
+  "license": "MIT",
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "@numior/source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "vite build && vue-tsc -p tsconfig.build.json"
+  },
+  "dependencies": {
+    "klona": "2.0.6",
+    "vee-validate": "5.0.0-beta.1"
+  },
+  "devDependencies": {
+    "@vue/test-utils": "2.5.1",
+    "zod": "4.6.5"
+  },
+  "peerDependencies": {
+    "vue": "^3.5.0"
+  },
+  "//": "vee-validate is pinned to 5.0.0-beta.1 (no 5.x GA yet); the reason and the upgrade trigger live in .archcore/forms.adr.md"
+}

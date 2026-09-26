@@ -108,7 +108,27 @@ const code = await importBuild('vue', [
   'NuiDateRangePicker',
 ]);
 
-assert.doesNotMatch(code, /(?:tiptap|prosemirror|reka-ui|spreadsheet|tailwindcss)/i);
+assert.doesNotMatch(code, /(?:tiptap|prosemirror|reka-ui|spreadsheet|tailwindcss|vee-validate)/i);
+
+await importBuild('forms', [
+  'useForm',
+  'useField',
+  'provideForm',
+  'useFormContext',
+  'FORM_KEY',
+  'NuiFormError',
+]);
+
+const formsTypes = (await readdir('packages/forms/dist', { recursive: true })).filter((file) =>
+  file.endsWith('.d.ts'),
+);
+
+assert.ok(formsTypes.length > 0, 'forms must ship declarations');
+
+for (const file of formsTypes) {
+  const declaration = await readFile(resolve('packages/forms/dist', file), 'utf8');
+  assert.doesNotMatch(declaration, /vee-validate/, `forms declarations leak vee-validate: ${file}`);
+}
 
 const PROBE = '\0nui-probe';
 

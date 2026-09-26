@@ -12,7 +12,11 @@ export default defineConfig({
     server: { deps: { inline: [/^@numior\//] } },
     coverage: {
       provider: 'v8',
-      include: ['packages/primitives/src/**/*.ts', 'packages/vue/src/**/*.vue'],
+      include: [
+        'packages/primitives/src/**/*.ts',
+        'packages/vue/src/**/*.vue',
+        'packages/forms/src/**/*.{ts,vue}',
+      ],
     },
   },
 });

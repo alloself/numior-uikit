@@ -1,7 +1,7 @@
 import { readdir, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
-const ROOTS = ['packages/primitives/test', 'packages/vue/test'];
+const ROOTS = ['packages/primitives/test', 'packages/vue/test', 'packages/forms/test'];
 
 const RULES = [
   {

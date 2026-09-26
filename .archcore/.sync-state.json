@@ -211,6 +211,26 @@
       "source": "structure.adr.md",
       "target": "component-authoring.rule.md",
       "type": "related"
+    },
+    {
+      "source": "forms.adr.md",
+      "target": "numior-ui.plan.md",
+      "type": "implements"
+    },
+    {
+      "source": "forms.adr.md",
+      "target": "modular-foundation.adr.md",
+      "type": "depends_on"
+    },
+    {
+      "source": "forms.adr.md",
+      "target": "semantic-release.adr.md",
+      "type": "related"
+    },
+    {
+      "source": "forms.adr.md",
+      "target": "engineering-quality.rule.md",
+      "type": "related"
     }
   ]
 }

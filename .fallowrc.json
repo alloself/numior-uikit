@@ -3,6 +3,7 @@
   "entry": [
     "packages/primitives/src/index.ts",
     "packages/vue/src/index.ts",
+    "packages/forms/src/index.ts",
     "apps/playground/src/tailwind.css",
     "scripts/vite-package-assets.ts"
   ],
@@ -49,6 +50,10 @@
         "patterns": ["packages/vue/**"]
       },
       {
+        "name": "forms",
+        "patterns": ["packages/forms/**"]
+      },
+      {
         "name": "apps",
         "patterns": ["apps/**"]
       },
@@ -79,12 +84,16 @@
         "allow": ["tokens", "primitives", "vue"]
       },
       {
+        "from": "forms",
+        "allow": ["tokens", "primitives", "vue", "forms"]
+      },
+      {
         "from": "apps",
-        "allow": ["tokens", "primitives", "utilities", "tailwind", "vue", "apps"]
+        "allow": ["tokens", "primitives", "utilities", "tailwind", "vue", "forms", "apps"]
       },
       {
         "from": "tests",
-        "allow": ["tokens", "primitives", "utilities", "tailwind", "vue", "apps", "tests"]
+        "allow": ["tokens", "primitives", "utilities", "tailwind", "vue", "forms", "apps", "tests"]
       }
     ]
   },
