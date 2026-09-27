@@ -25,7 +25,7 @@
     "test:ticks": "node scripts/check-tests.mjs",
     "arch:check": "archcore status",
     "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test:ticks && pnpm analyze && pnpm release:check && pnpm build && pnpm test:artifacts && pnpm docs:build",
-    "build:css": "node scripts/copy-css.mjs",
+    "build:css": "node scripts/build-css.ts",
     "release": "semantic-release",
     "release:dry-run": "semantic-release --dry-run",
     "release:check": "node --test scripts/release/*.test.mjs",

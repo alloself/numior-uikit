@@ -5,7 +5,7 @@
     data-nui-theme="system"
     :data-nui-density="density"
     :dir="direction"
-    :style="accents[accent]"
+    :data-nui-accent="accent"
   >
     <header class="intro">
       <span class="eyebrow">NUMIOR UI / FOUNDATION</span>
@@ -32,9 +32,9 @@
         <label
           >Акцент
           <select v-model="accent" data-testid="accent">
-            <option value="indigo">Индиго</option>
-            <option value="emerald">Изумруд</option>
-            <option value="rose">Роза</option>
+            <option v-for="(label, value) in accentLabels" :key="value" :value="value">
+              {{ label }}
+            </option>
           </select>
         </label>
         <label
@@ -175,9 +175,15 @@ const nestedDialogOpen = ref(false);
 const workspace = useTemplateRef<HTMLElement>('workspace');
 const { scheme, resolved } = useColorScheme({ scope: workspace });
 
-const accents: Record<string, Record<string, string>> = {
-  indigo: {},
-  emerald: { '--nui-primary': '#047857', '--nui-primary-foreground': '#ffffff' },
-  rose: { '--nui-primary': '#be123c', '--nui-primary-foreground': '#ffffff' },
+const accentLabels = {
+  indigo: 'Индиго',
+  blue: 'Синий',
+  violet: 'Фиолетовый',
+  emerald: 'Изумруд',
+  teal: 'Бирюзовый',
+  rose: 'Роза',
+  orange: 'Оранжевый',
+  amber: 'Янтарь',
+  slate: 'Графит',
 };
 </script>

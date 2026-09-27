@@ -13,7 +13,7 @@ const importTarget = (line: string, from: URL): URL | null => {
   return specifier ? new URL(specifier, from) : null;
 };
 
-const inlineCss = async (file: URL, seen = new Set<string>()): Promise<string> => {
+export const inlineCss = async (file: URL, seen = new Set<string>()): Promise<string> => {
   const output: string[] = [];
 
   for (const line of (await readFile(file, 'utf8')).split('\n')) {

@@ -6,7 +6,8 @@
     "packages/forms/src/index.ts",
     "packages/forms/src/vee-validate.ts",
     "apps/playground/src/tailwind.css",
-    "scripts/vite-package-assets.ts"
+    "scripts/vite-package-assets.ts",
+    "scripts/build-css.ts"
   ],
   "includeEntryExports": false,
   "ignorePatterns": [

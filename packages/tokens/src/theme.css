@@ -48,9 +48,11 @@
   --nui-focus-ring-offset: 2px;
   --nui-disabled-opacity: 0.5;
 
-  --nui-radius-sm: 0.25rem;
-  --nui-radius-md: 0.5rem;
-  --nui-radius-lg: 0.75rem;
+  --nui-radius-base: 0.5rem;
+  --nui-radius-sm: calc(var(--nui-radius-base) / 2);
+  --nui-radius-md: var(--nui-radius-base);
+  --nui-radius-lg: calc(var(--nui-radius-base) * 1.5);
+  --nui-radius-xl: calc(var(--nui-radius-base) * 2);
   --nui-radius-full: 9999px;
   --nui-radius: var(--nui-radius-md);
 
@@ -68,8 +70,32 @@
   --nui-font-size-sm: 0.875rem;
   --nui-font-size-md: 1rem;
   --nui-font-size-lg: 1.125rem;
+  --nui-font-size-xl: 1.25rem;
+  --nui-font-size-2xl: 1.5rem;
+  --nui-font-size-3xl: 1.875rem;
+  --nui-font-size-4xl: 2.25rem;
+  --nui-font-weight-normal: 400;
+  --nui-font-weight-medium: 500;
+  --nui-font-weight-semibold: 600;
+  --nui-font-weight-bold: 700;
   --nui-line-height: 1.5;
   --nui-line-height-tight: 1.25;
+  --nui-line-height-relaxed: 1.7;
+  --nui-tracking-tight: -0.02em;
+  --nui-measure: 65ch;
+
+  --nui-surface-code: light-dark(oklch(0.967 0.001 286.38), oklch(0.17 0.006 285.89));
+  --nui-syntax-keyword: light-dark(oklch(0.48 0.19 300), oklch(0.8 0.1 300));
+  --nui-syntax-string: light-dark(oklch(0.5 0.12 150), oklch(0.82 0.13 150));
+  --nui-syntax-number: light-dark(oklch(0.52 0.13 50), oklch(0.83 0.11 65));
+  --nui-syntax-function: light-dark(oklch(0.48 0.16 262), oklch(0.8 0.1 250));
+  --nui-syntax-type: light-dark(oklch(0.5 0.085 200), oklch(0.82 0.1 200));
+  --nui-syntax-tag: light-dark(oklch(0.5 0.16 20), oklch(0.8 0.1 20));
+  --nui-syntax-attribute: light-dark(oklch(0.5 0.1 80), oklch(0.85 0.12 90));
+  --nui-syntax-property: light-dark(oklch(0.46 0.12 250), oklch(0.8 0.1 235));
+  --nui-syntax-comment: light-dark(oklch(0.53 0.014 285.94), oklch(0.66 0.013 286.03));
+  --nui-syntax-punctuation: var(--nui-text-muted);
+  --nui-syntax-highlight: color-mix(in oklab, var(--nui-primary) 12%, var(--nui-surface-code));
 
   --nui-shadow-sm: 0 1px 2px oklch(0 0 0 / 0.08);
   --nui-shadow-md: 0 4px 12px oklch(0 0 0 / 0.12);

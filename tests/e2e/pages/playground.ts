@@ -42,7 +42,16 @@ const parseFormsOutput = (text: string): FormsOutput =>
   parseAs(text, isFormsOutput, 'forms output');
 
 export type Theme = 'system' | 'light' | 'dark';
-export type Accent = 'indigo' | 'emerald' | 'rose';
+export type Accent =
+  | 'indigo'
+  | 'blue'
+  | 'violet'
+  | 'emerald'
+  | 'teal'
+  | 'rose'
+  | 'orange'
+  | 'amber'
+  | 'slate';
 export type Density = 'comfortable' | 'compact';
 export type Direction = 'ltr' | 'rtl';
 

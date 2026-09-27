@@ -1,6 +1,6 @@
 import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vite';
-import { packageAssets } from '../../scripts/vite-package-assets';
+import { packageAssets } from '../../scripts/vite-package-assets.ts';
 
 export default defineConfig({
   plugins: [packageAssets({ root: new URL('./', import.meta.url) })],

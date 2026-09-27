@@ -45,8 +45,8 @@ test('theme, scoped overrides, density and RTL work without Tailwind', async ({ 
   await expect(playground.resolvedScheme).toHaveText('light');
   await expectRgb(nested, 'background-color', [165, 180, 252]);
   await playground.setAccent('emerald');
-  await expectRgb(primary, 'background-color', [4, 120, 87]);
-  await expectRgb(playground.swatches.utility, 'background-color', [4, 120, 87]);
+  await expectRgb(primary, 'background-color', [11, 118, 77]);
+  await expectRgb(playground.swatches.utility, 'background-color', [11, 118, 77]);
   await expectRgb(nested, 'background-color', [165, 180, 252]);
   await expect(large).toHaveCSS('min-block-size', '48px');
   await playground.setDensity('compact');
@@ -67,7 +67,7 @@ test('Tailwind utilities consume the same runtime tokens as native CSS', async (
     playground.swatches.utility,
     playground.swatches.tailwind,
   ]) {
-    await expectRgb(target, 'background-color', [190, 18, 60]);
+    await expectRgb(target, 'background-color', [191, 18, 78]);
     await expectRgb(target, 'color', [255, 255, 255]);
   }
 });
