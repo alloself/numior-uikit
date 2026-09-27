@@ -53,6 +53,7 @@
             :tokens="fileNamed(tab.value).tokens"
             :language="fileNamed(tab.value).language"
             :max-lines="30"
+            :copyable="false"
           />
         </template>
       </NuiTabs>
@@ -62,6 +63,7 @@
         :tokens="current.tokens"
         :language="current.language"
         :max-lines="30"
+        :copyable="false"
       />
     </div>
   </div>

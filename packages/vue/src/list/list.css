@@ -226,7 +226,11 @@
 }
 .nui-list-item--selected {
   --_row-icon: var(--nui-primary-soft-foreground);
-  --_row-muted: color-mix(in oklab, var(--nui-primary-soft-foreground) 72%, transparent);
+  --_row-muted: color-mix(
+    in oklab,
+    var(--nui-primary-soft-foreground) 90%,
+    var(--nui-primary-soft)
+  );
 
   background: var(--nui-primary-soft);
   color: var(--nui-primary-soft-foreground);

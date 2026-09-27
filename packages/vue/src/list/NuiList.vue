@@ -46,11 +46,15 @@
         </NuiListEntries>
       </template>
       <slot />
-      <li v-if="loading" class="nui-list__status" role="presentation">
+      <li v-if="loading" class="nui-list__status" :role="selectable ? 'presentation' : undefined">
         <NuiIcon alias="loader" class="nui-list__spinner" />
         {{ loadingText }}
       </li>
-      <li v-else-if="isEmpty" class="nui-list__empty" role="presentation">
+      <li
+        v-else-if="isEmpty"
+        class="nui-list__empty"
+        :role="selectable ? 'presentation' : undefined"
+      >
         <slot name="empty">
           <NuiEmpty size="sm" :hide-icon="variant === 'floating'" :title="emptyText" />
         </slot>

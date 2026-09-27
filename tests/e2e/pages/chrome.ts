@@ -1,4 +1,5 @@
 import type { Locator, Page } from '@playwright/test';
+import { copiedTexts, stubClipboard } from '../helpers/clipboard';
 
 export class ChromeSection {
   readonly root: Locator;
@@ -128,25 +129,12 @@ export class ChromeSection {
       .or(group.locator(`.nui-toggle-group__item[aria-label="${label}"]`));
   }
 
-  async stubClipboard(): Promise<void> {
-    await this.page.addInitScript(() => {
-      const copies: string[] = [];
-
-      Object.defineProperty(navigator, 'clipboard', {
-        configurable: true,
-        value: { writeText: (text: string) => Promise.resolve(copies.push(text)) },
-      });
-
-      Object.defineProperty(window, '__nuiCopies', { value: copies });
-    });
+  stubClipboard(): Promise<void> {
+    return stubClipboard(this.page);
   }
 
   copiedTexts(): Promise<string[]> {
-    return this.page.evaluate(() => {
-      const copies: unknown = Reflect.get(window, '__nuiCopies');
-
-      return Array.isArray(copies) ? copies.filter((copy) => typeof copy === 'string') : [];
-    });
+    return copiedTexts(this.page);
   }
 
   copyButtonOf(code: Locator): Locator {
