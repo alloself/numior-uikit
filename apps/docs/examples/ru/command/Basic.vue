@@ -1,15 +1,17 @@
 <template>
-  <div class="nui-max-w-md nui-border nui-rounded">
-    <NuiCommand :items="commands" @select="last = $event.label">
-      <template #footer>
-        <span class="nui-text-xs nui-text-muted">
-          <NuiKbd keys="arrowup" size="sm" /> <NuiKbd keys="arrowdown" size="sm" /> навигация,
-          <NuiKbd keys="enter" size="sm" /> выбрать
-        </span>
-      </template>
-    </NuiCommand>
+  <div class="nui-flex nui-flex-col nui-gap-3 nui-w-full nui-max-w-md">
+    <div class="nui-border nui-rounded">
+      <NuiCommand :items="commands" @select="last = $event.label">
+        <template #footer>
+          <span class="nui-text-xs nui-text-muted">
+            <NuiKbd keys="arrowup" size="sm" /> <NuiKbd keys="arrowdown" size="sm" /> навигация,
+            <NuiKbd keys="enter" size="sm" /> выбрать
+          </span>
+        </template>
+      </NuiCommand>
+    </div>
+    <p class="nui-m-0 nui-text-sm nui-text-muted">Последняя команда: {{ last || '—' }}</p>
   </div>
-  <p class="nui-m-0 nui-text-sm nui-text-muted">Последняя команда: {{ last || '—' }}</p>
 </template>
 
 <script setup lang="ts">

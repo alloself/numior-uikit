@@ -1,5 +1,5 @@
 <template>
-  <div class="nui-grid-auto-sm nui-gap-3">
+  <div class="nui-w-full nui-grid-auto-sm nui-gap-3">
     <div
       v-for="alias in aliases"
       :key="alias"

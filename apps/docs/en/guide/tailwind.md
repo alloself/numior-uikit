@@ -21,7 +21,7 @@ The integration is optional: the components need neither Tailwind nor its prefli
 | Spacing | `p-nui-1` … `p-nui-8`, `gap-nui-4`, `m-nui-2`                                                                                                                                                |
 | Fonts   | `font-nui`, `font-nui-mono`, `text-nui-xs` … `text-nui-4xl`                                                                                                                                  |
 | Shadows | `shadow-nui-sm`, `shadow-nui-md`, `shadow-nui-lg`                                                                                                                                            |
-| Motion  | `duration-nui-fast                                                                                                                                                                           | normal | slow`, `ease-nui` |
+| Motion  | `duration-nui-fast`, `duration-nui-normal`, `duration-nui-slow`, `ease-nui`                                                                                                                  |
 
 The values are references to `--nui-*`, not copies: overriding a token on `[data-nui-theme]`
 changes both the utilities and the components.

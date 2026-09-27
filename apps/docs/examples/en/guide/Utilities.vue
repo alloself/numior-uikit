@@ -1,5 +1,5 @@
 <template>
-  <div class="nui-grid-auto nui-gap-4">
+  <div class="nui-w-full nui-grid-auto nui-gap-4">
     <div
       v-for="item in stats"
       :key="item.label"

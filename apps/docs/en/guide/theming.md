@@ -91,14 +91,14 @@ or a sidebar can be more compact than the page.
 | Borders    | `--nui-border`, `--nui-border-strong`                                                                                                                                |
 | Roles      | `primary`, `secondary`, `success`, `warning`, `error`, `info`, `neutral`: `--nui-<role>`, `-foreground`, `-soft`, `-soft-foreground`                                 |
 | Focus      | `--nui-focus`, `--nui-focus-ring-width`, `--nui-focus-ring-offset`, `--nui-disabled-opacity`                                                                         |
-| Shape      | `--nui-radius-base`, `--nui-radius-sm                                                                                                                                | md     | lg                                                                        | xl       | full`, `--nui-radius` |
+| Shape      | `--nui-radius-base`, `--nui-radius-sm`, `--nui-radius-md`, `--nui-radius-lg`, `--nui-radius-xl`, `--nui-radius-full`, `--nui-radius`                                 |
 | Spacing    | `--nui-space-1…6`, `--nui-space-8` (0.25rem step)                                                                                                                    |
 | Typography | `--nui-font`, `--nui-font-mono`, `--nui-font-size-xs…4xl`, `--nui-font-weight-*`, `--nui-line-height`, `-tight`, `-relaxed`, `--nui-tracking-tight`, `--nui-measure` |
-| Code       | `--nui-syntax-keyword                                                                                                                                                | string | number                                                                    | function | type                  | tag | attribute | property | comment | variable | punctuation | highlight` |
-| Shadows    | `--nui-shadow-sm                                                                                                                                                     | md     | lg`                                                                       |
-| Motion     | `--nui-duration-fast                                                                                                                                                 | normal | slow`, `--nui-easing`; under `prefers-reduced-motion` the durations are 0 |
+| Code       | `--nui-syntax-keyword`, `-string`, `-number`, `-function`, `-type`, `-tag`, `-attribute`, `-property`, `-comment`, `-variable`, `-punctuation`, `-highlight`         |
+| Shadows    | `--nui-shadow-sm`, `--nui-shadow-md`, `--nui-shadow-lg`                                                                                                              |
+| Motion     | `--nui-duration-fast`, `--nui-duration-normal`, `--nui-duration-slow`, `--nui-easing`; under `prefers-reduced-motion` the durations are 0                            |
 | Layers     | `--nui-z-dropdown`, `--nui-z-overlay`, `--nui-z-toast`                                                                                                               |
-| Controls   | `--nui-control-height-*`, `--nui-control-padding-*`, `--nui-field-padding-*`, `--nui-control-font-size-*` for `sm                                                    | md     | lg` and the current step                                                  |
+| Controls   | `--nui-control-height-*`, `--nui-control-padding-*`, `--nui-field-padding-*`, `--nui-control-font-size-*` for `sm`, `md`, `lg` and the current step                  |
 
 Layers (`NuiDialog`, `NuiDrawer`, `NuiPopover`, `NuiTooltip`) stay in the DOM of their
 opener and inherit its theme, density and `dir` in the top layer.

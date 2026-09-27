@@ -1,15 +1,17 @@
 <template>
-  <NuiButton variant="outline" tone="neutral" @click="open = true">
-    Command palette <NuiKbd keys="mod+j" size="sm" variant="plain" />
-  </NuiButton>
-  <NuiCommandDialog
-    v-model:open="open"
-    v-model:query="query"
-    :items="commands"
-    hotkey="mod+j"
-    @select="last = $event.label"
-  />
-  <p class="nui-m-0 nui-text-sm nui-text-muted">Last command: {{ last || '—' }}</p>
+  <div class="nui-flex nui-flex-col nui-gap-3">
+    <NuiButton variant="outline" tone="neutral" @click="open = true">
+      Command palette <NuiKbd keys="mod+j" size="sm" variant="plain" />
+    </NuiButton>
+    <NuiCommandDialog
+      v-model:open="open"
+      v-model:query="query"
+      :items="commands"
+      hotkey="mod+j"
+      @select="last = $event.label"
+    />
+    <p class="nui-m-0 nui-text-sm nui-text-muted">Last command: {{ last || '—' }}</p>
+  </div>
 </template>
 
 <script setup lang="ts">

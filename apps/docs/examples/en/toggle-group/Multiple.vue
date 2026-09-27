@@ -1,13 +1,15 @@
 <template>
-  <NuiToggleGroup
-    v-model:values="panels"
-    :items="items"
-    multiple
-    icon-only
-    size="sm"
-    label="Panels"
-  />
-  <p class="nui-m-0 nui-text-sm nui-text-muted">Open: {{ panels.join(', ') || 'nothing' }}</p>
+  <div class="nui-flex nui-flex-col nui-gap-3">
+    <NuiToggleGroup
+      v-model:values="panels"
+      :items="items"
+      multiple
+      icon-only
+      size="sm"
+      label="Panels"
+    />
+    <p class="nui-m-0 nui-text-sm nui-text-muted">Open: {{ panels.join(', ') || 'nothing' }}</p>
+  </div>
 </template>
 
 <script setup lang="ts">

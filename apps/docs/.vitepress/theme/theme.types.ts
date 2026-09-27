@@ -146,6 +146,15 @@ export interface ApiTextsProps {
   texts: DocsTexts;
 }
 
+export interface SignatureProps {
+  name?: string | undefined;
+  names?: readonly string[] | undefined;
+}
+
+export interface SignatureViewProps {
+  names: readonly string[];
+}
+
 export interface KeyboardReferenceProps {
   name: string;
 }

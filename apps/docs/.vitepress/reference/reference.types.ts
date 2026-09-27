@@ -1,3 +1,5 @@
+import type { NuiCodeLine } from '@numior/vue';
+
 export interface LocalizedText {
   readonly ru: string;
   readonly en: string;
@@ -83,6 +85,10 @@ export interface DeclarationReference {
   readonly package: string;
   readonly kind: DeclarationKind;
   readonly signature: string;
+}
+
+export interface DeclarationSlice extends DeclarationReference {
+  readonly tokens?: readonly NuiCodeLine[] | undefined;
 }
 
 export interface TokenReference {

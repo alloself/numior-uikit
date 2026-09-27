@@ -20,7 +20,9 @@
     <NuiMenuItem icon="trash" tone="error" @select="last = 'Удалить'">Удалить</NuiMenuItem>
   </NuiMenu>
   <p class="nui-text-sm nui-text-muted">
-    Последнее: {{ last || '—' }} · сетка: {{ grid ? 'да' : 'нет' }} · сортировка: {{ sort }}
+    Показываем {{ grid ? 'сеткой' : 'списком' }}, сортировка
+    {{ sort === 'name' ? 'по имени' : 'по дате' }}.
+    <template v-if="last">Последнее действие: {{ last }}.</template>
   </p>
 </template>
 

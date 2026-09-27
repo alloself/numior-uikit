@@ -21,7 +21,7 @@
 | Отступы  | `p-nui-1` … `p-nui-8`, `gap-nui-4`, `m-nui-2`                                                                                                                                                |
 | Шрифты   | `font-nui`, `font-nui-mono`, `text-nui-xs` … `text-nui-4xl`                                                                                                                                  |
 | Тени     | `shadow-nui-sm`, `shadow-nui-md`, `shadow-nui-lg`                                                                                                                                            |
-| Движение | `duration-nui-fast                                                                                                                                                                           | normal | slow`, `ease-nui` |
+| Движение | `duration-nui-fast`, `duration-nui-normal`, `duration-nui-slow`, `ease-nui`                                                                                                                  |
 
 Значения — ссылки на `--nui-*`, а не копии: переопределение токена на `[data-nui-theme]`
 меняет и утилиты, и компоненты.

@@ -15,6 +15,7 @@ import ApiReference from './parts/ApiReference.vue';
 import DocsConfigurator from './parts/DocsConfigurator.vue';
 import DocsExample from './parts/DocsExample.vue';
 import DocsKeyboard from './parts/DocsKeyboard.vue';
+import DocsSignature from './parts/DocsSignature.vue';
 
 const isComponent = (value: unknown): value is Component =>
   typeof value === 'object' && value !== null && ('setup' in value || 'render' in value);
@@ -43,5 +44,6 @@ export default {
     app.component('Configurator', DocsConfigurator);
     app.component('Example', DocsExample);
     app.component('KeyboardReference', DocsKeyboard);
+    app.component('SignatureReference', DocsSignature);
   },
 } satisfies Theme;

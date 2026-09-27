@@ -3,7 +3,7 @@
     v-model:ratio="ratio"
     orientation="vertical"
     :step="0.1"
-    class="nui-h-80 nui-border nui-rounded"
+    class="nui-w-full nui-h-80 nui-border nui-rounded nui-bg-surface"
   >
     <template #start>
       <div class="nui-p-4 nui-text-center nui-text-muted">Редактор</div>

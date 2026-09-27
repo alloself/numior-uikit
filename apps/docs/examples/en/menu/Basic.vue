@@ -20,7 +20,8 @@
     <NuiMenuItem icon="trash" tone="error" @select="last = 'Delete'">Delete</NuiMenuItem>
   </NuiMenu>
   <p class="nui-text-sm nui-text-muted">
-    Last: {{ last || '—' }} · grid: {{ grid ? 'yes' : 'no' }} · sort: {{ sort }}
+    Shown as a {{ grid ? 'grid' : 'list' }}, sorted by {{ sort === 'name' ? 'name' : 'date' }}.
+    <template v-if="last">Last action: {{ last }}.</template>
   </p>
 </template>
 

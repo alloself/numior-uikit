@@ -1,10 +1,12 @@
 <template>
-  <NuiRadioGroup v-model="warehouse" label="Shipping warehouse">
-    <NuiRadio v-for="item in warehouses" :key="item.code" :value="item">
-      {{ item.city }} · {{ item.code }}
-    </NuiRadio>
-  </NuiRadioGroup>
-  <p class="nui-text-sm nui-text-muted">Selected: {{ warehouse?.city ?? '—' }}</p>
+  <div class="nui-flex nui-flex-col nui-gap-3">
+    <NuiRadioGroup v-model="warehouse" label="Shipping warehouse">
+      <NuiRadio v-for="item in warehouses" :key="item.code" :value="item">
+        {{ item.city }} · {{ item.code }}
+      </NuiRadio>
+    </NuiRadioGroup>
+    <p class="nui-text-sm nui-text-muted">Selected: {{ warehouse?.city ?? '—' }}</p>
+  </div>
 </template>
 
 <script setup lang="ts">

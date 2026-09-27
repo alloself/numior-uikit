@@ -1,5 +1,9 @@
 import registry from 'virtual:nui-reference';
-import type { CatalogReference, ComponentReference } from '../reference/reference.types';
+import type {
+  CatalogReference,
+  ComponentReference,
+  DeclarationSlice,
+} from '../reference/reference.types';
 
 export const loadComponentReference = async (name: string): Promise<ComponentReference> => {
   const loader = registry.components[name];
@@ -27,4 +31,18 @@ export const loadCatalogReference = async (namespace: string): Promise<CatalogRe
     throw new Error(`Unknown catalog in the docs reference: ${namespace}`);
   }
   return catalog;
+};
+
+export const loadDeclarationReference = async (name: string): Promise<DeclarationSlice> => {
+  const loader = registry.declarations[name];
+
+  if (loader === undefined) {
+    throw new Error(`Unknown declaration in the docs reference: ${name}`);
+  }
+  const declaration = (await loader()).default;
+
+  if (declaration === null) {
+    throw new Error(`Unknown declaration in the docs reference: ${name}`);
+  }
+  return declaration;
 };

@@ -13,7 +13,11 @@ declare module 'virtual:nui-examples' {
 }
 
 declare module 'virtual:nui-reference' {
-  import type { CatalogReference, ComponentReference } from '../reference/reference.types';
+  import type {
+    CatalogReference,
+    ComponentReference,
+    DeclarationSlice,
+  } from '../reference/reference.types';
 
   interface ReferenceRegistry {
     readonly components: Readonly<
@@ -21,6 +25,9 @@ declare module 'virtual:nui-reference' {
     >;
     readonly catalogs: Readonly<
       Record<string, () => Promise<{ readonly default: CatalogReference | null }>>
+    >;
+    readonly declarations: Readonly<
+      Record<string, () => Promise<{ readonly default: DeclarationSlice | null }>>
     >;
   }
 

@@ -1,6 +1,8 @@
 <template>
-  <NuiCalendar v-model="dates" mode="multiple" size="sm" today="2026-09-27" />
-  <p class="nui-text-sm nui-text-muted">On duty: {{ Array.isArray(dates) ? dates.length : 0 }}</p>
+  <div class="nui-flex nui-flex-col nui-gap-3">
+    <NuiCalendar v-model="dates" mode="multiple" size="sm" today="2026-09-27" />
+    <p class="nui-text-sm nui-text-muted">On duty: {{ Array.isArray(dates) ? dates.length : 0 }}</p>
+  </div>
 </template>
 
 <script setup lang="ts">

@@ -1,12 +1,14 @@
 <template>
-  <NuiTree
-    v-model="selected"
-    v-model:expanded="expanded"
-    :items="files"
-    label="Project files"
-    class="nui-w-full nui-max-w-sm"
-  />
-  <p class="nui-text-sm nui-text-muted">Selected: {{ selected ?? '—' }}</p>
+  <div class="nui-flex nui-flex-col nui-gap-3">
+    <NuiTree
+      v-model="selected"
+      v-model:expanded="expanded"
+      :items="files"
+      label="Project files"
+      class="nui-w-full nui-max-w-sm"
+    />
+    <p class="nui-text-sm nui-text-muted">Selected: {{ selected ?? '—' }}</p>
+  </div>
 </template>
 
 <script setup lang="ts">

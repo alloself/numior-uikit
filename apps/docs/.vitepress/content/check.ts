@@ -61,7 +61,8 @@ export const checkContent = (root: string): string[] => {
   return [...styleProblems(root, files), ...pageProblems(root, files)];
 };
 
-const UNRESOLVED_RE = /<(?:Nui[A-Za-z]*|Example|ApiReference|Configurator)\b/;
+const UNRESOLVED_RE =
+  /<(?:Nui[A-Za-z]*|Example|ApiReference|Configurator|SignatureReference|KeyboardReference)\b/;
 
 export const checkDist = (dist: string): string[] =>
   walk(dist)

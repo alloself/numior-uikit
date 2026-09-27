@@ -1,5 +1,8 @@
 import { existsSync, readFileSync } from 'node:fs';
 import type { Plugin } from 'vitepress';
+import type { Highlighter } from 'shiki';
+import type { NuiCodeLine } from '@numior/vue';
+import { tokenizeCode } from '../markdown/tokens.ts';
 import { parseBundle } from './bundle.ts';
 import type { ReferenceBundle } from './reference.types.ts';
 
@@ -7,6 +10,10 @@ const REGISTRY_ID = 'virtual:nui-reference';
 const SLICE_PREFIX = 'virtual:nui-reference/';
 const RESOLVED_REGISTRY = `\0${REGISTRY_ID}`;
 const RESOLVED_PREFIX = `\0${SLICE_PREFIX}`;
+
+export type SignatureTokenizer = (code: string) => readonly NuiCodeLine[] | undefined;
+
+const noTokens: SignatureTokenizer = () => undefined;
 
 const lazyEntries = (names: readonly string[], kind: string): string =>
   names
@@ -17,9 +24,29 @@ const lazyEntries = (names: readonly string[], kind: string): string =>
     .join(', ');
 
 const registryModule = (bundle: ReferenceBundle): string =>
-  `export default { components: { ${lazyEntries(Object.keys(bundle.components), 'component')} }, catalogs: { ${lazyEntries(Object.keys(bundle.catalogs), 'catalog')} } };\n`;
+  `export default { components: { ${lazyEntries(Object.keys(bundle.components), 'component')} }, catalogs: { ${lazyEntries(Object.keys(bundle.catalogs), 'catalog')} }, declarations: { ${lazyEntries(
+    bundle.declarations.map((entry) => entry.name),
+    'declaration',
+  )} } };\n`;
 
-const sliceModule = (bundle: ReferenceBundle, key: string): string => {
+const declarationModule = (
+  bundle: ReferenceBundle,
+  name: string,
+  tokenize: SignatureTokenizer,
+): string => {
+  const declaration = bundle.declarations.find((entry) => entry.name === name);
+
+  if (declaration === undefined) {
+    return 'export default null;\n';
+  }
+  return `export default ${JSON.stringify({ ...declaration, tokens: tokenize(declaration.signature) })};\n`;
+};
+
+const sliceModule = (
+  bundle: ReferenceBundle,
+  key: string,
+  tokenize: SignatureTokenizer,
+): string => {
   const [kind, name] = key.split('/');
 
   switch (kind) {
@@ -27,6 +54,8 @@ const sliceModule = (bundle: ReferenceBundle, key: string): string => {
       return `export default ${JSON.stringify(bundle.components[name ?? ''] ?? null)};\n`;
     case 'catalog':
       return `export default ${JSON.stringify(bundle.catalogs[name ?? ''] ?? null)};\n`;
+    case 'declaration':
+      return declarationModule(bundle, name ?? '', tokenize);
     case 'tokens':
       return `export default ${JSON.stringify(bundle.tokens)};\n`;
     case 'icons':
@@ -44,12 +73,13 @@ export const resolveReferenceId = (id: string): string | undefined =>
 export const loadReferenceModule = (
   bundle: () => ReferenceBundle,
   id: string,
+  tokenize: SignatureTokenizer = noTokens,
 ): string | undefined => {
   if (id === RESOLVED_REGISTRY) {
     return registryModule(bundle());
   }
   return id.startsWith(RESOLVED_PREFIX)
-    ? sliceModule(bundle(), id.slice(RESOLVED_PREFIX.length))
+    ? sliceModule(bundle(), id.slice(RESOLVED_PREFIX.length), tokenize)
     : undefined;
 };
 
@@ -60,7 +90,7 @@ const readBundle = (file: string): ReferenceBundle => {
   return parseBundle(readFileSync(file, 'utf8'));
 };
 
-export const docsReference = (file: string): Plugin => {
+export const docsReference = (file: string, highlighter: Highlighter): Plugin => {
   let bundle: ReferenceBundle | undefined;
 
   const current = (): ReferenceBundle => {
@@ -68,9 +98,11 @@ export const docsReference = (file: string): Plugin => {
     return bundle;
   };
 
+  const tokenize: SignatureTokenizer = (code) => tokenizeCode(highlighter, code, 'ts');
+
   return {
     name: 'nui-docs-reference',
     resolveId: resolveReferenceId,
-    load: (id) => loadReferenceModule(current, id),
+    load: (id) => loadReferenceModule(current, id, tokenize),
   };
 };

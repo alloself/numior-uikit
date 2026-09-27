@@ -88,14 +88,14 @@ custom property вычисляется там, где она объявлена,
 | Границы     | `--nui-border`, `--nui-border-strong`                                                                                                                                |
 | Роли        | `primary`, `secondary`, `success`, `warning`, `error`, `info`, `neutral`: `--nui-<role>`, `-foreground`, `-soft`, `-soft-foreground`                                 |
 | Фокус       | `--nui-focus`, `--nui-focus-ring-width`, `--nui-focus-ring-offset`, `--nui-disabled-opacity`                                                                         |
-| Форма       | `--nui-radius-base`, `--nui-radius-sm                                                                                                                                | md     | lg                                                                       | xl       | full`, `--nui-radius` |
+| Форма       | `--nui-radius-base`, `--nui-radius-sm`, `--nui-radius-md`, `--nui-radius-lg`, `--nui-radius-xl`, `--nui-radius-full`, `--nui-radius`                                 |
 | Отступы     | `--nui-space-1…6`, `--nui-space-8` (шаг 0.25rem)                                                                                                                     |
 | Типографика | `--nui-font`, `--nui-font-mono`, `--nui-font-size-xs…4xl`, `--nui-font-weight-*`, `--nui-line-height`, `-tight`, `-relaxed`, `--nui-tracking-tight`, `--nui-measure` |
-| Код         | `--nui-syntax-keyword                                                                                                                                                | string | number                                                                   | function | type                  | tag | attribute | property | comment | variable | punctuation | highlight` |
-| Тени        | `--nui-shadow-sm                                                                                                                                                     | md     | lg`                                                                      |
-| Движение    | `--nui-duration-fast                                                                                                                                                 | normal | slow`, `--nui-easing`; при `prefers-reduced-motion` длительности равны 0 |
+| Код         | `--nui-syntax-keyword`, `-string`, `-number`, `-function`, `-type`, `-tag`, `-attribute`, `-property`, `-comment`, `-variable`, `-punctuation`, `-highlight`         |
+| Тени        | `--nui-shadow-sm`, `--nui-shadow-md`, `--nui-shadow-lg`                                                                                                              |
+| Движение    | `--nui-duration-fast`, `--nui-duration-normal`, `--nui-duration-slow`, `--nui-easing`; при `prefers-reduced-motion` длительности равны 0                             |
 | Слои        | `--nui-z-dropdown`, `--nui-z-overlay`, `--nui-z-toast`                                                                                                               |
-| Контролы    | `--nui-control-height-*`, `--nui-control-padding-*`, `--nui-field-padding-*`, `--nui-control-font-size-*` для `sm                                                    | md     | lg` и текущей ступени                                                    |
+| Контролы    | `--nui-control-height-*`, `--nui-control-padding-*`, `--nui-field-padding-*`, `--nui-control-font-size-*` для `sm`, `md`, `lg` и текущей ступени                     |
 
 Слои (`NuiDialog`, `NuiDrawer`, `NuiPopover`, `NuiTooltip`) остаются в DOM инициатора и
 наследуют его тему, плотность и `dir` в top layer.

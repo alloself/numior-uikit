@@ -1,6 +1,8 @@
 <template>
-  <NuiToggleGroup v-model="scheme" :items="schemes" variant="segmented" required label="Scheme" />
-  <p class="nui-m-0 nui-text-sm nui-text-muted">Selected: {{ scheme }}</p>
+  <div class="nui-flex nui-flex-col nui-gap-3">
+    <NuiToggleGroup v-model="scheme" :items="schemes" variant="segmented" required label="Scheme" />
+    <p class="nui-m-0 nui-text-sm nui-text-muted">Selected: {{ scheme }}</p>
+  </div>
 </template>
 
 <script setup lang="ts">

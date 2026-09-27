@@ -1,13 +1,15 @@
 <template>
-  <NuiTree
-    v-model:checked="checked"
-    :items="files"
-    :selectable="false"
-    checkable
-    label="Export"
-    class="nui-w-full nui-max-w-sm"
-  />
-  <p class="nui-text-sm nui-text-muted">Checked: {{ checked.length }}</p>
+  <div class="nui-flex nui-flex-col nui-gap-3">
+    <NuiTree
+      v-model:checked="checked"
+      :items="files"
+      :selectable="false"
+      checkable
+      label="Export"
+      class="nui-w-full nui-max-w-sm"
+    />
+    <p class="nui-text-sm nui-text-muted">Checked: {{ checked.length }}</p>
+  </div>
 </template>
 
 <script setup lang="ts">

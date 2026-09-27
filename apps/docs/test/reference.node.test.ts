@@ -245,7 +245,14 @@ describe('docs reference', () => {
       version: 1,
       components: { NuiButton: button },
       catalogs: { code: { namespace: 'code', texts: {} } },
-      declarations: [],
+      declarations: [
+        {
+          name: 'useHotkey',
+          package: '@numior/primitives',
+          kind: 'function',
+          signature: 'useHotkey: () => void',
+        },
+      ],
       tokens: [],
       icons: [],
     };
@@ -265,6 +272,20 @@ describe('docs reference', () => {
 
     expect(loadReferenceModule(current, '\0virtual:nui-reference/catalog/code')).toContain(
       '"namespace":"code"',
+    );
+
+    expect(loadReferenceModule(current, '\0virtual:nui-reference')).toContain(
+      '"useHotkey": () => import("virtual:nui-reference/declaration/useHotkey")',
+    );
+
+    expect(
+      loadReferenceModule(current, '\0virtual:nui-reference/declaration/useHotkey', () => [
+        [{ text: 'useHotkey', scope: 'function' }],
+      ]),
+    ).toContain('"tokens":[[{"text":"useHotkey","scope":"function"}]]');
+
+    expect(loadReferenceModule(current, '\0virtual:nui-reference/declaration/nope')).toBe(
+      'export default null;\n',
     );
 
     expect(loadReferenceModule(current, '\0virtual:nui-reference/tokens')).toBe(

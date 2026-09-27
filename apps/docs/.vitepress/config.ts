@@ -145,8 +145,69 @@ const ruComponents: DocsSidebarGroup[] = [
   },
 ];
 
+const ruComposables: DocsSidebarGroup[] = [
+  {
+    text: 'Тема и среда',
+    items: [
+      { text: 'useColorScheme', link: '/composables/color-scheme' },
+      { text: 'useDirection', link: '/composables/direction' },
+      { text: 'useLocale', link: '/composables/locale' },
+      { text: 'useMessages', link: '/composables/messages' },
+      { text: 'useMediaQuery', link: '/composables/media-query' },
+    ],
+  },
+  {
+    text: 'Взаимодействие',
+    items: [
+      { text: 'useHotkey', link: '/composables/hotkey' },
+      { text: 'useClipboard', link: '/composables/clipboard' },
+      { text: 'useScrollSpy', link: '/composables/scroll-spy' },
+      { text: 'useToast', link: '/composables/toast' },
+    ],
+  },
+  {
+    text: 'Списки',
+    items: [
+      { text: 'useListNavigation', link: '/composables/list-navigation' },
+      { text: 'useVirtualList', link: '/composables/virtual-list' },
+      { text: 'useReorder', link: '/composables/reorder' },
+    ],
+  },
+  {
+    text: 'Слои',
+    items: [
+      { text: 'useFloating', link: '/composables/floating' },
+      { text: 'usePopover', link: '/composables/popover' },
+      { text: 'useDialog', link: '/composables/dialog' },
+    ],
+  },
+  {
+    text: 'Поля и формы',
+    items: [
+      { text: 'useFieldControl', link: '/composables/field-control' },
+      { text: 'useForm', link: '/composables/form' },
+    ],
+  },
+  {
+    text: 'Файлы',
+    items: [
+      { text: 'useFileDrop', link: '/composables/file-drop' },
+      { text: 'useUploadQueue', link: '/composables/upload-queue' },
+    ],
+  },
+  {
+    text: 'Разное',
+    items: [
+      { text: 'useLayout', link: '/composables/layout' },
+      { text: 'useIcon', link: '/composables/icon' },
+      { text: 'useBlockSizeTween', link: '/composables/block-size-tween' },
+    ],
+  },
+];
+
 const ruSidebar: DocsSidebarSections = {
   '/guide/': ruGuide,
+  '/composables/': ruComposables,
   '/components/': ruComponents,
 };
 
@@ -263,8 +324,69 @@ const enComponents: DocsSidebarGroup[] = [
   },
 ];
 
+const enComposables: DocsSidebarGroup[] = [
+  {
+    text: 'Theme and environment',
+    items: [
+      { text: 'useColorScheme', link: '/en/composables/color-scheme' },
+      { text: 'useDirection', link: '/en/composables/direction' },
+      { text: 'useLocale', link: '/en/composables/locale' },
+      { text: 'useMessages', link: '/en/composables/messages' },
+      { text: 'useMediaQuery', link: '/en/composables/media-query' },
+    ],
+  },
+  {
+    text: 'Interaction',
+    items: [
+      { text: 'useHotkey', link: '/en/composables/hotkey' },
+      { text: 'useClipboard', link: '/en/composables/clipboard' },
+      { text: 'useScrollSpy', link: '/en/composables/scroll-spy' },
+      { text: 'useToast', link: '/en/composables/toast' },
+    ],
+  },
+  {
+    text: 'Lists',
+    items: [
+      { text: 'useListNavigation', link: '/en/composables/list-navigation' },
+      { text: 'useVirtualList', link: '/en/composables/virtual-list' },
+      { text: 'useReorder', link: '/en/composables/reorder' },
+    ],
+  },
+  {
+    text: 'Layers',
+    items: [
+      { text: 'useFloating', link: '/en/composables/floating' },
+      { text: 'usePopover', link: '/en/composables/popover' },
+      { text: 'useDialog', link: '/en/composables/dialog' },
+    ],
+  },
+  {
+    text: 'Fields and forms',
+    items: [
+      { text: 'useFieldControl', link: '/en/composables/field-control' },
+      { text: 'useForm', link: '/en/composables/form' },
+    ],
+  },
+  {
+    text: 'Files',
+    items: [
+      { text: 'useFileDrop', link: '/en/composables/file-drop' },
+      { text: 'useUploadQueue', link: '/en/composables/upload-queue' },
+    ],
+  },
+  {
+    text: 'Miscellaneous',
+    items: [
+      { text: 'useLayout', link: '/en/composables/layout' },
+      { text: 'useIcon', link: '/en/composables/icon' },
+      { text: 'useBlockSizeTween', link: '/en/composables/block-size-tween' },
+    ],
+  },
+];
+
 const enSidebar: DocsSidebarSections = {
   '/en/guide/': enGuide,
+  '/en/composables/': enComposables,
   '/en/components/': enComponents,
 };
 
@@ -283,7 +405,7 @@ export default defineConfigWithTheme<DocsThemeConfig>({
     resolve: process.env.NODE_ENV === 'production' ? {} : { conditions: ['@numior/source'] },
     plugins: [
       docsExamples(fileURLToPath(new URL('../examples', import.meta.url)), highlighter),
-      docsReference(bundleFile),
+      docsReference(bundleFile, highlighter),
     ],
   },
   themeConfig: {
@@ -301,6 +423,7 @@ export default defineConfigWithTheme<DocsThemeConfig>({
         nav: [
           { text: 'Руководство', link: '/guide/getting-started', section: '/guide/' },
           { text: 'Компоненты', link: '/components/button', section: '/components/' },
+          { text: 'Композаблы', link: '/composables/color-scheme', section: '/composables/' },
         ],
         sidebar: ruSidebar,
         texts: ru,
@@ -313,6 +436,11 @@ export default defineConfigWithTheme<DocsThemeConfig>({
         nav: [
           { text: 'Guide', link: '/en/guide/getting-started', section: '/en/guide/' },
           { text: 'Components', link: '/en/components/button', section: '/en/components/' },
+          {
+            text: 'Composables',
+            link: '/en/composables/color-scheme',
+            section: '/en/composables/',
+          },
         ],
         sidebar: enSidebar,
         texts: en,

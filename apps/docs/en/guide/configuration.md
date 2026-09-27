@@ -27,12 +27,16 @@ createApp(App)
 | Option        | Type                                   | What it does                                                                          |
 | ------------- | -------------------------------------- | ------------------------------------------------------------------------------------- |
 | `locale`      | `string`, ref or getter                | Number, date and time formats and the language of built-in texts; `en-US` without it. |
-| `dir`         | `'ltr' \| 'rtl'`, ref or getter        | Writing direction; without it the nearest `dir` attribute is read.                    |
+| `dir`         | `'ltr' \\                              | 'rtl'`, ref or getter                                                                 | Writing direction; without it the nearest `dir` attribute is read. |
 | `messages`    | `NuiLocaleMessages`, ref or getter     | Dictionary overrides and new languages, see [Localization](/en/guide/localization).   |
 | `translate`   | `(key, params, locale) => string?`     | Texts from the app's i18n library, asked before the dictionary.                       |
 | `icons`       | `Record<string, Component>`            | Icon registry by alias, see [Icon](/en/components/icon).                              |
 | `colorScheme` | `{ storageKey?, initial?, scope? }`    | Shared colour scheme for `useColorScheme`, see [Theming](/en/guide/theming).          |
 | `toasts`      | `{ duration?, exitDuration?, limit? }` | Lifetime and number of simultaneous toasts, see [Toast](/en/components/toast).        |
+
+## Signature
+
+<SignatureReference :names="['createNuiConfig', 'provideNuiConfig']" />
 
 ## Subtree
 

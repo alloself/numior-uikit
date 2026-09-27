@@ -1,5 +1,5 @@
 <template>
-  <div class="nui-grid-auto nui-gap-6">
+  <div class="nui-w-full nui-grid-auto nui-gap-6">
     <div
       ref="article"
       class="nui-h-80 nui-overflow-auto nui-border nui-rounded nui-p-4"

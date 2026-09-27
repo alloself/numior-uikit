@@ -1,12 +1,14 @@
 <template>
-  <NuiCalendar
-    v-model="date"
-    today="2026-09-27"
-    min="2026-09-02"
-    week-numbers
-    :is-date-disabled="isWeekend"
-  />
-  <p class="nui-text-sm nui-text-muted">Выбрано: {{ date ?? '—' }}</p>
+  <div class="nui-flex nui-flex-col nui-gap-3">
+    <NuiCalendar
+      v-model="date"
+      today="2026-09-27"
+      min="2026-09-02"
+      week-numbers
+      :is-date-disabled="isWeekend"
+    />
+    <p class="nui-text-sm nui-text-muted">Выбрано: {{ date ?? '—' }}</p>
+  </div>
 </template>
 
 <script setup lang="ts">

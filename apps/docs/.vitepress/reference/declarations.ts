@@ -19,7 +19,10 @@ const signatureOf = (
   kind: DeclarationKind,
 ): string =>
   kind === 'type'
-    ? declaration.getText().replace(/^export\s+(declare\s+)?/, '')
+    ? declaration
+        .getText()
+        .replace(/^export\s+(declare\s+)?/, '')
+        .replaceAll(/^(?: {4})+/gm, (indent) => ' '.repeat(indent.length / 2))
     : `${symbol.name}: ${checker.typeToString(
         checker.getTypeOfSymbolAtLocation(symbol, declaration),
         declaration,

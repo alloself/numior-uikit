@@ -6,7 +6,7 @@
       </NuiButton>
     </template>
   </NuiMenu>
-  <p class="nui-text-sm nui-text-muted">Last: {{ last || '—' }}</p>
+  <p class="nui-text-sm nui-text-muted">Action: {{ last || 'none yet' }}</p>
 </template>
 
 <script setup lang="ts">

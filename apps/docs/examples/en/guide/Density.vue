@@ -1,5 +1,5 @@
 <template>
-  <div class="nui-grid-auto nui-gap-6">
+  <div class="nui-w-full nui-grid-auto nui-gap-6">
     <div data-nui-density="comfortable" class="nui-flex nui-flex-col nui-gap-3">
       <p class="nui-m-0 nui-text-sm nui-text-muted">comfortable</p>
       <NuiInput v-model="query" label="Search" placeholder="Product name" />
