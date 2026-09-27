@@ -15,7 +15,10 @@ status: accepted
   Boolean, который должен наследоваться из контекста поля, получает дефолт `= undefined`
   (тристейт). `withDefaults`, runtime-объекты props и `PropType` запрещены. v-model только
   через `defineModel`. Композаблы получают destructured props через getter:
-  `useFieldControl(() => ({ id, disabled, required, invalid }))`. Контрол, который держит
+  `useFieldControl(() => ({ id, disabled, required, invalid, label, description, error }))`;
+  корень контрола оборачивается в `NuiFieldFrame v-bind="fieldFrame"`, так что `label`,
+  `description` и `error` рисуются самим контролом, а `NuiField` нужен только для слотов и
+  нескольких контролов в одном поле. Контрол, который держит
   неподтверждённый ввод (lazy-текст, число до blur, свой текст комбобокса, незажатое время),
   передаёт его коммит вторым аргументом: `useFieldControl(props, { commit: () => commitDraft() })`;
   поле формы вызывает эти коммиты перед программной отправкой.

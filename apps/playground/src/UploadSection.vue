@@ -13,7 +13,7 @@
           :max-size="1024 * 1024"
           :max-files="3"
           :rejected="rejectedMode"
-          hint="PDF или TXT, до 1 МБ"
+          description="PDF или TXT, до 1 МБ"
           data-testid="upload-documents"
           @reject="onReject"
         />

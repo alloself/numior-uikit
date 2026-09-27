@@ -7,47 +7,47 @@
       >
     </div>
     <form class="form" @submit.prevent="submitted++" @reset.prevent="reset">
-      <NuiField label="Имя" description="Как к вам обращаться" required>
-        <NuiInput
-          v-model="name"
-          data-testid="input-name"
-          placeholder="Алексей"
-          autocomplete="name"
-        />
-      </NuiField>
-      <NuiField label="Почта" description="Рабочий адрес" :error="emailError">
-        <NuiInput v-model.trim="email" type="email" data-testid="input-email" autocomplete="email">
-          <template #prefix>@</template>
-        </NuiInput>
-      </NuiField>
-      <NuiField label="Телефон" description="Маска +7 (###) ###-##-##, в модели только цифры">
-        <NuiInput
-          v-model.unmasked="phone"
-          type="tel"
-          mask="+7 (###) ###-##-##"
-          data-testid="input-phone"
-          autocomplete="tel"
-        />
-      </NuiField>
-      <NuiField label="О себе">
-        <NuiTextarea v-model="bio" data-testid="textarea-bio" />
-      </NuiField>
-      <NuiField label="Крупное поле">
-        <NuiInput size="lg" data-testid="input-lg" />
-      </NuiField>
-      <NuiField label="Недоступное поле" disabled>
-        <NuiInput model-value="Нельзя изменить" />
-      </NuiField>
+      <NuiInput
+        v-model="name"
+        label="Имя"
+        description="Как к вам обращаться"
+        required
+        data-testid="input-name"
+        placeholder="Алексей"
+        autocomplete="name"
+      />
+      <NuiInput
+        v-model.trim="email"
+        type="email"
+        label="Почта"
+        description="Рабочий адрес"
+        :error="emailError"
+        data-testid="input-email"
+        autocomplete="email"
+      >
+        <template #prefix>@</template>
+      </NuiInput>
+      <NuiInput
+        v-model.unmasked="phone"
+        type="tel"
+        mask="+7 (###) ###-##-##"
+        label="Телефон"
+        description="Маска +7 (###) ###-##-##, в модели только цифры"
+        data-testid="input-phone"
+        autocomplete="tel"
+      />
+      <NuiTextarea v-model="bio" label="О себе" data-testid="textarea-bio" />
+      <NuiInput size="lg" label="Крупное поле" data-testid="input-lg" />
+      <NuiInput model-value="Нельзя изменить" label="Недоступное поле" disabled />
       <NuiCheckbox v-model="terms" data-testid="checkbox-terms">Принимаю условия</NuiCheckbox>
       <NuiCheckbox indeterminate data-testid="checkbox-indeterminate">Частично выбрано</NuiCheckbox>
-      <NuiField group label="Каналы">
-        <NuiCheckboxGroup
-          v-model="channels"
-          :options="CHANNELS"
-          orientation="horizontal"
-          data-testid="checkbox-channels"
-        />
-      </NuiField>
+      <NuiCheckboxGroup
+        v-model="channels"
+        :options="CHANNELS"
+        label="Каналы"
+        orientation="horizontal"
+        data-testid="checkbox-channels"
+      />
       <NuiField group label="Тариф" description="Можно изменить позже">
         <NuiRadioGroup v-model="plan" data-testid="radio-group">
           <NuiRadio value="free" data-testid="radio-free">Бесплатный</NuiRadio>

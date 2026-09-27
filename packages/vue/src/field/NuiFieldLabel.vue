@@ -8,10 +8,18 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useFieldContext } from '@numior/primitives';
+import type { NuiFieldPartProps } from './field.types';
 
-const field = useFieldContext();
-const tag = computed(() => (field && !field.labelable.value ? 'legend' : 'label'));
-const htmlFor = computed(() => (field?.labelable.value ? field.id.value : undefined));
-const id = computed(() => field?.labelId.value);
-const required = computed(() => field?.required.value ?? false);
+const { field } = defineProps<NuiFieldPartProps>();
+
+const injected = useFieldContext();
+const context = computed(() => field ?? injected);
+const tag = computed(() => (context.value && !context.value.labelable.value ? 'legend' : 'label'));
+
+const htmlFor = computed(() =>
+  context.value?.labelable.value ? context.value.id.value : undefined,
+);
+
+const id = computed(() => context.value?.labelId.value);
+const required = computed(() => context.value?.required.value ?? false);
 </script>

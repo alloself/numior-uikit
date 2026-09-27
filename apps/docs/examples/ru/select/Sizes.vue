@@ -1,18 +1,12 @@
 <template>
-  <NuiField label="Маленький">
-    <NuiSelect v-model="value" :options="options" size="sm" />
-  </NuiField>
-  <NuiField label="Обычный">
-    <NuiSelect v-model="value" :options="options" />
-  </NuiField>
-  <NuiField label="Большой">
-    <NuiSelect v-model="value" :options="options" size="lg" />
-  </NuiField>
+  <NuiSelect label="Маленький" v-model="value" :options="options" size="sm" />
+  <NuiSelect label="Обычный" v-model="value" :options="options" />
+  <NuiSelect label="Большой" v-model="value" :options="options" size="lg" />
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { NuiField, NuiSelect, type NuiOptionSource } from '@numior/vue';
+import { NuiSelect, type NuiOptionSource } from '@numior/vue';
 
 const value = ref<string | null>('a');
 

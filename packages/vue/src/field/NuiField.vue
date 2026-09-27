@@ -1,36 +1,24 @@
 <template>
-  <component
-    :is="group ? 'fieldset' : 'div'"
-    class="nui-field"
-    :class="{
-      'nui-field--group': group,
-      'nui-field--invalid': isInvalid,
-      'nui-field--required': isRequired,
-      'nui-field--disabled': isDisabled,
-      'nui-field--reserve-error': reserveError,
-    }"
-    :disabled="group && isDisabled ? true : undefined"
+  <NuiFieldFrame
+    :field="field"
+    :own="true"
+    :group="group"
+    :reserve-error="reserveError"
+    :label="label"
+    :description="description"
+    :error="error"
   >
-    <NuiFieldLabel v-if="hasLabel()">
-      <slot name="label">{{ label }}</slot>
-    </NuiFieldLabel>
+    <template v-if="$slots.label" #label><slot name="label" /></template>
     <slot />
-    <NuiFieldDescription v-if="hasDescription()">
-      <slot name="description">{{ description }}</slot>
-    </NuiFieldDescription>
-    <NuiFieldError v-if="hasError()">
-      <slot name="error">{{ error }}</slot>
-    </NuiFieldError>
-    <span v-else-if="reserveError" class="nui-field__reserve" aria-hidden="true"></span>
-  </component>
+    <template v-if="$slots.description" #description><slot name="description" /></template>
+    <template v-if="$slots.error" #error><slot name="error" /></template>
+  </NuiFieldFrame>
 </template>
 
 <script setup lang="ts">
 import { useSlots } from 'vue';
 import { provideField } from '@numior/primitives';
-import NuiFieldDescription from './NuiFieldDescription.vue';
-import NuiFieldError from './NuiFieldError.vue';
-import NuiFieldLabel from './NuiFieldLabel.vue';
+import NuiFieldFrame from './NuiFieldFrame';
 import type { NuiFieldProps } from './field.types';
 
 const {
@@ -60,8 +48,4 @@ const field = provideField({
   hasError,
   labelable: () => !group,
 });
-
-const isInvalid = field.invalid;
-const isRequired = field.required;
-const isDisabled = field.disabled;
 </script>

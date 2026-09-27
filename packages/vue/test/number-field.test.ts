@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { h } from 'vue';
 import { NumberFieldDriver } from './drivers/number-field';
+import { fieldTextsOf } from './support/field-texts';
 
 const languageDescriptor = Object.getOwnPropertyDescriptor(navigator, 'language');
 const EUR = { style: 'currency', currency: 'EUR' } as const;
@@ -204,5 +205,19 @@ describe('NuiNumberField', () => {
     expect(field.incrementButton.attributes('aria-label')).toBe('Увеличить');
     expect(field.decrementButton.attributes('aria-label')).toBe('Уменьшить');
     field.unmount();
+  });
+
+  it('renders its own label, description and error and links them to the control', () => {
+    const control = NumberFieldDriver.mount({
+      props: { label: 'Имя', description: 'Подсказка', error: 'Ошибка' },
+    });
+
+    expect(fieldTextsOf(control.wrapper)).toEqual({
+      label: 'Имя',
+      description: 'Подсказка',
+      error: 'Ошибка',
+      linked: true,
+      group: false,
+    });
   });
 });

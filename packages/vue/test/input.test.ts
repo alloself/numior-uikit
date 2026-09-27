@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { h } from 'vue';
 import { InputDriver, mountInputWithFocusHandle } from './drivers/input';
+import { fieldTextsOf } from './support/field-texts';
 
 describe('NuiInput', () => {
   it('updates the model on every input by default', async () => {
@@ -130,5 +131,19 @@ describe('NuiInput', () => {
     host.focus();
     expect(document.activeElement).toBe(host.control.element);
     host.unmount();
+  });
+
+  it('renders its own label, description and error and links them to the control', () => {
+    const control = InputDriver.mount({
+      props: { label: 'Имя', description: 'Подсказка', error: 'Ошибка' },
+    });
+
+    expect(fieldTextsOf(control.wrapper)).toEqual({
+      label: 'Имя',
+      description: 'Подсказка',
+      error: 'Ошибка',
+      linked: true,
+      group: false,
+    });
   });
 });

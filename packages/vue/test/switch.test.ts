@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { SwitchDriver } from './drivers/switch';
+import { fieldTextsOf } from './support/field-texts';
 
 describe('NuiSwitch', () => {
   it('is a native checkbox with the switch role that toggles its boolean model', async () => {
@@ -26,5 +27,21 @@ describe('NuiSwitch', () => {
     expect(toggle.hasModifier('disabled')).toBe(true);
     expect(toggle.hasModifier('invalid')).toBe(true);
     expect(toggle.hasModifier('size-sm')).toBe(true);
+  });
+
+  it('renders its own label, description and error and links them to the control', () => {
+    const control = SwitchDriver.mount({
+      props: { label: 'Имя', description: 'Подсказка', error: 'Ошибка' },
+    });
+
+    expect(fieldTextsOf(control.wrapper)).toEqual({
+      label: undefined,
+      description: 'Подсказка',
+      error: 'Ошибка',
+      linked: true,
+      group: false,
+    });
+
+    expect(control.wrapper.find('.nui-switch__label').text()).toBe('Имя');
   });
 });

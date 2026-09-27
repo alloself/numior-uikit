@@ -64,6 +64,22 @@ const docs: DocsMap = {
         ru: 'Показывает состояние ошибки; наследуется от поля.',
         en: 'Shows the error state; inherited from the field.',
       },
+      label: {
+        ru: 'Подпись над триггером; контрол рисует её сам, если не лежит в NuiField.',
+        en: 'Label above the trigger; the control draws it itself unless it sits inside NuiField.',
+      },
+      description: {
+        ru: 'Подсказка под контролом, связанная через aria-describedby.',
+        en: 'Hint under the control, linked through aria-describedby.',
+      },
+      error: {
+        ru: 'Текст ошибки; включает состояние ошибки.',
+        en: 'Error text; it switches the error state on.',
+      },
+      reserveError: {
+        ru: 'Держит строку под ошибку, чтобы форма не прыгала.',
+        en: 'Keeps a line for the error so the form does not jump.',
+      },
     },
     models: {
       'v-model': { ru: 'Значение в одиночном режиме.', en: 'Value in single mode.' },

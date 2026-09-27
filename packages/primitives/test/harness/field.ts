@@ -106,6 +106,18 @@ export class ControlHarness {
   get disabled(): boolean {
     return this.control.attrs.value.disabled;
   }
+
+  get own(): boolean {
+    return this.control.own.value;
+  }
+
+  get labelledBy(): string | undefined {
+    return this.control.field.value?.labelledBy.value;
+  }
+
+  get frameField(): string {
+    return this.control.frame.value.field.id.value;
+  }
 }
 
 export class DraftHarness {

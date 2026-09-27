@@ -1,25 +1,30 @@
 <template>
-  <textarea
-    ref="textarea"
-    class="nui-textarea"
-    :class="[
-      `nui-textarea--size-${size}`,
-      `nui-textarea--resize-${resize}`,
-      { 'nui-textarea--invalid': isInvalid },
-    ]"
-    v-bind="controlAttrs"
-    :rows="rows"
-    :readonly="readonly || undefined"
-    :value="draft"
-    @input="onInput"
-    @change="onChange"
-  />
+  <NuiFieldFrame v-bind="fieldFrame" :reserve-error="reserveError">
+    <textarea
+      ref="textarea"
+      class="nui-textarea"
+      :class="[
+        `nui-textarea--size-${size}`,
+        `nui-textarea--resize-${resize}`,
+        { 'nui-textarea--invalid': isInvalid },
+      ]"
+      v-bind="{ ...controlAttrs, ...attrs }"
+      :rows="rows"
+      :readonly="readonly || undefined"
+      :value="draft"
+      @input="onInput"
+      @change="onChange"
+    />
+  </NuiFieldFrame>
 </template>
 
 <script setup lang="ts">
-import { ref, useTemplateRef, watch } from 'vue';
+import { ref, useAttrs, useTemplateRef, watch } from 'vue';
 import { useFieldControl } from '@numior/primitives';
+import NuiFieldFrame from '../field/NuiFieldFrame';
 import type { NuiTextareaModifiers, NuiTextareaProps } from './textarea.types';
+
+defineOptions({ inheritAttrs: false });
 
 const {
   id,
@@ -27,17 +32,25 @@ const {
   disabled = undefined,
   required = undefined,
   invalid = undefined,
+  label,
+  description,
+  error,
+  reserveError = false,
   rows = 3,
   resize = 'vertical',
   readonly = false,
 } = defineProps<NuiTextareaProps>();
 
 const [model, modifiers] = defineModel<string, NuiTextareaModifiers>({ default: '' });
+const attrs = useAttrs();
 
-const { attrs: controlAttrs, invalid: isInvalid } = useFieldControl(
-  () => ({ id, disabled, required, invalid }),
-  { commit: () => commitDraft() },
-);
+const {
+  attrs: controlAttrs,
+  invalid: isInvalid,
+  frame: fieldFrame,
+} = useFieldControl(() => ({ id, disabled, required, invalid, label, description, error }), {
+  commit: () => commitDraft(),
+});
 
 const textareaElement = useTemplateRef<HTMLTextAreaElement>('textarea');
 const draft = ref(model.value);

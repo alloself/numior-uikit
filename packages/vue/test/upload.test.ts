@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { UploadDriver, fileOf } from './drivers/upload';
+import { fieldTextsOf } from './support/field-texts';
 
 describe('NuiUpload', () => {
   it('queues chosen files, uploads up to the concurrency limit and reports progress and results', async () => {
@@ -194,5 +195,19 @@ describe('NuiUpload', () => {
     await upload.resolve(0, 'ok');
     expect(upload.liveText).toBe('a.txt: Загружено');
     upload.unmount();
+  });
+
+  it('renders its own label, description and error and links them to the control', () => {
+    const control = UploadDriver.mount({
+      props: { label: 'Имя', description: 'Подсказка', error: 'Ошибка' },
+    });
+
+    expect(fieldTextsOf(control.wrapper)).toEqual({
+      label: 'Имя',
+      description: 'Подсказка',
+      error: 'Ошибка',
+      linked: true,
+      group: false,
+    });
   });
 });

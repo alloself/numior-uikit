@@ -1,4 +1,4 @@
-import { mount, type DOMWrapper } from '@vue/test-utils';
+import { mount, type DOMWrapper, type VueWrapper } from '@vue/test-utils';
 import { h } from 'vue';
 import {
   NuiField,
@@ -20,6 +20,13 @@ export interface RadioGroupMountOptions {
 export class RadioGroupDriver extends ComponentDriver {
   protected readonly block = 'nui-radio-group';
 
+  private constructor(
+    wrapper: VueWrapper,
+    private readonly emitter: VueWrapper,
+  ) {
+    super(wrapper);
+  }
+
   static mount({
     props = {},
     modelValue,
@@ -38,14 +45,18 @@ export class RadioGroupDriver extends ComponentDriver {
 
     const group = () => h(NuiRadioGroup<string | undefined>, { ...props, modelValue }, radios);
 
-    const wrapper = field
-      ? mount(NuiField, { props: field, slots: { default: group } })
-      : mount(NuiRadioGroup<string | undefined>, {
-          props: { ...props, modelValue },
-          slots: { default: radios },
-        });
+    if (field) {
+      const host = mount(NuiField, { props: field, slots: { default: group } });
 
-    return new RadioGroupDriver(wrapper);
+      return new RadioGroupDriver(host, host.findComponent(NuiRadioGroup));
+    }
+
+    const wrapper = mount(NuiRadioGroup<string | undefined>, {
+      props: { ...props, modelValue },
+      slots: { default: radios },
+    });
+
+    return new RadioGroupDriver(wrapper, wrapper);
   }
 
   get group(): DOMWrapper<Element> {
@@ -89,8 +100,7 @@ export class RadioGroupDriver extends ComponentDriver {
   }
 
   get emittedValues(): string[] {
-    const emitter = this.wrapper.findComponent(NuiRadioGroup);
-    return (emitter.emitted('update:modelValue') ?? []).flatMap(([value]) =>
+    return (this.emitter.emitted('update:modelValue') ?? []).flatMap(([value]) =>
       typeof value === 'string' ? [value] : [],
     );
   }

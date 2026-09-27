@@ -8,13 +8,13 @@ come from `options`, the choice is single or multiple.
 ## Installation
 
 ```ts
-import { NuiField, NuiSelect } from '@numior/vue';
+import { NuiSelect } from '@numior/vue';
 import '@numior/tokens/theme.css';
 import '@numior/vue/styles/field.css';
 import '@numior/vue/styles/select.css';
 ```
 
-Inside `NuiField` the trigger receives its label, description and error state without extra props.
+The control draws `label`, `description` and `error` itself; the label styles come from `field.css`.
 
 ## Examples
 

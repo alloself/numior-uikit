@@ -82,10 +82,6 @@
 .nui-upload__text {
   font-weight: 500;
 }
-.nui-upload__hint {
-  color: var(--nui-text-muted);
-  font-size: var(--nui-font-size-xs);
-}
 .nui-upload__items {
   display: grid;
   gap: var(--nui-space-2);

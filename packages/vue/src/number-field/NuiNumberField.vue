@@ -1,74 +1,76 @@
 <template>
-  <div
-    class="nui-number-field"
-    :class="[
-      `nui-number-field--size-${size}`,
-      {
-        'nui-number-field--invalid': isInvalid,
-        'nui-number-field--disabled': isDisabled,
-        'nui-number-field--readonly': readonly,
-        'nui-number-field--steppers': steppers,
-      },
-    ]"
-    v-bind="split.rootAttrs()"
-  >
-    <span v-if="$slots.prefix" class="nui-number-field__prefix">
-      <slot name="prefix" />
-    </span>
-    <input
-      ref="input"
-      class="nui-number-field__control"
-      type="text"
-      role="spinbutton"
-      inputmode="decimal"
-      autocomplete="off"
-      v-bind="{ ...controlAttrs, ...split.controlAttrs() }"
-      :aria-valuenow="model ?? undefined"
-      :aria-valuemin="min"
-      :aria-valuemax="max"
-      :aria-valuetext="valueText || undefined"
-      :readonly="readonly || undefined"
-      :value="draft"
-      @beforeinput="onBeforeinput"
-      @input="onInput"
-      @keydown="onKeydown"
-      @blur="commit"
-    />
-    <span v-if="$slots.suffix" class="nui-number-field__suffix">
-      <slot name="suffix" />
-    </span>
-    <span v-if="steppers" class="nui-number-field__steppers" aria-hidden="true">
-      <NuiButton
-        variant="ghost"
-        tone="neutral"
-        size="sm"
-        icon-only
-        class="nui-number-field__stepper nui-number-field__stepper--down"
-        tabindex="-1"
-        :aria-label="decrementText"
-        :disabled="!canDecrement"
-        @pointerdown.prevent
-        @click="stepBy(-1)"
-      >
-        <NuiIcon alias="minus" />
-      </NuiButton>
-      <NuiButton
-        variant="ghost"
-        tone="neutral"
-        size="sm"
-        icon-only
-        class="nui-number-field__stepper nui-number-field__stepper--up"
-        tabindex="-1"
-        :aria-label="incrementText"
-        :disabled="!canIncrement"
-        @pointerdown.prevent
-        @click="stepBy(1)"
-      >
-        <NuiIcon alias="plus" />
-      </NuiButton>
-    </span>
-    <input v-if="name" type="hidden" :name="name" :value="model ?? ''" />
-  </div>
+  <NuiFieldFrame v-bind="fieldFrame" :reserve-error="reserveError">
+    <div
+      class="nui-number-field"
+      :class="[
+        `nui-number-field--size-${size}`,
+        {
+          'nui-number-field--invalid': isInvalid,
+          'nui-number-field--disabled': isDisabled,
+          'nui-number-field--readonly': readonly,
+          'nui-number-field--steppers': steppers,
+        },
+      ]"
+      v-bind="split.rootAttrs()"
+    >
+      <span v-if="$slots.prefix" class="nui-number-field__prefix">
+        <slot name="prefix" />
+      </span>
+      <input
+        ref="input"
+        class="nui-number-field__control"
+        type="text"
+        role="spinbutton"
+        inputmode="decimal"
+        autocomplete="off"
+        v-bind="{ ...controlAttrs, ...split.controlAttrs() }"
+        :aria-valuenow="model ?? undefined"
+        :aria-valuemin="min"
+        :aria-valuemax="max"
+        :aria-valuetext="valueText || undefined"
+        :readonly="readonly || undefined"
+        :value="draft"
+        @beforeinput="onBeforeinput"
+        @input="onInput"
+        @keydown="onKeydown"
+        @blur="commit"
+      />
+      <span v-if="$slots.suffix" class="nui-number-field__suffix">
+        <slot name="suffix" />
+      </span>
+      <span v-if="steppers" class="nui-number-field__steppers" aria-hidden="true">
+        <NuiButton
+          variant="ghost"
+          tone="neutral"
+          size="sm"
+          icon-only
+          class="nui-number-field__stepper nui-number-field__stepper--down"
+          tabindex="-1"
+          :aria-label="decrementText"
+          :disabled="!canDecrement"
+          @pointerdown.prevent
+          @click="stepBy(-1)"
+        >
+          <NuiIcon alias="minus" />
+        </NuiButton>
+        <NuiButton
+          variant="ghost"
+          tone="neutral"
+          size="sm"
+          icon-only
+          class="nui-number-field__stepper nui-number-field__stepper--up"
+          tabindex="-1"
+          :aria-label="incrementText"
+          :disabled="!canIncrement"
+          @pointerdown.prevent
+          @click="stepBy(1)"
+        >
+          <NuiIcon alias="plus" />
+        </NuiButton>
+      </span>
+      <input v-if="name" type="hidden" :name="name" :value="model ?? ''" />
+    </div>
+  </NuiFieldFrame>
 </template>
 
 <script setup lang="ts">
@@ -86,6 +88,7 @@ import {
   useSplitAttrs,
   withStepPrecision,
 } from '@numior/primitives';
+import NuiFieldFrame from '../field/NuiFieldFrame';
 import NuiButton from '../button/NuiButton.vue';
 import NuiIcon from '../icon/NuiIcon.vue';
 import { numberFieldMessages } from './number-field.messages';
@@ -101,6 +104,10 @@ const {
   disabled = undefined,
   required = undefined,
   invalid = undefined,
+  label,
+  description,
+  error,
+  reserveError = false,
   min,
   max,
   step = 1,
@@ -117,10 +124,13 @@ const model = defineModel<number | null>({ default: null });
 const split = useSplitAttrs();
 
 const {
+  frame: fieldFrame,
   attrs: controlAttrs,
   invalid: isInvalid,
   disabled: isDisabled,
-} = useFieldControl(() => ({ id, disabled, required, invalid }), { commit: () => commit() });
+} = useFieldControl(() => ({ id, disabled, required, invalid, label, description, error }), {
+  commit: () => commit(),
+});
 
 const inputElement = useTemplateRef<HTMLInputElement>('input');
 const locale = useLocale(() => localeProp);

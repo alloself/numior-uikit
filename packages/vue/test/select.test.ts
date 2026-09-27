@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { SelectDriver } from './drivers/select';
+import { fieldTextsOf } from './support/field-texts';
 
 describe('NuiSelect', () => {
   beforeEach(() => vi.useFakeTimers());
@@ -136,5 +137,19 @@ describe('NuiSelect', () => {
 
     expect(counted.valueText).toBe('2 фрукта');
     counted.unmount();
+  });
+
+  it('renders its own label, description and error and links them to the control', () => {
+    const control = SelectDriver.mount({
+      props: { label: 'Имя', description: 'Подсказка', error: 'Ошибка' },
+    });
+
+    expect(fieldTextsOf(control.wrapper)).toEqual({
+      label: 'Имя',
+      description: 'Подсказка',
+      error: 'Ошибка',
+      linked: true,
+      group: false,
+    });
   });
 });

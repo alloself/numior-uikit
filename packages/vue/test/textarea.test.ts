@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { TextareaDriver } from './drivers/textarea';
+import { fieldTextsOf } from './support/field-texts';
 
 describe('NuiTextarea', () => {
   it('is a native textarea that receives attributes directly and reflects props', () => {
@@ -30,5 +31,19 @@ describe('NuiTextarea', () => {
     expect(lazy.emittedValues).toEqual([]);
     await lazy.commit();
     expect(lazy.emittedValues).toEqual(['text']);
+  });
+
+  it('renders its own label, description and error and links them to the control', () => {
+    const control = TextareaDriver.mount({
+      props: { label: 'Имя', description: 'Подсказка', error: 'Ошибка' },
+    });
+
+    expect(fieldTextsOf(control.wrapper)).toEqual({
+      label: 'Имя',
+      description: 'Подсказка',
+      error: 'Ошибка',
+      linked: true,
+      group: false,
+    });
   });
 });

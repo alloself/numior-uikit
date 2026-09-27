@@ -1,17 +1,21 @@
 <template>
-  <NuiField label="Assignee">
-    <NuiSelect v-model="assignee" :options="people" :get-key="keyOf" placeholder="Assign">
-      <template #option="{ option }">
-        <span>{{ option.label }}</span>
-        <span class="nui-text-muted nui-ms-2">{{ option.description }}</span>
-      </template>
-    </NuiSelect>
-  </NuiField>
+  <NuiSelect
+    label="Assignee"
+    v-model="assignee"
+    :options="people"
+    :get-key="keyOf"
+    placeholder="Assign"
+  >
+    <template #option="{ option }">
+      <span>{{ option.label }}</span>
+      <span class="nui-text-muted nui-ms-2">{{ option.description }}</span>
+    </template>
+  </NuiSelect>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { NuiField, NuiSelect, type NuiOptionSource } from '@numior/vue';
+import { NuiSelect, type NuiOptionSource } from '@numior/vue';
 
 interface Person {
   readonly id: number;

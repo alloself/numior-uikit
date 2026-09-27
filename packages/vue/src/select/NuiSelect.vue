@@ -1,90 +1,87 @@
 <template>
-  <div
-    class="nui-select"
-    :class="[
-      `nui-select--size-${size}`,
-      {
-        'nui-select--open': open,
-        'nui-select--empty': selectedOptions.length === 0,
-        'nui-select--clearable': showClear,
-        'nui-select--invalid': isInvalid,
-        'nui-select--disabled': isDisabled,
-      },
-    ]"
-    v-bind="split.rootAttrs()"
-  >
-    <button
-      ref="trigger"
-      type="button"
-      role="combobox"
-      class="nui-select__trigger"
-      aria-haspopup="listbox"
-      :aria-labelledby="field?.labelledBy.value"
-      :aria-required="isRequired || undefined"
-      v-bind="{ ...controlAttrs, ...split.controlAttrs(), ...control.invokerAttrs.value }"
-      @keydown="onTriggerKeydown"
+  <NuiFieldFrame v-bind="fieldFrame" :reserve-error="reserveError">
+    <div
+      class="nui-select"
+      :class="[
+        `nui-select--size-${size}`,
+        {
+          'nui-select--open': open,
+          'nui-select--empty': selectedOptions.length === 0,
+          'nui-select--clearable': showClear,
+          'nui-select--invalid': isInvalid,
+          'nui-select--disabled': isDisabled,
+        },
+      ]"
+      v-bind="split.rootAttrs()"
     >
-      <span class="nui-select__value">
-        <slot name="value" :selected="selectedOptions">{{ displayLabel }}</slot>
-      </span>
-      <NuiIcon alias="chevron-down" class="nui-select__chevron" />
-    </button>
-    <NuiButton
-      v-if="showClear"
-      variant="ghost"
-      tone="neutral"
-      size="sm"
-      class="nui-select__clear"
-      :aria-label="clearText"
-      @click="clear"
-    >
-      <NuiIcon alias="x" />
-    </NuiButton>
-    <NuiList
-      :ref="setListbox"
-      v-model="model"
-      v-model:values="values"
-      class="nui-select__listbox"
-      variant="floating"
-      :items="options"
-      :selectable="multiple ? 'multiple' : 'single'"
-      :get-key="getKey"
-      :keyboard="false"
-      :active-id="navigation.activeId.value"
-      :empty-label="emptyText"
-      v-bind="control.contentAttrs.value"
-      @select="onSelect"
-      @keydown="onListboxKeydown"
-      @pointermove="activateHovered"
-      @pointerleave="restActive"
-      @focusin="onFocusin"
-      @focusout="onFocusout"
-    >
-      <template #item="slot">
-        <slot name="option" :option="slot.item" :selected="slot.selected" :active="slot.active" />
+      <button
+        ref="trigger"
+        type="button"
+        role="combobox"
+        class="nui-select__trigger"
+        aria-haspopup="listbox"
+        :aria-labelledby="field?.labelledBy.value"
+        :aria-required="isRequired || undefined"
+        v-bind="{ ...controlAttrs, ...split.controlAttrs(), ...control.invokerAttrs.value }"
+        @keydown="onTriggerKeydown"
+      >
+        <span class="nui-select__value">
+          <slot name="value" :selected="selectedOptions">{{ displayLabel }}</slot>
+        </span>
+        <NuiIcon alias="chevron-down" class="nui-select__chevron" />
+      </button>
+      <NuiButton
+        v-if="showClear"
+        variant="ghost"
+        tone="neutral"
+        size="sm"
+        class="nui-select__clear"
+        :aria-label="clearText"
+        @click="clear"
+      >
+        <NuiIcon alias="x" />
+      </NuiButton>
+      <NuiList
+        :ref="setListbox"
+        v-model="model"
+        v-model:values="values"
+        class="nui-select__listbox"
+        variant="floating"
+        :items="options"
+        :selectable="multiple ? 'multiple' : 'single'"
+        :get-key="getKey"
+        :keyboard="false"
+        :active-id="navigation.activeId.value"
+        :empty-label="emptyText"
+        v-bind="control.contentAttrs.value"
+        @select="onSelect"
+        @keydown="onListboxKeydown"
+        @pointermove="activateHovered"
+        @pointerleave="restActive"
+        @focusin="onFocusin"
+        @focusout="onFocusout"
+      >
+        <template #item="slot">
+          <slot name="option" :option="slot.item" :selected="slot.selected" :active="slot.active" />
+        </template>
+      </NuiList>
+      <template v-if="name">
+        <input
+          v-for="value in selectedValues"
+          :key="keyOf(value)"
+          type="hidden"
+          :name="name"
+          :value="keyOf(value)"
+        />
       </template>
-    </NuiList>
-    <template v-if="name">
-      <input
-        v-for="value in selectedValues"
-        :key="keyOf(value)"
-        type="hidden"
-        :name="name"
-        :value="keyOf(value)"
-      />
-    </template>
-  </div>
+    </div>
+  </NuiFieldFrame>
 </template>
 
 <script setup lang="ts" generic="T">
 import { computed, onMounted, ref, useTemplateRef, watch } from 'vue';
-import {
-  createIntent,
-  useFieldContext,
-  useFieldControl,
-  useMessages,
-  useSplitAttrs,
-} from '@numior/primitives';
+import { createIntent, useFieldControl, useMessages, useSplitAttrs } from '@numior/primitives';
+import NuiFieldFrame from '../field/NuiFieldFrame';
 import NuiButton from '../button/NuiButton.vue';
 import NuiIcon from '../icon/NuiIcon.vue';
 import NuiList from '../list/NuiList.vue';
@@ -102,6 +99,10 @@ const {
   disabled = undefined,
   required = undefined,
   invalid = undefined,
+  label,
+  description,
+  error,
+  reserveError = false,
   options,
   multiple = false,
   clearable = false,
@@ -119,15 +120,16 @@ const model = defineModel<T | null>({ default: null });
 const values = defineModel<T[]>('values', { default: () => [] });
 
 const split = useSplitAttrs();
-const field = useFieldContext();
 const messages = useMessages(selectMessages);
 
 const {
+  frame: fieldFrame,
+  field,
   attrs: controlAttrs,
   invalid: isInvalid,
   required: isRequired,
   disabled: isDisabled,
-} = useFieldControl(() => ({ id, disabled, required, invalid }));
+} = useFieldControl(() => ({ id, disabled, required, invalid, label, description, error }));
 
 const listboxId = computed(() => `${controlAttrs.value.id}-listbox`);
 

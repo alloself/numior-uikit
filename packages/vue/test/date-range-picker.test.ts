@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { DateRangePickerDriver } from './drivers/date-range-picker';
+import { fieldTextsOf } from './support/field-texts';
 
 describe('NuiDateRangePicker', () => {
   it('shows both ends, labels the end input and swaps reversed typed dates', async () => {
@@ -64,5 +65,19 @@ describe('NuiDateRangePicker', () => {
     expect(picker.inputs[1]?.attributes('aria-label')).toBe('Дата окончания');
     expect(picker.openLabel).toBe('Выбрать период');
     picker.unmount();
+  });
+
+  it('renders its own label, description and error and links them to the control', () => {
+    const control = DateRangePickerDriver.mount({
+      props: { label: 'Имя', description: 'Подсказка', error: 'Ошибка' },
+    });
+
+    expect(fieldTextsOf(control.wrapper)).toEqual({
+      label: 'Имя',
+      description: 'Подсказка',
+      error: 'Ошибка',
+      linked: true,
+      group: false,
+    });
   });
 });

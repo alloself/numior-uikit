@@ -1030,4 +1030,18 @@ describe('server rendering', () => {
     const html = await renderMarkup(() => h(NuiIcon, { alias: 'check' }));
     expect(html).toContain('lucide-check');
   });
+
+  it('renders the own field texts of a control with matching ids on the server', async () => {
+    const markup = await renderMarkup(() =>
+      h(NuiInput, { modelValue: '', label: 'Имя', description: 'Подсказка', error: 'Ошибка' }),
+    );
+
+    const id = labelTarget(markup);
+
+    expect(id).toBeTruthy();
+    expect(markup).toContain(`<input`);
+    expect(markup).toContain(`id="${id}"`);
+    expect(markup).toContain(`aria-describedby="${id}-description ${id}-error"`);
+    expect(markup).toContain('nui-field--invalid');
+  });
 });

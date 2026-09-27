@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { CheckboxDriver, CheckboxGroupDriver } from './drivers/checkbox';
+import { fieldTextsOf } from './support/field-texts';
 
 describe('NuiCheckbox', () => {
   it('toggles a boolean model and mirrors it in the native control', async () => {
@@ -82,5 +83,35 @@ describe('NuiCheckboxGroup', () => {
     expect(group.checkboxes.every((box) => box.attributes('aria-describedby') === undefined)).toBe(
       true,
     );
+  });
+
+  it('renders its own label, description and error and links them to the control', () => {
+    const control = CheckboxDriver.mount({
+      props: { label: 'Имя', description: 'Подсказка', error: 'Ошибка' },
+    });
+
+    expect(fieldTextsOf(control.wrapper)).toEqual({
+      label: undefined,
+      description: 'Подсказка',
+      error: 'Ошибка',
+      linked: true,
+      group: false,
+    });
+
+    expect(control.wrapper.find('.nui-checkbox__label').text()).toBe('Имя');
+  });
+
+  it('renders a legend, description and error for the group and links them', () => {
+    const control = CheckboxGroupDriver.mount({
+      props: { label: 'Имя', description: 'Подсказка', error: 'Ошибка' },
+    });
+
+    expect(fieldTextsOf(control.wrapper)).toEqual({
+      label: 'Имя',
+      description: 'Подсказка',
+      error: 'Ошибка',
+      linked: true,
+      group: true,
+    });
   });
 });

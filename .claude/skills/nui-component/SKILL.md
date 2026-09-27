@@ -52,7 +52,10 @@ const {
   text, an unclamped time) passes its commit to `useFieldControl(props, { commit: () =>
 commitDraft() })`; `NuiFormField` runs these commits before a programmatic submit.
 - Props interface in `<name>.types.ts`, optional keys typed `| undefined`,
-  `extends NuiFieldControlProps` for form controls. Generic components use
+  `extends NuiFieldControlProps` for form controls. A field control passes `label`, `description`
+  and `error` into `useFieldControl` and wraps its root in `<NuiFieldFrame v-bind="fieldFrame"
+:reserve-error="reserveError">` (`inline` for box controls, `group` for groups), so the texts
+  render on the control itself; `NuiField` stays for slots and multi-control fields. Generic components use
   `<script setup lang="ts" generic="T">` and `defineProps<NuiThingProps<T>>()`.
 - Never `withDefaults`, runtime prop objects, `PropType`, `as`, `!`, or comments.
 - Nothing is typed on trust: when a value's type cannot be proven, change the API instead of

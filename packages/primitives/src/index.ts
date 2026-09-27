@@ -14,6 +14,7 @@ export type {
   FieldControlAttrs,
   FieldControlOptions,
   FieldControlProps,
+  FieldFrame,
 } from './field/useFieldControl';
 export { RADIO_GROUP_KEY, provideRadioGroup, useRadioGroup } from './radio/radio-group-context';
 export type { RadioGroupContext } from './radio/radio-group-context';

@@ -1,35 +1,39 @@
 <template>
-  <div
-    :id="attrs.id"
-    role="group"
-    class="nui-checkbox-group"
-    :class="[
-      `nui-checkbox-group--orientation-${orientation}`,
-      { 'nui-checkbox-group--invalid': isInvalid, 'nui-checkbox-group--disabled': isDisabled },
-    ]"
-    :aria-labelledby="labelledBy"
-    :aria-describedby="attrs['aria-describedby']"
-    :aria-invalid="attrs['aria-invalid']"
-    :aria-required="isRequired || undefined"
-    :aria-disabled="isDisabled || undefined"
-  >
-    <NuiCheckbox
-      v-for="option in options"
-      :key="keyOf(option.value)"
-      :size="size"
-      :disabled="option.disabled || undefined"
-      :value="keyOf(option.value)"
-      :model-value="checkedKeys.has(keyOf(option.value))"
-      @update:model-value="(checked) => toggle(option.value, checked)"
+  <NuiFieldFrame v-bind="fieldFrame" :reserve-error="reserveError" :group="true">
+    <div
+      :id="attrs.id"
+      role="group"
+      class="nui-checkbox-group"
+      :class="[
+        `nui-checkbox-group--orientation-${orientation}`,
+        { 'nui-checkbox-group--invalid': isInvalid, 'nui-checkbox-group--disabled': isDisabled },
+      ]"
+      :aria-labelledby="labelledBy"
+      :aria-describedby="attrs['aria-describedby']"
+      :aria-invalid="attrs['aria-invalid']"
+      :aria-required="isRequired || undefined"
+      :aria-disabled="isDisabled || undefined"
+      v-bind="passthrough"
     >
-      <slot name="option" :option="option">{{ option.label }}</slot>
-    </NuiCheckbox>
-  </div>
+      <NuiCheckbox
+        v-for="option in options"
+        :key="keyOf(option.value)"
+        :size="size"
+        :disabled="option.disabled || undefined"
+        :value="keyOf(option.value)"
+        :model-value="checkedKeys.has(keyOf(option.value))"
+        @update:model-value="(checked) => toggle(option.value, checked)"
+      >
+        <slot name="option" :option="option">{{ option.label }}</slot>
+      </NuiCheckbox>
+    </div>
+  </NuiFieldFrame>
 </template>
 
 <script setup lang="ts" generic="T">
-import { computed } from 'vue';
-import { useFieldContext, useFieldControl } from '@numior/primitives';
+import { computed, useAttrs } from 'vue';
+import { useFieldControl } from '@numior/primitives';
+import NuiFieldFrame from '../field/NuiFieldFrame';
 import { defaultOptionKey } from '../shared/options';
 import NuiCheckbox from './NuiCheckbox.vue';
 import { provideCheckboxGroup } from './checkbox-group-context';
@@ -41,23 +45,33 @@ const {
   disabled = undefined,
   required = undefined,
   invalid = undefined,
+  label,
+  description,
+  error,
+  reserveError = false,
   options,
   name,
   orientation = 'vertical',
   getKey,
 } = defineProps<NuiCheckboxGroupProps<T>>();
 
+defineOptions({ inheritAttrs: false });
+
+const passthrough = useAttrs();
 const model = defineModel<T[]>({ default: () => [] });
-const field = useFieldContext();
 
 const {
+  frame: fieldFrame,
+  field,
   attrs,
   invalid: isInvalid,
   required: isRequired,
   disabled: isDisabled,
-} = useFieldControl(() => ({ id, disabled, required, invalid }), { group: true });
+} = useFieldControl(() => ({ id, disabled, required, invalid, label, description, error }), {
+  group: true,
+});
 
-const labelledBy = computed(() => field?.labelledBy.value);
+const labelledBy = computed(() => field.value?.labelledBy.value);
 const keyOf = (value: T): string => (getKey ?? defaultOptionKey)(value);
 const checkedKeys = computed(() => new Set(model.value.map(keyOf)));
 

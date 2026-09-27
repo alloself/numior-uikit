@@ -1,70 +1,71 @@
 <template>
-  <div
-    class="nui-upload"
-    :class="[
-      `nui-upload--layout-${layout}`,
-      `nui-upload--size-${size}`,
-      {
-        'nui-upload--dragging': drop.dragging.value,
-        'nui-upload--disabled': isDisabled,
-        'nui-upload--invalid': isInvalid,
-        'nui-upload--busy': queue.busy.value,
-      },
-    ]"
-    v-bind="split.rootAttrs()"
-  >
-    <div class="nui-upload__zone" v-bind="drop.attrs" @click="onZoneClick">
-      <input
-        ref="input"
-        class="nui-upload__input"
-        type="file"
-        tabindex="-1"
-        aria-hidden="true"
-        :accept="accept"
-        :multiple="multiple"
-        :disabled="isDisabled"
-        @click.stop
-        @change="onChange"
-      />
-      <slot :open="open" :dragging="drop.dragging.value">
-        <NuiIcon alias="upload" class="nui-upload__icon" />
-        <span class="nui-upload__text">{{ texts.drop }}</span>
-        <NuiButton
-          :id="controlAttrs.id"
-          variant="outline"
-          tone="neutral"
-          size="sm"
-          class="nui-upload__browse"
-          :aria-describedby="controlAttrs['aria-describedby']"
-          :aria-invalid="controlAttrs['aria-invalid']"
+  <NuiFieldFrame v-bind="fieldFrame" :reserve-error="reserveError">
+    <div
+      class="nui-upload"
+      :class="[
+        `nui-upload--layout-${layout}`,
+        `nui-upload--size-${size}`,
+        {
+          'nui-upload--dragging': drop.dragging.value,
+          'nui-upload--disabled': isDisabled,
+          'nui-upload--invalid': isInvalid,
+          'nui-upload--busy': queue.busy.value,
+        },
+      ]"
+      v-bind="split.rootAttrs()"
+    >
+      <div class="nui-upload__zone" v-bind="drop.attrs" @click="onZoneClick">
+        <input
+          ref="input"
+          class="nui-upload__input"
+          type="file"
+          tabindex="-1"
+          aria-hidden="true"
+          :accept="accept"
+          :multiple="multiple"
           :disabled="isDisabled"
-          v-bind="split.controlAttrs()"
-          @click="open"
+          @click.stop
+          @change="onChange"
+        />
+        <slot :open="open" :dragging="drop.dragging.value">
+          <NuiIcon alias="upload" class="nui-upload__icon" />
+          <span class="nui-upload__text">{{ texts.drop }}</span>
+          <NuiButton
+            :id="controlAttrs.id"
+            variant="outline"
+            tone="neutral"
+            size="sm"
+            class="nui-upload__browse"
+            :aria-describedby="controlAttrs['aria-describedby']"
+            :aria-invalid="controlAttrs['aria-invalid']"
+            :disabled="isDisabled"
+            v-bind="split.controlAttrs()"
+            @click="open"
+          >
+            {{ texts.browse }}
+          </NuiButton>
+        </slot>
+      </div>
+      <ul v-if="model.length > 0" class="nui-upload__items">
+        <NuiUploadRow
+          v-for="item in model"
+          :key="item.id"
+          :item="item"
+          :preview="previewOf(item)"
+          :description="describe(item)"
+          :cancel-label="texts.cancel"
+          :retry-label="texts.retry"
+          :remove-label="texts.remove"
+          @cancel="discard(item)"
+          @retry="queue.retry(item.id)"
+          @remove="discard(item)"
         >
-          {{ texts.browse }}
-        </NuiButton>
-        <span v-if="hint" class="nui-upload__hint">{{ hint }}</span>
-      </slot>
+          <template v-if="$slots.item" #default="slot"><slot name="item" v-bind="slot" /></template>
+        </NuiUploadRow>
+      </ul>
+      <span class="nui-upload__live" aria-live="polite" aria-atomic="true">{{ announcement }}</span>
     </div>
-    <ul v-if="model.length > 0" class="nui-upload__items">
-      <NuiUploadRow
-        v-for="item in model"
-        :key="item.id"
-        :item="item"
-        :preview="previewOf(item)"
-        :description="describe(item)"
-        :cancel-label="texts.cancel"
-        :retry-label="texts.retry"
-        :remove-label="texts.remove"
-        @cancel="discard(item)"
-        @retry="queue.retry(item.id)"
-        @remove="discard(item)"
-      >
-        <template v-if="$slots.item" #default="slot"><slot name="item" v-bind="slot" /></template>
-      </NuiUploadRow>
-    </ul>
-    <span class="nui-upload__live" aria-live="polite" aria-atomic="true">{{ announcement }}</span>
-  </div>
+  </NuiFieldFrame>
 </template>
 
 <script setup lang="ts" generic="R = unknown">
@@ -81,6 +82,7 @@ import {
   type FileRejection,
   type UploadEntry,
 } from '@numior/primitives';
+import NuiFieldFrame from '../field/NuiFieldFrame';
 import NuiButton from '../button/NuiButton.vue';
 import NuiIcon from '../icon/NuiIcon.vue';
 import NuiUploadRow from './NuiUploadRow.vue';
@@ -124,6 +126,10 @@ const {
   disabled = undefined,
   required = undefined,
   invalid = undefined,
+  label,
+  description,
+  error,
+  reserveError = false,
   upload,
   accept,
   multiple = true,
@@ -137,7 +143,6 @@ const {
   size = 'md',
   dropLabel,
   browseLabel,
-  hint,
   cancelLabel,
   retryLabel,
   removeLabel,
@@ -159,10 +164,11 @@ const locale = useLocale();
 const messages = useMessages(uploadMessages, locale);
 
 const {
+  frame: fieldFrame,
   attrs: controlAttrs,
   invalid: isInvalid,
   disabled: isDisabled,
-} = useFieldControl(() => ({ id, disabled, required, invalid }));
+} = useFieldControl(() => ({ id, disabled, required, invalid, label, description, error }));
 
 const inputElement = useTemplateRef<HTMLInputElement>('input');
 const announcement = ref('');
@@ -177,10 +183,10 @@ const texts = computed(() => ({
   done: doneLabel ?? messages.value.done,
 }));
 
-const describeError = (error: NuiUploadError, item: NuiUploadItem<R>): string =>
+const describeError = (failure: NuiUploadError, item: NuiUploadItem<R>): string =>
   errorLabel
-    ? errorLabel(error, item)
-    : defaultErrorLabel(error, messages.value, { maxSize, maxFiles, locale: locale.value });
+    ? errorLabel(failure, item)
+    : defaultErrorLabel(failure, messages.value, { maxSize, maxFiles, locale: locale.value });
 
 const describe = (item: NuiUploadItem<R>): string =>
   item.status === 'error'

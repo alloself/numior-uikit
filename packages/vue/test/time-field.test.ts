@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { TimeFieldDriver } from './drivers/time-field';
+import { fieldTextsOf } from './support/field-texts';
 
 describe('NuiTimeField', () => {
   it('lays out segments from the locale, hour cycle and seconds', () => {
@@ -375,5 +376,19 @@ describe('NuiTimeField', () => {
     const us = TimeFieldDriver.mount({ locale: 'en-US' });
     expect(us.enterHints).toEqual(['next', 'next', 'done']);
     us.unmount();
+  });
+
+  it('renders its own label, description and error and links them to the control', () => {
+    const control = TimeFieldDriver.mount({
+      props: { label: 'Имя', description: 'Подсказка', error: 'Ошибка' },
+    });
+
+    expect(fieldTextsOf(control.wrapper)).toEqual({
+      label: 'Имя',
+      description: 'Подсказка',
+      error: 'Ошибка',
+      linked: true,
+      group: false,
+    });
   });
 });

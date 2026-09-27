@@ -6,4 +6,8 @@ export interface NuiFieldControlProps {
   disabled?: boolean | undefined;
   required?: boolean | undefined;
   invalid?: boolean | undefined;
+  label?: string | undefined;
+  description?: string | undefined;
+  error?: string | undefined;
+  reserveError?: boolean | undefined;
 }

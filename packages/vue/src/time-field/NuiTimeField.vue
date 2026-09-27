@@ -1,92 +1,98 @@
 <template>
-  <div
-    ref="root"
-    class="nui-time-field"
-    :class="[
-      `nui-time-field--size-${size}`,
-      {
-        'nui-time-field--open': open,
-        'nui-time-field--invalid': isInvalid,
-        'nui-time-field--disabled': isDisabled,
-        'nui-time-field--readonly': readonly,
-      },
-    ]"
-    v-bind="split.rootAttrs()"
-    @pointerdown="onRootPointerdown"
-  >
+  <NuiFieldFrame v-bind="fieldFrame" :reserve-error="reserveError">
     <div
-      ref="group"
-      role="group"
-      class="nui-time-field__segments"
-      :id="`${controlAttrs.id}-group`"
-      :aria-labelledby="field?.labelledBy.value"
-      :aria-describedby="controlAttrs['aria-describedby']"
-      v-bind="split.controlAttrs()"
-      @keydown="onGroupKeydown"
-      @focusin="onGroupFocusin"
-      @focusout="onGroupFocusout"
+      ref="root"
+      class="nui-time-field"
+      :class="[
+        `nui-time-field--size-${size}`,
+        {
+          'nui-time-field--open': open,
+          'nui-time-field--invalid': isInvalid,
+          'nui-time-field--disabled': isDisabled,
+          'nui-time-field--readonly': readonly,
+        },
+      ]"
+      v-bind="split.rootAttrs()"
+      @pointerdown="onRootPointerdown"
     >
-      <template v-for="(segment, index) in layout.segments" :key="index">
-        <span v-if="segment.type === 'literal'" class="nui-time-field__literal" aria-hidden="true">
-          {{ segment.text }}
-        </span>
-        <NuiTimeSegment
-          v-else
-          :type="segment.type"
-          :text="segmentText(segment.type)"
-          :label="labels[segment.type]"
-          :value="times.valueOf(segment.type)"
-          :min="segmentBounds(segment.type, layout.cycle).min"
-          :max="segmentBounds(segment.type, layout.cycle).max"
-          :value-text="segmentText(segment.type) || undefined"
-          :id="segment.type === 'hour' ? controlAttrs.id : undefined"
-          :tab-stop="index === firstSegment"
-          :last="index === lastSegment"
-          :disabled="isDisabled"
-          :readonly="readonly"
-          :invalid="isInvalid"
-          :required="isRequired"
-          @char="onChar(segment.type, $event)"
-          @step="times.step(segment.type, $event)"
-          @edge="times.setEdge(segment.type, $event)"
-          @clear="times.clear(segment.type)"
+      <div
+        ref="group"
+        role="group"
+        class="nui-time-field__segments"
+        :id="`${controlAttrs.id}-group`"
+        :aria-labelledby="field?.labelledBy.value"
+        :aria-describedby="controlAttrs['aria-describedby']"
+        v-bind="split.controlAttrs()"
+        @keydown="onGroupKeydown"
+        @focusin="onGroupFocusin"
+        @focusout="onGroupFocusout"
+      >
+        <template v-for="(segment, index) in layout.segments" :key="index">
+          <span
+            v-if="segment.type === 'literal'"
+            class="nui-time-field__literal"
+            aria-hidden="true"
+          >
+            {{ segment.text }}
+          </span>
+          <NuiTimeSegment
+            v-else
+            :type="segment.type"
+            :text="segmentText(segment.type)"
+            :label="labels[segment.type]"
+            :value="times.valueOf(segment.type)"
+            :min="segmentBounds(segment.type, layout.cycle).min"
+            :max="segmentBounds(segment.type, layout.cycle).max"
+            :value-text="segmentText(segment.type) || undefined"
+            :id="segment.type === 'hour' ? controlAttrs.id : undefined"
+            :tab-stop="index === firstSegment"
+            :last="index === lastSegment"
+            :disabled="isDisabled"
+            :readonly="readonly"
+            :invalid="isInvalid"
+            :required="isRequired"
+            @char="onChar(segment.type, $event)"
+            @step="times.step(segment.type, $event)"
+            @edge="times.setEdge(segment.type, $event)"
+            @clear="times.clear(segment.type)"
+          />
+        </template>
+      </div>
+      <NuiButton
+        variant="ghost"
+        tone="neutral"
+        size="sm"
+        icon-only
+        class="nui-time-field__clock"
+        :aria-label="clockText"
+        :disabled="isDisabled || readonly"
+        v-bind="control.invokerAttrs.value"
+      >
+        <NuiIcon alias="clock" />
+      </NuiButton>
+      <div
+        :ref="setPanel"
+        class="nui-time-field__panel"
+        role="group"
+        :aria-label="clockText"
+        v-bind="control.contentAttrs.value"
+        @keydown="onPanelKeydown"
+        @focusout="onPanelFocusout"
+        @toggle="onPanelToggle"
+      >
+        <NuiTimeWheels
+          v-if="open || rendered"
+          ref="wheels"
+          :columns="columns"
+          :labels="labels"
+          :empty-text="emptyText"
+          @pick="pickWheel"
+          @focus-wheel="onFocusWheel"
         />
-      </template>
+      </div>
+      <input v-if="name" type="hidden" :name="name" :value="model ?? ''" />
     </div>
-    <NuiButton
-      variant="ghost"
-      tone="neutral"
-      size="sm"
-      icon-only
-      class="nui-time-field__clock"
-      :aria-label="clockText"
-      :disabled="isDisabled || readonly"
-      v-bind="control.invokerAttrs.value"
-    >
-      <NuiIcon alias="clock" />
-    </NuiButton>
-    <div
-      :ref="setPanel"
-      class="nui-time-field__panel"
-      role="group"
-      :aria-label="clockText"
-      v-bind="control.contentAttrs.value"
-      @keydown="onPanelKeydown"
-      @focusout="onPanelFocusout"
-      @toggle="onPanelToggle"
-    >
-      <NuiTimeWheels
-        v-if="open || rendered"
-        ref="wheels"
-        :columns="columns"
-        :labels="labels"
-        :empty-text="emptyText"
-        @pick="pickWheel"
-        @focus-wheel="onFocusWheel"
-      />
-    </div>
-    <input v-if="name" type="hidden" :name="name" :value="model ?? ''" />
-  </div>
+  </NuiFieldFrame>
 </template>
 
 <script setup lang="ts">
@@ -98,7 +104,6 @@ import {
   segmentBounds,
   segmentLabels,
   timeLayout,
-  useFieldContext,
   useFieldControl,
   useFloating,
   useListNavigation,
@@ -109,6 +114,7 @@ import {
   type TimeSegmentType,
   type TimeValue,
 } from '@numior/primitives';
+import NuiFieldFrame from '../field/NuiFieldFrame';
 import NuiButton from '../button/NuiButton.vue';
 import NuiIcon from '../icon/NuiIcon.vue';
 import { useTriggerElement } from '../shared/trigger-ref';
@@ -127,6 +133,10 @@ const {
   disabled = undefined,
   required = undefined,
   invalid = undefined,
+  label,
+  description,
+  error,
+  reserveError = false,
   seconds = false,
   hourCycle,
   locale: localeProp,
@@ -143,14 +153,15 @@ const {
 const model = defineModel<string | null>({ default: null });
 
 const split = useSplitAttrs();
-const field = useFieldContext();
 
 const {
+  frame: fieldFrame,
+  field,
   attrs: controlAttrs,
   invalid: isInvalid,
   required: isRequired,
   disabled: isDisabled,
-} = useFieldControl(() => ({ id, disabled, required, invalid }), {
+} = useFieldControl(() => ({ id, disabled, required, invalid, label, description, error }), {
   commit: () => times.settle(),
 });
 

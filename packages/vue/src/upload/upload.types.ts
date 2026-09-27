@@ -1,5 +1,5 @@
 import type { UploadAdapter, UploadError, UploadItem } from '@numior/primitives';
-import type { NuiSize } from '../shared/scale.types';
+import type { NuiFieldControlProps } from '../shared/field-control.types';
 
 export type NuiUploadItem<R = unknown> = UploadItem<R>;
 export type NuiUploadAdapter<R = unknown> = UploadAdapter<R>;
@@ -7,11 +7,7 @@ export type NuiUploadError = UploadError;
 export type NuiUploadLayout = 'list' | 'grid';
 export type NuiUploadRejected = 'list' | 'drop';
 
-export interface NuiUploadProps<R = unknown> {
-  id?: string | undefined;
-  disabled?: boolean | undefined;
-  required?: boolean | undefined;
-  invalid?: boolean | undefined;
+export interface NuiUploadProps<R = unknown> extends NuiFieldControlProps {
   upload: NuiUploadAdapter<R>;
   accept?: string | undefined;
   multiple?: boolean | undefined;
@@ -22,10 +18,8 @@ export interface NuiUploadProps<R = unknown> {
   auto?: boolean | undefined;
   concurrency?: number | undefined;
   layout?: NuiUploadLayout | undefined;
-  size?: NuiSize | undefined;
   dropLabel?: string | undefined;
   browseLabel?: string | undefined;
-  hint?: string | undefined;
   cancelLabel?: string | undefined;
   retryLabel?: string | undefined;
   removeLabel?: string | undefined;

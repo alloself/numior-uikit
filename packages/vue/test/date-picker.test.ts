@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { DatePickerDriver } from './drivers/date-picker';
+import { fieldTextsOf } from './support/field-texts';
 
 describe('NuiDatePicker', () => {
   it('shows the model in the locale format and parses typed text live, keeping partial input out of the model', async () => {
@@ -154,5 +155,19 @@ describe('NuiDatePicker', () => {
     const labelled = DatePickerDriver.mount({ props: { openLabel: 'Открыть календарь' } });
     expect(labelled.openButton.attributes('aria-label')).toBe('Открыть календарь');
     labelled.unmount();
+  });
+
+  it('renders its own label, description and error and links them to the control', () => {
+    const control = DatePickerDriver.mount({
+      props: { label: 'Имя', description: 'Подсказка', error: 'Ошибка' },
+    });
+
+    expect(fieldTextsOf(control.wrapper)).toEqual({
+      label: 'Имя',
+      description: 'Подсказка',
+      error: 'Ошибка',
+      linked: true,
+      group: false,
+    });
   });
 });

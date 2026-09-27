@@ -49,6 +49,43 @@ describe('useFieldControl', () => {
     expect(root.ariaInvalid).toBe('true');
   });
 
+  it('creates its own field from label, description and error when nothing wraps it', () => {
+    const control = ControlHarness.inside(null, {
+      label: 'Имя',
+      description: 'Подсказка',
+      error: 'Ошибка',
+    });
+
+    expect(control.own).toBe(true);
+    expect(control.labelledBy).toBe(`${control.id}-label`);
+    expect(control.describedBy).toBe(`${control.id}-description ${control.id}-error`);
+    expect(control.ariaInvalid).toBe('true');
+    expect(control.frameField).toBe(control.id);
+
+    expect(
+      ControlHarness.inside(null, { label: 'Имя' }, { inlineLabel: true }).labelledBy,
+    ).toBeUndefined();
+
+    expect(
+      ControlHarness.inside(null, { description: 'Только подсказка' }).ariaInvalid,
+    ).toBeUndefined();
+
+    expect(ControlHarness.inside(null, {}).own).toBe(false);
+  });
+
+  it('lets a surrounding field win over the texts of the control', () => {
+    const control = ControlHarness.inside(
+      { id: 'name', hasDescription: true },
+      { label: 'Имя', error: 'Ошибка' },
+    );
+
+    expect(control.own).toBe(false);
+    expect(control.id).toBe('name');
+    expect(control.describedBy).toBe('name-description');
+    expect(control.ariaInvalid).toBeUndefined();
+    expect(control.frameField).toBe('name');
+  });
+
   it('hands its draft commit to the surrounding form field until it unmounts', () => {
     const commits: string[] = [];
     const draft = DraftHarness.mount(() => commits.push('committed'));

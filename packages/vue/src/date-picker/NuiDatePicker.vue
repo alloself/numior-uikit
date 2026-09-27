@@ -1,72 +1,75 @@
 <template>
-  <NuiDateField
-    ref="frame"
-    :popover="popover"
-    :size="size"
-    :invalid="isInvalid"
-    :disabled="isDisabled"
-    :readonly="readonly"
-    :clearable="showClear"
-    :open-label="texts.open"
-    :clear-label="texts.clear"
-    :dialog-label="texts.dialog"
-    :labelled-by="field?.labelledBy.value"
-    v-bind="split.rootAttrs()"
-    @clear="clear"
-  >
-    <NuiDateInput
-      ref="input"
-      :model-value="model"
-      :locale="locale"
-      :time="time"
-      :placeholder="placeholder"
+  <NuiFieldFrame v-bind="fieldFrame" :reserve-error="reserveError">
+    <NuiDateField
+      ref="frame"
+      :popover="popover"
+      :size="size"
+      :invalid="isInvalid"
+      :disabled="isDisabled"
       :readonly="readonly"
-      v-bind="{ ...controlAttrs, ...split.controlAttrs() }"
-      @update:model-value="setValue"
-      @keydown="onInputKeydown"
-    />
-    <template #panel>
-      <NuiCalendar
-        ref="calendar"
-        v-model:month="month"
-        :model-value="dateValue"
+      :clearable="showClear"
+      :open-label="texts.open"
+      :clear-label="texts.clear"
+      :dialog-label="texts.dialog"
+      :labelled-by="field?.labelledBy.value"
+      v-bind="split.rootAttrs()"
+      @clear="clear"
+    >
+      <NuiDateInput
+        ref="input"
+        :model-value="model"
         :locale="locale"
-        :week-start="weekStart"
-        :min="min"
-        :max="max"
-        :is-date-disabled="isDateDisabled"
-        :week-numbers="weekNumbers"
-        :months="months"
-        :today="today"
-        :today-label="todayLabel"
-        :previous-label="previousLabel"
-        :next-label="nextLabel"
-        :month-label="monthLabel"
-        :year-label="yearLabel"
-        :week-label="weekLabel"
-        @update:model-value="pickDate"
-      >
-        <template v-if="$slots.actions" #actions><slot name="actions" /></template>
-      </NuiCalendar>
-      <NuiTimeField
-        v-if="time"
-        class="nui-date-picker__time"
-        :model-value="timeValue"
-        :locale="locale"
-        :step="timeStep"
-        :clock-label="timeLabel"
-        size="sm"
-        @update:model-value="pickTime"
-        @keydown="onTimeKeydown"
+        :time="time"
+        :placeholder="placeholder"
+        :readonly="readonly"
+        v-bind="{ ...controlAttrs, ...split.controlAttrs() }"
+        @update:model-value="setValue"
+        @keydown="onInputKeydown"
       />
-    </template>
-    <input v-if="name" type="hidden" :name="name" :value="model ?? ''" />
-  </NuiDateField>
+      <template #panel>
+        <NuiCalendar
+          ref="calendar"
+          v-model:month="month"
+          :model-value="dateValue"
+          :locale="locale"
+          :week-start="weekStart"
+          :min="min"
+          :max="max"
+          :is-date-disabled="isDateDisabled"
+          :week-numbers="weekNumbers"
+          :months="months"
+          :today="today"
+          :today-label="todayLabel"
+          :previous-label="previousLabel"
+          :next-label="nextLabel"
+          :month-label="monthLabel"
+          :year-label="yearLabel"
+          :week-label="weekLabel"
+          @update:model-value="pickDate"
+        >
+          <template v-if="$slots.actions" #actions><slot name="actions" /></template>
+        </NuiCalendar>
+        <NuiTimeField
+          v-if="time"
+          class="nui-date-picker__time"
+          :model-value="timeValue"
+          :locale="locale"
+          :step="timeStep"
+          :clock-label="timeLabel"
+          size="sm"
+          @update:model-value="pickTime"
+          @keydown="onTimeKeydown"
+        />
+      </template>
+      <input v-if="name" type="hidden" :name="name" :value="model ?? ''" />
+    </NuiDateField>
+  </NuiFieldFrame>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue';
 import { joinDateTime, splitDateTime } from '@numior/primitives';
+import NuiFieldFrame from '../field/NuiFieldFrame';
 import NuiCalendar from '../calendar/NuiCalendar.vue';
 import type { NuiCalendarValue } from '../calendar/calendar.types';
 import NuiTimeField from '../time-field/NuiTimeField.vue';
@@ -84,6 +87,10 @@ const {
   disabled = undefined,
   required = undefined,
   invalid = undefined,
+  label,
+  description,
+  error,
+  reserveError = false,
   locale: localeProp,
   weekStart,
   min,
@@ -119,6 +126,7 @@ const timeValue = computed(() => splitDateTime(model.value)?.time ?? null);
 const {
   split,
   field,
+  fieldFrame,
   controlAttrs,
   isInvalid,
   isDisabled,
@@ -130,7 +138,7 @@ const {
   focusInput,
   onInputKeydown,
 } = useDatePickerShell({
-  control: () => ({ id, disabled, required, invalid }),
+  control: () => ({ id, disabled, required, invalid, label, description, error }),
   locale: () => localeProp,
   placement: () => placement,
   readonly: () => readonly,

@@ -1,77 +1,80 @@
 <template>
-  <NuiDateField
-    ref="frame"
-    :popover="popover"
-    :size="size"
-    range
-    :invalid="isInvalid"
-    :disabled="isDisabled"
-    :readonly="readonly"
-    :clearable="showClear"
-    :open-label="texts.open"
-    :clear-label="texts.clear"
-    :dialog-label="texts.dialog"
-    :labelled-by="field?.labelledBy.value"
-    v-bind="split.rootAttrs()"
-    @clear="clear"
-  >
-    <NuiDateInput
-      ref="input"
-      :model-value="model.start"
-      :locale="locale"
-      :placeholder="startPlaceholder"
-      :readonly="readonly"
-      v-bind="{ ...controlAttrs, ...split.controlAttrs() }"
-      @update:model-value="setStart"
-      @keydown="onInputKeydown"
-    />
-    <span class="nui-date-picker__separator" aria-hidden="true">–</span>
-    <NuiDateInput
-      :model-value="model.end"
-      :locale="locale"
-      :placeholder="endPlaceholder"
-      :readonly="readonly"
+  <NuiFieldFrame v-bind="fieldFrame" :reserve-error="reserveError">
+    <NuiDateField
+      ref="frame"
+      :popover="popover"
+      :size="size"
+      range
+      :invalid="isInvalid"
       :disabled="isDisabled"
-      :label="texts.end"
-      :aria-describedby="controlAttrs['aria-describedby']"
-      :aria-invalid="controlAttrs['aria-invalid']"
-      @update:model-value="setEnd"
-      @keydown="onInputKeydown"
-    />
-    <template #panel>
-      <NuiCalendar
-        ref="calendar"
-        v-model:month="month"
-        mode="range"
-        :model-value="model"
+      :readonly="readonly"
+      :clearable="showClear"
+      :open-label="texts.open"
+      :clear-label="texts.clear"
+      :dialog-label="texts.dialog"
+      :labelled-by="field?.labelledBy.value"
+      v-bind="split.rootAttrs()"
+      @clear="clear"
+    >
+      <NuiDateInput
+        ref="input"
+        :model-value="model.start"
         :locale="locale"
-        :week-start="weekStart"
-        :min="min"
-        :max="max"
-        :is-date-disabled="isDateDisabled"
-        :week-numbers="weekNumbers"
-        :months="months"
-        :today="today"
-        :presets="presets"
-        :today-label="todayLabel"
-        :previous-label="previousLabel"
-        :next-label="nextLabel"
-        :month-label="monthLabel"
-        :year-label="yearLabel"
-        :week-label="weekLabel"
-        @update:model-value="pickRange"
-      >
-        <template v-if="$slots.actions" #actions><slot name="actions" /></template>
-      </NuiCalendar>
-    </template>
-    <input v-if="startName" type="hidden" :name="startName" :value="model.start ?? ''" />
-    <input v-if="endName" type="hidden" :name="endName" :value="model.end ?? ''" />
-  </NuiDateField>
+        :placeholder="startPlaceholder"
+        :readonly="readonly"
+        v-bind="{ ...controlAttrs, ...split.controlAttrs() }"
+        @update:model-value="setStart"
+        @keydown="onInputKeydown"
+      />
+      <span class="nui-date-picker__separator" aria-hidden="true">–</span>
+      <NuiDateInput
+        :model-value="model.end"
+        :locale="locale"
+        :placeholder="endPlaceholder"
+        :readonly="readonly"
+        :disabled="isDisabled"
+        :label="texts.end"
+        :aria-describedby="controlAttrs['aria-describedby']"
+        :aria-invalid="controlAttrs['aria-invalid']"
+        @update:model-value="setEnd"
+        @keydown="onInputKeydown"
+      />
+      <template #panel>
+        <NuiCalendar
+          ref="calendar"
+          v-model:month="month"
+          mode="range"
+          :model-value="model"
+          :locale="locale"
+          :week-start="weekStart"
+          :min="min"
+          :max="max"
+          :is-date-disabled="isDateDisabled"
+          :week-numbers="weekNumbers"
+          :months="months"
+          :today="today"
+          :presets="presets"
+          :today-label="todayLabel"
+          :previous-label="previousLabel"
+          :next-label="nextLabel"
+          :month-label="monthLabel"
+          :year-label="yearLabel"
+          :week-label="weekLabel"
+          @update:model-value="pickRange"
+        >
+          <template v-if="$slots.actions" #actions><slot name="actions" /></template>
+        </NuiCalendar>
+      </template>
+      <input v-if="startName" type="hidden" :name="startName" :value="model.start ?? ''" />
+      <input v-if="endName" type="hidden" :name="endName" :value="model.end ?? ''" />
+    </NuiDateField>
+  </NuiFieldFrame>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue';
 import { normalizeRange } from '@numior/primitives';
+import NuiFieldFrame from '../field/NuiFieldFrame';
 import NuiCalendar from '../calendar/NuiCalendar.vue';
 import type { NuiCalendarValue, NuiDateRange } from '../calendar/calendar.types';
 import { isDateRange } from '../calendar/day-state';
@@ -89,6 +92,10 @@ const {
   disabled = undefined,
   required = undefined,
   invalid = undefined,
+  label,
+  description,
+  error,
+  reserveError = false,
   locale: localeProp,
   weekStart,
   min,
@@ -122,6 +129,7 @@ const model = defineModel<NuiDateRange>({ default: () => ({ start: null, end: nu
 const {
   split,
   field,
+  fieldFrame,
   controlAttrs,
   isInvalid,
   isDisabled,
@@ -133,7 +141,7 @@ const {
   focusInput,
   onInputKeydown,
 } = useDatePickerShell({
-  control: () => ({ id, disabled, required, invalid }),
+  control: () => ({ id, disabled, required, invalid, label, description, error }),
   locale: () => localeProp,
   placement: () => placement,
   readonly: () => readonly,

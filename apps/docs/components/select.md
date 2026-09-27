@@ -8,13 +8,13 @@
 ## Установка
 
 ```ts
-import { NuiField, NuiSelect } from '@numior/vue';
+import { NuiSelect } from '@numior/vue';
 import '@numior/tokens/theme.css';
 import '@numior/vue/styles/field.css';
 import '@numior/vue/styles/select.css';
 ```
 
-Внутри `NuiField` триггер получает подпись, описание и состояние ошибки без лишних пропов.
+`label`, `description` и `error` контрол рисует сам; стили подписи приходят из `field.css`.
 
 ## Примеры
 

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { RadioGroupDriver } from './drivers/radio';
+import { fieldTextsOf } from './support/field-texts';
 
 describe('NuiRadioGroup and NuiRadio', () => {
   it('shares one native name, reflects the model and emits the selected value', async () => {
@@ -36,5 +37,19 @@ describe('NuiRadioGroup and NuiRadio', () => {
     expect(group.group.attributes('aria-describedby')).toBe('plan-description');
     expect(group.group.attributes('aria-required')).toBe('true');
     expect(group.radios.map((radio) => radio.attributes('id'))).not.toContain('plan');
+  });
+
+  it('renders its own label, description and error and links them to the control', () => {
+    const control = RadioGroupDriver.mount({
+      props: { label: 'Имя', description: 'Подсказка', error: 'Ошибка' },
+    });
+
+    expect(fieldTextsOf(control.wrapper)).toEqual({
+      label: 'Имя',
+      description: 'Подсказка',
+      error: 'Ошибка',
+      linked: true,
+      group: true,
+    });
   });
 });

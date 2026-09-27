@@ -1,11 +1,11 @@
 import { ref, useTemplateRef, watch, type ComputedRef, type Ref } from 'vue';
 import {
-  useFieldContext,
   useFieldControl,
   useLocale,
   useMessages,
   useSplitAttrs,
   type FieldContext,
+  type FieldFrame,
   type FieldControlAttrs,
   type FieldControlProps,
   type FloatingPlacement,
@@ -30,7 +30,8 @@ export interface DatePickerExposed {
 
 export interface DatePickerShell {
   readonly split: SplitAttrs;
-  readonly field: FieldContext | null;
+  readonly field: ComputedRef<FieldContext | null>;
+  readonly fieldFrame: ComputedRef<FieldFrame>;
   readonly controlAttrs: ComputedRef<FieldControlAttrs>;
   readonly isInvalid: ComputedRef<boolean>;
   readonly isDisabled: ComputedRef<boolean>;
@@ -82,7 +83,8 @@ export const useDatePickerShell = (options: DatePickerShellOptions): DatePickerS
 
   return {
     split: useSplitAttrs(),
-    field: useFieldContext(),
+    field: control.field,
+    fieldFrame: control.frame,
     controlAttrs: control.attrs,
     isInvalid: control.invalid,
     isDisabled: control.disabled,

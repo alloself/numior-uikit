@@ -272,3 +272,20 @@ gzip); адаптер вместе с vee-validate добавляет 36,7 KB / 
 `compiler-ssr` Vue 3.5 выводит props `TransitionGroup` (классы переходов) атрибутами обёртки; это
 безвредно и касается также дерева и списка строк. Значения условных полей в типе формы должны быть
 необязательными: в отправку они не попадают. Ключи с точкой в путях не поддерживаются.
+
+## Тексты поля на контроле (2026-09-27)
+
+Каждый контрол поля (`NuiFieldControlProps`: Input, Textarea, Select, Combobox, NumberField,
+Switch, Checkbox, CheckboxGroup, RadioGroup, TimeField, DatePicker, DateRangePicker, Upload)
+принимает `label`, `description`, `error` и `reserveError`. `useFieldControl` создаёт для
+контрола собственный `FieldContext` из этих текстов, когда его не оборачивает `NuiField`
+(`own`), и отдаёт `frame` — данные для части `NuiFieldFrame`, которой обёрнут корень
+каждого контрола: та же разметка `.nui-field` с подписью, описанием и ошибкой, что у
+`NuiField`, и та же aria-проводка (`for`/`id`, `aria-describedby`, `aria-invalid` от ошибки).
+У Checkbox и Switch `label` — встроенная подпись рядом с боксом (`inlineLabel`: контекст без
+`labelledBy`, рамка только с описанием и ошибкой), у групп рамка — `fieldset` с `legend`.
+Внутри внешнего `NuiField` контрол свои тексты не рисует: внешнее поле побеждает. `NuiField`
+остаётся для слотов подписи, нескольких контролов в одном поле и `NuiFormField`; части
+`NuiFieldLabel`/`NuiFieldDescription`/`NuiFieldError` принимают контекст пропом `field`, а
+без него берут его из инъекции. `NuiUpload` перешёл на общий интерфейс (`hint` →
+`description`).

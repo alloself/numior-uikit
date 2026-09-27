@@ -1,12 +1,16 @@
 <template>
-  <NuiField label="Country">
-    <NuiSelect v-model="country" :options="countries" placeholder="Pick a country" clearable />
-  </NuiField>
+  <NuiSelect
+    label="Country"
+    v-model="country"
+    :options="countries"
+    placeholder="Pick a country"
+    clearable
+  />
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { NuiField, NuiSelect, type NuiOptionSource } from '@numior/vue';
+import { NuiSelect, type NuiOptionSource } from '@numior/vue';
 
 const country = ref<string | null>(null);
 

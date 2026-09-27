@@ -37,7 +37,7 @@ const images = ref([])
 
 <div class="vp-raw nui-demo nui-demo--stack" data-nui-theme="light">
   <NuiField label="Документы" description="PDF или TXT до 1 МБ, не больше трёх">
-    <NuiUpload v-model="documents" :upload="demoUpload" accept=".pdf,.txt" :max-size="1048576" :max-files="3" hint="Файл с «fail» в имени завершится ошибкой" />
+    <NuiUpload v-model="documents" :upload="demoUpload" accept=".pdf,.txt" :max-size="1048576" :max-files="3" description="Файл с «fail» в имени завершится ошибкой" />
   </NuiField>
   <NuiField label="Галерея" description="Изображения сеткой">
     <NuiUpload v-model="images" :upload="demoUpload" layout="grid" accept="image/*" drop-label="Перетащите изображения" browse-label="Выбрать изображения" />

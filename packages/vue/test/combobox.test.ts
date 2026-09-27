@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { ComboboxDriver } from './drivers/combobox';
+import { fieldTextsOf } from './support/field-texts';
 
 describe('NuiCombobox', () => {
   it('filters options as the user types, points aria-activedescendant at the first match and selects with Enter', async () => {
@@ -148,5 +149,19 @@ describe('NuiCombobox', () => {
     expect(await combobox.press('Enter')).toBe(true);
     expect(combobox.value).toBe('apple');
     combobox.unmount();
+  });
+
+  it('renders its own label, description and error and links them to the control', () => {
+    const control = ComboboxDriver.mount({
+      props: { label: 'Имя', description: 'Подсказка', error: 'Ошибка' },
+    });
+
+    expect(fieldTextsOf(control.wrapper)).toEqual({
+      label: 'Имя',
+      description: 'Подсказка',
+      error: 'Ошибка',
+      linked: true,
+      group: false,
+    });
   });
 });

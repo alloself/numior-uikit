@@ -1,12 +1,10 @@
 <template>
-  <NuiField label="Tags">
-    <NuiSelect v-model:values="tags" :options="options" multiple clearable />
-  </NuiField>
+  <NuiSelect label="Tags" v-model:values="tags" :options="options" multiple clearable />
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { NuiField, NuiSelect, type NuiOptionSource } from '@numior/vue';
+import { NuiSelect, type NuiOptionSource } from '@numior/vue';
 
 const tags = ref(['frontend']);
 

@@ -1,113 +1,116 @@
 <template>
-  <div
-    class="nui-combobox"
-    :class="[
-      `nui-combobox--size-${size}`,
-      {
-        'nui-combobox--open': open,
-        'nui-combobox--multiple': multiple,
-        'nui-combobox--invalid': isInvalid,
-        'nui-combobox--disabled': isDisabled,
-      },
-    ]"
-    v-bind="split.rootAttrs()"
-    @focusout="onFocusout"
-  >
-    <div ref="field" class="nui-combobox__field" @click="onFieldClick">
-      <template v-if="multiple">
-        <NuiChip
-          v-for="chip in chips"
-          :key="chip.key"
-          removable
-          :remove-label="`${texts.remove} ${chip.label}`"
-          :disabled="isDisabled"
-          class="nui-combobox__chip"
-          @remove="choose(chip.value)"
-        >
-          {{ chip.label }}
-        </NuiChip>
-      </template>
-      <input
-        ref="input"
-        class="nui-combobox__input"
-        role="combobox"
-        autocomplete="off"
-        aria-autocomplete="list"
-        :aria-expanded="open ? 'true' : 'false'"
-        :aria-controls="listboxId"
-        :aria-activedescendant="open ? navigation.activeId.value : undefined"
-        :placeholder="selectedValues.length === 0 ? placeholder : undefined"
-        :value="query"
-        v-bind="{ ...controlAttrs, ...split.controlAttrs() }"
-        @input="onInput"
-        @keydown="onKeydown"
-      />
-      <NuiButton
-        v-if="showClear"
-        variant="ghost"
-        tone="neutral"
-        size="sm"
-        class="nui-combobox__clear"
-        :aria-label="texts.clear"
-        tabindex="-1"
-        @click="clear"
-      >
-        <NuiIcon alias="x" />
-      </NuiButton>
-      <NuiButton
-        variant="ghost"
-        tone="neutral"
-        size="sm"
-        class="nui-combobox__toggle"
-        :aria-label="texts.toggle"
-        :aria-expanded="open ? 'true' : 'false'"
-        :aria-controls="listboxId"
-        tabindex="-1"
-        :disabled="isDisabled"
-        @click="toggle"
-      >
-        <NuiIcon alias="chevron-down" class="nui-combobox__chevron" />
-      </NuiButton>
-    </div>
-    <NuiList
-      :ref="setListbox"
-      v-model="model"
-      v-model:values="values"
-      class="nui-combobox__listbox"
-      variant="floating"
-      :items="filtered"
-      :selectable="multiple ? 'multiple' : 'single'"
-      :get-key="getKey"
-      :keyboard="false"
-      :active-id="navigation.activeId.value"
-      :loading="loading"
-      :loading-label="loadingLabel"
-      :empty-label="texts.empty"
-      v-bind="control.contentAttrs.value"
-      @select="onSelect"
-      @pointermove="activateHovered"
-      @pointerleave="restActive"
-      @pointerdown.prevent
+  <NuiFieldFrame v-bind="fieldFrame" :reserve-error="reserveError">
+    <div
+      class="nui-combobox"
+      :class="[
+        `nui-combobox--size-${size}`,
+        {
+          'nui-combobox--open': open,
+          'nui-combobox--multiple': multiple,
+          'nui-combobox--invalid': isInvalid,
+          'nui-combobox--disabled': isDisabled,
+        },
+      ]"
+      v-bind="split.rootAttrs()"
+      @focusout="onFocusout"
     >
-      <template #item="slot">
-        <slot name="option" :option="slot.item" :selected="slot.selected" :active="slot.active" />
+      <div ref="field" class="nui-combobox__field" @click="onFieldClick">
+        <template v-if="multiple">
+          <NuiChip
+            v-for="chip in chips"
+            :key="chip.key"
+            removable
+            :remove-label="`${texts.remove} ${chip.label}`"
+            :disabled="isDisabled"
+            class="nui-combobox__chip"
+            @remove="choose(chip.value)"
+          >
+            {{ chip.label }}
+          </NuiChip>
+        </template>
+        <input
+          ref="input"
+          class="nui-combobox__input"
+          role="combobox"
+          autocomplete="off"
+          aria-autocomplete="list"
+          :aria-expanded="open ? 'true' : 'false'"
+          :aria-controls="listboxId"
+          :aria-activedescendant="open ? navigation.activeId.value : undefined"
+          :placeholder="selectedValues.length === 0 ? placeholder : undefined"
+          :value="query"
+          v-bind="{ ...controlAttrs, ...split.controlAttrs() }"
+          @input="onInput"
+          @keydown="onKeydown"
+        />
+        <NuiButton
+          v-if="showClear"
+          variant="ghost"
+          tone="neutral"
+          size="sm"
+          class="nui-combobox__clear"
+          :aria-label="texts.clear"
+          tabindex="-1"
+          @click="clear"
+        >
+          <NuiIcon alias="x" />
+        </NuiButton>
+        <NuiButton
+          variant="ghost"
+          tone="neutral"
+          size="sm"
+          class="nui-combobox__toggle"
+          :aria-label="texts.toggle"
+          :aria-expanded="open ? 'true' : 'false'"
+          :aria-controls="listboxId"
+          tabindex="-1"
+          :disabled="isDisabled"
+          @click="toggle"
+        >
+          <NuiIcon alias="chevron-down" class="nui-combobox__chevron" />
+        </NuiButton>
+      </div>
+      <NuiList
+        :ref="setListbox"
+        v-model="model"
+        v-model:values="values"
+        class="nui-combobox__listbox"
+        variant="floating"
+        :items="filtered"
+        :selectable="multiple ? 'multiple' : 'single'"
+        :get-key="getKey"
+        :keyboard="false"
+        :active-id="navigation.activeId.value"
+        :loading="loading"
+        :loading-label="loadingLabel"
+        :empty-label="texts.empty"
+        v-bind="control.contentAttrs.value"
+        @select="onSelect"
+        @pointermove="activateHovered"
+        @pointerleave="restActive"
+        @pointerdown.prevent
+      >
+        <template #item="slot">
+          <slot name="option" :option="slot.item" :selected="slot.selected" :active="slot.active" />
+        </template>
+      </NuiList>
+      <template v-if="name">
+        <input
+          v-for="value in selectedValues"
+          :key="keyOf(value)"
+          type="hidden"
+          :name="name"
+          :value="keyOf(value)"
+        />
       </template>
-    </NuiList>
-    <template v-if="name">
-      <input
-        v-for="value in selectedValues"
-        :key="keyOf(value)"
-        type="hidden"
-        :name="name"
-        :value="keyOf(value)"
-      />
-    </template>
-  </div>
+    </div>
+  </NuiFieldFrame>
 </template>
 
 <script setup lang="ts" generic="T">
 import { computed, onMounted, ref, shallowRef, useTemplateRef, watch } from 'vue';
 import { createIntent, useFieldControl, useMessages, useSplitAttrs } from '@numior/primitives';
+import NuiFieldFrame from '../field/NuiFieldFrame';
 import NuiButton from '../button/NuiButton.vue';
 import NuiChip from '../chip/NuiChip.vue';
 import NuiIcon from '../icon/NuiIcon.vue';
@@ -127,6 +130,10 @@ const {
   disabled = undefined,
   required = undefined,
   invalid = undefined,
+  label,
+  description,
+  error,
+  reserveError = false,
   options,
   multiple = false,
   clearable = false,
@@ -152,10 +159,11 @@ const split = useSplitAttrs();
 const messages = useMessages(comboboxMessages);
 
 const {
+  frame: fieldFrame,
   attrs: controlAttrs,
   invalid: isInvalid,
   disabled: isDisabled,
-} = useFieldControl(() => ({ id, disabled, required, invalid }), {
+} = useFieldControl(() => ({ id, disabled, required, invalid, label, description, error }), {
   commit: () => commitDraft(),
 });
 
