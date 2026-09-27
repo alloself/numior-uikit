@@ -83,9 +83,11 @@ the table scrolls horizontally. Free space is shared by the columns without `wid
 compact columns a width and let one column stretch. A header label in a narrow column is
 truncated with an ellipsis and shows the full text in a tooltip, while body cells wrap. `sticky: 'start' | 'end'` pins a column to the scroller edge,
 offsets are computed from the neighbouring pinned widths and the edge shadow appears only
-once scrolled. `reorderable` lets you drag a header with the pointer or grab it from the
-keyboard through the grip button: Space grabs, ←/→ move, Space drops, Escape cancels; the
-order lives in `v-model:columnOrder` (keys) and pinned columns only move within their group.
+once scrolled. `reorderable` adds a grip before the label: drag it with the pointer or a
+finger, or grab it from the keyboard — Space grabs, ←/→ move, Space drops, Escape cancels.
+Only the grip starts a drag, so a click on the label still sorts and the header text stays
+selectable; the order lives in `v-model:columnOrder` (keys) and pinned columns only move
+within their group.
 The grip sits before the label, takes no space while hidden and pushes the header content
 aside when it appears on hover or keyboard focus (touch screens always show it); while
 dragging, the grips of the other columns and rows are hidden,

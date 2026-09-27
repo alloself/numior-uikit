@@ -8,12 +8,10 @@
       {
         'nui-table__cell--resizing': resizing,
         'nui-table__cell--dragging': dragging,
-        'nui-table__cell--reorderable': column.reorderable,
       },
     ]"
     :style="layout.cellStyle(column)"
     :aria-sort="ariaSortOf(sort, column.key)"
-    @pointerdown="onPointerdown"
   >
     <span class="nui-table__head-content">
       <button
@@ -21,6 +19,7 @@
         type="button"
         class="nui-table__grip"
         :aria-label="reorderLabel(column)"
+        @pointerdown="actions.dragStart(index, $event)"
         @keydown="actions.dragKeydown(index, $event)"
       >
         <NuiIcon alias="grip" />
@@ -78,10 +77,4 @@ const { column, index, sort, layout, actions, resizing, dragging, resizeLabel, r
 const emit = defineEmits<{ sort: [key: string] }>();
 
 const direction = computed(() => directionOf(sort, column.key));
-
-const onPointerdown = (event: PointerEvent): void => {
-  if (column.reorderable) {
-    actions.dragStart(index, event);
-  }
-};
 </script>

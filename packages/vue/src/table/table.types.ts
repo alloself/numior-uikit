@@ -55,8 +55,6 @@ export interface NuiTableHeadActions<T> {
   resizeReset(column: NuiTableColumn<T>): void;
   dragStart(index: number, event: PointerEvent): void;
   dragKeydown(index: number, event: KeyboardEvent): void;
-  headPointerdown(): void;
-  headClick(event: MouseEvent): void;
 }
 
 export interface NuiTableReorderEvent<T> {

@@ -491,9 +491,13 @@ export class TableDriver extends ComponentDriver {
     await nextTick();
   }
 
-  async grabHeader(label: string, from: number, to: number): Promise<void> {
-    const cell = this.header(label).element;
-    cell.dispatchEvent(pointer('pointerdown', from));
+  async grabColumn(
+    label: string,
+    from: number,
+    to: number,
+    part = '.nui-table__grip',
+  ): Promise<void> {
+    this.header(label).find(part).element.dispatchEvent(pointer('pointerdown', from));
     await nextTick();
     window.dispatchEvent(pointer('pointermove', from + Math.sign(to - from) * 3));
     window.dispatchEvent(pointer('pointermove', to));
@@ -505,8 +509,8 @@ export class TableDriver extends ComponentDriver {
     await nextTick();
   }
 
-  async dragHeader(label: string, from: number, to: number): Promise<void> {
-    await this.grabHeader(label, from, to);
+  async dragColumn(label: string, from: number, to: number, part?: string): Promise<void> {
+    await this.grabColumn(label, from, to, part);
     await this.dropAt(to, 0);
   }
 

@@ -329,7 +329,7 @@ describe('NuiTable columns', () => {
     pinned.unmount();
   });
 
-  it('reorders columns by dragging a header and swallows the click that ends the drag', async () => {
+  it('reorders columns by dragging the grip only, while the label keeps sorting', async () => {
     const table = TableDriver.mount({
       columns: withOptions({
         name: { reorderable: true },
@@ -340,18 +340,18 @@ describe('NuiTable columns', () => {
     });
 
     table.layoutHeaders(100);
-    await table.dragHeader('Имя', 50, 53);
+    await table.dragColumn('Имя', 50, 53);
     expect(table.columnOrder).toEqual([]);
-    expect(table.sort).toBeNull();
-    await table.grabHeader('Имя', 50, 360);
+    await table.dragColumn('Имя', 50, 360, '.nui-table__label');
+    expect(table.ghostText).toBeUndefined();
+    expect(table.columnOrder).toEqual([]);
+    await table.grabColumn('Имя', 50, 360);
     expect(table.ghostText).toBe('Имя');
     expect(table.hasModifier('dragging')).toBe(true);
     await table.dropAt(360, 0);
     expect(table.ghostText).toBeUndefined();
     expect(table.columnOrder).toEqual(['role', 'age', 'score', 'name']);
     expect(table.hasModifier('dragging')).toBe(false);
-    await table.clickHeader('Имя');
-    expect(table.sort).toBeNull();
     await table.clickHeader('Имя');
     expect(table.sort).toEqual({ key: 'name', direction: 'asc' });
     table.unmount();

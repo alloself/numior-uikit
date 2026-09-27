@@ -173,7 +173,13 @@ test.describe('table', () => {
       expect(await table.headerLabels()).toEqual(['', 'Имя', 'Роль', 'Балл', 'Возраст']);
     }
 
-    await table.dragBetween(table.header('Имя'), table.header('Роль'), 20, 0, async () => {
+    const before = await table.headerLabels();
+    await table.dragBy(table.header('Роль').locator('.nui-table__label'), 160);
+    await expect(table.ghost).toHaveCount(0);
+    expect(await table.headerLabels()).toEqual(before);
+    await table.header('Имя').hover();
+
+    await table.dragBetween(table.columnGrip('Имя'), table.header('Роль'), 20, 0, async () => {
       await expect(table.ghost).toContainText('Имя');
       const line = await table.dropLine(table.table).boundingBox();
       const head = await table.table.locator('thead').boundingBox();

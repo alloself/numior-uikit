@@ -1,8 +1,9 @@
 import { ref, type ComputedRef, type Ref } from 'vue';
-import { useReorder, type ReorderEvent, type ReorderState } from '@numior/primitives';
+import { useReorder, type ReorderState } from '@numior/primitives';
 import { clampInside, ghostAt, grabOf, NO_GRAB, type DragGrab, type NuiTableGhost } from './ghost';
 import type { NuiTableRowView } from './rows';
 import type { NuiTableAnnouncement, NuiTableReorderEvent } from './table.types';
+import { reorderListeners } from './reorder-feedback';
 
 export interface RowReorderOptions<T> {
   readonly scroller: () => HTMLElement | null | undefined;
@@ -109,36 +110,15 @@ export const useRowReorder = <T>(options: RowReorderOptions<T>): RowReorder => {
     });
   };
 
-  const onChange = (state: ReorderState): void => {
-    switch (state.phase) {
-      case 'dragging':
-      case 'keyboard':
-        place(state.from, state.to);
-        break;
-      case 'idle':
-        indicator.value = undefined;
-        break;
-      case 'pending':
-        break;
-    }
-    float(state);
-  };
-
-  const onEvent = (event: ReorderEvent): void => {
-    switch (event.type) {
-      case 'grabbed':
-      case 'cancelled':
-        say(event.type, event.from, event.from);
-        break;
-      case 'moved':
-        say(event.type, event.from, event.to);
-        options.reveal(event.to);
-        break;
-      case 'dropped':
-        say(event.type, event.from, event.to);
-        break;
-    }
-  };
+  const { onChange, onEvent } = reorderListeners({
+    place,
+    clear: () => {
+      indicator.value = undefined;
+    },
+    float,
+    say,
+    moved: options.reveal,
+  });
 
   const canMove = (from: number, to: number): boolean => {
     const source = options.views()[from];

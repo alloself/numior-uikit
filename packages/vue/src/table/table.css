@@ -257,10 +257,6 @@
     inset 1px 0 var(--nui-border),
     -6px 0 8px -6px rgb(0 0 0 / 0.2);
 }
-.nui-table__cell--reorderable {
-  cursor: grab;
-  touch-action: none;
-}
 .nui-table__cell--dragging {
   opacity: 0.5;
 }

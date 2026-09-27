@@ -1,7 +1,8 @@
 import { ref, type ComputedRef, type Ref } from 'vue';
-import { useReorder, type ReorderEvent, type ReorderState } from '@numior/primitives';
+import { useReorder, type ReorderState } from '@numior/primitives';
 import { clampInside, ghostAt, grabOf, NO_GRAB, type DragGrab, type NuiTableGhost } from './ghost';
 import type { NuiTableAnnouncement, NuiTableColumn } from './table.types';
+import { reorderListeners } from './reorder-feedback';
 
 export interface ColumnReorderOptions<T> {
   readonly scroller: () => HTMLElement | null | undefined;
@@ -20,8 +21,6 @@ export interface ColumnReorder {
   readonly ghost: Readonly<Ref<NuiTableGhost | undefined>>;
   dragStart(index: number, event: PointerEvent): void;
   dragKeydown(index: number, event: KeyboardEvent): void;
-  headPointerdown(): void;
-  headClick(event: MouseEvent): void;
 }
 
 const headerCells = (scroller: HTMLElement | null | undefined, skip: number): HTMLElement[] =>
@@ -67,7 +66,6 @@ export const useColumnReorder = <T>(options: ColumnReorderOptions<T>): ColumnReo
   const indicator = ref<number>();
   const ghost = ref<NuiTableGhost>();
   const grabbed: { current: DragGrab } = { current: NO_GRAB };
-  let dragged = false;
 
   const labelOf = (index: number): string => options.columns()[index]?.label ?? '';
 
@@ -97,36 +95,14 @@ export const useColumnReorder = <T>(options: ColumnReorderOptions<T>): ColumnReo
         : undefined;
   };
 
-  const onChange = (state: ReorderState): void => {
-    switch (state.phase) {
-      case 'dragging':
-        dragged = true;
-        place(state.from, state.to);
-        break;
-      case 'keyboard':
-        place(state.from, state.to);
-        break;
-      case 'idle':
-        indicator.value = undefined;
-        break;
-      case 'pending':
-        break;
-    }
-    float(state);
-  };
-
-  const onEvent = (event: ReorderEvent): void => {
-    switch (event.type) {
-      case 'grabbed':
-      case 'cancelled':
-        say(event.type, event.from, event.from);
-        break;
-      case 'moved':
-      case 'dropped':
-        say(event.type, event.from, event.to);
-        break;
-    }
-  };
+  const { onChange, onEvent } = reorderListeners({
+    place,
+    clear: () => {
+      indicator.value = undefined;
+    },
+    float,
+    say,
+  });
 
   const reorder = useReorder({
     axis: 'x',
@@ -152,16 +128,6 @@ export const useColumnReorder = <T>(options: ColumnReorderOptions<T>): ColumnReo
     },
     dragKeydown: (index, event) => {
       if (reorder.onKeydown(index, event)) {
-        event.preventDefault();
-      }
-    },
-    headPointerdown: () => {
-      dragged = false;
-    },
-    headClick: (event) => {
-      if (dragged) {
-        dragged = false;
-        event.stopPropagation();
         event.preventDefault();
       }
     },

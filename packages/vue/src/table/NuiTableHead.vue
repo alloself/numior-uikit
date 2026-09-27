@@ -1,9 +1,5 @@
 <template>
-  <thead
-    class="nui-table__head"
-    @pointerdown.capture="actions.headPointerdown"
-    @click.capture="actions.headClick"
-  >
+  <thead class="nui-table__head">
     <tr class="nui-table__row nui-table__row--head">
       <th
         v-if="rowDrag"

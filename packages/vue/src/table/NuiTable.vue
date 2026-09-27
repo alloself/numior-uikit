@@ -317,8 +317,6 @@ const headActions: NuiTableHeadActions<T> = {
   resizeReset: (column) => layout.resetWidth(column.key),
   dragStart: columnDrag.dragStart,
   dragKeydown: columnDrag.dragKeydown,
-  headPointerdown: columnDrag.headPointerdown,
-  headClick: columnDrag.headClick,
 };
 
 const firstColumnText = (view: NuiTableRowView<T>): string => {
