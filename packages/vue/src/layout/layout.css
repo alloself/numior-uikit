@@ -32,6 +32,7 @@
 }
 .nui-layout__content {
   flex: 1 1 auto;
+  min-inline-size: 0;
   min-block-size: 0;
 }
 .nui-layout__end {

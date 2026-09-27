@@ -66,6 +66,23 @@ describe('useColorScheme', () => {
     expect(own.scheme.value).toBe('dark');
   });
 
+  it('keeps the server default during setup and follows storage after mount', () => {
+    fakeMedia(false);
+    localStorage.setItem('nui-theme', 'dark');
+
+    const captured = captureSetup(
+      () => {
+        const control = useColorScheme();
+
+        return { control, duringSetup: control.scheme.value };
+      },
+      { plugins: [createNuiConfig({ colorScheme: { storageKey: 'nui-theme' } })] },
+    ).value;
+
+    expect(captured.duringSetup).toBe('system');
+    expect(captured.control.scheme.value).toBe('dark');
+  });
+
   it('applies the stored scheme before paint through the head script', () => {
     localStorage.setItem('nui-theme', 'dark');
     new Function(colorSchemeScript('nui-theme'))();

@@ -10,12 +10,15 @@
   },
   "dependencies": {
     "@numior/forms": "workspace:*",
+    "@numior/primitives": "workspace:*",
     "@numior/tokens": "workspace:*",
     "@numior/utilities": "workspace:*",
     "@numior/vue": "workspace:*",
+    "minisearch": "7.2.0",
     "vue": "3.5.43"
   },
   "devDependencies": {
+    "shiki": "4.4.3",
     "vitepress": "1.6.4"
   }
 }

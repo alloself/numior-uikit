@@ -9,7 +9,7 @@
       'nui-code--collapsed': collapsible && !expanded,
       'nui-code--copied': clipboard.copied.value,
     }"
-    :style="{ '--_max-lines': maxLines }"
+    :style="rootStyle"
   >
     <figcaption v-if="hasHeader" class="nui-code__header">
       <span v-if="title" class="nui-code__title">{{ title }}</span>
@@ -86,6 +86,11 @@ const texts = computed(() => ({
 const lines = computed(() => codeLines(code, tokens));
 const highlighted = computed(() => new Set(highlight ?? []));
 const hasHeader = computed(() => title !== undefined || language !== undefined);
+
+const rootStyle = computed(() =>
+  maxLines === undefined ? undefined : { '--_max-lines': maxLines },
+);
+
 const collapsible = computed(() => maxLines !== undefined && lines.value.length > maxLines);
 const copyText = computed(() => (clipboard.copied.value ? texts.value.copied : texts.value.copy));
 

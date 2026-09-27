@@ -1,4 +1,3 @@
-import DefaultTheme from 'vitepress/theme';
 import type { Theme } from 'vitepress';
 import {
   createNuiConfig,
@@ -20,6 +19,14 @@ import {
   NuiCheckbox,
   NuiCheckboxGroup,
   NuiChip,
+  NuiCode,
+  NuiCollapsible,
+  NuiAccordion,
+  NuiAccordionItem,
+  NuiKbd,
+  NuiSeparator,
+  NuiToggleGroup,
+  NuiToc,
   NuiCombobox,
   NuiDatePicker,
   NuiDateRangePicker,
@@ -79,15 +86,18 @@ import { NuiFieldArray, NuiForm, NuiFormField, NuiSmartForm } from '@numior/form
 import '@numior/tokens/theme.css';
 import '@numior/vue/styles.css';
 import '@numior/forms/styles.css';
+import '@numior/tokens/accents.css';
 import '@numior/utilities/utilities.css';
 import './demo.css';
+import Layout from './Layout.vue';
 
 export default {
-  extends: DefaultTheme,
+  Layout,
   enhanceApp({ app, router }) {
     app.use(
       createNuiConfig({
         locale: () => (router.route.path.startsWith('/en/') ? 'en-US' : 'ru-RU'),
+        colorScheme: { storageKey: 'nui-theme' },
       }),
     );
 
@@ -136,6 +146,14 @@ export default {
     app.component('NuiSelect', NuiSelect);
     app.component('NuiCombobox', NuiCombobox);
     app.component('NuiChip', NuiChip);
+    app.component('NuiCode', NuiCode);
+    app.component('NuiCollapsible', NuiCollapsible);
+    app.component('NuiAccordion', NuiAccordion);
+    app.component('NuiAccordionItem', NuiAccordionItem);
+    app.component('NuiKbd', NuiKbd);
+    app.component('NuiSeparator', NuiSeparator);
+    app.component('NuiToggleGroup', NuiToggleGroup);
+    app.component('NuiToc', NuiToc);
     app.component('NuiPagination', NuiPagination);
     app.component('NuiBadge', NuiBadge);
     app.component('NuiAvatar', NuiAvatar);

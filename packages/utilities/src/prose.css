@@ -68,6 +68,21 @@
   outline: var(--nui-focus-ring-width) solid var(--nui-focus);
   outline-offset: var(--nui-focus-ring-offset);
 }
+.nui-prose .nui-prose__anchor {
+  margin-inline-start: 0.35em;
+  color: var(--nui-text-subtle);
+  font-weight: var(--nui-font-weight-normal);
+  text-decoration: none;
+  opacity: 0;
+  transition: opacity var(--nui-duration-fast) var(--nui-easing);
+}
+.nui-prose .nui-prose__anchor::before {
+  content: '#';
+}
+.nui-prose :where(h1, h2, h3, h4, h5, h6):hover > .nui-prose__anchor,
+.nui-prose .nui-prose__anchor:focus-visible {
+  opacity: 1;
+}
 .nui-prose :where(strong, b):not(:where([class], .nui-not-prose *)) {
   font-weight: var(--nui-font-weight-semibold);
 }

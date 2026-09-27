@@ -78,7 +78,12 @@ emerald, teal, rose, orange, amber, slate) — пресет переопреде
 `createNuiConfig({ colorScheme })` создаёт один общий контрол на приложение
 (`useColorScheme()` без опций возвращает его, с опциями — локальный на область), `cycle()`
 идёт light → dark → system, `colorSchemeScript(storageKey)` — строка инлайн-скрипта для
-`<head>`, ставящая `data-nui-theme` из хранилища до первой отрисовки.
+`<head>`, ставящая `data-nui-theme` из хранилища до первой отрисовки. Контрол безопасен для
+гидратации: до монтирования `scheme` равен серверному значению (`initial` или `system`),
+хранилище, атрибут области и `prefers-color-scheme` читаются в `start()` — его вызывает
+`useColorScheme()` в `onMounted` и любая запись (`set`, `toggle`, `cycle`); поэтому разметка,
+зависящая от схемы (точка радио-пункта меню, иконка), совпадает с SSR, а тема до гидратации
+держится на инлайн-скрипте.
 
 Иконки: алиасы sun, moon, monitor, copy, hash, link, languages, command, arrow-left,
 arrow-right, code, eye, terminal, chevrons-up-down, chevron-up, smartphone, tablet, maximize,
@@ -150,6 +155,33 @@ NuiSplitter: две панели со слотами `start`/`end`, раздел
 Далее в волне: `defineSlots` во всех компонентах;
 кнопка-ссылка; NuiSeparator, NuiKbd, NuiCode, NuiToggleGroup, NuiCollapsible/NuiAccordion,
 NuiCommand, NuiToc, NuiSkipLink, NuiSplitter; режимы NuiLayout.
+
+### Каркас доки (этап 2, шаг 1)
+
+Тема VitePress написана с нуля: `theme/index.ts` отдаёт `Layout` и регистрирует kit,
+`config.ts` типизирован через `defineConfigWithTheme<DocsThemeConfig>` (`nav`, `sidebar`,
+`texts` на локаль, `search.provider = 'local'`), `appearance: false` и инлайн
+`colorSchemeScript('nui-theme')` в `head` вместо скрипта VitePress. `Layout.vue` — NuiSkipLink и
+NuiLayout (`header="full"`, `sticky`, `end-width`, мобильный порог 64rem) с частями `parts/*`:
+DocsHeader (NuiAppBar: триггер сайдбара на телефоне, словомарка, разделы, кнопка поиска с
+NuiKbd, меню темы на NuiMenuRadioGroup поверх общего контрола, меню языка со ссылками на ту
+же страницу другой локали), DocsSidebar (NuiSidebar и сворачиваемые группы из конфига),
+DocsPage (`<article class="nui-prose">` с `Content` и пейджер на NuiCard), DocsToc (NuiToc по
+`page.headers` 2–3 уровней), DocsHome, DocsNotFound (NuiEmpty), DocsSearch (NuiCommandDialog
+без собственного фильтра над MiniSearch-индексом `@localSearchIndex` локали; пустой запрос
+показывает страницы сайдбара). `useDocs()` даёт тексты локали, ссылки локалей, плоский список
+страниц, пейджер и проверки текущего пути. Стили — только классы утилит: ни одного `<style>`.
+
+Markdown-правила (`.vitepress/markdown`): fence → `<NuiCode>` с токенами Shiki
+(`github-light` только как источник скоупов, цвета — `--nui-syntax-*`; `title=`, `{2,4-6}`,
+`:line-numbers`), JSON пропов экранируется в атрибуте целиком (`&`, `'`, `<`, `>`), иначе
+индекс поиска и парсер шаблона видят обрывки; ссылки → `<NuiLink>` (внешние с `external`);
+`::: tip|info|warning|danger` → NuiAlert, `::: details` → NuiCollapsible; якорь заголовка
+рендерится собственным пермалинком `<a class="nui-prose__anchor">` с подписью на языке
+страницы — простым `<a>`, а не компонентом, потому что индексатор поиска VitePress режет
+страницу на разделы по `<hN>…<a href="#…">`. Часть `nui-prose__anchor` живёт в модуле prose
+(символ `#` появляется при наведении и фокусе). Старые страницы с `vp-raw`/`demo.css`
+собираются в новом каркасе до выката (этап 4).
 
 ### Временное исключение по документации
 

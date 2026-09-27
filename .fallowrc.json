@@ -112,5 +112,5 @@
   "resolve": {
     "conditions": ["@numior/source"]
   },
-  "ignoreDependencies": ["conventional-changelog-conventionalcommits"]
+  "ignoreDependencies": ["conventional-changelog-conventionalcommits", "@localSearchIndex"]
 }

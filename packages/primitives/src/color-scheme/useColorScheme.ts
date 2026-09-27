@@ -27,6 +27,7 @@ export interface ColorSchemeControl {
   readonly scheme: Ref<ColorScheme>;
   readonly resolved: ComputedRef<ResolvedColorScheme>;
   readonly systemDark: Readonly<Ref<boolean>>;
+  start(): void;
   set(next: ColorScheme): void;
   toggle(): void;
   cycle(): void;
@@ -62,14 +63,12 @@ const writeStored = (key: string | undefined, value: ColorScheme): void => {
   }
 };
 
-interface ColorSchemeSetup {
-  readonly control: ColorSchemeControl;
-  start(): void;
-}
+type StartRunner = (begin: () => void) => void;
 
-const createColorScheme = (options: ColorSchemeOptions): ColorSchemeSetup => {
+const createColorScheme = (options: ColorSchemeOptions, run: StartRunner): ColorSchemeControl => {
   const scheme = ref<ColorScheme>(options.initial ?? 'system');
   const systemDark = ref(false);
+  let started = false;
 
   const resolved = computed<ResolvedColorScheme>(() =>
     scheme.value === 'system' ? (systemDark.value ? 'dark' : 'light') : scheme.value,
@@ -78,7 +77,7 @@ const createColorScheme = (options: ColorSchemeOptions): ColorSchemeSetup => {
   const scopeElement = (): HTMLElement | null =>
     toValue(options.scope) ?? (typeof document === 'undefined' ? null : document.documentElement);
 
-  const start = (): void => {
+  const begin = (): void => {
     const attribute = scopeElement()?.getAttribute('data-nui-theme');
 
     scheme.value =
@@ -102,45 +101,51 @@ const createColorScheme = (options: ColorSchemeOptions): ColorSchemeSetup => {
     });
   };
 
+  const start = (): void => {
+    if (started || typeof window === 'undefined') {
+      return;
+    }
+    started = true;
+    run(begin);
+  };
+
   return {
-    control: {
-      scheme,
-      resolved,
-      systemDark,
-      set: (next) => {
-        scheme.value = next;
-      },
-      toggle: () => {
-        scheme.value = resolved.value === 'dark' ? 'light' : 'dark';
-      },
-      cycle: () => {
-        scheme.value = CYCLE[(CYCLE.indexOf(scheme.value) + 1) % CYCLE.length] ?? 'system';
-      },
-    },
+    scheme,
+    resolved,
+    systemDark,
     start,
+    set: (next) => {
+      start();
+      scheme.value = next;
+    },
+    toggle: () => {
+      start();
+      scheme.value = resolved.value === 'dark' ? 'light' : 'dark';
+    },
+    cycle: () => {
+      start();
+      scheme.value = CYCLE[(CYCLE.indexOf(scheme.value) + 1) % CYCLE.length] ?? 'system';
+    },
   };
 };
 
-export const createColorSchemeControl = (options: ColorSchemeOptions = {}): ColorSchemeControl => {
-  const { control, start } = createColorScheme(options);
+const runInline: StartRunner = (begin) => {
+  begin();
+};
 
-  if (typeof window !== 'undefined') {
-    effectScope(true).run(start);
-  }
-  return control;
+export const createColorSchemeControl = (options: ColorSchemeOptions = {}): ColorSchemeControl => {
+  const scope = effectScope(true);
+
+  return createColorScheme(options, (begin) => {
+    scope.run(begin);
+  });
 };
 
 export const useColorScheme = (options?: ColorSchemeOptions): ColorSchemeControl => {
-  if (options === undefined) {
-    const shared = inject(COLOR_SCHEME_KEY, null);
+  const shared = options === undefined ? inject(COLOR_SCHEME_KEY, null) : null;
+  const control = shared ?? createColorScheme(options ?? {}, runInline);
 
-    if (shared) {
-      return shared;
-    }
-  }
-  const { control, start } = createColorScheme(options ?? {});
-
-  onMounted(start);
+  onMounted(control.start);
   return control;
 };
 
