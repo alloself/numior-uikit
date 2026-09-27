@@ -153,21 +153,32 @@
 }
 
 .nui-field-array__ghost {
+  --_ghost-size: var(--nui-control-height);
+
   box-sizing: border-box;
   position: absolute;
   z-index: 1;
-  inset-inline: 0;
-  inset-block-start: var(--_ghost, 0);
+  inset-inline-start: 0;
+  inset-block-start: clamp(
+    calc(var(--_ghost-size) / 2),
+    var(--_ghost, 0px),
+    calc(100% - var(--_ghost-size) / 2)
+  );
   display: flex;
   align-items: center;
   gap: var(--nui-space-2);
-  padding: var(--nui-space-2) var(--nui-space-3);
+  inline-size: max-content;
+  max-inline-size: 100%;
+  block-size: var(--_ghost-size);
+  padding-inline: var(--nui-space-3) var(--nui-space-4);
   border: 1px solid var(--nui-border-strong);
   border-radius: var(--nui-radius);
   background: var(--nui-surface-elevated);
   box-shadow: var(--nui-shadow-lg);
   font-size: var(--nui-font-size-sm);
   font-weight: 500;
+  white-space: nowrap;
+  translate: 0 -50%;
   pointer-events: none;
 }
 

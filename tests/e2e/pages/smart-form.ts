@@ -7,7 +7,7 @@ import {
   shapeOf,
   type Guarded,
 } from '../../../packages/primitives/test/support/guards';
-import { boxOf } from '../helpers/geometry';
+import { boxOf, type Point } from '../helpers/geometry';
 
 const isSmartFormOutput = shapeOf({
   filter: shapeOf({ query: isString, status: nullable(isString) }),
@@ -46,6 +46,7 @@ export class SmartFormSection {
   readonly live: Locator;
   readonly limit: Locator;
   readonly ghost: Locator;
+  readonly indicator: Locator;
   readonly counter: Locator;
   readonly newsletter: Locator;
   readonly output: Locator;
@@ -67,6 +68,7 @@ export class SmartFormSection {
     this.live = this.profile.locator('.nui-field-array__live');
     this.limit = this.profile.locator('.nui-field-array__limit');
     this.ghost = this.profile.locator('.nui-field-array__ghost');
+    this.indicator = this.profile.locator('.nui-field-array__indicator');
     this.counter = page.getByTestId('smart-about-counter');
 
     this.newsletter = this.profile.getByRole('checkbox', {
@@ -203,17 +205,19 @@ export class SmartFormSection {
     await this.control('contacts.0.name').fill('Борис');
   }
 
-  async dragContact(from: number, to: number): Promise<void> {
+  async dragContact(from: number, to: number): Promise<Point> {
     const grip = await boxOf(this.grip(from));
     const target = await boxOf(this.contacts.nth(to - 1));
     const x = grip.x + grip.width / 2;
     const y = grip.y + grip.height / 2;
+    const pointer = { x, y: target.y + target.height * 0.75 };
 
     await this.contacts.nth(from - 1).hover();
     await this.page.mouse.move(x, y);
     await this.page.mouse.down();
     await this.page.mouse.move(x, y + 6);
-    await this.page.mouse.move(x, target.y + target.height * 0.75, { steps: 8 });
+    await this.page.mouse.move(pointer.x, pointer.y, { steps: 8 });
+    return pointer;
   }
 
   async drop(): Promise<void> {

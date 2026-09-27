@@ -1,5 +1,10 @@
 import type { Locator } from '@playwright/test';
 
+export interface Point {
+  readonly x: number;
+  readonly y: number;
+}
+
 export interface Box {
   readonly x: number;
   readonly y: number;

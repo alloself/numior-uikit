@@ -302,8 +302,8 @@ honest.
 
 `NuiFieldArray` is a `fieldset` of row cards. Field state, errors and focus follow the row
 rather than its index. `min` hides removal, `max` switches adding off and shows the limit text.
-`reorderable` adds a grip: with a mouse an opaque ghost carries the row and an insertion line
-sits between rows; with the keyboard Space or Enter grabs and drops, the arrows move and Escape
+`reorderable` adds a grip: with a mouse a compact opaque ghost with the row number stays
+centred under the pointer and the insertion line between rows shows beside it; with the keyboard Space or Enter grabs and drops, the arrows move and Escape
 cancels. The grip shows on hover and focus (always on touch screens) and hides when the row has
 nowhere to go. A row error (`guests.1`) shows inside the row, a list error below the list.
 `useFieldArray` gives the same without markup: `fields`, `push`, `prepend`, `insert`,

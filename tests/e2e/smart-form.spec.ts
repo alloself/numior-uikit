@@ -117,7 +117,7 @@ test.describe('smart form', () => {
     await expect(smartForm.addContact).toBeEnabled();
   });
 
-  test('dragging a grip moves a contact with a ghost under the pointer', async ({
+  test('dragging a grip moves a contact with a ghost under the pointer beside the insertion line', async ({
     page,
     isMobile,
   }) => {
@@ -128,8 +128,12 @@ test.describe('smart form', () => {
     await smartForm.control('contacts.1.name').fill('Анна');
     await smartForm.addContact.click();
     await smartForm.control('contacts.2.name').fill('Борис');
-    await smartForm.dragContact(1, 2);
+    const pointer = await smartForm.dragContact(1, 2);
     await expect(smartForm.ghost).toHaveText('Строка 1');
+    const ghost = await boxOf(smartForm.ghost);
+    const line = await boxOf(smartForm.indicator);
+    expect(Math.abs(ghost.y + ghost.height / 2 - pointer.y)).toBeLessThanOrEqual(2);
+    expect(line.x + line.width).toBeGreaterThan(ghost.x + ghost.width + 100);
     await smartForm.drop();
     await expect.poll(() => smartForm.names()).toEqual(['Анна', 'Вера', 'Борис']);
     await expect(smartForm.ghost).toHaveCount(0);

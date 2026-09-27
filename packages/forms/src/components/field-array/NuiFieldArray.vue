@@ -112,11 +112,10 @@ import type { NuiFieldArrayProps } from './field-array.types';
 import {
   FOCUSABLE,
   focusRow,
-  ghostOffset,
   indicatorOffset,
+  pointerOffset,
   rowsOf,
   targetIndex,
-  type Grab,
   type RowFocus,
 } from './reorder-geometry';
 
@@ -147,7 +146,6 @@ const baseId = useControlId(() => undefined);
 const announcement = shallowRef('');
 
 const focus = createIntent<RowFocus>();
-let grab: Grab | undefined;
 
 const isDisabled = computed(() => disabled ?? formScope?.disabled.value ?? false);
 
@@ -248,9 +246,7 @@ const place = (state: ReorderState): void => {
         `${indicatorOffset(element, state.from, state.to)}px`,
       );
 
-      if (grab) {
-        element.style.setProperty('--_ghost', `${ghostOffset(element, state.position, grab)}px`);
-      }
+      element.style.setProperty('--_ghost', `${pointerOffset(element, state.position)}px`);
       break;
     case 'keyboard':
       element.style.setProperty(
@@ -260,8 +256,6 @@ const place = (state: ReorderState): void => {
 
       break;
     case 'idle':
-      grab = undefined;
-      break;
     case 'pending':
       break;
   }
@@ -335,16 +329,9 @@ const remove = (index: number): void => {
 };
 
 const onGripPointerdown = (index: number, event: PointerEvent): void => {
-  const row = rowsOf(list.value)[index];
-
-  if (isDisabled.value || !row) {
-    return;
+  if (!isDisabled.value) {
+    reorder.onPointerdown(index, event);
   }
-
-  const rect = row.getBoundingClientRect();
-
-  grab = { offset: event.clientY - rect.top, height: rect.height };
-  reorder.onPointerdown(index, event);
 };
 
 const onGripKeydown = (index: number, event: KeyboardEvent): void => {

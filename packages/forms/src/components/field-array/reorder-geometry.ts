@@ -8,11 +8,6 @@ export type RowFocus =
   | { readonly kind: 'row'; readonly key: string; readonly part: RowPart }
   | { readonly kind: 'add' };
 
-export interface Grab {
-  readonly offset: number;
-  readonly height: number;
-}
-
 const ROWS =
   ':scope > .nui-field-array__rows > .nui-field-array__row:not(.nui-field-array__row--leaving)';
 
@@ -47,13 +42,8 @@ export const indicatorOffset = (list: HTMLElement, from: number, to: number): nu
   return edge - list.getBoundingClientRect().top;
 };
 
-export const ghostOffset = (list: HTMLElement, pointer: number, grab: Grab): number => {
-  const rect = list.getBoundingClientRect();
-  return Math.min(
-    Math.max(0, pointer - grab.offset - rect.top),
-    Math.max(0, rect.height - grab.height),
-  );
-};
+export const pointerOffset = (list: HTMLElement, pointer: number): number =>
+  pointer - list.getBoundingClientRect().top;
 
 export const focusRow = (row: Element | null | undefined, part: RowPart): void => {
   const element =
