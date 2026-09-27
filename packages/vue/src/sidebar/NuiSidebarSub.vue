@@ -42,7 +42,7 @@ import NuiIcon from '../icon/NuiIcon.vue';
 import NuiList from '../list/NuiList.vue';
 import NuiListItem from '../list/NuiListItem.vue';
 import NuiTooltip from '../tooltip/NuiTooltip.vue';
-import { useSidebar } from './sidebar-context';
+import { provideSidebarSub, useSidebar } from './sidebar-context';
 import type { NuiSidebarSubProps } from './sidebar.types';
 
 const { label, icon, active = false, id } = defineProps<NuiSidebarSubProps>();
@@ -64,4 +64,10 @@ const toggle = (): void => {
     open.value = !open.value;
   }
 };
+
+provideSidebarSub({
+  reveal: () => {
+    open.value = true;
+  },
+});
 </script>

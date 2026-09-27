@@ -97,6 +97,40 @@ describe('NuiLayout with NuiSidebar', () => {
     layout.unmount();
   });
 
+  it('places a full header above the sidebar, offers an end column and sticks both columns', async () => {
+    const layout = LayoutDriver.mount({ header: 'full', end: true, sticky: true });
+    expect(layout.hasModifier('pending')).toBe(true);
+    await layout.ready();
+    expect(layout.hasModifier('pending')).toBe(false);
+    expect(layout.hasModifier('header-full')).toBe(true);
+    expect(layout.hasModifier('sticky')).toBe(true);
+    expect(layout.hasModifier('with-end')).toBe(true);
+    expect(layout.headerBeforeRow).toBe(true);
+    expect(layout.endColumn.text()).toBe('Outline');
+    layout.unmount();
+    const inset = LayoutDriver.mount();
+    expect(inset.hasModifier('header-inset')).toBe(true);
+    expect(inset.headerBeforeRow).toBe(false);
+    expect(inset.endColumn.exists()).toBe(false);
+    inset.unmount();
+  });
+
+  it('collapses a group behind its label and reveals a sub list when a child becomes current', async () => {
+    const layout = LayoutDriver.mount({ collapsibleGroup: true });
+    expect(layout.groupToggle.attributes('aria-expanded')).toBe('true');
+    expect(layout.groupToggle.attributes('aria-controls')).toBe(layout.groupList.attributes('id'));
+    await layout.clickGroupToggle();
+    expect(layout.groupToggle.attributes('aria-expanded')).toBe('false');
+    expect(layout.groupList.attributes('inert')).toBeDefined();
+    await layout.clickGroupToggle();
+    expect(layout.groupList.attributes('inert')).toBeUndefined();
+    expect(layout.subOpen).toBe(false);
+    await layout.activate('team');
+    expect(layout.subOpen).toBe(true);
+    expect(layout.action('Team').attributes('aria-current')).toBe('page');
+    layout.unmount();
+  });
+
   it('names the sidebar, its trigger and the drawer in the configured language', async () => {
     const russian = LayoutDriver.mount({ config: { locale: 'ru-RU' } });
     expect(russian.sidebarLabel).toBe('Навигация');

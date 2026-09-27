@@ -18,8 +18,10 @@ export interface NuiSidebarContentProps {
 }
 
 export interface NuiSidebarGroupProps {
+  id?: string | undefined;
   label?: string | undefined;
   items?: readonly NuiListEntry<unknown>[] | undefined;
+  collapsible?: boolean | undefined;
 }
 
 export interface NuiSidebarItemProps {

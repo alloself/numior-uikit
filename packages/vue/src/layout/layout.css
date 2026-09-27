@@ -2,15 +2,27 @@
   --_sidebar-size: 16rem;
   --_rail-size: 3.5rem;
   --_bar-size: 3.5rem;
+  --_end-size: 14rem;
+  --_sticky-top: 0px;
 
   box-sizing: border-box;
   display: flex;
+  flex-direction: column;
   min-block-size: 100%;
   background: var(--nui-surface);
   color: var(--nui-text);
   font-family: var(--nui-font);
   font-size: var(--nui-font-size-sm);
   line-height: var(--nui-line-height);
+}
+.nui-layout--header-full {
+  --_sticky-top: var(--_bar-size);
+}
+.nui-layout__row {
+  display: flex;
+  flex: 1 1 auto;
+  min-inline-size: 0;
+  min-block-size: 0;
 }
 .nui-layout__body {
   display: flex;
@@ -21,6 +33,33 @@
 .nui-layout__content {
   flex: 1 1 auto;
   min-block-size: 0;
+}
+.nui-layout__end {
+  box-sizing: border-box;
+  flex: none;
+  order: 2;
+  inline-size: var(--_end-size);
+  min-inline-size: 0;
+}
+.nui-layout--mobile .nui-layout__end {
+  display: none;
+}
+.nui-layout--sticky > .nui-layout__row > .nui-sidebar,
+.nui-layout--sticky .nui-layout__end {
+  position: sticky;
+  inset-block-start: var(--_sticky-top);
+  align-self: flex-start;
+  block-size: calc(100dvh - var(--_sticky-top));
+  min-block-size: 0;
+}
+.nui-layout--sticky .nui-layout__end {
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+@media (max-width: 48rem) {
+  .nui-layout--pending > .nui-layout__row > .nui-sidebar {
+    display: none;
+  }
 }
 .nui-app-bar {
   box-sizing: border-box;

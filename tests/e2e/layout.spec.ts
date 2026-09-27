@@ -2,6 +2,39 @@ import { expect, test } from '@playwright/test';
 import { PlaygroundPage } from './pages/playground';
 
 test.describe('layout', () => {
+  test('a full header spans the frame, an end column docks beside the content and groups collapse', async ({
+    page,
+    isMobile,
+  }) => {
+    const playground = new PlaygroundPage(page);
+    await playground.open();
+    const { layout } = playground;
+    await layout.root.scrollIntoViewIfNeeded();
+    if (!isMobile) {
+      expect(await layout.appBarInset()).toBeGreaterThan(100);
+    }
+    await layout.header.selectOption('full');
+    expect(await layout.appBarInset()).toBeLessThan(2);
+    expect(await layout.appBarWidthGap()).toBeLessThan(2);
+    await layout.endToggle.check();
+    if (isMobile) {
+      await expect(layout.endColumn).toBeHidden();
+      return;
+    }
+    await expect(layout.endColumn).toBeVisible();
+    expect(await layout.endColumnGap()).toBeLessThan(2);
+    await expect(layout.groupToggle).toHaveAttribute('aria-expanded', 'true');
+    await layout.groupToggle.click();
+    await expect(layout.groupToggle).toHaveAttribute('aria-expanded', 'false');
+    await expect(layout.item('calendar')).toBeHidden();
+    await layout.groupToggle.click();
+    await expect(layout.item('calendar')).toBeVisible();
+    await expect(layout.subToggle).toHaveAttribute('aria-expanded', 'false');
+    await layout.gotoReport.click();
+    await expect(layout.subToggle).toHaveAttribute('aria-expanded', 'true');
+    await expect(layout.heading).toHaveText('Отчёт: команда');
+  });
+
   test('sidebar collapses to a rail with tooltips, toggles with Ctrl+B and hides offcanvas', async ({
     page,
     isMobile,

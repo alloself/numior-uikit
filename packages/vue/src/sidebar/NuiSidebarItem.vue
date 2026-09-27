@@ -26,10 +26,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed, useTemplateRef } from 'vue';
+import { computed, useTemplateRef, watch } from 'vue';
 import NuiListItem from '../list/NuiListItem.vue';
 import NuiTooltip from '../tooltip/NuiTooltip.vue';
-import { useSidebar } from './sidebar-context';
+import { useSidebar, useSidebarSub } from './sidebar-context';
 import type { NuiSidebarItemProps } from './sidebar.types';
 
 const {
@@ -47,8 +47,19 @@ const {
 defineSlots<{ default(): unknown; trailing(): unknown }>();
 
 const sidebar = useSidebar();
+const sub = useSidebarSub();
 const item = useTemplateRef<InstanceType<typeof NuiListItem>>('item');
 const action = computed(() => item.value?.action ?? null);
+
+watch(
+  () => current,
+  (isCurrent) => {
+    if (isCurrent) {
+      sub?.reveal();
+    }
+  },
+  { immediate: true },
+);
 
 const onClick = (): void => {
   if (sidebar.mobile.value && !disabled) {

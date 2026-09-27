@@ -1,4 +1,5 @@
 import type { Locator, Page } from '@playwright/test';
+import { boxOf } from '../helpers/geometry';
 import {
   isBoolean,
   isString,
@@ -29,6 +30,12 @@ export class LayoutSection {
   readonly collapsible: Locator;
   readonly side: Locator;
   readonly subToggle: Locator;
+  readonly header: Locator;
+  readonly endToggle: Locator;
+  readonly endColumn: Locator;
+  readonly gotoReport: Locator;
+  readonly groupToggle: Locator;
+  readonly appBar: Locator;
   readonly output: Locator;
 
   constructor(private readonly page: Page) {
@@ -40,6 +47,12 @@ export class LayoutSection {
     this.collapsible = page.getByTestId('layout-collapsible');
     this.side = page.getByTestId('layout-side');
     this.subToggle = page.getByTestId('layout-sub');
+    this.header = page.getByTestId('layout-header');
+    this.endToggle = page.getByTestId('layout-end-toggle');
+    this.endColumn = page.getByTestId('layout-end');
+    this.gotoReport = page.getByTestId('layout-goto-report');
+    this.groupToggle = page.getByTestId('layout-group').locator('.nui-sidebar-group__toggle');
+    this.appBar = this.root.locator('.nui-app-bar');
     this.output = page.getByTestId('layout-output');
   }
 
@@ -84,6 +97,24 @@ export class LayoutSection {
   async sidebarWidth(): Promise<number> {
     const box = await this.sidebar.boundingBox();
     return box?.width ?? 0;
+  }
+
+  async appBarInset(): Promise<number> {
+    const [frame, bar] = await Promise.all([boxOf(this.root), boxOf(this.appBar)]);
+
+    return bar.x - frame.x;
+  }
+
+  async appBarWidthGap(): Promise<number> {
+    const [frame, bar] = await Promise.all([boxOf(this.root), boxOf(this.appBar)]);
+
+    return Math.abs(bar.width - frame.width);
+  }
+
+  async endColumnGap(): Promise<number> {
+    const [frame, end] = await Promise.all([boxOf(this.root), boxOf(this.endColumn)]);
+
+    return Math.abs(end.x + end.width - (frame.x + frame.width));
   }
 
   async readOutput(): Promise<LayoutOutput> {

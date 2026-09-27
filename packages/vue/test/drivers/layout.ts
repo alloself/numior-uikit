@@ -13,6 +13,7 @@ import {
   NuiSidebarSub,
   NuiSidebarTrigger,
   type NuiConfigOptions,
+  type NuiLayoutHeader,
   type NuiSidebarCollapsible,
   type NuiSidebarSide,
 } from '../../src';
@@ -28,6 +29,10 @@ export interface LayoutMountOptions {
   readonly shortcut?: boolean;
   readonly label?: string;
   readonly config?: NuiConfigOptions;
+  readonly header?: NuiLayoutHeader;
+  readonly end?: boolean;
+  readonly sticky?: boolean;
+  readonly collapsibleGroup?: boolean;
 }
 
 interface FakeMediaList {
@@ -59,6 +64,10 @@ export class LayoutDriver extends ComponentDriver {
     shortcut = true,
     label,
     config,
+    header = 'inset',
+    end = false,
+    sticky = false,
+    collapsibleGroup = false,
   }: LayoutMountOptions = {}): LayoutDriver {
     const stubs = new TopLayerStubs();
     const media = fakeMedia(mobile);
@@ -83,11 +92,15 @@ export class LayoutDriver extends ComponentDriver {
       h(NuiSidebar, { collapsible, side, label }, () => [
         h(NuiSidebarHeader, () => h('strong', 'Brand')),
         h(NuiSidebarContent, () => [
-          h(NuiSidebarGroup, { label: 'Overview' }, () => [
-            item('Inbox', 'inbox', { badge: 3 }),
-            item('Calendar', 'calendar'),
-            item('Docs', 'docs', { href: '#docs' }),
-          ]),
+          h(
+            NuiSidebarGroup,
+            { label: 'Overview', id: 'overview', collapsible: collapsibleGroup },
+            () => [
+              item('Inbox', 'inbox', { badge: 3 }),
+              item('Calendar', 'calendar'),
+              item('Docs', 'docs', { href: '#docs' }),
+            ],
+          ),
           h(NuiSidebarGroup, { label: 'Data' }, () =>
             h(
               NuiSidebarSub,
@@ -116,6 +129,8 @@ export class LayoutDriver extends ComponentDriver {
           {
             id: 'app',
             shortcut,
+            header,
+            sticky,
             contentAs: 'div',
             open: open.value,
             'onUpdate:open': (value: boolean) => {
@@ -134,6 +149,7 @@ export class LayoutDriver extends ComponentDriver {
                 default: () => active.value,
               }),
             default: () => [h('input', { class: 'editor', type: 'text' }), h('p', 'Content')],
+            ...(end ? { end: () => h('nav', 'Outline') } : {}),
           },
         ),
     });
@@ -176,6 +192,25 @@ export class LayoutDriver extends ComponentDriver {
 
   get sidebar(): DOMWrapper<Element> {
     return this.wrapper.find('aside.nui-sidebar');
+  }
+
+  get headerBeforeRow(): boolean {
+    const bar = this.wrapper.find('.nui-app-bar').element;
+    const row = this.wrapper.find('.nui-layout__row').element;
+
+    return (bar.compareDocumentPosition(row) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0;
+  }
+
+  get endColumn(): DOMWrapper<Element> {
+    return this.wrapper.find('.nui-layout__end');
+  }
+
+  get groupToggle(): DOMWrapper<Element> {
+    return this.wrapper.find('.nui-sidebar-group__toggle');
+  }
+
+  get groupList(): DOMWrapper<Element> {
+    return this.wrapper.find('#overview-list');
   }
 
   get drawer(): DOMWrapper<Element> {
@@ -241,6 +276,19 @@ export class LayoutDriver extends ComponentDriver {
 
   async clickTrigger(): Promise<void> {
     await this.trigger.trigger('click');
+  }
+
+  async clickGroupToggle(): Promise<void> {
+    await this.groupToggle.trigger('click');
+  }
+
+  async activate(key: string): Promise<void> {
+    this.activeModel.value = key;
+    await nextTick();
+  }
+
+  async ready(): Promise<void> {
+    await nextTick();
   }
 
   async clickItem(label: string): Promise<void> {

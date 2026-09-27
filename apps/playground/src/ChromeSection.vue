@@ -80,6 +80,7 @@
         <div
           ref="toc-article"
           class="nui-prose nui-prose--size-sm toc-demo__article"
+          tabindex="0"
           data-testid="toc-article"
         >
           <h2 id="toc-install">Установка</h2>

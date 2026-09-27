@@ -309,3 +309,12 @@ footer {
   color: var(--nui-text-muted);
   font-size: var(--nui-font-size-sm);
 }
+.layout-outline {
+  padding: var(--nui-space-4) var(--nui-space-3);
+  border-inline-start: 1px solid var(--nui-border);
+  font-size: var(--nui-font-size-sm);
+}
+.layout-outline__title {
+  margin: 0 0 var(--nui-space-2);
+  font-weight: 600;
+}

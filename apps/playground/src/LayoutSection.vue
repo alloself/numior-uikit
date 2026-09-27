@@ -20,12 +20,32 @@
           <option value="end">Конец</option>
         </select>
       </label>
+      <label
+        >Панель
+        <select v-model="header" data-testid="layout-header">
+          <option value="inset">Рядом с боковой</option>
+          <option value="full">На всю ширину</option>
+        </select>
+      </label>
+      <label class="loading-toggle"
+        ><input v-model="withEnd" type="checkbox" data-testid="layout-end-toggle" /> Оглавление
+        справа</label
+      >
+      <NuiButton
+        size="sm"
+        variant="outline"
+        tone="neutral"
+        data-testid="layout-goto-report"
+        @click="active = 'report-team'"
+        >К отчёту команды</NuiButton
+      >
     </div>
     <div class="layout-frame">
       <NuiLayout
         id="demo"
         v-model:open="open"
         v-model:mobile-open="mobileOpen"
+        :header="header"
         content-as="div"
         data-testid="layout"
       >
@@ -38,7 +58,7 @@
               </div>
             </NuiSidebarHeader>
             <NuiSidebarContent>
-              <NuiSidebarGroup label="Обзор">
+              <NuiSidebarGroup label="Обзор" collapsible data-testid="layout-group">
                 <NuiSidebarItem
                   v-for="item in primary"
                   :key="item.key"
@@ -99,6 +119,12 @@
         <div class="layout-page">
           <p>Раздел «{{ titles[active] }}». Ctrl/Cmd+B сворачивает и раскрывает панель.</p>
         </div>
+        <template v-if="withEnd" #end>
+          <nav class="layout-outline" aria-label="На странице" data-testid="layout-end">
+            <p class="layout-outline__title">На странице</p>
+            <a href="#layout-title">Раздел</a>
+          </nav>
+        </template>
       </NuiLayout>
     </div>
     <pre class="output" data-testid="layout-output">{{ output }}</pre>
@@ -119,6 +145,7 @@ import {
   NuiSidebarItem,
   NuiSidebarSub,
   NuiSidebarTrigger,
+  type NuiLayoutHeader,
   type NuiSidebarCollapsible,
   type NuiSidebarSide,
 } from '@numior/vue';
@@ -146,6 +173,8 @@ const titles: Record<string, string> = {
 
 const collapsible = ref<NuiSidebarCollapsible>('icon');
 const side = ref<NuiSidebarSide>('start');
+const header = ref<NuiLayoutHeader>('inset');
+const withEnd = ref(false);
 const open = ref(true);
 const mobileOpen = ref(false);
 const reportsOpen = ref(false);

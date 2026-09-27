@@ -9,7 +9,12 @@ export interface SidebarContext {
   closeMobile(): void;
 }
 
+export interface SidebarSubContext {
+  reveal(): void;
+}
+
 const SIDEBAR_KEY: InjectionKey<SidebarContext> = Symbol('nui:sidebar');
+const SIDEBAR_SUB_KEY: InjectionKey<SidebarSubContext> = Symbol('nui:sidebar-sub');
 
 export const provideSidebar = (context: SidebarContext): void => {
   provide(SIDEBAR_KEY, context);
@@ -24,3 +29,9 @@ export const useSidebar = (): SidebarContext => {
 
   return context;
 };
+
+export const provideSidebarSub = (context: SidebarSubContext): void => {
+  provide(SIDEBAR_SUB_KEY, context);
+};
+
+export const useSidebarSub = (): SidebarSubContext | null => inject(SIDEBAR_SUB_KEY, null);

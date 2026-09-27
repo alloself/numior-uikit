@@ -139,6 +139,14 @@ NuiSplitter: две панели со слотами `start`/`end`, раздел
 перетаскивание с захватом указателя (учитывает RTL), стрелки шагают на `step`, Home/End —
 к границам; ориентация `horizontal`/`vertical`. Нужен рамке блоков в доке.
 
+Каркас: `header="full"` кладёт панель над строкой «сайдбар + контент + колонка `end`»
+(`--_sticky-top` = высота панели), `sticky` прилипает сайдбар и колонку `end` к области
+просмотра, когда прокручивается сама страница; колонка `end` (`endWidth`) скрыта на узких
+экранах; модификатор `--pending` до монтирования прячет десктопный сайдбар под 48rem, чтобы
+телефон не мигал сайдбаром до гидратации; `useLayout` экспортирован. NuiSidebarGroup
+`collapsible` сворачивает группу за подписью-кнопкой (`aria-expanded`, `inert`), NuiSidebarSub
+раскрывается сам, когда вложенный пункт становится текущим (контекст `reveal`).
+
 Далее в волне: `defineSlots` во всех компонентах;
 кнопка-ссылка; NuiSeparator, NuiKbd, NuiCode, NuiToggleGroup, NuiCollapsible/NuiAccordion,
 NuiCommand, NuiToc, NuiSkipLink, NuiSplitter; режимы NuiLayout.
@@ -162,7 +170,9 @@ NuiCommand, NuiToc, NuiSkipLink, NuiSplitter; режимы NuiLayout.
 - NuiCommand и NuiCommandDialog (страница «Палитра команд»), `placement`/`bare` у диалога,
   `shortcut` у записей списка;
 - NuiToc и NuiSkipLink (страницы «Оглавление» и «Ссылка к содержимому»);
-- NuiSplitter (страница «Разделитель панелей»).
+- NuiSplitter (страница «Разделитель панелей»);
+- каркас: `header`, `end`, `sticky`, сворачиваемые группы и автораскрытие подсписка (страница
+  «Каркас и боковая панель»).
 
 ## Alternatives Considered
 

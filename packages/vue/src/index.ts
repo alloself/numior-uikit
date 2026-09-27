@@ -109,7 +109,9 @@ export type {
   NuiUploadRejected,
   NuiUploadZoneSlot,
 } from './upload/upload.types';
-export type { NuiAppBarProps, NuiLayoutProps } from './layout/layout.types';
+export type { NuiAppBarProps, NuiLayoutHeader, NuiLayoutProps } from './layout/layout.types';
+export { useLayout } from './layout/layout-context';
+export type { LayoutContext } from './layout/layout-context';
 export type {
   NuiSidebarCollapsible,
   NuiSidebarContentProps,
