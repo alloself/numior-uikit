@@ -65,27 +65,57 @@ export class ConfiguratorFrameDriver {
     return this.wrapper.find('.nui-code__code').text();
   }
 
-  get fieldLabels(): string[] {
-    return this.wrapper.findAll('.nui-field__label').map((label) => label.text());
+  get optionNames(): string[] {
+    return this.wrapper
+      .findAll('.nui-toggle-group--variant-segmented, .nui-field__label, .nui-switch__label')
+      .map((element) => element.attributes('aria-label') ?? element.text());
   }
 
-  private control(label: string): DOMWrapper<Element> {
-    const field = this.wrapper
-      .findAll('.nui-field')
-      .find((candidate) => candidate.find('.nui-field__label').text() === label);
+  async choose(name: string, value: string): Promise<void> {
+    const item = this.wrapper
+      .find(`.nui-toggle-group[aria-label="${name}"]`)
+      .findAll('button')
+      .find((candidate) => candidate.text() === value);
 
-    if (field === undefined) {
-      throw new Error(`No field "${label}"`);
+    if (item === undefined) {
+      throw new Error(`No option "${value}" for "${name}"`);
     }
-    return field;
+    await item.trigger('click');
   }
 
   async toggle(label: string): Promise<void> {
-    await this.control(label).find('input[type="checkbox"]').setValue(true);
+    const control = this.wrapper
+      .findAll('.nui-switch')
+      .find((candidate) => candidate.find('.nui-switch__label').text() === label);
+
+    if (control === undefined) {
+      throw new Error(`No switch "${label}"`);
+    }
+    await control.find('input[type="checkbox"]').setValue(true);
   }
 
   async typeContent(text: string): Promise<void> {
-    await this.control(ru.configuratorContent).find('input').setValue(text);
+    const field = this.wrapper.findAll('.nui-field').find((candidate) => {
+      const label = candidate.find('.nui-field__label');
+
+      return label.exists() && label.text() === ru.configuratorContent;
+    });
+
+    if (field === undefined) {
+      throw new Error('No content field');
+    }
+    await field.find('input').setValue(text);
+  }
+
+  async reset(): Promise<void> {
+    const button = this.wrapper
+      .findAll('button')
+      .find((candidate) => candidate.text() === ru.reset);
+
+    if (button === undefined) {
+      throw new Error('No reset button');
+    }
+    await button.trigger('click');
   }
 
   unmount(): void {

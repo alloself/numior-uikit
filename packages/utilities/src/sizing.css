@@ -40,3 +40,6 @@
 .nui-max-w-prose {
   max-inline-size: var(--nui-measure);
 }
+.nui-min-h-40 {
+  min-block-size: 10rem;
+}

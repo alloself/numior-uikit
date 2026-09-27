@@ -1,7 +1,7 @@
 <template>
   <NuiAppBar>
     <template #start>
-      <NuiSidebarTrigger v-if="layout.mobile.value && hasSidebar" />
+      <NuiSidebarTrigger v-if="layout.mobile.value" />
       <NuiLink
         :href="localeBase"
         tone="neutral"
@@ -10,7 +10,11 @@
         >Numior UI</NuiLink
       >
     </template>
-    <nav :aria-label="texts.sections" class="nui-flex nui-items-center nui-gap-1 nui-font-normal">
+    <nav
+      v-if="!layout.mobile.value"
+      :aria-label="texts.sections"
+      class="nui-flex nui-items-center nui-gap-1 nui-font-normal"
+    >
       <NuiButton
         v-for="item in theme.nav"
         :key="item.link"
@@ -100,7 +104,7 @@ import type { DocsThemeConfig } from '../theme.types';
 const emit = defineEmits<{ search: [] }>();
 
 const { theme } = useData<DocsThemeConfig>();
-const { texts, localeBase, locales, sidebar, startsCurrent } = useDocs();
+const { texts, localeBase, locales, startsCurrent } = useDocs();
 const layout = useLayout();
 const scheme = useColorScheme();
 
@@ -111,5 +115,4 @@ const SCHEME_ICONS: Record<ColorScheme, IconAlias> = {
 };
 
 const schemeIcon = computed(() => SCHEME_ICONS[scheme.scheme.value]);
-const hasSidebar = computed(() => sidebar.value.length > 0);
 </script>

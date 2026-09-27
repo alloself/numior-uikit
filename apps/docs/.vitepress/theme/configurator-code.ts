@@ -50,6 +50,37 @@ export const configuratorState = (props: readonly ReferenceProp[]): Configurator
   return state;
 };
 
+export type ConfiguratorChange =
+  | { readonly kind: 'enum'; readonly name: string; readonly value: string | null }
+  | { readonly kind: 'boolean'; readonly name: string; readonly value: boolean }
+  | { readonly kind: 'number'; readonly name: string; readonly value: number | null }
+  | { readonly kind: 'string'; readonly name: string; readonly value: string };
+
+export const applyChange = (state: ConfiguratorState, change: ConfiguratorChange): void => {
+  switch (change.kind) {
+    case 'enum':
+      state.enums[change.name] = change.value;
+      break;
+    case 'boolean':
+      state.flags[change.name] = change.value;
+      break;
+    case 'number':
+      state.numbers[change.name] = change.value;
+      break;
+    default:
+      state.strings[change.name] = change.value;
+  }
+};
+
+export const resetState = (state: ConfiguratorState, props: readonly ReferenceProp[]): void => {
+  const initial = configuratorState(props);
+
+  Object.assign(state.enums, initial.enums);
+  Object.assign(state.flags, initial.flags);
+  Object.assign(state.numbers, initial.numbers);
+  Object.assign(state.strings, initial.strings);
+};
+
 export const stateValues = (state: ConfiguratorState): ConfiguratorValues => ({
   ...state.strings,
   ...state.numbers,

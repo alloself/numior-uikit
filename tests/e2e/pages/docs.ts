@@ -16,9 +16,9 @@ export class DocsExample {
 
   constructor(page: Page, previewLabel: string) {
     this.preview = page.locator(`[role="group"][aria-label="${previewLabel}"]`).first();
-    this.root = this.preview.locator('..');
-    this.previewToggle = this.root.getByRole('radio', { name: previewLabel });
-    this.codeToggle = this.root.getByRole('radio', { name: 'Код' });
+    this.root = this.preview.locator('xpath=ancestor::*[contains(@class, "nui-tabs")][1]');
+    this.previewToggle = this.root.getByRole('tab', { name: previewLabel });
+    this.codeToggle = this.root.getByRole('tab', { name: 'Код' });
     this.invertTheme = this.root.getByRole('button', { name: 'Обратная тема' });
     this.rtl = this.root.getByRole('button', { name: 'Справа налево' });
     this.copy = this.root.getByRole('button', { name: 'Скопировать код' });
@@ -33,23 +33,19 @@ export class DocsConfigurator {
 
   constructor(page: Page) {
     this.panel = page.locator('form[aria-label="Свойства"]');
-    this.preview = this.panel.locator('..').locator('[role="group"]').first();
+    this.preview = this.panel.locator('..').locator('[role="group"][aria-label="Превью"]').first();
     this.code = this.panel.locator('..').locator('.nui-code__code');
   }
 
-  field(label: string): Locator {
-    return this.panel
-      .locator('.nui-field')
-      .filter({ has: this.panel.page().getByText(label, { exact: true }) });
-  }
-
   async choose(label: string, option: string): Promise<void> {
-    await this.field(label).getByRole('combobox').click();
-    await this.panel.page().getByRole('option', { name: option, exact: true }).click();
+    await this.panel
+      .getByRole('group', { name: label })
+      .getByRole('radio', { name: option })
+      .click();
   }
 
   async enable(label: string): Promise<void> {
-    await this.field(label).getByRole('switch').check();
+    await this.panel.getByRole('switch', { name: label }).check();
   }
 }
 

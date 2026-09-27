@@ -46,6 +46,7 @@ test('the configurator drives the live component and the generated code', async 
   const docs = new DocsSite(page);
   await docs.open('/components/button');
   const configurator = docs.configurator();
+  await page.getByRole('button', { name: 'Код', exact: true }).last().click();
   await expect(configurator.code).toContainText('<NuiButton>Сохранить</NuiButton>');
   await configurator.choose('variant', 'soft');
   await configurator.enable('disabled');

@@ -84,7 +84,9 @@ export const useFieldControl = (
     () =>
       linked.value === null &&
       options.detached !== true &&
-      Object.values(ownTexts.value).some(hasText),
+      (hasText(ownTexts.value.description) ||
+        hasText(ownTexts.value.error) ||
+        (options.inlineLabel !== true && hasText(ownTexts.value.label))),
   );
 
   const field = computed<FieldContext | null>(

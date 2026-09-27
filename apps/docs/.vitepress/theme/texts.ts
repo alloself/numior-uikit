@@ -56,6 +56,7 @@ export const ru: DocsTexts = {
   configuratorContent: 'Содержимое',
   apiRussian: 'Русский',
   apiEnglish: 'English',
+  reset: 'Сбросить',
 };
 
 export const en: DocsTexts = {
@@ -114,4 +115,5 @@ export const en: DocsTexts = {
   configuratorContent: 'Content',
   apiRussian: 'Russian',
   apiEnglish: 'English',
+  reset: 'Reset',
 };

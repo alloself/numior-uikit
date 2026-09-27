@@ -47,6 +47,13 @@ export class ExampleFrameDriver {
     return this.wrapper.find<HTMLElement>(`[role="group"][aria-label="${ru.preview}"]`);
   }
 
+  get fileTabs(): string[] {
+    return this.wrapper
+      .findAll('[role="tab"]')
+      .map((tab) => tab.text())
+      .filter((name) => name !== ru.preview && name !== ru.code);
+  }
+
   get previewTheme(): string | undefined {
     return this.preview.attributes('data-nui-theme');
   }
@@ -67,10 +74,6 @@ export class ExampleFrameDriver {
     const visible = this.wrapper.findAll('.nui-code').find((code) => code.isVisible());
 
     return visible === undefined ? '' : visible.find('.nui-code__code').text();
-  }
-
-  get fileTabs(): string[] {
-    return this.wrapper.findAll('[role="tab"]').map((tab) => tab.text());
   }
 
   private button(...labels: readonly string[]): DOMWrapper<HTMLButtonElement> {

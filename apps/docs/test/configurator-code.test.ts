@@ -4,6 +4,7 @@ import {
   boundValues,
   configuratorCode,
   configuratorState,
+  resetState,
   stateValues,
 } from '../.vitepress/theme/configurator-code';
 
@@ -52,6 +53,17 @@ describe('configurator code', () => {
     expect(configuratorCode('NuiButton', PROPS, stateValues(state), '')).toBe(
       '<template>\n  <NuiButton variant="soft" disabled :loop="false" :max="5" placeholder="Name" />\n</template>',
     );
+  });
+
+  it('resets every map back to the defaults', () => {
+    const state = configuratorState(PROPS);
+
+    state.enums.variant = 'soft';
+    state.flags.disabled = true;
+    state.numbers.max = 3;
+    state.strings.placeholder = 'x';
+    resetState(state, PROPS);
+    expect(state).toEqual(configuratorState(PROPS));
   });
 
   it('binds only the values that carry information', () => {

@@ -1,11 +1,13 @@
 import type { MarkdownRenderer } from 'vitepress';
 import type { Component } from 'vue';
+import type { ConfiguratorChange, ConfiguratorState } from './configurator-code';
 import type { ExampleFile, ExampleLocale } from '../examples/example.types';
 import type {
   CatalogReference,
   ComponentReference,
   LocalizedText,
   ReferenceKey,
+  ReferenceProp,
   ReferenceStyles,
 } from '../reference/reference.types';
 
@@ -83,6 +85,7 @@ export interface DocsTexts {
   readonly configuratorContent: string;
   readonly apiRussian: string;
   readonly apiEnglish: string;
+  readonly reset: string;
 }
 
 export interface DocsSearchOptions {
@@ -190,4 +193,24 @@ export interface ApiCodeListProps {
   label: string;
   prefix: string;
   items: readonly string[];
+}
+
+export interface PreviewFrameProps {
+  texts: DocsTexts;
+  options: readonly PreviewOption[];
+}
+
+export type PreviewOption = 'dark' | 'rtl';
+
+export interface PreviewOptionsProps {
+  texts: DocsTexts;
+}
+
+export interface ConfiguratorControlProps {
+  prop: ReferenceProp;
+  state: ConfiguratorState;
+}
+
+export interface ConfiguratorControlEmits {
+  change: [change: ConfiguratorChange];
 }
