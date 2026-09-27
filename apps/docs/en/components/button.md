@@ -9,12 +9,8 @@ Role colours come from the tokens, so an accent change updates every variant at 
 
 ```ts
 import { NuiButton } from '@numior/vue';
-import '@numior/tokens/theme.css';
 import '@numior/vue/styles/button.css';
 ```
-
-`@numior/vue/styles.css` loads the styles of every component, `styles/button.css` only the button.
-CSS is never imported from JavaScript on its own.
 
 ## Usage
 

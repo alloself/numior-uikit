@@ -1,6 +1,7 @@
 import type { MarkdownRenderer } from 'vitepress';
 import type { Component } from 'vue';
 import type { ConfiguratorChange, ConfiguratorState } from './configurator-code';
+import type { HomeMosaic } from './home-content';
 import type { ExampleFile, ExampleLocale } from '../examples/example.types';
 import type {
   CatalogReference,
@@ -86,6 +87,7 @@ export interface DocsTexts {
   readonly apiRussian: string;
   readonly apiEnglish: string;
   readonly reset: string;
+  readonly facts: string;
 }
 
 export interface DocsSearchOptions {
@@ -213,4 +215,8 @@ export interface ConfiguratorControlProps {
 
 export interface ConfiguratorControlEmits {
   change: [change: ConfiguratorChange];
+}
+
+export interface HomeMosaicProps {
+  content: HomeMosaic;
 }

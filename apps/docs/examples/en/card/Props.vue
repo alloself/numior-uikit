@@ -1,6 +1,6 @@
 <template>
-  <NuiCard title="Quiet card" description="Header from props, no parts." class="nui-max-w-sm">
-    <NuiCardContent>Content</NuiCardContent>
+  <NuiCard title="Notifications" description="A project digest once a day." class="nui-max-w-sm">
+    <NuiCardContent>The email arrives at 9:00 in the team's time zone.</NuiCardContent>
   </NuiCard>
 </template>
 

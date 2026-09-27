@@ -1,6 +1,6 @@
 <template>
-  <NuiCard title="Тихая карточка" description="Шапка из пропов, без частей." class="nui-max-w-sm">
-    <NuiCardContent>Содержимое</NuiCardContent>
+  <NuiCard title="Уведомления" description="Сводка по проекту раз в день." class="nui-max-w-sm">
+    <NuiCardContent>Письмо приходит в 9:00 по времени команды.</NuiCardContent>
   </NuiCard>
 </template>
 

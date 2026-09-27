@@ -49,6 +49,28 @@ export class DocsConfigurator {
   }
 }
 
+export class DocsHome {
+  readonly title: Locator;
+  readonly start: Locator;
+  readonly copyInstall: Locator;
+  readonly nameInput: Locator;
+  readonly periods: Locator;
+  readonly facts: Locator;
+
+  constructor(page: Page) {
+    this.title = page.getByRole('heading', { level: 1 });
+    this.start = page.getByRole('link', { name: 'Начать', exact: true });
+    this.copyInstall = page.getByRole('button', { name: 'Скопировать код' });
+    this.nameInput = page.getByRole('textbox', { name: 'Название' });
+    this.periods = page.getByRole('group', { name: 'Период' });
+    this.facts = page.getByRole('region', { name: 'Коротко о наборе' });
+  }
+
+  period(label: string): Locator {
+    return this.periods.getByRole('radio', { name: label, exact: true });
+  }
+}
+
 export class DocsSite {
   readonly header: Locator;
   readonly sidebar: Locator;
@@ -138,6 +160,10 @@ export class DocsSite {
 
   configurator(): DocsConfigurator {
     return new DocsConfigurator(this.page);
+  }
+
+  home(): DocsHome {
+    return new DocsHome(this.page);
   }
 
   stubClipboard(): Promise<void> {

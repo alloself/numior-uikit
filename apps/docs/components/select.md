@@ -9,12 +9,9 @@
 
 ```ts
 import { NuiSelect } from '@numior/vue';
-import '@numior/tokens/theme.css';
 import '@numior/vue/styles/field.css';
 import '@numior/vue/styles/select.css';
 ```
-
-`label`, `description` и `error` контрол рисует сам; стили подписи приходят из `field.css`.
 
 ## Примеры
 

@@ -9,7 +9,6 @@
 
 ```ts
 import { NuiCard, NuiCardContent, NuiCardHeader, NuiCardTitle } from '@numior/vue';
-import '@numior/tokens/theme.css';
 import '@numior/vue/styles/card.css';
 ```
 

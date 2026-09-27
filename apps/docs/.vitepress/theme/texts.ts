@@ -57,6 +57,7 @@ export const ru: DocsTexts = {
   apiRussian: 'Русский',
   apiEnglish: 'English',
   reset: 'Сбросить',
+  facts: 'Коротко о наборе',
 };
 
 export const en: DocsTexts = {
@@ -116,4 +117,5 @@ export const en: DocsTexts = {
   apiRussian: 'Russian',
   apiEnglish: 'English',
   reset: 'Reset',
+  facts: 'The kit in short',
 };

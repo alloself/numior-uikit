@@ -21,15 +21,16 @@ import '@numior/vue/styles.css';
 ```
 
 `base.css` resets the `body` margin and sets the page background, text colour and font from the tokens.
-`styles.css` loads the styles of every component. For a narrower import take
-`@numior/vue/styles/<component>.css`: CSS is never imported from JavaScript on its own.
+`styles.css` loads the styles of every component; a component page shows its own file
+`@numior/vue/styles/<component>.css`. CSS is never imported from JavaScript on its own.
 
 ## First component
 
 <Example name="guide/First" />
 
 Components are styled along two axes: `variant` sets the shape, `tone` the role, `size` a step
-inside the density. Native attributes, events and classes reach the root element.
+inside the density. Native attributes, events and classes reach the root element. Form controls draw
+`label`, `description` and `error` themselves; `NuiField` serves slots and several controls in one field.
 
 ## Application setup
 

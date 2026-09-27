@@ -8,10 +8,10 @@
 import { ref } from 'vue';
 import { NuiSelect, type NuiOptionSource } from '@numior/vue';
 
-const value = ref<string | null>('a');
+const value = ref<string | null>('draft');
 
 const options: NuiOptionSource<string> = [
-  { value: 'a', label: 'Первый' },
-  { value: 'b', label: 'Второй' },
+  { value: 'draft', label: 'Черновик' },
+  { value: 'published', label: 'Опубликовано' },
 ];
 </script>

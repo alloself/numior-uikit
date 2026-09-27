@@ -9,12 +9,8 @@
 
 ```ts
 import { NuiButton } from '@numior/vue';
-import '@numior/tokens/theme.css';
 import '@numior/vue/styles/button.css';
 ```
-
-`@numior/vue/styles.css` подключает стили всех компонентов, `styles/button.css` — только кнопки.
-CSS никогда не импортируется из JavaScript сам.
 
 ## Использование
 

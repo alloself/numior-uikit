@@ -37,6 +37,15 @@
 .nui-max-w-3xl {
   max-inline-size: 48rem;
 }
+.nui-max-w-4xl {
+  max-inline-size: 56rem;
+}
+.nui-max-w-5xl {
+  max-inline-size: 64rem;
+}
+.nui-max-w-6xl {
+  max-inline-size: 72rem;
+}
 .nui-max-w-prose {
   max-inline-size: var(--nui-measure);
 }

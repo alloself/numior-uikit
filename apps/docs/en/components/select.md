@@ -9,12 +9,9 @@ come from `options`, the choice is single or multiple.
 
 ```ts
 import { NuiSelect } from '@numior/vue';
-import '@numior/tokens/theme.css';
 import '@numior/vue/styles/field.css';
 import '@numior/vue/styles/select.css';
 ```
-
-The control draws `label`, `description` and `error` itself; the label styles come from `field.css`.
 
 ## Examples
 

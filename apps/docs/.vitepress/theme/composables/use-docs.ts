@@ -24,6 +24,7 @@ export interface Docs {
   readonly pager: ComputedRef<Pager>;
   isCurrent(link: string): boolean;
   startsCurrent(link: string): boolean;
+  sectionItems(prefix: string): readonly DocsSidebarItem[];
 }
 
 const normalizePath = (path: string): string => {
@@ -31,6 +32,20 @@ const normalizePath = (path: string): string => {
 
   return trimmed.length > 1 ? trimmed.replace(/\/$/, '') : trimmed;
 };
+
+const sectionOf = (
+  sections: Readonly<Record<string, readonly DocsSidebarGroup[]>>,
+  matches: (prefix: string) => boolean,
+): readonly DocsSidebarGroup[] => {
+  const match = Object.entries(sections)
+    .filter(([prefix]) => matches(prefix))
+    .toSorted(([a], [b]) => b.length - a.length)[0];
+
+  return match?.[1] ?? [];
+};
+
+const startsWith = (path: string, prefix: string): boolean =>
+  path === prefix || path.startsWith(`${prefix}/`);
 
 const pageTail = (relativePath: string, localeKey: string): string => {
   const withoutLocale =
@@ -53,11 +68,8 @@ export const useDocs = (): Docs => {
 
   const isCurrent = (link: string): boolean => currentPath.value === normalizePath(withBase(link));
 
-  const startsCurrent = (link: string): boolean => {
-    const base = normalizePath(withBase(link));
-
-    return currentPath.value === base || currentPath.value.startsWith(`${base}/`);
-  };
+  const startsCurrent = (link: string): boolean =>
+    startsWith(currentPath.value, normalizePath(withBase(link)));
 
   const locales = computed<readonly LocaleLink[]>(() => {
     const tail = pageTail(page.value.relativePath, localeIndex.value);
@@ -70,13 +82,17 @@ export const useDocs = (): Docs => {
     }));
   });
 
-  const sidebar = computed<readonly DocsSidebarGroup[]>(() => {
-    const match = Object.entries(theme.value.sidebar)
-      .filter(([prefix]) => startsCurrent(prefix))
-      .toSorted(([a], [b]) => b.length - a.length)[0];
+  const sidebar = computed<readonly DocsSidebarGroup[]>(() =>
+    sectionOf(theme.value.sidebar, startsCurrent),
+  );
 
-    return match?.[1] ?? [];
-  });
+  const sectionItems = (prefix: string): readonly DocsSidebarItem[] => {
+    const path = normalizePath(withBase(prefix));
+
+    return sectionOf(theme.value.sidebar, (candidate) =>
+      startsWith(path, normalizePath(withBase(candidate))),
+    ).flatMap((group) => group.items);
+  };
 
   const sectionLinks = computed(() => sidebar.value.flatMap((group) => group.items));
 
@@ -104,5 +120,6 @@ export const useDocs = (): Docs => {
     pager,
     isCurrent,
     startsCurrent,
+    sectionItems,
   };
 };
