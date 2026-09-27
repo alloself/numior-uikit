@@ -1,52 +1,39 @@
 # Localization
 
-Built-in component texts — close button names, empty states, calendar navigation,
-pagination labels, table announcements, upload errors — come from a dictionary. Russian
-and English are built in, and the language follows the configured locale. An app can
-override any text, add its own language or hand texts to its i18n library.
+The built-in component texts, close button names, empty states, calendar navigation,
+pagination labels and upload errors, live in a dictionary with Russian and English. The
+configuration `locale` picks the language, and the app overrides any text, adds its own
+language or hands the texts to its i18n library. The "Texts" tab in a component's API lists
+its texts.
+
+<Example name="guide/Locale" />
 
 ## How a text is chosen
 
-Each text resolves in this order:
-
-1. The component prop (`closeLabel`, `emptyLabel`, `pageLabel` …) always wins.
+1. A component prop (`closeLabel`, `emptyLabel`, `pageLabel`) always wins.
 2. The `translate` hook from the configuration, when it returns a string.
 3. The `messages` dictionary from the configuration.
 4. The built-in Russian or English text.
 5. The English text.
 
-The language comes from the configured `locale` (`createNuiConfig({ locale })` for the app,
-`provideNuiConfig({ locale })` for a subtree). Without it `en-US` applies; the kit never reads
-the browser language, so the server and the first frame agree. The tag expands into a chain
-from general to specific: `ru-RU` gives `en` → `ru` → `ru-RU`, and the more specific tag
-wins — a `de-AT` override beats `de`. An `en` override is the fallback for every language but
-never replaces the built-in Russian.
-
-The calendar, date and range pickers, number field and time field take texts in the
-language of their own `locale` prop, so labels never disagree with number and date formats.
+A locale tag unfolds from general to specific: `ru-RU` gives `en` → `ru` → `ru-RU`, and the
+more specific tag wins. The calendar, the date pickers, number field and time field take texts in the language of
+their own `locale` prop. Labels never diverge from the format.
 
 ## Override texts
 
 ```ts
-import { createApp } from 'vue';
-import { createNuiConfig } from '@numior/vue';
-
-createApp(App)
-  .use(
-    createNuiConfig({
-      locale: 'en-US',
-      messages: { en: { dialog: { close: 'Dismiss' } } },
-    }),
-  )
-  .mount('#app');
+createNuiConfig({
+  locale: 'en-US',
+  messages: { en: { dialog: { close: 'Close window' } } },
+});
 ```
 
-Only the given keys change; the rest stay built in. `messages` takes a value, a ref or a
-getter. A nested `provideNuiConfig({ messages })` adds a layer for its subtree: for the same
-tag the nearer layer wins. Keys are typed, so a typo in a namespace or key is a TypeScript
-error.
+Only the given keys change. `messages` takes a value, a ref or a getter; a nested
+`provideNuiConfig({ messages })` adds a layer for a subtree. The keys are typed: a typo in a
+namespace or a key is a TypeScript error.
 
-## Your own language
+## Own language
 
 ```ts
 import { createNuiConfig, plural } from '@numior/vue';
@@ -65,15 +52,10 @@ createNuiConfig({
 });
 ```
 
-A partial language takes missing texts from English. Type a complete dictionary as
-`NuiVueMessages` and TypeScript lists the missing keys. `@numior/forms` adds the `form`,
-`formRules`, `fieldArray` and `smartForm` namespaces to the same dictionary, typed as
-`NuiFormsMessages`.
-
-Parameterised texts are functions of one object: `range: ({ from, to, total }) => …`.
-`plural(language, count, forms)` picks a form through `Intl.PluralRules` (`zero`, `one`,
-`two`, `few`, `many`, `other`) and falls back to `other`; pass the language the text is
-written in, not the app locale.
+Missing texts of a partial language come from English; the `NuiVueMessages` type describes
+the full dictionary, the forms add `NuiFormsMessages`. Texts with parameters are functions of
+one object. `plural(language, count, forms)` picks the form through `Intl.PluralRules` by the
+language of the text, not the app locale.
 
 ## vue-i18n and other libraries
 
@@ -92,231 +74,14 @@ createNuiConfig({
 });
 ```
 
-`translate(key, params, locale)` receives a `namespace.key` key (`dialog.close`,
-`pagination.range`), the params object of a function text and the component language. A
-returned string wins over the dictionary; `undefined` falls back to it. A nested hook is
-asked before the outer one. vue-i18n messages read the params by name:
-`nui: { pagination: { range: '{from}–{to} of {total}' } }`.
+`translate(key, params, locale)` receives a key such as `dialog.close`, the parameters of a
+text function and the component language. A string beats the dictionary, `undefined` hands
+the word to the dictionary. In vue-i18n messages the parameters are available by name:
+`pagination: { range: '{from}–{to} of {total}' }`.
 
-## SSR and lazy loading
+## SSR
 
-Catalogs are plain side-effect-free objects and `Intl.PluralRules` is deterministic, so the
+The catalogs are objects without side effects and `Intl.PluralRules` is deterministic, so the
 server and the client produce the same text. Load a lazy dictionary before `mount` and before
-the server render, then pass it through a ref. Unused catalogs tree-shake away: `NuiButton`
-carries no dialog texts, and the build checks it.
-
-## Reference
-
-Keys are grouped by namespace; ƒ marks a function text, and the examples show its params as
-`{from}`, `{label}` and so on.
-
-### alert
-
-| Key       | Prop                    | English | Russian |
-| --------- | ----------------------- | ------- | ------- |
-| `dismiss` | NuiAlert `dismissLabel` | Close   | Закрыть |
-
-### avatar
-
-| Key       | Prop                    | English | Russian      |
-| --------- | ----------------------- | ------- | ------------ |
-| `online`  | NuiAvatar `statusLabel` | Online  | В сети       |
-| `offline` | NuiAvatar `statusLabel` | Offline | Не в сети    |
-| `busy`    | NuiAvatar `statusLabel` | Busy    | Занят        |
-| `away`    | NuiAvatar `statusLabel` | Away    | Нет на месте |
-
-### breadcrumbs
-
-| Key     | Prop                       | English    | Russian               |
-| ------- | -------------------------- | ---------- | --------------------- |
-| `label` | NuiBreadcrumbs `label`     | Breadcrumb | Навигационная цепочка |
-| `more`  | NuiBreadcrumbs `moreLabel` | Show path  | Показать путь         |
-
-### calendar
-
-| Key        | Prop            | English        | Russian          |
-| ---------- | --------------- | -------------- | ---------------- |
-| `previous` | `previousLabel` | Previous month | Предыдущий месяц |
-| `next`     | `nextLabel`     | Next month     | Следующий месяц  |
-| `month`    | `monthLabel`    | Choose month   | Выбрать месяц    |
-| `year`     | `yearLabel`     | Choose year    | Выбрать год      |
-| `today`    | `todayLabel`    | Today          | Сегодня          |
-| `week`     | `weekLabel`     | Week           | Неделя           |
-
-### chip
-
-| Key      | Prop                  | English | Russian |
-| -------- | --------------------- | ------- | ------- |
-| `remove` | NuiChip `removeLabel` | Remove  | Убрать  |
-
-### combobox
-
-| Key      | Prop                      | English      | Russian           |
-| -------- | ------------------------- | ------------ | ----------------- |
-| `empty`  | NuiCombobox `emptyLabel`  | No matches   | Ничего не найдено |
-| `clear`  | NuiCombobox `clearLabel`  | Clear        | Очистить          |
-| `remove` | NuiCombobox `removeLabel` | Remove       | Убрать            |
-| `toggle` | NuiCombobox `toggleLabel` | Show options | Показать варианты |
-
-### datePicker
-
-| Key          | Prop                           | English      | Russian        |
-| ------------ | ------------------------------ | ------------ | -------------- |
-| `open`       | NuiDatePicker `openLabel`      | Choose date  | Выбрать дату   |
-| `openRange`  | NuiDateRangePicker `openLabel` | Choose dates | Выбрать период |
-| `clear`      | `clearLabel`                   | Clear        | Очистить       |
-| `dialog`     | `dialogLabel`                  | Calendar     | Календарь      |
-| `end`        | NuiDateRangePicker `endLabel`  | End date     | Дата окончания |
-| `yearGlyph`  | `placeholder`                  | Y            | Г              |
-| `monthGlyph` | `placeholder`                  | M            | М              |
-| `dayGlyph`   | `placeholder`                  | D            | Д              |
-| `timeGlyphs` | `placeholder`                  | HH:mm        | ЧЧ:ММ          |
-
-### dialog
-
-| Key     | Prop                                          | English | Russian |
-| ------- | --------------------------------------------- | ------- | ------- |
-| `close` | NuiDialog, NuiDrawer, NuiSidebar `closeLabel` | Close   | Закрыть |
-
-### fieldArray
-
-| Key           | Prop                     | English                                                                                                                          | Russian                                                                                                                         |
-| ------------- | ------------------------ | -------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| `add`         | NuiFieldArray `addLabel` | Add row                                                                                                                          | Добавить строку                                                                                                                 |
-| `remove` ƒ    | `removeLabel`            | Remove row `{index}`                                                                                                             | Удалить строку `{index}`                                                                                                        |
-| `move` ƒ      | `moveLabel`              | Move row `{index}`                                                                                                               | Переместить строку `{index}`                                                                                                    |
-| `row` ƒ       | —                        | Row `{index}`                                                                                                                    | Строка `{index}`                                                                                                                |
-| `empty`       | `emptyLabel`             | No rows yet                                                                                                                      | Строк пока нет                                                                                                                  |
-| `limit` ƒ     | —                        | Row limit reached: `{max}`                                                                                                       | Достигнут предел строк: `{max}`                                                                                                 |
-| `added` ƒ     | —                        | Row `{index}` added.                                                                                                             | Строка `{index}` добавлена.                                                                                                     |
-| `removed` ƒ   | —                        | Row `{index}` removed.                                                                                                           | Строка `{index}` удалена.                                                                                                       |
-| `grabbed` ƒ   | —                        | Row `{index}` grabbed, position `{position}` of `{count}`. Use the arrow keys to move, Space or Enter to drop, Escape to cancel. | Строка `{index}` захвачена, позиция `{position}` из `{count}`. Стрелки перемещают, пробел или Enter отпускают, Escape отменяет. |
-| `moved` ƒ     | —                        | Row `{index}`, position `{position}` of `{count}`.                                                                               | Строка `{index}`, позиция `{position}` из `{count}`.                                                                            |
-| `dropped` ƒ   | —                        | Row `{index}` dropped at position `{position}` of `{count}`.                                                                     | Строка `{index}` перемещена на позицию `{position}` из `{count}`.                                                               |
-| `cancelled` ƒ | —                        | Row `{index}`, move cancelled.                                                                                                   | Строка `{index}`: перемещение отменено.                                                                                         |
-
-### form
-
-| Key          | Prop                                | English                   | Russian                    |
-| ------------ | ----------------------------------- | ------------------------- | -------------------------- |
-| `submit`     | NuiForm, NuiSmartForm `submitLabel` | Submit                    | Отправить                  |
-| `errorTitle` | NuiForm `errorTitle`                | Could not submit the form | Не удалось отправить форму |
-
-### formRules
-
-| Key           | Prop                                  | English                     | Russian                                    |
-| ------------- | ------------------------------------- | --------------------------- | ------------------------------------------ |
-| `required`    | `required({ message })`               | Fill in this field          | Заполните поле                             |
-| `minLength` ƒ | `min(n, { message })`                 | Enter at least 3 characters | Введите не меньше 3 символов               |
-| `maxLength` ƒ | `max(n, { message })`                 | Enter at most 3 characters  | Введите не больше 3 символов               |
-| `minValue` ƒ  | `min(n, { message })`                 | Enter `{min}` or more       | Введите число не меньше `{min}`            |
-| `maxValue` ƒ  | `max(n, { message })`                 | Enter `{max}` or less       | Введите число не больше `{max}`            |
-| `minItems` ƒ  | `min(n, { message })`                 | Add at least 3 items        | Добавьте не меньше 3 элементов             |
-| `maxItems` ƒ  | `max(n, { message })`                 | Keep at most 3 items        | Оставьте не больше 3 элементов             |
-| `email`       | `email({ message })`                  | Enter a valid email address | Введите корректный адрес электронной почты |
-| `pattern`     | `pattern(re, { message })`            | Use the expected format     | Значение не соответствует формату          |
-| `invalid`     | `custom` (the check returned `false`) | Check this value            | Проверьте значение                         |
-
-### list
-
-| Key       | Prop                                | English  | Russian     |
-| --------- | ----------------------------------- | -------- | ----------- |
-| `loading` | NuiList, NuiCombobox `loadingLabel` | Loading  | Загрузка    |
-| `empty`   | NuiList `emptyLabel`                | No items | Список пуст |
-
-### numberField
-
-| Key         | Prop             | English   | Russian   |
-| ----------- | ---------------- | --------- | --------- |
-| `increment` | `incrementLabel` | Increment | Увеличить |
-| `decrement` | `decrementLabel` | Decrement | Уменьшить |
-
-### pagination
-
-| Key        | Prop            | English                      | Russian                      |
-| ---------- | --------------- | ---------------------------- | ---------------------------- |
-| `label`    | `label`         | Pagination                   | Постраничная навигация       |
-| `previous` | `previousLabel` | Previous page                | Предыдущая страница          |
-| `next`     | `nextLabel`     | Next page                    | Следующая страница           |
-| `first`    | `firstLabel`    | First page                   | Первая страница              |
-| `last`     | `lastLabel`     | Last page                    | Последняя страница           |
-| `pageSize` | `pageSizeLabel` | Rows per page                | Строк на странице            |
-| `page` ƒ   | `pageLabel`     | Page `{page}`                | Страница `{page}`            |
-| `range` ƒ  | `rangeLabel`    | `{from}`–`{to}` of `{total}` | `{from}`–`{to}` из `{total}` |
-
-### select
-
-| Key       | Prop         | English    | Russian       |
-| --------- | ------------ | ---------- | ------------- |
-| `empty`   | `emptyLabel` | No options | Нет вариантов |
-| `clear`   | `clearLabel` | Clear      | Очистить      |
-| `count` ƒ | `countLabel` | 2 selected | Выбрано: 2    |
-
-### sidebar
-
-| Key      | Prop                      | English        | Russian                    |
-| -------- | ------------------------- | -------------- | -------------------------- |
-| `label`  | NuiSidebar `label`        | Navigation     | Навигация                  |
-| `toggle` | NuiSidebarTrigger `label` | Toggle sidebar | Переключить боковую панель |
-
-### smartForm
-
-| Key             | Prop                     | English                                  | Russian                                 |
-| --------------- | ------------------------ | ---------------------------------------- | --------------------------------------- |
-| `next`          | NuiSmartForm `nextLabel` | Next                                     | Далее                                   |
-| `back`          | `backLabel`              | Back                                     | Назад                                   |
-| `stepChanged` ƒ | —                        | Step `{current}` of `{total}`: `{label}` | Шаг `{current}` из `{total}`: `{label}` |
-
-### stepper
-
-| Key         | Prop               | English                       | Russian                      |
-| ----------- | ------------------ | ----------------------------- | ---------------------------- |
-| `label`     | NuiStepper `label` | Steps                         | Шаги                         |
-| `complete`  | `completeLabel`    | completed                     | выполнено                    |
-| `error`     | `errorLabel`       | has errors                    | есть ошибки                  |
-| `summary` ƒ | —                  | Step `{current}` of `{total}` | Шаг `{current}` из `{total}` |
-
-### table
-
-| Key          | Prop             | English                                                                                          | Russian                                                                                           |
-| ------------ | ---------------- | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------- |
-| `empty`      | `emptyLabel`     | No data                                                                                          | Нет данных                                                                                        |
-| `select`     | `selectLabel`    | Select row                                                                                       | Выбрать строку                                                                                    |
-| `selectAll`  | `selectAllLabel` | Select all rows                                                                                  | Выбрать все строки                                                                                |
-| `expand`     | `expandLabel`    | Toggle row                                                                                       | Развернуть строку                                                                                 |
-| `drag`       | `dragLabel`      | Reorder row                                                                                      | Переставить строку                                                                                |
-| `resize` ƒ   | `resizeLabel`    | Resize `{label}`                                                                                 | Ширина колонки `{label}`                                                                          |
-| `reorder` ƒ  | `reorderLabel`   | Reorder `{label}`                                                                                | Переставить колонку `{label}`                                                                     |
-| `announce` ƒ | `announce`       | `{label}` grabbed, position 2 of 4. Use the arrow keys to move, Space to drop, Escape to cancel. | Колонка «`{label}`» взята, позиция 2 из 4. Стрелки перемещают, Пробел отпускает, Escape отменяет. |
-
-### timeField
-
-| Key     | Prop                                                 | English     | Russian                |
-| ------- | ---------------------------------------------------- | ----------- | ---------------------- |
-| `clock` | NuiTimeField `clockLabel`, NuiDatePicker `timeLabel` | Choose time | Выбрать время          |
-| `empty` | `emptyLabel`                                         | No times    | Нет доступного времени |
-
-### toast
-
-| Key     | Prop                              | English       | Russian     |
-| ------- | --------------------------------- | ------------- | ----------- |
-| `close` | NuiToast, NuiToaster `closeLabel` | Close         | Закрыть     |
-| `label` | NuiToaster `label`                | Notifications | Уведомления |
-
-### upload
-
-| Key            | Prop          | English               | Russian                    |
-| -------------- | ------------- | --------------------- | -------------------------- |
-| `drop`         | `dropLabel`   | Drop files here       | Перетащите файлы сюда      |
-| `browse`       | `browseLabel` | Choose files          | Выбрать файлы              |
-| `cancel`       | `cancelLabel` | Cancel upload         | Отменить загрузку          |
-| `retry`        | `retryLabel`  | Retry                 | Повторить                  |
-| `remove`       | `removeLabel` | Remove                | Удалить                    |
-| `done`         | `doneLabel`   | Uploaded              | Загружено                  |
-| `typeError`    | `errorLabel`  | Unsupported file type | Неподдерживаемый тип файла |
-| `tooLarge`     | `errorLabel`  | File is too large     | Файл слишком большой       |
-| `largerThan` ƒ | `errorLabel`  | Larger than `{size}`  | Файл больше `{size}`       |
-| `tooMany`      | `errorLabel`  | Too many files        | Слишком много файлов       |
-| `moreThan` ƒ   | `errorLabel`  | More than 3 files     | Не больше 3 файлов         |
-| `rejected`     | `errorLabel`  | File rejected         | Файл отклонён              |
-| `failed`       | `errorLabel`  | Upload failed         | Не удалось загрузить       |
+the server render and pass it through a ref. Unused catalogs are tree-shaken: `NuiButton` does
+not pull the dialog texts.

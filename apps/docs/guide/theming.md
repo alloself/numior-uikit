@@ -1,106 +1,101 @@
 # Темизация
 
-Подключите `@numior/tokens/theme.css`. На корне документа или области задайте
-`data-nui-theme="light|dark|system"`; по умолчанию используется системная схема.
-Цвета используют CSS `light-dark()`, поэтому область должна наследовать
-корректный `color-scheme`. Вложенная область с атрибутом темы начинает свой preset.
+Тема — набор CSS-токенов из `@numior/tokens/theme.css`. Атрибут `data-nui-theme` на корне
+или на любой области выбирает `light`, `dark` или `system`; цвета записаны через
+`light-dark()`, поэтому область наследует правильный `color-scheme`. Публичный контракт —
+только семантические токены `--nui-*`.
 
-```html
-<section
-  data-nui-theme="dark"
-  data-nui-density="compact"
-  style="--nui-primary: oklch(0.87 0.14 154); --nui-primary-foreground: oklch(0.27 0.06 153)"
->
-  <!-- Компоненты этой области -->
-</section>
+<Example name="guide/Scheme" />
+
+## Установка
+
+```ts
+import '@numior/tokens/theme.css';
+import '@numior/tokens/base.css';
+import '@numior/tokens/accents.css';
 ```
 
-Публичный контракт — только семантические токены. Значения заданы в `oklch()` внутри
-`light-dark()`, производные состояния (soft, hover, active) вычисляются через
-`color-mix()` от токена роли, поэтому достаточно заменить одну пару `--nui-<role>` и
-`--nui-<role>-foreground`. Проверяйте контраст обеих сторон пары.
-
-::: warning Область переопределения
-`var()` внутри custom property вычисляется на элементе, который её объявляет.
-Переопределяйте токены ролей на элементе с `data-nui-theme` (или на `:root`).
-Если переопределить `--nui-primary` на обычном элементе, унаследованные
-`--nui-primary-soft` и `--nui-focus` останутся старыми: задайте их тоже.
-:::
-
-## Токены
-
-| Группа      | Токены                                                                                                                                                                                                                                                                                      |
-| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Поверхности | `--nui-surface`, `--nui-surface-muted`, `--nui-surface-elevated`, `--nui-surface-overlay`, `--nui-ring` (кольцо вокруг перекрывающихся элементов), `--nui-backdrop` (затемнение под модальными слоями)                                                                                      |
-| Текст       | `--nui-text`, `--nui-text-muted`, `--nui-text-subtle`                                                                                                                                                                                                                                       |
-| Границы     | `--nui-border`, `--nui-border-strong`                                                                                                                                                                                                                                                       |
-| Роли        | `primary`, `secondary`, `success`, `warning`, `error`, `info`, `neutral`: `--nui-<role>`, `--nui-<role>-foreground`, `--nui-<role>-soft`, `--nui-<role>-soft-foreground`                                                                                                                    |
-| Фокус       | `--nui-focus`, `--nui-focus-ring-width`, `--nui-focus-ring-offset`                                                                                                                                                                                                                          |
-| Состояния   | `--nui-disabled-opacity`                                                                                                                                                                                                                                                                    |
-| Радиусы     | `--nui-radius-sm`, `--nui-radius-md`, `--nui-radius-lg`, `--nui-radius-full`; `--nui-radius` = md                                                                                                                                                                                           |
-| Отступы     | `--nui-space-1` … `--nui-space-6`, `--nui-space-8` (шаг 0.25rem)                                                                                                                                                                                                                            |
-| Типографика | `--nui-font`, `--nui-font-mono`, `--nui-font-size-xs/sm/md/lg`, `--nui-line-height`, `--nui-line-height-tight`                                                                                                                                                                              |
-| Тени        | `--nui-shadow-sm`, `--nui-shadow-md`, `--nui-shadow-lg`                                                                                                                                                                                                                                     |
-| Движение    | `--nui-duration-fast`, `--nui-duration-normal`, `--nui-duration-slow`, `--nui-easing`; при `prefers-reduced-motion: reduce` длительности равны `0ms`                                                                                                                                        |
-| Слои        | `--nui-z-dropdown`, `--nui-z-overlay`, `--nui-z-toast`                                                                                                                                                                                                                                      |
-| Контролы    | `--nui-control-height-sm/md/lg`, `--nui-control-padding-sm/md/lg` (кнопки и вкладки), `--nui-field-padding-sm/md/lg` (текстовые поля, select, combobox, числа и время), `--nui-control-font-size-sm/md/lg`; `--nui-control-height`, `--nui-control-padding`, `--nui-control-font-size` = md |
+`base.css` убирает поля `body` и задаёт фон, цвет и шрифт страницы из токенов; `accents.css`
+добавляет пресеты акцента и нужен только вместе с `data-nui-accent`.
 
 ## Переключение схемы
 
-`useColorScheme` из `@numior/vue` управляет `data-nui-theme` на области: читает текущее
-значение атрибута или сохранённый выбор, следит за `prefers-color-scheme` и пишет
-изменения обратно. На сервере возвращает `system`/`light` без обращения к DOM.
+`useColorScheme` управляет атрибутом `data-nui-theme`: читает сохранённый выбор, следит за
+`prefers-color-scheme` и пишет изменения обратно. С опцией `colorScheme` в
+`createNuiConfig` схема общая для всего приложения, и `useColorScheme()` без аргументов
+возвращает её; с аргументами создаётся отдельная схема для области `scope`.
 
 ```vue
-<script setup lang="ts">
-import { useTemplateRef } from 'vue';
-import { useColorScheme } from '@numior/vue';
-
-const root = useTemplateRef<HTMLElement>('root');
-const { scheme, resolved, toggle } = useColorScheme({ scope: root, storageKey: 'theme' });
-</script>
-
 <template>
-  <div ref="root" data-nui-theme="system">
-    <button @click="toggle()">Сейчас {{ resolved }}</button>
-  </div>
+  <NuiButton variant="ghost" tone="neutral" :aria-label="texts[scheme]" @click="cycle()">
+    <NuiIcon :alias="icons[resolved]" />
+  </NuiButton>
 </template>
+
+<script setup lang="ts">
+import { NuiButton, NuiIcon, useColorScheme } from '@numior/vue';
+
+const { scheme, resolved, cycle } = useColorScheme();
+const icons = { light: 'sun', dark: 'moon' } as const;
+const texts = { light: 'Светлая тема', dark: 'Тёмная тема', system: 'Системная тема' };
+</script>
 ```
 
-Без `scope` используется `document.documentElement`; `storageKey` включает сохранение в
-`localStorage`. Слои (`NuiDialog`, `NuiDrawer`, `NuiPopover`, `NuiTooltip`) остаются в DOM
-инициатора и наследуют его тему, плотность и `dir` в top layer без дополнительного кода.
+`scheme` хранит выбор (`light`, `dark`, `system`), `resolved` — фактическую схему, `set`,
+`toggle` и `cycle` меняют её. Чтобы страница не мигала до гидрации, вставьте в `<head>`
+скрипт `colorSchemeScript(storageKey)`: он ставит сохранённую схему до первой отрисовки.
 
-## Плотность и размеры
+## Акцент
 
-`data-nui-density="comfortable|compact"` сдвигает всю шкалу контролов и наследуется
-через вложенные темы. Размер конкретного элемента выбирается его prop `size`
-(`sm`, `md`, `lg`) внутри текущей шкалы. В `compact` высоты равны 1.75 / 2 / 2.5rem,
-в `comfortable` — 2 / 2.5 / 3rem.
+`data-nui-accent` меняет пару `--nui-primary` и `--nui-primary-foreground` вместе с
+производными: `indigo`, `blue`, `violet`, `emerald`, `teal`, `rose`, `orange`, `amber`,
+`slate`.
 
-## Независимые утилиты
+<Example name="guide/Accent" />
 
-Подключите `@numior/utilities/utilities.css`. Классы `nui-*` читают те же токены:
-`nui-flex`, `nui-wrap`, `nui-items-center`, `nui-gap-1…4`, `nui-bg-surface(-muted|-elevated)`,
-`nui-bg-<role>`, `nui-bg-<role>-soft`, `nui-text`, `nui-text-muted`, `nui-text-subtle`,
-`nui-text-<role>`, `nui-text-<role>-foreground`, `nui-border(-strong)`,
-`nui-rounded(-sm|-lg|-full)`, `nui-shadow-sm|md`.
+## Свои цвета
 
-## Tailwind 4
-
-Интеграция опциональна. В consumer с настроенным Tailwind 4:
+Производные состояния (`soft`, hover, active, фокус) вычисляются через `color-mix()` от
+токена роли, поэтому достаточно заменить пару `--nui-<role>` и `--nui-<role>-foreground`.
+Переопределяйте токены на элементе с `data-nui-theme` или на `:root`. `var()` внутри
+custom property вычисляется там, где она объявлена, поэтому на обычном элементе
+унаследованные `--nui-primary-soft` и `--nui-focus` останутся старыми.
 
 ```css
-@import 'tailwindcss';
-@import '@numior/tokens/theme.css';
-@import '@numior/tailwind/theme.css';
+[data-nui-theme] {
+  --nui-primary: light-dark(oklch(0.55 0.2 300), oklch(0.8 0.12 300));
+  --nui-primary-foreground: light-dark(oklch(1 0 0), oklch(0.25 0.08 300));
+  --nui-radius-base: 0.75rem;
+}
 ```
 
-Доступны `bg-primary`, `bg-primary-soft`, `text-primary-foreground`, `bg-surface`,
-`text-subtle-foreground`, `border-border-strong`, `rounded-nui(-sm|-lg|-full)`,
-`p-nui-4`, `font-nui`, `text-nui-sm`, `shadow-nui-md`, `ease-nui`. `@theme inline`
-связывает их с CSS variables, поэтому runtime-темизация совпадает с оформлением
-Vue-компонентов. Компоненты не требуют Tailwind или его preflight.
+Радиусы выводятся из `--nui-radius-base`: `sm` — половина, `lg` — полтора, `xl` — два.
 
-Перенос темы через portals/overlays будет реализован с соответствующими
-примитивами; в основании пока проверяется обычная DOM-вложенность.
+## Плотность
+
+`data-nui-density="comfortable|compact"` сдвигает шкалу высот, отступов и шрифтов
+контролов; проп `size` выбирает ступень внутри шкалы. Атрибут наследуется, поэтому таблица
+или боковая панель могут быть компактнее страницы.
+
+<Example name="guide/Density" />
+
+## Токены
+
+| Группа      | Токены                                                                                                                                                               |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Поверхности | `--nui-surface`, `-muted`, `-elevated`, `-overlay`, `--nui-ring`, `--nui-backdrop`, `--nui-surface-code`                                                             |
+| Текст       | `--nui-text`, `--nui-text-muted`, `--nui-text-subtle`, `--nui-code-inline`                                                                                           |
+| Границы     | `--nui-border`, `--nui-border-strong`                                                                                                                                |
+| Роли        | `primary`, `secondary`, `success`, `warning`, `error`, `info`, `neutral`: `--nui-<role>`, `-foreground`, `-soft`, `-soft-foreground`                                 |
+| Фокус       | `--nui-focus`, `--nui-focus-ring-width`, `--nui-focus-ring-offset`, `--nui-disabled-opacity`                                                                         |
+| Форма       | `--nui-radius-base`, `--nui-radius-sm                                                                                                                                | md     | lg                                                                       | xl       | full`, `--nui-radius` |
+| Отступы     | `--nui-space-1…6`, `--nui-space-8` (шаг 0.25rem)                                                                                                                     |
+| Типографика | `--nui-font`, `--nui-font-mono`, `--nui-font-size-xs…4xl`, `--nui-font-weight-*`, `--nui-line-height`, `-tight`, `-relaxed`, `--nui-tracking-tight`, `--nui-measure` |
+| Код         | `--nui-syntax-keyword                                                                                                                                                | string | number                                                                   | function | type                  | tag | attribute | property | comment | variable | punctuation | highlight` |
+| Тени        | `--nui-shadow-sm                                                                                                                                                     | md     | lg`                                                                      |
+| Движение    | `--nui-duration-fast                                                                                                                                                 | normal | slow`, `--nui-easing`; при `prefers-reduced-motion` длительности равны 0 |
+| Слои        | `--nui-z-dropdown`, `--nui-z-overlay`, `--nui-z-toast`                                                                                                               |
+| Контролы    | `--nui-control-height-*`, `--nui-control-padding-*`, `--nui-field-padding-*`, `--nui-control-font-size-*` для `sm                                                    | md     | lg` и текущей ступени                                                    |
+
+Слои (`NuiDialog`, `NuiDrawer`, `NuiPopover`, `NuiTooltip`) остаются в DOM инициатора и
+наследуют его тему, плотность и `dir` в top layer.

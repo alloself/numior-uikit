@@ -37,18 +37,33 @@ const ruGuide: DocsSidebarGroup[] = [
     text: 'Руководство',
     items: [
       { text: 'Начало работы', link: '/guide/getting-started' },
+      { text: 'Конфигурация', link: '/guide/configuration' },
       { text: 'Темизация', link: '/guide/theming' },
       { text: 'Локализация', link: '/guide/localization' },
+      { text: 'Направление письма', link: '/guide/direction' },
+      { text: 'SSR и Nuxt', link: '/guide/ssr' },
+      { text: 'Tailwind', link: '/guide/tailwind' },
+      { text: 'Утилиты и проза', link: '/guide/utilities' },
+      { text: 'Валидация форм', link: '/guide/forms-validation' },
+      { text: 'Доступность', link: '/guide/accessibility' },
     ],
   },
 ];
 
 const ruComponents: DocsSidebarGroup[] = [
   {
-    text: 'Компоненты',
+    text: 'Общие',
     items: [
       { text: 'Button', link: '/components/button' },
       { text: 'Icon', link: '/components/icon' },
+      { text: 'Kbd', link: '/components/kbd' },
+      { text: 'Separator', link: '/components/separator' },
+      { text: 'Code', link: '/components/code' },
+    ],
+  },
+  {
+    text: 'Поля ввода',
+    items: [
       { text: 'Field', link: '/components/field' },
       { text: 'Input', link: '/components/input' },
       { text: 'Textarea', link: '/components/textarea' },
@@ -56,6 +71,7 @@ const ruComponents: DocsSidebarGroup[] = [
       { text: 'Checkbox', link: '/components/checkbox' },
       { text: 'Radio group', link: '/components/radio-group' },
       { text: 'Switch', link: '/components/switch' },
+      { text: 'Toggle group', link: '/components/toggle-group' },
       { text: 'Select', link: '/components/select' },
       { text: 'Combobox', link: '/components/combobox' },
       { text: 'Upload', link: '/components/upload' },
@@ -97,7 +113,11 @@ const ruComponents: DocsSidebarGroup[] = [
       { text: 'Stepper', link: '/components/stepper' },
       { text: 'Layout', link: '/components/layout' },
       { text: 'Sidebar', link: '/components/sidebar' },
+      { text: 'Splitter', link: '/components/splitter' },
       { text: 'Pagination', link: '/components/pagination' },
+      { text: 'Command', link: '/components/command' },
+      { text: 'Toc', link: '/components/toc' },
+      { text: 'Skip link', link: '/components/skip-link' },
     ],
   },
   {
@@ -106,6 +126,8 @@ const ruComponents: DocsSidebarGroup[] = [
       { text: 'Badge', link: '/components/badge' },
       { text: 'Avatar', link: '/components/avatar' },
       { text: 'Card', link: '/components/card' },
+      { text: 'Collapsible', link: '/components/collapsible' },
+      { text: 'Accordion', link: '/components/accordion' },
       { text: 'List', link: '/components/list' },
       { text: 'Empty', link: '/components/empty' },
       { text: 'Tree', link: '/components/tree' },
@@ -133,18 +155,33 @@ const enGuide: DocsSidebarGroup[] = [
     text: 'Guide',
     items: [
       { text: 'Getting started', link: '/en/guide/getting-started' },
+      { text: 'Configuration', link: '/en/guide/configuration' },
       { text: 'Theming', link: '/en/guide/theming' },
       { text: 'Localization', link: '/en/guide/localization' },
+      { text: 'Direction', link: '/en/guide/direction' },
+      { text: 'SSR and Nuxt', link: '/en/guide/ssr' },
+      { text: 'Tailwind', link: '/en/guide/tailwind' },
+      { text: 'Utilities and prose', link: '/en/guide/utilities' },
+      { text: 'Forms validation', link: '/en/guide/forms-validation' },
+      { text: 'Accessibility', link: '/en/guide/accessibility' },
     ],
   },
 ];
 
 const enComponents: DocsSidebarGroup[] = [
   {
-    text: 'Components',
+    text: 'General',
     items: [
       { text: 'Button', link: '/en/components/button' },
       { text: 'Icon', link: '/en/components/icon' },
+      { text: 'Kbd', link: '/en/components/kbd' },
+      { text: 'Separator', link: '/en/components/separator' },
+      { text: 'Code', link: '/en/components/code' },
+    ],
+  },
+  {
+    text: 'Inputs',
+    items: [
       { text: 'Field', link: '/en/components/field' },
       { text: 'Input', link: '/en/components/input' },
       { text: 'Textarea', link: '/en/components/textarea' },
@@ -152,6 +189,7 @@ const enComponents: DocsSidebarGroup[] = [
       { text: 'Checkbox', link: '/en/components/checkbox' },
       { text: 'Radio group', link: '/en/components/radio-group' },
       { text: 'Switch', link: '/en/components/switch' },
+      { text: 'Toggle group', link: '/en/components/toggle-group' },
       { text: 'Select', link: '/en/components/select' },
       { text: 'Combobox', link: '/en/components/combobox' },
       { text: 'Upload', link: '/en/components/upload' },
@@ -193,7 +231,11 @@ const enComponents: DocsSidebarGroup[] = [
       { text: 'Stepper', link: '/en/components/stepper' },
       { text: 'Layout', link: '/en/components/layout' },
       { text: 'Sidebar', link: '/en/components/sidebar' },
+      { text: 'Splitter', link: '/en/components/splitter' },
       { text: 'Pagination', link: '/en/components/pagination' },
+      { text: 'Command', link: '/en/components/command' },
+      { text: 'Toc', link: '/en/components/toc' },
+      { text: 'Skip link', link: '/en/components/skip-link' },
     ],
   },
   {
@@ -202,6 +244,8 @@ const enComponents: DocsSidebarGroup[] = [
       { text: 'Badge', link: '/en/components/badge' },
       { text: 'Avatar', link: '/en/components/avatar' },
       { text: 'Card', link: '/en/components/card' },
+      { text: 'Collapsible', link: '/en/components/collapsible' },
+      { text: 'Accordion', link: '/en/components/accordion' },
       { text: 'List', link: '/en/components/list' },
       { text: 'Empty', link: '/en/components/empty' },
       { text: 'Tree', link: '/en/components/tree' },
