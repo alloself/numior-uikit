@@ -14,6 +14,34 @@
     "./utilities.css": {
       "@numior/source": "./src/utilities.css",
       "default": "./dist/utilities.css"
+    },
+    "./layout.css": {
+      "@numior/source": "./src/layout.css",
+      "default": "./dist/layout.css"
+    },
+    "./spacing.css": {
+      "@numior/source": "./src/spacing.css",
+      "default": "./dist/spacing.css"
+    },
+    "./sizing.css": {
+      "@numior/source": "./src/sizing.css",
+      "default": "./dist/sizing.css"
+    },
+    "./typography.css": {
+      "@numior/source": "./src/typography.css",
+      "default": "./dist/typography.css"
+    },
+    "./color.css": {
+      "@numior/source": "./src/color.css",
+      "default": "./dist/color.css"
+    },
+    "./shape.css": {
+      "@numior/source": "./src/shape.css",
+      "default": "./dist/shape.css"
+    },
+    "./prose.css": {
+      "@numior/source": "./src/prose.css",
+      "default": "./dist/prose.css"
     }
   },
   "scripts": {

@@ -14,6 +14,7 @@ import { TreeSection } from './tree';
 import { UploadSection } from './upload';
 import { WizardSection } from './wizard';
 import { LayoutSection } from './layout';
+import { TypographySection } from './typography';
 import {
   isBoolean,
   isNumber,
@@ -155,6 +156,7 @@ export class PlaygroundPage {
   };
 
   readonly swatches: { readonly utility: Locator; readonly tailwind: Locator };
+  readonly typography: TypographySection;
   readonly forms: FormsSection;
   readonly signup: SignupSection;
   readonly smartForm: SmartFormSection;
@@ -196,6 +198,7 @@ export class PlaygroundPage {
       tailwind: page.getByTestId('tailwind'),
     };
 
+    this.typography = new TypographySection(page);
     this.forms = new FormsSection(page);
     this.signup = new SignupSection(page);
     this.smartForm = new SmartFormSection(page);

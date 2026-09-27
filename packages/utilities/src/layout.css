@@ -1,0 +1,111 @@
+.nui-block {
+  display: block;
+}
+.nui-inline-block {
+  display: inline-block;
+}
+.nui-flex {
+  display: flex;
+}
+.nui-inline-flex {
+  display: inline-flex;
+}
+.nui-grid {
+  display: grid;
+}
+.nui-hidden {
+  display: none;
+}
+.nui-flex-col {
+  flex-direction: column;
+}
+.nui-wrap {
+  flex-wrap: wrap;
+}
+.nui-grow {
+  flex-grow: 1;
+}
+.nui-shrink-0 {
+  flex-shrink: 0;
+}
+.nui-items-start {
+  align-items: flex-start;
+}
+.nui-items-center {
+  align-items: center;
+}
+.nui-items-end {
+  align-items: flex-end;
+}
+.nui-items-baseline {
+  align-items: baseline;
+}
+.nui-items-stretch {
+  align-items: stretch;
+}
+.nui-justify-start {
+  justify-content: flex-start;
+}
+.nui-justify-center {
+  justify-content: center;
+}
+.nui-justify-end {
+  justify-content: flex-end;
+}
+.nui-justify-between {
+  justify-content: space-between;
+}
+.nui-self-start {
+  align-self: flex-start;
+}
+.nui-self-center {
+  align-self: center;
+}
+.nui-self-end {
+  align-self: flex-end;
+}
+.nui-gap-0 {
+  gap: 0;
+}
+.nui-gap-1 {
+  gap: var(--nui-space-1);
+}
+.nui-gap-2 {
+  gap: var(--nui-space-2);
+}
+.nui-gap-3 {
+  gap: var(--nui-space-3);
+}
+.nui-gap-4 {
+  gap: var(--nui-space-4);
+}
+.nui-gap-5 {
+  gap: var(--nui-space-5);
+}
+.nui-gap-6 {
+  gap: var(--nui-space-6);
+}
+.nui-gap-8 {
+  gap: var(--nui-space-8);
+}
+.nui-grid-auto {
+  --nui-grid-min: 16rem;
+
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(var(--nui-grid-min), 100%), 1fr));
+}
+.nui-grid-auto-sm {
+  --nui-grid-min: 12rem;
+}
+.nui-grid-auto-lg {
+  --nui-grid-min: 20rem;
+}
+.nui-relative {
+  position: relative;
+}
+.nui-overflow-hidden {
+  overflow: hidden;
+}
+.nui-overflow-auto {
+  overflow: auto;
+}

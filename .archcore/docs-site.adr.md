@@ -62,7 +62,14 @@ emerald, teal, rose, orange, amber, slate) — пресет переопреде
 элементе, поэтому работает и на вложенной области. Сборка CSS-пакетов (`scripts/build-css.ts`)
 инлайнит относительные `@import`, как сборка `@numior/vue`.
 
-Далее в волне: модульные утилиты и проза; примитивы `useClipboard`, `useHotkey`,
+Утилиты: `utilities.css` — манифест `@import`, модули `layout` (display, flex, grid,
+`nui-grid-auto` с `--nui-grid-min`), `spacing` (только логические свойства), `sizing`,
+`typography`, `color`, `shape`, `prose` — каждый самодостаточен и экспортируется отдельно.
+`.nui-prose` стилизует элементы без класса вне `.nui-not-prose` через `:where()`, поэтому
+его правила сильнее сбросов страницы (`h2 { … }`) и никогда не сильнее класса компонента;
+модификаторы `--size-sm|lg`, ритм в `em`.
+
+Далее в волне: примитивы `useClipboard`, `useHotkey`,
 `useScrollSpy`, общая цветовая схема; алиасы иконок; `defineSlots` во всех компонентах;
 кнопка-ссылка; NuiSeparator, NuiKbd, NuiCode, NuiToggleGroup, NuiCollapsible/NuiAccordion,
 NuiCommand, NuiToc, NuiSkipLink, NuiSplitter; режимы NuiLayout.
@@ -74,7 +81,8 @@ NuiCommand, NuiToc, NuiSkipLink, NuiSplitter; режимы NuiLayout.
 закрывается выкатом:
 
 - токены: типографика, `--nui-surface-code`/`--nui-syntax-*`, `--nui-radius-base`,
-  `accents.css` (страница «Темы» и справочник токенов).
+  `accents.css` (страница «Темы» и справочник токенов);
+- утилиты: модули и проза (гайд «Утилиты и проза»).
 
 ## Alternatives Considered
 
