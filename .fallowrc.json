@@ -9,7 +9,9 @@
     "scripts/vite-package-assets.ts",
     "scripts/build-css.ts",
     "apps/docs/scripts/check-examples.ts",
-    "apps/docs/examples/**/*.vue"
+    "apps/docs/examples/**/*.vue",
+    "apps/docs/scripts/reference.ts",
+    "apps/docs/api/*.ts"
   ],
   "includeEntryExports": false,
   "ignorePatterns": [
@@ -118,6 +120,7 @@
   "ignoreDependencies": [
     "conventional-changelog-conventionalcommits",
     "@localSearchIndex",
-    "virtual:nui-examples"
+    "virtual:nui-examples",
+    "virtual:nui-reference"
   ]
 }

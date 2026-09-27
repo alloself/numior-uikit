@@ -1,0 +1,121 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { pathToFileURL } from 'node:url';
+import { createChecker } from 'vue-component-meta';
+import { catalogReference } from './catalogs.ts';
+import { parseBlocks, parseTokens } from './css.ts';
+import { exportedDeclarations } from './declarations.ts';
+import { applyDocs, checkDocs } from './docs.ts';
+import { parseIconAliases } from './icons.ts';
+import { componentReference } from './meta.ts';
+import { componentEntries, familyFile, familyStyleImport } from './sources.ts';
+import { parseThemeTokens } from './tokens.ts';
+import type {
+  CatalogReference,
+  ComponentEntry,
+  ComponentReference,
+  DocsMap,
+  ReferenceBundle,
+  ReferenceStyles,
+} from './reference.types.ts';
+
+const PACKAGES = [
+  { name: '@numior/vue', dir: 'packages/vue' },
+  { name: '@numior/forms', dir: 'packages/forms' },
+] as const;
+
+const PRIMITIVES = { name: '@numior/primitives', dir: 'packages/primitives' } as const;
+
+export interface ReferenceBuild {
+  readonly bundle: ReferenceBundle;
+  readonly problems: readonly string[];
+  readonly undocumented: readonly string[];
+}
+
+const stylesOf = (entry: ComponentEntry): ReferenceStyles | undefined => {
+  const file = familyFile(entry, '.css');
+  const importPath = familyStyleImport(entry);
+
+  if (file === undefined || importPath === undefined) {
+    return undefined;
+  }
+  const css = readFileSync(file, 'utf8');
+
+  return { import: importPath, blocks: parseBlocks(css), tokens: parseTokens(css) };
+};
+
+const loadCatalog = async (file: string): Promise<CatalogReference | undefined> =>
+  catalogReference(await import(pathToFileURL(file).href));
+
+interface CollectedComponent {
+  readonly component: ComponentReference;
+  readonly catalog: CatalogReference | undefined;
+  readonly problems: readonly string[];
+}
+
+const collectComponent = async (
+  checker: ReturnType<typeof createChecker>,
+  entry: ComponentEntry,
+  docs: DocsMap,
+): Promise<CollectedComponent> => {
+  const messagesFile = familyFile(entry, '.messages.ts');
+  const catalog = messagesFile === undefined ? undefined : await loadCatalog(messagesFile);
+
+  const component = componentReference(
+    entry,
+    checker.getComponentMeta(entry.file),
+    stylesOf(entry),
+    catalog?.namespace,
+  );
+
+  const componentDocs = docs[entry.name];
+
+  return {
+    component: applyDocs(component, componentDocs),
+    catalog,
+    problems: componentDocs === undefined ? [] : checkDocs(component, componentDocs),
+  };
+};
+
+const allEntries = (root: string): ComponentEntry[] =>
+  PACKAGES.flatMap((pkg) => componentEntries(join(root, pkg.dir, 'src/index.ts'), pkg.name));
+
+export const buildReference = async (root: string, docs: DocsMap): Promise<ReferenceBuild> => {
+  const checker = createChecker(join(root, 'tsconfig.json'), {
+    forceUseTs: true,
+    printer: { newLine: 1 },
+    schema: { ignore: ['HTMLElement', 'Element'] },
+  });
+
+  const components: Record<string, ComponentReference> = {};
+  const catalogs: Record<string, CatalogReference> = {};
+  const problems: string[] = [];
+
+  for (const entry of allEntries(root)) {
+    const collected = await collectComponent(checker, entry, docs);
+
+    components[entry.name] = collected.component;
+    problems.push(...collected.problems);
+    if (collected.catalog !== undefined) {
+      catalogs[collected.catalog.namespace] = collected.catalog;
+    }
+  }
+  const componentNames = new Set(Object.keys(components));
+
+  return {
+    bundle: {
+      version: 1,
+      components,
+      catalogs,
+      declarations: [PRIMITIVES, ...PACKAGES].flatMap((pkg) =>
+        exportedDeclarations(join(root, pkg.dir, 'dist/index.d.ts'), pkg.name, componentNames),
+      ),
+      tokens: parseThemeTokens(readFileSync(join(root, 'packages/tokens/src/theme.css'), 'utf8')),
+      icons: parseIconAliases(
+        readFileSync(join(root, 'packages/vue/src/icon/default-icons.ts'), 'utf8'),
+      ),
+    },
+    problems,
+    undocumented: Object.keys(components).filter((name) => docs[name] === undefined),
+  };
+};

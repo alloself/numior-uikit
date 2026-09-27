@@ -66,15 +66,7 @@ scan in the playground; that does not replace a manual review.
 
 ## API
 
-| Prop       | Type                                                                                   | Default     |
-| ---------- | -------------------------------------------------------------------------------------- | ----------- |
-| `variant`  | `'solid' \| 'soft' \| 'outline' \| 'ghost' \| 'link'`                                  | `'solid'`   |
-| `tone`     | `'primary' \| 'secondary' \| 'success' \| 'warning' \| 'error' \| 'info' \| 'neutral'` | `'primary'` |
-| `size`     | `'sm' \| 'md' \| 'lg'`                                                                 | `'md'`      |
-| `type`     | `'button' \| 'submit' \| 'reset'`                                                      | `'button'`  |
-| `disabled` | `boolean`                                                                              | `false`     |
-| `loading`  | `boolean`                                                                              | `false`     |
-| `iconOnly` | `boolean`                                                                              | auto        |
+<ApiReference name="NuiButton" />
 
 The default slot is the button content. Native attributes, classes and event listeners
 reach the `<button>` element. Styling follows BEM: block `nui-button`, elements

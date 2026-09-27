@@ -151,6 +151,10 @@ var(--nui-focus-ring-offset)`. Disabled: `opacity: var(--nui-disabled-opacity)`.
   source and Shiki tokens, and `pnpm docs:check` fails on a missing counterpart, a
   structural RU/EN difference or a `<style>` block. Add both sidebar entries in
   `apps/docs/.vitepress/config.ts`. Never write `vp-raw` demos or `<style>` in the docs.
+  API tables are generated: pages embed `<ApiReference name="Nui<Name>" />` (or `:names` for
+  a family) and RU/EN descriptions of every prop, model, event, slot and exposed member plus
+  the keyboard table live in `apps/docs/api/<name>.ts` as a `DocsMap`; `pnpm docs:check`
+  fails on a missing or stale description.
 - Tests: follow the `nui-testing` skill (driver, unit spec, SSR scenario, e2e via page object).
 - Record architecture changes in `.archcore` and run `pnpm check`, then `pnpm test:e2e`
   (Docker image `mcr.microsoft.com/playwright:v1.63.0-noble` on this host).

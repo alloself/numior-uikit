@@ -204,6 +204,32 @@ Markdown-правила (`.vitepress/markdown`): fence → `<NuiCode>` с ток
 Fallow как entry, `en/**` исключён из поиска дублей. Правило для новых компонентов и
 скилл `nui-component` ссылаются на этот формат.
 
+### Справочный бандл (этап 2, шаг 3)
+
+`pnpm docs:reference` (`apps/docs/scripts/reference.ts` → `.vitepress/reference/build.ts`)
+собирает `apps/docs/.reference/bundle.json` (в `.gitignore`, схема `version: 1` в
+`reference.types.ts`): компоненты `@numior/vue` и `@numior/forms` по экспортам `index.ts`
+через `vue-component-meta` (пропы с типом без хвоста `| undefined`, `kind`
+boolean/enum/string/number/function/other и литералы enum, `required`, `default`;
+`update:x` + проп `x` сворачиваются в модель `v-model[:x]`; события, слоты с типами
+слот-пропов, `exposed`), стили семейства (`@numior/vue/styles/<семейство>.css`, BEM-блоки с
+частями и модификаторами и читаемые `--nui-*` из CSS), пространство словаря семейства и
+сами каталоги (`*.messages.ts` импортируются напрямую, функции — как исходник), объявления
+трёх пакетов из `dist/index.d.ts` через TypeScript API (`kind` function/value/type и
+сигнатура), токены из `theme.css` (`light-dark()` разбирается на светлое и тёмное) и
+алиасы иконок из `default-icons.ts`. `vue-component-meta` выводит слоты из шаблона, поэтому
+поголовный `defineSlots` из плана не нужен: он остаётся способом типизировать слот-пропы.
+Описания RU/EN и таблицы клавиш живут в `apps/docs/api/<семейство>.ts` (`DocsMap`: имя
+компонента → `props`/`models`/`events`/`slots`/`exposed`/`keyboard`); `pnpm docs:check`
+(`reference.ts --check`) падает на неполном или устаревшем описании у компонента с файлом
+описаний, а компоненты без файла считает задолженностью выката (этап 4). Vite-плагин
+`docsReference` отдаёт `virtual:nui-reference` (ленивые импорты компонентов и каталогов) и
+срезы `virtual:nui-reference/<component|catalog>/<имя>`, `tokens`, `icons`, `declarations`;
+`<ApiReference name="NuiButton" />` (или `:names`) рендерит через `Suspense` таблицы
+свойств, моделей, событий, слотов, exposed на NuiTable, клавиши на NuiKbd, импорт стилей в
+NuiCode и части/модификаторы в NuiBadge; описания берутся по локали страницы. Сборка доки
+и `docs:dev` запускают генерацию первыми.
+
 ### Временное исключение по документации
 
 Пока новая дока не построена, страницы компонентов и токенов этой волны не пишутся в старом

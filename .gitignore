@@ -6,6 +6,7 @@ coverage/
 .cache/
 *.tsbuildinfo
 apps/docs/.vitepress/cache/
+apps/docs/.reference/
 playwright-report/
 test-results/
 .release/

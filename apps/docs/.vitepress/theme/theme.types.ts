@@ -1,5 +1,11 @@
 import type { Component } from 'vue';
 import type { ExampleFile, ExampleLocale } from '../examples/example.types';
+import type {
+  ComponentReference,
+  LocalizedText,
+  ReferenceKey,
+  ReferenceStyles,
+} from '../reference/reference.types';
 
 export interface DocsNavItem {
   readonly text: string;
@@ -46,6 +52,28 @@ export interface DocsTexts {
   readonly copyCode: string;
   readonly copied: string;
   readonly exampleFiles: string;
+  readonly apiProps: string;
+  readonly apiModels: string;
+  readonly apiEvents: string;
+  readonly apiSlots: string;
+  readonly apiExposed: string;
+  readonly apiKeyboard: string;
+  readonly apiStyles: string;
+  readonly apiTexts: string;
+  readonly apiName: string;
+  readonly apiType: string;
+  readonly apiDefault: string;
+  readonly apiDescription: string;
+  readonly apiPayload: string;
+  readonly apiSlotProps: string;
+  readonly apiKeys: string;
+  readonly apiAction: string;
+  readonly apiRequired: string;
+  readonly apiParts: string;
+  readonly apiModifiers: string;
+  readonly apiTokens: string;
+  readonly apiKey: string;
+  readonly apiText: string;
 }
 
 export interface DocsThemeConfig {
@@ -68,5 +96,42 @@ export interface ExampleViewProps {
 export interface ExampleFrameProps {
   component: Component;
   files: readonly ExampleFile[];
+  texts: DocsTexts;
+}
+
+export interface ApiReferenceProps {
+  name?: string | undefined;
+  names?: readonly string[] | undefined;
+}
+
+export interface ApiReferenceViewProps {
+  names: readonly string[];
+  locale: ExampleLocale;
+  texts: DocsTexts;
+}
+
+export interface ApiComponentProps {
+  component: ComponentReference;
+  locale: ExampleLocale;
+  texts: DocsTexts;
+  heading: boolean;
+}
+
+export interface ApiRow {
+  readonly name: string;
+  readonly type: string;
+  readonly default?: string | undefined;
+  readonly required?: boolean | undefined;
+  readonly description: LocalizedText | undefined;
+}
+
+export interface ApiKeyboardProps {
+  keys: readonly ReferenceKey[];
+  locale: ExampleLocale;
+  texts: DocsTexts;
+}
+
+export interface ApiStylesProps {
+  styles: ReferenceStyles;
   texts: DocsTexts;
 }

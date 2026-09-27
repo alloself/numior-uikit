@@ -5,6 +5,7 @@ import { colorSchemeScript } from '@numior/primitives';
 import { CODE_LANGUAGES, docsMarkdown } from './markdown';
 import { headingPermalink } from './markdown/anchors';
 import { docsExamples } from './examples/plugin';
+import { docsReference } from './reference/plugin';
 import { en, ru } from './theme/texts';
 import type { DocsSidebarGroup, DocsThemeConfig } from './theme/theme.types';
 
@@ -200,7 +201,10 @@ export default defineConfigWithTheme<DocsThemeConfig>({
   },
   vite: {
     resolve: process.env.NODE_ENV === 'production' ? {} : { conditions: ['@numior/source'] },
-    plugins: [docsExamples(fileURLToPath(new URL('../examples', import.meta.url)), highlighter)],
+    plugins: [
+      docsExamples(fileURLToPath(new URL('../examples', import.meta.url)), highlighter),
+      docsReference(fileURLToPath(new URL('../.reference/bundle.json', import.meta.url))),
+    ],
   },
   themeConfig: { nav: [], sidebar: [], texts: ru, search: { provider: 'local' } },
   locales: {

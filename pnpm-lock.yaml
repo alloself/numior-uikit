@@ -123,9 +123,15 @@ importers:
       shiki:
         specifier: 4.4.3
         version: 4.4.3
+      typescript:
+        specifier: 5.9.3
+        version: 5.9.3
       vitepress:
         specifier: 1.6.4
         version: 1.6.4(@algolia/client-search@5.59.0)(@types/node@24.13.6)(lightningcss@1.33.0)(postcss@8.5.28)(search-insights@2.17.3)(typescript@5.9.3)
+      vue-component-meta:
+        specifier: 3.3.11
+        version: 3.3.11(typescript@5.9.3)
 
   apps/playground:
     dependencies:
@@ -3828,6 +3834,14 @@ packages:
   vscode-uri@3.2.0:
     resolution: {integrity: sha512-m2gXo3bn0G1kT9InzMf07fTbqMbGtyckj3bH5ktLO+1Ssv+yiATZ4dhwaQv9UZWxJh6E9IFGnQyjgWVDWVBDrg==}
 
+  vue-component-meta@3.3.11:
+    resolution: {integrity: sha512-fskQZaIFOifwB4x+/J24795yvezOJ1TKaqn97/4PHybyvXpDNdcKn3oTcPrw6HnNoZWe343A+TiCFOcFv1/SuQ==}
+    peerDependencies:
+      typescript: 5.9.3
+    peerDependenciesMeta:
+      typescript:
+        optional: true
+
   vue-component-type-helpers@3.3.11:
     resolution: {integrity: sha512-LwcxzeliO9fkQcpJG0PoX8X5kmAhKmH9wkpDLxNabwzkQ9Zeib2YVHwFV4pcWmMLfXVfjr/dSV+DaJ3cIPgSNA==}
 
@@ -7268,6 +7282,14 @@ snapshots:
       - msw
 
   vscode-uri@3.2.0: {}
+
+  vue-component-meta@3.3.11(typescript@5.9.3):
+    dependencies:
+      '@volar/typescript': 2.4.28
+      '@vue/language-core': 3.3.11
+      path-browserify: 1.0.1
+    optionalDependencies:
+      typescript: 5.9.3
 
   vue-component-type-helpers@3.3.11: {}
 

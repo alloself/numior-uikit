@@ -65,15 +65,7 @@
 
 ## API
 
-| Prop       | Тип                                                                                    | По умолчанию |
-| ---------- | -------------------------------------------------------------------------------------- | ------------ |
-| `variant`  | `'solid' \| 'soft' \| 'outline' \| 'ghost' \| 'link'`                                  | `'solid'`    |
-| `tone`     | `'primary' \| 'secondary' \| 'success' \| 'warning' \| 'error' \| 'info' \| 'neutral'` | `'primary'`  |
-| `size`     | `'sm' \| 'md' \| 'lg'`                                                                 | `'md'`       |
-| `type`     | `'button' \| 'submit' \| 'reset'`                                                      | `'button'`   |
-| `disabled` | `boolean`                                                                              | `false`      |
-| `loading`  | `boolean`                                                                              | `false`      |
-| `iconOnly` | `boolean`                                                                              | авто         |
+<ApiReference name="NuiButton" />
 
 Слот по умолчанию — содержимое кнопки. Нативные атрибуты, классы и обработчики
 событий передаются элементу `<button>`. Оформление построено на BEM: блок `nui-button`,

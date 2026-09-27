@@ -11,3 +11,20 @@ declare module 'virtual:nui-examples' {
 
   export default registry;
 }
+
+declare module 'virtual:nui-reference' {
+  import type { CatalogReference, ComponentReference } from '../reference/reference.types';
+
+  interface ReferenceRegistry {
+    readonly components: Readonly<
+      Record<string, () => Promise<{ readonly default: ComponentReference | null }>>
+    >;
+    readonly catalogs: Readonly<
+      Record<string, () => Promise<{ readonly default: CatalogReference | null }>>
+    >;
+  }
+
+  const registry: ReferenceRegistry;
+
+  export default registry;
+}

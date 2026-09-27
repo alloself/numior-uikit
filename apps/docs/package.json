@@ -7,7 +7,8 @@
     "dev": "vitepress dev",
     "build": "vitepress build",
     "preview": "vitepress preview",
-    "check": "node scripts/check-examples.ts"
+    "check": "node scripts/check-examples.ts && node scripts/reference.ts --check",
+    "reference": "node scripts/reference.ts"
   },
   "dependencies": {
     "@numior/forms": "workspace:*",
@@ -23,6 +24,8 @@
     "@vue/compiler-sfc": "3.5.43",
     "@vue/test-utils": "2.5.1",
     "shiki": "4.4.3",
-    "vitepress": "1.6.4"
+    "typescript": "5.9.3",
+    "vitepress": "1.6.4",
+    "vue-component-meta": "3.3.11"
   }
 }
