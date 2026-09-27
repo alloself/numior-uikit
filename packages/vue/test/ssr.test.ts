@@ -45,6 +45,7 @@ import {
   NuiCommand,
   NuiToc,
   NuiSkipLink,
+  NuiSplitter,
   NuiSwitch,
   NuiTable,
   NuiTabs,
@@ -161,6 +162,15 @@ const scenarios: Scenario[] = [
   { name: 'NuiSeparator', render: () => h(NuiSeparator, { label: 'or' }) },
   { name: 'NuiKbd', render: () => h(NuiKbd, { keys: 'mod+k' }) },
   { name: 'NuiSkipLink', render: () => h(NuiSkipLink, { target: 'main' }) },
+  {
+    name: 'NuiSplitter',
+    render: () =>
+      h(
+        NuiSplitter,
+        { id: 'panes', ratio: 0.4 },
+        { start: () => h('p', 'Preview'), end: () => h('p', 'Code') },
+      ),
+  },
   {
     name: 'NuiToc',
     render: () =>

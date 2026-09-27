@@ -17,6 +17,7 @@ import { paginationMessages } from '../src/pagination/pagination.messages';
 import { selectMessages } from '../src/select/select.messages';
 import { sidebarMessages } from '../src/sidebar/sidebar.messages';
 import { skipLinkMessages } from '../src/skip-link/skip-link.messages';
+import { splitterMessages } from '../src/splitter/splitter.messages';
 import { stepperMessages } from '../src/stepper/stepper.messages';
 import { tableMessages } from '../src/table/table.messages';
 import { timeFieldMessages } from '../src/time-field/time-field.messages';
@@ -41,6 +42,7 @@ const catalogs: { readonly [N in keyof NuiVueMessages]: NuiMessageCatalog<N> } =
   select: selectMessages,
   sidebar: sidebarMessages,
   skipLink: skipLinkMessages,
+  splitter: splitterMessages,
   stepper: stepperMessages,
   table: tableMessages,
   timeField: timeFieldMessages,

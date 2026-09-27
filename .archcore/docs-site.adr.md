@@ -133,6 +133,12 @@ NuiList, потому что оглавление — ссылки-якоря б
 фиксированная ссылка, видимая только в фокусе; по активации переносит фокус на цель
 (`tabindex="-1"` при необходимости) и обновляет hash без прокрутки истории.
 
+NuiSplitter: две панели со слотами `start`/`end`, разделитель `role="separator"` с
+`aria-valuenow` в процентах и `aria-controls` первой панели; доля первой панели — модель
+`ratio` в границах `min`/`max`, пишется в `--_ratio` и раскладывается через `flex-basis`;
+перетаскивание с захватом указателя (учитывает RTL), стрелки шагают на `step`, Home/End —
+к границам; ориентация `horizontal`/`vertical`. Нужен рамке блоков в доке.
+
 Далее в волне: `defineSlots` во всех компонентах;
 кнопка-ссылка; NuiSeparator, NuiKbd, NuiCode, NuiToggleGroup, NuiCollapsible/NuiAccordion,
 NuiCommand, NuiToc, NuiSkipLink, NuiSplitter; режимы NuiLayout.
@@ -155,7 +161,8 @@ NuiCommand, NuiToc, NuiSkipLink, NuiSplitter; режимы NuiLayout.
 - NuiCollapsible и NuiAccordion (страницы «Сворачиваемый блок» и «Аккордеон»);
 - NuiCommand и NuiCommandDialog (страница «Палитра команд»), `placement`/`bare` у диалога,
   `shortcut` у записей списка;
-- NuiToc и NuiSkipLink (страницы «Оглавление» и «Ссылка к содержимому»).
+- NuiToc и NuiSkipLink (страницы «Оглавление» и «Ссылка к содержимому»);
+- NuiSplitter (страница «Разделитель панелей»).
 
 ## Alternatives Considered
 

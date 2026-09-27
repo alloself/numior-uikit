@@ -179,7 +179,7 @@ export class PlaygroundPage {
   constructor(readonly page: Page) {
     this.workspace = page.getByRole('main');
     this.resolvedScheme = page.getByTestId('resolved-scheme');
-    this.clickCount = page.getByRole('status');
+    this.clickCount = page.getByRole('status').filter({ hasText: 'Нажатий' });
 
     this.settings = {
       theme: page.getByTestId('theme'),

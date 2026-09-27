@@ -100,6 +100,20 @@
           @select="lastHeading = $event"
         />
       </div>
+      <NuiSplitter
+        v-model:ratio="ratio"
+        :min="0.2"
+        :max="0.8"
+        class="splitter-demo"
+        data-testid="splitter"
+      >
+        <template #start>
+          <div class="splitter-demo__pane" data-testid="splitter-start">Превью</div>
+        </template>
+        <template #end>
+          <div class="splitter-demo__pane">Код</div>
+        </template>
+      </NuiSplitter>
       <NuiCollapsible label="Подробности установки" variant="card" data-testid="collapsible">
         <p>Пакеты приватные до полного релиза 1.0; установка идёт из workspace.</p>
       </NuiCollapsible>
@@ -129,6 +143,7 @@ import {
   NuiCommandDialog,
   NuiKbd,
   NuiSeparator,
+  NuiSplitter,
   NuiToc,
   NuiToggleGroup,
   type NuiCodeLine,
@@ -137,6 +152,7 @@ import {
   type NuiTocItem,
 } from '@numior/vue';
 
+const ratio = ref(0.5);
 const tocRoot = useTemplateRef<HTMLElement>('toc-article');
 const lastHeading = ref('');
 

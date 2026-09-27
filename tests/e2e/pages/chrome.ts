@@ -23,6 +23,9 @@ export class ChromeSection {
   readonly commandInput: Locator;
   readonly toc: Locator;
   readonly tocArticle: Locator;
+  readonly splitter: Locator;
+  readonly splitterDivider: Locator;
+  readonly splitterStart: Locator;
 
   constructor(readonly page: Page) {
     this.root = page.locator('section[aria-labelledby="chrome-title"]');
@@ -47,6 +50,31 @@ export class ChromeSection {
     this.commandInput = this.commandDialog.locator('.nui-command__input');
     this.toc = page.getByTestId('toc');
     this.tocArticle = page.getByTestId('toc-article');
+    this.splitter = page.getByTestId('splitter');
+    this.splitterDivider = this.splitter.locator('.nui-splitter__divider');
+    this.splitterStart = page.getByTestId('splitter-start');
+  }
+
+  async dragDividerBy(offset: number): Promise<void> {
+    const box = await this.splitterDivider.boundingBox();
+
+    if (!box) {
+      throw new Error('divider is not visible');
+    }
+    const x = box.x + box.width / 2;
+    const y = box.y + box.height / 2;
+
+    await this.page.mouse.move(x, y);
+    await this.page.mouse.down();
+    await this.page.mouse.move(x + offset / 2, y);
+    await this.page.mouse.move(x + offset, y);
+    await this.page.mouse.up();
+  }
+
+  splitterValue(): Promise<number> {
+    return this.splitterDivider.evaluate((element) =>
+      Number(element.getAttribute('aria-valuenow')),
+    );
   }
 
   tocLinks(): Locator {

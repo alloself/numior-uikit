@@ -62,6 +62,23 @@ describe('useScrollSpy', () => {
     expect(second?.disconnected).toBe(true);
   });
 
+  it('activates the last heading once the scroller reaches its end', () => {
+    installIntersectionObserver();
+    headings(['a', 'b', 'c']);
+    const root = document.createElement('div');
+    document.body.append(root);
+    Object.defineProperty(root, 'scrollHeight', { value: 300 });
+    Object.defineProperty(root, 'clientHeight', { value: 100 });
+    root.append(...document.querySelectorAll('h2'));
+    const active = captureSetup(() => useScrollSpy(['a', 'b', 'c'], { root })).value;
+    root.scrollTop = 120;
+    root.dispatchEvent(new Event('scroll'));
+    expect(active.value).toBeUndefined();
+    root.scrollTop = 200;
+    root.dispatchEvent(new Event('scroll'));
+    expect(active.value).toBe('c');
+  });
+
   it('stays undefined without an observer', () => {
     vi.stubGlobal('IntersectionObserver', undefined);
     headings(['a']);

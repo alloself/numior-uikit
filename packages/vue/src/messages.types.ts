@@ -14,6 +14,7 @@ import type { NuiPaginationMessages } from './pagination/pagination.messages';
 import type { NuiSelectMessages } from './select/select.messages';
 import type { NuiSidebarMessages } from './sidebar/sidebar.messages';
 import type { NuiSkipLinkMessages } from './skip-link/skip-link.messages';
+import type { NuiSplitterMessages } from './splitter/splitter.messages';
 import type { NuiStepperMessages } from './stepper/stepper.messages';
 import type { NuiTableMessages } from './table/table.messages';
 import type { NuiTimeFieldMessages } from './time-field/time-field.messages';
@@ -38,6 +39,7 @@ export interface NuiVueMessages {
   readonly select: NuiSelectMessages;
   readonly sidebar: NuiSidebarMessages;
   readonly skipLink: NuiSkipLinkMessages;
+  readonly splitter: NuiSplitterMessages;
   readonly stepper: NuiStepperMessages;
   readonly table: NuiTableMessages;
   readonly timeField: NuiTimeFieldMessages;

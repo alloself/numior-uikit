@@ -297,3 +297,15 @@ footer {
 .toc-demo__article :where(h2, h3) {
   scroll-margin-block-start: 0;
 }
+.splitter-demo {
+  block-size: 8rem;
+  border: 1px solid var(--nui-border);
+  border-radius: var(--nui-radius);
+}
+.splitter-demo__pane {
+  display: grid;
+  place-items: center;
+  block-size: 100%;
+  color: var(--nui-text-muted);
+  font-size: var(--nui-font-size-sm);
+}

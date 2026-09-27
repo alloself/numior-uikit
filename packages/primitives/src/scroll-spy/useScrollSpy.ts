@@ -20,6 +20,15 @@ const idsOf = (entries: readonly IntersectionObserverEntry[]): string[] =>
 
 const bandTopOf = (entry: IntersectionObserverEntry): number => entry.rootBounds?.top ?? 0;
 
+const atBottom = (root: Element | null): boolean => {
+  if (root === null) {
+    const page = document.documentElement;
+
+    return window.innerHeight + window.scrollY >= page.scrollHeight - 1;
+  }
+  return root.scrollTop + root.clientHeight >= root.scrollHeight - 1;
+};
+
 const elementsIn = (scope: ParentNode, order: readonly string[]): Element[] => {
   const wanted = new Set(order);
 
@@ -33,10 +42,13 @@ export const useScrollSpy = (
   const activeId = ref<string>();
   const visible = new Set<string>();
   let observer: IntersectionObserver | undefined;
+  let unscroll: (() => void) | undefined;
 
   const disconnect = (): void => {
     observer?.disconnect();
     observer = undefined;
+    unscroll?.();
+    unscroll = undefined;
     visible.clear();
   };
 
@@ -91,6 +103,18 @@ export const useScrollSpy = (
     for (const element of elementsIn(root ?? document, order)) {
       observer.observe(element);
     }
+    const scroller: EventTarget = root ?? window;
+
+    const onScroll = (): void => {
+      const last = order.at(-1);
+
+      if (last !== undefined && atBottom(root)) {
+        activeId.value = last;
+      }
+    };
+
+    scroller.addEventListener('scroll', onScroll, { passive: true });
+    unscroll = () => scroller.removeEventListener('scroll', onScroll);
   };
 
   onMounted(() => {

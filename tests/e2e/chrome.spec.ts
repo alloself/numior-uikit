@@ -194,3 +194,30 @@ test('the skip link appears on focus and moves focus to its target', async ({ pa
   await page.keyboard.press('Enter');
   await expect(page.locator('#forms-title')).toBeFocused();
 });
+
+test('the splitter resizes its first pane by pointer and keyboard within its bounds', async ({
+  page,
+  isMobile,
+}) => {
+  const playground = new PlaygroundPage(page);
+  await playground.open();
+  const { chrome } = playground;
+  await chrome.splitter.scrollIntoViewIfNeeded();
+  await expect(chrome.splitterDivider).toHaveRole('separator');
+  expect(await chrome.splitterValue()).toBe(50);
+  const width = (await chrome.splitter.boundingBox())?.width ?? 0;
+  const before = (await chrome.splitterStart.boundingBox())?.width ?? 0;
+  if (!isMobile) {
+    await chrome.dragDividerBy(width / 5);
+    await expect.poll(() => chrome.splitterValue()).toBeGreaterThan(65);
+    const after = (await chrome.splitterStart.boundingBox())?.width ?? 0;
+    expect(after).toBeGreaterThan(before + width / 8);
+  }
+  await chrome.splitterDivider.focus();
+  await page.keyboard.press('Home');
+  await expect.poll(() => chrome.splitterValue()).toBe(20);
+  await page.keyboard.press('ArrowRight');
+  await expect.poll(() => chrome.splitterValue()).toBe(25);
+  await page.keyboard.press('End');
+  await expect.poll(() => chrome.splitterValue()).toBe(80);
+});

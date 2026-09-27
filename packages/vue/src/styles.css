@@ -10,6 +10,7 @@
 @import './command/command.css';
 @import './toc/toc.css';
 @import './skip-link/skip-link.css';
+@import './splitter/splitter.css';
 @import './field/field.css';
 @import './input/input.css';
 @import './textarea/textarea.css';
