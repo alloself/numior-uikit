@@ -1,4 +1,10 @@
-import { computed, toValue, type MaybeRefOrGetter, type Plugin } from 'vue';
+import { computed, provide, toValue, type MaybeRefOrGetter, type Plugin } from 'vue';
+import {
+  COLOR_SCHEME_KEY,
+  createColorSchemeControl,
+  useColorScheme,
+  type ColorSchemeOptions,
+} from '../color-scheme/useColorScheme';
 import { DIRECTION_KEY, provideDirection, type Direction } from '../direction/direction-context';
 import { ICONS_KEY, provideIcons, type IconRegistry } from '../icons/icon-registry';
 import { DEFAULT_LOCALE, LOCALE_KEY, provideLocale } from '../locale/locale-context';
@@ -19,6 +25,7 @@ export interface NuiConfigOptions {
   readonly dir?: MaybeRefOrGetter<Direction | undefined> | undefined;
   readonly messages?: MaybeRefOrGetter<NuiLocaleMessages | undefined> | undefined;
   readonly translate?: NuiTranslate | undefined;
+  readonly colorScheme?: ColorSchemeOptions | undefined;
 }
 
 const hasMessages = (options: NuiConfigOptions): boolean =>
@@ -39,6 +46,9 @@ export const provideNuiConfig = (options: NuiConfigOptions): void => {
   }
   if (hasMessages(options)) {
     provideMessages(options);
+  }
+  if (options.colorScheme !== undefined) {
+    provide(COLOR_SCHEME_KEY, useColorScheme(options.colorScheme));
   }
 };
 
@@ -66,6 +76,9 @@ export const createNuiConfig = (options: NuiConfigOptions): Plugin => ({
     }
     if (hasMessages(options)) {
       app.provide(MESSAGES_KEY, createMessageLayers(options));
+    }
+    if (options.colorScheme !== undefined) {
+      app.provide(COLOR_SCHEME_KEY, createColorSchemeControl(options.colorScheme));
     }
   },
 });

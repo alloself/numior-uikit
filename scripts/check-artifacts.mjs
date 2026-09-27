@@ -78,6 +78,10 @@ await importBuild('primitives', [
   'useUploadQueue',
   'useMediaQuery',
   'useBlockSizeTween',
+  'useClipboard',
+  'useHotkey',
+  'useScrollSpy',
+  'colorSchemeScript',
 ]);
 
 const code = await importBuild('vue', [

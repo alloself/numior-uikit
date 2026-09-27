@@ -69,8 +69,18 @@ emerald, teal, rose, orange, amber, slate) — пресет переопреде
 его правила сильнее сбросов страницы (`h2 { … }`) и никогда не сильнее класса компонента;
 модификаторы `--size-sm|lg`, ритм в `em`.
 
-Далее в волне: примитивы `useClipboard`, `useHotkey`,
-`useScrollSpy`, общая цветовая схема; алиасы иконок; `defineSlots` во всех компонентах;
+Примитивы: `useClipboard` (`supported` false-first, `copied` на `copiedDuration`),
+`useHotkey('mod+k', handler, { enabled, target, inEditable })` — `mod` принимает Ctrl или Meta,
+остальные модификаторы совпадают точно, редактируемые цели пропускаются, каркас переводит
+на него Ctrl/Cmd+B; `useScrollSpy(ids, { root, rootMargin })` на IntersectionObserver —
+активен первый видимый заголовок в полосе (по умолчанию верхние 40 % области), а когда
+видимых нет, последний ушедший вверх; на сервере `undefined`. Цветовая схема:
+`createNuiConfig({ colorScheme })` создаёт один общий контрол на приложение
+(`useColorScheme()` без опций возвращает его, с опциями — локальный на область), `cycle()`
+идёт light → dark → system, `colorSchemeScript(storageKey)` — строка инлайн-скрипта для
+`<head>`, ставящая `data-nui-theme` из хранилища до первой отрисовки.
+
+Далее в волне: алиасы иконок; `defineSlots` во всех компонентах;
 кнопка-ссылка; NuiSeparator, NuiKbd, NuiCode, NuiToggleGroup, NuiCollapsible/NuiAccordion,
 NuiCommand, NuiToc, NuiSkipLink, NuiSplitter; режимы NuiLayout.
 
@@ -82,7 +92,9 @@ NuiCommand, NuiToc, NuiSkipLink, NuiSplitter; режимы NuiLayout.
 
 - токены: типографика, `--nui-surface-code`/`--nui-syntax-*`, `--nui-radius-base`,
   `accents.css` (страница «Темы» и справочник токенов);
-- утилиты: модули и проза (гайд «Утилиты и проза»).
+- утилиты: модули и проза (гайд «Утилиты и проза»);
+- примитивы `useClipboard`, `useHotkey`, `useScrollSpy`, общая цветовая схема и
+  `colorSchemeScript` (раздел «Композаблы», гайд «Темы»).
 
 ## Alternatives Considered
 

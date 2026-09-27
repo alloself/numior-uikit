@@ -13,20 +13,10 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, onScopeDispose, watch } from 'vue';
-import { useControlId, useMediaQuery } from '@numior/primitives';
+import { watch } from 'vue';
+import { useControlId, useHotkey, useMediaQuery } from '@numior/primitives';
 import { provideLayout } from './layout-context';
 import type { NuiLayoutProps } from './layout.types';
-
-const isEditable = (target: EventTarget | null): boolean =>
-  target instanceof HTMLElement &&
-  (target.isContentEditable ||
-    target instanceof HTMLInputElement ||
-    target instanceof HTMLTextAreaElement ||
-    target instanceof HTMLSelectElement);
-
-const isShortcut = (event: KeyboardEvent): boolean =>
-  (event.ctrlKey || event.metaKey) && !event.altKey && event.key.toLowerCase() === 'b';
 
 const {
   id,
@@ -51,13 +41,6 @@ const toggle = (): void => {
   }
 };
 
-const onKeydown = (event: KeyboardEvent): void => {
-  if (shortcut && isShortcut(event) && !isEditable(event.target)) {
-    event.preventDefault();
-    toggle();
-  }
-};
-
 watch(mobile, (isMobile) => {
   if (!isMobile) {
     mobileOpen.value = false;
@@ -65,9 +48,5 @@ watch(mobile, (isMobile) => {
 });
 
 provideLayout({ open, mobileOpen, mobile, sidebarId, toggle });
-
-onMounted(() => {
-  window.addEventListener('keydown', onKeydown);
-  onScopeDispose(() => window.removeEventListener('keydown', onKeydown));
-});
+useHotkey('mod+b', toggle, { enabled: () => shortcut });
 </script>

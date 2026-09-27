@@ -167,13 +167,24 @@ export type {
 } from './popover/usePopover';
 export { useDialog } from './dialog/useDialog';
 export type { DialogAttrs, DialogControl, DialogOptions } from './dialog/useDialog';
-export { useColorScheme } from './color-scheme/useColorScheme';
+export {
+  COLOR_SCHEME_KEY,
+  colorSchemeScript,
+  createColorSchemeControl,
+  useColorScheme,
+} from './color-scheme/useColorScheme';
 export type {
   ColorScheme,
   ColorSchemeControl,
   ColorSchemeOptions,
   ResolvedColorScheme,
 } from './color-scheme/useColorScheme';
+export { useClipboard } from './clipboard/useClipboard';
+export type { ClipboardControl, ClipboardOptions } from './clipboard/useClipboard';
+export { useHotkey } from './hotkey/useHotkey';
+export type { HotkeyOptions } from './hotkey/useHotkey';
+export { useScrollSpy } from './scroll-spy/useScrollSpy';
+export type { ScrollSpyOptions } from './scroll-spy/useScrollSpy';
 export { useListNavigation } from './list/useListNavigation';
 export type {
   ListFocusMode,

@@ -1,11 +1,14 @@
 import {
   computed,
+  effectScope,
+  inject,
   onMounted,
   onScopeDispose,
   ref,
   toValue,
   watchEffect,
   type ComputedRef,
+  type InjectionKey,
   type MaybeRefOrGetter,
   type Ref,
 } from 'vue';
@@ -26,7 +29,12 @@ export interface ColorSchemeControl {
   readonly systemDark: Readonly<Ref<boolean>>;
   set(next: ColorScheme): void;
   toggle(): void;
+  cycle(): void;
 }
+
+export const COLOR_SCHEME_KEY: InjectionKey<ColorSchemeControl> = Symbol('nui-color-scheme');
+
+const CYCLE: readonly ColorScheme[] = ['light', 'dark', 'system'];
 
 const isColorScheme = (value: unknown): value is ColorScheme =>
   value === 'system' || value === 'light' || value === 'dark';
@@ -54,7 +62,12 @@ const writeStored = (key: string | undefined, value: ColorScheme): void => {
   }
 };
 
-export const useColorScheme = (options: ColorSchemeOptions = {}): ColorSchemeControl => {
+interface ColorSchemeSetup {
+  readonly control: ColorSchemeControl;
+  start(): void;
+}
+
+const createColorScheme = (options: ColorSchemeOptions): ColorSchemeSetup => {
   const scheme = ref<ColorScheme>(options.initial ?? 'system');
   const systemDark = ref(false);
 
@@ -65,7 +78,7 @@ export const useColorScheme = (options: ColorSchemeOptions = {}): ColorSchemeCon
   const scopeElement = (): HTMLElement | null =>
     toValue(options.scope) ?? (typeof document === 'undefined' ? null : document.documentElement);
 
-  onMounted(() => {
+  const start = (): void => {
     const attribute = scopeElement()?.getAttribute('data-nui-theme');
 
     scheme.value =
@@ -87,17 +100,49 @@ export const useColorScheme = (options: ColorSchemeOptions = {}): ColorSchemeCon
       scopeElement()?.setAttribute('data-nui-theme', scheme.value);
       writeStored(options.storageKey, scheme.value);
     });
-  });
+  };
 
   return {
-    scheme,
-    resolved,
-    systemDark,
-    set: (next) => {
-      scheme.value = next;
+    control: {
+      scheme,
+      resolved,
+      systemDark,
+      set: (next) => {
+        scheme.value = next;
+      },
+      toggle: () => {
+        scheme.value = resolved.value === 'dark' ? 'light' : 'dark';
+      },
+      cycle: () => {
+        scheme.value = CYCLE[(CYCLE.indexOf(scheme.value) + 1) % CYCLE.length] ?? 'system';
+      },
     },
-    toggle: () => {
-      scheme.value = resolved.value === 'dark' ? 'light' : 'dark';
-    },
+    start,
   };
 };
+
+export const createColorSchemeControl = (options: ColorSchemeOptions = {}): ColorSchemeControl => {
+  const { control, start } = createColorScheme(options);
+
+  if (typeof window !== 'undefined') {
+    effectScope(true).run(start);
+  }
+  return control;
+};
+
+export const useColorScheme = (options?: ColorSchemeOptions): ColorSchemeControl => {
+  if (options === undefined) {
+    const shared = inject(COLOR_SCHEME_KEY, null);
+
+    if (shared) {
+      return shared;
+    }
+  }
+  const { control, start } = createColorScheme(options ?? {});
+
+  onMounted(start);
+  return control;
+};
+
+export const colorSchemeScript = (storageKey: string): string =>
+  `(function(){try{var s=localStorage.getItem(${JSON.stringify(storageKey)});if(s==='light'||s==='dark'||s==='system'){document.documentElement.setAttribute('data-nui-theme',s)}}catch(e){}})()`;

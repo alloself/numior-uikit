@@ -1,7 +1,12 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { nextTick } from 'vue';
-import { useColorScheme } from '../src';
-import { captureSetup } from './harness/capture';
+import {
+  colorSchemeScript,
+  createNuiConfig,
+  useColorScheme,
+  type ColorSchemeControl,
+} from '../src';
+import { captureSetup, providing } from './harness/capture';
 
 const fakeMedia = (matches: boolean) => {
   const listeners = new Set<() => void>();
@@ -27,6 +32,48 @@ describe('useColorScheme', () => {
     vi.unstubAllGlobals();
     vi.restoreAllMocks();
     localStorage.clear();
+    document.documentElement.removeAttribute('data-nui-theme');
+  });
+
+  it('shares one control through the config and cycles light, dark, system', async () => {
+    fakeMedia(true);
+    const outer: { control?: ColorSchemeControl } = {};
+
+    const inner = captureSetup(() => useColorScheme(), {
+      plugins: [createNuiConfig({ colorScheme: { storageKey: 'nui-theme' } })],
+      wrap: providing(() => {
+        outer.control = useColorScheme();
+      }),
+    }).value;
+
+    expect(inner).toBe(outer.control);
+    expect(inner.scheme.value).toBe('system');
+    expect(inner.resolved.value).toBe('dark');
+    inner.cycle();
+    expect(inner.scheme.value).toBe('light');
+    await nextTick();
+    expect(document.documentElement.getAttribute('data-nui-theme')).toBe('light');
+    expect(localStorage.getItem('nui-theme')).toBe('light');
+    inner.cycle();
+    inner.cycle();
+    expect(inner.scheme.value).toBe('system');
+
+    const own = captureSetup(() =>
+      useColorScheme({ scope: document.createElement('div'), initial: 'dark' }),
+    ).value;
+
+    expect(own).not.toBe(inner);
+    expect(own.scheme.value).toBe('dark');
+  });
+
+  it('applies the stored scheme before paint through the head script', () => {
+    localStorage.setItem('nui-theme', 'dark');
+    new Function(colorSchemeScript('nui-theme'))();
+    expect(document.documentElement.getAttribute('data-nui-theme')).toBe('dark');
+    localStorage.setItem('nui-theme', 'bogus');
+    document.documentElement.removeAttribute('data-nui-theme');
+    new Function(colorSchemeScript('nui-theme'))();
+    expect(document.documentElement.hasAttribute('data-nui-theme')).toBe(false);
   });
 
   it('reads the scope attribute, follows the system and writes changes back', async () => {
