@@ -1,12 +1,4 @@
 export const PENDING_PAGES: readonly string[] = [
-  'components/time-field.md',
-  'en/components/time-field.md',
-  'components/calendar.md',
-  'en/components/calendar.md',
-  'components/date-picker.md',
-  'en/components/date-picker.md',
-  'components/date-range-picker.md',
-  'en/components/date-range-picker.md',
   'components/icon.md',
   'en/components/icon.md',
   'en/index.md',
