@@ -153,6 +153,7 @@ export class PlaygroundPage {
     readonly loadingToggle: Locator;
     readonly nested: Locator;
     readonly large: Locator;
+    readonly link: Locator;
   };
 
   readonly swatches: { readonly utility: Locator; readonly tailwind: Locator };
@@ -191,6 +192,7 @@ export class PlaygroundPage {
       loadingToggle: page.getByTestId('loading-toggle'),
       nested: page.getByTestId('nested'),
       large: page.getByTestId('large'),
+      link: page.getByTestId('link-button'),
     };
 
     this.swatches = {

@@ -17,6 +17,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import NuiIcon from '../icon/NuiIcon.vue';
+import { destinationAttrs } from '../shared/destination';
 import type { NuiLinkProps } from './link.types';
 
 const {
@@ -29,19 +30,12 @@ const {
   disabled = false,
 } = defineProps<NuiLinkProps>();
 
-const destination = (url: string | undefined, route: unknown): Record<string, unknown> => {
-  if (route !== undefined) {
-    return { to: route };
-  }
-  return url === undefined ? {} : { href: url };
-};
-
 const linkAttrs = computed(() => {
   if (disabled) {
     return { 'aria-disabled': 'true', tabindex: -1 };
   }
   return {
-    ...destination(href, to),
+    ...destinationAttrs(href, to),
     ...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {}),
   };
 });

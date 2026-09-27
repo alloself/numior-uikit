@@ -143,6 +143,10 @@ const renderPopover = () =>
 
 const scenarios: Scenario[] = [
   { name: 'NuiButton', render: () => h(NuiButton, { loading: true }, () => 'Save') },
+  {
+    name: 'NuiButton as link',
+    render: () => h(NuiButton, { href: '/docs', variant: 'outline' }, () => 'Docs'),
+  },
   { name: 'NuiIcon', render: () => h(NuiIcon, { alias: 'check' }) },
   {
     name: 'NuiChip',

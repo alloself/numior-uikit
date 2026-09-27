@@ -1,6 +1,7 @@
 import { mount } from '@vue/test-utils';
 import { h } from 'vue';
 import { NuiButton, NuiIcon, type NuiButtonProps } from '../../src';
+import { RouterStub } from '../support/router-stub';
 import { ComponentDriver } from './component';
 
 export type ButtonContent = 'text' | 'icon' | 'icon-with-text';
@@ -12,6 +13,7 @@ export interface ButtonMountOptions {
   readonly content?: ButtonContent;
   readonly onClick?: () => void;
   readonly attached?: boolean;
+  readonly viaRouter?: boolean;
 }
 
 const slotFor = (content: ButtonContent, label: string) => {
@@ -32,10 +34,11 @@ export class ButtonDriver extends ComponentDriver {
     content = 'text',
     onClick,
     attached = false,
+    viaRouter = false,
   }: ButtonMountOptions = {}) {
     return new ButtonDriver(
       mount(NuiButton, {
-        props,
+        props: viaRouter ? { ...props, as: RouterStub } : props,
         attrs: onClick ? { ...attrs, onClick } : attrs,
         slots: { default: slotFor(content, label) },
         ...(attached ? { attachTo: document.body } : {}),
@@ -45,6 +48,18 @@ export class ButtonDriver extends ComponentDriver {
 
   get element(): HTMLButtonElement {
     return this.wrapper.find<HTMLButtonElement>('button').element;
+  }
+
+  get root(): HTMLElement {
+    return this.wrapper.find<HTMLElement>('.nui-button').element;
+  }
+
+  get tag(): string {
+    return this.root.tagName.toLowerCase();
+  }
+
+  get href(): string | undefined {
+    return this.attribute('href');
   }
 
   get type(): string | undefined {
@@ -64,7 +79,7 @@ export class ButtonDriver extends ComponentDriver {
   }
 
   get focused(): boolean {
-    return document.activeElement === this.element;
+    return document.activeElement === this.root;
   }
 
   get text(): string {
@@ -82,12 +97,12 @@ export class ButtonDriver extends ComponentDriver {
   clickNatively(): boolean {
     const event = new MouseEvent('click', { bubbles: true, cancelable: true });
 
-    this.element.dispatchEvent(event);
+    this.root.dispatchEvent(event);
     return event.defaultPrevented;
   }
 
   focus(): void {
-    this.element.focus();
+    this.root.focus();
   }
 
   async update(props: NuiButtonProps): Promise<void> {

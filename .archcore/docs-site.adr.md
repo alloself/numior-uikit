@@ -80,7 +80,14 @@ emerald, teal, rose, orange, amber, slate) — пресет переопреде
 идёт light → dark → system, `colorSchemeScript(storageKey)` — строка инлайн-скрипта для
 `<head>`, ставящая `data-nui-theme` из хранилища до первой отрисовки.
 
-Далее в волне: алиасы иконок; `defineSlots` во всех компонентах;
+Иконки: алиасы sun, moon, monitor, copy, hash, link, languages, command, arrow-left,
+arrow-right, code, eye, terminal, chevrons-up-down, chevron-up, smartphone, tablet, maximize,
+grip-horizontal — для переключателя темы, языка, копирования, якорей заголовков, поиска,
+вкладок превью/кода и рамки блоков. Кнопка: `href`/`to`/`as` переводят `NuiButton` на ссылку
+(`<a>` или компонент роутера) с тем же оформлением; `disabled` ссылки — `aria-disabled`,
+`tabindex="-1"` и без `href`, `loading` отменяет переход; `destinationAttrs` общий с NuiLink.
+
+Далее в волне: `defineSlots` во всех компонентах;
 кнопка-ссылка; NuiSeparator, NuiKbd, NuiCode, NuiToggleGroup, NuiCollapsible/NuiAccordion,
 NuiCommand, NuiToc, NuiSkipLink, NuiSplitter; режимы NuiLayout.
 
@@ -94,7 +101,8 @@ NuiCommand, NuiToc, NuiSkipLink, NuiSplitter; режимы NuiLayout.
   `accents.css` (страница «Темы» и справочник токенов);
 - утилиты: модули и проза (гайд «Утилиты и проза»);
 - примитивы `useClipboard`, `useHotkey`, `useScrollSpy`, общая цветовая схема и
-  `colorSchemeScript` (раздел «Композаблы», гайд «Темы»).
+  `colorSchemeScript` (раздел «Композаблы», гайд «Темы»);
+- новые алиасы иконок (справочник иконок) и кнопка-ссылка (страница «Кнопка»).
 
 ## Alternatives Considered
 

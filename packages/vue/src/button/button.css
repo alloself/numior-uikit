@@ -23,6 +23,7 @@
   font-size: var(--_font-size);
   font-weight: 500;
   line-height: var(--nui-line-height-tight);
+  text-decoration: none;
   cursor: pointer;
   transition:
     background-color var(--nui-duration-fast) var(--nui-easing),
@@ -108,34 +109,34 @@
   text-underline-offset: 0.2em;
 }
 
-.nui-button:hover:not(:disabled, .nui-button--loading) {
+.nui-button:hover:not(:disabled, .nui-button--disabled, .nui-button--loading) {
   background: color-mix(in oklab, var(--_tone), var(--nui-text) 10%);
 }
-.nui-button:active:not(:disabled, .nui-button--loading) {
+.nui-button:active:not(:disabled, .nui-button--disabled, .nui-button--loading) {
   background: color-mix(in oklab, var(--_tone), var(--nui-text) 16%);
   scale: 0.97;
 }
-.nui-button--variant-soft:hover:not(:disabled, .nui-button--loading) {
+.nui-button--variant-soft:hover:not(:disabled, .nui-button--disabled, .nui-button--loading) {
   background: color-mix(in oklab, var(--_tone-soft), var(--_tone) 10%);
 }
-.nui-button--variant-soft:active:not(:disabled, .nui-button--loading) {
+.nui-button--variant-soft:active:not(:disabled, .nui-button--disabled, .nui-button--loading) {
   background: color-mix(in oklab, var(--_tone-soft), var(--_tone) 16%);
 }
-.nui-button--variant-outline:hover:not(:disabled, .nui-button--loading),
-.nui-button--variant-ghost:hover:not(:disabled, .nui-button--loading) {
+.nui-button--variant-outline:hover:not(:disabled, .nui-button--disabled, .nui-button--loading),
+.nui-button--variant-ghost:hover:not(:disabled, .nui-button--disabled, .nui-button--loading) {
   background: var(--_tone-soft);
 }
-.nui-button--variant-outline:active:not(:disabled, .nui-button--loading),
-.nui-button--variant-ghost:active:not(:disabled, .nui-button--loading) {
+.nui-button--variant-outline:active:not(:disabled, .nui-button--disabled, .nui-button--loading),
+.nui-button--variant-ghost:active:not(:disabled, .nui-button--disabled, .nui-button--loading) {
   background: color-mix(in oklab, var(--_tone-soft), var(--_tone) 10%);
 }
-.nui-button--variant-link:hover:not(:disabled, .nui-button--loading),
-.nui-button--variant-link:active:not(:disabled, .nui-button--loading) {
+.nui-button--variant-link:hover:not(:disabled, .nui-button--disabled, .nui-button--loading),
+.nui-button--variant-link:active:not(:disabled, .nui-button--disabled, .nui-button--loading) {
   background: transparent;
   scale: 1;
   text-decoration-thickness: 2px;
 }
-.nui-button--icon-only:active:not(:disabled, .nui-button--loading) {
+.nui-button--icon-only:active:not(:disabled, .nui-button--disabled, .nui-button--loading) {
   scale: 1;
 }
 
@@ -144,10 +145,12 @@
   outline-offset: var(--nui-focus-ring-offset);
 }
 .nui-button:disabled,
+.nui-button--disabled,
 .nui-button--loading {
   opacity: var(--nui-disabled-opacity);
 }
-.nui-button:disabled {
+.nui-button:disabled,
+.nui-button--disabled {
   cursor: not-allowed;
 }
 .nui-button--loading {

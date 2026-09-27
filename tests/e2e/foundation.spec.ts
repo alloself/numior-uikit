@@ -18,6 +18,11 @@ test('standalone button activates by keyboard and loading blocks activation', as
     await expect(primary).toHaveCSS('outline-style', 'solid');
   }
   await expect(playground.clickCount).toHaveText('Нажатий: 1');
+  const { link } = playground.buttons;
+  expect(await link.evaluate((element) => element.tagName)).toBe('A');
+  await expect(link).toHaveAttribute('href', '#buttons-title');
+  await expect(link).toHaveCSS('text-decoration-line', 'none');
+  expect((await link.boundingBox())?.height).toBe((await primary.boundingBox())?.height);
   const idleBox = await loading.boundingBox();
   if (isMobile) {
     await loading.tap();

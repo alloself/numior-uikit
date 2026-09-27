@@ -66,6 +66,9 @@
         <NuiButton variant="outline">Контурная</NuiButton>
         <NuiButton variant="ghost">Без фона</NuiButton>
         <NuiButton variant="link">Ссылка</NuiButton>
+        <NuiButton href="#buttons-title" variant="outline" tone="neutral" data-testid="link-button"
+          >Как ссылка</NuiButton
+        >
         <NuiButton disabled>Недоступна</NuiButton>
         <NuiButton :loading="loading" data-testid="loading" @click="loading = true"
           >Сохранить</NuiButton

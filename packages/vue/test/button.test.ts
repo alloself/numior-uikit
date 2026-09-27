@@ -67,6 +67,28 @@ describe('NuiButton', () => {
     expect(ButtonDriver.mount({ props: { iconOnly: true } }).hasModifier('icon-only')).toBe(true);
   });
 
+  it('renders as a link when given a destination and keeps the button contract', () => {
+    const link = ButtonDriver.mount({ props: { href: '/docs', variant: 'outline' } });
+    expect(link.tag).toBe('a');
+    expect(link.href).toBe('/docs');
+    expect(link.type).toBeUndefined();
+    expect(link.hasModifier('variant-outline')).toBe(true);
+    expect(link.clickNatively()).toBe(false);
+    const routed = ButtonDriver.mount({ props: { to: '/guide' }, viaRouter: true });
+    expect(routed.tag).toBe('a');
+    expect(routed.href).toBe('/router/guide');
+    const off = ButtonDriver.mount({ props: { href: '/docs', disabled: true } });
+    expect(off.href).toBeUndefined();
+    expect(off.ariaDisabled).toBe('true');
+    expect(off.attribute('tabindex')).toBe('-1');
+    expect(off.hasModifier('disabled')).toBe(true);
+    expect(off.clickNatively()).toBe(true);
+    const busy = ButtonDriver.mount({ props: { href: '/docs', loading: true } });
+    expect(busy.href).toBe('/docs');
+    expect(busy.busy).toBe(true);
+    expect(busy.clickNatively()).toBe(true);
+  });
+
   it('keeps focus on a loading button and cancels its clicks so a form submits once', async () => {
     const clicks = { count: 0 };
 
