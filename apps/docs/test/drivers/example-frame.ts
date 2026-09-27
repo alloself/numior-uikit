@@ -3,6 +3,7 @@ import { defineComponent, h, markRaw, nextTick } from 'vue';
 import type { ExampleFile } from '../../.vitepress/examples/example.types';
 import ExampleFrame from '../../.vitepress/theme/parts/ExampleFrame.vue';
 import { ru } from '../../.vitepress/theme/texts';
+import { installClipboard } from '../../../../packages/primitives/test/support/clipboard';
 
 const SampleComponent = markRaw(
   defineComponent({
@@ -18,29 +19,21 @@ export const exampleFile = (name: string, source: string): ExampleFile => ({
 });
 
 export class ExampleFrameDriver {
-  readonly copied: string[] = [];
+  private readonly clipboard = installClipboard();
 
   constructor(readonly wrapper: VueWrapper) {}
 
   static mount(files: readonly ExampleFile[]): ExampleFrameDriver {
-    const driver = new ExampleFrameDriver(
+    return new ExampleFrameDriver(
       mount(ExampleFrame, {
         props: { component: SampleComponent, files, texts: ru },
         attachTo: document.body,
       }),
     );
+  }
 
-    Object.defineProperty(navigator, 'clipboard', {
-      configurable: true,
-      value: {
-        writeText: (text: string): Promise<void> => {
-          driver.copied.push(text);
-          return Promise.resolve();
-        },
-      },
-    });
-
-    return driver;
+  get copied(): readonly string[] {
+    return this.clipboard.copies;
   }
 
   get preview(): DOMWrapper<HTMLElement> {
@@ -93,6 +86,7 @@ export class ExampleFrameDriver {
 
   unmount(): void {
     this.wrapper.unmount();
+    this.clipboard.restore();
   }
 
   async showCode(): Promise<void> {

@@ -80,14 +80,7 @@ export const useFieldControl = (
     labelable: () => options.group !== true,
   });
 
-  const own = computed(
-    () =>
-      linked.value === null &&
-      options.detached !== true &&
-      (hasText(ownTexts.value.description) ||
-        hasText(ownTexts.value.error) ||
-        (options.inlineLabel !== true && hasText(ownTexts.value.label))),
-  );
+  const own = computed(() => linked.value === null && options.detached !== true);
 
   const field = computed<FieldContext | null>(
     () => linked.value ?? (own.value ? ownContext : null),

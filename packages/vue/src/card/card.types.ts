@@ -1,3 +1,4 @@
+import type { NuiRouteLocation } from '../shared/destination';
 import type { Component } from 'vue';
 
 export type NuiCardVariant = 'outline' | 'elevated' | 'soft';
@@ -8,7 +9,7 @@ export interface NuiCardProps {
   variant?: NuiCardVariant | undefined;
   padding?: NuiCardPadding | undefined;
   href?: string | undefined;
-  to?: unknown;
+  to?: NuiRouteLocation | undefined;
   as?: string | Component | undefined;
   interactive?: boolean | undefined;
   title?: string | undefined;

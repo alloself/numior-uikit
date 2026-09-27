@@ -59,7 +59,7 @@ describe('NuiInput', () => {
       },
     });
 
-    expect(input.wrapper.classes()).toContain('wide');
+    expect(input.root.classes()).toContain('wide');
     expect(input.attribute('style')).toContain('max-width');
     expect(input.hasModifier('size-lg')).toBe(true);
     expect(input.control.attributes('placeholder')).toBe('Name');

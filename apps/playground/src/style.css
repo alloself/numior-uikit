@@ -94,6 +94,9 @@ label:has(> input[type='checkbox']) {
   gap: var(--nui-space-4);
   max-inline-size: 28rem;
 }
+.pick-narrow {
+  inline-size: 12rem;
+}
 .form-demo {
   max-inline-size: 36rem;
 }

@@ -70,7 +70,8 @@ describe('useFieldControl', () => {
       ControlHarness.inside(null, { description: 'Только подсказка' }).ariaInvalid,
     ).toBeUndefined();
 
-    expect(ControlHarness.inside(null, {}).own).toBe(false);
+    expect(ControlHarness.inside(null, {}).own).toBe(true);
+    expect(ControlHarness.inside(null, {}, { detached: true }).own).toBe(false);
   });
 
   it('lets a surrounding field win over the texts of the control', () => {

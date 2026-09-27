@@ -1,3 +1,4 @@
+import { clamp } from '@vueuse/core';
 import type { ReorderAxis } from '@numior/primitives';
 
 export interface NuiTableGhost {
@@ -35,7 +36,7 @@ export const clampInside = (
   axis: ReorderAxis,
   value: number,
   size: number,
-): number => Math.min(Math.max(0, value), Math.max(0, contentSize(scroller, axis) - size));
+): number => clamp(value, 0, Math.max(0, contentSize(scroller, axis) - size));
 
 export const ghostAt = (
   scroller: HTMLElement | null | undefined,

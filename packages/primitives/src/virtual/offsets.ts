@@ -1,3 +1,5 @@
+import { clamp } from '@vueuse/core';
+
 export type SizeModel =
   | { readonly kind: 'fixed'; readonly size: number; readonly count: number }
   | { readonly kind: 'variable'; readonly offsets: readonly number[] };
@@ -8,9 +10,6 @@ export interface VirtualRange {
 }
 
 export type VirtualAlign = 'auto' | 'start' | 'center' | 'end';
-
-const clamp = (value: number, min: number, max: number): number =>
-  Math.min(max, Math.max(min, value));
 
 export const buildSizeModel = (
   count: number,

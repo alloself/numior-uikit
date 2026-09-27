@@ -18,7 +18,11 @@ test('the home page shows a live mosaic, copies the install line and leads to th
   await expect(home.period('Год')).toHaveAttribute('aria-checked', 'true');
   await expect(home.facts.getByText(/^\d+$/)).toBeVisible();
   await home.copyInstall.click();
-  expect((await docs.copiedTexts()).at(-1)).toBe('pnpm add @numior/vue @numior/tokens');
+
+  await expect
+    .poll(async () => (await docs.copiedTexts()).at(-1))
+    .toBe('pnpm add @numior/vue @numior/tokens');
+
   await home.start.click();
   await expect(page).toHaveURL(/\/guide\/getting-started$/);
 });

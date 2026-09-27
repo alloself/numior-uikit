@@ -1,16 +1,20 @@
-import type { VueWrapper } from '@vue/test-utils';
+import type { DOMWrapper, VueWrapper } from '@vue/test-utils';
 
 export abstract class ComponentDriver {
   protected abstract readonly block: string;
 
   constructor(readonly wrapper: VueWrapper) {}
 
+  get root(): DOMWrapper<Element> {
+    return this.wrapper.find(`.${this.block}`);
+  }
+
   hasModifier(modifier: string): boolean {
-    return this.wrapper.classes().includes(`${this.block}--${modifier}`);
+    return this.root.classes().includes(`${this.block}--${modifier}`);
   }
 
   attribute(name: string): string | undefined {
-    return this.wrapper.attributes(name);
+    return this.root.attributes(name);
   }
 
   unmount(): void {

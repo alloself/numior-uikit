@@ -37,9 +37,9 @@ test('copying puts the example source on the clipboard', async ({ page }) => {
   await expect(example.code).toBeVisible();
   await example.copy.click();
 
-  expect((await docs.copiedTexts()).at(-1)).toContain(
-    '<NuiButton variant="link">Подробнее</NuiButton>',
-  );
+  await expect
+    .poll(async () => (await docs.copiedTexts()).at(-1))
+    .toContain('<NuiButton variant="link">Подробнее</NuiButton>');
 });
 
 test('the configurator drives the live component and the generated code', async ({ page }) => {

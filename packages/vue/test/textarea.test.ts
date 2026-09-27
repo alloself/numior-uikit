@@ -10,7 +10,7 @@ describe('NuiTextarea', () => {
     });
 
     expect(textarea.element.tagName).toBe('TEXTAREA');
-    expect(textarea.wrapper.classes()).toContain('tall');
+    expect(textarea.root.classes()).toContain('tall');
     expect(textarea.attribute('placeholder')).toBe('Bio');
     expect(textarea.attribute('rows')).toBe('5');
     expect(textarea.hasModifier('resize-none')).toBe(true);

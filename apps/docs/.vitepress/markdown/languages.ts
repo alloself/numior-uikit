@@ -2,6 +2,7 @@ export const CODE_LANGUAGES = [
   'ts',
   'js',
   'vue',
+  'vue-html',
   'html',
   'css',
   'json',

@@ -46,7 +46,7 @@ import { computed } from 'vue';
 import { NuiInput, NuiNumberField, NuiSelect, NuiSwitch, NuiToggleGroup } from '@numior/vue';
 import type { ConfiguratorControlEmits, ConfiguratorControlProps } from '../theme.types';
 
-const SHORT_ENUM = 5;
+const SHORT_ENUM = 4;
 
 const { prop, state } = defineProps<ConfiguratorControlProps>();
 const emit = defineEmits<ConfiguratorControlEmits>();

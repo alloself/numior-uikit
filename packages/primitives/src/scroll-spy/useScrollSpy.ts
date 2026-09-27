@@ -1,131 +1,104 @@
-import {
-  onMounted,
-  onScopeDispose,
-  ref,
-  toValue,
-  watch,
-  type MaybeRefOrGetter,
-  type Ref,
-} from 'vue';
+import { useEventListener, useTimeoutFn } from '@vueuse/core';
+import { onMounted, ref, shallowRef, toValue, watch, type MaybeRefOrGetter, type Ref } from 'vue';
 
 export interface ScrollSpyOptions {
-  readonly root?: MaybeRefOrGetter<Element | null | undefined>;
-  readonly rootMargin?: MaybeRefOrGetter<string | undefined>;
+  readonly root?: MaybeRefOrGetter<HTMLElement | null | undefined>;
+  readonly line?: MaybeRefOrGetter<number | undefined>;
 }
 
-const DEFAULT_ROOT_MARGIN = '0px 0px -60% 0px';
+export interface ScrollSpy {
+  readonly activeId: Readonly<Ref<string | undefined>>;
+  activate(id: string): void;
+  measure(): void;
+}
 
-const idsOf = (entries: readonly IntersectionObserverEntry[]): string[] =>
-  entries.map((entry) => entry.target.id);
+const DEFAULT_LINE = 0.2;
+const SETTLE_DELAY = 150;
+const TOLERANCE = 1;
 
-const bandTopOf = (entry: IntersectionObserverEntry): number => entry.rootBounds?.top ?? 0;
-
-const atBottom = (root: Element | null): boolean => {
-  if (root === null) {
-    const page = document.documentElement;
-
-    return window.innerHeight + window.scrollY >= page.scrollHeight - 1;
-  }
-  return root.scrollTop + root.clientHeight >= root.scrollHeight - 1;
-};
-
-const elementsIn = (scope: ParentNode, order: readonly string[]): Element[] => {
+const elementsIn = (scope: ParentNode, order: readonly string[]): HTMLElement[] => {
   const wanted = new Set(order);
 
-  return [...scope.querySelectorAll('[id]')].filter((element) => wanted.has(element.id));
+  return [...scope.querySelectorAll('[id]')].filter(
+    (element): element is HTMLElement => element instanceof HTMLElement && wanted.has(element.id),
+  );
+};
+
+const pageWindow = (): Window | undefined => (typeof window === 'undefined' ? undefined : window);
+
+const lineOf = (root: HTMLElement | null, fraction: number): number => {
+  if (root === null) {
+    return window.innerHeight * fraction;
+  }
+  const rect = root.getBoundingClientRect();
+
+  return rect.top + rect.height * fraction;
 };
 
 export const useScrollSpy = (
   ids: MaybeRefOrGetter<readonly string[]>,
   options: ScrollSpyOptions = {},
-): Readonly<Ref<string | undefined>> => {
+): ScrollSpy => {
   const activeId = ref<string>();
-  const visible = new Set<string>();
-  let observer: IntersectionObserver | undefined;
-  let unscroll: (() => void) | undefined;
+  const targets = shallowRef<HTMLElement[]>([]);
+  let locked = false;
 
-  const disconnect = (): void => {
-    observer?.disconnect();
-    observer = undefined;
-    unscroll?.();
-    unscroll = undefined;
-    visible.clear();
+  const rootOf = (): HTMLElement | null => toValue(options.root) ?? null;
+  const scrollerOf = (): HTMLElement | Window | undefined => rootOf() ?? pageWindow();
+
+  const unlock = useTimeoutFn(
+    () => {
+      locked = false;
+    },
+    SETTLE_DELAY,
+    { immediate: false },
+  );
+
+  const measure = (): void => {
+    if (locked || typeof window === 'undefined') {
+      return;
+    }
+    const line = lineOf(rootOf(), toValue(options.line) ?? DEFAULT_LINE) + TOLERANCE;
+
+    activeId.value = targets.value.findLast(
+      (element) => element.getBoundingClientRect().top <= line,
+    )?.id;
   };
 
-  const settle = (entries: IntersectionObserverEntry[], order: readonly string[]): void => {
-    for (const entry of entries) {
-      if (entry.isIntersecting) {
-        visible.add(entry.target.id);
-      } else {
-        visible.delete(entry.target.id);
-      }
-    }
-    const first = order.find((id) => visible.has(id));
-
-    if (first !== undefined) {
-      activeId.value = first;
-      return;
-    }
-    const left = entries.filter((entry) => !entry.isIntersecting);
-
-    const above = new Set(
-      idsOf(left.filter((entry) => entry.boundingClientRect.top < bandTopOf(entry))),
-    );
-
-    const lastAbove = order.findLast((id) => above.has(id));
-
-    if (lastAbove !== undefined) {
-      activeId.value = lastAbove;
-      return;
-    }
-    const below = new Set(idsOf(left));
-    const firstBelow = order.findIndex((id) => below.has(id));
-
-    if (firstBelow >= 0) {
-      activeId.value = order[firstBelow - 1];
-    }
+  const activate = (id: string): void => {
+    activeId.value = id;
+    locked = true;
+    unlock.start();
   };
 
-  const observe = (): void => {
-    disconnect();
-
-    if (typeof IntersectionObserver === 'undefined') {
+  const onScroll = (): void => {
+    if (locked) {
+      unlock.start();
       return;
     }
-    const order = toValue(ids);
-    const root = toValue(options.root) ?? null;
+    measure();
+  };
 
-    observer = new IntersectionObserver((entries) => settle(entries, order), {
-      root,
-      rootMargin: toValue(options.rootMargin) ?? DEFAULT_ROOT_MARGIN,
-    });
+  const onScrollEnd = (): void => {
+    unlock.stop();
+    locked = false;
+  };
 
-    for (const element of elementsIn(root ?? document, order)) {
-      observer.observe(element);
-    }
-    const scroller: EventTarget = root ?? window;
-
-    const onScroll = (): void => {
-      const last = order.at(-1);
-
-      if (last !== undefined && atBottom(root)) {
-        activeId.value = last;
-      }
-    };
-
-    scroller.addEventListener('scroll', onScroll, { passive: true });
-    unscroll = () => scroller.removeEventListener('scroll', onScroll);
+  const refresh = (): void => {
+    targets.value = elementsIn(rootOf() ?? document, toValue(ids));
+    measure();
   };
 
   onMounted(() => {
-    observe();
+    refresh();
+    useEventListener(scrollerOf, 'scroll', onScroll, { passive: true });
+    useEventListener(scrollerOf, 'scrollend', onScrollEnd, { passive: true });
+    useEventListener(pageWindow, 'resize', measure, { passive: true });
 
-    watch(() => [toValue(ids), toValue(options.root), toValue(options.rootMargin)], observe, {
+    watch(() => [toValue(ids), toValue(options.root), toValue(options.line)], refresh, {
       flush: 'post',
     });
   });
 
-  onScopeDispose(disconnect);
-
-  return activeId;
+  return { activeId, activate, measure };
 };

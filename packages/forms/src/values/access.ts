@@ -1,43 +1,25 @@
+import { get, set } from 'lodash-es';
 import { isIndexSegment, joinPath, segmentsOf } from '../paths/paths';
 import { isObject, isPlainRecord } from './kinds';
 
 type Branch = readonly [path: string, value: unknown];
 
-export const getAt = (source: unknown, path: string): unknown =>
-  segmentsOf(path).reduce<unknown>(
-    (current, segment) => (isObject(current) ? Reflect.get(current, segment) : undefined),
-    source,
-  );
-
-const containerAt = (current: object, segment: string, next: string): object => {
-  const existing: unknown = Reflect.get(current, segment);
-
-  if (isObject(existing)) {
-    return existing;
+export const getAt = (source: unknown, path: string): unknown => {
+  if (path === '') {
+    return source;
   }
-  Reflect.set(current, segment, isIndexSegment(next) ? [] : {});
+  const found: unknown = get(source, segmentsOf(path));
 
-  const created: unknown = Reflect.get(current, segment);
-
-  return isObject(created) ? created : current;
+  return found;
 };
 
 export const setAt = (target: object, path: string, value: unknown): void => {
   const segments = segmentsOf(path);
-  const last = segments.at(-1);
 
-  if (last === undefined) {
+  if (segments.length === 0) {
     return;
   }
-
-  const parent = segments
-    .slice(0, -1)
-    .reduce<object>(
-      (current, segment, index) => containerAt(current, segment, segments[index + 1] ?? last),
-      target,
-    );
-
-  Reflect.set(parent, last, value);
+  set(target, segments, value);
 };
 
 export const mergeInto = (target: object, source: object): void => {

@@ -1,10 +1,12 @@
+import { clamp } from '@vueuse/core';
+
 export interface RatioBounds {
   readonly min: number;
   readonly max: number;
 }
 
 export const clampRatio = (value: number, bounds: RatioBounds): number =>
-  Math.min(bounds.max, Math.max(bounds.min, value));
+  clamp(value, bounds.min, bounds.max);
 
 export const ratioFromPointer = (
   rect: DOMRect,

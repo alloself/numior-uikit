@@ -1,4 +1,5 @@
-import { getCurrentScope, onScopeDispose, toValue, type MaybeRefOrGetter, type Ref } from 'vue';
+import { useTimeoutFn } from '@vueuse/core';
+import { toValue, type MaybeRefOrGetter, type Ref } from 'vue';
 
 export interface DelayedOpenOptions {
   readonly openDelay?: MaybeRefOrGetter<number | undefined>;
@@ -17,37 +18,33 @@ export const useDelayedOpen = (
   open: Ref<boolean>,
   options: DelayedOpenOptions = {},
 ): DelayedOpen => {
-  let timer: ReturnType<typeof setTimeout> | undefined;
+  let next = false;
+  let delay = 0;
 
-  const cancel = (): void => {
-    if (timer === undefined) {
+  const timer = useTimeoutFn(
+    () => {
+      open.value = next;
+    },
+    () => delay,
+    { immediate: false },
+  );
+
+  const schedule = (value: boolean, wait: number): void => {
+    timer.stop();
+    if (wait <= 0) {
+      open.value = value;
       return;
     }
-    clearTimeout(timer);
-    timer = undefined;
+    next = value;
+    delay = wait;
+    timer.start();
   };
 
-  const schedule = (next: boolean, delay: number): void => {
-    cancel();
-    if (delay <= 0) {
-      open.value = next;
-      return;
-    }
-
-    timer = setTimeout(() => {
-      timer = undefined;
-      open.value = next;
-    }, delay);
-  };
-
-  if (getCurrentScope()) {
-    onScopeDispose(cancel);
-  }
   return {
     scheduleOpen: () => schedule(true, toValue(options.openDelay) ?? 0),
     scheduleClose: () => schedule(false, toValue(options.closeDelay) ?? 0),
     openNow: () => schedule(true, 0),
     closeNow: () => schedule(false, 0),
-    cancel,
+    cancel: timer.stop,
   };
 };

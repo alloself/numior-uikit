@@ -23,21 +23,42 @@ const styleProblems = (root: string, files: readonly string[]): string[] =>
     .filter((file) => /<style[\s>]/.test(readFileSync(file, 'utf8')))
     .map((file) => `${relative(root, file)}: has a <style> block`);
 
-const proseProblems = (root: string, files: readonly string[]): string[] =>
+const COMPONENT_PAGE_RE = /^(?:en\/)?components\/[^/]+\.md$/;
+const ATTRIBUTE_MUSTACHE_RE = /=\s*"[^"]*\{\{/;
+
+const STRUCTURE_RULES: ReadonlyArray<readonly [(source: string) => boolean, string]> = [
+  [(source) => /<Example\s+name=/.test(source), 'no hero <Example>'],
+  [(source) => /^## (?:Установка|Installation)\s*$/m.test(source), 'no installation section'],
+  [(source) => /<ApiReference\s/.test(source), 'no <ApiReference>'],
+  [(source) => !ATTRIBUTE_MUSTACHE_RE.test(source), 'mustaches inside an attribute value'],
+  [(source) => !source.includes('vp-raw'), 'old vp-raw demo markup'],
+];
+
+export const structureProblemsOf = (page: string, source: string): string[] =>
+  COMPONENT_PAGE_RE.test(page)
+    ? STRUCTURE_RULES.filter(([passes]) => !passes(source)).map(([, text]) => `${page}: ${text}`)
+    : [];
+
+const pageProblems = (root: string, files: readonly string[]): string[] =>
   files
     .filter((file) => file.endsWith('.md'))
     .map((file) => relative(root, file))
     .filter((page) => !PENDING_PAGES.includes(page))
-    .flatMap((page) =>
-      lintProse(readFileSync(join(root, page), 'utf8'), page.startsWith('en/') ? 'en' : 'ru').map(
-        (problem) => `${page}:${problem.line}: ${problem.rule} — ${problem.text}`,
-      ),
-    );
+    .flatMap((page) => {
+      const source = readFileSync(join(root, page), 'utf8');
+
+      return [
+        ...structureProblemsOf(page, source),
+        ...lintProse(source, page.startsWith('en/') ? 'en' : 'ru').map(
+          (problem) => `${page}:${problem.line}: ${problem.rule} — ${problem.text}`,
+        ),
+      ];
+    });
 
 export const checkContent = (root: string): string[] => {
   const files = walk(root);
 
-  return [...styleProblems(root, files), ...proseProblems(root, files)];
+  return [...styleProblems(root, files), ...pageProblems(root, files)];
 };
 
 const UNRESOLVED_RE = /<(?:Nui[A-Za-z]*|Example|ApiReference|Configurator)\b/;

@@ -33,7 +33,7 @@ describe('NuiCheckbox', () => {
     });
 
     await checkbox.ready();
-    expect(checkbox.wrapper.classes()).toContain('inline');
+    expect(checkbox.root.classes()).toContain('inline');
     expect(checkbox.control.attributes('aria-label')).toBe('Accept');
     expect(checkbox.control.attributes('name')).toBe('accept');
     expect(checkbox.control.attributes('disabled')).toBe('');

@@ -16,7 +16,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onScopeDispose, useTemplateRef, watch } from 'vue';
+import { computed, onMounted, useTemplateRef, watch } from 'vue';
+import { useResizeObserver } from '@vueuse/core';
 import { useListNavigation } from '@numior/primitives';
 import { useTabs } from './tabs-context';
 import type { NuiTabListProps } from './tabs.types';
@@ -70,11 +71,6 @@ const onFocusout = (event: FocusEvent): void => {
 onMounted(() => {
   navigation.reset();
   watch([() => tabs.modelValue.value, orientation], measure, { immediate: true, flush: 'post' });
-  if (typeof ResizeObserver === 'undefined' || !listElement.value) {
-    return;
-  }
-  const observer = new ResizeObserver(measure);
-  observer.observe(listElement.value);
-  onScopeDispose(() => observer.disconnect());
+  useResizeObserver(listElement, measure);
 });
 </script>

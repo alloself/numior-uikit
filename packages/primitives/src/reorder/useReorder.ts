@@ -1,3 +1,4 @@
+import { useRafFn } from '@vueuse/core';
 import {
   computed,
   onScopeDispose,
@@ -94,7 +95,7 @@ const edgeDelta = (container: HTMLElement, client: number, axis: ReorderAxis): n
 
 export const useReorder = (options: ReorderOptions): Reorder => {
   const state = shallowRef<ReorderState>(IDLE);
-  let frame: number | undefined;
+  let scrollDelta = 0;
 
   const source = computed(() => {
     const current = state.value;
@@ -113,26 +114,31 @@ export const useReorder = (options: ReorderOptions): Reorder => {
   const allowed = (from: number, to: number): boolean =>
     to >= 0 && to < toValue(options.count) && (options.canMove?.(from, to) ?? true);
 
-  const stopScrolling = (): void => {
-    if (frame !== undefined && typeof cancelAnimationFrame !== 'undefined') {
-      cancelAnimationFrame(frame);
-    }
-    frame = undefined;
-  };
-
-  const scrollBy = (delta: number): void => {
+  const scrollStep = (): void => {
     const container = toValue(options.container);
-    if (!container || delta === 0) {
-      stopScrolling();
+    if (!container || scrollDelta === 0) {
+      autoscroll.pause();
       return;
     }
     if (options.axis === 'x') {
-      container.scrollLeft += delta;
+      container.scrollLeft += scrollDelta;
     } else {
-      container.scrollTop += delta;
+      container.scrollTop += scrollDelta;
     }
-    if (typeof requestAnimationFrame !== 'undefined') {
-      frame = requestAnimationFrame(() => scrollBy(delta));
+  };
+
+  const autoscroll = useRafFn(scrollStep, { immediate: false });
+
+  const stopScrolling = (): void => {
+    scrollDelta = 0;
+    autoscroll.pause();
+  };
+
+  const scrollBy = (delta: number): void => {
+    scrollDelta = delta;
+    scrollStep();
+    if (scrollDelta !== 0) {
+      autoscroll.resume();
     }
   };
 

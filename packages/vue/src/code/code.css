@@ -126,6 +126,7 @@
 }
 .nui-code__line {
   display: block;
+  min-block-size: 1lh;
   padding-inline: var(--_padding);
   padding-inline-start: calc(var(--_padding) + var(--_gutter));
   border-inline-start: 2px solid transparent;
@@ -179,7 +180,7 @@
   color: var(--nui-syntax-punctuation);
 }
 .nui-code__token--scope-variable {
-  color: var(--nui-text);
+  color: var(--nui-syntax-variable);
 }
 .nui-code__expand {
   box-sizing: border-box;

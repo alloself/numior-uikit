@@ -1,3 +1,4 @@
+import type { NuiRouteLocation } from '../shared/destination';
 import type { Component } from 'vue';
 import type { FloatingPlacement, IconAlias, PopoverInvokerAttrs } from '@numior/primitives';
 import type { NuiTriggerRef } from '../shared/trigger-ref';
@@ -13,7 +14,7 @@ export interface NuiMenuItemEntry {
   readonly disabled?: boolean | undefined;
   readonly tone?: NuiMenuItemTone | undefined;
   readonly href?: string | undefined;
-  readonly to?: unknown;
+  readonly to?: NuiRouteLocation | undefined;
   readonly as?: string | Component | undefined;
   readonly closeOnSelect?: boolean | undefined;
   readonly onSelect?: (() => void) | undefined;
@@ -102,7 +103,7 @@ export interface NuiMenuItemProps {
   tone?: NuiMenuItemTone | undefined;
   closeOnSelect?: boolean | undefined;
   href?: string | undefined;
-  to?: unknown;
+  to?: NuiRouteLocation | undefined;
   as?: string | Component | undefined;
 }
 

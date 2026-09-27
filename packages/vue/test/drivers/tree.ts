@@ -219,6 +219,21 @@ export class TreeDriver extends ComponentDriver {
     await nextTick();
   }
 
+  async pointerDown(label: string): Promise<void> {
+    this.node(label)
+      .find('.nui-tree__text')
+      .element.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+
+    this.tree.element.focus();
+    await nextTick();
+  }
+
+  get activeLabels(): string[] {
+    return this.nodes
+      .filter((node) => node.classes().includes('nui-tree__item--active'))
+      .map((node) => textOf(node.element));
+  }
+
   async dblclick(label: string): Promise<void> {
     await this.node(label).find('.nui-tree__text').trigger('dblclick');
     await nextTick();

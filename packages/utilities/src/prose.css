@@ -132,6 +132,7 @@
   padding: 0.15em 0.4em;
   border-radius: var(--nui-radius-sm);
   background: var(--nui-surface-muted);
+  color: var(--nui-code-inline);
   font-family: var(--nui-font-mono);
   font-size: 0.875em;
 }

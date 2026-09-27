@@ -37,15 +37,17 @@ export interface LayoutMountOptions {
   readonly variant?: NuiSidebarVariant;
 }
 
+type MediaListener = (event: { readonly matches: boolean }) => void;
+
 interface FakeMediaList {
   matches: boolean;
-  readonly listeners: Set<() => void>;
-  addEventListener(type: string, listener: () => void): void;
-  removeEventListener(type: string, listener: () => void): void;
+  readonly listeners: Set<MediaListener>;
+  addEventListener(type: string, listener: MediaListener): void;
+  removeEventListener(type: string, listener: MediaListener): void;
 }
 
 const fakeMedia = (matches: boolean): FakeMediaList => {
-  const listeners = new Set<() => void>();
+  const listeners = new Set<MediaListener>();
 
   return {
     matches,
@@ -324,7 +326,7 @@ export class LayoutDriver extends ComponentDriver {
     this.media.matches = matches;
 
     for (const listener of this.media.listeners) {
-      listener();
+      listener({ matches });
     }
 
     await nextTick();

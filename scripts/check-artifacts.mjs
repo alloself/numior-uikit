@@ -195,7 +195,8 @@ const bundleOf = async (source) => {
       rolldownOptions: {
         input: 'nui-probe',
         preserveEntrySignatures: 'strict',
-        external: [/^vue$/, /^@numior\/primitives$/, /^lucide-vue-next(\/|$)/],
+        treeshake: { moduleSideEffects: 'no-external' },
+        external: [/^vue$/, /^@numior\/primitives$/, /^lucide-vue-next(\/|$)/, /^@vueuse\/core$/],
       },
     },
     plugins: [
@@ -223,6 +224,8 @@ assert.doesNotMatch(
   /Закрыть|Навигационная цепочка/,
   'NuiButton pulled dictionary texts',
 );
+
+assert.doesNotMatch(buttonOnly, /@vueuse\/core/, 'NuiButton pulled @vueuse/core');
 
 assert.match(dialogOnly, /Закрыть/, 'NuiDialog lost its dictionary texts');
 

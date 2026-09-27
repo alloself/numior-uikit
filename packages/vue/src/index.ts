@@ -299,6 +299,7 @@ export type {
   NuiOptionKey,
   NuiOptionSource,
 } from './shared/options';
+export type { NuiRouteLocation, NuiRouteRegister } from './shared/destination';
 export { default as NuiToaster } from './toast/NuiToaster.vue';
 export { default as NuiToast } from './toast/NuiToast.vue';
 export type {

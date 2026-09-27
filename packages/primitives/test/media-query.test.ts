@@ -3,12 +3,14 @@ import { nextTick, ref } from 'vue';
 import { useMediaQuery } from '../src';
 import { captureSetup } from './harness/capture';
 
+type MediaListener = (event: { readonly matches: boolean }) => void;
+
 interface FakeMediaList {
   matches: boolean;
   readonly media: string;
-  readonly listeners: Set<() => void>;
-  addEventListener(type: string, listener: () => void): void;
-  removeEventListener(type: string, listener: () => void): void;
+  readonly listeners: Set<MediaListener>;
+  addEventListener(type: string, listener: MediaListener): void;
+  removeEventListener(type: string, listener: MediaListener): void;
   fire(matches: boolean): void;
 }
 
@@ -17,7 +19,7 @@ const lists: FakeMediaList[] = [];
 const fakeMatchMedia =
   (matching: readonly string[]) =>
   (query: string): FakeMediaList => {
-    const listeners = new Set<() => void>();
+    const listeners = new Set<MediaListener>();
 
     const list: FakeMediaList = {
       matches: matching.includes(query),
@@ -28,7 +30,7 @@ const fakeMatchMedia =
       fire: (matches) => {
         list.matches = matches;
         for (const listener of listeners) {
-          listener();
+          listener({ matches });
         }
       },
     };

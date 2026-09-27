@@ -1,3 +1,4 @@
+import { clamp } from '@vueuse/core';
 import { computed, type ComputedRef, type Ref } from 'vue';
 import { moveItem } from './announce';
 import type {
@@ -57,10 +58,7 @@ const cssWidth = (width: number | string | undefined): string | undefined =>
   typeof width === 'number' ? `${width}px` : width;
 
 const clampWidth = <T>(column: NuiTableColumn<T>, px: number): number =>
-  Math.min(
-    column.maxWidth ?? Number.POSITIVE_INFINITY,
-    Math.max(column.minWidth ?? MIN_WIDTH, Math.round(px)),
-  );
+  clamp(Math.round(px), column.minWidth ?? MIN_WIDTH, column.maxWidth ?? Number.POSITIVE_INFINITY);
 
 const utilityInset = (utilities: number, offset: string): string =>
   utilities > 0 ? `calc(${utilities} * var(--_util) + ${offset})` : offset;

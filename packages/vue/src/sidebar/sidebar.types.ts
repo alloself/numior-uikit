@@ -1,3 +1,4 @@
+import type { NuiRouteLocation } from '../shared/destination';
 import type { IconAlias } from '@numior/primitives';
 import type { Component } from 'vue';
 import type { NuiListEntry } from '../shared/options';
@@ -30,7 +31,7 @@ export interface NuiSidebarItemProps {
   label: string;
   icon?: IconAlias | undefined;
   href?: string | undefined;
-  to?: unknown;
+  to?: NuiRouteLocation | undefined;
   as?: string | Component | undefined;
   current?: boolean | undefined;
   disabled?: boolean | undefined;

@@ -1,3 +1,5 @@
+import { clamp } from '@vueuse/core';
+
 export type ListOrientation = 'vertical' | 'horizontal' | 'both';
 export type ListMove = 'first' | 'last' | 'next' | 'prev' | 'page-next' | 'page-prev';
 
@@ -19,10 +21,8 @@ export const listMoveFor = (
   rtl: boolean,
 ): ListMove | undefined => movesFor(orientation, rtl)[key];
 
-const clamp = (value: number, last: number): number => Math.min(last, Math.max(0, value));
-
 const wrapIndex = (value: number, length: number, loop: boolean): number =>
-  loop ? (value + length) % length : clamp(value, length - 1);
+  loop ? (value + length) % length : clamp(value, 0, length - 1);
 
 export const listTargetIndex = (
   move: ListMove,
@@ -38,7 +38,7 @@ export const listTargetIndex = (
     last,
     next: current < 0 ? 0 : wrapIndex(current + 1, length, loop),
     prev: current < 0 ? last : wrapIndex(current - 1, length, loop),
-    'page-next': clamp(Math.max(0, current) + page, last),
+    'page-next': clamp(Math.max(0, current) + page, 0, last),
     'page-prev': Math.max(0, current - page),
   };
 

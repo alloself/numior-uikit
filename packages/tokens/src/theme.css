@@ -94,8 +94,10 @@
   --nui-syntax-attribute: light-dark(oklch(0.5 0.1 80), oklch(0.85 0.12 90));
   --nui-syntax-property: light-dark(oklch(0.46 0.12 250), oklch(0.8 0.1 235));
   --nui-syntax-comment: light-dark(oklch(0.53 0.014 285.94), oklch(0.66 0.013 286.03));
+  --nui-syntax-variable: light-dark(oklch(0.38 0.04 262), oklch(0.86 0.03 262));
   --nui-syntax-punctuation: var(--nui-text-muted);
   --nui-syntax-highlight: color-mix(in oklab, var(--nui-primary) 12%, var(--nui-surface-code));
+  --nui-code-inline: light-dark(oklch(0.52 0.15 25), oklch(0.82 0.1 25));
 
   --nui-shadow-sm: 0 1px 2px oklch(0 0 0 / 0.08);
   --nui-shadow-md: 0 4px 12px oklch(0 0 0 / 0.12);

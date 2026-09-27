@@ -1,47 +1,9 @@
-import {
-  onMounted,
-  onScopeDispose,
-  ref,
-  toValue,
-  watch,
-  type MaybeRefOrGetter,
-  type Ref,
-} from 'vue';
-
-const noop = (): void => {};
+import { useMediaQuery as useMatchMedia, useMounted } from '@vueuse/core';
+import { computed, type MaybeRefOrGetter, type Ref } from 'vue';
 
 export const useMediaQuery = (query: MaybeRefOrGetter<string>): Readonly<Ref<boolean>> => {
-  const matches = ref(false);
-  const subscription = { stop: noop };
+  const mounted = useMounted();
+  const matches = useMatchMedia(query);
 
-  const subscribe = (value: string): void => {
-    subscription.stop();
-
-    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
-      return;
-    }
-
-    const list = window.matchMedia(value);
-
-    const update = (): void => {
-      matches.value = list.matches;
-    };
-
-    update();
-    list.addEventListener('change', update);
-
-    subscription.stop = () => {
-      list.removeEventListener('change', update);
-      subscription.stop = noop;
-    };
-  };
-
-  onMounted(() => {
-    subscribe(toValue(query));
-    watch(() => toValue(query), subscribe);
-  });
-
-  onScopeDispose(() => subscription.stop());
-
-  return matches;
+  return computed(() => mounted.value && matches.value);
 };

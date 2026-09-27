@@ -12,7 +12,7 @@ import NuiTocEntries from './NuiTocEntries.vue';
 import { tocMessages } from './toc.messages';
 import type { NuiTocItem, NuiTocProps } from './toc.types';
 
-const { items, title, label, root, rootMargin } = defineProps<NuiTocProps>();
+const { items, title, label, root, line } = defineProps<NuiTocProps>();
 
 const emit = defineEmits<{ select: [id: string] }>();
 
@@ -25,9 +25,11 @@ const idsOf = (entries: readonly NuiTocItem[]): string[] =>
 
 const ids = computed(() => idsOf(items));
 
-const activeId = useScrollSpy(ids, { root: () => root, rootMargin: () => rootMargin });
+const spy = useScrollSpy(ids, { root: () => root, line: () => line });
+const activeId = spy.activeId;
 
 const onSelect = (id: string): void => {
+  spy.activate(id);
   emit('select', id);
 };
 </script>

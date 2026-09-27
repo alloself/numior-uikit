@@ -1,3 +1,4 @@
+import { useEventListener, useResizeObserver } from '@vueuse/core';
 import {
   computed,
   onMounted,
@@ -137,25 +138,19 @@ export const useVirtualList = (
     scrollTop.value = target;
   };
 
+  const active = (): HTMLElement | undefined =>
+    enabled() ? (toValue(container) ?? undefined) : undefined;
+
   onMounted(() => {
+    useEventListener(active, 'scroll', measure, { passive: true });
+    useResizeObserver(active, measure);
+
     watch(
       [() => toValue(container), enabled],
-      ([element, on], _previous, onCleanup) => {
-        if (!element || !on) {
-          return;
+      ([element, on]) => {
+        if (element && on) {
+          measure();
         }
-        measure();
-        element.addEventListener('scroll', measure, { passive: true });
-
-        const observer =
-          typeof ResizeObserver === 'undefined' ? undefined : new ResizeObserver(measure);
-
-        observer?.observe(element);
-
-        onCleanup(() => {
-          element.removeEventListener('scroll', measure);
-          observer?.disconnect();
-        });
       },
       { immediate: true, flush: 'post' },
     );

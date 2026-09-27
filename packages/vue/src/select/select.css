@@ -2,13 +2,14 @@
   --_height: var(--nui-control-height-md);
   --_padding: var(--nui-field-padding-md);
   --_font-size: var(--nui-control-font-size-md);
-  --_chevron: 1.25rem;
+  --_chevron: calc(1.25 * var(--_font-size));
   --_clear-inset: calc(var(--_padding) + var(--_chevron) + var(--nui-space-2));
 
   box-sizing: border-box;
   position: relative;
   display: inline-flex;
   inline-size: 100%;
+  min-inline-size: 0;
   font-family: var(--nui-font);
 }
 .nui-select--size-sm {
@@ -27,6 +28,7 @@
   align-items: center;
   gap: var(--nui-space-2);
   inline-size: 100%;
+  min-inline-size: 0;
   min-block-size: var(--_height);
   padding: 0 var(--_padding);
   border: 1px solid var(--nui-border);

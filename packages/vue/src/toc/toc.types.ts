@@ -8,8 +8,8 @@ export interface NuiTocProps {
   items: readonly NuiTocItem[];
   title?: string | undefined;
   label?: string | undefined;
-  root?: Element | null | undefined;
-  rootMargin?: string | undefined;
+  root?: HTMLElement | null | undefined;
+  line?: number | undefined;
 }
 
 export interface NuiTocEntriesProps {

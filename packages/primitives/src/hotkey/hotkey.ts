@@ -61,8 +61,20 @@ export const parseHotkey = (combo: string): Hotkey => {
   return hotkey;
 };
 
+const physicalKeyOf = (code: string): string | undefined => {
+  if (code.length === 4 && code.startsWith('Key')) {
+    return code.slice(3).toLowerCase();
+  }
+  if (code.length === 6 && code.startsWith('Digit')) {
+    return code.slice(5);
+  }
+  return undefined;
+};
+
+export const hasModifier = (hotkey: Hotkey): boolean => hotkey.mod || hotkey.ctrl || hotkey.meta;
+
 export const matchesHotkey = (event: KeyboardEvent, hotkey: Hotkey): boolean => {
-  if (event.key.toLowerCase() !== hotkey.key) {
+  if (event.key.toLowerCase() !== hotkey.key && physicalKeyOf(event.code) !== hotkey.key) {
     return false;
   }
   if (event.altKey !== hotkey.alt || event.shiftKey !== hotkey.shift) {

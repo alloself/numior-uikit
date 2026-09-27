@@ -60,6 +60,7 @@
 .nui-combobox__input {
   flex: 1 1 4rem;
   min-inline-size: 4rem;
+  text-overflow: ellipsis;
   min-block-size: calc(var(--_height) - var(--nui-space-2) - 2px);
   padding: 0;
   border: 0;

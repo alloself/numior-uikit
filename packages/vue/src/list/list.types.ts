@@ -1,3 +1,4 @@
+import type { NuiRouteLocation } from '../shared/destination';
 import type { IconAlias } from '@numior/primitives';
 import type { Component } from 'vue';
 import type { NuiListEntry, NuiListSource, NuiOptionKey } from '../shared/options';
@@ -40,7 +41,7 @@ export interface NuiListItemProps {
   description?: string | undefined;
   icon?: IconAlias | undefined;
   href?: string | undefined;
-  to?: unknown;
+  to?: NuiRouteLocation | undefined;
   as?: string | Component | undefined;
   interactive?: boolean | undefined;
   disabled?: boolean | undefined;

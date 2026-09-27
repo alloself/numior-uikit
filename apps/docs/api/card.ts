@@ -14,7 +14,10 @@ const docs: DocsMap = {
         ru: 'Адрес; вся карточка становится ссылкой.',
         en: 'Address; the whole card becomes a link.',
       },
-      to: { ru: 'Маршрут для компонента роутера.', en: 'Route for a router component.' },
+      to: {
+        ru: 'Маршрут для компонента роутера: строка или объект; тип уточняется через NuiRouteRegister.',
+        en: 'Route for a router component: a string or an object; NuiRouteRegister narrows the type.',
+      },
       as: { ru: 'Компонент ссылки для to.', en: 'Link component used for to.' },
       interactive: {
         ru: 'Карточка-кнопка; клик по поверхности приходит в @click.',

@@ -289,3 +289,8 @@ Switch, Checkbox, CheckboxGroup, RadioGroup, TimeField, DatePicker, DateRangePic
 `NuiFieldLabel`/`NuiFieldDescription`/`NuiFieldError` принимают контекст пропом `field`, а
 без него берут его из инъекции. `NuiUpload` перешёл на общий интерфейс (`hint` →
 `description`).
+
+Обёртка `.nui-field` у контрола вне `NuiField` рисуется всегда, а не только при наличии
+текстов: иначе корень контрола менялся при появлении `error`, и Vue пересоздавал элемент ввода
+с потерей фокуса. `NuiFieldFrame` — функция рендера, потому что `<slot>` в шаблоне
+компилируется во фрагмент и SFC не может вернуть элемент слота своим корнем (вечер 2026-09-27).

@@ -14,6 +14,15 @@
           data-testid="pick-select"
         />
       </NuiField>
+      <NuiSelect
+        v-model="region"
+        :options="regions"
+        label="Регион"
+        description="Длинное значение в узком поле"
+        class="pick-narrow"
+        clearable
+        data-testid="pick-long"
+      />
       <NuiField label="Теги" description="Несколько значений">
         <NuiSelect
           v-model:values="tags"
@@ -122,6 +131,14 @@ const keywordOptions: NuiOption<string>[] = [
 ];
 
 const country = ref<string>();
+const region = ref<string>('far-east');
+
+const regions: NuiOptionSource<string> = [
+  { value: 'far-east', label: 'Дальневосточный федеральный округ, Хабаровский край' },
+  { value: 'siberia', label: 'Сибирский федеральный округ, Новосибирская область' },
+  { value: 'volga', label: 'Приволжский федеральный округ, Самарская область' },
+];
+
 const tags = ref<string[]>(['frontend']);
 const city = ref<string>();
 const cityOptions = ref<NuiOption<string>[]>(cities);

@@ -1,20 +1,25 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
-import { installIntersectionObserver } from '../../primitives/test/harness/scroll-spy';
+import { afterEach, describe, expect, it } from 'vitest';
+import { placeHeadings } from '../../primitives/test/support/headings';
 import { TocDriver } from './drivers/toc';
 
-const headings = (ids: readonly string[]): void => {
-  document.body.innerHTML = ids.map((id) => `<h2 id="${id}">${id}</h2>`).join('');
+const IDS = ['install', 'usage', 'basic', 'advanced', 'api'];
+
+const headings = (): void => {
+  document.body.innerHTML = IDS.map((id) => `<h2 id="${id}">${id}</h2>`).join('');
+  placeHeadings(document, { install: 400, usage: 800, basic: 1200, advanced: 1600, api: 2000 });
+};
+
+const scrolled = (): void => {
+  window.dispatchEvent(new Event('scroll'));
 };
 
 describe('NuiToc', () => {
   afterEach(() => {
-    vi.unstubAllGlobals();
     document.body.innerHTML = '';
   });
 
   it('lists nested headings as anchor links under a titled navigation landmark', () => {
-    const spies = installIntersectionObserver();
-    headings(['install', 'usage', 'basic', 'advanced', 'api']);
+    headings();
     const toc = TocDriver.mount();
     expect(toc.title).toBe('On this page');
     expect(toc.label).toBe('On this page');
@@ -22,30 +27,24 @@ describe('NuiToc', () => {
     expect(toc.depthOf('Usage')).toBe(0);
     expect(toc.depthOf('Basic')).toBe(1);
     expect(toc.currentLabel).toBeUndefined();
-
-    expect(spies.last()?.targets.map((element) => element.id)).toEqual([
-      'install',
-      'usage',
-      'basic',
-      'advanced',
-      'api',
-    ]);
   });
 
-  it('marks the section in view as the current location and reports clicks', async () => {
-    const spies = installIntersectionObserver();
-    headings(['install', 'usage', 'basic', 'advanced', 'api']);
-    const toc = TocDriver.mount({ props: { rootMargin: '-20% 0px' } });
-    expect(spies.last()?.rootMargin).toBe('-20% 0px');
-    spies.last()?.fire([{ id: 'basic', visible: true, top: 12 }]);
+  it('marks the section at the line as current and keeps a clicked link through its scroll', async () => {
+    headings();
+    const toc = TocDriver.mount({ props: { line: 0.5 } });
+    placeHeadings(document, { install: -800, usage: -400, basic: 12, advanced: 600, api: 1000 });
+    scrolled();
     await toc.wrapper.vm.$nextTick();
     expect(toc.currentLabel).toBe('Basic');
     await toc.click('API');
     expect(toc.emittedSelections).toEqual(['api']);
+    expect(toc.currentLabel).toBe('API');
+    scrolled();
+    await toc.wrapper.vm.$nextTick();
+    expect(toc.currentLabel).toBe('API');
   });
 
   it('speaks the configured language and lets props win', () => {
-    installIntersectionObserver();
     const toc = TocDriver.mount({ config: { locale: 'ru-RU' } });
     expect(toc.title).toBe('На странице');
     const custom = TocDriver.mount({ props: { title: 'Contents', label: 'Page outline' } });

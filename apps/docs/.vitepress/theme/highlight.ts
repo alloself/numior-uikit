@@ -7,7 +7,7 @@ let pending: Promise<Highlighter> | undefined;
 
 const highlighterOf = (): Promise<Highlighter> => {
   pending ??= import('shiki').then((shiki) =>
-    shiki.createHighlighter({ themes: ['github-light'], langs: ['vue'] }),
+    shiki.createHighlighter({ themes: ['github-light'], langs: ['vue', 'vue-html'] }),
   );
 
   return pending;

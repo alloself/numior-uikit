@@ -19,7 +19,8 @@
     "build": "vite build && vue-tsc -p tsconfig.build.json"
   },
   "dependencies": {
-    "@floating-ui/dom": "1.8.0"
+    "@floating-ui/dom": "1.8.0",
+    "@vueuse/core": "15.0.0"
   },
   "devDependencies": {
     "@vue/test-utils": "2.5.1"

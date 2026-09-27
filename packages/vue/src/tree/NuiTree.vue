@@ -20,6 +20,7 @@
     :style="rootStyle"
     @keydown="navigation.onKeydown"
     @focus="onFocus"
+    @pointerdown="onPointerdown"
     @click="onClick"
     @dblclick="onDblclick"
   >
@@ -335,6 +336,13 @@ const hitNode = (event: Event): number => {
 
 const partOf = (event: Event, part: string): boolean =>
   event.target instanceof Element && event.target.closest(`.nui-tree__${part}`) !== null;
+
+const onPointerdown = (event: PointerEvent): void => {
+  const node = visible.value[hitNode(event)];
+  if (node && !node.item.disabled) {
+    activeKey.value = node.key;
+  }
+};
 
 const onClick = (event: MouseEvent): void => {
   const index = hitNode(event);

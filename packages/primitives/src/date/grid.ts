@@ -1,3 +1,4 @@
+import { clamp } from '@vueuse/core';
 import { addDays, addMonths, addYears, differenceInDays, firstOfMonth } from './arithmetic';
 import { endOfWeek, isoWeekOf, startOfWeek, weekdayOf, type Weekday } from './week';
 
@@ -46,9 +47,6 @@ const CELL_KEYS: Record<string, CellMove> = {
   PageUp: 'page-prev',
   PageDown: 'page-next',
 };
-
-const clamp = (value: number, min: number, max: number): number =>
-  Math.min(max, Math.max(min, value));
 
 export const monthGrid = ({ month, weekStart, fixedWeeks }: MonthGridOptions): string[][] => {
   const first = firstOfMonth(month);

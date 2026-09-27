@@ -99,7 +99,8 @@
 </template>
 
 <script setup lang="ts" generic="T">
-import { computed, onMounted, onScopeDispose, ref, useSlots, useTemplateRef, watch } from 'vue';
+import { computed, onMounted, ref, useSlots, useTemplateRef, watch } from 'vue';
+import { useResizeObserver } from '@vueuse/core';
 import { useDirection, useMessages, useVirtualList } from '@numior/primitives';
 import NuiPagination from '../pagination/NuiPagination.vue';
 import { defaultOptionKey } from '../shared/options';
@@ -485,16 +486,10 @@ onMounted(() => {
 
   watch([() => layout.ordered.value, widths], measure, { immediate: true, flush: 'post' });
   trackScroll();
-  if (typeof ResizeObserver === 'undefined' || !tableElement.value) {
-    return;
-  }
 
-  const observer = new ResizeObserver(() => {
+  useResizeObserver(tableElement, () => {
     measure();
     trackScroll();
   });
-
-  observer.observe(tableElement.value);
-  onScopeDispose(() => observer.disconnect());
 });
 </script>

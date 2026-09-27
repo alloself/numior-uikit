@@ -1,10 +1,11 @@
+import type { NuiRouteLocation } from '../shared/destination';
 import { inject, provide, type Component, type ComputedRef, type InjectionKey } from 'vue';
 
 export type CardAction =
   | {
       readonly kind: 'link';
       readonly href: string | undefined;
-      readonly to: unknown;
+      readonly to: NuiRouteLocation | undefined;
       readonly as: string | Component;
     }
   | { readonly kind: 'button' };

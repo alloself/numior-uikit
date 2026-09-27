@@ -208,6 +208,16 @@ describe('NuiTree', () => {
     tree.unmount();
   });
 
+  it('moves the cursor to the pressed node before focus arrives, so no other node lights up', async () => {
+    const tree = TreeDriver.mount();
+    await tree.pointerDown('docs');
+    expect(tree.activeLabel).toBe('docs');
+    expect(tree.activeLabels).toEqual(['docs']);
+    await tree.click('docs');
+    expect(tree.activeLabels).toEqual(['docs']);
+    tree.unmount();
+  });
+
   it('windows long trees, keeps the active row rendered and pages by the viewport', async () => {
     const tree = TreeDriver.mount({
       items: manyNodes(2000),

@@ -1,3 +1,4 @@
+import type { NuiRouteLocation } from './destination';
 import type { IconAlias } from '@numior/primitives';
 
 export interface NuiListEntry<T = string> {
@@ -8,7 +9,7 @@ export interface NuiListEntry<T = string> {
   readonly icon?: IconAlias | undefined;
   readonly disabled?: boolean | undefined;
   readonly href?: string | undefined;
-  readonly to?: unknown;
+  readonly to?: NuiRouteLocation | undefined;
   readonly current?: boolean | undefined;
   readonly badge?: string | number | undefined;
   readonly shortcut?: string | undefined;

@@ -1,3 +1,5 @@
+import { clamp } from '@vueuse/core';
+
 export type PaginationEntry = number | 'start-ellipsis' | 'end-ellipsis';
 
 const range = (start: number, end: number): number[] =>
@@ -7,7 +9,7 @@ export const pageCountOf = (total: number, pageSize: number): number =>
   Math.max(1, Math.ceil(Math.max(0, total) / Math.max(1, pageSize)));
 
 export const clampPage = (page: number, pageCount: number): number =>
-  Math.min(pageCount, Math.max(1, Math.trunc(page) || 1));
+  clamp(Math.trunc(page) || 1, 1, pageCount);
 
 export const paginationRange = (
   page: number,

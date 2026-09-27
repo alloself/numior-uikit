@@ -1,15 +1,14 @@
-const INDEX = /^(?:0|[1-9]\d*)$/;
+import { toPath } from 'lodash-es';
 
-const BRACKET_INDEX = /\[(\d+)\]/g;
+const INDEX = /^(?:0|[1-9]\d*)$/;
 
 const DOT = 46;
 
 export const isIndexSegment = (segment: string): boolean => INDEX.test(segment);
 
-export const segmentsOf = (path: string): string[] => (path === '' ? [] : path.split('.'));
+export const segmentsOf = (path: string): string[] => toPath(path);
 
-export const normalizePath = (path: string): string =>
-  path.replace(BRACKET_INDEX, '.$1').replace(/^\./, '');
+export const normalizePath = (path: string): string => toPath(path).join('.');
 
 export const joinPath = (...parts: ReadonlyArray<string | number>): string =>
   parts

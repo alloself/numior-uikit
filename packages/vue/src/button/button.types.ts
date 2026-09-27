@@ -1,3 +1,4 @@
+import type { NuiRouteLocation } from '../shared/destination';
 import type { Component } from 'vue';
 import type { NuiSize, NuiTone } from '../shared/scale.types';
 
@@ -13,5 +14,5 @@ export interface NuiButtonProps {
   iconOnly?: boolean | undefined;
   as?: string | Component | undefined;
   href?: string | undefined;
-  to?: unknown;
+  to?: NuiRouteLocation | undefined;
 }

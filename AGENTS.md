@@ -6,7 +6,9 @@ changing architecture, public APIs or components. An accepted plan is not a stat
 that its features are implemented. Component and test conventions live in the skills
 `.claude/skills/nui-component` and `.claude/skills/nui-testing`.
 
-- Write new code; do not copy SaleHub/Ln implementations.
+- Write new code; do not copy SaleHub/Ln implementations. Behaviour composables and utilities
+  come from `@vueuse/core` and `lodash-es` where an equivalent with the same behaviour exists
+  (`.archcore/dependencies.adr.md` lists the replacements and the kept exceptions).
 - SFC block order is `<template>`, then `<script setup lang="ts">` (ESLint `vue/block-order`).
 - Props: `defineProps<Props>()` with reactive destructure defaults and `defineModel`;
   never `withDefaults`, runtime prop objects or `PropType`. Tri-state booleans use `= undefined`.

@@ -1,0 +1,92 @@
+import { vi } from 'vitest';
+
+class FakeClipboardItem {
+  constructor(readonly parts: Readonly<Record<string, string>>) {}
+}
+
+export interface ClipboardStub {
+  readonly copies: string[];
+  readonly writes: number;
+  readonly commands: number;
+  restore(): void;
+}
+
+export interface ClipboardStubOptions {
+  readonly api?: 'granted' | 'refused' | 'missing';
+  readonly legacy?: boolean;
+}
+
+const grantedStatus = (): PermissionStatus =>
+  Object.assign(new EventTarget(), {
+    state: 'granted' as const,
+    name: 'clipboard-write',
+    onchange: null,
+  });
+
+export const installClipboard = ({
+  api = 'missing',
+  legacy = true,
+}: ClipboardStubOptions = {}): ClipboardStub => {
+  const copies: string[] = [];
+  const counters = { writes: 0, commands: 0 };
+
+  const write = (items: readonly FakeClipboardItem[]): Promise<void> => {
+    counters.writes += 1;
+    if (api === 'refused') {
+      return Promise.reject(new Error('denied'));
+    }
+    for (const item of items) {
+      const text = item.parts['text/plain'];
+
+      if (text !== undefined) {
+        copies.push(text);
+      }
+    }
+    return Promise.resolve();
+  };
+
+  const execCommand = (command: string): boolean => {
+    counters.commands += 1;
+    if (!legacy) {
+      throw new Error('unsupported');
+    }
+    if (command === 'copy') {
+      const source = [...document.body.querySelectorAll('textarea')].findLast(
+        (area) => area.style.opacity === '0',
+      );
+
+      if (source !== undefined) {
+        copies.push(source.value);
+      }
+    }
+    return true;
+  };
+
+  vi.stubGlobal('ClipboardItem', FakeClipboardItem);
+
+  if (api !== 'missing') {
+    Object.defineProperty(window.navigator, 'clipboard', { configurable: true, value: { write } });
+
+    Object.defineProperty(window.navigator, 'permissions', {
+      configurable: true,
+      value: { query: (): Promise<PermissionStatus> => Promise.resolve(grantedStatus()) },
+    });
+  }
+  Object.defineProperty(document, 'execCommand', { configurable: true, value: execCommand });
+
+  return {
+    copies,
+    get writes() {
+      return counters.writes;
+    },
+    get commands() {
+      return counters.commands;
+    },
+    restore: () => {
+      vi.unstubAllGlobals();
+      Reflect.deleteProperty(window.navigator, 'clipboard');
+      Reflect.deleteProperty(window.navigator, 'permissions');
+      Reflect.deleteProperty(document, 'execCommand');
+    },
+  };
+};

@@ -182,6 +182,10 @@ test('the table of contents follows the section in view and links to headings', 
   await expect(chrome.currentTocLink()).toHaveText('Расширенный пример');
   await chrome.scrollArticleTo('toc-api');
   await expect(chrome.currentTocLink()).toHaveText('API');
+  await chrome.tocLinks().nth(2).click();
+  await expect(chrome.currentTocLink()).toHaveText('Базовый пример');
+  await page.waitForTimeout(300);
+  await expect(chrome.currentTocLink()).toHaveText('Базовый пример');
 });
 
 test('the skip link appears on focus and moves focus to its target', async ({ page, isMobile }) => {

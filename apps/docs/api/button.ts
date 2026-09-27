@@ -36,7 +36,10 @@ const docs: DocsMap = {
         ru: 'Адрес; переводит кнопку в режим ссылки.',
         en: 'Address; switches the button into link mode.',
       },
-      to: { ru: 'Маршрут для компонента роутера.', en: 'Route for a router component.' },
+      to: {
+        ru: 'Маршрут для компонента роутера: строка или объект; тип уточняется через NuiRouteRegister.',
+        en: 'Route for a router component: a string or an object; NuiRouteRegister narrows the type.',
+      },
     },
     slots: {
       default: { ru: 'Содержимое кнопки: текст и иконки.', en: 'Button content: text and icons.' },

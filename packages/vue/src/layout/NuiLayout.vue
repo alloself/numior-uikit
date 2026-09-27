@@ -69,7 +69,7 @@ watch(mobile, (isMobile) => {
 });
 
 provideLayout({ open, mobileOpen, mobile, sidebarId, toggle });
-useHotkey('mod+b', toggle, { enabled: () => shortcut });
+useHotkey('mod+b', toggle, { enabled: () => shortcut, inEditable: false });
 
 onMounted(() => {
   mounted.value = true;

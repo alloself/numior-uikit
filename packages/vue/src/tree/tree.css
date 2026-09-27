@@ -70,13 +70,13 @@
   translate: 0 var(--_start);
 }
 .nui-tree__item:hover,
-.nui-tree__item--active {
+.nui-tree:focus .nui-tree__item--active {
   background: var(--nui-neutral-soft);
 }
 .nui-tree__item--selected {
   background: var(--nui-primary-soft);
 }
-.nui-tree__item--selected.nui-tree__item--active,
+.nui-tree:focus .nui-tree__item--selected.nui-tree__item--active,
 .nui-tree__item--selected:hover {
   background: color-mix(in oklab, var(--nui-primary-soft), var(--nui-primary) 10%);
 }

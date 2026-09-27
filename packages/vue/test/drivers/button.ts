@@ -50,12 +50,12 @@ export class ButtonDriver extends ComponentDriver {
     return this.wrapper.find<HTMLButtonElement>('button').element;
   }
 
-  get root(): HTMLElement {
+  get node(): HTMLElement {
     return this.wrapper.find<HTMLElement>('.nui-button').element;
   }
 
   get tag(): string {
-    return this.root.tagName.toLowerCase();
+    return this.node.tagName.toLowerCase();
   }
 
   get href(): string | undefined {
@@ -79,7 +79,7 @@ export class ButtonDriver extends ComponentDriver {
   }
 
   get focused(): boolean {
-    return document.activeElement === this.root;
+    return document.activeElement === this.node;
   }
 
   get text(): string {
@@ -97,12 +97,12 @@ export class ButtonDriver extends ComponentDriver {
   clickNatively(): boolean {
     const event = new MouseEvent('click', { bubbles: true, cancelable: true });
 
-    this.root.dispatchEvent(event);
+    this.node.dispatchEvent(event);
     return event.defaultPrevented;
   }
 
   focus(): void {
-    this.root.focus();
+    this.node.focus();
   }
 
   async update(props: NuiButtonProps): Promise<void> {

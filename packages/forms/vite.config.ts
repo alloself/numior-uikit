@@ -19,7 +19,7 @@ export default defineConfig({
     },
     sourcemap: true,
     rolldownOptions: {
-      external: [/^vue$/, /^@numior\/(primitives|vue)$/, /^vee-validate$/],
+      external: [/^vue$/, /^@numior\/(primitives|vue)$/, /^vee-validate$/, /^lodash-es(\/|$)/],
     },
   },
 });

@@ -39,10 +39,10 @@ export class TextareaDriver extends ComponentDriver {
 
   async type(text: string): Promise<void> {
     this.element.value = text;
-    await this.wrapper.trigger('input');
+    await this.wrapper.find('textarea').trigger('input');
   }
 
   async commit(): Promise<void> {
-    await this.wrapper.trigger('change');
+    await this.wrapper.find('textarea').trigger('change');
   }
 }

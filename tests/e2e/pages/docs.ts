@@ -31,17 +31,21 @@ export class DocsConfigurator {
   readonly preview: Locator;
   readonly code: Locator;
 
-  constructor(page: Page) {
+  constructor(private readonly page: Page) {
     this.panel = page.locator('form[aria-label="Свойства"]');
     this.preview = this.panel.locator('..').locator('[role="group"][aria-label="Превью"]').first();
     this.code = this.panel.locator('..').locator('.nui-code__code');
   }
 
   async choose(label: string, option: string): Promise<void> {
-    await this.panel
-      .getByRole('group', { name: label })
-      .getByRole('radio', { name: option })
-      .click();
+    const group = this.panel.getByRole('group', { name: label });
+
+    if ((await group.count()) > 0) {
+      await group.getByRole('radio', { name: option }).click();
+      return;
+    }
+    await this.panel.getByRole('combobox', { name: label }).click();
+    await this.page.getByRole('option', { name: option, exact: true }).click();
   }
 
   async enable(label: string): Promise<void> {
@@ -132,6 +136,16 @@ export class DocsSite {
 
   get commandOptions(): Locator {
     return this.commandDialog.getByRole('option');
+  }
+
+  pressSearchHotkeyOnRussianLayout(): Promise<void> {
+    return this.page.locator('body').dispatchEvent('keydown', {
+      key: 'л',
+      code: 'KeyK',
+      ctrlKey: true,
+      bubbles: true,
+      cancelable: true,
+    });
   }
 
   async pickTheme(name: string): Promise<void> {

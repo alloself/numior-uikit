@@ -40,6 +40,18 @@ test.describe('pickers', () => {
     await expect.poll(async () => (await pickers.readOutput()).country).toBeNull();
   });
 
+  test('a long value truncates with an ellipsis and keeps the clear button off the text', async ({
+    page,
+  }) => {
+    const playground = new PlaygroundPage(page);
+    await playground.open();
+    const { pickers } = playground;
+    await expect(pickers.longValue).toHaveText(/Дальневосточный/);
+    await expect(pickers.longValue).toHaveCSS('text-overflow', 'ellipsis');
+    expect(await pickers.longValueOverflows()).toBe(true);
+    expect(await pickers.longClearGap()).toBeGreaterThanOrEqual(0);
+  });
+
   test('multiple select toggles options without closing and shows how many are picked', async ({
     page,
   }) => {

@@ -15,6 +15,8 @@ export default defineConfig({
       fileName: 'index',
     },
     sourcemap: true,
-    rolldownOptions: { external: [/^vue$/, /^@numior\/primitives$/, /^lucide-vue-next(\/|$)/] },
+    rolldownOptions: {
+      external: [/^vue$/, /^@numior\/primitives$/, /^lucide-vue-next(\/|$)/, /^@vueuse\/core$/],
+    },
   },
 });

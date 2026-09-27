@@ -15,21 +15,33 @@ describe('useHotkey', () => {
     document.body.innerHTML = '';
   });
 
-  it('runs the handler for the combo with either mod key and ignores editable targets', () => {
+  it('runs the handler for the combo with either mod key, on any keyboard layout and inside inputs', () => {
     const handler = vi.fn<(event: KeyboardEvent) => void>();
     const capture = captureSetup(() => useHotkey('mod+k', handler));
     expect(press(window, 'k', { ctrlKey: true })).toBe(true);
     expect(press(window, 'K', { metaKey: true })).toBe(true);
-    expect(handler).toHaveBeenCalledTimes(2);
+    expect(press(window, 'л', { ctrlKey: true, code: 'KeyK' })).toBe(true);
+    expect(handler).toHaveBeenCalledTimes(3);
     expect(press(window, 'k', { ctrlKey: true, altKey: true })).toBe(false);
     expect(press(window, 'k')).toBe(false);
     expect(press(window, 'j', { ctrlKey: true })).toBe(false);
+    expect(press(window, 'л', { ctrlKey: true, code: 'KeyL' })).toBe(false);
     const input = document.createElement('input');
     document.body.append(input);
-    expect(press(input, 'k', { ctrlKey: true })).toBe(false);
-    expect(handler).toHaveBeenCalledTimes(2);
+    expect(press(input, 'k', { ctrlKey: true })).toBe(true);
+    expect(handler).toHaveBeenCalledTimes(4);
     capture.wrapper.unmount();
     expect(press(window, 'k', { ctrlKey: true })).toBe(false);
+  });
+
+  it('keeps a bare key out of editable targets unless asked', () => {
+    const handler = vi.fn<(event: KeyboardEvent) => void>();
+    captureSetup(() => useHotkey('/', handler));
+    const input = document.createElement('input');
+    document.body.append(input);
+    expect(press(input, '/')).toBe(false);
+    expect(press(window, '/')).toBe(true);
+    expect(handler).toHaveBeenCalledTimes(1);
   });
 
   it('honours enabled, key aliases, a custom target and exact modifiers', () => {

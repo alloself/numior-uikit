@@ -30,6 +30,7 @@
   },
   "dependencies": {
     "@numior/primitives": "workspace:*",
+    "@vueuse/core": "15.0.0",
     "lucide-vue-next": "1.0.0"
   },
   "devDependencies": {

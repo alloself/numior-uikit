@@ -14,6 +14,7 @@
 </template>
 
 <script setup lang="ts">
+import { useEventListener } from '@vueuse/core';
 import { computed, ref, useTemplateRef, watch } from 'vue';
 import { useDelayedOpen, useFloating, usePopover } from '@numior/primitives';
 import { useTriggerElement } from '../shared/trigger-ref';
@@ -101,31 +102,14 @@ watch(
   },
 );
 
-watch(
-  () => anchor,
-  (element, _previous, onCleanup) => {
-    if (!element) {
-      return;
-    }
+const anchorOf = (): HTMLElement | null | undefined => anchor;
 
-    element.addEventListener('pointerenter', onPointerenter);
-    element.addEventListener('pointerleave', onPointerleave);
-    element.addEventListener('pointerdown', onPointerdown);
-    element.addEventListener('focus', onFocus);
-    element.addEventListener('blur', onBlur);
-    element.addEventListener('keydown', onKeydown);
-
-    onCleanup(() => {
-      element.removeEventListener('pointerenter', onPointerenter);
-      element.removeEventListener('pointerleave', onPointerleave);
-      element.removeEventListener('pointerdown', onPointerdown);
-      element.removeEventListener('focus', onFocus);
-      element.removeEventListener('blur', onBlur);
-      element.removeEventListener('keydown', onKeydown);
-    });
-  },
-  { immediate: true },
-);
+useEventListener(anchorOf, 'pointerenter', onPointerenter);
+useEventListener(anchorOf, 'pointerleave', onPointerleave);
+useEventListener(anchorOf, 'pointerdown', onPointerdown);
+useEventListener(anchorOf, 'focus', onFocus);
+useEventListener(anchorOf, 'blur', onBlur);
+useEventListener(anchorOf, 'keydown', onKeydown);
 
 const triggerAttrs = computed<NuiTooltipTriggerAttrs>(() => ({
   'aria-describedby': disabled ? undefined : tooltipId.value,

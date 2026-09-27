@@ -18,6 +18,7 @@ const partOf = (slot: Slot | undefined, text: string | undefined): Part =>
 
 const classesOf = (props: NuiFieldFrameProps, field: FieldContext) => ({
   'nui-field--group': props.group === true,
+  'nui-field--inline': props.inline === true,
   'nui-field--invalid': field.invalid.value,
   'nui-field--required': field.required.value,
   'nui-field--disabled': field.disabled.value,

@@ -1,4 +1,5 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
+import { installClipboard, type ClipboardStub } from '../../primitives/test/support/clipboard';
 import type { NuiCodeLine } from '../src';
 import { CodeDriver } from './drivers/code';
 
@@ -20,16 +21,12 @@ const TOKENS: readonly NuiCodeLine[] = [
   ],
 ];
 
-const fakeClipboard = () => {
-  const writeText = vi.fn<(text: string) => Promise<void>>(() => Promise.resolve());
-
-  vi.stubGlobal('navigator', { clipboard: { writeText } });
-  return writeText;
-};
-
 describe('NuiCode', () => {
+  let clipboard: ClipboardStub | undefined;
+
   afterEach(() => {
-    vi.unstubAllGlobals();
+    clipboard?.restore();
+    clipboard = undefined;
   });
 
   it('splits the code into lines, drops the trailing newline and paints tokens by scope', () => {
@@ -60,12 +57,12 @@ describe('NuiCode', () => {
   });
 
   it('copies the source and announces it, speaking the configured language', async () => {
-    const writeText = fakeClipboard();
+    clipboard = installClipboard();
     const code = CodeDriver.mount({ props: { code: SAMPLE }, config: { locale: 'ru-RU' } });
     expect(code.copyLabel).toBe('Скопировать код');
     expect(code.status).toBe('');
     await code.copy();
-    expect(writeText).toHaveBeenCalledWith(SAMPLE);
+    expect(clipboard.copies).toEqual([SAMPLE]);
     expect(code.copyLabel).toBe('Скопировано');
     expect(code.status).toBe('Скопировано');
     expect(code.hasModifier('copied')).toBe(true);

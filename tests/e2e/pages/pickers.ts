@@ -31,6 +31,7 @@ const ROOT =
 
 export class PickersSection {
   readonly countryTrigger: Locator;
+  readonly longTrigger: Locator;
   readonly tagsTrigger: Locator;
   readonly cityInput: Locator;
   readonly keywordsInput: Locator;
@@ -40,6 +41,7 @@ export class PickersSection {
 
   constructor(private readonly page: Page) {
     this.countryTrigger = page.getByTestId('pick-select');
+    this.longTrigger = page.getByTestId('pick-long');
     this.tagsTrigger = page.getByTestId('pick-multi');
     this.cityInput = page.getByTestId('pick-combobox');
     this.keywordsInput = page.getByTestId('pick-keywords');
@@ -58,6 +60,26 @@ export class PickersSection {
 
   option(label: string): Locator {
     return this.listbox.getByRole('option', { name: label });
+  }
+
+  get longValue(): Locator {
+    return this.longTrigger.locator('.nui-select__value');
+  }
+
+  longValueOverflows(): Promise<boolean> {
+    return this.longValue.evaluate((element) => element.scrollWidth > element.clientWidth);
+  }
+
+  longClearGap(): Promise<number> {
+    return this.longValue.evaluate((element) => {
+      const clear = element.closest('.nui-select')?.querySelector('.nui-select__clear');
+      const text = element.getBoundingClientRect();
+      const padding = Number.parseFloat(getComputedStyle(element).paddingInlineEnd);
+
+      return clear === null || clear === undefined
+        ? Number.NaN
+        : clear.getBoundingClientRect().left - (text.right - padding);
+    });
   }
 
   clearButton(control: Locator): Locator {

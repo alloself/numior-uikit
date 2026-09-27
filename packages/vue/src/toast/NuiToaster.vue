@@ -32,15 +32,8 @@
 </template>
 
 <script setup lang="ts">
-import {
-  computed,
-  onMounted,
-  onScopeDispose,
-  ref,
-  shallowReactive,
-  useTemplateRef,
-  watch,
-} from 'vue';
+import { computed, ref, shallowReactive, shallowRef, useTemplateRef, watch } from 'vue';
+import { useEventListener, useResizeObserver } from '@vueuse/core';
 import { useMessages, usePopover, useToastStore } from '@numior/primitives';
 import NuiToast from './NuiToast.vue';
 import { frontSize, itemStyle, layoutStack } from './toast-stack';
@@ -75,38 +68,43 @@ const regionStyle = computed(() => {
   return front === undefined ? {} : { '--_front-size': `${front}px` };
 });
 
-const observed = new Map<Element, string>();
+const pageDocument = (): Document | undefined =>
+  typeof document === 'undefined' ? undefined : document;
+
+const observed = new Map<HTMLElement, string>();
+const observedElements = shallowRef<HTMLElement[]>([]);
 
 const measure = (entries: readonly ResizeObserverEntry[]): void => {
   for (const entry of entries) {
-    const toastId = observed.get(entry.target);
-    if (toastId !== undefined && entry.target instanceof HTMLElement) {
-      sizes.set(toastId, entry.target.offsetHeight);
+    if (entry.target instanceof HTMLElement) {
+      const toastId = observed.get(entry.target);
+
+      if (toastId !== undefined) {
+        sizes.set(toastId, entry.target.offsetHeight);
+      }
     }
   }
 };
 
-const observer = typeof ResizeObserver === 'undefined' ? undefined : new ResizeObserver(measure);
+useResizeObserver(observedElements, measure);
 
 const track = (toastId: string, element: unknown): void => {
   const target = element instanceof HTMLElement ? element.firstElementChild : null;
-  if (target) {
+  if (target instanceof HTMLElement) {
     if (!observed.has(target)) {
       observed.set(target, toastId);
-      observer?.observe(target);
+      observedElements.value = [...observed.keys()];
     }
     return;
   }
   for (const [node, ownerId] of observed) {
     if (ownerId === toastId) {
-      observer?.unobserve(node);
       observed.delete(node);
     }
   }
+  observedElements.value = [...observed.keys()];
   sizes.delete(toastId);
 };
-
-onScopeDispose(() => observer?.disconnect());
 
 const modalOpen = (): boolean => document.querySelector('dialog[open]') !== null;
 
@@ -136,8 +134,5 @@ const onVisibilityChange = (): void => {
   }
 };
 
-onMounted(() => {
-  document.addEventListener('visibilitychange', onVisibilityChange);
-  onScopeDispose(() => document.removeEventListener('visibilitychange', onVisibilityChange));
-});
+useEventListener(pageDocument, 'visibilitychange', onVisibilityChange);
 </script>

@@ -1,5 +1,6 @@
-import { computed, onMounted, onScopeDispose, toValue, type MaybeRefOrGetter } from 'vue';
-import { isEditableTarget, matchesHotkey, parseHotkey } from './hotkey';
+import { onKeyStroke } from '@vueuse/core';
+import { computed, toValue, type MaybeRefOrGetter } from 'vue';
+import { hasModifier, isEditableTarget, matchesHotkey, parseHotkey } from './hotkey';
 
 export interface HotkeyOptions {
   readonly enabled?: MaybeRefOrGetter<boolean | undefined>;
@@ -14,27 +15,20 @@ export const useHotkey = (
   options: HotkeyOptions = {},
 ): void => {
   const hotkey = computed(() => parseHotkey(toValue(combo)));
+  const target = options.target;
 
-  const onKeydown = (event: Event): void => {
-    if (!(event instanceof KeyboardEvent) || event.defaultPrevented) {
-      return;
-    }
-    if (toValue(options.enabled) === false || !matchesHotkey(event, hotkey.value)) {
-      return;
-    }
-    if (!options.inEditable && isEditableTarget(event.target)) {
-      return;
-    }
+  const matches = (event: KeyboardEvent): boolean =>
+    !event.defaultPrevented &&
+    toValue(options.enabled) !== false &&
+    matchesHotkey(event, hotkey.value) &&
+    ((options.inEditable ?? hasModifier(hotkey.value)) || !isEditableTarget(event.target));
+
+  const run = (event: KeyboardEvent): void => {
     if (options.preventDefault !== false) {
       event.preventDefault();
     }
     handler(event);
   };
 
-  onMounted(() => {
-    const target = toValue(options.target) ?? window;
-
-    target.addEventListener('keydown', onKeydown);
-    onScopeDispose(() => target.removeEventListener('keydown', onKeydown));
-  });
+  onKeyStroke(matches, run, target === undefined ? {} : { target: () => toValue(target) });
 };

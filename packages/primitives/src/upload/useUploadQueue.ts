@@ -1,3 +1,4 @@
+import { clamp } from '@vueuse/core';
 import {
   computed,
   onScopeDispose,
@@ -59,7 +60,7 @@ const nextFrame = (run: () => void): (() => void) => {
 };
 
 const clampFraction = (fraction: number): number =>
-  Number.isFinite(fraction) ? Math.min(1, Math.max(0, fraction)) : 0;
+  Number.isFinite(fraction) ? clamp(fraction, 0, 1) : 0;
 
 const messageOf = (error: unknown): string | undefined => {
   if (error instanceof Error) {
