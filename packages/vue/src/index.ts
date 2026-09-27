@@ -37,6 +37,12 @@ export type {
   NuiCommandSource,
 } from './command/command.types';
 export type { NuiCommandMessages } from './command/command.messages';
+export { default as NuiToc } from './toc/NuiToc.vue';
+export type { NuiTocItem, NuiTocProps } from './toc/toc.types';
+export type { NuiTocMessages } from './toc/toc.messages';
+export { default as NuiSkipLink } from './skip-link/NuiSkipLink.vue';
+export type { NuiSkipLinkProps } from './skip-link/skip-link.types';
+export type { NuiSkipLinkMessages } from './skip-link/skip-link.messages';
 export type { NuiLinkProps, NuiLinkUnderline } from './link/link.types';
 export { default as NuiIcon } from './icon/NuiIcon.vue';
 export type { NuiIconProps } from './icon/icon.types';

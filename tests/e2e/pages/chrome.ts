@@ -21,6 +21,8 @@ export class ChromeSection {
   readonly commandOutput: Locator;
   readonly commandDialog: Locator;
   readonly commandInput: Locator;
+  readonly toc: Locator;
+  readonly tocArticle: Locator;
 
   constructor(readonly page: Page) {
     this.root = page.locator('section[aria-labelledby="chrome-title"]');
@@ -43,6 +45,26 @@ export class ChromeSection {
     this.commandOutput = page.getByTestId('command-output');
     this.commandDialog = page.getByTestId('command-dialog');
     this.commandInput = this.commandDialog.locator('.nui-command__input');
+    this.toc = page.getByTestId('toc');
+    this.tocArticle = page.getByTestId('toc-article');
+  }
+
+  tocLinks(): Locator {
+    return this.toc.locator('.nui-toc__link');
+  }
+
+  currentTocLink(): Locator {
+    return this.toc.locator('[aria-current="location"]');
+  }
+
+  scrollArticleTo(id: string): Promise<void> {
+    return this.tocArticle.evaluate((element, target) => {
+      const heading = element.querySelector(`#${target}`);
+
+      if (heading instanceof HTMLElement && element instanceof HTMLElement) {
+        element.scrollTop = heading.offsetTop - element.offsetTop;
+      }
+    }, id);
   }
 
   commandOptions(): Locator {

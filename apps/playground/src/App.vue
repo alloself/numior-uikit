@@ -7,6 +7,7 @@
     :dir="direction"
     :data-nui-accent="accent"
   >
+    <NuiSkipLink target="forms-title" data-testid="skip-link" />
     <header class="intro">
       <span class="eyebrow">NUMIOR UI / FOUNDATION</span>
       <h1>Свой интерфейс.<br />Общие принципы.</h1>
@@ -154,7 +155,7 @@
 
 <script setup lang="ts">
 import { ref, useTemplateRef } from 'vue';
-import { NuiButton, NuiDialog, useColorScheme } from '@numior/vue';
+import { NuiButton, NuiDialog, NuiSkipLink, useColorScheme } from '@numior/vue';
 import TypographySection from './TypographySection.vue';
 import ChromeSection from './ChromeSection.vue';
 import FormsSection from './FormsSection.vue';

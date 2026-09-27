@@ -76,6 +76,30 @@
         data-testid="code-titled"
       />
       <NuiCode :code="plain" data-testid="code-plain" />
+      <div class="nui-grid-auto nui-gap-4" data-testid="toc-demo">
+        <div
+          ref="toc-article"
+          class="nui-prose nui-prose--size-sm toc-demo__article"
+          data-testid="toc-article"
+        >
+          <h2 id="toc-install">Установка</h2>
+          <p>Установите пакеты и подключите стили токенов и компонентов.</p>
+          <h2 id="toc-usage">Использование</h2>
+          <p>Импортируйте компонент и передайте пропы.</p>
+          <h3 id="toc-basic">Базовый пример</h3>
+          <p>Кнопка с текстом и обработчиком клика.</p>
+          <h3 id="toc-advanced">Расширенный пример</h3>
+          <p>Загрузка, иконки и ссылки.</p>
+          <h2 id="toc-api">API</h2>
+          <p>Пропы, события и слоты.</p>
+        </div>
+        <NuiToc
+          :items="tocItems"
+          :root="tocRoot"
+          data-testid="toc"
+          @select="lastHeading = $event"
+        />
+      </div>
       <NuiCollapsible label="Подробности установки" variant="card" data-testid="collapsible">
         <p>Пакеты приватные до полного релиза 1.0; установка идёт из workspace.</p>
       </NuiCollapsible>
@@ -95,7 +119,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, useTemplateRef } from 'vue';
 import {
   NuiAccordion,
   NuiAccordionItem,
@@ -105,11 +129,29 @@ import {
   NuiCommandDialog,
   NuiKbd,
   NuiSeparator,
+  NuiToc,
   NuiToggleGroup,
   type NuiCodeLine,
   type NuiCommandSource,
   type NuiToggleItem,
+  type NuiTocItem,
 } from '@numior/vue';
+
+const tocRoot = useTemplateRef<HTMLElement>('toc-article');
+const lastHeading = ref('');
+
+const tocItems: readonly NuiTocItem[] = [
+  { id: 'toc-install', label: 'Установка' },
+  {
+    id: 'toc-usage',
+    label: 'Использование',
+    children: [
+      { id: 'toc-basic', label: 'Базовый пример' },
+      { id: 'toc-advanced', label: 'Расширенный пример' },
+    ],
+  },
+  { id: 'toc-api', label: 'API' },
+];
 
 const palette = ref(false);
 const paletteQuery = ref('');

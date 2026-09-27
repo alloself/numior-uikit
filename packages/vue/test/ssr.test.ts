@@ -43,6 +43,8 @@ import {
   NuiAccordion,
   NuiAccordionItem,
   NuiCommand,
+  NuiToc,
+  NuiSkipLink,
   NuiSwitch,
   NuiTable,
   NuiTabs,
@@ -158,6 +160,17 @@ const scenarios: Scenario[] = [
   { name: 'NuiIcon', render: () => h(NuiIcon, { alias: 'check' }) },
   { name: 'NuiSeparator', render: () => h(NuiSeparator, { label: 'or' }) },
   { name: 'NuiKbd', render: () => h(NuiKbd, { keys: 'mod+k' }) },
+  { name: 'NuiSkipLink', render: () => h(NuiSkipLink, { target: 'main' }) },
+  {
+    name: 'NuiToc',
+    render: () =>
+      h(NuiToc, {
+        items: [
+          { id: 'install', label: 'Install' },
+          { id: 'usage', label: 'Usage', children: [{ id: 'basic', label: 'Basic' }] },
+        ],
+      }),
+  },
   {
     name: 'NuiCommand',
     render: () =>

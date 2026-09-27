@@ -144,7 +144,7 @@ test('the command palette opens on top, filters as you type and picks with the k
   await expect(chrome.commandInput).toBeFocused();
   const box = await chrome.commandDialog.boundingBox();
   const viewport = page.viewportSize();
-  expect((box?.y ?? 0) + (box?.height ?? 0)).toBeLessThan((viewport?.height ?? 0) / 2 + 40);
+  expect(box?.y ?? Number.POSITIVE_INFINITY).toBeLessThan((viewport?.height ?? 0) / 4);
   await expect(chrome.commandOptions()).toHaveCount(5);
   await expect(chrome.activeCommand()).toHaveText('Начало работы');
   await chrome.commandInput.fill('тем');
@@ -162,4 +162,35 @@ test('the command palette opens on top, filters as you type and picks with the k
   await expect(chrome.commandDialog).toBeVisible();
   await page.keyboard.press('Escape');
   await expect(chrome.commandDialog).toBeHidden();
+});
+
+test('the table of contents follows the section in view and links to headings', async ({
+  page,
+}) => {
+  const playground = new PlaygroundPage(page);
+  await playground.open();
+  const { chrome } = playground;
+  await expect(chrome.toc).toHaveRole('navigation');
+  await expect(chrome.toc).toHaveAccessibleName('На странице');
+  await expect(chrome.tocLinks()).toHaveCount(5);
+  await expect(chrome.tocLinks().nth(2)).toHaveAttribute('href', '#toc-basic');
+  await chrome.tocArticle.scrollIntoViewIfNeeded();
+  await expect(chrome.currentTocLink()).toHaveText('Установка');
+  await chrome.scrollArticleTo('toc-advanced');
+  await expect(chrome.currentTocLink()).toHaveText('Расширенный пример');
+  await chrome.scrollArticleTo('toc-api');
+  await expect(chrome.currentTocLink()).toHaveText('API');
+});
+
+test('the skip link appears on focus and moves focus to its target', async ({ page, isMobile }) => {
+  test.skip(isMobile, 'keyboard navigation');
+  const playground = new PlaygroundPage(page);
+  await playground.open();
+  const skip = page.getByTestId('skip-link');
+  await expect(skip).toHaveCSS('opacity', '0');
+  await page.keyboard.press('Tab');
+  await expect(skip).toBeFocused();
+  await expect(skip).toHaveCSS('opacity', '1');
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#forms-title')).toBeFocused();
 });

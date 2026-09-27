@@ -287,3 +287,13 @@ footer {
 .dates-range {
   flex: 1 1 100%;
 }
+.toc-demo__article {
+  box-sizing: border-box;
+  max-block-size: 12rem;
+  padding-inline-end: var(--nui-space-3);
+  overflow-y: auto;
+  scroll-behavior: auto;
+}
+.toc-demo__article :where(h2, h3) {
+  scroll-margin-block-start: 0;
+}

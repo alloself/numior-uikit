@@ -1,0 +1,29 @@
+.nui-skip-link {
+  box-sizing: border-box;
+  position: fixed;
+  inset-block-start: var(--nui-space-2);
+  inset-inline-start: var(--nui-space-2);
+  z-index: var(--nui-z-toast);
+  padding-block: var(--nui-space-2);
+  padding-inline: var(--nui-space-4);
+  border-radius: var(--nui-radius);
+  background: var(--nui-primary);
+  color: var(--nui-primary-foreground);
+  font-family: var(--nui-font);
+  font-size: var(--nui-font-size-sm);
+  font-weight: var(--nui-font-weight-medium);
+  line-height: var(--nui-line-height-tight);
+  text-decoration: none;
+  box-shadow: var(--nui-shadow-md);
+  translate: 0 calc(-100% - var(--nui-space-4));
+  opacity: 0;
+  transition:
+    translate var(--nui-duration-normal) var(--nui-easing),
+    opacity var(--nui-duration-normal) var(--nui-easing);
+}
+.nui-skip-link:focus-visible {
+  translate: 0 0;
+  opacity: 1;
+  outline: var(--nui-focus-ring-width) solid var(--nui-focus);
+  outline-offset: var(--nui-focus-ring-offset);
+}

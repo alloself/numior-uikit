@@ -127,6 +127,12 @@ Enter выбирает активный, `select` не хранит выбор. 
 NuiDialog с `placement="top"` и `bare` (заголовок скрыт визуально, тело без отступов, кнопки
 закрытия нет — Esc в поле), горячая клавиша `mod+k` через `useHotkey`, выбор закрывает.
 
+NuiToc: `nav` с подписью из словаря, вложенные `ol` ссылок `#id`, текущий раздел от
+`useScrollSpy` помечен `aria-current="location"` и полосой у начала; собственная разметка, а не
+NuiList, потому что оглавление — ссылки-якоря без выбора и roving-фокуса. NuiSkipLink:
+фиксированная ссылка, видимая только в фокусе; по активации переносит фокус на цель
+(`tabindex="-1"` при необходимости) и обновляет hash без прокрутки истории.
+
 Далее в волне: `defineSlots` во всех компонентах;
 кнопка-ссылка; NuiSeparator, NuiKbd, NuiCode, NuiToggleGroup, NuiCollapsible/NuiAccordion,
 NuiCommand, NuiToc, NuiSkipLink, NuiSplitter; режимы NuiLayout.
@@ -148,7 +154,8 @@ NuiCommand, NuiToc, NuiSkipLink, NuiSplitter; режимы NuiLayout.
 - NuiToggleGroup (страница «Группа переключателей»);
 - NuiCollapsible и NuiAccordion (страницы «Сворачиваемый блок» и «Аккордеон»);
 - NuiCommand и NuiCommandDialog (страница «Палитра команд»), `placement`/`bare` у диалога,
-  `shortcut` у записей списка.
+  `shortcut` у записей списка;
+- NuiToc и NuiSkipLink (страницы «Оглавление» и «Ссылка к содержимому»).
 
 ## Alternatives Considered
 
