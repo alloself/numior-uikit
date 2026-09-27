@@ -60,7 +60,7 @@
   font: inherit;
   text-align: start;
   text-decoration: none;
-  cursor: default;
+  cursor: pointer;
   user-select: none;
   outline: none;
   transition:

@@ -110,6 +110,22 @@ export class FormsSection {
   }
 }
 
+const CLICKABLE_CONTROLS = [
+  'button:not(:disabled)',
+  'a[href]',
+  'select:not(:disabled)',
+  'input[type="checkbox"]:not(:disabled)',
+  'input[type="radio"]:not(:disabled)',
+  '[role="option"]',
+  '[role="tab"]',
+  '[role="menuitem"]',
+  '[role="menuitemcheckbox"]',
+  '[role="menuitemradio"]',
+  '[role="treeitem"]',
+].join(', ');
+
+const DRAG_GRIPS = '.nui-table__grip, .nui-field-array__grip';
+
 export class PlaygroundPage {
   readonly workspace: Locator;
   readonly resolvedScheme: Locator;
@@ -213,6 +229,25 @@ export class PlaygroundPage {
 
   async setDirection(direction: Direction): Promise<void> {
     await this.settings.direction.selectOption(direction);
+  }
+
+  controlsWithoutPointer(): Promise<string[]> {
+    return this.page.evaluate(
+      ({ selector, grips }) =>
+        [...document.querySelectorAll(selector)].flatMap((element) => {
+          const cursor = getComputedStyle(element).cursor;
+          const expected = element.matches(grips) ? 'grab' : 'pointer';
+
+          const inert =
+            element.closest('[aria-disabled="true"]') !== null ||
+            element.getAttribute('aria-current') === 'step';
+
+          return inert || cursor === expected
+            ? []
+            : [`${element.tagName.toLowerCase()}.${element.className} → ${cursor}`];
+        }),
+      { selector: CLICKABLE_CONTROLS, grips: DRAG_GRIPS },
+    );
   }
 
   hasHorizontalOverflow(): Promise<boolean> {

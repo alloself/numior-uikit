@@ -207,7 +207,7 @@
   cursor: not-allowed;
 }
 .nui-list-item--mode-option {
-  cursor: default;
+  cursor: pointer;
   user-select: none;
   outline: none;
 }

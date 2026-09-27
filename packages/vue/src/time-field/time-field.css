@@ -150,6 +150,7 @@
   color: var(--nui-text-muted);
   white-space: nowrap;
   scroll-snap-align: center;
+  cursor: pointer;
   user-select: none;
   transition:
     color var(--nui-duration-fast) var(--nui-easing),
@@ -165,7 +166,7 @@
 }
 .nui-time-field__wheel-item--disabled {
   opacity: var(--nui-disabled-opacity);
-  cursor: default;
+  cursor: not-allowed;
 }
 .nui-time-field__wheel-separator {
   position: relative;

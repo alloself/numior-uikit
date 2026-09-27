@@ -30,6 +30,7 @@ const advance = (drag: HeldDrag, y: number, element: HTMLElement): HeldDrag => {
     return drag;
   }
   element.style.scrollSnapType = 'none';
+  element.style.cursor = 'grabbing';
   element.scrollTop = drag.top - distance;
   return { ...drag, kind: 'dragging' };
 };
@@ -58,6 +59,7 @@ export const useWheelDrag = (options: WheelDragOptions): WheelDrag => {
 
     if (element) {
       element.style.scrollSnapType = '';
+      element.style.cursor = '';
     }
     state.dragged = true;
     options.release();

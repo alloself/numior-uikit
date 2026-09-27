@@ -72,6 +72,12 @@ test('Tailwind utilities consume the same runtime tokens as native CSS', async (
   }
 });
 
+test('every enabled control that reacts to a click shows the pointer cursor', async ({ page }) => {
+  const playground = new PlaygroundPage(page);
+  await playground.open();
+  expect(await playground.controlsWithoutPointer()).toEqual([]);
+});
+
 test('light and dark playground have no automatically detectable WCAG AA violations', async ({
   page,
 }) => {
