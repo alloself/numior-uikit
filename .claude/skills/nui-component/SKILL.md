@@ -127,6 +127,9 @@ commitDraft() })`; `NuiFormField` runs these commits before a programmatic submi
   the cursor of every enabled control in the playground.
 - A drag starts only from its handle, never from the whole row or cell: otherwise it fights the
   click (sorting, selection) and text selection.
+- A drag ghost never covers its insertion line: it spans only part of the cross axis (a column
+  ghost the header band, a row ghost a compact chip at the row start) while the line runs the
+  full width or height beside it. The ghost's grip stays under the pointer.
 - Focus ring: `outline: var(--nui-focus-ring-width) solid var(--nui-focus); outline-offset:
 var(--nui-focus-ring-offset)`. Disabled: `opacity: var(--nui-disabled-opacity)`.
 - Logical properties only (`inline-size`, `inset-inline-start`, `padding-inline`).

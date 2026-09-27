@@ -14,8 +14,10 @@
     :style="layer.ghost.value.style"
     aria-hidden="true"
   >
-    <NuiIcon alias="grip" class="nui-table__ghost-grip" />
-    <span class="nui-table__ghost-label">{{ layer.ghost.value.label }}</span>
+    <div class="nui-table__ghost-body">
+      <NuiIcon alias="grip" class="nui-table__ghost-grip" />
+      <span class="nui-table__ghost-label">{{ layer.ghost.value.label }}</span>
+    </div>
   </div>
 </template>
 

@@ -236,6 +236,9 @@ test.describe('table', () => {
 
     await table.dragBetween(table.gripOf('Айгуль'), table.gripOf('Артём'), 0, 8, async () => {
       await expect(table.ghost).toContainText('Айгуль');
+      const chip = await boxOf(table.ghostBody);
+      const line = await boxOf(table.rowDropLine(table.treeTable));
+      expect(line.x + line.width).toBeGreaterThan(chip.x + chip.width + 100);
     });
 
     await expect(table.ghost).toHaveCount(0);

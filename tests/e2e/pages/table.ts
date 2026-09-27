@@ -199,8 +199,16 @@ export class TableSection {
     return this.page.locator('.nui-table__ghost');
   }
 
+  get ghostBody(): Locator {
+    return this.ghost.locator('.nui-table__ghost-body');
+  }
+
   dropLine(table: Locator): Locator {
     return table.locator('.nui-table__drop--column');
+  }
+
+  rowDropLine(table: Locator): Locator {
+    return table.locator('.nui-table__drop--row');
   }
 
   opacityOf(locator: Locator): Promise<string> {

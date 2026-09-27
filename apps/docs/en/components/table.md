@@ -109,7 +109,9 @@ header, are never sorted or paged, and stay in place while scrolling under `stic
 (Space, ↑/↓, Space, Escape) to move it among the siblings of one parent; the table emits
 `reorder({ row, from, to, parent })` with sibling indices and the consumer updates the data.
 While a sort is active the grips are disabled. The row grip shows on row hover, the row ghost
-keeps the row height and carries the label from `rowLabel` or the first column. Utility
+is a compact chip as tall as the row at its start carrying the label from `rowLabel` or the
+first column, so the insertion line shows beside it across the whole table, as the column line
+shows below the header. Utility
 columns with checkboxes and grips are pinned to the start by default, so selection and
 dragging stay at hand while the table scrolls horizontally.
 
@@ -185,6 +187,6 @@ Column options: `key`, `label`, `sortable`, `align`, `width` (px or CSS), `minWi
 `--sticky-start`, `--sticky-end`, `--sticky-edge`, `--resizing`, `--dragging`), `__sort`
 (`--active`, `--desc`), `__sort-icon`, `__resizer`, `__grip`, `__toggle` (`--expanded`,
 `--loading`, `--leaf`), `__drop` (`--column`, `--row`), `__ghost` (`--column`, `--row`),
-`__ghost-grip`, `__ghost-label`, `__live`, `__spacer`, `__footer`; variables `--_row`,
+`__ghost-body`, `__ghost-grip`, `__ghost-label`, `__live`, `__spacer`, `__footer`; variables `--_row`,
 `--_pad-x`, `--_height`, `--_stripe`, `--_hover`, `--_head-bg`, `--_indent`, `--_level`,
 `--_head-size`, `--_caption-size`.

@@ -383,9 +383,14 @@
   position: absolute;
   z-index: 7;
   display: flex;
+  pointer-events: none;
+}
+.nui-table__ghost-body {
+  display: flex;
   box-sizing: border-box;
   align-items: center;
   gap: var(--nui-space-1);
+  block-size: 100%;
   padding-inline: var(--nui-space-2);
   overflow: hidden;
   border: 1px solid var(--nui-border);
@@ -394,13 +399,19 @@
   color: var(--nui-text);
   box-shadow: var(--nui-shadow-md);
   white-space: nowrap;
-  pointer-events: none;
 }
-.nui-table__ghost--column {
+.nui-table__ghost--column .nui-table__ghost-body {
+  inline-size: 100%;
   padding-inline: var(--_pad-x);
   color: var(--nui-text-muted);
   font-size: var(--nui-font-size-xs);
   font-weight: 600;
+}
+.nui-table__ghost--row .nui-table__ghost-body {
+  inline-size: max-content;
+  min-inline-size: min(100%, 12rem);
+  max-inline-size: min(100%, 24rem);
+  padding-inline-end: var(--nui-space-4);
 }
 .nui-table__ghost-grip {
   flex: none;
