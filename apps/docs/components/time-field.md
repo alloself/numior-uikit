@@ -74,24 +74,24 @@ Delete очищают его, ←/→ и Enter переключают сегме
 
 ## API
 
-| Prop         | Тип                    | По умолчанию                                                 | Описание                       |
-| ------------ | ---------------------- | ------------------------------------------------------------ | ------------------------------ |
-| `v-model`    | `string \| null`       | `null`                                                       | `HH:mm` или `HH:mm:ss`         |
-| `seconds`    | `boolean`              | `false`                                                      | Сегмент секунд                 |
-| `hourCycle`  | `'h12' \| 'h23'`       | из локали                                                    | Принудительный цикл            |
-| `locale`     | `string`               | из конфига                                                   | Локаль раскладки и подписей    |
-| `min`, `max` | `string`               | —                                                            | Границы для зажима и барабанов |
-| `step`       | `number`               | `15`                                                         | Шаг минут и PageUp/PageDown    |
-| `readonly`   | `boolean`              | `false`                                                      | Только чтение                  |
-| `name`       | `string`               | —                                                            | Скрытый `input` со значением   |
-| `placement`  | `FloatingPlacement`    | `'bottom-start'`                                             | Сторона панели барабанов       |
-| `clockLabel` | `string`               | [словарь](/localization#timefield): «Выбрать время»          | Подпись кнопки с часами        |
-| `emptyLabel` | `string`               | [словарь](/localization#timefield): «Нет доступного времени» | Текст, если время недоступно   |
-| `size`       | `'sm' \| 'md' \| 'lg'` | `'md'`                                                       | Ступень размера                |
-| `id`         | `string`               | из поля                                                      | Явный id (ставится на часы)    |
-| `disabled`   | `boolean`              | из поля                                                      | Отключение                     |
-| `required`   | `boolean`              | из поля                                                      | `aria-required` на сегментах   |
-| `invalid`    | `boolean`              | из поля                                                      | `aria-invalid` и красная рамка |
+| Prop         | Тип                    | По умолчанию                                                       | Описание                       |
+| ------------ | ---------------------- | ------------------------------------------------------------------ | ------------------------------ |
+| `v-model`    | `string \| null`       | `null`                                                             | `HH:mm` или `HH:mm:ss`         |
+| `seconds`    | `boolean`              | `false`                                                            | Сегмент секунд                 |
+| `hourCycle`  | `'h12' \| 'h23'`       | из локали                                                          | Принудительный цикл            |
+| `locale`     | `string`               | из конфига                                                         | Локаль раскладки и подписей    |
+| `min`, `max` | `string`               | —                                                                  | Границы для зажима и барабанов |
+| `step`       | `number`               | `15`                                                               | Шаг минут и PageUp/PageDown    |
+| `readonly`   | `boolean`              | `false`                                                            | Только чтение                  |
+| `name`       | `string`               | —                                                                  | Скрытый `input` со значением   |
+| `placement`  | `FloatingPlacement`    | `'bottom-start'`                                                   | Сторона панели барабанов       |
+| `clockLabel` | `string`               | [словарь](/guide/localization#timefield): «Выбрать время»          | Подпись кнопки с часами        |
+| `emptyLabel` | `string`               | [словарь](/guide/localization#timefield): «Нет доступного времени» | Текст, если время недоступно   |
+| `size`       | `'sm' \| 'md' \| 'lg'` | `'md'`                                                             | Ступень размера                |
+| `id`         | `string`               | из поля                                                            | Явный id (ставится на часы)    |
+| `disabled`   | `boolean`              | из поля                                                            | Отключение                     |
+| `required`   | `boolean`              | из поля                                                            | `aria-required` на сегментах   |
+| `invalid`    | `boolean`              | из поля                                                            | `aria-invalid` и красная рамка |
 
 Метод `focus()` фокусирует часы. Блок `nui-time-field` (модификаторы `--size-*`, `--open`,
 `--invalid`, `--disabled`, `--readonly`; элементы `__segments`, `__segment` с `--type-*`,

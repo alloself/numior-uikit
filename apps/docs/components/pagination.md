@@ -55,25 +55,25 @@ const pageSize = ref(20);
 
 ## API
 
-| Prop               | Тип                           | По умолчанию                                                  | Описание                         |
-| ------------------ | ----------------------------- | ------------------------------------------------------------- | -------------------------------- |
-| `v-model:page`     | `number`                      | `1`                                                           | Текущая страница                 |
-| `v-model:pageSize` | `number`                      | `20`                                                          | Размер страницы                  |
-| `total`            | `number`                      | —                                                             | Всего элементов                  |
-| `siblings`         | `number`                      | `1`                                                           | Страниц с каждой стороны текущей |
-| `boundaries`       | `number`                      | `1`                                                           | Страниц у каждого края           |
-| `edges`            | `boolean`                     | `false`                                                       | Кнопки «в начало» и «в конец»    |
-| `href`             | `(page: number) => string`    | —                                                             | Ссылки вместо кнопок             |
-| `as`               | `string \| Component`         | `'a'`                                                         | Компонент ссылки для роутера     |
-| `pageSizes`        | `number[]`                    | —                                                             | Выбор размера страницы           |
-| `showRange`        | `boolean`                     | `true`                                                        | Строка диапазона                 |
-| `size`             | `NuiSize`                     | `'md'`                                                        | Размер контролов                 |
-| `label`            | `string`                      | [словарь](/localization#pagination): «Постраничная навигация» | `aria-label` навигации           |
-| `pageLabel`        | `(page: number) => string`    | [словарь](/localization#pagination): «Страница N»             | Имя кнопки страницы              |
-| `rangeLabel`       | `(from, to, total) => string` | [словарь](/localization#pagination): «from–to из total»       | Строка диапазона                 |
+| Prop               | Тип                           | По умолчанию                                                        | Описание                         |
+| ------------------ | ----------------------------- | ------------------------------------------------------------------- | -------------------------------- |
+| `v-model:page`     | `number`                      | `1`                                                                 | Текущая страница                 |
+| `v-model:pageSize` | `number`                      | `20`                                                                | Размер страницы                  |
+| `total`            | `number`                      | —                                                                   | Всего элементов                  |
+| `siblings`         | `number`                      | `1`                                                                 | Страниц с каждой стороны текущей |
+| `boundaries`       | `number`                      | `1`                                                                 | Страниц у каждого края           |
+| `edges`            | `boolean`                     | `false`                                                             | Кнопки «в начало» и «в конец»    |
+| `href`             | `(page: number) => string`    | —                                                                   | Ссылки вместо кнопок             |
+| `as`               | `string \| Component`         | `'a'`                                                               | Компонент ссылки для роутера     |
+| `pageSizes`        | `number[]`                    | —                                                                   | Выбор размера страницы           |
+| `showRange`        | `boolean`                     | `true`                                                              | Строка диапазона                 |
+| `size`             | `NuiSize`                     | `'md'`                                                              | Размер контролов                 |
+| `label`            | `string`                      | [словарь](/guide/localization#pagination): «Постраничная навигация» | `aria-label` навигации           |
+| `pageLabel`        | `(page: number) => string`    | [словарь](/guide/localization#pagination): «Страница N»             | Имя кнопки страницы              |
+| `rangeLabel`       | `(from, to, total) => string` | [словарь](/guide/localization#pagination): «from–to из total»       | Строка диапазона                 |
 
 А также `previousLabel`, `nextLabel`, `firstLabel`, `lastLabel`, `pageSizeLabel` — все из
-[словаря](/localization#pagination). Блок
+[словаря](/guide/localization#pagination). Блок
 `nui-pagination` (модификатор `--size-*`; элементы `__range`, `__page-size`, `__page-size-label`,
 `__select`, `__list`, `__item` с `--page`, `--ellipsis`, `--edge`, `--status`, `__control` с `--current`,
 `__previous`, `__next`, `__page`, `__arrow`, `__ellipsis`, `__status`).

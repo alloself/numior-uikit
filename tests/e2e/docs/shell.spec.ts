@@ -18,6 +18,24 @@ test('the sidebar navigates, marks the current page and the contents follow the 
   await expect(docs.currentTocLink).toHaveText('API');
 });
 
+test('header sections switch the sidebar and mark the current section', async ({
+  page,
+  isMobile,
+}) => {
+  test.skip(isMobile, 'the sidebar lives in a drawer on phones');
+  const docs = new DocsSite(page);
+  await docs.open('/components/button');
+  await expect(docs.navLink('Компоненты')).toHaveAttribute('aria-current', 'page');
+  await expect(docs.sidebarLink('Начало работы')).toHaveCount(0);
+  await docs.navLink('Руководство').click();
+  await expect(page).toHaveURL(/\/guide\/getting-started$/);
+  await expect(docs.navLink('Руководство')).toHaveAttribute('aria-current', 'page');
+  await expect(docs.sidebarLink('Темизация')).toBeVisible();
+  await expect(docs.sidebarLink('Кнопка')).toHaveCount(0);
+  await docs.open('/');
+  await expect(docs.sidebar).toHaveCount(0);
+});
+
 test('the theme menu switches the scheme and the choice survives a reload', async ({ page }) => {
   const docs = new DocsSite(page);
   await docs.open('/components/button');
@@ -40,7 +58,7 @@ test('the language menu opens the same page in English', async ({ page }) => {
 
 test('search finds a page by text and opens it', async ({ page, isMobile }) => {
   const docs = new DocsSite(page);
-  await docs.open('/guide');
+  await docs.open('/guide/getting-started');
   if (isMobile) {
     await docs.searchButton.tap();
   } else {
@@ -64,8 +82,8 @@ test('the sidebar lives in a drawer on phones and closes after navigation', asyn
   await expect(docs.sidebar).toBeHidden();
   await docs.trigger.tap();
   await expect(docs.drawer).toBeVisible();
-  await docs.drawerLink('Темизация').tap();
-  await expect(page).toHaveURL(/\/theming$/);
+  await docs.drawerLink('Выбор из списка').tap();
+  await expect(page).toHaveURL(/\/components\/select$/);
   await expect(docs.drawer).toBeHidden();
 });
 

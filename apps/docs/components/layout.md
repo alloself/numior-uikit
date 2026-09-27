@@ -124,7 +124,7 @@ const open = ref(true);
 (`label`, `icon`, `href`, `to`, `as`, `current`, `disabled`, `badge`, `tooltip`; слоты default и
 `trailing`), `NuiSidebarSub` (`label`, `icon`, `active` — внутри текущая страница, `id`,
 `v-model:open`), `NuiSidebarTrigger` (`label`, словарь: «Переключить боковую панель»). Тексты — из
-[словаря](/localization#sidebar).
+[словаря](/guide/localization#sidebar).
 
 Блоки `nui-layout` (`--mobile`, `--sidebar-open`; `__body`, `__content`; переменные
 `--_sidebar-size`, `--_rail-size`, `--_bar-size`), `nui-app-bar` (`--sticky`; `__start`,

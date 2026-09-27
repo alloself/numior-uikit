@@ -102,7 +102,7 @@ want to wrap the standard card.
 
 `NuiToaster`: `placement` (`top-start | top | top-end | bottom-start | bottom | bottom-end`,
 default `top-end`), `expand` (keeps the stack expanded), `label` (region `aria-label`,
-[dictionary](/en/localization#toast): “Notifications”), `closeLabel`, `id`. On narrow screens the region spans the full width. Block `nui-toaster`
+[dictionary](/en/guide/localization#toast): “Notifications”), `closeLabel`, `id`. On narrow screens the region spans the full width. Block `nui-toaster`
 with `--placement-*` and `--expanded` modifiers, element `__item` with `--behind` and
 `--leaving` modifiers; region variables `--_inset`, `--_width`, `--_gap`, `--_peek`,
 `--_direction`, `--_front-size`, item variables `--_index`, `--_offset`, `--_size`.

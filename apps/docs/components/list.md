@@ -114,27 +114,27 @@ Tab как есть. В режиме `selectable` пункты с `value` пол
 
 ## API
 
-| Prop           | Тип                                                         | По умолчанию                                 | Описание                                                    |
-| -------------- | ----------------------------------------------------------- | -------------------------------------------- | ----------------------------------------------------------- |
-| `id`           | `string`                                                    | генерируется                                 | Id корня и основа id пунктов                                |
-| `as`           | `'ul' \| 'ol'`                                              | `'ul'`                                       | Тег списка                                                  |
-| `variant`      | `'plain' \| 'divided' \| 'bordered' \| 'floating' \| 'nav'` | `'plain'`                                    | Разделители, рамка, всплывающая поверхность или навигация   |
-| `size`         | `'sm' \| 'md' \| 'lg'`                                      | `'md'`                                       | Высота строки (токены контролов)                            |
-| `items`        | `NuiListSource<E>`                                          | —                                            | Пункты и группы `{ label, items }`; `[]` — пустое состояние |
-| `selectable`   | `'single' \| 'multiple'`                                    | —                                            | Режим выбора                                                |
-| `modelValue`   | `T \| null`                                                 | `null`                                       | Значение в одиночном режиме (`v-model`)                     |
-| `values`       | `T[]`                                                       | `[]`                                         | Значения в `multiple` (`v-model:values`)                    |
-| `getKey`       | `(value: T) => string`                                      | —                                            | Ключ объектных значений                                     |
-| `loop`         | `boolean`                                                   | `true`                                       | Циклические стрелки                                         |
-| `typeahead`    | `boolean`                                                   | `true`                                       | Поиск по первым буквам                                      |
-| `keyboard`     | `boolean`                                                   | `true`                                       | `false` — клавиатурой управляет владелец                    |
-| `activeId`     | `string`                                                    | —                                            | Id пункта с виртуальным фокусом                             |
-| `loading`      | `boolean`                                                   | `false`                                      | Строка загрузки вместо пустого состояния                    |
-| `loadingLabel` | `string`                                                    | [словарь](/localization#list): «Загрузка»    | Подпись загрузки                                            |
-| `label`        | `string`                                                    | —                                            | Имя списка                                                  |
-| `labelledBy`   | `string`                                                    | —                                            | Id внешней подписи                                          |
-| `emptyLabel`   | `string`                                                    | [словарь](/localization#list): «Список пуст» | Заголовок пустого состояния                                 |
-| `linkAs`       | `string \| Component`                                       | `'a'`                                        | Компонент роутера для пунктов из `items`                    |
+| Prop           | Тип                                                         | По умолчанию                                       | Описание                                                    |
+| -------------- | ----------------------------------------------------------- | -------------------------------------------------- | ----------------------------------------------------------- |
+| `id`           | `string`                                                    | генерируется                                       | Id корня и основа id пунктов                                |
+| `as`           | `'ul' \| 'ol'`                                              | `'ul'`                                             | Тег списка                                                  |
+| `variant`      | `'plain' \| 'divided' \| 'bordered' \| 'floating' \| 'nav'` | `'plain'`                                          | Разделители, рамка, всплывающая поверхность или навигация   |
+| `size`         | `'sm' \| 'md' \| 'lg'`                                      | `'md'`                                             | Высота строки (токены контролов)                            |
+| `items`        | `NuiListSource<E>`                                          | —                                                  | Пункты и группы `{ label, items }`; `[]` — пустое состояние |
+| `selectable`   | `'single' \| 'multiple'`                                    | —                                                  | Режим выбора                                                |
+| `modelValue`   | `T \| null`                                                 | `null`                                             | Значение в одиночном режиме (`v-model`)                     |
+| `values`       | `T[]`                                                       | `[]`                                               | Значения в `multiple` (`v-model:values`)                    |
+| `getKey`       | `(value: T) => string`                                      | —                                                  | Ключ объектных значений                                     |
+| `loop`         | `boolean`                                                   | `true`                                             | Циклические стрелки                                         |
+| `typeahead`    | `boolean`                                                   | `true`                                             | Поиск по первым буквам                                      |
+| `keyboard`     | `boolean`                                                   | `true`                                             | `false` — клавиатурой управляет владелец                    |
+| `activeId`     | `string`                                                    | —                                                  | Id пункта с виртуальным фокусом                             |
+| `loading`      | `boolean`                                                   | `false`                                            | Строка загрузки вместо пустого состояния                    |
+| `loadingLabel` | `string`                                                    | [словарь](/guide/localization#list): «Загрузка»    | Подпись загрузки                                            |
+| `label`        | `string`                                                    | —                                                  | Имя списка                                                  |
+| `labelledBy`   | `string`                                                    | —                                                  | Id внешней подписи                                          |
+| `emptyLabel`   | `string`                                                    | [словарь](/guide/localization#list): «Список пуст» | Заголовок пустого состояния                                 |
+| `linkAs`       | `string \| Component`                                       | `'a'`                                              | Компонент роутера для пунктов из `items`                    |
 
 `NuiListItem`: `value`, `id`, `label`, `description`, `icon`, `href`, `to`, `as`, `interactive`,
 `disabled`, `current`, `badge`; слоты `leading`, `default` (`{ selected, active }`), `description`,

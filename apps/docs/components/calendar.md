@@ -61,25 +61,25 @@ const weekend = (value) => ['6', '0'].includes(String(new Date(`${value}T00:00:0
 
 ## API
 
-| Prop              | Тип                                          | По умолчанию                      | Описание                                             |
-| ----------------- | -------------------------------------------- | --------------------------------- | ---------------------------------------------------- |
-| `v-model`         | `string \| string[] \| NuiDateRange \| null` | `null`                            | Значение по `mode`                                   |
-| `v-model:month`   | `string`                                     | месяц значения                    | Показанный месяц `YYYY-MM`                           |
-| `mode`            | `'single' \| 'multiple' \| 'range'`          | `'single'`                        | Режим выбора                                         |
-| `locale`          | `string`                                     | из конфига                        | Локаль подписей и формата                            |
-| `weekStart`       | `1…7`                                        | из локали                         | Первый день недели (ISO)                             |
-| `min` / `max`     | `string`                                     | —                                 | Границы выбора                                       |
-| `isDateDisabled`  | `(date: string) => boolean`                  | —                                 | Закрытые даты                                        |
-| `months`          | `number`                                     | `1`                               | Сколько месяцев показать                             |
-| `weekNumbers`     | `boolean`                                    | `false`                           | Колонка номеров недель ISO                           |
-| `fixedWeeks`      | `boolean`                                    | `true`                            | Всегда шесть строк                                   |
-| `showOutsideDays` | `boolean`                                    | `true`                            | Дни соседних месяцев                                 |
-| `showToday`       | `boolean`                                    | `true`                            | Кнопка «Сегодня»                                     |
-| `today`           | `string`                                     | локальная дата                    | Сегодняшний день `YYYY-MM-DD`                        |
-| `presets`         | `NuiDatePreset[]`                            | —                                 | Пресеты диапазонов                                   |
-| `size`            | `'sm' \| 'md' \| 'lg'`                       | `'md'`                            | Размер ячеек                                         |
-| `disabled`        | `boolean`                                    | `false`                           | Весь календарь неактивен                             |
-| `*Label`          | `string`                                     | [словарь](/localization#calendar) | `previous`, `next`, `month`, `year`, `today`, `week` |
+| Prop              | Тип                                          | По умолчанию                            | Описание                                             |
+| ----------------- | -------------------------------------------- | --------------------------------------- | ---------------------------------------------------- |
+| `v-model`         | `string \| string[] \| NuiDateRange \| null` | `null`                                  | Значение по `mode`                                   |
+| `v-model:month`   | `string`                                     | месяц значения                          | Показанный месяц `YYYY-MM`                           |
+| `mode`            | `'single' \| 'multiple' \| 'range'`          | `'single'`                              | Режим выбора                                         |
+| `locale`          | `string`                                     | из конфига                              | Локаль подписей и формата                            |
+| `weekStart`       | `1…7`                                        | из локали                               | Первый день недели (ISO)                             |
+| `min` / `max`     | `string`                                     | —                                       | Границы выбора                                       |
+| `isDateDisabled`  | `(date: string) => boolean`                  | —                                       | Закрытые даты                                        |
+| `months`          | `number`                                     | `1`                                     | Сколько месяцев показать                             |
+| `weekNumbers`     | `boolean`                                    | `false`                                 | Колонка номеров недель ISO                           |
+| `fixedWeeks`      | `boolean`                                    | `true`                                  | Всегда шесть строк                                   |
+| `showOutsideDays` | `boolean`                                    | `true`                                  | Дни соседних месяцев                                 |
+| `showToday`       | `boolean`                                    | `true`                                  | Кнопка «Сегодня»                                     |
+| `today`           | `string`                                     | локальная дата                          | Сегодняшний день `YYYY-MM-DD`                        |
+| `presets`         | `NuiDatePreset[]`                            | —                                       | Пресеты диапазонов                                   |
+| `size`            | `'sm' \| 'md' \| 'lg'`                       | `'md'`                                  | Размер ячеек                                         |
+| `disabled`        | `boolean`                                    | `false`                                 | Весь календарь неактивен                             |
+| `*Label`          | `string`                                     | [словарь](/guide/localization#calendar) | `previous`, `next`, `month`, `year`, `today`, `week` |
 
 Слот `actions` в подвале. Метод `focus(date?)` через ref. Блок `nui-calendar`
 (модификаторы `--size-*`, `--mode-*`, `--view-*`, `--week-numbers`, `--multi`, `--picking`,

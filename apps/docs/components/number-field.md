@@ -64,23 +64,23 @@ const discount = ref(0.15)
 
 ## API
 
-| Prop             | Тип                        | По умолчанию                                      | Описание                           |
-| ---------------- | -------------------------- | ------------------------------------------------- | ---------------------------------- |
-| `v-model`        | `number \| null`           | `null`                                            | Значение                           |
-| `min`, `max`     | `number`                   | —                                                 | Границы, зажим при коммите и шаге  |
-| `step`           | `number`                   | `1`                                               | Шаг клавиш и степперов             |
-| `formatOptions`  | `Intl.NumberFormatOptions` | —                                                 | Валюта, проценты, знаки            |
-| `locale`         | `string`                   | из конфига                                        | Локаль формата и разбора           |
-| `steppers`       | `boolean`                  | `true`                                            | Кнопки ± у края                    |
-| `readonly`       | `boolean`                  | `false`                                           | Только чтение, степперы выключены  |
-| `name`           | `string`                   | —                                                 | Скрытый `input` с числом для формы |
-| `incrementLabel` | `string`                   | [словарь](/localization#numberfield): «Увеличить» | Подпись кнопки «+»                 |
-| `decrementLabel` | `string`                   | [словарь](/localization#numberfield): «Уменьшить» | Подпись кнопки «−»                 |
-| `size`           | `'sm' \| 'md' \| 'lg'`     | `'md'`                                            | Ступень размера                    |
-| `id`             | `string`                   | из поля                                           | Явный id контрола                  |
-| `disabled`       | `boolean`                  | из поля                                           | Отключение                         |
-| `required`       | `boolean`                  | из поля                                           | Обязательность                     |
-| `invalid`        | `boolean`                  | из поля                                           | `aria-invalid` и красная рамка     |
+| Prop             | Тип                        | По умолчанию                                            | Описание                           |
+| ---------------- | -------------------------- | ------------------------------------------------------- | ---------------------------------- |
+| `v-model`        | `number \| null`           | `null`                                                  | Значение                           |
+| `min`, `max`     | `number`                   | —                                                       | Границы, зажим при коммите и шаге  |
+| `step`           | `number`                   | `1`                                                     | Шаг клавиш и степперов             |
+| `formatOptions`  | `Intl.NumberFormatOptions` | —                                                       | Валюта, проценты, знаки            |
+| `locale`         | `string`                   | из конфига                                              | Локаль формата и разбора           |
+| `steppers`       | `boolean`                  | `true`                                                  | Кнопки ± у края                    |
+| `readonly`       | `boolean`                  | `false`                                                 | Только чтение, степперы выключены  |
+| `name`           | `string`                   | —                                                       | Скрытый `input` с числом для формы |
+| `incrementLabel` | `string`                   | [словарь](/guide/localization#numberfield): «Увеличить» | Подпись кнопки «+»                 |
+| `decrementLabel` | `string`                   | [словарь](/guide/localization#numberfield): «Уменьшить» | Подпись кнопки «−»                 |
+| `size`           | `'sm' \| 'md' \| 'lg'`     | `'md'`                                                  | Ступень размера                    |
+| `id`             | `string`                   | из поля                                                 | Явный id контрола                  |
+| `disabled`       | `boolean`                  | из поля                                                 | Отключение                         |
+| `required`       | `boolean`                  | из поля                                                 | Обязательность                     |
+| `invalid`        | `boolean`                  | из поля                                                 | `aria-invalid` и красная рамка     |
 
 Слоты: `prefix`, `suffix`. Метод `focus()` доступен через template ref. Блок
 `nui-number-field` (модификаторы `--size-*`, `--invalid`, `--disabled`, `--readonly`,

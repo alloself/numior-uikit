@@ -38,17 +38,17 @@ blends into the background.
 
 ## API
 
-| Prop           | Type                             | Default                                       | Description                         |
-| -------------- | -------------------------------- | --------------------------------------------- | ----------------------------------- |
-| `variant`      | `'soft' \| 'outline' \| 'solid'` | `'soft'`                                      | Shape                               |
-| `tone`         | `NuiTone`                        | `'info'`                                      | Role, colors and icon               |
-| `title`        | `string`                         | —                                             | Heading; `title` slot               |
-| `description`  | `string`                         | —                                             | Text; default slot                  |
-| `icon`         | `IconAlias`                      | tone icon                                     | Custom icon                         |
-| `hideIcon`     | `boolean`                        | `false`                                       | No icon                             |
-| `dismissible`  | `boolean`                        | `false`                                       | Close button                        |
-| `dismissLabel` | `string`                         | [dictionary](/en/localization#alert): “Close” | Accessible name of the close button |
-| `v-model:open` | `boolean`                        | `true`                                        | Whether the alert is shown          |
+| Prop           | Type                             | Default                                             | Description                         |
+| -------------- | -------------------------------- | --------------------------------------------------- | ----------------------------------- |
+| `variant`      | `'soft' \| 'outline' \| 'solid'` | `'soft'`                                            | Shape                               |
+| `tone`         | `NuiTone`                        | `'info'`                                            | Role, colors and icon               |
+| `title`        | `string`                         | —                                                   | Heading; `title` slot               |
+| `description`  | `string`                         | —                                                   | Text; default slot                  |
+| `icon`         | `IconAlias`                      | tone icon                                           | Custom icon                         |
+| `hideIcon`     | `boolean`                        | `false`                                             | No icon                             |
+| `dismissible`  | `boolean`                        | `false`                                             | Close button                        |
+| `dismissLabel` | `string`                         | [dictionary](/en/guide/localization#alert): “Close” | Accessible name of the close button |
+| `v-model:open` | `boolean`                        | `true`                                              | Whether the alert is shown          |
 
 Event `dismiss`. Slots `title`, `default`, `actions`. Block `nui-alert`, modifiers
 `--variant-*`, `--tone-*`, `--closed`; elements `__icon`, `__body`, `__title`,

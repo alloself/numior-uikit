@@ -1,7 +1,7 @@
 <template>
   <NuiAppBar>
     <template #start>
-      <NuiSidebarTrigger v-if="layout.mobile.value" />
+      <NuiSidebarTrigger v-if="layout.mobile.value && hasSidebar" />
       <NuiLink
         :href="localeBase"
         tone="neutral"
@@ -18,15 +18,16 @@
         variant="ghost"
         tone="neutral"
         size="sm"
-        :aria-current="startsCurrent(item.link) ? 'page' : undefined"
+        :aria-current="startsCurrent(item.section) ? 'page' : undefined"
         >{{ item.text }}</NuiButton
       >
     </nav>
     <template #end>
       <NuiButton
-        variant="outline"
+        variant="soft"
         tone="neutral"
         size="sm"
+        class="nui-font-normal nui-text-muted"
         :aria-label="texts.search"
         @click="emit('search')"
       >
@@ -64,13 +65,12 @@
             <NuiIcon alias="languages" />
           </NuiButton>
         </template>
-        <NuiMenuItem
-          v-for="locale in locales"
-          :key="locale.key"
-          :href="locale.link"
-          :icon="locale.current ? 'check' : undefined"
-          >{{ locale.label }}</NuiMenuItem
-        >
+        <NuiMenuItem v-for="locale in locales" :key="locale.key" :href="locale.link">
+          {{ locale.label }}
+          <template v-if="locale.current" #trailing>
+            <NuiIcon alias="check" />
+          </template>
+        </NuiMenuItem>
       </NuiMenu>
     </template>
   </NuiAppBar>
@@ -100,7 +100,7 @@ import type { DocsThemeConfig } from '../theme.types';
 const emit = defineEmits<{ search: [] }>();
 
 const { theme } = useData<DocsThemeConfig>();
-const { texts, localeBase, locales, startsCurrent } = useDocs();
+const { texts, localeBase, locales, sidebar, startsCurrent } = useDocs();
 const layout = useLayout();
 const scheme = useColorScheme();
 
@@ -111,4 +111,5 @@ const SCHEME_ICONS: Record<ColorScheme, IconAlias> = {
 };
 
 const schemeIcon = computed(() => SCHEME_ICONS[scheme.scheme.value]);
+const hasSidebar = computed(() => sidebar.value.length > 0);
 </script>

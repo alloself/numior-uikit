@@ -36,15 +36,15 @@ import '@numior/vue/styles/chip.css';
 
 ## API
 
-| Prop          | Тип                              | По умолчанию                            | Описание                       |
-| ------------- | -------------------------------- | --------------------------------------- | ------------------------------ |
-| `tone`        | `NuiTone`                        | `'neutral'`                             | Цвет                           |
-| `variant`     | `'soft' \| 'outline' \| 'solid'` | `'soft'`                                | Форма                          |
-| `size`        | `'sm' \| 'md'`                   | `'md'`                                  | Высота                         |
-| `icon`        | `IconAlias`                      | —                                       | Иконка перед текстом           |
-| `removable`   | `boolean`                        | `false`                                 | Кнопка удаления                |
-| `removeLabel` | `string`                         | [словарь](/localization#chip): «Убрать» | Доступное имя кнопки           |
-| `disabled`    | `boolean`                        | `false`                                 | Приглушённый вид, без удаления |
+| Prop          | Тип                              | По умолчанию                                  | Описание                       |
+| ------------- | -------------------------------- | --------------------------------------------- | ------------------------------ |
+| `tone`        | `NuiTone`                        | `'neutral'`                                   | Цвет                           |
+| `variant`     | `'soft' \| 'outline' \| 'solid'` | `'soft'`                                      | Форма                          |
+| `size`        | `'sm' \| 'md'`                   | `'md'`                                        | Высота                         |
+| `icon`        | `IconAlias`                      | —                                             | Иконка перед текстом           |
+| `removable`   | `boolean`                        | `false`                                       | Кнопка удаления                |
+| `removeLabel` | `string`                         | [словарь](/guide/localization#chip): «Убрать» | Доступное имя кнопки           |
+| `disabled`    | `boolean`                        | `false`                                       | Приглушённый вид, без удаления |
 
 Событие `remove`. Блок `nui-chip`, модификаторы `--tone-*`, `--variant-*`, `--size-*`,
 `--removable`, `--disabled`; элементы `__icon`, `__label`, `__remove`; переменные `--_tone`,

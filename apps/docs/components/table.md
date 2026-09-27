@@ -142,37 +142,37 @@ const selected = ref<Person[]>([]);
 
 ## API
 
-| Prop                                   | Тип                                   | По умолчанию                                  | Описание                                   |
-| -------------------------------------- | ------------------------------------- | --------------------------------------------- | ------------------------------------------ |
-| `columns`                              | `NuiTableColumn<T>[]`                 | —                                             | Колонки                                    |
-| `rows`                                 | `T[]`                                 | —                                             | Строки                                     |
-| `getKey`                               | `(row: T) => string`                  | JSON                                          | Ключ строки                                |
-| `sort`                                 | `NuiTableSort`                        | `null`                                        | `v-model:sort`                             |
-| `selectable`                           | `'single' \| 'multiple'`              | —                                             | Выбор строк                                |
-| `selected`                             | `T[]`                                 | `[]`                                          | `v-model:selected`                         |
-| `pagination`                           | `NuiTablePagination \| boolean`       | —                                             | Футер с `NuiPagination` и его пропами      |
-| `page`, `pageSize`                     | `number`                              | `1`, `20`                                     | `v-model:page`, `v-model:pageSize`         |
-| `remote`                               | `boolean`                             | `false`                                       | Не сортировать и не резать самой           |
-| `total`                                | `number`                              | `rows.length`                                 | Всего строк в `remote`                     |
-| `loading`                              | `boolean`                             | `false`                                       | Скелетоны и `aria-busy`                    |
-| `loadingRows`                          | `number`                              | `5`                                           | Число скелетонов                           |
-| `emptyLabel`                           | `string`                              | [словарь](/localization#table): «Нет данных»  | Заголовок пустого состояния                |
-| `caption`                              | `string`                              | —                                             | Подпись таблицы                            |
-| `stickyHeader`, `striped`, `hoverable` | `boolean`                             | `false`                                       | Внешний вид                                |
-| `size`                                 | `'sm' \| 'md' \| 'lg'`                | `'md'`                                        | Высота строки                              |
-| `virtual`, `height`, `rowHeight`       | `boolean`, `string`, `number`         | `false`, —, `40`                              | Виртуализация                              |
-| `widths`                               | `Record<string, number>`              | `{}`                                          | `v-model:widths`, px                       |
-| `columnOrder`                          | `string[]`                            | `[]`                                          | `v-model:columnOrder`                      |
-| `getChildren`                          | `(row: T) => T[] \| undefined`        | —                                             | Дети строки (дерево)                       |
-| `isExpandable`                         | `(row: T) => boolean`                 | по детям                                      | Узел раскрываем до загрузки                |
-| `expanded`                             | `T[]`                                 | `[]`                                          | `v-model:expanded`                         |
-| `indent`                               | `number`                              | `20`                                          | Отступ уровня, px                          |
-| `pinnedRows`                           | `T[]`                                 | `[]`                                          | Строки под шапкой                          |
-| `rowDrag`                              | `boolean`                             | `false`                                       | Колонка с ручкой перестановки строк        |
-| `resizeLabel`, `reorderLabel`          | `(column) => string`                  | [словарь](/localization#table)                | Имена ручек колонок                        |
-| `expandLabel`, `dragLabel`, `rowLabel` | `(row) => string`                     | [словарь](/localization#table), первая ячейка | Имена кнопок строк и подпись в объявлениях |
-| `announce`                             | `(a: NuiTableAnnouncement) => string` | [словарь](/localization#table)                | Текст `aria-live` при перестановке         |
-| `selectLabel`, `selectAllLabel`        | `string`                              | [словарь](/localization#table)                | Имена чекбоксов                            |
+| Prop                                   | Тип                                   | По умолчанию                                        | Описание                                   |
+| -------------------------------------- | ------------------------------------- | --------------------------------------------------- | ------------------------------------------ |
+| `columns`                              | `NuiTableColumn<T>[]`                 | —                                                   | Колонки                                    |
+| `rows`                                 | `T[]`                                 | —                                                   | Строки                                     |
+| `getKey`                               | `(row: T) => string`                  | JSON                                                | Ключ строки                                |
+| `sort`                                 | `NuiTableSort`                        | `null`                                              | `v-model:sort`                             |
+| `selectable`                           | `'single' \| 'multiple'`              | —                                                   | Выбор строк                                |
+| `selected`                             | `T[]`                                 | `[]`                                                | `v-model:selected`                         |
+| `pagination`                           | `NuiTablePagination \| boolean`       | —                                                   | Футер с `NuiPagination` и его пропами      |
+| `page`, `pageSize`                     | `number`                              | `1`, `20`                                           | `v-model:page`, `v-model:pageSize`         |
+| `remote`                               | `boolean`                             | `false`                                             | Не сортировать и не резать самой           |
+| `total`                                | `number`                              | `rows.length`                                       | Всего строк в `remote`                     |
+| `loading`                              | `boolean`                             | `false`                                             | Скелетоны и `aria-busy`                    |
+| `loadingRows`                          | `number`                              | `5`                                                 | Число скелетонов                           |
+| `emptyLabel`                           | `string`                              | [словарь](/guide/localization#table): «Нет данных»  | Заголовок пустого состояния                |
+| `caption`                              | `string`                              | —                                                   | Подпись таблицы                            |
+| `stickyHeader`, `striped`, `hoverable` | `boolean`                             | `false`                                             | Внешний вид                                |
+| `size`                                 | `'sm' \| 'md' \| 'lg'`                | `'md'`                                              | Высота строки                              |
+| `virtual`, `height`, `rowHeight`       | `boolean`, `string`, `number`         | `false`, —, `40`                                    | Виртуализация                              |
+| `widths`                               | `Record<string, number>`              | `{}`                                                | `v-model:widths`, px                       |
+| `columnOrder`                          | `string[]`                            | `[]`                                                | `v-model:columnOrder`                      |
+| `getChildren`                          | `(row: T) => T[] \| undefined`        | —                                                   | Дети строки (дерево)                       |
+| `isExpandable`                         | `(row: T) => boolean`                 | по детям                                            | Узел раскрываем до загрузки                |
+| `expanded`                             | `T[]`                                 | `[]`                                                | `v-model:expanded`                         |
+| `indent`                               | `number`                              | `20`                                                | Отступ уровня, px                          |
+| `pinnedRows`                           | `T[]`                                 | `[]`                                                | Строки под шапкой                          |
+| `rowDrag`                              | `boolean`                             | `false`                                             | Колонка с ручкой перестановки строк        |
+| `resizeLabel`, `reorderLabel`          | `(column) => string`                  | [словарь](/guide/localization#table)                | Имена ручек колонок                        |
+| `expandLabel`, `dragLabel`, `rowLabel` | `(row) => string`                     | [словарь](/guide/localization#table), первая ячейка | Имена кнопок строк и подпись в объявлениях |
+| `announce`                             | `(a: NuiTableAnnouncement) => string` | [словарь](/guide/localization#table)                | Текст `aria-live` при перестановке         |
+| `selectLabel`, `selectAllLabel`        | `string`                              | [словарь](/guide/localization#table)                | Имена чекбоксов                            |
 
 Опции колонки: `key`, `label`, `sortable`, `align`, `width` (px или CSS), `minWidth`,
 `maxWidth`, `resizable`, `reorderable`, `sticky`, `value`, `sort`. События

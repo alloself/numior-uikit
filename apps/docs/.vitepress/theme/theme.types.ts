@@ -12,6 +12,7 @@ import type {
 export interface DocsNavItem {
   readonly text: string;
   readonly link: string;
+  readonly section: string;
 }
 
 export interface DocsSidebarItem {
@@ -23,6 +24,8 @@ export interface DocsSidebarGroup {
   readonly text: string;
   readonly items: readonly DocsSidebarItem[];
 }
+
+export type DocsSidebarSections = Readonly<Record<string, readonly DocsSidebarGroup[]>>;
 
 export interface DocsTexts {
   readonly navigation: string;
@@ -93,7 +96,7 @@ export interface DocsSearchConfig {
 
 export interface DocsThemeConfig {
   readonly nav: readonly DocsNavItem[];
-  readonly sidebar: readonly DocsSidebarGroup[];
+  readonly sidebar: DocsSidebarSections;
   readonly texts: DocsTexts;
   readonly search?: DocsSearchConfig | undefined;
 }
@@ -181,4 +184,10 @@ export interface ConfiguratorFrameProps {
   component: ComponentReference;
   locale: ExampleLocale;
   texts: DocsTexts;
+}
+
+export interface ApiCodeListProps {
+  label: string;
+  prefix: string;
+  items: readonly string[];
 }

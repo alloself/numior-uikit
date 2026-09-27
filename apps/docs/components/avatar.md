@@ -48,22 +48,22 @@ import '@numior/vue/styles/avatar.css';
 
 Фигура аватара — `role="img"` с именем из `alt ?? name`; без имени она декоративна
 (`aria-hidden="true"`). Точка статуса — отдельный `role="img"` с подписью из `statusLabel`
-или из [словаря](/localization#avatar) на языке конфигурации («В сети», «Не в сети», «Занят»,
+или из [словаря](/guide/localization#avatar) на языке конфигурации («В сети», «Не в сети», «Занят»,
 «Нет на месте»).
 Группа — `role="group"` с `label`.
 
 ## API
 
-| Prop          | Тип                                         | По умолчанию                    | Описание                     |
-| ------------- | ------------------------------------------- | ------------------------------- | ---------------------------- |
-| `src`         | `string`                                    | —                               | Картинка                     |
-| `alt`         | `string`                                    | `name`                          | Подпись картинки и фигуры    |
-| `name`        | `string`                                    | —                               | Источник инициалов и подписи |
-| `size`        | `'sm' \| 'md' \| 'lg' \| 'xl'`              | `'md'`                          | 1.5 / 2 / 2.5 / 3.5rem       |
-| `shape`       | `'circle' \| 'square'`                      | `'circle'`                      | Форма                        |
-| `status`      | `'online' \| 'offline' \| 'busy' \| 'away'` | —                               | Точка состояния              |
-| `statusLabel` | `string`                                    | [словарь](/localization#avatar) | Подпись точки                |
-| `icon`        | `IconAlias`                                 | `'user'`                        | Иконка последнего фолбэка    |
+| Prop          | Тип                                         | По умолчанию                          | Описание                     |
+| ------------- | ------------------------------------------- | ------------------------------------- | ---------------------------- |
+| `src`         | `string`                                    | —                                     | Картинка                     |
+| `alt`         | `string`                                    | `name`                                | Подпись картинки и фигуры    |
+| `name`        | `string`                                    | —                                     | Источник инициалов и подписи |
+| `size`        | `'sm' \| 'md' \| 'lg' \| 'xl'`              | `'md'`                                | 1.5 / 2 / 2.5 / 3.5rem       |
+| `shape`       | `'circle' \| 'square'`                      | `'circle'`                            | Форма                        |
+| `status`      | `'online' \| 'offline' \| 'busy' \| 'away'` | —                                     | Точка состояния              |
+| `statusLabel` | `string`                                    | [словарь](/guide/localization#avatar) | Подпись точки                |
+| `icon`        | `IconAlias`                                 | `'user'`                              | Иконка последнего фолбэка    |
 
 `NuiAvatarGroup`: `items?: NuiAvatarItem[]`, `max`, `size`, `shape`, `label`,
 `overflowLabel?: (count) => string`. Блоки `nui-avatar` (модификаторы `--size-*`, `--shape-*`,

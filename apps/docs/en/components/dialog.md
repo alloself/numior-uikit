@@ -86,21 +86,21 @@ with `scrollbar-gutter: stable`. The entry animates through `@starting-style` an
 `title` and `description` (or the slots of the same name) are linked through
 `aria-labelledby` and `aria-describedby` with ids known on the server. The first
 interactive element of the body receives focus; the close button is last in the DOM.
-The close button name comes from the [dictionary](/en/localization#dialog) in the
+The close button name comes from the [dictionary](/en/guide/localization#dialog) in the
 configured language; `closeLabel` replaces it.
 
 ## API
 
-| Prop              | Type                   | Default                                        | Description                            |
-| ----------------- | ---------------------- | ---------------------------------------------- | -------------------------------------- |
-| `v-model:open`    | `boolean`              | `false`                                        | Whether the dialog is open             |
-| `id`              | `string`               | generated                                      | Element id; heading ids derive from it |
-| `title`           | `string`               | —                                              | Heading; `title` slot                  |
-| `description`     | `string`               | —                                              | Description; `description` slot        |
-| `size`            | `'sm' \| 'md' \| 'lg'` | `'md'`                                         | Width 24 / 32 / 48rem                  |
-| `closable`        | `boolean`              | `true`                                         | Close button, Esc and backdrop click   |
-| `closeOnBackdrop` | `boolean`              | `true`                                         | Backdrop click closes when `closable`  |
-| `closeLabel`      | `string`               | [dictionary](/en/localization#dialog): “Close” | Accessible name of the close button    |
+| Prop              | Type                   | Default                                              | Description                            |
+| ----------------- | ---------------------- | ---------------------------------------------------- | -------------------------------------- |
+| `v-model:open`    | `boolean`              | `false`                                              | Whether the dialog is open             |
+| `id`              | `string`               | generated                                            | Element id; heading ids derive from it |
+| `title`           | `string`               | —                                                    | Heading; `title` slot                  |
+| `description`     | `string`               | —                                                    | Description; `description` slot        |
+| `size`            | `'sm' \| 'md' \| 'lg'` | `'md'`                                               | Width 24 / 32 / 48rem                  |
+| `closable`        | `boolean`              | `true`                                               | Close button, Esc and backdrop click   |
+| `closeOnBackdrop` | `boolean`              | `true`                                               | Backdrop click closes when `closable`  |
+| `closeLabel`      | `string`               | [dictionary](/en/guide/localization#dialog): “Close” | Accessible name of the close button    |
 
 Event `close(returnValue: string)`. Slots: `default`, `title`, `description`, `footer`.
 Modifiers `nui-dialog--size-*`; elements `__header`, `__title`, `__description`,

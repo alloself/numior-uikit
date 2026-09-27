@@ -12,7 +12,7 @@ import { docsReference } from './reference/plugin';
 import { apiSearchText } from './reference/search-text';
 import type { DocsSearchOptions } from './theme/theme.types';
 import { en, ru } from './theme/texts';
-import type { DocsSidebarGroup, DocsThemeConfig } from './theme/theme.types';
+import type { DocsSidebarGroup, DocsSidebarSections, DocsThemeConfig } from './theme/theme.types';
 
 const bundleFile = fileURLToPath(new URL('../.reference/bundle.json', import.meta.url));
 const bundle = existsSync(bundleFile) ? parseBundle(readFileSync(bundleFile, 'utf8')) : undefined;
@@ -32,15 +32,18 @@ const highlighter = await createHighlighter({
   langs: [...CODE_LANGUAGES],
 });
 
-const ruSidebar: DocsSidebarGroup[] = [
+const ruGuide: DocsSidebarGroup[] = [
   {
-    text: 'Основание',
+    text: 'Руководство',
     items: [
-      { text: 'Начало работы', link: '/guide' },
-      { text: 'Темизация', link: '/theming' },
-      { text: 'Локализация', link: '/localization' },
+      { text: 'Начало работы', link: '/guide/getting-started' },
+      { text: 'Темизация', link: '/guide/theming' },
+      { text: 'Локализация', link: '/guide/localization' },
     ],
   },
+];
+
+const ruComponents: DocsSidebarGroup[] = [
   {
     text: 'Компоненты',
     items: [
@@ -119,15 +122,23 @@ const ruSidebar: DocsSidebarGroup[] = [
   },
 ];
 
-const enSidebar: DocsSidebarGroup[] = [
+const ruSidebar: DocsSidebarSections = {
+  '/guide/': ruGuide,
+  '/components/': ruComponents,
+};
+
+const enGuide: DocsSidebarGroup[] = [
   {
-    text: 'Foundation',
+    text: 'Guide',
     items: [
-      { text: 'Getting started', link: '/en/guide' },
-      { text: 'Theming', link: '/en/theming' },
-      { text: 'Localization', link: '/en/localization' },
+      { text: 'Getting started', link: '/en/guide/getting-started' },
+      { text: 'Theming', link: '/en/guide/theming' },
+      { text: 'Localization', link: '/en/guide/localization' },
     ],
   },
+];
+
+const enComponents: DocsSidebarGroup[] = [
   {
     text: 'Components',
     items: [
@@ -206,6 +217,11 @@ const enSidebar: DocsSidebarGroup[] = [
   },
 ];
 
+const enSidebar: DocsSidebarSections = {
+  '/en/guide/': enGuide,
+  '/en/components/': enComponents,
+};
+
 export default defineConfigWithTheme<DocsThemeConfig>({
   title: 'Numior UI',
   description: 'Independent Vue 3.5+ UI kit — foundation in development.',
@@ -235,13 +251,23 @@ export default defineConfigWithTheme<DocsThemeConfig>({
       label: 'Русский',
       lang: 'ru',
       description: 'Независимый UI kit для Vue 3.5+ — основание в разработке.',
-      themeConfig: { nav: [{ text: 'Начало', link: '/guide' }], sidebar: ruSidebar, texts: ru },
+      themeConfig: {
+        nav: [
+          { text: 'Руководство', link: '/guide/getting-started', section: '/guide/' },
+          { text: 'Компоненты', link: '/components/button', section: '/components/' },
+        ],
+        sidebar: ruSidebar,
+        texts: ru,
+      },
     },
     en: {
       label: 'English',
       lang: 'en',
       themeConfig: {
-        nav: [{ text: 'Get started', link: '/en/guide' }],
+        nav: [
+          { text: 'Guide', link: '/en/guide/getting-started', section: '/en/guide/' },
+          { text: 'Components', link: '/en/components/button', section: '/en/components/' },
+        ],
         sidebar: enSidebar,
         texts: en,
       },

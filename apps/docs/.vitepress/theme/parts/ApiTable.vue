@@ -4,9 +4,7 @@
     <NuiTable :columns="columns" :rows="rows" :get-key="keyOf" size="sm">
       <template #cell-name="{ row }">
         <code>{{ row.name }}</code>
-        <NuiBadge v-if="isRequired(row)" variant="soft" tone="warning" size="sm" class="nui-ms-2">
-          {{ requiredLabel }}
-        </NuiBadge>
+        <span v-if="isRequired(row)" :title="requiredLabel" class="nui-text-error">*</span>
       </template>
       <template #cell-type="{ row }">
         <code>{{ row.type }}</code>
@@ -24,7 +22,7 @@
 </template>
 
 <script setup lang="ts" generic="T extends ApiRow">
-import { NuiBadge, NuiTable, type NuiTableColumn } from '@numior/vue';
+import { NuiTable, type NuiTableColumn } from '@numior/vue';
 import type { ExampleLocale } from '../../examples/example.types';
 import type { ApiRow } from '../theme.types';
 

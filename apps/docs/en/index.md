@@ -7,10 +7,10 @@ hero:
   actions:
     - theme: brand
       text: Get started
-      link: /en/guide
+      link: /en/guide/getting-started
     - theme: alt
       text: Theming
-      link: /en/theming
+      link: /en/guide/theming
 features:
   - title: Shared tokens
     details: Light, dark, system and semantic accents for components and utilities.

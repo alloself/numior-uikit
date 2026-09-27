@@ -76,9 +76,9 @@ export const PENDING_PAGES: readonly string[] = [
   'en/components/tree.md',
   'en/components/upload.md',
   'en/index.md',
-  'en/localization.md',
-  'en/theming.md',
+  'en/guide/localization.md',
+  'en/guide/theming.md',
   'index.md',
-  'localization.md',
-  'theming.md',
+  'guide/localization.md',
+  'guide/theming.md',
 ];

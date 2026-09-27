@@ -82,15 +82,15 @@ in compact mode the labels stay in the accessibility tree.
 
 ## API
 
-| Prop            | Type                         | Default                                              | Description                                          |
-| --------------- | ---------------------------- | ---------------------------------------------------- | ---------------------------------------------------- |
-| `v-model`       | `string`                     | —                                                    | Value of the current step                            |
-| `steps`         | `NuiStepperStep[]`           | —                                                    | `{ value, label, description?, status?, disabled? }` |
-| `orientation`   | `'horizontal' \| 'vertical'` | `'horizontal'`                                       | Direction                                            |
-| `linear`        | `boolean`                    | `true`                                               | Only completed steps become buttons                  |
-| `label`         | `string`                     | [dictionary](/en/localization#stepper): “Steps”      | `aria-label` of the nav                              |
-| `completeLabel` | `string`                     | [dictionary](/en/localization#stepper): “completed”  | Hidden status of a completed step                    |
-| `errorLabel`    | `string`                     | [dictionary](/en/localization#stepper): “has errors” | Hidden status of a failed step                       |
+| Prop            | Type                         | Default                                                    | Description                                          |
+| --------------- | ---------------------------- | ---------------------------------------------------------- | ---------------------------------------------------- |
+| `v-model`       | `string`                     | —                                                          | Value of the current step                            |
+| `steps`         | `NuiStepperStep[]`           | —                                                          | `{ value, label, description?, status?, disabled? }` |
+| `orientation`   | `'horizontal' \| 'vertical'` | `'horizontal'`                                             | Direction                                            |
+| `linear`        | `boolean`                    | `true`                                                     | Only completed steps become buttons                  |
+| `label`         | `string`                     | [dictionary](/en/guide/localization#stepper): “Steps”      | `aria-label` of the nav                              |
+| `completeLabel` | `string`                     | [dictionary](/en/guide/localization#stepper): “completed”  | Hidden status of a completed step                    |
+| `errorLabel`    | `string`                     | [dictionary](/en/guide/localization#stepper): “has errors” | Hidden status of a failed step                       |
 
 Block `nui-stepper` (modifier `--orientation-*`; elements `__list`, `__item` with `--complete`,
 `--upcoming`, `--error`, `--current`, `--clickable`, `--disabled`, `__step`, `__indicator`,

@@ -104,7 +104,7 @@ createApp(App)
 
 `NuiToaster`: `placement` (`top-start | top | top-end | bottom-start | bottom | bottom-end`,
 по умолчанию `top-end`), `expand` (стопка всегда раскрыта), `label` (`aria-label` региона,
-[словарь](/localization#toast): «Уведомления»), `closeLabel`, `id`. На узких экранах регион занимает всю ширину. Блок `nui-toaster` с
+[словарь](/guide/localization#toast): «Уведомления»), `closeLabel`, `id`. На узких экранах регион занимает всю ширину. Блок `nui-toaster` с
 модификаторами `--placement-*` и `--expanded`, элемент `__item` с модификаторами `--behind`
 и `--leaving`; переменные региона `--_inset`, `--_width`, `--_gap`, `--_peek`,
 `--_direction`, `--_front-size`, элемента — `--_index`, `--_offset`, `--_size`.

@@ -114,27 +114,27 @@ selectable list is a `role="listbox"` (`aria-multiselectable` for `multiple`) na
 
 ## API
 
-| Prop           | Type                                                        | Default                                         | Description                                                     |
-| -------------- | ----------------------------------------------------------- | ----------------------------------------------- | --------------------------------------------------------------- |
-| `id`           | `string`                                                    | generated                                       | Root id and the base of item ids                                |
-| `as`           | `'ul' \| 'ol'`                                              | `'ul'`                                          | List tag                                                        |
-| `variant`      | `'plain' \| 'divided' \| 'bordered' \| 'floating' \| 'nav'` | `'plain'`                                       | Dividers, border, a floating surface or navigation              |
-| `size`         | `'sm' \| 'md' \| 'lg'`                                      | `'md'`                                          | Row height (control tokens)                                     |
-| `items`        | `NuiListSource<E>`                                          | —                                               | Items and `{ label, items }` groups; `[]` shows the empty state |
-| `selectable`   | `'single' \| 'multiple'`                                    | —                                               | Selection mode                                                  |
-| `modelValue`   | `T \| null`                                                 | `null`                                          | Value in single mode (`v-model`)                                |
-| `values`       | `T[]`                                                       | `[]`                                            | Values in `multiple` (`v-model:values`)                         |
-| `getKey`       | `(value: T) => string`                                      | —                                               | Key of object values                                            |
-| `loop`         | `boolean`                                                   | `true`                                          | Arrows wrap around                                              |
-| `typeahead`    | `boolean`                                                   | `true`                                          | Search by first letters                                         |
-| `keyboard`     | `boolean`                                                   | `true`                                          | `false` lets the owner drive the keyboard                       |
-| `activeId`     | `string`                                                    | —                                               | Id of the virtually focused item                                |
-| `loading`      | `boolean`                                                   | `false`                                         | Loading row instead of the empty state                          |
-| `loadingLabel` | `string`                                                    | [dictionary](/en/localization#list): “Loading”  | Loading label                                                   |
-| `label`        | `string`                                                    | —                                               | Name of the list                                                |
-| `labelledBy`   | `string`                                                    | —                                               | Id of an external label                                         |
-| `emptyLabel`   | `string`                                                    | [dictionary](/en/localization#list): “No items” | Title of the empty state                                        |
-| `linkAs`       | `string \| Component`                                       | `'a'`                                           | Router component for `items` entries                            |
+| Prop           | Type                                                        | Default                                               | Description                                                     |
+| -------------- | ----------------------------------------------------------- | ----------------------------------------------------- | --------------------------------------------------------------- |
+| `id`           | `string`                                                    | generated                                             | Root id and the base of item ids                                |
+| `as`           | `'ul' \| 'ol'`                                              | `'ul'`                                                | List tag                                                        |
+| `variant`      | `'plain' \| 'divided' \| 'bordered' \| 'floating' \| 'nav'` | `'plain'`                                             | Dividers, border, a floating surface or navigation              |
+| `size`         | `'sm' \| 'md' \| 'lg'`                                      | `'md'`                                                | Row height (control tokens)                                     |
+| `items`        | `NuiListSource<E>`                                          | —                                                     | Items and `{ label, items }` groups; `[]` shows the empty state |
+| `selectable`   | `'single' \| 'multiple'`                                    | —                                                     | Selection mode                                                  |
+| `modelValue`   | `T \| null`                                                 | `null`                                                | Value in single mode (`v-model`)                                |
+| `values`       | `T[]`                                                       | `[]`                                                  | Values in `multiple` (`v-model:values`)                         |
+| `getKey`       | `(value: T) => string`                                      | —                                                     | Key of object values                                            |
+| `loop`         | `boolean`                                                   | `true`                                                | Arrows wrap around                                              |
+| `typeahead`    | `boolean`                                                   | `true`                                                | Search by first letters                                         |
+| `keyboard`     | `boolean`                                                   | `true`                                                | `false` lets the owner drive the keyboard                       |
+| `activeId`     | `string`                                                    | —                                                     | Id of the virtually focused item                                |
+| `loading`      | `boolean`                                                   | `false`                                               | Loading row instead of the empty state                          |
+| `loadingLabel` | `string`                                                    | [dictionary](/en/guide/localization#list): “Loading”  | Loading label                                                   |
+| `label`        | `string`                                                    | —                                                     | Name of the list                                                |
+| `labelledBy`   | `string`                                                    | —                                                     | Id of an external label                                         |
+| `emptyLabel`   | `string`                                                    | [dictionary](/en/guide/localization#list): “No items” | Title of the empty state                                        |
+| `linkAs`       | `string \| Component`                                       | `'a'`                                                 | Router component for `items` entries                            |
 
 `NuiListItem`: `value`, `id`, `label`, `description`, `icon`, `href`, `to`, `as`,
 `interactive`, `disabled`, `current`, `badge`; slots `leading`, `default` (`{ selected, active }`),

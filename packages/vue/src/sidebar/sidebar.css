@@ -31,6 +31,12 @@
   border-inline-width: 0;
   background: transparent;
 }
+.nui-sidebar--variant-plain .nui-list-item--current {
+  --_row-weight: 500;
+
+  background: transparent;
+  color: var(--nui-primary);
+}
 .nui-sidebar--rail {
   inline-size: var(--_rail);
 }

@@ -58,5 +58,5 @@ and `compact`. Both attributes work on any element, not only the root.
 ## Next
 
 - [Button](/en/components/button) — the first component with a configurator and the API.
-- [Theming](/en/theming) — tokens, accents and custom themes.
-- [Localization](/en/localization) — dictionaries and translations of built-in texts.
+- [Theming](/en/guide/theming) — tokens, accents and custom themes.
+- [Localization](/en/guide/localization) — dictionaries and translations of built-in texts.

@@ -38,17 +38,17 @@ const open = ref(true)
 
 ## API
 
-| Prop           | Тип                              | По умолчанию                              | Описание                      |
-| -------------- | -------------------------------- | ----------------------------------------- | ----------------------------- |
-| `variant`      | `'soft' \| 'outline' \| 'solid'` | `'soft'`                                  | Форма                         |
-| `tone`         | `NuiTone`                        | `'info'`                                  | Роль, цвета и иконка          |
-| `title`        | `string`                         | —                                         | Заголовок; слот `title`       |
-| `description`  | `string`                         | —                                         | Текст; слот по умолчанию      |
-| `icon`         | `IconAlias`                      | иконка тона                               | Своя иконка                   |
-| `hideIcon`     | `boolean`                        | `false`                                   | Без иконки                    |
-| `dismissible`  | `boolean`                        | `false`                                   | Кнопка закрытия               |
-| `dismissLabel` | `string`                         | [словарь](/localization#alert): «Закрыть» | Доступное имя кнопки закрытия |
-| `v-model:open` | `boolean`                        | `true`                                    | Показан ли алерт              |
+| Prop           | Тип                              | По умолчанию                                    | Описание                      |
+| -------------- | -------------------------------- | ----------------------------------------------- | ----------------------------- |
+| `variant`      | `'soft' \| 'outline' \| 'solid'` | `'soft'`                                        | Форма                         |
+| `tone`         | `NuiTone`                        | `'info'`                                        | Роль, цвета и иконка          |
+| `title`        | `string`                         | —                                               | Заголовок; слот `title`       |
+| `description`  | `string`                         | —                                               | Текст; слот по умолчанию      |
+| `icon`         | `IconAlias`                      | иконка тона                                     | Своя иконка                   |
+| `hideIcon`     | `boolean`                        | `false`                                         | Без иконки                    |
+| `dismissible`  | `boolean`                        | `false`                                         | Кнопка закрытия               |
+| `dismissLabel` | `string`                         | [словарь](/guide/localization#alert): «Закрыть» | Доступное имя кнопки закрытия |
+| `v-model:open` | `boolean`                        | `true`                                          | Показан ли алерт              |
 
 Событие `dismiss`. Слоты `title`, `default`, `actions`. Блок `nui-alert`, модификаторы
 `--variant-*`, `--tone-*`, `--closed`; элементы `__icon`, `__body`, `__title`,

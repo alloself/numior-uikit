@@ -7,10 +7,10 @@ hero:
   actions:
     - theme: brand
       text: Начать разработку
-      link: /guide
+      link: /guide/getting-started
     - theme: alt
       text: Темизация
-      link: /theming
+      link: /guide/theming
 features:
   - title: Общие токены
     details: Light, dark, system и семантические акценты для компонентов и утилит.

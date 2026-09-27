@@ -1,6 +1,6 @@
 import { computed, type ComputedRef } from 'vue';
 import { useData, useRoute, withBase } from 'vitepress';
-import type { DocsSidebarItem, DocsTexts, DocsThemeConfig } from '../theme.types';
+import type { DocsSidebarGroup, DocsSidebarItem, DocsTexts, DocsThemeConfig } from '../theme.types';
 
 export interface LocaleLink {
   readonly key: string;
@@ -18,7 +18,9 @@ export interface Docs {
   readonly texts: ComputedRef<DocsTexts>;
   readonly localeBase: ComputedRef<string>;
   readonly locales: ComputedRef<readonly LocaleLink[]>;
-  readonly flatLinks: ComputedRef<readonly DocsSidebarItem[]>;
+  readonly sidebar: ComputedRef<readonly DocsSidebarGroup[]>;
+  readonly sectionLinks: ComputedRef<readonly DocsSidebarItem[]>;
+  readonly allLinks: ComputedRef<readonly DocsSidebarItem[]>;
   readonly pager: ComputedRef<Pager>;
   isCurrent(link: string): boolean;
   startsCurrent(link: string): boolean;
@@ -51,9 +53,11 @@ export const useDocs = (): Docs => {
 
   const isCurrent = (link: string): boolean => currentPath.value === normalizePath(withBase(link));
 
-  const startsCurrent = (link: string): boolean =>
-    currentPath.value === normalizePath(withBase(link)) ||
-    currentPath.value.startsWith(`${normalizePath(withBase(link))}/`);
+  const startsCurrent = (link: string): boolean => {
+    const base = normalizePath(withBase(link));
+
+    return currentPath.value === base || currentPath.value.startsWith(`${base}/`);
+  };
 
   const locales = computed<readonly LocaleLink[]>(() => {
     const tail = pageTail(page.value.relativePath, localeIndex.value);
@@ -66,10 +70,22 @@ export const useDocs = (): Docs => {
     }));
   });
 
-  const flatLinks = computed(() => theme.value.sidebar.flatMap((group) => group.items));
+  const sidebar = computed<readonly DocsSidebarGroup[]>(() => {
+    const match = Object.entries(theme.value.sidebar)
+      .filter(([prefix]) => startsCurrent(prefix))
+      .toSorted(([a], [b]) => b.length - a.length)[0];
+
+    return match?.[1] ?? [];
+  });
+
+  const sectionLinks = computed(() => sidebar.value.flatMap((group) => group.items));
+
+  const allLinks = computed(() =>
+    Object.values(theme.value.sidebar).flatMap((groups) => groups.flatMap((group) => group.items)),
+  );
 
   const pager = computed<Pager>(() => {
-    const links = flatLinks.value;
+    const links = sectionLinks.value;
     const index = links.findIndex((item) => isCurrent(item.link));
 
     return {
@@ -78,5 +94,15 @@ export const useDocs = (): Docs => {
     };
   });
 
-  return { texts, localeBase, locales, flatLinks, pager, isCurrent, startsCurrent };
+  return {
+    texts,
+    localeBase,
+    locales,
+    sidebar,
+    sectionLinks,
+    allLinks,
+    pager,
+    isCurrent,
+    startsCurrent,
+  };
 };

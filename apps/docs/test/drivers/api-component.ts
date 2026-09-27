@@ -96,8 +96,12 @@ export class ApiComponentDriver {
       .map((row) => row.findAll('td').map((cell) => cell.text()));
   }
 
-  get badges(): string[] {
-    return this.wrapper.findAll('.nui-badge').map((badge) => badge.text());
+  get requiredMarks(): string[] {
+    return this.wrapper.findAll('td [title]').map((mark) => mark.attributes('title') ?? '');
+  }
+
+  get styleParts(): string[] {
+    return this.wrapper.findAll('dd code').map((part) => part.text());
   }
 
   get styleImport(): string {

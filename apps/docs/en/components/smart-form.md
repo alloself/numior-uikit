@@ -296,19 +296,19 @@ waiting button — works as on [`NuiForm`](/en/components/form#accessibility).
 
 ## API
 
-| Prop           | Type                          | Default                                          | Description                                |
-| -------------- | ----------------------------- | ------------------------------------------------ | ------------------------------------------ |
-| `form`         | `FormContext<Values>`         | —                                                | Context from `useForm`                     |
-| `fields`       | `NuiSmartFormEntry<Values>[]` | —                                                | Fields, sections and groups                |
-| `steps`        | `NuiSmartFormStep<Values>[]`  | —                                                | Steps instead of `fields`                  |
-| `v-model:step` | `string`                      | the first step                                   | Current step                               |
-| `layout`       | `string`                      | —                                                | Layout in the `grid-template-areas` syntax |
-| `inline`       | `boolean \| 'grow'`           | —                                                | Fields in a row                            |
-| `disabled`     | `boolean`                     | `false`                                          | Disables fields and buttons                |
-| `reserveError` | `boolean`                     | `false`                                          | Room for errors in every field             |
-| `submitLabel`  | `string`                      | [dictionary](/en/localization#form): “Submit”    | Submit button                              |
-| `nextLabel`    | `string`                      | [dictionary](/en/localization#smartform): “Next” | Next step button                           |
-| `backLabel`    | `string`                      | [dictionary](/en/localization#smartform): “Back” | Previous step button                       |
+| Prop           | Type                          | Default                                                | Description                                |
+| -------------- | ----------------------------- | ------------------------------------------------------ | ------------------------------------------ |
+| `form`         | `FormContext<Values>`         | —                                                      | Context from `useForm`                     |
+| `fields`       | `NuiSmartFormEntry<Values>[]` | —                                                      | Fields, sections and groups                |
+| `steps`        | `NuiSmartFormStep<Values>[]`  | —                                                      | Steps instead of `fields`                  |
+| `v-model:step` | `string`                      | the first step                                         | Current step                               |
+| `layout`       | `string`                      | —                                                      | Layout in the `grid-template-areas` syntax |
+| `inline`       | `boolean \| 'grow'`           | —                                                      | Fields in a row                            |
+| `disabled`     | `boolean`                     | `false`                                                | Disables fields and buttons                |
+| `reserveError` | `boolean`                     | `false`                                                | Room for errors in every field             |
+| `submitLabel`  | `string`                      | [dictionary](/en/guide/localization#form): “Submit”    | Submit button                              |
+| `nextLabel`    | `string`                      | [dictionary](/en/guide/localization#smartform): “Next” | Next step button                           |
+| `backLabel`    | `string`                      | [dictionary](/en/guide/localization#smartform): “Back” | Previous step button                       |
 
 Slots: `[path]`, `[path]:after`, `actions`, `form-errors`. Methods `requestSubmit()` and
 `back()`. Types `NuiSmartFormSlots<Values>`, `NuiSmartFormFieldScope`,

@@ -85,25 +85,25 @@ invoker'ом попапа: закрытие следует за фокусом, 
 
 ## API
 
-| Prop             | Тип                                   | По умолчанию                                           | Описание                    |
-| ---------------- | ------------------------------------- | ------------------------------------------------------ | --------------------------- |
-| `v-model`        | `T \| null`                           | `null`                                                 | Значение в одиночном режиме |
-| `v-model:values` | `T[]`                                 | `[]`                                                   | Значения в `multiple`       |
-| `options`        | `NuiOptionSource<T>`                  | —                                                      | Опции и группы              |
-| `multiple`       | `boolean`                             | `false`                                                | Чипы и несколько значений   |
-| `filter`         | `(option, query) => boolean \| false` | по подписи                                             | Свой фильтр или отключение  |
-| `loading`        | `boolean`                             | `false`                                                | Состояние загрузки          |
-| `customValue`    | `(text: string) => T`                 | —                                                      | Разрешить свои значения     |
-| `clearable`      | `boolean`                             | `false`                                                | Кнопка очистки              |
-| `placeholder`    | `string`                              | —                                                      | Текст без значения          |
-| `name`           | `string`                              | —                                                      | Скрытые поля формы          |
-| `getKey`         | `(value: T) => string`                | по значению                                            | Ключ для объектов           |
-| `placement`      | `FloatingPlacement`                   | `'bottom-start'`                                       | Сторона списка              |
-| `emptyLabel`     | `string`                              | [словарь](/localization#combobox): «Ничего не найдено» | Текст пустого списка        |
-| `loadingLabel`   | `string`                              | [словарь](/localization#list): «Загрузка»              | Текст загрузки              |
-| `clearLabel`     | `string`                              | [словарь](/localization#combobox): «Очистить»          | Имя кнопки очистки          |
-| `removeLabel`    | `string`                              | [словарь](/localization#combobox): «Убрать»            | Префикс имени крестика чипа |
-| `toggleLabel`    | `string`                              | [словарь](/localization#combobox): «Показать варианты» | Имя кнопки-переключателя    |
+| Prop             | Тип                                   | По умолчанию                                                 | Описание                    |
+| ---------------- | ------------------------------------- | ------------------------------------------------------------ | --------------------------- |
+| `v-model`        | `T \| null`                           | `null`                                                       | Значение в одиночном режиме |
+| `v-model:values` | `T[]`                                 | `[]`                                                         | Значения в `multiple`       |
+| `options`        | `NuiOptionSource<T>`                  | —                                                            | Опции и группы              |
+| `multiple`       | `boolean`                             | `false`                                                      | Чипы и несколько значений   |
+| `filter`         | `(option, query) => boolean \| false` | по подписи                                                   | Свой фильтр или отключение  |
+| `loading`        | `boolean`                             | `false`                                                      | Состояние загрузки          |
+| `customValue`    | `(text: string) => T`                 | —                                                            | Разрешить свои значения     |
+| `clearable`      | `boolean`                             | `false`                                                      | Кнопка очистки              |
+| `placeholder`    | `string`                              | —                                                            | Текст без значения          |
+| `name`           | `string`                              | —                                                            | Скрытые поля формы          |
+| `getKey`         | `(value: T) => string`                | по значению                                                  | Ключ для объектов           |
+| `placement`      | `FloatingPlacement`                   | `'bottom-start'`                                             | Сторона списка              |
+| `emptyLabel`     | `string`                              | [словарь](/guide/localization#combobox): «Ничего не найдено» | Текст пустого списка        |
+| `loadingLabel`   | `string`                              | [словарь](/guide/localization#list): «Загрузка»              | Текст загрузки              |
+| `clearLabel`     | `string`                              | [словарь](/guide/localization#combobox): «Очистить»          | Имя кнопки очистки          |
+| `removeLabel`    | `string`                              | [словарь](/guide/localization#combobox): «Убрать»            | Префикс имени крестика чипа |
+| `toggleLabel`    | `string`                              | [словарь](/guide/localization#combobox): «Показать варианты» | Имя кнопки-переключателя    |
 
 Событие `search(query)`. Плюс `id`, `size`, `disabled`, `required`, `invalid`; слот
 `option="{ option, selected, active }"`; `focus()` через ref. Блок `nui-combobox`

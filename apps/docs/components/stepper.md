@@ -83,15 +83,15 @@ const steps: NuiStepperStep[] = [
 
 ## API
 
-| Prop            | Тип                          | По умолчанию                                    | Описание                                             |
-| --------------- | ---------------------------- | ----------------------------------------------- | ---------------------------------------------------- |
-| `v-model`       | `string`                     | —                                               | Значение текущего шага                               |
-| `steps`         | `NuiStepperStep[]`           | —                                               | `{ value, label, description?, status?, disabled? }` |
-| `orientation`   | `'horizontal' \| 'vertical'` | `'horizontal'`                                  | Направление                                          |
-| `linear`        | `boolean`                    | `true`                                          | Кнопками становятся только пройденные шаги           |
-| `label`         | `string`                     | [словарь](/localization#stepper): «Шаги»        | `aria-label` навигации                               |
-| `completeLabel` | `string`                     | [словарь](/localization#stepper): «выполнено»   | Скрытый статус пройденного шага                      |
-| `errorLabel`    | `string`                     | [словарь](/localization#stepper): «есть ошибки» | Скрытый статус шага с ошибкой                        |
+| Prop            | Тип                          | По умолчанию                                          | Описание                                             |
+| --------------- | ---------------------------- | ----------------------------------------------------- | ---------------------------------------------------- |
+| `v-model`       | `string`                     | —                                                     | Значение текущего шага                               |
+| `steps`         | `NuiStepperStep[]`           | —                                                     | `{ value, label, description?, status?, disabled? }` |
+| `orientation`   | `'horizontal' \| 'vertical'` | `'horizontal'`                                        | Направление                                          |
+| `linear`        | `boolean`                    | `true`                                                | Кнопками становятся только пройденные шаги           |
+| `label`         | `string`                     | [словарь](/guide/localization#stepper): «Шаги»        | `aria-label` навигации                               |
+| `completeLabel` | `string`                     | [словарь](/guide/localization#stepper): «выполнено»   | Скрытый статус пройденного шага                      |
+| `errorLabel`    | `string`                     | [словарь](/guide/localization#stepper): «есть ошибки» | Скрытый статус шага с ошибкой                        |
 
 Блок `nui-stepper` (модификатор `--orientation-*`; элементы `__list`, `__item` с `--complete`,
 `--upcoming`, `--error`, `--current`, `--clickable`, `--disabled`, `__step`, `__indicator`,

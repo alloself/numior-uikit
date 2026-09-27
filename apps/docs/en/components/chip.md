@@ -35,15 +35,15 @@ chip, offer removal somewhere reachable too, or pass a `remove-label` that names
 
 ## API
 
-| Prop          | Type                             | Default                                       | Description                   |
-| ------------- | -------------------------------- | --------------------------------------------- | ----------------------------- |
-| `tone`        | `NuiTone`                        | `'neutral'`                                   | Colour                        |
-| `variant`     | `'soft' \| 'outline' \| 'solid'` | `'soft'`                                      | Shape                         |
-| `size`        | `'sm' \| 'md'`                   | `'md'`                                        | Height                        |
-| `icon`        | `IconAlias`                      | —                                             | Icon before the text          |
-| `removable`   | `boolean`                        | `false`                                       | Remove button                 |
-| `removeLabel` | `string`                         | [dictionary](/en/localization#chip): “Remove” | Accessible name of the button |
-| `disabled`    | `boolean`                        | `false`                                       | Muted look, removal disabled  |
+| Prop          | Type                             | Default                                             | Description                   |
+| ------------- | -------------------------------- | --------------------------------------------------- | ----------------------------- |
+| `tone`        | `NuiTone`                        | `'neutral'`                                         | Colour                        |
+| `variant`     | `'soft' \| 'outline' \| 'solid'` | `'soft'`                                            | Shape                         |
+| `size`        | `'sm' \| 'md'`                   | `'md'`                                              | Height                        |
+| `icon`        | `IconAlias`                      | —                                                   | Icon before the text          |
+| `removable`   | `boolean`                        | `false`                                             | Remove button                 |
+| `removeLabel` | `string`                         | [dictionary](/en/guide/localization#chip): “Remove” | Accessible name of the button |
+| `disabled`    | `boolean`                        | `false`                                             | Muted look, removal disabled  |
 
 Event `remove`. Block `nui-chip`, modifiers `--tone-*`, `--variant-*`, `--size-*`,
 `--removable`, `--disabled`; elements `__icon`, `__label`, `__remove`; variables `--_tone`,

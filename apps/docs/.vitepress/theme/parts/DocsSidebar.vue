@@ -1,11 +1,10 @@
 <template>
-  <NuiSidebar :label="texts.navigation" collapsible="offcanvas">
+  <NuiSidebar :label="texts.navigation" collapsible="offcanvas" variant="plain">
     <NuiSidebarContent>
       <NuiSidebarGroup
-        v-for="group in theme.sidebar"
+        v-for="group in sidebar"
         :key="group.text"
         :label="group.text"
-        collapsible
         :items="entriesOf(group)"
       />
     </NuiSidebarContent>
@@ -13,13 +12,12 @@
 </template>
 
 <script setup lang="ts">
-import { useData, withBase } from 'vitepress';
+import { withBase } from 'vitepress';
 import { NuiSidebar, NuiSidebarContent, NuiSidebarGroup, type NuiListEntry } from '@numior/vue';
 import { useDocs } from '../composables/use-docs';
-import type { DocsSidebarGroup, DocsThemeConfig } from '../theme.types';
+import type { DocsSidebarGroup } from '../theme.types';
 
-const { theme } = useData<DocsThemeConfig>();
-const { texts, isCurrent } = useDocs();
+const { texts, sidebar, isCurrent } = useDocs();
 
 const entriesOf = (group: DocsSidebarGroup): NuiListEntry<unknown>[] =>
   group.items.map((item) => ({

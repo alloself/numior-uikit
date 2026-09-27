@@ -56,25 +56,25 @@ button is named by `pageLabel`, arrows by `previousLabel`/`nextLabel` and
 
 ## API
 
-| Prop               | Type                          | Default                                                       | Description                   |
-| ------------------ | ----------------------------- | ------------------------------------------------------------- | ----------------------------- |
-| `v-model:page`     | `number`                      | `1`                                                           | Current page                  |
-| `v-model:pageSize` | `number`                      | `20`                                                          | Page size                     |
-| `total`            | `number`                      | —                                                             | Total items                   |
-| `siblings`         | `number`                      | `1`                                                           | Pages on each side of current |
-| `boundaries`       | `number`                      | `1`                                                           | Pages at each edge            |
-| `edges`            | `boolean`                     | `false`                                                       | First and last controls       |
-| `href`             | `(page: number) => string`    | —                                                             | Links instead of buttons      |
-| `as`               | `string \| Component`         | `'a'`                                                         | Link component for a router   |
-| `pageSizes`        | `number[]`                    | —                                                             | Page-size choices             |
-| `showRange`        | `boolean`                     | `true`                                                        | Range caption                 |
-| `size`             | `NuiSize`                     | `'md'`                                                        | Control size                  |
-| `label`            | `string`                      | [dictionary](/en/localization#pagination): “Pagination”       | `aria-label` of the nav       |
-| `pageLabel`        | `(page: number) => string`    | [dictionary](/en/localization#pagination): “Page N”           | Page button name              |
-| `rangeLabel`       | `(from, to, total) => string` | [dictionary](/en/localization#pagination): “from–to of total” | Range caption                 |
+| Prop               | Type                          | Default                                                             | Description                   |
+| ------------------ | ----------------------------- | ------------------------------------------------------------------- | ----------------------------- |
+| `v-model:page`     | `number`                      | `1`                                                                 | Current page                  |
+| `v-model:pageSize` | `number`                      | `20`                                                                | Page size                     |
+| `total`            | `number`                      | —                                                                   | Total items                   |
+| `siblings`         | `number`                      | `1`                                                                 | Pages on each side of current |
+| `boundaries`       | `number`                      | `1`                                                                 | Pages at each edge            |
+| `edges`            | `boolean`                     | `false`                                                             | First and last controls       |
+| `href`             | `(page: number) => string`    | —                                                                   | Links instead of buttons      |
+| `as`               | `string \| Component`         | `'a'`                                                               | Link component for a router   |
+| `pageSizes`        | `number[]`                    | —                                                                   | Page-size choices             |
+| `showRange`        | `boolean`                     | `true`                                                              | Range caption                 |
+| `size`             | `NuiSize`                     | `'md'`                                                              | Control size                  |
+| `label`            | `string`                      | [dictionary](/en/guide/localization#pagination): “Pagination”       | `aria-label` of the nav       |
+| `pageLabel`        | `(page: number) => string`    | [dictionary](/en/guide/localization#pagination): “Page N”           | Page button name              |
+| `rangeLabel`       | `(from, to, total) => string` | [dictionary](/en/guide/localization#pagination): “from–to of total” | Range caption                 |
 
 Plus `previousLabel`, `nextLabel`, `firstLabel`, `lastLabel`, `pageSizeLabel`, all from the
-[dictionary](/en/localization#pagination). Block
+[dictionary](/en/guide/localization#pagination). Block
 `nui-pagination` (modifier `--size-*`; elements `__range`, `__page-size`, `__page-size-label`,
 `__select`, `__list`, `__item` with `--page`, `--ellipsis`, `--edge`, `--status`, `__control` with
 `--current`, `__previous`, `__next`, `__page`, `__arrow`, `__ellipsis`, `__status`).

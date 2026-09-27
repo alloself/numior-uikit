@@ -4,7 +4,7 @@
     <template #header>
       <DocsHeader @search="searchOpen = true" />
     </template>
-    <template #sidebar>
+    <template v-if="hasSidebar" #sidebar>
       <DocsSidebar />
     </template>
     <DocsNotFound v-if="page.isNotFound" />
@@ -32,7 +32,9 @@ import DocsToc from './parts/DocsToc.vue';
 
 const { page, frontmatter } = useData();
 const route = useRoute();
-const { texts } = useDocs();
+const { texts, sidebar } = useDocs();
+
+const hasSidebar = computed(() => sidebar.value.length > 0);
 const searchOpen = ref(false);
 
 const showToc = computed(

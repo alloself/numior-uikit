@@ -35,16 +35,16 @@ const presets = [
 
 ## API
 
-| Prop                                  | Тип               | По умолчанию                                          | Описание                   |
-| ------------------------------------- | ----------------- | ----------------------------------------------------- | -------------------------- |
-| `v-model`                             | `NuiDateRange`    | `{ start, end }`                                      | Диапазон                   |
-| `months`                              | `number`          | `2`                                                   | Месяцев в календаре        |
-| `presets`                             | `NuiDatePreset[]` | —                                                     | Пресеты слева от календаря |
-| `startPlaceholder` / `endPlaceholder` | `string`          | шаблон локали                                         | Подсказки в полях          |
-| `startName` / `endName`               | `string`          | —                                                     | Скрытые inputs для формы   |
-| `endLabel`                            | `string`          | [словарь](/localization#datepicker): «Дата окончания» | Имя поля конца             |
-| `clearable`                           | `boolean`         | `false`                                               | Кнопка очистки             |
-| `openLabel`                           | `string`          | [словарь](/localization#datepicker): «Выбрать период» | Имя кнопки календаря       |
+| Prop                                  | Тип               | По умолчанию                                                | Описание                   |
+| ------------------------------------- | ----------------- | ----------------------------------------------------------- | -------------------------- |
+| `v-model`                             | `NuiDateRange`    | `{ start, end }`                                            | Диапазон                   |
+| `months`                              | `number`          | `2`                                                         | Месяцев в календаре        |
+| `presets`                             | `NuiDatePreset[]` | —                                                           | Пресеты слева от календаря |
+| `startPlaceholder` / `endPlaceholder` | `string`          | шаблон локали                                               | Подсказки в полях          |
+| `startName` / `endName`               | `string`          | —                                                           | Скрытые inputs для формы   |
+| `endLabel`                            | `string`          | [словарь](/guide/localization#datepicker): «Дата окончания» | Имя поля конца             |
+| `clearable`                           | `boolean`         | `false`                                                     | Кнопка очистки             |
+| `openLabel`                           | `string`          | [словарь](/guide/localization#datepicker): «Выбрать период» | Имя кнопки календаря       |
 
 Остальные пропы, слот `actions`, методы и блок совпадают с [выбором даты](/components/date-picker);
 корень получает модификатор `nui-date-picker--range`, между полями стоит `__separator`.

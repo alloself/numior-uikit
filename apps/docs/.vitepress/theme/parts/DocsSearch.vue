@@ -25,7 +25,7 @@ const open = defineModel<boolean>('open', { default: false });
 
 const { localeIndex } = useData();
 const router = useRouter();
-const { texts, flatLinks } = useDocs();
+const { texts, allLinks } = useDocs();
 const query = ref('');
 const loading = ref(false);
 const index = shallowRef<SearchIndex | null>(null);
@@ -46,7 +46,7 @@ const loadIndex = async (): Promise<void> => {
 const pages = computed<NuiCommandSource>(() => [
   {
     label: texts.value.searchPages,
-    items: flatLinks.value.map((item) => ({ value: item.link, label: item.text, icon: 'file' })),
+    items: allLinks.value.map((item) => ({ value: item.link, label: item.text, icon: 'file' })),
   },
 ]);
 

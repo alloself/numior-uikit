@@ -102,27 +102,27 @@ URL, который отзывается при удалении и размон
 
 ## API
 
-| Prop                                       | Тип                                            | По умолчанию                                             | Описание                                |
-| ------------------------------------------ | ---------------------------------------------- | -------------------------------------------------------- | --------------------------------------- |
-| `v-model`                                  | `NuiUploadItem<R>[]`                           | `[]`                                                     | Элементы со статусами                   |
-| `upload`                                   | `(file, { onProgress, signal }) => Promise<R>` | —                                                        | Адаптер загрузки                        |
-| `accept`                                   | `string`                                       | —                                                        | Расширения и типы через запятую         |
-| `multiple`                                 | `boolean`                                      | `true`                                                   | Несколько файлов; `false` заменяет файл |
-| `maxSize`                                  | `number`                                       | —                                                        | Предел размера в байтах                 |
-| `maxFiles`                                 | `number`                                       | —                                                        | Предел числа файлов в модели            |
-| `validate`                                 | `(file) => string \| undefined`                | —                                                        | Своя проверка, строка — текст ошибки    |
-| `rejected`                                 | `'list' \| 'drop'`                             | `'list'`                                                 | Показывать отклонённые или отбрасывать  |
-| `auto`                                     | `boolean`                                      | `true`                                                   | Загружать сразу                         |
-| `concurrency`                              | `number`                                       | `3`                                                      | Параллельных загрузок                   |
-| `layout`                                   | `'list' \| 'grid'`                             | `'list'`                                                 | Список или сетка миниатюр               |
-| `size`                                     | `'sm' \| 'md' \| 'lg'`                         | `'md'`                                                   | Ступень размера                         |
-| `dropLabel`                                | `string`                                       | [словарь](/localization#upload): «Перетащите файлы сюда» | Текст зоны                              |
-| `browseLabel`                              | `string`                                       | [словарь](/localization#upload): «Выбрать файлы»         | Подпись кнопки                          |
-| `hint`                                     | `string`                                       | —                                                        | Подсказка под кнопкой                   |
-| `cancelLabel`, `retryLabel`, `removeLabel` | `string`                                       | [словарь](/localization#upload)                          | `aria-label` действий                   |
-| `doneLabel`                                | `string`                                       | [словарь](/localization#upload): «Загружено»             | Текст объявления о готовности           |
-| `errorLabel`                               | `(error, item) => string`                      | [словарь](/localization#upload)                          | Текст ошибки по причине                 |
-| `id`, `disabled`, `required`, `invalid`    | из поля                                        | —                                                        | Связь с `NuiField`                      |
+| Prop                                       | Тип                                            | По умолчанию                                                   | Описание                                |
+| ------------------------------------------ | ---------------------------------------------- | -------------------------------------------------------------- | --------------------------------------- |
+| `v-model`                                  | `NuiUploadItem<R>[]`                           | `[]`                                                           | Элементы со статусами                   |
+| `upload`                                   | `(file, { onProgress, signal }) => Promise<R>` | —                                                              | Адаптер загрузки                        |
+| `accept`                                   | `string`                                       | —                                                              | Расширения и типы через запятую         |
+| `multiple`                                 | `boolean`                                      | `true`                                                         | Несколько файлов; `false` заменяет файл |
+| `maxSize`                                  | `number`                                       | —                                                              | Предел размера в байтах                 |
+| `maxFiles`                                 | `number`                                       | —                                                              | Предел числа файлов в модели            |
+| `validate`                                 | `(file) => string \| undefined`                | —                                                              | Своя проверка, строка — текст ошибки    |
+| `rejected`                                 | `'list' \| 'drop'`                             | `'list'`                                                       | Показывать отклонённые или отбрасывать  |
+| `auto`                                     | `boolean`                                      | `true`                                                         | Загружать сразу                         |
+| `concurrency`                              | `number`                                       | `3`                                                            | Параллельных загрузок                   |
+| `layout`                                   | `'list' \| 'grid'`                             | `'list'`                                                       | Список или сетка миниатюр               |
+| `size`                                     | `'sm' \| 'md' \| 'lg'`                         | `'md'`                                                         | Ступень размера                         |
+| `dropLabel`                                | `string`                                       | [словарь](/guide/localization#upload): «Перетащите файлы сюда» | Текст зоны                              |
+| `browseLabel`                              | `string`                                       | [словарь](/guide/localization#upload): «Выбрать файлы»         | Подпись кнопки                          |
+| `hint`                                     | `string`                                       | —                                                              | Подсказка под кнопкой                   |
+| `cancelLabel`, `retryLabel`, `removeLabel` | `string`                                       | [словарь](/guide/localization#upload)                          | `aria-label` действий                   |
+| `doneLabel`                                | `string`                                       | [словарь](/guide/localization#upload): «Загружено»             | Текст объявления о готовности           |
+| `errorLabel`                               | `(error, item) => string`                      | [словарь](/guide/localization#upload)                          | Текст ошибки по причине                 |
+| `id`, `disabled`, `required`, `invalid`    | из поля                                        | —                                                              | Связь с `NuiField`                      |
 
 События: `update:modelValue`, `reject(rejections)`, `done(item)`, `error(item)`,
 `remove(item)`. Слоты: default (`{ open, dragging }`) заменяет содержимое зоны, `item`

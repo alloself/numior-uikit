@@ -164,7 +164,7 @@ const passwordRules = [required(), min(8)];
 | `customAsync(check)` | Асинхронную проверку, см. ниже                                               |
 
 Все правила, кроме `required`, пропускают пустое значение. Тексты берутся из
-[словаря](/localization#formrules) на языке конфигурации, опция `{ message }` правила
+[словаря](/guide/localization#formrules) на языке конфигурации, опция `{ message }` правила
 побеждает. Правила поля передаются в `rules` у `NuiFormField`; правила формы — в
 `useForm({ rules })` по пути или шаблону, где `*` означает индекс строки:
 
@@ -360,14 +360,14 @@ const form = useForm({ initialValues, engine: veeValidateEngine, onSubmit });
 
 `NuiForm`:
 
-| Prop           | Тип                           | По умолчанию                                                | Описание                      |
-| -------------- | ----------------------------- | ----------------------------------------------------------- | ----------------------------- |
-| `form`         | `FormContext<T>`              | —                                                           | Контекст из `useForm`         |
-| `disabled`     | `boolean`                     | `false`                                                     | Отключает поля и отправку     |
-| `reserveError` | `boolean`                     | `false`                                                     | Место под ошибку у всех полей |
-| `submitAction` | `() => Promise<SubmitResult>` | `form.submit`                                               | Своё действие отправки        |
-| `submitLabel`  | `string`                      | [словарь](/localization#form): «Отправить»                  | Подпись кнопки по умолчанию   |
-| `errorTitle`   | `string`                      | [словарь](/localization#form): «Не удалось отправить форму» | Заголовок блока ошибок        |
+| Prop           | Тип                           | По умолчанию                                                      | Описание                      |
+| -------------- | ----------------------------- | ----------------------------------------------------------------- | ----------------------------- |
+| `form`         | `FormContext<T>`              | —                                                                 | Контекст из `useForm`         |
+| `disabled`     | `boolean`                     | `false`                                                           | Отключает поля и отправку     |
+| `reserveError` | `boolean`                     | `false`                                                           | Место под ошибку у всех полей |
+| `submitAction` | `() => Promise<SubmitResult>` | `form.submit`                                                     | Своё действие отправки        |
+| `submitLabel`  | `string`                      | [словарь](/guide/localization#form): «Отправить»                  | Подпись кнопки по умолчанию   |
+| `errorTitle`   | `string`                      | [словарь](/guide/localization#form): «Не удалось отправить форму» | Заголовок блока ошибок        |
 
 Слоты: default — поля; `form-errors` (`{ errors }`) заменяет блок ошибок; `actions`
 (`{ pending, dirty, submit, reset }`) заменяет кнопку. Событие `reset`. Методы
@@ -389,19 +389,19 @@ const form = useForm({ initialValues, engine: veeValidateEngine, onSubmit });
 
 `NuiFieldArray`:
 
-| Prop                       | Тип                    | По умолчанию                                           | Описание                              |
-| -------------------------- | ---------------------- | ------------------------------------------------------ | ------------------------------------- |
-| `form`                     | `FormContext<T>`       | —                                                      | Форма значения                        |
-| `name`                     | `(values: T) => Row[]` | —                                                      | Селектор массива                      |
-| `label`, `description`     | `string`               | —                                                      | Подпись и описание `fieldset`         |
-| `newRow`                   | `() => Row`            | —                                                      | Новая строка; без него нет добавления |
-| `min`, `max`               | `number`               | —                                                      | Пределы числа строк                   |
-| `reorderable`              | `boolean`              | `false`                                                | Перестановка мышью и клавиатурой      |
-| `disabled`                 | `boolean`              | —                                                      | Отключает строки и действия           |
-| `rules`, `validateOn`      | правила списка         | —                                                      | Правила числа и состава строк         |
-| `addLabel`                 | `string`               | [словарь](/localization#fieldarray): «Добавить строку» | Кнопка добавления                     |
-| `emptyLabel`               | `string`               | [словарь](/localization#fieldarray): «Строк пока нет»  | Пустой список                         |
-| `removeLabel`, `moveLabel` | `(index) => string`    | [словарь](/localization#fieldarray)                    | `aria-label` удаления и грипа         |
+| Prop                       | Тип                    | По умолчанию                                                 | Описание                              |
+| -------------------------- | ---------------------- | ------------------------------------------------------------ | ------------------------------------- |
+| `form`                     | `FormContext<T>`       | —                                                            | Форма значения                        |
+| `name`                     | `(values: T) => Row[]` | —                                                            | Селектор массива                      |
+| `label`, `description`     | `string`               | —                                                            | Подпись и описание `fieldset`         |
+| `newRow`                   | `() => Row`            | —                                                            | Новая строка; без него нет добавления |
+| `min`, `max`               | `number`               | —                                                            | Пределы числа строк                   |
+| `reorderable`              | `boolean`              | `false`                                                      | Перестановка мышью и клавиатурой      |
+| `disabled`                 | `boolean`              | —                                                            | Отключает строки и действия           |
+| `rules`, `validateOn`      | правила списка         | —                                                            | Правила числа и состава строк         |
+| `addLabel`                 | `string`               | [словарь](/guide/localization#fieldarray): «Добавить строку» | Кнопка добавления                     |
+| `emptyLabel`               | `string`               | [словарь](/guide/localization#fieldarray): «Строк пока нет»  | Пустой список                         |
+| `removeLabel`, `moveLabel` | `(index) => string`    | [словарь](/guide/localization#fieldarray)                    | `aria-label` удаления и грипа         |
 
 Слоты: default (`{ row, remove, first, last }`, `row` — `{ key, index, path, value }`),
 `row-actions` (`{ row, remove, canRemove }`), `add` (`{ push, canAdd }`), `empty`. Методы

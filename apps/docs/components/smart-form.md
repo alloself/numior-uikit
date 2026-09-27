@@ -304,19 +304,19 @@ first, last, back }`) и `form-errors` заменяют кнопки и блок
 
 ## API
 
-| Prop           | Тип                           | По умолчанию                                | Описание                                 |
-| -------------- | ----------------------------- | ------------------------------------------- | ---------------------------------------- |
-| `form`         | `FormContext<Values>`         | —                                           | Контекст из `useForm`                    |
-| `fields`       | `NuiSmartFormEntry<Values>[]` | —                                           | Поля, секции и группы                    |
-| `steps`        | `NuiSmartFormStep<Values>[]`  | —                                           | Шаги вместо `fields`                     |
-| `v-model:step` | `string`                      | первый шаг                                  | Текущий шаг                              |
-| `layout`       | `string`                      | —                                           | Макет в синтаксисе `grid-template-areas` |
-| `inline`       | `boolean \| 'grow'`           | —                                           | Поля в строку                            |
-| `disabled`     | `boolean`                     | `false`                                     | Отключает поля и кнопки                  |
-| `reserveError` | `boolean`                     | `false`                                     | Место под ошибку у всех полей            |
-| `submitLabel`  | `string`                      | [словарь](/localization#form): «Отправить»  | Кнопка отправки                          |
-| `nextLabel`    | `string`                      | [словарь](/localization#smartform): «Далее» | Кнопка следующего шага                   |
-| `backLabel`    | `string`                      | [словарь](/localization#smartform): «Назад» | Кнопка предыдущего шага                  |
+| Prop           | Тип                           | По умолчанию                                      | Описание                                 |
+| -------------- | ----------------------------- | ------------------------------------------------- | ---------------------------------------- |
+| `form`         | `FormContext<Values>`         | —                                                 | Контекст из `useForm`                    |
+| `fields`       | `NuiSmartFormEntry<Values>[]` | —                                                 | Поля, секции и группы                    |
+| `steps`        | `NuiSmartFormStep<Values>[]`  | —                                                 | Шаги вместо `fields`                     |
+| `v-model:step` | `string`                      | первый шаг                                        | Текущий шаг                              |
+| `layout`       | `string`                      | —                                                 | Макет в синтаксисе `grid-template-areas` |
+| `inline`       | `boolean \| 'grow'`           | —                                                 | Поля в строку                            |
+| `disabled`     | `boolean`                     | `false`                                           | Отключает поля и кнопки                  |
+| `reserveError` | `boolean`                     | `false`                                           | Место под ошибку у всех полей            |
+| `submitLabel`  | `string`                      | [словарь](/guide/localization#form): «Отправить»  | Кнопка отправки                          |
+| `nextLabel`    | `string`                      | [словарь](/guide/localization#smartform): «Далее» | Кнопка следующего шага                   |
+| `backLabel`    | `string`                      | [словарь](/guide/localization#smartform): «Назад» | Кнопка предыдущего шага                  |
 
 Слоты: `[путь]`, `[путь]:after`, `actions`, `form-errors`. Методы `requestSubmit()` и `back()`.
 Типы `NuiSmartFormSlots<Values>`, `NuiSmartFormFieldScope`, `NuiSmartFormAfterScope`,

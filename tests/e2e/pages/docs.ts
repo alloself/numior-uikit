@@ -92,6 +92,10 @@ export class DocsSite {
     return this.article.getByRole('heading', { level: 1 });
   }
 
+  navLink(text: string): Locator {
+    return this.header.getByRole('link', { name: text, exact: true });
+  }
+
   sidebarLink(text: string): Locator {
     return this.sidebar.getByRole('link', { name: text, exact: true });
   }

@@ -44,20 +44,20 @@ ArrowDown в поле, ставит фокус на выбранный день,
 
 ## API
 
-| Prop          | Тип                 | По умолчанию                                        | Описание                                            |
-| ------------- | ------------------- | --------------------------------------------------- | --------------------------------------------------- |
-| `v-model`     | `string \| null`    | `null`                                              | Дата `YYYY-MM-DD` или с `time` — `YYYY-MM-DDTHH:mm` |
-| `time`        | `boolean`           | `false`                                             | Дата и время                                        |
-| `timeStep`    | `number`            | `15`                                                | Шаг подсказок времени в минутах                     |
-| `placeholder` | `string`            | шаблон локали                                       | Подсказка в поле                                    |
-| `clearable`   | `boolean`           | `false`                                             | Кнопка очистки                                      |
-| `readonly`    | `boolean`           | `false`                                             | Только чтение                                       |
-| `name`        | `string`            | —                                                   | Скрытый input для формы                             |
-| `placement`   | `FloatingPlacement` | `'bottom-start'`                                    | Сторона диалога                                     |
-| `openLabel`   | `string`            | [словарь](/localization#datepicker): «Выбрать дату» | Имя кнопки календаря                                |
-| `clearLabel`  | `string`            | [словарь](/localization#datepicker): «Очистить»     | Имя кнопки очистки                                  |
-| `dialogLabel` | `string`            | [словарь](/localization#datepicker): «Календарь»    | Имя диалога без `NuiField`                          |
-| `timeLabel`   | `string`            | [словарь](/localization#timefield): «Выбрать время» | Имя кнопки часов                                    |
+| Prop          | Тип                 | По умолчанию                                              | Описание                                            |
+| ------------- | ------------------- | --------------------------------------------------------- | --------------------------------------------------- |
+| `v-model`     | `string \| null`    | `null`                                                    | Дата `YYYY-MM-DD` или с `time` — `YYYY-MM-DDTHH:mm` |
+| `time`        | `boolean`           | `false`                                                   | Дата и время                                        |
+| `timeStep`    | `number`            | `15`                                                      | Шаг подсказок времени в минутах                     |
+| `placeholder` | `string`            | шаблон локали                                             | Подсказка в поле                                    |
+| `clearable`   | `boolean`           | `false`                                                   | Кнопка очистки                                      |
+| `readonly`    | `boolean`           | `false`                                                   | Только чтение                                       |
+| `name`        | `string`            | —                                                         | Скрытый input для формы                             |
+| `placement`   | `FloatingPlacement` | `'bottom-start'`                                          | Сторона диалога                                     |
+| `openLabel`   | `string`            | [словарь](/guide/localization#datepicker): «Выбрать дату» | Имя кнопки календаря                                |
+| `clearLabel`  | `string`            | [словарь](/guide/localization#datepicker): «Очистить»     | Имя кнопки очистки                                  |
+| `dialogLabel` | `string`            | [словарь](/guide/localization#datepicker): «Календарь»    | Имя диалога без `NuiField`                          |
+| `timeLabel`   | `string`            | [словарь](/guide/localization#timefield): «Выбрать время» | Имя кнопки часов                                    |
 
 Плюс `id`, `size`, `disabled`, `required`, `invalid` как у остальных контролов поля и
 пропы календаря `locale`, `weekStart`, `min`, `max`, `isDateDisabled`, `weekNumbers`,

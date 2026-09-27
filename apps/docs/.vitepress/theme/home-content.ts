@@ -22,8 +22,8 @@ const ru: HomeContent = {
   title: 'Основание собственного UI kit',
   tagline: 'Vue 3.5+, семантические темы и модульные пакеты. Закрытая разработка.',
   actions: [
-    { text: 'Начать разработку', link: '/guide', primary: true },
-    { text: 'Темизация', link: '/theming', primary: false },
+    { text: 'Начать разработку', link: '/guide/getting-started', primary: true },
+    { text: 'Темизация', link: '/guide/theming', primary: false },
   ],
   features: [
     {
@@ -43,8 +43,8 @@ const en: HomeContent = {
   title: 'The foundation of an independent UI kit',
   tagline: 'Vue 3.5+, semantic themes and modular packages. Closed development.',
   actions: [
-    { text: 'Start developing', link: '/en/guide', primary: true },
-    { text: 'Theming', link: '/en/theming', primary: false },
+    { text: 'Start developing', link: '/en/guide/getting-started', primary: true },
+    { text: 'Theming', link: '/en/guide/theming', primary: false },
   ],
   features: [
     {

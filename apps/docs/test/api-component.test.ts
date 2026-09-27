@@ -9,7 +9,7 @@ describe('ApiComponent', () => {
 
     expect(api.rows('Свойства')).toEqual([
       ['size', 'NuiSize | undefined', '"md"', 'Ступень размера.'],
-      ['itemsобязательно', 'readonly string[]', '—', '—'],
+      ['items*', 'readonly string[]', '—', '—'],
     ]);
 
     expect(api.rows('Модели')).toEqual([
@@ -38,7 +38,8 @@ describe('ApiComponent', () => {
     expect(api.sectionTitles).toContain('Тексты');
     expect(api.rows('Тексты')).toEqual([['empty', 'Пусто', 'Empty']]);
     expect(api.styleImport).toBe("import '@numior/vue/styles/sample.css';");
-    expect(api.badges).toEqual(['обязательно', '__label', '--size-sm', '--__label--muted']);
+    expect(api.requiredMarks).toEqual(['обязательно']);
+    expect(api.styleParts).toEqual(['__label', '--size-sm', '--__label--muted']);
   });
 
   it('hides sections without members', () => {

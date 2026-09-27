@@ -166,7 +166,7 @@ attempt.
 | `customAsync(check)` | An asynchronous check, see below                                             |
 
 Every rule except `required` lets an empty value through. Messages come from the
-[dictionary](/en/localization#formrules) in the configured language, and a rule's
+[dictionary](/en/guide/localization#formrules) in the configured language, and a rule's
 `{ message }` option wins. Field rules go to `rules` on `NuiFormField`; form rules go to
 `useForm({ rules })` by path or pattern, where `*` stands for a row index:
 
@@ -364,14 +364,14 @@ descendants a `FormHandle` without the value type.
 
 `NuiForm`:
 
-| Prop           | Type                          | Default                                                          | Description                    |
-| -------------- | ----------------------------- | ---------------------------------------------------------------- | ------------------------------ |
-| `form`         | `FormContext<T>`              | —                                                                | Context from `useForm`         |
-| `disabled`     | `boolean`                     | `false`                                                          | Disables fields and submit     |
-| `reserveError` | `boolean`                     | `false`                                                          | Room for errors in every field |
-| `submitAction` | `() => Promise<SubmitResult>` | `form.submit`                                                    | Your own submit action         |
-| `submitLabel`  | `string`                      | [dictionary](/en/localization#form): “Submit”                    | Label of the default button    |
-| `errorTitle`   | `string`                      | [dictionary](/en/localization#form): “Could not submit the form” | Title of the error block       |
+| Prop           | Type                          | Default                                                                | Description                    |
+| -------------- | ----------------------------- | ---------------------------------------------------------------------- | ------------------------------ |
+| `form`         | `FormContext<T>`              | —                                                                      | Context from `useForm`         |
+| `disabled`     | `boolean`                     | `false`                                                                | Disables fields and submit     |
+| `reserveError` | `boolean`                     | `false`                                                                | Room for errors in every field |
+| `submitAction` | `() => Promise<SubmitResult>` | `form.submit`                                                          | Your own submit action         |
+| `submitLabel`  | `string`                      | [dictionary](/en/guide/localization#form): “Submit”                    | Label of the default button    |
+| `errorTitle`   | `string`                      | [dictionary](/en/guide/localization#form): “Could not submit the form” | Title of the error block       |
 
 Slots: default — the fields; `form-errors` (`{ errors }`) replaces the error block; `actions`
 (`{ pending, dirty, submit, reset }`) replaces the button. Event `reset`. Methods
@@ -393,19 +393,19 @@ Slots: default — the fields; `form-errors` (`{ errors }`) replaces the error b
 
 `NuiFieldArray`:
 
-| Prop                       | Type                   | Default                                                  | Description                            |
-| -------------------------- | ---------------------- | -------------------------------------------------------- | -------------------------------------- |
-| `form`                     | `FormContext<T>`       | —                                                        | The form of the value                  |
-| `name`                     | `(values: T) => Row[]` | —                                                        | Selector of the array                  |
-| `label`, `description`     | `string`               | —                                                        | Legend and description of the fieldset |
-| `newRow`                   | `() => Row`            | —                                                        | A new row; without it there is no add  |
-| `min`, `max`               | `number`               | —                                                        | Limits of the row count                |
-| `reorderable`              | `boolean`              | `false`                                                  | Mouse and keyboard reordering          |
-| `disabled`                 | `boolean`              | —                                                        | Disables rows and actions              |
-| `rules`, `validateOn`      | list rules             | —                                                        | Rules for the count and the rows       |
-| `addLabel`                 | `string`               | [dictionary](/en/localization#fieldarray): “Add row”     | Add button                             |
-| `emptyLabel`               | `string`               | [dictionary](/en/localization#fieldarray): “No rows yet” | Empty list                             |
-| `removeLabel`, `moveLabel` | `(index) => string`    | [dictionary](/en/localization#fieldarray)                | `aria-label` of remove and the grip    |
+| Prop                       | Type                   | Default                                                        | Description                            |
+| -------------------------- | ---------------------- | -------------------------------------------------------------- | -------------------------------------- |
+| `form`                     | `FormContext<T>`       | —                                                              | The form of the value                  |
+| `name`                     | `(values: T) => Row[]` | —                                                              | Selector of the array                  |
+| `label`, `description`     | `string`               | —                                                              | Legend and description of the fieldset |
+| `newRow`                   | `() => Row`            | —                                                              | A new row; without it there is no add  |
+| `min`, `max`               | `number`               | —                                                              | Limits of the row count                |
+| `reorderable`              | `boolean`              | `false`                                                        | Mouse and keyboard reordering          |
+| `disabled`                 | `boolean`              | —                                                              | Disables rows and actions              |
+| `rules`, `validateOn`      | list rules             | —                                                              | Rules for the count and the rows       |
+| `addLabel`                 | `string`               | [dictionary](/en/guide/localization#fieldarray): “Add row”     | Add button                             |
+| `emptyLabel`               | `string`               | [dictionary](/en/guide/localization#fieldarray): “No rows yet” | Empty list                             |
+| `removeLabel`, `moveLabel` | `(index) => string`    | [dictionary](/en/guide/localization#fieldarray)                | `aria-label` of remove and the grip    |
 
 Slots: default (`{ row, remove, first, last }`, where `row` is `{ key, index, path, value }`),
 `row-actions` (`{ row, remove, canRemove }`), `add` (`{ push, canAdd }`), `empty`. Methods

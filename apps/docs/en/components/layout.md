@@ -125,7 +125,7 @@ hint without `aria-describedby`.
 `NuiSidebarItem` (`label`, `icon`, `href`, `to`, `as`, `current`, `disabled`, `badge`,
 `tooltip`; default and `trailing` slots), `NuiSidebarSub` (`label`, `icon`, `active` — the
 current page is inside, `id`, `v-model:open`), `NuiSidebarTrigger` (`label`, dictionary: “Toggle sidebar”). Texts come from the
-[dictionary](/en/localization#sidebar).
+[dictionary](/en/guide/localization#sidebar).
 
 Blocks `nui-layout` (`--mobile`, `--sidebar-open`; `__body`, `__content`; variables
 `--_sidebar-size`, `--_rail-size`, `--_bar-size`), `nui-app-bar` (`--sticky`; `__start`,
