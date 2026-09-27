@@ -111,6 +111,14 @@ NuiToggleGroup: `items` с иконкой и подписью, одиночны�
 (`useListNavigation`, покой на выбранном), выбор — Space/Enter/клик. Модель и ключи — общий
 `useOptionSelection`.
 
+NuiCollapsible: кнопка с `aria-expanded`/`aria-controls`, необязательная обёртка-заголовок
+`headingLevel`, панель на `grid-template-rows: 0fr → 1fr`; содержимое получает
+`hidden="until-found"` только после завершения схлопывания (по `transitionend`), поэтому
+поиск по странице находит закрытые разделы (`beforematch` открывает), а анимация закрытия
+видит контент до конца; варианты `plain` и `card`. NuiAccordion: контекст открытых значений
+(`modelValue` или `values` при `multiple`, `collapsible` запрещает закрыть последний),
+`NuiAccordionItem` рендерит NuiCollapsible, стрелки и Home/End ходят по заголовкам.
+
 Далее в волне: `defineSlots` во всех компонентах;
 кнопка-ссылка; NuiSeparator, NuiKbd, NuiCode, NuiToggleGroup, NuiCollapsible/NuiAccordion,
 NuiCommand, NuiToc, NuiSkipLink, NuiSplitter; режимы NuiLayout.
@@ -129,7 +137,8 @@ NuiCommand, NuiToc, NuiSkipLink, NuiSplitter; режимы NuiLayout.
 - новые алиасы иконок (справочник иконок) и кнопка-ссылка (страница «Кнопка»);
 - NuiSeparator и NuiKbd (страницы «Разделитель» и «Клавиша»);
 - NuiCode (страница «Код»);
-- NuiToggleGroup (страница «Группа переключателей»).
+- NuiToggleGroup (страница «Группа переключателей»);
+- NuiCollapsible и NuiAccordion (страницы «Сворачиваемый блок» и «Аккордеон»).
 
 ## Alternatives Considered
 

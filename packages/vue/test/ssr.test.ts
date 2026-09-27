@@ -39,6 +39,9 @@ import {
   NuiKbd,
   NuiCode,
   NuiToggleGroup,
+  NuiCollapsible,
+  NuiAccordion,
+  NuiAccordionItem,
   NuiSwitch,
   NuiTable,
   NuiTabs,
@@ -154,6 +157,18 @@ const scenarios: Scenario[] = [
   { name: 'NuiIcon', render: () => h(NuiIcon, { alias: 'check' }) },
   { name: 'NuiSeparator', render: () => h(NuiSeparator, { label: 'or' }) },
   { name: 'NuiKbd', render: () => h(NuiKbd, { keys: 'mod+k' }) },
+  {
+    name: 'NuiCollapsible',
+    render: () => h(NuiCollapsible, { label: 'Details', headingLevel: 3 }, () => 'Hidden text'),
+  },
+  {
+    name: 'NuiAccordion',
+    render: () =>
+      h(NuiAccordion, { modelValue: 'a', variant: 'card' }, () => [
+        h(NuiAccordionItem, { value: 'a', label: 'First' }, () => 'One'),
+        h(NuiAccordionItem, { value: 'b', label: 'Second' }, () => 'Two'),
+      ]),
+  },
   {
     name: 'NuiToggleGroup',
     render: () =>

@@ -5,6 +5,8 @@
 @import './kbd/kbd.css';
 @import './code/code.css';
 @import './toggle-group/toggle-group.css';
+@import './collapsible/collapsible.css';
+@import './accordion/accordion.css';
 @import './field/field.css';
 @import './input/input.css';
 @import './textarea/textarea.css';

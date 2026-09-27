@@ -36,8 +36,9 @@ test('kbd renders combos per platform, boxed or plain', async ({ page }) => {
 
 test('code blocks number and highlight lines, copy their source and expand', async ({ page }) => {
   const playground = new PlaygroundPage(page);
-  await playground.open();
   const { chrome } = playground;
+  await chrome.stubClipboard();
+  await playground.open();
   const code = chrome.titledCode;
   await expect(code).toContainText('main.ts');
   expect(await chrome.hasLineNumber(code, 1)).toBe(true);
@@ -57,6 +58,7 @@ test('code blocks number and highlight lines, copy their source and expand', asy
   await copy.click();
   await expect(copy).toHaveAccessibleName('Скопировано');
   await expect(code).toHaveClass(/nui-code--copied/);
+  expect(await chrome.copiedTexts()).toEqual([expect.stringContaining('import { NuiButton }')]);
   await expect(chrome.copyButtonOf(chrome.plainCode)).toHaveCSS('opacity', '0');
   await chrome.plainCode.hover();
   await expect(chrome.copyButtonOf(chrome.plainCode)).toHaveCSS('opacity', '1');
@@ -92,4 +94,39 @@ test('toggle groups pick one scheme or several panels and rove focus', async ({
   await expect(dark).toHaveAttribute('aria-checked', 'true');
   await page.keyboard.press('Space');
   await expect(chrome.toggleOutput).toHaveText('system · preview, code');
+});
+
+test('collapsible and accordion reveal content with motion and hide it until found', async ({
+  page,
+  isMobile,
+}) => {
+  const playground = new PlaygroundPage(page);
+  await playground.open();
+  const { chrome } = playground;
+  const trigger = chrome.triggerOf(chrome.collapsible);
+  await expect(trigger).toHaveAttribute('aria-expanded', 'false');
+  await expect(chrome.contentOf(chrome.collapsible)).toHaveAttribute('hidden', /.*/);
+  expect(await chrome.panelHeightOf(chrome.collapsible)).toBe(0);
+  await trigger.click();
+  await expect(trigger).toHaveAttribute('aria-expanded', 'true');
+  await expect(chrome.contentOf(chrome.collapsible)).not.toHaveAttribute('hidden');
+  await expect.poll(() => chrome.panelHeightOf(chrome.collapsible)).toBeGreaterThan(20);
+  await trigger.click();
+  await expect.poll(() => chrome.panelHeightOf(chrome.collapsible)).toBe(0);
+  await expect(chrome.contentOf(chrome.collapsible)).toHaveAttribute('hidden', /.*/);
+  const ssr = chrome.triggerOf(chrome.accordion, 'SSR');
+  const tailwind = chrome.triggerOf(chrome.accordion, 'Tailwind');
+  await expect(ssr).toHaveAttribute('aria-expanded', 'true');
+  await expect(chrome.triggerOf(chrome.accordion, 'RTL')).toBeDisabled();
+  await tailwind.click();
+  await expect(tailwind).toHaveAttribute('aria-expanded', 'true');
+  await expect(ssr).toHaveAttribute('aria-expanded', 'false');
+  if (isMobile) {
+    return;
+  }
+  await ssr.focus();
+  await page.keyboard.press('ArrowDown');
+  await expect(tailwind).toBeFocused();
+  await page.keyboard.press('Home');
+  await expect(ssr).toBeFocused();
 });

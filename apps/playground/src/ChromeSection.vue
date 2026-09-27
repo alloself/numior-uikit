@@ -2,7 +2,7 @@
   <section class="panel" aria-labelledby="chrome-title">
     <div class="section-heading">
       <h2 id="chrome-title">Оформление интерфейса</h2>
-      <span class="tag">NuiSeparator · NuiKbd · NuiCode · NuiToggleGroup</span>
+      <span class="tag">NuiSeparator · NuiKbd · NuiCode · NuiToggleGroup · NuiAccordion</span>
     </div>
     <div class="nui-flex nui-flex-col nui-gap-4">
       <div class="nui-flex nui-items-center nui-gap-3" data-testid="chrome-toolbar">
@@ -50,6 +50,20 @@
         data-testid="code-titled"
       />
       <NuiCode :code="plain" language="sh" data-testid="code-plain" />
+      <NuiCollapsible label="Подробности установки" variant="card" data-testid="collapsible">
+        <p>Пакеты приватные до полного релиза 1.0; установка идёт из workspace.</p>
+      </NuiCollapsible>
+      <NuiAccordion v-model="faq" :heading-level="3" data-testid="accordion">
+        <NuiAccordionItem value="ssr" label="Работает ли SSR?">
+          Да: разметка детерминирована, id совпадают на сервере и клиенте.
+        </NuiAccordionItem>
+        <NuiAccordionItem value="tailwind" label="Нужен ли Tailwind?">
+          Нет, компоненты работают на автономном CSS; интеграция опциональна.
+        </NuiAccordionItem>
+        <NuiAccordionItem value="rtl" label="Поддерживается ли RTL?" disabled>
+          Да, через логические свойства и useDirection.
+        </NuiAccordionItem>
+      </NuiAccordion>
     </div>
   </section>
 </template>
@@ -57,8 +71,11 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import {
+  NuiAccordion,
+  NuiAccordionItem,
   NuiButton,
   NuiCode,
+  NuiCollapsible,
   NuiKbd,
   NuiSeparator,
   NuiToggleGroup,
@@ -67,6 +84,7 @@ import {
 } from '@numior/vue';
 
 const scheme = ref('light');
+const faq = ref<string | null>('ssr');
 const panels = ref(['preview']);
 
 const schemes: readonly NuiToggleItem[] = [

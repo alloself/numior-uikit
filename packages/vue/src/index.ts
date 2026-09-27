@@ -16,6 +16,16 @@ export type {
   NuiToggleItem,
   NuiToggleItemSlot,
 } from './toggle-group/toggle-group.types';
+export { default as NuiCollapsible } from './collapsible/NuiCollapsible.vue';
+export type {
+  NuiCollapsibleProps,
+  NuiCollapsibleTriggerSlot,
+  NuiCollapsibleVariant,
+  NuiHeadingLevel,
+} from './collapsible/collapsible.types';
+export { default as NuiAccordion } from './accordion/NuiAccordion.vue';
+export { default as NuiAccordionItem } from './accordion/NuiAccordionItem.vue';
+export type { NuiAccordionItemProps, NuiAccordionProps } from './accordion/accordion.types';
 export type { NuiLinkProps, NuiLinkUnderline } from './link/link.types';
 export { default as NuiIcon } from './icon/NuiIcon.vue';
 export type { NuiIconProps } from './icon/icon.types';

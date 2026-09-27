@@ -15,6 +15,8 @@ export class ChromeSection {
   readonly schemeToggle: Locator;
   readonly panelsToggle: Locator;
   readonly toggleOutput: Locator;
+  readonly collapsible: Locator;
+  readonly accordion: Locator;
 
   constructor(readonly page: Page) {
     this.root = page.locator('section[aria-labelledby="chrome-title"]');
@@ -31,12 +33,52 @@ export class ChromeSection {
     this.schemeToggle = page.getByTestId('toggle-scheme');
     this.panelsToggle = page.getByTestId('toggle-panels');
     this.toggleOutput = page.getByTestId('toggle-output');
+    this.collapsible = page.getByTestId('collapsible');
+    this.accordion = page.getByTestId('accordion');
+  }
+
+  triggerOf(block: Locator, label?: string): Locator {
+    const triggers = block.locator('.nui-collapsible__trigger');
+
+    return label === undefined ? triggers.first() : triggers.filter({ hasText: label });
+  }
+
+  contentOf(block: Locator, label?: string): Locator {
+    const items = block.locator('.nui-collapsible');
+    const item = label === undefined ? items.first() : items.filter({ hasText: label });
+
+    return item.locator('.nui-collapsible__content');
+  }
+
+  panelHeightOf(block: Locator, label?: string): Promise<number> {
+    return this.contentOf(block, label).evaluate((element) => element.clientHeight);
   }
 
   toggleItem(group: Locator, label: string): Locator {
     return group
       .locator('.nui-toggle-group__item', { hasText: label })
       .or(group.locator(`.nui-toggle-group__item[aria-label="${label}"]`));
+  }
+
+  async stubClipboard(): Promise<void> {
+    await this.page.addInitScript(() => {
+      const copies: string[] = [];
+
+      Object.defineProperty(navigator, 'clipboard', {
+        configurable: true,
+        value: { writeText: (text: string) => Promise.resolve(copies.push(text)) },
+      });
+
+      Object.defineProperty(window, '__nuiCopies', { value: copies });
+    });
+  }
+
+  copiedTexts(): Promise<string[]> {
+    return this.page.evaluate(() => {
+      const copies: unknown = Reflect.get(window, '__nuiCopies');
+
+      return Array.isArray(copies) ? copies.filter((copy) => typeof copy === 'string') : [];
+    });
   }
 
   copyButtonOf(code: Locator): Locator {
