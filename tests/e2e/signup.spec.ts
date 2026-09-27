@@ -1,6 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { expectRgb, rgbOf } from './helpers/color';
 import { PlaygroundPage } from './pages/playground';
+import { boxOf } from './helpers/geometry';
 
 const openSignup = async (page: Page): Promise<PlaygroundPage> => {
   const playground = new PlaygroundPage(page);
@@ -90,7 +91,7 @@ test.describe('signup form', () => {
       'Сервис регистрации временно недоступен',
     );
 
-    expect((await signup.boxOf(signup.alert)).y).toBeLessThan((await signup.boxOf(signup.login)).y);
+    expect((await boxOf(signup.alert)).y).toBeLessThan((await boxOf(signup.login)).y);
 
     await expect
       .poll(async () => (await signup.readOutput()).formErrors)
@@ -103,13 +104,13 @@ test.describe('signup form', () => {
     const { signup } = await openSignup(page);
     await signup.answer('Медленный ответ');
     await signup.fillValid();
-    const { width } = await signup.boxOf(signup.submit);
+    const { width } = await boxOf(signup.submit);
     await signup.submit.focus();
     await page.keyboard.press('Enter');
     await expect(signup.form).toHaveAttribute('aria-busy', 'true');
     await expect(signup.submit).toBeFocused();
     await expect(signup.reset).toBeDisabled();
-    expect((await signup.boxOf(signup.submit)).width).toBeCloseTo(width, 0);
+    expect((await boxOf(signup.submit)).width).toBeCloseTo(width, 0);
     await page.keyboard.press('Enter');
     await expect(signup.form).not.toHaveAttribute('aria-busy', 'true');
     await expect.poll(async () => (await signup.readOutput()).submitted).toBe(1);
@@ -171,11 +172,11 @@ test.describe('signup form', () => {
   }) => {
     const { signup } = await openSignup(page);
     await signup.reserve.check();
-    const before = await signup.boxOf(signup.form);
+    const before = await boxOf(signup.form);
     await signup.submit.click();
     await expect(signup.errorOf(signup.login)).toHaveText('Заполните поле');
     await expect(signup.errorOf(signup.terms)).toHaveText('Нужно принять условия');
-    const after = await signup.boxOf(signup.form);
+    const after = await boxOf(signup.form);
     expect(after.height).toBeCloseTo(before.height, 0);
   });
 
@@ -185,8 +186,8 @@ test.describe('signup form', () => {
   }) => {
     test.skip(isMobile, 'the pair stacks into one column on phones');
     const { signup } = await openSignup(page);
-    const password = await signup.boxOf(signup.frameOf(signup.password));
-    const confirm = await signup.boxOf(signup.frameOf(signup.confirm));
+    const password = await boxOf(signup.frameOf(signup.password));
+    const confirm = await boxOf(signup.frameOf(signup.confirm));
     expect(confirm.y).toBeCloseTo(password.y, 0);
     expect(confirm.height).toBeCloseTo(password.height, 0);
   });
@@ -198,8 +199,8 @@ test.describe('signup form', () => {
     await signup.submit.click();
     await expect(signup.errorOf(signup.login)).toBeVisible();
     expect(await playground.hasHorizontalOverflow()).toBe(false);
-    const email = await signup.boxOf(signup.email);
-    const minutes = await signup.boxOf(signup.segmentsOf(signup.call).last());
+    const email = await boxOf(signup.email);
+    const minutes = await boxOf(signup.segmentsOf(signup.call).last());
     expect(Math.abs(minutes.x + minutes.width - (email.x + email.width))).toBeLessThanOrEqual(3);
   });
 

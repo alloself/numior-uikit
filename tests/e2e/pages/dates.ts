@@ -1,65 +1,32 @@
 import type { Locator, Page } from '@playwright/test';
+import {
+  isString,
+  listOf,
+  nullable,
+  parseAs,
+  shapeOf,
+  type Guarded,
+} from '../../../packages/primitives/test/support/guards';
 
-export interface DateRangeOutput {
-  readonly start: string | null;
-  readonly end: string | null;
-}
+const isRange = shapeOf({ start: nullable(isString), end: nullable(isString) });
 
-export interface DatesOutput {
-  readonly date: string | null;
-  readonly month: string | null;
-  readonly dates: string[];
-  readonly range: DateRangeOutput;
-  readonly picked: string | null;
-  readonly period: DateRangeOutput;
-  readonly moment: string | null;
-  readonly today: string;
-}
+const isDatesOutput = shapeOf({
+  date: nullable(isString),
+  month: nullable(isString),
+  dates: listOf(isString),
+  range: isRange,
+  picked: nullable(isString),
+  period: isRange,
+  moment: nullable(isString),
+  today: isString,
+});
 
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null;
+export type DateRangeOutput = Guarded<typeof isRange>;
 
-const isNullableString = (value: unknown): value is string | null =>
-  value === null || typeof value === 'string';
+export type DatesOutput = Guarded<typeof isDatesOutput>;
 
-const isStringArray = (value: unknown): value is string[] =>
-  Array.isArray(value) && value.every((entry) => typeof entry === 'string');
-
-const isRange = (value: unknown): value is DateRangeOutput =>
-  isRecord(value) && isNullableString(value.start) && isNullableString(value.end);
-
-const field = <T>(
-  data: Record<string, unknown>,
-  key: string,
-  guard: (value: unknown) => value is T,
-): T => {
-  const value = data[key];
-
-  if (!guard(value)) {
-    throw new Error(`Unexpected ${key} in dates output: ${String(value)}`);
-  }
-
-  return value;
-};
-
-const parseDatesOutput = (text: string): DatesOutput => {
-  const data: unknown = JSON.parse(text);
-
-  if (!isRecord(data)) {
-    throw new Error('Dates output is not an object');
-  }
-
-  return {
-    date: field(data, 'date', isNullableString),
-    month: field(data, 'month', isNullableString),
-    dates: field(data, 'dates', isStringArray),
-    range: field(data, 'range', isRange),
-    picked: field(data, 'picked', isNullableString),
-    period: field(data, 'period', isRange),
-    moment: field(data, 'moment', isNullableString),
-    today: field(data, 'today', (value): value is string => typeof value === 'string'),
-  };
-};
+const parseDatesOutput = (text: string): DatesOutput =>
+  parseAs(text, isDatesOutput, 'dates output');
 
 const PICKER_ROOT = 'xpath=ancestor::*[contains(@class, "nui-date-picker")][1]';
 

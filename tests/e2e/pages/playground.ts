@@ -14,63 +14,37 @@ import { TreeSection } from './tree';
 import { UploadSection } from './upload';
 import { WizardSection } from './wizard';
 import { LayoutSection } from './layout';
+import {
+  isBoolean,
+  isNumber,
+  isString,
+  listOf,
+  parseAs,
+  shapeOf,
+  type Guarded,
+} from '../../../packages/primitives/test/support/guards';
+
+const isFormsOutput = shapeOf({
+  name: isString,
+  email: isString,
+  phone: isString,
+  bio: isString,
+  terms: isBoolean,
+  channels: listOf(isString),
+  plan: isString,
+  notifications: isBoolean,
+  submitted: isNumber,
+});
+
+export type FormsOutput = Guarded<typeof isFormsOutput>;
+
+const parseFormsOutput = (text: string): FormsOutput =>
+  parseAs(text, isFormsOutput, 'forms output');
 
 export type Theme = 'system' | 'light' | 'dark';
 export type Accent = 'indigo' | 'emerald' | 'rose';
 export type Density = 'comfortable' | 'compact';
 export type Direction = 'ltr' | 'rtl';
-
-export interface FormsOutput {
-  readonly name: string;
-  readonly email: string;
-  readonly phone: string;
-  readonly bio: string;
-  readonly terms: boolean;
-  readonly channels: string[];
-  readonly plan: string;
-  readonly notifications: boolean;
-  readonly submitted: number;
-}
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null;
-
-const isString = (value: unknown): value is string => typeof value === 'string';
-const isBoolean = (value: unknown): value is boolean => typeof value === 'boolean';
-const isNumber = (value: unknown): value is number => typeof value === 'number';
-
-const isStringArray = (value: unknown): value is string[] =>
-  Array.isArray(value) && value.every(isString);
-
-const field = <T>(
-  data: Record<string, unknown>,
-  key: string,
-  guard: (value: unknown) => value is T,
-): T => {
-  const value = data[key];
-  if (!guard(value)) {
-    throw new Error(`Unexpected ${key} in forms output: ${String(value)}`);
-  }
-  return value;
-};
-
-const parseFormsOutput = (text: string): FormsOutput => {
-  const data: unknown = JSON.parse(text);
-  if (!isRecord(data)) {
-    throw new Error('Forms output is not an object');
-  }
-  return {
-    name: field(data, 'name', isString),
-    email: field(data, 'email', isString),
-    phone: field(data, 'phone', isString),
-    bio: field(data, 'bio', isString),
-    terms: field(data, 'terms', isBoolean),
-    channels: field(data, 'channels', isStringArray),
-    plan: field(data, 'plan', isString),
-    notifications: field(data, 'notifications', isBoolean),
-    submitted: field(data, 'submitted', isNumber),
-  };
-};
 
 export class FormsSection {
   readonly root: Locator;
@@ -129,15 +103,6 @@ export class FormsSection {
     return control.locator(
       'xpath=ancestor::*[contains(concat(" ", @class, " "), " nui-field ")][1]',
     );
-  }
-
-  async boxOf(target: Locator): Promise<{ readonly width: number; readonly height: number }> {
-    const box = await target.boundingBox();
-
-    if (!box) {
-      throw new Error('Element has no bounding box');
-    }
-    return box;
   }
 
   async readOutput(): Promise<FormsOutput> {

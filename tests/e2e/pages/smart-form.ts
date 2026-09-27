@@ -1,35 +1,25 @@
 import type { Locator, Page } from '@playwright/test';
+import {
+  isRecord,
+  isString,
+  nullable,
+  parseAs,
+  shapeOf,
+  type Guarded,
+} from '../../../packages/primitives/test/support/guards';
+import { boxOf } from '../helpers/geometry';
 
-export interface SmartFormOutput {
-  readonly filter: { readonly query: string; readonly status: string | null };
-  readonly profile: Readonly<Record<string, unknown>> | null;
-}
+const isSmartFormOutput = shapeOf({
+  filter: shapeOf({ query: isString, status: nullable(isString) }),
+  profile: nullable(isRecord),
+});
 
-interface Box {
-  readonly x: number;
-  readonly y: number;
-  readonly width: number;
-  readonly height: number;
-}
+export type SmartFormOutput = Guarded<typeof isSmartFormOutput>;
+
+const parseSmartFormOutput = (text: string): SmartFormOutput =>
+  parseAs(text, isSmartFormOutput, 'smart form output');
 
 const FIELD = 'xpath=ancestor::*[contains(concat(" ", @class, " "), " nui-field ")][1]';
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null;
-
-const isFilter = (value: unknown): value is SmartFormOutput['filter'] =>
-  isRecord(value) &&
-  typeof value.query === 'string' &&
-  (value.status === null || typeof value.status === 'string');
-
-const parseSmartFormOutput = (text: string): SmartFormOutput => {
-  const data: unknown = JSON.parse(text);
-
-  if (!isRecord(data) || !isFilter(data.filter)) {
-    throw new Error(`Unexpected smart form output: ${text}`);
-  }
-  return { filter: data.filter, profile: isRecord(data.profile) ? data.profile : null };
-};
 
 export class SmartFormSection {
   readonly filter: Locator;
@@ -125,8 +115,8 @@ export class SmartFormSection {
   }
 
   async dragContact(from: number, to: number): Promise<void> {
-    const grip = await this.boxOf(this.grip(from));
-    const target = await this.boxOf(this.contacts.nth(to - 1));
+    const grip = await boxOf(this.grip(from));
+    const target = await boxOf(this.contacts.nth(to - 1));
     const x = grip.x + grip.width / 2;
     const y = grip.y + grip.height / 2;
 
@@ -139,15 +129,6 @@ export class SmartFormSection {
 
   async drop(): Promise<void> {
     await this.page.mouse.up();
-  }
-
-  async boxOf(target: Locator): Promise<Box> {
-    const box = await target.boundingBox();
-
-    if (!box) {
-      throw new Error('Element has no bounding box');
-    }
-    return box;
   }
 
   async readOutput(): Promise<SmartFormOutput> {

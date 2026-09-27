@@ -1,37 +1,27 @@
 import type { Locator, Page } from '@playwright/test';
+import {
+  isBoolean,
+  isNumber,
+  isString,
+  listOf,
+  nullable,
+  parseAs,
+  shapeOf,
+  type Guarded,
+} from '../../../packages/primitives/test/support/guards';
 
-export interface DataOutput {
-  readonly picked: readonly string[];
-  readonly channel: string | null;
-  readonly cardClicks: number;
-  readonly nestedClicks: number;
-  readonly runs: number;
-  readonly listEmpty: boolean;
-}
+const isDataOutput = shapeOf({
+  picked: listOf(isString),
+  channel: nullable(isString),
+  cardClicks: isNumber,
+  nestedClicks: isNumber,
+  runs: isNumber,
+  listEmpty: isBoolean,
+});
 
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null;
+export type DataOutput = Guarded<typeof isDataOutput>;
 
-const isStringList = (value: unknown): value is readonly string[] =>
-  Array.isArray(value) && value.every((entry) => typeof entry === 'string');
-
-const isDataOutput = (
-  data: Record<string, unknown>,
-): data is Record<string, unknown> & DataOutput =>
-  isStringList(data.picked) &&
-  (data.channel === null || typeof data.channel === 'string') &&
-  typeof data.cardClicks === 'number' &&
-  typeof data.nestedClicks === 'number' &&
-  typeof data.runs === 'number' &&
-  typeof data.listEmpty === 'boolean';
-
-const parseDataOutput = (text: string): DataOutput => {
-  const data: unknown = JSON.parse(text);
-  if (!isRecord(data) || !isDataOutput(data)) {
-    throw new Error(`Unexpected data output: ${text}`);
-  }
-  return data;
-};
+const parseDataOutput = (text: string): DataOutput => parseAs(text, isDataOutput, 'data output');
 
 export class DataSection {
   readonly badgeCount: Locator;

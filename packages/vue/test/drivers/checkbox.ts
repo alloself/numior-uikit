@@ -10,6 +10,9 @@ import {
 } from '../../src';
 import { ComponentDriver } from './component';
 import { waitForGlyph } from './icon';
+import { isString, listOf } from '../../../primitives/test/support/guards';
+
+const isStrings = listOf(isString);
 
 export interface CheckboxMountOptions {
   readonly props?: NuiCheckboxProps;
@@ -27,9 +30,6 @@ export interface CheckboxGroupMountOptions {
 }
 
 const MARK_GLYPH = '.nui-checkbox__mark .nui-icon__glyph';
-
-const isStrings = (value: unknown): value is string[] =>
-  Array.isArray(value) && value.every((item) => typeof item === 'string');
 
 export class CheckboxDriver extends ComponentDriver {
   protected readonly block = 'nui-checkbox';

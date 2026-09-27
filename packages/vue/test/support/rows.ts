@@ -1,4 +1,14 @@
 import type { NuiTableColumn } from '../../src';
+import {
+  isDate,
+  isNumber,
+  isString,
+  listOf,
+  nullable,
+  optional,
+  shapeOf,
+  type Guard,
+} from '../../../primitives/test/support/guards';
 
 export interface Person {
   readonly id: number;
@@ -33,9 +43,6 @@ export const PEOPLE: readonly Person[] = [
   person(11, 'Лев', 'Поддержка', 29, '2023-01-30', 77),
   person(12, 'Мария', 'Разработка', 48, '2016-10-10', 90),
 ];
-
-export const isPerson = (value: unknown): value is Person =>
-  typeof value === 'object' && value !== null && 'name' in value && 'age' in value;
 
 export const COLUMNS: readonly NuiTableColumn<unknown>[] = [
   { key: 'name', label: 'Имя', sortable: true },
@@ -89,3 +96,15 @@ export const withChildren = (
   }));
 
 export const newcomer = person(31, 'Влад', 'Разработка', 24, '2025-01-01', 66);
+
+const isPersonShape = shapeOf({
+  id: isNumber,
+  name: isString,
+  role: isString,
+  age: isNumber,
+  joined: isDate,
+  score: nullable(isNumber),
+  children: optional(listOf((value: unknown): value is Person => isPerson(value))),
+});
+
+export const isPerson: Guard<Person> = (value): value is Person => isPersonShape(value);

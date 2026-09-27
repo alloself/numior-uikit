@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { PlaygroundPage } from './pages/playground';
+import { boxOf } from './helpers/geometry';
 
 const openSmartForm = async (page: Page): Promise<PlaygroundPage> => {
   const playground = new PlaygroundPage(page);
@@ -36,10 +37,10 @@ test.describe('smart form', () => {
     isMobile,
   }) => {
     const { smartForm } = await openSmartForm(page);
-    const name = await smartForm.boxOf(smartForm.control('name'));
-    const email = await smartForm.boxOf(smartForm.control('email'));
-    const about = await smartForm.boxOf(smartForm.control('about'));
-    const form = await smartForm.boxOf(smartForm.profile);
+    const name = await boxOf(smartForm.control('name'));
+    const email = await boxOf(smartForm.control('email'));
+    const about = await boxOf(smartForm.control('about'));
+    const form = await boxOf(smartForm.profile);
     if (isMobile) {
       expect(email.y).toBeGreaterThan(name.y + name.height);
     } else {
@@ -49,8 +50,8 @@ test.describe('smart form', () => {
     expect(about.width).toBeGreaterThan(form.width * 0.9);
     const profile = smartForm.section('Профиль');
     const address = smartForm.section('Адрес');
-    const divider = await smartForm.boxOf(profile);
-    const legend = await smartForm.boxOf(smartForm.legendOf(address));
+    const divider = await boxOf(profile);
+    const legend = await boxOf(smartForm.legendOf(address));
     await expect(profile).toHaveCSS('border-bottom-style', 'solid');
     await expect(address).toHaveCSS('border-top-style', 'none');
     expect(legend.y).toBeGreaterThan(divider.y + divider.height);
@@ -72,8 +73,8 @@ test.describe('smart form', () => {
     await page.keyboard.type('Борис');
     await expect(smartForm.addContact).toBeDisabled();
     await expect(smartForm.limit).toHaveText('Достигнут предел строк: 3');
-    const name = await smartForm.boxOf(smartForm.control('contacts.1.name').locator('..'));
-    const remove = await smartForm.boxOf(smartForm.remove(2));
+    const name = await boxOf(smartForm.control('contacts.1.name').locator('..'));
+    const remove = await boxOf(smartForm.remove(2));
     expect(remove.height).toBeCloseTo(name.height, 0);
     expect(remove.y).toBeCloseTo(name.y, 0);
     await smartForm.grip(2).focus();
@@ -134,8 +135,8 @@ test.describe('smart form', () => {
     await smartForm.option('Активные').click();
     await smartForm.find.click();
     await expect.poll(async () => (await smartForm.readOutput()).filter.status).toBe('active');
-    const find = await smartForm.boxOf(smartForm.find);
-    const status = await smartForm.boxOf(smartForm.status);
+    const find = await boxOf(smartForm.find);
+    const status = await boxOf(smartForm.status);
     if (isMobile) {
       expect(find.y - (status.y + status.height)).toBeLessThanOrEqual(24);
     } else {
@@ -172,8 +173,8 @@ test.describe('smart form', () => {
     await expect(smartForm.errorOf(smartForm.control('name'))).toBeVisible();
     expect(await playground.hasHorizontalOverflow()).toBe(false);
     if (!isMobile) {
-      const name = await smartForm.boxOf(smartForm.control('name'));
-      const email = await smartForm.boxOf(smartForm.control('email'));
+      const name = await boxOf(smartForm.control('name'));
+      const email = await boxOf(smartForm.control('email'));
       expect(name.x).toBeGreaterThan(email.x + email.width);
     }
   });

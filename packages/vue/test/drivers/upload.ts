@@ -12,6 +12,31 @@ import {
 } from '../../src';
 import { configPlugins } from '../support/config';
 import { ComponentDriver } from './component';
+import {
+  anyOf,
+  isNumber,
+  isString,
+  listOf,
+  oneOf,
+  optional,
+  shapeOf,
+} from '../../../primitives/test/support/guards';
+
+const UPLOAD_FILE = { id: isString, name: isString, size: isNumber, type: isString };
+
+const isUploadError = shapeOf({
+  reason: oneOf('type', 'size', 'count', 'custom', 'upload'),
+  message: optional(isString),
+});
+
+const isItem = anyOf(
+  shapeOf({ ...UPLOAD_FILE, status: oneOf('queued') }),
+  shapeOf({ ...UPLOAD_FILE, status: oneOf('uploading'), progress: isNumber }),
+  shapeOf({ ...UPLOAD_FILE, status: oneOf('done'), result: optional(isString) }),
+  shapeOf({ ...UPLOAD_FILE, status: oneOf('error'), error: isUploadError }),
+);
+
+const isItems = listOf(isItem);
 
 type UploadProps = Omit<NuiUploadProps<string>, 'upload'>;
 type UploadContext = Parameters<NuiUploadAdapter<string>>[1];
@@ -44,12 +69,6 @@ interface UrlLog {
 
 export const fileOf = (name: string, size = 3, type = 'text/plain'): File =>
   new File([new Uint8Array(size)], name, { type });
-
-const isItem = (value: unknown): value is NuiUploadItem<string> =>
-  typeof value === 'object' && value !== null && 'id' in value && 'status' in value;
-
-const isItems = (value: unknown): value is NuiUploadItem<string>[] =>
-  Array.isArray(value) && value.every(isItem);
 
 const stubObjectUrls = (log: UrlLog): (() => void) => {
   const create = Object.getOwnPropertyDescriptor(URL, 'createObjectURL');

@@ -1,4 +1,5 @@
 import type { StandardIssue, StandardResult, StandardSchema } from '../../src';
+import { isRecord } from '../../../primitives/test/support/guards';
 
 export type SchemaValues = Readonly<Record<string, unknown>>;
 
@@ -14,9 +15,6 @@ export interface ProbeSchema<O> extends StandardSchema<unknown, O> {
   readonly inputs: readonly SchemaValues[];
 }
 
-const isValues = (value: unknown): value is SchemaValues =>
-  typeof value === 'object' && value !== null && !Array.isArray(value);
-
 export const issue = (message: string, ...path: Segment[]): StandardIssue =>
   path.length === 0 ? { message } : { message, path };
 
@@ -28,7 +26,7 @@ export const transformSchema = <O>(
   const inputs: SchemaValues[] = [];
 
   const evaluate = (value: unknown): StandardResult<O> => {
-    const values = isValues(value) ? value : {};
+    const values = isRecord(value) ? value : {};
     const issues = check(values);
 
     inputs.push(values);

@@ -3,6 +3,9 @@ import { defineComponent, h, nextTick, ref, type Ref } from 'vue';
 import { NuiField, NuiNumberField, type NuiFieldProps, type NuiNumberFieldProps } from '../../src';
 import { configScope } from '../support/config-scope';
 import { ComponentDriver } from './component';
+import { isNumber, nullable } from '../../../primitives/test/support/guards';
+
+const isModel = nullable(isNumber);
 
 export interface NumberFieldMountOptions {
   readonly props?: NuiNumberFieldProps;
@@ -11,9 +14,6 @@ export interface NumberFieldMountOptions {
   readonly locale?: string;
   readonly slots?: Record<string, () => unknown>;
 }
-
-const isModel = (value: unknown): value is number | null =>
-  value === null || typeof value === 'number';
 
 export class NumberFieldDriver extends ComponentDriver {
   protected readonly block = 'nui-number-field';

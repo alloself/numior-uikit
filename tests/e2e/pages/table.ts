@@ -1,68 +1,36 @@
 import type { Locator, Page } from '@playwright/test';
+import {
+  isBoolean,
+  isNumber,
+  isString,
+  listOf,
+  nullable,
+  parseAs,
+  recordOf,
+  shapeOf,
+  type Guarded,
+} from '../../../packages/primitives/test/support/guards';
 
-export interface TableOutput {
-  readonly sort: { readonly key: string; readonly direction: string } | null;
-  readonly selected: readonly string[];
-  readonly page: number;
-  readonly pageSize: number;
-  readonly lastRowClick: string | null;
-  readonly loading: boolean;
-  readonly empty: boolean;
-  readonly columnOrder: readonly string[];
-  readonly widths: Readonly<Record<string, number>>;
-  readonly expanded: readonly string[];
-  readonly loaded: readonly string[];
-  readonly lastReorder: string | null;
-  readonly teamOrder: readonly string[];
-}
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null;
-
-const isSort = (value: unknown): value is TableOutput['sort'] =>
-  value === null ||
-  (isRecord(value) && typeof value.key === 'string' && typeof value.direction === 'string');
-
-const isStringList = (value: unknown): value is readonly string[] =>
-  Array.isArray(value) && value.every((entry) => typeof entry === 'string');
-
-const isNullableString = (value: unknown): value is string | null =>
-  value === null || typeof value === 'string';
-
-const isWidths = (value: unknown): value is Readonly<Record<string, number>> =>
-  isRecord(value) && Object.values(value).every((entry) => typeof entry === 'number');
-
-const isBoolean = (value: unknown): value is boolean => typeof value === 'boolean';
-const isNumber = (value: unknown): value is number => typeof value === 'number';
-
-const OUTPUT_GUARDS: Readonly<Record<keyof TableOutput, (value: unknown) => boolean>> = {
-  sort: isSort,
-  selected: isStringList,
+const isTableOutput = shapeOf({
+  sort: nullable(shapeOf({ key: isString, direction: isString })),
+  selected: listOf(isString),
   page: isNumber,
   pageSize: isNumber,
-  lastRowClick: isNullableString,
+  lastRowClick: nullable(isString),
   loading: isBoolean,
   empty: isBoolean,
-  columnOrder: isStringList,
-  widths: isWidths,
-  expanded: isStringList,
-  loaded: isStringList,
-  lastReorder: isNullableString,
-  teamOrder: isStringList,
-};
+  columnOrder: listOf(isString),
+  widths: recordOf(isNumber),
+  expanded: listOf(isString),
+  loaded: listOf(isString),
+  lastReorder: nullable(isString),
+  teamOrder: listOf(isString),
+});
 
-const isTableOutput = (
-  data: Record<string, unknown>,
-): data is Record<string, unknown> & TableOutput =>
-  Object.entries(OUTPUT_GUARDS).every(([key, guard]) => guard(data[key]));
+export type TableOutput = Guarded<typeof isTableOutput>;
 
-const parseTableOutput = (text: string): TableOutput => {
-  const data: unknown = JSON.parse(text);
-  if (!isRecord(data) || !isTableOutput(data)) {
-    throw new Error(`Unexpected table output: ${text}`);
-  }
-  return data;
-};
+const parseTableOutput = (text: string): TableOutput =>
+  parseAs(text, isTableOutput, 'table output');
 
 const ROW_SELECTOR =
   'tbody:not(.nui-table__body--pinned) .nui-table__row:not(.nui-table__row--status):not(.nui-table__row--loading)';

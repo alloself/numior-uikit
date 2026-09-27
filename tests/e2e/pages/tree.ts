@@ -1,38 +1,24 @@
 import type { Locator, Page } from '@playwright/test';
+import {
+  isString,
+  listOf,
+  nullable,
+  parseAs,
+  shapeOf,
+  type Guarded,
+} from '../../../packages/primitives/test/support/guards';
 
-export interface TreeOutput {
-  readonly selected: string | null;
-  readonly expanded: readonly string[];
-  readonly checked: readonly string[];
-  readonly loaded: readonly string[];
-  readonly virtualSelected: string | null;
-}
+const isTreeOutput = shapeOf({
+  selected: nullable(isString),
+  expanded: listOf(isString),
+  checked: listOf(isString),
+  loaded: listOf(isString),
+  virtualSelected: nullable(isString),
+});
 
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null;
+export type TreeOutput = Guarded<typeof isTreeOutput>;
 
-const isStringList = (value: unknown): value is readonly string[] =>
-  Array.isArray(value) && value.every((entry) => typeof entry === 'string');
-
-const isNullableString = (value: unknown): value is string | null =>
-  value === null || typeof value === 'string';
-
-const isTreeOutput = (
-  data: Record<string, unknown>,
-): data is Record<string, unknown> & TreeOutput =>
-  isNullableString(data.selected) &&
-  isStringList(data.expanded) &&
-  isStringList(data.checked) &&
-  isStringList(data.loaded) &&
-  isNullableString(data.virtualSelected);
-
-const parseTreeOutput = (text: string): TreeOutput => {
-  const data: unknown = JSON.parse(text);
-  if (!isRecord(data) || !isTreeOutput(data)) {
-    throw new Error(`Unexpected tree output: ${text}`);
-  }
-  return data;
-};
+const parseTreeOutput = (text: string): TreeOutput => parseAs(text, isTreeOutput, 'tree output');
 
 export class TreeSection {
   readonly tree: Locator;

@@ -5,6 +5,9 @@ import { NuiTree, type NuiTreeItem, type NuiTreeItemSlot, type NuiTreeProps } fr
 import { FILES } from '../support/tree-items';
 import { createSelection, type Selection, type SelectionValue } from '../support/selection';
 import { ComponentDriver } from './component';
+import { isString, listOf } from '../../../primitives/test/support/guards';
+
+const isStringList = listOf(isString);
 
 export interface TreeMountOptions {
   readonly props?: Partial<Omit<NuiTreeProps<unknown>, 'items'>>;
@@ -15,9 +18,6 @@ export interface TreeMountOptions {
   readonly dir?: 'ltr' | 'rtl';
   readonly itemSlot?: ((slot: NuiTreeItemSlot<unknown>) => string) | undefined;
 }
-
-const isStringList = (value: unknown): value is string[] =>
-  Array.isArray(value) && value.every((entry) => typeof entry === 'string');
 
 const labelOfItem = (item: unknown): string =>
   typeof item === 'object' && item !== null && 'label' in item && typeof item.label === 'string'

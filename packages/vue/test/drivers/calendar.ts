@@ -2,6 +2,10 @@ import { mount, type DOMWrapper, type VueWrapper } from '@vue/test-utils';
 import { defineComponent, h, nextTick, ref, type Ref } from 'vue';
 import { NuiCalendar, type NuiCalendarProps, type NuiCalendarValue } from '../../src';
 import { ComponentDriver } from './component';
+import { anyOf, isString, listOf, nullable } from '../../../primitives/test/support/guards';
+import { isDateRange } from '../support/guards';
+
+const isValue = anyOf(nullable(isString), listOf(isString), isDateRange);
 
 export interface CalendarMountOptions {
   readonly props?: NuiCalendarProps;
@@ -18,12 +22,6 @@ export interface CellState {
   readonly middle: boolean;
   readonly preview: boolean;
 }
-
-const isValue = (value: unknown): value is NuiCalendarValue =>
-  value === null ||
-  typeof value === 'string' ||
-  (Array.isArray(value) && value.every((entry) => typeof entry === 'string')) ||
-  (typeof value === 'object' && value !== null && 'start' in value && 'end' in value);
 
 const datetimeOf = (element: Element | null | undefined): string | undefined =>
   element?.querySelector('time')?.getAttribute('datetime') ?? undefined;

@@ -1,71 +1,44 @@
 import type { Locator, Page } from '@playwright/test';
+import {
+  isNumber,
+  isString,
+  listOf,
+  nullable,
+  parseAs,
+  shapeOf,
+  type Guarded,
+} from '../../../packages/primitives/test/support/guards';
 
-export interface UploadDocumentOutput {
-  readonly name: string;
-  readonly status: string;
-  readonly progress: number;
-  readonly result: string | null;
-  readonly error: string | null;
-}
+const isDocument = shapeOf({
+  name: isString,
+  status: isString,
+  progress: isNumber,
+  result: nullable(isString),
+  error: nullable(isString),
+});
 
-export interface UploadImageOutput {
-  readonly name: string;
-  readonly status: string;
-}
+const isImage = shapeOf({ name: isString, status: isString });
 
-export interface UploadOutput {
-  readonly documents: UploadDocumentOutput[];
-  readonly images: UploadImageOutput[];
-  readonly rejections: string[];
-}
+const isUploadOutput = shapeOf({
+  documents: listOf(isDocument),
+  images: listOf(isImage),
+  rejections: listOf(isString),
+});
+
+export type UploadDocumentOutput = Guarded<typeof isDocument>;
+
+export type UploadImageOutput = Guarded<typeof isImage>;
+
+export type UploadOutput = Guarded<typeof isUploadOutput>;
+
+const parseUploadOutput = (text: string): UploadOutput =>
+  parseAs(text, isUploadOutput, 'upload output');
 
 export interface FakeFile {
   readonly name: string;
   readonly mimeType: string;
   readonly size?: number;
 }
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null;
-
-const isString = (value: unknown): value is string => typeof value === 'string';
-const isNumber = (value: unknown): value is number => typeof value === 'number';
-
-const isNullableString = (value: unknown): value is string | null =>
-  value === null || typeof value === 'string';
-
-const isDocument = (value: unknown): value is UploadDocumentOutput =>
-  isRecord(value) &&
-  isString(value.name) &&
-  isString(value.status) &&
-  isNumber(value.progress) &&
-  isNullableString(value.result) &&
-  isNullableString(value.error);
-
-const isImage = (value: unknown): value is UploadImageOutput =>
-  isRecord(value) && isString(value.name) && isString(value.status);
-
-const listOf = <T>(value: unknown, guard: (entry: unknown) => entry is T, key: string): T[] => {
-  if (!Array.isArray(value) || !value.every(guard)) {
-    throw new Error(`Unexpected ${key} in upload output`);
-  }
-
-  return value;
-};
-
-const parseUploadOutput = (text: string): UploadOutput => {
-  const data: unknown = JSON.parse(text);
-
-  if (!isRecord(data)) {
-    throw new Error('Upload output is not an object');
-  }
-
-  return {
-    documents: listOf(data.documents, isDocument, 'documents'),
-    images: listOf(data.images, isImage, 'images'),
-    rejections: listOf(data.rejections, isString, 'rejections'),
-  };
-};
 
 const UPLOAD_ROOT =
   'xpath=ancestor::*[contains(concat(" ", normalize-space(@class), " "), " nui-upload ")][1]';

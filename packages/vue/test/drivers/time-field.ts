@@ -4,6 +4,9 @@ import { NuiField, NuiTimeField, type NuiFieldProps, type NuiTimeFieldProps } fr
 import { configScope } from '../support/config-scope';
 import { TopLayerStubs, dismissPopoverNatively, openPopoverNatively } from '../support/top-layer';
 import { ComponentDriver } from './component';
+import { isString, nullable } from '../../../primitives/test/support/guards';
+
+const isModel = nullable(isString);
 
 export interface TimeFieldMountOptions {
   readonly props?: NuiTimeFieldProps;
@@ -12,9 +15,6 @@ export interface TimeFieldMountOptions {
   readonly locale?: string;
   readonly dir?: 'ltr' | 'rtl';
 }
-
-const isModel = (value: unknown): value is string | null =>
-  value === null || typeof value === 'string';
 
 const normalize = (text: string): string => text.replace(/\s/gu, ' ').trim();
 

@@ -10,15 +10,13 @@ import {
 import { configScope } from '../support/config-scope';
 import { TopLayerStubs } from '../support/top-layer';
 import { ComponentDriver } from './component';
+import { isDateRange } from '../support/guards';
 
 export interface DateRangePickerMountOptions {
   readonly props?: NuiDateRangePickerProps;
   readonly modelValue?: NuiDateRange;
   readonly field?: NuiFieldProps;
 }
-
-const isRange = (value: unknown): value is NuiDateRange =>
-  typeof value === 'object' && value !== null && 'start' in value && 'end' in value;
 
 export class DateRangePickerDriver extends ComponentDriver {
   protected readonly block = 'nui-date-picker';
@@ -37,7 +35,7 @@ export class DateRangePickerDriver extends ComponentDriver {
         ...props,
         modelValue: model.value,
         'onUpdate:modelValue': (value: unknown) => {
-          if (isRange(value)) {
+          if (isDateRange(value)) {
             model.value = value;
           }
         },

@@ -1,33 +1,23 @@
 import type { Locator, Page } from '@playwright/test';
+import {
+  isNumber,
+  isString,
+  nullable,
+  parseAs,
+  shapeOf,
+  type Guarded,
+} from '../../../packages/primitives/test/support/guards';
 
-export interface WizardOutput {
-  readonly step: string;
-  readonly submitted: number;
-  readonly team: string | null;
-}
+const isWizardOutput = shapeOf({ step: isString, submitted: isNumber, team: nullable(isString) });
+
+export type WizardOutput = Guarded<typeof isWizardOutput>;
+
+const parseWizardOutput = (text: string): WizardOutput =>
+  parseAs(text, isWizardOutput, 'wizard output');
 
 export type WizardStep = 'Аккаунт' | 'Команда' | 'Подтверждение';
 
 const FIELD = 'xpath=ancestor::*[contains(concat(" ", @class, " "), " nui-field ")][1]';
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null;
-
-const isWizardOutput = (
-  data: Record<string, unknown>,
-): data is Record<string, unknown> & WizardOutput =>
-  typeof data.step === 'string' &&
-  typeof data.submitted === 'number' &&
-  (data.team === null || typeof data.team === 'string');
-
-const parseWizardOutput = (text: string): WizardOutput => {
-  const data: unknown = JSON.parse(text);
-
-  if (!isRecord(data) || !isWizardOutput(data)) {
-    throw new Error(`Unexpected wizard output: ${text}`);
-  }
-  return data;
-};
 
 export class WizardSection {
   readonly form: Locator;

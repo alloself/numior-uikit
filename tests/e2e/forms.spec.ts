@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { expectRgb } from './helpers/color';
 import { PlaygroundPage } from './pages/playground';
+import { boxOf } from './helpers/geometry';
 
 test.describe('form controls', () => {
   test('field wiring: labels focus controls, output follows input, errors are announced', async ({
@@ -143,8 +144,8 @@ test.describe('form controls', () => {
     const playground = new PlaygroundPage(page);
     await playground.open();
     const { forms } = playground;
-    const frame = await forms.boxOf(forms.wrapperOf(forms.nameInput));
-    const field = await forms.boxOf(forms.fieldOf(forms.nameInput));
+    const frame = await boxOf(forms.wrapperOf(forms.nameInput));
+    const field = await boxOf(forms.fieldOf(forms.nameInput));
     expect(frame.height).toBe(40);
     expect(frame.width).toBeCloseTo(field.width, 0);
   });

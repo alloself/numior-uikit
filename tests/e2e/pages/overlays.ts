@@ -1,52 +1,29 @@
 import type { Locator, Page } from '@playwright/test';
+import {
+  isBoolean,
+  isString,
+  parseAs,
+  shapeOf,
+  type Guarded,
+} from '../../../packages/primitives/test/support/guards';
+
+const isOverlaysOutput = shapeOf({
+  dialogOpen: isBoolean,
+  dialogResult: isString,
+  persistentOpen: isBoolean,
+  stackedOpen: isBoolean,
+  drawerOpen: isBoolean,
+  side: isString,
+  popoverOpen: isBoolean,
+  tooltipOpen: isBoolean,
+});
+
+export type OverlaysOutput = Guarded<typeof isOverlaysOutput>;
+
+const parseOverlaysOutput = (text: string): OverlaysOutput =>
+  parseAs(text, isOverlaysOutput, 'overlays output');
 
 export type DrawerSide = 'start' | 'end' | 'top' | 'bottom';
-
-export interface OverlaysOutput {
-  readonly dialogOpen: boolean;
-  readonly dialogResult: string;
-  readonly persistentOpen: boolean;
-  readonly stackedOpen: boolean;
-  readonly drawerOpen: boolean;
-  readonly side: string;
-  readonly popoverOpen: boolean;
-  readonly tooltipOpen: boolean;
-}
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null;
-
-const BOOLEAN_KEYS = [
-  'dialogOpen',
-  'persistentOpen',
-  'stackedOpen',
-  'drawerOpen',
-  'popoverOpen',
-  'tooltipOpen',
-] as const;
-
-const STRING_KEYS = ['dialogResult', 'side'] as const;
-
-const parseOverlaysOutput = (text: string): OverlaysOutput => {
-  const data: unknown = JSON.parse(text);
-  if (
-    !isRecord(data) ||
-    !BOOLEAN_KEYS.every((key) => typeof data[key] === 'boolean') ||
-    !STRING_KEYS.every((key) => typeof data[key] === 'string')
-  ) {
-    throw new Error(`Unexpected overlays output: ${text}`);
-  }
-  return {
-    dialogOpen: data.dialogOpen === true,
-    dialogResult: String(data.dialogResult),
-    persistentOpen: data.persistentOpen === true,
-    stackedOpen: data.stackedOpen === true,
-    drawerOpen: data.drawerOpen === true,
-    side: String(data.side),
-    popoverOpen: data.popoverOpen === true,
-    tooltipOpen: data.tooltipOpen === true,
-  };
-};
 
 export class OverlaysSection {
   readonly dialogOpen: Locator;

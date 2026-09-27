@@ -1,53 +1,35 @@
 import type { Locator, Page } from '@playwright/test';
+import {
+  isBoolean,
+  isNumber,
+  isString,
+  listOf,
+  nullable,
+  parseAs,
+  shapeOf,
+  type Guarded,
+} from '../../../packages/primitives/test/support/guards';
 
-export interface SignupOutput {
-  readonly submitted: number;
-  readonly submitCount: number;
-  readonly dirty: boolean;
-  readonly pending: boolean;
-  readonly formErrors: readonly string[];
-  readonly seats: number | null;
-  readonly tags: readonly string[];
-}
+const isSignupOutput = shapeOf({
+  submitted: isNumber,
+  submitCount: isNumber,
+  dirty: isBoolean,
+  pending: isBoolean,
+  formErrors: listOf(isString),
+  seats: nullable(isNumber),
+  tags: listOf(isString),
+});
+
+export type SignupOutput = Guarded<typeof isSignupOutput>;
+
+const parseSignupOutput = (text: string): SignupOutput =>
+  parseAs(text, isSignupOutput, 'signup output');
 
 export type ServerAnswer = 'Успех' | 'Ошибка поля' | 'Ошибка формы' | 'Медленный ответ';
-
-interface Box {
-  readonly x: number;
-  readonly y: number;
-  readonly width: number;
-  readonly height: number;
-}
 
 const FIELD = 'xpath=ancestor::*[contains(concat(" ", @class, " "), " nui-field ")][1]';
 
 const CHECKBOX_BOX = 'xpath=following-sibling::*[contains(@class, "nui-checkbox__box")][1]';
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null;
-
-const isStringList = (value: unknown): value is readonly string[] =>
-  Array.isArray(value) && value.every((entry) => typeof entry === 'string');
-
-const isSignupOutput = (
-  data: Record<string, unknown>,
-): data is Record<string, unknown> & SignupOutput =>
-  typeof data.submitted === 'number' &&
-  typeof data.submitCount === 'number' &&
-  typeof data.dirty === 'boolean' &&
-  typeof data.pending === 'boolean' &&
-  isStringList(data.formErrors) &&
-  (data.seats === null || typeof data.seats === 'number') &&
-  isStringList(data.tags);
-
-const parseSignupOutput = (text: string): SignupOutput => {
-  const data: unknown = JSON.parse(text);
-
-  if (!isRecord(data) || !isSignupOutput(data)) {
-    throw new Error(`Unexpected signup output: ${text}`);
-  }
-  return data;
-};
 
 export class SignupSection {
   readonly form: Locator;
@@ -135,15 +117,6 @@ export class SignupSection {
   async fillValid(): Promise<void> {
     await this.fillAccount();
     await this.terms.check();
-  }
-
-  async boxOf(target: Locator): Promise<Box> {
-    const box = await target.boundingBox();
-
-    if (!box) {
-      throw new Error('Element has no bounding box');
-    }
-    return box;
   }
 
   isFocusVisible(target: Locator): Promise<boolean> {

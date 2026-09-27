@@ -1,45 +1,25 @@
 import type { Locator, Page } from '@playwright/test';
+import {
+  isNumber,
+  isString,
+  nullable,
+  parseAs,
+  shapeOf,
+  type Guarded,
+} from '../../../packages/primitives/test/support/guards';
 
-export interface IntlOutput {
-  readonly locale: string;
-  readonly price: number | null;
-  readonly quantity: number | null;
-  readonly discount: number | null;
-  readonly start: string | null;
-  readonly precise: string | null;
-}
-
-type Guard<T> = (value: unknown) => value is T;
-
-const isNullableNumber: Guard<number | null> = (value): value is number | null =>
-  value === null || typeof value === 'number';
-
-const isNullableString: Guard<string | null> = (value): value is string | null =>
-  value === null || typeof value === 'string';
-
-const isString: Guard<string> = (value): value is string => typeof value === 'string';
-
-const OUTPUT_GUARDS: { readonly [K in keyof IntlOutput]: Guard<IntlOutput[K]> } = {
+const isIntlOutput = shapeOf({
   locale: isString,
-  price: isNullableNumber,
-  quantity: isNullableNumber,
-  discount: isNullableNumber,
-  start: isNullableString,
-  precise: isNullableString,
-};
+  price: nullable(isNumber),
+  quantity: nullable(isNumber),
+  discount: nullable(isNumber),
+  start: nullable(isString),
+  precise: nullable(isString),
+});
 
-const isIntlOutput = (data: unknown): data is IntlOutput =>
-  typeof data === 'object' &&
-  data !== null &&
-  Object.entries(OUTPUT_GUARDS).every(([key, guard]) => guard(Reflect.get(data, key)));
+export type IntlOutput = Guarded<typeof isIntlOutput>;
 
-const parseIntlOutput = (text: string): IntlOutput => {
-  const data: unknown = JSON.parse(text);
-  if (!isIntlOutput(data)) {
-    throw new Error(`Unexpected intl output: ${text}`);
-  }
-  return data;
-};
+const parseIntlOutput = (text: string): IntlOutput => parseAs(text, isIntlOutput, 'intl output');
 
 const FIELD_ROOT = 'xpath=ancestor::*[contains(@class, "nui-number-field")][1]';
 

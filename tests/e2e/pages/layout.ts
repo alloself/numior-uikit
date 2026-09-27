@@ -1,48 +1,24 @@
 import type { Locator, Page } from '@playwright/test';
+import {
+  isBoolean,
+  isString,
+  parseAs,
+  shapeOf,
+  type Guarded,
+} from '../../../packages/primitives/test/support/guards';
 
-export interface LayoutOutput {
-  readonly open: boolean;
-  readonly mobileOpen: boolean;
-  readonly active: string;
-  readonly collapsible: string;
-  readonly side: string;
-}
+const isLayoutOutput = shapeOf({
+  open: isBoolean,
+  mobileOpen: isBoolean,
+  active: isString,
+  collapsible: isString,
+  side: isString,
+});
 
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null;
+export type LayoutOutput = Guarded<typeof isLayoutOutput>;
 
-const isString = (value: unknown): value is string => typeof value === 'string';
-const isBoolean = (value: unknown): value is boolean => typeof value === 'boolean';
-
-const field = <T>(
-  data: Record<string, unknown>,
-  key: string,
-  guard: (value: unknown) => value is T,
-): T => {
-  const value = data[key];
-
-  if (!guard(value)) {
-    throw new Error(`Unexpected ${key} in layout output: ${String(value)}`);
-  }
-
-  return value;
-};
-
-const parseLayoutOutput = (text: string): LayoutOutput => {
-  const data: unknown = JSON.parse(text);
-
-  if (!isRecord(data)) {
-    throw new Error('Layout output is not an object');
-  }
-
-  return {
-    open: field(data, 'open', isBoolean),
-    mobileOpen: field(data, 'mobileOpen', isBoolean),
-    active: field(data, 'active', isString),
-    collapsible: field(data, 'collapsible', isString),
-    side: field(data, 'side', isString),
-  };
-};
+const parseLayoutOutput = (text: string): LayoutOutput =>
+  parseAs(text, isLayoutOutput, 'layout output');
 
 export class LayoutSection {
   readonly root: Locator;

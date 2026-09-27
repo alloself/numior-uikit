@@ -6,6 +6,31 @@ import { COLUMNS, isPerson, PEOPLE, type Person } from '../support/rows';
 import { choosePageSize } from '../support/page-size';
 import { TopLayerStubs } from '../support/top-layer';
 import { ComponentDriver } from './component';
+import {
+  isNumber,
+  isString,
+  listOf,
+  nullable,
+  oneOf,
+  optional,
+  recordOf,
+  shapeOf,
+} from '../../../primitives/test/support/guards';
+
+const isReorderEvent = shapeOf({
+  row: isPerson,
+  from: isNumber,
+  to: isNumber,
+  parent: optional(isPerson),
+});
+
+const isStringList = listOf(isString);
+
+const isWidths = recordOf(isNumber);
+
+const isSort = nullable(shapeOf({ key: isString, direction: oneOf('asc', 'desc') }));
+
+const isPeople = listOf(isPerson);
 
 export interface TableMountOptions {
   readonly props?: Partial<Omit<NuiTableProps<unknown>, 'columns' | 'rows'>>;
@@ -23,32 +48,12 @@ export interface TableMountOptions {
   readonly config?: NuiConfigOptions;
 }
 
-const isReorderEvent = (
-  value: unknown,
-): value is { row: Person; from: number; to: number; parent: Person | undefined } =>
-  typeof value === 'object' &&
-  value !== null &&
-  'row' in value &&
-  isPerson(value.row) &&
-  'from' in value &&
-  typeof value.from === 'number' &&
-  'to' in value &&
-  typeof value.to === 'number';
-
 interface Box {
   readonly left: number;
   readonly top: number;
   readonly width: number;
   readonly height: number;
 }
-
-const isStringList = (value: unknown): value is string[] =>
-  Array.isArray(value) && value.every((entry) => typeof entry === 'string');
-
-const isWidths = (value: unknown): value is Record<string, number> =>
-  typeof value === 'object' &&
-  value !== null &&
-  Object.values(value).every((entry) => typeof entry === 'number');
 
 const rectOf = (box: Box): DOMRect => ({
   x: box.left,
@@ -82,13 +87,6 @@ const pointerAt = (type: string, clientX: number, clientY: number): PointerEvent
   });
 
 const pointer = (type: string, clientX: number): PointerEvent => pointerAt(type, clientX, 0);
-
-const isSort = (value: unknown): value is NuiTableSort =>
-  value === null ||
-  (typeof value === 'object' && value !== null && 'key' in value && 'direction' in value);
-
-const isPeople = (value: unknown): value is Person[] =>
-  Array.isArray(value) && value.every(isPerson);
 
 const defineSize = (element: HTMLElement, name: string, value: number): void => {
   Object.defineProperty(element, name, { value, configurable: true, writable: true });

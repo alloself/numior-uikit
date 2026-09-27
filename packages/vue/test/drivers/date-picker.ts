@@ -4,6 +4,9 @@ import { NuiDatePicker, NuiField, type NuiDatePickerProps, type NuiFieldProps } 
 import { configScope } from '../support/config-scope';
 import { TopLayerStubs } from '../support/top-layer';
 import { ComponentDriver } from './component';
+import { isString, nullable } from '../../../primitives/test/support/guards';
+
+const isModel = nullable(isString);
 
 export interface DatePickerMountOptions {
   readonly props?: NuiDatePickerProps;
@@ -11,9 +14,6 @@ export interface DatePickerMountOptions {
   readonly field?: NuiFieldProps;
   readonly locale?: string;
 }
-
-const isModel = (value: unknown): value is string | null =>
-  value === null || typeof value === 'string';
 
 export class DatePickerDriver extends ComponentDriver {
   protected readonly block = 'nui-date-picker';

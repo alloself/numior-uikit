@@ -1,44 +1,30 @@
 import type { Locator, Page } from '@playwright/test';
+import {
+  isBoolean,
+  isNumber,
+  isString,
+  listOf,
+  nullable,
+  parseAs,
+  shapeOf,
+  type Guarded,
+} from '../../../packages/primitives/test/support/guards';
 
-export interface PickersOutput {
-  readonly country: string | null;
-  readonly tags: readonly string[];
-  readonly city: string | null;
-  readonly cityLoading: boolean;
-  readonly keywords: readonly string[];
-  readonly page: number;
-  readonly pageSize: number;
-  readonly linkPage: number;
-}
+const isPickersOutput = shapeOf({
+  country: nullable(isString),
+  tags: listOf(isString),
+  city: nullable(isString),
+  cityLoading: isBoolean,
+  keywords: listOf(isString),
+  page: isNumber,
+  pageSize: isNumber,
+  linkPage: isNumber,
+});
 
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null;
+export type PickersOutput = Guarded<typeof isPickersOutput>;
 
-const isStringList = (value: unknown): value is readonly string[] =>
-  Array.isArray(value) && value.every((entry) => typeof entry === 'string');
-
-const isNullableString = (value: unknown): value is string | null =>
-  value === null || typeof value === 'string';
-
-const isPickersOutput = (
-  data: Record<string, unknown>,
-): data is Record<string, unknown> & PickersOutput =>
-  isNullableString(data.country) &&
-  isStringList(data.tags) &&
-  isNullableString(data.city) &&
-  typeof data.cityLoading === 'boolean' &&
-  isStringList(data.keywords) &&
-  typeof data.page === 'number' &&
-  typeof data.pageSize === 'number' &&
-  typeof data.linkPage === 'number';
-
-const parsePickersOutput = (text: string): PickersOutput => {
-  const data: unknown = JSON.parse(text);
-  if (!isRecord(data) || !isPickersOutput(data)) {
-    throw new Error(`Unexpected pickers output: ${text}`);
-  }
-  return data;
-};
+const parsePickersOutput = (text: string): PickersOutput =>
+  parseAs(text, isPickersOutput, 'pickers output');
 
 const ROOT =
   'xpath=ancestor::*[contains(@class, "nui-select") or contains(@class, "nui-combobox")][1]';

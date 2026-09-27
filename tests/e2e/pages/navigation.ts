@@ -1,64 +1,28 @@
 import type { Locator, Page } from '@playwright/test';
+import {
+  isBoolean,
+  isString,
+  parseAs,
+  shapeOf,
+  type Guarded,
+} from '../../../packages/primitives/test/support/guards';
+import { type Box } from '../helpers/geometry';
 
-export interface NavigationOutput {
-  readonly menuOpen: boolean;
-  readonly gridOn: boolean;
-  readonly sort: string;
-  readonly lastAction: string;
-  readonly tab: string;
-  readonly manualTab: string;
-  readonly signupStep: string;
-  readonly settingsStep: string;
-}
+const isNavigationOutput = shapeOf({
+  menuOpen: isBoolean,
+  gridOn: isBoolean,
+  sort: isString,
+  lastAction: isString,
+  tab: isString,
+  manualTab: isString,
+  signupStep: isString,
+  settingsStep: isString,
+});
 
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null;
+export type NavigationOutput = Guarded<typeof isNavigationOutput>;
 
-const flag = (data: Record<string, unknown>, key: string): boolean => {
-  const value = data[key];
-
-  if (typeof value !== 'boolean') {
-    throw new Error(`Unexpected ${key} in navigation output: ${String(value)}`);
-  }
-
-  return value;
-};
-
-const word = (data: Record<string, unknown>, key: string): string => {
-  const value = data[key];
-
-  if (typeof value !== 'string') {
-    throw new Error(`Unexpected ${key} in navigation output: ${String(value)}`);
-  }
-
-  return value;
-};
-
-const parseNavigationOutput = (text: string): NavigationOutput => {
-  const data: unknown = JSON.parse(text);
-
-  if (!isRecord(data)) {
-    throw new Error('Navigation output is not an object');
-  }
-
-  return {
-    menuOpen: flag(data, 'menuOpen'),
-    gridOn: flag(data, 'gridOn'),
-    sort: word(data, 'sort'),
-    lastAction: word(data, 'lastAction'),
-    tab: word(data, 'tab'),
-    manualTab: word(data, 'manualTab'),
-    signupStep: word(data, 'signupStep'),
-    settingsStep: word(data, 'settingsStep'),
-  };
-};
-
-export interface Box {
-  readonly x: number;
-  readonly y: number;
-  readonly width: number;
-  readonly height: number;
-}
+const parseNavigationOutput = (text: string): NavigationOutput =>
+  parseAs(text, isNavigationOutput, 'navigation output');
 
 export class NavigationSection {
   readonly menuTrigger: Locator;

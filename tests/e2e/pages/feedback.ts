@@ -1,38 +1,25 @@
 import type { Locator, Page } from '@playwright/test';
+import {
+  isBoolean,
+  isNumber,
+  isString,
+  parseAs,
+  shapeOf,
+  type Guarded,
+} from '../../../packages/primitives/test/support/guards';
+import { type Box } from '../helpers/geometry';
 
-export interface Box {
-  readonly x: number;
-  readonly y: number;
-  readonly width: number;
-  readonly height: number;
-}
+const isFeedbackOutput = shapeOf({
+  placement: isString,
+  toastCount: isNumber,
+  alertOpen: isBoolean,
+  progress: isNumber,
+});
 
-export interface FeedbackOutput {
-  readonly placement: string;
-  readonly toastCount: number;
-  readonly alertOpen: boolean;
-  readonly progress: number;
-}
+export type FeedbackOutput = Guarded<typeof isFeedbackOutput>;
 
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null;
-
-const parseFeedbackOutput = (text: string): FeedbackOutput => {
-  const data: unknown = JSON.parse(text);
-  if (!isRecord(data)) {
-    throw new Error('Feedback output is not an object');
-  }
-  const { placement, toastCount, alertOpen, progress } = data;
-  if (
-    typeof placement !== 'string' ||
-    typeof toastCount !== 'number' ||
-    typeof alertOpen !== 'boolean' ||
-    typeof progress !== 'number'
-  ) {
-    throw new Error(`Unexpected feedback output: ${text}`);
-  }
-  return { placement, toastCount, alertOpen, progress };
-};
+const parseFeedbackOutput = (text: string): FeedbackOutput =>
+  parseAs(text, isFeedbackOutput, 'feedback output');
 
 const readBoxes = (elements: readonly Element[]): Box[] =>
   elements.map((element) => {

@@ -1,9 +1,9 @@
 import { ref } from 'vue';
+import { isString, listOf } from '../../../primitives/test/support/guards';
+
+const isStrings = listOf(isString);
 
 export type SelectionValue = string | null | string[];
-
-const isStrings = (value: unknown): value is string[] =>
-  Array.isArray(value) && value.every((item) => typeof item === 'string');
 
 export interface Selection {
   props(): Record<string, unknown>;
