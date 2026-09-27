@@ -87,6 +87,13 @@ grip-horizontal — для переключателя темы, языка, ко
 (`<a>` или компонент роутера) с тем же оформлением; `disabled` ссылки — `aria-disabled`,
 `tabindex="-1"` и без `href`, `loading` отменяет переход; `destinationAttrs` общий с NuiLink.
 
+NuiSeparator: `role="separator"` (или `none` при `decorative`), `orientation`, подпись между
+линиями через `label` или слот; вертикальный растягивается на высоту строки. NuiKbd: `keys` —
+комбо `'mod+k'` или список, платформа определяется после монтирования (SSR и первый кадр —
+`Ctrl`, на Apple после гидратации `⌘`), `platform` переопределяет; `variant="plain"` без
+рамок для шорткатов меню — `NuiMenuRow` рендерит `shortcut` через него, поэтому строки
+`'mod+r'` и готовые глифы работают одинаково.
+
 Далее в волне: `defineSlots` во всех компонентах;
 кнопка-ссылка; NuiSeparator, NuiKbd, NuiCode, NuiToggleGroup, NuiCollapsible/NuiAccordion,
 NuiCommand, NuiToc, NuiSkipLink, NuiSplitter; режимы NuiLayout.
@@ -102,7 +109,8 @@ NuiCommand, NuiToc, NuiSkipLink, NuiSplitter; режимы NuiLayout.
 - утилиты: модули и проза (гайд «Утилиты и проза»);
 - примитивы `useClipboard`, `useHotkey`, `useScrollSpy`, общая цветовая схема и
   `colorSchemeScript` (раздел «Композаблы», гайд «Темы»);
-- новые алиасы иконок (справочник иконок) и кнопка-ссылка (страница «Кнопка»).
+- новые алиасы иконок (справочник иконок) и кнопка-ссылка (страница «Кнопка»);
+- NuiSeparator и NuiKbd (страницы «Разделитель» и «Клавиша»).
 
 ## Alternatives Considered
 

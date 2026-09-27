@@ -1,6 +1,10 @@
 export { default as NuiButton } from './button/NuiButton.vue';
 export type { NuiButtonProps, NuiButtonVariant } from './button/button.types';
 export { default as NuiLink } from './link/NuiLink.vue';
+export { default as NuiSeparator } from './separator/NuiSeparator.vue';
+export type { NuiSeparatorOrientation, NuiSeparatorProps } from './separator/separator.types';
+export { default as NuiKbd } from './kbd/NuiKbd.vue';
+export type { NuiKbdPlatform, NuiKbdProps, NuiKbdSize, NuiKbdVariant } from './kbd/kbd.types';
 export type { NuiLinkProps, NuiLinkUnderline } from './link/link.types';
 export { default as NuiIcon } from './icon/NuiIcon.vue';
 export type { NuiIconProps } from './icon/icon.types';

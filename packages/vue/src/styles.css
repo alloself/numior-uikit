@@ -1,6 +1,8 @@
 @import './icon/icon.css';
 @import './button/button.css';
 @import './link/link.css';
+@import './separator/separator.css';
+@import './kbd/kbd.css';
 @import './field/field.css';
 @import './input/input.css';
 @import './textarea/textarea.css';

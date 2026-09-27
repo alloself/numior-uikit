@@ -183,6 +183,8 @@ export { useClipboard } from './clipboard/useClipboard';
 export type { ClipboardControl, ClipboardOptions } from './clipboard/useClipboard';
 export { useHotkey } from './hotkey/useHotkey';
 export type { HotkeyOptions } from './hotkey/useHotkey';
+export { parseHotkey } from './hotkey/hotkey';
+export type { Hotkey } from './hotkey/hotkey';
 export { useScrollSpy } from './scroll-spy/useScrollSpy';
 export type { ScrollSpyOptions } from './scroll-spy/useScrollSpy';
 export { useListNavigation } from './list/useListNavigation';

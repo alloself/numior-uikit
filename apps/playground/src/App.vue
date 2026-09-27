@@ -89,6 +89,7 @@
     </section>
 
     <TypographySection />
+    <ChromeSection />
     <FormsSection />
     <SignupSection />
     <SmartFormSection />
@@ -155,6 +156,7 @@
 import { ref, useTemplateRef } from 'vue';
 import { NuiButton, NuiDialog, useColorScheme } from '@numior/vue';
 import TypographySection from './TypographySection.vue';
+import ChromeSection from './ChromeSection.vue';
 import FormsSection from './FormsSection.vue';
 import SignupSection from './SignupSection.vue';
 import SmartFormSection from './SmartFormSection.vue';

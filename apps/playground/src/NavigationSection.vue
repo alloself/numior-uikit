@@ -11,8 +11,10 @@
             >Действия</NuiButton
           >
         </template>
-        <NuiMenuItem icon="check" shortcut="⌘R" @select="act('rename')">Переименовать</NuiMenuItem>
-        <NuiMenuItem shortcut="⌘D" @select="act('duplicate')">Дублировать</NuiMenuItem>
+        <NuiMenuItem icon="check" shortcut="mod+r" @select="act('rename')"
+          >Переименовать</NuiMenuItem
+        >
+        <NuiMenuItem shortcut="mod+d" @select="act('duplicate')">Дублировать</NuiMenuItem>
         <NuiMenuItem href="#docs" @select="act('docs')">Документация</NuiMenuItem>
         <NuiMenuItem disabled @select="act('locked')">Архивировать</NuiMenuItem>
         <NuiMenuSeparator />

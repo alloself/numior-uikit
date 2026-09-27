@@ -35,6 +35,8 @@ import {
   NuiStepper,
   NuiRadioGroup,
   NuiSelect,
+  NuiSeparator,
+  NuiKbd,
   NuiSwitch,
   NuiTable,
   NuiTabs,
@@ -148,6 +150,8 @@ const scenarios: Scenario[] = [
     render: () => h(NuiButton, { href: '/docs', variant: 'outline' }, () => 'Docs'),
   },
   { name: 'NuiIcon', render: () => h(NuiIcon, { alias: 'check' }) },
+  { name: 'NuiSeparator', render: () => h(NuiSeparator, { label: 'or' }) },
+  { name: 'NuiKbd', render: () => h(NuiKbd, { keys: 'mod+k' }) },
   {
     name: 'NuiChip',
     render: () =>
