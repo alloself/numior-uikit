@@ -9,7 +9,6 @@ import '@numior/vue/styles.css';
 import '@numior/forms/styles.css';
 import '@numior/tokens/accents.css';
 import '@numior/utilities/utilities.css';
-import './demo.css';
 import Layout from './Layout.vue';
 import ApiReference from './parts/ApiReference.vue';
 import DocsConfigurator from './parts/DocsConfigurator.vue';

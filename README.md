@@ -21,7 +21,8 @@ pnpm dev
 ```
 
 Playground: `http://localhost:5173`. Автономный CSS — `/`, Tailwind fixture —
-`/tailwind.html`. Документация RU/EN: `pnpm build && pnpm docs:dev`.
+`/tailwind.html`. Документация RU/EN: `pnpm build && pnpm docs:dev` — руководство, страницы всех компонентов и
+композаблов с примерами и API из справочного бандла (`pnpm docs:reference`, `pnpm docs:check`).
 
 ## Структура
 

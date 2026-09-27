@@ -157,7 +157,10 @@ var(--nui-focus-ring-offset)`. Disabled: `opacity: var(--nui-disabled-opacity)`.
   API tables are generated: pages embed `<ApiReference name="Nui<Name>" />` (or `:names` for
   a family) and RU/EN descriptions of every prop, model, event, slot and exposed member plus
   the keyboard table live in `apps/docs/api/<name>.ts` as a `DocsMap`; `pnpm docs:check`
-  fails on a missing or stale description.
+  fails on a missing or stale description. A new `use*` composable gets a page in
+  `apps/docs/composables/<name>.md` (+ `en/`) with `<SignatureReference :names="[…]" />`
+  for the function and its option/result types, and a sidebar entry; the reference check
+  fails on a composable without a signature in either locale.
 - Tests: follow the `nui-testing` skill (driver, unit spec, SSR scenario, e2e via page object).
 - Record architecture changes in `.archcore` and run `pnpm check`, then `pnpm test:e2e`
   (Docker image `mcr.microsoft.com/playwright:v1.63.0-noble` on this host).
