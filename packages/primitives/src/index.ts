@@ -203,6 +203,7 @@ export type {
 } from './virtual/useVirtualList';
 export { createIntent } from './intent/createIntent';
 export type { Intent } from './intent/createIntent';
+export { useBlockSizeTween } from './motion/useBlockSizeTween';
 export { useReorder } from './reorder/useReorder';
 export type {
   Reorder,

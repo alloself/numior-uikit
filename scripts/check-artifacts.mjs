@@ -77,6 +77,7 @@ await importBuild('primitives', [
   'useReorder',
   'useUploadQueue',
   'useMediaQuery',
+  'useBlockSizeTween',
 ]);
 
 const code = await importBuild('vue', [
