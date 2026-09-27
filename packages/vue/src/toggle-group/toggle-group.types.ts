@@ -1,0 +1,32 @@
+import type { IconAlias } from '@numior/primitives';
+import type { NuiOptionKey } from '../shared/options';
+import type { NuiSize } from '../shared/scale.types';
+
+export type NuiToggleGroupVariant = 'outline' | 'segmented';
+
+export type NuiToggleGroupOrientation = 'horizontal' | 'vertical';
+
+export interface NuiToggleItem<T = string> {
+  readonly value: T;
+  readonly label: string;
+  readonly icon?: IconAlias | undefined;
+  readonly disabled?: boolean | undefined;
+}
+
+export interface NuiToggleGroupProps<T = string> {
+  items: readonly NuiToggleItem<T>[];
+  multiple?: boolean | undefined;
+  required?: boolean | undefined;
+  variant?: NuiToggleGroupVariant | undefined;
+  size?: NuiSize | undefined;
+  orientation?: NuiToggleGroupOrientation | undefined;
+  disabled?: boolean | undefined;
+  iconOnly?: boolean | undefined;
+  label?: string | undefined;
+  getKey?: NuiOptionKey<T> | undefined;
+}
+
+export interface NuiToggleItemSlot<T = string> {
+  readonly item: NuiToggleItem<T>;
+  readonly selected: boolean;
+}

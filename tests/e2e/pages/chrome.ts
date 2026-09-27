@@ -12,6 +12,9 @@ export class ChromeSection {
   readonly plainKbd: Locator;
   readonly titledCode: Locator;
   readonly plainCode: Locator;
+  readonly schemeToggle: Locator;
+  readonly panelsToggle: Locator;
+  readonly toggleOutput: Locator;
 
   constructor(readonly page: Page) {
     this.root = page.locator('section[aria-labelledby="chrome-title"]');
@@ -25,6 +28,15 @@ export class ChromeSection {
     this.plainKbd = page.getByTestId('kbd-plain');
     this.titledCode = page.getByTestId('code-titled');
     this.plainCode = page.getByTestId('code-plain');
+    this.schemeToggle = page.getByTestId('toggle-scheme');
+    this.panelsToggle = page.getByTestId('toggle-panels');
+    this.toggleOutput = page.getByTestId('toggle-output');
+  }
+
+  toggleItem(group: Locator, label: string): Locator {
+    return group
+      .locator('.nui-toggle-group__item', { hasText: label })
+      .or(group.locator(`.nui-toggle-group__item[aria-label="${label}"]`));
   }
 
   copyButtonOf(code: Locator): Locator {
@@ -39,10 +51,12 @@ export class ChromeSection {
     return code.locator('.nui-code__line').nth(line - 1);
   }
 
-  lineNumberOf(code: Locator, line: number): Promise<string> {
-    return this.lineOf(code, line).evaluate((element) =>
-      getComputedStyle(element, '::before').content.replaceAll('"', ''),
-    );
+  hasLineNumber(code: Locator, line: number): Promise<boolean> {
+    return this.lineOf(code, line).evaluate((element) => {
+      const style = getComputedStyle(element, '::before');
+
+      return style.content === 'counter(line)' && Number.parseFloat(style.width) > 0;
+    });
   }
 
   bodyHeightOf(code: Locator): Promise<number> {

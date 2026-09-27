@@ -2,7 +2,7 @@
   <section class="panel" aria-labelledby="chrome-title">
     <div class="section-heading">
       <h2 id="chrome-title">Оформление интерфейса</h2>
-      <span class="tag">NuiSeparator · NuiKbd · NuiCode</span>
+      <span class="tag">NuiSeparator · NuiKbd · NuiCode · NuiToggleGroup</span>
     </div>
     <div class="nui-flex nui-flex-col nui-gap-4">
       <div class="nui-flex nui-items-center nui-gap-3" data-testid="chrome-toolbar">
@@ -11,6 +11,28 @@
         <NuiButton variant="ghost" tone="neutral" size="sm">Правка</NuiButton>
         <NuiSeparator orientation="vertical" decorative data-testid="separator-decorative" />
         <NuiKbd keys="mod+k" data-testid="kbd-combo" />
+      </div>
+      <div class="nui-flex nui-wrap nui-items-center nui-gap-4">
+        <NuiToggleGroup
+          v-model="scheme"
+          :items="schemes"
+          variant="segmented"
+          required
+          label="Схема"
+          data-testid="toggle-scheme"
+        />
+        <NuiToggleGroup
+          v-model:values="panels"
+          :items="panelItems"
+          multiple
+          icon-only
+          size="sm"
+          label="Панели"
+          data-testid="toggle-panels"
+        />
+        <span class="nui-text-sm nui-text-muted" data-testid="toggle-output"
+          >{{ scheme }} · {{ panels.join(', ') }}</span
+        >
       </div>
       <NuiSeparator data-testid="separator-horizontal" />
       <NuiSeparator label="или" data-testid="separator-labelled" />
@@ -33,7 +55,31 @@
 </template>
 
 <script setup lang="ts">
-import { NuiButton, NuiCode, NuiKbd, NuiSeparator, type NuiCodeLine } from '@numior/vue';
+import { ref } from 'vue';
+import {
+  NuiButton,
+  NuiCode,
+  NuiKbd,
+  NuiSeparator,
+  NuiToggleGroup,
+  type NuiCodeLine,
+  type NuiToggleItem,
+} from '@numior/vue';
+
+const scheme = ref('light');
+const panels = ref(['preview']);
+
+const schemes: readonly NuiToggleItem[] = [
+  { value: 'light', label: 'Светлая', icon: 'sun' },
+  { value: 'dark', label: 'Тёмная', icon: 'moon' },
+  { value: 'system', label: 'Системная', icon: 'monitor' },
+];
+
+const panelItems: readonly NuiToggleItem[] = [
+  { value: 'preview', label: 'Превью', icon: 'eye' },
+  { value: 'code', label: 'Код', icon: 'code' },
+  { value: 'terminal', label: 'Терминал', icon: 'terminal', disabled: true },
+];
 
 const sample = [
   "import { NuiButton } from '@numior/vue';",

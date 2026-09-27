@@ -90,6 +90,7 @@ const code = await importBuild('vue', [
   'NuiSeparator',
   'NuiKbd',
   'NuiCode',
+  'NuiToggleGroup',
   'NuiMenu',
   'NuiTabs',
   'NuiBreadcrumbs',

@@ -38,6 +38,7 @@ import {
   NuiSeparator,
   NuiKbd,
   NuiCode,
+  NuiToggleGroup,
   NuiSwitch,
   NuiTable,
   NuiTabs,
@@ -153,6 +154,19 @@ const scenarios: Scenario[] = [
   { name: 'NuiIcon', render: () => h(NuiIcon, { alias: 'check' }) },
   { name: 'NuiSeparator', render: () => h(NuiSeparator, { label: 'or' }) },
   { name: 'NuiKbd', render: () => h(NuiKbd, { keys: 'mod+k' }) },
+  {
+    name: 'NuiToggleGroup',
+    render: () =>
+      h(NuiToggleGroup, {
+        modelValue: 'dark',
+        label: 'Theme',
+        variant: 'segmented',
+        items: [
+          { value: 'light', label: 'Light', icon: 'sun' },
+          { value: 'dark', label: 'Dark', icon: 'moon' },
+        ],
+      }),
+  },
   {
     name: 'NuiCode',
     render: () =>

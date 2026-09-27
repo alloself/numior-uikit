@@ -8,6 +8,14 @@ export type { NuiKbdPlatform, NuiKbdProps, NuiKbdSize, NuiKbdVariant } from './k
 export { default as NuiCode } from './code/NuiCode.vue';
 export type { NuiCodeLine, NuiCodeProps, NuiCodeToken, NuiSyntaxScope } from './code/code.types';
 export type { NuiCodeMessages } from './code/code.messages';
+export { default as NuiToggleGroup } from './toggle-group/NuiToggleGroup.vue';
+export type {
+  NuiToggleGroupOrientation,
+  NuiToggleGroupProps,
+  NuiToggleGroupVariant,
+  NuiToggleItem,
+  NuiToggleItemSlot,
+} from './toggle-group/toggle-group.types';
 export type { NuiLinkProps, NuiLinkUnderline } from './link/link.types';
 export { default as NuiIcon } from './icon/NuiIcon.vue';
 export type { NuiIconProps } from './icon/icon.types';

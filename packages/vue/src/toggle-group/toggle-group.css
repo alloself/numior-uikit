@@ -1,0 +1,132 @@
+.nui-toggle-group {
+  --_height: var(--nui-control-height-md);
+  --_padding: var(--nui-control-padding-md);
+  --_font-size: var(--nui-control-font-size-md);
+  --_gap: 0px;
+
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: stretch;
+  gap: var(--_gap);
+  max-inline-size: 100%;
+  border-radius: var(--nui-radius);
+  font-family: var(--nui-font);
+}
+.nui-toggle-group--orientation-vertical {
+  flex-direction: column;
+  align-items: stretch;
+}
+.nui-toggle-group--size-sm {
+  --_height: var(--nui-control-height-sm);
+  --_padding: var(--nui-control-padding-sm);
+  --_font-size: var(--nui-control-font-size-sm);
+}
+.nui-toggle-group--size-lg {
+  --_height: var(--nui-control-height-lg);
+  --_padding: var(--nui-control-padding-lg);
+  --_font-size: var(--nui-control-font-size-lg);
+}
+.nui-toggle-group--disabled {
+  opacity: var(--nui-disabled-opacity);
+}
+.nui-toggle-group__item {
+  box-sizing: border-box;
+  position: relative;
+  display: inline-flex;
+  flex: 1 1 auto;
+  align-items: center;
+  justify-content: center;
+  gap: var(--nui-space-2);
+  min-block-size: var(--_height);
+  padding-inline: var(--_padding);
+  border: 1px solid var(--nui-border);
+  border-radius: 0;
+  background: var(--nui-surface);
+  color: var(--nui-text-muted);
+  font: inherit;
+  font-size: var(--_font-size);
+  font-weight: var(--nui-font-weight-medium);
+  line-height: var(--nui-line-height-tight);
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color var(--nui-duration-fast) var(--nui-easing),
+    border-color var(--nui-duration-fast) var(--nui-easing),
+    color var(--nui-duration-fast) var(--nui-easing),
+    box-shadow var(--nui-duration-fast) var(--nui-easing);
+}
+.nui-toggle-group--orientation-horizontal .nui-toggle-group__item + .nui-toggle-group__item {
+  margin-inline-start: -1px;
+}
+.nui-toggle-group--orientation-vertical .nui-toggle-group__item + .nui-toggle-group__item {
+  margin-block-start: -1px;
+}
+.nui-toggle-group--orientation-horizontal .nui-toggle-group__item:first-child {
+  border-start-start-radius: var(--nui-radius);
+  border-end-start-radius: var(--nui-radius);
+}
+.nui-toggle-group--orientation-horizontal .nui-toggle-group__item:last-child {
+  border-start-end-radius: var(--nui-radius);
+  border-end-end-radius: var(--nui-radius);
+}
+.nui-toggle-group--orientation-vertical .nui-toggle-group__item:first-child {
+  border-start-start-radius: var(--nui-radius);
+  border-start-end-radius: var(--nui-radius);
+}
+.nui-toggle-group--orientation-vertical .nui-toggle-group__item:last-child {
+  border-end-start-radius: var(--nui-radius);
+  border-end-end-radius: var(--nui-radius);
+}
+.nui-toggle-group__item:hover:not(:disabled) {
+  background: var(--nui-surface-muted);
+  color: var(--nui-text);
+}
+.nui-toggle-group__item--selected,
+.nui-toggle-group__item--selected:hover:not(:disabled) {
+  z-index: 1;
+  border-color: color-mix(in oklab, var(--nui-primary) 50%, var(--nui-border));
+  background: var(--nui-primary-soft);
+  color: var(--nui-primary-soft-foreground);
+}
+.nui-toggle-group__item:focus-visible {
+  z-index: 2;
+  outline: var(--nui-focus-ring-width) solid var(--nui-focus);
+  outline-offset: var(--nui-focus-ring-offset);
+}
+.nui-toggle-group__item:disabled {
+  cursor: not-allowed;
+}
+.nui-toggle-group--icon-only .nui-toggle-group__item {
+  inline-size: var(--_height);
+  padding-inline: 0;
+}
+.nui-toggle-group__icon {
+  inline-size: 1.125em;
+  block-size: 1.125em;
+  flex-shrink: 0;
+}
+.nui-toggle-group--variant-segmented {
+  --_gap: 2px;
+
+  padding: 2px;
+  border-radius: var(--nui-radius);
+  background: var(--nui-surface-muted);
+}
+.nui-toggle-group--variant-segmented .nui-toggle-group__item {
+  min-block-size: calc(var(--_height) - 4px);
+  margin: 0;
+  border-color: transparent;
+  border-radius: var(--nui-radius-sm);
+  background: transparent;
+}
+.nui-toggle-group--variant-segmented .nui-toggle-group__item:hover:not(:disabled) {
+  background: color-mix(in oklab, var(--nui-surface) 50%, transparent);
+  color: var(--nui-text);
+}
+.nui-toggle-group--variant-segmented .nui-toggle-group__item--selected,
+.nui-toggle-group--variant-segmented .nui-toggle-group__item--selected:hover:not(:disabled) {
+  border-color: transparent;
+  background: var(--nui-surface-elevated);
+  color: var(--nui-text);
+  box-shadow: var(--nui-shadow-sm);
+}

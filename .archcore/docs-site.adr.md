@@ -104,6 +104,13 @@ attribute, property, comment, punctuation, variable), без токенов — 
 высотой через `useBlockSizeTween`. Прокручиваемая область фокусируемая. Тексты — каталог
 `code`.
 
+NuiToggleGroup: `items` с иконкой и подписью, одиночный (`role="radio"` + `aria-checked`,
+`required` запрещает снять выбор) или `multiple` (`aria-pressed`, модель `values`), варианты
+`outline` (сросшиеся кнопки) и `segmented` (подложка с приподнятым выбранным элементом),
+`iconOnly` с `aria-label`, `orientation`; стрелки только переносят фокус
+(`useListNavigation`, покой на выбранном), выбор — Space/Enter/клик. Модель и ключи — общий
+`useOptionSelection`.
+
 Далее в волне: `defineSlots` во всех компонентах;
 кнопка-ссылка; NuiSeparator, NuiKbd, NuiCode, NuiToggleGroup, NuiCollapsible/NuiAccordion,
 NuiCommand, NuiToc, NuiSkipLink, NuiSplitter; режимы NuiLayout.
@@ -121,7 +128,8 @@ NuiCommand, NuiToc, NuiSkipLink, NuiSplitter; режимы NuiLayout.
   `colorSchemeScript` (раздел «Композаблы», гайд «Темы»);
 - новые алиасы иконок (справочник иконок) и кнопка-ссылка (страница «Кнопка»);
 - NuiSeparator и NuiKbd (страницы «Разделитель» и «Клавиша»);
-- NuiCode (страница «Код»).
+- NuiCode (страница «Код»);
+- NuiToggleGroup (страница «Группа переключателей»).
 
 ## Alternatives Considered
 

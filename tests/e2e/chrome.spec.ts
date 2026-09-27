@@ -40,8 +40,9 @@ test('code blocks number and highlight lines, copy their source and expand', asy
   const { chrome } = playground;
   const code = chrome.titledCode;
   await expect(code).toContainText('main.ts');
-  expect(await chrome.lineNumberOf(code, 1)).toBe('1');
-  expect(await chrome.lineNumberOf(code, 3)).toBe('3');
+  expect(await chrome.hasLineNumber(code, 1)).toBe(true);
+  expect(await chrome.hasLineNumber(code, 3)).toBe(true);
+  expect(await chrome.hasLineNumber(chrome.plainCode, 1)).toBe(false);
   const plainLine = await rgbOf(chrome.lineOf(code, 1), 'background-color');
   const highlighted = await rgbOf(chrome.lineOf(code, 2), 'background-color');
   expect(highlighted).not.toEqual(plainLine);
@@ -59,4 +60,36 @@ test('code blocks number and highlight lines, copy their source and expand', asy
   await expect(chrome.copyButtonOf(chrome.plainCode)).toHaveCSS('opacity', '0');
   await chrome.plainCode.hover();
   await expect(chrome.copyButtonOf(chrome.plainCode)).toHaveCSS('opacity', '1');
+});
+
+test('toggle groups pick one scheme or several panels and rove focus', async ({
+  page,
+  isMobile,
+}) => {
+  const playground = new PlaygroundPage(page);
+  await playground.open();
+  const { chrome } = playground;
+  const dark = chrome.toggleItem(chrome.schemeToggle, 'Тёмная');
+  await expect(dark).toHaveRole('radio');
+  await expect(dark).toHaveAttribute('aria-checked', 'false');
+  await dark.click();
+  await expect(dark).toHaveAttribute('aria-checked', 'true');
+  await expect(chrome.toggleOutput).toHaveText('dark · preview');
+  await dark.click();
+  await expect(dark).toHaveAttribute('aria-checked', 'true');
+  const code = chrome.toggleItem(chrome.panelsToggle, 'Код');
+  await expect(code).toHaveAttribute('aria-pressed', 'false');
+  await code.click();
+  await expect(code).toHaveAttribute('aria-pressed', 'true');
+  await expect(chrome.toggleOutput).toHaveText('dark · preview, code');
+  await expect(chrome.toggleItem(chrome.panelsToggle, 'Терминал')).toBeDisabled();
+  if (isMobile) {
+    return;
+  }
+  await dark.focus();
+  await page.keyboard.press('ArrowRight');
+  await expect(chrome.toggleItem(chrome.schemeToggle, 'Системная')).toBeFocused();
+  await expect(dark).toHaveAttribute('aria-checked', 'true');
+  await page.keyboard.press('Space');
+  await expect(chrome.toggleOutput).toHaveText('system · preview, code');
 });
