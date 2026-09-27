@@ -8,6 +8,10 @@
 
 <Example name="button/Basic" />
 
+## Использование
+
+<Configurator name="NuiButton" />
+
 `@numior/vue/styles.css` подключает стили всех компонентов, `@numior/vue/styles/button.css` —
 только кнопки. CSS никогда не импортируется из JavaScript автоматически.
 

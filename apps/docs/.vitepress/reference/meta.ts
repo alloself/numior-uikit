@@ -110,5 +110,6 @@ export const componentReference = (
     slots: meta.slots.map(memberOf),
     exposed: meta.exposed.filter((member) => !member.name.startsWith('$')).map(memberOf),
     keyboard: [],
+    configurator: undefined,
   };
 };

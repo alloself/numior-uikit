@@ -49,6 +49,7 @@ export const referenceOf = (overrides: Partial<ComponentReference> = {}): Compon
   slots: [{ name: 'default', type: '{}', description: { ru: 'Содержимое.', en: 'Content.' } }],
   exposed: [],
   keyboard: [{ keys: 'Enter', description: { ru: 'Выбирает.', en: 'Selects.' } }],
+  configurator: undefined,
   ...overrides,
 });
 

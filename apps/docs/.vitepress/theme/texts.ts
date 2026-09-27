@@ -52,6 +52,8 @@ export const ru: DocsTexts = {
   apiTokens: 'Токены',
   apiKey: 'Ключ',
   apiText: 'Текст',
+  configuratorProps: 'Свойства',
+  configuratorContent: 'Содержимое',
 };
 
 export const en: DocsTexts = {
@@ -106,4 +108,6 @@ export const en: DocsTexts = {
   apiTokens: 'Tokens',
   apiKey: 'Key',
   apiText: 'Text',
+  configuratorProps: 'Props',
+  configuratorContent: 'Content',
 };

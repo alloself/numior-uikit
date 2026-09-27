@@ -45,6 +45,10 @@ const docs: DocsMap = {
       { keys: 'Enter', description: { ru: 'Активирует кнопку.', en: 'Activates the button.' } },
       { keys: 'Space', description: { ru: 'Активирует кнопку.', en: 'Activates the button.' } },
     ],
+    configurator: {
+      props: ['variant', 'tone', 'size', 'disabled', 'loading'],
+      content: { ru: 'Сохранить', en: 'Save' },
+    },
   },
 };
 

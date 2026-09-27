@@ -1,3 +1,4 @@
+import type { MarkdownRenderer } from 'vitepress';
 import type { Component } from 'vue';
 import type { ExampleFile, ExampleLocale } from '../examples/example.types';
 import type {
@@ -74,13 +75,24 @@ export interface DocsTexts {
   readonly apiTokens: string;
   readonly apiKey: string;
   readonly apiText: string;
+  readonly configuratorProps: string;
+  readonly configuratorContent: string;
+}
+
+export interface DocsSearchOptions {
+  readonly _render: (source: string, env: unknown, md: MarkdownRenderer) => string;
+}
+
+export interface DocsSearchConfig {
+  readonly provider: 'local';
+  readonly options?: DocsSearchOptions | undefined;
 }
 
 export interface DocsThemeConfig {
   readonly nav: readonly DocsNavItem[];
   readonly sidebar: readonly DocsSidebarGroup[];
   readonly texts: DocsTexts;
-  readonly search?: { readonly provider: 'local' } | undefined;
+  readonly search?: DocsSearchConfig | undefined;
 }
 
 export interface DocsExampleProps {
@@ -133,5 +145,21 @@ export interface ApiKeyboardProps {
 
 export interface ApiStylesProps {
   styles: ReferenceStyles;
+  texts: DocsTexts;
+}
+
+export interface DocsConfiguratorProps {
+  name: string;
+}
+
+export interface ConfiguratorViewProps {
+  name: string;
+  locale: ExampleLocale;
+  texts: DocsTexts;
+}
+
+export interface ConfiguratorFrameProps {
+  component: ComponentReference;
+  locale: ExampleLocale;
   texts: DocsTexts;
 }

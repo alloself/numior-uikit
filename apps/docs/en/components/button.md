@@ -8,6 +8,10 @@ runtime accent change affects every variant at once.
 
 <Example name="button/Basic" />
 
+## Usage
+
+<Configurator name="NuiButton" />
+
 `@numior/vue/styles.css` loads the styles of every component; `@numior/vue/styles/button.css`
 loads only the button. CSS is never imported from JavaScript automatically.
 

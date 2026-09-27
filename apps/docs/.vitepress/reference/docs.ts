@@ -34,6 +34,7 @@ export const applyDocs = (
   slots: describe(component.slots, docs?.slots),
   exposed: describe(component.exposed, docs?.exposed),
   keyboard: docs?.keyboard ?? [],
+  configurator: docs?.configurator,
 });
 
 const isComplete = (text: LocalizedText | undefined): boolean =>
@@ -60,8 +61,17 @@ const sectionProblems = (
   ];
 };
 
+const configuratorProblems = (component: ComponentReference, docs: ComponentDocs): string[] => {
+  const names = new Set(component.props.map((prop) => prop.name));
+
+  return (docs.configurator?.props ?? [])
+    .filter((name) => !names.has(name))
+    .map((name) => `${component.name}: configurator prop "${name}" does not exist`);
+};
+
 export const checkDocs = (component: ComponentReference, docs: ComponentDocs): string[] => [
   ...SECTIONS.flatMap((section) => sectionProblems(component, docs, section)),
+  ...configuratorProblems(component, docs),
   ...(docs.keyboard ?? [])
     .filter((key) => !isComplete(key.description))
     .map((key) => `${component.name}: keyboard "${key.keys}" needs a RU and EN description`),

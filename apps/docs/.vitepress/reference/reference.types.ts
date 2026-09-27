@@ -47,6 +47,11 @@ export interface ReferenceKey {
   readonly description: LocalizedText;
 }
 
+export interface ReferenceConfigurator {
+  readonly props: readonly string[];
+  readonly content: LocalizedText | undefined;
+}
+
 export interface ComponentReference {
   readonly name: string;
   readonly package: string;
@@ -60,6 +65,7 @@ export interface ComponentReference {
   readonly slots: readonly ReferenceMember[];
   readonly exposed: readonly ReferenceMember[];
   readonly keyboard: readonly ReferenceKey[];
+  readonly configurator: ReferenceConfigurator | undefined;
 }
 
 export interface CatalogReference {
@@ -106,6 +112,7 @@ export interface ComponentDocs {
   readonly slots?: DescriptionMap | undefined;
   readonly exposed?: DescriptionMap | undefined;
   readonly keyboard?: readonly ReferenceKey[] | undefined;
+  readonly configurator?: ReferenceConfigurator | undefined;
 }
 
 export type DocsMap = Readonly<Record<string, ComponentDocs>>;

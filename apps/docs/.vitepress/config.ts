@@ -1,3 +1,4 @@
+import { existsSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { createHighlighter } from 'shiki';
 import { defineConfigWithTheme } from 'vitepress';
@@ -5,9 +6,26 @@ import { colorSchemeScript } from '@numior/primitives';
 import { CODE_LANGUAGES, docsMarkdown } from './markdown';
 import { headingPermalink } from './markdown/anchors';
 import { docsExamples } from './examples/plugin';
+import { isEnglishPage } from './markdown/env';
+import { parseBundle } from './reference/bundle';
 import { docsReference } from './reference/plugin';
+import { apiSearchText } from './reference/search-text';
+import type { DocsSearchOptions } from './theme/theme.types';
 import { en, ru } from './theme/texts';
 import type { DocsSidebarGroup, DocsThemeConfig } from './theme/theme.types';
+
+const bundleFile = fileURLToPath(new URL('../.reference/bundle.json', import.meta.url));
+const bundle = existsSync(bundleFile) ? parseBundle(readFileSync(bundleFile, 'utf8')) : undefined;
+
+const searchOptions: DocsSearchOptions = {
+  _render: (source, env, md) =>
+    md.render(
+      bundle === undefined
+        ? source
+        : source + apiSearchText(bundle, source, isEnglishPage(env) ? 'en' : 'ru'),
+      env,
+    ),
+};
 
 const highlighter = await createHighlighter({
   themes: ['github-light'],
@@ -203,10 +221,15 @@ export default defineConfigWithTheme<DocsThemeConfig>({
     resolve: process.env.NODE_ENV === 'production' ? {} : { conditions: ['@numior/source'] },
     plugins: [
       docsExamples(fileURLToPath(new URL('../examples', import.meta.url)), highlighter),
-      docsReference(fileURLToPath(new URL('../.reference/bundle.json', import.meta.url))),
+      docsReference(bundleFile),
     ],
   },
-  themeConfig: { nav: [], sidebar: [], texts: ru, search: { provider: 'local' } },
+  themeConfig: {
+    nav: [],
+    sidebar: [],
+    texts: ru,
+    search: { provider: 'local', options: searchOptions },
+  },
   locales: {
     root: {
       label: 'Русский',
