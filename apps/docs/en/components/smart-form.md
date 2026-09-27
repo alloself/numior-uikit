@@ -223,7 +223,11 @@ it is allowed only when the value type admits `undefined` (`company?: string`): 
 `values` would lie about their type after the field hides, and the type check rejects it. A
 row field's `when` also gets the row's value, and in the rules of a row field `values` is the row
 itself, so a rule like “the phone is required once an email is set” lives in the row config. The condition is recomputed in the same render as
-the value change, and an appearing field moves through the motion tokens.
+the value change. Fields come and go through the motion tokens in both directions: a new field
+fades in, a hidden one fades out where it stood, the neighbours slide to their new places and the
+grid height eases to the new one, so nothing below the form jumps. Fields above the change stay
+where they are, and appearing or fading fields show only inside their section: the grid edge
+clips them while its height changes. With `reduced motion` it all happens at once.
 
 ## Layout
 

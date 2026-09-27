@@ -12,6 +12,32 @@ const openSmartForm = async (page: Page): Promise<PlaygroundPage> => {
 };
 
 test.describe('smart form', () => {
+  test('conditional fields come and go inside their section: the fields below slide, the fields above stay', async ({
+    page,
+  }) => {
+    const playground = new PlaygroundPage(page);
+    await playground.open();
+    await playground.setTheme('light');
+    const { smartForm } = playground;
+    await smartForm.slowDownMotion();
+
+    const shown = await smartForm.switchKindWatchingLayout('Компания');
+    expect(shown.after).toBeGreaterThan(shown.before + 20);
+    expect(shown.slid).toBe(true);
+    expect(shown.faded).toBe(true);
+    expect(shown.drift).toBeLessThan(1);
+    expect(shown.spill).toBeLessThan(1);
+    expect(shown.companyAfter).toBe(true);
+
+    const hidden = await smartForm.switchKindWatchingLayout('Частное лицо');
+    expect(hidden.after).toBeLessThan(hidden.before - 20);
+    expect(hidden.slid).toBe(true);
+    expect(hidden.faded).toBe(true);
+    expect(hidden.drift).toBeLessThan(1);
+    expect(hidden.spill).toBeLessThan(1);
+    expect(hidden.companyAfter).toBe(false);
+  });
+
   test('a company reveals its fields, and a person is saved without them while their values stay', async ({
     page,
   }) => {

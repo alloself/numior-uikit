@@ -21,6 +21,18 @@ const parseSmartFormOutput = (text: string): SmartFormOutput =>
 
 const FIELD = 'xpath=ancestor::*[contains(concat(" ", @class, " "), " nui-field ")][1]';
 
+export type KindLabel = 'Частное лицо' | 'Компания';
+
+export interface KindSwitchMotion {
+  readonly before: number;
+  readonly after: number;
+  readonly slid: boolean;
+  readonly faded: boolean;
+  readonly drift: number;
+  readonly spill: number;
+  readonly companyAfter: boolean;
+}
+
 export class SmartFormSection {
   readonly filter: Locator;
   readonly profile: Locator;
@@ -76,8 +88,85 @@ export class SmartFormSection {
     return this.profile.locator(`[name="${path}"]`);
   }
 
-  kind(label: 'Частное лицо' | 'Компания'): Locator {
+  kind(label: KindLabel): Locator {
     return this.profile.getByRole('radio', { name: label });
+  }
+
+  async slowDownMotion(): Promise<void> {
+    await this.profile.evaluate((root) => {
+      root.style.setProperty('--nui-duration-normal', '1s');
+    });
+  }
+
+  switchKindWatchingLayout(label: KindLabel): Promise<KindSwitchMotion> {
+    return this.profile.evaluate(async (root, text) => {
+      const topOf = (name: string): number =>
+        root.querySelector(`[name="${name}"]`)?.getBoundingClientRect().top ?? 0;
+
+      const companyOpacity = (): number | undefined => {
+        const cell = root.querySelector('[name="company"]')?.closest('.nui-smart-form__cell');
+        return cell ? Number(getComputedStyle(cell).opacity) : undefined;
+      };
+
+      const spillOf = (): number => {
+        const grid = root.querySelector('[name="name"]')?.closest('.nui-smart-form__grid');
+
+        if (!grid || getComputedStyle(grid).clipPath !== 'none') {
+          return 0;
+        }
+
+        const edge = grid.getBoundingClientRect().bottom;
+        const bottoms = [...grid.children].map((cell) => cell.getBoundingClientRect().bottom);
+        return Math.max(0, ...bottoms.map((bottom) => bottom - edge));
+      };
+
+      const radio = [...root.querySelectorAll('input[type="radio"]')].find(
+        (input) => input.closest('label')?.textContent?.includes(text) === true,
+      );
+
+      const before = topOf('city');
+      const anchor = topOf('name');
+      const cities: number[] = [];
+      const opacities: number[] = [];
+      const state = { drift: 0, spill: 0 };
+
+      if (radio instanceof HTMLElement) {
+        radio.click();
+      }
+
+      await new Promise<void>((resolve) => {
+        const started = performance.now();
+
+        const sample = (): void => {
+          cities.push(topOf('city'));
+          opacities.push(companyOpacity() ?? 1);
+          state.drift = Math.max(state.drift, Math.abs(topOf('name') - anchor));
+          state.spill = Math.max(state.spill, spillOf());
+
+          if (performance.now() - started < 1400) {
+            requestAnimationFrame(sample);
+          } else {
+            resolve();
+          }
+        };
+
+        requestAnimationFrame(sample);
+      });
+
+      const after = topOf('city');
+      const low = Math.min(before, after) + 2;
+      const high = Math.max(before, after) - 2;
+
+      return {
+        before,
+        after,
+        slid: cities.some((top) => top > low && top < high),
+        faded: opacities.some((opacity) => opacity > 0.05 && opacity < 0.95),
+        drift: state.drift,
+        spill: state.spill,
+        companyAfter: root.querySelector('[name="company"]') !== null,
+      };
+    }, label);
   }
 
   section(title: string): Locator {

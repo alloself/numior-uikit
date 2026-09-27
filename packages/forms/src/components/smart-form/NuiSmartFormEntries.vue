@@ -1,11 +1,16 @@
 <template>
   <TransitionGroup
+    ref="grid"
     tag="div"
     class="nui-smart-form__grid"
     :class="gridClass"
     :style="gridStyle"
     enter-from-class="nui-smart-form__cell--appearing"
     enter-active-class="nui-smart-form__cell--entering"
+    leave-active-class="nui-smart-form__cell--leaving"
+    leave-to-class="nui-smart-form__cell--appearing"
+    move-class="nui-smart-form__cell--moving"
+    @before-leave="pinLeaving"
   >
     <template v-for="item in ordered" :key="item.key">
       <NuiSmartFormCell
@@ -63,7 +68,8 @@
 </template>
 
 <script setup lang="ts" generic="T extends object">
-import { computed } from 'vue';
+import { computed, useTemplateRef } from 'vue';
+import { useBlockSizeTween } from '@numior/primitives';
 import { FORM_HOST } from '../../form/form-context';
 import NuiFieldArray from '../field-array/NuiFieldArray.vue';
 import NuiSmartFormCell from './NuiSmartFormCell.vue';
@@ -103,6 +109,24 @@ const gridStyle = computed(() =>
 const areaFor = (item: SmartItem<T>): string => (planned.value.has(item.area) ? item.area : 'auto');
 
 const cellStyle = (item: SmartItem<T>) => ({ '--_area': areaFor(item) });
+
+const grid = useTemplateRef<{ $el: unknown }>('grid');
+
+const gridElement = (): HTMLElement | null => {
+  const element = grid.value?.$el;
+  return element instanceof HTMLElement ? element : null;
+};
+
+const pinLeaving = (element: Element): void => {
+  if (element instanceof HTMLElement) {
+    element.inert = true;
+    element.style.top = `${element.offsetTop}px`;
+    element.style.left = `${element.offsetLeft}px`;
+    element.style.inlineSize = `${element.offsetWidth}px`;
+  }
+};
+
+useBlockSizeTween(gridElement);
 
 if (array !== undefined) {
   declareEntries(form, list.value);
