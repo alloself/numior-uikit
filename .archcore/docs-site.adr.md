@@ -189,7 +189,10 @@ Markdown-правила (`.vitepress/markdown`): fence → `<NuiCode>` с ток
 `index.vue` и соседними файлами — многофайловый пример. Vite-плагин `docsExamples`
 (`.vitepress/examples/plugin.ts`) отдаёт виртуальный реестр `virtual:nui-examples`
 (локаль → имя → ленивый импорт) и по модулю `virtual:nui-example/<локаль>/<имя>` на пример:
-компонент плюс исходник и токены Shiki каждого файла, с `addWatchFile` для перезагрузки.
+компонент плюс исходник и токены Shiki каждого файла, с `addWatchFile` на файлы примера для
+перезагрузки; сам реестр обновляется через watcher dev-сервера (`configureServer`: добавление и
+удаление файлов под `examples/` инвалидирует модуль и шлёт полную перезагрузку), потому что
+каталог, переданный в `addWatchFile`, Vite в dev считает импортом модуля и не может разрешить.
 Виртуальные id вместо `?query` на `.vue`, потому что плагин Vue считает любой запрос к
 `.vue` без `vue&type` главным модулем SFC и пытается его скомпилировать. В markdown
 `<Example name="button/Basic" />` (`DocsExample` → `Suspense` → `ExampleView` с

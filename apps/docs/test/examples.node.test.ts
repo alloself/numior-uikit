@@ -5,6 +5,7 @@ import {
   exampleModule,
   exampleNames,
   exampleSources,
+  isRegistryId,
   loadVirtualModule,
   registryModule,
   resolveVirtualId,
@@ -65,6 +66,8 @@ describe('docs examples', () => {
     );
 
     expect(resolveVirtualId('vue')).toBeUndefined();
+    expect(isRegistryId('\0virtual:nui-examples')).toBe(true);
+    expect(isRegistryId('\0virtual:nui-example/ru/button/Basic')).toBe(false);
 
     expect(loadVirtualModule(EXAMPLES, highlighter, '\0virtual:nui-examples', watch)).toContain(
       '"button/Basic"',
@@ -74,10 +77,7 @@ describe('docs examples', () => {
       loadVirtualModule(EXAMPLES, highlighter, '\0virtual:nui-example/en/button/Basic', watch),
     ).toContain('"name":"Basic.vue"');
 
-    expect(watched.map((file) => file.slice(EXAMPLES.length))).toEqual([
-      '',
-      '/en/button/Basic.vue',
-    ]);
+    expect(watched.map((file) => file.slice(EXAMPLES.length))).toEqual(['/en/button/Basic.vue']);
 
     expect(loadVirtualModule(EXAMPLES, highlighter, '/src/main.ts', watch)).toBeUndefined();
 

@@ -114,6 +114,8 @@ export const exampleModule = (highlighter: Highlighter, sources: ExampleSources)
   return `import component from ${JSON.stringify(toPosix(sources.entry))};\nexport default { component, files: ${JSON.stringify(files)} };\n`;
 };
 
+export const isRegistryId = (id: string): boolean => id === RESOLVED_REGISTRY;
+
 export const resolveVirtualId = (id: string): string | undefined =>
   id === REGISTRY_ID || id.startsWith(EXAMPLE_PREFIX) ? `\0${id}` : undefined;
 
@@ -124,7 +126,6 @@ export const loadVirtualModule = (
   watch: (file: string) => void,
 ): string | undefined => {
   if (id === RESOLVED_REGISTRY) {
-    watch(root);
     return registryModule(root);
   }
   if (!id.startsWith(RESOLVED_PREFIX)) {
