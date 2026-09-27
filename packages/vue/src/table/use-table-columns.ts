@@ -16,6 +16,11 @@ export interface ColumnLayoutOptions<T> {
   readonly utilities: () => number;
 }
 
+export interface StickyExtents {
+  readonly start: string;
+  readonly end: string;
+}
+
 export interface ColumnLayout<T> extends NuiTableCellLayout<T> {
   readonly ordered: ComputedRef<NuiTableColumn<T>[]>;
   readonly stickyStart: ComputedRef<boolean>;
@@ -23,6 +28,7 @@ export interface ColumnLayout<T> extends NuiTableCellLayout<T> {
   setWidth(key: string, px: number): void;
   resetWidth(key: string): void;
   measure(table: HTMLTableElement | null | undefined): void;
+  stickyExtents(): StickyExtents;
   canMoveColumn(from: number, to: number): boolean;
   moveColumn(from: number, to: number): void;
 }
@@ -139,6 +145,17 @@ export const useTableColumns = <T>(options: ColumnLayoutOptions<T>): ColumnLayou
     add(ordered.value.toReversed(), 'end');
     return offsets;
   };
+
+  const stickyWidth = (sticky: NuiTableSticky): number =>
+    ordered.value.reduce(
+      (total, column) => (column.sticky === sticky ? total + (widthOf(column) ?? 0) : total),
+      0,
+    );
+
+  const stickyExtents = (): StickyExtents => ({
+    start: utilityInset(options.utilities(), `${stickyWidth('start')}px`),
+    end: `${stickyWidth('end')}px`,
+  });
 
   const cellStyle = (column: NuiTableColumn<T>): NuiTableCellStyle => {
     if (column.sticky === undefined) {
@@ -278,6 +295,7 @@ export const useTableColumns = <T>(options: ColumnLayoutOptions<T>): ColumnLayou
     setWidth,
     resetWidth,
     measure,
+    stickyExtents,
     canMoveColumn,
     moveColumn,
   };

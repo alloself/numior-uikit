@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { paintedRgb, rgbDelta } from './helpers/color';
+import { boxOf } from './helpers/geometry';
 import { PlaygroundPage } from './pages/playground';
 
 test.describe('table', () => {
@@ -49,6 +50,20 @@ test.describe('table', () => {
       expect(before && after && Math.abs(after.x - before.x) <= 1).toBe(true);
       await expect(table.table).toHaveClass(/nui-table--scrolled-start/);
     }
+  });
+
+  test('focus brings a column out from under the sticky selection column', async ({ page }) => {
+    const playground = new PlaygroundPage(page);
+    await playground.resize({ width: 360, height: 800 });
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    const { table } = playground;
+    const sticky = await boxOf(table.selectAllCell);
+    await table.scrollColumnToStart('Имя');
+    expect((await boxOf(table.columnGrip('Имя'))).x).toBeLessThan(sticky.x + sticky.width);
+    await table.columnGrip('Имя').focus();
+    const grip = await boxOf(table.columnGrip('Имя'));
+    expect(grip.x).toBeGreaterThanOrEqual(sticky.x + sticky.width - 1);
   });
 
   test('pagination moves between pages and changes the page size', async ({ page }) => {

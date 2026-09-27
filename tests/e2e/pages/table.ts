@@ -10,6 +10,7 @@ import {
   shapeOf,
   type Guarded,
 } from '../../../packages/primitives/test/support/guards';
+import { boxOf } from '../helpers/geometry';
 
 const isTableOutput = shapeOf({
   sort: nullable(shapeOf({ key: isString, direction: isString })),
@@ -102,6 +103,10 @@ export class TableSection {
     return this.table.locator('thead').getByRole('checkbox');
   }
 
+  get selectAllCell(): Locator {
+    return this.table.locator('thead th').first();
+  }
+
   get nextPage(): Locator {
     return this.table.getByRole('button', { name: 'Следующая' });
   }
@@ -140,6 +145,14 @@ export class TableSection {
     await this.scroller(table).evaluate((element, value) => {
       element.scrollLeft = value;
     }, left);
+  }
+
+  async scrollColumnToStart(label: string): Promise<void> {
+    const scroller = await boxOf(this.scroller(this.table));
+    const column = await boxOf(this.header(label));
+    const current = await this.scroller(this.table).evaluate((element) => element.scrollLeft);
+
+    await this.scrollHorizontally(this.table, current + column.x - scroller.x);
   }
 
   scrollSlack(table: Locator): Promise<number> {

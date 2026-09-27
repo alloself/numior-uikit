@@ -43,6 +43,7 @@
   block-size: var(--_height);
   overflow: auto;
   outline: none;
+  scroll-padding-inline: var(--_sticky-start-size, 0px) var(--_sticky-end-size, 0px);
 }
 .nui-table--virtual .nui-table__scroller {
   overflow-anchor: none;

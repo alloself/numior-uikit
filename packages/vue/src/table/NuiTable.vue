@@ -475,9 +475,12 @@ onMounted(() => {
   const measure = (): void => {
     layout.measure(tableElement.value);
     const band = headBand();
+    const sticky = layout.stickyExtents();
 
     rootElement.value?.style.setProperty('--_head-size', `${band.height}px`);
     rootElement.value?.style.setProperty('--_caption-size', `${band.top}px`);
+    rootElement.value?.style.setProperty('--_sticky-start-size', sticky.start);
+    rootElement.value?.style.setProperty('--_sticky-end-size', sticky.end);
   };
 
   watch([() => layout.ordered.value, widths], measure, { immediate: true, flush: 'post' });

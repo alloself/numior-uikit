@@ -215,6 +215,10 @@ export class PlaygroundPage {
     await this.page.emulateMedia(options);
   }
 
+  async resize(size: { width: number; height: number }): Promise<void> {
+    await this.page.setViewportSize(size);
+  }
+
   async setTheme(theme: Theme): Promise<void> {
     await this.settings.theme.selectOption(theme);
   }
