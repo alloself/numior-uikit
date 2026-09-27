@@ -37,6 +37,7 @@ import {
   NuiSelect,
   NuiSeparator,
   NuiKbd,
+  NuiCode,
   NuiSwitch,
   NuiTable,
   NuiTabs,
@@ -152,6 +153,20 @@ const scenarios: Scenario[] = [
   { name: 'NuiIcon', render: () => h(NuiIcon, { alias: 'check' }) },
   { name: 'NuiSeparator', render: () => h(NuiSeparator, { label: 'or' }) },
   { name: 'NuiKbd', render: () => h(NuiKbd, { keys: 'mod+k' }) },
+  {
+    name: 'NuiCode',
+    render: () =>
+      h(NuiCode, {
+        code: 'const a = 1;\nconst b = 2;\n',
+        title: 'main.ts',
+        lineNumbers: true,
+        highlight: [2],
+        tokens: [
+          [{ text: 'const', scope: 'keyword' }, { text: ' a = ' }, { text: '1', scope: 'number' }],
+          [{ text: 'const', scope: 'keyword' }, { text: ' b = ' }, { text: '2', scope: 'number' }],
+        ],
+      }),
+  },
   {
     name: 'NuiChip',
     render: () =>

@@ -94,6 +94,16 @@ NuiSeparator: `role="separator"` (или `none` при `decorative`), `orientati
 рамок для шорткатов меню — `NuiMenuRow` рендерит `shortcut` через него, поэтому строки
 `'mod+r'` и готовые глифы работают одинаково.
 
+NuiCode: `code` плюс необязательные `tokens` — строки из `{ text, scope }` от любого
+подсветчика (scope из фиксированного списка keyword, string, number, function, type, tag,
+attribute, property, comment, punctuation, variable), без токенов — простой текст; цвета
+только из `--nui-syntax-*`. Заголовок с `title` или `language`, кнопка копирования
+(`useClipboard`, глифы copy → check растворяются друг в друга, `role="status"` объявляет
+«Скопировано»), номера строк CSS-счётчиком (не копируются), подсветка строк `highlight`,
+перенос `wrap`, `maxLines` сворачивает длинный код за кнопкой «Показать всё» с плавной
+высотой через `useBlockSizeTween`. Прокручиваемая область фокусируемая. Тексты — каталог
+`code`.
+
 Далее в волне: `defineSlots` во всех компонентах;
 кнопка-ссылка; NuiSeparator, NuiKbd, NuiCode, NuiToggleGroup, NuiCollapsible/NuiAccordion,
 NuiCommand, NuiToc, NuiSkipLink, NuiSplitter; режимы NuiLayout.
@@ -110,7 +120,8 @@ NuiCommand, NuiToc, NuiSkipLink, NuiSplitter; режимы NuiLayout.
 - примитивы `useClipboard`, `useHotkey`, `useScrollSpy`, общая цветовая схема и
   `colorSchemeScript` (раздел «Композаблы», гайд «Темы»);
 - новые алиасы иконок (справочник иконок) и кнопка-ссылка (страница «Кнопка»);
-- NuiSeparator и NuiKbd (страницы «Разделитель» и «Клавиша»).
+- NuiSeparator и NuiKbd (страницы «Разделитель» и «Клавиша»);
+- NuiCode (страница «Код»).
 
 ## Alternatives Considered
 

@@ -3,6 +3,7 @@
 @import './link/link.css';
 @import './separator/separator.css';
 @import './kbd/kbd.css';
+@import './code/code.css';
 @import './field/field.css';
 @import './input/input.css';
 @import './textarea/textarea.css';

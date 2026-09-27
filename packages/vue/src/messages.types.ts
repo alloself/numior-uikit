@@ -3,6 +3,7 @@ import type { NuiAvatarMessages } from './avatar/avatar.messages';
 import type { NuiBreadcrumbsMessages } from './breadcrumbs/breadcrumbs.messages';
 import type { NuiCalendarMessages } from './calendar/calendar.messages';
 import type { NuiChipMessages } from './chip/chip.messages';
+import type { NuiCodeMessages } from './code/code.messages';
 import type { NuiComboboxMessages } from './combobox/combobox.messages';
 import type { NuiDatePickerMessages } from './date-picker/date-picker.messages';
 import type { NuiDialogMessages } from './dialog/dialog.messages';
@@ -23,6 +24,7 @@ export interface NuiVueMessages {
   readonly breadcrumbs: NuiBreadcrumbsMessages;
   readonly calendar: NuiCalendarMessages;
   readonly chip: NuiChipMessages;
+  readonly code: NuiCodeMessages;
   readonly combobox: NuiComboboxMessages;
   readonly datePicker: NuiDatePickerMessages;
   readonly dialog: NuiDialogMessages;

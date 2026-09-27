@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { rgbOf } from './helpers/color';
 import { PlaygroundPage } from './pages/playground';
 
 test('separators carry semantics, stretch across their axis and take a label', async ({ page }) => {
@@ -31,4 +32,31 @@ test('kbd renders combos per platform, boxed or plain', async ({ page }) => {
   expect(await chrome.keysOf(chrome.plainKbd)).toEqual(['Esc']);
   await expect(chrome.firstKeyOf(chrome.comboKbd)).toHaveCSS('border-bottom-width', '2px');
   await expect(chrome.firstKeyOf(chrome.plainKbd)).toHaveCSS('border-bottom-width', '0px');
+});
+
+test('code blocks number and highlight lines, copy their source and expand', async ({ page }) => {
+  const playground = new PlaygroundPage(page);
+  await playground.open();
+  const { chrome } = playground;
+  const code = chrome.titledCode;
+  await expect(code).toContainText('main.ts');
+  expect(await chrome.lineNumberOf(code, 1)).toBe('1');
+  expect(await chrome.lineNumberOf(code, 3)).toBe('3');
+  const plainLine = await rgbOf(chrome.lineOf(code, 1), 'background-color');
+  const highlighted = await rgbOf(chrome.lineOf(code, 2), 'background-color');
+  expect(highlighted).not.toEqual(plainLine);
+  const collapsed = await chrome.bodyHeightOf(code);
+  const expand = chrome.expandButtonOf(code);
+  await expect(expand).toHaveAttribute('aria-expanded', 'false');
+  await expand.click();
+  await expect(expand).toHaveAttribute('aria-expanded', 'true');
+  await expect.poll(() => chrome.bodyHeightOf(code)).toBeGreaterThan(collapsed);
+  const copy = chrome.copyButtonOf(code);
+  await expect(copy).toHaveAccessibleName('Скопировать код');
+  await copy.click();
+  await expect(copy).toHaveAccessibleName('Скопировано');
+  await expect(code).toHaveClass(/nui-code--copied/);
+  await expect(chrome.copyButtonOf(chrome.plainCode)).toHaveCSS('opacity', '0');
+  await chrome.plainCode.hover();
+  await expect(chrome.copyButtonOf(chrome.plainCode)).toHaveCSS('opacity', '1');
 });
