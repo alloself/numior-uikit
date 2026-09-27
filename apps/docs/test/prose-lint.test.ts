@@ -1,0 +1,63 @@
+import { describe, expect, it } from 'vitest';
+import { lintProse } from '../.vitepress/content/prose-lint';
+
+const CLEAN = `---
+title: Кнопка
+---
+
+# Кнопка
+
+\`NuiButton\` — нативная кнопка с двумя осями оформления. Она берёт цвета из токенов роли.
+
+<Example name="button/Basic" />
+
+## Размеры
+
+- \`sm\` — компактные панели.
+- \`lg\` — герои и формы.
+
+| Клавиша | Действие |
+| ------- | -------- |
+| Enter   | Нажимает |
+
+\`\`\`vue
+<NuiButton>Позволяет</NuiButton>
+\`\`\`
+
+## API
+
+Блок \`nui-button__content\` держит текст.
+`;
+
+describe('prose lint', () => {
+  it('accepts short paragraphs, lists, tables, code, tags and BEM names inside the API section', () => {
+    expect(lintProse(CLEAN, 'ru')).toEqual([]);
+  });
+
+  it('reports long sentences, long paragraphs, banned phrases and internals in prose', () => {
+    const page = `# Кнопка
+
+Раз. Два. Три. Четыре.
+
+Данный компонент позволяет ${'очень '.repeat(24)}много.
+
+Модификатор \`nui-button--loading\` и переменная \`--_height\`.
+`;
+
+    expect(lintProse(page, 'ru')).toEqual([
+      { line: 3, rule: 'paragraph', text: '4 sentences' },
+      {
+        line: 5,
+        rule: 'sentence',
+        text: `Данный компонент позволяет ${'очень '.repeat(24)}много.`,
+      },
+      { line: 5, rule: 'phrase', text: 'позволяет' },
+      { line: 5, rule: 'phrase', text: 'данный' },
+      { line: 7, rule: 'internals', text: 'nui-button--loading' },
+    ]);
+
+    expect(
+      lintProse('Please note that this is powerful.', 'en').map((problem) => problem.text),
+    ).toEqual(['please note', 'powerful']);
+  });
+});

@@ -32,7 +32,7 @@ export default defineConfig({
       reporter: ['text-summary', 'json'],
       include: [
         'packages/{primitives,vue,forms}/src/**/*.{ts,vue}',
-        'apps/docs/.vitepress/{examples,markdown,reference,theme}/**/*.{ts,vue}',
+        'apps/docs/.vitepress/{content,examples,markdown,reference,theme}/**/*.{ts,vue}',
       ],
       exclude: ['**/*.types.ts', '**/*.d.ts'],
     },

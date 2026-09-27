@@ -7,8 +7,9 @@
     "dev": "vitepress dev",
     "build": "vitepress build",
     "preview": "vitepress preview",
-    "check": "node scripts/check-examples.ts && node scripts/reference.ts --check",
-    "reference": "node scripts/reference.ts"
+    "check": "node scripts/check-examples.ts && node scripts/check-content.ts && node scripts/reference.ts --check",
+    "reference": "node scripts/reference.ts",
+    "check:dist": "node scripts/check-dist.ts"
   },
   "dependencies": {
     "@numior/forms": "workspace:*",

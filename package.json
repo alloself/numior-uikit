@@ -9,7 +9,7 @@
     "docs:dev": "pnpm docs:reference && pnpm --filter @numior/docs dev",
     "docs:reference": "pnpm --filter @numior/docs reference",
     "build": "pnpm -r --filter './packages/*' build && pnpm --filter @numior/playground build",
-    "docs:build": "pnpm --filter @numior/docs build",
+    "docs:build": "pnpm --filter @numior/docs build && pnpm --filter @numior/docs check:dist",
     "docs:check": "pnpm --filter @numior/docs check",
     "lint": "oxlint --deny-warnings && eslint . --max-warnings 0",
     "format": "oxfmt --write .",
