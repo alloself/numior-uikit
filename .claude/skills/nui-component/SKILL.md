@@ -121,6 +121,12 @@ commitDraft() })`; `NuiFormField` runs these commits before a programmatic submi
   Icon-only buttons skip the press `scale`: on a 16px glyph it reads as the icon jumping. Close buttons in cards align their glyph with the first text line
   (`margin-block-start: calc((font-size * line-height - var(--_height)) / 2)`) and with the
   padding edge (negative `margin-inline-end`).
+- Everything that reacts to a click shows `cursor: pointer` (buttons, links, options, menu and
+  tree items, chevrons, wheel values); disabled → `not-allowed`, drag handles → `grab` /
+  `grabbing`, resizers → `col-resize`. No desktop-native `default` on menus and lists; e2e checks
+  the cursor of every enabled control in the playground.
+- A drag starts only from its handle, never from the whole row or cell: otherwise it fights the
+  click (sorting, selection) and text selection.
 - Focus ring: `outline: var(--nui-focus-ring-width) solid var(--nui-focus); outline-offset:
 var(--nui-focus-ring-offset)`. Disabled: `opacity: var(--nui-disabled-opacity)`.
 - Logical properties only (`inline-size`, `inset-inline-start`, `padding-inline`).

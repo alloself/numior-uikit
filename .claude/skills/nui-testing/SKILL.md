@@ -121,8 +121,13 @@ that the label `for` matches the control id and that values render on the server
   navigation, so reach a control with `Tab`, not `locator.focus()`, before asserting a ring.
 - axe `scrollable-region-focusable`: a scroll container with no focusable content needs
   `tabindex="0"` (the table scroller with `height`); the tree root already has it.
-- A page object's output guard with many `&&` checks trips fallow's CRAP threshold; keep a
-  `Record<keyof Output, guard>` and `Object.entries(...).every(...)` instead (`TableSection`).
+- Type guards come from `packages/primitives/test/support/guards.ts` in every suite (primitives,
+  vue and forms tests, e2e): `isString`, `isNumber`, `isBoolean`, `isDate`, `isRecord` and the
+  combinators `nullable`, `optional`, `listOf`, `recordOf`, `oneOf`, `anyOf`, `shapeOf`, plus
+  `parseAs(text, guard, what)` for JSON outputs. A guard claims only what it checks: an output
+  type is derived from its guard (`export type TableOutput = Guarded<typeof isTableOutput>`),
+  never written beside it, and a check of key presence never stands in for a full type.
+  Shared geometry lives in `tests/e2e/helpers/geometry.ts` (`Box`, `boxOf`).
 - Drag gestures use `page.mouse` (down, a 4px nudge past the threshold, a stepped move, up)
   from the page object (`TableSection.dragBetween`/`dragBy`); in jsdom the drivers dispatch
   `PointerEvent`s on the handle and `pointermove`/`pointerup` on `window`, with
