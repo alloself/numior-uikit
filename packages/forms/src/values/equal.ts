@@ -1,6 +1,6 @@
-type Entry = readonly [key: string, value: unknown];
+import { isObject } from './kinds';
 
-const isObject = (value: unknown): value is object => typeof value === 'object' && value !== null;
+type Entry = readonly [key: string, value: unknown];
 
 const isDefined = ([, value]: Entry): boolean => value !== undefined;
 

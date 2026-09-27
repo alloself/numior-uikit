@@ -1,10 +1,6 @@
 import { toRaw } from 'vue';
 import { isEqualValue } from './equal';
-
-const isPlainObject = (value: object): boolean => {
-  const prototype: unknown = Object.getPrototypeOf(value);
-  return prototype === Object.prototype || prototype === null;
-};
+import { isPlainRecord } from './kinds';
 
 const copyOf = (value: unknown): unknown => {
   if (typeof value !== 'object' || value === null) {
@@ -22,7 +18,7 @@ const copyOf = (value: unknown): unknown => {
   if (value instanceof Set) {
     return new Set(value);
   }
-  return isPlainObject(value)
+  return isPlainRecord(value)
     ? Object.fromEntries(Object.entries(value).map(([key, item]) => [key, copyOf(item)] as const))
     : value;
 };

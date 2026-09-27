@@ -1,27 +1,25 @@
 import { isIndexSegment, joinPath, segmentsOf } from '../paths/paths';
+import { isObject, isPlainRecord } from './kinds';
 
 type Branch = readonly [path: string, value: unknown];
 
-const isContainer = (value: unknown): value is object =>
-  typeof value === 'object' && value !== null;
-
 export const getAt = (source: unknown, path: string): unknown =>
   segmentsOf(path).reduce<unknown>(
-    (current, segment) => (isContainer(current) ? Reflect.get(current, segment) : undefined),
+    (current, segment) => (isObject(current) ? Reflect.get(current, segment) : undefined),
     source,
   );
 
 const containerAt = (current: object, segment: string, next: string): object => {
   const existing: unknown = Reflect.get(current, segment);
 
-  if (isContainer(existing)) {
+  if (isObject(existing)) {
     return existing;
   }
   Reflect.set(current, segment, isIndexSegment(next) ? [] : {});
 
   const created: unknown = Reflect.get(current, segment);
 
-  return isContainer(created) ? created : current;
+  return isObject(created) ? created : current;
 };
 
 export const setAt = (target: object, path: string, value: unknown): void => {
@@ -42,14 +40,11 @@ export const setAt = (target: object, path: string, value: unknown): void => {
   Reflect.set(parent, last, value);
 };
 
-const isRecord = (value: unknown): value is object =>
-  isContainer(value) && !Array.isArray(value) && Object.getPrototypeOf(value) === Object.prototype;
-
 export const mergeInto = (target: object, source: object): void => {
   for (const [key, value] of Object.entries(source)) {
     const current: unknown = Reflect.get(target, key);
 
-    if (isRecord(current) && isRecord(value)) {
+    if (isPlainRecord(current) && isPlainRecord(value)) {
       mergeInto(current, value);
     } else {
       Reflect.set(target, key, value);
@@ -73,7 +68,7 @@ export const deleteAt = (target: object, path: string): void => {
   const last = segments.pop();
   const parent = getAt(target, segments.join('.'));
 
-  if (last === undefined || !isContainer(parent)) {
+  if (last === undefined || !isObject(parent)) {
     return;
   }
   if (!Array.isArray(parent)) {
@@ -91,7 +86,7 @@ const childrenOf = (value: unknown, segment: string): Branch[] => {
       ? value.map((child: unknown, index) => [String(index), child] as const)
       : [];
   }
-  return isContainer(value) && Object.hasOwn(value, segment)
+  return isObject(value) && Object.hasOwn(value, segment)
     ? [[segment, Reflect.get(value, segment)]]
     : [];
 };
