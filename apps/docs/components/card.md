@@ -1,89 +1,85 @@
 # Карточка
 
-`NuiCard` — контейнер на поверхности: `variant` задаёт вид (`outline`, `elevated`, `soft`),
-`padding` — внутренний отступ. Содержимое собирается из частей `NuiCardHeader` (слот
-`actions`), `NuiCardTitle` (тег `as`, по умолчанию `h3`), `NuiCardDescription`,
-`NuiCardContent`, `NuiCardFooter` и `NuiCardMedia` (картинка в обрез до края, `aspect`).
-Пропы `title` и `description` рисуют шапку без частей. `href`/`to` или `interactive`
-превращают карточку в ссылку или кнопку целиком.
+`NuiCard` — контейнер на поверхности, собранный из частей: шапка, заголовок, описание, содержимое,
+подвал и медиа. Карточка целиком может быть ссылкой или кнопкой.
 
-<div class="vp-raw nui-demo" data-nui-theme="light" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); align-items: start">
-  <NuiCard href="#card">
-    <NuiCardMedia src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 100'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' x2='1'%3E%3Cstop offset='0' stop-color='%234f46e5'/%3E%3Cstop offset='1' stop-color='%2306b6d4'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='300' height='100' fill='url(%23g)'/%3E%3C/svg%3E" alt="" aspect="3 / 1" />
-    <NuiCardHeader>
-      <NuiCardTitle>Тариф Team</NuiCardTitle>
-      <NuiCardDescription>Вся карточка — одна ссылка.</NuiCardDescription>
-    </NuiCardHeader>
-    <NuiCardFooter><NuiBadge tone="success">Доступен</NuiBadge></NuiCardFooter>
-  </NuiCard>
-  <NuiCard interactive variant="elevated">
-    <NuiCardHeader>
-      <NuiCardTitle>Проект Numior</NuiCardTitle>
-      <NuiCardDescription>Карточка-кнопка с независимым действием в шапке.</NuiCardDescription>
-      <template #actions>
-        <NuiButton variant="ghost" tone="neutral" size="sm" aria-label="Ещё"><NuiIcon alias="ellipsis" /></NuiButton>
-      </template>
-    </NuiCardHeader>
-    <NuiCardContent>Открыть проект можно кликом в любом месте.</NuiCardContent>
-  </NuiCard>
-  <NuiCard variant="soft" padding="sm" title="Тихая карточка" description="Без интерактива, с отступом sm">
-    <NuiCardContent>Содержимое</NuiCardContent>
-  </NuiCard>
-</div>
+<Example name="card/Basic" />
 
-```vue
-<script setup lang="ts">
-import {
-  NuiCard,
-  NuiCardContent,
-  NuiCardDescription,
-  NuiCardHeader,
-  NuiCardMedia,
-  NuiCardTitle,
-} from '@numior/vue';
+## Установка
+
+```ts
+import { NuiCard, NuiCardContent, NuiCardHeader, NuiCardTitle } from '@numior/vue';
+import '@numior/tokens/theme.css';
 import '@numior/vue/styles/card.css';
-</script>
-
-<template>
-  <NuiCard :to="{ name: 'plan', params: { id } }" :as="RouterLink">
-    <NuiCardMedia :src="plan.cover" alt="" />
-    <NuiCardHeader>
-      <NuiCardTitle>{{ plan.name }}</NuiCardTitle>
-      <NuiCardDescription>{{ plan.summary }}</NuiCardDescription>
-      <template #actions><NuiButton size="sm" variant="ghost" aria-label="Ещё" /></template>
-    </NuiCardHeader>
-    <NuiCardContent>…</NuiCardContent>
-  </NuiCard>
-</template>
 ```
 
-## Интерактивная карточка
+## Использование
 
-Кликабельная карточка не оборачивается в `<a>` или `<button>` целиком: имя такой ссылки
-превратилось бы в весь текст карточки, а вложенные кнопки стали бы невалидными. Вместо
-этого `NuiCardTitle` рендерит внутри заголовка единственный фокусируемый элемент —
-`NuiLink` (при `href`/`to`, роутер через `as`) или `<button>` (при `interactive`) — и
-растягивает его псевдоэлементом на всю карточку. Имя ссылки равно заголовку, поэтому
-интерактивной карточке нужен `NuiCardTitle` или проп `title`. Контролы в `actions` и
-`footer` поднимаются над растянутой областью и работают независимо; `@click` на `NuiCard`
-получает и клик по поверхности (через действие), и клики вложенных кнопок — различайте их
-по `event.target.closest('.nui-card__action')`. Кольцо фокуса рисуется на всей карточке.
+<Configurator name="NuiCard" />
+
+## Анатомия
+
+| Часть                | Роль                                                           |
+| -------------------- | -------------------------------------------------------------- |
+| `NuiCard`            | Поверхность, отступ и режим ссылки или кнопки                  |
+| `NuiCardHeader`      | Заголовок с описанием и слот `actions` справа                  |
+| `NuiCardTitle`       | Заголовок; в интерактивной карточке держит единственную ссылку |
+| `NuiCardDescription` | Подзаголовок приглушённым цветом                               |
+| `NuiCardContent`     | Основное содержимое                                            |
+| `NuiCardFooter`      | Действия внизу                                                 |
+| `NuiCardMedia`       | Картинка в обрез до края с заданным соотношением сторон        |
+
+## Примеры
+
+### Медиа
+
+`NuiCardMedia` растягивает картинку до края карточки; `aspect` задаёт соотношение сторон.
+
+<Example name="card/Media" />
+
+### Карточка-ссылка
+
+`href` делает всю карточку ссылкой. Кнопка в `actions` и подвал работают отдельно от неё.
+
+<Example name="card/Link" />
+
+### Интерактивная карточка
+
+`interactive` превращает карточку в кнопку; клик по любому месту приходит в `@click`.
+
+<Example name="card/Interactive" />
+
+### Варианты и отступы
+
+`variant` выбирает контур, тень или мягкую заливку, `padding` — отступ всех частей.
+
+<Example name="card/Variants" />
+
+### Шапка из пропов
+
+`title` и `description` рисуют шапку без частей.
+
+<Example name="card/Props" />
+
+## Доступность
+
+Интерактивная карточка не оборачивается в `<a>` целиком: её именем стал бы весь текст, а вложенные
+кнопки стали бы невалидными. Вместо этого заголовок держит единственную ссылку или кнопку и
+растягивает её на всю карточку, поэтому такой карточке нужен `NuiCardTitle` или `title`.
+Кольцо фокуса рисуется вокруг всей карточки.
+
+<KeyboardReference name="NuiCard" />
 
 ## API
 
-| Prop          | Тип                                 | По умолчанию | Описание                                   |
-| ------------- | ----------------------------------- | ------------ | ------------------------------------------ |
-| `variant`     | `'outline' \| 'elevated' \| 'soft'` | `'outline'`  | Вид поверхности                            |
-| `padding`     | `'sm' \| 'md' \| 'lg'`              | `'md'`       | Внутренний отступ                          |
-| `href`, `to`  | `string`, `unknown`                 | —            | Делает карточку ссылкой (`to` для роутера) |
-| `as`          | `string \| Component`               | `'a'`        | Компонент роутера для `to`                 |
-| `interactive` | `boolean`                           | `false`      | Карточка-кнопка                            |
-| `title`       | `string`                            | —            | Заголовок без частей                       |
-| `description` | `string`                            | —            | Описание без частей                        |
-
-`NuiCardTitle`: `as` — `h2`…`h6` (`'h3'`). `NuiCardMedia`: `src`, `alt` (`''`), `aspect`
-(`'16 / 9'`), слот вместо картинки (по умолчанию иконка `image`). Блок `nui-card`,
-модификаторы `--variant-*`, `--padding-*`, `--interactive`; элементы `__header`, `__heading`,
-`__actions`, `__title`, `__action`, `__description`, `__content`, `__footer`, `__media`,
-`__image`, `__placeholder`; переменные `--_padding`, `--_gap`, `--_radius`, `--_surface`,
-`--_border`, `--_shadow`, `--_aspect`.
+<ApiReference
+  :names="[
+    'NuiCard',
+    'NuiCardHeader',
+    'NuiCardTitle',
+    'NuiCardDescription',
+    'NuiCardContent',
+    'NuiCardFooter',
+    'NuiCardMedia',
+  ]"
+/>

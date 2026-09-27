@@ -15,6 +15,7 @@ title: Кнопка
 
 - \`sm\` — компактные панели.
 - \`lg\` — герои и формы.
+- [Кнопка](/components/button) — первый компонент. [Темы](/theming) — токены. [Словарь](/localization) — тексты.
 
 | Клавиша | Действие |
 | ------- | -------- |
@@ -42,6 +43,8 @@ describe('prose lint', () => {
 Данный компонент позволяет ${'очень '.repeat(24)}много.
 
 Модификатор \`nui-button--loading\` и переменная \`--_height\`.
+
+- [Раз](/a) — первый. [Два](/b) — второй. [Три](/c) — третий. [Четыре](/d) — четвёртый.
 `;
 
     expect(lintProse(page, 'ru')).toEqual([
@@ -54,6 +57,7 @@ describe('prose lint', () => {
       { line: 5, rule: 'phrase', text: 'позволяет' },
       { line: 5, rule: 'phrase', text: 'данный' },
       { line: 7, rule: 'internals', text: 'nui-button--loading' },
+      { line: 9, rule: 'paragraph', text: '4 sentences' },
     ]);
 
     expect(

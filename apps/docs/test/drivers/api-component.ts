@@ -1,5 +1,8 @@
 import { DOMWrapper, mount, type VueWrapper } from '@vue/test-utils';
-import type { ComponentReference } from '../../.vitepress/reference/reference.types';
+import type {
+  CatalogReference,
+  ComponentReference,
+} from '../../.vitepress/reference/reference.types';
 import type { ExampleLocale } from '../../.vitepress/examples/example.types';
 import ApiComponent from '../../.vitepress/theme/parts/ApiComponent.vue';
 import { en, ru } from '../../.vitepress/theme/texts';
@@ -56,10 +59,15 @@ export const referenceOf = (overrides: Partial<ComponentReference> = {}): Compon
 export class ApiComponentDriver {
   constructor(readonly wrapper: VueWrapper) {}
 
-  static mount(component: ComponentReference, locale: ExampleLocale = 'ru', heading = false) {
+  static mount(
+    component: ComponentReference,
+    locale: ExampleLocale = 'ru',
+    heading = false,
+    catalog?: CatalogReference,
+  ) {
     return new ApiComponentDriver(
       mount(ApiComponent, {
-        props: { component, locale, texts: locale === 'en' ? en : ru, heading },
+        props: { component, catalog, locale, texts: locale === 'en' ? en : ru, heading },
       }),
     );
   }
@@ -94,9 +102,5 @@ export class ApiComponentDriver {
 
   get styleImport(): string {
     return this.wrapper.find('.nui-code__code').text();
-  }
-
-  get keys(): string[] {
-    return this.wrapper.findAll('.nui-kbd').map((kbd) => kbd.text());
   }
 }

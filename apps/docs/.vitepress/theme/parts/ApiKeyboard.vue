@@ -1,6 +1,5 @@
 <template>
-  <div class="nui-flex nui-flex-col nui-gap-2">
-    <h4>{{ texts.apiKeyboard }}</h4>
+  <div class="nui-not-prose nui-my-4">
     <NuiTable :columns="columns" :rows="keys" :get-key="keyOf" size="sm">
       <template #cell-keys="{ row }">
         <NuiKbd :keys="row.keys" size="sm" />

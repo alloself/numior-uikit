@@ -1,49 +1,60 @@
 # Getting started
 
-This is a working foundation, not a finished UI kit release. Packages are private
-and currently available inside the workspace. Archcore records the full editor,
-grid, offline and other module roadmap; these features are not implemented yet.
+Numior UI is a component set for Vue 3.5+ with explicit styles, shared tokens and SSR support.
+The packages are private for now and available inside the workspace.
 
-## Local development
-
-Use Node 24.15+, with pnpm 10.31.0.
+## Installation
 
 ```sh
-pnpm install --frozen-lockfile
-pnpm dev
+pnpm add @numior/vue @numior/tokens
 ```
 
-Docs: `pnpm build && pnpm docs:dev`. Checks: `pnpm check`.
-Browsers: `pnpm exec playwright install`, followed by `pnpm test:e2e`.
+`@numior/tokens` provides the themes and tokens, `@numior/vue` the components. Forms live in
+`@numior/forms`, layout utilities in `@numior/utilities`.
 
-## Component and explicit styles
+## Styles
 
-```vue
-<script setup lang="ts">
-import { NuiButton } from '@numior/vue';
+```ts
 import '@numior/tokens/theme.css';
 import '@numior/vue/styles.css';
-</script>
-
-<template>
-  <NuiButton>Save</NuiButton>
-</template>
 ```
 
-<div data-nui-theme="light" style="padding: 1rem">
-  <NuiButton>Save</NuiButton>
-</div>
+`styles.css` loads the styles of every component. For a narrower import take
+`@numior/vue/styles/<component>.css`: CSS is never imported from JavaScript on its own.
 
-Components are styled along two axes: `variant` picks the shape and `tone` the
-semantic role, while `size` picks a step inside the current density. Details and
-live examples live in the Components section, starting with the
-[button](/en/components/button). Native attributes, events and classes reach the
-root element. Controls without visible text need an accessible name, such as
-`aria-label`.
+## First component
 
-## Current verification
+<Example name="guide/First" />
 
-Native button activation and blocking, DOM-free package import, exported artifacts,
-CSS and declaration builds, theme/accent/density switching, RTL, optional Tailwind
-integration and an axe scan of the playground. These checks are not WCAG
-certification for the future kit or a substitute for real mobile device testing.
+Components are styled along two axes: `variant` sets the shape, `tone` the role, `size` a step
+inside the density. Native attributes, events and classes reach the root element.
+
+## Application setup
+
+```ts
+import { createApp } from 'vue';
+import { createNuiConfig } from '@numior/vue';
+import App from './App.vue';
+
+createApp(App)
+  .use(createNuiConfig({ locale: 'en-US', colorScheme: { storageKey: 'theme' } }))
+  .mount('#app');
+```
+
+The plugin sets the language of built-in texts, the shared colour scheme, icons and the writing
+direction. Without it components run on English texts and the system scheme.
+
+## Themes and density
+
+```html
+<html data-nui-theme="dark" data-nui-density="compact"></html>
+```
+
+`data-nui-theme` accepts `light`, `dark` and `system`, `data-nui-density` accepts `comfortable`
+and `compact`. Both attributes work on any element, not only the root.
+
+## Next
+
+- [Button](/en/components/button) — the first component with a configurator and the API.
+- [Theming](/en/theming) — tokens, accents and custom themes.
+- [Localization](/en/localization) — dictionaries and translations of built-in texts.

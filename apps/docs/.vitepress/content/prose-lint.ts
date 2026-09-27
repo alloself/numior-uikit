@@ -40,7 +40,8 @@ const BANNED: Readonly<Record<ExampleLocale, readonly string[]>> = {
 };
 
 const INTERNALS_RE = /nui-[a-z0-9-]+(?:__|--)[a-z0-9_-]+|--_[a-z0-9-]+/;
-const SENTENCE_END_RE = /(?<=[.!?…])\s+(?=[A-ZА-ЯЁ«"`(])/u;
+const SENTENCE_END_RE = /(?<=[.!?…])\s+(?=[A-ZА-ЯЁ«"`([])/u;
+const LIST_ITEM_RE = /^(?:[-*]|\d+\.)\s+/;
 const WORD_RE = /[\p{L}\p{N}]+(?:[-'’][\p{L}\p{N}]+)*/gu;
 
 const isSkipped = (line: string): boolean =>
@@ -88,10 +89,13 @@ const paragraphsOf = (markdown: string): Paragraph[] => {
       flush();
       return;
     }
+    if (LIST_ITEM_RE.test(line)) {
+      flush();
+    }
     if (current.length === 0) {
       start = index + 1;
     }
-    current.push(line.replace(/^[-*]\s+|^\d+\.\s+/, ''));
+    current.push(line.replace(LIST_ITEM_RE, ''));
   });
 
   flush();

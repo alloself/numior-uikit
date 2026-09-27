@@ -1,80 +1,65 @@
 # Button
 
-`NuiButton` is a native `<button>` styled along two axes. `variant` picks the shape:
-`solid`, `soft`, `outline`, `ghost`, `link`. `tone` picks the semantic role:
-`primary`, `secondary`, `success`, `warning`, `error`, `info`, `neutral`.
-The default is `solid` + `primary`. Each role reads its `--nui-<role>` tokens, so a
-runtime accent change affects every variant at once.
+`NuiButton` is a native button with two styling axes: `variant` sets the shape, `tone` the role.
+Role colours come from the tokens, so an accent change updates every variant at once.
 
 <Example name="button/Basic" />
+
+## Installation
+
+```ts
+import { NuiButton } from '@numior/vue';
+import '@numior/tokens/theme.css';
+import '@numior/vue/styles/button.css';
+```
+
+`@numior/vue/styles.css` loads the styles of every component, `styles/button.css` only the button.
+CSS is never imported from JavaScript on its own.
 
 ## Usage
 
 <Configurator name="NuiButton" />
 
-`@numior/vue/styles.css` loads the styles of every component; `@numior/vue/styles/button.css`
-loads only the button. CSS is never imported from JavaScript automatically.
+## Examples
 
-## Sizes
+### Sizes
 
-`size` picks the `sm`, `md` or `lg` step inside the current scale; `data-nui-density`
-shifts the whole scale. Heights are 2 / 2.5 / 3rem in `comfortable` and 1.75 / 2 / 2.5rem
-in `compact`.
+`size` picks a step inside the current density; `data-nui-density` shifts the whole scale.
 
-<div class="vp-raw nui-demo" data-nui-theme="light">
-  <NuiButton size="sm">Small</NuiButton>
-  <NuiButton>Default</NuiButton>
-  <NuiButton size="lg">Large</NuiButton>
-</div>
+<Example name="button/Sizes" />
 
-## States
+### States
 
-`disabled` prevents activation. `loading` swallows presses too but keeps the button
-focusable: instead of `disabled` it gets `aria-disabled="true"` and `aria-busy="true"` and
-cancels the click, so a pressed submit button keeps focus and the form never submits twice.
-The content fades out with `opacity` and the `loader` icon from the registry sits centred on
-top, so the button keeps its width. `type` defaults to
-`button`, so a button inside a form never submits it by accident; `submit` and `reset`
-are available.
+`disabled` blocks activation. `loading` swallows presses too but keeps the width and the focus,
+so the form does not jump.
 
-<div class="vp-raw nui-demo" data-nui-theme="light">
-  <NuiButton disabled>Disabled</NuiButton>
-  <NuiButton loading>Saving</NuiButton>
-</div>
+<Example name="button/States" />
 
-## Icon only
+### With an icon
 
-A button whose slot holds only a `NuiIcon` becomes square by itself: the width equals the
-step height, horizontal padding is removed and the content is centred. `icon-only` forces
-the mode and `:icon-only="false"` disables it. Such a button needs an `aria-label`.
+An icon in the slot sits before the text with the shared gap.
 
-<div class="vp-raw nui-demo" data-nui-theme="light">
-  <NuiButton aria-label="Close"><NuiIcon alias="x" /></NuiButton>
-  <NuiButton variant="outline" tone="neutral" size="sm" aria-label="Close"><NuiIcon alias="x" /></NuiButton>
-  <NuiButton variant="ghost" tone="neutral" size="lg" aria-label="Close"><NuiIcon alias="x" /></NuiButton>
-</div>
+<Example name="button/WithIcon" />
 
-```vue
-<NuiButton variant="ghost" tone="neutral" aria-label="Close">
-  <NuiIcon alias="x" />
-</NuiButton>
-```
+### Icon only
+
+A button with a lone icon squares itself; it needs an `aria-label`.
+
+<Example name="button/IconOnly" />
+
+### Link
+
+`href` or `to` turn the button into a link with the same look; `as` takes a router component.
+
+<Example name="button/Link" />
 
 ## Accessibility
 
-The component stays a native button: keyboard, focus and screen readers work without
-extra JavaScript. The focus ring uses `--nui-focus`. A button without visible text
-needs an accessible name, such as `aria-label`. In the `light` and `dark` themes the
-`solid`, `soft`, `outline`, `ghost` and `link` variants pass the automated axe contrast
-scan in the playground; that does not replace a manual review.
+The component stays a native `<button>` or `<a>`: keyboard, focus and screen readers work without
+extra code. While `loading` the button gets `aria-busy` and stays in the tab order.
+
+<KeyboardReference name="NuiButton" />
 
 ## API
 
 <ApiReference name="NuiButton" />
-
-The default slot is the button content. Native attributes, classes and event listeners
-reach the `<button>` element. Styling follows BEM: block `nui-button`, elements
-`nui-button__content`, `nui-button__loader`, `nui-button__spinner`, modifiers
-`nui-button--variant-soft`, `nui-button--tone-error`, `nui-button--size-sm`,
-`nui-button--icon-only` and `nui-button--loading`. Modifiers set private CSS variables (`--_tone`, `--_height`)
-that the remaining rules read, so a custom variant is just another modifier class.

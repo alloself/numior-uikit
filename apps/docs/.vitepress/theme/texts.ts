@@ -54,6 +54,8 @@ export const ru: DocsTexts = {
   apiText: 'Текст',
   configuratorProps: 'Свойства',
   configuratorContent: 'Содержимое',
+  apiRussian: 'Русский',
+  apiEnglish: 'English',
 };
 
 export const en: DocsTexts = {
@@ -110,4 +112,6 @@ export const en: DocsTexts = {
   apiText: 'Text',
   configuratorProps: 'Props',
   configuratorContent: 'Content',
+  apiRussian: 'Russian',
+  apiEnglish: 'English',
 };

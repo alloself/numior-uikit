@@ -2,6 +2,7 @@ import type { MarkdownRenderer } from 'vitepress';
 import type { Component } from 'vue';
 import type { ExampleFile, ExampleLocale } from '../examples/example.types';
 import type {
+  CatalogReference,
   ComponentReference,
   LocalizedText,
   ReferenceKey,
@@ -77,6 +78,8 @@ export interface DocsTexts {
   readonly apiText: string;
   readonly configuratorProps: string;
   readonly configuratorContent: string;
+  readonly apiRussian: string;
+  readonly apiEnglish: string;
 }
 
 export interface DocsSearchOptions {
@@ -124,9 +127,25 @@ export interface ApiReferenceViewProps {
 
 export interface ApiComponentProps {
   component: ComponentReference;
+  catalog: CatalogReference | undefined;
   locale: ExampleLocale;
   texts: DocsTexts;
   heading: boolean;
+}
+
+export interface ApiTextsProps {
+  catalog: CatalogReference;
+  texts: DocsTexts;
+}
+
+export interface KeyboardReferenceProps {
+  name: string;
+}
+
+export interface KeyboardViewProps {
+  name: string;
+  locale: ExampleLocale;
+  texts: DocsTexts;
 }
 
 export interface ApiRow {

@@ -5,14 +5,7 @@ describe('ApiComponent', () => {
   it('renders one table per populated section in the page language', () => {
     const api = ApiComponentDriver.mount(referenceOf());
 
-    expect(api.sectionTitles).toEqual([
-      'Свойства',
-      'Модели',
-      'События',
-      'Слоты',
-      'Клавиатура',
-      'Стили',
-    ]);
+    expect(api.sectionTitles).toEqual(['Свойства', 'Модели', 'События', 'Слоты', 'Стили']);
 
     expect(api.rows('Свойства')).toEqual([
       ['size', 'NuiSize | undefined', '"md"', 'Ступень размера.'],
@@ -36,18 +29,21 @@ describe('ApiComponent', () => {
     expect(api.rows('Slots')).toEqual([['default', '{}', 'Content.']]);
   });
 
-  it('lists keyboard keys, the style import and the BEM parts and modifiers', () => {
-    const api = ApiComponentDriver.mount(referenceOf());
+  it('lists the dictionary texts, the style import and the BEM parts and modifiers', () => {
+    const api = ApiComponentDriver.mount(referenceOf(), 'ru', false, {
+      namespace: 'sample',
+      texts: { empty: { ru: 'Пусто', en: 'Empty' } },
+    });
 
-    expect(api.keys).toEqual(['↵']);
-    expect(api.rows('Клавиатура')).toEqual([['↵', 'Выбирает.']]);
+    expect(api.sectionTitles).toContain('Тексты');
+    expect(api.rows('Тексты')).toEqual([['empty', 'Пусто', 'Empty']]);
     expect(api.styleImport).toBe("import '@numior/vue/styles/sample.css';");
     expect(api.badges).toEqual(['обязательно', '__label', '--size-sm', '--__label--muted']);
   });
 
   it('hides sections without members', () => {
     const api = ApiComponentDriver.mount(
-      referenceOf({ models: [], events: [], slots: [], keyboard: [], styles: undefined }),
+      referenceOf({ models: [], events: [], slots: [], styles: undefined }),
     );
 
     expect(api.sectionTitles).toEqual(['Свойства']);

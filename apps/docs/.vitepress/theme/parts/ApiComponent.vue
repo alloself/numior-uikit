@@ -37,13 +37,8 @@
       :rows="component.exposed"
       :locale="locale"
     />
-    <ApiKeyboard
-      v-if="component.keyboard.length > 0"
-      :keys="component.keyboard"
-      :locale="locale"
-      :texts="texts"
-    />
     <ApiStyles v-if="component.styles" :styles="component.styles" :texts="texts" />
+    <ApiTexts v-if="catalog" :catalog="catalog" :texts="texts" />
   </section>
 </template>
 
@@ -55,11 +50,11 @@ import type {
   ReferenceProp,
 } from '../../reference/reference.types';
 import type { ApiComponentProps } from '../theme.types';
-import ApiKeyboard from './ApiKeyboard.vue';
 import ApiStyles from './ApiStyles.vue';
 import ApiTable from './ApiTable.vue';
+import ApiTexts from './ApiTexts.vue';
 
-const { component, locale, texts, heading } = defineProps<ApiComponentProps>();
+const { component, catalog, locale, texts, heading } = defineProps<ApiComponentProps>();
 
 const anchorOf = (name: string): string => `api-${name.toLowerCase()}`;
 

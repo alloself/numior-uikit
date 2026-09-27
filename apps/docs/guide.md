@@ -1,48 +1,60 @@
 # Начало работы
 
-Это рабочее основание, не готовый релиз UI kit. Пакеты пока приватные и доступны
-внутри workspace. Полный план редактора, таблиц, offline и остальных модулей
-хранится в Archcore; эти возможности ещё не реализованы.
+Numior UI — набор компонентов для Vue 3.5+ с явными стилями, общими токенами и поддержкой SSR.
+Пакеты пока приватные и доступны внутри workspace.
 
-## Локальная разработка
-
-Нужны Node 24.15+ и pnpm 10.31.0.
+## Установка
 
 ```sh
-pnpm install --frozen-lockfile
-pnpm dev
+pnpm add @numior/vue @numior/tokens
 ```
 
-Документация: `pnpm build && pnpm docs:dev`. Проверки: `pnpm check`.
-Браузеры: `pnpm exec playwright install`, затем `pnpm test:e2e`.
+`@numior/tokens` даёт темы и токены, `@numior/vue` — компоненты. Формы живут в `@numior/forms`,
+утилиты вёрстки — в `@numior/utilities`.
 
-## Компонент и явные стили
+## Стили
 
-```vue
-<script setup lang="ts">
-import { NuiButton } from '@numior/vue';
+```ts
 import '@numior/tokens/theme.css';
 import '@numior/vue/styles.css';
-</script>
-
-<template>
-  <NuiButton>Сохранить</NuiButton>
-</template>
 ```
 
-<div data-nui-theme="light" style="padding: 1rem">
-  <NuiButton>Сохранить</NuiButton>
-</div>
+`styles.css` подключает стили всех компонентов. Для точечного подключения возьмите
+`@numior/vue/styles/<компонент>.css`: CSS никогда не импортируется из JavaScript сам.
 
-Компоненты стилизуются двумя осями: `variant` задаёт форму, `tone` — семантическую
-роль, `size` — ступень внутри текущей плотности. Подробности и живые примеры —
-в разделе «Компоненты», начиная с [кнопки](/components/button). Нативные
-атрибуты, события и классы передаются корневому элементу. Контролам без видимого
-текста необходимо доступное имя, например `aria-label`.
+## Первый компонент
 
-## Что уже проверяется
+<Example name="guide/First" />
 
-Нативная активация и блокировка кнопки, SSR-импорт пакета, выходные exports,
-сборка CSS и деклараций, переключение тем, акцента и плотности, RTL,
-опциональная Tailwind-интеграция и axe-проверка playground. Это не сертификация
-всего будущего kit по WCAG и не проверка реальных мобильных устройств.
+Компоненты стилизуются двумя осями: `variant` задаёт форму, `tone` — роль, `size` — ступень внутри
+плотности. Нативные атрибуты, события и классы уходят корневому элементу.
+
+## Настройка приложения
+
+```ts
+import { createApp } from 'vue';
+import { createNuiConfig } from '@numior/vue';
+import App from './App.vue';
+
+createApp(App)
+  .use(createNuiConfig({ locale: 'ru-RU', colorScheme: { storageKey: 'theme' } }))
+  .mount('#app');
+```
+
+Плагин задаёт язык встроенных текстов, общую цветовую схему, иконки и направление письма.
+Без него компоненты работают на английских текстах и системной схеме.
+
+## Темы и плотность
+
+```html
+<html data-nui-theme="dark" data-nui-density="compact"></html>
+```
+
+`data-nui-theme` принимает `light`, `dark` и `system`, `data-nui-density` — `comfortable` и
+`compact`. Оба атрибута работают на любом элементе, не только на корне.
+
+## Дальше
+
+- [Кнопка](/components/button) — первый компонент с конфигуратором и API.
+- [Темизация](/theming) — токены, акценты и свои темы.
+- [Локализация](/localization) — словари и переводы встроенных текстов.
