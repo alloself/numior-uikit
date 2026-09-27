@@ -127,6 +127,10 @@ commitDraft() })`; `NuiFormField` runs these commits before a programmatic submi
   the cursor of every enabled control in the playground.
 - A drag starts only from its handle, never from the whole row or cell: otherwise it fights the
   click (sorting, selection) and text selection.
+- An entrance offset starts on the block-start side (`translate: 0 calc(var(--nui-space-1) * -1)`)
+  or a `scale` below 1, never below: a box shifted past the end edge of an `overflow: auto`
+  container counts as its scrollable overflow and flashes a scrollbar for the whole animation
+  (the table's empty state did). Horizontal slides stay within the padding of their scroller.
 - A drag ghost never covers its insertion line: it spans only part of the cross axis (a column
   ghost the header band, a row ghost a compact chip at the row start) while the line runs the
   full width or height beside it. The ghost's grip stays under the pointer.

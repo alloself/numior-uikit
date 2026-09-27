@@ -147,6 +147,43 @@ export class TableSection {
     }, left);
   }
 
+  async slowDownMotion(): Promise<void> {
+    await this.table.evaluate((root) => {
+      root.style.setProperty('--nui-duration-normal', '1s');
+    });
+  }
+
+  async toggleEmptyWatchingOverflow(): Promise<number> {
+    const toggle = await this.emptyToggle.elementHandle();
+
+    return this.scroller(this.table).evaluate(async (scroller, button) => {
+      const excess = (): number => Math.max(0, scroller.scrollHeight - scroller.clientHeight);
+      const state = { most: excess() };
+
+      if (button instanceof HTMLElement) {
+        button.click();
+      }
+
+      await new Promise<void>((resolve) => {
+        const started = performance.now();
+
+        const sample = (): void => {
+          state.most = Math.max(state.most, excess());
+
+          if (performance.now() - started < 1400) {
+            requestAnimationFrame(sample);
+          } else {
+            resolve();
+          }
+        };
+
+        requestAnimationFrame(sample);
+      });
+
+      return state.most;
+    }, toggle);
+  }
+
   async scrollColumnToStart(label: string): Promise<void> {
     const scroller = await boxOf(this.scroller(this.table));
     const column = await boxOf(this.header(label));

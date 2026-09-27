@@ -106,6 +106,19 @@ test.describe('table', () => {
     await expect(table.rows(table.table)).toHaveCount(5);
   });
 
+  test('emptying and restoring the rows never flashes a scrollbar in the table', async ({
+    page,
+  }) => {
+    const playground = new PlaygroundPage(page);
+    await playground.open();
+    const { table } = playground;
+    await table.slowDownMotion();
+    expect(await table.toggleEmptyWatchingOverflow()).toBeLessThanOrEqual(0.5);
+    await expect(table.emptyState).toHaveText('Нет данных');
+    expect(await table.toggleEmptyWatchingOverflow()).toBeLessThanOrEqual(0.5);
+    await expect(table.rows(table.table)).toHaveCount(5);
+  });
+
   test('virtual table windows five thousand rows, keeps the header sticky and scrolls inside its box', async ({
     page,
     isMobile,
