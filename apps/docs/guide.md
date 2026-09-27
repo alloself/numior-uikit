@@ -16,9 +16,11 @@ pnpm add @numior/vue @numior/tokens
 
 ```ts
 import '@numior/tokens/theme.css';
+import '@numior/tokens/base.css';
 import '@numior/vue/styles.css';
 ```
 
+`base.css` обнуляет отступы `body`, задаёт фон, цвет текста и шрифт страницы из токенов.
 `styles.css` подключает стили всех компонентов. Для точечного подключения возьмите
 `@numior/vue/styles/<компонент>.css`: CSS никогда не импортируется из JavaScript сам.
 

@@ -44,6 +44,7 @@ test('code blocks number and highlight lines, copy their source and expand', asy
   expect(await chrome.hasLineNumber(code, 1)).toBe(true);
   expect(await chrome.hasLineNumber(code, 3)).toBe(true);
   expect(await chrome.hasLineNumber(chrome.plainCode, 1)).toBe(false);
+  expect(await chrome.linePaddingOf(chrome.plainCode)).toBeGreaterThan(8);
   const plainLine = await rgbOf(chrome.lineOf(code, 1), 'background-color');
   const highlighted = await rgbOf(chrome.lineOf(code, 2), 'background-color');
   expect(highlighted).not.toEqual(plainLine);
@@ -142,6 +143,7 @@ test('the command palette opens on top, filters as you type and picks with the k
   await chrome.commandOpen.click();
   await expect(chrome.commandDialog).toBeVisible();
   await expect(chrome.commandInput).toBeFocused();
+  expect(await chrome.dialogCornerClipped()).toBe(true);
   const box = await chrome.commandDialog.boundingBox();
   const viewport = page.viewportSize();
   expect(box?.y ?? Number.POSITIVE_INFINITY).toBeLessThan((viewport?.height ?? 0) / 4);

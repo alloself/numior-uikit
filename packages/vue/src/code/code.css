@@ -2,7 +2,7 @@
   --_padding: var(--nui-space-4);
   --_line-height: var(--nui-line-height);
   --_font-size: var(--nui-font-size-sm);
-  --_gutter: 0;
+  --_gutter: 0px;
 
   box-sizing: border-box;
   position: relative;

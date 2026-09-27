@@ -68,5 +68,42 @@ export const paintedRgb = async (locator: Locator): Promise<Rgb> => {
   return locator.page().evaluate(readBottomPixel, png.toString('base64'));
 };
 
+export type Point = readonly [number, number];
+
+const readPixels = async ({
+  base64,
+  points,
+}: {
+  base64: string;
+  points: readonly Point[];
+}): Promise<Rgb[]> => {
+  const image = new Image();
+  image.src = `data:image/png;base64,${base64}`;
+  await image.decode();
+  const canvas = document.createElement('canvas');
+  canvas.width = image.naturalWidth;
+  canvas.height = image.naturalHeight;
+  const context = canvas.getContext('2d', { willReadFrequently: true });
+  if (!context) {
+    throw new Error('2D canvas is unavailable');
+  }
+  context.drawImage(image, 0, 0);
+  return points.map(([x, y]) => {
+    const [r = 0, g = 0, b = 0] = context.getImageData(
+      Math.round(x * devicePixelRatio),
+      Math.round(y * devicePixelRatio),
+      1,
+      1,
+    ).data;
+
+    return [r, g, b];
+  });
+};
+
+export const paintedRgbAt = async (locator: Locator, points: readonly Point[]): Promise<Rgb[]> => {
+  const png = await locator.screenshot({ animations: 'disabled' });
+  return locator.page().evaluate(readPixels, { base64: png.toString('base64'), points });
+};
+
 export const rgbDelta = (a: Rgb, b: Rgb): number =>
   a.reduce((max, channel, i) => Math.max(max, Math.abs(channel - (b[i] ?? 0))), 0);

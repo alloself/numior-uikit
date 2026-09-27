@@ -103,6 +103,15 @@ describe('NuiMenu', () => {
     menu.unmount();
   });
 
+  it('renders a trailing slot after the label of an item', async () => {
+    const menu = MenuDriver.mount({ parts: true });
+
+    await menu.open();
+    expect(menu.trailingOf('Docs')).toBe('✓');
+    expect(menu.trailingOf('Rename')).toBe('');
+    menu.unmount();
+  });
+
   it('renders data entries as parts and hides on Tab', async () => {
     const log: string[] = [];
 

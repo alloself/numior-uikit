@@ -9,7 +9,11 @@
     :close-label="closeLabel"
     class="nui-sidebar-drawer"
   >
-    <div ref="root" class="nui-sidebar nui-sidebar--mobile" :class="`nui-sidebar--side-${side}`">
+    <div
+      ref="root"
+      class="nui-sidebar nui-sidebar--mobile"
+      :class="[`nui-sidebar--side-${side}`, `nui-sidebar--variant-${variant}`]"
+    >
       <slot />
     </div>
   </NuiDrawer>
@@ -20,6 +24,7 @@
     class="nui-sidebar"
     :class="[
       `nui-sidebar--side-${side}`,
+      `nui-sidebar--variant-${variant}`,
       `nui-sidebar--collapsible-${collapsible}`,
       { 'nui-sidebar--collapsed': collapsed, 'nui-sidebar--rail': rail },
     ]"
@@ -42,6 +47,7 @@ import type { NuiSidebarProps } from './sidebar.types';
 const {
   collapsible = 'offcanvas',
   side = 'start',
+  variant = 'panel',
   label,
   title,
   closeLabel,

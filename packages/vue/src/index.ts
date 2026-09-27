@@ -119,6 +119,7 @@ export type {
   NuiSidebarItemProps,
   NuiSidebarProps,
   NuiSidebarSide,
+  NuiSidebarVariant,
   NuiSidebarSubProps,
   NuiSidebarTriggerProps,
 } from './sidebar/sidebar.types';

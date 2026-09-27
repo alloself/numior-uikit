@@ -34,7 +34,7 @@
   translate: 0 calc(var(--nui-space-2) * -1);
 }
 .nui-dialog--bare {
-  overflow: visible;
+  overflow: hidden;
 }
 .nui-dialog--bare .nui-dialog__header {
   position: absolute;

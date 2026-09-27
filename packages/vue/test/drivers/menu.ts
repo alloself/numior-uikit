@@ -36,10 +36,19 @@ const LABEL = '.nui-menu-item__label';
 const item = (label: string, state: PartsState, extra: Record<string, unknown> = {}) =>
   h(NuiMenuItem, { ...extra, onSelect: () => state.log.push(label) }, () => label);
 
+const TRAILING = '.nui-menu-item__trailing-mark';
+
+const markedItem = (label: string, state: PartsState, extra: Record<string, unknown> = {}) =>
+  h(
+    NuiMenuItem,
+    { ...extra, onSelect: () => state.log.push(label) },
+    { default: () => label, trailing: () => h('span', { class: TRAILING.slice(1) }, '✓') },
+  );
+
 const parts = (state: PartsState) => () => [
   item('Rename', state, { icon: 'check', shortcut: '⌘R' }),
   item('Locked', state, { disabled: true }),
-  item('Docs', state, { href: '/docs' }),
+  markedItem('Docs', state, { href: '/docs' }),
   h(
     NuiMenuCheckboxItem,
     {
@@ -180,6 +189,12 @@ export class MenuDriver extends ComponentDriver {
 
   checked(label: string): string | undefined {
     return this.item(label).attributes('aria-checked');
+  }
+
+  trailingOf(label: string): string {
+    const mark = this.item(label).find(TRAILING);
+
+    return mark.exists() ? mark.text() : '';
   }
 
   hrefOf(label: string): string | undefined {

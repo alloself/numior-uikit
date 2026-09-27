@@ -4,10 +4,12 @@ import type { NuiListEntry } from '../shared/options';
 
 export type NuiSidebarCollapsible = 'icon' | 'offcanvas' | 'none';
 export type NuiSidebarSide = 'start' | 'end';
+export type NuiSidebarVariant = 'panel' | 'plain';
 
 export interface NuiSidebarProps {
   collapsible?: NuiSidebarCollapsible | undefined;
   side?: NuiSidebarSide | undefined;
+  variant?: NuiSidebarVariant | undefined;
   label?: string | undefined;
   title?: string | undefined;
   closeLabel?: string | undefined;

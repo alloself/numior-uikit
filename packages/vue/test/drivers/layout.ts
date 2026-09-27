@@ -16,6 +16,7 @@ import {
   type NuiLayoutHeader,
   type NuiSidebarCollapsible,
   type NuiSidebarSide,
+  type NuiSidebarVariant,
 } from '../../src';
 import { configPlugins } from '../support/config';
 import { TopLayerStubs } from '../support/top-layer';
@@ -33,6 +34,7 @@ export interface LayoutMountOptions {
   readonly end?: boolean;
   readonly sticky?: boolean;
   readonly collapsibleGroup?: boolean;
+  readonly variant?: NuiSidebarVariant;
 }
 
 interface FakeMediaList {
@@ -68,6 +70,7 @@ export class LayoutDriver extends ComponentDriver {
     end = false,
     sticky = false,
     collapsibleGroup = false,
+    variant = 'panel',
   }: LayoutMountOptions = {}): LayoutDriver {
     const stubs = new TopLayerStubs();
     const media = fakeMedia(mobile);
@@ -89,7 +92,7 @@ export class LayoutDriver extends ComponentDriver {
       });
 
     const sidebar = () =>
-      h(NuiSidebar, { collapsible, side, label }, () => [
+      h(NuiSidebar, { collapsible, side, label, variant }, () => [
         h(NuiSidebarHeader, () => h('strong', 'Brand')),
         h(NuiSidebarContent, () => [
           h(

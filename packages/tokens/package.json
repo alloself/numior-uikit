@@ -18,6 +18,10 @@
     "./accents.css": {
       "@numior/source": "./src/accents.css",
       "default": "./dist/accents.css"
+    },
+    "./base.css": {
+      "@numior/source": "./src/base.css",
+      "default": "./dist/base.css"
     }
   },
   "scripts": {

@@ -16,9 +16,11 @@ pnpm add @numior/vue @numior/tokens
 
 ```ts
 import '@numior/tokens/theme.css';
+import '@numior/tokens/base.css';
 import '@numior/vue/styles.css';
 ```
 
+`base.css` resets the `body` margin and sets the page background, text colour and font from the tokens.
 `styles.css` loads the styles of every component. For a narrower import take
 `@numior/vue/styles/<component>.css`: CSS is never imported from JavaScript on its own.
 

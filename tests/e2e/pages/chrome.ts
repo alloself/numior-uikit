@@ -1,5 +1,6 @@
 import type { Locator, Page } from '@playwright/test';
 import { copiedTexts, stubClipboard } from '../helpers/clipboard';
+import { paintedRgbAt, rgbDelta } from '../helpers/color';
 
 export class ChromeSection {
   readonly root: Locator;
@@ -147,6 +148,21 @@ export class ChromeSection {
 
   lineOf(code: Locator, line: number): Locator {
     return code.locator('.nui-code__line').nth(line - 1);
+  }
+
+  linePaddingOf(code: Locator): Promise<number> {
+    return this.lineOf(code, 1).evaluate((element) =>
+      Number.parseFloat(getComputedStyle(element).paddingInlineStart),
+    );
+  }
+
+  async dialogCornerClipped(): Promise<boolean> {
+    const [corner, inside] = await paintedRgbAt(this.commandDialog, [
+      [1, 1],
+      [24, 6],
+    ]);
+
+    return corner !== undefined && inside !== undefined && rgbDelta(corner, inside) > 8;
   }
 
   hasLineNumber(code: Locator, line: number): Promise<boolean> {

@@ -1,0 +1,10 @@
+body {
+  margin: 0;
+  background: var(--nui-surface);
+  color: var(--nui-text);
+  font-family: var(--nui-font);
+  font-size: var(--nui-font-size-md);
+  line-height: var(--nui-line-height);
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}

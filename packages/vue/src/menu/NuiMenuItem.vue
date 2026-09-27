@@ -14,7 +14,10 @@
     @click="onClick"
     @keydown.space.prevent="onSpace"
   >
-    <NuiMenuRow :icon="icon" :shortcut="shortcut"><slot /></NuiMenuRow>
+    <NuiMenuRow :icon="icon" :shortcut="shortcut">
+      <slot />
+      <template v-if="$slots.trailing" #trailing><slot name="trailing" /></template>
+    </NuiMenuRow>
   </NuiLink>
   <button
     v-else
@@ -26,7 +29,10 @@
     :aria-disabled="disabled || undefined"
     @click="onClick"
   >
-    <NuiMenuRow :icon="icon" :shortcut="shortcut"><slot /></NuiMenuRow>
+    <NuiMenuRow :icon="icon" :shortcut="shortcut">
+      <slot />
+      <template v-if="$slots.trailing" #trailing><slot name="trailing" /></template>
+    </NuiMenuRow>
   </button>
 </template>
 
@@ -49,6 +55,8 @@ const {
 } = defineProps<NuiMenuItemProps>();
 
 const emit = defineEmits<{ select: [] }>();
+
+defineSlots<{ default(): unknown; trailing?(): unknown }>();
 const menu = useMenu();
 
 const classes = computed(() => [

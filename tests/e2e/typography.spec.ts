@@ -10,10 +10,11 @@ test('prose styles bare content, beats page resets and leaves components alone',
   await playground.setTheme('light');
   const { typography } = playground;
   await expect(typography.heading).toHaveCSS('font-size', '24px');
-  await expect(typography.heading).toHaveCSS('border-bottom-width', '1px');
+  await expect(typography.heading).toHaveCSS('border-bottom-width', '0px');
   await expect(typography.title).toHaveCSS('font-size', '30px');
   await expect(typography.title).toHaveCSS('font-weight', '700');
-  await expect(typography.paragraphAfterTitle()).toHaveCSS('margin-bottom', '20px');
+  await expect(typography.paragraphAfterTitle()).toHaveCSS('margin-bottom', '24px');
+  await expect(typography.paragraphAfterTitle()).toHaveCSS('font-size', '18px');
   await expect(typography.escaped).toHaveCSS('margin-bottom', '16px');
   await expect(typography.last).toHaveCSS('margin-bottom', '0px');
   await expect(typography.small).toHaveCSS('font-size', '14px');

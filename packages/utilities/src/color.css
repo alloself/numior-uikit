@@ -94,3 +94,7 @@
 .nui-text-neutral-foreground {
   color: var(--nui-neutral-foreground);
 }
+.nui-bg-dots {
+  background-image: radial-gradient(var(--nui-border) 1px, transparent 1px);
+  background-size: 1rem 1rem;
+}

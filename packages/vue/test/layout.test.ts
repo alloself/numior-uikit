@@ -131,6 +131,14 @@ describe('NuiLayout with NuiSidebar', () => {
     layout.unmount();
   });
 
+  it('renders a plain sidebar without the panel surface', () => {
+    const layout = LayoutDriver.mount({ variant: 'plain' });
+
+    expect(layout.sidebarModifier('variant-plain')).toBe(true);
+    expect(LayoutDriver.mount().sidebarModifier('variant-panel')).toBe(true);
+    layout.unmount();
+  });
+
   it('names the sidebar, its trigger and the drawer in the configured language', async () => {
     const russian = LayoutDriver.mount({ config: { locale: 'ru-RU' } });
     expect(russian.sidebarLabel).toBe('Навигация');
