@@ -13,6 +13,7 @@
     :disabled="entry.disabled"
     :current="entry.current"
     :badge="entry.badge"
+    :shortcut="entry.shortcut"
     v-on="entry.onClick ? { click: entry.onClick } : {}"
   >
     <template v-if="$slots.item" #default="{ selected, active }">

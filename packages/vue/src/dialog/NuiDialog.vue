@@ -3,7 +3,11 @@
     :id="dialogId"
     ref="dialog"
     class="nui-dialog"
-    :class="[`nui-dialog--size-${size}`, { 'nui-dialog--covered': control.covered.value }]"
+    :class="[
+      `nui-dialog--size-${size}`,
+      `nui-dialog--placement-${placement}`,
+      { 'nui-dialog--covered': control.covered.value, 'nui-dialog--bare': bare },
+    ]"
     :aria-labelledby="labelledBy"
     :aria-describedby="describedBy"
     v-bind="control.attrs"
@@ -23,7 +27,7 @@
       <slot name="footer" />
     </footer>
     <NuiButton
-      v-if="closable"
+      v-if="closable && !bare"
       variant="ghost"
       tone="neutral"
       size="sm"
@@ -47,6 +51,8 @@ import type { NuiDialogProps } from './dialog.types';
 
 const {
   id,
+  placement = 'center',
+  bare = false,
   title,
   description,
   size = 'md',

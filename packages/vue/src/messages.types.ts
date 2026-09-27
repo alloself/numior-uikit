@@ -5,6 +5,7 @@ import type { NuiCalendarMessages } from './calendar/calendar.messages';
 import type { NuiChipMessages } from './chip/chip.messages';
 import type { NuiCodeMessages } from './code/code.messages';
 import type { NuiComboboxMessages } from './combobox/combobox.messages';
+import type { NuiCommandMessages } from './command/command.messages';
 import type { NuiDatePickerMessages } from './date-picker/date-picker.messages';
 import type { NuiDialogMessages } from './dialog/dialog.messages';
 import type { NuiListMessages } from './list/list.messages';
@@ -26,6 +27,7 @@ export interface NuiVueMessages {
   readonly chip: NuiChipMessages;
   readonly code: NuiCodeMessages;
   readonly combobox: NuiComboboxMessages;
+  readonly command: NuiCommandMessages;
   readonly datePicker: NuiDatePickerMessages;
   readonly dialog: NuiDialogMessages;
   readonly list: NuiListMessages;

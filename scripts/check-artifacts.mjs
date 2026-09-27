@@ -94,6 +94,8 @@ const code = await importBuild('vue', [
   'NuiCollapsible',
   'NuiAccordion',
   'NuiAccordionItem',
+  'NuiCommand',
+  'NuiCommandDialog',
   'NuiMenu',
   'NuiTabs',
   'NuiBreadcrumbs',

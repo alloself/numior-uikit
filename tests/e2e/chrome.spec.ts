@@ -130,3 +130,36 @@ test('collapsible and accordion reveal content with motion and hide it until fou
   await page.keyboard.press('Home');
   await expect(ssr).toBeFocused();
 });
+
+test('the command palette opens on top, filters as you type and picks with the keyboard', async ({
+  page,
+  isMobile,
+}) => {
+  const playground = new PlaygroundPage(page);
+  await playground.open();
+  const { chrome } = playground;
+  await expect(chrome.commandDialog).toBeHidden();
+  await chrome.commandOpen.click();
+  await expect(chrome.commandDialog).toBeVisible();
+  await expect(chrome.commandInput).toBeFocused();
+  const box = await chrome.commandDialog.boundingBox();
+  const viewport = page.viewportSize();
+  expect((box?.y ?? 0) + (box?.height ?? 0)).toBeLessThan((viewport?.height ?? 0) / 2 + 40);
+  await expect(chrome.commandOptions()).toHaveCount(5);
+  await expect(chrome.activeCommand()).toHaveText('Начало работы');
+  await chrome.commandInput.fill('тем');
+  await expect(chrome.commandOptions()).toHaveCount(2);
+  await expect(chrome.activeCommand()).toHaveText('Темизация');
+  await page.keyboard.press('ArrowDown');
+  await expect(chrome.activeCommand()).toHaveText('Переключить тему');
+  await page.keyboard.press('Enter');
+  await expect(chrome.commandDialog).toBeHidden();
+  await expect(chrome.commandOutput).toHaveText('theme');
+  if (isMobile) {
+    return;
+  }
+  await page.keyboard.press('Control+k');
+  await expect(chrome.commandDialog).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(chrome.commandDialog).toBeHidden();
+});

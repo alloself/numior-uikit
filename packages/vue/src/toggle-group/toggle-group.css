@@ -11,6 +11,9 @@
   max-inline-size: 100%;
   border-radius: var(--nui-radius);
   font-family: var(--nui-font);
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
 }
 .nui-toggle-group--orientation-vertical {
   flex-direction: column;
@@ -91,7 +94,7 @@
 .nui-toggle-group__item:focus-visible {
   z-index: 2;
   outline: var(--nui-focus-ring-width) solid var(--nui-focus);
-  outline-offset: var(--nui-focus-ring-offset);
+  outline-offset: calc(var(--nui-focus-ring-offset) * -1);
 }
 .nui-toggle-group__item:disabled {
   cursor: not-allowed;

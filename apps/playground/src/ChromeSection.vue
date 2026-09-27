@@ -2,9 +2,35 @@
   <section class="panel" aria-labelledby="chrome-title">
     <div class="section-heading">
       <h2 id="chrome-title">Оформление интерфейса</h2>
-      <span class="tag">NuiSeparator · NuiKbd · NuiCode · NuiToggleGroup · NuiAccordion</span>
+      <span class="tag"
+        >NuiSeparator · NuiKbd · NuiCode · NuiToggleGroup · NuiAccordion · NuiCommand</span
+      >
     </div>
     <div class="nui-flex nui-flex-col nui-gap-4">
+      <div class="nui-flex nui-wrap nui-items-center nui-gap-3">
+        <NuiButton
+          variant="outline"
+          tone="neutral"
+          data-testid="command-open"
+          @click="palette = true"
+          >Палитра команд <NuiKbd keys="mod+k" size="sm" variant="plain"
+        /></NuiButton>
+        <span class="nui-text-sm nui-text-muted" data-testid="command-output">{{
+          lastCommand
+        }}</span>
+      </div>
+      <NuiCommandDialog
+        v-model:open="palette"
+        v-model:query="paletteQuery"
+        :items="commands"
+        data-testid="command-dialog"
+        @select="lastCommand = $event.value"
+      >
+        <template #footer>
+          <NuiKbd keys="arrowup" size="sm" /> <NuiKbd keys="arrowdown" size="sm" /> навигация
+          <NuiKbd keys="enter" size="sm" /> выбрать
+        </template>
+      </NuiCommandDialog>
       <div class="nui-flex nui-items-center nui-gap-3" data-testid="chrome-toolbar">
         <NuiButton variant="ghost" tone="neutral" size="sm">Файл</NuiButton>
         <NuiSeparator orientation="vertical" data-testid="separator-vertical" />
@@ -49,7 +75,7 @@
         :max-lines="3"
         data-testid="code-titled"
       />
-      <NuiCode :code="plain" language="sh" data-testid="code-plain" />
+      <NuiCode :code="plain" data-testid="code-plain" />
       <NuiCollapsible label="Подробности установки" variant="card" data-testid="collapsible">
         <p>Пакеты приватные до полного релиза 1.0; установка идёт из workspace.</p>
       </NuiCollapsible>
@@ -76,12 +102,41 @@ import {
   NuiButton,
   NuiCode,
   NuiCollapsible,
+  NuiCommandDialog,
   NuiKbd,
   NuiSeparator,
   NuiToggleGroup,
   type NuiCodeLine,
+  type NuiCommandSource,
   type NuiToggleItem,
 } from '@numior/vue';
+
+const palette = ref(false);
+const paletteQuery = ref('');
+const lastCommand = ref('');
+
+const commands: NuiCommandSource = [
+  {
+    label: 'Разделы',
+    items: [
+      { value: 'guide', label: 'Начало работы', icon: 'file', shortcut: 'mod+1' },
+      {
+        value: 'theming',
+        label: 'Темизация',
+        icon: 'sun',
+        description: 'Цвета, плотность, акценты',
+      },
+      { value: 'button', label: 'Кнопка', icon: 'command', keywords: ['button'] },
+    ],
+  },
+  {
+    label: 'Действия',
+    items: [
+      { value: 'theme', label: 'Переключить тему', icon: 'moon', shortcut: 'mod+shift+t' },
+      { value: 'locked', label: 'Недоступное действие', disabled: true },
+    ],
+  },
+];
 
 const scheme = ref('light');
 const faq = ref<string | null>('ssr');

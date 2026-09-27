@@ -42,6 +42,7 @@ import {
   NuiCollapsible,
   NuiAccordion,
   NuiAccordionItem,
+  NuiCommand,
   NuiSwitch,
   NuiTable,
   NuiTabs,
@@ -157,6 +158,17 @@ const scenarios: Scenario[] = [
   { name: 'NuiIcon', render: () => h(NuiIcon, { alias: 'check' }) },
   { name: 'NuiSeparator', render: () => h(NuiSeparator, { label: 'or' }) },
   { name: 'NuiKbd', render: () => h(NuiKbd, { keys: 'mod+k' }) },
+  {
+    name: 'NuiCommand',
+    render: () =>
+      h(NuiCommand, {
+        id: 'palette',
+        items: [
+          { label: 'Pages', items: [{ value: 'home', label: 'Home', shortcut: 'mod+h' }] },
+          { value: 'theme', label: 'Toggle theme' },
+        ],
+      }),
+  },
   {
     name: 'NuiCollapsible',
     render: () => h(NuiCollapsible, { label: 'Details', headingLevel: 3 }, () => 'Hidden text'),

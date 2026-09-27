@@ -119,6 +119,14 @@ NuiCollapsible: кнопка с `aria-expanded`/`aria-controls`, необяза�
 (`modelValue` или `values` при `multiple`, `collapsible` запрещает закрыть последний),
 `NuiAccordionItem` рендерит NuiCollapsible, стрелки и Home/End ходят по заголовкам.
 
+NuiCommand: поле `role="combobox"` с виртуальным фокусом (`aria-activedescendant`) над
+NuiList (`selectable="single"`, `keyboard=false`), группы, иконки, описания, шорткаты через
+`NuiKbd` (поле `shortcut` у записей списка), фильтр по подписи, описанию и `keywords` либо
+`filter=false` для серверного поиска с `search`, первый результат активируется до рендера,
+Enter выбирает активный, `select` не хранит выбор. NuiCommandDialog оборачивает его в
+NuiDialog с `placement="top"` и `bare` (заголовок скрыт визуально, тело без отступов, кнопки
+закрытия нет — Esc в поле), горячая клавиша `mod+k` через `useHotkey`, выбор закрывает.
+
 Далее в волне: `defineSlots` во всех компонентах;
 кнопка-ссылка; NuiSeparator, NuiKbd, NuiCode, NuiToggleGroup, NuiCollapsible/NuiAccordion,
 NuiCommand, NuiToc, NuiSkipLink, NuiSplitter; режимы NuiLayout.
@@ -138,7 +146,9 @@ NuiCommand, NuiToc, NuiSkipLink, NuiSplitter; режимы NuiLayout.
 - NuiSeparator и NuiKbd (страницы «Разделитель» и «Клавиша»);
 - NuiCode (страница «Код»);
 - NuiToggleGroup (страница «Группа переключателей»);
-- NuiCollapsible и NuiAccordion (страницы «Сворачиваемый блок» и «Аккордеон»).
+- NuiCollapsible и NuiAccordion (страницы «Сворачиваемый блок» и «Аккордеон»);
+- NuiCommand и NuiCommandDialog (страница «Палитра команд»), `placement`/`bare` у диалога,
+  `shortcut` у записей списка.
 
 ## Alternatives Considered
 

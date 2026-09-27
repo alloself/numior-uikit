@@ -17,6 +17,10 @@ export class ChromeSection {
   readonly toggleOutput: Locator;
   readonly collapsible: Locator;
   readonly accordion: Locator;
+  readonly commandOpen: Locator;
+  readonly commandOutput: Locator;
+  readonly commandDialog: Locator;
+  readonly commandInput: Locator;
 
   constructor(readonly page: Page) {
     this.root = page.locator('section[aria-labelledby="chrome-title"]');
@@ -35,6 +39,18 @@ export class ChromeSection {
     this.toggleOutput = page.getByTestId('toggle-output');
     this.collapsible = page.getByTestId('collapsible');
     this.accordion = page.getByTestId('accordion');
+    this.commandOpen = page.getByTestId('command-open');
+    this.commandOutput = page.getByTestId('command-output');
+    this.commandDialog = page.getByTestId('command-dialog');
+    this.commandInput = this.commandDialog.locator('.nui-command__input');
+  }
+
+  commandOptions(): Locator {
+    return this.commandDialog.getByRole('option');
+  }
+
+  activeCommand(): Locator {
+    return this.commandDialog.locator('.nui-list-item--active .nui-row__title');
   }
 
   triggerOf(block: Locator, label?: string): Locator {
@@ -44,10 +60,12 @@ export class ChromeSection {
   }
 
   contentOf(block: Locator, label?: string): Locator {
-    const items = block.locator('.nui-collapsible');
-    const item = label === undefined ? items.first() : items.filter({ hasText: label });
-
-    return item.locator('.nui-collapsible__content');
+    if (label === undefined) {
+      return block.locator('.nui-collapsible__content').first();
+    }
+    return block
+      .locator('.nui-collapsible', { hasText: label })
+      .locator('.nui-collapsible__content');
   }
 
   panelHeightOf(block: Locator, label?: string): Promise<number> {

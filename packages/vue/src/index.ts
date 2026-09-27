@@ -26,6 +26,17 @@ export type {
 export { default as NuiAccordion } from './accordion/NuiAccordion.vue';
 export { default as NuiAccordionItem } from './accordion/NuiAccordionItem.vue';
 export type { NuiAccordionItemProps, NuiAccordionProps } from './accordion/accordion.types';
+export { default as NuiCommand } from './command/NuiCommand.vue';
+export { default as NuiCommandDialog } from './command/NuiCommandDialog.vue';
+export type {
+  NuiCommandDialogProps,
+  NuiCommandFilter,
+  NuiCommandItem,
+  NuiCommandItemSlot,
+  NuiCommandProps,
+  NuiCommandSource,
+} from './command/command.types';
+export type { NuiCommandMessages } from './command/command.messages';
 export type { NuiLinkProps, NuiLinkUnderline } from './link/link.types';
 export { default as NuiIcon } from './icon/NuiIcon.vue';
 export type { NuiIconProps } from './icon/icon.types';
@@ -123,7 +134,7 @@ export type {
 export { default as NuiSwitch } from './switch/NuiSwitch.vue';
 export type { NuiSwitchProps } from './switch/switch.types';
 export { default as NuiDialog } from './dialog/NuiDialog.vue';
-export type { NuiDialogProps } from './dialog/dialog.types';
+export type { NuiDialogPlacement, NuiDialogProps } from './dialog/dialog.types';
 export { default as NuiDrawer } from './drawer/NuiDrawer.vue';
 export type { NuiDrawerProps, NuiDrawerSide } from './drawer/drawer.types';
 export { default as NuiPopover } from './popover/NuiPopover.vue';

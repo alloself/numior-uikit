@@ -29,6 +29,30 @@
 .nui-dialog--size-lg {
   --_width: 48rem;
 }
+.nui-dialog--placement-top {
+  margin-block-start: min(15dvh, var(--nui-space-8) * 4);
+  translate: 0 calc(var(--nui-space-2) * -1);
+}
+.nui-dialog--bare {
+  overflow: visible;
+}
+.nui-dialog--bare .nui-dialog__header {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.nui-dialog--bare .nui-dialog__body {
+  padding: 0;
+}
+.nui-dialog--bare .nui-dialog__body > .nui-command {
+  border: 0;
+  border-radius: inherit;
+}
 .nui-dialog[open] {
   opacity: 1;
   translate: 0 0;
@@ -39,6 +63,9 @@
     opacity: 0;
     translate: 0 var(--nui-space-2);
     scale: 0.98;
+  }
+  .nui-dialog--placement-top[open] {
+    translate: 0 calc(var(--nui-space-2) * -1);
   }
 }
 .nui-dialog::backdrop {

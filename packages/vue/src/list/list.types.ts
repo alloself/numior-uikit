@@ -46,4 +46,5 @@ export interface NuiListItemProps {
   disabled?: boolean | undefined;
   current?: boolean | undefined;
   badge?: string | number | undefined;
+  shortcut?: string | undefined;
 }

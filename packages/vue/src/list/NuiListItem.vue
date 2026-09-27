@@ -19,9 +19,10 @@
           <slot :selected="selected" :active="active" />
         </template>
         <template v-if="$slots.description" #description><slot name="description" /></template>
-        <template v-if="$slots.trailing || badge !== undefined" #trailing>
+        <template v-if="$slots.trailing || badge !== undefined || shortcut !== undefined" #trailing>
           <slot name="trailing">
-            <NuiBadge v-if="typeof badge === 'number'" :count="badge" size="sm" />
+            <NuiKbd v-if="shortcut !== undefined" :keys="shortcut" variant="plain" size="sm" />
+            <NuiBadge v-else-if="typeof badge === 'number'" :count="badge" size="sm" />
             <NuiBadge v-else size="sm">{{ badge }}</NuiBadge>
           </slot>
         </template>
@@ -35,6 +36,7 @@
 import { computed, useAttrs } from 'vue';
 import { useSplitAttrs, type AttrRecord } from '@numior/primitives';
 import NuiBadge from '../badge/NuiBadge.vue';
+import NuiKbd from '../kbd/NuiKbd.vue';
 import NuiLink from '../link/NuiLink.vue';
 import NuiRow from '../row/NuiRow.vue';
 import { useTriggerElement } from '../shared/trigger-ref';
@@ -58,6 +60,7 @@ const {
   disabled = false,
   current = false,
   badge,
+  shortcut,
 } = defineProps<NuiListItemProps>();
 
 const attrs = useAttrs();

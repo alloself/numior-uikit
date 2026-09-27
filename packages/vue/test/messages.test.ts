@@ -8,6 +8,7 @@ import { calendarMessages } from '../src/calendar/calendar.messages';
 import { chipMessages } from '../src/chip/chip.messages';
 import { codeMessages } from '../src/code/code.messages';
 import { comboboxMessages } from '../src/combobox/combobox.messages';
+import { commandMessages } from '../src/command/command.messages';
 import { datePickerMessages } from '../src/date-picker/date-picker.messages';
 import { dialogMessages } from '../src/dialog/dialog.messages';
 import { listMessages } from '../src/list/list.messages';
@@ -29,6 +30,7 @@ const catalogs: { readonly [N in keyof NuiVueMessages]: NuiMessageCatalog<N> } =
   chip: chipMessages,
   code: codeMessages,
   combobox: comboboxMessages,
+  command: commandMessages,
   datePicker: datePickerMessages,
   dialog: dialogMessages,
   list: listMessages,
