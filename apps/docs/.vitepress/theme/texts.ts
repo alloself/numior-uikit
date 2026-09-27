@@ -21,6 +21,15 @@ export const ru: DocsTexts = {
   notFoundText: 'Такого адреса нет. Начните с главной или найдите нужное через поиск.',
   home: 'На главную',
   details: 'Подробнее',
+  exampleView: 'Вид примера',
+  preview: 'Превью',
+  code: 'Код',
+  exampleOptions: 'Настройки превью',
+  invertTheme: 'Обратная тема',
+  rtl: 'Справа налево',
+  copyCode: 'Скопировать код',
+  copied: 'Скопировано',
+  exampleFiles: 'Файлы примера',
 };
 
 export const en: DocsTexts = {
@@ -44,4 +53,13 @@ export const en: DocsTexts = {
   notFoundText: 'There is nothing at this address. Start from the home page or use the search.',
   home: 'Home',
   details: 'Details',
+  exampleView: 'Example view',
+  preview: 'Preview',
+  code: 'Code',
+  exampleOptions: 'Preview options',
+  invertTheme: 'Inverted theme',
+  rtl: 'Right to left',
+  copyCode: 'Copy code',
+  copied: 'Copied',
+  exampleFiles: 'Example files',
 };

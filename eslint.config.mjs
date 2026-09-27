@@ -99,7 +99,7 @@ export default [
     files: ['**/*.ts', '**/*.mts', '**/*.js', '**/*.mjs'],
     plugins: { '@stylistic': stylistic },
     languageOptions: { parser: tsParser },
-    rules: spacing,
+    rules: { ...spacing, 'vue/multi-word-component-names': ['error', { ignores: ['Example'] }] },
   },
   {
     files: ['packages/*/src/**/*.ts', 'packages/*/src/**/*.vue'],

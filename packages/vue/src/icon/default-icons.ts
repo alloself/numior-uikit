@@ -53,4 +53,5 @@ export const defaultIcons: IconRegistry = {
   tablet: lazyIcon(() => import('lucide-vue-next/dist/esm/icons/tablet.js')),
   maximize: lazyIcon(() => import('lucide-vue-next/dist/esm/icons/maximize.js')),
   'grip-horizontal': lazyIcon(() => import('lucide-vue-next/dist/esm/icons/grip-horizontal.js')),
+  direction: lazyIcon(() => import('lucide-vue-next/dist/esm/icons/arrow-left-right.js')),
 };

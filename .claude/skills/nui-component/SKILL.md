@@ -143,12 +143,14 @@ var(--nui-focus-ring-offset)`. Disabled: `opacity: var(--nui-disabled-opacity)`.
 ## Wiring
 
 - Playground: add a demo with `data-testid` in `apps/playground/src/*.vue`.
-- Docs: `apps/docs/components/<name>.md` and `apps/docs/en/components/<name>.md` with a live
-  demo (`<div class="vp-raw nui-demo" data-nui-theme="light">`: `vp-raw` opts the demo out
-  of VitePress element styles, which otherwise beat component classes), API table and
-  modifier list; register the component in
-  `apps/docs/.vitepress/theme/index.ts`; add both sidebar entries in
-  `apps/docs/.vitepress/config.ts`.
+- Docs: examples are real SFCs, one per locale with the same structure and translated
+  strings: `apps/docs/examples/ru/<name>/<Example>.vue` and `apps/docs/examples/en/...`
+  (a folder with `index.vue` plus sibling files is a multi-file example). Pages
+  `apps/docs/components/<name>.md` and `apps/docs/en/components/<name>.md` embed them with
+  `<Example name="<name>/<Example>" />`; the docs Vite plugin bundles the component, its
+  source and Shiki tokens, and `pnpm docs:check` fails on a missing counterpart, a
+  structural RU/EN difference or a `<style>` block. Add both sidebar entries in
+  `apps/docs/.vitepress/config.ts`. Never write `vp-raw` demos or `<style>` in the docs.
 - Tests: follow the `nui-testing` skill (driver, unit spec, SSR scenario, e2e via page object).
 - Record architecture changes in `.archcore` and run `pnpm check`, then `pnpm test:e2e`
   (Docker image `mcr.microsoft.com/playwright:v1.63.0-noble` on this host).

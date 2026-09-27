@@ -90,6 +90,7 @@ import '@numior/tokens/accents.css';
 import '@numior/utilities/utilities.css';
 import './demo.css';
 import Layout from './Layout.vue';
+import DocsExample from './parts/DocsExample.vue';
 
 export default {
   Layout,
@@ -146,6 +147,7 @@ export default {
     app.component('NuiSelect', NuiSelect);
     app.component('NuiCombobox', NuiCombobox);
     app.component('NuiChip', NuiChip);
+    app.component('Example', DocsExample);
     app.component('NuiCode', NuiCode);
     app.component('NuiCollapsible', NuiCollapsible);
     app.component('NuiAccordion', NuiAccordion);

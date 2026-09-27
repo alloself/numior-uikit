@@ -6,29 +6,7 @@
 The default is `solid` + `primary`. Each role reads its `--nui-<role>` tokens, so a
 runtime accent change affects every variant at once.
 
-<div class="vp-raw nui-demo" data-nui-theme="light">
-  <NuiButton>Save</NuiButton>
-  <NuiButton variant="soft" tone="success">Done</NuiButton>
-  <NuiButton variant="outline" tone="error">Delete</NuiButton>
-  <NuiButton variant="ghost" tone="neutral">Cancel</NuiButton>
-  <NuiButton variant="link">Learn more</NuiButton>
-</div>
-
-```vue
-<script setup lang="ts">
-import { NuiButton } from '@numior/vue';
-import '@numior/tokens/theme.css';
-import '@numior/vue/styles/button.css';
-</script>
-
-<template>
-  <NuiButton>Save</NuiButton>
-  <NuiButton variant="soft" tone="success">Done</NuiButton>
-  <NuiButton variant="outline" tone="error">Delete</NuiButton>
-  <NuiButton variant="ghost" tone="neutral">Cancel</NuiButton>
-  <NuiButton variant="link">Learn more</NuiButton>
-</template>
-```
+<Example name="button/Basic" />
 
 `@numior/vue/styles.css` loads the styles of every component; `@numior/vue/styles/button.css`
 loads only the button. CSS is never imported from JavaScript automatically.

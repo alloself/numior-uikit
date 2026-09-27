@@ -7,7 +7,9 @@
     "packages/forms/src/vee-validate.ts",
     "apps/playground/src/tailwind.css",
     "scripts/vite-package-assets.ts",
-    "scripts/build-css.ts"
+    "scripts/build-css.ts",
+    "apps/docs/scripts/check-examples.ts",
+    "apps/docs/examples/**/*.vue"
   ],
   "includeEntryExports": false,
   "ignorePatterns": [
@@ -16,7 +18,8 @@
     "**/.vitepress/cache/**",
     "playwright-report/**",
     "test-results/**",
-    ".release/**"
+    ".release/**",
+    "apps/docs/test/fixtures/**"
   ],
   "rules": {
     "unused-files": "error",
@@ -102,7 +105,7 @@
   "duplicates": {
     "minTokens": 100,
     "threshold": 0.001,
-    "ignore": ["**/*.messages.ts"]
+    "ignore": ["**/*.messages.ts", "apps/docs/examples/en/**"]
   },
   "health": {
     "maxCyclomatic": 15,
@@ -112,5 +115,9 @@
   "resolve": {
     "conditions": ["@numior/source"]
   },
-  "ignoreDependencies": ["conventional-changelog-conventionalcommits", "@localSearchIndex"]
+  "ignoreDependencies": [
+    "conventional-changelog-conventionalcommits",
+    "@localSearchIndex",
+    "virtual:nui-examples"
+  ]
 }

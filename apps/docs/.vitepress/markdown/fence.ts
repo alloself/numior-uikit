@@ -1,12 +1,11 @@
 import type { MarkdownRenderer } from 'vitepress';
 import type { Highlighter } from 'shiki';
-import type { NuiCodeLine, NuiCodeProps, NuiCodeToken } from '@numior/vue';
-import { isCodeLanguage } from './languages';
-import { scopeOf } from './scopes';
+import type { NuiCodeProps } from '@numior/vue';
+import { tokenizeCode } from './tokens.ts';
 
-const TOKEN_THEME = 'github-light';
 const HIGHLIGHT_RE = /\{([\d,-]+)\}/;
 const TITLE_RE = /title="([^"]*)"/;
+const PLAIN_LANGUAGES = new Set(['', 'txt', 'text']);
 
 const highlightedLines = (info: string): number[] => {
   const spec = HIGHLIGHT_RE.exec(info)?.[1];
@@ -26,56 +25,12 @@ const highlightedLines = (info: string): number[] => {
   });
 };
 
-const mergeTokens = (tokens: readonly NuiCodeToken[]): NuiCodeToken[] =>
-  tokens.reduce<NuiCodeToken[]>((merged, token) => {
-    const last = merged.at(-1);
-
-    if (last !== undefined && last.scope === token.scope) {
-      merged[merged.length - 1] = { text: last.text + token.text, scope: last.scope };
-    } else {
-      merged.push(token);
-    }
-    return merged;
-  }, []);
-
-const tokenize = (
-  highlighter: Highlighter,
-  code: string,
-  lang: string,
-): NuiCodeLine[] | undefined => {
-  if (!isCodeLanguage(lang) || !highlighter.getLoadedLanguages().includes(lang)) {
-    return undefined;
-  }
-
-  const lines = highlighter.codeToTokensBase(code, {
-    lang,
-    theme: TOKEN_THEME,
-    includeExplanation: 'scopeName',
-  });
-
-  return lines.map((line) =>
-    mergeTokens(
-      line.map((token) => {
-        const scopes = (token.explanation ?? []).flatMap((entry) =>
-          entry.scopes.map((scope) => scope.scopeName),
-        );
-
-        const scope = scopeOf(scopes);
-
-        return scope === undefined ? { text: token.content } : { text: token.content, scope };
-      }),
-    ),
-  );
-};
-
 const attributeJson = (value: unknown): string =>
   JSON.stringify(value)
     .replaceAll('&', '&amp;')
     .replaceAll("'", '&#39;')
     .replaceAll('<', '&lt;')
     .replaceAll('>', '&gt;');
-
-const PLAIN_LANGUAGES = new Set(['', 'txt', 'text']);
 
 interface FenceInfo {
   readonly lang: string;
@@ -102,7 +57,7 @@ const fenceProps = (highlighter: Highlighter, info: string, content: string): Nu
 
   return {
     code,
-    tokens: plain ? undefined : tokenize(highlighter, code, lang),
+    tokens: plain ? undefined : tokenizeCode(highlighter, code, lang),
     language: plain ? undefined : lang,
     title,
     highlight,

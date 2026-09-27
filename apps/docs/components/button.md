@@ -6,29 +6,7 @@
 По умолчанию `solid` + `primary`. Цвета каждой роли берутся из токенов
 `--nui-<role>`, поэтому runtime-смена акцента затрагивает все варианты сразу.
 
-<div class="vp-raw nui-demo" data-nui-theme="light">
-  <NuiButton>Сохранить</NuiButton>
-  <NuiButton variant="soft" tone="success">Готово</NuiButton>
-  <NuiButton variant="outline" tone="error">Удалить</NuiButton>
-  <NuiButton variant="ghost" tone="neutral">Отмена</NuiButton>
-  <NuiButton variant="link">Подробнее</NuiButton>
-</div>
-
-```vue
-<script setup lang="ts">
-import { NuiButton } from '@numior/vue';
-import '@numior/tokens/theme.css';
-import '@numior/vue/styles/button.css';
-</script>
-
-<template>
-  <NuiButton>Сохранить</NuiButton>
-  <NuiButton variant="soft" tone="success">Готово</NuiButton>
-  <NuiButton variant="outline" tone="error">Удалить</NuiButton>
-  <NuiButton variant="ghost" tone="neutral">Отмена</NuiButton>
-  <NuiButton variant="link">Подробнее</NuiButton>
-</template>
-```
+<Example name="button/Basic" />
 
 `@numior/vue/styles.css` подключает стили всех компонентов, `@numior/vue/styles/button.css` —
 только кнопки. CSS никогда не импортируется из JavaScript автоматически.

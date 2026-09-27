@@ -63,6 +63,7 @@ export type IconAlias =
   | 'tablet'
   | 'maximize'
   | 'grip-horizontal'
+  | 'direction'
   | (string & NonNullable<unknown>);
 
 export type IconRegistry = Readonly<Record<string, Component>>;

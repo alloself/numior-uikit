@@ -1,3 +1,6 @@
+import type { Component } from 'vue';
+import type { ExampleFile, ExampleLocale } from '../examples/example.types';
+
 export interface DocsNavItem {
   readonly text: string;
   readonly link: string;
@@ -34,6 +37,15 @@ export interface DocsTexts {
   readonly notFoundText: string;
   readonly home: string;
   readonly details: string;
+  readonly exampleView: string;
+  readonly preview: string;
+  readonly code: string;
+  readonly exampleOptions: string;
+  readonly invertTheme: string;
+  readonly rtl: string;
+  readonly copyCode: string;
+  readonly copied: string;
+  readonly exampleFiles: string;
 }
 
 export interface DocsThemeConfig {
@@ -41,4 +53,20 @@ export interface DocsThemeConfig {
   readonly sidebar: readonly DocsSidebarGroup[];
   readonly texts: DocsTexts;
   readonly search?: { readonly provider: 'local' } | undefined;
+}
+
+export interface DocsExampleProps {
+  name: string;
+}
+
+export interface ExampleViewProps {
+  name: string;
+  locale: ExampleLocale;
+  texts: DocsTexts;
+}
+
+export interface ExampleFrameProps {
+  component: Component;
+  files: readonly ExampleFile[];
+  texts: DocsTexts;
 }

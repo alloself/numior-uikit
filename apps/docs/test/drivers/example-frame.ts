@@ -1,0 +1,119 @@
+import { mount, type DOMWrapper, type VueWrapper } from '@vue/test-utils';
+import { defineComponent, h, markRaw, nextTick } from 'vue';
+import type { ExampleFile } from '../../.vitepress/examples/example.types';
+import ExampleFrame from '../../.vitepress/theme/parts/ExampleFrame.vue';
+import { ru } from '../../.vitepress/theme/texts';
+
+const SampleComponent = markRaw(
+  defineComponent({
+    setup: () => () => h('button', { class: 'sample' }, 'Кнопка'),
+  }),
+);
+
+export const exampleFile = (name: string, source: string): ExampleFile => ({
+  name,
+  language: name.endsWith('.vue') ? 'vue' : 'ts',
+  source,
+  tokens: undefined,
+});
+
+export class ExampleFrameDriver {
+  readonly copied: string[] = [];
+
+  constructor(readonly wrapper: VueWrapper) {}
+
+  static mount(files: readonly ExampleFile[]): ExampleFrameDriver {
+    const driver = new ExampleFrameDriver(
+      mount(ExampleFrame, {
+        props: { component: SampleComponent, files, texts: ru },
+        attachTo: document.body,
+      }),
+    );
+
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      value: {
+        writeText: (text: string): Promise<void> => {
+          driver.copied.push(text);
+          return Promise.resolve();
+        },
+      },
+    });
+
+    return driver;
+  }
+
+  get preview(): DOMWrapper<HTMLElement> {
+    return this.wrapper.find<HTMLElement>(`[role="group"][aria-label="${ru.preview}"]`);
+  }
+
+  get previewTheme(): string | undefined {
+    return this.preview.attributes('data-nui-theme');
+  }
+
+  get previewDirection(): string | undefined {
+    return this.preview.attributes('dir');
+  }
+
+  get previewVisible(): boolean {
+    return this.preview.isVisible();
+  }
+
+  get codeVisible(): boolean {
+    return this.wrapper.find('.nui-code').isVisible();
+  }
+
+  get codeText(): string {
+    const visible = this.wrapper.findAll('.nui-code').find((code) => code.isVisible());
+
+    return visible === undefined ? '' : visible.find('.nui-code__code').text();
+  }
+
+  get fileTabs(): string[] {
+    return this.wrapper.findAll('[role="tab"]').map((tab) => tab.text());
+  }
+
+  private button(...labels: readonly string[]): DOMWrapper<HTMLButtonElement> {
+    const button = this.wrapper
+      .findAll<HTMLButtonElement>('button')
+      .find(
+        (candidate) =>
+          labels.includes(candidate.text()) ||
+          labels.includes(candidate.attributes('aria-label') ?? ''),
+      );
+
+    if (button === undefined) {
+      throw new Error(`No button "${labels.join('" or "')}"`);
+    }
+    return button;
+  }
+
+  unmount(): void {
+    this.wrapper.unmount();
+  }
+
+  async showCode(): Promise<void> {
+    await this.button(ru.code).trigger('click');
+  }
+
+  async showPreview(): Promise<void> {
+    await this.button(ru.preview).trigger('click');
+  }
+
+  async toggleTheme(): Promise<void> {
+    await this.button(ru.invertTheme).trigger('click');
+  }
+
+  async toggleDirection(): Promise<void> {
+    await this.button(ru.rtl).trigger('click');
+  }
+
+  async copy(): Promise<void> {
+    await this.button(ru.copyCode, ru.copied).trigger('click');
+    await nextTick();
+  }
+
+  async selectFile(name: string): Promise<void> {
+    await this.button(name).trigger('click');
+  }
+}
