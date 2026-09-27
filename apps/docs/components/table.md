@@ -1,4 +1,4 @@
-# Таблица
+# Table
 
 `NuiTable` — нативная `<table>` без `role="grid"`: колонки описываются `columns` (`key`,
 `label`, `sortable`, `align`, `width`, `value`, `sort`), строки приходят в `rows`, ключ строки

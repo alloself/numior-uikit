@@ -10,6 +10,7 @@ come from `options`, the choice is single or multiple.
 ```ts
 import { NuiSelect } from '@numior/vue';
 import '@numior/vue/styles/field.css';
+import '@numior/vue/styles/list.css';
 import '@numior/vue/styles/select.css';
 ```
 

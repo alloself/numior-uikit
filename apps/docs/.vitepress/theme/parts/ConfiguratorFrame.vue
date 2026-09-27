@@ -57,7 +57,8 @@ const { component, locale, texts } = defineProps<ConfiguratorFrameProps>();
 const configured = new Set(component.configurator?.props ?? []);
 const props = component.props.filter((prop) => configured.has(prop.name));
 const initialContent = component.configurator?.content?.[locale] ?? '';
-const state = reactive(configuratorState(props));
+const seeds = component.configurator?.values ?? {};
+const state = reactive(configuratorState(props, seeds, locale));
 const content = ref(initialContent);
 const previewOptions = ref<PreviewOption[]>([]);
 
@@ -66,7 +67,7 @@ const change = (next: ConfiguratorChange): void => {
 };
 
 const reset = (): void => {
-  resetState(state, props);
+  resetState(state, props, seeds, locale);
   content.value = initialContent;
 };
 

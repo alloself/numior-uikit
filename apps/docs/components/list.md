@@ -1,4 +1,4 @@
-# Список
+# List
 
 `NuiList` — семантический `ul`/`ol` (`as`) с вариантами `plain`, `divided`, `bordered`,
 `floating`, `nav` и пунктами `NuiListItem`: слоты `leading`, `default`, `description`, `trailing`

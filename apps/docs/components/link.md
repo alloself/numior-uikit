@@ -1,65 +1,45 @@
-# Ссылка
+# Link
 
 `NuiLink` — ссылка на токенах ролей: по умолчанию `<a>`, через `as` и `to` — `RouterLink` или
-`NuxtLink`. `tone` задаёт цвет, `underline` — когда показывать подчёркивание, `external`
-открывает адрес в новой вкладке с `rel="noopener noreferrer"` и иконкой, `disabled` убирает
-адрес и помечает ссылку `aria-disabled`.
+`NuxtLink`. `tone` задаёт цвет, `underline` — когда подчёркивать, `external` открывает адрес
+в новой вкладке с `rel="noopener noreferrer"` и иконкой.
 
-<div class="vp-raw nui-demo" data-nui-theme="light">
-  <NuiLink href="#">Обычная ссылка</NuiLink>
-  <NuiLink href="#" underline="hover" tone="neutral">Подчёркивание при наведении</NuiLink>
-  <NuiLink href="https://lucide.dev" external>Внешняя</NuiLink>
-  <NuiLink href="#" tone="error">Опасное действие</NuiLink>
-  <NuiLink href="#" disabled>Недоступна</NuiLink>
-</div>
+<Example name="link/Basic" />
 
-```vue
-<script setup lang="ts">
+## Установка
+
+```ts
 import { NuiLink } from '@numior/vue';
 import '@numior/vue/styles/link.css';
-</script>
-
-<template>
-  <p>Подробности в <NuiLink href="/docs">документации</NuiLink>.</p>
-  <NuiLink href="https://lucide.dev" external>Lucide</NuiLink>
-</template>
 ```
 
-## Роутер
+## Использование
 
-`as` принимает компонент ссылки, а `to` передаётся ему как есть. Если задан `to`, `href` не
-рендерится, чтобы роутер сам управлял адресом. Тот же контракт используют пункты меню и
-хлебные крошки.
+<Configurator name="NuiLink" />
 
-```vue
-<script setup lang="ts">
-import { RouterLink } from 'vue-router';
-</script>
+## Примеры
 
-<template>
-  <NuiLink :as="RouterLink" to="/settings">Настройки</NuiLink>
-</template>
-```
+### Внешние ссылки
+
+`external` добавляет иконку и открывает адрес в новой вкладке.
+
+<Example name="link/External" />
+
+### Подчёркивание и недоступность
+
+`underline="hover"` подчёркивает только при наведении, `disabled` убирает адрес и помечает
+ссылку `aria-disabled`.
+
+<Example name="link/States" />
 
 ## Доступность
 
-Ссылка остаётся нативным `<a>`: клавиатура и screen reader работают без JavaScript. Ссылка в
-тексте может быть любой высоты (WCAG 2.5.8 делает исключение для строчных ссылок), а
-отдельно стоящие ссылки в навигации получают цель не меньше 24px — так сделано в
-хлебных крошках. `disabled` не делает ссылку недоступной для чтения, только убирает
-переход и фокус.
+Ссылка остаётся нативным `<a>`. Если задан `to`, `href` не рендерится, чтобы адресом управлял
+роутер; тот же контракт используют пункты меню, крошки и боковая панель. `disabled` не прячет
+ссылку от чтения, только убирает переход и фокус.
+
+<KeyboardReference name="NuiLink" />
 
 ## API
 
-| Prop        | Тип                             | По умолчанию | Описание                                  |
-| ----------- | ------------------------------- | ------------ | ----------------------------------------- |
-| `as`        | `string \| Component`           | `'a'`        | Элемент или компонент роутера             |
-| `href`      | `string`                        | —            | Адрес для `<a>`                           |
-| `to`        | `unknown`                       | —            | Назначение для роутера; побеждает `href`  |
-| `tone`      | `NuiTone`                       | `'primary'`  | Цвет                                      |
-| `underline` | `'always' \| 'hover' \| 'none'` | `'always'`   | Когда показывать подчёркивание            |
-| `external`  | `boolean`                       | `false`      | Новая вкладка, `rel`, иконка              |
-| `disabled`  | `boolean`                       | `false`      | Без адреса и фокуса, `aria-disabled=true` |
-
-Блок `nui-link`, модификаторы `--tone-*`, `--underline-*`, `--disabled`; элемент `__icon`;
-переменная `--_tone`.
+<ApiReference name="NuiLink" />

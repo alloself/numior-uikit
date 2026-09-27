@@ -1,4 +1,4 @@
-# Выбор периода
+# Date range picker
 
 `NuiDateRangePicker` держит два поля даты в одной рамке и открывает
 [календарь](/components/calendar) в режиме `range` на два месяца с пресетами. Модель —

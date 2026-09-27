@@ -1,43 +1,41 @@
 # Textarea
 
-`NuiTextarea` is a native `<textarea>` without a wrapper: attributes, classes and
-listeners land directly on it. The value syncs through `v-model` with the `.lazy` and
-`.trim` modifiers.
+`NuiTextarea` is a native `<textarea>` for multi-line text. The value goes through `v-model`
+with the `.lazy` and `.trim` modifiers.
 
-<script setup>
-import { ref } from 'vue'
-const bio = ref('')
-</script>
+<Example name="textarea/Basic" />
 
-<div class="vp-raw nui-demo nui-demo--stack" data-nui-theme="light">
-  <NuiField label="About you" description="A few sentences">
-    <NuiTextarea v-model="bio" :rows="4" />
-  </NuiField>
-  <NuiField label="Fixed size">
-    <NuiTextarea resize="none" size="sm" placeholder="Compact field" />
-  </NuiField>
-</div>
+## Installation
 
-```vue
-<NuiField label="About you" description="A few sentences">
-  <NuiTextarea v-model="bio" :rows="4" />
-</NuiField>
+```ts
+import { NuiTextarea } from '@numior/vue';
+import '@numior/vue/styles/field.css';
+import '@numior/vue/styles/textarea.css';
 ```
+
+## Usage
+
+<Configurator name="NuiTextarea" />
+
+## Examples
+
+### Resizing
+
+`resize` lets the field grow vertically, in both directions, or not at all.
+
+<Example name="textarea/Resize" />
+
+### Lazy updates
+
+`v-model.lazy` writes to the model on blur, `.trim` strips the spaces around the text.
+
+<Example name="textarea/Lazy" />
+
+## Accessibility
+
+Attributes, classes and event handlers land directly on the `<textarea>`. The label is linked
+through `for`, the description and the error through `aria-describedby`.
 
 ## API
 
-| Prop       | Type                             | Default      | Description                        |
-| ---------- | -------------------------------- | ------------ | ---------------------------------- |
-| `v-model`  | `string`                         | `''`         | Value; `.lazy`, `.trim`            |
-| `rows`     | `number`                         | `3`          | Visible rows                       |
-| `resize`   | `'none' \| 'vertical' \| 'both'` | `'vertical'` | Allowed resizing                   |
-| `size`     | `'sm' \| 'md' \| 'lg'`           | `'md'`       | Size step (padding and font)       |
-| `id`       | `string`                         | from field   | Explicit id                        |
-| `disabled` | `boolean`                        | from field   | Disabled state                     |
-| `required` | `boolean`                        | from field   | Required state                     |
-| `invalid`  | `boolean`                        | from field   | `aria-invalid` and an error border |
-| `readonly` | `boolean`                        | `false`      | Read-only                          |
-
-A `focus()` method is exposed through the template ref. The `nui-textarea--size-sm`,
-`nui-textarea--resize-none` and `nui-textarea--invalid` modifiers drive the styles and
-are available for your own rules.
+<ApiReference name="NuiTextarea" />

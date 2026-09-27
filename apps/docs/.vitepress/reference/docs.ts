@@ -64,7 +64,7 @@ const sectionProblems = (
 const configuratorProblems = (component: ComponentReference, docs: ComponentDocs): string[] => {
   const names = new Set(component.props.map((prop) => prop.name));
 
-  return (docs.configurator?.props ?? [])
+  return [...(docs.configurator?.props ?? []), ...Object.keys(docs.configurator?.values ?? {})]
     .filter((name) => !names.has(name))
     .map((name) => `${component.name}: configurator prop "${name}" does not exist`);
 };

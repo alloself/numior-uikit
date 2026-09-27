@@ -8,12 +8,12 @@ test('the sidebar navigates, marks the current page and the contents follow the 
   test.skip(isMobile, 'the sidebar lives in a drawer on phones');
   const docs = new DocsSite(page);
   await docs.open('/components/button');
-  await expect(docs.heading).toHaveText('Кнопка');
-  await expect(docs.currentSidebarLink).toHaveText('Кнопка');
-  await docs.sidebarLink('Выбор из списка').click();
+  await expect(docs.heading).toHaveText('Button');
+  await expect(docs.currentSidebarLink).toHaveText('Button');
+  await docs.sidebarLink('Select').click();
   await expect(page).toHaveURL(/\/components\/select$/);
-  await expect(docs.heading).toHaveText('Выбор из списка');
-  await expect(docs.currentSidebarLink).toHaveText('Выбор из списка');
+  await expect(docs.heading).toHaveText('Select');
+  await expect(docs.currentSidebarLink).toHaveText('Select');
   await docs.scrollTo('api');
   await expect(docs.currentTocLink).toHaveText('API');
 });
@@ -31,7 +31,7 @@ test('header sections switch the sidebar and mark the current section', async ({
   await expect(page).toHaveURL(/\/guide\/getting-started$/);
   await expect(docs.navLink('Руководство')).toHaveAttribute('aria-current', 'page');
   await expect(docs.sidebarLink('Темизация')).toBeVisible();
-  await expect(docs.sidebarLink('Кнопка')).toHaveCount(0);
+  await expect(docs.sidebarLink('Button')).toHaveCount(0);
   await docs.open('/');
   await expect(docs.sidebar).toHaveCount(0);
 });
@@ -62,11 +62,11 @@ test('search finds a page by text and opens it', async ({ page, isMobile }) => {
   if (isMobile) {
     await docs.searchButton.tap();
   } else {
-    await page.keyboard.press('Control+k');
+    await docs.pressSearchHotkeyOnRussianLayout();
   }
   await expect(docs.commandInput).toBeFocused();
-  await docs.commandInput.fill('кнопка');
-  await expect(docs.commandOptions.first()).toContainText('Кнопка');
+  await docs.commandInput.fill('Button');
+  await expect(docs.commandOptions.first()).toContainText('Button');
   await docs.commandOptions.first().click();
   await expect(page).toHaveURL(/\/components\/button/);
   await expect(docs.commandDialog).toBeHidden();
@@ -82,7 +82,7 @@ test('the sidebar lives in a drawer on phones and closes after navigation', asyn
   await expect(docs.sidebar).toBeHidden();
   await docs.trigger.tap();
   await expect(docs.drawer).toBeVisible();
-  await docs.drawerLink('Выбор из списка').tap();
+  await docs.drawerLink('Select').tap();
   await expect(page).toHaveURL(/\/components\/select$/);
   await expect(docs.drawer).toBeHidden();
 });

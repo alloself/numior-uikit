@@ -47,9 +47,12 @@ export interface ReferenceKey {
   readonly description: LocalizedText;
 }
 
+export type ConfiguratorSeed = string | number | boolean | LocalizedText;
+
 export interface ReferenceConfigurator {
   readonly props: readonly string[];
-  readonly content: LocalizedText | undefined;
+  readonly content?: LocalizedText | undefined;
+  readonly values?: Readonly<Record<string, ConfiguratorSeed>> | undefined;
 }
 
 export interface ComponentReference {

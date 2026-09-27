@@ -1,4 +1,4 @@
-# Icons and configuration
+# Icon
 
 The kit is not tied to one icon set. Every icon a component needs is requested by
 alias through a registry: `check`, `minus`, `loader`, `chevron-down`, `x`, `search`,

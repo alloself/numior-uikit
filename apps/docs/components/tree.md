@@ -1,4 +1,4 @@
-# Дерево
+# Tree
 
 `NuiTree` показывает иерархию из данных `items` (`value`, `label`, `description`, `icon`,
 `disabled`, `children`, `lazy`): раскрытие в `v-model:expanded`, выбор в `v-model` и `v-model:values` (`selectable`

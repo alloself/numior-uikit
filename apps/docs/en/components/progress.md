@@ -1,46 +1,35 @@
 # Progress
 
-`NuiProgress` is a native `<progress>`: the browser provides the `progressbar` role,
-value and maximum, while the styles paint the track, the tone color and the
-indeterminate animation.
+`NuiProgress` is a native `<progress>`: the browser provides the `progressbar` role, the value
+and the maximum. The styles draw the track, the tone colour and the indeterminate animation.
 
-<script setup>
-import { ref } from 'vue'
-const value = ref(40)
-</script>
+<Example name="progress/Basic" />
 
-<div class="vp-raw nui-demo nui-demo--stack" data-nui-theme="light">
-  <NuiProgress :value="value" label="Upload" :value-text="`${value}%`" />
-  <NuiProgress :value="value" tone="success" size="lg" label="Done" />
-  <NuiProgress label="Preparing" size="sm" tone="info" />
-  <label>Value <input type="range" min="0" max="100" v-model.number="value" /></label>
-</div>
+## Installation
 
-```vue
-<NuiProgress
-  :value="uploaded"
-  :max="total"
-  label="Upload"
-  :value-text="`${uploaded} of ${total}`"
-/>
-<NuiProgress label="Preparing" />
+```ts
+import { NuiProgress } from '@numior/vue';
+import '@numior/vue/styles/progress.css';
 ```
 
-Without `value` the indicator is indeterminate: a bar slides along the track, and under
-`prefers-reduced-motion` the animation runs at half speed. `label` gives the accessible
-name, `valueText` a human-readable value for screen readers.
+## Usage
+
+<Configurator name="NuiProgress" />
+
+## Examples
+
+### A live value
+
+The value changes through `value`; the caption next to it shows the percentage to sighted users.
+
+<Example name="progress/Live" />
+
+## Accessibility
+
+Without `value` the bar is indeterminate: it slides along the track, and under
+`prefers-reduced-motion` the animation slows down by half. `label` gives the accessible name,
+`valueText` the value in words for a screen reader.
 
 ## API
 
-| Prop        | Type                   | Default     | Description                           |
-| ----------- | ---------------------- | ----------- | ------------------------------------- |
-| `value`     | `number`               | —           | Current value; omit for indeterminate |
-| `max`       | `number`               | `100`       | Maximum                               |
-| `size`      | `'sm' \| 'md' \| 'lg'` | `'md'`      | Thickness 0.25 / 0.5 / 0.75rem        |
-| `tone`      | `NuiTone`              | `'primary'` | Fill color                            |
-| `label`     | `string`               | —           | `aria-label`                          |
-| `valueText` | `string`               | —           | `aria-valuetext`                      |
-| `id`        | `string`               | —           | Element id                            |
-
-Block `nui-progress`, modifiers `--size-*`, `--tone-*`, `--indeterminate`; variables
-`--_height`, `--_tone`, `--_track`.
+<ApiReference name="NuiProgress" />

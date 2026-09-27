@@ -1,4 +1,5 @@
-import type { ReferenceProp } from '../reference/reference.types';
+import type { ConfiguratorSeed, ReferenceProp } from '../reference/reference.types';
+import type { ExampleLocale } from '../examples/example.types';
 
 export type ConfiguratorValue = string | number | boolean | null | undefined;
 
@@ -27,11 +28,22 @@ const literalOf = (raw: string | undefined): ConfiguratorValue => {
   return /^".*"$/.test(raw) ? raw.slice(1, -1) : undefined;
 };
 
-export const configuratorState = (props: readonly ReferenceProp[]): ConfiguratorState => {
+export type ConfiguratorSeeds = Readonly<Record<string, ConfiguratorSeed>>;
+
+const seedOf = (
+  seed: ConfiguratorSeed | undefined,
+  locale: ExampleLocale,
+): ConfiguratorValue | undefined => (typeof seed === 'object' ? seed[locale] : seed);
+
+export const configuratorState = (
+  props: readonly ReferenceProp[],
+  seeds: ConfiguratorSeeds = {},
+  locale: ExampleLocale = 'ru',
+): ConfiguratorState => {
   const state: ConfiguratorState = { enums: {}, flags: {}, numbers: {}, strings: {} };
 
   for (const prop of props) {
-    const initial = literalOf(prop.default);
+    const initial = seedOf(seeds[prop.name], locale) ?? literalOf(prop.default);
 
     switch (prop.kind) {
       case 'enum':
@@ -72,8 +84,13 @@ export const applyChange = (state: ConfiguratorState, change: ConfiguratorChange
   }
 };
 
-export const resetState = (state: ConfiguratorState, props: readonly ReferenceProp[]): void => {
-  const initial = configuratorState(props);
+export const resetState = (
+  state: ConfiguratorState,
+  props: readonly ReferenceProp[],
+  seeds: ConfiguratorSeeds = {},
+  locale: ExampleLocale = 'ru',
+): void => {
+  const initial = configuratorState(props, seeds, locale);
 
   Object.assign(state.enums, initial.enums);
   Object.assign(state.flags, initial.flags);

@@ -1,4 +1,4 @@
-# Empty state
+# Empty
 
 `NuiEmpty` explains why there is nothing where data should be and offers an action: an icon
 (`icon`, `inbox` by default, removed by `hideIcon`) or a `media` slot with an illustration,

@@ -1,39 +1,35 @@
-# Скелетон
+# Skeleton
 
-`NuiSkeleton` — декоративная заглушка на время загрузки: `aria-hidden`, мерцающий градиент
-на токенах поверхности. Под `prefers-reduced-motion` мерцание отключается полностью, а
-`animated="false"` делает то же явно.
+`NuiSkeleton` — декоративная заглушка на время загрузки: `aria-hidden`, мерцающий градиент на
+токенах поверхности. Под `prefers-reduced-motion` мерцание выключается, `animated="false"`
+делает то же явно.
 
-<div class="vp-raw nui-demo nui-demo--stack" data-nui-theme="light">
-  <div style="display: flex; gap: 0.75rem; align-items: center">
-    <NuiSkeleton shape="circle" />
-    <NuiSkeleton :lines="2" />
-  </div>
-  <NuiSkeleton shape="rect" height="5rem" />
-  <NuiSkeleton width="40%" :animated="false" />
-</div>
+<Example name="skeleton/Basic" />
 
-```vue
-<div class="row">
-  <NuiSkeleton shape="circle" />
-  <NuiSkeleton :lines="2" />
-</div>
-<NuiSkeleton shape="rect" height="5rem" />
+## Установка
+
+```ts
+import { NuiSkeleton } from '@numior/vue';
+import '@numior/vue/styles/skeleton.css';
 ```
 
-Скелетон не сообщает о загрузке сам: пометьте контейнер `aria-busy="true"` или используйте
-`NuiProgress` с подписью, чтобы screen reader узнал о процессе.
+## Использование
+
+<Configurator name="NuiSkeleton" />
+
+## Примеры
+
+### Карточка во время загрузки
+
+Заглушки встают на место текста, поэтому раскладка не прыгает, когда приходят данные.
+
+<Example name="skeleton/Card" />
+
+## Доступность
+
+Скелетон не сообщает о загрузке сам: пометьте контейнер `aria-busy="true"` или покажите
+`NuiProgress` с подписью, чтобы экранный диктор узнал о процессе.
 
 ## API
 
-| Prop       | Тип                            | По умолчанию | Описание                            |
-| ---------- | ------------------------------ | ------------ | ----------------------------------- |
-| `shape`    | `'text' \| 'rect' \| 'circle'` | `'text'`     | Форма                               |
-| `width`    | `string`                       | по форме     | Ширина (`--_inline-size`)           |
-| `height`   | `string`                       | по форме     | Высота (`--_block-size`)            |
-| `lines`    | `number`                       | `1`          | Строки для `text`; последняя короче |
-| `animated` | `boolean`                      | `true`       | Мерцание                            |
-
-Блок `nui-skeleton`, модификаторы `--shape-*`, `--static`; элемент `__line`. Заливка —
-полупрозрачный оттенок цвета текста (`--_tint`, блик `--_shine`), а не цвет поверхности, поэтому
-заготовка видна на любом фоне, в том числе на серых полосах `NuiTable striped` и в тёмной теме.
+<ApiReference name="NuiSkeleton" />

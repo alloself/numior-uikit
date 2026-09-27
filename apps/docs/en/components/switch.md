@@ -1,36 +1,44 @@
 # Switch
 
-`NuiSwitch` is a native checkbox with `role="switch"` under an animated track. The model
-is a `boolean`. Space toggles it, screen readers announce on/off, and the thumb position
-uses logical properties, so it moves the right way in RTL.
+`NuiSwitch` is a native checkbox with `role="switch"` under an animated track and a `boolean`
+model. The knob is described with logical properties, so in RTL it moves the right way.
 
-<script setup>
-import { ref } from 'vue'
-const notifications = ref(true)
-const compact = ref(false)
-</script>
+<Example name="switch/Basic" />
 
-<div class="vp-raw nui-demo nui-demo--stack" data-nui-theme="light">
-  <NuiSwitch v-model="notifications">Notifications: {{ notifications ? 'on' : 'off' }}</NuiSwitch>
-  <NuiSwitch v-model="compact" size="sm">Compact mode</NuiSwitch>
-  <NuiSwitch size="lg" disabled>Unavailable</NuiSwitch>
-</div>
+## Installation
 
-```vue
-<NuiSwitch v-model="notifications">Notifications</NuiSwitch>
+```ts
+import { NuiSwitch } from '@numior/vue';
+import '@numior/vue/styles/field.css';
+import '@numior/vue/styles/switch.css';
 ```
+
+## Usage
+
+<Configurator name="NuiSwitch" />
+
+## Examples
+
+### A settings list
+
+The description under the label explains what the switch changes; `disabled` keeps the state
+visible.
+
+<Example name="switch/Settings" />
+
+### Sizes
+
+`size` changes the height of the track and the label with it.
+
+<Example name="switch/Sizes" />
+
+## Accessibility
+
+A screen reader announces "on" and "off", the label is read from the slot, the focus ring is
+drawn on the track.
+
+<KeyboardReference name="NuiSwitch" />
 
 ## API
 
-| Prop       | Type                   | Default    | Description                       |
-| ---------- | ---------------------- | ---------- | --------------------------------- |
-| `v-model`  | `boolean`              | `false`    | State                             |
-| `size`     | `'sm' \| 'md' \| 'lg'` | `'md'`     | Track and text size               |
-| `id`       | `string`               | from field | Explicit control id               |
-| `disabled` | `boolean`              | from field | Disabled state                    |
-| `required` | `boolean`              | from field | Required state                    |
-| `invalid`  | `boolean`              | from field | `aria-invalid` and an error track |
-
-The default slot is the label. `class` and `style` go to the `<label>`; other attributes
-and listeners reach the `<input>`. Modifiers: `nui-switch--checked`,
-`nui-switch--disabled`, `nui-switch--invalid`, `nui-switch--size-sm`.
+<ApiReference name="NuiSwitch" />

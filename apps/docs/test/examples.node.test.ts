@@ -34,12 +34,12 @@ describe('docs examples', () => {
   it('lists every example of both locales as a lazy import', () => {
     expect(exampleNames(EXAMPLES).ru).toContain('button/Basic');
 
-    expect(registryModule(EXAMPLES)).toContain(
-      '"ru": { "button/Basic": () => import("virtual:nui-example/ru/button/Basic")',
+    expect(registryModule(EXAMPLES)).toMatch(
+      /"ru": \{[^}]*"button\/Basic": \(\) => import\("virtual:nui-example\/ru\/button\/Basic"\)/,
     );
 
-    expect(registryModule(EXAMPLES)).toContain(
-      '"en": { "button/Basic": () => import("virtual:nui-example/en/button/Basic")',
+    expect(registryModule(EXAMPLES)).toMatch(
+      /"en": \{[^}]*"button\/Basic": \(\) => import\("virtual:nui-example\/en\/button\/Basic"\)/,
     );
   });
 

@@ -1,51 +1,42 @@
-# Чип
+# Chip
 
-`NuiChip` — компактная метка на токенах ролей: `tone` задаёт цвет, `variant` — форму
-(`soft`, `outline`, `solid`), `size` — высоту 1.5rem или 1.25rem. `removable` добавляет
-кнопку удаления с доступным именем из `removeLabel` и событием `remove`. Тот же чип
-показывает выбранные значения в `NuiCombobox`.
+`NuiChip` — компактная метка на токенах ролей: `tone` задаёт цвет, `variant` — вид, `size` —
+высоту. Тот же чип показывает выбранные значения в `NuiCombobox`.
 
-<div class="vp-raw nui-demo" data-nui-theme="light">
-  <NuiChip>Нейтральный</NuiChip>
-  <NuiChip tone="primary" icon="check">С иконкой</NuiChip>
-  <NuiChip tone="success" variant="outline">Контур</NuiChip>
-  <NuiChip tone="warning" variant="solid">Сплошной</NuiChip>
-  <NuiChip removable remove-label="Убрать Vue">Vue</NuiChip>
-  <NuiChip size="sm" tone="info" removable remove-label="Убрать Vite">Vite</NuiChip>
-</div>
+<Example name="chip/Basic" />
 
-```vue
-<script setup lang="ts">
+## Установка
+
+```ts
 import { NuiChip } from '@numior/vue';
 import '@numior/vue/styles/chip.css';
-</script>
-
-<template>
-  <NuiChip tone="success" variant="outline">Оплачено</NuiChip>
-  <NuiChip removable remove-label="Убрать фильтр «Vue»" @remove="clear">Vue</NuiChip>
-</template>
 ```
+
+## Использование
+
+<Configurator name="NuiChip" />
+
+## Примеры
+
+### Удаляемые фильтры
+
+`removable` добавляет кнопку удаления с событием `remove`; `removeLabel` называет, что именно
+убирается.
+
+<Example name="chip/Removable" />
+
+### Размеры и недоступность
+
+`size="sm"` подходит для таблиц и списков, `disabled` приглушает чип и выключает удаление.
+
+<Example name="chip/Sizes" />
 
 ## Доступность
 
-Чип — `<span>`, он не интерактивен сам по себе. Кнопка удаления — обычная `<button>` с
-именем из `removeLabel`; в неё не попасть по Tab (`tabindex="-1"`), потому что в списке
-чипов удаление доступно с клавиатуры из поля (Backspace в комбобоксе). Если чип стоит
-отдельно, продублируйте удаление в доступном месте или передайте `remove-label` с
-названием элемента.
+Чип — `<span>` без роли, сам по себе он не интерактивен. Кнопка удаления — обычная `<button>`
+вне порядка табуляции, потому что в списках чипов удаление доступно с клавиатуры из поля.
+Для одиночного чипа передайте `removeLabel` с названием элемента.
 
 ## API
 
-| Prop          | Тип                              | По умолчанию                                  | Описание                       |
-| ------------- | -------------------------------- | --------------------------------------------- | ------------------------------ |
-| `tone`        | `NuiTone`                        | `'neutral'`                                   | Цвет                           |
-| `variant`     | `'soft' \| 'outline' \| 'solid'` | `'soft'`                                      | Форма                          |
-| `size`        | `'sm' \| 'md'`                   | `'md'`                                        | Высота                         |
-| `icon`        | `IconAlias`                      | —                                             | Иконка перед текстом           |
-| `removable`   | `boolean`                        | `false`                                       | Кнопка удаления                |
-| `removeLabel` | `string`                         | [словарь](/guide/localization#chip): «Убрать» | Доступное имя кнопки           |
-| `disabled`    | `boolean`                        | `false`                                       | Приглушённый вид, без удаления |
-
-Событие `remove`. Блок `nui-chip`, модификаторы `--tone-*`, `--variant-*`, `--size-*`,
-`--removable`, `--disabled`; элементы `__icon`, `__label`, `__remove`; переменные `--_tone`,
-`--_tone-soft`, `--_height`, `--_padding`.
+<ApiReference name="NuiChip" />

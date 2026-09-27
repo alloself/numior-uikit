@@ -1,84 +1,52 @@
 # Checkbox
 
-`NuiCheckbox` is a native `<input type="checkbox">` under a custom indicator with a `boolean`
-model. A set of values is picked by `NuiCheckboxGroup`: it takes options and keeps the array
-of selected values in `v-model` in selection order, so the model type always matches what
-the component emits.
+`NuiCheckbox` is a native `<input type="checkbox">` under its own indicator with a `boolean`
+model. `NuiCheckboxGroup` collects a set of values from options into an array in selection order.
 
-<script setup>
-import { ref } from 'vue'
-const terms = ref(false)
-const channels = ref(['email'])
-const channelOptions = [
-  { value: 'email', label: 'Email' },
-  { value: 'sms', label: 'SMS' },
-  { value: 'push', label: 'Push', disabled: true },
-]
-</script>
+<Example name="checkbox/Basic" />
 
-<div class="vp-raw nui-demo nui-demo--stack" data-nui-theme="light">
-  <NuiCheckbox v-model="terms">I accept the terms of use</NuiCheckbox>
-  <NuiField group label="Notification channels" description="Selected: {{ channels.join(', ') || 'nothing' }}">
-    <NuiCheckboxGroup v-model="channels" :options="channelOptions" />
-  </NuiField>
-  <NuiCheckbox indeterminate>Partially selected</NuiCheckbox>
-</div>
+## Installation
 
-```vue
-<NuiCheckbox v-model="terms">I accept the terms of use</NuiCheckbox>
-
-<NuiField group label="Notification channels">
-  <NuiCheckboxGroup v-model="channels" :options="channelOptions" />
-</NuiField>
+```ts
+import { NuiCheckbox, NuiCheckboxGroup } from '@numior/vue';
+import '@numior/vue/styles/field.css';
+import '@numior/vue/styles/checkbox.css';
 ```
 
-## Indeterminate state
+## Usage
 
-`indeterminate` is a visual-only "partially selected" state for parent checkboxes. It is set
-as a DOM property after render and stays out of the model; a click clears it and toggles the
-value as usual. The indicator shows the `minus` alias from the icon registry instead of
-`check`.
+<Configurator name="NuiCheckbox" />
+
+## Examples
+
+### A set of values
+
+`NuiCheckboxGroup` draws a `fieldset` with a label and a description; a disabled option stays in
+the set but cannot be toggled.
+
+<Example name="checkbox/Group" />
+
+### In a row
+
+`orientation="horizontal"` lays the options out in a wrapping row.
+
+<Example name="checkbox/Horizontal" />
+
+### Partial selection
+
+`indeterminate` is the visual state of a parent checkbox while only some children are selected.
+A click clears it and toggles the value as usual.
+
+<Example name="checkbox/Indeterminate" />
 
 ## Accessibility
 
-The control stays native: Space toggles and screen readers read the label from the slot. A
-single checkbox inside a field inherits `disabled`, `required` and `invalid` unless they are
-set explicitly. `NuiCheckboxGroup` is a `role="group"` named by the label of a
-`NuiField group` and described by the field; its checkboxes share the native `name` and the
-group state and do not take the field id. The focus ring is drawn on the indicator on the
-control's `:focus-visible`.
+The control stays native: a screen reader reads the label from the slot, the focus ring is
+drawn on the indicator. A set is a `fieldset` with a `legend`, the checkboxes inside share one
+`name`.
+
+<KeyboardReference name="NuiCheckbox" />
 
 ## API
 
-`NuiCheckbox`
-
-| Prop            | Type                   | Default    | Description                       |
-| --------------- | ---------------------- | ---------- | --------------------------------- |
-| `v-model`       | `boolean`              | `false`    | Whether the checkbox is checked   |
-| `value`         | `string`               | —          | Native value for form submission  |
-| `indeterminate` | `boolean`              | `false`    | Visual "partially selected" state |
-| `size`          | `'sm' \| 'md' \| 'lg'` | `'md'`     | Indicator and text size           |
-| `id`            | `string`               | from field | Explicit control id               |
-| `disabled`      | `boolean`              | from field | Disabled                          |
-| `required`      | `boolean`              | from field | Required                          |
-| `invalid`       | `boolean`              | from field | `aria-invalid` and a red border   |
-
-The default slot is the label. `class` and `style` go to the root `<label>`, other attributes
-and listeners go to the `<input>`. Modifiers: `nui-checkbox--checked`,
-`nui-checkbox--indeterminate`, `nui-checkbox--invalid`, `nui-checkbox--disabled`,
-`nui-checkbox--size-sm`.
-
-`NuiCheckboxGroup`
-
-| Prop                                    | Type                         | Default      | Description                            |
-| --------------------------------------- | ---------------------------- | ------------ | -------------------------------------- |
-| `v-model`                               | `T[]`                        | `[]`         | Selected values                        |
-| `options`                               | `NuiOption<T>[]`             | —            | Options (`value`, `label`, `disabled`) |
-| `name`                                  | `string`                     | group id     | Shared native name of the checkboxes   |
-| `orientation`                           | `'vertical' \| 'horizontal'` | `'vertical'` | Layout                                 |
-| `getKey`                                | `(value: T) => string`       | by value     | Key for object values                  |
-| `size`                                  | `'sm' \| 'md' \| 'lg'`       | `'md'`       | Checkbox size                          |
-| `id`, `disabled`, `required`, `invalid` | —                            | from field   | As on other field controls             |
-
-The `option="{ option }"` slot replaces an option label. Block `nui-checkbox-group`, modifiers
-`--orientation-*`, `--invalid`, `--disabled`.
+<ApiReference :names="['NuiCheckbox', 'NuiCheckboxGroup']" />

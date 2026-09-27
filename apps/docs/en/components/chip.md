@@ -1,50 +1,41 @@
 # Chip
 
-`NuiChip` is a compact label on the role tokens: `tone` picks the colour, `variant` the shape
-(`soft`, `outline`, `solid`) and `size` the height, 1.5rem or 1.25rem. `removable` adds a
-remove button with an accessible name from `removeLabel` and a `remove` event. The same chip
-shows selected values in `NuiCombobox`.
+`NuiChip` is a compact label on the role tokens: `tone` sets the colour, `variant` the look,
+`size` the height. The same chip shows the selected values in `NuiCombobox`.
 
-<div class="vp-raw nui-demo" data-nui-theme="light">
-  <NuiChip>Neutral</NuiChip>
-  <NuiChip tone="primary" icon="check">With icon</NuiChip>
-  <NuiChip tone="success" variant="outline">Outline</NuiChip>
-  <NuiChip tone="warning" variant="solid">Solid</NuiChip>
-  <NuiChip removable remove-label="Remove Vue">Vue</NuiChip>
-  <NuiChip size="sm" tone="info" removable remove-label="Remove Vite">Vite</NuiChip>
-</div>
+<Example name="chip/Basic" />
 
-```vue
-<script setup lang="ts">
+## Installation
+
+```ts
 import { NuiChip } from '@numior/vue';
 import '@numior/vue/styles/chip.css';
-</script>
-
-<template>
-  <NuiChip tone="success" variant="outline">Paid</NuiChip>
-  <NuiChip removable remove-label="Remove the Vue filter" @remove="clear">Vue</NuiChip>
-</template>
 ```
+
+## Usage
+
+<Configurator name="NuiChip" />
+
+## Examples
+
+### Removable filters
+
+`removable` adds a remove button with the `remove` event; `removeLabel` names what gets removed.
+
+<Example name="chip/Removable" />
+
+### Sizes and disabled chips
+
+`size="sm"` suits tables and lists, `disabled` dims the chip and disables removal.
+
+<Example name="chip/Sizes" />
 
 ## Accessibility
 
-A chip is a `<span>` and is not interactive by itself. The remove button is a regular
-`<button>` named by `removeLabel`; it is out of the Tab order (`tabindex="-1"`) because in a
-chip list removal is reachable from the field (Backspace in the combobox). For a standalone
-chip, offer removal somewhere reachable too, or pass a `remove-label` that names the item.
+A chip is a `<span>` without a role and is not interactive on its own. The remove button is a
+plain `<button>` outside the tab order, because in chip lists removal is reachable from the
+field with the keyboard. For a standalone chip pass a `removeLabel` that names the item.
 
 ## API
 
-| Prop          | Type                             | Default                                             | Description                   |
-| ------------- | -------------------------------- | --------------------------------------------------- | ----------------------------- |
-| `tone`        | `NuiTone`                        | `'neutral'`                                         | Colour                        |
-| `variant`     | `'soft' \| 'outline' \| 'solid'` | `'soft'`                                            | Shape                         |
-| `size`        | `'sm' \| 'md'`                   | `'md'`                                              | Height                        |
-| `icon`        | `IconAlias`                      | —                                                   | Icon before the text          |
-| `removable`   | `boolean`                        | `false`                                             | Remove button                 |
-| `removeLabel` | `string`                         | [dictionary](/en/guide/localization#chip): “Remove” | Accessible name of the button |
-| `disabled`    | `boolean`                        | `false`                                             | Muted look, removal disabled  |
-
-Event `remove`. Block `nui-chip`, modifiers `--tone-*`, `--variant-*`, `--size-*`,
-`--removable`, `--disabled`; elements `__icon`, `__label`, `__remove`; variables `--_tone`,
-`--_tone-soft`, `--_height`, `--_padding`.
+<ApiReference name="NuiChip" />

@@ -1,41 +1,35 @@
 # Skeleton
 
-`NuiSkeleton` is a decorative loading placeholder: `aria-hidden`, a shimmering gradient
-built from the surface tokens. Under `prefers-reduced-motion` the shimmer is switched off
-entirely, and `animated="false"` does the same explicitly.
+`NuiSkeleton` is a decorative placeholder while data loads: `aria-hidden`, a shimmering gradient
+on the surface tokens. Under `prefers-reduced-motion` the shimmer is off, `animated="false"`
+does the same explicitly.
 
-<div class="vp-raw nui-demo nui-demo--stack" data-nui-theme="light">
-  <div style="display: flex; gap: 0.75rem; align-items: center">
-    <NuiSkeleton shape="circle" />
-    <NuiSkeleton :lines="2" />
-  </div>
-  <NuiSkeleton shape="rect" height="5rem" />
-  <NuiSkeleton width="40%" :animated="false" />
-</div>
+<Example name="skeleton/Basic" />
 
-```vue
-<div class="row">
-  <NuiSkeleton shape="circle" />
-  <NuiSkeleton :lines="2" />
-</div>
-<NuiSkeleton shape="rect" height="5rem" />
+## Installation
+
+```ts
+import { NuiSkeleton } from '@numior/vue';
+import '@numior/vue/styles/skeleton.css';
 ```
 
-A skeleton does not announce loading by itself: mark the container with
-`aria-busy="true"` or use `NuiProgress` with a label so screen readers know about the
-process.
+## Usage
+
+<Configurator name="NuiSkeleton" />
+
+## Examples
+
+### A card while loading
+
+The placeholders take the place of the text, so the layout does not jump when the data arrives.
+
+<Example name="skeleton/Card" />
+
+## Accessibility
+
+A skeleton does not announce loading on its own. Mark the container with `aria-busy="true"` or
+show a `NuiProgress` with a label, so a screen reader learns about the process.
 
 ## API
 
-| Prop       | Type                           | Default   | Description                               |
-| ---------- | ------------------------------ | --------- | ----------------------------------------- |
-| `shape`    | `'text' \| 'rect' \| 'circle'` | `'text'`  | Shape                                     |
-| `width`    | `string`                       | per shape | Width (`--_inline-size`)                  |
-| `height`   | `string`                       | per shape | Height (`--_block-size`)                  |
-| `lines`    | `number`                       | `1`       | Lines for `text`; the last one is shorter |
-| `animated` | `boolean`                      | `true`    | Shimmer                                   |
-
-Block `nui-skeleton`, modifiers `--shape-*`, `--static`; element `__line`. The fill is a
-translucent tint of the text colour (`--_tint`, highlight `--_shine`) rather than a surface
-colour, so the placeholder shows on any background, the grey stripes of `NuiTable striped` and
-the dark theme included.
+<ApiReference name="NuiSkeleton" />

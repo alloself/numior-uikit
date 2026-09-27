@@ -52,3 +52,9 @@
 .nui-min-h-40 {
   min-block-size: 10rem;
 }
+.nui-h-80 {
+  block-size: 20rem;
+}
+.nui-h-96 {
+  block-size: 24rem;
+}

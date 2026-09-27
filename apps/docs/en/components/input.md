@@ -1,83 +1,57 @@
 # Input
 
-`NuiInput` is a native `<input>` for text-like types inside a wrapper that holds the
-border, the focus ring and the `prefix`/`suffix` slots. The value syncs through
-`v-model` with the `.lazy` and `.trim` modifiers; IME input and composed characters
-behave exactly like a plain `<input v-model>`.
+`NuiInput` is a native `<input>` in a frame with a focus ring and the `prefix` and `suffix`
+slots. The value goes through `v-model` with the `.lazy`, `.trim` and `.unmasked` modifiers.
 
-<script setup>
-import { ref } from 'vue'
-const login = ref('')
-const site = ref('')
-const phone = ref('')
-</script>
+<Example name="input/Basic" />
 
-<div class="vp-raw nui-demo nui-demo--stack" data-nui-theme="light">
-  <NuiField label="Login">
-    <NuiInput v-model.trim="login" placeholder="alex" autocomplete="username">
-      <template #prefix>@</template>
-    </NuiInput>
-  </NuiField>
-  <NuiField label="Site" description="Domain without protocol">
-    <NuiInput v-model.lazy="site" type="url" size="sm">
-      <template #suffix>.com</template>
-    </NuiInput>
-  </NuiField>
-  <NuiField label="Phone" :description="`Model: ${phone || '—'}`">
-    <NuiInput v-model.unmasked="phone" type="tel" mask="+1 (###) ###-####" />
-  </NuiField>
-  <NuiField label="Read only">
-    <NuiInput model-value="Fixed value" readonly />
-  </NuiField>
-</div>
+## Installation
 
-```vue
-<NuiField label="Login">
-  <NuiInput v-model.trim="login" autocomplete="username">
-    <template #prefix>@</template>
-  </NuiInput>
-</NuiField>
+```ts
+import { NuiInput } from '@numior/vue';
+import '@numior/vue/styles/field.css';
+import '@numior/vue/styles/input.css';
 ```
 
-## Attributes and events
+## Usage
 
-`class` and `style` go to the wrapper; every other attribute (`placeholder`, `name`,
-`autocomplete`, `aria-*`, `inputmode`, `maxlength`) and event listener reaches the native
-`<input>`. A `focus()` method is exposed through the template ref.
+<Configurator name="NuiInput" />
 
-## Mask
+## Examples
 
-`mask` sets an input pattern: `#` is a digit, `A` a letter, `*` a letter or digit, and every
-other character is a literal that is inserted automatically (`\#` escapes a literal). The
-text is reformatted on every input, extra characters are dropped, the caret stays after the
-last accepted character, and Backspace before a literal deletes the character before it. By
-default the formatted string reaches the model; the `v-model.unmasked` modifier keeps only
-the significant characters (`2125550123` instead of `+1 (212) 555-0123`).
+### Prefix and suffix
 
-```vue
-<NuiInput v-model.unmasked="phone" type="tel" mask="+1 (###) ###-####" />
-```
+The slots sit inside the frame at the edges of the field and stay out of the value.
 
-## States
+<Example name="input/Affixes" />
 
-`disabled`, `required` and `invalid` default to the surrounding `NuiField`; an explicit
-value on the control overrides the field. `readonly` keeps the text selectable. `size`
-(`sm`, `md`, `lg`) picks a step inside the current density.
+### Mask
+
+`mask` formats the input as you type: `#` is a digit, `A` a letter, `*` a letter or digit, the
+other characters are inserted on their own. `v-model.unmasked` keeps only the meaningful
+characters in the model.
+
+<Example name="input/Mask" />
+
+### Lazy updates
+
+`v-model.lazy` writes to the model on blur or Enter, `.trim` strips the spaces around the text.
+
+<Example name="input/Lazy" />
+
+### States
+
+`readonly` keeps the text selectable, `disabled` switches the field off, `error` turns the
+error state on and shows the text under the field.
+
+<Example name="input/States" />
+
+## Accessibility
+
+The field stays a native `<input>`: `placeholder`, `name`, `autocomplete`, `inputmode` and
+event handlers land on it, `class` and `style` on the frame. The label is linked through
+`for`, the description and the error through `aria-describedby`.
 
 ## API
 
-| Prop       | Type                                                            | Default    | Description                          |
-| ---------- | --------------------------------------------------------------- | ---------- | ------------------------------------ |
-| `v-model`  | `string`                                                        | `''`       | Value; `.lazy`, `.trim`, `.unmasked` |
-| `type`     | `'text' \| 'email' \| 'password' \| 'search' \| 'tel' \| 'url'` | `'text'`   | Native input type                    |
-| `size`     | `'sm' \| 'md' \| 'lg'`                                          | `'md'`     | Size step                            |
-| `id`       | `string`                                                        | from field | Explicit control id                  |
-| `disabled` | `boolean`                                                       | from field | Disabled state                       |
-| `required` | `boolean`                                                       | from field | Required state                       |
-| `invalid`  | `boolean`                                                       | from field | `aria-invalid` and an error border   |
-| `readonly` | `boolean`                                                       | `false`    | Read-only                            |
-| `mask`     | `string`                                                        | —          | Input pattern (`#`, `A`, `*`)        |
-
-Slots: `prefix`, `suffix`. Numbers and time are separate components:
-[number field](/en/components/number-field) and [time field](/en/components/time-field);
-dates and file upload follow in later steps.
+<ApiReference name="NuiInput" />

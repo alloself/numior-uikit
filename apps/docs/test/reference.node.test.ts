@@ -236,8 +236,8 @@ describe('docs reference', () => {
     expect(bundle.tokens.some((token) => token.name === '--nui-primary')).toBe(true);
     expect(bundle.icons.some((icon) => icon.alias === 'direction')).toBe(true);
     expect(problems).toEqual([]);
-    expect(undocumented).toContain('NuiInput');
-    expect(undocumented).not.toContain('NuiSelect');
+    expect(undocumented).toContain('NuiTable');
+    expect(undocumented).not.toContain('NuiInput');
   }, 60_000);
 
   it('serves the bundle as a lazy registry and per-component slices', () => {
