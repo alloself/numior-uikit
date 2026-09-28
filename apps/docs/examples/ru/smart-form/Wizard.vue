@@ -4,7 +4,7 @@
     :form="form"
     :steps="steps"
     submit-label="Создать команду"
-    class="nui-max-w-lg"
+    class="max-w-lg"
   />
 </template>
 

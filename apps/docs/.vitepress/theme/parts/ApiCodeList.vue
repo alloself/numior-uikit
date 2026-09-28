@@ -1,6 +1,6 @@
 <template>
-  <dd class="nui-text-sm">
-    <span class="nui-text-muted">{{ label }}:</span>
+  <dd class="text-sm">
+    <span class="text-muted-foreground">{{ label }}:</span>
     <template v-for="(item, index) in items" :key="item">
       <code>{{ prefix }}{{ item }}</code
       ><span v-if="index < items.length - 1">, </span>

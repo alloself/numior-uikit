@@ -2,7 +2,7 @@
   <NuiField>
     <template #label>
       Пароль
-      <NuiLink href="#" class="nui-ms-2 nui-text-sm">Почему нужен?</NuiLink>
+      <NuiLink href="#" class="ms-2 text-sm">Почему нужен?</NuiLink>
     </template>
     <NuiInput v-model="password" type="password" autocomplete="new-password" />
     <template #description> Не меньше <strong>8 символов</strong>, хотя бы одна цифра. </template>

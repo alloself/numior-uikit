@@ -5,7 +5,7 @@
     selectable="single"
     variant="bordered"
     label="City"
-    class="nui-w-full nui-max-w-sm"
+    class="w-full max-w-sm"
   />
 </template>
 

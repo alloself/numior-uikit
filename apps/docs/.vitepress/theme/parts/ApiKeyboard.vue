@@ -1,5 +1,5 @@
 <template>
-  <div class="nui-not-prose nui-my-4">
+  <div class="nui-not-prose my-4">
     <NuiTable :columns="columns" :rows="keys" :get-key="keyOf" size="sm">
       <template #cell-keys="{ row }">
         <NuiKbd :keys="row.keys" size="sm" />

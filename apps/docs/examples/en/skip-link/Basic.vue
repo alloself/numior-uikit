@@ -1,12 +1,12 @@
 <template>
-  <div class="nui-flex nui-flex-col nui-gap-4">
+  <div class="flex flex-col gap-4">
     <NuiSkipLink target="skip-demo-content" />
-    <nav class="nui-flex nui-gap-4 nui-text-sm" aria-label="Example navigation">
+    <nav class="flex gap-4 text-sm" aria-label="Example navigation">
       <NuiLink href="#">Catalog</NuiLink>
       <NuiLink href="#">Orders</NuiLink>
       <NuiLink href="#">Settings</NuiLink>
     </nav>
-    <section id="skip-demo-content" class="nui-border nui-rounded nui-p-4 nui-text-sm">
+    <section id="skip-demo-content" class="border rounded-md p-4 text-sm">
       Press Tab inside the example: the "Skip to content" link appears above the navigation and
       moves the focus here.
     </section>

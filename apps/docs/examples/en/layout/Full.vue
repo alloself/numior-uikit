@@ -1,17 +1,17 @@
 <template>
-  <div class="nui-w-full nui-h-96 nui-border nui-rounded-lg nui-bg-surface">
+  <div class="w-full h-96 border rounded-lg bg-surface">
     <NuiLayout
       v-model:open="open"
       content-as="div"
       :shortcut="false"
-      class="nui-h-full"
+      class="h-full"
       header="full"
       end-width="12rem"
     >
       <template #sidebar>
         <NuiSidebar collapsible="icon" label="Sections">
           <NuiSidebarHeader>
-            <strong class="nui-px-2">Numior</strong>
+            <strong class="px-2">Numior</strong>
           </NuiSidebarHeader>
           <NuiSidebarContent>
             <NuiSidebarGroup label="Overview">
@@ -44,13 +44,13 @@
           </template>
         </NuiAppBar>
       </template>
-      <div class="nui-p-6">
+      <div class="p-6">
         <p>The “{{ titles[active] }}” section.</p>
       </div>
       <template #end>
-        <nav class="nui-p-4 nui-text-sm" aria-label="On this page">
-          <p class="nui-m-0 nui-font-medium">On this page</p>
-          <p class="nui-m-0 nui-text-muted">Summary, tasks, files</p>
+        <nav class="p-4 text-sm" aria-label="On this page">
+          <p class="m-0 font-medium">On this page</p>
+          <p class="m-0 text-muted-foreground">Summary, tasks, files</p>
         </nav>
       </template>
     </NuiLayout>

@@ -1,5 +1,5 @@
 <template>
-  <NuiCard class="nui-max-w-sm">
+  <NuiCard class="max-w-sm">
     <NuiCardHeader>
       <NuiCardTitle>Team plan</NuiCardTitle>
       <NuiCardDescription>For teams of up to ten people.</NuiCardDescription>

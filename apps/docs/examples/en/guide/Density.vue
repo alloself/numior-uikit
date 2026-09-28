@@ -1,17 +1,17 @@
 <template>
-  <div class="nui-w-full nui-grid-auto nui-gap-6">
-    <div data-nui-density="comfortable" class="nui-flex nui-flex-col nui-gap-3">
-      <p class="nui-m-0 nui-text-sm nui-text-muted">comfortable</p>
+  <div class="w-full grid-auto gap-6">
+    <div data-nui-density="comfortable" class="flex flex-col gap-3">
+      <p class="m-0 text-sm text-muted-foreground">comfortable</p>
       <NuiInput v-model="query" label="Search" placeholder="Product name" />
-      <div class="nui-flex nui-gap-2">
+      <div class="flex gap-2">
         <NuiButton>Find</NuiButton>
         <NuiButton variant="outline" tone="neutral">Reset</NuiButton>
       </div>
     </div>
-    <div data-nui-density="compact" class="nui-flex nui-flex-col nui-gap-3">
-      <p class="nui-m-0 nui-text-sm nui-text-muted">compact</p>
+    <div data-nui-density="compact" class="flex flex-col gap-3">
+      <p class="m-0 text-sm text-muted-foreground">compact</p>
       <NuiInput v-model="query" label="Search" placeholder="Product name" />
-      <div class="nui-flex nui-gap-2">
+      <div class="flex gap-2">
         <NuiButton>Find</NuiButton>
         <NuiButton variant="outline" tone="neutral">Reset</NuiButton>
       </div>

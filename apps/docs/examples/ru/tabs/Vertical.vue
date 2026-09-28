@@ -1,5 +1,5 @@
 <template>
-  <NuiTabs v-model="section" orientation="vertical" class="nui-w-full nui-max-w-md">
+  <NuiTabs v-model="section" orientation="vertical" class="w-full max-w-md">
     <NuiTabList label="Настройки">
       <NuiTab value="profile" icon="user">Профиль</NuiTab>
       <NuiTab value="notifications" icon="inbox">Уведомления</NuiTab>

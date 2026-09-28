@@ -1,5 +1,5 @@
 <template>
-  <NuiCard class="nui-max-w-sm">
+  <NuiCard class="max-w-sm">
     <NuiCardMedia :src="cover" alt="" aspect="3 / 1" />
     <NuiCardHeader>
       <NuiCardTitle>Cover</NuiCardTitle>

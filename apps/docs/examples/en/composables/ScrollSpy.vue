@@ -1,12 +1,12 @@
 <template>
-  <div class="nui-w-full nui-grid-auto nui-gap-6">
-    <div ref="root" class="nui-h-80 nui-overflow-auto nui-border nui-rounded nui-p-4" tabindex="0">
-      <section v-for="section in sections" :id="section.id" :key="section.id" class="nui-min-h-40">
-        <h3 class="nui-mt-0 nui-font-semibold">{{ section.label }}</h3>
-        <p class="nui-text-sm nui-text-muted">{{ section.text }}</p>
+  <div class="w-full grid-auto gap-6">
+    <div ref="root" class="h-80 overflow-auto border rounded-md p-4" tabindex="0">
+      <section v-for="section in sections" :id="section.id" :key="section.id" class="min-h-40">
+        <h3 class="mt-0 font-semibold">{{ section.label }}</h3>
+        <p class="text-sm text-muted-foreground">{{ section.text }}</p>
       </section>
     </div>
-    <div class="nui-flex nui-flex-col nui-items-start nui-gap-1">
+    <div class="flex flex-col items-start gap-1">
       <NuiButton
         v-for="section in sections"
         :key="section.id"

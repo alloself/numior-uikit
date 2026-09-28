@@ -1,5 +1,5 @@
 <template>
-  <div class="nui-p-6 nui-pt-8">
+  <div class="p-6 pt-8">
     <NuiToc :items="items" :title="texts.onThisPage" :label="texts.onThisPage" />
   </div>
 </template>

@@ -3,7 +3,7 @@
     <template #trigger="{ attrs }">
       <NuiButton v-bind="attrs" variant="outline">Автор</NuiButton>
     </template>
-    <div class="nui-flex nui-flex-col nui-gap-3 nui-p-1">
+    <div class="flex flex-col gap-3 p-1">
       <NuiInput v-model="author" label="Имя" placeholder="Анна Титова" />
       <NuiButton size="sm" @click="open = false">Применить</NuiButton>
     </div>

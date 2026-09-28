@@ -1,13 +1,13 @@
 <template>
-  <div class="nui-flex nui-flex-col nui-gap-3">
+  <div class="flex flex-col gap-3">
     <NuiTree
       v-model="selected"
       v-model:expanded="expanded"
       :items="files"
       label="Project files"
-      class="nui-w-full nui-max-w-sm"
+      class="w-full max-w-sm"
     />
-    <p class="nui-text-sm nui-text-muted">Selected: {{ selected ?? '—' }}</p>
+    <p class="text-sm text-muted-foreground">Selected: {{ selected ?? '—' }}</p>
   </div>
 </template>
 

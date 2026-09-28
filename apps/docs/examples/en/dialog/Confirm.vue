@@ -1,6 +1,6 @@
 <template>
   <NuiButton tone="error" variant="outline" @click="open = true">Delete project</NuiButton>
-  <p class="nui-text-sm nui-text-muted">Result: {{ result || '—' }}</p>
+  <p class="text-sm text-muted-foreground">Result: {{ result || '—' }}</p>
   <NuiDialog
     v-model:open="open"
     title="Delete the “Catalogue 2026” project?"
@@ -9,7 +9,7 @@
   >
     <p>Every project file is deleted together with the change history.</p>
     <template #footer>
-      <form method="dialog" class="nui-flex nui-gap-2">
+      <form method="dialog" class="flex gap-2">
         <NuiButton type="submit" value="cancel" variant="ghost" tone="neutral">Cancel</NuiButton>
         <NuiButton type="submit" value="confirm" tone="error">Delete</NuiButton>
       </form>

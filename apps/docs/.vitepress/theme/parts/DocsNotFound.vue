@@ -1,5 +1,5 @@
 <template>
-  <div class="nui-max-w-3xl nui-mx-auto nui-p-6 nui-mt-8">
+  <div class="max-w-3xl mx-auto p-6 mt-8">
     <NuiEmpty :title="texts.notFoundTitle" :description="texts.notFoundText" icon="search">
       <template #actions>
         <NuiButton :href="localeBase" variant="outline" tone="neutral">{{ texts.home }}</NuiButton>

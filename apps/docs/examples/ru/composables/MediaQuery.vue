@@ -1,5 +1,5 @@
 <template>
-  <ul class="nui-m-0 nui-text-sm">
+  <ul class="m-0 text-sm">
     <li>Узкий экран (до 48rem): {{ narrow ? 'да' : 'нет' }}</li>
     <li>Системная тёмная схема: {{ dark ? 'да' : 'нет' }}</li>
     <li>Уменьшенное движение: {{ reduced ? 'да' : 'нет' }}</li>

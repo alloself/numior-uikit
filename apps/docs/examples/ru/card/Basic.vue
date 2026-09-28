@@ -1,5 +1,5 @@
 <template>
-  <NuiCard class="nui-max-w-sm">
+  <NuiCard class="max-w-sm">
     <NuiCardHeader>
       <NuiCardTitle>Тариф Team</NuiCardTitle>
       <NuiCardDescription>Для команд до десяти человек.</NuiCardDescription>

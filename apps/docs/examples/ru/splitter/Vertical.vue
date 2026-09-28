@@ -3,13 +3,13 @@
     v-model:ratio="ratio"
     orientation="vertical"
     :step="0.1"
-    class="nui-w-full nui-h-80 nui-border nui-rounded nui-bg-surface"
+    class="w-full h-80 border rounded-md bg-surface"
   >
     <template #start>
-      <div class="nui-p-4 nui-text-center nui-text-muted">Редактор</div>
+      <div class="p-4 text-center text-muted-foreground">Редактор</div>
     </template>
     <template #end>
-      <div class="nui-p-4 nui-text-center nui-text-muted">Терминал</div>
+      <div class="p-4 text-center text-muted-foreground">Терминал</div>
     </template>
   </NuiSplitter>
 </template>

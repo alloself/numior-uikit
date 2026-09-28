@@ -1,5 +1,5 @@
 <template>
-  <NuiTabs v-model="tab" class="nui-w-full nui-max-w-md">
+  <NuiTabs v-model="tab" class="w-full max-w-md">
     <NuiTabList label="Разделы заказа">
       <NuiTab value="items">Состав</NuiTab>
       <NuiTab value="delivery">Доставка</NuiTab>

@@ -5,7 +5,7 @@
     selectable="single"
     variant="bordered"
     label="Город"
-    class="nui-w-full nui-max-w-sm"
+    class="w-full max-w-sm"
   />
 </template>
 

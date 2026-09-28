@@ -1,6 +1,6 @@
 <template>
-  <div class="nui-not-prose nui-my-6 nui-flex nui-flex-col nui-gap-3">
-    <div class="nui-flex nui-items-center nui-justify-end nui-gap-1">
+  <div class="nui-not-prose my-6 flex flex-col gap-3">
+    <div class="flex items-center justify-end gap-1">
       <PreviewOptions v-model:options="previewOptions" :texts="texts" />
       <NuiButton variant="ghost" tone="neutral" size="sm" @click="reset">{{
         texts.reset
@@ -10,7 +10,7 @@
       <component :is="component.name" v-bind="bound">{{ content }}</component>
     </PreviewFrame>
     <form
-      class="nui-grid-auto nui-grid-auto-sm nui-gap-4 nui-items-start"
+      class="grid-auto grid-auto-sm gap-4 items-start"
       :aria-label="texts.configuratorProps"
       @submit.prevent
     >

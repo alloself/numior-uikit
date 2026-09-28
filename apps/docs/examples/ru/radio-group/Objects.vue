@@ -1,11 +1,11 @@
 <template>
-  <div class="nui-flex nui-flex-col nui-gap-3">
+  <div class="flex flex-col gap-3">
     <NuiRadioGroup v-model="warehouse" label="Склад отгрузки">
       <NuiRadio v-for="item in warehouses" :key="item.code" :value="item">
         {{ item.city }} · {{ item.code }}
       </NuiRadio>
     </NuiRadioGroup>
-    <p class="nui-text-sm nui-text-muted">Выбран: {{ warehouse?.city ?? '—' }}</p>
+    <p class="text-sm text-muted-foreground">Выбран: {{ warehouse?.city ?? '—' }}</p>
   </div>
 </template>
 

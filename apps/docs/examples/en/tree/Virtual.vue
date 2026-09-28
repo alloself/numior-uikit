@@ -1,11 +1,5 @@
 <template>
-  <NuiTree
-    :items="nodes"
-    virtual
-    height="14rem"
-    label="Large tree"
-    class="nui-w-full nui-max-w-sm"
-  />
+  <NuiTree :items="nodes" virtual height="14rem" label="Large tree" class="w-full max-w-sm" />
 </template>
 
 <script setup lang="ts">

@@ -1,4 +1,4 @@
-import type { NuiOption, NuiToggleItem, NuiTone } from '@numior/vue';
+import type { NuiOption } from '@numior/vue';
 
 export interface HomeAction {
   readonly text: string;
@@ -11,11 +11,6 @@ export interface HomeFact {
   readonly details: string;
 }
 
-export interface HomeTag {
-  readonly text: string;
-  readonly tone: NuiTone;
-}
-
 export interface HomeMosaic {
   readonly title: string;
   readonly description: string;
@@ -26,13 +21,6 @@ export interface HomeMosaic {
   readonly shared: string;
   readonly create: string;
   readonly cancel: string;
-  readonly period: string;
-  readonly periods: readonly NuiToggleItem[];
-  readonly members: string;
-  readonly people: readonly string[];
-  readonly release: string;
-  readonly releaseValue: number;
-  readonly tags: readonly HomeTag[];
 }
 
 export interface HomeContent {
@@ -86,22 +74,6 @@ const ru: HomeContent = {
     shared: 'Виден всей компании',
     create: 'Создать',
     cancel: 'Отмена',
-    period: 'Период',
-    periods: [
-      { value: 'week', label: 'Неделя' },
-      { value: 'month', label: 'Месяц' },
-      { value: 'year', label: 'Год' },
-    ],
-    members: 'Участники',
-    people: ['Анна Титова', 'Игорь Белов', 'Мария Ким', 'Олег Смирнов'],
-    release: 'Готовность релиза',
-    releaseValue: 72,
-    tags: [
-      { text: 'Vue 3.5', tone: 'primary' },
-      { text: 'SSR', tone: 'success' },
-      { text: 'RTL', tone: 'info' },
-      { text: 'Тёмная тема', tone: 'neutral' },
-    ],
   },
 };
 
@@ -145,22 +117,6 @@ const en: HomeContent = {
     shared: 'Visible to the whole company',
     create: 'Create',
     cancel: 'Cancel',
-    period: 'Period',
-    periods: [
-      { value: 'week', label: 'Week' },
-      { value: 'month', label: 'Month' },
-      { value: 'year', label: 'Year' },
-    ],
-    members: 'Members',
-    people: ['Anna Titova', 'Igor Belov', 'Maria Kim', 'Oleg Smirnov'],
-    release: 'Release readiness',
-    releaseValue: 72,
-    tags: [
-      { text: 'Vue 3.5', tone: 'primary' },
-      { text: 'SSR', tone: 'success' },
-      { text: 'RTL', tone: 'info' },
-      { text: 'Dark theme', tone: 'neutral' },
-    ],
   },
 };
 

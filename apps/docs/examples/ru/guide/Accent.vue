@@ -1,5 +1,5 @@
 <template>
-  <div class="nui-flex nui-wrap nui-gap-3">
+  <div class="flex flex-wrap gap-3">
     <span v-for="accent in accents" :key="accent" :data-nui-accent="accent">
       <NuiButton>{{ accent }}</NuiButton>
     </span>

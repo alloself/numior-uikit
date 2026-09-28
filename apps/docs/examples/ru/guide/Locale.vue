@@ -1,8 +1,8 @@
 <template>
-  <div class="nui-flex nui-flex-col nui-gap-4">
-    <NuiSelect v-model="locale" :options="locales" label="Локаль приложения" class="nui-max-w-sm" />
+  <div class="flex flex-col gap-4">
+    <NuiSelect v-model="locale" :options="locales" label="Локаль приложения" class="max-w-sm" />
     <NuiPagination v-model:page="page" :total="240" show-range />
-    <NuiDatePicker v-model="date" label="Дата отчёта" today="2026-09-28" class="nui-max-w-sm" />
+    <NuiDatePicker v-model="date" label="Дата отчёта" today="2026-09-28" class="max-w-sm" />
   </div>
 </template>
 

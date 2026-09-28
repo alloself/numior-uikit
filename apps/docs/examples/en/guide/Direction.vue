@@ -1,5 +1,5 @@
 <template>
-  <div dir="rtl" class="nui-w-full nui-max-w-sm nui-flex nui-flex-col nui-gap-4">
+  <div dir="rtl" class="w-full max-w-sm flex flex-col gap-4">
     <NuiInput v-model="name" label="الاسم الكامل" placeholder="مثال: ليلى أحمد" />
     <NuiSelect v-model="city" :options="cities" label="المدينة" />
     <NuiSwitch v-model="news">إرسال الأخبار</NuiSwitch>

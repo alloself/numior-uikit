@@ -1,10 +1,10 @@
 <template>
-  <div class="nui-flex nui-flex-col nui-gap-3">
+  <div class="flex flex-col gap-3">
     <div
       ref="toolbar"
       role="toolbar"
       aria-label="Formatting"
-      class="nui-flex nui-gap-1"
+      class="flex gap-1"
       @keydown="navigation.onKeydown"
       @focusin="navigation.onFocusin"
     >
@@ -20,7 +20,7 @@
         {{ tool }}
       </NuiButton>
     </div>
-    <p class="nui-m-0 nui-text-sm nui-text-muted">Last action: {{ last || '—' }}</p>
+    <p class="m-0 text-sm text-muted-foreground">Last action: {{ last || '—' }}</p>
   </div>
 </template>
 

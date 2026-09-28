@@ -1,5 +1,5 @@
 <template>
-  <NuiCard interactive variant="elevated" class="nui-max-w-sm" @click="onClick">
+  <NuiCard interactive variant="elevated" class="max-w-sm" @click="onClick">
     <NuiCardHeader>
       <NuiCardTitle>Project Numior</NuiCardTitle>
       <NuiCardDescription>Press anywhere on the card.</NuiCardDescription>

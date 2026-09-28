@@ -1,6 +1,6 @@
 <template>
-  <div class="nui-flex nui-flex-col nui-gap-3 nui-w-full nui-max-w-sm">
-    <NuiList variant="divided" class="nui-w-full nui-max-w-sm">
+  <div class="flex flex-col gap-3 w-full max-w-sm">
+    <NuiList variant="divided" class="w-full max-w-sm">
       <NuiListItem
         icon="file"
         label="Contract.pdf"
@@ -16,7 +16,7 @@
         @click="opened = 'Archive'"
       />
     </NuiList>
-    <p class="nui-text-sm nui-text-muted">Opened: {{ opened || '—' }}</p>
+    <p class="text-sm text-muted-foreground">Opened: {{ opened || '—' }}</p>
   </div>
 </template>
 

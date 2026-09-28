@@ -1,7 +1,7 @@
 <template>
-  <div class="nui-flex nui-flex-col nui-gap-4 nui-w-full nui-max-w-lg">
+  <div class="flex flex-col gap-4 w-full max-w-lg">
     <NuiStepper v-model="step" :steps="steps" label="Sign up" />
-    <div class="nui-flex nui-justify-end nui-gap-2">
+    <div class="flex justify-end gap-2">
       <NuiButton variant="ghost" tone="neutral" :disabled="index === 0" @click="move(-1)"
         >Back</NuiButton
       >

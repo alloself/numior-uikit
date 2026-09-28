@@ -1,8 +1,8 @@
 <template>
-  <div class="nui-flex nui-flex-col nui-gap-2">
+  <div class="flex flex-col gap-2">
     <h4>{{ texts.apiStyles }}</h4>
     <NuiCode :code="`import '${styles.import}';`" language="ts" />
-    <dl v-for="block in described" :key="block.name" class="nui-flex nui-flex-col nui-gap-1">
+    <dl v-for="block in described" :key="block.name" class="flex flex-col gap-1">
       <dt>
         <code>.{{ block.name }}</code>
       </dt>
@@ -19,7 +19,7 @@
         :items="block.modifiers"
       />
     </dl>
-    <p v-if="plain.length > 0" class="nui-text-sm">
+    <p v-if="plain.length > 0" class="text-sm">
       <template v-for="(block, index) in plain" :key="block.name">
         <code>.{{ block.name }}</code
         ><span v-if="index < plain.length - 1">, </span>

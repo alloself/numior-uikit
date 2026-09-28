@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { DocsSite } from '../pages/docs';
 
-test('the home page shows a live mosaic, copies the install line and leads to the guide', async ({
+test('the home page shows a live form card, copies the install line and leads to the guide', async ({
   page,
 }) => {
   const docs = new DocsSite(page);
@@ -13,9 +13,6 @@ test('the home page shows a live mosaic, copies the install line and leads to th
   await expect(home.nameInput).toBeVisible();
   await home.nameInput.fill('Каталог');
   await expect(home.nameInput).toHaveValue('Каталог');
-  await expect(home.period('Месяц')).toHaveAttribute('aria-checked', 'true');
-  await home.period('Год').click();
-  await expect(home.period('Год')).toHaveAttribute('aria-checked', 'true');
   await expect(home.facts.getByText(/^\d+$/)).toBeVisible();
   await home.copyInstall.click();
 

@@ -1,17 +1,17 @@
 <template>
-  <div class="nui-w-full nui-h-96 nui-border nui-rounded-lg nui-bg-surface">
+  <div class="w-full h-96 border rounded-lg bg-surface">
     <NuiLayout
       v-model:open="open"
       content-as="div"
       :shortcut="false"
-      class="nui-h-full"
+      class="h-full"
       header="full"
       end-width="12rem"
     >
       <template #sidebar>
         <NuiSidebar collapsible="icon" label="Разделы">
           <NuiSidebarHeader>
-            <strong class="nui-px-2">Numior</strong>
+            <strong class="px-2">Numior</strong>
           </NuiSidebarHeader>
           <NuiSidebarContent>
             <NuiSidebarGroup label="Обзор">
@@ -44,13 +44,13 @@
           </template>
         </NuiAppBar>
       </template>
-      <div class="nui-p-6">
+      <div class="p-6">
         <p>Раздел «{{ titles[active] }}».</p>
       </div>
       <template #end>
-        <nav class="nui-p-4 nui-text-sm" aria-label="На странице">
-          <p class="nui-m-0 nui-font-medium">На странице</p>
-          <p class="nui-m-0 nui-text-muted">Сводка, задачи, файлы</p>
+        <nav class="p-4 text-sm" aria-label="На странице">
+          <p class="m-0 font-medium">На странице</p>
+          <p class="m-0 text-muted-foreground">Сводка, задачи, файлы</p>
         </nav>
       </template>
     </NuiLayout>

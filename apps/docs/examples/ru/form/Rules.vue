@@ -1,5 +1,5 @@
 <template>
-  <NuiForm :form="form" submit-label="Войти" class="nui-max-w-sm">
+  <NuiForm :form="form" submit-label="Войти" class="max-w-sm">
     <NuiFormField
       v-slot="{ field }"
       :form="form"

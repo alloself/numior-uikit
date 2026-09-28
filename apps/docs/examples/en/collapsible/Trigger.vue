@@ -3,7 +3,7 @@
     <template #trigger="{ open: expanded }">{{
       expanded ? 'Hide details' : 'Show details'
     }}</template>
-    <p class="nui-m-0 nui-text-sm nui-text-muted">
+    <p class="m-0 text-sm text-muted-foreground">
       Order 4812 is packed at the warehouse and handed to the courier.
     </p>
   </NuiCollapsible>

@@ -1,5 +1,5 @@
 <template>
-  <div class="nui-flex nui-wrap nui-gap-2">
+  <div class="flex flex-wrap gap-2">
     <NuiButton
       @click="toast.success('Заказ оформлен', { description: 'Номер 4812, доставка в среду' })"
       >Успех</NuiButton

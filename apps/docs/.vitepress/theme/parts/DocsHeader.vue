@@ -6,14 +6,14 @@
         :href="localeBase"
         tone="neutral"
         underline="none"
-        class="nui-font-semibold nui-text-md nui-nowrap"
+        class="font-semibold text-base whitespace-nowrap"
         >Numior UI</NuiLink
       >
     </template>
     <nav
       v-if="!layout.mobile.value"
       :aria-label="texts.sections"
-      class="nui-flex nui-items-center nui-gap-1 nui-font-normal"
+      class="flex items-center gap-1 font-normal"
     >
       <NuiButton
         v-for="item in theme.nav"
@@ -31,7 +31,7 @@
         variant="soft"
         tone="neutral"
         size="sm"
-        class="nui-font-normal nui-text-muted"
+        class="font-normal text-muted-foreground"
         :aria-label="texts.search"
         @click="emit('search')"
       >

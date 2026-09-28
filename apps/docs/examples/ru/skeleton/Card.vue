@@ -1,6 +1,6 @@
 <template>
-  <NuiSwitch v-model="loading" class="nui-mb-4">Загрузка</NuiSwitch>
-  <NuiCard class="nui-w-full nui-max-w-sm" :aria-busy="loading || undefined">
+  <NuiSwitch v-model="loading" class="mb-4">Загрузка</NuiSwitch>
+  <NuiCard class="w-full max-w-sm" :aria-busy="loading || undefined">
     <NuiCardHeader>
       <NuiCardTitle>
         <NuiSkeleton v-if="loading" width="60%" />

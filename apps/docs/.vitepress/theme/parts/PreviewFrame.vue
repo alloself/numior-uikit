@@ -2,7 +2,7 @@
   <div
     role="group"
     :aria-label="texts.preview"
-    class="nui-rounded-lg nui-border nui-bg-surface nui-bg-dots nui-text nui-p-8 nui-min-h-40 nui-flex nui-wrap nui-items-center nui-justify-center nui-gap-3"
+    class="rounded-lg border bg-surface bg-dots text-foreground p-8 min-h-40 flex flex-wrap items-center justify-center gap-3"
     :data-nui-theme="frameTheme"
     :dir="frameDirection"
   >

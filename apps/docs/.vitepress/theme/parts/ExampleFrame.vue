@@ -1,11 +1,11 @@
 <template>
-  <NuiTabs v-model="view" variant="line" size="sm" class="nui-not-prose nui-my-6">
-    <div class="nui-flex nui-items-center nui-justify-between nui-gap-2 nui-wrap">
+  <NuiTabs v-model="view" variant="line" size="sm" class="nui-not-prose my-6">
+    <div class="flex items-center justify-between gap-2 flex-wrap">
       <NuiTabList :label="texts.exampleView">
         <NuiTab value="preview" icon="eye">{{ texts.preview }}</NuiTab>
         <NuiTab value="code" icon="code">{{ texts.code }}</NuiTab>
       </NuiTabList>
-      <div class="nui-flex nui-items-center nui-gap-1">
+      <div class="flex items-center gap-1">
         <PreviewOptions v-model:options="options" :texts="texts" />
         <NuiButton
           variant="ghost"
@@ -18,12 +18,12 @@
         </NuiButton>
       </div>
     </div>
-    <NuiTabPanel value="preview" class="nui-mt-2">
+    <NuiTabPanel value="preview" class="mt-2">
       <PreviewFrame :texts="texts" :options="options">
         <component :is="component" />
       </PreviewFrame>
     </NuiTabPanel>
-    <NuiTabPanel value="code" class="nui-mt-2">
+    <NuiTabPanel value="code" class="mt-2">
       <NuiTabs
         v-if="files.length > 1"
         v-model="fileName"

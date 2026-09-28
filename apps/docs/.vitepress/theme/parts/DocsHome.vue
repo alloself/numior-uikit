@@ -1,12 +1,10 @@
 <template>
-  <div class="nui-max-w-5xl nui-mx-auto nui-px-6 nui-py-8 nui-flex nui-flex-col nui-gap-8">
-    <section class="nui-grid-auto nui-grid-auto-lg nui-gap-8 nui-items-center">
-      <div class="nui-flex nui-flex-col nui-gap-5">
-        <h1 class="nui-m-0 nui-text-4xl nui-font-bold nui-tracking-tight nui-leading-tight">
-          {{ home.title }}
-        </h1>
-        <p class="nui-m-0 nui-text-lg nui-text-muted">{{ home.tagline }}</p>
-        <div class="nui-flex nui-wrap nui-gap-3">
+  <div class="mx-auto flex max-w-6xl flex-col gap-16 px-6 py-16">
+    <section class="grid-auto-lg items-start gap-12">
+      <div class="flex flex-col gap-6 pt-2">
+        <h1 class="m-0 text-4xl leading-tight font-bold tracking-tight">{{ home.title }}</h1>
+        <p class="m-0 max-w-prose text-lg text-muted-foreground">{{ home.tagline }}</p>
+        <div class="flex flex-wrap gap-3">
           <NuiButton
             v-for="action in home.actions"
             :key="action.link"
@@ -21,16 +19,14 @@
       </div>
       <DocsHomeMosaic :content="home.mosaic" />
     </section>
-    <section class="nui-grid-auto nui-grid-auto-sm nui-gap-6" :aria-label="texts.facts">
-      <div class="nui-flex nui-flex-col nui-gap-1">
-        <p class="nui-m-0 nui-text-2xl nui-font-semibold nui-tracking-tight">
-          {{ componentCount }}
-        </p>
-        <p class="nui-m-0 nui-text-sm nui-text-muted">{{ home.componentsFact }}</p>
+    <section class="grid-auto-sm gap-8 border-t pt-10" :aria-label="texts.facts">
+      <div class="flex flex-col gap-1">
+        <p class="m-0 text-2xl font-semibold tracking-tight">{{ componentCount }}</p>
+        <p class="m-0 text-sm text-muted-foreground">{{ home.componentsFact }}</p>
       </div>
-      <div v-for="fact in home.facts" :key="fact.title" class="nui-flex nui-flex-col nui-gap-1">
-        <p class="nui-m-0 nui-text-2xl nui-font-semibold nui-tracking-tight">{{ fact.title }}</p>
-        <p class="nui-m-0 nui-text-sm nui-text-muted">{{ fact.details }}</p>
+      <div v-for="fact in home.facts" :key="fact.title" class="flex flex-col gap-1">
+        <p class="m-0 text-2xl font-semibold tracking-tight">{{ fact.title }}</p>
+        <p class="m-0 text-sm text-muted-foreground">{{ fact.details }}</p>
       </div>
     </section>
   </div>

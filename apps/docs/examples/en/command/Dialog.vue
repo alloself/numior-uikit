@@ -1,5 +1,5 @@
 <template>
-  <div class="nui-flex nui-flex-col nui-gap-3">
+  <div class="flex flex-col gap-3">
     <NuiButton variant="outline" tone="neutral" @click="open = true">
       Command palette <NuiKbd keys="mod+j" size="sm" variant="plain" />
     </NuiButton>
@@ -10,7 +10,7 @@
       hotkey="mod+j"
       @select="last = $event.label"
     />
-    <p class="nui-m-0 nui-text-sm nui-text-muted">Last command: {{ last || '—' }}</p>
+    <p class="m-0 text-sm text-muted-foreground">Last command: {{ last || '—' }}</p>
   </div>
 </template>
 

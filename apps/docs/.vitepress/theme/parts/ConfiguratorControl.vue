@@ -1,6 +1,6 @@
 <template>
-  <div v-if="prop.kind === 'enum' && short" class="nui-flex nui-flex-col nui-gap-1">
-    <span class="nui-text-sm nui-font-medium">{{ prop.name }}</span>
+  <div v-if="prop.kind === 'enum' && short" class="flex flex-col gap-1">
+    <span class="text-sm font-medium">{{ prop.name }}</span>
     <NuiToggleGroup
       :model-value="state.enums[prop.name] ?? null"
       :items="options"

@@ -1,21 +1,21 @@
 <template>
-  <div class="nui-flex nui-flex-col nui-gap-2">
+  <div class="flex flex-col gap-2">
     <h4>{{ title }}</h4>
     <NuiTable :columns="columns" :rows="rows" :get-key="keyOf" size="sm">
       <template #cell-name="{ row }">
         <code>{{ row.name }}</code>
-        <span v-if="isRequired(row)" :title="requiredLabel" class="nui-text-error">*</span>
+        <span v-if="isRequired(row)" :title="requiredLabel" class="text-error">*</span>
       </template>
       <template #cell-type="{ row }">
         <code>{{ row.type }}</code>
       </template>
       <template #cell-default="{ row }">
         <code v-if="defaultOf(row) !== undefined">{{ defaultOf(row) }}</code>
-        <span v-else class="nui-text-subtle">—</span>
+        <span v-else class="text-subtle-foreground">—</span>
       </template>
       <template #cell-description="{ row }">
         <span v-if="row.description">{{ row.description[locale] }}</span>
-        <span v-else class="nui-text-subtle">—</span>
+        <span v-else class="text-subtle-foreground">—</span>
       </template>
     </NuiTable>
   </div>

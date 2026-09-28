@@ -1,5 +1,5 @@
 <template>
-  <div class="nui-flex nui-flex-col nui-gap-3">
+  <div class="flex flex-col gap-3">
     <NuiToggleGroup
       v-model:values="panels"
       :items="items"
@@ -8,7 +8,7 @@
       size="sm"
       label="Панели"
     />
-    <p class="nui-m-0 nui-text-sm nui-text-muted">Открыто: {{ panels.join(', ') || 'ничего' }}</p>
+    <p class="m-0 text-sm text-muted-foreground">Открыто: {{ panels.join(', ') || 'ничего' }}</p>
   </div>
 </template>
 

@@ -10,7 +10,7 @@ pnpm add @numior/vue @numior/tokens
 ```
 
 `@numior/tokens` provides the themes and tokens, `@numior/vue` the components. Forms live in
-`@numior/forms`, layout utilities in `@numior/utilities`.
+`@numior/forms`, the Tailwind preset in `@numior/tailwind`.
 
 ## Styles
 

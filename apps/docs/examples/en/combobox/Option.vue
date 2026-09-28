@@ -2,7 +2,7 @@
   <NuiCombobox v-model="assignee" :options="people" label="Assignee" placeholder="Assign">
     <template #option="{ option }">
       <span>{{ option.label }}</span>
-      <span class="nui-text-muted nui-ms-2">{{ option.description }}</span>
+      <span class="text-muted-foreground ms-2">{{ option.description }}</span>
     </template>
   </NuiCombobox>
 </template>

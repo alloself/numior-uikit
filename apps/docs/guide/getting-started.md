@@ -10,7 +10,7 @@ pnpm add @numior/vue @numior/tokens
 ```
 
 `@numior/tokens` даёт темы и токены, `@numior/vue` — компоненты. Формы живут в `@numior/forms`,
-утилиты вёрстки — в `@numior/utilities`.
+пресет Tailwind — в `@numior/tailwind`.
 
 ## Стили
 

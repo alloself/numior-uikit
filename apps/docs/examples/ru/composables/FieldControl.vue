@@ -1,7 +1,7 @@
 <template>
-  <NuiField label="Оценка" description="От 1 до 5" class="nui-max-w-sm">
+  <NuiField label="Оценка" description="От 1 до 5" class="max-w-sm">
     <Rating />
-    <p class="nui-m-0 nui-text-sm nui-text-muted">Оценка: {{ rating }} из 5</p>
+    <p class="m-0 text-sm text-muted-foreground">Оценка: {{ rating }} из 5</p>
   </NuiField>
 </template>
 
@@ -23,7 +23,7 @@ const Rating = defineComponent({
           id: control.attrs.value.id,
           'aria-describedby': control.attrs.value['aria-describedby'],
           role: 'group',
-          class: 'nui-flex nui-gap-1',
+          class: 'flex gap-1',
         },
         scores.map((score) =>
           h(

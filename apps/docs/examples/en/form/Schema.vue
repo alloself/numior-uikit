@@ -1,5 +1,5 @@
 <template>
-  <NuiForm :form="form" submit-label="Create account" class="nui-max-w-sm">
+  <NuiForm :form="form" submit-label="Create account" class="max-w-sm">
     <NuiFormField v-slot="{ field }" :form="form" :name="(v) => v.email" label="Email" required>
       <NuiInput v-bind="field" type="email" autocomplete="email" />
     </NuiFormField>
@@ -10,7 +10,7 @@
       <NuiCheckbox v-bind="field">Send the monthly newsletter</NuiCheckbox>
     </NuiFormField>
   </NuiForm>
-  <p v-if="created" class="nui-text-sm nui-text-muted">Account created for {{ created }}</p>
+  <p v-if="created" class="text-sm text-muted-foreground">Account created for {{ created }}</p>
 </template>
 
 <script setup lang="ts">

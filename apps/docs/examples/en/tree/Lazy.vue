@@ -1,5 +1,5 @@
 <template>
-  <NuiTree :items="folders" label="Storage" class="nui-w-full nui-max-w-sm" @load="load" />
+  <NuiTree :items="folders" label="Storage" class="w-full max-w-sm" @load="load" />
 </template>
 
 <script setup lang="ts">

@@ -2,7 +2,7 @@
   <div
     ref="root"
     data-nui-theme="light"
-    class="nui-p-4 nui-bg-surface nui-border nui-rounded nui-flex nui-flex-col nui-gap-4"
+    class="p-4 bg-surface border rounded-md flex flex-col gap-4"
   >
     <NuiToggleGroup
       :model-value="scheme"
@@ -12,7 +12,7 @@
       label="Area scheme"
       @update:model-value="pick"
     />
-    <p class="nui-m-0 nui-text-sm nui-text-muted">
+    <p class="m-0 text-sm text-muted-foreground">
       The area renders as {{ resolved }}, the rest of the page stays as it is.
     </p>
     <NuiButton>Button inside the area</NuiButton>

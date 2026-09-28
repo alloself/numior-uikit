@@ -1,5 +1,5 @@
 <template>
-  <div class="nui-flex nui-items-center nui-gap-3">
+  <div class="flex items-center gap-3">
     <NuiButton variant="ghost" tone="error" aria-label="Удалить">
       <NuiIcon alias="trash" />
     </NuiButton>

@@ -1,5 +1,5 @@
 <template>
-  <section class="nui-flex nui-flex-col nui-gap-6">
+  <section class="flex flex-col gap-6">
     <h3 v-if="heading" :id="anchorOf(component.name)">{{ component.name }}</h3>
     <ApiTable
       v-if="component.props.length > 0"

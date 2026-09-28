@@ -1,5 +1,5 @@
 <template>
-  <NuiList variant="nav" label="Sections" class="nui-w-full nui-max-w-sm">
+  <NuiList variant="nav" label="Sections" class="w-full max-w-sm">
     <NuiListItem
       icon="inbox"
       label="Inbox"

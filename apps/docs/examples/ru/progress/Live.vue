@@ -1,8 +1,8 @@
 <template>
-  <div class="nui-flex nui-flex-col nui-gap-3 nui-w-full nui-max-w-sm">
-    <div class="nui-flex nui-justify-between nui-text-sm">
+  <div class="flex flex-col gap-3 w-full max-w-sm">
+    <div class="flex justify-between text-sm">
       <span>Импорт каталога</span>
-      <span class="nui-text-muted">{{ done }}%</span>
+      <span class="text-muted-foreground">{{ done }}%</span>
     </div>
     <NuiProgress :value="done" label="Импорт каталога" />
     <NuiButton size="sm" variant="outline" :disabled="running" @click="start">Запустить</NuiButton>

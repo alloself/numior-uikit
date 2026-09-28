@@ -1,7 +1,7 @@
 <template>
   <NuiButton variant="outline" @click="open = true">Filters</NuiButton>
   <NuiDrawer v-model:open="open" title="Filters" description="Order list settings">
-    <div class="nui-flex nui-flex-col nui-gap-3">
+    <div class="flex flex-col gap-3">
       <NuiInput v-model="query" label="Customer" placeholder="Name or company" />
       <NuiSelect v-model="status" :options="statuses" label="Status" clearable />
       <NuiSwitch v-model="onlyMine">Only my orders</NuiSwitch>

@@ -14,7 +14,7 @@
       {{ typeof value === 'number' ? value.toLocaleString('ru-RU') : value }}
     </template>
   </NuiTable>
-  <p class="nui-text-sm nui-text-muted">Выбрано: {{ selected.length }}</p>
+  <p class="text-sm text-muted-foreground">Выбрано: {{ selected.length }}</p>
 </template>
 
 <script setup lang="ts">

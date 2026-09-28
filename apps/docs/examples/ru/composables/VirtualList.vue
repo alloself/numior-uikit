@@ -1,14 +1,10 @@
 <template>
-  <div
-    ref="scroller"
-    class="nui-w-full nui-max-w-md nui-h-80 nui-overflow-auto nui-border nui-rounded"
-    tabindex="0"
-  >
+  <div ref="scroller" class="w-full max-w-md h-80 overflow-auto border rounded-md" tabindex="0">
     <div :style="{ paddingBlockStart: `${startSize}px`, paddingBlockEnd: `${endSize}px` }">
       <div
         v-for="item in items"
         :key="item.index"
-        class="nui-flex nui-items-center nui-px-4 nui-text-sm"
+        class="flex items-center px-4 text-sm"
         :style="{ blockSize: `${item.size}px` }"
       >
         Строка {{ item.index + 1 }} из 10 000

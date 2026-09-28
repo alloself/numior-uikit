@@ -1,5 +1,5 @@
 <template>
-  <div class="nui-flex nui-flex-col nui-gap-2">
+  <div class="flex flex-col gap-2">
     <h4>{{ texts.apiTexts }}</h4>
     <NuiTable :columns="columns" :rows="rows" :get-key="keyOf" size="sm">
       <template #cell-key="{ row }">

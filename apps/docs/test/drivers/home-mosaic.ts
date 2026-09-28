@@ -31,38 +31,6 @@ export class HomeMosaicDriver {
     return this.wrapper.find('[role="switch"]').element.closest('label')?.textContent?.trim() ?? '';
   }
 
-  period(label: string): DOMWrapper<HTMLElement> {
-    const found = this.wrapper
-      .findAll<HTMLElement>('[role="radio"]')
-      .find((item) => item.text() === label);
-
-    if (!found) {
-      throw new Error(`No period ${label}`);
-    }
-    return found;
-  }
-
-  get selectedPeriod(): string {
-    return (
-      this.wrapper
-        .findAll<HTMLElement>('[role="radio"]')
-        .find((item) => item.attributes('aria-checked') === 'true')
-        ?.text() ?? ''
-    );
-  }
-
-  async pickPeriod(label: string): Promise<void> {
-    await this.period(label).trigger('click');
-  }
-
-  get progressValue(): number {
-    return this.wrapper.find<HTMLProgressElement>('progress').element.value;
-  }
-
-  get chips(): string[] {
-    return this.wrapper.findAll('.nui-chip').map((chip) => chip.text());
-  }
-
   unmount(): void {
     this.wrapper.unmount();
   }

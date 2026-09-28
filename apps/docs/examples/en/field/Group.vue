@@ -1,6 +1,6 @@
 <template>
   <NuiField group label="First and last name" description="As in the passport">
-    <div class="nui-flex nui-gap-2">
+    <div class="flex gap-2">
       <NuiInput v-model="firstName" placeholder="Anna" autocomplete="given-name" />
       <NuiInput v-model="lastName" placeholder="Titova" autocomplete="family-name" />
     </div>

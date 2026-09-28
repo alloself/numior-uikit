@@ -1,5 +1,5 @@
 <template>
-  <div class="nui-max-w-3xl nui-mx-auto nui-p-6">
+  <div class="max-w-3xl mx-auto p-6">
     <article id="docs-content" class="nui-prose" tabindex="-1">
       <Content />
     </article>

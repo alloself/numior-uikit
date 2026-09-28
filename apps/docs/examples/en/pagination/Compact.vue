@@ -1,5 +1,5 @@
 <template>
-  <div class="nui-w-full nui-max-w-sm">
+  <div class="w-full max-w-sm">
     <NuiPagination v-model:page="page" :total="120" size="sm" />
   </div>
 </template>

@@ -1,12 +1,8 @@
 <template>
-  <div class="nui-w-full nui-grid-auto-sm nui-gap-3">
-    <div
-      v-for="alias in aliases"
-      :key="alias"
-      class="nui-flex nui-flex-col nui-items-center nui-gap-1"
-    >
-      <NuiIcon :alias="alias" class="nui-text-lg" />
-      <span class="nui-text-xs nui-text-muted">{{ alias }}</span>
+  <div class="w-full grid-auto-sm gap-3">
+    <div v-for="alias in aliases" :key="alias" class="flex flex-col items-center gap-1">
+      <NuiIcon :alias="alias" class="text-lg" />
+      <span class="text-xs text-muted-foreground">{{ alias }}</span>
     </div>
   </div>
 </template>

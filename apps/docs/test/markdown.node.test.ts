@@ -33,7 +33,7 @@ const decodeAttribute = (value: string): string =>
     .replaceAll('&amp;', '&');
 
 const codeProps = (html: string) => {
-  const match = /<NuiCode class="nui-mb-5" v-bind='([^']*)'><\/NuiCode>/.exec(html);
+  const match = /<NuiCode class="mb-5" v-bind='([^']*)'><\/NuiCode>/.exec(html);
 
   if (match?.[1] === undefined) {
     throw new Error(`No code block in: ${html}`);

@@ -1,16 +1,16 @@
 <template>
-  <div class="nui-flex nui-flex-col nui-gap-3 nui-w-full nui-max-w-md">
-    <div class="nui-border nui-rounded">
+  <div class="flex flex-col gap-3 w-full max-w-md">
+    <div class="border rounded-md">
       <NuiCommand :items="commands" @select="last = $event.label">
         <template #footer>
-          <span class="nui-text-xs nui-text-muted">
+          <span class="text-xs text-muted-foreground">
             <NuiKbd keys="arrowup" size="sm" /> <NuiKbd keys="arrowdown" size="sm" /> navigate,
             <NuiKbd keys="enter" size="sm" /> select
           </span>
         </template>
       </NuiCommand>
     </div>
-    <p class="nui-m-0 nui-text-sm nui-text-muted">Last command: {{ last || '—' }}</p>
+    <p class="m-0 text-sm text-muted-foreground">Last command: {{ last || '—' }}</p>
   </div>
 </template>
 

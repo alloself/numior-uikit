@@ -1,5 +1,5 @@
 <template>
-  <ul class="nui-m-0 nui-text-sm">
+  <ul class="m-0 text-sm">
     <li>Narrow screen (up to 48rem): {{ narrow ? 'yes' : 'no' }}</li>
     <li>System dark scheme: {{ dark ? 'yes' : 'no' }}</li>
     <li>Reduced motion: {{ reduced ? 'yes' : 'no' }}</li>

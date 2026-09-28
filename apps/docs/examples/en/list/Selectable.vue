@@ -1,14 +1,14 @@
 <template>
-  <div class="nui-flex nui-flex-col nui-gap-3 nui-w-full nui-max-w-sm">
+  <div class="flex flex-col gap-3 w-full max-w-sm">
     <NuiList
       v-model:values="picked"
       :items="languages"
       selectable="multiple"
       variant="bordered"
       label="Interface languages"
-      class="nui-w-full nui-max-w-sm"
+      class="w-full max-w-sm"
     />
-    <p class="nui-text-sm nui-text-muted">Selected: {{ picked.join(', ') || '—' }}</p>
+    <p class="text-sm text-muted-foreground">Selected: {{ picked.join(', ') || '—' }}</p>
   </div>
 </template>
 

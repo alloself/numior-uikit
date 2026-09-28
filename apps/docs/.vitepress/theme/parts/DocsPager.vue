@@ -1,9 +1,5 @@
 <template>
-  <nav
-    v-if="pager.previous || pager.next"
-    :aria-label="texts.pager"
-    class="nui-grid-auto nui-gap-4 nui-mt-8"
-  >
+  <nav v-if="pager.previous || pager.next" :aria-label="texts.pager" class="grid-auto gap-4 mt-8">
     <NuiCard
       v-if="pager.previous"
       :href="withBase(pager.previous.link)"
@@ -18,7 +14,7 @@
       :title="pager.next.text"
       :description="texts.next"
       padding="sm"
-      class="nui-text-end"
+      class="text-end"
     />
   </nav>
 </template>

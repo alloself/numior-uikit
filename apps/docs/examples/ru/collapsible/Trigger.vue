@@ -3,7 +3,7 @@
     <template #trigger="{ open: expanded }">{{
       expanded ? 'Скрыть детали' : 'Показать детали'
     }}</template>
-    <p class="nui-m-0 nui-text-sm nui-text-muted">Заказ 4812 собран на складе и передан курьеру.</p>
+    <p class="m-0 text-sm text-muted-foreground">Заказ 4812 собран на складе и передан курьеру.</p>
   </NuiCollapsible>
 </template>
 

@@ -1,5 +1,5 @@
 <template>
-  <div class="nui-flex nui-items-end nui-gap-2 nui-max-w-sm">
+  <div class="flex items-end gap-2 max-w-sm">
     <NuiInput v-model="link" label="Invite link" readonly />
     <NuiButton variant="outline" tone="neutral" @click="copy(link)">
       {{ copied ? 'Copied' : 'Copy' }}

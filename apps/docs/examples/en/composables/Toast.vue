@@ -1,5 +1,5 @@
 <template>
-  <div class="nui-flex nui-wrap nui-gap-2">
+  <div class="flex flex-wrap gap-2">
     <NuiButton
       @click="toast.success('Order placed', { description: 'Number 4812, delivery on Wednesday' })"
       >Success</NuiButton

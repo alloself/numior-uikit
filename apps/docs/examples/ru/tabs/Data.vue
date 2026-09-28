@@ -8,7 +8,7 @@
     label="Период"
   >
     <template #panel="{ tab }">
-      <p class="nui-text-sm">Продажи за период «{{ tab.label }}».</p>
+      <p class="text-sm">Продажи за период «{{ tab.label }}».</p>
     </template>
   </NuiTabs>
 </template>

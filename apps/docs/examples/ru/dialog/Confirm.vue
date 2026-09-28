@@ -1,6 +1,6 @@
 <template>
   <NuiButton tone="error" variant="outline" @click="open = true">Удалить проект</NuiButton>
-  <p class="nui-text-sm nui-text-muted">Результат: {{ result || '—' }}</p>
+  <p class="text-sm text-muted-foreground">Результат: {{ result || '—' }}</p>
   <NuiDialog
     v-model:open="open"
     title="Удалить проект «Каталог 2026»?"
@@ -9,7 +9,7 @@
   >
     <p>Все данные проекта будут удалены вместе с историей изменений.</p>
     <template #footer>
-      <form method="dialog" class="nui-flex nui-gap-2">
+      <form method="dialog" class="flex gap-2">
         <NuiButton type="submit" value="cancel" variant="ghost" tone="neutral">Отмена</NuiButton>
         <NuiButton type="submit" value="confirm" tone="error">Удалить</NuiButton>
       </form>

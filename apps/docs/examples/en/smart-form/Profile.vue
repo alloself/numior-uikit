@@ -1,5 +1,5 @@
 <template>
-  <NuiSmartForm :form="form" :fields="fields" submit-label="Save" class="nui-max-w-lg">
+  <NuiSmartForm :form="form" :fields="fields" submit-label="Save" class="max-w-lg">
     <template #kind>
       <NuiRadio value="person">Individual</NuiRadio>
       <NuiRadio value="company">Company</NuiRadio>

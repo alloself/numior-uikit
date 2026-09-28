@@ -1,5 +1,5 @@
 <template>
-  <div class="nui-flex nui-flex-col nui-gap-4 nui-max-w-sm">
+  <div class="flex flex-col gap-4 max-w-sm">
     <NuiButton variant="outline" tone="neutral">Продолжить с Google</NuiButton>
     <NuiSeparator label="или" />
     <NuiInput v-model="email" type="email" label="Почта" />

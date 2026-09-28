@@ -1,13 +1,13 @@
 <template>
-  <div class="nui-flex nui-flex-col nui-gap-3 nui-w-full nui-max-w-sm">
+  <div class="flex flex-col gap-3 w-full max-w-sm">
     <div
       v-bind="drop.attrs"
-      class="nui-border nui-rounded nui-p-4 nui-text-center nui-text-sm"
-      :class="drop.dragging.value ? 'nui-bg-primary-soft' : 'nui-bg-surface-muted'"
+      class="border rounded-md p-4 text-center text-sm"
+      :class="drop.dragging.value ? 'bg-primary-soft' : 'bg-surface-muted'"
     >
       Drop files here
     </div>
-    <ul v-if="names.length > 0" class="nui-m-0 nui-text-sm">
+    <ul v-if="names.length > 0" class="m-0 text-sm">
       <li v-for="name in names" :key="name">{{ name }}</li>
     </ul>
   </div>

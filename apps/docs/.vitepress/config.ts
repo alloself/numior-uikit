@@ -1,6 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { createHighlighter } from 'shiki';
+import tailwindcss from '@tailwindcss/vite';
 import { defineConfigWithTheme } from 'vitepress';
 import { colorSchemeScript } from '@numior/primitives';
 import { CODE_LANGUAGES, docsMarkdown } from './markdown';
@@ -43,7 +44,6 @@ const ruGuide: DocsSidebarGroup[] = [
       { text: 'Направление письма', link: '/guide/direction' },
       { text: 'SSR и Nuxt', link: '/guide/ssr' },
       { text: 'Tailwind', link: '/guide/tailwind' },
-      { text: 'Утилиты и проза', link: '/guide/utilities' },
       { text: 'Валидация форм', link: '/guide/forms-validation' },
       { text: 'Доступность', link: '/guide/accessibility' },
     ],
@@ -222,7 +222,6 @@ const enGuide: DocsSidebarGroup[] = [
       { text: 'Direction', link: '/en/guide/direction' },
       { text: 'SSR and Nuxt', link: '/en/guide/ssr' },
       { text: 'Tailwind', link: '/en/guide/tailwind' },
-      { text: 'Utilities and prose', link: '/en/guide/utilities' },
       { text: 'Forms validation', link: '/en/guide/forms-validation' },
       { text: 'Accessibility', link: '/en/guide/accessibility' },
     ],
@@ -404,6 +403,7 @@ export default defineConfigWithTheme<DocsThemeConfig>({
   vite: {
     resolve: process.env.NODE_ENV === 'production' ? {} : { conditions: ['@numior/source'] },
     plugins: [
+      tailwindcss(),
       docsExamples(fileURLToPath(new URL('../examples', import.meta.url)), highlighter),
       docsReference(bundleFile, highlighter),
     ],

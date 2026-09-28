@@ -3,7 +3,7 @@
     <template #trigger="{ attrs }">
       <NuiButton v-bind="attrs" variant="ghost" tone="neutral">{{ side.label }}</NuiButton>
     </template>
-    <p class="nui-p-1">Слой со стороны {{ side.label.toLowerCase() }}</p>
+    <p class="p-1">Слой со стороны {{ side.label.toLowerCase() }}</p>
   </NuiPopover>
 </template>
 

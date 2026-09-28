@@ -1,5 +1,5 @@
 <template>
-  <div class="nui-flex nui-items-center nui-gap-3">
+  <div class="flex items-center gap-3">
     <NuiButton variant="ghost" tone="neutral" size="sm">Файл</NuiButton>
     <NuiSeparator orientation="vertical" />
     <NuiButton variant="ghost" tone="neutral" size="sm">Правка</NuiButton>

@@ -1,5 +1,5 @@
 <template>
-  <NuiCard href="#anatomy" class="nui-max-w-sm">
+  <NuiCard href="#anatomy" class="max-w-sm">
     <NuiCardHeader>
       <NuiCardTitle>Card anatomy</NuiCardTitle>
       <NuiCardDescription

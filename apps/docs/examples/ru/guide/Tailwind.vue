@@ -1,15 +1,13 @@
 <template>
-  <div class="nui-w-full nui-grid-auto nui-gap-4">
+  <div class="w-full grid-auto gap-4">
     <div
       v-for="item in stats"
       :key="item.label"
-      class="nui-border nui-rounded nui-p-4 nui-bg-surface-elevated nui-flex nui-flex-col nui-gap-1"
+      class="border rounded-md p-4 bg-surface-elevated flex flex-col gap-1"
     >
-      <span class="nui-text-sm nui-text-muted">{{ item.label }}</span>
-      <span class="nui-text-2xl nui-font-semibold nui-tabular-nums">{{ item.value }}</span>
-      <span class="nui-text-xs" :class="item.up ? 'nui-text-success' : 'nui-text-error'">{{
-        item.delta
-      }}</span>
+      <span class="text-sm text-muted-foreground">{{ item.label }}</span>
+      <span class="text-2xl font-semibold tabular-nums">{{ item.value }}</span>
+      <span class="text-xs" :class="item.up ? 'text-success' : 'text-error'">{{ item.delta }}</span>
     </div>
   </div>
 </template>

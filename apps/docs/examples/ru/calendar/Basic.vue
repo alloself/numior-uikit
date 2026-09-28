@@ -1,5 +1,5 @@
 <template>
-  <div class="nui-flex nui-flex-col nui-gap-3">
+  <div class="flex flex-col gap-3">
     <NuiCalendar
       v-model="date"
       today="2026-09-27"
@@ -7,7 +7,7 @@
       week-numbers
       :is-date-disabled="isWeekend"
     />
-    <p class="nui-text-sm nui-text-muted">Выбрано: {{ date ?? '—' }}</p>
+    <p class="text-sm text-muted-foreground">Выбрано: {{ date ?? '—' }}</p>
   </div>
 </template>
 

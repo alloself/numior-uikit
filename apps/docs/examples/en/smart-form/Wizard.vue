@@ -4,7 +4,7 @@
     :form="form"
     :steps="steps"
     submit-label="Create team"
-    class="nui-max-w-lg"
+    class="max-w-lg"
   />
 </template>
 
