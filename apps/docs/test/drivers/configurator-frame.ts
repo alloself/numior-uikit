@@ -1,5 +1,5 @@
 import { mount, type DOMWrapper, type VueWrapper } from '@vue/test-utils';
-import { NuiButton } from '@numior/vue';
+import { NuiButton, NuiSeparator } from '@numior/vue';
 import type { ComponentReference } from '../../.vitepress/reference/reference.types';
 import ConfiguratorFrame from '../../.vitepress/theme/parts/ConfiguratorFrame.vue';
 import { ru } from '../../.vitepress/theme/texts';
@@ -40,6 +40,23 @@ export const configurableButton = (): ComponentReference =>
     configurator: { props: ['variant', 'disabled'], content: { ru: 'Сохранить', en: 'Save' } },
   });
 
+export const configurableSeparator = (): ComponentReference =>
+  referenceOf({
+    name: 'NuiSeparator',
+    props: [
+      {
+        name: 'label',
+        type: 'string',
+        kind: 'string',
+        required: false,
+        default: undefined,
+        values: undefined,
+        description: undefined,
+      },
+    ],
+    configurator: { props: ['label'], values: { label: { ru: 'или', en: 'or' } } },
+  });
+
 export class ConfiguratorFrameDriver {
   constructor(readonly wrapper: VueWrapper) {}
 
@@ -47,7 +64,7 @@ export class ConfiguratorFrameDriver {
     return new ConfiguratorFrameDriver(
       mount(ConfiguratorFrame, {
         props: { component, locale: 'ru', texts: ru },
-        global: { components: { NuiButton } },
+        global: { components: { NuiButton, NuiSeparator } },
         attachTo: document.body,
       }),
     );
@@ -59,6 +76,10 @@ export class ConfiguratorFrameDriver {
 
   get button(): DOMWrapper<HTMLButtonElement> {
     return this.preview.find<HTMLButtonElement>('button');
+  }
+
+  get separatorLabel(): string {
+    return this.preview.find('.nui-separator__label').text();
   }
 
   get code(): string {

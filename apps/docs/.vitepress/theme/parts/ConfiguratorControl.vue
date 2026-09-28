@@ -9,7 +9,7 @@
       size="sm"
       @update:model-value="setEnum"
     />
-    <span v-if="description" class="text-xs text-muted-foreground">{{ description }}</span>
+    <span v-if="description" class="text-sm text-muted-foreground">{{ description }}</span>
   </div>
   <NuiSelect
     v-else-if="prop.kind === 'enum'"

@@ -23,7 +23,9 @@
     </div>
     <NuiTabPanel value="preview" class="mt-2 flex flex-col gap-4">
       <PreviewFrame :texts="texts" :options="previewOptions">
-        <component :is="component.name" v-bind="bound">{{ content }}</component>
+        <component :is="component.name" v-bind="bound">
+          <template v-if="hasContent" #default>{{ content }}</template>
+        </component>
       </PreviewFrame>
       <form class="flex flex-col gap-4" :aria-label="texts.configuratorProps" @submit.prevent>
         <div

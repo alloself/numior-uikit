@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { configurableButton, ConfiguratorFrameDriver } from './drivers/configurator-frame';
+import {
+  configurableButton,
+  configurableSeparator,
+  ConfiguratorFrameDriver,
+} from './drivers/configurator-frame';
 
 describe('ConfiguratorFrame', () => {
   it('renders the live component with the configured props and the default content', async () => {
@@ -10,6 +14,13 @@ describe('ConfiguratorFrame', () => {
     expect(frame.optionNames).toEqual(['variant', 'Содержимое', 'disabled']);
     await frame.showCode();
     expect(frame.code).toBe('<template>  <NuiButton>Сохранить</NuiButton></template>');
+    frame.unmount();
+  });
+
+  it('leaves the default slot alone when the component takes no content', () => {
+    const frame = ConfiguratorFrameDriver.mount(configurableSeparator());
+
+    expect(frame.separatorLabel).toBe('или');
     frame.unmount();
   });
 
