@@ -1,5 +1,22 @@
 import { describe, expect, it } from 'vitest';
+import type { GridEngineColumn } from '../src/engine';
 import { EngineHarness, ORDERS, ORDER_COLUMNS, type Order } from './harness/engine';
+
+interface Account {
+  readonly email: string;
+  readonly score: number;
+}
+
+const ACCOUNT_COLUMNS: readonly GridEngineColumn<Account>[] = [
+  { kind: 'string', key: 'email', value: (row) => row.email },
+  { kind: 'number', key: 'score', value: (row) => row.score },
+];
+
+const accounts = (count: number): Account[] =>
+  Array.from({ length: count }, (_, index) => ({
+    email: `User${index}@Example.com`,
+    score: (index * 7919) % count,
+  }));
 
 const ids = async (
   harness: EngineHarness<Order>,
@@ -55,16 +72,18 @@ describe('createGridEngine filters', () => {
     expect(await ids(harness, [{ kind: 'number', key: 'paid', min: 1 }])).toEqual([1, 4, 6]);
   });
 
-  it('matches value sets with null, searches every string column quickly and combines filters', async () => {
+  it('matches value sets with blanks, searches every string column quickly and combines filters', async () => {
     const harness = new EngineHarness(ORDER_COLUMNS, ORDERS);
 
     expect(await ids(harness, [{ kind: 'set', key: 'city', values: ['Moscow', null] }])).toEqual([
       1, 4, 5,
     ]);
 
+    expect(await ids(harness, [{ kind: 'set', key: 'note', values: [null] }])).toEqual([2, 3]);
     expect(await ids(harness, [{ kind: 'set', key: 'paid', values: [true] }])).toEqual([1, 4, 6]);
     expect(await ids(harness, [{ kind: 'set', key: 'country', values: ['KZ'] }])).toEqual([5, 6]);
     expect(await ids(harness, [{ kind: 'quick', value: 'kaz' }])).toEqual([2]);
+    expect(harness.engine.store('city')?.kind).toBe('codes');
     expect(await ids(harness, [{ kind: 'quick', value: 'UR' }])).toEqual([1, 6]);
     expect(await ids(harness, [{ kind: 'quick', value: '' }])).toEqual([1, 2, 3, 4, 5, 6]);
 
@@ -77,6 +96,23 @@ describe('createGridEngine filters', () => {
 
     expect(harness.engine.rowCount()).toBe(2);
     expect(Array.from(harness.engine.visibleIndices())).toEqual([0, 1]);
+
+    const coded = harness.engine.store('note');
+    await harness.runToEnd({ sort: [{ key: 'note', direction: 'asc' }] });
+    const ranked = harness.engine.store('note');
+
+    expect(coded?.kind).toBe('codes');
+    expect(ranked?.kind).toBe('string');
+    expect(ranked !== undefined && coded !== undefined && ranked.nulls === coded.nulls).toBe(true);
+
+    expect(harness.visible('note')).toEqual([
+      '',
+      'Gift',
+      'gift wrap',
+      'urgent',
+      'URGENT call',
+      null,
+    ]);
   });
 
   it('rejects filters on columns of another kind', async () => {
@@ -95,7 +131,7 @@ describe('createGridEngine filters', () => {
     ).rejects.toThrow('needs a number or boolean column "city"');
   });
 
-  it('lists distinct values in collator order with a limit and a null marker', async () => {
+  it('lists distinct values in collator order with a limit and one blank marker for null and empty text', async () => {
     const harness = new EngineHarness(ORDER_COLUMNS, ORDERS);
 
     expect(await harness.settle(harness.engine.distinct('city'))).toEqual({
@@ -105,6 +141,21 @@ describe('createGridEngine filters', () => {
 
     expect(await harness.settle(harness.engine.distinct('city', { limit: 2 }))).toEqual({
       values: ['Almaty', 'Kazan'],
+      truncated: true,
+    });
+
+    expect(await harness.settle(harness.engine.distinct('note'))).toEqual({
+      values: ['Gift', 'gift wrap', 'urgent', 'URGENT call', null],
+      truncated: false,
+    });
+
+    expect(await harness.settle(harness.engine.distinct('note', { limit: 4 }))).toEqual({
+      values: ['Gift', 'gift wrap', 'urgent', 'URGENT call', null],
+      truncated: false,
+    });
+
+    expect(await harness.settle(harness.engine.distinct('note', { limit: 3 }))).toEqual({
+      values: ['Gift', 'gift wrap', 'urgent'],
       truncated: true,
     });
 
@@ -124,5 +175,33 @@ describe('createGridEngine filters', () => {
     expect(
       await harness.settle(harness.engine.distinct('note', { signal: controller.signal })),
     ).toBeNull();
+  });
+
+  it('scans dictionaries, filters rows and lists numbers in slices near the budget', async () => {
+    const harness = new EngineHarness(ACCOUNT_COLUMNS, accounts(300_000), { sliceMs: 4 });
+
+    await harness.runToEnd({
+      filters: [{ kind: 'set', key: 'email', values: ['User7@Example.com', 'nobody'] }],
+    });
+
+    expect(harness.engine.rowCount()).toBe(1);
+    harness.resetSlices();
+
+    expect(
+      await harness.runToEnd({ filters: [{ kind: 'quick', value: 'user12345' }] }),
+    ).toMatchObject({ rows: 11 });
+
+    await harness.runToEnd({
+      filters: [{ kind: 'text', key: 'email', op: 'starts', value: 'USER2999' }],
+    });
+
+    expect(harness.engine.rowCount()).toBe(111);
+
+    expect(await harness.settle(harness.engine.distinct('score', { limit: 3 }))).toEqual({
+      values: [0, 1, 2],
+      truncated: true,
+    });
+
+    expect(harness.longestSliceMs).toBeLessThanOrEqual(16);
   });
 });

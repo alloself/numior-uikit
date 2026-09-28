@@ -1,15 +1,34 @@
 import { describe, expect, it } from 'vitest';
-import { createStoreJob, type ColumnStore, type GridEngineColumn } from '../src/engine';
+import {
+  createRankJob,
+  createStoreJob,
+  type ColumnStore,
+  type GridEngineColumn,
+  type StoreJob,
+  type StoreNeed,
+} from '../src/engine';
 
 const collator = new Intl.Collator('ru', { numeric: true });
 
-const build = <T>(column: GridEngineColumn<T>, rows: readonly T[]): ColumnStore => {
-  const job = createStoreJob(column, rows, collator);
-
+const finish = (job: StoreJob): ColumnStore => {
   while (!job.work(performance.now() - 1)) {
     expect(job.done()).toBeLessThanOrEqual(job.total());
   }
   return job.result();
+};
+
+const build = <T>(
+  column: GridEngineColumn<T>,
+  rows: readonly T[],
+  need: StoreNeed = 'ranks',
+): ColumnStore => finish(createStoreJob(column, rows, collator, need));
+
+const FRUITS = ['вишня', 'абрикос', 'Банан', 'абрикос', null, 'item 10', 'item 2'];
+
+const fruit: GridEngineColumn<string | null> = {
+  kind: 'string',
+  key: 's',
+  value: (row) => row,
 };
 
 const numberStore = (store: ColumnStore) => {
@@ -59,17 +78,7 @@ describe('createStoreJob', () => {
   });
 
   it('ranks strings through the collator with a shared dictionary and numeric awareness', () => {
-    const store = stringStore(
-      build({ kind: 'string', key: 's', value: (row: string | null) => row }, [
-        'вишня',
-        'абрикос',
-        'Банан',
-        'абрикос',
-        null,
-        'item 10',
-        'item 2',
-      ]),
-    );
+    const store = stringStore(build(fruit, FRUITS));
 
     expect(store.dictionary).toEqual(['вишня', 'абрикос', 'Банан', 'item 10', 'item 2']);
     expect(Array.from(store.nulls)).toEqual([0, 0, 0, 0, 1, 0, 0]);
@@ -79,5 +88,21 @@ describe('createStoreJob', () => {
     expect(rankOf(2)).toBeLessThan(rankOf(0));
     expect(rankOf(6)).toBeLessThan(rankOf(5));
     expect(rankOf(6)).toBeGreaterThan(rankOf(0));
+  });
+
+  it('codes strings without ranking them and ranks the same codes later on demand', () => {
+    const coded = build(fruit, FRUITS, 'codes');
+
+    if (coded.kind !== 'codes') {
+      throw new Error('Expected a coded store');
+    }
+    expect(coded.dictionary).toEqual(['вишня', 'абрикос', 'Банан', 'item 10', 'item 2']);
+    expect(Array.from(coded.codes)).toEqual([0, 1, 2, 1, 0, 3, 4]);
+    const ranked = stringStore(finish(createRankJob(coded, collator)));
+
+    expect(ranked.codes).toBe(coded.codes);
+    expect(ranked.dictionary).toBe(coded.dictionary);
+    expect(Array.from(ranked.sortedCodes)).toEqual([1, 2, 0, 4, 3]);
+    expect(Array.from(ranked.ranks)).toEqual([2, 0, 1, 0, 2, 4, 3]);
   });
 });

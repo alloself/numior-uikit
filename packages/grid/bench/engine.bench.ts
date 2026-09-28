@@ -19,8 +19,13 @@ const rows = generateRows(ROWS);
 const heavy = { iterations: 3, warmup: 1 };
 const light = { iterations: 5, warmup: 1 };
 
+const yieldTo = (): Promise<void> =>
+  new Promise((resolve) => {
+    setImmediate(resolve);
+  });
+
 const engineFor = (): GridEngine<BenchRow> => {
-  const engine = createGridEngine({ columns: BENCH_COLUMNS });
+  const engine = createGridEngine({ columns: BENCH_COLUMNS, yieldTo });
   engine.setRows(rows);
   return engine;
 };
@@ -160,6 +165,29 @@ operations.push(
 
 operations.push(
   await measure(
+    'quick filter over every string column with cold stores',
+    async () => {
+      await engineFor().run({ filters: [{ kind: 'quick', value: 'mos' }] });
+    },
+    heavy,
+  ),
+);
+
+const warmQuick = engineFor();
+await warmQuick.run({ filters: [{ kind: 'quick', value: 'a' }] });
+
+operations.push(
+  await measure(
+    'quick filter over every string column with warm stores',
+    async () => {
+      await warmQuick.run({ filters: [{ kind: 'quick', value: 'mos' }] });
+    },
+    light,
+  ),
+);
+
+operations.push(
+  await measure(
     'group by country with sum, count and avg on warm stores',
     async () => {
       await warmMulti.run({ groupBy: ['country'] });
@@ -192,7 +220,12 @@ const TREE_NODES = 100_000;
 const tree = generateTree(TREE_NODES);
 
 const treeEngine = (): GridEngine<BenchNode> =>
-  createGridEngine({ columns: TREE_COLUMNS, children: (row) => row.items, keyOf: (row) => row.id });
+  createGridEngine({
+    columns: TREE_COLUMNS,
+    children: (row) => row.items,
+    keyOf: (row) => row.id,
+    yieldTo,
+  });
 
 operations.push(
   await measure(

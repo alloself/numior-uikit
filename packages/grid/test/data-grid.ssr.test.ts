@@ -2,10 +2,16 @@
 import { describe, expect, it } from 'vitest';
 import { createSSRApp, h } from 'vue';
 import { renderToString } from 'vue/server-renderer';
-import { NuiDataGrid, type GridSort } from '../src';
+import { NuiDataGrid, type GridSort, type NuiDataGridFilters } from '../src';
 import { people, PEOPLE_COLUMNS, type Person } from './support/people';
 
-const render = (count: number, sort: readonly GridSort[] = []): Promise<string> =>
+interface Query {
+  readonly sort?: readonly GridSort[];
+  readonly filters?: NuiDataGridFilters;
+  readonly quick?: string;
+}
+
+const render = (count: number, query: Query = {}): Promise<string> =>
   renderToString(
     createSSRApp({
       render: () =>
@@ -13,7 +19,9 @@ const render = (count: number, sort: readonly GridSort[] = []): Promise<string> 
           columns: PEOPLE_COLUMNS,
           source: people(count),
           id: 'staff',
-          sort,
+          sort: query.sort ?? [],
+          filters: query.filters ?? [],
+          quick: query.quick ?? '',
         }),
     }),
   );
@@ -40,12 +48,29 @@ describe('NuiDataGrid on the server', () => {
   });
 
   it('orders the first screen by the initial sort on the server', async () => {
-    const html = await render(1000, [{ key: 'salary', direction: 'desc' }]);
+    const sort = [{ key: 'salary', direction: 'desc' }] as const;
+    const html = await render(1000, { sort });
 
-    expect(html).toBe(await render(1000, [{ key: 'salary', direction: 'desc' }]));
+    expect(html).toBe(await render(1000, { sort }));
     expect(html).toContain('aria-sort="descending"');
     expect(html.indexOf('Сотрудник 998')).toBeLessThan(html.indexOf('Сотрудник 997'));
     expect(html).not.toContain('Сотрудник 0<');
+  });
+
+  it('filters the first screen by the initial column and quick filters and marks the column', async () => {
+    const query = {
+      filters: [{ kind: 'set', key: 'remote', values: [true] }],
+      quick: 'Казань',
+    } as const;
+
+    const html = await render(1000, query);
+
+    expect(html).toBe(await render(1000, query));
+    expect(html).toContain('aria-rowcount="84"');
+    expect(html).toContain('Сотрудник 9<');
+    expect(html).not.toContain('Сотрудник 1<');
+    expect(html.match(/nui-grid__filter--active/g)).toHaveLength(1);
+    expect(html).not.toContain('role="dialog"');
   });
 
   it('renders the empty state inside the grid when there are no rows', async () => {

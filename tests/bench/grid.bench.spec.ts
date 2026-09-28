@@ -81,6 +81,24 @@ test('the data grid keeps input and frames within budget on a million rows', asy
     ),
   );
 
+  operations.push(
+    summarize(
+      'apply a set filter from the header popover to the painted result',
+      await bench.setFilterLatencies(19, ['active', 'paused', 'active', 'closed', 'paused', 'new']),
+    ),
+  );
+
+  await bench.resetFilter(19);
+  const [coldQuick = Number.NaN, ...warmQuick] = await bench.quickLatencies('mosc', 4);
+
+  operations.push(
+    summarize('first quick filter keystroke while text stores build to the painted result', [
+      coldQuick,
+    ]),
+  );
+
+  operations.push(summarize('next quick filter keystroke to the painted result', warmQuick));
+
   const file = await record(
     RESULTS,
     `${ROWS} generated rows, ${GRID_COLUMNS.length} columns, seed 1, viewport 1440×900`,

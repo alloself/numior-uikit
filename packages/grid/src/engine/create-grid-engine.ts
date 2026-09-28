@@ -1,5 +1,6 @@
 import { createStoresJob } from './column-store';
-import { compactPass, compileFilter, compileQuick, createFilterJob, type RowTest } from './filter';
+import { createDistinctNumbersJob, distinctStrings } from './distinct';
+import { compactPass, createFilterJob, createFilterSetup } from './filter';
 import { createGroupJob, type AggregateColumn, type GroupLevel, type GroupTable } from './group';
 import { createPipeline, type Pipeline, type PipelineStage } from './pipeline';
 import { runSliced, yieldToHost } from './slicer';
@@ -22,13 +23,13 @@ import type {
   GridEngineColumn,
   GridEngineOptions,
   GridFilter,
-  GridFilterValue,
   GridNode,
   GridNodeId,
   GridQuery,
   GridRunOptions,
   GridRunResult,
   GridSort,
+  StoreNeed,
 } from './engine.types';
 
 interface Prepared {
@@ -43,15 +44,16 @@ interface Plan<T> {
   readonly filters: readonly GridFilter[];
   readonly groupBy: readonly string[];
   readonly aggregates: readonly GridEngineColumn<T>[];
-  readonly keys: readonly string[];
+  readonly needs: ReadonlyMap<string, StoreNeed>;
 }
 
 const DEFAULT_SLICE_MS = 12;
 const DEFAULT_DISTINCT_LIMIT = 100;
 
-const isStringStore = (
+const hasCodes = (
   store: ColumnStore | undefined,
-): store is Extract<ColumnStore, { kind: 'string' }> => store?.kind === 'string';
+): store is Exclude<ColumnStore, { kind: 'number' }> =>
+  store !== undefined && store.kind !== 'number';
 
 const emptyPrepared = (): Prepared => ({
   filtered: new Uint32Array(0),
@@ -61,34 +63,6 @@ const emptyPrepared = (): Prepared => ({
 });
 
 const allPass = (count: number): Uint8Array => new Uint8Array(count).fill(1);
-
-const valueOf = <T>(
-  column: GridEngineColumn<T>,
-  store: ColumnStore,
-  key: number,
-): GridFilterValue => {
-  switch (column.kind) {
-    case 'boolean':
-      return key === 1;
-    case 'string':
-      return store.kind === 'string' ? (store.dictionary[key] ?? null) : null;
-    case 'number':
-    case 'date':
-      return key;
-  }
-};
-
-const distinctStrings = (
-  store: Extract<ColumnStore, { kind: 'string' }>,
-  limit: number,
-): GridDistinct => {
-  const values: GridFilterValue[] = [];
-
-  for (const code of store.sortedCodes.subarray(0, limit)) {
-    values.push(store.dictionary[code] ?? '');
-  }
-  return { values, truncated: store.dictionary.length > limit };
-};
 
 export const createGridEngine = <T>(options: GridEngineOptions<T>): GridEngine<T> => {
   const columns = new Map<string, GridEngineColumn<T>>(
@@ -128,11 +102,18 @@ export const createGridEngine = <T>(options: GridEngineOptions<T>): GridEngine<T
 
   const isExpanded = (id: GridNodeId): boolean => defaultExpanded !== toggled.has(id);
 
+  const missing = (key: string, need: StoreNeed): boolean => {
+    const store = stores.get(key);
+    return store === undefined || (need === 'ranks' && store.kind === 'codes');
+  };
+
   const storesStage = (
-    keys: readonly string[],
+    needs: ReadonlyMap<string, StoreNeed>,
     next: () => PipelineStage | null,
   ): PipelineStage | null => {
-    const pending = keys.filter((key) => !stores.has(key)).map(columnOf);
+    const pending = [...needs]
+      .filter(([key, need]) => missing(key, need))
+      .map(([key, need]) => ({ column: columnOf(key), need, current: stores.get(key) }));
 
     if (pending.length === 0) {
       return next();
@@ -150,37 +131,54 @@ export const createGridEngine = <T>(options: GridEngineOptions<T>): GridEngine<T
 
   const planOf = (query: GridQuery): Plan<T> => {
     const sort = query.sort ?? [];
-    const filters = query.filters ?? [];
+
+    const filters = (query.filters ?? []).filter(
+      (filter) => filter.kind !== 'quick' || filter.value !== '',
+    );
+
     const groupBy = query.groupBy ?? [];
 
     if (groupBy.length > 0 && options.children !== undefined) {
       throw new Error('Grid engine cannot group rows of a tree');
     }
     const aggregates = groupBy.length > 0 || query.totals === true ? aggregated : [];
+    const needs = new Map<string, StoreNeed>();
 
-    const keys = new Set([
-      ...sort.map((entry) => columnOf(entry.key).key),
-      ...groupBy.map((key) => columnOf(key).key),
-      ...aggregates.map((column) => column.key),
-      ...filters.flatMap(filterKeys),
-    ]);
+    const want = (key: string, need: StoreNeed): void => {
+      const resolved = columnOf(key).key;
 
-    return { sort, filters, groupBy, aggregates, keys: [...keys] };
+      if (needs.get(resolved) !== 'ranks') {
+        needs.set(resolved, need);
+      }
+    };
+
+    for (const entry of sort) {
+      want(entry.key, 'ranks');
+    }
+    for (const key of groupBy) {
+      want(key, 'ranks');
+    }
+    for (const key of [...aggregates.map((column) => column.key), ...filters.flatMap(filterKeys)]) {
+      want(key, 'codes');
+    }
+    return { sort, filters, groupBy, aggregates, needs };
   };
 
-  const testsOf = (filters: readonly GridFilter[]): RowTest[] =>
-    filters.map((filter) =>
-      filter.kind === 'quick'
-        ? compileQuick(filter.value, stringKeys.map((key) => stores.get(key)).filter(isStringStore))
-        : compileFilter(filter, columns.get(filter.key), stores.get(filter.key)),
-    );
+  const filterSources = {
+    column: (key: string) => columns.get(key),
+    store: (key: string) => stores.get(key),
+    quickStores: () => stringKeys.map((key) => stores.get(key)).filter(hasCodes),
+  };
 
   const orderKeysOf = (plan: Plan<T>): OrderKey[] => {
     const leading = plan.groupBy.map((key): GridSort => ({ key, direction: 'asc' }));
 
     return [...leading, ...plan.sort].flatMap((sort) => {
       const store = stores.get(sort.key);
-      return store === undefined ? [] : [{ store, descending: sort.direction === 'desc' }];
+
+      return store === undefined || store.kind === 'codes'
+        ? []
+        : [{ store, descending: sort.direction === 'desc' }];
     });
   };
 
@@ -191,19 +189,25 @@ export const createGridEngine = <T>(options: GridEngineOptions<T>): GridEngine<T
     if (plan.filters.length === 0) {
       return next(allPass(table.rows.length));
     }
-    const job = createFilterJob(table.rows.length, testsOf(plan.filters));
+    const setup = createFilterSetup(plan.filters, filterSources);
 
-    const propagate = (): PipelineStage => ({
-      phase: 'filter',
-      job: createPropagateJob(job.pass(), table.parents),
-      next: () => next(job.pass()),
-    });
+    const passStage = (): PipelineStage => {
+      const job = createFilterJob(table.rows.length, setup.tests());
 
-    return {
-      phase: 'filter',
-      job,
-      next: () => (options.children === undefined ? next(job.pass()) : propagate()),
+      const propagate = (): PipelineStage => ({
+        phase: 'filter',
+        job: createPropagateJob(job.pass(), table.parents),
+        next: () => next(job.pass()),
+      });
+
+      return {
+        phase: 'filter',
+        job,
+        next: () => (options.children === undefined ? next(job.pass()) : propagate()),
+      };
     };
+
+    return { phase: 'filter', job: setup, next: passStage };
   };
 
   const groupStage = (
@@ -289,7 +293,7 @@ export const createGridEngine = <T>(options: GridEngineOptions<T>): GridEngine<T
     runOptions: GridRunOptions = {},
   ): Pipeline | null =>
     createPipeline(
-      storesStage(plan.keys, () =>
+      storesStage(plan.needs, () =>
         filterStage(plan, (pass) =>
           options.children === undefined
             ? flatStages(plan, pass, finish)
@@ -415,43 +419,35 @@ export const createGridEngine = <T>(options: GridEngineOptions<T>): GridEngine<T
     refresh();
   };
 
-  const distinctNumbers = (
+  const distinctStage = (
     column: GridEngineColumn<T>,
-    store: Extract<ColumnStore, { kind: 'number' }>,
     limit: number,
-  ): GridDistinct => {
-    const unique = new Set<number>();
+    finish: (found: GridDistinct) => void,
+  ): PipelineStage | null => {
+    const store = stores.get(column.key);
 
-    for (let index = 0; index < store.keys.length; index += 1) {
-      if (store.nulls[index] !== 1) {
-        unique.add(store.keys[index] ?? 0);
+    switch (store?.kind) {
+      case undefined:
+        finish({ values: [], truncated: false });
+        return null;
+      case 'codes':
+        throw new Error(`Grid engine lists values of "${column.key}" only from a ranked store`);
+      case 'string':
+        finish(distinctStrings(store, limit));
+        return null;
+      case 'number': {
+        const job = createDistinctNumbersJob(column, store, limit);
+
+        return {
+          phase: 'keys',
+          job,
+          next: () => {
+            finish(job.result());
+            return null;
+          },
+        };
       }
     }
-    const sorted = [...unique].toSorted((a, b) => a - b).slice(0, limit);
-
-    return {
-      values: sorted.map((entry) => valueOf(column, store, entry)),
-      truncated: unique.size > limit,
-    };
-  };
-
-  const distinctOf = (key: string, limit: number): GridDistinct => {
-    const column = columnOf(key);
-    const store = stores.get(key);
-
-    if (store === undefined) {
-      return { values: [], truncated: false };
-    }
-
-    const found =
-      store.kind === 'string'
-        ? distinctStrings(store, limit)
-        : distinctNumbers(column, store, limit);
-
-    if (found.truncated || !store.nulls.includes(1)) {
-      return found;
-    }
-    return { values: [...found.values, null], truncated: false };
   };
 
   return {
@@ -535,11 +531,20 @@ export const createGridEngine = <T>(options: GridEngineOptions<T>): GridEngine<T
     distinct: async (key, distinctOptions = {}) => {
       const version = rowsVersion;
       const limit = distinctOptions.limit ?? DEFAULT_DISTINCT_LIMIT;
-      const pipeline = createPipeline(storesStage([columnOf(key).key], () => null));
+      const column = columnOf(key);
+      const outcome: { found: GridDistinct | null } = { found: null };
 
       if (distinctOptions.signal?.aborted === true) {
         return null;
       }
+
+      const pipeline = createPipeline(
+        storesStage(new Map([[column.key, 'ranks']]), () =>
+          distinctStage(column, limit, (found) => {
+            outcome.found = found;
+          }),
+        ),
+      );
 
       const built =
         pipeline === null ||
@@ -550,7 +555,7 @@ export const createGridEngine = <T>(options: GridEngineOptions<T>): GridEngine<T
           isStale: () => version !== rowsVersion,
         }));
 
-      return built && version === rowsVersion ? distinctOf(key, limit) : null;
+      return built && version === rowsVersion ? outcome.found : null;
     },
     store: (key) => stores.get(key),
     dispose: () => {

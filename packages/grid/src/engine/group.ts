@@ -46,7 +46,7 @@ const tokenOf = (store: ColumnStore, index: number): number => {
   if (store.nulls[index] === 1) {
     return Number.NaN;
   }
-  return store.kind === 'string' ? (store.codes[index] ?? 0) : (store.keys[index] ?? 0);
+  return store.kind === 'number' ? (store.keys[index] ?? 0) : (store.codes[index] ?? 0);
 };
 
 const finishAll = <T>(

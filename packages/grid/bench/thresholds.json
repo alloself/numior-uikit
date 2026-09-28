@@ -33,6 +33,12 @@
     "filter status in a set with a warm store": {
       "p95Ms": 80
     },
+    "quick filter over every string column with cold stores": {
+      "p95Ms": 2500
+    },
+    "quick filter over every string column with warm stores": {
+      "p95Ms": 200
+    },
     "group by country with sum, count and avg on warm stores": {
       "p95Ms": 260
     },
@@ -84,6 +90,15 @@
       "p95Ms": 250
     },
     "add a sort key with Shift from the header to the painted result": {
+      "p95Ms": 250
+    },
+    "apply a set filter from the header popover to the painted result": {
+      "p95Ms": 250
+    },
+    "first quick filter keystroke while text stores build to the painted result": {
+      "p95Ms": 2000
+    },
+    "next quick filter keystroke to the painted result": {
       "p95Ms": 250
     }
   }

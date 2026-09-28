@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { boxOf } from './helpers/geometry';
 import { PlaygroundPage } from './pages/playground';
 
 test.describe('data grid', () => {
@@ -122,6 +123,13 @@ test.describe('data grid', () => {
     await grid.cell(0, 1).click();
     await page.keyboard.press('ArrowLeft');
     expect(await grid.focusedCell()).toEqual({ row: 0, col: 2 });
+    await grid.openFilter(3);
+    await expect(grid.filter).toBeVisible();
+    const header = await boxOf(grid.header(3));
+    const popover = await boxOf(grid.filter);
+    expect(popover.x + popover.width).toBeCloseTo(header.x + header.width, 0);
+    expect(popover.y).toBeGreaterThan(header.y + header.height);
+    await page.keyboard.press('Escape');
     await playground.setDirection('ltr');
   });
 
@@ -138,11 +146,133 @@ test.describe('data grid', () => {
     await expect(grid.cell(0, 0)).toHaveText('1');
   });
 
+  test('filters a column by chosen values from the header popover and resets it', async ({
+    page,
+  }) => {
+    const playground = new PlaygroundPage(page);
+    await playground.open();
+    const { grid } = playground;
+    await grid.root.scrollIntoViewIfNeeded();
+    await grid.openFilter(10);
+    await expect(grid.filter).toBeVisible();
+    await expect(grid.filter).toHaveAccessibleName('Фильтр: Статус');
+    await expect(grid.filterButton(10)).toHaveAttribute('aria-expanded', 'true');
+    await expect(grid.filterValue('Возврат')).toBeVisible();
+    await grid.filterValue('Оплачен').check();
+    await grid.applyFilter();
+
+    await expect(grid.filter).toBeHidden();
+    await expect(grid.viewport).toHaveAttribute('aria-rowcount', '2501');
+    await expect(grid.filterButton(10)).toHaveClass(/nui-grid__filter--active/);
+    expect(await grid.textsIn(10, 5)).toEqual(Array.from({ length: 5 }, () => 'Оплачен'));
+
+    await expect(grid.output).toHaveText(
+      JSON.stringify({
+        sort: [],
+        filters: [{ kind: 'set', key: 'status', values: ['Оплачен'] }],
+        quick: '',
+      }),
+    );
+
+    await grid.openFilter(10);
+    await expect(grid.filterValue('Оплачен')).toBeChecked();
+    await grid.resetFilter();
+    await expect(grid.viewport).toHaveAttribute('aria-rowcount', '10001');
+    await expect(grid.filterButton(10)).not.toHaveClass(/nui-grid__filter--active/);
+  });
+
+  test('narrows the rows with the quick filter and a number range and clears both', async ({
+    page,
+    isMobile,
+  }) => {
+    test.skip(isMobile, 'range typing on desktop');
+    const playground = new PlaygroundPage(page);
+    await playground.open();
+    const { grid } = playground;
+    await grid.root.scrollIntoViewIfNeeded();
+    await grid.quick.fill('Казань');
+    await expect(grid.viewport).toHaveAttribute('aria-rowcount', '1429');
+    await grid.openFilter(5);
+    await grid.filterField('От').fill('1000');
+    await grid.filterField('До').fill('20000');
+    await grid.applyFilter();
+
+    await expect
+      .poll(async () => Number(await grid.viewport.getAttribute('aria-rowcount')))
+      .toBeLessThan(1429);
+
+    const amounts = await grid.numbersIn(5, 5);
+    expect(amounts.every((amount) => amount >= 1000 && amount <= 20_000)).toBe(true);
+    expect(await grid.textsIn(3, 5)).toEqual(Array.from({ length: 5 }, () => 'Казань'));
+
+    await expect(grid.output).toHaveText(
+      JSON.stringify({
+        sort: [],
+        filters: [{ kind: 'number', key: 'amount', min: 1000, max: 20_000 }],
+        quick: 'Казань',
+      }),
+    );
+
+    await grid.clearFilters.click();
+    await expect(grid.viewport).toHaveAttribute('aria-rowcount', '10001');
+    await expect(grid.quick).toHaveValue('');
+  });
+
+  test('opens a filter from the header with Alt+ArrowDown and returns focus to it', async ({
+    page,
+    isMobile,
+  }) => {
+    test.skip(isMobile, 'keyboard entry on desktop');
+    const playground = new PlaygroundPage(page);
+    await playground.open();
+    const { grid } = playground;
+    await grid.root.scrollIntoViewIfNeeded();
+    await grid.cell(0, 1).click();
+    await page.keyboard.press('ArrowUp');
+    await page.keyboard.press('Alt+ArrowDown');
+    await expect(grid.filter).toBeVisible();
+    await expect(grid.filter).toHaveAccessibleName('Фильтр: Клиент');
+    await expect(grid.filter.locator(':focus')).toHaveCount(1);
+    await page.keyboard.press('Escape');
+    await expect(grid.filter).toBeHidden();
+    expect(await grid.focusedCell()).toEqual({ row: -1, col: 1 });
+
+    await page.keyboard.press('Alt+ArrowDown');
+    await grid.filterField('Значение').fill('Анна');
+    await page.keyboard.press('Enter');
+    await expect(grid.viewport).toHaveAttribute('aria-rowcount', '1251');
+    await expect(grid.filter).toBeHidden();
+    expect(await grid.focusedCell()).toEqual({ row: -1, col: 1 });
+    await expect(grid.root.getByRole('status')).toHaveText('Показано 1 250 строк');
+
+    await grid.openFilter(3);
+    await expect(grid.filter).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(grid.filter).toBeHidden();
+    await expect.poll(() => grid.focusedCell()).toEqual({ row: -1, col: 3 });
+    await page.keyboard.press('ArrowLeft');
+    expect(await grid.focusedCell()).toEqual({ row: -1, col: 2 });
+  });
+
   test('data grid has no automatically detectable WCAG AA violations', async ({ page }) => {
     const playground = new PlaygroundPage(page);
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
     await playground.grid.root.scrollIntoViewIfNeeded();
+
+    for (const theme of ['light', 'dark'] as const) {
+      await playground.setTheme(theme);
+      expect(await playground.wcagViolations()).toEqual([]);
+    }
+  });
+
+  test('filter popover has no automatically detectable WCAG AA violations', async ({ page }) => {
+    const playground = new PlaygroundPage(page);
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    await playground.grid.root.scrollIntoViewIfNeeded();
+    await playground.grid.openFilter(10);
+    await expect(playground.grid.filterValue('Оплачен')).toBeVisible();
 
     for (const theme of ['light', 'dark'] as const) {
       await playground.setTheme(theme);

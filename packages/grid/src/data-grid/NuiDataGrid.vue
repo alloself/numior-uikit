@@ -16,30 +16,25 @@
       @keydown="onKeydown"
       @focusin="focus.onFocusin"
     >
-      <div class="nui-grid__header" role="rowgroup" @click="onHeaderClick">
+      <div class="nui-grid__header" role="rowgroup" @click="header.onClick">
         <NuiDataGridRow
           :panes="panes"
           :row-index="1"
           head
           :active="focus.activeIn(-1)"
-          :heads="heads"
+          :heads="header.heads.value"
         >
           <template #default="{ column }">
-            <slot :name="`header-${column}`" v-bind="headerScope(column)">
+            <slot :name="`header-${column}`" v-bind="header.scope(column)">
               <span class="nui-grid__text">{{ columnAt(column).label }}</span>
             </slot>
-            <span
-              v-if="heads[column]?.sortable"
-              class="nui-grid__sort"
-              :class="sortClasses(column)"
-              aria-hidden="true"
-            >
-              <NuiIcon :alias="sortIcon(column)" class="nui-grid__sort-icon" />
-              <span v-if="heads[column]?.order" class="nui-grid__sort-order">
-                {{ heads[column]?.order }}
-              </span>
-            </span>
-            <span v-if="sortHint(column)" class="nui-grid__hidden">{{ sortHint(column) }}</span>
+            <NuiDataGridHeaderMarks
+              :state="header.heads.value[column]"
+              :hint="header.sortHint(column)"
+              :filter-label="messages.filterColumn({ column: columnAt(column).label })"
+              :expanded="header.expanded(column)"
+              @filter="header.openFilter(column, $event)"
+            />
           </template>
         </NuiDataGridRow>
       </div>
@@ -71,6 +66,20 @@
         </div>
       </div>
     </div>
+    <NuiDataGridFilter
+      v-if="header.target.value"
+      :key="header.target.value.key"
+      v-model:open="header.open.value"
+      :title="messages.filterColumn({ column: columnAt(header.target.value.key).label })"
+      :kind="header.target.value.kind"
+      :column-key="header.target.value.key"
+      :filter="header.filterOf(header.target.value.key)"
+      :anchor="header.target.value.anchor"
+      :locale="resolvedLocale"
+      :load-values="loadValues"
+      :value-label="valueLabel"
+      @apply="header.applyFilter"
+    />
     <div v-if="query.busy.value" class="nui-grid__busy" role="presentation"></div>
     <div class="nui-grid__hidden" role="status" aria-live="polite">{{ announcement }}</div>
   </div>
@@ -79,29 +88,39 @@
 <script setup lang="ts" generic="T">
 import { computed, ref, shallowRef, useTemplateRef, watch } from 'vue';
 import {
+  createIntent,
   useControlId,
   useDirection,
   useLocale,
   useMessages,
   useVirtualList,
 } from '@numior/primitives';
-import { NuiEmpty, NuiIcon } from '@numior/vue';
-import { createGridEngine, type GridEngine, type GridNodeId } from '../engine';
+import { NuiEmpty } from '@numior/vue';
+import {
+  createGridEngine,
+  type GridDistinct,
+  type GridEngine,
+  type GridFilter,
+  type GridFilterValue,
+  type GridNodeId,
+} from '../engine';
 import NuiDataGridRow from './NuiDataGridRow.vue';
 import { dataGridMessages } from './data-grid.messages';
-import { cellTextOf, cellValueOf, engineColumnOf } from './grid-format';
+import { cellTextOf, cellValueOf, engineColumnOf, valueTextOf } from './grid-format';
 import { centreIndexOf, gridLayout, panesOf } from './grid-layout';
-import { headStates, nextSort } from './grid-sort';
+import NuiDataGridFilter from './NuiDataGridFilter.vue';
+import NuiDataGridHeaderMarks from './NuiDataGridHeaderMarks.vue';
 import { useGridFocus } from './use-grid-focus';
+import { useGridHeader } from './use-grid-header';
 import { useGridQuery } from './use-grid-query';
 import type {
   GridCellPosition,
   NuiDataGridCellSlot,
   NuiDataGridEvents,
   NuiDataGridExposed,
-  NuiDataGridHeaderSlot,
   NuiDataGridProps,
   NuiDataGridSlots,
+  NuiDataGridFilters,
   NuiDataGridSort,
   NuiGridColumn,
 } from './data-grid.types';
@@ -111,6 +130,7 @@ const CANVAS_LIMIT = 15_000_000;
 const INITIAL_ROWS = 30;
 const INITIAL_COLUMNS = 12;
 const ROW_OVERSCAN = 6;
+const DISTINCT_LIMIT = 100;
 const COLUMN_OVERSCAN = 2;
 
 const {
@@ -127,6 +147,8 @@ const {
 } = defineProps<NuiDataGridProps<T>>();
 
 const sort = defineModel<NuiDataGridSort>('sort', { default: () => [] });
+const filters = defineModel<NuiDataGridFilters>('filters', { default: () => [] });
+const quick = defineModel<string>('quick', { default: '' });
 const emit = defineEmits<NuiDataGridEvents>();
 const slots = defineSlots<NuiDataGridSlots<T>>();
 
@@ -143,13 +165,23 @@ const engine = shallowRef(createEngine());
 const rowCount = ref(0);
 const revision = ref(0);
 const announcement = ref('');
+const rowsIntent = createIntent<'rows'>();
+
+const queryFilters = (): readonly GridFilter[] => {
+  const text = quick.value.trim();
+  return text === '' ? filters.value : [...filters.value, { kind: 'quick', value: text }];
+};
 
 const query = useGridQuery({
   engine,
-  query: () => ({ sort: sort.value }),
+  query: () => ({ sort: sort.value, filters: queryFilters() }),
   onSettled: (rows) => {
     sync();
     clampActive();
+
+    if (rowsIntent.take() === 'rows') {
+      announcement.value = messages.value.rowsShown({ count: rows });
+    }
     emit('settle', { rows });
   },
   onProgress: (progress) => {
@@ -247,88 +279,50 @@ const rowAt = (position: number): T => {
 
 const keyAt = (position: number): GridNodeId => engine.value.nodeAt(position)?.id ?? position;
 
-const heads = computed(() =>
-  headStates(
-    layout.value.visual.map((column) => column.key),
-    (key) => columnAt(key).sortable !== false,
-    sort.value,
-  ),
-);
-
-const headerScope = (key: string): NuiDataGridHeaderSlot<T> => ({
-  column: columnAt(key),
-  direction: heads.value[key]?.direction,
+const header = useGridHeader({
+  keys: () => layout.value.visual.map((column) => column.key),
+  keyAt: (visual) => layout.value.visual[visual]?.key,
+  columnAt,
+  sort,
+  filters,
+  messages,
+  announce: (text) => {
+    announcement.value = text;
+  },
+  filtered: () => {
+    rowsIntent.set('rows');
+  },
 });
-
-const sortClasses = (key: string) => ({
-  'nui-grid__sort--active': heads.value[key]?.direction !== undefined,
-  'nui-grid__sort--desc': heads.value[key]?.direction === 'desc',
-});
-
-const sortIcon = (key: string): 'arrow-up' | 'arrow-up-down' =>
-  heads.value[key]?.direction === undefined ? 'arrow-up-down' : 'arrow-up';
-
-const sortHint = (key: string): string => {
-  const order = heads.value[key]?.order;
-  return order === undefined ? '' : messages.value.sortKey({ order });
-};
-
-const announceSort = (key: string, next: NuiDataGridSort): void => {
-  const entry = next.find((candidate) => candidate.key === key);
-  const column = columnAt(key).label;
-
-  if (entry === undefined) {
-    announcement.value = messages.value.sortCleared;
-  } else {
-    announcement.value =
-      entry.direction === 'asc'
-        ? messages.value.sortedAscending({ column })
-        : messages.value.sortedDescending({ column });
-  }
-};
-
-const toggleSort = (key: string, multi: boolean): void => {
-  if (heads.value[key]?.sortable !== true) {
-    return;
-  }
-  const next = nextSort(sort.value, key, multi);
-
-  sort.value = next;
-  announceSort(key, next);
-};
-
-const headerKeyOf = (target: EventTarget | null): string | undefined => {
-  const cell = target instanceof Element ? target.closest('[role="columnheader"]') : null;
-  const visual = Number(cell?.getAttribute('aria-colindex')) - 1;
-
-  return layout.value.visual[visual]?.key;
-};
-
-const onHeaderClick = (event: MouseEvent): void => {
-  const key = headerKeyOf(event.target);
-
-  if (key !== undefined) {
-    toggleSort(key, event.shiftKey);
-  }
-};
-
-const activatesHeader = (event: KeyboardEvent): boolean =>
-  (event.key === 'Enter' || event.key === ' ') &&
-  !event.altKey &&
-  !event.ctrlKey &&
-  !event.metaKey &&
-  event.target instanceof HTMLElement &&
-  event.target.matches('[role="columnheader"]');
 
 const onKeydown = (event: KeyboardEvent): void => {
-  const key = activatesHeader(event) ? headerKeyOf(event.target) : undefined;
-
-  if (key === undefined) {
+  if (!header.onKeydown(event)) {
     focus.onKeydown(event);
-    return;
   }
-  event.preventDefault();
-  toggleSort(key, event.shiftKey);
+};
+
+const loadValues = (): Promise<GridDistinct | null> => {
+  const current = header.target.value;
+
+  return current === null
+    ? Promise.resolve(null)
+    : engine.value.distinct(current.key, { limit: DISTINCT_LIMIT });
+};
+
+const valueLabel = (value: GridFilterValue): string => {
+  const current = header.target.value;
+
+  const text =
+    current === null
+      ? ''
+      : valueTextOf(
+          columnAt(current.key),
+          value,
+          undefined,
+          resolvedLocale.value,
+          booleanTexts.value,
+        );
+
+  return text === '' ? messages.value.filterBlank : text;
 };
 
 const hasCellSlot = (key: string): boolean => slots[`cell-${key}`] !== undefined;
@@ -364,6 +358,10 @@ const clampActive = (): void => {
     active.value = { row, col };
   }
 };
+
+watch(quick, () => {
+  rowsIntent.set('rows');
+});
 
 watch(
   () => source,

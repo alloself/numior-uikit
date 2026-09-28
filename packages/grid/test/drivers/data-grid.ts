@@ -1,4 +1,4 @@
-import { mount, type DOMWrapper, type VueWrapper } from '@vue/test-utils';
+import { flushPromises, mount, type DOMWrapper, type VueWrapper } from '@vue/test-utils';
 import { createNuiConfig, type NuiConfigOptions } from '@numior/primitives';
 import {
   defineComponent,
@@ -9,9 +9,11 @@ import {
   type ShallowRef,
   type Slots,
 } from 'vue';
+import { dismissPopoverNatively, TopLayerStubs } from '../../../vue/test/support/top-layer';
 import {
   NuiDataGrid,
   type GridSort,
+  type NuiDataGridFilters,
   type NuiDataGridExposed,
   type NuiDataGridProps,
   type NuiGridColumn,
@@ -22,6 +24,7 @@ export interface DataGridMountOptions<T> {
   readonly source: readonly T[];
   readonly props?: Omit<NuiDataGridProps<T>, 'columns' | 'source'>;
   readonly sort?: readonly GridSort[];
+  readonly filters?: NuiDataGridFilters;
   readonly slots?: Slots;
   readonly width?: number;
   readonly height?: number;
@@ -34,6 +37,12 @@ export interface CellPosition {
   readonly col: number;
 }
 
+interface GridModels {
+  readonly sort: ShallowRef<readonly GridSort[]>;
+  readonly filters: ShallowRef<NuiDataGridFilters>;
+  readonly quick: ShallowRef<string>;
+}
+
 interface GridEvents {
   settled: number;
   progress: number;
@@ -43,6 +52,7 @@ interface GridEvents {
 export interface KeyOptions {
   readonly ctrl?: boolean;
   readonly shift?: boolean;
+  readonly alt?: boolean;
 }
 
 const defineValue = (element: HTMLElement, name: string, value: number): void => {
@@ -74,6 +84,9 @@ export class DataGridDriver<T> {
   static mount<T>(options: DataGridMountOptions<T>): DataGridDriver<T> {
     const source = shallowRef(options.source);
     const sort = shallowRef<readonly GridSort[]>(options.sort ?? []);
+    const filters = shallowRef<NuiDataGridFilters>(options.filters ?? []);
+    const quick = shallowRef('');
+    const stubs = new TopLayerStubs();
     const exposed = shallowRef<NuiDataGridExposed | null>(null);
     const events: GridEvents = { settled: 0, progress: 0, waiters: [] };
 
@@ -94,6 +107,14 @@ export class DataGridDriver<T> {
               'onUpdate:sort': (next: readonly GridSort[]) => {
                 sort.value = next;
               },
+              filters: filters.value,
+              'onUpdate:filters': (next: NuiDataGridFilters) => {
+                filters.value = next;
+              },
+              quick: quick.value,
+              'onUpdate:quick': (next: string) => {
+                quick.value = next;
+              },
               onSettle: () => {
                 events.settled += 1;
 
@@ -113,7 +134,15 @@ export class DataGridDriver<T> {
 
     const plugins: Plugin[] = options.config === undefined ? [] : [createNuiConfig(options.config)];
     const wrapper = mount(Host, { attachTo: document.body, global: { plugins } });
-    const driver = new DataGridDriver<T>(wrapper, source, sort, exposed, events);
+
+    const driver = new DataGridDriver<T>(
+      wrapper,
+      source,
+      { sort, filters, quick },
+      exposed,
+      events,
+      stubs,
+    );
 
     driver.size(options.width ?? 500, options.height ?? 300);
     return driver;
@@ -122,9 +151,10 @@ export class DataGridDriver<T> {
   private constructor(
     private readonly wrapper: VueWrapper,
     private readonly source: ShallowRef<readonly T[]>,
-    private readonly sortModel: ShallowRef<readonly GridSort[]>,
+    private readonly models: GridModels,
     private readonly exposed: ShallowRef<NuiDataGridExposed | null>,
     private readonly events: GridEvents,
+    private readonly stubs: TopLayerStubs,
   ) {}
 
   private nextSettle(): Promise<void> {
@@ -188,7 +218,53 @@ export class DataGridDriver<T> {
   }
 
   get sort(): readonly GridSort[] {
-    return this.sortModel.value;
+    return this.models.sort.value;
+  }
+
+  get filters(): NuiDataGridFilters {
+    return this.models.filters.value;
+  }
+
+  private get popover(): HTMLElement | null {
+    return document.querySelector<HTMLElement>('.nui-grid-filter');
+  }
+
+  get filterTitle(): string | undefined {
+    return this.popover?.querySelector('.nui-grid-filter__title')?.textContent?.trim();
+  }
+
+  get filterFocused(): boolean {
+    return this.popover?.contains(document.activeElement) ?? false;
+  }
+
+  get filterValueLabels(): string[] {
+    return [...(this.popover?.querySelectorAll('.nui-grid-filter__values label') ?? [])].map(
+      (label) => label.textContent?.trim() ?? '',
+    );
+  }
+
+  filterButton(col: number): HTMLElement | null {
+    return this.header(col)?.querySelector<HTMLElement>('.nui-grid__filter') ?? null;
+  }
+
+  filterActive(col: number): boolean {
+    return this.filterButton(col)?.classList.contains('nui-grid__filter--active') ?? false;
+  }
+
+  filterExpanded(col: number): boolean {
+    return this.filterButton(col)?.getAttribute('aria-expanded') === 'true';
+  }
+
+  filterValue(label: string): string | undefined {
+    return this.filterInput(label)?.value;
+  }
+
+  private filterInput(label: string): HTMLInputElement | undefined {
+    const inputs = this.popover?.querySelectorAll<HTMLInputElement>('input') ?? [];
+
+    return [...inputs].find((input) =>
+      [...(input.labels ?? [])].some((entry) => entry.textContent?.trim() === label),
+    );
   }
 
   get settledRuns(): number {
@@ -286,6 +362,7 @@ export class DataGridDriver<T> {
         key,
         ctrlKey: options.ctrl ?? false,
         shiftKey: options.shift ?? false,
+        altKey: options.alt ?? false,
         bubbles: true,
         cancelable: true,
       }),
@@ -329,10 +406,75 @@ export class DataGridDriver<T> {
     await nextTick();
   }
 
+  async openFilter(col: number): Promise<void> {
+    this.filterButton(col)?.click();
+    await flushPromises();
+  }
+
+  async dismissFilter(): Promise<void> {
+    const popover = this.popover;
+
+    if (popover !== null) {
+      dismissPopoverNatively(popover);
+    }
+    await nextTick();
+  }
+
+  async typeInFilter(label: string, value: string): Promise<void> {
+    const input = this.filterInput(label);
+
+    if (input !== undefined) {
+      input.value = value;
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+      input.dispatchEvent(new Event('blur'));
+    }
+    await nextTick();
+  }
+
+  async chooseValue(label: string): Promise<void> {
+    const option = [
+      ...(this.popover?.querySelectorAll<HTMLElement>('.nui-grid-filter__values label') ?? []),
+    ].find((entry) => entry.textContent?.trim() === label);
+
+    option?.querySelector<HTMLInputElement>('input')?.click();
+    await nextTick();
+  }
+
+  async applyFilter(): Promise<void> {
+    const settled = this.nextSettle();
+
+    this.popover
+      ?.querySelector('form')
+      ?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+
+    await settled;
+    await nextTick();
+  }
+
+  async resetFilter(): Promise<void> {
+    const settled = this.nextSettle();
+
+    const buttons = this.popover?.querySelectorAll<HTMLButtonElement>(
+      '.nui-grid-filter__actions button',
+    );
+
+    buttons?.[0]?.click();
+    await settled;
+    await nextTick();
+  }
+
+  async setQuick(text: string): Promise<void> {
+    const settled = this.nextSettle();
+
+    this.models.quick.value = text;
+    await settled;
+    await nextTick();
+  }
+
   async setSort(next: readonly GridSort[]): Promise<void> {
     const settled = this.nextSettle();
 
-    this.sortModel.value = next;
+    this.models.sort.value = next;
     await settled;
     await nextTick();
   }
@@ -354,5 +496,6 @@ export class DataGridDriver<T> {
 
   unmount(): void {
     this.wrapper.unmount();
+    this.stubs.restore();
   }
 }

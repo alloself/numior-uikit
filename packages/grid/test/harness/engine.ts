@@ -164,6 +164,8 @@ export class EngineHarness<T> {
   readonly engine: GridEngine<T>;
   readonly progress: GridProgress[] = [];
   private readonly waiting: Array<() => void> = [];
+  private resumedAt = 0;
+  private slowest = 0;
 
   constructor(
     columns: readonly GridEngineColumn<T>[],
@@ -177,10 +179,12 @@ export class EngineHarness<T> {
       defaultExpanded: options.defaultExpanded,
       sliceMs: options.sliceMs ?? 12,
       collator: new Intl.Collator('ru', { numeric: true }),
-      yieldTo: () =>
-        new Promise((resolve) => {
+      yieldTo: () => {
+        this.lap();
+        return new Promise((resolve) => {
           this.waiting.push(resolve);
-        }),
+        });
+      },
     });
 
     this.engine.setRows(rows);
@@ -190,11 +194,25 @@ export class EngineHarness<T> {
     return this.waiting.length;
   }
 
+  get longestSliceMs(): number {
+    return this.slowest;
+  }
+
+  resetSlices(): void {
+    this.slowest = 0;
+  }
+
+  private lap(): void {
+    this.slowest = Math.max(this.slowest, performance.now() - this.resumedAt);
+  }
+
   get phases(): string[] {
     return [...new Set(this.progress.map((entry) => entry.phase))];
   }
 
   run(query: GridQuery, signal?: AbortSignal): Promise<GridRunResult> {
+    this.resumedAt = performance.now();
+
     return this.engine.run(query, {
       signal,
       onProgress: (progress) => {
@@ -204,7 +222,10 @@ export class EngineHarness<T> {
   }
 
   async step(): Promise<void> {
-    this.waiting.shift()?.();
+    const resume = this.waiting.shift();
+
+    this.resumedAt = performance.now();
+    resume?.();
     await tick();
   }
 
@@ -212,6 +233,7 @@ export class EngineHarness<T> {
     const outcome = { settled: false };
 
     const finish = (): void => {
+      this.lap();
       outcome.settled = true;
     };
 

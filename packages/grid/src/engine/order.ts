@@ -1,10 +1,10 @@
 import { createRadixSortJob, type RadixLane } from './radix';
 import { createSortJob } from './sort';
 import type { SliceJob } from './slicer';
-import type { ColumnStore } from './engine.types';
+import type { RankedStore } from './engine.types';
 
 export interface OrderKey {
-  readonly store: ColumnStore;
+  readonly store: RankedStore;
   readonly descending: boolean;
 }
 

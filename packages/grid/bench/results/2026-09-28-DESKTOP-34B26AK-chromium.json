@@ -1,5 +1,5 @@
 {
-  "recordedAt": "2026-09-28T19:42:38.456Z",
+  "recordedAt": "2026-09-28T20:42:35.301Z",
   "dataset": "1000000 generated rows, 20 columns, seed 1, viewport 1440×900",
   "device": {
     "host": "DESKTOP-34B26AK",
@@ -10,68 +10,68 @@
     "node": "v24.20.0"
   },
   "browser": "chromium 153.0.8010.12",
-  "heapUsedMb": 406,
+  "heapUsedMb": 400,
   "operations": [
     {
       "name": "generate a million rows in the page",
       "samples": 1,
-      "meanMs": 449.09999999403954,
-      "p50Ms": 449.09999999403954,
-      "p95Ms": 449.09999999403954,
-      "maxMs": 449.09999999403954
+      "meanMs": 429,
+      "p50Ms": 429,
+      "p95Ms": 429,
+      "maxMs": 429
     },
     {
       "name": "cold mount to the first painted row",
       "samples": 1,
-      "meanMs": 73.5,
-      "p50Ms": 73.5,
-      "p95Ms": 73.5,
-      "maxMs": 73.5
+      "meanMs": 75.5,
+      "p50Ms": 75.5,
+      "p95Ms": 75.5,
+      "maxMs": 75.5
     },
     {
       "name": "warm remount to the first painted row",
       "samples": 5,
-      "meanMs": 62.10000000596047,
-      "p50Ms": 65.7999999821186,
-      "p95Ms": 73.7000000178814,
-      "maxMs": 73.7000000178814
+      "meanMs": 66.67999999523163,
+      "p50Ms": 67.69999998807907,
+      "p95Ms": 77.40000000596046,
+      "maxMs": 77.40000000596046
     },
     {
       "name": "arrow down to the next paint",
       "samples": 200,
-      "meanMs": 19.987000000178814,
-      "p50Ms": 20.099999994039536,
-      "p95Ms": 22.100000023841858,
-      "maxMs": 29.900000005960464
+      "meanMs": 19.99,
+      "p50Ms": 20.299999982118607,
+      "p95Ms": 20.900000005960464,
+      "maxMs": 21.599999994039536
     },
     {
       "name": "arrow across columns to the next paint",
       "samples": 40,
-      "meanMs": 17.20249999910593,
-      "p50Ms": 15.800000011920929,
-      "p95Ms": 21.099999994039536,
-      "maxMs": 21.400000005960464
+      "meanMs": 17.43500000014901,
+      "p50Ms": 15.899999976158142,
+      "p95Ms": 21.80000001192093,
+      "maxMs": 23
     },
     {
       "name": "page down to the next paint",
       "samples": 50,
-      "meanMs": 21.535999999046325,
-      "p50Ms": 21.600000023841858,
-      "p95Ms": 22.599999994039536,
-      "maxMs": 23.30000001192093
+      "meanMs": 21.24799999833107,
+      "p50Ms": 21.099999994039536,
+      "p95Ms": 22.19999998807907,
+      "maxMs": 23.299999982118607
     },
     {
       "name": "jump between the first and the last row to the next paint",
       "samples": 40,
-      "meanMs": 18.002500000596047,
-      "p50Ms": 18.099999994039536,
-      "p95Ms": 19.299999982118607,
-      "maxMs": 19.400000005960464
+      "meanMs": 18.062500000745057,
+      "p50Ms": 18,
+      "p95Ms": 19.099999994039536,
+      "maxMs": 19.80000001192093
     },
     {
       "name": "frame time while wheeling through rows",
-      "samples": 459,
-      "meanMs": 16.665869281045754,
+      "samples": 479,
+      "meanMs": 16.665832985386224,
       "p50Ms": 16.69999999999891,
       "p95Ms": 16.700000000000728,
       "maxMs": 16.80000000000291
@@ -79,42 +79,66 @@
     {
       "name": "first sort of a number column from the header to the painted result",
       "samples": 1,
-      "meanMs": 150.2999999821186,
-      "p50Ms": 150.2999999821186,
-      "p95Ms": 150.2999999821186,
-      "maxMs": 150.2999999821186
+      "meanMs": 119.59999999403954,
+      "p50Ms": 119.59999999403954,
+      "p95Ms": 119.59999999403954,
+      "maxMs": 119.59999999403954
     },
     {
       "name": "repeat sort of a number column from the header to the painted result",
       "samples": 5,
-      "meanMs": 81.87999998927117,
-      "p50Ms": 103.69999998807907,
-      "p95Ms": 111.19999998807907,
-      "maxMs": 111.19999998807907
+      "meanMs": 78.41999998688698,
+      "p50Ms": 96.89999997615814,
+      "p95Ms": 101.69999998807907,
+      "maxMs": 101.69999998807907
     },
     {
       "name": "first sort of a text column from the header to the painted result",
       "samples": 1,
-      "meanMs": 103.59999999403954,
-      "p50Ms": 103.59999999403954,
-      "p95Ms": 103.59999999403954,
-      "maxMs": 103.59999999403954
+      "meanMs": 118.5,
+      "p50Ms": 118.5,
+      "p95Ms": 118.5,
+      "maxMs": 118.5
     },
     {
       "name": "repeat sort of a text column from the header to the painted result",
       "samples": 5,
-      "meanMs": 65.61999999880791,
-      "p50Ms": 71.09999999403954,
-      "p95Ms": 86.30000001192093,
-      "maxMs": 86.30000001192093
+      "meanMs": 57.3,
+      "p50Ms": 66,
+      "p95Ms": 70.7000000178814,
+      "maxMs": 70.7000000178814
     },
     {
       "name": "add a sort key with Shift from the header to the painted result",
       "samples": 3,
-      "meanMs": 78.16666665673256,
-      "p50Ms": 78.2999999821186,
-      "p95Ms": 112.80000001192093,
-      "maxMs": 112.80000001192093
+      "meanMs": 76.13333332538605,
+      "p50Ms": 76.09999999403954,
+      "p95Ms": 112.2999999821186,
+      "maxMs": 112.2999999821186
+    },
+    {
+      "name": "apply a set filter from the header popover to the painted result",
+      "samples": 6,
+      "meanMs": 37.733333334326744,
+      "p50Ms": 34.30000001192093,
+      "p95Ms": 44.69999998807907,
+      "maxMs": 44.69999998807907
+    },
+    {
+      "name": "first quick filter keystroke while text stores build to the painted result",
+      "samples": 1,
+      "meanMs": 1337,
+      "p50Ms": 1337,
+      "p95Ms": 1337,
+      "maxMs": 1337
+    },
+    {
+      "name": "next quick filter keystroke to the painted result",
+      "samples": 7,
+      "meanMs": 65.15714286054883,
+      "p50Ms": 65.69999998807907,
+      "p95Ms": 92.40000000596046,
+      "maxMs": 92.40000000596046
     }
   ]
 }

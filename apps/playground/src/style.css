@@ -231,6 +231,9 @@ label:has(> input[type='checkbox']) {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
+.grid-quick {
+  inline-size: min(100%, 18rem);
+}
 .data-row {
   display: flex;
   flex-wrap: wrap;

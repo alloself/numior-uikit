@@ -1,10 +1,22 @@
-import type { GridNodeId, GridProgress, GridSort, GridSortDirection } from '../engine';
+import type {
+  GridDistinct,
+  GridFilter,
+  GridFilterValue,
+  GridNodeId,
+  GridProgress,
+  GridSort,
+  GridSortDirection,
+} from '../engine';
 
 export type NuiDataGridSize = 'sm' | 'md' | 'lg';
 
 export type NuiGridAlign = 'start' | 'center' | 'end';
 
 export type NuiGridPin = 'start' | 'end';
+
+export type NuiGridFilterKind = 'text' | 'number' | 'date' | 'set';
+
+export type NuiGridColumnFilter = Exclude<GridFilter, { kind: 'quick' }>;
 
 interface NuiGridColumnBase {
   readonly key: string;
@@ -14,30 +26,31 @@ interface NuiGridColumnBase {
   readonly pin?: NuiGridPin | undefined;
   readonly align?: NuiGridAlign | undefined;
   readonly sortable?: boolean | undefined;
+  readonly filter?: NuiGridFilterKind | false | undefined;
 }
 
 export interface NuiGridTextColumn<T> extends NuiGridColumnBase {
   readonly type: 'text';
   readonly value: (row: T) => string | null | undefined;
-  readonly format?: ((value: string, row: T) => string) | undefined;
+  readonly format?: ((value: string, row: T | undefined) => string) | undefined;
 }
 
 export interface NuiGridNumberColumn<T> extends NuiGridColumnBase {
   readonly type: 'number';
   readonly value: (row: T) => number | null | undefined;
-  readonly format?: ((value: number, row: T) => string) | undefined;
+  readonly format?: ((value: number, row: T | undefined) => string) | undefined;
 }
 
 export interface NuiGridDateColumn<T> extends NuiGridColumnBase {
   readonly type: 'date';
   readonly value: (row: T) => Date | number | null | undefined;
-  readonly format?: ((value: Date, row: T) => string) | undefined;
+  readonly format?: ((value: Date, row: T | undefined) => string) | undefined;
 }
 
 export interface NuiGridBooleanColumn<T> extends NuiGridColumnBase {
   readonly type: 'boolean';
   readonly value: (row: T) => boolean | null | undefined;
-  readonly format?: ((value: boolean, row: T) => string) | undefined;
+  readonly format?: ((value: boolean, row: T | undefined) => string) | undefined;
 }
 
 export type NuiGridColumn<T> =
@@ -85,6 +98,19 @@ export interface NuiDataGridEvents {
 
 export type NuiDataGridSort = readonly GridSort[];
 
+export type NuiDataGridFilters = readonly NuiGridColumnFilter[];
+
+export interface NuiDataGridFilterProps {
+  title: string;
+  kind: NuiGridFilterKind;
+  columnKey: string;
+  filter: NuiGridColumnFilter | undefined;
+  anchor: HTMLElement | null;
+  locale: string;
+  loadValues: () => Promise<GridDistinct | null>;
+  valueLabel: (value: GridFilterValue) => string;
+}
+
 export type NuiDataGridSlots<T> = {
   empty?: () => unknown;
 } & {
@@ -118,6 +144,15 @@ export interface GridHeadState {
   readonly direction: GridSortDirection | undefined;
   readonly order: number | undefined;
   readonly primary: boolean;
+  readonly filterable: boolean;
+  readonly filtered: boolean;
+}
+
+export interface NuiDataGridHeaderMarksProps {
+  state: GridHeadState | undefined;
+  hint: string;
+  filterLabel: string;
+  expanded: 'true' | 'false';
 }
 
 export interface GridCellPosition {

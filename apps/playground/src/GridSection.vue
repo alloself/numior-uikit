@@ -5,6 +5,29 @@
       <span class="tag">NuiDataGrid · 10 000 строк</span>
     </div>
     <div class="data-row">
+      <NuiInput
+        v-model="quick"
+        type="search"
+        size="sm"
+        class="grid-quick"
+        placeholder="Поиск по заказам"
+        aria-label="Поиск по заказам"
+        data-testid="grid-quick"
+      >
+        <template #prefix>
+          <NuiIcon alias="search" />
+        </template>
+      </NuiInput>
+      <NuiButton
+        size="sm"
+        variant="outline"
+        tone="neutral"
+        :disabled="filters.length === 0 && quick === ''"
+        data-testid="grid-clear-filters"
+        @click="clearFilters"
+      >
+        Сбросить фильтры
+      </NuiButton>
       <NuiButton
         size="sm"
         variant="outline"
@@ -17,6 +40,8 @@
     </div>
     <NuiDataGrid
       v-model:sort="sort"
+      v-model:filters="filters"
+      v-model:quick="quick"
       :columns="columns"
       :source="empty ? [] : orders"
       :get-key="(row) => row.id"
@@ -30,13 +55,19 @@
         }}</NuiChip>
       </template>
     </NuiDataGrid>
+    <pre class="output" data-testid="grid-output">{{ output }}</pre>
   </section>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
-import { NuiButton, NuiChip, type NuiTone } from '@numior/vue';
-import { NuiDataGrid, type GridSort, type NuiGridColumn } from '@numior/grid';
+import { computed, ref } from 'vue';
+import { NuiButton, NuiChip, NuiIcon, NuiInput, type NuiTone } from '@numior/vue';
+import {
+  NuiDataGrid,
+  type GridSort,
+  type NuiDataGridFilters,
+  type NuiGridColumn,
+} from '@numior/grid';
 
 type OrderStatus = 'new' | 'paid' | 'shipped' | 'returned';
 
@@ -111,12 +142,33 @@ const columns: NuiGridColumn<Order>[] = [
   },
   { key: 'customer', label: 'Клиент', type: 'text', width: 200, value: (row) => row.customer },
   { key: 'email', label: 'Почта', type: 'text', width: 240, value: (row) => row.email },
-  { key: 'city', label: 'Город', type: 'text', width: 140, value: (row) => row.city },
-  { key: 'country', label: 'Страна', type: 'text', width: 140, value: (row) => row.country },
+  {
+    key: 'city',
+    label: 'Город',
+    type: 'text',
+    width: 140,
+    filter: 'set',
+    value: (row) => row.city,
+  },
+  {
+    key: 'country',
+    label: 'Страна',
+    type: 'text',
+    width: 140,
+    filter: 'set',
+    value: (row) => row.country,
+  },
   { key: 'amount', label: 'Сумма', type: 'number', width: 130, value: (row) => row.amount },
   { key: 'created', label: 'Создан', type: 'date', width: 150, value: (row) => row.created },
   { key: 'vip', label: 'VIP', type: 'boolean', width: 100, value: (row) => row.vip },
-  { key: 'manager', label: 'Менеджер', type: 'text', width: 180, value: (row) => row.manager },
+  {
+    key: 'manager',
+    label: 'Менеджер',
+    type: 'text',
+    width: 180,
+    filter: 'set',
+    value: (row) => row.manager,
+  },
   { key: 'note', label: 'Комментарий', type: 'text', width: 260, value: (row) => row.note },
   {
     key: 'status',
@@ -124,10 +176,22 @@ const columns: NuiGridColumn<Order>[] = [
     type: 'text',
     pin: 'end',
     width: 140,
-    value: (row) => row.status,
+    filter: 'set',
+    value: (row) => STATUS_LABELS[row.status],
   },
 ];
 
 const empty = ref(false);
 const sort = ref<readonly GridSort[]>([]);
+const filters = ref<NuiDataGridFilters>([]);
+const quick = ref('');
+
+const output = computed(() =>
+  JSON.stringify({ sort: sort.value, filters: filters.value, quick: quick.value }),
+);
+
+const clearFilters = (): void => {
+  filters.value = [];
+  quick.value = '';
+};
 </script>

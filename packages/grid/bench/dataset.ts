@@ -212,6 +212,7 @@ export const GRID_COLUMNS: readonly NuiGridColumn<BenchRow>[] = [
     type: 'text',
     pin: 'end',
     width: 120,
+    filter: 'set',
     value: (row) => row.status,
   },
 ];

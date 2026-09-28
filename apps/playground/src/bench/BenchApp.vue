@@ -1,13 +1,25 @@
 <template>
   <main class="bench">
-    <p class="bench__caption">{{ caption }}</p>
+    <div class="bench__bar">
+      <p class="bench__caption">{{ caption }}</p>
+      <NuiInput
+        v-model="quick"
+        type="search"
+        size="sm"
+        aria-label="Быстрый фильтр"
+        placeholder="Быстрый фильтр"
+        data-testid="bench-quick"
+      />
+    </div>
     <NuiDataGrid
       v-if="shown"
       v-model:sort="sort"
+      v-model:filters="filters"
+      v-model:quick="quick"
       :columns="GRID_COLUMNS"
       :source="rows"
       :get-key="(row) => row.id"
-      height="calc(100dvh - 4rem)"
+      height="calc(100dvh - 5rem)"
       label="Бенчмарк грида"
       data-testid="bench-grid"
       @settle="onSettle"
@@ -17,7 +29,8 @@
 
 <script setup lang="ts">
 import { nextTick, onMounted, ref } from 'vue';
-import { NuiDataGrid, type GridSort } from '@numior/grid';
+import { NuiInput } from '@numior/vue';
+import { NuiDataGrid, type GridSort, type NuiDataGridFilters } from '@numior/grid';
 import { GRID_COLUMNS, generateRows } from '../../../../packages/grid/bench/dataset';
 import {
   afterPaint,
@@ -39,6 +52,8 @@ const dataReady = performance.now();
 const shown = ref(true);
 const caption = `${count.toLocaleString('ru-RU')} строк × ${GRID_COLUMNS.length} колонок`;
 const sort = ref<readonly GridSort[]>([]);
+const filters = ref<NuiDataGridFilters>([]);
+const quick = ref('');
 const latencies: number[] = [];
 const settles: number[] = [];
 const frames: number[] = [];

@@ -4,8 +4,8 @@ const docs: DocsMap = {
   NuiDataGrid: {
     props: {
       columns: {
-        ru: 'Колонки: key, label, type (text, number, date, boolean), value, format, width, minWidth, pin, align и sortable.',
-        en: 'Columns: key, label, type (text, number, date, boolean), value, format, width, minWidth, pin, align and sortable.',
+        ru: 'Колонки: key, label, type (text, number, date, boolean), value, format, width, minWidth, pin, align, sortable и filter. filter выбирает вид фильтра (text, number, date, set) или выключает его значением false. Вне строки, например в списке значений фильтра, format получает строку как undefined.',
+        en: 'Columns: key, label, type (text, number, date, boolean), value, format, width, minWidth, pin, align, sortable and filter. filter picks the filter kind (text, number, date, set) or turns it off with false. Outside a row, such as the filter value list, format receives the row as undefined.',
       },
       source: {
         ru: 'Строки данных; грид не копирует и не меняет их.',
@@ -49,6 +49,14 @@ const docs: DocsMap = {
         ru: 'Сортировка: список ключей колонок с направлением; первый ключ главный.',
         en: 'Sort: a list of column keys with directions; the first key leads.',
       },
+      'v-model:filters': {
+        ru: 'Фильтры колонок: список условий text, number, date и set по ключам колонок; модель сериализуется в JSON.',
+        en: 'Column filters: a list of text, number, date and set conditions by column key; the model serialises to JSON.',
+      },
+      'v-model:quick': {
+        ru: 'Быстрый фильтр: текст, который ищется во всех текстовых колонках без учёта регистра.',
+        en: 'Quick filter: text searched in every text column, ignoring case.',
+      },
     },
     events: {
       progress: {
@@ -76,6 +84,13 @@ const docs: DocsMap = {
         description: {
           ru: 'На ячейке шапки добавляет колонку следующим ключом сортировки.',
           en: 'On a header cell adds the column as the next sort key.',
+        },
+      },
+      {
+        keys: 'Alt+ArrowDown',
+        description: {
+          ru: 'На ячейке шапки открывает фильтр колонки; Escape закрывает его и возвращает фокус в шапку.',
+          en: 'On a header cell opens the column filter; Escape closes it and returns focus to the header.',
         },
       },
       {

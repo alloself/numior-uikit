@@ -224,3 +224,74 @@
     animation-duration: calc(var(--nui-duration-slow) * 12);
   }
 }
+.nui-grid__filter {
+  box-sizing: border-box;
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  inline-size: 1.5rem;
+  block-size: 1.5rem;
+  margin-inline-start: auto;
+  padding: 0;
+  border: 0;
+  border-radius: var(--nui-radius-sm);
+  background: none;
+  color: var(--nui-text-muted);
+  font-size: 0.875rem;
+  cursor: pointer;
+  opacity: 0;
+  transition:
+    opacity var(--nui-duration-fast) var(--nui-easing),
+    color var(--nui-duration-fast) var(--nui-easing),
+    background-color var(--nui-duration-fast) var(--nui-easing);
+}
+.nui-grid__cell--align-end > .nui-grid__filter {
+  order: -1;
+  margin-inline: 0 auto;
+}
+.nui-grid__cell:hover > .nui-grid__filter,
+.nui-grid__cell:focus-visible > .nui-grid__filter,
+.nui-grid__filter[aria-expanded='true'],
+.nui-grid__filter--active {
+  opacity: 1;
+}
+@media (hover: none) {
+  .nui-grid__filter {
+    opacity: 1;
+  }
+}
+.nui-grid__filter:hover {
+  background: var(--nui-neutral-soft);
+  color: var(--nui-text);
+}
+.nui-grid__filter--active {
+  color: var(--nui-primary);
+}
+.nui-grid-filter {
+  inline-size: min(18rem, calc(100vw - var(--nui-space-4)));
+}
+.nui-grid-filter__form {
+  display: grid;
+  gap: var(--nui-space-3);
+}
+.nui-grid-filter__title {
+  margin: 0;
+  font-weight: 600;
+}
+.nui-grid-filter__values {
+  display: grid;
+  gap: var(--nui-space-2);
+  max-block-size: 12rem;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+.nui-grid-filter__note {
+  margin: 0;
+  color: var(--nui-text-muted);
+  font-size: var(--nui-font-size-xs);
+}
+.nui-grid-filter__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--nui-space-2);
+}

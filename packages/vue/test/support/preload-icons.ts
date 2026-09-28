@@ -52,6 +52,7 @@ const loaders = [
   () => import('lucide-vue-next/dist/esm/icons/maximize.js'),
   () => import('lucide-vue-next/dist/esm/icons/grip-horizontal.js'),
   () => import('lucide-vue-next/dist/esm/icons/arrow-left-right.js'),
+  () => import('lucide-vue-next/dist/esm/icons/funnel.js'),
 ];
 
 await Promise.all(loaders.map((load) => load()));

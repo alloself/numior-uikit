@@ -1,6 +1,14 @@
 import type { GridSort } from '../engine';
 import type { GridHeadState } from './data-grid.types';
 
+export interface HeadStateInput {
+  readonly keys: readonly string[];
+  readonly sort: readonly GridSort[];
+  readonly sortable: (key: string) => boolean;
+  readonly filterable: (key: string) => boolean;
+  readonly filtered: (key: string) => boolean;
+}
+
 const cycle = (key: string, current: GridSort | undefined): GridSort | null => {
   if (current === undefined) {
     return { key, direction: 'asc' };
@@ -27,23 +35,20 @@ export const nextSort = (
     : sort.map((entry) => (entry.key === key ? next : entry));
 };
 
-export const headStates = (
-  keys: readonly string[],
-  sortable: (key: string) => boolean,
-  sort: readonly GridSort[],
-): Readonly<Record<string, GridHeadState>> =>
+export const headStates = (input: HeadStateInput): Readonly<Record<string, GridHeadState>> =>
   Object.fromEntries(
-    keys.map((key) => {
-      const position = sort.findIndex((entry) => entry.key === key);
-      const entry = sort[position];
+    input.keys.map((key) => {
+      const position = input.sort.findIndex((entry) => entry.key === key);
 
       return [
         key,
         {
-          sortable: sortable(key),
-          direction: entry?.direction,
-          order: position >= 0 && sort.length > 1 ? position + 1 : undefined,
+          sortable: input.sortable(key),
+          direction: input.sort[position]?.direction,
+          order: position >= 0 && input.sort.length > 1 ? position + 1 : undefined,
           primary: position === 0,
+          filterable: input.filterable(key),
+          filtered: input.filtered(key),
         },
       ];
     }),

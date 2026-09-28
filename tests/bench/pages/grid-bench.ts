@@ -6,10 +6,14 @@ const SETTLE_TIMEOUT = 60_000;
 export class GridBenchPage {
   readonly grid: Locator;
   readonly viewport: Locator;
+  readonly quick: Locator;
+  readonly filter: Locator;
 
   constructor(private readonly page: Page) {
     this.grid = page.getByTestId('bench-grid');
     this.viewport = this.grid.locator('.nui-grid__viewport');
+    this.quick = page.getByTestId('bench-quick');
+    this.filter = page.locator('.nui-grid-filter');
   }
 
   async open(rows: number): Promise<void> {
@@ -61,23 +65,73 @@ export class GridBenchPage {
     await this.nextFrame();
   }
 
-  async sortLatencies(col: number, clicks: number, shift = false): Promise<number[]> {
-    const header = this.viewport.locator(`[role="columnheader"][aria-colindex="${col + 1}"]`);
+  private header(col: number): Locator {
+    return this.viewport.locator(`[role="columnheader"][aria-colindex="${col + 1}"]`);
+  }
 
+  private async clearSettles(): Promise<void> {
     await this.page.evaluate(() => {
       window.numiorBench?.settles.splice(0);
     });
+  }
+
+  private async waitForSettles(expected: number): Promise<void> {
+    await this.page.waitForFunction(
+      (count) => (window.numiorBench?.settles.length ?? 0) >= count,
+      expected,
+      { timeout: SETTLE_TIMEOUT },
+    );
+  }
+
+  private settles(): Promise<number[]> {
+    return this.page.evaluate(() => [...(window.numiorBench?.settles ?? [])]);
+  }
+
+  async sortLatencies(col: number, clicks: number, shift = false): Promise<number[]> {
+    await this.clearSettles();
 
     for (let click = 1; click <= clicks; click += 1) {
-      await header.click({ modifiers: shift ? ['Shift'] : [] });
-
-      await this.page.waitForFunction(
-        (expected) => (window.numiorBench?.settles.length ?? 0) >= expected,
-        click,
-        { timeout: SETTLE_TIMEOUT },
-      );
+      await this.header(col).click({ modifiers: shift ? ['Shift'] : [] });
+      await this.waitForSettles(click);
     }
-    return this.page.evaluate(() => [...(window.numiorBench?.settles ?? [])]);
+    return this.settles();
+  }
+
+  private async openFilter(col: number): Promise<void> {
+    await this.header(col).hover();
+    await this.header(col).locator('.nui-grid__filter').click();
+    await this.filter.waitFor();
+  }
+
+  async setFilterLatencies(col: number, labels: readonly string[]): Promise<number[]> {
+    await this.clearSettles();
+
+    for (const [round, label] of labels.entries()) {
+      await this.openFilter(col);
+      await this.filter.getByRole('checkbox', { name: label, exact: true }).click();
+      await this.filter.getByRole('button', { name: 'Применить' }).click();
+      await this.waitForSettles(round + 1);
+    }
+    return this.settles();
+  }
+
+  async resetFilter(col: number): Promise<void> {
+    await this.clearSettles();
+    await this.openFilter(col);
+    await this.filter.getByRole('button', { name: 'Сбросить' }).click();
+    await this.waitForSettles(1);
+  }
+
+  async quickLatencies(text: string, erase: number): Promise<number[]> {
+    await this.quick.click();
+    await this.clearSettles();
+    const keys = [...text, ...Array.from({ length: erase }, () => 'Backspace')];
+
+    for (const [step, key] of keys.entries()) {
+      await this.page.keyboard.press(key);
+      await this.waitForSettles(step + 1);
+    }
+    return this.settles();
   }
 
   async keyLatencies(key: string, times: number): Promise<number[]> {

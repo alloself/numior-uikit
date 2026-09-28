@@ -4,6 +4,7 @@ export type {
   NuiDataGridCellSlot,
   NuiDataGridEvents,
   NuiDataGridExposed,
+  NuiDataGridFilters,
   NuiDataGridHeaderSlot,
   NuiDataGridProps,
   NuiDataGridSettled,
@@ -14,10 +15,20 @@ export type {
   NuiGridBooleanColumn,
   NuiGridCellValue,
   NuiGridColumn,
+  NuiGridColumnFilter,
   NuiGridDateColumn,
+  NuiGridFilterKind,
   NuiGridNumberColumn,
   NuiGridPin,
   NuiGridTextColumn,
 } from './data-grid/data-grid.types';
-export type { GridNodeId, GridProgress, GridSort, GridSortDirection } from './engine';
+export type {
+  GridFilter,
+  GridFilterValue,
+  GridNodeId,
+  GridProgress,
+  GridSort,
+  GridSortDirection,
+  GridTextOp,
+} from './engine';
 export type { NuiGridMessages } from './messages.types';

@@ -16,12 +16,49 @@ export class GridSection {
   readonly viewport: Locator;
   readonly emptyToggle: Locator;
   readonly empty: Locator;
+  readonly quick: Locator;
+  readonly clearFilters: Locator;
+  readonly output: Locator;
+  readonly filter: Locator;
 
   constructor(private readonly page: Page) {
     this.root = page.getByTestId('grid');
     this.viewport = this.root.locator('.nui-grid__viewport');
     this.emptyToggle = page.getByTestId('grid-empty');
     this.empty = this.root.locator('.nui-grid__empty');
+    this.quick = page.getByTestId('grid-quick');
+    this.clearFilters = page.getByTestId('grid-clear-filters');
+    this.output = page.getByTestId('grid-output');
+    this.filter = page.locator('.nui-grid-filter');
+  }
+
+  filterButton(col: number): Locator {
+    return this.header(col).locator('.nui-grid__filter');
+  }
+
+  async openFilter(col: number): Promise<void> {
+    await this.header(col).hover();
+    await this.filterButton(col).click();
+  }
+
+  filterValue(label: string): Locator {
+    return this.filter.getByRole('checkbox', { name: label, exact: true });
+  }
+
+  filterField(label: string): Locator {
+    return this.filter.getByLabel(label, { exact: true });
+  }
+
+  async applyFilter(): Promise<void> {
+    await this.filter.getByRole('button', { name: 'Применить' }).click();
+  }
+
+  async resetFilter(): Promise<void> {
+    await this.filter.getByRole('button', { name: 'Сбросить' }).click();
+  }
+
+  async textsIn(col: number, count: number): Promise<string[]> {
+    return Promise.all(Array.from({ length: count }, (_, row) => this.cell(row, col).innerText()));
   }
 
   row(position: number): Locator {
@@ -53,9 +90,7 @@ export class GridSection {
   }
 
   async numbersIn(col: number, count: number): Promise<number[]> {
-    const texts = await Promise.all(
-      Array.from({ length: count }, (_, row) => this.cell(row, col).innerText()),
-    );
+    const texts = await this.textsIn(col, count);
 
     return texts.map((text) => Number(text.replaceAll(/\D/g, '')));
   }

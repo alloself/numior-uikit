@@ -27,34 +27,44 @@ const dateFormatFor = (locale: string): Intl.DateTimeFormat => {
   return created;
 };
 
-const dateOf = (value: Date | number | null | undefined): Date | null => {
-  if (value === null || value === undefined) {
+const dateOf = (value: NuiGridCellValue): Date | null => {
+  if (!(value instanceof Date) && typeof value !== 'number') {
     return null;
   }
   const date = value instanceof Date ? value : new Date(value);
   return Number.isNaN(date.getTime()) ? null : date;
 };
 
-const textCell = <T>(column: NuiGridTextColumn<T>, row: T): string => {
-  const value = column.value(row);
-
-  if (value === null || value === undefined) {
+const textValue = <T>(
+  column: NuiGridTextColumn<T>,
+  value: NuiGridCellValue,
+  row: T | undefined,
+): string => {
+  if (typeof value !== 'string') {
     return '';
   }
   return column.format === undefined ? value : column.format(value, row);
 };
 
-const numberCell = <T>(column: NuiGridNumberColumn<T>, row: T, locale: string): string => {
-  const value = column.value(row);
-
-  if (value === null || value === undefined || !Number.isFinite(value)) {
+const numberValue = <T>(
+  column: NuiGridNumberColumn<T>,
+  value: NuiGridCellValue,
+  row: T | undefined,
+  locale: string,
+): string => {
+  if (typeof value !== 'number' || !Number.isFinite(value)) {
     return '';
   }
   return column.format === undefined ? formatNumber(value, locale) : column.format(value, row);
 };
 
-const dateCell = <T>(column: NuiGridDateColumn<T>, row: T, locale: string): string => {
-  const date = dateOf(column.value(row));
+const dateValue = <T>(
+  column: NuiGridDateColumn<T>,
+  value: NuiGridCellValue,
+  row: T | undefined,
+  locale: string,
+): string => {
+  const date = dateOf(value);
 
   if (date === null) {
     return '';
@@ -64,10 +74,13 @@ const dateCell = <T>(column: NuiGridDateColumn<T>, row: T, locale: string): stri
     : column.format(date, row);
 };
 
-const booleanCell = <T>(column: NuiGridBooleanColumn<T>, row: T, texts: BooleanTexts): string => {
-  const value = column.value(row);
-
-  if (value === null || value === undefined) {
+const booleanValue = <T>(
+  column: NuiGridBooleanColumn<T>,
+  value: NuiGridCellValue,
+  row: T | undefined,
+  texts: BooleanTexts,
+): string => {
+  if (typeof value !== 'boolean') {
     return '';
   }
   if (column.format !== undefined) {
@@ -76,23 +89,31 @@ const booleanCell = <T>(column: NuiGridBooleanColumn<T>, row: T, texts: BooleanT
   return value ? texts.yes : texts.no;
 };
 
-export const cellTextOf = <T>(
+export const valueTextOf = <T>(
   column: NuiGridColumn<T>,
-  row: T,
+  value: NuiGridCellValue,
+  row: T | undefined,
   locale: string,
   texts: BooleanTexts,
 ): string => {
   switch (column.type) {
     case 'text':
-      return textCell(column, row);
+      return textValue(column, value, row);
     case 'number':
-      return numberCell(column, row, locale);
+      return numberValue(column, value, row, locale);
     case 'date':
-      return dateCell(column, row, locale);
+      return dateValue(column, value, row, locale);
     case 'boolean':
-      return booleanCell(column, row, texts);
+      return booleanValue(column, value, row, texts);
   }
 };
+
+export const cellTextOf = <T>(
+  column: NuiGridColumn<T>,
+  row: T,
+  locale: string,
+  texts: BooleanTexts,
+): string => valueTextOf(column, column.value(row) ?? null, row, locale, texts);
 
 export const cellValueOf = <T>(column: NuiGridColumn<T>, row: T): NuiGridCellValue =>
   column.value(row) ?? null;

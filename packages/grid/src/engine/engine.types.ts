@@ -62,20 +62,28 @@ export type GridEngineColumn<T> =
       readonly value: (row: T) => string | null | undefined;
     });
 
+export interface StringCodes {
+  readonly codes: Uint32Array;
+  readonly nulls: Uint8Array;
+  readonly dictionary: readonly string[];
+}
+
 export type ColumnStore =
   | {
       readonly kind: 'number';
       readonly keys: Float64Array;
       readonly nulls: Uint8Array;
     }
-  | {
+  | (StringCodes & { readonly kind: 'codes' })
+  | (StringCodes & {
       readonly kind: 'string';
-      readonly codes: Uint32Array;
       readonly ranks: Uint32Array;
-      readonly nulls: Uint8Array;
-      readonly dictionary: readonly string[];
       readonly sortedCodes: Uint32Array;
-    };
+    });
+
+export type RankedStore = Exclude<ColumnStore, { kind: 'codes' }>;
+
+export type StoreNeed = 'codes' | 'ranks';
 
 export type GridPhase = 'keys' | 'filter' | 'sort' | 'group';
 
