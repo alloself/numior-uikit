@@ -28,7 +28,6 @@
   border-inline-start: 1px solid var(--nui-border);
 }
 .nui-sidebar--variant-plain {
-  border-inline-width: 0;
   background: transparent;
 }
 .nui-sidebar--variant-plain .nui-sidebar-group__list {
