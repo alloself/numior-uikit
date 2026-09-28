@@ -1,5 +1,6 @@
 import { flushPromises } from '@vue/test-utils';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { ref } from 'vue';
 import { useClipboard } from '../src';
 import { captureSetup } from './harness/capture';
 import { installClipboard, type ClipboardStub } from './support/clipboard';
@@ -34,6 +35,28 @@ describe('useClipboard', () => {
     expect(clipboard.commands).toBe(1);
     expect(control.copied.value).toBe(true);
     vi.advanceTimersByTime(499);
+    expect(control.copied.value).toBe(true);
+    vi.advanceTimersByTime(1);
+    expect(control.copied.value).toBe(false);
+  });
+
+  it('reports failure when the copy command refuses', async () => {
+    clipboard = installClipboard({ api: 'missing', legacy: 'refused' });
+    const control = captureSetup(() => useClipboard()).value;
+    expect(await control.copy('hello')).toBe(false);
+    expect(control.copied.value).toBe(false);
+    expect(clipboard.commands).toBe(1);
+    expect(clipboard.copies).toEqual([]);
+  });
+
+  it('reads the copied duration anew on every copy', async () => {
+    vi.useFakeTimers();
+    clipboard = installClipboard({ api: 'missing' });
+    const duration = ref(500);
+    const control = captureSetup(() => useClipboard({ copiedDuration: duration })).value;
+    duration.value = 50;
+    expect(await control.copy('hello')).toBe(true);
+    vi.advanceTimersByTime(49);
     expect(control.copied.value).toBe(true);
     vi.advanceTimersByTime(1);
     expect(control.copied.value).toBe(false);

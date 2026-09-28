@@ -78,7 +78,10 @@ export const createNuiConfig = (options: NuiConfigOptions): Plugin => ({
       app.provide(MESSAGES_KEY, createMessageLayers(options));
     }
     if (options.colorScheme !== undefined) {
-      app.provide(COLOR_SCHEME_KEY, createColorSchemeControl(options.colorScheme));
+      const handle = createColorSchemeControl(options.colorScheme);
+
+      app.provide(COLOR_SCHEME_KEY, handle);
+      app.onUnmount(handle.stop);
     }
   },
 });

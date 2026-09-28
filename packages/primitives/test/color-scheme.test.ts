@@ -21,6 +21,9 @@ const fakeMedia = (matches: boolean) => {
         listener();
       }
     },
+    get listeners() {
+      return listeners.size;
+    },
   };
 
   vi.stubGlobal('matchMedia', () => media);
@@ -64,6 +67,18 @@ describe('useColorScheme', () => {
 
     expect(own).not.toBe(inner);
     expect(own.scheme.value).toBe('dark');
+  });
+
+  it('drops the media listener of the shared control when the app unmounts', () => {
+    const media = fakeMedia(false);
+
+    const capture = captureSetup(() => useColorScheme(), {
+      plugins: [createNuiConfig({ colorScheme: {} })],
+    });
+
+    expect(media.listeners).toBe(1);
+    capture.wrapper.unmount();
+    expect(media.listeners).toBe(0);
   });
 
   it('keeps the server default during setup and follows storage after mount', () => {

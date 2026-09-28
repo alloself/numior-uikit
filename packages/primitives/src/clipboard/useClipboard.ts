@@ -1,5 +1,5 @@
-import { useClipboard as useClipboardApi } from '@vueuse/core';
-import { toValue, type MaybeRefOrGetter, type Ref } from 'vue';
+import { useTimeoutFn } from '@vueuse/core';
+import { computed, ref, toValue, type MaybeRefOrGetter, type Ref } from 'vue';
 
 export interface ClipboardOptions {
   readonly copiedDuration?: MaybeRefOrGetter<number | undefined>;
@@ -13,20 +13,68 @@ export interface ClipboardControl {
 
 const DEFAULT_COPIED_DURATION = 2000;
 
+const hasApi = (): boolean =>
+  typeof navigator !== 'undefined' && typeof navigator.clipboard?.writeText === 'function';
+
+const hasCommand = (): boolean =>
+  typeof document !== 'undefined' && typeof document.execCommand === 'function';
+
+const legacyCopy = (text: string): boolean => {
+  const area = document.createElement('textarea');
+
+  area.value = text;
+  area.setAttribute('readonly', '');
+  area.style.position = 'absolute';
+  area.style.opacity = '0';
+  document.body.append(area);
+  area.select();
+
+  try {
+    return document.execCommand('copy');
+  } finally {
+    area.remove();
+  }
+};
+
+const write = async (text: string): Promise<boolean> => {
+  if (hasApi()) {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch {
+      return hasCommand() && legacyCopy(text);
+    }
+  }
+  return hasCommand() && legacyCopy(text);
+};
+
 export const useClipboard = (options: ClipboardOptions = {}): ClipboardControl => {
-  const clipboard = useClipboardApi({
-    legacy: true,
-    copiedDuring: toValue(options.copiedDuration) ?? DEFAULT_COPIED_DURATION,
-  });
+  const copied = ref(false);
+  const supported = computed(() => hasApi() || hasCommand());
+
+  const reset = useTimeoutFn(
+    () => {
+      copied.value = false;
+    },
+    () => toValue(options.copiedDuration) ?? DEFAULT_COPIED_DURATION,
+    { immediate: false },
+  );
 
   const copy = async (text: string): Promise<boolean> => {
+    let done = false;
+
     try {
-      await clipboard.copy(text);
+      done = await write(text);
     } catch {
-      return false;
+      done = false;
     }
-    return clipboard.copied.value;
+    reset.stop();
+    copied.value = done;
+    if (done) {
+      reset.start();
+    }
+    return done;
   };
 
-  return { supported: clipboard.isSupported, copied: clipboard.copied, copy };
+  return { supported, copied, copy };
 };

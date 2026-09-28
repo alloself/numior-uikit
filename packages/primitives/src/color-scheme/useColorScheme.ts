@@ -133,12 +133,18 @@ const runInline: StartRunner = (begin) => {
   begin();
 };
 
-export const createColorSchemeControl = (options: ColorSchemeOptions = {}): ColorSchemeControl => {
+export interface ColorSchemeHandle extends ColorSchemeControl {
+  stop(): void;
+}
+
+export const createColorSchemeControl = (options: ColorSchemeOptions = {}): ColorSchemeHandle => {
   const scope = effectScope(true);
 
-  return createColorScheme(options, (begin) => {
+  const control = createColorScheme(options, (begin) => {
     scope.run(begin);
   });
+
+  return { ...control, stop: () => scope.stop() };
 };
 
 export const useColorScheme = (options?: ColorSchemeOptions): ColorSchemeControl => {

@@ -13,7 +13,7 @@ export interface ClipboardStub {
 
 export interface ClipboardStubOptions {
   readonly api?: 'granted' | 'refused' | 'missing';
-  readonly legacy?: boolean;
+  readonly legacy?: boolean | 'refused';
 }
 
 const grantedStatus = (): PermissionStatus =>
@@ -45,10 +45,22 @@ export const installClipboard = ({
     return Promise.resolve();
   };
 
+  const writeText = (text: string): Promise<void> => {
+    counters.writes += 1;
+    if (api === 'refused') {
+      return Promise.reject(new Error('denied'));
+    }
+    copies.push(text);
+    return Promise.resolve();
+  };
+
   const execCommand = (command: string): boolean => {
     counters.commands += 1;
-    if (!legacy) {
+    if (legacy === false) {
       throw new Error('unsupported');
+    }
+    if (legacy === 'refused') {
+      return false;
     }
     if (command === 'copy') {
       const source = [...document.body.querySelectorAll('textarea')].findLast(
@@ -65,7 +77,10 @@ export const installClipboard = ({
   vi.stubGlobal('ClipboardItem', FakeClipboardItem);
 
   if (api !== 'missing') {
-    Object.defineProperty(window.navigator, 'clipboard', { configurable: true, value: { write } });
+    Object.defineProperty(window.navigator, 'clipboard', {
+      configurable: true,
+      value: { write, writeText },
+    });
 
     Object.defineProperty(window.navigator, 'permissions', {
       configurable: true,

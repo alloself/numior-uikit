@@ -27,8 +27,10 @@ Kit писался с нуля: `engineering-quality.rule.md` требовал �
   `toPath`/`get`/`set` вместо `segmentsOf`/`normalizePath`/`getAt`/`setAt` (пути передаются
   массивами сегментов, поэтому lodash не трактует `a.b` как литеральный ключ).
 - Обёрнуто с сохранением публичной сигнатуры: `useMediaQuery` (VueUse + `useMounted`, значение
-  остаётся `false` до монтирования ради гидрации), `useClipboard` (VueUse с `legacy: true`,
-  `copy` возвращает boolean), `useHotkey` (парсер комбинаций, `mod`, псевдонимы и защита
+  остаётся `false` до монтирования ради гидрации), `useClipboard` (запись своя: VueUse глотает результат
+  `execCommand` и читает `copiedDuring` один раз, поэтому обёртка сама пишет через
+  `writeText` с запасным `execCommand`, возвращает его boolean и берёт `copiedDuration` при
+  каждом копировании; от VueUse остаётся `useTimeoutFn`), `useHotkey` (парсер комбинаций, `mod`, псевдонимы и защита
   редактируемых целей свои, слушатель — `onKeyStroke`), `useDelayedOpen` (`useTimeoutFn`,
   задержка ≤ 0 применяется синхронно).
 - Оставлено своё, потому что эквивалент меняет поведение: `useColorScheme` (`useColorMode`
