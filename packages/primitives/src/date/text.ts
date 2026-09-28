@@ -23,6 +23,7 @@ const formatterFor = (locale: string): Intl.DateTimeFormat => {
 
   if (!formatter) {
     formatter = new Intl.DateTimeFormat(locale, {
+      calendar: 'gregory',
       year: 'numeric',
       month: '2-digit',
       day: '2-digit',

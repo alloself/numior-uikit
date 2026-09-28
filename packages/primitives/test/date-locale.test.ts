@@ -88,4 +88,10 @@ describe('date text', () => {
     expect(parseDateText('31.02.2026', 'ru-RU')).toBeNull();
     expect(parseDateText('', 'ru-RU')).toBeNull();
   });
+
+  it('formats and parses in the Gregorian calendar whatever the locale calendar is', () => {
+    expect(formatDateText('2026-09-26', 'th-TH')).toContain('2026');
+    expect(parseDateText(formatDateText('2026-09-26', 'th-TH'), 'th-TH')).toBe('2026-09-26');
+    expect(parseDateText(formatDateText('2026-09-26', 'ar-SA'), 'ar-SA')).toBe('2026-09-26');
+  });
 });
