@@ -26,12 +26,13 @@
     "test:artifacts": "node scripts/check-artifacts.mjs",
     "test:ticks": "node scripts/check-tests.mjs",
     "arch:check": "archcore status",
-    "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test:ticks && pnpm analyze && pnpm release:check && pnpm build && pnpm test:artifacts && pnpm docs:check && pnpm docs:build",
+    "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test:ticks && pnpm analyze && pnpm release:check && pnpm build && pnpm test:artifacts && pnpm test:nuxt && pnpm docs:check && pnpm docs:build",
     "build:css": "node scripts/build-css.ts",
     "release": "semantic-release",
     "release:dry-run": "semantic-release --dry-run",
     "release:check": "node --test scripts/release/*.test.mjs",
-    "commitlint": "commitlint"
+    "commitlint": "commitlint",
+    "test:nuxt": "vitest run --config packages/nuxt/vitest.config.ts"
   },
   "devDependencies": {
     "@axe-core/playwright": "4.13.0",

@@ -106,6 +106,11 @@ describe('useColorScheme', () => {
     document.documentElement.removeAttribute('data-nui-theme');
     new Function(colorSchemeScript('nui-theme'))();
     expect(document.documentElement.hasAttribute('data-nui-theme')).toBe(false);
+    new Function(colorSchemeScript('nui-theme', 'light'))();
+    expect(document.documentElement.getAttribute('data-nui-theme')).toBe('light');
+    localStorage.setItem('nui-theme', 'dark');
+    new Function(colorSchemeScript('nui-theme', 'light'))();
+    expect(document.documentElement.getAttribute('data-nui-theme')).toBe('dark');
   });
 
   it('reads the scope attribute, follows the system and writes changes back', async () => {

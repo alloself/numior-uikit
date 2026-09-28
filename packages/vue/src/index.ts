@@ -349,6 +349,7 @@ export type {
   ColorScheme,
   ColorSchemeControl,
   ColorSchemeOptions,
+  Direction,
   FloatingPlacement,
   HotkeyOptions,
   HourCycle,

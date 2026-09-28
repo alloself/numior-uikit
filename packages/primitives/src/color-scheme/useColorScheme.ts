@@ -155,5 +155,5 @@ export const useColorScheme = (options?: ColorSchemeOptions): ColorSchemeControl
   return control;
 };
 
-export const colorSchemeScript = (storageKey: string): string =>
-  `(function(){try{var s=localStorage.getItem(${JSON.stringify(storageKey)});if(s==='light'||s==='dark'||s==='system'){document.documentElement.setAttribute('data-nui-theme',s)}}catch(e){}})()`;
+export const colorSchemeScript = (storageKey: string, initial?: ColorScheme): string =>
+  `(function(){var s=${JSON.stringify(initial ?? null)};try{var v=localStorage.getItem(${JSON.stringify(storageKey)});if(v==='light'||v==='dark'||v==='system'){s=v}}catch(e){}if(s){document.documentElement.setAttribute('data-nui-theme',s)}})()`;

@@ -40,19 +40,38 @@ server markup.
 
 ## Nuxt
 
-There is no dedicated module yet; the plugin is registered through `defineNuxtPlugin`, the
-scheme script through `useHead`.
+The `@numior/nuxt` module wires the kit in one line. It registers the plugin with
+`createNuiConfig`, auto-imports the `Nui*` components and `use*` composables and adds the token
+and component CSS. The scheme script lands in `<head>`, and `to` renders `NuxtLink`.
 
 ```ts
-import { colorSchemeScript, createNuiConfig } from '@numior/vue';
-
-export default defineNuxtPlugin((nuxtApp) => {
-  const locale = useRequestHeader('accept-language')?.split(',')[0] ?? 'en-US';
-
-  nuxtApp.vueApp.use(createNuiConfig({ locale, colorScheme: { storageKey: 'theme' } }));
-  useHead({ script: [{ innerHTML: colorSchemeScript('theme') }] });
+export default defineNuxtConfig({
+  modules: ['@numior/nuxt'],
+  numior: {
+    locale: 'en-US',
+    colorScheme: { storageKey: 'theme', initial: 'system' },
+  },
 });
 ```
 
-The token and component CSS goes into `nuxt.config.ts` through `css`:
-`@numior/tokens/theme.css`, `@numior/tokens/base.css`, `@numior/vue/styles.css`.
+The `numior` options are serialisable: `locale`, `dir`, `colorScheme` (`storageKey`, `initial`
+or `false`), `toasts`, plus the `css`, `components` and `composables` flags (`true` by
+default). The dictionary, `translate`, the icon registry and an own link component live in
+`app.config.ts`, because they are code rather than JSON:
+
+```ts
+export default defineAppConfig({
+  numior: {
+    messages: { en: { code: { copy: 'Copy the command' } } },
+    icons: { check: MyCheck },
+  },
+});
+```
+
+`locale` and `dir` from `app.config` are read reactively and win over `nuxt.config`. When
+`@numior/forms` is installed, its components, composables and CSS are registered the same way.
+
+An auto-import name may collide, such as Nuxt's own `useLayout` or `useMediaQuery` from
+`@vueuse/nuxt`. The other composable then wins, and the kit one is imported explicitly from
+`@numior/vue`. Without the module the plugin goes through `defineNuxtPlugin` with
+`createNuiConfig` and the scheme script through `useHead`.

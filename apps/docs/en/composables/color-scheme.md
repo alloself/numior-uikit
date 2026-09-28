@@ -16,5 +16,6 @@ arguments it creates its own for the `scope` area.
 `scheme` holds the choice, `resolved` the actual scheme, `systemDark` the system state. `set`,
 `toggle` and `cycle` change the choice; `start` runs automatically after mounting.
 
-On the server the attribute is left alone. `colorSchemeScript(storageKey)` in `<head>` applies
-the saved scheme before the first paint, see [Theming](/en/guide/theming).
+On the server the attribute is left alone. `colorSchemeScript(storageKey, initial?)` in
+`<head>` applies the saved scheme before the first paint. The second argument sets the scheme
+when the storage is empty, see [Theming](/en/guide/theming).

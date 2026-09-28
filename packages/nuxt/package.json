@@ -1,0 +1,43 @@
+{
+  "name": "@numior/nuxt",
+  "version": "0.0.0",
+  "private": true,
+  "license": "MIT",
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "@numior/source": "./src/module.ts",
+      "types": "./dist/module.d.ts",
+      "import": "./dist/module.js"
+    }
+  },
+  "scripts": {
+    "build": "vite build && vue-tsc -p tsconfig.build.json",
+    "fixture:build": "nuxi build test/fixture",
+    "fixture:start": "node test/fixture/.output/server/index.mjs"
+  },
+  "dependencies": {
+    "@nuxt/kit": "4.5.2",
+    "@nuxt/schema": "4.5.2"
+  },
+  "devDependencies": {
+    "@nuxt/test-utils": "4.3.2",
+    "nuxt": "4.5.2"
+  },
+  "peerDependencies": {
+    "@numior/forms": "workspace:*",
+    "@numior/primitives": "workspace:*",
+    "@numior/tokens": "workspace:*",
+    "@numior/vue": "workspace:*",
+    "vue": "^3.5.0"
+  },
+  "peerDependenciesMeta": {
+    "@numior/forms": {
+      "optional": true
+    }
+  }
+}

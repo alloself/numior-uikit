@@ -12,7 +12,14 @@
     "apps/docs/scripts/reference.ts",
     "apps/docs/api/*.ts",
     "apps/docs/scripts/check-content.ts",
-    "apps/docs/scripts/check-dist.ts"
+    "apps/docs/scripts/check-dist.ts",
+    "packages/nuxt/src/module.ts",
+    "packages/nuxt/src/runtime/plugin.ts",
+    "packages/nuxt/vitest.config.ts",
+    "packages/nuxt/test/fixture/nuxt.config.ts",
+    "packages/nuxt/test/fixture/app/app.config.ts",
+    "packages/nuxt/test/fixture/app/**/*.vue",
+    "packages/nuxt/test/**/*.test.ts"
   ],
   "includeEntryExports": false,
   "ignorePatterns": [
@@ -22,7 +29,9 @@
     "playwright-report/**",
     "test-results/**",
     ".release/**",
-    "apps/docs/test/fixtures/**"
+    "apps/docs/test/fixtures/**",
+    "**/.nuxt/**",
+    "**/.output/**"
   ],
   "rules": {
     "unused-files": "error",
@@ -58,6 +67,10 @@
         "patterns": ["packages/forms/**"]
       },
       {
+        "name": "nuxt",
+        "patterns": ["packages/nuxt/**"]
+      },
+      {
         "name": "apps",
         "patterns": ["apps/**"]
       },
@@ -88,12 +101,16 @@
         "allow": ["tokens", "primitives", "vue", "forms"]
       },
       {
+        "from": "nuxt",
+        "allow": ["tokens", "primitives", "vue", "forms", "nuxt"]
+      },
+      {
         "from": "apps",
-        "allow": ["tokens", "primitives", "tailwind", "vue", "forms", "apps"]
+        "allow": ["tokens", "primitives", "tailwind", "vue", "forms", "nuxt", "apps"]
       },
       {
         "from": "tests",
-        "allow": ["tokens", "primitives", "tailwind", "vue", "forms", "apps", "tests"]
+        "allow": ["tokens", "primitives", "tailwind", "vue", "forms", "nuxt", "apps", "tests"]
       }
     ]
   },
@@ -114,6 +131,7 @@
     "conventional-changelog-conventionalcommits",
     "@localSearchIndex",
     "virtual:nui-examples",
-    "virtual:nui-reference"
+    "virtual:nui-reference",
+    "#components"
   ]
 }

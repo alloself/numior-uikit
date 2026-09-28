@@ -157,6 +157,28 @@ const formsTypes = (await readdir('packages/forms/dist', { recursive: true })).f
 
 assert.ok(formsTypes.length > 0, 'forms must ship declarations');
 
+const nuxtModule = await import(pathToFileURL(resolve('packages/nuxt/dist/module.js')).href);
+
+assert.equal(typeof nuxtModule.default, 'function', 'nuxt must export the module');
+
+const nuxtPlugin = await readFile('packages/nuxt/dist/runtime/plugin.js', 'utf8');
+
+assert.match(nuxtPlugin, /from ['"]nuxt\/app['"]/, 'the nuxt plugin must keep nuxt/app external');
+
+assert.match(
+  nuxtPlugin,
+  /from ['"]#components['"]/,
+  'the nuxt plugin must take NuxtLink from #components',
+);
+
+assert.match(
+  nuxtPlugin,
+  /from ['"]@numior\/vue['"]/,
+  'the nuxt plugin must keep @numior/vue external',
+);
+
+assert.doesNotMatch(nuxtPlugin, /\.css['"]/, 'the nuxt plugin must not import css');
+
 const PROBE = '\0nui-probe';
 
 const bundleOf = async (source) => {

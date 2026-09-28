@@ -11,6 +11,8 @@
     "**/.vitepress/cache/**",
     "playwright-report/**",
     "test-results/**",
-    ".release/**"
+    ".release/**",
+    "**/.nuxt/**",
+    "**/.output/**"
   ]
 }

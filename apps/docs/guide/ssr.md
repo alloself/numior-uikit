@@ -40,19 +40,38 @@ export const render = async (locale: string, dir: 'ltr' | 'rtl') => {
 
 ## Nuxt
 
-Отдельного модуля пока нет; плагин подключается через `defineNuxtPlugin`, а скрипт схемы —
-через `useHead`.
+Модуль `@numior/nuxt` подключает кит одной строкой. Он регистрирует плагин с `createNuiConfig`,
+автоимпорт компонентов `Nui*` и композаблов `use*`, CSS токенов и компонентов. Скрипт схемы
+попадает в `<head>`, а `to` рендерит `NuxtLink`.
 
 ```ts
-import { colorSchemeScript, createNuiConfig } from '@numior/vue';
-
-export default defineNuxtPlugin((nuxtApp) => {
-  const locale = useRequestHeader('accept-language')?.split(',')[0] ?? 'ru-RU';
-
-  nuxtApp.vueApp.use(createNuiConfig({ locale, colorScheme: { storageKey: 'theme' } }));
-  useHead({ script: [{ innerHTML: colorSchemeScript('theme') }] });
+export default defineNuxtConfig({
+  modules: ['@numior/nuxt'],
+  numior: {
+    locale: 'ru-RU',
+    colorScheme: { storageKey: 'theme', initial: 'system' },
+  },
 });
 ```
 
-CSS токенов и компонентов подключается в `nuxt.config.ts` через `css`:
-`@numior/tokens/theme.css`, `@numior/tokens/base.css`, `@numior/vue/styles.css`.
+Опции `numior` сериализуемые: `locale`, `dir`, `colorScheme` (`storageKey`, `initial` или
+`false`), `toasts`, а также флаги `css`, `components` и `composables` (по умолчанию `true`).
+Словарь, `translate`, реестр иконок и свой компонент ссылки живут в `app.config.ts`, потому что
+это код, а не JSON:
+
+```ts
+export default defineAppConfig({
+  numior: {
+    messages: { ru: { code: { copy: 'Скопировать команду' } } },
+    icons: { check: MyCheck },
+  },
+});
+```
+
+`locale` и `dir` из `app.config` читаются реактивно и побеждают `nuxt.config`. Если пакет
+`@numior/forms` установлен, его компоненты, композаблы и CSS регистрируются так же.
+
+При совпадении имён автоимпорта (`useLayout` самого Nuxt, `useMediaQuery` из `@vueuse/nuxt`)
+побеждает чужой композабл, а композабл кита импортируется явно из `@numior/vue`. Без модуля
+плагин подключается через `defineNuxtPlugin` с `createNuiConfig`, а скрипт схемы через
+`useHead`.

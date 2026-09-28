@@ -14,7 +14,7 @@ export default defineConfig({
           name: 'jsdom',
           environment: 'jsdom',
           include: ['packages/**/*.test.ts', 'apps/docs/test/**/*.test.ts'],
-          exclude: [...configDefaults.exclude, '**/*.node.test.ts'],
+          exclude: [...configDefaults.exclude, '**/*.node.test.ts', 'packages/nuxt/test/nuxt/**'],
           setupFiles: ['./packages/vue/test/support/preload-icons.ts'],
         },
       },
@@ -23,7 +23,7 @@ export default defineConfig({
         test: {
           name: 'node',
           environment: 'node',
-          include: ['apps/docs/test/**/*.node.test.ts'],
+          include: ['apps/docs/test/**/*.node.test.ts', 'packages/**/*.node.test.ts'],
         },
       },
     ],

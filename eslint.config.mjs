@@ -78,6 +78,8 @@ export default [
       '**/node_modules/**',
       '**/coverage/**',
       '**/.vitepress/cache/**',
+      '**/.nuxt/**',
+      '**/.output/**',
       'playwright-report/**',
       'test-results/**',
       '.release/**',
