@@ -43,7 +43,6 @@ const modalCapable = (
 
 interface RootLock {
   readonly overflow: string;
-  readonly gutter: string;
   readonly padding: string;
 }
 
@@ -63,17 +62,10 @@ const lockRoot = (): void => {
   }
   const width = scrollbarWidth(root);
 
-  rootLock = {
-    overflow: root.style.overflow,
-    gutter: root.style.getPropertyValue('scrollbar-gutter'),
-    padding: root.style.paddingInlineEnd,
-  };
-
+  rootLock = { overflow: root.style.overflow, padding: root.style.paddingInlineEnd };
   root.style.overflow = 'hidden';
-  root.style.setProperty('scrollbar-gutter', 'stable');
-  const shift = width - scrollbarWidth(root);
-  if (shift > 0) {
-    root.style.paddingInlineEnd = `${shift}px`;
+  if (width > 0) {
+    root.style.paddingInlineEnd = `${width}px`;
   }
 };
 
@@ -83,7 +75,6 @@ const unlockRoot = (): void => {
   }
   const root = document.documentElement;
   root.style.overflow = rootLock.overflow;
-  root.style.setProperty('scrollbar-gutter', rootLock.gutter);
   root.style.paddingInlineEnd = rootLock.padding;
   rootLock = undefined;
 };

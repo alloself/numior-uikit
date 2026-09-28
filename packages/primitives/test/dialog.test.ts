@@ -61,11 +61,7 @@ const forgetRoot = (): void => {
 const rootStyle = () => {
   const { style } = document.documentElement;
 
-  return {
-    overflow: style.overflow,
-    gutter: style.getPropertyValue('scrollbar-gutter'),
-    padding: style.paddingInlineEnd,
-  };
+  return { overflow: style.overflow, padding: style.paddingInlineEnd };
 };
 
 describe('useDialog', () => {
@@ -86,22 +82,29 @@ describe('useDialog', () => {
     const firstOpen = ref(true);
     const secondOpen = ref(true);
     const first = mountDialog({ open: firstOpen });
-    expect(rootStyle()).toEqual({ overflow: 'hidden', gutter: 'stable', padding: '15px' });
+    expect(rootStyle()).toEqual({ overflow: 'hidden', padding: '15px' });
     const second = mountDialog({ open: secondOpen });
     second.value.close();
     await nextTick();
     expect(rootStyle().overflow).toBe('hidden');
     first.value.close();
     await nextTick();
-    expect(rootStyle()).toEqual({ overflow: 'auto', gutter: '', padding: '' });
+    expect(rootStyle()).toEqual({ overflow: 'auto', padding: '' });
     second.unmount();
     first.unmount();
+  });
+
+  it('pads nothing when the scrollbar takes no space', () => {
+    describeRoot({ scrollHeight: 2000, clientHeight: 800, scrollbar: 0 });
+    const capture = mountDialog({ open: ref(true) });
+    expect(rootStyle()).toEqual({ overflow: 'hidden', padding: '' });
+    capture.unmount();
   });
 
   it('leaves a root that does not scroll untouched', () => {
     describeRoot({ scrollHeight: 600, clientHeight: 800, scrollbar: 15 });
     const capture = mountDialog({ open: ref(true) });
-    expect(rootStyle()).toEqual({ overflow: '', gutter: '', padding: '' });
+    expect(rootStyle()).toEqual({ overflow: '', padding: '' });
     capture.unmount();
   });
 

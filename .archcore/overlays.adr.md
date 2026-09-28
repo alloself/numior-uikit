@@ -30,8 +30,12 @@ status: accepted
   только при наличии API. Атрибут `open` у `<dialog>` не биндится.
 - Движение: `@starting-style` и `transition-behavior: allow-discrete`; выход в top layer
   анимируется там, где есть `overlay`-transition (Chromium). Токен `--nui-backdrop`
-  окрашивает `::backdrop`. Пока диалог модальный, `html:has(.nui-dialog:modal)` получает
-  `overflow: hidden; scrollbar-gutter: stable`.
+  окрашивает `::backdrop`. Пока открыт хотя бы один модальный диалог, `useDialog` держит
+  прокручиваемый корень: `overflow: hidden` на `<html>` и `padding-inline-end` на измеренную
+  ширину скроллбара (`innerWidth - clientWidth`), чтобы контент не сдвигался; при нулевой
+  ширине (overlay или скрытые скроллбары) отступа нет. Правило `html:has(.nui-dialog:modal)`
+  с `scrollbar-gutter: stable` убрано 2026-09-28: оно резервировало жёлоб там, где скроллбар
+  места не занимал, и центрированный контент прыгал.
 - `useColorScheme` — минимальный композабл: чтение/запись `data-nui-theme` на scope,
   `prefers-color-scheme`, опциональный `storageKey`; playground переключает тему через него.
 - Стопка модальных диалогов: `useDialog` ведёт модульный стек открытых `<dialog>`; все,
@@ -65,6 +69,6 @@ status: accepted
 `@starting-style` и `allow-discrete` — Chrome 117, Firefox 129, Safari 17.4; наследование
 `::backdrop` — Chrome 122, Firefox 120, Safari 17.4. В Chromium повторный Esc без новой
 активации закрывает даже `closable=false` (close watcher) — документируется как подсказка,
-не запрет. `scrollbar-gutter: stable` уменьшает containing block для fixed на ширину
-скроллбара в десктопном Chromium; e2e измеряет край панели относительно fixed-пробы.
+не запрет. Отступ на `<html>` не меняет containing block для fixed-элементов, поэтому край
+панели совпадает с fixed-пробой; e2e измеряет и это, и неподвижность триггера при открытии.
 Следующая волна 2b: Toast, Alert, Progress, Skeleton на тех же примитивах.
