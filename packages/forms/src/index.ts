@@ -8,12 +8,26 @@ export { default as NuiFormField } from './components/form-field/NuiFormField.vu
 export type { NuiFormFieldProps } from './components/form-field/form-field.types';
 export { default as NuiSmartForm } from './components/smart-form/NuiSmartForm.vue';
 export { formConfig } from './components/smart-form/config';
+export type { ControlProps, ControlValue } from '@numior/primitives';
 export type {
-  ControlProps,
-  ControlValue,
+  ControlFieldConfig,
+  FormConfigOptions,
   SmartArrayConfig,
   SmartFieldConfig,
 } from './components/smart-form/config';
+export { parseFormConfig } from './components/smart-form/parse-config';
+export type {
+  FormConfigIssue,
+  FormConfigIssueCode,
+  FormJsonArray,
+  FormJsonCondition,
+  FormJsonEntry,
+  FormJsonField,
+  FormJsonRule,
+  FormJsonSection,
+  ParsedFormConfig,
+  ParseFormConfigOptions,
+} from './components/smart-form/parse-config.types';
 export type {
   NuiSmartFormActionsScope,
   NuiSmartFormAfterScope,

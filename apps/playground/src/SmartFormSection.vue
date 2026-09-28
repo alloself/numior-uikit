@@ -34,6 +34,14 @@
       </template>
       <template #newsletter>Присылать новости раз в месяц</template>
     </NuiSmartForm>
+    <NuiSmartForm
+      :form="lead"
+      :fields="leadFields"
+      submit-label="Отправить заявку"
+      class="smart-demo"
+      aria-label="Заявка"
+      data-testid="smart-json"
+    />
     <pre class="output" data-testid="smart-output">{{ output }}</pre>
   </section>
 </template>
@@ -48,6 +56,7 @@ import {
   NuiSelect,
   NuiSwitch,
   NuiTextarea,
+  kitControls,
   type NuiOptionSource,
 } from '@numior/vue';
 import {
@@ -55,9 +64,11 @@ import {
   email,
   formConfig,
   max,
+  parseFormConfig,
   pattern,
   required,
   useForm,
+  type FormJsonEntry,
   type SubmittedValues,
 } from '@numior/forms';
 
@@ -77,6 +88,14 @@ interface Profile {
   contacts: Contact[];
   about: string;
   newsletter: boolean;
+}
+
+interface Lead {
+  kind: string;
+  name: string;
+  company: string;
+  budget: number | null;
+  agree: boolean;
 }
 
 interface Filter {
@@ -206,6 +225,66 @@ const FILTER_FIELDS = [
   }),
 ];
 
+const LEAD_CONFIG: readonly FormJsonEntry[] = [
+  {
+    kind: 'section',
+    title: 'Заявка из JSON',
+    description: 'Конфигурация пришла с сервера и прошла через реестр контролов',
+    layout: '"kind kind" "name company" "budget agree"',
+    fields: [
+      {
+        kind: 'field',
+        type: 'radio',
+        name: 'kind',
+        label: 'Кто вы',
+        group: true,
+        props: {
+          orientation: 'horizontal',
+          options: [
+            { value: 'person', label: 'Частное лицо' },
+            { value: 'company', label: 'Компания' },
+          ],
+        },
+      },
+      {
+        kind: 'field',
+        type: 'text',
+        name: 'name',
+        label: 'Имя',
+        required: true,
+        rules: [{ rule: 'required' }],
+      },
+      {
+        kind: 'field',
+        type: 'text',
+        name: 'company',
+        label: 'Компания',
+        required: true,
+        when: { path: 'kind', equals: 'company' },
+        rules: [{ rule: 'required' }],
+      },
+      {
+        kind: 'field',
+        type: 'number',
+        name: 'budget',
+        label: 'Бюджет',
+        props: { min: 0, step: 1000 },
+      },
+      {
+        kind: 'field',
+        type: 'switch',
+        name: 'agree',
+        props: { label: 'Согласен на обработку данных' },
+      },
+    ],
+  },
+];
+
+const parsedLead = parseFormConfig<Lead>(LEAD_CONFIG, { controls: kitControls });
+const leadFields = parsedLead.kind === 'ok' ? parsedLead.fields : [];
+const leadIssues = parsedLead.kind === 'error' ? parsedLead.issues : [];
+const leadSaved = ref<SubmittedValues<Lead> | null>(null);
+
 const applied = ref<SubmittedValues<Filter>>({ query: '', status: null });
 const saved = ref<SubmittedValues<Profile> | null>(null);
 const profileReadonly = ref(false);
@@ -214,6 +293,13 @@ const filter = useForm<Filter>({
   initialValues: { query: '', status: null },
   onSubmit: (values) => {
     applied.value = values;
+  },
+});
+
+const lead = useForm<Lead>({
+  initialValues: { kind: 'person', name: '', company: '', budget: null, agree: false },
+  onSubmit: (values) => {
+    leadSaved.value = values;
   },
 });
 
@@ -238,6 +324,10 @@ const profile = useForm<Profile>({
 const aboutLength = computed(() => [...profile.values.about].length);
 
 const output = computed(() =>
-  JSON.stringify({ filter: applied.value, profile: saved.value }, null, 2),
+  JSON.stringify(
+    { filter: applied.value, profile: saved.value, lead: leadSaved.value, issues: leadIssues },
+    null,
+    2,
+  ),
 );
 </script>

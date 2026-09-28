@@ -10,11 +10,18 @@ const docs: DocsMap = {
         en: 'Shared name of the native radio buttons.',
       },
       orientation: { ru: 'Раскладка: столбцом или строкой.', en: 'Layout: a column or a row.' },
+      options: {
+        ru: 'Радиокнопки из списка опций вместо слота.',
+        en: 'Radios built from a list of options instead of the slot.',
+      },
     },
     models: {
       'v-model': { ru: 'Значение выбранной радиокнопки.', en: 'Value of the selected radio.' },
     },
-    slots: { default: { ru: 'Радиокнопки NuiRadio.', en: 'NuiRadio buttons.' } },
+    slots: {
+      default: { ru: 'Радиокнопки NuiRadio.', en: 'NuiRadio buttons.' },
+      option: { ru: 'Подпись радиокнопки из опции.', en: 'Label of a radio built from an option.' },
+    },
     keyboard: [
       {
         keys: 'ArrowDown',

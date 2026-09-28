@@ -21,7 +21,16 @@
       :aria-disabled="isDisabled || undefined"
       v-bind="passthrough"
     >
-      <slot />
+      <slot>
+        <NuiRadio
+          v-for="option in options"
+          :key="defaultOptionKey(option.value)"
+          :value="option.value"
+          :disabled="option.disabled || undefined"
+        >
+          <slot name="option" :option="option">{{ option.label }}</slot>
+        </NuiRadio>
+      </slot>
     </div>
   </NuiFieldFrame>
 </template>
@@ -30,6 +39,8 @@
 import { computed, useAttrs } from 'vue';
 import { provideRadioGroup, useFieldControl } from '@numior/primitives';
 import NuiFieldFrame from '../field/NuiFieldFrame';
+import { defaultOptionKey } from '../shared/options';
+import NuiRadio from './NuiRadio.vue';
 import type { NuiRadioGroupProps } from './radio.types';
 
 const {
@@ -45,7 +56,8 @@ const {
   reserveError = false,
   name,
   orientation = 'vertical',
-} = defineProps<NuiRadioGroupProps>();
+  options,
+} = defineProps<NuiRadioGroupProps<T>>();
 
 defineOptions({ inheritAttrs: false });
 

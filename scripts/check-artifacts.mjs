@@ -82,9 +82,11 @@ await importBuild('primitives', [
   'useHotkey',
   'useScrollSpy',
   'colorSchemeScript',
+  'shapeOf',
 ]);
 
 const code = await importBuild('vue', [
+  'kitControls',
   'NuiButton',
   'NuiLink',
   'NuiSeparator',

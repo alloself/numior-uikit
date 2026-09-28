@@ -218,6 +218,44 @@ export type {
   VirtualRange,
   VirtualScrollOptions,
 } from './virtual/useVirtualList';
+export {
+  anyOf,
+  isBoolean,
+  isDate,
+  isNumber,
+  isRecord,
+  isString,
+  isUnknown,
+  listOf,
+  nullable,
+  oneOf,
+  optional,
+  parseAs,
+  recordOf,
+  shapeOf,
+} from './guards/guards';
+export type { Guard, Guarded, Shape, ShapeOf } from './guards/guards';
+export {
+  CONTROLS_KEY,
+  control,
+  controlProps,
+  defineControls,
+  provideControls,
+  useControls,
+} from './controls/control-registry';
+export type {
+  ComponentProps,
+  ControlEmit,
+  ControlKeys,
+  ControlOf,
+  ControlOptions,
+  ControlProps,
+  ControlValue,
+  EmitsInto,
+  ModelKeys,
+  NuiControlEntry,
+  NuiControlRegistry,
+} from './controls/control.types';
 export { createIntent } from './intent/createIntent';
 export type { Intent } from './intent/createIntent';
 export { useBlockSizeTween } from './motion/useBlockSizeTween';

@@ -24,16 +24,17 @@ createApp(App)
 
 ## Опции
 
-| Опция         | Тип                                    | Что делает                                                                          |
-| ------------- | -------------------------------------- | ----------------------------------------------------------------------------------- |
-| `locale`      | `string`, ref или геттер               | Формат чисел, дат и времени и язык встроенных текстов; без неё `en-US`.             |
-| `dir`         | `'ltr'` или `'rtl'`, ref или геттер    | Направление письма; без него читается ближайший атрибут `dir`.                      |
-| `messages`    | `NuiLocaleMessages`, ref или геттер    | Переопределения словаря и новые языки, см. [Локализация](/guide/localization).      |
-| `translate`   | `(key, params, locale) => string?`     | Тексты из i18n-библиотеки приложения, спрашивается раньше словаря.                  |
-| `icons`       | `Record<string, Component>`            | Реестр иконок по алиасам, см. [Icon](/components/icon).                             |
-| `colorScheme` | `{ storageKey?, initial?, scope? }`    | Общая цветовая схема для `useColorScheme`, см. [Темизация](/guide/theming).         |
-| `toasts`      | `{ duration?, exitDuration?, limit? }` | Время жизни и число одновременных уведомлений, см. [Toast](/components/toast).      |
-| `link`        | `Component` или имя компонента         | Компонент ссылки для `to`; без него берётся `NuxtLink` или `RouterLink` приложения. |
+| Опция         | Тип                                    | Что делает                                                                                                        |
+| ------------- | -------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `locale`      | `string`, ref или геттер               | Формат чисел, дат и времени и язык встроенных текстов; без неё `en-US`.                                           |
+| `dir`         | `'ltr'` или `'rtl'`, ref или геттер    | Направление письма; без него читается ближайший атрибут `dir`.                                                    |
+| `messages`    | `NuiLocaleMessages`, ref или геттер    | Переопределения словаря и новые языки, см. [Локализация](/guide/localization).                                    |
+| `translate`   | `(key, params, locale) => string?`     | Тексты из i18n-библиотеки приложения, спрашивается раньше словаря.                                                |
+| `icons`       | `Record<string, Component>`            | Реестр иконок по алиасам, см. [Icon](/components/icon).                                                           |
+| `colorScheme` | `{ storageKey?, initial?, scope? }`    | Общая цветовая схема для `useColorScheme`, см. [Темизация](/guide/theming).                                       |
+| `toasts`      | `{ duration?, exitDuration?, limit? }` | Время жизни и число одновременных уведомлений, см. [Toast](/components/toast).                                    |
+| `link`        | `Component` или имя компонента         | Компонент ссылки для `to`; без него берётся `NuxtLink` или `RouterLink` приложения.                               |
+| `controls`    | `NuiControlRegistry`                   | Реестр контролов для форм из JSON и редакторов, например `kitControls`, см. [useControls](/composables/controls). |
 
 Свой компонент читает `link` через `useConfiguredLink()`: без опции он возвращает `null`.
 

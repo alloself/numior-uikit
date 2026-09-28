@@ -1,4 +1,11 @@
-import type { Component, InputHTMLAttributes } from 'vue';
+import type { Component } from 'vue';
+import type {
+  ControlOf,
+  ControlProps,
+  ControlValue,
+  EmitsInto,
+  NuiControlRegistry,
+} from '@numior/primitives';
 import type { KeepValue } from '../../paths/paths.types';
 import type { FieldSelector } from '../../paths/selector';
 import { adaptRule } from '../../rules/adapt-rule';
@@ -11,58 +18,6 @@ import type {
   NuiSmartFormPropsFactory,
   NuiSmartFormSection,
 } from './smart-form.types';
-
-type ComponentProps<C> = C extends new (...args: never[]) => { $props: infer P }
-  ? P
-  : C extends (props: infer P, ...args: never[]) => unknown
-    ? P
-    : object;
-
-type ModelKeys<M extends string> = M | `onUpdate:${M}`;
-
-type ControlKeys =
-  | ModelKeys<'modelValue'>
-  | 'id'
-  | 'name'
-  | 'invalid'
-  | 'required'
-  | 'disabled'
-  | 'readonly';
-
-export type ControlProps<C, M extends string = 'modelValue'> = Omit<
-  ComponentProps<C>,
-  ControlKeys | ModelKeys<M>
-> &
-  Omit<InputHTMLAttributes, ControlKeys | ModelKeys<M> | 'value'>;
-
-export type ControlValue<C, M extends string = 'modelValue'> =
-  ComponentProps<C> extends { readonly [K in M]: infer V }
-    ? V
-    : ComponentProps<C> extends { readonly [K in M]?: infer V }
-      ? V | undefined
-      : unknown;
-
-type ControlEmit<C, M extends string> =
-  ComponentProps<C> extends {
-    readonly [K in `onUpdate:${M}`]?: (value: infer E) => unknown;
-  }
-    ? E
-    : unknown;
-
-type Unchecked<E> = unknown extends E
-  ? true
-  : E extends readonly (infer I)[]
-    ? unknown extends I
-      ? true
-      : false
-    : false;
-
-type EmitsInto<C, R, M extends string> =
-  Unchecked<ControlEmit<C, M>> extends true
-    ? unknown
-    : [ControlEmit<C, M>] extends [R]
-      ? unknown
-      : { readonly updateModel: ControlEmit<C, M> };
 
 export interface SmartFieldConfig<S, R, C, M extends string = 'modelValue'> extends Omit<
   NuiSmartFormField<S>,
@@ -82,23 +37,56 @@ export interface SmartArrayConfig<S, Row> extends Omit<
   readonly fields: readonly NuiSmartFormEntry<Row>[];
 }
 
-export const formConfig = <S>() => ({
-  field: <C extends Component, R extends ControlValue<C, M>, M extends string = 'modelValue'>(
-    component: C & EmitsInto<C, R, M>,
-    name: FieldSelector<S, R>,
-    config: SmartFieldConfig<S, R, C, M> = {},
-  ): NuiSmartFormField<S> => {
-    const { rules, ...rest } = config;
+export interface FormConfigOptions<R extends NuiControlRegistry> {
+  readonly controls?: R | undefined;
+}
 
-    return {
-      ...rest,
-      kind: 'field',
-      component,
-      name,
-      rules: rules?.map((rule) =>
-        adaptRule(rule, (_value: unknown, values: S) => [name(values), values] as const),
-      ),
-    };
+export type ControlFieldConfig<
+  S,
+  R extends NuiControlRegistry,
+  K extends keyof R & string,
+  V,
+> = SmartFieldConfig<S, V, ControlOf<R, K>['component'], ControlOf<R, K>['model']>;
+
+const fieldEntry = <S, R>(
+  component: Component,
+  name: FieldSelector<S, R>,
+  config: SmartFieldConfig<S, R, Component, string>,
+  model?: string,
+): NuiSmartFormField<S> => {
+  const { rules, ...rest } = config;
+
+  return {
+    ...rest,
+    kind: 'field',
+    component,
+    ...(model === undefined ? {} : { model }),
+    name,
+    rules: rules?.map((rule) =>
+      adaptRule(rule, (_value: unknown, values: S) => [name(values), values] as const),
+    ),
+  };
+};
+
+export const formConfig = <S, R extends NuiControlRegistry = NuiControlRegistry>(
+  options: FormConfigOptions<R> = {},
+) => ({
+  field: <C extends Component, V extends ControlValue<C, M>, M extends string = 'modelValue'>(
+    component: C & EmitsInto<C, V, M>,
+    name: FieldSelector<S, V>,
+    config: SmartFieldConfig<S, V, C, M> = {},
+  ): NuiSmartFormField<S> => fieldEntry(component, name, config),
+  control: <K extends keyof R & string, V extends ControlOf<R, K>['value']>(
+    key: K,
+    name: FieldSelector<S, V>,
+    config: ControlFieldConfig<S, R, K, V> = {},
+  ): NuiSmartFormField<S> => {
+    const entry = options.controls?.[key];
+
+    if (entry === undefined) {
+      throw new Error(`formConfig({ controls }) has no control named "${key}"`);
+    }
+    return fieldEntry(entry.component, name, config, entry.model);
   },
   section: (config: Omit<NuiSmartFormSection<S>, 'kind'>): NuiSmartFormSection<S> => ({
     ...config,

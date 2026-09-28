@@ -1,0 +1,270 @@
+import {
+  anyOf,
+  isBoolean,
+  isNumber,
+  isRecord,
+  isString,
+  isUnknown,
+  listOf,
+  oneOf,
+  optional,
+  shapeOf,
+  type Guard,
+  type NuiControlRegistry,
+} from '@numior/primitives';
+import type { FieldRule } from '../../core/form.types';
+import { byPath, type FieldSelector } from '../../paths/selector';
+import { adaptRule } from '../../rules/adapt-rule';
+import type { AnyFieldRule } from '../../rules/async-rule';
+import { email, max, min, pattern, required } from '../../rules/rules';
+import { getAt } from '../../values/access';
+import { cloneValue } from '../../values/clone';
+import { formConfig } from './config';
+import type {
+  FormConfigIssue,
+  FormJsonArray,
+  FormJsonCondition,
+  FormJsonEntry,
+  FormJsonField,
+  FormJsonRule,
+  FormJsonSection,
+  ParsedFormConfig,
+  ParseFormConfigOptions,
+} from './parse-config.types';
+import type { NuiSmartFormCondition, NuiSmartFormEntry } from './smart-form.types';
+
+type JsonRow = Readonly<Record<string, unknown>>;
+
+const isList = listOf(isUnknown);
+const isRows = listOf(isRecord);
+
+const isJsonRule: Guard<FormJsonRule> = anyOf(
+  shapeOf({ rule: oneOf('required', 'email'), message: optional(isString) }),
+  shapeOf({ rule: oneOf('min', 'max'), limit: isNumber, message: optional(isString) }),
+  shapeOf({
+    rule: oneOf('pattern'),
+    source: isString,
+    flags: optional(isString),
+    message: optional(isString),
+  }),
+);
+
+const isCondition: Guard<FormJsonCondition> = anyOf(
+  shapeOf({ path: isString, equals: isUnknown }),
+  shapeOf({ path: isString, in: isList }),
+);
+
+const isJsonField: Guard<FormJsonField> = shapeOf({
+  kind: oneOf('field'),
+  type: isString,
+  name: isString,
+  label: optional(isString),
+  description: optional(isString),
+  required: optional(isBoolean),
+  disabled: optional(isBoolean),
+  readonly: optional(isBoolean),
+  group: optional(isBoolean),
+  area: optional(isString),
+  props: optional(isRecord),
+  when: optional(isCondition),
+  rules: optional(listOf(isJsonRule)),
+  validateOn: optional(oneOf('submit', 'blur', 'change')),
+  keepValue: optional(isBoolean),
+});
+
+const isJsonEntry: Guard<FormJsonEntry> = (value): value is FormJsonEntry =>
+  isJsonField(value) || isJsonSection(value) || isJsonArray(value);
+
+const isEntries = listOf((value: unknown): value is FormJsonEntry => isJsonEntry(value));
+
+const isJsonSection: Guard<FormJsonSection> = shapeOf({
+  kind: oneOf('section'),
+  name: optional(isString),
+  title: isString,
+  description: optional(isString),
+  layout: optional(isString),
+  area: optional(isString),
+  when: optional(isCondition),
+  fields: isEntries,
+});
+
+const isJsonArray: Guard<FormJsonArray> = shapeOf({
+  kind: oneOf('array'),
+  name: isString,
+  label: optional(isString),
+  description: optional(isString),
+  area: optional(isString),
+  when: optional(isCondition),
+  layout: optional(isString),
+  min: optional(isNumber),
+  max: optional(isNumber),
+  reorderable: optional(isBoolean),
+  newRow: isRecord,
+  fields: isEntries,
+  addLabel: optional(isString),
+});
+
+const ruleOf = (spec: FormJsonRule): FieldRule => {
+  switch (spec.rule) {
+    case 'required':
+      return required({ message: spec.message });
+    case 'email':
+      return email({ message: spec.message });
+    case 'min':
+      return min(spec.limit, { message: spec.message });
+    case 'max':
+      return max(spec.limit, { message: spec.message });
+    case 'pattern':
+      return pattern(new RegExp(spec.source, spec.flags), { message: spec.message });
+  }
+};
+
+const conditionOf = <S extends object>(spec: FormJsonCondition): NuiSmartFormCondition<S> => {
+  if ('in' in spec) {
+    return (values) => spec.in.some((candidate) => Object.is(getAt(values, spec.path), candidate));
+  }
+  return (values) => Object.is(getAt(values, spec.path), spec.equals);
+};
+
+const rowsSelector = <S extends object>(
+  path: string,
+): FieldSelector<S, readonly JsonRow[] | undefined> => {
+  const read = byPath(path);
+
+  return (values) => {
+    const value = read(values);
+    return isRows(value) ? value : undefined;
+  };
+};
+
+const fieldRules = <S extends object>(
+  path: string,
+  specs: readonly FormJsonRule[] | undefined,
+): readonly AnyFieldRule<unknown, S>[] | undefined =>
+  specs?.map((spec) =>
+    adaptRule(ruleOf(spec), (_value: unknown, values: S) => [getAt(values, path), values] as const),
+  );
+
+interface Builder<S extends object> {
+  readonly issues: FormConfigIssue[];
+  readonly controls: NuiControlRegistry;
+  entries(list: readonly FormJsonEntry[], at: string): NuiSmartFormEntry<S>[];
+}
+
+const buildField = <S extends object>(
+  builder: Builder<S>,
+  spec: FormJsonField,
+  at: string,
+): NuiSmartFormEntry<S> | undefined => {
+  const entry = builder.controls[spec.type];
+
+  if (entry === undefined) {
+    builder.issues.push({ path: `${at}.type`, code: 'unknown-type', type: spec.type });
+    return undefined;
+  }
+  const props = spec.props ?? {};
+
+  if (!entry.props(props)) {
+    builder.issues.push({ path: `${at}.props`, code: 'rejected-props', type: spec.type });
+    return undefined;
+  }
+  const { kind, type: _type, name, when, rules, props: _props, ...rest } = spec;
+
+  return {
+    ...rest,
+    kind,
+    component: entry.component,
+    model: entry.model,
+    name: byPath(name),
+    props,
+    when: when === undefined ? undefined : conditionOf<S>(when),
+    rules: fieldRules<S>(name, rules),
+  };
+};
+
+const buildArray = <S extends object>(
+  builder: Builder<S>,
+  spec: FormJsonArray,
+  at: string,
+): NuiSmartFormEntry<S> => {
+  const { kind: _kind, name, when, newRow, fields, ...rest } = spec;
+  const rowEntries = rowBuilder(builder, `${at}.fields`).entries(fields, `${at}.fields`);
+  const { array } = formConfig<S>();
+
+  return {
+    ...array(rowsSelector<S>(name), {
+      ...rest,
+      newRow: () => cloneValue(newRow),
+      fields: rowEntries,
+    }),
+    when: when === undefined ? undefined : conditionOf<S>(when),
+  };
+};
+
+const buildSection = <S extends object>(
+  builder: Builder<S>,
+  spec: FormJsonSection,
+  at: string,
+): NuiSmartFormEntry<S> => {
+  const { when, fields, ...rest } = spec;
+
+  return {
+    ...rest,
+    when: when === undefined ? undefined : conditionOf<S>(when),
+    fields: builder.entries(fields, `${at}.fields`),
+  };
+};
+
+const createBuilder = <S extends object>(
+  controls: NuiControlRegistry,
+  issues: FormConfigIssue[],
+): Builder<S> => {
+  const builder: Builder<S> = {
+    issues,
+    controls,
+    entries: (list, at) =>
+      list.flatMap((spec, index) => {
+        const here = `${at}.${index}`;
+
+        switch (spec.kind) {
+          case 'field': {
+            const built = buildField(builder, spec, here);
+            return built === undefined ? [] : [built];
+          }
+          case 'section':
+            return [buildSection(builder, spec, here)];
+          case 'array':
+            return [buildArray(builder, spec, here)];
+        }
+      }),
+  };
+
+  return builder;
+};
+
+const rowBuilder = <S extends object>(parent: Builder<S>, _at: string): Builder<JsonRow> =>
+  createBuilder<JsonRow>(parent.controls, parent.issues);
+
+const shapeIssues = (input: unknown): FormConfigIssue[] => {
+  if (!Array.isArray(input)) {
+    return [{ path: 'fields', code: 'not-a-list' }];
+  }
+  return input.flatMap((entry: unknown, index) =>
+    isJsonEntry(entry) ? [] : [{ path: `fields.${index}`, code: 'invalid-entry' }],
+  );
+};
+
+export const parseFormConfig = <S extends object>(
+  input: unknown,
+  options: ParseFormConfigOptions,
+): ParsedFormConfig<S> => {
+  const shape = shapeIssues(input);
+
+  if (shape.length > 0 || !isEntries(input)) {
+    return { kind: 'error', issues: shape };
+  }
+  const issues: FormConfigIssue[] = [];
+  const fields = createBuilder<S>(options.controls, issues).entries(input, 'fields');
+
+  return issues.length > 0 ? { kind: 'error', issues } : { kind: 'ok', fields };
+};

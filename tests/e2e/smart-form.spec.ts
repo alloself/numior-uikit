@@ -218,6 +218,24 @@ test.describe('smart form', () => {
     await expect(smartForm.save).toBeEnabled();
   });
 
+  test('a form parsed from JSON renders kit controls, reveals conditional fields and validates', async ({
+    page,
+  }) => {
+    const { smartForm } = await openSmartForm(page);
+    const send = smartForm.json.getByRole('button', { name: 'Отправить заявку' });
+    await expect(smartForm.jsonControl('company')).toHaveCount(0);
+    await smartForm.json.getByRole('radio', { name: 'Компания' }).check();
+    await expect(smartForm.jsonControl('company')).toBeVisible();
+    await send.click();
+    await expect(smartForm.errorOf(smartForm.jsonControl('name'))).toHaveText('Заполните поле');
+    await smartForm.jsonControl('name').fill('Анна');
+    await smartForm.jsonControl('company').fill('Numior');
+    await smartForm.json.getByRole('switch').check();
+    await send.click();
+    await expect.poll(async () => (await smartForm.readOutput()).lead?.company).toBe('Numior');
+    expect((await smartForm.readOutput()).issues).toEqual([]);
+  });
+
   test('in RTL the layout mirrors and nothing overflows', async ({ page, isMobile }) => {
     const playground = await openSmartForm(page);
     const { smartForm } = playground;

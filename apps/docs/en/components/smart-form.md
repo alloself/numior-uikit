@@ -47,6 +47,18 @@ leaves validation and submission but keeps its value. `layout` uses the `grid-te
 syntax with field paths or `area` as area names. Narrower than `36rem` the layout folds into one
 column, so the same form works in a dialog and on a phone.
 
+## From JSON
+
+`parseFormConfig(json, { controls })` builds a configuration from JSON. A field carries a string
+`type` from the registry, a `name` path, guarded `props`, a `when` condition and rules. An
+unknown type, rejected props or an unreadable entry produce a list of `issues` with a code and a
+path instead of a form.
+
+`formConfig({ controls }).control('select', (v) => v.country, { props })` picks a control by key
+with the props types of the registry. JSON rules are `required`, `min`, `max`, `email` and
+`pattern`. Values of JSON fields are typed `unknown`: the source of the configuration answers for
+their types, see [useControls](/en/composables/controls).
+
 ## Slots
 
 A slot named after a field path is the control content: the radios of a group, the label of a

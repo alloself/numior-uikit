@@ -63,4 +63,25 @@ describe('NuiRadioGroup and NuiRadio', () => {
     expect(group.emittedValues).toEqual([]);
     group.unmount();
   });
+
+  it('builds its radios from options when no slot is given', async () => {
+    const group = RadioGroupDriver.mount({
+      props: {
+        options: [
+          { value: 'x', label: 'Ten' },
+          { value: 'y', label: 'Twenty' },
+          { value: 'z', label: 'Thirty', disabled: true },
+        ],
+      },
+      modelValue: 'x',
+      values: [],
+    });
+
+    expect(group.radios.map((radio) => radio.element.value)).toEqual(['x', 'y', 'z']);
+    expect(group.disabledValues).toEqual(['z']);
+    expect(group.root.text()).toContain('Twenty');
+    await group.select('y');
+    expect(group.emittedValues).toEqual(['y']);
+    group.unmount();
+  });
 });

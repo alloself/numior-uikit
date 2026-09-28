@@ -10,7 +10,7 @@ import {
 import { ComponentDriver } from './component';
 
 export interface RadioGroupMountOptions {
-  readonly props?: NuiRadioGroupProps;
+  readonly props?: NuiRadioGroupProps<string>;
   readonly modelValue?: string;
   readonly values?: string[];
   readonly field?: NuiFieldProps;

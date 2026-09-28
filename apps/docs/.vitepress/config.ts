@@ -186,6 +186,7 @@ const ruComposables: DocsSidebarGroup[] = [
     items: [
       { text: 'useFieldControl', link: '/composables/field-control' },
       { text: 'useForm', link: '/composables/form' },
+      { text: 'useControls', link: '/composables/controls' },
     ],
   },
   {
@@ -364,6 +365,7 @@ const enComposables: DocsSidebarGroup[] = [
     items: [
       { text: 'useFieldControl', link: '/en/composables/field-control' },
       { text: 'useForm', link: '/en/composables/form' },
+      { text: 'useControls', link: '/en/composables/controls' },
     ],
   },
   {

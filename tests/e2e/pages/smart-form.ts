@@ -2,6 +2,7 @@ import type { Locator, Page } from '@playwright/test';
 import {
   isRecord,
   isString,
+  listOf,
   nullable,
   parseAs,
   shapeOf,
@@ -12,6 +13,8 @@ import { boxOf, type Point } from '../helpers/geometry';
 const isSmartFormOutput = shapeOf({
   filter: shapeOf({ query: isString, status: nullable(isString) }),
   profile: nullable(isRecord),
+  lead: nullable(isRecord),
+  issues: listOf(isRecord),
 });
 
 export type SmartFormOutput = Guarded<typeof isSmartFormOutput>;
@@ -36,6 +39,7 @@ export interface KindSwitchMotion {
 export class SmartFormSection {
   readonly filter: Locator;
   readonly profile: Locator;
+  readonly json: Locator;
   readonly search: Locator;
   readonly status: Locator;
   readonly find: Locator;
@@ -55,6 +59,7 @@ export class SmartFormSection {
   constructor(private readonly page: Page) {
     this.filter = page.getByTestId('smart-filter');
     this.profile = page.getByTestId('smart-profile');
+    this.json = page.getByTestId('smart-json');
     this.search = this.filter.getByRole('searchbox', { name: 'Поиск' });
     this.status = this.filter.getByRole('combobox', { name: 'Статус' });
     this.find = this.filter.getByRole('button', { name: 'Найти' });
@@ -90,6 +95,10 @@ export class SmartFormSection {
 
   control(path: string): Locator {
     return this.profile.locator(`[name="${path}"]`);
+  }
+
+  jsonControl(path: string): Locator {
+    return this.json.locator(`[name="${path}"]`);
   }
 
   kind(label: KindLabel): Locator {
