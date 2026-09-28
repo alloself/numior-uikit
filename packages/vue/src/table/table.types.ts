@@ -184,9 +184,14 @@ export interface NuiTableRowOptions<T> {
   readonly dragLabel: (row: T) => string;
 }
 
+export interface NuiTableRowEntry<T> {
+  readonly view: NuiTableRowView<T>;
+  readonly index: number;
+}
+
 export interface NuiTableBodyProps<T> {
   columns: readonly NuiTableColumn<T>[];
-  rows: readonly NuiTableRowView<T>[];
+  rows: readonly NuiTableRowEntry<T>[];
   layout: NuiTableCellLayout<T>;
   options: NuiTableRowOptions<T>;
   selectable: NuiTableSelection | undefined;
@@ -194,7 +199,6 @@ export interface NuiTableBodyProps<T> {
   loading: boolean;
   loadingRows: number;
   emptyLabel: string;
-  firstIndex: number;
   spacers: NuiTableSpacers | undefined;
   dragging: number | undefined;
   pinned: boolean;

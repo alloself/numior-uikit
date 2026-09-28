@@ -126,7 +126,7 @@ export class TableDriver extends ComponentDriver {
     const widthsRef = ref<Record<string, number>>({ ...widths });
     const expandedRef = ref<Person[]>([...expanded]);
     const propsRef = ref(props);
-    const rowsRef = ref<readonly Person[]>(rows);
+    const rowsRef = ref<Person[]>(structuredClone([...rows]));
     const clicks: string[] = [];
     const reorders: string[] = [];
     const loads: string[] = [];
@@ -237,7 +237,7 @@ export class TableDriver extends ComponentDriver {
       readonly expanded: Ref<Person[]>;
     },
     private readonly propsRef: Ref<TableMountOptions['props']>,
-    private readonly rowsRef: Ref<readonly Person[]>,
+    private readonly rowsRef: Ref<Person[]>,
     readonly clicks: string[],
     readonly reorders: string[],
     readonly loads: string[],
@@ -611,7 +611,22 @@ export class TableDriver extends ComponentDriver {
   }
 
   async receiveRows(rows: readonly Person[]): Promise<void> {
-    this.rowsRef.value = rows;
+    this.rowsRef.value = [...rows];
+    await nextTick();
+  }
+
+  async pushRow(person: Person): Promise<void> {
+    this.rowsRef.value.push(person);
+    await nextTick();
+  }
+
+  async patchRow(name: string, patch: Partial<Person>): Promise<void> {
+    const found = this.rowsRef.value.find((person) => person.name === name);
+
+    if (!found) {
+      throw new Error(`No person named ${name}`);
+    }
+    Object.assign(found, patch);
     await nextTick();
   }
 

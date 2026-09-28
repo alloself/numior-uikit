@@ -11,22 +11,22 @@
     <template v-else>
       <NuiTableSpacer :span="span" :size="startSpacer" />
       <NuiTableRow
-        v-for="(view, offset) in rows"
+        v-for="{ view, index } in rows"
         :key="view.key"
         :view="view"
-        :index="firstIndex + offset"
-        :row-index="rowIndexOf(offset)"
+        :index="index"
+        :row-index="rowIndexOf(index)"
         :columns="columns"
         :layout="layout"
         :options="options"
         :selectable="selectable"
         :selected="selectedKeys.has(view.key)"
-        :dragging="dragging === firstIndex + offset"
+        :dragging="dragging === index"
         @toggle="emit('toggle', view.row)"
         @row-click="emit('rowClick', view.row, $event)"
         @expand="emit('expand', view)"
-        @drag-start="emit('dragStart', firstIndex + offset, $event)"
-        @drag-keydown="emit('dragKeydown', firstIndex + offset, $event)"
+        @drag-start="emit('dragStart', index, $event)"
+        @drag-keydown="emit('dragKeydown', index, $event)"
       />
       <NuiTableSpacer :span="span" :size="endSpacer" />
     </template>
@@ -51,7 +51,6 @@ const {
   loading,
   loadingRows,
   emptyLabel,
-  firstIndex,
   spacers,
   dragging,
   pinned,
@@ -70,6 +69,5 @@ const showStatus = computed(() => !pinned && (loading || rows.length === 0));
 const startSpacer = computed(() => spacers?.start ?? 0);
 const endSpacer = computed(() => spacers?.end ?? 0);
 
-const rowIndexOf = (offset: number): number | undefined =>
-  spacers ? firstIndex + offset + 2 : undefined;
+const rowIndexOf = (index: number): number | undefined => (spacers ? index + 2 : undefined);
 </script>

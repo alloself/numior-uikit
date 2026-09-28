@@ -31,6 +31,20 @@ const textOf = (element: Element): string =>
     ''
   ).trim();
 
+const findItem = (
+  items: readonly NuiTreeItem<string>[],
+  label: string,
+): NuiTreeItem<string> | undefined => {
+  for (const item of items) {
+    const match = item.label === label ? item : findItem(item.children ?? [], label);
+
+    if (match) {
+      return match;
+    }
+  }
+  return undefined;
+};
+
 const defineSize = (element: HTMLElement, name: string, value: number): void => {
   Object.defineProperty(element, name, { value, configurable: true, writable: true });
 };
@@ -50,7 +64,7 @@ export class TreeDriver extends ComponentDriver {
     const selection = createSelection(modelValue, props.selectable === 'multiple');
     const expandedRef = ref<string[]>([...expanded]);
     const checkedRef = ref<string[]>([...checked]);
-    const itemsRef = ref<readonly NuiTreeItem<string>[]>(items);
+    const itemsRef = ref<readonly NuiTreeItem<string>[]>(structuredClone(items));
     const loads: string[] = [];
     const events: string[] = [];
 
@@ -241,6 +255,16 @@ export class TreeDriver extends ComponentDriver {
 
   async receiveItems(items: readonly NuiTreeItem<string>[]): Promise<void> {
     this.itemsRef.value = items;
+    await nextTick();
+  }
+
+  async rename(label: string, next: string): Promise<void> {
+    const found = findItem(this.itemsRef.value, label);
+
+    if (!found) {
+      throw new Error(`No tree item labelled ${label}`);
+    }
+    Object.assign(found, { label: next });
     await nextTick();
   }
 

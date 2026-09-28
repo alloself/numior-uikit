@@ -46,7 +46,7 @@
           <NuiTableBody
             v-if="tableRows.pinned.value.length > 0"
             :columns="layout.ordered.value"
-            :rows="tableRows.pinned.value"
+            :rows="pinnedEntries"
             :layout="layout"
             :options="rowOptions"
             :selectable="selectable"
@@ -54,7 +54,6 @@
             :loading="false"
             :loading-rows="0"
             :empty-label="texts.empty"
-            :first-index="0"
             :spacers="undefined"
             :dragging="undefined"
             pinned
@@ -71,7 +70,6 @@
             :loading="loading"
             :loading-rows="loadingRows"
             :empty-label="texts.empty"
-            :first-index="firstIndex"
             :spacers="spacers"
             :dragging="rowDragging"
             :pinned="false"
@@ -124,6 +122,7 @@ import type {
   NuiTableHeadActions,
   NuiTableProps,
   NuiTableReorderEvent,
+  NuiTableRowEntry,
   NuiTableRowOptions,
   NuiTableSlots,
   NuiTableSort,
@@ -209,29 +208,8 @@ const reorderText = (column: NuiTableColumn<T>): string =>
 const expandText = (row: T): string => (expandLabel ? expandLabel(row) : messages.value.expand);
 const dragText = (row: T): string => (dragLabel ? dragLabel(row) : messages.value.drag);
 
-const sortedLevels = computed(() => {
-  void sort.value;
-  void columns;
-  return new WeakMap<readonly T[], readonly T[]>();
-});
-
-const sortLevel = (level: readonly T[]): readonly T[] => {
-  if (remote) {
-    return level;
-  }
-
-  const cache = sortedLevels.value;
-  const known = cache.get(level);
-
-  if (known) {
-    return known;
-  }
-
-  const sorted = sortRows(level, sort.value, columns);
-
-  cache.set(level, sorted);
-  return sorted;
-};
+const sortLevel = (level: readonly T[]): readonly T[] =>
+  remote ? level : sortRows(level, sort.value, columns);
 
 const tableRows = useTableRows<T>({
   rows: () => rows,
@@ -258,18 +236,43 @@ const windowing = useVirtualList(scroller, {
   count: () => visibleRows.value.length,
   itemSize: () => rowHeight,
   enabled: isVirtual,
+  pinned: () => rowReorder.source.value,
 });
 
-const renderedRows = computed(() =>
+const entriesOf = (views: readonly NuiTableRowView<T>[]): NuiTableRowEntry<T>[] =>
+  views.map((view, index) => ({ view, index }));
+
+const renderedRows = computed((): NuiTableRowEntry<T>[] =>
   isVirtual.value
-    ? visibleRows.value.slice(windowing.range.value.start, windowing.range.value.end)
-    : visibleRows.value,
+    ? windowing.items.value.flatMap((item) => {
+        const view = visibleRows.value[item.index];
+
+        return view === undefined ? [] : [{ view, index: item.index }];
+      })
+    : entriesOf(visibleRows.value),
 );
+
+const pinnedEntries = computed(() => entriesOf(tableRows.pinned.value));
 
 const firstIndex = computed(() => (isVirtual.value ? windowing.range.value.start : 0));
 
+const heldOutside = computed(() => {
+  const { start, end } = windowing.range.value;
+  const items = windowing.items.value;
+
+  return {
+    before: items[0] !== undefined && items[0].index < start,
+    after: items.at(-1) !== undefined && (items.at(-1)?.index ?? 0) >= end,
+  };
+});
+
 const spacers = computed(() =>
-  isVirtual.value ? { start: windowing.startSize.value, end: windowing.endSize.value } : undefined,
+  isVirtual.value
+    ? {
+        start: windowing.startSize.value - (heldOutside.value.before ? rowHeight : 0),
+        end: windowing.endSize.value - (heldOutside.value.after ? rowHeight : 0),
+      }
+    : undefined,
 );
 
 const selectionState = computed(() =>

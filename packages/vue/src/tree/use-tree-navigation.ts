@@ -42,28 +42,17 @@ interface TypeaheadIndex {
   readonly lowered: readonly string[];
 }
 
-const TYPEAHEAD_INDEXES = new WeakMap<object, TypeaheadIndex>();
-
 const enabledIndices = <T>(nodes: readonly TreeNode<T>[]): number[] =>
   nodes.flatMap((node, index) => (node.item.disabled ? [] : [index]));
 
 const typeaheadIndexOf = <T>(nodes: readonly TreeNode<T>[]): TypeaheadIndex => {
-  const known = TYPEAHEAD_INDEXES.get(nodes);
-
-  if (known) {
-    return known;
-  }
-
   const enabled = enabledIndices(nodes);
 
-  const index: TypeaheadIndex = {
+  return {
     enabled,
     slots: new Map(enabled.map((node, slot) => [node, slot] as const)),
     lowered: lowerLabels(enabled.map((node) => nodes[node]?.item.label ?? '')),
   };
-
-  TYPEAHEAD_INDEXES.set(nodes, index);
-  return index;
 };
 
 const isEnabled = <T>(nodes: readonly TreeNode<T>[], index: number): boolean => {
@@ -127,6 +116,7 @@ const MOVES: Readonly<Record<ListMove, <T>(cursor: Cursor<T>) => number>> = {
 
 export const useTreeNavigation = <T>(options: TreeNavigationOptions<T>): TreeNavigation => {
   const typeahead = ref<TypeaheadState>(emptyTypeahead);
+  const typeaheadIndex = computed(() => typeaheadIndexOf(options.nodes()));
 
   const moveTo = (index: number): void => {
     if (index >= 0) {
@@ -187,7 +177,7 @@ export const useTreeNavigation = <T>(options: TreeNavigationOptions<T>): TreeNav
   };
 
   const type = (key: string): void => {
-    const { enabled, slots, lowered } = typeaheadIndexOf(options.nodes());
+    const { enabled, slots, lowered } = typeaheadIndex.value;
 
     typeahead.value = extendTypeahead(typeahead.value, key, Date.now());
 

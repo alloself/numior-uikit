@@ -180,6 +180,18 @@ describe('NuiTable', () => {
     custom.unmount();
   });
 
+  it('keeps a sorted view in step with rows pushed or edited in place', async () => {
+    const table = TableDriver.mount({ sort: { key: 'age', direction: 'asc' } });
+
+    expect(table.columnTexts('Имя').slice(0, 3)).toEqual(['Глеб', 'Зоя', 'Борис']);
+    await table.pushRow(newcomer);
+    expect(table.columnTexts('Имя').slice(0, 3)).toEqual(['Глеб', 'Влад', 'Зоя']);
+    await table.patchRow('Глеб', { age: 60 });
+    expect(table.columnTexts('Имя')[0]).toBe('Влад');
+    expect(table.columnTexts('Имя').at(-1)).toBe('Глеб');
+    table.unmount();
+  });
+
   it('windows long tables with spacer rows and aria-rowcount', async () => {
     const table = TableDriver.mount({
       rows: manyPeople(5000),
@@ -448,6 +460,42 @@ describe('NuiTable rows', () => {
     expect(flat.reorders).toEqual(['Анна:0->2@root']);
     expect(flat.clicks).toEqual([]);
     flat.unmount();
+  });
+});
+
+describe('NuiTable keyboard reorder', () => {
+  it('moves an expanded parent past its children to the next sibling', async () => {
+    const table = TableDriver.mount({
+      rows: TEAM,
+      expanded: TEAM.slice(0, 1),
+      props: { rowDrag: true, getChildren: childrenOf },
+    });
+
+    await table.pressRowGrip('Анна', ' ');
+    expect(table.liveText).toContain('Анна grabbed, position 1 of 3');
+    await table.pressRowGrip('Анна', 'ArrowDown');
+    expect(table.liveText).toContain('position 2 of 3');
+    await table.pressRowGrip('Анна', ' ');
+    expect(table.reorders).toEqual(['Анна:0->1@root']);
+    table.unmount();
+  });
+
+  it('keeps the grabbed row rendered while the target leaves the virtual window', async () => {
+    const table = TableDriver.mount({
+      rows: manyPeople(100),
+      props: { rowDrag: true, virtual: true, rowHeight: 40, height: '80px' },
+    });
+
+    await table.setHeight(80);
+    await table.pressRowGrip('Сотрудник 1', ' ');
+    for (let step = 0; step < 20; step += 1) {
+      await table.pressRowGrip('Сотрудник 1', 'ArrowDown');
+    }
+    expect(table.liveText).toContain('position 21 of 100');
+    expect(table.renderedRowCount).toBeLessThan(30);
+    await table.pressRowGrip('Сотрудник 1', ' ');
+    expect(table.reorders).toEqual(['Сотрудник 1:0->20@root']);
+    table.unmount();
   });
 });
 

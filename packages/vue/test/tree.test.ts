@@ -134,6 +134,18 @@ describe('NuiTree', () => {
     passive.unmount();
   });
 
+  it('matches typeahead against labels renamed in place', async () => {
+    const tree = TreeDriver.mount();
+    await tree.focus();
+    await tree.press('r');
+    expect(tree.activeLabel).toBe('README.md');
+    await tree.advance(600);
+    await tree.rename('docs', 'Заметки');
+    await tree.press('з');
+    expect(tree.activeLabel).toBe('Заметки');
+    tree.unmount();
+  });
+
   it('cascades checkboxes through enabled descendants and reports mixed ancestors', async () => {
     const tree = TreeDriver.mount({
       props: { checkable: true },
