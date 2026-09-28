@@ -236,4 +236,15 @@ describe('NuiUpload', () => {
     expect(off.events).toEqual([]);
     off.unmount();
   });
+
+  it('neither picks nor accepts files while readonly', async () => {
+    const upload = UploadDriver.mount({ props: { readonly: true } });
+    expect(upload.hasModifier('readonly')).toBe(true);
+    await upload.clickZone();
+    upload.open();
+    expect(upload.openCount).toBe(0);
+    await upload.dropFiles(fileOf('a.txt'));
+    expect(upload.names).toEqual([]);
+    upload.unmount();
+  });
 });

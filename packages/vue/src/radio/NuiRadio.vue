@@ -5,6 +5,7 @@
       'nui-radio--checked': checked,
       'nui-radio--invalid': isInvalid,
       'nui-radio--disabled': isDisabled,
+      'nui-radio--readonly': isReadonly,
     }"
     v-bind="split.rootAttrs()"
   >
@@ -17,6 +18,7 @@
       :value="String(value)"
       :disabled="isDisabled"
       :aria-invalid="isInvalid ? 'true' : undefined"
+      @click="onClick"
       @change="onChange"
     />
     <span class="nui-radio__dot"></span>
@@ -39,12 +41,19 @@ const controlId = useControlId(() => id);
 const checked = computed(() => group !== null && group.modelValue.value === value);
 const isDisabled = computed(() => disabled ?? group?.disabled.value ?? false);
 const isInvalid = computed(() => group?.invalid.value ?? false);
+const isReadonly = computed(() => group?.readonly.value ?? false);
 
 const groupAttrs = computed(() =>
   group ? { name: group.name.value, checked: checked.value } : {},
 );
 
 const radioElement = useTemplateRef<HTMLInputElement>('radio');
+
+const onClick = (event: MouseEvent): void => {
+  if (isReadonly.value) {
+    event.preventDefault();
+  }
+};
 
 const onChange = (): void => {
   if (radioElement.value?.checked) {

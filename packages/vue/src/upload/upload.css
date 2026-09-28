@@ -48,6 +48,10 @@
   border-color: var(--nui-primary);
   background: var(--nui-surface-muted);
 }
+.nui-upload--readonly .nui-upload__zone,
+.nui-upload--readonly .nui-upload-item__actions {
+  display: none;
+}
 .nui-upload--dragging .nui-upload__zone {
   border-color: var(--nui-primary);
   border-style: solid;

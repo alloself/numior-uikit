@@ -59,7 +59,12 @@
   align-items: center;
   color: var(--nui-text-muted);
 }
-.nui-input:hover:not(.nui-input--disabled, .nui-input--invalid, :focus-within) {
+.nui-input:hover:not(
+    .nui-input--disabled,
+    .nui-input--readonly,
+    .nui-input--invalid,
+    :focus-within
+  ) {
   border-color: var(--nui-border-strong);
 }
 .nui-input:focus-within {
@@ -73,6 +78,9 @@
 .nui-input--invalid:focus-within {
   border-color: var(--nui-error);
   outline-color: var(--nui-error);
+}
+.nui-input--readonly .nui-input__control {
+  cursor: default;
 }
 .nui-input--disabled {
   opacity: var(--nui-disabled-opacity);

@@ -10,6 +10,7 @@
           'nui-select--clearable': showClear,
           'nui-select--invalid': isInvalid,
           'nui-select--disabled': isDisabled,
+          'nui-select--readonly': isReadonly,
         },
       ]"
       v-bind="split.rootAttrs()"
@@ -22,7 +23,11 @@
         aria-haspopup="listbox"
         :aria-labelledby="field?.labelledBy.value"
         :aria-required="isRequired || undefined"
-        v-bind="{ ...controlAttrs, ...split.controlAttrs(), ...control.invokerAttrs.value }"
+        v-bind="{
+          ...controlAttrs,
+          ...split.controlAttrs(),
+          ...(isReadonly ? {} : control.invokerAttrs.value),
+        }"
         @keydown="onTriggerKeydown"
       >
         <span class="nui-select__value">
@@ -98,6 +103,7 @@ const {
   id,
   size = 'md',
   disabled = undefined,
+  readonly = undefined,
   required = undefined,
   invalid = undefined,
   label,
@@ -130,7 +136,11 @@ const {
   invalid: isInvalid,
   required: isRequired,
   disabled: isDisabled,
-} = useFieldControl(() => ({ id, disabled, required, invalid, label, description, error }));
+  readonly: isReadonly,
+} = useFieldControl(
+  () => ({ id, disabled, readonly, required, invalid, label, description, error }),
+  { readonlyAttr: 'aria-readonly' },
+);
 
 const listboxId = computed(() => `${controlAttrs.value.id}-listbox`);
 
@@ -162,7 +172,9 @@ const displayLabel = computed(() => {
 const emptyText = computed(() => emptyLabel ?? messages.value.empty);
 const clearText = computed(() => clearLabel ?? messages.value.clear);
 
-const showClear = computed(() => clearable && selectedValues.value.length > 0 && !isDisabled.value);
+const showClear = computed(
+  () => clearable && selectedValues.value.length > 0 && !isDisabled.value && !isReadonly.value,
+);
 
 const open = ref(false);
 const triggerElement = useTemplateRef<HTMLButtonElement>('trigger');
@@ -258,7 +270,7 @@ const pickByTypeahead = (event: KeyboardEvent): void => {
 };
 
 const onTriggerKeydown = (event: KeyboardEvent): void => {
-  if (isDisabled.value) {
+  if (isDisabled.value || isReadonly.value) {
     return;
   }
   const request = OPENERS[event.key];

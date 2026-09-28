@@ -28,6 +28,10 @@ const docs: DocsMap = {
         ru: 'Выключает контрол внутри; у группы — весь fieldset.',
         en: 'Disables the control inside; for a group the whole fieldset.',
       },
+      readonly: {
+        ru: 'Переводит контрол внутри в режим чтения: значение видно, но не меняется.',
+        en: 'Puts the control inside into read mode: the value shows but cannot change.',
+      },
       group: {
         ru: 'Рисует fieldset с legend для группы контролов.',
         en: 'Draws a fieldset with a legend for a group of controls.',

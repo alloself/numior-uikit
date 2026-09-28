@@ -37,7 +37,12 @@
   color: var(--nui-text-muted);
   opacity: 1;
 }
-.nui-textarea:hover:not(:disabled, .nui-textarea--invalid, :focus-visible) {
+.nui-textarea:hover:not(
+    :disabled,
+    .nui-textarea--readonly,
+    .nui-textarea--invalid,
+    :focus-visible
+  ) {
   border-color: var(--nui-border-strong);
 }
 .nui-textarea:focus-visible {
@@ -51,6 +56,9 @@
 .nui-textarea--invalid:focus-visible {
   border-color: var(--nui-error);
   outline-color: var(--nui-error);
+}
+.nui-textarea--readonly {
+  cursor: default;
 }
 .nui-textarea:disabled {
   opacity: var(--nui-disabled-opacity);

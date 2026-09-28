@@ -7,11 +7,16 @@
       :class="[
         `nui-radio-group--orientation-${orientation}`,
         `nui-radio-group--size-${size}`,
-        { 'nui-radio-group--invalid': isInvalid, 'nui-radio-group--disabled': isDisabled },
+        {
+          'nui-radio-group--invalid': isInvalid,
+          'nui-radio-group--disabled': isDisabled,
+          'nui-radio-group--readonly': isReadonly,
+        },
       ]"
       :aria-labelledby="labelledBy"
       :aria-describedby="attrs['aria-describedby']"
       :aria-invalid="attrs['aria-invalid']"
+      :aria-readonly="attrs['aria-readonly']"
       :aria-required="isRequired || undefined"
       :aria-disabled="isDisabled || undefined"
       v-bind="passthrough"
@@ -31,6 +36,7 @@ const {
   id,
   size = 'md',
   disabled = undefined,
+  readonly = undefined,
   required = undefined,
   invalid = undefined,
   label,
@@ -53,9 +59,11 @@ const {
   invalid: isInvalid,
   required: isRequired,
   disabled: isDisabled,
-} = useFieldControl(() => ({ id, disabled, required, invalid, label, description, error }), {
-  group: true,
-});
+  readonly: isReadonly,
+} = useFieldControl(
+  () => ({ id, disabled, readonly, required, invalid, label, description, error }),
+  { group: true, readonlyAttr: 'aria-readonly' },
+);
 
 const labelledBy = computed(() => field.value?.labelledBy.value);
 
@@ -63,6 +71,7 @@ provideRadioGroup<T>({
   name: computed(() => name ?? attrs.value.id),
   modelValue: model,
   disabled: isDisabled,
+  readonly: isReadonly,
   invalid: isInvalid,
   select: (value) => {
     model.value = value;

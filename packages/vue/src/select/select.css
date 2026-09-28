@@ -64,6 +64,12 @@
   border-color: var(--nui-error);
   outline-color: var(--nui-error);
 }
+.nui-select--readonly .nui-select__trigger {
+  cursor: default;
+}
+.nui-select--readonly .nui-select__chevron {
+  display: none;
+}
 .nui-select--disabled .nui-select__trigger {
   opacity: var(--nui-disabled-opacity);
   cursor: not-allowed;

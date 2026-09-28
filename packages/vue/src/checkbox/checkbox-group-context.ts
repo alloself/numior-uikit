@@ -3,6 +3,7 @@ import { inject, provide, type ComputedRef, type InjectionKey } from 'vue';
 export interface CheckboxGroupContext {
   readonly name: ComputedRef<string | undefined>;
   readonly disabled: ComputedRef<boolean>;
+  readonly readonly: ComputedRef<boolean>;
   readonly invalid: ComputedRef<boolean>;
 }
 

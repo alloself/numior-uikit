@@ -9,7 +9,6 @@ export interface NuiTimeFieldProps extends NuiFieldControlProps {
   min?: string | undefined;
   max?: string | undefined;
   step?: number | undefined;
-  readonly?: boolean | undefined;
   name?: string | undefined;
   placement?: FloatingPlacement | undefined;
   clockLabel?: string | undefined;

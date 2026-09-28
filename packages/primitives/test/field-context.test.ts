@@ -41,9 +41,16 @@ describe('field context', () => {
     expect(field.invalid).toBe(false);
     expect(field.labelable).toBe(false);
     expect(field.disabled).toBe(true);
+    expect(field.readonly).toBe(false);
     hasError.value = true;
     await nextTick();
     expect(field.describedBy).toBe('plan-error');
     expect(field.invalid).toBe(true);
+  });
+
+  it('carries readonly beside disabled', () => {
+    const field = FieldHarness.inside({ id: 'code', readonly: true });
+    expect(field.readonly).toBe(true);
+    expect(field.disabled).toBe(false);
   });
 });

@@ -45,6 +45,10 @@ export class SwitchDriver extends ComponentDriver {
     await this.control.trigger('change');
   }
 
+  async click(): Promise<void> {
+    await this.control.trigger('click');
+  }
+
   async receiveModelValue(value: boolean): Promise<void> {
     await this.wrapper.setProps({ modelValue: value });
   }

@@ -56,6 +56,10 @@ const docs: DocsMap = {
         ru: 'Блокирует триггер; наследуется от поля.',
         en: 'Blocks the trigger; inherited from the field.',
       },
+      readonly: {
+        ru: 'Значение видно и читается, но список не открывается; наследуется от поля.',
+        en: 'The value stays visible and readable, but the list does not open; inherited from the field.',
+      },
       required: {
         ru: 'Помечает значение обязательным; наследуется от поля.',
         en: 'Marks the value as required; inherited from the field.',

@@ -6,7 +6,6 @@ export interface NuiNumberFieldProps extends NuiFieldControlProps {
   step?: number | undefined;
   formatOptions?: Intl.NumberFormatOptions | undefined;
   locale?: string | undefined;
-  readonly?: boolean | undefined;
   steppers?: boolean | undefined;
   name?: string | undefined;
   incrementLabel?: string | undefined;

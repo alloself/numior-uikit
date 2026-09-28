@@ -7,15 +7,19 @@ export interface FieldControlProps {
   readonly invalid?: boolean | undefined;
   readonly required?: boolean | undefined;
   readonly disabled?: boolean | undefined;
+  readonly readonly?: boolean | undefined;
   readonly label?: string | undefined;
   readonly description?: string | undefined;
   readonly error?: string | undefined;
 }
 
+export type FieldReadonlyAttr = 'readonly' | 'aria-readonly';
+
 export interface FieldControlOptions {
   readonly group?: boolean | undefined;
   readonly detached?: boolean | undefined;
   readonly inlineLabel?: boolean | undefined;
+  readonly readonlyAttr?: FieldReadonlyAttr | undefined;
   readonly commit?: (() => void) | undefined;
 }
 
@@ -31,8 +35,10 @@ export interface FieldControlAttrs {
   readonly id: string;
   readonly 'aria-describedby': string | undefined;
   readonly 'aria-invalid': 'true' | undefined;
+  readonly 'aria-readonly': 'true' | undefined;
   readonly required: boolean;
   readonly disabled: boolean;
+  readonly readonly: boolean;
 }
 
 export interface FieldControl {
@@ -40,6 +46,7 @@ export interface FieldControl {
   readonly invalid: ComputedRef<boolean>;
   readonly required: ComputedRef<boolean>;
   readonly disabled: ComputedRef<boolean>;
+  readonly readonly: ComputedRef<boolean>;
   readonly describedBy: ComputedRef<string | undefined>;
   readonly attrs: ComputedRef<FieldControlAttrs>;
   readonly field: ComputedRef<FieldContext | null>;
@@ -74,6 +81,7 @@ export const useFieldControl = (
     invalid: () => toValue(props).invalid,
     required: () => toValue(props).required,
     disabled: () => toValue(props).disabled,
+    readonly: () => toValue(props).readonly,
     hasLabel: () => options.inlineLabel !== true && hasText(ownTexts.value.label),
     hasDescription: () => hasText(ownTexts.value.description),
     hasError: () => hasText(ownTexts.value.error),
@@ -109,14 +117,22 @@ export const useFieldControl = (
     (source) => source.disabled.value,
   );
 
+  const readonly = resolve(
+    (current) => current.readonly,
+    (source) => source.readonly.value,
+  );
+
   const describedBy = computed(() => field.value?.describedBy.value);
+  const readonlyAsAria = options.readonlyAttr === 'aria-readonly';
 
   const attrs = computed<FieldControlAttrs>(() => ({
     id: id.value,
     'aria-describedby': describedBy.value,
     'aria-invalid': invalid.value ? 'true' : undefined,
+    'aria-readonly': readonlyAsAria && readonly.value ? 'true' : undefined,
     required: required.value,
     disabled: disabled.value,
+    readonly: !readonlyAsAria && readonly.value,
   }));
 
   const frame = computed<FieldFrame>(() => ({
@@ -125,5 +141,5 @@ export const useFieldControl = (
     ...ownTexts.value,
   }));
 
-  return { id, invalid, required, disabled, describedBy, attrs, field, own, frame };
+  return { id, invalid, required, disabled, readonly, describedBy, attrs, field, own, frame };
 };

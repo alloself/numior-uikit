@@ -28,6 +28,10 @@ export const fieldState: DescriptionMap = {
     ru: 'Выключает контрол; наследуется от поля.',
     en: 'Disables the control; inherited from the field.',
   },
+  readonly: {
+    ru: 'Значение видно, читается и копируется, но не меняется; наследуется от поля.',
+    en: 'The value stays visible, readable and copyable, but cannot change; inherited from the field.',
+  },
   required: {
     ru: 'Помечает значение обязательным; наследуется от поля.',
     en: 'Marks the value as required; inherited from the field.',

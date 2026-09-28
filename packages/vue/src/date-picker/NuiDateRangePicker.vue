@@ -7,7 +7,7 @@
       range
       :invalid="isInvalid"
       :disabled="isDisabled"
-      :readonly="readonly"
+      :readonly="isReadonly"
       :clearable="showClear"
       :open-label="texts.open"
       :clear-label="texts.clear"
@@ -24,7 +24,6 @@
         :max="max"
         :is-date-disabled="isDateDisabled"
         :placeholder="startPlaceholder"
-        :readonly="readonly"
         v-bind="{ ...controlAttrs, ...split.controlAttrs() }"
         @update:model-value="setStart"
         @keydown="onInputKeydown"
@@ -37,7 +36,7 @@
         :max="max"
         :is-date-disabled="isDateDisabled"
         :placeholder="endPlaceholder"
-        :readonly="readonly"
+        :readonly="isReadonly"
         :disabled="isDisabled"
         :label="texts.end"
         :aria-describedby="controlAttrs['aria-describedby']"
@@ -123,7 +122,7 @@ const {
   months = 2,
   today,
   clearable = false,
-  readonly = false,
+  readonly = undefined,
   placement = 'bottom-start',
   startPlaceholder,
   endPlaceholder,
@@ -151,6 +150,7 @@ const {
   controlAttrs,
   isInvalid,
   isDisabled,
+  isReadonly,
   locale,
   messages,
   month,
@@ -159,10 +159,9 @@ const {
   focusInput,
   onInputKeydown,
 } = useDatePickerShell({
-  control: () => ({ id, disabled, required, invalid, label, description, error }),
+  control: () => ({ id, disabled, readonly, required, invalid, label, description, error }),
   locale: () => localeProp,
   placement: () => placement,
-  readonly: () => readonly,
   focusDate: () => model.value.start,
 });
 
@@ -178,7 +177,7 @@ const showClear = computed(
     clearable &&
     (model.value.start !== null || model.value.end !== null) &&
     !isDisabled.value &&
-    !readonly,
+    !isReadonly.value,
 );
 
 const setStart = (date: string | null): void => {

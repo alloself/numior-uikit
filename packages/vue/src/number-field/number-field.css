@@ -101,7 +101,10 @@
   outline-color: var(--nui-error);
 }
 .nui-number-field--readonly .nui-number-field__steppers {
-  opacity: var(--nui-disabled-opacity);
+  display: none;
+}
+.nui-number-field--readonly .nui-number-field__control {
+  cursor: default;
 }
 .nui-number-field--disabled {
   opacity: var(--nui-disabled-opacity);

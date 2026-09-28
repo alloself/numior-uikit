@@ -34,8 +34,18 @@
   --_padding: var(--nui-field-padding-lg);
   --_font-size: var(--nui-control-font-size-lg);
 }
-.nui-date-picker:hover:not(.nui-date-picker--disabled, .nui-date-picker--invalid, :focus-within),
-.nui-time-field:hover:not(.nui-time-field--disabled, .nui-time-field--invalid, :focus-within) {
+.nui-date-picker:hover:not(
+    .nui-date-picker--disabled,
+    .nui-date-picker--readonly,
+    .nui-date-picker--invalid,
+    :focus-within
+  ),
+.nui-time-field:hover:not(
+    .nui-time-field--disabled,
+    .nui-time-field--readonly,
+    .nui-time-field--invalid,
+    :focus-within
+  ) {
   border-color: var(--nui-border-strong);
 }
 .nui-date-picker:focus-within,

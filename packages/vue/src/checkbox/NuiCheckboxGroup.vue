@@ -6,7 +6,11 @@
       class="nui-checkbox-group"
       :class="[
         `nui-checkbox-group--orientation-${orientation}`,
-        { 'nui-checkbox-group--invalid': isInvalid, 'nui-checkbox-group--disabled': isDisabled },
+        {
+          'nui-checkbox-group--invalid': isInvalid,
+          'nui-checkbox-group--disabled': isDisabled,
+          'nui-checkbox-group--readonly': isReadonly,
+        },
       ]"
       :aria-labelledby="labelledBy"
       :aria-describedby="attrs['aria-describedby']"
@@ -42,6 +46,7 @@ const {
   id,
   size = 'md',
   disabled = undefined,
+  readonly = undefined,
   required = undefined,
   invalid = undefined,
   label,
@@ -65,9 +70,11 @@ const {
   attrs,
   invalid: isInvalid,
   disabled: isDisabled,
-} = useFieldControl(() => ({ id, disabled, required, invalid, label, description, error }), {
-  group: true,
-});
+  readonly: isReadonly,
+} = useFieldControl(
+  () => ({ id, disabled, readonly, required, invalid, label, description, error }),
+  { group: true },
+);
 
 const labelledBy = computed(() => field.value?.labelledBy.value);
 const keyOf = (value: T): string => (getKey ?? defaultOptionKey)(value);
@@ -83,6 +90,7 @@ const toggle = (value: T, checked: boolean): void => {
 provideCheckboxGroup({
   name: computed(() => name ?? attrs.value.id),
   disabled: isDisabled,
+  readonly: isReadonly,
   invalid: isInvalid,
 });
 </script>

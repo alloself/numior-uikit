@@ -22,6 +22,7 @@ const classesOf = (props: NuiFieldFrameProps, field: FieldContext) => ({
   'nui-field--invalid': field.invalid.value,
   'nui-field--required': field.required.value,
   'nui-field--disabled': field.disabled.value,
+  'nui-field--readonly': field.readonly.value,
   'nui-field--reserve-error': props.reserveError === true,
 });
 

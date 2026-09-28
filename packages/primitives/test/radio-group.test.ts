@@ -17,6 +17,7 @@ describe('radio group context', () => {
           name: computed(() => 'plan'),
           modelValue: model,
           disabled: computed(() => false),
+          readonly: computed(() => false),
           invalid: computed(() => false),
           select: (value) => {
             model.value = value;

@@ -27,6 +27,25 @@ describe('useFieldControl', () => {
     expect(control.disabled).toBe(true);
   });
 
+  it('adopts readonly from the field as the native attribute or as aria-readonly', () => {
+    const native = ControlHarness.inside({ id: 'code', readonly: true });
+    expect(native.readonly).toBe(true);
+    expect(native.ariaReadonly).toBeUndefined();
+
+    const aria = ControlHarness.inside(
+      { id: 'plan', readonly: true },
+      {},
+      {
+        readonlyAttr: 'aria-readonly',
+      },
+    );
+
+    expect(aria.readonly).toBe(false);
+    expect(aria.ariaReadonly).toBe('true');
+    const released = ControlHarness.inside({ id: 'code', readonly: true }, { readonly: false });
+    expect(released.readonly).toBe(false);
+  });
+
   it('lets explicit props override the field', () => {
     const control = ControlHarness.inside(
       { id: 'name', hasError: true, required: true },

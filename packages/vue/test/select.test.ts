@@ -163,4 +163,21 @@ describe('NuiSelect', () => {
     expect(off.hiddenDisabled).toEqual([true]);
     off.unmount();
   });
+
+  it('keeps a readonly select closed while its value stays readable', async () => {
+    const select = SelectDriver.mount({
+      modelValue: 'lime',
+      props: { readonly: true, clearable: true },
+    });
+
+    expect(select.hasModifier('readonly')).toBe(true);
+    expect(select.trigger.attributes('aria-readonly')).toBe('true');
+    expect(select.trigger.attributes('popovertarget')).toBeUndefined();
+    expect(select.trigger.element.disabled).toBe(false);
+    expect(select.clearButton.exists()).toBe(false);
+    await select.pressTrigger('ArrowDown');
+    expect(select.expanded).toBe(false);
+    expect(select.valueText).toBe('Lime');
+    select.unmount();
+  });
 });

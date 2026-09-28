@@ -8,6 +8,7 @@
         {
           'nui-upload--dragging': drop.dragging.value,
           'nui-upload--disabled': isDisabled,
+          'nui-upload--readonly': isReadonly,
           'nui-upload--invalid': isInvalid,
           'nui-upload--busy': queue.busy.value,
         },
@@ -23,7 +24,7 @@
           aria-hidden="true"
           :accept="accept"
           :multiple="multiple"
-          :disabled="isDisabled"
+          :disabled="isInert"
           @click.stop
           @change="onChange"
         />
@@ -38,7 +39,7 @@
             class="nui-upload__browse"
             :aria-describedby="controlAttrs['aria-describedby']"
             :aria-invalid="controlAttrs['aria-invalid']"
-            :disabled="isDisabled"
+            :disabled="isInert"
             v-bind="split.controlAttrs()"
             @click="open"
           >
@@ -56,7 +57,7 @@
           :cancel-label="texts.cancel"
           :retry-label="texts.retry"
           :remove-label="texts.remove"
-          :disabled="isDisabled"
+          :disabled="isInert"
           @cancel="discard(item)"
           @retry="queue.retry(item.id)"
           @remove="discard(item)"
@@ -125,6 +126,7 @@ defineOptions({ inheritAttrs: false });
 const {
   id,
   disabled = undefined,
+  readonly = undefined,
   required = undefined,
   invalid = undefined,
   label,
@@ -169,7 +171,19 @@ const {
   attrs: controlAttrs,
   invalid: isInvalid,
   disabled: isDisabled,
-} = useFieldControl(() => ({ id, disabled, required, invalid, label, description, error }));
+  readonly: isReadonly,
+} = useFieldControl(() => ({
+  id,
+  disabled,
+  readonly,
+  required,
+  invalid,
+  label,
+  description,
+  error,
+}));
+
+const isInert = computed(() => isDisabled.value || isReadonly.value);
 
 const inputElement = useTemplateRef<HTMLInputElement>('input');
 const announcement = ref('');
@@ -232,7 +246,7 @@ const previewOf = (item: NuiUploadItem<R>): string | undefined =>
   previews.get(item.id) ?? (item.type.startsWith('image/') ? item.url : undefined);
 
 const discard = (item: NuiUploadItem<R>): void => {
-  if (isDisabled.value) {
+  if (isInert.value) {
     return;
   }
   forget(item.id);
@@ -241,7 +255,7 @@ const discard = (item: NuiUploadItem<R>): void => {
 };
 
 const receive = (files: File[]): void => {
-  if (isDisabled.value || files.length === 0) {
+  if (isInert.value || files.length === 0) {
     return;
   }
 
@@ -273,10 +287,10 @@ const receive = (files: File[]): void => {
   }
 };
 
-const drop = useFileDrop({ disabled: isDisabled, onFiles: receive });
+const drop = useFileDrop({ disabled: isInert, onFiles: receive });
 
 const open = (): void => {
-  if (!isDisabled.value) {
+  if (!isInert.value) {
     inputElement.value?.click();
   }
 };

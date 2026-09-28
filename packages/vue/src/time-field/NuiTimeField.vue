@@ -9,7 +9,7 @@
           'nui-time-field--open': open,
           'nui-time-field--invalid': isInvalid,
           'nui-time-field--disabled': isDisabled,
-          'nui-time-field--readonly': readonly,
+          'nui-time-field--readonly': isReadonly,
         },
       ]"
       v-bind="split.rootAttrs()"
@@ -48,7 +48,7 @@
             :tab-stop="index === firstSegment"
             :last="index === lastSegment"
             :disabled="isDisabled"
-            :readonly="readonly"
+            :readonly="isReadonly"
             :invalid="isInvalid"
             :required="isRequired"
             @char="onChar(segment.type, $event)"
@@ -65,7 +65,7 @@
         icon-only
         class="nui-time-field__clock"
         :aria-label="clockText"
-        :disabled="isDisabled || readonly"
+        :disabled="isDisabled || isReadonly"
         v-bind="control.invokerAttrs.value"
       >
         <NuiIcon alias="clock" />
@@ -143,7 +143,7 @@ const {
   min,
   max,
   step = 15,
-  readonly = false,
+  readonly = undefined,
   name,
   placement = 'bottom-start',
   clockLabel,
@@ -161,9 +161,11 @@ const {
   invalid: isInvalid,
   required: isRequired,
   disabled: isDisabled,
-} = useFieldControl(() => ({ id, disabled, required, invalid, label, description, error }), {
-  commit: () => times.settle(),
-});
+  readonly: isReadonly,
+} = useFieldControl(
+  () => ({ id, disabled, readonly, required, invalid, label, description, error }),
+  { commit: () => times.settle() },
+);
 
 const locale = useLocale(() => localeProp);
 const messages = useMessages(timeFieldMessages, locale);
@@ -244,7 +246,7 @@ const nextType = (type: TimeSegmentType): TimeSegmentType | null => {
 };
 
 const onChar = (type: TimeSegmentType, char: string): void => {
-  if (readonly) {
+  if (isReadonly.value) {
     return;
   }
   const target = flow.type ?? type;
@@ -321,7 +323,7 @@ const shiftByPage = (event: KeyboardEvent): boolean => {
     return false;
   }
   event.preventDefault();
-  if (!readonly) {
+  if (!isReadonly.value) {
     times.shift(event.key === 'PageUp' ? step : -step);
   }
   return true;
@@ -384,7 +386,7 @@ const wheelInput = computed(() => ({
 const columns = computed(() => wheelColumns(wheelInput.value));
 
 const setWheelTime = (time: TimeValue): void => {
-  if (!readonly && formatTimeModel(time, seconds) !== model.value) {
+  if (!isReadonly.value && formatTimeModel(time, seconds) !== model.value) {
     times.setTime(time);
   }
 };

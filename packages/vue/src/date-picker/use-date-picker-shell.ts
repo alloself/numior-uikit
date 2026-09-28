@@ -18,7 +18,6 @@ export interface DatePickerShellOptions {
   readonly control: () => FieldControlProps;
   readonly locale: () => string | undefined;
   readonly placement: () => FloatingPlacement;
-  readonly readonly: () => boolean;
   readonly focusDate: () => string | null;
 }
 
@@ -35,6 +34,7 @@ export interface DatePickerShell {
   readonly controlAttrs: ComputedRef<FieldControlAttrs>;
   readonly isInvalid: ComputedRef<boolean>;
   readonly isDisabled: ComputedRef<boolean>;
+  readonly isReadonly: ComputedRef<boolean>;
   readonly locale: ComputedRef<string>;
   readonly messages: ComputedRef<NuiDatePickerMessages>;
   readonly month: Ref<string | undefined>;
@@ -63,7 +63,7 @@ export const useDatePickerShell = (options: DatePickerShellOptions): DatePickerS
   });
 
   const canOpen = (): boolean =>
-    !popover.open.value && !options.readonly() && !control.disabled.value;
+    !popover.open.value && !control.readonly.value && !control.disabled.value;
 
   const onInputKeydown = (event: KeyboardEvent): void => {
     if (event.key === 'ArrowDown' && canOpen()) {
@@ -88,6 +88,7 @@ export const useDatePickerShell = (options: DatePickerShellOptions): DatePickerS
     controlAttrs: control.attrs,
     isInvalid: control.invalid,
     isDisabled: control.disabled,
+    isReadonly: control.readonly,
     locale,
     messages: useMessages(datePickerMessages, locale),
     month: ref<string>(),

@@ -6,11 +6,10 @@
       :class="[
         `nui-textarea--size-${size}`,
         `nui-textarea--resize-${resize}`,
-        { 'nui-textarea--invalid': isInvalid },
+        { 'nui-textarea--invalid': isInvalid, 'nui-textarea--readonly': isReadonly },
       ]"
       v-bind="{ ...controlAttrs, ...attrs }"
       :rows="rows"
-      :readonly="readonly || undefined"
       :value="draft"
       @input="onInput"
       @change="onChange"
@@ -38,7 +37,7 @@ const {
   reserveError = false,
   rows = 3,
   resize = 'vertical',
-  readonly = false,
+  readonly = undefined,
 } = defineProps<NuiTextareaProps>();
 
 const [model, modifiers] = defineModel<string, NuiTextareaModifiers>({ default: '' });
@@ -47,10 +46,12 @@ const attrs = useAttrs();
 const {
   attrs: controlAttrs,
   invalid: isInvalid,
+  readonly: isReadonly,
   frame: fieldFrame,
-} = useFieldControl(() => ({ id, disabled, required, invalid, label, description, error }), {
-  commit: () => commitDraft(),
-});
+} = useFieldControl(
+  () => ({ id, disabled, readonly, required, invalid, label, description, error }),
+  { commit: () => commitDraft() },
+);
 
 const textareaElement = useTemplateRef<HTMLTextAreaElement>('textarea');
 const draft = ref(model.value);

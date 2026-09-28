@@ -13,6 +13,7 @@ export type {
   FieldControl,
   FieldControlAttrs,
   FieldControlOptions,
+  FieldReadonlyAttr,
   FieldControlProps,
   FieldFrame,
 } from './field/useFieldControl';

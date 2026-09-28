@@ -79,6 +79,10 @@ export class CheckboxDriver extends ComponentDriver {
     await this.control.trigger('change');
   }
 
+  async click(): Promise<void> {
+    await this.control.trigger('click');
+  }
+
   async receive(props: NuiCheckboxProps & { modelValue?: boolean }) {
     await this.wrapper.setProps(props);
     await this.ready();

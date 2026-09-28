@@ -7,5 +7,4 @@ export type NuiTextareaModifiers = 'lazy' | 'trim';
 export interface NuiTextareaProps extends NuiFieldControlProps {
   rows?: number | undefined;
   resize?: NuiTextareaResize | undefined;
-  readonly?: boolean | undefined;
 }

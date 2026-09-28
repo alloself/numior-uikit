@@ -44,4 +44,15 @@ describe('NuiSwitch', () => {
 
     expect(control.wrapper.find('.nui-switch__label').text()).toBe('Имя');
   });
+
+  it('keeps a readonly switch focusable but unchanged on click', async () => {
+    const toggle = SwitchDriver.mount({ props: { readonly: true }, modelValue: false });
+    expect(toggle.hasModifier('readonly')).toBe(true);
+    expect(toggle.control.attributes('aria-readonly')).toBe('true');
+    expect(toggle.control.attributes('disabled')).toBeUndefined();
+    await toggle.click();
+    expect(toggle.checked).toBe(false);
+    expect(toggle.emittedModels).toEqual([]);
+    toggle.unmount();
+  });
 });

@@ -12,7 +12,6 @@ export interface NuiDatePickerBaseProps extends NuiFieldControlProps {
   months?: number | undefined;
   today?: string | undefined;
   clearable?: boolean | undefined;
-  readonly?: boolean | undefined;
   placement?: FloatingPlacement | undefined;
   openLabel?: string | undefined;
   clearLabel?: string | undefined;

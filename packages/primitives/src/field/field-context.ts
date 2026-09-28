@@ -19,6 +19,7 @@ export interface FieldContext {
   readonly invalid: ComputedRef<boolean>;
   readonly required: ComputedRef<boolean>;
   readonly disabled: ComputedRef<boolean>;
+  readonly readonly: ComputedRef<boolean>;
   readonly labelable: ComputedRef<boolean>;
 }
 
@@ -27,6 +28,7 @@ export interface FieldOptions {
   invalid?: MaybeRefOrGetter<boolean | undefined>;
   required?: MaybeRefOrGetter<boolean | undefined>;
   disabled?: MaybeRefOrGetter<boolean | undefined>;
+  readonly?: MaybeRefOrGetter<boolean | undefined>;
   hasLabel?: MaybeRefOrGetter<boolean | undefined>;
   hasDescription?: MaybeRefOrGetter<boolean | undefined>;
   hasError?: MaybeRefOrGetter<boolean | undefined>;
@@ -63,6 +65,7 @@ export const createFieldContext = (options: FieldOptions = {}): FieldContext => 
     invalid: computed(() => toValue(options.invalid) === true || hasError.value),
     required: flag(options.required),
     disabled: flag(options.disabled),
+    readonly: flag(options.readonly),
     labelable: computed(() => toValue(options.labelable) !== false),
   };
 };

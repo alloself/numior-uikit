@@ -6,6 +6,5 @@ export type NuiInputModifiers = 'lazy' | 'trim' | 'unmasked';
 
 export interface NuiInputProps extends NuiFieldControlProps {
   type?: NuiInputType | undefined;
-  readonly?: boolean | undefined;
   mask?: string | undefined;
 }

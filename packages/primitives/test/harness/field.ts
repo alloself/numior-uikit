@@ -66,6 +66,10 @@ export class FieldHarness {
     return this.context.disabled.value;
   }
 
+  get readonly(): boolean {
+    return this.context.readonly.value;
+  }
+
   get labelable(): boolean {
     return this.context.labelable.value;
   }
@@ -105,6 +109,14 @@ export class ControlHarness {
 
   get disabled(): boolean {
     return this.control.attrs.value.disabled;
+  }
+
+  get readonly(): boolean {
+    return this.control.attrs.value.readonly;
+  }
+
+  get ariaReadonly(): 'true' | undefined {
+    return this.control.attrs.value['aria-readonly'];
   }
 
   get own(): boolean {

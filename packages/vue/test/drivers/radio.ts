@@ -99,6 +99,10 @@ export class RadioGroupDriver extends ComponentDriver {
     await radio.trigger('change');
   }
 
+  async click(value: string): Promise<void> {
+    await this.radio(value).trigger('click');
+  }
+
   get emittedValues(): string[] {
     return (this.emitter.emitted('update:modelValue') ?? []).flatMap(([value]) =>
       typeof value === 'string' ? [value] : [],

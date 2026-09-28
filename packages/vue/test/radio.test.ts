@@ -52,4 +52,15 @@ describe('NuiRadioGroup and NuiRadio', () => {
       group: true,
     });
   });
+
+  it('keeps a readonly group announced as such and ignores clicks on other radios', async () => {
+    const group = RadioGroupDriver.mount({ props: { readonly: true }, modelValue: 'a' });
+    expect(group.hasModifier('readonly')).toBe(true);
+    expect(group.group.attributes('aria-readonly')).toBe('true');
+    expect(group.group.attributes('aria-disabled')).toBeUndefined();
+    await group.click('b');
+    expect(group.checkedValue).toBe('a');
+    expect(group.emittedValues).toEqual([]);
+    group.unmount();
+  });
 });

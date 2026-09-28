@@ -165,4 +165,16 @@ describe('NuiCombobox', () => {
       group: false,
     });
   });
+
+  it('keeps a readonly combobox closed with its text readable', async () => {
+    const combobox = ComboboxDriver.mount({ modelValue: 'apple', props: { readonly: true } });
+    expect(combobox.hasModifier('readonly')).toBe(true);
+    expect(combobox.input.attributes('readonly')).toBe('');
+    expect(combobox.input.attributes('disabled')).toBeUndefined();
+    await combobox.press('ArrowDown');
+    await combobox.clickField();
+    expect(combobox.expanded).toBe(false);
+    expect(combobox.text).toBe('Apple');
+    combobox.unmount();
+  });
 });

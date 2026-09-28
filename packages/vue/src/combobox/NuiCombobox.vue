@@ -9,6 +9,7 @@
           'nui-combobox--multiple': multiple,
           'nui-combobox--invalid': isInvalid,
           'nui-combobox--disabled': isDisabled,
+          'nui-combobox--readonly': isReadonly,
         },
       ]"
       v-bind="split.rootAttrs()"
@@ -19,7 +20,7 @@
           <NuiChip
             v-for="chip in chips"
             :key="chip.key"
-            removable
+            :removable="!isReadonly"
             :remove-tabbable="false"
             :remove-label="`${texts.remove} ${chip.label}`"
             :disabled="isDisabled"
@@ -65,7 +66,7 @@
           :aria-expanded="open ? 'true' : 'false'"
           :aria-controls="listboxId"
           tabindex="-1"
-          :disabled="isDisabled"
+          :disabled="isDisabled || isReadonly"
           @click="toggle"
         >
           <NuiIcon alias="chevron-down" class="nui-combobox__chevron" />
@@ -130,6 +131,7 @@ const {
   id,
   size = 'md',
   disabled = undefined,
+  readonly = undefined,
   required = undefined,
   invalid = undefined,
   label,
@@ -165,9 +167,11 @@ const {
   attrs: controlAttrs,
   invalid: isInvalid,
   disabled: isDisabled,
-} = useFieldControl(() => ({ id, disabled, required, invalid, label, description, error }), {
-  commit: () => commitDraft(),
-});
+  readonly: isReadonly,
+} = useFieldControl(
+  () => ({ id, disabled, readonly, required, invalid, label, description, error }),
+  { commit: () => commitDraft() },
+);
 
 const listboxId = computed(() => `${controlAttrs.value.id}-listbox`);
 
@@ -229,7 +233,9 @@ const filtered = computed(() => {
   return filterOptions(options, (option) => (filter ?? defaultFilter)(option, needle));
 });
 
-const showClear = computed(() => clearable && selectedValues.value.length > 0 && !isDisabled.value);
+const showClear = computed(
+  () => clearable && selectedValues.value.length > 0 && !isDisabled.value && !isReadonly.value,
+);
 
 const open = ref(false);
 const fieldElement = useTemplateRef<HTMLElement>('field');
@@ -404,7 +410,7 @@ const KEY_HANDLERS: Record<string, (event: KeyboardEvent) => void> = {
 };
 
 const onKeydown = (event: KeyboardEvent): void => {
-  if (isComposing(event)) {
+  if (isComposing(event) || isReadonly.value) {
     return;
   }
 
@@ -415,7 +421,7 @@ const onKeydown = (event: KeyboardEvent): void => {
 
 const onFieldClick = (event: MouseEvent): void => {
   const onButton = event.target instanceof Element && event.target.closest('button') !== null;
-  if (isDisabled.value || onButton) {
+  if (isDisabled.value || isReadonly.value || onButton) {
     return;
   }
   focusInput();

@@ -4,6 +4,7 @@ export interface NuiFieldControlProps {
   id?: string | undefined;
   size?: NuiSize | undefined;
   disabled?: boolean | undefined;
+  readonly?: boolean | undefined;
   required?: boolean | undefined;
   invalid?: boolean | undefined;
   label?: string | undefined;

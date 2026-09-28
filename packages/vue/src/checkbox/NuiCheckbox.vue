@@ -9,6 +9,7 @@
           'nui-checkbox--indeterminate': indeterminate,
           'nui-checkbox--invalid': isInvalid,
           'nui-checkbox--disabled': isDisabled,
+          'nui-checkbox--readonly': isReadonly,
         },
       ]"
       v-bind="split.rootAttrs()"
@@ -20,6 +21,7 @@
         v-bind="{ ...controlAttrs, ...split.controlAttrs(), ...groupName }"
         :value="value"
         :checked="model"
+        @click="onClick"
         @change="onChange"
       />
       <span class="nui-checkbox__box">
@@ -46,6 +48,7 @@ const {
   id,
   size = 'md',
   disabled = undefined,
+  readonly = undefined,
   required = undefined,
   invalid = undefined,
   label,
@@ -65,17 +68,19 @@ const {
   attrs: controlAttrs,
   invalid: isInvalid,
   disabled: isDisabled,
+  readonly: isReadonly,
 } = useFieldControl(
   () => ({
     id,
     required,
     disabled: disabled ?? group?.disabled.value,
+    readonly: readonly ?? group?.readonly.value,
     invalid: invalid ?? group?.invalid.value,
     label,
     description,
     error,
   }),
-  { detached: group !== null, inlineLabel: true },
+  { detached: group !== null, inlineLabel: true, readonlyAttr: 'aria-readonly' },
 );
 
 const groupName = computed(() => {
@@ -90,6 +95,12 @@ watchPostEffect(() => {
     checkboxElement.value.indeterminate = indeterminate;
   }
 });
+
+const onClick = (event: MouseEvent): void => {
+  if (isReadonly.value) {
+    event.preventDefault();
+  }
+};
 
 const onChange = (): void => {
   const element = checkboxElement.value;

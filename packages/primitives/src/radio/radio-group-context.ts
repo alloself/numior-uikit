@@ -4,6 +4,7 @@ export interface RadioGroupContext<T = unknown> {
   readonly name: ComputedRef<string>;
   readonly modelValue: Ref<T | undefined>;
   readonly disabled: ComputedRef<boolean>;
+  readonly readonly: ComputedRef<boolean>;
   readonly invalid: ComputedRef<boolean>;
   select(value: T): void;
 }

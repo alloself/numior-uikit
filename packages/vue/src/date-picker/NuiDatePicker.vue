@@ -6,7 +6,7 @@
       :size="size"
       :invalid="isInvalid"
       :disabled="isDisabled"
-      :readonly="readonly"
+      :readonly="isReadonly"
       :clearable="showClear"
       :open-label="texts.open"
       :clear-label="texts.clear"
@@ -24,7 +24,6 @@
         :is-date-disabled="isDateDisabled"
         :time="time"
         :placeholder="placeholder"
-        :readonly="readonly"
         v-bind="{ ...controlAttrs, ...split.controlAttrs() }"
         @update:model-value="setValue"
         @keydown="onInputKeydown"
@@ -103,7 +102,7 @@ const {
   months = 1,
   today,
   clearable = false,
-  readonly = false,
+  readonly = undefined,
   placement = 'bottom-start',
   placeholder,
   name,
@@ -133,6 +132,7 @@ const {
   controlAttrs,
   isInvalid,
   isDisabled,
+  isReadonly,
   locale,
   messages,
   month,
@@ -141,10 +141,9 @@ const {
   focusInput,
   onInputKeydown,
 } = useDatePickerShell({
-  control: () => ({ id, disabled, required, invalid, label, description, error }),
+  control: () => ({ id, disabled, readonly, required, invalid, label, description, error }),
   locale: () => localeProp,
   placement: () => placement,
-  readonly: () => readonly,
   focusDate: () => dateValue.value,
 });
 
@@ -155,7 +154,7 @@ const texts = computed(() => ({
 }));
 
 const showClear = computed(
-  () => clearable && model.value !== null && !isDisabled.value && !readonly,
+  () => clearable && model.value !== null && !isDisabled.value && !isReadonly.value,
 );
 
 const setValue = (value: string | null): void => {

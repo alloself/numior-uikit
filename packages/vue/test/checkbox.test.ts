@@ -121,4 +121,28 @@ describe('NuiCheckboxGroup', () => {
     expect(group.group.attributes('role')).toBe('group');
     expect(group.group.attributes('aria-required')).toBeUndefined();
   });
+
+  it('keeps a readonly checkbox focusable but unchanged on click, also inside a group', async () => {
+    const checkbox = CheckboxDriver.mount({ props: { readonly: true }, modelValue: false });
+    await checkbox.ready();
+    expect(checkbox.hasModifier('readonly')).toBe(true);
+    expect(checkbox.control.attributes('aria-readonly')).toBe('true');
+    expect(checkbox.control.attributes('readonly')).toBeUndefined();
+    expect(checkbox.control.attributes('disabled')).toBeUndefined();
+    await checkbox.click();
+    expect(checkbox.checked).toBe(false);
+    expect(checkbox.emittedModels).toEqual([]);
+    checkbox.unmount();
+
+    const group = CheckboxGroupDriver.mount({ props: { readonly: true }, modelValue: ['a'] });
+    expect(group.hasModifier('readonly')).toBe(true);
+
+    expect(group.checkboxes.map((box) => box.attributes('aria-readonly'))).toEqual([
+      'true',
+      'true',
+      'true',
+    ]);
+
+    group.unmount();
+  });
 });

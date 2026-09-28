@@ -53,6 +53,13 @@
   border-color: var(--nui-error);
   outline-color: var(--nui-error);
 }
+.nui-combobox--readonly .nui-combobox__field,
+.nui-combobox--readonly .nui-combobox__input {
+  cursor: default;
+}
+.nui-combobox--readonly .nui-combobox__toggle {
+  display: none;
+}
 .nui-combobox--disabled .nui-combobox__field {
   opacity: var(--nui-disabled-opacity);
   cursor: not-allowed;

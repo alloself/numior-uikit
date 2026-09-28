@@ -4,7 +4,11 @@
       class="nui-input"
       :class="[
         `nui-input--size-${size}`,
-        { 'nui-input--invalid': isInvalid, 'nui-input--disabled': isDisabled },
+        {
+          'nui-input--invalid': isInvalid,
+          'nui-input--disabled': isDisabled,
+          'nui-input--readonly': isReadonly,
+        },
       ]"
       v-bind="split.rootAttrs()"
     >
@@ -16,7 +20,6 @@
         class="nui-input__control"
         v-bind="{ ...controlAttrs, ...split.controlAttrs() }"
         :type="type"
-        :readonly="readonly || undefined"
         :value="draft"
         @input="onInput"
         @change="onChange"
@@ -50,7 +53,7 @@ const {
   error,
   reserveError = false,
   type = 'text',
-  readonly = false,
+  readonly = undefined,
   mask,
 } = defineProps<NuiInputProps>();
 
@@ -62,9 +65,11 @@ const {
   attrs: controlAttrs,
   invalid: isInvalid,
   disabled: isDisabled,
-} = useFieldControl(() => ({ id, disabled, required, invalid, label, description, error }), {
-  commit: () => commitDraft(),
-});
+  readonly: isReadonly,
+} = useFieldControl(
+  () => ({ id, disabled, readonly, required, invalid, label, description, error }),
+  { commit: () => commitDraft() },
+);
 
 const inputElement = useTemplateRef<HTMLInputElement>('input');
 const display = (value: string): string => (mask ? applyMask(value, mask).masked : value);

@@ -7,7 +7,7 @@
         {
           'nui-number-field--invalid': isInvalid,
           'nui-number-field--disabled': isDisabled,
-          'nui-number-field--readonly': readonly,
+          'nui-number-field--readonly': isReadonly,
           'nui-number-field--steppers': steppers,
         },
       ]"
@@ -28,7 +28,6 @@
         :aria-valuemin="min"
         :aria-valuemax="max"
         :aria-valuetext="valueText || undefined"
-        :readonly="readonly || undefined"
         :value="draft"
         @beforeinput="onBeforeinput"
         @input="onInput"
@@ -113,7 +112,7 @@ const {
   step = 1,
   formatOptions,
   locale: localeProp,
-  readonly = false,
+  readonly = undefined,
   steppers = true,
   name,
   incrementLabel,
@@ -128,9 +127,11 @@ const {
   attrs: controlAttrs,
   invalid: isInvalid,
   disabled: isDisabled,
-} = useFieldControl(() => ({ id, disabled, required, invalid, label, description, error }), {
-  commit: () => commit(),
-});
+  readonly: isReadonly,
+} = useFieldControl(
+  () => ({ id, disabled, readonly, required, invalid, label, description, error }),
+  { commit: () => commit() },
+);
 
 const inputElement = useTemplateRef<HTMLInputElement>('input');
 const locale = useLocale(() => localeProp);
@@ -148,14 +149,14 @@ const valueText = computed(() => format(model.value));
 const canIncrement = computed(
   () =>
     !isDisabled.value &&
-    !readonly &&
+    !isReadonly.value &&
     (max === undefined || model.value === null || model.value < max),
 );
 
 const canDecrement = computed(
   () =>
     !isDisabled.value &&
-    !readonly &&
+    !isReadonly.value &&
     (min === undefined || model.value === null || model.value > min),
 );
 
@@ -187,7 +188,7 @@ const commit = (): void => {
 };
 
 const stepBy = (steps: number): void => {
-  if (isDisabled.value || readonly) {
+  if (isDisabled.value || isReadonly.value) {
     return;
   }
   apply(stepNumber(parse(draft.value), steps, { step, min, max }));
@@ -214,7 +215,7 @@ const onKeydown = (event: KeyboardEvent): void => {
     commit();
     return;
   }
-  if (isDisabled.value || readonly) {
+  if (isDisabled.value || isReadonly.value) {
     return;
   }
   if (event.key === 'Home' && min !== undefined) {

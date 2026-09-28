@@ -29,6 +29,7 @@ const {
   invalid = false,
   required = false,
   disabled = false,
+  readonly = false,
   group = false,
   reserveError = false,
 } = defineProps<NuiFieldProps>();
@@ -43,6 +44,7 @@ const field = provideField({
   invalid: () => invalid,
   required: () => required,
   disabled: () => disabled,
+  readonly: () => readonly,
   hasLabel,
   hasDescription,
   hasError,

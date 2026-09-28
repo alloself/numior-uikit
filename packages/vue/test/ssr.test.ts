@@ -131,6 +131,13 @@ const renderSelect = () =>
     }),
   );
 
+const renderReadonlySelect = () =>
+  h(NuiSelect, {
+    modelValue: 'banana',
+    readonly: true,
+    options: [{ value: 'banana', label: 'Banana' }],
+  });
+
 const renderCombobox = () =>
   h(NuiField, { label: 'Fruit' }, () =>
     h(NuiCombobox, {
@@ -668,6 +675,7 @@ describe('server rendering', () => {
     expect(html).toContain('aria-selected="true"');
     expect(html).toContain('class="nui-select__value"');
     expect(html).toContain('Banana');
+    expect(await renderMarkup(renderReadonlySelect)).toContain('aria-readonly="true"');
   });
 
   it('renders a calendar grid with one tab stop and a deterministic today marker', async () => {

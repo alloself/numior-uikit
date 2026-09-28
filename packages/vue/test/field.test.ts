@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { h } from 'vue';
+import { NuiInput } from '../src';
 import { FieldDriver } from './drivers/field';
 
 describe('NuiField', () => {
@@ -90,5 +91,20 @@ describe('NuiField', () => {
     expect(field.error.text()).toBe('Too long');
     expect(field.describedBy).toBe('bio-description bio-error');
     expect(field.ariaInvalid).toBe('true');
+  });
+
+  it('passes readonly to its control and lets the control release it', () => {
+    const field = FieldDriver.mount({ props: { label: 'Code', readonly: true } });
+    expect(field.hasModifier('readonly')).toBe(true);
+    expect(field.control.attributes('readonly')).toBe('');
+    field.unmount();
+
+    const released = FieldDriver.mount({
+      props: { label: 'Code', readonly: true },
+      control: () => h(NuiInput, { readonly: false }),
+    });
+
+    expect(released.control.attributes('readonly')).toBeUndefined();
+    released.unmount();
   });
 });

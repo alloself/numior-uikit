@@ -8,6 +8,7 @@
           'nui-switch--checked': model,
           'nui-switch--invalid': isInvalid,
           'nui-switch--disabled': isDisabled,
+          'nui-switch--readonly': isReadonly,
         },
       ]"
       v-bind="split.rootAttrs()"
@@ -19,6 +20,7 @@
         class="nui-switch__control"
         v-bind="{ ...controlAttrs, ...split.controlAttrs() }"
         :checked="model"
+        @click="onClick"
         @change="onChange"
       />
       <span class="nui-switch__track">
@@ -43,6 +45,7 @@ const {
   id,
   size = 'md',
   disabled = undefined,
+  readonly = undefined,
   required = undefined,
   invalid = undefined,
   label,
@@ -59,11 +62,19 @@ const {
   attrs: controlAttrs,
   invalid: isInvalid,
   disabled: isDisabled,
-} = useFieldControl(() => ({ id, disabled, required, invalid, label, description, error }), {
-  inlineLabel: true,
-});
+  readonly: isReadonly,
+} = useFieldControl(
+  () => ({ id, disabled, readonly, required, invalid, label, description, error }),
+  { inlineLabel: true, readonlyAttr: 'aria-readonly' },
+);
 
 const switchElement = useTemplateRef<HTMLInputElement>('switch');
+
+const onClick = (event: MouseEvent): void => {
+  if (isReadonly.value) {
+    event.preventDefault();
+  }
+};
 
 const onChange = (): void => {
   const element = switchElement.value;

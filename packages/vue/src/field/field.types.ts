@@ -8,6 +8,7 @@ export interface NuiFieldProps {
   invalid?: boolean | undefined;
   required?: boolean | undefined;
   disabled?: boolean | undefined;
+  readonly?: boolean | undefined;
   group?: boolean | undefined;
   reserveError?: boolean | undefined;
 }
