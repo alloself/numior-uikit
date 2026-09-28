@@ -1,0 +1,10 @@
+{
+  "build a number store and sort": { "p95Ms": 650 },
+  "build a date store and sort": { "p95Ms": 600 },
+  "build a low-cardinality string store and sort": { "p95Ms": 450 },
+  "build a unique string store and sort": { "p95Ms": 6000 },
+  "sort numbers with a warm store": { "p95Ms": 600 },
+  "sort strings with a warm store": { "p95Ms": 400 },
+  "sort unique strings with a warm store": { "p95Ms": 400 },
+  "multi-sort country, city and amount with warm stores": { "p95Ms": 1100 }
+}

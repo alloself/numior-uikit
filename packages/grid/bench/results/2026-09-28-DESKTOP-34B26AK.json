@@ -1,0 +1,79 @@
+{
+  "recordedAt": "2026-09-28T17:39:14.812Z",
+  "dataset": "1000000 generated rows, 20 columns, seed 1",
+  "device": {
+    "host": "DESKTOP-34B26AK",
+    "cpu": "13th Gen Intel(R) Core(TM) i9-13900KF",
+    "cores": 32,
+    "memoryGb": 31,
+    "platform": "linux 6.6.87.2-microsoft-standard-WSL2",
+    "node": "v24.21.0"
+  },
+  "heapUsedMb": 547,
+  "operations": [
+    {
+      "name": "build a number store and sort",
+      "samples": 3,
+      "meanMs": 410.66381399999995,
+      "p50Ms": 406.472978,
+      "p95Ms": 420.9744519999999,
+      "maxMs": 420.9744519999999
+    },
+    {
+      "name": "build a date store and sort",
+      "samples": 3,
+      "meanMs": 352.48183033333333,
+      "p50Ms": 336.5756970000002,
+      "p95Ms": 386.2716519999999,
+      "maxMs": 386.2716519999999
+    },
+    {
+      "name": "build a low-cardinality string store and sort",
+      "samples": 3,
+      "meanMs": 252.81194499999978,
+      "p50Ms": 243.55240299999969,
+      "p95Ms": 272.36257899999964,
+      "maxMs": 272.36257899999964
+    },
+    {
+      "name": "build a unique string store and sort",
+      "samples": 1,
+      "meanMs": 3818.753277,
+      "p50Ms": 3818.753277,
+      "p95Ms": 3818.753277,
+      "maxMs": 3818.753277
+    },
+    {
+      "name": "sort numbers with a warm store",
+      "samples": 5,
+      "meanMs": 379.11394540000003,
+      "p50Ms": 378.103787,
+      "p95Ms": 391.37323000000106,
+      "maxMs": 391.37323000000106
+    },
+    {
+      "name": "sort strings with a warm store",
+      "samples": 5,
+      "meanMs": 246.73258300000015,
+      "p50Ms": 242.7131330000011,
+      "p95Ms": 264.7684169999993,
+      "maxMs": 264.7684169999993
+    },
+    {
+      "name": "sort unique strings with a warm store",
+      "samples": 5,
+      "meanMs": 257.6672014000011,
+      "p50Ms": 256.64451400000326,
+      "p95Ms": 263.3270580000026,
+      "maxMs": 263.3270580000026
+    },
+    {
+      "name": "multi-sort country, city and amount with warm stores",
+      "samples": 5,
+      "meanMs": 646.3547046,
+      "p50Ms": 668.715064,
+      "p95Ms": 705.2167489999993,
+      "maxMs": 705.2167489999993
+    }
+  ]
+}

@@ -160,6 +160,19 @@ const formsTypes = (await readdir('packages/forms/dist', { recursive: true })).f
 
 assert.ok(formsTypes.length > 0, 'forms must ship declarations');
 
+await importBuild('grid', ['createGridEngine']);
+
+const gridEngineFile = resolve('packages/grid/dist/engine.js');
+const gridEngine = await import(pathToFileURL(gridEngineFile).href);
+
+assert.equal(typeof gridEngine.createGridEngine, 'function', 'grid/engine must export the engine');
+
+assert.doesNotMatch(
+  await readFile(gridEngineFile, 'utf8'),
+  /from ['"]vue['"]/,
+  'the grid engine must not import vue',
+);
+
 const nuxtModule = await import(pathToFileURL(resolve('packages/nuxt/dist/module.js')).href);
 
 assert.equal(typeof nuxtModule.default, 'function', 'nuxt must export the module');

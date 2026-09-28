@@ -1,0 +1,26 @@
+{
+  "name": "@numior/grid",
+  "version": "0.0.0",
+  "private": true,
+  "license": "MIT",
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "@numior/source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./engine": {
+      "@numior/source": "./src/engine/index.ts",
+      "types": "./dist/engine/index.d.ts",
+      "import": "./dist/engine.js"
+    }
+  },
+  "scripts": {
+    "build": "vite build && vue-tsc -p tsconfig.build.json"
+  }
+}

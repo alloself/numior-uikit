@@ -32,7 +32,10 @@
     "release:dry-run": "semantic-release --dry-run",
     "release:check": "node --test scripts/release/*.test.mjs",
     "commitlint": "commitlint",
-    "test:nuxt": "vitest run --config packages/nuxt/vitest.config.ts"
+    "test:nuxt": "vitest run --config packages/nuxt/vitest.config.ts",
+    "bench": "pnpm bench:engine",
+    "bench:engine": "pnpm --filter @numior/grid build && node packages/grid/bench/engine.bench.ts",
+    "bench:check": "node scripts/bench-check.mjs grid"
   },
   "devDependencies": {
     "@axe-core/playwright": "4.13.0",

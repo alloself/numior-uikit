@@ -195,6 +195,8 @@ importers:
         specifier: 4.6.5
         version: 4.6.5
 
+  packages/grid: {}
+
   packages/nuxt:
     dependencies:
       '@numior/forms':
