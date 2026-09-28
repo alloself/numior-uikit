@@ -161,9 +161,9 @@ export const BENCH_COLUMNS: readonly GridEngineColumn<BenchRow>[] = [
   { kind: 'string', key: 'city', value: (row) => row.city },
   { kind: 'string', key: 'country', value: (row) => row.country },
   { kind: 'string', key: 'status', value: (row) => row.status },
-  { kind: 'number', key: 'amount', value: (row) => row.amount },
-  { kind: 'number', key: 'qty', value: (row) => row.qty },
-  { kind: 'number', key: 'price', value: (row) => row.price },
+  { kind: 'number', key: 'amount', value: (row) => row.amount, aggregate: 'sum' },
+  { kind: 'number', key: 'qty', value: (row) => row.qty, aggregate: 'count' },
+  { kind: 'number', key: 'price', value: (row) => row.price, aggregate: 'avg' },
   { kind: 'number', key: 'discount', value: (row) => row.discount },
   { kind: 'date', key: 'created', value: (row) => row.created },
   { kind: 'date', key: 'updated', value: (row) => row.updated },
@@ -176,3 +176,44 @@ export const BENCH_COLUMNS: readonly GridEngineColumn<BenchRow>[] = [
   { kind: 'string', key: 'notes', value: (row) => row.notes },
   { kind: 'number', key: 'score', value: (row) => row.score },
 ];
+
+export interface BenchNode {
+  readonly id: number;
+  readonly name: string;
+  readonly size: number;
+  readonly items?: readonly BenchNode[];
+}
+
+export const TREE_COLUMNS: readonly GridEngineColumn<BenchNode>[] = [
+  { kind: 'string', key: 'name', value: (row) => row.name },
+  { kind: 'number', key: 'size', value: (row) => row.size, aggregate: 'sum' },
+];
+
+export const generateTree = (count: number, seed = 2): BenchNode[] => {
+  const random = mulberry32(seed);
+  const cursor = { next: 0 };
+
+  const node = (depth: number): BenchNode => {
+    const id = cursor.next;
+    cursor.next += 1;
+    const width = depth === 0 ? 10 : depth === 1 ? 9 : 0;
+    const items: BenchNode[] = [];
+
+    for (let index = 0; index < width && cursor.next < count; index += 1) {
+      items.push(node(depth + 1));
+    }
+    return {
+      id,
+      name: `node ${Math.floor(random() * 1_000_000)}`,
+      size: Math.floor(random() * 10_000),
+      ...(items.length > 0 ? { items } : {}),
+    };
+  };
+
+  const roots: BenchNode[] = [];
+
+  while (cursor.next < count) {
+    roots.push(node(0));
+  }
+  return roots;
+};

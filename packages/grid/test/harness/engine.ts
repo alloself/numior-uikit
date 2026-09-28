@@ -2,6 +2,8 @@ import {
   createGridEngine,
   type GridEngine,
   type GridEngineColumn,
+  type GridNode,
+  type GridNodeId,
   type GridProgress,
   type GridQuery,
   type GridRunResult,
@@ -29,13 +31,133 @@ export const PEOPLE: readonly Person[] = [
   { name: 'Анна', age: 35, born: new Date('1990-07-15'), active: false },
 ];
 
+export interface Order {
+  readonly id: number;
+  readonly city: string | null;
+  readonly country: string;
+  readonly amount: number | null;
+  readonly paid: boolean | null;
+  readonly created: Date | null;
+  readonly note: string | null;
+}
+
+export const ORDERS: readonly Order[] = [
+  {
+    id: 1,
+    city: 'Moscow',
+    country: 'RU',
+    amount: 100,
+    paid: true,
+    created: new Date('2024-01-05'),
+    note: 'urgent',
+  },
+  {
+    id: 2,
+    city: 'Kazan',
+    country: 'RU',
+    amount: 250,
+    paid: false,
+    created: new Date('2024-02-10'),
+    note: null,
+  },
+  { id: 3, city: 'Yerevan', country: 'AM', amount: null, paid: null, created: null, note: '' },
+  {
+    id: 4,
+    city: 'Moscow',
+    country: 'RU',
+    amount: 75,
+    paid: true,
+    created: new Date('2024-03-15'),
+    note: 'Gift',
+  },
+  {
+    id: 5,
+    city: null,
+    country: 'KZ',
+    amount: 300,
+    paid: false,
+    created: new Date('2023-12-31'),
+    note: 'gift wrap',
+  },
+  {
+    id: 6,
+    city: 'Almaty',
+    country: 'KZ',
+    amount: 120,
+    paid: true,
+    created: new Date('2024-01-20'),
+    note: 'URGENT call',
+  },
+];
+
+export const ORDER_COLUMNS: readonly GridEngineColumn<Order>[] = [
+  { kind: 'number', key: 'id', value: (row) => row.id },
+  { kind: 'string', key: 'city', value: (row) => row.city },
+  { kind: 'string', key: 'country', value: (row) => row.country },
+  { kind: 'number', key: 'amount', value: (row) => row.amount },
+  { kind: 'boolean', key: 'paid', value: (row) => row.paid },
+  { kind: 'date', key: 'created', value: (row) => row.created },
+  { kind: 'string', key: 'note', value: (row) => row.note },
+];
+
+export const ORDER_TOTALS: readonly GridEngineColumn<Order>[] = [
+  { kind: 'number', key: 'id', value: (row) => row.id, aggregate: 'count' },
+  { kind: 'string', key: 'city', value: (row) => row.city },
+  { kind: 'string', key: 'country', value: (row) => row.country },
+  { kind: 'number', key: 'amount', value: (row) => row.amount, aggregate: 'sum' },
+  { kind: 'number', key: 'average', value: (row) => row.amount, aggregate: 'avg' },
+  { kind: 'number', key: 'largest', value: (row) => row.amount, aggregate: 'max' },
+  {
+    kind: 'string',
+    key: 'note',
+    value: (row) => row.note,
+    aggregate: (rows, indices) =>
+      Array.from(indices, (index) => rows[index]?.note ?? '·').join('|'),
+  },
+];
+
+export interface Folder {
+  readonly name: string;
+  readonly size: number | null;
+  readonly items?: readonly Folder[];
+}
+
+export const FOLDERS: readonly Folder[] = [
+  {
+    name: 'docs',
+    size: null,
+    items: [
+      { name: 'plan.md', size: 3 },
+      { name: 'adr.md', size: 5 },
+      { name: 'old', size: null, items: [{ name: 'notes.txt', size: 1 }] },
+    ],
+  },
+  {
+    name: 'src',
+    size: null,
+    items: [
+      { name: 'index.ts', size: 8 },
+      { name: 'app.vue', size: 13 },
+    ],
+  },
+  { name: 'readme.md', size: 2 },
+];
+
+export const FOLDER_COLUMNS: readonly GridEngineColumn<Folder>[] = [
+  { kind: 'string', key: 'name', value: (row) => row.name },
+  { kind: 'number', key: 'size', value: (row) => row.size },
+];
+
 const tick = (): Promise<void> =>
   new Promise((resolve) => {
     setTimeout(resolve, 0);
   });
 
-export interface EngineHarnessOptions {
+export interface EngineHarnessOptions<T> {
   readonly sliceMs?: number;
+  readonly keyOf?: (row: T) => GridNodeId;
+  readonly children?: (row: T) => readonly T[] | null | undefined;
+  readonly defaultExpanded?: boolean;
 }
 
 export class EngineHarness<T> {
@@ -46,10 +168,13 @@ export class EngineHarness<T> {
   constructor(
     columns: readonly GridEngineColumn<T>[],
     rows: readonly T[],
-    options: EngineHarnessOptions = {},
+    options: EngineHarnessOptions<T> = {},
   ) {
     this.engine = createGridEngine({
       columns,
+      keyOf: options.keyOf,
+      children: options.children,
+      defaultExpanded: options.defaultExpanded,
       sliceMs: options.sliceMs ?? 12,
       collator: new Intl.Collator('ru', { numeric: true }),
       yieldTo: () =>
@@ -98,20 +223,28 @@ export class EngineHarness<T> {
     return pending;
   }
 
-  async runToEnd(query: GridQuery): Promise<GridRunResult> {
+  runToEnd(query: GridQuery): Promise<GridRunResult> {
     return this.settle(this.run(query));
   }
 
-  visible<K extends keyof T>(field: K): T[K][] {
-    const values: T[K][] = [];
+  nodes(): GridNode<T>[] {
+    const list: GridNode<T>[] = [];
 
     for (let position = 0; position < this.engine.count(); position += 1) {
       const node = this.engine.nodeAt(position);
 
       if (node !== undefined) {
-        values.push(node.row[field]);
+        list.push(node);
       }
     }
-    return values;
+    return list;
+  }
+
+  visible<K extends keyof T>(field: K): T[K][] {
+    return this.nodes().flatMap((node) => (node.kind === 'row' ? [node.row[field]] : []));
+  }
+
+  render(label: (node: GridNode<T>) => string): string[] {
+    return this.nodes().map(label);
   }
 }

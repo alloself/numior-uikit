@@ -1,5 +1,5 @@
 {
-  "recordedAt": "2026-09-28T17:39:14.812Z",
+  "recordedAt": "2026-09-28T18:07:38.217Z",
   "dataset": "1000000 generated rows, 20 columns, seed 1",
   "device": {
     "host": "DESKTOP-34B26AK",
@@ -9,71 +9,135 @@
     "platform": "linux 6.6.87.2-microsoft-standard-WSL2",
     "node": "v24.21.0"
   },
-  "heapUsedMb": 547,
+  "heapUsedMb": 615,
   "operations": [
     {
       "name": "build a number store and sort",
       "samples": 3,
-      "meanMs": 410.66381399999995,
-      "p50Ms": 406.472978,
-      "p95Ms": 420.9744519999999,
-      "maxMs": 420.9744519999999
+      "meanMs": 395.88357766666667,
+      "p50Ms": 394.5311200000001,
+      "p95Ms": 400.20683599999984,
+      "maxMs": 400.20683599999984
     },
     {
       "name": "build a date store and sort",
       "samples": 3,
-      "meanMs": 352.48183033333333,
-      "p50Ms": 336.5756970000002,
-      "p95Ms": 386.2716519999999,
-      "maxMs": 386.2716519999999
+      "meanMs": 369.6257693333334,
+      "p50Ms": 370.73605399999997,
+      "p95Ms": 384.61792400000013,
+      "maxMs": 384.61792400000013
     },
     {
       "name": "build a low-cardinality string store and sort",
       "samples": 3,
-      "meanMs": 252.81194499999978,
-      "p50Ms": 243.55240299999969,
-      "p95Ms": 272.36257899999964,
-      "maxMs": 272.36257899999964
+      "meanMs": 323.6280239999999,
+      "p50Ms": 321.1022720000001,
+      "p95Ms": 331.66757899999993,
+      "maxMs": 331.66757899999993
     },
     {
       "name": "build a unique string store and sort",
       "samples": 1,
-      "meanMs": 3818.753277,
-      "p50Ms": 3818.753277,
-      "p95Ms": 3818.753277,
-      "maxMs": 3818.753277
+      "meanMs": 3727.5678130000006,
+      "p50Ms": 3727.5678130000006,
+      "p95Ms": 3727.5678130000006,
+      "maxMs": 3727.5678130000006
     },
     {
       "name": "sort numbers with a warm store",
       "samples": 5,
-      "meanMs": 379.11394540000003,
-      "p50Ms": 378.103787,
-      "p95Ms": 391.37323000000106,
-      "maxMs": 391.37323000000106
+      "meanMs": 392.31695679999973,
+      "p50Ms": 394.55327599999873,
+      "p95Ms": 404.6099800000011,
+      "maxMs": 404.6099800000011
     },
     {
       "name": "sort strings with a warm store",
       "samples": 5,
-      "meanMs": 246.73258300000015,
-      "p50Ms": 242.7131330000011,
-      "p95Ms": 264.7684169999993,
-      "maxMs": 264.7684169999993
+      "meanMs": 268.2756879999994,
+      "p50Ms": 266.0374819999997,
+      "p95Ms": 274.6960629999994,
+      "maxMs": 274.6960629999994
     },
     {
       "name": "sort unique strings with a warm store",
       "samples": 5,
-      "meanMs": 257.6672014000011,
-      "p50Ms": 256.64451400000326,
-      "p95Ms": 263.3270580000026,
-      "maxMs": 263.3270580000026
+      "meanMs": 284.8566866000001,
+      "p50Ms": 283.8874280000018,
+      "p95Ms": 289.38586399999986,
+      "maxMs": 289.38586399999986
     },
     {
       "name": "multi-sort country, city and amount with warm stores",
       "samples": 5,
-      "meanMs": 646.3547046,
-      "p50Ms": 668.715064,
-      "p95Ms": 705.2167489999993,
-      "maxMs": 705.2167489999993
+      "meanMs": 642.3335663999991,
+      "p50Ms": 645.6664449999989,
+      "p95Ms": 661.0373550000004,
+      "maxMs": 661.0373550000004
+    },
+    {
+      "name": "filter city contains \"an\" with a warm store",
+      "samples": 5,
+      "meanMs": 11.700528400000621,
+      "p50Ms": 10.909833000001527,
+      "p95Ms": 13.824783000000025,
+      "maxMs": 13.824783000000025
+    },
+    {
+      "name": "filter amount between 1000 and 50000 with a warm store",
+      "samples": 5,
+      "meanMs": 40.97216499999922,
+      "p50Ms": 41.7418800000014,
+      "p95Ms": 42.22206399999777,
+      "maxMs": 42.22206399999777
+    },
+    {
+      "name": "filter status in a set with a warm store",
+      "samples": 5,
+      "meanMs": 35.94856400000062,
+      "p50Ms": 36.42210799999884,
+      "p95Ms": 39.23594299999968,
+      "maxMs": 39.23594299999968
+    },
+    {
+      "name": "group by country with sum, count and avg on warm stores",
+      "samples": 5,
+      "meanMs": 297.2336541999997,
+      "p50Ms": 294.68627299999935,
+      "p95Ms": 306.4794469999979,
+      "maxMs": 306.4794469999979
+    },
+    {
+      "name": "totals of sum, count and avg over all rows on warm stores",
+      "samples": 5,
+      "meanMs": 66.4939403999997,
+      "p50Ms": 56.6109260000012,
+      "p95Ms": 109.70913400000063,
+      "maxMs": 109.70913400000063
+    },
+    {
+      "name": "group by country and city with aggregates on warm stores",
+      "samples": 5,
+      "meanMs": 558.569746399999,
+      "p50Ms": 553.8634609999972,
+      "p95Ms": 594.9358319999992,
+      "maxMs": 594.9358319999992
+    },
+    {
+      "name": "flatten a 100,000 node tree, sort siblings and walk it",
+      "samples": 3,
+      "meanMs": 234.5942153333332,
+      "p50Ms": 233.32595199999923,
+      "p95Ms": 238.7542859999994,
+      "maxMs": 238.7542859999994
+    },
+    {
+      "name": "collapse and expand a root of the 100,000 node tree",
+      "samples": 10,
+      "meanMs": 12.777906499999517,
+      "p50Ms": 12.576229999998759,
+      "p95Ms": 14.527837000001455,
+      "maxMs": 14.527837000001455
     }
   ]
 }

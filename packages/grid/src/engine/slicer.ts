@@ -55,7 +55,13 @@ export const yieldToHost = (): Promise<void> => {
   return fallbackYield();
 };
 
+const interrupted = (options: SliceOptions): boolean =>
+  options.signal?.aborted === true || options.isStale?.() === true;
+
 export const runSliced = async (job: SliceJob, options: SliceOptions): Promise<boolean> => {
+  if (interrupted(options)) {
+    return false;
+  }
   for (;;) {
     if (job.work(performance.now() + options.sliceMs)) {
       options.onProgress?.(job.total(), job.total());
@@ -64,7 +70,7 @@ export const runSliced = async (job: SliceJob, options: SliceOptions): Promise<b
     options.onProgress?.(job.done(), job.total());
     await options.yieldTo();
 
-    if (options.signal?.aborted === true || options.isStale?.() === true) {
+    if (interrupted(options)) {
       return false;
     }
   }

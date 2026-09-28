@@ -22,7 +22,7 @@ describe('createGridEngine', () => {
       ],
     });
 
-    expect(result).toEqual({ kind: 'done', count: 5 });
+    expect(result).toEqual({ kind: 'done', count: 5, rows: 5 });
     expect(harness.visible('age')).toEqual([29, 29, 35, 41, null]);
     expect(harness.visible('name')).toEqual(['Борис', null, 'Анна', 'Вера', 'анна']);
     expect(harness.phases).toEqual(['keys', 'sort']);
@@ -48,7 +48,17 @@ describe('createGridEngine', () => {
     harness.engine.setRows(PEOPLE.slice(0, 2));
     expect(harness.engine.store('age')).toBeUndefined();
     expect(harness.engine.count()).toBe(2);
-    expect(harness.engine.nodeAt(1)).toEqual({ kind: 'row', index: 1, row: PEOPLE[1], level: 0 });
+
+    expect(harness.engine.nodeAt(1)).toEqual({
+      kind: 'row',
+      id: 1,
+      index: 1,
+      row: PEOPLE[1],
+      level: 0,
+      expandable: false,
+      expanded: false,
+    });
+
     expect(harness.engine.nodeAt(2)).toBeUndefined();
 
     await expect(harness.run({ sort: [{ key: 'height', direction: 'asc' }] })).rejects.toThrow(
@@ -72,7 +82,7 @@ describe('createGridEngine', () => {
     const second = harness.run({ sort: [{ key: 'age', direction: 'desc' }] });
 
     expect(await harness.settle(first)).toEqual({ kind: 'cancelled' });
-    expect(await harness.settle(second)).toEqual({ kind: 'done', count: 20_000 });
+    expect(await harness.settle(second)).toEqual({ kind: 'done', count: 20_000, rows: 20_000 });
     const ages = harness.visible('age');
     expect(ages[0]).toBe(96);
     expect(ages.at(-1)).toBe(0);

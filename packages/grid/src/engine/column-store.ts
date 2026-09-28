@@ -161,7 +161,14 @@ const createStringStoreJob = <T>(
       }
       return assign(deadline);
     },
-    result: () => ({ kind: 'string', ranks: ranks ?? new Uint32Array(0), nulls, dictionary }),
+    result: () => ({
+      kind: 'string',
+      codes,
+      ranks: ranks ?? new Uint32Array(0),
+      nulls,
+      dictionary,
+      sortedCodes: order ?? new Uint32Array(0),
+    }),
   };
 };
 

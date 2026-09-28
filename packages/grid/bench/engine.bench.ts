@@ -1,5 +1,17 @@
-import { createGridEngine, type GridEngine, type GridSort } from '@numior/grid/engine';
-import { BENCH_COLUMNS, generateRows, type BenchRow } from './dataset.ts';
+import {
+  createGridEngine,
+  type GridEngine,
+  type GridFilter,
+  type GridSort,
+} from '@numior/grid/engine';
+import {
+  BENCH_COLUMNS,
+  TREE_COLUMNS,
+  generateRows,
+  generateTree,
+  type BenchNode,
+  type BenchRow,
+} from './dataset.ts';
 import { measure, record, type Operation } from './harness.ts';
 
 const ROWS = 1_000_000;
@@ -104,6 +116,108 @@ operations.push(
     { key: 'country', direction: 'desc' },
     { key: 'city', direction: 'asc' },
     { key: 'amount', direction: 'asc' },
+  ),
+);
+
+const warmFilters = await warmed({ key: 'city', direction: 'asc' });
+await warmFilters.run({ sort: [{ key: 'status', direction: 'asc' }] });
+await warmFilters.run({ sort: [{ key: 'amount', direction: 'asc' }] });
+
+const filterOnly = (name: string, ...filters: GridFilter[]): Promise<Operation> =>
+  measure(
+    name,
+    async () => {
+      await warmFilters.run({ filters });
+    },
+    light,
+  );
+
+operations.push(
+  await filterOnly('filter city contains "an" with a warm store', {
+    kind: 'text',
+    key: 'city',
+    op: 'contains',
+    value: 'an',
+  }),
+);
+
+operations.push(
+  await filterOnly('filter amount between 1000 and 50000 with a warm store', {
+    kind: 'number',
+    key: 'amount',
+    min: 1000,
+    max: 50_000,
+  }),
+);
+
+operations.push(
+  await filterOnly('filter status in a set with a warm store', {
+    kind: 'set',
+    key: 'status',
+    values: ['active', 'paused'],
+  }),
+);
+
+operations.push(
+  await measure(
+    'group by country with sum, count and avg on warm stores',
+    async () => {
+      await warmMulti.run({ groupBy: ['country'] });
+    },
+    light,
+  ),
+);
+
+operations.push(
+  await measure(
+    'totals of sum, count and avg over all rows on warm stores',
+    async () => {
+      await warmMulti.run({ totals: true });
+    },
+    light,
+  ),
+);
+
+operations.push(
+  await measure(
+    'group by country and city with aggregates on warm stores',
+    async () => {
+      await warmMulti.run({ groupBy: ['country', 'city'] });
+    },
+    light,
+  ),
+);
+
+const TREE_NODES = 100_000;
+const tree = generateTree(TREE_NODES);
+
+const treeEngine = (): GridEngine<BenchNode> =>
+  createGridEngine({ columns: TREE_COLUMNS, children: (row) => row.items, keyOf: (row) => row.id });
+
+operations.push(
+  await measure(
+    `flatten a ${TREE_NODES.toLocaleString('en-US')} node tree, sort siblings and walk it`,
+    async () => {
+      const engine = treeEngine();
+      engine.setRows(tree);
+      await engine.run({ sort: [{ key: 'name', direction: 'asc' }] });
+    },
+    heavy,
+  ),
+);
+
+const walkable = treeEngine();
+walkable.setRows(tree);
+await walkable.run({ sort: [{ key: 'size', direction: 'desc' }] });
+
+operations.push(
+  await measure(
+    `collapse and expand a root of the ${TREE_NODES.toLocaleString('en-US')} node tree`,
+    async () => {
+      walkable.toggle(0);
+      walkable.toggle(0);
+    },
+    { iterations: 10, warmup: 2 },
   ),
 );
 
