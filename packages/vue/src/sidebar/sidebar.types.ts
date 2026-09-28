@@ -5,7 +5,7 @@ import type { NuiListEntry } from '../shared/options';
 
 export type NuiSidebarCollapsible = 'icon' | 'offcanvas' | 'none';
 export type NuiSidebarSide = 'start' | 'end';
-export type NuiSidebarVariant = 'panel' | 'plain';
+export type NuiSidebarVariant = 'panel' | 'plain' | 'inset' | 'floating';
 
 export interface NuiSidebarProps {
   collapsible?: NuiSidebarCollapsible | undefined;

@@ -21,6 +21,15 @@
         </select>
       </label>
       <label
+        >Вид
+        <select v-model="variant" data-testid="layout-variant">
+          <option value="panel">Панель</option>
+          <option value="plain">Без фона</option>
+          <option value="inset">На подложке</option>
+          <option value="floating">Плавающая</option>
+        </select>
+      </label>
+      <label
         >Панель
         <select v-model="header" data-testid="layout-header">
           <option value="inset">Рядом с боковой</option>
@@ -50,7 +59,7 @@
         data-testid="layout"
       >
         <template #sidebar>
-          <NuiSidebar :collapsible="collapsible" :side="side" label="Разделы">
+          <NuiSidebar :collapsible="collapsible" :side="side" :variant="variant" label="Разделы">
             <NuiSidebarHeader>
               <div class="layout-brand">
                 <span class="layout-brand__mark" aria-hidden="true">N</span>
@@ -148,6 +157,7 @@ import {
   type NuiLayoutHeader,
   type NuiSidebarCollapsible,
   type NuiSidebarSide,
+  type NuiSidebarVariant,
 } from '@numior/vue';
 
 interface PrimaryItem {
@@ -173,6 +183,7 @@ const titles: Record<string, string> = {
 
 const collapsible = ref<NuiSidebarCollapsible>('icon');
 const side = ref<NuiSidebarSide>('start');
+const variant = ref<NuiSidebarVariant>('panel');
 const header = ref<NuiLayoutHeader>('inset');
 const withEnd = ref(false);
 const open = ref(true);
@@ -188,6 +199,7 @@ const output = computed(() =>
       active: active.value,
       collapsible: collapsible.value,
       side: side.value,
+      variant: variant.value,
     },
     null,
     2,

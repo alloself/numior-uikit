@@ -103,6 +103,53 @@ test.describe('layout', () => {
     await playground.setDirection('ltr');
   });
 
+  test('inset puts the content into a card and floating frames the sidebar', async ({
+    page,
+    isMobile,
+  }) => {
+    const playground = new PlaygroundPage(page);
+    await playground.open();
+    const { layout } = playground;
+    await layout.root.scrollIntoViewIfNeeded();
+    await layout.variant.selectOption('inset');
+    if (isMobile) {
+      expect((await layout.bodyInsets()).start).toBeLessThan(1);
+      expect(await layout.bodyRadius()).toBe(0);
+      await layout.trigger.click();
+      await expect(layout.drawer).toBeVisible();
+      return;
+    }
+    await expect.poll(async () => (await layout.bodyInsets()).top).toBeGreaterThanOrEqual(7);
+    expect((await layout.bodyInsets()).end).toBeGreaterThanOrEqual(7);
+    expect((await layout.bodyInsets()).start).toBeGreaterThan(200);
+    expect(await layout.bodyRadius()).toBeGreaterThan(0);
+    const surfaces = await layout.surfaces();
+    expect(surfaces.frame).not.toBe(surfaces.body);
+    expect((await layout.sidebarFrame()).padding).toBeGreaterThanOrEqual(7);
+    await layout.collapsible.selectOption('offcanvas');
+    await layout.trigger.click();
+    await expect.poll(() => layout.sidebarWidth()).toBeLessThan(1);
+    await expect.poll(async () => (await layout.bodyInsets()).start).toBeGreaterThanOrEqual(7);
+    await layout.trigger.click();
+    await layout.collapsible.selectOption('icon');
+    await layout.variant.selectOption('floating');
+    const frame = await layout.sidebarFrame();
+    expect(frame.border).toBe(1);
+    expect(frame.radius).toBeGreaterThan(0);
+    expect(frame.padding).toBeGreaterThanOrEqual(8);
+    await expect.poll(async () => (await layout.bodyInsets()).top).toBeLessThan(1);
+    await layout.trigger.click();
+    await expect.poll(() => layout.sidebarWidth()).toBeLessThan(90);
+    await expect.poll(() => layout.iconOffset(layout.item('overview'))).toBeLessThan(1);
+    await layout.trigger.click();
+    await playground.setDirection('rtl');
+    const rtlBox = await layout.sidebar.boundingBox();
+    const rtlBody = await layout.content().boundingBox();
+    expect(rtlBox && rtlBody && rtlBox.x > rtlBody.x).toBe(true);
+    await playground.setDirection('ltr');
+    await layout.variant.selectOption('panel');
+  });
+
   test('sidebar becomes a drawer on small screens and closes after navigation', async ({
     page,
     isMobile,

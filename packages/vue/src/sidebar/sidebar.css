@@ -20,6 +20,7 @@
   transition:
     inline-size var(--nui-duration-normal) var(--nui-easing),
     border-inline-width var(--nui-duration-normal) var(--nui-easing),
+    padding-inline var(--nui-duration-normal) var(--nui-easing),
     visibility 0s var(--nui-easing);
 }
 .nui-sidebar--side-end {
@@ -41,14 +42,46 @@
   background: transparent;
   color: var(--nui-primary);
 }
+.nui-sidebar--variant-inset:not(.nui-sidebar--mobile),
+.nui-sidebar--variant-floating:not(.nui-sidebar--mobile) {
+  --_gap: var(--_inset-gap, var(--nui-space-2));
+  --_frame: 0px;
+
+  position: relative;
+  isolation: isolate;
+  padding: calc(var(--_gap) + var(--_frame));
+  border: 0;
+  background: transparent;
+}
+.nui-sidebar--variant-floating:not(.nui-sidebar--mobile) {
+  --_frame: 1px;
+}
+.nui-sidebar--variant-floating:not(.nui-sidebar--mobile)::before {
+  content: '';
+  position: absolute;
+  inset: var(--_gap);
+  z-index: -1;
+  border: var(--_frame) solid var(--nui-border);
+  border-radius: var(--_inset-radius, var(--nui-radius-lg));
+  background: var(--nui-surface-muted);
+  box-shadow: var(--nui-shadow-sm);
+}
 .nui-sidebar--rail {
   inline-size: var(--_rail);
+}
+.nui-sidebar--rail.nui-sidebar--variant-inset:not(.nui-sidebar--mobile),
+.nui-sidebar--rail.nui-sidebar--variant-floating:not(.nui-sidebar--mobile) {
+  inline-size: calc(var(--_rail) + 2 * (var(--_gap) + var(--_frame)));
+}
+.nui-sidebar--collapsed.nui-sidebar--collapsible-offcanvas.nui-sidebar--variant-inset,
+.nui-sidebar--collapsed.nui-sidebar--collapsible-offcanvas.nui-sidebar--variant-floating {
+  padding-inline: 0;
 }
 .nui-sidebar--collapsed.nui-sidebar--collapsible-offcanvas {
   inline-size: 0;
   border-inline-width: 0;
   visibility: hidden;
-  transition-delay: 0s, 0s, var(--nui-duration-normal);
+  transition-delay: 0s, 0s, 0s, var(--nui-duration-normal);
 }
 .nui-sidebar--mobile {
   inline-size: 100%;

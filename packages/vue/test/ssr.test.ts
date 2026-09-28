@@ -738,7 +738,7 @@ describe('server rendering', () => {
         { id: 'shell', contentAs: 'div' },
         {
           sidebar: () =>
-            h(NuiSidebar, { collapsible: 'icon', label: 'Sections' }, () =>
+            h(NuiSidebar, { collapsible: 'icon', variant: 'inset', label: 'Sections' }, () =>
               h(NuiSidebarContent, () =>
                 h(NuiSidebarGroup, { label: 'Overview' }, () => [
                   h(NuiSidebarItem, { label: 'Inbox', icon: 'inbox', current: true }),
@@ -754,6 +754,7 @@ describe('server rendering', () => {
     );
 
     expect(html).toContain('<aside');
+    expect(html).toContain('nui-sidebar--variant-inset');
     expect(html).toContain('aria-label="Sections"');
     expect(html).toContain('aria-expanded="true"');
     expect(html).toContain('aria-controls="shell-sidebar"');

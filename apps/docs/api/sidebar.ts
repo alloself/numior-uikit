@@ -14,8 +14,8 @@ const docs: DocsMap = {
         en: 'Sidebar at the start or the end of the row; follows the reading direction.',
       },
       variant: {
-        ru: 'Панель с фоном и рамкой или без них.',
-        en: 'A panel with a background and border, or plain.',
+        ru: 'Вид: панель с фоном и рамкой, без них, на подложке с содержимым в карточке или плавающая карточка.',
+        en: 'Look: a panel with a background and border, plain, on a backdrop with the content in a card, or a floating card.',
       },
       label: {
         ru: 'Доступное имя панели; по умолчанию из словаря.',

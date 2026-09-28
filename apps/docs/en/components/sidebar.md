@@ -23,6 +23,20 @@ the sidebar of this documentation is built this way.
 
 <Example name="sidebar/Plain" />
 
+### On a backdrop
+
+`variant="inset"` puts the sidebar on a muted background and the layout content into a raised
+card with rounded corners. The icon rail and off canvas work as usual.
+
+<Example name="sidebar/Inset" />
+
+### Floating
+
+`variant="floating"` draws the sidebar as a card with a border and a shadow, set off from the
+frame edges.
+
+<Example name="sidebar/Floating" />
+
 ## Behaviour
 
 In the icon rail the item labels show up as tooltips, and pressing a sub list expands the

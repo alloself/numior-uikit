@@ -131,12 +131,17 @@ describe('NuiLayout with NuiSidebar', () => {
     layout.unmount();
   });
 
-  it('renders a plain sidebar without the panel surface', () => {
-    const layout = LayoutDriver.mount({ variant: 'plain' });
+  it('renders the plain, inset and floating looks as modifiers of the panel', () => {
+    for (const variant of ['plain', 'inset', 'floating'] as const) {
+      const layout = LayoutDriver.mount({ variant });
 
-    expect(layout.sidebarModifier('variant-plain')).toBe(true);
-    expect(LayoutDriver.mount().sidebarModifier('variant-panel')).toBe(true);
-    layout.unmount();
+      expect(layout.sidebarModifier(`variant-${variant}`)).toBe(true);
+      layout.unmount();
+    }
+    const panel = LayoutDriver.mount();
+
+    expect(panel.sidebarModifier('variant-panel')).toBe(true);
+    panel.unmount();
   });
 
   it('names the sidebar, its trigger and the drawer in the configured language', async () => {

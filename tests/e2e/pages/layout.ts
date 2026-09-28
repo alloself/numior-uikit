@@ -14,6 +14,7 @@ const isLayoutOutput = shapeOf({
   active: isString,
   collapsible: isString,
   side: isString,
+  variant: isString,
 });
 
 export type LayoutOutput = Guarded<typeof isLayoutOutput>;
@@ -29,6 +30,7 @@ export class LayoutSection {
   readonly heading: Locator;
   readonly collapsible: Locator;
   readonly side: Locator;
+  readonly variant: Locator;
   readonly subToggle: Locator;
   readonly header: Locator;
   readonly endToggle: Locator;
@@ -46,6 +48,7 @@ export class LayoutSection {
     this.heading = page.getByTestId('layout-heading');
     this.collapsible = page.getByTestId('layout-collapsible');
     this.side = page.getByTestId('layout-side');
+    this.variant = page.getByTestId('layout-variant');
     this.subToggle = page.getByTestId('layout-sub');
     this.header = page.getByTestId('layout-header');
     this.endToggle = page.getByTestId('layout-end-toggle');
@@ -115,6 +118,44 @@ export class LayoutSection {
     const [frame, end] = await Promise.all([boxOf(this.root), boxOf(this.endColumn)]);
 
     return Math.abs(end.x + end.width - (frame.x + frame.width));
+  }
+
+  async bodyInsets(): Promise<{ start: number; end: number; top: number }> {
+    const [frame, body] = await Promise.all([boxOf(this.root), boxOf(this.content())]);
+
+    return {
+      start: body.x - frame.x,
+      end: frame.x + frame.width - (body.x + body.width),
+      top: body.y - frame.y,
+    };
+  }
+
+  bodyRadius(): Promise<number> {
+    return this.content().evaluate((element) =>
+      Number.parseFloat(getComputedStyle(element).borderStartStartRadius),
+    );
+  }
+
+  async surfaces(): Promise<{ frame: string; body: string }> {
+    const [frame, body] = await Promise.all([
+      this.root.evaluate((element) => getComputedStyle(element).backgroundColor),
+      this.content().evaluate((element) => getComputedStyle(element).backgroundColor),
+    ]);
+
+    return { frame, body };
+  }
+
+  sidebarFrame(): Promise<{ padding: number; border: number; radius: number }> {
+    return this.sidebar.evaluate((element) => {
+      const own = getComputedStyle(element);
+      const card = getComputedStyle(element, '::before');
+
+      return {
+        padding: Number.parseFloat(own.paddingInlineStart),
+        border: Number.parseFloat(card.borderTopWidth) || 0,
+        radius: Number.parseFloat(card.borderTopLeftRadius) || 0,
+      };
+    });
   }
 
   async readOutput(): Promise<LayoutOutput> {
