@@ -26,7 +26,8 @@
         v-bind="{
           ...controlAttrs,
           ...split.controlAttrs(),
-          ...(isReadonly ? {} : control.invokerAttrs.value),
+          ...control.invokerAttrs.value,
+          ...readonlyInvoker,
         }"
         @keydown="onTriggerKeydown"
       >
@@ -178,6 +179,7 @@ const showClear = computed(
 
 const open = ref(false);
 const triggerElement = useTemplateRef<HTMLButtonElement>('trigger');
+const readonlyInvoker = computed(() => (isReadonly.value ? { popovertarget: undefined } : {}));
 
 const { listboxElement, setListbox, control, navigation, activateHovered, restActive } =
   useListboxSurface({

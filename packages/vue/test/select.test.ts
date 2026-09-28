@@ -173,6 +173,8 @@ describe('NuiSelect', () => {
     expect(select.hasModifier('readonly')).toBe(true);
     expect(select.trigger.attributes('aria-readonly')).toBe('true');
     expect(select.trigger.attributes('popovertarget')).toBeUndefined();
+    expect(select.trigger.attributes('aria-expanded')).toBe('false');
+    expect(select.trigger.attributes('aria-controls')).toBeTruthy();
     expect(select.trigger.element.disabled).toBe(false);
     expect(select.clearButton.exists()).toBe(false);
     await select.pressTrigger('ArrowDown');
