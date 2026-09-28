@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
 import { createFormEngine } from '../src/engine/form-engine';
-import { veeValidateEngine } from '../src/vee-validate';
 import { EngineHarness } from './harness/engine';
 
 const marked = ['Taken'];
@@ -12,10 +11,9 @@ interface Draft {
 
 const stale: Draft = { name: 'Ann', stale: true };
 
-describe.each([
-  ['own engine', createFormEngine],
-  ['vee-validate 5.0.0-beta.1 engine', veeValidateEngine],
-])('%s contract', (_, factory) => {
+const factory = createFormEngine;
+
+describe('form engine contract', () => {
   it('seeds the store from a copy and exposes it read-only', () => {
     const initial = { name: 'Ann', tags: ['a'] };
     const harness = EngineHarness.mount(factory, initial, ['name']);

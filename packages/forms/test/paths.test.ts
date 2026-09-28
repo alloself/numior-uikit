@@ -1,13 +1,6 @@
 import { describe, expect, expectTypeOf, it } from 'vitest';
 import type { FormAfterSlotPath, FormPath, FormSlotPath } from '../src';
-import {
-  isUnder,
-  joinPath,
-  matchesPattern,
-  normalizePath,
-  patternOf,
-  toVeePath,
-} from '../src/paths/paths';
+import { isUnder, joinPath, matchesPattern, normalizePath, patternOf } from '../src/paths/paths';
 
 interface Team {
   name: string;
@@ -35,12 +28,6 @@ describe('paths', () => {
     expect(matchesPattern('items.3.name', 'items.*.name')).toBe(true);
     expect(matchesPattern('items.x.name', 'items.*.name')).toBe(false);
     expect(matchesPattern('items.3', 'items.*.name')).toBe(false);
-  });
-
-  it('speaks the bracket form vee-validate keys its state with', () => {
-    expect(toVeePath('items.0.name')).toBe('items[0].name');
-    expect(toVeePath('matrix.1.2')).toBe('matrix[1][2]');
-    expect(toVeePath('name')).toBe('name');
   });
 
   it('names smart form slots by the paths of a row, without row indexes', () => {

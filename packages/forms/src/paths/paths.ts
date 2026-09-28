@@ -55,11 +55,3 @@ export const matchesPattern = (path: string, pattern: string): boolean => {
     expected.every((segment, index) => segmentMatches(segments[index], segment))
   );
 };
-
-export const toVeePath = (path: string): string =>
-  segmentsOf(path).reduce((result, segment) => {
-    if (isIndexSegment(segment)) {
-      return `${result}[${segment}]`;
-    }
-    return result === '' ? segment : `${result}.${segment}`;
-  }, '');

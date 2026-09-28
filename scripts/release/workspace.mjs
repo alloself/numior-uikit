@@ -14,22 +14,6 @@ const repositoryUrl = (options) => {
 };
 
 const PRERELEASE = /\d+\.\d+\.\d+-[0-9A-Za-z.-]+/;
-const PRERELEASE_FLOOR = /^>=\d+\.\d+\.\d+-[0-9A-Za-z.-]+ <\d+\.\d+\.\d+$/;
-
-const optionalPeers = (manifest) =>
-  new Set(
-    Object.entries({ ...manifest.peerDependenciesMeta })
-      .filter(([, meta]) => meta.optional === true)
-      .map(([name]) => name),
-  );
-
-const assertStable = (manifest, name, range) => {
-  assert.doesNotMatch(
-    String(range),
-    PRERELEASE,
-    `${manifest.name} has a prerelease dependency ${name}@${range}`,
-  );
-};
 
 const packages = async (cwd) => {
   const entries = await readdir(join(cwd, 'packages'), { withFileTypes: true });
@@ -46,22 +30,17 @@ const packages = async (cwd) => {
   return result;
 };
 
-const isPrereleaseFloor = (floors, name, range) =>
-  floors.has(name) && PRERELEASE_FLOOR.test(String(range));
-
-const assertStablePeers = (manifest, floors) => {
-  for (const [name, range] of Object.entries({ ...manifest.peerDependencies })) {
-    if (!isPrereleaseFloor(floors, name, range)) {
-      assertStable(manifest, name, range);
-    }
-  }
-};
-
 const assertStableDependencies = (manifest) => {
-  for (const [name, range] of Object.entries({ ...manifest.dependencies })) {
-    assertStable(manifest, name, range);
+  for (const [name, range] of Object.entries({
+    ...manifest.dependencies,
+    ...manifest.peerDependencies,
+  })) {
+    assert.doesNotMatch(
+      String(range),
+      PRERELEASE,
+      `${manifest.name} has a prerelease dependency ${name}@${range}`,
+    );
   }
-  assertStablePeers(manifest, optionalPeers(manifest));
 };
 
 export const verifyConditions = async (_config, context) => {

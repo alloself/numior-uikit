@@ -16,11 +16,6 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
-    "./vee-validate": {
-      "@numior/source": "./src/vee-validate.ts",
-      "types": "./dist/vee-validate.d.ts",
-      "import": "./dist/vee-validate.js"
-    },
     "./styles.css": {
       "@numior/source": "./src/styles.css",
       "default": "./dist/styles.css"
@@ -41,18 +36,10 @@
   "devDependencies": {
     "@types/lodash-es": "4.17.12",
     "@vue/test-utils": "2.5.1",
-    "vee-validate": "5.0.0-beta.1",
     "zod": "4.6.5"
   },
   "peerDependencies": {
     "@numior/tokens": "workspace:*",
-    "vee-validate": ">=5.0.0-beta.1 <6.0.0",
     "vue": "^3.5.0"
-  },
-  "peerDependenciesMeta": {
-    "vee-validate": {
-      "optional": true
-    }
-  },
-  "//": "vee-validate is only an optional peer of @numior/forms/vee-validate; the range starts at the 5.0.0-beta.1 the adapter is tested against, see .archcore/forms.adr.md"
+  }
 }

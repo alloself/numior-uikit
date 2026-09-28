@@ -12,14 +12,13 @@ export default defineConfig({
     lib: {
       entry: {
         index: fileURLToPath(new URL('./src/index.ts', import.meta.url)),
-        'vee-validate': fileURLToPath(new URL('./src/vee-validate.ts', import.meta.url)),
       },
       formats: ['es'],
       fileName: (_format, name) => `${name}.js`,
     },
     sourcemap: true,
     rolldownOptions: {
-      external: [/^vue$/, /^@numior\/(primitives|vue)$/, /^vee-validate$/, /^lodash-es(\/|$)/],
+      external: [/^vue$/, /^@numior\/(primitives|vue)$/, /^lodash-es(\/|$)/],
     },
   },
 });
