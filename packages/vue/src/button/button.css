@@ -136,9 +136,6 @@
   scale: 1;
   text-decoration-thickness: 2px;
 }
-.nui-button--icon-only:active:not(:disabled, .nui-button--disabled, .nui-button--loading) {
-  scale: 1;
-}
 
 .nui-button:focus-visible {
   outline: var(--nui-focus-ring-width) solid var(--nui-focus);
