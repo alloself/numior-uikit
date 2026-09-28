@@ -139,4 +139,16 @@ describe('NuiFieldArray', () => {
     expect(list.removeLabels).toEqual(['Удалить строку 1']);
     expect(list.gripLabels).toEqual(['Переместить строку 1']);
   });
+
+  it('shows its rows without adding, removing or moving them when readonly', () => {
+    const list = FieldArrayDriver.mount({
+      names: ['Ann', 'Bob'],
+      reorderable: true,
+      readonly: true,
+    });
+
+    expect(list.names).toEqual(['Ann', 'Bob']);
+    expect(list.canAdd).toBe(false);
+    expect(list.removeLabels).toEqual([]);
+  });
 });

@@ -13,6 +13,7 @@ export interface NuiFieldArrayProps<T extends object, Row> {
   newRow?: (() => Row) | undefined;
   reorderable?: boolean | undefined;
   disabled?: boolean | undefined;
+  readonly?: boolean | undefined;
   rules?: readonly AnyFieldRule<readonly Row[], T>[] | undefined;
   validateOn?: ValidateOn | undefined;
   addLabel?: string | undefined;

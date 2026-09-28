@@ -18,6 +18,10 @@ const docs: DocsMap = {
         en: 'Fields in a row; grow stretches them to the full width.',
       },
       disabled: { ru: 'Выключает все поля и кнопки.', en: 'Disables every field and button.' },
+      readonly: {
+        ru: 'Режим чтения для всех полей; отправка отключена.',
+        en: 'Read mode for every field; submitting is disabled.',
+      },
       reserveError: {
         ru: 'Держит строку под ошибку у всех полей.',
         en: 'Keeps an error line under every field.',

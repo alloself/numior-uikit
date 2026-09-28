@@ -310,4 +310,12 @@ describe('NuiSmartForm', () => {
     await form.type('name', 'Ann');
     expect(form.text('.state')).toBe('false/true');
   });
+
+  it('puts every field into read mode and disables saving when readonly', () => {
+    const smart = SmartFormDriver.mount({ initialValues: blank, fields: COMPANY, readonly: true });
+
+    expect(smart.attribute('kind', 'readonly')).toBe('');
+    expect(smart.attribute('kind', 'disabled')).toBeUndefined();
+    expect(smart.submitDisabled).toBe(true);
+  });
 });

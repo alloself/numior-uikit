@@ -20,7 +20,7 @@ export interface EntrySpec<V extends object> {
   readonly kind: EntryKind;
   readonly path: () => string;
   readonly active: () => boolean;
-  readonly disabled: () => boolean;
+  readonly inert: () => boolean;
   readonly label: () => string | undefined;
   readonly element: () => HTMLElement | null | undefined;
   readonly focus: (() => void) | undefined;

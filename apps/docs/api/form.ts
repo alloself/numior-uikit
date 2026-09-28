@@ -10,6 +10,10 @@ const docs: DocsMap = {
         ru: 'Выключает все поля и кнопку отправки.',
         en: 'Disables every field and the submit button.',
       },
+      readonly: {
+        ru: 'Режим чтения: поля видны и фокусируемы, но не меняются, кнопка отправки отключена.',
+        en: 'Read mode: fields stay visible and focusable but cannot change, the submit button is disabled.',
+      },
       reserveError: {
         ru: 'Держит строку под ошибку у всех полей внутри.',
         en: 'Keeps an error line under every field inside.',
@@ -63,6 +67,10 @@ const docs: DocsMap = {
         ru: 'Выключает контрол; поле отправляется, но не проверяется.',
         en: 'Disables the control; the field submits but is not validated.',
       },
+      readonly: {
+        ru: 'Контрол только для чтения; поле отправляется, но не проверяется. Наследуется от формы.',
+        en: 'Read-only control; the field submits but is not validated. Inherited from the form.',
+      },
       group: {
         ru: 'Рисует fieldset для группы контролов.',
         en: 'Draws a fieldset for a group of controls.',
@@ -111,6 +119,10 @@ const docs: DocsMap = {
         en: 'Reordering rows with the mouse and the keyboard.',
       },
       disabled: { ru: 'Выключает строки и кнопки.', en: 'Disables the rows and the buttons.' },
+      readonly: {
+        ru: 'Строки только для чтения: без добавления, удаления и перестановки.',
+        en: 'Read-only rows: no adding, removing or reordering.',
+      },
       rules: { ru: 'Правила для массива целиком.', en: 'Rules for the whole array.' },
       validateOn: {
         ru: 'Когда начинать проверку массива.',

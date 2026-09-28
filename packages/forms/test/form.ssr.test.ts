@@ -86,20 +86,23 @@ const Contacts = defineComponent({
   },
 });
 
-const Signup = defineComponent({
-  setup: () => {
-    const form = useForm({ initialValues: { email: 'ann@example.com' }, onSubmit: noop });
+const signupForm = (readonly: boolean) =>
+  defineComponent({
+    setup: () => {
+      const form = useForm({ initialValues: { email: 'ann@example.com' }, onSubmit: noop });
 
-    return () =>
-      h(NuiForm<{ email: string }>, { form }, () =>
-        h(
-          NuiFormField<{ email: string }, string>,
-          { form, name: (values) => values.email, label: 'Email' },
-          { default: ({ field }: { field: Binding<string> }) => h(NuiInput, field) },
-        ),
-      );
-  },
-});
+      return () =>
+        h(NuiForm<{ email: string }>, { form, readonly }, () =>
+          h(
+            NuiFormField<{ email: string }, string>,
+            { form, name: (values) => values.email, label: 'Email' },
+            { default: ({ field }: { field: Binding<string> }) => h(NuiInput, field) },
+          ),
+        );
+    },
+  });
+
+const Signup = signupForm(false);
 
 const newContact = (): Contact => ({ name: '' });
 
@@ -232,6 +235,10 @@ describe('forms on the server', () => {
     expect(first).not.toContain('aria-busy');
     expect(first).not.toContain('nui-form__errors');
     expect(first).not.toContain('undefined');
+    const readonly = await renderToString(createSSRApp(signupForm(true)));
+    expect(readonly).toContain('nui-form--readonly');
+    expect(readonly).toContain(' readonly');
+    expect(readonly).toMatch(/type="submit"[^>]*disabled/);
   });
 
   it('renders field array rows with their controls the same way twice', async () => {

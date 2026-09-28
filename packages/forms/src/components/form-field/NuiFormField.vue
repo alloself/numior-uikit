@@ -7,6 +7,7 @@
     :error="control.errorMessage.value"
     :required="required"
     :disabled="isDisabled"
+    :readonly="isReadonly"
     :group="group"
     :reserve-error="reservesError"
     @focusout="onFocusout"
@@ -38,6 +39,7 @@ const {
   description,
   required = undefined,
   disabled = undefined,
+  readonly = undefined,
   group = false,
   reserveError = undefined,
   keepValue = undefined,
@@ -56,6 +58,7 @@ const root = (): HTMLElement | null => {
 };
 
 const isDisabled = computed(() => disabled ?? formScope?.disabled.value ?? false);
+const isReadonly = computed(() => readonly ?? formScope?.readonly.value ?? false);
 const reservesError = computed(() => reserveError ?? formScope?.reserveError.value ?? false);
 
 const control = useField(
@@ -71,6 +74,7 @@ const control = useField(
     focus: () => focusControl(root()),
     flush: () => drafts.commitAll(),
     disabled: () => isDisabled.value,
+    readonly: () => isReadonly.value,
   },
 );
 

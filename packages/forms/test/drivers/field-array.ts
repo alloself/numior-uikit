@@ -27,6 +27,7 @@ export interface FieldArrayDriverOptions {
   readonly min?: number;
   readonly max?: number;
   readonly reorderable?: boolean;
+  readonly readonly?: boolean;
   readonly addable?: boolean;
   readonly rowRules?: readonly AnyFieldRule<string | undefined, Contacts>[];
   readonly listRules?: readonly AnyFieldRule<readonly Contact[], Contacts>[];
@@ -120,6 +121,7 @@ export class FieldArrayDriver {
                 min: options.min,
                 max: options.max,
                 reorderable: options.reorderable,
+                readonly: options.readonly,
                 newRow: options.addable === false ? undefined : newContact,
                 rules: options.listRules,
               },

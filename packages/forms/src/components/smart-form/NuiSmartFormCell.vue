@@ -7,6 +7,7 @@
       :description="entry.description"
       :required="entry.required"
       :disabled="entry.disabled"
+      :readonly="entry.readonly"
       :group="entry.group"
       :rules="entry.rules"
       :validate-on="entry.validateOn"

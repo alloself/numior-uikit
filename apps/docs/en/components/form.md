@@ -68,6 +68,9 @@ A field that is not rendered leaves validation and submission but keeps its valu
 Control drafts, such as a number, a time or combobox text, are committed by `NuiFormField`
 before the submit.
 
+A field or form with `readonly` shows its value and keeps it focusable and copyable. Such a
+field submits without validation. The submit button of a form in read mode is disabled.
+
 ## Storage
 
 The values, field state and row keys live in the package engine. An own store, for example in

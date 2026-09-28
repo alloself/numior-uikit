@@ -20,6 +20,7 @@ export interface SmartFormDriverOptions<V extends object> {
   readonly onSubmit?: SubmitHandler<V, unknown>;
   readonly layout?: string;
   readonly inline?: boolean | 'grow';
+  readonly readonly?: boolean;
   readonly reserveError?: boolean;
   readonly slots?: Readonly<Record<string, SlotRender>>;
 }
@@ -50,6 +51,7 @@ export class SmartFormDriver<V extends object> {
               steps: options.steps,
               layout: options.layout,
               inline: options.inline,
+              readonly: options.readonly,
               reserveError: options.reserveError,
               ...(step.value === undefined ? {} : { step: step.value }),
               'onUpdate:step': (value: string | undefined) => {
@@ -194,6 +196,10 @@ export class SmartFormDriver<V extends object> {
 
   attribute(path: string, name: string): string | undefined {
     return this.control(path).attributes(name);
+  }
+
+  get submitDisabled(): boolean {
+    return this.wrapper.find<HTMLButtonElement>('button[type="submit"]').element.disabled;
   }
 
   cellText(path: string): string {

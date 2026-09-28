@@ -33,7 +33,7 @@ export const targetOf = (path: string, index: AnyIndex): IssueTarget => {
   const owner = ownerOf(path, index);
 
   if (owner) {
-    return owner.disabled() ? { kind: 'ignored', path } : { kind: 'owner', entry: owner };
+    return owner.inert() ? { kind: 'ignored', path } : { kind: 'owner', entry: owner };
   }
   return index.covered.has(path) ? { kind: 'form', path } : { kind: 'ignored', path };
 };

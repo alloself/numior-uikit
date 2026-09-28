@@ -13,6 +13,7 @@ import { FORM_HOST, type FormContext } from '../form/form-context';
 import { joinPath } from '../paths/paths';
 import { readSelected, recordPath, type FieldSelector } from '../paths/selector';
 import { createRuleSet, type RuleSource } from './rule-set';
+import { inertOf } from '../core/inert';
 
 export interface FieldArrayRow<Row> {
   readonly key: string;
@@ -32,6 +33,7 @@ export interface UseFieldArrayOptions<V extends object, Row> {
   readonly focus?: (() => void) | undefined;
   readonly active?: MaybeRefOrGetter<boolean | undefined>;
   readonly disabled?: MaybeRefOrGetter<boolean | undefined>;
+  readonly readonly?: MaybeRefOrGetter<boolean | undefined>;
 }
 
 export interface FieldArray<Row> {
@@ -69,7 +71,7 @@ export const useFieldArray = <V extends object, Row>(
     kind: 'array',
     path: () => path.value,
     active: () => toValue(options.active) ?? true,
-    disabled: () => toValue(options.disabled) ?? false,
+    inert: () => inertOf(options),
     label: () => toValue(options.label),
     element: () => toValue(options.element),
     focus: options.focus,

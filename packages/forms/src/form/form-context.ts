@@ -32,6 +32,7 @@ export interface RegisterOptions<V> {
   readonly kind?: EntryKind | undefined;
   readonly active?: MaybeRefOrGetter<boolean | undefined>;
   readonly disabled?: MaybeRefOrGetter<boolean | undefined>;
+  readonly readonly?: MaybeRefOrGetter<boolean | undefined>;
   readonly keepValue?: MaybeRefOrGetter<boolean | undefined>;
   readonly validateOn?: MaybeRefOrGetter<ValidateOn | undefined>;
   readonly rules?: MaybeRefOrGetter<readonly AnyFieldRule<unknown, V>[] | undefined>;

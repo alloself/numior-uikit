@@ -13,6 +13,7 @@ import type { KeepValue } from '../paths/paths.types';
 import { FORM_HOST, type FormContext } from '../form/form-context';
 import { readSelected, recordPath, type FieldSelector } from '../paths/selector';
 import { createRuleSet, type RuleSource } from './rule-set';
+import { inertOf } from '../core/inert';
 
 export interface UseFieldOptions<V extends object, R> {
   readonly form: FormContext<V>;
@@ -26,6 +27,7 @@ export interface UseFieldOptions<V extends object, R> {
   readonly flush?: FieldFlush<R> | undefined;
   readonly active?: MaybeRefOrGetter<boolean | undefined>;
   readonly disabled?: MaybeRefOrGetter<boolean | undefined>;
+  readonly readonly?: MaybeRefOrGetter<boolean | undefined>;
 }
 
 export interface FieldBinding<R> {
@@ -64,7 +66,7 @@ export const useField = <V extends object, R>(
     kind: 'field',
     path: () => path.value,
     active: () => toValue(options.active) ?? true,
-    disabled: () => toValue(options.disabled) ?? false,
+    inert: () => inertOf(options),
     label,
     element: () => toValue(options.element),
     focus: options.focus,

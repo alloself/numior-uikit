@@ -46,7 +46,7 @@ export const createValidation = <V extends object, O>(core: FormCore<V, O>): Val
 
   const ruleIssues = (values: V, active: readonly Entry<V>[]): FormIssue[] =>
     active
-      .filter((entry) => !entry.disabled())
+      .filter((entry) => !entry.inert())
       .flatMap((entry) => {
         const path = entry.path();
         const rules = core.rulesAt(path).sync;

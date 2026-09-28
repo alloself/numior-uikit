@@ -49,6 +49,7 @@ export class SmartFormSection {
   readonly indicator: Locator;
   readonly counter: Locator;
   readonly newsletter: Locator;
+  readonly readonlyToggle: Locator;
   readonly output: Locator;
 
   constructor(private readonly page: Page) {
@@ -75,6 +76,7 @@ export class SmartFormSection {
       name: 'Присылать новости раз в месяц',
     });
 
+    this.readonlyToggle = page.getByTestId('smart-readonly');
     this.output = page.getByTestId('smart-output');
   }
 

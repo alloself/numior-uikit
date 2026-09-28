@@ -10,6 +10,7 @@ import { createRuleSet } from '../field/rule-set';
 import { normalizePath } from '../paths/paths';
 import { getAt } from '../values/access';
 import type { FormContext } from './form-context';
+import { inertOf } from '../core/inert';
 
 export type FormActions<V extends object> = Pick<
   FormContext<V>,
@@ -38,7 +39,7 @@ export const createActions = <V extends object, O>(
       kind: options.kind ?? 'group',
       path: () => path.value,
       active: () => toValue(options.active) ?? true,
-      disabled: () => toValue(options.disabled) ?? false,
+      inert: () => inertOf(options),
       label: () => toValue(options.label),
       element: () => toValue(options.element),
       focus: options.focus,

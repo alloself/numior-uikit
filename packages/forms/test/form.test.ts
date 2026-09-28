@@ -155,6 +155,30 @@ describe('NuiForm and NuiFormField', () => {
     ]);
   });
 
+  it('keeps a readonly form focusable and readable while nothing can change or submit', () => {
+    const form = FormDriver.mount({ initialValues: blank, fields: FIELDS, readonly: true });
+
+    expect([form.readonly('email'), form.ariaReadonly('terms'), form.submitDisabled]).toEqual([
+      true,
+      true,
+      true,
+    ]);
+
+    expect(form.disabled('email')).toBe(false);
+  });
+
+  it('submits a readonly field without validating it', async () => {
+    const fields: readonly FormFieldConfig[] = [
+      { path: 'email', label: 'Email', rules: [required()], readonly: true },
+    ];
+
+    const form = FormDriver.mount({ initialValues: { email: '' }, fields });
+
+    await form.submit();
+    expect(form.error('email')).toBeUndefined();
+    expect(form.submissions).toEqual([{ email: '' }]);
+  });
+
   it('marks a field touched when focus leaves it, not when it moves inside it', async () => {
     const form = FormDriver.mount({ initialValues: blank, fields: FIELDS });
 

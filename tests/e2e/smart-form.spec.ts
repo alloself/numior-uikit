@@ -195,6 +195,29 @@ test.describe('smart form', () => {
     }
   });
 
+  test('read mode keeps the profile readable but unchangeable and stays accessible', async ({
+    page,
+  }) => {
+    const playground = await openSmartForm(page);
+    const { smartForm } = playground;
+    await smartForm.readonlyToggle.check();
+    await expect(smartForm.control('name')).toHaveAttribute('readonly', '');
+
+    await expect(smartForm.profile.getByRole('radiogroup')).toHaveAttribute(
+      'aria-readonly',
+      'true',
+    );
+
+    await expect(smartForm.save).toBeDisabled();
+    await expect(smartForm.addContact).toBeDisabled();
+    await smartForm.control('name').focus();
+    await expect(smartForm.control('name')).toBeFocused();
+    expect(await playground.wcagViolations()).toEqual([]);
+    await smartForm.readonlyToggle.uncheck();
+    await expect(smartForm.control('name')).not.toHaveAttribute('readonly');
+    await expect(smartForm.save).toBeEnabled();
+  });
+
   test('in RTL the layout mirrors and nothing overflows', async ({ page, isMobile }) => {
     const playground = await openSmartForm(page);
     const { smartForm } = playground;

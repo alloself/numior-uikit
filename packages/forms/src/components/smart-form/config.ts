@@ -20,7 +20,14 @@ type ComponentProps<C> = C extends new (...args: never[]) => { $props: infer P }
 
 type ModelKeys<M extends string> = M | `onUpdate:${M}`;
 
-type ControlKeys = ModelKeys<'modelValue'> | 'id' | 'name' | 'invalid' | 'required' | 'disabled';
+type ControlKeys =
+  | ModelKeys<'modelValue'>
+  | 'id'
+  | 'name'
+  | 'invalid'
+  | 'required'
+  | 'disabled'
+  | 'readonly';
 
 export type ControlProps<C, M extends string = 'modelValue'> = Omit<
   ComponentProps<C>,

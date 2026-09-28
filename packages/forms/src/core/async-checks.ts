@@ -70,7 +70,7 @@ export const createAsyncChecks = <V extends object, O>(
   };
 
   const needsCheck = (entry: Entry<V>): boolean =>
-    !entry.disabled() &&
+    !entry.inert() &&
     (entry.hasAsync() || formRules(entry).length > 0) &&
     freshResult(entry) === undefined;
 
@@ -209,7 +209,7 @@ export const createAsyncChecks = <V extends object, O>(
     issues: (active) =>
       active.flatMap((entry) => {
         const message = freshResult(entry)?.message;
-        return message === undefined || entry.disabled() ? [] : [{ path: entry.path(), message }];
+        return message === undefined || entry.inert() ? [] : [{ path: entry.path(), message }];
       }),
     schedule,
     refresh: (changed) => {

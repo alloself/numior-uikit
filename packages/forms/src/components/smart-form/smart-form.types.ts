@@ -23,6 +23,7 @@ export interface NuiSmartFormField<S> {
   readonly description?: string | undefined;
   readonly required?: boolean | undefined;
   readonly disabled?: boolean | undefined;
+  readonly readonly?: boolean | undefined;
   readonly group?: boolean | undefined;
   readonly area?: string | undefined;
   readonly when?: NuiSmartFormCondition<S> | undefined;
@@ -112,6 +113,7 @@ export interface NuiSmartFormProps<T extends object> {
   layout?: string | undefined;
   inline?: boolean | 'grow' | undefined;
   disabled?: boolean | undefined;
+  readonly?: boolean | undefined;
   reserveError?: boolean | undefined;
   submitLabel?: string | undefined;
   nextLabel?: string | undefined;

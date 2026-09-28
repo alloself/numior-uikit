@@ -13,9 +13,11 @@
       aria-label="Фильтр"
       data-testid="smart-filter"
     />
+    <NuiSwitch v-model="profileReadonly" data-testid="smart-readonly">Только чтение</NuiSwitch>
     <NuiSmartForm
       :form="profile"
       :fields="PROFILE_FIELDS"
+      :readonly="profileReadonly"
       submit-label="Сохранить профиль"
       class="smart-demo"
       aria-label="Профиль"
@@ -44,6 +46,7 @@ import {
   NuiRadio,
   NuiRadioGroup,
   NuiSelect,
+  NuiSwitch,
   NuiTextarea,
   type NuiOptionSource,
 } from '@numior/vue';
@@ -205,6 +208,7 @@ const FILTER_FIELDS = [
 
 const applied = ref<SubmittedValues<Filter>>({ query: '', status: null });
 const saved = ref<SubmittedValues<Profile> | null>(null);
+const profileReadonly = ref(false);
 
 const filter = useForm<Filter>({
   initialValues: { query: '', status: null },

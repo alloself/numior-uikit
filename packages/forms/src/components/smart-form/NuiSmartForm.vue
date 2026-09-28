@@ -5,6 +5,7 @@
     class="nui-smart-form"
     :class="classes"
     :disabled="disabled"
+    :readonly="readonly"
     :reserve-error="reserveError"
     :submit-label="submitLabel"
     :submit-action="steps ? runStep : undefined"
@@ -39,7 +40,7 @@
           class="nui-smart-form__next"
           type="submit"
           :loading="props.pending"
-          :disabled="disabled"
+          :disabled="disabled || readonly"
         >
           {{ last ? texts.submit : texts.next }}
         </NuiButton>
@@ -72,6 +73,7 @@ const {
   layout,
   inline = undefined,
   disabled = false,
+  readonly = false,
   reserveError = false,
   submitLabel,
   nextLabel,

@@ -31,6 +31,7 @@ export interface FormFieldConfig {
   readonly rules?: readonly AnyFieldRule[];
   readonly validateOn?: ValidateOn;
   readonly keepValue?: boolean;
+  readonly readonly?: boolean;
 }
 
 export interface FormDriverOptions<V extends object> {
@@ -39,6 +40,7 @@ export interface FormDriverOptions<V extends object> {
   readonly schema?: StandardSchema<unknown, unknown>;
   readonly onSubmit?: SubmitHandler<V, unknown>;
   readonly disabled?: boolean;
+  readonly readonly?: boolean;
   readonly submitLabel?: string;
   readonly errorTitle?: string;
   readonly config?: NuiConfigOptions;
@@ -90,6 +92,7 @@ interface View {
   readonly rules: Map<string, readonly AnyFieldRule[]>;
   readonly validateOn: Map<string, ValidateOn>;
   disabled: boolean;
+  readonly: boolean;
 }
 
 const renderField = <V extends object>(
@@ -108,6 +111,7 @@ const renderField = <V extends object>(
       rules: view.rules.get(config.path) ?? config.rules,
       validateOn: view.validateOn.get(config.path) ?? config.validateOn,
       keepValue: config.keepValue,
+      readonly: config.readonly,
     },
     { default: (scope: FieldScope) => renderControl(config.control ?? 'input', scope) },
   );
@@ -121,6 +125,7 @@ export class FormDriver<V extends object> {
       rules: new Map<string, readonly AnyFieldRule[]>(),
       validateOn: new Map<string, ValidateOn>(),
       disabled: options.disabled ?? false,
+      readonly: options.readonly ?? false,
     });
 
     const captured = shallowRef<FormContext<V> | null>(null);
@@ -145,6 +150,7 @@ export class FormDriver<V extends object> {
               {
                 form,
                 disabled: view.disabled,
+                readonly: view.readonly,
                 submitLabel: options.submitLabel,
                 errorTitle: options.errorTitle,
               },
@@ -263,6 +269,14 @@ export class FormDriver<V extends object> {
 
   disabled(path: string): boolean {
     return this.control(path).attributes('disabled') !== undefined;
+  }
+
+  readonly(path: string): boolean {
+    return this.control(path).attributes('readonly') !== undefined;
+  }
+
+  ariaReadonly(path: string): boolean {
+    return this.control(path).attributes('aria-readonly') === 'true';
   }
 
   pending(path: string): boolean {

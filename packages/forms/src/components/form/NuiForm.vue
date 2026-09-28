@@ -2,7 +2,11 @@
   <form
     ref="root"
     class="nui-form"
-    :class="{ 'nui-form--pending': pending, 'nui-form--disabled': disabled }"
+    :class="{
+      'nui-form--pending': pending,
+      'nui-form--disabled': disabled,
+      'nui-form--readonly': readonly,
+    }"
     novalidate
     :aria-busy="pending || undefined"
     @submit="onSubmit"
@@ -27,7 +31,7 @@
     <slot />
     <div class="nui-form__actions">
       <slot name="actions" v-bind="actions">
-        <NuiButton type="submit" :loading="pending" :disabled="disabled">
+        <NuiButton type="submit" :loading="pending" :disabled="disabled || readonly">
           {{ texts.submit }}
         </NuiButton>
       </slot>
@@ -48,6 +52,7 @@ import type { NuiFormProps } from './form.types';
 const {
   form,
   disabled = false,
+  readonly = false,
   reserveError = false,
   submitAction,
   submitLabel,
@@ -57,7 +62,12 @@ const {
 const emit = defineEmits<{ reset: [] }>();
 
 provideForm(form);
-provideFormScope({ disabled: () => disabled, reserveError: () => reserveError });
+
+provideFormScope({
+  disabled: () => disabled,
+  readonly: () => readonly,
+  reserveError: () => reserveError,
+});
 
 const host = form[FORM_HOST];
 const root = useTemplateRef<HTMLFormElement>('root');
@@ -87,6 +97,7 @@ const reset = (): void => {
 const actions = computed(() => ({
   pending: pending.value,
   dirty: form.meta.value.dirty,
+  readonly,
   submit: requestSubmit,
   reset,
 }));
@@ -103,7 +114,7 @@ const runSubmit = async (): Promise<void> => {
 const onSubmit = async (event: Event): Promise<void> => {
   event.preventDefault();
 
-  if (busy.value || disabled) {
+  if (busy.value || disabled || readonly) {
     return;
   }
   busy.value = true;

@@ -105,7 +105,7 @@ import {
 } from '@numior/primitives';
 import { NuiButton, NuiIcon } from '@numior/vue';
 import { useFieldArray } from '../../field/use-field-array';
-import { useFormScope } from '../form/form-scope';
+import { provideFormScope, useFormScope } from '../form/form-scope';
 import NuiFieldArrayRow from './NuiFieldArrayRow.vue';
 import { fieldArrayMessages } from './field-array.messages';
 import type { NuiFieldArrayProps } from './field-array.types';
@@ -129,6 +129,7 @@ const {
   newRow,
   reorderable = false,
   disabled = undefined,
+  readonly = undefined,
   rules,
   validateOn,
   addLabel,
@@ -148,6 +149,14 @@ const announcement = shallowRef('');
 const focus = createIntent<RowFocus>();
 
 const isDisabled = computed(() => disabled ?? formScope?.disabled.value ?? false);
+const isReadonly = computed(() => readonly ?? formScope?.readonly.value ?? false);
+const isInert = computed(() => isDisabled.value || isReadonly.value);
+
+provideFormScope({
+  disabled: () => isDisabled.value,
+  readonly: () => isReadonly.value,
+  reserveError: () => formScope?.reserveError.value ?? false,
+});
 
 const addElement = (): HTMLElement | null => {
   const element: unknown = addButton.value?.$el;
@@ -172,6 +181,7 @@ const array = useFieldArray(
     element: () => root.value,
     focus: focusArray,
     disabled: () => isDisabled.value,
+    readonly: () => isReadonly.value,
   },
 );
 
@@ -184,11 +194,11 @@ const texts = computed(() => ({
 }));
 
 const canAdd = computed(
-  () => !isDisabled.value && newRow !== undefined && (max === undefined || rows.value.length < max),
+  () => !isInert.value && newRow !== undefined && (max === undefined || rows.value.length < max),
 );
 
-const canRemove = computed(() => !isDisabled.value && rows.value.length > (min ?? 0));
-const gripDisabled = computed(() => isDisabled.value || rows.value.length < 2);
+const canRemove = computed(() => !isInert.value && rows.value.length > (min ?? 0));
+const gripDisabled = computed(() => isInert.value || rows.value.length < 2);
 const fieldsetDisabled = computed(() => isDisabled.value || undefined);
 const limitReached = computed(() => max !== undefined && rows.value.length >= max);
 const descriptionId = computed(() => `${baseId.value}-description`);
@@ -285,6 +295,7 @@ const classes = computed(() => ({
   'nui-field-array--reorderable': reorderable,
   'nui-field-array--reordering': reordering.value,
   'nui-field-array--disabled': isDisabled.value,
+  'nui-field-array--readonly': isReadonly.value,
   'nui-field-array--invalid': array.errors.value.length > 0,
 }));
 
@@ -329,13 +340,13 @@ const remove = (index: number): void => {
 };
 
 const onGripPointerdown = (index: number, event: PointerEvent): void => {
-  if (!isDisabled.value) {
+  if (!isInert.value) {
     reorder.onPointerdown(index, event);
   }
 };
 
 const onGripKeydown = (index: number, event: KeyboardEvent): void => {
-  if (!isDisabled.value && reorder.onKeydown(index, event)) {
+  if (!isInert.value && reorder.onKeydown(index, event)) {
     event.preventDefault();
   }
 };
