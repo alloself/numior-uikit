@@ -23,3 +23,13 @@ test('the home page shows a live form card, copies the install line and leads to
   await home.start.click();
   await expect(page).toHaveURL(/\/guide\/getting-started$/);
 });
+
+test('the skip link moves focus to the home content', async ({ page, isMobile }) => {
+  test.skip(isMobile, 'keyboard only');
+  const docs = new DocsSite(page);
+  await docs.open('/');
+  await page.keyboard.press('Tab');
+  await expect(page.getByRole('link', { name: 'К содержимому' })).toBeFocused();
+  await page.keyboard.press('Enter');
+  await expect(docs.article).toBeFocused();
+});
