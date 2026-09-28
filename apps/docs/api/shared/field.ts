@@ -33,8 +33,8 @@ export const fieldState: DescriptionMap = {
     en: 'Marks the value as required; inherited from the field.',
   },
   invalid: {
-    ru: 'Показывает состояние ошибки; наследуется от поля.',
-    en: 'Shows the error state; inherited from the field.',
+    ru: 'Помечает контрол невалидным без текста ошибки; error включает состояние сам.',
+    en: 'Marks the control invalid without an error text; error switches the state on itself.',
   },
 };
 
