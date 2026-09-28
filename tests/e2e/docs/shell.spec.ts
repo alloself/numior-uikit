@@ -68,6 +68,8 @@ test('search finds a page by text and opens it', async ({ page, isMobile }) => {
   }
   await expect(docs.commandInput).toBeFocused();
   expect((await boxOf(docs.heading)).x).toBe(before.x);
+  await expect(docs.commandOptions.first()).toBeVisible();
+  expect(await docs.commandLeadingStart()).toBeCloseTo(await docs.commandGroupTextStart(), 0);
   await docs.commandInput.fill('Button');
   await expect(docs.commandOptions.first()).toContainText('Button');
   await docs.commandOptions.first().click();

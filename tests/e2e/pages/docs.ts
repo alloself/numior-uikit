@@ -1,6 +1,7 @@
 import { AxeBuilder } from '@axe-core/playwright';
 import type { Locator, Page } from '@playwright/test';
 import { copiedTexts, stubClipboard } from '../helpers/clipboard';
+import { boxOf } from '../helpers/geometry';
 
 export type DocsScheme = 'light' | 'dark' | 'system';
 
@@ -131,6 +132,21 @@ export class DocsSite {
 
   get commandOptions(): Locator {
     return this.commandDialog.getByRole('option');
+  }
+
+  commandGroupTextStart(): Promise<number> {
+    return this.commandDialog
+      .locator('.nui-list__group-label')
+      .first()
+      .evaluate(
+        (label) =>
+          label.getBoundingClientRect().left +
+          Number.parseFloat(getComputedStyle(label).paddingInlineStart),
+      );
+  }
+
+  async commandLeadingStart(): Promise<number> {
+    return (await boxOf(this.commandOptions.first().locator('.nui-row__leading'))).x;
   }
 
   pressSearchHotkeyOnRussianLayout(): Promise<void> {
