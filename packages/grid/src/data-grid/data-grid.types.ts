@@ -1,4 +1,4 @@
-import type { GridNodeId } from '../engine';
+import type { GridNodeId, GridProgress, GridSort, GridSortDirection } from '../engine';
 
 export type NuiDataGridSize = 'sm' | 'md' | 'lg';
 
@@ -13,6 +13,7 @@ interface NuiGridColumnBase {
   readonly minWidth?: number | undefined;
   readonly pin?: NuiGridPin | undefined;
   readonly align?: NuiGridAlign | undefined;
+  readonly sortable?: boolean | undefined;
 }
 
 export interface NuiGridTextColumn<T> extends NuiGridColumnBase {
@@ -70,7 +71,19 @@ export interface NuiDataGridCellSlot<T> {
 
 export interface NuiDataGridHeaderSlot<T> {
   readonly column: NuiGridColumn<T>;
+  readonly direction: GridSortDirection | undefined;
 }
+
+export interface NuiDataGridSettled {
+  readonly rows: number;
+}
+
+export interface NuiDataGridEvents {
+  progress: [progress: GridProgress];
+  settle: [result: NuiDataGridSettled];
+}
+
+export type NuiDataGridSort = readonly GridSort[];
 
 export type NuiDataGridSlots<T> = {
   empty?: () => unknown;
@@ -100,6 +113,13 @@ export interface GridPanes {
   readonly end: readonly GridCellLayout[];
 }
 
+export interface GridHeadState {
+  readonly sortable: boolean;
+  readonly direction: GridSortDirection | undefined;
+  readonly order: number | undefined;
+  readonly primary: boolean;
+}
+
 export interface GridCellPosition {
   readonly row: number;
   readonly col: number;
@@ -112,4 +132,5 @@ export interface NuiDataGridRowProps {
   offset?: number | undefined;
   active?: number | undefined;
   revision?: number | undefined;
+  heads?: Readonly<Record<string, GridHeadState>> | undefined;
 }

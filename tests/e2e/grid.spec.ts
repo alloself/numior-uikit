@@ -75,6 +75,39 @@ test.describe('data grid', () => {
     expect(revealed.x + revealed.width).toBeLessThanOrEqual((await grid.cellBox(0, 10)).x + 1);
   });
 
+  test('sorts from the header by click, Shift+click and the keyboard', async ({
+    page,
+    isMobile,
+  }) => {
+    const playground = new PlaygroundPage(page);
+    await playground.open();
+    const { grid } = playground;
+    await grid.root.scrollIntoViewIfNeeded();
+    await grid.header(0).click();
+    await expect(grid.header(0)).toHaveAttribute('aria-sort', 'ascending');
+    await expect(grid.cell(0, 0)).toHaveText('1');
+    await grid.header(0).click();
+    await expect(grid.header(0)).toHaveAttribute('aria-sort', 'descending');
+    await expect(grid.cell(0, 0)).toHaveText('10000');
+    const descending = await grid.numbersIn(0, 8);
+    expect(descending).toEqual(descending.toSorted((a, b) => b - a));
+    await grid.header(1).click({ modifiers: ['Shift'] });
+    await expect(grid.sortOrder(1)).toHaveText('2');
+    await expect(grid.sortOrder(0)).toHaveText('1');
+    await expect(grid.header(1)).not.toHaveAttribute('aria-sort');
+
+    if (isMobile) {
+      return;
+    }
+    await grid.cell(0, 2).click();
+    await page.keyboard.press('ArrowUp');
+    await page.keyboard.press('Enter');
+    await expect(grid.header(2)).toHaveAttribute('aria-sort', 'ascending');
+    await expect(grid.header(0)).not.toHaveAttribute('aria-sort');
+    await expect(grid.sortOrder(1)).toHaveCount(0);
+    expect(await grid.focusedCell()).toEqual({ row: -1, col: 2 });
+  });
+
   test('mirrors the pinned panes and the arrow keys in RTL', async ({ page, isMobile }) => {
     test.skip(isMobile, 'direction switch on desktop');
     const playground = new PlaygroundPage(page);

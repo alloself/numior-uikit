@@ -11,6 +11,7 @@ import {
 } from 'vue';
 import {
   NuiDataGrid,
+  type GridSort,
   type NuiDataGridExposed,
   type NuiDataGridProps,
   type NuiGridColumn,
@@ -20,6 +21,7 @@ export interface DataGridMountOptions<T> {
   readonly columns: readonly NuiGridColumn<T>[];
   readonly source: readonly T[];
   readonly props?: Omit<NuiDataGridProps<T>, 'columns' | 'source'>;
+  readonly sort?: readonly GridSort[];
   readonly slots?: Slots;
   readonly width?: number;
   readonly height?: number;
@@ -30,6 +32,12 @@ export interface DataGridMountOptions<T> {
 export interface CellPosition {
   readonly row: number;
   readonly col: number;
+}
+
+interface GridEvents {
+  settled: number;
+  progress: number;
+  readonly waiters: Array<() => void>;
 }
 
 export interface KeyOptions {
@@ -65,7 +73,9 @@ const positionOf = (cell: Element | null): CellPosition | undefined => {
 export class DataGridDriver<T> {
   static mount<T>(options: DataGridMountOptions<T>): DataGridDriver<T> {
     const source = shallowRef(options.source);
+    const sort = shallowRef<readonly GridSort[]>(options.sort ?? []);
     const exposed = shallowRef<NuiDataGridExposed | null>(null);
+    const events: GridEvents = { settled: 0, progress: 0, waiters: [] };
 
     const setExposed = (value: unknown): void => {
       exposed.value = isExposed(value) ? value : null;
@@ -80,6 +90,20 @@ export class DataGridDriver<T> {
               ...options.props,
               columns: options.columns,
               source: source.value,
+              sort: sort.value,
+              'onUpdate:sort': (next: readonly GridSort[]) => {
+                sort.value = next;
+              },
+              onSettle: () => {
+                events.settled += 1;
+
+                for (const resolve of events.waiters.splice(0)) {
+                  resolve();
+                }
+              },
+              onProgress: () => {
+                events.progress += 1;
+              },
               ref: setExposed,
             },
             options.slots,
@@ -89,7 +113,7 @@ export class DataGridDriver<T> {
 
     const plugins: Plugin[] = options.config === undefined ? [] : [createNuiConfig(options.config)];
     const wrapper = mount(Host, { attachTo: document.body, global: { plugins } });
-    const driver = new DataGridDriver<T>(wrapper, source, exposed);
+    const driver = new DataGridDriver<T>(wrapper, source, sort, exposed, events);
 
     driver.size(options.width ?? 500, options.height ?? 300);
     return driver;
@@ -98,8 +122,16 @@ export class DataGridDriver<T> {
   private constructor(
     private readonly wrapper: VueWrapper,
     private readonly source: ShallowRef<readonly T[]>,
+    private readonly sortModel: ShallowRef<readonly GridSort[]>,
     private readonly exposed: ShallowRef<NuiDataGridExposed | null>,
+    private readonly events: GridEvents,
   ) {}
+
+  private nextSettle(): Promise<void> {
+    return new Promise((resolve) => {
+      this.events.waiters.push(resolve);
+    });
+  }
 
   private get element(): HTMLElement {
     return this.viewport.element;
@@ -153,6 +185,44 @@ export class DataGridDriver<T> {
 
   get focusedCell(): CellPosition | undefined {
     return positionOf(document.activeElement);
+  }
+
+  get sort(): readonly GridSort[] {
+    return this.sortModel.value;
+  }
+
+  get settledRuns(): number {
+    return this.events.settled;
+  }
+
+  get progressReports(): number {
+    return this.events.progress;
+  }
+
+  get announcement(): string {
+    return this.wrapper.find('[role="status"]').text();
+  }
+
+  get busy(): boolean {
+    return this.viewport.attributes('aria-busy') === 'true';
+  }
+
+  get sortOrders(): string[] {
+    return this.wrapper.findAll('.nui-grid__sort-order').map((order) => order.text());
+  }
+
+  ariaSort(col: number): string | undefined {
+    return this.header(col)?.getAttribute('aria-sort') ?? undefined;
+  }
+
+  sortable(col: number): boolean {
+    return this.header(col)?.classList.contains('nui-grid__cell--sortable') ?? false;
+  }
+
+  private header(col: number): HTMLElement | null {
+    return this.element.querySelector<HTMLElement>(
+      `[role="columnheader"][aria-colindex="${col + 1}"]`,
+    );
   }
 
   get emptyText(): string | undefined {
@@ -221,6 +291,49 @@ export class DataGridDriver<T> {
       }),
     );
 
+    await nextTick();
+  }
+
+  async clickHeader(col: number, options: KeyOptions = {}): Promise<void> {
+    this.header(col)?.dispatchEvent(
+      new MouseEvent('click', { bubbles: true, shiftKey: options.shift ?? false }),
+    );
+
+    await nextTick();
+  }
+
+  async sortBy(col: number, options: KeyOptions = {}): Promise<void> {
+    const settled = this.nextSettle();
+
+    this.header(col)?.dispatchEvent(
+      new MouseEvent('click', { bubbles: true, shiftKey: options.shift ?? false }),
+    );
+
+    await settled;
+    await nextTick();
+  }
+
+  async pressAndSettle(key: string, options: KeyOptions = {}): Promise<void> {
+    const settled = this.nextSettle();
+
+    (document.activeElement ?? this.element).dispatchEvent(
+      new KeyboardEvent('keydown', {
+        key,
+        shiftKey: options.shift ?? false,
+        bubbles: true,
+        cancelable: true,
+      }),
+    );
+
+    await settled;
+    await nextTick();
+  }
+
+  async setSort(next: readonly GridSort[]): Promise<void> {
+    const settled = this.nextSettle();
+
+    this.sortModel.value = next;
+    await settled;
     await nextTick();
   }
 

@@ -4,8 +4,8 @@ const docs: DocsMap = {
   NuiDataGrid: {
     props: {
       columns: {
-        ru: 'Колонки: key, label, type (text, number, date, boolean), value, format, width, minWidth, pin и align.',
-        en: 'Columns: key, label, type (text, number, date, boolean), value, format, width, minWidth, pin and align.',
+        ru: 'Колонки: key, label, type (text, number, date, boolean), value, format, width, minWidth, pin, align и sortable.',
+        en: 'Columns: key, label, type (text, number, date, boolean), value, format, width, minWidth, pin, align and sortable.',
       },
       source: {
         ru: 'Строки данных; грид не копирует и не меняет их.',
@@ -44,10 +44,40 @@ const docs: DocsMap = {
         en: 'Text of the empty grid; the dictionary supplies the default.',
       },
     },
+    models: {
+      'v-model:sort': {
+        ru: 'Сортировка: список ключей колонок с направлением; первый ключ главный.',
+        en: 'Sort: a list of column keys with directions; the first key leads.',
+      },
+    },
+    events: {
+      progress: {
+        ru: 'Прогресс долгого прогона: фаза, сделано и всего.',
+        en: 'Progress of a long run: the phase, done and total.',
+      },
+      settle: {
+        ru: 'Прогон сортировки или фильтра завершён; передаёт число строк.',
+        en: 'A sort or filter run finished; carries the row count.',
+      },
+    },
     slots: {
       empty: { ru: 'Содержимое пустого грида.', en: 'Content of the empty grid.' },
     },
     keyboard: [
+      {
+        keys: 'Enter / Space',
+        description: {
+          ru: 'На ячейке шапки меняет сортировку: по возрастанию, по убыванию, без сортировки.',
+          en: 'On a header cell cycles the sort: ascending, descending, none.',
+        },
+      },
+      {
+        keys: 'Shift+Enter',
+        description: {
+          ru: 'На ячейке шапки добавляет колонку следующим ключом сортировки.',
+          en: 'On a header cell adds the column as the next sort key.',
+        },
+      },
       {
         keys: 'ArrowUp / ArrowDown',
         description: {

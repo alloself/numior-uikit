@@ -1,6 +1,7 @@
 import type { Locator, Page } from '@playwright/test';
 
 const OPEN_TIMEOUT = 180_000;
+const SETTLE_TIMEOUT = 60_000;
 
 export class GridBenchPage {
   readonly grid: Locator;
@@ -50,6 +51,33 @@ export class GridBenchPage {
           });
         }),
     );
+  }
+
+  async scrollHome(): Promise<void> {
+    await this.viewport.evaluate((element) => {
+      element.scrollTo({ top: 0, left: 0 });
+    });
+
+    await this.nextFrame();
+  }
+
+  async sortLatencies(col: number, clicks: number, shift = false): Promise<number[]> {
+    const header = this.viewport.locator(`[role="columnheader"][aria-colindex="${col + 1}"]`);
+
+    await this.page.evaluate(() => {
+      window.numiorBench?.settles.splice(0);
+    });
+
+    for (let click = 1; click <= clicks; click += 1) {
+      await header.click({ modifiers: shift ? ['Shift'] : [] });
+
+      await this.page.waitForFunction(
+        (expected) => (window.numiorBench?.settles.length ?? 0) >= expected,
+        click,
+        { timeout: SETTLE_TIMEOUT },
+      );
+    }
+    return this.page.evaluate(() => [...(window.numiorBench?.settles ?? [])]);
   }
 
   async keyLatencies(key: string, times: number): Promise<number[]> {

@@ -53,6 +53,34 @@ test('the data grid keeps input and frames within budget on a million rows', asy
     summarize('frame time while wheeling through rows', await bench.wheelFrames(120, 360)),
   );
 
+  await bench.scrollHome();
+  const [coldNumber = Number.NaN, ...warmNumber] = await bench.sortLatencies(5, 6);
+
+  operations.push(
+    summarize('first sort of a number column from the header to the painted result', [coldNumber]),
+  );
+
+  operations.push(
+    summarize('repeat sort of a number column from the header to the painted result', warmNumber),
+  );
+
+  const [coldText = Number.NaN, ...warmText] = await bench.sortLatencies(3, 6);
+
+  operations.push(
+    summarize('first sort of a text column from the header to the painted result', [coldText]),
+  );
+
+  operations.push(
+    summarize('repeat sort of a text column from the header to the painted result', warmText),
+  );
+
+  operations.push(
+    summarize(
+      'add a sort key with Shift from the header to the painted result',
+      await bench.sortLatencies(4, 3, true),
+    ),
+  );
+
   const file = await record(
     RESULTS,
     `${ROWS} generated rows, ${GRID_COLUMNS.length} columns, seed 1, viewport 1440×900`,

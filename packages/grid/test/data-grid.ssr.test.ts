@@ -2,14 +2,19 @@
 import { describe, expect, it } from 'vitest';
 import { createSSRApp, h } from 'vue';
 import { renderToString } from 'vue/server-renderer';
-import { NuiDataGrid } from '../src';
+import { NuiDataGrid, type GridSort } from '../src';
 import { people, PEOPLE_COLUMNS, type Person } from './support/people';
 
-const render = (count: number): Promise<string> =>
+const render = (count: number, sort: readonly GridSort[] = []): Promise<string> =>
   renderToString(
     createSSRApp({
       render: () =>
-        h(NuiDataGrid<Person>, { columns: PEOPLE_COLUMNS, source: people(count), id: 'staff' }),
+        h(NuiDataGrid<Person>, {
+          columns: PEOPLE_COLUMNS,
+          source: people(count),
+          id: 'staff',
+          sort,
+        }),
     }),
   );
 
@@ -32,6 +37,15 @@ describe('NuiDataGrid on the server', () => {
     expect(html).toContain('tabindex="0"');
     expect(html.match(/tabindex="0"/g)).toHaveLength(1);
     expect(html).not.toContain('undefined');
+  });
+
+  it('orders the first screen by the initial sort on the server', async () => {
+    const html = await render(1000, [{ key: 'salary', direction: 'desc' }]);
+
+    expect(html).toBe(await render(1000, [{ key: 'salary', direction: 'desc' }]));
+    expect(html).toContain('aria-sort="descending"');
+    expect(html.indexOf('Сотрудник 998')).toBeLessThan(html.indexOf('Сотрудник 997'));
+    expect(html).not.toContain('Сотрудник 0<');
   });
 
   it('renders the empty state inside the grid when there are no rows', async () => {

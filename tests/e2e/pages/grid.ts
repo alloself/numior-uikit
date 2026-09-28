@@ -48,6 +48,18 @@ export class GridSection {
     });
   }
 
+  sortOrder(col: number): Locator {
+    return this.header(col).locator('.nui-grid__sort-order');
+  }
+
+  async numbersIn(col: number, count: number): Promise<number[]> {
+    const texts = await Promise.all(
+      Array.from({ length: count }, (_, row) => this.cell(row, col).innerText()),
+    );
+
+    return texts.map((text) => Number(text.replaceAll(/\D/g, '')));
+  }
+
   renderedRowCount(): Promise<number> {
     return this.viewport.evaluate(
       (element) => element.querySelectorAll('.nui-grid__body > [role="row"]').length,

@@ -70,6 +70,21 @@
     },
     "frame time while wheeling through rows": {
       "p95Ms": 34
+    },
+    "first sort of a number column from the header to the painted result": {
+      "p95Ms": 250
+    },
+    "repeat sort of a number column from the header to the painted result": {
+      "p95Ms": 250
+    },
+    "first sort of a text column from the header to the painted result": {
+      "p95Ms": 250
+    },
+    "repeat sort of a text column from the header to the painted result": {
+      "p95Ms": 250
+    },
+    "add a sort key with Shift from the header to the painted result": {
+      "p95Ms": 250
     }
   }
 }

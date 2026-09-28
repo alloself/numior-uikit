@@ -3,21 +3,31 @@
     <p class="bench__caption">{{ caption }}</p>
     <NuiDataGrid
       v-if="shown"
+      v-model:sort="sort"
       :columns="GRID_COLUMNS"
       :source="rows"
       :get-key="(row) => row.id"
       height="calc(100dvh - 4rem)"
       label="Бенчмарк грида"
       data-testid="bench-grid"
+      @settle="onSettle"
     />
   </main>
 </template>
 
 <script setup lang="ts">
 import { nextTick, onMounted, ref } from 'vue';
-import { NuiDataGrid } from '@numior/grid';
+import { NuiDataGrid, type GridSort } from '@numior/grid';
 import { GRID_COLUMNS, generateRows } from '../../../../packages/grid/bench/dataset';
-import { afterPaint, createFrameRecorder, trackKeyLatency, type BenchHooks } from './bench-hooks';
+import {
+  afterPaint,
+  createFrameRecorder,
+  recordSettle,
+  trackInput,
+  trackKeyLatency,
+  type BenchHooks,
+  type InputClock,
+} from './bench-hooks';
 
 const DEFAULT_ROWS = 1_000_000;
 
@@ -28,8 +38,15 @@ const rows = generateRows(count);
 const dataReady = performance.now();
 const shown = ref(true);
 const caption = `${count.toLocaleString('ru-RU')} строк × ${GRID_COLUMNS.length} колонок`;
+const sort = ref<readonly GridSort[]>([]);
 const latencies: number[] = [];
+const settles: number[] = [];
 const frames: number[] = [];
+const clock: InputClock = { last: 0 };
+
+const onSettle = (): void => {
+  void recordSettle(settles, clock);
+};
 
 const remount = async (): Promise<number> => {
   shown.value = false;
@@ -45,6 +62,7 @@ const hooks: BenchHooks = {
   dataMs: dataReady - generating,
   firstRowMs: null,
   latencies,
+  settles,
   frames,
   remount,
   recordFrames: createFrameRecorder(frames),
@@ -52,6 +70,7 @@ const hooks: BenchHooks = {
 
 window.numiorBench = hooks;
 trackKeyLatency(latencies);
+trackInput(clock);
 
 onMounted(async () => {
   hooks.firstRowMs = (await afterPaint()) - dataReady;

@@ -16,6 +16,7 @@
       </NuiButton>
     </div>
     <NuiDataGrid
+      v-model:sort="sort"
       :columns="columns"
       :source="empty ? [] : orders"
       :get-key="(row) => row.id"
@@ -35,7 +36,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { NuiButton, NuiChip, type NuiTone } from '@numior/vue';
-import { NuiDataGrid, type NuiGridColumn } from '@numior/grid';
+import { NuiDataGrid, type GridSort, type NuiGridColumn } from '@numior/grid';
 
 type OrderStatus = 'new' | 'paid' | 'shipped' | 'returned';
 
@@ -128,4 +129,5 @@ const columns: NuiGridColumn<Order>[] = [
 ];
 
 const empty = ref(false);
+const sort = ref<readonly GridSort[]>([]);
 </script>

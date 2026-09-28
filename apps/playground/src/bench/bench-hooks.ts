@@ -3,6 +3,7 @@ export interface BenchHooks {
   readonly dataMs: number;
   firstRowMs: number | null;
   readonly latencies: number[];
+  readonly settles: number[];
   readonly frames: number[];
   remount(): Promise<number>;
   recordFrames(active: boolean): void;
@@ -28,6 +29,26 @@ export const afterPaint = (): Promise<number> =>
       channel.port2.postMessage(undefined);
     });
   });
+
+export interface InputClock {
+  last: number;
+}
+
+export const trackInput = (clock: InputClock): void => {
+  for (const type of ['pointerdown', 'keydown'] as const) {
+    window.addEventListener(
+      type,
+      (event) => {
+        clock.last = event.timeStamp;
+      },
+      { capture: true },
+    );
+  }
+};
+
+export const recordSettle = async (settles: number[], clock: InputClock): Promise<void> => {
+  settles.push((await afterPaint()) - clock.last);
+};
 
 const recordLatency = async (latencies: number[], started: number): Promise<void> => {
   latencies.push((await afterPaint()) - started);
