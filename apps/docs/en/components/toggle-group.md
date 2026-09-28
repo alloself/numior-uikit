@@ -23,8 +23,8 @@ import '@numior/vue/styles/toggle-group.css';
 
 ## Accessibility
 
-The root is a `role="group"` named by `label`. In the single mode the buttons carry
-`role="radio"` and `aria-checked`, in `multiple` `aria-pressed`. One button stays in the tab
+In the single mode the root is a `role="radiogroup"` with `role="radio"` buttons and
+`aria-checked`. In `multiple` it is a `role="group"` with `aria-pressed`; `label` names it. One button stays in the tab
 order, the arrows walk the rest and follow `orientation` and RTL.
 
 <KeyboardReference name="NuiToggleGroup" />

@@ -81,6 +81,18 @@ describe('NuiToaster and NuiToast', () => {
     toaster.unmount();
   });
 
+  it('keeps the timers paused while a toast stays focused after the pointer leaves', async () => {
+    const toaster = ToasterDriver.mount({ storeOptions: { duration: 1000 } });
+    toaster.show({ title: 'Keep me' });
+    await toaster.advance(0);
+    await toaster.hoverStack();
+    await toaster.toast(0).focus();
+    await toaster.leaveStack();
+    await toaster.advance(1100);
+    expect(toaster.toasts.map((toast) => toast.leaving)).toEqual([false]);
+    toaster.unmount();
+  });
+
   it('dismisses a focused toast on Escape and moves focus to its neighbour', async () => {
     const toaster = ToasterDriver.mount({ storeOptions: { duration: 0 } });
     toaster.show({ title: 'First' });

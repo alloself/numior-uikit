@@ -24,8 +24,8 @@ import '@numior/vue/styles/toggle-group.css';
 
 ## Доступность
 
-Корень — `role="group"` с именем из `label`. В одиночном режиме кнопки несут `role="radio"`
-и `aria-checked`, в `multiple` — `aria-pressed`. В порядке табуляции одна кнопка, стрелки
+В одиночном режиме корень — `role="radiogroup"` с кнопками `role="radio"` и `aria-checked`,
+в `multiple` — `role="group"` с `aria-pressed`; имя даёт `label`. В порядке табуляции одна кнопка, стрелки
 ходят по остальным и следуют `orientation` и RTL.
 
 <KeyboardReference name="NuiToggleGroup" />

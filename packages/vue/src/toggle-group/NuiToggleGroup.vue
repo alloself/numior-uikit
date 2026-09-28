@@ -8,9 +8,9 @@
       `nui-toggle-group--orientation-${orientation}`,
       { 'nui-toggle-group--disabled': disabled, 'nui-toggle-group--icon-only': iconOnly },
     ]"
-    role="group"
+    :role="multiple ? 'group' : 'radiogroup'"
     :aria-label="label"
-    :aria-orientation="orientation === 'vertical' ? 'vertical' : undefined"
+    :aria-orientation="orientation === 'vertical' && !multiple ? 'vertical' : undefined"
     @keydown="navigation.onKeydown"
     @focusin="navigation.onFocusin"
     @focusout="onFocusout"

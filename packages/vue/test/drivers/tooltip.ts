@@ -27,18 +27,21 @@ export class TooltipDriver extends ComponentDriver {
 
     const Host = defineComponent({
       setup: () => () =>
-        h(
-          NuiTooltip,
-          {
-            ...props,
-            ...(anchor ? { anchor } : {}),
-            open: model.value,
-            'onUpdate:open': (value: boolean) => {
-              model.value = value;
+        h('div', [
+          h('input', { class: 'outside' }),
+          h(
+            NuiTooltip,
+            {
+              ...props,
+              ...(anchor ? { anchor } : {}),
+              open: model.value,
+              'onUpdate:open': (value: boolean) => {
+                model.value = value;
+              },
             },
-          },
-          slots,
-        ),
+            slots,
+          ),
+        ]),
     });
 
     return new TooltipDriver(mount(Host, { attachTo: document.body }), stubs, model, anchor);
@@ -102,6 +105,15 @@ export class TooltipDriver extends ComponentDriver {
 
   async pressEscape(): Promise<void> {
     await this.trigger.trigger('keydown', { key: 'Escape' });
+  }
+
+  async focusOutside(): Promise<void> {
+    this.wrapper.find<HTMLInputElement>('.outside').element.focus();
+    await nextTick();
+  }
+
+  async pressEscapeOutside(): Promise<void> {
+    await this.wrapper.find<HTMLInputElement>('.outside').trigger('keydown', { key: 'Escape' });
   }
 
   async advance(ms: number): Promise<void> {

@@ -17,6 +17,11 @@ describe('NuiAccordion', () => {
     expect(sticky.trigger('API').element.disabled).toBe(true);
   });
 
+  it('carries the supplied id on its root', () => {
+    const accordion = AccordionDriver.mount({ props: { id: 'faq' } });
+    expect(accordion.attribute('id')).toBe('faq');
+  });
+
   it('keeps several sections open in multiple mode', async () => {
     const accordion = AccordionDriver.mount({ props: { multiple: true }, modelValue: ['usage'] });
     await accordion.click('Install');

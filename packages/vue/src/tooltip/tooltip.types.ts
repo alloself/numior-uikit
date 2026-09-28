@@ -19,7 +19,6 @@ export interface NuiTooltipTriggerAttrs {
   readonly onPointerdown: () => void;
   readonly onFocus: () => void;
   readonly onBlur: () => void;
-  readonly onKeydown: (event: KeyboardEvent) => void;
 }
 
 export interface NuiTooltipTriggerSlot {

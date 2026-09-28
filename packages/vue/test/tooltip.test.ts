@@ -44,6 +44,16 @@ describe('NuiTooltip', () => {
     tooltip.unmount();
   });
 
+  it('closes a hovered tooltip on Escape pressed anywhere on the page', async () => {
+    const tooltip = TooltipDriver.mount({ props: { openDelay: 0 } });
+    await tooltip.focusOutside();
+    await tooltip.hover();
+    expect(tooltip.modelOpen).toBe(true);
+    await tooltip.pressEscapeOutside();
+    expect(tooltip.modelOpen).toBe(false);
+    tooltip.unmount();
+  });
+
   it('stays silent while disabled and drops the description from its trigger', async () => {
     const tooltip = TooltipDriver.mount({ props: { disabled: true } });
     expect(tooltip.trigger.attributes('aria-describedby')).toBeUndefined();

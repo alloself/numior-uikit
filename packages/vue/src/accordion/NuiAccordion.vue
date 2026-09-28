@@ -1,5 +1,6 @@
 <template>
   <div
+    :id="id"
     ref="root"
     class="nui-accordion"
     :class="[`nui-accordion--variant-${variant}`, { 'nui-accordion--disabled': disabled }]"
@@ -17,6 +18,7 @@ import { provideAccordion } from './accordion-context';
 import type { NuiAccordionProps } from './accordion.types';
 
 const {
+  id,
   multiple = false,
   collapsible = true,
   variant = 'plain',

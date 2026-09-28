@@ -4,7 +4,7 @@ import { ToggleGroupDriver } from './drivers/toggle-group';
 describe('NuiToggleGroup', () => {
   it('selects one value as a group of radios and can clear it unless required', async () => {
     const group = ToggleGroupDriver.mount({ modelValue: 'dark', props: { label: 'Theme' } });
-    expect(group.attribute('role')).toBe('group');
+    expect(group.attribute('role')).toBe('radiogroup');
     expect(group.attribute('aria-label')).toBe('Theme');
     expect(group.roles).toEqual(['radio', 'radio', 'radio', 'radio']);
     expect(group.checkedStates).toEqual(['false', 'true', 'false', 'false']);
@@ -21,8 +21,24 @@ describe('NuiToggleGroup', () => {
     expect(required.selected).toBe('light');
   });
 
+  it('keeps aria-orientation on the radiogroup only', () => {
+    const single = ToggleGroupDriver.mount({ props: { orientation: 'vertical', label: 'Theme' } });
+    expect(single.attribute('role')).toBe('radiogroup');
+    expect(single.attribute('aria-orientation')).toBe('vertical');
+
+    const many = ToggleGroupDriver.mount({
+      props: { orientation: 'vertical', multiple: true, label: 'Panels' },
+    });
+
+    expect(many.attribute('role')).toBe('group');
+    expect(many.attribute('aria-orientation')).toBeUndefined();
+    single.unmount();
+    many.unmount();
+  });
+
   it('toggles several pressed buttons in multiple mode', async () => {
     const group = ToggleGroupDriver.mount({ props: { multiple: true }, modelValue: ['light'] });
+    expect(group.attribute('role')).toBe('group');
     expect(group.roles).toEqual([undefined, undefined, undefined, undefined]);
     expect(group.pressedStates).toEqual(['true', 'false', 'false', 'false']);
     await group.click('Dark');

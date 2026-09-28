@@ -8,10 +8,10 @@
     aria-live="polite"
     :aria-label="labelText"
     v-bind="{ ...contentAttrs, ...$attrs }"
-    @pointerenter="pauseAll"
-    @pointerleave="resumeAll"
-    @focusin="pauseAll"
-    @focusout="resumeAll"
+    @pointerenter="onPointerenter"
+    @pointerleave="onPointerleave"
+    @focusin="onFocusin"
+    @focusout="onFocusout"
   >
     <div
       v-for="item in items"
@@ -125,6 +125,36 @@ const applyToVisible = (apply: (toastId: string) => void): void => {
 
 const pauseAll = (): void => applyToVisible(store.pause);
 const resumeAll = (): void => applyToVisible(store.resume);
+
+const holds = { hover: false, focus: false };
+
+const release = (): void => {
+  if (!holds.hover && !holds.focus) {
+    resumeAll();
+  }
+};
+
+const onPointerenter = (): void => {
+  holds.hover = true;
+  pauseAll();
+};
+
+const onPointerleave = (): void => {
+  holds.hover = false;
+  release();
+};
+
+const onFocusin = (): void => {
+  holds.focus = true;
+  pauseAll();
+};
+
+const onFocusout = (event: FocusEvent): void => {
+  const next = event.relatedTarget;
+
+  holds.focus = next instanceof Node && regionElement.value?.contains(next) === true;
+  release();
+};
 
 const onVisibilityChange = (): void => {
   if (document.hidden) {
