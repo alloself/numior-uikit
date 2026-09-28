@@ -220,4 +220,26 @@ describe('NuiNumberField', () => {
       group: false,
     });
   });
+
+  it('ignores Home, End and arrows while readonly and disables the hidden input with the control', async () => {
+    const locked = NumberFieldDriver.mount({
+      modelValue: 5,
+      props: { readonly: true, min: 0, max: 10 },
+    });
+
+    await locked.press('End');
+    await locked.press('Home');
+    await locked.press('ArrowUp');
+    expect(locked.value).toBe(5);
+    locked.unmount();
+
+    const off = NumberFieldDriver.mount({
+      modelValue: 5,
+      props: { name: 'quantity', disabled: true },
+    });
+
+    expect(off.hiddenValue).toBe('5');
+    expect(off.hiddenDisabled).toBe(true);
+    off.unmount();
+  });
 });

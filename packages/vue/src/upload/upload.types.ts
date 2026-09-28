@@ -34,6 +34,7 @@ export interface NuiUploadRowProps<R = unknown> {
   cancelLabel: string;
   retryLabel: string;
   removeLabel: string;
+  disabled?: boolean | undefined;
 }
 
 export interface NuiUploadItemSlot<R = unknown> {

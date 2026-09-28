@@ -72,6 +72,7 @@
           type="hidden"
           :name="name"
           :value="keyOf(value)"
+          :disabled="isDisabled"
         />
       </template>
     </div>

@@ -39,6 +39,9 @@ Accepted files go to the adapter, at most `concurrency` at a time.
 Cancelling aborts the request through `signal`. An adapter error keeps the row with a retry
 button. Removing a finished file emits `remove`, and the app deletes it on the server.
 
+In single mode a rejected replacement leaves the selected file in place. `disabled` blocks both
+receiving files and removing rows.
+
 ## Accessibility
 
 The whole zone is clickable; with the keyboard the "Browse files" button picks files and carries

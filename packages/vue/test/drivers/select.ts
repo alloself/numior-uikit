@@ -120,6 +120,12 @@ export class SelectDriver extends ComponentDriver {
       .map((input) => input.element.value);
   }
 
+  get hiddenDisabled(): boolean[] {
+    return this.wrapper
+      .findAll<HTMLInputElement>('input[type="hidden"]')
+      .map((input) => input.element.disabled);
+  }
+
   get emptyText(): string {
     const empty = this.wrapper.find('.nui-list__empty');
     return empty.exists() ? empty.text() : '';

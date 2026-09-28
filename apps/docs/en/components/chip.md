@@ -33,8 +33,10 @@ import '@numior/vue/styles/chip.css';
 ## Accessibility
 
 A chip is a `<span>` without a role and is not interactive on its own. The remove button is a
-plain `<button>` outside the tab order, because in chip lists removal is reachable from the
-field with the keyboard. For a standalone chip pass a `removeLabel` that names the item.
+plain `<button>` in the tab order. `removeTabbable="false"` takes it out in lists where removal
+is reachable from the field, as in `NuiCombobox`.
+
+For a standalone chip pass a `removeLabel` that names the item.
 
 ## API
 

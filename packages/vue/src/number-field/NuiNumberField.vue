@@ -68,7 +68,7 @@
           <NuiIcon alias="plus" />
         </NuiButton>
       </span>
-      <input v-if="name" type="hidden" :name="name" :value="model ?? ''" />
+      <input v-if="name" type="hidden" :name="name" :value="model ?? ''" :disabled="isDisabled" />
     </div>
   </NuiFieldFrame>
 </template>
@@ -212,6 +212,9 @@ const onBeforeinput = (event: InputEvent): void => {
 const onKeydown = (event: KeyboardEvent): void => {
   if (event.key === 'Enter') {
     commit();
+    return;
+  }
+  if (isDisabled.value || readonly) {
     return;
   }
   if (event.key === 'Home' && min !== undefined) {

@@ -19,6 +19,9 @@
         ref="input"
         :model-value="model"
         :locale="locale"
+        :min="min"
+        :max="max"
+        :is-date-disabled="isDateDisabled"
         :time="time"
         :placeholder="placeholder"
         :readonly="readonly"
@@ -61,7 +64,7 @@
           @keydown="onTimeKeydown"
         />
       </template>
-      <input v-if="name" type="hidden" :name="name" :value="model ?? ''" />
+      <input v-if="name" type="hidden" :name="name" :value="model ?? ''" :disabled="isDisabled" />
     </NuiDateField>
   </NuiFieldFrame>
 </template>

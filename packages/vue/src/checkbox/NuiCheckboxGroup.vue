@@ -11,7 +11,6 @@
       :aria-labelledby="labelledBy"
       :aria-describedby="attrs['aria-describedby']"
       :aria-invalid="attrs['aria-invalid']"
-      :aria-required="isRequired || undefined"
       :aria-disabled="isDisabled || undefined"
       v-bind="passthrough"
     >
@@ -65,7 +64,6 @@ const {
   field,
   attrs,
   invalid: isInvalid,
-  required: isRequired,
   disabled: isDisabled,
 } = useFieldControl(() => ({ id, disabled, required, invalid, label, description, error }), {
   group: true,

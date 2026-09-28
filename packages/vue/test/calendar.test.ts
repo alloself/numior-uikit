@@ -282,4 +282,14 @@ describe('NuiCalendar', () => {
     expect(english.navLabel('previous')).toBe('Previous month');
     expect(english.todayButton.text()).toBe('Now');
   });
+
+  it('gives every month its own picker id so two-month calendars keep their controls unambiguous', async () => {
+    const calendar = CalendarDriver.mount({ modelValue: '2026-09-24', props: { months: 2 } });
+
+    await calendar.clickTitle('month');
+    expect(calendar.pickerIds).toHaveLength(2);
+    expect(new Set(calendar.pickerIds).size).toBe(2);
+    expect(calendar.titleControls).toEqual(calendar.pickerIds);
+    calendar.unmount();
+  });
 });

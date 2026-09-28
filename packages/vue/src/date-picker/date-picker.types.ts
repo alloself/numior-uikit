@@ -45,6 +45,9 @@ export interface NuiDateRangePickerProps extends NuiDatePickerBaseProps {
 export interface NuiDateInputProps {
   modelValue: string | null;
   locale: string;
+  min?: string | undefined;
+  max?: string | undefined;
+  isDateDisabled?: ((date: string) => boolean) | undefined;
   time?: boolean | undefined;
   placeholder?: string | undefined;
   disabled?: boolean | undefined;

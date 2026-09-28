@@ -67,7 +67,7 @@ const { month, captionId, first, last } = defineProps<{
 
 const calendar = useCalendar();
 const labels = computed(() => calendar.labels());
-const pickerId = computed(() => `${calendar.id.value}-picker`);
+const pickerId = computed(() => `${calendar.id.value}-${month}-picker`);
 
 const parts = computed<TitlePart[]>(() => [
   {

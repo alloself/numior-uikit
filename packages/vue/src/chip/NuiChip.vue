@@ -17,7 +17,7 @@
       size="sm"
       class="nui-chip__remove"
       :aria-label="removeText"
-      tabindex="-1"
+      :tabindex="removeTabbable ? undefined : -1"
       :disabled="disabled"
       @click="emit('remove')"
     >
@@ -40,6 +40,7 @@ const {
   size = 'md',
   icon,
   removable = false,
+  removeTabbable = true,
   removeLabel,
   disabled = false,
 } = defineProps<NuiChipProps>();

@@ -50,6 +50,11 @@ status: accepted
   и размеры шапки таблицы — custom properties на элементе. Направление письма — опция `dir`
   конфига и `useDirection(anchor)`.
 
+### Уточнения после аудита (2026-09-28)
+
+`aria-required` не ставится на `role="group"`: ARIA не допускает атрибут на этой роли, а
+обязательность группы чекбоксов выражает подпись поля.
+
 ## Alternatives Considered
 
 - Runtime-объекты props ради тристейт-boolean отвергнуты: destructure-дефолт `= undefined`

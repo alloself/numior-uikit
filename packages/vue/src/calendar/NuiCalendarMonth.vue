@@ -35,7 +35,7 @@
         </tr>
       </tbody>
     </table>
-    <NuiCalendarPicker v-else :kind="calendar.view.value" />
+    <NuiCalendarPicker v-else :kind="calendar.view.value" :month="month" />
   </section>
 </template>
 

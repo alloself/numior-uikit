@@ -19,7 +19,7 @@
 
 <script setup lang="ts">
 import { computed, useTemplateRef } from 'vue';
-import { datePatternOf, useMessages } from '@numior/primitives';
+import { datePatternOf, isWithin, useMessages } from '@numior/primitives';
 import { datePickerMessages } from './date-picker.messages';
 import type { NuiDateInputProps } from './date-picker.types';
 import { useDateText } from './use-date-text';
@@ -27,6 +27,9 @@ import { useDateText } from './use-date-text';
 const {
   modelValue,
   locale,
+  min,
+  max,
+  isDateDisabled,
   time = false,
   placeholder,
   disabled = false,
@@ -44,6 +47,7 @@ const text = useDateText({
   value: () => modelValue,
   locale: localeRef,
   time: () => time,
+  accepts: (date) => isWithin(date, min, max) && !(isDateDisabled?.(date) ?? false),
   commit: (date) => emit('update:modelValue', date),
 });
 

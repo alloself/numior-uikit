@@ -22,7 +22,8 @@ import '@numior/vue/styles/number-field.css';
 ### Bounds and step
 
 On blur or Enter the value is parsed, clamped between `min` and `max` and snapped to the step
-grid. `steppers="false"` removes the plus and minus buttons.
+grid. `steppers="false"` removes the plus and minus buttons. Under `readonly` neither the arrows,
+nor Home and End, nor the buttons change the value.
 
 <Example name="number-field/Bounds" />
 

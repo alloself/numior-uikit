@@ -122,6 +122,7 @@ describe('NuiCombobox', () => {
     expect(combobox.toggleLabel).toBe('Показать варианты');
     expect(combobox.clearLabel).toBe('Очистить');
     expect(combobox.chipRemoveLabels).toEqual(['Убрать Apple']);
+    expect(combobox.chipRemoveTabStops).toEqual(['-1']);
     await combobox.receive({ loading: true });
     expect(combobox.statusText).toBe('Загрузка');
     await combobox.receive({ loading: false, options: [] });

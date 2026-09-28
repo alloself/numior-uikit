@@ -1,6 +1,6 @@
 <template>
   <div
-    :id="`${calendar.id.value}-picker`"
+    :id="`${calendar.id.value}-${month}-picker`"
     ref="root"
     class="nui-calendar__picker"
     role="group"
@@ -39,7 +39,7 @@ const COLUMNS = 3;
 
 const pad = (value: number): string => String(value).padStart(2, '0');
 
-const { kind } = defineProps<{ kind: 'months' | 'years' }>();
+const { kind, month } = defineProps<{ kind: 'months' | 'years'; month: string }>();
 
 const calendar = useCalendar();
 const root = useTemplateRef<HTMLElement>('root');

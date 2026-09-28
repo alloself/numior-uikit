@@ -24,6 +24,7 @@
               size="sm"
               icon-only
               :aria-label="cancelLabel"
+              :disabled="disabled"
               @click="cancel"
             >
               <NuiIcon alias="x" />
@@ -36,6 +37,7 @@
                 size="sm"
                 icon-only
                 :aria-label="retryLabel"
+                :disabled="disabled"
                 @click="retry"
               >
                 <NuiIcon alias="refresh" />
@@ -46,6 +48,7 @@
                 size="sm"
                 icon-only
                 :aria-label="removeLabel"
+                :disabled="disabled"
                 @click="remove"
               >
                 <NuiIcon alias="x" />
@@ -73,8 +76,15 @@ import NuiProgress from '../progress/NuiProgress.vue';
 import NuiRow from '../row/NuiRow.vue';
 import type { NuiUploadRowProps } from './upload.types';
 
-const { item, preview, description, cancelLabel, retryLabel, removeLabel } =
-  defineProps<NuiUploadRowProps<R>>();
+const {
+  item,
+  preview,
+  description,
+  cancelLabel,
+  retryLabel,
+  removeLabel,
+  disabled = false,
+} = defineProps<NuiUploadRowProps<R>>();
 
 const emit = defineEmits<{ cancel: []; retry: []; remove: [] }>();
 

@@ -21,13 +21,15 @@ describe('NuiChip', () => {
     expect(custom.hasIcon).toBe(true);
   });
 
-  it('adds a labelled remove button outside the tab order that emits remove unless disabled', async () => {
+  it('adds a labelled, tabbable remove button that emits remove unless disabled and leaves the tab order on request', async () => {
     const chip = ChipDriver.mount({ props: { removable: true, removeLabel: 'Убрать Vue' } });
     expect(chip.hasModifier('removable')).toBe(true);
     expect(chip.removeButton.attributes('aria-label')).toBe('Убрать Vue');
-    expect(chip.removeButton.attributes('tabindex')).toBe('-1');
+    expect(chip.removeButton.attributes('tabindex')).toBeUndefined();
     await chip.clickRemove();
     expect(chip.emittedRemove).toBe(1);
+    const listed = ChipDriver.mount({ props: { removable: true, removeTabbable: false } });
+    expect(listed.removeButton.attributes('tabindex')).toBe('-1');
     const off = ChipDriver.mount({ props: { removable: true, disabled: true } });
     expect(off.hasModifier('disabled')).toBe(true);
     expect(off.removeButton.element.disabled).toBe(true);

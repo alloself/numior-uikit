@@ -366,6 +366,17 @@ export class UploadDriver extends ComponentDriver {
     this.exposed.current?.value?.open();
   }
 
+  async removeById(id: string): Promise<void> {
+    this.exposed.current?.value?.remove(id);
+    await nextTick();
+  }
+
+  actionsDisabled(name: string): boolean {
+    return this.row(name)
+      .findAll<HTMLButtonElement>('button')
+      .every((button) => button.element.disabled);
+  }
+
   override unmount(): void {
     super.unmount();
     this.restoreUrls();

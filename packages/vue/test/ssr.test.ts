@@ -1044,4 +1044,26 @@ describe('server rendering', () => {
     expect(markup).toContain(`aria-describedby="${id}-description ${id}-error"`);
     expect(markup).toContain('nui-field--invalid');
   });
+
+  it('disables the hidden inputs of disabled controls so native forms skip their values', async () => {
+    const html = await renderMarkup(() =>
+      h('form', [
+        h(NuiNumberField, { modelValue: 5, name: 'quantity', disabled: true }),
+        h(NuiSelect, {
+          modelValue: 'apple',
+          name: 'fruit',
+          disabled: true,
+          options: [{ value: 'apple', label: 'Apple' }],
+        }),
+        h(NuiDatePicker, {
+          modelValue: '2026-09-26',
+          locale: 'en-US',
+          name: 'date',
+          disabled: true,
+        }),
+      ]),
+    );
+
+    expect(html.match(/type="hidden"[^>]*disabled/g)).toHaveLength(3);
+  });
 });

@@ -56,6 +56,7 @@
           :cancel-label="texts.cancel"
           :retry-label="texts.retry"
           :remove-label="texts.remove"
+          :disabled="isDisabled"
           @cancel="discard(item)"
           @retry="queue.retry(item.id)"
           @remove="discard(item)"
@@ -231,6 +232,9 @@ const previewOf = (item: NuiUploadItem<R>): string | undefined =>
   previews.get(item.id) ?? (item.type.startsWith('image/') ? item.url : undefined);
 
 const discard = (item: NuiUploadItem<R>): void => {
+  if (isDisabled.value) {
+    return;
+  }
   forget(item.id);
   queue.remove(item.id);
   emit('remove', item);
@@ -239,13 +243,6 @@ const discard = (item: NuiUploadItem<R>): void => {
 const receive = (files: File[]): void => {
   if (isDisabled.value || files.length === 0) {
     return;
-  }
-
-  if (!multiple) {
-    for (const item of model.value) {
-      forget(item.id);
-      queue.remove(item.id);
-    }
   }
 
   const outcome = validateFiles(files, {
@@ -261,6 +258,13 @@ const receive = (files: File[]): void => {
   const entries = files
     .map((file): UploadEntry => ({ file, error: reasons.get(file) }))
     .filter((entry) => rejected === 'list' || entry.error === undefined);
+
+  if (!multiple && entries.length > 0) {
+    for (const item of model.value) {
+      forget(item.id);
+      queue.remove(item.id);
+    }
+  }
 
   remember(queue.add(entries));
 

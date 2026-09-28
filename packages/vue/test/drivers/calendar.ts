@@ -165,6 +165,16 @@ export class CalendarDriver extends ComponentDriver {
     return this.wrapper.findAll('.nui-calendar__option').map((option) => option.text());
   }
 
+  get pickerIds(): Array<string | undefined> {
+    return this.wrapper.findAll('.nui-calendar__picker').map((picker) => picker.attributes('id'));
+  }
+
+  get titleControls(): Array<string | undefined> {
+    return this.wrapper
+      .findAll('.nui-calendar__title-button[aria-expanded="true"]')
+      .map((button) => button.attributes('aria-controls'));
+  }
+
   get presetLabels(): string[] {
     return this.wrapper.findAll('.nui-calendar__preset').map((preset) => preset.text());
   }

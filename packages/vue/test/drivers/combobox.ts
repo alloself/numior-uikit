@@ -135,6 +135,10 @@ export class ComboboxDriver extends ComponentDriver {
     return this.wrapper.findAll('.nui-chip__label').map((chip) => chip.text());
   }
 
+  get chipRemoveTabStops(): Array<string | undefined> {
+    return this.wrapper.findAll('.nui-chip__remove').map((button) => button.attributes('tabindex'));
+  }
+
   get hiddenValues(): string[] {
     return this.wrapper
       .findAll<HTMLInputElement>('input[type="hidden"]')

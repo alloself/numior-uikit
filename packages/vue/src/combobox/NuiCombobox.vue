@@ -20,6 +20,7 @@
             v-for="chip in chips"
             :key="chip.key"
             removable
+            :remove-tabbable="false"
             :remove-label="`${texts.remove} ${chip.label}`"
             :disabled="isDisabled"
             class="nui-combobox__chip"
@@ -101,6 +102,7 @@
           type="hidden"
           :name="name"
           :value="keyOf(value)"
+          :disabled="isDisabled"
         />
       </template>
     </div>

@@ -22,7 +22,8 @@ import '@numior/vue/styles/number-field.css';
 ### Границы и шаг
 
 По уходу фокуса или Enter значение разбирается, зажимается в `min` и `max` и снапится к сетке
-шага. `steppers="false"` убирает кнопки плюс и минус.
+шага. `steppers="false"` убирает кнопки плюс и минус. В `readonly` значение не меняют ни
+стрелки, ни Home и End, ни кнопки.
 
 <Example name="number-field/Bounds" />
 

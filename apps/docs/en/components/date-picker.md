@@ -30,7 +30,8 @@ The text is parsed as you type: a full date lands in the model at once, partial 
 the model alone. Invalid text rolls back on blur. Picking a day writes the model, closes the
 dialog and returns the focus to the field.
 
-`name` adds a hidden input with the ISO value.
+`name` adds a hidden input with the ISO value. A typed date outside `min` and `max` or rejected
+by `isDateDisabled` never reaches the model and rolls back on blur.
 
 <KeyboardReference name="NuiDatePicker" />
 

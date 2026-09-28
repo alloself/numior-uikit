@@ -12,6 +12,7 @@ export interface DateTextOptions {
   readonly value: () => string | null;
   readonly locale: ComputedRef<string>;
   readonly time: () => boolean;
+  readonly accepts: (date: string) => boolean;
   readonly commit: (date: string | null) => void;
 }
 
@@ -49,7 +50,7 @@ export const useDateText = (options: DateTextOptions): DateText => {
       : formatDateText(value, options.locale.value);
   };
 
-  const parse = (text: string): string | null => {
+  const parseAny = (text: string): string | null => {
     if (!options.time()) {
       return parseDateText(text, options.locale.value);
     }
@@ -57,6 +58,16 @@ export const useDateText = (options: DateTextOptions): DateText => {
     const current = splitDateTime(options.value())?.time ?? '00:00';
 
     return parseDateTimeText(text, options.locale.value, current);
+  };
+
+  const parse = (text: string): string | null => {
+    const parsed = parseAny(text);
+
+    if (parsed === null) {
+      return null;
+    }
+
+    return options.accepts(splitDateTime(parsed)?.date ?? parsed) ? parsed : null;
   };
 
   const draft = ref(display(options.value()));

@@ -22,6 +22,8 @@ start swaps them. In the calendar the first click opens the range, the second cl
 dialog, a preset does the same with one press. The clear button resets both ends, `startName`
 and `endName` add hidden form fields.
 
+A typed date outside `min` and `max` never reaches the model.
+
 ## Accessibility
 
 The field label sits on the start field, the end field is named through `endLabel`. The

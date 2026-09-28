@@ -20,6 +20,9 @@
         ref="input"
         :model-value="model.start"
         :locale="locale"
+        :min="min"
+        :max="max"
+        :is-date-disabled="isDateDisabled"
         :placeholder="startPlaceholder"
         :readonly="readonly"
         v-bind="{ ...controlAttrs, ...split.controlAttrs() }"
@@ -30,6 +33,9 @@
       <NuiDateInput
         :model-value="model.end"
         :locale="locale"
+        :min="min"
+        :max="max"
+        :is-date-disabled="isDateDisabled"
         :placeholder="endPlaceholder"
         :readonly="readonly"
         :disabled="isDisabled"
@@ -65,8 +71,20 @@
           <template v-if="$slots.actions" #actions><slot name="actions" /></template>
         </NuiCalendar>
       </template>
-      <input v-if="startName" type="hidden" :name="startName" :value="model.start ?? ''" />
-      <input v-if="endName" type="hidden" :name="endName" :value="model.end ?? ''" />
+      <input
+        v-if="startName"
+        type="hidden"
+        :name="startName"
+        :value="model.start ?? ''"
+        :disabled="isDisabled"
+      />
+      <input
+        v-if="endName"
+        type="hidden"
+        :name="endName"
+        :value="model.end ?? ''"
+        :disabled="isDisabled"
+      />
     </NuiDateField>
   </NuiFieldFrame>
 </template>

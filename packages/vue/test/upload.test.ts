@@ -210,4 +210,30 @@ describe('NuiUpload', () => {
       group: false,
     });
   });
+
+  it('keeps the chosen file when a single-mode replacement is rejected and blocks removal while disabled', async () => {
+    const single = UploadDriver.mount({
+      modelValue: [{ id: 'one', name: 'old.txt', type: 'text/plain', size: 10, status: 'done' }],
+      props: { multiple: false, accept: '.txt', rejected: 'drop', auto: false },
+    });
+
+    await single.addFiles(fileOf('bad.exe', 3, 'application/octet-stream'));
+    expect(single.names).toEqual(['old.txt']);
+    expect(single.events).toEqual(['reject:bad.exe']);
+    await single.addFiles(fileOf('new.txt'));
+    expect(single.names).toEqual(['new.txt']);
+    single.unmount();
+
+    const off = UploadDriver.mount({
+      modelValue: [{ id: 'one', name: 'old.txt', type: 'text/plain', size: 10, status: 'done' }],
+      props: { disabled: true },
+    });
+
+    expect(off.actionsDisabled('old.txt')).toBe(true);
+    await off.clickRemove('old.txt');
+    await off.removeById('one');
+    expect(off.names).toEqual(['old.txt']);
+    expect(off.events).toEqual([]);
+    off.unmount();
+  });
 });

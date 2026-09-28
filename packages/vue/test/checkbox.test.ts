@@ -114,4 +114,11 @@ describe('NuiCheckboxGroup', () => {
       group: true,
     });
   });
+
+  it('marks a required group without ARIA attributes the group role does not allow', () => {
+    const group = CheckboxGroupDriver.mount({ props: { required: true, label: 'Каналы' } });
+
+    expect(group.group.attributes('role')).toBe('group');
+    expect(group.group.attributes('aria-required')).toBeUndefined();
+  });
 });

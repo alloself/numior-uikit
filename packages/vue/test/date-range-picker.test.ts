@@ -80,4 +80,17 @@ describe('NuiDateRangePicker', () => {
       group: false,
     });
   });
+
+  it('keeps typed ends outside min and max out of the model', async () => {
+    const picker = DateRangePickerDriver.mount({
+      modelValue: { start: '2026-09-10', end: '2026-09-20' },
+      props: { min: '2026-09-01' },
+    });
+
+    await picker.type(0, '25.08.2026');
+    expect(picker.value).toEqual({ start: '2026-09-10', end: '2026-09-20' });
+    await picker.type(0, '05.09.2026');
+    expect(picker.value).toEqual({ start: '2026-09-05', end: '2026-09-20' });
+    picker.unmount();
+  });
 });

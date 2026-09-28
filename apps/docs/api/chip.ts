@@ -20,6 +20,10 @@ const docs: DocsMap = {
         ru: 'Кнопка удаления с событием remove.',
         en: 'Remove button with the remove event.',
       },
+      removeTabbable: {
+        ru: 'Кнопка удаления в порядке табуляции; false для списков, где удаление доступно из поля.',
+        en: 'Remove button in the tab order; false for lists where removal is reachable from the field.',
+      },
       removeLabel: {
         ru: 'Доступное имя кнопки удаления; по умолчанию из словаря.',
         en: 'Accessible name of the remove button; the dictionary supplies the default.',

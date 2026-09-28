@@ -10,6 +10,7 @@ export interface NuiChipProps {
   size?: NuiChipSize | undefined;
   icon?: IconAlias | undefined;
   removable?: boolean | undefined;
+  removeTabbable?: boolean | undefined;
   removeLabel?: string | undefined;
   disabled?: boolean | undefined;
 }

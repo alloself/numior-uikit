@@ -152,4 +152,15 @@ describe('NuiSelect', () => {
       group: false,
     });
   });
+
+  it('disables its hidden input together with the control so native forms skip the value', () => {
+    const off = SelectDriver.mount({
+      modelValue: 'banana',
+      props: { name: 'fruit', disabled: true },
+    });
+
+    expect(off.hiddenValues).toEqual(['banana']);
+    expect(off.hiddenDisabled).toEqual([true]);
+    off.unmount();
+  });
 });

@@ -170,4 +170,26 @@ describe('NuiDatePicker', () => {
       group: false,
     });
   });
+
+  it('keeps typed dates outside min, max and isDateDisabled out of the model and rolls the text back', async () => {
+    const picker = DatePickerDriver.mount({
+      modelValue: '2026-09-24',
+      locale: 'en-US',
+      props: {
+        min: '2026-09-01',
+        max: '2026-09-30',
+        isDateDisabled: (date) => date === '2026-09-15',
+      },
+    });
+
+    await picker.type('08/01/2026');
+    expect(picker.value).toBe('2026-09-24');
+    await picker.blur();
+    expect(picker.text).toBe('09/24/2026');
+    await picker.type('09/15/2026');
+    expect(picker.value).toBe('2026-09-24');
+    await picker.type('09/16/2026');
+    expect(picker.value).toBe('2026-09-16');
+    picker.unmount();
+  });
 });

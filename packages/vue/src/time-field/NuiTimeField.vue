@@ -90,7 +90,7 @@
           @focus-wheel="onFocusWheel"
         />
       </div>
-      <input v-if="name" type="hidden" :name="name" :value="model ?? ''" />
+      <input v-if="name" type="hidden" :name="name" :value="model ?? ''" :disabled="isDisabled" />
     </div>
   </NuiFieldFrame>
 </template>

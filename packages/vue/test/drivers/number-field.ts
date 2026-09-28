@@ -124,6 +124,10 @@ export class NumberFieldDriver extends ComponentDriver {
     return hidden.exists() ? hidden.element.value : undefined;
   }
 
+  get hiddenDisabled(): boolean {
+    return this.wrapper.find<HTMLInputElement>('input[type="hidden"]').element.disabled;
+  }
+
   get fieldLabelFor(): string | undefined {
     return this.wrapper.find('label').attributes('for');
   }
