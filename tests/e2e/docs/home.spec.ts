@@ -6,7 +6,7 @@ test('the home page copies the install line and leads to the guide', async ({ pa
   await docs.stubClipboard();
   await docs.open('/');
   const home = docs.home();
-  await expect(home.title).toHaveText('Компоненты Vue, которые уже собраны');
+  await expect(home.title).toHaveText('UI-кит для Vue 3');
   await expect(docs.sidebar).toHaveCount(0);
   await expect(home.facts.getByText(/^\d+$/)).toBeVisible();
   await home.copyInstall.click();

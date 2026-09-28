@@ -20,9 +20,9 @@ export interface HomeContent {
 }
 
 const ru: HomeContent = {
-  title: 'Компоненты Vue, которые уже собраны',
+  title: 'UI-кит для Vue 3',
   tagline:
-    'Формы, таблицы, календари и каркас приложения на одних токенах: SSR, клавиатура и тёмная тема без доработок.',
+    'Формы, таблицы, календари и каркас приложения на одних дизайн-токенах. SSR, клавиатура, RTL и тёмная тема — в каждом компоненте.',
   actions: [
     { text: 'Начать', link: '/guide/getting-started', primary: true },
     { text: 'Компоненты', link: '/components/button', primary: false },
@@ -48,9 +48,9 @@ const ru: HomeContent = {
 };
 
 const en: HomeContent = {
-  title: 'Vue components that are already assembled',
+  title: 'A UI kit for Vue 3',
   tagline:
-    'Forms, tables, calendars and an app shell on shared tokens: SSR, keyboard and dark theme with nothing to patch.',
+    'Forms, tables, calendars and an app shell on one set of design tokens. SSR, keyboard, RTL and a dark theme in every component.',
   actions: [
     { text: 'Get started', link: '/en/guide/getting-started', primary: true },
     { text: 'Components', link: '/en/components/button', primary: false },
