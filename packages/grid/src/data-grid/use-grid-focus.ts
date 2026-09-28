@@ -10,6 +10,7 @@ export interface GridFocusOptions {
   readonly columns: VirtualList;
   readonly rowCount: () => number;
   readonly bodyRows: () => number;
+  readonly headRows: () => number;
   readonly colCount: () => number;
   readonly rowSize: () => number;
   readonly centreIndexOf: (visual: number) => number | undefined;
@@ -31,12 +32,12 @@ const ariaIndex = (element: Element | null | undefined, name: string): number =>
   return Number.isInteger(value) ? value : 0;
 };
 
-const positionOf = (target: EventTarget | null): GridCellPosition | undefined => {
+const positionOf = (target: EventTarget | null, headRows: number): GridCellPosition | undefined => {
   const cell = target instanceof Element ? target.closest(CELL) : null;
   const row = ariaIndex(cell?.closest('[role="row"]'), 'aria-rowindex');
   const col = ariaIndex(cell, 'aria-colindex');
 
-  return row > 0 && col > 0 ? { row: row - 2, col: col - 1 } : undefined;
+  return row >= headRows && col > 0 ? { row: row - headRows - 1, col: col - 1 } : undefined;
 };
 
 const isCell = (target: EventTarget | null): boolean =>
@@ -86,7 +87,7 @@ export const useGridFocus = (options: GridFocusOptions): GridFocus => {
   };
 
   const onFocusin = (event: FocusEvent): void => {
-    const position = positionOf(event.target);
+    const position = positionOf(event.target, options.headRows());
 
     if (position !== undefined && !samePosition(position, options.active.value)) {
       options.active.value = position;

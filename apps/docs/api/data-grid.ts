@@ -4,8 +4,8 @@ const docs: DocsMap = {
   NuiDataGrid: {
     props: {
       columns: {
-        ru: 'Колонки: key, label, type (text, number, date, boolean), value, format, width, minWidth, pin, align, sortable, filter и aggregate. filter выбирает вид фильтра (text, number, date, set) или выключает его значением false. aggregate (sum, count, avg, min, max или функция) считает значение для строк групп и строки итогов. Вне строки, например в группе или списке значений фильтра, format получает строку как undefined.',
-        en: 'Columns: key, label, type (text, number, date, boolean), value, format, width, minWidth, pin, align, sortable, filter and aggregate. filter picks the filter kind (text, number, date, set) or turns it off with false. aggregate (sum, count, avg, min, max or a function) fills group rows and the totals row. Outside a row, such as a group or the filter value list, format receives the row as undefined.',
+        ru: 'Колонки: key, label, type (text, number, date, boolean), value, format, width, minWidth, pin, align, sortable, filter и aggregate. filter выбирает вид фильтра (text, number, date, set) или выключает его значением false. aggregate (sum, count, avg, min, max или функция) считает значение для строк групп и строки итогов. Вне строки, например в группе или списке значений фильтра, format получает строку как undefined. Группа { key, label, children } рисует над заголовками своих колонок полосу с подписью.',
+        en: 'Columns: key, label, type (text, number, date, boolean), value, format, width, minWidth, pin, align, sortable, filter and aggregate. filter picks the filter kind (text, number, date, set) or turns it off with false. aggregate (sum, count, avg, min, max or a function) fills group rows and the totals row. Outside a row, such as a group or the filter value list, format receives the row as undefined. A group { key, label, children } draws a labelled band above the headers of its columns.',
       },
       source: {
         ru: 'Строки данных; грид не копирует и не меняет их.',

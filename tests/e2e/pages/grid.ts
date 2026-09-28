@@ -11,6 +11,8 @@ export interface GridScroll {
   readonly left?: number;
 }
 
+const HEAD_ROWS = 2;
+
 export class GridSection {
   readonly root: Locator;
   readonly viewport: Locator;
@@ -75,11 +77,17 @@ export class GridSection {
   }
 
   row(position: number): Locator {
-    return this.viewport.locator(`[role="row"][aria-rowindex="${position + 2}"]`);
+    return this.viewport.locator(`[role="row"][aria-rowindex="${position + HEAD_ROWS + 1}"]`);
   }
 
   header(col: number): Locator {
-    return this.viewport.locator(`[role="columnheader"][aria-colindex="${col + 1}"]`);
+    return this.viewport.locator(
+      `.nui-grid__row--head [role="columnheader"][aria-colindex="${col + 1}"]`,
+    );
+  }
+
+  band(label: string): Locator {
+    return this.viewport.locator('.nui-grid__row--band [role="columnheader"]', { hasText: label });
   }
 
   cell(position: number, col: number): Locator {
@@ -119,7 +127,7 @@ export class GridSection {
   }
 
   focusedCell(): Promise<GridCell | null> {
-    return this.page.evaluate(() => {
+    return this.page.evaluate((headRows) => {
       const cell = document.activeElement;
 
       if (cell === null || !cell.matches('.nui-grid__cell')) {
@@ -128,10 +136,10 @@ export class GridSection {
       const row = cell.closest('[role="row"]');
 
       return {
-        row: Number(row?.getAttribute('aria-rowindex')) - 2,
+        row: Number(row?.getAttribute('aria-rowindex')) - headRows - 1,
         col: Number(cell.getAttribute('aria-colindex')) - 1,
       };
-    });
+    }, HEAD_ROWS);
   }
 
   viewportBox(): Promise<Box> {

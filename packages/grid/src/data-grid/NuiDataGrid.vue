@@ -13,7 +13,7 @@
       class="nui-grid__viewport"
       :role="hierarchical ? 'treegrid' : 'grid'"
       :aria-label="labelText"
-      :aria-rowcount="rowCount + 1 + footRows"
+      :aria-rowcount="rowCount + headRows + footRows"
       :aria-colcount="layout.visual.length"
       :aria-busy="query.busy.value || undefined"
       @keydown="onKeydown"
@@ -21,8 +21,19 @@
     >
       <div class="nui-grid__header" role="rowgroup" @click="header.onClick">
         <NuiDataGridRow
+          v-for="(band, level) in bands.rows"
+          :key="level"
+          :panes="band"
+          :row-index="level + 1"
+          part="band"
+        >
+          <template #default="{ column }">
+            <span class="nui-grid__text">{{ bands.labels.get(column) }}</span>
+          </template>
+        </NuiDataGridRow>
+        <NuiDataGridRow
           :panes="panes"
-          :row-index="1"
+          :row-index="headRows"
           part="head"
           :active="focus.activeIn(-1)"
           :heads="header.heads.value"
@@ -46,7 +57,7 @@
           v-for="item in rows.items.value"
           :key="keyAt(item.index)"
           :panes="panes"
-          :row-index="item.index + 2"
+          :row-index="item.index + headRows + 1"
           :offset="item.offset"
           :active="focus.activeIn(item.index)"
           :revision="revision"
@@ -64,7 +75,7 @@
           </template>
         </NuiDataGridRow>
       </div>
-      <div v-if="rowCount === 0" class="nui-grid__empty" role="row" aria-rowindex="2">
+      <div v-if="rowCount === 0" class="nui-grid__empty" role="row" :aria-rowindex="headRows + 1">
         <div class="nui-grid__empty-cell" role="gridcell" :aria-colspan="layout.visual.length">
           <slot name="empty">
             <NuiEmpty :title="emptyText" size="sm" />
@@ -74,7 +85,7 @@
       <div v-if="footRows" class="nui-grid__footer" role="rowgroup">
         <NuiDataGridRow
           :panes="panes"
-          :row-index="rowCount + 2"
+          :row-index="rowCount + headRows + 1"
           part="foot"
           :active="focus.activeIn(rowCount)"
           :revision="revision"
@@ -128,6 +139,7 @@ import {
 import NuiDataGridRow from './NuiDataGridRow.vue';
 import { dataGridMessages } from './data-grid.messages';
 import { cellTextOf, cellValueOf, engineColumnOf, valueTextOf } from './grid-format';
+import { columnTreeOf, headerBandsOf } from './grid-columns';
 import { centreIndexOf, gridLayout, panesOf } from './grid-layout';
 import NuiDataGridFilter from './NuiDataGridFilter.vue';
 import NuiDataGridHeaderMarks from './NuiDataGridHeaderMarks.vue';
@@ -181,6 +193,7 @@ const emit = defineEmits<NuiDataGridEvents>();
 const slots = defineSlots<NuiDataGridSlots<T>>();
 
 const viewport = useTemplateRef<HTMLElement>('viewport');
+const tree = computed(() => columnTreeOf(columns));
 const gridId = useControlId(() => id);
 const resolvedLocale = useLocale(() => locale);
 const messages = useMessages(dataGridMessages, resolvedLocale);
@@ -188,7 +201,7 @@ const direction = useDirection(viewport);
 
 const createEngine = (): GridEngine<T> =>
   createGridEngine({
-    columns: columns.map(engineColumnOf),
+    columns: tree.value.leaves.map(engineColumnOf),
     keyOf: getKey,
     defaultExpanded: false,
   });
@@ -206,7 +219,7 @@ const queryFilters = (): readonly GridFilter[] => {
 
 const totals = useGridTotals({
   engine,
-  columns: () => columns,
+  columns: () => tree.value.leaves,
   keys: () => layout.value.visual.map((column) => column.key),
   columnAt: (key) => columnAt(key),
   locale: () => resolvedLocale.value,
@@ -252,8 +265,14 @@ rowCount.value = engine.value.count();
 
 const active = ref<GridCellPosition>({ row: rowCount.value > 0 ? 0 : -1, col: 0 });
 
-const layout = computed(() => gridLayout(columns));
-const columnByKey = computed(() => new Map(columns.map((column) => [column.key, column])));
+const layout = computed(() => gridLayout(tree.value.leaves));
+const bands = computed(() => headerBandsOf(layout.value, tree.value));
+const headRows = computed(() => tree.value.depth + 1);
+
+const columnByKey = computed(
+  () => new Map(tree.value.leaves.map((column) => [column.key, column])),
+);
+
 const rowSize = computed(() => rowHeight ?? ROW_SIZES[size]);
 const labelText = computed(() => label ?? messages.value.label);
 const emptyText = computed(() => emptyLabel ?? messages.value.empty);
@@ -275,7 +294,7 @@ const rows = useVirtualList(viewport, {
   initialCount: INITIAL_ROWS,
   pinned: activeRow,
   maxSize: CANVAS_LIMIT,
-  inset: () => rowSize.value * (1 + footRows.value),
+  inset: () => rowSize.value * (headRows.value + footRows.value),
 });
 
 const columnWindow = useVirtualList(viewport, {
@@ -300,6 +319,7 @@ const panes = computed(() =>
 
 const rootStyle = computed(() => ({
   '--_row': `${rowSize.value}px`,
+  '--_head-rows': String(headRows.value),
   '--_height': height,
   '--_start': `${layout.value.startWidth}px`,
   '--_centre': `${layout.value.centreWidth}px`,
@@ -315,6 +335,7 @@ const focus = useGridFocus({
   columns: columnWindow,
   rowCount: () => rowCount.value + footRows.value,
   bodyRows: () => rowCount.value,
+  headRows: () => headRows.value,
   colCount: () => layout.value.visual.length,
   rowSize: () => rowSize.value,
   centreIndexOf: (visual) => centreIndexOf(layout.value, visual),

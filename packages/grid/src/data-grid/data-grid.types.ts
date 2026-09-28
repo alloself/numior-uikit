@@ -64,10 +64,18 @@ export type NuiGridColumn<T> =
   | NuiGridDateColumn<T>
   | NuiGridBooleanColumn<T>;
 
+export interface NuiGridColumnGroup<T> {
+  readonly key: string;
+  readonly label: string;
+  readonly children: readonly NuiGridColumnDef<T>[];
+}
+
+export type NuiGridColumnDef<T> = NuiGridColumn<T> | NuiGridColumnGroup<T>;
+
 export type NuiGridCellValue = string | number | Date | boolean | null;
 
 export interface NuiDataGridProps<T> {
-  columns: readonly NuiGridColumn<T>[];
+  columns: readonly NuiGridColumnDef<T>[];
   source: readonly T[];
   getKey?: ((row: T) => GridNodeId) | undefined;
   id?: string | undefined;
@@ -149,6 +157,7 @@ export interface GridCellLayout {
   readonly colIndex: number;
   readonly align: NuiGridAlign;
   readonly style: Readonly<Record<string, string>>;
+  readonly span?: number | undefined;
 }
 
 export interface GridPanes {
@@ -178,7 +187,7 @@ export interface GridCellPosition {
   readonly col: number;
 }
 
-export type GridRowPart = 'head' | 'body' | 'foot';
+export type GridRowPart = 'band' | 'head' | 'body' | 'foot';
 
 export type GridGroupCell =
   | { readonly kind: 'toggle'; readonly text: string; readonly count: string }

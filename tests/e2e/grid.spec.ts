@@ -10,8 +10,10 @@ test.describe('data grid', () => {
     await playground.open();
     const { grid } = playground;
     await grid.root.scrollIntoViewIfNeeded();
-    await expect(grid.viewport).toHaveAttribute('aria-rowcount', '10002');
+    await expect(grid.viewport).toHaveAttribute('aria-rowcount', '10003');
     await expect(grid.header(0)).toHaveText('№');
+    await expect(grid.band('Покупатель')).toHaveAttribute('aria-colspan', '2');
+    await expect(grid.band('Заказ')).toHaveAttribute('aria-colindex', '6');
     await expect(grid.cell(0, 10)).toContainText('Новый');
     expect(await grid.renderedRowCount()).toBeLessThan(60);
 
@@ -142,7 +144,7 @@ test.describe('data grid', () => {
     await grid.root.scrollIntoViewIfNeeded();
     await grid.emptyToggle.click();
     await expect(grid.empty).toContainText('Нет строк для показа');
-    await expect(grid.viewport).toHaveAttribute('aria-rowcount', '2');
+    await expect(grid.viewport).toHaveAttribute('aria-rowcount', '3');
     await grid.emptyToggle.click();
     await expect(grid.empty).toHaveCount(0);
     await expect(grid.cell(0, 0)).toHaveText('1');
@@ -164,7 +166,7 @@ test.describe('data grid', () => {
     await grid.applyFilter();
 
     await expect(grid.filter).toBeHidden();
-    await expect(grid.viewport).toHaveAttribute('aria-rowcount', '2502');
+    await expect(grid.viewport).toHaveAttribute('aria-rowcount', '2503');
     await expect(grid.filterButton(10)).toHaveClass(/nui-grid__filter--active/);
     expect(await grid.textsIn(10, 5)).toEqual(Array.from({ length: 5 }, () => 'Оплачен'));
 
@@ -180,7 +182,7 @@ test.describe('data grid', () => {
     await grid.openFilter(10);
     await expect(grid.filterValue('Оплачен')).toBeChecked();
     await grid.resetFilter();
-    await expect(grid.viewport).toHaveAttribute('aria-rowcount', '10002');
+    await expect(grid.viewport).toHaveAttribute('aria-rowcount', '10003');
     await expect(grid.filterButton(10)).not.toHaveClass(/nui-grid__filter--active/);
   });
 
@@ -194,7 +196,7 @@ test.describe('data grid', () => {
     const { grid } = playground;
     await grid.root.scrollIntoViewIfNeeded();
     await grid.quick.fill('Казань');
-    await expect(grid.viewport).toHaveAttribute('aria-rowcount', '1430');
+    await expect(grid.viewport).toHaveAttribute('aria-rowcount', '1431');
     await grid.openFilter(5);
     await grid.filterField('От').fill('1000');
     await grid.filterField('До').fill('20000');
@@ -202,7 +204,7 @@ test.describe('data grid', () => {
 
     await expect
       .poll(async () => Number(await grid.viewport.getAttribute('aria-rowcount')))
-      .toBeLessThan(1430);
+      .toBeLessThan(1431);
 
     const amounts = await grid.numbersIn(5, 5);
     expect(amounts.every((amount) => amount >= 1000 && amount <= 20_000)).toBe(true);
@@ -218,7 +220,7 @@ test.describe('data grid', () => {
     );
 
     await grid.clearFilters.click();
-    await expect(grid.viewport).toHaveAttribute('aria-rowcount', '10002');
+    await expect(grid.viewport).toHaveAttribute('aria-rowcount', '10003');
     await expect(grid.quick).toHaveValue('');
   });
 
@@ -244,7 +246,7 @@ test.describe('data grid', () => {
     await page.keyboard.press('Alt+ArrowDown');
     await grid.filterField('Значение').fill('Анна');
     await page.keyboard.press('Enter');
-    await expect(grid.viewport).toHaveAttribute('aria-rowcount', '1252');
+    await expect(grid.viewport).toHaveAttribute('aria-rowcount', '1253');
     await expect(grid.filter).toBeHidden();
     expect(await grid.focusedCell()).toEqual({ row: -1, col: 1 });
     await expect(grid.root.getByRole('status')).toHaveText('Показано 1 250 строк');
@@ -273,7 +275,7 @@ test.describe('data grid', () => {
     await grid.groupBy('По статусу');
 
     await expect(grid.viewport).toHaveAttribute('role', 'treegrid');
-    await expect(grid.viewport).toHaveAttribute('aria-rowcount', '6');
+    await expect(grid.viewport).toHaveAttribute('aria-rowcount', '7');
     await expect(grid.groupLabel(0)).toHaveText(/^Возврат/);
     await expect(grid.row(0)).toHaveAttribute('aria-expanded', 'false');
     await expect(grid.footerCell(5)).toHaveText(total);

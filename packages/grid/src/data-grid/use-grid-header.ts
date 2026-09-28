@@ -43,7 +43,7 @@ export interface GridHeader<T> {
   applyFilter(next: NuiGridColumnFilter | null): void;
 }
 
-const HEADER = '[role="columnheader"]';
+const HEADER = '.nui-grid__row--head > .nui-grid__pane > [role="columnheader"]';
 
 const headerOf = (target: EventTarget | null): HTMLElement | null => {
   const cell = target instanceof Element ? target.closest(HEADER) : null;

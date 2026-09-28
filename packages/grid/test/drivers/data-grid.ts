@@ -17,11 +17,11 @@ import {
   type NuiDataGridFilters,
   type NuiDataGridExposed,
   type NuiDataGridProps,
-  type NuiGridColumn,
+  type NuiGridColumnDef,
 } from '../../src';
 
 export interface DataGridMountOptions<T> {
-  readonly columns: readonly NuiGridColumn<T>[];
+  readonly columns: readonly NuiGridColumnDef<T>[];
   readonly source: readonly T[];
   readonly props?: Omit<NuiDataGridProps<T>, 'columns' | 'source'>;
   readonly sort?: readonly GridSort[];
@@ -75,12 +75,15 @@ const isExposed = (value: unknown): value is NuiDataGridExposed =>
 const numberAttribute = (element: Element | null | undefined, name: string): number =>
   Number(element?.getAttribute(name) ?? Number.NaN);
 
-const positionOf = (cell: Element | null): CellPosition | undefined => {
+const headRowsOf = (viewport: Element): number =>
+  viewport.querySelectorAll('.nui-grid__header > [role="row"]').length;
+
+const positionOf = (cell: Element | null, headRows: number): CellPosition | undefined => {
   if (cell === null || !cell.matches('.nui-grid__cell')) {
     return undefined;
   }
   return {
-    row: numberAttribute(cell.closest('[role="row"]'), 'aria-rowindex') - 2,
+    row: numberAttribute(cell.closest('[role="row"]'), 'aria-rowindex') - headRows - 1,
     col: numberAttribute(cell, 'aria-colindex') - 1,
   };
 };
@@ -208,22 +211,41 @@ export class DataGridDriver<T> {
     return this.element.scrollLeft;
   }
 
+  private get headRows(): number {
+    return headRowsOf(this.element);
+  }
+
   get renderedRows(): number[] {
     return this.wrapper
       .findAll('.nui-grid__body > [role="row"]')
-      .map((row) => numberAttribute(row.element, 'aria-rowindex') - 2);
+      .map((row) => numberAttribute(row.element, 'aria-rowindex') - this.headRows - 1);
   }
 
   get headerTexts(): string[] {
-    return this.wrapper.findAll('[role="columnheader"]').map((cell) => cell.text());
+    return this.wrapper
+      .findAll('.nui-grid__row--head [role="columnheader"]')
+      .map((cell) => cell.text());
+  }
+
+  get bands(): string[][] {
+    return this.wrapper
+      .findAll('.nui-grid__row--band')
+      .map((row) =>
+        row
+          .findAll('[role="columnheader"]')
+          .map(
+            (cell) =>
+              `${cell.text()}:${cell.attributes('aria-colindex')}+${cell.attributes('aria-colspan')}`,
+          ),
+      );
   }
 
   get activeCell(): CellPosition | undefined {
-    return positionOf(this.element.querySelector('.nui-grid__cell[tabindex="0"]'));
+    return positionOf(this.element.querySelector('.nui-grid__cell[tabindex="0"]'), this.headRows);
   }
 
   get focusedCell(): CellPosition | undefined {
-    return positionOf(document.activeElement);
+    return positionOf(document.activeElement, this.headRows);
   }
 
   get sort(): readonly GridSort[] {
@@ -333,7 +355,7 @@ export class DataGridDriver<T> {
 
   private header(col: number): HTMLElement | null {
     return this.element.querySelector<HTMLElement>(
-      `[role="columnheader"][aria-colindex="${col + 1}"]`,
+      `.nui-grid__row--head [role="columnheader"][aria-colindex="${col + 1}"]`,
     );
   }
 
@@ -343,7 +365,9 @@ export class DataGridDriver<T> {
   }
 
   private row(position: number): Element | null {
-    return this.element.querySelector(`[role="row"][aria-rowindex="${position + 2}"]`);
+    return this.element.querySelector(
+      `[role="row"][aria-rowindex="${position + this.headRows + 1}"]`,
+    );
   }
 
   cell(position: number, col: number): HTMLElement | null {
@@ -404,6 +428,15 @@ export class DataGridDriver<T> {
       }),
     );
 
+    await nextTick();
+  }
+
+  async clickBand(label: string): Promise<void> {
+    const cell = [
+      ...this.element.querySelectorAll<HTMLElement>('.nui-grid__row--band [role="columnheader"]'),
+    ].find((candidate) => candidate.textContent?.trim() === label);
+
+    cell?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     await nextTick();
   }
 

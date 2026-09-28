@@ -11,6 +11,7 @@
   --_hover: var(--nui-neutral-soft);
   --_line: var(--nui-border);
   --_foot: 0px;
+  --_head-rows: 1;
 
   box-sizing: border-box;
   position: relative;
@@ -80,12 +81,17 @@
 .nui-grid__body > .nui-grid__row:hover {
   --_row-bg: color-mix(in oklab, var(--nui-surface), var(--_hover) 70%);
 }
-.nui-grid__row--head {
+.nui-grid__row--head,
+.nui-grid__row--band {
   --_row-bg: var(--_head-bg);
 
   color: var(--nui-text-muted);
   font-size: var(--nui-font-size-xs);
   font-weight: 600;
+}
+.nui-grid__row--band .nui-grid__cell {
+  border-inline-end: 1px solid var(--_line);
+  color: var(--nui-text);
 }
 .nui-grid__row--foot {
   --_row-bg: var(--_head-bg);
@@ -208,6 +214,7 @@
   min-inline-size: 0;
   overflow: hidden;
   text-overflow: ellipsis;
+  unicode-bidi: plaintext;
 }
 .nui-grid__empty {
   position: sticky;
@@ -215,7 +222,7 @@
   display: grid;
   place-items: center;
   box-sizing: border-box;
-  min-block-size: calc(var(--_height) - var(--_row) - var(--_foot) - 2px);
+  min-block-size: calc(var(--_height) - var(--_row) * var(--_head-rows) - var(--_foot) - 2px);
 }
 .nui-grid__empty-cell {
   display: grid;
@@ -274,7 +281,7 @@
 .nui-grid__busy {
   position: absolute;
   inset-inline: 0;
-  inset-block-start: calc(var(--_row) - 1px);
+  inset-block-start: calc(var(--_row) * var(--_head-rows) - 1px);
   z-index: 3;
   block-size: 2px;
   overflow: hidden;

@@ -7,12 +7,12 @@ import {
   type GridNodeId,
   type GridSort,
   type NuiDataGridFilters,
-  type NuiGridColumn,
+  type NuiGridColumnDef,
 } from '../src';
 import { people, PEOPLE_COLUMNS, type Person } from './support/people';
 
 interface Query {
-  readonly columns?: readonly NuiGridColumn<Person>[];
+  readonly columns?: readonly NuiGridColumnDef<Person>[];
   readonly sort?: readonly GridSort[];
   readonly filters?: NuiDataGridFilters;
   readonly quick?: string;
@@ -102,6 +102,31 @@ describe('NuiDataGrid on the server', () => {
     expect(html).toContain('aria-level="2"');
     expect(html).toContain('(333)');
     expect(html).toContain('>Total<');
+  });
+
+  it('renders column group bands above the headers and offsets the rows', async () => {
+    const [id, name, city, ...rest] = PEOPLE_COLUMNS;
+
+    const query = {
+      columns: [
+        ...(id === undefined ? [] : [id]),
+        {
+          key: 'person',
+          label: 'Сотрудник',
+          children: [name, city].flatMap((column) => (column === undefined ? [] : [column])),
+        },
+        ...rest,
+      ],
+    };
+
+    const html = await render(1000, query);
+
+    expect(html).toBe(await render(1000, query));
+    expect(html).toContain('aria-rowcount="1002"');
+    expect(html).toContain('aria-colspan="2"');
+    expect(html).toContain('>Сотрудник<');
+    expect(html).toContain('aria-rowindex="3"');
+    expect(html).not.toContain('aria-rowindex="33"');
   });
 
   it('renders the empty state inside the grid when there are no rows', async () => {

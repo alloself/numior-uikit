@@ -9,7 +9,7 @@
     :aria-rowindex="rowIndex"
     :aria-level="level"
     :aria-expanded="group?.expanded"
-    :style="part === 'body' ? { transform: `translateY(${offset}px)` } : undefined"
+    :style="rowStyle"
   >
     <div
       v-for="pane in PANE_NAMES"
@@ -29,10 +29,11 @@
             'nui-grid__cell--sortable': heads?.[cell.key]?.sortable === true,
           },
         ]"
-        :role="part === 'head' ? 'columnheader' : 'gridcell'"
+        :role="cellRole"
         :aria-colindex="cell.colIndex"
+        :aria-colspan="cell.span"
         :aria-sort="ariaSortOf(cell.key)"
-        :tabindex="cell.colIndex === active ? 0 : -1"
+        :tabindex="tabindexOf(cell.colIndex)"
         :style="cell.style"
       >
         <NuiDataGridGroupCell v-if="group" :cell="group.cells[cell.key]" @toggle="emit('toggle')" />
@@ -43,6 +44,7 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue';
 import NuiDataGridGroupCell from './NuiDataGridGroupCell.vue';
 import type { GridPaneName, NuiDataGridRowProps } from './data-grid.types';
 
@@ -62,6 +64,19 @@ const {
 const emit = defineEmits<{ toggle: [] }>();
 
 defineSlots<{ default(props: { column: string }): unknown }>();
+
+const cellRole = computed(() => (part === 'head' || part === 'band' ? 'columnheader' : 'gridcell'));
+
+const rowStyle = computed(() =>
+  part === 'body' ? { transform: `translateY(${offset}px)` } : undefined,
+);
+
+const tabindexOf = (colIndex: number): number | undefined => {
+  if (part === 'band') {
+    return undefined;
+  }
+  return colIndex === active ? 0 : -1;
+};
 
 const ariaSortOf = (key: string): 'ascending' | 'descending' | undefined => {
   const state = heads?.[key];

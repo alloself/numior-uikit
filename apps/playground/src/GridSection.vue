@@ -85,7 +85,7 @@ import {
   type GridNodeId,
   type GridSort,
   type NuiDataGridFilters,
-  type NuiGridColumn,
+  type NuiGridColumnDef,
 } from '@numior/grid';
 
 type OrderStatus = 'new' | 'paid' | 'shipped' | 'returned';
@@ -162,7 +162,7 @@ const orderAt = (id: number): Order => {
 
 const orders: Order[] = Array.from(Array.from({ length: 10_000 }).keys(), orderAt);
 
-const columns: NuiGridColumn<Order>[] = [
+const columns: NuiGridColumnDef<Order>[] = [
   {
     key: 'id',
     label: '№',
@@ -172,50 +172,68 @@ const columns: NuiGridColumn<Order>[] = [
     value: (row) => row.id,
     format: (value) => String(value),
   },
-  { key: 'customer', label: 'Клиент', type: 'text', width: 200, value: (row) => row.customer },
-  { key: 'email', label: 'Почта', type: 'text', width: 240, value: (row) => row.email },
   {
-    key: 'city',
-    label: 'Город',
-    type: 'text',
-    width: 140,
-    filter: 'set',
-    value: (row) => row.city,
+    key: 'buyer',
+    label: 'Покупатель',
+    children: [
+      { key: 'customer', label: 'Клиент', type: 'text', width: 200, value: (row) => row.customer },
+      { key: 'email', label: 'Почта', type: 'text', width: 240, value: (row) => row.email },
+    ],
   },
   {
-    key: 'country',
-    label: 'Страна',
-    type: 'text',
-    width: 140,
-    filter: 'set',
-    value: (row) => row.country,
+    key: 'address',
+    label: 'Адрес',
+    children: [
+      {
+        key: 'city',
+        label: 'Город',
+        type: 'text',
+        width: 140,
+        filter: 'set',
+        value: (row) => row.city,
+      },
+      {
+        key: 'country',
+        label: 'Страна',
+        type: 'text',
+        width: 140,
+        filter: 'set',
+        value: (row) => row.country,
+      },
+    ],
   },
   {
-    key: 'amount',
-    label: 'Сумма',
-    type: 'number',
-    width: 130,
-    aggregate: 'sum',
-    value: (row) => row.amount,
+    key: 'order',
+    label: 'Заказ',
+    children: [
+      {
+        key: 'amount',
+        label: 'Сумма',
+        type: 'number',
+        width: 130,
+        aggregate: 'sum',
+        value: (row) => row.amount,
+      },
+      { key: 'created', label: 'Создан', type: 'date', width: 150, value: (row) => row.created },
+      {
+        key: 'vip',
+        label: 'VIP',
+        type: 'boolean',
+        width: 100,
+        aggregate: 'sum',
+        value: (row) => row.vip,
+      },
+      {
+        key: 'manager',
+        label: 'Менеджер',
+        type: 'text',
+        width: 180,
+        filter: 'set',
+        value: (row) => row.manager,
+      },
+      { key: 'note', label: 'Комментарий', type: 'text', width: 260, value: (row) => row.note },
+    ],
   },
-  { key: 'created', label: 'Создан', type: 'date', width: 150, value: (row) => row.created },
-  {
-    key: 'vip',
-    label: 'VIP',
-    type: 'boolean',
-    width: 100,
-    aggregate: 'sum',
-    value: (row) => row.vip,
-  },
-  {
-    key: 'manager',
-    label: 'Менеджер',
-    type: 'text',
-    width: 180,
-    filter: 'set',
-    value: (row) => row.manager,
-  },
-  { key: 'note', label: 'Комментарий', type: 'text', width: 260, value: (row) => row.note },
   {
     key: 'status',
     label: 'Статус',
