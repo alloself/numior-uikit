@@ -8,7 +8,16 @@ size. The container stays yours, so the rows can live in a `<tbody>` or any list
 
 ## Signature
 
-<SignatureReference :names="['useVirtualList', 'VirtualListOptions', 'VirtualList', 'VirtualItem']" />
+<SignatureReference
+  :names="[
+    'useVirtualList',
+    'VirtualListOptions',
+    'VirtualList',
+    'VirtualItem',
+    'createSizeIndex',
+    'SizeIndex',
+  ]"
+/>
 
 ## Behaviour
 
@@ -16,3 +25,10 @@ size. The container stays yours, so the rows can live in a `<tbody>` or any list
 spacer paddings, `totalSize` the full height. The server renders the first `initialCount`
 rows, `pinned` keeps an index in view when the data changes, `scrollTo(index)` scrolls to a
 row. `overscan` adds rows beyond the window edges.
+
+`axis: 'x'` windows horizontally from `scrollLeft` and the width; in RTL the scroll starts at
+the right edge. `maxSize` keeps the canvas below the browser ceiling. Then `canvasSize` is the
+physical height, `scrollTop` the logical one, and `items[].offset` places a row in the canvas.
+
+`createSizeIndex(count, estimate)` keeps measured sizes in a Fenwick tree. Pass it as
+`itemSize` and call `set(index, size)` after measuring a row.

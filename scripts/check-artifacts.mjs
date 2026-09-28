@@ -74,6 +74,7 @@ await importBuild('primitives', [
   'useToast',
   'useListNavigation',
   'useVirtualList',
+  'createSizeIndex',
   'useReorder',
   'useUploadQueue',
   'useMediaQuery',

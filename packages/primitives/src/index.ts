@@ -210,8 +210,12 @@ export {
 } from './list/typeahead';
 export type { TypeaheadState } from './list/typeahead';
 export { useVirtualList } from './virtual/useVirtualList';
+export { createSizeIndex } from './virtual/size-index';
+export type { SizeIndex } from './virtual/size-index';
 export type {
+  ItemSize,
   VirtualAlign,
+  VirtualAxis,
   VirtualItem,
   VirtualList,
   VirtualListOptions,

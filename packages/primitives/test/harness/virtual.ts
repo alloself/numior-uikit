@@ -1,15 +1,25 @@
 import { mount, type VueWrapper } from '@vue/test-utils';
 import { defineComponent, h, nextTick, ref, shallowRef } from 'vue';
-import { useVirtualList, type VirtualAlign, type VirtualList } from '../../src';
+import {
+  useVirtualList,
+  type ItemSize,
+  type VirtualAlign,
+  type VirtualAxis,
+  type VirtualList,
+} from '../../src';
 
 export interface VirtualHarnessOptions {
   readonly count?: number;
-  readonly itemSize?: number | ((index: number) => number);
+  readonly itemSize?: ItemSize;
   readonly overscan?: number;
   readonly height?: number;
   readonly initialCount?: number;
   readonly pinned?: number;
   readonly enabled?: boolean;
+  readonly axis?: VirtualAxis;
+  readonly maxSize?: number;
+  readonly inset?: number;
+  readonly dir?: 'ltr' | 'rtl';
 }
 
 type Outcome = { readonly ran: true; readonly value: VirtualList } | { readonly ran: false };
@@ -23,6 +33,7 @@ export class VirtualHarness {
     const count = ref(options.count ?? 1000);
     const pinned = ref(options.pinned);
     const height = options.height ?? 200;
+    const axis = options.axis ?? 'y';
     const outcome: { current: Outcome } = { current: { ran: false } };
 
     const Host = defineComponent({
@@ -32,17 +43,20 @@ export class VirtualHarness {
         const virtual = useVirtualList(container, {
           count,
           itemSize: () => options.itemSize ?? 20,
+          axis,
           overscan: () => options.overscan,
           initialCount: () => options.initialCount,
           enabled: () => options.enabled,
           pinned,
+          maxSize: () => options.maxSize,
+          inset: () => options.inset,
         });
 
         outcome.current = { ran: true, value: virtual };
 
         const setContainer = (element: unknown): void => {
           if (element instanceof HTMLElement) {
-            defineSize(element, 'clientHeight', height);
+            defineSize(element, axis === 'x' ? 'clientWidth' : 'clientHeight', height);
             container.value = element;
           } else {
             container.value = null;
@@ -50,10 +64,10 @@ export class VirtualHarness {
         };
 
         return () =>
-          h('div', { ref: setContainer, class: 'viewport' }, [
+          h('div', { ref: setContainer, class: 'viewport', dir: options.dir }, [
             h(
               'div',
-              { class: 'body', style: { height: `${virtual.totalSize.value}px` } },
+              { class: 'body', style: { height: `${virtual.canvasSize.value}px` } },
               virtual.items.value.map((item) =>
                 h(
                   'div',
@@ -61,7 +75,12 @@ export class VirtualHarness {
                     key: item.index,
                     class: 'row',
                     'data-index': item.index,
-                    style: { transform: `translateY(${item.start}px)` },
+                    style: {
+                      transform:
+                        axis === 'x'
+                          ? `translateX(${item.offset}px)`
+                          : `translateY(${item.offset}px)`,
+                    },
                   },
                   `Row ${item.index}`,
                 ),
@@ -75,7 +94,7 @@ export class VirtualHarness {
     if (!outcome.current.ran) {
       throw new Error('useVirtualList did not run');
     }
-    return new VirtualHarness(wrapper, outcome.current.value, count, pinned);
+    return new VirtualHarness(wrapper, outcome.current.value, count, pinned, axis);
   }
 
   async settle(): Promise<void> {
@@ -87,6 +106,7 @@ export class VirtualHarness {
     private readonly list: VirtualList,
     private readonly count: { value: number },
     private readonly pinned: { value: number | undefined },
+    private readonly axis: VirtualAxis,
   ) {}
 
   private get element(): HTMLElement {
@@ -117,6 +137,26 @@ export class VirtualHarness {
     return this.list.viewport.value;
   }
 
+  get canvasSize(): number {
+    return this.list.canvasSize.value;
+  }
+
+  get shift(): number {
+    return this.list.shift.value;
+  }
+
+  get elementScroll(): number {
+    return this.axis === 'x' ? this.element.scrollLeft : this.element.scrollTop;
+  }
+
+  get items(): readonly {
+    readonly index: number;
+    readonly start: number;
+    readonly offset: number;
+  }[] {
+    return this.list.items.value;
+  }
+
   offsetOf(index: number): number {
     return this.list.offsetOf(index);
   }
@@ -126,7 +166,7 @@ export class VirtualHarness {
   }
 
   async scroll(px: number): Promise<void> {
-    defineSize(this.element, 'scrollTop', px);
+    defineSize(this.element, this.axis === 'x' ? 'scrollLeft' : 'scrollTop', px);
     this.element.dispatchEvent(new Event('scroll'));
     await nextTick();
   }
@@ -137,7 +177,7 @@ export class VirtualHarness {
   }
 
   async resize(height: number): Promise<void> {
-    defineSize(this.element, 'clientHeight', height);
+    defineSize(this.element, this.axis === 'x' ? 'clientWidth' : 'clientHeight', height);
     this.list.measure();
     await nextTick();
   }
