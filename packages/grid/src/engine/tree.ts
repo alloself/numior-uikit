@@ -1,4 +1,3 @@
-import { createSortJob, type IndexCompare } from './sort';
 import { CHECK_INTERVAL, type SliceJob } from './slicer';
 
 export interface TreeTable<T> {
@@ -131,7 +130,10 @@ export const buildTreeLists = (pass: Uint8Array, parents: Int32Array): TreeLists
 export const childrenOf = (tree: TreeLists, slot: number): Uint32Array =>
   tree.lists.subarray(tree.starts[slot] ?? 0, tree.starts[slot + 1] ?? 0);
 
-export const createSiblingSortJob = (tree: TreeLists, compare: IndexCompare): SliceJob => {
+export const createSiblingSortJob = (
+  tree: TreeLists,
+  jobFor: (indices: Uint32Array) => SliceJob,
+): SliceJob => {
   let slot = 0;
   let current: SliceJob | null = null;
   let sorted = 0;
@@ -149,7 +151,7 @@ export const createSiblingSortJob = (tree: TreeLists, compare: IndexCompare): Sl
       nextSlot();
 
       while (slot <= tree.root) {
-        current ??= createSortJob(childrenOf(tree, slot), compare);
+        current ??= jobFor(childrenOf(tree, slot));
 
         if (!current.work(deadline)) {
           return false;

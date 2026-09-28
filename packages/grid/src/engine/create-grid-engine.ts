@@ -2,7 +2,8 @@ import { createStoreJob } from './column-store';
 import { compactPass, compileFilter, compileQuick, createFilterJob, type RowTest } from './filter';
 import { createGroupJob, type AggregateColumn, type GroupLevel, type GroupTable } from './group';
 import { runSliced, yieldToHost, type SliceJob, type SliceOptions } from './slicer';
-import { createSortJob, identityIndices, type IndexCompare } from './sort';
+import { createOrderJob, type OrderKey } from './order';
+import { identityIndices } from './sort';
 import {
   buildTreeLists,
   childrenOf,
@@ -29,12 +30,6 @@ import type {
   GridSort,
 } from './engine.types';
 
-interface SortLane {
-  readonly keys: Float64Array | Uint32Array;
-  readonly nulls: Uint8Array;
-  readonly sign: 1 | -1;
-}
-
 interface Prepared {
   readonly filtered: Uint32Array;
   readonly groups: GroupTable | null;
@@ -52,39 +47,6 @@ interface Plan<T> {
 
 const DEFAULT_SLICE_MS = 12;
 const DEFAULT_DISTINCT_LIMIT = 100;
-
-const laneOf = (store: ColumnStore, sort: GridSort): SortLane => ({
-  keys: store.kind === 'number' ? store.keys : store.ranks,
-  nulls: store.nulls,
-  sign: sort.direction === 'asc' ? 1 : -1,
-});
-
-const compareLane = (lane: SortLane, a: number, b: number): number => {
-  const nullA = lane.nulls[a] === 1;
-  const nullB = lane.nulls[b] === 1;
-
-  if (nullA || nullB) {
-    return nullA === nullB ? 0 : nullA ? 1 : -1;
-  }
-  const keyA = lane.keys[a] ?? 0;
-  const keyB = lane.keys[b] ?? 0;
-
-  if (keyA === keyB) {
-    return 0;
-  }
-  return keyA < keyB ? -lane.sign : lane.sign;
-};
-
-const compareLanes = (lanes: readonly SortLane[], a: number, b: number): number => {
-  for (const lane of lanes) {
-    const order = compareLane(lane, a, b);
-
-    if (order !== 0) {
-      return order;
-    }
-  }
-  return 0;
-};
 
 const isStringStore = (
   store: ColumnStore | undefined,
@@ -236,18 +198,13 @@ export const createGridEngine = <T>(options: GridEngineOptions<T>): GridEngine<T
         : compileFilter(filter, columns.get(filter.key), stores.get(filter.key)),
     );
 
-  const lanesOf = (plan: Plan<T>): SortLane[] => {
+  const orderKeysOf = (plan: Plan<T>): OrderKey[] => {
     const leading = plan.groupBy.map((key): GridSort => ({ key, direction: 'asc' }));
 
     return [...leading, ...plan.sort].flatMap((sort) => {
       const store = stores.get(sort.key);
-      return store === undefined ? [] : [laneOf(store, sort)];
+      return store === undefined ? [] : [{ store, descending: sort.direction === 'desc' }];
     });
-  };
-
-  const compareOf = (plan: Plan<T>): IndexCompare | null => {
-    const lanes = lanesOf(plan);
-    return lanes.length === 0 ? null : (a, b) => compareLanes(lanes, a, b);
   };
 
   const runJob = (
@@ -289,10 +246,10 @@ export const createGridEngine = <T>(options: GridEngineOptions<T>): GridEngine<T
     const filtered =
       plan.filters.length === 0 ? identityIndices(table.rows.length) : compactPass(pass);
 
-    const compare = compareOf(plan);
+    const keys = orderKeysOf(plan);
 
-    if (compare !== null) {
-      const job = createSortJob(filtered, compare);
+    if (keys.length > 0) {
+      const job = createOrderJob(filtered, keys);
 
       if (!(await runJob(job, isStale, runOptions, 'sort'))) {
         return null;
@@ -331,10 +288,10 @@ export const createGridEngine = <T>(options: GridEngineOptions<T>): GridEngine<T
     runOptions: GridRunOptions,
   ): Promise<Prepared | null> => {
     const tree = buildTreeLists(pass, table.parents);
-    const compare = compareOf(plan);
+    const keys = orderKeysOf(plan);
 
-    if (compare !== null) {
-      const job = createSiblingSortJob(tree, compare);
+    if (keys.length > 0) {
+      const job = createSiblingSortJob(tree, (indices) => createOrderJob(indices, keys));
 
       if (!(await runJob(job, isStale, runOptions, 'sort'))) {
         return null;
