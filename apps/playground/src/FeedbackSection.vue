@@ -4,7 +4,7 @@
       <h2 id="feedback-title">Обратная связь</h2>
       <span class="tag">NuiToaster · NuiAlert · NuiProgress · NuiSkeleton</span>
     </div>
-    <div class="nui-flex nui-wrap nui-items-center nui-gap-2">
+    <div class="flex flex-wrap items-center gap-2">
       <NuiButton data-testid="toast-show" @click="notify">Уведомление</NuiButton>
       <NuiButton variant="soft" tone="success" data-testid="toast-quick" @click="quick"
         >Быстрое (1,5 с)</NuiButton

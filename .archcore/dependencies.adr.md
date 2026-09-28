@@ -67,3 +67,18 @@ Kit писался с нуля: `engineering-quality.rule.md` требовал �
 - Скролл-спай создаёт наблюдатель после монтирования в post-flush: тесты ждут `nextTick`.
 - `engineering-quality.rule.md` и `numior-ui.plan.md` ссылаются на этот документ; новая
   зависимость в базовом UI по-прежнему требует записи здесь.
+
+## Tailwind 4 вместо собственных утилит (2026-09-28)
+
+`@numior/utilities` (модули `layout`, `spacing`, `sizing`, `typography`, `color`, `shape`)
+удалён: он дублировал Tailwind и делал примеры доки некопируемыми для Tailwind-проектов.
+`@numior/tailwind/theme.css` теперь кладёт токены на стандартные имена Tailwind 4
+(`--color-*`, `--radius-*`, `--spacing`, `--text-*` с высотой строки, `--font-weight-*`,
+`--leading-*`, `--shadow-*`, `--container-prose`), красит границы по умолчанию в `--nui-border`
+и объявляет `@utility grid-auto`, `grid-auto-sm`, `grid-auto-lg`, `bg-dots`. Проза
+`.nui-prose` переехала в `@numior/tokens/prose.css`. Дока и playground собираются через
+`@tailwindcss/vite` и работают под preflight; компоненты по-прежнему на BEM CSS без
+зависимости от Tailwind. Под preflight у голых элементов нет браузерных стилей, поэтому
+`prose.css` описывает заголовки, списки и таблицы явно и каждым правилом покрывает и прозу,
+вложенную в `.nui-not-prose` (`.nui-not-prose .nui-prose …`): пример прозы внутри превью
+доки оформляется как страница. Решение пользователя после второго ревью доки.

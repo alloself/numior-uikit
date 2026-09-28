@@ -20,8 +20,7 @@ pnpm install --frozen-lockfile
 pnpm dev
 ```
 
-Playground: `http://localhost:5173`. Автономный CSS — `/`, Tailwind fixture —
-`/tailwind.html`. Документация RU/EN: `pnpm build && pnpm docs:dev` — руководство, страницы всех компонентов и
+Playground: `http://localhost:5173`, раскладка страницы на Tailwind 4 с пресетом `@numior/tailwind`. Документация RU/EN: `pnpm build && pnpm docs:dev` — руководство, страницы всех компонентов и
 композаблов с примерами и API из справочного бандла (`pnpm docs:reference`, `pnpm docs:check`).
 
 ## Структура

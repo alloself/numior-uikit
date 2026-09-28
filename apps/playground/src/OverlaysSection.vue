@@ -4,7 +4,7 @@
       <h2 id="overlays-title">Слои</h2>
       <span class="tag">NuiDialog · NuiDrawer · NuiPopover · NuiTooltip</span>
     </div>
-    <div class="nui-flex nui-wrap nui-items-center nui-gap-2">
+    <div class="flex flex-wrap items-center gap-2">
       <NuiButton data-testid="dialog-open" @click="dialogOpen = true">Открыть диалог</NuiButton>
       <NuiButton variant="outline" data-testid="persistent-open" @click="persistentOpen = true"
         >Без закрытия по Esc</NuiButton
@@ -39,7 +39,7 @@
         >Открыть второй уровень</NuiButton
       >
       <template #footer>
-        <form method="dialog" class="nui-flex nui-gap-2">
+        <form method="dialog" class="flex gap-2">
           <NuiButton type="submit" value="cancel" variant="ghost" tone="neutral">Отмена</NuiButton>
           <NuiButton type="submit" value="confirm" tone="error" data-testid="dialog-confirm"
             >Удалить</NuiButton
@@ -83,7 +83,7 @@
         <NuiInput placeholder="Название" data-testid="drawer-input" />
       </NuiField>
     </NuiDrawer>
-    <div class="nui-flex nui-wrap nui-items-center nui-gap-2 tones">
+    <div class="flex flex-wrap items-center gap-2 tones">
       <NuiPopover v-model:open="popoverOpen" placement="bottom-start" arrow data-testid="popover">
         <template #trigger="{ attrs }">
           <NuiButton v-bind="attrs" variant="outline" data-testid="popover-trigger"

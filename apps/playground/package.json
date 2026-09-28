@@ -12,7 +12,6 @@
     "@numior/forms": "workspace:*",
     "@numior/tailwind": "workspace:*",
     "@numior/tokens": "workspace:*",
-    "@numior/utilities": "workspace:*",
     "@numior/vue": "workspace:*",
     "vue": "3.5.43"
   },

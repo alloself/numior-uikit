@@ -52,39 +52,75 @@
   --color-syntax-punctuation: var(--nui-syntax-punctuation);
   --color-syntax-highlight: var(--nui-syntax-highlight);
   --color-code-inline: var(--nui-code-inline);
-  --radius-nui-sm: var(--nui-radius-sm);
-  --radius-nui: var(--nui-radius);
-  --radius-nui-lg: var(--nui-radius-lg);
-  --radius-nui-xl: var(--nui-radius-xl);
-  --radius-nui-full: var(--nui-radius-full);
-  --spacing-nui-1: var(--nui-space-1);
-  --spacing-nui-2: var(--nui-space-2);
-  --spacing-nui-3: var(--nui-space-3);
-  --spacing-nui-4: var(--nui-space-4);
-  --spacing-nui-5: var(--nui-space-5);
-  --spacing-nui-6: var(--nui-space-6);
-  --spacing-nui-8: var(--nui-space-8);
-  --font-nui: var(--nui-font);
-  --font-nui-mono: var(--nui-font-mono);
-  --text-nui-xs: var(--nui-font-size-xs);
-  --text-nui-sm: var(--nui-font-size-sm);
-  --text-nui-md: var(--nui-font-size-md);
-  --text-nui-lg: var(--nui-font-size-lg);
-  --text-nui-xl: var(--nui-font-size-xl);
-  --text-nui-2xl: var(--nui-font-size-2xl);
-  --text-nui-3xl: var(--nui-font-size-3xl);
-  --text-nui-4xl: var(--nui-font-size-4xl);
-  --font-weight-nui-normal: var(--nui-font-weight-normal);
-  --font-weight-nui-medium: var(--nui-font-weight-medium);
-  --font-weight-nui-semibold: var(--nui-font-weight-semibold);
-  --font-weight-nui-bold: var(--nui-font-weight-bold);
-  --leading-nui: var(--nui-line-height);
-  --leading-nui-tight: var(--nui-line-height-tight);
-  --leading-nui-relaxed: var(--nui-line-height-relaxed);
-  --tracking-nui-tight: var(--nui-tracking-tight);
-  --container-nui-measure: var(--nui-measure);
-  --shadow-nui-sm: var(--nui-shadow-sm);
-  --shadow-nui-md: var(--nui-shadow-md);
-  --shadow-nui-lg: var(--nui-shadow-lg);
+  --radius-sm: var(--nui-radius-sm);
+  --radius-md: var(--nui-radius-md);
+  --radius-lg: var(--nui-radius-lg);
+  --radius-xl: var(--nui-radius-xl);
+  --spacing: var(--nui-space-1);
+  --font-sans: var(--nui-font);
+  --font-mono: var(--nui-font-mono);
+  --text-xs: var(--nui-font-size-xs);
+  --text-xs--line-height: var(--nui-line-height);
+  --text-sm: var(--nui-font-size-sm);
+  --text-sm--line-height: var(--nui-line-height);
+  --text-base: var(--nui-font-size-md);
+  --text-base--line-height: var(--nui-line-height);
+  --text-lg: var(--nui-font-size-lg);
+  --text-lg--line-height: var(--nui-line-height);
+  --text-xl: var(--nui-font-size-xl);
+  --text-xl--line-height: var(--nui-line-height-tight);
+  --text-2xl: var(--nui-font-size-2xl);
+  --text-2xl--line-height: var(--nui-line-height-tight);
+  --text-3xl: var(--nui-font-size-3xl);
+  --text-3xl--line-height: var(--nui-line-height-tight);
+  --text-4xl: var(--nui-font-size-4xl);
+  --text-4xl--line-height: var(--nui-line-height-tight);
+  --font-weight-normal: var(--nui-font-weight-normal);
+  --font-weight-medium: var(--nui-font-weight-medium);
+  --font-weight-semibold: var(--nui-font-weight-semibold);
+  --font-weight-bold: var(--nui-font-weight-bold);
+  --leading-tight: var(--nui-line-height-tight);
+  --leading-normal: var(--nui-line-height);
+  --leading-relaxed: var(--nui-line-height-relaxed);
+  --tracking-tight: var(--nui-tracking-tight);
+  --container-prose: var(--nui-measure);
+  --shadow-sm: var(--nui-shadow-sm);
+  --shadow-md: var(--nui-shadow-md);
+  --shadow-lg: var(--nui-shadow-lg);
   --ease-nui: var(--nui-easing);
+  --default-transition-timing-function: var(--nui-easing);
+}
+
+@layer base {
+  *,
+  ::before,
+  ::after {
+    border-color: var(--nui-border);
+  }
+}
+
+@utility grid-auto {
+  --nui-grid-min: 16rem;
+
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(var(--nui-grid-min), 100%), 1fr));
+}
+
+@utility grid-auto-sm {
+  --nui-grid-min: 12rem;
+
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(var(--nui-grid-min), 100%), 1fr));
+}
+
+@utility grid-auto-lg {
+  --nui-grid-min: 20rem;
+
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(var(--nui-grid-min), 100%), 1fr));
+}
+
+@utility bg-dots {
+  background-image: radial-gradient(var(--nui-border) 1px, transparent 1px);
+  background-size: 1rem 1rem;
 }

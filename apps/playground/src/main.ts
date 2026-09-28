@@ -5,7 +5,8 @@ import '@numior/tokens/base.css';
 import '@numior/tokens/accents.css';
 import '@numior/vue/styles.css';
 import '@numior/forms/styles.css';
-import '@numior/utilities/utilities.css';
+import '@numior/tokens/prose.css';
+import './tailwind.css';
 import './style.css';
 import App from './App.vue';
 

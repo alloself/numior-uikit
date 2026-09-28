@@ -15,7 +15,7 @@ test('prose styles bare content, beats page resets and leaves components alone',
   await expect(typography.title).toHaveCSS('font-weight', '700');
   await expect(typography.paragraphAfterTitle()).toHaveCSS('margin-bottom', '24px');
   await expect(typography.paragraphAfterTitle()).toHaveCSS('font-size', '18px');
-  await expect(typography.escaped).toHaveCSS('margin-bottom', '16px');
+  await expect(typography.escaped).toHaveCSS('margin-bottom', '0px');
   await expect(typography.last).toHaveCSS('margin-bottom', '0px');
   await expect(typography.small).toHaveCSS('font-size', '14px');
   await expectRgb(typography.link, 'color', [67, 56, 202]);

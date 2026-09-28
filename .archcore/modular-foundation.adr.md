@@ -9,7 +9,7 @@ Kit должен обслуживать небольшие сайты и сло�
 
 ## Decision
 
-pnpm workspace, TypeScript strict, ESM, Vue 3.5+ как peer. Основание: отдельные tokens, vue, utilities и tailwind; добавлять самостоятельные поведенческие/вычислительные пакеты по мере реализации. Не создавать фиктивные API тяжёлых модулей. CSS подключается явно и объявляется side effect. Tokens — plain CSS, утилиты и Tailwind 4 opt-in. Публичные entry points закрыты exports; импорты чужих src запрещены.
+pnpm workspace, TypeScript strict, ESM, Vue 3.5+ как peer. Основание: отдельные tokens, vue и tailwind (пресет Tailwind 4 на токенах, единственная система утилит; свой пакет `utilities` удалён 2026-09-28); добавлять самостоятельные поведенческие/вычислительные пакеты по мере реализации. Не создавать фиктивные API тяжёлых модулей. CSS подключается явно и объявляется side effect. Tokens — plain CSS (`theme.css`, `base.css`, `accents.css`, `prose.css`), Tailwind 4 opt-in через `@numior/tailwind`. Публичные entry points закрыты exports; импорты чужих src запрещены.
 
 В репозитории packages для библиотек, apps/docs для VitePress RU/EN, apps/playground для исполняемых примеров, tests для межпакетных/browser сценариев. Все пакеты private до полного 1.0, scope @numior — рабочий. Закреплять инструменты и lockfile. Использовать стабильный Node 24.15+; точная версия 24.21.0 закреплена в .nvmrc и CI. TypeScript 5.9.3 закреплён workspace override: автоматический optional peer TypeScript 7 не предоставляет ts.sys, нужный SFC-компилятору Vue. Это подтверждено ошибкой сборки и её устранением при единообразной версии TypeScript.
 

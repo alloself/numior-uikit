@@ -4,7 +4,7 @@
       <h2 id="navigation-title">Навигация</h2>
       <span class="tag">NuiMenu · NuiTabs · NuiBreadcrumbs · NuiStepper · NuiLink</span>
     </div>
-    <div class="nui-flex nui-wrap nui-items-center nui-gap-2">
+    <div class="flex flex-wrap items-center gap-2">
       <NuiMenu v-model:open="menuOpen" data-testid="nav-menu">
         <template #trigger="{ attrs }">
           <NuiButton v-bind="attrs" variant="outline" tone="neutral" data-testid="nav-menu-trigger"

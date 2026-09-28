@@ -60,7 +60,7 @@
         <h2 id="buttons-title">Кнопки</h2>
         <span class="tag">NuiButton</span>
       </div>
-      <div class="nui-flex nui-wrap nui-items-center nui-gap-2">
+      <div class="flex flex-wrap items-center gap-2">
         <NuiButton data-testid="primary" @click="count++">Добавить</NuiButton>
         <NuiButton tone="secondary">Вторичная</NuiButton>
         <NuiButton variant="soft">Мягкая</NuiButton>
@@ -75,7 +75,7 @@
           >Сохранить</NuiButton
         >
       </div>
-      <div class="nui-flex nui-wrap nui-items-center nui-gap-2 tones">
+      <div class="flex flex-wrap items-center gap-2 tones">
         <NuiButton tone="success" size="sm">Успех</NuiButton>
         <NuiButton tone="warning" variant="soft">Внимание</NuiButton>
         <NuiButton tone="error" variant="outline">Удалить</NuiButton>
@@ -111,18 +111,12 @@
 
     <section class="panel" aria-labelledby="tokens-title">
       <h2 id="tokens-title">Один акцент — разные способы использования</h2>
-      <div class="nui-flex nui-wrap nui-gap-2">
-        <div
-          class="swatch nui-bg-primary nui-text-primary-foreground nui-rounded"
-          data-testid="utility"
-        >
-          Утилиты Numior
-        </div>
-        <div class="swatch bg-primary text-primary-foreground rounded-nui" data-testid="tailwind">
-          Tailwind fixture
+      <div class="flex flex-wrap gap-2">
+        <div class="swatch bg-primary text-primary-foreground rounded-md" data-testid="tailwind">
+          Tailwind на токенах kit
         </div>
       </div>
-      <p class="nui-text-muted">
+      <p class="text-muted-foreground">
         Tailwind-пример оформлен только на
         <a href="/tailwind.html">отдельной странице интеграции</a>.
       </p>
@@ -131,7 +125,7 @@
     <section class="panel nested-theme" data-nui-theme="dark" aria-labelledby="nested-title">
       <h2 id="nested-title">Локальная тёмная тема</h2>
       <p>Тема этой области независима от внешней.</p>
-      <div class="nui-flex nui-wrap nui-gap-2">
+      <div class="flex flex-wrap gap-2">
         <NuiButton data-testid="nested">Вложенный компонент</NuiButton>
         <NuiButton
           variant="outline"

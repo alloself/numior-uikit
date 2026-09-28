@@ -6,8 +6,8 @@
         >NuiSeparator · NuiKbd · NuiCode · NuiToggleGroup · NuiAccordion · NuiCommand</span
       >
     </div>
-    <div class="nui-flex nui-flex-col nui-gap-4">
-      <div class="nui-flex nui-wrap nui-items-center nui-gap-3">
+    <div class="flex flex-col gap-4">
+      <div class="flex flex-wrap items-center gap-3">
         <NuiButton
           variant="outline"
           tone="neutral"
@@ -15,7 +15,7 @@
           @click="palette = true"
           >Палитра команд <NuiKbd keys="mod+k" size="sm" variant="plain"
         /></NuiButton>
-        <span class="nui-text-sm nui-text-muted" data-testid="command-output">{{
+        <span class="text-sm text-muted-foreground" data-testid="command-output">{{
           lastCommand
         }}</span>
       </div>
@@ -31,14 +31,14 @@
           <NuiKbd keys="enter" size="sm" /> выбрать
         </template>
       </NuiCommandDialog>
-      <div class="nui-flex nui-items-center nui-gap-3" data-testid="chrome-toolbar">
+      <div class="flex items-center gap-3" data-testid="chrome-toolbar">
         <NuiButton variant="ghost" tone="neutral" size="sm">Файл</NuiButton>
         <NuiSeparator orientation="vertical" data-testid="separator-vertical" />
         <NuiButton variant="ghost" tone="neutral" size="sm">Правка</NuiButton>
         <NuiSeparator orientation="vertical" decorative data-testid="separator-decorative" />
         <NuiKbd keys="mod+k" data-testid="kbd-combo" />
       </div>
-      <div class="nui-flex nui-wrap nui-items-center nui-gap-4">
+      <div class="flex flex-wrap items-center gap-4">
         <NuiToggleGroup
           v-model="scheme"
           :items="schemes"
@@ -56,13 +56,13 @@
           label="Панели"
           data-testid="toggle-panels"
         />
-        <span class="nui-text-sm nui-text-muted" data-testid="toggle-output"
+        <span class="text-sm text-muted-foreground" data-testid="toggle-output"
           >{{ scheme }} · {{ panels.join(', ') }}</span
         >
       </div>
       <NuiSeparator data-testid="separator-horizontal" />
       <NuiSeparator label="или" data-testid="separator-labelled" />
-      <p class="nui-text-sm nui-text-muted">
+      <p class="text-sm text-muted-foreground">
         Нажмите <NuiKbd :keys="['mod+shift+p']" size="sm" data-testid="kbd-list" /> для палитры
         команд или <NuiKbd variant="plain" data-testid="kbd-plain">Esc</NuiKbd> для выхода.
       </p>
@@ -76,7 +76,7 @@
         data-testid="code-titled"
       />
       <NuiCode :code="plain" data-testid="code-plain" />
-      <div class="nui-grid-auto nui-gap-4" data-testid="toc-demo">
+      <div class="grid-auto gap-4" data-testid="toc-demo">
         <div
           ref="toc-article"
           class="nui-prose nui-prose--size-sm toc-demo__article"

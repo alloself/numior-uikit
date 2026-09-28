@@ -56,7 +56,7 @@
         </NuiRadioGroup>
       </NuiField>
       <NuiSwitch v-model="notifications" data-testid="switch-notifications">Уведомления</NuiSwitch>
-      <div class="nui-flex nui-gap-2">
+      <div class="flex gap-2">
         <NuiButton type="submit" data-testid="submit">Отправить</NuiButton>
         <NuiButton type="reset" variant="ghost" tone="neutral">Сбросить</NuiButton>
       </div>

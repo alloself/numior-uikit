@@ -14,17 +14,19 @@
   "dependencies": {
     "@numior/forms": "workspace:*",
     "@numior/primitives": "workspace:*",
+    "@numior/tailwind": "workspace:*",
     "@numior/tokens": "workspace:*",
-    "@numior/utilities": "workspace:*",
     "@numior/vue": "workspace:*",
     "minisearch": "7.2.0",
     "vue": "3.5.43"
   },
   "devDependencies": {
+    "@tailwindcss/vite": "4.3.3",
     "@vue/compiler-core": "3.5.43",
     "@vue/compiler-sfc": "3.5.43",
     "@vue/test-utils": "2.5.1",
     "shiki": "4.4.3",
+    "tailwindcss": "4.3.3",
     "typescript": "5.9.3",
     "vitepress": "1.6.4",
     "vue-component-meta": "3.3.11",

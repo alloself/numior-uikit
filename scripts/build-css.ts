@@ -1,7 +1,7 @@
 import { cp, mkdir, readdir, writeFile } from 'node:fs/promises';
 import { inlineCss } from './vite-package-assets.ts';
 
-const CSS_WORKSPACES = ['tokens', 'utilities', 'tailwind'];
+const CSS_WORKSPACES = ['tokens', 'tailwind'];
 
 const name = process.argv[2];
 

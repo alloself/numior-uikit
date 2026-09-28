@@ -157,7 +157,7 @@ export class PlaygroundPage {
     readonly link: Locator;
   };
 
-  readonly swatches: { readonly utility: Locator; readonly tailwind: Locator };
+  readonly tailwindSwatch: Locator;
   readonly typography: TypographySection;
   readonly chrome: ChromeSection;
   readonly forms: FormsSection;
@@ -197,10 +197,7 @@ export class PlaygroundPage {
       link: page.getByTestId('link-button'),
     };
 
-    this.swatches = {
-      utility: page.getByTestId('utility'),
-      tailwind: page.getByTestId('tailwind'),
-    };
+    this.tailwindSwatch = page.getByTestId('tailwind');
 
     this.typography = new TypographySection(page);
     this.chrome = new ChromeSection(page);
@@ -221,7 +218,7 @@ export class PlaygroundPage {
     this.table = new TableSection(page);
   }
 
-  async open(path: '/' | '/tailwind.html' = '/'): Promise<void> {
+  async open(path: '/' = '/'): Promise<void> {
     await this.page.goto(path);
   }
 

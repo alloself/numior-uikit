@@ -22,6 +22,10 @@
     "./base.css": {
       "@numior/source": "./src/base.css",
       "default": "./dist/base.css"
+    },
+    "./prose.css": {
+      "@numior/source": "./src/prose.css",
+      "default": "./dist/prose.css"
     }
   },
   "scripts": {

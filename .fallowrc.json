@@ -47,10 +47,6 @@
         "patterns": ["packages/primitives/**"]
       },
       {
-        "name": "utilities",
-        "patterns": ["packages/utilities/**"]
-      },
-      {
         "name": "tailwind",
         "patterns": ["packages/tailwind/**"]
       },
@@ -81,10 +77,6 @@
         "allow": ["primitives"]
       },
       {
-        "from": "utilities",
-        "allow": ["tokens"]
-      },
-      {
         "from": "tailwind",
         "allow": ["tokens"]
       },
@@ -98,11 +90,11 @@
       },
       {
         "from": "apps",
-        "allow": ["tokens", "primitives", "utilities", "tailwind", "vue", "forms", "apps"]
+        "allow": ["tokens", "primitives", "tailwind", "vue", "forms", "apps"]
       },
       {
         "from": "tests",
-        "allow": ["tokens", "primitives", "utilities", "tailwind", "vue", "forms", "apps", "tests"]
+        "allow": ["tokens", "primitives", "tailwind", "vue", "forms", "apps", "tests"]
       }
     ]
   },
