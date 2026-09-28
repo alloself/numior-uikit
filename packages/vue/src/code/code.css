@@ -54,6 +54,10 @@
     opacity var(--nui-duration-fast) var(--nui-easing),
     background-color var(--nui-duration-fast) var(--nui-easing);
 }
+.nui-code--single .nui-code__copy--floating {
+  inset-block-start: 50%;
+  translate: 0 -50%;
+}
 .nui-code:hover .nui-code__copy--floating,
 .nui-code:focus-within .nui-code__copy--floating,
 .nui-code--copied .nui-code__copy--floating {

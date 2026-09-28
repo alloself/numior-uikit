@@ -43,6 +43,13 @@ describe('NuiCode', () => {
     expect(mismatched.scopesOf(1)).toEqual([]);
   });
 
+  it('centres the floating copy button on a one-line block', () => {
+    const single = CodeDriver.mount({ props: { code: 'pnpm add @numior/vue' } });
+    expect(single.hasModifier('single')).toBe(true);
+    const multi = CodeDriver.mount({ props: { code: SAMPLE } });
+    expect(multi.hasModifier('single')).toBe(false);
+  });
+
   it('numbers and highlights lines, shows a title and wraps on request', () => {
     const code = CodeDriver.mount({
       props: { code: SAMPLE, title: 'main.ts', lineNumbers: true, highlight: [2], wrap: true },

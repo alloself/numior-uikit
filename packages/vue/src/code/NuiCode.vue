@@ -7,6 +7,7 @@
       'nui-code--titled': hasHeader,
       'nui-code--collapsible': collapsible,
       'nui-code--collapsed': collapsible && !expanded,
+      'nui-code--single': lines.length === 1,
       'nui-code--copied': clipboard.copied.value,
     }"
     :style="rootStyle"
