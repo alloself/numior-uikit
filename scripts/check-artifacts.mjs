@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { readFile, readdir } from 'node:fs/promises';
-import { resolve } from 'node:path';
+import { dirname, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { build } from 'vite';
 
@@ -161,18 +161,36 @@ const formsTypes = (await readdir('packages/forms/dist', { recursive: true })).f
 
 assert.ok(formsTypes.length > 0, 'forms must ship declarations');
 
-await importBuild('grid', ['createGridEngine']);
+const localImports = async (file, seen = new Set()) => {
+  if (seen.has(file)) {
+    return seen;
+  }
+  seen.add(file);
+
+  for (const [, specifier] of (await readFile(file, 'utf8')).matchAll(
+    /from ['"](\.{1,2}\/[^'"]+)['"]/g,
+  )) {
+    await localImports(resolve(dirname(file), specifier), seen);
+  }
+  return seen;
+};
+
+const gridCode = await importBuild('grid', ['NuiDataGrid']);
+
+assert.match(gridCode, /from ['"]@numior\/vue['"]/, 'grid must keep @numior/vue external');
 
 const gridEngineFile = resolve('packages/grid/dist/engine.js');
 const gridEngine = await import(pathToFileURL(gridEngineFile).href);
 
 assert.equal(typeof gridEngine.createGridEngine, 'function', 'grid/engine must export the engine');
 
-assert.doesNotMatch(
-  await readFile(gridEngineFile, 'utf8'),
-  /from ['"]vue['"]/,
-  'the grid engine must not import vue',
-);
+for (const file of await localImports(gridEngineFile)) {
+  assert.doesNotMatch(
+    await readFile(file, 'utf8'),
+    /from ['"](?:vue|@vueuse\/[\w-]+|@numior\/[\w-]+)['"]/,
+    `the grid engine must stay free of Vue and UI packages: ${file}`,
+  );
+}
 
 const nuxtModule = await import(pathToFileURL(resolve('packages/nuxt/dist/module.js')).href);
 

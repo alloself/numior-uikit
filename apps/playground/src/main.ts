@@ -5,6 +5,7 @@ import '@numior/tokens/base.css';
 import '@numior/tokens/accents.css';
 import '@numior/vue/styles.css';
 import '@numior/forms/styles.css';
+import '@numior/grid/styles.css';
 import '@numior/tokens/prose.css';
 import './tailwind.css';
 import './style.css';
