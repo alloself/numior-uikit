@@ -64,6 +64,15 @@ const emptyPrepared = (): Prepared => ({
 
 const allPass = (count: number): Uint8Array => new Uint8Array(count).fill(1);
 
+const identityRefs = (length: number): Int32Array => {
+  const refs = new Int32Array(length);
+
+  for (let index = 0; index < length; index += 1) {
+    refs[index] = index;
+  }
+  return refs;
+};
+
 export const createGridEngine = <T>(options: GridEngineOptions<T>): GridEngine<T> => {
   const columns = new Map<string, GridEngineColumn<T>>(
     options.columns.map((column) => [column.key, column]),
@@ -319,7 +328,7 @@ export const createGridEngine = <T>(options: GridEngineOptions<T>): GridEngine<T
     const groups = prepared.groups?.groups ?? [];
 
     if (prepared.groupDepth === 0) {
-      return Int32Array.from(prepared.filtered.keys());
+      return identityRefs(prepared.filtered.length);
     }
     const refs: number[] = [];
     const hidden: boolean[] = [];
@@ -526,6 +535,14 @@ export const createGridEngine = <T>(options: GridEngineOptions<T>): GridEngine<T
       setExpanded(node.id, !node.expanded);
     },
     setExpanded,
+    setToggled: (ids) => {
+      toggled.clear();
+
+      for (const id of ids) {
+        toggled.add(id);
+      }
+      refresh();
+    },
     isExpanded,
     totals: () => prepared.groups?.totals ?? {},
     distinct: async (key, distinctOptions = {}) => {

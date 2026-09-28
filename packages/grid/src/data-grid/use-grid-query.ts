@@ -4,13 +4,13 @@ import type { GridEngine, GridProgress, GridQuery } from '../engine';
 export interface GridQueryOptions<T> {
   readonly engine: Readonly<ShallowRef<GridEngine<T>>>;
   readonly query: () => GridQuery;
-  readonly onSettled: (rows: number) => void;
+  readonly onSettled: (rows: number, query: GridQuery) => void;
   readonly onProgress: (progress: GridProgress) => void;
 }
 
 export interface GridQueryRunner {
   readonly busy: Readonly<Ref<boolean>>;
-  runNow(): void;
+  runNow(): GridQuery;
 }
 
 const BUSY_DELAY = 120;
@@ -31,13 +31,14 @@ export const useGridQuery = <T>(options: GridQueryOptions<T>): GridQueryRunner =
     busy.value = false;
   };
 
-  const runNow = (): void => {
+  const runNow = (): GridQuery => {
     stop();
     const query = options.query();
 
     if (hasWork(query)) {
       options.engine.value.runSync(query);
     }
+    return query;
   };
 
   const run = async (query: GridQuery): Promise<void> => {
@@ -58,7 +59,7 @@ export const useGridQuery = <T>(options: GridQueryOptions<T>): GridQueryRunner =
       if (running === own && result.kind === 'done') {
         running = null;
         busy.value = false;
-        options.onSettled(result.rows);
+        options.onSettled(result.rows, query);
       }
     } finally {
       clearTimeout(timer);

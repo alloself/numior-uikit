@@ -22,11 +22,14 @@ export interface NuiDataGridMessages {
   readonly filterFrom: string;
   readonly filterTo: string;
   readonly filterSelectAll: string;
-  readonly filterBlank: string;
+  readonly blank: string;
   readonly filterTruncated: string;
   readonly filterApply: string;
   readonly filterReset: string;
   readonly rowsShown: (params: { readonly count: number }) => string;
+  readonly totals: string;
+  readonly groupExpanded: (params: { readonly group: string }) => string;
+  readonly groupCollapsed: (params: { readonly group: string }) => string;
 }
 
 export const dataGridMessages: NuiMessageCatalog<'dataGrid'> = {
@@ -53,12 +56,15 @@ export const dataGridMessages: NuiMessageCatalog<'dataGrid'> = {
     filterFrom: 'From date',
     filterTo: 'To date',
     filterSelectAll: 'Select all',
-    filterBlank: '(blank)',
+    blank: '(blank)',
     filterTruncated: 'Only the first values are listed',
     filterApply: 'Apply',
     filterReset: 'Reset',
     rowsShown: ({ count }) =>
       `${count.toLocaleString('en-US')} ${plural('en', count, { one: 'row', other: 'rows' })} shown`,
+    totals: 'Total',
+    groupExpanded: ({ group }) => `Group ${group} expanded`,
+    groupCollapsed: ({ group }) => `Group ${group} collapsed`,
   },
   ru: {
     label: 'Таблица данных',
@@ -82,11 +88,14 @@ export const dataGridMessages: NuiMessageCatalog<'dataGrid'> = {
     filterFrom: 'С даты',
     filterTo: 'По дату',
     filterSelectAll: 'Выбрать все',
-    filterBlank: '(пусто)',
+    blank: '(пусто)',
     filterTruncated: 'Показаны только первые значения',
     filterApply: 'Применить',
     filterReset: 'Сбросить',
     rowsShown: ({ count }) =>
       `${plural('ru', count, { one: 'Показана', few: 'Показаны', many: 'Показано', other: 'Показано' })} ${count.toLocaleString('ru-RU')} ${plural('ru', count, { one: 'строка', few: 'строки', many: 'строк', other: 'строки' })}`,
+    totals: 'Итого',
+    groupExpanded: ({ group }) => `Группа «${group}» развёрнута`,
+    groupCollapsed: ({ group }) => `Группа «${group}» свёрнута`,
   },
 };

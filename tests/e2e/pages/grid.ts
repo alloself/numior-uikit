@@ -32,6 +32,19 @@ export class GridSection {
     this.filter = page.locator('.nui-grid-filter');
   }
 
+  footerCell(col: number): Locator {
+    return this.root.locator(`.nui-grid__footer [aria-colindex="${col + 1}"]`);
+  }
+
+  groupLabel(position: number): Locator {
+    return this.row(position).locator('.nui-grid__group');
+  }
+
+  async groupBy(label: string): Promise<void> {
+    await this.page.getByTestId('grid-group').click();
+    await this.page.locator('.nui-select__listbox').getByRole('option', { name: label }).click();
+  }
+
   filterButton(col: number): Locator {
     return this.header(col).locator('.nui-grid__filter');
   }

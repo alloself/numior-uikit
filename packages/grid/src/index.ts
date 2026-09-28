@@ -3,8 +3,11 @@ export type { NuiDataGridMessages } from './data-grid/data-grid.messages';
 export type {
   NuiDataGridCellSlot,
   NuiDataGridEvents,
+  NuiDataGridExpanded,
   NuiDataGridExposed,
   NuiDataGridFilters,
+  NuiDataGridFooterSlot,
+  NuiDataGridGroupBy,
   NuiDataGridHeaderSlot,
   NuiDataGridProps,
   NuiDataGridSettled,
@@ -23,6 +26,9 @@ export type {
   NuiGridTextColumn,
 } from './data-grid/data-grid.types';
 export type {
+  GridAggregate,
+  GridAggregateFn,
+  GridAggregateKind,
   GridFilter,
   GridFilterValue,
   GridNodeId,

@@ -1,4 +1,10 @@
-import { accumulate, createAccumulator, finishAggregate, type Accumulator } from './aggregate';
+import {
+  accumulateRange,
+  createAccumulator,
+  finishAggregate,
+  mergeAccumulator,
+  type Accumulator,
+} from './aggregate';
 import { CHECK_INTERVAL, type SliceJob } from './slicer';
 import type { ColumnStore, GridAggregate, GridEngineColumn } from './engine.types';
 
@@ -49,6 +55,16 @@ const tokenOf = (store: ColumnStore, index: number): number => {
   return store.kind === 'number' ? (store.keys[index] ?? 0) : (store.codes[index] ?? 0);
 };
 
+const mergeAll = (into: readonly Accumulator[], from: readonly Accumulator[]): void => {
+  from.forEach((source, index) => {
+    const target = into[index];
+
+    if (target !== undefined) {
+      mergeAccumulator(target, source);
+    }
+  });
+};
+
 const finishAll = <T>(
   columns: readonly AggregateColumn<T>[],
   accumulators: readonly Accumulator[],
@@ -78,6 +94,7 @@ export const createGroupJob = <T>(
   const groups: GroupRecord[] = [];
   const open: OpenGroup[] = [];
   const totals = aggregates.map(() => createAccumulator());
+  const length = sorted.length;
   let position = 0;
 
   const close = (level: number, end: number): void => {
@@ -86,11 +103,11 @@ export const createGroupJob = <T>(
     if (group === undefined) {
       return;
     }
-    const levelColumn = levels[level];
+    mergeAll(open[level - 1]?.accumulators ?? totals, group.accumulators);
 
     groups.push({
       id: group.id,
-      key: levelColumn?.column.key ?? '',
+      key: levels[level]?.column.key ?? '',
       value: group.value,
       path: group.path,
       level,
@@ -150,38 +167,60 @@ export const createGroupJob = <T>(
     return levels.length;
   };
 
-  const step = (): void => {
-    const rowIndex = sorted[position] ?? 0;
-    const change = firstChange(rowIndex);
+  const segmentEnd = (from: number): number => {
+    const limit = Math.min(length, from + CHECK_INTERVAL);
 
-    if (change < levels.length) {
-      closeFrom(change, position);
-      openFrom(change, rowIndex, position);
+    if (levels.length === 0) {
+      return limit;
     }
+    let end = from + 1;
+
+    while (end < limit && firstChange(sorted[end] ?? 0) === levels.length) {
+      end += 1;
+    }
+    return end;
+  };
+
+  const accumulateSegment = (from: number, to: number): void => {
+    const targets = open.at(-1)?.accumulators ?? totals;
 
     aggregates.forEach((column, index) => {
-      accumulate(totals[index] ?? createAccumulator(), column.store, rowIndex);
+      const target = targets[index];
 
-      for (const group of open) {
-        accumulate(group.accumulators[index] ?? createAccumulator(), column.store, rowIndex);
+      if (target !== undefined) {
+        accumulateRange(target, column.store, sorted, from, to);
       }
     });
-
-    position += 1;
   };
 
   return {
-    total: () => sorted.length,
+    total: () => length,
     done: () => position,
     work: (deadline) => {
-      while (position < sorted.length) {
-        step();
+      let sinceCheck = 0;
 
-        if (position % CHECK_INTERVAL === 0 && performance.now() >= deadline) {
-          return false;
+      while (position < length) {
+        const rowIndex = sorted[position] ?? 0;
+        const change = firstChange(rowIndex);
+
+        if (change < levels.length) {
+          closeFrom(change, position);
+          openFrom(change, rowIndex, position);
+        }
+        const end = segmentEnd(position);
+        accumulateSegment(position, end);
+        sinceCheck += end - position;
+        position = end;
+
+        if (sinceCheck >= CHECK_INTERVAL) {
+          sinceCheck = 0;
+
+          if (performance.now() >= deadline && position < length) {
+            return false;
+          }
         }
       }
-      closeFrom(0, sorted.length);
+      closeFrom(0, length);
       return true;
     },
     result: () => ({

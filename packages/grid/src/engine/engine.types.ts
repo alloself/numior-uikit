@@ -159,6 +159,7 @@ export interface GridEngine<T> {
   rowAt(index: number): T | undefined;
   toggle(position: number): void;
   setExpanded(id: GridNodeId, expanded: boolean): void;
+  setToggled(ids: Iterable<GridNodeId>): void;
   isExpanded(id: GridNodeId): boolean;
   totals(): Readonly<Record<string, unknown>>;
   distinct(key: string, options?: GridDistinctOptions): Promise<GridDistinct | null>;

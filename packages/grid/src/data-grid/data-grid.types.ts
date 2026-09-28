@@ -1,4 +1,5 @@
 import type {
+  GridAggregate,
   GridDistinct,
   GridFilter,
   GridFilterValue,
@@ -29,25 +30,29 @@ interface NuiGridColumnBase {
   readonly filter?: NuiGridFilterKind | false | undefined;
 }
 
-export interface NuiGridTextColumn<T> extends NuiGridColumnBase {
+interface NuiGridColumnCommon<T> extends NuiGridColumnBase {
+  readonly aggregate?: GridAggregate<T> | undefined;
+}
+
+export interface NuiGridTextColumn<T> extends NuiGridColumnCommon<T> {
   readonly type: 'text';
   readonly value: (row: T) => string | null | undefined;
   readonly format?: ((value: string, row: T | undefined) => string) | undefined;
 }
 
-export interface NuiGridNumberColumn<T> extends NuiGridColumnBase {
+export interface NuiGridNumberColumn<T> extends NuiGridColumnCommon<T> {
   readonly type: 'number';
   readonly value: (row: T) => number | null | undefined;
   readonly format?: ((value: number, row: T | undefined) => string) | undefined;
 }
 
-export interface NuiGridDateColumn<T> extends NuiGridColumnBase {
+export interface NuiGridDateColumn<T> extends NuiGridColumnCommon<T> {
   readonly type: 'date';
   readonly value: (row: T) => Date | number | null | undefined;
   readonly format?: ((value: Date, row: T | undefined) => string) | undefined;
 }
 
-export interface NuiGridBooleanColumn<T> extends NuiGridColumnBase {
+export interface NuiGridBooleanColumn<T> extends NuiGridColumnCommon<T> {
   readonly type: 'boolean';
   readonly value: (row: T) => boolean | null | undefined;
   readonly format?: ((value: boolean, row: T | undefined) => string) | undefined;
@@ -72,6 +77,7 @@ export interface NuiDataGridProps<T> {
   locale?: string | undefined;
   label?: string | undefined;
   emptyLabel?: string | undefined;
+  totalsLabel?: string | undefined;
 }
 
 export interface NuiDataGridCellSlot<T> {
@@ -80,6 +86,12 @@ export interface NuiDataGridCellSlot<T> {
   readonly text: string;
   readonly column: NuiGridColumn<T>;
   readonly position: number;
+}
+
+export interface NuiDataGridFooterSlot<T> {
+  readonly column: NuiGridColumn<T>;
+  readonly value: unknown;
+  readonly text: string;
 }
 
 export interface NuiDataGridHeaderSlot<T> {
@@ -100,6 +112,10 @@ export type NuiDataGridSort = readonly GridSort[];
 
 export type NuiDataGridFilters = readonly NuiGridColumnFilter[];
 
+export type NuiDataGridGroupBy = readonly string[];
+
+export type NuiDataGridExpanded = readonly GridNodeId[];
+
 export interface NuiDataGridFilterProps {
   title: string;
   kind: NuiGridFilterKind;
@@ -117,6 +133,8 @@ export type NuiDataGridSlots<T> = {
   [name: `cell-${string}`]: ((scope: NuiDataGridCellSlot<T>) => unknown) | undefined;
 } & {
   [name: `header-${string}`]: ((scope: NuiDataGridHeaderSlot<T>) => unknown) | undefined;
+} & {
+  [name: `footer-${string}`]: ((scope: NuiDataGridFooterSlot<T>) => unknown) | undefined;
 };
 
 export interface NuiDataGridExposed {
@@ -160,12 +178,30 @@ export interface GridCellPosition {
   readonly col: number;
 }
 
+export type GridRowPart = 'head' | 'body' | 'foot';
+
+export type GridGroupCell =
+  | { readonly kind: 'toggle'; readonly text: string; readonly count: string }
+  | { readonly kind: 'value'; readonly text: string };
+
+export interface GridGroupRow {
+  readonly id: string;
+  readonly expanded: boolean;
+  readonly cells: Readonly<Record<string, GridGroupCell>>;
+}
+
 export interface NuiDataGridRowProps {
   panes: GridPanes;
   rowIndex: number;
-  head?: boolean | undefined;
+  part?: GridRowPart | undefined;
   offset?: number | undefined;
   active?: number | undefined;
   revision?: number | undefined;
+  level?: number | undefined;
+  group?: GridGroupRow | undefined;
   heads?: Readonly<Record<string, GridHeadState>> | undefined;
+}
+
+export interface NuiDataGridGroupCellProps {
+  cell: GridGroupCell | undefined;
 }

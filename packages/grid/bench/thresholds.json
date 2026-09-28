@@ -4,49 +4,49 @@
       "p95Ms": 450
     },
     "build a date store and sort": {
-      "p95Ms": 300
-    },
-    "build a low-cardinality string store and sort": {
-      "p95Ms": 300
-    },
-    "build a unique string store and sort": {
-      "p95Ms": 6000
-    },
-    "sort numbers with a warm store": {
-      "p95Ms": 160
-    },
-    "sort strings with a warm store": {
       "p95Ms": 120
     },
-    "sort unique strings with a warm store": {
-      "p95Ms": 150
-    },
-    "multi-sort country, city and amount with warm stores": {
-      "p95Ms": 260
-    },
-    "filter city contains \"an\" with a warm store": {
-      "p95Ms": 30
-    },
-    "filter amount between 1000 and 50000 with a warm store": {
+    "build a low-cardinality string store and sort": {
       "p95Ms": 100
     },
+    "build a unique string store and sort": {
+      "p95Ms": 5100
+    },
+    "sort numbers with a warm store": {
+      "p95Ms": 110
+    },
+    "sort strings with a warm store": {
+      "p95Ms": 70
+    },
+    "sort unique strings with a warm store": {
+      "p95Ms": 90
+    },
+    "multi-sort country, city and amount with warm stores": {
+      "p95Ms": 210
+    },
+    "filter city contains \"an\" with a warm store": {
+      "p95Ms": 20
+    },
+    "filter amount between 1000 and 50000 with a warm store": {
+      "p95Ms": 60
+    },
     "filter status in a set with a warm store": {
-      "p95Ms": 80
+      "p95Ms": 40
     },
     "quick filter over every string column with cold stores": {
-      "p95Ms": 2500
+      "p95Ms": 2300
     },
     "quick filter over every string column with warm stores": {
-      "p95Ms": 200
+      "p95Ms": 90
     },
     "group by country with sum, count and avg on warm stores": {
-      "p95Ms": 260
+      "p95Ms": 120
     },
     "totals of sum, count and avg over all rows on warm stores": {
-      "p95Ms": 170
+      "p95Ms": 30
     },
     "group by country and city with aggregates on warm stores": {
-      "p95Ms": 460
+      "p95Ms": 250
     },
     "flatten a 100,000 node tree, sort siblings and walk it": {
       "p95Ms": 360
@@ -94,6 +94,18 @@
     },
     "apply a set filter from the header popover to the painted result": {
       "p95Ms": 250
+    },
+    "first grouping by a column from the model to the painted result": {
+      "p95Ms": 250
+    },
+    "change the grouping from the model to the painted result": {
+      "p95Ms": 250
+    },
+    "group by two columns from the model to the painted result": {
+      "p95Ms": 250
+    },
+    "expand and collapse a group to the next paint": {
+      "p95Ms": 100
     },
     "first quick filter keystroke while text stores build to the painted result": {
       "p95Ms": 2000

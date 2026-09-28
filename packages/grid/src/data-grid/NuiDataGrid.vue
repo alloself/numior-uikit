@@ -1,16 +1,19 @@
 <template>
   <div
     class="nui-grid"
-    :class="[`nui-grid--size-${size}`, { 'nui-grid--busy': query.busy.value }]"
+    :class="[
+      `nui-grid--size-${size}`,
+      { 'nui-grid--busy': query.busy.value, 'nui-grid--totals': totals.enabled.value },
+    ]"
     :style="rootStyle"
   >
     <div
       :id="gridId"
       ref="viewport"
       class="nui-grid__viewport"
-      role="grid"
+      :role="hierarchical ? 'treegrid' : 'grid'"
       :aria-label="labelText"
-      :aria-rowcount="rowCount + 1"
+      :aria-rowcount="rowCount + 1 + footRows"
       :aria-colcount="layout.visual.length"
       :aria-busy="query.busy.value || undefined"
       @keydown="onKeydown"
@@ -20,7 +23,7 @@
         <NuiDataGridRow
           :panes="panes"
           :row-index="1"
-          head
+          part="head"
           :active="focus.activeIn(-1)"
           :heads="header.heads.value"
         >
@@ -47,6 +50,9 @@
           :offset="item.offset"
           :active="focus.activeIn(item.index)"
           :revision="revision"
+          :level="levelOf(item.index)"
+          :group="groups.rowAt(item.index)"
+          @toggle="groups.toggle(item.index)"
         >
           <template #default="{ column }">
             <slot
@@ -64,6 +70,21 @@
             <NuiEmpty :title="emptyText" size="sm" />
           </slot>
         </div>
+      </div>
+      <div v-if="footRows" class="nui-grid__footer" role="rowgroup">
+        <NuiDataGridRow
+          :panes="panes"
+          :row-index="rowCount + 2"
+          part="foot"
+          :active="focus.activeIn(rowCount)"
+          :revision="revision"
+        >
+          <template #default="{ column }">
+            <slot :name="`footer-${column}`" v-bind="totals.scope(column)">
+              <span class="nui-grid__text">{{ totals.scope(column).text }}</span>
+            </slot>
+          </template>
+        </NuiDataGridRow>
       </div>
     </div>
     <NuiDataGridFilter
@@ -111,13 +132,17 @@ import { centreIndexOf, gridLayout, panesOf } from './grid-layout';
 import NuiDataGridFilter from './NuiDataGridFilter.vue';
 import NuiDataGridHeaderMarks from './NuiDataGridHeaderMarks.vue';
 import { useGridFocus } from './use-grid-focus';
+import { useGridGroups } from './use-grid-groups';
 import { useGridHeader } from './use-grid-header';
 import { useGridQuery } from './use-grid-query';
+import { useGridTotals } from './use-grid-totals';
 import type {
   GridCellPosition,
   NuiDataGridCellSlot,
   NuiDataGridEvents,
+  NuiDataGridExpanded,
   NuiDataGridExposed,
+  NuiDataGridGroupBy,
   NuiDataGridProps,
   NuiDataGridSlots,
   NuiDataGridFilters,
@@ -144,11 +169,14 @@ const {
   locale,
   label,
   emptyLabel,
+  totalsLabel,
 } = defineProps<NuiDataGridProps<T>>();
 
 const sort = defineModel<NuiDataGridSort>('sort', { default: () => [] });
 const filters = defineModel<NuiDataGridFilters>('filters', { default: () => [] });
 const quick = defineModel<string>('quick', { default: '' });
+const groupBy = defineModel<NuiDataGridGroupBy>('groupBy', { default: () => [] });
+const expanded = defineModel<NuiDataGridExpanded>('expanded', { default: () => [] });
 const emit = defineEmits<NuiDataGridEvents>();
 const slots = defineSlots<NuiDataGridSlots<T>>();
 
@@ -159,7 +187,11 @@ const messages = useMessages(dataGridMessages, resolvedLocale);
 const direction = useDirection(viewport);
 
 const createEngine = (): GridEngine<T> =>
-  createGridEngine({ columns: columns.map(engineColumnOf), keyOf: getKey });
+  createGridEngine({
+    columns: columns.map(engineColumnOf),
+    keyOf: getKey,
+    defaultExpanded: false,
+  });
 
 const engine = shallowRef(createEngine());
 const rowCount = ref(0);
@@ -172,10 +204,30 @@ const queryFilters = (): readonly GridFilter[] => {
   return text === '' ? filters.value : [...filters.value, { kind: 'quick', value: text }];
 };
 
+const totals = useGridTotals({
+  engine,
+  columns: () => columns,
+  keys: () => layout.value.visual.map((column) => column.key),
+  columnAt: (key) => columnAt(key),
+  locale: () => resolvedLocale.value,
+  messages,
+  label: () => totalsLabel,
+});
+
 const query = useGridQuery({
   engine,
-  query: () => ({ sort: sort.value, filters: queryFilters() }),
-  onSettled: (rows) => {
+  query: () => {
+    const list = queryFilters();
+
+    return {
+      sort: sort.value,
+      filters: list,
+      groupBy: groupBy.value,
+      totals: totals.wanted(list),
+    };
+  },
+  onSettled: (rows, ran) => {
+    totals.take(ran);
     sync();
     clampActive();
 
@@ -189,8 +241,13 @@ const query = useGridQuery({
   },
 });
 
+const runNow = (): void => {
+  totals.take(query.runNow());
+};
+
 engine.value.setRows(source);
-query.runNow();
+engine.value.setToggled(expanded.value);
+runNow();
 rowCount.value = engine.value.count();
 
 const active = ref<GridCellPosition>({ row: rowCount.value > 0 ? 0 : -1, col: 0 });
@@ -203,7 +260,11 @@ const emptyText = computed(() => emptyLabel ?? messages.value.empty);
 const booleanTexts = computed(() => ({ yes: messages.value.yes, no: messages.value.no }));
 const centreWidths = computed(() => layout.value.centre.map((column) => column.width));
 
-const activeRow = (): number | undefined => (active.value.row >= 0 ? active.value.row : undefined);
+const footRows = computed(() => (totals.enabled.value ? 1 : 0));
+const hierarchical = computed(() => groupBy.value.length > 0);
+
+const activeRow = (): number | undefined =>
+  active.value.row >= 0 && active.value.row < rowCount.value ? active.value.row : undefined;
 
 const activeCentre = (): number | undefined => centreIndexOf(layout.value, active.value.col);
 
@@ -214,7 +275,7 @@ const rows = useVirtualList(viewport, {
   initialCount: INITIAL_ROWS,
   pinned: activeRow,
   maxSize: CANVAS_LIMIT,
-  inset: rowSize,
+  inset: () => rowSize.value * (1 + footRows.value),
 });
 
 const columnWindow = useVirtualList(viewport, {
@@ -252,7 +313,8 @@ const focus = useGridFocus({
   active,
   rows,
   columns: columnWindow,
-  rowCount: () => rowCount.value,
+  rowCount: () => rowCount.value + footRows.value,
+  bodyRows: () => rowCount.value,
   colCount: () => layout.value.visual.length,
   rowSize: () => rowSize.value,
   centreIndexOf: (visual) => centreIndexOf(layout.value, visual),
@@ -294,8 +356,26 @@ const header = useGridHeader({
   },
 });
 
+const groups = useGridGroups({
+  engine,
+  expanded,
+  revision,
+  keys: () => layout.value.visual.map((column) => column.key),
+  columnAt,
+  locale: () => resolvedLocale.value,
+  messages,
+  announce: (text) => {
+    announcement.value = text;
+  },
+});
+
+const levelOf = (position: number): number | undefined => {
+  const node = hierarchical.value ? engine.value.nodeAt(position) : undefined;
+  return node === undefined ? undefined : node.level + 1;
+};
+
 const onKeydown = (event: KeyboardEvent): void => {
-  if (!header.onKeydown(event)) {
+  if (!header.onKeydown(event) && !groups.onKeydown(event, active.value)) {
     focus.onKeydown(event);
   }
 };
@@ -322,7 +402,7 @@ const valueLabel = (value: GridFilterValue): string => {
           booleanTexts.value,
         );
 
-  return text === '' ? messages.value.filterBlank : text;
+  return text === '' ? messages.value.blank : text;
 };
 
 const hasCellSlot = (key: string): boolean => slots[`cell-${key}`] !== undefined;
@@ -349,7 +429,8 @@ const sync = (): void => {
 };
 
 const clampActive = (): void => {
-  const lastRow = rowCount.value > 0 ? rowCount.value - 1 : -1;
+  const rowsInFocus = rowCount.value + footRows.value;
+  const lastRow = rowsInFocus > 0 ? rowsInFocus - 1 : -1;
   const lastCol = Math.max(0, layout.value.visual.length - 1);
   const row = Math.min(active.value.row, lastRow);
   const col = Math.min(active.value.col, lastCol);
@@ -363,11 +444,18 @@ watch(quick, () => {
   rowsIntent.set('rows');
 });
 
+watch(expanded, (ids) => {
+  engine.value.setToggled(ids);
+  sync();
+  clampActive();
+});
+
 watch(
   () => source,
   (next) => {
     engine.value.setRows(next);
-    query.runNow();
+    totals.reset();
+    runNow();
     sync();
     clampActive();
   },
@@ -379,7 +467,9 @@ watch(
     engine.value.dispose();
     engine.value = createEngine();
     engine.value.setRows(source);
-    query.runNow();
+    engine.value.setToggled(expanded.value);
+    totals.reset();
+    runNow();
     sync();
     clampActive();
   },

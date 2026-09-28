@@ -2,13 +2,22 @@
 import { describe, expect, it } from 'vitest';
 import { createSSRApp, h } from 'vue';
 import { renderToString } from 'vue/server-renderer';
-import { NuiDataGrid, type GridSort, type NuiDataGridFilters } from '../src';
+import {
+  NuiDataGrid,
+  type GridNodeId,
+  type GridSort,
+  type NuiDataGridFilters,
+  type NuiGridColumn,
+} from '../src';
 import { people, PEOPLE_COLUMNS, type Person } from './support/people';
 
 interface Query {
+  readonly columns?: readonly NuiGridColumn<Person>[];
   readonly sort?: readonly GridSort[];
   readonly filters?: NuiDataGridFilters;
   readonly quick?: string;
+  readonly groupBy?: readonly string[];
+  readonly expanded?: readonly GridNodeId[];
 }
 
 const render = (count: number, query: Query = {}): Promise<string> =>
@@ -16,12 +25,14 @@ const render = (count: number, query: Query = {}): Promise<string> =>
     createSSRApp({
       render: () =>
         h(NuiDataGrid<Person>, {
-          columns: PEOPLE_COLUMNS,
+          columns: query.columns ?? PEOPLE_COLUMNS,
           source: people(count),
           id: 'staff',
           sort: query.sort ?? [],
           filters: query.filters ?? [],
           quick: query.quick ?? '',
+          groupBy: query.groupBy ?? [],
+          expanded: query.expanded ?? [],
         }),
     }),
   );
@@ -71,6 +82,26 @@ describe('NuiDataGrid on the server', () => {
     expect(html).not.toContain('Сотрудник 1<');
     expect(html.match(/nui-grid__filter--active/g)).toHaveLength(1);
     expect(html).not.toContain('role="dialog"');
+  });
+
+  it('renders groups with levels and the totals row on the server', async () => {
+    const query = {
+      columns: PEOPLE_COLUMNS.map((column) =>
+        column.key === 'id' ? { ...column, aggregate: 'count' as const } : column,
+      ),
+      groupBy: ['team'],
+      expanded: ['["Данные"]'],
+    };
+
+    const html = await render(1000, query);
+
+    expect(html).toBe(await render(1000, query));
+    expect(html).toContain('role="treegrid"');
+    expect(html).toContain('aria-rowcount="338"');
+    expect(html).toContain('aria-expanded="true"');
+    expect(html).toContain('aria-level="2"');
+    expect(html).toContain('(333)');
+    expect(html).toContain('>Total<');
   });
 
   it('renders the empty state inside the grid when there are no rows', async () => {

@@ -16,17 +16,44 @@ export const createAccumulator = (): Accumulator => ({
   max: Number.NEGATIVE_INFINITY,
 });
 
-export const accumulate = (target: Accumulator, store: ColumnStore, index: number): void => {
-  target.count += 1;
+export const accumulateRange = (
+  target: Accumulator,
+  store: ColumnStore,
+  indices: Uint32Array,
+  from: number,
+  to: number,
+): void => {
+  target.count += to - from;
 
-  if (store.kind !== 'number' || store.nulls[index] === 1) {
+  if (store.kind !== 'number') {
     return;
   }
-  const key = store.keys[index] ?? 0;
-  target.filled += 1;
-  target.sum += key;
-  target.min = Math.min(target.min, key);
-  target.max = Math.max(target.max, key);
+  const { keys, nulls } = store;
+  let { filled, sum, min, max } = target;
+
+  for (let position = from; position < to; position += 1) {
+    const index = indices[position] ?? 0;
+
+    if (nulls[index] !== 1) {
+      const key = keys[index] ?? 0;
+      filled += 1;
+      sum += key;
+      min = key < min ? key : min;
+      max = key > max ? key : max;
+    }
+  }
+  target.filled = filled;
+  target.sum = sum;
+  target.min = min;
+  target.max = max;
+};
+
+export const mergeAccumulator = (target: Accumulator, source: Accumulator): void => {
+  target.count += source.count;
+  target.filled += source.filled;
+  target.sum += source.sum;
+  target.min = Math.min(target.min, source.min);
+  target.max = Math.max(target.max, source.max);
 };
 
 export const finishAggregate = (kind: GridAggregateKind, source: Accumulator): unknown => {

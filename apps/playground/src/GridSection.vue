@@ -18,6 +18,14 @@
           <NuiIcon alias="search" />
         </template>
       </NuiInput>
+      <NuiSelect
+        v-model="grouping"
+        :options="GROUPINGS"
+        size="sm"
+        class="grid-grouping"
+        aria-label="Группировка"
+        data-testid="grid-group"
+      />
       <NuiButton
         size="sm"
         variant="outline"
@@ -42,6 +50,8 @@
       v-model:sort="sort"
       v-model:filters="filters"
       v-model:quick="quick"
+      v-model:group-by="groupBy"
+      v-model:expanded="expanded"
       :columns="columns"
       :source="empty ? [] : orders"
       :get-key="(row) => row.id"
@@ -60,10 +70,19 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue';
-import { NuiButton, NuiChip, NuiIcon, NuiInput, type NuiTone } from '@numior/vue';
+import { computed, ref, watch } from 'vue';
+import {
+  NuiButton,
+  NuiChip,
+  NuiIcon,
+  NuiInput,
+  NuiSelect,
+  type NuiOption,
+  type NuiTone,
+} from '@numior/vue';
 import {
   NuiDataGrid,
+  type GridNodeId,
   type GridSort,
   type NuiDataGridFilters,
   type NuiGridColumn,
@@ -104,6 +123,19 @@ const STATUS_TONES: Readonly<Record<OrderStatus, NuiTone>> = {
   paid: 'success',
   shipped: 'neutral',
   returned: 'warning',
+};
+
+const GROUPINGS: readonly NuiOption<string>[] = [
+  { value: 'none', label: 'Без группировки' },
+  { value: 'country', label: 'По стране' },
+  { value: 'status', label: 'По статусу' },
+  { value: 'country-city', label: 'Страна и город' },
+];
+
+const GROUP_KEYS: Readonly<Record<string, readonly string[]>> = {
+  country: ['country'],
+  status: ['status'],
+  'country-city': ['country', 'city'],
 };
 
 const pick = <V>(list: readonly V[], seed: number, fallback: V): V =>
@@ -158,9 +190,23 @@ const columns: NuiGridColumn<Order>[] = [
     filter: 'set',
     value: (row) => row.country,
   },
-  { key: 'amount', label: 'Сумма', type: 'number', width: 130, value: (row) => row.amount },
+  {
+    key: 'amount',
+    label: 'Сумма',
+    type: 'number',
+    width: 130,
+    aggregate: 'sum',
+    value: (row) => row.amount,
+  },
   { key: 'created', label: 'Создан', type: 'date', width: 150, value: (row) => row.created },
-  { key: 'vip', label: 'VIP', type: 'boolean', width: 100, value: (row) => row.vip },
+  {
+    key: 'vip',
+    label: 'VIP',
+    type: 'boolean',
+    width: 100,
+    aggregate: 'sum',
+    value: (row) => row.vip,
+  },
   {
     key: 'manager',
     label: 'Менеджер',
@@ -175,7 +221,7 @@ const columns: NuiGridColumn<Order>[] = [
     label: 'Статус',
     type: 'text',
     pin: 'end',
-    width: 140,
+    width: 160,
     filter: 'set',
     value: (row) => STATUS_LABELS[row.status],
   },
@@ -185,10 +231,23 @@ const empty = ref(false);
 const sort = ref<readonly GridSort[]>([]);
 const filters = ref<NuiDataGridFilters>([]);
 const quick = ref('');
+const grouping = ref('none');
+const groupBy = ref<readonly string[]>([]);
+const expanded = ref<readonly GridNodeId[]>([]);
 
 const output = computed(() =>
-  JSON.stringify({ sort: sort.value, filters: filters.value, quick: quick.value }),
+  JSON.stringify({
+    sort: sort.value,
+    filters: filters.value,
+    quick: quick.value,
+    groupBy: groupBy.value,
+  }),
 );
+
+watch(grouping, (key) => {
+  groupBy.value = GROUP_KEYS[key] ?? [];
+  expanded.value = [];
+});
 
 const clearFilters = (): void => {
   filters.value = [];

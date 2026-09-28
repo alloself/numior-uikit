@@ -12,6 +12,7 @@ import {
 import { dismissPopoverNatively, TopLayerStubs } from '../../../vue/test/support/top-layer';
 import {
   NuiDataGrid,
+  type GridNodeId,
   type GridSort,
   type NuiDataGridFilters,
   type NuiDataGridExposed,
@@ -25,6 +26,8 @@ export interface DataGridMountOptions<T> {
   readonly props?: Omit<NuiDataGridProps<T>, 'columns' | 'source'>;
   readonly sort?: readonly GridSort[];
   readonly filters?: NuiDataGridFilters;
+  readonly groupBy?: readonly string[];
+  readonly expanded?: readonly GridNodeId[];
   readonly slots?: Slots;
   readonly width?: number;
   readonly height?: number;
@@ -41,6 +44,8 @@ interface GridModels {
   readonly sort: ShallowRef<readonly GridSort[]>;
   readonly filters: ShallowRef<NuiDataGridFilters>;
   readonly quick: ShallowRef<string>;
+  readonly groupBy: ShallowRef<readonly string[]>;
+  readonly expanded: ShallowRef<readonly GridNodeId[]>;
 }
 
 interface GridEvents {
@@ -86,6 +91,8 @@ export class DataGridDriver<T> {
     const sort = shallowRef<readonly GridSort[]>(options.sort ?? []);
     const filters = shallowRef<NuiDataGridFilters>(options.filters ?? []);
     const quick = shallowRef('');
+    const groupBy = shallowRef<readonly string[]>(options.groupBy ?? []);
+    const expanded = shallowRef<readonly GridNodeId[]>(options.expanded ?? []);
     const stubs = new TopLayerStubs();
     const exposed = shallowRef<NuiDataGridExposed | null>(null);
     const events: GridEvents = { settled: 0, progress: 0, waiters: [] };
@@ -115,6 +122,14 @@ export class DataGridDriver<T> {
               'onUpdate:quick': (next: string) => {
                 quick.value = next;
               },
+              groupBy: groupBy.value,
+              'onUpdate:groupBy': (next: readonly string[]) => {
+                groupBy.value = next;
+              },
+              expanded: expanded.value,
+              'onUpdate:expanded': (next: readonly GridNodeId[]) => {
+                expanded.value = next;
+              },
               onSettle: () => {
                 events.settled += 1;
 
@@ -135,14 +150,8 @@ export class DataGridDriver<T> {
     const plugins: Plugin[] = options.config === undefined ? [] : [createNuiConfig(options.config)];
     const wrapper = mount(Host, { attachTo: document.body, global: { plugins } });
 
-    const driver = new DataGridDriver<T>(
-      wrapper,
-      source,
-      { sort, filters, quick },
-      exposed,
-      events,
-      stubs,
-    );
+    const models = { sort, filters, quick, groupBy, expanded };
+    const driver = new DataGridDriver<T>(wrapper, source, models, exposed, events, stubs);
 
     driver.size(options.width ?? 500, options.height ?? 300);
     return driver;
@@ -223,6 +232,33 @@ export class DataGridDriver<T> {
 
   get filters(): NuiDataGridFilters {
     return this.models.filters.value;
+  }
+
+  get expanded(): readonly GridNodeId[] {
+    return this.models.expanded.value;
+  }
+
+  get role(): string | undefined {
+    return this.viewport.attributes('role');
+  }
+
+  rowLevel(position: number): string | undefined {
+    return this.row(position)?.getAttribute('aria-level') ?? undefined;
+  }
+
+  rowExpanded(position: number): string | undefined {
+    return this.row(position)?.getAttribute('aria-expanded') ?? undefined;
+  }
+
+  groupLabel(position: number): string | undefined {
+    const group = this.row(position)?.querySelector('.nui-grid__group');
+
+    if (group === null || group === undefined) {
+      return undefined;
+    }
+    return [...group.querySelectorAll('.nui-grid__text, .nui-grid__count')]
+      .map((part) => part.textContent?.trim() ?? '')
+      .join(' ');
   }
 
   private get popover(): HTMLElement | null {
@@ -459,6 +495,19 @@ export class DataGridDriver<T> {
     );
 
     buttons?.[0]?.click();
+    await settled;
+    await nextTick();
+  }
+
+  async toggleGroup(position: number): Promise<void> {
+    this.row(position)?.querySelector<HTMLElement>('.nui-grid__group')?.click();
+    await nextTick();
+  }
+
+  async setGroupBy(keys: readonly string[]): Promise<void> {
+    const settled = this.nextSettle();
+
+    this.models.groupBy.value = keys;
     await settled;
     await nextTick();
   }

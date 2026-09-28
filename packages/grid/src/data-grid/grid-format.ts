@@ -118,15 +118,45 @@ export const cellTextOf = <T>(
 export const cellValueOf = <T>(column: NuiGridColumn<T>, row: T): NuiGridCellValue =>
   column.value(row) ?? null;
 
+export const cellValueFrom = (value: unknown): NuiGridCellValue =>
+  typeof value === 'string' ||
+  typeof value === 'number' ||
+  typeof value === 'boolean' ||
+  value instanceof Date
+    ? value
+    : null;
+
+export const aggregateTextOf = <T>(
+  column: NuiGridColumn<T>,
+  value: unknown,
+  locale: string,
+  texts: BooleanTexts,
+): string => {
+  switch (typeof value) {
+    case 'number':
+      return column.aggregate === 'count' || column.type === 'text' || column.type === 'boolean'
+        ? formatNumber(value, locale)
+        : valueTextOf(column, value, undefined, locale, texts);
+    case 'string':
+      return value;
+    case 'boolean':
+      return value ? texts.yes : texts.no;
+    default:
+      return '';
+  }
+};
+
 export const engineColumnOf = <T>(column: NuiGridColumn<T>): GridEngineColumn<T> => {
+  const shared = { key: column.key, aggregate: column.aggregate };
+
   switch (column.type) {
     case 'text':
-      return { kind: 'string', key: column.key, value: column.value };
+      return { ...shared, kind: 'string', value: column.value };
     case 'number':
-      return { kind: 'number', key: column.key, value: column.value };
+      return { ...shared, kind: 'number', value: column.value };
     case 'date':
-      return { kind: 'date', key: column.key, value: column.value };
+      return { ...shared, kind: 'date', value: column.value };
     case 'boolean':
-      return { kind: 'boolean', key: column.key, value: column.value };
+      return { ...shared, kind: 'boolean', value: column.value };
   }
 };

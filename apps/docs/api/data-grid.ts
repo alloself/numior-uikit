@@ -4,8 +4,8 @@ const docs: DocsMap = {
   NuiDataGrid: {
     props: {
       columns: {
-        ru: 'Колонки: key, label, type (text, number, date, boolean), value, format, width, minWidth, pin, align, sortable и filter. filter выбирает вид фильтра (text, number, date, set) или выключает его значением false. Вне строки, например в списке значений фильтра, format получает строку как undefined.',
-        en: 'Columns: key, label, type (text, number, date, boolean), value, format, width, minWidth, pin, align, sortable and filter. filter picks the filter kind (text, number, date, set) or turns it off with false. Outside a row, such as the filter value list, format receives the row as undefined.',
+        ru: 'Колонки: key, label, type (text, number, date, boolean), value, format, width, minWidth, pin, align, sortable, filter и aggregate. filter выбирает вид фильтра (text, number, date, set) или выключает его значением false. aggregate (sum, count, avg, min, max или функция) считает значение для строк групп и строки итогов. Вне строки, например в группе или списке значений фильтра, format получает строку как undefined.',
+        en: 'Columns: key, label, type (text, number, date, boolean), value, format, width, minWidth, pin, align, sortable, filter and aggregate. filter picks the filter kind (text, number, date, set) or turns it off with false. aggregate (sum, count, avg, min, max or a function) fills group rows and the totals row. Outside a row, such as a group or the filter value list, format receives the row as undefined.',
       },
       source: {
         ru: 'Строки данных; грид не копирует и не меняет их.',
@@ -43,6 +43,10 @@ const docs: DocsMap = {
         ru: 'Текст пустого грида; по умолчанию из словаря.',
         en: 'Text of the empty grid; the dictionary supplies the default.',
       },
+      totalsLabel: {
+        ru: 'Подпись строки итогов в первой колонке без агрегата; по умолчанию из словаря.',
+        en: 'Label of the totals row in the first column without an aggregate; the dictionary supplies the default.',
+      },
     },
     models: {
       'v-model:sort': {
@@ -56,6 +60,14 @@ const docs: DocsMap = {
       'v-model:quick': {
         ru: 'Быстрый фильтр: текст, который ищется во всех текстовых колонках без учёта регистра.',
         en: 'Quick filter: text searched in every text column, ignoring case.',
+      },
+      'v-model:groupBy': {
+        ru: 'Группировка: ключи колонок по уровням; непустой список делает грид деревом (treegrid).',
+        en: 'Grouping: column keys by level; a non-empty list turns the grid into a treegrid.',
+      },
+      'v-model:expanded': {
+        ru: 'Развёрнутые группы: их id; по умолчанию все группы свёрнуты.',
+        en: 'Expanded groups by id; all groups start collapsed.',
       },
     },
     events: {
@@ -84,6 +96,13 @@ const docs: DocsMap = {
         description: {
           ru: 'На ячейке шапки добавляет колонку следующим ключом сортировки.',
           en: 'On a header cell adds the column as the next sort key.',
+        },
+      },
+      {
+        keys: 'Enter / Space',
+        description: {
+          ru: 'На строке группы разворачивает или сворачивает её.',
+          en: 'On a group row expands or collapses it.',
         },
       },
       {
@@ -117,8 +136,8 @@ const docs: DocsMap = {
       {
         keys: 'Ctrl+Home / Ctrl+End',
         description: {
-          ru: 'Переходит на первую или последнюю ячейку данных.',
-          en: 'Moves to the first or the last data cell.',
+          ru: 'Переходит на первую ячейку данных или на последнюю ячейку, включая строку итогов.',
+          en: 'Moves to the first data cell or to the last cell, the totals row included.',
         },
       },
       {

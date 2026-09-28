@@ -122,6 +122,22 @@ export class GridBenchPage {
     await this.waitForSettles(1);
   }
 
+  async groupLatencies(sets: readonly (readonly string[])[]): Promise<number[]> {
+    const samples: number[] = [];
+
+    for (const keys of sets) {
+      await this.clearSettles();
+
+      await this.page.evaluate((next) => {
+        window.numiorBench?.setGroupBy(next);
+      }, keys);
+
+      await this.waitForSettles(1);
+      samples.push(...(await this.settles()));
+    }
+    return samples;
+  }
+
   async quickLatencies(text: string, erase: number): Promise<number[]> {
     await this.quick.click();
     await this.clearSettles();

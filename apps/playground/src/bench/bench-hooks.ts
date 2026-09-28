@@ -7,6 +7,7 @@ export interface BenchHooks {
   readonly frames: number[];
   remount(): Promise<number>;
   recordFrames(active: boolean): void;
+  setGroupBy(keys: readonly string[]): void;
 }
 
 declare global {

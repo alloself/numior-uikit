@@ -9,6 +9,7 @@ export interface GridFocusOptions {
   readonly rows: VirtualList;
   readonly columns: VirtualList;
   readonly rowCount: () => number;
+  readonly bodyRows: () => number;
   readonly colCount: () => number;
   readonly rowSize: () => number;
   readonly centreIndexOf: (visual: number) => number | undefined;
@@ -53,7 +54,7 @@ export const useGridFocus = (options: GridFocusOptions): GridFocus => {
   };
 
   const reveal = (target: GridCellPosition): void => {
-    if (target.row >= 0) {
+    if (target.row >= 0 && target.row < options.bodyRows()) {
       options.rows.scrollTo(target.row, { align: 'auto' });
     }
     const centre = options.centreIndexOf(target.col);

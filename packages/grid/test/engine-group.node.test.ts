@@ -117,6 +117,11 @@ describe('createGridEngine groups', () => {
 
     collapsed.engine.setExpanded('["KZ"]', true);
     expect(collapsed.engine.count()).toBe(5);
+    collapsed.engine.setToggled(['["AM"]', '["RU"]']);
+    expect(collapsed.engine.count()).toBe(7);
+    expect(collapsed.engine.isExpanded('["KZ"]')).toBe(false);
+    collapsed.engine.setToggled(['["KZ"]']);
+    expect(collapsed.engine.count()).toBe(5);
     collapsed.engine.setRows(ORDERS.slice(0, 2));
     expect(collapsed.engine.isExpanded('["KZ"]')).toBe(false);
   });

@@ -89,6 +89,46 @@ test('the data grid keeps input and frames within budget on a million rows', asy
   );
 
   await bench.resetFilter(19);
+
+  const [coldCountry = Number.NaN, ...countries] = await bench.groupLatencies([
+    ['country'],
+    [],
+    ['country'],
+    [],
+    ['country'],
+  ]);
+
+  operations.push(
+    summarize('first grouping by a column from the model to the painted result', [coldCountry]),
+  );
+
+  operations.push(
+    summarize(
+      'change the grouping from the model to the painted result',
+      countries.filter((_, index) => index % 2 === 1),
+    ),
+  );
+
+  operations.push(
+    summarize(
+      'group by two columns from the model to the painted result',
+      (await bench.groupLatencies([['country', 'city'], [], ['country', 'city']])).filter(
+        (_, index) => index % 2 === 0,
+      ),
+    ),
+  );
+
+  await bench.groupLatencies([['country']]);
+  await bench.focusCell(0, 1);
+
+  operations.push(
+    summarize(
+      'expand and collapse a group to the next paint',
+      await bench.keyLatencies('Enter', 10),
+    ),
+  );
+
+  await bench.groupLatencies([[]]);
   const [coldQuick = Number.NaN, ...warmQuick] = await bench.quickLatencies('mosc', 4);
 
   operations.push(

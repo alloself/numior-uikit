@@ -10,7 +10,7 @@ test.describe('data grid', () => {
     await playground.open();
     const { grid } = playground;
     await grid.root.scrollIntoViewIfNeeded();
-    await expect(grid.viewport).toHaveAttribute('aria-rowcount', '10001');
+    await expect(grid.viewport).toHaveAttribute('aria-rowcount', '10002');
     await expect(grid.header(0)).toHaveText('№');
     await expect(grid.cell(0, 10)).toContainText('Новый');
     expect(await grid.renderedRowCount()).toBeLessThan(60);
@@ -53,12 +53,14 @@ test.describe('data grid', () => {
     await page.keyboard.press('End');
     expect(await grid.focusedCell()).toEqual({ row: 3, col: 10 });
     await page.keyboard.press('Control+End');
+    expect(await grid.focusedCell()).toEqual({ row: 10_000, col: 10 });
+    await page.keyboard.press('ArrowUp');
     expect(await grid.focusedCell()).toEqual({ row: 9999, col: 10 });
 
     const last = await grid.cellBox(9999, 10);
-    const frame = await grid.viewportBox();
+    const footer = await grid.cellBox(10_000, 10);
     expect(last.y).toBeGreaterThanOrEqual((await grid.headerBottom()) - 1);
-    expect(last.y + last.height).toBeLessThanOrEqual(frame.y + frame.height + 1);
+    expect(last.y + last.height).toBeLessThanOrEqual(footer.y + 1);
     await page.keyboard.press('Control+Home');
     expect(await grid.focusedCell()).toEqual({ row: 0, col: 0 });
     expect(await grid.scrollTop()).toBe(0);
@@ -140,7 +142,7 @@ test.describe('data grid', () => {
     await grid.root.scrollIntoViewIfNeeded();
     await grid.emptyToggle.click();
     await expect(grid.empty).toContainText('Нет строк для показа');
-    await expect(grid.viewport).toHaveAttribute('aria-rowcount', '1');
+    await expect(grid.viewport).toHaveAttribute('aria-rowcount', '2');
     await grid.emptyToggle.click();
     await expect(grid.empty).toHaveCount(0);
     await expect(grid.cell(0, 0)).toHaveText('1');
@@ -162,7 +164,7 @@ test.describe('data grid', () => {
     await grid.applyFilter();
 
     await expect(grid.filter).toBeHidden();
-    await expect(grid.viewport).toHaveAttribute('aria-rowcount', '2501');
+    await expect(grid.viewport).toHaveAttribute('aria-rowcount', '2502');
     await expect(grid.filterButton(10)).toHaveClass(/nui-grid__filter--active/);
     expect(await grid.textsIn(10, 5)).toEqual(Array.from({ length: 5 }, () => 'Оплачен'));
 
@@ -171,13 +173,14 @@ test.describe('data grid', () => {
         sort: [],
         filters: [{ kind: 'set', key: 'status', values: ['Оплачен'] }],
         quick: '',
+        groupBy: [],
       }),
     );
 
     await grid.openFilter(10);
     await expect(grid.filterValue('Оплачен')).toBeChecked();
     await grid.resetFilter();
-    await expect(grid.viewport).toHaveAttribute('aria-rowcount', '10001');
+    await expect(grid.viewport).toHaveAttribute('aria-rowcount', '10002');
     await expect(grid.filterButton(10)).not.toHaveClass(/nui-grid__filter--active/);
   });
 
@@ -191,7 +194,7 @@ test.describe('data grid', () => {
     const { grid } = playground;
     await grid.root.scrollIntoViewIfNeeded();
     await grid.quick.fill('Казань');
-    await expect(grid.viewport).toHaveAttribute('aria-rowcount', '1429');
+    await expect(grid.viewport).toHaveAttribute('aria-rowcount', '1430');
     await grid.openFilter(5);
     await grid.filterField('От').fill('1000');
     await grid.filterField('До').fill('20000');
@@ -199,7 +202,7 @@ test.describe('data grid', () => {
 
     await expect
       .poll(async () => Number(await grid.viewport.getAttribute('aria-rowcount')))
-      .toBeLessThan(1429);
+      .toBeLessThan(1430);
 
     const amounts = await grid.numbersIn(5, 5);
     expect(amounts.every((amount) => amount >= 1000 && amount <= 20_000)).toBe(true);
@@ -210,11 +213,12 @@ test.describe('data grid', () => {
         sort: [],
         filters: [{ kind: 'number', key: 'amount', min: 1000, max: 20_000 }],
         quick: 'Казань',
+        groupBy: [],
       }),
     );
 
     await grid.clearFilters.click();
-    await expect(grid.viewport).toHaveAttribute('aria-rowcount', '10001');
+    await expect(grid.viewport).toHaveAttribute('aria-rowcount', '10002');
     await expect(grid.quick).toHaveValue('');
   });
 
@@ -240,7 +244,7 @@ test.describe('data grid', () => {
     await page.keyboard.press('Alt+ArrowDown');
     await grid.filterField('Значение').fill('Анна');
     await page.keyboard.press('Enter');
-    await expect(grid.viewport).toHaveAttribute('aria-rowcount', '1251');
+    await expect(grid.viewport).toHaveAttribute('aria-rowcount', '1252');
     await expect(grid.filter).toBeHidden();
     expect(await grid.focusedCell()).toEqual({ row: -1, col: 1 });
     await expect(grid.root.getByRole('status')).toHaveText('Показано 1 250 строк');
@@ -252,6 +256,43 @@ test.describe('data grid', () => {
     await expect.poll(() => grid.focusedCell()).toEqual({ row: -1, col: 3 });
     await page.keyboard.press('ArrowLeft');
     expect(await grid.focusedCell()).toEqual({ row: -1, col: 2 });
+  });
+
+  test('groups rows from the toolbar, expands a group and keeps totals in the footer', async ({
+    page,
+    isMobile,
+  }) => {
+    const playground = new PlaygroundPage(page);
+    await playground.open();
+    const { grid } = playground;
+    await grid.root.scrollIntoViewIfNeeded();
+    await expect(grid.footerCell(0)).toHaveText('Итого');
+    await grid.scrollTo({ left: 600 });
+    await expect(grid.footerCell(5)).not.toHaveText('');
+    const total = await grid.footerCell(5).innerText();
+    await grid.groupBy('По статусу');
+
+    await expect(grid.viewport).toHaveAttribute('role', 'treegrid');
+    await expect(grid.viewport).toHaveAttribute('aria-rowcount', '6');
+    await expect(grid.groupLabel(0)).toHaveText(/^Возврат/);
+    await expect(grid.row(0)).toHaveAttribute('aria-expanded', 'false');
+    await expect(grid.footerCell(5)).toHaveText(total);
+    await grid.groupLabel(0).click();
+
+    await expect(grid.row(0)).toHaveAttribute('aria-expanded', 'true');
+    await expect(grid.row(1)).toHaveAttribute('aria-level', '2');
+    await expect(grid.cell(1, 10)).toHaveText('Возврат');
+    await expect(grid.output).toContainText('"groupBy":["status"]');
+
+    if (isMobile) {
+      return;
+    }
+    await grid.cell(0, 0).click();
+    await page.keyboard.press('Enter');
+    await expect(grid.row(0)).toHaveAttribute('aria-expanded', 'false');
+    await page.keyboard.press('Control+End');
+    expect(await grid.focusedCell()).toEqual({ row: 4, col: 10 });
+    await expect(grid.footerCell(10)).toBeFocused();
   });
 
   test('data grid has no automatically detectable WCAG AA violations', async ({ page }) => {

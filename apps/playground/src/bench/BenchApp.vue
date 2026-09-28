@@ -16,6 +16,8 @@
       v-model:sort="sort"
       v-model:filters="filters"
       v-model:quick="quick"
+      v-model:group-by="groupBy"
+      v-model:expanded="expanded"
       :columns="GRID_COLUMNS"
       :source="rows"
       :get-key="(row) => row.id"
@@ -30,7 +32,7 @@
 <script setup lang="ts">
 import { nextTick, onMounted, ref } from 'vue';
 import { NuiInput } from '@numior/vue';
-import { NuiDataGrid, type GridSort, type NuiDataGridFilters } from '@numior/grid';
+import { NuiDataGrid, type GridNodeId, type GridSort, type NuiDataGridFilters } from '@numior/grid';
 import { GRID_COLUMNS, generateRows } from '../../../../packages/grid/bench/dataset';
 import {
   afterPaint,
@@ -54,6 +56,8 @@ const caption = `${count.toLocaleString('ru-RU')} строк × ${GRID_COLUMNS.l
 const sort = ref<readonly GridSort[]>([]);
 const filters = ref<NuiDataGridFilters>([]);
 const quick = ref('');
+const groupBy = ref<readonly string[]>([]);
+const expanded = ref<readonly GridNodeId[]>([]);
 const latencies: number[] = [];
 const settles: number[] = [];
 const frames: number[] = [];
@@ -81,6 +85,11 @@ const hooks: BenchHooks = {
   frames,
   remount,
   recordFrames: createFrameRecorder(frames),
+  setGroupBy: (keys) => {
+    clock.last = performance.now();
+    expanded.value = [];
+    groupBy.value = keys;
+  },
 };
 
 window.numiorBench = hooks;

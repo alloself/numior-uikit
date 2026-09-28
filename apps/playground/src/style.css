@@ -234,6 +234,9 @@ label:has(> input[type='checkbox']) {
 .grid-quick {
   inline-size: min(100%, 18rem);
 }
+.grid-grouping {
+  inline-size: 12rem;
+}
 .data-row {
   display: flex;
   flex-wrap: wrap;
