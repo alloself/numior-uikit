@@ -35,6 +35,19 @@ describe('createGridEngine', () => {
     expect(Array.from(harness.engine.visibleIndices())).toEqual([1, 4, 0, 3, 2]);
   });
 
+  it('runs a query synchronously through the same stages and supersedes a sliced run', async () => {
+    const harness = new EngineHarness(PEOPLE_COLUMNS, PEOPLE);
+    const pending = harness.run({ sort: [{ key: 'age', direction: 'asc' }] });
+    const result = harness.engine.runSync({ sort: [{ key: 'name', direction: 'asc' }] });
+
+    expect(result).toEqual({ kind: 'done', count: 5, rows: 5 });
+    expect(harness.visible('name')).toEqual(['анна', 'Анна', 'Борис', 'Вера', null]);
+    expect(await harness.settle(pending)).toEqual({ kind: 'cancelled' });
+    expect(harness.visible('name')).toEqual(['анна', 'Анна', 'Борис', 'Вера', null]);
+    expect(harness.engine.runSync({})).toEqual({ kind: 'done', count: 5, rows: 5 });
+    expect(harness.visible('name')).toEqual(['Вера', 'анна', 'Борис', null, 'Анна']);
+  });
+
   it('keeps built stores until the rows change and rejects unknown columns', async () => {
     const harness = new EngineHarness(PEOPLE_COLUMNS, PEOPLE);
 

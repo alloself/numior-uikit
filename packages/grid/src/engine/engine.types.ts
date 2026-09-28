@@ -145,6 +145,7 @@ export interface GridEngine<T> {
   rowCount(): number;
   setRows(rows: readonly T[]): void;
   run(query: GridQuery, options?: GridRunOptions): Promise<GridRunResult>;
+  runSync(query: GridQuery): GridRunResult;
   visibleIndices(): Uint32Array;
   nodeAt(position: number): GridNode<T> | undefined;
   rowAt(index: number): T | undefined;

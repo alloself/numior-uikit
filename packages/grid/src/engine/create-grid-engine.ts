@@ -1,7 +1,8 @@
-import { createStoreJob } from './column-store';
+import { createStoresJob } from './column-store';
 import { compactPass, compileFilter, compileQuick, createFilterJob, type RowTest } from './filter';
 import { createGroupJob, type AggregateColumn, type GroupLevel, type GroupTable } from './group';
-import { runSliced, yieldToHost, type SliceJob, type SliceOptions } from './slicer';
+import { createPipeline, type Pipeline, type PipelineStage } from './pipeline';
+import { runSliced, yieldToHost } from './slicer';
 import { createOrderJob, type OrderKey } from './order';
 import { identityIndices } from './sort';
 import {
@@ -24,9 +25,9 @@ import type {
   GridFilterValue,
   GridNode,
   GridNodeId,
-  GridPhase,
   GridQuery,
   GridRunOptions,
+  GridRunResult,
   GridSort,
 } from './engine.types';
 
@@ -127,45 +128,21 @@ export const createGridEngine = <T>(options: GridEngineOptions<T>): GridEngine<T
 
   const isExpanded = (id: GridNodeId): boolean => defaultExpanded !== toggled.has(id);
 
-  const slicing = (
-    isStale: () => boolean,
-    runOptions: GridRunOptions,
-    phase: GridPhase,
-    offset: number,
-    total: number,
-  ): SliceOptions => ({
-    sliceMs,
-    yieldTo,
-    signal: runOptions.signal,
-    isStale,
-    onProgress: (done, jobTotal) => {
-      runOptions.onProgress?.({
-        phase,
-        done: Math.min(offset + done, Math.max(total, jobTotal)),
-        total: Math.max(total, jobTotal),
-      });
-    },
-  });
-
-  const buildStores = async (
+  const storesStage = (
     keys: readonly string[],
-    isStale: () => boolean,
-    runOptions: GridRunOptions,
-  ): Promise<boolean> => {
-    const pending = keys.filter((key) => !stores.has(key));
-    const total = pending.length * table.rows.length;
-    let offset = 0;
+    next: () => PipelineStage | null,
+  ): PipelineStage | null => {
+    const pending = keys.filter((key) => !stores.has(key)).map(columnOf);
 
-    for (const key of pending) {
-      const job = createStoreJob(columnOf(key), table.rows, collator);
-
-      if (!(await runSliced(job, slicing(isStale, runOptions, 'keys', offset, total)))) {
-        return false;
-      }
-      stores.set(key, job.result());
-      offset += table.rows.length;
+    if (pending.length === 0) {
+      return next();
     }
-    return true;
+
+    const job = createStoresJob(pending, table.rows, collator, (key, store) => {
+      stores.set(key, store);
+    });
+
+    return { phase: 'keys', job, next };
   };
 
   const filterKeys = (filter: GridFilter): readonly string[] =>
@@ -207,97 +184,131 @@ export const createGridEngine = <T>(options: GridEngineOptions<T>): GridEngine<T
     });
   };
 
-  const runJob = (
-    job: SliceJob,
-    isStale: () => boolean,
-    runOptions: GridRunOptions,
-    phase: GridPhase,
-  ): Promise<boolean> => runSliced(job, slicing(isStale, runOptions, phase, 0, job.total()));
-
-  const filterPass = async (
+  const filterStage = (
     plan: Plan<T>,
-    isStale: () => boolean,
-    runOptions: GridRunOptions,
-  ): Promise<Uint8Array | null> => {
+    next: (pass: Uint8Array) => PipelineStage | null,
+  ): PipelineStage | null => {
     if (plan.filters.length === 0) {
-      return allPass(table.rows.length);
+      return next(allPass(table.rows.length));
     }
     const job = createFilterJob(table.rows.length, testsOf(plan.filters));
 
-    if (!(await runJob(job, isStale, runOptions, 'filter'))) {
-      return null;
-    }
-    if (options.children !== undefined) {
-      const propagate = createPropagateJob(job.pass(), table.parents);
+    const propagate = (): PipelineStage => ({
+      phase: 'filter',
+      job: createPropagateJob(job.pass(), table.parents),
+      next: () => next(job.pass()),
+    });
 
-      if (!(await runJob(propagate, isStale, runOptions, 'filter'))) {
-        return null;
-      }
-    }
-    return job.pass();
+    return {
+      phase: 'filter',
+      job,
+      next: () => (options.children === undefined ? next(job.pass()) : propagate()),
+    };
   };
 
-  const prepareFlat = async (
+  const groupStage = (
+    plan: Plan<T>,
+    filtered: Uint32Array,
+    finish: (next: Prepared) => void,
+  ): PipelineStage | null => {
+    if (plan.groupBy.length === 0 && plan.aggregates.length === 0) {
+      finish({ filtered, groups: null, tree: null, groupDepth: 0 });
+      return null;
+    }
+
+    const levels = plan.groupBy.flatMap((key): GroupLevel<T>[] => {
+      const store = stores.get(key);
+      return store === undefined ? [] : [{ column: columnOf(key), store }];
+    });
+
+    const aggregates = plan.aggregates.flatMap((column): AggregateColumn<T>[] => {
+      const store = stores.get(column.key);
+
+      return store === undefined || column.aggregate === undefined
+        ? []
+        : [{ key: column.key, store, aggregate: column.aggregate }];
+    });
+
+    const job = createGroupJob(table.rows, filtered, levels, aggregates);
+
+    return {
+      phase: 'group',
+      job,
+      next: () => {
+        finish({ filtered, groups: job.result(), tree: null, groupDepth: plan.groupBy.length });
+        return null;
+      },
+    };
+  };
+
+  const flatStages = (
     plan: Plan<T>,
     pass: Uint8Array,
-    isStale: () => boolean,
-    runOptions: GridRunOptions,
-  ): Promise<Prepared | null> => {
+    finish: (next: Prepared) => void,
+  ): PipelineStage | null => {
     const filtered =
       plan.filters.length === 0 ? identityIndices(table.rows.length) : compactPass(pass);
 
     const keys = orderKeysOf(plan);
 
-    if (keys.length > 0) {
-      const job = createOrderJob(filtered, keys);
-
-      if (!(await runJob(job, isStale, runOptions, 'sort'))) {
-        return null;
-      }
-    }
-    let groups: GroupTable | null = null;
-
-    if (plan.groupBy.length > 0 || plan.aggregates.length > 0) {
-      const levels = plan.groupBy.flatMap((key): GroupLevel<T>[] => {
-        const store = stores.get(key);
-        return store === undefined ? [] : [{ column: columnOf(key), store }];
-      });
-
-      const aggregates = plan.aggregates.flatMap((column): AggregateColumn<T>[] => {
-        const store = stores.get(column.key);
-
-        return store === undefined || column.aggregate === undefined
-          ? []
-          : [{ key: column.key, store, aggregate: column.aggregate }];
-      });
-
-      const job = createGroupJob(table.rows, filtered, levels, aggregates);
-
-      if (!(await runJob(job, isStale, runOptions, 'group'))) {
-        return null;
-      }
-      groups = job.result();
-    }
-    return { filtered, groups, tree: null, groupDepth: plan.groupBy.length };
+    return keys.length === 0
+      ? groupStage(plan, filtered, finish)
+      : {
+          phase: 'sort',
+          job: createOrderJob(filtered, keys),
+          next: () => groupStage(plan, filtered, finish),
+        };
   };
 
-  const prepareTree = async (
+  const treeStages = (
     plan: Plan<T>,
     pass: Uint8Array,
-    isStale: () => boolean,
-    runOptions: GridRunOptions,
-  ): Promise<Prepared | null> => {
+    finish: (next: Prepared) => void,
+  ): PipelineStage | null => {
     const tree = buildTreeLists(pass, table.parents);
+
+    const complete = (): null => {
+      finish({ filtered: new Uint32Array(0), groups: null, tree, groupDepth: 0 });
+      return null;
+    };
+
     const keys = orderKeysOf(plan);
 
-    if (keys.length > 0) {
-      const job = createSiblingSortJob(tree, (indices) => createOrderJob(indices, keys));
+    return keys.length === 0
+      ? complete()
+      : {
+          phase: 'sort',
+          job: createSiblingSortJob(tree, (indices) => createOrderJob(indices, keys)),
+          next: complete,
+        };
+  };
 
-      if (!(await runJob(job, isStale, runOptions, 'sort'))) {
-        return null;
-      }
+  const pipelineFor = (
+    plan: Plan<T>,
+    finish: (next: Prepared) => void,
+    runOptions: GridRunOptions = {},
+  ): Pipeline | null =>
+    createPipeline(
+      storesStage(plan.keys, () =>
+        filterStage(plan, (pass) =>
+          options.children === undefined
+            ? flatStages(plan, pass, finish)
+            : treeStages(plan, pass, finish),
+        ),
+      ),
+      (stage) => {
+        const total = stage.job.total();
+        runOptions.onProgress?.({ phase: stage.phase, done: total, total });
+      },
+    );
+
+  const commit = (next: Prepared | null): GridRunResult => {
+    if (next === null) {
+      return { kind: 'cancelled' };
     }
-    return { filtered: new Uint32Array(0), groups: null, tree, groupDepth: 0 };
+    prepared = next;
+    refresh();
+    return { kind: 'done', count: visible.length, rows: prepared.filtered.length };
   };
 
   const flattenGroups = (): Int32Array => {
@@ -472,29 +483,40 @@ export const createGridEngine = <T>(options: GridEngineOptions<T>): GridEngine<T
     run: async (query, runOptions = {}) => {
       generation += 1;
       const mine = generation;
-      const isStale = (): boolean => mine !== generation;
-      const plan = planOf(query);
+      const outcome: { prepared: Prepared | null } = { prepared: null };
 
-      if (!(await buildStores(plan.keys, isStale, runOptions))) {
-        return { kind: 'cancelled' };
-      }
-      const pass = await filterPass(plan, isStale, runOptions);
+      const pipeline = pipelineFor(
+        planOf(query),
+        (next) => {
+          outcome.prepared = next;
+        },
+        runOptions,
+      );
 
-      if (pass === null) {
-        return { kind: 'cancelled' };
-      }
+      const completed =
+        pipeline === null ||
+        (await runSliced(pipeline, {
+          sliceMs,
+          yieldTo,
+          signal: runOptions.signal,
+          isStale: () => mine !== generation,
+          onProgress: (done, total) => {
+            runOptions.onProgress?.({ phase: pipeline.phase(), done, total });
+          },
+        }));
 
-      const next =
-        options.children === undefined
-          ? await prepareFlat(plan, pass, isStale, runOptions)
-          : await prepareTree(plan, pass, isStale, runOptions);
+      return commit(completed && mine === generation ? outcome.prepared : null);
+    },
+    runSync: (query) => {
+      generation += 1;
+      const outcome: { prepared: Prepared | null } = { prepared: null };
 
-      if (next === null || isStale()) {
-        return { kind: 'cancelled' };
-      }
-      prepared = next;
-      refresh();
-      return { kind: 'done', count: visible.length, rows: prepared.filtered.length };
+      const pipeline = pipelineFor(planOf(query), (next) => {
+        outcome.prepared = next;
+      });
+
+      pipeline?.work(Number.POSITIVE_INFINITY);
+      return commit(outcome.prepared);
     },
     visibleIndices: () => prepared.filtered,
     nodeAt,
@@ -513,15 +535,20 @@ export const createGridEngine = <T>(options: GridEngineOptions<T>): GridEngine<T
     distinct: async (key, distinctOptions = {}) => {
       const version = rowsVersion;
       const limit = distinctOptions.limit ?? DEFAULT_DISTINCT_LIMIT;
-      columnOf(key);
+      const pipeline = createPipeline(storesStage([columnOf(key).key], () => null));
 
       if (distinctOptions.signal?.aborted === true) {
         return null;
       }
 
-      const built = await buildStores([key], () => version !== rowsVersion, {
-        signal: distinctOptions.signal,
-      });
+      const built =
+        pipeline === null ||
+        (await runSliced(pipeline, {
+          sliceMs,
+          yieldTo,
+          signal: distinctOptions.signal,
+          isStale: () => version !== rowsVersion,
+        }));
 
       return built && version === rowsVersion ? distinctOf(key, limit) : null;
     },

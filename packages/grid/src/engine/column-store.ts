@@ -186,3 +186,43 @@ export const createStoreJob = <T>(
     ? createStringStoreJob(rows, column.value, collator)
     : createNumberStoreJob(rows, () => null);
 };
+
+export const createStoresJob = <T>(
+  columns: readonly GridEngineColumn<T>[],
+  rows: readonly T[],
+  collator: Intl.Collator,
+  onStore: (key: string, store: ColumnStore) => void,
+): SliceJob => {
+  let position = 0;
+  let current: StoreJob | null = null;
+
+  const currentJob = (): StoreJob | null => {
+    const column = columns[position];
+
+    if (column === undefined) {
+      return null;
+    }
+    current ??= createStoreJob(column, rows, collator);
+    return current;
+  };
+
+  return {
+    total: () => Math.max(1, columns.length * rows.length),
+    done: () => position * rows.length + (current?.done() ?? 0),
+    work: (deadline) => {
+      for (let job = currentJob(); job !== null; job = currentJob()) {
+        if (!job.work(deadline)) {
+          return false;
+        }
+        onStore(columns[position]?.key ?? '', job.result());
+        current = null;
+        position += 1;
+
+        if (position < columns.length && performance.now() >= deadline) {
+          return false;
+        }
+      }
+      return true;
+    },
+  };
+};
