@@ -16,6 +16,12 @@ export interface MeasureOptions {
   readonly warmup?: number;
 }
 
+export interface RecordVariant {
+  readonly suffix?: string | undefined;
+  readonly browser?: string | undefined;
+  readonly heapUsedMb?: number | undefined;
+}
+
 interface BenchRecord {
   readonly recordedAt: string;
   readonly dataset: string;
@@ -27,6 +33,7 @@ interface BenchRecord {
     readonly platform: string;
     readonly node: string;
   };
+  readonly browser: string | null;
   readonly heapUsedMb: number;
   readonly operations: readonly Operation[];
 }
@@ -39,21 +46,9 @@ const quantile = (sorted: readonly number[], share: number): number => {
   return sorted[Math.max(0, position)] ?? 0;
 };
 
-export const measure = async (
-  name: string,
-  run: () => Promise<void>,
-  options: MeasureOptions,
-): Promise<Operation> => {
-  for (let index = 0; index < (options.warmup ?? 1); index += 1) {
-    await run();
-  }
-  const samples: number[] = [];
+const benchHost = (): string => process.env.BENCH_HOST ?? hostname();
 
-  for (let index = 0; index < options.iterations; index += 1) {
-    const started = performance.now();
-    await run();
-    samples.push(performance.now() - started);
-  }
+export const summarize = (name: string, samples: readonly number[]): Operation => {
   const sorted = samples.toSorted((a, b) => a - b);
   const meanMs = samples.reduce((sum, value) => sum + value, 0) / Math.max(1, samples.length);
 
@@ -73,30 +68,52 @@ export const measure = async (
   return operation;
 };
 
+export const measure = async (
+  name: string,
+  run: () => Promise<void>,
+  options: MeasureOptions,
+): Promise<Operation> => {
+  for (let index = 0; index < (options.warmup ?? 1); index += 1) {
+    await run();
+  }
+  const samples: number[] = [];
+
+  for (let index = 0; index < options.iterations; index += 1) {
+    const started = performance.now();
+    await run();
+    samples.push(performance.now() - started);
+  }
+  return summarize(name, samples);
+};
+
 export const record = async (
   resultsDir: URL,
   dataset: string,
   operations: readonly Operation[],
+  variant: RecordVariant = {},
 ): Promise<string> => {
   const recordedAt = new Date().toISOString();
+  const host = benchHost();
 
   const entry: BenchRecord = {
     recordedAt,
     dataset,
     device: {
-      host: hostname(),
+      host,
       cpu: cpus()[0]?.model ?? 'unknown',
       cores: cpus().length,
       memoryGb: Math.round(totalmem() / 1_073_741_824),
       platform: `${platform()} ${release()}`,
       node: process.version,
     },
-    heapUsedMb: Math.round(process.memoryUsage().heapUsed / 1_048_576),
+    browser: variant.browser ?? null,
+    heapUsedMb: variant.heapUsedMb ?? Math.round(process.memoryUsage().heapUsed / 1_048_576),
     operations,
   };
 
   await mkdir(resultsDir, { recursive: true });
-  const file = new URL(`${recordedAt.slice(0, 10)}-${hostname()}.json`, resultsDir);
+  const suffix = variant.suffix === undefined ? '' : `-${variant.suffix}`;
+  const file = new URL(`${recordedAt.slice(0, 10)}-${host}${suffix}.json`, resultsDir);
   await writeFile(file, `${JSON.stringify(entry, null, 2)}\n`);
   return fileURLToPath(file);
 };

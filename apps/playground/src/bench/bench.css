@@ -1,0 +1,12 @@
+.bench {
+  box-sizing: border-box;
+  display: grid;
+  gap: var(--nui-space-2);
+  padding: var(--nui-space-4);
+  font-family: var(--nui-font);
+}
+.bench__caption {
+  margin: 0;
+  color: var(--nui-text-muted);
+  font-size: var(--nui-font-size-sm);
+}

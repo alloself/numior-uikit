@@ -51,6 +51,9 @@ playground проверяет реальный `dist`, типы и внешню�
 | `pnpm test` / `pnpm test:coverage`  | Vitest; coverage V8 в формате Istanbul для Fallow                                         |
 | `pnpm test:e2e`                     | Playwright по production build, темы, RTL, Tailwind, axe                                  |
 | `pnpm arch:check`                   | Archcore CLI: структура и связи                                                           |
+| `pnpm bench:engine`                 | Бенчмарк движка грида в Node на миллионе строк, запись в `packages/grid/bench/results`    |
+| `pnpm bench:browser`                | Бенчмарк `NuiDataGrid` в Chromium: ввод до отрисовки, кадры прокрутки, монтаж, куча       |
+| `pnpm bench:check`                  | Сверка последних результатов с `packages/grid/bench/thresholds.json`                      |
 
 Перед браузерными тестами: `pnpm exec playwright install`.
 В Linux при отсутствии системных библиотек: `pnpm exec playwright install --with-deps`.

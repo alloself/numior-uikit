@@ -22,7 +22,10 @@
     "packages/nuxt/test/fixture/app/app.config.ts",
     "packages/nuxt/test/fixture/app/**/*.vue",
     "packages/nuxt/test/**/*.test.ts",
-    "packages/grid/bench/engine.bench.ts"
+    "packages/grid/bench/engine.bench.ts",
+    "playwright.bench.config.ts",
+    "tests/bench/**/*.spec.ts",
+    "apps/playground/src/bench/main.ts"
   ],
   "includeEntryExports": false,
   "ignorePatterns": [

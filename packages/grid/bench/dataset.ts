@@ -1,3 +1,4 @@
+import type { NuiGridColumn } from '../src';
 import type { GridEngineColumn } from '../src/engine';
 
 export interface BenchRow {
@@ -175,6 +176,44 @@ export const BENCH_COLUMNS: readonly GridEngineColumn<BenchRow>[] = [
   { kind: 'string', key: 'phone', value: (row) => row.phone },
   { kind: 'string', key: 'notes', value: (row) => row.notes },
   { kind: 'number', key: 'score', value: (row) => row.score },
+];
+
+export const GRID_COLUMNS: readonly NuiGridColumn<BenchRow>[] = [
+  {
+    key: 'id',
+    label: 'ID',
+    type: 'number',
+    pin: 'start',
+    width: 96,
+    value: (row) => row.id,
+    format: (value) => String(value),
+  },
+  { key: 'name', label: 'Name', type: 'text', width: 180, value: (row) => row.name },
+  { key: 'email', label: 'Email', type: 'text', width: 260, value: (row) => row.email },
+  { key: 'city', label: 'City', type: 'text', width: 150, value: (row) => row.city },
+  { key: 'country', label: 'Country', type: 'text', width: 110, value: (row) => row.country },
+  { key: 'amount', label: 'Amount', type: 'number', width: 130, value: (row) => row.amount },
+  { key: 'qty', label: 'Qty', type: 'number', width: 90, value: (row) => row.qty },
+  { key: 'price', label: 'Price', type: 'number', width: 110, value: (row) => row.price },
+  { key: 'discount', label: 'Discount', type: 'number', width: 110, value: (row) => row.discount },
+  { key: 'created', label: 'Created', type: 'date', width: 140, value: (row) => row.created },
+  { key: 'updated', label: 'Updated', type: 'date', width: 140, value: (row) => row.updated },
+  { key: 'active', label: 'Active', type: 'boolean', width: 100, value: (row) => row.active },
+  { key: 'vip', label: 'VIP', type: 'boolean', width: 90, value: (row) => row.vip },
+  { key: 'tags', label: 'Tags', type: 'text', width: 130, value: (row) => row.tags },
+  { key: 'region', label: 'Region', type: 'text', width: 120, value: (row) => row.region },
+  { key: 'manager', label: 'Manager', type: 'text', width: 180, value: (row) => row.manager },
+  { key: 'phone', label: 'Phone', type: 'text', width: 160, value: (row) => row.phone },
+  { key: 'notes', label: 'Notes', type: 'text', width: 200, value: (row) => row.notes },
+  { key: 'score', label: 'Score', type: 'number', width: 100, value: (row) => row.score },
+  {
+    key: 'status',
+    label: 'Status',
+    type: 'text',
+    pin: 'end',
+    width: 120,
+    value: (row) => row.status,
+  },
 ];
 
 export interface BenchNode {

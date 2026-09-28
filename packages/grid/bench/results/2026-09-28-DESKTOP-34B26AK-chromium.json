@@ -1,0 +1,80 @@
+{
+  "recordedAt": "2026-09-28T19:16:34.640Z",
+  "dataset": "1000000 generated rows, 20 columns, seed 1, viewport 1440×900",
+  "device": {
+    "host": "DESKTOP-34B26AK",
+    "cpu": "13th Gen Intel(R) Core(TM) i9-13900KF",
+    "cores": 32,
+    "memoryGb": 31,
+    "platform": "linux 6.6.87.2-microsoft-standard-WSL2",
+    "node": "v24.20.0"
+  },
+  "browser": "chromium 153.0.8010.12",
+  "heapUsedMb": 406,
+  "operations": [
+    {
+      "name": "generate a million rows in the page",
+      "samples": 1,
+      "meanMs": 565.6999999880791,
+      "p50Ms": 565.6999999880791,
+      "p95Ms": 565.6999999880791,
+      "maxMs": 565.6999999880791
+    },
+    {
+      "name": "cold mount to the first painted row",
+      "samples": 1,
+      "meanMs": 97.69999998807907,
+      "p50Ms": 97.69999998807907,
+      "p95Ms": 97.69999998807907,
+      "maxMs": 97.69999998807907
+    },
+    {
+      "name": "warm remount to the first painted row",
+      "samples": 5,
+      "meanMs": 49.41999998688698,
+      "p50Ms": 50.099999994039536,
+      "p95Ms": 54.19999998807907,
+      "maxMs": 54.19999998807907
+    },
+    {
+      "name": "arrow down to the next paint",
+      "samples": 200,
+      "meanMs": 20.600500000566242,
+      "p50Ms": 20.400000005960464,
+      "p95Ms": 24.19999998807907,
+      "maxMs": 27.19999998807907
+    },
+    {
+      "name": "arrow across columns to the next paint",
+      "samples": 40,
+      "meanMs": 17.43249999806285,
+      "p50Ms": 15.599999994039536,
+      "p95Ms": 23.69999998807907,
+      "maxMs": 25.30000001192093
+    },
+    {
+      "name": "page down to the next paint",
+      "samples": 50,
+      "meanMs": 23.21000000178814,
+      "p50Ms": 23.19999998807907,
+      "p95Ms": 25.100000023841858,
+      "maxMs": 25.900000005960464
+    },
+    {
+      "name": "jump between the first and the last row to the next paint",
+      "samples": 40,
+      "meanMs": 19.427499999850987,
+      "p50Ms": 18.399999976158142,
+      "p95Ms": 27.900000005960464,
+      "maxMs": 28.799999982118607
+    },
+    {
+      "name": "frame time while wheeling through rows",
+      "samples": 478,
+      "meanMs": 16.665899581589958,
+      "p50Ms": 16.69999999999891,
+      "p95Ms": 16.700000000000728,
+      "maxMs": 16.80000000000291
+    }
+  ]
+}

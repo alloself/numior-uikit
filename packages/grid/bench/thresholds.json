@@ -1,18 +1,75 @@
 {
-  "build a number store and sort": { "p95Ms": 450 },
-  "build a date store and sort": { "p95Ms": 300 },
-  "build a low-cardinality string store and sort": { "p95Ms": 300 },
-  "build a unique string store and sort": { "p95Ms": 6000 },
-  "sort numbers with a warm store": { "p95Ms": 160 },
-  "sort strings with a warm store": { "p95Ms": 120 },
-  "sort unique strings with a warm store": { "p95Ms": 150 },
-  "multi-sort country, city and amount with warm stores": { "p95Ms": 260 },
-  "filter city contains \"an\" with a warm store": { "p95Ms": 30 },
-  "filter amount between 1000 and 50000 with a warm store": { "p95Ms": 100 },
-  "filter status in a set with a warm store": { "p95Ms": 80 },
-  "group by country with sum, count and avg on warm stores": { "p95Ms": 260 },
-  "totals of sum, count and avg over all rows on warm stores": { "p95Ms": 170 },
-  "group by country and city with aggregates on warm stores": { "p95Ms": 460 },
-  "flatten a 100,000 node tree, sort siblings and walk it": { "p95Ms": 360 },
-  "collapse and expand a root of the 100,000 node tree": { "p95Ms": 30 }
+  "node": {
+    "build a number store and sort": {
+      "p95Ms": 450
+    },
+    "build a date store and sort": {
+      "p95Ms": 300
+    },
+    "build a low-cardinality string store and sort": {
+      "p95Ms": 300
+    },
+    "build a unique string store and sort": {
+      "p95Ms": 6000
+    },
+    "sort numbers with a warm store": {
+      "p95Ms": 160
+    },
+    "sort strings with a warm store": {
+      "p95Ms": 120
+    },
+    "sort unique strings with a warm store": {
+      "p95Ms": 150
+    },
+    "multi-sort country, city and amount with warm stores": {
+      "p95Ms": 260
+    },
+    "filter city contains \"an\" with a warm store": {
+      "p95Ms": 30
+    },
+    "filter amount between 1000 and 50000 with a warm store": {
+      "p95Ms": 100
+    },
+    "filter status in a set with a warm store": {
+      "p95Ms": 80
+    },
+    "group by country with sum, count and avg on warm stores": {
+      "p95Ms": 260
+    },
+    "totals of sum, count and avg over all rows on warm stores": {
+      "p95Ms": 170
+    },
+    "group by country and city with aggregates on warm stores": {
+      "p95Ms": 460
+    },
+    "flatten a 100,000 node tree, sort siblings and walk it": {
+      "p95Ms": 360
+    },
+    "collapse and expand a root of the 100,000 node tree": {
+      "p95Ms": 30
+    }
+  },
+  "chromium": {
+    "cold mount to the first painted row": {
+      "p95Ms": 250
+    },
+    "warm remount to the first painted row": {
+      "p95Ms": 150
+    },
+    "arrow down to the next paint": {
+      "p95Ms": 100
+    },
+    "arrow across columns to the next paint": {
+      "p95Ms": 100
+    },
+    "page down to the next paint": {
+      "p95Ms": 100
+    },
+    "jump between the first and the last row to the next paint": {
+      "p95Ms": 100
+    },
+    "frame time while wheeling through rows": {
+      "p95Ms": 34
+    }
+  }
 }

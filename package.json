@@ -33,8 +33,9 @@
     "release:check": "node --test scripts/release/*.test.mjs",
     "commitlint": "commitlint",
     "test:nuxt": "vitest run --config packages/nuxt/vitest.config.ts",
-    "bench": "pnpm bench:engine",
+    "bench": "pnpm bench:engine && pnpm bench:browser",
     "bench:engine": "pnpm --filter @numior/grid build && node packages/grid/bench/engine.bench.ts",
+    "bench:browser": "playwright test -c playwright.bench.config.ts",
     "bench:check": "node scripts/bench-check.mjs grid"
   },
   "devDependencies": {
