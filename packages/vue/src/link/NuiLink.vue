@@ -1,6 +1,6 @@
 <template>
   <component
-    :is="disabled ? 'a' : as"
+    :is="disabled ? 'a' : tag"
     class="nui-link"
     :class="[
       `nui-link--tone-${tone}`,
@@ -17,11 +17,11 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import NuiIcon from '../icon/NuiIcon.vue';
-import { destinationAttrs } from '../shared/destination';
+import { destinationAttrs, useLinkTag } from '../shared/destination';
 import type { NuiLinkProps } from './link.types';
 
 const {
-  as = 'a',
+  as,
   href,
   to,
   tone = 'primary',
@@ -30,12 +30,14 @@ const {
   disabled = false,
 } = defineProps<NuiLinkProps>();
 
+const tag = useLinkTag(() => ({ as, to }));
+
 const linkAttrs = computed(() => {
   if (disabled) {
     return { 'aria-disabled': 'true', tabindex: -1 };
   }
   return {
-    ...destinationAttrs(href, to),
+    ...destinationAttrs(href, to, tag.value),
     ...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {}),
   };
 });

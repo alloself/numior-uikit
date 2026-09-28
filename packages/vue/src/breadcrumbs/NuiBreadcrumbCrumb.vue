@@ -26,6 +26,6 @@ import type { NuiBreadcrumbItem } from './breadcrumbs.types';
 const { item, current, as } = defineProps<{
   item: NuiBreadcrumbItem;
   current: boolean;
-  as: string | Component;
+  as?: string | Component | undefined;
 }>();
 </script>

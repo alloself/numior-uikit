@@ -26,7 +26,10 @@ const crumb = (item: NuiBreadcrumbItem, index: number, count: number): CrumbEntr
   current: index === count - 1,
 });
 
-const toMenuEntry = (item: NuiBreadcrumbItem, as: string | Component): NuiMenuEntry => ({
+const toMenuEntry = (
+  item: NuiBreadcrumbItem,
+  as: string | Component | undefined,
+): NuiMenuEntry => ({
   label: item.label,
   icon: item.icon,
   href: item.href,
@@ -37,7 +40,7 @@ const toMenuEntry = (item: NuiBreadcrumbItem, as: string | Component): NuiMenuEn
 export const layoutBreadcrumbs = (
   items: readonly NuiBreadcrumbItem[],
   maxItems: number | undefined,
-  as: string | Component,
+  as: string | Component | undefined,
 ): BreadcrumbEntry[] => {
   const count = items.length;
   if (maxItems === undefined || maxItems < 2 || count <= maxItems) {

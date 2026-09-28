@@ -27,7 +27,7 @@
 <script setup lang="ts">
 import { computed, useSlots } from 'vue';
 import NuiIcon from '../icon/NuiIcon.vue';
-import { destinationAttrs } from '../shared/destination';
+import { destinationAttrs, useLinkTag } from '../shared/destination';
 import type { NuiButtonProps } from './button.types';
 import { isIconOnlyContent } from './icon-only';
 
@@ -39,7 +39,7 @@ const {
   disabled = false,
   loading = false,
   iconOnly = undefined,
-  as = 'a',
+  as,
   href,
   to,
 } = defineProps<NuiButtonProps>();
@@ -48,14 +48,15 @@ defineSlots<{ default?(): unknown }>();
 
 const slots = useSlots();
 const isLink = computed(() => href !== undefined || to !== undefined);
-const tag = computed(() => (isLink.value ? as : 'button'));
+const linkTag = useLinkTag(() => ({ as, to }));
+const tag = computed(() => (isLink.value ? linkTag.value : 'button'));
 
 const controlAttrs = computed(() => {
   const busy = loading || undefined;
 
   if (isLink.value) {
     return {
-      ...(disabled ? {} : destinationAttrs(href, to)),
+      ...(disabled ? {} : destinationAttrs(href, to, linkTag.value)),
       'aria-disabled': disabled || loading ? 'true' : undefined,
       tabindex: disabled ? -1 : undefined,
       'aria-busy': busy,

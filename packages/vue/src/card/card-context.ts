@@ -6,7 +6,7 @@ export type CardAction =
       readonly kind: 'link';
       readonly href: string | undefined;
       readonly to: NuiRouteLocation | undefined;
-      readonly as: string | Component;
+      readonly as?: string | Component | undefined;
     }
   | { readonly kind: 'button' };
 

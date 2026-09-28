@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { LinkDriver } from './drivers/link';
+import { ConfiguredLinkStub, RouterStub } from './support/router-stub';
 
 describe('NuiLink', () => {
   it('renders an anchor with primary tone and a permanent underline by default', () => {
@@ -39,5 +40,31 @@ describe('NuiLink', () => {
     expect(link.tag).toBe('a');
     expect(link.href).toBe('/router/guide');
     expect(link.hasModifier('tone-primary')).toBe(true);
+  });
+
+  it('finds the registered router link for to, lets the configured link win and keeps href native', () => {
+    const registered = LinkDriver.mount({ props: { to: '/guide' }, routerComponent: RouterStub });
+    expect(registered.href).toBe('/router/guide');
+
+    const configured = LinkDriver.mount({
+      props: { to: '/guide' },
+      routerComponent: RouterStub,
+      config: { link: ConfiguredLinkStub },
+    });
+
+    expect(configured.href).toBe('/configured/guide');
+
+    const native = LinkDriver.mount({
+      props: { href: '/docs' },
+      routerComponent: RouterStub,
+      config: { link: ConfiguredLinkStub },
+    });
+
+    expect(native.tag).toBe('a');
+    expect(native.href).toBe('/docs');
+    const plain = LinkDriver.mount({ props: { to: '/guide' } });
+    expect(plain.tag).toBe('a');
+    expect(plain.href).toBe('/guide');
+    expect(plain.attribute('to')).toBeUndefined();
   });
 });

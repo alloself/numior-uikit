@@ -1,6 +1,7 @@
 import { mount } from '@vue/test-utils';
-import { h } from 'vue';
-import { NuiButton, NuiIcon, type NuiButtonProps } from '../../src';
+import { h, type Component } from 'vue';
+import { NuiButton, NuiIcon, type NuiButtonProps, type NuiConfigOptions } from '../../src';
+import { configPlugins } from '../support/config';
 import { RouterStub } from '../support/router-stub';
 import { ComponentDriver } from './component';
 
@@ -14,6 +15,8 @@ export interface ButtonMountOptions {
   readonly onClick?: () => void;
   readonly attached?: boolean;
   readonly viaRouter?: boolean;
+  readonly routerComponent?: Component;
+  readonly config?: NuiConfigOptions;
 }
 
 const slotFor = (content: ButtonContent, label: string) => {
@@ -35,12 +38,18 @@ export class ButtonDriver extends ComponentDriver {
     onClick,
     attached = false,
     viaRouter = false,
+    routerComponent,
+    config,
   }: ButtonMountOptions = {}) {
     return new ButtonDriver(
       mount(NuiButton, {
         props: viaRouter ? { ...props, as: RouterStub } : props,
         attrs: onClick ? { ...attrs, onClick } : attrs,
         slots: { default: slotFor(content, label) },
+        global: {
+          plugins: configPlugins(config),
+          components: routerComponent ? { RouterLink: routerComponent } : {},
+        },
         ...(attached ? { attachTo: document.body } : {}),
       }),
     );

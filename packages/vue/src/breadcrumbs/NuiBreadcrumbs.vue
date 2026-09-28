@@ -46,7 +46,7 @@ const {
   separator = 'chevron-right',
   label,
   moreLabel,
-  as = 'a',
+  as,
 } = defineProps<NuiBreadcrumbsProps>();
 
 defineSlots<{ item(props: NuiBreadcrumbsItemSlot): unknown }>();

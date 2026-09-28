@@ -28,7 +28,7 @@ const {
   padding = 'md',
   href,
   to,
-  as = 'a',
+  as,
   interactive = false,
   title,
   description,

@@ -23,7 +23,10 @@ const docs: DocsMap = {
         ru: 'Доступное имя кнопки «…»; по умолчанию из словаря.',
         en: 'Accessible name of the “…” button; the dictionary supplies the default.',
       },
-      as: { ru: 'Компонент ссылки для элементов с to.', en: 'Link component for items with to.' },
+      as: {
+        ru: 'Переопределяет компонент ссылки для элементов с to.',
+        en: 'Overrides the link component for items with to.',
+      },
     },
     slots: {
       item: {

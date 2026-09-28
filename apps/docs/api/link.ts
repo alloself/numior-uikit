@@ -3,11 +3,14 @@ import type { DocsMap } from '../.vitepress/reference/reference.types';
 const docs: DocsMap = {
   NuiLink: {
     props: {
-      as: { ru: 'Тег или компонент ссылки роутера.', en: 'Tag or router link component.' },
+      as: {
+        ru: 'Переопределяет тег или компонент ссылки; без него to берёт роутер.',
+        en: 'Overrides the link tag or component; without it to takes the router.',
+      },
       href: { ru: 'Адрес ссылки.', en: 'Link address.' },
       to: {
-        ru: 'Маршрут для компонента роутера: строка или объект; тип уточняется через NuiRouteRegister.',
-        en: 'Route for a router component: a string or an object; NuiRouteRegister narrows the type.',
+        ru: 'Маршрут для RouterLink или NuxtLink приложения либо link из конфигурации; без роутера строка становится href. Тип уточняется через NuiRouteRegister.',
+        en: 'Route for the app RouterLink or NuxtLink or the configured link; without a router a string becomes href. NuiRouteRegister narrows the type.',
       },
       tone: { ru: 'Цвет из токенов роли.', en: 'Colour from the role tokens.' },
       underline: {

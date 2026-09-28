@@ -1,8 +1,8 @@
 # Link
 
-`NuiLink` is a link on the role tokens: an `<a>` by default, a `RouterLink` or `NuxtLink`
-through `as` and `to`. `tone` sets the colour, `underline` when to underline, `external` opens
-the address in a new tab with `rel="noopener noreferrer"` and an icon.
+`NuiLink` is a link on the role tokens: an `<a>` by default, the app's `RouterLink` or `NuxtLink`
+with `to`, and `as` overrides the component. `tone` sets the colour, `underline` when to
+underline, `external` opens the address in a new tab with `rel="noopener noreferrer"` and an icon.
 
 <Example name="link/Basic" />
 

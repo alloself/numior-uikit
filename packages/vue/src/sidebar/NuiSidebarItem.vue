@@ -37,7 +37,7 @@ const {
   icon,
   href,
   to,
-  as = 'a',
+  as,
   current = false,
   disabled = false,
   badge,

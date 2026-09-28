@@ -24,6 +24,8 @@ export { createNuiConfig, provideNuiConfig } from './config/nui-config';
 export type { NuiConfigOptions } from './config/nui-config';
 export { DEFAULT_LOCALE, LOCALE_KEY, provideLocale, useLocale } from './locale/locale-context';
 export { DIRECTION_KEY, provideDirection, useDirection } from './direction/direction-context';
+export { LINK_KEY, provideLink, useConfiguredLink } from './link/link-context';
+export type { NuiLinkComponent } from './link/link-context';
 export { useMessages } from './messages/messages';
 export { plural } from './messages/plural';
 export type { NuiPluralForms } from './messages/plural';

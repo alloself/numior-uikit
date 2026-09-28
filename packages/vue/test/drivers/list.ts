@@ -1,6 +1,6 @@
 import { mount, type DOMWrapper, type VueWrapper } from '@vue/test-utils';
 import { vi } from 'vitest';
-import { defineComponent, h, nextTick, ref, type Ref } from 'vue';
+import { defineComponent, h, nextTick, ref, type Component, type Ref } from 'vue';
 import {
   NuiList,
   NuiListItem,
@@ -29,6 +29,7 @@ export interface ListMountOptions {
   readonly parts?: readonly ListPart[];
   readonly itemSlot?: ((slot: NuiListItemSlot<NuiListEntry<unknown>>) => string) | undefined;
   readonly viaRouter?: boolean;
+  readonly routerComponent?: Component;
   readonly config?: NuiConfigOptions;
 }
 
@@ -70,6 +71,7 @@ export class ListDriver extends ComponentDriver {
     parts = [],
     itemSlot,
     viaRouter = false,
+    routerComponent,
     config,
   }: ListMountOptions = {}) {
     const selection = createSelection(modelValue, props.selectable === 'multiple');
@@ -100,7 +102,13 @@ export class ListDriver extends ComponentDriver {
     });
 
     return new ListDriver(
-      mount(Host, { attachTo: document.body, global: { plugins: configPlugins(config) } }),
+      mount(Host, {
+        attachTo: document.body,
+        global: {
+          plugins: configPlugins(config),
+          components: routerComponent ? { RouterLink: routerComponent } : {},
+        },
+      }),
       selection,
       clicks,
       items,

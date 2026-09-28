@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { ButtonDriver } from './drivers/button';
+import { ConfiguredLinkStub, RouterStub } from './support/router-stub';
 
 describe('NuiButton', () => {
   it('is a native button that never submits by accident and forwards attributes and clicks', async () => {
@@ -87,6 +88,35 @@ describe('NuiButton', () => {
     expect(busy.href).toBe('/docs');
     expect(busy.busy).toBe(true);
     expect(busy.clickNatively()).toBe(true);
+  });
+
+  it('resolves the router link from to, prefers the configured link and falls back to an anchor', () => {
+    const registered = ButtonDriver.mount({ props: { to: '/guide' }, routerComponent: RouterStub });
+    expect(registered.tag).toBe('a');
+    expect(registered.href).toBe('/router/guide');
+
+    const configured = ButtonDriver.mount({
+      props: { to: '/guide' },
+      routerComponent: RouterStub,
+      config: { link: ConfiguredLinkStub },
+    });
+
+    expect(configured.href).toBe('/configured/guide');
+
+    const explicit = ButtonDriver.mount({
+      props: { to: '/guide', as: RouterStub },
+      config: { link: ConfiguredLinkStub },
+    });
+
+    expect(explicit.href).toBe('/router/guide');
+    const plain = ButtonDriver.mount({ props: { to: '/guide' } });
+    expect(plain.tag).toBe('a');
+    expect(plain.href).toBe('/guide');
+    expect(plain.attribute('to')).toBeUndefined();
+    const located = ButtonDriver.mount({ props: { to: { name: 'guide' } } });
+    expect(located.tag).toBe('a');
+    expect(located.href).toBeUndefined();
+    expect(located.attribute('to')).toBeUndefined();
   });
 
   it('keeps focus on a loading button and cancels its clicks so a form submits once', async () => {

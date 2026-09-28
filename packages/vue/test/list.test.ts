@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { NuiListEntry } from '../src';
 import { ListDriver } from './drivers/list';
+import { ConfiguredLinkStub, RouterStub } from './support/router-stub';
 
 const LANGUAGES: readonly NuiListEntry<string>[] = [
   { label: 'Go', value: 'go', description: 'Compiled' },
@@ -70,6 +71,29 @@ describe('NuiList', () => {
     const routed = ListDriver.mount({ parts: [{ label: 'Guide', to: '/guide' }], viaRouter: true });
     expect(routed.inner('Guide').attributes('href')).toBe('/router/guide');
     routed.unmount();
+  });
+
+  it('routes item destinations through the registered or configured link without an as prop', () => {
+    const registered = ListDriver.mount({
+      parts: [{ label: 'Guide', to: '/guide' }],
+      routerComponent: RouterStub,
+    });
+
+    expect(registered.inner('Guide').attributes('href')).toBe('/router/guide');
+    registered.unmount();
+
+    const configured = ListDriver.mount({
+      props: { items: [{ label: 'Guide', to: '/guide' }] },
+      routerComponent: RouterStub,
+      config: { link: ConfiguredLinkStub },
+    });
+
+    expect(configured.inner('Guide').attributes('href')).toBe('/configured/guide');
+    configured.unmount();
+    const plain = ListDriver.mount({ parts: [{ label: 'Guide', to: '/guide' }] });
+    expect(plain.inner('Guide').attributes('href')).toBe('/guide');
+    expect(plain.inner('Guide').attributes('to')).toBeUndefined();
+    plain.unmount();
   });
 
   it('marks the current page, carries badges and nests content inside a navigation list', () => {

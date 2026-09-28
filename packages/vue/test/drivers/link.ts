@@ -1,5 +1,7 @@
 import { mount } from '@vue/test-utils';
-import { NuiLink, type NuiLinkProps } from '../../src';
+import type { Component } from 'vue';
+import { NuiLink, type NuiConfigOptions, type NuiLinkProps } from '../../src';
+import { configPlugins } from '../support/config';
 import { RouterStub } from '../support/router-stub';
 import { ComponentDriver } from './component';
 
@@ -8,6 +10,8 @@ export interface LinkMountOptions {
   readonly attrs?: Record<string, unknown>;
   readonly label?: string;
   readonly viaRouter?: boolean;
+  readonly routerComponent?: Component;
+  readonly config?: NuiConfigOptions;
 }
 
 export class LinkDriver extends ComponentDriver {
@@ -18,12 +22,18 @@ export class LinkDriver extends ComponentDriver {
     attrs = {},
     label = 'Docs',
     viaRouter = false,
+    routerComponent,
+    config,
   }: LinkMountOptions = {}) {
     return new LinkDriver(
       mount(NuiLink, {
         props: viaRouter ? { ...props, as: RouterStub } : props,
         attrs,
         slots: { default: label },
+        global: {
+          plugins: configPlugins(config),
+          components: routerComponent ? { RouterLink: routerComponent } : {},
+        },
       }),
     );
   }

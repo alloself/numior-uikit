@@ -51,7 +51,7 @@ const {
   closeOnSelect = undefined,
   href,
   to,
-  as = 'a',
+  as,
 } = defineProps<NuiMenuItemProps>();
 
 const emit = defineEmits<{ select: [] }>();

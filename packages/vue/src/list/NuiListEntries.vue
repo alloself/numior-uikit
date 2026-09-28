@@ -30,7 +30,7 @@ import NuiListItem from './NuiListItem.vue';
 const { entries, listId, linkAs, indexOf } = defineProps<{
   entries: readonly E[];
   listId: string;
-  linkAs: string | Component;
+  linkAs?: string | Component | undefined;
   indexOf: (entry: E) => number;
 }>();
 

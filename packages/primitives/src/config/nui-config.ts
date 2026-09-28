@@ -7,6 +7,7 @@ import {
 } from '../color-scheme/useColorScheme';
 import { DIRECTION_KEY, provideDirection, type Direction } from '../direction/direction-context';
 import { ICONS_KEY, provideIcons, type IconRegistry } from '../icons/icon-registry';
+import { LINK_KEY, provideLink, type NuiLinkComponent } from '../link/link-context';
 import { DEFAULT_LOCALE, LOCALE_KEY, provideLocale } from '../locale/locale-context';
 import {
   MESSAGES_KEY,
@@ -26,6 +27,7 @@ export interface NuiConfigOptions {
   readonly messages?: MaybeRefOrGetter<NuiLocaleMessages | undefined> | undefined;
   readonly translate?: NuiTranslate | undefined;
   readonly colorScheme?: ColorSchemeOptions | undefined;
+  readonly link?: NuiLinkComponent | undefined;
 }
 
 const hasMessages = (options: NuiConfigOptions): boolean =>
@@ -49,6 +51,9 @@ export const provideNuiConfig = (options: NuiConfigOptions): void => {
   }
   if (options.colorScheme !== undefined) {
     provide(COLOR_SCHEME_KEY, useColorScheme(options.colorScheme));
+  }
+  if (options.link !== undefined) {
+    provideLink(options.link);
   }
 };
 
@@ -82,6 +87,9 @@ export const createNuiConfig = (options: NuiConfigOptions): Plugin => ({
 
       app.provide(COLOR_SCHEME_KEY, handle);
       app.onUnmount(handle.stop);
+    }
+    if (options.link !== undefined) {
+      app.provide(LINK_KEY, options.link);
     }
   },
 });

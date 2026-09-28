@@ -3,10 +3,10 @@ import type { DocsMap } from '../.vitepress/reference/reference.types';
 const route = {
   href: { ru: 'Адрес; пункт становится ссылкой.', en: 'Address; the item becomes a link.' },
   to: {
-    ru: 'Маршрут для компонента роутера: строка или объект; тип уточняется через NuiRouteRegister.',
-    en: 'Route for a router component: a string or an object; NuiRouteRegister narrows the type.',
+    ru: 'Маршрут для RouterLink или NuxtLink приложения либо link из конфигурации; без роутера строка становится href. Тип уточняется через NuiRouteRegister.',
+    en: 'Route for the app RouterLink or NuxtLink or the configured link; without a router a string becomes href. NuiRouteRegister narrows the type.',
   },
-  as: { ru: 'Компонент ссылки для to.', en: 'Link component used for to.' },
+  as: { ru: 'Переопределяет компонент ссылки для to.', en: 'Overrides the link component for to.' },
 };
 
 const docs: DocsMap = {
@@ -58,7 +58,10 @@ const docs: DocsMap = {
         ru: 'Текст пустого состояния; по умолчанию из словаря.',
         en: 'Empty state text; the dictionary supplies the default.',
       },
-      linkAs: { ru: 'Компонент ссылки для пунктов с to.', en: 'Link component for items with to.' },
+      linkAs: {
+        ru: 'Переопределяет компонент ссылки для пунктов с to.',
+        en: 'Overrides the link component for items with to.',
+      },
     },
     models: {
       'v-model': { ru: 'Значение в одиночном режиме.', en: 'Value in single mode.' },

@@ -124,10 +124,13 @@ const docs: DocsMap = {
       },
       href: { ru: 'Адрес; пункт становится ссылкой.', en: 'Address; the item becomes a link.' },
       to: {
-        ru: 'Маршрут для компонента роутера: строка или объект; тип уточняется через NuiRouteRegister.',
-        en: 'Route for a router component: a string or an object; NuiRouteRegister narrows the type.',
+        ru: 'Маршрут для RouterLink или NuxtLink приложения либо link из конфигурации; без роутера строка становится href. Тип уточняется через NuiRouteRegister.',
+        en: 'Route for the app RouterLink or NuxtLink or the configured link; without a router a string becomes href. NuiRouteRegister narrows the type.',
       },
-      as: { ru: 'Компонент ссылки для to.', en: 'Link component used for to.' },
+      as: {
+        ru: 'Переопределяет компонент ссылки для to.',
+        en: 'Overrides the link component for to.',
+      },
     },
     events: { select },
     slots: {

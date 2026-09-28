@@ -92,7 +92,7 @@ const {
   label,
   labelledBy,
   emptyLabel,
-  linkAs = 'a',
+  linkAs,
 } = defineProps<NuiListProps<T, E>>();
 
 const model = defineModel<T | null>({ default: null });

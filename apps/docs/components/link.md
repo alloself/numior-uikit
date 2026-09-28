@@ -1,8 +1,8 @@
 # Link
 
-`NuiLink` — ссылка на токенах ролей: по умолчанию `<a>`, через `as` и `to` — `RouterLink` или
-`NuxtLink`. `tone` задаёт цвет, `underline` — когда подчёркивать, `external` открывает адрес
-в новой вкладке с `rel="noopener noreferrer"` и иконкой.
+`NuiLink` — ссылка на токенах ролей: по умолчанию `<a>`, с `to` — `RouterLink` или `NuxtLink`
+приложения, `as` переопределяет компонент. `tone` задаёт цвет, `underline` — когда подчёркивать,
+`external` открывает адрес в новой вкладке с `rel="noopener noreferrer"` и иконкой.
 
 <Example name="link/Basic" />
 

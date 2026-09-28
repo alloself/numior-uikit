@@ -69,3 +69,9 @@ Select и combobox переиспользуют `useListNavigation` (roving и v
 опцией `size`. Меню в jsdom проверяется через стабы popover с событиями `toggle`; порядок
 отрисовки, hover-intent, light dismiss и RTL — в e2e (`tests/e2e/navigation.spec.ts`).
 Следующая подволна: `NuiSelect`, `NuiCombobox`, `NuiPagination`.
+
+Ссылки с `to` сами находят компонент роутера через `useLinkTag`: сначала `link` из
+`createNuiConfig`/`provideNuiConfig`, затем зарегистрированный в приложении `NuxtLink` или
+`RouterLink`, иначе `<a>`, где строковый маршрут становится `href`. Проп `as` у кнопки, ссылки,
+пунктов списка, меню, боковой панели, карточки и крошек остаётся переопределением без значения
+по умолчанию (2026-09-28).

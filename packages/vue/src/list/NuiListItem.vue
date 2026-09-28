@@ -55,7 +55,7 @@ const {
   icon,
   href,
   to,
-  as = 'a',
+  as,
   interactive = false,
   disabled = false,
   current = false,

@@ -70,6 +70,7 @@ import {
   type NuiTooltipTriggerSlot,
 } from '../src';
 import { configScope } from './support/config-scope';
+import { RouterStub } from './support/router-stub';
 import { labelTarget, popoverTarget, renderMarkup } from './support/ssr';
 import { childrenOf, COLUMNS, manyPeople, PEOPLE, TEAM } from './support/rows';
 import { FILES, manyNodes } from './support/tree-items';
@@ -613,6 +614,19 @@ describe('server rendering', () => {
     expect(html).toContain('aria-checked="true"');
     expect(html).toContain('aria-expanded="false"');
     expect(html).not.toContain('tabindex="0"');
+  });
+
+  it('renders a button with to through the configured link and as an anchor without one', async () => {
+    const configured = await renderMarkup(() =>
+      h(configScope({ link: RouterStub }, () => h(NuiButton, { to: '/guide' }, () => 'Guide'))),
+    );
+
+    expect(configured).toContain('href="/router/guide"');
+    expect(configured).not.toContain(' to=');
+    const plain = await renderMarkup(() => h(NuiButton, { to: '/guide' }, () => 'Guide'));
+    expect(plain).toContain('<a');
+    expect(plain).toContain('href="/guide"');
+    expect(plain).not.toContain(' to=');
   });
 
   it('renders tabs with one selected tab stop and hidden inactive panels', async () => {

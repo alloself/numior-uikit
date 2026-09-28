@@ -33,10 +33,14 @@ createApp(App)
 | `icons`       | `Record<string, Component>`            | Icon registry by alias, see [Icon](/en/components/icon).                              |
 | `colorScheme` | `{ storageKey?, initial?, scope? }`    | Shared colour scheme for `useColorScheme`, see [Theming](/en/guide/theming).          |
 | `toasts`      | `{ duration?, exitDuration?, limit? }` | Lifetime and number of simultaneous toasts, see [Toast](/en/components/toast).        |
+| `link`        | `Component` or a component name        | Link component for `to`; without it the app's `NuxtLink` or `RouterLink` is used.     |
+
+A custom component reads `link` through `useConfiguredLink()`: without the option it returns
+`null`.
 
 ## Signature
 
-<SignatureReference :names="['createNuiConfig', 'provideNuiConfig']" />
+<SignatureReference :names="['createNuiConfig', 'provideNuiConfig', 'useConfiguredLink']" />
 
 ## Subtree
 

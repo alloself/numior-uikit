@@ -29,16 +29,16 @@ const docs: DocsMap = {
         en: 'Squares the button; detected automatically for a lone icon.',
       },
       as: {
-        ru: 'Тег или компонент ссылки в режиме ссылки.',
-        en: 'Tag or component used for the link mode.',
+        ru: 'Переопределяет тег или компонент в режиме ссылки; без него to берёт роутер.',
+        en: 'Overrides the tag or component of the link mode; without it to takes the router.',
       },
       href: {
         ru: 'Адрес; переводит кнопку в режим ссылки.',
         en: 'Address; switches the button into link mode.',
       },
       to: {
-        ru: 'Маршрут для компонента роутера: строка или объект; тип уточняется через NuiRouteRegister.',
-        en: 'Route for a router component: a string or an object; NuiRouteRegister narrows the type.',
+        ru: 'Маршрут для RouterLink или NuxtLink приложения либо link из конфигурации; без роутера строка становится href. Тип уточняется через NuiRouteRegister.',
+        en: 'Route for the app RouterLink or NuxtLink or the configured link; without a router a string becomes href. NuiRouteRegister narrows the type.',
       },
     },
     slots: {

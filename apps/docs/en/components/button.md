@@ -45,7 +45,8 @@ A button with a lone icon squares itself; it needs an `aria-label`.
 
 ### Link
 
-`href` or `to` turn the button into a link with the same look; `as` takes a router component.
+`href` or `to` turn the button into a link with the same look. `to` renders the app's `RouterLink`
+or `NuxtLink`, and `as` overrides the component.
 
 <Example name="button/Link" />
 
