@@ -1,23 +1,25 @@
 <template>
-  <div id="docs-content" class="mx-auto flex max-w-6xl flex-col gap-16 px-6 py-16" tabindex="-1">
-    <section class="grid-auto-lg items-start gap-12">
-      <div class="flex flex-col gap-6 pt-2">
-        <h1 class="m-0 text-4xl leading-tight font-bold tracking-tight">{{ home.title }}</h1>
-        <p class="m-0 max-w-prose text-lg text-muted-foreground">{{ home.tagline }}</p>
-        <div class="flex flex-wrap gap-3">
-          <NuiButton
-            v-for="action in home.actions"
-            :key="action.link"
-            :href="withBase(action.link)"
-            :variant="action.primary ? 'solid' : 'outline'"
-            :tone="action.primary ? 'primary' : 'neutral'"
-            size="lg"
-            >{{ action.text }}</NuiButton
-          >
-        </div>
-        <NuiCode :code="home.install" :copy-label="texts.copyCode" :copied-label="texts.copied" />
+  <div class="mx-auto flex max-w-6xl flex-col gap-16 px-6 py-16">
+    <section class="mx-auto flex w-full max-w-3xl flex-col items-center gap-6 text-center">
+      <h1 class="m-0 text-4xl leading-tight font-bold tracking-tight">{{ home.title }}</h1>
+      <p class="m-0 max-w-prose text-lg text-muted-foreground">{{ home.tagline }}</p>
+      <div class="flex flex-wrap justify-center gap-3">
+        <NuiButton
+          v-for="action in home.actions"
+          :key="action.link"
+          :href="withBase(action.link)"
+          :variant="action.primary ? 'solid' : 'outline'"
+          :tone="action.primary ? 'primary' : 'neutral'"
+          size="lg"
+          >{{ action.text }}</NuiButton
+        >
       </div>
-      <DocsHomeMosaic :content="home.mosaic" />
+      <NuiCode
+        class="w-full max-w-md text-start"
+        :code="home.install"
+        :copy-label="texts.copyCode"
+        :copied-label="texts.copied"
+      />
     </section>
     <section class="grid-auto-sm gap-8 border-t pt-10" :aria-label="texts.facts">
       <div class="flex flex-col gap-1">
@@ -38,7 +40,6 @@ import { useData, withBase } from 'vitepress';
 import { NuiButton, NuiCode } from '@numior/vue';
 import { useDocs } from '../composables/use-docs';
 import { homeOf } from '../home-content';
-import DocsHomeMosaic from './DocsHomeMosaic.vue';
 
 const { localeIndex } = useData();
 const { texts, sectionItems } = useDocs();

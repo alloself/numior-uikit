@@ -65,6 +65,17 @@ export class ConfiguratorFrameDriver {
     return this.wrapper.find('.nui-code__code').text();
   }
 
+  async showCode(): Promise<void> {
+    const tab = this.wrapper
+      .findAll('[role="tab"]')
+      .find((candidate) => candidate.text() === ru.code);
+
+    if (tab === undefined) {
+      throw new Error('No code tab');
+    }
+    await tab.trigger('click');
+  }
+
   get optionNames(): string[] {
     return this.wrapper
       .findAll('.nui-toggle-group--variant-segmented, .nui-field__label, .nui-switch__label')

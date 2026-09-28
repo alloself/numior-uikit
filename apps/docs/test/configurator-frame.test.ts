@@ -2,12 +2,13 @@ import { describe, expect, it } from 'vitest';
 import { configurableButton, ConfiguratorFrameDriver } from './drivers/configurator-frame';
 
 describe('ConfiguratorFrame', () => {
-  it('renders the live component with the configured props and the default content', () => {
+  it('renders the live component with the configured props and the default content', async () => {
     const frame = ConfiguratorFrameDriver.mount(configurableButton());
 
     expect(frame.button.text()).toBe('Сохранить');
     expect(frame.button.classes()).toContain('nui-button--variant-solid');
-    expect(frame.optionNames).toEqual(['variant', 'disabled', 'Содержимое']);
+    expect(frame.optionNames).toEqual(['variant', 'Содержимое', 'disabled']);
+    await frame.showCode();
     expect(frame.code).toBe('<template>  <NuiButton>Сохранить</NuiButton></template>');
     frame.unmount();
   });
@@ -20,6 +21,7 @@ describe('ConfiguratorFrame', () => {
     await frame.toggle('disabled');
     expect(frame.button.element.disabled).toBe(true);
     await frame.typeContent('Отправить');
+    await frame.showCode();
 
     expect(frame.code).toBe(
       '<template>  <NuiButton variant="soft" disabled>Отправить</NuiButton></template>',

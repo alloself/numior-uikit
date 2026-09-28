@@ -34,7 +34,10 @@ export class DocsConfigurator {
   constructor(private readonly page: Page) {
     this.panel = page.locator('form[aria-label="Свойства"]');
     this.preview = this.panel.locator('..').locator('[role="group"][aria-label="Превью"]').first();
-    this.code = this.panel.locator('..').locator('.nui-code__code');
+
+    this.code = this.panel
+      .locator('xpath=ancestor::*[contains(@class, "nui-tabs")][1]')
+      .locator('.nui-code__code');
   }
 
   async choose(label: string, option: string): Promise<void> {
@@ -57,14 +60,12 @@ export class DocsHome {
   readonly title: Locator;
   readonly start: Locator;
   readonly copyInstall: Locator;
-  readonly nameInput: Locator;
   readonly facts: Locator;
 
   constructor(page: Page) {
     this.title = page.getByRole('heading', { level: 1 });
     this.start = page.getByRole('link', { name: 'Начать', exact: true });
     this.copyInstall = page.getByRole('button', { name: 'Скопировать код' });
-    this.nameInput = page.getByRole('textbox', { name: 'Название' });
     this.facts = page.getByRole('region', { name: 'Коротко о наборе' });
   }
 }

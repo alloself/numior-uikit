@@ -100,8 +100,20 @@ export class ApiComponentDriver {
     return this.wrapper.findAll('td [title]').map((mark) => mark.attributes('title') ?? '');
   }
 
-  get styleParts(): string[] {
-    return this.wrapper.findAll('dd code').map((part) => part.text());
+  private styleList(label: string): string[] {
+    const list = this.wrapper
+      .findAll('p')
+      .find((candidate) => candidate.find('span').text() === `${label}:`);
+
+    return list === undefined ? [] : list.findAll('code').map((entry) => entry.text());
+  }
+
+  get styleClasses(): string[] {
+    return this.styleList(ru.apiClasses);
+  }
+
+  get styleTokens(): string[] {
+    return this.styleList(ru.apiTokens);
   }
 
   get styleImport(): string {

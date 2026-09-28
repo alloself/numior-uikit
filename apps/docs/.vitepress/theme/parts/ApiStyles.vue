@@ -2,29 +2,13 @@
   <div class="flex flex-col gap-2">
     <h4>{{ texts.apiStyles }}</h4>
     <NuiCode :code="`import '${styles.import}';`" language="ts" />
-    <dl v-for="block in described" :key="block.name" class="flex flex-col gap-1">
-      <dt>
-        <code>.{{ block.name }}</code>
-      </dt>
-      <ApiCodeList
-        v-if="block.parts.length > 0"
-        :label="texts.apiParts"
-        prefix="__"
-        :items="block.parts"
-      />
-      <ApiCodeList
-        v-if="block.modifiers.length > 0"
-        :label="texts.apiModifiers"
-        prefix="--"
-        :items="block.modifiers"
-      />
-    </dl>
-    <p v-if="plain.length > 0" class="text-sm">
-      <template v-for="(block, index) in plain" :key="block.name">
-        <code>.{{ block.name }}</code
-        ><span v-if="index < plain.length - 1">, </span>
-      </template>
-    </p>
+    <ApiCodeList :label="texts.apiClasses" prefix="." :items="classes" />
+    <ApiCodeList
+      v-if="styles.tokens.length > 0"
+      :label="texts.apiTokens"
+      prefix=""
+      :items="styles.tokens"
+    />
   </div>
 </template>
 
@@ -36,9 +20,5 @@ import ApiCodeList from './ApiCodeList.vue';
 
 const { styles, texts } = defineProps<ApiStylesProps>();
 
-const hasDetails = (block: ApiStylesProps['styles']['blocks'][number]): boolean =>
-  block.parts.length > 0 || block.modifiers.length > 0;
-
-const described = computed(() => styles.blocks.filter((block) => hasDetails(block)));
-const plain = computed(() => styles.blocks.filter((block) => !hasDetails(block)));
+const classes = computed(() => styles.blocks.map((block) => block.name));
 </script>

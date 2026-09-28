@@ -29,7 +29,7 @@ describe('ApiComponent', () => {
     expect(api.rows('Slots')).toEqual([['default', '{}', 'Content.']]);
   });
 
-  it('lists the dictionary texts, the style import and the BEM parts and modifiers', () => {
+  it('lists the dictionary texts, the style import, the block classes and the tokens', () => {
     const api = ApiComponentDriver.mount(referenceOf(), 'ru', false, {
       namespace: 'sample',
       texts: { empty: { ru: 'Пусто', en: 'Empty' } },
@@ -39,7 +39,8 @@ describe('ApiComponent', () => {
     expect(api.rows('Тексты')).toEqual([['empty', 'Пусто', 'Empty']]);
     expect(api.styleImport).toBe("import '@numior/vue/styles/sample.css';");
     expect(api.requiredMarks).toEqual(['обязательно']);
-    expect(api.styleParts).toEqual(['__label', '--size-sm', '--__label--muted']);
+    expect(api.styleClasses).toEqual(['.nui-sample']);
+    expect(api.styleTokens).toEqual(['--nui-primary']);
   });
 
   it('hides sections without members', () => {

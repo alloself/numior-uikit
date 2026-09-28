@@ -1,13 +1,13 @@
 <template>
-  <NuiSwitch v-model="failed" class="mb-4">Show the error</NuiSwitch>
-  <div class="flex gap-2 items-end">
+  <div class="flex w-full max-w-sm flex-col gap-4">
+    <NuiSwitch v-model="failed">Show the error</NuiSwitch>
     <NuiInput
       v-model="promo"
       label="Promo code"
       :error="failed ? 'Promo code not found' : undefined"
       reserve-error
     />
-    <NuiButton class="mb-5">Apply</NuiButton>
+    <NuiButton class="self-start">Apply</NuiButton>
   </div>
 </template>
 

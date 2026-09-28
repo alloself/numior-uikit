@@ -1,11 +1,11 @@
 <template>
-  <dd class="text-sm">
+  <p class="m-0 text-sm">
     <span class="text-muted-foreground">{{ label }}:</span>
     <template v-for="(item, index) in items" :key="item">
       <code>{{ prefix }}{{ item }}</code
       ><span v-if="index < items.length - 1">, </span>
     </template>
-  </dd>
+  </p>
 </template>
 
 <script setup lang="ts">

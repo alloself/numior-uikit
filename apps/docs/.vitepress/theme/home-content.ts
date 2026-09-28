@@ -1,5 +1,3 @@
-import type { NuiOption } from '@numior/vue';
-
 export interface HomeAction {
   readonly text: string;
   readonly link: string;
@@ -11,18 +9,6 @@ export interface HomeFact {
   readonly details: string;
 }
 
-export interface HomeMosaic {
-  readonly title: string;
-  readonly description: string;
-  readonly name: string;
-  readonly namePlaceholder: string;
-  readonly team: string;
-  readonly teams: readonly NuiOption<string>[];
-  readonly shared: string;
-  readonly create: string;
-  readonly cancel: string;
-}
-
 export interface HomeContent {
   readonly title: string;
   readonly tagline: string;
@@ -31,7 +17,6 @@ export interface HomeContent {
   readonly componentsSection: string;
   readonly componentsFact: string;
   readonly facts: readonly HomeFact[];
-  readonly mosaic: HomeMosaic;
 }
 
 const ru: HomeContent = {
@@ -60,21 +45,6 @@ const ru: HomeContent = {
       details: 'Стили подключаются файлами компонентов; пресет Tailwind читает те же токены.',
     },
   ],
-  mosaic: {
-    title: 'Новый проект',
-    description: 'Название, команда и доступ.',
-    name: 'Название',
-    namePlaceholder: 'Каталог 2026',
-    team: 'Команда',
-    teams: [
-      { value: 'design', label: 'Дизайн' },
-      { value: 'web', label: 'Веб' },
-      { value: 'mobile', label: 'Мобильные' },
-    ],
-    shared: 'Виден всей компании',
-    create: 'Создать',
-    cancel: 'Отмена',
-  },
 };
 
 const en: HomeContent = {
@@ -103,21 +73,6 @@ const en: HomeContent = {
       details: 'Styles ship as component files; the Tailwind preset reads the same tokens.',
     },
   ],
-  mosaic: {
-    title: 'New project',
-    description: 'Name, team and access.',
-    name: 'Name',
-    namePlaceholder: 'Catalogue 2026',
-    team: 'Team',
-    teams: [
-      { value: 'design', label: 'Design' },
-      { value: 'web', label: 'Web' },
-      { value: 'mobile', label: 'Mobile' },
-    ],
-    shared: 'Visible to the whole company',
-    create: 'Create',
-    cancel: 'Cancel',
-  },
 };
 
 export const homeOf = (localeIndex: string): HomeContent => (localeIndex === 'en' ? en : ru);

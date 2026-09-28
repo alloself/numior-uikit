@@ -9,12 +9,14 @@
       size="sm"
       @update:model-value="setEnum"
     />
+    <span v-if="description" class="text-xs text-muted-foreground">{{ description }}</span>
   </div>
   <NuiSelect
     v-else-if="prop.kind === 'enum'"
     :model-value="state.enums[prop.name] ?? null"
     :options="options"
     :label="prop.name"
+    :description="description"
     size="sm"
     @update:model-value="setEnum"
   />
@@ -29,6 +31,7 @@
     v-else-if="prop.kind === 'number'"
     :model-value="state.numbers[prop.name] ?? null"
     :label="prop.name"
+    :description="description"
     size="sm"
     @update:model-value="setNumber"
   />
@@ -36,6 +39,7 @@
     v-else
     :model-value="state.strings[prop.name] ?? ''"
     :label="prop.name"
+    :description="description"
     size="sm"
     @update:model-value="setString"
   />
@@ -48,10 +52,11 @@ import type { ConfiguratorControlEmits, ConfiguratorControlProps } from '../them
 
 const SHORT_ENUM = 4;
 
-const { prop, state } = defineProps<ConfiguratorControlProps>();
+const { prop, state, locale } = defineProps<ConfiguratorControlProps>();
 const emit = defineEmits<ConfiguratorControlEmits>();
 
 const short = computed(() => (prop.values?.length ?? 0) <= SHORT_ENUM);
+const description = computed(() => prop.description?.[locale]);
 const options = computed(() => (prop.values ?? []).map((value) => ({ value, label: value })));
 
 const setEnum = (value: string | null): void => {

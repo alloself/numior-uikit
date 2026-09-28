@@ -37,7 +37,7 @@
       >
         <NuiIcon alias="search" />
         <span v-if="!layout.mobile.value">{{ texts.search }}</span>
-        <NuiKbd v-if="!layout.mobile.value" keys="mod+k" size="sm" variant="plain" />
+        <NuiKbd v-if="!layout.mobile.value" keys="mod+k" size="sm" />
       </NuiButton>
       <NuiMenu :label="texts.theme" placement="bottom-end">
         <template #trigger="{ attrs }">
