@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { min, required } from '../src';
+import { customAsync, min, required } from '../src';
 import { ArrayHarness, type ArrayHarnessOptions } from './harness/array';
 
 const named = (...names: string[]) => names.map((name) => ({ name }));
@@ -16,6 +16,24 @@ const mountContacts = (
   });
 
 describe('field arrays', () => {
+  it('runs an asynchronous rule on the whole list', async () => {
+    const seen: number[] = [];
+
+    const list = mountContacts(['a', 'b'], {
+      listRules: [
+        customAsync(async (contacts) => {
+          seen.push(contacts.length);
+          return contacts.length > 2 ? 'Too many contacts' : undefined;
+        }),
+      ],
+    });
+
+    expect((await list.form.validate()).valid).toBe(true);
+    await list.push({ name: 'c' });
+    expect((await list.form.validate()).valid).toBe(false);
+    expect(seen).toEqual([2, 3]);
+  });
+
   it('keeps row keys unique and stable through every operation', async () => {
     const list = mountContacts(['a', 'b', 'c']);
     const [a, b, c] = list.keys;

@@ -192,20 +192,24 @@ export const createValidation = <V extends object, O>(core: FormCore<V, O>): Val
         : Promise.resolve(followAsync(entries, outcome, trigger));
     },
     validateFully: async (entries) => {
-      const first = await attempt(entries, 'attempted', true);
-      const passing: Entry<V>[] = [];
+      let result = await attempt(entries, 'attempted', true);
 
-      for (const entry of entries) {
-        if (first.byOwner.has(entry.path())) {
-          asyncChecks.cancel(entry);
-        } else {
-          passing.push(entry);
+      for (;;) {
+        const passing: Entry<V>[] = [];
+
+        for (const entry of entries) {
+          if (result.byOwner.has(entry.path())) {
+            asyncChecks.cancel(entry);
+          } else {
+            passing.push(entry);
+          }
         }
+
+        if (!(await asyncChecks.settle(passing))) {
+          return result;
+        }
+        result = await execute(undefined, true);
       }
-
-      const checked = await asyncChecks.settle(passing);
-
-      return checked ? execute(undefined, true) : first;
     },
   };
 };

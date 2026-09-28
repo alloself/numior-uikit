@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { required } from '../src';
+import { customAsync, required } from '../src';
+import { CodeCheck } from './harness/code-check';
 import { DocumentCheck } from './harness/document';
 import { FormHarness, type FieldSpec } from './harness/form';
 import { LoginCheck } from './harness/login';
@@ -176,6 +177,49 @@ describe('asynchronous checks', () => {
     expect(form.error('document')).toBe('Unknown document for this country');
     expect((await form.submit()).status).toBe('invalid');
     expect(check.calls).toEqual(['fr:A123', 'de:A123']);
+  });
+
+  it('checks a value that changed while its submit check ran before delivering it', async () => {
+    const check = new CodeCheck();
+
+    const form = FormHarness.mount({
+      initialValues: { code: 'good' },
+      fields: [{ path: 'code', rules: [check.rule] }],
+    });
+
+    const submitting = form.startSubmit();
+
+    await check.entered();
+    await form.change('code', 'bad');
+    check.open();
+    expect((await submitting).status).toBe('invalid');
+    expect(form.submissions).toEqual([]);
+    expect(form.error('code')).toBe('Unknown code');
+    expect(check.calls).toEqual(['good', 'bad']);
+  });
+
+  it('runs an asynchronous rule on a list-valued field', async () => {
+    const seen: unknown[] = [];
+
+    const form = FormHarness.mount({
+      initialValues: { tags: ['a'] },
+      fields: [
+        {
+          path: 'tags',
+          rules: [
+            customAsync(async (value) => {
+              seen.push(value);
+              return undefined;
+            }),
+          ],
+        },
+      ],
+    });
+
+    expect((await form.validate()).valid).toBe(true);
+    expect((await form.submit()).status).toBe('submitted');
+    expect(form.submissions).toEqual([{ tags: ['a'] }]);
+    expect(seen).toEqual([['a']]);
   });
 
   it('checks right away when a blur field is left', async () => {

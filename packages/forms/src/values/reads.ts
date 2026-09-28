@@ -8,8 +8,15 @@ export interface ReadLog<V extends object> {
   reads(): ReadonlyMap<string, unknown>;
 }
 
-const recorder = <T extends object>(target: T, prefix: string, paths: Set<string>): T =>
-  new Proxy(target, {
+interface Child {
+  readonly target: object;
+  readonly proxy: object;
+}
+
+const recorder = <T extends object>(target: T, prefix: string, paths: Set<string>): T => {
+  const children = new Map<string, Child>();
+
+  return new Proxy(target, {
     get: (object, key, receiver) => {
       const value: unknown = Reflect.get(object, key, receiver);
 
@@ -20,7 +27,16 @@ const recorder = <T extends object>(target: T, prefix: string, paths: Set<string
       const path = joinPath(prefix, key);
 
       if (isTraversable(value)) {
-        return recorder(value, path, paths);
+        const known = children.get(key);
+
+        if (known && known.target === value) {
+          return known.proxy;
+        }
+
+        const proxy = recorder(value, path, paths);
+
+        children.set(key, { target: value, proxy });
+        return proxy;
       }
       paths.add(path);
       return value;
@@ -36,6 +52,7 @@ const recorder = <T extends object>(target: T, prefix: string, paths: Set<string
       return Reflect.ownKeys(object);
     },
   });
+};
 
 export const recordReads = <V extends object>(values: V): ReadLog<V> => {
   const paths = new Set<string>();

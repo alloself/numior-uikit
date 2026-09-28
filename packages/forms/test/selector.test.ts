@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { byPath } from '../src';
 import { readSelected, recordPath } from '../src/paths/selector';
+import { recordReads } from '../src/values/reads';
 
 interface Team {
   name: string;
@@ -51,6 +52,19 @@ describe('field selectors', () => {
 
     expect(readSelected(team, (values) => values.members[5]?.email, 'members.5.email')).toBe(
       undefined,
+    );
+  });
+
+  it('read list and object values through a recording view', () => {
+    const log = recordReads(team);
+    const members = readSelected(log.view, (values) => values.members, 'members');
+
+    expect(members).toHaveLength(2);
+    expect(readSelected(log.view, (values) => values.members, 'members')).toBe(members);
+    expect(readSelected(log.view, (values) => values.owner, 'owner')).toEqual(team.owner);
+
+    expect(() => readSelected(log.view, (values) => values.members, 'owner')).toThrow(
+      'The field selector reads something other than owner',
     );
   });
 
