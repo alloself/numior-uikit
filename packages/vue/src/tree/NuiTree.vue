@@ -20,6 +20,7 @@
     :style="rootStyle"
     @keydown="navigation.onKeydown"
     @focus="onFocus"
+    @blur="navigation.reset"
     @pointerdown="onPointerdown"
     @click="onClick"
     @dblclick="onDblclick"

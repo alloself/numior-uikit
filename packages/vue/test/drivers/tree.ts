@@ -211,6 +211,11 @@ export class TreeDriver extends ComponentDriver {
     await nextTick();
   }
 
+  async blur(): Promise<void> {
+    this.tree.element.blur();
+    await nextTick();
+  }
+
   async press(key: string): Promise<void> {
     vi.advanceTimersByTime(1);
     const event = new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true });

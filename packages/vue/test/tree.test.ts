@@ -134,6 +134,18 @@ describe('NuiTree', () => {
     passive.unmount();
   });
 
+  it('resets the typeahead buffer when the tree loses focus', async () => {
+    const tree = TreeDriver.mount();
+    await tree.focus();
+    await tree.press('r');
+    expect(tree.activeLabel).toBe('README.md');
+    await tree.blur();
+    await tree.focus();
+    await tree.press('d');
+    expect(tree.activeLabel).toBe('docs');
+    tree.unmount();
+  });
+
   it('matches typeahead against labels renamed in place', async () => {
     const tree = TreeDriver.mount();
     await tree.focus();
