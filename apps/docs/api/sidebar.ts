@@ -120,9 +120,35 @@ const docs: DocsMap = {
       },
     },
     models: {
-      'v-model:open': { ru: 'Раскрыт ли подсписок.', en: 'Whether the sub list is expanded.' },
+      'v-model:open': {
+        ru: 'Раскрыт ли подсписок; в полосе иконок он открывается всплывающей панелью, и модель не меняется.',
+        en: 'Whether the sub list is expanded; in the icon rail it opens as a flyout and the model stays.',
+      },
     },
     slots: content('Пункты подсписка.', 'Sub list items.'),
+    keyboard: [
+      {
+        keys: '→ / Enter / Space',
+        description: {
+          ru: 'В полосе иконок открывает всплывающую панель и ставит фокус на первый пункт.',
+          en: 'In the icon rail opens the flyout and focuses its first item.',
+        },
+      },
+      {
+        keys: '↑ / ↓',
+        description: {
+          ru: 'Переходит по пунктам всплывающей панели.',
+          en: 'Moves through the flyout items.',
+        },
+      },
+      {
+        keys: 'Esc / ←',
+        description: {
+          ru: 'Закрывает панель и возвращает фокус на кнопку подсписка.',
+          en: 'Closes the flyout and returns focus to the sub list button.',
+        },
+      },
+    ],
   },
   NuiSidebarTrigger: {
     props: {

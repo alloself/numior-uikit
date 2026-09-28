@@ -62,7 +62,12 @@ watch(
 );
 
 const onClick = (): void => {
-  if (sidebar.mobile.value && !disabled) {
+  if (disabled) {
+    return;
+  }
+  sub?.dismiss();
+
+  if (sidebar.mobile.value) {
     sidebar.closeMobile();
   }
 };

@@ -270,6 +270,24 @@ export class LayoutDriver extends ComponentDriver {
     return this.wrapper.find('.nui-sidebar-sub > .nui-list-item__action');
   }
 
+  get flyout(): DOMWrapper<Element> {
+    return this.wrapper.find('.nui-sidebar-sub__flyout');
+  }
+
+  get focusedLabel(): string | undefined {
+    const focused = document.activeElement;
+
+    if (!(focused instanceof HTMLElement)) {
+      return undefined;
+    }
+    const title = focused.querySelector('.nui-row__title');
+    return title?.textContent?.trim();
+  }
+
+  get subFocused(): boolean {
+    return document.activeElement === this.subToggle.element;
+  }
+
   get tooltipShows(): number {
     return this.stubs.popoverCalls.show;
   }
@@ -302,6 +320,32 @@ export class LayoutDriver extends ComponentDriver {
 
   async clickSub(): Promise<void> {
     await this.subToggle.trigger('click');
+  }
+
+  async hoverSub(): Promise<void> {
+    await this.subToggle.trigger('pointerenter', { pointerType: 'mouse' });
+  }
+
+  async leaveSub(): Promise<void> {
+    await this.subToggle.trigger('pointerleave');
+  }
+
+  async pressOnSub(key: string): Promise<void> {
+    await this.subToggle.trigger('keydown', { key });
+  }
+
+  async pressFocused(key: string): Promise<void> {
+    const focused = document.activeElement;
+
+    if (focused instanceof HTMLElement) {
+      focused.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }));
+    }
+    await nextTick();
+  }
+
+  async advance(ms: number): Promise<void> {
+    vi.advanceTimersByTime(ms);
+    await nextTick();
   }
 
   async pressShortcut(modifier: 'ctrl' | 'meta' = 'ctrl', target: EventTarget = window) {

@@ -1,7 +1,11 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { LayoutDriver } from './drivers/layout';
 
 describe('NuiLayout with NuiSidebar', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it('starts open, wires the trigger to the sidebar and collapses to a rail that describes its items', async () => {
     const layout = LayoutDriver.mount({ collapsible: 'icon' });
     expect(layout.sidebarLabel).toBe('Navigation');
@@ -65,11 +69,46 @@ describe('NuiLayout with NuiSidebar', () => {
     expect(layout.active).toBe('sales');
     await layout.clickTrigger();
     expect(layout.subToggle.attributes('aria-expanded')).toBe('false');
-    expect(layout.subItems.attributes('inert')).toBeDefined();
-    await layout.clickSub();
-    expect(layout.open).toBe(true);
-    expect(layout.subOpen).toBe(true);
+    expect(layout.subItems.exists()).toBe(false);
+    expect(layout.flyout.exists()).toBe(true);
+    await layout.clickTrigger();
+    expect(layout.flyout.exists()).toBe(false);
     expect(layout.subToggle.attributes('aria-expanded')).toBe('true');
+    layout.unmount();
+  });
+
+  it('opens a flyout from the rail on hover, click or arrow key and closes it on Escape or a pick', async () => {
+    vi.useFakeTimers();
+    const layout = LayoutDriver.mount({ collapsible: 'icon' });
+    await layout.clickTrigger();
+    expect(layout.flyout.attributes('role')).toBe('group');
+    expect(layout.flyout.attributes('popover')).toBe('manual');
+    expect(layout.subToggle.attributes('aria-controls')).toBe(layout.flyout.attributes('id'));
+    expect(layout.subToggle.attributes('aria-expanded')).toBe('false');
+    expect(layout.flyout.text()).toContain('Reports');
+    await layout.hoverSub();
+    await layout.advance(100);
+    expect(layout.subToggle.attributes('aria-expanded')).toBe('true');
+    expect(layout.tooltipShows).toBe(1);
+    await layout.leaveSub();
+    await layout.advance(300);
+    expect(layout.subToggle.attributes('aria-expanded')).toBe('false');
+    await layout.pressOnSub('ArrowRight');
+    expect(layout.subToggle.attributes('aria-expanded')).toBe('true');
+    expect(layout.focusedLabel).toBe('Sales');
+    await layout.pressFocused('ArrowDown');
+    expect(layout.focusedLabel).toBe('Team');
+    await layout.pressFocused('Escape');
+    expect(layout.subToggle.attributes('aria-expanded')).toBe('false');
+    expect(layout.subFocused).toBe(true);
+    await layout.clickSub();
+    expect(layout.subToggle.attributes('aria-expanded')).toBe('true');
+    await layout.clickItem('Sales');
+    expect(layout.active).toBe('sales');
+    expect(layout.subToggle.attributes('aria-expanded')).toBe('false');
+    expect(layout.open).toBe(false);
+    await layout.clickTrigger();
+    expect(layout.flyout.exists()).toBe(false);
     layout.unmount();
   });
 

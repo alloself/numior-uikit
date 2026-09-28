@@ -32,6 +32,7 @@ export class LayoutSection {
   readonly side: Locator;
   readonly variant: Locator;
   readonly subToggle: Locator;
+  readonly flyout: Locator;
   readonly header: Locator;
   readonly endToggle: Locator;
   readonly endColumn: Locator;
@@ -50,6 +51,7 @@ export class LayoutSection {
     this.side = page.getByTestId('layout-side');
     this.variant = page.getByTestId('layout-variant');
     this.subToggle = page.getByTestId('layout-sub');
+    this.flyout = this.root.locator('.nui-sidebar-sub__flyout');
     this.header = page.getByTestId('layout-header');
     this.endToggle = page.getByTestId('layout-end-toggle');
     this.endColumn = page.getByTestId('layout-end');

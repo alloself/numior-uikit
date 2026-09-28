@@ -39,10 +39,12 @@ frame edges.
 
 ## Behaviour
 
-In the icon rail the item labels show up as tooltips, and pressing a sub list expands the
-sidebar first. `side` puts the sidebar at the start or the end of the row and follows the
-reading direction. A group with `collapsible` collapses through a button in its label,
-`NuiSidebarSub` through a button with `aria-expanded`.
+In the icon rail the item labels show up as tooltips. A sub list opens as a flyout next to the
+rail: on hover, click or an arrow key.
+
+`side` puts the sidebar at the start or the end of the row and follows the reading direction. A
+group with `collapsible` collapses through a button in its label, `NuiSidebarSub` through a
+button with `aria-expanded`.
 
 ## Accessibility
 
@@ -50,6 +52,8 @@ The sidebar is an `aside` with `aria-label`, the content a `nav`, a group a list
 through `aria-labelledby`. The current item gets `aria-current="page"`, items with a link render
 through `NuiLink`, the rest as buttons. In the icon rail the labels are hidden visually but stay
 the accessible name.
+
+<KeyboardReference name="NuiSidebarSub" />
 
 ## API
 

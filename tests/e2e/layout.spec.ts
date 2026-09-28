@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { boxOf } from './helpers/geometry';
 import { PlaygroundPage } from './pages/playground';
 
 test.describe('layout', () => {
@@ -103,6 +104,55 @@ test.describe('layout', () => {
     await playground.setDirection('ltr');
   });
 
+  test('the icon rail opens sub lists as flyouts by hover, click and keyboard', async ({
+    page,
+    isMobile,
+  }) => {
+    test.skip(isMobile, 'desktop rail');
+    const playground = new PlaygroundPage(page);
+    await playground.open();
+    const { layout } = playground;
+    await layout.root.scrollIntoViewIfNeeded();
+    await layout.trigger.click();
+    await expect.poll(() => layout.sidebarWidth()).toBeLessThan(80);
+    await expect(layout.flyout).toBeHidden();
+    await layout.subToggle.hover();
+    await expect(layout.flyout).toBeVisible();
+    await expect(layout.flyout).toContainText('Отчёты');
+    await expect(layout.tooltip('Отчёты')).toBeHidden();
+    const [toggle, flyout] = await Promise.all([boxOf(layout.subToggle), boxOf(layout.flyout)]);
+    expect(flyout.x).toBeGreaterThanOrEqual(toggle.x + toggle.width);
+    expect(flyout.y).toBeLessThanOrEqual(toggle.y + 1);
+    await expect(layout.itemLabel('report-sales')).toBeVisible();
+    await layout.item('report-sales').click();
+    await expect(layout.heading).toHaveText('Отчёт: продажи');
+    await expect(layout.flyout).toBeHidden();
+    expect(await layout.sidebarWidth()).toBeLessThan(80);
+    await layout.subToggle.focus();
+    await page.keyboard.press('ArrowRight');
+    await expect(layout.flyout).toBeVisible();
+    await expect(layout.item('report-sales')).toBeFocused();
+    await page.keyboard.press('ArrowDown');
+    await expect(layout.item('report-team')).toBeFocused();
+    await page.keyboard.press('Escape');
+    await expect(layout.flyout).toBeHidden();
+    await expect(layout.subToggle).toBeFocused();
+    await playground.setDirection('rtl');
+    await layout.subToggle.click();
+    await expect(layout.flyout).toBeVisible();
+
+    const [rtlToggle, rtlFlyout] = await Promise.all([
+      boxOf(layout.subToggle),
+      boxOf(layout.flyout),
+    ]);
+
+    expect(rtlFlyout.x + rtlFlyout.width).toBeLessThanOrEqual(rtlToggle.x + 1);
+    await page.keyboard.press('Escape');
+    await playground.setDirection('ltr');
+    await layout.trigger.click();
+    await expect.poll(() => layout.sidebarWidth()).toBeGreaterThan(200);
+  });
+
   test('inset puts the content into a card and floating frames the sidebar', async ({
     page,
     isMobile,
@@ -133,10 +183,10 @@ test.describe('layout', () => {
     await layout.trigger.click();
     await layout.collapsible.selectOption('icon');
     await layout.variant.selectOption('floating');
+    await expect.poll(async () => (await layout.sidebarFrame()).padding).toBeGreaterThanOrEqual(8);
     const frame = await layout.sidebarFrame();
     expect(frame.border).toBe(1);
     expect(frame.radius).toBeGreaterThan(0);
-    expect(frame.padding).toBeGreaterThanOrEqual(8);
     await expect.poll(async () => (await layout.bodyInsets()).top).toBeLessThan(1);
     await layout.trigger.click();
     await expect.poll(() => layout.sidebarWidth()).toBeLessThan(90);
@@ -187,6 +237,9 @@ test.describe('layout', () => {
     if (!isMobile) {
       await layout.trigger.click();
       await expect.poll(() => layout.sidebarWidth()).toBeLessThan(80);
+      expect(await playground.wcagViolations()).toEqual([]);
+      await layout.subToggle.click();
+      await expect(layout.flyout).toBeVisible();
       expect(await playground.wcagViolations()).toEqual([]);
     }
   });

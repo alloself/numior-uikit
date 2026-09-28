@@ -11,6 +11,7 @@ export interface SidebarContext {
 
 export interface SidebarSubContext {
   reveal(): void;
+  dismiss(): void;
 }
 
 const SIDEBAR_KEY: InjectionKey<SidebarContext> = Symbol('nui:sidebar');

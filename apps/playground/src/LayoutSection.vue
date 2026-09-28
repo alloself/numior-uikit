@@ -96,6 +96,7 @@
                   <NuiSidebarItem
                     label="Команда"
                     :current="active === 'report-team'"
+                    data-testid="layout-item-report-team"
                     @click="active = 'report-team'"
                   />
                 </NuiSidebarSub>
