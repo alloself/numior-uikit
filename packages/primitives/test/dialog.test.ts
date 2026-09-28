@@ -26,6 +26,48 @@ const press = (dialog: HTMLElement, clientX: number) => {
   dialog.dispatchEvent(new MouseEvent('click', { clientX, clientY: 0, bubbles: true }));
 };
 
+interface RootMetrics {
+  readonly scrollHeight: number;
+  readonly clientHeight: number;
+  readonly scrollbar: number;
+}
+
+const ROOT_METRICS = ['scrollHeight', 'clientHeight', 'clientWidth'] as const;
+
+const defineMetric = (name: string, get: () => number): void => {
+  Object.defineProperty(document.documentElement, name, { configurable: true, get });
+};
+
+const describeRoot = (metrics: RootMetrics): void => {
+  const root = document.documentElement;
+
+  const clientWidth = () =>
+    window.innerWidth - (root.style.overflow === 'hidden' ? 0 : metrics.scrollbar);
+
+  defineMetric('scrollHeight', () => metrics.scrollHeight);
+  defineMetric('clientHeight', () => metrics.clientHeight);
+  defineMetric('clientWidth', clientWidth);
+};
+
+const forgetRoot = (): void => {
+  const root = document.documentElement;
+
+  for (const metric of ROOT_METRICS) {
+    Reflect.deleteProperty(root, metric);
+  }
+  root.removeAttribute('style');
+};
+
+const rootStyle = () => {
+  const { style } = document.documentElement;
+
+  return {
+    overflow: style.overflow,
+    gutter: style.getPropertyValue('scrollbar-gutter'),
+    padding: style.paddingInlineEnd,
+  };
+};
+
 describe('useDialog', () => {
   let topLayer = installTopLayer();
 
@@ -33,7 +75,35 @@ describe('useDialog', () => {
     topLayer = installTopLayer();
   });
 
-  afterEach(() => topLayer.restore());
+  afterEach(() => {
+    topLayer.restore();
+    forgetRoot();
+  });
+
+  it('locks a scrolling root while any modal is open and restores its inline styles after', async () => {
+    describeRoot({ scrollHeight: 2000, clientHeight: 800, scrollbar: 15 });
+    document.documentElement.style.overflow = 'auto';
+    const firstOpen = ref(true);
+    const secondOpen = ref(true);
+    const first = mountDialog({ open: firstOpen });
+    expect(rootStyle()).toEqual({ overflow: 'hidden', gutter: 'stable', padding: '15px' });
+    const second = mountDialog({ open: secondOpen });
+    second.value.close();
+    await nextTick();
+    expect(rootStyle().overflow).toBe('hidden');
+    first.value.close();
+    await nextTick();
+    expect(rootStyle()).toEqual({ overflow: 'auto', gutter: '', padding: '' });
+    second.unmount();
+    first.unmount();
+  });
+
+  it('leaves a root that does not scroll untouched', () => {
+    describeRoot({ scrollHeight: 600, clientHeight: 800, scrollbar: 15 });
+    const capture = mountDialog({ open: ref(true) });
+    expect(rootStyle()).toEqual({ overflow: '', gutter: '', padding: '' });
+    capture.unmount();
+  });
 
   it('marks a modal as covered while another modal is open above it', async () => {
     const firstOpen = ref(true);

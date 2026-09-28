@@ -131,7 +131,3 @@
   inset-block-start: var(--nui-space-3);
   inset-inline-end: var(--nui-space-3);
 }
-html:has(.nui-dialog:modal) {
-  overflow: hidden;
-  scrollbar-gutter: stable;
-}

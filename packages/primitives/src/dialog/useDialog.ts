@@ -41,11 +41,61 @@ const modalCapable = (
 ): element is HTMLDialogElement =>
   element !== null && element !== undefined && typeof element.showModal === 'function';
 
+interface RootLock {
+  readonly overflow: string;
+  readonly gutter: string;
+  readonly padding: string;
+}
+
 const openModals = shallowRef<readonly HTMLDialogElement[]>([]);
+
+let rootLock: RootLock | undefined;
+
+const scrollbarWidth = (root: HTMLElement): number => window.innerWidth - root.clientWidth;
+
+const lockRoot = (): void => {
+  if (rootLock !== undefined || typeof document === 'undefined') {
+    return;
+  }
+  const root = document.documentElement;
+  if (root.scrollHeight <= root.clientHeight) {
+    return;
+  }
+  const width = scrollbarWidth(root);
+
+  rootLock = {
+    overflow: root.style.overflow,
+    gutter: root.style.getPropertyValue('scrollbar-gutter'),
+    padding: root.style.paddingInlineEnd,
+  };
+
+  root.style.overflow = 'hidden';
+  root.style.setProperty('scrollbar-gutter', 'stable');
+  const shift = width - scrollbarWidth(root);
+  if (shift > 0) {
+    root.style.paddingInlineEnd = `${shift}px`;
+  }
+};
+
+const unlockRoot = (): void => {
+  if (rootLock === undefined) {
+    return;
+  }
+  const root = document.documentElement;
+  root.style.overflow = rootLock.overflow;
+  root.style.setProperty('scrollbar-gutter', rootLock.gutter);
+  root.style.paddingInlineEnd = rootLock.padding;
+  rootLock = undefined;
+};
 
 const track = (dialog: HTMLDialogElement, isOpen: boolean): void => {
   const others = openModals.value.filter((entry) => entry !== dialog);
   openModals.value = isOpen ? [...others, dialog] : others;
+  if (openModals.value.length > 0) {
+    lockRoot();
+  } else {
+    unlockRoot();
+  }
 };
 
 const outside = (element: HTMLDialogElement, point: { clientX: number; clientY: number }) => {

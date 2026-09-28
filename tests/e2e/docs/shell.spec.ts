@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { boxOf } from '../helpers/geometry';
 import { DocsSite } from '../pages/docs';
 
 test('the sidebar navigates, marks the current page and the contents follow the scroll', async ({
@@ -59,12 +60,14 @@ test('the language menu opens the same page in English', async ({ page }) => {
 test('search finds a page by text and opens it', async ({ page, isMobile }) => {
   const docs = new DocsSite(page);
   await docs.open('/guide/getting-started');
+  const before = await boxOf(docs.heading);
   if (isMobile) {
     await docs.searchButton.tap();
   } else {
     await docs.pressSearchHotkeyOnRussianLayout();
   }
   await expect(docs.commandInput).toBeFocused();
+  expect((await boxOf(docs.heading)).x).toBe(before.x);
   await docs.commandInput.fill('Button');
   await expect(docs.commandOptions.first()).toContainText('Button');
   await docs.commandOptions.first().click();

@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { expectRgb } from './helpers/color';
+import { boxOf } from './helpers/geometry';
 import { PlaygroundPage } from './pages/playground';
 
 test.describe('layers', () => {
@@ -10,12 +11,14 @@ test.describe('layers', () => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
     const { overlays } = playground;
+    const before = await boxOf(overlays.dialogOpen);
     await overlays.dialogOpen.click();
     await expect(overlays.dialog).toBeVisible();
     await expect(overlays.dialog).toHaveAccessibleName('Удалить проект?');
     await expect(overlays.dialog).toHaveAccessibleDescription('Действие нельзя отменить.');
     expect(await overlays.focusIsInside(overlays.dialog)).toBe(true);
     expect(await overlays.documentOverflow()).toBe('hidden');
+    expect((await boxOf(overlays.dialogOpen)).x).toBe(before.x);
     await overlays.pressEscape();
     await expect(overlays.dialog).toBeHidden();
     await expect(overlays.dialogOpen).toBeFocused();
