@@ -121,7 +121,8 @@ commitDraft() })`; `NuiFormField` runs these commits before a programmatic submi
   into `false` otherwise (`filter` in NuiCombobox).
 - A button whose slot holds only `NuiIcon` squares itself (`nui-button--icon-only`, no
   horizontal padding); `:icon-only` forces or disables it. It always needs `aria-label`.
-  Every button, icon-only included, shares the press feedback (`scale: 0.97`). Close buttons in cards align their glyph with the first text line
+  Every button, icon-only included, shares the press feedback (`scale: 0.97`). Close buttons
+  in cards align their glyph with the first text line
   (`margin-block-start: calc((font-size * line-height - var(--_height)) / 2)`) and with the
   padding edge (negative `margin-inline-end`).
 - Everything that reacts to a click shows `cursor: pointer` (buttons, links, options, menu and

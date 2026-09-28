@@ -1,5 +1,5 @@
 <template>
-  <div class="mx-auto flex max-w-6xl flex-col gap-16 px-6 py-16">
+  <div id="docs-content" class="mx-auto flex max-w-6xl flex-col gap-16 px-6 py-16" tabindex="-1">
     <section class="mx-auto flex w-full max-w-3xl flex-col items-center gap-6 text-center">
       <h1 class="m-0 text-4xl leading-tight font-bold tracking-tight">{{ home.title }}</h1>
       <p class="m-0 max-w-prose text-lg text-muted-foreground">{{ home.tagline }}</p>
