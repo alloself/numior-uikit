@@ -28,6 +28,20 @@ import '@numior/vue/styles/upload.css';
 
 <Example name="upload/Manual" />
 
+### Только кнопка
+
+`variant="button"` убирает зону сброса: остаётся кнопка выбора и список файлов, перетаскивание
+не принимается.
+
+<Example name="upload/Button" />
+
+### Аватар
+
+`NuiAvatarUpload` хранит одно изображение: превью в `NuiAvatar`, замена по клику или сбросу
+файла на аватар, удаление кнопкой. Отклонённый файл не трогает текущее изображение.
+
+<Example name="upload/Avatar" />
+
 ## Поведение
 
 Файлы проходят проверку `accept`, `maxSize`, `maxFiles` и свой `validate`; отклонённые при
@@ -50,3 +64,5 @@ import '@numior/vue/styles/upload.css';
 ## API
 
 <ApiReference name="NuiUpload" />
+
+<ApiReference name="NuiAvatarUpload" />

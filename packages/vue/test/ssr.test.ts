@@ -4,6 +4,7 @@ import { h, type VNode } from 'vue';
 import {
   NuiAlert,
   NuiAvatar,
+  NuiAvatarUpload,
   NuiAvatarGroup,
   NuiBadge,
   NuiBreadcrumbs,
@@ -791,6 +792,18 @@ describe('server rendering', () => {
     expect(html).toContain('2 kB');
     expect(html).not.toContain('<img');
     expect(html).not.toContain('<progress');
+
+    const avatar = await renderMarkup(() =>
+      h(NuiAvatarUpload<string>, {
+        upload: () => Promise.resolve('ok'),
+        name: 'Ann Smith',
+        label: 'Photo',
+      }),
+    );
+
+    expect(avatar).toContain('aria-label="Choose an image"');
+    expect(avatar).toContain('AS');
+    expect(avatar).not.toContain('<img');
   });
 
   it('renders a time field with one tab stop, filled segments and a closed list', async () => {

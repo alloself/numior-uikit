@@ -115,6 +115,52 @@ test.describe('upload', () => {
     await fromKeyboard;
   });
 
+  test('the button variant has no drop zone and lists the chosen file', async ({ page }) => {
+    const playground = new PlaygroundPage(page);
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    const { upload } = playground;
+    await upload.report.scrollIntoViewIfNeeded();
+    await expect(upload.zone(upload.report)).toHaveCount(0);
+    const chooser = page.waitForEvent('filechooser');
+    await upload.browse(upload.report).click();
+    expect((await chooser).isMultiple()).toBe(false);
+    await upload.choose(upload.report, { name: 'sales.csv', mimeType: 'text/csv' });
+    await expect(upload.row(upload.report, 'sales.csv')).toBeVisible();
+
+    await expect
+      .poll(async () => (await upload.readOutput()).report)
+      .toEqual([{ name: 'sales.csv', status: 'done' }]);
+  });
+
+  test('the avatar upload previews the chosen image, replaces it and removes it', async ({
+    page,
+  }) => {
+    const playground = new PlaygroundPage(page);
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    const { upload } = playground;
+    await upload.avatar.scrollIntoViewIfNeeded();
+    await expect(upload.avatarInitials).toHaveText('АС');
+    await expect(upload.avatarTrigger).toHaveAccessibleName('Выбрать изображение');
+    await upload.choose(upload.avatar, { name: 'me.png', mimeType: 'image/png', image: true });
+    await expect(upload.avatarImage).toBeVisible();
+    await expect(upload.avatarTrigger).toHaveAccessibleName('Сменить изображение');
+    await expect.poll(async () => (await upload.readOutput()).avatar?.status).toBe('done');
+
+    await upload.choose(upload.avatar, {
+      name: 'huge.png',
+      mimeType: 'image/png',
+      size: 3 * 1024 * 1024,
+    });
+
+    await expect(upload.avatar.getByRole('status')).toContainText('Файл больше');
+    expect((await upload.readOutput()).avatar?.name).toBe('me.png');
+    await upload.avatarRemove.click();
+    await expect(upload.avatarInitials).toHaveText('АС');
+    expect((await upload.readOutput()).avatar).toBeNull();
+  });
+
   test('upload has no automatically detectable WCAG AA violations', async ({ page }) => {
     const playground = new PlaygroundPage(page);
     await playground.emulate({ reducedMotion: 'reduce' });

@@ -22,6 +22,8 @@ const isImage = shapeOf({ name: isString, status: isString });
 const isUploadOutput = shapeOf({
   documents: listOf(isDocument),
   images: listOf(isImage),
+  report: listOf(isImage),
+  avatar: nullable(isImage),
   rejections: listOf(isString),
 });
 
@@ -38,20 +40,31 @@ export interface FakeFile {
   readonly name: string;
   readonly mimeType: string;
   readonly size?: number;
+  readonly image?: boolean;
 }
 
 const UPLOAD_ROOT =
   'xpath=ancestor::*[contains(concat(" ", normalize-space(@class), " "), " nui-upload ")][1]';
 
+const AVATAR_ROOT =
+  'xpath=ancestor::*[contains(concat(" ", normalize-space(@class), " "), " nui-avatar-upload ")][1]';
+
+const PIXEL_PNG = Buffer.from(
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
+  'base64',
+);
+
 const payload = (file: FakeFile) => ({
   name: file.name,
   mimeType: file.mimeType,
-  buffer: Buffer.alloc(file.size ?? 16, 1),
+  buffer: file.image === true ? PIXEL_PNG : Buffer.alloc(file.size ?? 16, 1),
 });
 
 export class UploadSection {
   readonly documents: Locator;
   readonly images: Locator;
+  readonly report: Locator;
+  readonly avatar: Locator;
   readonly failToggle: Locator;
   readonly dropToggle: Locator;
   readonly output: Locator;
@@ -59,6 +72,8 @@ export class UploadSection {
   constructor(private readonly page: Page) {
     this.documents = page.getByTestId('upload-documents').locator(UPLOAD_ROOT);
     this.images = page.getByTestId('upload-images').locator(UPLOAD_ROOT);
+    this.report = page.getByTestId('upload-button').locator(UPLOAD_ROOT);
+    this.avatar = page.getByTestId('upload-avatar').locator(AVATAR_ROOT);
     this.failToggle = page.getByTestId('upload-fail-toggle');
     this.dropToggle = page.getByTestId('upload-drop-toggle');
     this.output = page.getByTestId('upload-output');
@@ -66,6 +81,22 @@ export class UploadSection {
 
   zone(scope: Locator): Locator {
     return scope.locator('.nui-upload__zone');
+  }
+
+  get avatarTrigger(): Locator {
+    return this.avatar.locator('.nui-avatar-upload__trigger');
+  }
+
+  get avatarImage(): Locator {
+    return this.avatar.locator('img');
+  }
+
+  get avatarInitials(): Locator {
+    return this.avatar.locator('.nui-avatar__initials');
+  }
+
+  get avatarRemove(): Locator {
+    return this.avatar.getByRole('button', { name: 'Удалить изображение' });
   }
 
   browse(scope: Locator): Locator {

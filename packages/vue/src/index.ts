@@ -62,6 +62,7 @@ export { default as NuiNumberField } from './number-field/NuiNumberField.vue';
 export type { NuiNumberFieldProps } from './number-field/number-field.types';
 export { default as NuiTimeField } from './time-field/NuiTimeField.vue';
 export { default as NuiUpload } from './upload/NuiUpload.vue';
+export { default as NuiAvatarUpload } from './upload/NuiAvatarUpload.vue';
 export { default as NuiLayout } from './layout/NuiLayout.vue';
 export { default as NuiAppBar } from './layout/NuiAppBar.vue';
 export { default as NuiSidebar } from './sidebar/NuiSidebar.vue';
@@ -101,6 +102,7 @@ export type {
 } from './calendar/calendar.types';
 export type { NuiTimeFieldProps } from './time-field/time-field.types';
 export type {
+  NuiAvatarUploadProps,
   NuiUploadAdapter,
   NuiUploadError,
   NuiUploadItem,
@@ -108,6 +110,7 @@ export type {
   NuiUploadLayout,
   NuiUploadProps,
   NuiUploadRejected,
+  NuiUploadVariant,
   NuiUploadZoneSlot,
 } from './upload/upload.types';
 export type { NuiAppBarProps, NuiLayoutHeader, NuiLayoutProps } from './layout/layout.types';

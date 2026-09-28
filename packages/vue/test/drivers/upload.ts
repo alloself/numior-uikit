@@ -48,7 +48,7 @@ export interface UploadMountOptions {
   readonly config?: NuiConfigOptions;
 }
 
-interface AdapterCall {
+export interface AdapterCall {
   readonly file: File;
   readonly context: UploadContext;
   resolve(result: string): void;
@@ -62,7 +62,7 @@ interface UploadExposed {
   remove(id: string): void;
 }
 
-interface UrlLog {
+export interface UrlLog {
   readonly created: string[];
   readonly revoked: string[];
 }
@@ -70,7 +70,7 @@ interface UrlLog {
 export const fileOf = (name: string, size = 3, type = 'text/plain'): File =>
   new File([new Uint8Array(size)], name, { type });
 
-const stubObjectUrls = (log: UrlLog): (() => void) => {
+export const stubObjectUrls = (log: UrlLog): (() => void) => {
   const create = Object.getOwnPropertyDescriptor(URL, 'createObjectURL');
   const revoke = Object.getOwnPropertyDescriptor(URL, 'revokeObjectURL');
 
@@ -104,7 +104,7 @@ const stubObjectUrls = (log: UrlLog): (() => void) => {
   };
 };
 
-const transferEvent = (type: string, files: File[]): Event => {
+export const transferEvent = (type: string, files: File[]): Event => {
   const event = new Event(type, { bubbles: true, cancelable: true });
 
   Object.defineProperty(event, 'dataTransfer', {

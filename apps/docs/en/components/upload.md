@@ -30,6 +30,20 @@ ref.
 
 <Example name="upload/Manual" />
 
+### Button only
+
+`variant="button"` drops the drop zone: the browse button and the file list remain, dragging is
+not accepted.
+
+<Example name="upload/Button" />
+
+### Avatar
+
+`NuiAvatarUpload` keeps one image: a preview inside `NuiAvatar`, replacement by a click or a file
+dropped onto the avatar, removal by a button. A rejected file leaves the current image alone.
+
+<Example name="upload/Avatar" />
+
 ## Behaviour
 
 Files pass the `accept`, `maxSize`, `maxFiles` and custom `validate` checks. Rejected ones stay
@@ -53,3 +67,5 @@ and remove buttons have accessible names.
 ## API
 
 <ApiReference name="NuiUpload" />
+
+<ApiReference name="NuiAvatarUpload" />

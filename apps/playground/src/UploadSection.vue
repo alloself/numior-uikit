@@ -30,6 +30,26 @@
           data-testid="upload-images"
         />
       </NuiField>
+      <NuiField label="Отчёт" description="Одна таблица CSV, без зоны сброса">
+        <NuiUpload
+          v-model="report"
+          :upload="fakeUpload"
+          variant="button"
+          accept=".csv,text/csv"
+          :multiple="false"
+          browse-label="Выбрать CSV"
+          data-testid="upload-button"
+        />
+      </NuiField>
+      <NuiField label="Аватар" description="Одно изображение до 2 МБ">
+        <NuiAvatarUpload
+          v-model="avatar"
+          :upload="fakeUpload"
+          name="Анна Смирнова"
+          :max-size="2 * 1024 * 1024"
+          data-testid="upload-avatar"
+        />
+      </NuiField>
       <div class="upload-controls">
         <label class="loading-toggle"
           ><input v-model="failNext" type="checkbox" data-testid="upload-fail-toggle" /> Следующая
@@ -47,7 +67,13 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { NuiField, NuiUpload, type NuiUploadAdapter, type NuiUploadItem } from '@numior/vue';
+import {
+  NuiAvatarUpload,
+  NuiField,
+  NuiUpload,
+  type NuiUploadAdapter,
+  type NuiUploadItem,
+} from '@numior/vue';
 
 const STEPS = 5;
 const STEP_DELAY = 120;
@@ -64,6 +90,8 @@ const documents = ref<NuiUploadItem<string>[]>([
 ]);
 
 const images = ref<NuiUploadItem<string>[]>([]);
+const report = ref<NuiUploadItem<string>[]>([]);
+const avatar = ref<NuiUploadItem<string> | null>(null);
 const failNext = ref(false);
 const dropRejected = ref(false);
 const rejections = ref<string[]>([]);
@@ -128,6 +156,8 @@ const output = computed(() =>
         error: reasonOf(item),
       })),
       images: images.value.map((item) => ({ name: item.name, status: item.status })),
+      report: report.value.map((item) => ({ name: item.name, status: item.status })),
+      avatar: avatar.value ? { name: avatar.value.name, status: avatar.value.status } : null,
       rejections: rejections.value,
     },
     null,

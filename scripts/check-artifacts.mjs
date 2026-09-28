@@ -87,6 +87,7 @@ await importBuild('primitives', [
 
 const code = await importBuild('vue', [
   'kitControls',
+  'NuiAvatarUpload',
   'NuiButton',
   'NuiLink',
   'NuiSeparator',

@@ -4,6 +4,7 @@
       class="nui-upload"
       :class="[
         `nui-upload--layout-${layout}`,
+        `nui-upload--variant-${variant}`,
         `nui-upload--size-${size}`,
         {
           'nui-upload--dragging': drop.dragging.value,
@@ -15,19 +16,36 @@
       ]"
       v-bind="split.rootAttrs()"
     >
-      <div class="nui-upload__zone" v-bind="drop.attrs" @click="onZoneClick">
-        <input
-          ref="input"
-          class="nui-upload__input"
-          type="file"
-          tabindex="-1"
-          aria-hidden="true"
-          :accept="accept"
-          :multiple="multiple"
-          :disabled="isInert"
-          @click.stop
-          @change="onChange"
-        />
+      <input
+        ref="input"
+        class="nui-upload__input"
+        type="file"
+        tabindex="-1"
+        aria-hidden="true"
+        :accept="accept"
+        :multiple="multiple"
+        :disabled="isInert"
+        @click.stop
+        @change="onChange"
+      />
+      <NuiButton
+        v-if="variant === 'button'"
+        :id="controlAttrs.id"
+        variant="outline"
+        tone="neutral"
+        class="nui-upload__browse"
+        :aria-describedby="controlAttrs['aria-describedby']"
+        :aria-invalid="controlAttrs['aria-invalid']"
+        :disabled="isInert"
+        v-bind="split.controlAttrs()"
+        @click="open"
+      >
+        <slot name="button">
+          <NuiIcon alias="upload" />
+          {{ texts.browse }}
+        </slot>
+      </NuiButton>
+      <div v-else class="nui-upload__zone" v-bind="drop.attrs" @click="onZoneClick">
         <slot :open="open" :dragging="drop.dragging.value">
           <NuiIcon alias="upload" class="nui-upload__icon" />
           <span class="nui-upload__text">{{ texts.drop }}</span>
@@ -71,14 +89,10 @@
 </template>
 
 <script setup lang="ts" generic="R = unknown">
-import { computed, onScopeDispose, ref, useTemplateRef } from 'vue';
+import { computed, ref, useTemplateRef } from 'vue';
 import {
   formatFileSize,
-  useFieldControl,
   useFileDrop,
-  useLocale,
-  useMessages,
-  useSplitAttrs,
   useUploadQueue,
   validateFiles,
   type FileRejection,
@@ -88,38 +102,8 @@ import NuiFieldFrame from '../field/NuiFieldFrame';
 import NuiButton from '../button/NuiButton.vue';
 import NuiIcon from '../icon/NuiIcon.vue';
 import NuiUploadRow from './NuiUploadRow.vue';
-import { uploadMessages, type NuiUploadMessages } from './upload.messages';
+import { useUploadField, useUploadPicker, useUploadPreviews } from './use-upload-field';
 import type { NuiUploadError, NuiUploadItem, NuiUploadProps } from './upload.types';
-
-interface ErrorLabelContext {
-  readonly maxSize: number | undefined;
-  readonly maxFiles: number | undefined;
-  readonly locale: string;
-}
-
-type ErrorLabel = (
-  error: NuiUploadError,
-  texts: NuiUploadMessages,
-  context: ErrorLabelContext,
-) => string;
-
-const ERROR_LABELS: Readonly<Record<NuiUploadError['reason'], ErrorLabel>> = {
-  type: (_error, texts) => texts.typeError,
-  size: (_error, texts, { maxSize, locale }) =>
-    maxSize === undefined
-      ? texts.tooLarge
-      : texts.largerThan({ size: formatFileSize(maxSize, locale) }),
-  count: (_error, texts, { maxFiles }) =>
-    maxFiles === undefined ? texts.tooMany : texts.moreThan({ count: maxFiles }),
-  custom: (error, texts) => error.message ?? texts.rejected,
-  upload: (error, texts) => error.message ?? texts.failed,
-};
-
-const defaultErrorLabel: ErrorLabel = (error, texts, context) =>
-  ERROR_LABELS[error.reason](error, texts, context);
-
-const canPreview = (item: NuiUploadItem<unknown>): boolean =>
-  item.type.startsWith('image/') && typeof URL.createObjectURL === 'function';
 
 defineOptions({ inheritAttrs: false });
 
@@ -143,6 +127,7 @@ const {
   auto = true,
   concurrency = 3,
   layout = 'list',
+  variant = 'zone',
   size = 'md',
   dropLabel,
   browseLabel,
@@ -162,32 +147,25 @@ const emit = defineEmits<{
   remove: [item: NuiUploadItem<R>];
 }>();
 
-const split = useSplitAttrs();
-const locale = useLocale();
-const messages = useMessages(uploadMessages, locale);
-
 const {
+  split,
+  locale,
+  messages,
   frame: fieldFrame,
   attrs: controlAttrs,
   invalid: isInvalid,
   disabled: isDisabled,
   readonly: isReadonly,
-} = useFieldControl(() => ({
-  id,
-  disabled,
-  readonly,
-  required,
-  invalid,
-  label,
-  description,
-  error,
-}));
+  inert: isInert,
+  describe: describeFailure,
+} = useUploadField(
+  () => ({ id, disabled, readonly, required, invalid, label, description, error }),
+  () => ({ maxSize, maxFiles }),
+);
 
-const isInert = computed(() => isDisabled.value || isReadonly.value);
-
+const { remember, forget, previewOf } = useUploadPreviews<R>();
 const inputElement = useTemplateRef<HTMLInputElement>('input');
 const announcement = ref('');
-const previews = new Map<string, string>();
 
 const texts = computed(() => ({
   drop: dropLabel ?? messages.value.drop,
@@ -199,9 +177,7 @@ const texts = computed(() => ({
 }));
 
 const describeError = (failure: NuiUploadError, item: NuiUploadItem<R>): string =>
-  errorLabel
-    ? errorLabel(failure, item)
-    : defaultErrorLabel(failure, messages.value, { maxSize, maxFiles, locale: locale.value });
+  errorLabel ? errorLabel(failure, item) : describeFailure(failure);
 
 const describe = (item: NuiUploadItem<R>): string =>
   item.status === 'error'
@@ -224,26 +200,6 @@ const queue = useUploadQueue<R>({
     emit('error', item);
   },
 });
-
-const remember = (items: readonly NuiUploadItem<R>[]): void => {
-  for (const item of items) {
-    if (item.file && canPreview(item)) {
-      previews.set(item.id, URL.createObjectURL(item.file));
-    }
-  }
-};
-
-const forget = (itemId: string): void => {
-  const url = previews.get(itemId);
-
-  if (url !== undefined) {
-    URL.revokeObjectURL(url);
-    previews.delete(itemId);
-  }
-};
-
-const previewOf = (item: NuiUploadItem<R>): string | undefined =>
-  previews.get(item.id) ?? (item.type.startsWith('image/') ? item.url : undefined);
 
 const discard = (item: NuiUploadItem<R>): void => {
   if (isInert.value) {
@@ -289,20 +245,11 @@ const receive = (files: File[]): void => {
 
 const drop = useFileDrop({ disabled: isInert, onFiles: receive });
 
-const open = (): void => {
-  if (!isInert.value) {
-    inputElement.value?.click();
-  }
-};
-
-const onChange = (): void => {
-  const input = inputElement.value;
-
-  if (input) {
-    receive(Array.from(input.files ?? []));
-    input.value = '';
-  }
-};
+const { open, onChange } = useUploadPicker({
+  input: inputElement,
+  inert: isInert,
+  onFiles: receive,
+});
 
 const onZoneClick = (event: MouseEvent): void => {
   if (event.target instanceof Element && event.target.closest('.nui-upload__browse')) {
@@ -311,14 +258,6 @@ const onZoneClick = (event: MouseEvent): void => {
 
   open();
 };
-
-onScopeDispose(() => {
-  for (const url of previews.values()) {
-    URL.revokeObjectURL(url);
-  }
-
-  previews.clear();
-});
 
 defineExpose({
   open,

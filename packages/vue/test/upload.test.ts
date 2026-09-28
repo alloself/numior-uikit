@@ -247,4 +247,16 @@ describe('NuiUpload', () => {
     expect(upload.names).toEqual([]);
     upload.unmount();
   });
+
+  it('renders the button variant without a zone and still lists the chosen files', async () => {
+    const upload = UploadDriver.mount({ props: { variant: 'button' } });
+
+    expect(upload.hasModifier('variant-button')).toBe(true);
+    expect(upload.zone.exists()).toBe(false);
+    await upload.browse.trigger('click');
+    expect(upload.openCount).toBe(1);
+    await upload.addFiles(fileOf('a.txt'));
+    expect(upload.names).toEqual(['a.txt']);
+    upload.unmount();
+  });
 });

@@ -49,8 +49,15 @@
   background: var(--nui-surface-muted);
 }
 .nui-upload--readonly .nui-upload__zone,
+.nui-upload--readonly .nui-upload__browse,
 .nui-upload--readonly .nui-upload-item__actions {
   display: none;
+}
+.nui-upload--variant-button {
+  justify-items: start;
+}
+.nui-upload--variant-button .nui-upload__items {
+  justify-self: stretch;
 }
 .nui-upload--dragging .nui-upload__zone {
   border-color: var(--nui-primary);
@@ -212,4 +219,163 @@
     opacity: 0;
     translate: 0 calc(var(--nui-space-1) * -1);
   }
+}
+.nui-avatar-upload {
+  --_badge: 1.375rem;
+  --_badge-font: 0.75rem;
+  --_ring: 3px;
+  --_ring-gap: 2px;
+
+  box-sizing: border-box;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--nui-space-3);
+  color: var(--nui-text);
+  font-family: var(--nui-font);
+  font-size: var(--nui-font-size-sm);
+  line-height: var(--nui-line-height);
+}
+.nui-avatar-upload--size-sm {
+  --_badge: 1rem;
+  --_badge-font: 0.5rem;
+  --_ring: 2px;
+}
+.nui-avatar-upload--size-md {
+  --_badge: 1.125rem;
+  --_badge-font: 0.625rem;
+}
+.nui-avatar-upload--size-lg {
+  --_badge: 1.25rem;
+  --_badge-font: 0.6875rem;
+}
+.nui-avatar-upload__input {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  margin: -1px;
+  opacity: 0;
+  pointer-events: none;
+}
+.nui-avatar-upload__trigger {
+  --_radius: var(--nui-radius-full);
+
+  position: relative;
+  display: inline-grid;
+  flex: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--_radius);
+  background: none;
+  color: inherit;
+  cursor: pointer;
+  transition:
+    opacity var(--nui-duration-fast) var(--nui-easing),
+    outline-color var(--nui-duration-fast) var(--nui-easing);
+}
+.nui-avatar-upload--shape-square .nui-avatar-upload__trigger {
+  --_radius: var(--nui-radius-md);
+}
+.nui-avatar-upload__trigger:hover .nui-avatar-upload__avatar {
+  opacity: 0.85;
+}
+.nui-avatar-upload__trigger:focus-visible {
+  outline: var(--nui-focus-ring-width) solid var(--nui-focus);
+  outline-offset: calc(var(--nui-focus-ring-offset) + var(--_ring) + var(--_ring-gap));
+}
+.nui-avatar-upload__avatar {
+  transition: opacity var(--nui-duration-fast) var(--nui-easing);
+}
+.nui-avatar-upload__ring {
+  position: absolute;
+  inset: calc(-1 * (var(--_ring) + var(--_ring-gap)));
+  padding: var(--_ring);
+  border-radius: calc(var(--_radius) + var(--_ring) + var(--_ring-gap));
+  background: conic-gradient(
+    var(--nui-primary) calc(var(--_progress, 0) * 1turn),
+    var(--nui-border) 0
+  );
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
+  animation: nui-avatar-upload-ring var(--nui-duration-normal) var(--nui-easing);
+}
+@keyframes nui-avatar-upload-ring {
+  from {
+    opacity: 0;
+    scale: 0.92;
+  }
+}
+.nui-avatar-upload__badge {
+  box-sizing: border-box;
+  position: absolute;
+  inset-block-end: 0;
+  inset-inline-end: 0;
+  display: grid;
+  place-items: center;
+  inline-size: var(--_badge);
+  block-size: var(--_badge);
+  border: 2px solid var(--nui-surface);
+  border-radius: var(--nui-radius-full);
+  background: var(--nui-primary);
+  color: var(--nui-primary-foreground);
+  font-size: var(--_badge-font);
+  transition:
+    background-color var(--nui-duration-fast) var(--nui-easing),
+    opacity var(--nui-duration-fast) var(--nui-easing);
+}
+.nui-avatar-upload--busy .nui-avatar-upload__badge {
+  opacity: 0;
+}
+.nui-avatar-upload--dragging .nui-avatar-upload__trigger {
+  outline: var(--nui-focus-ring-width) solid var(--nui-primary);
+  outline-offset: calc(var(--nui-focus-ring-offset) + var(--_ring) + var(--_ring-gap));
+}
+.nui-avatar-upload--invalid .nui-avatar-upload__badge {
+  background: var(--nui-error);
+  color: var(--nui-error-foreground);
+}
+.nui-avatar-upload--disabled .nui-avatar-upload__trigger {
+  opacity: var(--nui-disabled-opacity);
+  cursor: not-allowed;
+}
+.nui-avatar-upload--readonly .nui-avatar-upload__trigger {
+  cursor: default;
+}
+.nui-avatar-upload--readonly .nui-avatar-upload__badge,
+.nui-avatar-upload--readonly .nui-avatar-upload__actions {
+  display: none;
+}
+.nui-avatar-upload__aside {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--nui-space-1);
+  min-inline-size: 0;
+}
+.nui-avatar-upload__actions {
+  display: inline-flex;
+  gap: var(--nui-space-1);
+}
+.nui-avatar-upload__progress,
+.nui-avatar-upload__status {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.nui-avatar-upload__status--failure {
+  position: static;
+  inline-size: auto;
+  block-size: auto;
+  overflow: visible;
+  clip-path: none;
+  color: var(--nui-error);
+  font-size: var(--nui-font-size-xs);
+  white-space: normal;
 }

@@ -14,6 +14,9 @@ export interface NuiUploadMessages {
   readonly moreThan: (params: { readonly count: number }) => string;
   readonly rejected: string;
   readonly failed: string;
+  readonly chooseImage: string;
+  readonly changeImage: string;
+  readonly removeImage: string;
 }
 
 export const uploadMessages: NuiMessageCatalog<'upload'> = {
@@ -33,6 +36,9 @@ export const uploadMessages: NuiMessageCatalog<'upload'> = {
       `More than ${count} ${plural('en', count, { one: 'file', other: 'files' })}`,
     rejected: 'File rejected',
     failed: 'Upload failed',
+    chooseImage: 'Choose an image',
+    changeImage: 'Change the image',
+    removeImage: 'Remove the image',
   },
   ru: {
     drop: 'Перетащите файлы сюда',
@@ -49,5 +55,8 @@ export const uploadMessages: NuiMessageCatalog<'upload'> = {
       `Не больше ${count} ${plural('ru', count, { one: 'файла', few: 'файлов', many: 'файлов', other: 'файла' })}`,
     rejected: 'Файл отклонён',
     failed: 'Не удалось загрузить',
+    chooseImage: 'Выбрать изображение',
+    changeImage: 'Сменить изображение',
+    removeImage: 'Удалить изображение',
   },
 };
