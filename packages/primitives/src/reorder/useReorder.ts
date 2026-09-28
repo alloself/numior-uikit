@@ -114,6 +114,19 @@ export const useReorder = (options: ReorderOptions): Reorder => {
   const allowed = (from: number, to: number): boolean =>
     to >= 0 && to < toValue(options.count) && (options.canMove?.(from, to) ?? true);
 
+  const retarget = (): void => {
+    const current = state.value;
+
+    if (current.phase !== 'dragging') {
+      return;
+    }
+    const target = options.indexAt(current.position, current.from);
+
+    if (target !== current.to && allowed(current.from, target)) {
+      publish({ ...current, to: target });
+    }
+  };
+
   const scrollStep = (): void => {
     const container = toValue(options.container);
     if (!container || scrollDelta === 0) {
@@ -125,6 +138,7 @@ export const useReorder = (options: ReorderOptions): Reorder => {
     } else {
       container.scrollTop += scrollDelta;
     }
+    retarget();
   };
 
   const autoscroll = useRafFn(scrollStep, { immediate: false });
@@ -262,10 +276,21 @@ export const useReorder = (options: ReorderOptions): Reorder => {
     window.addEventListener('keydown', onWindowKeydown);
   };
 
-  const nudge = (current: KeyboardState, step: number): void => {
-    const to = current.to + step;
+  const nextAllowed = (from: number, start: number, step: number): number | undefined => {
+    const count = toValue(options.count);
 
-    if (allowed(current.from, to)) {
+    for (let to = start + step; to >= 0 && to < count; to += step) {
+      if (allowed(from, to)) {
+        return to;
+      }
+    }
+    return undefined;
+  };
+
+  const nudge = (current: KeyboardState, step: number): void => {
+    const to = nextAllowed(current.from, current.to, step);
+
+    if (to !== undefined) {
       publish({ ...current, to });
       emit({ type: 'moved', from: current.from, to });
     }

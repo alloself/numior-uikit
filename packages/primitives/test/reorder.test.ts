@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { ReorderHarness } from './harness/reorder';
 
 describe('useReorder', () => {
@@ -76,6 +76,35 @@ describe('useReorder', () => {
     expect(list.moves).toEqual([[1, 0]]);
     expect(list.changes.at(-1)?.phase).toBe('idle');
     list.unmount();
+  });
+
+  it('steps over indexes canMove refuses when moving from the keyboard', async () => {
+    const list = ReorderHarness.mount({ canMove: (_from, to) => to !== 2 });
+    await list.press(1, ' ');
+    await list.press(1, 'ArrowDown');
+    expect(list.target).toBe(3);
+    await list.press(1, 'ArrowUp');
+    expect(list.target).toBe(1);
+    await list.press(1, 'ArrowUp');
+    expect(list.target).toBe(0);
+    await list.press(1, 'ArrowUp');
+    expect(list.target).toBe(0);
+    list.unmount();
+  });
+
+  it('keeps retargeting while the edge autoscroll runs under a still pointer', async () => {
+    vi.useFakeTimers();
+    const list = ReorderHarness.mount({ count: 100, size: 20, viewport: 100 });
+    await list.pointerDown(0, 20);
+    await list.pointerMove(95);
+    expect(list.target).toBe(Math.floor((95 + list.scrollTop) / 20));
+    await list.advance(160);
+    expect(list.scrollTop).toBeGreaterThan(0);
+    expect(list.target).toBe(Math.floor((95 + list.scrollTop) / 20));
+    await list.pointerUp(95);
+    expect(list.moves).toEqual([[0, Math.floor((95 + list.scrollTop) / 20)]]);
+    list.unmount();
+    vi.useRealTimers();
   });
 
   it('swaps horizontal arrows in RTL', async () => {

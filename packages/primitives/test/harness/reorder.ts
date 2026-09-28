@@ -1,4 +1,5 @@
 import { mount, type VueWrapper } from '@vue/test-utils';
+import { vi } from 'vitest';
 import { defineComponent, h, nextTick, shallowRef } from 'vue';
 import {
   useReorder,
@@ -14,7 +15,17 @@ export interface ReorderHarnessOptions {
   readonly size?: number;
   readonly canMove?: (from: number, to: number) => boolean;
   readonly rtl?: boolean;
+  readonly viewport?: number;
 }
+
+const defineViewport = (element: HTMLElement, height: number): void => {
+  const rect = { top: 0, bottom: height, left: 0, right: height, width: height, height };
+
+  Object.defineProperty(element, 'getBoundingClientRect', {
+    value: () => ({ ...rect, x: 0, y: 0, toJSON: () => ({}) }),
+    configurable: true,
+  });
+};
 
 type Outcome = { readonly ran: true; readonly value: Reorder } | { readonly ran: false };
 
@@ -42,11 +53,14 @@ export class ReorderHarness {
       setup() {
         const container = shallowRef<HTMLElement | null>(null);
 
+        const scrolled = (client: number): number => client + (container.value?.scrollTop ?? 0);
+
         const reorder = useReorder({
           axis,
           count: () => count,
           container,
-          indexAt: (client) => Math.min(count - 1, Math.max(0, Math.floor(client / size))),
+          indexAt: (client) =>
+            Math.min(count - 1, Math.max(0, Math.floor(scrolled(client) / size))),
           canMove: options.canMove,
           onMove: (from, to) => moves.push([from, to]),
           onChange: (state) => changes.push(state),
@@ -83,6 +97,9 @@ export class ReorderHarness {
     if (!outcome.current.ran) {
       throw new Error('useReorder did not run');
     }
+    if (options.viewport !== undefined) {
+      defineViewport(wrapper.element, options.viewport);
+    }
     return new ReorderHarness(wrapper, outcome.current.value, axis, moves, changes, events);
   }
 
@@ -106,6 +123,15 @@ export class ReorderHarness {
 
   get source(): number | undefined {
     return this.reorder.source.value;
+  }
+
+  get scrollTop(): number {
+    return this.wrapper.element.scrollTop;
+  }
+
+  async advance(ms: number): Promise<void> {
+    vi.advanceTimersByTime(ms);
+    await nextTick();
   }
 
   private handle(index: number): HTMLElement {
