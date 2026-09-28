@@ -67,3 +67,5 @@ onSubmit: async (values, { setErrors }) => {
 
 An app on vee-validate plugs its store in through `useForm({ engine: veeValidateEngine })`
 from `@numior/forms/vee-validate`; validation, submit and focus stay with `@numior/forms`.
+It needs vee-validate 5: the adapter is tested on `5.0.0-beta.1`, the peer range is
+`>=5.0.0-beta.1 <6.0.0`.

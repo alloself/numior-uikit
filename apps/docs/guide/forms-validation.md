@@ -67,3 +67,4 @@ onSubmit: async (values, { setErrors }) => {
 
 Приложение на vee-validate подключает его хранилище через `useForm({ engine: veeValidateEngine })`
 из `@numior/forms/vee-validate`; проверки, отправка и фокус остаются за `@numior/forms`.
+Нужна vee-validate 5: адаптер проверен на `5.0.0-beta.1`, peer-диапазон `>=5.0.0-beta.1 <6.0.0`.

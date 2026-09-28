@@ -13,7 +13,13 @@ import releaseConfig from '../../release.config.mjs';
 
 const logger = { log() {}, error() {}, success() {} };
 
-const fixture = async (t, isPrivate = true, dependencies = {}) => {
+const vueManifest = (dependencies, peers) => ({
+  peerDependencies: { '@numior/tokens': 'workspace:*', ...peers.peerDependencies },
+  ...(peers.peerDependenciesMeta ? { peerDependenciesMeta: peers.peerDependenciesMeta } : {}),
+  dependencies,
+});
+
+const fixture = async (t, isPrivate, dependencies, peers) => {
   const cwd = await mkdtemp(join(tmpdir(), 'numior-release-'));
   t.after(() => rm(cwd, { recursive: true, force: true }));
   await writeFile(join(cwd, 'pnpm-workspace.yaml'), 'packages:\n  - packages/*\n');
@@ -36,8 +42,7 @@ const fixture = async (t, isPrivate = true, dependencies = {}) => {
         version: '0.0.0',
         private: isPrivate,
         files: ['dist'],
-        ...(name === 'vue' ? { peerDependencies: { '@numior/tokens': 'workspace:*' } } : {}),
-        ...(name === 'vue' ? { dependencies } : {}),
+        ...(name === 'vue' ? vueManifest(dependencies, peers) : {}),
       }),
     );
   }
@@ -68,7 +73,7 @@ test('conventional commits produce patch, minor, major and no release', async ()
 });
 
 test('disabled and private packages cannot reach prepare or publish', async (t) => {
-  const context = await fixture(t);
+  const context = await fixture(t, true, {}, {});
   await assert.rejects(verifyConditions({}, context), /disabled/);
   await assert.rejects(prepare({}, context), /disabled/);
   await assert.rejects(publish({}, context), /disabled/);
@@ -81,7 +86,7 @@ test('disabled and private packages cannot reach prepare or publish', async (t) 
 });
 
 test('packing synchronizes versions and replaces workspace protocols without publishing', async (t) => {
-  const context = await fixture(t, false);
+  const context = await fixture(t, false, {}, {});
   context.env.NUMIOR_RELEASE_ENABLED = 'true';
 
   context.options.repositoryUrl =
@@ -115,7 +120,7 @@ test('packing synchronizes versions and replaces workspace protocols without pub
 });
 
 test('a prerelease dependency blocks publication but not a dry run', async (t) => {
-  const context = await fixture(t, false, { 'vee-validate': '5.0.0-beta.1' });
+  const context = await fixture(t, false, { 'vee-validate': '5.0.0-beta.1' }, {});
   context.env.NUMIOR_RELEASE_ENABLED = 'true';
 
   await assert.rejects(
@@ -127,8 +132,46 @@ test('a prerelease dependency blocks publication but not a dry run', async (t) =
   await verifyConditions({}, { ...context, options: { dryRun: true } });
 });
 
+test('an optional peer may start at a prerelease floor, a required one may not', async (t) => {
+  const floor = await fixture(
+    t,
+    false,
+    {},
+    {
+      peerDependencies: { 'vee-validate': '>=5.0.0-beta.1 <6.0.0' },
+      peerDependenciesMeta: { 'vee-validate': { optional: true } },
+    },
+  );
+
+  floor.env.NUMIOR_RELEASE_ENABLED = 'true';
+  await verifyConditions({}, floor);
+
+  const required = await fixture(
+    t,
+    false,
+    {},
+    { peerDependencies: { 'vee-validate': '>=5.0.0-beta.1 <6.0.0' } },
+  );
+
+  required.env.NUMIOR_RELEASE_ENABLED = 'true';
+  await assert.rejects(verifyConditions({}, required), /prerelease dependency vee-validate/);
+
+  const caret = await fixture(
+    t,
+    false,
+    {},
+    {
+      peerDependencies: { 'vee-validate': '^5.0.0-beta.1' },
+      peerDependenciesMeta: { 'vee-validate': { optional: true } },
+    },
+  );
+
+  caret.env.NUMIOR_RELEASE_ENABLED = 'true';
+  await assert.rejects(verifyConditions({}, caret), /prerelease dependency vee-validate/);
+});
+
 test('prerelease versions are rejected before changing package versions', async (t) => {
-  const context = await fixture(t, false);
+  const context = await fixture(t, false, {}, {});
   context.env.NUMIOR_RELEASE_ENABLED = 'true';
   context.nextRelease.version = '1.0.0-beta.1';
   await assert.rejects(prepare({}, context), /Only stable releases/);
@@ -140,7 +183,7 @@ test('prerelease versions are rejected before changing package versions', async 
 });
 
 test('semantic-release calculates the first 1.0.0 in dry-run without tags or package mutations', async (t) => {
-  const context = await fixture(t);
+  const context = await fixture(t, true, {}, {});
 
   const git = (...args) =>
     execFileSync('git', args, {
