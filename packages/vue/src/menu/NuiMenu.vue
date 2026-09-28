@@ -21,7 +21,12 @@ import { useTriggerElement } from '../shared/trigger-ref';
 import NuiMenuEntries from './NuiMenuEntries.vue';
 import { provideMenu } from './menu-context';
 import { useMenuSurface } from './use-menu-surface';
-import type { NuiMenuProps, NuiMenuTriggerAttrs, NuiMenuTriggerSlot } from './menu.types';
+import type {
+  NuiMenuExposed,
+  NuiMenuProps,
+  NuiMenuTriggerAttrs,
+  NuiMenuTriggerSlot,
+} from './menu.types';
 
 defineOptions({ inheritAttrs: false });
 
@@ -34,12 +39,14 @@ const {
   loop = true,
   typeahead = true,
   label,
+  anchor,
 } = defineProps<NuiMenuProps>();
 
 const open = defineModel<boolean>('open', { default: false });
 defineSlots<{ trigger(props: NuiMenuTriggerSlot): unknown; default(): unknown }>();
 
 const { trigger, setTrigger } = useTriggerElement();
+const reference = computed(() => (anchor === undefined ? trigger.value : anchor));
 const contentElement = useTemplateRef<HTMLElement>('content');
 const triggerId = useControlId(() => (id === undefined ? undefined : `${id}-trigger`));
 
@@ -50,7 +57,7 @@ const {
 } = useMenuSurface({
   open,
   id: () => id,
-  trigger,
+  trigger: reference,
   content: contentElement,
   placement: () => placement,
   offset: () => offset,
@@ -80,4 +87,11 @@ const triggerAttrs = computed<NuiMenuTriggerAttrs>(() => ({
   ref: setTrigger,
   onKeydown: onTriggerKeydown,
 }));
+
+defineExpose<NuiMenuExposed>({
+  show: (focus) => {
+    context.requestFocus(focus ?? 'none');
+    control.show();
+  },
+});
 </script>

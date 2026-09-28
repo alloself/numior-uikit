@@ -178,6 +178,8 @@ export type {
   NuiMenuCheckboxEntry,
   NuiMenuCheckboxItemProps,
   NuiMenuEntry,
+  NuiMenuExposed,
+  NuiMenuFocus,
   NuiMenuItemEntry,
   NuiMenuItemProps,
   NuiMenuItemTone,

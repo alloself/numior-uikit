@@ -23,6 +23,24 @@ describe('NuiMenu', () => {
     menu.unmount();
   });
 
+  it('opens at an external anchor from code onto the chosen item and returns focus to the anchor', async () => {
+    const menu = MenuDriver.mount({ parts: true, anchored: true });
+    await menu.focusAnchor();
+    await menu.show('first');
+
+    expect(menu.isOpen).toBe(true);
+    expect(menu.focusedLabel).toBe('Rename');
+    await menu.dismissNatively();
+    expect(menu.isOpen).toBe(false);
+    expect(menu.anchorFocused).toBe(true);
+    await menu.show('last');
+    expect(menu.focusedLabel).toBe('Delete');
+    await menu.close();
+    await menu.show();
+    expect(menu.focusedLabel).toBe('menu');
+    menu.unmount();
+  });
+
   it('moves with arrows, Home, End and typeahead, skipping disabled items and looping', async () => {
     const menu = MenuDriver.mount({ parts: true });
     await menu.pressTrigger('ArrowDown');

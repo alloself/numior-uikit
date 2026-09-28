@@ -82,6 +82,13 @@ export interface NuiMenuProps {
   loop?: boolean | undefined;
   typeahead?: boolean | undefined;
   label?: string | undefined;
+  anchor?: HTMLElement | null | undefined;
+}
+
+export type NuiMenuFocus = 'first' | 'last';
+
+export interface NuiMenuExposed {
+  show(focus?: NuiMenuFocus): void;
 }
 
 export interface NuiMenuTriggerAttrs extends PopoverInvokerAttrs {

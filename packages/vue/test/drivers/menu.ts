@@ -1,6 +1,6 @@
 import { mount, type DOMWrapper, type VueWrapper } from '@vue/test-utils';
 import { vi } from 'vitest';
-import { defineComponent, h, nextTick, ref, type Ref } from 'vue';
+import { defineComponent, h, nextTick, ref, shallowRef, type Ref, type ShallowRef } from 'vue';
 import {
   NuiMenu,
   NuiMenuCheckboxItem,
@@ -11,6 +11,8 @@ import {
   NuiMenuSeparator,
   NuiMenuSub,
   type NuiMenuEntry,
+  type NuiMenuExposed,
+  type NuiMenuFocus,
   type NuiMenuProps,
   type NuiMenuTriggerSlot,
 } from '../../src';
@@ -22,6 +24,7 @@ export interface MenuMountOptions {
   readonly entries?: readonly NuiMenuEntry[];
   readonly parts?: boolean;
   readonly open?: boolean;
+  readonly anchored?: boolean;
 }
 
 interface PartsState {
@@ -83,6 +86,15 @@ const parts = (state: PartsState) => () => [
 const labelText = (element: Element): string =>
   (element.querySelector(LABEL)?.textContent ?? '').trim();
 
+const trigger = (slot: NuiMenuTriggerSlot) =>
+  h('button', { ...slot.attrs, type: 'button' }, 'Actions');
+
+const isExposed = (value: unknown): value is NuiMenuExposed =>
+  typeof value === 'object' &&
+  value !== null &&
+  'show' in value &&
+  typeof value.show === 'function';
+
 export class MenuDriver extends ComponentDriver {
   protected readonly block = 'nui-menu';
 
@@ -91,32 +103,47 @@ export class MenuDriver extends ComponentDriver {
     entries,
     parts: withParts = false,
     open = false,
+    anchored = false,
   }: MenuMountOptions = {}) {
     const stubs = new TopLayerStubs();
     const model = ref(open);
     const state: PartsState = { log: [], bold: ref(false), align: ref('left') };
+    const anchor = shallowRef<HTMLElement | null>(null);
+    const exposed = shallowRef<NuiMenuExposed | null>(null);
+
+    const setAnchor = (element: unknown): void => {
+      anchor.value = element instanceof HTMLElement ? element : null;
+    };
+
+    const setExposed = (value: unknown): void => {
+      exposed.value = isExposed(value) ? value : null;
+    };
 
     const Host = defineComponent({
-      setup: () => () =>
+      setup: () => () => [
+        anchored ? h('button', { ref: setAnchor, type: 'button', class: 'anchor' }, 'Cell') : null,
         h(
           NuiMenu,
           {
             ...props,
+            ...(anchored ? { anchor: anchor.value } : {}),
             items: entries,
             open: model.value,
             'onUpdate:open': (value: boolean) => {
               model.value = value;
             },
+            ref: setExposed,
           },
           {
-            trigger: (slot: NuiMenuTriggerSlot) =>
-              h('button', { ...slot.attrs, type: 'button' }, 'Actions'),
+            ...(anchored ? {} : { trigger }),
             ...(withParts ? { default: parts(state) } : {}),
           },
         ),
+      ],
     });
 
-    return new MenuDriver(mount(Host, { attachTo: document.body }), stubs, model, state);
+    const wrapper = mount(Host, { attachTo: document.body });
+    return new MenuDriver(wrapper, stubs, model, state, anchor, exposed);
   }
 
   private constructor(
@@ -124,8 +151,24 @@ export class MenuDriver extends ComponentDriver {
     private readonly stubs: TopLayerStubs,
     private readonly model: Ref<boolean>,
     private readonly state: PartsState,
+    private readonly anchor: ShallowRef<HTMLElement | null>,
+    private readonly exposed: ShallowRef<NuiMenuExposed | null>,
   ) {
     super(wrapper);
+  }
+
+  get anchorFocused(): boolean {
+    return this.anchor.value !== null && document.activeElement === this.anchor.value;
+  }
+
+  async focusAnchor(): Promise<void> {
+    this.anchor.value?.focus();
+    await nextTick();
+  }
+
+  async show(focus?: NuiMenuFocus): Promise<void> {
+    this.exposed.value?.show(focus);
+    await nextTick();
   }
 
   get trigger(): DOMWrapper<HTMLButtonElement> {

@@ -24,7 +24,7 @@ const MENU_ITEMS = '[role="menuitem"], [role="menuitemcheckbox"], [role="menuite
 export interface MenuSurfaceOptions {
   readonly open: Ref<boolean>;
   readonly id?: MaybeRefOrGetter<string | undefined>;
-  readonly trigger: Readonly<ShallowRef<HTMLElement | null>>;
+  readonly trigger: Readonly<Ref<HTMLElement | null>>;
   readonly content: Readonly<ShallowRef<HTMLElement | null>>;
   readonly placement: MaybeRefOrGetter<FloatingPlacement>;
   readonly offset: MaybeRefOrGetter<number>;
