@@ -70,10 +70,9 @@ before the submit.
 
 ## Storage
 
-The values and field state live in the package engine. An app on vee-validate plugs its storage
-in from the separate entry `@numior/forms/vee-validate` through `useForm({ engine })`.
-Validation, submission and focus stay with `@numior/forms`; a custom engine implements
-`FormEngineFactory`.
+The values, field state and row keys live in the package engine. An own store, for example in
+Pinia, plugs in through `useForm({ engine })` with a `FormEngineFactory`. Validation, submission
+and focus stay with `@numior/forms` whatever the engine.
 
 ## Accessibility
 

@@ -63,9 +63,11 @@ onSubmit: async (values, { setErrors }) => {
 };
 ```
 
-## vee-validate
+## Why an own core
 
-An app on vee-validate plugs its store in through `useForm({ engine: veeValidateEngine })`
-from `@numior/forms/vee-validate`; validation, submit and focus stay with `@numior/forms`.
-It needs vee-validate 5: the adapter is tested on `5.0.0-beta.1`, the peer range is
-`>=5.0.0-beta.1 <6.0.0`.
+Ready-made form libraries impose their own policy: errors on the first blur, either a schema or
+field rules, their own fate for hidden fields. The `@numior/forms` core keeps the kit decisions.
+Those are silence until the first submit, hidden fields out of validation, a schema together
+with rules and cancellation of stale async checks.
+
+The store stays replaceable: `useForm({ engine })` takes a `FormEngineFactory`.
