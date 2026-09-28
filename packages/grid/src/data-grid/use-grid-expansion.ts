@@ -1,8 +1,8 @@
-import { computed, type ComputedRef, type Ref, type ShallowRef } from 'vue';
+import { computed, shallowRef, type ComputedRef, type Ref, type ShallowRef } from 'vue';
 import { formatNumber } from '@numior/primitives';
-import type { GridEngine, GridGroupNode, GridNodeId } from '../engine';
+import type { GridEngine, GridGroupNode, GridNode, GridNodeId, GridRowNode } from '../engine';
 import type { NuiDataGridMessages } from './data-grid.messages';
-import { aggregateTextOf, cellValueFrom, valueTextOf } from './grid-format';
+import { aggregateTextOf, cellTextOf, cellValueFrom, valueTextOf } from './grid-format';
 import type {
   GridCellPosition,
   GridGroupCell,
@@ -10,20 +10,25 @@ import type {
   NuiGridColumn,
 } from './data-grid.types';
 
-export interface GridGroupsOptions<T> {
+export interface GridExpansionOptions<T> {
   readonly engine: Readonly<ShallowRef<GridEngine<T>>>;
   readonly expanded: Ref<readonly GridNodeId[]>;
   readonly revision: Readonly<Ref<number>>;
   readonly keys: () => readonly string[];
+  readonly keyAt: (visual: number) => string | undefined;
+  readonly treeKey: () => string | undefined;
   readonly columnAt: (key: string) => NuiGridColumn<T>;
   readonly locale: () => string;
   readonly messages: ComputedRef<NuiDataGridMessages>;
   readonly announce: (text: string) => void;
+  readonly load: (row: T) => void;
 }
 
-export interface GridGroups {
+export interface GridExpansion {
+  readonly loading: Readonly<ShallowRef<ReadonlySet<GridNodeId>>>;
   rowAt(position: number): GridGroupRow | undefined;
   toggle(position: number): void;
+  settle(): void;
   onKeydown(event: KeyboardEvent, active: GridCellPosition): boolean;
 }
 
@@ -42,7 +47,9 @@ const plainToggle = (event: KeyboardEvent): boolean =>
   !event.metaKey &&
   !event.shiftKey;
 
-export const useGridGroups = <T>(options: GridGroupsOptions<T>): GridGroups => {
+export const useGridExpansion = <T>(options: GridExpansionOptions<T>): GridExpansion => {
+  const loading = shallowRef<ReadonlySet<GridNodeId>>(new Set());
+
   const context = computed<GroupContext>(() => ({
     revision: options.revision.value,
     keys: options.keys(),
@@ -51,7 +58,7 @@ export const useGridGroups = <T>(options: GridGroupsOptions<T>): GridGroups => {
     rows: new Map(),
   }));
 
-  const labelOf = (node: GridGroupNode, current: GroupContext): string => {
+  const groupLabel = (node: GridGroupNode, current: GroupContext): string => {
     const text = valueTextOf(
       options.columnAt(node.key),
       cellValueFrom(node.value),
@@ -63,6 +70,13 @@ export const useGridGroups = <T>(options: GridGroupsOptions<T>): GridGroups => {
     return text === '' ? current.texts.blank : text;
   };
 
+  const rowLabel = (node: GridRowNode<T>, current: GroupContext): string => {
+    const key = options.treeKey();
+    return key === undefined
+      ? String(node.id)
+      : cellTextOf(options.columnAt(key), node.row, current.locale, current.texts);
+  };
+
   const cellOf = (
     node: GridGroupNode,
     key: string,
@@ -71,7 +85,7 @@ export const useGridGroups = <T>(options: GridGroupsOptions<T>): GridGroups => {
     if (key === node.key) {
       return {
         kind: 'toggle',
-        text: labelOf(node, current),
+        text: groupLabel(node, current),
         count: `(${formatNumber(node.count, current.locale)})`,
       };
     }
@@ -94,7 +108,7 @@ export const useGridGroups = <T>(options: GridGroupsOptions<T>): GridGroups => {
         cells[key] = cell;
       }
     }
-    return { id: node.id, expanded: node.expanded, cells };
+    return { id: node.id, cells };
   };
 
   const rowAt = (position: number): GridGroupRow | undefined => {
@@ -111,28 +125,68 @@ export const useGridGroups = <T>(options: GridGroupsOptions<T>): GridGroups => {
     return row ?? undefined;
   };
 
+  const setLoading = (id: GridNodeId, active: boolean): void => {
+    const next = new Set(loading.value);
+
+    if (active) {
+      next.add(id);
+    } else {
+      next.delete(id);
+    }
+    loading.value = next;
+  };
+
+  const announceToggle = (node: GridNode<T>, opening: boolean): void => {
+    const texts = options.messages.value;
+
+    if (node.kind === 'group') {
+      const group = groupLabel(node, context.value);
+      options.announce(opening ? texts.groupExpanded({ group }) : texts.groupCollapsed({ group }));
+      return;
+    }
+    const row = rowLabel(node, context.value);
+    options.announce(opening ? texts.rowExpanded({ row }) : texts.rowCollapsed({ row }));
+  };
+
   const toggle = (position: number): void => {
     const node = options.engine.value.nodeAt(position);
 
-    if (node?.kind !== 'group') {
+    if (node === undefined || (node.kind === 'row' && !node.expandable)) {
       return;
     }
+    const opening = !node.expanded;
     const ids = options.expanded.value;
-    const texts = options.messages.value;
-    const group = labelOf(node, context.value);
 
-    options.expanded.value = node.expanded ? ids.filter((id) => id !== node.id) : [...ids, node.id];
+    options.expanded.value = opening ? [...ids, node.id] : ids.filter((id) => id !== node.id);
 
-    options.announce(
-      node.expanded ? texts.groupCollapsed({ group }) : texts.groupExpanded({ group }),
-    );
+    if (node.kind === 'row' && node.unloaded) {
+      setLoading(node.id, opening);
+
+      if (opening) {
+        options.load(node.row);
+      }
+    }
+    announceToggle(node, opening);
+  };
+
+  const togglesAt = (node: GridNode<T> | undefined, col: number): boolean => {
+    if (node?.kind === 'group') {
+      return true;
+    }
+    return node?.expandable === true && options.keyAt(col) === options.treeKey();
   };
 
   return {
+    loading,
     rowAt,
     toggle,
+    settle: () => {
+      if (loading.value.size > 0) {
+        loading.value = new Set();
+      }
+    },
     onKeydown: (event, active) => {
-      if (!plainToggle(event) || options.engine.value.nodeAt(active.row)?.kind !== 'group') {
+      if (!plainToggle(event) || !togglesAt(options.engine.value.nodeAt(active.row), active.col)) {
         return false;
       }
       event.preventDefault();

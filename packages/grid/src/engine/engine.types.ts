@@ -112,6 +112,7 @@ export interface GridRowNode<T> {
   readonly level: number;
   readonly expandable: boolean;
   readonly expanded: boolean;
+  readonly unloaded: boolean;
 }
 
 export interface GridGroupNode {
@@ -142,6 +143,7 @@ export interface GridEngineOptions<T> {
   readonly columns: readonly GridEngineColumn<T>[];
   readonly keyOf?: ((row: T) => GridNodeId) | undefined;
   readonly children?: ((row: T) => readonly T[] | null | undefined) | undefined;
+  readonly hasChildren?: ((row: T) => boolean) | undefined;
   readonly defaultExpanded?: boolean | undefined;
   readonly collator?: Intl.Collator | undefined;
   readonly sliceMs?: number | undefined;

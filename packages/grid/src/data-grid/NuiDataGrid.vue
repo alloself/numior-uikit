@@ -54,16 +54,20 @@
       </div>
       <div class="nui-grid__body" role="rowgroup" :style="bodyStyle">
         <NuiDataGridRow
-          v-for="item in rows.items.value"
-          :key="keyAt(item.index)"
+          v-for="item in bodyRows"
+          :key="item.key"
           :panes="panes"
           :row-index="item.index + headRows + 1"
           :offset="item.offset"
           :active="focus.activeIn(item.index)"
-          :revision="revision"
-          :level="levelOf(item.index)"
-          :group="groups.rowAt(item.index)"
-          @toggle="groups.toggle(item.index)"
+          :revision="item.revision"
+          :level="item.level"
+          :group="item.group"
+          :tree-key="treeKey"
+          :expandable="item.expandable"
+          :expanded="item.expanded"
+          :loading="item.loading"
+          @toggle="expansion.toggle(item.index)"
         >
           <template #default="{ column }">
             <slot
@@ -134,7 +138,6 @@ import {
   type GridEngine,
   type GridFilter,
   type GridFilterValue,
-  type GridNodeId,
 } from '../engine';
 import NuiDataGridRow from './NuiDataGridRow.vue';
 import { dataGridMessages } from './data-grid.messages';
@@ -144,7 +147,7 @@ import { centreIndexOf, gridLayout, panesOf } from './grid-layout';
 import NuiDataGridFilter from './NuiDataGridFilter.vue';
 import NuiDataGridHeaderMarks from './NuiDataGridHeaderMarks.vue';
 import { useGridFocus } from './use-grid-focus';
-import { useGridGroups } from './use-grid-groups';
+import { useGridExpansion } from './use-grid-expansion';
 import { useGridHeader } from './use-grid-header';
 import { useGridQuery } from './use-grid-query';
 import { useGridTotals } from './use-grid-totals';
@@ -182,6 +185,9 @@ const {
   label,
   emptyLabel,
   totalsLabel,
+  getChildren,
+  hasChildren,
+  treeColumn,
 } = defineProps<NuiDataGridProps<T>>();
 
 const sort = defineModel<NuiDataGridSort>('sort', { default: () => [] });
@@ -189,7 +195,7 @@ const filters = defineModel<NuiDataGridFilters>('filters', { default: () => [] }
 const quick = defineModel<string>('quick', { default: '' });
 const groupBy = defineModel<NuiDataGridGroupBy>('groupBy', { default: () => [] });
 const expanded = defineModel<NuiDataGridExpanded>('expanded', { default: () => [] });
-const emit = defineEmits<NuiDataGridEvents>();
+const emit = defineEmits<NuiDataGridEvents<T>>();
 const slots = defineSlots<NuiDataGridSlots<T>>();
 
 const viewport = useTemplateRef<HTMLElement>('viewport');
@@ -203,6 +209,8 @@ const createEngine = (): GridEngine<T> =>
   createGridEngine({
     columns: tree.value.leaves.map(engineColumnOf),
     keyOf: getKey,
+    children: getChildren,
+    hasChildren,
     defaultExpanded: false,
   });
 
@@ -235,7 +243,7 @@ const query = useGridQuery({
     return {
       sort: sort.value,
       filters: list,
-      groupBy: groupBy.value,
+      groupBy: getChildren === undefined ? groupBy.value : [],
       totals: totals.wanted(list),
     };
   },
@@ -280,7 +288,7 @@ const booleanTexts = computed(() => ({ yes: messages.value.yes, no: messages.val
 const centreWidths = computed(() => layout.value.centre.map((column) => column.width));
 
 const footRows = computed(() => (totals.enabled.value ? 1 : 0));
-const hierarchical = computed(() => groupBy.value.length > 0);
+const hierarchical = computed(() => groupBy.value.length > 0 || getChildren !== undefined);
 
 const activeRow = (): number | undefined =>
   active.value.row >= 0 && active.value.row < rowCount.value ? active.value.row : undefined;
@@ -360,8 +368,6 @@ const rowAt = (position: number): T => {
   return node.row;
 };
 
-const keyAt = (position: number): GridNodeId => engine.value.nodeAt(position)?.id ?? position;
-
 const header = useGridHeader({
   keys: () => layout.value.visual.map((column) => column.key),
   keyAt: (visual) => layout.value.visual[visual]?.key,
@@ -377,26 +383,52 @@ const header = useGridHeader({
   },
 });
 
-const groups = useGridGroups({
+const treeKey = computed(() =>
+  getChildren === undefined ? undefined : (treeColumn ?? layout.value.visual[0]?.key),
+);
+
+const expansion = useGridExpansion({
   engine,
   expanded,
   revision,
   keys: () => layout.value.visual.map((column) => column.key),
+  keyAt: (visual) => layout.value.visual[visual]?.key,
+  treeKey: () => treeKey.value,
   columnAt,
   locale: () => resolvedLocale.value,
   messages,
   announce: (text) => {
     announcement.value = text;
   },
+  load: (row) => {
+    emit('load', row);
+  },
 });
 
-const levelOf = (position: number): number | undefined => {
-  const node = hierarchical.value ? engine.value.nodeAt(position) : undefined;
-  return node === undefined ? undefined : node.level + 1;
-};
+const bodyRows = computed(() => {
+  const current = revision.value;
+  const loading = expansion.loading.value;
+
+  return rows.items.value.map((item) => {
+    const node = engine.value.nodeAt(item.index);
+    const expandable = node?.kind === 'group' || node?.expandable === true;
+
+    return {
+      index: item.index,
+      offset: item.offset,
+      key: node?.id ?? item.index,
+      revision: current,
+      level: hierarchical.value && node !== undefined ? node.level + 1 : undefined,
+      group: expansion.rowAt(item.index),
+      expandable,
+      expanded: expandable ? node?.expanded : undefined,
+      loading: node !== undefined && loading.has(node.id),
+    };
+  });
+});
 
 const onKeydown = (event: KeyboardEvent): void => {
-  if (!header.onKeydown(event) && !groups.onKeydown(event, active.value)) {
+  if (!header.onKeydown(event) && !expansion.onKeydown(event, active.value)) {
     focus.onKeydown(event);
   }
 };
@@ -475,6 +507,8 @@ watch(
   () => source,
   (next) => {
     engine.value.setRows(next);
+    engine.value.setToggled(expanded.value);
+    expansion.settle();
     totals.reset();
     runNow();
     sync();

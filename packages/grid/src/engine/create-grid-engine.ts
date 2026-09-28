@@ -111,6 +111,9 @@ export const createGridEngine = <T>(options: GridEngineOptions<T>): GridEngine<T
 
   const isExpanded = (id: GridNodeId): boolean => defaultExpanded !== toggled.has(id);
 
+  const unloadedRow = (row: T): boolean =>
+    options.hasChildren?.(row) === true && (options.children?.(row)?.length ?? 0) === 0;
+
   const missing = (key: string, need: StoreNeed): boolean => {
     const store = stores.get(key);
     return store === undefined || (need === 'ranks' && store.kind === 'codes');
@@ -374,7 +377,8 @@ export const createGridEngine = <T>(options: GridEngineOptions<T>): GridEngine<T
     if (row === undefined) {
       return undefined;
     }
-    const expandable = tree !== null && childrenOf(tree, index).length > 0;
+    const unloaded = tree !== null && unloadedRow(row);
+    const expandable = tree !== null && (childrenOf(tree, index).length > 0 || unloaded);
     const id = idOf(index);
 
     return {
@@ -385,6 +389,7 @@ export const createGridEngine = <T>(options: GridEngineOptions<T>): GridEngine<T
       level,
       expandable,
       expanded: expandable && isExpanded(id),
+      unloaded,
     };
   };
 

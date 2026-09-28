@@ -157,6 +157,7 @@ export interface EngineHarnessOptions<T> {
   readonly sliceMs?: number;
   readonly keyOf?: (row: T) => GridNodeId;
   readonly children?: (row: T) => readonly T[] | null | undefined;
+  readonly hasChildren?: (row: T) => boolean;
   readonly defaultExpanded?: boolean;
 }
 
@@ -176,6 +177,7 @@ export class EngineHarness<T> {
       columns,
       keyOf: options.keyOf,
       children: options.children,
+      hasChildren: options.hasChildren,
       defaultExpanded: options.defaultExpanded,
       sliceMs: options.sliceMs ?? 12,
       collator: new Intl.Collator('ru', { numeric: true }),

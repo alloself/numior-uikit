@@ -95,4 +95,27 @@ describe('createGridEngine trees', () => {
       'cannot group rows of a tree',
     );
   });
+
+  it('marks rows with children still to load as expandable until the children arrive', () => {
+    const lazy: Folder = { name: 'lazy', size: null };
+
+    const harness = new EngineHarness(FOLDER_COLUMNS, [...FOLDERS, lazy], {
+      children: (row) => row.items,
+      hasChildren: (row) => row.name === 'lazy' || row.name === 'readme.md',
+      keyOf: (row) => row.name,
+      defaultExpanded: false,
+    });
+
+    expect(harness.render(label)).toEqual(['docs +', 'src +', 'readme.md +', 'lazy +']);
+    expect(harness.engine.nodeAt(3)).toMatchObject({ expandable: true, unloaded: true });
+    expect(harness.engine.nodeAt(0)).toMatchObject({ expandable: true, unloaded: false });
+    harness.engine.setToggled(['lazy']);
+    expect(harness.render(label).at(-1)).toBe('lazy -');
+
+    harness.engine.setRows([...FOLDERS, { ...lazy, items: [{ name: 'child.txt', size: 1 }] }]);
+    harness.engine.setToggled(['lazy']);
+
+    expect(harness.render(label).slice(-2)).toEqual(['lazy -', '  child.txt']);
+    expect(harness.engine.nodeAt(3)).toMatchObject({ expandable: true, unloaded: false });
+  });
 });

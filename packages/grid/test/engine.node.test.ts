@@ -70,6 +70,7 @@ describe('createGridEngine', () => {
       level: 0,
       expandable: false,
       expanded: false,
+      unloaded: false,
     });
 
     expect(harness.engine.nodeAt(2)).toBeUndefined();

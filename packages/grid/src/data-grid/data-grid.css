@@ -51,10 +51,12 @@
   inset-block-start: 0;
   z-index: 2;
   inline-size: calc(var(--_start) + var(--_centre) + var(--_end));
+  min-inline-size: 100%;
 }
 .nui-grid__body {
   position: relative;
   inline-size: calc(var(--_start) + var(--_centre) + var(--_end));
+  min-inline-size: 100%;
 }
 .nui-grid__footer {
   box-sizing: border-box;
@@ -62,6 +64,7 @@
   inset-block-end: -1px;
   z-index: 2;
   inline-size: calc(var(--_start) + var(--_centre) + var(--_end));
+  min-inline-size: 100%;
   padding-block-end: 1px;
   background: var(--_head-bg);
 }
@@ -69,7 +72,9 @@
   box-sizing: border-box;
   display: flex;
   inline-size: calc(var(--_start) + var(--_centre) + var(--_end));
+  min-inline-size: 100%;
   block-size: var(--_row);
+  border-block-end: 1px solid var(--_line);
   background: var(--_row-bg);
   transition: background-color var(--nui-duration-fast) var(--nui-easing);
 }
@@ -99,9 +104,9 @@
   font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
-.nui-grid__row--foot .nui-grid__cell {
+.nui-grid__row--foot {
   border-block: 1px solid var(--_line);
-  border-block-end-color: transparent;
+  border-block-end-width: 0;
 }
 .nui-grid__row--group {
   --_row-bg: color-mix(in oklab, var(--nui-surface), var(--_head-bg) 60%);
@@ -129,6 +134,27 @@
 }
 .nui-grid__toggle:dir(rtl) {
   scale: -1 1;
+}
+.nui-grid__toggle--expandable {
+  cursor: pointer;
+}
+.nui-grid__tree {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  margin-inline-end: var(--nui-space-1);
+  padding-inline-start: calc(var(--_level, 0) * 1.25rem);
+}
+.nui-grid__spinner {
+  inline-size: 1rem;
+  block-size: 1rem;
+  color: var(--nui-text-muted);
+  animation: nui-grid-spin 0.8s linear infinite;
+}
+@keyframes nui-grid-spin {
+  to {
+    rotate: 1turn;
+  }
 }
 .nui-grid__chevron {
   inline-size: 1rem;
@@ -186,7 +212,6 @@
   align-items: center;
   min-inline-size: 0;
   padding-inline: var(--_pad-x);
-  border-block-end: 1px solid var(--_line);
   overflow: hidden;
   white-space: nowrap;
   outline: none;
@@ -304,6 +329,9 @@
 @media (prefers-reduced-motion: reduce) {
   .nui-grid__busy::after {
     animation-duration: calc(var(--nui-duration-slow) * 12);
+  }
+  .nui-grid__spinner {
+    animation-duration: 1.6s;
   }
 }
 .nui-grid__filter {

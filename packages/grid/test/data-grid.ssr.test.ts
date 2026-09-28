@@ -9,6 +9,7 @@ import {
   type NuiDataGridFilters,
   type NuiGridColumnDef,
 } from '../src';
+import { FILE_COLUMNS, FILES, type FileNode } from './support/files';
 import { people, PEOPLE_COLUMNS, type Person } from './support/people';
 
 interface Query {
@@ -33,6 +34,21 @@ const render = (count: number, query: Query = {}): Promise<string> =>
           quick: query.quick ?? '',
           groupBy: query.groupBy ?? [],
           expanded: query.expanded ?? [],
+        }),
+    }),
+  );
+
+const renderTree = (): Promise<string> =>
+  renderToString(
+    createSSRApp({
+      render: () =>
+        h(NuiDataGrid<FileNode>, {
+          columns: FILE_COLUMNS,
+          source: FILES,
+          getKey: (row: FileNode) => row.path,
+          getChildren: (row: FileNode) => row.items,
+          hasChildren: (row: FileNode) => row.lazy === true,
+          expanded: ['docs'],
         }),
     }),
   );
@@ -127,6 +143,18 @@ describe('NuiDataGrid on the server', () => {
     expect(html).toContain('>Сотрудник<');
     expect(html).toContain('aria-rowindex="3"');
     expect(html).not.toContain('aria-rowindex="33"');
+  });
+
+  it('renders expanded tree rows with levels and indentation on the server', async () => {
+    const html = await renderTree();
+
+    expect(html).toBe(await renderTree());
+    expect(html).toContain('role="treegrid"');
+    expect(html).toContain('aria-rowcount="7"');
+    expect(html).toContain('aria-level="2"');
+    expect(html).toContain('aria-expanded="true"');
+    expect(html).toContain('--_level:1');
+    expect(html).toContain('>plan.md<');
   });
 
   it('renders the empty state inside the grid when there are no rows', async () => {

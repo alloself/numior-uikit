@@ -297,6 +297,28 @@ test.describe('data grid', () => {
     await expect(grid.footerCell(10)).toBeFocused();
   });
 
+  test('expands tree rows and loads a lazy branch when it opens', async ({ page }) => {
+    const playground = new PlaygroundPage(page);
+    await playground.open();
+    const { grid } = playground;
+    await grid.tree.scrollIntoViewIfNeeded();
+    const viewport = grid.tree.locator('.nui-grid__viewport');
+    await expect(viewport).toHaveAttribute('role', 'treegrid');
+    await expect(viewport).toHaveAttribute('aria-rowcount', '4');
+    await grid.treeToggle(0).click();
+
+    await expect(grid.treeRow(0)).toHaveAttribute('aria-expanded', 'true');
+    await expect(grid.treeRow(1)).toHaveAttribute('aria-level', '2');
+    await expect(grid.treeRow(1)).toContainText('Россия');
+    await expect(grid.treeRow(4)).toContainText('Операции');
+    await grid.treeToggle(4).click();
+
+    await expect(grid.treeRow(4)).toHaveAttribute('aria-busy', 'true');
+    await expect(grid.treeRow(5)).toContainText('Поддержка');
+    await expect(grid.treeRow(4)).not.toHaveAttribute('aria-busy');
+    await expect(viewport).toHaveAttribute('aria-rowcount', '8');
+  });
+
   test('data grid has no automatically detectable WCAG AA violations', async ({ page }) => {
     const playground = new PlaygroundPage(page);
     await playground.emulate({ reducedMotion: 'reduce' });

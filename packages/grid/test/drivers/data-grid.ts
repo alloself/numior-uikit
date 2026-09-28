@@ -48,9 +48,10 @@ interface GridModels {
   readonly expanded: ShallowRef<readonly GridNodeId[]>;
 }
 
-interface GridEvents {
+interface GridEvents<T> {
   settled: number;
   progress: number;
+  readonly loads: T[];
   readonly waiters: Array<() => void>;
 }
 
@@ -98,7 +99,7 @@ export class DataGridDriver<T> {
     const expanded = shallowRef<readonly GridNodeId[]>(options.expanded ?? []);
     const stubs = new TopLayerStubs();
     const exposed = shallowRef<NuiDataGridExposed | null>(null);
-    const events: GridEvents = { settled: 0, progress: 0, waiters: [] };
+    const events: GridEvents<T> = { settled: 0, progress: 0, loads: [], waiters: [] };
 
     const setExposed = (value: unknown): void => {
       exposed.value = isExposed(value) ? value : null;
@@ -143,6 +144,9 @@ export class DataGridDriver<T> {
               onProgress: () => {
                 events.progress += 1;
               },
+              onLoad: (row: T) => {
+                events.loads.push(row);
+              },
               ref: setExposed,
             },
             options.slots,
@@ -165,7 +169,7 @@ export class DataGridDriver<T> {
     private readonly source: ShallowRef<readonly T[]>,
     private readonly models: GridModels,
     private readonly exposed: ShallowRef<NuiDataGridExposed | null>,
-    private readonly events: GridEvents,
+    private readonly events: GridEvents<T>,
     private readonly stubs: TopLayerStubs,
   ) {}
 
@@ -258,6 +262,19 @@ export class DataGridDriver<T> {
 
   get expanded(): readonly GridNodeId[] {
     return this.models.expanded.value;
+  }
+
+  get loads(): readonly T[] {
+    return this.events.loads;
+  }
+
+  rowBusy(position: number): boolean {
+    return this.row(position)?.getAttribute('aria-busy') === 'true';
+  }
+
+  treeLevel(position: number): string | undefined {
+    const tree = this.row(position)?.querySelector<HTMLElement>('.nui-grid__tree');
+    return tree?.style.getPropertyValue('--_level');
   }
 
   get role(): string | undefined {
@@ -529,6 +546,11 @@ export class DataGridDriver<T> {
 
     buttons?.[0]?.click();
     await settled;
+    await nextTick();
+  }
+
+  async toggleRow(position: number): Promise<void> {
+    this.row(position)?.querySelector<HTMLElement>('.nui-grid__toggle--expandable')?.click();
     await nextTick();
   }
 

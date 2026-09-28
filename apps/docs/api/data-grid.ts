@@ -43,6 +43,18 @@ const docs: DocsMap = {
         ru: 'Текст пустого грида; по умолчанию из словаря.',
         en: 'Text of the empty grid; the dictionary supplies the default.',
       },
+      getChildren: {
+        ru: 'Дочерние строки для данных-дерева; включает роль treegrid и игнорирует groupBy.',
+        en: 'Child rows for tree data; turns on the treegrid role and ignores groupBy.',
+      },
+      hasChildren: {
+        ru: 'Отмечает строку, чьи дети ещё не загружены: её можно раскрыть, и грид вызовет событие load.',
+        en: 'Marks a row whose children are not loaded yet: it can expand, and the grid emits load.',
+      },
+      treeColumn: {
+        ru: 'Ключ колонки с отступом и переключателем дерева; по умолчанию первая колонка.',
+        en: 'Key of the column with the tree indentation and toggle; the first column by default.',
+      },
       totalsLabel: {
         ru: 'Подпись строки итогов в первой колонке без агрегата; по умолчанию из словаря.',
         en: 'Label of the totals row in the first column without an aggregate; the dictionary supplies the default.',
@@ -66,8 +78,8 @@ const docs: DocsMap = {
         en: 'Grouping: column keys by level; a non-empty list turns the grid into a treegrid.',
       },
       'v-model:expanded': {
-        ru: 'Развёрнутые группы: их id; по умолчанию все группы свёрнуты.',
-        en: 'Expanded groups by id; all groups start collapsed.',
+        ru: 'Развёрнутые группы и строки дерева: их id; по умолчанию всё свёрнуто.',
+        en: 'Expanded groups and tree rows by id; everything starts collapsed.',
       },
     },
     events: {
@@ -78,6 +90,10 @@ const docs: DocsMap = {
       settle: {
         ru: 'Прогон сортировки или фильтра завершён; передаёт число строк.',
         en: 'A sort or filter run finished; carries the row count.',
+      },
+      load: {
+        ru: 'Раскрыта строка с незагруженными детьми; строка ждёт их, пока источник не обновится.',
+        en: 'A row with unloaded children expanded; it waits for them until the source updates.',
       },
     },
     slots: {
@@ -101,8 +117,8 @@ const docs: DocsMap = {
       {
         keys: 'Enter / Space',
         description: {
-          ru: 'На строке группы разворачивает или сворачивает её.',
-          en: 'On a group row expands or collapses it.',
+          ru: 'На строке группы или в колонке дерева разворачивает или сворачивает строку.',
+          en: 'On a group row or in the tree column expands or collapses the row.',
         },
       },
       {

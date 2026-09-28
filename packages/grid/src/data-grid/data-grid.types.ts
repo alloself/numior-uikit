@@ -86,6 +86,9 @@ export interface NuiDataGridProps<T> {
   label?: string | undefined;
   emptyLabel?: string | undefined;
   totalsLabel?: string | undefined;
+  getChildren?: ((row: T) => readonly T[] | null | undefined) | undefined;
+  hasChildren?: ((row: T) => boolean) | undefined;
+  treeColumn?: string | undefined;
 }
 
 export interface NuiDataGridCellSlot<T> {
@@ -111,9 +114,10 @@ export interface NuiDataGridSettled {
   readonly rows: number;
 }
 
-export interface NuiDataGridEvents {
+export interface NuiDataGridEvents<T> {
   progress: [progress: GridProgress];
   settle: [result: NuiDataGridSettled];
+  load: [row: T];
 }
 
 export type NuiDataGridSort = readonly GridSort[];
@@ -195,7 +199,6 @@ export type GridGroupCell =
 
 export interface GridGroupRow {
   readonly id: string;
-  readonly expanded: boolean;
   readonly cells: Readonly<Record<string, GridGroupCell>>;
 }
 
@@ -208,7 +211,17 @@ export interface NuiDataGridRowProps {
   revision?: number | undefined;
   level?: number | undefined;
   group?: GridGroupRow | undefined;
+  treeKey?: string | undefined;
+  expandable?: boolean | undefined;
+  expanded?: boolean | undefined;
+  loading?: boolean | undefined;
   heads?: Readonly<Record<string, GridHeadState>> | undefined;
+}
+
+export interface NuiDataGridTreeToggleProps {
+  level: number;
+  expandable: boolean;
+  loading: boolean;
 }
 
 export interface NuiDataGridGroupCellProps {

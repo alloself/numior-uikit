@@ -66,6 +66,19 @@
       </template>
     </NuiDataGrid>
     <pre class="output" data-testid="grid-output">{{ output }}</pre>
+    <NuiDataGrid
+      v-model:expanded="unitsExpanded"
+      class="grid-tree"
+      :columns="UNIT_COLUMNS"
+      :source="units"
+      :get-key="(row) => row.id"
+      :get-children="(row) => row.children"
+      :has-children="(row) => row.lazy === true"
+      label="Структура компании"
+      height="18rem"
+      data-testid="grid-tree"
+      @load="loadUnit"
+    />
   </section>
 </template>
 
@@ -124,6 +137,64 @@ const STATUS_TONES: Readonly<Record<OrderStatus, NuiTone>> = {
   shipped: 'neutral',
   returned: 'warning',
 };
+
+interface Unit {
+  readonly id: string;
+  readonly name: string;
+  readonly head: string;
+  readonly people: number;
+  readonly budget: number;
+  readonly children?: readonly Unit[];
+  readonly lazy?: boolean;
+}
+
+const UNITS: readonly Unit[] = [
+  {
+    id: 'sales',
+    name: 'Продажи',
+    head: 'Вера Орлова',
+    people: 42,
+    budget: 1_200_000,
+    children: [
+      {
+        id: 'sales-ru',
+        name: 'Россия',
+        head: 'Олег Титов',
+        people: 18,
+        budget: 540_000,
+        children: [
+          { id: 'sales-msk', name: 'Москва', head: 'Нина Белова', people: 11, budget: 330_000 },
+          { id: 'sales-kzn', name: 'Казань', head: 'Игорь Зуев', people: 7, budget: 210_000 },
+        ],
+      },
+      { id: 'sales-kz', name: 'Казахстан', head: 'Анна Смирнова', people: 24, budget: 660_000 },
+    ],
+  },
+  {
+    id: 'rnd',
+    name: 'Разработка',
+    head: 'Павел Попов',
+    people: 64,
+    budget: 3_100_000,
+    children: [
+      { id: 'rnd-web', name: 'Веб', head: 'Ольга Соколова', people: 29, budget: 1_400_000 },
+      { id: 'rnd-data', name: 'Данные', head: 'Сергей Иванов', people: 35, budget: 1_700_000 },
+    ],
+  },
+  { id: 'ops', name: 'Операции', head: 'Елена Кузнецова', people: 23, budget: 800_000, lazy: true },
+];
+
+const OPERATIONS: readonly Unit[] = [
+  { id: 'ops-support', name: 'Поддержка', head: 'Мария Лебедева', people: 15, budget: 450_000 },
+  { id: 'ops-logistics', name: 'Логистика', head: 'Дмитрий Попов', people: 8, budget: 350_000 },
+];
+
+const UNIT_COLUMNS: NuiGridColumnDef<Unit>[] = [
+  { key: 'name', label: 'Подразделение', type: 'text', width: 240, value: (row) => row.name },
+  { key: 'head', label: 'Руководитель', type: 'text', width: 200, value: (row) => row.head },
+  { key: 'people', label: 'Сотрудники', type: 'number', width: 150, value: (row) => row.people },
+  { key: 'budget', label: 'Бюджет', type: 'number', width: 150, value: (row) => row.budget },
+];
 
 const GROUPINGS: readonly NuiOption<string>[] = [
   { value: 'none', label: 'Без группировки' },
@@ -250,6 +321,18 @@ const sort = ref<readonly GridSort[]>([]);
 const filters = ref<NuiDataGridFilters>([]);
 const quick = ref('');
 const grouping = ref('none');
+const units = ref<readonly Unit[]>(UNITS);
+const unitsExpanded = ref<readonly GridNodeId[]>([]);
+const LOAD_DELAY = 700;
+
+const loadUnit = (unit: Unit): void => {
+  setTimeout(() => {
+    units.value = units.value.map((entry) =>
+      entry.id === unit.id ? { ...entry, children: OPERATIONS } : entry,
+    );
+  }, LOAD_DELAY);
+};
+
 const groupBy = ref<readonly string[]>([]);
 const expanded = ref<readonly GridNodeId[]>([]);
 

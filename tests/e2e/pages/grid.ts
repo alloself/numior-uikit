@@ -22,6 +22,7 @@ export class GridSection {
   readonly clearFilters: Locator;
   readonly output: Locator;
   readonly filter: Locator;
+  readonly tree: Locator;
 
   constructor(private readonly page: Page) {
     this.root = page.getByTestId('grid');
@@ -32,6 +33,15 @@ export class GridSection {
     this.clearFilters = page.getByTestId('grid-clear-filters');
     this.output = page.getByTestId('grid-output');
     this.filter = page.locator('.nui-grid-filter');
+    this.tree = page.getByTestId('grid-tree');
+  }
+
+  treeRow(position: number): Locator {
+    return this.tree.locator(`.nui-grid__viewport [role="row"][aria-rowindex="${position + 2}"]`);
+  }
+
+  treeToggle(position: number): Locator {
+    return this.treeRow(position).locator('.nui-grid__toggle--expandable');
   }
 
   footerCell(col: number): Locator {

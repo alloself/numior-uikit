@@ -30,6 +30,8 @@ export interface NuiDataGridMessages {
   readonly totals: string;
   readonly groupExpanded: (params: { readonly group: string }) => string;
   readonly groupCollapsed: (params: { readonly group: string }) => string;
+  readonly rowExpanded: (params: { readonly row: string }) => string;
+  readonly rowCollapsed: (params: { readonly row: string }) => string;
 }
 
 export const dataGridMessages: NuiMessageCatalog<'dataGrid'> = {
@@ -65,6 +67,8 @@ export const dataGridMessages: NuiMessageCatalog<'dataGrid'> = {
     totals: 'Total',
     groupExpanded: ({ group }) => `Group ${group} expanded`,
     groupCollapsed: ({ group }) => `Group ${group} collapsed`,
+    rowExpanded: ({ row }) => `Row ${row} expanded`,
+    rowCollapsed: ({ row }) => `Row ${row} collapsed`,
   },
   ru: {
     label: 'Таблица данных',
@@ -97,5 +101,7 @@ export const dataGridMessages: NuiMessageCatalog<'dataGrid'> = {
     totals: 'Итого',
     groupExpanded: ({ group }) => `Группа «${group}» развёрнута`,
     groupCollapsed: ({ group }) => `Группа «${group}» свёрнута`,
+    rowExpanded: ({ row }) => `Строка «${row}» развёрнута`,
+    rowCollapsed: ({ row }) => `Строка «${row}» свёрнута`,
   },
 };

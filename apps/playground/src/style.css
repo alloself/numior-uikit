@@ -237,6 +237,9 @@ label:has(> input[type='checkbox']) {
 .grid-grouping {
   inline-size: 12rem;
 }
+.grid-tree {
+  margin-block-start: var(--nui-space-4);
+}
 .data-row {
   display: flex;
   flex-wrap: wrap;

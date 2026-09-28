@@ -3,12 +3,13 @@
     class="nui-grid__row"
     :class="[
       `nui-grid__row--${part}`,
-      { 'nui-grid__row--group': group, 'nui-grid__row--expanded': group?.expanded },
+      { 'nui-grid__row--group': group, 'nui-grid__row--expanded': expanded },
     ]"
     role="row"
     :aria-rowindex="rowIndex"
     :aria-level="level"
-    :aria-expanded="group?.expanded"
+    :aria-expanded="expanded"
+    :aria-busy="loading || undefined"
     :style="rowStyle"
   >
     <div
@@ -37,6 +38,15 @@
         :style="cell.style"
       >
         <NuiDataGridGroupCell v-if="group" :cell="group.cells[cell.key]" @toggle="emit('toggle')" />
+        <template v-else-if="cell.key === treeKey">
+          <NuiDataGridTreeToggle
+            :level="treeLevel"
+            :expandable="expandable"
+            :loading="loading"
+            @toggle="emit('toggle')"
+          />
+          <slot :column="cell.key" />
+        </template>
         <slot v-else :column="cell.key" />
       </div>
     </div>
@@ -46,6 +56,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import NuiDataGridGroupCell from './NuiDataGridGroupCell.vue';
+import NuiDataGridTreeToggle from './NuiDataGridTreeToggle.vue';
 import type { GridPaneName, NuiDataGridRowProps } from './data-grid.types';
 
 const PANE_NAMES: readonly GridPaneName[] = ['start', 'centre', 'end'];
@@ -58,12 +69,18 @@ const {
   active = 0,
   level,
   group,
+  treeKey,
+  expandable = false,
+  expanded = undefined,
+  loading = false,
   heads,
 } = defineProps<NuiDataGridRowProps>();
 
 const emit = defineEmits<{ toggle: [] }>();
 
 defineSlots<{ default(props: { column: string }): unknown }>();
+
+const treeLevel = computed(() => Math.max(0, (level ?? 1) - 1));
 
 const cellRole = computed(() => (part === 'head' || part === 'band' ? 'columnheader' : 'gridcell'));
 
