@@ -43,6 +43,7 @@ interface NuiGridColumnBase {
   readonly filter?: NuiGridFilterKind | false | undefined;
   readonly hideable?: boolean | undefined;
   readonly wrap?: boolean | undefined;
+  readonly flex?: number | undefined;
 }
 
 export interface NuiGridTextColumn<T> extends NuiGridColumnBase {

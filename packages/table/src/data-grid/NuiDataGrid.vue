@@ -200,6 +200,7 @@ import {
   watch,
   type VNode,
 } from 'vue';
+import { useElementSize } from '@vueuse/core';
 import {
   createIntent,
   useControlId,
@@ -420,12 +421,13 @@ rowCount.value = engine.value.count();
 
 const active = ref<GridCellPosition>({ row: rowCount.value > 0 ? 0 : -1, col: 0 });
 
-const room = shallowRef(0);
+const { width: room } = useElementSize(viewport);
 
 const layoutOptions = computed(() => ({
   pins: pins.value,
   hidden: hidden.value,
   select: selectOn.value,
+  room: room.value,
 }));
 
 const pinnedLayout = computed(() =>
@@ -492,14 +494,6 @@ const columnWindow = useVirtualList(viewport, {
   pinned: activeCentre,
   inset: () => layout.value.startWidth + layout.value.endWidth,
 });
-
-watch(
-  columnWindow.viewport,
-  (width) => {
-    room.value = width;
-  },
-  { immediate: true, flush: 'sync' },
-);
 
 const panes = computed(() =>
   panesOf(

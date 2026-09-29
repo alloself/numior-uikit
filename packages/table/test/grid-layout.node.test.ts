@@ -35,20 +35,66 @@ describe('gridLayout', () => {
       hidden: ['name'],
       sticky: true,
       select: false,
+      room: 0,
     });
 
     expect(panesOf(layout)).toEqual({ start: ['id', 'city'], centre: ['status'], end: [] });
     expect(layout.visual.map((placed) => placed.cell.colIndex)).toEqual([1, 2, 3]);
   });
 
+  it('stretches flex columns into the free width once the room is known', () => {
+    const columns = [
+      column('id', 80, 'start'),
+      { ...column('name', 200), flex: 2 },
+      { ...column('city', 140), flex: 1 },
+      column('status', 160, 'end'),
+    ];
+
+    const narrow = gridLayout(columns, {
+      pins: {},
+      hidden: [],
+      sticky: true,
+      select: true,
+      room: 500,
+    });
+
+    const wide = gridLayout(columns, {
+      pins: {},
+      hidden: [],
+      sticky: true,
+      select: true,
+      room: 920,
+    });
+
+    const unknown = gridLayout(columns, {
+      pins: {},
+      hidden: [],
+      sticky: true,
+      select: true,
+      room: 0,
+    });
+
+    expect(narrow.visual.map((placed) => placed.width)).toEqual([40, 80, 200, 140, 160]);
+    expect(wide.visual.map((placed) => placed.width)).toEqual([40, 80, 400, 240, 160]);
+    expect(wide.centre.map((placed) => placed.offset)).toEqual([0, 400]);
+    expect(unknown.visual.map((placed) => placed.width)).toEqual([40, 80, 200, 140, 160]);
+  });
+
   it('tells when the pinned panes leave no room for a column and then scrolls every column in the same order', () => {
-    const roomy = gridLayout(COLUMNS, { pins: {}, hidden: [], sticky: true, select: false });
+    const roomy = gridLayout(COLUMNS, {
+      pins: {},
+      hidden: [],
+      sticky: true,
+      select: false,
+      room: 0,
+    });
 
     const pinned = gridLayout(COLUMNS, {
       pins: { city: 'start' },
       hidden: [],
       sticky: true,
       select: false,
+      room: 0,
     });
 
     const scrolling = gridLayout(COLUMNS, {
@@ -56,6 +102,7 @@ describe('gridLayout', () => {
       hidden: [],
       sticky: false,
       select: false,
+      room: 0,
     });
 
     expect(pinsFit(roomy, 320)).toBe(true);

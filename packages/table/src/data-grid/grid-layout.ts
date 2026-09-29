@@ -39,6 +39,7 @@ interface PlaceInput {
   readonly key: string;
   readonly kind: GridColumnKind;
   readonly width: number;
+  readonly flex: number;
   readonly align: NuiGridAlign;
   readonly wrap: boolean | undefined;
 }
@@ -53,6 +54,7 @@ const SELECT_INPUT: PlaceInput = {
   key: SELECT_KEY,
   kind: 'select',
   width: UTILITY_WIDTH,
+  flex: 0,
   align: 'center',
   wrap: undefined,
 };
@@ -67,9 +69,24 @@ const inputOf = <T>(column: NuiGridColumn<T>): PlaceInput => ({
   key: column.key,
   kind: 'data',
   width: widthOf(column),
+  flex: Math.max(0, column.flex ?? 0),
   align: alignOf(column),
   wrap: column.wrap,
 });
+
+const stretch = (inputs: readonly PlaceInput[], room: number): readonly PlaceInput[] => {
+  const flexSum = inputs.reduce((sum, input) => sum + input.flex, 0);
+  const free = room - inputs.reduce((sum, input) => sum + input.width, 0);
+
+  if (room <= 0 || free <= 0 || flexSum === 0) {
+    return inputs;
+  }
+  return inputs.map((input) =>
+    input.flex === 0
+      ? input
+      : { ...input, width: input.width + Math.floor((free * input.flex) / flexSum) },
+  );
+};
 
 const placePane = (
   inputs: readonly PlaceInput[],
@@ -110,9 +127,16 @@ export interface LayoutOptions {
   readonly hidden: NuiDataGridHidden;
   readonly sticky: boolean;
   readonly select: boolean;
+  readonly room: number;
 }
 
-const DEFAULT_OPTIONS: LayoutOptions = { pins: {}, hidden: [], sticky: true, select: false };
+const DEFAULT_OPTIONS: LayoutOptions = {
+  pins: {},
+  hidden: [],
+  sticky: true,
+  select: false,
+  room: 0,
+};
 
 export const pinOf = <T>(
   column: NuiGridColumn<T>,
@@ -131,15 +155,23 @@ export const gridLayout = <T>(
   const starts = inPane('start').map(inputOf);
   const ends = inPane('end').map(inputOf);
   const utilities = options.select ? [SELECT_INPUT] : [];
-  const sticky = options.sticky;
-  const start = placePane([...utilities, ...(sticky ? starts : [])], 'start', 0);
 
-  const scrolling = sticky
-    ? inPane(undefined).map(inputOf)
-    : [...starts, ...inPane(undefined).map(inputOf), ...ends];
+  const ordered = stretch(
+    [...utilities, ...starts, ...inPane(undefined).map(inputOf), ...ends],
+    options.room,
+  );
 
-  const centre = placePane(scrolling, 'centre', start.placed.length);
-  const end = placePane(sticky ? ends : [], 'end', start.placed.length + centre.placed.length);
+  const startCount = utilities.length + (options.sticky ? starts.length : 0);
+  const endCount = options.sticky ? ends.length : 0;
+  const start = placePane(ordered.slice(0, startCount), 'start', 0);
+
+  const centre = placePane(
+    ordered.slice(startCount, ordered.length - endCount),
+    'centre',
+    startCount,
+  );
+
+  const end = placePane(ordered.slice(ordered.length - endCount), 'end', ordered.length - endCount);
 
   return {
     start: start.placed,
