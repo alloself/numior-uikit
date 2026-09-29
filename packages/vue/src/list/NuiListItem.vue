@@ -3,7 +3,7 @@
     :id="id"
     class="nui-list-item"
     :class="classes()"
-    v-bind="{ ...optionAttrs(), ...rootAttrs() }"
+    v-bind="{ ...roleAttrs(), ...rootAttrs() }"
     @click="onClick"
   >
     <component :is="innerIs()" :ref="setAction" class="nui-list-item__inner" v-bind="innerAttrs()">
@@ -13,6 +13,7 @@
         :description="description"
         :check="isOption() ? selected : undefined"
         :nowrap="nowrap"
+        :inline="inTree"
       >
         <template v-if="$slots.leading" #leading><slot name="leading" /></template>
         <template v-if="$slots.default" #default>
@@ -43,7 +44,7 @@ import { useTriggerElement } from '../shared/trigger-ref';
 import { useList } from './list-context';
 import type { NuiListItemProps } from './list.types';
 
-type ListItemMode = 'option' | 'link' | 'button' | 'plain';
+type ListItemMode = 'treeitem' | 'option' | 'link' | 'button' | 'plain';
 
 defineOptions({ inheritAttrs: false });
 
@@ -66,19 +67,29 @@ const {
 const attrs = useAttrs();
 const split = useSplitAttrs();
 const list = useList();
+const inTree = list?.kind === 'tree';
 const { trigger: action, setTrigger: setAction } = useTriggerElement();
 
 const size = computed(() => list?.size.value ?? 'md');
 const selected = computed(() => value !== undefined && (list?.isSelected(value) ?? false));
 const active = computed(() => id !== undefined && list?.activeId.value === id);
 
-const nowrap = computed(() => list?.variant.value === 'floating' || list?.variant.value === 'nav');
+const treeNode = computed(() =>
+  list?.kind === 'tree' && value !== undefined ? list.nodeOf(value) : undefined,
+);
+
+const nowrap = computed(
+  () => inTree || list?.variant.value === 'floating' || list?.variant.value === 'nav',
+);
 
 const tabStop = computed(
-  () => list !== null && value !== undefined && list.tabStopKey.value === list.keyOf(value),
+  () => list?.kind === 'list' && value !== undefined && list.tabStopKey.value === list.keyOf(value),
 );
 
 const mode = (): ListItemMode => {
+  if (inTree) {
+    return 'treeitem';
+  }
   if (list?.selectable.value !== undefined && value !== undefined) {
     return 'option';
   }
@@ -102,15 +113,40 @@ const classes = () => [
   },
 ];
 
-const optionAttrs = (): AttrRecord =>
-  isOption()
-    ? {
+const treeAttrs = (): AttrRecord => {
+  const node = treeNode.value;
+
+  return {
+    role: 'treeitem',
+    'aria-level': node?.level,
+    'aria-setsize': node?.setSize,
+    'aria-posinset': node?.posInSet,
+    'aria-expanded': node?.expanded,
+    'aria-selected': list?.selectable.value === undefined ? undefined : selected.value,
+    'aria-checked': node?.checked,
+    'aria-busy': node?.loading || undefined,
+    'aria-disabled': disabled ? 'true' : undefined,
+    'aria-current': current ? 'true' : undefined,
+  };
+};
+
+const roleAttrs = (): AttrRecord => {
+  switch (mode()) {
+    case 'treeitem':
+      return treeAttrs();
+    case 'option':
+      return {
         role: 'option',
         tabindex: tabStop.value ? 0 : -1,
         'aria-selected': selected.value,
         'aria-disabled': disabled ? 'true' : undefined,
-      }
-    : {};
+      };
+    case 'link':
+    case 'button':
+    case 'plain':
+      return {};
+  }
+};
 
 const rootAttrs = (): AttrRecord => (hasAction() ? split.rootAttrs() : attrs);
 
@@ -120,6 +156,7 @@ const innerIs = () => {
       return NuiLink;
     case 'button':
       return 'button';
+    case 'treeitem':
     case 'option':
     case 'plain':
       return 'div';
@@ -150,6 +187,7 @@ const innerAttrs = (): AttrRecord => {
         ...page,
         ...split.controlAttrs(),
       };
+    case 'treeitem':
     case 'option':
     case 'plain':
       return {};
@@ -157,8 +195,8 @@ const innerAttrs = (): AttrRecord => {
 };
 
 const onClick = (): void => {
-  if (mode() === 'option' && !disabled && value !== undefined) {
-    list?.select(value);
+  if (list?.kind === 'list' && mode() === 'option' && !disabled && value !== undefined) {
+    list.select(value);
   }
 };
 

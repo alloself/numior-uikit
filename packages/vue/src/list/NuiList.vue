@@ -154,6 +154,7 @@ const select = (value: T): void => {
 };
 
 provideList<T>({
+  kind: 'list',
   selectable: computed(() => selectable),
   variant: computed(() => variant),
   size: computed(() => size),

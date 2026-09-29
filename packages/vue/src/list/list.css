@@ -206,12 +206,14 @@
 .nui-list-item--disabled .nui-list-item__action {
   cursor: not-allowed;
 }
-.nui-list-item--mode-option {
+.nui-list-item--mode-option,
+.nui-list-item--mode-treeitem {
   cursor: pointer;
   user-select: none;
   outline: none;
 }
 .nui-list-item--mode-option:not(.nui-list-item--disabled, .nui-list-item--selected):hover,
+.nui-list-item--mode-treeitem:not(.nui-list-item--disabled, .nui-list-item--selected):hover,
 .nui-list-item--mode-option:not(.nui-list-item--selected):focus-visible,
 .nui-list-item--active:not(.nui-list-item--selected) {
   background: var(--_hover);
@@ -259,7 +261,8 @@
 .nui-list-item--disabled {
   opacity: var(--nui-disabled-opacity);
 }
-.nui-list-item--disabled.nui-list-item--mode-option {
+.nui-list-item--disabled.nui-list-item--mode-option,
+.nui-list-item--disabled.nui-list-item--mode-treeitem {
   cursor: not-allowed;
 }
 @keyframes nui-list-spin {
