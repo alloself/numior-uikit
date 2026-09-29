@@ -41,7 +41,27 @@ interface HeadCell {
   readonly rect: DOMRect;
 }
 
+interface Grab {
+  readonly offset: number;
+  readonly size: number;
+}
+
 const HEAD_CELL = '.nui-table__row--head > [role="columnheader"][aria-colindex]';
+const NO_GRAB: Grab = { offset: 0, size: 0 };
+
+const grabOf = (event: PointerEvent, rtl: boolean): Grab => {
+  const cell = event.target instanceof Element ? event.target.closest(HEAD_CELL) : null;
+
+  if (cell === null) {
+    return NO_GRAB;
+  }
+  const rect = cell.getBoundingClientRect();
+
+  return {
+    offset: rtl ? rect.right - event.clientX : event.clientX - rect.left,
+    size: rect.width,
+  };
+};
 
 const slotsOf = (layout: TableLayout): PlacedColumn[] =>
   layout.visual.filter((column) => column.kind === 'data');
@@ -72,6 +92,7 @@ const othersOf = (slots: readonly PlacedColumn[], from: number): PlacedColumn[] 
 export const useTableColumnOrder = <T>(options: TableColumnOrderOptions<T>): TableColumnOrder => {
   const drop = ref<number>();
   const ghost = ref<TableGhost>();
+  let held = NO_GRAB;
 
   const reorderable = (key: string): boolean => options.columnAt(key).reorderable !== false;
 
@@ -172,11 +193,14 @@ export const useTableColumnOrder = <T>(options: TableColumnOrderOptions<T>): Tab
       return;
     }
     const source = slotsOf(options.layout())[state.from];
+    const room = frame.getBoundingClientRect().width;
+    const start = toStart(state.position, frame) - held.offset;
 
     drop.value = dropAt(state.from, state.to);
 
     ghost.value = {
-      start: toStart(state.position, frame),
+      start: Math.max(0, Math.min(room - held.size, start)),
+      size: held.size,
       label: source === undefined ? '' : options.columnAt(source.key).label,
     };
   };
@@ -207,6 +231,7 @@ export const useTableColumnOrder = <T>(options: TableColumnOrderOptions<T>): Tab
       return;
     }
     event.preventDefault();
+    held = grabOf(event, options.isRtl());
     reorder.onPointerdown(from, event);
   };
 

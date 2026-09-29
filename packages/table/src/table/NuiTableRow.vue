@@ -43,7 +43,7 @@
         <NuiTableResizer
           v-if="resizerOf(cell)"
           v-bind="resizerOf(cell)"
-          @grab="emit('resize', cell.key, $event)"
+          @grab="emit('resize', handleOf(cell), $event)"
         />
       </component>
     </template>
@@ -134,17 +134,21 @@ const cellClass = (cell: TableDataCell): unknown[] => [
   `nui-table__cell--align-${cell.align}`,
   `nui-table__cell--${cell.kind}`,
   pinClass(cell),
+  cell.rule === undefined ? undefined : `nui-table__cell--rule-${cell.rule}`,
   {
     'nui-table__cell--wrap': cell.wrap && wrapsText.value,
     'nui-table__cell--active': cell.colIndex === active,
     'nui-table__cell--sortable': heads?.[cell.key]?.sortable === true,
+    'nui-table__cell--dragging': heads?.[cell.key]?.dragging === true,
   },
 ];
 
 const colspanOf = (colspan: number): number | undefined => (colspan > 1 ? colspan : undefined);
 
+const handleOf = (cell: TableDataCell): string => cell.handle ?? cell.key;
+
 const resizerOf = (cell: TableDataCell): NuiTableResizerProps | undefined => {
-  const state = part === 'head' ? heads?.[cell.key] : undefined;
+  const state = heading.value ? heads?.[handleOf(cell)] : undefined;
 
   return state?.resizable === true
     ? { start: cell.pin === 'end', active: state.resizing }

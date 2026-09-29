@@ -84,10 +84,10 @@ Sorting, filters and groups run in slices with progress, and the `settle` event 
 count. Select-all checks the rows in view after filters, `loading` draws skeletons, empty `rows`
 show [Empty](/en/components/empty) or the `empty` slot.
 
-The handle at the header edge drags the column width, and `v-model:widths` keeps it by key.
-While the table fits, the width moves to the neighbouring column; once it scrolls, only the
-column itself grows. `Alt` with the arrow keys does the same from the keyboard, and the column
-menu resets the width.
+The handle at the header edge drags the column width, a group's handle drags its outer column,
+and `v-model:widths` keeps it by key. While the table fits, the width moves to the neighbouring
+column; once it scrolls, only the column itself grows. `Alt` with the arrow keys does the same
+from the keyboard, and the column menu resets the width.
 
 The grip at the start of a header drags the column inside its pane, and `v-model:columnOrder`
 keeps the key order. `Alt+Shift` with the arrow keys moves a column from the keyboard. A row is

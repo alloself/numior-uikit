@@ -79,9 +79,9 @@ export const createTableEngine = <T>(options: TableEngineOptions<T>): TableEngin
     options.columns.map((column) => [column.key, column]),
   );
 
-  const stringKeys = options.columns
-    .filter((column) => column.kind === 'string')
-    .map((column) => column.key);
+  const stringKeys = options.columns.flatMap((column) =>
+    column.kind === 'string' ? [column.key] : [],
+  );
 
   const aggregated = options.columns.filter((column) => column.aggregate !== undefined);
   const collator = options.collator ?? new Intl.Collator(undefined, { numeric: true });
@@ -124,9 +124,9 @@ export const createTableEngine = <T>(options: TableEngineOptions<T>): TableEngin
     needs: ReadonlyMap<string, StoreNeed>,
     next: () => PipelineStage | null,
   ): PipelineStage | null => {
-    const pending = [...needs]
-      .filter(([key, need]) => missing(key, need))
-      .map(([key, need]) => ({ column: columnOf(key), need, current: stores.get(key) }));
+    const pending = [...needs].flatMap(([key, need]) =>
+      missing(key, need) ? [{ column: columnOf(key), need, current: stores.get(key) }] : [],
+    );
 
     if (pending.length === 0) {
       return next();
@@ -139,8 +139,14 @@ export const createTableEngine = <T>(options: TableEngineOptions<T>): TableEngin
     return { phase: 'keys', job, next };
   };
 
-  const quickKeys = (keys: readonly string[] | undefined): readonly string[] =>
-    keys === undefined ? stringKeys : stringKeys.filter((key) => keys.includes(key));
+  const quickKeys = (keys: readonly string[] | undefined): readonly string[] => {
+    if (keys === undefined) {
+      return stringKeys;
+    }
+    const wanted = new Set(keys);
+
+    return stringKeys.filter((key) => wanted.has(key));
+  };
 
   const filterKeys = (filter: TableFilter): readonly string[] =>
     filter.kind === 'quick' ? quickKeys(filter.keys) : [columnOf(filter.key).key];

@@ -258,13 +258,11 @@ const quickPending = (value: string, stores: readonly StringCodes[]): PendingTes
     scans: lanes.map((lane) => lane.scan),
     test: () =>
       quickTest(
-        lanes
-          .filter((lane) => lane.scan.hits > 0)
-          .map((lane) => ({
-            codes: lane.store.codes,
-            nulls: lane.store.nulls,
-            map: lane.scan.map,
-          })),
+        lanes.flatMap((lane) =>
+          lane.scan.hits > 0
+            ? [{ codes: lane.store.codes, nulls: lane.store.nulls, map: lane.scan.map }]
+            : [],
+        ),
       ),
   };
 };

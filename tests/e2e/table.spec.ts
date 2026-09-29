@@ -40,6 +40,7 @@ test.describe('table', () => {
 
   test('resizes a column from its handle and the keyboard and resets it from the menu', async ({
     page,
+    isMobile,
   }) => {
     const playground = new PlaygroundPage(page);
     await playground.open();
@@ -65,6 +66,16 @@ test.describe('table', () => {
     await table.menuItem('Сбросить ширину').click();
     await expect(table.output).toContainText('"widths":{}');
     expect((await table.cellBox(0, 0)).width).toBeCloseTo(before.width, 0);
+
+    if (isMobile) {
+      return;
+    }
+    const band = await boxOf(table.bandCell('Покупатель'));
+    await table.dragBandResizer('Покупатель', 40);
+    await expect(table.output).toContainText('"widths":{"email":280}');
+    expect((await boxOf(table.bandCell('Покупатель'))).width).toBeCloseTo(band.width + 40, 0);
+    await playground.page.getByTestId('table-reset-columns').click();
+    await expect(table.output).toContainText('"widths":{}');
   });
 
   test('moves a column by its grip and from the keyboard and resets the order', async ({
@@ -175,15 +186,15 @@ test.describe('table', () => {
     await playground.open();
     const { table } = playground;
     await table.root.scrollIntoViewIfNeeded();
-    await table.header(0).click();
+    await table.sortBy(0);
     await expect(table.header(0)).toHaveAttribute('aria-sort', 'ascending');
     await expect(table.cell(0, 0)).toHaveText('1');
-    await table.header(0).click();
+    await table.sortBy(0);
     await expect(table.header(0)).toHaveAttribute('aria-sort', 'descending');
     await expect(table.cell(0, 0)).toHaveText('10000');
     const descending = await table.numbersIn(0, 8);
     expect(descending).toEqual(descending.toSorted((a, b) => b - a));
-    await table.header(1).click({ modifiers: ['Shift'] });
+    await table.sortBy(1, ['Shift']);
     await expect(table.sortOrder(1)).toHaveText('2');
     await expect(table.sortOrder(0)).toHaveText('1');
     await expect(table.header(1)).not.toHaveAttribute('aria-sort');
@@ -497,8 +508,8 @@ test.describe('table', () => {
     await expect(table.cell(0, 0)).toHaveText('1');
     await expect(table.cell(1, 0)).toHaveText('2');
     await expect(table.cell(2, 0)).toHaveText('1');
-    await table.header(0).click();
-    await table.header(0).click();
+    await table.sortBy(0);
+    await table.sortBy(0);
 
     await expect(table.cell(2, 0)).toHaveText('10000');
     await expect(table.cell(0, 0)).toHaveText('1');
@@ -507,7 +518,7 @@ test.describe('table', () => {
     await expect(table.row(2)).toHaveCount(0);
     await expect(table.cell(22, 0)).toHaveText('9980');
     expect((await table.cellBox(0, 0)).y).toBeCloseTo(pinnedBox.y, 0);
-    await table.header(0).click();
+    await table.sortBy(0);
     await table.pinnedToggle.click();
     await expect(table.grid).toHaveAttribute('aria-rowcount', '10003');
   });

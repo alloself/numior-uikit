@@ -81,6 +81,45 @@ describe('NuiTable header groups', () => {
     expect(grid.focusedCell).toEqual({ row: -1, col: 2 });
   });
 
+  it('rules the band edges and resizes the outer column of a group from the band handle', async () => {
+    const grid = TableDriver.mount<Person>({
+      columns: GROUPED,
+      rows: people(10),
+      config: { locale: 'ru-RU' },
+      width: 2400,
+    });
+
+    mounted.push(grid);
+    await grid.settle();
+
+    expect(grid.bandRules(0)).toEqual([undefined, 'end', 'end', undefined, undefined]);
+    expect(grid.bandRules(1)).toEqual([undefined, undefined, 'both', undefined, undefined]);
+    expect(grid.bandResizer('Организация')).not.toBeNull();
+    await grid.dragBandResizer('Сотрудник', 40);
+    expect(grid.widths).toEqual({ city: 180 });
+    expect(grid.announcement).toBe('Ширина колонки «Город»: 180 px');
+  });
+
+  it('leaves a band without a handle when its outer column is locked', async () => {
+    const grid = TableDriver.mount<Person>({
+      columns: [
+        {
+          key: 'person',
+          label: 'Сотрудник',
+          children: [columnOf('name'), { ...columnOf('city'), resizable: false }],
+        },
+        columnOf('salary'),
+      ],
+      rows: people(10),
+      config: { locale: 'ru-RU' },
+    });
+
+    mounted.push(grid);
+    await grid.settle();
+    expect(grid.bandResizer('Сотрудник')).toBeNull();
+    expect(grid.resizer(0)).not.toBeNull();
+  });
+
   it('splits a band at the pinned pane edge', async () => {
     const grid = TableDriver.mount<Person>({
       columns: [

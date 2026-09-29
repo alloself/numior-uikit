@@ -42,7 +42,24 @@ interface RowPlace<T> {
   readonly siblings: TableSiblings<T>;
 }
 
+interface Grab {
+  readonly offset: number;
+  readonly size: number;
+}
+
 const BODY_ROW = '.nui-table__body > [role="row"]';
+const NO_GRAB: Grab = { offset: 0, size: 0 };
+
+const grabOf = (event: PointerEvent, fallback: number): Grab => {
+  const row = event.target instanceof Element ? event.target.closest(BODY_ROW) : null;
+
+  if (row === null) {
+    return { offset: 0, size: fallback };
+  }
+  const rect = row.getBoundingClientRect();
+
+  return { offset: event.clientY - rect.top, size: rect.height || fallback };
+};
 
 const rowsOf = (viewport: HTMLElement | null): HTMLElement[] => [
   ...(viewport?.querySelectorAll<HTMLElement>(BODY_ROW) ?? []),
@@ -53,6 +70,7 @@ const neighbourOf = (from: number, to: number): number => (to < from ? to : to +
 export const useTableRowDrag = <T>(options: TableRowDragOptions<T>): TableRowDrag => {
   const drop = ref<number>();
   const ghost = ref<TableGhost>();
+  let held = NO_GRAB;
 
   const placeOf = (position: number): RowPlace<T> | undefined => {
     const engine = options.engine.value;
@@ -191,6 +209,22 @@ export const useTableRowDrag = <T>(options: TableRowDragOptions<T>): TableRowDra
     return last === undefined ? undefined : frameTop(last.getBoundingClientRect().bottom);
   };
 
+  const ghostAt = (position: number, source: RowPlace<T> | undefined): TableGhost | undefined => {
+    const frame = options.frame();
+
+    if (frame === null || source === undefined) {
+      return undefined;
+    }
+    const room = frame.getBoundingClientRect().height;
+    const start = position - frame.getBoundingClientRect().top - held.offset;
+
+    return {
+      start: Math.max(0, Math.min(room - held.size, start)),
+      size: held.size,
+      label: options.labelOf(source.row),
+    };
+  };
+
   const follow = (state: ReorderState): void => {
     if (state.phase === 'idle' || state.phase === 'pending') {
       drop.value = undefined;
@@ -200,11 +234,7 @@ export const useTableRowDrag = <T>(options: TableRowDragOptions<T>): TableRowDra
     const source = placeOf(state.from);
 
     drop.value = dropAt(state.from, state.to);
-
-    ghost.value =
-      state.phase === 'dragging' && source !== undefined
-        ? { start: frameTop(state.position) ?? 0, label: options.labelOf(source.row) }
-        : undefined;
+    ghost.value = state.phase === 'dragging' ? ghostAt(state.position, source) : undefined;
   };
 
   const say = (event: ReorderEvent): void => {
@@ -272,6 +302,7 @@ export const useTableRowDrag = <T>(options: TableRowDragOptions<T>): TableRowDra
     grab: (position, event) => {
       if (options.enabled()) {
         event.preventDefault();
+        held = grabOf(event, options.rowSize());
         reorder.onPointerdown(position, event);
       }
     },

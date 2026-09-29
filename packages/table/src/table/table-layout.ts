@@ -55,7 +55,7 @@ const UTILITY_WIDTH = 40;
 
 export const SELECT_KEY = '__select';
 export const DRAG_KEY = '__drag';
-const TRAIL_KEY = '__trail';
+export const TRAIL_KEY = '__trail';
 
 const SELECT_INPUT: PlaceInput = {
   key: SELECT_KEY,
@@ -188,26 +188,43 @@ const DEFAULT_OPTIONS: LayoutOptions = {
 export const pinOf = <T>(column: NuiTableColumn<T>, pins: NuiTablePins): NuiTablePin | undefined =>
   column.key in pins ? (pins[column.key] ?? undefined) : column.pin;
 
+const paneOf = (
+  pin: NuiTablePin | undefined,
+  starts: PlaceInput[],
+  centres: PlaceInput[],
+  ends: PlaceInput[],
+): PlaceInput[] => {
+  switch (pin) {
+    case 'start':
+      return starts;
+    case 'end':
+      return ends;
+    case undefined:
+      return centres;
+  }
+};
+
 export const tableLayout = <T>(
   columns: readonly NuiTableColumn<T>[],
   options: LayoutOptions = DEFAULT_OPTIONS,
 ): TableLayout => {
-  const shown = columns.filter((column) => !options.hidden.includes(column.key));
+  const hiddenKeys = new Set(options.hidden);
+  const starts: PlaceInput[] = [];
+  const centres: PlaceInput[] = [];
+  const ends: PlaceInput[] = [];
 
-  const inPane = (pin: NuiTablePin | undefined): PlaceInput[] =>
-    shown
-      .filter((column) => pinOf(column, options.pins) === pin)
-      .map((column) => inputOf(column, options));
-
-  const starts = inPane('start');
-  const ends = inPane('end');
+  for (const column of columns) {
+    if (!hiddenKeys.has(column.key)) {
+      paneOf(pinOf(column, options.pins), starts, centres, ends).push(inputOf(column, options));
+    }
+  }
 
   const utilities = [
     ...(options.drag ? [DRAG_INPUT] : []),
     ...(options.select ? [SELECT_INPUT] : []),
   ];
 
-  const ordered = stretch([...utilities, ...starts, ...inPane(undefined), ...ends], options.room);
+  const ordered = stretch([...utilities, ...starts, ...centres, ...ends], options.room);
   const startCount = utilities.length + (options.sticky ? starts.length : 0);
   const endCount = options.sticky ? ends.length : 0;
   const start = placePane(ordered.slice(0, startCount), 'start', 0);

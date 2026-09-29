@@ -1,5 +1,6 @@
-import { pinStyleOf, type PlacedColumn, type TableLayout } from './table-layout';
+import { pinStyleOf, TRAIL_KEY, type PlacedColumn, type TableLayout } from './table-layout';
 import type {
+  TableBandRule,
   TableCellLayout,
   TableDataCell,
   TableGapCell,
@@ -69,9 +70,58 @@ const pinStyleOver = (
   return pinStyleOf(first.pin, head.offset, width, layout.endWidth);
 };
 
+const isLabelled = <T>(band: OpenBand<T> | undefined): boolean =>
+  band !== undefined && band.group !== undefined && band.first.kind === 'data';
+
+const isPinEndEdge = (cell: TableCellLayout | undefined): boolean =>
+  cell !== undefined && cell.pin === 'end' && cell.edge;
+
+const closesAtPinEnd = <T>(bands: readonly OpenBand<T>[], index: number): boolean => {
+  const next = bands[index + 1];
+
+  if (next === undefined) {
+    return true;
+  }
+  if (isPinEndEdge(next.first)) {
+    return true;
+  }
+  return next.first.key === TRAIL_KEY && isPinEndEdge(bands[index + 2]?.first);
+};
+
+const ruleOf = <T>(bands: readonly OpenBand<T>[], index: number): TableBandRule | undefined => {
+  const band = bands[index];
+  const previous = bands[index - 1];
+
+  if (band === undefined || !isLabelled(band)) {
+    return undefined;
+  }
+
+  const start =
+    previous !== undefined &&
+    !isLabelled(previous) &&
+    !previous.last.edge &&
+    !isPinEndEdge(band.first);
+
+  const end = !band.last.edge && !closesAtPinEnd(bands, index);
+
+  if (start && end) {
+    return 'both';
+  }
+  if (start) {
+    return 'start';
+  }
+  return end ? 'end' : undefined;
+};
+
+const handleOf = <T>(band: OpenBand<T>): string | undefined => {
+  const cell = band.first.pin === 'end' ? band.first : band.last;
+  return cell.kind === 'data' ? cell.key : undefined;
+};
+
 const bandCellOf = <T>(
   band: OpenBand<T>,
   style: Readonly<Record<string, string>> | undefined,
+  rule: TableBandRule | undefined,
 ): TableDataCell | TableGapCell => {
   const shared = {
     pin: band.first.pin,
@@ -90,6 +140,8 @@ const bandCellOf = <T>(
     align: 'start',
     wrap: false,
     span: band.span,
+    handle: handleOf(band),
+    rule,
     ...shared,
   };
 };
@@ -130,8 +182,12 @@ const bandRowOf = <T>(
     }
   }
 
-  const cells = bands.map((band) => {
-    const cell = bandCellOf(band, pinStyleOver(layout, placed, band.first, band.last));
+  const cells = bands.map((band, index) => {
+    const cell = bandCellOf(
+      band,
+      pinStyleOver(layout, placed, band.first, band.last),
+      ruleOf(bands, index),
+    );
 
     if (band.group !== undefined) {
       labels.set(cell.key, band.group.label);

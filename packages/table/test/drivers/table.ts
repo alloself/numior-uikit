@@ -134,6 +134,21 @@ const LAYOUT_WIDTH = 4000;
 const LAYOUT_HEIGHT = 300;
 const HEAD_HEIGHT = 40;
 const GRAB_NUDGE = 10;
+
+const dragHandle = async (handle: HTMLElement | null, name: string, dx: number): Promise<void> => {
+  if (handle === null) {
+    throw new Error(`${name} has no resize handle`);
+  }
+
+  handle.dispatchEvent(
+    new PointerEvent('pointerdown', { bubbles: true, button: 0, pointerId: 1, clientX: 100 }),
+  );
+
+  window.dispatchEvent(new PointerEvent('pointermove', { pointerId: 1, clientX: 100 + dx }));
+  window.dispatchEvent(new PointerEvent('pointerup', { pointerId: 1, clientX: 100 + dx }));
+  await nextTick();
+};
+
 const ROW_EARLY = 10;
 const ROW_LATE = 30;
 
@@ -406,6 +421,34 @@ export class TableDriver<T> {
     const row = this.wrapper.findAll('.nui-table__row--band')[level];
 
     return (row?.findAll('th') ?? []).map((cell) => Number(cell.attributes('colspan') ?? 1));
+  }
+
+  bandRules(level: number): Array<string | undefined> {
+    const row = this.wrapper.findAll('.nui-table__row--band')[level];
+
+    return (row?.findAll('th') ?? []).map((cell) =>
+      [...cell.element.classList]
+        .find((name) => name.startsWith('nui-table__cell--rule-'))
+        ?.replace('nui-table__cell--rule-', ''),
+    );
+  }
+
+  bandCell(label: string): HTMLElement | null {
+    return (
+      [
+        ...this.element.querySelectorAll<HTMLElement>(
+          '.nui-table__row--band [role="columnheader"]',
+        ),
+      ].find((cell) => cell.textContent?.trim() === label) ?? null
+    );
+  }
+
+  bandResizer(label: string): HTMLElement | null {
+    return this.bandCell(label)?.querySelector<HTMLElement>('.nui-table__resizer') ?? null;
+  }
+
+  async dragBandResizer(label: string, dx: number): Promise<void> {
+    await dragHandle(this.bandResizer(label), `band ${label}`, dx);
   }
 
   get activeCell(): CellPosition | undefined {
@@ -724,6 +767,12 @@ export class TableDriver<T> {
     return line.exists() ? line.element.style.getPropertyValue('--_drop') : undefined;
   }
 
+  get ghostSize(): string | undefined {
+    const ghost = this.wrapper.find<HTMLElement>('.nui-table__ghost--y');
+
+    return ghost.exists() ? ghost.element.style.getPropertyValue('--_size') : undefined;
+  }
+
   get ghostText(): string | undefined {
     const ghost = this.wrapper.find('.nui-table__ghost--y');
     return ghost.exists() ? ghost.text() : undefined;
@@ -905,19 +954,7 @@ export class TableDriver<T> {
   }
 
   async dragResizer(col: number, dx: number): Promise<void> {
-    const handle = this.resizer(col);
-
-    if (handle === null) {
-      throw new Error(`Column ${col} has no resize handle`);
-    }
-
-    handle.dispatchEvent(
-      new PointerEvent('pointerdown', { bubbles: true, button: 0, pointerId: 1, clientX: 100 }),
-    );
-
-    window.dispatchEvent(new PointerEvent('pointermove', { pointerId: 1, clientX: 100 + dx }));
-    window.dispatchEvent(new PointerEvent('pointerup', { pointerId: 1, clientX: 100 + dx }));
-    await nextTick();
+    await dragHandle(this.resizer(col), `column ${col}`, dx);
   }
 
   gapBefore(position: number): string | undefined {

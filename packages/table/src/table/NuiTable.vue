@@ -24,6 +24,8 @@
               :cells="band"
               :row-index="level + 1"
               part="band"
+              :heads="header.heads.value"
+              @resize="resize.start"
             >
               <template #default="{ column }">
                 <span class="nui-table__text">{{ bands.labels.get(column) }}</span>
@@ -396,13 +398,14 @@ const totalCount = computed(() => (remote ? (total ?? rows.length) : rowCount.va
 
 const keyOf = (row: T): TableSelectionKey<T> => (getKey === undefined ? row : getKey(row));
 
-const quickKeys = computed(() =>
-  hidden.value.length === 0
-    ? undefined
-    : tree.value.leaves
-        .filter((column) => !hidden.value.includes(column.key))
-        .map((column) => column.key),
-);
+const quickKeys = computed(() => {
+  if (hidden.value.length === 0) {
+    return undefined;
+  }
+  const hiddenKeys = new Set(hidden.value);
+
+  return tree.value.leaves.flatMap((column) => (hiddenKeys.has(column.key) ? [] : [column.key]));
+});
 
 const queryFilters = (): readonly TableFilter[] => {
   const text = quick.value.trim();
@@ -577,6 +580,8 @@ const rootClass = computed(() => [
     'nui-table--busy': query.busy.value,
     'nui-table--totals': totals.enabled.value,
     'nui-table--auto': !windowed.value,
+    'nui-table--captioned': hasCaption.value,
+    'nui-table--paged': paginationProps.value !== undefined,
     'nui-table--striped': striped,
     'nui-table--loading': loading,
     'nui-table--resizing': resize.active.value !== undefined,

@@ -52,6 +52,7 @@ describe('NuiTable row drag', () => {
     await grid.grabRow(1);
     expect(grid.rowDragging(1)).toBe(true);
     expect(grid.ghostText).toBe('Сотрудник 1');
+    expect(grid.ghostSize).toBe('40px');
     await grid.moveRowTo(4, 'after');
     expect(grid.dropLine).toBe('240px');
     await grid.dropRow();

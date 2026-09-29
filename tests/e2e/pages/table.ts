@@ -1,4 +1,4 @@
-import type { Locator, Page } from '@playwright/test';
+import { expect, type Locator, type Page } from '@playwright/test';
 import { boxOf, type Box } from '../helpers/geometry';
 
 export interface TableCell {
@@ -142,8 +142,17 @@ export class TableSection {
     return this.header(col).locator('.nui-table__grip');
   }
 
+  async sortBy(col: number, modifiers: Array<'Shift'> = []): Promise<void> {
+    await this.header(col).locator('.nui-table__text').click({ modifiers });
+  }
+
   async dragHeader(col: number, target: number): Promise<void> {
     await this.header(col).hover();
+
+    await expect
+      .poll(async () => (await this.grip(col).boundingBox())?.width ?? 0)
+      .toBeGreaterThan(8);
+
     const grip = await boxOf(this.grip(col));
     const destination = await boxOf(this.header(target));
     const x = grip.x + grip.width / 2;
@@ -160,8 +169,20 @@ export class TableSection {
     return this.header(col).locator('.nui-table__resizer');
   }
 
+  bandCell(label: string): Locator {
+    return this.root.locator('.nui-table__row--band [role="columnheader"]', { hasText: label });
+  }
+
+  async dragBandResizer(label: string, dx: number): Promise<void> {
+    await this.dragHandle(this.bandCell(label).locator('.nui-table__resizer'), dx);
+  }
+
   async dragResizer(col: number, dx: number): Promise<void> {
-    const box = await boxOf(this.resizer(col));
+    await this.dragHandle(this.resizer(col), dx);
+  }
+
+  private async dragHandle(handle: Locator, dx: number): Promise<void> {
+    const box = await boxOf(handle);
     const x = box.x + box.width / 2;
     const y = box.y + box.height / 2;
 

@@ -203,8 +203,11 @@ export type NuiTableColumnOrder = readonly string[];
 
 export interface TableGhost {
   readonly start: number;
+  readonly size: number;
   readonly label: string;
 }
+
+export type TableBandRule = 'start' | 'end' | 'both';
 
 export interface NuiTableFilterProps {
   title: string;
@@ -247,6 +250,8 @@ export interface TableDataCell {
   readonly style: Readonly<Record<string, string>> | undefined;
   readonly span: number | undefined;
   readonly colspan: number;
+  readonly handle?: string | undefined;
+  readonly rule?: TableBandRule | undefined;
 }
 
 export interface TableGapCell {
