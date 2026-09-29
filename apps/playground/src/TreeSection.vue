@@ -10,7 +10,7 @@
         v-model:expanded="expanded"
         :items="files"
         label="Файлы"
-        class="tree-box"
+        variant="bordered"
         data-testid="data-tree"
         @load="loadDocs"
       />
@@ -20,7 +20,7 @@
         :selectable="false"
         checkable
         label="Экспорт"
-        class="tree-box"
+        variant="bordered"
         data-testid="data-tree-check"
       />
       <NuiTree
@@ -29,7 +29,7 @@
         virtual
         height="12rem"
         label="Большое дерево"
-        class="tree-box"
+        variant="bordered"
         data-testid="data-tree-virtual"
       />
     </div>

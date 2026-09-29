@@ -959,6 +959,9 @@ describe('server rendering', () => {
 
     expect(html).toContain('role="tree"');
     expect(html).toContain('tabindex="0"');
+    expect(html).toContain('<ul class="nui-list__items nui-tree__list" role="presentation"');
+    expect(html).toContain('<li id="files-node-src" class="nui-list-item');
+    expect(html).toContain('nui-list-item--mode-treeitem');
     expect(html).toContain('aria-level="2"');
     expect(html).toContain('id="files-node-src"');
     expect(html).toContain('aria-expanded="true"');
@@ -970,7 +973,7 @@ describe('server rendering', () => {
     );
 
     expect(windowed.match(/role="treeitem"/g)).toHaveLength(20);
-    expect(windowed).toContain('block-size:16000px');
+    expect(windowed).toContain('block-size:18000px');
   });
 
   it('renders lazy default icons on the server', async () => {

@@ -28,6 +28,20 @@ export const FILES: readonly NuiTreeItem<string>[] = [
   { value: 'design', label: 'Дизайн', children: [{ value: 'logo', label: 'logo.svg' }] },
 ];
 
+export const withTrailing = (): NuiTreeItem<string>[] =>
+  FILES.map((item) => {
+    switch (item.value) {
+      case 'src':
+        return { ...item, badge: 3 };
+      case 'docs':
+        return { ...item, shortcut: 'mod+d' };
+      case 'readme':
+        return { ...item, current: true };
+      default:
+        return item;
+    }
+  });
+
 export const withDocs = (children: readonly NuiTreeItem<string>[]): NuiTreeItem<string>[] =>
   FILES.map((item) => (item.value === 'docs' ? { ...item, children } : item));
 

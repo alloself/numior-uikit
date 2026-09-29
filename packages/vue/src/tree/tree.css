@@ -1,48 +1,60 @@
 .nui-tree {
+  --_row: 2.25rem;
   --_indent: 1.25rem;
-  --_row: 2rem;
-  --_height: auto;
-  --_font-size: var(--nui-font-size-sm);
   --_control: 1.25rem;
+  --_height: auto;
+  --_padding-inline: var(--nui-space-2);
+  --_padding-block: var(--nui-space-1);
+  --_gap: var(--nui-space-2);
 
-  box-sizing: border-box;
   position: relative;
   block-size: var(--_height);
   overflow: auto;
-  color: var(--nui-text);
-  font-family: var(--nui-font);
-  font-size: var(--_font-size);
-  line-height: var(--nui-line-height-tight);
-  outline: none;
   user-select: none;
 }
 .nui-tree--size-sm {
-  --_row: 1.75rem;
-  --_font-size: var(--nui-font-size-xs);
+  --_row: 2rem;
 }
 .nui-tree--size-lg {
   --_row: 2.5rem;
-  --_font-size: var(--nui-font-size-md);
+}
+.nui-tree--virtual {
+  overflow-anchor: none;
+}
+.nui-tree.nui-list--variant-bordered {
+  --_divider: transparent;
+
+  padding: var(--nui-space-1);
 }
 .nui-tree__list {
   position: relative;
 }
-.nui-tree__item {
-  display: grid;
-  grid-template-rows: 1fr;
+.nui-tree .nui-list-item {
+  --_min-size: var(--_row);
+
+  block-size: var(--_row);
   border-radius: var(--nui-radius-sm);
-  cursor: pointer;
+  overflow: hidden;
   transition:
     background-color var(--nui-duration-fast) var(--nui-easing),
     color var(--nui-duration-fast) var(--nui-easing),
     opacity var(--nui-duration-normal) var(--nui-easing),
-    grid-template-rows var(--nui-duration-normal) var(--nui-easing);
+    block-size var(--nui-duration-normal) var(--nui-easing);
 }
-.nui-tree__item--folded {
-  grid-template-rows: 0fr;
+.nui-tree .nui-list-item__inner {
+  min-block-size: 0;
+}
+.nui-tree--virtual .nui-list-item {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline: 0;
+  translate: 0 var(--_start);
+}
+.nui-tree .nui-tree__item--folded {
+  block-size: 0;
   opacity: 0;
 }
-.nui-tree__item--leaving {
+.nui-tree .nui-tree__item--leaving {
   pointer-events: none;
 }
 @starting-style {
@@ -50,45 +62,16 @@
     opacity: 0;
   }
 }
-.nui-tree__row {
-  box-sizing: border-box;
-  display: flex;
-  align-items: center;
-  gap: var(--nui-space-2);
-  min-block-size: 0;
-  padding-inline: calc(var(--nui-space-2) + var(--_indent) * (var(--_level) - 1)) var(--nui-space-2);
-  overflow: hidden;
-}
-.nui-tree--virtual {
-  overflow-anchor: none;
-}
-.nui-tree--virtual .nui-tree__item {
-  position: absolute;
-  inset-block-start: 0;
-  inset-inline: 0;
-  block-size: var(--_row);
-  translate: 0 var(--_start);
-}
-.nui-tree__item:hover,
-.nui-tree:focus .nui-tree__item--active {
-  background: var(--nui-neutral-soft);
-}
-.nui-tree__item--selected {
-  background: var(--nui-primary-soft);
-}
-.nui-tree:focus .nui-tree__item--selected.nui-tree__item--active,
-.nui-tree__item--selected:hover {
-  background: color-mix(in oklab, var(--nui-primary-soft), var(--nui-primary) 10%);
-}
-.nui-tree__item--disabled,
-.nui-tree__item--disabled:hover {
-  background: transparent;
-  opacity: var(--nui-disabled-opacity);
-  cursor: not-allowed;
-}
-.nui-tree:focus-visible .nui-tree__item--active {
+.nui-tree:focus-visible .nui-list-item--active {
   outline: var(--nui-focus-ring-width) solid var(--nui-focus);
   outline-offset: calc(-1 * var(--nui-focus-ring-width));
+}
+.nui-tree__controls {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: var(--nui-space-2);
+  margin-inline-start: calc(var(--_indent) * (var(--_level) - 1));
 }
 .nui-tree__toggle {
   display: inline-flex;
@@ -97,7 +80,6 @@
   justify-content: center;
   inline-size: var(--_control);
   block-size: var(--_control);
-  color: var(--nui-text-muted);
 }
 .nui-tree__toggle:dir(rtl) {
   scale: -1 1;
@@ -128,7 +110,6 @@
   flex: none;
   inline-size: 1rem;
   block-size: 1rem;
-  color: var(--nui-text-muted);
 }
 .nui-tree__icon--folder {
   display: inline-grid;
@@ -144,14 +125,6 @@
 }
 .nui-tree__item--expanded .nui-tree__glyph--open {
   opacity: 1;
-}
-.nui-tree__text {
-  box-sizing: border-box;
-  display: flex;
-  align-items: baseline;
-  gap: var(--nui-space-2);
-  min-inline-size: 0;
-  padding-block: calc((var(--_row) - var(--_font-size) * var(--nui-line-height-tight)) / 2);
 }
 @keyframes nui-tree-spin {
   to {

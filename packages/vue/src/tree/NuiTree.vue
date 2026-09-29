@@ -2,8 +2,9 @@
   <div
     :id="baseId"
     ref="root"
-    class="nui-tree"
+    class="nui-list nui-tree"
     :class="[
+      `nui-list--variant-${variant}`,
       `nui-tree--size-${size}`,
       {
         'nui-tree--virtual': virtual,
@@ -20,14 +21,15 @@
     :style="rootStyle"
     @keydown="navigation.onKeydown"
     @focus="onFocus"
-    @blur="navigation.reset"
+    @blur="onBlur"
     @pointerdown="onPointerdown"
     @click="onClick"
     @dblclick="onDblclick"
   >
     <component
-      :is="virtual ? 'div' : TransitionGroup"
-      class="nui-tree__list"
+      :is="virtual ? 'ul' : TransitionGroup"
+      class="nui-list__items nui-tree__list"
+      role="presentation"
       :style="listStyle"
       v-bind="virtual ? {} : FOLDING"
     >
@@ -36,16 +38,13 @@
         :id="nodeId(entry.node.key)"
         :key="entry.node.key"
         :node="entry.node"
-        :active="entry.index === activeIndex"
-        :selected="selectedKeys.has(entry.node.key)"
-        :selectable="mode !== false"
         :checked="checkable ? checkStates.get(entry.node.key) : undefined"
         :icon="iconFor(entry.node)"
         :folder="folderFor(entry.node)"
         :start="entry.start"
         :revealing="revealing.has(entry.node.key)"
       >
-        <template #default="slot"><slot name="item" v-bind="slot" /></template>
+        <template v-if="$slots.item" #default="slot"><slot name="item" v-bind="slot" /></template>
       </NuiTreeNode>
     </component>
   </div>
@@ -62,9 +61,16 @@ import {
   watch,
 } from 'vue';
 import { useControlId, useDirection, useVirtualList, type IconAlias } from '@numior/primitives';
+import { provideList, type TreeItemState } from '../list/list-context';
+import type { NuiSize } from '../shared/scale.types';
 import { useOptionSelection } from '../shared/use-option-selection';
 import NuiTreeNode from './NuiTreeNode.vue';
-import { applyCheck, checkStates as checkStatesOf, collectCheckedValues } from './cascade';
+import {
+  applyCheck,
+  checkStates as checkStatesOf,
+  collectCheckedValues,
+  type CheckState,
+} from './cascade';
 import { flattenTree, siblingIndicesOf, type TreeNode } from './flatten';
 import type { NuiTreeItem, NuiTreeProps } from './tree.types';
 import { useTreeNavigation, type TreeActivationKey } from './use-tree-navigation';
@@ -75,6 +81,8 @@ interface RenderedNode {
   readonly start: number | undefined;
 }
 
+const ROW_SIZES: Record<NuiSize, number> = { sm: 32, md: 36, lg: 40 };
+
 const afterPaint = (callback: () => void): void => {
   if (typeof requestAnimationFrame === 'undefined') {
     callback();
@@ -83,8 +91,11 @@ const afterPaint = (callback: () => void): void => {
   requestAnimationFrame(() => requestAnimationFrame(callback));
 };
 
+const ariaChecked = (state: CheckState | undefined): boolean | 'mixed' =>
+  state === 'indeterminate' ? 'mixed' : state === 'checked';
+
 const FOLDING = {
-  tag: 'div',
+  tag: 'ul',
   enterFromClass: 'nui-tree__item--folded',
   enterActiveClass: 'nui-tree__item--entering',
   enterToClass: 'nui-tree__item--unfolded',
@@ -97,13 +108,14 @@ const {
   id,
   items,
   getKey,
+  variant = 'plain',
+  size = 'md',
   selectable = undefined,
   checkable = false,
   icons = true,
   virtual = false,
   height,
-  itemHeight = 32,
-  size = 'md',
+  itemHeight,
   loop = false,
   typeahead = true,
   label,
@@ -125,6 +137,8 @@ const emit = defineEmits<{
 const baseId = useControlId(() => id);
 const root = useTemplateRef<HTMLElement>('root');
 const mounted = ref(false);
+const focused = ref(false);
+const rowScale = ref(1);
 const mode = computed(() => (selectable === undefined ? 'single' : selectable));
 
 const { keyOf, selectedKeys, selectedValues, choose } = useOptionSelection<T>({
@@ -139,7 +153,7 @@ const expandedKeys = computed(() => new Set(expanded.value.map(keyOf)));
 const checkedKeys = computed(() => new Set(checked.value.map(keyOf)));
 
 const checkStates = computed(() =>
-  checkable ? checkStatesOf(items, checkedKeys.value, keyOf) : new Map(),
+  checkable ? checkStatesOf(items, checkedKeys.value, keyOf) : new Map<string, CheckState>(),
 );
 
 const pending = shallowReactive(new Set<string>());
@@ -154,14 +168,17 @@ const activeIndex = computed(() =>
 
 const nodeId = (key: string): string => `${baseId.value}-node-${encodeURIComponent(key)}`;
 
-const activeDescendant = computed(() => {
+const activeNodeId = computed(() => {
   const node = visible.value[activeIndex.value];
-  return mounted.value && node ? nodeId(node.key) : undefined;
+  return node ? nodeId(node.key) : undefined;
 });
+
+const activeDescendant = computed(() => (mounted.value ? activeNodeId.value : undefined));
+const rowSize = computed(() => itemHeight ?? ROW_SIZES[size] * rowScale.value);
 
 const windowing = useVirtualList(root, {
   count: () => visible.value.length,
-  itemSize: () => itemHeight,
+  itemSize: () => rowSize.value,
   enabled: () => virtual,
   pinned: () => (activeIndex.value >= 0 ? activeIndex.value : undefined),
 });
@@ -177,7 +194,7 @@ const rendered = computed<RenderedNode[]>(() =>
 
 const rootStyle = computed(() => ({
   '--_height': height,
-  ...(virtual ? { '--_row': `${itemHeight}px` } : {}),
+  ...(itemHeight === undefined ? {} : { '--_row': `${itemHeight}px` }),
 }));
 
 const listStyle = computed(() =>
@@ -196,6 +213,36 @@ const iconFor = (node: TreeNode<T>): IconAlias | undefined => {
   }
   return node.hasChildren ? undefined : 'file';
 };
+
+const nodeOf = (value: T): TreeItemState | undefined => {
+  const key = keyOf(value);
+  const index = indexByKey.value.get(key);
+  const node = index === undefined ? undefined : visible.value[index];
+
+  if (!node) {
+    return undefined;
+  }
+
+  return {
+    level: node.level,
+    setSize: node.setSize,
+    posInSet: node.posInSet,
+    expanded: node.hasChildren ? node.expanded : undefined,
+    checked: checkable ? ariaChecked(checkStates.value.get(key)) : undefined,
+    loading: node.loading,
+  };
+};
+
+provideList<T>({
+  kind: 'tree',
+  selectable: computed(() => (mode.value === false ? undefined : mode.value)),
+  variant: computed(() => variant),
+  size: computed(() => size),
+  activeId: computed(() => (focused.value ? activeNodeId.value : undefined)),
+  keyOf,
+  isSelected: (value) => selectedKeys.value.has(keyOf(value)),
+  nodeOf,
+});
 
 const revealNode = (index: number): void => {
   if (virtual) {
@@ -307,7 +354,8 @@ const navigation = useTreeNavigation<T>({
   rtl: isRtl,
   loop: () => loop,
   typeahead: () => typeahead,
-  pageSize: () => (virtual ? Math.max(1, Math.floor(windowing.viewport.value / itemHeight)) : 10),
+  pageSize: () =>
+    virtual ? Math.max(1, Math.floor(windowing.viewport.value / rowSize.value)) : 10,
   onExpand: expandNode,
   onCollapse: collapseNode,
   onExpandSiblings: expandSiblings,
@@ -315,13 +363,23 @@ const navigation = useTreeNavigation<T>({
   onMove: setActive,
 });
 
-const onFocus = (): void => {
+const restCursor = (): void => {
   if (activeIndex.value >= 0) {
     return;
   }
   const nodes = visible.value;
   const selected = nodes.find((node) => selectedKeys.value.has(node.key) && !node.item.disabled);
   activeKey.value = (selected ?? nodes.find((node) => !node.item.disabled))?.key;
+};
+
+const onFocus = (): void => {
+  focused.value = true;
+  restCursor();
+};
+
+const onBlur = (): void => {
+  focused.value = false;
+  navigation.reset();
 };
 
 const hitNode = (event: Event): number => {
@@ -369,10 +427,22 @@ const onDblclick = (event: MouseEvent): void => {
   }
 };
 
+const measureRow = (): void => {
+  const row = root.value?.querySelector('.nui-list-item');
+  const measured = row instanceof HTMLElement ? row.getBoundingClientRect().height : 0;
+
+  if (measured > 0) {
+    rowScale.value = measured / ROW_SIZES[size];
+  }
+};
+
 onMounted(() => {
   mounted.value = true;
+  if (itemHeight === undefined) {
+    measureRow();
+  }
   if (selectedValues.value.length > 0) {
-    onFocus();
+    restCursor();
   }
 });
 </script>

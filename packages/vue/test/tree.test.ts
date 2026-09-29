@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { applyCheck, checkStates } from '../src/tree/cascade';
 import { defaultOptionKey } from '../src/shared/options';
 import { TreeDriver } from './drivers/tree';
-import { FILES, manyNodes, withDocs } from './support/tree-items';
+import { FILES, manyNodes, withDocs, withTrailing } from './support/tree-items';
 
 describe('NuiTree', () => {
   beforeEach(() => vi.useFakeTimers());
@@ -14,6 +14,11 @@ describe('NuiTree', () => {
     expect(tree.tree.attributes('tabindex')).toBe('0');
     expect(tree.tree.attributes('aria-label')).toBe('Файлы');
     expect(tree.tree.attributes('aria-multiselectable')).toBeUndefined();
+    expect(tree.nodeTag('src')).toBe('li');
+    expect(tree.listModifier('variant-plain')).toBe(true);
+    expect(tree.modifierOf('src', 'mode-treeitem')).toBe(true);
+    expect(tree.modifierOf('src', 'size-md')).toBe(true);
+    expect(tree.modifierOf('legacy', 'disabled')).toBe(true);
 
     expect(tree.labels).toEqual([
       'src',
@@ -114,6 +119,7 @@ describe('NuiTree', () => {
     await tree.press('Enter');
     expect(tree.value).toBe('design');
     expect(tree.attr('Дизайн', 'aria-selected')).toBe('true');
+    expect(tree.modifierOf('Дизайн', 'selected')).toBe(true);
     expect(tree.attr('src', 'aria-selected')).toBe('false');
     expect(tree.events).toEqual(['select:Дизайн']);
     tree.unmount();
@@ -232,6 +238,33 @@ describe('NuiTree', () => {
     tree.unmount();
   });
 
+  it('renders on the list shell with a variant, a size, badges, shortcuts and the current node', () => {
+    const tree = TreeDriver.mount({
+      items: withTrailing(),
+      props: { variant: 'bordered', size: 'sm' },
+    });
+
+    expect(tree.listModifier('variant-bordered')).toBe(true);
+    expect(tree.modifierOf('src', 'size-sm')).toBe(true);
+    expect(tree.trailingOf('src')).toBe('3');
+    expect(tree.trailingOf('docs')).not.toBe('');
+    expect(tree.attr('README.md', 'aria-current')).toBe('true');
+    expect(tree.modifierOf('README.md', 'current')).toBe(true);
+    expect(tree.attr('src', 'aria-current')).toBeUndefined();
+    tree.unmount();
+  });
+
+  it('paints the active row only while the tree holds focus and keeps the cursor across blur', async () => {
+    const tree = TreeDriver.mount({ modelValue: 'readme' });
+    expect(tree.activeLabels).toEqual([]);
+    await tree.focus();
+    expect(tree.activeLabels).toEqual(['README.md']);
+    await tree.blur();
+    expect(tree.activeLabels).toEqual([]);
+    expect(tree.activeLabel).toBe('README.md');
+    tree.unmount();
+  });
+
   it('moves the cursor to the pressed node before focus arrives, so no other node lights up', async () => {
     const tree = TreeDriver.mount();
     await tree.pointerDown('docs');
@@ -249,6 +282,7 @@ describe('NuiTree', () => {
     });
 
     expect(tree.hasModifier('virtual')).toBe(true);
+    expect(tree.itemsTag).toBe('ul');
     await tree.setHeight(160);
     expect(tree.renderedCount).toBe(10);
     await tree.focus();

@@ -25,11 +25,7 @@ const labelOfItem = (item: unknown): string =>
     : '';
 
 const textOf = (element: Element): string =>
-  (
-    element.querySelector('.nui-row__title')?.textContent ??
-    element.querySelector('.nui-tree__text')?.textContent ??
-    ''
-  ).trim();
+  (element.querySelector('.nui-row__title')?.textContent ?? '').trim();
 
 const findItem = (
   items: readonly NuiTreeItem<string>[],
@@ -126,6 +122,14 @@ export class TreeDriver extends ComponentDriver {
     return this.tree.classes().includes(`nui-tree--${modifier}`);
   }
 
+  listModifier(modifier: string): boolean {
+    return this.tree.classes().includes(`nui-list--${modifier}`);
+  }
+
+  get itemsTag(): string {
+    return this.tree.find('.nui-tree__list').element.tagName.toLowerCase();
+  }
+
   get tree(): DOMWrapper<HTMLElement> {
     return this.wrapper.find<HTMLElement>('.nui-tree');
   }
@@ -170,6 +174,18 @@ export class TreeDriver extends ComponentDriver {
 
   attr(label: string, name: string): string | undefined {
     return this.node(label).attributes(name);
+  }
+
+  nodeTag(label: string): string {
+    return this.node(label).element.tagName.toLowerCase();
+  }
+
+  modifierOf(label: string, modifier: string): boolean {
+    return this.node(label).classes().includes(`nui-list-item--${modifier}`);
+  }
+
+  trailingOf(label: string): string {
+    return this.node(label).find('.nui-row__trailing').text();
   }
 
   nodeId(label: string): string | undefined {
@@ -234,13 +250,13 @@ export class TreeDriver extends ComponentDriver {
   }
 
   async click(label: string): Promise<void> {
-    await this.node(label).find('.nui-tree__text').trigger('click');
+    await this.node(label).find('.nui-row__title').trigger('click');
     await nextTick();
   }
 
   async pointerDown(label: string): Promise<void> {
     this.node(label)
-      .find('.nui-tree__text')
+      .find('.nui-row__title')
       .element.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
 
     this.tree.element.focus();
@@ -249,12 +265,12 @@ export class TreeDriver extends ComponentDriver {
 
   get activeLabels(): string[] {
     return this.nodes
-      .filter((node) => node.classes().includes('nui-tree__item--active'))
+      .filter((node) => node.classes().includes('nui-list-item--active'))
       .map((node) => textOf(node.element));
   }
 
   async dblclick(label: string): Promise<void> {
-    await this.node(label).find('.nui-tree__text').trigger('dblclick');
+    await this.node(label).find('.nui-row__title').trigger('dblclick');
     await nextTick();
   }
 

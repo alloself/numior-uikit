@@ -269,6 +269,7 @@ export type {
   NuiTreeItemSlot,
   NuiTreeProps,
   NuiTreeSelectable,
+  NuiTreeVariant,
 } from './tree/tree.types';
 export type { CheckState } from './tree/cascade';
 export { default as NuiChip } from './chip/NuiChip.vue';
