@@ -36,6 +36,7 @@
     calc(-1 * var(--_side-y) * var(--nui-space-1));
   --_padding-inline: var(--nui-space-2);
   --_padding-block: var(--nui-space-1);
+  --_row-padding: var(--nui-space-1);
   --_gap: var(--nui-space-2);
   --_indent: var(--nui-space-3);
 
@@ -71,6 +72,7 @@
 .nui-list--variant-nav {
   --_padding-inline: var(--nui-space-2);
   --_padding-block: var(--nui-space-1);
+  --_row-padding: var(--nui-space-1);
   --_gap: var(--nui-space-2);
   --_indent: 0px;
 }
@@ -157,14 +159,12 @@
 }
 .nui-list-item--size-sm {
   --_min-size: var(--nui-control-height-sm);
-  --_padding-block: var(--nui-space-2);
   --_row-description-size: var(--nui-font-size-xs);
 
   font-size: var(--nui-font-size-xs);
 }
 .nui-list-item--size-lg {
   --_min-size: var(--nui-control-height-lg);
-  --_padding-block: var(--nui-space-4);
 
   font-size: var(--nui-font-size-md);
 }
@@ -183,7 +183,8 @@
   gap: var(--_gap);
   min-inline-size: 0;
   min-block-size: var(--_min-size);
-  padding: var(--_padding-block) var(--_padding-inline);
+  padding: var(--_row-padding, max(var(--nui-space-1), calc((var(--_min-size) - 1lh) / 2)))
+    var(--_padding-inline);
 }
 .nui-list-item__action {
   border: 0;

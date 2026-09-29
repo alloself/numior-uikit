@@ -5,6 +5,7 @@
   --_height: auto;
   --_padding-inline: var(--nui-space-2);
   --_padding-block: var(--nui-space-1);
+  --_row-padding: var(--nui-space-1);
   --_gap: var(--nui-space-2);
 
   position: relative;
