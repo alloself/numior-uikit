@@ -4,8 +4,8 @@
     "packages/primitives/src/index.ts",
     "packages/vue/src/index.ts",
     "packages/forms/src/index.ts",
-    "packages/grid/src/engine/index.ts",
-    "packages/grid/src/index.ts",
+    "packages/table/src/engine/index.ts",
+    "packages/table/src/index.ts",
     "apps/playground/src/tailwind.css",
     "scripts/vite-package-assets.ts",
     "scripts/build-css.ts",
@@ -22,7 +22,7 @@
     "packages/nuxt/test/fixture/app/app.config.ts",
     "packages/nuxt/test/fixture/app/**/*.vue",
     "packages/nuxt/test/**/*.test.ts",
-    "packages/grid/bench/engine.bench.ts",
+    "packages/table/bench/engine.bench.ts",
     "playwright.bench.config.ts",
     "tests/bench/**/*.spec.ts",
     "apps/playground/src/bench/main.ts"
@@ -73,8 +73,8 @@
         "patterns": ["packages/forms/**"]
       },
       {
-        "name": "grid",
-        "patterns": ["packages/grid/**"]
+        "name": "table",
+        "patterns": ["packages/table/**"]
       },
       {
         "name": "nuxt",
@@ -111,8 +111,8 @@
         "allow": ["tokens", "primitives", "vue", "forms"]
       },
       {
-        "from": "grid",
-        "allow": ["tokens", "primitives", "vue", "forms", "grid"]
+        "from": "table",
+        "allow": ["tokens", "primitives", "vue", "forms", "table"]
       },
       {
         "from": "nuxt",
@@ -120,7 +120,7 @@
       },
       {
         "from": "apps",
-        "allow": ["tokens", "primitives", "tailwind", "vue", "forms", "grid", "nuxt", "apps"]
+        "allow": ["tokens", "primitives", "tailwind", "vue", "forms", "table", "nuxt", "apps"]
       },
       {
         "from": "tests",
@@ -130,7 +130,7 @@
           "tailwind",
           "vue",
           "forms",
-          "grid",
+          "table",
           "nuxt",
           "apps",
           "tests"

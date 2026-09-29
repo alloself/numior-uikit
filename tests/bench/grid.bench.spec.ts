@@ -1,10 +1,10 @@
 import { expect, test } from '@playwright/test';
-import { GRID_COLUMNS } from '../../packages/grid/bench/dataset';
-import { record, summarize, type Operation } from '../../packages/grid/bench/harness';
+import { GRID_COLUMNS } from '../../packages/table/bench/dataset';
+import { record, summarize, type Operation } from '../../packages/table/bench/harness';
 import { GridBenchPage } from './pages/grid-bench';
 
 const ROWS = 1_000_000;
-const RESULTS = new URL('../../packages/grid/bench/results/', import.meta.url);
+const RESULTS = new URL('../../packages/table/bench/results/', import.meta.url);
 
 test('the data grid keeps input and frames within budget on a million rows', async ({
   page,

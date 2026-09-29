@@ -22,7 +22,7 @@ import type {
 const PACKAGES = [
   { name: '@numior/vue', dir: 'packages/vue' },
   { name: '@numior/forms', dir: 'packages/forms' },
-  { name: '@numior/grid', dir: 'packages/grid' },
+  { name: '@numior/table', dir: 'packages/table' },
 ] as const;
 
 const PRIMITIVES = { name: '@numior/primitives', dir: 'packages/primitives' } as const;

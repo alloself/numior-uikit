@@ -3,7 +3,7 @@ import { createNuiConfig } from '@numior/vue';
 import '@numior/tokens/theme.css';
 import '@numior/tokens/base.css';
 import '@numior/vue/styles.css';
-import '@numior/grid/styles.css';
+import '@numior/table/styles.css';
 import './bench.css';
 import BenchApp from './BenchApp.vue';
 

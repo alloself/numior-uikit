@@ -5,7 +5,7 @@ const ROOTS = [
   'packages/primitives/test',
   'packages/vue/test',
   'packages/forms/test',
-  'packages/grid/test',
+  'packages/table/test',
 ];
 
 const RULES = [

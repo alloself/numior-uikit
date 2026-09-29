@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@numior/forms": "workspace:*",
-    "@numior/grid": "workspace:*",
+    "@numior/table": "workspace:*",
     "@numior/tailwind": "workspace:*",
     "@numior/tokens": "workspace:*",
     "@numior/vue": "workspace:*",

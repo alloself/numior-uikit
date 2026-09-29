@@ -175,20 +175,24 @@ const localImports = async (file, seen = new Set()) => {
   return seen;
 };
 
-const gridCode = await importBuild('grid', ['NuiDataGrid']);
+const tableCode = await importBuild('table', ['NuiDataGrid']);
 
-assert.match(gridCode, /from ['"]@numior\/vue['"]/, 'grid must keep @numior/vue external');
+assert.match(tableCode, /from ['"]@numior\/vue['"]/, 'table must keep @numior/vue external');
 
-const gridEngineFile = resolve('packages/grid/dist/engine.js');
-const gridEngine = await import(pathToFileURL(gridEngineFile).href);
+const tableEngineFile = resolve('packages/table/dist/engine.js');
+const tableEngine = await import(pathToFileURL(tableEngineFile).href);
 
-assert.equal(typeof gridEngine.createGridEngine, 'function', 'grid/engine must export the engine');
+assert.equal(
+  typeof tableEngine.createGridEngine,
+  'function',
+  'table/engine must export the engine',
+);
 
-for (const file of await localImports(gridEngineFile)) {
+for (const file of await localImports(tableEngineFile)) {
   assert.doesNotMatch(
     await readFile(file, 'utf8'),
     /from ['"](?:vue|@vueuse\/[\w-]+|@numior\/[\w-]+)['"]/,
-    `the grid engine must stay free of Vue and UI packages: ${file}`,
+    `the table engine must stay free of Vue and UI packages: ${file}`,
   );
 }
 

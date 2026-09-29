@@ -32,8 +32,13 @@
 <script setup lang="ts">
 import { nextTick, onMounted, ref } from 'vue';
 import { NuiInput } from '@numior/vue';
-import { NuiDataGrid, type GridNodeId, type GridSort, type NuiDataGridFilters } from '@numior/grid';
-import { GRID_COLUMNS, generateRows } from '../../../../packages/grid/bench/dataset';
+import {
+  NuiDataGrid,
+  type GridNodeId,
+  type GridSort,
+  type NuiDataGridFilters,
+} from '@numior/table';
+import { GRID_COLUMNS, generateRows } from '../../../../packages/table/bench/dataset';
 import {
   afterPaint,
   createFrameRecorder,

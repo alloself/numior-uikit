@@ -3,7 +3,7 @@ import {
   type GridEngine,
   type GridFilter,
   type GridSort,
-} from '@numior/grid/engine';
+} from '@numior/table/engine';
 import {
   BENCH_COLUMNS,
   TREE_COLUMNS,

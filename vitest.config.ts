@@ -31,7 +31,7 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text-summary', 'json'],
       include: [
-        'packages/{primitives,vue,forms,grid}/src/**/*.{ts,vue}',
+        'packages/{primitives,vue,forms,table}/src/**/*.{ts,vue}',
         'apps/docs/.vitepress/{content,examples,markdown,reference,theme}/**/*.{ts,vue}',
       ],
       exclude: ['**/*.types.ts', '**/*.d.ts'],

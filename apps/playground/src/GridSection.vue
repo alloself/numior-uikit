@@ -113,7 +113,7 @@ import {
   type NuiDataGridHidden,
   type NuiDataGridPins,
   type NuiGridColumnDef,
-} from '@numior/grid';
+} from '@numior/table';
 
 type OrderStatus = 'new' | 'paid' | 'shipped' | 'returned';
 
