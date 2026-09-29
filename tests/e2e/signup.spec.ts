@@ -204,9 +204,7 @@ test.describe('signup form', () => {
     expect(Math.abs(minutes.x + minutes.width - (email.x + email.width))).toBeLessThanOrEqual(3);
   });
 
-  test('the form with field errors and with a server alert has no detectable WCAG AA violations', async ({
-    page,
-  }) => {
+  test('the form with field errors has no detectable WCAG AA violations', async ({ page }) => {
     const playground = await openSignup(page);
     const { signup } = playground;
     await signup.submit.click();
@@ -215,6 +213,11 @@ test.describe('signup form', () => {
       await playground.setTheme(theme);
       expect(await playground.wcagViolations()).toEqual([]);
     }
+  });
+
+  test('the form with a server alert has no detectable WCAG AA violations', async ({ page }) => {
+    const playground = await openSignup(page);
+    const { signup } = playground;
     await signup.answer('Ошибка формы');
     await signup.fillValid();
     await signup.submit.click();

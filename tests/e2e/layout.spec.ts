@@ -234,13 +234,23 @@ test.describe('layout', () => {
       await playground.setTheme(theme);
       expect(await playground.wcagViolations()).toEqual([]);
     }
-    if (!isMobile) {
-      await layout.trigger.click();
-      await expect.poll(() => layout.sidebarWidth()).toBeLessThan(80);
-      expect(await playground.wcagViolations()).toEqual([]);
-      await layout.subToggle.click();
-      await expect(layout.flyout).toBeVisible();
-      expect(await playground.wcagViolations()).toEqual([]);
-    }
+  });
+
+  test('icon rail and its flyout have no automatically detectable WCAG AA violations', async ({
+    page,
+    isMobile,
+  }) => {
+    test.skip(isMobile, 'the icon rail is a desktop mode');
+    const playground = new PlaygroundPage(page);
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    const { layout } = playground;
+    await layout.root.scrollIntoViewIfNeeded();
+    await layout.trigger.click();
+    await expect.poll(() => layout.sidebarWidth()).toBeLessThan(80);
+    expect(await playground.wcagViolations()).toEqual([]);
+    await layout.subToggle.click();
+    await expect(layout.flyout).toBeVisible();
+    expect(await playground.wcagViolations()).toEqual([]);
   });
 });
