@@ -11,8 +11,6 @@ import {
 } from '@numior/primitives';
 import { firstChildIndexOf, parentIndexOf, type TreeNode } from './flatten';
 
-export type TreeActivationKey = 'Enter' | ' ';
-
 export interface TreeNavigationOptions<T> {
   readonly nodes: () => readonly TreeNode<T>[];
   readonly activeIndex: () => number;
@@ -23,7 +21,7 @@ export interface TreeNavigationOptions<T> {
   readonly onExpand: (index: number) => void;
   readonly onCollapse: (index: number) => void;
   readonly onExpandSiblings: (index: number) => void;
-  readonly onActivate: (index: number, key: TreeActivationKey) => void;
+  readonly onActivate: (index: number) => void;
   readonly onMove: (index: number) => void;
 }
 
@@ -215,11 +213,11 @@ export const useTreeNavigation = <T>(options: TreeNavigationOptions<T>): TreeNav
       return true;
     }
     if (event.key === 'Enter') {
-      options.onActivate(options.activeIndex(), 'Enter');
+      options.onActivate(options.activeIndex());
       return true;
     }
     if (event.key === ' ' && !isTypeaheadActive(typeahead.value, Date.now())) {
-      options.onActivate(options.activeIndex(), ' ');
+      options.onActivate(options.activeIndex());
       return true;
     }
     if (options.typeahead() && isPrintable(event)) {

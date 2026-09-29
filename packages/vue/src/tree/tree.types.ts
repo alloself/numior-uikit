@@ -31,6 +31,9 @@ export interface NuiTreeProps<T> {
   itemHeight?: number | undefined;
   loop?: boolean | undefined;
   typeahead?: boolean | undefined;
+  loading?: boolean | undefined;
+  loadingLabel?: string | undefined;
+  emptyLabel?: string | undefined;
   label?: string | undefined;
   labelledBy?: string | undefined;
 }

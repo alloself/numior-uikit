@@ -60,6 +60,23 @@ export const flattenTree = <T>(
   return out;
 };
 
+export const findTreeItem = <T>(
+  items: readonly NuiTreeItem<T>[],
+  key: string,
+  keyOf: NuiOptionKey<T>,
+): NuiTreeItem<T> | undefined => {
+  for (const item of items) {
+    if (keyOf(item.value) === key) {
+      return item;
+    }
+    const found = findTreeItem(item.children ?? [], key, keyOf);
+    if (found) {
+      return found;
+    }
+  }
+  return undefined;
+};
+
 export const parentIndexOf = <T>(nodes: readonly TreeNode<T>[], index: number): number => {
   const node = nodes[index];
   if (!node || node.parentKey === undefined) {

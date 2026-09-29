@@ -12,14 +12,15 @@
         'nui-tree--multiple': mode === 'multiple',
       },
     ]"
-    role="tree"
-    tabindex="0"
-    :aria-label="label"
-    :aria-labelledby="labelledBy"
-    :aria-multiselectable="mode === 'multiple' || undefined"
+    :role="widget ? 'tree' : undefined"
+    :tabindex="widget ? 0 : undefined"
+    :aria-label="widget ? label : undefined"
+    :aria-labelledby="widget ? labelledBy : undefined"
+    :aria-multiselectable="(widget && mode === 'multiple') || undefined"
     :aria-activedescendant="activeDescendant"
+    :aria-busy="loading || undefined"
     :style="rootStyle"
-    @keydown="navigation.onKeydown"
+    @keydown="onKeydown"
     @focus="onFocus"
     @blur="onBlur"
     @pointerdown="onPointerdown"
@@ -46,6 +47,13 @@
       >
         <template v-if="$slots.item" #default="slot"><slot name="item" v-bind="slot" /></template>
       </NuiTreeNode>
+      <li v-if="loading" key="status" class="nui-list__status" role="presentation">
+        <NuiIcon alias="loader" class="nui-list__spinner" />
+        {{ loadingText }}
+      </li>
+      <li v-else-if="isEmpty" key="empty" class="nui-list__empty" role="presentation">
+        <slot name="empty"><NuiEmpty size="sm" :title="emptyText" /></slot>
+      </li>
     </component>
   </div>
 </template>
@@ -60,8 +68,17 @@ import {
   useTemplateRef,
   watch,
 } from 'vue';
-import { useControlId, useDirection, useVirtualList, type IconAlias } from '@numior/primitives';
+import {
+  useControlId,
+  useDirection,
+  useMessages,
+  useVirtualList,
+  type IconAlias,
+} from '@numior/primitives';
+import NuiEmpty from '../empty/NuiEmpty.vue';
+import NuiIcon from '../icon/NuiIcon.vue';
 import { provideList, type TreeItemState } from '../list/list-context';
+import { listMessages } from '../list/list.messages';
 import type { NuiSize } from '../shared/scale.types';
 import { useOptionSelection } from '../shared/use-option-selection';
 import NuiTreeNode from './NuiTreeNode.vue';
@@ -69,11 +86,13 @@ import {
   applyCheck,
   checkStates as checkStatesOf,
   collectCheckedValues,
+  completeChecked,
+  sameKeys,
   type CheckState,
 } from './cascade';
-import { flattenTree, siblingIndicesOf, type TreeNode } from './flatten';
+import { findTreeItem, flattenTree, siblingIndicesOf, type TreeNode } from './flatten';
 import type { NuiTreeItem, NuiTreeProps } from './tree.types';
-import { useTreeNavigation, type TreeActivationKey } from './use-tree-navigation';
+import { useTreeNavigation } from './use-tree-navigation';
 
 interface RenderedNode {
   readonly node: TreeNode<T>;
@@ -118,6 +137,9 @@ const {
   itemHeight,
   loop = false,
   typeahead = true,
+  loading = false,
+  loadingLabel,
+  emptyLabel,
   label,
   labelledBy,
 } = defineProps<NuiTreeProps<T>>();
@@ -125,7 +147,6 @@ const {
 const model = defineModel<T | null>({ default: null });
 const values = defineModel<T[]>('values', { default: () => [] });
 const expanded = defineModel<T[]>('expanded', { default: () => [] });
-const checked = defineModel<T[]>('checked', { default: () => [] });
 
 const emit = defineEmits<{
   expand: [item: NuiTreeItem<T>];
@@ -136,10 +157,23 @@ const emit = defineEmits<{
 
 const baseId = useControlId(() => id);
 const root = useTemplateRef<HTMLElement>('root');
+const messages = useMessages(listMessages);
 const mounted = ref(false);
 const focused = ref(false);
+const pointerModality = ref(false);
 const rowScale = ref(1);
-const mode = computed(() => (selectable === undefined ? 'single' : selectable));
+
+const mode = computed(() => {
+  if (checkable) {
+    return 'multiple';
+  }
+  return selectable === undefined ? 'single' : selectable;
+});
+
+const loadingText = computed(() => loadingLabel ?? messages.value.loading);
+const emptyText = computed(() => emptyLabel ?? messages.value.empty);
+const isEmpty = computed(() => items.length === 0);
+const widget = computed(() => loading || !isEmpty.value);
 
 const { keyOf, selectedKeys, selectedValues, choose } = useOptionSelection<T>({
   options: () => [],
@@ -150,10 +184,9 @@ const { keyOf, selectedKeys, selectedValues, choose } = useOptionSelection<T>({
 });
 
 const expandedKeys = computed(() => new Set(expanded.value.map(keyOf)));
-const checkedKeys = computed(() => new Set(checked.value.map(keyOf)));
 
 const checkStates = computed(() =>
-  checkable ? checkStatesOf(items, checkedKeys.value, keyOf) : new Map<string, CheckState>(),
+  checkable ? checkStatesOf(items, selectedKeys.value, keyOf) : new Map<string, CheckState>(),
 );
 
 const pending = shallowReactive(new Set<string>());
@@ -238,7 +271,9 @@ provideList<T>({
   selectable: computed(() => (mode.value === false ? undefined : mode.value)),
   variant: computed(() => variant),
   size: computed(() => size),
-  activeId: computed(() => (focused.value ? activeNodeId.value : undefined)),
+  activeId: computed(() =>
+    focused.value && !pointerModality.value ? activeNodeId.value : undefined,
+  ),
   keyOf,
   isSelected: (value) => selectedKeys.value.has(keyOf(value)),
   nodeOf,
@@ -280,6 +315,34 @@ watch(visible, (next, previous) => {
   const before = new Set(previous.map((node) => node.key));
   revealAdded(next.flatMap((node) => (before.has(node.key) ? [] : [node.key])));
 });
+
+const setChecked = (next: ReadonlySet<string>): void => {
+  values.value = collectCheckedValues(items, next, keyOf);
+};
+
+const settlePending = (): void => {
+  for (const key of pending) {
+    const item = findTreeItem(items, key, keyOf);
+
+    if (!item || item.children !== undefined || !expandedKeys.value.has(key)) {
+      pending.delete(key);
+    }
+  }
+};
+
+const completeCascade = (): void => {
+  if (!checkable) {
+    return;
+  }
+  const next = completeChecked(items, selectedKeys.value, keyOf);
+
+  if (!sameKeys(next, selectedKeys.value)) {
+    setChecked(next);
+  }
+};
+
+watch([() => items, expandedKeys], settlePending);
+watch(() => items, completeCascade);
 
 const expandItems = (targets: readonly TreeNode<T>[]): void => {
   const fresh = targets.filter((node) => node.hasChildren && !node.expanded);
@@ -327,24 +390,16 @@ const expandSiblings = (index: number): void => {
   expandItems(siblingIndicesOf(nodes, index).flatMap((position) => nodes[position] ?? []));
 };
 
-const toggleCheck = (node: TreeNode<T>): void => {
-  const next = applyCheck(items, checkedKeys.value, node.item, keyOf);
-  checked.value = collectCheckedValues(items, next, keyOf);
-};
-
-const activate = (index: number, key: TreeActivationKey): void => {
+const activate = (index: number): void => {
   const node = visible.value[index];
-  if (!node || node.item.disabled) {
+  if (!node || node.item.disabled || mode.value === false) {
     return;
   }
-  if (checkable && (key === ' ' || mode.value === false)) {
-    toggleCheck(node);
-    return;
+  if (checkable) {
+    setChecked(applyCheck(items, selectedKeys.value, node.item, keyOf));
+  } else {
+    choose(node.item.value);
   }
-  if (mode.value === false) {
-    return;
-  }
-  choose(node.item.value);
   emit('select', node.item);
 };
 
@@ -379,7 +434,13 @@ const onFocus = (): void => {
 
 const onBlur = (): void => {
   focused.value = false;
+  pointerModality.value = false;
   navigation.reset();
+};
+
+const onKeydown = (event: KeyboardEvent): void => {
+  pointerModality.value = false;
+  navigation.onKeydown(event);
 };
 
 const hitNode = (event: Event): number => {
@@ -397,6 +458,7 @@ const partOf = (event: Event, part: string): boolean =>
   event.target instanceof Element && event.target.closest(`.nui-tree__${part}`) !== null;
 
 const onPointerdown = (event: PointerEvent): void => {
+  pointerModality.value = true;
   const node = visible.value[hitNode(event)];
   if (node && !node.item.disabled) {
     activeKey.value = node.key;
@@ -412,10 +474,8 @@ const onClick = (event: MouseEvent): void => {
   activeKey.value = node.key;
   if (partOf(event, 'toggle')) {
     toggleExpand(index);
-  } else if (partOf(event, 'checkbox')) {
-    toggleCheck(node);
   } else {
-    activate(index, 'Enter');
+    activate(index);
   }
 };
 

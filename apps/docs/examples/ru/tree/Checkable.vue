@@ -1,9 +1,8 @@
 <template>
   <div class="flex flex-col gap-3">
     <NuiTree
-      v-model:checked="checked"
+      v-model:values="checked"
       :items="files"
-      :selectable="false"
       checkable
       label="Экспорт"
       class="w-full max-w-sm"

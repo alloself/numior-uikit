@@ -15,9 +15,8 @@
         @load="loadDocs"
       />
       <NuiTree
-        v-model:checked="checked"
+        v-model:values="checked"
         :items="files"
-        :selectable="false"
         checkable
         label="Экспорт"
         variant="bordered"

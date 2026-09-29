@@ -95,6 +95,34 @@ export const applyCheck = <T>(
   return next;
 };
 
+export const completeChecked = <T>(
+  items: readonly NuiTreeItem<T>[],
+  checked: ReadonlySet<string>,
+  keyOf: NuiOptionKey<T>,
+): Set<string> => {
+  const next = new Set(checked);
+
+  const visit = (item: NuiTreeItem<T>): void => {
+    if (next.has(keyOf(item.value))) {
+      for (const key of enabledDescendantKeys(item, keyOf)) {
+        next.add(key);
+      }
+    }
+    for (const child of item.children ?? []) {
+      visit(child);
+    }
+  };
+
+  for (const item of items) {
+    visit(item);
+  }
+  normalize(items, next, keyOf);
+  return next;
+};
+
+export const sameKeys = (left: ReadonlySet<string>, right: ReadonlySet<string>): boolean =>
+  left.size === right.size && [...left].every((key) => right.has(key));
+
 const pushChecked = <T>(
   items: readonly NuiTreeItem<T>[],
   checked: ReadonlySet<string>,

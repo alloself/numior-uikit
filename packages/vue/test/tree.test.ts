@@ -164,39 +164,92 @@ describe('NuiTree', () => {
     tree.unmount();
   });
 
-  it('cascades checkboxes through enabled descendants and reports mixed ancestors', async () => {
+  it('checks with a cascade through enabled descendants, selects checked rows and reports mixed ancestors', async () => {
     const tree = TreeDriver.mount({
       props: { checkable: true },
       expanded: ['src', 'components'],
     });
 
     expect(tree.hasModifier('checkable')).toBe(true);
+    expect(tree.hasModifier('multiple')).toBe(true);
+    expect(tree.tree.attributes('aria-multiselectable')).toBe('true');
     expect(tree.attr('src', 'aria-checked')).toBe('false');
     await tree.clickCheckbox('src');
-    expect(tree.checkedValues).toEqual(['src', 'components', 'button', 'index']);
+    expect(tree.value).toEqual(['src', 'components', 'button', 'index']);
     expect(tree.attr('src', 'aria-checked')).toBe('true');
-    expect(tree.value).toBeNull();
+    expect(tree.attr('src', 'aria-selected')).toBe('true');
+    expect(tree.modifierOf('src', 'selected')).toBe(true);
+    expect(tree.events).toEqual(['select:src']);
     await tree.clickCheckbox('Button.vue');
-    expect(tree.checkedValues).toEqual(['index']);
+    expect(tree.value).toEqual(['index']);
     expect(tree.attr('src', 'aria-checked')).toBe('mixed');
+    expect(tree.attr('src', 'aria-selected')).toBe('false');
     expect(tree.hasPart('src', 'checkbox--indeterminate')).toBe(true);
     expect(tree.attr('components', 'aria-checked')).toBe('false');
     expect(tree.attr('index.ts', 'aria-checked')).toBe('true');
-    await tree.clickCheckbox('Button.vue');
-    expect(tree.checkedValues).toEqual(['src', 'components', 'button', 'index']);
+    await tree.click('Button.vue');
+    expect(tree.value).toEqual(['src', 'components', 'button', 'index']);
     await tree.clickCheckbox('legacy');
-    expect(tree.checkedValues).toEqual(['src', 'components', 'button', 'index']);
+    expect(tree.value).toEqual(['src', 'components', 'button', 'index']);
     await tree.focus();
     await tree.press('End');
     await tree.press(' ');
-    expect(tree.checkedValues).toEqual(['src', 'components', 'button', 'index', 'design', 'logo']);
+    expect(tree.value).toEqual(['src', 'components', 'button', 'index', 'design', 'logo']);
+    await tree.press('Enter');
+    expect(tree.value).toEqual(['src', 'components', 'button', 'index']);
     tree.unmount();
     const only = TreeDriver.mount({ props: { checkable: true, selectable: false } });
     await only.focus();
     await only.press('Enter');
-    expect(only.checkedValues).toEqual(['src', 'components', 'button', 'index']);
-    expect(only.value).toBeNull();
+    expect(only.value).toEqual(['src', 'components', 'button', 'index']);
     only.unmount();
+  });
+
+  it('checks lazily loaded children of a checked node and drops the spinner when the node collapses', async () => {
+    const tree = TreeDriver.mount({ props: { checkable: true } });
+    await tree.clickCheckbox('docs');
+    expect(tree.value).toEqual(['docs']);
+    await tree.clickToggle('docs');
+    expect(tree.attr('docs', 'aria-busy')).toBe('true');
+
+    await tree.receiveItems(
+      withDocs([
+        { value: 'guide', label: 'guide.md' },
+        { value: 'api', label: 'API.md' },
+      ]),
+    );
+
+    expect(tree.value).toEqual(['docs', 'guide', 'api']);
+    expect(tree.attr('guide.md', 'aria-checked')).toBe('true');
+    expect(tree.attr('docs', 'aria-busy')).toBeUndefined();
+    tree.unmount();
+    const failing = TreeDriver.mount();
+    await failing.clickToggle('docs');
+    expect(failing.loads).toEqual(['docs']);
+    expect(failing.hasPart('docs', 'spinner')).toBe(true);
+    await failing.setExpanded([]);
+    expect(failing.hasPart('docs', 'spinner')).toBe(false);
+    expect(failing.attr('docs', 'aria-busy')).toBeUndefined();
+    await failing.clickToggle('docs');
+    expect(failing.loads).toEqual(['docs', 'docs']);
+    expect(failing.hasPart('docs', 'spinner')).toBe(true);
+    failing.unmount();
+  });
+
+  it('shows the loading and empty rows in the configured language unless labelled', () => {
+    const loading = TreeDriver.mount({ props: { loading: true }, config: { locale: 'ru-RU' } });
+    expect(loading.tree.attributes('aria-busy')).toBe('true');
+    expect(loading.statusText).toBe('Загрузка');
+    loading.unmount();
+    const empty = TreeDriver.mount({ items: [], config: { locale: 'ru-RU' } });
+    expect(empty.emptyText).toBe('Список пуст');
+    expect(empty.tree.attributes('role')).toBeUndefined();
+    expect(empty.tree.attributes('tabindex')).toBeUndefined();
+    expect(loading.tree.attributes('role')).toBe('tree');
+    empty.unmount();
+    const labelled = TreeDriver.mount({ items: [], props: { emptyLabel: 'Нет файлов' } });
+    expect(labelled.emptyText).toBe('Нет файлов');
+    labelled.unmount();
   });
 
   it('loads lazy children on expand, shows a spinner meanwhile and turns empty results into a leaf', async () => {
@@ -265,13 +318,19 @@ describe('NuiTree', () => {
     tree.unmount();
   });
 
-  it('moves the cursor to the pressed node before focus arrives, so no other node lights up', async () => {
+  it('moves the cursor to the pressed node before focus arrives and paints it only from the keyboard', async () => {
     const tree = TreeDriver.mount();
     await tree.pointerDown('docs');
     expect(tree.activeLabel).toBe('docs');
-    expect(tree.activeLabels).toEqual(['docs']);
+    expect(tree.activeLabels).toEqual([]);
     await tree.click('docs');
-    expect(tree.activeLabels).toEqual(['docs']);
+    expect(tree.value).toBe('docs');
+    expect(tree.activeLabels).toEqual([]);
+    await tree.press('ArrowDown');
+    expect(tree.activeLabels).toEqual(['README.md']);
+    await tree.pointerDown('src');
+    expect(tree.activeLabel).toBe('src');
+    expect(tree.activeLabels).toEqual([]);
     tree.unmount();
   });
 

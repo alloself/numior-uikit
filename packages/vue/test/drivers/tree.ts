@@ -1,8 +1,15 @@
 import { flushPromises, mount, type DOMWrapper, type VueWrapper } from '@vue/test-utils';
 import { vi } from 'vitest';
 import { defineComponent, h, nextTick, ref, type Ref } from 'vue';
-import { NuiTree, type NuiTreeItem, type NuiTreeItemSlot, type NuiTreeProps } from '../../src';
+import {
+  NuiTree,
+  type NuiConfigOptions,
+  type NuiTreeItem,
+  type NuiTreeItemSlot,
+  type NuiTreeProps,
+} from '../../src';
 import { FILES } from '../support/tree-items';
+import { configPlugins } from '../support/config';
 import { createSelection, type Selection, type SelectionValue } from '../support/selection';
 import { ComponentDriver } from './component';
 import { isString, listOf } from '../../../primitives/test/support/guards';
@@ -14,9 +21,9 @@ export interface TreeMountOptions {
   readonly items?: readonly NuiTreeItem<string>[];
   readonly modelValue?: SelectionValue;
   readonly expanded?: readonly string[];
-  readonly checked?: readonly string[];
   readonly dir?: 'ltr' | 'rtl';
   readonly itemSlot?: ((slot: NuiTreeItemSlot<unknown>) => string) | undefined;
+  readonly config?: NuiConfigOptions;
 }
 
 const labelOfItem = (item: unknown): string =>
@@ -53,13 +60,16 @@ export class TreeDriver extends ComponentDriver {
     items = FILES,
     modelValue,
     expanded = [],
-    checked = [],
     dir,
     itemSlot,
+    config,
   }: TreeMountOptions = {}) {
-    const selection = createSelection(modelValue, props.selectable === 'multiple');
+    const selection = createSelection(
+      modelValue,
+      props.selectable === 'multiple' || props.checkable === true,
+    );
+
     const expandedRef = ref<string[]>([...expanded]);
-    const checkedRef = ref<string[]>([...checked]);
     const itemsRef = ref<readonly NuiTreeItem<string>[]>(structuredClone(items));
     const loads: string[] = [];
     const events: string[] = [];
@@ -74,15 +84,9 @@ export class TreeDriver extends ComponentDriver {
               items: itemsRef.value,
               ...selection.props(),
               expanded: expandedRef.value,
-              checked: checkedRef.value,
               'onUpdate:expanded': (value: unknown) => {
                 if (isStringList(value)) {
                   expandedRef.value = value;
-                }
-              },
-              'onUpdate:checked': (value: unknown) => {
-                if (isStringList(value)) {
-                  checkedRef.value = value;
                 }
               },
               onLoad: (item: unknown) => loads.push(labelOfItem(item)),
@@ -96,10 +100,9 @@ export class TreeDriver extends ComponentDriver {
     });
 
     return new TreeDriver(
-      mount(Host, { attachTo: document.body }),
+      mount(Host, { attachTo: document.body, global: { plugins: configPlugins(config) } }),
       selection,
       expandedRef,
-      checkedRef,
       itemsRef,
       loads,
       events,
@@ -110,7 +113,6 @@ export class TreeDriver extends ComponentDriver {
     wrapper: VueWrapper,
     private readonly selection: Selection,
     private readonly expandedRef: Ref<string[]>,
-    private readonly checkedRef: Ref<string[]>,
     private readonly itemsRef: Ref<readonly NuiTreeItem<string>[]>,
     readonly loads: string[],
     readonly events: string[],
@@ -160,8 +162,14 @@ export class TreeDriver extends ComponentDriver {
     return this.expandedRef.value;
   }
 
-  get checkedValues(): string[] {
-    return this.checkedRef.value;
+  get statusText(): string {
+    const status = this.wrapper.find('.nui-list__status');
+    return status.exists() ? status.text() : '';
+  }
+
+  get emptyText(): string {
+    const empty = this.wrapper.find('.nui-empty');
+    return empty.exists() ? empty.text() : '';
   }
 
   private node(label: string): DOMWrapper<HTMLElement> {
@@ -276,6 +284,11 @@ export class TreeDriver extends ComponentDriver {
 
   async receiveItems(items: readonly NuiTreeItem<string>[]): Promise<void> {
     this.itemsRef.value = items;
+    await nextTick();
+  }
+
+  async setExpanded(values: readonly string[]): Promise<void> {
+    this.expandedRef.value = [...values];
     await nextTick();
   }
 

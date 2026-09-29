@@ -20,12 +20,12 @@ const docs: DocsMap = {
         en: 'List variant: plain, divided or bordered.',
       },
       selectable: {
-        ru: 'Одиночный или множественный выбор строк; false выключает.',
-        en: 'Single or multiple row selection; false switches it off.',
+        ru: 'Одиночный или множественный выбор строк; false выключает, при checkable не учитывается.',
+        en: 'Single or multiple row selection; false switches it off, checkable overrides it.',
       },
       checkable: {
-        ru: 'Чекбоксы с каскадом в v-model:checked.',
-        en: 'Checkboxes with a cascade into v-model:checked.',
+        ru: 'Множественный выбор чекбоксами с каскадом; отмеченные узлы выбраны.',
+        en: 'Multiple selection with cascading checkboxes; checked nodes are selected.',
       },
       icons: { ru: 'Иконки папок и файлов по умолчанию.', en: 'Default folder and file icons.' },
       virtual: {
@@ -43,6 +43,15 @@ const docs: DocsMap = {
         ru: 'Набор первых букв ищет по видимым узлам.',
         en: 'Typing the first letters searches the visible nodes.',
       },
+      loading: { ru: 'Показывает загрузку и aria-busy.', en: 'Shows loading and aria-busy.' },
+      loadingLabel: {
+        ru: 'Текст загрузки; по умолчанию из словаря.',
+        en: 'Loading text; the dictionary supplies the default.',
+      },
+      emptyLabel: {
+        ru: 'Текст пустого состояния; по умолчанию из словаря.',
+        en: 'Empty state text; the dictionary supplies the default.',
+      },
       label: { ru: 'Доступное имя дерева.', en: 'Accessible name of the tree.' },
       labelledBy: {
         ru: 'Id элемента с именем дерева.',
@@ -52,17 +61,16 @@ const docs: DocsMap = {
     models: {
       'v-model': { ru: 'Выбранный узел в одиночном режиме.', en: 'Selected node in single mode.' },
       'v-model:values': {
-        ru: 'Выбранные узлы в режиме multiple.',
-        en: 'Selected nodes in multiple mode.',
-      },
-      'v-model:checked': {
-        ru: 'Отмеченные узлы в порядке документа.',
-        en: 'Checked nodes in document order.',
+        ru: 'Выбранные узлы в режиме multiple и при checkable, в порядке документа.',
+        en: 'Selected nodes in multiple mode and under checkable, in document order.',
       },
       'v-model:expanded': { ru: 'Раскрытые узлы.', en: 'Expanded nodes.' },
     },
     events: {
-      select: { ru: 'Узел выбран.', en: 'A node was selected.' },
+      select: {
+        ru: 'Узел выбран или его отметка переключена.',
+        en: 'A node was selected or its check toggled.',
+      },
       expand: { ru: 'Узел раскрыт.', en: 'A node was expanded.' },
       collapse: { ru: 'Узел свёрнут.', en: 'A node was collapsed.' },
       load: {
@@ -75,6 +83,7 @@ const docs: DocsMap = {
         ru: 'Разметка строки; получает узел, уровень и состояния.',
         en: 'Row markup; receives the node, the level and its states.',
       },
+      empty: { ru: 'Содержимое пустого дерева.', en: 'Content of the empty tree.' },
     },
     keyboard: [
       {
