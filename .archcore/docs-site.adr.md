@@ -391,8 +391,10 @@ RU/EN каждого нового пропа/слота/события в `apps/
   не наезжает на текст; `.nui-combobox__input` тоже обрезается многоточием.
 - `NuiTree` ставит курсор на узел уже в `pointerdown`, поэтому `focus` корня не подсвечивает
   выбранный или первый узел на время до `click`; фон активного узла показывается только при
-  фокусе на дереве (контекст дерева отдаёт `activeId` только пока корень в фокусе, класс
-  `nui-list-item--active`; до 2026-09-30 — `.nui-tree:focus .nui-tree__item--active`).
+  клавиатурном фокусе на дереве (контекст дерева отдаёт `activeId`, пока корень в фокусе и
+  последнее действие пришло с клавиатуры, класс `nui-list-item--active`; после клика мышью
+  строка держит только `selected`, как опция списка без `:focus-visible`; до 2026-09-30 —
+  `.nui-tree:focus .nui-tree__item--active`).
 - `to` типизирован как `NuiRouteLocation` (`string | object`), приложение сужает его через
   `declare module '@numior/vue' { interface NuiRouteRegister { location: RouteLocationRaw } }`.
 - Контрол вне `NuiField` всегда рисует свою обёртку `.nui-field` (для чекбокса, переключателя
