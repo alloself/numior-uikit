@@ -116,7 +116,7 @@
       },
       {
         "from": "nuxt",
-        "allow": ["tokens", "primitives", "vue", "forms", "nuxt"]
+        "allow": ["tokens", "primitives", "vue", "forms", "table", "nuxt"]
       },
       {
         "from": "apps",

@@ -31,12 +31,16 @@
   "peerDependencies": {
     "@numior/forms": "workspace:*",
     "@numior/primitives": "workspace:*",
+    "@numior/table": "workspace:*",
     "@numior/tokens": "workspace:*",
     "@numior/vue": "workspace:*",
     "vue": "^3.5.0"
   },
   "peerDependenciesMeta": {
     "@numior/forms": {
+      "optional": true
+    },
+    "@numior/table": {
       "optional": true
     }
   }

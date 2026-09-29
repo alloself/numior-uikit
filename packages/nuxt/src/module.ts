@@ -19,10 +19,19 @@ export type {
 } from './module.types';
 
 const VUE = '@numior/vue';
-const FORMS = '@numior/forms';
 const DEFAULT_STORAGE_KEY = 'nui-theme';
 const YIELDING_PRIORITY = -1;
 const KIT_CSS = ['@numior/tokens/theme.css', '@numior/tokens/base.css', `${VUE}/styles.css`];
+
+interface OptionalPackage {
+  readonly id: string;
+  readonly load: () => Promise<ModuleNamespace>;
+}
+
+const OPTIONAL: readonly OptionalPackage[] = [
+  { id: '@numior/forms', load: () => import('@numior/forms') },
+  { id: '@numior/table', load: () => import('@numior/table') },
+];
 
 interface Registration {
   readonly components: boolean;
@@ -71,8 +80,13 @@ const addHead = (nuxt: Nuxt, scheme: NuiNuxtColorScheme | undefined): void => {
   ];
 };
 
-const hasForms = async (nuxt: Nuxt): Promise<boolean> =>
-  (await tryResolveModule(FORMS, nuxt.options.modulesDir)) !== undefined;
+const installedOf = async (nuxt: Nuxt): Promise<OptionalPackage[]> => {
+  const resolved = await Promise.all(
+    OPTIONAL.map((entry) => tryResolveModule(entry.id, nuxt.options.modulesDir)),
+  );
+
+  return OPTIONAL.filter((_, index) => resolved[index] !== undefined);
+};
 
 export default defineNuxtModule<NuiNuxtOptions>({
   meta: {
@@ -83,7 +97,7 @@ export default defineNuxtModule<NuiNuxtOptions>({
   defaults: { css: true, components: true, composables: true },
   async setup(options, nuxt) {
     const resolver = createResolver(import.meta.url);
-    const forms = await hasForms(nuxt);
+    const installed = await installedOf(nuxt);
 
     const registration = {
       components: options.components === true,
@@ -93,11 +107,16 @@ export default defineNuxtModule<NuiNuxtOptions>({
     nuxt.options.runtimeConfig.public.numior = runtimeOptionsOf(options);
     addHead(nuxt, colorSchemeOf(options));
     if (options.css === true) {
-      nuxt.options.css.push(...KIT_CSS, ...(forms ? [`${FORMS}/styles.css`] : []));
+      nuxt.options.css.push(...KIT_CSS, ...installed.map((entry) => `${entry.id}/styles.css`));
     }
     registerNamespace(VUE, await import('@numior/vue'), registration);
-    if (forms) {
-      registerNamespace(FORMS, await import('@numior/forms'), registration);
+
+    const loaded = await Promise.all(
+      installed.map(async (entry) => ({ id: entry.id, namespace: await entry.load() })),
+    );
+
+    for (const entry of loaded) {
+      registerNamespace(entry.id, entry.namespace, registration);
     }
     addPlugin(resolver.resolve('./runtime/plugin'));
   },

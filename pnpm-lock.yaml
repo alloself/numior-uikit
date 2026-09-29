@@ -209,6 +209,9 @@ importers:
       '@numior/primitives':
         specifier: workspace:*
         version: link:../primitives
+      '@numior/table':
+        specifier: workspace:*
+        version: link:../table
       '@numior/tokens':
         specifier: workspace:*
         version: link:../tokens

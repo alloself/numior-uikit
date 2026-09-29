@@ -69,7 +69,7 @@ export default defineAppConfig({
 ```
 
 `locale` и `dir` из `app.config` читаются реактивно и побеждают `nuxt.config`. Если пакет
-`@numior/forms` установлен, его компоненты, композаблы и CSS регистрируются так же.
+`@numior/forms` или `@numior/table` установлен, его компоненты, композаблы и CSS регистрируются так же.
 
 При совпадении имён автоимпорта (`useLayout` самого Nuxt, `useMediaQuery` из `@vueuse/nuxt`)
 побеждает чужой композабл, а композабл кита импортируется явно из `@numior/vue`. Без модуля

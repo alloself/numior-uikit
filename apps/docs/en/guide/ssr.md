@@ -69,7 +69,7 @@ export default defineAppConfig({
 ```
 
 `locale` and `dir` from `app.config` are read reactively and win over `nuxt.config`. When
-`@numior/forms` is installed, its components, composables and CSS are registered the same way.
+`@numior/forms` or `@numior/table` is installed, its components, composables and CSS are registered the same way.
 
 An auto-import name may collide, such as Nuxt's own `useLayout` or `useMediaQuery` from
 `@vueuse/nuxt`. The other composable then wins, and the kit one is imported explicitly from

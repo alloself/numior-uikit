@@ -10,6 +10,7 @@ describe('@numior/nuxt', () => {
       '@numior/tokens/base.css',
       '@numior/vue/styles.css',
       '@numior/forms/styles.css',
+      '@numior/table/styles.css',
     ]);
 
     expect(host.headScripts).toEqual([host.expectedScript('light')]);
@@ -27,6 +28,7 @@ describe('@numior/nuxt', () => {
     expect(components.NuiButton).toBe('@numior/vue#NuiButton');
     expect(components.NuiFieldFrame).toBe('@numior/vue#NuiFieldFrame');
     expect(components.NuiForm).toBe('@numior/forms#NuiForm');
+    expect(components.NuiTable).toBe('@numior/table#NuiTable');
     expect(components.NuiFormError).toBeUndefined();
 
     const imports = await host.imports();
