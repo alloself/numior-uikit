@@ -61,6 +61,23 @@ export interface NuiTableMessages {
     readonly position: number;
     readonly count: number;
   }) => string;
+  readonly dragRow: (params: { readonly row: string }) => string;
+  readonly rowGrabbed: (params: {
+    readonly row: string;
+    readonly position: number;
+    readonly count: number;
+  }) => string;
+  readonly rowMoved: (params: {
+    readonly row: string;
+    readonly position: number;
+    readonly count: number;
+  }) => string;
+  readonly rowDropped: (params: {
+    readonly row: string;
+    readonly position: number;
+    readonly count: number;
+  }) => string;
+  readonly rowDragCancelled: (params: { readonly row: string }) => string;
 }
 
 export const tableMessages: NuiMessageCatalog<'table'> = {
@@ -125,6 +142,13 @@ export const tableMessages: NuiMessageCatalog<'table'> = {
     menuResetWidth: 'Reset width',
     columnMoved: ({ column, position, count }) =>
       `Column ${column} moved to position ${position} of ${count}`,
+    dragRow: ({ row }) => `Drag row ${row}`,
+    rowGrabbed: ({ row, position, count }) =>
+      `Row ${row} grabbed, position ${position} of ${count}`,
+    rowMoved: ({ row, position, count }) => `Row ${row} at position ${position} of ${count}`,
+    rowDropped: ({ row, position, count }) =>
+      `Row ${row} moved to position ${position} of ${count}`,
+    rowDragCancelled: ({ row }) => `Move of row ${row} cancelled`,
   },
   ru: {
     label: 'Таблица данных',
@@ -186,5 +210,12 @@ export const tableMessages: NuiMessageCatalog<'table'> = {
     menuResetWidth: 'Сбросить ширину',
     columnMoved: ({ column, position, count }) =>
       `Колонка «${column}» перемещена на место ${position} из ${count}`,
+    dragRow: ({ row }) => `Перетащить строку «${row}»`,
+    rowGrabbed: ({ row, position, count }) =>
+      `Строка «${row}» взята, место ${position} из ${count}`,
+    rowMoved: ({ row, position, count }) => `Строка «${row}» на месте ${position} из ${count}`,
+    rowDropped: ({ row, position, count }) =>
+      `Строка «${row}» перемещена на место ${position} из ${count}`,
+    rowDragCancelled: ({ row }) => `Перемещение строки «${row}» отменено`,
   },
 };

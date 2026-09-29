@@ -15,6 +15,28 @@ const treeHarness = (defaultExpanded = true): EngineHarness<Folder> =>
   });
 
 describe('createTableEngine trees', () => {
+  it('tells the place of a node among its siblings and its parent', () => {
+    const harness = treeHarness();
+
+    expect(harness.engine.siblingsAt(2)).toEqual({
+      index: 1,
+      count: 3,
+      parentIndex: 0,
+      parent: FOLDERS[0],
+    });
+
+    expect(harness.engine.siblingsAt(4)).toMatchObject({ index: 0, count: 1, parentIndex: 3 });
+
+    expect(harness.engine.siblingsAt(8)).toEqual({
+      index: 2,
+      count: 3,
+      parentIndex: -1,
+      parent: undefined,
+    });
+
+    expect(harness.engine.siblingsAt(9)).toBeUndefined();
+  });
+
   it('flattens nested rows, sorts within siblings and exposes levels and expansion', async () => {
     const harness = treeHarness();
 

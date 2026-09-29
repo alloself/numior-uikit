@@ -21,6 +21,7 @@ import {
   type NuiTablePins,
   type NuiTableWidths,
   type NuiTableColumnOrder,
+  type NuiTableReorderEvent,
   type NuiTableProps,
   type NuiTableColumnDef,
 } from '../../src';
@@ -115,6 +116,7 @@ interface TableEvents<T> {
   progress: number;
   readonly loads: T[];
   readonly clicks: T[];
+  readonly reorders: NuiTableReorderEvent<T>[];
   readonly waiters: Array<() => void>;
 }
 
@@ -132,6 +134,8 @@ const LAYOUT_WIDTH = 4000;
 const LAYOUT_HEIGHT = 300;
 const HEAD_HEIGHT = 40;
 const GRAB_NUDGE = 10;
+const ROW_EARLY = 10;
+const ROW_LATE = 30;
 
 const defineRect = (element: Element, rect: DOMRect): void => {
   Object.defineProperty(element, 'getBoundingClientRect', {
@@ -183,7 +187,15 @@ export class TableDriver<T> {
     const props = shallowRef<TableProps<T>>(settings.props ?? {});
     const stubs = new TopLayerStubs();
     const exposed = shallowRef<NuiTableExposed | null>(null);
-    const events: TableEvents<T> = { settled: 0, progress: 0, loads: [], clicks: [], waiters: [] };
+
+    const events: TableEvents<T> = {
+      settled: 0,
+      progress: 0,
+      loads: [],
+      clicks: [],
+      reorders: [],
+      waiters: [],
+    };
 
     const setExposed = (value: unknown): void => {
       exposed.value = isExposed(value) ? value : null;
@@ -249,6 +261,9 @@ export class TableDriver<T> {
               },
               onRowClick: (row: T) => {
                 events.clicks.push(row);
+              },
+              onReorder: (event: NuiTableReorderEvent<T>) => {
+                events.reorders.push(event);
               },
               onSettle: () => {
                 events.settled += 1;
@@ -698,6 +713,71 @@ export class TableDriver<T> {
 
   get announcement(): string {
     return this.wrapper.find('[role="status"]').text();
+  }
+
+  get reorders(): readonly NuiTableReorderEvent<T>[] {
+    return this.events.reorders;
+  }
+
+  get dropLine(): string | undefined {
+    const line = this.wrapper.find<HTMLElement>('.nui-table__drop--y');
+    return line.exists() ? line.element.style.getPropertyValue('--_drop') : undefined;
+  }
+
+  get ghostText(): string | undefined {
+    const ghost = this.wrapper.find('.nui-table__ghost--y');
+    return ghost.exists() ? ghost.text() : undefined;
+  }
+
+  rowGrip(position: number): HTMLButtonElement | null {
+    return this.row(position)?.querySelector<HTMLButtonElement>('.nui-table__row-grip') ?? null;
+  }
+
+  gripDisabled(position: number): boolean {
+    return this.rowGrip(position)?.disabled ?? true;
+  }
+
+  rowDragging(position: number): boolean {
+    return this.row(position)?.classList.contains('nui-table__row--dragging') ?? false;
+  }
+
+  private rowY(position: number, side: 'before' | 'after'): number {
+    const pinned = this.element.querySelectorAll('.nui-table__pinned > [role="row"]').length;
+    const top = (this.headRows + pinned + position) * HEAD_HEIGHT;
+
+    return top + (side === 'after' ? ROW_LATE : ROW_EARLY);
+  }
+
+  async grabRow(position: number): Promise<void> {
+    const grip = this.rowGrip(position);
+
+    if (grip === null) {
+      throw new Error(`Row ${position} has no drag grip`);
+    }
+    const y = this.rowY(position, 'before') + GRAB_NUDGE;
+
+    grip.dispatchEvent(
+      new PointerEvent('pointerdown', { bubbles: true, button: 0, pointerId: 3, clientY: y }),
+    );
+
+    window.dispatchEvent(
+      new PointerEvent('pointermove', { pointerId: 3, clientY: y + GRAB_NUDGE }),
+    );
+
+    await nextTick();
+  }
+
+  async moveRowTo(position: number, side: 'before' | 'after'): Promise<void> {
+    window.dispatchEvent(
+      new PointerEvent('pointermove', { pointerId: 3, clientY: this.rowY(position, side) }),
+    );
+
+    await nextTick();
+  }
+
+  async dropRow(): Promise<void> {
+    window.dispatchEvent(new PointerEvent('pointerup', { pointerId: 3 }));
+    await nextTick();
   }
 
   get busy(): boolean {

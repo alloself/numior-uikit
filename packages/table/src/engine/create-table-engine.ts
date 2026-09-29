@@ -18,6 +18,7 @@ import {
 } from './tree';
 import type {
   ColumnStore,
+  StoreNeed,
   TableDistinct,
   TableEngine,
   TableEngineColumn,
@@ -28,8 +29,8 @@ import type {
   TableQuery,
   TableRunOptions,
   TableRunResult,
+  TableSiblings,
   TableSort,
-  StoreNeed,
 } from './engine.types';
 
 interface Prepared {
@@ -399,6 +400,28 @@ export const createTableEngine = <T>(options: TableEngineOptions<T>): TableEngin
     };
   };
 
+  const siblingsAt = (position: number): TableSiblings<T> | undefined => {
+    const ref = visible[position];
+
+    if (ref === undefined || ref < 0) {
+      return undefined;
+    }
+    if (prepared.tree === null) {
+      return prepared.filtered[ref] === undefined
+        ? undefined
+        : { index: ref, count: prepared.filtered.length, parentIndex: -1, parent: undefined };
+    }
+    const parentIndex = table.parents[ref] ?? -1;
+    const siblings = childrenOf(prepared.tree, parentIndex < 0 ? prepared.tree.root : parentIndex);
+
+    return {
+      index: siblings.indexOf(ref),
+      count: siblings.length,
+      parentIndex,
+      parent: parentIndex < 0 ? undefined : table.rows[parentIndex],
+    };
+  };
+
   const nodeAt = (position: number): TableNode<T> | undefined => {
     const ref = visible[position];
 
@@ -536,6 +559,7 @@ export const createTableEngine = <T>(options: TableEngineOptions<T>): TableEngin
     },
     visibleIndices: () => prepared.filtered,
     nodeAt,
+    siblingsAt,
     rowAt: (index) => table.rows[index],
     toggle: (position) => {
       const node = nodeAt(position);

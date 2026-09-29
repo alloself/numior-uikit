@@ -135,7 +135,7 @@ const CLICKABLE_CONTROLS = [
   '[role="treeitem"]',
 ].join(', ');
 
-const DRAG_GRIPS = '.nui-table__grip, .nui-field-array__grip';
+const DRAG_GRIPS = '.nui-table__row-grip, .nui-field-array__grip';
 
 export class PlaygroundPage {
   readonly workspace: Locator;

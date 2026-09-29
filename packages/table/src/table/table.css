@@ -417,21 +417,72 @@
 .nui-table--dragging .nui-table__cell:hover > .nui-table__resizer::after {
   opacity: 0;
 }
+.nui-table__row-grip {
+  box-sizing: border-box;
+  display: inline-grid;
+  place-items: center;
+  inline-size: 1.5rem;
+  block-size: 1.5rem;
+  padding: 0;
+  border: 0;
+  border-radius: var(--nui-radius-sm);
+  background: none;
+  color: var(--nui-text-muted);
+  cursor: grab;
+  opacity: 0;
+  touch-action: none;
+  transition:
+    opacity var(--nui-duration-fast) var(--nui-easing),
+    background-color var(--nui-duration-fast) var(--nui-easing);
+}
+.nui-table__row:hover .nui-table__row-grip,
+.nui-table__row-grip:focus-visible,
+.nui-table__row-grip--active {
+  opacity: 1;
+}
+.nui-table__row-grip:hover:not(:disabled) {
+  background: var(--nui-neutral-soft);
+  color: var(--nui-text);
+}
+.nui-table__row-grip:disabled {
+  cursor: not-allowed;
+  opacity: 0;
+}
+@media (hover: none) {
+  .nui-table__row-grip:not(:disabled) {
+    opacity: 1;
+  }
+}
+.nui-table--dragging .nui-table__row-grip {
+  cursor: grabbing;
+}
+.nui-table__row--dragging {
+  --_row-bg: var(--_stripe);
+}
+.nui-table__row--dragging > .nui-table__cell > .nui-table__content {
+  opacity: 0.5;
+}
 .nui-table__drop {
   position: absolute;
-  inset-block: 0;
-  inset-inline-start: var(--_drop);
   z-index: 4;
-  inline-size: 2px;
-  margin-inline-start: -1px;
   background: var(--nui-primary);
   pointer-events: none;
+}
+.nui-table__drop--x {
+  inset-block: 0;
+  inset-inline-start: var(--_drop);
+  inline-size: 2px;
+  margin-inline-start: -1px;
+}
+.nui-table__drop--y {
+  inset-inline: 0;
+  inset-block-start: var(--_drop);
+  block-size: 2px;
+  margin-block-start: -1px;
 }
 .nui-table__ghost {
   box-sizing: border-box;
   position: absolute;
-  inset-block-start: 0;
-  inset-inline-start: var(--_ghost);
   z-index: 5;
   display: flex;
   align-items: center;
@@ -446,11 +497,20 @@
   font-size: var(--nui-font-size-xs);
   font-weight: 600;
   white-space: nowrap;
-  translate: -50% 0;
   pointer-events: none;
 }
-.nui-table__ghost:dir(rtl) {
+.nui-table__ghost--x {
+  inset-block-start: 0;
+  inset-inline-start: var(--_ghost);
+  translate: -50% 0;
+}
+.nui-table__ghost--x:dir(rtl) {
   translate: 50% 0;
+}
+.nui-table__ghost--y {
+  inset-block-start: var(--_ghost);
+  inset-inline-start: var(--_pad-x);
+  translate: 0 -50%;
 }
 .nui-table--resizing .nui-table__cell:hover :is(.nui-table__filter, .nui-table__menu) {
   opacity: 0;

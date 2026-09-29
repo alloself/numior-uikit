@@ -59,6 +59,14 @@ loaded yet: on expand the table emits `load` and waits for them.
 
 <Example name="table/Tree" />
 
+### Row drag
+
+`rowDrag` adds a column with a grip, and a row moves among the siblings of one parent. The
+`reorder` event hands out the indices, and the application applies the order. The grips switch
+off while the table is sorted, filtered or grouped.
+
+<Example name="table/Drag" />
+
 ### Ten thousand rows
 
 `height` turns on the row and column windows of `rowHeight` rows. A column with `pin` stays in
@@ -82,7 +90,8 @@ column itself grows. `Alt` with the arrow keys does the same from the keyboard, 
 menu resets the width.
 
 The grip at the start of a header drags the column inside its pane, and `v-model:columnOrder`
-keeps the key order. `Alt+Shift` with the arrow keys moves a column from the keyboard.
+keeps the key order. `Alt+Shift` with the arrow keys moves a column from the keyboard. A row is
+grabbed with Space on its grip cell, moved with the arrows and dropped with Space.
 
 ## Accessibility
 

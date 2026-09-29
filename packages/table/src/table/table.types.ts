@@ -21,7 +21,7 @@ export type NuiTableSelection = 'single' | 'multiple';
 
 export type NuiTablePagination = Partial<Omit<NuiPaginationProps, 'total' | 'size'>>;
 
-export type TableColumnKind = 'data' | 'select';
+export type TableColumnKind = 'data' | 'select' | 'drag';
 
 export interface TablePageWindow {
   readonly start: number;
@@ -120,6 +120,16 @@ export interface NuiTableProps<T> {
   remote?: boolean | undefined;
   total?: number | undefined;
   pinnedRows?: readonly T[] | undefined;
+  rowDrag?: boolean | undefined;
+  dragLabel?: ((row: T) => string) | undefined;
+  rowLabel?: ((row: T) => string) | undefined;
+}
+
+export interface NuiTableReorderEvent<T> {
+  readonly row: T;
+  readonly from: number;
+  readonly to: number;
+  readonly parent: T | undefined;
 }
 
 export interface NuiTableCellSlot<T> {
@@ -172,6 +182,7 @@ export interface NuiTableEvents<T> {
   settle: [result: NuiTableSettled];
   load: [row: T];
   rowClick: [row: T, event: MouseEvent];
+  reorder: [event: NuiTableReorderEvent<T>];
 }
 
 export type NuiTableSort = readonly TableSort[];
@@ -287,6 +298,7 @@ export interface NuiTableGripProps {
 }
 
 export interface NuiTableDragLayerProps {
+  axis?: 'x' | 'y' | undefined;
   drop?: number | undefined;
   ghost?: TableGhost | undefined;
 }
@@ -324,10 +336,11 @@ export interface TableBodyRow {
 }
 
 export interface NuiTableUtilityCellProps {
-  control: 'checkbox' | 'skeleton' | 'none';
+  control: 'checkbox' | 'grip' | 'skeleton' | 'none';
   checked?: boolean | undefined;
   indeterminate?: boolean | undefined;
   disabled?: boolean | undefined;
+  active?: boolean | undefined;
   label?: string | undefined;
 }
 
@@ -353,6 +366,7 @@ export interface NuiTableRowProps {
   loading?: boolean | undefined;
   selected?: boolean | undefined;
   stripe?: boolean | undefined;
+  dragging?: boolean | undefined;
   heads?: Readonly<Record<string, TableHeadState>> | undefined;
 }
 

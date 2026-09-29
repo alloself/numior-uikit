@@ -73,6 +73,7 @@ const {
   loading = false,
   selected = undefined,
   stripe = false,
+  dragging = false,
   heads,
 } = defineProps<NuiTableRowProps>();
 
@@ -115,6 +116,7 @@ const rowClass = computed(() => [
     'nui-table__row--expanded': expanded === true,
     'nui-table__row--selected': selected === true,
     'nui-table__row--odd': stripe,
+    'nui-table__row--dragging': dragging,
   },
 ]);
 

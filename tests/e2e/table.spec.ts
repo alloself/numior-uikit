@@ -2,6 +2,8 @@ import { expect, test } from '@playwright/test';
 import { boxOf } from './helpers/geometry';
 import { PlaygroundPage } from './pages/playground';
 
+const TREE_HEAD_ROWS = 1;
+
 test.describe('table', () => {
   test('windows ten thousand rows and keeps the pinned columns in place while scrolling', async ({
     page,
@@ -97,6 +99,28 @@ test.describe('table', () => {
     await table.resetColumns.click();
     await expect(table.output).toContainText('"columnOrder":[]');
     await expect(table.header(1)).toHaveText('Клиент');
+  });
+
+  test('drags a tree row among its siblings and moves it from the keyboard', async ({ page }) => {
+    const playground = new PlaygroundPage(page);
+    await playground.open();
+    const { table } = playground;
+    await table.tree.scrollIntoViewIfNeeded();
+    await expect(table.treeRow(0)).toContainText('Продажи');
+    await expect(table.treeRow(1)).toContainText('Разработка');
+
+    await table.dragTreeRow(1, 0);
+    await expect(table.output).toContainText('"lastReorder":"rnd:1>0:root"');
+    await expect(table.treeRow(0)).toContainText('Разработка');
+    await expect(table.treeRow(1)).toContainText('Продажи');
+
+    await table.treeCell(0, 0).click();
+    await page.keyboard.press('Space');
+    await page.keyboard.press('ArrowDown');
+    await page.keyboard.press('Space');
+    await expect(table.output).toContainText('"lastReorder":"rnd:0>1:root"');
+    await expect(table.treeRow(1)).toContainText('Разработка');
+    expect(await table.focusedCell(TREE_HEAD_ROWS)).toEqual({ row: 1, col: 0 });
   });
 
   test('walks the cells with the keyboard and keeps the active one in view', async ({
@@ -251,6 +275,7 @@ test.describe('table', () => {
         columnOrder: [],
         selected: [],
         lastClick: null,
+        lastReorder: null,
         page: 1,
         pageSize: 25,
       }),
@@ -299,6 +324,7 @@ test.describe('table', () => {
         columnOrder: [],
         selected: [],
         lastClick: null,
+        lastReorder: null,
         page: 1,
         pageSize: 25,
       }),

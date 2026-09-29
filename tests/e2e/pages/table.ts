@@ -64,6 +64,28 @@ export class TableSection {
     return this.treeRow(position).locator(`[aria-colindex="${col + 1}"]`);
   }
 
+  treeGrip(position: number): Locator {
+    return this.treeRow(position).locator('.nui-table__row-grip');
+  }
+
+  async dragTreeRow(from: number, to: number): Promise<void> {
+    await this.treeRow(from).hover();
+    const grip = await boxOf(this.treeGrip(from));
+    const target = await boxOf(this.treeRow(to));
+    const x = grip.x + grip.width / 2;
+    const y = grip.y + grip.height / 2;
+
+    await this.page.mouse.move(x, y);
+    await this.page.mouse.down();
+    await this.page.mouse.move(x, y + 8);
+
+    await this.page.mouse.move(x, target.y + target.height * (to < from ? 0.25 : 0.75), {
+      steps: 6,
+    });
+
+    await this.page.mouse.up();
+  }
+
   treeCheckbox(position: number): Locator {
     return this.treeRow(position).getByRole('checkbox');
   }
@@ -229,7 +251,7 @@ export class TableSection {
     return this.viewport.evaluate((element) => element.scrollTop);
   }
 
-  focusedCell(): Promise<TableCell | null> {
+  focusedCell(head: number = HEAD_ROWS): Promise<TableCell | null> {
     return this.page.evaluate((headRows) => {
       const cell = document.activeElement;
 
@@ -242,7 +264,7 @@ export class TableSection {
         row: Number(row?.getAttribute('aria-rowindex')) - headRows - 1,
         col: Number(cell.getAttribute('aria-colindex')) - 1,
       };
-    }, HEAD_ROWS);
+    }, head);
   }
 
   viewportBox(): Promise<Box> {

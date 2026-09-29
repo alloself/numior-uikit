@@ -129,9 +129,11 @@
       caption="Структура компании"
       selectable="multiple"
       striped
+      row-drag
       data-testid="table-tree"
       @load="loadUnit"
       @row-click="(row) => (lastUnitClick = row.id)"
+      @reorder="onUnitReorder"
     />
   </section>
 </template>
@@ -156,6 +158,7 @@ import {
   type NuiTablePins,
   type NuiTableWidths,
   type NuiTableColumnOrder,
+  type NuiTableReorderEvent,
   type NuiTableColumnDef,
   type NuiTablePagination,
 } from '@numior/table';
@@ -473,7 +476,37 @@ const unitsExpanded = ref<readonly TableNodeId[]>([]);
 const selectedUnits = ref<readonly Unit[]>([]);
 const unitsLoading = ref(false);
 const lastUnitClick = ref<string | null>(null);
+const lastReorder = ref<string | null>(null);
 const LOAD_DELAY = 700;
+
+const moved = <V>(list: readonly V[], from: number, to: number): V[] => {
+  const next = [...list];
+  const [item] = next.splice(from, 1);
+
+  if (item !== undefined) {
+    next.splice(to, 0, item);
+  }
+  return next;
+};
+
+const movedWithin = (list: readonly Unit[], event: NuiTableReorderEvent<Unit>): Unit[] => {
+  if (event.parent === undefined) {
+    return moved(list, event.from, event.to);
+  }
+  return list.map((unit) => {
+    if (unit.children === undefined) {
+      return unit;
+    }
+    return unit === event.parent
+      ? { ...unit, children: moved(unit.children, event.from, event.to) }
+      : { ...unit, children: movedWithin(unit.children, event) };
+  });
+};
+
+const onUnitReorder = (event: NuiTableReorderEvent<Unit>): void => {
+  units.value = movedWithin(units.value, event);
+  lastReorder.value = `${event.row.id}:${event.from}>${event.to}:${event.parent?.id ?? 'root'}`;
+};
 
 const loadUnit = (unit: Unit): void => {
   setTimeout(() => {
@@ -510,6 +543,7 @@ const output = computed(() =>
     columnOrder: columnOrder.value,
     selected: selectedUnits.value.map((unit) => unit.id),
     lastClick: lastUnitClick.value,
+    lastReorder: lastReorder.value,
     page: page.value,
     pageSize: pageSize.value,
   }),

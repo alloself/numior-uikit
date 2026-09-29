@@ -138,6 +138,13 @@ export interface TableGroupNode {
 
 export type TableNode<T> = TableRowNode<T> | TableGroupNode;
 
+export interface TableSiblings<T> {
+  readonly index: number;
+  readonly count: number;
+  readonly parentIndex: number;
+  readonly parent: T | undefined;
+}
+
 export interface TableDistinctOptions {
   readonly limit?: number | undefined;
   readonly signal?: AbortSignal | undefined;
@@ -167,6 +174,7 @@ export interface TableEngine<T> {
   runSync(query: TableQuery): TableRunResult;
   visibleIndices(): Uint32Array;
   nodeAt(position: number): TableNode<T> | undefined;
+  siblingsAt(position: number): TableSiblings<T> | undefined;
   rowAt(index: number): T | undefined;
   toggle(position: number): void;
   setExpanded(id: TableNodeId, expanded: boolean): void;

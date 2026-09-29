@@ -28,6 +28,7 @@ export type {
   TableGroupNode,
   TableNode,
   TableNodeId,
+  TableSiblings,
   TablePhase,
   TableProgress,
   TableQuery,

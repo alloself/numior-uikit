@@ -103,6 +103,18 @@ const docs: DocsMap = {
         ru: 'Строки, закреплённые под шапкой: не сортируются, не фильтруются и не режутся на страницы, участвуют в выборе и rowClick; их слоты ячеек получают pinned: true.',
         en: 'Rows pinned under the header: left out of sorting, filters and pages, part of selection and rowClick; their cell slots receive pinned: true.',
       },
+      rowDrag: {
+        ru: 'Служебная колонка с ручкой перетаскивания строк: строка ходит среди соседей одного родителя, событие reorder несёт индексы, а сама таблица строки не переставляет. Ручки отключены при сортировке, фильтрах, быстром фильтре, группировке, серверном режиме и загрузке.',
+        en: 'A utility column with a drag grip per row: a row moves among the siblings of one parent, the reorder event carries the indices and the table itself never reorders rows. The grips are disabled under sorting, filters, the quick filter, grouping, remote mode and loading.',
+      },
+      dragLabel: {
+        ru: 'Функция доступного имени ручки строки; по умолчанию из словаря с подписью строки.',
+        en: 'Function that names the row grip; the dictionary with the row label supplies the default.',
+      },
+      rowLabel: {
+        ru: 'Функция подписи строки для призрака и объявлений; по умолчанию текст первой текстовой колонки, а без неё — первой колонки данных.',
+        en: 'Function that labels a row in the ghost and the announcements; the text of the first text column by default, or of the first data column without one.',
+      },
       columnMenu: {
         ru: 'Меню колонки в шапке: сортировка, фильтр, группировка, закрепление, скрытие и список колонок. false убирает кнопку меню, и Alt+ArrowDown открывает фильтр.',
         en: 'Column menu in the header: sort, filter, grouping, pinning, hiding and the column list. false drops the menu button, and Alt+ArrowDown opens the filter.',
@@ -172,8 +184,12 @@ const docs: DocsMap = {
         en: 'A row with unloaded children expanded; it waits for them until rows update.',
       },
       rowClick: {
-        ru: 'Клик по строке данных вне флажка, подписи группы и переключателя дерева; передаёт строку и событие.',
-        en: 'A click on a data row outside the checkbox, the group label and the tree toggle; carries the row and the event.',
+        ru: 'Клик по строке данных вне флажка, ручки, подписи группы и переключателя дерева; передаёт строку и событие.',
+        en: 'A click on a data row outside the checkbox, the grip, the group label and the tree toggle; carries the row and the event.',
+      },
+      reorder: {
+        ru: 'Строку перетащили: row, from и to — индексы среди соседей одного родителя, parent — родитель или undefined для корня; порядок применяет потребитель.',
+        en: 'A row was dragged: row, from and to as indices among the siblings of one parent, parent or undefined at the root; the consumer applies the order.',
       },
     },
     slots: {
@@ -228,6 +244,20 @@ const docs: DocsMap = {
         description: {
           ru: 'На ячейке шапки переставляет колонку на одну позицию внутри её панели, фокус остаётся на ней; в RTL стрелки меняются местами.',
           en: 'On a header cell moves the column one position inside its pane and keeps the focus on it; in RTL the arrows swap.',
+        },
+      },
+      {
+        keys: 'Space / Enter',
+        description: {
+          ru: 'На ячейке ручки берёт строку; со взятой строкой кладёт её на новое место.',
+          en: 'On the grip cell grabs the row; with a grabbed row drops it at the new place.',
+        },
+      },
+      {
+        keys: 'ArrowUp / ArrowDown',
+        description: {
+          ru: 'Со взятой строкой двигает её среди соседей; Escape отменяет перемещение.',
+          en: 'With a grabbed row moves it among its siblings; Escape cancels the move.',
         },
       },
       {

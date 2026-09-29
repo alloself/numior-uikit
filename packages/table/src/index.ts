@@ -3,6 +3,7 @@ export type { NuiTableMessages } from './table/table.messages';
 export type {
   NuiTableCellSlot,
   NuiTableEvents,
+  NuiTableReorderEvent,
   NuiTableExpanded,
   NuiTableExposed,
   NuiTableFilters,
