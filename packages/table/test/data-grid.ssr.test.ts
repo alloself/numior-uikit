@@ -27,6 +27,7 @@ interface Query {
   readonly pagination?: boolean;
   readonly remote?: boolean;
   readonly total?: number;
+  readonly pinnedRows?: readonly Person[];
 }
 
 const RENDER_DEFAULTS: Required<Omit<Query, 'auto' | 'selectable' | 'caption' | 'total'>> = {
@@ -40,6 +41,7 @@ const RENDER_DEFAULTS: Required<Omit<Query, 'auto' | 'selectable' | 'caption' | 
   loading: false,
   pagination: false,
   remote: false,
+  pinnedRows: [],
 };
 
 const render = (count: number, query: Query = {}): Promise<string> => {
@@ -146,6 +148,13 @@ describe('NuiDataGrid on the server', () => {
 
     expect(remote).toContain('aria-rowcount="6"');
     expect(remote).toContain('Сотрудник 4');
+
+    const pinned = await render(5, { auto: true, pinnedRows: people(102).slice(100) });
+
+    expect(pinned).toBe(await render(5, { auto: true, pinnedRows: people(102).slice(100) }));
+    expect(pinned).toContain('aria-rowcount="8"');
+    expect(pinned.match(/nui-grid__row--pinned/g)).toHaveLength(2);
+    expect(pinned.indexOf('Сотрудник 100')).toBeLessThan(pinned.indexOf('Сотрудник 0<'));
   });
 
   it('orders the first screen by the initial sort on the server', async () => {

@@ -391,6 +391,34 @@ test.describe('data grid', () => {
     await expect(viewport).toHaveAttribute('aria-rowcount', '8');
   });
 
+  test('pins rows under the header outside sorting and scrolling', async ({ page }) => {
+    const playground = new PlaygroundPage(page);
+    await playground.open();
+    const { grid } = playground;
+    await grid.root.scrollIntoViewIfNeeded();
+    await grid.pinnedToggle.click();
+
+    await expect(grid.viewport).toHaveAttribute('aria-rowcount', '10005');
+    await expect(grid.row(0)).toHaveClass(/nui-grid__row--pinned/);
+    await expect(grid.row(2)).not.toHaveClass(/nui-grid__row--pinned/);
+    await expect(grid.cell(0, 0)).toHaveText('1');
+    await expect(grid.cell(1, 0)).toHaveText('2');
+    await expect(grid.cell(2, 0)).toHaveText('1');
+    await grid.header(0).click();
+    await grid.header(0).click();
+
+    await expect(grid.cell(2, 0)).toHaveText('10000');
+    await expect(grid.cell(0, 0)).toHaveText('1');
+    const pinnedBox = await grid.cellBox(0, 0);
+    await grid.scrollTo({ top: 800 });
+    await expect(grid.row(2)).toHaveCount(0);
+    await expect(grid.cell(22, 0)).toHaveText('9980');
+    expect((await grid.cellBox(0, 0)).y).toBeCloseTo(pinnedBox.y, 0);
+    await grid.header(0).click();
+    await grid.pinnedToggle.click();
+    await expect(grid.viewport).toHaveAttribute('aria-rowcount', '10003');
+  });
+
   test('pages the rows from the footer and keeps filters and the page size in step', async ({
     page,
   }) => {

@@ -24,7 +24,7 @@ export interface GridSelection<T> {
   has(row: T): boolean;
   toggle(row: T): void;
   toggleAll(): void;
-  onKeydown(event: KeyboardEvent, active: GridCellPosition, position: number | undefined): boolean;
+  onKeydown(event: KeyboardEvent, active: GridCellPosition, row: T | undefined): boolean;
 }
 
 const plainSpace = (event: KeyboardEvent): boolean =>
@@ -113,7 +113,7 @@ export const useTableSelection = <T>(options: GridSelectionOptions<T>): GridSele
   const onKeydown = (
     event: KeyboardEvent,
     active: GridCellPosition,
-    position: number | undefined,
+    row: T | undefined,
   ): boolean => {
     if (!enabled.value || options.disabled()) {
       return false;
@@ -126,16 +126,11 @@ export const useTableSelection = <T>(options: GridSelectionOptions<T>): GridSele
       toggleAll();
       return true;
     }
-    if (position === undefined || !plainSpace(event)) {
-      return false;
-    }
-    const node = options.engine.value.nodeAt(position);
-
-    if (node?.kind !== 'row') {
+    if (row === undefined || !plainSpace(event)) {
       return false;
     }
     event.preventDefault();
-    toggle(node.row);
+    toggle(row);
     return true;
   };
 

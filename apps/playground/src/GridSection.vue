@@ -59,6 +59,15 @@
         size="sm"
         variant="outline"
         tone="neutral"
+        data-testid="grid-pinned"
+        @click="pinned = !pinned"
+      >
+        {{ pinned ? 'Открепить строки' : 'Закрепить строки' }}
+      </NuiButton>
+      <NuiButton
+        size="sm"
+        variant="outline"
+        tone="neutral"
         data-testid="grid-pages"
         @click="paged = !paged"
       >
@@ -86,6 +95,7 @@
       v-model:page-size="pageSize"
       :columns="columns"
       :source="empty ? [] : orders"
+      :pinned-rows="pinned ? PINNED_ORDERS : []"
       :pagination="paged ? PAGINATION : false"
       :get-key="(row) => row.id"
       label="Заказы"
@@ -352,6 +362,7 @@ const orderAt = (id: number): Order => {
 };
 
 const orders: Order[] = Array.from(Array.from({ length: 10_000 }).keys(), orderAt);
+const PINNED_ORDERS = orders.slice(0, 2);
 
 const columns: NuiGridColumnDef<Order>[] = [
   {
@@ -443,6 +454,7 @@ const quick = ref('');
 const pins = ref<NuiDataGridPins>({});
 const hidden = ref<NuiDataGridHidden>([]);
 const paged = ref(false);
+const pinned = ref(false);
 const page = ref(1);
 const pageSize = ref(25);
 const units = ref<readonly Unit[]>(UNITS);

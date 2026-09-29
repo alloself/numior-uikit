@@ -52,12 +52,34 @@
             </template>
           </NuiDataGridRow>
         </div>
-        <div class="nui-grid__body" role="rowgroup" :style="bodyStyle" @click="onBodyClick">
+        <div class="nui-grid__pinned" role="rowgroup" @click="onRowsClick">
+          <NuiDataGridRow
+            v-for="item in pinnedItems"
+            :key="item.key"
+            :panes="panes"
+            :row-index="item.index + headRows + 1"
+            part="pinned"
+            :active="focus.activeIn(item.index)"
+            :revision="revision"
+            :selected="item.selected"
+          >
+            <template #utility>
+              <NuiDataGridUtilityCell
+                v-bind="pinnedUtility(item)"
+                @toggle="selection.toggle(item.row)"
+              />
+            </template>
+            <template #default="{ column }">
+              <CellContent :row="item.row" :position="item.index" :column="column" pinned />
+            </template>
+          </NuiDataGridRow>
+        </div>
+        <div class="nui-grid__body" role="rowgroup" :style="bodyStyle" @click="onRowsClick">
           <NuiDataGridRow
             v-for="item in skeletonRows"
             :key="item.key"
             :panes="panes"
-            :row-index="item.index + headRows + 1"
+            :row-index="item.index + pinnedCount + headRows + 1"
             part="skeleton"
             :offset="item.offset"
           >
@@ -72,9 +94,9 @@
             v-for="item in bodyRows"
             :key="item.key"
             :panes="panes"
-            :row-index="item.index + headRows + 1"
+            :row-index="item.index + pinnedCount + headRows + 1"
             :offset="item.offset"
-            :active="focus.activeIn(item.index)"
+            :active="focus.activeIn(item.index + pinnedCount)"
             :revision="item.revision"
             :level="item.level"
             :group="item.group"
@@ -100,12 +122,7 @@
               />
             </template>
             <template #default="{ column }">
-              <slot
-                v-if="hasCellSlot(column)"
-                :name="`cell-${column}`"
-                v-bind="cellScope(item.index, column)"
-              />
-              <span v-else class="nui-grid__text">{{ cellText(item.index, column) }}</span>
+              <CellContent :row="rowAt(item.index)" :position="item.index" :column="column" />
             </template>
           </NuiDataGridRow>
         </div>
@@ -119,9 +136,9 @@
         <div v-if="footRows" class="nui-grid__footer" role="rowgroup">
           <NuiDataGridRow
             :panes="panes"
-            :row-index="visibleRows + headRows + 1"
+            :row-index="pinnedCount + visibleRows + headRows + 1"
             part="foot"
-            :active="focus.activeIn(visibleRows)"
+            :active="focus.activeIn(pinnedCount + visibleRows)"
             :revision="revision"
           >
             <template #default="{ column }">
@@ -172,7 +189,17 @@
 </template>
 
 <script setup lang="ts" generic="T">
-import { computed, ref, shallowRef, useTemplateRef, watch } from 'vue';
+import {
+  computed,
+  h,
+  ref,
+  renderSlot,
+  shallowRef,
+  useSlots,
+  useTemplateRef,
+  watch,
+  type VNode,
+} from 'vue';
 import {
   createIntent,
   useControlId,
@@ -217,7 +244,9 @@ import { useGridTotals } from './use-grid-totals';
 import { useTableSelection, type GridSelectionKey } from './use-table-selection';
 import type {
   GridBodyRow,
+  GridCellContentProps,
   GridCellPosition,
+  GridPinnedRow,
   GridSkeletonRow,
   GridStatusSlot,
   NuiDataGridCellSlot,
@@ -273,6 +302,7 @@ const {
   pagination = undefined,
   remote = false,
   total,
+  pinnedRows = [],
 } = defineProps<NuiDataGridProps<T>>();
 
 const sort = defineModel<NuiDataGridSort>('sort', { default: () => [] });
@@ -287,6 +317,7 @@ const page = defineModel<number>('page', { default: 1 });
 const pageSize = defineModel<number>('pageSize', { default: 20 });
 const emit = defineEmits<NuiDataGridEvents<T>>();
 const slots = defineSlots<NuiDataGridSlots<T>>();
+const rawSlots = useSlots();
 
 const viewport = useTemplateRef<HTMLElement>('viewport');
 const tree = computed(() => columnTreeOf(columns));
@@ -319,6 +350,7 @@ const pageWindow = computed(() =>
 );
 
 const pageStart = computed(() => pageWindow.value.start);
+const pinnedCount = computed(() => pinnedRows.length);
 const visibleRows = computed(() => (loading ? 0 : pageWindow.value.end - pageWindow.value.start));
 const totalCount = computed(() => (remote ? (total ?? source.length) : rowCount.value));
 
@@ -429,8 +461,10 @@ const centreWidths = computed(() => layout.value.centre.map((column) => column.w
 const footRows = computed(() => (totals.enabled.value ? 1 : 0));
 const hierarchical = computed(() => groupBy.value.length > 0 || getChildren !== undefined);
 
-const activeRow = (): number | undefined =>
-  active.value.row >= 0 && active.value.row < rowCount.value ? active.value.row : undefined;
+const activeRow = (): number | undefined => {
+  const body = active.value.row - pinnedCount.value;
+  return body >= 0 && body < visibleRows.value ? body : undefined;
+};
 
 const activeCentre = (): number | undefined => centreIndexOf(layout.value, active.value.col);
 
@@ -442,7 +476,7 @@ const rows = useVirtualList(viewport, {
   initialCount: INITIAL_ROWS,
   pinned: activeRow,
   maxSize: CANVAS_LIMIT,
-  inset: () => rowSize.value * (headRows.value + footRows.value),
+  inset: () => rowSize.value * (headRows.value + pinnedCount.value + footRows.value),
 });
 
 const columnWindow = useVirtualList(viewport, {
@@ -477,6 +511,7 @@ const panes = computed(() =>
 const rootStyle = computed(() => ({
   '--_row': `${rowSize.value}px`,
   '--_head-rows': String(headRows.value),
+  '--_pinned-rows': String(pinnedCount.value),
   '--_height': height,
   '--_start': `${layout.value.startWidth}px`,
   '--_centre': `${layout.value.centreWidth}px`,
@@ -516,8 +551,9 @@ const focus = useGridFocus({
   active,
   rows,
   columns: columnWindow,
-  rowCount: () => visibleRows.value + footRows.value,
+  rowCount: () => pinnedCount.value + visibleRows.value + footRows.value,
   bodyRows: () => visibleRows.value,
+  pinnedRows: () => pinnedCount.value,
   headRows: () => headRows.value,
   colCount: () => layout.value.visual.length,
   rowSize: () => rowSize.value,
@@ -580,7 +616,7 @@ const viewportAria = computed(() => {
   return {
     'aria-label': captioned ? undefined : labelText.value,
     'aria-labelledby': captioned ? captionId.value : undefined,
-    'aria-rowcount': visibleRows.value + headRows.value + footRows.value,
+    'aria-rowcount': pinnedCount.value + visibleRows.value + headRows.value + footRows.value,
     'aria-colcount': layout.value.visual.length,
     'aria-busy': loading || query.busy.value || undefined,
     'aria-multiselectable': selection.multiple.value || undefined,
@@ -696,32 +732,64 @@ const bodyRows = computed((): GridBodyRow[] => {
   });
 });
 
-const bodyPosition = (row: number): number | undefined =>
-  row >= 0 && row < visibleRows.value ? pageStart.value + row : undefined;
+const bodyPosition = (row: number): number | undefined => {
+  const body = row - pinnedCount.value;
+  return body >= 0 && body < visibleRows.value ? pageStart.value + body : undefined;
+};
 
-const onBodyClick = (event: MouseEvent): void => {
+const rowFor = (visual: number): T | undefined => {
+  if (visual >= 0 && visual < pinnedCount.value) {
+    return pinnedRows[visual];
+  }
+  const position = bodyPosition(visual);
+  const node = position === undefined ? undefined : engine.value.nodeAt(position);
+
+  return node?.kind === 'row' ? node.row : undefined;
+};
+
+const pinnedItems = computed((): GridPinnedRow<T>[] =>
+  pinnedRows.map((row, index) => ({
+    row,
+    index,
+    key: getKey === undefined ? index : getKey(row),
+    selected: selectOn.value ? selection.has(row) : undefined,
+  })),
+);
+
+const pinnedUtility = (item: GridPinnedRow<T>): NuiDataGridUtilityCellProps =>
+  item.selected === undefined
+    ? NO_UTILITY
+    : { control: 'checkbox', checked: item.selected, label: selectText.value };
+
+const onRowsClick = (event: MouseEvent): void => {
   const target = event.target;
 
   if (!(target instanceof Element) || target.closest(CLICK_GUARD) !== null) {
     return;
   }
-  const row = target.closest('[role="row"]');
-  const position = Number(row?.getAttribute('aria-rowindex')) - headRows.value - 1;
 
-  const node = Number.isInteger(position)
-    ? engine.value.nodeAt(pageStart.value + position)
-    : undefined;
+  const visual =
+    Number(target.closest('[role="row"]')?.getAttribute('aria-rowindex')) - headRows.value - 1;
 
-  if (node?.kind === 'row') {
-    emit('rowClick', node.row, event);
+  const row = Number.isInteger(visual) ? rowFor(visual) : undefined;
+
+  if (row !== undefined) {
+    emit('rowClick', row, event);
   }
 };
 
+const bodyActive = (): GridCellPosition | undefined => {
+  const row = active.value.row - pinnedCount.value;
+  return row >= 0 && row < visibleRows.value ? { row, col: active.value.col } : undefined;
+};
+
 const onKeydown = (event: KeyboardEvent): void => {
-  if (selection.onKeydown(event, active.value, bodyPosition(active.value.row))) {
+  if (selection.onKeydown(event, active.value, rowFor(active.value.row))) {
     return;
   }
-  if (!header.onKeydown(event) && !expansion.onKeydown(event, active.value)) {
+  const body = bodyActive();
+
+  if (!header.onKeydown(event) && !(body !== undefined && expansion.onKeydown(event, body))) {
     focus.onKeydown(event);
   }
 };
@@ -751,23 +819,34 @@ const valueLabel = (value: GridFilterValue): string => {
   return text === '' ? messages.value.blank : text;
 };
 
-const hasCellSlot = (key: string): boolean => slots[`cell-${key}`] !== undefined;
-
-const cellText = (position: number, key: string): string =>
-  cellTextOf(columnAt(key), rowAt(position), resolvedLocale.value, booleanTexts.value);
-
-const cellScope = (position: number, key: string): NuiDataGridCellSlot<T> => {
+const scopeOf = (
+  row: T,
+  position: number,
+  key: string,
+  pinned: boolean,
+): NuiDataGridCellSlot<T> => {
   const column = columnAt(key);
-  const row = rowAt(position);
 
   return {
     row,
     column,
     position,
+    pinned,
     value: cellValueOf(column, row),
     text: cellTextOf(column, row, resolvedLocale.value, booleanTexts.value),
   };
 };
+
+const textOf = (row: T, key: string): string =>
+  cellTextOf(columnAt(key), row, resolvedLocale.value, booleanTexts.value);
+
+const CellContent = (props: GridCellContentProps<T>): VNode =>
+  renderSlot(
+    rawSlots,
+    `cell-${props.column}`,
+    { ...scopeOf(props.row, props.position, props.column, props.pinned === true) },
+    () => [h('span', { class: 'nui-grid__text' }, textOf(props.row, props.column))],
+  );
 
 const sync = (): void => {
   rowCount.value = engine.value.count();

@@ -115,6 +115,7 @@ export interface NuiDataGridProps<T> {
   pagination?: NuiTablePagination | boolean | undefined;
   remote?: boolean | undefined;
   total?: number | undefined;
+  pinnedRows?: readonly T[] | undefined;
 }
 
 export interface NuiDataGridCellSlot<T> {
@@ -123,6 +124,21 @@ export interface NuiDataGridCellSlot<T> {
   readonly text: string;
   readonly column: NuiGridColumn<T>;
   readonly position: number;
+  readonly pinned: boolean;
+}
+
+export interface GridCellContentProps<T> {
+  readonly row: T;
+  readonly position: number;
+  readonly column: string;
+  readonly pinned?: boolean | undefined;
+}
+
+export interface GridPinnedRow<T> {
+  readonly row: T;
+  readonly index: number;
+  readonly key: string | number;
+  readonly selected: boolean | undefined;
 }
 
 export interface NuiDataGridFooterSlot<T> {
@@ -239,7 +255,7 @@ export type GridHeaderTarget =
   | { readonly kind: 'column'; readonly key: string }
   | { readonly kind: 'slot'; readonly index: number };
 
-export type GridRowPart = 'band' | 'head' | 'body' | 'foot' | 'skeleton';
+export type GridRowPart = 'band' | 'head' | 'pinned' | 'body' | 'foot' | 'skeleton';
 
 export type GridStatusSlot = 'empty' | 'loading';
 

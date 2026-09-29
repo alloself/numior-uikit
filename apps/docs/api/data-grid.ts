@@ -99,6 +99,10 @@ const docs: DocsMap = {
         ru: 'Общее число строк для пагинации в серверном режиме; по умолчанию длина источника.',
         en: 'Total row count for the pagination in remote mode; the source length by default.',
       },
+      pinnedRows: {
+        ru: 'Строки, закреплённые под шапкой: не сортируются, не фильтруются и не режутся на страницы, участвуют в выборе и rowClick; их слоты ячеек получают pinned: true.',
+        en: 'Rows pinned under the header: left out of sorting, filters and pages, part of selection and rowClick; their cell slots receive pinned: true.',
+      },
       columnMenu: {
         ru: 'Меню колонки в шапке: сортировка, фильтр, группировка, закрепление, скрытие и список колонок. false убирает кнопку меню, и Alt+ArrowDown открывает фильтр.',
         en: 'Column menu in the header: sort, filter, grouping, pinning, hiding and the column list. false drops the menu button, and Alt+ArrowDown opens the filter.',

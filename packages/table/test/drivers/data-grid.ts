@@ -463,6 +463,10 @@ export class DataGridDriver<T> {
     return this.selectInput(position)?.checked ?? false;
   }
 
+  rowPinned(position: number): boolean {
+    return this.row(position)?.classList.contains('nui-grid__row--pinned') ?? false;
+  }
+
   rowOdd(position: number): boolean {
     return this.row(position)?.classList.contains('nui-grid__row--odd') ?? false;
   }

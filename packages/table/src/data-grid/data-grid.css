@@ -12,6 +12,7 @@
   --_line: var(--nui-border);
   --_foot: 0px;
   --_head-rows: 1;
+  --_pinned-rows: 0;
 
   box-sizing: border-box;
   position: relative;
@@ -59,7 +60,7 @@
   overflow: auto;
   overflow-anchor: none;
   overscroll-behavior: contain;
-  scroll-padding-block: calc(var(--_row) * var(--_head-rows)) var(--_foot);
+  scroll-padding-block: calc(var(--_row) * (var(--_head-rows) + var(--_pinned-rows))) var(--_foot);
   scroll-padding-inline: var(--_start) var(--_end);
   scrollbar-width: thin;
   outline: none;
@@ -70,6 +71,19 @@
   z-index: 2;
   inline-size: calc(var(--_start) + var(--_centre) + var(--_end));
   min-inline-size: 100%;
+}
+.nui-grid__pinned {
+  position: sticky;
+  inset-block-start: calc(var(--_row) * var(--_head-rows));
+  z-index: 2;
+  inline-size: calc(var(--_start) + var(--_centre) + var(--_end));
+  min-inline-size: 100%;
+}
+.nui-grid__row--pinned {
+  --_row-bg: var(--_stripe);
+}
+.nui-grid__row--pinned:last-child {
+  border-block-end-color: var(--nui-border-strong);
 }
 .nui-grid__body {
   position: relative;
@@ -315,7 +329,9 @@
   display: grid;
   place-items: center;
   box-sizing: border-box;
-  min-block-size: calc(var(--_height) - var(--_row) * var(--_head-rows) - var(--_foot) - 2px);
+  min-block-size: calc(
+    var(--_height) - var(--_row) * (var(--_head-rows) + var(--_pinned-rows)) - var(--_foot) - 2px
+  );
 }
 .nui-grid--auto .nui-grid__empty {
   min-block-size: auto;
@@ -377,7 +393,7 @@
 .nui-grid__busy {
   position: absolute;
   inset-inline: 0;
-  inset-block-start: calc(var(--_row) * var(--_head-rows) - 1px);
+  inset-block-start: calc(var(--_row) * (var(--_head-rows) + var(--_pinned-rows)) - 1px);
   z-index: 3;
   block-size: 2px;
   overflow: hidden;

@@ -26,6 +26,7 @@ export class GridSection {
   readonly resetColumns: Locator;
   readonly loadingToggle: Locator;
   readonly pagesToggle: Locator;
+  readonly pinnedToggle: Locator;
   readonly pagination: Locator;
   readonly nextPageButton: Locator;
   readonly pageSizeTrigger: Locator;
@@ -47,6 +48,7 @@ export class GridSection {
     this.resetColumns = page.getByTestId('grid-reset-columns');
     this.loadingToggle = page.getByTestId('grid-loading');
     this.pagesToggle = page.getByTestId('grid-pages');
+    this.pinnedToggle = page.getByTestId('grid-pinned');
     this.pagination = this.root.locator('.nui-grid__pagination');
     this.nextPageButton = this.pagination.locator('.nui-pagination__next');
     this.pageSizeTrigger = this.pagination.getByRole('combobox');
