@@ -81,6 +81,9 @@ While the table fits, the width moves to the neighbouring column; once it scroll
 column itself grows. `Alt` with the arrow keys does the same from the keyboard, and the column
 menu resets the width.
 
+The grip at the start of a header drags the column inside its pane, and `v-model:columnOrder`
+keeps the key order. `Alt+Shift` with the arrow keys moves a column from the keyboard.
+
 ## Accessibility
 
 The markup is a `role="grid"` grid, `treegrid` for trees and groups, with one tab stop: focus

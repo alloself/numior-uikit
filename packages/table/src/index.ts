@@ -11,6 +11,7 @@ export type {
   NuiTableHeaderSlot,
   NuiTableHidden,
   NuiTableWidths,
+  NuiTableColumnOrder,
   NuiTablePins,
   NuiTableProps,
   NuiTableSettled,

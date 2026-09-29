@@ -376,6 +376,82 @@
   cursor: col-resize;
   user-select: none;
 }
+.nui-table__grip {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  display: grid;
+  place-items: center;
+  inline-size: max(var(--_pad-x), 12px);
+  color: var(--nui-text-muted);
+  cursor: grab;
+  opacity: 0;
+  touch-action: none;
+  user-select: none;
+  transition: opacity var(--nui-duration-fast) var(--nui-easing);
+}
+.nui-table__grip-icon {
+  inline-size: 0.75rem;
+  block-size: 0.75rem;
+}
+.nui-table__cell:hover > .nui-table__content > .nui-table__grip,
+.nui-table__grip--active {
+  opacity: 1;
+}
+@media (hover: none) {
+  .nui-table__grip {
+    opacity: 1;
+  }
+}
+.nui-table--dragging {
+  cursor: grabbing;
+  user-select: none;
+}
+.nui-table--dragging .nui-table__grip {
+  cursor: grabbing;
+}
+.nui-table--dragging .nui-table__grip:not(.nui-table__grip--active) {
+  opacity: 0;
+}
+.nui-table--dragging .nui-table__cell:hover :is(.nui-table__filter, .nui-table__menu),
+.nui-table--dragging .nui-table__cell:hover > .nui-table__resizer::after {
+  opacity: 0;
+}
+.nui-table__drop {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: var(--_drop);
+  z-index: 4;
+  inline-size: 2px;
+  margin-inline-start: -1px;
+  background: var(--nui-primary);
+  pointer-events: none;
+}
+.nui-table__ghost {
+  box-sizing: border-box;
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-start: var(--_ghost);
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  max-inline-size: 16rem;
+  block-size: var(--_row);
+  padding-inline: var(--_pad-x);
+  border: 1px solid var(--nui-border-strong);
+  border-radius: var(--nui-radius-sm);
+  background: var(--nui-surface);
+  box-shadow: var(--nui-shadow-md);
+  color: var(--nui-text);
+  font-size: var(--nui-font-size-xs);
+  font-weight: 600;
+  white-space: nowrap;
+  translate: -50% 0;
+  pointer-events: none;
+}
+.nui-table__ghost:dir(rtl) {
+  translate: 50% 0;
+}
 .nui-table--resizing .nui-table__cell:hover :is(.nui-table__filter, .nui-table__menu) {
   opacity: 0;
 }

@@ -50,7 +50,10 @@
         variant="outline"
         tone="neutral"
         :disabled="
-          hidden.length === 0 && Object.keys(pins).length === 0 && Object.keys(widths).length === 0
+          hidden.length === 0 &&
+          columnOrder.length === 0 &&
+          Object.keys(pins).length === 0 &&
+          Object.keys(widths).length === 0
         "
         data-testid="table-reset-columns"
         @click="resetColumns"
@@ -94,6 +97,7 @@
       v-model:pins="pins"
       v-model:hidden="hidden"
       v-model:widths="widths"
+      v-model:column-order="columnOrder"
       v-model:page="page"
       v-model:page-size="pageSize"
       :columns="columns"
@@ -151,6 +155,7 @@ import {
   type NuiTableHidden,
   type NuiTablePins,
   type NuiTableWidths,
+  type NuiTableColumnOrder,
   type NuiTableColumnDef,
   type NuiTablePagination,
 } from '@numior/table';
@@ -458,6 +463,7 @@ const quick = ref('');
 const pins = ref<NuiTablePins>({});
 const hidden = ref<NuiTableHidden>([]);
 const widths = ref<NuiTableWidths>({});
+const columnOrder = ref<NuiTableColumnOrder>([]);
 const paged = ref(false);
 const pinned = ref(false);
 const page = ref(1);
@@ -501,6 +507,7 @@ const output = computed(() =>
     pins: pins.value,
     hidden: hidden.value,
     widths: widths.value,
+    columnOrder: columnOrder.value,
     selected: selectedUnits.value.map((unit) => unit.id),
     lastClick: lastUnitClick.value,
     page: page.value,
@@ -517,5 +524,6 @@ const resetColumns = (): void => {
   pins.value = {};
   hidden.value = [];
   widths.value = {};
+  columnOrder.value = [];
 };
 </script>

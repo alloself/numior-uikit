@@ -28,6 +28,7 @@ interface Query {
   readonly remote?: boolean;
   readonly total?: number;
   readonly pinnedRows?: readonly Person[];
+  readonly columnOrder?: readonly string[];
 }
 
 const RENDER_DEFAULTS: Required<Omit<Query, 'auto' | 'selectable' | 'caption' | 'total'>> = {
@@ -42,6 +43,7 @@ const RENDER_DEFAULTS: Required<Omit<Query, 'auto' | 'selectable' | 'caption' | 
   pagination: false,
   remote: false,
   pinnedRows: [],
+  columnOrder: [],
 };
 
 const render = (count: number, query: Query = {}): Promise<string> => {
@@ -110,6 +112,15 @@ describe('NuiTable on the server', () => {
     expect(html).toContain('aria-rowcount="13"');
     expect(html).toContain('aria-rowindex="13"');
     expect(html).toContain('Сотрудник 11');
+  });
+
+  it('orders the columns by the column order model on the server', async () => {
+    const html = await render(3, { auto: true, columnOrder: ['city', 'name'] });
+
+    expect(html).toBe(await render(3, { auto: true, columnOrder: ['city', 'name'] }));
+    expect(html.indexOf('>Город<')).toBeLessThan(html.indexOf('>Имя<'));
+    expect(html.indexOf('>ID<')).toBeLessThan(html.indexOf('>Город<'));
+    expect(html).toContain('nui-table__grip');
   });
 
   it('renders selection controls, a caption, stripes and skeletons deterministically', async () => {

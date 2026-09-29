@@ -39,6 +39,7 @@ interface NuiTableColumnBase {
   readonly minWidth?: number | undefined;
   readonly maxWidth?: number | undefined;
   readonly resizable?: boolean | undefined;
+  readonly reorderable?: boolean | undefined;
   readonly pin?: NuiTablePin | undefined;
   readonly align?: NuiTableAlign | undefined;
   readonly sortable?: boolean | undefined;
@@ -187,6 +188,13 @@ export type NuiTableHidden = readonly string[];
 
 export type NuiTableWidths = Readonly<Record<string, number>>;
 
+export type NuiTableColumnOrder = readonly string[];
+
+export interface TableGhost {
+  readonly start: number;
+  readonly label: string;
+}
+
 export interface NuiTableFilterProps {
   title: string;
   kind: NuiTableFilterKind;
@@ -260,6 +268,8 @@ export interface TableHeadState {
   readonly filtered: boolean;
   readonly resizable: boolean;
   readonly resizing: boolean;
+  readonly reorderable: boolean;
+  readonly dragging: boolean;
 }
 
 export interface NuiTableHeaderMarksProps {
@@ -269,6 +279,16 @@ export interface NuiTableHeaderMarksProps {
   expanded: 'true' | 'false';
   menuLabel?: string | undefined;
   menuExpanded: 'true' | 'false';
+  grip?: NuiTableGripProps | undefined;
+}
+
+export interface NuiTableGripProps {
+  active?: boolean | undefined;
+}
+
+export interface NuiTableDragLayerProps {
+  drop?: number | undefined;
+  ghost?: TableGhost | undefined;
 }
 
 export interface TableCellPosition {

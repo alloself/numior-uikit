@@ -3,7 +3,7 @@
     <p v-if="hasCaption" :id="captionId" class="nui-table__caption">
       <slot name="caption">{{ caption }}</slot>
     </p>
-    <div class="nui-table__frame">
+    <div ref="frame" class="nui-table__frame">
       <div
         ref="viewport"
         class="nui-table__viewport"
@@ -51,8 +51,10 @@
                   :expanded="header.expanded(column)"
                   :menu-label="menu.labelOf(column)"
                   :menu-expanded="menu.expanded(column)"
+                  :grip="order.gripOf(column)"
                   @filter="header.openFilter(column, $event)"
                   @menu="header.openMenu(column, $event)"
+                  @grab="order.grab(column, $event)"
                 />
               </template>
             </NuiTableRow>
@@ -157,6 +159,7 @@
           </tfoot>
         </table>
       </div>
+      <NuiTableDragLayer :drop="order.drop.value" :ghost="order.ghost.value" />
       <div v-if="query.busy.value" class="nui-table__busy" role="presentation"></div>
     </div>
     <div v-if="paginationProps" class="nui-table__pagination">
@@ -230,6 +233,7 @@ import {
   type TableFilterValue,
   type TableNode,
 } from '../engine';
+import NuiTableDragLayer from './NuiTableDragLayer.vue';
 import NuiTableGap from './NuiTableGap.vue';
 import NuiTableGroupCell from './NuiTableGroupCell.vue';
 import NuiTableRow from './NuiTableRow.vue';
@@ -239,6 +243,7 @@ import NuiTableUtilityCell from './NuiTableUtilityCell.vue';
 import { tableMessages } from './table.messages';
 import { cellTextOf, cellValueOf, engineColumnOf, valueTextOf } from './table-format';
 import { columnTreeOf, headerBandsOf } from './table-columns';
+import { orderLeaves } from './table-order';
 import {
   centreIndexOf,
   dataKeyAt,
@@ -255,6 +260,7 @@ import { useTableFocus } from './use-table-focus';
 import { useTableExpansion } from './use-table-expansion';
 import { useTableHeader, type TableHeader } from './use-table-header';
 import { useTableMenu, type TableMenu } from './use-table-menu';
+import { useTableColumnOrder } from './use-table-column-order';
 import { useTableQuery } from './use-table-query';
 import { useTableResize } from './use-table-resize';
 import { useTableTotals } from './use-table-totals';
@@ -279,6 +285,7 @@ import type {
   NuiTableSort,
   NuiTableUtilityCellProps,
   NuiTableColumn,
+  NuiTableColumnOrder,
   NuiTableWidths,
 } from './table.types';
 
@@ -331,6 +338,7 @@ const expanded = defineModel<NuiTableExpanded>('expanded', { default: () => [] }
 const pins = defineModel<NuiTablePins>('pins', { default: () => ({}) });
 const hidden = defineModel<NuiTableHidden>('hidden', { default: () => [] });
 const widths = defineModel<NuiTableWidths>('widths', { default: () => ({}) });
+const columnOrder = defineModel<NuiTableColumnOrder>('columnOrder', { default: () => [] });
 const selected = defineModel<readonly T[]>('selected', { default: () => [] });
 const page = defineModel<number>('page', { default: 1 });
 const pageSize = defineModel<number>('pageSize', { default: 20 });
@@ -339,7 +347,9 @@ const slots = defineSlots<NuiTableSlots<T>>();
 const rawSlots = useSlots();
 
 const viewport = useTemplateRef<HTMLElement>('viewport');
+const frame = useTemplateRef<HTMLElement>('frame');
 const tree = computed(() => columnTreeOf(columns));
+const orderedLeaves = computed(() => orderLeaves(tree.value.leaves, columnOrder.value));
 const gridId = useControlId(() => id);
 const resolvedLocale = useLocale(() => locale);
 const messages = useMessages(tableMessages, resolvedLocale);
@@ -451,7 +461,7 @@ const layoutOptions = computed(() => ({
 }));
 
 const pinnedLayout = computed(() =>
-  tableLayout(tree.value.leaves, { ...layoutOptions.value, sticky: true }),
+  tableLayout(orderedLeaves.value, { ...layoutOptions.value, sticky: true }),
 );
 
 const sticky = computed(() => pinsFit(pinnedLayout.value, room.value));
@@ -459,7 +469,7 @@ const sticky = computed(() => pinsFit(pinnedLayout.value, room.value));
 const layout = computed(() =>
   sticky.value
     ? pinnedLayout.value
-    : tableLayout(tree.value.leaves, { ...layoutOptions.value, sticky: false }),
+    : tableLayout(orderedLeaves.value, { ...layoutOptions.value, sticky: false }),
 );
 
 const headRows = computed(() => tree.value.depth + 1);
@@ -558,6 +568,7 @@ const rootClass = computed(() => [
     'nui-table--striped': striped,
     'nui-table--loading': loading,
     'nui-table--resizing': resize.active.value !== undefined,
+    'nui-table--dragging': order.dragging.value !== undefined,
   },
 ]);
 
@@ -615,6 +626,23 @@ const resize = useTableResize<T>({
   },
 });
 
+const order = useTableColumnOrder<T>({
+  order: columnOrder,
+  leaves: () => tree.value.leaves,
+  layout: () => layout.value,
+  viewport: () => viewport.value,
+  frame: () => frame.value,
+  columnAt,
+  isRtl: direction.isRtl,
+  messages,
+  announce: (text) => {
+    announcement.value = text;
+  },
+  refocus: (key) => {
+    focus.focusHeader({ kind: 'column', key });
+  },
+});
+
 const header: TableHeader<T> = useTableHeader({
   keys: () => dataKeysOf(layout.value),
   keyAt: (visual) => dataKeyAt(layout.value, visual),
@@ -632,6 +660,9 @@ const header: TableHeader<T> = useTableHeader({
   resizable: resize.resizable,
   resizing: (key) => resize.active.value === key,
   resize: resize.onKeydown,
+  reorderable: order.reorderable,
+  dragging: (key) => order.dragging.value === key,
+  reorder: order.onKeydown,
 });
 
 const menuNode = useTemplateRef<NuiMenuExposed>('menu-node');

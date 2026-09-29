@@ -1,4 +1,5 @@
 <template>
+  <NuiTableGrip v-if="grip" v-bind="grip" @grab="emit('grab', $event)" />
   <span
     v-if="state?.sortable"
     class="nui-table__sort"
@@ -45,12 +46,17 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { NuiIcon } from '@numior/vue';
+import NuiTableGrip from './NuiTableGrip.vue';
 import type { NuiTableHeaderMarksProps } from './table.types';
 
-const { state, hint, filterLabel, expanded, menuLabel, menuExpanded } =
+const { state, hint, filterLabel, expanded, menuLabel, menuExpanded, grip } =
   defineProps<NuiTableHeaderMarksProps>();
 
-const emit = defineEmits<{ filter: [event: MouseEvent]; menu: [event: MouseEvent] }>();
+const emit = defineEmits<{
+  filter: [event: MouseEvent];
+  menu: [event: MouseEvent];
+  grab: [event: PointerEvent];
+}>();
 
 const showFilter = computed(
   () =>

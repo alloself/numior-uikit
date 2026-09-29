@@ -56,6 +56,11 @@ export interface NuiTableMessages {
   readonly columnWidth: (params: { readonly column: string; readonly width: number }) => string;
   readonly columnWidthReset: (params: { readonly column: string }) => string;
   readonly menuResetWidth: string;
+  readonly columnMoved: (params: {
+    readonly column: string;
+    readonly position: number;
+    readonly count: number;
+  }) => string;
 }
 
 export const tableMessages: NuiMessageCatalog<'table'> = {
@@ -118,6 +123,8 @@ export const tableMessages: NuiMessageCatalog<'table'> = {
     columnWidth: ({ column, width }) => `Column ${column} is ${width} px wide`,
     columnWidthReset: ({ column }) => `Column ${column} width reset`,
     menuResetWidth: 'Reset width',
+    columnMoved: ({ column, position, count }) =>
+      `Column ${column} moved to position ${position} of ${count}`,
   },
   ru: {
     label: 'Таблица данных',
@@ -177,5 +184,7 @@ export const tableMessages: NuiMessageCatalog<'table'> = {
     columnWidth: ({ column, width }) => `Ширина колонки «${column}»: ${width} px`,
     columnWidthReset: ({ column }) => `Ширина колонки «${column}» сброшена`,
     menuResetWidth: 'Сбросить ширину',
+    columnMoved: ({ column, position, count }) =>
+      `Колонка «${column}» перемещена на место ${position} из ${count}`,
   },
 };

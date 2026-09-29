@@ -31,6 +31,9 @@ export interface TableHeaderOptions<T> {
   readonly resizable: (key: string) => boolean;
   readonly resizing: (key: string) => boolean;
   readonly resize: (key: string, event: KeyboardEvent) => boolean;
+  readonly reorderable: (key: string) => boolean;
+  readonly dragging: (key: string) => boolean;
+  readonly reorder: (key: string, event: KeyboardEvent) => boolean;
 }
 
 export interface TableHeader<T> {
@@ -50,10 +53,10 @@ export interface TableHeader<T> {
 }
 
 const HEADER = '.nui-table__row--head > [role="columnheader"]';
-const RESIZER = '.nui-table__resizer';
+const HANDLE = '.nui-table__resizer, .nui-table__grip';
 
 const headerOf = (target: EventTarget | null): HTMLElement | null => {
-  if (!(target instanceof Element) || target.closest(RESIZER) !== null) {
+  if (!(target instanceof Element) || target.closest(HANDLE) !== null) {
     return null;
   }
   const cell = target.closest(HEADER);
@@ -63,6 +66,11 @@ const headerOf = (target: EventTarget | null): HTMLElement | null => {
 
 const plainKey = (event: KeyboardEvent): boolean =>
   !event.altKey && !event.ctrlKey && !event.metaKey;
+
+const isSortKey = (event: KeyboardEvent): boolean =>
+  (event.key === 'Enter' || event.key === ' ') && plainKey(event);
+
+const isSideArrow = (key: string): boolean => key === 'ArrowLeft' || key === 'ArrowRight';
 
 export const useTableHeader = <T>(options: TableHeaderOptions<T>): TableHeader<T> => {
   const target = shallowRef<TableFilterTarget | null>(null);
@@ -77,6 +85,8 @@ export const useTableHeader = <T>(options: TableHeaderOptions<T>): TableHeader<T
       filtered: (key) => filterOf(options.filters.value, key) !== undefined,
       resizable: options.resizable,
       resizing: options.resizing,
+      reorderable: options.reorderable,
+      dragging: options.dragging,
     }),
   );
 
@@ -119,24 +129,7 @@ export const useTableHeader = <T>(options: TableHeaderOptions<T>): TableHeader<T
     open.value = true;
   };
 
-  const onKeydown = (event: KeyboardEvent): boolean => {
-    const cell = headerOf(event.target);
-    const key = event.target === cell ? keyOf(cell) : undefined;
-
-    if (cell === null || key === undefined) {
-      return false;
-    }
-    if ((event.key === 'Enter' || event.key === ' ') && plainKey(event)) {
-      event.preventDefault();
-      toggleSort(key, event.shiftKey);
-      return true;
-    }
-    if (event.altKey && (event.key === 'ArrowLeft' || event.key === 'ArrowRight')) {
-      return options.resize(key, event);
-    }
-    if (event.key !== 'ArrowDown' || !event.altKey) {
-      return false;
-    }
+  const openMenuOrFilter = (key: string, cell: HTMLElement, event: KeyboardEvent): boolean => {
     if (options.menu(key, cell, 'first')) {
       event.preventDefault();
       return true;
@@ -147,6 +140,24 @@ export const useTableHeader = <T>(options: TableHeaderOptions<T>): TableHeader<T
       return true;
     }
     return false;
+  };
+
+  const onKeydown = (event: KeyboardEvent): boolean => {
+    const cell = headerOf(event.target);
+    const key = event.target === cell ? keyOf(cell) : undefined;
+
+    if (cell === null || key === undefined) {
+      return false;
+    }
+    if (isSortKey(event)) {
+      event.preventDefault();
+      toggleSort(key, event.shiftKey);
+      return true;
+    }
+    if (event.altKey && isSideArrow(event.key)) {
+      return event.shiftKey ? options.reorder(key, event) : options.resize(key, event);
+    }
+    return event.altKey && event.key === 'ArrowDown' && openMenuOrFilter(key, cell, event);
   };
 
   return {

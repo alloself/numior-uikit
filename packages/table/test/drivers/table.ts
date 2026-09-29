@@ -20,6 +20,7 @@ import {
   type NuiTableHidden,
   type NuiTablePins,
   type NuiTableWidths,
+  type NuiTableColumnOrder,
   type NuiTableProps,
   type NuiTableColumnDef,
 } from '../../src';
@@ -35,6 +36,7 @@ export interface TableMountOptions<T> {
   readonly pins?: NuiTablePins;
   readonly hidden?: NuiTableHidden;
   readonly widths?: NuiTableWidths;
+  readonly columnOrder?: NuiTableColumnOrder;
   readonly selected?: readonly T[];
   readonly page?: number;
   readonly pageSize?: number;
@@ -56,6 +58,7 @@ type MountDefaults = Required<
     | 'pins'
     | 'hidden'
     | 'widths'
+    | 'columnOrder'
     | 'width'
     | 'height'
     | 'dir'
@@ -70,6 +73,7 @@ const MOUNT_DEFAULTS: MountDefaults = {
   pins: {},
   hidden: [],
   widths: {},
+  columnOrder: [],
   width: 500,
   height: 300,
   dir: 'ltr',
@@ -98,6 +102,7 @@ interface TableModels<T> {
   readonly pins: ShallowRef<NuiTablePins>;
   readonly hidden: ShallowRef<NuiTableHidden>;
   readonly widths: ShallowRef<NuiTableWidths>;
+  readonly columnOrder: ShallowRef<NuiTableColumnOrder>;
   readonly selected: ShallowRef<readonly T[]>;
   readonly page: ShallowRef<number>;
   readonly pageSize: ShallowRef<number>;
@@ -121,6 +126,18 @@ export interface KeyOptions {
 
 const defineValue = (element: HTMLElement, name: string, value: number): void => {
   Object.defineProperty(element, name, { value, configurable: true, writable: true });
+};
+
+const LAYOUT_WIDTH = 4000;
+const LAYOUT_HEIGHT = 300;
+const HEAD_HEIGHT = 40;
+const GRAB_NUDGE = 10;
+
+const defineRect = (element: Element, rect: DOMRect): void => {
+  Object.defineProperty(element, 'getBoundingClientRect', {
+    value: () => rect,
+    configurable: true,
+  });
 };
 
 const isExposed = (value: unknown): value is NuiTableExposed =>
@@ -159,6 +176,7 @@ export class TableDriver<T> {
     const pins = shallowRef<NuiTablePins>(settings.pins);
     const hidden = shallowRef<NuiTableHidden>(settings.hidden);
     const widths = shallowRef<NuiTableWidths>(settings.widths);
+    const columnOrder = shallowRef<NuiTableColumnOrder>(settings.columnOrder);
     const selected = shallowRef<readonly T[]>(settings.selected ?? []);
     const page = shallowRef(settings.page ?? 1);
     const pageSize = shallowRef(settings.pageSize ?? 20);
@@ -213,6 +231,10 @@ export class TableDriver<T> {
               'onUpdate:widths': (next: NuiTableWidths) => {
                 widths.value = next;
               },
+              columnOrder: columnOrder.value,
+              'onUpdate:columnOrder': (next: NuiTableColumnOrder) => {
+                columnOrder.value = next;
+              },
               selected: selected.value,
               'onUpdate:selected': (next: readonly T[]) => {
                 selected.value = next;
@@ -260,6 +282,7 @@ export class TableDriver<T> {
       pins,
       hidden,
       widths,
+      columnOrder,
       selected,
       page,
       pageSize,
@@ -400,6 +423,10 @@ export class TableDriver<T> {
 
   get widths(): NuiTableWidths {
     return this.models.widths.value;
+  }
+
+  get columnOrder(): NuiTableColumnOrder {
+    return this.models.columnOrder.value;
   }
 
   get selected(): readonly T[] {
@@ -740,6 +767,57 @@ export class TableDriver<T> {
         : this.element.querySelectorAll('colgroup > col')[siblings.indexOf(head)];
 
     return track instanceof HTMLElement ? track.style.inlineSize : undefined;
+  }
+
+  grip(col: number): HTMLElement | null {
+    return this.header(col)?.querySelector<HTMLElement>('.nui-table__grip') ?? null;
+  }
+
+  layoutHeaders(): void {
+    const tracks = [...this.element.querySelectorAll<HTMLElement>('colgroup > col')].map(
+      (track) => Number.parseFloat(track.style.inlineSize) || 0,
+    );
+
+    const frame = this.wrapper.find<HTMLElement>('.nui-table__frame').element;
+    let left = 0;
+
+    defineRect(this.element, new DOMRect(0, 0, LAYOUT_WIDTH, LAYOUT_HEIGHT));
+    defineRect(frame, new DOMRect(0, 0, LAYOUT_WIDTH, LAYOUT_HEIGHT));
+
+    for (const [index, cell] of [
+      ...(this.element.querySelector('.nui-table__row--head')?.children ?? []),
+    ].entries()) {
+      const width = tracks[index] ?? 0;
+
+      defineRect(cell, new DOMRect(left, 0, width, HEAD_HEIGHT));
+      left += width;
+    }
+  }
+
+  async dragHeader(col: number, target: number, side: 'before' | 'after'): Promise<void> {
+    const grip = this.grip(col);
+    const source = this.header(col)?.getBoundingClientRect();
+    const destination = this.header(target)?.getBoundingClientRect();
+
+    if (grip === null || source === undefined || destination === undefined) {
+      throw new Error(`Cannot drag column ${col} to column ${target}`);
+    }
+    const x = source.left + source.width / 2;
+
+    const to =
+      destination.left + destination.width / 2 + (side === 'after' ? GRAB_NUDGE : -GRAB_NUDGE);
+
+    grip.dispatchEvent(
+      new PointerEvent('pointerdown', { bubbles: true, button: 0, pointerId: 2, clientX: x }),
+    );
+
+    window.dispatchEvent(
+      new PointerEvent('pointermove', { pointerId: 2, clientX: x + GRAB_NUDGE }),
+    );
+
+    window.dispatchEvent(new PointerEvent('pointermove', { pointerId: 2, clientX: to }));
+    window.dispatchEvent(new PointerEvent('pointerup', { pointerId: 2, clientX: to }));
+    await nextTick();
   }
 
   resizer(col: number): HTMLElement | null {

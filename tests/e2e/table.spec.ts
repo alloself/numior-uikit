@@ -65,6 +65,40 @@ test.describe('table', () => {
     expect((await table.cellBox(0, 0)).width).toBeCloseTo(before.width, 0);
   });
 
+  test('moves a column by its grip and from the keyboard and resets the order', async ({
+    page,
+    isMobile,
+  }) => {
+    const playground = new PlaygroundPage(page);
+    await playground.open();
+    const { table } = playground;
+    await table.root.scrollIntoViewIfNeeded();
+    await expect(table.header(1)).toHaveText('Клиент');
+
+    if (!isMobile) {
+      await table.dragHeader(1, 2);
+      await expect(table.header(1)).toHaveText('Почта');
+      await expect(table.header(2)).toHaveText('Клиент');
+      await expect(table.output).toContainText('"columnOrder":["id","email","customer"');
+      await expect(table.output).toContainText('"sort":[]');
+      await table.cell(0, 2).click();
+      await page.keyboard.press('ArrowUp');
+      await page.keyboard.press('Alt+Shift+ArrowLeft');
+      await expect(table.output).toContainText('"columnOrder":["id","customer","email"');
+      expect(await table.focusedCell()).toEqual({ row: -1, col: 1 });
+    } else {
+      await table.cell(0, 1).click();
+      await page.keyboard.press('ArrowUp');
+      await page.keyboard.press('Alt+Shift+ArrowRight');
+      await expect(table.output).toContainText('"columnOrder":["id","email","customer"');
+      expect(await table.focusedCell()).toEqual({ row: -1, col: 2 });
+    }
+
+    await table.resetColumns.click();
+    await expect(table.output).toContainText('"columnOrder":[]');
+    await expect(table.header(1)).toHaveText('Клиент');
+  });
+
   test('walks the cells with the keyboard and keeps the active one in view', async ({
     page,
     isMobile,
@@ -214,6 +248,7 @@ test.describe('table', () => {
         pins: {},
         hidden: [],
         widths: {},
+        columnOrder: [],
         selected: [],
         lastClick: null,
         page: 1,
@@ -261,6 +296,7 @@ test.describe('table', () => {
         pins: {},
         hidden: [],
         widths: {},
+        columnOrder: [],
         selected: [],
         lastClick: null,
         page: 1,

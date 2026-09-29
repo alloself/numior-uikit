@@ -4,8 +4,8 @@ const docs: DocsMap = {
   NuiTable: {
     props: {
       columns: {
-        ru: 'Колонки: key, label, type (text, number, date, boolean), value, format, width, minWidth, maxWidth, resizable, pin, align, sortable, filter, hideable, wrap, flex и aggregate. hideable: false не даёт скрыть колонку из меню; resizable: false убирает ручку ширины и клавиши Alt+стрелки, minWidth и maxWidth ограничивают ширину при перетаскивании; wrap: true переносит текст ячейки, а без height строка растёт по нему; flex делит свободную ширину области прокрутки между колонками пропорционально, пока колонку не растянули вручную. filter выбирает вид фильтра (text, number, date, set) или выключает его значением false. aggregate считает значение для строк групп и строки итогов: у числовой колонки sum, count, avg, min, max или функция, у даты min, max, count или функция, у текстовой и булевой count или функция. Вне строки, например в группе или списке значений фильтра, format получает строку как undefined. Группа { key, label, children } рисует над заголовками своих колонок полосу с подписью.',
-        en: 'Columns: key, label, type (text, number, date, boolean), value, format, width, minWidth, maxWidth, resizable, pin, align, sortable, filter, hideable, wrap, flex and aggregate. hideable: false keeps the column out of reach of the menu hide; resizable: false drops the width handle and the Alt+arrow keys, minWidth and maxWidth bound the width while dragging; wrap: true wraps the cell text, and without height the row grows with it; flex shares the free width of the scroll area between columns in proportion until the column is resized by hand. filter picks the filter kind (text, number, date, set) or turns it off with false. aggregate fills group rows and the totals row: a number column takes sum, count, avg, min, max or a function, a date column min, max, count or a function, a text or boolean column count or a function. Outside a row, such as a group or the filter value list, format receives the row as undefined. A group { key, label, children } draws a labelled band above the headers of its columns.',
+        ru: 'Колонки: key, label, type (text, number, date, boolean), value, format, width, minWidth, maxWidth, resizable, reorderable, pin, align, sortable, filter, hideable, wrap, flex и aggregate. hideable: false не даёт скрыть колонку из меню; resizable: false убирает ручку ширины и клавиши Alt+стрелки, reorderable: false — ручку перетаскивания и Alt+Shift+стрелки, minWidth и maxWidth ограничивают ширину при перетаскивании; wrap: true переносит текст ячейки, а без height строка растёт по нему; flex делит свободную ширину области прокрутки между колонками пропорционально, пока колонку не растянули вручную. filter выбирает вид фильтра (text, number, date, set) или выключает его значением false. aggregate считает значение для строк групп и строки итогов: у числовой колонки sum, count, avg, min, max или функция, у даты min, max, count или функция, у текстовой и булевой count или функция. Вне строки, например в группе или списке значений фильтра, format получает строку как undefined. Группа { key, label, children } рисует над заголовками своих колонок полосу с подписью.',
+        en: 'Columns: key, label, type (text, number, date, boolean), value, format, width, minWidth, maxWidth, resizable, reorderable, pin, align, sortable, filter, hideable, wrap, flex and aggregate. hideable: false keeps the column out of reach of the menu hide; resizable: false drops the width handle and the Alt+arrow keys, reorderable: false the drag grip and the Alt+Shift+arrow keys, minWidth and maxWidth bound the width while dragging; wrap: true wraps the cell text, and without height the row grows with it; flex shares the free width of the scroll area between columns in proportion until the column is resized by hand. filter picks the filter kind (text, number, date, set) or turns it off with false. aggregate fills group rows and the totals row: a number column takes sum, count, avg, min, max or a function, a date column min, max, count or a function, a text or boolean column count or a function. Outside a row, such as a group or the filter value list, format receives the row as undefined. A group { key, label, children } draws a labelled band above the headers of its columns.',
       },
       rows: {
         ru: 'Строки таблицы; она их не копирует и не меняет.',
@@ -149,6 +149,10 @@ const docs: DocsMap = {
         ru: 'Ширины колонок в пикселях по ключу после ручного изменения: ручка у края заголовка тянет колонку, пока таблица помещается — ширина переходит к соседней колонке, при прокрутке растёт только сама колонка; колонка с ключом в модели перестаёт делить свободное место через flex.',
         en: 'Column widths in pixels by key after a manual resize: the handle at the header edge drags the column, while the table fits the width moves to the neighbouring column and once it scrolls only the column itself grows; a column with a key in the model stops sharing the free width through flex.',
       },
+      'v-model:columnOrder': {
+        ru: 'Порядок колонок ключами после перестановки: ключи модели идут первыми в своём порядке, остальные — в порядке объявления. Ручка в начале заголовка тянет колонку внутри её панели, закрепление сильнее порядка.',
+        en: 'Column order as keys after a move: the keys in the model come first in their order, the rest follow the declaration order. The grip at the start of a header drags the column inside its pane, and pinning wins over the order.',
+      },
       'v-model:hidden': {
         ru: 'Ключи скрытых колонок; скрытая колонка не рисуется и не участвует в навигации, но её фильтры и сортировка продолжают действовать.',
         en: 'Keys of hidden columns; a hidden column is neither drawn nor reachable by the keyboard, but its filters and sort keep working.',
@@ -217,6 +221,13 @@ const docs: DocsMap = {
         description: {
           ru: 'На ячейке шапки сужает или расширяет колонку на 10 px; в RTL стрелки меняются местами.',
           en: 'On a header cell narrows or widens the column by 10 px; in RTL the arrows swap.',
+        },
+      },
+      {
+        keys: 'Alt+Shift+ArrowLeft / Alt+Shift+ArrowRight',
+        description: {
+          ru: 'На ячейке шапки переставляет колонку на одну позицию внутри её панели, фокус остаётся на ней; в RTL стрелки меняются местами.',
+          en: 'On a header cell moves the column one position inside its pane and keeps the focus on it; in RTL the arrows swap.',
         },
       },
       {
