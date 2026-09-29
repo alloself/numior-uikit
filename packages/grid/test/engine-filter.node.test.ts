@@ -86,6 +86,13 @@ describe('createGridEngine filters', () => {
     expect(harness.engine.store('city')?.kind).toBe('codes');
     expect(await ids(harness, [{ kind: 'quick', value: 'UR' }])).toEqual([1, 6]);
     expect(await ids(harness, [{ kind: 'quick', value: '' }])).toEqual([1, 2, 3, 4, 5, 6]);
+    expect(await ids(harness, [{ kind: 'quick', value: 'UR', keys: ['note'] }])).toEqual([1, 6]);
+
+    expect(await ids(harness, [{ kind: 'quick', value: 'UR', keys: ['city', 'country'] }])).toEqual(
+      [],
+    );
+
+    expect(await ids(harness, [{ kind: 'quick', value: 'UR', keys: ['amount'] }])).toEqual([]);
 
     expect(
       await ids(harness, [

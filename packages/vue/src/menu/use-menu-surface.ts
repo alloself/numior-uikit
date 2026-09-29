@@ -117,8 +117,19 @@ export const useMenuSurface = (options: MenuSurfaceOptions): MenuSurface => {
     }
   };
 
+  const requestedItem = (request: Exclude<MenuFocusRequest, 'none'>): HTMLElement | null => {
+    const items = navigation.items();
+    return (request === 'first' ? items[0] : items.at(-1)) ?? null;
+  };
+
   const focusOnOpen = (): void => {
-    focusElement(opening.take() === undefined ? options.content.value : navigation.activeElement());
+    const request = opening.take();
+
+    focusElement(
+      request === undefined
+        ? options.content.value
+        : (navigation.activeElement() ?? requestedItem(request)),
+    );
   };
 
   const onClosed = (): void => {

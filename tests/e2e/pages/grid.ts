@@ -22,6 +22,8 @@ export class GridSection {
   readonly clearFilters: Locator;
   readonly output: Locator;
   readonly filter: Locator;
+  readonly menu: Locator;
+  readonly resetColumns: Locator;
   readonly tree: Locator;
 
   constructor(private readonly page: Page) {
@@ -33,7 +35,33 @@ export class GridSection {
     this.clearFilters = page.getByTestId('grid-clear-filters');
     this.output = page.getByTestId('grid-output');
     this.filter = page.locator('.nui-grid-filter');
+    this.menu = this.root.locator(':scope > .nui-menu');
+    this.resetColumns = page.getByTestId('grid-reset-columns');
     this.tree = page.getByTestId('grid-tree');
+  }
+
+  menuButton(col: number): Locator {
+    return this.header(col).locator('.nui-grid__menu');
+  }
+
+  async openMenu(col: number): Promise<void> {
+    await this.header(col).hover();
+    await this.menuButton(col).click();
+  }
+
+  headerPane(col: number): Promise<string | undefined> {
+    return this.header(col).evaluate(
+      (element) => /nui-grid__pane--(\w+)/.exec(element.parentElement?.className ?? '')?.[1],
+    );
+  }
+
+  menuItem(label: string): Locator {
+    const name = { name: label, exact: true };
+
+    return this.menu
+      .getByRole('menuitem', name)
+      .or(this.menu.getByRole('menuitemradio', name))
+      .or(this.menu.getByRole('menuitemcheckbox', name));
   }
 
   treeRow(position: number): Locator {
@@ -62,8 +90,8 @@ export class GridSection {
   }
 
   async openFilter(col: number): Promise<void> {
-    await this.header(col).hover();
-    await this.filterButton(col).click();
+    await this.openMenu(col);
+    await this.menuItem('Фильтр…').click();
   }
 
   filterValue(label: string): Locator {

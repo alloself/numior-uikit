@@ -3,7 +3,9 @@
     <slot name="indicator" />
   </span>
   <NuiIcon v-if="icon" :alias="icon" class="nui-menu-item__icon" />
-  <span class="nui-menu-item__label"><slot /></span>
+  <span class="nui-menu-item__label"
+    ><bdi><slot /></bdi
+  ></span>
   <NuiKbd
     v-if="shortcut"
     :keys="shortcut"

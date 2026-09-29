@@ -2,8 +2,11 @@ import type {
   GridCellLayout,
   GridPaneName,
   GridPanes,
+  NuiDataGridHidden,
+  NuiDataGridPins,
   NuiGridAlign,
   NuiGridColumn,
+  NuiGridPin,
 } from './data-grid.types';
 
 export interface PlacedColumn {
@@ -71,24 +74,35 @@ const placePane = <T>(
   return { placed, width: offset };
 };
 
-export const gridLayout = <T>(columns: readonly NuiGridColumn<T>[]): GridLayout => {
-  const start = placePane(
-    columns.filter((column) => column.pin === 'start'),
-    'start',
-    0,
-  );
+export interface LayoutOptions {
+  readonly pins: NuiDataGridPins;
+  readonly hidden: NuiDataGridHidden;
+  readonly sticky: boolean;
+}
 
-  const centre = placePane(
-    columns.filter((column) => column.pin === undefined),
-    'centre',
-    start.placed.length,
-  );
+const DEFAULT_OPTIONS: LayoutOptions = { pins: {}, hidden: [], sticky: true };
 
-  const end = placePane(
-    columns.filter((column) => column.pin === 'end'),
-    'end',
-    start.placed.length + centre.placed.length,
-  );
+export const pinOf = <T>(
+  column: NuiGridColumn<T>,
+  pins: NuiDataGridPins,
+): NuiGridPin | undefined => (column.key in pins ? (pins[column.key] ?? undefined) : column.pin);
+
+export const gridLayout = <T>(
+  columns: readonly NuiGridColumn<T>[],
+  options: LayoutOptions = DEFAULT_OPTIONS,
+): GridLayout => {
+  const shown = columns.filter((column) => !options.hidden.includes(column.key));
+
+  const inPane = (pin: NuiGridPin | undefined): NuiGridColumn<T>[] =>
+    shown.filter((column) => pinOf(column, options.pins) === pin);
+
+  const starts = inPane('start');
+  const ends = inPane('end');
+  const sticky = options.sticky;
+  const start = placePane(sticky ? starts : [], 'start', 0);
+  const scrolling = sticky ? inPane(undefined) : [...starts, ...inPane(undefined), ...ends];
+  const centre = placePane(scrolling, 'centre', start.placed.length);
+  const end = placePane(sticky ? ends : [], 'end', start.placed.length + centre.placed.length);
 
   return {
     start: start.placed,
@@ -100,6 +114,9 @@ export const gridLayout = <T>(columns: readonly NuiGridColumn<T>[]): GridLayout 
     endWidth: end.width,
   };
 };
+
+export const pinsFit = (layout: GridLayout, room: number): boolean =>
+  room === 0 || layout.startWidth + layout.endWidth <= room - SMALLEST_WIDTH;
 
 export const centreIndexOf = (layout: GridLayout, visual: number): number | undefined =>
   layout.visual[visual]?.pane === 'centre' ? visual - layout.start.length : undefined;

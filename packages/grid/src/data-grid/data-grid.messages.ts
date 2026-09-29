@@ -32,6 +32,24 @@ export interface NuiDataGridMessages {
   readonly groupCollapsed: (params: { readonly group: string }) => string;
   readonly rowExpanded: (params: { readonly row: string }) => string;
   readonly rowCollapsed: (params: { readonly row: string }) => string;
+  readonly columnMenu: (params: { readonly column: string }) => string;
+  readonly menuSortAscending: string;
+  readonly menuSortDescending: string;
+  readonly menuSortClear: string;
+  readonly menuFilter: string;
+  readonly menuGroup: string;
+  readonly menuUngroup: string;
+  readonly menuPin: string;
+  readonly menuPinStart: string;
+  readonly menuPinNone: string;
+  readonly menuPinEnd: string;
+  readonly menuHide: string;
+  readonly menuColumns: string;
+  readonly columnPinnedStart: (params: { readonly column: string }) => string;
+  readonly columnPinnedEnd: (params: { readonly column: string }) => string;
+  readonly columnUnpinned: (params: { readonly column: string }) => string;
+  readonly columnHidden: (params: { readonly column: string }) => string;
+  readonly columnShown: (params: { readonly column: string }) => string;
 }
 
 export const dataGridMessages: NuiMessageCatalog<'dataGrid'> = {
@@ -69,6 +87,24 @@ export const dataGridMessages: NuiMessageCatalog<'dataGrid'> = {
     groupCollapsed: ({ group }) => `Group ${group} collapsed`,
     rowExpanded: ({ row }) => `Row ${row} expanded`,
     rowCollapsed: ({ row }) => `Row ${row} collapsed`,
+    columnMenu: ({ column }) => `Column menu: ${column}`,
+    menuSortAscending: 'Sort ascending',
+    menuSortDescending: 'Sort descending',
+    menuSortClear: 'Clear sorting',
+    menuFilter: 'Filter…',
+    menuGroup: 'Group by this column',
+    menuUngroup: 'Remove from grouping',
+    menuPin: 'Pinning',
+    menuPinStart: 'At the start',
+    menuPinNone: 'Not pinned',
+    menuPinEnd: 'At the end',
+    menuHide: 'Hide column',
+    menuColumns: 'Columns',
+    columnPinnedStart: ({ column }) => `Column ${column} pinned at the start`,
+    columnPinnedEnd: ({ column }) => `Column ${column} pinned at the end`,
+    columnUnpinned: ({ column }) => `Column ${column} unpinned`,
+    columnHidden: ({ column }) => `Column ${column} hidden`,
+    columnShown: ({ column }) => `Column ${column} shown`,
   },
   ru: {
     label: 'Таблица данных',
@@ -103,5 +139,23 @@ export const dataGridMessages: NuiMessageCatalog<'dataGrid'> = {
     groupCollapsed: ({ group }) => `Группа «${group}» свёрнута`,
     rowExpanded: ({ row }) => `Строка «${row}» развёрнута`,
     rowCollapsed: ({ row }) => `Строка «${row}» свёрнута`,
+    columnMenu: ({ column }) => `Меню колонки «${column}»`,
+    menuSortAscending: 'Сортировать по возрастанию',
+    menuSortDescending: 'Сортировать по убыванию',
+    menuSortClear: 'Снять сортировку',
+    menuFilter: 'Фильтр…',
+    menuGroup: 'Группировать по колонке',
+    menuUngroup: 'Убрать из группировки',
+    menuPin: 'Закрепление',
+    menuPinStart: 'В начале',
+    menuPinNone: 'Не закреплять',
+    menuPinEnd: 'В конце',
+    menuHide: 'Скрыть колонку',
+    menuColumns: 'Колонки',
+    columnPinnedStart: ({ column }) => `Колонка «${column}» закреплена в начале`,
+    columnPinnedEnd: ({ column }) => `Колонка «${column}» закреплена в конце`,
+    columnUnpinned: ({ column }) => `Колонка «${column}» откреплена`,
+    columnHidden: ({ column }) => `Колонка «${column}» скрыта`,
+    columnShown: ({ column }) => `Колонка «${column}» показана`,
   },
 };

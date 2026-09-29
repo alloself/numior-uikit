@@ -47,7 +47,10 @@
               :hint="header.sortHint(column)"
               :filter-label="messages.filterColumn({ column: columnAt(column).label })"
               :expanded="header.expanded(column)"
+              :menu-label="menu.labelOf(column)"
+              :menu-expanded="menu.expanded(column)"
               @filter="header.openFilter(column, $event)"
+              @menu="header.openMenu(column, $event)"
             />
           </template>
         </NuiDataGridRow>
@@ -116,6 +119,13 @@
       :value-label="valueLabel"
       @apply="header.applyFilter"
     />
+    <NuiMenu
+      ref="menu-node"
+      v-model:open="menu.open.value"
+      :anchor="menu.target.value?.anchor ?? null"
+      :items="menu.items.value"
+      :label="menu.label.value"
+    />
     <div v-if="query.busy.value" class="nui-grid__busy" role="presentation"></div>
     <div class="nui-grid__hidden" role="status" aria-live="polite">{{ announcement }}</div>
   </div>
@@ -131,7 +141,7 @@ import {
   useMessages,
   useVirtualList,
 } from '@numior/primitives';
-import { NuiEmpty } from '@numior/vue';
+import { NuiEmpty, NuiMenu, type NuiMenuExposed } from '@numior/vue';
 import {
   createGridEngine,
   type GridDistinct,
@@ -143,12 +153,13 @@ import NuiDataGridRow from './NuiDataGridRow.vue';
 import { dataGridMessages } from './data-grid.messages';
 import { cellTextOf, cellValueOf, engineColumnOf, valueTextOf } from './grid-format';
 import { columnTreeOf, headerBandsOf } from './grid-columns';
-import { centreIndexOf, gridLayout, panesOf } from './grid-layout';
+import { centreIndexOf, gridLayout, panesOf, pinsFit } from './grid-layout';
 import NuiDataGridFilter from './NuiDataGridFilter.vue';
 import NuiDataGridHeaderMarks from './NuiDataGridHeaderMarks.vue';
 import { useGridFocus } from './use-grid-focus';
 import { useGridExpansion } from './use-grid-expansion';
-import { useGridHeader } from './use-grid-header';
+import { useGridHeader, type GridHeader } from './use-grid-header';
+import { useGridMenu, type GridMenu } from './use-grid-menu';
 import { useGridQuery } from './use-grid-query';
 import { useGridTotals } from './use-grid-totals';
 import type {
@@ -158,6 +169,8 @@ import type {
   NuiDataGridExpanded,
   NuiDataGridExposed,
   NuiDataGridGroupBy,
+  NuiDataGridHidden,
+  NuiDataGridPins,
   NuiDataGridProps,
   NuiDataGridSlots,
   NuiDataGridFilters,
@@ -188,6 +201,7 @@ const {
   getChildren,
   hasChildren,
   treeColumn,
+  columnMenu = true,
 } = defineProps<NuiDataGridProps<T>>();
 
 const sort = defineModel<NuiDataGridSort>('sort', { default: () => [] });
@@ -195,6 +209,8 @@ const filters = defineModel<NuiDataGridFilters>('filters', { default: () => [] }
 const quick = defineModel<string>('quick', { default: '' });
 const groupBy = defineModel<NuiDataGridGroupBy>('groupBy', { default: () => [] });
 const expanded = defineModel<NuiDataGridExpanded>('expanded', { default: () => [] });
+const pins = defineModel<NuiDataGridPins>('pins', { default: () => ({}) });
+const hidden = defineModel<NuiDataGridHidden>('hidden', { default: () => [] });
 const emit = defineEmits<NuiDataGridEvents<T>>();
 const slots = defineSlots<NuiDataGridSlots<T>>();
 
@@ -220,9 +236,20 @@ const revision = ref(0);
 const announcement = ref('');
 const rowsIntent = createIntent<'rows'>();
 
+const quickKeys = computed(() =>
+  hidden.value.length === 0
+    ? undefined
+    : tree.value.leaves
+        .filter((column) => !hidden.value.includes(column.key))
+        .map((column) => column.key),
+);
+
 const queryFilters = (): readonly GridFilter[] => {
   const text = quick.value.trim();
-  return text === '' ? filters.value : [...filters.value, { kind: 'quick', value: text }];
+
+  return text === ''
+    ? filters.value
+    : [...filters.value, { kind: 'quick', value: text, keys: quickKeys.value }];
 };
 
 const totals = useGridTotals({
@@ -273,7 +300,20 @@ rowCount.value = engine.value.count();
 
 const active = ref<GridCellPosition>({ row: rowCount.value > 0 ? 0 : -1, col: 0 });
 
-const layout = computed(() => gridLayout(tree.value.leaves));
+const room = shallowRef(0);
+
+const pinnedLayout = computed(() =>
+  gridLayout(tree.value.leaves, { pins: pins.value, hidden: hidden.value, sticky: true }),
+);
+
+const sticky = computed(() => pinsFit(pinnedLayout.value, room.value));
+
+const layout = computed(() =>
+  sticky.value
+    ? pinnedLayout.value
+    : gridLayout(tree.value.leaves, { pins: pins.value, hidden: hidden.value, sticky: false }),
+);
+
 const bands = computed(() => headerBandsOf(layout.value, tree.value));
 const headRows = computed(() => tree.value.depth + 1);
 
@@ -318,6 +358,14 @@ const columnWindow = useVirtualList(viewport, {
   inset: () => layout.value.startWidth + layout.value.endWidth,
 });
 
+watch(
+  columnWindow.viewport,
+  (width) => {
+    room.value = width;
+  },
+  { immediate: true, flush: 'sync' },
+);
+
 const panes = computed(() =>
   panesOf(
     layout.value,
@@ -347,6 +395,7 @@ const focus = useGridFocus({
   colCount: () => layout.value.visual.length,
   rowSize: () => rowSize.value,
   centreIndexOf: (visual) => centreIndexOf(layout.value, visual),
+  columnIndexOf: (key) => layout.value.visual.findIndex((column) => column.key === key),
   isRtl: direction.isRtl,
 });
 
@@ -368,7 +417,7 @@ const rowAt = (position: number): T => {
   return node.row;
 };
 
-const header = useGridHeader({
+const header: GridHeader<T> = useGridHeader({
   keys: () => layout.value.visual.map((column) => column.key),
   keyAt: (visual) => layout.value.visual[visual]?.key,
   columnAt,
@@ -381,6 +430,33 @@ const header = useGridHeader({
   filtered: () => {
     rowsIntent.set('rows');
   },
+  menu: (key, anchor, focusOn) => menu.openAt(key, anchor, focusOn),
+});
+
+const menuNode = useTemplateRef<NuiMenuExposed>('menu-node');
+
+const menu: GridMenu = useGridMenu({
+  enabled: () => columnMenu,
+  leaves: () => tree.value.leaves,
+  layout: () => layout.value,
+  columnAt,
+  heads: () => header.heads.value,
+  sort,
+  groupBy,
+  pins,
+  hidden,
+  treeMode: () => getChildren !== undefined,
+  messages,
+  announce: (text) => {
+    announcement.value = text;
+  },
+  openFilter: (key, anchor) => {
+    header.openFilterAt(key, anchor);
+  },
+  show: (focusOn) => {
+    menuNode.value?.show(focusOn);
+  },
+  refocus: focus.focusHeader,
 });
 
 const treeKey = computed(() =>
@@ -496,6 +572,22 @@ const clampActive = (): void => {
 watch(quick, () => {
   rowsIntent.set('rows');
 });
+
+watch(
+  layout,
+  (next, previous) => {
+    const key = previous.visual[active.value.col]?.key;
+    const index = key === undefined ? -1 : next.visual.findIndex((column) => column.key === key);
+
+    const col =
+      index >= 0 ? index : Math.min(active.value.col, Math.max(0, next.visual.length - 1));
+
+    if (col !== active.value.col) {
+      active.value = { ...active.value, col };
+    }
+  },
+  { flush: 'sync' },
+);
 
 watch(expanded, (ids) => {
   engine.value.setToggled(ids);

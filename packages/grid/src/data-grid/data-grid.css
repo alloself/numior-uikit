@@ -43,6 +43,8 @@
   overflow: auto;
   overflow-anchor: none;
   overscroll-behavior: contain;
+  scroll-padding-block: calc(var(--_row) * var(--_head-rows)) var(--_foot);
+  scroll-padding-inline: var(--_start) var(--_end);
   scrollbar-width: thin;
   outline: none;
 }
@@ -334,7 +336,8 @@
     animation-duration: 1.6s;
   }
 }
-.nui-grid__filter {
+.nui-grid__filter,
+.nui-grid__menu {
   box-sizing: border-box;
   display: inline-grid;
   flex: none;
@@ -355,22 +358,30 @@
     color var(--nui-duration-fast) var(--nui-easing),
     background-color var(--nui-duration-fast) var(--nui-easing);
 }
-.nui-grid__cell--align-end > .nui-grid__filter {
-  order: -1;
-  margin-inline: 0 auto;
+.nui-grid__filter + .nui-grid__menu {
+  margin-inline-start: 0;
 }
-.nui-grid__cell:hover > .nui-grid__filter,
-.nui-grid__cell:focus-visible > .nui-grid__filter,
-.nui-grid__filter[aria-expanded='true'],
+.nui-grid__cell--align-end > .nui-grid__filter,
+.nui-grid__cell--align-end > .nui-grid__menu {
+  order: -1;
+  margin-inline-start: 0;
+}
+.nui-grid__cell--align-end > button:last-of-type {
+  margin-inline-end: auto;
+}
+.nui-grid__cell:hover > :is(.nui-grid__filter, .nui-grid__menu),
+.nui-grid__cell:focus-visible > :is(.nui-grid__filter, .nui-grid__menu),
+:is(.nui-grid__filter, .nui-grid__menu)[aria-expanded='true'],
 .nui-grid__filter--active {
   opacity: 1;
 }
 @media (hover: none) {
-  .nui-grid__filter {
+  .nui-grid__filter,
+  .nui-grid__menu {
     opacity: 1;
   }
 }
-.nui-grid__filter:hover {
+:is(.nui-grid__filter, .nui-grid__menu):hover {
   background: var(--nui-neutral-soft);
   color: var(--nui-text);
 }

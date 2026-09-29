@@ -28,6 +28,7 @@ interface NuiGridColumnBase {
   readonly align?: NuiGridAlign | undefined;
   readonly sortable?: boolean | undefined;
   readonly filter?: NuiGridFilterKind | false | undefined;
+  readonly hideable?: boolean | undefined;
 }
 
 interface NuiGridColumnCommon<T> extends NuiGridColumnBase {
@@ -89,6 +90,7 @@ export interface NuiDataGridProps<T> {
   getChildren?: ((row: T) => readonly T[] | null | undefined) | undefined;
   hasChildren?: ((row: T) => boolean) | undefined;
   treeColumn?: string | undefined;
+  columnMenu?: boolean | undefined;
 }
 
 export interface NuiDataGridCellSlot<T> {
@@ -127,6 +129,10 @@ export type NuiDataGridFilters = readonly NuiGridColumnFilter[];
 export type NuiDataGridGroupBy = readonly string[];
 
 export type NuiDataGridExpanded = readonly GridNodeId[];
+
+export type NuiDataGridPins = Readonly<Record<string, NuiGridPin | null>>;
+
+export type NuiDataGridHidden = readonly string[];
 
 export interface NuiDataGridFilterProps {
   title: string;
@@ -184,12 +190,18 @@ export interface NuiDataGridHeaderMarksProps {
   hint: string;
   filterLabel: string;
   expanded: 'true' | 'false';
+  menuLabel?: string | undefined;
+  menuExpanded: 'true' | 'false';
 }
 
 export interface GridCellPosition {
   readonly row: number;
   readonly col: number;
 }
+
+export type GridHeaderTarget =
+  | { readonly kind: 'column'; readonly key: string }
+  | { readonly kind: 'slot'; readonly index: number };
 
 export type GridRowPart = 'band' | 'head' | 'body' | 'foot';
 

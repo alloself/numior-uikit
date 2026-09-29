@@ -110,6 +110,7 @@ export class MenuDriver extends ComponentDriver {
     const state: PartsState = { log: [], bold: ref(false), align: ref('left') };
     const anchor = shallowRef<HTMLElement | null>(null);
     const exposed = shallowRef<NuiMenuExposed | null>(null);
+    const items = shallowRef(entries);
 
     const setAnchor = (element: unknown): void => {
       anchor.value = element instanceof HTMLElement ? element : null;
@@ -127,7 +128,7 @@ export class MenuDriver extends ComponentDriver {
           {
             ...props,
             ...(anchored ? { anchor: anchor.value } : {}),
-            items: entries,
+            items: items.value,
             open: model.value,
             'onUpdate:open': (value: boolean) => {
               model.value = value;
@@ -143,7 +144,7 @@ export class MenuDriver extends ComponentDriver {
     });
 
     const wrapper = mount(Host, { attachTo: document.body });
-    return new MenuDriver(wrapper, stubs, model, state, anchor, exposed);
+    return new MenuDriver(wrapper, stubs, model, state, anchor, exposed, items);
   }
 
   private constructor(
@@ -153,6 +154,7 @@ export class MenuDriver extends ComponentDriver {
     private readonly state: PartsState,
     private readonly anchor: ShallowRef<HTMLElement | null>,
     private readonly exposed: ShallowRef<NuiMenuExposed | null>,
+    private readonly items: ShallowRef<readonly NuiMenuEntry[] | undefined>,
   ) {
     super(wrapper);
   }
@@ -167,6 +169,12 @@ export class MenuDriver extends ComponentDriver {
   }
 
   async show(focus?: NuiMenuFocus): Promise<void> {
+    this.exposed.value?.show(focus);
+    await nextTick();
+  }
+
+  async showWith(entries: readonly NuiMenuEntry[], focus: NuiMenuFocus): Promise<void> {
+    this.items.value = entries;
     this.exposed.value?.show(focus);
     await nextTick();
   }

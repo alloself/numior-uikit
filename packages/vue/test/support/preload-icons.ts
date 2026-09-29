@@ -53,6 +53,10 @@ const loaders = [
   () => import('lucide-vue-next/dist/esm/icons/grip-horizontal.js'),
   () => import('lucide-vue-next/dist/esm/icons/arrow-left-right.js'),
   () => import('lucide-vue-next/dist/esm/icons/funnel.js'),
+  () => import('lucide-vue-next/dist/esm/icons/arrow-down.js'),
+  () => import('lucide-vue-next/dist/esm/icons/eye-off.js'),
+  () => import('lucide-vue-next/dist/esm/icons/list-tree.js'),
+  () => import('lucide-vue-next/dist/esm/icons/columns-3.js'),
 ];
 
 await Promise.all(loaders.map((load) => load()));

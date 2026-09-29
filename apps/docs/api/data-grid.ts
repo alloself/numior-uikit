@@ -4,8 +4,8 @@ const docs: DocsMap = {
   NuiDataGrid: {
     props: {
       columns: {
-        ru: 'Колонки: key, label, type (text, number, date, boolean), value, format, width, minWidth, pin, align, sortable, filter и aggregate. filter выбирает вид фильтра (text, number, date, set) или выключает его значением false. aggregate (sum, count, avg, min, max или функция) считает значение для строк групп и строки итогов. Вне строки, например в группе или списке значений фильтра, format получает строку как undefined. Группа { key, label, children } рисует над заголовками своих колонок полосу с подписью.',
-        en: 'Columns: key, label, type (text, number, date, boolean), value, format, width, minWidth, pin, align, sortable, filter and aggregate. filter picks the filter kind (text, number, date, set) or turns it off with false. aggregate (sum, count, avg, min, max or a function) fills group rows and the totals row. Outside a row, such as a group or the filter value list, format receives the row as undefined. A group { key, label, children } draws a labelled band above the headers of its columns.',
+        ru: 'Колонки: key, label, type (text, number, date, boolean), value, format, width, minWidth, pin, align, sortable, filter, hideable и aggregate. hideable: false не даёт скрыть колонку из меню. filter выбирает вид фильтра (text, number, date, set) или выключает его значением false. aggregate (sum, count, avg, min, max или функция) считает значение для строк групп и строки итогов. Вне строки, например в группе или списке значений фильтра, format получает строку как undefined. Группа { key, label, children } рисует над заголовками своих колонок полосу с подписью.',
+        en: 'Columns: key, label, type (text, number, date, boolean), value, format, width, minWidth, pin, align, sortable, filter, hideable and aggregate. hideable: false keeps the column out of reach of the menu hide. filter picks the filter kind (text, number, date, set) or turns it off with false. aggregate (sum, count, avg, min, max or a function) fills group rows and the totals row. Outside a row, such as a group or the filter value list, format receives the row as undefined. A group { key, label, children } draws a labelled band above the headers of its columns.',
       },
       source: {
         ru: 'Строки данных; грид не копирует и не меняет их.',
@@ -59,6 +59,10 @@ const docs: DocsMap = {
         ru: 'Подпись строки итогов в первой колонке без агрегата; по умолчанию из словаря.',
         en: 'Label of the totals row in the first column without an aggregate; the dictionary supplies the default.',
       },
+      columnMenu: {
+        ru: 'Меню колонки в шапке: сортировка, фильтр, группировка, закрепление, скрытие и список колонок. false убирает кнопку меню, и Alt+ArrowDown открывает фильтр.',
+        en: 'Column menu in the header: sort, filter, grouping, pinning, hiding and the column list. false drops the menu button, and Alt+ArrowDown opens the filter.',
+      },
     },
     models: {
       'v-model:sort': {
@@ -70,8 +74,8 @@ const docs: DocsMap = {
         en: 'Column filters: a list of text, number, date and set conditions by column key; the model serialises to JSON.',
       },
       'v-model:quick': {
-        ru: 'Быстрый фильтр: текст, который ищется во всех текстовых колонках без учёта регистра.',
-        en: 'Quick filter: text searched in every text column, ignoring case.',
+        ru: 'Быстрый фильтр: текст, который ищется во всех видимых текстовых колонках без учёта регистра.',
+        en: 'Quick filter: text searched in every shown text column, ignoring case.',
       },
       'v-model:groupBy': {
         ru: 'Группировка: ключи колонок по уровням; непустой список делает грид деревом (treegrid).',
@@ -80,6 +84,14 @@ const docs: DocsMap = {
       'v-model:expanded': {
         ru: 'Развёрнутые группы и строки дерева: их id; по умолчанию всё свёрнуто.',
         en: 'Expanded groups and tree rows by id; everything starts collapsed.',
+      },
+      'v-model:pins': {
+        ru: 'Закрепление из меню: ключ колонки → start, end или null (не закреплять); побеждает pin колонки, отсутствующий ключ оставляет его. Если закреплённые панели не оставляют места хотя бы на одну колонку, все колонки прокручиваются, а модель не меняется.',
+        en: 'Pinning from the menu: column key → start, end or null (unpinned); it beats the column pin, and a missing key keeps it. When the pinned panes leave no room for a single column, every column scrolls and the model stays as it is.',
+      },
+      'v-model:hidden': {
+        ru: 'Ключи скрытых колонок; скрытая колонка не рисуется и не участвует в навигации, но её фильтры и сортировка продолжают действовать.',
+        en: 'Keys of hidden columns; a hidden column is neither drawn nor reachable by the keyboard, but its filters and sort keep working.',
       },
     },
     events: {
@@ -124,8 +136,8 @@ const docs: DocsMap = {
       {
         keys: 'Alt+ArrowDown',
         description: {
-          ru: 'На ячейке шапки открывает фильтр колонки; Escape закрывает его и возвращает фокус в шапку.',
-          en: 'On a header cell opens the column filter; Escape closes it and returns focus to the header.',
+          ru: 'На ячейке шапки открывает меню колонки на первом пункте, а без меню — фильтр; Escape закрывает их и возвращает фокус в шапку.',
+          en: 'On a header cell opens the column menu on its first item, or the filter without a menu; Escape closes them and returns focus to the header.',
         },
       },
       {

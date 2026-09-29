@@ -20,7 +20,7 @@ export interface FilterSetup extends SliceJob {
 export interface FilterSources<T> {
   readonly column: (key: string) => GridEngineColumn<T> | undefined;
   readonly store: (key: string) => ColumnStore | undefined;
-  readonly quickStores: () => readonly StringCodes[];
+  readonly quickStores: (keys: readonly string[] | undefined) => readonly StringCodes[];
 }
 
 type TextMatch = (lowered: string) => boolean;
@@ -242,8 +242,11 @@ const setPending = (store: ColumnStore, values: readonly GridFilterValue[]): Pen
 const quickPending = (value: string, stores: readonly StringCodes[]): PendingTest => {
   const needle = value.toLocaleLowerCase();
 
-  if (needle === '' || stores.length === 0) {
+  if (needle === '') {
     return ready(() => true);
+  }
+  if (stores.length === 0) {
+    return ready(() => false);
   }
 
   const lanes = stores.map((store) => ({
@@ -276,7 +279,7 @@ const textPending = (
 
 const pendingFor = <T>(filter: GridFilter, sources: FilterSources<T>): PendingTest => {
   if (filter.kind === 'quick') {
-    return quickPending(filter.value, sources.quickStores());
+    return quickPending(filter.value, sources.quickStores(filter.keys));
   }
   const { column, store } = sourceOf(sources, filter.key);
 

@@ -16,6 +16,8 @@ import {
   type GridSort,
   type NuiDataGridFilters,
   type NuiDataGridExposed,
+  type NuiDataGridHidden,
+  type NuiDataGridPins,
   type NuiDataGridProps,
   type NuiGridColumnDef,
 } from '../../src';
@@ -28,12 +30,36 @@ export interface DataGridMountOptions<T> {
   readonly filters?: NuiDataGridFilters;
   readonly groupBy?: readonly string[];
   readonly expanded?: readonly GridNodeId[];
+  readonly pins?: NuiDataGridPins;
+  readonly hidden?: NuiDataGridHidden;
   readonly slots?: Slots;
   readonly width?: number;
   readonly height?: number;
   readonly dir?: 'ltr' | 'rtl';
   readonly config?: NuiConfigOptions;
 }
+
+type MountDefaults = Required<
+  Pick<
+    DataGridMountOptions<never>,
+    'sort' | 'filters' | 'groupBy' | 'expanded' | 'pins' | 'hidden' | 'width' | 'height' | 'dir'
+  >
+>;
+
+const MOUNT_DEFAULTS: MountDefaults = {
+  sort: [],
+  filters: [],
+  groupBy: [],
+  expanded: [],
+  pins: {},
+  hidden: [],
+  width: 500,
+  height: 300,
+  dir: 'ltr',
+};
+
+const pluginsOf = (config: NuiConfigOptions | undefined): Plugin[] =>
+  config === undefined ? [] : [createNuiConfig(config)];
 
 export interface CellPosition {
   readonly row: number;
@@ -46,6 +72,8 @@ interface GridModels {
   readonly quick: ShallowRef<string>;
   readonly groupBy: ShallowRef<readonly string[]>;
   readonly expanded: ShallowRef<readonly GridNodeId[]>;
+  readonly pins: ShallowRef<NuiDataGridPins>;
+  readonly hidden: ShallowRef<NuiDataGridHidden>;
 }
 
 interface GridEvents<T> {
@@ -91,12 +119,15 @@ const positionOf = (cell: Element | null, headRows: number): CellPosition | unde
 
 export class DataGridDriver<T> {
   static mount<T>(options: DataGridMountOptions<T>): DataGridDriver<T> {
-    const source = shallowRef(options.source);
-    const sort = shallowRef<readonly GridSort[]>(options.sort ?? []);
-    const filters = shallowRef<NuiDataGridFilters>(options.filters ?? []);
+    const settings = { ...MOUNT_DEFAULTS, ...options };
+    const source = shallowRef(settings.source);
+    const sort = shallowRef<readonly GridSort[]>(settings.sort);
+    const filters = shallowRef<NuiDataGridFilters>(settings.filters);
     const quick = shallowRef('');
-    const groupBy = shallowRef<readonly string[]>(options.groupBy ?? []);
-    const expanded = shallowRef<readonly GridNodeId[]>(options.expanded ?? []);
+    const groupBy = shallowRef<readonly string[]>(settings.groupBy);
+    const expanded = shallowRef<readonly GridNodeId[]>(settings.expanded);
+    const pins = shallowRef<NuiDataGridPins>(settings.pins);
+    const hidden = shallowRef<NuiDataGridHidden>(settings.hidden);
     const stubs = new TopLayerStubs();
     const exposed = shallowRef<NuiDataGridExposed | null>(null);
     const events: GridEvents<T> = { settled: 0, progress: 0, loads: [], waiters: [] };
@@ -107,12 +138,12 @@ export class DataGridDriver<T> {
 
     const Host = defineComponent({
       setup: () => () =>
-        h('div', { dir: options.dir ?? 'ltr' }, [
+        h('div', { dir: settings.dir }, [
           h(
             NuiDataGrid<T>,
             {
-              ...options.props,
-              columns: options.columns,
+              ...settings.props,
+              columns: settings.columns,
               source: source.value,
               sort: sort.value,
               'onUpdate:sort': (next: readonly GridSort[]) => {
@@ -134,6 +165,14 @@ export class DataGridDriver<T> {
               'onUpdate:expanded': (next: readonly GridNodeId[]) => {
                 expanded.value = next;
               },
+              pins: pins.value,
+              'onUpdate:pins': (next: NuiDataGridPins) => {
+                pins.value = next;
+              },
+              hidden: hidden.value,
+              'onUpdate:hidden': (next: NuiDataGridHidden) => {
+                hidden.value = next;
+              },
               onSettle: () => {
                 events.settled += 1;
 
@@ -149,18 +188,18 @@ export class DataGridDriver<T> {
               },
               ref: setExposed,
             },
-            options.slots,
+            settings.slots,
           ),
         ]),
     });
 
-    const plugins: Plugin[] = options.config === undefined ? [] : [createNuiConfig(options.config)];
+    const plugins = pluginsOf(settings.config);
     const wrapper = mount(Host, { attachTo: document.body, global: { plugins } });
 
-    const models = { sort, filters, quick, groupBy, expanded };
+    const models = { sort, filters, quick, groupBy, expanded, pins, hidden };
     const driver = new DataGridDriver<T>(wrapper, source, models, exposed, events, stubs);
 
-    driver.size(options.width ?? 500, options.height ?? 300);
+    driver.size(settings.width, settings.height);
     return driver;
   }
 
@@ -264,6 +303,14 @@ export class DataGridDriver<T> {
     return this.models.expanded.value;
   }
 
+  get pins(): NuiDataGridPins {
+    return this.models.pins.value;
+  }
+
+  get hidden(): NuiDataGridHidden {
+    return this.models.hidden.value;
+  }
+
   get loads(): readonly T[] {
     return this.events.loads;
   }
@@ -316,6 +363,72 @@ export class DataGridDriver<T> {
     return [...(this.popover?.querySelectorAll('.nui-grid-filter__values label') ?? [])].map(
       (label) => label.textContent?.trim() ?? '',
     );
+  }
+
+  private get columnMenu(): HTMLElement | null {
+    return (
+      this.element.closest('.nui-grid')?.querySelector<HTMLElement>(':scope > .nui-menu') ?? null
+    );
+  }
+
+  private menuEntries(): HTMLElement[] {
+    const root = this.columnMenu;
+
+    return [
+      ...(root?.querySelectorAll<HTMLElement>(
+        '[role="menuitem"], [role="menuitemcheckbox"], [role="menuitemradio"]',
+      ) ?? []),
+    ];
+  }
+
+  private menuEntry(label: string): HTMLElement | undefined {
+    return this.menuEntries().find(
+      (entry) => entry.querySelector('.nui-menu-item__label')?.textContent?.trim() === label,
+    );
+  }
+
+  get menuLabels(): string[] {
+    const root = this.columnMenu;
+
+    return this.menuEntries()
+      .filter((entry) => entry.closest('.nui-menu') === root)
+      .map((entry) => entry.querySelector('.nui-menu-item__label')?.textContent?.trim() ?? '');
+  }
+
+  get focusedMenuItem(): string | undefined {
+    const active = document.activeElement;
+    return active instanceof HTMLElement && this.columnMenu?.contains(active)
+      ? active.querySelector('.nui-menu-item__label')?.textContent?.trim()
+      : undefined;
+  }
+
+  menuItemState(label: string): string | undefined {
+    const entry = this.menuEntry(label);
+    return entry?.getAttribute('aria-checked') ?? entry?.getAttribute('aria-disabled') ?? undefined;
+  }
+
+  menuExpanded(col: number): boolean {
+    return (
+      this.header(col)?.querySelector('.nui-grid__menu')?.getAttribute('aria-expanded') === 'true'
+    );
+  }
+
+  async openColumnMenu(col: number): Promise<void> {
+    this.header(col)?.querySelector<HTMLElement>('.nui-grid__menu')?.click();
+    await nextTick();
+  }
+
+  async chooseMenu(label: string): Promise<void> {
+    this.menuEntry(label)?.click();
+    await nextTick();
+  }
+
+  async chooseMenuAndSettle(label: string): Promise<void> {
+    const settled = this.nextSettle();
+
+    this.menuEntry(label)?.click();
+    await settled;
+    await nextTick();
   }
 
   filterButton(col: number): HTMLElement | null {
@@ -493,7 +606,14 @@ export class DataGridDriver<T> {
   }
 
   async openFilter(col: number): Promise<void> {
-    this.filterButton(col)?.click();
+    const funnel = this.filterButton(col);
+
+    if (funnel === null) {
+      await this.openColumnMenu(col);
+      this.menuEntry('Фильтр…')?.click();
+    } else {
+      funnel.click();
+    }
     await flushPromises();
   }
 

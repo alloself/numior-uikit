@@ -1,7 +1,7 @@
-import { onMounted, watch, type Ref, type ShallowRef } from 'vue';
+import { onMounted, ref, watch, type Ref, type ShallowRef } from 'vue';
 import { createIntent, type VirtualList } from '@numior/primitives';
 import { nextCell } from './grid-keys';
-import type { GridCellPosition } from './data-grid.types';
+import type { GridCellPosition, GridHeaderTarget } from './data-grid.types';
 
 export interface GridFocusOptions {
   readonly viewport: Readonly<ShallowRef<HTMLElement | null>>;
@@ -14,12 +14,15 @@ export interface GridFocusOptions {
   readonly colCount: () => number;
   readonly rowSize: () => number;
   readonly centreIndexOf: (visual: number) => number | undefined;
+  readonly columnIndexOf: (key: string) => number;
   readonly isRtl: () => boolean;
 }
 
 export interface GridFocus {
   activeIn(position: number): number;
   reveal(target: GridCellPosition): void;
+  focusCell(target: GridCellPosition): void;
+  focusHeader(target: GridHeaderTarget): void;
   onKeydown(event: KeyboardEvent): void;
   onFocusin(event: FocusEvent): void;
 }
@@ -48,6 +51,9 @@ const samePosition = (a: GridCellPosition, b: GridCellPosition): boolean =>
 
 export const useGridFocus = (options: GridFocusOptions): GridFocus => {
   const intent = createIntent<'cell'>();
+  const requests = ref(0);
+  const placement = createIntent<GridHeaderTarget>();
+  const placements = ref(0);
 
   const pageRows = (): number => {
     const size = options.rowSize();
@@ -62,6 +68,24 @@ export const useGridFocus = (options: GridFocusOptions): GridFocus => {
 
     if (centre !== undefined) {
       options.columns.scrollTo(centre, { align: 'auto' });
+    }
+  };
+
+  const focusCell = (target: GridCellPosition): void => {
+    options.active.value = target;
+    reveal(target);
+    intent.set('cell');
+    requests.value += 1;
+  };
+
+  const headerColumn = (target: GridHeaderTarget): number => {
+    const last = Math.max(0, options.colCount() - 1);
+
+    switch (target.kind) {
+      case 'column':
+        return Math.min(Math.max(0, options.columnIndexOf(target.key)), last);
+      case 'slot':
+        return Math.min(target.index, last);
     }
   };
 
@@ -94,9 +118,17 @@ export const useGridFocus = (options: GridFocusOptions): GridFocus => {
     }
   };
 
+  watch(placements, () => {
+    const target = placement.take();
+
+    if (target !== undefined) {
+      focusCell({ row: -1, col: headerColumn(target) });
+    }
+  });
+
   onMounted(() => {
     watch(
-      options.active,
+      [options.active, requests],
       () => {
         if (intent.take() === 'cell') {
           options.viewport.value
@@ -112,6 +144,11 @@ export const useGridFocus = (options: GridFocusOptions): GridFocus => {
     activeIn: (position) =>
       options.active.value.row === position ? options.active.value.col + 1 : 0,
     reveal,
+    focusCell,
+    focusHeader: (target) => {
+      placement.set(target);
+      placements.value += 1;
+    },
     onKeydown,
     onFocusin,
   };

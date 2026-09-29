@@ -101,7 +101,7 @@ describe('NuiDataGrid filters', () => {
     expect(grid.announcement).toBe('Показано 667 строк');
   });
 
-  it('honours the column filter option and opens the popover from the header with Alt+ArrowDown', async () => {
+  it('honours the column filter option and opens the popover through the column menu from the keyboard', async () => {
     const grid = mountPeople({
       columns: PEOPLE_COLUMNS.map((column) => {
         switch (column.key) {
@@ -119,6 +119,8 @@ describe('NuiDataGrid filters', () => {
     expect(grid.filterButton(3)).toBeNull();
     await grid.focusCell(-1, 2);
     await grid.press('ArrowDown', { alt: true });
+    expect(grid.focusedMenuItem).toBe('Сортировать по возрастанию');
+    await grid.chooseMenu('Фильтр…');
 
     expect(grid.filterTitle).toBe('Фильтр: Город');
     expect(grid.filterFocused).toBe(true);
@@ -134,7 +136,9 @@ describe('NuiDataGrid filters', () => {
     await grid.focusCell(-1, 3);
     await grid.press('ArrowDown', { alt: true });
     expect(grid.filterExpanded(2)).toBe(false);
-    expect(grid.focusedCell).toEqual({ row: -1, col: 3 });
+    expect(grid.menuExpanded(3)).toBe(true);
+    expect(grid.menuLabels).not.toContain('Фильтр…');
+    expect(grid.focusedMenuItem).toBe('Сортировать по возрастанию');
   });
 
   it('combines the quick filter with column filters from the model and reads dates by whole days', async () => {

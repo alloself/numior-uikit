@@ -16,10 +16,10 @@
   </span>
   <span v-if="hint" class="nui-grid__hidden">{{ hint }}</span>
   <button
-    v-if="state?.filterable"
+    v-if="showFilter"
     type="button"
     class="nui-grid__filter"
-    :class="{ 'nui-grid__filter--active': state.filtered }"
+    :class="{ 'nui-grid__filter--active': state?.filtered }"
     tabindex="-1"
     aria-haspopup="dialog"
     :aria-expanded="expanded"
@@ -28,13 +28,33 @@
   >
     <NuiIcon alias="filter" />
   </button>
+  <button
+    v-if="menuLabel"
+    type="button"
+    class="nui-grid__menu"
+    tabindex="-1"
+    aria-haspopup="menu"
+    :aria-expanded="menuExpanded"
+    :aria-label="menuLabel"
+    @click.stop="emit('menu', $event)"
+  >
+    <NuiIcon alias="ellipsis" />
+  </button>
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue';
 import { NuiIcon } from '@numior/vue';
 import type { NuiDataGridHeaderMarksProps } from './data-grid.types';
 
-const { state, hint, filterLabel, expanded } = defineProps<NuiDataGridHeaderMarksProps>();
+const { state, hint, filterLabel, expanded, menuLabel, menuExpanded } =
+  defineProps<NuiDataGridHeaderMarksProps>();
 
-const emit = defineEmits<{ filter: [event: MouseEvent] }>();
+const emit = defineEmits<{ filter: [event: MouseEvent]; menu: [event: MouseEvent] }>();
+
+const showFilter = computed(
+  () =>
+    state?.filterable === true &&
+    (menuLabel === undefined || state.filtered || expanded === 'true'),
+);
 </script>

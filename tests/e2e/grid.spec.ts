@@ -134,6 +134,12 @@ test.describe('data grid', () => {
     expect(popover.x + popover.width).toBeCloseTo(header.x + header.width, 0);
     expect(popover.y).toBeGreaterThan(header.y + header.height);
     await page.keyboard.press('Escape');
+    await grid.openMenu(3);
+    await expect(grid.menu).toBeVisible();
+    const menu = await boxOf(grid.menu);
+    expect(Math.abs(menu.x + menu.width - header.x - header.width)).toBeLessThanOrEqual(1);
+    await page.keyboard.press('Escape');
+    await expect(grid.menu).toBeHidden();
     await playground.setDirection('ltr');
   });
 
@@ -176,6 +182,8 @@ test.describe('data grid', () => {
         filters: [{ kind: 'set', key: 'status', values: ['Оплачен'] }],
         quick: '',
         groupBy: [],
+        pins: {},
+        hidden: [],
       }),
     );
 
@@ -183,7 +191,7 @@ test.describe('data grid', () => {
     await expect(grid.filterValue('Оплачен')).toBeChecked();
     await grid.resetFilter();
     await expect(grid.viewport).toHaveAttribute('aria-rowcount', '10003');
-    await expect(grid.filterButton(10)).not.toHaveClass(/nui-grid__filter--active/);
+    await expect(grid.filterButton(10)).toHaveCount(0);
   });
 
   test('narrows the rows with the quick filter and a number range and clears both', async ({
@@ -216,6 +224,8 @@ test.describe('data grid', () => {
         filters: [{ kind: 'number', key: 'amount', min: 1000, max: 20_000 }],
         quick: 'Казань',
         groupBy: [],
+        pins: {},
+        hidden: [],
       }),
     );
 
@@ -224,7 +234,7 @@ test.describe('data grid', () => {
     await expect(grid.quick).toHaveValue('');
   });
 
-  test('opens a filter from the header with Alt+ArrowDown and returns focus to it', async ({
+  test('opens the column menu and a filter from the header with the keyboard', async ({
     page,
     isMobile,
   }) => {
@@ -236,14 +246,22 @@ test.describe('data grid', () => {
     await grid.cell(0, 1).click();
     await page.keyboard.press('ArrowUp');
     await page.keyboard.press('Alt+ArrowDown');
-    await expect(grid.filter).toBeVisible();
-    await expect(grid.filter).toHaveAccessibleName('Фильтр: Клиент');
-    await expect(grid.filter.locator(':focus')).toHaveCount(1);
+    await expect(grid.menu).toBeVisible();
+    await expect(grid.menu).toHaveAccessibleName('Меню колонки «Клиент»');
+    await expect(grid.menuItem('Сортировать по возрастанию')).toBeFocused();
     await page.keyboard.press('Escape');
-    await expect(grid.filter).toBeHidden();
+    await expect(grid.menu).toBeHidden();
     expect(await grid.focusedCell()).toEqual({ row: -1, col: 1 });
 
     await page.keyboard.press('Alt+ArrowDown');
+    await page.keyboard.press('ArrowDown');
+    await page.keyboard.press('ArrowDown');
+    await expect(grid.menuItem('Фильтр…')).toBeFocused();
+    await page.keyboard.press('Enter');
+    await expect(grid.menu).toBeHidden();
+    await expect(grid.filter).toBeVisible();
+    await expect(grid.filter).toHaveAccessibleName('Фильтр: Клиент');
+    await expect(grid.filter.locator(':focus')).toHaveCount(1);
     await grid.filterField('Значение').fill('Анна');
     await page.keyboard.press('Enter');
     await expect(grid.viewport).toHaveAttribute('aria-rowcount', '1253');
@@ -258,6 +276,49 @@ test.describe('data grid', () => {
     await expect.poll(() => grid.focusedCell()).toEqual({ row: -1, col: 3 });
     await page.keyboard.press('ArrowLeft');
     expect(await grid.focusedCell()).toEqual({ row: -1, col: 2 });
+  });
+
+  test('pins, hides and brings back columns from the header menu', async ({ page, isMobile }) => {
+    const playground = new PlaygroundPage(page);
+    await playground.open();
+    const { grid } = playground;
+    await grid.root.scrollIntoViewIfNeeded();
+    await grid.openMenu(3);
+
+    await expect(grid.menu).toBeVisible();
+    await expect(grid.menuButton(3)).toHaveAttribute('aria-expanded', 'true');
+    await grid.menuItem('В начале').click();
+
+    await expect(grid.menu).toBeHidden();
+    await expect(grid.header(1)).toContainText('Город');
+    await expect(grid.header(2)).toContainText('Клиент');
+    await expect(grid.output).toContainText('"pins":{"city":"start"}');
+    await expect(grid.root.getByRole('status')).toHaveText('Колонка «Город» закреплена в начале');
+    expect(await grid.headerPane(1)).toBe(isMobile ? 'centre' : 'start');
+
+    if (!isMobile) {
+      const pinned = await grid.cellBox(0, 1);
+      await grid.scrollTo({ left: 400 });
+      await expect.poll(async () => (await grid.cellBox(0, 1)).x).toBeCloseTo(pinned.x, 0);
+      await grid.scrollTo({ left: 0 });
+    }
+
+    await grid.openMenu(3);
+    await grid.menuItem('Скрыть колонку').click();
+    await expect(grid.output).toContainText('"hidden":["email"]');
+    await expect(grid.header(3)).toContainText('Страна');
+    await grid.openMenu(2);
+    await grid.menuItem('Колонки').click();
+    await expect(grid.menuItem('Почта')).toHaveAttribute('aria-checked', 'false');
+    await expect(grid.menuItem('№')).toHaveAttribute('aria-disabled', 'true');
+    await grid.menuItem('Почта').click();
+
+    await expect(grid.header(3)).toContainText('Почта');
+    await expect(grid.menuItem('Почта')).toHaveAttribute('aria-checked', 'true');
+    await grid.resetColumns.click();
+    await expect(grid.menu).toBeHidden();
+    await expect(grid.output).toContainText('"pins":{},"hidden":[]');
+    await expect(grid.header(1)).toContainText('Клиент');
   });
 
   test('groups rows from the toolbar, expands a group and keeps totals in the footer', async ({
@@ -328,6 +389,24 @@ test.describe('data grid', () => {
     for (const theme of ['light', 'dark'] as const) {
       await playground.setTheme(theme);
       expect(await playground.wcagViolations()).toEqual([]);
+    }
+  });
+
+  test('column menu has no automatically detectable WCAG AA violations', async ({ page }) => {
+    const playground = new PlaygroundPage(page);
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    await playground.grid.root.scrollIntoViewIfNeeded();
+
+    for (const theme of ['light', 'dark'] as const) {
+      await playground.setTheme(theme);
+      await playground.grid.openMenu(10);
+      await playground.grid.menuItem('Колонки').click();
+      await expect(playground.grid.menuItem('Почта')).toBeVisible();
+      expect(await playground.wcagViolations()).toEqual([]);
+      await page.keyboard.press('Escape');
+      await page.keyboard.press('Escape');
+      await expect(playground.grid.menu).toBeHidden();
     }
   });
 

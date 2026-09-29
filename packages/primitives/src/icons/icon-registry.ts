@@ -65,6 +65,10 @@ export type IconAlias =
   | 'grip-horizontal'
   | 'direction'
   | 'filter'
+  | 'arrow-down'
+  | 'eye-off'
+  | 'list-tree'
+  | 'columns'
   | (string & NonNullable<unknown>);
 
 export type IconRegistry = Readonly<Record<string, Component>>;

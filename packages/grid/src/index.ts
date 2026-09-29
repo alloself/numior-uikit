@@ -9,6 +9,8 @@ export type {
   NuiDataGridFooterSlot,
   NuiDataGridGroupBy,
   NuiDataGridHeaderSlot,
+  NuiDataGridHidden,
+  NuiDataGridPins,
   NuiDataGridProps,
   NuiDataGridSettled,
   NuiDataGridSize,

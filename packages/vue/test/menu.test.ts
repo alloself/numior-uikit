@@ -41,6 +41,19 @@ describe('NuiMenu', () => {
     menu.unmount();
   });
 
+  it('focuses the requested item when the entries arrive together with the opening', async () => {
+    const menu = MenuDriver.mount({ anchored: true, entries: [] });
+    await menu.focusAnchor();
+    await menu.showWith([{ label: 'Copy' }, { label: 'Paste' }], 'first');
+
+    expect(menu.isOpen).toBe(true);
+    expect(menu.focusedLabel).toBe('Copy');
+    await menu.close();
+    await menu.showWith([{ label: 'Cut' }, { label: 'Delete' }], 'last');
+    expect(menu.focusedLabel).toBe('Delete');
+    menu.unmount();
+  });
+
   it('moves with arrows, Home, End and typeahead, skipping disabled items and looping', async () => {
     const menu = MenuDriver.mount({ parts: true });
     await menu.pressTrigger('ArrowDown');

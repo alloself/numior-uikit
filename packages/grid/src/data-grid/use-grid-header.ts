@@ -27,6 +27,7 @@ export interface GridHeaderOptions<T> {
   readonly messages: ComputedRef<NuiDataGridMessages>;
   readonly announce: (text: string) => void;
   readonly filtered: () => void;
+  readonly menu: (key: string, anchor: HTMLElement, focus?: 'first') => boolean;
 }
 
 export interface GridHeader<T> {
@@ -40,6 +41,8 @@ export interface GridHeader<T> {
   onClick(event: MouseEvent): void;
   onKeydown(event: KeyboardEvent): boolean;
   openFilter(key: string, event: Event): void;
+  openFilterAt(key: string, anchor: HTMLElement): void;
+  openMenu(key: string, event: Event): void;
   applyFilter(next: NuiGridColumnFilter | null): void;
 }
 
@@ -118,7 +121,14 @@ export const useGridHeader = <T>(options: GridHeaderOptions<T>): GridHeader<T> =
       toggleSort(key, event.shiftKey);
       return true;
     }
-    if (event.key === 'ArrowDown' && event.altKey && heads.value[key]?.filterable === true) {
+    if (event.key !== 'ArrowDown' || !event.altKey) {
+      return false;
+    }
+    if (options.menu(key, cell, 'first')) {
+      event.preventDefault();
+      return true;
+    }
+    if (heads.value[key]?.filterable === true) {
       event.preventDefault();
       openFor(key, cell);
       return true;
@@ -150,6 +160,14 @@ export const useGridHeader = <T>(options: GridHeaderOptions<T>): GridHeader<T> =
 
       if (cell !== null) {
         openFor(key, cell);
+      }
+    },
+    openFilterAt: openFor,
+    openMenu: (key, event) => {
+      const cell = headerOf(event.target);
+
+      if (cell !== null) {
+        options.menu(key, cell);
       }
     },
     applyFilter: (next) => {

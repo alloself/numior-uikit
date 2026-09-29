@@ -24,7 +24,11 @@ export type GridFilter =
       readonly to?: number | undefined;
     }
   | { readonly kind: 'set'; readonly key: string; readonly values: readonly GridFilterValue[] }
-  | { readonly kind: 'quick'; readonly value: string };
+  | {
+      readonly kind: 'quick';
+      readonly value: string;
+      readonly keys?: readonly string[] | undefined;
+    };
 
 export interface GridQuery {
   readonly sort?: readonly GridSort[] | undefined;

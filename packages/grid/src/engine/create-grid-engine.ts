@@ -138,8 +138,11 @@ export const createGridEngine = <T>(options: GridEngineOptions<T>): GridEngine<T
     return { phase: 'keys', job, next };
   };
 
+  const quickKeys = (keys: readonly string[] | undefined): readonly string[] =>
+    keys === undefined ? stringKeys : stringKeys.filter((key) => keys.includes(key));
+
   const filterKeys = (filter: GridFilter): readonly string[] =>
-    filter.kind === 'quick' ? stringKeys : [columnOf(filter.key).key];
+    filter.kind === 'quick' ? quickKeys(filter.keys) : [columnOf(filter.key).key];
 
   const planOf = (query: GridQuery): Plan<T> => {
     const sort = query.sort ?? [];
@@ -179,7 +182,10 @@ export const createGridEngine = <T>(options: GridEngineOptions<T>): GridEngine<T
   const filterSources = {
     column: (key: string) => columns.get(key),
     store: (key: string) => stores.get(key),
-    quickStores: () => stringKeys.map((key) => stores.get(key)).filter(hasCodes),
+    quickStores: (keys: readonly string[] | undefined) =>
+      quickKeys(keys)
+        .map((key) => stores.get(key))
+        .filter(hasCodes),
   };
 
   const orderKeysOf = (plan: Plan<T>): OrderKey[] => {

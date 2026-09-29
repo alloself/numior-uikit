@@ -55,4 +55,8 @@ export const defaultIcons: IconRegistry = {
   'grip-horizontal': lazyIcon(() => import('lucide-vue-next/dist/esm/icons/grip-horizontal.js')),
   direction: lazyIcon(() => import('lucide-vue-next/dist/esm/icons/arrow-left-right.js')),
   filter: lazyIcon(() => import('lucide-vue-next/dist/esm/icons/funnel.js')),
+  'arrow-down': lazyIcon(() => import('lucide-vue-next/dist/esm/icons/arrow-down.js')),
+  'eye-off': lazyIcon(() => import('lucide-vue-next/dist/esm/icons/eye-off.js')),
+  'list-tree': lazyIcon(() => import('lucide-vue-next/dist/esm/icons/list-tree.js')),
+  columns: lazyIcon(() => import('lucide-vue-next/dist/esm/icons/columns-3.js')),
 };

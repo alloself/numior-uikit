@@ -20,7 +20,7 @@
       </NuiInput>
       <NuiSelect
         v-model="grouping"
-        :options="GROUPINGS"
+        :options="groupings"
         size="sm"
         class="grid-grouping"
         aria-label="Группировка"
@@ -45,6 +45,16 @@
       >
         {{ empty ? 'Вернуть строки' : 'Очистить строки' }}
       </NuiButton>
+      <NuiButton
+        size="sm"
+        variant="outline"
+        tone="neutral"
+        :disabled="hidden.length === 0 && Object.keys(pins).length === 0"
+        data-testid="grid-reset-columns"
+        @click="resetColumns"
+      >
+        Сбросить колонки
+      </NuiButton>
     </div>
     <NuiDataGrid
       v-model:sort="sort"
@@ -52,6 +62,8 @@
       v-model:quick="quick"
       v-model:group-by="groupBy"
       v-model:expanded="expanded"
+      v-model:pins="pins"
+      v-model:hidden="hidden"
       :columns="columns"
       :source="empty ? [] : orders"
       :get-key="(row) => row.id"
@@ -83,7 +95,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
+import { computed, ref } from 'vue';
 import {
   NuiButton,
   NuiChip,
@@ -98,6 +110,8 @@ import {
   type GridNodeId,
   type GridSort,
   type NuiDataGridFilters,
+  type NuiDataGridHidden,
+  type NuiDataGridPins,
   type NuiGridColumnDef,
 } from '@numior/grid';
 
@@ -203,10 +217,26 @@ const GROUPINGS: readonly NuiOption<string>[] = [
   { value: 'country-city', label: 'Страна и город' },
 ];
 
+const CUSTOM_GROUPING: NuiOption<string> = {
+  value: 'custom',
+  label: 'Своя группировка',
+  disabled: true,
+};
+
 const GROUP_KEYS: Readonly<Record<string, readonly string[]>> = {
   country: ['country'],
   status: ['status'],
   'country-city': ['country', 'city'],
+};
+
+const sameKeys = (a: readonly string[], b: readonly string[]): boolean =>
+  a.length === b.length && a.every((key, index) => b[index] === key);
+
+const groupingOf = (keys: readonly string[]): string => {
+  if (keys.length === 0) {
+    return 'none';
+  }
+  return Object.entries(GROUP_KEYS).find(([, preset]) => sameKeys(preset, keys))?.[0] ?? 'custom';
 };
 
 const pick = <V>(list: readonly V[], seed: number, fallback: V): V =>
@@ -239,6 +269,7 @@ const columns: NuiGridColumnDef<Order>[] = [
     label: '№',
     type: 'number',
     pin: 'start',
+    hideable: false,
     width: 88,
     value: (row) => row.id,
     format: (value) => String(value),
@@ -320,7 +351,8 @@ const empty = ref(false);
 const sort = ref<readonly GridSort[]>([]);
 const filters = ref<NuiDataGridFilters>([]);
 const quick = ref('');
-const grouping = ref('none');
+const pins = ref<NuiDataGridPins>({});
+const hidden = ref<NuiDataGridHidden>([]);
 const units = ref<readonly Unit[]>(UNITS);
 const unitsExpanded = ref<readonly GridNodeId[]>([]);
 const LOAD_DELAY = 700;
@@ -336,22 +368,36 @@ const loadUnit = (unit: Unit): void => {
 const groupBy = ref<readonly string[]>([]);
 const expanded = ref<readonly GridNodeId[]>([]);
 
+const grouping = computed({
+  get: () => groupingOf(groupBy.value),
+  set: (key: string) => {
+    groupBy.value = GROUP_KEYS[key] ?? [];
+    expanded.value = [];
+  },
+});
+
+const groupings = computed(() =>
+  grouping.value === 'custom' ? [...GROUPINGS, CUSTOM_GROUPING] : GROUPINGS,
+);
+
 const output = computed(() =>
   JSON.stringify({
     sort: sort.value,
     filters: filters.value,
     quick: quick.value,
     groupBy: groupBy.value,
+    pins: pins.value,
+    hidden: hidden.value,
   }),
 );
-
-watch(grouping, (key) => {
-  groupBy.value = GROUP_KEYS[key] ?? [];
-  expanded.value = [];
-});
 
 const clearFilters = (): void => {
   filters.value = [];
   quick.value = '';
+};
+
+const resetColumns = (): void => {
+  pins.value = {};
+  hidden.value = [];
 };
 </script>
