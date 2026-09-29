@@ -137,6 +137,15 @@
       </div>
       <div v-if="query.busy.value" class="nui-grid__busy" role="presentation"></div>
     </div>
+    <div v-if="paginationProps" class="nui-grid__pagination">
+      <NuiPagination
+        v-model:page="page"
+        v-model:page-size="pageSize"
+        :total="totalCount"
+        :size="size"
+        v-bind="paginationProps"
+      />
+    </div>
     <NuiDataGridFilter
       v-if="header.target.value"
       :key="header.target.value.key"
@@ -175,6 +184,7 @@ import {
 import {
   NuiEmpty,
   NuiMenu,
+  NuiPagination,
   NuiSkeleton,
   type NuiMenuExposed,
   type NuiSkeletonProps,
@@ -194,6 +204,7 @@ import { dataGridMessages } from './data-grid.messages';
 import { cellTextOf, cellValueOf, engineColumnOf, valueTextOf } from './grid-format';
 import { columnTreeOf, headerBandsOf } from './grid-columns';
 import { centreIndexOf, dataKeyAt, dataKeysOf, gridLayout, panesOf, pinsFit } from './grid-layout';
+import { pageWindowOf, resolvePagination } from './grid-pages';
 import NuiDataGridFilter from './NuiDataGridFilter.vue';
 import NuiDataGridFooterCell from './NuiDataGridFooterCell.vue';
 import NuiDataGridHeaderMarks from './NuiDataGridHeaderMarks.vue';
@@ -259,6 +270,9 @@ const {
   loadingRows = 5,
   selectLabel,
   selectAllLabel,
+  pagination = undefined,
+  remote = false,
+  total,
 } = defineProps<NuiDataGridProps<T>>();
 
 const sort = defineModel<NuiDataGridSort>('sort', { default: () => [] });
@@ -269,6 +283,8 @@ const expanded = defineModel<NuiDataGridExpanded>('expanded', { default: () => [
 const pins = defineModel<NuiDataGridPins>('pins', { default: () => ({}) });
 const hidden = defineModel<NuiDataGridHidden>('hidden', { default: () => [] });
 const selected = defineModel<readonly T[]>('selected', { default: () => [] });
+const page = defineModel<number>('page', { default: 1 });
+const pageSize = defineModel<number>('pageSize', { default: 20 });
 const emit = defineEmits<NuiDataGridEvents<T>>();
 const slots = defineSlots<NuiDataGridSlots<T>>();
 
@@ -294,7 +310,17 @@ const revision = ref(0);
 const announcement = ref('');
 const rowsIntent = createIntent<'rows'>();
 const selectOn = computed(() => selectable !== undefined);
-const visibleRows = computed(() => (loading ? 0 : rowCount.value));
+const paginationProps = computed(() => resolvePagination(pagination));
+
+const pageWindow = computed(() =>
+  paginationProps.value === undefined || remote
+    ? { start: 0, end: rowCount.value, page: 1, pages: 1 }
+    : pageWindowOf(rowCount.value, page.value, pageSize.value),
+);
+
+const pageStart = computed(() => pageWindow.value.start);
+const visibleRows = computed(() => (loading ? 0 : pageWindow.value.end - pageWindow.value.start));
+const totalCount = computed(() => (remote ? (total ?? source.length) : rowCount.value));
 
 const keyOf = (row: T): GridSelectionKey<T> => (getKey === undefined ? row : getKey(row));
 
@@ -329,13 +355,12 @@ const query = useGridQuery({
   engine,
   query: () => {
     const list = queryFilters();
+    const sorting = sort.value;
+    const grouping = getChildren === undefined ? groupBy.value : [];
 
-    return {
-      sort: sort.value,
-      filters: list,
-      groupBy: getChildren === undefined ? groupBy.value : [],
-      totals: totals.wanted(list),
-    };
+    return remote
+      ? {}
+      : { sort: sorting, filters: list, groupBy: grouping, totals: totals.wanted(list) };
   },
   onSettled: (rows, ran) => {
     totals.take(ran);
@@ -411,7 +436,7 @@ const activeCentre = (): number | undefined => centreIndexOf(layout.value, activ
 
 const rows = useVirtualList(viewport, {
   enabled: windowed,
-  count: rowCount,
+  count: () => visibleRows.value,
   itemSize: rowSize,
   overscan: ROW_OVERSCAN,
   initialCount: INITIAL_ROWS,
@@ -512,7 +537,7 @@ const columnAt = (key: string): NuiGridColumn<T> => {
 };
 
 const rowAt = (position: number): T => {
-  const node = engine.value.nodeAt(position);
+  const node = engine.value.nodeAt(pageStart.value + position);
 
   if (node?.kind !== 'row') {
     throw new Error(`NuiDataGrid has no row at position ${position}`);
@@ -544,7 +569,7 @@ const selection = useTableSelection<T>({
   keyOf,
   engine,
   revision,
-  scope: () => ({ start: 0, end: visibleRows.value }),
+  scope: () => ({ start: pageStart.value, end: pageStart.value + visibleRows.value }),
   disabled: () => loading,
   selectKeyAt: (visual) => layout.value.visual[visual]?.kind === 'select',
 });
@@ -611,6 +636,7 @@ const expansion = useGridExpansion({
   engine,
   expanded,
   revision,
+  offset: () => pageStart.value,
   keys: () => dataKeysOf(layout.value),
   keyAt: (visual) => dataKeyAt(layout.value, visual),
   treeKey: () => treeKey.value,
@@ -651,7 +677,7 @@ const bodyRows = computed((): GridBodyRow[] => {
   const pending = expansion.loading.value;
 
   return rows.items.value.map((item) => {
-    const node = engine.value.nodeAt(item.index);
+    const node = engine.value.nodeAt(pageStart.value + item.index);
     const level = levelOf(node);
 
     return {
@@ -671,7 +697,7 @@ const bodyRows = computed((): GridBodyRow[] => {
 });
 
 const bodyPosition = (row: number): number | undefined =>
-  row >= 0 && row < visibleRows.value ? row : undefined;
+  row >= 0 && row < visibleRows.value ? pageStart.value + row : undefined;
 
 const onBodyClick = (event: MouseEvent): void => {
   const target = event.target;
@@ -681,7 +707,10 @@ const onBodyClick = (event: MouseEvent): void => {
   }
   const row = target.closest('[role="row"]');
   const position = Number(row?.getAttribute('aria-rowindex')) - headRows.value - 1;
-  const node = Number.isInteger(position) ? engine.value.nodeAt(position) : undefined;
+
+  const node = Number.isInteger(position)
+    ? engine.value.nodeAt(pageStart.value + position)
+    : undefined;
 
   if (node?.kind === 'row') {
     emit('rowClick', node.row, event);
@@ -759,6 +788,14 @@ const clampActive = (): void => {
 
 watch(quick, () => {
   rowsIntent.set('rows');
+});
+
+watch(visibleRows, clampActive);
+
+watch(pageStart, () => {
+  if (windowed.value) {
+    rows.scrollTo(0, { align: 'start' });
+  }
 });
 
 watch(

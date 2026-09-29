@@ -14,6 +14,7 @@ export interface GridExpansionOptions<T> {
   readonly engine: Readonly<ShallowRef<GridEngine<T>>>;
   readonly expanded: Ref<readonly GridNodeId[]>;
   readonly revision: Readonly<Ref<number>>;
+  readonly offset: () => number;
   readonly keys: () => readonly string[];
   readonly keyAt: (visual: number) => string | undefined;
   readonly treeKey: () => string | undefined;
@@ -34,6 +35,7 @@ export interface GridExpansion {
 
 interface GroupContext {
   readonly revision: number;
+  readonly offset: number;
   readonly keys: readonly string[];
   readonly locale: string;
   readonly texts: NuiDataGridMessages;
@@ -52,6 +54,7 @@ export const useGridExpansion = <T>(options: GridExpansionOptions<T>): GridExpan
 
   const context = computed<GroupContext>(() => ({
     revision: options.revision.value,
+    offset: options.offset(),
     keys: options.keys(),
     locale: options.locale(),
     texts: options.messages.value,
@@ -118,7 +121,7 @@ export const useGridExpansion = <T>(options: GridExpansionOptions<T>): GridExpan
     if (known !== undefined) {
       return known ?? undefined;
     }
-    const node = options.engine.value.nodeAt(position);
+    const node = options.engine.value.nodeAt(current.offset + position);
     const row = node?.kind === 'group' ? build(node, current) : null;
 
     current.rows.set(position, row);
@@ -149,7 +152,7 @@ export const useGridExpansion = <T>(options: GridExpansionOptions<T>): GridExpan
   };
 
   const toggle = (position: number): void => {
-    const node = options.engine.value.nodeAt(position);
+    const node = options.engine.value.nodeAt(options.offset() + position);
 
     if (node === undefined || (node.kind === 'row' && !node.expandable)) {
       return;
@@ -186,7 +189,9 @@ export const useGridExpansion = <T>(options: GridExpansionOptions<T>): GridExpan
       }
     },
     onKeydown: (event, active) => {
-      if (!plainToggle(event) || !togglesAt(options.engine.value.nodeAt(active.row), active.col)) {
+      const node = options.engine.value.nodeAt(options.offset() + active.row);
+
+      if (!plainToggle(event) || !togglesAt(node, active.col)) {
         return false;
       }
       event.preventDefault();

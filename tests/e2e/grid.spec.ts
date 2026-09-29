@@ -186,6 +186,8 @@ test.describe('data grid', () => {
         hidden: [],
         selected: [],
         lastClick: null,
+        page: 1,
+        pageSize: 25,
       }),
     );
 
@@ -230,6 +232,8 @@ test.describe('data grid', () => {
         hidden: [],
         selected: [],
         lastClick: null,
+        page: 1,
+        pageSize: 25,
       }),
     );
 
@@ -385,6 +389,39 @@ test.describe('data grid', () => {
     await expect(grid.treeRow(5)).toContainText('Поддержка');
     await expect(grid.treeRow(4)).not.toHaveAttribute('aria-busy');
     await expect(viewport).toHaveAttribute('aria-rowcount', '8');
+  });
+
+  test('pages the rows from the footer and keeps filters and the page size in step', async ({
+    page,
+  }) => {
+    const playground = new PlaygroundPage(page);
+    await playground.open();
+    const { grid } = playground;
+    await grid.root.scrollIntoViewIfNeeded();
+    await expect(grid.pagination).toBeHidden();
+    await grid.pagesToggle.click();
+
+    await expect(grid.pagination).toBeVisible();
+    await expect(grid.viewport).toHaveAttribute('aria-rowcount', '28');
+    await expect(grid.cell(0, 0)).toHaveText('1');
+    await grid.nextPageButton.click();
+
+    await expect(grid.cell(0, 0)).toHaveText('26');
+    await expect(grid.output).toContainText('"page":2');
+    await grid.quick.fill('client10000');
+
+    await expect(grid.viewport).toHaveAttribute('aria-rowcount', '4');
+    await expect(grid.output).toContainText('"page":1');
+    await grid.clearFilters.click();
+    await expect(grid.viewport).toHaveAttribute('aria-rowcount', '28');
+    await grid.pageSizeTrigger.click();
+    await page.locator('.nui-select__listbox').getByRole('option', { name: '50' }).click();
+
+    await expect(grid.viewport).toHaveAttribute('aria-rowcount', '53');
+    await expect(grid.output).toContainText('"pageSize":50');
+    await grid.pagesToggle.click();
+    await expect(grid.pagination).toBeHidden();
+    await expect(grid.viewport).toHaveAttribute('aria-rowcount', '10003');
   });
 
   test('selects tree rows with checkboxes, Space and the header, reports clicks and shows skeletons', async ({

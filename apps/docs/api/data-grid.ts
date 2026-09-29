@@ -87,6 +87,18 @@ const docs: DocsMap = {
         ru: 'Доступное имя флажка «все» в шапке; по умолчанию из словаря.',
         en: 'Accessible name of the select-all checkbox; the dictionary supplies the default.',
       },
+      pagination: {
+        ru: 'Постраничный вывод: true или настройки NuiPagination без total и size. Страницы режут видимый после сортировки и фильтров список строк, футер с NuiPagination стоит под областью прокрутки, окно строк работает внутри страницы; нужны стили NuiPagination и NuiSelect.',
+        en: 'Paging: true or NuiPagination options without total and size. Pages slice the rows visible after sorting and filters, the NuiPagination footer sits under the scroll area and the row window works inside the page; NuiPagination and NuiSelect styles are needed.',
+      },
+      remote: {
+        ru: 'Серверный режим: движок не сортирует, не фильтрует и не группирует, модели только эмитятся, а источник считается уже готовой страницей.',
+        en: 'Remote mode: the engine neither sorts, filters nor groups, the models are only emitted and the source counts as the ready page.',
+      },
+      total: {
+        ru: 'Общее число строк для пагинации в серверном режиме; по умолчанию длина источника.',
+        en: 'Total row count for the pagination in remote mode; the source length by default.',
+      },
       columnMenu: {
         ru: 'Меню колонки в шапке: сортировка, фильтр, группировка, закрепление, скрытие и список колонок. false убирает кнопку меню, и Alt+ArrowDown открывает фильтр.',
         en: 'Column menu in the header: sort, filter, grouping, pinning, hiding and the column list. false drops the menu button, and Alt+ArrowDown opens the filter.',
@@ -116,6 +128,14 @@ const docs: DocsMap = {
       'v-model:pins': {
         ru: 'Закрепление из меню: ключ колонки → start, end или null (не закреплять); побеждает pin колонки, отсутствующий ключ оставляет его. Если закреплённые панели не оставляют места хотя бы на одну колонку, все колонки прокручиваются, а модель не меняется.',
         en: 'Pinning from the menu: column key → start, end or null (unpinned); it beats the column pin, and a missing key keeps it. When the pinned panes leave no room for a single column, every column scrolls and the model stays as it is.',
+      },
+      'v-model:page': {
+        ru: 'Текущая страница, с 1; при сокращении списка страница зажимается.',
+        en: 'Current page, from 1; the page clamps when the list shrinks.',
+      },
+      'v-model:pageSize': {
+        ru: 'Размер страницы; по умолчанию 20.',
+        en: 'Page size; 20 by default.',
       },
       'v-model:selected': {
         ru: 'Выбранные строки как значения источника; ключ — getKey, без него сама строка.',

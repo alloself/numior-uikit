@@ -59,6 +59,15 @@
         size="sm"
         variant="outline"
         tone="neutral"
+        data-testid="grid-pages"
+        @click="paged = !paged"
+      >
+        {{ paged ? 'Все строки' : 'По страницам' }}
+      </NuiButton>
+      <NuiButton
+        size="sm"
+        variant="outline"
+        tone="neutral"
         data-testid="grid-loading"
         @click="unitsLoading = !unitsLoading"
       >
@@ -73,8 +82,11 @@
       v-model:expanded="expanded"
       v-model:pins="pins"
       v-model:hidden="hidden"
+      v-model:page="page"
+      v-model:page-size="pageSize"
       :columns="columns"
       :source="empty ? [] : orders"
+      :pagination="paged ? PAGINATION : false"
       :get-key="(row) => row.id"
       label="Заказы"
       height="26rem"
@@ -126,6 +138,7 @@ import {
   type NuiDataGridHidden,
   type NuiDataGridPins,
   type NuiGridColumnDef,
+  type NuiTablePagination,
 } from '@numior/table';
 
 type OrderStatus = 'new' | 'paid' | 'shipped' | 'returned';
@@ -285,6 +298,8 @@ const UNIT_COLUMNS: NuiGridColumnDef<Unit>[] = [
   { key: 'note', label: 'Задачи', type: 'text', width: 300, wrap: true, value: (row) => row.note },
 ];
 
+const PAGINATION: NuiTablePagination = { pageSizes: [25, 50, 100], showRange: true };
+
 const GROUPINGS: readonly NuiOption<string>[] = [
   { value: 'none', label: 'Без группировки' },
   { value: 'country', label: 'По стране' },
@@ -427,6 +442,9 @@ const filters = ref<NuiDataGridFilters>([]);
 const quick = ref('');
 const pins = ref<NuiDataGridPins>({});
 const hidden = ref<NuiDataGridHidden>([]);
+const paged = ref(false);
+const page = ref(1);
+const pageSize = ref(25);
 const units = ref<readonly Unit[]>(UNITS);
 const unitsExpanded = ref<readonly GridNodeId[]>([]);
 const selectedUnits = ref<readonly Unit[]>([]);
@@ -467,6 +485,8 @@ const output = computed(() =>
     hidden: hidden.value,
     selected: selectedUnits.value.map((unit) => unit.id),
     lastClick: lastUnitClick.value,
+    page: page.value,
+    pageSize: pageSize.value,
   }),
 );
 

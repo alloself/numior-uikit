@@ -47,6 +47,11 @@
   position: relative;
   min-inline-size: 0;
 }
+.nui-grid__pagination {
+  box-sizing: border-box;
+  padding: var(--nui-space-2) var(--_pad-x);
+  border-block-start: 1px solid var(--_line);
+}
 .nui-grid__viewport {
   box-sizing: border-box;
   position: relative;

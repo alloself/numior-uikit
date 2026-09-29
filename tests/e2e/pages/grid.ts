@@ -25,6 +25,10 @@ export class GridSection {
   readonly menu: Locator;
   readonly resetColumns: Locator;
   readonly loadingToggle: Locator;
+  readonly pagesToggle: Locator;
+  readonly pagination: Locator;
+  readonly nextPageButton: Locator;
+  readonly pageSizeTrigger: Locator;
   readonly tree: Locator;
   readonly treeCaption: Locator;
   readonly treeSelectAll: Locator;
@@ -42,6 +46,10 @@ export class GridSection {
     this.menu = this.root.locator(':scope > .nui-menu');
     this.resetColumns = page.getByTestId('grid-reset-columns');
     this.loadingToggle = page.getByTestId('grid-loading');
+    this.pagesToggle = page.getByTestId('grid-pages');
+    this.pagination = this.root.locator('.nui-grid__pagination');
+    this.nextPageButton = this.pagination.locator('.nui-pagination__next');
+    this.pageSizeTrigger = this.pagination.getByRole('combobox');
     this.tree = page.getByTestId('grid-tree');
     this.treeCaption = this.tree.locator('.nui-grid__caption');
     this.treeSelectAll = this.tree.locator('.nui-grid__row--head').getByRole('checkbox');

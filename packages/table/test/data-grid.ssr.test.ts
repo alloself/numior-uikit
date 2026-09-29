@@ -24,9 +24,12 @@ interface Query {
   readonly caption?: string;
   readonly striped?: boolean;
   readonly loading?: boolean;
+  readonly pagination?: boolean;
+  readonly remote?: boolean;
+  readonly total?: number;
 }
 
-const RENDER_DEFAULTS: Required<Omit<Query, 'auto' | 'selectable' | 'caption'>> = {
+const RENDER_DEFAULTS: Required<Omit<Query, 'auto' | 'selectable' | 'caption' | 'total'>> = {
   columns: PEOPLE_COLUMNS,
   sort: [],
   filters: [],
@@ -35,6 +38,8 @@ const RENDER_DEFAULTS: Required<Omit<Query, 'auto' | 'selectable' | 'caption'>> 
   expanded: [],
   striped: false,
   loading: false,
+  pagination: false,
+  remote: false,
 };
 
 const render = (count: number, query: Query = {}): Promise<string> => {
@@ -125,6 +130,22 @@ describe('NuiDataGrid on the server', () => {
     expect(loading).toContain('aria-rowcount="1"');
     expect(loading.match(/nui-grid__row--skeleton/g)).toHaveLength(5);
     expect(loading).not.toContain('Сотрудник 0');
+  });
+
+  it('renders the first page and the pagination footer on the server', async () => {
+    const html = await render(45, { auto: true, pagination: true });
+
+    expect(html).toBe(await render(45, { auto: true, pagination: true }));
+    expect(html).toContain('aria-rowcount="21"');
+    expect(html).toContain('Сотрудник 19');
+    expect(html).not.toContain('Сотрудник 20');
+    expect(html).toContain('nui-grid__pagination');
+    expect(html).toContain('nui-pagination');
+
+    const remote = await render(5, { auto: true, pagination: true, remote: true, total: 500 });
+
+    expect(remote).toContain('aria-rowcount="6"');
+    expect(remote).toContain('Сотрудник 4');
   });
 
   it('orders the first screen by the initial sort on the server', async () => {

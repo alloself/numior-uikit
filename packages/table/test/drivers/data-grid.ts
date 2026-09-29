@@ -9,6 +9,7 @@ import {
   type ShallowRef,
   type Slots,
 } from 'vue';
+import { choosePageSize } from '../../../vue/test/support/page-size';
 import { dismissPopoverNatively, TopLayerStubs } from '../../../vue/test/support/top-layer';
 import {
   NuiDataGrid,
@@ -33,6 +34,8 @@ export interface DataGridMountOptions<T> {
   readonly pins?: NuiDataGridPins;
   readonly hidden?: NuiDataGridHidden;
   readonly selected?: readonly T[];
+  readonly page?: number;
+  readonly pageSize?: number;
   readonly slots?: Slots;
   readonly width?: number;
   readonly height?: number;
@@ -83,6 +86,8 @@ interface GridModels<T> {
   readonly pins: ShallowRef<NuiDataGridPins>;
   readonly hidden: ShallowRef<NuiDataGridHidden>;
   readonly selected: ShallowRef<readonly T[]>;
+  readonly page: ShallowRef<number>;
+  readonly pageSize: ShallowRef<number>;
 }
 
 type GridProps<T> = Omit<NuiDataGridProps<T>, 'columns' | 'source'>;
@@ -141,6 +146,8 @@ export class DataGridDriver<T> {
     const pins = shallowRef<NuiDataGridPins>(settings.pins);
     const hidden = shallowRef<NuiDataGridHidden>(settings.hidden);
     const selected = shallowRef<readonly T[]>(settings.selected ?? []);
+    const page = shallowRef(settings.page ?? 1);
+    const pageSize = shallowRef(settings.pageSize ?? 20);
     const props = shallowRef<GridProps<T>>(settings.props ?? {});
     const stubs = new TopLayerStubs();
     const exposed = shallowRef<NuiDataGridExposed | null>(null);
@@ -192,6 +199,14 @@ export class DataGridDriver<T> {
               'onUpdate:selected': (next: readonly T[]) => {
                 selected.value = next;
               },
+              page: page.value,
+              'onUpdate:page': (next: number) => {
+                page.value = next;
+              },
+              pageSize: pageSize.value,
+              'onUpdate:pageSize': (next: number) => {
+                pageSize.value = next;
+              },
               onRowClick: (row: T) => {
                 events.clicks.push(row);
               },
@@ -218,7 +233,19 @@ export class DataGridDriver<T> {
     const plugins = pluginsOf(settings.config);
     const wrapper = mount(Host, { attachTo: document.body, global: { plugins } });
 
-    const models = { sort, filters, quick, groupBy, expanded, pins, hidden, selected };
+    const models = {
+      sort,
+      filters,
+      quick,
+      groupBy,
+      expanded,
+      pins,
+      hidden,
+      selected,
+      page,
+      pageSize,
+    };
+
     const driver = new DataGridDriver<T>(wrapper, source, props, models, exposed, events, stubs);
 
     driver.size(settings.width, settings.height);
@@ -351,6 +378,32 @@ export class DataGridDriver<T> {
 
   get selected(): readonly T[] {
     return this.models.selected.value;
+  }
+
+  get page(): number {
+    return this.models.page.value;
+  }
+
+  get pageSize(): number {
+    return this.models.pageSize.value;
+  }
+
+  get paginated(): boolean {
+    return this.wrapper.find('.nui-grid__pagination').exists();
+  }
+
+  get rangeText(): string | undefined {
+    const range = this.wrapper.find('.nui-pagination__range');
+    return range.exists() ? range.text() : undefined;
+  }
+
+  async nextPage(): Promise<void> {
+    await this.wrapper.find('.nui-pagination__next').trigger('click');
+    await nextTick();
+  }
+
+  async choosePageSize(size: number): Promise<void> {
+    await choosePageSize(this.wrapper, size);
   }
 
   get clicks(): readonly T[] {

@@ -1,3 +1,4 @@
+import type { NuiPaginationProps } from '@numior/vue';
 import type {
   GridAggregate,
   GridAggregateFn,
@@ -17,6 +18,8 @@ export type NuiGridAlign = 'start' | 'center' | 'end';
 export type NuiGridPin = 'start' | 'end';
 
 export type NuiTableSelection = 'single' | 'multiple';
+
+export type NuiTablePagination = Partial<Omit<NuiPaginationProps, 'total' | 'size'>>;
 
 export type GridColumnKind = 'data' | 'select';
 
@@ -109,6 +112,9 @@ export interface NuiDataGridProps<T> {
   loadingRows?: number | undefined;
   selectLabel?: string | undefined;
   selectAllLabel?: string | undefined;
+  pagination?: NuiTablePagination | boolean | undefined;
+  remote?: boolean | undefined;
+  total?: number | undefined;
 }
 
 export interface NuiDataGridCellSlot<T> {

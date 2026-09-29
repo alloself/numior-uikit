@@ -28,6 +28,8 @@ export type {
   NuiGridNumberColumn,
   NuiGridPin,
   NuiGridTextColumn,
+  NuiTablePagination,
+  NuiTableSelection,
 } from './data-grid/data-grid.types';
 export type {
   GridAggregate,
