@@ -190,4 +190,27 @@ describe('NuiDataGrid', () => {
     expect(custom.emptyText).toBe('Пусто');
     expect(custom.label).toBe('Сотрудники');
   });
+
+  it('grows with its rows without a height, wraps marked body cells and pages by the window', async () => {
+    const grid = mountPeople({
+      auto: true,
+      source: people(12),
+      columns: PEOPLE_COLUMNS.map((column) =>
+        column.key === 'note' ? { ...column, wrap: true } : column,
+      ),
+    });
+
+    await grid.settle();
+    expect(grid.auto).toBe(true);
+    expect(grid.rowCount).toBe(13);
+    expect(grid.renderedRows).toEqual(range(0, 12));
+    expect(grid.rowTransform(3)).toBe('');
+    expect(grid.headerTexts).toHaveLength(18);
+    expect(grid.cellWraps(0, 6)).toBe(true);
+    expect(grid.cellWraps(0, 1)).toBe(false);
+    expect(grid.cellWraps(-1, 6)).toBe(false);
+    await grid.focusCell(0, 0);
+    await grid.press('PageDown');
+    expect(grid.focusedCell).toEqual({ row: 11, col: 0 });
+  });
 });

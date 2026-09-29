@@ -329,7 +329,8 @@ test.describe('data grid', () => {
     await playground.open();
     const { grid } = playground;
     await grid.root.scrollIntoViewIfNeeded();
-    await expect(grid.footerCell(0)).toHaveText('Итого');
+    await expect(grid.footerCell(0)).toContainText('Итого');
+    await expect(grid.footerCell(0)).toContainText(/10\D000 строк/);
     await grid.scrollTo({ left: 600 });
     await expect(grid.footerCell(5)).not.toHaveText('');
     const total = await grid.footerCell(5).innerText();
@@ -364,8 +365,10 @@ test.describe('data grid', () => {
     const { grid } = playground;
     await grid.tree.scrollIntoViewIfNeeded();
     const viewport = grid.tree.locator('.nui-grid__viewport');
+    await expect(grid.tree).toHaveClass(/nui-grid--auto/);
     await expect(viewport).toHaveAttribute('role', 'treegrid');
     await expect(viewport).toHaveAttribute('aria-rowcount', '4');
+    expect((await boxOf(grid.treeRow(0))).height).toBeGreaterThan(48);
     await grid.treeToggle(0).click();
 
     await expect(grid.treeRow(0)).toHaveAttribute('aria-expanded', 'true');

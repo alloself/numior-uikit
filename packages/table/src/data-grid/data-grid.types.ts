@@ -1,5 +1,6 @@
 import type {
   GridAggregate,
+  GridAggregateFn,
   GridDistinct,
   GridFilter,
   GridFilterValue,
@@ -29,34 +30,35 @@ interface NuiGridColumnBase {
   readonly sortable?: boolean | undefined;
   readonly filter?: NuiGridFilterKind | false | undefined;
   readonly hideable?: boolean | undefined;
+  readonly wrap?: boolean | undefined;
 }
 
-interface NuiGridColumnCommon<T> extends NuiGridColumnBase {
-  readonly aggregate?: GridAggregate<T> | undefined;
-}
-
-export interface NuiGridTextColumn<T> extends NuiGridColumnCommon<T> {
+export interface NuiGridTextColumn<T> extends NuiGridColumnBase {
   readonly type: 'text';
   readonly value: (row: T) => string | null | undefined;
   readonly format?: ((value: string, row: T | undefined) => string) | undefined;
+  readonly aggregate?: 'count' | GridAggregateFn<T> | undefined;
 }
 
-export interface NuiGridNumberColumn<T> extends NuiGridColumnCommon<T> {
+export interface NuiGridNumberColumn<T> extends NuiGridColumnBase {
   readonly type: 'number';
   readonly value: (row: T) => number | null | undefined;
   readonly format?: ((value: number, row: T | undefined) => string) | undefined;
+  readonly aggregate?: GridAggregate<T> | undefined;
 }
 
-export interface NuiGridDateColumn<T> extends NuiGridColumnCommon<T> {
+export interface NuiGridDateColumn<T> extends NuiGridColumnBase {
   readonly type: 'date';
   readonly value: (row: T) => Date | number | null | undefined;
   readonly format?: ((value: Date, row: T | undefined) => string) | undefined;
+  readonly aggregate?: 'min' | 'max' | 'count' | GridAggregateFn<T> | undefined;
 }
 
-export interface NuiGridBooleanColumn<T> extends NuiGridColumnCommon<T> {
+export interface NuiGridBooleanColumn<T> extends NuiGridColumnBase {
   readonly type: 'boolean';
   readonly value: (row: T) => boolean | null | undefined;
   readonly format?: ((value: boolean, row: T | undefined) => string) | undefined;
+  readonly aggregate?: 'count' | GridAggregateFn<T> | undefined;
 }
 
 export type NuiGridColumn<T> =
@@ -105,6 +107,12 @@ export interface NuiDataGridFooterSlot<T> {
   readonly column: NuiGridColumn<T>;
   readonly value: unknown;
   readonly text: string;
+  readonly count: number | undefined;
+}
+
+export interface NuiDataGridFooterCellProps {
+  text: string;
+  countText?: string | undefined;
 }
 
 export interface NuiDataGridHeaderSlot<T> {
@@ -166,6 +174,7 @@ export interface GridCellLayout {
   readonly key: string;
   readonly colIndex: number;
   readonly align: NuiGridAlign;
+  readonly wrap?: boolean | undefined;
   readonly style: Readonly<Record<string, string>>;
   readonly span?: number | undefined;
 }
@@ -174,6 +183,7 @@ export interface GridPanes {
   readonly start: readonly GridCellLayout[];
   readonly centre: readonly GridCellLayout[];
   readonly end: readonly GridCellLayout[];
+  readonly centreInset: number;
 }
 
 export interface GridHeadState {

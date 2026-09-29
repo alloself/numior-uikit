@@ -87,7 +87,6 @@
       :get-children="(row) => row.children"
       :has-children="(row) => row.lazy === true"
       label="Структура компании"
-      height="18rem"
       data-testid="grid-tree"
       @load="loadUnit"
     />
@@ -158,6 +157,7 @@ interface Unit {
   readonly head: string;
   readonly people: number;
   readonly budget: number;
+  readonly note: string;
   readonly children?: readonly Unit[];
   readonly lazy?: boolean;
 }
@@ -169,6 +169,7 @@ const UNITS: readonly Unit[] = [
     head: 'Вера Орлова',
     people: 42,
     budget: 1_200_000,
+    note: 'Прямые продажи и партнёрская сеть в трёх странах, квартальные планы по регионам',
     children: [
       {
         id: 'sales-ru',
@@ -176,12 +177,34 @@ const UNITS: readonly Unit[] = [
         head: 'Олег Титов',
         people: 18,
         budget: 540_000,
+        note: 'Ключевые клиенты Москвы и регионов, тендеры и федеральные сети',
         children: [
-          { id: 'sales-msk', name: 'Москва', head: 'Нина Белова', people: 11, budget: 330_000 },
-          { id: 'sales-kzn', name: 'Казань', head: 'Игорь Зуев', people: 7, budget: 210_000 },
+          {
+            id: 'sales-msk',
+            name: 'Москва',
+            head: 'Нина Белова',
+            people: 11,
+            budget: 330_000,
+            note: 'Федеральные сети и корпоративные заказчики столицы',
+          },
+          {
+            id: 'sales-kzn',
+            name: 'Казань',
+            head: 'Игорь Зуев',
+            people: 7,
+            budget: 210_000,
+            note: 'Региональные дистрибьюторы Поволжья',
+          },
         ],
       },
-      { id: 'sales-kz', name: 'Казахстан', head: 'Анна Смирнова', people: 24, budget: 660_000 },
+      {
+        id: 'sales-kz',
+        name: 'Казахстан',
+        head: 'Анна Смирнова',
+        people: 24,
+        budget: 660_000,
+        note: 'Развитие сети в Казахстане, локализация каталога и логистика',
+      },
     ],
   },
   {
@@ -190,24 +213,62 @@ const UNITS: readonly Unit[] = [
     head: 'Павел Попов',
     people: 64,
     budget: 3_100_000,
+    note: 'Продуктовая разработка, инфраструктура и качество',
     children: [
-      { id: 'rnd-web', name: 'Веб', head: 'Ольга Соколова', people: 29, budget: 1_400_000 },
-      { id: 'rnd-data', name: 'Данные', head: 'Сергей Иванов', people: 35, budget: 1_700_000 },
+      {
+        id: 'rnd-web',
+        name: 'Веб',
+        head: 'Ольга Соколова',
+        people: 29,
+        budget: 1_400_000,
+        note: 'Клиентские приложения, дизайн-система и производительность интерфейсов',
+      },
+      {
+        id: 'rnd-data',
+        name: 'Данные',
+        head: 'Сергей Иванов',
+        people: 35,
+        budget: 1_700_000,
+        note: 'Хранилища, отчётность и модели прогнозирования спроса',
+      },
     ],
   },
-  { id: 'ops', name: 'Операции', head: 'Елена Кузнецова', people: 23, budget: 800_000, lazy: true },
+  {
+    id: 'ops',
+    name: 'Операции',
+    head: 'Елена Кузнецова',
+    people: 23,
+    budget: 800_000,
+    note: 'Поддержка клиентов, логистика и складской учёт',
+    lazy: true,
+  },
 ];
 
 const OPERATIONS: readonly Unit[] = [
-  { id: 'ops-support', name: 'Поддержка', head: 'Мария Лебедева', people: 15, budget: 450_000 },
-  { id: 'ops-logistics', name: 'Логистика', head: 'Дмитрий Попов', people: 8, budget: 350_000 },
+  {
+    id: 'ops-support',
+    name: 'Поддержка',
+    head: 'Мария Лебедева',
+    people: 15,
+    budget: 450_000,
+    note: 'Первая и вторая линии поддержки, база знаний',
+  },
+  {
+    id: 'ops-logistics',
+    name: 'Логистика',
+    head: 'Дмитрий Попов',
+    people: 8,
+    budget: 350_000,
+    note: 'Доставка, склады и возвраты',
+  },
 ];
 
 const UNIT_COLUMNS: NuiGridColumnDef<Unit>[] = [
-  { key: 'name', label: 'Подразделение', type: 'text', width: 240, value: (row) => row.name },
-  { key: 'head', label: 'Руководитель', type: 'text', width: 200, value: (row) => row.head },
-  { key: 'people', label: 'Сотрудники', type: 'number', width: 150, value: (row) => row.people },
-  { key: 'budget', label: 'Бюджет', type: 'number', width: 150, value: (row) => row.budget },
+  { key: 'name', label: 'Подразделение', type: 'text', width: 220, value: (row) => row.name },
+  { key: 'head', label: 'Руководитель', type: 'text', width: 180, value: (row) => row.head },
+  { key: 'people', label: 'Сотрудники', type: 'number', width: 130, value: (row) => row.people },
+  { key: 'budget', label: 'Бюджет', type: 'number', width: 130, value: (row) => row.budget },
+  { key: 'note', label: 'Задачи', type: 'text', width: 300, wrap: true, value: (row) => row.note },
 ];
 
 const GROUPINGS: readonly NuiOption<string>[] = [
@@ -322,7 +383,6 @@ const columns: NuiGridColumnDef<Order>[] = [
         label: 'VIP',
         type: 'boolean',
         width: 100,
-        aggregate: 'sum',
         value: (row) => row.vip,
       },
       {

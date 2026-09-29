@@ -24,9 +24,12 @@ interface OpenBand<T> {
   readonly pane: GridPaneName;
   readonly colIndex: number;
   readonly offset: number;
+  readonly gap: number;
   width: number;
   span: number;
 }
+
+type PaneCursor = Map<GridPaneName, number>;
 
 const isColumnGroup = <T>(def: NuiGridColumnDef<T>): def is NuiGridColumnGroup<T> =>
   'children' in def;
@@ -57,15 +60,19 @@ const bandCell = <T>(band: OpenBand<T>): GridCellLayout => ({
   colIndex: band.colIndex,
   align: 'start',
   span: band.span,
-  style: { insetInlineStart: `${band.offset}px`, inlineSize: `${band.width}px` },
+  style: { inlineSize: `${band.width}px`, marginInlineStart: `${band.gap}px` },
 });
 
 const placeBand = <T>(
   bands: OpenBand<T>[],
+  cursor: PaneCursor,
   group: NuiGridColumnGroup<T>,
   placed: PlacedColumn,
 ): void => {
   const last = bands.at(-1);
+  const gap = placed.offset - (cursor.get(placed.pane) ?? 0);
+
+  cursor.set(placed.pane, placed.offset + placed.width);
 
   if (
     last !== undefined &&
@@ -83,6 +90,7 @@ const placeBand = <T>(
     pane: placed.pane,
     colIndex: placed.cell.colIndex,
     offset: placed.offset,
+    gap,
     width: placed.width,
     span: 1,
   });
@@ -90,12 +98,13 @@ const placeBand = <T>(
 
 const bandRow = <T>(layout: GridLayout, tree: ColumnTree<T>, level: number): OpenBand<T>[] => {
   const bands: OpenBand<T>[] = [];
+  const cursor: PaneCursor = new Map();
 
   for (const placed of layout.visual) {
     const group = tree.ancestors.get(placed.key)?.[level];
 
     if (group !== undefined) {
-      placeBand(bands, group, placed);
+      placeBand(bands, cursor, group, placed);
     }
   }
   return bands;
@@ -114,7 +123,7 @@ export const headerBandsOf = <T>(layout: GridLayout, tree: ColumnTree<T>): Heade
       labels.set(cell.key, band.group.label);
       panes[band.pane].push(cell);
     }
-    return panes;
+    return { ...panes, centreInset: 0 };
   });
 
   return { rows, labels };

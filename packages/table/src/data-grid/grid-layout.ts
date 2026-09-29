@@ -64,7 +64,8 @@ const placePane = <T>(
         key: column.key,
         colIndex: visual + 1,
         align: alignOf(column),
-        style: { insetInlineStart: `${offset}px`, inlineSize: `${width}px` },
+        wrap: column.wrap,
+        style: { inlineSize: `${width}px` },
       },
     });
 
@@ -121,11 +122,16 @@ export const pinsFit = (layout: GridLayout, room: number): boolean =>
 export const centreIndexOf = (layout: GridLayout, visual: number): number | undefined =>
   layout.visual[visual]?.pane === 'centre' ? visual - layout.start.length : undefined;
 
-export const panesOf = (layout: GridLayout, centre: readonly number[]): GridPanes => ({
-  start: layout.start.map((column) => column.cell),
-  centre: centre.flatMap((index) => {
-    const column = layout.centre[index];
-    return column === undefined ? [] : [column.cell];
-  }),
-  end: layout.end.map((column) => column.cell),
-});
+export const panesOf = (layout: GridLayout, centre: readonly number[]): GridPanes => {
+  const first = centre[0];
+
+  return {
+    start: layout.start.map((column) => column.cell),
+    centre: centre.flatMap((index) => {
+      const column = layout.centre[index];
+      return column === undefined ? [] : [column.cell];
+    }),
+    end: layout.end.map((column) => column.cell),
+    centreInset: first === undefined ? 0 : (layout.centre[first]?.offset ?? 0),
+  };
+};

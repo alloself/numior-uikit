@@ -3,7 +3,11 @@
     class="nui-grid"
     :class="[
       `nui-grid--size-${size}`,
-      { 'nui-grid--busy': query.busy.value, 'nui-grid--totals': totals.enabled.value },
+      {
+        'nui-grid--busy': query.busy.value,
+        'nui-grid--totals': totals.enabled.value,
+        'nui-grid--auto': !windowed,
+      },
     ]"
     :style="rootStyle"
   >
@@ -99,7 +103,10 @@
         >
           <template #default="{ column }">
             <slot :name="`footer-${column}`" v-bind="totals.scope(column)">
-              <span class="nui-grid__text">{{ totals.scope(column).text }}</span>
+              <NuiDataGridFooterCell
+                :text="totals.scope(column).text"
+                :count-text="totals.countText(totals.scope(column).count)"
+              />
             </slot>
           </template>
         </NuiDataGridRow>
@@ -155,6 +162,7 @@ import { cellTextOf, cellValueOf, engineColumnOf, valueTextOf } from './grid-for
 import { columnTreeOf, headerBandsOf } from './grid-columns';
 import { centreIndexOf, gridLayout, panesOf, pinsFit } from './grid-layout';
 import NuiDataGridFilter from './NuiDataGridFilter.vue';
+import NuiDataGridFooterCell from './NuiDataGridFooterCell.vue';
 import NuiDataGridHeaderMarks from './NuiDataGridHeaderMarks.vue';
 import { useGridFocus } from './use-grid-focus';
 import { useGridExpansion } from './use-grid-expansion';
@@ -193,7 +201,7 @@ const {
   id,
   size = 'md',
   rowHeight,
-  height = '28rem',
+  height,
   locale,
   label,
   emptyLabel,
@@ -260,6 +268,7 @@ const totals = useGridTotals({
   locale: () => resolvedLocale.value,
   messages,
   label: () => totalsLabel,
+  rowCount: () => engine.value.rowCount(),
 });
 
 const query = useGridQuery({
@@ -322,6 +331,7 @@ const columnByKey = computed(
 );
 
 const rowSize = computed(() => rowHeight ?? ROW_SIZES[size]);
+const windowed = computed(() => height !== undefined);
 const labelText = computed(() => label ?? messages.value.label);
 const emptyText = computed(() => emptyLabel ?? messages.value.empty);
 const booleanTexts = computed(() => ({ yes: messages.value.yes, no: messages.value.no }));
@@ -336,6 +346,7 @@ const activeRow = (): number | undefined =>
 const activeCentre = (): number | undefined => centreIndexOf(layout.value, active.value.col);
 
 const rows = useVirtualList(viewport, {
+  enabled: windowed,
   count: rowCount,
   itemSize: rowSize,
   overscan: ROW_OVERSCAN,
@@ -346,6 +357,7 @@ const rows = useVirtualList(viewport, {
 });
 
 const columnWindow = useVirtualList(viewport, {
+  enabled: windowed,
   axis: 'x',
   count: () => layout.value.centre.length,
   itemSize: () => {
@@ -382,7 +394,9 @@ const rootStyle = computed(() => ({
   '--_end': `${layout.value.endWidth}px`,
 }));
 
-const bodyStyle = computed(() => ({ blockSize: `${rows.canvasSize.value}px` }));
+const bodyStyle = computed(() =>
+  windowed.value ? { blockSize: `${rows.canvasSize.value}px` } : undefined,
+);
 
 const focus = useGridFocus({
   viewport,
@@ -397,6 +411,7 @@ const focus = useGridFocus({
   centreIndexOf: (visual) => centreIndexOf(layout.value, visual),
   columnIndexOf: (key) => layout.value.visual.findIndex((column) => column.key === key),
   isRtl: direction.isRtl,
+  windowed: () => windowed.value,
 });
 
 const columnAt = (key: string): NuiGridColumn<T> => {
@@ -491,7 +506,7 @@ const bodyRows = computed(() => {
 
     return {
       index: item.index,
-      offset: item.offset,
+      offset: windowed.value ? item.offset : undefined,
       key: node?.id ?? item.index,
       revision: current,
       level: hierarchical.value && node !== undefined ? node.level + 1 : undefined,

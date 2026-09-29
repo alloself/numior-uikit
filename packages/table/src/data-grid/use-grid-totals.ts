@@ -12,6 +12,7 @@ export interface GridTotalsOptions<T> {
   readonly locale: () => string;
   readonly messages: ComputedRef<NuiDataGridMessages>;
   readonly label: () => string | undefined;
+  readonly rowCount: () => number;
 }
 
 export interface GridTotals<T> {
@@ -20,6 +21,7 @@ export interface GridTotals<T> {
   take(query: GridQuery): void;
   reset(): void;
   scope(key: string): NuiDataGridFooterSlot<T>;
+  countText(count: number | undefined): string | undefined;
 }
 
 const keyOf = (filters: readonly GridFilter[]): string => JSON.stringify(filters);
@@ -61,8 +63,11 @@ export const useGridTotals = <T>(options: GridTotalsOptions<T>): GridTotals<T> =
     scope: (key) => {
       const column = options.columnAt(key);
       const value = values.value[key];
+      const count = column.key === labelKey.value ? options.rowCount() : undefined;
 
-      return { column, value, text: textOf(column, value) };
+      return { column, value, text: textOf(column, value), count };
     },
+    countText: (count) =>
+      count === undefined ? undefined : options.messages.value.rowsCount({ count }),
   };
 };

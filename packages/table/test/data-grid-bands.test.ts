@@ -53,6 +53,10 @@ describe('NuiDataGrid header groups', () => {
       ['Формат:6+2'],
     ]);
 
+    expect(grid.bandGap(0, 0)).toBe('0px');
+    expect(grid.bandGap(0, 1)).toBe('0px');
+    expect(grid.bandGap(1, 0)).toBe('560px');
+
     expect(grid.headerTexts.slice(0, 8)).toEqual([
       'ID',
       'Имя',

@@ -35,6 +35,7 @@ export interface DataGridMountOptions<T> {
   readonly slots?: Slots;
   readonly width?: number;
   readonly height?: number;
+  readonly auto?: boolean;
   readonly dir?: 'ltr' | 'rtl';
   readonly config?: NuiConfigOptions;
 }
@@ -142,6 +143,7 @@ export class DataGridDriver<T> {
           h(
             NuiDataGrid<T>,
             {
+              ...(settings.auto === true ? {} : { height: `${settings.height}px` }),
               ...settings.props,
               columns: settings.columns,
               source: source.value,
@@ -281,6 +283,21 @@ export class DataGridDriver<T> {
               `${cell.text()}:${cell.attributes('aria-colindex')}+${cell.attributes('aria-colspan')}`,
           ),
       );
+  }
+
+  get auto(): boolean {
+    return this.wrapper.find('.nui-grid').classes('nui-grid--auto');
+  }
+
+  cellWraps(position: number, col: number): boolean {
+    return this.cell(position, col)?.classList.contains('nui-grid__cell--wrap') ?? false;
+  }
+
+  bandGap(level: number, index: number): string | undefined {
+    const rows = this.wrapper.findAll('.nui-grid__row--band');
+    const cell = rows[level]?.findAll('[role="columnheader"]')[index]?.element;
+
+    return cell instanceof HTMLElement ? cell.style.marginInlineStart : undefined;
   }
 
   get activeCell(): CellPosition | undefined {

@@ -7,6 +7,9 @@ import { people, PEOPLE_COLUMNS, type Person } from './support/people';
 const mounted: Array<{ unmount(): void }> = [];
 
 const TOTALS_COLUMNS: readonly NuiGridColumn<Person>[] = PEOPLE_COLUMNS.map((column) => {
+  if (column.type !== 'number') {
+    return column;
+  }
   switch (column.key) {
     case 'id':
       return { ...column, aggregate: 'count' };
@@ -54,7 +57,7 @@ describe('NuiDataGrid groups and totals', () => {
     expect(grid.cellText(0, 7)).toBe('1\u00a0661\u00a0670');
     expect(grid.cellText(0, 1)).toBe('');
     expect(grid.cellText(3, 0)).toBe('1\u00a0000');
-    expect(grid.cellText(3, 1)).toBe('Итого');
+    expect(grid.cellText(3, 1)).toBe('Итого1\u00a0000 строк');
     expect(grid.cellText(3, 7)).toBe('4\u00a0995\u00a0000');
   });
 
@@ -132,7 +135,7 @@ describe('NuiDataGrid groups and totals', () => {
     await grid.settle();
     expect(grid.role).toBe('grid');
     expect(grid.rowCount).toBe(1002);
-    expect(grid.cellText(1000, 1)).toBe('Всего');
+    expect(grid.cellText(1000, 1)).toBe('Всего1\u00a0000 строк');
     expect(grid.cellHtml(1000, 7)).toContain('<b>4&nbsp;995&nbsp;000</b>');
     await grid.focusCell(0, 1);
     await grid.press('End', { ctrl: true });

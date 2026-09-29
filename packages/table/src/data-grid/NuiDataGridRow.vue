@@ -17,19 +17,14 @@
       :key="pane"
       class="nui-grid__pane"
       :class="`nui-grid__pane--${pane}`"
+      :style="paneStyle(pane)"
       role="presentation"
     >
       <div
         v-for="cell in panes[pane]"
         :key="cell.key"
         class="nui-grid__cell"
-        :class="[
-          `nui-grid__cell--align-${cell.align}`,
-          {
-            'nui-grid__cell--active': cell.colIndex === active,
-            'nui-grid__cell--sortable': heads?.[cell.key]?.sortable === true,
-          },
-        ]"
+        :class="cellClass(cell)"
         :role="cellRole"
         :aria-colindex="cell.colIndex"
         :aria-colspan="cell.span"
@@ -57,7 +52,7 @@
 import { computed } from 'vue';
 import NuiDataGridGroupCell from './NuiDataGridGroupCell.vue';
 import NuiDataGridTreeToggle from './NuiDataGridTreeToggle.vue';
-import type { GridPaneName, NuiDataGridRowProps } from './data-grid.types';
+import type { GridCellLayout, GridPaneName, NuiDataGridRowProps } from './data-grid.types';
 
 const PANE_NAMES: readonly GridPaneName[] = ['start', 'centre', 'end'];
 
@@ -65,7 +60,7 @@ const {
   panes,
   rowIndex,
   part = 'body',
-  offset = 0,
+  offset,
   active = 0,
   level,
   group,
@@ -85,8 +80,24 @@ const treeLevel = computed(() => Math.max(0, (level ?? 1) - 1));
 const cellRole = computed(() => (part === 'head' || part === 'band' ? 'columnheader' : 'gridcell'));
 
 const rowStyle = computed(() =>
-  part === 'body' ? { transform: `translateY(${offset}px)` } : undefined,
+  part === 'body' && offset !== undefined ? { transform: `translateY(${offset}px)` } : undefined,
 );
+
+const centreStyle = computed(() => ({ paddingInlineStart: `${panes.centreInset}px` }));
+
+const paneStyle = (pane: GridPaneName): Readonly<Record<string, string>> | undefined =>
+  pane === 'centre' ? centreStyle.value : undefined;
+
+const wrapsText = computed(() => part === 'body' || part === 'foot');
+
+const cellClass = (cell: GridCellLayout): unknown[] => [
+  `nui-grid__cell--align-${cell.align}`,
+  {
+    'nui-grid__cell--wrap': cell.wrap === true && wrapsText.value,
+    'nui-grid__cell--active': cell.colIndex === active,
+    'nui-grid__cell--sortable': heads?.[cell.key]?.sortable === true,
+  },
+];
 
 const tabindexOf = (colIndex: number): number | undefined => {
   if (part === 'band') {

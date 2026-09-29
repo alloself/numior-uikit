@@ -19,6 +19,7 @@ interface Query {
   readonly quick?: string;
   readonly groupBy?: readonly string[];
   readonly expanded?: readonly GridNodeId[];
+  readonly auto?: boolean;
 }
 
 const render = (count: number, query: Query = {}): Promise<string> =>
@@ -34,6 +35,7 @@ const render = (count: number, query: Query = {}): Promise<string> =>
           quick: query.quick ?? '',
           groupBy: query.groupBy ?? [],
           expanded: query.expanded ?? [],
+          height: query.auto === true ? undefined : '28rem',
         }),
     }),
   );
@@ -72,6 +74,18 @@ describe('NuiDataGrid on the server', () => {
     expect(html).toContain('tabindex="0"');
     expect(html.match(/tabindex="0"/g)).toHaveLength(1);
     expect(html).not.toContain('undefined');
+  });
+
+  it('renders every row in flow without a height and windows nothing', async () => {
+    const html = await render(12, { auto: true });
+
+    expect(html).toBe(await render(12, { auto: true }));
+    expect(html).toContain('nui-grid--auto');
+    expect(html).not.toContain('translateY');
+    expect(html).not.toContain('block-size');
+    expect(html).toContain('aria-rowcount="13"');
+    expect(html).toContain('aria-rowindex="13"');
+    expect(html).toContain('Сотрудник 11');
   });
 
   it('orders the first screen by the initial sort on the server', async () => {

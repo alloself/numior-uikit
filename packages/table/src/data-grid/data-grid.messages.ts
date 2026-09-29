@@ -28,6 +28,7 @@ export interface NuiDataGridMessages {
   readonly filterReset: string;
   readonly rowsShown: (params: { readonly count: number }) => string;
   readonly totals: string;
+  readonly rowsCount: (params: { readonly count: number }) => string;
   readonly groupExpanded: (params: { readonly group: string }) => string;
   readonly groupCollapsed: (params: { readonly group: string }) => string;
   readonly rowExpanded: (params: { readonly row: string }) => string;
@@ -83,6 +84,8 @@ export const dataGridMessages: NuiMessageCatalog<'dataGrid'> = {
     rowsShown: ({ count }) =>
       `${count.toLocaleString('en-US')} ${plural('en', count, { one: 'row', other: 'rows' })} shown`,
     totals: 'Total',
+    rowsCount: ({ count }) =>
+      `${count.toLocaleString('en-US')} ${plural('en', count, { one: 'row', other: 'rows' })}`,
     groupExpanded: ({ group }) => `Group ${group} expanded`,
     groupCollapsed: ({ group }) => `Group ${group} collapsed`,
     rowExpanded: ({ row }) => `Row ${row} expanded`,
@@ -135,6 +138,8 @@ export const dataGridMessages: NuiMessageCatalog<'dataGrid'> = {
     rowsShown: ({ count }) =>
       `${plural('ru', count, { one: 'Показана', few: 'Показаны', many: 'Показано', other: 'Показано' })} ${count.toLocaleString('ru-RU')} ${plural('ru', count, { one: 'строка', few: 'строки', many: 'строк', other: 'строки' })}`,
     totals: 'Итого',
+    rowsCount: ({ count }) =>
+      `${count.toLocaleString('ru-RU')} ${plural('ru', count, { one: 'строка', few: 'строки', many: 'строк', other: 'строки' })}`,
     groupExpanded: ({ group }) => `Группа «${group}» развёрнута`,
     groupCollapsed: ({ group }) => `Группа «${group}» свёрнута`,
     rowExpanded: ({ row }) => `Строка «${row}» развёрнута`,

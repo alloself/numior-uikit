@@ -16,6 +16,7 @@ export interface GridFocusOptions {
   readonly centreIndexOf: (visual: number) => number | undefined;
   readonly columnIndexOf: (key: string) => number;
   readonly isRtl: () => boolean;
+  readonly windowed: () => boolean;
 }
 
 export interface GridFocus {
@@ -49,6 +50,8 @@ const isCell = (target: EventTarget | null): boolean =>
 const samePosition = (a: GridCellPosition, b: GridCellPosition): boolean =>
   a.row === b.row && a.col === b.col;
 
+const pageSpan = (): number => (typeof window === 'undefined' ? 0 : window.innerHeight);
+
 export const useGridFocus = (options: GridFocusOptions): GridFocus => {
   const intent = createIntent<'cell'>();
   const requests = ref(0);
@@ -57,10 +60,15 @@ export const useGridFocus = (options: GridFocusOptions): GridFocus => {
 
   const pageRows = (): number => {
     const size = options.rowSize();
-    return Math.max(1, Math.floor((options.rows.viewport.value - size) / size));
+    const span = options.rows.viewport.value > 0 ? options.rows.viewport.value : pageSpan();
+
+    return Math.max(1, Math.floor((span - size) / size));
   };
 
   const reveal = (target: GridCellPosition): void => {
+    if (!options.windowed()) {
+      return;
+    }
     if (target.row >= 0 && target.row < options.bodyRows()) {
       options.rows.scrollTo(target.row, { align: 'auto' });
     }
@@ -133,7 +141,7 @@ export const useGridFocus = (options: GridFocusOptions): GridFocus => {
         if (intent.take() === 'cell') {
           options.viewport.value
             ?.querySelector<HTMLElement>(ACTIVE_CELL)
-            ?.focus({ preventScroll: true });
+            ?.focus({ preventScroll: options.windowed() });
         }
       },
       { flush: 'post' },

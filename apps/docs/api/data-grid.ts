@@ -4,8 +4,8 @@ const docs: DocsMap = {
   NuiDataGrid: {
     props: {
       columns: {
-        ru: 'Колонки: key, label, type (text, number, date, boolean), value, format, width, minWidth, pin, align, sortable, filter, hideable и aggregate. hideable: false не даёт скрыть колонку из меню. filter выбирает вид фильтра (text, number, date, set) или выключает его значением false. aggregate (sum, count, avg, min, max или функция) считает значение для строк групп и строки итогов. Вне строки, например в группе или списке значений фильтра, format получает строку как undefined. Группа { key, label, children } рисует над заголовками своих колонок полосу с подписью.',
-        en: 'Columns: key, label, type (text, number, date, boolean), value, format, width, minWidth, pin, align, sortable, filter, hideable and aggregate. hideable: false keeps the column out of reach of the menu hide. filter picks the filter kind (text, number, date, set) or turns it off with false. aggregate (sum, count, avg, min, max or a function) fills group rows and the totals row. Outside a row, such as a group or the filter value list, format receives the row as undefined. A group { key, label, children } draws a labelled band above the headers of its columns.',
+        ru: 'Колонки: key, label, type (text, number, date, boolean), value, format, width, minWidth, pin, align, sortable, filter, hideable, wrap и aggregate. hideable: false не даёт скрыть колонку из меню; wrap: true переносит текст ячейки, а без height строка растёт по нему. filter выбирает вид фильтра (text, number, date, set) или выключает его значением false. aggregate считает значение для строк групп и строки итогов: у числовой колонки sum, count, avg, min, max или функция, у даты min, max, count или функция, у текстовой и булевой count или функция. Вне строки, например в группе или списке значений фильтра, format получает строку как undefined. Группа { key, label, children } рисует над заголовками своих колонок полосу с подписью.',
+        en: 'Columns: key, label, type (text, number, date, boolean), value, format, width, minWidth, pin, align, sortable, filter, hideable, wrap and aggregate. hideable: false keeps the column out of reach of the menu hide; wrap: true wraps the cell text, and without height the row grows with it. filter picks the filter kind (text, number, date, set) or turns it off with false. aggregate fills group rows and the totals row: a number column takes sum, count, avg, min, max or a function, a date column min, max, count or a function, a text or boolean column count or a function. Outside a row, such as a group or the filter value list, format receives the row as undefined. A group { key, label, children } draws a labelled band above the headers of its columns.',
       },
       source: {
         ru: 'Строки данных; грид не копирует и не меняет их.',
@@ -24,12 +24,12 @@ const docs: DocsMap = {
         en: 'Density: paddings, font and the default row height.',
       },
       rowHeight: {
-        ru: 'Высота строки в пикселях; по умолчанию 32, 40 или 48 по размеру.',
-        en: 'Row height in pixels; 32, 40 or 48 by size by default.',
+        ru: 'Высота строки в пикселях; по умолчанию 32, 40 или 48 по размеру. Без height это минимальная высота: строка растёт по содержимому.',
+        en: 'Row height in pixels; 32, 40 or 48 by size by default. Without height it is the minimum: a row grows with its content.',
       },
       height: {
-        ru: 'Высота области прокрутки в единицах CSS.',
-        en: 'Height of the scroll area in CSS units.',
+        ru: 'Высота области прокрутки в единицах CSS: с ней строки и колонки рисуются окнами по rowHeight и ширинам, без неё таблица растёт по строкам и рисует все строки и колонки.',
+        en: 'Height of the scroll area in CSS units: with it rows and columns render in windows by rowHeight and widths, without it the table grows with its rows and renders every row and column.',
       },
       locale: {
         ru: 'Локаль для чисел и дат; по умолчанию из конфигурации.',
@@ -56,8 +56,8 @@ const docs: DocsMap = {
         en: 'Key of the column with the tree indentation and toggle; the first column by default.',
       },
       totalsLabel: {
-        ru: 'Подпись строки итогов в первой колонке без агрегата; по умолчанию из словаря.',
-        en: 'Label of the totals row in the first column without an aggregate; the dictionary supplies the default.',
+        ru: 'Подпись строки итогов в первой колонке без агрегата, рядом с ней число строк после фильтров; по умолчанию из словаря.',
+        en: 'Label of the totals row in the first column without an aggregate, next to the count of filtered rows; the dictionary supplies the default.',
       },
       columnMenu: {
         ru: 'Меню колонки в шапке: сортировка, фильтр, группировка, закрепление, скрытие и список колонок. false убирает кнопку меню, и Alt+ArrowDown открывает фильтр.',
