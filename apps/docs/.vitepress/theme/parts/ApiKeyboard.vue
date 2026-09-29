@@ -1,8 +1,8 @@
 <template>
   <div class="nui-not-prose my-4">
-    <NuiDataGrid
+    <NuiTable
       :columns="columns"
-      :source="keys"
+      :rows="keys"
       :get-key="keyOf"
       :label="texts.apiKeyboard"
       :column-menu="false"
@@ -12,13 +12,13 @@
         <NuiKbd :keys="row.keys" size="sm" />
       </template>
       <template #cell-description="{ row }">{{ row.description[locale] }}</template>
-    </NuiDataGrid>
+    </NuiTable>
   </div>
 </template>
 
 <script setup lang="ts">
 import { NuiKbd } from '@numior/vue';
-import { NuiDataGrid, type NuiGridColumn } from '@numior/table';
+import { NuiTable, type NuiTableColumn } from '@numior/table';
 import type { ReferenceKey } from '../../reference/reference.types';
 import type { ApiKeyboardProps } from '../theme.types';
 
@@ -26,7 +26,7 @@ const { keys, locale, texts } = defineProps<ApiKeyboardProps>();
 
 const keyOf = (row: ReferenceKey): string => row.keys;
 
-const columns: readonly NuiGridColumn<ReferenceKey>[] = [
+const columns: readonly NuiTableColumn<ReferenceKey>[] = [
   {
     key: 'keys',
     label: texts.apiKeys,

@@ -16,7 +16,6 @@ import type { NuiSidebarMessages } from './sidebar/sidebar.messages';
 import type { NuiSkipLinkMessages } from './skip-link/skip-link.messages';
 import type { NuiSplitterMessages } from './splitter/splitter.messages';
 import type { NuiStepperMessages } from './stepper/stepper.messages';
-import type { NuiTableMessages } from './table/table.messages';
 import type { NuiTimeFieldMessages } from './time-field/time-field.messages';
 import type { NuiTocMessages } from './toc/toc.messages';
 import type { NuiToastMessages } from './toast/toast.messages';
@@ -41,7 +40,6 @@ export interface NuiVueMessages {
   readonly skipLink: NuiSkipLinkMessages;
   readonly splitter: NuiSplitterMessages;
   readonly stepper: NuiStepperMessages;
-  readonly table: NuiTableMessages;
   readonly timeField: NuiTimeFieldMessages;
   readonly toc: NuiTocMessages;
   readonly toast: NuiToastMessages;

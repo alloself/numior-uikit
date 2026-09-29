@@ -1,5 +1,6 @@
 <template>
   <NuiTable
+    v-model:page-size="pageSize"
     :columns="columns"
     :rows="orders"
     :get-key="keyOf"
@@ -9,7 +10,8 @@
 </template>
 
 <script setup lang="ts">
-import { NuiTable, type NuiTableColumn } from '@numior/vue';
+import { ref } from 'vue';
+import { NuiTable, type NuiTableColumn } from '@numior/table';
 
 interface Order {
   readonly id: number;
@@ -25,11 +27,39 @@ const orders: Order[] = Array.from({ length: 42 }, (_, index) => ({
   total: 900 + index * 350,
 }));
 
+const money = new Intl.NumberFormat('en-US', {
+  style: 'currency',
+  currency: 'USD',
+  maximumFractionDigits: 0,
+});
+
 const columns: NuiTableColumn<Order>[] = [
-  { key: 'id', label: 'No.', width: 96 },
-  { key: 'customer', label: 'Customer' },
-  { key: 'total', label: 'Total, €', align: 'end', width: 128 },
+  {
+    key: 'id',
+    label: '#',
+    type: 'number',
+    width: 96,
+    value: (row) => row.id,
+    format: (value) => String(value),
+  },
+  {
+    key: 'customer',
+    label: 'Customer',
+    type: 'text',
+    width: 200,
+    flex: 1,
+    value: (row) => row.customer,
+  },
+  {
+    key: 'total',
+    label: 'Total',
+    type: 'number',
+    width: 140,
+    value: (row) => row.total,
+    format: (value) => money.format(value),
+  },
 ];
 
-const keyOf = (order: Order): string => String(order.id);
+const keyOf = (order: Order): number => order.id;
+const pageSize = ref(10);
 </script>

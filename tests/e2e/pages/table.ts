@@ -1,272 +1,240 @@
 import type { Locator, Page } from '@playwright/test';
-import {
-  isBoolean,
-  isNumber,
-  isString,
-  listOf,
-  nullable,
-  parseAs,
-  recordOf,
-  shapeOf,
-  type Guarded,
-} from '../../../packages/primitives/test/support/guards';
-import { boxOf } from '../helpers/geometry';
+import { boxOf, type Box } from '../helpers/geometry';
 
-const isTableOutput = shapeOf({
-  sort: nullable(shapeOf({ key: isString, direction: isString })),
-  selected: listOf(isString),
-  page: isNumber,
-  pageSize: isNumber,
-  lastRowClick: nullable(isString),
-  loading: isBoolean,
-  empty: isBoolean,
-  columnOrder: listOf(isString),
-  widths: recordOf(isNumber),
-  expanded: listOf(isString),
-  loaded: listOf(isString),
-  lastReorder: nullable(isString),
-  teamOrder: listOf(isString),
-});
+export interface TableCell {
+  readonly row: number;
+  readonly col: number;
+}
 
-export type TableOutput = Guarded<typeof isTableOutput>;
+export interface TableScroll {
+  readonly top?: number;
+  readonly left?: number;
+}
 
-const parseTableOutput = (text: string): TableOutput =>
-  parseAs(text, isTableOutput, 'table output');
-
-const ROW_SELECTOR =
-  'tbody:not(.nui-table__body--pinned) .nui-table__row:not(.nui-table__row--status):not(.nui-table__row--loading)';
+const HEAD_ROWS = 2;
 
 export class TableSection {
-  readonly table: Locator;
-  readonly treeTable: Locator;
-  readonly virtualTable: Locator;
-  readonly loadingToggle: Locator;
+  readonly root: Locator;
+  readonly viewport: Locator;
+  readonly grid: Locator;
   readonly emptyToggle: Locator;
+  readonly empty: Locator;
+  readonly quick: Locator;
+  readonly clearFilters: Locator;
   readonly output: Locator;
+  readonly filter: Locator;
+  readonly menu: Locator;
+  readonly resetColumns: Locator;
+  readonly loadingToggle: Locator;
+  readonly pagesToggle: Locator;
+  readonly pinnedToggle: Locator;
+  readonly pagination: Locator;
+  readonly nextPageButton: Locator;
+  readonly pageSizeTrigger: Locator;
+  readonly tree: Locator;
+  readonly treeCaption: Locator;
+  readonly treeSelectAll: Locator;
+  readonly treeSkeletons: Locator;
 
   constructor(private readonly page: Page) {
-    this.table = page.getByTestId('data-table');
-    this.treeTable = page.getByTestId('data-table-tree');
-    this.virtualTable = page.getByTestId('data-table-virtual');
-    this.loadingToggle = page.getByTestId('data-table-loading');
-    this.emptyToggle = page.getByTestId('data-table-empty');
+    this.root = page.getByTestId('table');
+    this.viewport = this.root.locator('.nui-table__viewport');
+    this.grid = this.root.locator('.nui-table__grid');
+    this.emptyToggle = page.getByTestId('table-empty');
+    this.empty = this.root.locator('.nui-table__empty');
+    this.quick = page.getByTestId('table-quick');
+    this.clearFilters = page.getByTestId('table-clear-filters');
     this.output = page.getByTestId('table-output');
+    this.filter = page.locator('.nui-table-filter');
+    this.menu = this.root.locator(':scope > .nui-menu');
+    this.resetColumns = page.getByTestId('table-reset-columns');
+    this.loadingToggle = page.getByTestId('table-loading');
+    this.pagesToggle = page.getByTestId('table-pages');
+    this.pinnedToggle = page.getByTestId('table-pinned');
+    this.pagination = this.root.locator('.nui-table__pagination');
+    this.nextPageButton = this.pagination.locator('.nui-pagination__next');
+    this.pageSizeTrigger = this.pagination.getByRole('combobox');
+    this.tree = page.getByTestId('table-tree');
+    this.treeCaption = this.tree.locator('.nui-table__caption');
+    this.treeSelectAll = this.tree.locator('.nui-table__row--head').getByRole('checkbox');
+    this.treeSkeletons = this.tree.locator('.nui-table__row--skeleton');
   }
 
-  header(label: string, table: Locator = this.table): Locator {
-    return table.getByRole('columnheader', { name: label });
+  treeCell(position: number, col: number): Locator {
+    return this.treeRow(position).locator(`[aria-colindex="${col + 1}"]`);
   }
 
-  sortButton(label: string): Locator {
-    return this.header(label).getByRole('button', { name: label, exact: true });
+  treeCheckbox(position: number): Locator {
+    return this.treeRow(position).getByRole('checkbox');
   }
 
-  resizer(label: string): Locator {
-    return this.header(label).getByRole('separator');
+  menuButton(col: number): Locator {
+    return this.header(col).locator('.nui-table__menu');
   }
 
-  columnGrip(label: string): Locator {
-    return this.header(label).getByRole('button', { name: `Переставить колонку ${label}` });
+  async openMenu(col: number): Promise<void> {
+    await this.header(col).hover();
+    await this.menuButton(col).click();
   }
 
-  headerLabels(table: Locator = this.table): Promise<string[]> {
-    return table.locator('thead th').allInnerTexts();
+  headerPane(col: number): Promise<string> {
+    return this.header(col).evaluate((element) => {
+      if (element.classList.contains('nui-table__cell--pin-start')) {
+        return 'start';
+      }
+      return element.classList.contains('nui-table__cell--pin-end') ? 'end' : 'centre';
+    });
   }
 
-  rows(table: Locator): Locator {
-    return table.locator(ROW_SELECTOR);
+  menuItem(label: string): Locator {
+    const name = { name: label, exact: true };
+
+    return this.menu
+      .getByRole('menuitem', name)
+      .or(this.menu.getByRole('menuitemradio', name))
+      .or(this.menu.getByRole('menuitemcheckbox', name));
   }
 
-  row(name: string): Locator {
-    return this.rows(this.table).filter({ has: this.page.getByText(name, { exact: true }) });
+  treeRow(position: number): Locator {
+    return this.tree.locator(`.nui-table__viewport [role="row"][aria-rowindex="${position + 2}"]`);
   }
 
-  treeRow(name: string): Locator {
-    return this.rows(this.treeTable).filter({ has: this.page.getByText(name, { exact: true }) });
+  treeToggle(position: number): Locator {
+    return this.treeRow(position).locator('.nui-table__toggle--expandable');
   }
 
-  toggleOf(name: string): Locator {
-    return this.treeRow(name).getByRole('button', { name: `Раскрыть ${name}` });
+  footerCell(col: number): Locator {
+    return this.root.locator(`.nui-table__footer [aria-colindex="${col + 1}"]`);
   }
 
-  gripOf(name: string): Locator {
-    return this.treeRow(name).getByRole('button', { name: `Переставить ${name}` });
+  groupLabel(position: number): Locator {
+    return this.row(position).locator('.nui-table__group');
   }
 
-  async cellsOf(table: Locator, label: string): Promise<Locator> {
-    const headers = await table.locator('thead th').allInnerTexts();
-    const index = headers.findIndex((text) => text.trim().startsWith(label));
-    return this.rows(table).locator(`td:nth-child(${index + 1})`);
+  async groupBy(label: string): Promise<void> {
+    await this.page.getByTestId('table-group').click();
+    await this.page.locator('.nui-select__listbox').getByRole('option', { name: label }).click();
   }
 
-  get selectAll(): Locator {
-    return this.table.locator('thead').getByRole('checkbox');
+  filterButton(col: number): Locator {
+    return this.header(col).locator('.nui-table__filter');
   }
 
-  get selectAllCell(): Locator {
-    return this.table.locator('thead th').first();
+  async openFilter(col: number): Promise<void> {
+    await this.openMenu(col);
+    await this.menuItem('Фильтр…').click();
   }
 
-  get nextPage(): Locator {
-    return this.table.getByRole('button', { name: 'Следующая' });
+  filterValue(label: string): Locator {
+    return this.filter.getByRole('checkbox', { name: label, exact: true });
   }
 
-  get pageSizeTrigger(): Locator {
-    return this.table.getByRole('combobox');
+  filterField(label: string): Locator {
+    return this.filter.getByLabel(label, { exact: true });
   }
 
-  get rangeText(): Locator {
-    return this.table.locator('.nui-pagination__range');
+  async applyFilter(): Promise<void> {
+    await this.filter.getByRole('button', { name: 'Применить' }).click();
   }
 
-  get emptyState(): Locator {
-    return this.table.locator('.nui-empty');
+  async resetFilter(): Promise<void> {
+    await this.filter.getByRole('button', { name: 'Сбросить' }).click();
   }
 
-  get skeletons(): Locator {
-    return this.table.locator('.nui-table__row--loading');
+  async textsIn(col: number, count: number): Promise<string[]> {
+    return Promise.all(Array.from({ length: count }, (_, row) => this.cell(row, col).innerText()));
   }
 
-  skeletonCell(row: number): Locator {
-    return this.skeletons.nth(row).locator('.nui-table__cell').nth(1);
+  row(position: number): Locator {
+    return this.viewport.locator(`[role="row"][aria-rowindex="${position + HEAD_ROWS + 1}"]`);
   }
 
-  scroller(table: Locator): Locator {
-    return table.locator('.nui-table__scroller');
+  header(col: number): Locator {
+    return this.viewport.locator(
+      `.nui-table__row--head [role="columnheader"][aria-colindex="${col + 1}"]`,
+    );
   }
 
-  async scrollToBottom(table: Locator): Promise<void> {
-    await this.scroller(table).evaluate((element) => {
+  band(label: string): Locator {
+    return this.viewport.locator('.nui-table__row--band [role="columnheader"]', { hasText: label });
+  }
+
+  cell(position: number, col: number): Locator {
+    return this.row(position).locator(`[aria-colindex="${col + 1}"]`);
+  }
+
+  async scrollTo(target: TableScroll): Promise<void> {
+    await this.viewport.evaluate((element, position) => {
+      element.scrollTo(position);
+    }, target);
+  }
+
+  async scrollToBottom(): Promise<void> {
+    await this.viewport.evaluate((element) => {
       element.scrollTop = element.scrollHeight;
     });
   }
 
-  async scrollHorizontally(table: Locator, left: number): Promise<void> {
-    await this.scroller(table).evaluate((element, value) => {
-      element.scrollLeft = value;
-    }, left);
+  sortOrder(col: number): Locator {
+    return this.header(col).locator('.nui-table__sort-order');
   }
 
-  async slowDownMotion(): Promise<void> {
-    await this.table.evaluate((root) => {
-      root.style.setProperty('--nui-duration-normal', '1s');
+  async numbersIn(col: number, count: number): Promise<number[]> {
+    const texts = await this.textsIn(col, count);
+
+    return texts.map((text) => Number(text.replaceAll(/\D/g, '')));
+  }
+
+  renderedRowCount(): Promise<number> {
+    return this.viewport.evaluate(
+      (element) => element.querySelectorAll('.nui-table__body > [role="row"]').length,
+    );
+  }
+
+  scrollTop(): Promise<number> {
+    return this.viewport.evaluate((element) => element.scrollTop);
+  }
+
+  focusedCell(): Promise<TableCell | null> {
+    return this.page.evaluate((headRows) => {
+      const cell = document.activeElement;
+
+      if (cell === null || !cell.matches('.nui-table__cell')) {
+        return null;
+      }
+      const row = cell.closest('[role="row"]');
+
+      return {
+        row: Number(row?.getAttribute('aria-rowindex')) - headRows - 1,
+        col: Number(cell.getAttribute('aria-colindex')) - 1,
+      };
+    }, HEAD_ROWS);
+  }
+
+  viewportBox(): Promise<Box> {
+    return boxOf(this.viewport);
+  }
+
+  cellBox(position: number, col: number): Promise<Box> {
+    return boxOf(this.cell(position, col));
+  }
+
+  async headerBottom(): Promise<number> {
+    const header = await boxOf(this.viewport.locator('.nui-table__header'));
+    return header.y + header.height;
+  }
+
+  clientRight(): Promise<number> {
+    return this.viewport.evaluate((element) => {
+      const box = element.getBoundingClientRect();
+      return box.left + element.clientLeft + element.clientWidth;
     });
   }
 
-  async toggleEmptyWatchingOverflow(): Promise<number> {
-    const toggle = await this.emptyToggle.elementHandle();
-
-    return this.scroller(this.table).evaluate(async (scroller, button) => {
-      const excess = (): number => Math.max(0, scroller.scrollHeight - scroller.clientHeight);
-      const state = { most: excess() };
-
-      if (button instanceof HTMLElement) {
-        button.click();
-      }
-
-      await new Promise<void>((resolve) => {
-        const started = performance.now();
-
-        const sample = (): void => {
-          state.most = Math.max(state.most, excess());
-
-          if (performance.now() - started < 1400) {
-            requestAnimationFrame(sample);
-          } else {
-            resolve();
-          }
-        };
-
-        requestAnimationFrame(sample);
-      });
-
-      return state.most;
-    }, toggle);
-  }
-
-  async scrollColumnToStart(label: string): Promise<void> {
-    const scroller = await boxOf(this.scroller(this.table));
-    const column = await boxOf(this.header(label));
-    const current = await this.scroller(this.table).evaluate((element) => element.scrollLeft);
-
-    await this.scrollHorizontally(this.table, current + column.x - scroller.x);
-  }
-
-  scrollSlack(table: Locator): Promise<number> {
-    return this.scroller(table).evaluate(
-      (element) =>
-        element.scrollWidth - (element.firstElementChild?.getBoundingClientRect().width ?? 0),
-    );
-  }
-
-  overflowsHorizontally(table: Locator): Promise<boolean> {
-    return this.scroller(table).evaluate((element) => element.scrollWidth > element.clientWidth);
-  }
-
-  indeterminate(checkbox: Locator): Promise<boolean> {
-    return checkbox.evaluate(
-      (element) => element instanceof HTMLInputElement && element.indeterminate,
-    );
-  }
-
-  async dragBetween(
-    source: Locator,
-    target: Locator,
-    dx = 0,
-    dy = 0,
-    whileDragging?: () => Promise<void>,
-  ): Promise<void> {
-    await source.scrollIntoViewIfNeeded();
-    const from = await source.boundingBox();
-    const to = await target.boundingBox();
-    if (!from || !to) {
-      throw new Error('Drag endpoints are not rendered');
-    }
-    const startX = from.x + from.width / 2;
-    const startY = from.y + from.height / 2;
-    await this.page.mouse.move(startX, startY);
-    await this.page.mouse.down();
-    await this.page.mouse.move(startX + 4, startY + 4);
-    await this.page.mouse.move(to.x + to.width / 2 + dx, to.y + to.height / 2 + dy, { steps: 8 });
-    await whileDragging?.();
-    await this.page.mouse.up();
-  }
-
-  get ghost(): Locator {
-    return this.page.locator('.nui-table__ghost');
-  }
-
-  get ghostBody(): Locator {
-    return this.ghost.locator('.nui-table__ghost-body');
-  }
-
-  dropLine(table: Locator): Locator {
-    return table.locator('.nui-table__drop--column');
-  }
-
-  rowDropLine(table: Locator): Locator {
-    return table.locator('.nui-table__drop--row');
-  }
-
-  opacityOf(locator: Locator): Promise<string> {
-    return locator.evaluate((element) => getComputedStyle(element).opacity);
-  }
-
-  async dragBy(source: Locator, dx: number): Promise<void> {
-    await source.scrollIntoViewIfNeeded();
-    const from = await source.boundingBox();
-    if (!from) {
-      throw new Error('Drag source is not rendered');
-    }
-    const startX = from.x + from.width / 2;
-    const startY = from.y + from.height / 2;
-    await this.page.mouse.move(startX, startY);
-    await this.page.mouse.down();
-    await this.page.mouse.move(startX + dx, startY, { steps: 6 });
-    await this.page.mouse.up();
-  }
-
-  async readOutput(): Promise<TableOutput> {
-    return parseTableOutput(await this.output.innerText());
+  clientLeft(): Promise<number> {
+    return this.viewport.evaluate((element) => {
+      const box = element.getBoundingClientRect();
+      return box.right - element.clientLeft - element.clientWidth;
+    });
   }
 }

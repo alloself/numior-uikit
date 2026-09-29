@@ -1,303 +1,540 @@
 import { expect, test } from '@playwright/test';
-import { paintedRgb, rgbDelta } from './helpers/color';
 import { boxOf } from './helpers/geometry';
 import { PlaygroundPage } from './pages/playground';
 
 test.describe('table', () => {
-  test('sorting cycles through ascending, descending and off', async ({ page }) => {
-    const playground = new PlaygroundPage(page);
-    await playground.emulate({ reducedMotion: 'reduce' });
-    await playground.open();
-    const { table } = playground;
-    await expect(table.header('Возраст')).not.toHaveAttribute('aria-sort');
-    await table.sortButton('Возраст').click();
-    await expect(table.header('Возраст')).toHaveAttribute('aria-sort', 'ascending');
-    await expect((await table.cellsOf(table.table, 'Возраст')).first()).toHaveText('23');
-    await table.sortButton('Возраст').click();
-    await expect(table.header('Возраст')).toHaveAttribute('aria-sort', 'descending');
-    await expect((await table.cellsOf(table.table, 'Возраст')).first()).toHaveText('52');
-    await table.sortButton('Возраст').click();
-    await expect(table.header('Возраст')).not.toHaveAttribute('aria-sort');
-    await expect.poll(async () => (await table.readOutput()).sort).toBeNull();
-    await expect((await table.cellsOf(table.table, 'Имя')).first()).toHaveText('Анна');
-  });
-
-  test('rows select through checkboxes with a tri-state header and row clicks stay separate', async ({
+  test('windows ten thousand rows and keeps the pinned columns in place while scrolling', async ({
     page,
   }) => {
     const playground = new PlaygroundPage(page);
-    await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
     const { table } = playground;
-    await expect(table.selectAll).toHaveAccessibleName('Выбрать все строки');
-    await table.selectAll.click();
+    await table.root.scrollIntoViewIfNeeded();
+    await expect(table.grid).toHaveAttribute('aria-rowcount', '10003');
+    await expect(table.header(0)).toHaveText('№');
+    await expect(table.band('Покупатель')).toHaveAttribute('aria-colspan', '2');
+    await expect(table.cell(0, 10)).toContainText('Новый');
+    expect(await table.renderedRowCount()).toBeLessThan(60);
+
+    const pinnedBefore = await table.cellBox(0, 0);
+    const endBefore = await table.cellBox(0, 10);
+    const centreBefore = await table.cellBox(0, 1);
+    await table.scrollTo({ left: 400 });
+    await expect.poll(async () => (await table.cellBox(0, 1)).x).toBeLessThan(centreBefore.x - 300);
+    await expect(table.band('Заказ')).toHaveAttribute('aria-colindex', '6');
+    expect((await table.cellBox(0, 0)).x).toBeCloseTo(pinnedBefore.x, 0);
+    expect((await table.cellBox(0, 10)).x).toBeCloseTo(endBefore.x, 0);
+
+    expect((await table.cellBox(0, 10)).x + endBefore.width).toBeCloseTo(
+      await table.clientRight(),
+      0,
+    );
+
+    await table.scrollToBottom();
+    await expect(table.cell(9999, 0)).toHaveText('10000');
+    await expect(table.cell(9999, 0)).toBeInViewport();
+    expect(await table.renderedRowCount()).toBeLessThan(60);
+  });
+
+  test('walks the cells with the keyboard and keeps the active one in view', async ({
+    page,
+    isMobile,
+  }) => {
+    test.skip(isMobile, 'keyboard walk on desktop');
+    const playground = new PlaygroundPage(page);
+    await playground.open();
+    const { table } = playground;
+    await table.root.scrollIntoViewIfNeeded();
+    await table.cell(0, 1).click();
+    expect(await table.focusedCell()).toEqual({ row: 0, col: 1 });
+
+    for (let step = 0; step < 3; step += 1) {
+      await page.keyboard.press('ArrowDown');
+    }
+    expect(await table.focusedCell()).toEqual({ row: 3, col: 1 });
+    await page.keyboard.press('End');
+    expect(await table.focusedCell()).toEqual({ row: 3, col: 10 });
+    await page.keyboard.press('Control+End');
+    expect(await table.focusedCell()).toEqual({ row: 10_000, col: 10 });
+    await page.keyboard.press('ArrowUp');
+    expect(await table.focusedCell()).toEqual({ row: 9999, col: 10 });
+
+    const last = await table.cellBox(9999, 10);
+    const footer = await table.cellBox(10_000, 10);
+    expect(last.y).toBeGreaterThanOrEqual((await table.headerBottom()) - 1);
+    expect(last.y + last.height).toBeLessThanOrEqual(footer.y + 1);
+    await page.keyboard.press('Control+Home');
+    expect(await table.focusedCell()).toEqual({ row: 0, col: 0 });
+    expect(await table.scrollTop()).toBe(0);
+    await page.keyboard.press('ArrowUp');
+    expect(await table.focusedCell()).toEqual({ row: -1, col: 0 });
+
+    await page.keyboard.press('ArrowDown');
+    await page.keyboard.press('ArrowRight');
+
+    for (let step = 0; step < 8; step += 1) {
+      await page.keyboard.press('ArrowRight');
+    }
+    expect(await table.focusedCell()).toEqual({ row: 0, col: 9 });
+    const revealed = await table.cellBox(0, 9);
+    expect(revealed.x + revealed.width).toBeLessThanOrEqual((await table.cellBox(0, 10)).x + 1);
+  });
+
+  test('sorts from the header by click, Shift+click and the keyboard', async ({
+    page,
+    isMobile,
+  }) => {
+    const playground = new PlaygroundPage(page);
+    await playground.open();
+    const { table } = playground;
+    await table.root.scrollIntoViewIfNeeded();
+    await table.header(0).click();
+    await expect(table.header(0)).toHaveAttribute('aria-sort', 'ascending');
+    await expect(table.cell(0, 0)).toHaveText('1');
+    await table.header(0).click();
+    await expect(table.header(0)).toHaveAttribute('aria-sort', 'descending');
+    await expect(table.cell(0, 0)).toHaveText('10000');
+    const descending = await table.numbersIn(0, 8);
+    expect(descending).toEqual(descending.toSorted((a, b) => b - a));
+    await table.header(1).click({ modifiers: ['Shift'] });
+    await expect(table.sortOrder(1)).toHaveText('2');
+    await expect(table.sortOrder(0)).toHaveText('1');
+    await expect(table.header(1)).not.toHaveAttribute('aria-sort');
+
+    if (isMobile) {
+      return;
+    }
+    await table.cell(0, 2).click();
+    await page.keyboard.press('ArrowUp');
+    await page.keyboard.press('Enter');
+    await expect(table.header(2)).toHaveAttribute('aria-sort', 'ascending');
+    await expect(table.header(0)).not.toHaveAttribute('aria-sort');
+    await expect(table.sortOrder(1)).toHaveCount(0);
+    expect(await table.focusedCell()).toEqual({ row: -1, col: 2 });
+  });
+
+  test('mirrors the pinned panes and the arrow keys in RTL', async ({ page, isMobile }) => {
+    test.skip(isMobile, 'direction switch on desktop');
+    const playground = new PlaygroundPage(page);
+    await playground.open();
+    await playground.setDirection('rtl');
+    const { table } = playground;
+    await table.root.scrollIntoViewIfNeeded();
+    const start = await table.cellBox(0, 0);
+    const end = await table.cellBox(0, 10);
+    expect(start.x + start.width).toBeCloseTo(await table.clientRight(), 0);
+    expect(end.x).toBeCloseTo(await table.clientLeft(), 0);
+    await table.cell(0, 1).click();
+    await page.keyboard.press('ArrowLeft');
+    expect(await table.focusedCell()).toEqual({ row: 0, col: 2 });
+    await table.openFilter(3);
+    await expect(table.filter).toBeVisible();
+    const header = await boxOf(table.header(3));
+    const popover = await boxOf(table.filter);
+    expect(popover.x + popover.width).toBeCloseTo(header.x + header.width, 0);
+    expect(popover.y).toBeGreaterThan(header.y + header.height);
+    await page.keyboard.press('Escape');
+    await table.openMenu(3);
+    await expect(table.menu).toBeVisible();
+    const menu = await boxOf(table.menu);
+    expect(Math.abs(menu.x + menu.width - header.x - header.width)).toBeLessThanOrEqual(1);
+    await page.keyboard.press('Escape');
+    await expect(table.menu).toBeHidden();
+    await playground.setDirection('ltr');
+  });
+
+  test('shows the empty state and brings the rows back', async ({ page }) => {
+    const playground = new PlaygroundPage(page);
+    await playground.open();
+    const { table } = playground;
+    await table.root.scrollIntoViewIfNeeded();
+    await table.emptyToggle.click();
+    await expect(table.empty).toContainText('Нет строк для показа');
+    await expect(table.grid).toHaveAttribute('aria-rowcount', '3');
+    await table.emptyToggle.click();
+    await expect(table.empty).toHaveCount(0);
+    await expect(table.cell(0, 0)).toHaveText('1');
+  });
+
+  test('filters a column by chosen values from the header popover and resets it', async ({
+    page,
+  }) => {
+    const playground = new PlaygroundPage(page);
+    await playground.open();
+    const { table } = playground;
+    await table.root.scrollIntoViewIfNeeded();
+    await table.openFilter(10);
+    await expect(table.filter).toBeVisible();
+    await expect(table.filter).toHaveAccessibleName('Фильтр: Статус');
+    await expect(table.filterButton(10)).toHaveAttribute('aria-expanded', 'true');
+    await expect(table.filterValue('Возврат')).toBeVisible();
+    await table.filterValue('Оплачен').check();
+    await table.applyFilter();
+
+    await expect(table.filter).toBeHidden();
+    await expect(table.grid).toHaveAttribute('aria-rowcount', '2503');
+    await expect(table.filterButton(10)).toHaveClass(/nui-table__filter--active/);
+    expect(await table.textsIn(10, 5)).toEqual(Array.from({ length: 5 }, () => 'Оплачен'));
+
+    await expect(table.output).toHaveText(
+      JSON.stringify({
+        sort: [],
+        filters: [{ kind: 'set', key: 'status', values: ['Оплачен'] }],
+        quick: '',
+        groupBy: [],
+        pins: {},
+        hidden: [],
+        selected: [],
+        lastClick: null,
+        page: 1,
+        pageSize: 25,
+      }),
+    );
+
+    await table.openFilter(10);
+    await expect(table.filterValue('Оплачен')).toBeChecked();
+    await table.resetFilter();
+    await expect(table.grid).toHaveAttribute('aria-rowcount', '10003');
+    await expect(table.filterButton(10)).toHaveCount(0);
+  });
+
+  test('narrows the rows with the quick filter and a number range and clears both', async ({
+    page,
+    isMobile,
+  }) => {
+    test.skip(isMobile, 'range typing on desktop');
+    const playground = new PlaygroundPage(page);
+    await playground.open();
+    const { table } = playground;
+    await table.root.scrollIntoViewIfNeeded();
+    await table.quick.fill('Казань');
+    await expect(table.grid).toHaveAttribute('aria-rowcount', '1431');
+    await table.openFilter(5);
+    await table.filterField('От').fill('1000');
+    await table.filterField('До').fill('20000');
+    await table.applyFilter();
 
     await expect
-      .poll(async () => (await table.readOutput()).selected)
-      .toEqual(['Анна', 'Борис', 'Вера', 'Глеб', 'Дина']);
+      .poll(async () => Number(await table.grid.getAttribute('aria-rowcount')))
+      .toBeLessThan(1431);
 
-    await expect(table.row('Вера')).toHaveAttribute('aria-selected', 'true');
-    await table.row('Вера').getByRole('checkbox').click();
-    await expect.poll(() => table.indeterminate(table.selectAll)).toBe(true);
-    await expect.poll(async () => (await table.readOutput()).selected).toHaveLength(4);
-    expect((await table.readOutput()).lastRowClick).toBeNull();
-    await table.row('Глеб').getByText('Глеб', { exact: true }).click();
-    await expect.poll(async () => (await table.readOutput()).lastRowClick).toBe('Глеб');
-    if (await table.overflowsHorizontally(table.table)) {
-      const before = await table.selectAll.boundingBox();
-      await table.scrollHorizontally(table.table, 150);
-      const after = await table.selectAll.boundingBox();
-      expect(before && after && Math.abs(after.x - before.x) <= 1).toBe(true);
-      await expect(table.table).toHaveClass(/nui-table--scrolled-start/);
+    const amounts = await table.numbersIn(5, 5);
+    expect(amounts.every((amount) => amount >= 1000 && amount <= 20_000)).toBe(true);
+    expect(await table.textsIn(3, 5)).toEqual(Array.from({ length: 5 }, () => 'Казань'));
+
+    await expect(table.output).toHaveText(
+      JSON.stringify({
+        sort: [],
+        filters: [{ kind: 'number', key: 'amount', min: 1000, max: 20_000 }],
+        quick: 'Казань',
+        groupBy: [],
+        pins: {},
+        hidden: [],
+        selected: [],
+        lastClick: null,
+        page: 1,
+        pageSize: 25,
+      }),
+    );
+
+    await table.clearFilters.click();
+    await expect(table.grid).toHaveAttribute('aria-rowcount', '10003');
+    await expect(table.quick).toHaveValue('');
+  });
+
+  test('opens the column menu and a filter from the header with the keyboard', async ({
+    page,
+    isMobile,
+  }) => {
+    test.skip(isMobile, 'keyboard entry on desktop');
+    const playground = new PlaygroundPage(page);
+    await playground.open();
+    const { table } = playground;
+    await table.root.scrollIntoViewIfNeeded();
+    await table.cell(0, 1).click();
+    await page.keyboard.press('ArrowUp');
+    await page.keyboard.press('Alt+ArrowDown');
+    await expect(table.menu).toBeVisible();
+    await expect(table.menu).toHaveAccessibleName('Меню колонки «Клиент»');
+    await expect(table.menuItem('Сортировать по возрастанию')).toBeFocused();
+    await page.keyboard.press('Escape');
+    await expect(table.menu).toBeHidden();
+    expect(await table.focusedCell()).toEqual({ row: -1, col: 1 });
+
+    await page.keyboard.press('Alt+ArrowDown');
+    await page.keyboard.press('ArrowDown');
+    await page.keyboard.press('ArrowDown');
+    await expect(table.menuItem('Фильтр…')).toBeFocused();
+    await page.keyboard.press('Enter');
+    await expect(table.menu).toBeHidden();
+    await expect(table.filter).toBeVisible();
+    await expect(table.filter).toHaveAccessibleName('Фильтр: Клиент');
+    await expect(table.filter.locator(':focus')).toHaveCount(1);
+    await table.filterField('Значение').fill('Анна');
+    await page.keyboard.press('Enter');
+    await expect(table.grid).toHaveAttribute('aria-rowcount', '1253');
+    await expect(table.filter).toBeHidden();
+    expect(await table.focusedCell()).toEqual({ row: -1, col: 1 });
+    await expect(table.root.getByRole('status')).toHaveText('Показано 1 250 строк');
+
+    await table.openFilter(3);
+    await expect(table.filter).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(table.filter).toBeHidden();
+    await expect.poll(() => table.focusedCell()).toEqual({ row: -1, col: 3 });
+    await page.keyboard.press('ArrowLeft');
+    expect(await table.focusedCell()).toEqual({ row: -1, col: 2 });
+  });
+
+  test('pins, hides and brings back columns from the header menu', async ({ page, isMobile }) => {
+    const playground = new PlaygroundPage(page);
+    await playground.open();
+    const { table } = playground;
+    await table.root.scrollIntoViewIfNeeded();
+    await table.openMenu(3);
+
+    await expect(table.menu).toBeVisible();
+    await expect(table.menuButton(3)).toHaveAttribute('aria-expanded', 'true');
+    await table.menuItem('В начале').click();
+
+    await expect(table.menu).toBeHidden();
+    await expect(table.header(1)).toContainText('Город');
+    await expect(table.header(2)).toContainText('Клиент');
+    await expect(table.output).toContainText('"pins":{"city":"start"}');
+    await expect(table.root.getByRole('status')).toHaveText('Колонка «Город» закреплена в начале');
+    expect(await table.headerPane(1)).toBe(isMobile ? 'centre' : 'start');
+
+    if (!isMobile) {
+      const pinned = await table.cellBox(0, 1);
+      await table.scrollTo({ left: 400 });
+      await expect.poll(async () => (await table.cellBox(0, 1)).x).toBeCloseTo(pinned.x, 0);
+      await table.scrollTo({ left: 0 });
     }
+
+    await table.openMenu(3);
+    await table.menuItem('Скрыть колонку').click();
+    await expect(table.output).toContainText('"hidden":["email"]');
+    await expect(table.header(3)).toContainText('Страна');
+    await table.openMenu(2);
+    await table.menuItem('Колонки').click();
+    await expect(table.menuItem('Почта')).toHaveAttribute('aria-checked', 'false');
+    await expect(table.menuItem('№')).toHaveAttribute('aria-disabled', 'true');
+    await table.menuItem('Почта').click();
+
+    await expect(table.header(3)).toContainText('Почта');
+    await expect(table.menuItem('Почта')).toHaveAttribute('aria-checked', 'true');
+    await table.resetColumns.click();
+    await expect(table.menu).toBeHidden();
+    await expect(table.output).toContainText('"pins":{},"hidden":[]');
+    await expect(table.header(1)).toContainText('Клиент');
   });
 
-  test('focus brings a column out from under the sticky selection column', async ({ page }) => {
-    const playground = new PlaygroundPage(page);
-    await playground.resize({ width: 360, height: 800 });
-    await playground.emulate({ reducedMotion: 'reduce' });
-    await playground.open();
-    const { table } = playground;
-    const sticky = await boxOf(table.selectAllCell);
-    await table.scrollColumnToStart('Имя');
-    expect((await boxOf(table.columnGrip('Имя'))).x).toBeLessThan(sticky.x + sticky.width);
-    await table.columnGrip('Имя').focus();
-    const grip = await boxOf(table.columnGrip('Имя'));
-    expect(grip.x).toBeGreaterThanOrEqual(sticky.x + sticky.width - 1);
-  });
-
-  test('pagination moves between pages and changes the page size', async ({ page }) => {
-    const playground = new PlaygroundPage(page);
-    await playground.emulate({ reducedMotion: 'reduce' });
-    await playground.open();
-    const { table } = playground;
-    await expect(table.rows(table.table)).toHaveCount(5);
-    await expect(table.rangeText).toHaveText('1–5 из 12');
-    await table.nextPage.click();
-    await expect.poll(async () => (await table.readOutput()).page).toBe(2);
-    await expect((await table.cellsOf(table.table, 'Имя')).first()).toHaveText('Егор');
-    await table.pageSizeTrigger.click();
-    await page.getByRole('option', { name: '10' }).click();
-    await expect.poll(async () => (await table.readOutput()).pageSize).toBe(10);
-    await expect(table.rows(table.table)).toHaveCount(2);
-    await expect(table.rangeText).toHaveText('11–12 из 12');
-  });
-
-  test('loading shows skeleton rows and an emptied table shows the empty state', async ({
-    page,
-  }) => {
-    const playground = new PlaygroundPage(page);
-    await playground.emulate({ reducedMotion: 'reduce' });
-    await playground.open();
-    const { table } = playground;
-    await table.loadingToggle.click();
-    await expect(table.table.locator('table')).toHaveAttribute('aria-busy', 'true');
-    await expect(table.skeletons).toHaveCount(5);
-    const stripe = await paintedRgb(table.skeletonCell(1));
-    const skeleton = await paintedRgb(table.skeletonCell(1).locator('.nui-skeleton'));
-    expect(rgbDelta(skeleton, stripe)).toBeGreaterThan(8);
-    await expect(table.selectAll).toBeDisabled();
-    await table.loadingToggle.click();
-    await expect(table.rows(table.table)).toHaveCount(5);
-    await table.emptyToggle.click();
-    await expect(table.emptyState).toHaveText('Нет данных');
-    await expect.poll(async () => (await table.readOutput()).empty).toBe(true);
-    await table.emptyToggle.click();
-    await expect(table.rows(table.table)).toHaveCount(5);
-  });
-
-  test('emptying and restoring the rows never flashes a scrollbar in the table', async ({
-    page,
-  }) => {
-    const playground = new PlaygroundPage(page);
-    await playground.open();
-    const { table } = playground;
-    await table.slowDownMotion();
-    expect(await table.toggleEmptyWatchingOverflow()).toBeLessThanOrEqual(0.5);
-    await expect(table.emptyState).toHaveText('Нет данных');
-    expect(await table.toggleEmptyWatchingOverflow()).toBeLessThanOrEqual(0.5);
-    await expect(table.rows(table.table)).toHaveCount(5);
-  });
-
-  test('virtual table windows five thousand rows, keeps the header sticky and scrolls inside its box', async ({
+  test('groups rows from the toolbar, expands a group and keeps totals in the footer', async ({
     page,
     isMobile,
   }) => {
     const playground = new PlaygroundPage(page);
-    await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
     const { table } = playground;
-    const virtual = table.virtualTable;
-    await expect(virtual.locator('table')).toHaveAttribute('aria-rowcount', '5001');
-    expect(await table.rows(virtual).count()).toBeLessThan(60);
-    await table.scrollToBottom(virtual);
-    await expect(table.rows(virtual).last()).toContainText('Сотрудник 5000');
-    await expect(table.scroller(virtual)).toHaveAttribute('tabindex', '0');
-    const scroller = await table.scroller(virtual).boundingBox();
-    const header = await virtual.locator('thead th').first().boundingBox();
-    expect(scroller && header && Math.abs(header.y - scroller.y) <= 1).toBe(true);
+    await table.root.scrollIntoViewIfNeeded();
+    await expect(table.footerCell(0)).toContainText('Итого');
+    await expect(table.footerCell(0)).toContainText(/10\D000 строк/);
+    await table.scrollTo({ left: 600 });
+    await expect(table.footerCell(5)).not.toHaveText('');
+    const total = await table.footerCell(5).innerText();
+    await table.groupBy('По статусу');
+
+    await expect(table.grid).toHaveAttribute('role', 'treegrid');
+    await expect(table.grid).toHaveAttribute('aria-rowcount', '7');
+    await expect(table.groupLabel(0)).toHaveText(/^Возврат/);
+    await expect(table.row(0)).toHaveAttribute('aria-expanded', 'false');
+    await expect(table.footerCell(5)).toHaveText(total);
+    await table.groupLabel(0).click();
+
+    await expect(table.row(0)).toHaveAttribute('aria-expanded', 'true');
+    await expect(table.row(1)).toHaveAttribute('aria-level', '2');
+    await expect(table.cell(1, 10)).toHaveText('Возврат');
+    await expect(table.output).toContainText('"groupBy":["status"]');
+
     if (isMobile) {
-      expect(await table.overflowsHorizontally(virtual)).toBe(true);
-      expect(await playground.hasHorizontalOverflow()).toBe(false);
+      return;
     }
+    await table.cell(0, 0).click();
+    await page.keyboard.press('Enter');
+    await expect(table.row(0)).toHaveAttribute('aria-expanded', 'false');
+    await page.keyboard.press('Control+End');
+    expect(await table.focusedCell()).toEqual({ row: 4, col: 10 });
+    await expect(table.footerCell(10)).toBeFocused();
   });
 
-  test('columns resize from the keyboard and the pointer within their limits', async ({
+  test('expands tree rows and loads a lazy branch when it opens', async ({ page }) => {
+    const playground = new PlaygroundPage(page);
+    await playground.open();
+    const { table } = playground;
+    await table.tree.scrollIntoViewIfNeeded();
+    const viewport = table.tree.locator('.nui-table__grid');
+    await expect(table.tree).toHaveClass(/nui-table--auto/);
+    await expect(viewport).toHaveAttribute('role', 'treegrid');
+    await expect(viewport).toHaveAttribute('aria-rowcount', '4');
+    expect((await boxOf(table.treeRow(0))).height).toBeGreaterThan(48);
+    await table.treeToggle(0).click();
+
+    await expect(table.treeRow(0)).toHaveAttribute('aria-expanded', 'true');
+    await expect(table.treeRow(1)).toHaveAttribute('aria-level', '2');
+    await expect(table.treeRow(1)).toContainText('Россия');
+    await expect(table.treeRow(4)).toContainText('Операции');
+    await table.treeToggle(4).click();
+
+    await expect(table.treeRow(4)).toHaveAttribute('aria-busy', 'true');
+    await expect(table.treeRow(5)).toContainText('Поддержка');
+    await expect(table.treeRow(4)).not.toHaveAttribute('aria-busy');
+    await expect(viewport).toHaveAttribute('aria-rowcount', '8');
+  });
+
+  test('pins rows under the header outside sorting and scrolling', async ({ page }) => {
+    const playground = new PlaygroundPage(page);
+    await playground.open();
+    const { table } = playground;
+    await table.root.scrollIntoViewIfNeeded();
+    await table.pinnedToggle.click();
+
+    await expect(table.grid).toHaveAttribute('aria-rowcount', '10005');
+    await expect(table.row(0)).toHaveClass(/nui-table__row--pinned/);
+    await expect(table.row(2)).not.toHaveClass(/nui-table__row--pinned/);
+    await expect(table.cell(0, 0)).toHaveText('1');
+    await expect(table.cell(1, 0)).toHaveText('2');
+    await expect(table.cell(2, 0)).toHaveText('1');
+    await table.header(0).click();
+    await table.header(0).click();
+
+    await expect(table.cell(2, 0)).toHaveText('10000');
+    await expect(table.cell(0, 0)).toHaveText('1');
+    const pinnedBox = await table.cellBox(0, 0);
+    await table.scrollTo({ top: 800 });
+    await expect(table.row(2)).toHaveCount(0);
+    await expect(table.cell(22, 0)).toHaveText('9980');
+    expect((await table.cellBox(0, 0)).y).toBeCloseTo(pinnedBox.y, 0);
+    await table.header(0).click();
+    await table.pinnedToggle.click();
+    await expect(table.grid).toHaveAttribute('aria-rowcount', '10003');
+  });
+
+  test('pages the rows from the footer and keeps filters and the page size in step', async ({
+    page,
+  }) => {
+    const playground = new PlaygroundPage(page);
+    await playground.open();
+    const { table } = playground;
+    await table.root.scrollIntoViewIfNeeded();
+    await expect(table.pagination).toBeHidden();
+    await table.pagesToggle.click();
+
+    await expect(table.pagination).toBeVisible();
+    await expect(table.grid).toHaveAttribute('aria-rowcount', '28');
+    await expect(table.cell(0, 0)).toHaveText('1');
+    await table.nextPageButton.click();
+
+    await expect(table.cell(0, 0)).toHaveText('26');
+    await expect(table.output).toContainText('"page":2');
+    await table.quick.fill('client10000');
+
+    await expect(table.grid).toHaveAttribute('aria-rowcount', '4');
+    await expect(table.output).toContainText('"page":1');
+    await table.clearFilters.click();
+    await expect(table.grid).toHaveAttribute('aria-rowcount', '28');
+    await table.pageSizeTrigger.click();
+    await page.locator('.nui-select__listbox').getByRole('option', { name: '50' }).click();
+
+    await expect(table.grid).toHaveAttribute('aria-rowcount', '53');
+    await expect(table.output).toContainText('"pageSize":50');
+    await table.pagesToggle.click();
+    await expect(table.pagination).toBeHidden();
+    await expect(table.grid).toHaveAttribute('aria-rowcount', '10003');
+  });
+
+  test('selects tree rows with checkboxes, Space and the header, reports clicks and shows skeletons', async ({
     page,
     isMobile,
   }) => {
     const playground = new PlaygroundPage(page);
-    await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
     const { table } = playground;
-    const resizer = table.resizer('Возраст');
-    await expect(resizer).toHaveAttribute('aria-valuenow', '112');
-    expect(await table.scrollSlack(table.table)).toBeLessThanOrEqual(1);
+    await table.tree.scrollIntoViewIfNeeded();
+    const viewport = table.tree.locator('.nui-table__grid');
+    await expect(viewport).toHaveAttribute('aria-multiselectable', 'true');
+    await expect(table.treeCaption).toHaveText('Структура компании');
+    await expect(viewport).toHaveAccessibleName('Структура компании');
+    await expect(table.treeRow(1)).toHaveClass(/nui-table__row--odd/);
+    await table.treeCheckbox(0).check();
+
+    await expect(table.treeRow(0)).toHaveAttribute('aria-selected', 'true');
+    await expect(table.treeRow(1)).toHaveAttribute('aria-selected', 'false');
+    await expect(table.output).toContainText('"selected":["sales"]');
+    await expect(table.treeSelectAll).toHaveJSProperty('indeterminate', true);
+    await table.treeSelectAll.click();
+
+    await expect(table.output).toContainText('"selected":["sales","rnd","ops"]');
+    await expect(table.treeSelectAll).toBeChecked();
+    await table.treeToggle(0).click();
+    await expect(table.treeRow(1)).toContainText('Россия');
+    await expect(table.treeSelectAll).toHaveJSProperty('indeterminate', true);
+    await table.treeCell(1, 2).click();
+    await expect(table.output).toContainText('"lastClick":"sales-ru"');
+    await expect(table.output).toContainText('"selected":["sales","rnd","ops"]');
+
     if (!isMobile) {
-      await resizer.focus();
-      await page.keyboard.press('ArrowRight');
-      await expect.poll(async () => (await table.readOutput()).widths.age).toBe(122);
-      await page.keyboard.press('Shift+ArrowLeft');
-      await expect.poll(async () => (await table.readOutput()).widths.age).toBe(72);
-      await page.keyboard.press('Enter');
-      await expect.poll(async () => (await table.readOutput()).widths.age).toBeUndefined();
+      await page.keyboard.press(' ');
+      await expect(table.output).toContainText('"selected":["sales","rnd","ops","sales-ru"]');
+      await expect(table.treeRow(1)).toHaveAttribute('aria-selected', 'true');
     }
-    await table.dragBy(resizer, 40);
-    await expect.poll(async () => (await table.readOutput()).widths.age).toBe(152);
-    const box = await table.header('Возраст').boundingBox();
-    expect(box && Math.abs(box.width - 152) <= 1).toBe(true);
-    await table.dragBy(resizer, -400);
-    await expect.poll(async () => (await table.readOutput()).widths.age).toBe(64);
-    const label = table.header('Возраст').locator('.nui-table__label');
+    await table.loadingToggle.click();
 
-    expect(await label.evaluate((element) => getComputedStyle(element).textOverflow)).toBe(
-      'ellipsis',
-    );
-
-    expect(await label.evaluate((element) => element.scrollWidth > element.clientWidth)).toBe(true);
-    expect(await table.scrollSlack(table.table)).toBeLessThanOrEqual(1);
+    await expect(viewport).toHaveAttribute('aria-busy', 'true');
+    await expect(table.treeSkeletons).toHaveCount(5);
+    await expect(table.treeSelectAll).toBeDisabled();
+    await table.loadingToggle.click();
+    await expect(table.treeSkeletons).toHaveCount(0);
+    await expect(table.treeRow(0)).toHaveAttribute('aria-selected', 'true');
   });
 
-  test('columns reorder by keyboard grab and by dragging a header', async ({ page, isMobile }) => {
+  test('data table has no automatically detectable WCAG AA violations', async ({ page }) => {
     const playground = new PlaygroundPage(page);
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
-    const { table } = playground;
-    expect(await table.headerLabels()).toEqual(['', 'Имя', 'Роль', 'Возраст', 'Балл']);
-    if (!isMobile) {
-      expect(await table.opacityOf(table.columnGrip('Имя'))).toBe('0');
-      await table.header('Имя').hover();
-      await expect.poll(() => table.opacityOf(table.columnGrip('Имя'))).toBe('1');
-      await table.columnGrip('Балл').focus();
-      await page.keyboard.press('Space');
-      await expect(table.table.locator('.nui-table__live')).toContainText('Колонка «Балл» взята');
-      await page.keyboard.press('ArrowLeft');
-      await page.keyboard.press('Space');
+    await playground.table.root.scrollIntoViewIfNeeded();
 
-      await expect
-        .poll(async () => (await table.readOutput()).columnOrder)
-        .toEqual(['name', 'role', 'score', 'age']);
-
-      expect(await table.headerLabels()).toEqual(['', 'Имя', 'Роль', 'Балл', 'Возраст']);
+    for (const theme of ['light', 'dark'] as const) {
+      await playground.setTheme(theme);
+      expect(await playground.wcagViolations()).toEqual([]);
     }
-
-    const before = await table.headerLabels();
-    await table.dragBy(table.header('Роль').locator('.nui-table__label'), 160);
-    await expect(table.ghost).toHaveCount(0);
-    expect(await table.headerLabels()).toEqual(before);
-    await table.header('Имя').hover();
-
-    await table.dragBetween(table.columnGrip('Имя'), table.header('Роль'), 20, 0, async () => {
-      await expect(table.ghost).toContainText('Имя');
-      const line = await table.dropLine(table.table).boundingBox();
-      const head = await table.table.locator('thead').boundingBox();
-      expect(line && head && line.y >= head.y - 1).toBe(true);
-    });
-
-    await expect(table.ghost).toHaveCount(0);
-    await expect.poll(async () => (await table.readOutput()).columnOrder.indexOf('name')).toBe(1);
-    expect((await table.readOutput()).sort).toBeNull();
   });
 
-  test('tree rows expand, load lazily and reorder among siblings', async ({ page, isMobile }) => {
+  test('column menu has no automatically detectable WCAG AA violations', async ({ page }) => {
     const playground = new PlaygroundPage(page);
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
-    const { table } = playground;
-    await expect(table.rows(table.treeTable)).toHaveCount(3);
-    await table.toggleOf('Анна').click();
-    await expect(table.rows(table.treeTable)).toHaveCount(5);
-    await expect(table.toggleOf('Анна')).toHaveAttribute('aria-expanded', 'true');
-    const rootToggle = await table.treeRow('Анна').locator('.nui-table__toggle').boundingBox();
-    const childToggle = await table.treeRow('Айгуль').locator('.nui-table__toggle').boundingBox();
-    expect(rootToggle && childToggle && childToggle.x > rootToggle.x + 16).toBe(true);
-    await table.toggleOf('Вера').click();
-    await expect(table.toggleOf('Вера')).toHaveAttribute('aria-busy', 'true');
-    await expect(table.treeRow('Влад')).toBeVisible();
-    await expect.poll(async () => (await table.readOutput()).loaded).toEqual(['Вера']);
-    if (!isMobile) {
-      await table.gripOf('Борис').focus();
-      await page.keyboard.press('Space');
-      await page.keyboard.press('ArrowDown');
-      await page.keyboard.press('Space');
-      await expect.poll(async () => (await table.readOutput()).lastReorder).toBe('Борис:1->2');
+    await playground.table.root.scrollIntoViewIfNeeded();
 
-      await expect
-        .poll(async () => (await table.readOutput()).teamOrder)
-        .toEqual(['Анна', 'Вера', 'Борис']);
+    for (const theme of ['light', 'dark'] as const) {
+      await playground.setTheme(theme);
+      await playground.table.openMenu(10);
+      await playground.table.menuItem('Колонки').click();
+      await expect(playground.table.menuItem('Почта')).toBeVisible();
+      expect(await playground.wcagViolations()).toEqual([]);
+      await page.keyboard.press('Escape');
+      await page.keyboard.press('Escape');
+      await expect(playground.table.menu).toBeHidden();
     }
-
-    await table.dragBetween(table.gripOf('Айгуль'), table.gripOf('Артём'), 0, 8, async () => {
-      await expect(table.ghost).toContainText('Айгуль');
-      const chip = await boxOf(table.ghostBody);
-      const line = await boxOf(table.rowDropLine(table.treeTable));
-      expect(line.x + line.width).toBeGreaterThan(chip.x + chip.width + 100);
-    });
-
-    await expect(table.ghost).toHaveCount(0);
-    await expect.poll(async () => (await table.readOutput()).lastReorder).toBe('Айгуль:0->1');
-
-    await table
-      .header('Возраст', table.treeTable)
-      .getByRole('button', { name: 'Возраст', exact: true })
-      .click();
-
-    await expect(table.gripOf('Анна')).toBeDisabled();
   });
 
-  test('pinned columns and pinned rows stay in place while the virtual table scrolls', async ({
-    page,
-  }) => {
+  test('filter popover has no automatically detectable WCAG AA violations', async ({ page }) => {
     const playground = new PlaygroundPage(page);
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
-    const { table } = playground;
-    const virtual = table.virtualTable;
-    await virtual.scrollIntoViewIfNeeded();
-    const before = await table.header('№', virtual).boundingBox();
-    await table.scrollHorizontally(virtual, 300);
-    const after = await table.header('№', virtual).boundingBox();
-    expect(before && after && Math.abs(after.x - before.x) <= 1).toBe(true);
-    await expect(virtual).toHaveClass(/nui-table--scrolled-start/);
-    await table.scrollToBottom(virtual);
-    const pinned = virtual.locator('.nui-table__body--pinned .nui-table__row');
-    await expect(pinned).toContainText('Итого по отделу');
-    const pinnedBox = await pinned.boundingBox();
-    const header = await virtual.locator('thead').boundingBox();
+    await playground.table.root.scrollIntoViewIfNeeded();
+    await playground.table.openFilter(10);
+    await expect(playground.table.filterValue('Оплачен')).toBeVisible();
 
-    expect(pinnedBox && header && Math.abs(pinnedBox.y - (header.y + header.height)) <= 1).toBe(
-      true,
-    );
-  });
-
-  test('table has no automatically detectable WCAG AA violations', async ({ page }) => {
-    const playground = new PlaygroundPage(page);
-    await playground.emulate({ reducedMotion: 'reduce' });
-    await playground.open();
-    const { table } = playground;
-    await table.sortButton('Имя').click();
-    await table.row('Анна').getByRole('checkbox').click();
-    await table.toggleOf('Анна').click();
     for (const theme of ['light', 'dark'] as const) {
       await playground.setTheme(theme);
       expect(await playground.wcagViolations()).toEqual([]);

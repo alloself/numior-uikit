@@ -1,4 +1,4 @@
-import type { NuiGridColumn } from '../../src';
+import type { NuiTableColumn } from '../../src';
 
 export interface Person {
   readonly id: number;
@@ -29,7 +29,7 @@ export const people = (count: number): Person[] =>
     metrics: Array.from(Array.from({ length: METRICS }).keys(), (metric) => id * 10 + metric),
   }));
 
-const metricColumns: NuiGridColumn<Person>[] = Array.from({ length: METRICS }, (_, metric) => ({
+const metricColumns: NuiTableColumn<Person>[] = Array.from({ length: METRICS }, (_, metric) => ({
   key: `m${metric + 1}`,
   label: `M${metric + 1}`,
   type: 'number',
@@ -37,7 +37,7 @@ const metricColumns: NuiGridColumn<Person>[] = Array.from({ length: METRICS }, (
   value: (row) => row.metrics[metric],
 }));
 
-export const PEOPLE_COLUMNS: readonly NuiGridColumn<Person>[] = [
+export const PEOPLE_COLUMNS: readonly NuiTableColumn<Person>[] = [
   { key: 'id', label: 'ID', type: 'number', pin: 'start', width: 80, value: (row) => row.id },
   { key: 'name', label: 'Имя', type: 'text', width: 160, value: (row) => row.name },
   { key: 'city', label: 'Город', type: 'text', width: 140, value: (row) => row.city },

@@ -1,7 +1,6 @@
 export {
   anyOf,
   isBoolean,
-  isDate,
   isNumber,
   isRecord,
   isString,
@@ -10,7 +9,6 @@ export {
   oneOf,
   optional,
   parseAs,
-  recordOf,
   shapeOf,
   type Guard,
   type Guarded,

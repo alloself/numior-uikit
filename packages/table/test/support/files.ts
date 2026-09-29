@@ -1,4 +1,4 @@
-import type { NuiGridColumn } from '../../src';
+import type { NuiTableColumn } from '../../src';
 
 export interface FileNode {
   readonly path: string;
@@ -28,7 +28,7 @@ export const FILES: readonly FileNode[] = [
   { path: 'readme.md', name: 'readme.md', size: 2 },
 ];
 
-export const FILE_COLUMNS: readonly NuiGridColumn<FileNode>[] = [
+export const FILE_COLUMNS: readonly NuiTableColumn<FileNode>[] = [
   { key: 'name', label: 'Имя', type: 'text', width: 220, value: (row) => row.name },
   { key: 'size', label: 'Размер', type: 'number', width: 100, value: (row) => row.size },
 ];

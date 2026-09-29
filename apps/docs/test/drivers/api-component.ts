@@ -92,7 +92,7 @@ export class ApiComponentDriver {
 
   rows(title: string): string[][] {
     return this.table(title)
-      .findAll('.nui-grid__body [role="row"]')
+      .findAll('.nui-table__body [role="row"]')
       .map((row) => row.findAll('[role="gridcell"]').map((cell) => cell.text()));
   }
 

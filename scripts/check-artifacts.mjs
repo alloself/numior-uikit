@@ -116,7 +116,6 @@ const code = await importBuild('vue', [
   'NuiCard',
   'NuiList',
   'NuiTree',
-  'NuiTable',
   'NuiPagination',
   'NuiIcon',
   'NuiField',
@@ -175,7 +174,7 @@ const localImports = async (file, seen = new Set()) => {
   return seen;
 };
 
-const tableCode = await importBuild('table', ['NuiDataGrid']);
+const tableCode = await importBuild('table', ['NuiTable']);
 
 assert.match(tableCode, /from ['"]@numior\/vue['"]/, 'table must keep @numior/vue external');
 
@@ -183,7 +182,7 @@ const tableEngineFile = resolve('packages/table/dist/engine.js');
 const tableEngine = await import(pathToFileURL(tableEngineFile).href);
 
 assert.equal(
-  typeof tableEngine.createGridEngine,
+  typeof tableEngine.createTableEngine,
   'function',
   'table/engine must export the engine',
 );

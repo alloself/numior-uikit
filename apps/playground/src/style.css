@@ -231,13 +231,13 @@ label:has(> input[type='checkbox']) {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
-.grid-quick {
+.table-quick {
   inline-size: min(100%, 18rem);
 }
-.grid-grouping {
+.table-grouping {
   inline-size: 12rem;
 }
-.grid-tree {
+.table-tree {
   margin-block-start: var(--nui-space-4);
 }
 .data-row {

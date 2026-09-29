@@ -88,7 +88,7 @@ it('waits for a commit with the lazy modifier', async () => {
   (`VirtualHarness`).
 - jsdom has no layout: give a scroll container a size with `Object.defineProperty(el,
 'clientHeight', { value })` and dispatch `scroll`; `useVirtualList` re-measures on every
-  scroll event, so no internal API is needed (`TreeDriver.setHeight`, `TableDriver.setHeight`).
+  scroll event, so no internal API is needed (`TreeDriver.setHeight`, `TableDriver.mount({ width, height })`).
 - Leftover trees from a failed test share generated ids across apps, so resolve
   `aria-activedescendant` inside the driver's wrapper, never via `document.getElementById`.
 
@@ -122,24 +122,24 @@ that the label `for` matches the control id and that values render on the server
 - axe `scrollable-region-focusable`: a scroll container with no focusable content needs
   `tabindex="0"` (the table scroller with `height`); the tree root already has it.
 - Type guards come from `packages/primitives/test/support/guards.ts` in every suite (primitives,
-  vue and forms tests, e2e): `isString`, `isNumber`, `isBoolean`, `isDate`, `isRecord` and the
-  combinators `nullable`, `optional`, `listOf`, `recordOf`, `oneOf`, `anyOf`, `shapeOf`, plus
+  vue and forms tests, e2e): `isString`, `isNumber`, `isBoolean`, `isRecord` and the
+  combinators `nullable`, `optional`, `listOf`, `oneOf`, `anyOf`, `shapeOf`, plus
   `parseAs(text, guard, what)` for JSON outputs. A guard claims only what it checks: an output
   type is derived from its guard (`export type TableOutput = Guarded<typeof isTableOutput>`),
   never written beside it, and a check of key presence never stands in for a full type.
   Shared geometry lives in `tests/e2e/helpers/geometry.ts` (`Box`, `boxOf`).
 - Drag gestures use `page.mouse` (down, a 4px nudge past the threshold, a stepped move, up)
-  from the page object (`TableSection.dragBetween`/`dragBy`); in jsdom the drivers dispatch
+  from the page object (`SmartFormSection.dragContact`); in jsdom the drivers dispatch
   `PointerEvent`s on the handle and `pointermove`/`pointerup` on `window`, with
-  `getBoundingClientRect` defined per cell or row (`TableDriver.layoutHeaders`/`layoutRows`).
-  Mid-drag state (ghost, drop line) is asserted through the `whileDragging` callback of
-  `dragBetween` in e2e and through `grabHeader`/`grabRow` + `ghostText` + `dropAt` in jsdom.
+  `getBoundingClientRect` defined per row (`TreeDriver`). Mid-drag state (ghost, drop line)
+  is asserted through a `whileDragging` callback in e2e and through grab + `ghostText` +
+  drop readers in jsdom.
   Hover-only affordances are checked with computed `opacity`, since Playwright treats
   `opacity: 0` elements as visible.
-- Measurements taken synchronously in `onMounted` (the table's natural column widths) happen
-  before a driver can touch elements, so stub the prototype before mounting through
-  `TopLayerStubs.define(HTMLTableCellElement.prototype, 'getBoundingClientRect', …)`
-  (`TableDriver.mount({ headerWidth })`). Measured values land in the DOM directly
-  (`table.style.tableLayout`, `col.style.inlineSize`, `--_sticky-<index>` on the table,
-  `--_side-x`/`--_side-y` on floating elements), so assert them through element style
-  getters (`fixedLayout`, `tableVar`, `sideVector`), never through classes.
+- Measurements taken in `onMounted` or by a resize observer (the table scroller size that
+  feeds the row and column windows and the flex columns) happen before a driver can touch
+  elements, so the driver defines `clientWidth`/`clientHeight` on the scroller in `mount`
+  (`TableDriver.mount({ width, height })`) and dispatches `scroll` to re-measure. Measured values land in
+  the DOM directly (`inlineSize` and `translate` in element styles, `--_side-x`/`--_side-y`
+  on floating elements), so assert them through element style getters (`rowTransform`,
+  `paneOf`, `sideVector`), never through classes.

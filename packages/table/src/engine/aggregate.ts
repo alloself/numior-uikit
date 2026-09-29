@@ -1,4 +1,4 @@
-import type { ColumnStore, GridAggregateKind } from './engine.types';
+import type { ColumnStore, TableAggregateKind } from './engine.types';
 
 export interface Accumulator {
   count: number;
@@ -56,7 +56,7 @@ export const mergeAccumulator = (target: Accumulator, source: Accumulator): void
   target.max = Math.max(target.max, source.max);
 };
 
-export const finishAggregate = (kind: GridAggregateKind, source: Accumulator): unknown => {
+export const finishAggregate = (kind: TableAggregateKind, source: Accumulator): unknown => {
   switch (kind) {
     case 'count':
       return source.count;

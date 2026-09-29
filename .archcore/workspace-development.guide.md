@@ -29,7 +29,8 @@ Node 24.15+; проверенная и закреплённая версия 24.
 (@.archcore/navigation.adr.md), выбор `NuiSelect`, `NuiCombobox` и `NuiPagination` на общей
 модели опций (@.archcore/pickers.adr.md), представление данных `NuiBadge`, `NuiAvatar` с
 `NuiAvatarGroup`, `NuiCard` с частями, `NuiList`/`NuiListItem`, `NuiEmpty`, `NuiTree` и
-`NuiTable` на примитивах `useVirtualList` и `useReorder` (@.archcore/data-display.adr.md), локаль,
+на примитиве `useVirtualList` (@.archcore/data-display.adr.md), таблица `NuiTable` в пакете
+`@numior/table` на движке без Vue (@.archcore/table.adr.md), локаль,
 `NuiNumberField` и `NuiTimeField` на Intl-хелперах примитивов (@.archcore/intl-fields.adr.md). Конвенции — @.archcore/component-conventions.adr.md и
 @.archcore/component-authoring.rule.md. Будущие модули перечислены в @packages/README.md;
 готовность 1.0 не заявляется.

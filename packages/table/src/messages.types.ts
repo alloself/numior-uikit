@@ -1,9 +1,9 @@
-import type { NuiDataGridMessages } from './data-grid/data-grid.messages';
+import type { NuiTableMessages } from './table/table.messages';
 
-export interface NuiGridMessages {
-  readonly dataGrid: NuiDataGridMessages;
+export interface NuiTablePackageMessages {
+  readonly table: NuiTableMessages;
 }
 
 declare module '@numior/primitives' {
-  interface NuiMessages extends NuiGridMessages {}
+  interface NuiMessages extends NuiTablePackageMessages {}
 }

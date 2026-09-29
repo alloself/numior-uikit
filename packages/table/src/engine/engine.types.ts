@@ -1,16 +1,21 @@
-export type GridSortDirection = 'asc' | 'desc';
+export type TableSortDirection = 'asc' | 'desc';
 
-export interface GridSort {
+export interface TableSort {
   readonly key: string;
-  readonly direction: GridSortDirection;
+  readonly direction: TableSortDirection;
 }
 
-export type GridTextOp = 'contains' | 'equals' | 'starts' | 'empty';
+export type TableTextOp = 'contains' | 'equals' | 'starts' | 'empty';
 
-export type GridFilterValue = string | number | boolean | null;
+export type TableFilterValue = string | number | boolean | null;
 
-export type GridFilter =
-  | { readonly kind: 'text'; readonly key: string; readonly op: GridTextOp; readonly value: string }
+export type TableFilter =
+  | {
+      readonly kind: 'text';
+      readonly key: string;
+      readonly op: TableTextOp;
+      readonly value: string;
+    }
   | {
       readonly kind: 'number';
       readonly key: string;
@@ -23,45 +28,45 @@ export type GridFilter =
       readonly from?: number | undefined;
       readonly to?: number | undefined;
     }
-  | { readonly kind: 'set'; readonly key: string; readonly values: readonly GridFilterValue[] }
+  | { readonly kind: 'set'; readonly key: string; readonly values: readonly TableFilterValue[] }
   | {
       readonly kind: 'quick';
       readonly value: string;
       readonly keys?: readonly string[] | undefined;
     };
 
-export interface GridQuery {
-  readonly sort?: readonly GridSort[] | undefined;
-  readonly filters?: readonly GridFilter[] | undefined;
+export interface TableQuery {
+  readonly sort?: readonly TableSort[] | undefined;
+  readonly filters?: readonly TableFilter[] | undefined;
   readonly groupBy?: readonly string[] | undefined;
   readonly totals?: boolean | undefined;
 }
 
-export type GridAggregateKind = 'sum' | 'count' | 'avg' | 'min' | 'max';
+export type TableAggregateKind = 'sum' | 'count' | 'avg' | 'min' | 'max';
 
-export type GridAggregateFn<T> = (rows: readonly T[], indices: Uint32Array) => unknown;
+export type TableAggregateFn<T> = (rows: readonly T[], indices: Uint32Array) => unknown;
 
-export type GridAggregate<T> = GridAggregateKind | GridAggregateFn<T>;
+export type TableAggregate<T> = TableAggregateKind | TableAggregateFn<T>;
 
-interface GridColumnBase<T> {
+interface TableColumnBase<T> {
   readonly key: string;
-  readonly aggregate?: GridAggregate<T> | undefined;
+  readonly aggregate?: TableAggregate<T> | undefined;
 }
 
-export type GridEngineColumn<T> =
-  | (GridColumnBase<T> & {
+export type TableEngineColumn<T> =
+  | (TableColumnBase<T> & {
       readonly kind: 'number';
       readonly value: (row: T) => number | null | undefined;
     })
-  | (GridColumnBase<T> & {
+  | (TableColumnBase<T> & {
       readonly kind: 'boolean';
       readonly value: (row: T) => boolean | null | undefined;
     })
-  | (GridColumnBase<T> & {
+  | (TableColumnBase<T> & {
       readonly kind: 'date';
       readonly value: (row: T) => Date | number | null | undefined;
     })
-  | (GridColumnBase<T> & {
+  | (TableColumnBase<T> & {
       readonly kind: 'string';
       readonly value: (row: T) => string | null | undefined;
     });
@@ -89,28 +94,28 @@ export type RankedStore = Exclude<ColumnStore, { kind: 'codes' }>;
 
 export type StoreNeed = 'codes' | 'ranks';
 
-export type GridPhase = 'keys' | 'filter' | 'sort' | 'group';
+export type TablePhase = 'keys' | 'filter' | 'sort' | 'group';
 
-export interface GridProgress {
-  readonly phase: GridPhase;
+export interface TableProgress {
+  readonly phase: TablePhase;
   readonly done: number;
   readonly total: number;
 }
 
-export type GridRunResult =
+export type TableRunResult =
   | { readonly kind: 'done'; readonly count: number; readonly rows: number }
   | { readonly kind: 'cancelled' };
 
-export interface GridRunOptions {
+export interface TableRunOptions {
   readonly signal?: AbortSignal | undefined;
-  readonly onProgress?: ((progress: GridProgress) => void) | undefined;
+  readonly onProgress?: ((progress: TableProgress) => void) | undefined;
 }
 
-export type GridNodeId = string | number;
+export type TableNodeId = string | number;
 
-export interface GridRowNode<T> {
+export interface TableRowNode<T> {
   readonly kind: 'row';
-  readonly id: GridNodeId;
+  readonly id: TableNodeId;
   readonly index: number;
   readonly row: T;
   readonly level: number;
@@ -119,7 +124,7 @@ export interface GridRowNode<T> {
   readonly unloaded: boolean;
 }
 
-export interface GridGroupNode {
+export interface TableGroupNode {
   readonly kind: 'group';
   readonly id: string;
   readonly key: string;
@@ -131,21 +136,21 @@ export interface GridGroupNode {
   readonly aggregates: Readonly<Record<string, unknown>>;
 }
 
-export type GridNode<T> = GridRowNode<T> | GridGroupNode;
+export type TableNode<T> = TableRowNode<T> | TableGroupNode;
 
-export interface GridDistinctOptions {
+export interface TableDistinctOptions {
   readonly limit?: number | undefined;
   readonly signal?: AbortSignal | undefined;
 }
 
-export interface GridDistinct {
-  readonly values: readonly GridFilterValue[];
+export interface TableDistinct {
+  readonly values: readonly TableFilterValue[];
   readonly truncated: boolean;
 }
 
-export interface GridEngineOptions<T> {
-  readonly columns: readonly GridEngineColumn<T>[];
-  readonly keyOf?: ((row: T) => GridNodeId) | undefined;
+export interface TableEngineOptions<T> {
+  readonly columns: readonly TableEngineColumn<T>[];
+  readonly keyOf?: ((row: T) => TableNodeId) | undefined;
   readonly children?: ((row: T) => readonly T[] | null | undefined) | undefined;
   readonly hasChildren?: ((row: T) => boolean) | undefined;
   readonly defaultExpanded?: boolean | undefined;
@@ -154,21 +159,21 @@ export interface GridEngineOptions<T> {
   readonly yieldTo?: (() => Promise<void>) | undefined;
 }
 
-export interface GridEngine<T> {
+export interface TableEngine<T> {
   count(): number;
   rowCount(): number;
   setRows(rows: readonly T[]): void;
-  run(query: GridQuery, options?: GridRunOptions): Promise<GridRunResult>;
-  runSync(query: GridQuery): GridRunResult;
+  run(query: TableQuery, options?: TableRunOptions): Promise<TableRunResult>;
+  runSync(query: TableQuery): TableRunResult;
   visibleIndices(): Uint32Array;
-  nodeAt(position: number): GridNode<T> | undefined;
+  nodeAt(position: number): TableNode<T> | undefined;
   rowAt(index: number): T | undefined;
   toggle(position: number): void;
-  setExpanded(id: GridNodeId, expanded: boolean): void;
-  setToggled(ids: Iterable<GridNodeId>): void;
-  isExpanded(id: GridNodeId): boolean;
+  setExpanded(id: TableNodeId, expanded: boolean): void;
+  setToggled(ids: Iterable<TableNodeId>): void;
+  isExpanded(id: TableNodeId): boolean;
   totals(): Readonly<Record<string, unknown>>;
-  distinct(key: string, options?: GridDistinctOptions): Promise<GridDistinct | null>;
+  distinct(key: string, options?: TableDistinctOptions): Promise<TableDistinct | null>;
   store(key: string): ColumnStore | undefined;
   dispose(): void;
 }

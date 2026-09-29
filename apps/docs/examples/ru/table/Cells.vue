@@ -1,69 +1,95 @@
 <template>
-  <NuiTable
-    v-model:selected="selected"
-    :columns="columns"
-    :rows="orders"
-    :get-key="keyOf"
-    selectable="multiple"
-    caption="Заказы к отправке"
-  >
-    <template #cell-status="{ value }">
-      <NuiBadge :tone="toneOf(value)" size="sm">{{ statusOf(value) }}</NuiBadge>
-    </template>
-    <template #cell-total="{ value }">
-      {{ typeof value === 'number' ? value.toLocaleString('ru-RU') : value }}
-    </template>
-  </NuiTable>
-  <p class="text-sm text-muted-foreground">Выбрано: {{ selected.length }}</p>
+  <div class="flex flex-col gap-3">
+    <NuiTable
+      v-model:selected="selected"
+      :columns="columns"
+      :rows="orders"
+      :get-key="keyOf"
+      selectable="multiple"
+      caption="Заказы к отправке"
+    >
+      <template #cell-status="{ row }">
+        <NuiBadge :tone="toneOf(row)" size="sm">{{ statusOf(row) }}</NuiBadge>
+      </template>
+    </NuiTable>
+    <p class="text-sm text-muted-foreground">Выбрано: {{ selected.length }}</p>
+  </div>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { NuiBadge, NuiTable, type NuiTableColumn, type NuiTone } from '@numior/vue';
+import { NuiBadge, type NuiTone } from '@numior/vue';
+import { NuiTable, type NuiTableColumn } from '@numior/table';
 
 interface Order {
   readonly id: number;
   readonly customer: string;
   readonly status: 'paid' | 'pending' | 'cancelled';
   readonly total: number;
-  readonly date: string;
 }
 
 const orders: Order[] = [
-  { id: 20419, customer: 'Анна Титова', status: 'paid', total: 12400, date: '2026-09-21' },
-  { id: 20420, customer: 'Игорь Белов', status: 'pending', total: 3150, date: '2026-09-22' },
-  { id: 20421, customer: 'Мария Ким', status: 'paid', total: 48900, date: '2026-09-23' },
-  { id: 20422, customer: 'Олег Смирнов', status: 'cancelled', total: 990, date: '2026-09-24' },
-  { id: 20423, customer: 'Дина Ахметова', status: 'paid', total: 7600, date: '2026-09-25' },
+  { id: 20419, customer: 'Анна Титова', status: 'paid', total: 12400 },
+  { id: 20420, customer: 'Игорь Белов', status: 'pending', total: 3150 },
+  { id: 20421, customer: 'Мария Ким', status: 'paid', total: 48900 },
+  { id: 20422, customer: 'Олег Смирнов', status: 'cancelled', total: 990 },
+  { id: 20423, customer: 'Дина Ахметова', status: 'paid', total: 7600 },
 ];
 
-const columns: NuiTableColumn<Order>[] = [
-  { key: 'id', label: '№', width: 96, sortable: true },
-  { key: 'customer', label: 'Клиент', sortable: true },
-  { key: 'status', label: 'Статус', width: 140 },
-  { key: 'total', label: 'Сумма, ₽', align: 'end', width: 128, sortable: true },
-  { key: 'date', label: 'Дата', width: 128, sortable: true },
-];
-
-const keyOf = (order: Order): string => String(order.id);
-
-const selected = ref<Order[]>([]);
-
-const TONES: Record<string, NuiTone> = {
+const TONES: Record<Order['status'], NuiTone> = {
   paid: 'success',
   pending: 'warning',
   cancelled: 'neutral',
 };
 
-const STATUSES: Record<string, string> = {
+const STATUSES: Record<Order['status'], string> = {
   paid: 'Оплачен',
   pending: 'Ждёт оплаты',
   cancelled: 'Отменён',
 };
 
-const toneOf = (value: unknown): NuiTone =>
-  typeof value === 'string' ? (TONES[value] ?? 'neutral') : 'neutral';
+const money = new Intl.NumberFormat('ru-RU', {
+  style: 'currency',
+  currency: 'RUB',
+  maximumFractionDigits: 0,
+});
 
-const statusOf = (value: unknown): string =>
-  typeof value === 'string' ? (STATUSES[value] ?? value) : '';
+const columns: NuiTableColumn<Order>[] = [
+  {
+    key: 'id',
+    label: '№',
+    type: 'number',
+    width: 96,
+    value: (row) => row.id,
+    format: (value) => String(value),
+  },
+  {
+    key: 'customer',
+    label: 'Клиент',
+    type: 'text',
+    width: 200,
+    flex: 1,
+    value: (row) => row.customer,
+  },
+  {
+    key: 'status',
+    label: 'Статус',
+    type: 'text',
+    width: 160,
+    value: (row) => STATUSES[row.status],
+  },
+  {
+    key: 'total',
+    label: 'Сумма',
+    type: 'number',
+    width: 140,
+    value: (row) => row.total,
+    format: (value) => money.format(value),
+  },
+];
+
+const keyOf = (order: Order): number => order.id;
+const toneOf = (order: Order): NuiTone => TONES[order.status];
+const statusOf = (order: Order): string => STATUSES[order.status];
+const selected = ref<Order[]>([]);
 </script>

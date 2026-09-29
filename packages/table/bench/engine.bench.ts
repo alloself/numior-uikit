@@ -1,8 +1,8 @@
 import {
-  createGridEngine,
-  type GridEngine,
-  type GridFilter,
-  type GridSort,
+  createTableEngine,
+  type TableEngine,
+  type TableFilter,
+  type TableSort,
 } from '@numior/table/engine';
 import {
   BENCH_COLUMNS,
@@ -24,21 +24,21 @@ const yieldTo = (): Promise<void> =>
     setImmediate(resolve);
   });
 
-const engineFor = (): GridEngine<BenchRow> => {
-  const engine = createGridEngine({ columns: BENCH_COLUMNS, yieldTo });
+const engineFor = (): TableEngine<BenchRow> => {
+  const engine = createTableEngine({ columns: BENCH_COLUMNS, yieldTo });
   engine.setRows(rows);
   return engine;
 };
 
-const sortBy = (...sort: GridSort[]) => ({ sort });
+const sortBy = (...sort: TableSort[]) => ({ sort });
 
-const warmed = async (...sort: GridSort[]): Promise<GridEngine<BenchRow>> => {
+const warmed = async (...sort: TableSort[]): Promise<TableEngine<BenchRow>> => {
   const engine = engineFor();
   await engine.run(sortBy(...sort));
   return engine;
 };
 
-const coldSort = (name: string, sort: GridSort, options = heavy): Promise<Operation> =>
+const coldSort = (name: string, sort: TableSort, options = heavy): Promise<Operation> =>
   measure(
     name,
     async () => {
@@ -49,8 +49,8 @@ const coldSort = (name: string, sort: GridSort, options = heavy): Promise<Operat
 
 const warmSort = (
   name: string,
-  engine: GridEngine<BenchRow>,
-  ...sort: GridSort[]
+  engine: TableEngine<BenchRow>,
+  ...sort: TableSort[]
 ): Promise<Operation> =>
   measure(
     name,
@@ -128,7 +128,7 @@ const warmFilters = await warmed({ key: 'city', direction: 'asc' });
 await warmFilters.run({ sort: [{ key: 'status', direction: 'asc' }] });
 await warmFilters.run({ sort: [{ key: 'amount', direction: 'asc' }] });
 
-const filterOnly = (name: string, ...filters: GridFilter[]): Promise<Operation> =>
+const filterOnly = (name: string, ...filters: TableFilter[]): Promise<Operation> =>
   measure(
     name,
     async () => {
@@ -219,8 +219,8 @@ operations.push(
 const TREE_NODES = 100_000;
 const tree = generateTree(TREE_NODES);
 
-const treeEngine = (): GridEngine<BenchNode> =>
-  createGridEngine({
+const treeEngine = (): TableEngine<BenchNode> =>
+  createTableEngine({
     columns: TREE_COLUMNS,
     children: (row) => row.items,
     keyOf: (row) => row.id,

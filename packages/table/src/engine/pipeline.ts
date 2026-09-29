@@ -1,14 +1,14 @@
 import type { SliceJob } from './slicer';
-import type { GridPhase } from './engine.types';
+import type { TablePhase } from './engine.types';
 
 export interface PipelineStage {
-  readonly phase: GridPhase;
+  readonly phase: TablePhase;
   readonly job: SliceJob;
   readonly next: () => PipelineStage | null;
 }
 
 export interface Pipeline extends SliceJob {
-  phase(): GridPhase;
+  phase(): TablePhase;
 }
 
 export const createPipeline = (

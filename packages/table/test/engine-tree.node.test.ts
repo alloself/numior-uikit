@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import type { GridNode } from '../src/engine';
+import type { TableNode } from '../src/engine';
 import { EngineHarness, FOLDERS, FOLDER_COLUMNS, type Folder } from './harness/engine';
 
-const label = (node: GridNode<Folder>): string =>
+const label = (node: TableNode<Folder>): string =>
   node.kind === 'row'
     ? `${'  '.repeat(node.level)}${node.row.name}${node.expandable ? (node.expanded ? ' -' : ' +') : ''}`
     : 'group';
@@ -14,7 +14,7 @@ const treeHarness = (defaultExpanded = true): EngineHarness<Folder> =>
     defaultExpanded,
   });
 
-describe('createGridEngine trees', () => {
+describe('createTableEngine trees', () => {
   it('flattens nested rows, sorts within siblings and exposes levels and expansion', async () => {
     const harness = treeHarness();
 

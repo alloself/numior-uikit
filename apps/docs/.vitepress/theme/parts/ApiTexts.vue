@@ -1,9 +1,9 @@
 <template>
   <div class="flex flex-col gap-2">
     <h4>{{ texts.apiTexts }}</h4>
-    <NuiDataGrid
+    <NuiTable
       :columns="columns"
-      :source="rows"
+      :rows="rows"
       :get-key="keyOf"
       :label="texts.apiTexts"
       :column-menu="false"
@@ -12,13 +12,13 @@
       <template #cell-key="{ row }">
         <code>{{ row.key }}</code>
       </template>
-    </NuiDataGrid>
+    </NuiTable>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import { NuiDataGrid, type NuiGridColumn } from '@numior/table';
+import { NuiTable, type NuiTableColumn } from '@numior/table';
 import type { ApiTextsProps } from '../theme.types';
 
 interface TextRow {
@@ -31,7 +31,7 @@ const { catalog, texts } = defineProps<ApiTextsProps>();
 
 const keyOf = (row: TextRow): string => row.key;
 
-const columns: readonly NuiGridColumn<TextRow>[] = [
+const columns: readonly NuiTableColumn<TextRow>[] = [
   {
     key: 'key',
     label: texts.apiKey,

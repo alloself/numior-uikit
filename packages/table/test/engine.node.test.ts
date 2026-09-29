@@ -9,7 +9,7 @@ const many = (count: number): Person[] =>
     active: index % 3 === 0,
   }));
 
-describe('createGridEngine', () => {
+describe('createTableEngine', () => {
   it('sorts by several keys with missing values last in both directions and reports phases', async () => {
     const harness = new EngineHarness(PEOPLE_COLUMNS, PEOPLE);
 
@@ -76,7 +76,7 @@ describe('createGridEngine', () => {
     expect(harness.engine.nodeAt(2)).toBeUndefined();
 
     await expect(harness.run({ sort: [{ key: 'height', direction: 'asc' }] })).rejects.toThrow(
-      'Grid engine has no column "height"',
+      'Table engine has no column "height"',
     );
   });
 

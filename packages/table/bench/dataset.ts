@@ -1,5 +1,5 @@
-import type { NuiGridColumn } from '../src';
-import type { GridEngineColumn } from '../src/engine';
+import type { NuiTableColumn } from '../src';
+import type { TableEngineColumn } from '../src/engine';
 
 export interface BenchRow {
   readonly id: number;
@@ -155,7 +155,7 @@ export const generateRows = (count: number, seed = 1): BenchRow[] => {
   return rows;
 };
 
-export const BENCH_COLUMNS: readonly GridEngineColumn<BenchRow>[] = [
+export const BENCH_COLUMNS: readonly TableEngineColumn<BenchRow>[] = [
   { kind: 'number', key: 'id', value: (row) => row.id },
   { kind: 'string', key: 'name', value: (row) => row.name },
   { kind: 'string', key: 'email', value: (row) => row.email },
@@ -178,7 +178,7 @@ export const BENCH_COLUMNS: readonly GridEngineColumn<BenchRow>[] = [
   { kind: 'number', key: 'score', value: (row) => row.score },
 ];
 
-export const GRID_COLUMNS: readonly NuiGridColumn<BenchRow>[] = [
+export const TABLE_COLUMNS: readonly NuiTableColumn<BenchRow>[] = [
   {
     key: 'id',
     label: 'ID',
@@ -245,7 +245,7 @@ export interface BenchNode {
   readonly items?: readonly BenchNode[];
 }
 
-export const TREE_COLUMNS: readonly GridEngineColumn<BenchNode>[] = [
+export const TREE_COLUMNS: readonly TableEngineColumn<BenchNode>[] = [
   { kind: 'string', key: 'name', value: (row) => row.name },
   { kind: 'number', key: 'size', value: (row) => row.size, aggregate: 'sum' },
 ];

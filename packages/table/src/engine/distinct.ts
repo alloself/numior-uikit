@@ -1,16 +1,21 @@
 import { CHECK_INTERVAL, type SliceJob } from './slicer';
-import type { ColumnStore, GridDistinct, GridEngineColumn, GridFilterValue } from './engine.types';
+import type {
+  ColumnStore,
+  TableDistinct,
+  TableEngineColumn,
+  TableFilterValue,
+} from './engine.types';
 
 type NumberStore = Extract<ColumnStore, { kind: 'number' }>;
 
 type RankedStrings = Extract<ColumnStore, { kind: 'string' }>;
 
 interface DistinctJob extends SliceJob {
-  result(): GridDistinct;
+  result(): TableDistinct;
 }
 
-export const distinctStrings = (store: RankedStrings, limit: number): GridDistinct => {
-  const values: GridFilterValue[] = [];
+export const distinctStrings = (store: RankedStrings, limit: number): TableDistinct => {
+  const values: TableFilterValue[] = [];
   const blank = store.dictionary.includes('');
   const filled = store.dictionary.length - (blank ? 1 : 0);
 
@@ -58,11 +63,11 @@ const insertBounded = (kept: number[], key: number, cap: number): void => {
   }
 };
 
-const numberValue = <T>(column: GridEngineColumn<T>, key: number): GridFilterValue =>
+const numberValue = <T>(column: TableEngineColumn<T>, key: number): TableFilterValue =>
   column.kind === 'boolean' ? key === 1 : key;
 
 export const createDistinctNumbersJob = <T>(
-  column: GridEngineColumn<T>,
+  column: TableEngineColumn<T>,
   store: NumberStore,
   limit: number,
 ): DistinctJob => {

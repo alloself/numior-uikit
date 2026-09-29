@@ -1,12 +1,12 @@
 import {
-  createGridEngine,
-  type GridEngine,
-  type GridEngineColumn,
-  type GridNode,
-  type GridNodeId,
-  type GridProgress,
-  type GridQuery,
-  type GridRunResult,
+  createTableEngine,
+  type TableEngine,
+  type TableEngineColumn,
+  type TableNode,
+  type TableNodeId,
+  type TableProgress,
+  type TableQuery,
+  type TableRunResult,
 } from '../../src/engine';
 
 export interface Person {
@@ -16,7 +16,7 @@ export interface Person {
   readonly active: boolean | null;
 }
 
-export const PEOPLE_COLUMNS: readonly GridEngineColumn<Person>[] = [
+export const PEOPLE_COLUMNS: readonly TableEngineColumn<Person>[] = [
   { kind: 'string', key: 'name', value: (row) => row.name },
   { kind: 'number', key: 'age', value: (row) => row.age },
   { kind: 'date', key: 'born', value: (row) => row.born },
@@ -90,7 +90,7 @@ export const ORDERS: readonly Order[] = [
   },
 ];
 
-export const ORDER_COLUMNS: readonly GridEngineColumn<Order>[] = [
+export const ORDER_COLUMNS: readonly TableEngineColumn<Order>[] = [
   { kind: 'number', key: 'id', value: (row) => row.id },
   { kind: 'string', key: 'city', value: (row) => row.city },
   { kind: 'string', key: 'country', value: (row) => row.country },
@@ -100,7 +100,7 @@ export const ORDER_COLUMNS: readonly GridEngineColumn<Order>[] = [
   { kind: 'string', key: 'note', value: (row) => row.note },
 ];
 
-export const ORDER_TOTALS: readonly GridEngineColumn<Order>[] = [
+export const ORDER_TOTALS: readonly TableEngineColumn<Order>[] = [
   { kind: 'number', key: 'id', value: (row) => row.id, aggregate: 'count' },
   { kind: 'string', key: 'city', value: (row) => row.city },
   { kind: 'string', key: 'country', value: (row) => row.country },
@@ -143,7 +143,7 @@ export const FOLDERS: readonly Folder[] = [
   { name: 'readme.md', size: 2 },
 ];
 
-export const FOLDER_COLUMNS: readonly GridEngineColumn<Folder>[] = [
+export const FOLDER_COLUMNS: readonly TableEngineColumn<Folder>[] = [
   { kind: 'string', key: 'name', value: (row) => row.name },
   { kind: 'number', key: 'size', value: (row) => row.size },
 ];
@@ -155,25 +155,25 @@ const tick = (): Promise<void> =>
 
 export interface EngineHarnessOptions<T> {
   readonly sliceMs?: number;
-  readonly keyOf?: (row: T) => GridNodeId;
+  readonly keyOf?: (row: T) => TableNodeId;
   readonly children?: (row: T) => readonly T[] | null | undefined;
   readonly hasChildren?: (row: T) => boolean;
   readonly defaultExpanded?: boolean;
 }
 
 export class EngineHarness<T> {
-  readonly engine: GridEngine<T>;
-  readonly progress: GridProgress[] = [];
+  readonly engine: TableEngine<T>;
+  readonly progress: TableProgress[] = [];
   private readonly waiting: Array<() => void> = [];
   private resumedAt = 0;
   private slowest = 0;
 
   constructor(
-    columns: readonly GridEngineColumn<T>[],
+    columns: readonly TableEngineColumn<T>[],
     rows: readonly T[],
     options: EngineHarnessOptions<T> = {},
   ) {
-    this.engine = createGridEngine({
+    this.engine = createTableEngine({
       columns,
       keyOf: options.keyOf,
       children: options.children,
@@ -212,7 +212,7 @@ export class EngineHarness<T> {
     return [...new Set(this.progress.map((entry) => entry.phase))];
   }
 
-  run(query: GridQuery, signal?: AbortSignal): Promise<GridRunResult> {
+  run(query: TableQuery, signal?: AbortSignal): Promise<TableRunResult> {
     this.resumedAt = performance.now();
 
     return this.engine.run(query, {
@@ -247,12 +247,12 @@ export class EngineHarness<T> {
     return pending;
   }
 
-  runToEnd(query: GridQuery): Promise<GridRunResult> {
+  runToEnd(query: TableQuery): Promise<TableRunResult> {
     return this.settle(this.run(query));
   }
 
-  nodes(): GridNode<T>[] {
-    const list: GridNode<T>[] = [];
+  nodes(): TableNode<T>[] {
+    const list: TableNode<T>[] = [];
 
     for (let position = 0; position < this.engine.count(); position += 1) {
       const node = this.engine.nodeAt(position);
@@ -268,7 +268,7 @@ export class EngineHarness<T> {
     return this.nodes().flatMap((node) => (node.kind === 'row' ? [node.row[field]] : []));
   }
 
-  render(label: (node: GridNode<T>) => string): string[] {
+  render(label: (node: TableNode<T>) => string): string[] {
     return this.nodes().map(label);
   }
 }

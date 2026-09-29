@@ -48,7 +48,6 @@ import {
   NuiSkipLink,
   NuiSplitter,
   NuiSwitch,
-  NuiTable,
   NuiTabs,
   NuiTextarea,
   NuiAppBar,
@@ -73,7 +72,6 @@ import {
 import { configScope } from './support/config-scope';
 import { RouterStub } from './support/router-stub';
 import { labelTarget, popoverTarget, renderMarkup } from './support/ssr';
-import { childrenOf, COLUMNS, manyPeople, PEOPLE, TEAM } from './support/rows';
 import { FILES, manyNodes } from './support/tree-items';
 
 const STEPPER_STEPS = [
@@ -275,19 +273,6 @@ const scenarios: Scenario[] = [
   {
     name: 'NuiTree',
     render: () => h(NuiTree, { id: 'files', items: FILES, expanded: ['src'], modelValue: 'index' }),
-  },
-  {
-    name: 'NuiTable',
-    render: () =>
-      h(NuiTable, {
-        columns: COLUMNS,
-        rows: PEOPLE,
-        selectable: 'multiple',
-        sort: { key: 'name', direction: 'asc' },
-        pagination: true,
-        pageSize: 5,
-        caption: 'Команда',
-      }),
   },
   {
     name: 'NuiCard',
@@ -986,80 +971,6 @@ describe('server rendering', () => {
 
     expect(windowed.match(/role="treeitem"/g)).toHaveLength(20);
     expect(windowed).toContain('block-size:16000px');
-  });
-
-  it('renders a sorted, selectable and paginated table and windows long ones on the server', async () => {
-    const html = await renderMarkup(() =>
-      h(NuiTable, {
-        columns: COLUMNS,
-        rows: PEOPLE,
-        selectable: 'multiple',
-        sort: { key: 'age', direction: 'desc' },
-        pagination: true,
-        pageSize: 5,
-        caption: 'Команда',
-      }),
-    );
-
-    expect(html).toContain('<table');
-    expect(html).toContain('<caption');
-    expect(html).toContain('aria-sort="descending"');
-    expect(html).toContain('aria-label="Select all rows"');
-    expect(html).toContain('aria-label="Select row"');
-    expect(html).toContain('aria-label="Pagination"');
-    expect(html.indexOf('Жанна')).toBeLessThan(html.indexOf('Мария'));
-    expect(html.match(/nui-table__row--selected/g)).toBeNull();
-
-    const windowed = await renderMarkup(() =>
-      h(NuiTable, { columns: COLUMNS, rows: manyPeople(1000), virtual: true, height: '10rem' }),
-    );
-
-    expect(windowed).toContain('aria-rowcount="1001"');
-    expect(windowed).toContain('nui-table__spacer');
-    expect(windowed.match(/aria-rowindex=/g)).toHaveLength(20);
-
-    const pinned = await renderMarkup(() =>
-      h(NuiTable, {
-        columns: [
-          {
-            key: 'name',
-            label: 'Имя',
-            sticky: 'start',
-            width: 120,
-            resizable: true,
-            reorderable: true,
-          },
-          { key: 'age', label: 'Возраст' },
-        ],
-        rows: PEOPLE.slice(0, 2),
-      }),
-    );
-
-    expect(pinned).toContain('<colgroup>');
-    expect(pinned).toContain('inline-size:120px');
-    expect(pinned).toContain('nui-table__cell--sticky-start');
-    expect(pinned).toContain('inset-inline-start:var(--_sticky-0, 0px)');
-    expect(pinned).toContain('role="separator"');
-    expect(pinned).toContain('aria-valuenow="120"');
-    expect(pinned).toContain('aria-label="Reorder Имя"');
-
-    const tree = await renderMarkup(() =>
-      h(NuiTable, {
-        columns: COLUMNS,
-        rows: TEAM,
-        getChildren: childrenOf,
-        expanded: TEAM.slice(0, 1),
-        pinnedRows: PEOPLE.slice(5, 6),
-        rowDrag: true,
-      }),
-    );
-
-    expect(tree).toContain('aria-expanded="true"');
-    expect(tree).toContain('nui-table__toggle--leaf');
-    expect(tree).toContain('--_level:1');
-    expect(tree).toContain('nui-table__body--pinned');
-    expect(tree).toContain('aria-label="Reorder row"');
-    expect(tree.indexOf('Егор')).toBeLessThan(tree.indexOf('Анна'));
   });
 
   it('renders lazy default icons on the server', async () => {

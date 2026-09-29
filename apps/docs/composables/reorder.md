@@ -24,4 +24,4 @@ const reorder = useReorder({
 
 `onPointerdown(index, event)` вешается на ручку строки, `onKeydown(index, event)` — на неё
 же для стрелок с модификатором, `state` описывает фазу: `idle`, `pending`, `dragging`,
-`keyboard`. Так переставляют строки и колонки [Table](/components/table).
+`keyboard`. Так переставляют поля `NuiFieldArray` в формах.

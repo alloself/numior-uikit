@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import type { GridNode } from '../src/engine';
+import type { TableNode } from '../src/engine';
 import { EngineHarness, ORDERS, ORDER_TOTALS, type Order } from './harness/engine';
 
-const label = (node: GridNode<Order>): string =>
+const label = (node: TableNode<Order>): string =>
   node.kind === 'group'
     ? `${'  '.repeat(node.level)}${node.key}=${String(node.value)} (${node.count}) sum=${String(node.aggregates['amount'])} count=${String(node.aggregates['id'])}`
     : `${'  '.repeat(node.level)}#${node.row.id}`;
 
-describe('createGridEngine groups', () => {
+describe('createTableEngine groups', () => {
   it('groups by one and two keys, sorts inside groups and aggregates each group and the total', async () => {
     const harness = new EngineHarness(ORDER_TOTALS, ORDERS);
 

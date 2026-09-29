@@ -24,4 +24,4 @@ const reorder = useReorder({
 
 `onPointerdown(index, event)` attaches to the row handle, `onKeydown(index, event)` to the
 same handle for arrows with a modifier. `state` describes the phase: `idle`, `pending`,
-`dragging`, `keyboard`. [Table](/en/components/table) reorders rows and columns this way.
+`dragging`, `keyboard`. `NuiFieldArray` reorders form fields this way.

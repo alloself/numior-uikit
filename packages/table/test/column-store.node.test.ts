@@ -3,7 +3,7 @@ import {
   createRankJob,
   createStoreJob,
   type ColumnStore,
-  type GridEngineColumn,
+  type TableEngineColumn,
   type StoreJob,
   type StoreNeed,
 } from '../src/engine';
@@ -18,14 +18,14 @@ const finish = (job: StoreJob): ColumnStore => {
 };
 
 const build = <T>(
-  column: GridEngineColumn<T>,
+  column: TableEngineColumn<T>,
   rows: readonly T[],
   need: StoreNeed = 'ranks',
 ): ColumnStore => finish(createStoreJob(column, rows, collator, need));
 
 const FRUITS = ['вишня', 'абрикос', 'Банан', 'абрикос', null, 'item 10', 'item 2'];
 
-const fruit: GridEngineColumn<string | null> = {
+const fruit: TableEngineColumn<string | null> = {
   kind: 'string',
   key: 's',
   value: (row) => row,

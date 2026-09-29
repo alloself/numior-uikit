@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { GridEngineColumn } from '../src/engine';
+import type { TableEngineColumn } from '../src/engine';
 import { EngineHarness, ORDERS, ORDER_COLUMNS, type Order } from './harness/engine';
 
 interface Account {
@@ -7,7 +7,7 @@ interface Account {
   readonly score: number;
 }
 
-const ACCOUNT_COLUMNS: readonly GridEngineColumn<Account>[] = [
+const ACCOUNT_COLUMNS: readonly TableEngineColumn<Account>[] = [
   { kind: 'string', key: 'email', value: (row) => row.email },
   { kind: 'number', key: 'score', value: (row) => row.score },
 ];
@@ -26,7 +26,7 @@ const ids = async (
   return harness.visible('id');
 };
 
-describe('createGridEngine filters', () => {
+describe('createTableEngine filters', () => {
   it('matches text by contains, equals, starts and empty regardless of case', async () => {
     const harness = new EngineHarness(ORDER_COLUMNS, ORDERS);
 

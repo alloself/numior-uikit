@@ -1,9 +1,9 @@
 <template>
   <div class="flex flex-col gap-2">
     <h4>{{ title }}</h4>
-    <NuiDataGrid
+    <NuiTable
       :columns="columns"
-      :source="rows"
+      :rows="rows"
       :get-key="keyOf"
       :label="title"
       :column-menu="false"
@@ -24,18 +24,18 @@
         <span v-if="row.description">{{ row.description[locale] }}</span>
         <span v-else class="text-subtle-foreground">—</span>
       </template>
-    </NuiDataGrid>
+    </NuiTable>
   </div>
 </template>
 
 <script setup lang="ts" generic="T extends ApiRow">
-import { NuiDataGrid, type NuiGridColumn } from '@numior/table';
+import { NuiTable, type NuiTableColumn } from '@numior/table';
 import type { ExampleLocale } from '../../examples/example.types';
 import type { ApiRow } from '../theme.types';
 
 interface ApiTableProps {
   title: string;
-  columns: readonly NuiGridColumn<T>[];
+  columns: readonly NuiTableColumn<T>[];
   rows: readonly T[];
   locale: ExampleLocale;
   requiredLabel?: string | undefined;

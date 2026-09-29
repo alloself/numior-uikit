@@ -1,9 +1,9 @@
 import { CHECK_INTERVAL, type SliceJob } from './slicer';
 import type {
   ColumnStore,
-  GridEngineColumn,
-  GridFilter,
-  GridFilterValue,
+  TableEngineColumn,
+  TableFilter,
+  TableFilterValue,
   StringCodes,
 } from './engine.types';
 
@@ -18,7 +18,7 @@ export interface FilterSetup extends SliceJob {
 }
 
 export interface FilterSources<T> {
-  readonly column: (key: string) => GridEngineColumn<T> | undefined;
+  readonly column: (key: string) => TableEngineColumn<T> | undefined;
   readonly store: (key: string) => ColumnStore | undefined;
   readonly quickStores: (keys: readonly string[] | undefined) => readonly StringCodes[];
 }
@@ -132,7 +132,7 @@ const exactScan = (dictionary: readonly string[], wanted: ReadonlySet<string>): 
   hits: 0,
 });
 
-const textMatcher = (filter: Extract<GridFilter, { kind: 'text' }>): TextMatch => {
+const textMatcher = (filter: Extract<TableFilter, { kind: 'text' }>): TextMatch => {
   const needle = filter.value.toLocaleLowerCase();
 
   switch (filter.op) {
@@ -172,7 +172,7 @@ const rangeTest = (
   };
 };
 
-const numericValue = (value: GridFilterValue): number | null => {
+const numericValue = (value: TableFilterValue): number | null => {
   switch (typeof value) {
     case 'number':
       return value;
@@ -183,7 +183,7 @@ const numericValue = (value: GridFilterValue): number | null => {
   }
 };
 
-const numberSetTest = (store: NumberStore, values: readonly GridFilterValue[]): RowTest => {
+const numberSetTest = (store: NumberStore, values: readonly TableFilterValue[]): RowTest => {
   const nullPasses = values.includes(null);
   const wanted = new Set<number>();
 
@@ -210,25 +210,25 @@ const quickTest =
 
 const ready = (test: RowTest): PendingTest => ({ scans: [], test: () => test });
 
-const mismatch = (filter: GridFilter, expected: string): Error =>
+const mismatch = (filter: TableFilter, expected: string): Error =>
   new Error(
-    `Grid engine filter "${filter.kind}" needs ${expected} column${'key' in filter ? ` "${filter.key}"` : ''}`,
+    `Table engine filter "${filter.kind}" needs ${expected} column${'key' in filter ? ` "${filter.key}"` : ''}`,
   );
 
 const sourceOf = <T>(
   sources: FilterSources<T>,
   key: string,
-): { readonly column: GridEngineColumn<T>; readonly store: ColumnStore } => {
+): { readonly column: TableEngineColumn<T>; readonly store: ColumnStore } => {
   const column = sources.column(key);
   const store = sources.store(key);
 
   if (column === undefined || store === undefined) {
-    throw new Error('Grid engine filter needs a built column store');
+    throw new Error('Table engine filter needs a built column store');
   }
   return { column, store };
 };
 
-const setPending = (store: ColumnStore, values: readonly GridFilterValue[]): PendingTest => {
+const setPending = (store: ColumnStore, values: readonly TableFilterValue[]): PendingTest => {
   if (store.kind === 'number') {
     return ready(numberSetTest(store, values));
   }
@@ -270,14 +270,14 @@ const quickPending = (value: string, stores: readonly StringCodes[]): PendingTes
 };
 
 const textPending = (
-  filter: Extract<GridFilter, { kind: 'text' }>,
+  filter: Extract<TableFilter, { kind: 'text' }>,
   store: CodedStore,
 ): PendingTest => {
   const scan = loweredScan(store.dictionary, textMatcher(filter));
   return { scans: [scan], test: () => codedTest(store, scan.map, filter.op === 'empty') };
 };
 
-const pendingFor = <T>(filter: GridFilter, sources: FilterSources<T>): PendingTest => {
+const pendingFor = <T>(filter: TableFilter, sources: FilterSources<T>): PendingTest => {
   if (filter.kind === 'quick') {
     return quickPending(filter.value, sources.quickStores(filter.keys));
   }
@@ -305,7 +305,7 @@ const pendingFor = <T>(filter: GridFilter, sources: FilterSources<T>): PendingTe
 };
 
 export const createFilterSetup = <T>(
-  filters: readonly GridFilter[],
+  filters: readonly TableFilter[],
   sources: FilterSources<T>,
 ): FilterSetup => {
   const pending = filters.map((filter) => pendingFor(filter, sources));

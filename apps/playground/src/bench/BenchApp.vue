@@ -11,19 +11,19 @@
         data-testid="bench-quick"
       />
     </div>
-    <NuiDataGrid
+    <NuiTable
       v-if="shown"
       v-model:sort="sort"
       v-model:filters="filters"
       v-model:quick="quick"
       v-model:group-by="groupBy"
       v-model:expanded="expanded"
-      :columns="GRID_COLUMNS"
-      :source="rows"
+      :columns="TABLE_COLUMNS"
+      :rows="rows"
       :get-key="(row) => row.id"
       height="calc(100dvh - 5rem)"
-      label="Бенчмарк грида"
-      data-testid="bench-grid"
+      label="Бенчмарк таблицы"
+      data-testid="bench-table"
       @settle="onSettle"
     />
   </main>
@@ -32,13 +32,8 @@
 <script setup lang="ts">
 import { nextTick, onMounted, ref } from 'vue';
 import { NuiInput } from '@numior/vue';
-import {
-  NuiDataGrid,
-  type GridNodeId,
-  type GridSort,
-  type NuiDataGridFilters,
-} from '@numior/table';
-import { GRID_COLUMNS, generateRows } from '../../../../packages/table/bench/dataset';
+import { NuiTable, type TableNodeId, type TableSort, type NuiTableFilters } from '@numior/table';
+import { TABLE_COLUMNS, generateRows } from '../../../../packages/table/bench/dataset';
 import {
   afterPaint,
   createFrameRecorder,
@@ -57,12 +52,12 @@ const generating = performance.now();
 const rows = generateRows(count);
 const dataReady = performance.now();
 const shown = ref(true);
-const caption = `${count.toLocaleString('ru-RU')} строк × ${GRID_COLUMNS.length} колонок`;
-const sort = ref<readonly GridSort[]>([]);
-const filters = ref<NuiDataGridFilters>([]);
+const caption = `${count.toLocaleString('ru-RU')} строк × ${TABLE_COLUMNS.length} колонок`;
+const sort = ref<readonly TableSort[]>([]);
+const filters = ref<NuiTableFilters>([]);
 const quick = ref('');
 const groupBy = ref<readonly string[]>([]);
-const expanded = ref<readonly GridNodeId[]>([]);
+const expanded = ref<readonly TableNodeId[]>([]);
 const latencies: number[] = [];
 const settles: number[] = [];
 const frames: number[] = [];

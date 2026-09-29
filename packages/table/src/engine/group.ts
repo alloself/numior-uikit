@@ -6,7 +6,7 @@ import {
   type Accumulator,
 } from './aggregate';
 import { CHECK_INTERVAL, type SliceJob } from './slicer';
-import type { ColumnStore, GridAggregate, GridEngineColumn } from './engine.types';
+import type { ColumnStore, TableAggregate, TableEngineColumn } from './engine.types';
 
 export interface GroupRecord {
   readonly id: string;
@@ -27,11 +27,11 @@ export interface GroupTable {
 export interface AggregateColumn<T> {
   readonly key: string;
   readonly store: ColumnStore;
-  readonly aggregate: GridAggregate<T>;
+  readonly aggregate: TableAggregate<T>;
 }
 
 export interface GroupLevel<T> {
-  readonly column: GridEngineColumn<T>;
+  readonly column: TableEngineColumn<T>;
   readonly store: ColumnStore;
 }
 

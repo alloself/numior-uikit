@@ -2,80 +2,130 @@
   <section class="panel" aria-labelledby="table-title">
     <div class="section-heading">
       <h2 id="table-title">Таблица</h2>
-      <span class="tag">NuiTable · NuiPagination · useReorder</span>
+      <span class="tag">NuiTable · 10 000 строк</span>
     </div>
     <div class="data-row">
+      <NuiInput
+        v-model="quick"
+        type="search"
+        size="sm"
+        class="table-quick"
+        placeholder="Поиск по заказам"
+        aria-label="Поиск по заказам"
+        data-testid="table-quick"
+      >
+        <template #prefix>
+          <NuiIcon alias="search" />
+        </template>
+      </NuiInput>
+      <NuiSelect
+        v-model="grouping"
+        :options="groupings"
+        size="sm"
+        class="table-grouping"
+        aria-label="Группировка"
+        data-testid="table-group"
+      />
       <NuiButton
         size="sm"
         variant="outline"
         tone="neutral"
-        data-testid="data-table-loading"
-        @click="loading = !loading"
+        :disabled="filters.length === 0 && quick === ''"
+        data-testid="table-clear-filters"
+        @click="clearFilters"
       >
-        {{ loading ? 'Показать данные' : 'Показать загрузку' }}
+        Сбросить фильтры
       </NuiButton>
       <NuiButton
         size="sm"
         variant="outline"
         tone="neutral"
-        data-testid="data-table-empty"
+        data-testid="table-empty"
         @click="empty = !empty"
       >
         {{ empty ? 'Вернуть строки' : 'Очистить строки' }}
       </NuiButton>
+      <NuiButton
+        size="sm"
+        variant="outline"
+        tone="neutral"
+        :disabled="hidden.length === 0 && Object.keys(pins).length === 0"
+        data-testid="table-reset-columns"
+        @click="resetColumns"
+      >
+        Сбросить колонки
+      </NuiButton>
+      <NuiButton
+        size="sm"
+        variant="outline"
+        tone="neutral"
+        data-testid="table-pinned"
+        @click="pinned = !pinned"
+      >
+        {{ pinned ? 'Открепить строки' : 'Закрепить строки' }}
+      </NuiButton>
+      <NuiButton
+        size="sm"
+        variant="outline"
+        tone="neutral"
+        data-testid="table-pages"
+        @click="paged = !paged"
+      >
+        {{ paged ? 'Все строки' : 'По страницам' }}
+      </NuiButton>
+      <NuiButton
+        size="sm"
+        variant="outline"
+        tone="neutral"
+        data-testid="table-loading"
+        @click="unitsLoading = !unitsLoading"
+      >
+        {{ unitsLoading ? 'Показать структуру' : 'Загрузка структуры' }}
+      </NuiButton>
     </div>
     <NuiTable
       v-model:sort="sort"
-      v-model:selected="selectedPeople"
+      v-model:filters="filters"
+      v-model:quick="quick"
+      v-model:group-by="groupBy"
+      v-model:expanded="expanded"
+      v-model:pins="pins"
+      v-model:hidden="hidden"
       v-model:page="page"
       v-model:page-size="pageSize"
-      v-model:column-order="columnOrder"
-      v-model:widths="widths"
       :columns="columns"
-      :rows="empty ? [] : people"
-      :get-key="keyOf"
-      selectable="multiple"
-      :pagination="tablePagination"
-      :loading="loading"
-      caption="Команда"
-      hoverable
-      striped
-      data-testid="data-table"
-      @row-click="onRowClick"
+      :rows="empty ? [] : orders"
+      :pinned-rows="pinned ? PINNED_ORDERS : []"
+      :pagination="paged ? PAGINATION : false"
+      :get-key="(row) => row.id"
+      label="Заказы"
+      height="26rem"
+      data-testid="table"
     >
-      <template #cell-role="{ value }">
-        <NuiChip size="sm" tone="info">{{ value }}</NuiChip>
+      <template #cell-status="{ row }">
+        <NuiChip size="sm" :tone="STATUS_TONES[row.status]">{{
+          STATUS_LABELS[row.status]
+        }}</NuiChip>
       </template>
     </NuiTable>
-    <NuiTable
-      v-model:expanded="expanded"
-      :columns="treeColumns"
-      :rows="team"
-      :get-key="keyOf"
-      :get-children="childrenOf"
-      :is-expandable="expandable"
-      row-drag
-      caption="Отделы: дерево, ленивая подгрузка и перестановка строк"
-      :expand-label="(row) => `Раскрыть ${row.name}`"
-      :drag-label="(row) => `Переставить ${row.name}`"
-      :row-label="(row) => row.name"
-      data-testid="data-table-tree"
-      @load="loadChildren"
-      @reorder="onReorder"
-    />
-    <NuiTable
-      :columns="wideColumns"
-      :rows="manyRows"
-      :pinned-rows="pinned"
-      :get-key="keyOf"
-      virtual
-      height="14rem"
-      sticky-header
-      size="sm"
-      caption="5000 строк: виртуализация, закреплённые колонки и строка"
-      data-testid="data-table-virtual"
-    />
     <pre class="output" data-testid="table-output">{{ output }}</pre>
+    <NuiTable
+      v-model:expanded="unitsExpanded"
+      v-model:selected="selectedUnits"
+      class="table-tree"
+      :columns="UNIT_COLUMNS"
+      :rows="units"
+      :get-key="(row) => row.id"
+      :get-children="(row) => row.children"
+      :has-children="(row) => row.lazy === true"
+      :loading="unitsLoading"
+      caption="Структура компании"
+      selectable="multiple"
+      striped
+      data-testid="table-tree"
+      @load="loadUnit"
+      @row-click="(row) => (lastUnitClick = row.id)"
+    />
   </section>
 </template>
 
@@ -84,211 +134,381 @@ import { computed, ref } from 'vue';
 import {
   NuiButton,
   NuiChip,
-  NuiTable,
-  type NuiTableColumn,
-  type NuiTablePagination,
-  type NuiTableReorderEvent,
-  type NuiTableSort,
+  NuiIcon,
+  NuiInput,
+  NuiSelect,
+  type NuiOption,
+  type NuiTone,
 } from '@numior/vue';
+import {
+  NuiTable,
+  type TableNodeId,
+  type TableSort,
+  type NuiTableFilters,
+  type NuiTableHidden,
+  type NuiTablePins,
+  type NuiTableColumnDef,
+  type NuiTablePagination,
+} from '@numior/table';
 
-interface Person {
+type OrderStatus = 'new' | 'paid' | 'shipped' | 'returned';
+
+interface Order {
   readonly id: number;
-  readonly name: string;
-  readonly role: string;
-  readonly age: number;
+  readonly customer: string;
+  readonly email: string;
   readonly city: string;
-  readonly score: number | null;
-  readonly children?: readonly Person[] | undefined;
+  readonly country: string;
+  readonly amount: number;
+  readonly created: Date;
+  readonly vip: boolean;
+  readonly manager: string;
+  readonly note: string;
+  readonly status: OrderStatus;
 }
 
-const ROLES = ['Дизайн', 'Разработка', 'Тесты', 'Поддержка'];
-const CITIES = ['Казань', 'Москва', 'Самара', 'Сочи'];
+const FIRST_NAMES = ['Анна', 'Иван', 'Мария', 'Павел', 'Ольга', 'Сергей', 'Елена', 'Дмитрий'];
+const LAST_NAMES = ['Смирнова', 'Иванов', 'Кузнецова', 'Попов', 'Соколова', 'Лебедев'];
+const CITIES = ['Москва', 'Казань', 'Ереван', 'Алматы', 'Белград', 'Тбилиси', 'Минск'];
+const COUNTRIES = ['Россия', 'Армения', 'Казахстан', 'Сербия', 'Грузия', 'Беларусь'];
+const MANAGERS = ['Вера Орлова', 'Олег Титов', 'Нина Белова', 'Игорь Зуев'];
+const STATUSES: readonly OrderStatus[] = ['new', 'paid', 'shipped', 'returned'];
 
-const person = (
-  id: number,
-  name: string,
-  role: string,
-  age: number,
-  score: number | null,
-): Person => ({
-  id,
-  name,
-  role,
-  age,
-  city: CITIES[id % CITIES.length] ?? 'Казань',
-  score,
-});
+const STATUS_LABELS: Readonly<Record<OrderStatus, string>> = {
+  new: 'Новый',
+  paid: 'Оплачен',
+  shipped: 'Отправлен',
+  returned: 'Возврат',
+};
 
-const people: Person[] = [
-  person(1, 'Анна', 'Дизайн', 34, 88),
-  person(2, 'Борис', 'Разработка', 28, null),
-  person(3, 'Вера', 'Разработка', 45, 92),
-  person(4, 'Глеб', 'Тесты', 23, 71),
-  person(5, 'Дина', 'Дизайн', 39, 65),
-  person(6, 'Егор', 'Разработка', 31, 79),
-  person(7, 'Жанна', 'Поддержка', 52, 84),
-  person(8, 'Зоя', 'Тесты', 27, null),
-  person(9, 'Иван', 'Разработка', 41, 95),
-  person(10, 'Кира', 'Дизайн', 36, 58),
-  person(11, 'Лев', 'Поддержка', 29, 77),
-  person(12, 'Мария', 'Разработка', 48, 90),
-];
+const STATUS_TONES: Readonly<Record<OrderStatus, NuiTone>> = {
+  new: 'info',
+  paid: 'success',
+  shipped: 'neutral',
+  returned: 'warning',
+};
 
-const manyRows: Person[] = Array.from({ length: 5000 }, (_, index) =>
-  person(
-    index + 1,
-    `Сотрудник ${index + 1}`,
-    ROLES[index % ROLES.length] ?? 'Разработка',
-    20 + (index % 40),
-    index % 7 === 0 ? null : index % 100,
-  ),
-);
+interface Unit {
+  readonly id: string;
+  readonly name: string;
+  readonly head: string;
+  readonly people: number;
+  readonly budget: number;
+  readonly note: string;
+  readonly children?: readonly Unit[];
+  readonly lazy?: boolean;
+}
 
-const pinned: Person[] = [person(0, 'Итого по отделу', '—', 0, 4321)];
-
-const columns: NuiTableColumn<Person>[] = [
-  { key: 'name', label: 'Имя', sortable: true, resizable: true, reorderable: true, minWidth: 120 },
-  { key: 'role', label: 'Роль', width: 160, resizable: true, reorderable: true },
+const UNITS: readonly Unit[] = [
   {
-    key: 'age',
-    label: 'Возраст',
-    sortable: true,
-    align: 'end',
-    width: 112,
-    resizable: true,
-    reorderable: true,
-  },
-  {
-    key: 'score',
-    label: 'Балл',
-    sortable: true,
-    align: 'end',
-    width: 96,
-    resizable: true,
-    reorderable: true,
-  },
-];
-
-const treeColumns: NuiTableColumn<Person>[] = [
-  { key: 'name', label: 'Имя', sortable: true },
-  { key: 'role', label: 'Роль' },
-  { key: 'age', label: 'Возраст', sortable: true, align: 'end', width: 112 },
-];
-
-const wideColumns: NuiTableColumn<Person>[] = [
-  { key: 'id', label: '№', width: 72, align: 'end', sticky: 'start' },
-  { key: 'name', label: 'Имя', width: 192, sticky: 'start' },
-  { key: 'role', label: 'Роль', width: 160 },
-  { key: 'city', label: 'Город', width: 160 },
-  { key: 'age', label: 'Возраст', width: 128, align: 'end' },
-  { key: 'score', label: 'Балл', width: 128, align: 'end' },
-  { key: 'team', label: 'Команда', width: 160, value: (row) => `Команда ${row.id % 9}` },
-  {
-    key: 'status',
-    label: 'Статус',
-    width: 128,
-    sticky: 'end',
-    value: (row) => (row.score === null ? '—' : 'ок'),
-  },
-];
-
-const tablePagination: NuiTablePagination = { pageSizes: [5, 10] };
-
-const keyOf = (row: Person): string => String(row.id);
-const childrenOf = (row: Person): readonly Person[] | undefined => row.children;
-
-const expandable = (row: Person): boolean =>
-  row.children === undefined ? row.id === 300 : row.children.length > 0;
-
-const team = ref<Person[]>([
-  {
-    ...person(100, 'Анна', 'Дизайн', 34, 88),
+    id: 'sales',
+    name: 'Продажи',
+    head: 'Вера Орлова',
+    people: 42,
+    budget: 1_200_000,
+    note: 'Прямые продажи и партнёрская сеть в трёх странах, квартальные планы по регионам',
     children: [
-      person(101, 'Айгуль', 'Дизайн', 26, 70),
       {
-        ...person(102, 'Артём', 'Дизайн', 31, 75),
-        children: [person(103, 'Ася', 'Дизайн', 22, 60)],
+        id: 'sales-ru',
+        name: 'Россия',
+        head: 'Олег Титов',
+        people: 18,
+        budget: 540_000,
+        note: 'Ключевые клиенты Москвы и регионов, тендеры и федеральные сети',
+        children: [
+          {
+            id: 'sales-msk',
+            name: 'Москва',
+            head: 'Нина Белова',
+            people: 11,
+            budget: 330_000,
+            note: 'Федеральные сети и корпоративные заказчики столицы',
+          },
+          {
+            id: 'sales-kzn',
+            name: 'Казань',
+            head: 'Игорь Зуев',
+            people: 7,
+            budget: 210_000,
+            note: 'Региональные дистрибьюторы Поволжья',
+          },
+        ],
+      },
+      {
+        id: 'sales-kz',
+        name: 'Казахстан',
+        head: 'Анна Смирнова',
+        people: 24,
+        budget: 660_000,
+        note: 'Развитие сети в Казахстане, локализация каталога и логистика',
       },
     ],
   },
-  person(200, 'Борис', 'Разработка', 28, null),
-  person(300, 'Вера', 'Разработка', 45, 92),
-]);
+  {
+    id: 'rnd',
+    name: 'Разработка',
+    head: 'Павел Попов',
+    people: 64,
+    budget: 3_100_000,
+    note: 'Продуктовая разработка, инфраструктура и качество',
+    children: [
+      {
+        id: 'rnd-web',
+        name: 'Веб',
+        head: 'Ольга Соколова',
+        people: 29,
+        budget: 1_400_000,
+        note: 'Клиентские приложения, дизайн-система и производительность интерфейсов',
+      },
+      {
+        id: 'rnd-data',
+        name: 'Данные',
+        head: 'Сергей Иванов',
+        people: 35,
+        budget: 1_700_000,
+        note: 'Хранилища, отчётность и модели прогнозирования спроса',
+      },
+    ],
+  },
+  {
+    id: 'ops',
+    name: 'Операции',
+    head: 'Елена Кузнецова',
+    people: 23,
+    budget: 800_000,
+    note: 'Поддержка клиентов, логистика и складской учёт',
+    lazy: true,
+  },
+];
 
-const expanded = ref<Person[]>([]);
-const loaded = ref<string[]>([]);
-const lastReorder = ref<string>();
+const OPERATIONS: readonly Unit[] = [
+  {
+    id: 'ops-support',
+    name: 'Поддержка',
+    head: 'Мария Лебедева',
+    people: 15,
+    budget: 450_000,
+    note: 'Первая и вторая линии поддержки, база знаний',
+  },
+  {
+    id: 'ops-logistics',
+    name: 'Логистика',
+    head: 'Дмитрий Попов',
+    people: 8,
+    budget: 350_000,
+    note: 'Доставка, склады и возвраты',
+  },
+];
 
-const withRows = (rows: readonly Person[], id: number, update: (row: Person) => Person): Person[] =>
-  rows.map((row) => {
-    const next = row.id === id ? update(row) : row;
-    return next.children ? { ...next, children: withRows(next.children, id, update) } : next;
-  });
+const UNIT_COLUMNS: NuiTableColumnDef<Unit>[] = [
+  { key: 'name', label: 'Подразделение', type: 'text', width: 220, value: (row) => row.name },
+  { key: 'head', label: 'Руководитель', type: 'text', width: 180, value: (row) => row.head },
+  { key: 'people', label: 'Сотрудники', type: 'number', width: 130, value: (row) => row.people },
+  { key: 'budget', label: 'Бюджет', type: 'number', width: 130, value: (row) => row.budget },
+  { key: 'note', label: 'Задачи', type: 'text', width: 300, wrap: true, value: (row) => row.note },
+];
 
-const moveWithin = (rows: readonly Person[], from: number, to: number): Person[] => {
-  const next = [...rows];
-  const [row] = next.splice(from, 1);
-  if (row) {
-    next.splice(to, 0, row);
+const PAGINATION: NuiTablePagination = { pageSizes: [25, 50, 100], showRange: true };
+
+const GROUPINGS: readonly NuiOption<string>[] = [
+  { value: 'none', label: 'Без группировки' },
+  { value: 'country', label: 'По стране' },
+  { value: 'status', label: 'По статусу' },
+  { value: 'country-city', label: 'Страна и город' },
+];
+
+const CUSTOM_GROUPING: NuiOption<string> = {
+  value: 'custom',
+  label: 'Своя группировка',
+  disabled: true,
+};
+
+const GROUP_KEYS: Readonly<Record<string, readonly string[]>> = {
+  country: ['country'],
+  status: ['status'],
+  'country-city': ['country', 'city'],
+};
+
+const sameKeys = (a: readonly string[], b: readonly string[]): boolean =>
+  a.length === b.length && a.every((key, index) => b[index] === key);
+
+const groupingOf = (keys: readonly string[]): string => {
+  if (keys.length === 0) {
+    return 'none';
   }
-  return next;
+  return Object.entries(GROUP_KEYS).find(([, preset]) => sameKeys(preset, keys))?.[0] ?? 'custom';
 };
 
-const loadChildren = (row: Person): void => {
-  setTimeout(() => {
-    team.value = withRows(team.value, row.id, (entry) => ({
-      ...entry,
-      children: [person(301, 'Влад', 'Разработка', 24, 66), person(302, 'Галя', 'Тесты', 27, 71)],
-    }));
+const pick = <V>(list: readonly V[], seed: number, fallback: V): V =>
+  list[seed % list.length] ?? fallback;
 
-    loaded.value = [...loaded.value, row.name];
-  }, 400);
+const orderAt = (id: number): Order => {
+  const first = pick(FIRST_NAMES, id * 7, '');
+  const last = pick(LAST_NAMES, id * 11, '');
+
+  return {
+    id: id + 1,
+    customer: `${first} ${last}`,
+    email: `client${id + 1}@example.com`,
+    city: pick(CITIES, id * 3, ''),
+    country: pick(COUNTRIES, id * 5, ''),
+    amount: ((id * 7919) % 100_000) + 100,
+    created: new Date(Date.UTC(2025, id % 12, 1 + (id % 27))),
+    vip: id % 9 === 0,
+    manager: pick(MANAGERS, id, ''),
+    note: id % 4 === 0 ? 'Позвонить перед доставкой' : '',
+    status: pick(STATUSES, id * 13, 'new'),
+  };
 };
 
-const onReorder = ({ row, from, to, parent }: NuiTableReorderEvent<Person>): void => {
-  lastReorder.value = `${row.name}:${from}->${to}`;
+const orders: Order[] = Array.from(Array.from({ length: 10_000 }).keys(), orderAt);
+const PINNED_ORDERS = orders.slice(0, 2);
 
-  team.value = parent
-    ? withRows(team.value, parent.id, (entry) => ({
-        ...entry,
-        children: moveWithin(entry.children ?? [], from, to),
-      }))
-    : moveWithin(team.value, from, to);
-};
+const columns: NuiTableColumnDef<Order>[] = [
+  {
+    key: 'id',
+    label: '№',
+    type: 'number',
+    pin: 'start',
+    hideable: false,
+    width: 88,
+    value: (row) => row.id,
+    format: (value) => String(value),
+  },
+  {
+    key: 'buyer',
+    label: 'Покупатель',
+    children: [
+      { key: 'customer', label: 'Клиент', type: 'text', width: 200, value: (row) => row.customer },
+      { key: 'email', label: 'Почта', type: 'text', width: 240, value: (row) => row.email },
+    ],
+  },
+  {
+    key: 'address',
+    label: 'Адрес',
+    children: [
+      {
+        key: 'city',
+        label: 'Город',
+        type: 'text',
+        width: 140,
+        filter: 'set',
+        value: (row) => row.city,
+      },
+      {
+        key: 'country',
+        label: 'Страна',
+        type: 'text',
+        width: 140,
+        filter: 'set',
+        value: (row) => row.country,
+      },
+    ],
+  },
+  {
+    key: 'order',
+    label: 'Заказ',
+    children: [
+      {
+        key: 'amount',
+        label: 'Сумма',
+        type: 'number',
+        width: 130,
+        aggregate: 'sum',
+        value: (row) => row.amount,
+      },
+      { key: 'created', label: 'Создан', type: 'date', width: 150, value: (row) => row.created },
+      {
+        key: 'vip',
+        label: 'VIP',
+        type: 'boolean',
+        width: 100,
+        value: (row) => row.vip,
+      },
+      {
+        key: 'manager',
+        label: 'Менеджер',
+        type: 'text',
+        width: 180,
+        filter: 'set',
+        value: (row) => row.manager,
+      },
+      { key: 'note', label: 'Комментарий', type: 'text', width: 260, value: (row) => row.note },
+    ],
+  },
+  {
+    key: 'status',
+    label: 'Статус',
+    type: 'text',
+    pin: 'end',
+    width: 160,
+    filter: 'set',
+    value: (row) => STATUS_LABELS[row.status],
+  },
+];
 
-const sort = ref<NuiTableSort>(null);
-const selectedPeople = ref<Person[]>([]);
-const page = ref(1);
-const pageSize = ref(5);
-const columnOrder = ref<string[]>([]);
-const widths = ref<Record<string, number>>({});
-const loading = ref(false);
 const empty = ref(false);
-const lastRowClick = ref<string>();
+const sort = ref<readonly TableSort[]>([]);
+const filters = ref<NuiTableFilters>([]);
+const quick = ref('');
+const pins = ref<NuiTablePins>({});
+const hidden = ref<NuiTableHidden>([]);
+const paged = ref(false);
+const pinned = ref(false);
+const page = ref(1);
+const pageSize = ref(25);
+const units = ref<readonly Unit[]>(UNITS);
+const unitsExpanded = ref<readonly TableNodeId[]>([]);
+const selectedUnits = ref<readonly Unit[]>([]);
+const unitsLoading = ref(false);
+const lastUnitClick = ref<string | null>(null);
+const LOAD_DELAY = 700;
 
-const onRowClick = (row: Person): void => {
-  lastRowClick.value = row.name;
+const loadUnit = (unit: Unit): void => {
+  setTimeout(() => {
+    units.value = units.value.map((entry) =>
+      entry.id === unit.id ? { ...entry, children: OPERATIONS } : entry,
+    );
+  }, LOAD_DELAY);
 };
+
+const groupBy = ref<readonly string[]>([]);
+const expanded = ref<readonly TableNodeId[]>([]);
+
+const grouping = computed({
+  get: () => groupingOf(groupBy.value),
+  set: (key: string) => {
+    groupBy.value = GROUP_KEYS[key] ?? [];
+    expanded.value = [];
+  },
+});
+
+const groupings = computed(() =>
+  grouping.value === 'custom' ? [...GROUPINGS, CUSTOM_GROUPING] : GROUPINGS,
+);
 
 const output = computed(() =>
-  JSON.stringify(
-    {
-      sort: sort.value,
-      selected: selectedPeople.value.map((entry) => entry.name),
-      page: page.value,
-      pageSize: pageSize.value,
-      lastRowClick: lastRowClick.value ?? null,
-      loading: loading.value,
-      empty: empty.value,
-      columnOrder: columnOrder.value,
-      widths: widths.value,
-      expanded: expanded.value.map((entry) => entry.name),
-      loaded: loaded.value,
-      lastReorder: lastReorder.value ?? null,
-      teamOrder: team.value.map((entry) => entry.name),
-    },
-    null,
-    2,
-  ),
+  JSON.stringify({
+    sort: sort.value,
+    filters: filters.value,
+    quick: quick.value,
+    groupBy: groupBy.value,
+    pins: pins.value,
+    hidden: hidden.value,
+    selected: selectedUnits.value.map((unit) => unit.id),
+    lastClick: lastUnitClick.value,
+    page: page.value,
+    pageSize: pageSize.value,
+  }),
 );
+
+const clearFilters = (): void => {
+  filters.value = [];
+  quick.value = '';
+};
+
+const resetColumns = (): void => {
+  pins.value = {};
+  hidden.value = [];
+};
 </script>

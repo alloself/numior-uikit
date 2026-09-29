@@ -1,6 +1,6 @@
 import { CHECK_INTERVAL, type SliceJob } from './slicer';
 import { createSortJob, identityIndices } from './sort';
-import type { ColumnStore, GridEngineColumn, StoreNeed, StringCodes } from './engine.types';
+import type { ColumnStore, TableEngineColumn, StoreNeed, StringCodes } from './engine.types';
 
 export interface StoreJob extends SliceJob {
   result(): ColumnStore;
@@ -8,10 +8,10 @@ export interface StoreJob extends SliceJob {
 
 type NumberRead<T> = (row: T) => number | null | undefined;
 
-type NumberColumn<T> = Exclude<GridEngineColumn<T>, { kind: 'string' }>;
+type NumberColumn<T> = Exclude<TableEngineColumn<T>, { kind: 'string' }>;
 
 export interface StoreRequest<T> {
-  readonly column: GridEngineColumn<T>;
+  readonly column: TableEngineColumn<T>;
   readonly need: StoreNeed;
   readonly current: ColumnStore | undefined;
 }
@@ -188,7 +188,7 @@ const createRankedStringJob = (codes: CodesJob, collator: Intl.Collator): StoreJ
 };
 
 export const createStoreJob = <T>(
-  column: GridEngineColumn<T>,
+  column: TableEngineColumn<T>,
   rows: readonly T[],
   collator: Intl.Collator,
   need: StoreNeed,
