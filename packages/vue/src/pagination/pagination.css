@@ -23,6 +23,7 @@
 }
 .nui-pagination__range {
   color: var(--nui-text-muted);
+  unicode-bidi: plaintext;
 }
 .nui-pagination__page-size {
   display: inline-flex;
@@ -110,6 +111,7 @@
   min-inline-size: 3rem;
   text-align: center;
   font-variant-numeric: tabular-nums;
+  unicode-bidi: plaintext;
 }
 @container (max-width: 28rem) {
   .nui-pagination__item--page,
