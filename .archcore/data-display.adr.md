@@ -169,10 +169,11 @@ status: accepted
   `nui-tree__checkbox` с `tabindex="-1"`, `aria-hidden` и `pointer-events: none`: выглядит как
   везде в ките, но клик ловит обёртка, фокус остаётся на корне, а состояние для AT несёт
   `aria-checked` на `treeitem`. Раскрытие анимируется как у Vuetify: строки списка идут
-  через `TransitionGroup` (BEM-классы `--folded`/`--entering`/`--leaving`), каждая строка —
-  grid с `grid-template-rows: 1fr → 0fr` и внутренней обёрткой `nui-tree__row` с
-  `overflow: hidden`, поэтому дети разворачиваются и сворачиваются по высоте без обёртки
-  вокруг группы и без нарушения плоской модели; в `virtual` переходы выключены, там строки
+  через `TransitionGroup` (BEM-классы `--folded`/`--entering`/`--leaving`), строка держит
+  фиксированную высоту `--_row` и `overflow: hidden`, а складывание анимирует `block-size`
+  до нуля (с 2026-09-30; до этого grid `1fr → 0fr` с внутренней обёрткой), поэтому дети
+  разворачиваются и сворачиваются по высоте без обёртки вокруг группы и без нарушения
+  плоской модели; в `virtual` переходы выключены, там строки
   абсолютные, а плавно проявляются только строки, добавленные в плоский список действием
   (разворот узла, догрузка): дерево диффит `visible` в watcher, помечает новые ключи классом
   `nui-tree__item--revealing` на два кадра и только для него держит `@starting-style`.
@@ -203,7 +204,37 @@ status: accepted
   (`useOptionSelection`, `useListNavigation`). Список один: `NuiList` на странице и он же в
   варианте `floating` внутри select, combobox и поля времени (2026-09-25: `NuiListbox`
   удалён, модель пункта общая — `NuiListEntry` с `label`, `NuiOption` требует `value`,
-  группы `{ label, items }`); дерево остаётся отдельным контейнером из-за вложенности.
+  группы `{ label, items }`); дерево остаётся отдельным контейнером (свой движок,
+  `aria-activedescendant`, окно строк), но с 2026-09-30 рендерит каркас списка, см. ниже.
+
+- Дерево на каркасе списка (2026-09-30, интервью). Пользователь читает дерево как «список,
+  который умеет показывать дерево», а `div`-узлы рядом с `ul`/`li` списка — как задвоение.
+  `NuiTree` рендерит корень `div.nui-list.nui-tree` с `nui-list--variant-*`
+  (`plain | divided | bordered`, без `floating` до tree-select), внутри
+  `ul.nui-list__items[role="presentation"]` (тег `TransitionGroup`), а каждый узел —
+  `NuiListItem` в режиме `treeitem`: `li.nui-list-item.nui-list-item--mode-treeitem` с
+  `role="treeitem"`, `aria-level`/`setsize`/`posinset`/`expanded`/`checked`/`busy`/`current`,
+  без `tabindex` и без клика в `select` (клики ловит корень). Контекст списка стал
+  размеченным объединением `ListContext = ListboxContext | TreeContext` по `kind`:
+  `'list'` несёт `tabStopKey` и `select`, `'tree'` — `nodeOf(value)` с состоянием узла;
+  `NuiListItem` разбирает режим `switch`'ем по `kind`, а тоггл, чекбокс и пара папки
+  приходят из `NuiTreeNode` слотом `leading`, поэтому `NuiCheckbox` и глифы не попадают в
+  бандл списка и селектов. Состояния `selected`/`active`/`disabled`/`current` — классы
+  `nui-list-item--*` и цвета `list.css` (селекторы `--mode-option` расширены
+  `--mode-treeitem`); `expanded`/`loading`/`folded`/`revealing` — микс `nui-tree__item--*`;
+  `activeId` контекст отдаёт только пока корень в фокусе, кольцо —
+  `.nui-tree:focus-visible .nui-list-item--active`. Модель узла — `NuiTreeItem extends
+  Omit<NuiOption, 'key' | 'href' | 'to' | 'onClick' | 'icon'>` плюс `icon: IconAlias | false`,
+  `children`, `lazy`: узел получает `badge`, `shortcut`, `current`, `description`; ссылок в
+  узлах нет, переход делает приложение по `select` (дерево ссылок с Tab по ним —
+  `NuiSidebarSub`). Слот `item` стал слотом заголовка, как у списка. Плотность — как у
+  `nav` (`--_row` 2 / 2.25 / 2.5rem по `size`, паддинги `space-1`, gap `space-2`), а не
+  `plain` списка (≈41.5px строка): деревья плотные по природе и встают в сетку сайдбара.
+  `bordered` у дерева — рамка с паддингом `space-1` без разделителей строк, `divided` —
+  разделители. `itemHeight` стал необязательным override: без него высота строки берётся
+  из `size` (`ROW_SIZES` 32 / 36 / 40 для SSR и первого рендера), а на монтировании дерево
+  один раз измеряет первую строку и держит масштаб `rowScale` (rem-высота при другом
+  корневом шрифте); заданный `itemHeight` пишется в `--_row` px, чтобы CSS и окно совпали.
 
 - Правки по аудиту (2026-09-28). Сортированный вид таблицы считается вместе с `views`:
   кэш отсортированных уровней по идентичности массива скрывал `rows.value.push(...)` и
@@ -226,6 +257,19 @@ status: accepted
   времени монтирования, слот-срез детерминирован.
 - Отдельный `NuiSelectableList`: дублировал бы разметку и стили обычного списка.
 - Вложенные `role="group"` в дереве: несовместимы с оконным рендером.
+- `NuiList` принимает `children` и сам становится деревом: два фокус-режима (roving
+  tabindex и `aria-activedescendant`) в одном компоненте, движок дерева и каскад в бандле
+  каждого `select`.
+- `NuiTreeNode` оборачивает `NuiListItem` в plain-режиме атрибутами без контекста:
+  `--selected`/`--active` берутся только из контекста, `list.css` не красил бы состояния.
+- `NuiListItem` рисует тоггл, чекбокс и папку сам: `NuiCheckbox` и глифы папок в импорте
+  каждого списка и селекта.
+- Ссылки `href`/`to` в узлах дерева: `<a>` внутри `treeitem` — второй tab stop в
+  activedescendant-дереве, а программной навигации по `to` в ките нет.
+- Плотность `plain` списка для дерева: ~41.5px на строку чужие для дерева файлов, деревья в
+  MUI, Fluent, Ark и Vuetify compact живут в 32px.
+- Повторное измерение строки post-flush watcher'ом при смене `size`: писало бы состояние из
+  post-flush; вместо этого одно измерение на монтировании и масштаб от таблицы размеров.
 - `useListNavigation` для дерева: DOM-сбор не видит невидимые строки, roving tabindex
   теряет фокус при размонтировании.
 - Фокусируемый `NuiCheckbox` внутри `treeitem`: второй tab stop и уход фокуса с корня по
