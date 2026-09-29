@@ -11,6 +11,7 @@ import type {
   NuiTableAlign,
   NuiTableColumn,
   NuiTablePin,
+  NuiTableWidths,
 } from './table.types';
 
 export interface PlacedColumn {
@@ -64,19 +65,30 @@ const SELECT_INPUT: PlaceInput = {
   wrap: false,
 };
 
-const widthOf = <T>(column: NuiTableColumn<T>): number =>
-  Math.max(column.minWidth ?? SMALLEST_WIDTH, column.width ?? DEFAULT_WIDTH);
+const minWidthOf = <T>(column: NuiTableColumn<T>): number => column.minWidth ?? SMALLEST_WIDTH;
+
+export const clampWidth = <T>(column: NuiTableColumn<T>, px: number): number => {
+  const min = minWidthOf(column);
+
+  const max =
+    column.maxWidth === undefined ? Number.POSITIVE_INFINITY : Math.max(min, column.maxWidth);
+
+  return Math.round(Math.min(max, Math.max(min, px)));
+};
+
+export const widthOf = <T>(column: NuiTableColumn<T>, widths: NuiTableWidths): number =>
+  clampWidth(column, widths[column.key] ?? column.width ?? DEFAULT_WIDTH);
 
 const alignOf = <T>(column: NuiTableColumn<T>): NuiTableAlign =>
   column.align ?? (column.type === 'number' ? 'end' : 'start');
 
-const inputOf = <T>(column: NuiTableColumn<T>, wrap: boolean): PlaceInput => ({
+const inputOf = <T>(column: NuiTableColumn<T>, options: LayoutOptions): PlaceInput => ({
   key: column.key,
   kind: 'data',
-  width: widthOf(column),
-  flex: Math.max(0, column.flex ?? 0),
+  width: widthOf(column, options.widths),
+  flex: column.key in options.widths ? 0 : Math.max(0, column.flex ?? 0),
   align: alignOf(column),
-  wrap: wrap && column.wrap === true,
+  wrap: options.wrap && column.wrap === true,
 });
 
 const stretch = (inputs: readonly PlaceInput[], room: number): readonly PlaceInput[] => {
@@ -151,6 +163,7 @@ const placePane = (
 export interface LayoutOptions {
   readonly pins: NuiTablePins;
   readonly hidden: NuiTableHidden;
+  readonly widths: NuiTableWidths;
   readonly sticky: boolean;
   readonly select: boolean;
   readonly room: number;
@@ -160,6 +173,7 @@ export interface LayoutOptions {
 const DEFAULT_OPTIONS: LayoutOptions = {
   pins: {},
   hidden: [],
+  widths: {},
   sticky: true,
   select: false,
   room: 0,
@@ -178,7 +192,7 @@ export const tableLayout = <T>(
   const inPane = (pin: NuiTablePin | undefined): PlaceInput[] =>
     shown
       .filter((column) => pinOf(column, options.pins) === pin)
-      .map((column) => inputOf(column, options.wrap));
+      .map((column) => inputOf(column, options));
 
   const starts = inPane('start');
   const ends = inPane('end');

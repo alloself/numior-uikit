@@ -33,6 +33,7 @@ describe('tableLayout', () => {
     const layout = tableLayout(COLUMNS, {
       pins: { city: 'start', status: null },
       hidden: ['name'],
+      widths: {},
       sticky: true,
       select: false,
       room: 0,
@@ -54,6 +55,7 @@ describe('tableLayout', () => {
     const narrow = tableLayout(columns, {
       pins: {},
       hidden: [],
+      widths: {},
       sticky: true,
       select: true,
       room: 500,
@@ -63,6 +65,7 @@ describe('tableLayout', () => {
     const wide = tableLayout(columns, {
       pins: {},
       hidden: [],
+      widths: {},
       sticky: true,
       select: true,
       room: 920,
@@ -72,6 +75,7 @@ describe('tableLayout', () => {
     const unknown = tableLayout(columns, {
       pins: {},
       hidden: [],
+      widths: {},
       sticky: true,
       select: true,
       room: 0,
@@ -88,6 +92,7 @@ describe('tableLayout', () => {
     const roomy = tableLayout(COLUMNS, {
       pins: {},
       hidden: [],
+      widths: {},
       sticky: true,
       select: false,
       room: 0,
@@ -97,6 +102,7 @@ describe('tableLayout', () => {
     const pinned = tableLayout(COLUMNS, {
       pins: { city: 'start' },
       hidden: [],
+      widths: {},
       sticky: true,
       select: false,
       room: 0,
@@ -106,6 +112,7 @@ describe('tableLayout', () => {
     const scrolling = tableLayout(COLUMNS, {
       pins: { city: 'start' },
       hidden: [],
+      widths: {},
       sticky: false,
       select: false,
       room: 0,

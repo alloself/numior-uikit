@@ -35,6 +35,7 @@
               part="head"
               :active="focus.activeIn(-1)"
               :heads="header.heads.value"
+              @resize="resize.start"
             >
               <template #utility>
                 <NuiTableUtilityCell v-bind="headUtility" @toggle="selection.toggleAll()" />
@@ -103,12 +104,10 @@
               :revision="item.revision"
               :level="item.level"
               :group="item.group"
-              :tree-key="treeKey"
               :expanded="item.expanded"
               :loading="item.loading"
               :selected="item.selected"
               :stripe="item.stripe"
-              @toggle="expansion.toggle(item.index)"
             >
               <template #utility>
                 <NuiTableUtilityCell
@@ -116,16 +115,8 @@
                   @toggle="selection.toggle(rowAt(item.index))"
                 />
               </template>
-              <template #tree>
-                <NuiTableTreeToggle
-                  :level="item.treeLevel"
-                  :expandable="item.expanded !== undefined"
-                  :loading="item.loading"
-                  @toggle="expansion.toggle(item.index)"
-                />
-              </template>
               <template #default="{ column }">
-                <CellContent :row="rowAt(item.index)" :position="item.index" :column="column" />
+                <CellContent :item="item" :position="item.index" :column="column" />
               </template>
             </NuiTableRow>
             <NuiTableGap :size="tailGap" />
@@ -240,6 +231,7 @@ import {
   type TableNode,
 } from '../engine';
 import NuiTableGap from './NuiTableGap.vue';
+import NuiTableGroupCell from './NuiTableGroupCell.vue';
 import NuiTableRow from './NuiTableRow.vue';
 import NuiTableTracks from './NuiTableTracks.vue';
 import NuiTableTreeToggle from './NuiTableTreeToggle.vue';
@@ -264,6 +256,7 @@ import { useTableExpansion } from './use-table-expansion';
 import { useTableHeader, type TableHeader } from './use-table-header';
 import { useTableMenu, type TableMenu } from './use-table-menu';
 import { useTableQuery } from './use-table-query';
+import { useTableResize } from './use-table-resize';
 import { useTableTotals } from './use-table-totals';
 import { useTableSelection, type TableSelectionKey } from './use-table-selection';
 import type {
@@ -286,6 +279,7 @@ import type {
   NuiTableSort,
   NuiTableUtilityCellProps,
   NuiTableColumn,
+  NuiTableWidths,
 } from './table.types';
 
 const ROW_SIZES = { sm: 32, md: 40, lg: 48 } as const;
@@ -336,6 +330,7 @@ const groupBy = defineModel<NuiTableGroupBy>('groupBy', { default: () => [] });
 const expanded = defineModel<NuiTableExpanded>('expanded', { default: () => [] });
 const pins = defineModel<NuiTablePins>('pins', { default: () => ({}) });
 const hidden = defineModel<NuiTableHidden>('hidden', { default: () => [] });
+const widths = defineModel<NuiTableWidths>('widths', { default: () => ({}) });
 const selected = defineModel<readonly T[]>('selected', { default: () => [] });
 const page = defineModel<number>('page', { default: 1 });
 const pageSize = defineModel<number>('pageSize', { default: 20 });
@@ -449,6 +444,7 @@ const { width: room } = useElementSize(viewport);
 const layoutOptions = computed(() => ({
   pins: pins.value,
   hidden: hidden.value,
+  widths: widths.value,
   select: selectOn.value,
   room: room.value,
   wrap: height === undefined,
@@ -509,8 +505,8 @@ const columnWindow = useVirtualList(viewport, {
   axis: 'x',
   count: () => layout.value.centre.length,
   itemSize: () => {
-    const widths = centreWidths.value;
-    return (index: number) => widths[index] ?? 0;
+    const sizes = centreWidths.value;
+    return (index: number) => sizes[index] ?? 0;
   },
   overscan: COLUMN_OVERSCAN,
   initialCount: INITIAL_COLUMNS,
@@ -561,6 +557,7 @@ const rootClass = computed(() => [
     'nui-table--auto': !windowed.value,
     'nui-table--striped': striped,
     'nui-table--loading': loading,
+    'nui-table--resizing': resize.active.value !== undefined,
   },
 ]);
 
@@ -606,6 +603,18 @@ const rowAt = (position: number): T => {
   return node.row;
 };
 
+const resize = useTableResize<T>({
+  widths,
+  layout: () => layout.value,
+  room: () => room.value,
+  columnAt,
+  isRtl: direction.isRtl,
+  messages,
+  announce: (text) => {
+    announcement.value = text;
+  },
+});
+
 const header: TableHeader<T> = useTableHeader({
   keys: () => dataKeysOf(layout.value),
   keyAt: (visual) => dataKeyAt(layout.value, visual),
@@ -620,6 +629,9 @@ const header: TableHeader<T> = useTableHeader({
     rowsIntent.set('rows');
   },
   menu: (key, anchor, focusOn) => menu.openAt(key, anchor, focusOn),
+  resizable: resize.resizable,
+  resizing: (key) => resize.active.value === key,
+  resize: resize.onKeydown,
 });
 
 const menuNode = useTemplateRef<NuiMenuExposed>('menu-node');
@@ -675,6 +687,8 @@ const menu: TableMenu = useTableMenu({
   groupBy,
   pins,
   hidden,
+  widths,
+  resetWidth: resize.reset,
   treeMode: () => getChildren !== undefined,
   messages,
   announce: (text) => {
@@ -863,13 +877,34 @@ const scopeOf = (row: T, position: number, key: string, pinned: boolean): NuiTab
 const textOf = (row: T, key: string): string =>
   cellTextOf(columnAt(key), row, resolvedLocale.value, booleanTexts.value);
 
-const CellContent = (props: TableCellContentProps<T>): VNode =>
-  renderSlot(
+const treeToggleOf = (item: TableBodyRow): VNode =>
+  h(NuiTableTreeToggle, {
+    level: item.treeLevel,
+    expandable: item.expanded !== undefined,
+    loading: item.loading,
+    onToggle: () => expansion.toggle(item.index),
+  });
+
+const CellContent = (props: TableCellContentProps<T>): VNode | VNode[] => {
+  const { item, column } = props;
+
+  if (item?.group !== undefined) {
+    return h(NuiTableGroupCell, {
+      cell: item.group.cells[column],
+      onToggle: () => expansion.toggle(item.index),
+    });
+  }
+  const row = props.row ?? rowAt(props.position);
+
+  const content = renderSlot(
     rawSlots,
-    `cell-${props.column}`,
-    { ...scopeOf(props.row, props.position, props.column, props.pinned === true) },
-    () => [h('span', { class: 'nui-table__text' }, textOf(props.row, props.column))],
+    `cell-${column}`,
+    { ...scopeOf(row, props.position, column, props.pinned === true) },
+    () => [h('span', { class: 'nui-table__text' }, textOf(row, column))],
   );
+
+  return item !== undefined && column === treeKey.value ? [treeToggleOf(item), content] : content;
+};
 
 const sync = (): void => {
   rowCount.value = engine.value.count();

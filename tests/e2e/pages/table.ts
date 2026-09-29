@@ -116,6 +116,22 @@ export class TableSection {
     await this.page.locator('.nui-select__listbox').getByRole('option', { name: label }).click();
   }
 
+  resizer(col: number): Locator {
+    return this.header(col).locator('.nui-table__resizer');
+  }
+
+  async dragResizer(col: number, dx: number): Promise<void> {
+    const box = await boxOf(this.resizer(col));
+    const x = box.x + box.width / 2;
+    const y = box.y + box.height / 2;
+
+    await this.page.mouse.move(x, y);
+    await this.page.mouse.down();
+    await this.page.mouse.move(x + dx / 2, y);
+    await this.page.mouse.move(x + dx, y, { steps: 4 });
+    await this.page.mouse.up();
+  }
+
   filterButton(col: number): Locator {
     return this.header(col).locator('.nui-table__filter');
   }

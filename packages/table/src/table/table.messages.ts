@@ -53,6 +53,9 @@ export interface NuiTableMessages {
   readonly columnUnpinned: (params: { readonly column: string }) => string;
   readonly columnHidden: (params: { readonly column: string }) => string;
   readonly columnShown: (params: { readonly column: string }) => string;
+  readonly columnWidth: (params: { readonly column: string; readonly width: number }) => string;
+  readonly columnWidthReset: (params: { readonly column: string }) => string;
+  readonly menuResetWidth: string;
 }
 
 export const tableMessages: NuiMessageCatalog<'table'> = {
@@ -112,6 +115,9 @@ export const tableMessages: NuiMessageCatalog<'table'> = {
     columnUnpinned: ({ column }) => `Column ${column} unpinned`,
     columnHidden: ({ column }) => `Column ${column} hidden`,
     columnShown: ({ column }) => `Column ${column} shown`,
+    columnWidth: ({ column, width }) => `Column ${column} is ${width} px wide`,
+    columnWidthReset: ({ column }) => `Column ${column} width reset`,
+    menuResetWidth: 'Reset width',
   },
   ru: {
     label: 'Таблица данных',
@@ -168,5 +174,8 @@ export const tableMessages: NuiMessageCatalog<'table'> = {
     columnUnpinned: ({ column }) => `Колонка «${column}» откреплена`,
     columnHidden: ({ column }) => `Колонка «${column}» скрыта`,
     columnShown: ({ column }) => `Колонка «${column}» показана`,
+    columnWidth: ({ column, width }) => `Ширина колонки «${column}»: ${width} px`,
+    columnWidthReset: ({ column }) => `Ширина колонки «${column}» сброшена`,
+    menuResetWidth: 'Сбросить ширину',
   },
 };

@@ -7,6 +7,8 @@ export interface HeadStateInput {
   readonly sortable: (key: string) => boolean;
   readonly filterable: (key: string) => boolean;
   readonly filtered: (key: string) => boolean;
+  readonly resizable: (key: string) => boolean;
+  readonly resizing: (key: string) => boolean;
 }
 
 const cycle = (key: string, current: TableSort | undefined): TableSort | null => {
@@ -49,6 +51,8 @@ export const headStates = (input: HeadStateInput): Readonly<Record<string, Table
           primary: position === 0,
           filterable: input.filterable(key),
           filtered: input.filtered(key),
+          resizable: input.resizable(key),
+          resizing: input.resizing(key),
         },
       ];
     }),

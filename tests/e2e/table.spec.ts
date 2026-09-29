@@ -36,6 +36,35 @@ test.describe('table', () => {
     expect(await table.renderedRowCount()).toBeLessThan(60);
   });
 
+  test('resizes a column from its handle and the keyboard and resets it from the menu', async ({
+    page,
+  }) => {
+    const playground = new PlaygroundPage(page);
+    await playground.open();
+    const { table } = playground;
+    await table.root.scrollIntoViewIfNeeded();
+    const before = await table.cellBox(0, 0);
+    const width = Math.round(before.width);
+    await table.dragResizer(0, 60);
+    await expect(table.output).toContainText(`"widths":{"id":${width + 60}}`);
+    await expect(table.output).toContainText('"sort":[]');
+    expect((await table.cellBox(0, 0)).width).toBeCloseTo(before.width + 60, 0);
+    expect((await table.cellBox(0, 1)).x).toBeCloseTo(before.x + before.width + 60, 0);
+
+    await table.cell(0, 0).click();
+    await page.keyboard.press('ArrowUp');
+    await page.keyboard.press('Alt+ArrowRight');
+    await expect(table.output).toContainText(`"widths":{"id":${width + 70}}`);
+    await page.keyboard.press('Alt+ArrowLeft');
+    await expect(table.output).toContainText(`"widths":{"id":${width + 60}}`);
+    expect(await table.focusedCell()).toEqual({ row: -1, col: 0 });
+
+    await table.openMenu(0);
+    await table.menuItem('Сбросить ширину').click();
+    await expect(table.output).toContainText('"widths":{}');
+    expect((await table.cellBox(0, 0)).width).toBeCloseTo(before.width, 0);
+  });
+
   test('walks the cells with the keyboard and keeps the active one in view', async ({
     page,
     isMobile,
@@ -184,6 +213,7 @@ test.describe('table', () => {
         groupBy: [],
         pins: {},
         hidden: [],
+        widths: {},
         selected: [],
         lastClick: null,
         page: 1,
@@ -230,6 +260,7 @@ test.describe('table', () => {
         groupBy: [],
         pins: {},
         hidden: [],
+        widths: {},
         selected: [],
         lastClick: null,
         page: 1,

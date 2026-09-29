@@ -10,6 +10,7 @@ export type {
   NuiTableGroupBy,
   NuiTableHeaderSlot,
   NuiTableHidden,
+  NuiTableWidths,
   NuiTablePins,
   NuiTableProps,
   NuiTableSettled,

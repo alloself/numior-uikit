@@ -19,6 +19,7 @@ import {
   type NuiTableExposed,
   type NuiTableHidden,
   type NuiTablePins,
+  type NuiTableWidths,
   type NuiTableProps,
   type NuiTableColumnDef,
 } from '../../src';
@@ -33,6 +34,7 @@ export interface TableMountOptions<T> {
   readonly expanded?: readonly TableNodeId[];
   readonly pins?: NuiTablePins;
   readonly hidden?: NuiTableHidden;
+  readonly widths?: NuiTableWidths;
   readonly selected?: readonly T[];
   readonly page?: number;
   readonly pageSize?: number;
@@ -47,7 +49,16 @@ export interface TableMountOptions<T> {
 type MountDefaults = Required<
   Pick<
     TableMountOptions<never>,
-    'sort' | 'filters' | 'groupBy' | 'expanded' | 'pins' | 'hidden' | 'width' | 'height' | 'dir'
+    | 'sort'
+    | 'filters'
+    | 'groupBy'
+    | 'expanded'
+    | 'pins'
+    | 'hidden'
+    | 'widths'
+    | 'width'
+    | 'height'
+    | 'dir'
   >
 >;
 
@@ -58,6 +69,7 @@ const MOUNT_DEFAULTS: MountDefaults = {
   expanded: [],
   pins: {},
   hidden: [],
+  widths: {},
   width: 500,
   height: 300,
   dir: 'ltr',
@@ -85,6 +97,7 @@ interface TableModels<T> {
   readonly expanded: ShallowRef<readonly TableNodeId[]>;
   readonly pins: ShallowRef<NuiTablePins>;
   readonly hidden: ShallowRef<NuiTableHidden>;
+  readonly widths: ShallowRef<NuiTableWidths>;
   readonly selected: ShallowRef<readonly T[]>;
   readonly page: ShallowRef<number>;
   readonly pageSize: ShallowRef<number>;
@@ -145,6 +158,7 @@ export class TableDriver<T> {
     const expanded = shallowRef<readonly TableNodeId[]>(settings.expanded);
     const pins = shallowRef<NuiTablePins>(settings.pins);
     const hidden = shallowRef<NuiTableHidden>(settings.hidden);
+    const widths = shallowRef<NuiTableWidths>(settings.widths);
     const selected = shallowRef<readonly T[]>(settings.selected ?? []);
     const page = shallowRef(settings.page ?? 1);
     const pageSize = shallowRef(settings.pageSize ?? 20);
@@ -195,6 +209,10 @@ export class TableDriver<T> {
               'onUpdate:hidden': (next: NuiTableHidden) => {
                 hidden.value = next;
               },
+              widths: widths.value,
+              'onUpdate:widths': (next: NuiTableWidths) => {
+                widths.value = next;
+              },
               selected: selected.value,
               'onUpdate:selected': (next: readonly T[]) => {
                 selected.value = next;
@@ -241,6 +259,7 @@ export class TableDriver<T> {
       expanded,
       pins,
       hidden,
+      widths,
       selected,
       page,
       pageSize,
@@ -377,6 +396,10 @@ export class TableDriver<T> {
 
   get hidden(): NuiTableHidden {
     return this.models.hidden.value;
+  }
+
+  get widths(): NuiTableWidths {
+    return this.models.widths.value;
   }
 
   get selected(): readonly T[] {
@@ -705,6 +728,38 @@ export class TableDriver<T> {
       return 'start';
     }
     return cell.classList.contains('nui-table__cell--pin-end') ? 'end' : 'centre';
+  }
+
+  trackWidth(col: number): string | undefined {
+    const head = this.header(col);
+    const siblings = [...(head?.parentElement?.children ?? [])];
+
+    const track =
+      head === null
+        ? undefined
+        : this.element.querySelectorAll('colgroup > col')[siblings.indexOf(head)];
+
+    return track instanceof HTMLElement ? track.style.inlineSize : undefined;
+  }
+
+  resizer(col: number): HTMLElement | null {
+    return this.header(col)?.querySelector<HTMLElement>('.nui-table__resizer') ?? null;
+  }
+
+  async dragResizer(col: number, dx: number): Promise<void> {
+    const handle = this.resizer(col);
+
+    if (handle === null) {
+      throw new Error(`Column ${col} has no resize handle`);
+    }
+
+    handle.dispatchEvent(
+      new PointerEvent('pointerdown', { bubbles: true, button: 0, pointerId: 1, clientX: 100 }),
+    );
+
+    window.dispatchEvent(new PointerEvent('pointermove', { pointerId: 1, clientX: 100 + dx }));
+    window.dispatchEvent(new PointerEvent('pointerup', { pointerId: 1, clientX: 100 + dx }));
+    await nextTick();
   }
 
   gapBefore(position: number): string | undefined {

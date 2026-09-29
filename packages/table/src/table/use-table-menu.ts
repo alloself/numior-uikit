@@ -14,6 +14,7 @@ import type {
   NuiTableSort,
   NuiTableColumn,
   NuiTablePin,
+  NuiTableWidths,
 } from './table.types';
 
 export interface TableMenuTarget {
@@ -31,6 +32,8 @@ export interface TableMenuOptions<T> {
   readonly groupBy: Ref<NuiTableGroupBy>;
   readonly pins: Ref<NuiTablePins>;
   readonly hidden: Ref<NuiTableHidden>;
+  readonly widths: Ref<NuiTableWidths>;
+  readonly resetWidth: (key: string) => void;
   readonly treeMode: () => boolean;
   readonly messages: ComputedRef<NuiTableMessages>;
   readonly announce: (text: string) => void;
@@ -94,6 +97,7 @@ export const useTableMenu = <T>(options: TableMenuOptions<T>): TableMenu => {
       grouped: options.groupBy.value.includes(key),
       pin: pinOf(column, options.pins.value),
       hideable: column.hideable !== false && shown.length > 1,
+      resized: key in options.widths.value,
       columns: options.leaves().map((leaf) => {
         const visible = shown.includes(leaf.key);
 
@@ -141,6 +145,9 @@ export const useTableMenu = <T>(options: TableMenuOptions<T>): TableMenu => {
         options.hidden.value = [...options.hidden.value, key];
         options.announce(texts.columnHidden({ column: label }));
         options.refocus(place);
+      },
+      resetWidth: () => {
+        options.resetWidth(key);
       },
       show: (choice, shown) => {
         const column = options.columnAt(choice).label;

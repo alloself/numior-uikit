@@ -8,7 +8,7 @@
     :aria-level="level"
     :aria-expanded="expanded"
     :aria-selected="selected"
-    :aria-busy="loading || undefined"
+    :aria-busy="busy"
     :aria-hidden="hiddenRow"
     :style="rowStyle"
   >
@@ -38,17 +38,13 @@
       >
         <div class="nui-table__content">
           <slot v-if="cell.kind !== 'data'" name="utility" :column="cell.key" />
-          <NuiTableGroupCell
-            v-else-if="group"
-            :cell="group.cells[cell.key]"
-            @toggle="emit('toggle')"
-          />
-          <template v-else-if="cell.key === treeKey">
-            <slot name="tree" />
-            <slot :column="cell.key" />
-          </template>
           <slot v-else :column="cell.key" />
         </div>
+        <NuiTableResizer
+          v-if="resizerOf(cell)"
+          v-bind="resizerOf(cell)"
+          @grab="emit('resize', cell.key, $event)"
+        />
       </component>
     </template>
   </tr>
@@ -57,8 +53,13 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import NuiTableGap from './NuiTableGap.vue';
-import NuiTableGroupCell from './NuiTableGroupCell.vue';
-import type { TableCellLayout, TableDataCell, NuiTableRowProps } from './table.types';
+import NuiTableResizer from './NuiTableResizer.vue';
+import type {
+  TableCellLayout,
+  TableDataCell,
+  NuiTableResizerProps,
+  NuiTableRowProps,
+} from './table.types';
 
 const {
   cells,
@@ -68,7 +69,6 @@ const {
   active = 0,
   level,
   group,
-  treeKey,
   expanded = undefined,
   loading = false,
   selected = undefined,
@@ -76,12 +76,11 @@ const {
   heads,
 } = defineProps<NuiTableRowProps>();
 
-const emit = defineEmits<{ toggle: [] }>();
+const emit = defineEmits<{ resize: [key: string, event: PointerEvent] }>();
 
 defineSlots<{
   default(props: { column: string }): unknown;
   utility(props: { column: string }): unknown;
-  tree(): unknown;
 }>();
 
 const heading = computed(() => part === 'head' || part === 'band');
@@ -104,6 +103,8 @@ const scope = computed(() => {
 const sticky = computed(() => part === 'head' || part === 'band' || part === 'pinned');
 
 const hiddenRow = computed(() => (part === 'skeleton' ? true : undefined));
+
+const busy = computed(() => loading || undefined);
 
 const wrapsText = computed(() => part === 'body' || part === 'foot');
 
@@ -139,6 +140,14 @@ const cellClass = (cell: TableDataCell): unknown[] => [
 ];
 
 const colspanOf = (colspan: number): number | undefined => (colspan > 1 ? colspan : undefined);
+
+const resizerOf = (cell: TableDataCell): NuiTableResizerProps | undefined => {
+  const state = part === 'head' ? heads?.[cell.key] : undefined;
+
+  return state?.resizable === true
+    ? { start: cell.pin === 'end', active: state.resizing }
+    : undefined;
+};
 
 const tabindexOf = (colIndex: number): number | undefined => {
   if (part === 'band' || part === 'skeleton') {

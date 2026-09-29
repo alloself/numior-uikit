@@ -37,6 +37,8 @@ interface NuiTableColumnBase {
   readonly label: string;
   readonly width?: number | undefined;
   readonly minWidth?: number | undefined;
+  readonly maxWidth?: number | undefined;
+  readonly resizable?: boolean | undefined;
   readonly pin?: NuiTablePin | undefined;
   readonly align?: NuiTableAlign | undefined;
   readonly sortable?: boolean | undefined;
@@ -129,9 +131,10 @@ export interface NuiTableCellSlot<T> {
 }
 
 export interface TableCellContentProps<T> {
-  readonly row: T;
-  readonly position: number;
   readonly column: string;
+  readonly position: number;
+  readonly row?: T | undefined;
+  readonly item?: TableBodyRow | undefined;
   readonly pinned?: boolean | undefined;
 }
 
@@ -181,6 +184,8 @@ export type NuiTableExpanded = readonly TableNodeId[];
 export type NuiTablePins = Readonly<Record<string, NuiTablePin | null>>;
 
 export type NuiTableHidden = readonly string[];
+
+export type NuiTableWidths = Readonly<Record<string, number>>;
 
 export interface NuiTableFilterProps {
   title: string;
@@ -253,6 +258,8 @@ export interface TableHeadState {
   readonly primary: boolean;
   readonly filterable: boolean;
   readonly filtered: boolean;
+  readonly resizable: boolean;
+  readonly resizing: boolean;
 }
 
 export interface NuiTableHeaderMarksProps {
@@ -322,7 +329,6 @@ export interface NuiTableRowProps {
   revision?: number | undefined;
   level?: number | undefined;
   group?: TableGroupRow | undefined;
-  treeKey?: string | undefined;
   expanded?: boolean | undefined;
   loading?: boolean | undefined;
   selected?: boolean | undefined;
@@ -342,6 +348,11 @@ export interface NuiTableGroupCellProps {
 
 export interface NuiTableGapProps {
   size: number;
+}
+
+export interface NuiTableResizerProps {
+  start?: boolean | undefined;
+  active?: boolean | undefined;
 }
 
 export interface NuiTableTracksProps {

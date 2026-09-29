@@ -23,7 +23,6 @@ interface Order {
   readonly city: string;
   readonly status: 'paid' | 'pending' | 'cancelled';
   readonly total: number;
-  readonly date: string;
 }
 
 const orders: Order[] = [
@@ -33,7 +32,6 @@ const orders: Order[] = [
     city: 'Berlin',
     status: 'paid',
     total: 12400,
-    date: '2026-09-01',
   },
   {
     id: 20402,
@@ -41,7 +39,6 @@ const orders: Order[] = [
     city: 'Prague',
     status: 'pending',
     total: 3150,
-    date: '2026-09-03',
   },
   {
     id: 20403,
@@ -49,7 +46,6 @@ const orders: Order[] = [
     city: 'Berlin',
     status: 'paid',
     total: 48900,
-    date: '2026-09-05',
   },
   {
     id: 20404,
@@ -57,7 +53,6 @@ const orders: Order[] = [
     city: 'Vienna',
     status: 'cancelled',
     total: 990,
-    date: '2026-09-08',
   },
   {
     id: 20405,
@@ -65,7 +60,6 @@ const orders: Order[] = [
     city: 'Prague',
     status: 'paid',
     total: 7600,
-    date: '2026-09-11',
   },
   {
     id: 20406,
@@ -73,7 +67,6 @@ const orders: Order[] = [
     city: 'Vienna',
     status: 'paid',
     total: 15300,
-    date: '2026-09-14',
   },
   {
     id: 20407,
@@ -81,7 +74,6 @@ const orders: Order[] = [
     city: 'Berlin',
     status: 'pending',
     total: 2200,
-    date: '2026-09-18',
   },
   {
     id: 20408,
@@ -89,7 +81,6 @@ const orders: Order[] = [
     city: 'Prague',
     status: 'paid',
     total: 31800,
-    date: '2026-09-22',
   },
 ];
 
@@ -122,11 +113,11 @@ const columns: NuiTableColumnDef<Order>[] = [
         key: 'customer',
         label: 'Customer',
         type: 'text',
-        width: 180,
+        width: 150,
         flex: 1,
         value: (row) => row.customer,
       },
-      { key: 'city', label: 'City', type: 'text', width: 130, value: (row) => row.city },
+      { key: 'city', label: 'City', type: 'text', width: 120, value: (row) => row.city },
     ],
   },
   {
@@ -137,24 +128,17 @@ const columns: NuiTableColumnDef<Order>[] = [
         key: 'status',
         label: 'Status',
         type: 'text',
-        width: 150,
+        width: 140,
         value: (row) => STATUSES[row.status],
       },
       {
         key: 'total',
         label: 'Total',
         type: 'number',
-        width: 140,
+        width: 130,
         aggregate: 'sum',
         value: (row) => row.total,
         format: (value) => money.format(value),
-      },
-      {
-        key: 'date',
-        label: 'Date',
-        type: 'date',
-        width: 130,
-        value: (row) => Date.parse(row.date),
       },
     ],
   },

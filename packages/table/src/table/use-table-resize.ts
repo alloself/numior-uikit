@@ -1,0 +1,176 @@
+import { computed, onScopeDispose, shallowRef, type ComputedRef, type Ref } from 'vue';
+import { clampWidth, widthOf, type PlacedColumn, type TableLayout } from './table-layout';
+import type { NuiTableMessages } from './table.messages';
+import type { NuiTableColumn, NuiTableWidths } from './table.types';
+
+const STEP = 10;
+
+export interface TableResizeOptions<T> {
+  readonly widths: Ref<NuiTableWidths>;
+  readonly layout: () => TableLayout;
+  readonly room: () => number;
+  readonly columnAt: (key: string) => NuiTableColumn<T>;
+  readonly isRtl: () => boolean;
+  readonly messages: ComputedRef<NuiTableMessages>;
+  readonly announce: (text: string) => void;
+}
+
+export interface TableResize {
+  readonly active: ComputedRef<string | undefined>;
+  resizable(key: string): boolean;
+  widthOf(key: string): number;
+  start(key: string, event: PointerEvent): void;
+  onKeydown(key: string, event: KeyboardEvent): boolean;
+  reset(key: string): void;
+}
+
+interface Partner {
+  readonly key: string;
+  readonly width: number;
+}
+
+interface ResizeSession {
+  readonly key: string;
+  readonly pointerId: number;
+  readonly origin: number;
+  readonly width: number;
+  readonly sign: number;
+  readonly partner: Partner | undefined;
+}
+
+const placedOf = (layout: TableLayout, key: string): PlacedColumn | undefined =>
+  layout.visual.find((column) => column.key === key);
+
+const partnerOf = (layout: TableLayout, placed: PlacedColumn): Partner | undefined => {
+  const next = layout.visual[placed.visual + (placed.pane === 'end' ? -1 : 1)];
+  return next?.kind === 'data' ? { key: next.key, width: next.width } : undefined;
+};
+
+const withoutKey = (widths: NuiTableWidths, key: string): NuiTableWidths =>
+  Object.fromEntries(Object.entries(widths).filter(([entry]) => entry !== key));
+
+export const useTableResize = <T>(options: TableResizeOptions<T>): TableResize => {
+  const session = shallowRef<ResizeSession>();
+  const active = computed(() => session.value?.key);
+  const latest = { width: 0 };
+
+  const resizable = (key: string): boolean => options.columnAt(key).resizable !== false;
+
+  const currentWidth = (key: string): number =>
+    placedOf(options.layout(), key)?.width ?? widthOf(options.columnAt(key), options.widths.value);
+
+  const write = (patch: NuiTableWidths): void => {
+    const current = options.widths.value;
+
+    if (Object.entries(patch).some(([key, value]) => current[key] !== value)) {
+      options.widths.value = { ...current, ...patch };
+    }
+  };
+
+  const announceWidth = (key: string, width: number): void => {
+    options.announce(
+      options.messages.value.columnWidth({ column: options.columnAt(key).label, width }),
+    );
+  };
+
+  const apply = (current: ResizeSession, delta: number): void => {
+    const column = options.columnAt(current.key);
+    const wanted = clampWidth(column, current.width + delta);
+
+    if (current.partner === undefined) {
+      latest.width = wanted;
+      write({ [current.key]: wanted });
+      return;
+    }
+    const partnerColumn = options.columnAt(current.partner.key);
+    const partnerNext = clampWidth(partnerColumn, current.partner.width - (wanted - current.width));
+
+    latest.width = current.width + (current.partner.width - partnerNext);
+    write({ [current.key]: latest.width, [current.partner.key]: partnerNext });
+  };
+
+  const onMove = (event: PointerEvent): void => {
+    const current = session.value;
+
+    if (current !== undefined && event.pointerId === current.pointerId) {
+      apply(current, (event.clientX - current.origin) * current.sign);
+    }
+  };
+
+  const detach = (): void => {
+    if (typeof window !== 'undefined') {
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', stop);
+      window.removeEventListener('pointercancel', stop);
+    }
+  };
+
+  const stop = (): void => {
+    const current = session.value;
+
+    detach();
+    session.value = undefined;
+
+    if (current !== undefined) {
+      announceWidth(current.key, latest.width);
+    }
+  };
+
+  const start = (key: string, event: PointerEvent): void => {
+    const layout = options.layout();
+    const placed = placedOf(layout, key);
+
+    if (event.button !== 0 || typeof window === 'undefined' || placed === undefined) {
+      return;
+    }
+    event.preventDefault();
+
+    const fits = layout.canvasWidth <= options.room();
+
+    latest.width = placed.width;
+
+    session.value = {
+      key,
+      pointerId: event.pointerId,
+      origin: event.clientX,
+      width: placed.width,
+      sign: (options.isRtl() ? -1 : 1) * (placed.pane === 'end' ? -1 : 1),
+      partner: fits ? partnerOf(layout, placed) : undefined,
+    };
+
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', stop);
+    window.addEventListener('pointercancel', stop);
+  };
+
+  const onKeydown = (key: string, event: KeyboardEvent): boolean => {
+    const arrow = event.key === 'ArrowLeft' || event.key === 'ArrowRight';
+
+    if (!arrow || !event.altKey || event.shiftKey || event.ctrlKey || event.metaKey) {
+      return false;
+    }
+    event.preventDefault();
+
+    if (!resizable(key)) {
+      return true;
+    }
+    const grow = (event.key === 'ArrowRight') !== options.isRtl();
+    const next = clampWidth(options.columnAt(key), currentWidth(key) + (grow ? STEP : -STEP));
+
+    write({ [key]: next });
+    announceWidth(key, next);
+    return true;
+  };
+
+  const reset = (key: string): void => {
+    options.widths.value = withoutKey(options.widths.value, key);
+
+    options.announce(
+      options.messages.value.columnWidthReset({ column: options.columnAt(key).label }),
+    );
+  };
+
+  onScopeDispose(stop);
+
+  return { active, resizable, widthOf: currentWidth, start, onKeydown, reset };
+};

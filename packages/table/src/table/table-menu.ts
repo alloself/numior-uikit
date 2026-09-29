@@ -18,6 +18,7 @@ export interface ColumnMenuState {
   readonly grouped: boolean;
   readonly pin: NuiTablePin | undefined;
   readonly hideable: boolean;
+  readonly resized: boolean;
   readonly columns: readonly MenuColumnChoice[];
 }
 
@@ -28,6 +29,7 @@ export interface ColumnMenuActions {
   pin(pin: NuiTablePin | undefined): void;
   hide(): void;
   show(key: string, shown: boolean): void;
+  resetWidth(): void;
 }
 
 const pinValue = (value: string): NuiTablePin | undefined =>
@@ -110,6 +112,15 @@ const pinSection = (
   },
 ];
 
+const widthSection = (
+  state: ColumnMenuState,
+  actions: ColumnMenuActions,
+  texts: NuiTableMessages,
+): NuiMenuEntry[] =>
+  state.resized
+    ? [{ key: 'width-reset', label: texts.menuResetWidth, onSelect: actions.resetWidth }]
+    : [];
+
 const visibilitySection = (
   state: ColumnMenuState,
   actions: ColumnMenuActions,
@@ -147,6 +158,7 @@ export const columnMenuEntries = (
     sortSection(state, actions, texts),
     groupSection(state, actions, texts),
     pinSection(state, actions, texts),
+    widthSection(state, actions, texts),
     visibilitySection(state, actions, texts),
   ]
     .filter((section) => section.length > 0)

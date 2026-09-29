@@ -49,7 +49,9 @@
         size="sm"
         variant="outline"
         tone="neutral"
-        :disabled="hidden.length === 0 && Object.keys(pins).length === 0"
+        :disabled="
+          hidden.length === 0 && Object.keys(pins).length === 0 && Object.keys(widths).length === 0
+        "
         data-testid="table-reset-columns"
         @click="resetColumns"
       >
@@ -91,6 +93,7 @@
       v-model:expanded="expanded"
       v-model:pins="pins"
       v-model:hidden="hidden"
+      v-model:widths="widths"
       v-model:page="page"
       v-model:page-size="pageSize"
       :columns="columns"
@@ -147,6 +150,7 @@ import {
   type NuiTableFilters,
   type NuiTableHidden,
   type NuiTablePins,
+  type NuiTableWidths,
   type NuiTableColumnDef,
   type NuiTablePagination,
 } from '@numior/table';
@@ -453,6 +457,7 @@ const filters = ref<NuiTableFilters>([]);
 const quick = ref('');
 const pins = ref<NuiTablePins>({});
 const hidden = ref<NuiTableHidden>([]);
+const widths = ref<NuiTableWidths>({});
 const paged = ref(false);
 const pinned = ref(false);
 const page = ref(1);
@@ -495,6 +500,7 @@ const output = computed(() =>
     groupBy: groupBy.value,
     pins: pins.value,
     hidden: hidden.value,
+    widths: widths.value,
     selected: selectedUnits.value.map((unit) => unit.id),
     lastClick: lastUnitClick.value,
     page: page.value,
@@ -510,5 +516,6 @@ const clearFilters = (): void => {
 const resetColumns = (): void => {
   pins.value = {};
   hidden.value = [];
+  widths.value = {};
 };
 </script>

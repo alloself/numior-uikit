@@ -76,6 +76,11 @@ Sorting, filters and groups run in slices with progress, and the `settle` event 
 count. Select-all checks the rows in view after filters, `loading` draws skeletons, empty `rows`
 show [Empty](/en/components/empty) or the `empty` slot.
 
+The handle at the header edge drags the column width, and `v-model:widths` keeps it by key.
+While the table fits, the width moves to the neighbouring column; once it scrolls, only the
+column itself grows. `Alt` with the arrow keys does the same from the keyboard, and the column
+menu resets the width.
+
 ## Accessibility
 
 The markup is a `role="grid"` grid, `treegrid` for trees and groups, with one tab stop: focus

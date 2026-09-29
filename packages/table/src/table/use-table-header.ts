@@ -28,6 +28,9 @@ export interface TableHeaderOptions<T> {
   readonly announce: (text: string) => void;
   readonly filtered: () => void;
   readonly menu: (key: string, anchor: HTMLElement, focus?: 'first') => boolean;
+  readonly resizable: (key: string) => boolean;
+  readonly resizing: (key: string) => boolean;
+  readonly resize: (key: string, event: KeyboardEvent) => boolean;
 }
 
 export interface TableHeader<T> {
@@ -47,9 +50,14 @@ export interface TableHeader<T> {
 }
 
 const HEADER = '.nui-table__row--head > [role="columnheader"]';
+const RESIZER = '.nui-table__resizer';
 
 const headerOf = (target: EventTarget | null): HTMLElement | null => {
-  const cell = target instanceof Element ? target.closest(HEADER) : null;
+  if (!(target instanceof Element) || target.closest(RESIZER) !== null) {
+    return null;
+  }
+  const cell = target.closest(HEADER);
+
   return cell instanceof HTMLElement ? cell : null;
 };
 
@@ -67,6 +75,8 @@ export const useTableHeader = <T>(options: TableHeaderOptions<T>): TableHeader<T
       sortable: (key) => options.columnAt(key).sortable !== false,
       filterable: (key) => filterKindOf(options.columnAt(key)) !== undefined,
       filtered: (key) => filterOf(options.filters.value, key) !== undefined,
+      resizable: options.resizable,
+      resizing: options.resizing,
     }),
   );
 
@@ -120,6 +130,9 @@ export const useTableHeader = <T>(options: TableHeaderOptions<T>): TableHeader<T
       event.preventDefault();
       toggleSort(key, event.shiftKey);
       return true;
+    }
+    if (event.altKey && (event.key === 'ArrowLeft' || event.key === 'ArrowRight')) {
+      return options.resize(key, event);
     }
     if (event.key !== 'ArrowDown' || !event.altKey) {
       return false;

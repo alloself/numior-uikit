@@ -13,6 +13,7 @@
   --_foot: 0px;
   --_head-rows: 1;
   --_pinned-rows: 0;
+  --_height: auto;
 
   box-sizing: border-box;
   position: relative;
@@ -56,7 +57,7 @@
 .nui-table__viewport {
   box-sizing: border-box;
   position: relative;
-  block-size: var(--_height, auto);
+  block-size: var(--_height);
   overflow: auto;
   overflow-anchor: none;
   overscroll-behavior: contain;
@@ -330,6 +331,53 @@
 }
 .nui-table--auto .nui-table__empty-body {
   min-block-size: auto;
+}
+.nui-table__resizer {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-end: 0;
+  inline-size: 8px;
+  cursor: col-resize;
+  touch-action: none;
+  user-select: none;
+}
+.nui-table__resizer--start {
+  inset-inline-end: auto;
+  inset-inline-start: 0;
+}
+.nui-table__resizer::after {
+  content: '';
+  position: absolute;
+  inset-block: 25%;
+  inset-inline-end: 3px;
+  inline-size: 2px;
+  border-radius: 1px;
+  background: var(--nui-border-strong);
+  opacity: 0;
+  transition: opacity var(--nui-duration-fast) var(--nui-easing);
+}
+.nui-table__resizer--start::after {
+  inset-inline-end: auto;
+  inset-inline-start: 3px;
+}
+.nui-table__cell:hover > .nui-table__resizer::after,
+.nui-table__resizer--active::after {
+  opacity: 1;
+}
+.nui-table__resizer--active::after {
+  background: var(--nui-primary);
+}
+@media (hover: none) {
+  .nui-table__resizer {
+    inline-size: 12px;
+  }
+}
+.nui-table--resizing {
+  cursor: col-resize;
+  user-select: none;
+}
+.nui-table--resizing .nui-table__cell:hover :is(.nui-table__filter, .nui-table__menu) {
+  opacity: 0;
 }
 .nui-table__cell--sortable {
   cursor: pointer;
