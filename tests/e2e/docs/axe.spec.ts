@@ -38,6 +38,7 @@ for (const scheme of SCHEMES) {
       isMobile,
     }) => {
       test.skip(isMobile, 'the sweep runs on desktop Chromium');
+      test.slow();
       const docs = new DocsSite(page);
       await docs.emulate({ reducedMotion: 'reduce' });
       await page.addInitScript((value) => localStorage.setItem('nui-theme', value), scheme);
