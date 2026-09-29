@@ -92,12 +92,14 @@ export class ApiComponentDriver {
 
   rows(title: string): string[][] {
     return this.table(title)
-      .findAll('tbody tr')
-      .map((row) => row.findAll('td').map((cell) => cell.text()));
+      .findAll('.nui-grid__body [role="row"]')
+      .map((row) => row.findAll('[role="gridcell"]').map((cell) => cell.text()));
   }
 
   get requiredMarks(): string[] {
-    return this.wrapper.findAll('td [title]').map((mark) => mark.attributes('title') ?? '');
+    return this.wrapper
+      .findAll('[role="gridcell"] [title]')
+      .map((mark) => mark.attributes('title') ?? '');
   }
 
   private styleList(label: string): string[] {

@@ -1,7 +1,14 @@
 <template>
   <div class="flex flex-col gap-2">
     <h4>{{ title }}</h4>
-    <NuiTable :columns="columns" :rows="rows" :get-key="keyOf" size="sm">
+    <NuiDataGrid
+      :columns="columns"
+      :source="rows"
+      :get-key="keyOf"
+      :label="title"
+      :column-menu="false"
+      size="sm"
+    >
       <template #cell-name="{ row }">
         <code>{{ row.name }}</code>
         <span v-if="isRequired(row)" :title="requiredLabel" class="text-error">*</span>
@@ -17,18 +24,18 @@
         <span v-if="row.description">{{ row.description[locale] }}</span>
         <span v-else class="text-subtle-foreground">—</span>
       </template>
-    </NuiTable>
+    </NuiDataGrid>
   </div>
 </template>
 
 <script setup lang="ts" generic="T extends ApiRow">
-import { NuiTable, type NuiTableColumn } from '@numior/vue';
+import { NuiDataGrid, type NuiGridColumn } from '@numior/table';
 import type { ExampleLocale } from '../../examples/example.types';
 import type { ApiRow } from '../theme.types';
 
 interface ApiTableProps {
   title: string;
-  columns: readonly NuiTableColumn<T>[];
+  columns: readonly NuiGridColumn<T>[];
   rows: readonly T[];
   locale: ExampleLocale;
   requiredLabel?: string | undefined;

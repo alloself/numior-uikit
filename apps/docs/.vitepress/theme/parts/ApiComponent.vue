@@ -43,13 +43,14 @@
 </template>
 
 <script setup lang="ts">
-import type { NuiTableColumn } from '@numior/vue';
+import type { NuiGridColumn } from '@numior/table';
 import type {
+  LocalizedText,
   ReferenceMember,
   ReferenceModel,
   ReferenceProp,
 } from '../../reference/reference.types';
-import type { ApiComponentProps } from '../theme.types';
+import type { ApiComponentProps, ApiRow } from '../theme.types';
 import ApiStyles from './ApiStyles.vue';
 import ApiTable from './ApiTable.vue';
 import ApiTexts from './ApiTexts.vue';
@@ -58,23 +59,64 @@ const { component, catalog, locale, texts, heading } = defineProps<ApiComponentP
 
 const anchorOf = (name: string): string => `api-${name.toLowerCase()}`;
 
-const propColumns: readonly NuiTableColumn<ReferenceProp>[] = [
-  { key: 'name', label: texts.apiName },
-  { key: 'type', label: texts.apiType },
-  { key: 'default', label: texts.apiDefault },
-  { key: 'description', label: texts.apiDescription },
+const localized = (text: LocalizedText | undefined): string => text?.[locale] ?? '';
+
+const nameColumn = <T extends ApiRow>(): NuiGridColumn<T> => ({
+  key: 'name',
+  label: texts.apiName,
+  type: 'text',
+  filter: false,
+  width: 150,
+  value: (row) => row.name,
+});
+
+const typeColumn = <T extends ApiRow>(label: string): NuiGridColumn<T> => ({
+  key: 'type',
+  label,
+  type: 'text',
+  filter: false,
+  width: 190,
+  wrap: true,
+  value: (row) => row.type,
+});
+
+const defaultColumn = <T extends ApiRow>(): NuiGridColumn<T> => ({
+  key: 'default',
+  label: texts.apiDefault,
+  type: 'text',
+  filter: false,
+  width: 120,
+  value: (row) => row.default ?? '',
+});
+
+const descriptionColumn = <T extends ApiRow>(): NuiGridColumn<T> => ({
+  key: 'description',
+  label: texts.apiDescription,
+  type: 'text',
+  filter: false,
+  width: 200,
+  flex: 1,
+  wrap: true,
+  value: (row) => localized(row.description),
+});
+
+const propColumns: readonly NuiGridColumn<ReferenceProp>[] = [
+  nameColumn(),
+  typeColumn(texts.apiType),
+  defaultColumn(),
+  descriptionColumn(),
 ];
 
-const modelColumns: readonly NuiTableColumn<ReferenceModel>[] = [
-  { key: 'name', label: texts.apiName },
-  { key: 'type', label: texts.apiType },
-  { key: 'default', label: texts.apiDefault },
-  { key: 'description', label: texts.apiDescription },
+const modelColumns: readonly NuiGridColumn<ReferenceModel>[] = [
+  nameColumn(),
+  typeColumn(texts.apiType),
+  defaultColumn(),
+  descriptionColumn(),
 ];
 
-const memberColumns = (typeLabel: string): readonly NuiTableColumn<ReferenceMember>[] => [
-  { key: 'name', label: texts.apiName },
-  { key: 'type', label: typeLabel },
-  { key: 'description', label: texts.apiDescription },
+const memberColumns = (typeLabel: string): readonly NuiGridColumn<ReferenceMember>[] => [
+  nameColumn(),
+  typeColumn(typeLabel),
+  descriptionColumn(),
 ];
 </script>

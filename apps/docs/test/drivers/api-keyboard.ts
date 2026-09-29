@@ -18,7 +18,7 @@ export class ApiKeyboardDriver {
 
   rows(): string[][] {
     return this.wrapper
-      .findAll('tbody tr')
-      .map((row) => row.findAll('td').map((cell) => cell.text()));
+      .findAll('.nui-grid__body [role="row"]')
+      .map((row) => row.findAll('[role="gridcell"]').map((cell) => cell.text()));
   }
 }

@@ -95,6 +95,9 @@ importers:
       '@numior/primitives':
         specifier: workspace:*
         version: link:../../packages/primitives
+      '@numior/table':
+        specifier: workspace:*
+        version: link:../../packages/table
       '@numior/tailwind':
         specifier: workspace:*
         version: link:../../packages/tailwind

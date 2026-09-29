@@ -1,16 +1,24 @@
 <template>
   <div class="nui-not-prose my-4">
-    <NuiTable :columns="columns" :rows="keys" :get-key="keyOf" size="sm">
+    <NuiDataGrid
+      :columns="columns"
+      :source="keys"
+      :get-key="keyOf"
+      :label="texts.apiKeyboard"
+      :column-menu="false"
+      size="sm"
+    >
       <template #cell-keys="{ row }">
         <NuiKbd :keys="row.keys" size="sm" />
       </template>
       <template #cell-description="{ row }">{{ row.description[locale] }}</template>
-    </NuiTable>
+    </NuiDataGrid>
   </div>
 </template>
 
 <script setup lang="ts">
-import { NuiKbd, NuiTable, type NuiTableColumn } from '@numior/vue';
+import { NuiKbd } from '@numior/vue';
+import { NuiDataGrid, type NuiGridColumn } from '@numior/table';
 import type { ReferenceKey } from '../../reference/reference.types';
 import type { ApiKeyboardProps } from '../theme.types';
 
@@ -18,8 +26,25 @@ const { keys, locale, texts } = defineProps<ApiKeyboardProps>();
 
 const keyOf = (row: ReferenceKey): string => row.keys;
 
-const columns: readonly NuiTableColumn<ReferenceKey>[] = [
-  { key: 'keys', label: texts.apiKeys },
-  { key: 'description', label: texts.apiAction },
+const columns: readonly NuiGridColumn<ReferenceKey>[] = [
+  {
+    key: 'keys',
+    label: texts.apiKeys,
+    type: 'text',
+    filter: false,
+    width: 160,
+    wrap: true,
+    value: (row) => row.keys,
+  },
+  {
+    key: 'description',
+    label: texts.apiAction,
+    type: 'text',
+    filter: false,
+    width: 200,
+    flex: 1,
+    wrap: true,
+    value: (row) => row.description[locale],
+  },
 ];
 </script>

@@ -2,11 +2,13 @@ import type { App, Component } from 'vue';
 import type { Theme } from 'vitepress';
 import * as vue from '@numior/vue';
 import * as forms from '@numior/forms';
+import * as table from '@numior/table';
 import { createNuiConfig } from '@numior/vue';
 import '@numior/tokens/theme.css';
 import '@numior/tokens/base.css';
 import '@numior/vue/styles.css';
 import '@numior/forms/styles.css';
+import '@numior/table/styles.css';
 import '@numior/tokens/accents.css';
 import '@numior/tokens/prose.css';
 import './tailwind.css';
@@ -40,6 +42,7 @@ export default {
 
     registerKit(app, vue);
     registerKit(app, forms);
+    registerKit(app, table);
     app.component('ApiReference', ApiReference);
     app.component('Configurator', DocsConfigurator);
     app.component('Example', DocsExample);

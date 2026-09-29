@@ -14,6 +14,7 @@
   "dependencies": {
     "@numior/forms": "workspace:*",
     "@numior/primitives": "workspace:*",
+    "@numior/table": "workspace:*",
     "@numior/tailwind": "workspace:*",
     "@numior/tokens": "workspace:*",
     "@numior/vue": "workspace:*",
