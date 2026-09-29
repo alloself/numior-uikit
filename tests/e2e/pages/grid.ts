@@ -24,7 +24,11 @@ export class GridSection {
   readonly filter: Locator;
   readonly menu: Locator;
   readonly resetColumns: Locator;
+  readonly loadingToggle: Locator;
   readonly tree: Locator;
+  readonly treeCaption: Locator;
+  readonly treeSelectAll: Locator;
+  readonly treeSkeletons: Locator;
 
   constructor(private readonly page: Page) {
     this.root = page.getByTestId('grid');
@@ -37,7 +41,19 @@ export class GridSection {
     this.filter = page.locator('.nui-grid-filter');
     this.menu = this.root.locator(':scope > .nui-menu');
     this.resetColumns = page.getByTestId('grid-reset-columns');
+    this.loadingToggle = page.getByTestId('grid-loading');
     this.tree = page.getByTestId('grid-tree');
+    this.treeCaption = this.tree.locator('.nui-grid__caption');
+    this.treeSelectAll = this.tree.locator('.nui-grid__row--head').getByRole('checkbox');
+    this.treeSkeletons = this.tree.locator('.nui-grid__row--skeleton');
+  }
+
+  treeCell(position: number, col: number): Locator {
+    return this.treeRow(position).locator(`[aria-colindex="${col + 1}"]`);
+  }
+
+  treeCheckbox(position: number): Locator {
+    return this.treeRow(position).getByRole('checkbox');
   }
 
   menuButton(col: number): Locator {

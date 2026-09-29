@@ -59,6 +59,34 @@ const docs: DocsMap = {
         ru: 'Подпись строки итогов в первой колонке без агрегата, рядом с ней число строк после фильтров; по умолчанию из словаря.',
         en: 'Label of the totals row in the first column without an aggregate, next to the count of filtered rows; the dictionary supplies the default.',
       },
+      selectable: {
+        ru: 'Выбор строк: single или multiple. Добавляет колонку с флажками в начале, в multiple — флажок «все» в шапке для строк на экране после фильтров; Space на ячейке строки переключает её.',
+        en: 'Row selection: single or multiple. Adds a checkbox column at the start and, for multiple, a select-all checkbox in the header for the rows in view after filters; Space on a row cell toggles it.',
+      },
+      striped: {
+        ru: 'Чередует фон нечётных строк по их позиции; окно строк и закреплённые строки не сбивают узор.',
+        en: 'Shades odd rows by their position, so the row window and pinned rows keep the pattern.',
+      },
+      caption: {
+        ru: 'Подпись над таблицей; без label она же становится доступным именем сетки.',
+        en: 'Caption above the table; without label it also names the grid.',
+      },
+      loading: {
+        ru: 'Внешняя загрузка данных: сетка помечена aria-busy, вместо строк — скелетоны или слот loading, флажок «все» отключён.',
+        en: 'External data loading: the grid is aria-busy, skeleton rows or the loading slot replace the data, and the select-all checkbox is disabled.',
+      },
+      loadingRows: {
+        ru: 'Число строк-скелетонов во время загрузки; по умолчанию 5.',
+        en: 'Number of skeleton rows while loading; 5 by default.',
+      },
+      selectLabel: {
+        ru: 'Доступное имя флажка строки; по умолчанию из словаря.',
+        en: 'Accessible name of a row checkbox; the dictionary supplies the default.',
+      },
+      selectAllLabel: {
+        ru: 'Доступное имя флажка «все» в шапке; по умолчанию из словаря.',
+        en: 'Accessible name of the select-all checkbox; the dictionary supplies the default.',
+      },
       columnMenu: {
         ru: 'Меню колонки в шапке: сортировка, фильтр, группировка, закрепление, скрытие и список колонок. false убирает кнопку меню, и Alt+ArrowDown открывает фильтр.',
         en: 'Column menu in the header: sort, filter, grouping, pinning, hiding and the column list. false drops the menu button, and Alt+ArrowDown opens the filter.',
@@ -89,6 +117,10 @@ const docs: DocsMap = {
         ru: 'Закрепление из меню: ключ колонки → start, end или null (не закреплять); побеждает pin колонки, отсутствующий ключ оставляет его. Если закреплённые панели не оставляют места хотя бы на одну колонку, все колонки прокручиваются, а модель не меняется.',
         en: 'Pinning from the menu: column key → start, end or null (unpinned); it beats the column pin, and a missing key keeps it. When the pinned panes leave no room for a single column, every column scrolls and the model stays as it is.',
       },
+      'v-model:selected': {
+        ru: 'Выбранные строки как значения источника; ключ — getKey, без него сама строка.',
+        en: 'Selected rows as source values, keyed by getKey or by identity without it.',
+      },
       'v-model:hidden': {
         ru: 'Ключи скрытых колонок; скрытая колонка не рисуется и не участвует в навигации, но её фильтры и сортировка продолжают действовать.',
         en: 'Keys of hidden columns; a hidden column is neither drawn nor reachable by the keyboard, but its filters and sort keep working.',
@@ -107,9 +139,21 @@ const docs: DocsMap = {
         ru: 'Раскрыта строка с незагруженными детьми; строка ждёт их, пока источник не обновится.',
         en: 'A row with unloaded children expanded; it waits for them until the source updates.',
       },
+      rowClick: {
+        ru: 'Клик по строке данных вне флажка, подписи группы и переключателя дерева; передаёт строку и событие.',
+        en: 'A click on a data row outside the checkbox, the group label and the tree toggle; carries the row and the event.',
+      },
     },
     slots: {
       empty: { ru: 'Содержимое пустого грида.', en: 'Content of the empty grid.' },
+      loading: {
+        ru: 'Содержимое вместо строк-скелетонов во время загрузки.',
+        en: 'Content shown instead of skeleton rows while loading.',
+      },
+      caption: {
+        ru: 'Подпись над таблицей вместо caption.',
+        en: 'Caption above the table instead of caption.',
+      },
     },
     keyboard: [
       {
@@ -131,6 +175,13 @@ const docs: DocsMap = {
         description: {
           ru: 'На строке группы или в колонке дерева разворачивает или сворачивает строку.',
           en: 'On a group row or in the tree column expands or collapses the row.',
+        },
+      },
+      {
+        keys: 'Space',
+        description: {
+          ru: 'При включённом selectable на ячейке строки выбирает или снимает строку; на ячейке флажка в шапке — все строки на экране.',
+          en: 'With selectable on, on a row cell selects or deselects the row; on the header checkbox cell, every row in view.',
         },
       },
       {

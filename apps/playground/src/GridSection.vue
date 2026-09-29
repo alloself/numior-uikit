@@ -55,6 +55,15 @@
       >
         Сбросить колонки
       </NuiButton>
+      <NuiButton
+        size="sm"
+        variant="outline"
+        tone="neutral"
+        data-testid="grid-loading"
+        @click="unitsLoading = !unitsLoading"
+      >
+        {{ unitsLoading ? 'Показать структуру' : 'Загрузка структуры' }}
+      </NuiButton>
     </div>
     <NuiDataGrid
       v-model:sort="sort"
@@ -80,15 +89,20 @@
     <pre class="output" data-testid="grid-output">{{ output }}</pre>
     <NuiDataGrid
       v-model:expanded="unitsExpanded"
+      v-model:selected="selectedUnits"
       class="grid-tree"
       :columns="UNIT_COLUMNS"
       :source="units"
       :get-key="(row) => row.id"
       :get-children="(row) => row.children"
       :has-children="(row) => row.lazy === true"
-      label="Структура компании"
+      :loading="unitsLoading"
+      caption="Структура компании"
+      selectable="multiple"
+      striped
       data-testid="grid-tree"
       @load="loadUnit"
+      @row-click="(row) => (lastUnitClick = row.id)"
     />
   </section>
 </template>
@@ -415,6 +429,9 @@ const pins = ref<NuiDataGridPins>({});
 const hidden = ref<NuiDataGridHidden>([]);
 const units = ref<readonly Unit[]>(UNITS);
 const unitsExpanded = ref<readonly GridNodeId[]>([]);
+const selectedUnits = ref<readonly Unit[]>([]);
+const unitsLoading = ref(false);
+const lastUnitClick = ref<string | null>(null);
 const LOAD_DELAY = 700;
 
 const loadUnit = (unit: Unit): void => {
@@ -448,6 +465,8 @@ const output = computed(() =>
     groupBy: groupBy.value,
     pins: pins.value,
     hidden: hidden.value,
+    selected: selectedUnits.value.map((unit) => unit.id),
+    lastClick: lastUnitClick.value,
   }),
 );
 

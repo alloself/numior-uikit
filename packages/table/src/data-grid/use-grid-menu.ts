@@ -3,7 +3,7 @@ import type { NuiMenuEntry, NuiMenuFocus } from '@numior/vue';
 import type { GridSortDirection } from '../engine';
 import type { NuiDataGridMessages } from './data-grid.messages';
 import type { GridLayout } from './grid-layout';
-import { pinOf } from './grid-layout';
+import { dataKeysOf, pinOf } from './grid-layout';
 import { columnMenuEntries, type ColumnMenuActions, type ColumnMenuState } from './grid-menu';
 import type {
   GridHeaderTarget,
@@ -79,7 +79,7 @@ export const useGridMenu = <T>(options: GridMenuOptions<T>): GridMenu => {
   const target = shallowRef<GridMenuTarget | null>(null);
   const open = ref(false);
 
-  const shownKeys = (): readonly string[] => options.layout().visual.map((column) => column.key);
+  const shownKeys = (): readonly string[] => dataKeysOf(options.layout());
 
   const stateOf = (key: string): ColumnMenuState => {
     const column = options.columnAt(key);

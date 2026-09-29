@@ -184,6 +184,8 @@ test.describe('data grid', () => {
         groupBy: [],
         pins: {},
         hidden: [],
+        selected: [],
+        lastClick: null,
       }),
     );
 
@@ -226,6 +228,8 @@ test.describe('data grid', () => {
         groupBy: [],
         pins: {},
         hidden: [],
+        selected: [],
+        lastClick: null,
       }),
     );
 
@@ -381,6 +385,51 @@ test.describe('data grid', () => {
     await expect(grid.treeRow(5)).toContainText('Поддержка');
     await expect(grid.treeRow(4)).not.toHaveAttribute('aria-busy');
     await expect(viewport).toHaveAttribute('aria-rowcount', '8');
+  });
+
+  test('selects tree rows with checkboxes, Space and the header, reports clicks and shows skeletons', async ({
+    page,
+    isMobile,
+  }) => {
+    const playground = new PlaygroundPage(page);
+    await playground.open();
+    const { grid } = playground;
+    await grid.tree.scrollIntoViewIfNeeded();
+    const viewport = grid.tree.locator('.nui-grid__viewport');
+    await expect(viewport).toHaveAttribute('aria-multiselectable', 'true');
+    await expect(grid.treeCaption).toHaveText('Структура компании');
+    await expect(viewport).toHaveAccessibleName('Структура компании');
+    await expect(grid.treeRow(1)).toHaveClass(/nui-grid__row--odd/);
+    await grid.treeCheckbox(0).check();
+
+    await expect(grid.treeRow(0)).toHaveAttribute('aria-selected', 'true');
+    await expect(grid.treeRow(1)).toHaveAttribute('aria-selected', 'false');
+    await expect(grid.output).toContainText('"selected":["sales"]');
+    await expect(grid.treeSelectAll).toHaveJSProperty('indeterminate', true);
+    await grid.treeSelectAll.click();
+
+    await expect(grid.output).toContainText('"selected":["sales","rnd","ops"]');
+    await expect(grid.treeSelectAll).toBeChecked();
+    await grid.treeToggle(0).click();
+    await expect(grid.treeRow(1)).toContainText('Россия');
+    await expect(grid.treeSelectAll).toHaveJSProperty('indeterminate', true);
+    await grid.treeCell(1, 2).click();
+    await expect(grid.output).toContainText('"lastClick":"sales-ru"');
+    await expect(grid.output).toContainText('"selected":["sales","rnd","ops"]');
+
+    if (!isMobile) {
+      await page.keyboard.press(' ');
+      await expect(grid.output).toContainText('"selected":["sales","rnd","ops","sales-ru"]');
+      await expect(grid.treeRow(1)).toHaveAttribute('aria-selected', 'true');
+    }
+    await grid.loadingToggle.click();
+
+    await expect(viewport).toHaveAttribute('aria-busy', 'true');
+    await expect(grid.treeSkeletons).toHaveCount(5);
+    await expect(grid.treeSelectAll).toBeDisabled();
+    await grid.loadingToggle.click();
+    await expect(grid.treeSkeletons).toHaveCount(0);
+    await expect(grid.treeRow(0)).toHaveAttribute('aria-selected', 'true');
   });
 
   test('data grid has no automatically detectable WCAG AA violations', async ({ page }) => {

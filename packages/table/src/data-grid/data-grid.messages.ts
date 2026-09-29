@@ -3,6 +3,8 @@ import { plural, type NuiMessageCatalog } from '@numior/primitives';
 export interface NuiDataGridMessages {
   readonly label: string;
   readonly empty: string;
+  readonly select: string;
+  readonly selectAll: string;
   readonly yes: string;
   readonly no: string;
   readonly sortedAscending: (params: { readonly column: string }) => string;
@@ -58,6 +60,8 @@ export const dataGridMessages: NuiMessageCatalog<'dataGrid'> = {
   en: {
     label: 'Data grid',
     empty: 'No rows to show',
+    select: 'Select row',
+    selectAll: 'Select all rows',
     yes: 'Yes',
     no: 'No',
     sortedAscending: ({ column }) => `Sorted by ${column}, ascending`,
@@ -112,6 +116,8 @@ export const dataGridMessages: NuiMessageCatalog<'dataGrid'> = {
   ru: {
     label: 'Таблица данных',
     empty: 'Нет строк для показа',
+    select: 'Выбрать строку',
+    selectAll: 'Выбрать все строки',
     yes: 'Да',
     no: 'Нет',
     sortedAscending: ({ column }) => `Сортировка по колонке «${column}» по возрастанию`,

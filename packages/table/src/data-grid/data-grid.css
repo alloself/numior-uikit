@@ -8,6 +8,7 @@
   --_row-bg: var(--nui-surface);
   --_head-bg: var(--nui-surface-muted);
   --_hover: var(--nui-neutral-soft);
+  --_stripe: color-mix(in oklab, var(--nui-surface), var(--_head-bg) 55%);
   --_line: var(--nui-border);
   --_foot: 0px;
   --_head-rows: 1;
@@ -34,6 +35,17 @@
 .nui-grid--size-lg {
   --_pad-x: var(--nui-space-4);
   --_font-size: var(--nui-font-size-md);
+}
+.nui-grid__caption {
+  box-sizing: border-box;
+  margin: 0;
+  padding: var(--nui-space-2) var(--_pad-x);
+  border-block-end: 1px solid var(--_line);
+  font-weight: 600;
+}
+.nui-grid__frame {
+  position: relative;
+  min-inline-size: 0;
 }
 .nui-grid__viewport {
   box-sizing: border-box;
@@ -91,8 +103,18 @@
   block-size: auto;
   min-block-size: var(--_row);
 }
-.nui-grid__body > .nui-grid__row:hover {
+.nui-grid--striped .nui-grid__body > .nui-grid__row--odd {
+  --_row-bg: var(--_stripe);
+}
+.nui-grid .nui-grid__body > .nui-grid__row:hover {
   --_row-bg: color-mix(in oklab, var(--nui-surface), var(--_hover) 70%);
+}
+.nui-grid .nui-grid__body > .nui-grid__row--selected,
+.nui-grid .nui-grid__body > .nui-grid__row--selected:hover {
+  --_row-bg: var(--nui-primary-soft);
+}
+.nui-grid--loading .nui-grid__body {
+  pointer-events: none;
 }
 .nui-grid__row--head,
 .nui-grid__row--band {
@@ -249,6 +271,12 @@
 .nui-grid__cell--align-center {
   justify-content: center;
   text-align: center;
+}
+.nui-grid__cell--select {
+  padding-inline: 0;
+}
+.nui-grid__cell--select .nui-checkbox {
+  display: inline-flex;
 }
 .nui-grid__cell--align-end {
   justify-content: flex-end;

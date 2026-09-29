@@ -34,6 +34,7 @@ describe('gridLayout', () => {
       pins: { city: 'start', status: null },
       hidden: ['name'],
       sticky: true,
+      select: false,
     });
 
     expect(panesOf(layout)).toEqual({ start: ['id', 'city'], centre: ['status'], end: [] });
@@ -41,9 +42,21 @@ describe('gridLayout', () => {
   });
 
   it('tells when the pinned panes leave no room for a column and then scrolls every column in the same order', () => {
-    const roomy = gridLayout(COLUMNS, { pins: {}, hidden: [], sticky: true });
-    const pinned = gridLayout(COLUMNS, { pins: { city: 'start' }, hidden: [], sticky: true });
-    const scrolling = gridLayout(COLUMNS, { pins: { city: 'start' }, hidden: [], sticky: false });
+    const roomy = gridLayout(COLUMNS, { pins: {}, hidden: [], sticky: true, select: false });
+
+    const pinned = gridLayout(COLUMNS, {
+      pins: { city: 'start' },
+      hidden: [],
+      sticky: true,
+      select: false,
+    });
+
+    const scrolling = gridLayout(COLUMNS, {
+      pins: { city: 'start' },
+      hidden: [],
+      sticky: false,
+      select: false,
+    });
 
     expect(pinsFit(roomy, 320)).toBe(true);
     expect(pinsFit(pinned, 320)).toBe(false);

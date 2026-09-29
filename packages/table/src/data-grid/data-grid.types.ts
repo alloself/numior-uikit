@@ -16,6 +16,15 @@ export type NuiGridAlign = 'start' | 'center' | 'end';
 
 export type NuiGridPin = 'start' | 'end';
 
+export type NuiTableSelection = 'single' | 'multiple';
+
+export type GridColumnKind = 'data' | 'select';
+
+export interface GridPageWindow {
+  readonly start: number;
+  readonly end: number;
+}
+
 export type NuiGridFilterKind = 'text' | 'number' | 'date' | 'set';
 
 export type NuiGridColumnFilter = Exclude<GridFilter, { kind: 'quick' }>;
@@ -93,6 +102,13 @@ export interface NuiDataGridProps<T> {
   hasChildren?: ((row: T) => boolean) | undefined;
   treeColumn?: string | undefined;
   columnMenu?: boolean | undefined;
+  selectable?: NuiTableSelection | undefined;
+  striped?: boolean | undefined;
+  caption?: string | undefined;
+  loading?: boolean | undefined;
+  loadingRows?: number | undefined;
+  selectLabel?: string | undefined;
+  selectAllLabel?: string | undefined;
 }
 
 export interface NuiDataGridCellSlot<T> {
@@ -128,6 +144,7 @@ export interface NuiDataGridEvents<T> {
   progress: [progress: GridProgress];
   settle: [result: NuiDataGridSettled];
   load: [row: T];
+  rowClick: [row: T, event: MouseEvent];
 }
 
 export type NuiDataGridSort = readonly GridSort[];
@@ -155,6 +172,8 @@ export interface NuiDataGridFilterProps {
 
 export type NuiDataGridSlots<T> = {
   empty?: () => unknown;
+  loading?: () => unknown;
+  caption?: () => unknown;
 } & {
   [name: `cell-${string}`]: ((scope: NuiDataGridCellSlot<T>) => unknown) | undefined;
 } & {
@@ -172,6 +191,7 @@ export type GridPaneName = 'start' | 'centre' | 'end';
 
 export interface GridCellLayout {
   readonly key: string;
+  readonly kind: GridColumnKind;
   readonly colIndex: number;
   readonly align: NuiGridAlign;
   readonly wrap?: boolean | undefined;
@@ -213,7 +233,37 @@ export type GridHeaderTarget =
   | { readonly kind: 'column'; readonly key: string }
   | { readonly kind: 'slot'; readonly index: number };
 
-export type GridRowPart = 'band' | 'head' | 'body' | 'foot';
+export type GridRowPart = 'band' | 'head' | 'body' | 'foot' | 'skeleton';
+
+export type GridStatusSlot = 'empty' | 'loading';
+
+export interface GridSkeletonRow {
+  readonly index: number;
+  readonly offset: number | undefined;
+  readonly key: string;
+}
+
+export interface GridBodyRow {
+  readonly index: number;
+  readonly offset: number | undefined;
+  readonly key: GridNodeId;
+  readonly revision: number;
+  readonly level: number | undefined;
+  readonly treeLevel: number;
+  readonly group: GridGroupRow | undefined;
+  readonly expanded: boolean | undefined;
+  readonly loading: boolean;
+  readonly selected: boolean | undefined;
+  readonly stripe: boolean;
+}
+
+export interface NuiDataGridUtilityCellProps {
+  control: 'checkbox' | 'skeleton' | 'none';
+  checked?: boolean | undefined;
+  indeterminate?: boolean | undefined;
+  disabled?: boolean | undefined;
+  label?: string | undefined;
+}
 
 export type GridGroupCell =
   | { readonly kind: 'toggle'; readonly text: string; readonly count: string }
@@ -234,9 +284,10 @@ export interface NuiDataGridRowProps {
   level?: number | undefined;
   group?: GridGroupRow | undefined;
   treeKey?: string | undefined;
-  expandable?: boolean | undefined;
   expanded?: boolean | undefined;
   loading?: boolean | undefined;
+  selected?: boolean | undefined;
+  stripe?: boolean | undefined;
   heads?: Readonly<Record<string, GridHeadState>> | undefined;
 }
 

@@ -1,116 +1,141 @@
 <template>
-  <div
-    class="nui-grid"
-    :class="[
-      `nui-grid--size-${size}`,
-      {
-        'nui-grid--busy': query.busy.value,
-        'nui-grid--totals': totals.enabled.value,
-        'nui-grid--auto': !windowed,
-      },
-    ]"
-    :style="rootStyle"
-  >
-    <div
-      :id="gridId"
-      ref="viewport"
-      class="nui-grid__viewport"
-      :role="hierarchical ? 'treegrid' : 'grid'"
-      :aria-label="labelText"
-      :aria-rowcount="rowCount + headRows + footRows"
-      :aria-colcount="layout.visual.length"
-      :aria-busy="query.busy.value || undefined"
-      @keydown="onKeydown"
-      @focusin="focus.onFocusin"
-    >
-      <div class="nui-grid__header" role="rowgroup" @click="header.onClick">
-        <NuiDataGridRow
-          v-for="(band, level) in bands.rows"
-          :key="level"
-          :panes="band"
-          :row-index="level + 1"
-          part="band"
-        >
-          <template #default="{ column }">
-            <span class="nui-grid__text">{{ bands.labels.get(column) }}</span>
-          </template>
-        </NuiDataGridRow>
-        <NuiDataGridRow
-          :panes="panes"
-          :row-index="headRows"
-          part="head"
-          :active="focus.activeIn(-1)"
-          :heads="header.heads.value"
-        >
-          <template #default="{ column }">
-            <slot :name="`header-${column}`" v-bind="header.scope(column)">
-              <span class="nui-grid__text">{{ columnAt(column).label }}</span>
+  <div class="nui-grid" :class="rootClass" :style="rootStyle">
+    <p v-if="hasCaption" :id="captionId" class="nui-grid__caption">
+      <slot name="caption">{{ caption }}</slot>
+    </p>
+    <div class="nui-grid__frame">
+      <div
+        :id="gridId"
+        ref="viewport"
+        class="nui-grid__viewport"
+        :role="hierarchical ? 'treegrid' : 'grid'"
+        v-bind="viewportAria"
+        @keydown="onKeydown"
+        @focusin="focus.onFocusin"
+      >
+        <div class="nui-grid__header" role="rowgroup" @click="header.onClick">
+          <NuiDataGridRow
+            v-for="(band, level) in bands.rows"
+            :key="level"
+            :panes="band"
+            :row-index="level + 1"
+            part="band"
+          >
+            <template #default="{ column }">
+              <span class="nui-grid__text">{{ bands.labels.get(column) }}</span>
+            </template>
+          </NuiDataGridRow>
+          <NuiDataGridRow
+            :panes="panes"
+            :row-index="headRows"
+            part="head"
+            :active="focus.activeIn(-1)"
+            :heads="header.heads.value"
+          >
+            <template #utility>
+              <NuiDataGridUtilityCell v-bind="headUtility" @toggle="selection.toggleAll()" />
+            </template>
+            <template #default="{ column }">
+              <slot :name="`header-${column}`" v-bind="header.scope(column)">
+                <span class="nui-grid__text">{{ columnAt(column).label }}</span>
+              </slot>
+              <NuiDataGridHeaderMarks
+                :state="header.heads.value[column]"
+                :hint="header.sortHint(column)"
+                :filter-label="messages.filterColumn({ column: columnAt(column).label })"
+                :expanded="header.expanded(column)"
+                :menu-label="menu.labelOf(column)"
+                :menu-expanded="menu.expanded(column)"
+                @filter="header.openFilter(column, $event)"
+                @menu="header.openMenu(column, $event)"
+              />
+            </template>
+          </NuiDataGridRow>
+        </div>
+        <div class="nui-grid__body" role="rowgroup" :style="bodyStyle" @click="onBodyClick">
+          <NuiDataGridRow
+            v-for="item in skeletonRows"
+            :key="item.key"
+            :panes="panes"
+            :row-index="item.index + headRows + 1"
+            part="skeleton"
+            :offset="item.offset"
+          >
+            <template #utility>
+              <NuiDataGridUtilityCell v-bind="SKELETON_UTILITY" />
+            </template>
+            <template #default>
+              <NuiSkeleton v-bind="TEXT_SKELETON" />
+            </template>
+          </NuiDataGridRow>
+          <NuiDataGridRow
+            v-for="item in bodyRows"
+            :key="item.key"
+            :panes="panes"
+            :row-index="item.index + headRows + 1"
+            :offset="item.offset"
+            :active="focus.activeIn(item.index)"
+            :revision="item.revision"
+            :level="item.level"
+            :group="item.group"
+            :tree-key="treeKey"
+            :expanded="item.expanded"
+            :loading="item.loading"
+            :selected="item.selected"
+            :stripe="item.stripe"
+            @toggle="expansion.toggle(item.index)"
+          >
+            <template #utility>
+              <NuiDataGridUtilityCell
+                v-bind="rowUtility(item)"
+                @toggle="selection.toggle(rowAt(item.index))"
+              />
+            </template>
+            <template #tree>
+              <NuiDataGridTreeToggle
+                :level="item.treeLevel"
+                :expandable="item.expanded !== undefined"
+                :loading="item.loading"
+                @toggle="expansion.toggle(item.index)"
+              />
+            </template>
+            <template #default="{ column }">
+              <slot
+                v-if="hasCellSlot(column)"
+                :name="`cell-${column}`"
+                v-bind="cellScope(item.index, column)"
+              />
+              <span v-else class="nui-grid__text">{{ cellText(item.index, column) }}</span>
+            </template>
+          </NuiDataGridRow>
+        </div>
+        <div v-if="status" class="nui-grid__empty" role="row" :aria-rowindex="headRows + 1">
+          <div class="nui-grid__empty-cell" role="gridcell" :aria-colspan="layout.visual.length">
+            <slot :name="status">
+              <NuiEmpty :title="emptyText" size="sm" />
             </slot>
-            <NuiDataGridHeaderMarks
-              :state="header.heads.value[column]"
-              :hint="header.sortHint(column)"
-              :filter-label="messages.filterColumn({ column: columnAt(column).label })"
-              :expanded="header.expanded(column)"
-              :menu-label="menu.labelOf(column)"
-              :menu-expanded="menu.expanded(column)"
-              @filter="header.openFilter(column, $event)"
-              @menu="header.openMenu(column, $event)"
-            />
-          </template>
-        </NuiDataGridRow>
-      </div>
-      <div class="nui-grid__body" role="rowgroup" :style="bodyStyle">
-        <NuiDataGridRow
-          v-for="item in bodyRows"
-          :key="item.key"
-          :panes="panes"
-          :row-index="item.index + headRows + 1"
-          :offset="item.offset"
-          :active="focus.activeIn(item.index)"
-          :revision="item.revision"
-          :level="item.level"
-          :group="item.group"
-          :tree-key="treeKey"
-          :expandable="item.expandable"
-          :expanded="item.expanded"
-          :loading="item.loading"
-          @toggle="expansion.toggle(item.index)"
-        >
-          <template #default="{ column }">
-            <slot
-              v-if="hasCellSlot(column)"
-              :name="`cell-${column}`"
-              v-bind="cellScope(item.index, column)"
-            />
-            <span v-else class="nui-grid__text">{{ cellText(item.index, column) }}</span>
-          </template>
-        </NuiDataGridRow>
-      </div>
-      <div v-if="rowCount === 0" class="nui-grid__empty" role="row" :aria-rowindex="headRows + 1">
-        <div class="nui-grid__empty-cell" role="gridcell" :aria-colspan="layout.visual.length">
-          <slot name="empty">
-            <NuiEmpty :title="emptyText" size="sm" />
-          </slot>
+          </div>
+        </div>
+        <div v-if="footRows" class="nui-grid__footer" role="rowgroup">
+          <NuiDataGridRow
+            :panes="panes"
+            :row-index="visibleRows + headRows + 1"
+            part="foot"
+            :active="focus.activeIn(visibleRows)"
+            :revision="revision"
+          >
+            <template #default="{ column }">
+              <slot :name="`footer-${column}`" v-bind="totals.scope(column)">
+                <NuiDataGridFooterCell
+                  :text="totals.scope(column).text"
+                  :count-text="totals.countText(totals.scope(column).count)"
+                />
+              </slot>
+            </template>
+          </NuiDataGridRow>
         </div>
       </div>
-      <div v-if="footRows" class="nui-grid__footer" role="rowgroup">
-        <NuiDataGridRow
-          :panes="panes"
-          :row-index="rowCount + headRows + 1"
-          part="foot"
-          :active="focus.activeIn(rowCount)"
-          :revision="revision"
-        >
-          <template #default="{ column }">
-            <slot :name="`footer-${column}`" v-bind="totals.scope(column)">
-              <NuiDataGridFooterCell
-                :text="totals.scope(column).text"
-                :count-text="totals.countText(totals.scope(column).count)"
-              />
-            </slot>
-          </template>
-        </NuiDataGridRow>
-      </div>
+      <div v-if="query.busy.value" class="nui-grid__busy" role="presentation"></div>
     </div>
     <NuiDataGridFilter
       v-if="header.target.value"
@@ -133,7 +158,6 @@
       :items="menu.items.value"
       :label="menu.label.value"
     />
-    <div v-if="query.busy.value" class="nui-grid__busy" role="presentation"></div>
     <div class="nui-grid__hidden" role="status" aria-live="polite">{{ announcement }}</div>
   </div>
 </template>
@@ -148,19 +172,28 @@ import {
   useMessages,
   useVirtualList,
 } from '@numior/primitives';
-import { NuiEmpty, NuiMenu, type NuiMenuExposed } from '@numior/vue';
+import {
+  NuiEmpty,
+  NuiMenu,
+  NuiSkeleton,
+  type NuiMenuExposed,
+  type NuiSkeletonProps,
+} from '@numior/vue';
 import {
   createGridEngine,
   type GridDistinct,
   type GridEngine,
   type GridFilter,
   type GridFilterValue,
+  type GridNode,
 } from '../engine';
 import NuiDataGridRow from './NuiDataGridRow.vue';
+import NuiDataGridTreeToggle from './NuiDataGridTreeToggle.vue';
+import NuiDataGridUtilityCell from './NuiDataGridUtilityCell.vue';
 import { dataGridMessages } from './data-grid.messages';
 import { cellTextOf, cellValueOf, engineColumnOf, valueTextOf } from './grid-format';
 import { columnTreeOf, headerBandsOf } from './grid-columns';
-import { centreIndexOf, gridLayout, panesOf, pinsFit } from './grid-layout';
+import { centreIndexOf, dataKeyAt, dataKeysOf, gridLayout, panesOf, pinsFit } from './grid-layout';
 import NuiDataGridFilter from './NuiDataGridFilter.vue';
 import NuiDataGridFooterCell from './NuiDataGridFooterCell.vue';
 import NuiDataGridHeaderMarks from './NuiDataGridHeaderMarks.vue';
@@ -170,8 +203,12 @@ import { useGridHeader, type GridHeader } from './use-grid-header';
 import { useGridMenu, type GridMenu } from './use-grid-menu';
 import { useGridQuery } from './use-grid-query';
 import { useGridTotals } from './use-grid-totals';
+import { useTableSelection, type GridSelectionKey } from './use-table-selection';
 import type {
+  GridBodyRow,
   GridCellPosition,
+  GridSkeletonRow,
+  GridStatusSlot,
   NuiDataGridCellSlot,
   NuiDataGridEvents,
   NuiDataGridExpanded,
@@ -183,6 +220,7 @@ import type {
   NuiDataGridSlots,
   NuiDataGridFilters,
   NuiDataGridSort,
+  NuiDataGridUtilityCellProps,
   NuiGridColumn,
 } from './data-grid.types';
 
@@ -193,6 +231,10 @@ const INITIAL_COLUMNS = 12;
 const ROW_OVERSCAN = 6;
 const DISTINCT_LIMIT = 100;
 const COLUMN_OVERSCAN = 2;
+const NO_UTILITY: NuiDataGridUtilityCellProps = { control: 'none' };
+const SKELETON_UTILITY: NuiDataGridUtilityCellProps = { control: 'skeleton' };
+const TEXT_SKELETON: NuiSkeletonProps = { shape: 'text', width: '60%' };
+const CLICK_GUARD = '.nui-grid__cell--select, .nui-grid__toggle, .nui-grid__group';
 
 const {
   columns,
@@ -210,6 +252,13 @@ const {
   hasChildren,
   treeColumn,
   columnMenu = true,
+  selectable,
+  striped = false,
+  caption,
+  loading = false,
+  loadingRows = 5,
+  selectLabel,
+  selectAllLabel,
 } = defineProps<NuiDataGridProps<T>>();
 
 const sort = defineModel<NuiDataGridSort>('sort', { default: () => [] });
@@ -219,6 +268,7 @@ const groupBy = defineModel<NuiDataGridGroupBy>('groupBy', { default: () => [] }
 const expanded = defineModel<NuiDataGridExpanded>('expanded', { default: () => [] });
 const pins = defineModel<NuiDataGridPins>('pins', { default: () => ({}) });
 const hidden = defineModel<NuiDataGridHidden>('hidden', { default: () => [] });
+const selected = defineModel<readonly T[]>('selected', { default: () => [] });
 const emit = defineEmits<NuiDataGridEvents<T>>();
 const slots = defineSlots<NuiDataGridSlots<T>>();
 
@@ -243,6 +293,10 @@ const rowCount = ref(0);
 const revision = ref(0);
 const announcement = ref('');
 const rowsIntent = createIntent<'rows'>();
+const selectOn = computed(() => selectable !== undefined);
+const visibleRows = computed(() => (loading ? 0 : rowCount.value));
+
+const keyOf = (row: T): GridSelectionKey<T> => (getKey === undefined ? row : getKey(row));
 
 const quickKeys = computed(() =>
   hidden.value.length === 0
@@ -263,7 +317,7 @@ const queryFilters = (): readonly GridFilter[] => {
 const totals = useGridTotals({
   engine,
   columns: () => tree.value.leaves,
-  keys: () => layout.value.visual.map((column) => column.key),
+  keys: () => dataKeysOf(layout.value),
   columnAt: (key) => columnAt(key),
   locale: () => resolvedLocale.value,
   messages,
@@ -311,8 +365,14 @@ const active = ref<GridCellPosition>({ row: rowCount.value > 0 ? 0 : -1, col: 0 
 
 const room = shallowRef(0);
 
+const layoutOptions = computed(() => ({
+  pins: pins.value,
+  hidden: hidden.value,
+  select: selectOn.value,
+}));
+
 const pinnedLayout = computed(() =>
-  gridLayout(tree.value.leaves, { pins: pins.value, hidden: hidden.value, sticky: true }),
+  gridLayout(tree.value.leaves, { ...layoutOptions.value, sticky: true }),
 );
 
 const sticky = computed(() => pinsFit(pinnedLayout.value, room.value));
@@ -320,7 +380,7 @@ const sticky = computed(() => pinsFit(pinnedLayout.value, room.value));
 const layout = computed(() =>
   sticky.value
     ? pinnedLayout.value
-    : gridLayout(tree.value.leaves, { pins: pins.value, hidden: hidden.value, sticky: false }),
+    : gridLayout(tree.value.leaves, { ...layoutOptions.value, sticky: false }),
 );
 
 const bands = computed(() => headerBandsOf(layout.value, tree.value));
@@ -333,6 +393,10 @@ const columnByKey = computed(
 const rowSize = computed(() => rowHeight ?? ROW_SIZES[size]);
 const windowed = computed(() => height !== undefined);
 const labelText = computed(() => label ?? messages.value.label);
+const hasCaption = computed(() => caption !== undefined || slots.caption !== undefined);
+const captionId = computed(() => `${gridId.value}-caption`);
+const selectText = computed(() => selectLabel ?? messages.value.select);
+const selectAllText = computed(() => selectAllLabel ?? messages.value.selectAll);
 const emptyText = computed(() => emptyLabel ?? messages.value.empty);
 const booleanTexts = computed(() => ({ yes: messages.value.yes, no: messages.value.no }));
 const centreWidths = computed(() => layout.value.centre.map((column) => column.width));
@@ -394,17 +458,41 @@ const rootStyle = computed(() => ({
   '--_end': `${layout.value.endWidth}px`,
 }));
 
-const bodyStyle = computed(() =>
-  windowed.value ? { blockSize: `${rows.canvasSize.value}px` } : undefined,
+const skeletonCount = computed(() => (loading && slots.loading === undefined ? loadingRows : 0));
+
+const canvasSize = computed(() =>
+  loading ? skeletonCount.value * rowSize.value : rows.canvasSize.value,
 );
+
+const bodyStyle = computed(() =>
+  windowed.value ? { blockSize: `${canvasSize.value}px` } : undefined,
+);
+
+const rootClass = computed(() => [
+  `nui-grid--size-${size}`,
+  {
+    'nui-grid--busy': query.busy.value,
+    'nui-grid--totals': totals.enabled.value,
+    'nui-grid--auto': !windowed.value,
+    'nui-grid--striped': striped,
+    'nui-grid--loading': loading,
+  },
+]);
+
+const status = computed<GridStatusSlot | undefined>(() => {
+  if (loading) {
+    return slots.loading === undefined ? undefined : 'loading';
+  }
+  return rowCount.value === 0 ? 'empty' : undefined;
+});
 
 const focus = useGridFocus({
   viewport,
   active,
   rows,
   columns: columnWindow,
-  rowCount: () => rowCount.value + footRows.value,
-  bodyRows: () => rowCount.value,
+  rowCount: () => visibleRows.value + footRows.value,
+  bodyRows: () => visibleRows.value,
   headRows: () => headRows.value,
   colCount: () => layout.value.visual.length,
   rowSize: () => rowSize.value,
@@ -433,8 +521,8 @@ const rowAt = (position: number): T => {
 };
 
 const header: GridHeader<T> = useGridHeader({
-  keys: () => layout.value.visual.map((column) => column.key),
-  keyAt: (visual) => layout.value.visual[visual]?.key,
+  keys: () => dataKeysOf(layout.value),
+  keyAt: (visual) => dataKeyAt(layout.value, visual),
   columnAt,
   sort,
   filters,
@@ -449,6 +537,47 @@ const header: GridHeader<T> = useGridHeader({
 });
 
 const menuNode = useTemplateRef<NuiMenuExposed>('menu-node');
+
+const selection = useTableSelection<T>({
+  mode: () => selectable,
+  selected,
+  keyOf,
+  engine,
+  revision,
+  scope: () => ({ start: 0, end: visibleRows.value }),
+  disabled: () => loading,
+  selectKeyAt: (visual) => layout.value.visual[visual]?.kind === 'select',
+});
+
+const viewportAria = computed(() => {
+  const captioned = hasCaption.value && label === undefined;
+
+  return {
+    'aria-label': captioned ? undefined : labelText.value,
+    'aria-labelledby': captioned ? captionId.value : undefined,
+    'aria-rowcount': visibleRows.value + headRows.value + footRows.value,
+    'aria-colcount': layout.value.visual.length,
+    'aria-busy': loading || query.busy.value || undefined,
+    'aria-multiselectable': selection.multiple.value || undefined,
+  };
+});
+
+const headUtility = computed<NuiDataGridUtilityCellProps>(() =>
+  selection.multiple.value
+    ? {
+        control: 'checkbox',
+        checked: selection.headerState.value === 'checked',
+        indeterminate: selection.headerState.value === 'indeterminate',
+        disabled: selection.headerDisabled.value,
+        label: selectAllText.value,
+      }
+    : NO_UTILITY,
+);
+
+const rowUtility = (item: GridBodyRow): NuiDataGridUtilityCellProps =>
+  item.selected === undefined
+    ? NO_UTILITY
+    : { control: 'checkbox', checked: item.selected, label: selectText.value };
 
 const menu: GridMenu = useGridMenu({
   enabled: () => columnMenu,
@@ -475,15 +604,15 @@ const menu: GridMenu = useGridMenu({
 });
 
 const treeKey = computed(() =>
-  getChildren === undefined ? undefined : (treeColumn ?? layout.value.visual[0]?.key),
+  getChildren === undefined ? undefined : (treeColumn ?? dataKeysOf(layout.value)[0]),
 );
 
 const expansion = useGridExpansion({
   engine,
   expanded,
   revision,
-  keys: () => layout.value.visual.map((column) => column.key),
-  keyAt: (visual) => layout.value.visual[visual]?.key,
+  keys: () => dataKeysOf(layout.value),
+  keyAt: (visual) => dataKeyAt(layout.value, visual),
   treeKey: () => treeKey.value,
   columnAt,
   locale: () => resolvedLocale.value,
@@ -496,29 +625,73 @@ const expansion = useGridExpansion({
   },
 });
 
-const bodyRows = computed(() => {
+const levelOf = (node: GridNode<T> | undefined): number | undefined =>
+  hierarchical.value && node !== undefined ? node.level + 1 : undefined;
+
+const selectedOf = (node: GridNode<T> | undefined): boolean | undefined =>
+  selectOn.value && node?.kind === 'row' ? selection.has(node.row) : undefined;
+
+const expandedOf = (node: GridNode<T> | undefined): boolean | undefined =>
+  node?.kind === 'group' || node?.expandable === true ? node.expanded : undefined;
+
+const skeletonRows = computed((): GridSkeletonRow[] =>
+  Array.from({ length: skeletonCount.value }, (_, index) => ({
+    index,
+    offset: windowed.value ? index * rowSize.value : undefined,
+    key: `skeleton-${index}`,
+  })),
+);
+
+const bodyRows = computed((): GridBodyRow[] => {
   const current = revision.value;
-  const loading = expansion.loading.value;
+
+  if (loading) {
+    return [];
+  }
+  const pending = expansion.loading.value;
 
   return rows.items.value.map((item) => {
     const node = engine.value.nodeAt(item.index);
-    const expandable = node?.kind === 'group' || node?.expandable === true;
+    const level = levelOf(node);
 
     return {
       index: item.index,
       offset: windowed.value ? item.offset : undefined,
       key: node?.id ?? item.index,
       revision: current,
-      level: hierarchical.value && node !== undefined ? node.level + 1 : undefined,
+      level,
+      treeLevel: Math.max(0, (level ?? 1) - 1),
       group: expansion.rowAt(item.index),
-      expandable,
-      expanded: expandable ? node?.expanded : undefined,
-      loading: node !== undefined && loading.has(node.id),
+      expanded: expandedOf(node),
+      loading: node !== undefined && pending.has(node.id),
+      selected: selectedOf(node),
+      stripe: striped && item.index % 2 === 1,
     };
   });
 });
 
+const bodyPosition = (row: number): number | undefined =>
+  row >= 0 && row < visibleRows.value ? row : undefined;
+
+const onBodyClick = (event: MouseEvent): void => {
+  const target = event.target;
+
+  if (!(target instanceof Element) || target.closest(CLICK_GUARD) !== null) {
+    return;
+  }
+  const row = target.closest('[role="row"]');
+  const position = Number(row?.getAttribute('aria-rowindex')) - headRows.value - 1;
+  const node = Number.isInteger(position) ? engine.value.nodeAt(position) : undefined;
+
+  if (node?.kind === 'row') {
+    emit('rowClick', node.row, event);
+  }
+};
+
 const onKeydown = (event: KeyboardEvent): void => {
+  if (selection.onKeydown(event, active.value, bodyPosition(active.value.row))) {
+    return;
+  }
   if (!header.onKeydown(event) && !expansion.onKeydown(event, active.value)) {
     focus.onKeydown(event);
   }
@@ -573,7 +746,7 @@ const sync = (): void => {
 };
 
 const clampActive = (): void => {
-  const rowsInFocus = rowCount.value + footRows.value;
+  const rowsInFocus = visibleRows.value + footRows.value;
   const lastRow = rowsInFocus > 0 ? rowsInFocus - 1 : -1;
   const lastCol = Math.max(0, layout.value.visual.length - 1);
   const row = Math.min(active.value.row, lastRow);

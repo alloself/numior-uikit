@@ -32,6 +32,7 @@ export interface DataGridMountOptions<T> {
   readonly expanded?: readonly GridNodeId[];
   readonly pins?: NuiDataGridPins;
   readonly hidden?: NuiDataGridHidden;
+  readonly selected?: readonly T[];
   readonly slots?: Slots;
   readonly width?: number;
   readonly height?: number;
@@ -67,7 +68,13 @@ export interface CellPosition {
   readonly col: number;
 }
 
-interface GridModels {
+export interface SelectAllState {
+  readonly checked: boolean;
+  readonly indeterminate: boolean;
+  readonly disabled: boolean;
+}
+
+interface GridModels<T> {
   readonly sort: ShallowRef<readonly GridSort[]>;
   readonly filters: ShallowRef<NuiDataGridFilters>;
   readonly quick: ShallowRef<string>;
@@ -75,12 +82,16 @@ interface GridModels {
   readonly expanded: ShallowRef<readonly GridNodeId[]>;
   readonly pins: ShallowRef<NuiDataGridPins>;
   readonly hidden: ShallowRef<NuiDataGridHidden>;
+  readonly selected: ShallowRef<readonly T[]>;
 }
+
+type GridProps<T> = Omit<NuiDataGridProps<T>, 'columns' | 'source'>;
 
 interface GridEvents<T> {
   settled: number;
   progress: number;
   readonly loads: T[];
+  readonly clicks: T[];
   readonly waiters: Array<() => void>;
 }
 
@@ -129,9 +140,11 @@ export class DataGridDriver<T> {
     const expanded = shallowRef<readonly GridNodeId[]>(settings.expanded);
     const pins = shallowRef<NuiDataGridPins>(settings.pins);
     const hidden = shallowRef<NuiDataGridHidden>(settings.hidden);
+    const selected = shallowRef<readonly T[]>(settings.selected ?? []);
+    const props = shallowRef<GridProps<T>>(settings.props ?? {});
     const stubs = new TopLayerStubs();
     const exposed = shallowRef<NuiDataGridExposed | null>(null);
-    const events: GridEvents<T> = { settled: 0, progress: 0, loads: [], waiters: [] };
+    const events: GridEvents<T> = { settled: 0, progress: 0, loads: [], clicks: [], waiters: [] };
 
     const setExposed = (value: unknown): void => {
       exposed.value = isExposed(value) ? value : null;
@@ -144,7 +157,7 @@ export class DataGridDriver<T> {
             NuiDataGrid<T>,
             {
               ...(settings.auto === true ? {} : { height: `${settings.height}px` }),
-              ...settings.props,
+              ...props.value,
               columns: settings.columns,
               source: source.value,
               sort: sort.value,
@@ -175,6 +188,13 @@ export class DataGridDriver<T> {
               'onUpdate:hidden': (next: NuiDataGridHidden) => {
                 hidden.value = next;
               },
+              selected: selected.value,
+              'onUpdate:selected': (next: readonly T[]) => {
+                selected.value = next;
+              },
+              onRowClick: (row: T) => {
+                events.clicks.push(row);
+              },
               onSettle: () => {
                 events.settled += 1;
 
@@ -198,8 +218,8 @@ export class DataGridDriver<T> {
     const plugins = pluginsOf(settings.config);
     const wrapper = mount(Host, { attachTo: document.body, global: { plugins } });
 
-    const models = { sort, filters, quick, groupBy, expanded, pins, hidden };
-    const driver = new DataGridDriver<T>(wrapper, source, models, exposed, events, stubs);
+    const models = { sort, filters, quick, groupBy, expanded, pins, hidden, selected };
+    const driver = new DataGridDriver<T>(wrapper, source, props, models, exposed, events, stubs);
 
     driver.size(settings.width, settings.height);
     return driver;
@@ -208,7 +228,8 @@ export class DataGridDriver<T> {
   private constructor(
     private readonly wrapper: VueWrapper,
     private readonly source: ShallowRef<readonly T[]>,
-    private readonly models: GridModels,
+    private readonly props: ShallowRef<GridProps<T>>,
+    private readonly models: GridModels<T>,
     private readonly exposed: ShallowRef<NuiDataGridExposed | null>,
     private readonly events: GridEvents<T>,
     private readonly stubs: TopLayerStubs,
@@ -326,6 +347,91 @@ export class DataGridDriver<T> {
 
   get hidden(): NuiDataGridHidden {
     return this.models.hidden.value;
+  }
+
+  get selected(): readonly T[] {
+    return this.models.selected.value;
+  }
+
+  get clicks(): readonly T[] {
+    return this.events.clicks;
+  }
+
+  get multiselectable(): boolean {
+    return this.viewport.attributes('aria-multiselectable') === 'true';
+  }
+
+  get skeletonRows(): number {
+    return this.wrapper.findAll('.nui-grid__row--skeleton').length;
+  }
+
+  get captionText(): string | undefined {
+    const caption = this.wrapper.find('.nui-grid__caption');
+    return caption.exists() ? caption.text() : undefined;
+  }
+
+  get captionId(): string | undefined {
+    const caption = this.wrapper.find('.nui-grid__caption');
+    return caption.exists() ? caption.attributes('id') : undefined;
+  }
+
+  get labelledBy(): string | undefined {
+    return this.viewport.attributes('aria-labelledby');
+  }
+
+  private selectInput(position: number): HTMLInputElement | null {
+    return (
+      this.row(position)?.querySelector<HTMLInputElement>('.nui-grid__cell--select input') ?? null
+    );
+  }
+
+  get headerCheckbox(): SelectAllState | undefined {
+    const input = this.selectInput(-1);
+
+    return input === null
+      ? undefined
+      : { checked: input.checked, indeterminate: input.indeterminate, disabled: input.disabled };
+  }
+
+  get selectAllLabel(): string | undefined {
+    return this.selectInput(-1)?.getAttribute('aria-label') ?? undefined;
+  }
+
+  selectLabel(position: number): string | undefined {
+    return this.selectInput(position)?.getAttribute('aria-label') ?? undefined;
+  }
+
+  rowSelected(position: number): boolean | undefined {
+    const value = this.row(position)?.getAttribute('aria-selected');
+    return value === null || value === undefined ? undefined : value === 'true';
+  }
+
+  rowChecked(position: number): boolean {
+    return this.selectInput(position)?.checked ?? false;
+  }
+
+  rowOdd(position: number): boolean {
+    return this.row(position)?.classList.contains('nui-grid__row--odd') ?? false;
+  }
+
+  async checkRow(position: number): Promise<void> {
+    this.selectInput(position)?.click();
+    await nextTick();
+  }
+
+  async checkAll(): Promise<void> {
+    this.selectInput(-1)?.click();
+    await nextTick();
+  }
+
+  async clickRow(position: number, col: number): Promise<void> {
+    this.cell(position, col)?.click();
+    await nextTick();
+  }
+
+  async receive(next: Partial<GridProps<T>>): Promise<void> {
+    this.props.value = { ...this.props.value, ...next };
+    await nextTick();
   }
 
   get loads(): readonly T[] {

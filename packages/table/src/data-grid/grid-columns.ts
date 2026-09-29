@@ -57,6 +57,7 @@ export const columnTreeOf = <T>(defs: readonly NuiGridColumnDef<T>[]): ColumnTre
 
 const bandCell = <T>(band: OpenBand<T>): GridCellLayout => ({
   key: `${band.group.key}@${band.colIndex}`,
+  kind: 'data',
   colIndex: band.colIndex,
   align: 'start',
   span: band.span,

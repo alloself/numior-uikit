@@ -20,25 +20,40 @@ interface Query {
   readonly groupBy?: readonly string[];
   readonly expanded?: readonly GridNodeId[];
   readonly auto?: boolean;
+  readonly selectable?: 'single' | 'multiple';
+  readonly caption?: string;
+  readonly striped?: boolean;
+  readonly loading?: boolean;
 }
 
-const render = (count: number, query: Query = {}): Promise<string> =>
-  renderToString(
+const RENDER_DEFAULTS: Required<Omit<Query, 'auto' | 'selectable' | 'caption'>> = {
+  columns: PEOPLE_COLUMNS,
+  sort: [],
+  filters: [],
+  quick: '',
+  groupBy: [],
+  expanded: [],
+  striped: false,
+  loading: false,
+};
+
+const render = (count: number, query: Query = {}): Promise<string> => {
+  const { auto, selectable, caption, ...rest } = { ...RENDER_DEFAULTS, ...query };
+
+  return renderToString(
     createSSRApp({
       render: () =>
         h(NuiDataGrid<Person>, {
-          columns: query.columns ?? PEOPLE_COLUMNS,
+          ...rest,
           source: people(count),
           id: 'staff',
-          sort: query.sort ?? [],
-          filters: query.filters ?? [],
-          quick: query.quick ?? '',
-          groupBy: query.groupBy ?? [],
-          expanded: query.expanded ?? [],
-          height: query.auto === true ? undefined : '28rem',
+          height: auto === true ? undefined : '28rem',
+          selectable,
+          caption,
         }),
     }),
   );
+};
 
 const renderTree = (): Promise<string> =>
   renderToString(
@@ -86,6 +101,30 @@ describe('NuiDataGrid on the server', () => {
     expect(html).toContain('aria-rowcount="13"');
     expect(html).toContain('aria-rowindex="13"');
     expect(html).toContain('Сотрудник 11');
+  });
+
+  it('renders selection controls, a caption, stripes and skeletons deterministically', async () => {
+    const query = { auto: true, selectable: 'multiple', caption: 'Staff', striped: true } as const;
+    const html = await render(6, query);
+
+    expect(html).toBe(await render(6, query));
+    expect(html).toContain('aria-multiselectable="true"');
+    expect(html).toContain('aria-labelledby="staff-caption"');
+    expect(html).toContain('id="staff-caption"');
+    expect(html).not.toContain('aria-label="Data grid"');
+    expect(html).toContain('aria-colcount="19"');
+    expect(html).toContain('aria-label="Select all rows"');
+    expect(html.match(/aria-label="Select row"/g)).toHaveLength(6);
+    expect(html.match(/aria-selected="false"/g)).toHaveLength(6);
+    expect(html.match(/nui-grid__row--odd/g)).toHaveLength(3);
+    expect(html).not.toContain('nui-grid__row--selected');
+
+    const loading = await render(6, { auto: true, loading: true });
+
+    expect(loading).toContain('aria-busy="true"');
+    expect(loading).toContain('aria-rowcount="1"');
+    expect(loading.match(/nui-grid__row--skeleton/g)).toHaveLength(5);
+    expect(loading).not.toContain('Сотрудник 0');
   });
 
   it('orders the first screen by the initial sort on the server', async () => {

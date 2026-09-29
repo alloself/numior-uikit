@@ -1,5 +1,6 @@
 import type {
   GridCellLayout,
+  GridColumnKind,
   GridPaneName,
   GridPanes,
   NuiDataGridHidden,
@@ -11,6 +12,7 @@ import type {
 
 export interface PlacedColumn {
   readonly key: string;
+  readonly kind: GridColumnKind;
   readonly pane: GridPaneName;
   readonly visual: number;
   readonly width: number;
@@ -33,8 +35,27 @@ interface PaneLayout {
   readonly width: number;
 }
 
+interface PlaceInput {
+  readonly key: string;
+  readonly kind: GridColumnKind;
+  readonly width: number;
+  readonly align: NuiGridAlign;
+  readonly wrap: boolean | undefined;
+}
+
 const DEFAULT_WIDTH = 160;
 const SMALLEST_WIDTH = 48;
+const UTILITY_WIDTH = 40;
+
+const SELECT_KEY = '__select';
+
+const SELECT_INPUT: PlaceInput = {
+  key: SELECT_KEY,
+  kind: 'select',
+  width: UTILITY_WIDTH,
+  align: 'center',
+  wrap: undefined,
+};
 
 const widthOf = <T>(column: NuiGridColumn<T>): number =>
   Math.max(column.minWidth ?? SMALLEST_WIDTH, column.width ?? DEFAULT_WIDTH);
@@ -42,34 +63,43 @@ const widthOf = <T>(column: NuiGridColumn<T>): number =>
 const alignOf = <T>(column: NuiGridColumn<T>): NuiGridAlign =>
   column.align ?? (column.type === 'number' ? 'end' : 'start');
 
-const placePane = <T>(
-  columns: readonly NuiGridColumn<T>[],
+const inputOf = <T>(column: NuiGridColumn<T>): PlaceInput => ({
+  key: column.key,
+  kind: 'data',
+  width: widthOf(column),
+  align: alignOf(column),
+  wrap: column.wrap,
+});
+
+const placePane = (
+  inputs: readonly PlaceInput[],
   pane: GridPaneName,
   first: number,
 ): PaneLayout => {
   const placed: PlacedColumn[] = [];
   let offset = 0;
 
-  columns.forEach((column, index) => {
-    const width = widthOf(column);
+  inputs.forEach((input, index) => {
     const visual = first + index;
 
     placed.push({
-      key: column.key,
+      key: input.key,
+      kind: input.kind,
       pane,
       visual,
-      width,
+      width: input.width,
       offset,
       cell: {
-        key: column.key,
+        key: input.key,
+        kind: input.kind,
         colIndex: visual + 1,
-        align: alignOf(column),
-        wrap: column.wrap,
-        style: { inlineSize: `${width}px` },
+        align: input.align,
+        wrap: input.wrap,
+        style: { inlineSize: `${input.width}px` },
       },
     });
 
-    offset += width;
+    offset += input.width;
   });
 
   return { placed, width: offset };
@@ -79,9 +109,10 @@ export interface LayoutOptions {
   readonly pins: NuiDataGridPins;
   readonly hidden: NuiDataGridHidden;
   readonly sticky: boolean;
+  readonly select: boolean;
 }
 
-const DEFAULT_OPTIONS: LayoutOptions = { pins: {}, hidden: [], sticky: true };
+const DEFAULT_OPTIONS: LayoutOptions = { pins: {}, hidden: [], sticky: true, select: false };
 
 export const pinOf = <T>(
   column: NuiGridColumn<T>,
@@ -97,11 +128,16 @@ export const gridLayout = <T>(
   const inPane = (pin: NuiGridPin | undefined): NuiGridColumn<T>[] =>
     shown.filter((column) => pinOf(column, options.pins) === pin);
 
-  const starts = inPane('start');
-  const ends = inPane('end');
+  const starts = inPane('start').map(inputOf);
+  const ends = inPane('end').map(inputOf);
+  const utilities = options.select ? [SELECT_INPUT] : [];
   const sticky = options.sticky;
-  const start = placePane(sticky ? starts : [], 'start', 0);
-  const scrolling = sticky ? inPane(undefined) : [...starts, ...inPane(undefined), ...ends];
+  const start = placePane([...utilities, ...(sticky ? starts : [])], 'start', 0);
+
+  const scrolling = sticky
+    ? inPane(undefined).map(inputOf)
+    : [...starts, ...inPane(undefined).map(inputOf), ...ends];
+
   const centre = placePane(scrolling, 'centre', start.placed.length);
   const end = placePane(sticky ? ends : [], 'end', start.placed.length + centre.placed.length);
 
@@ -114,6 +150,14 @@ export const gridLayout = <T>(
     centreWidth: centre.width,
     endWidth: end.width,
   };
+};
+
+export const dataKeysOf = (layout: GridLayout): string[] =>
+  layout.visual.flatMap((column) => (column.kind === 'data' ? [column.key] : []));
+
+export const dataKeyAt = (layout: GridLayout, visual: number): string | undefined => {
+  const column = layout.visual[visual];
+  return column?.kind === 'data' ? column.key : undefined;
 };
 
 export const pinsFit = (layout: GridLayout, room: number): boolean =>
