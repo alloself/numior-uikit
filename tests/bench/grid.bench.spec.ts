@@ -119,6 +119,7 @@ test('the data grid keeps input and frames within budget on a million rows', asy
   );
 
   await bench.groupLatencies([['country']]);
+  await bench.scrollHome();
   await bench.focusCell(0, 1);
 
   operations.push(

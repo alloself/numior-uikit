@@ -99,7 +99,13 @@ export class GridBenchPage {
 
   private async openFilter(col: number): Promise<void> {
     await this.header(col).hover();
-    await this.header(col).locator('.nui-grid__filter').click();
+    await this.header(col).locator('.nui-grid__menu').click();
+
+    await this.grid
+      .locator(':scope > .nui-menu')
+      .getByRole('menuitem', { name: 'Фильтр…', exact: true })
+      .click();
+
     await this.filter.waitFor();
   }
 
