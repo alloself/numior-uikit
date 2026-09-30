@@ -146,9 +146,6 @@
     inset calc(-1 * var(--_range-s)) 0 0 var(--nui-primary),
     inset var(--_range-e) 0 0 var(--nui-primary);
 }
-.nui-table__cell--ranged.nui-table__cell--active {
-  background-color: var(--_row-bg);
-}
 .nui-table__cell--range-top {
   --_range-t: 1px;
 }
@@ -171,7 +168,8 @@
   outline: none;
   pointer-events: none;
 }
-.nui-table__cell:focus-visible {
+.nui-table__cell:focus-visible,
+.nui-table__cell--ranged.nui-table__cell--active:focus {
   outline: var(--nui-focus-ring-width) solid var(--nui-focus);
   outline-offset: calc(-1 * var(--nui-focus-ring-width));
 }

@@ -279,6 +279,12 @@ export class TableSection {
     return this.page.evaluate(() => window.getSelection()?.toString() ?? '');
   }
 
+  cellBackground(position: number, col: number): Promise<string> {
+    return this.cell(position, col).evaluate(
+      (element) => getComputedStyle(element).backgroundColor,
+    );
+  }
+
   async cellTexts(cells: readonly TableCell[]): Promise<string[]> {
     return Promise.all(
       cells.map(async (cell) => (await this.cell(cell.row, cell.col).textContent())?.trim() ?? ''),

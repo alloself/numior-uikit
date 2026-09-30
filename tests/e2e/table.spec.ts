@@ -190,6 +190,8 @@ test.describe('table', () => {
       '"ranges":[{"from":{"row":0,"col":0},"to":{"row":9999,"col":10}}]',
     );
 
+    await expect(table.cell(1, 1)).toHaveCSS('background-color', await table.cellBackground(1, 2));
+    await expect(table.cell(1, 1)).toHaveCSS('outline-style', 'solid');
     await page.keyboard.press('Escape');
     await expect(table.output).toContainText('"ranges":[]');
     await table.output.click();
