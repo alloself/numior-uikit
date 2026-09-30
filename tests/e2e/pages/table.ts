@@ -291,10 +291,13 @@ export class TableSection {
     );
   }
 
-  async dragRange(from: TableCell, to: TableCell): Promise<void> {
+  async dragRange(from: TableCell, to: TableCell, modifier?: 'ControlOrMeta'): Promise<void> {
     const start = await boxOf(this.cell(from.row, from.col));
     const end = await boxOf(this.cell(to.row, to.col));
 
+    if (modifier !== undefined) {
+      await this.page.keyboard.down(modifier);
+    }
     await this.page.mouse.move(start.x + start.width / 2, start.y + start.height / 2);
     await this.page.mouse.down();
 
@@ -303,6 +306,10 @@ export class TableSection {
     });
 
     await this.page.mouse.up();
+
+    if (modifier !== undefined) {
+      await this.page.keyboard.up(modifier);
+    }
   }
 
   async longPress(position: number, col: number): Promise<void> {

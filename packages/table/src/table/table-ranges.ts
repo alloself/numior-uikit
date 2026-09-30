@@ -81,35 +81,104 @@ export const inRanges = (ranges: NuiTableRanges, position: TableCellPosition): b
     );
   });
 
+const mergeSpans = (spans: readonly RangeSpan[]): RangeSpan[] => {
+  const merged: RangeSpan[] = [];
+
+  for (const span of spans.toSorted((a, b) => a.start - b.start)) {
+    const last = merged.at(-1);
+
+    if (last !== undefined && span.start <= last.end + 1) {
+      merged[merged.length - 1] = { start: last.start, end: Math.max(last.end, span.end) };
+    } else {
+      merged.push(span);
+    }
+  }
+  return merged;
+};
+
+const spansAt = (ranges: NuiTableRanges, row: number): RangeSpan[] =>
+  mergeSpans(
+    ranges.flatMap((range) => {
+      const box = boxOf(range);
+
+      return row < box.top || row > box.bottom ? [] : [{ start: box.start, end: box.end }];
+    }),
+  );
+
+const covers = (spans: readonly RangeSpan[], col: number): boolean =>
+  spans.some((span) => col >= span.start && col <= span.end);
+
+const cutsOf = (span: RangeSpan, around: readonly RangeSpan[]): number[] =>
+  [...new Set(around.flatMap((other) => [other.start, other.end + 1]))]
+    .filter((col) => col > span.start && col <= span.end)
+    .toSorted((a, b) => a - b);
+
 export const segmentsOf = (
   ranges: NuiTableRanges,
   row: number,
   offset: number,
-): TableRangeSegment[] =>
-  ranges.flatMap((range) => {
-    const box = boxOf(range);
+): TableRangeSegment[] => {
+  const own = spansAt(ranges, row);
 
-    return row < box.top || row > box.bottom
-      ? []
-      : [
-          {
-            from: box.start + offset,
-            to: box.end + offset,
-            top: row === box.top,
-            bottom: row === box.bottom,
-          },
-        ];
+  if (own.length === 0) {
+    return [];
+  }
+  const above = spansAt(ranges, row - 1);
+  const below = spansAt(ranges, row + 1);
+
+  return own.flatMap((span) => {
+    const edges = [span.start, ...cutsOf(span, [...above, ...below]), span.end + 1];
+
+    return edges.slice(0, -1).map((from, index) => {
+      const to = (edges[index + 1] ?? span.end + 1) - 1;
+
+      return {
+        from: from + offset,
+        to: to + offset,
+        top: !covers(above, from),
+        bottom: !covers(below, from),
+        start: from === span.start,
+        end: to === span.end,
+      };
+    });
   });
-
-export const withCorner = (
-  ranges: NuiTableRanges,
-  from: TableCellPosition,
-  to: TableCellPosition,
-): NuiTableRange[] => {
-  const last = ranges.at(-1);
-
-  return last === undefined ? [{ from, to }] : [...ranges.slice(0, -1), { from: last.from, to }];
 };
+
+const rangeOfBox = (box: RangeBox): NuiTableRange => ({
+  from: { row: box.top, col: box.start },
+  to: { row: box.bottom, col: box.end },
+});
+
+const overlaps = (a: RangeBox, b: RangeBox): boolean =>
+  a.top <= b.bottom && b.top <= a.bottom && a.start <= b.end && b.start <= a.end;
+
+const subtractRange = (range: NuiTableRange, cut: NuiTableRange): NuiTableRange[] => {
+  const box = boxOf(range);
+  const hole = boxOf(cut);
+
+  if (!overlaps(box, hole)) {
+    return [range];
+  }
+  const top = Math.max(box.top, hole.top);
+  const bottom = Math.min(box.bottom, hole.bottom);
+
+  return [
+    { top: box.top, bottom: top - 1, start: box.start, end: box.end },
+    { top, bottom, start: box.start, end: hole.start - 1 },
+    { top, bottom, start: hole.end + 1, end: box.end },
+    { top: bottom + 1, bottom: box.bottom, start: box.start, end: box.end },
+  ]
+    .filter((piece) => piece.top <= piece.bottom && piece.start <= piece.end)
+    .map(rangeOfBox);
+};
+
+export const cutRanges = (ranges: NuiTableRanges, cut: NuiTableRange): NuiTableRange[] =>
+  ranges.flatMap((range) => subtractRange(range, cut));
+
+export const withLast = (others: NuiTableRanges, last: NuiTableRange): NuiTableRange[] => [
+  ...cutRanges(others, last),
+  last,
+];
 
 export const rowsOf = (range: NuiTableRange, bounds: RangeBounds): NuiTableRange => ({
   from: { row: range.from.row, col: 0 },
@@ -186,21 +255,6 @@ export const stepCorner = (
     return clampPosition({ row, col: corner.col }, bounds);
   }
   return col === undefined ? undefined : clampPosition({ row: corner.row, col }, bounds);
-};
-
-const mergeSpans = (spans: readonly RangeSpan[]): RangeSpan[] => {
-  const merged: RangeSpan[] = [];
-
-  for (const span of spans.toSorted((a, b) => a.start - b.start)) {
-    const last = merged.at(-1);
-
-    if (last !== undefined && span.start <= last.end + 1) {
-      merged[merged.length - 1] = { start: last.start, end: Math.max(last.end, span.end) };
-    } else {
-      merged.push(span);
-    }
-  }
-  return merged;
 };
 
 export const copyShapeOf = (ranges: NuiTableRanges): CopyShape => {

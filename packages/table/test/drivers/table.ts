@@ -5,8 +5,10 @@ import {
   defineComponent,
   h,
   nextTick,
+  ref,
   shallowRef,
   type Plugin,
+  type Ref,
   type ShallowRef,
   type Slots,
 } from 'vue';
@@ -109,7 +111,7 @@ interface TableModels<T> {
   readonly selected: ShallowRef<readonly T[]>;
   readonly page: ShallowRef<number>;
   readonly pageSize: ShallowRef<number>;
-  readonly ranges: ShallowRef<NuiTableRanges>;
+  readonly ranges: Ref<NuiTableRanges>;
 }
 
 type TableProps<T> = Omit<NuiTableProps<T>, 'columns' | 'rows'>;
@@ -231,7 +233,7 @@ export class TableDriver<T> {
     const selected = shallowRef<readonly T[]>(settings.selected ?? []);
     const page = shallowRef(settings.page ?? 1);
     const pageSize = shallowRef(settings.pageSize ?? 20);
-    const ranges = shallowRef<NuiTableRanges>([]);
+    const ranges = ref<NuiTableRanges>([]);
     const props = shallowRef<TableProps<T>>(settings.props ?? {});
     const stubs = new TopLayerStubs();
     const exposed = shallowRef<NuiTableExposed | null>(null);

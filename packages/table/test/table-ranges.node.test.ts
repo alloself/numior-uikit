@@ -3,6 +3,7 @@ import {
   allOf,
   colsOf,
   copyShapeOf,
+  cutRanges,
   inRanges,
   rowsOf,
   sameRanges,
@@ -10,7 +11,7 @@ import {
   spanItems,
   spanLength,
   stepCorner,
-  withCorner,
+  withLast,
 } from '../src/table/table-ranges';
 import { htmlOf, tsvOf } from '../src/table/table-clipboard';
 
@@ -67,15 +68,26 @@ describe('table ranges', () => {
     expect(stepCorner(corner, { ...KEY, key: 'Enter' }, BOUNDS)).toBeUndefined();
   });
 
-  it('keeps the anchor of the last range and widens it to rows, columns or everything', () => {
+  it('cuts holes, places the last range over the others and widens it to rows, columns or everything', () => {
     const list = [range(1, 1, 1, 1), range(3, 2, 4, 3)];
 
-    expect(withCorner(list, { row: 0, col: 0 }, { row: 6, col: 4 })).toEqual([
-      range(1, 1, 1, 1),
-      range(3, 2, 6, 4),
+    expect(cutRanges([range(0, 0, 4, 4)], range(2, 2, 2, 2))).toEqual([
+      range(0, 0, 1, 4),
+      range(2, 0, 2, 1),
+      range(2, 3, 2, 4),
+      range(3, 0, 4, 4),
     ]);
 
-    expect(withCorner([], { row: 2, col: 2 }, { row: 3, col: 1 })).toEqual([range(2, 2, 3, 1)]);
+    expect(cutRanges([range(0, 0, 1, 1)], range(3, 3, 4, 4))).toEqual([range(0, 0, 1, 1)]);
+    expect(cutRanges([range(1, 1, 2, 2)], range(4, 4, 0, 0))).toEqual([]);
+
+    expect(withLast([range(0, 0, 2, 3)], range(1, 2, 4, 2))).toEqual([
+      range(0, 0, 0, 3),
+      range(1, 0, 2, 1),
+      range(1, 3, 2, 3),
+      range(1, 2, 4, 2),
+    ]);
+
     expect(rowsOf(range(3, 2, 4, 3), BOUNDS)).toEqual(range(3, 0, 4, 4));
     expect(colsOf(range(3, 2, 4, 3), BOUNDS)).toEqual(range(0, 2, 9, 3));
     expect(allOf(BOUNDS)).toEqual(range(0, 0, 9, 4));
@@ -85,17 +97,31 @@ describe('table ranges', () => {
     expect(sameRanges(list, [range(1, 1, 1, 1)])).toBe(false);
   });
 
-  it('cuts row segments with their edges in visual columns', () => {
+  it('outlines the union of the ranges in visual columns, holes included', () => {
     const list = [range(4, 3, 2, 1), range(3, 2, 3, 2)];
+    const holed = cutRanges([range(0, 0, 4, 4)], range(2, 2, 2, 2));
+    const edges = { top: false, bottom: false, start: false, end: false };
 
-    expect(segmentsOf(list, 2, 1)).toEqual([{ from: 2, to: 4, top: true, bottom: false }]);
+    expect(segmentsOf(list, 2, 1)).toEqual([
+      { from: 2, to: 4, top: true, bottom: false, start: true, end: true },
+    ]);
 
     expect(segmentsOf(list, 3, 0)).toEqual([
-      { from: 1, to: 3, top: false, bottom: false },
-      { from: 2, to: 2, top: true, bottom: true },
+      { from: 1, to: 3, top: false, bottom: false, start: true, end: true },
     ]);
 
     expect(segmentsOf(list, 5, 0)).toEqual([]);
+
+    expect(segmentsOf(holed, 1, 0)).toEqual([
+      { ...edges, from: 0, to: 1, start: true },
+      { ...edges, from: 2, to: 2, bottom: true },
+      { ...edges, from: 3, to: 4, end: true },
+    ]);
+
+    expect(segmentsOf(holed, 2, 0)).toEqual([
+      { ...edges, from: 0, to: 1, start: true, end: true },
+      { ...edges, from: 3, to: 4, start: true, end: true },
+    ]);
   });
 
   it('copies ranges that share rows or columns as one block and refuses the rest', () => {

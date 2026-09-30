@@ -168,6 +168,8 @@ export interface TableRangeSegment {
   readonly to: number;
   readonly top: boolean;
   readonly bottom: boolean;
+  readonly start: boolean;
+  readonly end: boolean;
 }
 
 export type TableRowRanges = readonly TableRangeSegment[];

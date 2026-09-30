@@ -192,6 +192,10 @@ test.describe('table', () => {
 
     await expect(table.cell(1, 1)).toHaveCSS('background-color', await table.cellBackground(1, 2));
     await expect(table.cell(1, 1)).toHaveCSS('outline-style', 'solid');
+    await table.cell(2, 3).click({ modifiers: ['ControlOrMeta'] });
+    await expect(table.cell(2, 3)).not.toHaveAttribute('aria-selected');
+    await expect(table.cell(2, 2)).toHaveAttribute('aria-selected', 'true');
+    await expect(table.cell(1, 1)).toBeFocused();
     await page.keyboard.press('Escape');
     await expect(table.output).toContainText('"ranges":[]');
     await table.output.click();
@@ -225,6 +229,14 @@ test.describe('table', () => {
     await expect
       .poll(() => table.copiedTexts())
       .toEqual([`${block[0]}\t${block[1]}\n${block[2]}\t${block[3]}`]);
+
+    await table.dragRange({ row: 4, col: 2 }, { row: 1, col: 2 }, 'ControlOrMeta');
+
+    await expect(table.output).toContainText(
+      '"ranges":[{"from":{"row":1,"col":1},"to":{"row":2,"col":1}},{"from":{"row":4,"col":2},"to":{"row":1,"col":2}}]',
+    );
+
+    await page.keyboard.press('Escape');
 
     await table.cell(2, 1).click({ button: 'right' });
     await expect(table.cellMenu).toBeVisible();

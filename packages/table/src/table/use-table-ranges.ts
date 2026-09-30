@@ -5,16 +5,22 @@ import {
   boxOf,
   clampPosition,
   colsOf,
+  cutRanges,
   inRanges,
   rowsOf,
   sameRanges,
   segmentsOf,
   stepCorner,
-  withCorner,
+  withLast,
   type RangeBounds,
 } from './table-ranges';
 import type { NuiTableMessages } from './table.messages';
-import type { NuiTableRanges, TableCellPosition, TableRowRanges } from './table.types';
+import type {
+  NuiTableRange,
+  NuiTableRanges,
+  TableCellPosition,
+  TableRowRanges,
+} from './table.types';
 
 export interface TableRangesOptions {
   readonly enabled: () => boolean;
@@ -49,11 +55,19 @@ export interface TableRanges {
 
 type SessionMode = 'plain' | 'extend' | 'add';
 
-interface RangeSession {
+type SessionAction =
+  | { readonly kind: 'shape' }
+  | { readonly kind: 'remove'; readonly base: NuiTableRanges };
+
+interface SessionStart {
+  readonly from: TableCellPosition;
+  readonly action: SessionAction;
+}
+
+interface RangeSession extends SessionStart {
   readonly pointerId: number;
   readonly x: number;
   readonly y: number;
-  readonly from: TableCellPosition;
 }
 
 interface StartCell {
@@ -69,6 +83,7 @@ interface Band {
 }
 
 const THRESHOLD = 5;
+const SHAPE: SessionAction = { kind: 'shape' };
 const BODY_ROW = '.nui-table__body > .nui-table__row--body';
 const START_ROW = `${BODY_ROW}:not(.nui-table__row--group)`;
 const PINNED = ['nui-table__cell--pin-start', 'nui-table__cell--pin-end'];
@@ -129,6 +144,8 @@ export const useTableRanges = (options: TableRangesOptions): TableRanges => {
   let swallow = false;
   let holdFocus = false;
   let pending: NuiTableRanges | undefined;
+  let others: NuiTableRanges | undefined;
+  let written = options.ranges.value;
   let cache = new Map<number, TableRowRanges | undefined>();
   let cachedFor: NuiTableRanges = options.ranges.value;
   let cachedOffset = options.offset();
@@ -138,6 +155,7 @@ export const useTableRanges = (options: TableRangesOptions): TableRanges => {
   const write = (next: NuiTableRanges): NuiTableRanges => {
     if (!sameRanges(next, latest())) {
       pending = next;
+      written = next;
       options.ranges.value = next;
 
       queueMicrotask(() => {
@@ -147,7 +165,16 @@ export const useTableRanges = (options: TableRangesOptions): TableRanges => {
     return next;
   };
 
+  const shape = (
+    last: NuiTableRange,
+    kept: NuiTableRanges = others ?? latest().slice(0, -1),
+  ): NuiTableRanges => {
+    others = kept;
+    return write(withLast(kept, last));
+  };
+
   const clear = (): void => {
+    others = undefined;
     write([]);
   };
 
@@ -226,8 +253,18 @@ export const useTableRanges = (options: TableRangesOptions): TableRanges => {
     const active = session;
     const cell = active === undefined ? undefined : hitAt(point);
 
-    if (active !== undefined && cell !== undefined) {
-      write(withCorner(latest(), active.from, cell));
+    if (active === undefined || cell === undefined) {
+      return;
+    }
+    const swept = { from: active.from, to: cell };
+
+    switch (active.action.kind) {
+      case 'shape':
+        shape(swept);
+        break;
+      case 'remove':
+        write(cutRanges(active.action.base, swept));
+        break;
     }
   };
 
@@ -268,12 +305,17 @@ export const useTableRanges = (options: TableRangesOptions): TableRanges => {
   };
 
   const onUp = (event: PointerEvent): void => {
-    if (session === undefined || event.pointerId !== session.pointerId) {
+    const active = session;
+
+    if (active === undefined || event.pointerId !== active.pointerId) {
       return;
     }
     if (dragging.value) {
       swallow = true;
-      announceSize(latest());
+
+      if (active.action.kind === 'shape') {
+        announceSize(latest());
+      }
     }
     finish();
   };
@@ -292,7 +334,7 @@ export const useTableRanges = (options: TableRangesOptions): TableRanges => {
     holdFocus = true;
     swallow = true;
     clearTextSelection();
-    write(withCorner(latest(), from, start.position));
+    shape({ from, to: start.position });
 
     if (anchor === undefined) {
       start.element.focus({ preventScroll: true });
@@ -300,22 +342,43 @@ export const useTableRanges = (options: TableRangesOptions): TableRanges => {
     return from;
   };
 
-  const fromOf = (
+  const addFrom = (start: StartCell, anchor: TableCellPosition | undefined): SessionStart => {
+    swallow = true;
+    clearTextSelection();
+    shape({ from: start.position, to: start.position }, materialized(anchor));
+    return { from: start.position, action: SHAPE };
+  };
+
+  const removeFrom = (start: StartCell, anchor: TableCellPosition | undefined): SessionStart => {
+    const base = latest();
+
+    holdFocus = true;
+    swallow = true;
+    others = undefined;
+    clearTextSelection();
+    write(cutRanges(base, { from: start.position, to: start.position }));
+
+    if (anchor === undefined) {
+      start.element.focus({ preventScroll: true });
+    }
+    return { from: start.position, action: { kind: 'remove', base } };
+  };
+
+  const sessionFor = (
     mode: SessionMode,
     start: StartCell,
     anchor: TableCellPosition | undefined,
-  ): TableCellPosition => {
+  ): SessionStart => {
     switch (mode) {
       case 'extend':
-        return extendFrom(start, anchor);
+        return { from: extendFrom(start, anchor), action: SHAPE };
       case 'add':
-        swallow = true;
-        clearTextSelection();
-        write([...materialized(anchor), { from: start.position, to: start.position }]);
-        return start.position;
+        return inRanges(latest(), start.position)
+          ? removeFrom(start, anchor)
+          : addFrom(start, anchor);
       case 'plain':
         clear();
-        return start.position;
+        return { from: start.position, action: SHAPE };
     }
   };
 
@@ -331,9 +394,9 @@ export const useTableRanges = (options: TableRangesOptions): TableRanges => {
     if (start === undefined) {
       return;
     }
-    const from = fromOf(modeOf(event), start, options.anchor());
+    const begun = sessionFor(modeOf(event), start, options.anchor());
 
-    session = { pointerId: event.pointerId, x: event.clientX, y: event.clientY, from };
+    session = { ...begun, pointerId: event.pointerId, x: event.clientX, y: event.clientY };
     point = { x: event.clientX, y: event.clientY };
     window.addEventListener('pointermove', onMove);
     window.addEventListener('pointerup', onUp);
@@ -359,24 +422,26 @@ export const useTableRanges = (options: TableRangesOptions): TableRanges => {
       return false;
     }
     event.preventDefault();
-    announceSize(write(withCorner(list, last?.from ?? anchor, corner)));
+    announceSize(shape({ from: last?.from ?? anchor, to: corner }));
     options.reveal(corner);
     return true;
   };
 
-  const replaceLast = (event: KeyboardEvent, next: NuiTableRanges): boolean => {
+  const replaceLast = (
+    event: KeyboardEvent,
+    last: NuiTableRange,
+    kept?: NuiTableRanges,
+  ): boolean => {
     event.preventDefault();
-    announceSize(write(next));
+    announceSize(shape(last, kept));
     return true;
   };
 
   const selectLines = (event: KeyboardEvent, anchor: TableCellPosition): boolean => {
-    const list = latest();
-    const base = list.at(-1) ?? { from: anchor, to: anchor };
+    const base = latest().at(-1) ?? { from: anchor, to: anchor };
     const bounds = options.bounds();
-    const line = event.shiftKey ? rowsOf(base, bounds) : colsOf(base, bounds);
 
-    return replaceLast(event, [...list.slice(0, -1), line]);
+    return replaceLast(event, event.shiftKey ? rowsOf(base, bounds) : colsOf(base, bounds));
   };
 
   const onNavigation = (event: KeyboardEvent, anchor: TableCellPosition): boolean => {
@@ -408,7 +473,7 @@ export const useTableRanges = (options: TableRangesOptions): TableRanges => {
     }
     if (ctrl && !event.shiftKey && isAllKey(event)) {
       clearTextSelection();
-      return replaceLast(event, [allOf(options.bounds())]);
+      return replaceLast(event, allOf(options.bounds()), []);
     }
     if (anchor === undefined) {
       return false;
@@ -436,6 +501,12 @@ export const useTableRanges = (options: TableRangesOptions): TableRanges => {
   };
 
   watch(options.resetOn, clear);
+
+  watch(options.ranges, (value) => {
+    if (!sameRanges(value, written)) {
+      others = undefined;
+    }
+  });
 
   watch(options.enabled, (on) => {
     if (!on) {

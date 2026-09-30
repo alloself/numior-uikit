@@ -70,6 +70,46 @@ describe('NuiTable cell ranges', () => {
     expect(grid.ranges).toEqual([]);
   });
 
+  it('takes selected cells out with Ctrl and never selects a cell twice', async () => {
+    const grid = mountPeople();
+    await grid.focusCell(1, 1);
+
+    await grid.press('a', { ctrl: true });
+    await grid.clickCell(2, 3, { ctrl: true });
+
+    expect(grid.ranges).toEqual([
+      range(0, 0, 1, 17),
+      range(2, 0, 2, 2),
+      range(2, 4, 2, 17),
+      range(3, 0, 49, 17),
+    ]);
+
+    expect(grid.rangeMarks(2, 3)).toEqual([]);
+    expect(grid.rangeMarks(1, 3)).toEqual(['selected', 'ranged', 'range-bottom']);
+    expect(grid.rangeMarks(2, 2)).toEqual(['selected', 'ranged', 'range-end']);
+    expect(grid.focusedCell).toEqual({ row: 1, col: 1 });
+    expect(grid.clicks).toEqual([]);
+    await grid.clickCell(2, 3, { ctrl: true });
+    expect(grid.rangeMarks(2, 3)).toEqual(['selected', 'ranged']);
+    expect(grid.rangeMarks(1, 3)).toEqual(['selected', 'ranged']);
+    await grid.press('Escape');
+    await grid.dragRange({ row: 1, col: 1 }, { row: 3, col: 3 });
+    await grid.dragRange({ row: 2, col: 1 }, { row: 3, col: 2 }, { ctrl: true });
+    expect(grid.ranges).toEqual([range(1, 1, 1, 3), range(2, 3, 3, 3)]);
+    await grid.clickCell(5, 2, { ctrl: true });
+    await grid.press('ArrowUp', { shift: true, ctrl: true });
+
+    expect(grid.ranges).toEqual([
+      range(1, 1, 1, 1),
+      range(1, 3, 1, 3),
+      range(2, 3, 3, 3),
+      range(5, 2, 0, 2),
+    ]);
+
+    await grid.press('ArrowDown', { shift: true, ctrl: true });
+    expect(grid.ranges).toEqual([range(1, 1, 1, 3), range(2, 3, 3, 3), range(5, 2, 49, 2)]);
+  });
+
   it('grows the range from the keyboard and selects rows, columns and everything', async () => {
     const grid = mountPeople();
     await grid.focusCell(2, 2);

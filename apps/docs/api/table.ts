@@ -182,8 +182,8 @@ const docs: DocsMap = {
         en: 'Column order as keys after a move: the keys in the model come first in their order, the rest follow the declaration order. The grip at the start of a header drags the column inside its pane, and pinning wins over the order.',
       },
       'v-model:ranges': {
-        ru: 'Выделенные прямоугольники ячеек: from и to с row — позицией строки на странице — и col — позицией среди видимых колонок данных. Сбрасываются при сортировке, фильтре, группировке, смене страницы, колонок и строк.',
-        en: 'Selected cell rectangles: from and to with row as the position on the page and col as the position among the shown data columns. They reset on sorting, filtering, grouping and changes of the page, the columns and the rows.',
+        ru: 'Выделенные прямоугольники ячеек: from и to с row — позицией строки на странице — и col — позицией среди видимых колонок данных. Прямоугольники не пересекаются: новый вырезается из прежних, а Ctrl на выделенной ячейке снимает с неё выделение. Сбрасываются при сортировке, фильтре, группировке, смене страницы, колонок и строк.',
+        en: 'Selected cell rectangles: from and to with row as the position on the page and col as the position among the shown data columns. Rectangles never overlap: a new one is cut out of the earlier ones, and Ctrl on a selected cell takes it out. They reset on sorting, filtering, grouping and changes of the page, the columns and the rows.',
       },
       'v-model:hidden': {
         ru: 'Ключи скрытых колонок; скрытая колонка не рисуется и не участвует в навигации, но её фильтры и сортировка продолжают действовать.',

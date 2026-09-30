@@ -71,8 +71,11 @@ is sorted, filtered or grouped.
 ### Ranges and clipboard
 
 Dragging with the mouse selects a rectangle of cells, Shift stretches it from the active cell and
-Ctrl adds another one. Ctrl+C copies the selection as tab separated text and an HTML table, so a
-paste into Excel or Google Sheets keeps the grid.
+Ctrl adds another one. Ctrl on a selected cell takes it out of the selection, so no cell lands in
+the model twice.
+
+Ctrl+C copies the selection as tab separated text and an HTML table, so a paste into Excel or
+Google Sheets keeps the grid.
 
 The right button, Shift+F10 or a long press open the cell menu. The `contextMenu` function adds its
 items after the copy items, and `v-model:ranges` keeps the selection.

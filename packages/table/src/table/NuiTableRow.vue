@@ -152,8 +152,10 @@ const rangeClass = (cell: TableDataCell): Record<string, boolean> | undefined =>
         'nui-table__cell--ranged': true,
         'nui-table__cell--range-top': hits.some((segment) => segment.top),
         'nui-table__cell--range-bottom': hits.some((segment) => segment.bottom),
-        'nui-table__cell--range-start': hits.some((segment) => segment.from === visual),
-        'nui-table__cell--range-end': hits.some((segment) => segment.to === visual),
+        'nui-table__cell--range-start': hits.some(
+          (segment) => segment.start && segment.from === visual,
+        ),
+        'nui-table__cell--range-end': hits.some((segment) => segment.end && segment.to === visual),
       };
 };
 
