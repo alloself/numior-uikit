@@ -67,6 +67,18 @@ const layoutSlots = (slots: readonly DOMWrapper<HTMLElement>[]): void => {
   });
 };
 
+const centerOf = (index: number): number => index * SLOT_WIDTH + SLOT_WIDTH / 2;
+
+const pointerDown = (index: number): PointerEvent =>
+  new PointerEvent('pointerdown', {
+    bubbles: true,
+    cancelable: true,
+    isPrimary: true,
+    button: 0,
+    pointerType: 'mouse',
+    clientX: centerOf(index),
+  });
+
 const indexesOf = (slots: readonly DOMWrapper<HTMLElement>[], selector: string): number[] =>
   slots.flatMap((slot, index) => (slot.find(selector).exists() ? [index] : []));
 
@@ -267,20 +279,32 @@ export class OtpFieldDriver extends ComponentDriver {
     await nextTick();
   }
 
-  async clickSlot(index: number, detail = 1): Promise<void> {
+  private pointAt(index: number): void {
     const element = this.control.element;
 
     layoutSlots(this.slots);
+    element.dispatchEvent(pointerDown(index));
     if (!this.focused) {
       element.focus();
     }
+  }
 
-    element.dispatchEvent(
-      new MouseEvent('click', {
-        bubbles: true,
-        detail,
-        clientX: index * SLOT_WIDTH + SLOT_WIDTH / 2,
-      }),
+  async pressSlot(index: number): Promise<void> {
+    this.pointAt(index);
+    await nextTick();
+  }
+
+  async cancelPress(index: number): Promise<void> {
+    this.control.element.dispatchEvent(pointerDown(index));
+    this.control.element.dispatchEvent(new PointerEvent('pointercancel', { bubbles: true }));
+    await nextTick();
+  }
+
+  async clickSlot(index: number, detail = 1): Promise<void> {
+    this.pointAt(index);
+
+    this.control.element.dispatchEvent(
+      new MouseEvent('click', { bubbles: true, detail, clientX: centerOf(index) }),
     );
 
     await nextTick();

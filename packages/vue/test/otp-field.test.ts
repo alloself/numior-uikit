@@ -77,6 +77,26 @@ describe('NuiOtpField', () => {
     otp.unmount();
   });
 
+  it('activates the pressed slot at once instead of passing through the end of the code', async () => {
+    const otp = OtpFieldDriver.mount({ modelValue: '482913' });
+    await otp.pressSlot(0);
+    expect(otp.activeSlots).toEqual([0]);
+    await otp.selectNatively(6, 6);
+    expect(otp.activeSlots).toEqual([0]);
+    await otp.pressSlot(3);
+    await otp.selectNatively(6, 6);
+    expect(otp.activeSlots).toEqual([3]);
+    otp.unmount();
+  });
+
+  it('forgets a cancelled press and focuses the end of the code from the keyboard', async () => {
+    const otp = OtpFieldDriver.mount({ modelValue: '482913' });
+    await otp.cancelPress(1);
+    await otp.focus();
+    expect(otp.activeSlots).toEqual([5]);
+    otp.unmount();
+  });
+
   it('keeps the clicked slot when the browser places its caret after the click', async () => {
     const otp = OtpFieldDriver.mount({ modelValue: '482913' });
     await otp.clickSlot(2);

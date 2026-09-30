@@ -52,6 +52,8 @@
           @compositionend="onCompositionend"
           @paste="onPaste"
           @keydown="onKeydown"
+          @pointerdown="onPointerdown"
+          @pointercancel="onPointercancel"
           @click="onClick"
           @focus="onFocus"
           @blur="onBlur"
@@ -339,6 +341,14 @@ const slotIndexAt = (x: number): number => {
   return index === -1 ? count.value : index;
 };
 
+const onPointerdown = (event: PointerEvent): void => {
+  pointed.set(event.isPrimary && event.button === 0 ? slotIndexAt(event.clientX) : undefined);
+};
+
+const onPointercancel = (): void => {
+  pointed.set(undefined);
+};
+
 const onClick = (event: MouseEvent): void => {
   const element = inputElement.value;
   const index = event.detail < 2 ? slotIndexAt(event.clientX) : undefined;
@@ -352,7 +362,7 @@ const onClick = (event: MouseEvent): void => {
 const onFocus = (): void => {
   const element = inputElement.value;
   if (element) {
-    selectSlot(element, count.value);
+    selectSlot(element, pointed.peek() ?? count.value);
   }
 };
 

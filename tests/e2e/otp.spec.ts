@@ -65,6 +65,24 @@ test.describe('one-time code field', () => {
     await expect(otp.caretOf(otp.spare)).toHaveCount(1);
   });
 
+  test('activates the clicked slot without passing through the end of the code', async ({
+    page,
+  }) => {
+    const playground = new PlaygroundPage(page);
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    const { otp } = playground;
+    await otp.clickSlot(otp.spare, 0);
+    await page.keyboard.type('482913');
+    await page.keyboard.press('Tab');
+    await otp.recordActiveSlots(otp.spare);
+    await otp.clickSlot(otp.spare, 1);
+    await expect.poll(() => otp.activeSlots(otp.spare)).toEqual([1]);
+    await otp.clickSlot(otp.spare, 3);
+    await expect.poll(() => otp.activeSlots(otp.spare)).toEqual([3]);
+    expect((await otp.activeHistory()).flat()).not.toContain(5);
+  });
+
   test('pastes a whole code with its separators and upper-cases access codes', async ({ page }) => {
     const playground = new PlaygroundPage(page);
     await playground.emulate({ reducedMotion: 'reduce' });

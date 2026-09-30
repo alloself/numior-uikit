@@ -1,6 +1,7 @@
 import type { Locator, Page } from '@playwright/test';
 import { boxOf, type Box } from '../helpers/geometry';
 import {
+  isNumber,
   isString,
   listOf,
   parseAs,
@@ -20,6 +21,8 @@ const isOtpOutput = shapeOf({
 export type OtpOutput = Guarded<typeof isOtpOutput>;
 
 const parseOtpOutput = (text: string): OtpOutput => parseAs(text, isOtpOutput, 'otp output');
+
+const isActiveHistory = listOf(listOf(isNumber));
 
 const FIELD_ROOT = 'xpath=ancestor::*[contains(concat(" ", @class, " "), " nui-otp-field ")][1]';
 
@@ -102,6 +105,36 @@ export class OtpSection {
         slot.classList.contains('nui-otp-field__slot--revealed') ? [index] : [],
       ),
     );
+  }
+
+  async recordActiveSlots(control: Locator): Promise<void> {
+    await this.rootOf(control).evaluate((root) => {
+      const history: number[][] = [];
+
+      const record = (): void => {
+        history.push(
+          [...root.querySelectorAll('.nui-otp-field__slot')].flatMap((slot, index) =>
+            slot.classList.contains('nui-otp-field__slot--active') ? [index] : [],
+          ),
+        );
+      };
+
+      Reflect.set(window, '__nuiOtpActive', history);
+
+      new MutationObserver(record).observe(root, {
+        subtree: true,
+        attributes: true,
+        attributeFilter: ['class'],
+      });
+    });
+  }
+
+  async activeHistory(): Promise<number[][]> {
+    const text = await this.page.evaluate(() =>
+      JSON.stringify(Reflect.get(window, '__nuiOtpActive') ?? []),
+    );
+
+    return parseAs(text, isActiveHistory, 'otp active history');
   }
 
   dots(control: Locator): Locator {
