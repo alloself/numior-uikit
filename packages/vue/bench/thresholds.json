@@ -1,0 +1,22 @@
+{
+  "chromium": {
+    "cold mount to the first painted row": {
+      "p95Ms": 250
+    },
+    "warm remount to the first painted row": {
+      "p95Ms": 150
+    },
+    "arrow down to the next paint": {
+      "p95Ms": 100
+    },
+    "page down to the next paint": {
+      "p95Ms": 100
+    },
+    "move the row window by a viewport, main-thread ms": {
+      "p95Ms": 6
+    },
+    "frame time while wheeling through rows": {
+      "p95Ms": 34
+    }
+  }
+}

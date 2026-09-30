@@ -114,6 +114,22 @@ test.describe('tree', () => {
     expect(await tree.renderedCount(tree.virtualTree)).toBeLessThan(100);
   });
 
+  test('virtual tree keeps its rows on screen before the scroll event catches up', async ({
+    page,
+    isMobile,
+  }) => {
+    test.skip(isMobile, 'scrollbar scenario');
+    const playground = new PlaygroundPage(page);
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    const { tree } = playground;
+    await expect(tree.item(tree.virtualTree, 'Узел 1')).toBeVisible();
+    expect(await tree.rowsInViewAfterJump(tree.virtualTree, 200_000)).toBeGreaterThan(3);
+    await expect(tree.item(tree.virtualTree, 'Узел 5556')).toBeVisible();
+    expect(await tree.rowsInViewAfterJump(tree.virtualTree, 0)).toBeGreaterThan(3);
+    await expect(tree.item(tree.virtualTree, 'Узел 1')).toBeVisible();
+  });
+
   test('tree mirrors the chevron in RTL and swaps the horizontal arrows', async ({
     page,
     isMobile,

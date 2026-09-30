@@ -5,6 +5,22 @@ import { PlaygroundPage } from './pages/playground';
 const TREE_HEAD_ROWS = 1;
 
 test.describe('table', () => {
+  test('windowed table keeps its rows on screen before the scroll event catches up', async ({
+    page,
+    isMobile,
+  }) => {
+    test.skip(isMobile, 'scrollbar scenario');
+    const playground = new PlaygroundPage(page);
+    await playground.open();
+    const { table } = playground;
+    await table.root.scrollIntoViewIfNeeded();
+    await expect(table.cell(0, 1)).toBeVisible();
+    expect(await table.rowsInViewAfterJump(200_000)).toBeGreaterThan(5);
+    await expect(table.cell(5000, 1)).toBeVisible();
+    expect(await table.rowsInViewAfterJump(0)).toBeGreaterThan(5);
+    await expect(table.cell(0, 1)).toBeVisible();
+  });
+
   test('windows ten thousand rows and keeps the pinned columns in place while scrolling', async ({
     page,
   }) => {

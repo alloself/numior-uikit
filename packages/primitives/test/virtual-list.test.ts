@@ -87,6 +87,61 @@ describe('useVirtualList', () => {
     list.unmount();
   });
 
+  it('keeps a slot on every row that stays in the window and hands freed slots to newcomers', async () => {
+    const list = VirtualHarness.mount({ height: 200, itemSize: 20, overscan: 2 });
+    await list.settle();
+    expect([...list.slots.entries()]).toEqual(range(0, 13).map((index) => [index, index]));
+    await list.scroll(100);
+    expect(list.range).toEqual({ start: 3, end: 18 });
+    for (const index of range(3, 13)) {
+      expect(list.slots.get(index)).toBe(index);
+    }
+    expect(range(13, 18).map((index) => list.slots.get(index))).toEqual([0, 1, 2, 13, 14]);
+    expect(new Set(list.slots.values()).size).toBe(15);
+    await list.scroll(20_000);
+    expect(Math.max(...list.slots.values())).toBeLessThan(15);
+    await list.scroll(100);
+    expect(new Set(list.slots.values()).size).toBe(15);
+    list.unmount();
+  });
+
+  it('holds the slot of a pinned index while it stays rendered outside the window', async () => {
+    const list = VirtualHarness.mount({ height: 200, itemSize: 20, overscan: 2 });
+    await list.settle();
+    await list.pin(500);
+    expect(list.slots.get(500)).toBe(13);
+    await list.scroll(20_000);
+    expect(list.renderedIndices).toEqual([500, ...range(997, 1000)]);
+    expect(list.slots.get(500)).toBe(13);
+    expect(range(997, 1000).map((index) => list.slots.get(index))).toEqual([0, 1, 2]);
+    await list.scrollToIndex(500, 'start');
+    expect(list.slots.get(500)).toBe(13);
+    list.unmount();
+  });
+
+  it('leaves the scroll event to the host when listen is off and still measures on demand', async () => {
+    const list = VirtualHarness.mount({ height: 200, itemSize: 20, overscan: 2, listen: false });
+    await list.settle();
+    expect(list.range).toEqual({ start: 0, end: 13 });
+    await list.scroll(5000);
+    expect(list.range).toEqual({ start: 0, end: 13 });
+    await list.measure();
+    expect(list.range).toEqual({ start: 248, end: 263 });
+    list.unmount();
+  });
+
+  it('reports the offset of the first rendered row relative to the viewport', async () => {
+    const list = VirtualHarness.mount({ height: 200, itemSize: 20, overscan: 2 });
+    await list.settle();
+    expect(list.windowOffset).toBe(0);
+    await list.scroll(5000);
+    expect(list.range.start).toBe(248);
+    expect(list.windowOffset).toBe(248 * 20 - 5000);
+    await list.scroll(15);
+    expect(list.windowOffset).toBe(-15);
+    list.unmount();
+  });
+
   it('shrinks the window when the count or the viewport shrinks and renders everything when disabled', async () => {
     const list = VirtualHarness.mount({ height: 200, itemSize: 20, overscan: 2 });
     await list.settle();

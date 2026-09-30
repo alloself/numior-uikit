@@ -826,6 +826,10 @@ export class TableDriver<T> {
       const top = (Number(row.getAttribute('aria-rowindex')) - 1) * HEAD_HEIGHT;
 
       defineRect(row, new DOMRect(0, top, LAYOUT_WIDTH, HEAD_HEIGHT));
+
+      if (row.firstElementChild) {
+        defineRect(row.firstElementChild, new DOMRect(0, top, LAYOUT_WIDTH, HEAD_HEIGHT));
+      }
     }
   }
 
@@ -1015,20 +1019,23 @@ export class TableDriver<T> {
     await dragHandle(this.resizer(col), `column ${col}`, dx);
   }
 
-  gapBefore(position: number): string | undefined {
-    const gap = this.row(position)?.previousElementSibling;
-
-    return gap instanceof HTMLElement && gap.classList.contains('nui-table__gap')
-      ? gap.style.getPropertyValue('--_gap')
-      : undefined;
+  rowTop(position: number): string | undefined {
+    const row = this.row(position);
+    const top = row instanceof HTMLElement ? row.style.getPropertyValue('--_top') : '';
+    return top === '' ? undefined : top;
   }
 
-  get tailGap(): string | undefined {
-    const gap = this.element.querySelector<HTMLElement>(
-      '.nui-table__body > .nui-table__gap:last-child',
-    );
+  get canvasRest(): string | undefined {
+    const rest = this.element.querySelector<HTMLElement>('.nui-table__canvas > .nui-table__rest');
+    return rest?.style.getPropertyValue('--_rest');
+  }
 
-    return gap?.style.getPropertyValue('--_gap');
+  get rowElements(): HTMLElement[] {
+    return [...this.element.querySelectorAll<HTMLElement>('.nui-table__body > [role="row"]')];
+  }
+
+  get activeCellElement(): HTMLElement | null {
+    return this.element.querySelector<HTMLElement>('.nui-table__cell--active');
   }
 
   async settle(): Promise<void> {

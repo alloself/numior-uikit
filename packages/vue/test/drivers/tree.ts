@@ -148,6 +148,28 @@ export class TreeDriver extends ComponentDriver {
     return this.nodes.length;
   }
 
+  get rowElements(): HTMLElement[] {
+    return this.nodes.map((node) => node.element);
+  }
+
+  get windowShift(): string {
+    return this.tree.find<HTMLElement>('.nui-tree__list').element.style.translate;
+  }
+
+  rowShift(label: string): string | undefined {
+    return this.nodes.find((node) => textOf(node.element) === label)?.element.style.translate;
+  }
+
+  get canvasHeight(): string {
+    return this.tree.element.style.getPropertyValue('--_canvas');
+  }
+
+  get activeElement(): HTMLElement | undefined {
+    const id = this.tree.attributes('aria-activedescendant');
+    const active = id === undefined ? undefined : this.wrapper.find<HTMLElement>(`[id="${id}"]`);
+    return active?.exists() ? active.element : undefined;
+  }
+
   get activeLabel(): string | undefined {
     const id = this.tree.attributes('aria-activedescendant');
     const active = id === undefined ? undefined : this.wrapper.find(`[id="${id}"]`);

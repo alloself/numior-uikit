@@ -272,6 +272,20 @@ export class TableSection {
     });
   }
 
+  rowsInViewAfterJump(top: number): Promise<number> {
+    return this.viewport.evaluate((element, target) => {
+      element.scrollTop = target;
+      const box = element.getBoundingClientRect();
+
+      return [...element.querySelectorAll('.nui-table__body > [role="row"] > .nui-table__cell')]
+        .filter((cell) => cell.matches(':first-child'))
+        .filter((cell) => {
+          const rect = cell.getBoundingClientRect();
+          return rect.bottom > box.top && rect.top < box.bottom;
+        }).length;
+    }, top);
+  }
+
   sortOrder(col: number): Locator {
     return this.header(col).locator('.nui-table__sort-order');
   }

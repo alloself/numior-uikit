@@ -37,7 +37,7 @@
       <NuiTreeNode
         v-for="entry in rendered"
         :id="nodeId(entry.node.key)"
-        :key="entry.node.key"
+        :key="entry.key"
         :node="entry.node"
         :checked="checkable ? checkStates.get(entry.node.key) : undefined"
         :icon="iconFor(entry.node)"
@@ -96,6 +96,7 @@ import { useTreeNavigation } from './use-tree-navigation';
 
 interface RenderedNode {
   readonly node: TreeNode<T>;
+  readonly key: string | number;
   readonly index: number;
   readonly start: number | undefined;
 }
@@ -218,20 +219,21 @@ const windowing = useVirtualList(root, {
 
 const rendered = computed<RenderedNode[]>(() =>
   virtual
-    ? windowing.items.value.flatMap(({ index, start }) => {
+    ? windowing.items.value.flatMap(({ index, start, slot }) => {
         const node = visible.value[index];
-        return node ? [{ node, index, start }] : [];
+        return node ? [{ node, key: slot, index, start }] : [];
       })
-    : visible.value.map((node, index) => ({ node, index, start: undefined })),
+    : visible.value.map((node, index) => ({ node, key: node.key, index, start: undefined })),
 );
 
 const rootStyle = computed(() => ({
   '--_height': height,
   ...(itemHeight === undefined ? {} : { '--_row': `${itemHeight}px` }),
+  ...(virtual ? { '--_canvas': `${windowing.totalSize.value}px` } : {}),
 }));
 
 const listStyle = computed(() =>
-  virtual ? { blockSize: `${windowing.totalSize.value}px` } : undefined,
+  virtual ? { translate: `0 ${-windowing.scrollTop.value}px` } : undefined,
 );
 
 const folderFor = (node: TreeNode<T>): boolean =>

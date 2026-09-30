@@ -68,6 +68,18 @@ export class TreeSection {
     return tree.locator('[role="treeitem"]:not(.nui-tree__item--leaving)').count();
   }
 
+  rowsInViewAfterJump(tree: Locator, top: number): Promise<number> {
+    return tree.evaluate((element, target) => {
+      element.scrollTop = target;
+      const box = element.getBoundingClientRect();
+
+      return [...element.querySelectorAll('[role="treeitem"]')].filter((row) => {
+        const rect = row.getBoundingClientRect();
+        return rect.bottom > box.top && rect.top < box.bottom;
+      }).length;
+    }, top);
+  }
+
   async readOutput(): Promise<TreeOutput> {
     return parseTreeOutput(await this.output.innerText());
   }

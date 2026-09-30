@@ -7,6 +7,7 @@
       <div
         ref="viewport"
         class="nui-table__viewport"
+        @scroll.passive="onViewportScroll"
         @keydown="onKeydown"
         @focusin="focus.onFocusin"
       >
@@ -103,7 +104,7 @@
               :key="item.key"
               :cells="rowCells"
               :row-index="item.index + pinnedCount + headRows + 1"
-              :gap="item.gap"
+              :top="item.top"
               :active="focus.activeIn(item.index + pinnedCount)"
               :revision="item.revision"
               :level="item.level"
@@ -124,7 +125,11 @@
                 <CellContent :item="item" :position="item.index" :column="column" />
               </template>
             </NuiTableRow>
-            <NuiTableGap :size="tailGap" />
+          </tbody>
+          <tbody v-if="canvasRest > 0" class="nui-table__canvas">
+            <tr ref="rest" class="nui-table__rest" role="presentation" :style="restStyle">
+              <td :colspan="rowCells.tracks.length"></td>
+            </tr>
           </tbody>
           <tbody v-if="status" class="nui-table__status">
             <tr class="nui-table__empty" role="row" :aria-rowindex="headRows + 1">
@@ -239,7 +244,6 @@ import {
 } from '../engine';
 import NuiTableDragLayer from './NuiTableDragLayer.vue';
 import NuiTableRowGrip from './NuiTableRowGrip.vue';
-import NuiTableGap from './NuiTableGap.vue';
 import NuiTableGroupCell from './NuiTableGroupCell.vue';
 import NuiTableRow from './NuiTableRow.vue';
 import NuiTableTracks from './NuiTableTracks.vue';
@@ -524,6 +528,7 @@ const rowWindow = useVirtualList(viewport, {
   pinned: activeRow,
   maxSize: CANVAS_LIMIT,
   inset: () => rowSize.value * (headRows.value + pinnedCount.value + footRows.value),
+  listen: false,
 });
 
 const columnWindow = useVirtualList(viewport, {
@@ -538,7 +543,15 @@ const columnWindow = useVirtualList(viewport, {
   initialCount: INITIAL_COLUMNS,
   pinned: activeCentre,
   inset: () => layout.value.startWidth + layout.value.endWidth,
+  listen: false,
 });
+
+const onViewportScroll = (): void => {
+  if (windowed.value) {
+    rowWindow.measure();
+    columnWindow.measure();
+  }
+};
 
 const rowCells = computed(() =>
   rowCellsOf(
@@ -566,13 +579,23 @@ const canvasSize = computed(() =>
   loading ? skeletonCount.value * rowSize.value : rowWindow.canvasSize.value,
 );
 
-const tailGap = computed(() => {
+const canvasRest = computed(() => {
   if (!windowed.value || loading) {
     return 0;
   }
-  const last = rowWindow.items.value.at(-1);
+  const rendered = rowWindow.items.value.reduce((sum, item) => sum + item.size, 0);
 
-  return Math.max(0, canvasSize.value - (last === undefined ? 0 : last.offset + last.size));
+  return Math.max(0, canvasSize.value - rendered);
+});
+
+const restStyle = computed(() => ({ '--_rest': `${canvasRest.value}px` }));
+const rest = useTemplateRef<HTMLElement>('rest');
+const bodyTop = computed(() => rowSize.value * (headRows.value + pinnedCount.value));
+
+watch(canvasRest, (next, previous) => {
+  if (next > previous) {
+    rest.value?.style.setProperty('--_rest', `${next}px`);
+  }
 });
 
 const rootClass = computed(() => [
@@ -825,19 +848,16 @@ const bodyRows = computed((): TableBodyRow[] => {
     return [];
   }
   const pending = expansion.loading.value;
-  let cursor = 0;
+  const top = bodyTop.value - rowWindow.scrollTop.value;
 
   return rowWindow.items.value.map((item) => {
     const node = engine.value.nodeAt(pageStart.value + item.index);
     const level = levelOf(node);
-    const gap = windowed.value ? Math.max(0, item.offset - cursor) : 0;
-
-    cursor = item.offset + item.size;
 
     return {
       index: item.index,
-      gap,
-      key: node?.id ?? item.index,
+      top: windowed.value ? top + item.start : undefined,
+      key: item.slot,
       revision: current,
       level,
       treeLevel: Math.max(0, (level ?? 1) - 1),

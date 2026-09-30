@@ -1,60 +1,26 @@
-import type { Locator, Page } from '@playwright/test';
+import type { Browser, Locator, Page } from '@playwright/test';
+import { BenchPage } from './bench-page';
 
-const OPEN_TIMEOUT = 180_000;
 const SETTLE_TIMEOUT = 60_000;
 
-export class TableBenchPage {
+export class TableBenchPage extends BenchPage {
   readonly table: Locator;
   readonly viewport: Locator;
   readonly quick: Locator;
   readonly filter: Locator;
 
-  constructor(private readonly page: Page) {
+  constructor(page: Page) {
+    super(page, '');
     this.table = page.getByTestId('bench-table');
     this.viewport = this.table.locator('.nui-table__viewport');
     this.quick = page.getByTestId('bench-quick');
     this.filter = page.locator('.nui-table-filter');
   }
 
-  async open(rows: number): Promise<void> {
-    await this.page.goto(`/bench.html?rows=${rows}`, { timeout: OPEN_TIMEOUT });
-
-    await this.page.waitForFunction(
-      () => typeof window.numiorBench?.firstRowMs === 'number',
-      undefined,
-      { timeout: OPEN_TIMEOUT },
-    );
-  }
-
-  dataMs(): Promise<number> {
-    return this.page.evaluate(() => window.numiorBench?.dataMs ?? Number.NaN);
-  }
-
-  coldStart(): Promise<number> {
-    return this.page.evaluate(() => window.numiorBench?.firstRowMs ?? Number.NaN);
-  }
-
-  remount(): Promise<number> {
-    return this.page.evaluate(() => window.numiorBench?.remount() ?? Number.NaN);
-  }
-
   async focusCell(row: number, col: number): Promise<void> {
     await this.viewport
       .locator(`[role="row"][aria-rowindex="${row + 2}"] [aria-colindex="${col + 1}"]`)
       .click();
-  }
-
-  async nextFrame(): Promise<void> {
-    await this.page.evaluate(
-      () =>
-        new Promise<void>((resolve) => {
-          requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-              resolve();
-            });
-          });
-        }),
-    );
   }
 
   async scrollHome(): Promise<void> {
@@ -156,45 +122,11 @@ export class TableBenchPage {
     return this.settles();
   }
 
-  async keyLatencies(key: string, times: number): Promise<number[]> {
-    await this.page.evaluate(() => {
-      window.numiorBench?.latencies.splice(0);
-    });
-
-    for (let step = 0; step < times; step += 1) {
-      await this.page.keyboard.press(key);
-      await this.nextFrame();
-    }
-    return this.page.evaluate(() => [...(window.numiorBench?.latencies ?? [])]);
+  wheelFrames(steps: number, delta: number): Promise<number[]> {
+    return this.framesWhileWheeling(this.viewport, steps, delta);
   }
 
-  async wheelFrames(steps: number, delta: number): Promise<number[]> {
-    const box = await this.viewport.boundingBox();
-
-    if (box === null) {
-      throw new Error('The bench table has no box');
-    }
-    await this.page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
-
-    await this.page.evaluate(() => {
-      window.numiorBench?.recordFrames(true);
-    });
-
-    for (let step = 0; step < steps; step += 1) {
-      await this.page.mouse.wheel(0, delta);
-      await this.nextFrame();
-    }
-    return this.page.evaluate(() => {
-      window.numiorBench?.recordFrames(false);
-      return [...(window.numiorBench?.frames ?? [])];
-    });
-  }
-
-  async heapMb(): Promise<number> {
-    const session = await this.page.context().newCDPSession(this.page);
-    await session.send('HeapProfiler.collectGarbage');
-    const usage = await session.send('Runtime.getHeapUsage');
-    await session.detach();
-    return Math.round(usage.usedSize / 1_048_576);
+  windowMoves(browser: Browser, rounds: number): Promise<number[]> {
+    return this.mainThreadPerWindowMove(browser, this.viewport, rounds);
   }
 }

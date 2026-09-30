@@ -112,6 +112,9 @@
     },
     "next quick filter keystroke to the painted result": {
       "p95Ms": 250
+    },
+    "move the row window by a viewport, main-thread ms": {
+      "p95Ms": 22
     }
   }
 }

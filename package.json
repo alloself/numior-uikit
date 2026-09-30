@@ -36,7 +36,7 @@
     "bench": "pnpm bench:engine && pnpm bench:browser",
     "bench:engine": "pnpm --filter @numior/table build && node packages/table/bench/engine.bench.ts",
     "bench:browser": "playwright test -c playwright.bench.config.ts",
-    "bench:check": "node scripts/bench-check.mjs table"
+    "bench:check": "node scripts/bench-check.mjs table && node scripts/bench-check.mjs vue"
   },
   "devDependencies": {
     "@axe-core/playwright": "4.13.0",

@@ -20,6 +20,7 @@ export interface VirtualHarnessOptions {
   readonly maxSize?: number;
   readonly inset?: number;
   readonly dir?: 'ltr' | 'rtl';
+  readonly listen?: boolean;
 }
 
 type Outcome = { readonly ran: true; readonly value: VirtualList } | { readonly ran: false };
@@ -50,6 +51,7 @@ export class VirtualHarness {
           pinned,
           maxSize: () => options.maxSize,
           inset: () => options.inset,
+          listen: () => options.listen,
         });
 
         outcome.current = { ran: true, value: virtual };
@@ -145,6 +147,14 @@ export class VirtualHarness {
     return this.list.shift.value;
   }
 
+  get windowOffset(): number {
+    return this.list.windowOffset.value;
+  }
+
+  get slots(): ReadonlyMap<number, number> {
+    return new Map(this.list.items.value.map((item) => [item.index, item.slot]));
+  }
+
   get elementScroll(): number {
     return this.axis === 'x' ? this.element.scrollLeft : this.element.scrollTop;
   }
@@ -173,6 +183,11 @@ export class VirtualHarness {
 
   async scrollToIndex(index: number, align?: VirtualAlign): Promise<void> {
     this.list.scrollTo(index, { align });
+    await nextTick();
+  }
+
+  async measure(): Promise<void> {
+    this.list.measure();
     await nextTick();
   }
 

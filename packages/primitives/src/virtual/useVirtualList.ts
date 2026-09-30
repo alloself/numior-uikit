@@ -23,6 +23,7 @@ import {
   type VirtualAlign,
   type VirtualRange,
 } from './offsets';
+import { assignSlots, type SlotMap } from './slots';
 
 export type { ItemSize, VirtualAlign, VirtualRange } from './offsets';
 
@@ -38,10 +39,12 @@ export interface VirtualListOptions {
   readonly pinned?: MaybeRefOrGetter<number | undefined>;
   readonly maxSize?: MaybeRefOrGetter<number | undefined>;
   readonly inset?: MaybeRefOrGetter<number | undefined>;
+  readonly listen?: MaybeRefOrGetter<boolean | undefined>;
 }
 
 export interface VirtualItem {
   readonly index: number;
+  readonly slot: number;
   readonly start: number;
   readonly offset: number;
   readonly size: number;
@@ -57,6 +60,7 @@ export interface VirtualList {
   readonly totalSize: ComputedRef<number>;
   readonly canvasSize: ComputedRef<number>;
   readonly shift: ComputedRef<number>;
+  readonly windowOffset: ComputedRef<number>;
   readonly startSize: ComputedRef<number>;
   readonly endSize: ComputedRef<number>;
   readonly viewport: Readonly<Ref<number>>;
@@ -70,16 +74,15 @@ export interface VirtualList {
 const DEFAULT_OVERSCAN = 4;
 const DEFAULT_INITIAL = 20;
 
-const withPinned = (
-  list: VirtualItem[],
-  range: VirtualRange,
-  pinned: VirtualItem | undefined,
-): VirtualItem[] => {
-  if (!pinned || (pinned.index >= range.start && pinned.index < range.end)) {
+const withPinned = (list: number[], range: VirtualRange, pinned: number | undefined): number[] => {
+  if (pinned === undefined || (pinned >= range.start && pinned < range.end)) {
     return list;
   }
-  return pinned.index < range.start ? [pinned, ...list] : [...list, pinned];
+  return pinned < range.start ? [pinned, ...list] : [...list, pinned];
 };
+
+const slotsOf = (items: readonly VirtualItem[] = []): SlotMap =>
+  new Map(items.map((item) => [item.index, item.slot]));
 
 export const useVirtualList = (
   container: MaybeRefOrGetter<HTMLElement | null | undefined>,
@@ -122,20 +125,23 @@ export const useVirtualList = (
       : next;
   });
 
-  const itemAt = (index: number): VirtualItem => {
+  const itemAt = (index: number, slot: number): VirtualItem => {
     const start = offsetAt(model.value, index);
-    return { index, start, offset: start - shift.value, size: sizeAt(model.value, index) };
+    return { index, slot, start, offset: start - shift.value, size: sizeAt(model.value, index) };
   };
 
-  const items = computed(() => {
+  const items = computed<readonly VirtualItem[]>((previous) => {
     const { start, end } = range.value;
-    const list = Array.from({ length: end - start }, (_, offset) => itemAt(start + offset));
+    const list = Array.from({ length: end - start }, (_, offset) => start + offset);
     const pinned = toValue(options.pinned);
     const valid = pinned !== undefined && pinned >= 0 && pinned < countOf(model.value);
-    return withPinned(list, range.value, valid ? itemAt(pinned) : undefined);
+    const indices = withPinned(list, range.value, valid ? pinned : undefined);
+    const slots = assignSlots(slotsOf(previous), indices);
+    return indices.map((index) => itemAt(index, slots.get(index) ?? 0));
   });
 
   const canvasSize = computed(() => scale.value.canvas);
+  const windowOffset = computed(() => offsetAt(model.value, range.value.start) - scrollTop.value);
   const startSize = computed(() => offsetAt(model.value, range.value.start) - shift.value);
 
   const endSize = computed(
@@ -182,7 +188,9 @@ export const useVirtualList = (
     enabled() ? (toValue(container) ?? undefined) : undefined;
 
   onMounted(() => {
-    useEventListener(active, 'scroll', measure, { passive: true });
+    if (toValue(options.listen) ?? true) {
+      useEventListener(active, 'scroll', measure, { passive: true });
+    }
     useResizeObserver(active, measure);
 
     watch(
@@ -202,6 +210,7 @@ export const useVirtualList = (
     totalSize,
     canvasSize,
     shift,
+    windowOffset,
     startSize,
     endSize,
     viewport,

@@ -74,6 +74,9 @@ is sorted, filtered or grouped.
 place while scrolling, `pinnedRows` stay under the header, and the column menu pins and hides
 columns.
 
+The window rows sit on sticky cells that the browser keeps in place while the scrollbar is
+dragged. Rows are reused element by element, so the body never goes blank between frames.
+
 <Example name="table/Windowed" />
 
 ## Behaviour

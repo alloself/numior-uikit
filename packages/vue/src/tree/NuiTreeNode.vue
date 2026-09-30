@@ -71,6 +71,6 @@ const { node, id, checked, icon, folder, start, revealing } = defineProps<NuiTre
 
 const style = computed(() => ({
   '--_level': String(node.level),
-  ...(start === undefined ? {} : { '--_start': `${start}px` }),
+  ...(start === undefined ? {} : { translate: `0 ${start}px` }),
 }));
 </script>

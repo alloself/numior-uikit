@@ -66,8 +66,8 @@ describe('NuiTable', () => {
     expect(grid.cellText(2, 5)).toBe('');
     expect(grid.cellText(2, 2)).toBe('');
     expect(grid.cellText(5, 17)).toBe('Дизайн');
-    expect(grid.gapBefore(0)).toBeUndefined();
-    expect(grid.tailGap).toBe('39480px');
+    expect(grid.rowTop(0)).toBe('40px');
+    expect(grid.canvasRest).toBe('39480px');
     expect(grid.activeCell).toEqual({ row: 0, col: 0 });
   });
 
@@ -76,9 +76,17 @@ describe('NuiTable', () => {
     await grid.scroll({ top: 4000 });
 
     expect(grid.renderedRows).toEqual([0, ...range(94, 113)]);
-    expect(grid.gapBefore(0)).toBeUndefined();
-    expect(grid.gapBefore(94)).toBe('3720px');
-    expect(grid.tailGap).toBe('35480px');
+    expect(grid.rowTop(0)).toBe('-3960px');
+    expect(grid.rowTop(94)).toBe('-200px');
+    expect(grid.rowTop(100)).toBe('40px');
+    expect(grid.canvasRest).toBe('39200px');
+
+    const before = grid.rowElements;
+
+    await grid.scroll({ top: 4080 });
+    expect(grid.renderedRows).toEqual([0, ...range(96, 115)]);
+    expect(grid.rowElements.every((row) => before.includes(row))).toBe(true);
+    expect(grid.rowTop(96)).toBe('-200px');
     await grid.scroll({ left: 1000 });
 
     expect(grid.headerTexts).toEqual([
@@ -160,9 +168,15 @@ describe('NuiTable', () => {
   it('keeps the active cell mounted while scrolled away and follows focus from a click', async () => {
     const grid = mountPeople();
     await grid.focusCell(2, 3);
+
+    const cell = grid.activeCellElement;
+
     await grid.scroll({ top: 20_000 });
     expect(grid.renderedRows).toContain(2);
     expect(grid.activeCell).toEqual({ row: 2, col: 3 });
+    expect(grid.activeCellElement).toBe(cell);
+    expect(document.activeElement).toBe(cell);
+    expect(grid.rowTop(2)).toBe('-19880px');
     await grid.focusCell(505, 0);
     expect(grid.activeCell).toEqual({ row: 505, col: 0 });
     expect(grid.renderedRows).not.toContain(2);
@@ -207,8 +221,8 @@ describe('NuiTable', () => {
     expect(grid.auto).toBe(true);
     expect(grid.rowCount).toBe(13);
     expect(grid.renderedRows).toEqual(range(0, 12));
-    expect(grid.gapBefore(3)).toBeUndefined();
-    expect(grid.tailGap).toBeUndefined();
+    expect(grid.rowTop(3)).toBeUndefined();
+    expect(grid.canvasRest).toBeUndefined();
     expect(grid.headerTexts).toHaveLength(18);
     expect(grid.cellWraps(0, 6)).toBe(true);
     expect(grid.cellWraps(0, 1)).toBe(false);

@@ -974,7 +974,8 @@ describe('server rendering', () => {
     );
 
     expect(windowed.match(/role="treeitem"/g)).toHaveLength(20);
-    expect(windowed).toContain('block-size:18000px');
+    expect(windowed).toContain('--_canvas:18000px');
+    expect(windowed).toContain('translate:0 0px');
   });
 
   it('renders a select with nested options as a tree on the server', async () => {

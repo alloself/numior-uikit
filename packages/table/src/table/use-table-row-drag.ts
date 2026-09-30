@@ -80,13 +80,15 @@ const BEFORE_EDGE = 0.3;
 const AFTER_EDGE = 0.7;
 const NO_GRAB: Grab = { offset: 0, size: 0 };
 
+const rowRect = (row: Element): DOMRect => (row.firstElementChild ?? row).getBoundingClientRect();
+
 const grabOf = (event: PointerEvent, fallback: number): Grab => {
   const row = event.target instanceof Element ? event.target.closest(BODY_ROW) : null;
 
   if (row === null) {
     return { offset: 0, size: fallback };
   }
-  const rect = row.getBoundingClientRect();
+  const rect = rowRect(row);
 
   return { offset: event.clientY - rect.top, size: rect.height || fallback };
 };
@@ -173,7 +175,7 @@ export const useTableRowDrag = <T>(options: TableRowDragOptions<T>): TableRowDra
 
         return position >= from && position < end
           ? []
-          : [{ position, element, rect: element.getBoundingClientRect() }];
+          : [{ position, element, rect: rowRect(element) }];
       },
     );
   };

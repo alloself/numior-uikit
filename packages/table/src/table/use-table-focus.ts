@@ -141,6 +141,8 @@ export const useTableFocus = (options: TableFocusOptions): TableFocus => {
   });
 
   onMounted(() => {
+    let owned = false;
+
     watch(
       [options.active, requests],
       () => {
@@ -148,6 +150,26 @@ export const useTableFocus = (options: TableFocusOptions): TableFocus => {
           options.viewport.value
             ?.querySelector<HTMLElement>(ACTIVE_CELL)
             ?.focus({ preventScroll: options.windowed() });
+        }
+      },
+      { flush: 'post' },
+    );
+
+    watch(
+      options.rows.range,
+      () => {
+        owned = options.viewport.value?.contains(document.activeElement) ?? false;
+      },
+      { flush: 'pre' },
+    );
+
+    watch(
+      options.rows.range,
+      () => {
+        const viewport = options.viewport.value;
+
+        if (owned && viewport !== null && !viewport.contains(document.activeElement)) {
+          viewport.querySelector<HTMLElement>(ACTIVE_CELL)?.focus({ preventScroll: true });
         }
       },
       { flush: 'post' },

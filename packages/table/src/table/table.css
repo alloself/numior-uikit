@@ -97,18 +97,20 @@
   background: var(--_row-bg);
   transition: background-color var(--nui-duration-fast) var(--nui-easing);
 }
-.nui-table__gap {
-  block-size: var(--_gap);
+.nui-table__rest {
+  block-size: var(--_rest);
 }
-.nui-table__gap > td {
-  block-size: var(--_gap);
+.nui-table__rest > td {
+  block-size: var(--_rest);
   padding: 0;
   border: 0;
-  background: repeating-linear-gradient(
-    to bottom,
-    transparent 0 calc(var(--_row) - 1px),
-    var(--_line) calc(var(--_row) - 1px) var(--_row)
-  );
+}
+.nui-table:not(.nui-table--auto) .nui-table__body .nui-table__cell {
+  position: sticky;
+  inset-block-start: var(--_top);
+}
+.nui-table:not(.nui-table--auto) .nui-table__body .nui-icon__glyph {
+  animation: none;
 }
 .nui-table__cell {
   box-sizing: border-box;

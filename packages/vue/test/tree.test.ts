@@ -365,6 +365,41 @@ describe('NuiTree', () => {
     tree.unmount();
   });
 
+  it('keeps the window on a sticky list, reuses row elements and holds the active row element', async () => {
+    const warn = vi.spyOn(console, 'warn');
+
+    const tree = TreeDriver.mount({
+      items: manyNodes(2000),
+      props: { virtual: true, height: '160px', itemHeight: 32 },
+    });
+
+    await tree.setHeight(160);
+    expect(tree.canvasHeight).toBe('64000px');
+    expect(tree.windowShift).toBe('0 0px');
+    await tree.scrollTo(3200);
+    expect(tree.windowShift).toBe('0 -3200px');
+    expect(tree.rowShift('Узел 100')).toBe('0 3200px');
+
+    const before = tree.rowElements;
+
+    await tree.scrollTo(3200 + 5 * 32);
+    expect(tree.labels).toContain('Узел 105');
+    expect(tree.rowElements.every((element) => before.includes(element))).toBe(true);
+    await tree.focus();
+    await tree.press('End');
+
+    const active = tree.activeElement;
+
+    expect(active?.textContent).toContain('Узел 1999');
+    await tree.scrollTo(0);
+    expect(tree.activeElement).toBe(active);
+    await tree.scrollTo(40_000);
+    expect(tree.activeElement).toBe(active);
+    expect(warn).not.toHaveBeenCalled();
+    warn.mockRestore();
+    tree.unmount();
+  });
+
   it('renders windowed rows instantly on scroll and fades in only rows revealed by expanding', async () => {
     const tree = TreeDriver.mount({
       items: manyNodes(2000),

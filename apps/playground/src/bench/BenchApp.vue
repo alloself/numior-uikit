@@ -11,8 +11,16 @@
         data-testid="bench-quick"
       />
     </div>
+    <NuiTree
+      v-if="shown && view === 'tree'"
+      :items="nodes"
+      virtual
+      height="calc(100dvh - 5rem)"
+      label="Бенчмарк дерева"
+      data-testid="bench-tree"
+    />
     <NuiTable
-      v-if="shown"
+      v-else-if="shown"
       v-model:sort="sort"
       v-model:filters="filters"
       v-model:quick="quick"
@@ -31,9 +39,10 @@
 
 <script setup lang="ts">
 import { nextTick, onMounted, ref } from 'vue';
-import { NuiInput } from '@numior/vue';
+import { NuiInput, NuiTree } from '@numior/vue';
 import { NuiTable, type TableNodeId, type TableSort, type NuiTableFilters } from '@numior/table';
 import { TABLE_COLUMNS, generateRows } from '../../../../packages/table/bench/dataset';
+import { generateTreeNodes } from '../../../../packages/vue/bench/dataset';
 import {
   afterPaint,
   createFrameRecorder,
@@ -46,13 +55,21 @@ import {
 
 const DEFAULT_ROWS = 1_000_000;
 
-const requested = Number(new URL(window.location.href).searchParams.get('rows'));
+const params = new URL(window.location.href).searchParams;
+const view = params.get('view') === 'tree' ? 'tree' : 'table';
+const requested = Number(params.get('rows'));
 const count = Number.isInteger(requested) && requested > 0 ? requested : DEFAULT_ROWS;
 const generating = performance.now();
-const rows = generateRows(count);
+const rows = view === 'table' ? generateRows(count) : [];
+const nodes = view === 'tree' ? generateTreeNodes(count) : [];
 const dataReady = performance.now();
 const shown = ref(true);
-const caption = `${count.toLocaleString('ru-RU')} строк × ${TABLE_COLUMNS.length} колонок`;
+
+const caption =
+  view === 'tree'
+    ? `${count.toLocaleString('ru-RU')} узлов`
+    : `${count.toLocaleString('ru-RU')} строк × ${TABLE_COLUMNS.length} колонок`;
+
 const sort = ref<readonly TableSort[]>([]);
 const filters = ref<NuiTableFilters>([]);
 const quick = ref('');

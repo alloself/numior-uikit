@@ -53,6 +53,13 @@ test('the data table keeps input and frames within budget on a million rows', as
     summarize('frame time while wheeling through rows', await bench.wheelFrames(120, 360)),
   );
 
+  operations.push(
+    summarize(
+      'move the row window by a viewport, main-thread ms',
+      await bench.windowMoves(browser, 20),
+    ),
+  );
+
   await bench.scrollHome();
   const [coldNumber = Number.NaN, ...warmNumber] = await bench.sortLatencies(5, 6);
 

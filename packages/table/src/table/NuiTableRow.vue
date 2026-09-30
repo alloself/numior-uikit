@@ -1,5 +1,4 @@
 <template>
-  <NuiTableGap :size="gap" />
   <tr
     class="nui-table__row"
     :class="rowClass"
@@ -52,7 +51,6 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import NuiTableGap from './NuiTableGap.vue';
 import NuiTableResizer from './NuiTableResizer.vue';
 import type {
   TableCellLayout,
@@ -65,7 +63,7 @@ const {
   cells,
   rowIndex,
   part = 'body',
-  gap = 0,
+  top,
   active = 0,
   level,
   group,
@@ -120,9 +118,12 @@ const rowClass = computed(() => [
   },
 ]);
 
-const rowStyle = computed(() =>
-  sticky.value ? { '--_top': `calc(var(--_row) * ${rowIndex - 1})` } : undefined,
-);
+const rowStyle = computed(() => {
+  if (sticky.value) {
+    return { '--_top': `calc(var(--_row) * ${rowIndex - 1})` };
+  }
+  return top === undefined ? undefined : { '--_top': `${top}px` };
+});
 
 const pinClass = (cell: TableCellLayout): Record<string, boolean> => ({
   'nui-table__cell--pin-start': cell.pin === 'start',

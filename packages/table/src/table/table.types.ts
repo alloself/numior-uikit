@@ -345,8 +345,8 @@ export interface TableSkeletonRow {
 
 export interface TableBodyRow {
   readonly index: number;
-  readonly gap: number;
-  readonly key: TableNodeId;
+  readonly top: number | undefined;
+  readonly key: number;
   readonly revision: number;
   readonly level: number | undefined;
   readonly treeLevel: number;
@@ -378,7 +378,7 @@ export interface NuiTableRowProps {
   cells: TableRowCells;
   rowIndex: number;
   part?: TableRowPart | undefined;
-  gap?: number | undefined;
+  top?: number | undefined;
   active?: number | undefined;
   revision?: number | undefined;
   level?: number | undefined;
@@ -399,10 +399,6 @@ export interface NuiTableTreeToggleProps {
 
 export interface NuiTableGroupCellProps {
   cell: TableGroupCell | undefined;
-}
-
-export interface NuiTableGapProps {
-  size: number;
 }
 
 export interface NuiTableResizerProps {
