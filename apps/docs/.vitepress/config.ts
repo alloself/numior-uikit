@@ -68,6 +68,7 @@ const ruComponents: DocsSidebarGroup[] = [
       { text: 'Input', link: '/components/input' },
       { text: 'Textarea', link: '/components/textarea' },
       { text: 'Number field', link: '/components/number-field' },
+      { text: 'OTP field', link: '/components/otp-field' },
       { text: 'Checkbox', link: '/components/checkbox' },
       { text: 'Radio group', link: '/components/radio-group' },
       { text: 'Switch', link: '/components/switch' },
@@ -187,6 +188,7 @@ const ruComposables: DocsSidebarGroup[] = [
       { text: 'useFieldControl', link: '/composables/field-control' },
       { text: 'useForm', link: '/composables/form' },
       { text: 'useControls', link: '/composables/controls' },
+      { text: 'useWebOtp', link: '/composables/web-otp' },
     ],
   },
   {
@@ -247,6 +249,7 @@ const enComponents: DocsSidebarGroup[] = [
       { text: 'Input', link: '/en/components/input' },
       { text: 'Textarea', link: '/en/components/textarea' },
       { text: 'Number field', link: '/en/components/number-field' },
+      { text: 'OTP field', link: '/en/components/otp-field' },
       { text: 'Checkbox', link: '/en/components/checkbox' },
       { text: 'Radio group', link: '/en/components/radio-group' },
       { text: 'Switch', link: '/en/components/switch' },
@@ -366,6 +369,7 @@ const enComposables: DocsSidebarGroup[] = [
       { text: 'useFieldControl', link: '/en/composables/field-control' },
       { text: 'useForm', link: '/en/composables/form' },
       { text: 'useControls', link: '/en/composables/controls' },
+      { text: 'useWebOtp', link: '/en/composables/web-otp' },
     ],
   },
   {

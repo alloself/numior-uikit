@@ -111,6 +111,11 @@ label:has(> input[type='checkbox']) {
   flex: 1 1 12rem;
   max-inline-size: 16rem;
 }
+.otp-demo__sms {
+  display: grid;
+  justify-items: start;
+  gap: var(--nui-space-2);
+}
 .form-demo__pair {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));

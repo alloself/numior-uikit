@@ -122,6 +122,7 @@ const code = await importBuild('vue', [
   'NuiTextarea',
   'NuiNumberField',
   'NuiTimeField',
+  'NuiOtpField',
   'NuiCalendar',
   'NuiDatePicker',
   'NuiDateRangePicker',

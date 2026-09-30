@@ -93,6 +93,7 @@
     <ChromeSection />
     <FormsSection />
     <SignupSection />
+    <OtpSection />
     <SmartFormSection />
     <WizardSection />
 
@@ -154,6 +155,7 @@ import TypographySection from './TypographySection.vue';
 import ChromeSection from './ChromeSection.vue';
 import FormsSection from './FormsSection.vue';
 import SignupSection from './SignupSection.vue';
+import OtpSection from './OtpSection.vue';
 import SmartFormSection from './SmartFormSection.vue';
 import WizardSection from './WizardSection.vue';
 import OverlaysSection from './OverlaysSection.vue';

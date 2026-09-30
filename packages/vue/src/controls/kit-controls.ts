@@ -19,6 +19,7 @@ import NuiDatePicker from '../date-picker/NuiDatePicker.vue';
 import NuiDateRangePicker from '../date-picker/NuiDateRangePicker.vue';
 import NuiInput from '../input/NuiInput.vue';
 import NuiNumberField from '../number-field/NuiNumberField.vue';
+import NuiOtpField from '../otp-field/NuiOtpField.vue';
 import NuiRadioGroup from '../radio/NuiRadioGroup.vue';
 import NuiSelect from '../select/NuiSelect.vue';
 import NuiSwitch from '../switch/NuiSwitch.vue';
@@ -92,6 +93,17 @@ export const kitControls = defineControls({
   ),
   time: control(NuiTimeField, nullable(isString), {
     props: controlProps({ seconds: flag, step: amount, min: text, max: text, size }),
+  }),
+  otp: control(NuiOtpField, isString, {
+    props: controlProps({
+      length: amount,
+      groupSize: amount,
+      charset: optional(oneOf('digits', 'alphanumeric')),
+      secret: flag,
+      placeholder: text,
+      webOtp: flag,
+      size,
+    }),
   }),
 });
 

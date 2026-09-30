@@ -236,6 +236,26 @@
       "source": "forms.adr.md",
       "target": "messages.adr.md",
       "type": "depends_on"
+    },
+    {
+      "source": "otp-field.adr.md",
+      "target": "numior-ui.plan.md",
+      "type": "implements"
+    },
+    {
+      "source": "otp-field.adr.md",
+      "target": "intl-fields.adr.md",
+      "type": "related"
+    },
+    {
+      "source": "otp-field.adr.md",
+      "target": "controls.adr.md",
+      "type": "related"
+    },
+    {
+      "source": "otp-field.adr.md",
+      "target": "component-authoring.rule.md",
+      "type": "related"
     }
   ]
 }

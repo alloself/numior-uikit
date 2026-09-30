@@ -42,6 +42,18 @@ export type {
 export type { Direction, DirectionControl } from './direction/direction-context';
 export { applyMask, maskCaret } from './mask/mask';
 export {
+  normalizeOtp,
+  otpGroups,
+  otpLength,
+  pasteOtp,
+  reconcileOtp,
+  selectOtpSlot,
+  settleOtpCaret,
+} from './otp/otp';
+export type { OtpCharset, OtpDirection, OtpEdit, OtpSelection } from './otp/otp';
+export { useWebOtp } from './otp/useWebOtp';
+export type { WebOtpControl, WebOtpOptions } from './otp/useWebOtp';
+export {
   clampIsoDate,
   compareIsoDates,
   formatIsoDate,

@@ -38,7 +38,7 @@ status: accepted
 
 ### Функциональный состав первого стабильного релиза
 
-Базовые элементы и формы: кнопки, ссылки, текстовые и числовые поля, textarea, checkbox/radio/switch, select/combobox/autocomplete, даты и диапазоны, upload, валидация и состояния загрузки/ошибок. Навигация и структура: layout, sidebar, меню, tabs, breadcrumbs, pagination. Обратная связь и слои: dialog/drawer/popover/tooltip, toast/notification, alert, progress/skeleton. Представление данных: card, badge, avatar, список, дерево, таблица. Сложные модули ниже обязательны в 1.0; перечень конкретных компонентов уточняется в спецификациях без исключения согласованных возможностей.
+Базовые элементы и формы: кнопки, ссылки, текстовые и числовые поля, поле одноразового кода, textarea, checkbox/radio/switch, select/combobox/autocomplete, даты и диапазоны, upload, валидация и состояния загрузки/ошибок. Навигация и структура: layout, sidebar, меню, tabs, breadcrumbs, pagination. Обратная связь и слои: dialog/drawer/popover/tooltip, toast/notification, alert, progress/skeleton. Представление данных: card, badge, avatar, список, дерево, таблица. Сложные модули ниже обязательны в 1.0; перечень конкретных компонентов уточняется в спецификациях без исключения согласованных возможностей.
 
 Формы: ручная композиция и schema/config API, синхронная/асинхронная валидация, серверные ошибки, условные поля, повторяемые группы и подключаемые контролы. Единые контракты значения, touched/dirty, reset, pending и submit.
 

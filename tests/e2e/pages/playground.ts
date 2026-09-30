@@ -5,6 +5,7 @@ import { DatesSection } from './dates';
 import { FeedbackSection } from './feedback';
 import { IntlSection } from './intl';
 import { NavigationSection } from './navigation';
+import { OtpSection } from './otp';
 import { OverlaysSection } from './overlays';
 import { PickersSection } from './pickers';
 import { SignupSection } from './signup';
@@ -162,6 +163,7 @@ export class PlaygroundPage {
   readonly chrome: ChromeSection;
   readonly forms: FormsSection;
   readonly signup: SignupSection;
+  readonly otp: OtpSection;
   readonly smartForm: SmartFormSection;
   readonly wizard: WizardSection;
   readonly overlays: OverlaysSection;
@@ -203,6 +205,7 @@ export class PlaygroundPage {
     this.chrome = new ChromeSection(page);
     this.forms = new FormsSection(page);
     this.signup = new SignupSection(page);
+    this.otp = new OtpSection(page);
     this.smartForm = new SmartFormSection(page);
     this.wizard = new WizardSection(page);
     this.overlays = new OverlaysSection(page);

@@ -34,7 +34,8 @@ date: 2026-09-28
   нет намеренно: `kitControls` из `@numior/vue/controls` импортирует все контролы кита, и подстановка по
   умолчанию тянула бы их в каждое приложение с формой.
 - `kitControls`: `text`, `textarea`, `number`, `select`, `combobox`, `checkbox`, `switch`,
-  `radio`, `date`, `dateRange`, `time` с гардами JSON-допустимых props. `NuiRadioGroup` получил
+  `radio`, `date`, `dateRange`, `time`, `otp` (с 2026-09-30, `otp-field.adr.md`) с гардами
+  JSON-допустимых props. `NuiRadioGroup` получил
   проп `options` (как у `NuiCheckboxGroup`), иначе радиокнопки нельзя описать без слота.
   `NuiUpload` в реестр не входит: ему нужен адаптер-функция, которую JSON не передаст;
   приложение регистрирует свою обёртку.

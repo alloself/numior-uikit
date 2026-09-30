@@ -16,6 +16,7 @@
 @import './textarea/textarea.css';
 @import './number-field/number-field.css';
 @import './time-field/time-field.css';
+@import './otp-field/otp-field.css';
 @import './calendar/calendar.css';
 @import './date-picker/date-picker.css';
 @import './upload/upload.css';

@@ -61,6 +61,8 @@ export type { NuiInputModifiers, NuiInputProps, NuiInputType } from './input/inp
 export { default as NuiNumberField } from './number-field/NuiNumberField.vue';
 export type { NuiNumberFieldProps } from './number-field/number-field.types';
 export { default as NuiTimeField } from './time-field/NuiTimeField.vue';
+export { default as NuiOtpField } from './otp-field/NuiOtpField.vue';
+export type { NuiOtpFieldProps } from './otp-field/otp-field.types';
 export { default as NuiUpload } from './upload/NuiUpload.vue';
 export { default as NuiAvatarUpload } from './upload/NuiAvatarUpload.vue';
 export { default as NuiLayout } from './layout/NuiLayout.vue';
@@ -330,6 +332,7 @@ export {
   useScrollSpy,
   useToast,
   useToastStore,
+  useWebOtp,
 } from '@numior/primitives';
 export type {
   ClipboardControl,
@@ -353,6 +356,7 @@ export type {
   NuiMessageParams,
   NuiPluralForms,
   NuiTranslate,
+  OtpCharset,
   PopoverMode,
   ResolvedColorScheme,
   ScrollSpyOptions,
@@ -364,4 +368,6 @@ export type {
   ToastStore,
   ToastStoreOptions,
   ToastTone,
+  WebOtpControl,
+  WebOtpOptions,
 } from '@numior/primitives';

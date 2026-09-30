@@ -29,6 +29,7 @@ import {
   NuiPagination,
   NuiMenu,
   NuiNumberField,
+  NuiOtpField,
   NuiPopover,
   NuiProgress,
   NuiRadio,
@@ -319,6 +320,13 @@ const scenarios: Scenario[] = [
   {
     name: 'NuiTimeField',
     render: () => h(NuiTimeField, { modelValue: '13:05', locale: 'en-US', name: 'start' }),
+  },
+  {
+    name: 'NuiOtpField',
+    render: () =>
+      h(NuiField, { label: 'Code' }, () =>
+        h(NuiOtpField, { modelValue: '48', groupSize: 3, placeholder: '·', name: 'code' }),
+      ),
   },
   {
     name: 'NuiDatePicker',
@@ -815,6 +823,25 @@ describe('server rendering', () => {
 
     expect(german).toContain('value="13"');
     expect(german.match(/role="spinbutton"/g)).toHaveLength(2);
+  });
+
+  it('renders a one-time code field with its value on the labelled input and hidden slots', async () => {
+    const html = await renderMarkup(() =>
+      h(NuiField, { label: 'Code' }, () =>
+        h(NuiOtpField, { modelValue: '48', groupSize: 3, placeholder: '·', name: 'code' }),
+      ),
+    );
+
+    const controlId = labelTarget(html);
+    expect(controlId).toBeTruthy();
+    expect(html).toContain(`id="${controlId}"`);
+    expect(html).toContain('autocomplete="one-time-code"');
+    expect(html).toContain('name="code"');
+    expect(html).toContain('value="48"');
+    expect(html).toContain('class="nui-otp-field__slots" aria-hidden="true"');
+    expect(html.match(/class="nui-otp-field__slot"/g)).toHaveLength(6);
+    expect(html.match(/nui-otp-field__placeholder/g)).toHaveLength(4);
+    expect(html).not.toContain('nui-otp-field__caret');
   });
 
   it('renders a combobox input with its selected label and no active descendant', async () => {

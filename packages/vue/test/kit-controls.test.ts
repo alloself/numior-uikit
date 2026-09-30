@@ -26,6 +26,11 @@ const SAMPLES: readonly Sample[] = [
   { entry: kitControls.date, value: '2026-09-28', props: { min: '2026-01-01', clearable: true } },
   { entry: kitControls.dateRange, value: { start: '2026-09-01', end: null }, props: {} },
   { entry: kitControls.time, value: '10:30', props: { step: 15 } },
+  {
+    entry: kitControls.otp,
+    value: '4829',
+    props: { length: 4, groupSize: 2, charset: 'digits', secret: true, placeholder: '·' },
+  },
 ];
 
 describe('kit controls', () => {
@@ -45,5 +50,7 @@ describe('kit controls', () => {
     expect(kitControls.number.accepts('1')).toBe(false);
     expect(kitControls.checkbox.accepts('yes')).toBe(false);
     expect(kitControls.dateRange.accepts({ start: 1, end: null })).toBe(false);
+    expect(kitControls.otp.accepts(4829)).toBe(false);
+    expect(kitControls.otp.props({ charset: 'hex' })).toBe(false);
   });
 });
