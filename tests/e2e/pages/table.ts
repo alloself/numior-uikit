@@ -1,3 +1,4 @@
+import { readFile } from 'node:fs/promises';
 import { expect, type Locator, type Page } from '@playwright/test';
 import { copiedTexts, stubClipboard } from '../helpers/clipboard';
 import { boxOf, type Box } from '../helpers/geometry';
@@ -276,6 +277,15 @@ export class TableSection {
 
   stubClipboard(): Promise<void> {
     return stubClipboard(this.page);
+  }
+
+  async exportCsv(): Promise<string> {
+    const [download] = await Promise.all([
+      this.page.waitForEvent('download'),
+      this.page.getByTestId('table-export').click(),
+    ]);
+
+    return readFile(await download.path(), 'utf8');
   }
 
   async putInClipboard(text: string): Promise<void> {

@@ -101,6 +101,18 @@ and `parse` sets a reader of its own.
 
 <Example name="table/Edits" />
 
+### Export to CSV
+
+The `exportCsv` method of the table ref builds CSV from the rows after filters and sorting, from
+every page and over the shown columns. Cells hold the shown text, `separator` sets the delimiter,
+and `headers: false` drops the header line. A long export runs in chunks under the busy bar and
+stops on `signal`.
+
+Excel reads the file cleanly when it starts with a byte order mark, and locales with a decimal comma
+expect the semicolon delimiter.
+
+<Example name="table/Export" />
+
 ### Ten thousand rows
 
 `height` turns on the row and column windows of `rowHeight` rows. A column with `pin` stays in

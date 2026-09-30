@@ -97,6 +97,7 @@ export interface NuiTableMessages {
   readonly menuPaste: string;
   readonly pasted: (params: { readonly count: number; readonly skipped: number }) => string;
   readonly pasteDenied: string;
+  readonly exported: (params: { readonly count: number }) => string;
 }
 
 export const tableMessages: NuiMessageCatalog<'table'> = {
@@ -195,6 +196,8 @@ export const tableMessages: NuiMessageCatalog<'table'> = {
     pasted: ({ count, skipped }) =>
       `Pasted ${count.toLocaleString('en-US')} ${plural('en', count, { one: 'cell', other: 'cells' })}${skipped > 0 ? `, skipped ${skipped.toLocaleString('en-US')}` : ''}`,
     pasteDenied: 'The browser did not share the clipboard; press Ctrl+V',
+    exported: ({ count }) =>
+      `Exported ${count.toLocaleString('en-US')} ${plural('en', count, { one: 'row', other: 'rows' })}`,
   },
   ru: {
     label: 'Таблица данных',
@@ -291,5 +294,7 @@ export const tableMessages: NuiMessageCatalog<'table'> = {
     pasted: ({ count, skipped }) =>
       `${plural('ru', count, { one: 'Вставлена', few: 'Вставлены', many: 'Вставлено', other: 'Вставлено' })} ${count.toLocaleString('ru-RU')} ${plural('ru', count, { one: 'ячейка', few: 'ячейки', many: 'ячеек', other: 'ячейки' })}${skipped > 0 ? `, пропущено: ${skipped.toLocaleString('ru-RU')}` : ''}`,
     pasteDenied: 'Браузер не дал прочитать буфер обмена, нажмите Ctrl+V',
+    exported: ({ count }) =>
+      `${plural('ru', count, { one: 'Выгружена', few: 'Выгружены', many: 'Выгружено', other: 'Выгружено' })} ${count.toLocaleString('ru-RU')} ${plural('ru', count, { one: 'строка', few: 'строки', many: 'строк', other: 'строки' })}`,
   },
 };

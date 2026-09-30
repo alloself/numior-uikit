@@ -38,6 +38,7 @@ export type {
   NuiTableContextMenu,
   NuiTableContextScope,
   NuiTableCopyOptions,
+  NuiTableCsvOptions,
   NuiTableEdit,
   NuiTableEditEvent,
   NuiTableEditKind,

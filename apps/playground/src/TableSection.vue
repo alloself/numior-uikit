@@ -87,8 +87,18 @@
       >
         {{ unitsLoading ? 'Показать структуру' : 'Загрузка структуры' }}
       </NuiButton>
+      <NuiButton
+        size="sm"
+        variant="outline"
+        tone="neutral"
+        data-testid="table-export"
+        @click="downloadCsv"
+      >
+        Экспорт CSV
+      </NuiButton>
     </div>
     <NuiTable
+      ref="orders-table"
       v-model:sort="sort"
       v-model:filters="filters"
       v-model:quick="quick"
@@ -142,7 +152,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, ref, useTemplateRef } from 'vue';
 import {
   NuiButton,
   NuiChip,
@@ -169,6 +179,7 @@ import {
   type NuiTableRanges,
   type NuiTableCellValue,
   type NuiTableEditEvent,
+  type NuiTableExposed,
 } from '@numior/table';
 
 type OrderStatus = 'new' | 'paid' | 'shipped' | 'returned';
@@ -552,6 +563,23 @@ const ORDER_SETTERS: Readonly<Record<string, (row: Order, value: NuiTableCellVal
   vip: (row, value) => {
     row.vip = typeof value === 'boolean' ? value : null;
   },
+};
+
+const ordersTable = useTemplateRef<NuiTableExposed>('orders-table');
+
+const downloadCsv = async (): Promise<void> => {
+  const text = await ordersTable.value?.exportCsv({ separator: ';' });
+
+  if (text === undefined) {
+    return;
+  }
+  const url = URL.createObjectURL(new Blob(['\uFEFF', text], { type: 'text/csv;charset=utf-8' }));
+  const link = document.createElement('a');
+
+  link.href = url;
+  link.download = 'orders.csv';
+  link.click();
+  URL.revokeObjectURL(url);
 };
 
 const onOrderEdit = (event: NuiTableEditEvent<Order>): void => {

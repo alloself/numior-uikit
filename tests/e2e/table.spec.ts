@@ -347,6 +347,25 @@ test.describe('table', () => {
     await expect.poll(() => table.cellTexts(block)).toEqual(before);
   });
 
+  test('exports the filtered rows as CSV with the shown texts', async ({ page, isMobile }) => {
+    test.skip(isMobile, 'downloads on desktop');
+    const playground = new PlaygroundPage(page);
+    const { table } = playground;
+    await playground.open();
+    await table.root.scrollIntoViewIfNeeded();
+    await table.quick.fill('Казань');
+    await expect(table.output).toContainText('"quick":"Казань"');
+
+    const lines = (await table.exportCsv()).split('\r\n');
+
+    expect(lines[0]).toBe(
+      '\uFEFF№;Клиент;Почта;Город;Страна;Сумма;Создан;VIP;Менеджер;Комментарий;Статус',
+    );
+
+    expect(lines.length).toBeGreaterThan(100);
+    expect(lines.slice(1).every((line) => line.includes('Казань'))).toBe(true);
+  });
+
   test('opens the cell menu with a long press on a phone and copies the cell', async ({
     page,
     isMobile,

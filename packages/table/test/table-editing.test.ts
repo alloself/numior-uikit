@@ -140,6 +140,30 @@ describe('NuiTable edits', () => {
     expect([2, 3, 4, 5].map((row) => rows[row]?.remote)).toEqual([true, false, true, false]);
   });
 
+  it('exports the shown rows and columns as CSV in the current order and stops when aborted', async () => {
+    const grid = mountStaff({
+      rows: staff(4),
+      sort: [{ key: 'salary', direction: 'desc' }],
+      hidden: ['name'],
+    });
+
+    await grid.settle();
+
+    expect(await grid.exportCsv({ separator: ';', headers: false })).toBe(
+      ['3;Москва;1 030;Нет', '2;Ереван;1 020;Да', '1;Казань;1 010;Нет', '0;Москва;1 000;Да'].join(
+        '\r\n',
+      ),
+    );
+
+    expect(grid.announcement).toBe('Выгружены 4 строки');
+    expect((await grid.exportCsv()).split('\r\n')[0]).toBe('ID,Город,Оклад,Удалённо');
+
+    const controller = new AbortController();
+
+    controller.abort();
+    await expect(grid.exportCsv({ signal: controller.signal })).rejects.toThrow(/aborted/i);
+  });
+
   it('offers cut and clear in the cell menu and keeps the history across new rows by key', async () => {
     const rows = staff(20);
     const grid = mountStaff({ rows, props: { getKey: (row) => row.id } });

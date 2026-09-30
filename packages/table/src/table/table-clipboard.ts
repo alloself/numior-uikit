@@ -94,3 +94,11 @@ export const parseTsv = (text: string): string[][] => {
   }
   return state.rows;
 };
+
+const csvField = (text: string, separator: string): string =>
+  text.includes(separator) || /["\r\n]/.test(text) || text.trim() !== text
+    ? `"${text.replaceAll('"', '""')}"`
+    : text;
+
+export const csvLine = (cells: readonly string[], separator: string): string =>
+  cells.map((cell) => csvField(cell, separator)).join(separator);

@@ -172,6 +172,12 @@ export interface NuiTableCopyOptions {
   readonly headers?: boolean | undefined;
 }
 
+export interface NuiTableCsvOptions {
+  readonly headers?: boolean | undefined;
+  readonly separator?: string | undefined;
+  readonly signal?: AbortSignal | undefined;
+}
+
 export type NuiTableEditKind = 'clear' | 'cut' | 'paste' | 'undo' | 'redo';
 
 export interface NuiTableEdit<T> {
@@ -304,6 +310,7 @@ export interface NuiTableExposed {
   copy(options?: NuiTableCopyOptions): Promise<boolean>;
   undo(): boolean;
   redo(): boolean;
+  exportCsv(options?: NuiTableCsvOptions): Promise<string>;
 }
 
 export type TablePaneName = 'start' | 'centre' | 'end';

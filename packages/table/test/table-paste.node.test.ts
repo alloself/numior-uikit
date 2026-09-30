@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseTsv, tsvOf } from '../src/table/table-clipboard';
+import { csvLine, parseTsv, tsvOf } from '../src/table/table-clipboard';
 import { parseBooleanCell, parseDateCell, parseNumberCell } from '../src/table/table-parse';
 import { planPaste } from '../src/table/table-paste';
 
@@ -31,6 +31,14 @@ describe('table paste', () => {
     expect(parseTsv('a\n\nb')).toEqual([['a'], [''], ['b']]);
     expect(parseTsv('ab"c')).toEqual([['ab"c']]);
     expect(parseTsv('')).toEqual([]);
+  });
+
+  it('writes CSV lines with quotes only where a field needs them', () => {
+    expect(csvLine(['a', 'b,c', 'say "hi"', 'x\ny', ' pad', 'ok'], ',')).toBe(
+      'a,"b,c","say ""hi""","x\ny"," pad",ok',
+    );
+
+    expect(csvLine(['a;b', 'c,d'], ';')).toBe('"a;b";c,d');
   });
 
   it('pastes at the anchor, fills the selection with one value and repeats a block over a multiple', () => {

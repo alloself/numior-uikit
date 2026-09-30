@@ -26,6 +26,7 @@ import {
   type NuiTableColumnOrder,
   type NuiTableReorderEvent,
   type NuiTableEditEvent,
+  type NuiTableCsvOptions,
   type NuiTableProps,
   type NuiTableColumnDef,
   type NuiTableRanges,
@@ -1450,6 +1451,13 @@ export class TableDriver<T> {
   async setSource(rows: readonly T[]): Promise<void> {
     this.source.value = rows;
     await nextTick();
+  }
+
+  async exportCsv(options?: NuiTableCsvOptions): Promise<string> {
+    const text = await this.exposed.value?.exportCsv(options);
+
+    await nextTick();
+    return text ?? '';
   }
 
   async scrollToRow(position: number): Promise<void> {

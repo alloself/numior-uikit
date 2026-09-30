@@ -292,6 +292,7 @@ import { useTableFocus } from './use-table-focus';
 import { useTableClipboard, type TableCopyCell } from './use-table-clipboard';
 import { useTableContextMenu } from './use-table-context-menu';
 import { useTableEditing } from './use-table-editing';
+import { useTableExport } from './use-table-export';
 import { parseCell } from './table-parse';
 import { useTableRanges } from './use-table-ranges';
 import { pageRowsOf } from './table-keys';
@@ -1236,7 +1237,17 @@ const cellMenu = useTableContextMenu<T>({
   messages,
 });
 
-const busy = computed(() => query.busy.value || clipboard.busy.value);
+const exporter = useTableExport<T>({
+  indices: () => engine.value.visibleIndices(),
+  rowAt: (index) => engine.value.rowAt(index),
+  keys: () => dataKeys.value,
+  labelOf: (key) => columnAt(key).label,
+  textOf: (row, key) => textOf(row, key),
+  messages,
+  announce,
+});
+
+const busy = computed(() => query.busy.value || clipboard.busy.value || exporter.busy.value);
 
 const refocusActive = (): void => {
   focus.focusCell(active.value);
@@ -1490,5 +1501,6 @@ defineExpose<NuiTableExposed>({
   copy: (options) => clipboard.copy(options?.headers === true),
   undo: () => editing.undo(),
   redo: () => editing.redo(),
+  exportCsv: (options) => exporter.exportCsv(options),
 });
 </script>
