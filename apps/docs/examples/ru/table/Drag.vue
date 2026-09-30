@@ -55,32 +55,50 @@ const units = ref<readonly Unit[]>(START);
 const expanded = ref<TableNodeId[]>(['dev']);
 const last = ref('—');
 
-const moved = (list: readonly Unit[], from: number, to: number): Unit[] => {
-  const next = [...list];
-  const [item] = next.splice(from, 1);
+const inserted = (list: readonly Unit[], unit: Unit, index: number): Unit[] => [
+  ...list.slice(0, index),
+  unit,
+  ...list.slice(index),
+];
 
-  if (item !== undefined) {
-    next.splice(to, 0, item);
-  }
-  return next;
-};
-
-const movedWithin = (list: readonly Unit[], event: NuiTableReorderEvent<Unit>): Unit[] => {
-  if (event.parent === undefined) {
-    return moved(list, event.from, event.to);
-  }
-  return list.map((unit) => {
-    if (unit.children === undefined) {
-      return unit;
+const without = (list: readonly Unit[], id: string): Unit[] =>
+  list.flatMap((unit) => {
+    if (unit.id === id) {
+      return [];
     }
-    return unit === event.parent
-      ? { ...unit, children: moved(unit.children, event.from, event.to) }
-      : { ...unit, children: movedWithin(unit.children, event) };
+    return [unit.children === undefined ? unit : { ...unit, children: without(unit.children, id) }];
+  });
+
+const placed = (
+  list: readonly Unit[],
+  parentId: string | undefined,
+  unit: Unit,
+  index: number,
+): Unit[] => {
+  if (parentId === undefined) {
+    return inserted(list, unit, index);
+  }
+  return list.map((entry) => {
+    if (entry.id === parentId) {
+      return { ...entry, children: inserted(entry.children ?? [], unit, index) };
+    }
+    return entry.children === undefined
+      ? entry
+      : { ...entry, children: placed(entry.children, parentId, unit, index) };
   });
 };
 
+const withParent = (ids: readonly TableNodeId[], id: string | undefined): TableNodeId[] =>
+  id === undefined || ids.includes(id) ? [...ids] : [...ids, id];
+
+const parentNote = (parent: Unit | undefined): string =>
+  parent === undefined ? '' : ` (${parent.name})`;
+
 const onReorder = (event: NuiTableReorderEvent<Unit>): void => {
-  units.value = movedWithin(units.value, event);
-  last.value = `${event.row.name}: ${event.from + 1} → ${event.to + 1}`;
+  const target = event.toParent === undefined ? undefined : event.toParent.id;
+
+  units.value = placed(without(units.value, event.row.id), target, event.row, event.to);
+  expanded.value = withParent(expanded.value, target);
+  last.value = `${event.row.name}: ${event.from + 1} → ${event.to + 1}${parentNote(event.toParent)}`;
 };
 </script>

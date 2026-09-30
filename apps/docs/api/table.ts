@@ -104,8 +104,12 @@ const docs: DocsMap = {
         en: 'Rows pinned under the header: left out of sorting, filters and pages, part of selection and rowClick; their cell slots receive pinned: true.',
       },
       rowDrag: {
-        ru: 'Служебная колонка с ручкой перетаскивания строк: строка ходит среди соседей одного родителя, событие reorder несёт индексы, а сама таблица строки не переставляет. Ручки отключены при сортировке, фильтрах, быстром фильтре, группировке, серверном режиме и загрузке.',
-        en: 'A utility column with a drag grip per row: a row moves among the siblings of one parent, the reorder event carries the indices and the table itself never reorders rows. The grips are disabled under sorting, filters, the quick filter, grouping, remote mode and loading.',
+        ru: 'Ручка перетаскивания в первой колонке каждой строки: верхняя часть целевой строки ставит строку перед ней, нижняя — после, удержание над серединой вкладывает её внутрь; событие reorder несёт индексы и обоих родителей, а сама таблица строки не переставляет. Ручки отключены при сортировке, фильтрах, быстром фильтре, группировке, серверном режиме и загрузке.',
+        en: 'A drag grip in the first column of every row: the top of a target row drops before it, the bottom after it, and holding over the middle nests inside; the reorder event carries the indices and both parents while the table itself never reorders rows. The grips are disabled under sorting, filters, the quick filter, grouping, remote mode and loading.',
+      },
+      nestDelay: {
+        ru: 'Миллисекунды удержания строки над серединой другой строки до вложения в неё; по умолчанию 600.',
+        en: 'Milliseconds to hold a row over the middle of another before it nests inside; 600 by default.',
       },
       dragLabel: {
         ru: 'Функция доступного имени ручки строки; по умолчанию из словаря с подписью строки.',
@@ -188,8 +192,8 @@ const docs: DocsMap = {
         en: 'A click on a data row outside the checkbox, the grip, the group label and the tree toggle; carries the row and the event.',
       },
       reorder: {
-        ru: 'Строку перетащили: row, from и to — индексы среди соседей одного родителя, parent — родитель или undefined для корня; порядок применяет потребитель.',
-        en: 'A row was dragged: row, from and to as indices among the siblings of one parent, parent or undefined at the root; the consumer applies the order.',
+        ru: 'Строку переместили: row, from — индекс среди соседей старого родителя parent, to — индекс среди соседей нового родителя toParent; undefined означает корень, порядок применяет потребитель.',
+        en: 'A row was moved: row, from as the index among the siblings of the old parent, to as the index among the siblings of the new toParent; undefined means the root, the consumer applies the order.',
       },
     },
     slots: {
@@ -247,17 +251,17 @@ const docs: DocsMap = {
         },
       },
       {
-        keys: 'Space / Enter',
+        keys: 'Alt+Shift+ArrowUp / Alt+Shift+ArrowDown',
         description: {
-          ru: 'На ячейке ручки берёт строку; со взятой строкой кладёт её на новое место.',
-          en: 'On the grip cell grabs the row; with a grabbed row drops it at the new place.',
+          ru: 'При включённом rowDrag на ячейке строки переставляет строку среди соседей; фокус следует за строкой.',
+          en: 'With rowDrag on, on a row cell moves the row among its siblings; the focus follows the row.',
         },
       },
       {
-        keys: 'ArrowUp / ArrowDown',
+        keys: 'Alt+Shift+ArrowRight / Alt+Shift+ArrowLeft',
         description: {
-          ru: 'Со взятой строкой двигает её среди соседей; Escape отменяет перемещение.',
-          en: 'With a grabbed row moves it among its siblings; Escape cancels the move.',
+          ru: 'Вкладывает строку в предыдущего соседа или выносит её следом за родителем; в RTL стрелки меняются местами.',
+          en: 'Nests the row into the previous sibling or lifts it after its parent; in RTL the arrows swap.',
         },
       },
       {

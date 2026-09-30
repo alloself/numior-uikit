@@ -1,9 +1,9 @@
 <template>
   <div
-    v-if="drop !== undefined"
+    v-if="drop"
     class="nui-table__drop"
-    :class="`nui-table__drop--${axis}`"
-    :style="{ '--_drop': `${drop}px` }"
+    :class="dropClass"
+    :style="dropStyle"
     aria-hidden="true"
   ></div>
   <div
@@ -21,8 +21,29 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue';
 import { NuiIcon } from '@numior/vue';
 import type { NuiTableDragLayerProps } from './table.types';
 
 const { axis = 'x', drop, ghost } = defineProps<NuiTableDragLayerProps>();
+
+const dropClass = computed(() =>
+  drop?.kind === 'box' ? 'nui-table__drop--box' : `nui-table__drop--${axis}`,
+);
+
+const dropStyle = computed(() => {
+  if (drop === undefined) {
+    return undefined;
+  }
+  if (drop.kind === 'box') {
+    return { '--_drop': `${drop.start}px`, '--_size': `${drop.size}px` };
+  }
+  const inset = drop.inset;
+
+  return {
+    '--_drop': `${drop.start}px`,
+    '--_drop-inset':
+      inset === undefined ? '0px' : `calc(${inset.start}px + ${inset.level} * var(--_indent))`,
+  };
+});
 </script>

@@ -120,18 +120,26 @@ test.describe('table', () => {
     await expect(table.treeRow(0)).toContainText('Продажи');
     await expect(table.treeRow(1)).toContainText('Разработка');
 
-    await table.dragTreeRow(1, 0);
-    await expect(table.output).toContainText('"lastReorder":"rnd:1>0:root"');
+    await table.dragTreeRow(1, 0, 'before');
+    await expect(table.output).toContainText('"lastReorder":"rnd:1>0:root>root"');
     await expect(table.treeRow(0)).toContainText('Разработка');
     await expect(table.treeRow(1)).toContainText('Продажи');
 
     await table.treeCell(0, 0).click();
-    await page.keyboard.press('Space');
-    await page.keyboard.press('ArrowDown');
-    await page.keyboard.press('Space');
-    await expect(table.output).toContainText('"lastReorder":"rnd:0>1:root"');
+    await page.keyboard.press('Alt+Shift+ArrowDown');
+    await expect(table.output).toContainText('"lastReorder":"rnd:0>1:root>root"');
     await expect(table.treeRow(1)).toContainText('Разработка');
     expect(await table.focusedCell(TREE_HEAD_ROWS)).toEqual({ row: 1, col: 0 });
+
+    await table.dragTreeRow(1, 0, 'inside');
+    await expect(table.output).toContainText('"lastReorder":"rnd:1>2:root>sales"');
+    await expect(table.treeRow(3)).toContainText('Разработка');
+    await expect(table.treeRow(3)).toHaveAttribute('aria-level', '2');
+
+    await page.keyboard.press('Alt+Shift+ArrowLeft');
+    await expect(table.output).toContainText('"lastReorder":"rnd:2>1:sales>root"');
+    await expect(table.treeRow(3)).toContainText('Разработка');
+    await expect(table.treeRow(3)).toHaveAttribute('aria-level', '1');
   });
 
   test('walks the cells with the keyboard and keeps the active one in view', async ({

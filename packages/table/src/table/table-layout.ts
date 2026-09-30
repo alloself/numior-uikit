@@ -54,7 +54,6 @@ const SMALLEST_WIDTH = 48;
 const UTILITY_WIDTH = 40;
 
 export const SELECT_KEY = '__select';
-export const DRAG_KEY = '__drag';
 export const TRAIL_KEY = '__trail';
 
 const SELECT_INPUT: PlaceInput = {
@@ -65,8 +64,6 @@ const SELECT_INPUT: PlaceInput = {
   align: 'center',
   wrap: false,
 };
-
-const DRAG_INPUT: PlaceInput = { ...SELECT_INPUT, key: DRAG_KEY, kind: 'drag' };
 
 const minWidthOf = <T>(column: NuiTableColumn<T>): number => column.minWidth ?? SMALLEST_WIDTH;
 
@@ -169,7 +166,6 @@ export interface LayoutOptions {
   readonly widths: NuiTableWidths;
   readonly sticky: boolean;
   readonly select: boolean;
-  readonly drag: boolean;
   readonly room: number;
   readonly wrap: boolean;
 }
@@ -180,7 +176,6 @@ const DEFAULT_OPTIONS: LayoutOptions = {
   widths: {},
   sticky: true,
   select: false,
-  drag: false,
   room: 0,
   wrap: true,
 };
@@ -219,10 +214,7 @@ export const tableLayout = <T>(
     }
   }
 
-  const utilities = [
-    ...(options.drag ? [DRAG_INPUT] : []),
-    ...(options.select ? [SELECT_INPUT] : []),
-  ];
+  const utilities = options.select ? [SELECT_INPUT] : [];
 
   const ordered = stretch([...utilities, ...starts, ...centres, ...ends], options.room);
   const startCount = utilities.length + (options.sticky ? starts.length : 0);

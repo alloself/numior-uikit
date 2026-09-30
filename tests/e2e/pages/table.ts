@@ -68,21 +68,27 @@ export class TableSection {
     return this.treeRow(position).locator('.nui-table__row-grip');
   }
 
-  async dragTreeRow(from: number, to: number): Promise<void> {
+  async dragTreeRow(from: number, to: number, zone: 'before' | 'after' | 'inside'): Promise<void> {
     await this.treeRow(from).hover();
+
+    await expect
+      .poll(async () => (await this.treeGrip(from).boundingBox())?.width ?? 0)
+      .toBeGreaterThan(20);
+
     const grip = await boxOf(this.treeGrip(from));
     const target = await boxOf(this.treeRow(to));
     const x = grip.x + grip.width / 2;
     const y = grip.y + grip.height / 2;
+    const share = zone === 'before' ? 0.15 : zone === 'after' ? 0.85 : 0.5;
 
     await this.page.mouse.move(x, y);
     await this.page.mouse.down();
     await this.page.mouse.move(x, y + 8);
+    await this.page.mouse.move(x, target.y + target.height * share, { steps: 6 });
 
-    await this.page.mouse.move(x, target.y + target.height * (to < from ? 0.25 : 0.75), {
-      steps: 6,
-    });
-
+    if (zone === 'inside') {
+      await expect(this.tree.locator('.nui-table__drop--box')).toBeVisible();
+    }
     await this.page.mouse.up();
   }
 
@@ -95,8 +101,22 @@ export class TableSection {
   }
 
   async openMenu(col: number): Promise<void> {
-    await this.header(col).hover();
-    await this.menuButton(col).click();
+    await this.header(col).scrollIntoViewIfNeeded();
+    await this.clickRevealed(this.header(col), this.menuButton(col));
+  }
+
+  private async clickRevealed(cell: Locator, control: Locator): Promise<void> {
+    const idle = await control.boundingBox();
+
+    if (idle !== null && idle.width > 20) {
+      await control.click();
+      return;
+    }
+    await cell.hover();
+    await expect.poll(async () => (await control.boundingBox())?.width ?? 0).toBeGreaterThan(20);
+    const box = await boxOf(control);
+
+    await this.page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
   }
 
   headerPane(col: number): Promise<string> {

@@ -36,7 +36,6 @@ describe('tableLayout', () => {
       widths: {},
       sticky: true,
       select: false,
-      drag: false,
       room: 0,
       wrap: true,
     });
@@ -59,7 +58,6 @@ describe('tableLayout', () => {
       widths: {},
       sticky: true,
       select: true,
-      drag: false,
       room: 500,
       wrap: true,
     });
@@ -70,7 +68,6 @@ describe('tableLayout', () => {
       widths: {},
       sticky: true,
       select: true,
-      drag: false,
       room: 920,
       wrap: true,
     });
@@ -81,7 +78,6 @@ describe('tableLayout', () => {
       widths: {},
       sticky: true,
       select: true,
-      drag: false,
       room: 0,
       wrap: true,
     });
@@ -99,7 +95,6 @@ describe('tableLayout', () => {
       widths: {},
       sticky: true,
       select: false,
-      drag: false,
       room: 0,
       wrap: true,
     });
@@ -110,7 +105,6 @@ describe('tableLayout', () => {
       widths: {},
       sticky: true,
       select: false,
-      drag: false,
       room: 0,
       wrap: true,
     });
@@ -121,7 +115,6 @@ describe('tableLayout', () => {
       widths: {},
       sticky: false,
       select: false,
-      drag: false,
       room: 0,
       wrap: true,
     });

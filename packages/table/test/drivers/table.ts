@@ -150,7 +150,17 @@ const dragHandle = async (handle: HTMLElement | null, name: string, dx: number):
 };
 
 const ROW_EARLY = 10;
+const ROW_MIDDLE = 20;
 const ROW_LATE = 30;
+
+type DropSide = 'before' | 'after' | 'inside';
+
+interface DropMark {
+  readonly kind: 'line' | 'box';
+  readonly start: string;
+  readonly size?: string | undefined;
+  readonly inset?: string | undefined;
+}
 
 const defineRect = (element: Element, rect: DOMRect): void => {
   Object.defineProperty(element, 'getBoundingClientRect', {
@@ -762,9 +772,25 @@ export class TableDriver<T> {
     return this.events.reorders;
   }
 
-  get dropLine(): string | undefined {
+  get dropMark(): DropMark | undefined {
+    const box = this.wrapper.find<HTMLElement>('.nui-table__drop--box');
+
+    if (box.exists()) {
+      return {
+        kind: 'box',
+        start: box.element.style.getPropertyValue('--_drop'),
+        size: box.element.style.getPropertyValue('--_size'),
+      };
+    }
     const line = this.wrapper.find<HTMLElement>('.nui-table__drop--y');
-    return line.exists() ? line.element.style.getPropertyValue('--_drop') : undefined;
+
+    return line.exists()
+      ? {
+          kind: 'line',
+          start: line.element.style.getPropertyValue('--_drop'),
+          inset: line.element.style.getPropertyValue('--_drop-inset'),
+        }
+      : undefined;
   }
 
   get ghostSize(): string | undefined {
@@ -782,6 +808,27 @@ export class TableDriver<T> {
     return this.row(position)?.querySelector<HTMLButtonElement>('.nui-table__row-grip') ?? null;
   }
 
+  gripColumn(position: number): number | undefined {
+    const cell = this.rowGrip(position)?.closest('[aria-colindex]');
+    return cell === null || cell === undefined
+      ? undefined
+      : Number(cell.getAttribute('aria-colindex'));
+  }
+
+  private layoutRows(): void {
+    const frame = this.wrapper.find<HTMLElement>('.nui-table__frame').element;
+
+    defineRect(frame, new DOMRect(0, 0, LAYOUT_WIDTH, LAYOUT_HEIGHT));
+
+    for (const row of this.element.querySelectorAll<HTMLElement>(
+      '.nui-table__body > [role="row"]',
+    )) {
+      const top = (Number(row.getAttribute('aria-rowindex')) - 1) * HEAD_HEIGHT;
+
+      defineRect(row, new DOMRect(0, top, LAYOUT_WIDTH, HEAD_HEIGHT));
+    }
+  }
+
   gripDisabled(position: number): boolean {
     return this.rowGrip(position)?.disabled ?? true;
   }
@@ -790,11 +837,18 @@ export class TableDriver<T> {
     return this.row(position)?.classList.contains('nui-table__row--dragging') ?? false;
   }
 
-  private rowY(position: number, side: 'before' | 'after'): number {
+  private rowY(position: number, side: DropSide): number {
     const pinned = this.element.querySelectorAll('.nui-table__pinned > [role="row"]').length;
     const top = (this.headRows + pinned + position) * HEAD_HEIGHT;
 
-    return top + (side === 'after' ? ROW_LATE : ROW_EARLY);
+    switch (side) {
+      case 'before':
+        return top + ROW_EARLY;
+      case 'after':
+        return top + ROW_LATE;
+      case 'inside':
+        return top + ROW_MIDDLE;
+    }
   }
 
   async grabRow(position: number): Promise<void> {
@@ -804,6 +858,8 @@ export class TableDriver<T> {
       throw new Error(`Row ${position} has no drag grip`);
     }
     const y = this.rowY(position, 'before') + GRAB_NUDGE;
+
+    this.layoutRows();
 
     grip.dispatchEvent(
       new PointerEvent('pointerdown', { bubbles: true, button: 0, pointerId: 3, clientY: y }),
@@ -816,7 +872,9 @@ export class TableDriver<T> {
     await nextTick();
   }
 
-  async moveRowTo(position: number, side: 'before' | 'after'): Promise<void> {
+  async moveRowTo(position: number, side: DropSide): Promise<void> {
+    this.layoutRows();
+
     window.dispatchEvent(
       new PointerEvent('pointermove', { pointerId: 3, clientY: this.rowY(position, side) }),
     );

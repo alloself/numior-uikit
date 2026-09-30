@@ -62,22 +62,22 @@ export interface NuiTableMessages {
     readonly count: number;
   }) => string;
   readonly dragRow: (params: { readonly row: string }) => string;
-  readonly rowGrabbed: (params: {
-    readonly row: string;
-    readonly position: number;
-    readonly count: number;
-  }) => string;
   readonly rowMoved: (params: {
     readonly row: string;
     readonly position: number;
     readonly count: number;
   }) => string;
-  readonly rowDropped: (params: {
+  readonly rowMovedInto: (params: {
+    readonly row: string;
+    readonly parent: string;
+    readonly position: number;
+    readonly count: number;
+  }) => string;
+  readonly rowMovedToRoot: (params: {
     readonly row: string;
     readonly position: number;
     readonly count: number;
   }) => string;
-  readonly rowDragCancelled: (params: { readonly row: string }) => string;
 }
 
 export const tableMessages: NuiMessageCatalog<'table'> = {
@@ -143,12 +143,11 @@ export const tableMessages: NuiMessageCatalog<'table'> = {
     columnMoved: ({ column, position, count }) =>
       `Column ${column} moved to position ${position} of ${count}`,
     dragRow: ({ row }) => `Drag row ${row}`,
-    rowGrabbed: ({ row, position, count }) =>
-      `Row ${row} grabbed, position ${position} of ${count}`,
-    rowMoved: ({ row, position, count }) => `Row ${row} at position ${position} of ${count}`,
-    rowDropped: ({ row, position, count }) =>
-      `Row ${row} moved to position ${position} of ${count}`,
-    rowDragCancelled: ({ row }) => `Move of row ${row} cancelled`,
+    rowMoved: ({ row, position, count }) => `Row ${row} moved to position ${position} of ${count}`,
+    rowMovedInto: ({ row, parent, position, count }) =>
+      `Row ${row} moved into ${parent}, position ${position} of ${count}`,
+    rowMovedToRoot: ({ row, position, count }) =>
+      `Row ${row} moved to the top level, position ${position} of ${count}`,
   },
   ru: {
     label: 'Таблица данных',
@@ -211,11 +210,11 @@ export const tableMessages: NuiMessageCatalog<'table'> = {
     columnMoved: ({ column, position, count }) =>
       `Колонка «${column}» перемещена на место ${position} из ${count}`,
     dragRow: ({ row }) => `Перетащить строку «${row}»`,
-    rowGrabbed: ({ row, position, count }) =>
-      `Строка «${row}» взята, место ${position} из ${count}`,
-    rowMoved: ({ row, position, count }) => `Строка «${row}» на месте ${position} из ${count}`,
-    rowDropped: ({ row, position, count }) =>
+    rowMoved: ({ row, position, count }) =>
       `Строка «${row}» перемещена на место ${position} из ${count}`,
-    rowDragCancelled: ({ row }) => `Перемещение строки «${row}» отменено`,
+    rowMovedInto: ({ row, parent, position, count }) =>
+      `Строка «${row}» перемещена в «${parent}», место ${position} из ${count}`,
+    rowMovedToRoot: ({ row, position, count }) =>
+      `Строка «${row}» перемещена на верхний уровень, место ${position} из ${count}`,
   },
 };

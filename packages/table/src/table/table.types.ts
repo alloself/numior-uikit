@@ -21,7 +21,7 @@ export type NuiTableSelection = 'single' | 'multiple';
 
 export type NuiTablePagination = Partial<Omit<NuiPaginationProps, 'total' | 'size'>>;
 
-export type TableColumnKind = 'data' | 'select' | 'drag';
+export type TableColumnKind = 'data' | 'select';
 
 export interface TablePageWindow {
   readonly start: number;
@@ -121,6 +121,7 @@ export interface NuiTableProps<T> {
   total?: number | undefined;
   pinnedRows?: readonly T[] | undefined;
   rowDrag?: boolean | undefined;
+  nestDelay?: number | undefined;
   dragLabel?: ((row: T) => string) | undefined;
   rowLabel?: ((row: T) => string) | undefined;
 }
@@ -130,6 +131,7 @@ export interface NuiTableReorderEvent<T> {
   readonly from: number;
   readonly to: number;
   readonly parent: T | undefined;
+  readonly toParent: T | undefined;
 }
 
 export interface NuiTableCellSlot<T> {
@@ -206,6 +208,15 @@ export interface TableGhost {
   readonly size: number;
   readonly label: string;
 }
+
+export interface TableDropInset {
+  readonly start: number;
+  readonly level: number;
+}
+
+export type TableDropMark =
+  | { readonly kind: 'line'; readonly start: number; readonly inset?: TableDropInset | undefined }
+  | { readonly kind: 'box'; readonly start: number; readonly size: number };
 
 export type TableBandRule = 'start' | 'end' | 'both';
 
@@ -304,8 +315,14 @@ export interface NuiTableGripProps {
 
 export interface NuiTableDragLayerProps {
   axis?: 'x' | 'y' | undefined;
-  drop?: number | undefined;
+  drop?: TableDropMark | undefined;
   ghost?: TableGhost | undefined;
+}
+
+export interface NuiTableRowGripProps {
+  label: string;
+  disabled?: boolean | undefined;
+  active?: boolean | undefined;
 }
 
 export interface TableCellPosition {
@@ -341,11 +358,10 @@ export interface TableBodyRow {
 }
 
 export interface NuiTableUtilityCellProps {
-  control: 'checkbox' | 'grip' | 'skeleton' | 'none';
+  control: 'checkbox' | 'skeleton' | 'none';
   checked?: boolean | undefined;
   indeterminate?: boolean | undefined;
   disabled?: boolean | undefined;
-  active?: boolean | undefined;
   label?: string | undefined;
 }
 

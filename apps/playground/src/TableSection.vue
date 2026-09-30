@@ -383,7 +383,7 @@ const columns: NuiTableColumnDef<Order>[] = [
     type: 'number',
     pin: 'start',
     hideable: false,
-    width: 88,
+    width: 104,
     value: (row) => row.id,
     format: (value) => String(value),
   },
@@ -453,7 +453,7 @@ const columns: NuiTableColumnDef<Order>[] = [
     label: 'Статус',
     type: 'text',
     pin: 'end',
-    width: 160,
+    width: 144,
     filter: 'set',
     value: (row) => STATUS_LABELS[row.status],
   },
@@ -479,33 +479,53 @@ const lastUnitClick = ref<string | null>(null);
 const lastReorder = ref<string | null>(null);
 const LOAD_DELAY = 700;
 
-const moved = <V>(list: readonly V[], from: number, to: number): V[] => {
-  const next = [...list];
-  const [item] = next.splice(from, 1);
+const inserted = (list: readonly Unit[], unit: Unit, index: number): Unit[] => [
+  ...list.slice(0, index),
+  unit,
+  ...list.slice(index),
+];
 
-  if (item !== undefined) {
-    next.splice(to, 0, item);
-  }
-  return next;
-};
-
-const movedWithin = (list: readonly Unit[], event: NuiTableReorderEvent<Unit>): Unit[] => {
-  if (event.parent === undefined) {
-    return moved(list, event.from, event.to);
-  }
-  return list.map((unit) => {
-    if (unit.children === undefined) {
-      return unit;
+const without = (list: readonly Unit[], id: string): Unit[] =>
+  list.flatMap((unit) => {
+    if (unit.id === id) {
+      return [];
     }
-    return unit === event.parent
-      ? { ...unit, children: moved(unit.children, event.from, event.to) }
-      : { ...unit, children: movedWithin(unit.children, event) };
+    return [unit.children === undefined ? unit : { ...unit, children: without(unit.children, id) }];
+  });
+
+const placed = (
+  list: readonly Unit[],
+  parentId: string | undefined,
+  unit: Unit,
+  index: number,
+): Unit[] => {
+  if (parentId === undefined) {
+    return inserted(list, unit, index);
+  }
+  return list.map((entry) => {
+    if (entry.id === parentId) {
+      return { ...entry, children: inserted(entry.children ?? [], unit, index) };
+    }
+    return entry.children === undefined
+      ? entry
+      : { ...entry, children: placed(entry.children, parentId, unit, index) };
   });
 };
 
+const idOf = (unit: Unit | undefined): string => (unit === undefined ? 'root' : unit.id);
+
+const withParent = (ids: readonly TableNodeId[], id: string | undefined): readonly TableNodeId[] =>
+  id === undefined || ids.includes(id) ? ids : [...ids, id];
+
+const reorderMark = (event: NuiTableReorderEvent<Unit>): string =>
+  `${event.row.id}:${event.from}>${event.to}:${idOf(event.parent)}>${idOf(event.toParent)}`;
+
 const onUnitReorder = (event: NuiTableReorderEvent<Unit>): void => {
-  units.value = movedWithin(units.value, event);
-  lastReorder.value = `${event.row.id}:${event.from}>${event.to}:${event.parent?.id ?? 'root'}`;
+  const target = event.toParent === undefined ? undefined : event.toParent.id;
+
+  units.value = placed(without(units.value, event.row.id), target, event.row, event.to);
+  unitsExpanded.value = withParent(unitsExpanded.value, target);
+  lastReorder.value = reorderMark(event);
 };
 
 const loadUnit = (unit: Unit): void => {

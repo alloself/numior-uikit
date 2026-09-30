@@ -1,45 +1,62 @@
-import { computed, ref, type ComputedRef, type Ref, type ShallowRef } from 'vue';
-import {
-  useReorder,
-  type ReorderEvent,
-  type ReorderState,
-  type VirtualList,
-} from '@numior/primitives';
-import type { TableEngine, TableSiblings } from '../engine';
+import { computed, onScopeDispose, ref, type ComputedRef, type Ref, type ShallowRef } from 'vue';
+import { useReorder, type ReorderState } from '@numior/primitives';
+import type { TableEngine, TableRowNode, TableSiblings } from '../engine';
 import type { NuiTableMessages } from './table.messages';
-import type { NuiTableReorderEvent, TableGhost } from './table.types';
+import type {
+  NuiTableReorderEvent,
+  TableCellPosition,
+  TableDropInset,
+  TableDropMark,
+  TableGhost,
+} from './table.types';
 
 export interface TableRowDragOptions<T> {
   readonly enabled: () => boolean;
   readonly engine: ShallowRef<TableEngine<T>>;
   readonly viewport: () => HTMLElement | null;
   readonly frame: () => HTMLElement | null;
-  readonly rows: VirtualList;
   readonly pageStart: () => number;
   readonly rowCount: () => number;
   readonly rowSize: () => number;
-  readonly windowed: () => boolean;
   readonly headRows: () => number;
-  readonly pinnedRows: () => number;
+  readonly nestDelay: () => number;
+  readonly isRtl: () => boolean;
+  readonly canNest: (row: T) => boolean;
+  readonly childCount: (row: T) => number;
   readonly labelOf: (row: T) => string;
   readonly messages: ComputedRef<NuiTableMessages>;
   readonly announce: (text: string) => void;
-  readonly reveal: (position: number) => void;
-  readonly moved: (position: number) => void;
+  readonly refocus: (row: T) => void;
   readonly emit: (event: NuiTableReorderEvent<T>) => void;
 }
 
 export interface TableRowDrag {
   readonly dragging: ComputedRef<number | undefined>;
-  readonly drop: Readonly<Ref<number | undefined>>;
+  readonly drop: Readonly<Ref<TableDropMark | undefined>>;
   readonly ghost: Readonly<Ref<TableGhost | undefined>>;
   grab(position: number, event: PointerEvent): void;
-  onKeydown(event: KeyboardEvent, position: number | undefined): boolean;
+  onKeydown(event: KeyboardEvent, body: TableCellPosition | undefined): boolean;
 }
 
 interface RowPlace<T> {
-  readonly row: T;
+  readonly position: number;
+  readonly node: TableRowNode<T>;
   readonly siblings: TableSiblings<T>;
+}
+
+type RowZone = 'before' | 'after' | 'inside';
+
+interface RowTarget {
+  readonly position: number;
+  readonly zone: RowZone;
+}
+
+interface RowDestination<T> {
+  readonly parent: T | undefined;
+  readonly parentIndex: number;
+  readonly index: number;
+  readonly count: number;
+  readonly level: number;
 }
 
 interface Grab {
@@ -47,7 +64,20 @@ interface Grab {
   readonly size: number;
 }
 
+interface RenderedRow {
+  readonly position: number;
+  readonly element: HTMLElement;
+  readonly rect: DOMRect;
+}
+
+interface Hold {
+  readonly position: number;
+  readonly since: number;
+}
+
 const BODY_ROW = '.nui-table__body > [role="row"]';
+const BEFORE_EDGE = 0.3;
+const AFTER_EDGE = 0.7;
 const NO_GRAB: Grab = { offset: 0, size: 0 };
 
 const grabOf = (event: PointerEvent, fallback: number): Grab => {
@@ -61,114 +91,186 @@ const grabOf = (event: PointerEvent, fallback: number): Grab => {
   return { offset: event.clientY - rect.top, size: rect.height || fallback };
 };
 
-const rowsOf = (viewport: HTMLElement | null): HTMLElement[] => [
-  ...(viewport?.querySelectorAll<HTMLElement>(BODY_ROW) ?? []),
-];
+const zoneOf = (clientY: number, rect: DOMRect): RowZone => {
+  const share = rect.height > 0 ? (clientY - rect.top) / rect.height : 0.5;
 
-const neighbourOf = (from: number, to: number): number => (to < from ? to : to + 1);
+  if (share < BEFORE_EDGE) {
+    return 'before';
+  }
+  return share > AFTER_EDGE ? 'after' : 'inside';
+};
+
+const halfOf = (clientY: number, rect: DOMRect): RowZone =>
+  clientY < rect.top + rect.height / 2 ? 'before' : 'after';
+
+const rowUnder = (clientY: number, rows: readonly RenderedRow[]): RowTarget | undefined => {
+  const first = rows[0];
+  const lastRow = rows.at(-1);
+
+  if (first === undefined || lastRow === undefined) {
+    return undefined;
+  }
+  const hit = rows.find((row) => clientY >= row.rect.top && clientY < row.rect.bottom);
+
+  if (hit !== undefined) {
+    return { position: hit.position, zone: zoneOf(clientY, hit.rect) };
+  }
+  return clientY < first.rect.top
+    ? { position: first.position, zone: 'before' }
+    : { position: lastRow.position, zone: 'after' };
+};
+
+const isArrow = (key: string): boolean =>
+  key === 'ArrowUp' || key === 'ArrowDown' || key === 'ArrowLeft' || key === 'ArrowRight';
+
+const isChord = (event: KeyboardEvent): boolean =>
+  isArrow(event.key) && event.altKey && event.shiftKey && !event.ctrlKey && !event.metaKey;
 
 export const useTableRowDrag = <T>(options: TableRowDragOptions<T>): TableRowDrag => {
-  const drop = ref<number>();
+  const drop = ref<TableDropMark>();
   const ghost = ref<TableGhost>();
   let held = NO_GRAB;
+  let target: RowTarget | undefined;
+  let hold: Hold | undefined;
+  let timer = 0;
+  let last: ReorderState = { phase: 'idle' };
 
   const placeOf = (position: number): RowPlace<T> | undefined => {
     const engine = options.engine.value;
     const node = engine.nodeAt(options.pageStart() + position);
     const siblings = engine.siblingsAt(options.pageStart() + position);
 
-    return node?.kind === 'row' && siblings !== undefined ? { row: node.row, siblings } : undefined;
+    return node?.kind === 'row' && siblings !== undefined
+      ? { position, node, siblings }
+      : undefined;
   };
 
-  const chromeHeight = (): number =>
-    options.rowSize() * (options.headRows() + options.pinnedRows());
+  const subtreeEnd = (from: number): number => {
+    const source = placeOf(from);
+    const count = options.rowCount();
+    let end = from + 1;
 
-  const bodyOffset = (clientY: number): number | undefined => {
-    const viewport = options.viewport();
-
-    if (viewport === null) {
-      return undefined;
+    if (source === undefined) {
+      return end;
     }
-    return (
-      clientY - viewport.getBoundingClientRect().top + options.rows.scrollTop.value - chromeHeight()
+    while (end < count) {
+      const node = options.engine.value.nodeAt(options.pageStart() + end);
+
+      if (node?.kind !== 'row' || node.level <= source.node.level) {
+        break;
+      }
+      end += 1;
+    }
+    return end;
+  };
+
+  const renderedRows = (from: number): RenderedRow[] => {
+    const end = subtreeEnd(from);
+
+    return [...(options.viewport()?.querySelectorAll<HTMLElement>(BODY_ROW) ?? [])].flatMap(
+      (element) => {
+        const position = Number(element.getAttribute('aria-rowindex')) - options.headRows() - 1;
+
+        return position >= from && position < end
+          ? []
+          : [{ position, element, rect: element.getBoundingClientRect() }];
+      },
     );
   };
 
-  const passedOf = (clientY: number, from: number): number => {
-    const count = options.rowCount();
-
-    if (options.windowed()) {
-      const offset = bodyOffset(clientY);
-      const slot = offset === undefined ? from : Math.round(offset / options.rowSize());
-      const passed = Math.max(0, Math.min(count, slot));
-
-      return Math.min(count - 1, from < passed ? passed - 1 : passed);
-    }
-
-    const passed = rowsOf(options.viewport()).filter((row) => {
-      const position = Number(row.getAttribute('aria-rowindex')) - options.headRows() - 1;
-      const rect = row.getBoundingClientRect();
-
-      return position !== from && rect.top + rect.height / 2 < clientY;
-    }).length;
-
-    return Math.min(count - 1, passed);
+  const childAfter = (place: RowPlace<T>): RowPlace<T> | undefined => {
+    const next = placeOf(place.position + 1);
+    return next !== undefined && next.node.level === place.node.level + 1 ? next : undefined;
   };
 
-  interface Anchor {
-    readonly place: RowPlace<T>;
-    readonly after: boolean;
-  }
+  const spotOf = (place: RowPlace<T>, zone: RowZone): RowDestination<T> => {
+    const beside = (index: number): RowDestination<T> => ({
+      parent: place.siblings.parent,
+      parentIndex: place.siblings.parentIndex,
+      index,
+      count: place.siblings.count,
+      level: place.node.level,
+    });
 
-  const anchorOf = (from: number, to: number): Anchor | undefined => {
-    const count = options.rowCount();
+    const within = (index: number): RowDestination<T> => ({
+      parent: place.node.row,
+      parentIndex: place.node.index,
+      index,
+      count: options.childCount(place.node.row),
+      level: place.node.level + 1,
+    });
+
+    switch (zone) {
+      case 'before':
+        return beside(place.siblings.index);
+      case 'after':
+        return childAfter(place) === undefined ? beside(place.siblings.index + 1) : within(0);
+      case 'inside':
+        return within(options.childCount(place.node.row));
+    }
+  };
+
+  const destinationOf = (from: number, at: RowTarget): RowDestination<T> | undefined => {
     const source = placeOf(from);
-    const nextPosition = neighbourOf(from, to);
-    const next = nextPosition < count ? placeOf(nextPosition) : undefined;
-    const previous = to > 0 ? placeOf(neighbourOf(from, to - 1)) : undefined;
+    const place = placeOf(at.position);
 
-    if (source === undefined) {
+    if (source === undefined || place === undefined) {
       return undefined;
     }
-    if (next !== undefined && next.siblings.parentIndex === source.siblings.parentIndex) {
-      return { place: next, after: false };
-    }
-    if (previous !== undefined && previous.siblings.parentIndex === source.siblings.parentIndex) {
-      return { place: previous, after: true };
-    }
-    return undefined;
+    const spot = spotOf(place, at.zone);
+    const same = spot.parentIndex === source.siblings.parentIndex;
+    const index = same && source.siblings.index < spot.index ? spot.index - 1 : spot.index;
+
+    return { ...spot, index, count: same ? spot.count : spot.count + 1 };
   };
 
-  const sameParent = (from: number, to: number): boolean =>
-    options.enabled() && anchorOf(from, to) !== undefined;
-
-  const finalIndex = (source: TableSiblings<T>, from: number, to: number): number => {
-    const anchor = anchorOf(from, to);
-
-    if (anchor === undefined) {
-      return source.index;
-    }
-    const target = anchor.place.siblings.index;
-
-    if (anchor.after) {
-      return source.index < target ? target : target + 1;
-    }
-    return target - (source.index < target ? 1 : 0);
-  };
-
-  const move = (from: number, to: number): void => {
+  const staysPut = (from: number, destination: RowDestination<T>): boolean => {
     const source = placeOf(from);
 
-    if (source === undefined) {
-      return;
-    }
+    return (
+      source !== undefined &&
+      destination.parentIndex === source.siblings.parentIndex &&
+      destination.index === source.siblings.index
+    );
+  };
 
-    options.emit({
-      row: source.row,
-      from: source.siblings.index,
-      to: finalIndex(source.siblings, from, to),
-      parent: source.siblings.parent,
-    });
+  const settledZone = (
+    at: RowTarget,
+    place: RowPlace<T>,
+    rect: DOMRect,
+    clientY: number,
+  ): RowZone => {
+    if (at.zone !== 'inside') {
+      hold = undefined;
+      return at.zone;
+    }
+    if (!options.canNest(place.node.row)) {
+      hold = undefined;
+      return halfOf(clientY, rect);
+    }
+    const now = Date.now();
+
+    if (hold === undefined || hold.position !== at.position) {
+      hold = { position: at.position, since: now };
+    }
+    if (now - hold.since >= options.nestDelay()) {
+      return 'inside';
+    }
+    window.clearTimeout(timer);
+    timer = window.setTimeout(() => follow(last), options.nestDelay() - (now - hold.since));
+    return halfOf(clientY, rect);
+  };
+
+  const targetAt = (clientY: number, from: number): RowTarget | undefined => {
+    const rows = renderedRows(from);
+    const raw = rowUnder(clientY, rows);
+    const place = raw === undefined ? undefined : placeOf(raw.position);
+    const rendered = rows.find((row) => row.position === raw?.position);
+
+    if (raw === undefined || place === undefined || rendered === undefined) {
+      return undefined;
+    }
+    return { position: raw.position, zone: settledZone(raw, place, rendered.rect, clientY) };
   };
 
   const frameTop = (clientY: number): number | undefined => {
@@ -176,123 +278,219 @@ export const useTableRowDrag = <T>(options: TableRowDragOptions<T>): TableRowDra
     return frame === null ? undefined : clientY - frame.getBoundingClientRect().top;
   };
 
-  const dropAt = (from: number, to: number): number | undefined => {
-    const viewport = options.viewport();
-    const count = options.rowCount();
-    const neighbour = neighbourOf(from, to);
+  const insetOf = (element: HTMLElement, level: number): TableDropInset | undefined => {
+    const frame = options.frame();
+    const tree = element.querySelector('.nui-table__tree');
 
-    if (viewport === null) {
+    if (frame === null || tree === null) {
       return undefined;
     }
-    if (options.windowed()) {
-      const top = viewport.getBoundingClientRect().top;
+    const outer = frame.getBoundingClientRect();
+    const inner = tree.getBoundingClientRect();
 
-      const edge =
-        Math.min(neighbour, count) * options.rowSize() +
-        chromeHeight() -
-        options.rows.scrollTop.value;
-
-      return frameTop(top + Math.max(chromeHeight(), Math.min(viewport.clientHeight, edge)));
-    }
-    const rows = rowsOf(viewport);
-
-    const row = rows.find(
-      (candidate) =>
-        Number(candidate.getAttribute('aria-rowindex')) - options.headRows() - 1 === neighbour,
-    );
-
-    const last = rows.at(-1);
-
-    if (row !== undefined) {
-      return frameTop(row.getBoundingClientRect().top);
-    }
-    return last === undefined ? undefined : frameTop(last.getBoundingClientRect().bottom);
+    return { start: options.isRtl() ? outer.right - inner.right : inner.left - outer.left, level };
   };
 
-  const ghostAt = (position: number, source: RowPlace<T> | undefined): TableGhost | undefined => {
-    const frame = options.frame();
+  const markOf = (from: number, at: RowTarget): TableDropMark | undefined => {
+    const rendered = renderedRows(from).find((row) => row.position === at.position);
+    const place = placeOf(at.position);
 
-    if (frame === null || source === undefined) {
+    if (rendered === undefined || place === undefined) {
       return undefined;
     }
-    const room = frame.getBoundingClientRect().height;
-    const start = position - frame.getBoundingClientRect().top - held.offset;
+    const top = frameTop(rendered.rect.top) ?? 0;
 
-    return {
-      start: Math.max(0, Math.min(room - held.size, start)),
-      size: held.size,
-      label: options.labelOf(source.row),
-    };
+    switch (at.zone) {
+      case 'inside':
+        return { kind: 'box', start: top, size: rendered.rect.height };
+      case 'before':
+        return { kind: 'line', start: top, inset: insetOf(rendered.element, place.node.level) };
+      case 'after': {
+        const nested = childAfter(place) !== undefined;
+
+        return {
+          kind: 'line',
+          start: top + rendered.rect.height,
+          inset: insetOf(rendered.element, place.node.level + (nested ? 1 : 0)),
+        };
+      }
+    }
+  };
+
+  const say = (source: RowPlace<T>, destination: RowDestination<T>): void => {
+    const texts = options.messages.value;
+    const row = options.labelOf(source.node.row);
+    const position = destination.index + 1;
+    const count = destination.count;
+
+    if (destination.parentIndex === source.siblings.parentIndex) {
+      options.announce(texts.rowMoved({ row, position, count }));
+    } else if (destination.parent === undefined) {
+      options.announce(texts.rowMovedToRoot({ row, position, count }));
+    } else {
+      const parent = options.labelOf(destination.parent);
+      options.announce(texts.rowMovedInto({ row, parent, position, count }));
+    }
+  };
+
+  const commit = (from: number, destination: RowDestination<T> | undefined): boolean => {
+    const source = placeOf(from);
+
+    if (source === undefined || destination === undefined || staysPut(from, destination)) {
+      return false;
+    }
+
+    options.emit({
+      row: source.node.row,
+      from: source.siblings.index,
+      to: destination.index,
+      parent: source.siblings.parent,
+      toParent: destination.parent,
+    });
+
+    say(source, destination);
+    options.refocus(source.node.row);
+    return true;
+  };
+
+  const clear = (): void => {
+    window.clearTimeout(timer);
+    hold = undefined;
+    target = undefined;
+    drop.value = undefined;
+    ghost.value = undefined;
   };
 
   const follow = (state: ReorderState): void => {
-    if (state.phase === 'idle' || state.phase === 'pending') {
-      drop.value = undefined;
-      ghost.value = undefined;
+    const frame = options.frame();
+
+    last = state;
+
+    if (state.phase !== 'dragging' || frame === null) {
+      clear();
       return;
     }
     const source = placeOf(state.from);
+    const at = targetAt(state.position, state.from);
+    const room = frame.getBoundingClientRect().height;
+    const start = state.position - frame.getBoundingClientRect().top - held.offset;
 
-    drop.value = dropAt(state.from, state.to);
-    ghost.value = state.phase === 'dragging' ? ghostAt(state.position, source) : undefined;
-  };
+    target = at;
+    drop.value = at === undefined ? undefined : markOf(state.from, at);
 
-  const say = (event: ReorderEvent): void => {
-    const source = placeOf(event.from);
-
-    if (source === undefined) {
-      return;
-    }
-    const texts = options.messages.value;
-    const row = options.labelOf(source.row);
-    const count = source.siblings.count;
-
-    switch (event.type) {
-      case 'grabbed':
-        options.announce(texts.rowGrabbed({ row, position: source.siblings.index + 1, count }));
-        break;
-      case 'moved':
-        options.announce(
-          texts.rowMoved({
-            row,
-            position: finalIndex(source.siblings, event.from, event.to) + 1,
-            count,
-          }),
-        );
-
-        options.reveal(event.to);
-        break;
-      case 'dropped':
-        options.announce(
-          texts.rowDropped({
-            row,
-            position: finalIndex(source.siblings, event.from, event.to) + 1,
-            count,
-          }),
-        );
-
-        options.moved(event.to);
-        break;
-      case 'cancelled':
-        options.announce(texts.rowDragCancelled({ row }));
-        break;
-    }
+    ghost.value =
+      source === undefined
+        ? undefined
+        : {
+            start: Math.max(0, Math.min(room - held.size, start)),
+            size: held.size,
+            label: options.labelOf(source.node.row),
+          };
   };
 
   const reorder = useReorder({
     axis: 'y',
     count: options.rowCount,
     container: options.viewport,
-    indexAt: passedOf,
-    canMove: sameParent,
-    onMove: move,
+    indexAt: (client, from) => rowUnder(client, renderedRows(from))?.position ?? from,
+    canMove: (from, to) => to !== from,
+    onMove: (from) => {
+      if (target !== undefined) {
+        commit(from, destinationOf(from, target));
+      }
+    },
     onChange: follow,
-    onEvent: say,
   });
 
   const dragging = computed(() => {
     const state = reorder.state.value;
-    return state.phase === 'idle' || state.phase === 'pending' ? undefined : state.from;
+    return state.phase === 'dragging' ? state.from : undefined;
+  });
+
+  const ancestorOf = (place: RowPlace<T>): RowPlace<T> | undefined => {
+    for (let position = place.position - 1; position >= 0; position -= 1) {
+      const candidate = placeOf(position);
+
+      if (candidate !== undefined && candidate.node.level < place.node.level) {
+        return candidate;
+      }
+    }
+    return undefined;
+  };
+
+  const previousSibling = (place: RowPlace<T>): RowPlace<T> | undefined => {
+    for (let position = place.position - 1; position >= 0; position -= 1) {
+      const candidate = placeOf(position);
+
+      if (candidate === undefined || candidate.node.level < place.node.level) {
+        return undefined;
+      }
+      if (candidate.node.level === place.node.level) {
+        return candidate;
+      }
+    }
+    return undefined;
+  };
+
+  const chordDestination = (source: RowPlace<T>, key: string): RowDestination<T> | undefined => {
+    const forward = options.isRtl() ? 'ArrowLeft' : 'ArrowRight';
+
+    const beside = (index: number): RowDestination<T> => ({
+      parent: source.siblings.parent,
+      parentIndex: source.siblings.parentIndex,
+      index,
+      count: source.siblings.count,
+      level: source.node.level,
+    });
+
+    switch (key) {
+      case 'ArrowUp':
+        return source.siblings.index > 0 ? beside(source.siblings.index - 1) : undefined;
+      case 'ArrowDown':
+        return source.siblings.index < source.siblings.count - 1
+          ? beside(source.siblings.index + 1)
+          : undefined;
+      case forward:
+        return nestDestination(source);
+      default:
+        return liftDestination(source);
+    }
+  };
+
+  const nestDestination = (source: RowPlace<T>): RowDestination<T> | undefined => {
+    const previous = previousSibling(source);
+
+    if (previous === undefined || !options.canNest(previous.node.row)) {
+      return undefined;
+    }
+    const count = options.childCount(previous.node.row);
+
+    return {
+      parent: previous.node.row,
+      parentIndex: previous.node.index,
+      index: count,
+      count: count + 1,
+      level: previous.node.level + 1,
+    };
+  };
+
+  const liftDestination = (source: RowPlace<T>): RowDestination<T> | undefined => {
+    const parent = ancestorOf(source);
+
+    if (parent === undefined) {
+      return undefined;
+    }
+    return {
+      parent: parent.siblings.parent,
+      parentIndex: parent.siblings.parentIndex,
+      index: parent.siblings.index + 1,
+      count: parent.siblings.count + 1,
+      level: parent.node.level,
+    };
+  };
+
+  onScopeDispose(() => {
+    window.clearTimeout(timer);
   });
 
   return {
@@ -306,15 +504,18 @@ export const useTableRowDrag = <T>(options: TableRowDragOptions<T>): TableRowDra
         reorder.onPointerdown(position, event);
       }
     },
-    onKeydown: (event, position) => {
-      if (position === undefined || !options.enabled()) {
+    onKeydown: (event, body) => {
+      if (body === undefined || !options.enabled() || !isChord(event)) {
         return false;
       }
-      if (reorder.onKeydown(position, event)) {
-        event.preventDefault();
-        return true;
+      event.preventDefault();
+
+      const source = placeOf(body.row);
+
+      if (source !== undefined) {
+        commit(body.row, chordDestination(source, event.key));
       }
-      return false;
+      return true;
     },
   };
 };

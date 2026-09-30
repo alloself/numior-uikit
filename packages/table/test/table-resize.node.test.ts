@@ -34,7 +34,6 @@ const harness = (room: number, rtl = false): Harness => {
       widths: widths.value,
       sticky: true,
       select: false,
-      drag: false,
       room,
       wrap: true,
     }),

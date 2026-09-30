@@ -120,7 +120,7 @@ describe('NuiTable on the server', () => {
     const html = await render(3, { auto: true, rowDrag: true });
 
     expect(html).toBe(await render(3, { auto: true, rowDrag: true }));
-    expect(html).toContain('aria-colcount="19"');
+    expect(html).toContain('aria-colcount="18"');
     expect(html.match(/nui-table__row-grip/g)).toHaveLength(3);
     expect(html).toContain('aria-label="Drag row Сотрудник 0"');
   });

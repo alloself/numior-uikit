@@ -4,6 +4,7 @@ import type { PlacedColumn, TableLayout } from './table-layout';
 import { movedKeys, orderLeaves } from './table-order';
 import type { NuiTableMessages } from './table.messages';
 import type {
+  TableDropMark,
   TableGhost,
   TablePaneName,
   NuiTableColumn,
@@ -26,7 +27,7 @@ export interface TableColumnOrderOptions<T> {
 
 export interface TableColumnOrder {
   readonly dragging: ComputedRef<string | undefined>;
-  readonly drop: Readonly<Ref<number | undefined>>;
+  readonly drop: Readonly<Ref<TableDropMark | undefined>>;
   readonly ghost: Readonly<Ref<TableGhost | undefined>>;
   reorderable(key: string): boolean;
   gripOf(key: string): NuiTableGripProps | undefined;
@@ -90,7 +91,7 @@ const othersOf = (slots: readonly PlacedColumn[], from: number): PlacedColumn[] 
   slots.filter((_, slot) => slot !== from);
 
 export const useTableColumnOrder = <T>(options: TableColumnOrderOptions<T>): TableColumnOrder => {
-  const drop = ref<number>();
+  const drop = ref<TableDropMark>();
   const ghost = ref<TableGhost>();
   let held = NO_GRAB;
 
@@ -196,7 +197,9 @@ export const useTableColumnOrder = <T>(options: TableColumnOrderOptions<T>): Tab
     const room = frame.getBoundingClientRect().width;
     const start = toStart(state.position, frame) - held.offset;
 
-    drop.value = dropAt(state.from, state.to);
+    const line = dropAt(state.from, state.to);
+
+    drop.value = line === undefined ? undefined : { kind: 'line', start: line };
 
     ghost.value = {
       start: Math.max(0, Math.min(room - held.size, start)),

@@ -72,9 +72,9 @@
               :revision="revision"
               :selected="item.selected"
             >
-              <template #utility="{ column }">
+              <template #utility>
                 <NuiTableUtilityCell
-                  v-bind="pinnedUtility(item, column)"
+                  v-bind="pinnedUtility(item)"
                   @toggle="selection.toggle(item.row)"
                 />
               </template>
@@ -114,11 +114,10 @@
               :stripe="item.stripe"
               :dragging="rowDrag.dragging.value === item.index"
             >
-              <template #utility="{ column }">
+              <template #utility>
                 <NuiTableUtilityCell
-                  v-bind="rowUtility(item, column)"
+                  v-bind="rowUtility(item)"
                   @toggle="selection.toggle(rowAt(item.index))"
-                  @grab="rowDrag.grab(item.index, $event)"
                 />
               </template>
               <template #default="{ column }">
@@ -239,6 +238,7 @@ import {
   type TableNode,
 } from '../engine';
 import NuiTableDragLayer from './NuiTableDragLayer.vue';
+import NuiTableRowGrip from './NuiTableRowGrip.vue';
 import NuiTableGap from './NuiTableGap.vue';
 import NuiTableGroupCell from './NuiTableGroupCell.vue';
 import NuiTableRow from './NuiTableRow.vue';
@@ -253,7 +253,6 @@ import {
   centreIndexOf,
   dataKeyAt,
   dataKeysOf,
-  DRAG_KEY,
   pinsFit,
   rowCellsOf,
   SELECT_KEY,
@@ -306,10 +305,12 @@ const DISTINCT_LIMIT = 100;
 const COLUMN_OVERSCAN = 2;
 const NO_UTILITY: NuiTableUtilityCellProps = { control: 'none' };
 const SKELETON_UTILITY: NuiTableUtilityCellProps = { control: 'skeleton' };
-const TEXT_SKELETON: NuiSkeletonProps = { shape: 'text', width: '60%' };
+const TEXT_SKELETON: NuiSkeletonProps = { shape: 'text', width: '100%' };
 
 const CLICK_GUARD =
-  '.nui-table__cell--select, .nui-table__cell--drag, .nui-table__toggle, .nui-table__group';
+  '.nui-table__cell--select, .nui-table__row-grip, .nui-table__toggle, .nui-table__group';
+
+const NEST_DELAY = 600;
 
 const {
   columns,
@@ -339,6 +340,7 @@ const {
   total,
   pinnedRows = [],
   rowDrag: rowDragOn = false,
+  nestDelay = NEST_DELAY,
   dragLabel,
   rowLabel,
 } = defineProps<NuiTableProps<T>>();
@@ -470,7 +472,6 @@ const layoutOptions = computed(() => ({
   hidden: hidden.value,
   widths: widths.value,
   select: selectOn.value,
-  drag: rowDragOn,
   room: room.value,
   wrap: height === undefined,
 }));
@@ -738,26 +739,19 @@ const labelOf = (row: T): string => {
   return rowLabel?.(row) ?? (first === undefined ? '' : textOf(row, first));
 };
 
-const gripUtility = (item: TableBodyRow): NuiTableUtilityCellProps =>
-  item.group === undefined
-    ? {
-        control: 'grip',
-        label:
-          dragLabel?.(rowAt(item.index)) ??
-          messages.value.dragRow({ row: labelOf(rowAt(item.index)) }),
-        disabled: !dragEnabled.value,
-        active: rowDrag.dragging.value === item.index,
-      }
-    : NO_UTILITY;
-
-const rowUtility = (item: TableBodyRow, column: string): NuiTableUtilityCellProps => {
-  if (column === DRAG_KEY) {
-    return gripUtility(item);
-  }
-  return item.selected === undefined
+const rowUtility = (item: TableBodyRow): NuiTableUtilityCellProps =>
+  item.selected === undefined
     ? NO_UTILITY
     : { control: 'checkbox', checked: item.selected, label: selectText.value };
-};
+
+const gripOf = (item: TableBodyRow): VNode =>
+  h(NuiTableRowGrip, {
+    label:
+      dragLabel?.(rowAt(item.index)) ?? messages.value.dragRow({ row: labelOf(rowAt(item.index)) }),
+    disabled: !dragEnabled.value,
+    active: rowDrag.dragging.value === item.index,
+    onGrab: (event: PointerEvent) => rowDrag.grab(item.index, event),
+  });
 
 const menu: TableMenu = useTableMenu({
   enabled: () => columnMenu,
@@ -880,47 +874,66 @@ const pinnedItems = computed((): TablePinnedRow<T>[] =>
   })),
 );
 
-const pinnedUtility = (item: TablePinnedRow<T>, column: string): NuiTableUtilityCellProps =>
-  column === DRAG_KEY || item.selected === undefined
+const pinnedUtility = (item: TablePinnedRow<T>): NuiTableUtilityCellProps =>
+  item.selected === undefined
     ? NO_UTILITY
     : { control: 'checkbox', checked: item.selected, label: selectText.value };
+
+const movedRow = createIntent<T>();
+
+const gripKey = computed(() =>
+  rowDragOn ? (treeKey.value ?? dataKeysOf(layout.value)[0]) : undefined,
+);
+
+const positionOf = (row: T): number | undefined => {
+  const key = keyOf(row);
+  const count = engine.value.count();
+
+  for (let index = pageStart.value; index < count; index += 1) {
+    const node = engine.value.nodeAt(index);
+
+    if (node?.kind === 'row' && keyOf(node.row) === key) {
+      return index - pageStart.value;
+    }
+  }
+  return undefined;
+};
+
+const refocusMoved = (): void => {
+  const row = movedRow.take();
+  const position = row === undefined ? undefined : positionOf(row);
+
+  if (position !== undefined) {
+    focus.focusCell({ row: position + pinnedCount.value, col: active.value.col });
+  }
+};
 
 const rowDrag = useTableRowDrag<T>({
   enabled: () => dragEnabled.value,
   engine,
   viewport: () => viewport.value,
   frame: () => frame.value,
-  rows: rowWindow,
   pageStart: () => pageStart.value,
   rowCount: () => visibleRows.value,
   rowSize: () => rowSize.value,
-  windowed: () => windowed.value,
   headRows: () => headRows.value,
-  pinnedRows: () => pinnedCount.value,
+  nestDelay: () => nestDelay,
+  isRtl: direction.isRtl,
+  canNest: (row) =>
+    getChildren !== undefined && (getChildren(row) !== undefined || hasChildren?.(row) !== true),
+  childCount: (row) => getChildren?.(row)?.length ?? 0,
   labelOf,
   messages,
   announce: (text) => {
     announcement.value = text;
   },
-  reveal: (position) => {
-    if (windowed.value) {
-      rowWindow.scrollTo(position, { align: 'auto' });
-    }
-  },
-  moved: (position) => {
-    focus.focusCell({ row: position + pinnedCount.value, col: active.value.col });
+  refocus: (row) => {
+    movedRow.set(row);
   },
   emit: (event) => {
     emit('reorder', event);
   },
 });
-
-const dragActive = (): number | undefined => {
-  const body = bodyActive();
-  return body !== undefined && layout.value.visual[body.col]?.kind === 'drag'
-    ? body.row
-    : undefined;
-};
 
 const onRowsClick = (event: MouseEvent): void => {
   const target = event.target;
@@ -945,7 +958,7 @@ const bodyActive = (): TableCellPosition | undefined => {
 };
 
 const onKeydown = (event: KeyboardEvent): void => {
-  if (rowDrag.onKeydown(event, dragActive())) {
+  if (rowDrag.onKeydown(event, bodyActive())) {
     return;
   }
   if (selection.onKeydown(event, active.value, rowFor(active.value.row))) {
@@ -1025,7 +1038,12 @@ const CellContent = (props: TableCellContentProps<T>): VNode | VNode[] => {
     () => [h('span', { class: 'nui-table__text' }, textOf(row, column))],
   );
 
-  return item !== undefined && column === treeKey.value ? [treeToggleOf(item), content] : content;
+  const parts = [
+    ...(item !== undefined && column === gripKey.value ? [gripOf(item)] : []),
+    ...(item !== undefined && column === treeKey.value ? [treeToggleOf(item)] : []),
+  ];
+
+  return parts.length === 0 ? content : [...parts, content];
 };
 
 const sync = (): void => {
@@ -1089,6 +1107,7 @@ watch(
     runNow();
     sync();
     clampActive();
+    refocusMoved();
   },
 );
 

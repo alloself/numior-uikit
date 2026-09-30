@@ -61,9 +61,10 @@ loaded yet: on expand the table emits `load` and waits for them.
 
 ### Row drag
 
-`rowDrag` adds a column with a grip, and a row moves among the siblings of one parent. The
-`reorder` event hands out the indices, and the application applies the order. The grips switch
-off while the table is sorted, filtered or grouped.
+`rowDrag` shows a grip in the first column of a row. The top of a target row drops the row
+before it, the bottom after it, and holding over the middle for `nestDelay` nests it inside.
+The `reorder` event carries the indices and both parents; the grips switch off while the table
+is sorted, filtered or grouped.
 
 <Example name="table/Drag" />
 
@@ -90,8 +91,9 @@ column; once it scrolls, only the column itself grows. `Alt` with the arrow keys
 from the keyboard, and the column menu resets the width.
 
 The grip at the start of a header drags the column inside its pane, and `v-model:columnOrder`
-keeps the key order. `Alt+Shift` with the arrow keys moves a column from the keyboard. A row is
-grabbed with Space on its grip cell, moved with the arrows and dropped with Space.
+keeps the key order. `Alt+Shift` with the arrows moves a column from the keyboard, and on a row
+moves it among its siblings. The right arrow nests a row into the previous sibling and the left
+one lifts it after its parent.
 
 ## Accessibility
 
