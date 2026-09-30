@@ -184,5 +184,54 @@ export interface TableEngine<T> {
   totals(): Readonly<Record<string, unknown>>;
   distinct(key: string, options?: TableDistinctOptions): Promise<TableDistinct | null>;
   store(key: string): ColumnStore | undefined;
+  pendingAt(position: number): boolean;
+  collect(signal?: AbortSignal): Promise<readonly T[]>;
+  ensure(from: number, to: number): void;
+  refresh(): void;
+  settled(): boolean;
   dispose(): void;
+}
+
+export interface TableFetchRequest {
+  readonly offset: number;
+  readonly limit: number;
+  readonly sort: readonly TableSort[];
+  readonly filters: readonly TableFilter[];
+  readonly signal: AbortSignal;
+}
+
+export interface TableFetchResult<T> {
+  readonly rows: readonly T[];
+  readonly total?: number | undefined;
+  readonly hasMore?: boolean | undefined;
+}
+
+export interface TableValuesRequest {
+  readonly key: string;
+  readonly filters: readonly TableFilter[];
+  readonly limit: number;
+  readonly signal: AbortSignal;
+}
+
+export interface TableTotalsRequest {
+  readonly filters: readonly TableFilter[];
+  readonly signal: AbortSignal;
+}
+
+export interface TableSource<T> {
+  readonly fetch: (request: TableFetchRequest) => Promise<TableFetchResult<T>>;
+  readonly values?: ((request: TableValuesRequest) => Promise<TableDistinct>) | undefined;
+  readonly totals?:
+    | ((request: TableTotalsRequest) => Promise<Readonly<Record<string, unknown>>>)
+    | undefined;
+}
+
+export interface TableSourceEngineOptions<T> {
+  readonly source: TableSource<T>;
+  readonly keyOf?: ((row: T) => TableNodeId) | undefined;
+  readonly blockSize: () => number;
+  readonly cacheBlocks?: number | undefined;
+  readonly concurrency?: number | undefined;
+  readonly onChange: () => void;
+  readonly onError: (error: unknown) => void;
 }

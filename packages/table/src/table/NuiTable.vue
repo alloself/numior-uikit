@@ -233,6 +233,7 @@
 import {
   computed,
   h,
+  onMounted,
   ref,
   renderSlot,
   shallowRef,
@@ -261,6 +262,7 @@ import {
   type NuiSkeletonProps,
 } from '@numior/vue';
 import {
+  createSourceEngine,
   createTableEngine,
   type TableDistinct,
   type TableEngine,
@@ -358,11 +360,15 @@ const CLICK_GUARD =
 
 const NEST_DELAY = 600;
 const COPY_LIMIT = 200_000;
+const BLOCK_SIZE = 100;
+const SKELETON_ROWS = 5;
 const LONG_PRESS = 500;
 
 const {
   columns,
-  rows,
+  rows = [],
+  source,
+  blockSize = BLOCK_SIZE,
   getKey,
   id,
   size = 'md',
@@ -380,7 +386,7 @@ const {
   striped = false,
   caption,
   loading = false,
-  loadingRows = 5,
+  loadingRows,
   selectLabel,
   selectAllLabel,
   pagination = undefined,
@@ -423,22 +429,49 @@ const resolvedLocale = useLocale(() => locale);
 const messages = useMessages(tableMessages, resolvedLocale);
 const direction = useDirection(viewport);
 
+const paginationProps = computed(() =>
+  resolvePagination(
+    source !== undefined && height === undefined && pagination === undefined ? true : pagination,
+  ),
+);
+
+const sourceChanges = ref(0);
+
+const onSourceChange = (): void => {
+  sourceChanges.value += 1;
+};
+
+const onSourceError = (error: unknown): void => {
+  emit('error', error);
+  announcement.value = messages.value.loadFailed;
+};
+
 const createEngine = (): TableEngine<T> =>
-  createTableEngine({
-    columns: tree.value.leaves.map(engineColumnOf),
-    keyOf: getKey,
-    children: getChildren,
-    hasChildren,
-    defaultExpanded: false,
-  });
+  source === undefined
+    ? createTableEngine({
+        columns: tree.value.leaves.map(engineColumnOf),
+        keyOf: getKey,
+        children: getChildren,
+        hasChildren,
+        defaultExpanded: false,
+      })
+    : createSourceEngine({
+        source,
+        keyOf: getKey,
+        blockSize: () => (paginationProps.value === undefined ? blockSize : pageSize.value),
+        onChange: onSourceChange,
+        onError: onSourceError,
+      });
 
 const engine = shallowRef(createEngine());
+const waiting = ref(!engine.value.settled());
+const loadingNow = computed(() => loading || waiting.value);
 const rowCount = ref(0);
 const revision = ref(0);
 const announcement = ref('');
 const rowsIntent = createIntent<'rows'>();
 const selectOn = computed(() => selectable !== undefined);
-const paginationProps = computed(() => resolvePagination(pagination));
+const treeOn = computed(() => getChildren !== undefined && source === undefined);
 
 const pageWindow = computed(() =>
   paginationProps.value === undefined || remote
@@ -448,7 +481,11 @@ const pageWindow = computed(() =>
 
 const pageStart = computed(() => pageWindow.value.start);
 const pinnedCount = computed(() => pinnedRows.length);
-const visibleRows = computed(() => (loading ? 0 : pageWindow.value.end - pageWindow.value.start));
+
+const visibleRows = computed(() =>
+  loadingNow.value ? 0 : pageWindow.value.end - pageWindow.value.start,
+);
+
 const totalCount = computed(() => (remote ? (total ?? rows.length) : rowCount.value));
 
 const keyOf = (row: T): TableSelectionKey<T> => (getKey === undefined ? row : getKey(row));
@@ -484,7 +521,7 @@ const totals = useTableTotals({
 const currentQuery = (): TableQuery => {
   const list = queryFilters();
   const sorting = sort.value;
-  const grouping = getChildren === undefined ? groupBy.value : [];
+  const grouping = getChildren === undefined && source === undefined ? groupBy.value : [];
 
   return remote
     ? {}
@@ -561,7 +598,10 @@ const booleanTexts = computed(() => ({ yes: messages.value.yes, no: messages.val
 const centreWidths = computed(() => layout.value.centre.map((column) => column.width));
 
 const footRows = computed(() => (totals.enabled.value ? 1 : 0));
-const hierarchical = computed(() => groupBy.value.length > 0 || getChildren !== undefined);
+
+const hierarchical = computed(
+  () => source === undefined && (groupBy.value.length > 0 || getChildren !== undefined),
+);
 
 const activeRow = (): number | undefined => {
   const body = active.value.row - pinnedCount.value;
@@ -624,14 +664,31 @@ const rootStyle = computed(() => ({
   ...(room.value > 0 ? { '--_room': `${room.value}px` } : {}),
 }));
 
-const skeletonCount = computed(() => (loading && slots.loading === undefined ? loadingRows : 0));
+const fittingRows = computed(() =>
+  Math.ceil(
+    Math.max(
+      0,
+      rowWindow.viewport.value -
+        rowSize.value * (headRows.value + pinnedCount.value + footRows.value),
+    ) / rowSize.value,
+  ),
+);
+
+const skeletonCount = computed(() => {
+  if (!loadingNow.value || slots.loading !== undefined) {
+    return 0;
+  }
+  return (
+    loadingRows ?? (windowed.value ? Math.max(SKELETON_ROWS, fittingRows.value) : SKELETON_ROWS)
+  );
+});
 
 const canvasSize = computed(() =>
-  loading ? skeletonCount.value * rowSize.value : rowWindow.canvasSize.value,
+  loadingNow.value ? skeletonCount.value * rowSize.value : rowWindow.canvasSize.value,
 );
 
 const canvasRest = computed(() => {
-  if (!windowed.value || loading) {
+  if (!windowed.value || loadingNow.value) {
     return 0;
   }
   const rendered = rowWindow.items.value.reduce((sum, item) => sum + item.size, 0);
@@ -658,18 +715,18 @@ const rootClass = computed(() => [
     'nui-table--captioned': hasCaption.value,
     'nui-table--paged': paginationProps.value !== undefined,
     'nui-table--striped': striped,
-    'nui-table--loading': loading,
+    'nui-table--loading': loadingNow.value,
     'nui-table--resizing': resize.active.value !== undefined,
     'nui-table--dragging':
       order.dragging.value !== undefined || rowDrag.dragging.value !== undefined,
     'nui-table--ranging': rangeSelect.dragging.value,
-    'nui-table--cell-selection': cellSelection && !loading,
+    'nui-table--cell-selection': cellSelection && !loadingNow.value,
     'nui-table--ranged': ranges.value.length > 0 || rangeSelect.deselected.value,
   },
 ]);
 
 const status = computed<TableStatusSlot | undefined>(() => {
-  if (loading) {
+  if (loadingNow.value) {
     return slots.loading === undefined ? undefined : 'loading';
   }
   return rowCount.value === 0 ? 'empty' : undefined;
@@ -770,7 +827,7 @@ const selection = useTableSelection<T>({
   engine,
   revision,
   scope: () => ({ start: pageStart.value, end: pageStart.value + visibleRows.value }),
-  disabled: () => loading,
+  disabled: () => loadingNow.value,
   selectKeyAt: (visual) => layout.value.visual[visual]?.kind === 'select',
 });
 
@@ -782,7 +839,7 @@ const gridAria = computed(() => {
     'aria-labelledby': captioned ? captionId.value : undefined,
     'aria-rowcount': pinnedCount.value + visibleRows.value + headRows.value + footRows.value,
     'aria-colcount': layout.value.visual.length,
-    'aria-busy': loading || query.busy.value || undefined,
+    'aria-busy': loadingNow.value || query.busy.value || undefined,
     'aria-multiselectable': selection.multiple.value || cellSelection || undefined,
   };
 });
@@ -802,7 +859,8 @@ const dragEnabled = computed(
   () =>
     rowDragOn &&
     !remote &&
-    !loading &&
+    source === undefined &&
+    !loadingNow.value &&
     sort.value.length === 0 &&
     filters.value.length === 0 &&
     quick.value.trim() === '' &&
@@ -842,7 +900,7 @@ const menu: TableMenu = useTableMenu({
   hidden,
   widths,
   resetWidth: resize.reset,
-  treeMode: () => getChildren !== undefined,
+  treeMode: () => getChildren !== undefined || source !== undefined,
   messages,
   announce: (text) => {
     announcement.value = text;
@@ -857,7 +915,7 @@ const menu: TableMenu = useTableMenu({
 });
 
 const treeKey = computed(() =>
-  getChildren === undefined ? undefined : (treeColumn ?? dataKeysOf(layout.value)[0]),
+  treeOn.value ? (treeColumn ?? dataKeysOf(layout.value)[0]) : undefined,
 );
 
 const expansion = useTableExpansion({
@@ -898,7 +956,7 @@ const skeletonRows = computed((): TableSkeletonRow[] =>
 const bodyRows = computed((): TableBodyRow[] => {
   const current = revision.value;
 
-  if (loading) {
+  if (loadingNow.value) {
     return [];
   }
   const pending = expansion.loading.value;
@@ -907,6 +965,7 @@ const bodyRows = computed((): TableBodyRow[] => {
   return rowWindow.items.value.map((item) => {
     const node = engine.value.nodeAt(pageStart.value + item.index);
     const level = levelOf(node);
+    const unloaded = engine.value.pendingAt(pageStart.value + item.index);
 
     return {
       index: item.index,
@@ -917,7 +976,8 @@ const bodyRows = computed((): TableBodyRow[] => {
       treeLevel: Math.max(0, (level ?? 1) - 1),
       group: expansion.rowAt(item.index),
       expanded: expandedOf(node),
-      loading: node !== undefined && pending.has(node.id),
+      loading: unloaded || (node !== undefined && pending.has(node.id)),
+      pending: unloaded,
       selected: selectedOf(node),
       stripe: striped && item.index % 2 === 1,
     };
@@ -1047,7 +1107,7 @@ const announce = (text: string): void => {
 };
 
 const rangeSelect = useTableRanges({
-  enabled: () => cellSelection && !loading,
+  enabled: () => cellSelection && !loadingNow.value,
   ranges,
   viewport: () => viewport.value,
   bounds: () => ({ rows: visibleRows.value, cols: dataKeys.value.length }),
@@ -1139,12 +1199,14 @@ const ownsCell = (element: Element | null): boolean =>
   viewport.value?.contains(element) === true;
 
 const resolveRow = (row: T): T | undefined =>
-  getKey === undefined || rowByKey.value === undefined ? row : rowByKey.value.get(getKey(row));
+  getKey === undefined || source !== undefined || rowByKey.value === undefined
+    ? row
+    : rowByKey.value.get(getKey(row));
 
 const ruleTexts = useMessages(formRulesMessages, resolvedLocale);
 const kitControls = useControls();
 
-const editOn = computed(() => cellSelection && !loading && canEdit.value);
+const editOn = computed(() => cellSelection && !loadingNow.value && canEdit.value);
 
 const checkCell = (row: T, key: string, value: NuiTableCellValue): string | undefined => {
   const column = columnAt(key);
@@ -1312,8 +1374,7 @@ const cellMenu = useTableContextMenu<T>({
 });
 
 const exporter = useTableExport<T>({
-  indices: () => engine.value.visibleIndices(),
-  rowAt: (index) => engine.value.rowAt(index),
+  rows: (signal) => engine.value.collect(signal),
   keys: () => dataKeys.value,
   labelOf: (key) => columnAt(key).label,
   textOf: (row, key) => textOf(row, key),
@@ -1474,6 +1535,9 @@ const editorOf = (position: number, column: string): VNode | undefined => {
 const CellContent = (props: TableCellContentProps<T>): VNode | VNode[] => {
   const { item, column } = props;
 
+  if (item?.pending === true) {
+    return h(NuiSkeleton, TEXT_SKELETON);
+  }
   if (item?.group !== undefined) {
     return h(NuiTableGroupCell, {
       cell: item.group.cells[column],
@@ -1498,6 +1562,21 @@ const CellContent = (props: TableCellContentProps<T>): VNode | VNode[] => {
   ];
 
   return parts.length === 0 ? content : [...parts, content];
+};
+
+const neededRange = computed(() => {
+  if (paginationProps.value !== undefined) {
+    const from = waiting.value ? (Math.max(1, page.value) - 1) * pageSize.value : pageStart.value;
+
+    return { from, to: from + pageSize.value };
+  }
+  const range = rowWindow.range.value;
+
+  return { from: pageStart.value + range.start, to: pageStart.value + range.end };
+});
+
+const ensureRows = (): void => {
+  engine.value.ensure(neededRange.value.from, neededRange.value.to);
 };
 
 const sync = (): void => {
@@ -1569,20 +1648,30 @@ watch(
   },
 );
 
-watch(
-  () => columns,
-  () => {
-    engine.value.dispose();
-    engine.value = createEngine();
-    engine.value.setRows(rows);
-    engine.value.setToggled(expanded.value);
-    editing.reset();
-    totals.reset();
-    runNow();
-    sync();
-    clampActive();
-  },
-);
+watch([() => columns, () => source], () => {
+  engine.value.dispose();
+  engine.value = createEngine();
+  waiting.value = !engine.value.settled();
+  engine.value.setRows(rows);
+  engine.value.setToggled(expanded.value);
+  editing.reset();
+  totals.reset();
+  runNow();
+  sync();
+  clampActive();
+  ensureRows();
+});
+
+watch(sourceChanges, () => {
+  waiting.value = !engine.value.settled();
+  totals.sync();
+  sync();
+  clampActive();
+});
+
+onMounted(() => {
+  watch(neededRange, ensureRows, { immediate: true });
+});
 
 defineExpose<NuiTableExposed>({
   scrollToRow: (position) => {
@@ -1599,5 +1688,8 @@ defineExpose<NuiTableExposed>({
   undo: () => editing.undo(),
   redo: () => editing.redo(),
   exportCsv: (options) => exporter.exportCsv(options),
+  refresh: () => {
+    engine.value.refresh();
+  },
 });
 </script>

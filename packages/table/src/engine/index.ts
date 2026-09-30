@@ -1,4 +1,5 @@
 export { createTableEngine } from './create-table-engine';
+export { createSourceEngine } from './source-engine';
 export { createRankJob, createStoreJob } from './column-store';
 export { createFilterJob, createFilterSetup, compactPass } from './filter';
 export { createGroupJob } from './group';
@@ -23,12 +24,18 @@ export type {
   TableEngine,
   TableEngineColumn,
   TableEngineOptions,
+  TableFetchRequest,
+  TableFetchResult,
   TableFilter,
   TableFilterValue,
   TableGroupNode,
   TableNode,
   TableNodeId,
   TableSiblings,
+  TableSource,
+  TableSourceEngineOptions,
+  TableTotalsRequest,
+  TableValuesRequest,
   TablePhase,
   TableProgress,
   TableQuery,

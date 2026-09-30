@@ -12,6 +12,7 @@ import type {
   TableProgress,
   TableSort,
   TableSortDirection,
+  TableSource,
 } from '../engine';
 
 export type NuiTableSize = 'sm' | 'md' | 'lg';
@@ -124,7 +125,9 @@ export type NuiTableCellValue = string | number | Date | boolean | null;
 
 export interface NuiTableProps<T> {
   columns: readonly NuiTableColumnDef<T>[];
-  rows: readonly T[];
+  rows?: readonly T[] | undefined;
+  source?: TableSource<T> | undefined;
+  blockSize?: number | undefined;
   getKey?: ((row: T) => TableNodeId) | undefined;
   id?: string | undefined;
   size?: NuiTableSize | undefined;
@@ -315,6 +318,7 @@ export interface NuiTableEvents<T> {
   reorder: [event: NuiTableReorderEvent<T>];
   edit: [event: NuiTableEditEvent<T>];
   editRefused: [event: NuiTableEditRefusal<T>];
+  error: [error: unknown];
 }
 
 export type NuiTableSort = readonly TableSort[];
@@ -380,6 +384,7 @@ export interface NuiTableExposed {
   undo(): boolean;
   redo(): boolean;
   exportCsv(options?: NuiTableCsvOptions): Promise<string>;
+  refresh(): void;
 }
 
 export type TablePaneName = 'start' | 'centre' | 'end';
@@ -487,6 +492,7 @@ export interface TableBodyRow {
   readonly group: TableGroupRow | undefined;
   readonly expanded: boolean | undefined;
   readonly loading: boolean;
+  readonly pending: boolean;
   readonly selected: boolean | undefined;
   readonly stripe: boolean;
 }

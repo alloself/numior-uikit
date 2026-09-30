@@ -150,6 +150,23 @@ dragged. Rows are reused element by element, so the body never goes blank betwee
 
 <Example name="table/Windowed" />
 
+### Server source
+
+The `source` prop takes rows from a server: `fetch({ offset, limit, sort, filters, signal })`
+returns `{ rows, total }`, or `{ rows, hasMore }` without a total. The table asks for blocks of
+`blockSize` rows under the scroll window and keeps the last fifty blocks in a cache. While a block
+is on its way, its rows show skeletons.
+
+Sorting, filters and the quick search go to the server, and old requests are cancelled through
+`signal`. The `values` and `totals` functions give the set filter values and the totals row.
+Without `height` the table pages through the source, one request per page.
+
+The `refresh()` method of the table ref drops the cache, and a failed request arrives as the
+`error` event. CSV export downloads the whole query result in chunks of a thousand rows. Groups and
+trees do not work with a source yet.
+
+<Example name="table/Source" />
+
 ## Behaviour
 
 `column.value(row)` gives the cell value, and the column type picks the comparison, the filter

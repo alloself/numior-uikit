@@ -128,6 +128,7 @@ interface TableEvents<T> {
   readonly reorders: NuiTableReorderEvent<T>[];
   readonly edits: NuiTableEditEvent<T>[];
   readonly refusals: NuiTableEditRefusal<T>[];
+  readonly errors: unknown[];
   readonly waiters: Array<() => void>;
 }
 
@@ -252,6 +253,7 @@ export class TableDriver<T> {
       reorders: [],
       edits: [],
       refusals: [],
+      errors: [],
       waiters: [],
     };
 
@@ -329,6 +331,9 @@ export class TableDriver<T> {
               },
               onEditRefused: (event: NuiTableEditRefusal<T>) => {
                 events.refusals.push(event);
+              },
+              onError: (error: unknown) => {
+                events.errors.push(error);
               },
               onEdit: (event: NuiTableEditEvent<T>) => {
                 events.edits.push(event);
@@ -872,6 +877,20 @@ export class TableDriver<T> {
 
   get refusals(): readonly NuiTableEditRefusal<T>[] {
     return this.events.refusals;
+  }
+
+  get errors(): readonly unknown[] {
+    return this.events.errors;
+  }
+
+  get pendingRows(): number {
+    return this.element.querySelectorAll('.nui-table__body > [role="row"][aria-busy="true"]')
+      .length;
+  }
+
+  async refresh(): Promise<void> {
+    this.exposed.value?.refresh();
+    await nextTick();
   }
 
   async paste(text: string): Promise<void> {

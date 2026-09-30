@@ -437,6 +437,25 @@ test.describe('table', () => {
     await expect(table.cell(3, 8)).not.toHaveText('Нина Белова');
   });
 
+  test('loads a server source by blocks, sorts and searches it on the server', async ({ page }) => {
+    const playground = new PlaygroundPage(page);
+    const { table } = playground;
+    await playground.open();
+    await table.remote.scrollIntoViewIfNeeded();
+
+    await expect(table.remoteCell(0, 0)).toHaveText('1');
+    await table.remoteHeader(3).click();
+    await table.remoteHeader(3).click();
+    await expect(table.remoteCell(0, 3)).toHaveText('100\u00a0099');
+    await table.remoteScroll('bottom');
+    await expect(table.remoteCell(99_999, 3)).toHaveText('100');
+    expect(await table.remoteRequests()).toBeLessThan(12);
+    await table.remoteQuick.fill('Казань');
+    await table.remoteScroll('top');
+    await expect(table.remoteCell(0, 2)).toHaveText('Казань');
+    await expect(table.remote.locator('.nui-table__body [aria-busy="true"]')).toHaveCount(0);
+  });
+
   test('opens a cell editor with a double tap on a phone and commits it on a tap elsewhere', async ({
     page,
     isMobile,

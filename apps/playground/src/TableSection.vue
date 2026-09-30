@@ -149,6 +149,41 @@
       @row-click="(row) => (lastUnitClick = row.id)"
       @reorder="onUnitReorder"
     />
+    <div class="data-row">
+      <NuiInput
+        v-model="remoteQuick"
+        type="search"
+        size="sm"
+        class="table-quick"
+        placeholder="Поиск на сервере"
+        aria-label="Поиск на сервере"
+        data-testid="table-remote-quick"
+      >
+        <template #prefix>
+          <NuiIcon alias="search" />
+        </template>
+      </NuiInput>
+      <NuiButton
+        size="sm"
+        variant="outline"
+        tone="neutral"
+        data-testid="table-remote-refresh"
+        @click="remoteTable?.refresh()"
+      >
+        Обновить
+      </NuiButton>
+    </div>
+    <NuiTable
+      ref="remote-table"
+      v-model:quick="remoteQuick"
+      :columns="REMOTE_COLUMNS"
+      :source="remoteSource"
+      :get-key="(row) => row.id"
+      caption="Заказы с сервера · 100 000 строк"
+      height="22rem"
+      data-testid="table-remote"
+    />
+    <pre class="output" data-testid="table-remote-output">{{ remoteOutput }}</pre>
   </section>
 </template>
 
@@ -184,6 +219,9 @@ import {
   type NuiTableCellValue,
   type NuiTableEditEvent,
   type NuiTableExposed,
+  type NuiTableColumn,
+  type TableFilter,
+  type TableSource,
 } from '@numior/table';
 
 type OrderStatus = 'new' | 'paid' | 'shipped' | 'returned';
@@ -579,6 +617,133 @@ const ORDER_SETTERS: Readonly<Record<string, (row: Order, value: NuiTableCellVal
 };
 
 const ordersTable = useTemplateRef<NuiTableExposed>('orders-table');
+const remoteTable = useTemplateRef<NuiTableExposed>('remote-table');
+
+interface RemoteOrder {
+  readonly id: number;
+  readonly customer: string;
+  readonly city: string;
+  readonly amount: number;
+}
+
+const REMOTE_DELAY = 250;
+
+const REMOTE_ORDERS: readonly RemoteOrder[] = Array.from({ length: 100_000 }, (_, id) => ({
+  id: id + 1,
+  customer: `${pick(FIRST_NAMES, id * 7, '')} ${pick(LAST_NAMES, id * 11, '')}`,
+  city: pick(CITIES, id * 3, ''),
+  amount: ((id * 7919) % 100_000) + 100,
+}));
+
+const REMOTE_SIGN = { asc: 1, desc: -1 } as const;
+
+const REMOTE_UNSORTED: TableSort = { key: '', direction: 'asc' };
+
+const REMOTE_COMPARE: Readonly<Record<string, (a: RemoteOrder, b: RemoteOrder) => number>> = {
+  id: (a, b) => a.id - b.id,
+  customer: (a, b) => a.customer.localeCompare(b.customer, 'ru'),
+  city: (a, b) => a.city.localeCompare(b.city, 'ru'),
+  amount: (a, b) => a.amount - b.amount,
+};
+
+const REMOTE_COLUMNS: NuiTableColumn<RemoteOrder>[] = [
+  {
+    key: 'id',
+    label: '№',
+    type: 'number',
+    width: 96,
+    filter: false,
+    value: (row) => row.id,
+    format: (value) => String(value),
+  },
+  {
+    key: 'customer',
+    label: 'Клиент',
+    type: 'text',
+    width: 200,
+    flex: 1,
+    filter: false,
+    value: (row) => row.customer,
+  },
+  {
+    key: 'city',
+    label: 'Город',
+    type: 'text',
+    width: 140,
+    filter: false,
+    value: (row) => row.city,
+  },
+  {
+    key: 'amount',
+    label: 'Сумма',
+    type: 'number',
+    width: 130,
+    filter: false,
+    aggregate: 'sum',
+    value: (row) => row.amount,
+  },
+];
+
+const remoteQuick = ref('');
+const remoteRequests = ref(0);
+const lastRemote = ref<string | null>(null);
+
+const isQuick = (filter: TableFilter): filter is Extract<TableFilter, { kind: 'quick' }> =>
+  filter.kind === 'quick';
+
+const remoteFound = (conditions: readonly TableFilter[]): readonly RemoteOrder[] => {
+  const text = conditions.find(isQuick)?.value.toLocaleLowerCase('ru') ?? '';
+
+  return REMOTE_ORDERS.filter((row) =>
+    `${row.customer} ${row.city}`.toLocaleLowerCase('ru').includes(text),
+  );
+};
+
+const remoteSorted = (
+  rows: readonly RemoteOrder[],
+  sorting: readonly TableSort[],
+): readonly RemoteOrder[] => {
+  const [order = REMOTE_UNSORTED] = sorting;
+  const compare = REMOTE_COMPARE[order.key];
+
+  return compare === undefined
+    ? rows
+    : rows.toSorted((a, b) => compare(a, b) * REMOTE_SIGN[order.direction]);
+};
+
+const pause = (signal: AbortSignal): Promise<void> =>
+  new Promise((resolve, reject) => {
+    const timer = setTimeout(resolve, REMOTE_DELAY);
+
+    signal.addEventListener(
+      'abort',
+      () => {
+        clearTimeout(timer);
+        reject(signal.reason);
+      },
+      { once: true },
+    );
+  });
+
+const remoteSource: TableSource<RemoteOrder> = {
+  fetch: async ({ offset, limit, sort: sorting, filters: conditions, signal }) => {
+    remoteRequests.value += 1;
+    lastRemote.value = `${offset}+${limit}`;
+    await pause(signal);
+
+    const found = remoteSorted(remoteFound(conditions), sorting);
+
+    return { rows: found.slice(offset, offset + limit), total: found.length };
+  },
+  totals: async ({ filters: conditions, signal }) => {
+    await pause(signal);
+    return { amount: remoteFound(conditions).reduce((sum, row) => sum + row.amount, 0) };
+  },
+};
+
+const remoteOutput = computed(() =>
+  JSON.stringify({ requests: remoteRequests.value, last: lastRemote.value }),
+);
 
 const downloadCsv = async (): Promise<void> => {
   const text = await ordersTable.value?.exportCsv({ separator: ';' });

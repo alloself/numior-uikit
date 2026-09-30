@@ -8,8 +8,16 @@ const docs: DocsMap = {
         en: "Columns: key, label, type (text, number, date, boolean), value, format, width, minWidth, maxWidth, resizable, reorderable, pin, align, sortable, filter, hideable, wrap, flex, aggregate, editable, parse, rules and editor. hideable: false keeps the column out of reach of the menu hide; resizable: false drops the width handle and the Alt+arrow keys, reorderable: false the drag grip and the Alt+Shift+arrow keys, minWidth and maxWidth bound the width while dragging; wrap: true wraps the cell text, and without height the row grows with it; flex shares the free width of the scroll area between columns in proportion until the column is resized by hand. filter picks the filter kind (text, number, date, set) or turns it off with false. aggregate fills group rows and the totals row: a number column takes sum, count, avg, min, max or a function, a date column min, max, count or a function, a text or boolean column count or a function. Outside a row, such as a group or the filter value list, format receives the row as undefined. A group { key, label, children } draws a labelled band above the headers of its columns. editable (true or a function of the row) opens the cells of the column to the editor, clearing, cutting and pasting, and the changes arrive in the edit event. parse(text, row) turns pasted text into the column value and refuses the cell by returning undefined; without it a number, a date or a boolean is read by the column type. rules are @numior/forms rules that check the value before an edit, a paste or a clear is saved. editor sets an editor of its own: tableEditor(Component, guard, { props }) or a control registry key ('select' or { control, props }); a date column editor works with an ISO string.",
       },
       rows: {
-        ru: 'Строки таблицы; она их не копирует и не меняет.',
-        en: 'Rows of the table; it neither copies nor changes them.',
+        ru: 'Строки таблицы; она их не копирует и не меняет. С source не нужны.',
+        en: 'Rows of the table; it neither copies nor changes them. Not needed with source.',
+      },
+      source: {
+        ru: 'Серверный источник: fetch({ offset, limit, sort, filters, signal }) возвращает { rows, total } или { rows, hasMore }, а необязательные values и totals дают значения фильтра-списка и итоги. Таблица грузит блоки под окном прокрутки, держит в кеше пятьдесят последних блоков и отменяет старые запросы при смене сортировки и фильтров; без height она листает источник страницами. Группы, дерево и перетаскивание строк с source не работают.',
+        en: 'Server source: fetch({ offset, limit, sort, filters, signal }) returns { rows, total } or { rows, hasMore }, while the optional values and totals give the set filter values and the totals. The table loads blocks under the scroll window, keeps the last fifty blocks in a cache and cancels old requests when sorting or filters change; without height it pages through the source. Groups, trees and row drag do not work with source.',
+      },
+      blockSize: {
+        ru: 'Строк в одном запросе к source; по умолчанию 100, а при пагинации — размер страницы.',
+        en: 'Rows in one source request; 100 by default and the page size with pagination.',
       },
       getKey: {
         ru: 'Устойчивый ключ строки; без него ключом служит индекс в rows.',
@@ -76,8 +84,8 @@ const docs: DocsMap = {
         en: 'External data loading: the table is aria-busy, skeleton rows or the loading slot replace the data, and the select-all checkbox is disabled.',
       },
       loadingRows: {
-        ru: 'Число строк-скелетонов во время загрузки; по умолчанию 5.',
-        en: 'Number of skeleton rows while loading; 5 by default.',
+        ru: 'Число строк-скелетонов во время загрузки; по умолчанию 5, а с height — столько, сколько помещается в области прокрутки.',
+        en: 'Number of skeleton rows while loading; 5 by default, or as many as fit the scroll area with height.',
       },
       selectLabel: {
         ru: 'Доступное имя флажка строки; по умолчанию из словаря.',
@@ -195,6 +203,10 @@ const docs: DocsMap = {
       },
     },
     events: {
+      error: {
+        ru: 'Запрос к source не удался; строки блока остаются скелетонами, а refresh() у ссылки на таблицу грузит их снова.',
+        en: 'A source request failed; the rows of the block stay skeletons, and refresh() of the table ref loads them again.',
+      },
       progress: {
         ru: 'Прогресс долгого прогона: фаза, сделано и всего.',
         en: 'Progress of a long run: the phase, done and total.',

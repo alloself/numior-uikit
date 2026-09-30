@@ -98,7 +98,7 @@ describe('NuiTable selection', () => {
     await grid.settle();
 
     expect(grid.busy).toBe(true);
-    expect(grid.skeletonRows).toBe(5);
+    expect(grid.skeletonRows).toBe(7);
     expect(grid.cellText(0, 1)).toBe('');
     expect(grid.rowCount).toBe(1);
     expect(grid.headerCheckbox?.disabled).toBe(true);
@@ -116,6 +116,11 @@ describe('NuiTable selection', () => {
     await custom.settle();
     expect(custom.skeletonRows).toBe(0);
     expect(custom.emptyText).toBe('Загрузка…');
+
+    const few = mountPeople({ props: { loading: true, loadingRows: 3 } });
+
+    await few.settle();
+    expect(few.skeletonRows).toBe(3);
   });
 
   it('stripes rows by position and names the grid by its caption', async () => {

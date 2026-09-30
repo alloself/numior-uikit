@@ -74,6 +74,8 @@ const identityRefs = (length: number): Int32Array => {
   return refs;
 };
 
+const isDefined = <V>(value: V | undefined): value is V => value !== undefined;
+
 export const createTableEngine = <T>(options: TableEngineOptions<T>): TableEngine<T> => {
   const columns = new Map<string, TableEngineColumn<T>>(
     options.columns.map((column) => [column.key, column]),
@@ -661,6 +663,16 @@ export const createTableEngine = <T>(options: TableEngineOptions<T>): TableEngin
       return built && version === rowsVersion ? outcome.found : null;
     },
     store: (key) => stores.get(key),
+    pendingAt: () => false,
+    collect: (signal) => {
+      signal?.throwIfAborted();
+      return Promise.resolve(
+        Array.from(prepared.filtered, (index) => table.rows[index]).filter(isDefined),
+      );
+    },
+    ensure: () => undefined,
+    refresh: () => undefined,
+    settled: () => true,
     dispose: () => {
       generation += 1;
       rowsVersion += 1;

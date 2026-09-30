@@ -35,6 +35,10 @@ export class TableSection {
   readonly nextPageButton: Locator;
   readonly pageSizeTrigger: Locator;
   readonly tree: Locator;
+  readonly remote: Locator;
+  readonly remoteViewport: Locator;
+  readonly remoteQuick: Locator;
+  readonly remoteOutput: Locator;
   readonly treeCaption: Locator;
   readonly treeSelectAll: Locator;
   readonly treeSkeletons: Locator;
@@ -62,6 +66,40 @@ export class TableSection {
     this.treeCaption = this.tree.locator('.nui-table__caption');
     this.treeSelectAll = this.tree.locator('.nui-table__row--head').getByRole('checkbox');
     this.treeSkeletons = this.tree.locator('.nui-table__row--skeleton');
+    this.remote = page.getByTestId('table-remote');
+    this.remoteViewport = this.remote.locator('.nui-table__viewport');
+    this.remoteQuick = page.getByTestId('table-remote-quick');
+    this.remoteOutput = page.getByTestId('table-remote-output');
+  }
+
+  remoteCell(position: number, col: number): Locator {
+    return this.remoteViewport.locator(
+      `[role="row"][aria-rowindex="${position + 2}"] > [aria-colindex="${col + 1}"]`,
+    );
+  }
+
+  remoteHeader(col: number): Locator {
+    return this.remoteViewport.locator(
+      `.nui-table__row--head [role="columnheader"][aria-colindex="${col + 1}"]`,
+    );
+  }
+
+  async remoteScroll(edge: 'top' | 'bottom'): Promise<void> {
+    await this.remoteViewport.evaluate((element, where) => {
+      element.scrollTop = where === 'top' ? 0 : element.scrollHeight;
+    }, edge);
+  }
+
+  async remoteRequests(): Promise<number> {
+    const text = (await this.remoteOutput.textContent()) ?? '{}';
+    const parsed: unknown = JSON.parse(text);
+
+    return typeof parsed === 'object' &&
+      parsed !== null &&
+      'requests' in parsed &&
+      typeof parsed.requests === 'number'
+      ? parsed.requests
+      : 0;
   }
 
   treeCell(position: number, col: number): Locator {

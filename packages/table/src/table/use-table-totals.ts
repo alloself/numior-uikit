@@ -19,6 +19,7 @@ export interface TableTotals<T> {
   readonly enabled: ComputedRef<boolean>;
   wanted(filters: readonly TableFilter[]): boolean;
   take(query: TableQuery): void;
+  sync(): void;
   reset(): void;
   scope(key: string): NuiTableFooterSlot<T>;
   countText(count: number | undefined): string | undefined;
@@ -56,6 +57,11 @@ export const useTableTotals = <T>(options: TableTotalsOptions<T>): TableTotals<T
       }
       values.value = options.engine.value.totals();
       computedFor = keyOf(query.filters ?? []);
+    },
+    sync: () => {
+      if (enabled.value) {
+        values.value = options.engine.value.totals();
+      }
     },
     reset: () => {
       computedFor = null;

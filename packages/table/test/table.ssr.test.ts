@@ -266,6 +266,31 @@ describe('NuiTable on the server', () => {
     expect(html).toContain('>plan.md<');
   });
 
+  it('renders skeleton rows for a source without asking it for rows on the server', async () => {
+    const offsets: number[] = [];
+
+    const html = await renderToString(
+      createSSRApp({
+        render: () =>
+          h(NuiTable<Person>, {
+            columns: PEOPLE_COLUMNS,
+            id: 'staff',
+            height: '400px',
+            source: {
+              fetch: (request) => {
+                offsets.push(request.offset);
+                return Promise.resolve({ rows: [], total: 0 });
+              },
+            },
+          }),
+      }),
+    );
+
+    expect(html.match(/nui-table__row--skeleton/g)).toHaveLength(5);
+    expect(html).toContain('aria-busy="true"');
+    expect(offsets).toEqual([]);
+  });
+
   it('renders the empty state inside the grid when there are no rows', async () => {
     const html = await render(0);
 
