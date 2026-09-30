@@ -1,11 +1,14 @@
 import { vi } from 'vitest';
 
+type ClipboardPart = string | Blob;
+
 class FakeClipboardItem {
-  constructor(readonly parts: Readonly<Record<string, string>>) {}
+  constructor(readonly parts: Readonly<Record<string, ClipboardPart>>) {}
 }
 
 export interface ClipboardStub {
   readonly copies: string[];
+  readonly htmls: string[];
   readonly writes: number;
   readonly commands: number;
   restore(): void;
@@ -15,6 +18,9 @@ export interface ClipboardStubOptions {
   readonly api?: 'granted' | 'refused' | 'missing';
   readonly legacy?: boolean | 'refused';
 }
+
+const textOf = (part: ClipboardPart): Promise<string> =>
+  typeof part === 'string' ? Promise.resolve(part) : part.text();
 
 const grantedStatus = (): PermissionStatus =>
   Object.assign(new EventTarget(), {
@@ -28,21 +34,25 @@ export const installClipboard = ({
   legacy = true,
 }: ClipboardStubOptions = {}): ClipboardStub => {
   const copies: string[] = [];
+  const htmls: string[] = [];
   const counters = { writes: 0, commands: 0 };
 
-  const write = (items: readonly FakeClipboardItem[]): Promise<void> => {
+  const write = async (items: readonly FakeClipboardItem[]): Promise<void> => {
     counters.writes += 1;
     if (api === 'refused') {
-      return Promise.reject(new Error('denied'));
+      throw new Error('denied');
     }
     for (const item of items) {
       const text = item.parts['text/plain'];
+      const html = item.parts['text/html'];
 
       if (text !== undefined) {
-        copies.push(text);
+        copies.push(await textOf(text));
+      }
+      if (html !== undefined) {
+        htmls.push(await textOf(html));
       }
     }
-    return Promise.resolve();
   };
 
   const writeText = (text: string): Promise<void> => {
@@ -91,6 +101,7 @@ export const installClipboard = ({
 
   return {
     copies,
+    htmls,
     get writes() {
       return counters.writes;
     },

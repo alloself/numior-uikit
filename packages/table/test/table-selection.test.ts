@@ -76,7 +76,7 @@ describe('NuiTable selection', () => {
   });
 
   it('selects one row at a time and reports clicks outside the checkbox', async () => {
-    const grid = mountPeople({ props: { selectable: 'single' } });
+    const grid = mountPeople({ props: { selectable: 'single', cellSelection: false } });
     await grid.settle();
 
     expect(grid.multiselectable).toBe(false);

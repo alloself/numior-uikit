@@ -100,11 +100,13 @@
       v-model:column-order="columnOrder"
       v-model:page="page"
       v-model:page-size="pageSize"
+      v-model:ranges="ranges"
       :columns="columns"
       :rows="empty ? [] : orders"
       :pinned-rows="pinned ? PINNED_ORDERS : []"
       :pagination="paged ? PAGINATION : false"
       :get-key="(row) => row.id"
+      :context-menu="orderMenu"
       label="Заказы"
       height="26rem"
       data-testid="table"
@@ -146,6 +148,7 @@ import {
   NuiIcon,
   NuiInput,
   NuiSelect,
+  type NuiMenuEntry,
   type NuiOption,
   type NuiTone,
 } from '@numior/vue';
@@ -160,7 +163,9 @@ import {
   type NuiTableColumnOrder,
   type NuiTableReorderEvent,
   type NuiTableColumnDef,
+  type NuiTableContextScope,
   type NuiTablePagination,
+  type NuiTableRanges,
 } from '@numior/table';
 
 type OrderStatus = 'new' | 'paid' | 'shipped' | 'returned';
@@ -477,6 +482,18 @@ const selectedUnits = ref<readonly Unit[]>([]);
 const unitsLoading = ref(false);
 const lastUnitClick = ref<string | null>(null);
 const lastReorder = ref<string | null>(null);
+const ranges = ref<NuiTableRanges>([]);
+const lastOpened = ref<number | null>(null);
+
+const orderMenu = (scope: NuiTableContextScope<Order>): NuiMenuEntry[] => [
+  {
+    label: `Открыть заказ ${scope.row.id}`,
+    onSelect: () => {
+      lastOpened.value = scope.row.id;
+    },
+  },
+];
+
 const LOAD_DELAY = 700;
 
 const inserted = (list: readonly Unit[], unit: Unit, index: number): Unit[] => [
@@ -564,6 +581,8 @@ const output = computed(() =>
     selected: selectedUnits.value.map((unit) => unit.id),
     lastClick: lastUnitClick.value,
     lastReorder: lastReorder.value,
+    ranges: ranges.value,
+    lastOpened: lastOpened.value,
     page: page.value,
     pageSize: pageSize.value,
   }),

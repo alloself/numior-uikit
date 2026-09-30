@@ -119,6 +119,18 @@ const docs: DocsMap = {
         ru: 'Функция подписи строки для призрака и объявлений; по умолчанию текст первой текстовой колонки, а без неё — первой колонки данных.',
         en: 'Function that labels a row in the ghost and the announcements; the text of the first text column by default, or of the first data column without one.',
       },
+      cellSelection: {
+        ru: 'Выделение прямоугольников ячеек мышью и клавиатурой; по умолчанию включено, false оставляет обычное выделение текста.',
+        en: 'Selection of cell rectangles with the mouse and the keyboard; on by default, false keeps the plain text selection.',
+      },
+      contextMenu: {
+        ru: 'Пункты контекстного меню ячейки: функция получает строку, колонку, значение, текст и диапазоны, её пункты идут после копирования. false оставляет меню браузера.',
+        en: 'Items of the cell context menu: the function receives the row, column, value, text and ranges, and its items follow the copy items. false keeps the browser menu.',
+      },
+      copyLimit: {
+        ru: 'Предел ячеек в одном копировании; по умолчанию 200 000, лишние строки отбрасываются с объявлением.',
+        en: 'Limit of cells in one copy; 200,000 by default, the rows past it are dropped with an announcement.',
+      },
       columnMenu: {
         ru: 'Меню колонки в шапке: сортировка, фильтр, группировка, закрепление, скрытие и список колонок. false убирает кнопку меню, и Alt+ArrowDown открывает фильтр.',
         en: 'Column menu in the header: sort, filter, grouping, pinning, hiding and the column list. false drops the menu button, and Alt+ArrowDown opens the filter.',
@@ -168,6 +180,10 @@ const docs: DocsMap = {
       'v-model:columnOrder': {
         ru: 'Порядок колонок ключами после перестановки: ключи модели идут первыми в своём порядке, остальные — в порядке объявления. Ручка в начале заголовка тянет колонку внутри её панели, закрепление сильнее порядка.',
         en: 'Column order as keys after a move: the keys in the model come first in their order, the rest follow the declaration order. The grip at the start of a header drags the column inside its pane, and pinning wins over the order.',
+      },
+      'v-model:ranges': {
+        ru: 'Выделенные прямоугольники ячеек: from и to с row — позицией строки на странице — и col — позицией среди видимых колонок данных. Сбрасываются при сортировке, фильтре, группировке, смене страницы, колонок и строк.',
+        en: 'Selected cell rectangles: from and to with row as the position on the page and col as the position among the shown data columns. They reset on sorting, filtering, grouping and changes of the page, the columns and the rows.',
       },
       'v-model:hidden': {
         ru: 'Ключи скрытых колонок; скрытая колонка не рисуется и не участвует в навигации, но её фильтры и сортировка продолжают действовать.',
@@ -262,6 +278,34 @@ const docs: DocsMap = {
         description: {
           ru: 'Вкладывает строку в предыдущего соседа или выносит её следом за родителем; в RTL стрелки меняются местами.',
           en: 'Nests the row into the previous sibling or lifts it after its parent; in RTL the arrows swap.',
+        },
+      },
+      {
+        keys: 'Shift+Arrow / Shift+Home / Shift+End',
+        description: {
+          ru: 'Тянет свободный угол диапазона от активной ячейки; с Ctrl доходит до края таблицы.',
+          en: 'Drags the free corner of the range away from the active cell; with Ctrl it reaches the edge of the table.',
+        },
+      },
+      {
+        keys: 'Shift+Space / Ctrl+Space / Ctrl+A',
+        description: {
+          ru: 'Выделяет строки диапазона целиком, его колонки целиком или все ячейки страницы; Escape снимает выделение.',
+          en: 'Selects the whole rows of the range, its whole columns or every cell of the page; Escape clears the selection.',
+        },
+      },
+      {
+        keys: 'Ctrl+C',
+        description: {
+          ru: 'Копирует диапазоны или активную ячейку как текст с табуляцией и HTML-таблицу.',
+          en: 'Copies the ranges or the active cell as tab separated text and an HTML table.',
+        },
+      },
+      {
+        keys: 'Shift+F10 / ContextMenu',
+        description: {
+          ru: 'Открывает меню ячейки на первом пункте; Escape возвращает фокус в ячейку.',
+          en: 'Opens the cell menu on its first item; Escape returns focus to the cell.',
         },
       },
       {

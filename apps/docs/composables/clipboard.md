@@ -8,9 +8,14 @@
 
 ## Сигнатура
 
-<SignatureReference :names="['useClipboard', 'ClipboardOptions', 'ClipboardControl']" />
+<SignatureReference
+  :names="['useClipboard', 'ClipboardOptions', 'ClipboardControl', 'ClipboardPayload']"
+/>
 
 ## Поведение
+
+`copyRich({ text, html })` кладёт в буфер текст и HTML вместе, а если браузер не принимает HTML,
+копирует только текст. Так [Table](/components/table) отдаёт выделенные ячейки таблицей.
 
 На сервере `supported` равен `false`, а `copy` ничего не делает. Кнопки [Code](/components/code)
 и копирование в этой документации построены на этом композабле.

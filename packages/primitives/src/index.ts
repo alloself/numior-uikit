@@ -184,7 +184,11 @@ export type {
   ResolvedColorScheme,
 } from './color-scheme/useColorScheme';
 export { useClipboard } from './clipboard/useClipboard';
-export type { ClipboardControl, ClipboardOptions } from './clipboard/useClipboard';
+export type {
+  ClipboardControl,
+  ClipboardOptions,
+  ClipboardPayload,
+} from './clipboard/useClipboard';
 export { useHotkey } from './hotkey/useHotkey';
 export type { HotkeyOptions } from './hotkey/useHotkey';
 export { parseHotkey } from './hotkey/hotkey';
@@ -264,6 +268,8 @@ export { createIntent } from './intent/createIntent';
 export type { Intent } from './intent/createIntent';
 export { useBlockSizeTween } from './motion/useBlockSizeTween';
 export { useReorder } from './reorder/useReorder';
+export { useEdgeScroll } from './reorder/useEdgeScroll';
+export type { EdgePoint, EdgeScroll, EdgeScrollOptions } from './reorder/useEdgeScroll';
 export type {
   Reorder,
   ReorderAxis,

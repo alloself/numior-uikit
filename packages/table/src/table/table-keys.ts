@@ -16,6 +16,13 @@ export interface TableKey {
 
 const lastRowOf = (bounds: TableBounds): number => (bounds.rows > 0 ? bounds.rows - 1 : -1);
 
+const windowHeight = (): number => (typeof window === 'undefined' ? 0 : window.innerHeight);
+
+export const pageRowsOf = (viewport: number, size: number): number => {
+  const span = viewport > 0 ? viewport : windowHeight();
+  return Math.max(1, Math.floor((span - size) / size));
+};
+
 const verticalTarget = (
   key: string,
   from: TableCellPosition,

@@ -336,6 +336,7 @@ export {
 export type {
   ClipboardControl,
   ClipboardOptions,
+  ClipboardPayload,
   ColorScheme,
   ColorSchemeControl,
   ColorSchemeOptions,

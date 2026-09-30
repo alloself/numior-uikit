@@ -25,3 +25,11 @@ const reorder = useReorder({
 `onPointerdown(index, event)` вешается на ручку строки, `onKeydown(index, event)` — на неё
 же для стрелок с модификатором, `state` описывает фазу: `idle`, `pending`, `dragging`,
 `keyboard`. Так переставляют поля `NuiFieldArray` в формах.
+
+## Автопрокрутка у краёв
+
+`useEdgeScroll(options)` — та же автопрокрутка отдельно. `follow({ x, y })` прокручивает
+контейнер, пока точка у его края, и зовёт `onStep` после каждого шага, а `stop()` её гасит.
+На ней же [Table](/components/table) тянет диапазоны ячеек за край.
+
+<SignatureReference :names="['useEdgeScroll', 'EdgeScrollOptions', 'EdgeScroll', 'EdgePoint']" />

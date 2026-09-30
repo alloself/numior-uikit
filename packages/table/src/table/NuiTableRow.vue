@@ -32,6 +32,7 @@
         :aria-colindex="cell.colIndex"
         :aria-colspan="cell.span"
         :aria-sort="ariaSortOf(cell.key)"
+        :aria-selected="cellSelected(cell)"
         :tabindex="tabindexOf(cell.colIndex)"
         :style="cell.style"
       >
@@ -55,6 +56,7 @@ import NuiTableResizer from './NuiTableResizer.vue';
 import type {
   TableCellLayout,
   TableDataCell,
+  TableRangeSegment,
   NuiTableResizerProps,
   NuiTableRowProps,
 } from './table.types';
@@ -72,6 +74,7 @@ const {
   selected = undefined,
   stripe = false,
   dragging = false,
+  ranged,
   heads,
 } = defineProps<NuiTableRowProps>();
 
@@ -131,10 +134,37 @@ const pinClass = (cell: TableCellLayout): Record<string, boolean> => ({
   'nui-table__cell--edge': cell.edge,
 });
 
+const hitsOf = (cell: TableDataCell): TableRangeSegment[] => {
+  const visual = cell.colIndex - 1;
+
+  return ranged === undefined || cell.kind !== 'data'
+    ? []
+    : ranged.filter((segment) => visual >= segment.from && visual <= segment.to);
+};
+
+const rangeClass = (cell: TableDataCell): Record<string, boolean> | undefined => {
+  const hits = hitsOf(cell);
+  const visual = cell.colIndex - 1;
+
+  return hits.length === 0
+    ? undefined
+    : {
+        'nui-table__cell--ranged': true,
+        'nui-table__cell--range-top': hits.some((segment) => segment.top),
+        'nui-table__cell--range-bottom': hits.some((segment) => segment.bottom),
+        'nui-table__cell--range-start': hits.some((segment) => segment.from === visual),
+        'nui-table__cell--range-end': hits.some((segment) => segment.to === visual),
+      };
+};
+
+const cellSelected = (cell: TableDataCell): 'true' | undefined =>
+  hitsOf(cell).length === 0 ? undefined : 'true';
+
 const cellClass = (cell: TableDataCell): unknown[] => [
   `nui-table__cell--align-${cell.align}`,
   `nui-table__cell--${cell.kind}`,
   pinClass(cell),
+  rangeClass(cell),
   cell.rule === undefined ? undefined : `nui-table__cell--rule-${cell.rule}`,
   {
     'nui-table__cell--wrap': cell.wrap && wrapsText.value,

@@ -1,4 +1,4 @@
-import type { NuiPaginationProps } from '@numior/vue';
+import type { NuiMenuEntry, NuiPaginationProps } from '@numior/vue';
 import type {
   TableAggregate,
   TableAggregateFn,
@@ -124,6 +124,9 @@ export interface NuiTableProps<T> {
   nestDelay?: number | undefined;
   dragLabel?: ((row: T) => string) | undefined;
   rowLabel?: ((row: T) => string) | undefined;
+  cellSelection?: boolean | undefined;
+  contextMenu?: NuiTableContextMenu<T> | false | undefined;
+  copyLimit?: number | undefined;
 }
 
 export interface NuiTableReorderEvent<T> {
@@ -142,6 +145,32 @@ export interface NuiTableCellSlot<T> {
   readonly position: number;
   readonly pinned: boolean;
 }
+
+export interface NuiTableRange {
+  readonly from: TableCellPosition;
+  readonly to: TableCellPosition;
+}
+
+export type NuiTableRanges = readonly NuiTableRange[];
+
+export interface NuiTableContextScope<T> extends NuiTableCellSlot<T> {
+  readonly ranges: NuiTableRanges;
+}
+
+export type NuiTableContextMenu<T> = (scope: NuiTableContextScope<T>) => readonly NuiMenuEntry[];
+
+export interface NuiTableCopyOptions {
+  readonly headers?: boolean | undefined;
+}
+
+export interface TableRangeSegment {
+  readonly from: number;
+  readonly to: number;
+  readonly top: boolean;
+  readonly bottom: boolean;
+}
+
+export type TableRowRanges = readonly TableRangeSegment[];
 
 export interface TableCellContentProps<T> {
   readonly column: string;
@@ -246,6 +275,7 @@ export type NuiTableSlots<T> = {
 export interface NuiTableExposed {
   scrollToRow(position: number): void;
   scrollToColumn(key: string): void;
+  copy(options?: NuiTableCopyOptions): Promise<boolean>;
 }
 
 export type TablePaneName = 'start' | 'centre' | 'end';
@@ -388,6 +418,7 @@ export interface NuiTableRowProps {
   selected?: boolean | undefined;
   stripe?: boolean | undefined;
   dragging?: boolean | undefined;
+  ranged?: TableRowRanges | undefined;
   heads?: Readonly<Record<string, TableHeadState>> | undefined;
 }
 

@@ -68,6 +68,17 @@ is sorted, filtered or grouped.
 
 <Example name="table/Drag" />
 
+### Ranges and clipboard
+
+Dragging with the mouse selects a rectangle of cells, Shift stretches it from the active cell and
+Ctrl adds another one. Ctrl+C copies the selection as tab separated text and an HTML table, so a
+paste into Excel or Google Sheets keeps the grid.
+
+The right button, Shift+F10 or a long press open the cell menu. The `contextMenu` function adds its
+items after the copy items, and `v-model:ranges` keeps the selection.
+
+<Example name="table/Ranges" />
+
 ### Ten thousand rows
 
 `height` turns on the row and column windows of `rowHeight` rows. A column with `pin` stays in
@@ -104,6 +115,9 @@ The markup is a `role="grid"` grid, `treegrid` for trees and groups, with one ta
 moves between cells with the arrow keys. `aria-rowindex` and `aria-colindex` count the rows
 outside the window too, headers carry `aria-sort`, rows `aria-selected`, `aria-expanded` and
 `aria-level`. Checkboxes and menu buttons take their names from the dictionary.
+
+Cells inside ranges carry `aria-selected`, and the live region announces the selection size and
+the result of a copy.
 
 <KeyboardReference name="NuiTable" />
 

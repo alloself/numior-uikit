@@ -10,6 +10,9 @@
         @scroll.passive="onViewportScroll"
         @keydown="onKeydown"
         @focusin="focus.onFocusin"
+        @pointerdown="rangeSelect.onPointerdown"
+        @mousedown="rangeSelect.onMousedown"
+        @contextmenu="cellMenu.onContextmenu"
       >
         <table
           :id="gridId"
@@ -114,6 +117,7 @@
               :selected="item.selected"
               :stripe="item.stripe"
               :dragging="rowDrag.dragging.value === item.index"
+              :ranged="rangedOf(item)"
             >
               <template #utility>
                 <NuiTableUtilityCell
@@ -169,7 +173,14 @@
       </div>
       <NuiTableDragLayer :drop="order.drop.value" :ghost="order.ghost.value" />
       <NuiTableDragLayer axis="y" :drop="rowDrag.drop.value" :ghost="rowDrag.ghost.value" />
-      <div v-if="query.busy.value" class="nui-table__busy" role="presentation"></div>
+      <div v-if="busy" class="nui-table__busy" role="presentation"></div>
+      <span
+        ref="context-anchor"
+        class="nui-table__anchor"
+        tabindex="-1"
+        aria-hidden="true"
+        @focus="refocusActive"
+      ></span>
     </div>
     <div v-if="paginationProps" class="nui-table__pagination">
       <NuiPagination
@@ -201,6 +212,15 @@
       :items="menu.items.value"
       :label="menu.label.value"
     />
+    <NuiMenu
+      ref="cell-menu"
+      v-model:open="cellMenu.open.value"
+      class="nui-table__cell-menu"
+      :anchor="cellMenu.target.value"
+      :items="cellMenu.items.value"
+      :label="messages.cellMenu"
+      :offset="0"
+    />
     <div class="nui-table__hidden" role="status" aria-live="polite">{{ announcement }}</div>
   </div>
 </template>
@@ -217,7 +237,7 @@ import {
   watch,
   type VNode,
 } from 'vue';
-import { useElementSize } from '@vueuse/core';
+import { onLongPress, useElementSize } from '@vueuse/core';
 import {
   createIntent,
   useControlId,
@@ -267,6 +287,10 @@ import NuiTableFilter from './NuiTableFilter.vue';
 import NuiTableFooterCell from './NuiTableFooterCell.vue';
 import NuiTableHeaderMarks from './NuiTableHeaderMarks.vue';
 import { useTableFocus } from './use-table-focus';
+import { useTableClipboard, type TableCopyCell } from './use-table-clipboard';
+import { useTableContextMenu } from './use-table-context-menu';
+import { useTableRanges } from './use-table-ranges';
+import { pageRowsOf } from './table-keys';
 import { useTableExpansion } from './use-table-expansion';
 import { useTableHeader, type TableHeader } from './use-table-header';
 import { useTableMenu, type TableMenu } from './use-table-menu';
@@ -297,7 +321,10 @@ import type {
   NuiTableUtilityCellProps,
   NuiTableColumn,
   NuiTableColumnOrder,
+  NuiTableContextScope,
+  NuiTableRanges,
   NuiTableWidths,
+  TableRowRanges,
 } from './table.types';
 
 const ROW_SIZES = { sm: 32, md: 40, lg: 48 } as const;
@@ -315,6 +342,8 @@ const CLICK_GUARD =
   '.nui-table__cell--select, .nui-table__row-grip, .nui-table__toggle, .nui-table__group';
 
 const NEST_DELAY = 600;
+const COPY_LIMIT = 200_000;
+const LONG_PRESS = 500;
 
 const {
   columns,
@@ -347,6 +376,9 @@ const {
   nestDelay = NEST_DELAY,
   dragLabel,
   rowLabel,
+  cellSelection = true,
+  contextMenu = undefined,
+  copyLimit = COPY_LIMIT,
 } = defineProps<NuiTableProps<T>>();
 
 const sort = defineModel<NuiTableSort>('sort', { default: () => [] });
@@ -361,6 +393,7 @@ const columnOrder = defineModel<NuiTableColumnOrder>('columnOrder', { default: (
 const selected = defineModel<readonly T[]>('selected', { default: () => [] });
 const page = defineModel<number>('page', { default: 1 });
 const pageSize = defineModel<number>('pageSize', { default: 20 });
+const ranges = defineModel<NuiTableRanges>('ranges', { default: () => [] });
 const emit = defineEmits<NuiTableEvents<T>>();
 const slots = defineSlots<NuiTableSlots<T>>();
 const rawSlots = useSlots();
@@ -611,6 +644,7 @@ const rootClass = computed(() => [
     'nui-table--resizing': resize.active.value !== undefined,
     'nui-table--dragging':
       order.dragging.value !== undefined || rowDrag.dragging.value !== undefined,
+    'nui-table--ranging': rangeSelect.dragging.value,
   },
 ]);
 
@@ -729,7 +763,7 @@ const gridAria = computed(() => {
     'aria-rowcount': pinnedCount.value + visibleRows.value + headRows.value + footRows.value,
     'aria-colcount': layout.value.visual.length,
     'aria-busy': loading || query.busy.value || undefined,
-    'aria-multiselectable': selection.multiple.value || undefined,
+    'aria-multiselectable': selection.multiple.value || cellSelection || undefined,
   };
 });
 
@@ -955,10 +989,191 @@ const rowDrag = useTableRowDrag<T>({
   },
 });
 
+const dataKeys = computed(() => dataKeysOf(layout.value));
+
+const dataOffset = computed(() =>
+  Math.max(
+    0,
+    layout.value.visual.findIndex((column) => column.kind === 'data'),
+  ),
+);
+
+const rangeAnchor = (): TableCellPosition | undefined => {
+  const body = bodyActive();
+  const col = body === undefined ? -1 : body.col - dataOffset.value;
+
+  return body !== undefined && col >= 0 && col < dataKeys.value.length
+    ? { row: body.row, col }
+    : undefined;
+};
+
+const revealed = createIntent<TableCellPosition>();
+
+const revealCorner = (corner: TableCellPosition): void => {
+  const target = { row: corner.row + pinnedCount.value, col: corner.col + dataOffset.value };
+
+  if (windowed.value) {
+    focus.reveal(target);
+  } else {
+    revealed.set(target);
+  }
+};
+
+const announce = (text: string): void => {
+  announcement.value = text;
+};
+
+const rangeSelect = useTableRanges({
+  enabled: () => cellSelection && !loading,
+  ranges,
+  viewport: () => viewport.value,
+  bounds: () => ({ rows: visibleRows.value, cols: dataKeys.value.length }),
+  offset: () => dataOffset.value,
+  headRows: () => headRows.value,
+  pinnedRows: () => pinnedCount.value,
+  footRows: () => footRows.value,
+  rowSize: () => rowSize.value,
+  pageRows: () => pageRowsOf(rowWindow.viewport.value, rowSize.value),
+  isRtl: direction.isRtl,
+  anchor: rangeAnchor,
+  reveal: revealCorner,
+  resetOn: [
+    sort,
+    filters,
+    quick,
+    groupBy,
+    expanded,
+    pageStart,
+    () => rows,
+    () => dataKeys.value.join('\u0000'),
+  ],
+  messages,
+  announce,
+});
+
+const rangedOf = (item: TableBodyRow): TableRowRanges | undefined =>
+  item.group === undefined ? rangeSelect.segmentsOf(item.index) : undefined;
+
+const copyCell = (): TableCopyCell<T> | undefined => {
+  const row = rowFor(active.value.row);
+  const key = dataKeyAt(layout.value, active.value.col);
+
+  return row === undefined || key === undefined ? undefined : { row, key };
+};
+
+const clipboard = useTableClipboard<T>({
+  ranges: () => ranges.value,
+  cell: copyCell,
+  rowAt: (position) => {
+    const node = engine.value.nodeAt(pageStart.value + position);
+    return node?.kind === 'row' ? node.row : undefined;
+  },
+  keyAt: (col) => dataKeys.value[col],
+  labelOf: (key) => columnAt(key).label,
+  textOf: (row, key) => textOf(row, key),
+  limit: () => copyLimit,
+  messages,
+  announce,
+});
+
+const selectForMenu = (target: TableCellPosition): NuiTableRanges => {
+  const body = { row: target.row - pinnedCount.value, col: target.col - dataOffset.value };
+  const inside = body.row >= 0 && rangeSelect.contains(body);
+
+  const focused =
+    active.value.row === target.row &&
+    active.value.col === target.col &&
+    viewport.value?.contains(document.activeElement) === true;
+
+  if (!inside) {
+    rangeSelect.clear();
+  }
+  if (!focused) {
+    focus.focusCell(target, false);
+  }
+  return inside ? ranges.value : [];
+};
+
+const contextScopeOf = (
+  target: TableCellPosition,
+  current: NuiTableRanges,
+): NuiTableContextScope<T> | undefined => {
+  const row = rowFor(target.row);
+  const key = dataKeyAt(layout.value, target.col);
+  const pinned = target.row < pinnedCount.value;
+
+  return row === undefined || key === undefined
+    ? undefined
+    : {
+        ...scopeOf(row, pinned ? target.row : target.row - pinnedCount.value, key, pinned),
+        ranges: current,
+      };
+};
+
+const cellMenuNode = useTemplateRef<NuiMenuExposed>('cell-menu');
+const contextAnchor = useTemplateRef<HTMLElement>('context-anchor');
+
+const cellMenu = useTableContextMenu<T>({
+  enabled: () => contextMenu !== false,
+  extra: () => (contextMenu === false ? undefined : contextMenu),
+  frame: () => frame.value,
+  anchor: () => contextAnchor.value,
+  viewport: () => viewport.value,
+  headRows: () => headRows.value,
+  scopeOf: contextScopeOf,
+  select: selectForMenu,
+  copyable: () => clipboard.copyable(),
+  copy: (headers) => {
+    void clipboard.copy(headers);
+  },
+  show: (focusOn) => {
+    cellMenuNode.value?.show(focusOn);
+  },
+  isRtl: direction.isRtl,
+  messages,
+});
+
+const busy = computed(() => query.busy.value || clipboard.busy.value);
+
+const refocusActive = (): void => {
+  focus.focusCell(active.value);
+};
+
+onLongPress(
+  viewport,
+  (event) => {
+    if (cellMenu.onLongPress(event)) {
+      rangeSelect.swallowClick();
+    }
+  },
+  { delay: LONG_PRESS },
+);
+
+watch(
+  ranges,
+  () => {
+    const target = revealed.take();
+
+    const cell =
+      target === undefined
+        ? null
+        : viewport.value?.querySelector(
+            `[aria-rowindex="${target.row + headRows.value + 1}"] > [aria-colindex="${target.col + 1}"]`,
+          );
+
+    cell?.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
+  },
+  { flush: 'post' },
+);
+
 const onRowsClick = (event: MouseEvent): void => {
   const target = event.target;
 
-  if (!(target instanceof Element) || target.closest(CLICK_GUARD) !== null) {
+  if (
+    rangeSelect.takeClick() ||
+    !(target instanceof Element) ||
+    target.closest(CLICK_GUARD) !== null
+  ) {
     return;
   }
 
@@ -978,6 +1193,9 @@ const bodyActive = (): TableCellPosition | undefined => {
 };
 
 const onKeydown = (event: KeyboardEvent): void => {
+  if (cellMenu.onKeydown(event) || clipboard.onKeydown(event) || rangeSelect.onKeydown(event)) {
+    return;
+  }
   if (rowDrag.onKeydown(event, bodyActive())) {
     return;
   }
@@ -1156,5 +1374,6 @@ defineExpose<NuiTableExposed>({
       columnWindow.scrollTo(index, { align: 'start' });
     }
   },
+  copy: (options) => clipboard.copy(options?.headers === true),
 });
 </script>

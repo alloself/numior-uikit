@@ -158,6 +158,87 @@ test.describe('table', () => {
     await expect(table.treeRow(3)).toHaveAttribute('aria-level', '1');
   });
 
+  test('selects cell ranges with the mouse and the keyboard, copies them and opens the cell menu', async ({
+    page,
+    isMobile,
+  }) => {
+    test.skip(isMobile, 'pointer ranges on desktop');
+    const playground = new PlaygroundPage(page);
+    const { table } = playground;
+    await table.stubClipboard();
+    await playground.open();
+    await table.root.scrollIntoViewIfNeeded();
+
+    await table.dragRange({ row: 1, col: 1 }, { row: 3, col: 2 });
+
+    await expect(table.output).toContainText(
+      '"ranges":[{"from":{"row":1,"col":1},"to":{"row":3,"col":2}}]',
+    );
+
+    await expect(table.cell(2, 2)).toHaveAttribute('aria-selected', 'true');
+    await table.cell(4, 3).click({ modifiers: ['Shift'] });
+
+    await expect(table.output).toContainText(
+      '"ranges":[{"from":{"row":1,"col":1},"to":{"row":4,"col":3}}]',
+    );
+
+    await expect(table.cell(1, 1)).toBeFocused();
+    await page.keyboard.press('ControlOrMeta+A');
+
+    await expect(table.output).toContainText(
+      '"ranges":[{"from":{"row":0,"col":0},"to":{"row":9999,"col":10}}]',
+    );
+
+    await page.keyboard.press('Escape');
+    await expect(table.output).toContainText('"ranges":[]');
+
+    await table.dragRange({ row: 1, col: 1 }, { row: 2, col: 2 });
+    await page.keyboard.press('ControlOrMeta+C');
+
+    const block = await table.cellTexts([
+      { row: 1, col: 1 },
+      { row: 1, col: 2 },
+      { row: 2, col: 1 },
+      { row: 2, col: 2 },
+    ]);
+
+    await expect
+      .poll(() => table.copiedTexts())
+      .toEqual([`${block[0]}\t${block[1]}\n${block[2]}\t${block[3]}`]);
+
+    await table.cell(2, 1).click({ button: 'right' });
+    await expect(table.cellMenu).toBeVisible();
+    await expect(table.cellMenuItem('Копировать с заголовками')).toBeVisible();
+    await table.cellMenuItem('Открыть заказ 3').click();
+    await expect(table.output).toContainText('"lastOpened":3');
+    await expect(table.cellMenu).toBeHidden();
+    await expect(table.cell(2, 1)).toBeFocused();
+    await page.keyboard.press('Shift+F10');
+    await expect(table.cellMenuItem('Копировать')).toBeFocused();
+    await page.keyboard.press('Escape');
+    await expect(table.cellMenu).toBeHidden();
+    await expect(table.cell(2, 1)).toBeFocused();
+  });
+
+  test('opens the cell menu with a long press on a phone and copies the cell', async ({
+    page,
+    isMobile,
+  }) => {
+    test.skip(!isMobile, 'long press on touch screens');
+    const playground = new PlaygroundPage(page);
+    const { table } = playground;
+    await table.stubClipboard();
+    await playground.open();
+    await table.root.scrollIntoViewIfNeeded();
+
+    await table.longPress(1, 1);
+    await table.cellMenuItem('Копировать').click();
+
+    await expect
+      .poll(() => table.copiedTexts())
+      .toEqual(await table.cellTexts([{ row: 1, col: 1 }]));
+  });
+
   test('walks the cells with the keyboard and keeps the active one in view', async ({
     page,
     isMobile,
@@ -311,6 +392,8 @@ test.describe('table', () => {
         selected: [],
         lastClick: null,
         lastReorder: null,
+        ranges: [],
+        lastOpened: null,
         page: 1,
         pageSize: 25,
       }),
@@ -360,6 +443,8 @@ test.describe('table', () => {
         selected: [],
         lastClick: null,
         lastReorder: null,
+        ranges: [],
+        lastOpened: null,
         page: 1,
         pageSize: 25,
       }),
@@ -653,6 +738,22 @@ test.describe('table', () => {
       await page.keyboard.press('Escape');
       await expect(playground.table.menu).toBeHidden();
     }
+  });
+
+  test('cell menu has no automatically detectable WCAG AA violations', async ({
+    page,
+    isMobile,
+  }) => {
+    test.skip(isMobile, 'the cell menu opens by the pointer on desktop');
+    const playground = new PlaygroundPage(page);
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    const { table } = playground;
+    await table.root.scrollIntoViewIfNeeded();
+    await table.dragRange({ row: 1, col: 1 }, { row: 2, col: 2 });
+    await table.cell(1, 1).click({ button: 'right' });
+    await expect(table.cellMenu).toBeVisible();
+    expect(await playground.wcagViolations()).toEqual([]);
   });
 
   test('filter popover has no automatically detectable WCAG AA violations', async ({ page }) => {

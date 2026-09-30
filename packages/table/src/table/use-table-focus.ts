@@ -1,6 +1,6 @@
 import { onMounted, ref, watch, type Ref, type ShallowRef } from 'vue';
 import { createIntent, type VirtualList } from '@numior/primitives';
-import { nextCell } from './table-keys';
+import { nextCell, pageRowsOf } from './table-keys';
 import type { TableCellPosition, TableHeaderTarget } from './table.types';
 
 export interface TableFocusOptions {
@@ -23,7 +23,7 @@ export interface TableFocusOptions {
 export interface TableFocus {
   activeIn(position: number): number;
   reveal(target: TableCellPosition): void;
-  focusCell(target: TableCellPosition): void;
+  focusCell(target: TableCellPosition, scroll?: boolean): void;
   focusHeader(target: TableHeaderTarget): void;
   onKeydown(event: KeyboardEvent): void;
   onFocusin(event: FocusEvent): void;
@@ -54,20 +54,13 @@ const isCell = (target: EventTarget | null): boolean =>
 const samePosition = (a: TableCellPosition, b: TableCellPosition): boolean =>
   a.row === b.row && a.col === b.col;
 
-const pageSpan = (): number => (typeof window === 'undefined' ? 0 : window.innerHeight);
-
 export const useTableFocus = (options: TableFocusOptions): TableFocus => {
   const intent = createIntent<'cell'>();
   const requests = ref(0);
   const placement = createIntent<TableHeaderTarget>();
   const placements = ref(0);
 
-  const pageRows = (): number => {
-    const size = options.rowSize();
-    const span = options.rows.viewport.value > 0 ? options.rows.viewport.value : pageSpan();
-
-    return Math.max(1, Math.floor((span - size) / size));
-  };
+  const pageRows = (): number => pageRowsOf(options.rows.viewport.value, options.rowSize());
 
   const reveal = (target: TableCellPosition): void => {
     if (!options.windowed()) {
@@ -85,9 +78,12 @@ export const useTableFocus = (options: TableFocusOptions): TableFocus => {
     }
   };
 
-  const focusCell = (target: TableCellPosition): void => {
+  const focusCell = (target: TableCellPosition, scroll = true): void => {
     options.active.value = target;
-    reveal(target);
+
+    if (scroll) {
+      reveal(target);
+    }
     intent.set('cell');
     requests.value += 1;
   };

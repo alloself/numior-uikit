@@ -1,4 +1,3 @@
-import { useRafFn } from '@vueuse/core';
 import {
   computed,
   onScopeDispose,
@@ -8,6 +7,7 @@ import {
   type MaybeRefOrGetter,
   type Ref,
 } from 'vue';
+import { useEdgeScroll } from './useEdgeScroll';
 
 export type ReorderAxis = 'x' | 'y';
 
@@ -63,8 +63,6 @@ export interface Reorder {
 
 const IDLE: ReorderState = { phase: 'idle' };
 const DEFAULT_THRESHOLD = 5;
-const EDGE = 24;
-const STEP = 8;
 
 const isSelectKey = (key: string): boolean => key === ' ' || key === 'Enter';
 
@@ -83,19 +81,8 @@ const stepFor = (key: string, axis: ReorderAxis, rtl: boolean): number => {
   return key === forward ? 1 : key === backward ? -1 : 0;
 };
 
-const edgeDelta = (container: HTMLElement, client: number, axis: ReorderAxis): number => {
-  const rect = container.getBoundingClientRect();
-  const start = axis === 'x' ? rect.left : rect.top;
-  const end = axis === 'x' ? rect.right : rect.bottom;
-  if (client < start + EDGE) {
-    return -STEP;
-  }
-  return client > end - EDGE ? STEP : 0;
-};
-
 export const useReorder = (options: ReorderOptions): Reorder => {
   const state = shallowRef<ReorderState>(IDLE);
-  let scrollDelta = 0;
 
   const source = computed(() => {
     const current = state.value;
@@ -127,34 +114,7 @@ export const useReorder = (options: ReorderOptions): Reorder => {
     }
   };
 
-  const scrollStep = (): void => {
-    const container = toValue(options.container);
-    if (!container || scrollDelta === 0) {
-      autoscroll.pause();
-      return;
-    }
-    if (options.axis === 'x') {
-      container.scrollLeft += scrollDelta;
-    } else {
-      container.scrollTop += scrollDelta;
-    }
-    retarget();
-  };
-
-  const autoscroll = useRafFn(scrollStep, { immediate: false });
-
-  const stopScrolling = (): void => {
-    scrollDelta = 0;
-    autoscroll.pause();
-  };
-
-  const scrollBy = (delta: number): void => {
-    scrollDelta = delta;
-    scrollStep();
-    if (scrollDelta !== 0) {
-      autoscroll.resume();
-    }
-  };
+  const edge = useEdgeScroll({ container: options.container, onStep: retarget });
 
   const detach = (): void => {
     if (typeof window === 'undefined') {
@@ -167,7 +127,7 @@ export const useReorder = (options: ReorderOptions): Reorder => {
   };
 
   const finish = (): void => {
-    stopScrolling();
+    edge.stop();
     detach();
     publish(IDLE);
   };
@@ -213,13 +173,7 @@ export const useReorder = (options: ReorderOptions): Reorder => {
       position: client,
     });
 
-    const container = toValue(options.container);
-
-    stopScrolling();
-
-    if (container) {
-      scrollBy(edgeDelta(container, client, options.axis));
-    }
+    edge.follow(options.axis === 'x' ? { x: client } : { y: client });
   };
 
   const onPointermove = (event: PointerEvent): void => {

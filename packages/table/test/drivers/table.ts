@@ -1,5 +1,6 @@
 import { flushPromises, mount, type DOMWrapper, type VueWrapper } from '@vue/test-utils';
 import { createNuiConfig, type NuiConfigOptions } from '@numior/primitives';
+import { vi } from 'vitest';
 import {
   defineComponent,
   h,
@@ -24,6 +25,7 @@ import {
   type NuiTableReorderEvent,
   type NuiTableProps,
   type NuiTableColumnDef,
+  type NuiTableRanges,
 } from '../../src';
 
 export interface TableMountOptions<T> {
@@ -107,6 +109,7 @@ interface TableModels<T> {
   readonly selected: ShallowRef<readonly T[]>;
   readonly page: ShallowRef<number>;
   readonly pageSize: ShallowRef<number>;
+  readonly ranges: ShallowRef<NuiTableRanges>;
 }
 
 type TableProps<T> = Omit<NuiTableProps<T>, 'columns' | 'rows'>;
@@ -148,6 +151,25 @@ const dragHandle = async (handle: HTMLElement | null, name: string, dx: number):
   window.dispatchEvent(new PointerEvent('pointerup', { pointerId: 1, clientX: 100 + dx }));
   await nextTick();
 };
+
+const RANGE_POINTER = 4;
+
+interface Point {
+  readonly x: number;
+  readonly y: number;
+}
+
+const pointerInit = (point: Point, options: KeyOptions): PointerEventInit => ({
+  bubbles: true,
+  cancelable: true,
+  button: 0,
+  pointerId: RANGE_POINTER,
+  pointerType: 'mouse',
+  clientX: point.x,
+  clientY: point.y,
+  shiftKey: options.shift ?? false,
+  ctrlKey: options.ctrl ?? false,
+});
 
 const ROW_EARLY = 10;
 const ROW_MIDDLE = 20;
@@ -209,6 +231,7 @@ export class TableDriver<T> {
     const selected = shallowRef<readonly T[]>(settings.selected ?? []);
     const page = shallowRef(settings.page ?? 1);
     const pageSize = shallowRef(settings.pageSize ?? 20);
+    const ranges = shallowRef<NuiTableRanges>([]);
     const props = shallowRef<TableProps<T>>(settings.props ?? {});
     const stubs = new TopLayerStubs();
     const exposed = shallowRef<NuiTableExposed | null>(null);
@@ -284,6 +307,10 @@ export class TableDriver<T> {
               'onUpdate:pageSize': (next: number) => {
                 pageSize.value = next;
               },
+              ranges: ranges.value,
+              'onUpdate:ranges': (next: NuiTableRanges) => {
+                ranges.value = next;
+              },
               onRowClick: (row: T) => {
                 events.clicks.push(row);
               },
@@ -326,6 +353,7 @@ export class TableDriver<T> {
       selected,
       page,
       pageSize,
+      ranges,
     };
 
     const driver = new TableDriver<T>(wrapper, source, props, models, exposed, events, stubs);
@@ -668,8 +696,57 @@ export class TableDriver<T> {
 
   private get columnMenu(): HTMLElement | null {
     return (
-      this.element.closest('.nui-table')?.querySelector<HTMLElement>(':scope > .nui-menu') ?? null
+      this.element
+        .closest('.nui-table')
+        ?.querySelector<HTMLElement>(':scope > .nui-menu:not(.nui-table__cell-menu)') ?? null
     );
+  }
+
+  private get cellMenu(): HTMLElement | null {
+    return (
+      this.element
+        .closest('.nui-table')
+        ?.querySelector<HTMLElement>(':scope > .nui-table__cell-menu') ?? null
+    );
+  }
+
+  private cellMenuEntries(): HTMLElement[] {
+    return [...(this.cellMenu?.querySelectorAll<HTMLElement>('[role="menuitem"]') ?? [])];
+  }
+
+  get cellMenuFocused(): boolean {
+    return this.cellMenu?.contains(document.activeElement) ?? false;
+  }
+
+  get cellMenuLabels(): string[] {
+    return this.cellMenuEntries().map(
+      (entry) => entry.querySelector('.nui-menu-item__label')?.textContent?.trim() ?? '',
+    );
+  }
+
+  cellMenuDisabled(label: string): boolean {
+    return (
+      this.cellMenuEntries()
+        .find(
+          (entry) => entry.querySelector('.nui-menu-item__label')?.textContent?.trim() === label,
+        )
+        ?.getAttribute('aria-disabled') === 'true'
+    );
+  }
+
+  async closeCellMenu(): Promise<void> {
+    if (this.cellMenu !== null) {
+      dismissPopoverNatively(this.cellMenu);
+    }
+    await nextTick();
+  }
+
+  async chooseCellMenu(label: string): Promise<void> {
+    this.cellMenuEntries()
+      .find((entry) => entry.querySelector('.nui-menu-item__label')?.textContent?.trim() === label)
+      ?.click();
+
+    await flushPromises();
   }
 
   private menuEntries(): HTMLElement[] {
@@ -831,6 +908,115 @@ export class TableDriver<T> {
         defineRect(row.firstElementChild, new DOMRect(0, top, LAYOUT_WIDTH, HEAD_HEIGHT));
       }
     }
+  }
+
+  get ranges(): NuiTableRanges {
+    return this.models.ranges.value;
+  }
+
+  rangeMarks(position: number, col: number): string[] {
+    const cell = this.cell(position, col);
+
+    const marks = [...(cell?.classList ?? [])].filter((name) =>
+      name.startsWith('nui-table__cell--range'),
+    );
+
+    return [
+      ...(cell?.getAttribute('aria-selected') === 'true' ? ['selected'] : []),
+      ...marks.map((name) => name.replace('nui-table__cell--', '')),
+    ];
+  }
+
+  private layoutBody(): void {
+    const tracks = [...this.element.querySelectorAll<HTMLElement>('colgroup > col')].map(
+      (track) => Number.parseFloat(track.style.inlineSize) || 0,
+    );
+
+    const frame = this.wrapper.find<HTMLElement>('.nui-table__frame').element;
+
+    defineRect(
+      this.element,
+      new DOMRect(0, 0, this.element.clientWidth, this.element.clientHeight),
+    );
+
+    defineRect(frame, new DOMRect(0, 0, this.element.clientWidth, this.element.clientHeight));
+
+    for (const row of this.element.querySelectorAll('.nui-table__body > [role="row"]')) {
+      const top = (Number(row.getAttribute('aria-rowindex')) - 1) * HEAD_HEIGHT;
+      let left = 0;
+
+      for (const [index, cell] of [...row.children].entries()) {
+        const width = tracks[index] ?? 0;
+
+        defineRect(cell, new DOMRect(left, top, width, HEAD_HEIGHT));
+        left += width;
+      }
+    }
+  }
+
+  private pointAt(position: number, col: number): Point {
+    const rect = this.cell(position, col)?.getBoundingClientRect();
+
+    if (rect === undefined) {
+      throw new Error(`No cell at ${position}:${col}`);
+    }
+    return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+  }
+
+  private pressDown(cell: HTMLElement | null, start: Point, options: KeyOptions): void {
+    cell?.dispatchEvent(new PointerEvent('pointerdown', pointerInit(start, options)));
+
+    const pressed = new MouseEvent('mousedown', pointerInit(start, options));
+
+    cell?.dispatchEvent(pressed);
+
+    if (!pressed.defaultPrevented) {
+      cell?.focus();
+    }
+  }
+
+  async dragRange(from: CellPosition, to: CellPosition, options: KeyOptions = {}): Promise<void> {
+    this.layoutBody();
+    const start = this.pointAt(from.row, from.col);
+    const end = this.pointAt(to.row, to.col);
+
+    this.pressDown(this.cell(from.row, from.col), start, options);
+    window.dispatchEvent(new PointerEvent('pointermove', pointerInit(end, options)));
+    window.dispatchEvent(new PointerEvent('pointerup', pointerInit(end, options)));
+    this.cell(to.row, to.col)?.dispatchEvent(new MouseEvent('click', pointerInit(end, options)));
+    await nextTick();
+  }
+
+  async clickCell(position: number, col: number, options: KeyOptions = {}): Promise<void> {
+    this.layoutBody();
+    const point = this.pointAt(position, col);
+    const cell = this.cell(position, col);
+
+    this.pressDown(cell, point, options);
+    window.dispatchEvent(new PointerEvent('pointerup', pointerInit(point, options)));
+    cell?.dispatchEvent(new MouseEvent('click', pointerInit(point, options)));
+    await nextTick();
+  }
+
+  async openCellMenu(position: number, col: number): Promise<boolean> {
+    this.layoutBody();
+    const point = this.pointAt(position, col);
+    const event = new MouseEvent('contextmenu', { ...pointerInit(point, {}), button: 2 });
+
+    this.cell(position, col)?.dispatchEvent(event);
+    await nextTick();
+    return event.defaultPrevented;
+  }
+
+  async holdCell(position: number, col: number, ms: number): Promise<void> {
+    this.layoutBody();
+    const point = this.pointAt(position, col);
+
+    this.cell(position, col)?.dispatchEvent(
+      new PointerEvent('pointerdown', { ...pointerInit(point, {}), pointerType: 'touch' }),
+    );
+
+    await vi.advanceTimersByTimeAsync(ms);
   }
 
   gripDisabled(position: number): boolean {

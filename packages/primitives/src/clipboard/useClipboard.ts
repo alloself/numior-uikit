@@ -5,10 +5,16 @@ export interface ClipboardOptions {
   readonly copiedDuration?: MaybeRefOrGetter<number | undefined>;
 }
 
+export interface ClipboardPayload {
+  readonly text: string;
+  readonly html?: string | undefined;
+}
+
 export interface ClipboardControl {
   readonly supported: Readonly<Ref<boolean>>;
   readonly copied: Readonly<Ref<boolean>>;
   copy(text: string): Promise<boolean>;
+  copyRich(payload: ClipboardPayload): Promise<boolean>;
 }
 
 const DEFAULT_COPIED_DURATION = 2000;
@@ -36,6 +42,11 @@ const legacyCopy = (text: string): boolean => {
   }
 };
 
+const hasRichApi = (): boolean =>
+  hasApi() &&
+  typeof navigator.clipboard.write === 'function' &&
+  typeof ClipboardItem === 'function';
+
 const write = async (text: string): Promise<boolean> => {
   if (hasApi()) {
     try {
@@ -46,6 +57,24 @@ const write = async (text: string): Promise<boolean> => {
     }
   }
   return hasCommand() && legacyCopy(text);
+};
+
+const writeRich = async (payload: ClipboardPayload): Promise<boolean> => {
+  if (payload.html === undefined || !hasRichApi()) {
+    return write(payload.text);
+  }
+  try {
+    await navigator.clipboard.write([
+      new ClipboardItem({
+        'text/plain': new Blob([payload.text], { type: 'text/plain' }),
+        'text/html': new Blob([payload.html], { type: 'text/html' }),
+      }),
+    ]);
+
+    return true;
+  } catch {
+    return write(payload.text);
+  }
 };
 
 export const useClipboard = (options: ClipboardOptions = {}): ClipboardControl => {
@@ -60,11 +89,11 @@ export const useClipboard = (options: ClipboardOptions = {}): ClipboardControl =
     { immediate: false },
   );
 
-  const copy = async (text: string): Promise<boolean> => {
+  const settle = async (attempt: Promise<boolean>): Promise<boolean> => {
     let done = false;
 
     try {
-      done = await write(text);
+      done = await attempt;
     } catch {
       done = false;
     }
@@ -76,5 +105,10 @@ export const useClipboard = (options: ClipboardOptions = {}): ClipboardControl =
     return done;
   };
 
-  return { supported, copied, copy };
+  return {
+    supported,
+    copied,
+    copy: (text) => settle(write(text)),
+    copyRich: (payload) => settle(writeRich(payload)),
+  };
 };

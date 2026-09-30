@@ -123,6 +123,54 @@
   vertical-align: middle;
   outline: none;
 }
+.nui-table__body .nui-table__cell {
+  transition: box-shadow var(--nui-duration-fast) var(--nui-easing);
+}
+.nui-table__cell--ranged {
+  --_range-t: 0px;
+  --_range-b: 0px;
+  --_range-s: 0px;
+  --_range-e: 0px;
+
+  background-color: color-mix(in oklab, var(--_row-bg), var(--nui-primary) 12%);
+  box-shadow:
+    inset 0 var(--_range-t) 0 var(--nui-primary),
+    inset 0 calc(-1 * var(--_range-b)) 0 var(--nui-primary),
+    inset var(--_range-s) 0 0 var(--nui-primary),
+    inset calc(-1 * var(--_range-e)) 0 0 var(--nui-primary);
+}
+.nui-table__cell--ranged:dir(rtl) {
+  box-shadow:
+    inset 0 var(--_range-t) 0 var(--nui-primary),
+    inset 0 calc(-1 * var(--_range-b)) 0 var(--nui-primary),
+    inset calc(-1 * var(--_range-s)) 0 0 var(--nui-primary),
+    inset var(--_range-e) 0 0 var(--nui-primary);
+}
+.nui-table__cell--ranged.nui-table__cell--active {
+  background-color: var(--_row-bg);
+}
+.nui-table__cell--range-top {
+  --_range-t: 1px;
+}
+.nui-table__cell--range-bottom {
+  --_range-b: 1px;
+}
+.nui-table__cell--range-start {
+  --_range-s: 1px;
+}
+.nui-table__cell--range-end {
+  --_range-e: 1px;
+}
+.nui-table--ranging {
+  user-select: none;
+}
+.nui-table__anchor {
+  position: absolute;
+  inline-size: 0;
+  block-size: 0;
+  outline: none;
+  pointer-events: none;
+}
 .nui-table__cell:focus-visible {
   outline: var(--nui-focus-ring-width) solid var(--nui-focus);
   outline-offset: calc(-1 * var(--nui-focus-ring-width));

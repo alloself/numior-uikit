@@ -33,6 +33,12 @@ export type {
   NuiTableTextColumn,
   NuiTablePagination,
   NuiTableSelection,
+  NuiTableRange,
+  NuiTableRanges,
+  NuiTableContextMenu,
+  NuiTableContextScope,
+  NuiTableCopyOptions,
+  TableCellPosition,
 } from './table/table.types';
 export type {
   TableAggregate,

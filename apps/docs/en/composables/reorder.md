@@ -25,3 +25,11 @@ const reorder = useReorder({
 `onPointerdown(index, event)` attaches to the row handle, `onKeydown(index, event)` to the
 same handle for arrows with a modifier. `state` describes the phase: `idle`, `pending`,
 `dragging`, `keyboard`. `NuiFieldArray` reorders form fields this way.
+
+## Edge auto-scroll
+
+`useEdgeScroll(options)` is the same auto-scroll on its own. `follow({ x, y })` scrolls the
+container while the point stays near its edge and calls `onStep` after every step, and `stop()`
+ends it. [Table](/en/components/table) drags cell ranges past the edge with it.
+
+<SignatureReference :names="['useEdgeScroll', 'EdgeScrollOptions', 'EdgeScroll', 'EdgePoint']" />

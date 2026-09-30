@@ -1,4 +1,5 @@
 import { expect, type Locator, type Page } from '@playwright/test';
+import { copiedTexts, stubClipboard } from '../helpers/clipboard';
 import { boxOf, type Box } from '../helpers/geometry';
 
 export interface TableCell {
@@ -24,6 +25,7 @@ export class TableSection {
   readonly output: Locator;
   readonly filter: Locator;
   readonly menu: Locator;
+  readonly cellMenu: Locator;
   readonly resetColumns: Locator;
   readonly loadingToggle: Locator;
   readonly pagesToggle: Locator;
@@ -46,7 +48,8 @@ export class TableSection {
     this.clearFilters = page.getByTestId('table-clear-filters');
     this.output = page.getByTestId('table-output');
     this.filter = page.locator('.nui-table-filter');
-    this.menu = this.root.locator(':scope > .nui-menu');
+    this.menu = this.root.locator(':scope > .nui-menu:not(.nui-table__cell-menu)');
+    this.cellMenu = this.root.locator(':scope > .nui-table__cell-menu');
     this.resetColumns = page.getByTestId('table-reset-columns');
     this.loadingToggle = page.getByTestId('table-loading');
     this.pagesToggle = page.getByTestId('table-pages');
@@ -258,6 +261,57 @@ export class TableSection {
 
   cell(position: number, col: number): Locator {
     return this.row(position).locator(`[aria-colindex="${col + 1}"]`);
+  }
+
+  cellMenuItem(label: string): Locator {
+    return this.cellMenu.getByRole('menuitem', { name: label, exact: true });
+  }
+
+  stubClipboard(): Promise<void> {
+    return stubClipboard(this.page);
+  }
+
+  copiedTexts(): Promise<string[]> {
+    return copiedTexts(this.page);
+  }
+
+  async cellTexts(cells: readonly TableCell[]): Promise<string[]> {
+    return Promise.all(
+      cells.map(async (cell) => (await this.cell(cell.row, cell.col).textContent())?.trim() ?? ''),
+    );
+  }
+
+  async dragRange(from: TableCell, to: TableCell): Promise<void> {
+    const start = await boxOf(this.cell(from.row, from.col));
+    const end = await boxOf(this.cell(to.row, to.col));
+
+    await this.page.mouse.move(start.x + start.width / 2, start.y + start.height / 2);
+    await this.page.mouse.down();
+
+    await this.page.mouse.move(end.x + end.width / 2, end.y + end.height / 2, {
+      steps: 6,
+    });
+
+    await this.page.mouse.up();
+  }
+
+  async longPress(position: number, col: number): Promise<void> {
+    const cell = this.cell(position, col);
+    const box = await boxOf(cell);
+
+    const init = {
+      bubbles: true,
+      button: 0,
+      isPrimary: true,
+      pointerId: 11,
+      pointerType: 'touch',
+      clientX: box.x + box.width / 2,
+      clientY: box.y + box.height / 2,
+    };
+
+    await cell.dispatchEvent('pointerdown', init);
+    await expect(this.cellMenu).toBeVisible();
+    await cell.dispatchEvent('pointerup', init);
   }
 
   async scrollTo(target: TableScroll): Promise<void> {

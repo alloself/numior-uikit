@@ -62,6 +62,21 @@ describe('useClipboard', () => {
     expect(control.copied.value).toBe(false);
   });
 
+  it('writes plain text and HTML together and falls back to plain text when refused', async () => {
+    clipboard = installClipboard({ api: 'granted' });
+    const control = captureSetup(() => useClipboard()).value;
+    expect(await control.copyRich({ text: 'a\tb', html: '<table></table>' })).toBe(true);
+    expect(clipboard.copies).toEqual(['a\tb']);
+    expect(clipboard.htmls).toEqual(['<table></table>']);
+    clipboard.restore();
+    clipboard = installClipboard({ api: 'refused' });
+    const refused = captureSetup(() => useClipboard()).value;
+    expect(await refused.copyRich({ text: 'a\tb', html: '<table></table>' })).toBe(true);
+    expect(clipboard.copies).toEqual(['a\tb']);
+    expect(clipboard.htmls).toEqual([]);
+    expect(clipboard.commands).toBe(1);
+  });
+
   it('reports failure when neither the API nor the command can copy', async () => {
     clipboard = installClipboard({ api: 'missing', legacy: false });
     const control = captureSetup(() => useClipboard()).value;

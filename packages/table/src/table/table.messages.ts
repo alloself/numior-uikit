@@ -78,6 +78,14 @@ export interface NuiTableMessages {
     readonly position: number;
     readonly count: number;
   }) => string;
+  readonly cellMenu: string;
+  readonly menuCopy: string;
+  readonly menuCopyWithHeaders: string;
+  readonly copied: (params: { readonly count: number }) => string;
+  readonly copiedPart: (params: { readonly count: number; readonly total: number }) => string;
+  readonly copyDisjoint: string;
+  readonly copyFailed: string;
+  readonly rangeSelected: (params: { readonly rows: number; readonly cols: number }) => string;
 }
 
 export const tableMessages: NuiMessageCatalog<'table'> = {
@@ -148,6 +156,17 @@ export const tableMessages: NuiMessageCatalog<'table'> = {
       `Row ${row} moved into ${parent}, position ${position} of ${count}`,
     rowMovedToRoot: ({ row, position, count }) =>
       `Row ${row} moved to the top level, position ${position} of ${count}`,
+    cellMenu: 'Cell actions',
+    menuCopy: 'Copy',
+    menuCopyWithHeaders: 'Copy with headers',
+    copied: ({ count }) =>
+      `Copied ${count.toLocaleString('en-US')} ${plural('en', count, { one: 'row', other: 'rows' })}`,
+    copiedPart: ({ count, total }) =>
+      `Copied ${count.toLocaleString('en-US')} of ${total.toLocaleString('en-US')} rows`,
+    copyDisjoint: 'Separate ranges are copied only when they share rows or columns',
+    copyFailed: 'Copying failed',
+    rangeSelected: ({ rows, cols }) =>
+      `Selected ${rows.toLocaleString('en-US')} ${plural('en', rows, { one: 'row', other: 'rows' })} and ${cols.toLocaleString('en-US')} ${plural('en', cols, { one: 'column', other: 'columns' })}`,
   },
   ru: {
     label: 'Таблица данных',
@@ -216,5 +235,16 @@ export const tableMessages: NuiMessageCatalog<'table'> = {
       `Строка «${row}» перемещена в «${parent}», место ${position} из ${count}`,
     rowMovedToRoot: ({ row, position, count }) =>
       `Строка «${row}» перемещена на верхний уровень, место ${position} из ${count}`,
+    cellMenu: 'Действия с ячейками',
+    menuCopy: 'Копировать',
+    menuCopyWithHeaders: 'Копировать с заголовками',
+    copied: ({ count }) =>
+      `${plural('ru', count, { one: 'Скопирована', few: 'Скопированы', many: 'Скопировано', other: 'Скопировано' })} ${count.toLocaleString('ru-RU')} ${plural('ru', count, { one: 'строка', few: 'строки', many: 'строк', other: 'строки' })}`,
+    copiedPart: ({ count, total }) =>
+      `Скопировано строк: ${count.toLocaleString('ru-RU')} из ${total.toLocaleString('ru-RU')}`,
+    copyDisjoint: 'Разрывные диапазоны копируются, только если у них общие строки или колонки',
+    copyFailed: 'Не удалось скопировать',
+    rangeSelected: ({ rows, cols }) =>
+      `Выделено строк: ${rows.toLocaleString('ru-RU')}, колонок: ${cols.toLocaleString('ru-RU')}`,
   },
 };
