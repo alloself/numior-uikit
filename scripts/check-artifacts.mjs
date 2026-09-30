@@ -150,6 +150,8 @@ const formsCode = await importBuild('forms', [
   'pattern',
   'custom',
   'customAsync',
+  'runRules',
+  'formRulesMessages',
 ]);
 
 assert.match(formsCode, /from ['"]@numior\/vue['"]/, 'forms must keep @numior/vue external');
@@ -177,6 +179,7 @@ const localImports = async (file, seen = new Set()) => {
 const tableCode = await importBuild('table', ['NuiTable']);
 
 assert.match(tableCode, /from ['"]@numior\/vue['"]/, 'table must keep @numior/vue external');
+assert.doesNotMatch(tableCode, /formRulesMessages\s*=/, 'table must keep @numior/forms external');
 
 const tableEngineFile = resolve('packages/table/dist/engine.js');
 const tableEngine = await import(pathToFileURL(tableEngineFile).href);

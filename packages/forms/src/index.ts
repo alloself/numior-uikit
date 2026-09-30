@@ -100,6 +100,8 @@ export { byPath } from './paths/selector';
 export type { FieldSelector } from './paths/selector';
 export { customAsync } from './rules/async-rule';
 export type { AnyFieldRule, AsyncFieldRule } from './rules/async-rule';
+export { firstFailure as runRules } from './core/rules';
+export { formRulesMessages } from './rules/form-rules.messages';
 export type { NuiFormRulesMessages } from './rules/form-rules.messages';
 export { custom, email, max, min, pattern, required } from './rules/rules';
 export type { RuleOptions } from './rules/rules';

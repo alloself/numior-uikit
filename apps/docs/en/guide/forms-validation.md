@@ -34,6 +34,10 @@ const form = useForm({
 Form rules are set by path or by a pattern with `*` in place of a row index
 (`'guests.*.email'`), field rules in `rules` of `NuiFormField`.
 
+Outside a form, `runRules(rules, value, context)` runs the rules and returns the text of the first
+failure or undefined. The context holds the name, the label, the values and the `formRulesMessages`
+texts from `useMessages`. The table checks a cell edit with the same rules this way.
+
 ## Async validation
 
 `customAsync` receives the value and a `signal`: while the user types, the previous request
