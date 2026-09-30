@@ -99,7 +99,7 @@ describe('NuiTable selection', () => {
 
     expect(grid.busy).toBe(true);
     expect(grid.skeletonRows).toBe(7);
-    expect(grid.cellText(0, 1)).toBe('');
+    expect(grid.cellText(0, 1)).toBeUndefined();
     expect(grid.rowCount).toBe(1);
     expect(grid.headerCheckbox?.disabled).toBe(true);
     await grid.receive({ loading: false });

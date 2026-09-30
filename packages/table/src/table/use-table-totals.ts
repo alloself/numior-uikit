@@ -12,7 +12,7 @@ export interface TableTotalsOptions<T> {
   readonly locale: () => string;
   readonly messages: ComputedRef<NuiTableMessages>;
   readonly label: () => string | undefined;
-  readonly rowCount: () => number;
+  readonly rowCount: () => number | undefined;
 }
 
 export interface TableTotals<T> {

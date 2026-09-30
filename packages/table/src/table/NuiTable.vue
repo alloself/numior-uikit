@@ -515,7 +515,7 @@ const totals = useTableTotals({
   locale: () => resolvedLocale.value,
   messages,
   label: () => totalsLabel,
-  rowCount: () => engine.value.rowCount(),
+  rowCount: () => (loadingNow.value ? undefined : engine.value.rowCount()),
 });
 
 const currentQuery = (): TableQuery => {

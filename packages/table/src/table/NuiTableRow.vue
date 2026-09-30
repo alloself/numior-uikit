@@ -3,7 +3,7 @@
     class="nui-table__row"
     :class="rowClass"
     role="row"
-    :aria-rowindex="rowIndex"
+    :aria-rowindex="hiddenRow ? undefined : rowIndex"
     :aria-level="level"
     :aria-expanded="expanded"
     :aria-selected="selected"

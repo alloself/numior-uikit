@@ -36,6 +36,7 @@ describe('NuiTable with a source', () => {
 
     await grid.settle();
     expect(grid.skeletonRows).toBe(6);
+    expect(grid.cellText(0, 0)).toBe('Итого');
     expect(remote.requests).toEqual([{ offset: 0, limit: 50, sort: [] }]);
     remote.answer();
     await flushPromises();
