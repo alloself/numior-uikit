@@ -26,6 +26,7 @@ import {
   type NuiTableColumnOrder,
   type NuiTableReorderEvent,
   type NuiTableEditEvent,
+  type NuiTableEditRefusal,
   type NuiTableCsvOptions,
   type NuiTableProps,
   type NuiTableColumnDef,
@@ -126,6 +127,7 @@ interface TableEvents<T> {
   readonly clicks: T[];
   readonly reorders: NuiTableReorderEvent<T>[];
   readonly edits: NuiTableEditEvent<T>[];
+  readonly refusals: NuiTableEditRefusal<T>[];
   readonly waiters: Array<() => void>;
 }
 
@@ -249,6 +251,7 @@ export class TableDriver<T> {
       clicks: [],
       reorders: [],
       edits: [],
+      refusals: [],
       waiters: [],
     };
 
@@ -323,6 +326,9 @@ export class TableDriver<T> {
               },
               onReorder: (event: NuiTableReorderEvent<T>) => {
                 events.reorders.push(event);
+              },
+              onEditRefused: (event: NuiTableEditRefusal<T>) => {
+                events.refusals.push(event);
               },
               onEdit: (event: NuiTableEditEvent<T>) => {
                 events.edits.push(event);
@@ -864,6 +870,10 @@ export class TableDriver<T> {
     return this.events.edits;
   }
 
+  get refusals(): readonly NuiTableEditRefusal<T>[] {
+    return this.events.refusals;
+  }
+
   async paste(text: string): Promise<void> {
     const event = new Event('paste', { bubbles: true, cancelable: true });
 
@@ -918,6 +928,28 @@ export class TableDriver<T> {
       field.value = text;
       field.dispatchEvent(new Event('input', { bubbles: true }));
     }
+    await nextTick();
+  }
+
+  get editorExpanded(): string | undefined {
+    return (
+      this.editorElement?.querySelector('[aria-haspopup]')?.getAttribute('aria-expanded') ??
+      undefined
+    );
+  }
+
+  get editorOptions(): string[] {
+    return [...(this.editorElement?.querySelectorAll('[role="option"]') ?? [])].map(
+      (option) => option.textContent?.trim() ?? '',
+    );
+  }
+
+  async pickInEditor(label: string): Promise<void> {
+    const option = [
+      ...(this.editorElement?.querySelectorAll<HTMLElement>('[role="option"]') ?? []),
+    ].find((element) => element.textContent?.trim() === label);
+
+    option?.click();
     await nextTick();
   }
 

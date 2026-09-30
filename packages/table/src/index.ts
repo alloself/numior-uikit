@@ -1,4 +1,6 @@
 export { default as NuiTable } from './table/NuiTable.vue';
+export { tableEditor } from './table/table-editors';
+export type { NuiTableEditorOptions } from './table/table-editors';
 export type { NuiTableMessages } from './table/table.messages';
 export type {
   NuiTableCellSlot,
@@ -42,6 +44,11 @@ export type {
   NuiTableEdit,
   NuiTableEditEvent,
   NuiTableEditKind,
+  NuiTableEditor,
+  NuiTableControlEditor,
+  NuiTableColumnEditor,
+  NuiTableEditRefusal,
+  NuiTableEditRefusalReason,
   TableCellPosition,
 } from './table/table.types';
 export type {

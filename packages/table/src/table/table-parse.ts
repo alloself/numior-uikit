@@ -6,11 +6,7 @@ import {
   parseNumber,
 } from '@numior/primitives';
 import type { BooleanTexts } from './table-format';
-import type { NuiTableCellValue, NuiTableColumn } from './table.types';
-
-export type ParsedCell =
-  | { readonly kind: 'value'; readonly value: NuiTableCellValue }
-  | { readonly kind: 'invalid' };
+import type { NuiTableCellValue, NuiTableColumn, ParsedCell } from './table.types';
 
 const INVALID: ParsedCell = { kind: 'invalid' };
 const EMPTY: ParsedCell = { kind: 'value', value: null };

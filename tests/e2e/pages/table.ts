@@ -271,12 +271,22 @@ export class TableSection {
     return this.row(position).locator(`[aria-colindex="${col + 1}"]`);
   }
 
+  editor(): Locator {
+    return this.viewport.locator('.nui-table__editor');
+  }
+
   editorField(): Locator {
     return this.viewport.locator('.nui-table__editor input');
   }
 
   editorError(): Locator {
     return this.viewport.locator('.nui-table__error');
+  }
+
+  editorOption(label: string): Locator {
+    return this.viewport
+      .locator('.nui-table__editor')
+      .getByRole('option', { name: label, exact: true });
   }
 
   async tapCell(position: number, col: number, times = 1): Promise<void> {

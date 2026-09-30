@@ -2,7 +2,6 @@ import type { ComputedRef } from 'vue';
 import { parseTsv } from './table-clipboard';
 import { createCommandStack } from './table-commands';
 import { instantOf } from './table-format';
-import type { ParsedCell } from './table-parse';
 import { planPaste, type PasteCell } from './table-paste';
 import { boxOf, type RangeBounds, type RangeBox } from './table-ranges';
 import type { NuiTableMessages } from './table.messages';
@@ -11,6 +10,7 @@ import type {
   NuiTableEdit,
   NuiTableEditEvent,
   NuiTableRanges,
+  ParsedCell,
   TableCellPosition,
 } from './table.types';
 

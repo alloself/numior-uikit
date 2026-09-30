@@ -246,6 +246,7 @@ import { formRulesMessages } from '@numior/forms';
 import {
   createIntent,
   useControlId,
+  useControls,
   useDirection,
   useLocale,
   useMessages,
@@ -299,6 +300,7 @@ import { useTableContextMenu } from './use-table-context-menu';
 import { useTableCellEditor } from './use-table-cell-editor';
 import { useTableEditing } from './use-table-editing';
 import { useTableExport } from './use-table-export';
+import { editorPlan } from './table-editors';
 import { parseCell } from './table-parse';
 import { ruleFailure } from './table-rules';
 import { useTableRanges } from './use-table-ranges';
@@ -392,6 +394,7 @@ const {
   cellSelection = true,
   contextMenu = undefined,
   copyLimit = COPY_LIMIT,
+  controls,
 } = defineProps<NuiTableProps<T>>();
 
 const sort = defineModel<NuiTableSort>('sort', { default: () => [] });
@@ -1139,6 +1142,7 @@ const resolveRow = (row: T): T | undefined =>
   getKey === undefined || rowByKey.value === undefined ? row : rowByKey.value.get(getKey(row));
 
 const ruleTexts = useMessages(formRulesMessages, resolvedLocale);
+const kitControls = useControls();
 
 const editOn = computed(() => cellSelection && !loading && canEdit.value);
 
@@ -1195,12 +1199,23 @@ const cellEditor = useTableCellEditor<T>({
   cell: activeData,
   rowAt: rowAtPosition,
   keyAt: (col) => dataKeys.value[col],
-  columnAt,
+  labelOf: (key) => columnAt(key).label,
   editable: editableOf,
   valueOf: (row, key) => cellValueOf(columnAt(key), row),
+  plan: (row, key) =>
+    editorPlan(
+      columnAt(key),
+      cellValueOf(columnAt(key), row),
+      controls ?? kitControls,
+      resolvedLocale.value,
+    ),
   check: checkCell,
+  invalid: () => ruleTexts.value.invalid,
   save: (row, key, value) => {
     editing.commitCell(row, key, value);
+  },
+  refuse: (row, key, reason) => {
+    emit('editRefused', { row, key, reason });
   },
   bounds: () => ({ rows: visibleRows.value, cols: dataKeys.value.length }),
   locate: (target) => rangeSelect.cellAt(target),
@@ -1210,7 +1225,6 @@ const cellEditor = useTableCellEditor<T>({
       col: position.col + dataOffset.value,
     });
   },
-  locale: () => resolvedLocale.value,
   resetOn: [
     sort,
     filters,

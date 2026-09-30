@@ -7,14 +7,14 @@ import {
   type ShallowRef,
   type WatchSource,
 } from 'vue';
-import { builtinEditor } from './table-editors';
 import type { RangeBounds } from './table-ranges';
 import type { NuiTableMessages } from './table.messages';
 import type {
   NuiTableCellValue,
-  NuiTableColumn,
+  NuiTableEditRefusalReason,
   TableCellPosition,
   TableEditorMove,
+  TableEditorPlan,
   TableEditSession,
 } from './table.types';
 
@@ -23,15 +23,17 @@ export interface TableCellEditorOptions<T> {
   readonly cell: () => TableCellPosition | undefined;
   readonly rowAt: (position: number) => T | undefined;
   readonly keyAt: (col: number) => string | undefined;
-  readonly columnAt: (key: string) => NuiTableColumn<T>;
+  readonly labelOf: (key: string) => string;
   readonly editable: (row: T, key: string) => boolean;
   readonly valueOf: (row: T, key: string) => NuiTableCellValue;
+  readonly plan: (row: T, key: string) => TableEditorPlan;
   readonly check: (row: T, key: string, value: NuiTableCellValue) => string | undefined;
+  readonly invalid: () => string;
   readonly save: (row: T, key: string, value: NuiTableCellValue) => void;
+  readonly refuse: (row: T, key: string, reason: NuiTableEditRefusalReason) => void;
   readonly bounds: () => RangeBounds;
   readonly locate: (target: EventTarget | null) => TableCellPosition | undefined;
   readonly focus: (position: TableCellPosition) => void;
-  readonly locale: () => string;
   readonly resetOn: WatchSource[];
   readonly messages: ComputedRef<NuiTableMessages>;
   readonly announce: (text: string) => void;
@@ -54,6 +56,11 @@ interface TableTap {
   readonly time: number;
   readonly row: number;
   readonly col: number;
+}
+
+interface TableEditOutcome {
+  readonly value: NuiTableCellValue;
+  readonly failure: string | undefined;
 }
 
 const DOUBLE_TAP = 300;
@@ -88,6 +95,7 @@ const stepOf = (
       return { row: from.row, col: Math.min(from.col + 1, bounds.cols - 1) };
     case 'previous':
       return { row: from.row, col: Math.max(from.col - 1, 0) };
+    case 'stay':
     case 'blur':
       return from;
   }
@@ -139,18 +147,29 @@ export const useTableCellEditor = <T>(options: TableCellEditorOptions<T>): Table
     if (row === undefined || key === undefined || !options.editable(row, key)) {
       return false;
     }
-    const column = options.columnAt(key);
+    const plan = options.plan(row, key);
 
-    if (column.type === 'boolean') {
-      return typed === undefined && toggle(row, key);
+    switch (plan.kind) {
+      case 'toggle':
+        return typed === undefined && toggle(row, key);
+      case 'refused':
+        options.refuse(row, key, plan.reason);
+        return false;
+      case 'editor':
+        session.value = { position, row, key, label: options.labelOf(key), spec: plan.spec, typed };
+        draft.value = plan.spec.toControl(options.valueOf(row, key));
+        error.value = undefined;
+        strict = false;
+        return true;
     }
-    const spec = builtinEditor(column, options.locale());
+  };
 
-    session.value = { position, row, key, label: column.label, spec, typed };
-    draft.value = spec.toControl(options.valueOf(row, key));
-    error.value = undefined;
-    strict = false;
-    return true;
+  const outcomeOf = (current: TableEditSession<T>, control: unknown): TableEditOutcome => {
+    const parsed = current.spec.fromControl(control);
+
+    return parsed.kind === 'invalid'
+      ? { value: null, failure: options.invalid() }
+      : { value: parsed.value, failure: options.check(current.row, current.key, parsed.value) };
   };
 
   const commit = (move: TableEditorMove): boolean => {
@@ -159,8 +178,7 @@ export const useTableCellEditor = <T>(options: TableCellEditorOptions<T>): Table
     if (current === undefined) {
       return true;
     }
-    const value = current.spec.fromControl(draft.value);
-    const failure = options.check(current.row, current.key, value);
+    const { value, failure } = outcomeOf(current, draft.value);
 
     if (failure !== undefined && move !== 'blur') {
       error.value = failure;
@@ -196,7 +214,7 @@ export const useTableCellEditor = <T>(options: TableCellEditorOptions<T>): Table
     draft.value = value;
 
     if (current !== undefined && strict) {
-      error.value = options.check(current.row, current.key, current.spec.fromControl(value));
+      error.value = outcomeOf(current, value).failure;
     }
   };
 

@@ -1,5 +1,6 @@
 import type { Component } from 'vue';
 import type { FieldRule } from '@numior/forms';
+import type { Guard, NuiControlRegistry } from '@numior/primitives';
 import type { NuiMenuEntry, NuiPaginationProps } from '@numior/vue';
 import type {
   TableAggregate,
@@ -51,10 +52,26 @@ interface NuiTableColumnBase {
   readonly flex?: number | undefined;
 }
 
-interface NuiTableColumnEditing<T, V> {
+export interface NuiTableEditor<V> {
+  readonly kind: 'component';
+  readonly component: Component;
+  readonly model: string;
+  readonly accepts: Guard<V>;
+  readonly props: Readonly<Record<string, unknown>>;
+}
+
+export interface NuiTableControlEditor {
+  readonly control: string;
+  readonly props?: Readonly<Record<string, unknown>> | undefined;
+}
+
+export type NuiTableColumnEditor<V> = NuiTableEditor<V> | NuiTableControlEditor | string;
+
+interface NuiTableColumnEditing<T, V, E = V> {
   readonly editable?: boolean | ((row: T) => boolean) | undefined;
   readonly parse?: ((text: string, row: T) => V | null | undefined) | undefined;
   readonly rules?: readonly FieldRule<V | null, T>[] | undefined;
+  readonly editor?: NuiTableColumnEditor<E> | undefined;
 }
 
 export interface NuiTableTextColumn<T>
@@ -74,7 +91,7 @@ export interface NuiTableNumberColumn<T>
 }
 
 export interface NuiTableDateColumn<T>
-  extends NuiTableColumnBase, NuiTableColumnEditing<T, Date | number> {
+  extends NuiTableColumnBase, NuiTableColumnEditing<T, Date | number, string> {
   readonly type: 'date';
   readonly value: (row: T) => Date | number | null | undefined;
   readonly format?: ((value: Date, row: T | undefined) => string) | undefined;
@@ -139,6 +156,7 @@ export interface NuiTableProps<T> {
   cellSelection?: boolean | undefined;
   contextMenu?: NuiTableContextMenu<T> | false | undefined;
   copyLimit?: number | undefined;
+  controls?: NuiControlRegistry | undefined;
 }
 
 export interface NuiTableReorderEvent<T> {
@@ -195,15 +213,32 @@ export interface NuiTableEditEvent<T> {
   readonly changes: readonly NuiTableEdit<T>[];
 }
 
-export type TableEditorMove = 'down' | 'up' | 'next' | 'previous' | 'blur';
+export type NuiTableEditRefusalReason = 'control' | 'props' | 'value';
+
+export interface NuiTableEditRefusal<T> {
+  readonly row: T;
+  readonly key: string;
+  readonly reason: NuiTableEditRefusalReason;
+}
+
+export type TableEditorMove = 'down' | 'up' | 'next' | 'previous' | 'stay' | 'blur';
+
+export type ParsedCell =
+  | { readonly kind: 'value'; readonly value: NuiTableCellValue }
+  | { readonly kind: 'invalid' };
 
 export interface TableCellEditorSpec {
   readonly component: Component;
   readonly model: string;
   readonly props: Readonly<Record<string, unknown>>;
   readonly toControl: (value: NuiTableCellValue) => unknown;
-  readonly fromControl: (value: unknown) => NuiTableCellValue;
+  readonly fromControl: (value: unknown) => ParsedCell;
 }
+
+export type TableEditorPlan =
+  | { readonly kind: 'editor'; readonly spec: TableCellEditorSpec }
+  | { readonly kind: 'toggle' }
+  | { readonly kind: 'refused'; readonly reason: NuiTableEditRefusalReason };
 
 export interface TableEditSession<T> {
   readonly position: TableCellPosition;
@@ -279,6 +314,7 @@ export interface NuiTableEvents<T> {
   rowClick: [row: T, event: MouseEvent];
   reorder: [event: NuiTableReorderEvent<T>];
   edit: [event: NuiTableEditEvent<T>];
+  editRefused: [event: NuiTableEditRefusal<T>];
 }
 
 export type NuiTableSort = readonly TableSort[];

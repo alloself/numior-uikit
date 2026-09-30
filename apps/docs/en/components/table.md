@@ -112,6 +112,21 @@ On a phone a double tap opens the editor. Pinned rows and group rows are not edi
 
 <Example name="table/Edits" />
 
+### Custom editors
+
+A column takes its own editor from `editor`. The `tableEditor(NuiSelect, isString, { props })`
+helper checks the props against the component types. A [control registry](/en/composables/controls)
+key such as `'select'` or `{ control, props }` is checked when the editor opens.
+
+The registry comes from `createNuiConfig({ controls })` or from the `controls` prop of the table. A
+list opens at once, and a picked value is saved without Enter. A date column passes and receives an
+ISO string, like `NuiDatePicker`.
+
+When the props or the value do not fit the control, or the registry lacks it, the cell stays closed.
+The table then sends the `editRefused` event.
+
+<Example name="table/Editors" />
+
 ### Export to CSV
 
 The `exportCsv` method of the table ref builds CSV from the rows after filters and sorting, from

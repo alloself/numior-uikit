@@ -6,6 +6,7 @@
     @keydown="onKeydown"
     @focusout="onFocusout"
     @mousedown="onMousedown"
+    @beforetoggle.capture="onBeforetoggle"
   >
     <component
       :is="spec.component"
@@ -37,6 +38,7 @@ import type { NuiTableCellEditorProps, TableEditorMove } from './table.types';
 
 const FOCUSABLE = 'input, textarea, select, button, [tabindex]';
 const PINNED = '.nui-table__cell--pin-start, .nui-table__cell--pin-end';
+const ERROR = '.nui-table__error';
 
 const { spec, value, label, errorId, error, typed, commit, cancel } =
   defineProps<NuiTableCellEditorProps>();
@@ -48,16 +50,9 @@ const root = useTemplateRef<HTMLElement>('root');
 const control = useTemplateRef<{ focus?: () => void }>('control');
 const message = ref(error ?? '');
 let settled = false;
+let popup = false;
 
 const invalid = computed(() => error !== undefined);
-
-const bound = computed(() => ({
-  ...spec.props,
-  [spec.model]: value,
-  [`onUpdate:${spec.model}`]: (next: unknown) => {
-    emit('update', next);
-  },
-}));
 
 const keepOpen = (): void => undefined;
 
@@ -68,8 +63,23 @@ const finish = (move: TableEditorMove): void => {
   }
 };
 
+const bound = computed(() => ({
+  ...spec.props,
+  [spec.model]: value,
+  [`onUpdate:${spec.model}`]: (next: unknown) => {
+    emit('update', next);
+
+    if (popup) {
+      finish('stay');
+    }
+  },
+}));
+
+const breaksLine = (event: KeyboardEvent): boolean =>
+  event.key === 'Enter' && event.shiftKey && event.target instanceof HTMLTextAreaElement;
+
 const moveOf = (event: KeyboardEvent): TableEditorMove | undefined => {
-  if (event.altKey || event.ctrlKey || event.metaKey) {
+  if (event.altKey || event.ctrlKey || event.metaKey || breaksLine(event)) {
     return undefined;
   }
   switch (event.key) {
@@ -112,6 +122,30 @@ const onFocusout = (event: FocusEvent): void => {
       finish('blur');
     }
   });
+};
+
+const onBeforetoggle = (event: Event): void => {
+  if (
+    !('newState' in event) ||
+    (event.target instanceof Element && event.target.closest(ERROR) !== null)
+  ) {
+    return;
+  }
+  popup = event.newState === 'open';
+};
+
+const unfold = (): void => {
+  const trigger = document.activeElement;
+
+  if (
+    trigger instanceof HTMLButtonElement &&
+    trigger.hasAttribute('aria-haspopup') &&
+    trigger.getAttribute('aria-expanded') !== 'true'
+  ) {
+    trigger.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true, cancelable: true }),
+    );
+  }
 };
 
 const onMousedown = (event: MouseEvent): void => {
@@ -194,14 +228,16 @@ onMounted(() => {
     root.value?.querySelector<HTMLElement>(FOCUSABLE)?.focus();
   }
   reveal();
+  unfold();
 
   const field = fieldOf();
 
-  if (field !== undefined && typed !== undefined) {
+  if (field === undefined || field.selectionStart === null) {
+    return;
+  }
+  if (typed !== undefined) {
     typeInto(field, typed);
   }
-  if (field !== undefined && field.selectionStart !== null) {
-    field.setSelectionRange(field.value.length, field.value.length);
-  }
+  field.setSelectionRange(field.value.length, field.value.length);
 });
 </script>

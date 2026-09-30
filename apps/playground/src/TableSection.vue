@@ -117,6 +117,7 @@
       :pagination="paged ? PAGINATION : false"
       :get-key="(row) => row.id"
       :context-menu="orderMenu"
+      :controls="kitControls"
       @edit="onOrderEdit"
       label="Заказы"
       height="26rem"
@@ -164,8 +165,10 @@ import {
   type NuiOption,
   type NuiTone,
 } from '@numior/vue';
+import { kitControls } from '@numior/vue/controls';
 import {
   NuiTable,
+  tableEditor,
   type TableNodeId,
   type TableSort,
   type NuiTableFilters,
@@ -204,6 +207,10 @@ const LAST_NAMES = ['Смирнова', 'Иванов', 'Кузнецова', '�
 const CITIES = ['Москва', 'Казань', 'Ереван', 'Алматы', 'Белград', 'Тбилиси', 'Минск'];
 const COUNTRIES = ['Россия', 'Армения', 'Казахстан', 'Сербия', 'Грузия', 'Беларусь'];
 const MANAGERS = ['Вера Орлова', 'Олег Титов', 'Нина Белова', 'Игорь Зуев'];
+const isText = (value: unknown): value is string => typeof value === 'string';
+const optionOf = (value: string): NuiOption<string> => ({ value, label: value });
+const COUNTRY_OPTIONS = COUNTRIES.map(optionOf);
+const MANAGER_OPTIONS = MANAGERS.map(optionOf);
 const STATUSES: readonly OrderStatus[] = ['new', 'paid', 'shipped', 'returned'];
 
 const STATUS_LABELS: Readonly<Record<OrderStatus, string>> = {
@@ -451,6 +458,7 @@ const columns: NuiTableColumnDef<Order>[] = [
         width: 140,
         filter: 'set',
         editable: true,
+        editor: tableEditor(NuiSelect, isText, { props: { options: COUNTRY_OPTIONS } }),
         value: (row) => row.country,
       },
     ],
@@ -492,6 +500,7 @@ const columns: NuiTableColumnDef<Order>[] = [
         width: 180,
         filter: 'set',
         editable: true,
+        editor: { control: 'select', props: { options: MANAGER_OPTIONS } },
         value: (row) => row.manager,
       },
       {

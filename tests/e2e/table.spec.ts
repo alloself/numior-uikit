@@ -400,6 +400,43 @@ test.describe('table', () => {
     expect(await table.focusedCell()).toEqual({ row: 6, col: 1 });
   });
 
+  test('edits cells in list editors from a typed helper and the control registry', async ({
+    page,
+    isMobile,
+  }) => {
+    test.skip(isMobile, 'keyboard editing on desktop');
+    const playground = new PlaygroundPage(page);
+    const { table } = playground;
+    await playground.open();
+    await table.root.scrollIntoViewIfNeeded();
+
+    await table.cell(1, 4).click();
+    await page.keyboard.press('Enter');
+    await expect(table.editorOption('Грузия')).toBeVisible();
+    await table.editorOption('Грузия').click();
+    await expect(table.editor()).toHaveCount(0);
+    await expect(table.cell(1, 4)).toHaveText('Грузия');
+    await expect(table.output).toContainText('"lastEdit":"edit:1"');
+    expect(await table.focusedCell()).toEqual({ row: 1, col: 4 });
+    await page.keyboard.press('ArrowDown');
+    await page.keyboard.press('F2');
+    await expect(table.editorOption('Россия')).toBeVisible();
+    await page.keyboard.press('Home');
+    await page.keyboard.press('Enter');
+    await expect(table.cell(2, 4)).toHaveText('Россия');
+    expect(await table.focusedCell()).toEqual({ row: 2, col: 4 });
+    await page.keyboard.press('ArrowDown');
+
+    for (const step of ['ArrowRight', 'ArrowRight', 'ArrowRight', 'ArrowRight']) {
+      await page.keyboard.press(step);
+    }
+    await page.keyboard.press('F2');
+    await table.editorOption('Нина Белова').click();
+    await expect(table.cell(3, 8)).toHaveText('Нина Белова');
+    await page.keyboard.press('ControlOrMeta+Z');
+    await expect(table.cell(3, 8)).not.toHaveText('Нина Белова');
+  });
+
   test('opens a cell editor with a double tap on a phone and commits it on a tap elsewhere', async ({
     page,
     isMobile,
