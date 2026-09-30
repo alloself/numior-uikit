@@ -210,7 +210,8 @@ status: accepted
 - Дерево на каркасе списка (2026-09-30, интервью). Пользователь читает дерево как «список,
   который умеет показывать дерево», а `div`-узлы рядом с `ul`/`li` списка — как задвоение.
   `NuiTree` рендерит корень `div.nui-list.nui-tree` с `nui-list--variant-*`
-  (`plain | divided | bordered`, без `floating` до tree-select), внутри
+  (`plain | divided | bordered | floating`; `floating` — дерево в поповере `NuiSelect`, см.
+  @.archcore/pickers.adr.md), внутри
   `ul.nui-list__items[role="presentation"]` (тег `TransitionGroup`), а каждый узел —
   `NuiListItem` в режиме `treeitem`: `li.nui-list-item.nui-list-item--mode-treeitem` с
   `role="treeitem"`, `aria-level`/`setsize`/`posinset`/`expanded`/`checked`/`busy`/`current`,
@@ -293,8 +294,8 @@ status: accepted
   вопрос «почему отмеченный узел не выбран».
 - Промис-лоадер `load(item): Promise<children>` вместо события: `items` принадлежат
   приложению, дерево не вставляет детей само; отложено.
-- Вариант `floating` у дерева без tree-select: мёртвый API без хоста-поповера; отложено до
-  компонента выбора по дереву.
+- Отдельный компонент tree-select: у селекта выпадашка и так `NuiList` во `floating`, дерево
+  встало в тот же поповер (`NuiSelect` с вложенными `options`, 2026-09-30).
 - `useListNavigation` для дерева: DOM-сбор не видит невидимые строки, roving tabindex
   теряет фокус при размонтировании.
 - Фокусируемый `NuiCheckbox` внутри `treeitem`: второй tab stop и уход фокуса с корня по
