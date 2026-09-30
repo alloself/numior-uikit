@@ -153,6 +153,7 @@
 
 <script setup lang="ts">
 import { computed, ref, useTemplateRef } from 'vue';
+import { email, min, required } from '@numior/forms';
 import {
   NuiButton,
   NuiChip,
@@ -416,6 +417,7 @@ const columns: NuiTableColumnDef<Order>[] = [
         type: 'text',
         width: 200,
         editable: true,
+        rules: [required()],
         value: (row) => row.customer,
       },
       {
@@ -424,6 +426,7 @@ const columns: NuiTableColumnDef<Order>[] = [
         type: 'text',
         width: 240,
         editable: true,
+        rules: [email()],
         value: (row) => row.email,
       },
     ],
@@ -463,6 +466,7 @@ const columns: NuiTableColumnDef<Order>[] = [
         width: 130,
         aggregate: 'sum',
         editable: true,
+        rules: [min(0)],
         value: (row) => row.amount,
       },
       {

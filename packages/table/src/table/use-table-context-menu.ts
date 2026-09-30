@@ -45,6 +45,8 @@ export interface TableContextMenu {
 const DATA_CELL =
   ':is(.nui-table__pinned, .nui-table__body) > [role="row"]:not(.nui-table__row--group) > .nui-table__cell--data';
 
+const EDITOR = '.nui-table__editor';
+
 const TOUCH_GAP = 16;
 
 const isMenuKey = (event: KeyboardEvent): boolean =>
@@ -77,7 +79,9 @@ export const useTableContextMenu = <T>(options: TableContextMenuOptions<T>): Tab
   });
 
   const cellOf = (node: EventTarget | null): HTMLElement | null => {
-    const cell = node instanceof Element ? node.closest(DATA_CELL) : null;
+    const cell =
+      node instanceof Element && node.closest(EDITOR) === null ? node.closest(DATA_CELL) : null;
+
     return cell instanceof HTMLElement && options.viewport()?.contains(cell) === true ? cell : null;
   };
 

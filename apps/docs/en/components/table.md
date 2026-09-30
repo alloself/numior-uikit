@@ -99,6 +99,17 @@ selection. A single value fills the whole selection, a block repeats over a mult
 and cells past the table edge are dropped. Numbers, dates and booleans are read by the column type,
 and `parse` sets a reader of its own.
 
+Enter, F2 or a double click opens the editor in the active cell, and typing starts the edit with the
+first character. The editor follows the column type: a text input, a number field or a date picker,
+while a boolean cell toggles at once. Enter saves the value and moves down, Tab moves right, and
+Escape cancels the edit.
+
+The `rules` of [forms](/en/guide/forms-validation) check the value before it is saved. An error stays
+in the editor with a hint, and moving the focus away from a wrong value discards the edit. Paste and
+clear skip the cells that break the rules.
+
+On a phone a double tap opens the editor. Pinned rows and group rows are not edited.
+
 <Example name="table/Edits" />
 
 ### Export to CSV

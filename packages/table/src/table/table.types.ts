@@ -1,3 +1,5 @@
+import type { Component } from 'vue';
+import type { FieldRule } from '@numior/forms';
 import type { NuiMenuEntry, NuiPaginationProps } from '@numior/vue';
 import type {
   TableAggregate,
@@ -52,6 +54,7 @@ interface NuiTableColumnBase {
 interface NuiTableColumnEditing<T, V> {
   readonly editable?: boolean | ((row: T) => boolean) | undefined;
   readonly parse?: ((text: string, row: T) => V | null | undefined) | undefined;
+  readonly rules?: readonly FieldRule<V | null, T>[] | undefined;
 }
 
 export interface NuiTableTextColumn<T>
@@ -178,7 +181,7 @@ export interface NuiTableCsvOptions {
   readonly signal?: AbortSignal | undefined;
 }
 
-export type NuiTableEditKind = 'clear' | 'cut' | 'paste' | 'undo' | 'redo';
+export type NuiTableEditKind = 'edit' | 'clear' | 'cut' | 'paste' | 'undo' | 'redo';
 
 export interface NuiTableEdit<T> {
   readonly row: T;
@@ -190,6 +193,36 @@ export interface NuiTableEdit<T> {
 export interface NuiTableEditEvent<T> {
   readonly kind: NuiTableEditKind;
   readonly changes: readonly NuiTableEdit<T>[];
+}
+
+export type TableEditorMove = 'down' | 'up' | 'next' | 'previous' | 'blur';
+
+export interface TableCellEditorSpec {
+  readonly component: Component;
+  readonly model: string;
+  readonly props: Readonly<Record<string, unknown>>;
+  readonly toControl: (value: NuiTableCellValue) => unknown;
+  readonly fromControl: (value: unknown) => NuiTableCellValue;
+}
+
+export interface TableEditSession<T> {
+  readonly position: TableCellPosition;
+  readonly row: T;
+  readonly key: string;
+  readonly label: string;
+  readonly spec: TableCellEditorSpec;
+  readonly typed: string | undefined;
+}
+
+export interface NuiTableCellEditorProps {
+  spec: TableCellEditorSpec;
+  value: unknown;
+  label: string;
+  errorId: string;
+  error?: string | undefined;
+  typed?: string | undefined;
+  commit: (move: TableEditorMove) => boolean;
+  cancel: () => void;
 }
 
 export interface TableRangeSegment {

@@ -4,8 +4,8 @@ const docs: DocsMap = {
   NuiTable: {
     props: {
       columns: {
-        ru: 'Колонки: key, label, type (text, number, date, boolean), value, format, width, minWidth, maxWidth, resizable, reorderable, pin, align, sortable, filter, hideable, wrap, flex, aggregate, editable и parse. hideable: false не даёт скрыть колонку из меню; resizable: false убирает ручку ширины и клавиши Alt+стрелки, reorderable: false — ручку перетаскивания и Alt+Shift+стрелки, minWidth и maxWidth ограничивают ширину при перетаскивании; wrap: true переносит текст ячейки, а без height строка растёт по нему; flex делит свободную ширину области прокрутки между колонками пропорционально, пока колонку не растянули вручную. filter выбирает вид фильтра (text, number, date, set) или выключает его значением false. aggregate считает значение для строк групп и строки итогов: у числовой колонки sum, count, avg, min, max или функция, у даты min, max, count или функция, у текстовой и булевой count или функция. Вне строки, например в группе или списке значений фильтра, format получает строку как undefined. Группа { key, label, children } рисует над заголовками своих колонок полосу с подписью. editable (true или функция строки) разрешает очищать, вырезать и вставлять ячейки колонки, а правки приходят событием edit. parse(text, row) переводит вставленный текст в значение колонки и отклоняет ячейку ответом undefined; без него число, дата и булево значение разбираются по типу колонки.',
-        en: 'Columns: key, label, type (text, number, date, boolean), value, format, width, minWidth, maxWidth, resizable, reorderable, pin, align, sortable, filter, hideable, wrap, flex, aggregate, editable and parse. hideable: false keeps the column out of reach of the menu hide; resizable: false drops the width handle and the Alt+arrow keys, reorderable: false the drag grip and the Alt+Shift+arrow keys, minWidth and maxWidth bound the width while dragging; wrap: true wraps the cell text, and without height the row grows with it; flex shares the free width of the scroll area between columns in proportion until the column is resized by hand. filter picks the filter kind (text, number, date, set) or turns it off with false. aggregate fills group rows and the totals row: a number column takes sum, count, avg, min, max or a function, a date column min, max, count or a function, a text or boolean column count or a function. Outside a row, such as a group or the filter value list, format receives the row as undefined. A group { key, label, children } draws a labelled band above the headers of its columns. editable (true or a function of the row) lets the cells of the column be cleared, cut and pasted, and the changes arrive in the edit event. parse(text, row) turns pasted text into the column value and refuses the cell by returning undefined; without it a number, a date or a boolean is read by the column type.',
+        ru: 'Колонки: key, label, type (text, number, date, boolean), value, format, width, minWidth, maxWidth, resizable, reorderable, pin, align, sortable, filter, hideable, wrap, flex, aggregate, editable, parse и rules. hideable: false не даёт скрыть колонку из меню; resizable: false убирает ручку ширины и клавиши Alt+стрелки, reorderable: false — ручку перетаскивания и Alt+Shift+стрелки, minWidth и maxWidth ограничивают ширину при перетаскивании; wrap: true переносит текст ячейки, а без height строка растёт по нему; flex делит свободную ширину области прокрутки между колонками пропорционально, пока колонку не растянули вручную. filter выбирает вид фильтра (text, number, date, set) или выключает его значением false. aggregate считает значение для строк групп и строки итогов: у числовой колонки sum, count, avg, min, max или функция, у даты min, max, count или функция, у текстовой и булевой count или функция. Вне строки, например в группе или списке значений фильтра, format получает строку как undefined. Группа { key, label, children } рисует над заголовками своих колонок полосу с подписью. editable (true или функция строки) открывает ячейки колонки для правки в редакторе, очистки, вырезания и вставки, а правки приходят событием edit. parse(text, row) переводит вставленный текст в значение колонки и отклоняет ячейку ответом undefined; без него число, дата и булево значение разбираются по типу колонки. rules — правила @numior/forms: они проверяют значение перед сохранением правки, вставкой и очисткой.',
+        en: 'Columns: key, label, type (text, number, date, boolean), value, format, width, minWidth, maxWidth, resizable, reorderable, pin, align, sortable, filter, hideable, wrap, flex, aggregate, editable, parse and rules. hideable: false keeps the column out of reach of the menu hide; resizable: false drops the width handle and the Alt+arrow keys, reorderable: false the drag grip and the Alt+Shift+arrow keys, minWidth and maxWidth bound the width while dragging; wrap: true wraps the cell text, and without height the row grows with it; flex shares the free width of the scroll area between columns in proportion until the column is resized by hand. filter picks the filter kind (text, number, date, set) or turns it off with false. aggregate fills group rows and the totals row: a number column takes sum, count, avg, min, max or a function, a date column min, max, count or a function, a text or boolean column count or a function. Outside a row, such as a group or the filter value list, format receives the row as undefined. A group { key, label, children } draws a labelled band above the headers of its columns. editable (true or a function of the row) opens the cells of the column to the editor, clearing, cutting and pasting, and the changes arrive in the edit event. parse(text, row) turns pasted text into the column value and refuses the cell by returning undefined; without it a number, a date or a boolean is read by the column type. rules are @numior/forms rules that check the value before an edit, a paste or a clear is saved.',
       },
       rows: {
         ru: 'Строки таблицы; она их не копирует и не меняет.',
@@ -120,8 +120,8 @@ const docs: DocsMap = {
         en: 'Function that labels a row in the ghost and the announcements; the text of the first text column by default, or of the first data column without one.',
       },
       cellSelection: {
-        ru: 'Выделение прямоугольников ячеек мышью и клавиатурой; по умолчанию включено, false оставляет обычное выделение текста.',
-        en: 'Selection of cell rectangles with the mouse and the keyboard; on by default, false keeps the plain text selection.',
+        ru: 'Выделение прямоугольников ячеек мышью и клавиатурой; по умолчанию включено, false оставляет обычное выделение текста и выключает правку ячеек.',
+        en: 'Selection of cell rectangles with the mouse and the keyboard; on by default, false keeps the plain text selection and turns cell editing off.',
       },
       contextMenu: {
         ru: 'Пункты контекстного меню ячейки: функция получает строку, колонку, значение, текст и диапазоны, её пункты идут после копирования. false оставляет меню браузера.',
@@ -212,8 +212,8 @@ const docs: DocsMap = {
         en: 'A row was moved: row, from as the index among the siblings of the old parent, to as the index among the siblings of the new toParent; undefined means the root, the consumer applies the order.',
       },
       edit: {
-        ru: 'Правка ячеек: kind (clear, cut, paste, undo, redo) и changes со строкой, ключом колонки, новым и прежним значением. Таблица строки не меняет, изменения применяет потребитель.',
-        en: 'An edit of cells: kind (clear, cut, paste, undo, redo) and changes with the row, the column key, the new and the previous value. The table never changes rows; the consumer applies the changes.',
+        ru: 'Правка ячеек: kind (edit, clear, cut, paste, undo, redo) и changes со строкой, ключом колонки, новым и прежним значением. Таблица строки не меняет, изменения применяет потребитель.',
+        en: 'An edit of cells: kind (edit, clear, cut, paste, undo, redo) and changes with the row, the column key, the new and the previous value. The table never changes rows; the consumer applies the changes.',
       },
     },
     slots: {
@@ -303,6 +303,34 @@ const docs: DocsMap = {
         description: {
           ru: 'Копирует диапазоны или активную ячейку как текст с табуляцией и HTML-таблицу.',
           en: 'Copies the ranges or the active cell as tab separated text and an HTML table.',
+        },
+      },
+      {
+        keys: 'Enter / F2',
+        description: {
+          ru: 'На изменяемой ячейке открывает редактор по типу колонки, а набор текста открывает его с первым символом; булеву ячейку переключает сразу.',
+          en: 'On an editable cell opens the editor of the column type, and typing opens it with the first character; a boolean cell toggles at once.',
+        },
+      },
+      {
+        keys: 'Enter / Shift+Enter',
+        description: {
+          ru: 'В редакторе сохраняет значение и переходит на строку ниже или выше; значение против правил остаётся в редакторе с ошибкой.',
+          en: 'In the editor saves the value and moves one row down or up; a value that breaks the rules stays in the editor with its error.',
+        },
+      },
+      {
+        keys: 'Tab / Shift+Tab',
+        description: {
+          ru: 'В редакторе сохраняет значение и переходит в следующую или предыдущую колонку.',
+          en: 'In the editor saves the value and moves to the next or the previous column.',
+        },
+      },
+      {
+        keys: 'Escape',
+        description: {
+          ru: 'В редакторе отменяет правку и возвращает фокус в ячейку.',
+          en: 'In the editor cancels the edit and returns focus to the cell.',
         },
       },
       {

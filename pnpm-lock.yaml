@@ -253,6 +253,9 @@ importers:
 
   packages/table:
     dependencies:
+      '@numior/forms':
+        specifier: workspace:*
+        version: link:../forms
       '@numior/primitives':
         specifier: workspace:*
         version: link:../primitives

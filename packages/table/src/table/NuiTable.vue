@@ -14,6 +14,9 @@
         @mousedown="rangeSelect.onMousedown"
         @contextmenu="cellMenu.onContextmenu"
         @paste="editing.onPaste"
+        @click="cellEditor.onClick"
+        @dblclick="cellEditor.onDblclick"
+        @pointerup="cellEditor.onPointerup"
       >
         <table
           :id="gridId"
@@ -239,6 +242,7 @@ import {
   type VNode,
 } from 'vue';
 import { onLongPress, useElementSize } from '@vueuse/core';
+import { formRulesMessages } from '@numior/forms';
 import {
   createIntent,
   useControlId,
@@ -264,6 +268,7 @@ import {
   type TableQuery,
   type TableNode,
 } from '../engine';
+import NuiTableCellEditor from './NuiTableCellEditor.vue';
 import NuiTableDragLayer from './NuiTableDragLayer.vue';
 import NuiTableRowGrip from './NuiTableRowGrip.vue';
 import NuiTableGroupCell from './NuiTableGroupCell.vue';
@@ -291,9 +296,11 @@ import NuiTableHeaderMarks from './NuiTableHeaderMarks.vue';
 import { useTableFocus } from './use-table-focus';
 import { useTableClipboard, type TableCopyCell } from './use-table-clipboard';
 import { useTableContextMenu } from './use-table-context-menu';
+import { useTableCellEditor } from './use-table-cell-editor';
 import { useTableEditing } from './use-table-editing';
 import { useTableExport } from './use-table-export';
 import { parseCell } from './table-parse';
+import { ruleFailure } from './table-rules';
 import { useTableRanges } from './use-table-ranges';
 import { pageRowsOf } from './table-keys';
 import { useTableExpansion } from './use-table-expansion';
@@ -327,6 +334,7 @@ import type {
   NuiTableColumn,
   NuiTableColumnOrder,
   NuiTableContextScope,
+  NuiTableCellValue,
   NuiTableRanges,
   NuiTableWidths,
   TableRowRanges,
@@ -344,7 +352,7 @@ const SKELETON_UTILITY: NuiTableUtilityCellProps = { control: 'skeleton' };
 const TEXT_SKELETON: NuiSkeletonProps = { shape: 'text', width: '100%' };
 
 const CLICK_GUARD =
-  '.nui-table__cell--select, .nui-table__row-grip, .nui-table__toggle, .nui-table__group';
+  '.nui-table__cell--select, .nui-table__row-grip, .nui-table__toggle, .nui-table__group, .nui-table__editor';
 
 const NEST_DELAY = 600;
 const COPY_LIMIT = 200_000;
@@ -1130,8 +1138,23 @@ const ownsCell = (element: Element | null): boolean =>
 const resolveRow = (row: T): T | undefined =>
   getKey === undefined || rowByKey.value === undefined ? row : rowByKey.value.get(getKey(row));
 
+const ruleTexts = useMessages(formRulesMessages, resolvedLocale);
+
+const editOn = computed(() => cellSelection && !loading && canEdit.value);
+
+const checkCell = (row: T, key: string, value: NuiTableCellValue): string | undefined => {
+  const column = columnAt(key);
+
+  return ruleFailure(column, value, {
+    name: key,
+    label: column.label,
+    values: row,
+    messages: ruleTexts.value,
+  });
+};
+
 const editing = useTableEditing<T>({
-  enabled: () => cellSelection && !loading && canEdit.value,
+  enabled: () => editOn.value,
   ranges: () => ranges.value,
   cell: activeData,
   rowAt: rowAtPosition,
@@ -1155,6 +1178,7 @@ const editing = useTableEditing<T>({
   },
   parse: (row, key, text) =>
     parseCell(columnAt(key), text, row, resolvedLocale.value, booleanTexts.value),
+  check: checkCell,
   bounds: () => ({ rows: visibleRows.value, cols: dataKeys.value.length }),
   select: (next) => {
     rangeSelect.replace(next);
@@ -1162,6 +1186,42 @@ const editing = useTableEditing<T>({
   readable: () => typeof clipboardOf()?.readText === 'function',
   read: readClipboard,
   owns: ownsCell,
+  messages,
+  announce,
+});
+
+const cellEditor = useTableCellEditor<T>({
+  enabled: () => editOn.value,
+  cell: activeData,
+  rowAt: rowAtPosition,
+  keyAt: (col) => dataKeys.value[col],
+  columnAt,
+  editable: editableOf,
+  valueOf: (row, key) => cellValueOf(columnAt(key), row),
+  check: checkCell,
+  save: (row, key, value) => {
+    editing.commitCell(row, key, value);
+  },
+  bounds: () => ({ rows: visibleRows.value, cols: dataKeys.value.length }),
+  locate: (target) => rangeSelect.cellAt(target),
+  focus: (position) => {
+    focus.focusCell({
+      row: position.row + pinnedCount.value,
+      col: position.col + dataOffset.value,
+    });
+  },
+  locale: () => resolvedLocale.value,
+  resetOn: [
+    sort,
+    filters,
+    quick,
+    groupBy,
+    expanded,
+    pageStart,
+    () => rows,
+    () => columns,
+    () => dataKeys.value.join('\u0000'),
+  ],
   messages,
   announce,
 });
@@ -1310,6 +1370,7 @@ const onKeydown = (event: KeyboardEvent): void => {
   if (
     cellMenu.onKeydown(event) ||
     clipboard.onKeydown(event) ||
+    cellEditor.onKeydown(event) ||
     editing.onKeydown(event) ||
     rangeSelect.onKeydown(event)
   ) {
@@ -1377,6 +1438,25 @@ const treeToggleOf = (item: TableBodyRow): VNode =>
     onToggle: () => expansion.toggle(item.index),
   });
 
+const editorOf = (position: number, column: string): VNode | undefined => {
+  const current = cellEditor.session.value;
+
+  if (current?.position.row !== position || current.key !== column) {
+    return undefined;
+  }
+  return h(NuiTableCellEditor, {
+    spec: current.spec,
+    value: cellEditor.draft.value,
+    label: current.label,
+    errorId: `${gridId.value}-error`,
+    error: cellEditor.error.value,
+    typed: current.typed,
+    commit: cellEditor.commit,
+    cancel: cellEditor.cancel,
+    onUpdate: cellEditor.input,
+  });
+};
+
 const CellContent = (props: TableCellContentProps<T>): VNode | VNode[] => {
   const { item, column } = props;
 
@@ -1387,13 +1467,16 @@ const CellContent = (props: TableCellContentProps<T>): VNode | VNode[] => {
     });
   }
   const row = props.row ?? rowAt(props.position);
+  const editor = item === undefined ? undefined : editorOf(props.position, column);
 
-  const content = renderSlot(
-    rawSlots,
-    `cell-${column}`,
-    { ...scopeOf(row, props.position, column, props.pinned === true) },
-    () => [h('span', { class: 'nui-table__text' }, textOf(row, column))],
-  );
+  const content =
+    editor ??
+    renderSlot(
+      rawSlots,
+      `cell-${column}`,
+      { ...scopeOf(row, props.position, column, props.pinned === true) },
+      () => [h('span', { class: 'nui-table__text' }, textOf(row, column))],
+    );
 
   const parts = [
     ...(item !== undefined && column === gripKey.value ? [gripOf(item)] : []),

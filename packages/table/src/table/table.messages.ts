@@ -88,12 +88,14 @@ export interface NuiTableMessages {
   readonly rangeSelected: (params: { readonly rows: number; readonly cols: number }) => string;
   readonly menuCut: string;
   readonly menuClear: string;
-  readonly cleared: (params: { readonly count: number }) => string;
-  readonly cutDone: (params: { readonly count: number }) => string;
+  readonly cleared: (params: { readonly count: number; readonly skipped: number }) => string;
+  readonly cutDone: (params: { readonly count: number; readonly skipped: number }) => string;
   readonly undone: (params: { readonly count: number }) => string;
   readonly redone: (params: { readonly count: number }) => string;
   readonly editLimit: (params: { readonly count: number; readonly limit: number }) => string;
   readonly readOnly: string;
+  readonly cellReadOnly: string;
+  readonly editDiscarded: (params: { readonly error: string }) => string;
   readonly menuPaste: string;
   readonly pasted: (params: { readonly count: number; readonly skipped: number }) => string;
   readonly pasteDenied: string;
@@ -181,10 +183,10 @@ export const tableMessages: NuiMessageCatalog<'table'> = {
       `Selected ${rows.toLocaleString('en-US')} ${plural('en', rows, { one: 'row', other: 'rows' })} and ${cols.toLocaleString('en-US')} ${plural('en', cols, { one: 'column', other: 'columns' })}`,
     menuCut: 'Cut',
     menuClear: 'Clear',
-    cleared: ({ count }) =>
-      `Cleared ${count.toLocaleString('en-US')} ${plural('en', count, { one: 'cell', other: 'cells' })}`,
-    cutDone: ({ count }) =>
-      `Cut ${count.toLocaleString('en-US')} ${plural('en', count, { one: 'cell', other: 'cells' })}`,
+    cleared: ({ count, skipped }) =>
+      `Cleared ${count.toLocaleString('en-US')} ${plural('en', count, { one: 'cell', other: 'cells' })}${skipped > 0 ? `, skipped ${skipped.toLocaleString('en-US')}` : ''}`,
+    cutDone: ({ count, skipped }) =>
+      `Cut ${count.toLocaleString('en-US')} ${plural('en', count, { one: 'cell', other: 'cells' })}${skipped > 0 ? `, skipped ${skipped.toLocaleString('en-US')}` : ''}`,
     undone: ({ count }) =>
       `Undid ${count.toLocaleString('en-US')} ${plural('en', count, { one: 'change', other: 'changes' })}`,
     redone: ({ count }) =>
@@ -192,6 +194,8 @@ export const tableMessages: NuiMessageCatalog<'table'> = {
     editLimit: ({ count, limit }) =>
       `Too many cells: ${count.toLocaleString('en-US')}, up to ${limit.toLocaleString('en-US')} change at once`,
     readOnly: 'These cells cannot be changed',
+    cellReadOnly: 'This cell cannot be changed',
+    editDiscarded: ({ error }) => `Edit discarded: ${error}`,
     menuPaste: 'Paste',
     pasted: ({ count, skipped }) =>
       `Pasted ${count.toLocaleString('en-US')} ${plural('en', count, { one: 'cell', other: 'cells' })}${skipped > 0 ? `, skipped ${skipped.toLocaleString('en-US')}` : ''}`,
@@ -279,10 +283,10 @@ export const tableMessages: NuiMessageCatalog<'table'> = {
       `Выделено строк: ${rows.toLocaleString('ru-RU')}, колонок: ${cols.toLocaleString('ru-RU')}`,
     menuCut: 'Вырезать',
     menuClear: 'Очистить',
-    cleared: ({ count }) =>
-      `${plural('ru', count, { one: 'Очищена', few: 'Очищены', many: 'Очищено', other: 'Очищено' })} ${count.toLocaleString('ru-RU')} ${plural('ru', count, { one: 'ячейка', few: 'ячейки', many: 'ячеек', other: 'ячейки' })}`,
-    cutDone: ({ count }) =>
-      `${plural('ru', count, { one: 'Вырезана', few: 'Вырезаны', many: 'Вырезано', other: 'Вырезано' })} ${count.toLocaleString('ru-RU')} ${plural('ru', count, { one: 'ячейка', few: 'ячейки', many: 'ячеек', other: 'ячейки' })}`,
+    cleared: ({ count, skipped }) =>
+      `${plural('ru', count, { one: 'Очищена', few: 'Очищены', many: 'Очищено', other: 'Очищено' })} ${count.toLocaleString('ru-RU')} ${plural('ru', count, { one: 'ячейка', few: 'ячейки', many: 'ячеек', other: 'ячейки' })}${skipped > 0 ? `, пропущено: ${skipped.toLocaleString('ru-RU')}` : ''}`,
+    cutDone: ({ count, skipped }) =>
+      `${plural('ru', count, { one: 'Вырезана', few: 'Вырезаны', many: 'Вырезано', other: 'Вырезано' })} ${count.toLocaleString('ru-RU')} ${plural('ru', count, { one: 'ячейка', few: 'ячейки', many: 'ячеек', other: 'ячейки' })}${skipped > 0 ? `, пропущено: ${skipped.toLocaleString('ru-RU')}` : ''}`,
     undone: ({ count }) =>
       `${plural('ru', count, { one: 'Отменено', few: 'Отменены', many: 'Отменено', other: 'Отменено' })} ${count.toLocaleString('ru-RU')} ${plural('ru', count, { one: 'изменение', few: 'изменения', many: 'изменений', other: 'изменения' })}`,
     redone: ({ count }) =>
@@ -290,6 +294,8 @@ export const tableMessages: NuiMessageCatalog<'table'> = {
     editLimit: ({ count, limit }) =>
       `Слишком много ячеек: ${count.toLocaleString('ru-RU')}, за раз можно изменить до ${limit.toLocaleString('ru-RU')}`,
     readOnly: 'Эти ячейки нельзя изменить',
+    cellReadOnly: 'Эту ячейку нельзя изменить',
+    editDiscarded: ({ error }) => `Правка отменена: ${error}`,
     menuPaste: 'Вставить',
     pasted: ({ count, skipped }) =>
       `${plural('ru', count, { one: 'Вставлена', few: 'Вставлены', many: 'Вставлено', other: 'Вставлено' })} ${count.toLocaleString('ru-RU')} ${plural('ru', count, { one: 'ячейка', few: 'ячейки', many: 'ячеек', other: 'ячейки' })}${skipped > 0 ? `, пропущено: ${skipped.toLocaleString('ru-RU')}` : ''}`,

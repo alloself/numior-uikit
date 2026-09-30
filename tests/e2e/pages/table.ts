@@ -271,6 +271,36 @@ export class TableSection {
     return this.row(position).locator(`[aria-colindex="${col + 1}"]`);
   }
 
+  editorField(): Locator {
+    return this.viewport.locator('.nui-table__editor input');
+  }
+
+  editorError(): Locator {
+    return this.viewport.locator('.nui-table__error');
+  }
+
+  async tapCell(position: number, col: number, times = 1): Promise<void> {
+    const cell = this.cell(position, col);
+
+    await cell.scrollIntoViewIfNeeded();
+
+    const point = await cell.evaluate((element) => {
+      const rect = element.getBoundingClientRect();
+      const y = rect.top + rect.height / 2;
+
+      for (let x = rect.left + 4; x < rect.right; x += 8) {
+        if (element.contains(document.elementFromPoint(x, y))) {
+          return { x, y };
+        }
+      }
+      return { x: rect.left + rect.width / 2, y };
+    });
+
+    for (let tap = 0; tap < times; tap += 1) {
+      await this.page.touchscreen.tap(point.x, point.y);
+    }
+  }
+
   cellMenuItem(label: string): Locator {
     return this.cellMenu.getByRole('menuitem', { name: label, exact: true });
   }

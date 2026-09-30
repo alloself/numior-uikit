@@ -284,15 +284,15 @@ test.describe('table', () => {
     await table.root.scrollIntoViewIfNeeded();
 
     const block = [
-      { row: 1, col: 1 },
-      { row: 1, col: 2 },
-      { row: 2, col: 1 },
-      { row: 2, col: 2 },
+      { row: 1, col: 3 },
+      { row: 1, col: 4 },
+      { row: 2, col: 3 },
+      { row: 2, col: 4 },
     ];
 
     const before = await table.cellTexts(block);
 
-    await table.dragRange({ row: 1, col: 1 }, { row: 2, col: 2 });
+    await table.dragRange({ row: 1, col: 3 }, { row: 2, col: 4 });
     await page.keyboard.press('Delete');
     await expect(table.output).toContainText('"lastEdit":"clear:4"');
     expect(await table.cellTexts(block)).toEqual(['', '', '', '']);
@@ -302,9 +302,9 @@ test.describe('table', () => {
     await page.keyboard.press('ControlOrMeta+Shift+Z');
     await expect(table.output).toContainText('"lastEdit":"redo:4"');
     expect(await table.cellTexts(block)).toEqual(['', '', '', '']);
-    await table.cell(3, 1).click();
+    await table.cell(3, 3).click();
 
-    const cut = await table.cellTexts([{ row: 3, col: 1 }]);
+    const cut = await table.cellTexts([{ row: 3, col: 3 }]);
 
     await page.keyboard.press('ControlOrMeta+X');
     await expect.poll(() => table.copiedTexts()).toEqual(cut);
@@ -345,6 +345,78 @@ test.describe('table', () => {
 
     await page.keyboard.press('ControlOrMeta+Z');
     await expect.poll(() => table.cellTexts(block)).toEqual(before);
+  });
+
+  test('edits cells in place, checks the column rules and undoes an edit', async ({
+    page,
+    isMobile,
+  }) => {
+    test.skip(isMobile, 'keyboard editing on desktop');
+    const playground = new PlaygroundPage(page);
+    const { table } = playground;
+    await playground.open();
+    await table.root.scrollIntoViewIfNeeded();
+
+    await table.cell(1, 3).click();
+    await page.keyboard.press('Enter');
+    await expect(table.editorField()).toBeFocused();
+    await table.editorField().fill('Самара');
+    await page.keyboard.press('Enter');
+    await expect(table.output).toContainText('"lastEdit":"edit:1"');
+    await expect(table.cell(1, 3)).toHaveText('Самара');
+    expect(await table.focusedCell()).toEqual({ row: 2, col: 3 });
+    await page.keyboard.type('Tula');
+    await expect(table.editorField()).toHaveValue('Tula');
+    await page.keyboard.press('Tab');
+    await expect(table.cell(2, 3)).toHaveText('Tula');
+    expect(await table.focusedCell()).toEqual({ row: 2, col: 4 });
+    await page.keyboard.press('ArrowRight');
+    await page.keyboard.press('F2');
+    await table.editorField().fill('-5');
+    await page.keyboard.press('Enter');
+    await expect(table.editorError()).toHaveText('Введите число не меньше 0');
+    await expect(table.editorField()).toHaveAttribute('aria-invalid', 'true');
+    await table.editorField().fill('250');
+    await page.keyboard.press('Enter');
+    await expect(table.editorError()).toHaveCount(0);
+    await expect(table.cell(2, 5)).toHaveText('250');
+    await page.keyboard.press('ArrowRight');
+    await page.keyboard.press('F2');
+    await table.editorField().fill('15.03.2026');
+    await page.keyboard.press('Enter');
+    await expect(table.cell(3, 6)).toHaveText('15 мар. 2026 г.');
+    await page.keyboard.press('ArrowRight');
+
+    const [vip = ''] = await table.cellTexts([{ row: 4, col: 7 }]);
+
+    await page.keyboard.press('Enter');
+    await expect(table.cell(4, 7)).not.toHaveText(vip);
+    await page.keyboard.press('ControlOrMeta+Z');
+    await expect(table.cell(4, 7)).toHaveText(vip);
+    await table.cell(6, 1).dblclick();
+    await table.editorField().fill('');
+    await page.keyboard.press('Escape');
+    await expect(table.editorField()).toHaveCount(0);
+    expect(await table.focusedCell()).toEqual({ row: 6, col: 1 });
+  });
+
+  test('opens a cell editor with a double tap on a phone and commits it on a tap elsewhere', async ({
+    page,
+    isMobile,
+  }) => {
+    test.skip(!isMobile, 'double tap on touch screens');
+    const playground = new PlaygroundPage(page);
+    const { table } = playground;
+    await playground.open();
+    await table.root.scrollIntoViewIfNeeded();
+
+    await table.tapCell(1, 1, 2);
+    await expect(table.editorField()).toBeFocused();
+    await table.editorField().fill('Иван Петров');
+    await table.tapCell(4, 1);
+    await expect(table.editorField()).toHaveCount(0);
+    await expect(table.cell(1, 1)).toHaveText('Иван Петров');
+    await expect(table.output).toContainText('"lastEdit":"edit:1"');
   });
 
   test('exports the filtered rows as CSV with the shown texts', async ({ page, isMobile }) => {

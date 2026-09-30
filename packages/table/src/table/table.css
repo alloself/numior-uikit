@@ -83,6 +83,7 @@
   scroll-padding-inline: var(--_start) var(--_end);
   scrollbar-width: thin;
   outline: none;
+  touch-action: manipulation;
 }
 .nui-table__grid {
   table-layout: fixed;
@@ -210,6 +211,27 @@
 }
 .nui-table__cell--select .nui-table__content {
   padding-inline: 0;
+}
+.nui-table__editor {
+  --nui-control-height-sm: calc(var(--_row) - var(--nui-space-2));
+  --nui-field-padding-sm: calc(var(--_pad-x) - var(--nui-space-1) - 1px);
+  --nui-control-font-size-sm: var(--_font-size);
+  --nui-focus-ring-width: 1px;
+  --nui-focus-ring-offset: 0px;
+
+  box-sizing: border-box;
+  flex: 1 1 auto;
+  min-inline-size: 0;
+  margin-inline: calc(var(--nui-space-1) - var(--_pad-x));
+}
+.nui-table__editor:not(:first-child) {
+  margin-inline-start: calc(-1px - var(--nui-field-padding-sm));
+}
+.nui-table__editor :is(input, textarea) {
+  text-align: inherit;
+}
+.nui-table__editor .nui-button {
+  --nui-control-height-sm: calc(var(--_row) - var(--nui-space-2) - 2px);
 }
 .nui-table__cell--select .nui-checkbox {
   display: inline-flex;

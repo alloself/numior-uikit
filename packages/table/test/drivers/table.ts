@@ -875,6 +875,88 @@ export class TableDriver<T> {
     await nextTick();
   }
 
+  private get editorElement(): HTMLElement | null {
+    return this.element.querySelector<HTMLElement>('.nui-table__editor');
+  }
+
+  private get editorField(): HTMLInputElement | null {
+    return this.editorElement?.querySelector<HTMLInputElement>('input') ?? null;
+  }
+
+  get editing(): CellPosition | undefined {
+    return positionOf(
+      this.editorElement?.closest('.nui-table__cell') ?? null,
+      headRowsOf(this.element),
+    );
+  }
+
+  get editorValue(): string | undefined {
+    return this.editorField?.value;
+  }
+
+  get editorLabel(): string | undefined {
+    return this.editorField?.getAttribute('aria-label') ?? undefined;
+  }
+
+  get editorFocused(): boolean {
+    return this.editorElement?.contains(document.activeElement) === true;
+  }
+
+  get editorError(): string | undefined {
+    const id =
+      this.editorField?.getAttribute('aria-invalid') === 'true'
+        ? this.editorField.getAttribute('aria-errormessage')
+        : null;
+
+    return id === null ? undefined : document.getElementById(id)?.textContent?.trim();
+  }
+
+  async typeInEditor(text: string): Promise<void> {
+    const field = this.editorField;
+
+    if (field !== null) {
+      field.value = text;
+      field.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+    await nextTick();
+  }
+
+  async clickEditor(): Promise<void> {
+    const field = this.editorField;
+
+    field?.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, button: 0 }));
+    field?.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, button: 0 }));
+    field?.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, button: 0 }));
+    field?.dispatchEvent(new MouseEvent('click', { bubbles: true, button: 0 }));
+    await nextTick();
+  }
+
+  async doubleClickCell(position: number, col: number): Promise<void> {
+    this.layoutBody();
+    const point = this.pointAt(position, col);
+    const cell = this.cell(position, col);
+
+    this.pressDown(cell, point, {});
+    window.dispatchEvent(new PointerEvent('pointerup', pointerInit(point, {})));
+    cell?.dispatchEvent(new MouseEvent('click', pointerInit(point, {})));
+    cell?.dispatchEvent(new MouseEvent('dblclick', { ...pointerInit(point, {}), detail: 2 }));
+    await nextTick();
+  }
+
+  async doubleTapCell(position: number, col: number): Promise<void> {
+    this.layoutBody();
+    const cell = this.cell(position, col);
+    const tap = { ...pointerInit(this.pointAt(position, col), {}), pointerType: 'touch' };
+
+    cell?.focus();
+
+    for (const detail of [1, 2]) {
+      cell?.dispatchEvent(new PointerEvent('pointerup', tap));
+      cell?.dispatchEvent(new MouseEvent('click', { ...tap, detail }));
+    }
+    await nextTick();
+  }
+
   get dropMark(): DropMark | undefined {
     const box = this.wrapper.find<HTMLElement>('.nui-table__drop--box');
 

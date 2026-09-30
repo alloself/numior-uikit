@@ -22,6 +22,7 @@
 
 <script setup lang="ts">
 import { ref, useTemplateRef } from 'vue';
+import { min, required } from '@numior/forms';
 import { NuiButton } from '@numior/vue';
 import {
   NuiTable,
@@ -67,6 +68,7 @@ const columns: NuiTableColumn<Order>[] = [
     width: 160,
     flex: 1,
     editable: true,
+    rules: [required()],
     value: (row) => row.customer,
   },
   {
@@ -83,6 +85,7 @@ const columns: NuiTableColumn<Order>[] = [
     type: 'number',
     width: 120,
     editable: true,
+    rules: [min(0)],
     aggregate: 'sum',
     value: (row) => row.total,
     format: (value) => money.format(value),

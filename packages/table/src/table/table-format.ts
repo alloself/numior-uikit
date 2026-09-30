@@ -27,6 +27,13 @@ const dateFormatFor = (locale: string): Intl.DateTimeFormat => {
   return created;
 };
 
+export const instantOf = (value: NuiTableCellValue): number => {
+  if (value instanceof Date) {
+    return value.getTime();
+  }
+  return typeof value === 'number' ? value : Number.NaN;
+};
+
 const dateOf = (value: NuiTableCellValue): Date | null => {
   if (!(value instanceof Date) && typeof value !== 'number') {
     return null;

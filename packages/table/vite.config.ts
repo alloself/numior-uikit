@@ -19,7 +19,7 @@ export default defineConfig({
     },
     sourcemap: true,
     rolldownOptions: {
-      external: [/^vue$/, /^@numior\/(primitives|vue)$/, /^@vueuse\/core$/],
+      external: [/^vue$/, /^@numior\/(primitives|vue|forms)$/, /^@vueuse\/core$/],
     },
   },
 });

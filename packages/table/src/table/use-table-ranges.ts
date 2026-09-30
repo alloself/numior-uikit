@@ -48,6 +48,7 @@ export interface TableRanges {
   readonly deselected: Readonly<Ref<boolean>>;
   segmentsOf(row: number): TableRowRanges | undefined;
   contains(position: TableCellPosition): boolean;
+  cellAt(target: EventTarget | null): TableCellPosition | undefined;
   onPointerdown(event: PointerEvent): void;
   onMousedown(event: MouseEvent): void;
   onKeydown(event: KeyboardEvent): boolean;
@@ -99,7 +100,7 @@ const NAVIGATION = new Set([
 ]);
 
 const INTERACTIVE =
-  'button, a[href], input, select, textarea, label, [contenteditable="true"], .nui-table__toggle';
+  'button, a[href], input, select, textarea, label, [contenteditable="true"], .nui-table__toggle, .nui-table__editor';
 
 const modeOf = (event: MouseEvent): SessionMode => {
   if (event.shiftKey) {
@@ -530,6 +531,7 @@ export const useTableRanges = (options: TableRangesOptions): TableRanges => {
     deselected,
     segmentsOf: segments,
     contains: (position) => inRanges(latest(), position),
+    cellAt: startOf,
     onPointerdown,
     onMousedown: (event) => {
       if (holdFocus || keepsMenuFocus(event)) {
