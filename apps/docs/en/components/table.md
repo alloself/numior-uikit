@@ -70,9 +70,9 @@ is sorted, filtered or grouped.
 
 ### Ranges and clipboard
 
-Dragging with the mouse selects a rectangle of cells, Shift stretches it from the active cell and
-Ctrl adds another one. Ctrl on a selected cell takes it out of the selection, so no cell lands in
-the model twice.
+Dragging with the mouse selects a rectangle of cells, Shift+click grows the selection to the cell
+and Ctrl adds another rectangle. Ctrl on a selected cell takes it out of the selection, so no cell lands in
+the model twice. While the table has focus, the active cell looks like a one-cell selection.
 
 Ctrl+C copies the selection as tab separated text and an HTML table, so a paste into Excel or
 Google Sheets keeps the grid.

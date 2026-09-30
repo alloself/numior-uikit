@@ -70,6 +70,43 @@ describe('NuiTable cell ranges', () => {
     expect(grid.ranges).toEqual([]);
   });
 
+  it('grows the selection with every Shift+click and never drops what is already selected', async () => {
+    const grid = mountPeople();
+    await grid.clickCell(4, 1);
+
+    await grid.clickCell(3, 1, { shift: true });
+    await grid.clickCell(2, 1, { shift: true });
+    await grid.clickCell(4, 1, { shift: true });
+    await grid.clickCell(5, 1, { shift: true });
+    expect(grid.ranges).toEqual([range(2, 1, 5, 1)]);
+    expect(grid.focusedCell).toEqual({ row: 4, col: 1 });
+    await grid.press('Escape');
+    await grid.blur();
+    await grid.clickCell(4, 2, { shift: true });
+    await grid.clickCell(3, 2, { shift: true });
+    await grid.clickCell(5, 2, { shift: true });
+    expect(grid.ranges).toEqual([range(3, 2, 5, 2)]);
+    expect(grid.focusedCell).toEqual({ row: 4, col: 2 });
+    await grid.clickCell(4, 4, { shift: true });
+    await grid.clickCell(4, 3, { shift: true });
+    expect(grid.ranges).toEqual([range(3, 2, 5, 4)]);
+    await grid.press('ArrowDown', { shift: true });
+    expect(grid.ranges).toEqual([range(3, 2, 6, 4)]);
+    await grid.openCellMenu(5, 3);
+    expect(grid.activeCell).toEqual({ row: 4, col: 2 });
+    await grid.closeCellMenu();
+    expect(grid.focusedCell).toEqual({ row: 4, col: 2 });
+    await grid.clickCell(4, 3, { ctrl: true });
+    await grid.clickCell(8, 3, { shift: true });
+
+    expect(grid.ranges).toEqual([
+      range(3, 2, 3, 4),
+      range(4, 2, 4, 2),
+      range(4, 4, 4, 4),
+      range(5, 2, 8, 4),
+    ]);
+  });
+
   it('takes selected cells out with Ctrl and never selects a cell twice', async () => {
     const grid = mountPeople();
     await grid.focusCell(1, 1);

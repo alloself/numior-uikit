@@ -180,6 +180,28 @@ export const withLast = (others: NuiTableRanges, last: NuiTableRange): NuiTableR
   last,
 ];
 
+interface AxisSpan {
+  readonly from: number;
+  readonly to: number;
+}
+
+const growAxis = (from: number, to: number, target: number): AxisSpan => {
+  const low = Math.min(from, to);
+  const high = Math.max(from, to);
+
+  if (target < low) {
+    return { from: high, to: target };
+  }
+  return target > high ? { from: low, to: target } : { from, to };
+};
+
+export const growRange = (range: NuiTableRange, cell: TableCellPosition): NuiTableRange => {
+  const rows = growAxis(range.from.row, range.to.row, cell.row);
+  const cols = growAxis(range.from.col, range.to.col, cell.col);
+
+  return { from: { row: rows.from, col: cols.from }, to: { row: rows.to, col: cols.to } };
+};
+
 export const rowsOf = (range: NuiTableRange, bounds: RangeBounds): NuiTableRange => ({
   from: { row: range.from.row, col: 0 },
   to: { row: range.to.row, col: Math.max(0, bounds.cols - 1) },

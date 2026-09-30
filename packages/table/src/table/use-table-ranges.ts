@@ -6,6 +6,7 @@ import {
   clampPosition,
   colsOf,
   cutRanges,
+  growRange,
   inRanges,
   rowsOf,
   sameRanges,
@@ -35,6 +36,7 @@ export interface TableRangesOptions {
   readonly pageRows: () => number;
   readonly isRtl: () => boolean;
   readonly anchor: () => TableCellPosition | undefined;
+  readonly focus: (position: TableCellPosition) => void;
   readonly reveal: (corner: TableCellPosition) => void;
   readonly resetOn: WatchSource[];
   readonly messages: ComputedRef<NuiTableMessages>;
@@ -68,11 +70,6 @@ interface RangeSession extends SessionStart {
   readonly pointerId: number;
   readonly x: number;
   readonly y: number;
-}
-
-interface StartCell {
-  readonly position: TableCellPosition;
-  readonly element: HTMLElement;
 }
 
 interface Band {
@@ -202,16 +199,14 @@ export const useTableRanges = (options: TableRangesOptions): TableRanges => {
     return Number.isInteger(row) && Number.isInteger(col) ? { row, col } : undefined;
   };
 
-  const startOf = (target: EventTarget | null): StartCell | undefined => {
+  const startOf = (target: EventTarget | null): TableCellPosition | undefined => {
     if (!(target instanceof Element) || target.closest(INTERACTIVE) !== null) {
       return undefined;
     }
-    const element = target.closest<HTMLElement>(`${START_ROW} > .nui-table__cell[aria-colindex]`);
+    const element = target.closest(`${START_ROW} > .nui-table__cell[aria-colindex]`);
     const position = element === null ? undefined : positionOf(element);
 
-    return element !== null && position !== undefined && position.col >= 0
-      ? { position, element }
-      : undefined;
+    return position !== undefined && position.col >= 0 ? position : undefined;
   };
 
   const bandOf = (viewport: HTMLElement): Band => {
@@ -263,7 +258,7 @@ export const useTableRanges = (options: TableRangesOptions): TableRanges => {
         shape(swept);
         break;
       case 'remove':
-        write(cutRanges(active.action.base, swept));
+        others = write(cutRanges(active.action.base, swept));
         break;
     }
   };
@@ -326,59 +321,65 @@ export const useTableRanges = (options: TableRangesOptions): TableRanges => {
   };
 
   const extendFrom = (
-    start: StartCell,
+    start: TableCellPosition,
     anchor: TableCellPosition | undefined,
   ): TableCellPosition => {
-    const from = latest().at(-1)?.from ?? anchor ?? start.position;
+    const last = latest().at(-1);
+
+    const grown =
+      last === undefined ? { from: anchor ?? start, to: start } : growRange(last, start);
 
     holdFocus = true;
     swallow = true;
     clearTextSelection();
-    shape({ from, to: start.position });
+    shape(grown);
 
     if (anchor === undefined) {
-      start.element.focus({ preventScroll: true });
+      options.focus(start);
     }
-    return from;
+    return grown.from;
   };
 
-  const addFrom = (start: StartCell, anchor: TableCellPosition | undefined): SessionStart => {
+  const addFrom = (
+    start: TableCellPosition,
+    anchor: TableCellPosition | undefined,
+  ): SessionStart => {
     swallow = true;
     clearTextSelection();
-    shape({ from: start.position, to: start.position }, materialized(anchor));
-    return { from: start.position, action: SHAPE };
+    shape({ from: start, to: start }, materialized(anchor));
+    return { from: start, action: SHAPE };
   };
 
-  const removeFrom = (start: StartCell, anchor: TableCellPosition | undefined): SessionStart => {
+  const removeFrom = (
+    start: TableCellPosition,
+    anchor: TableCellPosition | undefined,
+  ): SessionStart => {
     const base = latest();
 
     holdFocus = true;
     swallow = true;
-    others = undefined;
     clearTextSelection();
-    write(cutRanges(base, { from: start.position, to: start.position }));
+    others = write(cutRanges(base, { from: start, to: start }));
 
     if (anchor === undefined) {
-      start.element.focus({ preventScroll: true });
+      options.focus(start);
     }
-    return { from: start.position, action: { kind: 'remove', base } };
+    return { from: start, action: { kind: 'remove', base } };
   };
 
   const sessionFor = (
     mode: SessionMode,
-    start: StartCell,
+    start: TableCellPosition,
     anchor: TableCellPosition | undefined,
   ): SessionStart => {
     switch (mode) {
       case 'extend':
         return { from: extendFrom(start, anchor), action: SHAPE };
       case 'add':
-        return inRanges(latest(), start.position)
-          ? removeFrom(start, anchor)
-          : addFrom(start, anchor);
+        return inRanges(latest(), start) ? removeFrom(start, anchor) : addFrom(start, anchor);
       case 'plain':
         clear();
-        return { from: start.position, action: SHAPE };
+        return { from: start, action: SHAPE };
     }
   };
 
@@ -516,13 +517,19 @@ export const useTableRanges = (options: TableRangesOptions): TableRanges => {
 
   onScopeDispose(finish);
 
+  const keepsMenuFocus = (event: MouseEvent): boolean => {
+    const start = event.button === 2 && options.enabled() ? startOf(event.target) : undefined;
+
+    return start !== undefined && inRanges(latest(), start);
+  };
+
   return {
     dragging,
     segmentsOf: segments,
     contains: (position) => inRanges(latest(), position),
     onPointerdown,
     onMousedown: (event) => {
-      if (holdFocus) {
+      if (holdFocus || keepsMenuFocus(event)) {
         holdFocus = false;
         event.preventDefault();
       }

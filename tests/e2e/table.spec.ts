@@ -169,6 +169,23 @@ test.describe('table', () => {
     await playground.open();
     await table.root.scrollIntoViewIfNeeded();
 
+    await table.cell(4, 1).click();
+
+    await expect(table.cell(4, 1)).not.toHaveCSS(
+      'background-color',
+      await table.cellBackground(4, 2),
+    );
+
+    await table.cell(3, 1).click({ modifiers: ['Shift'] });
+    await table.cell(2, 1).click({ modifiers: ['Shift'] });
+    await table.cell(4, 1).click({ modifiers: ['Shift'] });
+    await table.cell(5, 1).click({ modifiers: ['Shift'] });
+
+    await expect(table.output).toContainText(
+      '"ranges":[{"from":{"row":2,"col":1},"to":{"row":5,"col":1}}]',
+    );
+
+    await page.keyboard.press('Escape');
     await table.dragRange({ row: 1, col: 1 }, { row: 3, col: 2 });
 
     await expect(table.output).toContainText(
@@ -622,13 +639,13 @@ test.describe('table', () => {
     await expect(viewport).toHaveAttribute('role', 'treegrid');
     await expect(viewport).toHaveAttribute('aria-rowcount', '4');
     expect((await boxOf(table.treeRow(0))).height).toBeGreaterThan(48);
-    await table.treeToggle(0).click();
+    await table.toggleTreeRow(0);
 
     await expect(table.treeRow(0)).toHaveAttribute('aria-expanded', 'true');
     await expect(table.treeRow(1)).toHaveAttribute('aria-level', '2');
     await expect(table.treeRow(1)).toContainText('Россия');
     await expect(table.treeRow(4)).toContainText('Операции');
-    await table.treeToggle(4).click();
+    await table.toggleTreeRow(4);
 
     await expect(table.treeRow(4)).toHaveAttribute('aria-busy', 'true');
     await expect(table.treeRow(5)).toContainText('Поддержка');
@@ -720,7 +737,7 @@ test.describe('table', () => {
 
     await expect(table.output).toContainText('"selected":["sales","rnd","ops"]');
     await expect(table.treeSelectAll).toBeChecked();
-    await table.treeToggle(0).click();
+    await table.toggleTreeRow(0);
     await expect(table.treeRow(1)).toContainText('Россия');
     await expect(table.treeSelectAll).toHaveJSProperty('indeterminate', true);
     await table.treeCell(1, 2).click();

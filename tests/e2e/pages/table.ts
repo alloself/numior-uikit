@@ -148,6 +148,13 @@ export class TableSection {
     return this.treeRow(position).locator('.nui-table__toggle--expandable');
   }
 
+  async toggleTreeRow(position: number): Promise<void> {
+    const toggle = this.treeToggle(position);
+
+    await toggle.hover();
+    await toggle.click();
+  }
+
   footerCell(col: number): Locator {
     return this.root.locator(`.nui-table__footer [aria-colindex="${col + 1}"]`);
   }

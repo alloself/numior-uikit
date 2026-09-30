@@ -645,6 +645,8 @@ const rootClass = computed(() => [
     'nui-table--dragging':
       order.dragging.value !== undefined || rowDrag.dragging.value !== undefined,
     'nui-table--ranging': rangeSelect.dragging.value,
+    'nui-table--cell-selection': cellSelection && !loading,
+    'nui-table--ranged': ranges.value.length > 0,
   },
 ]);
 
@@ -1037,6 +1039,12 @@ const rangeSelect = useTableRanges({
   pageRows: () => pageRowsOf(rowWindow.viewport.value, rowSize.value),
   isRtl: direction.isRtl,
   anchor: rangeAnchor,
+  focus: (position) => {
+    focus.focusCell(
+      { row: position.row + pinnedCount.value, col: position.col + dataOffset.value },
+      false,
+    );
+  },
   reveal: revealCorner,
   resetOn: [
     sort,
@@ -1079,20 +1087,22 @@ const clipboard = useTableClipboard<T>({
 
 const selectForMenu = (target: TableCellPosition): NuiTableRanges => {
   const body = { row: target.row - pinnedCount.value, col: target.col - dataOffset.value };
-  const inside = body.row >= 0 && rangeSelect.contains(body);
+
+  if (body.row >= 0 && rangeSelect.contains(body)) {
+    return ranges.value;
+  }
 
   const focused =
     active.value.row === target.row &&
     active.value.col === target.col &&
     viewport.value?.contains(document.activeElement) === true;
 
-  if (!inside) {
-    rangeSelect.clear();
-  }
+  rangeSelect.clear();
+
   if (!focused) {
     focus.focusCell(target, false);
   }
-  return inside ? ranges.value : [];
+  return [];
 };
 
 const contextScopeOf = (

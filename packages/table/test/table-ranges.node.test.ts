@@ -4,6 +4,7 @@ import {
   colsOf,
   copyShapeOf,
   cutRanges,
+  growRange,
   inRanges,
   rowsOf,
   sameRanges,
@@ -88,6 +89,9 @@ describe('table ranges', () => {
       range(1, 2, 4, 2),
     ]);
 
+    expect(growRange(range(4, 1, 3, 1), { row: 5, col: 1 })).toEqual(range(3, 1, 5, 1));
+    expect(growRange(range(3, 1, 5, 1), { row: 4, col: 1 })).toEqual(range(3, 1, 5, 1));
+    expect(growRange(range(3, 2, 5, 2), { row: 1, col: 4 })).toEqual(range(5, 2, 1, 4));
     expect(rowsOf(range(3, 2, 4, 3), BOUNDS)).toEqual(range(3, 0, 4, 4));
     expect(colsOf(range(3, 2, 4, 3), BOUNDS)).toEqual(range(0, 2, 9, 3));
     expect(allOf(BOUNDS)).toEqual(range(0, 0, 9, 4));
