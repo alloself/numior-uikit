@@ -34,6 +34,24 @@ describe('useHotkey', () => {
     expect(press(window, 'k', { ctrlKey: true })).toBe(false);
   });
 
+  it('skips keydown events without a key, as Chrome sends them on autofill', () => {
+    const handler = vi.fn<(event: KeyboardEvent) => void>();
+    const errors: unknown[] = [];
+
+    const onError = (event: ErrorEvent): void => {
+      errors.push(event.error);
+      event.preventDefault();
+    };
+
+    window.addEventListener('error', onError);
+    captureSetup(() => useHotkey('mod+k', handler));
+    window.dispatchEvent(new Event('keydown', { bubbles: true }));
+    window.removeEventListener('error', onError);
+    expect(errors).toEqual([]);
+    expect(handler).not.toHaveBeenCalled();
+    expect(press(window, 'k', { ctrlKey: true })).toBe(true);
+  });
+
   it('keeps a bare key out of editable targets unless asked', () => {
     const handler = vi.fn<(event: KeyboardEvent) => void>();
     captureSetup(() => useHotkey('/', handler));

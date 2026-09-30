@@ -18,6 +18,7 @@ export const useHotkey = (
   const target = options.target;
 
   const matches = (event: KeyboardEvent): boolean =>
+    event instanceof KeyboardEvent &&
     !event.defaultPrevented &&
     toValue(options.enabled) !== false &&
     matchesHotkey(event, hotkey.value) &&
