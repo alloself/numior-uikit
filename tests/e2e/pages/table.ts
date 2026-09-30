@@ -39,6 +39,7 @@ export class TableSection {
   readonly remoteViewport: Locator;
   readonly remoteQuick: Locator;
   readonly remoteOutput: Locator;
+  readonly remoteToggle: Locator;
   readonly treeCaption: Locator;
   readonly treeSelectAll: Locator;
   readonly treeSkeletons: Locator;
@@ -70,6 +71,7 @@ export class TableSection {
     this.remoteViewport = this.remote.locator('.nui-table__viewport');
     this.remoteQuick = page.getByTestId('table-remote-quick');
     this.remoteOutput = page.getByTestId('table-remote-output');
+    this.remoteToggle = page.getByTestId('table-remote-toggle');
   }
 
   remoteCell(position: number, col: number): Locator {

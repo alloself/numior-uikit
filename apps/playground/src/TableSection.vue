@@ -150,40 +150,53 @@
       @reorder="onUnitReorder"
     />
     <div class="data-row">
-      <NuiInput
-        v-model="remoteQuick"
-        type="search"
-        size="sm"
-        class="table-quick"
-        placeholder="Поиск на сервере"
-        aria-label="Поиск на сервере"
-        data-testid="table-remote-quick"
-      >
-        <template #prefix>
-          <NuiIcon alias="search" />
-        </template>
-      </NuiInput>
       <NuiButton
         size="sm"
         variant="outline"
         tone="neutral"
-        data-testid="table-remote-refresh"
-        @click="remoteTable?.refresh()"
+        data-testid="table-remote-toggle"
+        @click="remoteShown = !remoteShown"
       >
-        Обновить
+        {{ remoteShown ? 'Скрыть серверную таблицу' : 'Показать серверную таблицу' }}
       </NuiButton>
     </div>
-    <NuiTable
-      ref="remote-table"
-      v-model:quick="remoteQuick"
-      :columns="REMOTE_COLUMNS"
-      :source="remoteSource"
-      :get-key="(row) => row.id"
-      caption="Заказы с сервера · 100 000 строк"
-      height="22rem"
-      data-testid="table-remote"
-    />
-    <pre class="output" data-testid="table-remote-output">{{ remoteOutput }}</pre>
+    <template v-if="remoteShown">
+      <div class="data-row">
+        <NuiInput
+          v-model="remoteQuick"
+          type="search"
+          size="sm"
+          class="table-quick"
+          placeholder="Поиск на сервере"
+          aria-label="Поиск на сервере"
+          data-testid="table-remote-quick"
+        >
+          <template #prefix>
+            <NuiIcon alias="search" />
+          </template>
+        </NuiInput>
+        <NuiButton
+          size="sm"
+          variant="outline"
+          tone="neutral"
+          data-testid="table-remote-refresh"
+          @click="remoteTable?.refresh()"
+        >
+          Обновить
+        </NuiButton>
+      </div>
+      <NuiTable
+        ref="remote-table"
+        v-model:quick="remoteQuick"
+        :columns="REMOTE_COLUMNS"
+        :source="remoteSource"
+        :get-key="(row) => row.id"
+        caption="Заказы с сервера · 100 000 строк"
+        height="22rem"
+        data-testid="table-remote"
+      />
+      <pre class="output" data-testid="table-remote-output">{{ remoteOutput }}</pre>
+    </template>
   </section>
 </template>
 
@@ -684,6 +697,7 @@ const REMOTE_COLUMNS: NuiTableColumn<RemoteOrder>[] = [
   },
 ];
 
+const remoteShown = ref(false);
 const remoteQuick = ref('');
 const remoteRequests = ref(0);
 const lastRemote = ref<string | null>(null);

@@ -441,6 +441,7 @@ test.describe('table', () => {
     const playground = new PlaygroundPage(page);
     const { table } = playground;
     await playground.open();
+    await table.remoteToggle.click();
     await table.remote.scrollIntoViewIfNeeded();
 
     await expect(table.remoteCell(0, 0)).toHaveText('1');
