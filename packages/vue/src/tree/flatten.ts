@@ -77,6 +77,35 @@ export const findTreeItem = <T>(
   return undefined;
 };
 
+const collectAncestors = <T>(
+  items: readonly NuiTreeItem<T>[],
+  keys: ReadonlySet<string>,
+  keyOf: NuiOptionKey<T>,
+  path: readonly T[],
+  out: Map<string, T>,
+): void => {
+  for (const item of items) {
+    if (keys.has(keyOf(item.value))) {
+      for (const ancestor of path) {
+        out.set(keyOf(ancestor), ancestor);
+      }
+    }
+    if (item.children) {
+      collectAncestors(item.children, keys, keyOf, [...path, item.value], out);
+    }
+  }
+};
+
+export const ancestorValuesOf = <T>(
+  items: readonly NuiTreeItem<T>[],
+  keys: ReadonlySet<string>,
+  keyOf: NuiOptionKey<T>,
+): T[] => {
+  const out = new Map<string, T>();
+  collectAncestors(items, keys, keyOf, [], out);
+  return [...out.values()];
+};
+
 export const parentIndexOf = <T>(nodes: readonly TreeNode<T>[], index: number): number => {
   const node = nodes[index];
   if (!node || node.parentKey === undefined) {

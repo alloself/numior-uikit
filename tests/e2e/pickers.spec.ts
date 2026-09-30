@@ -73,6 +73,44 @@ test.describe('pickers', () => {
     await expect(pickers.listbox).toBeHidden();
   });
 
+  test('select shows a tree for nested options, reveals the selected node and picks by keyboard', async ({
+    page,
+    isMobile,
+  }) => {
+    const playground = new PlaygroundPage(page);
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    const { pickers } = playground;
+    const trigger = pickers.treeTrigger;
+    await expect(trigger).toHaveAttribute('aria-haspopup', 'tree');
+    await trigger.click();
+    await expect(pickers.tree).toBeVisible();
+    await pickers.treeToggleOf(pickers.treeItem('Электроника')).click();
+    await pickers.treeLabelOf(pickers.treeItem('Ноутбуки')).click();
+    await expect(pickers.tree).toBeHidden();
+    await expect(trigger).toHaveText('Ноутбуки');
+    await expect.poll(async () => (await pickers.readOutput()).category).toBe('laptops');
+    await trigger.click();
+    await expect(pickers.treeItem('Электроника')).toHaveAttribute('aria-expanded', 'true');
+    await expect(pickers.treeItem('Ноутбуки')).toHaveAttribute('aria-selected', 'true');
+    expect(await playground.wcagViolations()).toEqual([]);
+    await page.keyboard.press('Escape');
+    await expect(pickers.tree).toBeHidden();
+    if (!isMobile) {
+      await trigger.focus();
+      await page.keyboard.press('ArrowDown');
+      await expect(pickers.tree).toBeFocused();
+      await page.keyboard.press('ArrowUp');
+      await page.keyboard.press('Enter');
+      await expect(pickers.tree).toBeHidden();
+      await expect(trigger).toBeFocused();
+      await expect.poll(async () => (await pickers.readOutput()).category).toBe('phones');
+    }
+    await pickers.clearButton(trigger).click();
+    await expect(trigger).toHaveText('Выберите категорию');
+    await expect.poll(async () => (await pickers.readOutput()).category).toBeNull();
+  });
+
   test('combobox searches asynchronously, tracks the active option and keeps chips in multiple mode', async ({
     page,
   }) => {

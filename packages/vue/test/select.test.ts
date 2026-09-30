@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { SelectDriver } from './drivers/select';
 import { fieldTextsOf } from './support/field-texts';
+import { CATEGORIES } from './support/options';
 
 describe('NuiSelect', () => {
   beforeEach(() => vi.useFakeTimers());
@@ -25,6 +26,49 @@ describe('NuiSelect', () => {
     expect(select.valueText).toBe('Lemon');
     expect(select.triggerFocused).toBe(true);
     select.unmount();
+  });
+
+  it('shows a tree for nested options, reveals the selected node on open and picks by keyboard', async () => {
+    const select = SelectDriver.mount({ props: { options: CATEGORIES }, modelValue: 'laptops' });
+    expect(select.trigger.attributes('aria-haspopup')).toBe('tree');
+    expect(select.trigger.attributes('aria-controls')).toBe(select.tree.attributes('id'));
+    expect(select.tree.attributes('popover')).toBe('auto');
+    expect(select.valueText).toBe('Laptops');
+    await select.pressTrigger('ArrowDown');
+    expect(select.expanded).toBe(true);
+    expect(select.treeFocused).toBe(true);
+    expect(select.treeAttr('Electronics', 'aria-expanded')).toBe('true');
+    expect(select.treeAttr('Laptops', 'aria-selected')).toBe('true');
+    expect(select.treeActiveLabel).toBe('Laptops');
+    await select.press('ArrowUp');
+    expect(select.treeActiveLabel).toBe('Phones');
+    await select.press('Enter');
+    expect(select.value).toBe('phones');
+    expect(select.expanded).toBe(false);
+    expect(select.valueText).toBe('Phones');
+    expect(select.triggerFocused).toBe(true);
+    await select.pressTrigger('ArrowDown');
+    await select.clickTreeToggle('Clothes');
+    await select.clickTreeItem('Shoes');
+    expect(select.value).toBe('shoes');
+    expect(select.expanded).toBe(false);
+    select.unmount();
+
+    const multiple = SelectDriver.mount({
+      props: { options: CATEGORIES, multiple: true },
+      modelValue: ['books'],
+    });
+
+    await multiple.pressTrigger('ArrowDown');
+    expect(multiple.tree.attributes('aria-multiselectable')).toBe('true');
+    await multiple.clickTreeCheckbox('Electronics');
+    expect(multiple.value).toEqual(['electronics', 'phones', 'laptops', 'books']);
+    expect(multiple.expanded).toBe(true);
+    expect(multiple.valueText).toBe('4 selected');
+    await multiple.press('Enter');
+    expect(multiple.expanded).toBe(false);
+    expect(multiple.value).toEqual(['electronics', 'phones', 'laptops', 'books']);
+    multiple.unmount();
   });
 
   it('shows the empty state inside the listbox when there are no options', () => {

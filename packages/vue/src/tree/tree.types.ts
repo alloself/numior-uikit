@@ -6,16 +6,15 @@ import type { TreeNode } from './flatten';
 
 export interface NuiTreeItem<T = string> extends Omit<
   NuiOption<T>,
-  'key' | 'href' | 'to' | 'onClick' | 'icon'
+  'key' | 'href' | 'to' | 'onClick' | 'children'
 > {
-  readonly icon?: IconAlias | false | undefined;
   readonly children?: readonly NuiTreeItem<T>[] | undefined;
   readonly lazy?: boolean | undefined;
 }
 
 export type NuiTreeSelectable = 'single' | 'multiple';
 
-export type NuiTreeVariant = 'plain' | 'divided' | 'bordered';
+export type NuiTreeVariant = 'plain' | 'divided' | 'bordered' | 'floating';
 
 export interface NuiTreeProps<T> {
   id?: string | undefined;

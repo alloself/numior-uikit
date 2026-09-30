@@ -73,6 +73,50 @@ export class SelectDriver extends ComponentDriver {
     return this.wrapper.find<HTMLElement>('.nui-select__listbox');
   }
 
+  get tree(): DOMWrapper<HTMLElement> {
+    return this.wrapper.find<HTMLElement>('.nui-select__listbox[role="tree"]');
+  }
+
+  get treeFocused(): boolean {
+    return this.tree.exists() && document.activeElement === this.tree.element;
+  }
+
+  get treeActiveLabel(): string | undefined {
+    const id = this.tree.attributes('aria-activedescendant');
+    const active = id === undefined ? undefined : this.wrapper.find(`[id="${id}"]`);
+    return active?.exists() ? labelOf(active.element) : undefined;
+  }
+
+  private treeItem(label: string): DOMWrapper<HTMLElement> {
+    const found = this.wrapper
+      .findAll<HTMLElement>('[role="treeitem"]')
+      .find((item) => labelOf(item.element) === label);
+
+    if (!found) {
+      throw new Error(`No tree item labelled ${label}`);
+    }
+    return found;
+  }
+
+  treeAttr(label: string, name: string): string | undefined {
+    return this.treeItem(label).attributes(name);
+  }
+
+  async clickTreeToggle(label: string): Promise<void> {
+    await this.treeItem(label).find('.nui-tree__toggle').trigger('click');
+    await nextTick();
+  }
+
+  async clickTreeItem(label: string): Promise<void> {
+    await this.treeItem(label).find('.nui-row__title').trigger('click');
+    await nextTick();
+  }
+
+  async clickTreeCheckbox(label: string): Promise<void> {
+    await this.treeItem(label).find('.nui-tree__checkbox').trigger('click');
+    await nextTick();
+  }
+
   get expanded(): boolean {
     return this.trigger.attributes('aria-expanded') === 'true';
   }

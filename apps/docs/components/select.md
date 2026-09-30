@@ -35,6 +35,14 @@ import '@numior/vue/styles/select.css';
 
 <Example name="select/Objects" />
 
+### Дерево
+
+Вложенные `options` (записи с `children` или `lazy`) открывают дерево вместо списка. Кнопка
+та же, при открытии раскрываются предки выбранного узла. `multiple` даёт чекбоксы с каскадом,
+`load` уходит наружу как у `NuiTree`.
+
+<Example name="select/Tree" />
+
 ### Размеры
 
 `size` совпадает со ступенями остальных контролов поля.
@@ -45,6 +53,8 @@ import '@numior/vue/styles/select.css';
 
 Триггер — нативная `<button role="combobox">` с `aria-expanded` и `aria-controls`. Список —
 `role="listbox"`, группы — `role="group"` с подписью, опции — `role="option"` с `aria-selected`.
+С вложенными опциями триггер несёт `aria-haspopup="tree"`, а поповер — `role="tree"` с узлами
+`treeitem`.
 
 На закрытом триггере набор букв меняет значение без открытия, как у нативного `<select>`.
 

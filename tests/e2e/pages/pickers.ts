@@ -13,6 +13,7 @@ import {
 const isPickersOutput = shapeOf({
   country: nullable(isString),
   tags: listOf(isString),
+  category: nullable(isString),
   city: nullable(isString),
   cityLoading: isBoolean,
   keywords: listOf(isString),
@@ -33,6 +34,7 @@ export class PickersSection {
   readonly countryTrigger: Locator;
   readonly longTrigger: Locator;
   readonly tagsTrigger: Locator;
+  readonly treeTrigger: Locator;
   readonly cityInput: Locator;
   readonly keywordsInput: Locator;
   readonly pagination: Locator;
@@ -43,6 +45,7 @@ export class PickersSection {
     this.countryTrigger = page.getByTestId('pick-select');
     this.longTrigger = page.getByTestId('pick-long');
     this.tagsTrigger = page.getByTestId('pick-multi');
+    this.treeTrigger = page.getByTestId('pick-tree');
     this.cityInput = page.getByTestId('pick-combobox');
     this.keywordsInput = page.getByTestId('pick-keywords');
     this.pagination = page.getByTestId('pick-pagination');
@@ -56,6 +59,25 @@ export class PickersSection {
 
   get emptyState(): Locator {
     return this.listbox.locator('.nui-empty');
+  }
+
+  get tree(): Locator {
+    return this.page.getByRole('tree').and(this.page.locator('.nui-list--variant-floating'));
+  }
+
+  treeItem(label: string): Locator {
+    const escaped = label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return this.tree.locator('[role="treeitem"]', {
+      has: this.page.locator('.nui-row__title', { hasText: new RegExp(`^${escaped}$`) }),
+    });
+  }
+
+  treeToggleOf(item: Locator): Locator {
+    return item.locator('.nui-tree__toggle');
+  }
+
+  treeLabelOf(item: Locator): Locator {
+    return item.locator('.nui-row__title');
   }
 
   option(label: string): Locator {

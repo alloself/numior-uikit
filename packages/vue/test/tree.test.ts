@@ -307,13 +307,19 @@ describe('NuiTree', () => {
     tree.unmount();
   });
 
-  it('paints the active row only while the tree holds focus and keeps the cursor across blur', async () => {
+  it('rests the cursor on the selected node when focus arrives and forgets it on blur', async () => {
     const tree = TreeDriver.mount({ modelValue: 'readme' });
+    expect(tree.activeLabel).toBeUndefined();
     expect(tree.activeLabels).toEqual([]);
     await tree.focus();
+    expect(tree.activeLabel).toBe('README.md');
     expect(tree.activeLabels).toEqual(['README.md']);
+    await tree.press('ArrowDown');
+    expect(tree.activeLabel).toBe('empty');
     await tree.blur();
+    expect(tree.activeLabel).toBeUndefined();
     expect(tree.activeLabels).toEqual([]);
+    await tree.focus();
     expect(tree.activeLabel).toBe('README.md');
     tree.unmount();
   });

@@ -29,7 +29,7 @@ export interface NuiSidebarGroupProps {
 
 export interface NuiSidebarItemProps {
   label: string;
-  icon?: IconAlias | undefined;
+  icon?: IconAlias | false | undefined;
   href?: string | undefined;
   to?: NuiRouteLocation | undefined;
   as?: string | Component | undefined;
@@ -41,7 +41,7 @@ export interface NuiSidebarItemProps {
 
 export interface NuiSidebarSubProps {
   label: string;
-  icon?: IconAlias | undefined;
+  icon?: IconAlias | false | undefined;
   active?: boolean | undefined;
   id?: string | undefined;
 }

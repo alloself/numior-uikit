@@ -6,7 +6,7 @@ export interface NuiListEntry<T = string> {
   readonly value?: T | undefined;
   readonly label: string;
   readonly description?: string | undefined;
-  readonly icon?: IconAlias | undefined;
+  readonly icon?: IconAlias | false | undefined;
   readonly disabled?: boolean | undefined;
   readonly href?: string | undefined;
   readonly to?: NuiRouteLocation | undefined;
@@ -18,6 +18,7 @@ export interface NuiListEntry<T = string> {
 
 export interface NuiOption<T = string> extends NuiListEntry<T> {
   readonly value: T;
+  readonly children?: readonly NuiOption<T>[] | undefined;
 }
 
 export interface NuiListGroup<E> {
@@ -33,11 +34,21 @@ export type NuiOptionSource<T = string> = NuiListSource<NuiOption<T>>;
 
 export type NuiOptionKey<T> = (value: T) => string;
 
-const isListGroup = <E>(entry: E | NuiListGroup<E>): entry is NuiListGroup<E> =>
+export const isListGroup = <E>(entry: E | NuiListGroup<E>): entry is NuiListGroup<E> =>
   typeof entry === 'object' && entry !== null && 'items' in entry && Array.isArray(entry.items);
 
 export const flattenEntries = <E>(source: NuiListSource<E>): E[] =>
   source.flatMap((entry) => (isListGroup(entry) ? [...entry.items] : [entry]));
+
+const withDescendants = <T>(option: NuiOption<T>): NuiOption<T>[] => [
+  option,
+  ...(option.children ?? []).flatMap(withDescendants),
+];
+
+export const flattenOptions = <T>(source: NuiOptionSource<T>): NuiOption<T>[] =>
+  source.flatMap((entry) =>
+    isListGroup(entry) ? entry.items.flatMap(withDescendants) : withDescendants(entry),
+  );
 
 interface EntryGroup<E> {
   readonly label: string | undefined;

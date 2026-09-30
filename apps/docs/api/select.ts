@@ -3,7 +3,10 @@ import type { DocsMap } from '../.vitepress/reference/reference.types';
 const docs: DocsMap = {
   NuiSelect: {
     props: {
-      options: { ru: 'Опции и группы списка.', en: 'Options and groups of the list.' },
+      options: {
+        ru: 'Опции и группы списка; записи с children или lazy открывают дерево.',
+        en: 'Options and groups of the list; entries with children or lazy open a tree.',
+      },
       multiple: {
         ru: 'Несколько значений; список остаётся открытым при выборе.',
         en: 'Several values; the list stays open while picking.',
@@ -88,6 +91,12 @@ const docs: DocsMap = {
     models: {
       'v-model': { ru: 'Значение в одиночном режиме.', en: 'Value in single mode.' },
       'v-model:values': { ru: 'Значения в режиме multiple.', en: 'Values in multiple mode.' },
+    },
+    events: {
+      load: {
+        ru: 'Узел дерева с lazy раскрыт и ждёт детей.',
+        en: 'A lazy tree node was expanded and waits for its children.',
+      },
     },
     slots: {
       value: {

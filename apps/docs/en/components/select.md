@@ -35,6 +35,14 @@ Objects need `getKey`; the `option` slot draws an option its own way.
 
 <Example name="select/Objects" />
 
+### Tree
+
+Nested `options` (entries with `children` or `lazy`) open a tree instead of a list. The button
+stays the same, and opening expands the ancestors of the selected node. `multiple` gives
+cascading checkboxes, `load` is emitted like in `NuiTree`.
+
+<Example name="select/Tree" />
+
 ### Sizes
 
 `size` matches the steps of the other field controls.
@@ -45,7 +53,8 @@ Objects need `getKey`; the `option` slot draws an option its own way.
 
 The trigger is a native `<button role="combobox">` with `aria-expanded` and `aria-controls`. The
 list is `role="listbox"`, groups are `role="group"` with a label, options are `role="option"` with
-`aria-selected`.
+`aria-selected`. With nested options the trigger carries `aria-haspopup="tree"` and the popover is
+a `role="tree"` with `treeitem` nodes.
 
 On the closed trigger, typing letters changes the value without opening, like a native `<select>`.
 

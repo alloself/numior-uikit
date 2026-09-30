@@ -32,6 +32,15 @@
           data-testid="pick-multi"
         />
       </NuiField>
+      <NuiField label="Категория" description="Выбор по дереву">
+        <NuiSelect
+          v-model="category"
+          :options="categories"
+          placeholder="Выберите категорию"
+          clearable
+          data-testid="pick-tree"
+        />
+      </NuiField>
       <NuiField label="Город" description="Поиск с загрузкой">
         <NuiCombobox
           v-model="city"
@@ -86,6 +95,7 @@ import {
   NuiSelect,
   type NuiOption,
   type NuiOptionSource,
+  type NuiTreeItem,
 } from '@numior/vue';
 
 const countries: NuiOptionSource<string> = [
@@ -105,6 +115,26 @@ const countries: NuiOptionSource<string> = [
       { value: 'jp', label: 'Япония' },
     ],
   },
+];
+
+const categories: NuiTreeItem<string>[] = [
+  {
+    value: 'electronics',
+    label: 'Электроника',
+    children: [
+      { value: 'phones', label: 'Телефоны' },
+      { value: 'laptops', label: 'Ноутбуки' },
+    ],
+  },
+  {
+    value: 'clothes',
+    label: 'Одежда',
+    children: [
+      { value: 'shoes', label: 'Обувь' },
+      { value: 'jackets', label: 'Куртки' },
+    ],
+  },
+  { value: 'books', label: 'Книги' },
 ];
 
 const tagOptions: NuiOption<string>[] = [
@@ -140,6 +170,7 @@ const regions: NuiOptionSource<string> = [
 ];
 
 const tags = ref<string[]>(['frontend']);
+const category = ref<string>();
 const city = ref<string>();
 const cityOptions = ref<NuiOption<string>[]>(cities);
 const cityLoading = ref(false);
@@ -167,6 +198,7 @@ const output = computed(() =>
     {
       country: country.value ?? null,
       tags: tags.value,
+      category: category.value ?? null,
       city: city.value ?? null,
       cityLoading: cityLoading.value,
       keywords: keywords.value,

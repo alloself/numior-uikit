@@ -20,7 +20,7 @@
         type="button"
         role="combobox"
         class="nui-select__trigger"
-        aria-haspopup="listbox"
+        :aria-haspopup="isTree ? 'tree' : 'listbox'"
         :aria-labelledby="field?.labelledBy.value"
         :aria-required="isRequired || undefined"
         v-bind="{
@@ -47,7 +47,32 @@
       >
         <NuiIcon alias="x" />
       </NuiButton>
+      <NuiTree
+        v-if="isTree"
+        :ref="setListbox"
+        v-model="model"
+        v-model:values="values"
+        v-model:expanded="treeExpanded"
+        class="nui-select__listbox"
+        variant="floating"
+        :items="treeItems"
+        :checkable="multiple"
+        :get-key="getKey"
+        :loop="loop"
+        :empty-label="emptyText"
+        v-bind="control.contentAttrs.value"
+        @select="onSelect"
+        @load="onLoad"
+        @keydown.capture="onTreeKeydown"
+        @focusin="onFocusin"
+        @focusout="onFocusout"
+      >
+        <template #item="slot">
+          <slot name="option" :option="slot.item" :selected="slot.selected" :active="false" />
+        </template>
+      </NuiTree>
       <NuiList
+        v-else
         :ref="setListbox"
         v-model="model"
         v-model:values="values"
@@ -86,17 +111,22 @@
 </template>
 
 <script setup lang="ts" generic="T">
-import { computed, onMounted, ref, useTemplateRef, watch } from 'vue';
+import { computed, onMounted, ref, shallowRef, useTemplateRef, watch } from 'vue';
 import { createIntent, useFieldControl, useMessages, useSplitAttrs } from '@numior/primitives';
 import NuiFieldFrame from '../field/NuiFieldFrame';
 import NuiButton from '../button/NuiButton.vue';
 import NuiIcon from '../icon/NuiIcon.vue';
 import NuiList from '../list/NuiList.vue';
-import { optionIndexOf, type NuiOption } from '../shared/options';
+import NuiTree from '../tree/NuiTree.vue';
+import { isListGroup, optionIndexOf, type NuiListGroup, type NuiOption } from '../shared/options';
 import { useListboxSurface } from '../shared/use-listbox-surface';
 import { useOptionSelection } from '../shared/use-option-selection';
+import { ancestorValuesOf } from '../tree/flatten';
+import type { NuiTreeItem } from '../tree/tree.types';
 import { selectMessages } from './select.messages';
 import type { NuiSelectProps } from './select.types';
+
+type SelectEntry<T> = NuiOption<T> | NuiListGroup<NuiOption<T>> | NuiTreeItem<T>;
 
 defineOptions({ inheritAttrs: false });
 
@@ -126,6 +156,7 @@ const {
 
 const model = defineModel<T | null>({ default: null });
 const values = defineModel<T[]>('values', { default: () => [] });
+const emit = defineEmits<{ load: [item: NuiTreeItem<T>] }>();
 
 const split = useSplitAttrs();
 const messages = useMessages(selectMessages);
@@ -144,10 +175,24 @@ const {
 );
 
 const listboxId = computed(() => `${controlAttrs.value.id}-listbox`);
+const entries = computed((): readonly SelectEntry<T>[] => options);
+
+const treeItems = computed(() =>
+  entries.value.flatMap((entry) => (isListGroup(entry) ? [] : [entry])),
+);
+
+const isTree = computed(() =>
+  treeItems.value.some(
+    (entry) => entry.children !== undefined || ('lazy' in entry && entry.lazy === true),
+  ),
+);
+
+const treeExpanded = shallowRef<T[]>([]);
 
 const {
   keyOf,
   flat,
+  selectedKeys,
   selectedValues,
   selectedOptions,
   clear: clearSelection,
@@ -211,11 +256,27 @@ const activate = (): void => {
   }
 };
 
+const revealSelected = (): void => {
+  const known = new Set(treeExpanded.value.map(keyOf));
+
+  const added = ancestorValuesOf(treeItems.value, selectedKeys.value, keyOf).filter(
+    (value) => !known.has(keyOf(value)),
+  );
+
+  if (added.length > 0) {
+    treeExpanded.value = [...treeExpanded.value, ...added];
+  }
+};
+
 watch(open, (isOpen) => {
-  if (isOpen) {
-    activate();
-  } else {
+  if (!isOpen) {
     navigation.reset();
+    return;
+  }
+  if (isTree.value) {
+    revealSelected();
+  } else {
+    activate();
   }
 });
 
@@ -228,6 +289,10 @@ const onSelect = (): void => {
   }
 };
 
+const onLoad = (item: NuiTreeItem<T>): void => {
+  emit('load', item);
+};
+
 const clear = (): void => {
   clearSelection();
   triggerElement.value?.focus({ preventScroll: true });
@@ -237,7 +302,9 @@ onMounted(() => {
   watch(
     open,
     (isOpen) => {
-      if (isOpen) {
+      if (isOpen && isTree.value) {
+        listboxElement.value?.focus({ preventScroll: true });
+      } else if (isOpen) {
         navigation.reveal();
         navigation.activeElement()?.focus({ preventScroll: true });
       } else if (inside) {
@@ -282,7 +349,7 @@ const onTriggerKeydown = (event: KeyboardEvent): void => {
     control.show();
   } else if (event.key === 'Enter' || event.key === ' ') {
     opening.set('selected');
-  } else if (!multiple && isPrintable(event)) {
+  } else if (!multiple && !isTree.value && isPrintable(event)) {
     pickByTypeahead(event);
   }
 };
@@ -301,6 +368,18 @@ const onListboxKeydown = (event: KeyboardEvent): void => {
     control.hide();
   } else {
     navigation.activeElement()?.click();
+  }
+};
+
+const onTreeKeydown = (event: KeyboardEvent): void => {
+  if (event.key === 'Tab') {
+    control.hide();
+    return;
+  }
+  if (multiple && event.key === 'Enter') {
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    control.hide();
   }
 };
 

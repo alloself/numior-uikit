@@ -11,7 +11,7 @@
         :icon="icon"
         :title="label"
         :description="description"
-        :check="isOption() ? selected : undefined"
+        :check="showsCheck() ? selected : undefined"
         :nowrap="nowrap"
         :inline="inTree"
       >
@@ -101,6 +101,10 @@ const mode = (): ListItemMode => {
 
 const isOption = (): boolean => mode() === 'option';
 const hasAction = (): boolean => mode() === 'link' || mode() === 'button';
+
+const showsCheck = (): boolean =>
+  isOption() ||
+  (inTree && list?.variant.value === 'floating' && treeNode.value?.checked === undefined);
 
 const classes = () => [
   `nui-list-item--size-${size.value}`,

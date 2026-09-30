@@ -73,6 +73,7 @@ import { configScope } from './support/config-scope';
 import { RouterStub } from './support/router-stub';
 import { labelTarget, popoverTarget, renderMarkup } from './support/ssr';
 import { FILES, manyNodes } from './support/tree-items';
+import { CATEGORIES } from './support/options';
 
 const STEPPER_STEPS = [
   { value: 'account', label: 'Account' },
@@ -974,6 +975,16 @@ describe('server rendering', () => {
 
     expect(windowed.match(/role="treeitem"/g)).toHaveLength(20);
     expect(windowed).toContain('block-size:18000px');
+  });
+
+  it('renders a select with nested options as a tree on the server', async () => {
+    const html = await renderMarkup(() =>
+      h(NuiSelect, { options: CATEGORIES, modelValue: 'laptops', label: 'Category' }),
+    );
+
+    expect(html).toContain('aria-haspopup="tree"');
+    expect(html).toContain('role="tree"');
+    expect(html).toContain('Laptops');
   });
 
   it('renders lazy default icons on the server', async () => {

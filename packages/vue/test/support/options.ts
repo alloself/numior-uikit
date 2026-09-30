@@ -1,4 +1,4 @@
-import type { NuiOptionSource } from '../../src';
+import type { NuiOptionSource, NuiTreeItem } from '../../src';
 
 export const FRUITS: NuiOptionSource<string> = [
   { value: 'apple', label: 'Apple', icon: 'check' },
@@ -11,4 +11,17 @@ export const FRUITS: NuiOptionSource<string> = [
       { value: 'lime', label: 'Lime' },
     ],
   },
+];
+
+export const CATEGORIES: readonly NuiTreeItem<string>[] = [
+  {
+    value: 'electronics',
+    label: 'Electronics',
+    children: [
+      { value: 'phones', label: 'Phones' },
+      { value: 'laptops', label: 'Laptops', description: 'Portable' },
+    ],
+  },
+  { value: 'clothes', label: 'Clothes', children: [{ value: 'shoes', label: 'Shoes' }] },
+  { value: 'books', label: 'Books' },
 ];

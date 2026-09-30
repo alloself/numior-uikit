@@ -27,6 +27,19 @@
 
   padding: var(--nui-space-1);
 }
+.nui-tree.nui-list--variant-floating {
+  --_row: 2rem;
+
+  position: fixed;
+  padding: var(--nui-space-1);
+  overflow: auto;
+  scrollbar-width: thin;
+}
+.nui-tree.nui-list--variant-floating .nui-list__items {
+  flex: none;
+  padding: 0;
+  overflow: visible;
+}
 .nui-tree__list {
   position: relative;
 }

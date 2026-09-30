@@ -175,7 +175,7 @@ const emptyText = computed(() => emptyLabel ?? messages.value.empty);
 const isEmpty = computed(() => items.length === 0);
 const widget = computed(() => loading || !isEmpty.value);
 
-const { keyOf, selectedKeys, selectedValues, choose } = useOptionSelection<T>({
+const { keyOf, selectedKeys, choose } = useOptionSelection<T>({
   options: () => [],
   model,
   values,
@@ -435,6 +435,7 @@ const onFocus = (): void => {
 const onBlur = (): void => {
   focused.value = false;
   pointerModality.value = false;
+  activeKey.value = undefined;
   navigation.reset();
 };
 
@@ -500,9 +501,6 @@ onMounted(() => {
   mounted.value = true;
   if (itemHeight === undefined) {
     measureRow();
-  }
-  if (selectedValues.value.length > 0) {
-    restCursor();
   }
 });
 </script>
