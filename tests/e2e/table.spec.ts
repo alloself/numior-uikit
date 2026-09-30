@@ -185,6 +185,9 @@ test.describe('table', () => {
       '"ranges":[{"from":{"row":2,"col":1},"to":{"row":5,"col":1}}]',
     );
 
+    await table.cell(3, 1).click({ modifiers: ['Shift'] });
+    await expect(table.cell(3, 1)).not.toHaveAttribute('aria-selected');
+    await expect(table.cell(4, 1)).toHaveAttribute('aria-selected', 'true');
     await page.keyboard.press('Escape');
     await table.dragRange({ row: 1, col: 1 }, { row: 3, col: 2 });
 
@@ -199,7 +202,7 @@ test.describe('table', () => {
       '"ranges":[{"from":{"row":1,"col":1},"to":{"row":4,"col":3}}]',
     );
 
-    await expect(table.cell(1, 1)).toBeFocused();
+    await expect(table.cell(4, 3)).toBeFocused();
     expect(await table.textSelection()).toBe('');
     await page.keyboard.press('ControlOrMeta+A');
 
@@ -207,12 +210,12 @@ test.describe('table', () => {
       '"ranges":[{"from":{"row":0,"col":0},"to":{"row":9999,"col":10}}]',
     );
 
-    await expect(table.cell(1, 1)).toHaveCSS('background-color', await table.cellBackground(1, 2));
-    await expect(table.cell(1, 1)).toHaveCSS('outline-style', 'none');
+    await expect(table.cell(4, 3)).toHaveCSS('background-color', await table.cellBackground(4, 2));
+    await expect(table.cell(4, 3)).toHaveCSS('outline-style', 'none');
     await table.cell(2, 3).click({ modifiers: ['ControlOrMeta'] });
     await expect(table.cell(2, 3)).not.toHaveAttribute('aria-selected');
     await expect(table.cell(2, 2)).toHaveAttribute('aria-selected', 'true');
-    await expect(table.cell(1, 1)).toBeFocused();
+    await expect(table.cell(2, 3)).toBeFocused();
     await page.keyboard.press('Escape');
     await expect(table.output).toContainText('"ranges":[]');
     await table.output.click();

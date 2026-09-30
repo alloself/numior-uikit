@@ -6,12 +6,12 @@ import {
   clampPosition,
   colsOf,
   cutRanges,
-  growRange,
   inRanges,
   rowsOf,
   sameRanges,
   segmentsOf,
   stepCorner,
+  tidyRanges,
   withLast,
   type RangeBounds,
 } from './table-ranges';
@@ -45,6 +45,7 @@ export interface TableRangesOptions {
 
 export interface TableRanges {
   readonly dragging: Readonly<Ref<boolean>>;
+  readonly deselected: Readonly<Ref<boolean>>;
   segmentsOf(row: number): TableRowRanges | undefined;
   contains(position: TableCellPosition): boolean;
   onPointerdown(event: PointerEvent): void;
@@ -136,6 +137,7 @@ const clearTextSelection = (): void => {
 
 export const useTableRanges = (options: TableRangesOptions): TableRanges => {
   const dragging = ref(false);
+  const deselected = ref(false);
   let session: RangeSession | undefined;
   let point: EdgePoint = {};
   let swallow = false;
@@ -167,11 +169,20 @@ export const useTableRanges = (options: TableRangesOptions): TableRanges => {
     kept: NuiTableRanges = others ?? latest().slice(0, -1),
   ): NuiTableRanges => {
     others = kept;
-    return write(withLast(kept, last));
+    deselected.value = false;
+    return write(tidyRanges(withLast(kept, last)));
+  };
+
+  const take = (base: NuiTableRanges, cut: NuiTableRange): void => {
+    const next = write(tidyRanges(cutRanges(base, cut)));
+
+    others = next;
+    deselected.value = next.length === 0;
   };
 
   const clear = (): void => {
     others = undefined;
+    deselected.value = false;
     write([]);
   };
 
@@ -258,7 +269,7 @@ export const useTableRanges = (options: TableRangesOptions): TableRanges => {
         shape(swept);
         break;
       case 'remove':
-        others = write(cutRanges(active.action.base, swept));
+        take(active.action.base, swept);
         break;
     }
   };
@@ -320,51 +331,40 @@ export const useTableRanges = (options: TableRangesOptions): TableRanges => {
     return list.length === 0 && anchor !== undefined ? [{ from: anchor, to: anchor }] : list;
   };
 
-  const extendFrom = (
-    start: TableCellPosition,
-    anchor: TableCellPosition | undefined,
-  ): TableCellPosition => {
-    const last = latest().at(-1);
-
-    const grown =
-      last === undefined ? { from: anchor ?? start, to: start } : growRange(last, start);
-
-    holdFocus = true;
-    swallow = true;
-    clearTextSelection();
-    shape(grown);
-
-    if (anchor === undefined) {
-      options.focus(start);
-    }
-    return grown.from;
-  };
-
   const addFrom = (
     start: TableCellPosition,
     anchor: TableCellPosition | undefined,
   ): SessionStart => {
-    swallow = true;
-    clearTextSelection();
     shape({ from: start, to: start }, materialized(anchor));
     return { from: start, action: SHAPE };
   };
 
-  const removeFrom = (
+  const removeFrom = (start: TableCellPosition): SessionStart => {
+    const base = latest();
+
+    take(base, { from: start, to: start });
+    return { from: start, action: { kind: 'remove', base } };
+  };
+
+  const shiftFrom = (
     start: TableCellPosition,
     anchor: TableCellPosition | undefined,
   ): SessionStart => {
-    const base = latest();
+    if (inRanges(latest(), start)) {
+      return removeFrom(start);
+    }
+    const from = anchor ?? start;
 
+    shape({ from, to: start }, latest());
+    return { from, action: SHAPE };
+  };
+
+  const claim = (start: TableCellPosition, begun: SessionStart): SessionStart => {
     holdFocus = true;
     swallow = true;
     clearTextSelection();
-    others = write(cutRanges(base, { from: start, to: start }));
-
-    if (anchor === undefined) {
-      options.focus(start);
-    }
-    return { from: start, action: { kind: 'remove', base } };
+    options.focus(start);
+    return begun;
   };
 
   const sessionFor = (
@@ -374,9 +374,9 @@ export const useTableRanges = (options: TableRangesOptions): TableRanges => {
   ): SessionStart => {
     switch (mode) {
       case 'extend':
-        return { from: extendFrom(start, anchor), action: SHAPE };
+        return claim(start, shiftFrom(start, anchor));
       case 'add':
-        return inRanges(latest(), start) ? removeFrom(start, anchor) : addFrom(start, anchor);
+        return claim(start, inRanges(latest(), start) ? removeFrom(start) : addFrom(start, anchor));
       case 'plain':
         clear();
         return { from: start, action: SHAPE };
@@ -506,6 +506,7 @@ export const useTableRanges = (options: TableRangesOptions): TableRanges => {
   watch(options.ranges, (value) => {
     if (!sameRanges(value, written)) {
       others = undefined;
+      deselected.value = false;
     }
   });
 
@@ -525,6 +526,7 @@ export const useTableRanges = (options: TableRangesOptions): TableRanges => {
 
   return {
     dragging,
+    deselected,
     segmentsOf: segments,
     contains: (position) => inRanges(latest(), position),
     onPointerdown,

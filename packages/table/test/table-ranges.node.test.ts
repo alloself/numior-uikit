@@ -4,7 +4,6 @@ import {
   colsOf,
   copyShapeOf,
   cutRanges,
-  growRange,
   inRanges,
   rowsOf,
   sameRanges,
@@ -12,6 +11,7 @@ import {
   spanItems,
   spanLength,
   stepCorner,
+  tidyRanges,
   withLast,
 } from '../src/table/table-ranges';
 import { htmlOf, tsvOf } from '../src/table/table-clipboard';
@@ -89,9 +89,17 @@ describe('table ranges', () => {
       range(1, 2, 4, 2),
     ]);
 
-    expect(growRange(range(4, 1, 3, 1), { row: 5, col: 1 })).toEqual(range(3, 1, 5, 1));
-    expect(growRange(range(3, 1, 5, 1), { row: 4, col: 1 })).toEqual(range(3, 1, 5, 1));
-    expect(growRange(range(3, 2, 5, 2), { row: 1, col: 4 })).toEqual(range(5, 2, 1, 4));
+    expect(tidyRanges([range(4, 1, 4, 1), range(3, 1, 2, 1)])).toEqual([range(4, 1, 2, 1)]);
+
+    expect(tidyRanges([range(3, 3, 1, 1), range(5, 5, 5, 5)])).toEqual([
+      range(3, 3, 1, 1),
+      range(5, 5, 5, 5),
+    ]);
+
+    expect(
+      tidyRanges([...cutRanges([range(0, 0, 4, 4)], range(2, 2, 2, 2)), range(2, 2, 2, 2)]),
+    ).toEqual([range(0, 0, 4, 4)]);
+
     expect(rowsOf(range(3, 2, 4, 3), BOUNDS)).toEqual(range(3, 0, 4, 4));
     expect(colsOf(range(3, 2, 4, 3), BOUNDS)).toEqual(range(0, 2, 9, 3));
     expect(allOf(BOUNDS)).toEqual(range(0, 0, 9, 4));

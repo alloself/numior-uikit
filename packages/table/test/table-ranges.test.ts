@@ -61,7 +61,7 @@ describe('NuiTable cell ranges', () => {
 
     await grid.clickCell(4, 3, { shift: true });
     expect(grid.ranges).toEqual([range(1, 1, 4, 3)]);
-    expect(grid.focusedCell).toEqual({ row: 1, col: 1 });
+    expect(grid.focusedCell).toEqual({ row: 4, col: 3 });
     await grid.clickCell(6, 2, { ctrl: true });
     expect(grid.ranges).toEqual([range(1, 1, 4, 3), range(6, 2, 6, 2)]);
     expect(grid.focusedCell).toEqual({ row: 6, col: 2 });
@@ -70,41 +70,37 @@ describe('NuiTable cell ranges', () => {
     expect(grid.ranges).toEqual([]);
   });
 
-  it('grows the selection with every Shift+click and never drops what is already selected', async () => {
+  it('adds the rectangle from the last clicked cell with Shift and takes a selected cell out', async () => {
     const grid = mountPeople();
     await grid.clickCell(4, 1);
 
     await grid.clickCell(3, 1, { shift: true });
     await grid.clickCell(2, 1, { shift: true });
     await grid.clickCell(4, 1, { shift: true });
+    expect(grid.ranges).toEqual([range(2, 1, 3, 1)]);
     await grid.clickCell(5, 1, { shift: true });
     expect(grid.ranges).toEqual([range(2, 1, 5, 1)]);
-    expect(grid.focusedCell).toEqual({ row: 4, col: 1 });
+    expect(grid.focusedCell).toEqual({ row: 5, col: 1 });
     await grid.press('Escape');
     await grid.blur();
     await grid.clickCell(4, 2, { shift: true });
     await grid.clickCell(3, 2, { shift: true });
     await grid.clickCell(5, 2, { shift: true });
     expect(grid.ranges).toEqual([range(3, 2, 5, 2)]);
-    expect(grid.focusedCell).toEqual({ row: 4, col: 2 });
-    await grid.clickCell(4, 4, { shift: true });
-    await grid.clickCell(4, 3, { shift: true });
-    expect(grid.ranges).toEqual([range(3, 2, 5, 4)]);
-    await grid.press('ArrowDown', { shift: true });
-    expect(grid.ranges).toEqual([range(3, 2, 6, 4)]);
-    await grid.openCellMenu(5, 3);
-    expect(grid.activeCell).toEqual({ row: 4, col: 2 });
+    await grid.clickCell(4, 2, { shift: true });
+    expect(grid.ranges).toEqual([range(3, 2, 3, 2), range(5, 2, 5, 2)]);
+    expect(grid.rangeMarks(4, 2)).toEqual([]);
+    await grid.clickCell(4, 2, { shift: true });
+    expect(grid.ranges).toEqual([range(3, 2, 5, 2)]);
+    await grid.press('a', { ctrl: true });
+    await grid.clickCell(6, 2, { shift: true });
+    expect(grid.rangeMarks(6, 2)).toEqual([]);
+    expect(grid.rangeMarks(7, 2)).toEqual(['selected', 'ranged', 'range-top']);
+    expect(grid.focusedCell).toEqual({ row: 6, col: 2 });
+    await grid.openCellMenu(8, 3);
+    expect(grid.activeCell).toEqual({ row: 6, col: 2 });
     await grid.closeCellMenu();
-    expect(grid.focusedCell).toEqual({ row: 4, col: 2 });
-    await grid.clickCell(4, 3, { ctrl: true });
-    await grid.clickCell(8, 3, { shift: true });
-
-    expect(grid.ranges).toEqual([
-      range(3, 2, 3, 4),
-      range(4, 2, 4, 2),
-      range(4, 4, 4, 4),
-      range(5, 2, 8, 4),
-    ]);
+    expect(grid.focusedCell).toEqual({ row: 6, col: 2 });
   });
 
   it('takes selected cells out with Ctrl and never selects a cell twice', async () => {
@@ -124,7 +120,7 @@ describe('NuiTable cell ranges', () => {
     expect(grid.rangeMarks(2, 3)).toEqual([]);
     expect(grid.rangeMarks(1, 3)).toEqual(['selected', 'ranged', 'range-bottom']);
     expect(grid.rangeMarks(2, 2)).toEqual(['selected', 'ranged', 'range-end']);
-    expect(grid.focusedCell).toEqual({ row: 1, col: 1 });
+    expect(grid.focusedCell).toEqual({ row: 2, col: 3 });
     expect(grid.clicks).toEqual([]);
     await grid.clickCell(2, 3, { ctrl: true });
     expect(grid.rangeMarks(2, 3)).toEqual(['selected', 'ranged']);
@@ -136,12 +132,7 @@ describe('NuiTable cell ranges', () => {
     await grid.clickCell(5, 2, { ctrl: true });
     await grid.press('ArrowUp', { shift: true, ctrl: true });
 
-    expect(grid.ranges).toEqual([
-      range(1, 1, 1, 1),
-      range(1, 3, 1, 3),
-      range(2, 3, 3, 3),
-      range(5, 2, 0, 2),
-    ]);
+    expect(grid.ranges).toEqual([range(1, 1, 1, 1), range(1, 3, 3, 3), range(5, 2, 0, 2)]);
 
     await grid.press('ArrowDown', { shift: true, ctrl: true });
     expect(grid.ranges).toEqual([range(1, 1, 1, 3), range(2, 3, 3, 3), range(5, 2, 49, 2)]);

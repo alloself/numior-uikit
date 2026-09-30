@@ -646,7 +646,7 @@ const rootClass = computed(() => [
       order.dragging.value !== undefined || rowDrag.dragging.value !== undefined,
     'nui-table--ranging': rangeSelect.dragging.value,
     'nui-table--cell-selection': cellSelection && !loading,
-    'nui-table--ranged': ranges.value.length > 0,
+    'nui-table--ranged': ranges.value.length > 0 || rangeSelect.deselected.value,
   },
 ]);
 

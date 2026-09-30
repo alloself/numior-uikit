@@ -175,9 +175,12 @@
   outline: none;
   pointer-events: none;
 }
-.nui-table__cell:not(.nui-table__cell--ranged):focus-visible {
+.nui-table__cell:focus-visible {
   outline: var(--nui-focus-ring-width) solid var(--nui-focus);
   outline-offset: calc(-1 * var(--nui-focus-ring-width));
+}
+.nui-table--ranged .nui-table__body .nui-table__cell:focus-visible {
+  outline: none;
 }
 .nui-table__content {
   box-sizing: border-box;

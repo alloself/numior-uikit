@@ -180,26 +180,88 @@ export const withLast = (others: NuiTableRanges, last: NuiTableRange): NuiTableR
   last,
 ];
 
-interface AxisSpan {
-  readonly from: number;
-  readonly to: number;
+interface RangeItem {
+  readonly box: RangeBox;
+  readonly range: NuiTableRange | undefined;
 }
 
-const growAxis = (from: number, to: number, target: number): AxisSpan => {
-  const low = Math.min(from, to);
-  const high = Math.max(from, to);
+interface RangeJoin {
+  readonly first: number;
+  readonly second: number;
+  readonly box: RangeBox;
+}
 
-  if (target < low) {
-    return { from: high, to: target };
+const joinBoxes = (a: RangeBox, b: RangeBox): RangeBox | undefined => {
+  const sameCols = a.start === b.start && a.end === b.end;
+  const sameRows = a.top === b.top && a.bottom === b.bottom;
+
+  if (sameCols && a.top <= b.bottom + 1 && b.top <= a.bottom + 1) {
+    return {
+      top: Math.min(a.top, b.top),
+      bottom: Math.max(a.bottom, b.bottom),
+      start: a.start,
+      end: a.end,
+    };
   }
-  return target > high ? { from: low, to: target } : { from, to };
+  return sameRows && a.start <= b.end + 1 && b.start <= a.end + 1
+    ? {
+        top: a.top,
+        bottom: a.bottom,
+        start: Math.min(a.start, b.start),
+        end: Math.max(a.end, b.end),
+      }
+    : undefined;
 };
 
-export const growRange = (range: NuiTableRange, cell: TableCellPosition): NuiTableRange => {
-  const rows = growAxis(range.from.row, range.to.row, cell.row);
-  const cols = growAxis(range.from.col, range.to.col, cell.col);
+const joinOf = (items: readonly RangeItem[]): RangeJoin | undefined => {
+  for (const [second, right] of items.entries()) {
+    for (const [first, left] of items.entries()) {
+      const box = first < second ? joinBoxes(left.box, right.box) : undefined;
 
-  return { from: { row: rows.from, col: cols.from }, to: { row: rows.to, col: cols.to } };
+      if (box !== undefined) {
+        return { first, second, box };
+      }
+    }
+  }
+  return undefined;
+};
+
+const joinAll = (items: readonly RangeItem[]): readonly RangeItem[] => {
+  const join = joinOf(items);
+
+  if (join === undefined) {
+    return items;
+  }
+  return joinAll(
+    items.flatMap((item, index) => {
+      if (index === join.first) {
+        return [];
+      }
+      return index === join.second ? [{ box: join.box, range: undefined }] : [item];
+    }),
+  );
+};
+
+const isCorner = (box: RangeBox, cell: TableCellPosition): boolean =>
+  (cell.row === box.top || cell.row === box.bottom) &&
+  (cell.col === box.start || cell.col === box.end);
+
+const orient = (box: RangeBox, moving: TableCellPosition | undefined): NuiTableRange =>
+  moving !== undefined && isCorner(box, moving)
+    ? {
+        from: { row: box.top + box.bottom - moving.row, col: box.start + box.end - moving.col },
+        to: moving,
+      }
+    : rangeOfBox(box);
+
+export const tidyRanges = (ranges: NuiTableRanges): NuiTableRange[] => {
+  const items = joinAll(ranges.map((range) => ({ box: boxOf(range), range })));
+  const moving = ranges.at(-1)?.to;
+
+  return items.map(
+    (item, index) =>
+      item.range ?? orient(item.box, index === items.length - 1 ? moving : undefined),
+  );
 };
 
 export const rowsOf = (range: NuiTableRange, bounds: RangeBounds): NuiTableRange => ({
