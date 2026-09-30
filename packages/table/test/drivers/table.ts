@@ -863,6 +863,17 @@ export class TableDriver<T> {
     return this.events.edits;
   }
 
+  async paste(text: string): Promise<void> {
+    const event = new Event('paste', { bubbles: true, cancelable: true });
+
+    Object.defineProperty(event, 'clipboardData', {
+      value: { getData: (type: string) => (type === 'text/plain' ? text : '') },
+    });
+
+    (document.activeElement ?? this.element).dispatchEvent(event);
+    await nextTick();
+  }
+
   get dropMark(): DropMark | undefined {
     const box = this.wrapper.find<HTMLElement>('.nui-table__drop--box');
 

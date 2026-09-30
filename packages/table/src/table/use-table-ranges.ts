@@ -54,6 +54,7 @@ export interface TableRanges {
   takeClick(): boolean;
   swallowClick(): void;
   clear(): void;
+  replace(next: NuiTableRanges): void;
 }
 
 type SessionMode = 'plain' | 'extend' | 'add';
@@ -547,5 +548,10 @@ export const useTableRanges = (options: TableRangesOptions): TableRanges => {
       swallow = true;
     },
     clear,
+    replace: (next) => {
+      others = undefined;
+      deselected.value = false;
+      write(tidyRanges(next));
+    },
   };
 };

@@ -94,6 +94,11 @@ Rows stay in place after an edit even when the column is sorted or filtered. Tot
 and without `getKey` the edit history resets when `rows` change. The `undo` and `redo` methods of
 the table ref do the same from code.
 
+Ctrl+V pastes a block of tab separated text at the active cell, and the pasted area becomes the
+selection. A single value fills the whole selection, a block repeats over a multiple of its size,
+and cells past the table edge are dropped. Numbers, dates and booleans are read by the column type,
+and `parse` sets a reader of its own.
+
 <Example name="table/Edits" />
 
 ### Ten thousand rows

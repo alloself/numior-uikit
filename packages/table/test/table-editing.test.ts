@@ -23,6 +23,11 @@ const mountStaff = (options: Partial<TableMountOptions<Staff>> = {}): TableDrive
   return grid;
 };
 
+const range = (top: number, start: number, bottom: number, end: number) => ({
+  from: { row: top, col: start },
+  to: { row: bottom, col: end },
+});
+
 afterEach(() => {
   clipboard?.restore();
   clipboard = undefined;
@@ -100,6 +105,41 @@ describe('NuiTable edits', () => {
     expect(grid.edits).toHaveLength(1);
   });
 
+  it('pastes a block from the active cell, fills a selection, repeats a block and skips what does not fit', async () => {
+    const rows = staff(20);
+    const grid = mountStaff({ rows });
+    await grid.focusCell(1, 2);
+
+    await grid.paste('Самара\t1\u00a0500\r\nТула\tabc\r\n');
+
+    expect(grid.edits).toEqual([
+      {
+        kind: 'paste',
+        changes: [
+          { row: rows[1], key: 'city', value: 'Самара', previous: 'Казань' },
+          { row: rows[1], key: 'salary', value: 1500, previous: 1010 },
+          { row: rows[2], key: 'city', value: 'Тула', previous: 'Ереван' },
+        ],
+      },
+    ]);
+
+    expect(grid.ranges).toEqual([range(1, 2, 2, 3)]);
+    expect(grid.cellText(1, 3)).toBe('1\u00a0500');
+    expect(grid.announcement).toBe('Вставлены 3 ячейки, пропущено: 1');
+    await grid.dragRange({ row: 3, col: 2 }, { row: 5, col: 2 });
+    await grid.paste('Сочи');
+    expect([3, 4, 5].map((row) => grid.cellText(row, 2))).toEqual(['Сочи', 'Сочи', 'Сочи']);
+    await grid.dragRange({ row: 2, col: 4 }, { row: 5, col: 4 });
+    await grid.paste('нет\nда');
+    expect([2, 3, 4, 5].map((row) => rows[row]?.remote)).toEqual([false, true, false, true]);
+    await grid.dragRange({ row: 4, col: 1 }, { row: 4, col: 1 });
+    await grid.paste('Кто-то');
+    expect(grid.announcement).toBe('Вставлено 0 ячеек, пропущено: 1');
+    expect(grid.edits).toHaveLength(3);
+    await grid.press('z', { ctrl: true });
+    expect([2, 3, 4, 5].map((row) => rows[row]?.remote)).toEqual([true, false, true, false]);
+  });
+
   it('offers cut and clear in the cell menu and keeps the history across new rows by key', async () => {
     const rows = staff(20);
     const grid = mountStaff({ rows, props: { getKey: (row) => row.id } });
@@ -111,8 +151,11 @@ describe('NuiTable edits', () => {
       'Вырезать',
       'Копировать',
       'Копировать с заголовками',
+      'Вставить',
       'Очистить',
     ]);
+
+    expect(grid.cellMenuDisabled('Вставить')).toBe(true);
 
     await grid.chooseCellMenu('Очистить');
 

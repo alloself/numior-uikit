@@ -26,6 +26,8 @@ export interface TableContextMenuOptions<T> {
   readonly clearable: () => boolean;
   readonly cut: () => void;
   readonly clear: () => void;
+  readonly pastable: () => boolean;
+  readonly paste: () => void;
   readonly show: (focus: NuiMenuFocus | undefined) => void;
   readonly isRtl: () => boolean;
   readonly messages: ComputedRef<NuiTableMessages>;
@@ -158,7 +160,15 @@ export const useTableContextMenu = <T>(options: TableContextMenuOptions<T>): Tab
       : [];
 
     const clear: NuiMenuEntry[] = editable
-      ? [{ key: 'clear', label: texts.menuClear, disabled: !clearable, onSelect: options.clear }]
+      ? [
+          {
+            key: 'paste',
+            label: texts.menuPaste,
+            disabled: !options.pastable(),
+            onSelect: options.paste,
+          },
+          { key: 'clear', label: texts.menuClear, disabled: !clearable, onSelect: options.clear },
+        ]
       : [];
 
     const own: NuiMenuEntry[] = [

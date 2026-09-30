@@ -1,6 +1,9 @@
 import type { ComputedRef } from 'vue';
-import { boxOf, type RangeBox } from './table-ranges';
+import { parseTsv } from './table-clipboard';
 import { createCommandStack } from './table-commands';
+import type { ParsedCell } from './table-parse';
+import { planPaste, type PasteCell } from './table-paste';
+import { boxOf, type RangeBounds, type RangeBox } from './table-ranges';
 import type { NuiTableMessages } from './table.messages';
 import type {
   NuiTableCellValue,
@@ -23,6 +26,12 @@ export interface TableEditingOptions<T> {
   readonly copy: () => Promise<boolean>;
   readonly emit: (event: NuiTableEditEvent<T>) => void;
   readonly applied: (keys: readonly string[]) => void;
+  readonly parse: (row: T, key: string, text: string) => ParsedCell;
+  readonly bounds: () => RangeBounds;
+  readonly select: (ranges: NuiTableRanges) => void;
+  readonly readable: () => boolean;
+  readonly read: () => Promise<string | null>;
+  readonly owns: (element: Element | null) => boolean;
   readonly messages: ComputedRef<NuiTableMessages>;
   readonly announce: (text: string) => void;
 }
@@ -34,13 +43,21 @@ export interface TableEditing {
   undo(): boolean;
   redo(): boolean;
   reset(): void;
+  pastable(): boolean;
+  paste(text: string): boolean;
+  pasteFromClipboard(): Promise<boolean>;
+  onPaste(event: ClipboardEvent): void;
   onKeydown(event: KeyboardEvent): boolean;
 }
 
 type ClearKind = 'clear' | 'cut';
 
+type EditKind = ClearKind | 'paste';
+
+type PasteOutcome<T> = NuiTableEdit<T> | 'skip' | 'same';
+
 interface TableEditCommand<T> {
-  readonly kind: ClearKind;
+  readonly kind: EditKind;
   readonly changes: readonly NuiTableEdit<T>[];
 }
 
@@ -60,6 +77,12 @@ const isKey = (event: KeyboardEvent, code: string, key: string): boolean =>
 const keysOf = <T>(changes: readonly NuiTableEdit<T>[]): string[] => [
   ...new Set(changes.map((change) => change.key)),
 ];
+
+const sameValue = (a: NuiTableCellValue, b: NuiTableCellValue): boolean =>
+  a instanceof Date && b instanceof Date ? a.getTime() === b.getTime() : a === b;
+
+const isChange = <T>(outcome: PasteOutcome<T>): outcome is NuiTableEdit<T> =>
+  typeof outcome !== 'string';
 
 const areaOf = (ranges: NuiTableRanges): number =>
   ranges.reduce((sum, range) => {
@@ -140,7 +163,7 @@ export const useTableEditing = <T>(options: TableEditingOptions<T>): TableEditin
     return true;
   };
 
-  const record = (kind: ClearKind, changes: readonly NuiTableEdit<T>[]): void => {
+  const record = (kind: EditKind, changes: readonly NuiTableEdit<T>[]): void => {
     if (changes.length === 0) {
       return;
     }
@@ -229,6 +252,68 @@ export const useTableEditing = <T>(options: TableEditingOptions<T>): TableEditin
     return (await options.copy()) && clearCells('cut');
   };
 
+  const outcomeOf = (cell: PasteCell): PasteOutcome<T> => {
+    const row = options.rowAt(cell.row);
+    const key = options.keyAt(cell.col);
+
+    if (row === undefined || key === undefined || !options.editable(row, key)) {
+      return 'skip';
+    }
+    const parsed = options.parse(row, key, cell.text);
+
+    if (parsed.kind === 'invalid') {
+      return 'skip';
+    }
+    const previous = options.valueOf(row, key);
+
+    return sameValue(previous, parsed.value) ? 'same' : { row, key, value: parsed.value, previous };
+  };
+
+  const pasteCells = (cells: readonly PasteCell[], area: NuiTableRanges): boolean => {
+    const outcomes = cells.map(outcomeOf);
+    const skipped = outcomes.filter((outcome) => outcome === 'skip').length;
+
+    record('paste', outcomes.filter(isChange));
+
+    if (area.length > 0) {
+      options.select(area);
+    }
+    options.announce(options.messages.value.pasted({ count: cells.length - skipped, skipped }));
+    return true;
+  };
+
+  const paste = (text: string): boolean => {
+    const limit = options.limit();
+
+    const plan = planPaste(
+      parseTsv(text),
+      options.ranges(),
+      options.cell(),
+      options.bounds(),
+      limit,
+    );
+
+    switch (plan.kind) {
+      case 'none':
+        return false;
+      case 'limit':
+        options.announce(options.messages.value.editLimit({ count: plan.count, limit }));
+        return false;
+      case 'cells':
+        return pasteCells(plan.cells, plan.area === undefined ? [] : [plan.area]);
+    }
+  };
+
+  const pasteFromClipboard = async (): Promise<boolean> => {
+    const text = await options.read();
+
+    if (text === null) {
+      options.announce(options.messages.value.pasteDenied);
+      return false;
+    }
+    return paste(text);
+  };
+
   const onModified = (event: KeyboardEvent): boolean => {
     if (isKey(event, 'KeyX', 'x') && !event.shiftKey) {
       event.preventDefault();
@@ -261,6 +346,18 @@ export const useTableEditing = <T>(options: TableEditingOptions<T>): TableEditin
     redo,
     reset: () => {
       history.clear();
+    },
+    pastable: () => options.enabled() && options.readable(),
+    paste: (text) => options.enabled() && paste(text),
+    pasteFromClipboard,
+    onPaste: (event) => {
+      const text = event.clipboardData?.getData('text/plain') ?? '';
+
+      if (!options.enabled() || text === '' || !options.owns(document.activeElement)) {
+        return;
+      }
+      event.preventDefault();
+      paste(text);
     },
     onKeydown: (event) => {
       if (!options.enabled() || event.altKey || !isCellTarget(event.target)) {

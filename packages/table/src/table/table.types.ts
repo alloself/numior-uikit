@@ -49,32 +49,37 @@ interface NuiTableColumnBase {
   readonly flex?: number | undefined;
 }
 
-interface NuiTableColumnEditing<T> {
+interface NuiTableColumnEditing<T, V> {
   readonly editable?: boolean | ((row: T) => boolean) | undefined;
+  readonly parse?: ((text: string, row: T) => V | null | undefined) | undefined;
 }
 
-export interface NuiTableTextColumn<T> extends NuiTableColumnBase, NuiTableColumnEditing<T> {
+export interface NuiTableTextColumn<T>
+  extends NuiTableColumnBase, NuiTableColumnEditing<T, string> {
   readonly type: 'text';
   readonly value: (row: T) => string | null | undefined;
   readonly format?: ((value: string, row: T | undefined) => string) | undefined;
   readonly aggregate?: 'count' | TableAggregateFn<T> | undefined;
 }
 
-export interface NuiTableNumberColumn<T> extends NuiTableColumnBase, NuiTableColumnEditing<T> {
+export interface NuiTableNumberColumn<T>
+  extends NuiTableColumnBase, NuiTableColumnEditing<T, number> {
   readonly type: 'number';
   readonly value: (row: T) => number | null | undefined;
   readonly format?: ((value: number, row: T | undefined) => string) | undefined;
   readonly aggregate?: TableAggregate<T> | undefined;
 }
 
-export interface NuiTableDateColumn<T> extends NuiTableColumnBase, NuiTableColumnEditing<T> {
+export interface NuiTableDateColumn<T>
+  extends NuiTableColumnBase, NuiTableColumnEditing<T, Date | number> {
   readonly type: 'date';
   readonly value: (row: T) => Date | number | null | undefined;
   readonly format?: ((value: Date, row: T | undefined) => string) | undefined;
   readonly aggregate?: 'min' | 'max' | 'count' | TableAggregateFn<T> | undefined;
 }
 
-export interface NuiTableBooleanColumn<T> extends NuiTableColumnBase, NuiTableColumnEditing<T> {
+export interface NuiTableBooleanColumn<T>
+  extends NuiTableColumnBase, NuiTableColumnEditing<T, boolean> {
   readonly type: 'boolean';
   readonly value: (row: T) => boolean | null | undefined;
   readonly format?: ((value: boolean, row: T | undefined) => string) | undefined;
@@ -167,7 +172,7 @@ export interface NuiTableCopyOptions {
   readonly headers?: boolean | undefined;
 }
 
-export type NuiTableEditKind = 'clear' | 'cut' | 'undo' | 'redo';
+export type NuiTableEditKind = 'clear' | 'cut' | 'paste' | 'undo' | 'redo';
 
 export interface NuiTableEdit<T> {
   readonly row: T;

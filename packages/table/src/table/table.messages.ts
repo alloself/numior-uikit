@@ -94,6 +94,9 @@ export interface NuiTableMessages {
   readonly redone: (params: { readonly count: number }) => string;
   readonly editLimit: (params: { readonly count: number; readonly limit: number }) => string;
   readonly readOnly: string;
+  readonly menuPaste: string;
+  readonly pasted: (params: { readonly count: number; readonly skipped: number }) => string;
+  readonly pasteDenied: string;
 }
 
 export const tableMessages: NuiMessageCatalog<'table'> = {
@@ -188,6 +191,10 @@ export const tableMessages: NuiMessageCatalog<'table'> = {
     editLimit: ({ count, limit }) =>
       `Too many cells: ${count.toLocaleString('en-US')}, up to ${limit.toLocaleString('en-US')} change at once`,
     readOnly: 'These cells cannot be changed',
+    menuPaste: 'Paste',
+    pasted: ({ count, skipped }) =>
+      `Pasted ${count.toLocaleString('en-US')} ${plural('en', count, { one: 'cell', other: 'cells' })}${skipped > 0 ? `, skipped ${skipped.toLocaleString('en-US')}` : ''}`,
+    pasteDenied: 'The browser did not share the clipboard; press Ctrl+V',
   },
   ru: {
     label: 'Таблица данных',
@@ -280,5 +287,9 @@ export const tableMessages: NuiMessageCatalog<'table'> = {
     editLimit: ({ count, limit }) =>
       `Слишком много ячеек: ${count.toLocaleString('ru-RU')}, за раз можно изменить до ${limit.toLocaleString('ru-RU')}`,
     readOnly: 'Эти ячейки нельзя изменить',
+    menuPaste: 'Вставить',
+    pasted: ({ count, skipped }) =>
+      `${plural('ru', count, { one: 'Вставлена', few: 'Вставлены', many: 'Вставлено', other: 'Вставлено' })} ${count.toLocaleString('ru-RU')} ${plural('ru', count, { one: 'ячейка', few: 'ячейки', many: 'ячеек', other: 'ячейки' })}${skipped > 0 ? `, пропущено: ${skipped.toLocaleString('ru-RU')}` : ''}`,
+    pasteDenied: 'Браузер не дал прочитать буфер обмена, нажмите Ctrl+V',
   },
 };

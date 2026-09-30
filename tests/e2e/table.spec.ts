@@ -314,6 +314,39 @@ test.describe('table', () => {
     await page.keyboard.press('Escape');
   });
 
+  test('pastes a block copied elsewhere into the cells and undoes it', async ({
+    page,
+    isMobile,
+  }) => {
+    test.skip(isMobile, 'keyboard paste on desktop');
+    const playground = new PlaygroundPage(page);
+    const { table } = playground;
+    await playground.open();
+    await table.root.scrollIntoViewIfNeeded();
+
+    const block = [
+      { row: 1, col: 3 },
+      { row: 1, col: 4 },
+      { row: 2, col: 3 },
+      { row: 2, col: 4 },
+    ];
+
+    const before = await table.cellTexts(block);
+
+    await table.putInClipboard('Самара\tЛатвия\r\nТула\tЛитва');
+    await table.cell(1, 3).click();
+    await page.keyboard.press('ControlOrMeta+V');
+    await expect(table.output).toContainText('"lastEdit":"paste:4"');
+    await expect.poll(() => table.cellTexts(block)).toEqual(['Самара', 'Латвия', 'Тула', 'Литва']);
+
+    await expect(table.output).toContainText(
+      '"ranges":[{"from":{"row":1,"col":3},"to":{"row":2,"col":4}}]',
+    );
+
+    await page.keyboard.press('ControlOrMeta+Z');
+    await expect.poll(() => table.cellTexts(block)).toEqual(before);
+  });
+
   test('opens the cell menu with a long press on a phone and copies the cell', async ({
     page,
     isMobile,

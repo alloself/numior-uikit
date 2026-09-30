@@ -13,6 +13,7 @@
         @pointerdown="rangeSelect.onPointerdown"
         @mousedown="rangeSelect.onMousedown"
         @contextmenu="cellMenu.onContextmenu"
+        @paste="editing.onPaste"
       >
         <table
           :id="gridId"
@@ -291,6 +292,7 @@ import { useTableFocus } from './use-table-focus';
 import { useTableClipboard, type TableCopyCell } from './use-table-clipboard';
 import { useTableContextMenu } from './use-table-context-menu';
 import { useTableEditing } from './use-table-editing';
+import { parseCell } from './table-parse';
 import { useTableRanges } from './use-table-ranges';
 import { pageRowsOf } from './table-keys';
 import { useTableExpansion } from './use-table-expansion';
@@ -1108,6 +1110,22 @@ const rowByKey = computed(() =>
     : new Map(rows.map((row) => [getKey(row), row])),
 );
 
+const clipboardOf = (): Clipboard | undefined =>
+  typeof navigator === 'undefined' || !('clipboard' in navigator) ? undefined : navigator.clipboard;
+
+const readClipboard = async (): Promise<string | null> => {
+  try {
+    return (await clipboardOf()?.readText()) ?? null;
+  } catch {
+    return null;
+  }
+};
+
+const ownsCell = (element: Element | null): boolean =>
+  element instanceof HTMLElement &&
+  element.matches('.nui-table__cell') &&
+  viewport.value?.contains(element) === true;
+
 const resolveRow = (row: T): T | undefined =>
   getKey === undefined || rowByKey.value === undefined ? row : rowByKey.value.get(getKey(row));
 
@@ -1134,6 +1152,15 @@ const editing = useTableEditing<T>({
     totals.take(ran);
     sync();
   },
+  parse: (row, key, text) =>
+    parseCell(columnAt(key), text, row, resolvedLocale.value, booleanTexts.value),
+  bounds: () => ({ rows: visibleRows.value, cols: dataKeys.value.length }),
+  select: (next) => {
+    rangeSelect.replace(next);
+  },
+  readable: () => typeof clipboardOf()?.readText === 'function',
+  read: readClipboard,
+  owns: ownsCell,
   messages,
   announce,
 });
@@ -1197,6 +1224,10 @@ const cellMenu = useTableContextMenu<T>({
   },
   clear: () => {
     editing.clear();
+  },
+  pastable: () => editing.pastable(),
+  paste: () => {
+    void editing.pasteFromClipboard();
   },
   show: (focusOn) => {
     cellMenuNode.value?.show(focusOn);

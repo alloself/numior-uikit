@@ -278,6 +278,24 @@ export class TableSection {
     return stubClipboard(this.page);
   }
 
+  async putInClipboard(text: string): Promise<void> {
+    await this.page.evaluate((value) => {
+      const area = document.createElement('textarea');
+
+      area.id = 'clipboard-source';
+      area.value = value;
+      document.body.append(area);
+      area.focus();
+      area.select();
+    }, text);
+
+    await this.page.keyboard.press('ControlOrMeta+C');
+
+    await this.page.evaluate(() => {
+      document.getElementById('clipboard-source')?.remove();
+    });
+  }
+
   copiedTexts(): Promise<string[]> {
     return copiedTexts(this.page);
   }
