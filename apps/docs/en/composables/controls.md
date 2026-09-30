@@ -3,7 +3,7 @@
 `defineControls({ text: control(NuiInput, isString, { props }) })` builds a control registry:
 the component, its model name, a value guard and a props guard. Forms from JSON and cell
 editors find a control by its string key. `createNuiConfig({ controls })` or `provideControls`
-hands the registry to descendants, `kitControls` from `@numior/vue` describes the kit controls.
+hands the registry to descendants, `kitControls` from `@numior/vue/controls` describes the kit controls.
 
 <Example name="composables/Controls" />
 

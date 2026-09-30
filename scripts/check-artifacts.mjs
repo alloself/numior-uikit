@@ -87,7 +87,6 @@ await importBuild('primitives', [
 ]);
 
 const code = await importBuild('vue', [
-  'kitControls',
   'NuiAvatarUpload',
   'NuiButton',
   'NuiLink',
@@ -252,6 +251,10 @@ const bundleOf = async (source) => {
     .join('\n');
 };
 
+const vueControls = await import(pathToFileURL(resolve('packages/vue/dist/controls.js')).href);
+
+assert.equal(typeof vueControls.kitControls, 'object', 'vue/controls must export the kit controls');
+
 const vueEntry = JSON.stringify(resolve('packages/vue/dist/index.js'));
 const buttonOnly = await bundleOf(`export { NuiButton } from ${vueEntry};`);
 const dialogOnly = await bundleOf(`export { NuiDialog } from ${vueEntry};`);
@@ -263,6 +266,8 @@ assert.doesNotMatch(
 );
 
 assert.doesNotMatch(buttonOnly, /@vueuse\/core/, 'NuiButton pulled @vueuse/core');
+
+assert.doesNotMatch(buttonOnly, /NuiTimeField|NuiDatePicker/, 'NuiButton pulled the kit controls');
 
 assert.match(dialogOnly, /Закрыть/, 'NuiDialog lost its dictionary texts');
 

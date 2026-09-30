@@ -1,4 +1,4 @@
-import { kitControls } from '@numior/vue';
+import { kitControls } from '@numior/vue/controls';
 import { describe, expect, it } from 'vitest';
 import { parseFormConfig, type FormJsonEntry } from '../src';
 import { SmartFormDriver } from './drivers/smart-form';

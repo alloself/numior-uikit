@@ -10,7 +10,8 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
-import { NuiField, NuiSelect, kitControls } from '@numior/vue';
+import { NuiField, NuiSelect } from '@numior/vue';
+import { kitControls } from '@numior/vue/controls';
 
 const kinds = [
   { value: 'text', label: 'Text' },

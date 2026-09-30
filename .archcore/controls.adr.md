@@ -31,13 +31,24 @@ date: 2026-09-28
   и экспортируются: одна реализация для тестов, реестра и JSON-форм.
 - Реестр раздаётся через `createNuiConfig({ controls })`/`provideNuiConfig` или
   `provideControls`; `useControls()` возвращает `null`, если реестра нет. Значения по умолчанию
-  нет намеренно: `kitControls` из `@numior/vue` импортирует все контролы кита, и подстановка по
+  нет намеренно: `kitControls` из `@numior/vue/controls` импортирует все контролы кита, и подстановка по
   умолчанию тянула бы их в каждое приложение с формой.
 - `kitControls`: `text`, `textarea`, `number`, `select`, `combobox`, `checkbox`, `switch`,
   `radio`, `date`, `dateRange`, `time` с гардами JSON-допустимых props. `NuiRadioGroup` получил
   проп `options` (как у `NuiCheckboxGroup`), иначе радиокнопки нельзя описать без слота.
   `NuiUpload` в реестр не входит: ему нужен адаптер-функция, которую JSON не передаст;
   приложение регистрирует свою обёртку.
+
+### Отдельный вход `@numior/vue/controls` (2026-09-30)
+
+`kitControls` переехал из корня `@numior/vue` во вход `@numior/vue/controls` (второй entry сборки
+по образцу `@numior/table/engine`, общие компоненты — в чанке `shared-*.js`). В едином
+`dist/index.js` вызов `defineControls({...})` на верхнем уровне сборщик выбросить не может, и
+импорт одного `NuiButton` тянул все контролы реестра (около 5,5 тыс. строк: время, календарь,
+выбор дат, дерево). Заметили, когда `NuiOtpField` первым из контролов импортировал
+`@vueuse/core` и сработала проверка артефактов; теперь `check-artifacts` ещё и требует, чтобы
+бандл `NuiButton` не содержал `NuiTimeField` и `NuiDatePicker`. PURE-аннотации отвергнуты:
+это комментарии в исходниках.
 
 ## Alternatives Considered
 
@@ -50,7 +61,7 @@ date: 2026-09-28
 
 ## Consequences
 
-`@numior/primitives` экспортирует гарды и реестр, `@numior/vue` — `kitControls`, `NuiRadioGroup`
+`@numior/primitives` экспортирует гарды и реестр, `@numior/vue/controls` — `kitControls`, `NuiRadioGroup`
 принимает `options`. Формы получают `formConfig({ controls }).control('select', selector, config)`
 (отдельный строитель вместо перегрузки `field`: перегрузки стрелочных функций через интерфейс с
 двумя сигнатурами не сходятся с обобщёнными правилами без приведения типов) и

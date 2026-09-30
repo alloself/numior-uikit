@@ -1,7 +1,7 @@
 import { mount } from '@vue/test-utils';
 import { describe, expect, it } from 'vitest';
 import type { NuiControlEntry } from '@numior/primitives';
-import { kitControls } from '../src';
+import { kitControls } from '../src/controls';
 
 interface Sample {
   readonly entry: NuiControlEntry;

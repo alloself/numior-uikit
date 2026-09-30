@@ -16,6 +16,11 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
+    "./controls": {
+      "@numior/source": "./src/controls/index.ts",
+      "types": "./dist/controls/index.d.ts",
+      "import": "./dist/controls.js"
+    },
     "./styles.css": {
       "@numior/source": "./src/styles.css",
       "default": "./dist/styles.css"

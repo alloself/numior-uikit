@@ -56,9 +56,9 @@ import {
   NuiSelect,
   NuiSwitch,
   NuiTextarea,
-  kitControls,
   type NuiOptionSource,
 } from '@numior/vue';
+import { kitControls } from '@numior/vue/controls';
 import {
   NuiSmartForm,
   email,

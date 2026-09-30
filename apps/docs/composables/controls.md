@@ -3,7 +3,7 @@
 `defineControls({ text: control(NuiInput, isString, { props }) })` собирает реестр контролов:
 компонент, имя модели, гард значения и гард props. Формы из JSON и редакторы ячеек находят
 контрол по строковому ключу. `createNuiConfig({ controls })` или `provideControls` отдают реестр
-потомкам, `kitControls` из `@numior/vue` описывает контролы кита.
+потомкам, `kitControls` из `@numior/vue/controls` описывает контролы кита.
 
 <Example name="composables/Controls" />
 

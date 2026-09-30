@@ -303,8 +303,6 @@ export type { NuiProgressProps } from './progress/progress.types';
 export { default as NuiSkeleton } from './skeleton/NuiSkeleton.vue';
 export type { NuiSkeletonProps, NuiSkeletonShape } from './skeleton/skeleton.types';
 export type { NuiFieldControlProps } from './shared/field-control.types';
-export { kitControls } from './controls/kit-controls';
-export type { NuiKitControls } from './controls/kit-controls';
 export type { NuiSize, NuiTone } from './shared/scale.types';
 export type { NuiVueMessages } from './messages.types';
 export {
