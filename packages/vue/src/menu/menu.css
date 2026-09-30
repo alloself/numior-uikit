@@ -42,7 +42,7 @@
 
 .nui-menu-item {
   --_tone: var(--nui-text);
-  --_indicator: 1.25rem;
+  --_indicator: 1.25em;
 
   box-sizing: border-box;
   position: relative;

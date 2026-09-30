@@ -59,4 +59,9 @@ export const defaultIcons: IconRegistry = {
   'eye-off': lazyIcon(() => import('lucide-vue-next/dist/esm/icons/eye-off.js')),
   'list-tree': lazyIcon(() => import('lucide-vue-next/dist/esm/icons/list-tree.js')),
   columns: lazyIcon(() => import('lucide-vue-next/dist/esm/icons/columns-3.js')),
+  scissors: lazyIcon(() => import('lucide-vue-next/dist/esm/icons/scissors.js')),
+  'clipboard-paste': lazyIcon(() => import('lucide-vue-next/dist/esm/icons/clipboard-paste.js')),
+  eraser: lazyIcon(() => import('lucide-vue-next/dist/esm/icons/eraser.js')),
+  table: lazyIcon(() => import('lucide-vue-next/dist/esm/icons/table-2.js')),
+  'move-horizontal': lazyIcon(() => import('lucide-vue-next/dist/esm/icons/move-horizontal.js')),
 };

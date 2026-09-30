@@ -153,6 +153,7 @@ export const useTableContextMenu = <T>(options: TableContextMenuOptions<T>): Tab
           {
             key: 'cut',
             label: texts.menuCut,
+            icon: 'scissors',
             disabled: !copyable || !clearable,
             onSelect: options.cut,
           },
@@ -164,10 +165,17 @@ export const useTableContextMenu = <T>(options: TableContextMenuOptions<T>): Tab
           {
             key: 'paste',
             label: texts.menuPaste,
+            icon: 'clipboard-paste',
             disabled: !options.pastable(),
             onSelect: options.paste,
           },
-          { key: 'clear', label: texts.menuClear, disabled: !clearable, onSelect: options.clear },
+          {
+            key: 'clear',
+            label: texts.menuClear,
+            icon: 'eraser',
+            disabled: !clearable,
+            onSelect: options.clear,
+          },
         ]
       : [];
 
@@ -176,6 +184,7 @@ export const useTableContextMenu = <T>(options: TableContextMenuOptions<T>): Tab
       {
         key: 'copy',
         label: texts.menuCopy,
+        icon: 'copy',
         disabled: !copyable,
         onSelect: () => {
           options.copy(false);
@@ -184,6 +193,7 @@ export const useTableContextMenu = <T>(options: TableContextMenuOptions<T>): Tab
       {
         key: 'copy-headers',
         label: texts.menuCopyWithHeaders,
+        icon: 'table',
         disabled: !copyable,
         onSelect: () => {
           options.copy(true);

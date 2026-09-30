@@ -57,6 +57,11 @@ const loaders = [
   () => import('lucide-vue-next/dist/esm/icons/eye-off.js'),
   () => import('lucide-vue-next/dist/esm/icons/list-tree.js'),
   () => import('lucide-vue-next/dist/esm/icons/columns-3.js'),
+  () => import('lucide-vue-next/dist/esm/icons/scissors.js'),
+  () => import('lucide-vue-next/dist/esm/icons/clipboard-paste.js'),
+  () => import('lucide-vue-next/dist/esm/icons/eraser.js'),
+  () => import('lucide-vue-next/dist/esm/icons/table-2.js'),
+  () => import('lucide-vue-next/dist/esm/icons/move-horizontal.js'),
 ];
 
 await Promise.all(loaders.map((load) => load()));

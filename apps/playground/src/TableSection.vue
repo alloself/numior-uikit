@@ -564,6 +564,7 @@ const onOrderEdit = (event: NuiTableEditEvent<Order>): void => {
 const orderMenu = (scope: NuiTableContextScope<Order>): NuiMenuEntry[] => [
   {
     label: `Открыть заказ ${scope.row.id}`,
+    icon: 'external-link',
     onSelect: () => {
       lastOpened.value = scope.row.id;
     },

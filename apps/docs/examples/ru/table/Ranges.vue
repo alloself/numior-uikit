@@ -89,6 +89,7 @@ const cells = computed(() =>
 const menuOf = (scope: NuiTableContextScope<Order>): NuiMenuEntry[] => [
   {
     label: `Открыть заказ ${scope.row.id}`,
+    icon: 'external-link',
     onSelect: () => {
       opened.value = String(scope.row.id);
     },

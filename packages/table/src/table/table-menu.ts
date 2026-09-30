@@ -61,6 +61,7 @@ const sortSection = (
       {
         key: 'sort-clear',
         label: texts.menuSortClear,
+        icon: 'arrow-up-down',
         disabled: state.direction === undefined,
         onSelect: () => actions.sortBy(undefined),
       },
@@ -118,7 +119,14 @@ const widthSection = (
   texts: NuiTableMessages,
 ): NuiMenuEntry[] =>
   state.resized
-    ? [{ key: 'width-reset', label: texts.menuResetWidth, onSelect: actions.resetWidth }]
+    ? [
+        {
+          key: 'width-reset',
+          label: texts.menuResetWidth,
+          icon: 'move-horizontal',
+          onSelect: actions.resetWidth,
+        },
+      ]
     : [];
 
 const visibilitySection = (
