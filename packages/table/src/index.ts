@@ -38,6 +38,9 @@ export type {
   NuiTableContextMenu,
   NuiTableContextScope,
   NuiTableCopyOptions,
+  NuiTableEdit,
+  NuiTableEditEvent,
+  NuiTableEditKind,
   TableCellPosition,
 } from './table/table.types';
 export type {

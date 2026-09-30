@@ -49,28 +49,32 @@ interface NuiTableColumnBase {
   readonly flex?: number | undefined;
 }
 
-export interface NuiTableTextColumn<T> extends NuiTableColumnBase {
+interface NuiTableColumnEditing<T> {
+  readonly editable?: boolean | ((row: T) => boolean) | undefined;
+}
+
+export interface NuiTableTextColumn<T> extends NuiTableColumnBase, NuiTableColumnEditing<T> {
   readonly type: 'text';
   readonly value: (row: T) => string | null | undefined;
   readonly format?: ((value: string, row: T | undefined) => string) | undefined;
   readonly aggregate?: 'count' | TableAggregateFn<T> | undefined;
 }
 
-export interface NuiTableNumberColumn<T> extends NuiTableColumnBase {
+export interface NuiTableNumberColumn<T> extends NuiTableColumnBase, NuiTableColumnEditing<T> {
   readonly type: 'number';
   readonly value: (row: T) => number | null | undefined;
   readonly format?: ((value: number, row: T | undefined) => string) | undefined;
   readonly aggregate?: TableAggregate<T> | undefined;
 }
 
-export interface NuiTableDateColumn<T> extends NuiTableColumnBase {
+export interface NuiTableDateColumn<T> extends NuiTableColumnBase, NuiTableColumnEditing<T> {
   readonly type: 'date';
   readonly value: (row: T) => Date | number | null | undefined;
   readonly format?: ((value: Date, row: T | undefined) => string) | undefined;
   readonly aggregate?: 'min' | 'max' | 'count' | TableAggregateFn<T> | undefined;
 }
 
-export interface NuiTableBooleanColumn<T> extends NuiTableColumnBase {
+export interface NuiTableBooleanColumn<T> extends NuiTableColumnBase, NuiTableColumnEditing<T> {
   readonly type: 'boolean';
   readonly value: (row: T) => boolean | null | undefined;
   readonly format?: ((value: boolean, row: T | undefined) => string) | undefined;
@@ -163,6 +167,20 @@ export interface NuiTableCopyOptions {
   readonly headers?: boolean | undefined;
 }
 
+export type NuiTableEditKind = 'clear' | 'cut' | 'undo' | 'redo';
+
+export interface NuiTableEdit<T> {
+  readonly row: T;
+  readonly key: string;
+  readonly value: NuiTableCellValue;
+  readonly previous: NuiTableCellValue;
+}
+
+export interface NuiTableEditEvent<T> {
+  readonly kind: NuiTableEditKind;
+  readonly changes: readonly NuiTableEdit<T>[];
+}
+
 export interface TableRangeSegment {
   readonly from: number;
   readonly to: number;
@@ -216,6 +234,7 @@ export interface NuiTableEvents<T> {
   load: [row: T];
   rowClick: [row: T, event: MouseEvent];
   reorder: [event: NuiTableReorderEvent<T>];
+  edit: [event: NuiTableEditEvent<T>];
 }
 
 export type NuiTableSort = readonly TableSort[];
@@ -278,6 +297,8 @@ export interface NuiTableExposed {
   scrollToRow(position: number): void;
   scrollToColumn(key: string): void;
   copy(options?: NuiTableCopyOptions): Promise<boolean>;
+  undo(): boolean;
+  redo(): boolean;
 }
 
 export type TablePaneName = 'start' | 'centre' | 'end';

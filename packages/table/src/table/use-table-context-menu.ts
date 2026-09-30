@@ -22,6 +22,10 @@ export interface TableContextMenuOptions<T> {
   readonly select: (target: TableCellPosition) => NuiTableRanges;
   readonly copyable: () => boolean;
   readonly copy: (headers: boolean) => void;
+  readonly editable: () => boolean;
+  readonly clearable: () => boolean;
+  readonly cut: () => void;
+  readonly clear: () => void;
   readonly show: (focus: NuiMenuFocus | undefined) => void;
   readonly isRtl: () => boolean;
   readonly messages: ComputedRef<NuiTableMessages>;
@@ -139,12 +143,29 @@ export const useTableContextMenu = <T>(options: TableContextMenuOptions<T>): Tab
     }
     const copyable = options.copyable();
     const extra = options.extra()?.(current) ?? [];
+    const editable = options.editable();
+    const clearable = editable && options.clearable();
+
+    const cut: NuiMenuEntry[] = editable
+      ? [
+          {
+            key: 'cut',
+            label: texts.menuCut,
+            disabled: !copyable || !clearable,
+            onSelect: options.cut,
+          },
+        ]
+      : [];
+
+    const clear: NuiMenuEntry[] = editable
+      ? [{ key: 'clear', label: texts.menuClear, disabled: !clearable, onSelect: options.clear }]
+      : [];
 
     const own: NuiMenuEntry[] = [
+      ...cut,
       {
         key: 'copy',
         label: texts.menuCopy,
-        icon: 'copy',
         disabled: !copyable,
         onSelect: () => {
           options.copy(false);
@@ -158,6 +179,7 @@ export const useTableContextMenu = <T>(options: TableContextMenuOptions<T>): Tab
           options.copy(true);
         },
       },
+      ...clear,
     ];
 
     return extra.length === 0 ? own : [...own, { type: 'separator', key: 'extra' }, ...extra];

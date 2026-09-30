@@ -499,6 +499,60 @@ export const createTableEngine = <T>(options: TableEngineOptions<T>): TableEngin
     }
   };
 
+  const runSync = (query: TableQuery): TableRunResult => {
+    generation += 1;
+    const outcome: { prepared: Prepared | null } = { prepared: null };
+
+    const pipeline = pipelineFor(planOf(query), (next) => {
+      outcome.prepared = next;
+    });
+
+    pipeline?.work(Number.POSITIVE_INFINITY);
+    return commit(outcome.prepared);
+  };
+
+  const regroup = (plan: Plan<T>): void => {
+    const outcome: { prepared: Prepared | null } = { prepared: null };
+    const filtered = prepared.filtered;
+
+    const pipeline = createPipeline(
+      storesStage(plan.needs, () =>
+        groupStage(plan, filtered, (next) => {
+          outcome.prepared = next;
+        }),
+      ),
+    );
+
+    pipeline?.work(Number.POSITIVE_INFINITY);
+
+    if (outcome.prepared !== null) {
+      commit(outcome.prepared);
+    }
+  };
+
+  const patch = (query: TableQuery, keys: readonly string[]): void => {
+    const changed = new Set(keys);
+
+    for (const key of changed) {
+      stores.delete(key);
+    }
+    rowsVersion += 1;
+
+    if (options.children !== undefined || prepared.groups === null) {
+      return;
+    }
+    const plan = planOf(query);
+
+    if (plan.groupBy.some((key) => changed.has(key))) {
+      runSync(query);
+      return;
+    }
+    for (const column of plan.aggregates) {
+      stores.delete(column.key);
+    }
+    regroup(plan);
+  };
+
   return {
     count: () => visible.length,
     rowCount: () => prepared.filtered.length,
@@ -552,17 +606,8 @@ export const createTableEngine = <T>(options: TableEngineOptions<T>): TableEngin
 
       return commit(completed && mine === generation ? outcome.prepared : null);
     },
-    runSync: (query) => {
-      generation += 1;
-      const outcome: { prepared: Prepared | null } = { prepared: null };
-
-      const pipeline = pipelineFor(planOf(query), (next) => {
-        outcome.prepared = next;
-      });
-
-      pipeline?.work(Number.POSITIVE_INFINITY);
-      return commit(outcome.prepared);
-    },
+    runSync,
+    patch,
     visibleIndices: () => prepared.filtered,
     nodeAt,
     siblingsAt,

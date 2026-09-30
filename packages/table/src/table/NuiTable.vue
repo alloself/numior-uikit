@@ -260,6 +260,7 @@ import {
   type TableEngine,
   type TableFilter,
   type TableFilterValue,
+  type TableQuery,
   type TableNode,
 } from '../engine';
 import NuiTableDragLayer from './NuiTableDragLayer.vue';
@@ -289,6 +290,7 @@ import NuiTableHeaderMarks from './NuiTableHeaderMarks.vue';
 import { useTableFocus } from './use-table-focus';
 import { useTableClipboard, type TableCopyCell } from './use-table-clipboard';
 import { useTableContextMenu } from './use-table-context-menu';
+import { useTableEditing } from './use-table-editing';
 import { useTableRanges } from './use-table-ranges';
 import { pageRowsOf } from './table-keys';
 import { useTableExpansion } from './use-table-expansion';
@@ -465,17 +467,19 @@ const totals = useTableTotals({
   rowCount: () => engine.value.rowCount(),
 });
 
+const currentQuery = (): TableQuery => {
+  const list = queryFilters();
+  const sorting = sort.value;
+  const grouping = getChildren === undefined ? groupBy.value : [];
+
+  return remote
+    ? {}
+    : { sort: sorting, filters: list, groupBy: grouping, totals: totals.wanted(list) };
+};
+
 const query = useTableQuery({
   engine,
-  query: () => {
-    const list = queryFilters();
-    const sorting = sort.value;
-    const grouping = getChildren === undefined ? groupBy.value : [];
-
-    return remote
-      ? {}
-      : { sort: sorting, filters: list, groupBy: grouping, totals: totals.wanted(list) };
-  },
+  query: currentQuery,
   onSettled: (count, ran) => {
     totals.take(ran);
     sync();
@@ -1000,15 +1004,17 @@ const dataOffset = computed(() =>
   ),
 );
 
-const rangeAnchor = (): TableCellPosition | undefined => {
+const activeData = (): TableCellPosition | undefined => {
   const body = bodyActive();
   const col = body === undefined ? -1 : body.col - dataOffset.value;
-  const owned = viewport.value?.contains(document.activeElement) === true;
 
-  return owned && body !== undefined && col >= 0 && col < dataKeys.value.length
+  return body !== undefined && col >= 0 && col < dataKeys.value.length
     ? { row: body.row, col }
     : undefined;
 };
+
+const rangeAnchor = (): TableCellPosition | undefined =>
+  viewport.value?.contains(document.activeElement) === true ? activeData() : undefined;
 
 const revealed = createIntent<TableCellPosition>();
 
@@ -1070,17 +1076,64 @@ const copyCell = (): TableCopyCell<T> | undefined => {
   return row === undefined || key === undefined ? undefined : { row, key };
 };
 
+const rowAtPosition = (position: number): T | undefined => {
+  const node = engine.value.nodeAt(pageStart.value + position);
+  return node?.kind === 'row' ? node.row : undefined;
+};
+
 const clipboard = useTableClipboard<T>({
   ranges: () => ranges.value,
   cell: copyCell,
-  rowAt: (position) => {
-    const node = engine.value.nodeAt(pageStart.value + position);
-    return node?.kind === 'row' ? node.row : undefined;
-  },
+  rowAt: rowAtPosition,
   keyAt: (col) => dataKeys.value[col],
   labelOf: (key) => columnAt(key).label,
   textOf: (row, key) => textOf(row, key),
   limit: () => copyLimit,
+  messages,
+  announce,
+});
+
+const canEdit = computed(() =>
+  tree.value.leaves.some((column) => column.editable !== undefined && column.editable !== false),
+);
+
+const editableOf = (row: T, key: string): boolean => {
+  const editable = columnAt(key).editable;
+  return typeof editable === 'function' ? editable(row) : editable === true;
+};
+
+const rowByKey = computed(() =>
+  getKey === undefined || getChildren !== undefined
+    ? undefined
+    : new Map(rows.map((row) => [getKey(row), row])),
+);
+
+const resolveRow = (row: T): T | undefined =>
+  getKey === undefined || rowByKey.value === undefined ? row : rowByKey.value.get(getKey(row));
+
+const editing = useTableEditing<T>({
+  enabled: () => cellSelection && !loading && canEdit.value,
+  ranges: () => ranges.value,
+  cell: activeData,
+  rowAt: rowAtPosition,
+  keyAt: (col) => dataKeys.value[col],
+  editable: editableOf,
+  valueOf: (row, key) => cellValueOf(columnAt(key), row),
+  resolve: resolveRow,
+  limit: () => copyLimit,
+  copy: () => clipboard.copy(false),
+  emit: (event) => {
+    emit('edit', event);
+  },
+  applied: (keys) => {
+    totals.reset();
+
+    const ran = currentQuery();
+
+    engine.value.patch(ran, keys);
+    totals.take(ran);
+    sync();
+  },
   messages,
   announce,
 });
@@ -1136,6 +1189,14 @@ const cellMenu = useTableContextMenu<T>({
   copyable: () => clipboard.copyable(),
   copy: (headers) => {
     void clipboard.copy(headers);
+  },
+  editable: () => cellSelection && canEdit.value,
+  clearable: () => editing.clearable(),
+  cut: () => {
+    void editing.cut();
+  },
+  clear: () => {
+    editing.clear();
   },
   show: (focusOn) => {
     cellMenuNode.value?.show(focusOn);
@@ -1204,7 +1265,12 @@ const bodyActive = (): TableCellPosition | undefined => {
 };
 
 const onKeydown = (event: KeyboardEvent): void => {
-  if (cellMenu.onKeydown(event) || clipboard.onKeydown(event) || rangeSelect.onKeydown(event)) {
+  if (
+    cellMenu.onKeydown(event) ||
+    clipboard.onKeydown(event) ||
+    editing.onKeydown(event) ||
+    rangeSelect.onKeydown(event)
+  ) {
     return;
   }
   if (rowDrag.onKeydown(event, bodyActive())) {
@@ -1353,6 +1419,10 @@ watch(
     engine.value.setToggled(expanded.value);
     expansion.settle();
     totals.reset();
+
+    if (getKey === undefined) {
+      editing.reset();
+    }
     runNow();
     sync();
     clampActive();
@@ -1367,6 +1437,7 @@ watch(
     engine.value = createEngine();
     engine.value.setRows(rows);
     engine.value.setToggled(expanded.value);
+    editing.reset();
     totals.reset();
     runNow();
     sync();
@@ -1386,5 +1457,7 @@ defineExpose<NuiTableExposed>({
     }
   },
   copy: (options) => clipboard.copy(options?.headers === true),
+  undo: () => editing.undo(),
+  redo: () => editing.redo(),
 });
 </script>

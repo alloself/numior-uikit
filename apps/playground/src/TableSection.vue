@@ -107,6 +107,7 @@
       :pagination="paged ? PAGINATION : false"
       :get-key="(row) => row.id"
       :context-menu="orderMenu"
+      @edit="onOrderEdit"
       label="Заказы"
       height="26rem"
       data-testid="table"
@@ -166,21 +167,23 @@ import {
   type NuiTableContextScope,
   type NuiTablePagination,
   type NuiTableRanges,
+  type NuiTableCellValue,
+  type NuiTableEditEvent,
 } from '@numior/table';
 
 type OrderStatus = 'new' | 'paid' | 'shipped' | 'returned';
 
 interface Order {
   readonly id: number;
-  readonly customer: string;
-  readonly email: string;
-  readonly city: string;
-  readonly country: string;
-  readonly amount: number;
-  readonly created: Date;
-  readonly vip: boolean;
-  readonly manager: string;
-  readonly note: string;
+  customer: string;
+  email: string;
+  city: string;
+  country: string;
+  amount: number | null;
+  created: Date | null;
+  vip: boolean | null;
+  manager: string;
+  note: string;
   readonly status: OrderStatus;
 }
 
@@ -396,8 +399,22 @@ const columns: NuiTableColumnDef<Order>[] = [
     key: 'buyer',
     label: 'Покупатель',
     children: [
-      { key: 'customer', label: 'Клиент', type: 'text', width: 200, value: (row) => row.customer },
-      { key: 'email', label: 'Почта', type: 'text', width: 240, value: (row) => row.email },
+      {
+        key: 'customer',
+        label: 'Клиент',
+        type: 'text',
+        width: 200,
+        editable: true,
+        value: (row) => row.customer,
+      },
+      {
+        key: 'email',
+        label: 'Почта',
+        type: 'text',
+        width: 240,
+        editable: true,
+        value: (row) => row.email,
+      },
     ],
   },
   {
@@ -410,6 +427,7 @@ const columns: NuiTableColumnDef<Order>[] = [
         type: 'text',
         width: 140,
         filter: 'set',
+        editable: true,
         value: (row) => row.city,
       },
       {
@@ -418,6 +436,7 @@ const columns: NuiTableColumnDef<Order>[] = [
         type: 'text',
         width: 140,
         filter: 'set',
+        editable: true,
         value: (row) => row.country,
       },
     ],
@@ -432,14 +451,23 @@ const columns: NuiTableColumnDef<Order>[] = [
         type: 'number',
         width: 130,
         aggregate: 'sum',
+        editable: true,
         value: (row) => row.amount,
       },
-      { key: 'created', label: 'Создан', type: 'date', width: 150, value: (row) => row.created },
+      {
+        key: 'created',
+        label: 'Создан',
+        type: 'date',
+        width: 150,
+        editable: true,
+        value: (row) => row.created,
+      },
       {
         key: 'vip',
         label: 'VIP',
         type: 'boolean',
         width: 100,
+        editable: true,
         value: (row) => row.vip,
       },
       {
@@ -448,9 +476,17 @@ const columns: NuiTableColumnDef<Order>[] = [
         type: 'text',
         width: 180,
         filter: 'set',
+        editable: true,
         value: (row) => row.manager,
       },
-      { key: 'note', label: 'Комментарий', type: 'text', width: 260, value: (row) => row.note },
+      {
+        key: 'note',
+        label: 'Комментарий',
+        type: 'text',
+        width: 260,
+        editable: true,
+        value: (row) => row.note,
+      },
     ],
   },
   {
@@ -484,6 +520,46 @@ const lastUnitClick = ref<string | null>(null);
 const lastReorder = ref<string | null>(null);
 const ranges = ref<NuiTableRanges>([]);
 const lastOpened = ref<number | null>(null);
+const lastEdit = ref<string | null>(null);
+
+const textOf = (value: NuiTableCellValue): string => (typeof value === 'string' ? value : '');
+
+const ORDER_SETTERS: Readonly<Record<string, (row: Order, value: NuiTableCellValue) => void>> = {
+  customer: (row, value) => {
+    row.customer = textOf(value);
+  },
+  email: (row, value) => {
+    row.email = textOf(value);
+  },
+  city: (row, value) => {
+    row.city = textOf(value);
+  },
+  country: (row, value) => {
+    row.country = textOf(value);
+  },
+  manager: (row, value) => {
+    row.manager = textOf(value);
+  },
+  note: (row, value) => {
+    row.note = textOf(value);
+  },
+  amount: (row, value) => {
+    row.amount = typeof value === 'number' ? value : null;
+  },
+  created: (row, value) => {
+    row.created = value instanceof Date ? value : null;
+  },
+  vip: (row, value) => {
+    row.vip = typeof value === 'boolean' ? value : null;
+  },
+};
+
+const onOrderEdit = (event: NuiTableEditEvent<Order>): void => {
+  for (const { row, key, value } of event.changes) {
+    ORDER_SETTERS[key]?.(row, value);
+  }
+  lastEdit.value = `${event.kind}:${event.changes.length}`;
+};
 
 const orderMenu = (scope: NuiTableContextScope<Order>): NuiMenuEntry[] => [
   {
@@ -583,6 +659,7 @@ const output = computed(() =>
     lastReorder: lastReorder.value,
     ranges: ranges.value,
     lastOpened: lastOpened.value,
+    lastEdit: lastEdit.value,
     page: page.value,
     pageSize: pageSize.value,
   }),

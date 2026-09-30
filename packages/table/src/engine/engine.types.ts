@@ -172,6 +172,7 @@ export interface TableEngine<T> {
   setRows(rows: readonly T[]): void;
   run(query: TableQuery, options?: TableRunOptions): Promise<TableRunResult>;
   runSync(query: TableQuery): TableRunResult;
+  patch(query: TableQuery, keys: readonly string[]): void;
   visibleIndices(): Uint32Array;
   nodeAt(position: number): TableNode<T> | undefined;
   siblingsAt(position: number): TableSiblings<T> | undefined;

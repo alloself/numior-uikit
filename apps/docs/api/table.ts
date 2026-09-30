@@ -4,8 +4,8 @@ const docs: DocsMap = {
   NuiTable: {
     props: {
       columns: {
-        ru: 'Колонки: key, label, type (text, number, date, boolean), value, format, width, minWidth, maxWidth, resizable, reorderable, pin, align, sortable, filter, hideable, wrap, flex и aggregate. hideable: false не даёт скрыть колонку из меню; resizable: false убирает ручку ширины и клавиши Alt+стрелки, reorderable: false — ручку перетаскивания и Alt+Shift+стрелки, minWidth и maxWidth ограничивают ширину при перетаскивании; wrap: true переносит текст ячейки, а без height строка растёт по нему; flex делит свободную ширину области прокрутки между колонками пропорционально, пока колонку не растянули вручную. filter выбирает вид фильтра (text, number, date, set) или выключает его значением false. aggregate считает значение для строк групп и строки итогов: у числовой колонки sum, count, avg, min, max или функция, у даты min, max, count или функция, у текстовой и булевой count или функция. Вне строки, например в группе или списке значений фильтра, format получает строку как undefined. Группа { key, label, children } рисует над заголовками своих колонок полосу с подписью.',
-        en: 'Columns: key, label, type (text, number, date, boolean), value, format, width, minWidth, maxWidth, resizable, reorderable, pin, align, sortable, filter, hideable, wrap, flex and aggregate. hideable: false keeps the column out of reach of the menu hide; resizable: false drops the width handle and the Alt+arrow keys, reorderable: false the drag grip and the Alt+Shift+arrow keys, minWidth and maxWidth bound the width while dragging; wrap: true wraps the cell text, and without height the row grows with it; flex shares the free width of the scroll area between columns in proportion until the column is resized by hand. filter picks the filter kind (text, number, date, set) or turns it off with false. aggregate fills group rows and the totals row: a number column takes sum, count, avg, min, max or a function, a date column min, max, count or a function, a text or boolean column count or a function. Outside a row, such as a group or the filter value list, format receives the row as undefined. A group { key, label, children } draws a labelled band above the headers of its columns.',
+        ru: 'Колонки: key, label, type (text, number, date, boolean), value, format, width, minWidth, maxWidth, resizable, reorderable, pin, align, sortable, filter, hideable, wrap, flex, aggregate и editable. hideable: false не даёт скрыть колонку из меню; resizable: false убирает ручку ширины и клавиши Alt+стрелки, reorderable: false — ручку перетаскивания и Alt+Shift+стрелки, minWidth и maxWidth ограничивают ширину при перетаскивании; wrap: true переносит текст ячейки, а без height строка растёт по нему; flex делит свободную ширину области прокрутки между колонками пропорционально, пока колонку не растянули вручную. filter выбирает вид фильтра (text, number, date, set) или выключает его значением false. aggregate считает значение для строк групп и строки итогов: у числовой колонки sum, count, avg, min, max или функция, у даты min, max, count или функция, у текстовой и булевой count или функция. Вне строки, например в группе или списке значений фильтра, format получает строку как undefined. Группа { key, label, children } рисует над заголовками своих колонок полосу с подписью. editable (true или функция строки) разрешает очищать и вырезать ячейки колонки, а правки приходят событием edit.',
+        en: 'Columns: key, label, type (text, number, date, boolean), value, format, width, minWidth, maxWidth, resizable, reorderable, pin, align, sortable, filter, hideable, wrap, flex, aggregate and editable. hideable: false keeps the column out of reach of the menu hide; resizable: false drops the width handle and the Alt+arrow keys, reorderable: false the drag grip and the Alt+Shift+arrow keys, minWidth and maxWidth bound the width while dragging; wrap: true wraps the cell text, and without height the row grows with it; flex shares the free width of the scroll area between columns in proportion until the column is resized by hand. filter picks the filter kind (text, number, date, set) or turns it off with false. aggregate fills group rows and the totals row: a number column takes sum, count, avg, min, max or a function, a date column min, max, count or a function, a text or boolean column count or a function. Outside a row, such as a group or the filter value list, format receives the row as undefined. A group { key, label, children } draws a labelled band above the headers of its columns. editable (true or a function of the row) lets the cells of the column be cleared and cut, and the changes arrive in the edit event.',
       },
       rows: {
         ru: 'Строки таблицы; она их не копирует и не меняет.',
@@ -211,6 +211,10 @@ const docs: DocsMap = {
         ru: 'Строку переместили: row, from — индекс среди соседей старого родителя parent, to — индекс среди соседей нового родителя toParent; undefined означает корень, порядок применяет потребитель.',
         en: 'A row was moved: row, from as the index among the siblings of the old parent, to as the index among the siblings of the new toParent; undefined means the root, the consumer applies the order.',
       },
+      edit: {
+        ru: 'Правка ячеек: kind (clear, cut, undo, redo) и changes со строкой, ключом колонки, новым и прежним значением. Таблица строки не меняет, изменения применяет потребитель.',
+        en: 'An edit of cells: kind (clear, cut, undo, redo) and changes with the row, the column key, the new and the previous value. The table never changes rows; the consumer applies the changes.',
+      },
     },
     slots: {
       empty: { ru: 'Содержимое пустой таблицы.', en: 'Content of the empty table.' },
@@ -299,6 +303,27 @@ const docs: DocsMap = {
         description: {
           ru: 'Копирует диапазоны или активную ячейку как текст с табуляцией и HTML-таблицу.',
           en: 'Copies the ranges or the active cell as tab separated text and an HTML table.',
+        },
+      },
+      {
+        keys: 'Delete / Backspace',
+        description: {
+          ru: 'Очищает изменяемые ячейки выделения или активной ячейки.',
+          en: 'Clears the editable cells of the selection or the active cell.',
+        },
+      },
+      {
+        keys: 'Ctrl+X',
+        description: {
+          ru: 'Копирует выделение и очищает его изменяемые ячейки.',
+          en: 'Copies the selection and clears its editable cells.',
+        },
+      },
+      {
+        keys: 'Ctrl+Z / Ctrl+Shift+Z / Ctrl+Y',
+        description: {
+          ru: 'Отменяет последнюю правку и повторяет отменённую.',
+          en: 'Undoes the last edit and redoes an undone one.',
         },
       },
       {

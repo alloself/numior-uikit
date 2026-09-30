@@ -25,6 +25,7 @@ import {
   type NuiTableWidths,
   type NuiTableColumnOrder,
   type NuiTableReorderEvent,
+  type NuiTableEditEvent,
   type NuiTableProps,
   type NuiTableColumnDef,
   type NuiTableRanges,
@@ -47,6 +48,7 @@ export interface TableMountOptions<T> {
   readonly pageSize?: number;
   readonly slots?: Slots;
   readonly width?: number;
+  readonly onEdit?: (event: NuiTableEditEvent<T>) => void;
   readonly height?: number;
   readonly auto?: boolean;
   readonly dir?: 'ltr' | 'rtl';
@@ -122,6 +124,7 @@ interface TableEvents<T> {
   readonly loads: T[];
   readonly clicks: T[];
   readonly reorders: NuiTableReorderEvent<T>[];
+  readonly edits: NuiTableEditEvent<T>[];
   readonly waiters: Array<() => void>;
 }
 
@@ -244,6 +247,7 @@ export class TableDriver<T> {
       loads: [],
       clicks: [],
       reorders: [],
+      edits: [],
       waiters: [],
     };
 
@@ -318,6 +322,10 @@ export class TableDriver<T> {
               },
               onReorder: (event: NuiTableReorderEvent<T>) => {
                 events.reorders.push(event);
+              },
+              onEdit: (event: NuiTableEditEvent<T>) => {
+                events.edits.push(event);
+                settings.onEdit?.(event);
               },
               onSettle: () => {
                 events.settled += 1;
@@ -849,6 +857,10 @@ export class TableDriver<T> {
 
   get reorders(): readonly NuiTableReorderEvent<T>[] {
     return this.events.reorders;
+  }
+
+  get edits(): readonly NuiTableEditEvent<T>[] {
+    return this.events.edits;
   }
 
   get dropMark(): DropMark | undefined {

@@ -83,6 +83,19 @@ items after the copy items, and `v-model:ranges` keeps the selection.
 
 <Example name="table/Ranges" />
 
+### Editing cells
+
+A column with `editable` takes edits: Delete and Backspace clear the selected cells, and Ctrl+X cuts
+them to the clipboard. The table never changes rows itself; it sends an `edit` event with the list
+of changes, and the consumer applies them. Ctrl+Z undoes the last edit, Ctrl+Shift+Z and Ctrl+Y redo
+it.
+
+Rows stay in place after an edit even when the column is sorted or filtered. Totals update at once,
+and without `getKey` the edit history resets when `rows` change. The `undo` and `redo` methods of
+the table ref do the same from code.
+
+<Example name="table/Edits" />
+
 ### Ten thousand rows
 
 `height` turns on the row and column windows of `rowHeight` rows. A column with `pin` stays in

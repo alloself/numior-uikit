@@ -266,10 +266,52 @@ test.describe('table', () => {
     await expect(table.cellMenu).toBeHidden();
     await expect(table.cell(2, 1)).toBeFocused();
     await page.keyboard.press('Shift+F10');
-    await expect(table.cellMenuItem('Копировать')).toBeFocused();
+    await expect(table.cellMenuItem('Вырезать')).toBeFocused();
     await page.keyboard.press('Escape');
     await expect(table.cellMenu).toBeHidden();
     await expect(table.cell(2, 1)).toBeFocused();
+  });
+
+  test('clears cells with Delete, cuts them and brings them back with undo and redo', async ({
+    page,
+    isMobile,
+  }) => {
+    test.skip(isMobile, 'keyboard edits on desktop');
+    const playground = new PlaygroundPage(page);
+    const { table } = playground;
+    await table.stubClipboard();
+    await playground.open();
+    await table.root.scrollIntoViewIfNeeded();
+
+    const block = [
+      { row: 1, col: 1 },
+      { row: 1, col: 2 },
+      { row: 2, col: 1 },
+      { row: 2, col: 2 },
+    ];
+
+    const before = await table.cellTexts(block);
+
+    await table.dragRange({ row: 1, col: 1 }, { row: 2, col: 2 });
+    await page.keyboard.press('Delete');
+    await expect(table.output).toContainText('"lastEdit":"clear:4"');
+    expect(await table.cellTexts(block)).toEqual(['', '', '', '']);
+    await page.keyboard.press('ControlOrMeta+Z');
+    await expect(table.output).toContainText('"lastEdit":"undo:4"');
+    expect(await table.cellTexts(block)).toEqual(before);
+    await page.keyboard.press('ControlOrMeta+Shift+Z');
+    await expect(table.output).toContainText('"lastEdit":"redo:4"');
+    expect(await table.cellTexts(block)).toEqual(['', '', '', '']);
+    await table.cell(3, 1).click();
+
+    const cut = await table.cellTexts([{ row: 3, col: 1 }]);
+
+    await page.keyboard.press('ControlOrMeta+X');
+    await expect.poll(() => table.copiedTexts()).toEqual(cut);
+    await expect(table.output).toContainText('"lastEdit":"cut:1"');
+    await table.cell(3, 0).click({ button: 'right' });
+    await expect(table.cellMenuItem('Очистить')).toBeDisabled();
+    await page.keyboard.press('Escape');
   });
 
   test('opens the cell menu with a long press on a phone and copies the cell', async ({
@@ -446,6 +488,7 @@ test.describe('table', () => {
         lastReorder: null,
         ranges: [],
         lastOpened: null,
+        lastEdit: null,
         page: 1,
         pageSize: 25,
       }),
@@ -497,6 +540,7 @@ test.describe('table', () => {
         lastReorder: null,
         ranges: [],
         lastOpened: null,
+        lastEdit: null,
         page: 1,
         pageSize: 25,
       }),
