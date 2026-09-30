@@ -67,8 +67,9 @@ const selectsText = (target: EventTarget | null): boolean => {
   return (
     selection !== null &&
     !selection.isCollapsed &&
+    selection.rangeCount > 0 &&
     target instanceof Node &&
-    selection.containsNode(target, true)
+    selection.getRangeAt(0).intersectsNode(target)
   );
 };
 
@@ -206,9 +207,9 @@ export const useTableClipboard = <T>(options: TableClipboardOptions<T>): TableCl
     },
     copy,
     onKeydown: (event) => {
-      const copyable = isCopyKey(event) && isCellTarget(event.target) && !selectsText(event.target);
+      const plan = isCopyKey(event) && isCellTarget(event.target) ? planOf() : undefined;
 
-      if (!copyable || planOf() === undefined) {
+      if (plan === undefined || (plan.kind === 'cell' && selectsText(event.target))) {
         return false;
       }
       event.preventDefault();

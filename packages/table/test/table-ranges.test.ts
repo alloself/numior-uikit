@@ -95,6 +95,37 @@ describe('NuiTable cell ranges', () => {
     expect(grid.focusedCell).toEqual({ row: 3, col: 2 });
   });
 
+  it('selects everything from a header cell and starts from the clicked cell when the table had no focus', async () => {
+    const grid = mountPeople();
+    await grid.focusCell(-1, 2);
+
+    await grid.press('a', { ctrl: true });
+    expect(grid.ranges).toEqual([range(0, 0, 49, 17)]);
+    await grid.press('Escape');
+    await grid.blur();
+    await grid.clickCell(3, 2, { shift: true });
+    expect(grid.ranges).toEqual([range(3, 2, 3, 2)]);
+    expect(grid.focusedCell).toEqual({ row: 3, col: 2 });
+    expect(grid.textSelection).toBe('');
+  });
+
+  it('copies ranges over a stray text selection and leaves a selected word to the browser', async () => {
+    clipboard = installClipboard({ api: 'granted' });
+    const grid = mountPeople();
+    await grid.focusCell(1, 1);
+
+    grid.selectText(1, 1);
+    await grid.press('c', { ctrl: true });
+    await flushPromises();
+    expect(clipboard.copies).toEqual([]);
+    await grid.dragRange({ row: 1, col: 1 }, { row: 1, col: 2 });
+    expect(grid.textSelection).toBe('');
+    grid.selectText(2, 2);
+    await grid.press('c', { ctrl: true });
+    await flushPromises();
+    expect(clipboard.copies).toEqual([`Сотрудник 1\t${grid.cellText(1, 2)}`]);
+  });
+
   it('copies the active cell or a block of ranges as text and a table, with or without headers', async () => {
     clipboard = installClipboard({ api: 'granted' });
     const grid = mountPeople();

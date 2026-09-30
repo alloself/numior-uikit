@@ -1001,8 +1001,9 @@ const dataOffset = computed(() =>
 const rangeAnchor = (): TableCellPosition | undefined => {
   const body = bodyActive();
   const col = body === undefined ? -1 : body.col - dataOffset.value;
+  const owned = viewport.value?.contains(document.activeElement) === true;
 
-  return body !== undefined && col >= 0 && col < dataKeys.value.length
+  return owned && body !== undefined && col >= 0 && col < dataKeys.value.length
     ? { row: body.row, col }
     : undefined;
 };

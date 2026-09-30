@@ -56,6 +56,11 @@ interface RangeSession {
   readonly from: TableCellPosition;
 }
 
+interface StartCell {
+  readonly position: TableCellPosition;
+  readonly element: HTMLElement;
+}
+
 interface Band {
   readonly left: number;
   readonly right: number;
@@ -113,6 +118,10 @@ const isAllKey = (event: KeyboardEvent): boolean =>
 const isCellTarget = (target: EventTarget | null): boolean =>
   target instanceof HTMLElement && target.matches('.nui-table__cell');
 
+const clearTextSelection = (): void => {
+  window.getSelection()?.removeAllRanges();
+};
+
 export const useTableRanges = (options: TableRangesOptions): TableRanges => {
   const dragging = ref(false);
   let session: RangeSession | undefined;
@@ -166,14 +175,16 @@ export const useTableRanges = (options: TableRangesOptions): TableRanges => {
     return Number.isInteger(row) && Number.isInteger(col) ? { row, col } : undefined;
   };
 
-  const startOf = (target: EventTarget | null): TableCellPosition | undefined => {
+  const startOf = (target: EventTarget | null): StartCell | undefined => {
     if (!(target instanceof Element) || target.closest(INTERACTIVE) !== null) {
       return undefined;
     }
-    const cell = target.closest(`${START_ROW} > .nui-table__cell[aria-colindex]`);
-    const position = cell === null ? undefined : positionOf(cell);
+    const element = target.closest<HTMLElement>(`${START_ROW} > .nui-table__cell[aria-colindex]`);
+    const position = element === null ? undefined : positionOf(element);
 
-    return position !== undefined && position.col >= 0 ? position : undefined;
+    return element !== null && position !== undefined && position.col >= 0
+      ? { position, element }
+      : undefined;
   };
 
   const bandOf = (viewport: HTMLElement): Band => {
@@ -235,7 +246,7 @@ export const useTableRanges = (options: TableRangesOptions): TableRanges => {
         return;
       }
       dragging.value = true;
-      window.getSelection()?.removeAllRanges();
+      clearTextSelection();
     }
     follow();
     edge.follow(point);
@@ -272,27 +283,39 @@ export const useTableRanges = (options: TableRangesOptions): TableRanges => {
     return list.length === 0 && anchor !== undefined ? [{ from: anchor, to: anchor }] : list;
   };
 
+  const extendFrom = (
+    start: StartCell,
+    anchor: TableCellPosition | undefined,
+  ): TableCellPosition => {
+    const from = latest().at(-1)?.from ?? anchor ?? start.position;
+
+    holdFocus = true;
+    swallow = true;
+    clearTextSelection();
+    write(withCorner(latest(), from, start.position));
+
+    if (anchor === undefined) {
+      start.element.focus({ preventScroll: true });
+    }
+    return from;
+  };
+
   const fromOf = (
     mode: SessionMode,
-    cell: TableCellPosition,
+    start: StartCell,
     anchor: TableCellPosition | undefined,
   ): TableCellPosition => {
     switch (mode) {
-      case 'extend': {
-        const from = latest().at(-1)?.from ?? anchor ?? cell;
-
-        holdFocus = anchor !== undefined;
-        swallow = true;
-        write(withCorner(latest(), from, cell));
-        return from;
-      }
+      case 'extend':
+        return extendFrom(start, anchor);
       case 'add':
         swallow = true;
-        write([...materialized(anchor), { from: cell, to: cell }]);
-        return cell;
+        clearTextSelection();
+        write([...materialized(anchor), { from: start.position, to: start.position }]);
+        return start.position;
       case 'plain':
         clear();
-        return cell;
+        return start.position;
     }
   };
 
@@ -303,12 +326,12 @@ export const useTableRanges = (options: TableRangesOptions): TableRanges => {
     if (!options.enabled() || event.button !== 0 || event.pointerType === 'touch' || session) {
       return;
     }
-    const cell = startOf(event.target);
+    const start = startOf(event.target);
 
-    if (cell === undefined) {
+    if (start === undefined) {
       return;
     }
-    const from = fromOf(modeOf(event), cell, options.anchor());
+    const from = fromOf(modeOf(event), start, options.anchor());
 
     session = { pointerId: event.pointerId, x: event.clientX, y: event.clientY, from };
     point = { x: event.clientX, y: event.clientY };
@@ -383,18 +406,17 @@ export const useTableRanges = (options: TableRangesOptions): TableRanges => {
     if (event.key === 'Escape') {
       return onEscape(event);
     }
+    if (ctrl && !event.shiftKey && isAllKey(event)) {
+      clearTextSelection();
+      return replaceLast(event, [allOf(options.bounds())]);
+    }
     if (anchor === undefined) {
       return false;
     }
     if (NAVIGATION.has(event.key)) {
       return onNavigation(event, anchor);
     }
-    if (event.key === ' ' && (event.shiftKey || ctrl)) {
-      return selectLines(event, anchor);
-    }
-    return ctrl && !event.shiftKey && isAllKey(event)
-      ? replaceLast(event, [allOf(options.bounds())])
-      : false;
+    return event.key === ' ' && (event.shiftKey || ctrl) ? selectLines(event, anchor) : false;
   };
 
   const segments = (row: number): TableRowRanges | undefined => {

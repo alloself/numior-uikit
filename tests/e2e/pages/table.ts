@@ -275,6 +275,10 @@ export class TableSection {
     return copiedTexts(this.page);
   }
 
+  textSelection(): Promise<string> {
+    return this.page.evaluate(() => window.getSelection()?.toString() ?? '');
+  }
+
   async cellTexts(cells: readonly TableCell[]): Promise<string[]> {
     return Promise.all(
       cells.map(async (cell) => (await this.cell(cell.row, cell.col).textContent())?.trim() ?? ''),

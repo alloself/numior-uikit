@@ -987,6 +987,25 @@ export class TableDriver<T> {
     await nextTick();
   }
 
+  async blur(): Promise<void> {
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+    await nextTick();
+  }
+
+  selectText(position: number, col: number): void {
+    const cell = this.cell(position, col);
+
+    if (cell !== null) {
+      window.getSelection()?.selectAllChildren(cell);
+    }
+  }
+
+  get textSelection(): string {
+    return window.getSelection()?.toString() ?? '';
+  }
+
   async clickCell(position: number, col: number, options: KeyOptions = {}): Promise<void> {
     this.layoutBody();
     const point = this.pointAt(position, col);

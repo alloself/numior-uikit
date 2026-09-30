@@ -183,6 +183,7 @@ test.describe('table', () => {
     );
 
     await expect(table.cell(1, 1)).toBeFocused();
+    expect(await table.textSelection()).toBe('');
     await page.keyboard.press('ControlOrMeta+A');
 
     await expect(table.output).toContainText(
@@ -191,6 +192,23 @@ test.describe('table', () => {
 
     await page.keyboard.press('Escape');
     await expect(table.output).toContainText('"ranges":[]');
+    await table.output.click();
+    await table.cell(5, 2).click({ modifiers: ['Shift'] });
+
+    await expect(table.output).toContainText(
+      '"ranges":[{"from":{"row":5,"col":2},"to":{"row":5,"col":2}}]',
+    );
+
+    await expect(table.cell(5, 2)).toBeFocused();
+    expect(await table.textSelection()).toBe('');
+    await table.header(2).focus();
+    await page.keyboard.press('ControlOrMeta+A');
+
+    await expect(table.output).toContainText(
+      '"ranges":[{"from":{"row":0,"col":0},"to":{"row":9999,"col":10}}]',
+    );
+
+    await page.keyboard.press('Escape');
 
     await table.dragRange({ row: 1, col: 1 }, { row: 2, col: 2 });
     await page.keyboard.press('ControlOrMeta+C');
