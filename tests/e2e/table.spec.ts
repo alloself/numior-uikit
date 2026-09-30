@@ -191,7 +191,7 @@ test.describe('table', () => {
     );
 
     await expect(table.cell(1, 1)).toHaveCSS('background-color', await table.cellBackground(1, 2));
-    await expect(table.cell(1, 1)).toHaveCSS('outline-style', 'solid');
+    await expect(table.cell(1, 1)).toHaveCSS('outline-style', 'none');
     await table.cell(2, 3).click({ modifiers: ['ControlOrMeta'] });
     await expect(table.cell(2, 3)).not.toHaveAttribute('aria-selected');
     await expect(table.cell(2, 2)).toHaveAttribute('aria-selected', 'true');
