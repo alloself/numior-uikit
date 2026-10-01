@@ -8,6 +8,11 @@ export interface TableCell {
   readonly col: number;
 }
 
+export interface TableJump {
+  readonly rows: number;
+  readonly headerGap: number;
+}
+
 export interface TableScroll {
   readonly top?: number;
   readonly left?: number;
@@ -458,17 +463,25 @@ export class TableSection {
     });
   }
 
-  rowsInViewAfterJump(top: number): Promise<number> {
+  jumpBeforeRender(top: number): Promise<TableJump> {
     return this.viewport.evaluate((element, target) => {
       element.scrollTop = target;
       const box = element.getBoundingClientRect();
+      const first = element.querySelector('.nui-table__header .nui-table__cell');
+      const last = element.querySelector('.nui-table__header > tr:last-child > .nui-table__cell');
+      const headerTop = first?.getBoundingClientRect().top ?? Number.POSITIVE_INFINITY;
+      const bodyTop = last?.getBoundingClientRect().bottom ?? box.top;
 
-      return [...element.querySelectorAll('.nui-table__body > [role="row"] > .nui-table__cell')]
-        .filter((cell) => cell.matches(':first-child'))
-        .filter((cell) => {
-          const rect = cell.getBoundingClientRect();
-          return rect.bottom > box.top && rect.top < box.bottom;
-        }).length;
+      const rows = [
+        ...element.querySelectorAll(
+          '.nui-table__body > [role="row"] > .nui-table__cell:first-child',
+        ),
+      ].filter((cell) => {
+        const rect = cell.getBoundingClientRect();
+        return rect.bottom > bodyTop && rect.top < box.bottom;
+      }).length;
+
+      return { rows, headerGap: Math.abs(headerTop - box.top) };
     }, top);
   }
 
@@ -517,7 +530,10 @@ export class TableSection {
   }
 
   async headerBottom(): Promise<number> {
-    const header = await boxOf(this.viewport.locator('.nui-table__header'));
+    const header = await boxOf(
+      this.viewport.locator('.nui-table__header > tr:last-child > .nui-table__cell').first(),
+    );
+
     return header.y + header.height;
   }
 

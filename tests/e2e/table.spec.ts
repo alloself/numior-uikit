@@ -15,9 +15,16 @@ test.describe('table', () => {
     const { table } = playground;
     await table.root.scrollIntoViewIfNeeded();
     await expect(table.cell(0, 1)).toBeVisible();
-    expect(await table.rowsInViewAfterJump(200_000)).toBeGreaterThan(5);
+    const ahead = await table.jumpBeforeRender(200_000);
+
+    expect(ahead.rows).toBeGreaterThan(5);
+    expect(ahead.headerGap).toBeLessThan(1);
     await expect(table.cell(5000, 1)).toBeVisible();
-    expect(await table.rowsInViewAfterJump(0)).toBeGreaterThan(5);
+
+    const back = await table.jumpBeforeRender(0);
+
+    expect(back.rows).toBeGreaterThan(5);
+    expect(back.headerGap).toBeLessThan(1);
     await expect(table.cell(0, 1)).toBeVisible();
   });
 

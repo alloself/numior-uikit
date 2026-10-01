@@ -145,8 +145,9 @@ expect the semicolon delimiter.
 place while scrolling, `pinnedRows` stay under the header, and the column menu pins and hides
 columns.
 
-The window rows sit on sticky cells that the browser keeps in place while the scrollbar is
-dragged. Rows are reused element by element, so the body never goes blank between frames.
+The row window is one sticky table that the browser scrolls on its own. When the scrollbar runs
+past it, the table stays at the edge until the next frame, so the body never goes blank. Rows are
+reused element by element.
 
 <Example name="table/Windowed" />
 

@@ -74,6 +74,13 @@ type MountDefaults = Required<
   >
 >;
 
+interface TableWindowFrameText {
+  readonly lead: string;
+  readonly rest: string;
+  readonly clampStart: string;
+  readonly clampEnd: string;
+}
+
 const MOUNT_DEFAULTS: MountDefaults = {
   sort: [],
   filters: [],
@@ -1383,15 +1390,19 @@ export class TableDriver<T> {
     await dragHandle(this.resizer(col), `column ${col}`, dx);
   }
 
-  rowTop(position: number): string | undefined {
-    const row = this.row(position);
-    const top = row instanceof HTMLElement ? row.style.getPropertyValue('--_top') : '';
-    return top === '' ? undefined : top;
-  }
+  get windowFrame(): TableWindowFrameText | undefined {
+    const grid = this.element.querySelector<HTMLElement>('.nui-table__grid');
+    const lead = this.element.style.getPropertyValue('--_lead');
 
-  get canvasRest(): string | undefined {
-    const rest = this.element.querySelector<HTMLElement>('.nui-table__canvas > .nui-table__rest');
-    return rest?.style.getPropertyValue('--_rest');
+    if (grid === null || lead === '') {
+      return undefined;
+    }
+    return {
+      lead,
+      rest: this.element.style.getPropertyValue('--_rest'),
+      clampStart: grid.style.getPropertyValue('--_clamp-start'),
+      clampEnd: grid.style.getPropertyValue('--_clamp-end'),
+    };
   }
 
   get rowElements(): HTMLElement[] {

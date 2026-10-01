@@ -7,6 +7,7 @@
       <div
         ref="viewport"
         class="nui-table__viewport"
+        :style="spacerStyle"
         @scroll.passive="onViewportScroll"
         @keydown="onKeydown"
         @focusin="focus.onFocusin"
@@ -22,6 +23,7 @@
           :id="gridId"
           class="nui-table__grid"
           :role="hierarchical ? 'treegrid' : 'grid'"
+          :style="gridStyle"
           v-bind="gridAria"
         >
           <NuiTableTracks :tracks="rowCells.tracks" />
@@ -111,7 +113,6 @@
               :key="item.key"
               :cells="rowCells"
               :row-index="item.index + pinnedCount + headRows + 1"
-              :top="item.top"
               :active="focus.activeIn(item.index + pinnedCount)"
               :revision="item.revision"
               :level="item.level"
@@ -133,11 +134,6 @@
                 <CellContent :item="item" :position="item.index" :column="column" />
               </template>
             </NuiTableRow>
-          </tbody>
-          <tbody v-if="canvasRest > 0" class="nui-table__canvas">
-            <tr ref="rest" class="nui-table__rest" role="presentation" :style="restStyle">
-              <td :colspan="rowCells.tracks.length"></td>
-            </tr>
           </tbody>
           <tbody v-if="status" class="nui-table__status">
             <tr class="nui-table__empty" role="row" :aria-rowindex="headRows + 1">
@@ -293,6 +289,7 @@ import {
   tableLayout,
 } from './table-layout';
 import { pageWindowOf, resolvePagination } from './table-pages';
+import { STILL_FRAME, tableWindowFrame, type TableWindowFrame } from './table-window';
 import NuiTableFilter from './NuiTableFilter.vue';
 import NuiTableFooterCell from './NuiTableFooterCell.vue';
 import NuiTableHeaderMarks from './NuiTableHeaderMarks.vue';
@@ -683,26 +680,41 @@ const skeletonCount = computed(() => {
   );
 });
 
-const canvasSize = computed(() =>
-  loadingNow.value ? skeletonCount.value * rowSize.value : rowWindow.canvasSize.value,
-);
-
-const canvasRest = computed(() => {
+const windowFrame = computed((): TableWindowFrame => {
   if (!windowed.value || loadingNow.value) {
-    return 0;
+    return STILL_FRAME;
   }
-  const rendered = rowWindow.items.value.reduce((sum, item) => sum + item.size, 0);
-
-  return Math.max(0, canvasSize.value - rendered);
+  return tableWindowFrame({
+    items: rowWindow.items.value,
+    range: rowWindow.range.value,
+    startSize: rowWindow.startSize.value,
+    endSize: rowWindow.endSize.value,
+    viewport: rowWindow.viewport.value,
+    chrome: rowSize.value * (headRows.value + pinnedCount.value + footRows.value),
+  });
 });
 
-const restStyle = computed(() => ({ '--_rest': `${canvasRest.value}px` }));
-const rest = useTemplateRef<HTMLElement>('rest');
-const bodyTop = computed(() => rowSize.value * (headRows.value + pinnedCount.value));
+const spacerStyle = computed(() =>
+  windowed.value
+    ? { '--_lead': `${windowFrame.value.lead}px`, '--_rest': `${windowFrame.value.rest}px` }
+    : undefined,
+);
 
-watch(canvasRest, (next, previous) => {
-  if (next > previous) {
-    rest.value?.style.setProperty('--_rest', `${next}px`);
+const gridStyle = computed(() =>
+  windowed.value
+    ? {
+        '--_clamp-start': `${windowFrame.value.clampStart}px`,
+        '--_clamp-end': `${windowFrame.value.clampEnd}px`,
+      }
+    : undefined,
+);
+
+watch(windowFrame, (next, previous) => {
+  if (next.lead > previous.lead) {
+    viewport.value?.style.setProperty('--_lead', `${next.lead}px`);
+  }
+  if (next.rest > previous.rest) {
+    viewport.value?.style.setProperty('--_rest', `${next.rest}px`);
   }
 });
 
@@ -960,7 +972,6 @@ const bodyRows = computed((): TableBodyRow[] => {
     return [];
   }
   const pending = expansion.loading.value;
-  const top = bodyTop.value - rowWindow.scrollTop.value;
 
   return rowWindow.items.value.map((item) => {
     const node = engine.value.nodeAt(pageStart.value + item.index);
@@ -969,7 +980,6 @@ const bodyRows = computed((): TableBodyRow[] => {
 
     return {
       index: item.index,
-      top: windowed.value ? top + item.start : undefined,
       key: item.slot,
       revision: current,
       level,

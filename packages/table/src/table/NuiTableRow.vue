@@ -65,7 +65,6 @@ const {
   cells,
   rowIndex,
   part = 'body',
-  top,
   active = 0,
   level,
   group,
@@ -121,12 +120,9 @@ const rowClass = computed(() => [
   },
 ]);
 
-const rowStyle = computed(() => {
-  if (sticky.value) {
-    return { '--_top': `calc(var(--_row) * ${rowIndex - 1})` };
-  }
-  return top === undefined ? undefined : { '--_top': `${top}px` };
-});
+const rowStyle = computed(() =>
+  sticky.value ? { '--_top': `calc(var(--_row) * ${rowIndex - 1})` } : undefined,
+);
 
 const pinClass = (cell: TableCellLayout): Record<string, boolean> => ({
   'nui-table__cell--pin-start': cell.pin === 'start',

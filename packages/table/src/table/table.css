@@ -98,17 +98,25 @@
   background: var(--_row-bg);
   transition: background-color var(--nui-duration-fast) var(--nui-easing);
 }
-.nui-table__rest {
+.nui-table:not(.nui-table--auto) .nui-table__viewport::before {
+  content: '';
+  display: block;
+  block-size: var(--_lead);
+}
+.nui-table:not(.nui-table--auto) .nui-table__viewport::after {
+  content: '';
+  display: block;
   block-size: var(--_rest);
 }
-.nui-table__rest > td {
-  block-size: var(--_rest);
-  padding: 0;
-  border: 0;
-}
-.nui-table:not(.nui-table--auto) .nui-table__body .nui-table__cell {
+.nui-table:not(.nui-table--auto) .nui-table__grid {
   position: sticky;
-  inset-block-start: var(--_top);
+  inset-block: var(--_clamp-start) var(--_clamp-end);
+}
+.nui-table:not(.nui-table--auto)
+  .nui-table__body
+  .nui-table__cell:not(.nui-table__cell--pin-start, .nui-table__cell--pin-end) {
+  position: relative;
+  z-index: 0;
 }
 .nui-table:not(.nui-table--auto) .nui-table__body .nui-icon__glyph {
   animation: none;
@@ -263,6 +271,13 @@
   position: sticky;
   inset-block-end: 0;
   z-index: 2;
+}
+.nui-table:not(.nui-table--auto) .nui-table__footer .nui-table__cell {
+  inset-block-end: -1px;
+  padding-block-end: 1px;
+}
+.nui-table:not(.nui-table--auto) .nui-table__footer .nui-table__content {
+  block-size: calc(var(--_row) - 2px);
 }
 .nui-table__header .nui-table__cell:is(.nui-table__cell--pin-start, .nui-table__cell--pin-end),
 .nui-table__pinned .nui-table__cell:is(.nui-table__cell--pin-start, .nui-table__cell--pin-end),

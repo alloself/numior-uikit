@@ -484,7 +484,6 @@ export interface TableSkeletonRow {
 
 export interface TableBodyRow {
   readonly index: number;
-  readonly top: number | undefined;
   readonly key: number;
   readonly revision: number;
   readonly level: number | undefined;
@@ -518,7 +517,6 @@ export interface NuiTableRowProps {
   cells: TableRowCells;
   rowIndex: number;
   part?: TableRowPart | undefined;
-  top?: number | undefined;
   active?: number | undefined;
   revision?: number | undefined;
   level?: number | undefined;

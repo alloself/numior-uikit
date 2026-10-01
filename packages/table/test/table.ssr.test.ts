@@ -96,8 +96,9 @@ describe('NuiTable on the server', () => {
     expect(html).not.toContain('Сотрудник 30');
     expect(html).toContain('>M6<');
     expect(html).not.toContain('>M7<');
+    expect(html).toContain('--_lead:0px');
     expect(html).toContain('--_rest:38800px');
-    expect(html).toContain('--_top:40px');
+    expect(html).toContain('--_clamp-start:-1240px');
     expect(html).toContain('<table');
     expect(html).toContain('<colgroup>');
     expect(html).toContain('tabindex="0"');
@@ -110,8 +111,8 @@ describe('NuiTable on the server', () => {
 
     expect(html).toBe(await render(12, { auto: true }));
     expect(html).toContain('nui-table--auto');
-    expect(html).not.toContain('nui-table__canvas');
-    expect(html).not.toMatch(/--_top:-?\d+px/);
+    expect(html).not.toContain('--_rest');
+    expect(html).not.toContain('--_clamp-start');
     expect(html).not.toContain('block-size');
     expect(html).toContain('aria-rowcount="13"');
     expect(html).toContain('aria-rowindex="13"');
