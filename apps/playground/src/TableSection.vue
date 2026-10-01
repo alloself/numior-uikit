@@ -149,7 +149,7 @@
       @row-click="(row) => (lastUnitClick = row.id)"
       @reorder="onUnitReorder"
     />
-    <div class="data-row">
+    <div class="data-row mt-2">
       <NuiButton
         size="sm"
         variant="outline"
