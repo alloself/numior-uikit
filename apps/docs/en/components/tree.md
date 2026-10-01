@@ -56,8 +56,9 @@ the application.
 `size`, `itemHeight` sets it explicitly. The active row always stays in the DOM, and the
 server renders the first 20 rows.
 
-The window sits on a sticky list that the browser holds in place while the scrollbar is
-dragged. Rows are reused element by element, so the tree never goes blank between frames.
+The window is one sticky list that the browser scrolls on its own. When the scrollbar runs
+past it, the list stays at the edge until the next frame, so the tree never goes blank. Rows
+are reused element by element.
 
 <Example name="tree/Virtual" />
 

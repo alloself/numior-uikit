@@ -226,12 +226,15 @@ export {
 } from './list/typeahead';
 export type { TypeaheadState } from './list/typeahead';
 export { useVirtualList } from './virtual/useVirtualList';
+export { useVirtualFrame } from './virtual/useVirtualFrame';
+export type { VirtualFrameStyle, VirtualFrameStyles } from './virtual/useVirtualFrame';
 export { createSizeIndex } from './virtual/size-index';
 export type { SizeIndex } from './virtual/size-index';
 export type {
   ItemSize,
   VirtualAlign,
   VirtualAxis,
+  VirtualFrame,
   VirtualItem,
   VirtualList,
   VirtualListOptions,

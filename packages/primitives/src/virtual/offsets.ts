@@ -116,6 +116,11 @@ export const indexAt = (model: SizeModel, position: number): number => {
   }
 };
 
+const lastVisible = (model: SizeModel, scrollTop: number, viewport: number): number =>
+  model.kind === 'fixed' && model.size > 0
+    ? indexAt(model, scrollTop) + Math.ceil(viewport / model.size)
+    : indexAt(model, scrollTop + viewport);
+
 export const rangeFor = (
   model: SizeModel,
   scrollTop: number,
@@ -128,7 +133,7 @@ export const rangeFor = (
     return { start: 0, end: 0 };
   }
   const start = Math.max(0, indexAt(model, scrollTop) - overscan);
-  const end = Math.min(count, indexAt(model, scrollTop + viewport) + 1 + overscan);
+  const end = Math.min(count, lastVisible(model, scrollTop, viewport) + 1 + overscan);
   return { start, end };
 };
 

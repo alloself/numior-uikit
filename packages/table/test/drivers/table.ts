@@ -1392,16 +1392,16 @@ export class TableDriver<T> {
 
   get windowFrame(): TableWindowFrameText | undefined {
     const grid = this.element.querySelector<HTMLElement>('.nui-table__grid');
-    const lead = this.element.style.getPropertyValue('--_lead');
+    const lead = this.element.style.getPropertyValue('--_window-lead');
 
     if (grid === null || lead === '') {
       return undefined;
     }
     return {
       lead,
-      rest: this.element.style.getPropertyValue('--_rest'),
-      clampStart: grid.style.getPropertyValue('--_clamp-start'),
-      clampEnd: grid.style.getPropertyValue('--_clamp-end'),
+      rest: this.element.style.getPropertyValue('--_window-rest'),
+      clampStart: grid.style.getPropertyValue('--_window-clamp-start'),
+      clampEnd: grid.style.getPropertyValue('--_window-clamp-end'),
     };
   }
 

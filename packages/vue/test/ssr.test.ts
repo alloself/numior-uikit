@@ -1001,8 +1001,9 @@ describe('server rendering', () => {
     );
 
     expect(windowed.match(/role="treeitem"/g)).toHaveLength(20);
-    expect(windowed).toContain('--_canvas:18000px');
-    expect(windowed).toContain('translate:0 0px');
+    expect(windowed).toContain('--_window-lead:0px');
+    expect(windowed).toContain('--_window-rest:17280px');
+    expect(windowed).toContain('--_window-clamp-start:-720px');
   });
 
   it('renders a select with nested options as a tree on the server', async () => {

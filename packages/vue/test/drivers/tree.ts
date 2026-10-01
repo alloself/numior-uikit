@@ -26,6 +26,13 @@ export interface TreeMountOptions {
   readonly config?: NuiConfigOptions;
 }
 
+interface TreeWindowFrame {
+  readonly lead: string;
+  readonly rest: string;
+  readonly clampStart: string;
+  readonly clampEnd: string;
+}
+
 const labelOfItem = (item: unknown): string =>
   typeof item === 'object' && item !== null && 'label' in item && typeof item.label === 'string'
     ? item.label
@@ -152,16 +159,16 @@ export class TreeDriver extends ComponentDriver {
     return this.nodes.map((node) => node.element);
   }
 
-  get windowShift(): string {
-    return this.tree.find<HTMLElement>('.nui-tree__list').element.style.translate;
-  }
+  get windowFrame(): TreeWindowFrame {
+    const canvas = this.tree.element.style;
+    const list = this.tree.find<HTMLElement>('.nui-tree__list').element.style;
 
-  rowShift(label: string): string | undefined {
-    return this.nodes.find((node) => textOf(node.element) === label)?.element.style.translate;
-  }
-
-  get canvasHeight(): string {
-    return this.tree.element.style.getPropertyValue('--_canvas');
+    return {
+      lead: canvas.getPropertyValue('--_window-lead'),
+      rest: canvas.getPropertyValue('--_window-rest'),
+      clampStart: list.getPropertyValue('--_window-clamp-start'),
+      clampEnd: list.getPropertyValue('--_window-clamp-end'),
+    };
   }
 
   get activeElement(): HTMLElement | undefined {

@@ -7,7 +7,7 @@
       <div
         ref="viewport"
         class="nui-table__viewport"
-        :style="spacerStyle"
+        :style="windowFrame.canvasStyle.value"
         @scroll.passive="onViewportScroll"
         @keydown="onKeydown"
         @focusin="focus.onFocusin"
@@ -23,7 +23,7 @@
           :id="gridId"
           class="nui-table__grid"
           :role="hierarchical ? 'treegrid' : 'grid'"
-          :style="gridStyle"
+          :style="windowFrame.windowStyle.value"
           v-bind="gridAria"
         >
           <NuiTableTracks :tracks="rowCells.tracks" />
@@ -247,7 +247,9 @@ import {
   useDirection,
   useLocale,
   useMessages,
+  useVirtualFrame,
   useVirtualList,
+  type VirtualFrame,
 } from '@numior/primitives';
 import {
   NuiEmpty,
@@ -289,7 +291,6 @@ import {
   tableLayout,
 } from './table-layout';
 import { pageWindowOf, resolvePagination } from './table-pages';
-import { STILL_FRAME, tableWindowFrame, type TableWindowFrame } from './table-window';
 import NuiTableFilter from './NuiTableFilter.vue';
 import NuiTableFooterCell from './NuiTableFooterCell.vue';
 import NuiTableHeaderMarks from './NuiTableHeaderMarks.vue';
@@ -343,6 +344,7 @@ import type {
 
 const ROW_SIZES = { sm: 32, md: 40, lg: 48 } as const;
 const CANVAS_LIMIT = 15_000_000;
+const STILL_FRAME: VirtualFrame = { lead: 0, rest: 0, clampStart: 0, clampEnd: 0 };
 const INITIAL_ROWS = 30;
 const INITIAL_COLUMNS = 12;
 const ROW_OVERSCAN = 6;
@@ -680,42 +682,11 @@ const skeletonCount = computed(() => {
   );
 });
 
-const windowFrame = computed((): TableWindowFrame => {
-  if (!windowed.value || loadingNow.value) {
-    return STILL_FRAME;
+const windowFrame = useVirtualFrame(viewport, () => {
+  if (!windowed.value) {
+    return undefined;
   }
-  return tableWindowFrame({
-    items: rowWindow.items.value,
-    range: rowWindow.range.value,
-    startSize: rowWindow.startSize.value,
-    endSize: rowWindow.endSize.value,
-    viewport: rowWindow.viewport.value,
-    chrome: rowSize.value * (headRows.value + pinnedCount.value + footRows.value),
-  });
-});
-
-const spacerStyle = computed(() =>
-  windowed.value
-    ? { '--_lead': `${windowFrame.value.lead}px`, '--_rest': `${windowFrame.value.rest}px` }
-    : undefined,
-);
-
-const gridStyle = computed(() =>
-  windowed.value
-    ? {
-        '--_clamp-start': `${windowFrame.value.clampStart}px`,
-        '--_clamp-end': `${windowFrame.value.clampEnd}px`,
-      }
-    : undefined,
-);
-
-watch(windowFrame, (next, previous) => {
-  if (next.lead > previous.lead) {
-    viewport.value?.style.setProperty('--_lead', `${next.lead}px`);
-  }
-  if (next.rest > previous.rest) {
-    viewport.value?.style.setProperty('--_rest', `${next.rest}px`);
-  }
+  return loadingNow.value ? STILL_FRAME : rowWindow.frame.value;
 });
 
 const rootClass = computed(() => [

@@ -14,6 +14,9 @@ size. The container stays yours, so the rows can live in a `<tbody>` or any list
     'VirtualListOptions',
     'VirtualList',
     'VirtualItem',
+    'useVirtualFrame',
+    'VirtualFrame',
+    'VirtualFrameStyles',
     'createSizeIndex',
     'SizeIndex',
   ]"
@@ -34,12 +37,22 @@ The browser scrolls on the compositor thread and paints your rows on the main th
 frame later. When an update misses the frame, rows placed on a tall canvas leave the
 viewport during a fast scrollbar drag.
 
-Keep the rows in a window with `position: sticky` that covers the viewport. Move a block of
-consecutive rows with `translate: 0 <windowOffset>px`, where `windowOffset` is the offset of
-the first rendered row relative to the viewport. Rows that keep their canvas positions move
-with `translate: 0 -<scrollTop>px` instead.
+`frame` describes a sticky window. `lead` and `rest` are the spacer heights before and after
+the block of rows, `clampStart` and `clampEnd` the limits the block never crosses.
 
-The compositor holds the sticky window in place until the next frame replaces its rows.
+Give the block of rows `position: sticky` and pass the limits to `inset-block-start` and
+`inset-block-end`. Put the spacers next to the block inside the scroller, as in the example
+above. The browser scrolls the block on its own and holds it at the edge until the next frame.
+
+The kit components take these values through `useVirtualFrame(container, frame)`. It returns
+styles for the scroller and the block of rows. A growing spacer goes to the DOM before the
+render, so the canvas never dips.
+
+`windowOffset` is the offset of the first rendered row from the viewport, for windows your own
+code moves.
+
+With rows of one height both window edges move at the same scroll offset. Crossing a row
+boundary therefore updates the window once.
 
 `listen: false` leaves the scroll event to you. Call `measure()` from one shared listener
 when several windows share a scroller, so the rows update once per event.

@@ -1,10 +1,13 @@
 import { mount, type VueWrapper } from '@vue/test-utils';
-import { defineComponent, h, nextTick, ref, shallowRef } from 'vue';
+import { defineComponent, h, nextTick, ref, shallowRef, type VNode } from 'vue';
 import {
+  useVirtualFrame,
   useVirtualList,
   type ItemSize,
   type VirtualAlign,
   type VirtualAxis,
+  type VirtualFrame,
+  type VirtualItem,
   type VirtualList,
 } from '../../src';
 
@@ -25,6 +28,30 @@ export interface VirtualHarnessOptions {
 
 type Outcome = { readonly ran: true; readonly value: VirtualList } | { readonly ran: false };
 
+interface SpacerStyles {
+  readonly lead: string;
+  readonly rest: string;
+}
+
+const rowOf = (item: VirtualItem, axis: VirtualAxis): VNode =>
+  h(
+    'div',
+    {
+      key: item.index,
+      class: 'row',
+      'data-index': item.index,
+      style: {
+        transform: axis === 'x' ? `translateX(${item.offset}px)` : `translateY(${item.offset}px)`,
+      },
+    },
+    `Row ${item.index}`,
+  );
+
+const spacersOf = (element: HTMLElement): SpacerStyles => ({
+  lead: element.style.getPropertyValue('--_window-lead'),
+  rest: element.style.getPropertyValue('--_window-rest'),
+});
+
 const defineSize = (element: HTMLElement, name: string, value: number): void => {
   Object.defineProperty(element, name, { value, configurable: true, writable: true });
 };
@@ -36,6 +63,7 @@ export class VirtualHarness {
     const height = options.height ?? 200;
     const axis = options.axis ?? 'y';
     const outcome: { current: Outcome } = { current: { ran: false } };
+    const renders: SpacerStyles[] = [];
 
     const Host = defineComponent({
       setup() {
@@ -54,6 +82,8 @@ export class VirtualHarness {
           listen: () => options.listen,
         });
 
+        const framed = useVirtualFrame(container, virtual.frame);
+
         outcome.current = { ran: true, value: virtual };
 
         const setContainer = (element: unknown): void => {
@@ -65,30 +95,30 @@ export class VirtualHarness {
           }
         };
 
-        return () =>
-          h('div', { ref: setContainer, class: 'viewport', dir: options.dir }, [
-            h(
-              'div',
-              { class: 'body', style: { height: `${virtual.canvasSize.value}px` } },
-              virtual.items.value.map((item) =>
-                h(
-                  'div',
-                  {
-                    key: item.index,
-                    class: 'row',
-                    'data-index': item.index,
-                    style: {
-                      transform:
-                        axis === 'x'
-                          ? `translateX(${item.offset}px)`
-                          : `translateY(${item.offset}px)`,
-                    },
-                  },
-                  `Row ${item.index}`,
-                ),
+        return () => {
+          if (container.value !== null) {
+            renders.push(spacersOf(container.value));
+          }
+          return h(
+            'div',
+            {
+              ref: setContainer,
+              class: 'viewport',
+              dir: options.dir,
+              style: framed.canvasStyle.value,
+            },
+            [
+              h(
+                'div',
+                {
+                  class: 'body',
+                  style: { height: `${virtual.canvasSize.value}px`, ...framed.windowStyle.value },
+                },
+                virtual.items.value.map((item) => rowOf(item, axis)),
               ),
-            ),
-          ]);
+            ],
+          );
+        };
       },
     });
 
@@ -96,7 +126,7 @@ export class VirtualHarness {
     if (!outcome.current.ran) {
       throw new Error('useVirtualList did not run');
     }
-    return new VirtualHarness(wrapper, outcome.current.value, count, pinned, axis);
+    return new VirtualHarness(wrapper, outcome.current.value, count, pinned, axis, renders);
   }
 
   async settle(): Promise<void> {
@@ -109,6 +139,7 @@ export class VirtualHarness {
     private readonly count: { value: number },
     private readonly pinned: { value: number | undefined },
     private readonly axis: VirtualAxis,
+    private readonly renders: readonly SpacerStyles[],
   ) {}
 
   private get element(): HTMLElement {
@@ -149,6 +180,27 @@ export class VirtualHarness {
 
   get windowOffset(): number {
     return this.list.windowOffset.value;
+  }
+
+  get frame(): VirtualFrame {
+    return this.list.frame.value;
+  }
+
+  get spacerStyles(): SpacerStyles {
+    return spacersOf(this.element);
+  }
+
+  get spacerStylesAtRender(): SpacerStyles | undefined {
+    return this.renders.at(-1);
+  }
+
+  get clampStyles(): { readonly start: string; readonly end: string } {
+    const body = this.wrapper.find<HTMLElement>('.body').element;
+
+    return {
+      start: body.style.getPropertyValue('--_window-clamp-start'),
+      end: body.style.getPropertyValue('--_window-clamp-end'),
+    };
   }
 
   get slots(): ReadonlyMap<number, number> {

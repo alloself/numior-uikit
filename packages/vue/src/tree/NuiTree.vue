@@ -31,7 +31,7 @@
       :is="virtual ? 'ul' : TransitionGroup"
       class="nui-list__items nui-tree__list"
       role="presentation"
-      :style="listStyle"
+      :style="windowFrame.windowStyle.value"
       v-bind="virtual ? {} : FOLDING"
     >
       <NuiTreeNode
@@ -42,7 +42,6 @@
         :checked="checkable ? checkStates.get(entry.node.key) : undefined"
         :icon="iconFor(entry.node)"
         :folder="folderFor(entry.node)"
-        :start="entry.start"
         :revealing="revealing.has(entry.node.key)"
       >
         <template v-if="$slots.item" #default="slot"><slot name="item" v-bind="slot" /></template>
@@ -72,6 +71,7 @@ import {
   useControlId,
   useDirection,
   useMessages,
+  useVirtualFrame,
   useVirtualList,
   type IconAlias,
 } from '@numior/primitives';
@@ -98,10 +98,11 @@ interface RenderedNode {
   readonly node: TreeNode<T>;
   readonly key: string | number;
   readonly index: number;
-  readonly start: number | undefined;
 }
 
 const ROW_SIZES: Record<NuiSize, number> = { sm: 32, md: 36, lg: 40 };
+
+const lengthOf = (value: string): number => Number.parseFloat(value) || 0;
 
 const afterPaint = (callback: () => void): void => {
   if (typeof requestAnimationFrame === 'undefined') {
@@ -163,6 +164,7 @@ const mounted = ref(false);
 const focused = ref(false);
 const pointerModality = ref(false);
 const rowScale = ref(1);
+const framePadding = ref(0);
 
 const mode = computed(() => {
   if (checkable) {
@@ -215,26 +217,25 @@ const windowing = useVirtualList(root, {
   itemSize: () => rowSize.value,
   enabled: () => virtual,
   pinned: () => (activeIndex.value >= 0 ? activeIndex.value : undefined),
+  inset: () => framePadding.value,
 });
+
+const windowFrame = useVirtualFrame(root, () => (virtual ? windowing.frame.value : undefined));
 
 const rendered = computed<RenderedNode[]>(() =>
   virtual
-    ? windowing.items.value.flatMap(({ index, start, slot }) => {
+    ? windowing.items.value.flatMap(({ index, slot }) => {
         const node = visible.value[index];
-        return node ? [{ node, key: slot, index, start }] : [];
+        return node ? [{ node, key: slot, index }] : [];
       })
-    : visible.value.map((node, index) => ({ node, key: node.key, index, start: undefined })),
+    : visible.value.map((node, index) => ({ node, key: node.key, index })),
 );
 
 const rootStyle = computed(() => ({
   '--_height': height,
   ...(itemHeight === undefined ? {} : { '--_row': `${itemHeight}px` }),
-  ...(virtual ? { '--_canvas': `${windowing.totalSize.value}px` } : {}),
+  ...windowFrame.canvasStyle.value,
 }));
-
-const listStyle = computed(() =>
-  virtual ? { translate: `0 ${-windowing.scrollTop.value}px` } : undefined,
-);
 
 const folderFor = (node: TreeNode<T>): boolean =>
   icons && node.item.icon === undefined && node.hasChildren;
@@ -499,10 +500,23 @@ const measureRow = (): void => {
   }
 };
 
+const measureFrame = (): void => {
+  const element = root.value;
+
+  if (element) {
+    const style = getComputedStyle(element);
+
+    framePadding.value = lengthOf(style.paddingBlockStart) + lengthOf(style.paddingBlockEnd);
+  }
+};
+
 onMounted(() => {
   mounted.value = true;
   if (itemHeight === undefined) {
     measureRow();
+  }
+  if (virtual) {
+    measureFrame();
   }
 });
 </script>

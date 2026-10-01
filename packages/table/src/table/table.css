@@ -101,16 +101,19 @@
 .nui-table:not(.nui-table--auto) .nui-table__viewport::before {
   content: '';
   display: block;
-  block-size: var(--_lead);
+  block-size: var(--_window-lead);
 }
 .nui-table:not(.nui-table--auto) .nui-table__viewport::after {
   content: '';
   display: block;
-  block-size: var(--_rest);
+  block-size: var(--_window-rest);
 }
 .nui-table:not(.nui-table--auto) .nui-table__grid {
+  --_window-lead: initial;
+  --_window-rest: initial;
+
   position: sticky;
-  inset-block: var(--_clamp-start) var(--_clamp-end);
+  inset-block: var(--_window-clamp-start) var(--_window-clamp-end);
 }
 .nui-table:not(.nui-table--auto)
   .nui-table__body

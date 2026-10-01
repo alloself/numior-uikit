@@ -130,6 +130,58 @@ describe('useVirtualList', () => {
     list.unmount();
   });
 
+  it('moves both edges of a fixed-size window at the same scroll offset', async () => {
+    const list = VirtualHarness.mount({ height: 210, itemSize: 20, overscan: 2 });
+    await list.settle();
+    expect(list.range).toEqual({ start: 0, end: 14 });
+    await list.scroll(100);
+    expect(list.range).toEqual({ start: 3, end: 19 });
+
+    const settled = list.range;
+
+    await list.scroll(110);
+    expect(list.range).toBe(settled);
+    await list.scroll(119);
+    expect(list.range).toBe(settled);
+    await list.scroll(120);
+    expect(list.range).toEqual({ start: 4, end: 20 });
+    list.unmount();
+  });
+
+  it('frames the window between two spacers and clamps it to the rendered rows', async () => {
+    const list = VirtualHarness.mount({ height: 200, itemSize: 20, overscan: 2 });
+    await list.settle();
+    expect(list.frame).toEqual({ lead: 0, rest: 19_740, clampStart: -60, clampEnd: -60 });
+    expect(list.spacerStyles).toEqual({ lead: '0px', rest: '19740px' });
+    expect(list.clampStyles).toEqual({ start: '-60px', end: '-60px' });
+    await list.scroll(5000);
+    expect(list.frame).toEqual({ lead: 4960, rest: 14_740, clampStart: -100, clampEnd: -100 });
+
+    const settled = list.frame;
+
+    await list.scroll(5005);
+    expect(list.frame).toBe(settled);
+    await list.pin(900);
+    expect(list.renderedIndices.at(-1)).toBe(900);
+    expect(list.frame).toEqual({ lead: 4960, rest: 14_720, clampStart: -100, clampEnd: -120 });
+    await list.pin(3);
+    expect(list.renderedIndices[0]).toBe(3);
+    expect(list.frame).toEqual({ lead: 4940, rest: 14_740, clampStart: -120, clampEnd: -100 });
+    list.unmount();
+  });
+
+  it('grows a spacer before the render and shrinks the other one with it', async () => {
+    const list = VirtualHarness.mount({ height: 200, itemSize: 20, overscan: 2 });
+    await list.settle();
+    await list.scroll(5000);
+    expect(list.spacerStylesAtRender).toEqual({ lead: '4960px', rest: '19740px' });
+    expect(list.spacerStyles).toEqual({ lead: '4960px', rest: '14740px' });
+    await list.scroll(1000);
+    expect(list.spacerStylesAtRender).toEqual({ lead: '4960px', rest: '18740px' });
+    expect(list.spacerStyles).toEqual({ lead: '960px', rest: '18740px' });
+    list.unmount();
+  });
+
   it('reports the offset of the first rendered row relative to the viewport', async () => {
     const list = VirtualHarness.mount({ height: 200, itemSize: 20, overscan: 2 });
     await list.settle();

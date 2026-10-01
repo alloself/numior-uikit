@@ -1,19 +1,24 @@
-import type { VirtualItem, VirtualRange } from '@numior/primitives';
+import type { VirtualRange } from './offsets';
 
-export interface TableWindowInput {
-  readonly items: readonly VirtualItem[];
-  readonly range: VirtualRange;
-  readonly startSize: number;
-  readonly endSize: number;
-  readonly viewport: number;
-  readonly chrome: number;
-}
-
-export interface TableWindowFrame {
+export interface VirtualFrame {
   readonly lead: number;
   readonly rest: number;
   readonly clampStart: number;
   readonly clampEnd: number;
+}
+
+export interface VirtualFrameItem {
+  readonly index: number;
+  readonly size: number;
+}
+
+export interface VirtualFrameInput {
+  readonly items: readonly VirtualFrameItem[];
+  readonly range: VirtualRange;
+  readonly startSize: number;
+  readonly endSize: number;
+  readonly viewport: number;
+  readonly inset: number;
 }
 
 interface WindowSizes {
@@ -24,9 +29,7 @@ interface WindowSizes {
 
 const NO_SIZES: WindowSizes = { before: 0, inside: 0, after: 0 };
 
-export const STILL_FRAME: TableWindowFrame = { lead: 0, rest: 0, clampStart: 0, clampEnd: 0 };
-
-const sizesOf = (items: readonly VirtualItem[], range: VirtualRange): WindowSizes =>
+const sizesOf = (items: readonly VirtualFrameItem[], range: VirtualRange): WindowSizes =>
   items.reduce((sizes, item) => {
     if (item.index < range.start) {
       return { ...sizes, before: sizes.before + item.size };
@@ -37,16 +40,16 @@ const sizesOf = (items: readonly VirtualItem[], range: VirtualRange): WindowSize
     return { ...sizes, inside: sizes.inside + item.size };
   }, NO_SIZES);
 
-export const tableWindowFrame = ({
+export const virtualFrameOf = ({
   items,
   range,
   startSize,
   endSize,
   viewport,
-  chrome,
-}: TableWindowInput): TableWindowFrame => {
+  inset,
+}: VirtualFrameInput): VirtualFrame => {
   const { before, inside, after } = sizesOf(items, range);
-  const overflow = viewport - chrome - inside;
+  const overflow = viewport - inset - inside;
 
   return {
     lead: Math.max(0, startSize - before),
@@ -55,3 +58,9 @@ export const tableWindowFrame = ({
     clampEnd: Math.min(0, overflow - after),
   };
 };
+
+export const sameFrame = (a: VirtualFrame, b: VirtualFrame): boolean =>
+  a.lead === b.lead &&
+  a.rest === b.rest &&
+  a.clampStart === b.clampStart &&
+  a.clampEnd === b.clampEnd;

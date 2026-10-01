@@ -18,6 +18,11 @@ const isTreeOutput = shapeOf({
 
 export type TreeOutput = Guarded<typeof isTreeOutput>;
 
+export interface TreeRowGaps {
+  readonly top: number;
+  readonly bottom: number;
+}
+
 const parseTreeOutput = (text: string): TreeOutput => parseAs(text, isTreeOutput, 'tree output');
 
 export class TreeSection {
@@ -50,6 +55,21 @@ export class TreeSection {
 
   labelOf(item: Locator): Locator {
     return item.locator('.nui-row__title');
+  }
+
+  activeRowGaps(tree: Locator): Promise<TreeRowGaps | null> {
+    return tree.evaluate((element) => {
+      const id = element.getAttribute('aria-activedescendant');
+      const active = id === null ? null : document.getElementById(id);
+
+      if (active === null) {
+        return null;
+      }
+      const top = element.getBoundingClientRect().top + element.clientTop;
+      const row = active.getBoundingClientRect();
+
+      return { top: row.top - top, bottom: top + element.clientHeight - row.bottom };
+    });
   }
 
   activeLabel(tree: Locator): Promise<string | null> {

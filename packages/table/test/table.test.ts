@@ -41,7 +41,7 @@ describe('NuiTable', () => {
     expect(grid.label).toBe('Таблица данных');
     expect(grid.rowCount).toBe(1001);
     expect(grid.colCount).toBe(18);
-    expect(grid.renderedRows).toEqual(range(0, 13));
+    expect(grid.renderedRows).toEqual(range(0, 14));
 
     expect(grid.headerTexts).toEqual([
       'ID',
@@ -69,9 +69,9 @@ describe('NuiTable', () => {
 
     expect(grid.windowFrame).toEqual({
       lead: '0px',
-      rest: '39480px',
-      clampStart: '-260px',
-      clampEnd: '-260px',
+      rest: '39440px',
+      clampStart: '-300px',
+      clampEnd: '-300px',
     });
 
     expect(grid.activeCell).toEqual({ row: 0, col: 0 });
@@ -81,26 +81,26 @@ describe('NuiTable', () => {
     const grid = mountPeople();
     await grid.scroll({ top: 4000 });
 
-    expect(grid.renderedRows).toEqual([0, ...range(94, 113)]);
+    expect(grid.renderedRows).toEqual([0, ...range(94, 114)]);
 
     expect(grid.windowFrame).toEqual({
       lead: '3720px',
-      rest: '35480px',
-      clampStart: '-540px',
-      clampEnd: '-500px',
+      rest: '35440px',
+      clampStart: '-580px',
+      clampEnd: '-540px',
     });
 
     const before = grid.rowElements;
 
     await grid.scroll({ top: 4080 });
-    expect(grid.renderedRows).toEqual([0, ...range(96, 115)]);
+    expect(grid.renderedRows).toEqual([0, ...range(96, 116)]);
     expect(grid.rowElements.every((row) => before.includes(row))).toBe(true);
 
     expect(grid.windowFrame).toEqual({
       lead: '3800px',
-      rest: '35400px',
-      clampStart: '-540px',
-      clampEnd: '-500px',
+      rest: '35360px',
+      clampStart: '-580px',
+      clampEnd: '-540px',
     });
 
     await grid.scroll({ left: 1000 });

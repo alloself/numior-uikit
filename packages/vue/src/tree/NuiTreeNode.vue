@@ -67,10 +67,7 @@ import NuiIcon from '../icon/NuiIcon.vue';
 import NuiListItem from '../list/NuiListItem.vue';
 import type { NuiTreeNodeProps } from './tree.types';
 
-const { node, id, checked, icon, folder, start, revealing } = defineProps<NuiTreeNodeProps<T>>();
+const { node, id, checked, icon, folder, revealing } = defineProps<NuiTreeNodeProps<T>>();
 
-const style = computed(() => ({
-  '--_level': String(node.level),
-  ...(start === undefined ? {} : { translate: `0 ${start}px` }),
-}));
+const style = computed(() => ({ '--_level': String(node.level) }));
 </script>

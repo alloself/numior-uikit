@@ -112,6 +112,14 @@ test.describe('tree', () => {
     await page.keyboard.press('Home');
     await expect(tree.item(tree.virtualTree, 'Узел 1')).toBeVisible();
     expect(await tree.renderedCount(tree.virtualTree)).toBeLessThan(100);
+    await page.keyboard.press('PageDown');
+    await page.keyboard.press('PageDown');
+    await expect(tree.item(tree.virtualTree, 'Узел 11')).toBeVisible();
+
+    const gaps = await tree.activeRowGaps(tree.virtualTree);
+
+    expect(gaps?.top).toBeGreaterThanOrEqual(0);
+    expect(gaps?.bottom).toBeGreaterThanOrEqual(0);
   });
 
   test('virtual tree keeps its rows on screen before the scroll event catches up', async ({

@@ -10,6 +10,7 @@ import {
   type Ref,
 } from 'vue';
 import { useDirection } from '../direction/direction-context';
+import { sameFrame, virtualFrameOf, type VirtualFrame } from './frame';
 import {
   buildSizeModel,
   canvasScaleFor,
@@ -25,6 +26,7 @@ import {
 } from './offsets';
 import { assignSlots, type SlotMap } from './slots';
 
+export type { VirtualFrame } from './frame';
 export type { ItemSize, VirtualAlign, VirtualRange } from './offsets';
 
 export type VirtualAxis = 'y' | 'x';
@@ -63,6 +65,7 @@ export interface VirtualList {
   readonly windowOffset: ComputedRef<number>;
   readonly startSize: ComputedRef<number>;
   readonly endSize: ComputedRef<number>;
+  readonly frame: ComputedRef<VirtualFrame>;
   readonly viewport: Readonly<Ref<number>>;
   readonly scrollTop: Readonly<Ref<number>>;
   offsetOf(index: number): number;
@@ -148,6 +151,19 @@ export const useVirtualList = (
     () => canvasSize.value - (offsetAt(model.value, range.value.end) - shift.value),
   );
 
+  const frame = computed<VirtualFrame>((previous) => {
+    const next = virtualFrameOf({
+      items: items.value,
+      range: range.value,
+      startSize: startSize.value,
+      endSize: endSize.value,
+      viewport: viewport.value,
+      inset: toValue(options.inset) ?? 0,
+    });
+
+    return previous !== undefined && sameFrame(previous, next) ? previous : next;
+  });
+
   const readScroll = (element: HTMLElement): number =>
     axis() === 'x' ? Math.abs(element.scrollLeft) : element.scrollTop;
 
@@ -213,6 +229,7 @@ export const useVirtualList = (
     windowOffset,
     startSize,
     endSize,
+    frame,
     viewport,
     scrollTop,
     offsetOf: (index) => offsetAt(model.value, index),

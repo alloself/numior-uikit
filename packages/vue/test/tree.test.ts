@@ -374,11 +374,22 @@ describe('NuiTree', () => {
     });
 
     await tree.setHeight(160);
-    expect(tree.canvasHeight).toBe('64000px');
-    expect(tree.windowShift).toBe('0 0px');
+
+    expect(tree.windowFrame).toEqual({
+      lead: '0px',
+      rest: '63680px',
+      clampStart: '-160px',
+      clampEnd: '-160px',
+    });
+
     await tree.scrollTo(3200);
-    expect(tree.windowShift).toBe('0 -3200px');
-    expect(tree.rowShift('Узел 100')).toBe('0 3200px');
+
+    expect(tree.windowFrame).toEqual({
+      lead: '3072px',
+      rest: '60480px',
+      clampStart: '-288px',
+      clampEnd: '-288px',
+    });
 
     const before = tree.rowElements;
 
@@ -393,6 +404,14 @@ describe('NuiTree', () => {
     expect(active?.textContent).toContain('Узел 1999');
     await tree.scrollTo(0);
     expect(tree.activeElement).toBe(active);
+
+    expect(tree.windowFrame).toEqual({
+      lead: '0px',
+      rest: '63648px',
+      clampStart: '-160px',
+      clampEnd: '-192px',
+    });
+
     await tree.scrollTo(40_000);
     expect(tree.activeElement).toBe(active);
     expect(warn).not.toHaveBeenCalled();
