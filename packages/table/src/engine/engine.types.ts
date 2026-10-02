@@ -137,7 +137,14 @@ export interface TableGroupNode {
   readonly aggregates: Readonly<Record<string, unknown>>;
 }
 
-export type TableNode<T> = TableRowNode<T> | TableGroupNode;
+export interface TableDetailNode<T> {
+  readonly kind: 'detail';
+  readonly id: TableNodeId;
+  readonly row: T;
+  readonly level: number;
+}
+
+export type TableNode<T> = TableRowNode<T> | TableGroupNode | TableDetailNode<T>;
 
 export interface TableSiblings<T> {
   readonly index: number;
@@ -161,6 +168,7 @@ export interface TableEngineOptions<T> {
   readonly keyOf?: ((row: T) => TableNodeId) | undefined;
   readonly children?: ((row: T) => readonly T[] | null | undefined) | undefined;
   readonly hasChildren?: ((row: T) => boolean) | undefined;
+  readonly detail?: ((row: T) => boolean) | undefined;
   readonly defaultExpanded?: boolean | undefined;
   readonly collator?: Intl.Collator | undefined;
   readonly sliceMs?: number | undefined;
@@ -176,6 +184,7 @@ export interface TableEngine<T> {
   patch(query: TableQuery, keys: readonly string[]): void;
   visibleIndices(): Uint32Array;
   nodeAt(position: number): TableNode<T> | undefined;
+  details(): readonly number[];
   siblingsAt(position: number): TableSiblings<T> | undefined;
   rowAt(index: number): T | undefined;
   toggle(position: number): void;
@@ -255,6 +264,7 @@ export interface TableSourceEngineOptions<T> {
   readonly source: TableSource<T>;
   readonly keyOf?: ((row: T) => TableNodeId) | undefined;
   readonly hasChildren?: ((row: T) => boolean) | undefined;
+  readonly detail?: ((row: T) => boolean) | undefined;
   readonly blockSize: () => number;
   readonly cacheBlocks?: number | undefined;
   readonly concurrency?: number | undefined;

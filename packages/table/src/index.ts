@@ -4,6 +4,7 @@ export type { NuiTableEditorOptions } from './table/table-editors';
 export type { NuiTableMessages } from './table/table.messages';
 export type {
   NuiTableCellSlot,
+  NuiTableDetailSlot,
   NuiTableEvents,
   NuiTableReorderEvent,
   NuiTableExpanded,

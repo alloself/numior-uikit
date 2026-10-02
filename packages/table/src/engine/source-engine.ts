@@ -108,6 +108,7 @@ export const createSourceEngine = <T>(options: TableSourceEngineOptions<T>): Tab
       holds: holdsAt(0),
       known: undefined,
       parent: undefined,
+      owner: undefined,
     });
 
     store.total = total;
@@ -180,6 +181,7 @@ export const createSourceEngine = <T>(options: TableSourceEngineOptions<T>): Tab
         holds,
         known: holds === 'rows' ? group.count : undefined,
         parent: undefined,
+        owner: key,
       });
 
     stores.set(key, child);
@@ -218,22 +220,60 @@ export const createSourceEngine = <T>(options: TableSourceEngineOptions<T>): Tab
         holds: 'rows',
         known: undefined,
         parent: row,
+        owner: id,
       });
 
     stores.set(key, child);
     return child;
   };
 
+  const detailed = (row: T): boolean =>
+    options.source.children === undefined && options.detail?.(row) === true;
+
+  const detailOf = (store: SourceStore<T>, id: TableNodeId, row: T): SourceStore<T> => {
+    const key = `!${JSON.stringify(id)}`;
+
+    const child =
+      stores.get(key) ??
+      createSourceStore<T>({
+        key,
+        level: store.level + 1,
+        path: EMPTY_PATH,
+        holds: 'detail',
+        known: 1,
+        parent: row,
+        owner: id,
+      });
+
+    child.answered = true;
+    stores.set(key, child);
+    return child;
+  };
+
+  const branchFor = (
+    store: SourceStore<T>,
+    id: TableNodeId,
+    row: T,
+  ): SourceStore<T> | undefined => {
+    if (parental(row)) {
+      return branchOf(store, id, row);
+    }
+    return detailed(row) ? detailOf(store, id, row) : undefined;
+  };
+
   const adoptRows = (store: SourceStore<T>, offset: number, rows: readonly T[]): void => {
-    if (options.source.children === undefined) {
+    if (options.source.children === undefined && options.detail === undefined) {
       return;
     }
 
     rows.forEach((row, at) => {
       const id = rowIdOf(store, offset + at, row);
 
-      if (parental(row) && expanded.has(id) && !store.open.has(offset + at)) {
-        store.open.set(offset + at, { id, store: branchOf(store, id, row) });
+      const branch =
+        expanded.has(id) && !store.open.has(offset + at) ? branchFor(store, id, row) : undefined;
+
+      if (branch !== undefined) {
+        store.open.set(offset + at, { id, store: branch });
       }
     });
   };
@@ -419,6 +459,10 @@ export const createSourceEngine = <T>(options: TableSourceEngineOptions<T>): Tab
 
   const missingIn = (span: SourceSpan<T>): SourceRun<T>[] => {
     const { store } = span;
+
+    if (store.holds === 'detail') {
+      return [];
+    }
     const blocks = store.holds === 'rows' ? rowBlocks : groupBlocks;
     const missing: number[] = [];
 
@@ -609,7 +653,7 @@ export const createSourceEngine = <T>(options: TableSourceEngineOptions<T>): Tab
 
   const rowNode = (spot: SourceSpot<T>, position: number, row: T): TableNode<T> => {
     const id = rowIdOf(spot.store, spot.index, row);
-    const expandable = parental(row);
+    const expandable = parental(row) || detailed(row);
     const branch = spot.store.open.get(spot.index);
 
     return {
@@ -625,6 +669,11 @@ export const createSourceEngine = <T>(options: TableSourceEngineOptions<T>): Tab
     };
   };
 
+  const detailNode = ({ holds, parent, owner, level }: SourceStore<T>): TableNode<T> | undefined =>
+    holds === 'detail' && parent !== undefined && owner !== undefined
+      ? { kind: 'detail', id: owner, row: parent, level }
+      : undefined;
+
   const nodeAt = (position: number): TableNode<T> | undefined => {
     const spot = layouts.locate(root, position);
 
@@ -638,7 +687,20 @@ export const createSourceEngine = <T>(options: TableSourceEngineOptions<T>): Tab
     }
     const group = groupIn(spot);
 
-    return group === undefined ? undefined : groupNode(spot.store, group);
+    return group === undefined ? detailNode(spot.store) : groupNode(spot.store, group);
+  };
+
+  const detailsOf = (): number[] => {
+    const positions: number[] = [];
+
+    for (const [store, base] of layouts.bases(root)) {
+      for (const [index, branch] of store.open) {
+        if (branch.store.holds === 'detail' && index < ownCount(store)) {
+          positions.push(layouts.flatOf(store, base, index) + 1);
+        }
+      }
+    }
+    return positions.toSorted((a, b) => a - b);
   };
 
   const loaded = (): Uint32Array => {
@@ -661,7 +723,7 @@ export const createSourceEngine = <T>(options: TableSourceEngineOptions<T>): Tab
 
   const rowCount = (): number =>
     root.holds === 'rows'
-      ? count()
+      ? count() - detailsOf().length
       : groupBlocks
           .entries()
           .reduce(
@@ -690,7 +752,12 @@ export const createSourceEngine = <T>(options: TableSourceEngineOptions<T>): Tab
   const pendingAt = (position: number): boolean => {
     const spot = layouts.locate(root, position);
 
-    return spot !== undefined && rowIn(spot) === undefined && groupIn(spot) === undefined;
+    return (
+      spot !== undefined &&
+      spot.store.holds !== 'detail' &&
+      rowIn(spot) === undefined &&
+      groupIn(spot) === undefined
+    );
   };
 
   return {
@@ -718,12 +785,13 @@ export const createSourceEngine = <T>(options: TableSourceEngineOptions<T>): Tab
     patch: () => undefined,
     visibleIndices: loaded,
     nodeAt,
+    details: detailsOf,
     siblingsAt: () => undefined,
     rowAt,
     toggle: (position) => {
       const node = nodeAt(position);
 
-      if (node !== undefined && (node.kind === 'group' || node.expandable)) {
+      if (node?.kind === 'group' || (node?.kind === 'row' && node.expandable)) {
         setExpanded(node.id, !node.expanded);
       }
     },

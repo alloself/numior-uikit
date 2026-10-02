@@ -158,6 +158,7 @@ export interface EngineHarnessOptions<T> {
   readonly keyOf?: (row: T) => TableNodeId;
   readonly children?: (row: T) => readonly T[] | null | undefined;
   readonly hasChildren?: (row: T) => boolean;
+  readonly detail?: (row: T) => boolean;
   readonly defaultExpanded?: boolean;
 }
 
@@ -178,6 +179,7 @@ export class EngineHarness<T> {
       keyOf: options.keyOf,
       children: options.children,
       hasChildren: options.hasChildren,
+      detail: options.detail,
       defaultExpanded: options.defaultExpanded,
       sliceMs: options.sliceMs ?? 12,
       collator: new Intl.Collator('ru', { numeric: true }),

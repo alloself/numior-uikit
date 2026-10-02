@@ -139,6 +139,7 @@ export interface NuiTableProps<T> {
   totalsLabel?: string | undefined;
   getChildren?: ((row: T) => readonly T[] | null | undefined) | undefined;
   hasChildren?: ((row: T) => boolean) | undefined;
+  hasDetail?: ((row: T) => boolean) | undefined;
   treeColumn?: string | undefined;
   columnMenu?: boolean | undefined;
   selectable?: NuiTableSelection | undefined;
@@ -289,6 +290,11 @@ export interface TablePinnedRow<T> {
   readonly selected: boolean | undefined;
 }
 
+export interface NuiTableDetailSlot<T> {
+  readonly row: T;
+  readonly position: number;
+}
+
 export interface NuiTableFooterSlot<T> {
   readonly column: NuiTableColumn<T>;
   readonly value: unknown;
@@ -369,6 +375,7 @@ export type NuiTableSlots<T> = {
   empty?: () => unknown;
   loading?: () => unknown;
   caption?: () => unknown;
+  detail?: (scope: NuiTableDetailSlot<T>) => unknown;
 } & {
   [name: `cell-${string}`]: ((scope: NuiTableCellSlot<T>) => unknown) | undefined;
 } & {
@@ -482,9 +489,17 @@ export interface TableSkeletonRow {
   readonly key: string;
 }
 
+export type TableBodyPart = 'body' | 'detail';
+
+export interface TableDetailSpot {
+  readonly position: number;
+  readonly id: TableNodeId;
+}
+
 export interface TableBodyRow {
   readonly index: number;
-  readonly key: number;
+  readonly key: number | string;
+  readonly part: TableBodyPart;
   readonly revision: number;
   readonly level: number | undefined;
   readonly treeLevel: number;
@@ -528,6 +543,15 @@ export interface NuiTableRowProps {
   dragging?: boolean | undefined;
   ranged?: TableRowRanges | undefined;
   heads?: Readonly<Record<string, TableHeadState>> | undefined;
+}
+
+export interface NuiTableDetailRowProps {
+  rowIndex: number;
+  span: number;
+  colspan: number;
+  level?: number | undefined;
+  active?: boolean | undefined;
+  measured?: boolean | undefined;
 }
 
 export interface NuiTableTreeToggleProps {

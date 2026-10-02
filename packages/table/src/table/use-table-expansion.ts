@@ -139,7 +139,7 @@ export const useTableExpansion = <T>(options: TableExpansionOptions<T>): TableEx
     loading.value = next;
   };
 
-  const announceToggle = (node: TableNode<T>, opening: boolean): void => {
+  const announceToggle = (node: TableRowNode<T> | TableGroupNode, opening: boolean): void => {
     const texts = options.messages.value;
 
     if (node.kind === 'group') {
@@ -154,7 +154,7 @@ export const useTableExpansion = <T>(options: TableExpansionOptions<T>): TableEx
   const toggle = (position: number): void => {
     const node = options.engine.value.nodeAt(options.offset() + position);
 
-    if (node === undefined || (node.kind === 'row' && !node.expandable)) {
+    if (node === undefined || node.kind === 'detail' || (node.kind === 'row' && !node.expandable)) {
       return;
     }
     const opening = !node.expanded;
@@ -176,7 +176,7 @@ export const useTableExpansion = <T>(options: TableExpansionOptions<T>): TableEx
     if (node?.kind === 'group') {
       return true;
     }
-    return node?.expandable === true && options.keyAt(col) === options.treeKey();
+    return node?.kind === 'row' && node.expandable && options.keyAt(col) === options.treeKey();
   };
 
   return {

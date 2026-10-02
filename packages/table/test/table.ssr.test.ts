@@ -8,6 +8,7 @@ import {
   type TableSort,
   type NuiTableFilters,
   type NuiTableColumnDef,
+  type NuiTableDetailSlot,
 } from '../src';
 import { FILE_COLUMNS, FILES, type FileNode } from './support/files';
 import { people, PEOPLE_COLUMNS, type Person } from './support/people';
@@ -78,6 +79,24 @@ const renderTree = (): Promise<string> =>
           hasChildren: (row: FileNode) => row.lazy === true,
           expanded: ['docs'],
         }),
+    }),
+  );
+
+const renderDetail = (height: string | undefined): Promise<string> =>
+  renderToString(
+    createSSRApp({
+      render: () =>
+        h(
+          NuiTable<Person>,
+          {
+            columns: PEOPLE_COLUMNS,
+            rows: people(40),
+            getKey: (row: Person) => row.id,
+            expanded: [1],
+            height,
+          },
+          { detail: ({ row }: NuiTableDetailSlot<Person>) => [h('p', `Досье: ${row.name}`)] },
+        ),
     }),
   );
 
@@ -265,6 +284,20 @@ describe('NuiTable on the server', () => {
     expect(html).toContain('aria-expanded="true"');
     expect(html).toContain('--_level:1');
     expect(html).toContain('>plan.md<');
+  });
+
+  it('renders an opened detail under its row and sizes the window by an estimate', async () => {
+    const html = await renderDetail('28rem');
+
+    expect(html).toBe(await renderDetail('28rem'));
+    expect(html).toContain('role="treegrid"');
+    expect(html).toContain('aria-rowcount="42"');
+    expect(html.match(/nui-table__row--detail/g)).toHaveLength(1);
+    expect(html).toContain('aria-colspan="18"');
+    expect(html).toContain('<p>Досье: Сотрудник 1</p>');
+    expect(html.match(/aria-expanded="true"/g)).toHaveLength(1);
+    expect(html).toContain('--_window-rest:440px');
+    expect(await renderDetail(undefined)).not.toContain('--_window-rest');
   });
 
   it('renders skeleton rows for a source without asking it for rows on the server', async () => {

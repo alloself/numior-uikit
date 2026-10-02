@@ -9,15 +9,7 @@
         class="nui-table__viewport"
         :style="windowFrame.canvasStyle.value"
         @scroll.passive="onViewportScroll"
-        @keydown="onKeydown"
-        @focusin="focus.onFocusin"
-        @pointerdown="rangeSelect.onPointerdown"
-        @mousedown="rangeSelect.onMousedown"
-        @contextmenu="cellMenu.onContextmenu"
-        @paste="editing.onPaste"
-        @click="cellEditor.onClick"
-        @dblclick="cellEditor.onDblclick"
-        @pointerup="cellEditor.onPointerup"
+        v-on="viewportEvents"
       >
         <table
           :id="gridId"
@@ -108,32 +100,45 @@
                 <NuiSkeleton v-bind="TEXT_SKELETON" />
               </template>
             </NuiTableRow>
-            <NuiTableRow
-              v-for="item in bodyRows"
-              :key="item.key"
-              :cells="rowCells"
-              :row-index="item.index + pinnedCount + headRows + 1"
-              :active="focus.activeIn(item.index + pinnedCount)"
-              :revision="item.revision"
-              :level="item.level"
-              :group="item.group"
-              :expanded="item.expanded"
-              :loading="item.loading"
-              :selected="item.selected"
-              :stripe="item.stripe"
-              :dragging="rowDrag.dragging.value === item.index"
-              :ranged="rangedOf(item)"
-            >
-              <template #utility>
-                <NuiTableUtilityCell
-                  v-bind="rowUtility(item)"
-                  @toggle="selection.toggle(rowAt(item.index))"
-                />
-              </template>
-              <template #default="{ column }">
-                <CellContent :item="item" :position="item.index" :column="column" />
-              </template>
-            </NuiTableRow>
+            <template v-for="item in bodyRows" :key="item.key">
+              <NuiTableDetailRow
+                v-if="item.part === 'detail'"
+                :row-index="item.index + pinnedCount + headRows + 1"
+                :span="layout.visual.length"
+                :colspan="rowCells.tracks.length"
+                :level="item.level"
+                :active="focus.activeIn(item.index + pinnedCount) > 0"
+                :measured="windowed"
+                @measure="onDetailSize(item.index, $event)"
+              >
+                <slot name="detail" v-bind="detailScope(item.index)" />
+              </NuiTableDetailRow>
+              <NuiTableRow
+                v-else
+                :cells="rowCells"
+                :row-index="item.index + pinnedCount + headRows + 1"
+                :active="focus.activeIn(item.index + pinnedCount)"
+                :revision="item.revision"
+                :level="item.level"
+                :group="item.group"
+                :expanded="item.expanded"
+                :loading="item.loading"
+                :selected="item.selected"
+                :stripe="item.stripe"
+                :dragging="rowDrag.dragging.value === item.index"
+                :ranged="rangedOf(item)"
+              >
+                <template #utility>
+                  <NuiTableUtilityCell
+                    v-bind="rowUtility(item)"
+                    @toggle="selection.toggle(rowAt(item.index))"
+                  />
+                </template>
+                <template #default="{ column }">
+                  <CellContent :item="item" :position="item.index" :column="column" />
+                </template>
+              </NuiTableRow>
+            </template>
           </tbody>
           <tbody v-if="status" class="nui-table__status">
             <tr class="nui-table__empty" role="row" :aria-rowindex="headRows + 1">
@@ -249,6 +254,7 @@ import {
   useMessages,
   useVirtualFrame,
   useVirtualList,
+  type ItemSize,
   type VirtualFrame,
 } from '@numior/primitives';
 import {
@@ -262,6 +268,7 @@ import {
 import {
   createSourceEngine,
   createTableEngine,
+  type TableDetailNode,
   type TableDistinct,
   type TableEngine,
   type TableFilter,
@@ -271,6 +278,7 @@ import {
   type TableNodeId,
 } from '../engine';
 import NuiTableCellEditor from './NuiTableCellEditor.vue';
+import NuiTableDetailRow from './NuiTableDetailRow.vue';
 import NuiTableDragLayer from './NuiTableDragLayer.vue';
 import NuiTableRowGrip from './NuiTableRowGrip.vue';
 import NuiTableGroupCell from './NuiTableGroupCell.vue';
@@ -279,6 +287,15 @@ import NuiTableTracks from './NuiTableTracks.vue';
 import NuiTableTreeToggle from './NuiTableTreeToggle.vue';
 import NuiTableUtilityCell from './NuiTableUtilityCell.vue';
 import { tableMessages } from './table.messages';
+import {
+  detailsBefore,
+  detailSpotsOf,
+  NO_DETAILS,
+  NO_SPOTS,
+  rowSizesOf,
+  sameSpots,
+} from './table-detail';
+import { ownCellAt, ownDetailOf } from './table-dom';
 import { cellTextOf, cellValueOf, engineColumnOf, valueTextOf } from './table-format';
 import { columnTreeOf, headerBandsOf } from './table-columns';
 import { orderLeaves } from './table-order';
@@ -319,10 +336,12 @@ import type {
   TableBodyRow,
   TableCellContentProps,
   TableCellPosition,
+  TableDetailSpot,
   TablePinnedRow,
   TableSkeletonRow,
   TableStatusSlot,
   NuiTableCellSlot,
+  NuiTableDetailSlot,
   NuiTableEvents,
   NuiTableExpanded,
   NuiTableExposed,
@@ -369,6 +388,7 @@ const NEST_DELAY = 600;
 const COPY_LIMIT = 200_000;
 const BLOCK_SIZE = 100;
 const SKELETON_ROWS = 5;
+const DETAIL_ROWS = 4;
 const LONG_PRESS = 500;
 
 const {
@@ -387,6 +407,7 @@ const {
   totalsLabel,
   getChildren,
   hasChildren,
+  hasDetail,
   treeColumn,
   columnMenu = true,
   selectable,
@@ -453,6 +474,9 @@ const onSourceError = (error: unknown): void => {
   announcement.value = messages.value.loadFailed;
 };
 
+const detailTest = (): ((row: T) => boolean) | undefined =>
+  slots.detail === undefined ? undefined : (row) => hasDetail?.(row) ?? true;
+
 const createEngine = (): TableEngine<T> =>
   source === undefined
     ? createTableEngine({
@@ -460,12 +484,14 @@ const createEngine = (): TableEngine<T> =>
         keyOf: getKey,
         children: getChildren,
         hasChildren,
+        detail: detailTest(),
         defaultExpanded: false,
       })
     : createSourceEngine({
         source,
         keyOf: getKey,
         hasChildren,
+        detail: detailTest(),
         blockSize: () => (paginationProps.value === undefined ? blockSize : pageSize.value),
         onChange: onSourceChange,
         onError: onSourceError,
@@ -484,12 +510,18 @@ const treeOn = computed(() =>
   source === undefined ? getChildren !== undefined : source.children !== undefined,
 );
 
+const detailOn = computed(() => slots.detail !== undefined && !treeOn.value);
 const grouping = computed(() => (treeOn.value ? NO_GROUPS : groupBy.value));
+
+const detailPositions = computed(() => {
+  void revision.value;
+  return detailOn.value ? engine.value.details() : NO_DETAILS;
+});
 
 const pageWindow = computed(() =>
   paginationProps.value === undefined || remote
     ? { start: 0, end: rowCount.value, page: 1, pages: 1 }
-    : pageWindowOf(rowCount.value, page.value, pageSize.value),
+    : pageWindowOf(rowCount.value, page.value, pageSize.value, detailPositions.value),
 );
 
 const pageStart = computed(() => pageWindow.value.start);
@@ -499,7 +531,9 @@ const visibleRows = computed(() =>
   loadingNow.value ? 0 : pageWindow.value.end - pageWindow.value.start,
 );
 
-const totalCount = computed(() => (remote ? (total ?? rows.length) : rowCount.value));
+const totalCount = computed(() =>
+  remote ? (total ?? rows.length) : rowCount.value - detailPositions.value.length,
+);
 
 const keyOf = (row: T): TableSelectionKey<T> => (getKey === undefined ? row : getKey(row));
 
@@ -611,7 +645,31 @@ const centreWidths = computed(() => layout.value.centre.map((column) => column.w
 
 const footRows = computed(() => (totals.enabled.value ? 1 : 0));
 
-const hierarchical = computed(() => treeOn.value || grouping.value.length > 0);
+const hierarchical = computed(() => treeOn.value || detailOn.value || grouping.value.length > 0);
+
+const detailSpots = computed<readonly TableDetailSpot[]>((previous) => {
+  void revision.value;
+
+  const next = loadingNow.value
+    ? NO_SPOTS
+    : detailSpotsOf(engine.value, detailPositions.value, pageStart.value, visibleRows.value);
+
+  return previous !== undefined && sameSpots(previous, next) ? previous : next;
+});
+
+const detailSizes = new Map<TableNodeId, number>();
+let detailEstimate: number | undefined;
+
+const rowSizes = computed<ItemSize>(() => {
+  const base = rowSize.value;
+
+  return rowSizesOf(
+    windowed.value ? detailSpots.value : NO_SPOTS,
+    visibleRows.value,
+    base,
+    (key) => detailSizes.get(key) ?? detailEstimate ?? base * DETAIL_ROWS,
+  );
+});
 
 const activeRow = (): number | undefined => {
   const body = active.value.row - pinnedCount.value;
@@ -623,7 +681,7 @@ const activeCentre = (): number | undefined => centreIndexOf(layout.value, activ
 const rowWindow = useVirtualList(viewport, {
   enabled: windowed,
   count: () => visibleRows.value,
-  itemSize: rowSize,
+  itemSize: rowSizes,
   overscan: ROW_OVERSCAN,
   initialCount: INITIAL_ROWS,
   pinned: activeRow,
@@ -760,6 +818,32 @@ const rowAt = (position: number): T => {
   }
   return node.row;
 };
+
+const detailAt = (position: number): TableDetailNode<T> => {
+  const node = engine.value.nodeAt(pageStart.value + position);
+
+  if (node?.kind !== 'detail') {
+    throw new Error(`NuiTable has no detail at position ${position}`);
+  }
+  return node;
+};
+
+const detailScope = (position: number): NuiTableDetailSlot<T> => ({
+  row: detailAt(position).row,
+  position: position - 1,
+});
+
+const onDetailSize = (position: number, measured: number): void => {
+  const node = engine.value.nodeAt(pageStart.value + position);
+
+  if (node?.kind === 'detail') {
+    detailSizes.set(node.id, measured);
+    detailEstimate = measured;
+    rowWindow.resize([[position, measured]]);
+  }
+};
+
+const inDetail = (event: Event): boolean => ownDetailOf(event.target, viewport.value) !== null;
 
 const resize = useTableResize<T>({
   widths,
@@ -909,7 +993,7 @@ const menu: TableMenu = useTableMenu({
 });
 
 const treeKey = computed(() =>
-  treeOn.value ? (treeColumn ?? dataKeysOf(layout.value)[0]) : undefined,
+  treeOn.value || detailOn.value ? (treeColumn ?? dataKeysOf(layout.value)[0]) : undefined,
 );
 
 const expansion = useTableExpansion({
@@ -938,7 +1022,7 @@ const selectedOf = (node: TableNode<T> | undefined): boolean | undefined =>
   selectOn.value && node?.kind === 'row' ? selection.has(node.row) : undefined;
 
 const expandedOf = (node: TableNode<T> | undefined): boolean | undefined =>
-  node?.kind === 'group' || node?.expandable === true ? node.expanded : undefined;
+  node?.kind === 'group' || (node?.kind === 'row' && node.expandable) ? node.expanded : undefined;
 
 const skeletonRows = computed((): TableSkeletonRow[] =>
   Array.from({ length: skeletonCount.value }, (_, index) => ({
@@ -954,15 +1038,18 @@ const bodyRows = computed((): TableBodyRow[] => {
     return [];
   }
   const pending = expansion.loading.value;
+  const spots = detailSpots.value;
 
   return rowWindow.items.value.map((item) => {
     const node = engine.value.nodeAt(pageStart.value + item.index);
     const level = levelOf(node);
     const unloaded = engine.value.pendingAt(pageStart.value + item.index);
+    const detail = node?.kind === 'detail';
 
     return {
       index: item.index,
-      key: item.slot,
+      key: detail ? `detail-${node.id}` : item.slot,
+      part: detail ? 'detail' : 'body',
       revision: current,
       level,
       treeLevel: Math.max(0, (level ?? 1) - 1),
@@ -971,7 +1058,7 @@ const bodyRows = computed((): TableBodyRow[] => {
       loading: unloaded || awaited(node, pending),
       pending: unloaded,
       selected: selectedOf(node),
-      stripe: striped && item.index % 2 === 1,
+      stripe: striped && !detail && (item.index - detailsBefore(spots, item.index)) % 2 === 1,
     };
   });
 });
@@ -1383,7 +1470,7 @@ const refocusActive = (): void => {
 onLongPress(
   viewport,
   (event) => {
-    if (cellMenu.onLongPress(event)) {
+    if (!inDetail(event) && cellMenu.onLongPress(event)) {
       rangeSelect.swallowClick();
     }
   },
@@ -1398,9 +1485,7 @@ watch(
     const cell =
       target === undefined
         ? null
-        : viewport.value?.querySelector(
-            `[aria-rowindex="${target.row + headRows.value + 1}"] > [aria-colindex="${target.col + 1}"]`,
-          );
+        : viewport.value?.querySelector(ownCellAt(target.row + headRows.value + 1, target.col + 1));
 
     cell?.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
   },
@@ -1413,6 +1498,7 @@ const onRowsClick = (event: MouseEvent): void => {
   if (
     rangeSelect.takeClick() ||
     !(target instanceof Element) ||
+    inDetail(event) ||
     target.closest(CLICK_GUARD) !== null
   ) {
     return;
@@ -1454,6 +1540,28 @@ const onKeydown = (event: KeyboardEvent): void => {
   if (!header.onKeydown(event) && !(body !== undefined && expansion.onKeydown(event, body))) {
     focus.onKeydown(event);
   }
+};
+
+const outsideDetail =
+  <E extends Event>(handler: (event: E) => void) =>
+  (event: E): void => {
+    if (!inDetail(event)) {
+      handler(event);
+    }
+  };
+
+const viewportEvents = {
+  keydown: outsideDetail(onKeydown),
+  focusin: (event: FocusEvent): void => {
+    focus.onFocusin(ownDetailOf(event.target, viewport.value)?.parentElement ?? event.target);
+  },
+  pointerdown: outsideDetail(rangeSelect.onPointerdown),
+  mousedown: outsideDetail(rangeSelect.onMousedown),
+  contextmenu: outsideDetail(cellMenu.onContextmenu),
+  paste: outsideDetail(editing.onPaste),
+  click: outsideDetail(cellEditor.onClick),
+  dblclick: outsideDetail(cellEditor.onDblclick),
+  pointerup: outsideDetail(cellEditor.onPointerup),
 };
 
 const loadValues = (): Promise<TableDistinct | null> => {
@@ -1499,7 +1607,7 @@ const textOf = (row: T, key: string): string =>
 
 const treeToggleOf = (item: TableBodyRow): VNode =>
   h(NuiTableTreeToggle, {
-    level: item.treeLevel,
+    level: treeOn.value ? item.treeLevel : 0,
     expandable: item.expanded !== undefined,
     loading: item.loading,
     onToggle: () => expansion.toggle(item.index),
@@ -1560,7 +1668,7 @@ const neededRange = computed(() => {
   if (paginationProps.value !== undefined) {
     const from = waiting.value ? (Math.max(1, page.value) - 1) * pageSize.value : pageStart.value;
 
-    return { from, to: from + pageSize.value };
+    return { from, to: Math.max(from + pageSize.value, pageWindow.value.end) };
   }
   const range = rowWindow.range.value;
 

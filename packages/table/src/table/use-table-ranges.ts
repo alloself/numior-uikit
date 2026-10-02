@@ -15,6 +15,7 @@ import {
   withLast,
   type RangeBounds,
 } from './table-ranges';
+import { OWN_DATA_ROWS } from './table-dom';
 import type { NuiTableMessages } from './table.messages';
 import type {
   NuiTableRange,
@@ -246,7 +247,7 @@ export const useTableRanges = (options: TableRangesOptions): TableRanges => {
     const x = Math.min(Math.max(target.x, band.left + 1), band.right - 1);
     const y = Math.min(Math.max(target.y, band.top + 1), band.bottom - 1);
 
-    const row = [...viewport.querySelectorAll(BODY_ROW)].find((candidate) => {
+    const row = [...viewport.querySelectorAll(OWN_DATA_ROWS)].find((candidate) => {
       const rect = rowRect(candidate);
       return within(y, rect.top, rect.bottom);
     });

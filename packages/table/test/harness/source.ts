@@ -21,6 +21,7 @@ export interface SourceHarnessOptions {
   readonly totals?: Readonly<Record<string, unknown>> | undefined;
   readonly values?: TableDistinct | undefined;
   readonly tree?: boolean | undefined;
+  readonly details?: boolean | undefined;
 }
 
 interface PendingChildren {
@@ -97,6 +98,7 @@ export class SourceHarness {
       },
       keyOf: (item) => item.id,
       hasChildren: (item) => item.id % 10 === 0,
+      detail: options.details === true ? (item) => item.id !== 3 : undefined,
       blockSize: () => this.size,
       cacheBlocks: options.cacheBlocks,
       concurrency: options.concurrency,
@@ -135,7 +137,7 @@ export class SourceHarness {
       }
       return node.kind === 'group'
         ? `${node.key}=${String(node.value)} (${node.count})`
-        : `row ${node.row.id}`;
+        : `${node.kind} ${node.row.id}`;
     });
   }
 

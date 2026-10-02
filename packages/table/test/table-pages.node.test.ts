@@ -12,6 +12,14 @@ describe('grid pages', () => {
     expect(pageWindowOf(0, 1, 20)).toEqual({ start: 0, end: 0, page: 1, pages: 1 });
   });
 
+  it('gives the details no slots of their own and keeps them on the page of their rows', () => {
+    expect(pageWindowOf(7, 1, 2, [2])).toEqual({ start: 0, end: 3, page: 1, pages: 3 });
+    expect(pageWindowOf(7, 2, 2, [2])).toEqual({ start: 3, end: 5, page: 2, pages: 3 });
+    expect(pageWindowOf(8, 2, 2, [2, 4])).toEqual({ start: 3, end: 6, page: 2, pages: 3 });
+    expect(pageWindowOf(8, 3, 2, [1, 7])).toEqual({ start: 5, end: 8, page: 3, pages: 3 });
+    expect(pageWindowOf(4, 1, 20, [1, 3])).toEqual({ start: 0, end: 4, page: 1, pages: 1 });
+  });
+
   it('turns the pagination prop into options', () => {
     expect(resolvePagination(true)).toEqual({});
     expect(resolvePagination(false)).toBeUndefined();

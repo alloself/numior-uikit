@@ -17,6 +17,16 @@
   --_clip-start: calc(var(--nui-radius) - 1px);
   --_clip-end: calc(var(--nui-radius) - 1px);
   --_indent: 1.25rem;
+  --_room: initial;
+  --_cell-position: relative;
+  --_cell-layer: 0;
+  --_content-size: calc(var(--_row) - 1px);
+  --_content-min: auto;
+  --_foot-overlap: 1px;
+  --_foot-size: calc(var(--_row) - 2px);
+  --_empty-min: calc(
+    var(--_height) - var(--_row) * (var(--_head-rows) + var(--_pinned-rows)) - var(--_foot) - 2px
+  );
 
   box-sizing: border-box;
   position: relative;
@@ -40,6 +50,15 @@
 }
 .nui-table--totals {
   --_foot: var(--_row);
+}
+.nui-table--auto {
+  --_cell-position: static;
+  --_cell-layer: auto;
+  --_content-size: auto;
+  --_content-min: calc(var(--_row) - 1px);
+  --_foot-overlap: 0px;
+  --_foot-size: auto;
+  --_empty-min: auto;
 }
 .nui-table--captioned {
   --_clip-start: 0px;
@@ -98,28 +117,28 @@
   background: var(--_row-bg);
   transition: background-color var(--nui-duration-fast) var(--nui-easing);
 }
-.nui-table:not(.nui-table--auto) .nui-table__viewport::before {
+.nui-table:not(.nui-table--auto) > .nui-table__frame > .nui-table__viewport::before {
   content: '';
   display: block;
   block-size: var(--_window-lead);
 }
-.nui-table:not(.nui-table--auto) .nui-table__viewport::after {
+.nui-table:not(.nui-table--auto) > .nui-table__frame > .nui-table__viewport::after {
   content: '';
   display: block;
   block-size: var(--_window-rest);
 }
-.nui-table:not(.nui-table--auto) .nui-table__grid {
+.nui-table:not(.nui-table--auto) > .nui-table__frame > .nui-table__viewport > .nui-table__grid {
   --_window-lead: initial;
   --_window-rest: initial;
 
   position: sticky;
   inset-block: var(--_window-clamp-start) var(--_window-clamp-end);
 }
-.nui-table:not(.nui-table--auto)
-  .nui-table__body
-  .nui-table__cell:not(.nui-table__cell--pin-start, .nui-table__cell--pin-end) {
-  position: relative;
-  z-index: 0;
+.nui-table__body
+  > .nui-table__row
+  > .nui-table__cell:not(.nui-table__cell--pin-start, .nui-table__cell--pin-end) {
+  position: var(--_cell-position);
+  z-index: var(--_cell-layer);
 }
 .nui-table:not(.nui-table--auto) .nui-table__body .nui-icon__glyph {
   animation: none;
@@ -159,7 +178,10 @@
     inset var(--_range-e) 0 0 var(--nui-primary);
 }
 .nui-table--cell-selection:not(.nui-table--ranged)
-  .nui-table__body
+  > .nui-table__frame
+  > .nui-table__viewport
+  > .nui-table__grid
+  > .nui-table__body
   > .nui-table__row--body:not(.nui-table__row--group)
   > .nui-table__cell--data.nui-table__cell--active:focus {
   background-color: color-mix(in oklab, var(--_row-bg), var(--nui-primary) 12%);
@@ -191,7 +213,13 @@
   outline: var(--nui-focus-ring-width) solid var(--nui-focus);
   outline-offset: calc(-1 * var(--nui-focus-ring-width));
 }
-.nui-table--ranged .nui-table__body .nui-table__cell:focus-visible {
+.nui-table--ranged
+  > .nui-table__frame
+  > .nui-table__viewport
+  > .nui-table__grid
+  > .nui-table__body
+  > .nui-table__row
+  > .nui-table__cell:not(.nui-table__cell--detail):focus-visible {
   outline: none;
 }
 .nui-table__content {
@@ -199,14 +227,11 @@
   display: flex;
   align-items: center;
   min-inline-size: 0;
-  block-size: calc(var(--_row) - 1px);
+  block-size: var(--_content-size);
+  min-block-size: var(--_content-min);
   padding-inline: var(--_pad-x);
   overflow: hidden;
   white-space: nowrap;
-}
-.nui-table--auto .nui-table__content {
-  block-size: auto;
-  min-block-size: calc(var(--_row) - 1px);
 }
 .nui-table--auto .nui-table__cell--wrap .nui-table__content {
   padding-block: var(--nui-space-2);
@@ -272,15 +297,12 @@
 }
 .nui-table__footer .nui-table__cell {
   position: sticky;
-  inset-block-end: 0;
+  inset-block-end: calc(-1 * var(--_foot-overlap));
   z-index: 2;
+  padding-block-end: var(--_foot-overlap);
 }
-.nui-table:not(.nui-table--auto) .nui-table__footer .nui-table__cell {
-  inset-block-end: -1px;
-  padding-block-end: 1px;
-}
-.nui-table:not(.nui-table--auto) .nui-table__footer .nui-table__content {
-  block-size: calc(var(--_row) - 2px);
+.nui-table__footer .nui-table__content {
+  block-size: var(--_foot-size);
 }
 .nui-table__header .nui-table__cell:is(.nui-table__cell--pin-start, .nui-table__cell--pin-end),
 .nui-table__pinned .nui-table__cell:is(.nui-table__cell--pin-start, .nui-table__cell--pin-end),
@@ -293,7 +315,7 @@
 .nui-table--striped .nui-table__body > .nui-table__row--odd {
   --_row-bg: var(--_stripe);
 }
-.nui-table .nui-table__body > .nui-table__row:hover {
+.nui-table .nui-table__body > .nui-table__row:where(:not(.nui-table__row--detail)):hover {
   --_row-bg: color-mix(in oklab, var(--nui-surface), var(--_hover) 70%);
 }
 .nui-table .nui-table__body > .nui-table__row--selected,
@@ -396,6 +418,9 @@
   margin-inline-end: var(--nui-space-1);
   padding-inline-start: calc(var(--_level, 0) * var(--_indent));
 }
+.nui-table__cell--align-end > .nui-table__content > .nui-table__tree {
+  margin-inline-end: auto;
+}
 .nui-table__spinner {
   inline-size: 1rem;
   block-size: 1rem;
@@ -460,13 +485,20 @@
   display: grid;
   place-items: center;
   inline-size: var(--_room, 100%);
-  min-block-size: calc(
-    var(--_height) - var(--_row) * (var(--_head-rows) + var(--_pinned-rows)) - var(--_foot) - 2px
-  );
+  min-block-size: var(--_empty-min);
   padding: var(--nui-space-4);
 }
-.nui-table--auto .nui-table__empty-body {
-  min-block-size: auto;
+.nui-table__row--detail {
+  --_row-bg: var(--_stripe);
+
+  block-size: auto;
+}
+.nui-table__detail {
+  box-sizing: border-box;
+  position: sticky;
+  inset-inline-start: 0;
+  inline-size: var(--_room, 100%);
+  padding: var(--nui-space-3) var(--_pad-x);
 }
 .nui-table__resizer {
   position: absolute;
@@ -572,7 +604,10 @@
 .nui-table__cell--dragging > .nui-table__content {
   opacity: 0.5;
 }
-.nui-table--dragging .nui-table__cell:hover :is(.nui-table__filter, .nui-table__menu),
+.nui-table--dragging
+  .nui-table__cell:hover
+  > .nui-table__content
+  > :is(.nui-table__filter, .nui-table__menu),
 .nui-table--dragging .nui-table__cell:hover > .nui-table__resizer::after {
   opacity: 0;
 }
@@ -599,7 +634,10 @@
     opacity var(--nui-duration-fast) var(--nui-easing),
     background-color var(--nui-duration-fast) var(--nui-easing);
 }
-.nui-table__row:hover .nui-table__row-grip:not(:disabled),
+.nui-table__row:hover
+  > .nui-table__cell
+  > .nui-table__content
+  > .nui-table__row-grip:not(:disabled),
 .nui-table__row-grip:focus-visible,
 .nui-table__row-grip--active {
   inline-size: 1.5rem;
@@ -714,7 +752,10 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.nui-table--resizing .nui-table__cell:hover :is(.nui-table__filter, .nui-table__menu) {
+.nui-table--resizing
+  .nui-table__cell:hover
+  > .nui-table__content
+  > :is(.nui-table__filter, .nui-table__menu) {
   opacity: 0;
 }
 .nui-table__cell--sortable {
@@ -739,8 +780,8 @@
     margin var(--nui-duration-fast) var(--nui-easing),
     color var(--nui-duration-fast) var(--nui-easing);
 }
-.nui-table__cell:hover .nui-table__sort,
-.nui-table__cell:focus-visible .nui-table__sort,
+.nui-table__cell:hover > .nui-table__content > .nui-table__sort,
+.nui-table__cell:focus-visible > .nui-table__content > .nui-table__sort,
 .nui-table__sort--active {
   max-inline-size: 3rem;
   margin-inline-start: 0;
@@ -840,8 +881,8 @@
     color var(--nui-duration-fast) var(--nui-easing),
     background-color var(--nui-duration-fast) var(--nui-easing);
 }
-.nui-table__cell:hover :is(.nui-table__filter, .nui-table__menu),
-.nui-table__cell:focus-visible :is(.nui-table__filter, .nui-table__menu),
+.nui-table__cell:hover > .nui-table__content > :is(.nui-table__filter, .nui-table__menu),
+.nui-table__cell:focus-visible > .nui-table__content > :is(.nui-table__filter, .nui-table__menu),
 :is(.nui-table__filter, .nui-table__menu)[aria-expanded='true'],
 .nui-table__filter--active {
   max-inline-size: 1.5rem;
@@ -849,10 +890,10 @@
   opacity: 1;
 }
 .nui-table__cell:hover
-  .nui-table__content
+  > .nui-table__content
   > :is(.nui-table__filter, .nui-table__menu):first-of-type,
 .nui-table__cell:focus-visible
-  .nui-table__content
+  > .nui-table__content
   > :is(.nui-table__filter, .nui-table__menu):first-of-type,
 .nui-table__content > :is(.nui-table__filter, .nui-table__menu)[aria-expanded='true']:first-of-type,
 .nui-table__content > .nui-table__filter--active:first-of-type {

@@ -59,6 +59,21 @@ loaded yet: on expand the table emits `load` and waits for them.
 
 <Example name="table/Tree" />
 
+### Row details
+
+The `detail` slot turns details on: a row gets a toggle, and an opened one shows the slot under
+itself across the full width. The opened keys live in `v-model:expanded`, and `hasDetail` keeps the
+toggle only for the rows that need it.
+
+A detail is a grid row of its own: the arrow keys pass through it, and Tab moves focus inside.
+Clicks, keys and pastes inside a detail stay with its content, so a second table fits there.
+Selection, copy and editing skip the details, and a page keeps the same number of rows.
+
+With `height` the table measures the height of a detail and counts it in the scroll. Details are
+off in a row tree.
+
+<Example name="table/Detail" />
+
 ### Row drag
 
 `rowDrag` shows a grip in the first column of a row. The top of a target row drops the row
@@ -206,8 +221,8 @@ one lifts it after its parent.
 
 ## Accessibility
 
-The markup is a `role="grid"` grid, `treegrid` for trees and groups, with one tab stop: focus
-moves between cells with the arrow keys. `aria-rowindex` and `aria-colindex` count the rows
+The markup is a `role="grid"` grid, `treegrid` for trees, groups and details, with one tab stop:
+focus moves between cells with the arrow keys. `aria-rowindex` and `aria-colindex` count the rows
 outside the window too, headers carry `aria-sort`, rows `aria-selected`, `aria-expanded` and
 `aria-level`. Checkboxes and menu buttons take their names from the dictionary.
 

@@ -1,5 +1,6 @@
 import { computed, ref, type ComputedRef, type Ref } from 'vue';
 import { useReorder, type ReorderState } from '@numior/primitives';
+import { OWN_HEAD_CELLS } from './table-dom';
 import type { PlacedColumn, TableLayout } from './table-layout';
 import { movedKeys, orderLeaves } from './table-order';
 import type { NuiTableMessages } from './table.messages';
@@ -75,7 +76,7 @@ const headCells = (viewport: HTMLElement | null, slots: readonly PlacedColumn[])
     ]),
   );
 
-  return [...(viewport?.querySelectorAll<HTMLElement>(HEAD_CELL) ?? [])].flatMap((cell) => {
+  return [...(viewport?.querySelectorAll<HTMLElement>(OWN_HEAD_CELLS) ?? [])].flatMap((cell) => {
     const entry = byVisual.get(Number(cell.getAttribute('aria-colindex')) - 1);
     return entry === undefined ? [] : [{ ...entry, rect: cell.getBoundingClientRect() }];
   });

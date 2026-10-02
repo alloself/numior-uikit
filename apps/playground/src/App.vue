@@ -109,6 +109,7 @@
     <DataSection />
     <TreeSection />
     <TableSection />
+    <TableDetailSection />
 
     <section class="panel" aria-labelledby="tokens-title">
       <h2 id="tokens-title">Один акцент — разные способы использования</h2>
@@ -168,6 +169,7 @@ import LayoutSection from './LayoutSection.vue';
 import PickersSection from './PickersSection.vue';
 import DataSection from './DataSection.vue';
 import TreeSection from './TreeSection.vue';
+import TableDetailSection from './TableDetailSection.vue';
 import TableSection from './TableSection.vue';
 
 const density = ref('comfortable');

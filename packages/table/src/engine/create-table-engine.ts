@@ -50,6 +50,8 @@ interface Plan<T> {
 
 const DEFAULT_SLICE_MS = 12;
 const DEFAULT_DISTINCT_LIMIT = 100;
+const DETAIL_REF = 2 ** 30;
+const NO_DETAILS: readonly number[] = [];
 
 const hasCodes = (
   store: ColumnStore | undefined,
@@ -76,6 +78,18 @@ const identityRefs = (length: number): Int32Array => {
 
 const isDefined = <V>(value: V | undefined): value is V => value !== undefined;
 
+const detailPositions = (refs: Int32Array): readonly number[] => {
+  const positions: number[] = [];
+
+  refs.forEach((ref, position) => {
+    if (ref >= DETAIL_REF) {
+      positions.push(position);
+    }
+  });
+
+  return positions;
+};
+
 export const createTableEngine = <T>(options: TableEngineOptions<T>): TableEngine<T> => {
   const columns = new Map<string, TableEngineColumn<T>>(
     options.columns.map((column) => [column.key, column]),
@@ -94,6 +108,7 @@ export const createTableEngine = <T>(options: TableEngineOptions<T>): TableEngin
   let stores = new Map<string, ColumnStore>();
   let prepared = emptyPrepared();
   let visible: Int32Array = new Int32Array(0);
+  let details: readonly number[] = NO_DETAILS;
   let generation = 0;
   let rowsVersion = 0;
   const toggled = new Set<TableNodeId>();
@@ -342,12 +357,54 @@ export const createTableEngine = <T>(options: TableEngineOptions<T>): TableEngin
     return { kind: 'done', count: visible.length, rows: prepared.filtered.length };
   };
 
+  const detailsOn = (): boolean =>
+    options.detail !== undefined &&
+    options.children === undefined &&
+    (defaultExpanded || toggled.size > 0);
+
+  const detailed = (position: number): boolean => {
+    const index = prepared.filtered[position];
+    const row = index === undefined ? undefined : table.rows[index];
+
+    return (
+      index !== undefined &&
+      row !== undefined &&
+      isExpanded(idOf(index)) &&
+      options.detail?.(row) === true
+    );
+  };
+
+  const flattenRows = (): Int32Array => {
+    const count = prepared.filtered.length;
+    const open = detailsOn() ? identityIndices(count).filter(detailed) : [];
+
+    if (open.length === 0) {
+      return identityRefs(count);
+    }
+    const refs = new Int32Array(count + open.length);
+    let next = 0;
+    let target = 0;
+
+    for (let position = 0; position < count; position += 1) {
+      refs[target] = position;
+      target += 1;
+
+      if (open[next] === position) {
+        refs[target] = DETAIL_REF + position;
+        target += 1;
+        next += 1;
+      }
+    }
+    return refs;
+  };
+
   const flattenGroups = (): Int32Array => {
     const groups = prepared.groups?.groups ?? [];
 
     if (prepared.groupDepth === 0) {
-      return identityRefs(prepared.filtered.length);
+      return flattenRows();
     }
+    const detailing = detailsOn();
     const refs: number[] = [];
     const hidden: boolean[] = [];
 
@@ -365,6 +422,10 @@ export const createTableEngine = <T>(options: TableEngineOptions<T>): TableEngin
       if (expanded && group.level === prepared.groupDepth - 1) {
         for (let position = group.start; position < group.end; position += 1) {
           refs.push(position);
+
+          if (detailing && detailed(position)) {
+            refs.push(DETAIL_REF + position);
+          }
         }
       }
     });
@@ -377,9 +438,11 @@ export const createTableEngine = <T>(options: TableEngineOptions<T>): TableEngin
       const walk = walkTree(prepared.tree, (index) => isExpanded(idOf(index)));
       prepared = { ...prepared, filtered: walk.all };
       visible = walk.visible;
+      details = NO_DETAILS;
       return;
     }
     visible = flattenGroups();
+    details = detailsOn() ? detailPositions(visible) : NO_DETAILS;
   };
 
   const rowNode = (
@@ -393,7 +456,12 @@ export const createTableEngine = <T>(options: TableEngineOptions<T>): TableEngin
       return undefined;
     }
     const unloaded = tree !== null && unloadedRow(row);
-    const expandable = tree !== null && (childrenOf(tree, index).length > 0 || unloaded);
+
+    const expandable =
+      tree === null
+        ? options.detail?.(row) === true
+        : childrenOf(tree, index).length > 0 || unloaded;
+
     const id = idOf(index);
 
     return {
@@ -409,10 +477,19 @@ export const createTableEngine = <T>(options: TableEngineOptions<T>): TableEngin
     };
   };
 
+  const detailNode = (position: number): TableNode<T> | undefined => {
+    const index = prepared.filtered[position];
+    const row = index === undefined ? undefined : table.rows[index];
+
+    return index === undefined || row === undefined
+      ? undefined
+      : { kind: 'detail', id: idOf(index), row, level: prepared.groupDepth + 1 };
+  };
+
   const siblingsAt = (position: number): TableSiblings<T> | undefined => {
     const ref = visible[position];
 
-    if (ref === undefined || ref < 0) {
+    if (ref === undefined || ref < 0 || ref >= DETAIL_REF) {
       return undefined;
     }
     if (prepared.tree === null) {
@@ -439,6 +516,9 @@ export const createTableEngine = <T>(options: TableEngineOptions<T>): TableEngin
     }
     if (prepared.tree !== null) {
       return rowNode(ref, table.depths[ref] ?? 0, prepared.tree);
+    }
+    if (ref >= DETAIL_REF) {
+      return detailNode(ref - DETAIL_REF);
     }
     if (ref >= 0) {
       const index = prepared.filtered[ref];
@@ -613,12 +693,17 @@ export const createTableEngine = <T>(options: TableEngineOptions<T>): TableEngin
     patch,
     visibleIndices: () => prepared.filtered,
     nodeAt,
+    details: () => details,
     siblingsAt,
     rowAt: (index) => table.rows[index],
     toggle: (position) => {
       const node = nodeAt(position);
 
-      if (node === undefined || (node.kind === 'row' && !node.expandable)) {
+      if (
+        node === undefined ||
+        node.kind === 'detail' ||
+        (node.kind === 'row' && !node.expandable)
+      ) {
         return;
       }
       setExpanded(node.id, !node.expanded);

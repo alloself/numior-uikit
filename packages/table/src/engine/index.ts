@@ -21,6 +21,7 @@ export type {
   TableAggregateKind,
   TableChildrenRequest,
   TableDistinct,
+  TableDetailNode,
   TableDistinctOptions,
   TableEngine,
   TableEngineColumn,

@@ -1,6 +1,6 @@
 import type { TableNodeId } from './engine.types';
 
-export type SourceHolds = 'rows' | 'groups';
+export type SourceHolds = 'rows' | 'groups' | 'detail';
 
 export interface SourceBranch<T> {
   readonly id: TableNodeId;
@@ -14,6 +14,7 @@ export interface SourceStore<T> {
   readonly holds: SourceHolds;
   readonly known: number | undefined;
   readonly parent: T | undefined;
+  readonly owner: TableNodeId | undefined;
   readonly open: Map<number, SourceBranch<T>>;
   total: number | undefined;
   more: boolean;
@@ -61,7 +62,7 @@ export const storeOfBlockKey = (
 };
 
 export const createSourceStore = <T>(
-  seed: Pick<SourceStore<T>, 'key' | 'level' | 'path' | 'holds' | 'known' | 'parent'>,
+  seed: Pick<SourceStore<T>, 'key' | 'level' | 'path' | 'holds' | 'known' | 'parent' | 'owner'>,
 ): SourceStore<T> => ({
   ...seed,
   open: new Map(),

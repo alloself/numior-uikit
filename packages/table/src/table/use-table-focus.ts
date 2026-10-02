@@ -1,5 +1,6 @@
 import { onMounted, ref, watch, type Ref, type ShallowRef } from 'vue';
 import { createIntent, type VirtualList } from '@numior/primitives';
+import { DETAIL_CELL, OWN_ACTIVE_CELL } from './table-dom';
 import { nextCell, pageRowsOf } from './table-keys';
 import type { TableCellPosition, TableHeaderTarget } from './table.types';
 
@@ -26,11 +27,10 @@ export interface TableFocus {
   focusCell(target: TableCellPosition, scroll?: boolean): void;
   focusHeader(target: TableHeaderTarget): void;
   onKeydown(event: KeyboardEvent): void;
-  onFocusin(event: FocusEvent): void;
+  onFocusin(target: EventTarget | null): void;
 }
 
 const CELL = '.nui-table__cell';
-const ACTIVE_CELL = '.nui-table__cell--active';
 
 const ariaIndex = (element: Element | null | undefined, name: string): number => {
   const value = Number(element?.getAttribute(name));
@@ -40,10 +40,13 @@ const ariaIndex = (element: Element | null | undefined, name: string): number =>
 const positionOf = (
   target: EventTarget | null,
   headRows: number,
+  column: number,
 ): TableCellPosition | undefined => {
   const cell = target instanceof Element ? target.closest(CELL) : null;
   const row = ariaIndex(cell?.closest('[role="row"]'), 'aria-rowindex');
-  const col = ariaIndex(cell, 'aria-colindex');
+
+  const col =
+    cell?.classList.contains(DETAIL_CELL) === true ? column + 1 : ariaIndex(cell, 'aria-colindex');
 
   return row >= headRows && col > 0 ? { row: row - headRows - 1, col: col - 1 } : undefined;
 };
@@ -120,8 +123,8 @@ export const useTableFocus = (options: TableFocusOptions): TableFocus => {
     intent.set('cell');
   };
 
-  const onFocusin = (event: FocusEvent): void => {
-    const position = positionOf(event.target, options.headRows());
+  const onFocusin = (target: EventTarget | null): void => {
+    const position = positionOf(target, options.headRows(), options.active.value.col);
 
     if (position !== undefined && !samePosition(position, options.active.value)) {
       options.active.value = position;
@@ -144,7 +147,7 @@ export const useTableFocus = (options: TableFocusOptions): TableFocus => {
       () => {
         if (intent.take() === 'cell') {
           options.viewport.value
-            ?.querySelector<HTMLElement>(ACTIVE_CELL)
+            ?.querySelector<HTMLElement>(OWN_ACTIVE_CELL)
             ?.focus({ preventScroll: options.windowed() });
         }
       },
@@ -165,7 +168,7 @@ export const useTableFocus = (options: TableFocusOptions): TableFocus => {
         const viewport = options.viewport.value;
 
         if (owned && viewport !== null && !viewport.contains(document.activeElement)) {
-          viewport.querySelector<HTMLElement>(ACTIVE_CELL)?.focus({ preventScroll: true });
+          viewport.querySelector<HTMLElement>(OWN_ACTIVE_CELL)?.focus({ preventScroll: true });
         }
       },
       { flush: 'post' },

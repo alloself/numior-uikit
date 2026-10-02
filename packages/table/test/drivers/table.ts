@@ -14,6 +14,21 @@ import {
 } from 'vue';
 import { choosePageSize } from '../../../vue/test/support/page-size';
 import { dismissPopoverNatively, TopLayerStubs } from '../../../vue/test/support/top-layer';
+import NuiTableDetailRow from '../../src/table/NuiTableDetailRow.vue';
+import {
+  activeCellOf,
+  bodyRowsOf,
+  cellAt,
+  cellPositionOf,
+  clickCellAt,
+  headRowsOf,
+  numberAttribute,
+  pressKey,
+  rangedCellsOf,
+  rowAt,
+  type CellPosition,
+  type KeyOptions,
+} from './table-surface';
 import {
   NuiTable,
   type TableNodeId,
@@ -98,10 +113,7 @@ const MOUNT_DEFAULTS: MountDefaults = {
 const pluginsOf = (config: NuiConfigOptions | undefined): Plugin[] =>
   config === undefined ? [] : [createNuiConfig(config)];
 
-export interface CellPosition {
-  readonly row: number;
-  readonly col: number;
-}
+export type { CellPosition, KeyOptions } from './table-surface';
 
 export interface SelectAllState {
   readonly checked: boolean;
@@ -137,12 +149,6 @@ interface TableEvents<T> {
   readonly refusals: NuiTableEditRefusal<T>[];
   readonly errors: unknown[];
   readonly waiters: Array<() => void>;
-}
-
-export interface KeyOptions {
-  readonly ctrl?: boolean;
-  readonly shift?: boolean;
-  readonly alt?: boolean;
 }
 
 const defineValue = (element: HTMLElement, name: string, value: number): void => {
@@ -215,21 +221,10 @@ const isExposed = (value: unknown): value is NuiTableExposed =>
   'scrollToColumn' in value &&
   typeof value.scrollToColumn === 'function';
 
-const numberAttribute = (element: Element | null | undefined, name: string): number =>
-  Number(element?.getAttribute(name) ?? Number.NaN);
+const DETAIL_CONTROLS = 'button, input, a[href]';
 
-const headRowsOf = (viewport: Element): number =>
-  viewport.querySelectorAll('.nui-table__header > [role="row"]').length;
-
-const positionOf = (cell: Element | null, headRows: number): CellPosition | undefined => {
-  if (cell === null || !cell.matches('.nui-table__cell')) {
-    return undefined;
-  }
-  return {
-    row: numberAttribute(cell.closest('[role="row"]'), 'aria-rowindex') - headRows - 1,
-    col: numberAttribute(cell, 'aria-colindex') - 1,
-  };
-};
+const nameOf = (control: Element): string =>
+  control.getAttribute('aria-label') ?? control.textContent?.trim() ?? '';
 
 export class TableDriver<T> {
   static mount<T>(options: TableMountOptions<T>): TableDriver<T> {
@@ -452,9 +447,9 @@ export class TableDriver<T> {
   }
 
   get renderedRows(): number[] {
-    return this.wrapper
-      .findAll('.nui-table__body > [role="row"]')
-      .map((row) => numberAttribute(row.element, 'aria-rowindex') - this.headRows - 1);
+    return bodyRowsOf(this.element).map(
+      (row) => numberAttribute(row, 'aria-rowindex') - this.headRows - 1,
+    );
   }
 
   get headerTexts(): string[] {
@@ -519,11 +514,11 @@ export class TableDriver<T> {
   }
 
   get activeCell(): CellPosition | undefined {
-    return positionOf(this.element.querySelector('.nui-table__cell[tabindex="0"]'), this.headRows);
+    return activeCellOf(this.element);
   }
 
   get focusedCell(): CellPosition | undefined {
-    return positionOf(document.activeElement, this.headRows);
+    return cellPositionOf(this.element, document.activeElement);
   }
 
   get sort(): readonly TableSort[] {
@@ -920,10 +915,7 @@ export class TableDriver<T> {
   }
 
   get editing(): CellPosition | undefined {
-    return positionOf(
-      this.editorElement?.closest('.nui-table__cell') ?? null,
-      headRowsOf(this.element),
-    );
+    return cellPositionOf(this.element, this.editorElement?.closest('.nui-table__cell') ?? null);
   }
 
   get editorValue(): string | undefined {
@@ -1290,17 +1282,112 @@ export class TableDriver<T> {
   }
 
   private row(position: number): Element | null {
-    return this.element.querySelector(
-      `[role="row"][aria-rowindex="${position + this.headRows + 1}"]`,
-    );
+    return rowAt(this.element, position);
   }
 
   cell(position: number, col: number): HTMLElement | null {
-    return this.row(position)?.querySelector<HTMLElement>(`[aria-colindex="${col + 1}"]`) ?? null;
+    return cellAt(this.element, position, col);
   }
 
   cellText(position: number, col: number): string | undefined {
     return this.cell(position, col)?.textContent?.trim();
+  }
+
+  private detail(position: number): HTMLElement | null {
+    return (
+      this.row(position)?.querySelector<HTMLElement>(
+        ':scope > .nui-table__cell--detail > .nui-table__detail',
+      ) ?? null
+    );
+  }
+
+  detailText(position: number): string | undefined {
+    return this.detail(position)?.querySelector('p')?.textContent?.trim();
+  }
+
+  get details(): number[] {
+    return bodyRowsOf(this.element)
+      .filter((row) => row.classList.contains('nui-table__row--detail'))
+      .map((row) => numberAttribute(row, 'aria-rowindex') - this.headRows - 1);
+  }
+
+  detailSpan(position: number): string | undefined {
+    return this.cell(position, 0)?.getAttribute('aria-colspan') ?? undefined;
+  }
+
+  private detailControl(position: number, name: string): HTMLElement | undefined {
+    return [...(this.detail(position)?.querySelectorAll<HTMLElement>(DETAIL_CONTROLS) ?? [])].find(
+      (control) => nameOf(control) === name,
+    );
+  }
+
+  async focusInDetail(position: number, name: string): Promise<void> {
+    this.detailControl(position, name)?.focus();
+    await nextTick();
+  }
+
+  async clickInDetail(position: number, name: string): Promise<void> {
+    const control = this.detailControl(position, name);
+    const point = { x: 0, y: 0 };
+
+    this.pressDown(control ?? null, point, {});
+    control?.dispatchEvent(new PointerEvent('pointerup', pointerInit(point, {})));
+    control?.dispatchEvent(new MouseEvent('click', pointerInit(point, {})));
+    control?.dispatchEvent(new MouseEvent('dblclick', { ...pointerInit(point, {}), detail: 2 }));
+    await nextTick();
+  }
+
+  async openDetailMenu(position: number, name: string): Promise<boolean> {
+    const event = new MouseEvent('contextmenu', { ...pointerInit({ x: 0, y: 0 }, {}), button: 2 });
+
+    this.detailControl(position, name)?.dispatchEvent(event);
+    await nextTick();
+    return event.defaultPrevented;
+  }
+
+  async measureDetail(position: number, size: number): Promise<void> {
+    const row = this.row(position);
+
+    this.wrapper
+      .findAllComponents(NuiTableDetailRow)
+      .find((component) => component.element === row)
+      ?.vm.$emit('measure', size);
+
+    await nextTick();
+  }
+
+  private nested(position: number): HTMLElement {
+    const viewport = this.detail(position)?.querySelector<HTMLElement>('.nui-table__viewport');
+
+    if (viewport === null || viewport === undefined) {
+      throw new Error(`The detail at ${position} holds no table`);
+    }
+    return viewport;
+  }
+
+  nestedActiveCell(position: number): CellPosition | undefined {
+    return activeCellOf(this.nested(position));
+  }
+
+  nestedFocusedCell(position: number): CellPosition | undefined {
+    return cellPositionOf(this.nested(position), document.activeElement);
+  }
+
+  nestedRangedCells(position: number): number {
+    return rangedCellsOf(this.nested(position));
+  }
+
+  async focusNestedCell(position: number, at: CellPosition): Promise<void> {
+    cellAt(this.nested(position), at.row, at.col)?.focus();
+    await nextTick();
+  }
+
+  async clickNestedCell(
+    position: number,
+    at: CellPosition,
+    options: KeyOptions = {},
+  ): Promise<void> {
+    await clickCellAt(cellAt(this.nested(position), at.row, at.col), options);
   }
 
   cellHtml(position: number, col: number): string | undefined {
@@ -1406,7 +1493,7 @@ export class TableDriver<T> {
   }
 
   get rowElements(): HTMLElement[] {
-    return [...this.element.querySelectorAll<HTMLElement>('.nui-table__body > [role="row"]')];
+    return bodyRowsOf(this.element);
   }
 
   get activeCellElement(): HTMLElement | null {
@@ -1434,20 +1521,7 @@ export class TableDriver<T> {
   }
 
   async press(key: string, options: KeyOptions = {}): Promise<void> {
-    const target = document.activeElement ?? this.element;
-
-    target.dispatchEvent(
-      new KeyboardEvent('keydown', {
-        key,
-        ctrlKey: options.ctrl ?? false,
-        shiftKey: options.shift ?? false,
-        altKey: options.alt ?? false,
-        bubbles: true,
-        cancelable: true,
-      }),
-    );
-
-    await nextTick();
+    await pressKey(document.activeElement ?? this.element, key, options);
   }
 
   async clickBand(label: string): Promise<void> {

@@ -59,9 +59,13 @@ const docs: DocsMap = {
         ru: 'Отмечает строку, чьи дети ещё не загружены: её можно раскрыть, и таблица вызовет событие load. С source отмечает строки, детей которых отдаёт source.children; событие load тогда не приходит.',
         en: 'Marks a row whose children are not loaded yet: it can expand, and the table emits load. With source it marks the rows whose children source.children returns; the load event does not fire then.',
       },
+      hasDetail: {
+        ru: 'Отмечает строки, у которых есть деталь: остальные остаются без переключателя. Без функции деталь есть у каждой строки, пока задан слот detail.',
+        en: 'Marks the rows that have a detail: the others get no toggle. Without the function every row has a detail while the detail slot is set.',
+      },
       treeColumn: {
-        ru: 'Ключ колонки с отступом и переключателем дерева; по умолчанию первая колонка.',
-        en: 'Key of the column with the tree indentation and toggle; the first column by default.',
+        ru: 'Ключ колонки с отступом и переключателем дерева или детали; по умолчанию первая колонка.',
+        en: 'Key of the column with the tree indentation and the toggle of a tree row or a detail; the first column by default.',
       },
       totalsLabel: {
         ru: 'Подпись строки итогов в первой колонке без агрегата, рядом с ней число строк после фильтров; по умолчанию из словаря.',
@@ -246,6 +250,10 @@ const docs: DocsMap = {
         ru: 'Подпись над таблицей вместо caption.',
         en: 'Caption above the table instead of caption.',
       },
+      detail: {
+        ru: 'Деталь раскрытой строки на всю ширину таблицы: слот получает строку и её позицию. Раскрытые ключи лежат в expanded; в дереве строк слот не работает.',
+        en: 'Detail of an opened row across the full width of the table: the slot receives the row and its position. The opened keys live in expanded; the slot does not work in a row tree.',
+      },
     },
     keyboard: [
       {
@@ -265,8 +273,15 @@ const docs: DocsMap = {
       {
         keys: 'Enter / Space',
         description: {
-          ru: 'На строке группы или в колонке дерева разворачивает или сворачивает строку.',
-          en: 'On a group row or in the tree column expands or collapses the row.',
+          ru: 'На строке группы или в колонке дерева разворачивает или сворачивает строку; в той же колонке открывает и закрывает деталь.',
+          en: 'On a group row or in the tree column expands or collapses the row; in the same column opens and closes a detail.',
+        },
+      },
+      {
+        keys: 'Tab / Shift+Tab',
+        description: {
+          ru: 'На ячейке детали уводит фокус в её содержимое и возвращает обратно; клавиши внутри детали таблица не обрабатывает.',
+          en: 'On a detail cell moves focus into its content and back; the table handles no keys inside a detail.',
         },
       },
       {

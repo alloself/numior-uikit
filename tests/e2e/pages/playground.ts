@@ -11,6 +11,7 @@ import { PickersSection } from './pickers';
 import { SignupSection } from './signup';
 import { SmartFormSection } from './smart-form';
 import { TableSection } from './table';
+import { TableDetailSection } from './table-detail';
 import { TreeSection } from './tree';
 import { UploadSection } from './upload';
 import { WizardSection } from './wizard';
@@ -177,6 +178,7 @@ export class PlaygroundPage {
   readonly data: DataSection;
   readonly tree: TreeSection;
   readonly table: TableSection;
+  readonly tableDetail: TableDetailSection;
 
   constructor(readonly page: Page) {
     this.workspace = page.getByRole('main');
@@ -219,6 +221,7 @@ export class PlaygroundPage {
     this.data = new DataSection(page);
     this.tree = new TreeSection(page);
     this.table = new TableSection(page);
+    this.tableDetail = new TableDetailSection(page);
   }
 
   async open(path: '/' = '/'): Promise<void> {

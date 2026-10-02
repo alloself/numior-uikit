@@ -328,3 +328,41 @@ describe('createSourceEngine with tree rows', () => {
     expect(harness.labels(10, 13)).toEqual(['row 10', 'row 200', 'row 11']);
   });
 });
+
+describe('createSourceEngine with detail rows', () => {
+  it('opens a detail under a loaded row without asking the source', async () => {
+    const harness = new SourceHarness({ total: 30, details: true });
+
+    harness.engine.ensure(0, 30);
+    await harness.answer(0);
+    expect(harness.engine.nodeAt(5)).toMatchObject({ expandable: true, expanded: false });
+    expect(harness.engine.nodeAt(3)).toMatchObject({ expandable: false });
+    harness.engine.setToggled([5, 3]);
+    expect(harness.engine.count()).toBe(31);
+    expect(harness.engine.rowCount()).toBe(30);
+    expect(harness.engine.details()).toEqual([6]);
+    expect(harness.engine.nodeAt(5)).toMatchObject({ expanded: true, loading: false });
+    expect(harness.engine.nodeAt(6)).toEqual({ kind: 'detail', id: 5, row: { id: 5 }, level: 1 });
+    expect(harness.engine.pendingAt(6)).toBe(false);
+    expect(harness.labels(5, 8)).toEqual(['row 5', 'detail 5', 'row 6']);
+    expect(harness.requests).toHaveLength(1);
+    harness.engine.toggle(6);
+    expect(harness.engine.count()).toBe(31);
+    harness.engine.toggle(5);
+    expect(harness.engine.count()).toBe(30);
+  });
+
+  it('opens details inside a server group one level deeper than its rows', async () => {
+    const harness = new SourceHarness({ total: 90, details: true });
+
+    void harness.engine.run({ groupBy: ['team'] });
+    harness.engine.ensure(0, 30);
+    await harness.answerLevel(0);
+    harness.engine.setToggled(['[1]', 4]);
+    await harness.answerLevel(1);
+    expect(harness.labels(1, 4)).toEqual(['team=1 (30)', 'row 1', 'row 4']);
+    expect(harness.engine.nodeAt(4)).toMatchObject({ kind: 'detail', id: 4, level: 2 });
+    expect(harness.engine.details()).toEqual([4]);
+    expect(harness.engine.count()).toBe(34);
+  });
+});

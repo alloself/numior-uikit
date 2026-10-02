@@ -1,6 +1,7 @@
 import { computed, onScopeDispose, ref, type ComputedRef, type Ref, type ShallowRef } from 'vue';
 import { useReorder, type ReorderState } from '@numior/primitives';
-import type { TableEngine, TableRowNode, TableSiblings } from '../engine';
+import type { TableEngine, TableNode, TableRowNode, TableSiblings } from '../engine';
+import { OWN_BODY_ROWS } from './table-dom';
 import type { NuiTableMessages } from './table.messages';
 import type {
   NuiTableReorderEvent,
@@ -82,6 +83,9 @@ const NO_GRAB: Grab = { offset: 0, size: 0 };
 
 const rowRect = (row: Element): DOMRect => (row.firstElementChild ?? row).getBoundingClientRect();
 
+const belongsTo = (node: TableNode<unknown> | undefined, level: number): boolean =>
+  node?.kind === 'detail' || (node?.kind === 'row' && node.level > level);
+
 const grabOf = (event: PointerEvent, fallback: number): Grab => {
   const row = event.target instanceof Element ? event.target.closest(BODY_ROW) : null;
 
@@ -158,7 +162,7 @@ export const useTableRowDrag = <T>(options: TableRowDragOptions<T>): TableRowDra
     while (end < count) {
       const node = options.engine.value.nodeAt(options.pageStart() + end);
 
-      if (node?.kind !== 'row' || node.level <= source.node.level) {
+      if (!belongsTo(node, source.node.level)) {
         break;
       }
       end += 1;
@@ -169,7 +173,7 @@ export const useTableRowDrag = <T>(options: TableRowDragOptions<T>): TableRowDra
   const renderedRows = (from: number): RenderedRow[] => {
     const end = subtreeEnd(from);
 
-    return [...(options.viewport()?.querySelectorAll<HTMLElement>(BODY_ROW) ?? [])].flatMap(
+    return [...(options.viewport()?.querySelectorAll<HTMLElement>(OWN_BODY_ROWS) ?? [])].flatMap(
       (element) => {
         const position = Number(element.getAttribute('aria-rowindex')) - options.headRows() - 1;
 
