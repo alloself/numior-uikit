@@ -163,8 +163,7 @@ Sorting, filters and the quick search go to the server, and old requests are can
 Without `height` the table pages through the source, one request per page.
 
 The `refresh()` method of the table ref drops the cache, and a failed request arrives as the
-`error` event. CSV export downloads the whole query result in chunks of a thousand rows. Trees do
-not work with a source yet.
+`error` event. CSV export downloads the whole query result in chunks of a thousand rows.
 
 <Example name="table/Source" />
 
@@ -177,6 +176,14 @@ Groups start collapsed, and the opened ones live in `v-model:expanded`. The rows
 group show skeletons while its block is on the way.
 
 <Example name="table/SourceGroups" />
+
+A server tree turns on with `source.children`: the function takes a row and returns its children.
+`hasChildren` marks the rows with children, and they are requested when a row opens.
+
+While the children are on the way, the row is busy and a skeleton row stands under it. CSV export
+of a tree downloads the top level rows.
+
+<Example name="table/SourceTree" />
 
 ## Behaviour
 

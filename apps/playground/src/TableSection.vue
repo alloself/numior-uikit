@@ -206,6 +206,16 @@
         data-testid="table-remote"
       />
       <pre class="output" data-testid="table-remote-output">{{ remoteOutput }}</pre>
+      <NuiTable
+        v-model:expanded="remoteUnitsExpanded"
+        :columns="UNIT_COLUMNS"
+        :source="remoteUnitSource"
+        :get-key="(row) => row.id"
+        :has-children="hasRemoteUnits"
+        caption="Структура компании с сервера"
+        height="18rem"
+        data-testid="table-remote-tree"
+      />
     </template>
   </section>
 </template>
@@ -835,6 +845,22 @@ const remoteSource: TableSource<RemoteOrder> = {
   totals: async ({ filters: conditions, signal }) => {
     await pause(signal);
     return { amount: remoteFound(conditions).reduce((sum, row) => sum + row.amount, 0) };
+  },
+};
+
+const remoteUnitsExpanded = ref<readonly TableNodeId[]>([]);
+
+const hasRemoteUnits = (unit: Unit): boolean =>
+  unit.lazy === true || (unit.children?.length ?? 0) > 0;
+
+const remoteUnitSource: TableSource<Unit> = {
+  fetch: async ({ offset, limit, signal }) => {
+    await pause(signal);
+    return { rows: UNITS.slice(offset, offset + limit), total: UNITS.length };
+  },
+  children: async ({ row, signal }) => {
+    await pause(signal);
+    return row.children ?? OPERATIONS;
   },
 };
 

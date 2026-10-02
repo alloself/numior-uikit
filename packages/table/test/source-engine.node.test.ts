@@ -273,3 +273,58 @@ describe('createSourceEngine with groups', () => {
     expect(harness.engine.pendingAt(0)).toBe(true);
   });
 });
+
+describe('createSourceEngine with tree rows', () => {
+  it('marks rows with children expandable and loads them from the source when a row opens', async () => {
+    const harness = new SourceHarness({ total: 30, tree: true });
+
+    harness.engine.ensure(0, 30);
+    await harness.answer(0);
+    expect(harness.engine.nodeAt(0)).toMatchObject({ expandable: true, expanded: false });
+    expect(harness.engine.nodeAt(1)).toMatchObject({ expandable: false });
+    harness.engine.setToggled([0]);
+    expect(harness.engine.count()).toBe(31);
+    expect(harness.labels(0, 3)).toEqual(['row 0', 'pending', 'row 1']);
+    expect(harness.engine.nodeAt(0)).toMatchObject({ expanded: true, loading: true });
+    expect(harness.parents).toEqual([0]);
+    await harness.answerChildren(0, [100, 101, 102]);
+    expect(harness.engine.count()).toBe(33);
+    expect(harness.labels(0, 5)).toEqual(['row 0', 'row 100', 'row 101', 'row 102', 'row 1']);
+    expect(harness.engine.nodeAt(1)).toMatchObject({ level: 1, expandable: true });
+    expect(harness.engine.nodeAt(0)).toMatchObject({ loading: false });
+  });
+
+  it('opens nested rows and keeps a closed branch for the next opening', async () => {
+    const harness = new SourceHarness({ total: 30, tree: true });
+
+    harness.engine.ensure(0, 30);
+    await harness.answer(0);
+    harness.engine.setToggled([0, 100]);
+    await harness.answerChildren(0, [100, 101]);
+    expect(harness.parents).toEqual([0, 100]);
+    await harness.answerChildren(1, [1000]);
+    expect(harness.labels(0, 5)).toEqual(['row 0', 'row 100', 'row 1000', 'row 101', 'row 1']);
+    expect(harness.engine.nodeAt(2)).toMatchObject({ level: 2 });
+    harness.engine.toggle(0);
+    expect(harness.engine.count()).toBe(30);
+    harness.engine.toggle(0);
+    expect(harness.parents).toHaveLength(2);
+    expect(harness.engine.count()).toBe(33);
+  });
+
+  it('asks for the children again after the query changes and after a failure', async () => {
+    const harness = new SourceHarness({ total: 30, tree: true });
+
+    harness.engine.ensure(0, 30);
+    await harness.answer(0);
+    harness.engine.setToggled([10]);
+    await harness.failChildren(0, new Error('offline'));
+    expect(harness.errors).toEqual([new Error('offline')]);
+    expect(harness.labels(10, 12)).toEqual(['row 10', 'pending']);
+    void harness.engine.run({ sort: [{ key: 'id', direction: 'desc' }] });
+    await harness.answer(1);
+    expect(harness.parents).toEqual([10, 10]);
+    await harness.answerChildren(1, [200]);
+    expect(harness.labels(10, 13)).toEqual(['row 10', 'row 200', 'row 11']);
+  });
+});

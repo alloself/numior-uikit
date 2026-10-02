@@ -43,6 +43,8 @@ export class TableSection {
   readonly remote: Locator;
   readonly remoteViewport: Locator;
   readonly remoteGrid: Locator;
+  readonly remoteTree: Locator;
+  readonly remoteTreeGrid: Locator;
   readonly remoteQuick: Locator;
   readonly remoteOutput: Locator;
   readonly remoteToggle: Locator;
@@ -76,6 +78,8 @@ export class TableSection {
     this.remote = page.getByTestId('table-remote');
     this.remoteViewport = this.remote.locator('.nui-table__viewport');
     this.remoteGrid = this.remote.locator('.nui-table__grid');
+    this.remoteTree = page.getByTestId('table-remote-tree');
+    this.remoteTreeGrid = this.remoteTree.locator('.nui-table__grid');
     this.remoteQuick = page.getByTestId('table-remote-quick');
     this.remoteOutput = page.getByTestId('table-remote-output');
     this.remoteToggle = page.getByTestId('table-remote-toggle');
@@ -87,6 +91,19 @@ export class TableSection {
 
   remoteCell(position: number, col: number): Locator {
     return this.remoteRow(position).locator(`> [aria-colindex="${col + 1}"]`);
+  }
+
+  remoteTreeRow(position: number): Locator {
+    return this.remoteTree.locator(
+      `.nui-table__viewport [role="row"][aria-rowindex="${position + 2}"]`,
+    );
+  }
+
+  async toggleRemoteTreeRow(position: number): Promise<void> {
+    const toggle = this.remoteTreeRow(position).locator('.nui-table__toggle--expandable');
+
+    await toggle.hover();
+    await toggle.click();
   }
 
   remoteGroupLabel(position: number): Locator {

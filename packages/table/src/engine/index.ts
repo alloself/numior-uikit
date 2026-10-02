@@ -19,6 +19,7 @@ export type {
   TableAggregate,
   TableAggregateFn,
   TableAggregateKind,
+  TableChildrenRequest,
   TableDistinct,
   TableDistinctOptions,
   TableEngine,

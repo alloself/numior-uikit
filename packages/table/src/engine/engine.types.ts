@@ -122,6 +122,7 @@ export interface TableRowNode<T> {
   readonly expandable: boolean;
   readonly expanded: boolean;
   readonly unloaded: boolean;
+  readonly loading: boolean;
 }
 
 export interface TableGroupNode {
@@ -234,8 +235,16 @@ export interface TableTotalsRequest {
   readonly signal: AbortSignal;
 }
 
+export interface TableChildrenRequest<T> {
+  readonly row: T;
+  readonly sort: readonly TableSort[];
+  readonly filters: readonly TableFilter[];
+  readonly signal: AbortSignal;
+}
+
 export interface TableSource<T> {
   readonly fetch: (request: TableFetchRequest) => Promise<TableFetchResult<T>>;
+  readonly children?: ((request: TableChildrenRequest<T>) => Promise<readonly T[]>) | undefined;
   readonly values?: ((request: TableValuesRequest) => Promise<TableDistinct>) | undefined;
   readonly totals?:
     | ((request: TableTotalsRequest) => Promise<Readonly<Record<string, unknown>>>)
@@ -245,6 +254,7 @@ export interface TableSource<T> {
 export interface TableSourceEngineOptions<T> {
   readonly source: TableSource<T>;
   readonly keyOf?: ((row: T) => TableNodeId) | undefined;
+  readonly hasChildren?: ((row: T) => boolean) | undefined;
   readonly blockSize: () => number;
   readonly cacheBlocks?: number | undefined;
   readonly concurrency?: number | undefined;

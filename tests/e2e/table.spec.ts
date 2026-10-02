@@ -490,6 +490,26 @@ test.describe('table', () => {
     await expect(table.remoteGroupLabel(1)).toHaveText(/^Белград/);
   });
 
+  test('loads the children of a server tree row when it opens', async ({ page }) => {
+    const playground = new PlaygroundPage(page);
+    const { table } = playground;
+    await playground.open();
+    await table.remoteToggle.click();
+    await table.remoteTree.scrollIntoViewIfNeeded();
+    await expect(table.remoteTreeRow(0)).toContainText('Продажи');
+    await expect(table.remoteTreeGrid).toHaveAttribute('role', 'treegrid');
+    await expect(table.remoteTreeRow(0)).toHaveAttribute('aria-expanded', 'false');
+    await table.toggleRemoteTreeRow(0);
+    await expect(table.remoteTreeRow(0)).toHaveAttribute('aria-expanded', 'true');
+    await expect(table.remoteTreeRow(1)).toHaveAttribute('aria-level', '2');
+    await expect(table.remoteTreeRow(1)).toContainText('Россия');
+    await table.toggleRemoteTreeRow(1);
+    await expect(table.remoteTreeRow(2)).toHaveAttribute('aria-level', '3');
+    await expect(table.remoteTreeRow(2)).toContainText('Москва');
+    await table.toggleRemoteTreeRow(0);
+    await expect(table.remoteTreeRow(1)).toHaveAttribute('aria-level', '1');
+  });
+
   test('opens a cell editor with a double tap on a phone and commits it on a tap elsewhere', async ({
     page,
     isMobile,

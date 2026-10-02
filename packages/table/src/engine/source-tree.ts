@@ -13,6 +13,7 @@ export interface SourceStore<T> {
   readonly path: readonly unknown[];
   readonly holds: SourceHolds;
   readonly known: number | undefined;
+  readonly parent: T | undefined;
   readonly open: Map<number, SourceBranch<T>>;
   total: number | undefined;
   more: boolean;
@@ -60,7 +61,7 @@ export const storeOfBlockKey = (
 };
 
 export const createSourceStore = <T>(
-  seed: Pick<SourceStore<T>, 'key' | 'level' | 'path' | 'holds' | 'known'>,
+  seed: Pick<SourceStore<T>, 'key' | 'level' | 'path' | 'holds' | 'known' | 'parent'>,
 ): SourceStore<T> => ({
   ...seed,
   open: new Map(),

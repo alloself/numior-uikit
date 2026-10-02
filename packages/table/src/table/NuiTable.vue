@@ -268,6 +268,7 @@ import {
   type TableFilterValue,
   type TableQuery,
   type TableNode,
+  type TableNodeId,
 } from '../engine';
 import NuiTableCellEditor from './NuiTableCellEditor.vue';
 import NuiTableDragLayer from './NuiTableDragLayer.vue';
@@ -346,6 +347,12 @@ const ROW_SIZES = { sm: 32, md: 40, lg: 48 } as const;
 const CANVAS_LIMIT = 15_000_000;
 const STILL_FRAME: VirtualFrame = { lead: 0, rest: 0, clampStart: 0, clampEnd: 0 };
 const NO_GROUPS: readonly string[] = [];
+
+const awaited = (
+  node: TableNode<unknown> | undefined,
+  pending: ReadonlySet<TableNodeId>,
+): boolean => node !== undefined && (pending.has(node.id) || (node.kind === 'row' && node.loading));
+
 const INITIAL_ROWS = 30;
 const INITIAL_COLUMNS = 12;
 const ROW_OVERSCAN = 6;
@@ -458,6 +465,7 @@ const createEngine = (): TableEngine<T> =>
     : createSourceEngine({
         source,
         keyOf: getKey,
+        hasChildren,
         blockSize: () => (paginationProps.value === undefined ? blockSize : pageSize.value),
         onChange: onSourceChange,
         onError: onSourceError,
@@ -471,7 +479,11 @@ const revision = ref(0);
 const announcement = ref('');
 const rowsIntent = createIntent<'rows'>();
 const selectOn = computed(() => selectable !== undefined);
-const treeOn = computed(() => getChildren !== undefined && source === undefined);
+
+const treeOn = computed(() =>
+  source === undefined ? getChildren !== undefined : source.children !== undefined,
+);
+
 const grouping = computed(() => (treeOn.value ? NO_GROUPS : groupBy.value));
 
 const pageWindow = computed(() =>
@@ -956,7 +968,7 @@ const bodyRows = computed((): TableBodyRow[] => {
       treeLevel: Math.max(0, (level ?? 1) - 1),
       group: expansion.rowAt(item.index),
       expanded: expandedOf(node),
-      loading: unloaded || (node !== undefined && pending.has(node.id)),
+      loading: unloaded || awaited(node, pending),
       pending: unloaded,
       selected: selectedOf(node),
       stripe: striped && item.index % 2 === 1,

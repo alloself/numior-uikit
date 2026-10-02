@@ -1,5 +1,6 @@
 import {
   createSourceEngine,
+  type TableChildrenRequest,
   type TableDistinct,
   type TableEngine,
   type TableFetchRequest,
@@ -19,6 +20,13 @@ export interface SourceHarnessOptions {
   readonly concurrency?: number | undefined;
   readonly totals?: Readonly<Record<string, unknown>> | undefined;
   readonly values?: TableDistinct | undefined;
+  readonly tree?: boolean | undefined;
+}
+
+interface PendingChildren {
+  readonly request: TableChildrenRequest<Item>;
+  readonly resolve: (rows: readonly Item[]) => void;
+  readonly reject: (error: unknown) => void;
 }
 
 interface PendingFetch {
@@ -63,6 +71,7 @@ export class SourceHarness {
   changes = 0;
   size: number;
   private readonly pending: PendingFetch[] = [];
+  private readonly branches: PendingChildren[] = [];
   private readonly total: number | undefined;
 
   constructor(options: SourceHarnessOptions = {}) {
@@ -76,10 +85,18 @@ export class SourceHarness {
           new Promise((resolve, reject) => {
             this.pending.push({ request, resolve, reject });
           }),
+        children:
+          options.tree === true
+            ? (request) =>
+                new Promise((resolve, reject) => {
+                  this.branches.push({ request, resolve, reject });
+                })
+            : undefined,
         totals: totals === undefined ? undefined : () => Promise.resolve(totals),
         values: values === undefined ? undefined : () => Promise.resolve(values),
       },
       keyOf: (item) => item.id,
+      hasChildren: (item) => item.id % 10 === 0,
       blockSize: () => this.size,
       cacheBlocks: options.cacheBlocks,
       concurrency: options.concurrency,
@@ -120,6 +137,20 @@ export class SourceHarness {
         ? `${node.key}=${String(node.value)} (${node.count})`
         : `row ${node.row.id}`;
     });
+  }
+
+  get parents(): number[] {
+    return this.branches.map(({ request }) => request.row.id);
+  }
+
+  async answerChildren(index: number, ids: readonly number[]): Promise<void> {
+    this.branches[index]?.resolve(ids.map((id) => ({ id })));
+    await flush();
+  }
+
+  async failChildren(index: number, error: unknown): Promise<void> {
+    this.branches[index]?.reject(error);
+    await flush();
   }
 
   aborted(index: number): boolean {

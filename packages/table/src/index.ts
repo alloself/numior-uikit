@@ -55,6 +55,7 @@ export type {
   TableAggregate,
   TableAggregateFn,
   TableAggregateKind,
+  TableChildrenRequest,
   TableDistinct,
   TableFetchRequest,
   TableFetchResult,

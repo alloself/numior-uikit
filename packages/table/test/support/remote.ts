@@ -1,4 +1,10 @@
-import type { TableFetchRequest, TableFetchResult, TableSource, TableSourceGroup } from '../../src';
+import type {
+  TableChildrenRequest,
+  TableFetchRequest,
+  TableFetchResult,
+  TableSource,
+  TableSourceGroup,
+} from '../../src';
 import { staff, type Staff } from './staff';
 
 interface RemoteCall {
@@ -6,6 +12,17 @@ interface RemoteCall {
   readonly resolve: (result: TableFetchResult<Staff>) => void;
   readonly reject: (error: unknown) => void;
 }
+
+interface RemoteBranch {
+  readonly request: TableChildrenRequest<Staff>;
+  readonly resolve: (rows: readonly Staff[]) => void;
+}
+
+const reportOf = (parent: Staff, order: number): Staff => {
+  const id = 1000 + parent.id * 10 + order;
+
+  return { id, name: `Сотрудник ${id}`, city: parent.city, salary: 500, remote: false };
+};
 
 const numberOf = (row: Staff, key: string): number =>
   key === 'salary' ? (row.salary ?? 0) : row.id;
@@ -37,8 +54,9 @@ export class RemoteStaff {
   readonly rows: Staff[];
   readonly source: TableSource<Staff>;
   private readonly calls: RemoteCall[] = [];
+  private readonly branches: RemoteBranch[] = [];
 
-  constructor(count: number, totals?: Readonly<Record<string, unknown>>) {
+  constructor(count: number, totals?: Readonly<Record<string, unknown>>, tree = false) {
     this.rows = staff(count);
 
     this.source = {
@@ -46,8 +64,24 @@ export class RemoteStaff {
         new Promise((resolve, reject) => {
           this.calls.push({ request, resolve, reject });
         }),
+      children: tree
+        ? (request) =>
+            new Promise((resolve) => {
+              this.branches.push({ request, resolve });
+            })
+        : undefined,
       totals: totals === undefined ? undefined : () => Promise.resolve(totals),
     };
+  }
+
+  get parents(): number[] {
+    return this.branches.map(({ request }) => request.row.id);
+  }
+
+  answerChildren(index = this.branches.length - 1): void {
+    const branch = this.branches[index];
+
+    branch?.resolve([reportOf(branch.request.row, 1), reportOf(branch.request.row, 2)]);
   }
 
   get requests(): Array<Pick<TableFetchRequest, 'offset' | 'limit' | 'sort'>> {

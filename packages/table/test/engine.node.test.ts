@@ -71,6 +71,7 @@ describe('createTableEngine', () => {
       expandable: false,
       expanded: false,
       unloaded: false,
+      loading: false,
     });
 
     expect(harness.engine.nodeAt(2)).toBeUndefined();

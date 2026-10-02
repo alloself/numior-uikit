@@ -405,6 +405,7 @@ export const createTableEngine = <T>(options: TableEngineOptions<T>): TableEngin
       expandable,
       expanded: expandable && isExpanded(id),
       unloaded,
+      loading: false,
     };
   };
 

@@ -187,4 +187,35 @@ describe('NuiTable with a source', () => {
     expect(grid.role).toBe('grid');
     expect(grid.cellText(0, 1)).toBe('Сотрудник 0');
   });
+
+  it('loads the children of a server row when it opens and shows them one level deeper', async () => {
+    const remote = new RemoteStaff(30, undefined, true);
+
+    const grid = mountRemote(remote, {
+      props: { getKey: (row) => row.id, hasChildren: (row) => row.id % 10 === 0 },
+    });
+
+    await grid.settle();
+    remote.answer();
+    await flushPromises();
+    expect(grid.role).toBe('treegrid');
+    expect(grid.rowLevel(0)).toBe('1');
+    expect(grid.rowExpanded(0)).toBe('false');
+    expect(grid.rowExpanded(1)).toBeUndefined();
+    await grid.toggleRow(0);
+    expect(grid.expanded).toEqual([0]);
+    expect(remote.parents).toEqual([0]);
+    expect(grid.rowBusy(0)).toBe(true);
+    expect(grid.rowCount).toBe(33);
+    remote.answerChildren();
+    await flushPromises();
+    expect(grid.rowBusy(0)).toBe(false);
+    expect(grid.rowCount).toBe(34);
+    expect(grid.cellText(1, 1)).toBe('Сотрудник 1001');
+    expect(grid.rowLevel(1)).toBe('2');
+    expect(grid.loads).toEqual([]);
+    await grid.toggleRow(0);
+    expect(grid.rowCount).toBe(32);
+    expect(grid.cellText(1, 1)).toBe('Сотрудник 1');
+  });
 });

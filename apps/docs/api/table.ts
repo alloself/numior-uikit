@@ -12,8 +12,8 @@ const docs: DocsMap = {
         en: 'Rows of the table; it neither copies nor changes them. Not needed with source.',
       },
       source: {
-        ru: 'Серверный источник: fetch({ offset, limit, sort, filters, groupBy, groupPath, signal }) возвращает { rows, total } или { rows, hasMore }, а необязательные values и totals дают значения фильтра-списка и итоги. С groupBy таблица просит уровень групп: пока groupPath короче groupBy, fetch возвращает { groups } со значением value, числом строк count и агрегатами aggregates, а на последнем уровне — строки группы. Таблица грузит блоки под окном прокрутки, держит в кеше пятьдесят последних блоков и отменяет старые запросы при смене сортировки, фильтров и групп; без height она листает источник страницами. Дерево и перетаскивание строк с source не работают.',
-        en: 'Server source: fetch({ offset, limit, sort, filters, groupBy, groupPath, signal }) returns { rows, total } or { rows, hasMore }, while the optional values and totals give the set filter values and the totals. With groupBy the table asks for a level of groups: while groupPath is shorter than groupBy, fetch returns { groups } with the value, the row count and the aggregates of each group, and at the last level the rows of the group. The table loads blocks under the scroll window, keeps the last fifty blocks in a cache and cancels old requests when sorting, filters or groups change; without height it pages through the source. Trees and row drag do not work with source.',
+        ru: 'Серверный источник: fetch({ offset, limit, sort, filters, groupBy, groupPath, signal }) возвращает { rows, total } или { rows, hasMore }, а необязательные values и totals дают значения фильтра-списка и итоги. С groupBy таблица просит уровень групп: пока groupPath короче groupBy, fetch возвращает { groups } со значением value, числом строк count и агрегатами aggregates, а на последнем уровне — строки группы. Таблица грузит блоки под окном прокрутки, держит в кеше пятьдесят последних блоков и отменяет старые запросы при смене сортировки, фильтров и групп; без height она листает источник страницами. Необязательный children({ row, sort, filters, signal }) возвращает детей строки и включает дерево: строки с детьми отмечает hasChildren, а группировка в дереве выключена. Перетаскивание строк с source не работает.',
+        en: 'Server source: fetch({ offset, limit, sort, filters, groupBy, groupPath, signal }) returns { rows, total } or { rows, hasMore }, while the optional values and totals give the set filter values and the totals. With groupBy the table asks for a level of groups: while groupPath is shorter than groupBy, fetch returns { groups } with the value, the row count and the aggregates of each group, and at the last level the rows of the group. The table loads blocks under the scroll window, keeps the last fifty blocks in a cache and cancels old requests when sorting, filters or groups change; without height it pages through the source. The optional children({ row, sort, filters, signal }) returns the children of a row and turns the tree on: hasChildren marks the rows with children, and grouping is off in a tree. Row drag does not work with source.',
       },
       blockSize: {
         ru: 'Строк в одном запросе к source; по умолчанию 100, а при пагинации — размер страницы.',
@@ -56,8 +56,8 @@ const docs: DocsMap = {
         en: 'Child rows for tree data; turns on the treegrid role and ignores groupBy.',
       },
       hasChildren: {
-        ru: 'Отмечает строку, чьи дети ещё не загружены: её можно раскрыть, и таблица вызовет событие load.',
-        en: 'Marks a row whose children are not loaded yet: it can expand, and the table emits load.',
+        ru: 'Отмечает строку, чьи дети ещё не загружены: её можно раскрыть, и таблица вызовет событие load. С source отмечает строки, детей которых отдаёт source.children; событие load тогда не приходит.',
+        en: 'Marks a row whose children are not loaded yet: it can expand, and the table emits load. With source it marks the rows whose children source.children returns; the load event does not fire then.',
       },
       treeColumn: {
         ru: 'Ключ колонки с отступом и переключателем дерева; по умолчанию первая колонка.',
