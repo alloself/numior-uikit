@@ -24,6 +24,18 @@ export interface TableSheetEdge {
   readonly style: string;
 }
 
+export interface TableSheetBand {
+  readonly top: number;
+  readonly bottom: number;
+}
+
+export interface TableSheetWindow {
+  readonly frozenBottom: number;
+  readonly firstTop: number;
+  readonly lastBottom: number;
+  readonly end: number;
+}
+
 const HEAD_ROWS = 1;
 const ROW_HEADERS = 1;
 const BODY_ROWS = ':scope > .nui-table__body > [role="row"]';
@@ -46,6 +58,26 @@ const LAYER_PAINT = `
   }
 `;
 
+const BAND_PAINT = `
+  html, body { overflow-anchor: none; }
+  [data-testid='table-sheet'] .nui-table__body > .nui-table__row:not(.nui-table__row--frozen) > .nui-table__cell {
+    background-color: blue !important;
+    background-image: none !important;
+    color: blue !important;
+  }
+`;
+
+const BAND_TOP = 31.5;
+const BAND_BOTTOM = 107;
+const BAND_STEP = 0.5;
+const BAND_COLUMNS: readonly number[] = [60, 150, 420];
+const HIT_COLUMN = 120;
+
+const BAND_POINTS: readonly Point[] = Array.from(
+  { length: Math.floor((BAND_BOTTOM - BAND_TOP) / BAND_STEP) + 1 },
+  (_, step) => BAND_TOP + step * BAND_STEP,
+).flatMap((y) => BAND_COLUMNS.map((x): Point => [x, y]));
+
 const isTinted = ([red, green, blue]: Rgb): boolean =>
   Math.abs(blue - red) > LEAK || Math.abs(red - green) > LEAK;
 
@@ -60,6 +92,7 @@ export class TableSheetSection {
   readonly windowSwitch: Locator;
   readonly quarterSwitch: Locator;
   readonly longSwitch: Locator;
+  readonly frozenSwitch: Locator;
   readonly journalNote: Locator;
   readonly corner: Locator;
   readonly output: Locator;
@@ -74,6 +107,7 @@ export class TableSheetSection {
     this.windowSwitch = page.getByTestId('table-sheet-window');
     this.quarterSwitch = page.getByTestId('table-sheet-quarter');
     this.longSwitch = page.getByTestId('table-sheet-long');
+    this.frozenSwitch = page.getByTestId('table-sheet-frozen');
     this.journalNote = this.grid.locator('.nui-table__cell--tall', { hasText: 'Операции сверены' });
     this.corner = this.grid.locator(':scope > .nui-table__header [aria-colindex="1"]');
     this.output = page.getByTestId('table-sheet-output');
@@ -223,17 +257,12 @@ export class TableSheetSection {
     await this.page.addStyleTag({ content: LAYER_PAINT });
   }
 
-  async headerLeaks(fraction: number): Promise<Rgb[]> {
-    await this.root.evaluate((element, target) => {
-      const top = element.getBoundingClientRect().top * devicePixelRatio;
-      const shift = (((target - (top % 1)) % 1) + 1) % 1;
+  async paintScrolledRows(): Promise<void> {
+    await this.page.addStyleTag({ content: BAND_PAINT });
+  }
 
-      element.style.setProperty('inset-block-start', `${shift / devicePixelRatio}px`);
-    }, fraction);
-
-    await this.scrollTo(96, 300);
-
-    await this.viewport.evaluate(
+  private painted(): Promise<void> {
+    return this.viewport.evaluate(
       () =>
         new Promise<void>((resolve) => {
           requestAnimationFrame(() => {
@@ -243,8 +272,101 @@ export class TableSheetSection {
           });
         }),
     );
+  }
+
+  async headerLeaks(fraction: number): Promise<Rgb[]> {
+    await this.root.evaluate((element, target) => {
+      const top = element.getBoundingClientRect().top * devicePixelRatio;
+      const shift = (((target - (top % 1)) % 1) + 1) % 1;
+
+      element.style.setProperty('inset-block-start', `${shift / devicePixelRatio}px`);
+    }, fraction);
+
+    await this.scrollTo(96, 300);
+    await this.painted();
 
     return (await paintedRgbAt(this.root, HEADER_POINTS)).filter(isTinted);
+  }
+
+  async bandLeaks(fraction: number, top: number): Promise<Rgb[]> {
+    await this.root.evaluate((element, target) => {
+      element.style.setProperty('inset-block-start', '0px');
+
+      const edge = element.getBoundingClientRect().top * devicePixelRatio;
+      const shift = (((target - (edge % 1)) % 1) + 1) % 1;
+
+      element.style.setProperty('inset-block-start', `${shift / devicePixelRatio}px`);
+    }, fraction);
+
+    await this.scrollTo(top, 0);
+    await this.painted();
+
+    return (await paintedRgbAt(this.root, BAND_POINTS)).filter(isTinted);
+  }
+
+  scrollTop(): Promise<number> {
+    return this.viewport.evaluate((element) => element.scrollTop);
+  }
+
+  async bandOf(target: Locator): Promise<TableSheetBand> {
+    const [box, frame] = await Promise.all([boxOf(target), boxOf(this.viewport)]);
+
+    return {
+      top: Math.round(box.y - frame.y),
+      bottom: Math.round(box.y + box.height - frame.y),
+    };
+  }
+
+  rowAt(offset: number): Promise<number | null> {
+    return this.viewport.evaluate(
+      (element, { y, x, head }) => {
+        element.scrollIntoView({ block: 'center' });
+
+        const box = element.getBoundingClientRect();
+        const rtl = getComputedStyle(element).direction === 'rtl';
+        const point = rtl ? box.right - x : box.left + x;
+        const row = document.elementFromPoint(point, box.top + y)?.closest('[role="row"]');
+        const index = Number(row?.getAttribute('aria-rowindex'));
+
+        return Number.isInteger(index) && index > head ? index - head - 1 : null;
+      },
+      { y: offset, x: HIT_COLUMN, head: HEAD_ROWS },
+    );
+  }
+
+  async focusNatively(target: Locator): Promise<void> {
+    await target.evaluate((element) => {
+      if (element instanceof HTMLElement) {
+        element.focus();
+      }
+    });
+
+    await this.painted();
+  }
+
+  runAhead(top: number): Promise<TableSheetWindow> {
+    return this.viewport.evaluate(
+      (element, { target, rows }) => {
+        const base = element.getBoundingClientRect().top;
+        const grid = element.querySelector(':scope > .nui-table__grid');
+        const all = [...(grid?.querySelectorAll(rows) ?? [])];
+        const frozen = all.filter((row) => row.classList.contains('nui-table__row--frozen'));
+        const moving = all.filter((row) => !row.classList.contains('nui-table__row--frozen'));
+
+        const edgeOf = (row: Element | undefined, side: 'top' | 'bottom'): number =>
+          Math.round((row?.firstElementChild?.getBoundingClientRect()[side] ?? 0) - base);
+
+        element.scrollTop = target;
+
+        return {
+          frozenBottom: edgeOf(frozen.at(-1), 'bottom'),
+          firstTop: edgeOf(moving[0], 'top'),
+          lastBottom: edgeOf(moving.at(-1), 'bottom'),
+          end: element.clientHeight,
+        };
+      },
+      { target: top, rows: BODY_ROWS },
+    );
   }
 
   hasSpareRoom(): Promise<boolean> {

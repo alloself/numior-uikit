@@ -90,6 +90,8 @@ const {
   sized,
   sizable = false,
   sizing = false,
+  frozen,
+  edge = false,
   heads,
 } = defineProps<NuiTableRowProps>();
 
@@ -200,12 +202,19 @@ const rowClass = computed(() => [
     'nui-table__row--selected': selected === true,
     'nui-table__row--odd': stripe,
     'nui-table__row--dragging': dragging,
+    'nui-table__row--frozen': frozen !== undefined,
+    'nui-table__row--edge': edge,
   },
 ]);
 
-const rowStyle = computed(() =>
-  sticky.value ? { '--_top': `calc(var(--_row) * ${rowIndex - 1})` } : sized,
-);
+const rowStyle = computed(() => {
+  if (sticky.value) {
+    return { '--_top': `calc(var(--_row) * ${rowIndex - 1})` };
+  }
+  return frozen === undefined
+    ? sized
+    : { ...sized, '--_top': `calc(var(--_head-size) + ${frozen}px)` };
+});
 
 const pinClass = (cell: TableCellLayout): Record<string, boolean> => ({
   'nui-table__cell--pin-start': cell.pin === 'start',

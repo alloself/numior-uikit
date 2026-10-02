@@ -963,6 +963,25 @@ test.describe('table', () => {
     await expect(table.grid).toHaveAttribute('aria-rowcount', '10003');
   });
 
+  test('leaves the rows where they are when a header, pinned or totals cell takes focus', async ({
+    page,
+  }) => {
+    const playground = new PlaygroundPage(page);
+    await playground.open();
+    const { table } = playground;
+    await table.root.scrollIntoViewIfNeeded();
+    await table.pinnedToggle.click();
+    await expect(table.row(0)).toHaveClass(/nui-table__row--pinned/);
+    await table.scrollTo({ top: 800 });
+    await expect(table.cell(22, 0)).toBeVisible();
+
+    for (const target of [table.cell(0, 1), table.header(1), table.footerCell(1)]) {
+      await table.focusNatively(target);
+      await expect(target).toBeFocused();
+      expect(await table.scrollTop()).toBe(800);
+    }
+  });
+
   test('pages the rows from the footer and keeps filters and the page size in step', async ({
     page,
   }) => {

@@ -3,7 +3,8 @@
     <div class="section-heading">
       <h2 id="table-sheet-title">Лист</h2>
       <span class="tag"
-        >NuiTable · bordered · cellStyle · rowHeaders · rowHeights · merges · overflow</span
+        >NuiTable · bordered · cellStyle · rowHeaders · rowHeights · merges · overflow ·
+        frozenRows</span
       >
     </div>
     <div class="data-row">
@@ -24,6 +25,7 @@
         <NuiSwitch v-model="windowed" data-testid="table-sheet-window">Окно строк</NuiSwitch>
         <NuiSwitch v-model="quarter" data-testid="table-sheet-quarter">Первый квартал</NuiSwitch>
         <NuiSwitch v-model="long" data-testid="table-sheet-long">Журнал</NuiSwitch>
+        <NuiSwitch v-model="frozen" data-testid="table-sheet-frozen">Закрепить шапку</NuiSwitch>
       </div>
       <NuiTable
         v-model:ranges="ranges"
@@ -35,6 +37,7 @@
         :merges="merges"
         :bordered="bordered"
         :row-headers="ROW_HEADERS"
+        :frozen-rows="frozen ? FROZEN_ROWS : 0"
         :hidden="quarter ? LATER_MONTHS : NO_COLUMNS"
         :height="windowed ? '18rem' : undefined"
         :column-menu="false"
@@ -92,6 +95,7 @@ const COSTS_NOTE = 'Маркетинг растёт быстрее выручк�
 const JOURNAL_NOTE = 'Операции сверены с банком';
 const FOOTNOTE = 'Прибыль посчитана после постоянных расходов: 620 тыс. ₽ в месяц';
 const JOURNAL = 60;
+const FROZEN_ROWS = 2;
 const BANDS: readonly number[] = [0, 2, 7];
 
 const NOTES: readonly SheetBlock[] = [
@@ -246,6 +250,7 @@ const heat = ref(false);
 const windowed = ref(false);
 const quarter = ref(false);
 const long = ref(false);
+const frozen = ref(false);
 const ranges = ref<NuiTableRanges>([]);
 const rowHeights = ref<NuiTableRowHeights>({ 0: 44 });
 

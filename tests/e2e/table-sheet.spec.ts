@@ -19,6 +19,12 @@ const CENTRE_WIDTH = 13 * 92 + 170;
 const QUARTER_WIDTH = 4 * 92 + 170;
 const PIXEL_FRACTIONS = [0.05, 0.3, 0.55, 0.8];
 const PIXEL_RATIOS = [1.25, 1.5];
+const TITLE = 0;
+const HEAD = 1;
+const HEAD_HEIGHT = 32;
+const TITLE_HEIGHT = 44;
+const FROZEN_BOTTOM = HEAD_HEIGHT + TITLE_HEIGHT + ROW;
+const BAND_SCROLLS = [97, 333];
 
 const expectSolidHeader = async (page: Page): Promise<void> => {
   const playground = new PlaygroundPage(page);
@@ -383,6 +389,104 @@ test.describe('table cell styles', () => {
     );
   });
 
+  test('keeps the first rows of the sheet under the header while the rest scroll', async ({
+    page,
+  }) => {
+    const playground = new PlaygroundPage(page);
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    const { tableSheet: sheet } = playground;
+    await sheet.show();
+    await sheet.longSwitch.click();
+    await sheet.windowSwitch.click();
+    await sheet.frozenSwitch.click();
+
+    await expect(sheet.row(HEAD)).toHaveClass(/nui-table__row--edge/);
+
+    expect(await sheet.bandOf(sheet.rowHeader(TITLE))).toEqual({
+      top: HEAD_HEIGHT,
+      bottom: HEAD_HEIGHT + TITLE_HEIGHT,
+    });
+
+    await sheet.scrollTo(12 * ROW, 300);
+    await expect(sheet.cell(JOURNAL, 0)).toBeVisible();
+
+    expect(await sheet.bandOf(sheet.rowHeader(TITLE))).toEqual({
+      top: HEAD_HEIGHT,
+      bottom: HEAD_HEIGHT + TITLE_HEIGHT,
+    });
+
+    expect(await sheet.bandOf(sheet.cell(HEAD, 0))).toEqual({
+      top: HEAD_HEIGHT + TITLE_HEIGHT,
+      bottom: FROZEN_BOTTOM,
+    });
+
+    expect(await sheet.rowAt(FROZEN_BOTTOM - 4)).toBe(HEAD);
+    expect(await sheet.rowAt(FROZEN_BOTTOM + 4)).toBeGreaterThan(SALES);
+    await expect(sheet.text(HEAD, 0)).toHaveText('Статья');
+    await sheet.frozenSwitch.click();
+    await expect(sheet.row(HEAD)).toHaveCount(0);
+  });
+
+  test('reveals the cursor below the frozen rows and leaves them where they are', async ({
+    page,
+  }) => {
+    const playground = new PlaygroundPage(page);
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    const { tableSheet: sheet } = playground;
+    await sheet.show();
+    await sheet.longSwitch.click();
+    await sheet.windowSwitch.click();
+    await sheet.frozenSwitch.click();
+    await sheet.scrollTo(12 * ROW, 0);
+    await expect(sheet.cell(JOURNAL, 0)).toBeVisible();
+    await sheet.focusNatively(sheet.cell(HEAD, 2));
+    await expect(sheet.cell(HEAD, 2)).toBeFocused();
+
+    expect(await sheet.scrollTop()).toBe(12 * ROW);
+    await sheet.focusNatively(sheet.columnHeader(2));
+    await expect(sheet.columnHeader(2)).toBeFocused();
+    expect(await sheet.scrollTop()).toBe(12 * ROW);
+    await sheet.focusNatively(sheet.cell(HEAD, 2));
+    await page.keyboard.press('ArrowDown');
+    await expect(sheet.cell(INCOME, 1)).toBeFocused();
+    expect(await sheet.scrollTop()).toBe(0);
+    await page.keyboard.press('PageDown');
+    await page.keyboard.press('PageDown');
+    await expect.poll(() => sheet.scrollTop()).toBeGreaterThan(0);
+    const focused = sheet.grid.locator('.nui-table__cell--active');
+
+    expect((await sheet.bandOf(focused)).top).toBeGreaterThanOrEqual(FROZEN_BOTTOM);
+    await page.keyboard.press('PageUp');
+    expect((await sheet.bandOf(focused)).top).toBeGreaterThanOrEqual(FROZEN_BOTTOM);
+    await page.keyboard.press('Control+Home');
+    await expect(sheet.rowHeader(TITLE)).toBeFocused();
+    expect(await sheet.scrollTop()).toBeGreaterThan(0);
+  });
+
+  test('holds the rendered rows under the frozen ones when the scroll runs ahead of the window', async ({
+    page,
+  }) => {
+    const playground = new PlaygroundPage(page);
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    const { tableSheet: sheet } = playground;
+    await sheet.show();
+    await sheet.longSwitch.click();
+    await sheet.windowSwitch.click();
+    await sheet.frozenSwitch.click();
+    await expect(sheet.row(HEAD)).toHaveClass(/nui-table__row--frozen/);
+    const down = await sheet.runAhead(40 * ROW);
+
+    expect(down.frozenBottom).toBe(FROZEN_BOTTOM);
+    expect(down.lastBottom).toBe(down.end);
+    await expect(sheet.cell(JOURNAL + 30, 0)).toBeVisible();
+    const up = await sheet.runAhead(0);
+
+    expect(up.firstTop).toBe(up.frozenBottom);
+  });
+
   test('a painted sheet has no automatically detectable WCAG AA violations', async ({ page }) => {
     const playground = new PlaygroundPage(page);
     await playground.emulate({ reducedMotion: 'reduce' });
@@ -406,6 +510,29 @@ for (const ratio of PIXEL_RATIOS) {
     test('keeps scrolled cells from showing over the header', async ({ page, isMobile }) => {
       test.skip(isMobile, 'pixel ratios of a desktop display');
       await expectSolidHeader(page);
+    });
+
+    test('keeps scrolled rows from showing between the frozen rows', async ({ page, isMobile }) => {
+      test.skip(isMobile, 'pixel ratios of a desktop display');
+      const playground = new PlaygroundPage(page);
+      await playground.emulate({ reducedMotion: 'reduce' });
+      await playground.open();
+      const { tableSheet: sheet } = playground;
+      await sheet.show();
+      await sheet.longSwitch.click();
+      await sheet.windowSwitch.click();
+      await sheet.frozenSwitch.click();
+      await expect(sheet.row(HEAD)).toHaveClass(/nui-table__row--frozen/);
+      await sheet.paintScrolledRows();
+
+      for (const fraction of PIXEL_FRACTIONS) {
+        for (const top of BAND_SCROLLS) {
+          expect(
+            await sheet.bandLeaks(fraction, top),
+            `at a pixel fraction of ${fraction} and a scroll of ${top}`,
+          ).toEqual([]);
+        }
+      }
     });
   });
 }

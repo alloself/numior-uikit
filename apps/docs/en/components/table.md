@@ -142,6 +142,16 @@ The grid lines between them are hidden while the text runs over them.
 
 <Example name="table/Overflow" />
 
+### Frozen rows
+
+`frozenRows` keeps the first body rows under the header while the rest scroll beneath them. They
+are rows of the data itself: selection, copying and editing treat them like any other row.
+
+Freezing works in a row window, that is with `height`. Groups, a tree, row details and a server
+source turn it off, and `pinnedRows` stay for rows outside the data.
+
+<Example name="table/Frozen" />
+
 ### Row drag
 
 `rowDrag` shows a grip in the first column of a row. The top of a target row drops the row

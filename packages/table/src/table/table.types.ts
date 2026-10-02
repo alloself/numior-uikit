@@ -157,6 +157,7 @@ export interface NuiTableProps<T> {
   remote?: boolean | undefined;
   total?: number | undefined;
   pinnedRows?: readonly T[] | undefined;
+  frozenRows?: number | undefined;
   rowDrag?: boolean | undefined;
   nestDelay?: number | undefined;
   dragLabel?: ((row: T) => string) | undefined;
@@ -612,6 +613,8 @@ export interface TableBodyRow {
   readonly part: TableBodyPart;
   readonly revision: number;
   readonly sized: Readonly<Record<string, string>> | undefined;
+  readonly frozen: number | undefined;
+  readonly edge: boolean;
   readonly level: number | undefined;
   readonly treeLevel: number;
   readonly group: TableGroupRow | undefined;
@@ -664,6 +667,8 @@ export interface NuiTableRowProps {
   sized?: Readonly<Record<string, string>> | undefined;
   sizable?: boolean | undefined;
   sizing?: boolean | undefined;
+  frozen?: number | undefined;
+  edge?: boolean | undefined;
   heads?: Readonly<Record<string, TableHeadState>> | undefined;
 }
 

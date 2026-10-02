@@ -208,13 +208,13 @@ export const leaveMergeBy = (
   move: TableEditorMove,
 ): TableCellPosition => toEdge(index, from, MOVE_SIDES[move]);
 
-export const consecutiveRuns = (positions: readonly number[]): number[][] => {
+export const consecutiveRuns = (positions: readonly number[], edge = 0): number[][] => {
   const runs: number[][] = [];
 
   for (const position of positions) {
     const run = runs.at(-1);
 
-    if (run !== undefined && run.at(-1) === position - 1) {
+    if (run !== undefined && run.at(-1) === position - 1 && position !== edge) {
       run.push(position);
     } else {
       runs.push([position]);

@@ -763,6 +763,22 @@ export class TableDriver<T> {
     return this.row(position)?.classList.contains('nui-table__row--odd') ?? false;
   }
 
+  rowFrozen(position: number): string | undefined {
+    const row = this.row(position);
+
+    return row instanceof HTMLElement && row.classList.contains('nui-table__row--frozen')
+      ? row.style.getPropertyValue('--_top')
+      : undefined;
+  }
+
+  rowEdge(position: number): boolean {
+    return this.row(position)?.classList.contains('nui-table__row--edge') ?? false;
+  }
+
+  get frozenSize(): string {
+    return this.wrapper.find<HTMLElement>('.nui-table').element.style.getPropertyValue('--_frozen');
+  }
+
   async checkRow(position: number): Promise<void> {
     this.selectInput(position)?.click();
     await nextTick();

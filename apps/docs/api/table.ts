@@ -131,6 +131,10 @@ const docs: DocsMap = {
         ru: 'Строки, закреплённые под шапкой: не сортируются, не фильтруются и не режутся на страницы, участвуют в выборе и rowClick; их слоты ячеек получают pinned: true.',
         en: 'Rows pinned under the header: left out of sorting, filters and pages, part of selection and rowClick; their cell slots receive pinned: true.',
       },
+      frozenRows: {
+        ru: 'Число первых строк тела, которые остаются под шапкой при прокрутке. Это строки данных: выделение, правка и копирование работают с ними как с остальными. Нужен height; группы, дерево, детали строк и source закрепление отключают.',
+        en: 'How many first body rows stay under the header while the rest scroll. They are data rows: selection, editing and copying treat them like the others. Needs height; groups, a tree, row details and source turn freezing off.',
+      },
       rowDrag: {
         ru: 'Ручка перетаскивания в первой колонке каждой строки: верхняя часть целевой строки ставит строку перед ней, нижняя — после, удержание над серединой вкладывает её внутрь; событие reorder несёт индексы и обоих родителей, а сама таблица строки не переставляет. Ручки отключены при сортировке, фильтрах, быстром фильтре, группировке, серверном режиме и загрузке.',
         en: 'A drag grip in the first column of every row: the top of a target row drops before it, the bottom after it, and holding over the middle nests inside; the reorder event carries the indices and both parents while the table itself never reorders rows. The grips are disabled under sorting, filters, the quick filter, grouping, remote mode and loading.',

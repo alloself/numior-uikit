@@ -540,6 +540,23 @@ export class TableSection {
     return this.viewport.evaluate((element) => element.scrollTop);
   }
 
+  focusNatively(target: Locator): Promise<void> {
+    return target.evaluate(
+      (element) =>
+        new Promise<void>((resolve) => {
+          if (element instanceof HTMLElement) {
+            element.focus();
+          }
+
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              resolve();
+            });
+          });
+        }),
+    );
+  }
+
   focusedCell(head: number = HEAD_ROWS): Promise<TableCell | null> {
     return this.page.evaluate((headRows) => {
       const cell = document.activeElement;

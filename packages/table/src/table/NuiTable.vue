@@ -134,6 +134,8 @@
                 :spans="spansOf(item)"
                 :ally="allyOf(item)"
                 :sized="item.sized"
+                :frozen="item.frozen"
+                :edge="item.edge"
                 :sizable="sizableOf(item)"
                 :sizing="rowResize.active.value === item.index"
                 @resize="(_, event) => rowResize.start(item.index, event)"
@@ -260,7 +262,7 @@ import {
   watch,
   type VNode,
 } from 'vue';
-import { onLongPress, useElementSize } from '@vueuse/core';
+import { clamp, onLongPress, useElementSize } from '@vueuse/core';
 import { formRulesMessages } from '@numior/forms';
 import {
   createIntent,
@@ -480,6 +482,7 @@ const {
   remote = false,
   total,
   pinnedRows = [],
+  frozenRows = 0,
   rowDrag: rowDragOn = false,
   nestDelay = NEST_DELAY,
   dragLabel,
@@ -737,6 +740,13 @@ const centreWidths = computed(() => layout.value.centre.map((column) => column.w
 const footRows = computed(() => (totals.enabled.value ? 1 : 0));
 
 const hierarchical = computed(() => treeOn.value || detailOn.value || grouping.value.length > 0);
+
+const frozenCount = computed(() =>
+  windowed.value && !hierarchical.value && !loadingNow.value && source === undefined
+    ? clamp(Math.floor(frozenRows) || 0, 0, visibleRows.value)
+    : 0,
+);
+
 const gridRole = computed(() => (hierarchical.value ? 'treegrid' : 'grid'));
 
 const detailSpots = computed<readonly TableDetailSpot[]>((previous) => {
@@ -780,10 +790,13 @@ const rowWindow = useVirtualList(viewport, {
   overscan: ROW_OVERSCAN,
   initialCount: INITIAL_ROWS,
   pinned: activeRow,
+  frozen: frozenCount,
   maxSize: CANVAS_LIMIT,
   inset: () => rowSize.value * (headRows.value + pinnedCount.value + footRows.value),
   listen: false,
 });
+
+const frozenSize = computed(() => rowWindow.offsetOf(frozenCount.value));
 
 const columnWindow = useVirtualList(viewport, {
   enabled: windowed,
@@ -825,6 +838,7 @@ const rootStyle = computed(() => ({
   '--_row': `${rowSize.value}px`,
   '--_head-rows': String(headRows.value),
   '--_pinned-rows': String(pinnedCount.value),
+  '--_frozen': `${frozenSize.value}px`,
   '--_height': height,
   '--_start': `${layout.value.startWidth}px`,
   '--_end': `${layout.value.endWidth}px`,
@@ -836,7 +850,8 @@ const bodySpan = computed(() =>
   Math.max(
     0,
     rowWindow.viewport.value -
-      rowSize.value * (headRows.value + pinnedCount.value + footRows.value),
+      rowSize.value * (headRows.value + pinnedCount.value + footRows.value) -
+      frozenSize.value,
   ),
 );
 
@@ -844,7 +859,7 @@ const fittingRows = computed(() => Math.ceil(bodySpan.value / rowSize.value));
 
 const pageRows = (body: number, forward: boolean): number =>
   body < 0 || body >= visibleRows.value || typeof rowSizes.itemSize.value === 'number'
-    ? pageRowsOf(rowWindow.viewport.value, rowSize.value)
+    ? pageRowsOf(rowWindow.viewport.value - frozenSize.value, rowSize.value)
     : pageStepOf(
         { span: bodySpan.value, offsetOf: rowWindow.offsetOf, indexAt: rowWindow.indexAt },
         body,
@@ -880,6 +895,7 @@ const rootClass = computed(() => [
     'nui-table--bordered': bordered,
     'nui-table--slack': room.value > layout.value.canvasWidth,
     'nui-table--loading': loadingNow.value,
+    'nui-table--underlay': windowed.value && (pinnedCount.value > 0 || frozenCount.value > 0),
     'nui-table--resizing': resize.active.value !== undefined,
     'nui-table--sizing': rowResize.active.value !== undefined,
     'nui-table--dragging':
@@ -1170,6 +1186,7 @@ const bodyRows = computed((): TableBodyRow[] => {
   }
   const pending = expansion.loading.value;
   const spots = detailSpots.value;
+  const frozen = frozenCount.value;
 
   return rowWindow.items.value.map((item) => {
     const node = engine.value.nodeAt(pageStart.value + item.index);
@@ -1183,6 +1200,8 @@ const bodyRows = computed((): TableBodyRow[] => {
       part: detail ? 'detail' : 'body',
       revision: current,
       sized: sizedOf(node),
+      frozen: item.index < frozen ? rowWindow.offsetOf(item.index) : undefined,
+      edge: item.index === frozen - 1,
       level,
       treeLevel: Math.max(0, (level ?? 1) - 1),
       group: expansion.rowAt(item.index),
@@ -1347,7 +1366,12 @@ const mergeLayout = computed<TableMergeLayout<RangeBox> | undefined>((previous) 
   if (index.size === 0) {
     return undefined;
   }
-  const runs = consecutiveRuns(rowWindow.items.value.map((item) => item.index));
+
+  const runs = consecutiveRuns(
+    rowWindow.items.value.map((item) => item.index),
+    frozenCount.value,
+  );
+
   const found = new Set(runs.flatMap((run) => index.within(run[0] ?? 0, run.at(-1) ?? 0)));
 
   const next = mergeSpans([...found], runs, mergeSlots.value, {

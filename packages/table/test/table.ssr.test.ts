@@ -433,6 +433,26 @@ describe('NuiTable on the server', () => {
     expect(html).toContain('--_over-w:260px');
   });
 
+  it('renders frozen rows with their offsets under the header on the server', async () => {
+    const html = await renderToString(
+      createSSRApp({
+        render: () =>
+          h(NuiTable<Person>, {
+            columns: PEOPLE_COLUMNS,
+            rows: people(100),
+            height: '300px',
+            frozenRows: 2,
+          }),
+      }),
+    );
+
+    expect(html.match(/nui-table__row--frozen/g)).toHaveLength(2);
+    expect(html.match(/nui-table__row--edge/g)).toHaveLength(1);
+    expect(html).toContain('--_frozen:80px');
+    expect(html).toContain('--_top:calc(var(--_head-size) + 40px)');
+    expect(html.match(/aria-rowindex/g)).toHaveLength(31);
+  });
+
   it('renders skeleton rows for a source without asking it for rows on the server', async () => {
     const offsets: number[] = [];
 
