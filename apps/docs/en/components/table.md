@@ -163,10 +163,20 @@ Sorting, filters and the quick search go to the server, and old requests are can
 Without `height` the table pages through the source, one request per page.
 
 The `refresh()` method of the table ref drops the cache, and a failed request arrives as the
-`error` event. CSV export downloads the whole query result in chunks of a thousand rows. Groups and
-trees do not work with a source yet.
+`error` event. CSV export downloads the whole query result in chunks of a thousand rows. Trees do
+not work with a source yet.
 
 <Example name="table/Source" />
+
+With `v-model:groupBy` the server computes the groups: `fetch` receives the `groupBy` keys and the
+`groupPath` of the opened group. While the path is shorter than the keys, return `{ groups }` with
+the value, the row count and the aggregates of each group. At the last level return the rows of
+the group.
+
+Groups start collapsed, and the opened ones live in `v-model:expanded`. The rows of an opened
+group show skeletons while its block is on the way.
+
+<Example name="table/SourceGroups" />
 
 ## Behaviour
 

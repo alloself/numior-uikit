@@ -197,14 +197,30 @@ export interface TableFetchRequest {
   readonly limit: number;
   readonly sort: readonly TableSort[];
   readonly filters: readonly TableFilter[];
+  readonly groupBy: readonly string[];
+  readonly groupPath: readonly unknown[];
   readonly signal: AbortSignal;
 }
 
-export interface TableFetchResult<T> {
+export interface TableSourceGroup {
+  readonly value: unknown;
+  readonly count: number;
+  readonly aggregates?: Readonly<Record<string, unknown>> | undefined;
+}
+
+export interface TableRowsResult<T> {
   readonly rows: readonly T[];
   readonly total?: number | undefined;
   readonly hasMore?: boolean | undefined;
 }
+
+export interface TableGroupsResult {
+  readonly groups: readonly TableSourceGroup[];
+  readonly total?: number | undefined;
+  readonly hasMore?: boolean | undefined;
+}
+
+export type TableFetchResult<T> = TableRowsResult<T> | TableGroupsResult;
 
 export interface TableValuesRequest {
   readonly key: string;

@@ -135,4 +135,56 @@ describe('NuiTable with a source', () => {
     remote.answer();
     expect((await text).split('\r\n')).toHaveLength(30);
   });
+
+  it('groups server rows by a column and loads the rows of a group when it opens', async () => {
+    const remote = new RemoteStaff(90);
+    const grid = mountRemote(remote, { groupBy: ['city'] });
+
+    await grid.settle();
+    expect(remote.paths).toEqual([{ groupBy: ['city'], groupPath: [] }]);
+    remote.answer();
+    await flushPromises();
+    expect(grid.role).toBe('treegrid');
+    expect(grid.rowCount).toBe(5);
+    expect(grid.groupLabel(0)).toBe('Ереван (30)');
+    expect(grid.groupLabel(2)).toBe('Москва (30)');
+    expect(grid.rowExpanded(1)).toBe('false');
+    expect(grid.cellText(0, 3)).toBe('43\u00a0650');
+    expect(grid.cellText(3, 0)).toBe('Итого90 строк');
+    await grid.toggleGroup(1);
+    expect(grid.rowExpanded(1)).toBe('true');
+    expect(grid.rowCount).toBe(35);
+    expect(grid.pendingRows).toBeGreaterThan(0);
+    expect(remote.paths.at(-1)).toEqual({ groupBy: ['city'], groupPath: ['Казань'] });
+    remote.answer();
+    await flushPromises();
+    expect(grid.pendingRows).toBe(0);
+    expect(grid.cellText(2, 1)).toBe('Сотрудник 1');
+    expect(grid.rowLevel(2)).toBe('2');
+    await grid.toggleGroup(1);
+    expect(grid.rowCount).toBe(5);
+    expect(grid.groupLabel(2)).toBe('Москва (30)');
+  });
+
+  it('groups a source from the column menu and asks it again for flat rows without the group', async () => {
+    const remote = new RemoteStaff(90);
+    const grid = mountRemote(remote);
+
+    await grid.settle();
+    remote.answer();
+    await flushPromises();
+    await grid.openColumnMenu(2);
+    await grid.chooseMenu('Группировать по колонке');
+    expect(remote.paths.at(-1)).toEqual({ groupBy: ['city'], groupPath: [] });
+    remote.answer();
+    await flushPromises();
+    expect(grid.groupLabel(1)).toBe('Казань (30)');
+    await grid.openColumnMenu(2);
+    await grid.chooseMenu('Убрать из группировки');
+    expect(remote.paths.at(-1)).toEqual({ groupBy: [], groupPath: [] });
+    remote.answer();
+    await flushPromises();
+    expect(grid.role).toBe('grid');
+    expect(grid.cellText(0, 1)).toBe('Сотрудник 0');
+  });
 });

@@ -345,6 +345,7 @@ import type {
 const ROW_SIZES = { sm: 32, md: 40, lg: 48 } as const;
 const CANVAS_LIMIT = 15_000_000;
 const STILL_FRAME: VirtualFrame = { lead: 0, rest: 0, clampStart: 0, clampEnd: 0 };
+const NO_GROUPS: readonly string[] = [];
 const INITIAL_ROWS = 30;
 const INITIAL_COLUMNS = 12;
 const ROW_OVERSCAN = 6;
@@ -471,6 +472,7 @@ const announcement = ref('');
 const rowsIntent = createIntent<'rows'>();
 const selectOn = computed(() => selectable !== undefined);
 const treeOn = computed(() => getChildren !== undefined && source === undefined);
+const grouping = computed(() => (treeOn.value ? NO_GROUPS : groupBy.value));
 
 const pageWindow = computed(() =>
   paginationProps.value === undefined || remote
@@ -520,11 +522,10 @@ const totals = useTableTotals({
 const currentQuery = (): TableQuery => {
   const list = queryFilters();
   const sorting = sort.value;
-  const grouping = getChildren === undefined && source === undefined ? groupBy.value : [];
 
   return remote
     ? {}
-    : { sort: sorting, filters: list, groupBy: grouping, totals: totals.wanted(list) };
+    : { sort: sorting, filters: list, groupBy: grouping.value, totals: totals.wanted(list) };
 };
 
 const query = useTableQuery({
@@ -598,9 +599,7 @@ const centreWidths = computed(() => layout.value.centre.map((column) => column.w
 
 const footRows = computed(() => (totals.enabled.value ? 1 : 0));
 
-const hierarchical = computed(
-  () => source === undefined && (groupBy.value.length > 0 || getChildren !== undefined),
-);
+const hierarchical = computed(() => treeOn.value || grouping.value.length > 0);
 
 const activeRow = (): number | undefined => {
   const body = active.value.row - pinnedCount.value;
@@ -883,7 +882,7 @@ const menu: TableMenu = useTableMenu({
   hidden,
   widths,
   resetWidth: resize.reset,
-  treeMode: () => getChildren !== undefined || source !== undefined,
+  treeMode: () => treeOn.value,
   messages,
   announce: (text) => {
     announcement.value = text;

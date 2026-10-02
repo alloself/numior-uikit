@@ -464,6 +464,32 @@ test.describe('table', () => {
     await expect(table.remote.locator('.nui-table__body [aria-busy="true"]')).toHaveCount(0);
   });
 
+  test('groups a server source by a column and loads a group when it opens', async ({ page }) => {
+    const playground = new PlaygroundPage(page);
+    const { table } = playground;
+    await playground.open();
+    await table.remoteToggle.click();
+    await table.remote.scrollIntoViewIfNeeded();
+    await expect(table.remoteCell(0, 0)).toHaveText('1');
+    await table.remoteGroupBy('По городу');
+    await expect(table.remoteGrid).toHaveAttribute('role', 'treegrid');
+    await expect(table.remoteGrid).toHaveAttribute('aria-rowcount', '9');
+    await expect(table.remoteGroupLabel(0)).toHaveText(/^Алматы/);
+    await expect(table.remoteRow(0)).toHaveAttribute('aria-expanded', 'false');
+    await expect(table.remoteCell(0, 3)).not.toHaveText('');
+
+    const before = await table.remoteRequests();
+
+    await table.remoteGroupLabel(0).click();
+    await expect(table.remoteRow(0)).toHaveAttribute('aria-expanded', 'true');
+    await expect(table.remoteRow(1)).toHaveAttribute('aria-level', '2');
+    await expect(table.remoteCell(1, 2)).toHaveText('Алматы');
+    expect(await table.remoteRequests()).toBe(before + 1);
+    await table.remoteGroupLabel(0).click();
+    await expect(table.remoteGrid).toHaveAttribute('aria-rowcount', '9');
+    await expect(table.remoteGroupLabel(1)).toHaveText(/^Белград/);
+  });
+
   test('opens a cell editor with a double tap on a phone and commits it on a tap elsewhere', async ({
     page,
     isMobile,

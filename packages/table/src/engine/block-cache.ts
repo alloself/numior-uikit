@@ -1,41 +1,41 @@
 export interface BlockCache<T> {
-  get(block: number): readonly T[] | undefined;
-  has(block: number): boolean;
-  set(block: number, rows: readonly T[]): void;
-  touch(block: number): void;
-  keys(): number[];
+  get(key: string): readonly T[] | undefined;
+  has(key: string): boolean;
+  set(key: string, rows: readonly T[]): void;
+  touch(key: string): void;
+  entries(): Array<[string, readonly T[]]>;
   clear(): void;
 }
 
 export const createBlockCache = <T>(limit: number): BlockCache<T> => {
-  const blocks = new Map<number, readonly T[]>();
+  const blocks = new Map<string, readonly T[]>();
 
   const trim = (): void => {
-    for (const block of blocks.keys()) {
+    for (const key of blocks.keys()) {
       if (blocks.size <= limit) {
         return;
       }
-      blocks.delete(block);
+      blocks.delete(key);
     }
   };
 
   return {
-    get: (block) => blocks.get(block),
-    has: (block) => blocks.has(block),
-    set: (block, rows) => {
-      blocks.delete(block);
-      blocks.set(block, rows);
+    get: (key) => blocks.get(key),
+    has: (key) => blocks.has(key),
+    set: (key, rows) => {
+      blocks.delete(key);
+      blocks.set(key, rows);
       trim();
     },
-    touch: (block) => {
-      const rows = blocks.get(block);
+    touch: (key) => {
+      const rows = blocks.get(key);
 
       if (rows !== undefined) {
-        blocks.delete(block);
-        blocks.set(block, rows);
+        blocks.delete(key);
+        blocks.set(key, rows);
       }
     },
-    keys: () => [...blocks.keys()].toSorted((a, b) => a - b),
+    entries: () => [...blocks],
     clear: () => {
       blocks.clear();
     },

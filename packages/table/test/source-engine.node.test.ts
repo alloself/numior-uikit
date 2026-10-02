@@ -143,3 +143,133 @@ describe('createSourceEngine', () => {
     expect(harness.changes).toBeGreaterThan(0);
   });
 });
+
+describe('createSourceEngine with groups', () => {
+  it('asks for the groups of the first level and holds one row per group', async () => {
+    const harness = new SourceHarness({ total: 90 });
+    const run = harness.engine.run({ groupBy: ['team'] });
+
+    harness.engine.ensure(0, 30);
+    expect(harness.paths).toEqual([{ offset: 0, groupBy: ['team'], groupPath: [] }]);
+    await harness.answerLevel(0);
+    await expect(run).resolves.toEqual({ kind: 'done', count: 3, rows: 90 });
+    expect(harness.labels(0, 4)).toEqual(['team=0 (30)', 'team=1 (30)', 'team=2 (30)', 'none']);
+
+    expect(harness.engine.nodeAt(1)).toEqual({
+      kind: 'group',
+      id: '[1]',
+      key: 'team',
+      value: 1,
+      path: [1],
+      level: 0,
+      count: 30,
+      expanded: false,
+      aggregates: { id: 30 },
+    });
+  });
+
+  it('opens a group over skeleton rows of its count and loads them by the group path', async () => {
+    const harness = new SourceHarness({ total: 90 });
+
+    void harness.engine.run({ groupBy: ['team'] });
+    harness.engine.ensure(0, 30);
+    await harness.answerLevel(0);
+    harness.engine.setToggled(['[1]']);
+    expect(harness.engine.count()).toBe(33);
+    expect(harness.labels(0, 4)).toEqual(['team=0 (30)', 'team=1 (30)', 'pending', 'pending']);
+    expect(harness.engine.nodeAt(1)).toMatchObject({ expanded: true });
+    expect(harness.paths.at(-1)).toEqual({ offset: 0, groupBy: ['team'], groupPath: [1] });
+    await harness.answerLevel(1);
+    expect(harness.labels(2, 4)).toEqual(['row 1', 'row 4']);
+    expect(harness.engine.nodeAt(2)).toMatchObject({ kind: 'row', id: 1, level: 1 });
+    expect(harness.labels(31, 33)).toEqual(['row 88', 'team=2 (30)']);
+
+    expect(Array.from(harness.engine.visibleIndices())).toEqual(
+      Array.from({ length: 30 }, (_, offset) => 2 + offset),
+    );
+  });
+
+  it('closes a group and opens it again from the cache without a request', async () => {
+    const harness = new SourceHarness({ total: 90 });
+
+    void harness.engine.run({ groupBy: ['team'] });
+    harness.engine.ensure(0, 30);
+    await harness.answerLevel(0);
+    harness.engine.setToggled(['[0]']);
+    await harness.answerLevel(1);
+    harness.engine.setToggled([]);
+    expect(harness.engine.count()).toBe(3);
+    expect(harness.labels(0, 3)).toEqual(['team=0 (30)', 'team=1 (30)', 'team=2 (30)']);
+    harness.engine.setToggled(['[0]']);
+    expect(harness.paths).toHaveLength(2);
+    expect(harness.labels(0, 3)).toEqual(['team=0 (30)', 'row 0', 'row 3']);
+  });
+
+  it('walks nested levels: one placeholder until the inner groups arrive', async () => {
+    const harness = new SourceHarness({ total: 90 });
+
+    void harness.engine.run({ groupBy: ['team', 'parity'] });
+    harness.engine.ensure(0, 30);
+    await harness.answerLevel(0);
+    harness.engine.setToggled(['[2]']);
+    expect(harness.engine.count()).toBe(4);
+    expect(harness.labels(2, 4)).toEqual(['team=2 (30)', 'pending']);
+
+    expect(harness.paths.at(-1)).toEqual({
+      offset: 0,
+      groupBy: ['team', 'parity'],
+      groupPath: [2],
+    });
+
+    await harness.answerLevel(1);
+    expect(harness.labels(2, 5)).toEqual(['team=2 (30)', 'parity=0 (15)', 'parity=1 (15)']);
+    expect(harness.engine.nodeAt(3)).toMatchObject({ id: '[2,0]', key: 'parity', level: 1 });
+    harness.engine.setToggled(['[2]', '[2,1]']);
+    expect(harness.engine.count()).toBe(20);
+    expect(harness.paths.at(-1)?.groupPath).toEqual([2, 1]);
+    await harness.answerLevel(2);
+    expect(harness.labels(4, 7)).toEqual(['parity=1 (15)', 'row 5', 'row 11']);
+    expect(harness.engine.nodeAt(5)).toMatchObject({ level: 2 });
+  });
+
+  it('opens the expanded groups again after the query changes', async () => {
+    const harness = new SourceHarness({ total: 90 });
+
+    void harness.engine.run({ groupBy: ['team'] });
+    harness.engine.ensure(0, 30);
+    await harness.answerLevel(0);
+    harness.engine.setToggled(['[1]']);
+    await harness.answerLevel(1);
+    void harness.engine.run({ groupBy: ['team'], sort: [{ key: 'id', direction: 'desc' }] });
+    expect(harness.engine.count()).toBe(3);
+    expect(harness.labels(0, 2)).toEqual(['pending', 'pending']);
+    await harness.answerLevel(2);
+    expect(harness.engine.count()).toBe(33);
+    expect(harness.paths.at(-1)?.groupPath).toEqual([1]);
+    void harness.engine.run({ sort: [{ key: 'id', direction: 'desc' }] });
+    expect(harness.paths.at(-1)).toEqual({ offset: 0, groupBy: [], groupPath: [] });
+  });
+
+  it('ends a group at a short block when its count promised more rows', async () => {
+    const harness = new SourceHarness({ total: 90 });
+
+    void harness.engine.run({ groupBy: ['team'] });
+    harness.engine.ensure(0, 30);
+    await harness.answerLevel(0);
+    harness.engine.setToggled(['[0]']);
+    expect(harness.engine.count()).toBe(33);
+    await harness.answerLevel(1, 60);
+    expect(harness.engine.count()).toBe(23);
+    expect(harness.labels(20, 23)).toEqual(['row 57', 'team=1 (30)', 'team=2 (30)']);
+  });
+
+  it('reports a source that answers a group level with rows', async () => {
+    const harness = new SourceHarness({ total: 90 });
+
+    void harness.engine.run({ groupBy: ['team'] });
+    harness.engine.ensure(0, 30);
+    await harness.answer(0);
+    expect(harness.errors).toHaveLength(1);
+    expect(harness.engine.pendingAt(0)).toBe(true);
+  });
+});

@@ -4,6 +4,8 @@ import {
   type TableEngine,
   type TableFetchRequest,
   type TableFetchResult,
+  type TableRowsResult,
+  type TableSourceGroup,
 } from '../../src/engine';
 
 export interface Item {
@@ -24,6 +26,31 @@ interface PendingFetch {
   readonly resolve: (result: TableFetchResult<Item>) => void;
   readonly reject: (error: unknown) => void;
 }
+
+const GROUPERS: Readonly<Record<string, (id: number) => number>> = {
+  team: (id) => id % 3,
+  parity: (id) => id % 2,
+};
+
+const inPath = (id: number, request: TableFetchRequest): boolean =>
+  request.groupPath.every((value, depth) => {
+    const key = request.groupBy[depth];
+
+    return key !== undefined && GROUPERS[key]?.(id) === value;
+  });
+
+const groupsOf = (ids: readonly number[], key: string): TableSourceGroup[] => {
+  const counts = new Map<number, number>();
+
+  for (const id of ids) {
+    const value = GROUPERS[key]?.(id) ?? 0;
+
+    counts.set(value, (counts.get(value) ?? 0) + 1);
+  }
+  return [...counts]
+    .toSorted((a, b) => a[0] - b[0])
+    .map(([value, count]) => ({ value, count, aggregates: { id: count } }));
+};
 
 const flush = (): Promise<void> =>
   new Promise((resolve) => {
@@ -73,6 +100,28 @@ export class SourceHarness {
     }));
   }
 
+  get paths(): Array<Pick<TableFetchRequest, 'offset' | 'groupBy' | 'groupPath'>> {
+    return this.pending.map(({ request }) => ({
+      offset: request.offset,
+      groupBy: request.groupBy,
+      groupPath: request.groupPath,
+    }));
+  }
+
+  labels(from: number, to: number): string[] {
+    return Array.from({ length: to - from }, (_, offset) => {
+      const position = from + offset;
+      const node = this.engine.nodeAt(position);
+
+      if (node === undefined) {
+        return this.engine.pendingAt(position) ? 'pending' : 'none';
+      }
+      return node.kind === 'group'
+        ? `${node.key}=${String(node.value)} (${node.count})`
+        : `row ${node.row.id}`;
+    });
+  }
+
   aborted(index: number): boolean {
     return this.pending[index]?.request.signal.aborted ?? false;
   }
@@ -81,7 +130,7 @@ export class SourceHarness {
     return Array.from({ length: to - from }, (_, offset) => this.engine.rowAt(from + offset)?.id);
   }
 
-  async answer(index: number, overrides: Partial<TableFetchResult<Item>> = {}): Promise<void> {
+  async answer(index: number, overrides: Partial<TableRowsResult<Item>> = {}): Promise<void> {
     const call = this.pending[index];
 
     if (call !== undefined) {
@@ -95,6 +144,29 @@ export class SourceHarness {
         total: this.total,
         ...overrides,
       });
+    }
+    await flush();
+  }
+
+  async answerLevel(index: number, shown = this.total ?? 0): Promise<void> {
+    const call = this.pending[index];
+
+    if (call !== undefined) {
+      const { request } = call;
+      const { offset, limit } = request;
+
+      const ids = Array.from({ length: shown }, (_, id) => id).filter((id) => inPath(id, request));
+
+      const key = request.groupBy[request.groupPath.length];
+
+      call.resolve(
+        key === undefined
+          ? {
+              rows: ids.slice(offset, offset + limit).map((id) => ({ id })),
+              total: shown === this.total ? ids.length : undefined,
+            }
+          : { groups: groupsOf(ids, key).slice(offset, offset + limit) },
+      );
     }
     await flush();
   }

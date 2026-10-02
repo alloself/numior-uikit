@@ -175,6 +175,14 @@
             <NuiIcon alias="search" />
           </template>
         </NuiInput>
+        <NuiSelect
+          v-model="remoteGrouping"
+          :options="REMOTE_GROUPINGS"
+          size="sm"
+          class="table-grouping"
+          aria-label="Группировка на сервере"
+          data-testid="table-remote-group"
+        />
         <NuiButton
           size="sm"
           variant="outline"
@@ -188,6 +196,8 @@
       <NuiTable
         ref="remote-table"
         v-model:quick="remoteQuick"
+        v-model:group-by="remoteGroupBy"
+        v-model:expanded="remoteExpanded"
         :columns="REMOTE_COLUMNS"
         :source="remoteSource"
         :get-key="(row) => row.id"
@@ -235,6 +245,7 @@ import {
   type NuiTableColumn,
   type TableFilter,
   type TableSource,
+  type TableSourceGroup,
 } from '@numior/table';
 
 type OrderStatus = 'new' | 'paid' | 'shipped' | 'returned';
@@ -697,10 +708,40 @@ const REMOTE_COLUMNS: NuiTableColumn<RemoteOrder>[] = [
   },
 ];
 
+const REMOTE_GROUP_KEYS: Readonly<Record<string, readonly string[]>> = {
+  none: [],
+  city: ['city'],
+  nested: ['city', 'customer'],
+};
+
+const REMOTE_GROUPINGS: NuiOption<string>[] = [
+  { value: 'none', label: 'Без групп' },
+  { value: 'city', label: 'По городу' },
+  { value: 'nested', label: 'По городу и клиенту' },
+];
+
+const REMOTE_GROUP_VALUES: Readonly<Record<string, (row: RemoteOrder) => string>> = {
+  city: (row) => row.city,
+  customer: (row) => row.customer,
+};
+
 const remoteShown = ref(false);
 const remoteQuick = ref('');
 const remoteRequests = ref(0);
 const lastRemote = ref<string | null>(null);
+const remoteGroupBy = ref<readonly string[]>([]);
+const remoteExpanded = ref<readonly TableNodeId[]>([]);
+
+const remoteGrouping = computed({
+  get: () =>
+    Object.entries(REMOTE_GROUP_KEYS).find(([, keys]) =>
+      sameKeys(keys, remoteGroupBy.value),
+    )?.[0] ?? 'none',
+  set: (key: string) => {
+    remoteGroupBy.value = REMOTE_GROUP_KEYS[key] ?? [];
+    remoteExpanded.value = [];
+  },
+});
 
 const isQuick = (filter: TableFilter): filter is Extract<TableFilter, { kind: 'quick' }> =>
   filter.kind === 'quick';
@@ -739,13 +780,55 @@ const pause = (signal: AbortSignal): Promise<void> =>
     );
   });
 
+const remoteValueOf = (row: RemoteOrder, key: string | undefined): string =>
+  REMOTE_GROUP_VALUES[key ?? '']?.(row) ?? '';
+
+const remoteInside = (
+  rows: readonly RemoteOrder[],
+  keys: readonly string[],
+  path: readonly unknown[],
+): readonly RemoteOrder[] =>
+  path.length === 0
+    ? rows
+    : rows.filter((row) => path.every((value, depth) => remoteValueOf(row, keys[depth]) === value));
+
+const remoteGroups = (rows: readonly RemoteOrder[], key: string): TableSourceGroup[] => {
+  const groups = new Map<string, { count: number; amount: number }>();
+
+  for (const row of rows) {
+    const value = remoteValueOf(row, key);
+    const group = groups.get(value) ?? { count: 0, amount: 0 };
+
+    groups.set(value, { count: group.count + 1, amount: group.amount + row.amount });
+  }
+  return [...groups]
+    .toSorted((a, b) => a[0].localeCompare(b[0], 'ru'))
+    .map(([value, { count, amount }]) => ({ value, count, aggregates: { amount } }));
+};
+
 const remoteSource: TableSource<RemoteOrder> = {
-  fetch: async ({ offset, limit, sort: sorting, filters: conditions, signal }) => {
+  fetch: async ({
+    offset,
+    limit,
+    sort: sorting,
+    filters: conditions,
+    groupBy: keys,
+    groupPath,
+    signal,
+  }) => {
     remoteRequests.value += 1;
-    lastRemote.value = `${offset}+${limit}`;
+    lastRemote.value = `${groupPath.join('/')}:${offset}+${limit}`;
     await pause(signal);
 
-    const found = remoteSorted(remoteFound(conditions), sorting);
+    const inside = remoteInside(remoteFound(conditions), keys, groupPath);
+    const level = keys[groupPath.length];
+
+    if (level !== undefined) {
+      const groups = remoteGroups(inside, level);
+
+      return { groups: groups.slice(offset, offset + limit), total: groups.length };
+    }
+    const found = remoteSorted(inside, sorting);
 
     return { rows: found.slice(offset, offset + limit), total: found.length };
   },

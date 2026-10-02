@@ -42,6 +42,7 @@ export class TableSection {
   readonly tree: Locator;
   readonly remote: Locator;
   readonly remoteViewport: Locator;
+  readonly remoteGrid: Locator;
   readonly remoteQuick: Locator;
   readonly remoteOutput: Locator;
   readonly remoteToggle: Locator;
@@ -74,15 +75,31 @@ export class TableSection {
     this.treeSkeletons = this.tree.locator('.nui-table__row--skeleton');
     this.remote = page.getByTestId('table-remote');
     this.remoteViewport = this.remote.locator('.nui-table__viewport');
+    this.remoteGrid = this.remote.locator('.nui-table__grid');
     this.remoteQuick = page.getByTestId('table-remote-quick');
     this.remoteOutput = page.getByTestId('table-remote-output');
     this.remoteToggle = page.getByTestId('table-remote-toggle');
   }
 
+  remoteRow(position: number): Locator {
+    return this.remoteViewport.locator(`[role="row"][aria-rowindex="${position + 2}"]`);
+  }
+
   remoteCell(position: number, col: number): Locator {
-    return this.remoteViewport.locator(
-      `[role="row"][aria-rowindex="${position + 2}"] > [aria-colindex="${col + 1}"]`,
-    );
+    return this.remoteRow(position).locator(`> [aria-colindex="${col + 1}"]`);
+  }
+
+  remoteGroupLabel(position: number): Locator {
+    return this.remoteRow(position).locator('.nui-table__group');
+  }
+
+  async remoteGroupBy(label: string): Promise<void> {
+    await this.page.getByTestId('table-remote-group').click();
+
+    await this.page
+      .locator('.nui-select__listbox')
+      .getByRole('option', { name: label, exact: true })
+      .click();
   }
 
   remoteHeader(col: number): Locator {

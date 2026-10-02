@@ -1,13 +1,26 @@
-import { createBlockCache } from './block-cache';
+import { createBlockCache, type BlockCache } from './block-cache';
+import {
+  blockKeyOf,
+  createSourceLayouts,
+  createSourceStore,
+  storeOfBlockKey,
+  type SourceHolds,
+  type SourceSpan,
+  type SourceSpot,
+  type SourceStore,
+} from './source-tree';
 import type {
   TableEngine,
   TableFetchResult,
   TableFilter,
+  TableGroupsResult,
   TableNode,
+  TableNodeId,
   TableQuery,
   TableRunResult,
   TableSort,
   TableSourceEngineOptions,
+  TableSourceGroup,
 } from './engine.types';
 
 interface SourceRange {
@@ -15,18 +28,37 @@ interface SourceRange {
   readonly to: number;
 }
 
+interface SourceRun<T> {
+  readonly store: SourceStore<T>;
+  readonly first: number;
+  readonly last: number;
+}
+
+interface SourceAnswer {
+  readonly total?: number | undefined;
+  readonly hasMore?: boolean | undefined;
+}
+
 const CACHE_BLOCKS = 50;
 const CONCURRENCY = 2;
 const COLLECT_CHUNK = 1000;
 const EMPTY_SORT: readonly TableSort[] = [];
 const EMPTY_FILTERS: readonly TableFilter[] = [];
+const EMPTY_KEYS: readonly string[] = [];
+const EMPTY_PATH: readonly unknown[] = [];
+const NO_AGGREGATES: Readonly<Record<string, unknown>> = {};
 const CANCELLED: TableRunResult = { kind: 'cancelled' };
 
+const groupsKeyOf = (query: TableQuery): string => JSON.stringify(query.groupBy ?? EMPTY_KEYS);
+
 const keyOfQuery = (query: TableQuery): string =>
-  JSON.stringify([query.sort ?? EMPTY_SORT, query.filters ?? EMPTY_FILTERS]);
+  JSON.stringify([query.sort ?? EMPTY_SORT, query.filters ?? EMPTY_FILTERS, groupsKeyOf(query)]);
 
 const isAbort = (error: unknown): boolean =>
   typeof error === 'object' && error !== null && 'name' in error && error.name === 'AbortError';
+
+const isGroups = <T>(result: TableFetchResult<T>): result is TableGroupsResult =>
+  'groups' in result;
 
 const runsOf = (blocks: readonly number[]): Array<[number, number]> =>
   blocks.reduce<Array<[number, number]>>((runs, block) => {
@@ -40,20 +72,22 @@ const runsOf = (blocks: readonly number[]): Array<[number, number]> =>
     return runs;
   }, []);
 
+const rowsIn = (groups: readonly TableSourceGroup[]): number =>
+  groups.reduce((sum, group) => sum + group.count, 0);
+
 export const createSourceEngine = <T>(options: TableSourceEngineOptions<T>): TableEngine<T> => {
-  const blocks = createBlockCache<T>(options.cacheBlocks ?? CACHE_BLOCKS);
+  const rowBlocks = createBlockCache<T>(options.cacheBlocks ?? CACHE_BLOCKS);
+  const groupBlocks = createBlockCache<TableSourceGroup>(options.cacheBlocks ?? CACHE_BLOCKS);
   const concurrency = options.concurrency ?? CONCURRENCY;
-  const inflight = new Set<number>();
+  const inflight = new Set<string>();
   const listeners = new Set<() => void>();
+  const stores = new Map<string, SourceStore<T>>();
+  let expanded: ReadonlySet<TableNodeId> = new Set();
   let query: TableQuery = {};
   let queryKey = keyOfQuery(query);
   let version = 0;
   let controller = new AbortController();
   let size = Math.max(1, options.blockSize());
-  let total: number | undefined;
-  let more = true;
-  let loadedEnd = 0;
-  let answered = false;
   let failed = false;
   let running = 0;
   let range: SourceRange = { from: 0, to: 0 };
@@ -62,10 +96,51 @@ export const createSourceEngine = <T>(options: TableSourceEngineOptions<T>): Tab
   let totalsController = new AbortController();
   let sums: Readonly<Record<string, unknown>> = {};
 
-  const count = (): number => total ?? loadedEnd + (more ? size : 0);
+  const groupKeys = (): readonly string[] => query.groupBy ?? EMPTY_KEYS;
 
-  const rowAt = (position: number): T | undefined =>
-    position < 0 ? undefined : blocks.get(Math.floor(position / size))?.[position % size];
+  const holdsAt = (depth: number): SourceHolds => (depth < groupKeys().length ? 'groups' : 'rows');
+
+  const rootStore = (total: number | undefined): SourceStore<T> => {
+    const store = createSourceStore<T>({
+      key: '',
+      level: 0,
+      path: EMPTY_PATH,
+      holds: holdsAt(0),
+      known: undefined,
+    });
+
+    store.total = total;
+    return store;
+  };
+
+  let root = rootStore(undefined);
+
+  const ownCount = (store: SourceStore<T>): number => {
+    if (store.total !== undefined) {
+      return store.total;
+    }
+    if (store !== root && !store.answered) {
+      return 1;
+    }
+    return store.loadedEnd + (store.more ? size : 0);
+  };
+
+  const layouts = createSourceLayouts<T>(ownCount);
+  const count = (): number => layouts.sizeOf(root);
+
+  const entryIn = <V>(blocks: BlockCache<V>, store: SourceStore<T>, index: number): V | undefined =>
+    blocks.get(blockKeyOf(store.key, Math.floor(index / size)))?.[index % size];
+
+  const rowIn = (spot: SourceSpot<T>): T | undefined =>
+    spot.store.holds === 'rows' ? entryIn(rowBlocks, spot.store, spot.index) : undefined;
+
+  const groupIn = (spot: SourceSpot<T>): TableSourceGroup | undefined =>
+    spot.store.holds === 'groups' ? entryIn(groupBlocks, spot.store, spot.index) : undefined;
+
+  const rowAt = (position: number): T | undefined => {
+    const spot = layouts.locate(root, position);
+    return spot === undefined ? undefined : rowIn(spot);
+  };
 
   const notify = (): void => {
     for (const listener of listeners) {
@@ -73,84 +148,188 @@ export const createSourceEngine = <T>(options: TableSourceEngineOptions<T>): Tab
     }
   };
 
-  const reset = (): void => {
+  const reset = (keepTotal: boolean): void => {
     version += 1;
     controller.abort();
     controller = new AbortController();
-    blocks.clear();
+    rowBlocks.clear();
+    groupBlocks.clear();
     inflight.clear();
+    stores.clear();
     running = 0;
-    answered = false;
     failed = false;
-    loadedEnd = 0;
-    more = true;
+    root = rootStore(keepTotal ? root.total : undefined);
+    layouts.invalidate();
   };
 
-  const beyond = (block: number): boolean => {
-    const start = block * size;
-    return total === undefined ? !more && start >= loadedEnd : start >= total;
+  const groupIdOf = (store: SourceStore<T>, group: TableSourceGroup): string =>
+    JSON.stringify([...store.path, group.value]);
+
+  const childOf = (store: SourceStore<T>, group: TableSourceGroup): SourceStore<T> => {
+    const path = [...store.path, group.value];
+    const key = JSON.stringify(path);
+    const holds = holdsAt(path.length);
+
+    const child =
+      stores.get(key) ??
+      createSourceStore<T>({
+        key,
+        level: store.level + 1,
+        path,
+        holds,
+        known: holds === 'rows' ? group.count : undefined,
+      });
+
+    stores.set(key, child);
+    return child;
   };
 
-  const absorb = (offset: number, limit: number, result: TableFetchResult<T>): void => {
-    const end = offset + result.rows.length;
+  const adopt = (
+    store: SourceStore<T>,
+    offset: number,
+    groups: readonly TableSourceGroup[],
+  ): void => {
+    groups.forEach((group, at) => {
+      const id = groupIdOf(store, group);
 
-    for (let start = 0; start < result.rows.length; start += size) {
-      blocks.set(Math.floor((offset + start) / size), result.rows.slice(start, start + size));
+      if (expanded.has(id) && !store.open.has(offset + at)) {
+        store.open.set(offset + at, { id, store: childOf(store, group) });
+      }
+    });
+  };
+
+  const reopen = (): void => {
+    for (const store of [root, ...stores.values()]) {
+      for (const [index, branch] of store.open) {
+        if (!expanded.has(branch.id)) {
+          store.open.delete(index);
+        }
+      }
     }
-    if (end >= loadedEnd) {
-      more = result.hasMore ?? result.rows.length >= limit;
+    for (const [key, groups] of groupBlocks.entries()) {
+      const at = storeOfBlockKey(key);
+      const store = at.store === '' ? root : stores.get(at.store);
+
+      if (store !== undefined) {
+        adopt(store, at.block * size, groups);
+      }
     }
-    loadedEnd = Math.max(loadedEnd, end);
-    total = result.total ?? (more ? undefined : loadedEnd);
-    answered = true;
+    layouts.invalidate();
   };
 
-  const release = (first: number, last: number): void => {
-    for (let block = first; block <= last; block += 1) {
-      inflight.delete(block);
+  const keep = <V>(
+    blocks: BlockCache<V>,
+    store: SourceStore<T>,
+    offset: number,
+    entries: readonly V[],
+  ): void => {
+    for (let start = 0; start < entries.length; start += size) {
+      blocks.set(
+        blockKeyOf(store.key, Math.floor((offset + start) / size)),
+        entries.slice(start, start + size),
+      );
     }
-    running -= 1;
   };
 
-  const request = async (own: number, first: number, last: number): Promise<void> => {
-    const offset = first * size;
-    const limit = (last - first + 1) * size;
+  const settle = (
+    store: SourceStore<T>,
+    offset: number,
+    loaded: number,
+    limit: number,
+    answer: SourceAnswer,
+  ): void => {
+    const end = offset + loaded;
 
+    if (end >= store.loadedEnd) {
+      store.more =
+        answer.hasMore ?? (loaded >= limit && (store.known === undefined || end < store.known));
+    }
+    store.loadedEnd = Math.max(store.loadedEnd, end);
+    store.total = answer.total ?? (store.more ? store.known : store.loadedEnd);
+    store.answered = true;
+    layouts.invalidate();
+  };
+
+  const absorb = (
+    store: SourceStore<T>,
+    offset: number,
+    limit: number,
+    result: TableFetchResult<T>,
+  ): void => {
+    if (isGroups(result)) {
+      keep(groupBlocks, store, offset, result.groups);
+      adopt(store, offset, result.groups);
+      settle(store, offset, result.groups.length, limit, result);
+    } else {
+      keep(rowBlocks, store, offset, result.rows);
+      settle(store, offset, result.rows.length, limit, result);
+    }
+  };
+
+  const fits = (store: SourceStore<T>, result: TableFetchResult<T>): boolean =>
+    isGroups(result) === (store.holds === 'groups');
+
+  const release = (run: SourceRun<T>): void => {
+    const held = inflight.delete(blockKeyOf(run.store.key, run.first));
+
+    for (let block = run.first + 1; block <= run.last; block += 1) {
+      inflight.delete(blockKeyOf(run.store.key, block));
+    }
+    if (held) {
+      running -= 1;
+    }
+  };
+
+  const fail = (error: unknown): void => {
+    failed = true;
+    notify();
+
+    if (!isAbort(error)) {
+      options.onError(error);
+    }
+  };
+
+  const land = (run: SourceRun<T>, result: TableFetchResult<T>): void => {
+    if (!fits(run.store, result)) {
+      fail(new Error(`Table source answered a level of ${run.store.holds} with the other kind`));
+      return;
+    }
+    absorb(run.store, run.first * size, (run.last - run.first + 1) * size, result);
+    notify();
+    options.onChange();
+    ensure(range.from, range.to);
+  };
+
+  const request = async (own: number, run: SourceRun<T>): Promise<void> => {
     try {
       const result = await options.source.fetch({
-        offset,
-        limit,
+        offset: run.first * size,
+        limit: (run.last - run.first + 1) * size,
         sort: query.sort ?? EMPTY_SORT,
         filters: query.filters ?? EMPTY_FILTERS,
+        groupBy: groupKeys(),
+        groupPath: run.store.path,
         signal: controller.signal,
       });
 
       if (own === version) {
-        release(first, last);
-        absorb(offset, limit, result);
-        notify();
-        options.onChange();
-        ensure(range.from, range.to);
+        release(run);
+        land(run, result);
       }
     } catch (error) {
       if (own === version) {
-        release(first, last);
-        failed = true;
-        notify();
-
-        if (!isAbort(error)) {
-          options.onError(error);
-        }
+        release(run);
+        fail(error);
       }
     }
   };
 
-  const load = (first: number, last: number): void => {
-    for (let block = first; block <= last; block += 1) {
-      inflight.add(block);
+  const load = (run: SourceRun<T>): void => {
+    for (let block = run.first; block <= run.last; block += 1) {
+      inflight.add(blockKeyOf(run.store.key, block));
     }
     running += 1;
-    void request(version, first, last);
+    void request(version, run);
   };
 
   const resize = (): void => {
@@ -158,10 +337,57 @@ export const createSourceEngine = <T>(options: TableSourceEngineOptions<T>): Tab
 
     if (next !== size) {
       size = next;
-      reset();
+      reset(false);
       notify();
       options.onChange();
     }
+  };
+
+  const beyond = (store: SourceStore<T>, block: number): boolean => {
+    const start = block * size;
+
+    return store.total === undefined
+      ? !store.more && start >= store.loadedEnd
+      : start >= store.total;
+  };
+
+  const missingIn = (span: SourceSpan<T>): SourceRun<T>[] => {
+    const { store } = span;
+    const blocks = store.holds === 'rows' ? rowBlocks : groupBlocks;
+    const missing: number[] = [];
+
+    for (
+      let block = Math.floor(span.from / size);
+      block <= Math.floor((span.to - 1) / size);
+      block += 1
+    ) {
+      const key = blockKeyOf(store.key, block);
+
+      if (blocks.has(key)) {
+        blocks.touch(key);
+      } else if (!inflight.has(key) && !beyond(store, block)) {
+        missing.push(block);
+      }
+    }
+    return runsOf(missing).map(([first, last]) => ({ store, first, last }));
+  };
+
+  const spansOf = (from: number, to: number): SourceSpan<T>[] => {
+    const known = layouts.sizeOf(root);
+    const inner = ownCount(root);
+    const found = layouts.spans(root, from, Math.min(to, known));
+
+    return to > known && root.total === undefined
+      ? [
+          ...found,
+          {
+            store: root,
+            from: Math.max(from, known) - (known - inner),
+            to: to - (known - inner),
+            base: known - inner,
+          },
+        ]
+      : found;
   };
 
   const ensure = (from: number, to: number): void => {
@@ -169,22 +395,13 @@ export const createSourceEngine = <T>(options: TableSourceEngineOptions<T>): Tab
     wanted = true;
     resize();
 
-    const first = Math.floor(Math.max(0, from) / size);
-    const last = Math.floor(Math.max(0, from, to - 1) / size);
-    const missing: number[] = [];
+    const start = Math.max(0, from);
 
-    for (let block = first; block <= last; block += 1) {
-      if (blocks.has(block)) {
-        blocks.touch(block);
-      } else if (!inflight.has(block) && !beyond(block)) {
-        missing.push(block);
-      }
-    }
-    for (const [start, end] of runsOf(missing)) {
+    for (const run of spansOf(start, Math.max(start + 1, to)).flatMap(missingIn)) {
       if (running >= concurrency) {
         break;
       }
-      load(start, end);
+      load(run);
     }
     void pullTotals();
   };
@@ -197,12 +414,13 @@ export const createSourceEngine = <T>(options: TableSourceEngineOptions<T>): Tab
 
   const apply = (next: TableQuery): void => {
     const nextKey = keyOfQuery(next);
+    const regrouped = groupsKeyOf(next) !== groupsKeyOf(query);
 
     query = next;
 
     if (nextKey !== queryKey) {
       queryKey = nextKey;
-      reset();
+      reset(!regrouped);
       notify();
       options.onChange();
       fill();
@@ -212,7 +430,7 @@ export const createSourceEngine = <T>(options: TableSourceEngineOptions<T>): Tab
   const whenAnswered = (own: number): Promise<void> =>
     new Promise((resolve) => {
       const check = (): void => {
-        if (answered || failed || own !== version) {
+        if (root.answered || failed || own !== version) {
           listeners.delete(check);
           resolve();
         }
@@ -265,15 +483,18 @@ export const createSourceEngine = <T>(options: TableSourceEngineOptions<T>): Tab
         limit: COLLECT_CHUNK,
         sort,
         filters,
+        groupBy: EMPTY_KEYS,
+        groupPath: EMPTY_PATH,
         signal: signal ?? controller.signal,
       });
 
-      const next = offset + result.rows.length;
+      const found = isGroups(result) ? [] : result.rows;
+      const next = offset + found.length;
 
-      rows.push(...result.rows);
+      rows.push(...found);
 
       if (
-        result.rows.length === COLLECT_CHUNK &&
+        found.length === COLLECT_CHUNK &&
         result.hasMore !== false &&
         (result.total === undefined || next < result.total)
       ) {
@@ -299,39 +520,105 @@ export const createSourceEngine = <T>(options: TableSourceEngineOptions<T>): Tab
     }
   };
 
-  const nodeAt = (position: number): TableNode<T> | undefined => {
-    const row = rowAt(position);
+  const groupNode = (store: SourceStore<T>, group: TableSourceGroup): TableNode<T> => {
+    const id = groupIdOf(store, group);
 
-    return row === undefined
-      ? undefined
-      : {
-          kind: 'row',
-          id: options.keyOf?.(row) ?? position,
-          index: position,
-          row,
-          level: 0,
-          expandable: false,
-          expanded: false,
-          unloaded: false,
-        };
+    return {
+      kind: 'group',
+      id,
+      key: groupKeys()[store.level] ?? '',
+      value: group.value,
+      path: [...store.path, group.value],
+      level: store.level,
+      count: group.count,
+      expanded: expanded.has(id),
+      aggregates: group.aggregates ?? NO_AGGREGATES,
+    };
+  };
+
+  const rowNode = (spot: SourceSpot<T>, position: number, row: T): TableNode<T> => ({
+    kind: 'row',
+    id:
+      options.keyOf?.(row) ?? (spot.store === root ? position : `${spot.store.key}/${spot.index}`),
+    index: position,
+    row,
+    level: spot.store.level,
+    expandable: false,
+    expanded: false,
+    unloaded: false,
+  });
+
+  const nodeAt = (position: number): TableNode<T> | undefined => {
+    const spot = layouts.locate(root, position);
+
+    if (spot === undefined) {
+      return undefined;
+    }
+    const row = rowIn(spot);
+
+    if (row !== undefined) {
+      return rowNode(spot, position, row);
+    }
+    const group = groupIn(spot);
+
+    return group === undefined ? undefined : groupNode(spot.store, group);
   };
 
   const loaded = (): Uint32Array => {
+    const bases = layouts.bases(root);
     const positions: number[] = [];
 
-    for (const block of blocks.keys()) {
-      const rows = blocks.get(block) ?? [];
+    for (const [key, rows] of rowBlocks.entries()) {
+      const at = storeOfBlockKey(key);
+      const store = at.store === '' ? root : stores.get(at.store);
+      const base = store === undefined ? undefined : bases.get(store);
 
-      for (let offset = 0; offset < rows.length; offset += 1) {
-        positions.push(block * size + offset);
+      if (store !== undefined && base !== undefined) {
+        for (let offset = 0; offset < rows.length; offset += 1) {
+          positions.push(layouts.flatOf(store, base, at.block * size + offset));
+        }
       }
     }
-    return Uint32Array.from(positions);
+    return Uint32Array.from(positions.toSorted((a, b) => a - b));
+  };
+
+  const rowCount = (): number =>
+    root.holds === 'rows'
+      ? count()
+      : groupBlocks
+          .entries()
+          .reduce(
+            (sum, [key, groups]) =>
+              storeOfBlockKey(key).store === '' ? sum + rowsIn(groups) : sum,
+            0,
+          );
+
+  const setToggled = (ids: Iterable<TableNodeId>): void => {
+    expanded = new Set(ids);
+    reopen();
+    fill();
+  };
+
+  const setExpanded = (id: TableNodeId, open: boolean): void => {
+    const next = new Set(expanded);
+
+    if (open) {
+      next.add(id);
+    } else {
+      next.delete(id);
+    }
+    setToggled(next);
+  };
+
+  const pendingAt = (position: number): boolean => {
+    const spot = layouts.locate(root, position);
+
+    return spot !== undefined && rowIn(spot) === undefined && groupIn(spot) === undefined;
   };
 
   return {
     count,
-    rowCount: count,
+    rowCount,
     setRows: () => undefined,
     run: async (next, runOptions = {}) => {
       apply(next);
@@ -343,23 +630,29 @@ export const createSourceEngine = <T>(options: TableSourceEngineOptions<T>): Tab
 
       return own !== version || runOptions.signal?.aborted === true
         ? CANCELLED
-        : { kind: 'done', count: count(), rows: count() };
+        : { kind: 'done', count: count(), rows: rowCount() };
     },
     runSync: (next) => {
       apply(next);
       expectTotals(next);
       void pullTotals();
-      return { kind: 'done', count: count(), rows: count() };
+      return { kind: 'done', count: count(), rows: rowCount() };
     },
     patch: () => undefined,
     visibleIndices: loaded,
     nodeAt,
     siblingsAt: () => undefined,
     rowAt,
-    toggle: () => undefined,
-    setExpanded: () => undefined,
-    setToggled: () => undefined,
-    isExpanded: () => false,
+    toggle: (position) => {
+      const node = nodeAt(position);
+
+      if (node?.kind === 'group') {
+        setExpanded(node.id, !node.expanded);
+      }
+    },
+    setExpanded,
+    setToggled,
+    isExpanded: (id) => expanded.has(id),
     totals: () => sums,
     distinct: async (key, distinctOptions = {}) =>
       options.source.values === undefined
@@ -371,23 +664,25 @@ export const createSourceEngine = <T>(options: TableSourceEngineOptions<T>): Tab
             signal: distinctOptions.signal ?? controller.signal,
           }),
     store: () => undefined,
-    pendingAt: (position) => position < count() && rowAt(position) === undefined,
+    pendingAt,
     collect,
     ensure,
     refresh: () => {
-      reset();
+      reset(true);
       totalsDue = true;
       notify();
       options.onChange();
       fill();
     },
-    settled: () => answered || total !== undefined,
+    settled: () => root.answered || root.total !== undefined,
     dispose: () => {
       version += 1;
       controller.abort();
       totalsController.abort();
-      blocks.clear();
+      rowBlocks.clear();
+      groupBlocks.clear();
       inflight.clear();
+      stores.clear();
       listeners.clear();
     },
   };
