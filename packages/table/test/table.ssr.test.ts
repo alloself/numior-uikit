@@ -397,6 +397,25 @@ describe('NuiTable on the server', () => {
     expect(html.match(/nui-table__resizer--row/g)).toHaveLength(3);
   });
 
+  it('renders merged cells with their spans on the server', async () => {
+    const html = await renderToString(
+      createSSRApp({
+        render: () =>
+          h(NuiTable<Person>, {
+            columns: PEOPLE_COLUMNS.filter((column) => column.pin === undefined),
+            rows: people(4),
+            merges: [{ from: { row: 1, col: 0 }, to: { row: 2, col: 1 } }],
+          }),
+      }),
+    );
+
+    expect(html.match(/nui-table__cell--merged/g)).toHaveLength(1);
+    expect(html).toMatch(/rowspan="2" colspan="2"[^>]*aria-colspan="2"/);
+    expect(html.match(/Сотрудник 1</g)).toHaveLength(1);
+    expect(html).not.toContain('Сотрудник 2<');
+    expect(html).toContain('Сотрудник 3<');
+  });
+
   it('renders skeleton rows for a source without asking it for rows on the server', async () => {
     const offsets: number[] = [];
 

@@ -14,6 +14,7 @@ describe('table cell paint', () => {
           'nui-table__cell--filled': true,
           'nui-table__cell--inked': true,
           'nui-table__cell--edged': false,
+          'nui-table__cell--wrap': false,
         },
       ],
       style: { '--_fill': 'gold', '--_ink': 'black' },
@@ -33,7 +34,13 @@ describe('table cell paint', () => {
       'nui-table__cell--filled': false,
       'nui-table__cell--inked': false,
       'nui-table__cell--edged': true,
+      'nui-table__cell--wrap': false,
     });
+  });
+
+  it('marks a cell whose text wraps', () => {
+    expect(paintOf({ wrap: true })?.class[1]).toMatchObject({ 'nui-table__cell--wrap': true });
+    expect(paintOf({ wrap: false })?.class[1]).toMatchObject({ 'nui-table__cell--wrap': false });
   });
 
   it('passes the class and the plain styles through and lets its own properties win', () => {

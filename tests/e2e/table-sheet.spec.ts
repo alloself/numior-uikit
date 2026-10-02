@@ -2,11 +2,17 @@ import { expect, test, type Page } from '@playwright/test';
 import { boxOf } from './helpers/geometry';
 import { PlaygroundPage } from './pages/playground';
 
+const INCOME = 2;
 const SALES = 3;
 const INCOME_TOTAL = 6;
+const COSTS = 8;
 const RESULT = 14;
-const LAST_COLUMN = 13;
-const LAST_QUARTER_COLUMN = 4;
+const JOURNAL = 16;
+const JOURNAL_ROWS = 60;
+const LAST_COLUMN = 14;
+const LAST_QUARTER_COLUMN = 5;
+const ROW = 32;
+const CENTRE_WIDTH = 13 * 92 + 170;
 const PIXEL_FRACTIONS = [0.05, 0.3, 0.55, 0.8];
 const PIXEL_RATIOS = [1.25, 1.5];
 
@@ -230,6 +236,106 @@ test.describe('table cell styles', () => {
     page,
   }) => {
     await expectSolidHeader(page);
+  });
+
+  test('draws a merged range as one cell with its text wrapped in the middle', async ({ page }) => {
+    const playground = new PlaygroundPage(page);
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    const { tableSheet: sheet } = playground;
+    await sheet.show();
+
+    await expect(sheet.cell(INCOME, 0)).toHaveText('Доходы');
+    await expect(sheet.cell(INCOME, 2)).toHaveCount(0);
+    expect((await boxOf(sheet.cell(INCOME, 1))).width).toBe(CENTRE_WIDTH);
+    await sheet.scrollTo(0, CENTRE_WIDTH);
+    await expect(sheet.cell(SALES, LAST_COLUMN)).toHaveAttribute('rowspan', '3');
+    await expect(sheet.cell(SALES + 1, LAST_COLUMN)).toHaveCount(0);
+    expect((await boxOf(sheet.cell(SALES, LAST_COLUMN))).height).toBe(3 * ROW);
+    expect(await sheet.middleGap(SALES, LAST_COLUMN)).toBeLessThan(1.5);
+    expect(await sheet.middleGap(COSTS, LAST_COLUMN)).toBeLessThan(1.5);
+    expect((await boxOf(sheet.text(COSTS, LAST_COLUMN))).height).toBeGreaterThan(ROW);
+    expect(await sheet.boxHeights()).toEqual([44, ROW]);
+  });
+
+  test('moves the cursor through a merged cell and selects it whole', async ({
+    page,
+    isMobile,
+  }) => {
+    test.skip(isMobile, 'mouse and keyboard scenario');
+    const playground = new PlaygroundPage(page);
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    const { tableSheet: sheet } = playground;
+    await sheet.show();
+    await sheet.scrollTo(0, CENTRE_WIDTH);
+    await sheet.cell(SALES, LAST_COLUMN - 1).click();
+    await page.keyboard.press('ArrowRight');
+    await expect(sheet.cell(SALES, LAST_COLUMN)).toBeFocused();
+    await page.keyboard.press('ArrowDown');
+    await expect(sheet.cell(INCOME_TOTAL, LAST_COLUMN)).toBeFocused();
+    await page.keyboard.press('ArrowUp');
+    await expect(sheet.cell(SALES, LAST_COLUMN)).toBeFocused();
+    await page.keyboard.press('Shift+ArrowLeft');
+
+    await expect
+      .poll(() => sheet.ranges())
+      .toEqual([
+        { from: { row: SALES, col: LAST_COLUMN }, to: { row: SALES + 2, col: LAST_COLUMN - 1 } },
+      ]);
+
+    await expect(sheet.cell(SALES + 2, LAST_COLUMN - 1)).toHaveClass(/nui-table__cell--ranged/);
+  });
+
+  test('keeps both pieces of a merge split by the pinned column under one cursor', async ({
+    page,
+  }) => {
+    const playground = new PlaygroundPage(page);
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    const { tableSheet: sheet } = playground;
+    await sheet.show();
+
+    expect(await sheet.fillLayers(INCOME, 0)).toBe(1);
+    await sheet.cell(INCOME, 1).click({ position: { x: 40, y: 10 } });
+    await expect(sheet.cell(INCOME, 1)).toBeFocused();
+    await expect(sheet.cell(INCOME, 0)).toHaveClass(/nui-table__cell--allied/);
+    await expect.poll(() => sheet.fillLayers(INCOME, 0)).toBe(2);
+    expect(await sheet.fillLayers(INCOME, 1)).toBe(2);
+    expect(await sheet.ranges()).toEqual([]);
+    await sheet.cell(SALES, 1).click();
+    await expect(sheet.cell(INCOME, 0)).not.toHaveClass(/nui-table__cell--allied/);
+    await expect.poll(() => sheet.fillLayers(INCOME, 0)).toBe(1);
+  });
+
+  test('continues a tall merge through the row window without moving its content', async ({
+    page,
+  }) => {
+    const playground = new PlaygroundPage(page);
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    const { tableSheet: sheet } = playground;
+    await sheet.show();
+    await sheet.longSwitch.click();
+    await sheet.windowSwitch.click();
+    await sheet.scrollTo(8 * ROW, CENTRE_WIDTH);
+    await expect(sheet.cell(JOURNAL, LAST_COLUMN)).toBeVisible();
+    const top = await sheet.canvasTop(sheet.row(JOURNAL));
+
+    expect(await sheet.canvasTop(sheet.content(sheet.journalNote))).toBe(top);
+    await sheet.scrollTo(40 * ROW, CENTRE_WIDTH);
+    await expect(sheet.cell(JOURNAL, LAST_COLUMN)).toHaveCount(0);
+    await expect(sheet.journalNote).toHaveCount(1);
+    await expect(sheet.journalNote).toBeVisible();
+    const content = await boxOf(sheet.content(sheet.journalNote));
+
+    expect(Math.round(content.height)).toBe(JOURNAL_ROWS * ROW);
+    expect(await sheet.canvasTop(sheet.content(sheet.journalNote))).toBe(top);
+    expect(await sheet.boxHeights()).toEqual([44, ROW]);
+    await sheet.scrollTo(44 * ROW, CENTRE_WIDTH);
+    await expect(sheet.text(JOURNAL, LAST_COLUMN)).toHaveCount(0);
+    await expect(sheet.journalNote).toContainText('Операции сверены с банком');
+    expect(await sheet.canvasTop(sheet.content(sheet.journalNote))).toBe(top);
   });
 
   test('a painted sheet has no automatically detectable WCAG AA violations', async ({ page }) => {

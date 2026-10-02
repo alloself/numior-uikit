@@ -130,6 +130,9 @@
                 :stripe="item.stripe"
                 :dragging="rowDrag.dragging.value === item.index"
                 :ranged="rangedOf(item)"
+                :ranged-at="rangedAt"
+                :spans="spansOf(item)"
+                :ally="allyOf(item)"
                 :sized="item.sized"
                 :sizable="sizableOf(item)"
                 :sizing="rowResize.active.value === item.index"
@@ -142,8 +145,13 @@
                     @toggle="selection.toggle(rowAt(item.index))"
                   />
                 </template>
-                <template #default="{ column }">
-                  <CellContent :item="item" :position="item.index" :column="column" />
+                <template #default="{ column, merge }">
+                  <CellContent
+                    :item="item"
+                    :position="item.index"
+                    :column="column"
+                    :merge="merge"
+                  />
                 </template>
               </NuiTableRow>
             </template>
@@ -303,6 +311,16 @@ import {
   NO_SPOTS,
   sameSpots,
 } from './table-detail';
+import {
+  anchorOf,
+  consecutiveRuns,
+  createMergeIndex,
+  keepSpans,
+  leaveMerge,
+  leaveMergeBy,
+  mergeSpans,
+  pieceOf,
+} from './table-merges';
 import { paintOf } from './table-paint';
 import { ownCellAt, ownDetailOf } from './table-dom';
 import { cellTextOf, cellValueOf, engineColumnOf, valueTextOf } from './table-format';
@@ -337,7 +355,7 @@ import { useTableExport } from './use-table-export';
 import { editorPlan } from './table-editors';
 import { parseCell } from './table-parse';
 import { ruleFailure } from './table-rules';
-import { columnSpansOf } from './table-ranges';
+import { columnSpansOf, type RangeBox } from './table-ranges';
 import { useTableRanges } from './use-table-ranges';
 import { pageRowsOf, pageStepOf } from './table-keys';
 import { useTableExpansion } from './use-table-expansion';
@@ -356,12 +374,17 @@ import type {
   TableCellContentProps,
   TableCellPaint,
   TableCellPosition,
+  TableCellSpan,
+  TableLeadSpan,
+  TableMergeLayout,
+  TableMergeSlot,
+  TableRowPaint,
+  TableRowSpan,
   TableDetailSpot,
   TablePinnedRow,
   TableReveal,
   TableRevealAxis,
   TableRowMode,
-  TableRowPaint,
   TableRowPainter,
   TableSkeletonRow,
   TableStatusSlot,
@@ -407,6 +430,7 @@ const DISTINCT_LIMIT = 100;
 const COLUMN_OVERSCAN = 2;
 const NO_ROW_HEAD = {} as const;
 const NO_HEIGHTS: NuiTableRowHeights = {};
+const NO_MERGE_INDEX = createMergeIndex([], { rows: 0, cols: 0 });
 const NO_UTILITY: NuiTableUtilityCellProps = { control: 'none' };
 const SKELETON_UTILITY: NuiTableUtilityCellProps = { control: 'skeleton' };
 const TEXT_SKELETON: NuiSkeletonProps = { shape: 'text', width: '100%' };
@@ -438,6 +462,7 @@ const {
   hasChildren,
   hasDetail,
   cellStyle,
+  merges = [],
   bordered = false,
   rowHeaders = undefined,
   treeColumn,
@@ -885,6 +910,9 @@ const focus = useTableFocus({
   columnIndexOf: (key) => layout.value.visual.findIndex((column) => column.key === key),
   isRtl: direction.isRtl,
   windowed: () => windowed.value,
+  lead: () => activeLead.value,
+  settle: (focused) => settleFocus(focused),
+  leave: (from, key) => leaveFrom(from, key),
 });
 
 const columnAt = (key: string): NuiTableColumn<T> => {
@@ -1284,12 +1312,127 @@ const dataOffset = computed(() =>
   ),
 );
 
+const dataOffsets = computed(() => {
+  const offsets = [0];
+
+  for (const column of layout.value.visual) {
+    if (column.kind === 'data') {
+      offsets.push((offsets.at(-1) ?? 0) + column.width);
+    }
+  }
+  return offsets;
+});
+
+const mergeIndex = computed(() =>
+  merges.length > 0 && !hierarchical.value && !loadingNow.value
+    ? createMergeIndex(merges, { rows: visibleRows.value, cols: dataKeys.value.length })
+    : NO_MERGE_INDEX,
+);
+
+const mergeSlots = computed((): TableMergeSlot[] =>
+  rowCells.value.cells.map((cell) => ({
+    key: cell.key,
+    pane: cell.pin ?? 'centre',
+    col: cell.kind === 'data' ? cell.colIndex - 1 - dataOffset.value : undefined,
+    edge: cell.edge,
+    tail: cell.kind !== 'gap' && cell.tail === true,
+  })),
+);
+
+const mergeLayout = computed<TableMergeLayout<RangeBox> | undefined>((previous) => {
+  const index = mergeIndex.value;
+
+  if (index.size === 0) {
+    return undefined;
+  }
+  const runs = consecutiveRuns(rowWindow.items.value.map((item) => item.index));
+  const found = new Set(runs.flatMap((run) => index.within(run[0] ?? 0, run.at(-1) ?? 0)));
+
+  const next = mergeSpans([...found], runs, mergeSlots.value, {
+    rowOffset: rowWindow.offsetOf,
+    colOffset: (col) => dataOffsets.value[col] ?? 0,
+  });
+
+  return { spans: keepSpans(next.spans, previous?.spans), pieces: next.pieces };
+});
+
+const spansOf = (item: TableBodyRow): TableRowSpan | undefined =>
+  mergeLayout.value?.spans.get(item.index);
+
+const dataCellOf = (visual: TableCellPosition): TableCellPosition | undefined => {
+  const row = visual.row - pinnedCount.value;
+  const col = visual.col - dataOffset.value;
+
+  return row >= 0 && row < visibleRows.value && col >= 0 && col < dataKeys.value.length
+    ? { row, col }
+    : undefined;
+};
+
+const visualCellOf = (data: TableCellPosition): TableCellPosition => ({
+  row: data.row + pinnedCount.value,
+  col: data.col + dataOffset.value,
+});
+
+const activeMerge = computed(() => {
+  const data = mergeIndex.value.size === 0 ? undefined : dataCellOf(active.value);
+
+  return data === undefined ? undefined : mergeIndex.value.at(data.row, data.col);
+});
+
+const activeAnchor = computed((): TableCellPosition | undefined => {
+  const merge = activeMerge.value;
+
+  return merge === undefined ? undefined : { row: merge.top, col: merge.start };
+});
+
+const allyOf = (item: TableBodyRow): TableCellPosition | undefined => {
+  const merge = activeMerge.value;
+
+  return merge !== undefined && item.index >= merge.top && item.index <= merge.bottom
+    ? activeAnchor.value
+    : undefined;
+};
+
+const activeLead = computed((): TableCellPosition => {
+  const current = active.value;
+  const merge = activeMerge.value;
+  const data = merge === undefined ? undefined : dataCellOf(current);
+
+  const piece =
+    merge === undefined || data === undefined
+      ? undefined
+      : pieceOf(mergeLayout.value?.pieces.get(merge), data);
+
+  return piece === undefined ? current : visualCellOf({ row: piece.top, col: piece.start });
+});
+
+const hostsCursor = (span: TableLeadSpan): boolean => {
+  const lead = activeLead.value;
+  const piece = visualCellOf({ row: span.row, col: span.col });
+
+  return lead.row === piece.row && lead.col === piece.col;
+};
+
+const settleFocus = (focused: TableCellPosition): TableCellPosition => {
+  const lead = activeLead.value;
+
+  return focused.row === lead.row && focused.col === lead.col ? active.value : focused;
+};
+
+const leaveFrom = (from: TableCellPosition, key: string): TableCellPosition => {
+  const data = mergeIndex.value.size === 0 ? undefined : dataCellOf(from);
+
+  return data === undefined
+    ? from
+    : visualCellOf(leaveMerge(mergeIndex.value, data, key, direction.isRtl()));
+};
+
 const activeData = (): TableCellPosition | undefined => {
   const body = bodyActive();
   const col = body === undefined ? -1 : body.col - dataOffset.value;
 
   return body !== undefined && col >= 0 && col < dataKeys.value.length
-    ? { row: body.row, col }
+    ? anchorOf(mergeIndex.value, { row: body.row, col })
     : undefined;
 };
 
@@ -1368,6 +1511,7 @@ const rangeSelect = useTableRanges({
   anchor: rangeAnchor,
   cursor: () => activeData(),
   sorts: (col) => header.heads.value[dataKeys.value[col] ?? '']?.sortable === true,
+  merges: () => mergeIndex.value,
   focus: (position) => {
     focus.focusCell(
       { row: position.row + pinnedCount.value, col: position.col + dataOffset.value },
@@ -1389,6 +1533,8 @@ const rangeSelect = useTableRanges({
   announce,
 });
 
+const rangedAt = computed(() => (mergeIndex.value.size === 0 ? undefined : rangeSelect.segmentsOf));
+
 const rangedOf = (item: TableBodyRow): TableRowRanges | undefined =>
   item.group === undefined ? rangeSelect.segmentsOf(item.index) : undefined;
 
@@ -1408,14 +1554,40 @@ const paintedKeys = computed(() =>
   rowCells.value.cells.flatMap((cell) => (cell.kind === 'data' ? [cell.key] : [])),
 );
 
-const paintRow = (row: T | undefined, position: number, pinned: boolean): TableRowPaint => {
+const paintCell = (
+  row: T,
+  key: string,
+  position: number,
+  pinned: boolean,
+): TableCellPaint | undefined =>
+  paintOf(cellStyle?.({ row, column: columnAt(key), position, pinned }));
+
+const paintSpan = (span: TableCellSpan): TableCellPaint | undefined => {
+  if (span.kind === 'covered') {
+    return undefined;
+  }
+  const row = rowAtPosition(span.anchor.row);
+  const key = dataKeys.value[span.anchor.col];
+
+  return row === undefined || key === undefined
+    ? undefined
+    : paintCell(row, key, span.anchor.row, false);
+};
+
+const paintRow = (
+  row: T | undefined,
+  position: number,
+  pinned: boolean,
+  spans?: TableRowSpan,
+): TableRowPaint => {
   const painted = new Map<string, TableCellPaint>();
 
-  if (row === undefined || cellStyle === undefined) {
+  if (row === undefined) {
     return painted;
   }
   for (const key of paintedKeys.value) {
-    const paint = paintOf(cellStyle({ row, column: columnAt(key), position, pinned }));
+    const span = spans?.get(key);
+    const paint = span === undefined ? paintCell(row, key, position, pinned) : paintSpan(span);
 
     if (paint !== undefined) {
       painted.set(key, paint);
@@ -1424,7 +1596,9 @@ const paintRow = (row: T | undefined, position: number, pinned: boolean): TableR
   return painted;
 };
 
-const paintBody: TableRowPainter = (position) => paintRow(rowAtPosition(position), position, false);
+const paintBody: TableRowPainter = (position, spans) =>
+  paintRow(rowAtPosition(position), position, false, spans);
+
 const paintPinned: TableRowPainter = (position) => paintRow(pinnedRows[position], position, true);
 const bodyPaint = computed(() => (cellStyle === undefined ? undefined : paintBody));
 const pinnedPaint = computed(() => (cellStyle === undefined ? undefined : paintPinned));
@@ -1554,12 +1728,16 @@ const cellEditor = useTableCellEditor<T>({
     emit('editRefused', { row, key, reason });
   },
   bounds: () => ({ rows: visibleRows.value, cols: dataKeys.value.length }),
-  locate: (target) => rangeSelect.cellAt(target),
+  locate: (target) => {
+    const cell = rangeSelect.cellAt(target);
+    return cell === undefined ? undefined : anchorOf(mergeIndex.value, cell);
+  },
+  leave: (from, move) => leaveMergeBy(mergeIndex.value, from, move),
   focus: (position) => {
-    focus.focusCell({
-      row: position.row + pinnedCount.value,
-      col: position.col + dataOffset.value,
-    });
+    const current = activeData();
+    const stays = current?.row === position.row && current.col === position.col;
+
+    focus.focusCell(stays ? active.value : visualCellOf(position));
   },
   resetOn: [
     sort,
@@ -1597,9 +1775,11 @@ const selectForMenu = (target: TableCellPosition): NuiTableRanges => {
 };
 
 const contextScopeOf = (
-  target: TableCellPosition,
+  focused: TableCellPosition,
   current: NuiTableRanges,
 ): NuiTableContextScope<T> | undefined => {
+  const data = dataCellOf(focused);
+  const target = data === undefined ? focused : visualCellOf(anchorOf(mergeIndex.value, data));
   const row = rowFor(target.row);
   const key = dataKeyAt(layout.value, target.col);
   const pinned = target.row < pinnedCount.value;
@@ -1830,9 +2010,28 @@ const editorOf = (position: number, column: string): VNode | undefined => {
   });
 };
 
+const mergedContent = (merge: TableLeadSpan): VNode | VNode[] => {
+  const key = dataKeys.value[merge.anchor.col];
+  const row = rowAtPosition(merge.anchor.row);
+
+  if (key === undefined || row === undefined) {
+    return [];
+  }
+  const editor = editorOf(merge.anchor.row, key);
+
+  return editor !== undefined && hostsCursor(merge)
+    ? editor
+    : renderSlot(rawSlots, `cell-${key}`, { ...scopeOf(row, merge.anchor.row, key, false) }, () => [
+        h('span', { class: 'nui-table__text' }, textOf(row, key)),
+      ]);
+};
+
 const CellContent = (props: TableCellContentProps<T>): VNode | VNode[] => {
   const { item, column } = props;
 
+  if (props.merge !== undefined) {
+    return mergedContent(props.merge);
+  }
   if (item?.pending === true) {
     return h(NuiSkeleton, TEXT_SKELETON);
   }

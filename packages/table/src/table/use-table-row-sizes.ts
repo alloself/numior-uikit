@@ -52,7 +52,11 @@ const positionOf = (cell: Element, leading: number): number =>
   Number(cell.parentElement?.getAttribute('aria-rowindex')) - leading - 1;
 
 const firstCells = (rows: Iterable<Element>): Element[] =>
-  [...rows].flatMap((row) => (row.firstElementChild === null ? [] : [row.firstElementChild]));
+  [...rows].flatMap((row) => {
+    const cell = row.querySelector(':scope > :not([rowspan])');
+
+    return cell === null ? [] : [cell];
+  });
 
 export const useTableRowSizes = <T>(options: TableRowSizesOptions<T>): TableRowSizes => {
   const detailSizes = new Map<TableNodeId, number>();

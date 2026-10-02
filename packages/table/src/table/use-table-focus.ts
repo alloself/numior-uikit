@@ -19,6 +19,9 @@ export interface TableFocusOptions {
   readonly columnIndexOf: (key: string) => number;
   readonly isRtl: () => boolean;
   readonly windowed: () => boolean;
+  readonly lead: () => TableCellPosition;
+  readonly settle: (focused: TableCellPosition) => TableCellPosition;
+  readonly leave: (from: TableCellPosition, key: string) => TableCellPosition;
 }
 
 export interface TableFocus {
@@ -117,7 +120,9 @@ export const useTableFocus = (options: TableFocusOptions): TableFocus => {
       return;
     }
 
-    const target = nextCell({ key: event.key, ctrl: event.ctrlKey }, options.active.value, {
+    const from = options.leave(options.active.value, event.key);
+
+    const target = nextCell({ key: event.key, ctrl: event.ctrlKey }, from, {
       rows: options.rowCount(),
       cols: options.colCount(),
       page: options.pageRows(options.active.value.row, event.key === 'PageDown'),
@@ -134,7 +139,8 @@ export const useTableFocus = (options: TableFocusOptions): TableFocus => {
   };
 
   const onFocusin = (target: EventTarget | null): void => {
-    const position = positionOf(target, options.headRows(), options.active.value.col);
+    const focused = positionOf(target, options.headRows(), options.active.value.col);
+    const position = focused === undefined ? undefined : options.settle(focused);
 
     if (position !== undefined && !samePosition(position, options.active.value)) {
       options.active.value = position;
@@ -186,8 +192,11 @@ export const useTableFocus = (options: TableFocusOptions): TableFocus => {
   });
 
   return {
-    activeIn: (position) =>
-      options.active.value.row === position ? options.active.value.col + 1 : 0,
+    activeIn: (position) => {
+      const shown = options.lead();
+
+      return shown.row === position ? shown.col + 1 : 0;
+    },
     reveal,
     focusCell,
     focusHeader: (target) => {

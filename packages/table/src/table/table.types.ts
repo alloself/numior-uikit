@@ -141,6 +141,7 @@ export interface NuiTableProps<T> {
   hasChildren?: ((row: T) => boolean) | undefined;
   hasDetail?: ((row: T) => boolean) | undefined;
   cellStyle?: NuiTableCellStyler<T> | undefined;
+  merges?: readonly NuiTableRange[] | undefined;
   bordered?: boolean | undefined;
   rowHeaders?: NuiTableRowHeaders<T> | boolean | undefined;
   treeColumn?: string | undefined;
@@ -210,6 +211,7 @@ export interface NuiTableCellStyle {
   readonly fill?: string | undefined;
   readonly color?: string | undefined;
   readonly align?: NuiTableAlign | undefined;
+  readonly wrap?: boolean | undefined;
   readonly borders?: NuiTableCellBorders | undefined;
   readonly style?: Readonly<Record<string, string>> | undefined;
 }
@@ -224,7 +226,7 @@ export interface TableCellPaint {
 
 export type TableRowPaint = ReadonlyMap<string, TableCellPaint>;
 
-export type TableRowPainter = (position: number) => TableRowPaint | undefined;
+export type TableRowPainter = (position: number, spans?: TableRowSpan) => TableRowPaint | undefined;
 
 export interface NuiTableRange {
   readonly from: TableCellPosition;
@@ -324,6 +326,48 @@ export interface TableReveal {
   readonly axis: TableRevealAxis;
 }
 
+export interface TableMergeSlot {
+  readonly key: string;
+  readonly pane: TablePaneName;
+  readonly col: number | undefined;
+  readonly edge?: boolean | undefined;
+  readonly tail?: boolean | undefined;
+}
+
+export interface TableLeadSpan {
+  readonly kind: 'lead';
+  readonly row: number;
+  readonly col: number;
+  readonly rowspan: number;
+  readonly colspan: number;
+  readonly span: number;
+  readonly anchor: TableCellPosition;
+  readonly rows: number;
+  readonly cols: number;
+  readonly edge: boolean;
+  readonly tail: boolean;
+  readonly x: number;
+  readonly y: number;
+  readonly width: number;
+  readonly height: number;
+}
+
+export type TableCellSpan = TableLeadSpan | { readonly kind: 'covered' };
+
+export type TableRowSpan = ReadonlyMap<string, TableCellSpan>;
+
+export interface TableMergePiece {
+  readonly top: number;
+  readonly bottom: number;
+  readonly start: number;
+  readonly end: number;
+}
+
+export interface TableMergeLayout<M> {
+  readonly spans: ReadonlyMap<number, TableRowSpan>;
+  readonly pieces: ReadonlyMap<M, readonly TableMergePiece[]>;
+}
+
 export interface TableRangeSegment {
   readonly from: number;
   readonly to: number;
@@ -338,6 +382,7 @@ export type TableRowRanges = readonly TableRangeSegment[];
 export interface TableCellContentProps<T> {
   readonly column: string;
   readonly position: number;
+  readonly merge?: TableLeadSpan | undefined;
   readonly row?: T | undefined;
   readonly item?: TableBodyRow | undefined;
   readonly pinned?: boolean | undefined;
@@ -610,6 +655,9 @@ export interface NuiTableRowProps {
   stripe?: boolean | undefined;
   dragging?: boolean | undefined;
   ranged?: TableRowRanges | undefined;
+  rangedAt?: ((position: number) => TableRowRanges | undefined) | undefined;
+  spans?: TableRowSpan | undefined;
+  ally?: TableCellPosition | undefined;
   marks?: readonly TableSpan[] | undefined;
   sized?: Readonly<Record<string, string>> | undefined;
   sizable?: boolean | undefined;

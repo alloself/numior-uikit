@@ -32,7 +32,8 @@ view.
 ### Cell styles
 
 `bordered` draws lines between the columns, and `cellStyle` paints single cells. The function
-takes the row and the column and returns a `fill`, a text `color`, an `align` and `borders`.
+takes the row and the column and returns a `fill`, a text `color`, an `align` and `borders`. `wrap`
+breaks the text of a single cell.
 
 The fill lies over the row background, so a translucent colour keeps the stripes and the hover.
 The `top`, `end`, `bottom` and `start` lines are drawn over the grid and leave the row height
@@ -113,6 +114,22 @@ With `height` the table measures the height of a detail and counts it in the scr
 off in a row tree.
 
 <Example name="table/Detail" />
+
+### Merged cells
+
+`merges` joins cells: every `{ from, to }` rectangle is drawn as one cell with the content and the
+style of its first cell. The coordinates are those of `v-model:ranges`: the row position on the
+page and the position among the shown data columns. `wrap` from `cellStyle` breaks a long text.
+
+The cursor lands on a merge as a whole and leaves it from its far edge. A selection grows until it
+holds every merge it touches, but whole rows and columns stay as they are. An edit of a merge
+changes its first cell.
+
+In a row window a tall merge continues from the first shown row, and a pinned column splits it at
+its edge. A merge of several rows stays on the table background: hover, stripes and row selection
+leave it alone. Merges are off with grouping, in a tree and with details.
+
+<Example name="table/Merges" />
 
 ### Row drag
 

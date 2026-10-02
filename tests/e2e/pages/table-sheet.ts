@@ -1,5 +1,6 @@
 import type { Locator, Page } from '@playwright/test';
 import { paintedRgbAt, type Point, type Rgb } from '../helpers/color';
+import { boxOf } from '../helpers/geometry';
 import {
   isNumber,
   listOf,
@@ -58,6 +59,8 @@ export class TableSheetSection {
   readonly heatSwitch: Locator;
   readonly windowSwitch: Locator;
   readonly quarterSwitch: Locator;
+  readonly longSwitch: Locator;
+  readonly journalNote: Locator;
   readonly corner: Locator;
   readonly output: Locator;
 
@@ -70,6 +73,8 @@ export class TableSheetSection {
     this.heatSwitch = page.getByTestId('table-sheet-heat');
     this.windowSwitch = page.getByTestId('table-sheet-window');
     this.quarterSwitch = page.getByTestId('table-sheet-quarter');
+    this.longSwitch = page.getByTestId('table-sheet-long');
+    this.journalNote = this.grid.locator('.nui-table__cell--tall', { hasText: 'Операции сверены' });
     this.corner = this.grid.locator(':scope > .nui-table__header [aria-colindex="1"]');
     this.output = page.getByTestId('table-sheet-output');
   }
@@ -86,6 +91,33 @@ export class TableSheetSection {
 
   cell(position: number, col: number): Locator {
     return this.row(position).locator(`:scope > [aria-colindex="${col + ROW_HEADERS + 1}"]`);
+  }
+
+  text(position: number, col: number): Locator {
+    return this.cell(position, col).locator('.nui-table__text');
+  }
+
+  content(cell: Locator): Locator {
+    return cell.locator(':scope > .nui-table__content');
+  }
+
+  async canvasTop(target: Locator): Promise<number> {
+    const [box, frame, scrolled] = await Promise.all([
+      boxOf(target),
+      boxOf(this.viewport),
+      this.viewport.evaluate((element) => element.scrollTop),
+    ]);
+
+    return Math.round(box.y - frame.y + scrolled);
+  }
+
+  async middleGap(position: number, col: number): Promise<number> {
+    const [cell, text] = await Promise.all([
+      boxOf(this.cell(position, col)),
+      boxOf(this.text(position, col)),
+    ]);
+
+    return Math.abs(text.y + text.height / 2 - (cell.y + cell.height / 2));
   }
 
   rowHeader(position: number): Locator {

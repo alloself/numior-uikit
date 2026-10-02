@@ -237,6 +237,41 @@ const alignOf = (cell: Element): string =>
   [...cell.classList].find((name) => name.startsWith(ALIGN_PREFIX))?.replace(ALIGN_PREFIX, '') ??
   '';
 
+const spanOf = (cell: Element): [rows: number, cols: number] =>
+  cell instanceof HTMLTableCellElement ? [cell.rowSpan, cell.colSpan] : [1, 1];
+
+const widthOf = (tracks: readonly number[], from: number, count: number): number =>
+  tracks.slice(from, from + count).reduce((sum, width) => sum + width, 0);
+
+const freeTrack = (busy: ReadonlySet<number> | undefined, from: number): number => {
+  let track = from;
+
+  while (busy?.has(track) === true) {
+    track += 1;
+  }
+  return track;
+};
+
+const occupy = (
+  taken: Map<number, Set<number>>,
+  rowIndex: number,
+  rows: number,
+  track: number,
+  cols: number,
+): void => {
+  for (let below = 1; below < rows; below += 1) {
+    const busy = taken.get(rowIndex + below) ?? new Set<number>();
+
+    for (let at = track; at < track + cols; at += 1) {
+      busy.add(at);
+    }
+    taken.set(rowIndex + below, busy);
+  }
+};
+
+const SPAN_PROPERTIES = ['--_span-x', '--_span-y', '--_span-w', '--_span-h'] as const;
+const MERGE_MARK = /^nui-table__cell--(?:tall|allied|cut-\w+)$/u;
+
 const isExposed = (value: unknown): value is NuiTableExposed =>
   typeof value === 'object' &&
   value !== null &&
@@ -1182,15 +1217,29 @@ export class TableDriver<T> {
 
     defineRect(frame, new DOMRect(0, 0, this.element.clientWidth, this.element.clientHeight));
 
+    const taken = new Map<number, Set<number>>();
+
     for (const row of this.element.querySelectorAll('.nui-table__body > [role="row"]')) {
-      const top = (Number(row.getAttribute('aria-rowindex')) - 1) * HEAD_HEIGHT;
-      let left = 0;
+      const rowIndex = Number(row.getAttribute('aria-rowindex'));
+      let track = 0;
 
-      for (const [index, cell] of [...row.children].entries()) {
-        const width = tracks[index] ?? 0;
+      for (const cell of row.children) {
+        const [rows, cols] = spanOf(cell);
 
-        defineRect(cell, new DOMRect(left, top, width, HEAD_HEIGHT));
-        left += width;
+        track = freeTrack(taken.get(rowIndex), track);
+
+        defineRect(
+          cell,
+          new DOMRect(
+            widthOf(tracks, 0, track),
+            (rowIndex - 1) * HEAD_HEIGHT,
+            widthOf(tracks, track, cols),
+            HEAD_HEIGHT * rows,
+          ),
+        );
+
+        occupy(taken, rowIndex, rows, track, cols);
+        track += cols;
       }
     }
   }
@@ -1322,6 +1371,32 @@ export class TableDriver<T> {
   async resetRowHeight(position: number): Promise<void> {
     this.rowResizer(position)?.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));
     await nextTick();
+  }
+
+  cellSpan(position: number, col: number): number[] {
+    const cell = this.cell(position, col);
+
+    return cell instanceof HTMLTableCellElement
+      ? [cell.rowSpan, cell.colSpan, numberAttribute(cell, 'aria-colspan')]
+      : [];
+  }
+
+  cellSpread(position: number, col: number): string[] {
+    const cell = this.cell(position, col);
+
+    return cell === null
+      ? []
+      : SPAN_PROPERTIES.map((property) => cell.style.getPropertyValue(property));
+  }
+
+  cellMerged(position: number, col: number): boolean {
+    return this.cell(position, col)?.classList.contains('nui-table__cell--merged') ?? false;
+  }
+
+  mergeMarks(position: number, col: number): string[] {
+    return [...(this.cell(position, col)?.classList ?? [])]
+      .filter((name) => MERGE_MARK.test(name))
+      .map((name) => name.replace('nui-table__cell--', ''));
   }
 
   cellRole(position: number, col: number): string | undefined {

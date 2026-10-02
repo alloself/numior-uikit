@@ -28,6 +28,16 @@
   --_edge-end: initial;
   --_edge-bottom: initial;
   --_edge-start: initial;
+  --_span-x: initial;
+  --_span-y: initial;
+  --_span-w: initial;
+  --_span-h: initial;
+  --_ring-t: 1px;
+  --_ring-b: 1px;
+  --_ring-s: 1px;
+  --_ring-e: 1px;
+  --_ring-l: 1px;
+  --_ring-r: 1px;
   --_cell-position: relative;
   --_cell-layer: 0;
   --_head-lap: 2px;
@@ -202,8 +212,36 @@
 .nui-table__cell--inked {
   color: var(--_ink);
 }
-.nui-table__cell--edged {
+.nui-table__cell--edged,
+.nui-table__cell--merged {
   --_cell-position: relative;
+}
+.nui-table__cell--merged {
+  --_ring-l: var(--_ring-s);
+  --_ring-r: var(--_ring-e);
+
+  clip-path: inset(0);
+}
+.nui-table__cell--merged:dir(rtl) {
+  --_ring-l: var(--_ring-e);
+  --_ring-r: var(--_ring-s);
+}
+.nui-table__cell--tall {
+  --_row-bg: var(--nui-surface);
+
+  background-color: var(--_row-bg);
+}
+.nui-table__cell--cut-top {
+  --_ring-t: 0px;
+}
+.nui-table__cell--cut-bottom {
+  --_ring-b: 0px;
+}
+.nui-table__cell--cut-start {
+  --_ring-s: 0px;
+}
+.nui-table__cell--cut-end {
+  --_ring-e: 0px;
 }
 .nui-table__cell--edged::before {
   content: '';
@@ -243,11 +281,29 @@
   > .nui-table__grid
   > .nui-table__body
   > .nui-table__row--body:not(.nui-table__row--group)
-  > .nui-table__cell--data.nui-table__cell--active:focus {
+  > .nui-table__cell--data.nui-table__cell--active:focus,
+.nui-table--cell-selection:not(.nui-table--ranged)
+  > .nui-table__frame
+  > .nui-table__viewport
+  > .nui-table__grid
+  > .nui-table__body:has(> .nui-table__row > .nui-table__cell--active:focus)
+  > .nui-table__row
+  > .nui-table__cell--allied {
   background-color: color-mix(in oklab, var(--_row-bg), var(--nui-primary) 12%);
-  box-shadow: inset 0 0 0 1px var(--nui-primary);
+  box-shadow:
+    inset 0 var(--_ring-t) 0 var(--nui-primary),
+    inset 0 calc(-1 * var(--_ring-b)) 0 var(--nui-primary),
+    inset var(--_ring-l) 0 0 var(--nui-primary),
+    inset calc(-1 * var(--_ring-r)) 0 0 var(--nui-primary);
 }
 .nui-table__cell--filled.nui-table__cell--ranged,
+.nui-table--cell-selection:not(.nui-table--ranged)
+  > .nui-table__frame
+  > .nui-table__viewport
+  > .nui-table__grid
+  > .nui-table__body:has(> .nui-table__row > .nui-table__cell--active:focus)
+  > .nui-table__row
+  > .nui-table__cell--filled.nui-table__cell--allied,
 .nui-table--cell-selection:not(.nui-table--ranged)
   > .nui-table__frame
   > .nui-table__viewport
@@ -308,6 +364,23 @@
 .nui-table__body > .nui-table__row > .nui-table__cell > .nui-table__content {
   block-size: var(--_body-size);
   min-block-size: var(--_body-min);
+}
+.nui-table__body > .nui-table__row > .nui-table__cell--merged > .nui-table__content {
+  position: absolute;
+  inset-block-start: var(--_span-y, 0px);
+  inset-inline-start: var(--_span-x, 0px);
+  inline-size: var(--_span-w, 100%);
+  block-size: var(--_span-h, 100%);
+  min-block-size: 0;
+}
+.nui-table__body
+  > .nui-table__row
+  > .nui-table__cell--merged
+  > .nui-table__content:has(> .nui-table__editor) {
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  inline-size: 100%;
+  block-size: 100%;
 }
 .nui-table__cell--wrap > .nui-table__content {
   padding-block: var(--nui-space-2);
@@ -415,7 +488,11 @@
 .nui-table--striped .nui-table__body > .nui-table__row--odd {
   --_row-bg: var(--_stripe);
 }
-.nui-table .nui-table__body > .nui-table__row:where(:not(.nui-table__row--detail)):hover {
+.nui-table
+  .nui-table__body
+  > .nui-table__row:where(
+    :not(.nui-table__row--detail, :has(> .nui-table__cell--tall:hover))
+  ):hover {
   --_row-bg: color-mix(in oklab, var(--nui-surface), var(--_hover) 70%);
 }
 .nui-table .nui-table__body > .nui-table__row--selected,

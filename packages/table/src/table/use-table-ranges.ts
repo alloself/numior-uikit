@@ -17,7 +17,8 @@ import {
   withLast,
   type RangeBounds,
 } from './table-ranges';
-import { OWN_DATA_ROWS } from './table-dom';
+import { OWN_DATA_ROWS, OWN_SPANNING_CELLS } from './table-dom';
+import { expandToMerges, leaveMerge, spansLines, type TableMergeIndex } from './table-merges';
 import type { NuiTableMessages } from './table.messages';
 import type {
   NuiTableRange,
@@ -44,6 +45,7 @@ export interface TableRangesOptions {
   readonly anchor: () => TableCellPosition | undefined;
   readonly cursor: () => TableCellPosition | undefined;
   readonly sorts: (col: number) => boolean;
+  readonly merges: () => TableMergeIndex;
   readonly focus: (position: TableCellPosition) => void;
   readonly reveal: (corner: TableCellPosition, axis: TableRevealAxis) => void;
   readonly resetOn: WatchSource[];
@@ -132,12 +134,20 @@ const modeOf = (event: MouseEvent): SessionMode => {
   return event.ctrlKey || event.metaKey ? 'add' : 'plain';
 };
 
-const rowRect = (row: Element): DOMRect => (row.firstElementChild ?? row).getBoundingClientRect();
+const rowRect = (row: Element): DOMRect =>
+  (row.querySelector(':scope > :not([rowspan])') ?? row).getBoundingClientRect();
 
 const isPinned = (cell: Element): boolean => PINNED.some((name) => cell.classList.contains(name));
 
 const within = (value: number, start: number, end: number): boolean =>
   value >= start && value < end;
+
+const spanningAt = (viewport: Element, x: number, y: number): Element | undefined =>
+  [...viewport.querySelectorAll(OWN_SPANNING_CELLS)].find((cell) => {
+    const rect = cell.getBoundingClientRect();
+
+    return within(x, rect.left, rect.right) && within(y, rect.top, rect.bottom);
+  });
 
 const cellIn = (row: Element, x: number): Element | undefined => {
   const cells = [...row.children].filter((cell) => cell.hasAttribute('aria-colindex'));
@@ -196,17 +206,20 @@ export const useTableRanges = (options: TableRangesOptions): TableRanges => {
     return next;
   };
 
+  const whole = (range: NuiTableRange): NuiTableRange =>
+    expandToMerges(options.merges(), range, options.bounds());
+
   const shape = (
     last: NuiTableRange,
     kept: NuiTableRanges = others ?? latest().slice(0, -1),
   ): NuiTableRanges => {
     others = kept;
     deselected.value = false;
-    return write(tidyRanges(withLast(kept, last)));
+    return write(tidyRanges(withLast(kept, whole(last))));
   };
 
   const take = (base: NuiTableRanges, cut: NuiTableRange): void => {
-    const next = write(tidyRanges(cutRanges(base, cut)));
+    const next = write(tidyRanges(cutRanges(base, whole(cut))));
 
     others = next;
     deselected.value = next.length === 0;
@@ -341,7 +354,7 @@ export const useTableRanges = (options: TableRangesOptions): TableRanges => {
       return within(y, rect.top, rect.bottom);
     });
 
-    const cell = row === undefined ? undefined : cellIn(row, x);
+    const cell = row === undefined ? undefined : (cellIn(row, x) ?? spanningAt(viewport, x, y));
     const position = cell === undefined ? undefined : positionOf(cell);
 
     return position === undefined ? undefined : clampPosition(position, options.bounds());
@@ -557,10 +570,17 @@ export const useTableRanges = (options: TableRangesOptions): TableRanges => {
     }
   };
 
+  const cornerOf = (last: NuiTableRange | undefined, anchor: TableCellPosition, key: string) => {
+    const moving = last?.to ?? anchor;
+
+    return last !== undefined && spansLines(last, options.bounds())
+      ? moving
+      : leaveMerge(options.merges(), moving, key, options.isRtl());
+  };
+
   const extendBy = (event: KeyboardEvent, anchor: TableCellPosition): boolean => {
-    const list = latest();
-    const last = list.at(-1);
-    const from = last?.to ?? anchor;
+    const last = latest().at(-1);
+    const from = cornerOf(last, anchor, event.key);
 
     const corner = stepCorner(
       from,

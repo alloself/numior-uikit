@@ -28,6 +28,7 @@ export interface TableCellEditorOptions<T> {
   readonly valueOf: (row: T, key: string) => NuiTableCellValue;
   readonly plan: (row: T, key: string) => TableEditorPlan;
   readonly check: (row: T, key: string, value: NuiTableCellValue) => string | undefined;
+  readonly leave: (from: TableCellPosition, move: TableEditorMove) => TableCellPosition;
   readonly invalid: () => string;
   readonly save: (row: T, key: string, value: NuiTableCellValue) => void;
   readonly refuse: (row: T, key: string, reason: NuiTableEditRefusalReason) => void;
@@ -194,7 +195,7 @@ export const useTableCellEditor = <T>(options: TableCellEditorOptions<T>): Table
       options.announce(options.messages.value.editDiscarded({ error: failure }));
     }
     if (move !== 'blur') {
-      options.focus(stepOf(current.position, move, options.bounds()));
+      options.focus(stepOf(options.leave(current.position, move), move, options.bounds()));
     }
     return true;
   };
