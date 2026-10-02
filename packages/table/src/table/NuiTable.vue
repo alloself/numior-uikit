@@ -358,7 +358,7 @@ import { useTableExport } from './use-table-export';
 import { editorPlan } from './table-editors';
 import { parseCell } from './table-parse';
 import { ruleFailure } from './table-rules';
-import { columnSpansOf, type RangeBox } from './table-ranges';
+import { clampPosition, columnSpansOf, type RangeBox } from './table-ranges';
 import { useTableRanges } from './use-table-ranges';
 import { pageRowsOf, pageStepOf } from './table-keys';
 import { useTableExpansion } from './use-table-expansion';
@@ -409,6 +409,7 @@ import type {
   NuiTableColumnOrder,
   NuiTableContextScope,
   NuiTableCellValue,
+  NuiTableEdgeDirection,
   NuiTableRanges,
   NuiTableRowHeaders,
   NuiTableRowHeights,
@@ -483,6 +484,7 @@ const {
   total,
   pinnedRows = [],
   frozenRows = 0,
+  nextEdge,
   rowDrag: rowDragOn = false,
   nestDelay = NEST_DELAY,
   dragLabel,
@@ -931,6 +933,12 @@ const focus = useTableFocus({
   lead: () => activeLead.value,
   settle: (focused) => settleFocus(focused),
   leave: (from, key) => leaveFrom(from, key),
+  edge: (from, toward) => {
+    const data = dataCellOf(from);
+    const target = data === undefined ? undefined : edgeOfData(data, toward);
+
+    return target === undefined ? undefined : visualCellOf(target);
+  },
 });
 
 const columnAt = (key: string): NuiTableColumn<T> => {
@@ -1399,6 +1407,17 @@ const visualCellOf = (data: TableCellPosition): TableCellPosition => ({
   col: data.col + dataOffset.value,
 });
 
+const edgeOfData = (
+  from: TableCellPosition,
+  toward: NuiTableEdgeDirection,
+): TableCellPosition | undefined =>
+  nextEdge === undefined
+    ? undefined
+    : clampPosition(nextEdge(from, toward), {
+        rows: visibleRows.value,
+        cols: dataKeys.value.length,
+      });
+
 const activeMerge = computed(() => {
   const data = mergeIndex.value.size === 0 ? undefined : dataCellOf(active.value);
 
@@ -1538,6 +1557,7 @@ const rangeSelect = useTableRanges({
   cursor: () => activeData(),
   sorts: (col) => header.heads.value[dataKeys.value[col] ?? '']?.sortable === true,
   merges: () => mergeIndex.value,
+  edge: edgeOfData,
   focus: (position) => {
     focus.focusCell(
       { row: position.row + pinnedCount.value, col: position.col + dataOffset.value },

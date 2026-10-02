@@ -44,6 +44,8 @@ export type {
   NuiTableSelection,
   NuiTableRange,
   NuiTableRanges,
+  NuiTableEdgeDirection,
+  NuiTableNextEdge,
   NuiTableContextMenu,
   NuiTableContextScope,
   NuiTableCopyOptions,

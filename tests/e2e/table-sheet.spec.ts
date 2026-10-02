@@ -487,6 +487,27 @@ test.describe('table cell styles', () => {
     expect(up.firstTop).toBe(up.frozenBottom);
   });
 
+  test('jumps to the edges of the sheet with Ctrl and the arrows', async ({ page }) => {
+    const playground = new PlaygroundPage(page);
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    const { tableSheet: sheet } = playground;
+    await sheet.show();
+    await sheet.cell(SALES, 1).click();
+    await page.keyboard.press('Control+ArrowDown');
+
+    await expect(sheet.cell(LAST_ROW, 1)).toBeFocused();
+    await page.keyboard.press('Control+Shift+ArrowRight');
+
+    await expect
+      .poll(() => sheet.ranges())
+      .toEqual([{ from: { row: LAST_ROW, col: 1 }, to: { row: LAST_ROW, col: LAST_COLUMN } }]);
+
+    await page.keyboard.press('Escape');
+    await page.keyboard.press('Control+ArrowUp');
+    await expect(sheet.cell(TITLE, 1)).toBeFocused();
+  });
+
   test('a painted sheet has no automatically detectable WCAG AA violations', async ({ page }) => {
     const playground = new PlaygroundPage(page);
     await playground.emulate({ reducedMotion: 'reduce' });

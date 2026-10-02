@@ -1,12 +1,18 @@
 import { clamp } from '@vueuse/core';
 import { listMoveFor } from '@numior/primitives';
-import type { TableCellPosition } from './table.types';
+import type { NuiTableEdgeDirection, TableCellPosition } from './table.types';
+
+export type TableEdgeOf = (
+  from: TableCellPosition,
+  direction: NuiTableEdgeDirection,
+) => TableCellPosition | undefined;
 
 export interface TableBounds {
   readonly rows: number;
   readonly cols: number;
   readonly page: number;
   readonly rtl: boolean;
+  readonly edge?: TableEdgeOf | undefined;
 }
 
 export interface TableKey {
@@ -21,6 +27,38 @@ const windowHeight = (): number => (typeof window === 'undefined' ? 0 : window.i
 export const pageRowsOf = (viewport: number, size: number): number => {
   const span = viewport > 0 ? viewport : windowHeight();
   return Math.max(1, Math.floor((span - size) / size));
+};
+
+export const edgeDirectionOf = (key: string, rtl: boolean): NuiTableEdgeDirection | undefined => {
+  if (key === 'ArrowDown' || key === 'ArrowUp') {
+    return key === 'ArrowDown' ? 'down' : 'up';
+  }
+  switch (listMoveFor(key, 'horizontal', rtl)) {
+    case 'next':
+      return 'next';
+    case 'prev':
+      return 'previous';
+    default:
+      return undefined;
+  }
+};
+
+export const tableEdge = (
+  from: TableCellPosition,
+  direction: NuiTableEdgeDirection,
+  rows: number,
+  cols: number,
+): TableCellPosition => {
+  switch (direction) {
+    case 'up':
+      return { row: Math.min(from.row, 0), col: from.col };
+    case 'down':
+      return { row: Math.max(from.row, rows - 1), col: from.col };
+    case 'previous':
+      return { row: from.row, col: 0 };
+    case 'next':
+      return { row: from.row, col: Math.max(0, cols - 1) };
+  }
 };
 
 export interface PageScale {
@@ -95,6 +133,11 @@ export const nextCell = (
   from: TableCellPosition,
   bounds: TableBounds,
 ): TableCellPosition | undefined => {
+  const direction = input.ctrl ? edgeDirectionOf(input.key, bounds.rtl) : undefined;
+
+  if (direction !== undefined) {
+    return bounds.edge?.(from, direction) ?? tableEdge(from, direction, bounds.rows, bounds.cols);
+  }
   const row = verticalTarget(input.key, from, bounds);
 
   if (row !== undefined) {

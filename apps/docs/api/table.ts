@@ -131,6 +131,10 @@ const docs: DocsMap = {
         ru: 'Строки, закреплённые под шапкой: не сортируются, не фильтруются и не режутся на страницы, участвуют в выборе и rowClick; их слоты ячеек получают pinned: true.',
         en: 'Rows pinned under the header: left out of sorting, filters and pages, part of selection and rowClick; their cell slots receive pinned: true.',
       },
+      nextEdge: {
+        ru: 'Край данных для Ctrl со стрелками: (from, direction) → позиция, куда перейти; позиции — как в ranges, direction — up, down, previous или next. Без него Ctrl со стрелкой ведёт к краю таблицы. Ответ вне таблицы прижимается к её краю.',
+        en: 'Edge of the data for Ctrl with the arrows: (from, direction) → the position to move to; positions are as in ranges, direction is up, down, previous or next. Without it Ctrl with an arrow goes to the edge of the table. An answer outside the table is pulled to its edge.',
+      },
       frozenRows: {
         ru: 'Число первых строк тела, которые остаются под шапкой при прокрутке. Это строки данных: выделение, правка и копирование работают с ними как с остальными. Нужен height; группы, дерево, детали строк и source закрепление отключают.',
         en: 'How many first body rows stay under the header while the rest scroll. They are data rows: selection, editing and copying treat them like the others. Needs height; groups, a tree, row details and source turn freezing off.',
@@ -360,8 +364,8 @@ const docs: DocsMap = {
       {
         keys: 'Shift+Arrow / Shift+Home / Shift+End',
         description: {
-          ru: 'Тянет свободный угол диапазона от активной ячейки; с Ctrl доходит до края таблицы.',
-          en: 'Drags the free corner of the range away from the active cell; with Ctrl it reaches the edge of the table.',
+          ru: 'Тянет свободный угол диапазона от активной ячейки; с Ctrl доходит до края данных из nextEdge или до края таблицы.',
+          en: 'Drags the free corner of the range away from the active cell; with Ctrl it reaches the edge of the data from nextEdge or the edge of the table.',
         },
       },
       {
@@ -467,6 +471,13 @@ const docs: DocsMap = {
         description: {
           ru: 'Переходит на первую или последнюю колонку строки.',
           en: 'Moves to the first or the last column of the row.',
+        },
+      },
+      {
+        keys: 'Ctrl+Arrow',
+        description: {
+          ru: 'Переходит к краю таблицы по направлению стрелки, а с nextEdge — к краю данных, как в электронных таблицах.',
+          en: 'Moves to the edge of the table in the direction of the arrow, or with nextEdge to the edge of the data, as spreadsheets do.',
         },
       },
       {

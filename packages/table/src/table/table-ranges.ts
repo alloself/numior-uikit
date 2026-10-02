@@ -1,5 +1,6 @@
 import { clamp } from '@vueuse/core';
 import { listMoveFor } from '@numior/primitives';
+import { edgeDirectionOf, tableEdge, type TableEdgeOf } from './table-keys';
 import type {
   NuiTableRange,
   NuiTableRanges,
@@ -37,6 +38,7 @@ export interface CornerKey {
   readonly ctrl: boolean;
   readonly page: number;
   readonly rtl: boolean;
+  readonly edge?: TableEdgeOf | undefined;
 }
 
 export const boxOf = (range: NuiTableRange): RangeBox => ({
@@ -335,12 +337,12 @@ const edgeCorner = (
   }
 };
 
-const rowStep = (input: CornerKey, corner: TableCellPosition, bounds: RangeBounds) => {
+const rowStep = (input: CornerKey, corner: TableCellPosition) => {
   switch (input.key) {
     case 'ArrowUp':
-      return input.ctrl ? 0 : corner.row - 1;
+      return corner.row - 1;
     case 'ArrowDown':
-      return input.ctrl ? bounds.rows - 1 : corner.row + 1;
+      return corner.row + 1;
     case 'PageUp':
       return corner.row - input.page;
     case 'PageDown':
@@ -350,12 +352,12 @@ const rowStep = (input: CornerKey, corner: TableCellPosition, bounds: RangeBound
   }
 };
 
-const colStep = (input: CornerKey, corner: TableCellPosition, bounds: RangeBounds) => {
+const colStep = (input: CornerKey, corner: TableCellPosition) => {
   switch (listMoveFor(input.key, 'horizontal', input.rtl)) {
     case 'next':
-      return input.ctrl ? bounds.cols - 1 : corner.col + 1;
+      return corner.col + 1;
     case 'prev':
-      return input.ctrl ? 0 : corner.col - 1;
+      return corner.col - 1;
     default:
       return undefined;
   }
@@ -366,9 +368,17 @@ export const stepCorner = (
   input: CornerKey,
   bounds: RangeBounds,
 ): TableCellPosition | undefined => {
+  const direction = input.ctrl ? edgeDirectionOf(input.key, input.rtl) : undefined;
+
+  if (direction !== undefined) {
+    return clampPosition(
+      input.edge?.(corner, direction) ?? tableEdge(corner, direction, bounds.rows, bounds.cols),
+      bounds,
+    );
+  }
   const edge = edgeCorner(input, corner, bounds);
-  const row = rowStep(input, corner, bounds);
-  const col = colStep(input, corner, bounds);
+  const row = rowStep(input, corner);
+  const col = colStep(input, corner);
 
   if (edge !== undefined) {
     return clampPosition(edge, bounds);

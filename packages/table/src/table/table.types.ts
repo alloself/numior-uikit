@@ -158,6 +158,7 @@ export interface NuiTableProps<T> {
   total?: number | undefined;
   pinnedRows?: readonly T[] | undefined;
   frozenRows?: number | undefined;
+  nextEdge?: NuiTableNextEdge | undefined;
   rowDrag?: boolean | undefined;
   nestDelay?: number | undefined;
   dragLabel?: ((row: T) => string) | undefined;
@@ -230,6 +231,13 @@ export interface TableCellPaint {
 export type TableRowPaint = ReadonlyMap<string, TableCellPaint>;
 
 export type TableRowPainter = (position: number, spans?: TableRowSpan) => TableRowPaint | undefined;
+
+export type NuiTableEdgeDirection = 'up' | 'down' | 'previous' | 'next';
+
+export type NuiTableNextEdge = (
+  from: TableCellPosition,
+  direction: NuiTableEdgeDirection,
+) => TableCellPosition;
 
 export interface NuiTableRange {
   readonly from: TableCellPosition;

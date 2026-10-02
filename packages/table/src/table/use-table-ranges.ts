@@ -18,6 +18,7 @@ import {
   type RangeBounds,
 } from './table-ranges';
 import { OWN_DATA_ROWS, OWN_SPANNING_CELLS } from './table-dom';
+import type { TableEdgeOf } from './table-keys';
 import { expandToMerges, leaveMerge, spansLines, type TableMergeIndex } from './table-merges';
 import type { NuiTableMessages } from './table.messages';
 import type {
@@ -46,6 +47,7 @@ export interface TableRangesOptions {
   readonly cursor: () => TableCellPosition | undefined;
   readonly sorts: (col: number) => boolean;
   readonly merges: () => TableMergeIndex;
+  readonly edge: TableEdgeOf;
   readonly focus: (position: TableCellPosition) => void;
   readonly reveal: (corner: TableCellPosition, axis: TableRevealAxis) => void;
   readonly resetOn: WatchSource[];
@@ -589,6 +591,7 @@ export const useTableRanges = (options: TableRangesOptions): TableRanges => {
         ctrl: event.ctrlKey || event.metaKey,
         page: options.pageRows(from.row, event.key === 'PageDown'),
         rtl: options.isRtl(),
+        edge: options.edge,
       },
       options.bounds(),
     );
