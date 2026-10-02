@@ -503,7 +503,8 @@ export class TableSection {
       const box = element.getBoundingClientRect();
       const first = element.querySelector('.nui-table__header .nui-table__cell');
       const last = element.querySelector('.nui-table__header > tr:last-child > .nui-table__cell');
-      const headerTop = first?.getBoundingClientRect().top ?? Number.POSITIVE_INFINITY;
+      const lap = first === null ? 0 : Number.parseFloat(getComputedStyle(first).paddingTop);
+      const offset = (first?.getBoundingClientRect().top ?? Number.POSITIVE_INFINITY) - box.top;
       const bodyTop = last?.getBoundingClientRect().bottom ?? box.top;
 
       const rows = [
@@ -515,7 +516,7 @@ export class TableSection {
         return rect.bottom > bodyTop && rect.top < box.bottom;
       }).length;
 
-      return { rows, headerGap: Math.abs(headerTop - box.top) };
+      return { rows, headerGap: Math.max(offset, -lap - offset, 0) };
     }, top);
   }
 

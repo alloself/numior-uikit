@@ -1,4 +1,5 @@
 import type { Locator, Page } from '@playwright/test';
+import { paintedRgbAt, type Point, type Rgb } from '../helpers/color';
 import {
   isNumber,
   listOf,
@@ -25,6 +26,27 @@ export interface TableSheetEdge {
 const HEAD_ROWS = 1;
 const ROW_HEADERS = 1;
 const BODY_ROWS = ':scope > .nui-table__body > [role="row"]';
+const LEAK = 12;
+const HEADER_TOP: readonly number[] = [0.3, 0.6, 0.9, 1.2, 1.5, 1.8, 2.1, 2.4, 2.7, 3, 3.3, 3.6];
+
+const HEADER_POINTS: readonly Point[] = HEADER_TOP.flatMap((y): Point[] => [
+  [30, y],
+  [140, y],
+]);
+
+const LAYER_PAINT = `
+  html, body { overflow-anchor: none; }
+  [data-testid='table-sheet'] .nui-table__body .nui-table__cell {
+    background-color: blue !important;
+    background-image: none !important;
+  }
+  [data-testid='table-sheet'] .nui-table__header .nui-table__cell:not(.nui-table__cell--pin-start) {
+    background-color: red !important;
+  }
+`;
+
+const isTinted = ([red, green, blue]: Rgb): boolean =>
+  Math.abs(blue - red) > LEAK || Math.abs(red - green) > LEAK;
 
 export class TableSheetSection {
   readonly scope = '[data-testid="table-sheet"]';
@@ -39,7 +61,7 @@ export class TableSheetSection {
   readonly corner: Locator;
   readonly output: Locator;
 
-  constructor(page: Page) {
+  constructor(private readonly page: Page) {
     this.toggle = page.getByTestId('table-sheet-toggle');
     this.root = page.getByTestId('table-sheet');
     this.viewport = this.root.locator(':scope > .nui-table__frame > .nui-table__viewport');
@@ -154,13 +176,32 @@ export class TableSheetSection {
     );
   }
 
-  async restOnHalfPixel(): Promise<void> {
-    await this.root.evaluate((element) => {
-      const top = element.getBoundingClientRect().top * devicePixelRatio;
-      const shift = (((0.5 - (top % 1)) % 1) + 1) % 1;
+  async paintLayers(): Promise<void> {
+    await this.page.addStyleTag({ content: LAYER_PAINT });
+  }
 
-      element.style.setProperty('margin-block-start', `${shift / devicePixelRatio}px`);
-    });
+  async headerLeaks(fraction: number): Promise<Rgb[]> {
+    await this.root.evaluate((element, target) => {
+      const top = element.getBoundingClientRect().top * devicePixelRatio;
+      const shift = (((target - (top % 1)) % 1) + 1) % 1;
+
+      element.style.setProperty('inset-block-start', `${shift / devicePixelRatio}px`);
+    }, fraction);
+
+    await this.scrollTo(96, 300);
+
+    await this.viewport.evaluate(
+      () =>
+        new Promise<void>((resolve) => {
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              resolve();
+            });
+          });
+        }),
+    );
+
+    return (await paintedRgbAt(this.root, HEADER_POINTS)).filter(isTinted);
   }
 
   hasSpareRoom(): Promise<boolean> {

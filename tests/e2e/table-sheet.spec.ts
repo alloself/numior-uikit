@@ -1,5 +1,4 @@
-import { expect, test } from '@playwright/test';
-import { paintedRgbAt } from './helpers/color';
+import { expect, test, type Page } from '@playwright/test';
 import { boxOf } from './helpers/geometry';
 import { PlaygroundPage } from './pages/playground';
 
@@ -8,8 +7,22 @@ const INCOME_TOTAL = 6;
 const RESULT = 14;
 const LAST_COLUMN = 13;
 const LAST_QUARTER_COLUMN = 4;
-const CORNER_ROWS = [0.4, 0.8, 1.2, 1.6, 2, 2.4, 2.8, 3.2];
-const TINT = 8;
+const PIXEL_FRACTIONS = [0.05, 0.3, 0.55, 0.8];
+const PIXEL_RATIOS = [1.25, 1.5];
+
+const expectSolidHeader = async (page: Page): Promise<void> => {
+  const playground = new PlaygroundPage(page);
+  await playground.emulate({ reducedMotion: 'reduce' });
+  await playground.open();
+  const { tableSheet: sheet } = playground;
+  await sheet.show();
+  await sheet.windowSwitch.click();
+  await sheet.paintLayers();
+
+  for (const fraction of PIXEL_FRACTIONS) {
+    expect(await sheet.headerLeaks(fraction), `at a pixel fraction of ${fraction}`).toEqual([]);
+  }
+};
 
 test.describe('table cell styles', () => {
   test('draws grid lines between the columns and keeps the pane edge without them', async ({
@@ -213,28 +226,10 @@ test.describe('table cell styles', () => {
     expect(await sheet.scrollHeight()).toBe(before);
   });
 
-  test('keeps the first pixel row of the corner solid over a marked header on a half pixel', async ({
+  test('keeps scrolled cells from showing over the header at any pixel fraction', async ({
     page,
-    isMobile,
   }) => {
-    const playground = new PlaygroundPage(page);
-    await playground.emulate({ reducedMotion: 'reduce' });
-    await playground.open();
-    const { tableSheet: sheet } = playground;
-    await sheet.show();
-    await sheet.windowSwitch.click();
-    await (isMobile ? sheet.columnHeader(2).tap() : sheet.columnHeader(2).click());
-    await expect(sheet.columnHeader(2)).toHaveClass(/nui-table__cell--marked/);
-    await sheet.restOnHalfPixel();
-    await sheet.scrollTo(96, 300);
-    await expect(sheet.rowHeader(SALES + 1)).toBeVisible();
-
-    const column = await paintedRgbAt(
-      sheet.root,
-      CORNER_ROWS.map((y) => [30, y]),
-    );
-
-    expect(column.filter(([red, , blue]) => blue - red > TINT)).toEqual([]);
+    await expectSolidHeader(page);
   });
 
   test('a painted sheet has no automatically detectable WCAG AA violations', async ({ page }) => {
@@ -252,3 +247,14 @@ test.describe('table cell styles', () => {
     }
   });
 });
+
+for (const ratio of PIXEL_RATIOS) {
+  test.describe(`table header at a pixel ratio of ${ratio}`, () => {
+    test.use({ deviceScaleFactor: ratio });
+
+    test('keeps scrolled cells from showing over the header', async ({ page, isMobile }) => {
+      test.skip(isMobile, 'pixel ratios of a desktop display');
+      await expectSolidHeader(page);
+    });
+  });
+}

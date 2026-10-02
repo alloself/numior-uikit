@@ -30,6 +30,7 @@
   --_edge-start: initial;
   --_cell-position: relative;
   --_cell-layer: 0;
+  --_head-lap: 2px;
   --_content-size: calc(var(--_row) - 1px);
   --_content-min: auto;
   --_body-size: var(--_content-size);
@@ -137,6 +138,7 @@
   border-spacing: 0;
   inline-size: var(--_canvas);
   min-inline-size: 100%;
+  margin-block-start: calc(-1 * var(--_head-lap));
   background: var(--nui-surface);
 }
 .nui-table__row {
@@ -159,7 +161,7 @@
   --_window-rest: initial;
 
   position: sticky;
-  inset-block: var(--_window-clamp-start) var(--_window-clamp-end);
+  inset-block: calc(var(--_window-clamp-start) - var(--_head-lap)) var(--_window-clamp-end);
 }
 .nui-table__body
   > .nui-table__row
@@ -388,6 +390,10 @@
   position: sticky;
   inset-block-start: var(--_top, 0px);
   z-index: 2;
+}
+.nui-table__header > .nui-table__row:first-child > .nui-table__cell {
+  inset-block-start: calc(-1 * var(--_head-lap));
+  padding-block-start: var(--_head-lap);
 }
 .nui-table__footer .nui-table__cell {
   position: sticky;
