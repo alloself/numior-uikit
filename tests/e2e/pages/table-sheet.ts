@@ -53,9 +53,6 @@ const LAYER_PAINT = `
     background-color: blue !important;
     background-image: none !important;
   }
-  [data-testid='table-sheet'] .nui-table__header .nui-table__cell:not(.nui-table__cell--pin-start) {
-    background-color: red !important;
-  }
 `;
 
 const BAND_PAINT = `
@@ -78,8 +75,7 @@ const BAND_POINTS: readonly Point[] = Array.from(
   (_, step) => BAND_TOP + step * BAND_STEP,
 ).flatMap((y) => BAND_COLUMNS.map((x): Point => [x, y]));
 
-const isTinted = ([red, green, blue]: Rgb): boolean =>
-  Math.abs(blue - red) > LEAK || Math.abs(red - green) > LEAK;
+const showsBody = ([red, green, blue]: Rgb): boolean => blue - Math.max(red, green) > LEAK;
 
 export class TableSheetSection {
   readonly scope = '[data-testid="table-sheet"]';
@@ -274,21 +270,7 @@ export class TableSheetSection {
     );
   }
 
-  async headerLeaks(fraction: number): Promise<Rgb[]> {
-    await this.root.evaluate((element, target) => {
-      const top = element.getBoundingClientRect().top * devicePixelRatio;
-      const shift = (((target - (top % 1)) % 1) + 1) % 1;
-
-      element.style.setProperty('inset-block-start', `${shift / devicePixelRatio}px`);
-    }, fraction);
-
-    await this.scrollTo(96, 300);
-    await this.painted();
-
-    return (await paintedRgbAt(this.root, HEADER_POINTS)).filter(isTinted);
-  }
-
-  async bandLeaks(fraction: number, top: number): Promise<Rgb[]> {
+  private async shiftTo(fraction: number): Promise<void> {
     await this.root.evaluate((element, target) => {
       element.style.setProperty('inset-block-start', '0px');
 
@@ -297,11 +279,22 @@ export class TableSheetSection {
 
       element.style.setProperty('inset-block-start', `${shift / devicePixelRatio}px`);
     }, fraction);
+  }
 
+  async headerLeaks(fraction: number): Promise<Rgb[]> {
+    await this.shiftTo(fraction);
+    await this.scrollTo(96, 300);
+    await this.painted();
+
+    return (await paintedRgbAt(this.root, HEADER_POINTS)).filter(showsBody);
+  }
+
+  async bandLeaks(fraction: number, top: number): Promise<Rgb[]> {
+    await this.shiftTo(fraction);
     await this.scrollTo(top, 0);
     await this.painted();
 
-    return (await paintedRgbAt(this.root, BAND_POINTS)).filter(isTinted);
+    return (await paintedRgbAt(this.root, BAND_POINTS)).filter(showsBody);
   }
 
   scrollTop(): Promise<number> {
