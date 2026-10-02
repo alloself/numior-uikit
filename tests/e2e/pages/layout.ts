@@ -32,6 +32,7 @@ export class LayoutSection {
   readonly side: Locator;
   readonly variant: Locator;
   readonly subToggle: Locator;
+  readonly subIcon: Locator;
   readonly flyout: Locator;
   readonly header: Locator;
   readonly endToggle: Locator;
@@ -51,6 +52,7 @@ export class LayoutSection {
     this.side = page.getByTestId('layout-side');
     this.variant = page.getByTestId('layout-variant');
     this.subToggle = page.getByTestId('layout-sub');
+    this.subIcon = this.subToggle.locator('.nui-row__leading');
     this.flyout = this.root.locator('.nui-sidebar-sub__flyout');
     this.header = page.getByTestId('layout-header');
     this.endToggle = page.getByTestId('layout-end-toggle');
@@ -67,6 +69,14 @@ export class LayoutSection {
 
   itemLabel(key: string): Locator {
     return this.item(key).locator('.nui-row__title');
+  }
+
+  itemIcon(key: string): Locator {
+    return this.item(key).locator('.nui-row__leading');
+  }
+
+  itemRow(key: string): Locator {
+    return this.item(key).locator('xpath=..');
   }
 
   async labelWidth(key: string): Promise<number> {

@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { motionOf, SLOW_MOTION, slowMotion } from './helpers/motion';
 import { PlaygroundPage } from './pages/playground';
 
 test.describe('data display', () => {
@@ -104,6 +105,41 @@ test.describe('data display', () => {
     await expect(data.option(list, 'Котлин')).toHaveAttribute('tabindex', '-1');
     await data.option(data.singleList, 'Push').click();
     await expect.poll(async () => (await data.readOutput()).channel).toBe('push');
+  });
+
+  test('a selected option fades its icon and its description together with its label', async ({
+    page,
+  }) => {
+    const playground = new PlaygroundPage(page);
+    await playground.open();
+    const { data } = playground;
+    const option = data.option(data.singleList, 'Почта');
+    await option.scrollIntoViewIfNeeded();
+    await slowMotion(data.singleList);
+    await option.click();
+    const label = await motionOf(option, 'color');
+
+    expect(label?.duration).toBe(SLOW_MOTION);
+    expect(await motionOf(data.iconOf(option), 'color')).toEqual(label);
+    expect(await motionOf(data.descriptionOf(option), 'color')).toEqual(label);
+    expect(await motionOf(data.titleOf(option), 'color')).toBeNull();
+  });
+
+  test('a linked list item fades its hover background and leaves the text colour to its row', async ({
+    page,
+    isMobile,
+  }) => {
+    test.skip(isMobile, 'hover scenario');
+    const playground = new PlaygroundPage(page);
+    await playground.open();
+    const { data } = playground;
+    const link = data.action(data.list, 'Документация');
+    await link.scrollIntoViewIfNeeded();
+    await slowMotion(data.list);
+    await link.hover();
+
+    expect((await motionOf(link, 'background-color'))?.duration).toBe(SLOW_MOTION);
+    await expect(link).toHaveCSS('transition-property', 'background-color');
   });
 
   test('list items render as links or buttons and an emptied list shows the empty state', async ({

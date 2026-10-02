@@ -64,6 +64,22 @@ export class DataSection {
     return list.getByRole('option', { name });
   }
 
+  titleOf(item: Locator): Locator {
+    return item.locator('.nui-row__title');
+  }
+
+  iconOf(item: Locator): Locator {
+    return item.locator('.nui-row__leading');
+  }
+
+  descriptionOf(item: Locator): Locator {
+    return item.locator('.nui-row__description');
+  }
+
+  action(list: Locator, name: string): Locator {
+    return list.locator('.nui-list-item__action').filter({ hasText: name });
+  }
+
   async clickSurface(target: Locator): Promise<void> {
     await target.scrollIntoViewIfNeeded();
     const box = await target.boundingBox();

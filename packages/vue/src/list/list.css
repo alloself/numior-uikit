@@ -194,6 +194,7 @@
   font: inherit;
   text-align: start;
   cursor: pointer;
+  transition: background-color var(--nui-duration-fast) var(--nui-easing);
 }
 .nui-list .nui-list-item__action:hover {
   background: var(--_hover);
@@ -220,7 +221,7 @@
   background: var(--_hover);
 }
 .nui-list-item--current {
-  --_row-icon: currentColor;
+  --_row-icon: var(--nui-primary-soft-foreground);
   --_row-weight: 500;
   --_hover: color-mix(in oklab, var(--nui-primary-soft), var(--nui-primary) 8%);
 

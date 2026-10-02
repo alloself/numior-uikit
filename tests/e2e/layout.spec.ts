@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { boxOf } from './helpers/geometry';
+import { motionOf, SLOW_MOTION, slowMotion } from './helpers/motion';
 import { PlaygroundPage } from './pages/playground';
 
 test.describe('layout', () => {
@@ -102,6 +103,30 @@ test.describe('layout', () => {
     const rtlBody = await layout.content().boundingBox();
     expect(rtlBox && rtlBody && rtlBox.x > rtlBody.x).toBe(true);
     await playground.setDirection('ltr');
+  });
+
+  test('a navigation item fades its icon and its hover background together with its label', async ({
+    page,
+    isMobile,
+  }) => {
+    test.skip(isMobile, 'desktop sidebar');
+    const playground = new PlaygroundPage(page);
+    await playground.open();
+    const { layout } = playground;
+    await layout.root.scrollIntoViewIfNeeded();
+    await slowMotion(layout.sidebar);
+    await layout.item('calendar').click();
+    const label = await motionOf(layout.itemRow('calendar'), 'color');
+
+    expect(label?.duration).toBe(SLOW_MOTION);
+    expect(await motionOf(layout.itemIcon('calendar'), 'color')).toEqual(label);
+    expect(await motionOf(layout.item('calendar'), 'background-color')).toEqual(label);
+    expect(await motionOf(layout.item('calendar'), 'color')).toBeNull();
+    await layout.subToggle.click();
+    await layout.item('report-sales').click();
+
+    expect(await motionOf(layout.subToggle, 'color')).toEqual(label);
+    expect(await motionOf(layout.subIcon, 'color')).toEqual(label);
   });
 
   test('the icon rail opens sub lists as flyouts by hover, click and keyboard', async ({
