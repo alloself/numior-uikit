@@ -71,6 +71,10 @@ const docs: DocsMap = {
         ru: 'Рисует линии между колонками. Линия после последней колонки видна, только пока колонки уже области прокрутки.',
         en: 'Draws lines between the columns. The line after the last column shows only while the columns are narrower than the scroll area.',
       },
+      rowHeaders: {
+        ru: 'Закреплённая в начале колонка заголовков строк: true нумерует строки по порядку на экране, а { label, width } задаёт подпись label(row, position) и ширину в пикселях. Щелчок по заголовку выделяет строку, по углу — все ячейки, а по заголовку колонки с sortable: false — колонку; Shift продолжает выделение, Ctrl добавляет строку или колонку, протяжка берёт несколько подряд. Заголовки выделенных ячеек подсвечены. Выделение требует cellSelection.',
+        en: 'Column of row headers pinned at the start: true numbers the rows in the order on screen, and { label, width } sets the label(row, position) text and the width in pixels. A click on a header selects the row, on the corner every cell, and on the header of a column with sortable: false the column; Shift extends the selection, Ctrl adds a row or a column, a drag takes several in a row. The headers of selected cells are highlighted. The selection needs cellSelection.',
+      },
       treeColumn: {
         ru: 'Ключ колонки с отступом и переключателем дерева или детали; по умолчанию первая колонка.',
         en: 'Key of the column with the tree indentation and the toggle of a tree row or a detail; the first column by default.',
@@ -276,6 +280,13 @@ const docs: DocsMap = {
         description: {
           ru: 'На ячейке шапки добавляет колонку следующим ключом сортировки.',
           en: 'On a header cell adds the column as the next sort key.',
+        },
+      },
+      {
+        keys: 'Enter / Space',
+        description: {
+          ru: 'При включённом rowHeaders на заголовке строки выделяет строку, на заголовке колонки без сортировки — колонку, а на угловой ячейке — все ячейки.',
+          en: 'With rowHeaders on, on a row header selects the row, on the header of a column that does not sort the column, and on the corner cell every cell.',
         },
       },
       {

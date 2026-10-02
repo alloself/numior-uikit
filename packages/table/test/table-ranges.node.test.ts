@@ -2,9 +2,12 @@ import { describe, expect, it } from 'vitest';
 import {
   allOf,
   colsOf,
+  columnSpansOf,
   copyShapeOf,
   cutRanges,
   inRanges,
+  inSpans,
+  revealAxisOf,
   rowsOf,
   sameRanges,
   segmentsOf,
@@ -12,6 +15,7 @@ import {
   spanLength,
   stepCorner,
   tidyRanges,
+  widenRange,
   withLast,
 } from '../src/table/table-ranges';
 import { htmlOf, tsvOf } from '../src/table/table-clipboard';
@@ -107,6 +111,34 @@ describe('table ranges', () => {
     expect(inRanges(list, { row: 2, col: 2 })).toBe(false);
     expect(sameRanges(list, [range(1, 1, 1, 1), range(3, 2, 4, 3)])).toBe(true);
     expect(sameRanges(list, [range(1, 1, 1, 1)])).toBe(false);
+  });
+
+  it('widens a range to whole lines and reveals a whole line only along the other axis', () => {
+    const cell = range(3, 2, 3, 2);
+
+    expect(widenRange(cell, 'cells', BOUNDS)).toBe(cell);
+    expect(widenRange(range(3, 2, 5, 2), 'rows', BOUNDS)).toEqual(range(3, 0, 5, 4));
+    expect(widenRange(range(3, 1, 3, 2), 'cols', BOUNDS)).toEqual(range(0, 1, 9, 2));
+    expect(revealAxisOf(range(3, 2, 5, 3), BOUNDS)).toBe('both');
+    expect(revealAxisOf(range(3, 0, 5, 4), BOUNDS)).toBe('row');
+    expect(revealAxisOf(range(9, 1, 0, 2), BOUNDS)).toBe('col');
+    expect(revealAxisOf(allOf(BOUNDS), BOUNDS)).toBe('none');
+    expect(revealAxisOf(range(0, 0, 0, 2), { rows: 1, cols: 5 })).toBe('both');
+  });
+
+  it('merges the columns under the ranges into spans of visual columns', () => {
+    const spans = columnSpansOf([range(0, 3, 9, 3), range(2, 0, 4, 1), range(6, 2, 6, 2)], 2);
+
+    expect(spans).toEqual([{ start: 2, end: 5 }]);
+
+    expect(columnSpansOf([range(0, 0, 1, 0), range(5, 3, 5, 4)], 1)).toEqual([
+      { start: 1, end: 1 },
+      { start: 4, end: 5 },
+    ]);
+
+    expect(inSpans(spans, 5)).toBe(true);
+    expect(inSpans(spans, 6)).toBe(false);
+    expect(columnSpansOf([], 1)).toEqual([]);
   });
 
   it('outlines the union of the ranges in visual columns, holes included', () => {

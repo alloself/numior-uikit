@@ -53,7 +53,11 @@ const DEFAULT_WIDTH = 160;
 const SMALLEST_WIDTH = 48;
 const UTILITY_WIDTH = 40;
 
+const ROW_HEAD_DIGIT = 8;
+const ROW_HEAD_PADDING = 20;
+
 export const SELECT_KEY = '__select';
+export const ROW_HEAD_KEY = '__rowhead';
 export const TRAIL_KEY = '__trail';
 
 const SELECT_INPUT: PlaceInput = {
@@ -64,6 +68,19 @@ const SELECT_INPUT: PlaceInput = {
   align: 'center',
   wrap: false,
 };
+
+const rowHeadInput = (width: number): PlaceInput => ({
+  key: ROW_HEAD_KEY,
+  kind: 'rowhead',
+  width,
+  flex: 0,
+  align: 'center',
+  wrap: false,
+});
+
+export const rowHeadWidth = (count: number, width: number | undefined): number =>
+  width ??
+  Math.max(UTILITY_WIDTH, String(Math.max(1, count)).length * ROW_HEAD_DIGIT + ROW_HEAD_PADDING);
 
 const minWidthOf = <T>(column: NuiTableColumn<T>): number => column.minWidth ?? SMALLEST_WIDTH;
 
@@ -169,6 +186,7 @@ export interface LayoutOptions {
   readonly select: boolean;
   readonly room: number;
   readonly wrap: boolean;
+  readonly rowHeader?: number | undefined;
 }
 
 const DEFAULT_OPTIONS: LayoutOptions = {
@@ -215,7 +233,12 @@ export const tableLayout = <T>(
     }
   }
 
-  const utilities = options.select ? [SELECT_INPUT] : [];
+  const rowHeader = options.rowHeader ?? 0;
+
+  const utilities = [
+    ...(rowHeader > 0 ? [rowHeadInput(rowHeader)] : []),
+    ...(options.select ? [SELECT_INPUT] : []),
+  ];
 
   const ordered = stretch([...utilities, ...starts, ...centres, ...ends], options.room);
   const startCount = utilities.length + (options.sticky ? starts.length : 0);
@@ -258,6 +281,13 @@ export const centreIndexOf = (layout: TableLayout, visual: number): number | und
 
 export const wrappedCentreOf = (layout: TableLayout): number[] =>
   layout.centre.flatMap((column, index) => (column.cell.wrap ? [index] : []));
+
+export const revealOffset = (
+  current: number,
+  offset: number,
+  width: number,
+  span: number,
+): number => Math.min(offset, Math.max(current, offset + width - span));
 
 export const sameIndices = (a: readonly number[], b: readonly number[]): boolean =>
   a.length === b.length && a.every((index, at) => index === b[at]);

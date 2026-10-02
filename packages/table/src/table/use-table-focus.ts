@@ -2,7 +2,7 @@ import { onMounted, ref, watch, type Ref, type ShallowRef } from 'vue';
 import { createIntent, type VirtualList } from '@numior/primitives';
 import { DETAIL_CELL, OWN_ACTIVE_CELL } from './table-dom';
 import { nextCell } from './table-keys';
-import type { TableCellPosition, TableHeaderTarget } from './table.types';
+import type { TableCellPosition, TableHeaderTarget, TableRevealAxis } from './table.types';
 
 export interface TableFocusOptions {
   readonly viewport: Readonly<ShallowRef<HTMLElement | null>>;
@@ -23,7 +23,7 @@ export interface TableFocusOptions {
 
 export interface TableFocus {
   activeIn(position: number): number;
-  reveal(target: TableCellPosition): void;
+  reveal(target: TableCellPosition, axis?: TableRevealAxis): void;
   focusCell(target: TableCellPosition, scroll?: boolean): void;
   focusHeader(target: TableHeaderTarget): void;
   onKeydown(event: KeyboardEvent): void;
@@ -63,19 +63,31 @@ export const useTableFocus = (options: TableFocusOptions): TableFocus => {
   const placement = createIntent<TableHeaderTarget>();
   const placements = ref(0);
 
-  const reveal = (target: TableCellPosition): void => {
-    if (!options.windowed()) {
-      return;
-    }
-    const body = target.row - options.pinnedRows();
+  const revealRow = (row: number): void => {
+    const body = row - options.pinnedRows();
 
     if (body >= 0 && body < options.bodyRows()) {
       options.rows.scrollTo(body, { align: 'auto' });
     }
-    const centre = options.centreIndexOf(target.col);
+  };
+
+  const revealColumn = (col: number): void => {
+    const centre = options.centreIndexOf(col);
 
     if (centre !== undefined) {
       options.columns.scrollTo(centre, { align: 'auto' });
+    }
+  };
+
+  const reveal = (target: TableCellPosition, axis: TableRevealAxis = 'both'): void => {
+    if (!options.windowed()) {
+      return;
+    }
+    if (axis === 'both' || axis === 'row') {
+      revealRow(target.row);
+    }
+    if (axis === 'both' || axis === 'col') {
+      revealColumn(target.col);
     }
   };
 

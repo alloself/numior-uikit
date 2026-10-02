@@ -4,7 +4,10 @@ import type {
   NuiTableRange,
   NuiTableRanges,
   TableCellPosition,
+  TableRangeLines,
   TableRangeSegment,
+  TableRevealAxis,
+  TableSpan,
 } from './table.types';
 
 export interface RangeBounds {
@@ -19,10 +22,7 @@ export interface RangeBox {
   readonly end: number;
 }
 
-export interface RangeSpan {
-  readonly start: number;
-  readonly end: number;
-}
+export type RangeSpan = TableSpan;
 
 export type CopyShape =
   | {
@@ -105,8 +105,8 @@ const spansAt = (ranges: NuiTableRanges, row: number): RangeSpan[] =>
     }),
   );
 
-const covers = (spans: readonly RangeSpan[], col: number): boolean =>
-  spans.some((span) => col >= span.start && col <= span.end);
+export const inSpans = (spans: readonly RangeSpan[], index: number): boolean =>
+  spans.some((span) => index >= span.start && index <= span.end);
 
 const cutsOf = (span: RangeSpan, around: readonly RangeSpan[]): number[] =>
   [...new Set(around.flatMap((other) => [other.start, other.end + 1]))]
@@ -135,8 +135,8 @@ export const segmentsOf = (
       return {
         from: from + offset,
         to: to + offset,
-        top: !covers(above, from),
-        bottom: !covers(below, from),
+        top: !inSpans(above, from),
+        bottom: !inSpans(below, from),
         start: from === span.start,
         end: to === span.end,
       };
@@ -278,6 +278,44 @@ export const allOf = (bounds: RangeBounds): NuiTableRange => ({
   from: { row: 0, col: 0 },
   to: { row: Math.max(0, bounds.rows - 1), col: Math.max(0, bounds.cols - 1) },
 });
+
+export const widenRange = (
+  range: NuiTableRange,
+  lines: TableRangeLines,
+  bounds: RangeBounds,
+): NuiTableRange => {
+  switch (lines) {
+    case 'cells':
+      return range;
+    case 'rows':
+      return rowsOf(range, bounds);
+    case 'cols':
+      return colsOf(range, bounds);
+  }
+};
+
+export const revealAxisOf = (range: NuiTableRange, bounds: RangeBounds): TableRevealAxis => {
+  const box = boxOf(range);
+  const everyRow = bounds.rows > 1 && box.top === 0 && box.bottom >= bounds.rows - 1;
+  const everyCol = bounds.cols > 1 && box.start === 0 && box.end >= bounds.cols - 1;
+
+  if (everyRow && everyCol) {
+    return 'none';
+  }
+  if (everyRow) {
+    return 'col';
+  }
+  return everyCol ? 'row' : 'both';
+};
+
+export const columnSpansOf = (ranges: NuiTableRanges, offset: number): RangeSpan[] =>
+  mergeSpans(
+    ranges.map((range) => {
+      const box = boxOf(range);
+
+      return { start: box.start + offset, end: box.end + offset };
+    }),
+  );
 
 const edgeCorner = (
   input: CornerKey,

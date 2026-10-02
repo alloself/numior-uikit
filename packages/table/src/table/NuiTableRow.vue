@@ -13,7 +13,7 @@
   >
     <template v-for="cell in cells.cells" :key="cell.key">
       <component
-        :is="tag"
+        :is="tagOf(cell)"
         v-if="cell.kind === 'gap'"
         class="nui-table__cell nui-table__cell--gap"
         :class="pinClass(cell)"
@@ -22,12 +22,12 @@
         :style="cell.style"
       ></component>
       <component
-        :is="tag"
+        :is="tagOf(cell)"
         v-else
         class="nui-table__cell"
         :class="cellClass(cell)"
-        :role="cellRole"
-        :scope="scope"
+        :role="roleOf(cell)"
+        :scope="scopeOf(cell)"
         :colspan="colspanOf(cell.colspan)"
         :aria-colindex="cell.colIndex"
         :aria-colspan="cell.span"
@@ -53,6 +53,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import NuiTableResizer from './NuiTableResizer.vue';
+import { inSpans } from './table-ranges';
 import type {
   TableCellLayout,
   TableDataCell,
@@ -78,6 +79,7 @@ const {
   stripe = false,
   dragging = false,
   ranged,
+  marks,
   heads,
 } = defineProps<NuiTableRowProps>();
 
@@ -90,20 +92,29 @@ defineSlots<{
 
 const heading = computed(() => part === 'head' || part === 'band');
 
-const cellRole = computed(() => (heading.value ? 'columnheader' : 'gridcell'));
+const headScope = computed(() => (part === 'head' ? 'col' : 'colgroup'));
 
-const tag = computed(() => (heading.value ? 'th' : 'td'));
+const tagOf = (cell: TableCellLayout): 'th' | 'td' =>
+  heading.value || cell.kind === 'rowhead' ? 'th' : 'td';
 
-const scope = computed(() => {
-  switch (part) {
-    case 'head':
-      return 'col';
-    case 'band':
-      return 'colgroup';
-    default:
-      return undefined;
+const roleOf = (cell: TableDataCell): 'columnheader' | 'rowheader' | 'gridcell' => {
+  if (heading.value) {
+    return 'columnheader';
   }
-});
+  return cell.kind === 'rowhead' ? 'rowheader' : 'gridcell';
+};
+
+const scopeOf = (cell: TableDataCell): 'col' | 'colgroup' | 'row' | undefined => {
+  if (heading.value) {
+    return headScope.value;
+  }
+  return cell.kind === 'rowhead' ? 'row' : undefined;
+};
+
+const markedOf = (cell: TableDataCell): boolean =>
+  cell.kind === 'rowhead'
+    ? ranged !== undefined
+    : marks !== undefined && inSpans(marks, cell.colIndex - 1);
 
 const sticky = computed(() => part === 'head' || part === 'band' || part === 'pinned');
 
@@ -181,6 +192,7 @@ const cellClass = (cell: TableDataCell): unknown[] => [
   rangeClass(cell),
   cell.rule === undefined ? undefined : `nui-table__cell--rule-${cell.rule}`,
   {
+    'nui-table__cell--marked': markedOf(cell),
     'nui-table__cell--tail': cell.tail === true,
     'nui-table__cell--wrap': cell.wrap && wrapsText.value,
     'nui-table__cell--active': cell.colIndex === active,

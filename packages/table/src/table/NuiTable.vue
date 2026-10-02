@@ -38,6 +38,7 @@
               :row-index="headRows"
               part="head"
               :active="focus.activeIn(-1)"
+              :marks="columnMarks"
               :heads="header.heads.value"
               @resize="resize.start"
             >
@@ -76,9 +77,9 @@
               :revision="revision"
               :selected="item.selected"
             >
-              <template #utility>
+              <template #utility="{ column }">
                 <NuiTableUtilityCell
-                  v-bind="pinnedUtility(item)"
+                  v-bind="pinnedUtility(item, column)"
                   @toggle="selection.toggle(item.row)"
                 />
               </template>
@@ -130,9 +131,9 @@
                 :dragging="rowDrag.dragging.value === item.index"
                 :ranged="rangedOf(item)"
               >
-                <template #utility>
+                <template #utility="{ column }">
                   <NuiTableUtilityCell
-                    v-bind="rowUtility(item)"
+                    v-bind="rowUtility(item, column)"
                     @toggle="selection.toggle(rowAt(item.index))"
                   />
                 </template>
@@ -289,7 +290,14 @@ import NuiTableTracks from './NuiTableTracks.vue';
 import NuiTableTreeToggle from './NuiTableTreeToggle.vue';
 import NuiTableUtilityCell from './NuiTableUtilityCell.vue';
 import { tableMessages } from './table.messages';
-import { detailsBefore, detailSpotsOf, NO_DETAILS, NO_SPOTS, sameSpots } from './table-detail';
+import {
+  countBelow,
+  detailsBefore,
+  detailSpotsOf,
+  NO_DETAILS,
+  NO_SPOTS,
+  sameSpots,
+} from './table-detail';
 import { paintOf } from './table-paint';
 import { ownCellAt, ownDetailOf } from './table-dom';
 import { cellTextOf, cellValueOf, engineColumnOf, valueTextOf } from './table-format';
@@ -300,7 +308,10 @@ import {
   dataKeyAt,
   dataKeysOf,
   pinsFit,
+  revealOffset,
+  ROW_HEAD_KEY,
   rowCellsOf,
+  rowHeadWidth,
   SELECT_KEY,
   mergeIndices,
   sameIndices,
@@ -320,6 +331,7 @@ import { useTableExport } from './use-table-export';
 import { editorPlan } from './table-editors';
 import { parseCell } from './table-parse';
 import { ruleFailure } from './table-rules';
+import { columnSpansOf } from './table-ranges';
 import { useTableRanges } from './use-table-ranges';
 import { pageRowsOf, pageStepOf } from './table-keys';
 import { useTableExpansion } from './use-table-expansion';
@@ -339,6 +351,8 @@ import type {
   TableCellPosition,
   TableDetailSpot,
   TablePinnedRow,
+  TableReveal,
+  TableRevealAxis,
   TableRowMode,
   TableRowPaint,
   TableRowPainter,
@@ -362,6 +376,7 @@ import type {
   NuiTableContextScope,
   NuiTableCellValue,
   NuiTableRanges,
+  NuiTableRowHeaders,
   NuiTableWidths,
   TableRowRanges,
 } from './table.types';
@@ -382,12 +397,13 @@ const INITIAL_COLUMNS = 12;
 const ROW_OVERSCAN = 6;
 const DISTINCT_LIMIT = 100;
 const COLUMN_OVERSCAN = 2;
+const NO_ROW_HEAD = {} as const;
 const NO_UTILITY: NuiTableUtilityCellProps = { control: 'none' };
 const SKELETON_UTILITY: NuiTableUtilityCellProps = { control: 'skeleton' };
 const TEXT_SKELETON: NuiSkeletonProps = { shape: 'text', width: '100%' };
 
 const CLICK_GUARD =
-  '.nui-table__cell--select, .nui-table__row-grip, .nui-table__toggle, .nui-table__group, .nui-table__editor';
+  '.nui-table__cell--select, .nui-table__cell--rowhead, .nui-table__row-grip, .nui-table__toggle, .nui-table__group, .nui-table__editor';
 
 const NEST_DELAY = 600;
 const COPY_LIMIT = 200_000;
@@ -414,6 +430,7 @@ const {
   hasDetail,
   cellStyle,
   bordered = false,
+  rowHeaders = undefined,
   treeColumn,
   columnMenu = true,
   selectable,
@@ -544,6 +561,24 @@ const totalCount = computed(() =>
 
 const keyOf = (row: T): TableSelectionKey<T> => (getKey === undefined ? row : getKey(row));
 
+const rowHead = computed<NuiTableRowHeaders<T> | undefined>(() => {
+  if (rowHeaders === undefined || rowHeaders === false) {
+    return undefined;
+  }
+  return rowHeaders === true ? NO_ROW_HEAD : rowHeaders;
+});
+
+const rowHeadSize = computed(() =>
+  rowHead.value === undefined ? 0 : rowHeadWidth(totalCount.value, rowHead.value.width),
+);
+
+const ordinalBase = computed(() =>
+  remote ? (Math.max(1, page.value) - 1) * pageSize.value : pageStart.value,
+);
+
+const ordinalOf = (position: number): number =>
+  ordinalBase.value + position + 1 - countBelow(detailPositions.value, pageStart.value + position);
+
 const quickKeys = computed(() => {
   if (hidden.value.length === 0) {
     return undefined;
@@ -619,6 +654,7 @@ const layoutOptions = computed(() => ({
   select: selectOn.value,
   room: room.value,
   wrap: height === undefined || rowHeight === 'auto',
+  rowHeader: rowHeadSize.value,
 }));
 
 const pinnedLayout = computed(() =>
@@ -949,8 +985,11 @@ const gridAria = computed(() => {
   };
 });
 
-const headUtility = (column: string): NuiTableUtilityCellProps =>
-  column === SELECT_KEY && selection.multiple.value
+const headUtility = (column: string): NuiTableUtilityCellProps => {
+  if (column === ROW_HEAD_KEY) {
+    return { control: 'corner', label: messages.value.rowHeaders };
+  }
+  return column === SELECT_KEY && selection.multiple.value
     ? {
         control: 'checkbox',
         checked: selection.headerState.value === 'checked',
@@ -959,6 +998,7 @@ const headUtility = (column: string): NuiTableUtilityCellProps =>
         label: selectAllText.value,
       }
     : NO_UTILITY;
+};
 
 const dragEnabled = computed(
   () =>
@@ -979,10 +1019,24 @@ const labelOf = (row: T): string => {
   return rowLabel?.(row) ?? (first === undefined ? '' : textOf(row, first));
 };
 
-const rowUtility = (item: TableBodyRow): NuiTableUtilityCellProps =>
-  item.selected === undefined
+const rowHeadText = (item: TableBodyRow): string => {
+  const labelOfRow = rowHead.value?.label;
+  const row = item.pending ? undefined : rowAtPosition(item.index);
+
+  if (labelOfRow === undefined) {
+    return item.group === undefined ? String(ordinalOf(item.index)) : '';
+  }
+  return row === undefined ? '' : labelOfRow(row, item.index);
+};
+
+const rowUtility = (item: TableBodyRow, column: string): NuiTableUtilityCellProps => {
+  if (column === ROW_HEAD_KEY) {
+    return { control: 'label', text: rowHeadText(item) };
+  }
+  return item.selected === undefined
     ? NO_UTILITY
     : { control: 'checkbox', checked: item.selected, label: selectText.value };
+};
 
 const gripOf = (item: TableBodyRow): VNode =>
   h(NuiTableRowGrip, {
@@ -1114,8 +1168,8 @@ const pinnedItems = computed((): TablePinnedRow<T>[] =>
   })),
 );
 
-const pinnedUtility = (item: TablePinnedRow<T>): NuiTableUtilityCellProps =>
-  item.selected === undefined
+const pinnedUtility = (item: TablePinnedRow<T>, column: string): NuiTableUtilityCellProps =>
+  item.selected === undefined || column === ROW_HEAD_KEY
     ? NO_UTILITY
     : { control: 'checkbox', checked: item.selected, label: selectText.value };
 
@@ -1196,17 +1250,57 @@ const activeData = (): TableCellPosition | undefined => {
 const rangeAnchor = (): TableCellPosition | undefined =>
   viewport.value?.contains(document.activeElement) === true ? activeData() : undefined;
 
-const revealed = createIntent<TableCellPosition>();
+const revealed = createIntent<TableReveal>();
 
-const revealCorner = (corner: TableCellPosition): void => {
+const revealCorner = (corner: TableCellPosition, axis: TableRevealAxis): void => {
   const target = { row: corner.row + pinnedCount.value, col: corner.col + dataOffset.value };
 
   if (windowed.value) {
-    focus.reveal(target);
+    focus.reveal(target, axis);
   } else {
-    revealed.set(target);
+    revealed.set({ target, axis });
   }
 };
+
+const revealColumnInFlow = (visual: number): void => {
+  const element = viewport.value;
+  const placed = layout.value.visual[visual];
+
+  if (element === null || placed?.pane !== 'centre') {
+    return;
+  }
+  const span = element.clientWidth - layout.value.startWidth - layout.value.endWidth;
+  const current = Math.abs(element.scrollLeft);
+  const next = revealOffset(current, placed.offset, placed.width, span);
+
+  if (next !== current) {
+    element.scrollLeft = direction.isRtl() ? -next : next;
+  }
+};
+
+const revealInFlow = ({ target, axis }: TableReveal): void => {
+  const cell = viewport.value?.querySelector(
+    ownCellAt(target.row + headRows.value + 1, target.col + 1),
+  );
+
+  switch (axis) {
+    case 'both':
+      cell?.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
+      break;
+    case 'row':
+      cell?.parentElement?.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
+      break;
+    case 'col':
+      revealColumnInFlow(target.col);
+      break;
+    case 'none':
+      break;
+  }
+};
+
+const columnMarks = computed(() =>
+  rowHead.value === undefined ? undefined : columnSpansOf(ranges.value, dataOffset.value),
+);
 
 const announce = (text: string): void => {
   announcement.value = text;
@@ -1214,6 +1308,7 @@ const announce = (text: string): void => {
 
 const rangeSelect = useTableRanges({
   enabled: () => cellSelection && !loadingNow.value,
+  lines: () => rowHead.value !== undefined,
   ranges,
   viewport: () => viewport.value,
   bounds: () => ({ rows: visibleRows.value, cols: dataKeys.value.length }),
@@ -1225,6 +1320,8 @@ const rangeSelect = useTableRanges({
   pageRows,
   isRtl: direction.isRtl,
   anchor: rangeAnchor,
+  cursor: () => activeData(),
+  sorts: (col) => header.heads.value[dataKeys.value[col] ?? '']?.sortable === true,
   focus: (position) => {
     focus.focusCell(
       { row: position.row + pinnedCount.value, col: position.col + dataOffset.value },
@@ -1532,14 +1629,11 @@ onLongPress(
 watch(
   ranges,
   () => {
-    const target = revealed.take();
+    const pending = revealed.take();
 
-    const cell =
-      target === undefined
-        ? null
-        : viewport.value?.querySelector(ownCellAt(target.row + headRows.value + 1, target.col + 1));
-
-    cell?.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
+    if (pending !== undefined) {
+      revealInFlow(pending);
+    }
   },
   { flush: 'post' },
 );
@@ -1611,7 +1705,10 @@ const viewportEvents = {
   mousedown: outsideDetail(rangeSelect.onMousedown),
   contextmenu: outsideDetail(cellMenu.onContextmenu),
   paste: outsideDetail(editing.onPaste),
-  click: outsideDetail(cellEditor.onClick),
+  click: outsideDetail((event: MouseEvent) => {
+    rangeSelect.onClick(event);
+    cellEditor.onClick(event);
+  }),
   dblclick: outsideDetail(cellEditor.onDblclick),
   pointerup: outsideDetail(cellEditor.onPointerup),
 };

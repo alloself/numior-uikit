@@ -1219,6 +1219,60 @@ export class TableDriver<T> {
     await nextTick();
   }
 
+  private headPoint(col: number): Point {
+    const rect = this.cell(0, col)?.getBoundingClientRect();
+
+    if (rect === undefined) {
+      throw new Error(`No column ${col}`);
+    }
+    return { x: rect.left + rect.width / 2, y: HEAD_HEIGHT / 2 };
+  }
+
+  async pressHeader(col: number, options: KeyOptions = {}): Promise<void> {
+    this.layoutBody();
+    const point = this.headPoint(col);
+    const head = this.header(col);
+
+    this.pressDown(head, point, options);
+    window.dispatchEvent(new PointerEvent('pointerup', pointerInit(point, options)));
+    head?.dispatchEvent(new MouseEvent('click', pointerInit(point, options)));
+    await nextTick();
+  }
+
+  async dragHeaders(from: number, to: number): Promise<void> {
+    this.layoutBody();
+    const end = this.headPoint(to);
+
+    this.pressDown(this.header(from), this.headPoint(from), {});
+    window.dispatchEvent(new PointerEvent('pointermove', pointerInit(end, {})));
+    window.dispatchEvent(new PointerEvent('pointerup', pointerInit(end, {})));
+    await nextTick();
+  }
+
+  async tapCell(position: number, col: number): Promise<void> {
+    const cell = this.cell(position, col);
+    const init = { bubbles: true, cancelable: true, button: 0, pointerType: 'touch' };
+
+    cell?.dispatchEvent(new PointerEvent('pointerdown', init));
+    cell?.dispatchEvent(new PointerEvent('pointerup', init));
+    cell?.dispatchEvent(new MouseEvent('click', init));
+    await nextTick();
+  }
+
+  cellRole(position: number, col: number): string | undefined {
+    return this.cell(position, col)?.getAttribute('role') ?? undefined;
+  }
+
+  cellMarked(position: number, col: number): boolean {
+    return this.cell(position, col)?.classList.contains('nui-table__cell--marked') ?? false;
+  }
+
+  get markedHeaders(): number[] {
+    return [...this.element.querySelectorAll('.nui-table__row--head > .nui-table__cell--marked')]
+      .map((cell) => numberAttribute(cell, 'aria-colindex') - 1)
+      .toSorted((a, b) => a - b);
+  }
+
   async blur(): Promise<void> {
     if (document.activeElement instanceof HTMLElement) {
       document.activeElement.blur();

@@ -14,12 +14,13 @@
   --_head-rows: 1;
   --_pinned-rows: 0;
   --_height: auto;
-  --_clip-start: calc(var(--nui-radius) - 1px);
-  --_clip-end: calc(var(--nui-radius) - 1px);
+  --_clip-start: var(--nui-radius);
+  --_clip-end: var(--nui-radius);
   --_indent: 1.25rem;
   --_room: initial;
   --_grid: 0px;
   --_slack: 0;
+  --_line-cursor: default;
   --_tint: color-mix(in oklab, var(--nui-primary) 12%, transparent);
   --_fill: initial;
   --_ink: initial;
@@ -77,6 +78,9 @@
 .nui-table--slack {
   --_slack: 1;
 }
+.nui-table--cell-selection {
+  --_line-cursor: pointer;
+}
 .nui-table--fluid {
   --_body-size: auto;
   --_body-min: calc(var(--_row) - 1px);
@@ -105,7 +109,9 @@
 .nui-table__frame {
   position: relative;
   min-inline-size: 0;
-  clip-path: inset(0 round var(--_clip-start) var(--_clip-start) var(--_clip-end) var(--_clip-end));
+  clip-path: inset(
+    -1px round var(--_clip-start) var(--_clip-start) var(--_clip-end) var(--_clip-end)
+  );
 }
 .nui-table__pagination {
   box-sizing: border-box;
@@ -315,6 +321,26 @@
 }
 .nui-table__cell--select .nui-table__content {
   padding-inline: 0;
+}
+.nui-table__cell--rowhead {
+  background-color: var(--_head-bg);
+  color: var(--nui-text-muted);
+  font-size: var(--nui-font-size-xs);
+  font-variant-numeric: tabular-nums;
+  cursor: var(--_line-cursor);
+  user-select: none;
+}
+.nui-table__cell--rowhead > .nui-table__content {
+  padding-inline: var(--nui-space-1);
+}
+.nui-table__row--head > .nui-table__cell {
+  transition:
+    background-color var(--nui-duration-fast) var(--nui-easing),
+    color var(--nui-duration-fast) var(--nui-easing);
+}
+.nui-table__cell--marked {
+  background-color: color-mix(in oklab, var(--_head-bg), var(--nui-primary) 16%);
+  color: var(--nui-text);
 }
 .nui-table__editor {
   --nui-control-height-sm: calc(var(--_row) - var(--nui-space-2));

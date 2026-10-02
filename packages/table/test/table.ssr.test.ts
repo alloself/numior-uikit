@@ -361,6 +361,24 @@ describe('NuiTable on the server', () => {
     expect(html.match(/nui-table__cell--align-end[^"]*nui-table__cell--filled/g)).toHaveLength(1);
   });
 
+  it('renders numbered row headers and the corner on the server', async () => {
+    const html = await renderToString(
+      createSSRApp({
+        render: () =>
+          h(NuiTable<Person>, { columns: PEOPLE_COLUMNS, rows: people(3), rowHeaders: true }),
+      }),
+    );
+
+    expect(html.match(/role="rowheader"/g)).toHaveLength(3);
+    expect(html.match(/scope="row"/g)).toHaveLength(3);
+    expect(html).toContain('aria-colcount="19"');
+    expect(html).toContain('<span class="nui-table__hidden">Row numbers</span>');
+
+    expect(html).toMatch(
+      /nui-table__cell--rowhead[^>]*>.*?<span class="nui-table__text">3<\/span>/s,
+    );
+  });
+
   it('renders skeleton rows for a source without asking it for rows on the server', async () => {
     const offsets: number[] = [];
 

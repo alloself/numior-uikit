@@ -21,14 +21,14 @@ export const sameSpots = (a: readonly TableDetailSpot[], b: readonly TableDetail
   a.length === b.length &&
   a.every((spot, index) => spot.position === b[index]?.position && spot.id === b[index]?.id);
 
-export const detailsBefore = (spots: readonly TableDetailSpot[], position: number): number => {
+const lowerBound = (length: number, below: (index: number) => boolean): number => {
   let low = 0;
-  let high = spots.length;
+  let high = length;
 
   while (low < high) {
     const middle = Math.floor((low + high) / 2);
 
-    if ((spots[middle]?.position ?? 0) < position) {
+    if (below(middle)) {
       low = middle + 1;
     } else {
       high = middle;
@@ -36,3 +36,9 @@ export const detailsBefore = (spots: readonly TableDetailSpot[], position: numbe
   }
   return low;
 };
+
+export const detailsBefore = (spots: readonly TableDetailSpot[], position: number): number =>
+  lowerBound(spots.length, (index) => (spots[index]?.position ?? 0) < position);
+
+export const countBelow = (sorted: readonly number[], value: number): number =>
+  lowerBound(sorted.length, (index) => (sorted[index] ?? 0) < value);

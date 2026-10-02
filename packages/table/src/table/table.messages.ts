@@ -5,6 +5,7 @@ export interface NuiTableMessages {
   readonly empty: string;
   readonly select: string;
   readonly selectAll: string;
+  readonly rowHeaders: string;
   readonly yes: string;
   readonly no: string;
   readonly sortedAscending: (params: { readonly column: string }) => string;
@@ -110,6 +111,7 @@ export const tableMessages: NuiMessageCatalog<'table'> = {
     empty: 'No rows to show',
     select: 'Select row',
     selectAll: 'Select all rows',
+    rowHeaders: 'Row numbers',
     yes: 'Yes',
     no: 'No',
     sortedAscending: ({ column }) => `Sorted by ${column}, ascending`,
@@ -210,6 +212,7 @@ export const tableMessages: NuiMessageCatalog<'table'> = {
     empty: 'Нет строк для показа',
     select: 'Выбрать строку',
     selectAll: 'Выбрать все строки',
+    rowHeaders: 'Номера строк',
     yes: 'Да',
     no: 'Нет',
     sortedAscending: ({ column }) => `Сортировка по колонке «${column}» по возрастанию`,

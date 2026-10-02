@@ -11,6 +11,7 @@ export type {
   NuiTableDetailSlot,
   NuiTableEvents,
   NuiTableReorderEvent,
+  NuiTableRowHeaders,
   NuiTableExpanded,
   NuiTableExposed,
   NuiTableFilters,

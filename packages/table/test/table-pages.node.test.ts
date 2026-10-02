@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { countBelow, detailsBefore } from '../src/table/table-detail';
 import { pageStepOf } from '../src/table/table-keys';
 import { pageCountOf, pageWindowOf, resolvePagination } from '../src/table/table-pages';
 
@@ -31,6 +32,23 @@ describe('grid pages', () => {
     expect(pageWindowOf(8, 2, 2, [2, 4])).toEqual({ start: 3, end: 6, page: 2, pages: 3 });
     expect(pageWindowOf(8, 3, 2, [1, 7])).toEqual({ start: 5, end: 8, page: 3, pages: 3 });
     expect(pageWindowOf(4, 1, 20, [1, 3])).toEqual({ start: 0, end: 4, page: 1, pages: 1 });
+  });
+
+  it('counts the details before a position for stripes and row numbers', () => {
+    const spots = [
+      { position: 2, id: 'a' },
+      { position: 5, id: 'b' },
+    ];
+
+    expect([0, 2, 3, 5, 9].map((position) => detailsBefore(spots, position))).toEqual([
+      0, 0, 1, 1, 2,
+    ]);
+
+    expect([0, 2, 3, 5, 9].map((position) => countBelow([2, 5], position))).toEqual([
+      0, 0, 1, 1, 2,
+    ]);
+
+    expect(countBelow([], 4)).toBe(0);
   });
 
   it('steps a keyboard page by the rows that fit the window around a tall row', () => {

@@ -281,10 +281,15 @@ export class PlaygroundPage {
     return this.page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
   }
 
-  async wcagViolations() {
-    const results = await new AxeBuilder({ page: this.page })
-      .withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa'])
-      .analyze();
+  async wcagViolations(scope?: string) {
+    const builder = new AxeBuilder({ page: this.page }).withTags([
+      'wcag2a',
+      'wcag2aa',
+      'wcag21aa',
+      'wcag22aa',
+    ]);
+
+    const results = await (scope === undefined ? builder : builder.include(scope)).analyze();
 
     return results.violations;
   }

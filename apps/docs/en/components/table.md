@@ -46,6 +46,21 @@ reactive state read by the function changes.
 
 <Example name="table/CellStyle" />
 
+### Row headers
+
+`rowHeaders` adds a pinned column of row numbers at the start. A number counts the rows in the
+order on screen, so sorting and filters keep it right. The `{ label, width }` options set a label
+and a width of their own.
+
+The headers select cells. A click on a number takes the whole row, and a click on the corner takes
+the whole table. The header of a column with `sortable: false` takes its column.
+
+Shift extends the selection, Ctrl adds a row or a column, and a drag over the headers takes several
+in a row. Space or Enter on a header does the same from the keyboard. The headers of selected
+cells are highlighted.
+
+<Example name="table/RowHeaders" />
+
 ### Filters and totals
 
 The column type picks the filter: text, number, date or a value set through `filter: 'set'`;

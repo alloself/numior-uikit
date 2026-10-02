@@ -2,7 +2,7 @@
   <section class="panel" aria-labelledby="table-sheet-title">
     <div class="section-heading">
       <h2 id="table-sheet-title">Лист</h2>
-      <span class="tag">NuiTable · bordered · cellStyle</span>
+      <span class="tag">NuiTable · bordered · cellStyle · rowHeaders</span>
     </div>
     <div class="data-row">
       <NuiButton
@@ -23,11 +23,13 @@
         <NuiSwitch v-model="quarter" data-testid="table-sheet-quarter">Первый квартал</NuiSwitch>
       </div>
       <NuiTable
+        v-model:ranges="ranges"
         :columns="SHEET_COLUMNS"
         :rows="SHEET_ROWS"
         :get-key="(row) => row.index"
         :cell-style="styleOf"
         :bordered="bordered"
+        row-headers
         :hidden="quarter ? LATER_MONTHS : NO_COLUMNS"
         :height="windowed ? '18rem' : undefined"
         :column-menu="false"
@@ -35,18 +37,20 @@
         label="Бюджет"
         data-testid="table-sheet"
       />
+      <pre class="output" data-testid="table-sheet-output">{{ output }}</pre>
     </template>
   </section>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { NuiButton, NuiSwitch } from '@numior/vue';
 import {
   NuiTable,
   type NuiTableCellRef,
   type NuiTableCellStyle,
   type NuiTableColumnDef,
+  type NuiTableRanges,
 } from '@numior/table';
 
 type SheetValue = string | number | null;
@@ -174,6 +178,8 @@ const bordered = ref(true);
 const heat = ref(false);
 const windowed = ref(false);
 const quarter = ref(false);
+const ranges = ref<NuiTableRanges>([]);
+const output = computed(() => JSON.stringify({ ranges: ranges.value }));
 
 const heatOf = (value: number): string =>
   `color-mix(in oklab, var(--nui-success) ${Math.round((Math.max(0, value) / PEAK) * HEAT_LIMIT)}%, transparent)`;

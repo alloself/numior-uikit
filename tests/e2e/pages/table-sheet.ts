@@ -1,4 +1,16 @@
 import type { Locator, Page } from '@playwright/test';
+import {
+  isNumber,
+  listOf,
+  parseAs,
+  shapeOf,
+  type Guarded,
+} from '../../../packages/primitives/test/support/guards';
+
+const isCorner = shapeOf({ row: isNumber, col: isNumber });
+const isSheetOutput = shapeOf({ ranges: listOf(shapeOf({ from: isCorner, to: isCorner })) });
+
+export type TableSheetOutput = Guarded<typeof isSheetOutput>;
 
 export interface TableSheetEdge {
   readonly width: string;
@@ -6,9 +18,11 @@ export interface TableSheetEdge {
 }
 
 const HEAD_ROWS = 1;
+const ROW_HEADERS = 1;
 const BODY_ROWS = ':scope > .nui-table__body > [role="row"]';
 
 export class TableSheetSection {
+  readonly scope = '[data-testid="table-sheet"]';
   readonly toggle: Locator;
   readonly root: Locator;
   readonly viewport: Locator;
@@ -17,6 +31,8 @@ export class TableSheetSection {
   readonly heatSwitch: Locator;
   readonly windowSwitch: Locator;
   readonly quarterSwitch: Locator;
+  readonly corner: Locator;
+  readonly output: Locator;
 
   constructor(page: Page) {
     this.toggle = page.getByTestId('table-sheet-toggle');
@@ -27,6 +43,8 @@ export class TableSheetSection {
     this.heatSwitch = page.getByTestId('table-sheet-heat');
     this.windowSwitch = page.getByTestId('table-sheet-window');
     this.quarterSwitch = page.getByTestId('table-sheet-quarter');
+    this.corner = this.grid.locator(':scope > .nui-table__header [aria-colindex="1"]');
+    this.output = page.getByTestId('table-sheet-output');
   }
 
   async show(): Promise<void> {
@@ -40,7 +58,21 @@ export class TableSheetSection {
   }
 
   cell(position: number, col: number): Locator {
-    return this.row(position).locator(`:scope > [aria-colindex="${col + 1}"]`);
+    return this.row(position).locator(`:scope > [aria-colindex="${col + ROW_HEADERS + 1}"]`);
+  }
+
+  rowHeader(position: number): Locator {
+    return this.row(position).locator(':scope > [role="rowheader"]');
+  }
+
+  columnHeader(col: number): Locator {
+    return this.grid.locator(
+      `:scope > .nui-table__header [role="columnheader"][aria-colindex="${col + ROW_HEADERS + 1}"]`,
+    );
+  }
+
+  async ranges(): Promise<TableSheetOutput['ranges']> {
+    return parseAs(await this.output.innerText(), isSheetOutput, 'table sheet output').ranges;
   }
 
   lineAfter(position: number, col: number): Promise<string> {
@@ -87,6 +119,27 @@ export class TableSheetSection {
       ],
       BODY_ROWS,
     );
+  }
+
+  async scrollTo(top: number, left: number): Promise<void> {
+    await this.viewport.evaluate(
+      (element, [y, x]) => {
+        const sign = getComputedStyle(element).direction === 'rtl' ? -1 : 1;
+
+        element.scrollTop = y ?? 0;
+        element.scrollLeft = sign * (x ?? 0);
+      },
+      [top, left],
+    );
+  }
+
+  async restOnHalfPixel(): Promise<void> {
+    await this.root.evaluate((element) => {
+      const top = element.getBoundingClientRect().top * devicePixelRatio;
+      const shift = (((0.5 - (top % 1)) % 1) + 1) % 1;
+
+      element.style.setProperty('margin-block-start', `${shift / devicePixelRatio}px`);
+    });
   }
 
   hasSpareRoom(): Promise<boolean> {

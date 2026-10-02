@@ -10,6 +10,8 @@
     @update:model-value="emit('toggle')"
   />
   <NuiSkeleton v-else-if="control === 'skeleton'" shape="rect" width="1rem" height="1rem" />
+  <span v-else-if="control === 'label'" class="nui-table__text">{{ text }}</span>
+  <span v-else-if="control === 'corner'" class="nui-table__hidden">{{ label }}</span>
 </template>
 
 <script setup lang="ts">
@@ -22,6 +24,7 @@ const {
   indeterminate = false,
   disabled = false,
   label,
+  text,
 } = defineProps<NuiTableUtilityCellProps>();
 
 const emit = defineEmits<{ toggle: [] }>();

@@ -25,7 +25,7 @@ export type NuiTableSelection = 'single' | 'multiple';
 
 export type NuiTablePagination = Partial<Omit<NuiPaginationProps, 'total' | 'size'>>;
 
-export type TableColumnKind = 'data' | 'select';
+export type TableColumnKind = 'data' | 'select' | 'rowhead';
 
 export interface TablePageWindow {
   readonly start: number;
@@ -142,6 +142,7 @@ export interface NuiTableProps<T> {
   hasDetail?: ((row: T) => boolean) | undefined;
   cellStyle?: NuiTableCellStyler<T> | undefined;
   bordered?: boolean | undefined;
+  rowHeaders?: NuiTableRowHeaders<T> | boolean | undefined;
   treeColumn?: string | undefined;
   columnMenu?: boolean | undefined;
   selectable?: NuiTableSelection | undefined;
@@ -180,6 +181,11 @@ export interface NuiTableCellSlot<T> {
   readonly column: NuiTableColumn<T>;
   readonly position: number;
   readonly pinned: boolean;
+}
+
+export interface NuiTableRowHeaders<T> {
+  readonly label?: ((row: T, position: number) => string) | undefined;
+  readonly width?: number | undefined;
 }
 
 export interface NuiTableCellRef<T> {
@@ -299,6 +305,20 @@ export interface NuiTableCellEditorProps {
   typed?: string | undefined;
   commit: (move: TableEditorMove) => boolean;
   cancel: () => void;
+}
+
+export interface TableSpan {
+  readonly start: number;
+  readonly end: number;
+}
+
+export type TableRangeLines = 'cells' | 'rows' | 'cols';
+
+export type TableRevealAxis = 'both' | 'row' | 'col' | 'none';
+
+export interface TableReveal {
+  readonly target: TableCellPosition;
+  readonly axis: TableRevealAxis;
 }
 
 export interface TableRangeSegment {
@@ -552,11 +572,12 @@ export interface TableBodyRow {
 }
 
 export interface NuiTableUtilityCellProps {
-  control: 'checkbox' | 'skeleton' | 'none';
+  control: 'checkbox' | 'skeleton' | 'label' | 'corner' | 'none';
   checked?: boolean | undefined;
   indeterminate?: boolean | undefined;
   disabled?: boolean | undefined;
   label?: string | undefined;
+  text?: string | undefined;
 }
 
 export type TableGroupCell =
@@ -585,6 +606,7 @@ export interface NuiTableRowProps {
   stripe?: boolean | undefined;
   dragging?: boolean | undefined;
   ranged?: TableRowRanges | undefined;
+  marks?: readonly TableSpan[] | undefined;
   heads?: Readonly<Record<string, TableHeadState>> | undefined;
 }
 

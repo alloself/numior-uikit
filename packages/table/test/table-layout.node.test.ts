@@ -3,7 +3,11 @@ import type { NuiTableColumn, NuiTablePin } from '../src';
 import {
   mergeIndices,
   pinsFit,
+  revealOffset,
+  ROW_HEAD_KEY,
+  rowHeadWidth,
   sameIndices,
+  SELECT_KEY,
   tableLayout,
   wrappedCentreOf,
   type TableLayout,
@@ -164,6 +168,39 @@ describe('tableLayout', () => {
     expect(mergeIndices([], wrapped)).toEqual([1, 3]);
     expect(mergeIndices([0, 2, 3, 4], wrapped)).toEqual([0, 1, 2, 3, 4]);
     expect(mergeIndices([3], [])).toEqual([3]);
+  });
+
+  it('puts the row headers before the checkboxes in the start pane and sizes them by the row count', () => {
+    const layout = tableLayout(COLUMNS, {
+      pins: {},
+      hidden: [],
+      widths: {},
+      sticky: true,
+      select: true,
+      room: 0,
+      wrap: true,
+      rowHeader: rowHeadWidth(1200, undefined),
+    });
+
+    expect(panesOf(layout).start).toEqual([ROW_HEAD_KEY, SELECT_KEY, 'id']);
+
+    expect(layout.visual.map((placed) => placed.kind).slice(0, 3)).toEqual([
+      'rowhead',
+      'select',
+      'data',
+    ]);
+
+    expect(layout.start[0]?.width).toBe(52);
+    expect(rowHeadWidth(9, undefined)).toBe(40);
+    expect(rowHeadWidth(1_048_576, undefined)).toBe(76);
+    expect(rowHeadWidth(1_048_576, 64)).toBe(64);
+  });
+
+  it('scrolls a column into the free span between the panes only when it is cut', () => {
+    expect(revealOffset(0, 300, 100, 500)).toBe(0);
+    expect(revealOffset(0, 480, 100, 500)).toBe(80);
+    expect(revealOffset(400, 300, 100, 500)).toBe(300);
+    expect(revealOffset(120, 300, 100, 500)).toBe(120);
   });
 
   it('marks the last scrolling column as the tail and tells equal column sets apart', () => {
