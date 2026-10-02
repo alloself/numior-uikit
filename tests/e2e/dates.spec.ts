@@ -78,20 +78,20 @@ test.describe('dates', () => {
     await dates.openButton(dates.rangePicker).click();
     await expect(dates.dialog(dates.rangePicker)).toBeVisible();
     await expect(dates.rangePicker.getByRole('grid')).toHaveCount(2);
-    await dates.day(dates.rangePicker, '2026-09-10').click();
+    const third = await dates.dayOfThisMonth(3);
+    const tenth = await dates.dayOfThisMonth(10);
+
+    await dates.day(dates.rangePicker, tenth).click();
     await expect(dates.dialog(dates.rangePicker)).toBeVisible();
-    await dates.day(dates.rangePicker, '2026-09-03').click();
+    await dates.day(dates.rangePicker, third).click();
     await expect(dates.dialog(dates.rangePicker)).toBeHidden();
 
     await expect
       .poll(async () => (await dates.readOutput()).period)
-      .toEqual({
-        start: '2026-09-03',
-        end: '2026-09-10',
-      });
+      .toEqual({ start: third, end: tenth });
 
-    await expect(dates.input(dates.rangePicker, 0)).toHaveValue('03.09.2026');
-    await expect(dates.input(dates.rangePicker, 1)).toHaveValue('10.09.2026');
+    await expect(dates.input(dates.rangePicker, 0)).toHaveValue(dates.typed(third));
+    await expect(dates.input(dates.rangePicker, 1)).toHaveValue(dates.typed(tenth));
     await dates.openButton(dates.rangePicker).click();
     await dates.preset(dates.dialog(dates.rangePicker), 'Последние 7 дней').click();
     await expect(dates.dialog(dates.rangePicker)).toBeHidden();
@@ -121,30 +121,30 @@ test.describe('dates', () => {
     await playground.open();
     const { dates } = playground;
     await dates.range.scrollIntoViewIfNeeded();
-    await dates.day(dates.range, '2026-09-08').click();
-    await dates.day(dates.range, '2026-09-12').hover();
+    const eighth = await dates.dayOfThisMonth(8);
+    const twelfth = await dates.dayOfThisMonth(12);
 
-    await expect(dates.day(dates.range, '2026-09-10').locator('..')).toHaveClass(
+    await dates.day(dates.range, eighth).click();
+    await dates.day(dates.range, twelfth).hover();
+
+    await expect(dates.day(dates.range, await dates.dayOfThisMonth(10)).locator('..')).toHaveClass(
       /nui-calendar__cell--preview/,
     );
 
-    await dates.day(dates.range, '2026-09-12').click();
+    await dates.day(dates.range, twelfth).click();
 
     await expect
       .poll(async () => (await dates.readOutput()).range)
-      .toEqual({
-        start: '2026-09-08',
-        end: '2026-09-12',
-      });
+      .toEqual({ start: eighth, end: twelfth });
 
-    await dates.dragDays(dates.range, '2026-09-21', '2026-09-24');
+    const from = await dates.dayOfThisMonth(21);
+    const to = await dates.dayOfThisMonth(24);
+
+    await dates.dragDays(dates.range, from, to);
 
     await expect
       .poll(async () => (await dates.readOutput()).range)
-      .toEqual({
-        start: '2026-09-21',
-        end: '2026-09-24',
-      });
+      .toEqual({ start: from, end: to });
 
     await playground.setDirection('rtl');
     await dates.day(dates.calendar, '2026-09-15').focus();

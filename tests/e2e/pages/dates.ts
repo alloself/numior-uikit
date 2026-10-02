@@ -29,6 +29,7 @@ const parseDatesOutput = (text: string): DatesOutput =>
   parseAs(text, isDatesOutput, 'dates output');
 
 const PICKER_ROOT = 'xpath=ancestor::*[contains(@class, "nui-date-picker")][1]';
+const MONTH_PREFIX = 'YYYY-MM-'.length;
 
 export class DatesSection {
   readonly calendar: Locator;
@@ -99,5 +100,15 @@ export class DatesSection {
 
   async readOutput(): Promise<DatesOutput> {
     return parseDatesOutput(await this.output.innerText());
+  }
+
+  async dayOfThisMonth(day: number): Promise<string> {
+    const { today } = await this.readOutput();
+
+    return `${today.slice(0, MONTH_PREFIX)}${String(day).padStart(2, '0')}`;
+  }
+
+  typed(date: string): string {
+    return date.split('-').toReversed().join('.');
   }
 }
