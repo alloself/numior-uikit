@@ -162,6 +162,12 @@ export interface EngineHarnessOptions<T> {
   readonly defaultExpanded?: boolean;
 }
 
+const cpuMs = (): number => {
+  const { user, system } = process.threadCpuUsage();
+
+  return (user + system) / 1000;
+};
+
 export class EngineHarness<T> {
   readonly engine: TableEngine<T>;
   readonly progress: TableProgress[] = [];
@@ -207,7 +213,7 @@ export class EngineHarness<T> {
   }
 
   private lap(): void {
-    this.slowest = Math.max(this.slowest, performance.now() - this.resumedAt);
+    this.slowest = Math.max(this.slowest, cpuMs() - this.resumedAt);
   }
 
   get phases(): string[] {
@@ -215,7 +221,7 @@ export class EngineHarness<T> {
   }
 
   run(query: TableQuery, signal?: AbortSignal): Promise<TableRunResult> {
-    this.resumedAt = performance.now();
+    this.resumedAt = cpuMs();
 
     return this.engine.run(query, {
       signal,
@@ -228,7 +234,7 @@ export class EngineHarness<T> {
   async step(): Promise<void> {
     const resume = this.waiting.shift();
 
-    this.resumedAt = performance.now();
+    this.resumedAt = cpuMs();
     resume?.();
     await tick();
   }
