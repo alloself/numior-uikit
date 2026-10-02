@@ -90,6 +90,105 @@ describe('useVirtualList', () => {
     list.unmount();
   });
 
+  it('keeps frozen rows rendered and windows the rest below them', async () => {
+    const list = VirtualHarness.mount({ height: 200, itemSize: 20, overscan: 2, frozen: 2 });
+
+    await list.settle();
+    expect(list.range).toEqual({ start: 2, end: 13 });
+    expect(list.renderedIndices).toEqual(range(0, 13));
+    expect(list.frame).toEqual({ lead: 0, rest: 19_740, clampStart: -60, clampEnd: -60 });
+    await list.scroll(5000);
+    expect(list.range).toEqual({ start: 250, end: 263 });
+    expect(list.renderedIndices).toEqual([0, 1, ...range(250, 263)]);
+    expect(list.frame).toEqual({ lead: 4960, rest: 14_740, clampStart: -100, clampEnd: -100 });
+    await list.pin(1);
+    expect(list.renderedIndices).toEqual([0, 1, ...range(250, 263)]);
+    await list.pin(100);
+    expect(list.renderedIndices).toEqual([0, 1, 100, ...range(250, 263)]);
+    expect(list.frame).toEqual({ lead: 4940, rest: 14_740, clampStart: -120, clampEnd: -100 });
+    await list.pin(undefined);
+    await list.freeze(0);
+    expect(list.range).toEqual({ start: 248, end: 263 });
+    expect(list.renderedIndices).toEqual(range(248, 263));
+    list.unmount();
+  });
+
+  it('scrolls a row to the edge of the frozen rows and leaves frozen rows where they are', async () => {
+    const list = VirtualHarness.mount({ height: 200, itemSize: 20, frozen: 2 });
+
+    await list.settle();
+    await list.scrollToIndex(50, 'start');
+    expect(list.scrollTop).toBe(960);
+    await list.scrollToIndex(50, 'end');
+    expect(list.scrollTop).toBe(820);
+    await list.scrollToIndex(50, 'center');
+    expect(list.scrollTop).toBe(890);
+    await list.scrollToIndex(50, 'start');
+    await list.scrollToIndex(49, 'auto');
+    expect(list.scrollTop).toBe(940);
+    await list.scrollToIndex(56, 'auto');
+    expect(list.scrollTop).toBe(940);
+    await list.scrollToIndex(57, 'auto');
+    expect(list.scrollTop).toBe(960);
+    await list.scrollToIndex(1, 'start');
+    expect(list.scrollTop).toBe(960);
+    await list.scrollToIndex(2, 'auto');
+    expect(list.scrollTop).toBe(0);
+    list.unmount();
+  });
+
+  it('renders frozen rows before a measurement, past the count and not at all when disabled', async () => {
+    const unmeasured = VirtualHarness.mount({ height: 0, initialCount: 5, frozen: 7 });
+
+    await unmeasured.settle();
+    expect(unmeasured.renderedIndices).toEqual(range(0, 7));
+    expect(unmeasured.range).toEqual({ start: 7, end: 7 });
+    unmeasured.unmount();
+
+    const short = VirtualHarness.mount({ count: 3, height: 200, itemSize: 20, frozen: 10 });
+
+    await short.settle();
+    expect(short.renderedIndices).toEqual(range(0, 3));
+    expect(short.range).toEqual({ start: 3, end: 3 });
+    await short.scrollToIndex(2, 'start');
+    expect(short.scrollTop).toBe(0);
+    short.unmount();
+
+    const plain = VirtualHarness.mount({
+      count: 30,
+      height: 200,
+      itemSize: 20,
+      enabled: false,
+      frozen: 2,
+    });
+
+    await plain.settle();
+    expect(plain.range).toEqual({ start: 0, end: 30 });
+    expect(plain.renderedIndices).toEqual(range(0, 30));
+    plain.unmount();
+  });
+
+  it('keeps the first row under the frozen rows in place when sizes change', async () => {
+    const sizes = createSizeIndex(1000, 20);
+    const list = VirtualHarness.mount({ height: 200, itemSize: sizes, overscan: 2, frozen: 2 });
+
+    await list.settle();
+    await list.scroll(5000);
+    expect(list.range).toEqual({ start: 250, end: 263 });
+    expect(await list.resizeRows([[100, 50]])).toBe(true);
+    expect(list.scrollTop).toBe(5030);
+    expect(list.range).toEqual({ start: 250, end: 263 });
+    expect(await list.resizeRows([[0, 50]])).toBe(true);
+    expect(list.scrollTop).toBe(5030);
+    expect(list.elementScroll).toBe(5030);
+    expect(list.range).toEqual({ start: 250, end: 261 });
+    expect(list.frame.lead).toBe(4990);
+    await list.setItemSize(createSizeIndex(1000, 20));
+    expect(list.scrollTop).toBe(5000);
+    expect(list.range).toEqual({ start: 250, end: 263 });
+    list.unmount();
+  });
+
   it('keeps a slot on every row that stays in the window and hands freed slots to newcomers', async () => {
     const list = VirtualHarness.mount({ height: 200, itemSize: 20, overscan: 2 });
     await list.settle();

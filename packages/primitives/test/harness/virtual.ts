@@ -19,6 +19,7 @@ export interface VirtualHarnessOptions {
   readonly height?: number;
   readonly initialCount?: number;
   readonly pinned?: number;
+  readonly frozen?: number;
   readonly enabled?: boolean;
   readonly axis?: VirtualAxis;
   readonly maxSize?: number;
@@ -32,6 +33,13 @@ type Outcome = { readonly ran: true; readonly value: VirtualList } | { readonly 
 interface SpacerStyles {
   readonly lead: string;
   readonly rest: string;
+}
+
+interface HarnessInputs {
+  readonly count: { value: number };
+  readonly itemSize: { value: ItemSize };
+  readonly pinned: { value: number | undefined };
+  readonly frozen: { value: number | undefined };
 }
 
 interface HarnessView {
@@ -67,6 +75,7 @@ export class VirtualHarness {
     const count = ref(options.count ?? 1000);
     const itemSize = shallowRef<ItemSize>(options.itemSize ?? 20);
     const pinned = ref(options.pinned);
+    const frozen = ref(options.frozen);
     const height = options.height ?? 200;
     const axis = options.axis ?? 'y';
     const outcome: { current: Outcome } = { current: { ran: false } };
@@ -84,6 +93,7 @@ export class VirtualHarness {
           initialCount: () => options.initialCount,
           enabled: () => options.enabled,
           pinned,
+          frozen,
           maxSize: () => options.maxSize,
           inset: () => options.inset,
           listen: () => options.listen,
@@ -133,10 +143,15 @@ export class VirtualHarness {
     if (!outcome.current.ran) {
       throw new Error('useVirtualList did not run');
     }
-    return new VirtualHarness(wrapper, outcome.current.value, count, itemSize, pinned, {
-      axis,
-      renders,
-    });
+    return new VirtualHarness(
+      wrapper,
+      outcome.current.value,
+      { count, itemSize, pinned, frozen },
+      {
+        axis,
+        renders,
+      },
+    );
   }
 
   async settle(): Promise<void> {
@@ -146,9 +161,7 @@ export class VirtualHarness {
   private constructor(
     private readonly wrapper: VueWrapper,
     private readonly list: VirtualList,
-    private readonly count: { value: number },
-    private readonly itemSize: { value: ItemSize },
-    private readonly pinned: { value: number | undefined },
+    private readonly inputs: HarnessInputs,
     private readonly view: HarnessView,
   ) {}
 
@@ -279,17 +292,22 @@ export class VirtualHarness {
   }
 
   async setCount(count: number): Promise<void> {
-    this.count.value = count;
+    this.inputs.count.value = count;
     await nextTick();
   }
 
   async setItemSize(size: ItemSize): Promise<void> {
-    this.itemSize.value = size;
+    this.inputs.itemSize.value = size;
     await nextTick();
   }
 
   async pin(index: number | undefined): Promise<void> {
-    this.pinned.value = index;
+    this.inputs.pinned.value = index;
+    await nextTick();
+  }
+
+  async freeze(count: number | undefined): Promise<void> {
+    this.inputs.frozen.value = count;
     await nextTick();
   }
 

@@ -1,4 +1,4 @@
-import { useEventListener, useResizeObserver } from '@vueuse/core';
+import { clamp, useEventListener, useResizeObserver } from '@vueuse/core';
 import {
   computed,
   onMounted,
@@ -43,6 +43,7 @@ export interface VirtualListOptions {
   readonly initialCount?: MaybeRefOrGetter<number | undefined>;
   readonly enabled?: MaybeRefOrGetter<boolean | undefined>;
   readonly pinned?: MaybeRefOrGetter<number | undefined>;
+  readonly frozen?: MaybeRefOrGetter<number | undefined>;
   readonly maxSize?: MaybeRefOrGetter<number | undefined>;
   readonly inset?: MaybeRefOrGetter<number | undefined>;
   readonly listen?: MaybeRefOrGetter<boolean | undefined>;
@@ -83,11 +84,14 @@ export interface VirtualList {
 const DEFAULT_OVERSCAN = 4;
 const DEFAULT_INITIAL = 20;
 
-const withPinned = (list: number[], range: VirtualRange, pinned: number | undefined): number[] => {
-  if (pinned === undefined || (pinned >= range.start && pinned < range.end)) {
-    return list;
+const indicesOf = (range: VirtualRange, frozen: number, pinned: number | undefined): number[] => {
+  const held = Array.from({ length: frozen }, (_, index) => index);
+  const list = Array.from({ length: range.end - range.start }, (_, offset) => range.start + offset);
+
+  if (pinned === undefined || pinned < frozen || (pinned >= range.start && pinned < range.end)) {
+    return [...held, ...list];
   }
-  return pinned < range.start ? [pinned, ...list] : [...list, pinned];
+  return pinned < range.start ? [...held, pinned, ...list] : [...held, ...list, pinned];
 };
 
 const slotsOf = (items: readonly VirtualItem[] = []): SlotMap =>
@@ -116,17 +120,29 @@ export const useVirtualList = (
   const scrollTop = computed(() => physical.value * scale.value.factor);
   const shift = computed(() => scrollTop.value - physical.value);
 
+  const frozen = computed(() =>
+    enabled() ? clamp(Math.floor(toValue(options.frozen) ?? 0) || 0, 0, countOf(model.value)) : 0,
+  );
+
+  const frozenSize = computed(() => offsetAt(model.value, frozen.value));
+  const room = computed(() => Math.max(0, span.value - frozenSize.value));
+
   const nextRange = (): VirtualRange => {
     const count = countOf(model.value);
+    const held = frozen.value;
 
     if (!enabled()) {
       return { start: 0, end: count };
     }
     if (viewport.value === 0) {
-      return { start: 0, end: Math.min(count, toValue(options.initialCount) ?? DEFAULT_INITIAL) };
+      const initial = Math.min(count, toValue(options.initialCount) ?? DEFAULT_INITIAL);
+
+      return { start: held, end: Math.max(held, initial) };
     }
     const overscan = toValue(options.overscan) ?? DEFAULT_OVERSCAN;
-    return rangeFor(model.value, scrollTop.value, span.value, overscan);
+    const found = rangeFor(model.value, scrollTop.value + frozenSize.value, room.value, overscan);
+
+    return { start: Math.max(held, found.start), end: Math.max(held, found.end) };
   };
 
   const range = computed<VirtualRange>((previous) => {
@@ -143,12 +159,11 @@ export const useVirtualList = (
   };
 
   const items = computed<readonly VirtualItem[]>((previous) => {
-    const { start, end } = range.value;
-    const list = Array.from({ length: end - start }, (_, offset) => start + offset);
     const pinned = toValue(options.pinned);
     const valid = pinned !== undefined && pinned >= 0 && pinned < countOf(model.value);
-    const indices = withPinned(list, range.value, valid ? pinned : undefined);
+    const indices = indicesOf(range.value, frozen.value, valid ? pinned : undefined);
     const slots = assignSlots(slotsOf(previous), indices);
+
     return indices.map((index) => itemAt(index, slots.get(index) ?? 0));
   });
 
@@ -168,6 +183,7 @@ export const useVirtualList = (
       endSize: endSize.value,
       viewport: viewport.value,
       inset: toValue(options.inset) ?? 0,
+      frozen: frozen.value,
     });
 
     return previous !== undefined && sameFrame(previous, next) ? previous : next;
@@ -196,15 +212,17 @@ export const useVirtualList = (
   const scrollTo = (index: number, { align = 'auto' }: VirtualScrollOptions = {}): void => {
     const element = toValue(container);
 
-    if (!element) {
+    if (!element || index < frozen.value) {
       return;
     }
-    const target = scrollTargetFor(model.value, index, scrollTop.value, span.value, align);
+    const held = frozenSize.value;
+    const target = scrollTargetFor(model.value, index, scrollTop.value + held, room.value, align);
 
     if (target === undefined) {
       return;
     }
-    const next = target / scale.value.factor;
+    const next = Math.max(0, target - held) / scale.value.factor;
+
     writeScroll(element, next);
     physical.value = next;
   };
@@ -232,8 +250,9 @@ export const useVirtualList = (
     }
     const top = scrollTop.value;
     const end = totalSize.value - span.value;
-    const anchor = indexAt(model.value, top);
-    const within = top - offsetAt(model.value, anchor);
+    const edge = top + frozenSize.value;
+    const anchor = indexAt(model.value, edge);
+    const within = edge - offsetAt(model.value, anchor);
     let changed = false;
 
     for (const [position, size] of sizes) {
@@ -243,7 +262,9 @@ export const useVirtualList = (
       settle(
         end > 0 && top >= end - 1
           ? index.total() - span.value
-          : index.offsetAt(anchor) + Math.min(within, index.sizeAt(anchor)),
+          : index.offsetAt(anchor) +
+              Math.min(within, index.sizeAt(anchor)) -
+              index.offsetAt(frozen.value),
       );
     }
     return changed;
@@ -254,11 +275,15 @@ export const useVirtualList = (
       return;
     }
     const before = canvasScaleFor(totalSizeOf(previous), span.value, toValue(options.maxSize));
-    const top = physical.value * before.factor;
-    const anchor = indexAt(previous, top);
-    const within = top - offsetAt(previous, anchor);
+    const edge = physical.value * before.factor + offsetAt(previous, frozen.value);
+    const anchor = indexAt(previous, edge);
+    const within = edge - offsetAt(previous, anchor);
 
-    settle(offsetAt(next, anchor) + Math.min(within, sizeAt(next, anchor)));
+    settle(
+      offsetAt(next, anchor) +
+        Math.min(within, sizeAt(next, anchor)) -
+        offsetAt(next, frozen.value),
+    );
   });
 
   const active = (): HTMLElement | undefined =>

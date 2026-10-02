@@ -55,6 +55,10 @@ code moves.
 With rows of one height both window edges move at the same scroll offset. Crossing a row
 boundary therefore updates the window once.
 
+`frozen: n` keeps the first `n` items rendered and windows the rest below them. The range
+starts after them, and `scrollTo` brings a row to their lower edge. Make these items sticky at
+`offsetOf(index)`: the `frame` limits already count their height.
+
 `listen: false` leaves the scroll event to you. Call `measure()` from one shared listener
 when several windows share a scroller, so the rows update once per event.
 

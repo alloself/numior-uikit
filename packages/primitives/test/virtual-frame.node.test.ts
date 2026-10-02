@@ -35,6 +35,20 @@ describe('virtualFrameOf', () => {
     expect(below).toEqual({ lead: 3760, rest: 35440, clampStart: -500, clampEnd: -540 });
   });
 
+  it('lays the window under frozen rows and stops it at their lower edge', () => {
+    const frozen = virtualFrameOf({
+      ...WINDOW,
+      frozen: 2,
+      items: itemsOf([0, 1, ...range(94, 113)]),
+    });
+
+    expect(frozen).toEqual({ lead: 3680, rest: 35480, clampStart: -580, clampEnd: -580 });
+
+    expect(
+      virtualFrameOf({ ...WINDOW, frozen: 2, items: itemsOf([0, 1, 40, ...range(94, 113), 700]) }),
+    ).toEqual({ lead: 3640, rest: 35440, clampStart: -620, clampEnd: -620 });
+  });
+
   it('never pushes rows that fit their viewport', () => {
     expect(
       virtualFrameOf({

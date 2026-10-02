@@ -19,25 +19,34 @@ export interface VirtualFrameInput {
   readonly endSize: number;
   readonly viewport: number;
   readonly inset: number;
+  readonly frozen?: number | undefined;
 }
 
-interface WindowSizes {
-  readonly before: number;
-  readonly inside: number;
-  readonly after: number;
-}
+type WindowPart = 'frozen' | 'before' | 'inside' | 'after';
 
-const NO_SIZES: WindowSizes = { before: 0, inside: 0, after: 0 };
+type WindowSizes = Readonly<Record<WindowPart, number>>;
 
-const sizesOf = (items: readonly VirtualFrameItem[], range: VirtualRange): WindowSizes =>
+const NO_SIZES: WindowSizes = { frozen: 0, before: 0, inside: 0, after: 0 };
+
+const partOf = (index: number, range: VirtualRange, frozen: number): WindowPart => {
+  if (index < frozen) {
+    return 'frozen';
+  }
+  if (index < range.start) {
+    return 'before';
+  }
+  return index >= range.end ? 'after' : 'inside';
+};
+
+const sizesOf = (
+  items: readonly VirtualFrameItem[],
+  range: VirtualRange,
+  frozen: number,
+): WindowSizes =>
   items.reduce((sizes, item) => {
-    if (item.index < range.start) {
-      return { ...sizes, before: sizes.before + item.size };
-    }
-    if (item.index >= range.end) {
-      return { ...sizes, after: sizes.after + item.size };
-    }
-    return { ...sizes, inside: sizes.inside + item.size };
+    const part = partOf(item.index, range, frozen);
+
+    return { ...sizes, [part]: sizes[part] + item.size };
   }, NO_SIZES);
 
 export const virtualFrameOf = ({
@@ -47,15 +56,16 @@ export const virtualFrameOf = ({
   endSize,
   viewport,
   inset,
+  frozen = 0,
 }: VirtualFrameInput): VirtualFrame => {
-  const { before, inside, after } = sizesOf(items, range);
-  const overflow = viewport - inset - inside;
+  const sizes = sizesOf(items, range, frozen);
+  const overflow = viewport - inset - sizes.frozen - sizes.inside;
 
   return {
-    lead: Math.max(0, startSize - before),
-    rest: Math.max(0, endSize - after),
-    clampStart: Math.min(0, overflow - before),
-    clampEnd: Math.min(0, overflow - after),
+    lead: Math.max(0, startSize - sizes.frozen - sizes.before),
+    rest: Math.max(0, endSize - sizes.after),
+    clampStart: Math.min(0, overflow - sizes.before),
+    clampEnd: Math.min(0, overflow - sizes.after),
   };
 };
 
