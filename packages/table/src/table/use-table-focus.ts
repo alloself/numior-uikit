@@ -1,7 +1,7 @@
 import { onMounted, ref, watch, type Ref, type ShallowRef } from 'vue';
 import { createIntent, type VirtualList } from '@numior/primitives';
 import { DETAIL_CELL, OWN_ACTIVE_CELL } from './table-dom';
-import { nextCell, pageRowsOf } from './table-keys';
+import { nextCell } from './table-keys';
 import type { TableCellPosition, TableHeaderTarget } from './table.types';
 
 export interface TableFocusOptions {
@@ -14,7 +14,7 @@ export interface TableFocusOptions {
   readonly pinnedRows: () => number;
   readonly headRows: () => number;
   readonly colCount: () => number;
-  readonly rowSize: () => number;
+  readonly pageRows: (row: number, forward: boolean) => number;
   readonly centreIndexOf: (visual: number) => number | undefined;
   readonly columnIndexOf: (key: string) => number;
   readonly isRtl: () => boolean;
@@ -63,8 +63,6 @@ export const useTableFocus = (options: TableFocusOptions): TableFocus => {
   const placement = createIntent<TableHeaderTarget>();
   const placements = ref(0);
 
-  const pageRows = (): number => pageRowsOf(options.rows.viewport.value, options.rowSize());
-
   const reveal = (target: TableCellPosition): void => {
     if (!options.windowed()) {
       return;
@@ -110,7 +108,7 @@ export const useTableFocus = (options: TableFocusOptions): TableFocus => {
     const target = nextCell({ key: event.key, ctrl: event.ctrlKey }, options.active.value, {
       rows: options.rowCount(),
       cols: options.colCount(),
-      page: pageRows(),
+      page: options.pageRows(options.active.value.row, event.key === 'PageDown'),
       rtl: options.isRtl(),
     });
 

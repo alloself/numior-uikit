@@ -65,6 +65,7 @@ const {
   cells,
   rowIndex,
   part = 'body',
+  wraps = true,
   active = 0,
   level,
   group,
@@ -107,7 +108,7 @@ const hiddenRow = computed(() => (part === 'skeleton' ? true : undefined));
 
 const busy = computed(() => loading || undefined);
 
-const wrapsText = computed(() => part === 'body' || part === 'foot');
+const wrapsText = computed(() => part === 'body' || (part === 'foot' && wraps));
 
 const rowClass = computed(() => [
   `nui-table__row--${part}`,

@@ -255,6 +255,12 @@ export const pinsFit = (layout: TableLayout, room: number): boolean =>
 export const centreIndexOf = (layout: TableLayout, visual: number): number | undefined =>
   layout.visual[visual]?.pane === 'centre' ? visual - layout.start.length : undefined;
 
+export const withWrapped = (layout: TableLayout, centre: readonly number[]): number[] => {
+  const wrapped = layout.centre.flatMap((column, index) => (column.cell.wrap ? [index] : []));
+
+  return [...new Set([...centre, ...wrapped])].toSorted((a, b) => a - b);
+};
+
 const gapCell = (key: string): TableGapCell => ({
   kind: 'gap',
   key,

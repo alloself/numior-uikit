@@ -300,6 +300,35 @@ describe('NuiTable on the server', () => {
     expect(await renderDetail(undefined)).not.toContain('--_window-rest');
   });
 
+  it('renders rows that size themselves in a window with their wrap columns', async () => {
+    const columns = PEOPLE_COLUMNS.map((column) =>
+      column.key === 'note' || column.key === 'm9' ? { ...column, wrap: true } : column,
+    );
+
+    const fluid = (): Promise<string> =>
+      renderToString(
+        createSSRApp({
+          render: () =>
+            h(NuiTable<Person>, {
+              columns,
+              rows: people(1000),
+              height: '28rem',
+              rowHeight: 'auto',
+            }),
+        }),
+      );
+
+    const html = await fluid();
+
+    expect(html).toBe(await fluid());
+    expect(html).toContain('nui-table--fluid');
+    expect(html).not.toContain('nui-table--auto');
+    expect(html.match(/nui-table__cell--wrap/g)).toHaveLength(60);
+    expect(html).toContain('>M9<');
+    expect(html).not.toContain('>M8<');
+    expect(html).toContain('--_window-rest:38800px');
+  });
+
   it('renders skeleton rows for a source without asking it for rows on the server', async () => {
     const offsets: number[] = [];
 

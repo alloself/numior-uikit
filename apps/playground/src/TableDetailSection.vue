@@ -6,6 +6,7 @@
     </div>
     <div class="data-row">
       <NuiSwitch v-model="windowed" data-testid="table-detail-window">Окно строк</NuiSwitch>
+      <NuiSwitch v-model="fluid" data-testid="table-detail-fluid">Высота по содержимому</NuiSwitch>
       <NuiSwitch v-model="striped" data-testid="table-detail-striped">Полосы</NuiSwitch>
       <NuiButton
         size="sm"
@@ -35,6 +36,7 @@
       :get-key="(row) => row.id"
       :has-detail="(row) => row.items.length > 0"
       :height="windowed ? '24rem' : undefined"
+      :row-height="fluid ? 'auto' : undefined"
       :pagination="windowed ? false : PAGINATION"
       :striped="striped"
       label="Поставки"
@@ -158,7 +160,7 @@ const SHIPMENT_COLUMNS: NuiTableColumnDef<Shipment>[] = [
     key: 'customer',
     label: 'Клиент',
     type: 'text',
-    width: 220,
+    width: 200,
     flex: 1,
     value: (row) => row.customer,
   },
@@ -171,6 +173,14 @@ const SHIPMENT_COLUMNS: NuiTableColumnDef<Shipment>[] = [
     value: (row) => row.items.length,
   },
   { key: 'total', label: 'Сумма', type: 'number', width: 140, value: totalOf },
+  {
+    key: 'note',
+    label: 'Комментарий',
+    type: 'text',
+    width: 220,
+    wrap: true,
+    value: (row) => row.note,
+  },
 ];
 
 const ITEM_COLUMNS: NuiTableColumnDef<ShipmentItem>[] = [
@@ -200,6 +210,7 @@ const factsOf = (row: Shipment): Fact[] => [
 ];
 
 const windowed = ref(true);
+const fluid = ref(false);
 const striped = ref(false);
 const expanded = ref<readonly TableNodeId[]>([]);
 const pageSize = ref(10);

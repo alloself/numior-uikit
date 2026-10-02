@@ -2,6 +2,8 @@ import { expect, test } from '@playwright/test';
 import { boxOf } from './helpers/geometry';
 import { PlaygroundPage } from './pages/playground';
 
+const ITEM_KINDS = 6;
+
 test.describe('table detail rows', () => {
   test('opens a detail with a nested table from the chevron and keeps its clicks to itself', async ({
     page,
@@ -146,6 +148,101 @@ test.describe('table detail rows', () => {
     await detail.closeAll.click();
     await expect(detail.panel(1)).toHaveCount(0);
     await expect(detail.grid).toHaveAttribute('aria-rowcount', '11');
+  });
+
+  test('sizes the rows of a window by their content and keeps the row under the header in place', async ({
+    page,
+  }) => {
+    const playground = new PlaygroundPage(page);
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    const { tableDetail: detail } = playground;
+    await detail.root.scrollIntoViewIfNeeded();
+    const plain = await boxOf(detail.row(1));
+
+    await detail.fluidSwitch.click();
+
+    await expect
+      .poll(async () => (await boxOf(detail.row(1))).height)
+      .toBeGreaterThan(plain.height);
+
+    expect((await boxOf(detail.row(2))).height).toBe(plain.height);
+    expect(await detail.largestRowGap()).toBeLessThanOrEqual(0.5);
+    await detail.scrollTo(30_000);
+
+    await expect.poll(async () => Number((await detail.topRow())?.text)).toBeGreaterThan(600);
+
+    await expect.poll(async () => (await detail.topRow())?.gap ?? 99).toBeLessThanOrEqual(0.5);
+    const settled = await detail.topRow();
+
+    await page.waitForTimeout(200);
+    expect(await detail.topRow()).toEqual(settled);
+    expect(await detail.largestRowGap()).toBeLessThanOrEqual(0.5);
+    await detail.scrollToEnd();
+
+    await expect(detail.cell(1999, 0)).toHaveText('2000');
+
+    await expect
+      .poll(async () => {
+        const last = await boxOf(detail.row(1999));
+
+        return Math.abs(last.y + last.height - (await detail.bodyEdges()).bottom);
+      })
+      .toBeLessThanOrEqual(1);
+  });
+
+  test('keeps a row among measured rows in place when its detail opens', async ({ page }) => {
+    const playground = new PlaygroundPage(page);
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    const { tableDetail: detail } = playground;
+    await detail.root.scrollIntoViewIfNeeded();
+    await detail.fluidSwitch.click();
+    await detail.scrollTo(30_000);
+    await expect.poll(async () => (await detail.topRow())?.gap ?? 99).toBeLessThanOrEqual(0.5);
+    const below = Number((await detail.topRow())?.text) + 1;
+    const position = (below + 1) % ITEM_KINDS === 0 ? below + 1 : below;
+    const before = await boxOf(detail.row(position));
+
+    await detail.toggle(position).click();
+    await expect(detail.row(position)).toHaveAttribute('aria-expanded', 'true');
+    await expect(detail.panel(position + 1)).toBeVisible();
+
+    await expect
+      .poll(async () => Math.abs((await boxOf(detail.row(position))).y - before.y))
+      .toBeLessThanOrEqual(1);
+
+    expect(await detail.largestRowGap()).toBeLessThanOrEqual(0.5);
+    await detail.toggle(position).click();
+    await expect(detail.panel(position + 1)).toHaveCount(0);
+
+    await expect
+      .poll(async () => Math.abs((await boxOf(detail.row(position))).y - before.y))
+      .toBeLessThanOrEqual(1);
+  });
+
+  test('keeps the focused cell in view while the arrows walk rows of different heights', async ({
+    page,
+    isMobile,
+  }) => {
+    test.skip(isMobile, 'keyboard scenario');
+    const playground = new PlaygroundPage(page);
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    const { tableDetail: detail } = playground;
+    await detail.root.scrollIntoViewIfNeeded();
+    await detail.fluidSwitch.click();
+    await detail.cell(0, 1).click();
+
+    for (let step = 1; step <= 14; step += 1) {
+      await page.keyboard.press('ArrowDown');
+      await expect(detail.cell(step, 1)).toBeFocused();
+      const edges = await detail.bodyEdges();
+      const cell = await boxOf(detail.cell(step, 1));
+
+      expect(cell.y).toBeGreaterThanOrEqual(edges.top - 1);
+      expect(cell.y + cell.height).toBeLessThanOrEqual(edges.bottom + 1);
+    }
   });
 
   test('open details have no automatically detectable WCAG AA violations', async ({ page }) => {

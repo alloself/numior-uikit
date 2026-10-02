@@ -34,7 +34,7 @@ export interface TableRangesOptions {
   readonly pinnedRows: () => number;
   readonly footRows: () => number;
   readonly rowSize: () => number;
-  readonly pageRows: () => number;
+  readonly pageRows: (row: number, forward: boolean) => number;
   readonly isRtl: () => boolean;
   readonly anchor: () => TableCellPosition | undefined;
   readonly focus: (position: TableCellPosition) => void;
@@ -410,13 +410,14 @@ export const useTableRanges = (options: TableRangesOptions): TableRanges => {
   const extendBy = (event: KeyboardEvent, anchor: TableCellPosition): boolean => {
     const list = latest();
     const last = list.at(-1);
+    const from = last?.to ?? anchor;
 
     const corner = stepCorner(
-      last?.to ?? anchor,
+      from,
       {
         key: event.key,
         ctrl: event.ctrlKey || event.metaKey,
-        page: options.pageRows(),
+        page: options.pageRows(from.row, event.key === 'PageDown'),
         rtl: options.isRtl(),
       },
       options.bounds(),

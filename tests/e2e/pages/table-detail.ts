@@ -21,6 +21,11 @@ export interface TableDetailTopRow {
   readonly gap: number;
 }
 
+export interface TableDetailEdges {
+  readonly top: number;
+  readonly bottom: number;
+}
+
 const HEAD_ROWS = 1;
 const BODY_ROWS = ':scope > .nui-table__body > [role="row"]';
 
@@ -29,6 +34,7 @@ export class TableDetailSection {
   readonly viewport: Locator;
   readonly grid: Locator;
   readonly windowSwitch: Locator;
+  readonly fluidSwitch: Locator;
   readonly stripedSwitch: Locator;
   readonly openFirst: Locator;
   readonly closeAll: Locator;
@@ -39,6 +45,7 @@ export class TableDetailSection {
     this.viewport = this.root.locator(':scope > .nui-table__frame > .nui-table__viewport');
     this.grid = this.viewport.locator(':scope > .nui-table__grid');
     this.windowSwitch = page.getByTestId('table-detail-window');
+    this.fluidSwitch = page.getByTestId('table-detail-fluid');
     this.stripedSwitch = page.getByTestId('table-detail-striped');
     this.openFirst = page.getByTestId('table-detail-open');
     this.closeAll = page.getByTestId('table-detail-close');
@@ -103,6 +110,37 @@ export class TableDetailSection {
         Math.abs(element.scrollLeft) >= element.scrollWidth - element.clientWidth - 1 &&
         element.scrollWidth > element.clientWidth,
     );
+  }
+
+  async scrollToEnd(): Promise<void> {
+    await this.viewport.evaluate((element) => {
+      element.scrollTop = element.scrollHeight;
+    });
+  }
+
+  largestRowGap(): Promise<number> {
+    return this.grid.evaluate((grid, selector) => {
+      const rects = [...grid.querySelectorAll(selector)].map((row) => row.getBoundingClientRect());
+
+      return rects.reduce(
+        (gap, rect, index) =>
+          index === 0 ? gap : Math.max(gap, Math.abs(rect.top - (rects[index - 1]?.bottom ?? 0))),
+        0,
+      );
+    }, BODY_ROWS);
+  }
+
+  bodyEdges(): Promise<TableDetailEdges> {
+    return this.viewport.evaluate((viewport) => {
+      const header = viewport.querySelector(
+        ':scope > .nui-table__grid > .nui-table__header [role="columnheader"]',
+      );
+
+      return {
+        top: header?.getBoundingClientRect().bottom ?? 0,
+        bottom: viewport.getBoundingClientRect().top + viewport.clientTop + viewport.clientHeight,
+      };
+    });
   }
 
   topRow(): Promise<TableDetailTopRow | null> {

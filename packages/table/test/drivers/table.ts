@@ -14,7 +14,7 @@ import {
 } from 'vue';
 import { choosePageSize } from '../../../vue/test/support/page-size';
 import { dismissPopoverNatively, TopLayerStubs } from '../../../vue/test/support/top-layer';
-import NuiTableDetailRow from '../../src/table/NuiTableDetailRow.vue';
+import { stubRowObserver, type RowObserverStub } from '../support/row-observer';
 import {
   activeCellOf,
   bodyRowsOf,
@@ -88,6 +88,11 @@ type MountDefaults = Required<
     | 'dir'
   >
 >;
+
+interface TableStubs {
+  readonly layers: TopLayerStubs;
+  readonly observers: RowObserverStub;
+}
 
 interface TableWindowFrameText {
   readonly lead: string;
@@ -245,6 +250,7 @@ export class TableDriver<T> {
     const ranges = ref<NuiTableRanges>([]);
     const props = shallowRef<TableProps<T>>(settings.props ?? {});
     const stubs = new TopLayerStubs();
+    const observers = stubRowObserver();
     const exposed = shallowRef<NuiTableExposed | null>(null);
 
     const events: TableEvents<T> = {
@@ -380,7 +386,10 @@ export class TableDriver<T> {
       ranges,
     };
 
-    const driver = new TableDriver<T>(wrapper, source, props, models, exposed, events, stubs);
+    const driver = new TableDriver<T>(wrapper, source, props, models, exposed, events, {
+      layers: stubs,
+      observers,
+    });
 
     driver.size(settings.width, settings.height);
     return driver;
@@ -393,7 +402,7 @@ export class TableDriver<T> {
     private readonly models: TableModels<T>,
     private readonly exposed: ShallowRef<NuiTableExposed | null>,
     private readonly events: TableEvents<T>,
-    private readonly stubs: TopLayerStubs,
+    private readonly stubs: TableStubs,
   ) {}
 
   private nextSettle(): Promise<void> {
@@ -473,6 +482,10 @@ export class TableDriver<T> {
 
   get auto(): boolean {
     return this.wrapper.find('.nui-table').classes('nui-table--auto');
+  }
+
+  get fluid(): boolean {
+    return this.wrapper.find('.nui-table').classes('nui-table--fluid');
   }
 
   cellWraps(position: number, col: number): boolean {
@@ -1345,14 +1358,18 @@ export class TableDriver<T> {
     return event.defaultPrevented;
   }
 
-  async measureDetail(position: number, size: number): Promise<void> {
-    const row = this.row(position);
+  async measureRows(sizes: Readonly<Record<number, number>>): Promise<void> {
+    const cells = Object.entries(sizes).flatMap(([position, size]) => {
+      const cell = this.row(Number(position))?.firstElementChild;
 
-    this.wrapper
-      .findAllComponents(NuiTableDetailRow)
-      .find((component) => component.element === row)
-      ?.vm.$emit('measure', size);
+      if (cell === null || cell === undefined) {
+        return [];
+      }
+      defineRect(cell, new DOMRect(0, 0, LAYOUT_WIDTH, size));
+      return [cell];
+    });
 
+    this.stubs.observers.deliver(cells);
     await nextTick();
   }
 
@@ -1690,6 +1707,7 @@ export class TableDriver<T> {
 
   unmount(): void {
     this.wrapper.unmount();
-    this.stubs.restore();
+    this.stubs.layers.restore();
+    this.stubs.observers.restore();
   }
 }

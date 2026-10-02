@@ -166,6 +166,12 @@ reused element by element.
 
 <Example name="table/Windowed" />
 
+`rowHeight="auto"` keeps the row window but takes the height of every row from its content.
+Columns with `wrap` break their text and render at any horizontal scroll. The table measures rows
+as they appear and holds the row under the header in place while the scroll height settles.
+
+<Example name="table/RowHeight" />
+
 ### Server source
 
 The `source` prop takes rows from a server: `fetch({ offset, limit, sort, filters, signal })`

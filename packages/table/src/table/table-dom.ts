@@ -4,6 +4,8 @@ export const OWN_BODY_ROWS = `${OWN_GRID} > .nui-table__body > [role="row"]`;
 
 export const OWN_DATA_ROWS = `${OWN_GRID} > .nui-table__body > .nui-table__row--body`;
 
+export const OWN_DETAIL_ROWS = `${OWN_GRID} > .nui-table__body > .nui-table__row--detail`;
+
 export const OWN_HEAD_CELLS = `${OWN_GRID} > .nui-table__header > .nui-table__row--head > [role="columnheader"][aria-colindex]`;
 
 export const OWN_ACTIVE_CELL = `${OWN_GRID} > * > .nui-table__row > .nui-table__cell--active`;

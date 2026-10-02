@@ -108,8 +108,6 @@
                 :colspan="rowCells.tracks.length"
                 :level="item.level"
                 :active="focus.activeIn(item.index + pinnedCount) > 0"
-                :measured="windowed"
-                @measure="onDetailSize(item.index, $event)"
               >
                 <slot name="detail" v-bind="detailScope(item.index)" />
               </NuiTableDetailRow>
@@ -161,6 +159,7 @@
               :cells="rowCells"
               :row-index="pinnedCount + visibleRows + headRows + 1"
               part="foot"
+              :wraps="!windowed"
               :active="focus.activeIn(pinnedCount + visibleRows)"
               :revision="revision"
             >
@@ -254,7 +253,6 @@ import {
   useMessages,
   useVirtualFrame,
   useVirtualList,
-  type ItemSize,
   type VirtualFrame,
 } from '@numior/primitives';
 import {
@@ -287,14 +285,7 @@ import NuiTableTracks from './NuiTableTracks.vue';
 import NuiTableTreeToggle from './NuiTableTreeToggle.vue';
 import NuiTableUtilityCell from './NuiTableUtilityCell.vue';
 import { tableMessages } from './table.messages';
-import {
-  detailsBefore,
-  detailSpotsOf,
-  NO_DETAILS,
-  NO_SPOTS,
-  rowSizesOf,
-  sameSpots,
-} from './table-detail';
+import { detailsBefore, detailSpotsOf, NO_DETAILS, NO_SPOTS, sameSpots } from './table-detail';
 import { ownCellAt, ownDetailOf } from './table-dom';
 import { cellTextOf, cellValueOf, engineColumnOf, valueTextOf } from './table-format';
 import { columnTreeOf, headerBandsOf } from './table-columns';
@@ -307,6 +298,7 @@ import {
   rowCellsOf,
   SELECT_KEY,
   tableLayout,
+  withWrapped,
 } from './table-layout';
 import { pageWindowOf, resolvePagination } from './table-pages';
 import NuiTableFilter from './NuiTableFilter.vue';
@@ -322,7 +314,7 @@ import { editorPlan } from './table-editors';
 import { parseCell } from './table-parse';
 import { ruleFailure } from './table-rules';
 import { useTableRanges } from './use-table-ranges';
-import { pageRowsOf } from './table-keys';
+import { pageRowsOf, pageStepOf } from './table-keys';
 import { useTableExpansion } from './use-table-expansion';
 import { useTableHeader, type TableHeader } from './use-table-header';
 import { useTableMenu, type TableMenu } from './use-table-menu';
@@ -330,6 +322,7 @@ import { useTableColumnOrder } from './use-table-column-order';
 import { useTableQuery } from './use-table-query';
 import { useTableResize } from './use-table-resize';
 import { useTableRowDrag } from './use-table-row-drag';
+import { useTableRowSizes } from './use-table-row-sizes';
 import { useTableTotals } from './use-table-totals';
 import { useTableSelection, type TableSelectionKey } from './use-table-selection';
 import type {
@@ -388,7 +381,6 @@ const NEST_DELAY = 600;
 const COPY_LIMIT = 200_000;
 const BLOCK_SIZE = 100;
 const SKELETON_ROWS = 5;
-const DETAIL_ROWS = 4;
 const LONG_PRESS = 500;
 
 const {
@@ -502,6 +494,7 @@ const waiting = ref(!engine.value.settled());
 const loadingNow = computed(() => loading || waiting.value);
 const rowCount = ref(0);
 const revision = ref(0);
+const arrangement = ref(0);
 const announcement = ref('');
 const rowsIntent = createIntent<'rows'>();
 const selectOn = computed(() => selectable !== undefined);
@@ -579,7 +572,7 @@ const query = useTableQuery({
   query: currentQuery,
   onSettled: (count, ran) => {
     totals.take(ran);
-    sync();
+    rearrange();
     clampActive();
 
     if (rowsIntent.take() === 'rows') {
@@ -611,7 +604,7 @@ const layoutOptions = computed(() => ({
   widths: widths.value,
   select: selectOn.value,
   room: room.value,
-  wrap: height === undefined,
+  wrap: height === undefined || rowHeight === 'auto',
 }));
 
 const pinnedLayout = computed(() =>
@@ -632,8 +625,9 @@ const columnByKey = computed(
   () => new Map(tree.value.leaves.map((column) => [column.key, column])),
 );
 
-const rowSize = computed(() => rowHeight ?? ROW_SIZES[size]);
+const rowSize = computed(() => (typeof rowHeight === 'number' ? rowHeight : ROW_SIZES[size]));
 const windowed = computed(() => height !== undefined);
+const fluid = computed(() => windowed.value && rowHeight === 'auto');
 const labelText = computed(() => label ?? messages.value.label);
 const hasCaption = computed(() => caption !== undefined || slots.caption !== undefined);
 const captionId = computed(() => `${gridId.value}-caption`);
@@ -657,18 +651,21 @@ const detailSpots = computed<readonly TableDetailSpot[]>((previous) => {
   return previous !== undefined && sameSpots(previous, next) ? previous : next;
 });
 
-const detailSizes = new Map<TableNodeId, number>();
-let detailEstimate: number | undefined;
-
-const rowSizes = computed<ItemSize>(() => {
-  const base = rowSize.value;
-
-  return rowSizesOf(
-    windowed.value ? detailSpots.value : NO_SPOTS,
-    visibleRows.value,
-    base,
-    (key) => detailSizes.get(key) ?? detailEstimate ?? base * DETAIL_ROWS,
-  );
+const rowSizes = useTableRowSizes({
+  viewport,
+  engine,
+  windowed: () => windowed.value,
+  fluid: () => fluid.value,
+  rowSize: () => rowSize.value,
+  count: () => visibleRows.value,
+  pageStart: () => pageStart.value,
+  leading: () => headRows.value + pinnedCount.value,
+  spots: () => detailSpots.value,
+  arrangement: () => arrangement.value,
+  rendered: () => [bodyRows.value, rowCells.value],
+  resize: (sizes) => {
+    rowWindow.resize(sizes);
+  },
 });
 
 const activeRow = (): number | undefined => {
@@ -681,7 +678,7 @@ const activeCentre = (): number | undefined => centreIndexOf(layout.value, activ
 const rowWindow = useVirtualList(viewport, {
   enabled: windowed,
   count: () => visibleRows.value,
-  itemSize: rowSizes,
+  itemSize: rowSizes.itemSize,
   overscan: ROW_OVERSCAN,
   initialCount: INITIAL_ROWS,
   pinned: activeRow,
@@ -712,12 +709,11 @@ const onViewportScroll = (): void => {
   }
 };
 
-const rowCells = computed(() =>
-  rowCellsOf(
-    layout.value,
-    columnWindow.items.value.map((item) => item.index),
-  ),
-);
+const rowCells = computed(() => {
+  const shown = columnWindow.items.value.map((item) => item.index);
+
+  return rowCellsOf(layout.value, fluid.value ? withWrapped(layout.value, shown) : shown);
+});
 
 const bands = computed(() => headerBandsOf(layout.value, tree.value, rowCells.value));
 
@@ -732,15 +728,24 @@ const rootStyle = computed(() => ({
   ...(room.value > 0 ? { '--_room': `${room.value}px` } : {}),
 }));
 
-const fittingRows = computed(() =>
-  Math.ceil(
-    Math.max(
-      0,
-      rowWindow.viewport.value -
-        rowSize.value * (headRows.value + pinnedCount.value + footRows.value),
-    ) / rowSize.value,
+const bodySpan = computed(() =>
+  Math.max(
+    0,
+    rowWindow.viewport.value -
+      rowSize.value * (headRows.value + pinnedCount.value + footRows.value),
   ),
 );
+
+const fittingRows = computed(() => Math.ceil(bodySpan.value / rowSize.value));
+
+const pageRows = (body: number, forward: boolean): number =>
+  body < 0 || body >= visibleRows.value || typeof rowSizes.itemSize.value === 'number'
+    ? pageRowsOf(rowWindow.viewport.value, rowSize.value)
+    : pageStepOf(
+        { span: bodySpan.value, offsetOf: rowWindow.offsetOf, indexAt: rowWindow.indexAt },
+        body,
+        forward,
+      );
 
 const skeletonCount = computed(() => {
   if (!loadingNow.value || slots.loading !== undefined) {
@@ -764,6 +769,7 @@ const rootClass = computed(() => [
     'nui-table--busy': query.busy.value,
     'nui-table--totals': totals.enabled.value,
     'nui-table--auto': !windowed.value,
+    'nui-table--fluid': fluid.value,
     'nui-table--captioned': hasCaption.value,
     'nui-table--paged': paginationProps.value !== undefined,
     'nui-table--striped': striped,
@@ -794,7 +800,7 @@ const focus = useTableFocus({
   pinnedRows: () => pinnedCount.value,
   headRows: () => headRows.value,
   colCount: () => layout.value.visual.length,
-  rowSize: () => rowSize.value,
+  pageRows: (row, forward) => pageRows(row - pinnedCount.value, forward),
   centreIndexOf: (visual) => centreIndexOf(layout.value, visual),
   columnIndexOf: (key) => layout.value.visual.findIndex((column) => column.key === key),
   isRtl: direction.isRtl,
@@ -832,16 +838,6 @@ const detailScope = (position: number): NuiTableDetailSlot<T> => ({
   row: detailAt(position).row,
   position: position - 1,
 });
-
-const onDetailSize = (position: number, measured: number): void => {
-  const node = engine.value.nodeAt(pageStart.value + position);
-
-  if (node?.kind === 'detail') {
-    detailSizes.set(node.id, measured);
-    detailEstimate = measured;
-    rowWindow.resize([[position, measured]]);
-  }
-};
 
 const inDetail = (event: Event): boolean => ownDetailOf(event.target, viewport.value) !== null;
 
@@ -1195,7 +1191,7 @@ const rangeSelect = useTableRanges({
   pinnedRows: () => pinnedCount.value,
   footRows: () => footRows.value,
   rowSize: () => rowSize.value,
-  pageRows: () => pageRowsOf(rowWindow.viewport.value, rowSize.value),
+  pageRows,
   isRtl: direction.isRtl,
   anchor: rangeAnchor,
   focus: (position) => {
@@ -1684,6 +1680,11 @@ const sync = (): void => {
   revision.value += 1;
 };
 
+const rearrange = (): void => {
+  arrangement.value += 1;
+  sync();
+};
+
 const clampActive = (): void => {
   const rowsInFocus = visibleRows.value + footRows.value;
   const lastRow = rowsInFocus > 0 ? rowsInFocus - 1 : -1;
@@ -1726,7 +1727,7 @@ watch(
 
 watch(expanded, (ids) => {
   engine.value.setToggled(ids);
-  sync();
+  rearrange();
   clampActive();
 });
 
@@ -1742,7 +1743,7 @@ watch(
       editing.reset();
     }
     runNow();
-    sync();
+    rearrange();
     clampActive();
     refocusMoved();
   },
@@ -1757,7 +1758,7 @@ watch([() => columns, () => source], () => {
   editing.reset();
   totals.reset();
   runNow();
-  sync();
+  rearrange();
   clampActive();
   ensureRows();
 });

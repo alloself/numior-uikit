@@ -196,7 +196,7 @@ describe('NuiTable detail rows', () => {
       clampEnd: '-260px',
     });
 
-    await grid.measureDetail(2, 250);
+    await grid.measureRows({ 2: 250 });
 
     expect(grid.windowFrame).toEqual({
       lead: '0px',
@@ -214,9 +214,9 @@ describe('NuiTable detail rows', () => {
     await grid.scroll({ top: 400 });
 
     expect(grid.renderedRows).toContain(2);
-    await grid.measureDetail(2, 250);
+    await grid.measureRows({ 2: 250 });
     expect(grid.scrollTop).toBe(490);
-    await grid.measureDetail(2, 250);
+    await grid.measureRows({ 2: 250 });
     expect(grid.scrollTop).toBe(490);
   });
 

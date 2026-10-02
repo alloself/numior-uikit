@@ -23,6 +23,18 @@ export const pageRowsOf = (viewport: number, size: number): number => {
   return Math.max(1, Math.floor((span - size) / size));
 };
 
+export interface PageScale {
+  readonly span: number;
+  readonly offsetOf: (index: number) => number;
+  readonly indexAt: (position: number) => number;
+}
+
+export const pageStepOf = (scale: PageScale, from: number, forward: boolean): number => {
+  const edge = forward ? scale.offsetOf(from) + scale.span : scale.offsetOf(from + 1) - scale.span;
+
+  return Math.max(1, Math.abs(scale.indexAt(Math.max(0, edge)) - from) - 1);
+};
+
 const verticalTarget = (
   key: string,
   from: TableCellPosition,

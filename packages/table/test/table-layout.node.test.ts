@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { NuiTableColumn, NuiTablePin } from '../src';
-import { tableLayout, pinsFit, type TableLayout } from '../src/table/table-layout';
+import { tableLayout, pinsFit, withWrapped, type TableLayout } from '../src/table/table-layout';
 
 interface Place {
   readonly name: string;
@@ -134,5 +134,23 @@ describe('tableLayout', () => {
     expect(scrolling.visual.map((placed) => placed.key)).toEqual(
       pinned.visual.map((placed) => placed.key),
     );
+  });
+
+  it('adds the wrapping columns to the columns of the window in their order', () => {
+    const layout = tableLayout(
+      [
+        column('id', 80, 'start'),
+        column('name', 200),
+        { ...column('note', 300), wrap: true },
+        column('city', 140),
+        { ...column('address', 300), wrap: true },
+        { ...column('status', 160, 'end'), wrap: true },
+      ],
+      { pins: {}, hidden: [], widths: {}, sticky: true, select: false, room: 0, wrap: true },
+    );
+
+    expect(withWrapped(layout, [2])).toEqual([1, 2, 3]);
+    expect(withWrapped(layout, [0, 1])).toEqual([0, 1, 3]);
+    expect(withWrapped(layout, [])).toEqual([1, 3]);
   });
 });

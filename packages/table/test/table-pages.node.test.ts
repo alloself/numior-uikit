@@ -1,5 +1,18 @@
 import { describe, expect, it } from 'vitest';
+import { pageStepOf } from '../src/table/table-keys';
 import { pageCountOf, pageWindowOf, resolvePagination } from '../src/table/table-pages';
+
+const OFFSETS = [0, 40, 80, 330, 370, 410, 450, 490, 530];
+
+const scale = {
+  span: 260,
+  offsetOf: (index: number): number => OFFSETS[index] ?? 0,
+  indexAt: (position: number): number =>
+    Math.max(
+      0,
+      OFFSETS.findLastIndex((offset) => offset <= position),
+    ),
+};
 
 describe('grid pages', () => {
   it('clamps the page and slices a window of the visible list', () => {
@@ -18,6 +31,14 @@ describe('grid pages', () => {
     expect(pageWindowOf(8, 2, 2, [2, 4])).toEqual({ start: 3, end: 6, page: 2, pages: 3 });
     expect(pageWindowOf(8, 3, 2, [1, 7])).toEqual({ start: 5, end: 8, page: 3, pages: 3 });
     expect(pageWindowOf(4, 1, 20, [1, 3])).toEqual({ start: 0, end: 4, page: 1, pages: 1 });
+  });
+
+  it('steps a keyboard page by the rows that fit the window around a tall row', () => {
+    expect(pageStepOf(scale, 0, true)).toBe(1);
+    expect(pageStepOf(scale, 3, true)).toBe(4);
+    expect(pageStepOf(scale, 7, false)).toBe(4);
+    expect(pageStepOf(scale, 3, false)).toBe(1);
+    expect(pageStepOf(scale, 2, false)).toBe(1);
   });
 
   it('turns the pagination prop into options', () => {

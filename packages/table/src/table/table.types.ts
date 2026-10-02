@@ -131,7 +131,7 @@ export interface NuiTableProps<T> {
   getKey?: ((row: T) => TableNodeId) | undefined;
   id?: string | undefined;
   size?: NuiTableSize | undefined;
-  rowHeight?: number | undefined;
+  rowHeight?: number | 'auto' | undefined;
   height?: string | undefined;
   locale?: string | undefined;
   label?: string | undefined;
@@ -532,6 +532,7 @@ export interface NuiTableRowProps {
   cells: TableRowCells;
   rowIndex: number;
   part?: TableRowPart | undefined;
+  wraps?: boolean | undefined;
   active?: number | undefined;
   revision?: number | undefined;
   level?: number | undefined;
@@ -551,7 +552,6 @@ export interface NuiTableDetailRowProps {
   colspan: number;
   level?: number | undefined;
   active?: boolean | undefined;
-  measured?: boolean | undefined;
 }
 
 export interface NuiTableTreeToggleProps {

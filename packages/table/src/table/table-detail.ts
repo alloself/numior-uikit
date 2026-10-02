@@ -1,5 +1,4 @@
-import { createSizeIndex, type ItemSize } from '@numior/primitives';
-import type { TableEngine, TableNodeId } from '../engine';
+import type { TableEngine } from '../engine';
 import type { TableDetailSpot } from './table.types';
 
 export const NO_SPOTS: readonly TableDetailSpot[] = [];
@@ -36,20 +35,4 @@ export const detailsBefore = (spots: readonly TableDetailSpot[], position: numbe
     }
   }
   return low;
-};
-
-export const rowSizesOf = (
-  spots: readonly TableDetailSpot[],
-  count: number,
-  size: number,
-  detailSize: (id: TableNodeId) => number,
-): ItemSize => {
-  if (spots.length === 0) {
-    return size;
-  }
-  return createSizeIndex(
-    count,
-    size,
-    spots.map((spot) => [spot.position, detailSize(spot.id)]),
-  );
 };

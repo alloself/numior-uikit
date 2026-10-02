@@ -32,8 +32,8 @@ const docs: DocsMap = {
         en: 'Density: paddings, font and the default row height.',
       },
       rowHeight: {
-        ru: 'Высота строки в пикселях; по умолчанию 32, 40 или 48 по размеру. Без height это минимальная высота: строка растёт по содержимому.',
-        en: 'Row height in pixels; 32, 40 or 48 by size by default. Without height it is the minimum: a row grows with its content.',
+        ru: 'Высота строки в пикселях; по умолчанию 32, 40 или 48 по размеру. Без height это минимальная высота: строка растёт по содержимому. Значение auto вместе с height измеряет строки окна: строка растёт по содержимому, а колонки с wrap переносят текст.',
+        en: 'Row height in pixels; 32, 40 or 48 by size by default. Without height it is the minimum: a row grows with its content. The value auto together with height measures the rows of the window: a row grows with its content, and columns with wrap break their text.',
       },
       height: {
         ru: 'Высота области прокрутки в единицах CSS: с ней строки и колонки рисуются окнами по rowHeight и ширинам, без неё таблица растёт по строкам и рисует все строки и колонки.',
