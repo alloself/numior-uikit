@@ -162,18 +162,12 @@ export interface EngineHarnessOptions<T> {
   readonly defaultExpanded?: boolean;
 }
 
-const cpuMs = (): number => {
-  const { user, system } = process.threadCpuUsage();
-
-  return (user + system) / 1000;
-};
-
 export class EngineHarness<T> {
   readonly engine: TableEngine<T>;
   readonly progress: TableProgress[] = [];
   private readonly waiting: Array<() => void> = [];
+  private readonly laps: number[] = [];
   private resumedAt = 0;
-  private slowest = 0;
 
   constructor(
     columns: readonly TableEngineColumn<T>[],
@@ -204,16 +198,16 @@ export class EngineHarness<T> {
     return this.waiting.length;
   }
 
-  get longestSliceMs(): number {
-    return this.slowest;
+  get slices(): number {
+    return this.laps.length;
   }
 
-  resetSlices(): void {
-    this.slowest = 0;
+  slicesOver(ms: number): number {
+    return this.laps.filter((lap) => lap > ms).length;
   }
 
   private lap(): void {
-    this.slowest = Math.max(this.slowest, cpuMs() - this.resumedAt);
+    this.laps.push(performance.now() - this.resumedAt);
   }
 
   get phases(): string[] {
@@ -221,7 +215,7 @@ export class EngineHarness<T> {
   }
 
   run(query: TableQuery, signal?: AbortSignal): Promise<TableRunResult> {
-    this.resumedAt = cpuMs();
+    this.resumedAt = performance.now();
 
     return this.engine.run(query, {
       signal,
@@ -234,7 +228,7 @@ export class EngineHarness<T> {
   async step(): Promise<void> {
     const resume = this.waiting.shift();
 
-    this.resumedAt = cpuMs();
+    this.resumedAt = performance.now();
     resume?.();
     await tick();
   }

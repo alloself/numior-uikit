@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { TableEngineColumn } from '../src/engine';
+import { CHECK_INTERVAL } from '../src/engine/slicer';
 import { EngineHarness, ORDERS, ORDER_COLUMNS, type Order } from './harness/engine';
 
 interface Account {
@@ -11,6 +12,11 @@ const ACCOUNT_COLUMNS: readonly TableEngineColumn<Account>[] = [
   { kind: 'string', key: 'email', value: (row) => row.email },
   { kind: 'number', key: 'score', value: (row) => row.score },
 ];
+
+const ROWS = 50_000;
+const PASS = Math.floor(ROWS / CHECK_INTERVAL);
+const FRAME_MS = 16;
+const BUDGET_MS = 12;
 
 const accounts = (count: number): Account[] =>
   Array.from({ length: count }, (_, index) => ({
@@ -184,31 +190,35 @@ describe('createTableEngine filters', () => {
     ).toBeNull();
   });
 
-  it('scans dictionaries, filters rows and lists numbers in slices near the budget', async () => {
-    const harness = new EngineHarness(ACCOUNT_COLUMNS, accounts(300_000), { sliceMs: 4 });
+  it('yields at every clock check while it builds a store, scans dictionaries, filters rows and lists numbers', async () => {
+    const harness = new EngineHarness(ACCOUNT_COLUMNS, accounts(ROWS), { sliceMs: 0 });
 
     await harness.runToEnd({
       filters: [{ kind: 'set', key: 'email', values: ['User7@Example.com', 'nobody'] }],
     });
 
     expect(harness.engine.rowCount()).toBe(1);
-    harness.resetSlices();
+    expect(harness.slices).toBeGreaterThanOrEqual(3 * PASS);
 
     expect(
-      await harness.runToEnd({ filters: [{ kind: 'quick', value: 'user12345' }] }),
+      await harness.runToEnd({ filters: [{ kind: 'quick', value: 'user1234' }] }),
     ).toMatchObject({ rows: 11 });
 
+    expect(harness.slices).toBeGreaterThanOrEqual(5 * PASS);
+
     await harness.runToEnd({
-      filters: [{ kind: 'text', key: 'email', op: 'starts', value: 'USER2999' }],
+      filters: [{ kind: 'text', key: 'email', op: 'starts', value: 'USER299' }],
     });
 
     expect(harness.engine.rowCount()).toBe(111);
+    expect(harness.slices).toBeGreaterThanOrEqual(7 * PASS);
 
     expect(await harness.settle(harness.engine.distinct('score', { limit: 3 }))).toEqual({
       values: [0, 1, 2],
       truncated: true,
     });
 
-    expect(harness.longestSliceMs).toBeLessThanOrEqual(16);
+    expect(harness.slices).toBeGreaterThanOrEqual(9 * PASS);
+    expect(harness.slicesOver(FRAME_MS - BUDGET_MS)).toBeLessThan(PASS / 2);
   });
 });
