@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import type { NuiTableColumn, NuiTablePin } from '../src';
-import { tableLayout, pinsFit, withWrapped, type TableLayout } from '../src/table/table-layout';
+import {
+  mergeIndices,
+  pinsFit,
+  tableLayout,
+  wrappedCentreOf,
+  type TableLayout,
+} from '../src/table/table-layout';
 
 interface Place {
   readonly name: string;
@@ -149,8 +155,13 @@ describe('tableLayout', () => {
       { pins: {}, hidden: [], widths: {}, sticky: true, select: false, room: 0, wrap: true },
     );
 
-    expect(withWrapped(layout, [2])).toEqual([1, 2, 3]);
-    expect(withWrapped(layout, [0, 1])).toEqual([0, 1, 3]);
-    expect(withWrapped(layout, [])).toEqual([1, 3]);
+    const wrapped = wrappedCentreOf(layout);
+
+    expect(wrapped).toEqual([1, 3]);
+    expect(mergeIndices([2], wrapped)).toEqual([1, 2, 3]);
+    expect(mergeIndices([0, 1], wrapped)).toEqual([0, 1, 3]);
+    expect(mergeIndices([], wrapped)).toEqual([1, 3]);
+    expect(mergeIndices([0, 2, 3, 4], wrapped)).toEqual([0, 1, 2, 3, 4]);
+    expect(mergeIndices([3], [])).toEqual([3]);
   });
 });

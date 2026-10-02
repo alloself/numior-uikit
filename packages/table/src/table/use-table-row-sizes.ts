@@ -10,13 +10,12 @@ import {
 import { createSizeIndex, type ItemSize, type VirtualSize } from '@numior/primitives';
 import type { TableEngine, TableNodeId } from '../engine';
 import { OWN_BODY_ROWS, OWN_DETAIL_ROWS } from './table-dom';
-import type { TableDetailSpot } from './table.types';
+import type { TableDetailSpot, TableRowMode } from './table.types';
 
 export interface TableRowSizesOptions<T> {
   readonly viewport: Readonly<ShallowRef<HTMLElement | null>>;
   readonly engine: Readonly<ShallowRef<TableEngine<T>>>;
-  readonly windowed: () => boolean;
-  readonly fluid: () => boolean;
+  readonly mode: () => TableRowMode;
   readonly rowSize: () => number;
   readonly count: () => number;
   readonly pageStart: () => number;
@@ -33,6 +32,17 @@ export interface TableRowSizes {
 
 const DETAIL_ROWS = 4;
 
+const measuredRows = (mode: TableRowMode, details: number): string | undefined => {
+  switch (mode) {
+    case 'flow':
+      return undefined;
+    case 'fixed':
+      return details === 0 ? undefined : OWN_DETAIL_ROWS;
+    case 'fluid':
+      return OWN_BODY_ROWS;
+  }
+};
+
 const sizeOf = (entry: ResizeObserverEntry): number =>
   entry.borderBoxSize[0]?.blockSize ?? entry.target.getBoundingClientRect().height;
 
@@ -47,27 +57,31 @@ export const useTableRowSizes = <T>(options: TableRowSizesOptions<T>): TableRowS
   let detailEstimate: number | undefined;
   let observer: ResizeObserver | undefined;
 
-  const itemSize = computed<ItemSize>(() => {
-    const base = options.rowSize();
-    const windowed = options.windowed();
-    const spots = windowed ? options.spots() : [];
-    const fluid = windowed && options.fluid();
-
-    if (!fluid && spots.length === 0) {
-      return base;
-    }
-    if (fluid) {
-      void options.arrangement();
-    }
-    return createSizeIndex(
+  const indexOf = (base: number): ItemSize =>
+    createSizeIndex(
       options.count(),
       base,
-      spots.map((spot) => [
-        spot.position,
-        detailSizes.get(spot.id) ?? detailEstimate ?? base * DETAIL_ROWS,
-      ]),
+      options
+        .spots()
+        .map((spot) => [
+          spot.position,
+          detailSizes.get(spot.id) ?? detailEstimate ?? base * DETAIL_ROWS,
+        ]),
     );
-  });
+
+  const sizeFor = (mode: TableRowMode, base: number): ItemSize => {
+    switch (mode) {
+      case 'flow':
+        return base;
+      case 'fixed':
+        return options.spots().length === 0 ? base : indexOf(base);
+      case 'fluid':
+        void options.arrangement();
+        return indexOf(base);
+    }
+  };
+
+  const itemSize = computed(() => sizeFor(options.mode(), options.rowSize()));
 
   const remember = (position: number, size: number): void => {
     const node = options.engine.value.nodeAt(options.pageStart() + position);
@@ -98,12 +112,11 @@ export const useTableRowSizes = <T>(options: TableRowSizesOptions<T>): TableRowS
 
   const targets = (): Element[] => {
     const viewport = options.viewport.value;
-    const fluid = options.fluid();
+    const rows = measuredRows(options.mode(), options.spots().length);
 
-    if (viewport === null || !options.windowed() || (!fluid && options.spots().length === 0)) {
-      return [];
-    }
-    return firstCells(viewport.querySelectorAll(fluid ? OWN_BODY_ROWS : OWN_DETAIL_ROWS));
+    return viewport === null || rows === undefined
+      ? []
+      : firstCells(viewport.querySelectorAll(rows));
   };
 
   const observe = (): void => {

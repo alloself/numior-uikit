@@ -491,6 +491,8 @@ export interface TableSkeletonRow {
 
 export type TableBodyPart = 'body' | 'detail';
 
+export type TableRowMode = 'flow' | 'fixed' | 'fluid';
+
 export interface TableDetailSpot {
   readonly position: number;
   readonly id: TableNodeId;

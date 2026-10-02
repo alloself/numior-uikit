@@ -297,8 +297,9 @@ import {
   pinsFit,
   rowCellsOf,
   SELECT_KEY,
+  mergeIndices,
   tableLayout,
-  withWrapped,
+  wrappedCentreOf,
 } from './table-layout';
 import { pageWindowOf, resolvePagination } from './table-pages';
 import NuiTableFilter from './NuiTableFilter.vue';
@@ -331,6 +332,7 @@ import type {
   TableCellPosition,
   TableDetailSpot,
   TablePinnedRow,
+  TableRowMode,
   TableSkeletonRow,
   TableStatusSlot,
   NuiTableCellSlot,
@@ -359,6 +361,7 @@ const ROW_SIZES = { sm: 32, md: 40, lg: 48 } as const;
 const CANVAS_LIMIT = 15_000_000;
 const STILL_FRAME: VirtualFrame = { lead: 0, rest: 0, clampStart: 0, clampEnd: 0 };
 const NO_GROUPS: readonly string[] = [];
+const NO_COLUMNS: readonly number[] = [];
 
 const awaited = (
   node: TableNode<unknown> | undefined,
@@ -626,8 +629,16 @@ const columnByKey = computed(
 );
 
 const rowSize = computed(() => (typeof rowHeight === 'number' ? rowHeight : ROW_SIZES[size]));
-const windowed = computed(() => height !== undefined);
-const fluid = computed(() => windowed.value && rowHeight === 'auto');
+
+const rowMode = computed<TableRowMode>(() => {
+  if (height === undefined) {
+    return 'flow';
+  }
+  return rowHeight === 'auto' ? 'fluid' : 'fixed';
+});
+
+const windowed = computed(() => rowMode.value !== 'flow');
+const fluid = computed(() => rowMode.value === 'fluid');
 const labelText = computed(() => label ?? messages.value.label);
 const hasCaption = computed(() => caption !== undefined || slots.caption !== undefined);
 const captionId = computed(() => `${gridId.value}-caption`);
@@ -654,8 +665,7 @@ const detailSpots = computed<readonly TableDetailSpot[]>((previous) => {
 const rowSizes = useTableRowSizes({
   viewport,
   engine,
-  windowed: () => windowed.value,
-  fluid: () => fluid.value,
+  mode: () => rowMode.value,
   rowSize: () => rowSize.value,
   count: () => visibleRows.value,
   pageStart: () => pageStart.value,
@@ -709,10 +719,13 @@ const onViewportScroll = (): void => {
   }
 };
 
+const wrappedCentre = computed(() => (fluid.value ? wrappedCentreOf(layout.value) : NO_COLUMNS));
+
 const rowCells = computed(() => {
   const shown = columnWindow.items.value.map((item) => item.index);
+  const kept = wrappedCentre.value;
 
-  return rowCellsOf(layout.value, fluid.value ? withWrapped(layout.value, shown) : shown);
+  return rowCellsOf(layout.value, kept.length === 0 ? shown : mergeIndices(shown, kept));
 });
 
 const bands = computed(() => headerBandsOf(layout.value, tree.value, rowCells.value));
