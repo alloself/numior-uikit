@@ -923,6 +923,7 @@ test.describe('table', () => {
     await table.toggleTreeRow(0);
 
     await expect(table.treeRow(0)).toHaveAttribute('aria-expanded', 'true');
+    await expect(table.treeCell(0, 1)).not.toBeFocused();
     await expect(table.treeRow(1)).toHaveAttribute('aria-level', '2');
     await expect(table.treeRow(1)).toContainText('Россия');
     await expect(table.treeRow(4)).toContainText('Операции');

@@ -1650,7 +1650,19 @@ export class TableDriver<T> {
   }
 
   async toggleRow(position: number): Promise<void> {
-    this.row(position)?.querySelector<HTMLElement>('.nui-table__toggle--expandable')?.click();
+    const toggle = this.row(position)?.querySelector<HTMLElement>('.nui-table__toggle--expandable');
+
+    const point = { x: 0, y: 0 };
+    const pressed = new MouseEvent('mousedown', pointerInit(point, {}));
+
+    toggle?.dispatchEvent(new PointerEvent('pointerdown', pointerInit(point, {})));
+    toggle?.dispatchEvent(pressed);
+
+    if (!pressed.defaultPrevented) {
+      toggle?.closest<HTMLElement>('.nui-table__cell')?.focus();
+    }
+    window.dispatchEvent(new PointerEvent('pointerup', pointerInit(point, {})));
+    toggle?.click();
     await nextTick();
   }
 

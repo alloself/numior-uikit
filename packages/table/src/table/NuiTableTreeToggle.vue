@@ -4,6 +4,7 @@
     <span
       v-else-if="expandable"
       class="nui-table__toggle nui-table__toggle--expandable"
+      @mousedown.prevent
       @click="emit('toggle')"
     >
       <NuiIcon alias="chevron-right" class="nui-table__chevron" />

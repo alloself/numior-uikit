@@ -55,7 +55,8 @@ table only the rendering and the events.
 
 `getChildren` enables the tree: a row with children gets a toggle and a level indent, the
 expanded keys live in `v-model:expanded`. `hasChildren` marks a row whose children are not
-loaded yet: on expand the table emits `load` and waits for them.
+loaded yet: on expand the table emits `load` and waits for them. A click on the toggle expands the
+row without moving focus or selecting the cell.
 
 <Example name="table/Tree" />
 

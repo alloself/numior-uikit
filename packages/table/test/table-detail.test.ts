@@ -61,6 +61,9 @@ describe('NuiTable detail rows', () => {
     await grid.toggleRow(1);
 
     expect(grid.expanded).toEqual([1]);
+    expect(grid.focusedCell).toBeUndefined();
+    expect(grid.activeCell).toEqual({ row: 0, col: 0 });
+    expect(grid.ranges).toEqual([]);
     expect(grid.rowExpanded(1)).toBe('true');
     expect(grid.details).toEqual([2]);
     expect(grid.detailText(2)).toBe('Досье: Сотрудник 1');

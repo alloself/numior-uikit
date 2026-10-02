@@ -41,6 +41,7 @@ describe('NuiTable tree rows', () => {
     await grid.toggleRow(0);
 
     expect(grid.expanded).toEqual(['docs']);
+    expect(grid.focusedCell).toBeUndefined();
     expect(grid.rowCount).toBe(7);
     expect(grid.cellText(1, 0)).toBe('plan.md');
     expect(grid.rowLevel(1)).toBe('2');

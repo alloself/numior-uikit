@@ -20,6 +20,7 @@ test.describe('table detail rows', () => {
     await detail.toggle(1).click();
 
     await expect(detail.row(1)).toHaveAttribute('aria-expanded', 'true');
+    await expect(detail.cell(1, 0)).not.toBeFocused();
     await expect(detail.row(2)).toHaveAttribute('aria-level', '2');
     await expect(detail.panel(2)).toBeVisible();
     await expect(detail.nestedCell(2, 0, 0)).toHaveText('Блендер');
