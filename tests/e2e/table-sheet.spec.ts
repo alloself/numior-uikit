@@ -7,12 +7,16 @@ const SALES = 3;
 const INCOME_TOTAL = 6;
 const COSTS = 8;
 const RESULT = 14;
-const JOURNAL = 16;
+const FOOTNOTE = 15;
+const LAST_ROW = 15;
+const JOURNAL = 17;
 const JOURNAL_ROWS = 60;
 const LAST_COLUMN = 14;
 const LAST_QUARTER_COLUMN = 5;
 const ROW = 32;
+const PAD = 8;
 const CENTRE_WIDTH = 13 * 92 + 170;
+const QUARTER_WIDTH = 4 * 92 + 170;
 const PIXEL_FRACTIONS = [0.05, 0.3, 0.55, 0.8];
 const PIXEL_RATIOS = [1.25, 1.5];
 
@@ -128,7 +132,7 @@ test.describe('table cell styles', () => {
 
     await expect
       .poll(() => sheet.ranges())
-      .toEqual([{ from: { row: 0, col: 2 }, to: { row: RESULT, col: 2 } }]);
+      .toEqual([{ from: { row: 0, col: 2 }, to: { row: LAST_ROW, col: 2 } }]);
 
     await expect(sheet.columnHeader(2)).toHaveClass(/nui-table__cell--marked/);
     await expect(sheet.columnHeader(3)).not.toHaveClass(/nui-table__cell--marked/);
@@ -136,7 +140,7 @@ test.describe('table cell styles', () => {
 
     await expect
       .poll(() => sheet.ranges())
-      .toEqual([{ from: { row: 0, col: 0 }, to: { row: RESULT, col: LAST_COLUMN } }]);
+      .toEqual([{ from: { row: 0, col: 0 }, to: { row: LAST_ROW, col: LAST_COLUMN } }]);
   });
 
   test('extends rows from their headers with Shift, a drag and the keyboard', async ({
@@ -205,7 +209,7 @@ test.describe('table cell styles', () => {
     await sheet.windowSwitch.click();
     await expect(sheet.rowHeader(SALES)).toBeVisible();
     expect(await sheet.rowHeights()).toEqual({ 0: 44 });
-    expect((await boxOf(sheet.row(0))).height).toBe(44);
+    expect((await boxOf(sheet.row(0))).height).toBeCloseTo(44, 3);
     const before = await sheet.scrollHeight();
     const below = await boxOf(sheet.row(SALES + 1));
     const handle = await boxOf(sheet.rowResizer(SALES));
@@ -216,8 +220,8 @@ test.describe('table cell styles', () => {
     await page.mouse.up();
 
     await expect.poll(() => sheet.rowHeights()).toEqual({ 0: 44, [SALES]: 52 });
-    expect((await boxOf(sheet.row(SALES))).height).toBe(52);
-    expect((await boxOf(sheet.row(SALES + 1))).y).toBe(below.y + 20);
+    expect((await boxOf(sheet.row(SALES))).height).toBeCloseTo(52, 3);
+    expect((await boxOf(sheet.row(SALES + 1))).y).toBeCloseTo(below.y + 20, 3);
     expect(await sheet.scrollHeight()).toBe(before + 20);
     expect(await sheet.ranges()).toEqual([]);
     await sheet.rowHeader(SALES).click();
@@ -228,7 +232,7 @@ test.describe('table cell styles', () => {
     await expect.poll(() => sheet.rowHeights()).toEqual({ 0: 44, [SALES]: 60 });
     await sheet.rowResizer(SALES).dblclick();
     await expect.poll(() => sheet.rowHeights()).toEqual({ 0: 44 });
-    expect((await boxOf(sheet.row(SALES))).height).toBe(32);
+    expect((await boxOf(sheet.row(SALES))).height).toBeCloseTo(32, 3);
     expect(await sheet.scrollHeight()).toBe(before);
   });
 
@@ -247,11 +251,11 @@ test.describe('table cell styles', () => {
 
     await expect(sheet.cell(INCOME, 0)).toHaveText('Доходы');
     await expect(sheet.cell(INCOME, 2)).toHaveCount(0);
-    expect((await boxOf(sheet.cell(INCOME, 1))).width).toBe(CENTRE_WIDTH);
+    expect((await boxOf(sheet.cell(INCOME, 1))).width).toBeCloseTo(CENTRE_WIDTH, 3);
     await sheet.scrollTo(0, CENTRE_WIDTH);
     await expect(sheet.cell(SALES, LAST_COLUMN)).toHaveAttribute('rowspan', '3');
     await expect(sheet.cell(SALES + 1, LAST_COLUMN)).toHaveCount(0);
-    expect((await boxOf(sheet.cell(SALES, LAST_COLUMN))).height).toBe(3 * ROW);
+    expect((await boxOf(sheet.cell(SALES, LAST_COLUMN))).height).toBeCloseTo(3 * ROW, 3);
     expect(await sheet.middleGap(SALES, LAST_COLUMN)).toBeLessThan(1.5);
     expect(await sheet.middleGap(COSTS, LAST_COLUMN)).toBeLessThan(1.5);
     expect((await boxOf(sheet.text(COSTS, LAST_COLUMN))).height).toBeGreaterThan(ROW);
@@ -336,6 +340,47 @@ test.describe('table cell styles', () => {
     await expect(sheet.text(JOURNAL, LAST_COLUMN)).toHaveCount(0);
     await expect(sheet.journalNote).toContainText('Операции сверены с банком');
     expect(await sheet.canvasTop(sheet.content(sheet.journalNote))).toBe(top);
+  });
+
+  test('lets a long text flow over the empty cells after it and leaves them to the pointer', async ({
+    page,
+  }) => {
+    const playground = new PlaygroundPage(page);
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    const { tableSheet: sheet } = playground;
+    await sheet.show();
+
+    await expect(sheet.cell(FOOTNOTE, 1)).toHaveClass(/nui-table__cell--overflow/);
+    expect((await boxOf(sheet.text(FOOTNOTE, 1))).width).toBeCloseTo(CENTRE_WIDTH - 2 * PAD, 3);
+    expect(await sheet.lineAfter(FOOTNOTE, 1)).toBe('0px');
+    expect(await sheet.lineAfter(RESULT, 1)).toBe('1px');
+    await sheet.cell(FOOTNOTE, 3).click();
+    await expect(sheet.cell(FOOTNOTE, 3)).toBeFocused();
+    expect(await sheet.ranges()).toEqual([]);
+    await sheet.quarterSwitch.click();
+
+    await expect
+      .poll(async () => (await boxOf(sheet.text(FOOTNOTE, 1))).width)
+      .toBeCloseTo(QUARTER_WIDTH - 2 * PAD, 3);
+  });
+
+  test('starts a flowing text at its own cell in either direction', async ({ page }) => {
+    const playground = new PlaygroundPage(page);
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    const { tableSheet: sheet } = playground;
+    await sheet.show();
+    const cell = await boxOf(sheet.cell(FOOTNOTE, 1));
+
+    expect((await sheet.inkOf(FOOTNOTE, 1)).left - cell.x).toBeCloseTo(PAD, 0);
+    await playground.setDirection('rtl');
+    const mirrored = await boxOf(sheet.cell(FOOTNOTE, 1));
+
+    expect(mirrored.x + mirrored.width - (await sheet.inkOf(FOOTNOTE, 1)).right).toBeCloseTo(
+      PAD,
+      0,
+    );
   });
 
   test('a painted sheet has no automatically detectable WCAG AA violations', async ({ page }) => {

@@ -228,9 +228,10 @@ const PAINT_PROPERTIES = [
   ['end', '--_edge-end'],
   ['bottom', '--_edge-bottom'],
   ['start', '--_edge-start'],
+  ['flow', '--_over-w'],
 ] as const;
 
-const PAINT_MARKS = ['filled', 'inked', 'edged', 'tail'] as const;
+const PAINT_MARKS = ['filled', 'inked', 'edged', 'tail', 'overflow', 'seamless'] as const;
 const ALIGN_PREFIX = 'nui-table__cell--align-';
 
 const alignOf = (cell: Element): string =>

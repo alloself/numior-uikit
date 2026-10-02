@@ -38,5 +38,6 @@ export const paintOf = (style: NuiTableCellStyle | undefined): TableCellPaint | 
       ...Object.fromEntries(edges),
     },
     align: style.align,
+    overflow: style.overflow === true && style.wrap !== true,
   };
 };

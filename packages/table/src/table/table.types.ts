@@ -212,6 +212,7 @@ export interface NuiTableCellStyle {
   readonly color?: string | undefined;
   readonly align?: NuiTableAlign | undefined;
   readonly wrap?: boolean | undefined;
+  readonly overflow?: boolean | undefined;
   readonly borders?: NuiTableCellBorders | undefined;
   readonly style?: Readonly<Record<string, string>> | undefined;
 }
@@ -222,6 +223,7 @@ export interface TableCellPaint {
   readonly class: readonly unknown[];
   readonly style: Readonly<Record<string, string>>;
   readonly align: NuiTableAlign | undefined;
+  readonly overflow: boolean;
 }
 
 export type TableRowPaint = ReadonlyMap<string, TableCellPaint>;

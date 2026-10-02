@@ -2,7 +2,9 @@
   <section class="panel" aria-labelledby="table-sheet-title">
     <div class="section-heading">
       <h2 id="table-sheet-title">Лист</h2>
-      <span class="tag">NuiTable · bordered · cellStyle · rowHeaders · rowHeights · merges</span>
+      <span class="tag"
+        >NuiTable · bordered · cellStyle · rowHeaders · rowHeights · merges · overflow</span
+      >
     </div>
     <div class="data-row">
       <NuiButton
@@ -59,7 +61,7 @@ import {
 } from '@numior/table';
 
 type SheetValue = string | number | null;
-type SheetRowKind = 'title' | 'head' | 'section' | 'item' | 'total' | 'result';
+type SheetRowKind = 'title' | 'head' | 'section' | 'item' | 'total' | 'result' | 'note';
 
 interface SheetRow {
   readonly index: number;
@@ -88,6 +90,7 @@ const HEAT_LIMIT = 45;
 const INCOME_NOTE = 'Рост держат подписки';
 const COSTS_NOTE = 'Маркетинг растёт быстрее выручки';
 const JOURNAL_NOTE = 'Операции сверены с банком';
+const FOOTNOTE = 'Прибыль посчитана после постоянных расходов: 620 тыс. ₽ в месяц';
 const JOURNAL = 60;
 const BANDS: readonly number[] = [0, 2, 7];
 
@@ -122,8 +125,10 @@ const NOTE_STYLE: NuiTableCellStyle = {
   wrap: true,
 };
 
+const FOOTNOTE_STYLE: NuiTableCellStyle = { color: 'var(--nui-text-muted)', overflow: true };
 const TOTAL: NuiTableCellStyle = { style: BOLD, borders: { top: '1px solid var(--nui-text)' } };
 const RESULT: NuiTableCellStyle = { style: BOLD, borders: { top: '3px double var(--nui-text)' } };
+const PLAIN: NuiTableCellStyle = {};
 const numbers = new Intl.NumberFormat('ru-RU');
 
 const monthsOf = (line: SheetLine, shift: number): number[] =>
@@ -190,6 +195,7 @@ const buildRows = (journal: boolean): SheetRow[] => {
         null,
       ),
     ],
+    ['note', ['Примечание', FOOTNOTE, ...MONTHS.slice(1).map(() => null), null, null]],
     ...(journal ? journalOf() : []),
   ];
 
@@ -287,6 +293,7 @@ const PAINTERS: Readonly<
   item: itemStyle,
   total: (value) => ({ ...numberStyle(value, false), ...TOTAL }),
   result: (value) => ({ ...numberStyle(value, false), ...RESULT }),
+  note: (_, col) => (col === 1 ? FOOTNOTE_STYLE : PLAIN),
 };
 
 const styleOf = ({ row, column }: NuiTableCellRef<SheetRow>): NuiTableCellStyle => {

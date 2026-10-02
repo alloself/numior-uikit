@@ -32,6 +32,7 @@
   --_span-y: initial;
   --_span-w: initial;
   --_span-h: initial;
+  --_over-w: initial;
   --_ring-t: 1px;
   --_ring-b: 1px;
   --_ring-s: 1px;
@@ -66,7 +67,7 @@
   content: '';
   position: absolute;
   inset: -1px;
-  z-index: 6;
+  z-index: 8;
   border: 1px solid var(--_line);
   border-radius: var(--nui-radius);
   pointer-events: none;
@@ -444,7 +445,7 @@
 .nui-table__cell--pin-start,
 .nui-table__cell--pin-end {
   position: sticky;
-  z-index: 1;
+  z-index: 2;
 }
 .nui-table__cell--pin-start {
   inset-inline-start: var(--_pin, 0px);
@@ -462,7 +463,7 @@
 .nui-table__pinned .nui-table__cell {
   position: sticky;
   inset-block-start: var(--_top, 0px);
-  z-index: 2;
+  z-index: 3;
 }
 .nui-table__header > .nui-table__row:first-child > .nui-table__cell {
   inset-block-start: calc(-1 * var(--_head-lap));
@@ -471,7 +472,7 @@
 .nui-table__footer .nui-table__cell {
   position: sticky;
   inset-block-end: calc(-1 * var(--_foot-overlap));
-  z-index: 2;
+  z-index: 3;
   padding-block-end: var(--_foot-overlap);
 }
 .nui-table__footer .nui-table__content {
@@ -480,7 +481,7 @@
 .nui-table__header .nui-table__cell:is(.nui-table__cell--pin-start, .nui-table__cell--pin-end),
 .nui-table__pinned .nui-table__cell:is(.nui-table__cell--pin-start, .nui-table__cell--pin-end),
 .nui-table__footer .nui-table__cell:is(.nui-table__cell--pin-start, .nui-table__cell--pin-end) {
-  z-index: 3;
+  z-index: 5;
 }
 .nui-table__row--pinned {
   --_row-bg: var(--_stripe);
@@ -644,6 +645,29 @@
   overflow: hidden;
   text-overflow: ellipsis;
   unicode-bidi: plaintext;
+}
+.nui-table__cell--overflow {
+  --_cell-layer: 1;
+  --_over-align: left;
+}
+.nui-table__cell--overflow:dir(rtl),
+.nui-table__cell--align-end.nui-table__cell--overflow {
+  --_over-align: right;
+}
+.nui-table__cell--align-end.nui-table__cell--overflow:dir(rtl) {
+  --_over-align: left;
+}
+.nui-table__cell--overflow > .nui-table__content {
+  overflow: visible;
+}
+.nui-table__cell--overflow > .nui-table__content > .nui-table__text {
+  flex: none;
+  inline-size: calc(var(--_over-w) - 2 * var(--_pad-x));
+  text-align: var(--_over-align);
+  pointer-events: none;
+}
+.nui-table__cell--seamless {
+  --_grid-x: 0px;
 }
 .nui-table__cell--wrap .nui-table__content {
   white-space: normal;
@@ -871,7 +895,7 @@
 }
 .nui-table__drop {
   position: absolute;
-  z-index: 4;
+  z-index: 6;
   background: var(--nui-primary);
   pointer-events: none;
 }
@@ -898,7 +922,7 @@
 }
 .nui-table__ghost {
   position: absolute;
-  z-index: 5;
+  z-index: 7;
   display: flex;
   pointer-events: none;
 }
@@ -1030,7 +1054,7 @@
   position: absolute;
   inset-inline: 0;
   inset-block-start: calc(var(--_row) * (var(--_head-rows) + var(--_pinned-rows)) - 1px);
-  z-index: 3;
+  z-index: 5;
   block-size: 2px;
   overflow: hidden;
   pointer-events: none;

@@ -416,6 +416,23 @@ describe('NuiTable on the server', () => {
     expect(html).toContain('Сотрудник 3<');
   });
 
+  it('renders the text flow of an overflowing cell on the server', async () => {
+    const html = await renderToString(
+      createSSRApp({
+        render: () =>
+          h(NuiTable<Person>, {
+            columns: PEOPLE_COLUMNS.filter((column) => column.pin === undefined),
+            rows: people(6),
+            cellStyle: ({ column }) => (column.key === 'city' ? { overflow: true } : undefined),
+          }),
+      }),
+    );
+
+    expect(html.match(/nui-table__cell--overflow/g)).toHaveLength(1);
+    expect(html.match(/nui-table__cell--seamless/g)).toHaveLength(1);
+    expect(html).toContain('--_over-w:260px');
+  });
+
   it('renders skeleton rows for a source without asking it for rows on the server', async () => {
     const offsets: number[] = [];
 

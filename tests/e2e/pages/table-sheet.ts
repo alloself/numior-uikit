@@ -97,6 +97,17 @@ export class TableSheetSection {
     return this.cell(position, col).locator('.nui-table__text');
   }
 
+  inkOf(position: number, col: number): Promise<{ left: number; right: number }> {
+    return this.text(position, col).evaluate((element) => {
+      const range = document.createRange();
+
+      range.selectNodeContents(element);
+      const { left, right } = range.getBoundingClientRect();
+
+      return { left, right };
+    });
+  }
+
   content(cell: Locator): Locator {
     return cell.locator(':scope > .nui-table__content');
   }

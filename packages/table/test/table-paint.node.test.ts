@@ -19,6 +19,7 @@ describe('table cell paint', () => {
       ],
       style: { '--_fill': 'gold', '--_ink': 'black' },
       align: 'center',
+      overflow: false,
     });
   });
 
@@ -41,6 +42,12 @@ describe('table cell paint', () => {
   it('marks a cell whose text wraps', () => {
     expect(paintOf({ wrap: true })?.class[1]).toMatchObject({ 'nui-table__cell--wrap': true });
     expect(paintOf({ wrap: false })?.class[1]).toMatchObject({ 'nui-table__cell--wrap': false });
+  });
+
+  it('lets a text overflow only while it stays on one line', () => {
+    expect(paintOf({ overflow: true })?.overflow).toBe(true);
+    expect(paintOf({ overflow: true, wrap: true })?.overflow).toBe(false);
+    expect(paintOf({ fill: 'gold' })?.overflow).toBe(false);
   });
 
   it('passes the class and the plain styles through and lets its own properties win', () => {

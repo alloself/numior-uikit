@@ -131,6 +131,17 @@ leave it alone. Merges are off with grouping, in a tree and with details.
 
 <Example name="table/Merges" />
 
+### Text overflow
+
+`overflow` in `cellStyle` carries the text of a cell over the empty cells after it, as spreadsheets
+do. The text runs up to the first filled cell, a merge or the edge of a pinned pane, and an end
+aligned text runs backwards.
+
+The cells under the text stay separate: a click on the text over a neighbour lands in that cell.
+The grid lines between them are hidden while the text runs over them.
+
+<Example name="table/Overflow" />
+
 ### Row drag
 
 `rowDrag` shows a grip in the first column of a row. The top of a target row drops the row

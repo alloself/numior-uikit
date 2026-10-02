@@ -13,6 +13,13 @@ const FRAME: NuiTableCellStyle = {
   style: { 'font-weight': '700' },
 };
 
+const GAPS: Readonly<Record<number, Partial<Staff>>> = {
+  1: { city: null, salary: null },
+  2: { city: null },
+};
+
+const sparseStaff = (): Staff[] => staff(20).map((row) => ({ ...row, ...GAPS[row.id] }));
+
 const paintStaff = ({ row, column }: NuiTableCellRef<Staff>): NuiTableCellStyle | undefined => {
   if (column.key === 'salary' && row.id % 2 === 1) {
     return HIGHLIGHT;
@@ -143,6 +150,64 @@ describe('NuiTable cell styles', () => {
     expect(grid.cellPaint(0, 1).fill).toBe('silver');
     expect(grid.cellPaint(1, 1).fill).toBe('silver');
     expect(grid.cellPaint(2, 1).fill).toBe('white');
+  });
+
+  it('lets the text of a cell flow over the empty cells after it up to a filled one', async () => {
+    const grid = mountStaff({
+      rows: sparseStaff(),
+      width: 900,
+      props: {
+        cellStyle: ({ column }) => (column.key === 'name' ? { overflow: true } : undefined),
+      },
+      onEdit: (event) => {
+        applyStaffEdits(event.changes);
+      },
+    });
+
+    await grid.settle();
+    expect(grid.cellPaint(1, 1)).toEqual({ flow: '420px', align: 'start' });
+    expect(grid.cellMarks(1, 1)).toEqual(['overflow', 'seamless']);
+    expect(grid.cellMarks(1, 2)).toEqual(['seamless']);
+    expect(grid.cellMarks(1, 3)).toEqual([]);
+    expect(grid.cellPaint(2, 1).flow).toBe('300px');
+    expect(grid.cellMarks(0, 1)).toEqual([]);
+    await grid.focusCell(1, 2);
+    await grid.press('Enter');
+
+    expect(grid.editing).toEqual({ row: 1, col: 2 });
+    expect(grid.cellMarks(1, 1)).toEqual([]);
+    await grid.typeInEditor('Тверь');
+    await grid.press('Enter');
+
+    expect(grid.cellText(1, 2)).toBe('Тверь');
+    expect(grid.cellMarks(1, 1)).toEqual([]);
+    expect(grid.cellPaint(1, 1).flow).toBeUndefined();
+  });
+
+  it('carries an end aligned text back over empty cells and keeps a pinned or centred text in its cell', async () => {
+    const grid = mountStaff({
+      rows: sparseStaff(),
+      width: 900,
+      pins: { id: 'start', name: 'start' },
+      props: {
+        cellStyle: ({ row, column }) => {
+          if (column.key === 'name') {
+            return { overflow: true };
+          }
+          return column.key === 'remote'
+            ? { overflow: true, align: row.id === 1 ? 'end' : 'center' }
+            : undefined;
+        },
+      },
+    });
+
+    await grid.settle();
+    expect(grid.cellMarks(1, 1)).toEqual([]);
+    expect(grid.cellPaint(1, 4)).toEqual({ flow: '360px', align: 'end' });
+    expect(grid.cellMarks(1, 4)).toEqual(['tail', 'overflow']);
+    expect(grid.cellMarks(1, 3)).toEqual(['seamless']);
+    expect(grid.cellMarks(1, 2)).toEqual(['seamless']);
+    expect(grid.cellMarks(2, 4)).toEqual(['tail']);
   });
 
   it('draws grid lines in a bordered table and closes the last column only while the table has spare room', async () => {

@@ -321,6 +321,7 @@ import {
   mergeSpans,
   pieceOf,
 } from './table-merges';
+import { alignOfCell, floodRow, paneOfCell, type TableFloodRow } from './table-flood';
 import { paintOf } from './table-paint';
 import { ownCellAt, ownDetailOf } from './table-dom';
 import { cellTextOf, cellValueOf, engineColumnOf, valueTextOf } from './table-format';
@@ -372,6 +373,7 @@ import { useTableSelection, type TableSelectionKey } from './use-table-selection
 import type {
   TableBodyRow,
   TableCellContentProps,
+  TableCellLayout,
   TableCellPaint,
   TableCellPosition,
   TableCellSpan,
@@ -1574,6 +1576,42 @@ const paintSpan = (span: TableCellSpan): TableCellPaint | undefined => {
     : paintCell(row, key, span.anchor.row, false);
 };
 
+const widthOfCell = (cell: TableCellLayout | undefined): number => {
+  const col = cell?.kind === 'data' ? cell.colIndex - 1 - dataOffset.value : -1;
+
+  return (dataOffsets.value[col + 1] ?? 0) - (dataOffsets.value[col] ?? 0);
+};
+
+const plainText = (row: T, position: number, key: string): string | undefined => {
+  const session = cellEditor.session.value;
+  const edited = session?.position.row === position && session.key === key;
+  const custom = edited || key === treeKey.value || key === gripKey.value;
+
+  return custom || rawSlots[`cell-${key}`] !== undefined ? undefined : textOf(row, key);
+};
+
+const floodRowOf = (row: T, position: number, spans: TableRowSpan | undefined): TableFloodRow => {
+  const cells = rowCells.value.cells;
+
+  const textAt = (index: number): string | undefined => {
+    const cell = cells[index];
+
+    return cell?.kind === 'data' && spans?.get(cell.key) === undefined
+      ? plainText(row, position, cell.key)
+      : undefined;
+  };
+
+  return {
+    count: cells.length,
+    keyAt: (index) => cells[index]?.key,
+    paneAt: (index) => paneOfCell(cells[index]),
+    widthAt: (index) => widthOfCell(cells[index]),
+    alignAt: (index) => alignOfCell(cells[index]),
+    freeAt: (index) => textAt(index) === '',
+    flowsAt: (index) => (textAt(index) ?? '') !== '',
+  };
+};
+
 const paintRow = (
   row: T | undefined,
   position: number,
@@ -1581,6 +1619,7 @@ const paintRow = (
   spans?: TableRowSpan,
 ): TableRowPaint => {
   const painted = new Map<string, TableCellPaint>();
+  let flows = false;
 
   if (row === undefined) {
     return painted;
@@ -1591,9 +1630,10 @@ const paintRow = (
 
     if (paint !== undefined) {
       painted.set(key, paint);
+      flows ||= paint.overflow && !pinned;
     }
   }
-  return painted;
+  return flows ? floodRow(painted, floodRowOf(row, position, spans)) : painted;
 };
 
 const paintBody: TableRowPainter = (position, spans) =>
