@@ -140,6 +140,7 @@ const bandCellOf = <T>(
     align: 'start',
     wrap: false,
     span: band.span,
+    tail: band.last.kind === 'data' && band.last.tail === true,
     handle: handleOf(band),
     rule,
     ...shared,

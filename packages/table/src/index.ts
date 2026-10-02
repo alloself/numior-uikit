@@ -3,7 +3,11 @@ export { tableEditor } from './table/table-editors';
 export type { NuiTableEditorOptions } from './table/table-editors';
 export type { NuiTableMessages } from './table/table.messages';
 export type {
+  NuiTableCellBorders,
+  NuiTableCellRef,
   NuiTableCellSlot,
+  NuiTableCellStyle,
+  NuiTableCellStyler,
   NuiTableDetailSlot,
   NuiTableEvents,
   NuiTableReorderEvent,

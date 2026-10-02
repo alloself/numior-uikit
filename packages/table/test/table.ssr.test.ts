@@ -7,6 +7,8 @@ import {
   type TableNodeId,
   type TableSort,
   type NuiTableFilters,
+  type NuiTableCellRef,
+  type NuiTableCellStyle,
   type NuiTableColumnDef,
   type NuiTableDetailSlot,
 } from '../src';
@@ -66,6 +68,24 @@ const render = (count: number, query: Query = {}): Promise<string> => {
     }),
   );
 };
+
+const paintName = ({ row, column }: NuiTableCellRef<Person>): NuiTableCellStyle | undefined =>
+  column.key === 'name' && row.id === 1
+    ? { fill: 'gold', align: 'end', borders: { bottom: '2px solid red' } }
+    : undefined;
+
+const renderPainted = (): Promise<string> =>
+  renderToString(
+    createSSRApp({
+      render: () =>
+        h(NuiTable<Person>, {
+          columns: PEOPLE_COLUMNS,
+          rows: people(3),
+          bordered: true,
+          cellStyle: paintName,
+        }),
+    }),
+  );
 
 const renderTree = (): Promise<string> =>
   renderToString(
@@ -327,6 +347,18 @@ describe('NuiTable on the server', () => {
     expect(html).toContain('>M9<');
     expect(html).not.toContain('>M8<');
     expect(html).toContain('--_window-rest:38800px');
+  });
+
+  it('renders the grid lines and the cell paint on the server', async () => {
+    const html = await renderPainted();
+
+    expect(html).toBe(await renderPainted());
+    expect(html).toContain('nui-table--bordered');
+    expect(html).not.toContain('nui-table--slack');
+    expect(html.match(/nui-table__cell--filled/g)).toHaveLength(1);
+    expect(html.match(/nui-table__cell--edged/g)).toHaveLength(1);
+    expect(html).toContain('--_fill:gold;--_edge-bottom:2px solid red;');
+    expect(html.match(/nui-table__cell--align-end[^"]*nui-table__cell--filled/g)).toHaveLength(1);
   });
 
   it('renders skeleton rows for a source without asking it for rows on the server', async () => {

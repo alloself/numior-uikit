@@ -3,6 +3,7 @@ import type { NuiTableColumn, NuiTablePin } from '../src';
 import {
   mergeIndices,
   pinsFit,
+  sameIndices,
   tableLayout,
   wrappedCentreOf,
   type TableLayout,
@@ -163,5 +164,18 @@ describe('tableLayout', () => {
     expect(mergeIndices([], wrapped)).toEqual([1, 3]);
     expect(mergeIndices([0, 2, 3, 4], wrapped)).toEqual([0, 1, 2, 3, 4]);
     expect(mergeIndices([3], [])).toEqual([3]);
+  });
+
+  it('marks the last scrolling column as the tail and tells equal column sets apart', () => {
+    const layout = tableLayout(COLUMNS);
+
+    const tails = layout.visual.flatMap((placed) =>
+      placed.cell.tail === true ? [placed.key] : [],
+    );
+
+    expect(tails).toEqual(['city']);
+    expect(sameIndices([0, 1, 2], [0, 1, 2])).toBe(true);
+    expect(sameIndices([0, 1, 2], [0, 1])).toBe(false);
+    expect(sameIndices([0, 1, 2], [0, 2, 1])).toBe(false);
   });
 });

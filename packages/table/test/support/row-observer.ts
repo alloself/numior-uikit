@@ -9,13 +9,17 @@ export interface RowObserverStub {
   restore(): void;
 }
 
-const entryOf = (target: Element): ResizeObserverEntry => ({
-  target,
-  contentRect: target.getBoundingClientRect(),
-  borderBoxSize: [],
-  contentBoxSize: [],
-  devicePixelContentBoxSize: [],
-});
+const entryOf = (target: Element): ResizeObserverEntry => {
+  const contentRect = target.getBoundingClientRect();
+
+  return {
+    target,
+    contentRect,
+    borderBoxSize: [],
+    contentBoxSize: [{ inlineSize: contentRect.width, blockSize: contentRect.height }],
+    devicePixelContentBoxSize: [],
+  };
+};
 
 export const stubRowObserver = (): RowObserverStub => {
   const watchers: Watcher[] = [];

@@ -218,6 +218,22 @@ const defineRect = (element: Element, rect: DOMRect): void => {
   });
 };
 
+const PAINT_PROPERTIES = [
+  ['fill', '--_fill'],
+  ['color', '--_ink'],
+  ['top', '--_edge-top'],
+  ['end', '--_edge-end'],
+  ['bottom', '--_edge-bottom'],
+  ['start', '--_edge-start'],
+] as const;
+
+const PAINT_MARKS = ['filled', 'inked', 'edged', 'tail'] as const;
+const ALIGN_PREFIX = 'nui-table__cell--align-';
+
+const alignOf = (cell: Element): string =>
+  [...cell.classList].find((name) => name.startsWith(ALIGN_PREFIX))?.replace(ALIGN_PREFIX, '') ??
+  '';
+
 const isExposed = (value: unknown): value is NuiTableExposed =>
   typeof value === 'object' &&
   value !== null &&
@@ -486,6 +502,51 @@ export class TableDriver<T> {
 
   get fluid(): boolean {
     return this.wrapper.find('.nui-table').classes('nui-table--fluid');
+  }
+
+  get bordered(): boolean {
+    return this.wrapper.find('.nui-table').classes('nui-table--bordered');
+  }
+
+  get slack(): boolean {
+    return this.wrapper.find('.nui-table').classes('nui-table--slack');
+  }
+
+  async resize(width: number): Promise<void> {
+    defineValue(this.element, 'clientWidth', width);
+    defineRect(this.element, new DOMRect(0, 0, width, LAYOUT_HEIGHT));
+    this.stubs.observers.deliver([this.element]);
+    await nextTick();
+  }
+
+  cellPaint(position: number, col: number): Record<string, string> {
+    const cell = this.cell(position, col);
+
+    if (cell === null) {
+      return {};
+    }
+    return Object.fromEntries([
+      ...PAINT_PROPERTIES.flatMap(([name, property]) => {
+        const value = cell.style.getPropertyValue(property);
+
+        return value === '' ? [] : [[name, value]];
+      }),
+      ['align', alignOf(cell)],
+    ]);
+  }
+
+  cellMarks(position: number, col: number): string[] {
+    const cell = this.cell(position, col);
+
+    return PAINT_MARKS.filter(
+      (mark) => cell?.classList.contains(`nui-table__cell--${mark}`) === true,
+    );
+  }
+
+  bandTails(level: number): boolean[] {
+    const row = this.wrapper.findAll('.nui-table__row--band')[level];
+
+    return (row?.findAll('th') ?? []).map((cell) => cell.classes('nui-table__cell--tail'));
   }
 
   cellWraps(position: number, col: number): boolean {

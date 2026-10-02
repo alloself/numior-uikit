@@ -14,7 +14,7 @@
         <table
           :id="gridId"
           class="nui-table__grid"
-          :role="hierarchical ? 'treegrid' : 'grid'"
+          :role="gridRole"
           :style="windowFrame.windowStyle.value"
           v-bind="gridAria"
         >
@@ -70,6 +70,8 @@
               :cells="rowCells"
               :row-index="item.index + headRows + 1"
               part="pinned"
+              :position="item.index"
+              :paint="pinnedPaint"
               :active="focus.activeIn(item.index)"
               :revision="revision"
               :selected="item.selected"
@@ -115,6 +117,8 @@
                 v-else
                 :cells="rowCells"
                 :row-index="item.index + pinnedCount + headRows + 1"
+                :position="item.index"
+                :paint="bodyPaint"
                 :active="focus.activeIn(item.index + pinnedCount)"
                 :revision="item.revision"
                 :level="item.level"
@@ -212,7 +216,7 @@
     <NuiMenu
       ref="menu-node"
       v-model:open="menu.open.value"
-      :anchor="menu.target.value?.anchor ?? null"
+      :anchor="menuAnchor"
       :items="menu.items.value"
       :label="menu.label.value"
     />
@@ -286,6 +290,7 @@ import NuiTableTreeToggle from './NuiTableTreeToggle.vue';
 import NuiTableUtilityCell from './NuiTableUtilityCell.vue';
 import { tableMessages } from './table.messages';
 import { detailsBefore, detailSpotsOf, NO_DETAILS, NO_SPOTS, sameSpots } from './table-detail';
+import { paintOf } from './table-paint';
 import { ownCellAt, ownDetailOf } from './table-dom';
 import { cellTextOf, cellValueOf, engineColumnOf, valueTextOf } from './table-format';
 import { columnTreeOf, headerBandsOf } from './table-columns';
@@ -298,6 +303,7 @@ import {
   rowCellsOf,
   SELECT_KEY,
   mergeIndices,
+  sameIndices,
   tableLayout,
   wrappedCentreOf,
 } from './table-layout';
@@ -329,10 +335,13 @@ import { useTableSelection, type TableSelectionKey } from './use-table-selection
 import type {
   TableBodyRow,
   TableCellContentProps,
+  TableCellPaint,
   TableCellPosition,
   TableDetailSpot,
   TablePinnedRow,
   TableRowMode,
+  TableRowPaint,
+  TableRowPainter,
   TableSkeletonRow,
   TableStatusSlot,
   NuiTableCellSlot,
@@ -403,6 +412,8 @@ const {
   getChildren,
   hasChildren,
   hasDetail,
+  cellStyle,
+  bordered = false,
   treeColumn,
   columnMenu = true,
   selectable,
@@ -651,6 +662,7 @@ const centreWidths = computed(() => layout.value.centre.map((column) => column.w
 const footRows = computed(() => (totals.enabled.value ? 1 : 0));
 
 const hierarchical = computed(() => treeOn.value || detailOn.value || grouping.value.length > 0);
+const gridRole = computed(() => (hierarchical.value ? 'treegrid' : 'grid'));
 
 const detailSpots = computed<readonly TableDetailSpot[]>((previous) => {
   void revision.value;
@@ -721,12 +733,15 @@ const onViewportScroll = (): void => {
 
 const wrappedCentre = computed(() => (fluid.value ? wrappedCentreOf(layout.value) : NO_COLUMNS));
 
-const rowCells = computed(() => {
+const shownCentre = computed<readonly number[]>((previous) => {
   const shown = columnWindow.items.value.map((item) => item.index);
   const kept = wrappedCentre.value;
+  const next = kept.length === 0 ? shown : mergeIndices(shown, kept);
 
-  return rowCellsOf(layout.value, kept.length === 0 ? shown : mergeIndices(shown, kept));
+  return previous !== undefined && sameIndices(previous, next) ? previous : next;
 });
+
+const rowCells = computed(() => rowCellsOf(layout.value, shownCentre.value));
 
 const bands = computed(() => headerBandsOf(layout.value, tree.value, rowCells.value));
 
@@ -786,6 +801,8 @@ const rootClass = computed(() => [
     'nui-table--captioned': hasCaption.value,
     'nui-table--paged': paginationProps.value !== undefined,
     'nui-table--striped': striped,
+    'nui-table--bordered': bordered,
+    'nui-table--slack': room.value > layout.value.canvasWidth,
     'nui-table--loading': loadingNow.value,
     'nui-table--resizing': resize.active.value !== undefined,
     'nui-table--dragging':
@@ -906,6 +923,7 @@ const header: TableHeader<T> = useTableHeader({
 });
 
 const menuNode = useTemplateRef<NuiMenuExposed>('menu-node');
+const menuAnchor = computed(() => menu.target.value?.anchor ?? null);
 
 const selection = useTableSelection<T>({
   mode: () => selectable,
@@ -1242,6 +1260,31 @@ const rowAtPosition = (position: number): T | undefined => {
   const node = engine.value.nodeAt(pageStart.value + position);
   return node?.kind === 'row' ? node.row : undefined;
 };
+
+const paintedKeys = computed(() =>
+  rowCells.value.cells.flatMap((cell) => (cell.kind === 'data' ? [cell.key] : [])),
+);
+
+const paintRow = (row: T | undefined, position: number, pinned: boolean): TableRowPaint => {
+  const painted = new Map<string, TableCellPaint>();
+
+  if (row === undefined || cellStyle === undefined) {
+    return painted;
+  }
+  for (const key of paintedKeys.value) {
+    const paint = paintOf(cellStyle({ row, column: columnAt(key), position, pinned }));
+
+    if (paint !== undefined) {
+      painted.set(key, paint);
+    }
+  }
+  return painted;
+};
+
+const paintBody: TableRowPainter = (position) => paintRow(rowAtPosition(position), position, false);
+const paintPinned: TableRowPainter = (position) => paintRow(pinnedRows[position], position, true);
+const bodyPaint = computed(() => (cellStyle === undefined ? undefined : paintBody));
+const pinnedPaint = computed(() => (cellStyle === undefined ? undefined : paintPinned));
 
 const clipboard = useTableClipboard<T>({
   ranges: () => ranges.value,

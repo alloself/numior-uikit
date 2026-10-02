@@ -34,7 +34,7 @@
         :aria-sort="ariaSortOf(cell.key)"
         :aria-selected="cellSelected(cell)"
         :tabindex="tabindexOf(cell.colIndex)"
-        :style="cell.style"
+        :style="styleOf(cell)"
       >
         <div class="nui-table__content">
           <slot v-if="cell.kind !== 'data'" name="utility" :column="cell.key" />
@@ -66,7 +66,10 @@ const {
   rowIndex,
   part = 'body',
   wraps = true,
+  position,
+  paint,
   active = 0,
+  revision,
   level,
   group,
   expanded = undefined,
@@ -159,13 +162,26 @@ const rangeClass = (cell: TableDataCell): Record<string, boolean> | undefined =>
 const cellSelected = (cell: TableDataCell): 'true' | undefined =>
   hitsOf(cell).length === 0 ? undefined : 'true';
 
+const paints = computed(() => {
+  void revision;
+  return position === undefined ? undefined : paint?.(position);
+});
+
+const styleOf = (cell: TableDataCell): unknown => {
+  const painted = paints.value?.get(cell.key)?.style;
+
+  return painted === undefined ? cell.style : [cell.style, painted];
+};
+
 const cellClass = (cell: TableDataCell): unknown[] => [
-  `nui-table__cell--align-${cell.align}`,
+  `nui-table__cell--align-${paints.value?.get(cell.key)?.align ?? cell.align}`,
   `nui-table__cell--${cell.kind}`,
+  paints.value?.get(cell.key)?.class,
   pinClass(cell),
   rangeClass(cell),
   cell.rule === undefined ? undefined : `nui-table__cell--rule-${cell.rule}`,
   {
+    'nui-table__cell--tail': cell.tail === true,
     'nui-table__cell--wrap': cell.wrap && wrapsText.value,
     'nui-table__cell--active': cell.colIndex === active,
     'nui-table__cell--sortable': heads?.[cell.key]?.sortable === true,

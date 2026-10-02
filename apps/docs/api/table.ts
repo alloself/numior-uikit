@@ -63,6 +63,14 @@ const docs: DocsMap = {
         ru: 'Отмечает строки, у которых есть деталь: остальные остаются без переключателя. Без функции деталь есть у каждой строки, пока задан слот detail.',
         en: 'Marks the rows that have a detail: the others get no toggle. Without the function every row has a detail while the detail slot is set.',
       },
+      cellStyle: {
+        ru: 'Оформление ячейки тела и закреплённых строк: функция получает { row, column, position, pinned } и возвращает fill, color, align, borders, class и style либо undefined. fill ложится поверх фона строки и под выделение. borders рисует линии top, end, bottom и start поверх сетки и не меняет высоту строки: end и bottom встают на линии сетки, top и start — внутри ячейки. Функция вызывается один раз на показанную ячейку и снова, когда меняется строка или реактивное состояние, которое она читает.',
+        en: 'Style of a body or pinned row cell: the function takes { row, column, position, pinned } and returns fill, color, align, borders, class and style, or undefined. fill lies over the row background and under the selection. borders draws the top, end, bottom and start lines over the grid and leaves the row height alone: end and bottom sit on the grid lines, top and start stay inside the cell. The function runs once per shown cell and again when the row or reactive state it reads changes.',
+      },
+      bordered: {
+        ru: 'Рисует линии между колонками. Линия после последней колонки видна, только пока колонки уже области прокрутки.',
+        en: 'Draws lines between the columns. The line after the last column shows only while the columns are narrower than the scroll area.',
+      },
       treeColumn: {
         ru: 'Ключ колонки с отступом и переключателем дерева или детали; по умолчанию первая колонка.',
         en: 'Key of the column with the tree indentation and the toggle of a tree row or a detail; the first column by default.',

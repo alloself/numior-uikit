@@ -29,6 +29,23 @@ view.
 
 <Example name="table/Cells" />
 
+### Cell styles
+
+`bordered` draws lines between the columns, and `cellStyle` paints single cells. The function
+takes the row and the column and returns a `fill`, a text `color`, an `align` and `borders`.
+
+The fill lies over the row background, so a translucent colour keeps the stripes and the hover.
+The `top`, `end`, `bottom` and `start` lines are drawn over the grid and leave the row height
+alone.
+
+A line between two cells belongs to the cell before it. So `end` and `bottom` sit on the grid,
+while `top` and `start` stay inside the cell.
+
+The table asks for a style once per shown cell. It asks again when the row changes or when
+reactive state read by the function changes.
+
+<Example name="table/CellStyle" />
+
 ### Filters and totals
 
 The column type picks the filter: text, number, date or a value set through `filter: 'set'`;

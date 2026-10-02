@@ -120,6 +120,26 @@ describe('NuiTable header groups', () => {
     expect(grid.resizer(0)).not.toBeNull();
   });
 
+  it('closes a group that ends the table with a line only while the table has spare room', async () => {
+    const grid = TableDriver.mount<Person>({
+      columns: [
+        columnOf('salary'),
+        { key: 'person', label: 'Сотрудник', children: [columnOf('name'), columnOf('city')] },
+      ],
+      rows: people(10),
+      config: { locale: 'ru-RU' },
+    });
+
+    mounted.push(grid);
+    await grid.settle();
+
+    expect(grid.bandRules(0)).toEqual([undefined, 'both', undefined]);
+    expect(grid.bandTails(0)).toEqual([false, true, false]);
+    expect(grid.slack).toBe(false);
+    await grid.resize(4000);
+    expect(grid.slack).toBe(true);
+  });
+
   it('splits a band at the pinned pane edge', async () => {
     const grid = TableDriver.mount<Person>({
       columns: [

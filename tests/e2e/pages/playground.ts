@@ -12,6 +12,7 @@ import { SignupSection } from './signup';
 import { SmartFormSection } from './smart-form';
 import { TableSection } from './table';
 import { TableDetailSection } from './table-detail';
+import { TableSheetSection } from './table-sheet';
 import { TreeSection } from './tree';
 import { UploadSection } from './upload';
 import { WizardSection } from './wizard';
@@ -179,6 +180,7 @@ export class PlaygroundPage {
   readonly tree: TreeSection;
   readonly table: TableSection;
   readonly tableDetail: TableDetailSection;
+  readonly tableSheet: TableSheetSection;
 
   constructor(readonly page: Page) {
     this.workspace = page.getByRole('main');
@@ -222,6 +224,7 @@ export class PlaygroundPage {
     this.tree = new TreeSection(page);
     this.table = new TableSection(page);
     this.tableDetail = new TableDetailSection(page);
+    this.tableSheet = new TableSheetSection(page);
   }
 
   async open(path: '/' = '/'): Promise<void> {

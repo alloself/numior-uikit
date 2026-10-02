@@ -151,6 +151,7 @@ const placePane = (
         style: pinStyleOf(pane, offset, input.width, width),
         span: undefined,
         colspan: 1,
+        tail: pane === 'centre' && index === inputs.length - 1,
       },
     });
 
@@ -257,6 +258,9 @@ export const centreIndexOf = (layout: TableLayout, visual: number): number | und
 
 export const wrappedCentreOf = (layout: TableLayout): number[] =>
   layout.centre.flatMap((column, index) => (column.cell.wrap ? [index] : []));
+
+export const sameIndices = (a: readonly number[], b: readonly number[]): boolean =>
+  a.length === b.length && a.every((index, at) => index === b[at]);
 
 export const mergeIndices = (shown: readonly number[], kept: readonly number[]): number[] => {
   const merged: number[] = [];

@@ -140,6 +140,8 @@ export interface NuiTableProps<T> {
   getChildren?: ((row: T) => readonly T[] | null | undefined) | undefined;
   hasChildren?: ((row: T) => boolean) | undefined;
   hasDetail?: ((row: T) => boolean) | undefined;
+  cellStyle?: NuiTableCellStyler<T> | undefined;
+  bordered?: boolean | undefined;
   treeColumn?: string | undefined;
   columnMenu?: boolean | undefined;
   selectable?: NuiTableSelection | undefined;
@@ -179,6 +181,41 @@ export interface NuiTableCellSlot<T> {
   readonly position: number;
   readonly pinned: boolean;
 }
+
+export interface NuiTableCellRef<T> {
+  readonly row: T;
+  readonly column: NuiTableColumn<T>;
+  readonly position: number;
+  readonly pinned: boolean;
+}
+
+export interface NuiTableCellBorders {
+  readonly top?: string | undefined;
+  readonly end?: string | undefined;
+  readonly bottom?: string | undefined;
+  readonly start?: string | undefined;
+}
+
+export interface NuiTableCellStyle {
+  readonly class?: string | undefined;
+  readonly fill?: string | undefined;
+  readonly color?: string | undefined;
+  readonly align?: NuiTableAlign | undefined;
+  readonly borders?: NuiTableCellBorders | undefined;
+  readonly style?: Readonly<Record<string, string>> | undefined;
+}
+
+export type NuiTableCellStyler<T> = (cell: NuiTableCellRef<T>) => NuiTableCellStyle | undefined;
+
+export interface TableCellPaint {
+  readonly class: readonly unknown[];
+  readonly style: Readonly<Record<string, string>>;
+  readonly align: NuiTableAlign | undefined;
+}
+
+export type TableRowPaint = ReadonlyMap<string, TableCellPaint>;
+
+export type TableRowPainter = (position: number) => TableRowPaint | undefined;
 
 export interface NuiTableRange {
   readonly from: TableCellPosition;
@@ -407,6 +444,7 @@ export interface TableDataCell {
   readonly style: Readonly<Record<string, string>> | undefined;
   readonly span: number | undefined;
   readonly colspan: number;
+  readonly tail?: boolean | undefined;
   readonly handle?: string | undefined;
   readonly rule?: TableBandRule | undefined;
 }
@@ -535,6 +573,8 @@ export interface NuiTableRowProps {
   rowIndex: number;
   part?: TableRowPart | undefined;
   wraps?: boolean | undefined;
+  position?: number | undefined;
+  paint?: TableRowPainter | undefined;
   active?: number | undefined;
   revision?: number | undefined;
   level?: number | undefined;
