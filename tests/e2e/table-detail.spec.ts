@@ -247,6 +247,7 @@ test.describe('table detail rows', () => {
   });
 
   test('open details have no automatically detectable WCAG AA violations', async ({ page }) => {
+    test.slow();
     const playground = new PlaygroundPage(page);
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();

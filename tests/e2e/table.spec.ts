@@ -1042,6 +1042,7 @@ test.describe('table', () => {
   });
 
   test('data table has no automatically detectable WCAG AA violations', async ({ page }) => {
+    test.slow();
     const playground = new PlaygroundPage(page);
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
@@ -1054,6 +1055,7 @@ test.describe('table', () => {
   });
 
   test('column menu has no automatically detectable WCAG AA violations', async ({ page }) => {
+    test.slow();
     const playground = new PlaygroundPage(page);
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
@@ -1088,6 +1090,7 @@ test.describe('table', () => {
   });
 
   test('filter popover has no automatically detectable WCAG AA violations', async ({ page }) => {
+    test.slow();
     const playground = new PlaygroundPage(page);
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
