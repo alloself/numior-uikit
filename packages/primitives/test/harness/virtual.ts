@@ -34,6 +34,11 @@ interface SpacerStyles {
   readonly rest: string;
 }
 
+interface HarnessView {
+  readonly axis: VirtualAxis;
+  readonly renders: readonly SpacerStyles[];
+}
+
 const rowOf = (item: VirtualItem, axis: VirtualAxis): VNode =>
   h(
     'div',
@@ -60,6 +65,7 @@ const defineSize = (element: HTMLElement, name: string, value: number): void => 
 export class VirtualHarness {
   static mount(options: VirtualHarnessOptions = {}): VirtualHarness {
     const count = ref(options.count ?? 1000);
+    const itemSize = shallowRef<ItemSize>(options.itemSize ?? 20);
     const pinned = ref(options.pinned);
     const height = options.height ?? 200;
     const axis = options.axis ?? 'y';
@@ -72,7 +78,7 @@ export class VirtualHarness {
 
         const virtual = useVirtualList(container, {
           count,
-          itemSize: () => options.itemSize ?? 20,
+          itemSize,
           axis,
           overscan: () => options.overscan,
           initialCount: () => options.initialCount,
@@ -127,7 +133,10 @@ export class VirtualHarness {
     if (!outcome.current.ran) {
       throw new Error('useVirtualList did not run');
     }
-    return new VirtualHarness(wrapper, outcome.current.value, count, pinned, axis, renders);
+    return new VirtualHarness(wrapper, outcome.current.value, count, itemSize, pinned, {
+      axis,
+      renders,
+    });
   }
 
   async settle(): Promise<void> {
@@ -138,10 +147,18 @@ export class VirtualHarness {
     private readonly wrapper: VueWrapper,
     private readonly list: VirtualList,
     private readonly count: { value: number },
+    private readonly itemSize: { value: ItemSize },
     private readonly pinned: { value: number | undefined },
-    private readonly axis: VirtualAxis,
-    private readonly renders: readonly SpacerStyles[],
+    private readonly view: HarnessView,
   ) {}
+
+  private get axis(): VirtualAxis {
+    return this.view.axis;
+  }
+
+  private get renders(): readonly SpacerStyles[] {
+    return this.view.renders;
+  }
 
   private get element(): HTMLElement {
     return this.wrapper.find<HTMLElement>('.viewport').element;
@@ -224,6 +241,10 @@ export class VirtualHarness {
     return this.list.offsetOf(index);
   }
 
+  indexAt(position: number): number {
+    return this.list.indexAt(position);
+  }
+
   rowTransform(index: number): string {
     return this.wrapper.find<HTMLElement>(`.row[data-index="${index}"]`).element.style.transform;
   }
@@ -259,6 +280,11 @@ export class VirtualHarness {
 
   async setCount(count: number): Promise<void> {
     this.count.value = count;
+    await nextTick();
+  }
+
+  async setItemSize(size: ItemSize): Promise<void> {
+    this.itemSize.value = size;
     await nextTick();
   }
 

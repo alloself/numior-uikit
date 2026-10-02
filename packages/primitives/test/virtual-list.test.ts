@@ -43,6 +43,8 @@ describe('useVirtualList', () => {
     expect(list.totalSize).toBe(180);
     expect(list.offsetOf(3)).toBe(90);
     expect(list.offsetOf(6)).toBe(180);
+    expect(list.indexAt(89)).toBe(2);
+    expect(list.indexAt(90)).toBe(3);
     expect(list.renderedIndices).toEqual(range(0, 4));
     await list.scroll(50);
     expect(list.range).toEqual({ start: 2, end: 6 });
@@ -204,6 +206,41 @@ describe('useVirtualList', () => {
     await list.scroll(5050);
     expect(await list.resizeRows([[250, 30]])).toBe(true);
     expect(list.scrollTop).toBe(5050);
+    list.unmount();
+  });
+
+  it('stays at the end when rows measured there turn out taller', async () => {
+    const sizes = createSizeIndex(1000, 20);
+    const list = VirtualHarness.mount({ height: 200, itemSize: sizes, overscan: 2 });
+
+    await list.settle();
+    await list.scroll(19_800);
+    expect(await list.resizeRows([[995, 50]])).toBe(true);
+    expect(list.scrollTop).toBe(19_830);
+    expect(list.elementScroll).toBe(19_830);
+    await list.scroll(19_700);
+    expect(await list.resizeRows([[996, 50]])).toBe(true);
+    expect(list.scrollTop).toBe(19_700);
+    list.unmount();
+  });
+
+  it('keeps the same row on top when the size index is replaced', async () => {
+    const measured = createSizeIndex(1000, 20, [[5, 100]]);
+    const list = VirtualHarness.mount({ height: 200, itemSize: measured, overscan: 2 });
+
+    await list.settle();
+    await list.scroll(1010);
+    expect(list.range).toEqual({ start: 44, end: 59 });
+    await list.setItemSize(createSizeIndex(1000, 20));
+
+    expect(list.scrollTop).toBe(930);
+    expect(list.elementScroll).toBe(930);
+    expect(list.range).toEqual({ start: 44, end: 59 });
+    await list.setItemSize(20);
+    expect(list.scrollTop).toBe(930);
+    await list.setItemSize(createSizeIndex(1000, 20, [[10, 60]]));
+    expect(list.scrollTop).toBe(970);
+    expect(list.range).toEqual({ start: 44, end: 59 });
     list.unmount();
   });
 

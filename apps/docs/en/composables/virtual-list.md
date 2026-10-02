@@ -66,3 +66,7 @@ physical height, `scrollTop` the logical one, and `items[].offset` places a row 
 the sizes you already have. Pass it as `itemSize` and call `resize([[index, size]])` of the list
 after measuring rows. It updates the index and shifts the scroll so that the first visible row
 stays in place.
+
+At the end of the list `resize` keeps the scroll at the end when the rows there turn out taller.
+Replacing the index with a new one leaves the row with the same number on top. `offsetOf(index)`
+gives the offset of a row, and `indexAt(offset)` the row under an offset.
