@@ -2,10 +2,11 @@
   <div class="flex flex-col gap-3">
     <NuiTable
       v-model:ranges="ranges"
+      v-model:row-heights="rowHeights"
       :columns="columns"
       :rows="readings"
       :get-key="keyOf"
-      row-headers
+      :row-headers="ROW_HEADERS"
       bordered
       height="18rem"
       :column-menu="false"
@@ -17,7 +18,12 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { NuiTable, type NuiTableColumn, type NuiTableRanges } from '@numior/table';
+import {
+  NuiTable,
+  type NuiTableColumn,
+  type NuiTableRanges,
+  type NuiTableRowHeights,
+} from '@numior/table';
 
 interface Reading {
   readonly hour: number;
@@ -44,7 +50,10 @@ const columns: NuiTableColumn<Reading>[] = SENSORS.map((label, sensor) => ({
   value: (row) => row.values[sensor],
 }));
 
+const ROW_HEADERS = { resizable: true };
+
 const ranges = ref<NuiTableRanges>([]);
+const rowHeights = ref<NuiTableRowHeights>({ 2: 56 });
 
 const selectedCells = computed(() =>
   ranges.value.reduce(

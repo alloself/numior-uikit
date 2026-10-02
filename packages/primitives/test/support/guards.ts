@@ -9,6 +9,7 @@ export {
   oneOf,
   optional,
   parseAs,
+  recordOf,
   shapeOf,
   type Guard,
   type Guarded,

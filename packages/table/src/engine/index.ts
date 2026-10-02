@@ -34,6 +34,7 @@ export type {
   TableGroupsResult,
   TableNode,
   TableNodeId,
+  TableNodePosition,
   TableSiblings,
   TableSource,
   TableSourceEngineOptions,

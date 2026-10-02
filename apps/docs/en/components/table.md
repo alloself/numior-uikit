@@ -59,6 +59,13 @@ Shift extends the selection, Ctrl adds a row or a column, and a drag over the he
 in a row. Space or Enter on a header does the same from the keyboard. The headers of selected
 cells are highlighted.
 
+The `resizable` option adds a handle at the bottom edge of a row header. The heights live in
+`v-model:rowHeights` by the row key, and a double click on the handle brings the default height
+back. `Alt` with the up and down arrows changes the height from the keyboard.
+
+In a row window the height is exact and counts in the scroll. When rows grow with their content,
+it is a minimum. Row heights have no effect with `source`.
+
 <Example name="table/RowHeaders" />
 
 ### Filters and totals

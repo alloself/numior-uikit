@@ -72,8 +72,8 @@ const docs: DocsMap = {
         en: 'Draws lines between the columns. The line after the last column shows only while the columns are narrower than the scroll area.',
       },
       rowHeaders: {
-        ru: 'Закреплённая в начале колонка заголовков строк: true нумерует строки по порядку на экране, а { label, width } задаёт подпись label(row, position) и ширину в пикселях. Щелчок по заголовку выделяет строку, по углу — все ячейки, а по заголовку колонки с sortable: false — колонку; Shift продолжает выделение, Ctrl добавляет строку или колонку, протяжка берёт несколько подряд. Заголовки выделенных ячеек подсвечены. Выделение требует cellSelection.',
-        en: 'Column of row headers pinned at the start: true numbers the rows in the order on screen, and { label, width } sets the label(row, position) text and the width in pixels. A click on a header selects the row, on the corner every cell, and on the header of a column with sortable: false the column; Shift extends the selection, Ctrl adds a row or a column, a drag takes several in a row. The headers of selected cells are highlighted. The selection needs cellSelection.',
+        ru: 'Закреплённая в начале колонка заголовков строк: true нумерует строки по порядку на экране, а { label, width, resizable } задаёт подпись label(row, position), ширину в пикселях и ручку высоты у нижнего края заголовка. Щелчок по заголовку выделяет строку, по углу — все ячейки, а по заголовку колонки с sortable: false — колонку; Shift продолжает выделение, Ctrl добавляет строку или колонку, протяжка берёт несколько подряд. Заголовки выделенных ячеек подсвечены. Выделение требует cellSelection.',
+        en: 'Column of row headers pinned at the start: true numbers the rows in the order on screen, and { label, width, resizable } sets the label(row, position) text, the width in pixels and a height handle at the bottom edge of a header. A click on a header selects the row, on the corner every cell, and on the header of a column with sortable: false the column; Shift extends the selection, Ctrl adds a row or a column, a drag takes several in a row. The headers of selected cells are highlighted. The selection needs cellSelection.',
       },
       treeColumn: {
         ru: 'Ключ колонки с отступом и переключателем дерева или детали; по умолчанию первая колонка.',
@@ -205,6 +205,10 @@ const docs: DocsMap = {
         ru: 'Ширины колонок в пикселях по ключу после ручного изменения: ручка у края заголовка тянет колонку, пока таблица помещается — ширина переходит к соседней колонке, при прокрутке растёт только сама колонка; колонка с ключом в модели перестаёт делить свободное место через flex.',
         en: 'Column widths in pixels by key after a manual resize: the handle at the header edge drags the column, while the table fits the width moves to the neighbouring column and once it scrolls only the column itself grows; a column with a key in the model stops sharing the free width through flex.',
       },
+      'v-model:rowHeights': {
+        ru: 'Высоты строк в пикселях по ключу строки (getKey, без него индекс в rows) после ручного изменения: ручку у нижнего края заголовка строки включает rowHeaders.resizable, двойной щелчок по ней возвращает высоту по умолчанию. С height и числовой rowHeight высота точная и учитывается в прокрутке; когда строки растут по содержимому, это минимум. С source модель не действует.',
+        en: 'Row heights in pixels by the row key (getKey, or the index in rows without it) after a manual resize: rowHeaders.resizable turns on the handle at the bottom edge of a row header, and a double click on it brings the default height back. With height and a numeric rowHeight the height is exact and counts in the scroll; when rows grow with their content it is a minimum. The model has no effect with source.',
+      },
       'v-model:columnOrder': {
         ru: 'Порядок колонок ключами после перестановки: ключи модели идут первыми в своём порядке, остальные — в порядке объявления. Ручка в начале заголовка тянет колонку внутри её панели, закрепление сильнее порядка.',
         en: 'Column order as keys after a move: the keys in the model come first in their order, the rest follow the declaration order. The grip at the start of a header drags the column inside its pane, and pinning wins over the order.',
@@ -315,6 +319,13 @@ const docs: DocsMap = {
         description: {
           ru: 'На ячейке шапки сужает или расширяет колонку на 10 px; в RTL стрелки меняются местами.',
           en: 'On a header cell narrows or widens the column by 10 px; in RTL the arrows swap.',
+        },
+      },
+      {
+        keys: 'Alt+ArrowUp / Alt+ArrowDown',
+        description: {
+          ru: 'При включённом rowHeaders.resizable на заголовке строки уменьшает или увеличивает её высоту на 8 px.',
+          en: 'With rowHeaders.resizable on, on a row header lowers or raises the row by 8 px.',
         },
       },
       {

@@ -35,6 +35,30 @@ describe('createTableEngine', () => {
     expect(Array.from(harness.engine.visibleIndices())).toEqual([1, 4, 0, 3, 2]);
   });
 
+  it('finds the positions of rows by their keys in the current order and stops at the limit', async () => {
+    const harness = new EngineHarness(PEOPLE_COLUMNS, PEOPLE);
+    const wanted = new Set<string | number>([0, 3]);
+
+    expect(harness.engine.positionsOf((id) => wanted.has(id), 2)).toEqual([
+      [0, 0],
+      [3, 3],
+    ]);
+
+    await harness.runToEnd({ sort: [{ key: 'active', direction: 'asc' }] });
+
+    expect(harness.engine.positionsOf((id) => wanted.has(id), 2)).toEqual([
+      [0, 2],
+      [3, 3],
+    ]);
+
+    expect(harness.engine.positionsOf(() => true, 2)).toEqual([
+      [1, 0],
+      [4, 1],
+    ]);
+
+    expect(harness.engine.positionsOf(() => false, 5)).toEqual([]);
+  });
+
   it('runs a query synchronously through the same stages and supersedes a sliced run', async () => {
     const harness = new EngineHarness(PEOPLE_COLUMNS, PEOPLE);
     const pending = harness.run({ sort: [{ key: 'age', direction: 'asc' }] });

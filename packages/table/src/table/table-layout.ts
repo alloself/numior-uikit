@@ -5,6 +5,7 @@ import type {
   TableGapCell,
   TablePaneName,
   TableRowCells,
+  TableRowMode,
   TableTrack,
   NuiTableHidden,
   NuiTablePins,
@@ -281,6 +282,14 @@ export const centreIndexOf = (layout: TableLayout, visual: number): number | und
 
 export const wrappedCentreOf = (layout: TableLayout): number[] =>
   layout.centre.flatMap((column, index) => (column.cell.wrap ? [index] : []));
+
+export const sizedRowStyle = (
+  height: number,
+  mode: TableRowMode,
+): Readonly<Record<string, string>> =>
+  mode === 'fixed'
+    ? { '--_row': `${height}px`, '--_body-size': `${height - 1}px` }
+    : { '--_row': `${height}px`, '--_body-min': `${height - 1}px` };
 
 export const revealOffset = (
   current: number,

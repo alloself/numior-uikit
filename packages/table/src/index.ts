@@ -12,6 +12,7 @@ export type {
   NuiTableEvents,
   NuiTableReorderEvent,
   NuiTableRowHeaders,
+  NuiTableRowHeights,
   NuiTableExpanded,
   NuiTableExposed,
   NuiTableFilters,

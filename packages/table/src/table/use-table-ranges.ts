@@ -269,6 +269,9 @@ export const useTableRanges = (options: TableRangesOptions): TableRanges => {
   };
 
   const lineOrigin = (target: Element): RangeOrigin | undefined => {
+    if (target.closest(HANDLE) !== null) {
+      return undefined;
+    }
     const rowHead = target.closest(ROW_HEAD);
 
     if (rowHead !== null) {
@@ -277,7 +280,7 @@ export const useTableRanges = (options: TableRangesOptions): TableRanges => {
     if (target.closest(CORNER) !== null) {
       return { kind: 'all' };
     }
-    const head = target.closest(HANDLE) === null ? target.closest(COLUMN_HEAD) : null;
+    const head = target.closest(COLUMN_HEAD);
 
     return head === null ? undefined : columnOrigin(head);
   };

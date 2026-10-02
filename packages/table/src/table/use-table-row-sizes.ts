@@ -10,7 +10,7 @@ import {
 import { createSizeIndex, type ItemSize, type VirtualSize } from '@numior/primitives';
 import type { TableEngine, TableNodeId } from '../engine';
 import { OWN_BODY_ROWS, OWN_DETAIL_ROWS } from './table-dom';
-import type { TableDetailSpot, TableRowMode } from './table.types';
+import type { NuiTableRowHeights, TableDetailSpot, TableRowMode } from './table.types';
 
 export interface TableRowSizesOptions<T> {
   readonly viewport: Readonly<ShallowRef<HTMLElement | null>>;
@@ -21,6 +21,7 @@ export interface TableRowSizesOptions<T> {
   readonly pageStart: () => number;
   readonly leading: () => number;
   readonly spots: () => readonly TableDetailSpot[];
+  readonly heights: () => NuiTableRowHeights;
   readonly arrangement: () => number;
   readonly rendered: WatchSource;
   readonly resize: (sizes: readonly VirtualSize[]) => void;
@@ -31,6 +32,7 @@ export interface TableRowSizes {
 }
 
 const DETAIL_ROWS = 4;
+const NO_POSITIONS: ReadonlyMap<string, number> = new Map();
 
 const measuredRows = (mode: TableRowMode, details: number): string | undefined => {
   switch (mode) {
@@ -56,25 +58,51 @@ export const useTableRowSizes = <T>(options: TableRowSizesOptions<T>): TableRowS
   const detailSizes = new Map<TableNodeId, number>();
   let detailEstimate: number | undefined;
   let observer: ResizeObserver | undefined;
+  let heights = options.heights();
+
+  const sizedKeys = computed(() => Object.keys(options.heights()).toSorted().join('\u0000'));
+
+  const sizedPositions = computed((): ReadonlyMap<string, number> => {
+    const keys = new Set(sizedKeys.value === '' ? [] : sizedKeys.value.split('\u0000'));
+
+    void options.arrangement();
+
+    if (keys.size === 0 || options.mode() !== 'fixed') {
+      return NO_POSITIONS;
+    }
+    const start = options.pageStart();
+    const end = start + options.count();
+    const found = options.engine.value.positionsOf((id) => keys.has(String(id)), keys.size);
+
+    return new Map(
+      found.flatMap(([id, position]) =>
+        position >= start && position < end ? [[String(id), position - start]] : [],
+      ),
+    );
+  });
+
+  const sizedRows = (base: number): VirtualSize[] =>
+    [...sizedPositions.value].map(([key, position]) => [position, heights[key] ?? base]);
 
   const indexOf = (base: number): ItemSize =>
-    createSizeIndex(
-      options.count(),
-      base,
-      options
+    createSizeIndex(options.count(), base, [
+      ...options
         .spots()
-        .map((spot) => [
+        .map((spot): VirtualSize => [
           spot.position,
           detailSizes.get(spot.id) ?? detailEstimate ?? base * DETAIL_ROWS,
         ]),
-    );
+      ...sizedRows(base),
+    ]);
 
   const sizeFor = (mode: TableRowMode, base: number): ItemSize => {
     switch (mode) {
       case 'flow':
         return base;
       case 'fixed':
-        return options.spots().length === 0 ? base : indexOf(base);
+        return options.spots().length === 0 && sizedPositions.value.size === 0
+          ? base
+          : indexOf(base);
       case 'fluid':
         void options.arrangement();
         return indexOf(base);
@@ -109,6 +137,27 @@ export const useTableRowSizes = <T>(options: TableRowSizesOptions<T>): TableRowS
       options.resize(sizes);
     }
   };
+
+  watch(
+    options.heights,
+    (next, previous) => {
+      const changed: VirtualSize[] = [];
+
+      heights = next;
+
+      for (const [key, position] of sizedPositions.value) {
+        const size = next[key];
+
+        if (size !== undefined && previous[key] !== undefined && size !== previous[key]) {
+          changed.push([position, size]);
+        }
+      }
+      if (changed.length > 0) {
+        options.resize(changed);
+      }
+    },
+    { flush: 'sync' },
+  );
 
   const targets = (): Element[] => {
     const viewport = options.viewport.value;

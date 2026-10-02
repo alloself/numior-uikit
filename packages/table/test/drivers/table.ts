@@ -46,6 +46,7 @@ import {
   type NuiTableProps,
   type NuiTableColumnDef,
   type NuiTableRanges,
+  type NuiTableRowHeights,
 } from '../../src';
 
 export interface TableMountOptions<T> {
@@ -60,6 +61,7 @@ export interface TableMountOptions<T> {
   readonly hidden?: NuiTableHidden;
   readonly widths?: NuiTableWidths;
   readonly columnOrder?: NuiTableColumnOrder;
+  readonly rowHeights?: NuiTableRowHeights;
   readonly selected?: readonly T[];
   readonly page?: number;
   readonly pageSize?: number;
@@ -140,6 +142,7 @@ interface TableModels<T> {
   readonly page: ShallowRef<number>;
   readonly pageSize: ShallowRef<number>;
   readonly ranges: Ref<NuiTableRanges>;
+  readonly rowHeights: ShallowRef<NuiTableRowHeights>;
 }
 
 type TableProps<T> = Omit<NuiTableProps<T>, 'columns' | 'rows'>;
@@ -264,6 +267,7 @@ export class TableDriver<T> {
     const page = shallowRef(settings.page ?? 1);
     const pageSize = shallowRef(settings.pageSize ?? 20);
     const ranges = ref<NuiTableRanges>([]);
+    const rowHeights = shallowRef<NuiTableRowHeights>(settings.rowHeights ?? {});
     const props = shallowRef<TableProps<T>>(settings.props ?? {});
     const stubs = new TopLayerStubs();
     const observers = stubRowObserver();
@@ -347,6 +351,10 @@ export class TableDriver<T> {
               'onUpdate:ranges': (next: NuiTableRanges) => {
                 ranges.value = next;
               },
+              rowHeights: rowHeights.value,
+              'onUpdate:rowHeights': (next: NuiTableRowHeights) => {
+                rowHeights.value = next;
+              },
               onRowClick: (row: T) => {
                 events.clicks.push(row);
               },
@@ -400,6 +408,7 @@ export class TableDriver<T> {
       page,
       pageSize,
       ranges,
+      rowHeights,
     };
 
     const driver = new TableDriver<T>(wrapper, source, props, models, exposed, events, {
@@ -1256,6 +1265,62 @@ export class TableDriver<T> {
     cell?.dispatchEvent(new PointerEvent('pointerdown', init));
     cell?.dispatchEvent(new PointerEvent('pointerup', init));
     cell?.dispatchEvent(new MouseEvent('click', init));
+    await nextTick();
+  }
+
+  get rowHeights(): NuiTableRowHeights {
+    return this.models.rowHeights.value;
+  }
+
+  rowHeight(position: number): string {
+    const row = this.row(position);
+
+    return row instanceof HTMLElement ? row.style.getPropertyValue('--_row') : '';
+  }
+
+  rowBodySize(position: number): string[] {
+    const row = this.row(position);
+
+    return row instanceof HTMLElement
+      ? [row.style.getPropertyValue('--_body-size'), row.style.getPropertyValue('--_body-min')]
+      : [];
+  }
+
+  get canvasHeight(): number {
+    const frame = this.windowFrame;
+
+    const rows = this.rowElements.reduce(
+      (sum, row) => sum + (Number.parseFloat(row.style.getPropertyValue('--_row')) || HEAD_HEIGHT),
+      0,
+    );
+
+    return frame === undefined
+      ? rows
+      : Number.parseFloat(frame.lead) + Number.parseFloat(frame.rest) + rows;
+  }
+
+  rowResizer(position: number): HTMLElement | null {
+    return this.row(position)?.querySelector<HTMLElement>('.nui-table__resizer--row') ?? null;
+  }
+
+  async dragRowResizer(position: number, dy: number): Promise<void> {
+    const handle = this.rowResizer(position);
+
+    if (handle === null) {
+      throw new Error(`Row ${position} has no resize handle`);
+    }
+
+    handle.dispatchEvent(
+      new PointerEvent('pointerdown', { bubbles: true, button: 0, pointerId: 2, clientY: 100 }),
+    );
+
+    window.dispatchEvent(new PointerEvent('pointermove', { pointerId: 2, clientY: 100 + dy }));
+    window.dispatchEvent(new PointerEvent('pointerup', { pointerId: 2, clientY: 100 + dy }));
+    await nextTick();
+  }
+
+  async resetRowHeight(position: number): Promise<void> {
+    this.rowResizer(position)?.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));
     await nextTick();
   }
 

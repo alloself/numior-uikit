@@ -175,6 +175,8 @@ export interface TableEngineOptions<T> {
   readonly yieldTo?: (() => Promise<void>) | undefined;
 }
 
+export type TableNodePosition = readonly [id: TableNodeId, position: number];
+
 export interface TableEngine<T> {
   count(): number;
   rowCount(): number;
@@ -184,6 +186,7 @@ export interface TableEngine<T> {
   patch(query: TableQuery, keys: readonly string[]): void;
   visibleIndices(): Uint32Array;
   nodeAt(position: number): TableNode<T> | undefined;
+  positionsOf(matches: (id: TableNodeId) => boolean, limit: number): TableNodePosition[];
   details(): readonly number[];
   siblingsAt(position: number): TableSiblings<T> | undefined;
   rowAt(index: number): T | undefined;

@@ -379,6 +379,24 @@ describe('NuiTable on the server', () => {
     );
   });
 
+  it('renders the row heights of the model and their resize handles on the server', async () => {
+    const html = await renderToString(
+      createSSRApp({
+        render: () =>
+          h(NuiTable<Person>, {
+            columns: PEOPLE_COLUMNS,
+            rows: people(3),
+            getKey: (row: Person) => row.id,
+            rowHeaders: { resizable: true },
+            rowHeights: { 1: 72 },
+          }),
+      }),
+    );
+
+    expect(html.match(/--_row:72px;--_body-min:71px;/g)).toHaveLength(1);
+    expect(html.match(/nui-table__resizer--row/g)).toHaveLength(3);
+  });
+
   it('renders skeleton rows for a source without asking it for rows on the server', async () => {
     const offsets: number[] = [];
 

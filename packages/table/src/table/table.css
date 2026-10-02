@@ -633,13 +633,34 @@
 .nui-table__resizer--active::after {
   background: var(--nui-primary);
 }
+.nui-table__resizer--row {
+  inset-block: auto 0;
+  inset-inline: 0;
+  inline-size: auto;
+  block-size: 6px;
+  cursor: row-resize;
+}
+.nui-table__resizer--row::after {
+  inset-block: auto 2px;
+  inset-inline: 25%;
+  inline-size: auto;
+  block-size: 2px;
+}
 @media (hover: none) {
   .nui-table__resizer {
     inline-size: 12px;
   }
+  .nui-table__resizer--row {
+    inline-size: auto;
+    block-size: 12px;
+  }
 }
 .nui-table--resizing {
   cursor: col-resize;
+  user-select: none;
+}
+.nui-table--sizing {
+  cursor: row-resize;
   user-select: none;
 }
 .nui-table__row--head .nui-table__content {

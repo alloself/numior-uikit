@@ -785,6 +785,7 @@ export const createSourceEngine = <T>(options: TableSourceEngineOptions<T>): Tab
     patch: () => undefined,
     visibleIndices: loaded,
     nodeAt,
+    positionsOf: () => [],
     details: detailsOf,
     siblingsAt: () => undefined,
     rowAt,

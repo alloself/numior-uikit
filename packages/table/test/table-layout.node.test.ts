@@ -8,6 +8,7 @@ import {
   rowHeadWidth,
   sameIndices,
   SELECT_KEY,
+  sizedRowStyle,
   tableLayout,
   wrappedCentreOf,
   type TableLayout,
@@ -194,6 +195,12 @@ describe('tableLayout', () => {
     expect(rowHeadWidth(9, undefined)).toBe(40);
     expect(rowHeadWidth(1_048_576, undefined)).toBe(76);
     expect(rowHeadWidth(1_048_576, 64)).toBe(64);
+  });
+
+  it('sizes a row exactly in a fixed window and as a minimum when rows size themselves', () => {
+    expect(sizedRowStyle(64, 'fixed')).toEqual({ '--_row': '64px', '--_body-size': '63px' });
+    expect(sizedRowStyle(64, 'fluid')).toEqual({ '--_row': '64px', '--_body-min': '63px' });
+    expect(sizedRowStyle(64, 'flow')).toEqual({ '--_row': '64px', '--_body-min': '63px' });
   });
 
   it('scrolls a column into the free span between the panes only when it is cut', () => {

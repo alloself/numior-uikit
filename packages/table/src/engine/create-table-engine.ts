@@ -26,6 +26,7 @@ import type {
   TableFilter,
   TableNode,
   TableNodeId,
+  TableNodePosition,
   TableQuery,
   TableRunOptions,
   TableRunResult,
@@ -542,6 +543,32 @@ export const createTableEngine = <T>(options: TableEngineOptions<T>): TableEngin
     };
   };
 
+  const sourceIndexAt = (position: number): number | undefined => {
+    const ref = visible[position];
+
+    if (ref === undefined || ref < 0 || ref >= DETAIL_REF) {
+      return undefined;
+    }
+    return prepared.tree === null ? prepared.filtered[ref] : ref;
+  };
+
+  const positionsOf = (
+    matches: (id: TableNodeId) => boolean,
+    limit: number,
+  ): TableNodePosition[] => {
+    const found: TableNodePosition[] = [];
+
+    for (let position = 0; position < visible.length && found.length < limit; position += 1) {
+      const index = sourceIndexAt(position);
+      const id = index === undefined ? undefined : idOf(index);
+
+      if (id !== undefined && matches(id)) {
+        found.push([id, position]);
+      }
+    }
+    return found;
+  };
+
   const setExpanded = (id: TableNodeId, expanded: boolean): void => {
     if (expanded === defaultExpanded) {
       toggled.delete(id);
@@ -693,6 +720,7 @@ export const createTableEngine = <T>(options: TableEngineOptions<T>): TableEngin
     patch,
     visibleIndices: () => prepared.filtered,
     nodeAt,
+    positionsOf,
     details: () => details,
     siblingsAt,
     rowAt: (index) => table.rows[index],

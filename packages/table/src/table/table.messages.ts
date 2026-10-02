@@ -56,6 +56,8 @@ export interface NuiTableMessages {
   readonly columnShown: (params: { readonly column: string }) => string;
   readonly columnWidth: (params: { readonly column: string; readonly width: number }) => string;
   readonly columnWidthReset: (params: { readonly column: string }) => string;
+  readonly rowHeight: (params: { readonly row: string; readonly height: number }) => string;
+  readonly rowHeightReset: (params: { readonly row: string }) => string;
   readonly menuResetWidth: string;
   readonly columnMoved: (params: {
     readonly column: string;
@@ -164,6 +166,8 @@ export const tableMessages: NuiMessageCatalog<'table'> = {
     columnShown: ({ column }) => `Column ${column} shown`,
     columnWidth: ({ column, width }) => `Column ${column} is ${width} px wide`,
     columnWidthReset: ({ column }) => `Column ${column} width reset`,
+    rowHeight: ({ row, height }) => `Row ${row} is ${height} px high`,
+    rowHeightReset: ({ row }) => `Row ${row} height reset`,
     menuResetWidth: 'Reset width',
     columnMoved: ({ column, position, count }) =>
       `Column ${column} moved to position ${position} of ${count}`,
@@ -265,6 +269,8 @@ export const tableMessages: NuiMessageCatalog<'table'> = {
     columnShown: ({ column }) => `Колонка «${column}» показана`,
     columnWidth: ({ column, width }) => `Ширина колонки «${column}»: ${width} px`,
     columnWidthReset: ({ column }) => `Ширина колонки «${column}» сброшена`,
+    rowHeight: ({ row, height }) => `Высота строки ${row}: ${height} px`,
+    rowHeightReset: ({ row }) => `Высота строки ${row} сброшена`,
     menuResetWidth: 'Сбросить ширину',
     columnMoved: ({ column, position, count }) =>
       `Колонка «${column}» перемещена на место ${position} из ${count}`,

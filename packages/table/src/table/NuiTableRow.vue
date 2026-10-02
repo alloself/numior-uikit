@@ -44,6 +44,7 @@
           v-if="resizerOf(cell)"
           v-bind="resizerOf(cell)"
           @grab="emit('resize', handleOf(cell), $event)"
+          @reset="emit('resetSize', handleOf(cell))"
         />
       </component>
     </template>
@@ -80,10 +81,16 @@ const {
   dragging = false,
   ranged,
   marks,
+  sized,
+  sizable = false,
+  sizing = false,
   heads,
 } = defineProps<NuiTableRowProps>();
 
-const emit = defineEmits<{ resize: [key: string, event: PointerEvent] }>();
+const emit = defineEmits<{
+  resize: [key: string, event: PointerEvent];
+  resetSize: [key: string];
+}>();
 
 defineSlots<{
   default(props: { column: string }): unknown;
@@ -136,7 +143,7 @@ const rowClass = computed(() => [
 ]);
 
 const rowStyle = computed(() =>
-  sticky.value ? { '--_top': `calc(var(--_row) * ${rowIndex - 1})` } : undefined,
+  sticky.value ? { '--_top': `calc(var(--_row) * ${rowIndex - 1})` } : sized,
 );
 
 const pinClass = (cell: TableCellLayout): Record<string, boolean> => ({
@@ -206,6 +213,9 @@ const colspanOf = (colspan: number): number | undefined => (colspan > 1 ? colspa
 const handleOf = (cell: TableDataCell): string => cell.handle ?? cell.key;
 
 const resizerOf = (cell: TableDataCell): NuiTableResizerProps | undefined => {
+  if (cell.kind === 'rowhead') {
+    return sizable ? { axis: 'y', active: sizing } : undefined;
+  }
   const state = heading.value ? heads?.[handleOf(cell)] : undefined;
 
   return state?.resizable === true

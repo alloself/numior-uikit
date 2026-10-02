@@ -186,7 +186,10 @@ export interface NuiTableCellSlot<T> {
 export interface NuiTableRowHeaders<T> {
   readonly label?: ((row: T, position: number) => string) | undefined;
   readonly width?: number | undefined;
+  readonly resizable?: boolean | undefined;
 }
+
+export type NuiTableRowHeights = Readonly<Record<string, number>>;
 
 export interface NuiTableCellRef<T> {
   readonly row: T;
@@ -561,6 +564,7 @@ export interface TableBodyRow {
   readonly key: number | string;
   readonly part: TableBodyPart;
   readonly revision: number;
+  readonly sized: Readonly<Record<string, string>> | undefined;
   readonly level: number | undefined;
   readonly treeLevel: number;
   readonly group: TableGroupRow | undefined;
@@ -607,6 +611,9 @@ export interface NuiTableRowProps {
   dragging?: boolean | undefined;
   ranged?: TableRowRanges | undefined;
   marks?: readonly TableSpan[] | undefined;
+  sized?: Readonly<Record<string, string>> | undefined;
+  sizable?: boolean | undefined;
+  sizing?: boolean | undefined;
   heads?: Readonly<Record<string, TableHeadState>> | undefined;
 }
 
@@ -629,6 +636,7 @@ export interface NuiTableGroupCellProps {
 }
 
 export interface NuiTableResizerProps {
+  axis?: 'x' | 'y' | undefined;
   start?: boolean | undefined;
   active?: boolean | undefined;
 }

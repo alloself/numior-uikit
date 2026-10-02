@@ -130,6 +130,11 @@
                 :stripe="item.stripe"
                 :dragging="rowDrag.dragging.value === item.index"
                 :ranged="rangedOf(item)"
+                :sized="item.sized"
+                :sizable="sizableOf(item)"
+                :sizing="rowResize.active.value === item.index"
+                @resize="(_, event) => rowResize.start(item.index, event)"
+                @reset-size="rowResize.reset(item.index)"
               >
                 <template #utility="{ column }">
                   <NuiTableUtilityCell
@@ -313,6 +318,7 @@ import {
   rowCellsOf,
   rowHeadWidth,
   SELECT_KEY,
+  sizedRowStyle,
   mergeIndices,
   sameIndices,
   tableLayout,
@@ -341,6 +347,7 @@ import { useTableColumnOrder } from './use-table-column-order';
 import { useTableQuery } from './use-table-query';
 import { useTableResize } from './use-table-resize';
 import { useTableRowDrag } from './use-table-row-drag';
+import { useTableRowResize } from './use-table-row-resize';
 import { useTableRowSizes } from './use-table-row-sizes';
 import { useTableTotals } from './use-table-totals';
 import { useTableSelection, type TableSelectionKey } from './use-table-selection';
@@ -377,6 +384,7 @@ import type {
   NuiTableCellValue,
   NuiTableRanges,
   NuiTableRowHeaders,
+  NuiTableRowHeights,
   NuiTableWidths,
   TableRowRanges,
 } from './table.types';
@@ -398,6 +406,7 @@ const ROW_OVERSCAN = 6;
 const DISTINCT_LIMIT = 100;
 const COLUMN_OVERSCAN = 2;
 const NO_ROW_HEAD = {} as const;
+const NO_HEIGHTS: NuiTableRowHeights = {};
 const NO_UTILITY: NuiTableUtilityCellProps = { control: 'none' };
 const SKELETON_UTILITY: NuiTableUtilityCellProps = { control: 'skeleton' };
 const TEXT_SKELETON: NuiSkeletonProps = { shape: 'text', width: '100%' };
@@ -467,6 +476,7 @@ const selected = defineModel<readonly T[]>('selected', { default: () => [] });
 const page = defineModel<number>('page', { default: 1 });
 const pageSize = defineModel<number>('pageSize', { default: 20 });
 const ranges = defineModel<NuiTableRanges>('ranges', { default: () => [] });
+const rowHeights = defineModel<NuiTableRowHeights>('rowHeights', { default: () => ({}) });
 const emit = defineEmits<NuiTableEvents<T>>();
 const slots = defineSlots<NuiTableSlots<T>>();
 const rawSlots = useSlots();
@@ -571,6 +581,8 @@ const rowHead = computed<NuiTableRowHeaders<T> | undefined>(() => {
 const rowHeadSize = computed(() =>
   rowHead.value === undefined ? 0 : rowHeadWidth(totalCount.value, rowHead.value.width),
 );
+
+const sizedHeights = computed(() => (source === undefined ? rowHeights.value : NO_HEIGHTS));
 
 const ordinalBase = computed(() =>
   remote ? (Math.max(1, page.value) - 1) * pageSize.value : pageStart.value,
@@ -719,6 +731,7 @@ const rowSizes = useTableRowSizes({
   pageStart: () => pageStart.value,
   leading: () => headRows.value + pinnedCount.value,
   spots: () => detailSpots.value,
+  heights: () => sizedHeights.value,
   arrangement: () => arrangement.value,
   rendered: () => [bodyRows.value, rowCells.value],
   resize: (sizes) => {
@@ -841,6 +854,7 @@ const rootClass = computed(() => [
     'nui-table--slack': room.value > layout.value.canvasWidth,
     'nui-table--loading': loadingNow.value,
     'nui-table--resizing': resize.active.value !== undefined,
+    'nui-table--sizing': rowResize.active.value !== undefined,
     'nui-table--dragging':
       order.dragging.value !== undefined || rowDrag.dragging.value !== undefined,
     'nui-table--ranging': rangeSelect.dragging.value,
@@ -1105,6 +1119,12 @@ const selectedOf = (node: TableNode<T> | undefined): boolean | undefined =>
 const expandedOf = (node: TableNode<T> | undefined): boolean | undefined =>
   node?.kind === 'group' || (node?.kind === 'row' && node.expandable) ? node.expanded : undefined;
 
+const sizedOf = (node: TableNode<T> | undefined): Readonly<Record<string, string>> | undefined => {
+  const pixels = node?.kind === 'row' ? sizedHeights.value[String(node.id)] : undefined;
+
+  return pixels === undefined ? undefined : sizedRowStyle(pixels, rowMode.value);
+};
+
 const skeletonRows = computed((): TableSkeletonRow[] =>
   Array.from({ length: skeletonCount.value }, (_, index) => ({
     index,
@@ -1132,6 +1152,7 @@ const bodyRows = computed((): TableBodyRow[] => {
       key: detail ? `detail-${node.id}` : item.slot,
       part: detail ? 'detail' : 'body',
       revision: current,
+      sized: sizedOf(node),
       level,
       treeLevel: Math.max(0, (level ?? 1) - 1),
       group: expansion.rowAt(item.index),
@@ -1167,6 +1188,31 @@ const pinnedItems = computed((): TablePinnedRow<T>[] =>
     selected: selectOn.value ? selection.has(row) : undefined,
   })),
 );
+
+const rowLabelAt = (position: number): string => {
+  const row = rowAtPosition(position);
+  const custom = row === undefined ? undefined : rowHead.value?.label?.(row, position);
+
+  return custom ?? String(ordinalOf(position));
+};
+
+const rowResize = useTableRowResize({
+  enabled: () => rowHead.value?.resizable === true && source === undefined && !loadingNow.value,
+  heights: rowHeights,
+  rowSize: () => rowSize.value,
+  keyAt: (position) => {
+    const node = engine.value.nodeAt(pageStart.value + position);
+    return node?.kind === 'row' ? String(node.id) : undefined;
+  },
+  labelAt: rowLabelAt,
+  messages,
+  announce: (text) => {
+    announcement.value = text;
+  },
+});
+
+const sizableOf = (item: TableBodyRow): boolean =>
+  rowHead.value?.resizable === true && source === undefined && item.group === undefined;
 
 const pinnedUtility = (item: TablePinnedRow<T>, column: string): NuiTableUtilityCellProps =>
   item.selected === undefined || column === ROW_HEAD_KEY
@@ -1665,6 +1711,9 @@ const bodyActive = (): TableCellPosition | undefined => {
   return row >= 0 && row < visibleRows.value ? { row, col: active.value.col } : undefined;
 };
 
+const activeRowHead = (): number | undefined =>
+  layout.value.visual[active.value.col]?.kind === 'rowhead' ? bodyActive()?.row : undefined;
+
 const onKeydown = (event: KeyboardEvent): void => {
   if (
     cellMenu.onKeydown(event) ||
@@ -1675,7 +1724,7 @@ const onKeydown = (event: KeyboardEvent): void => {
   ) {
     return;
   }
-  if (rowDrag.onKeydown(event, bodyActive())) {
+  if (rowResize.onKeydown(event, activeRowHead()) || rowDrag.onKeydown(event, bodyActive())) {
     return;
   }
   if (selection.onKeydown(event, active.value, rowFor(active.value.row))) {

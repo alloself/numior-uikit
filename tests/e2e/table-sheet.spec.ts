@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { paintedRgbAt } from './helpers/color';
+import { boxOf } from './helpers/geometry';
 import { PlaygroundPage } from './pages/playground';
 
 const SALES = 3;
@@ -39,10 +40,10 @@ test.describe('table cell styles', () => {
     expect(await sheet.topEdge(INCOME_TOTAL, 2)).toEqual({ width: '1px', style: 'solid' });
     expect(await sheet.topEdge(RESULT, 2)).toEqual({ width: '3px', style: 'double' });
     expect(await sheet.topEdge(SALES, 2)).toBeNull();
-    expect(await sheet.rowHeights()).toHaveLength(1);
+    expect(await sheet.boxHeights()).toEqual([44, 32]);
     await sheet.windowSwitch.click();
     await expect(sheet.cell(INCOME_TOTAL, 2)).toBeVisible();
-    expect(await sheet.rowHeights()).toEqual([32]);
+    expect(await sheet.boxHeights()).toEqual([44, 32]);
   });
 
   test('paints fills and text colours and lays the selection tint over a filled cell', async ({
@@ -170,6 +171,46 @@ test.describe('table cell styles', () => {
           to: { row: INCOME_TOTAL + 3, col: LAST_COLUMN },
         },
       ]);
+  });
+
+  test('resizes a row by the edge of its header and counts the height in the scroll', async ({
+    page,
+    isMobile,
+  }) => {
+    test.skip(isMobile, 'mouse and keyboard scenario');
+    const playground = new PlaygroundPage(page);
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    const { tableSheet: sheet } = playground;
+    await sheet.show();
+    await sheet.windowSwitch.click();
+    await expect(sheet.rowHeader(SALES)).toBeVisible();
+    expect(await sheet.rowHeights()).toEqual({ 0: 44 });
+    expect((await boxOf(sheet.row(0))).height).toBe(44);
+    const before = await sheet.scrollHeight();
+    const below = await boxOf(sheet.row(SALES + 1));
+    const handle = await boxOf(sheet.rowResizer(SALES));
+
+    await page.mouse.move(handle.x + handle.width / 2, handle.y + handle.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(handle.x + handle.width / 2, handle.y + handle.height / 2 + 20);
+    await page.mouse.up();
+
+    await expect.poll(() => sheet.rowHeights()).toEqual({ 0: 44, [SALES]: 52 });
+    expect((await boxOf(sheet.row(SALES))).height).toBe(52);
+    expect((await boxOf(sheet.row(SALES + 1))).y).toBe(below.y + 20);
+    expect(await sheet.scrollHeight()).toBe(before + 20);
+    expect(await sheet.ranges()).toEqual([]);
+    await sheet.rowHeader(SALES).click();
+    await page.keyboard.press('Home');
+    await expect(sheet.rowHeader(SALES)).toBeFocused();
+    await page.keyboard.press('Alt+ArrowDown');
+
+    await expect.poll(() => sheet.rowHeights()).toEqual({ 0: 44, [SALES]: 60 });
+    await sheet.rowResizer(SALES).dblclick();
+    await expect.poll(() => sheet.rowHeights()).toEqual({ 0: 44 });
+    expect((await boxOf(sheet.row(SALES))).height).toBe(32);
+    expect(await sheet.scrollHeight()).toBe(before);
   });
 
   test('keeps the first pixel row of the corner solid over a marked header on a half pixel', async ({

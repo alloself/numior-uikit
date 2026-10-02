@@ -3,12 +3,17 @@ import {
   isNumber,
   listOf,
   parseAs,
+  recordOf,
   shapeOf,
   type Guarded,
 } from '../../../packages/primitives/test/support/guards';
 
 const isCorner = shapeOf({ row: isNumber, col: isNumber });
-const isSheetOutput = shapeOf({ ranges: listOf(shapeOf({ from: isCorner, to: isCorner })) });
+
+const isSheetOutput = shapeOf({
+  ranges: listOf(shapeOf({ from: isCorner, to: isCorner })),
+  rowHeights: recordOf(isNumber),
+});
 
 export type TableSheetOutput = Guarded<typeof isSheetOutput>;
 
@@ -71,8 +76,24 @@ export class TableSheetSection {
     );
   }
 
+  rowResizer(position: number): Locator {
+    return this.rowHeader(position).locator('.nui-table__resizer');
+  }
+
+  private async readOutput(): Promise<TableSheetOutput> {
+    return parseAs(await this.output.innerText(), isSheetOutput, 'table sheet output');
+  }
+
   async ranges(): Promise<TableSheetOutput['ranges']> {
-    return parseAs(await this.output.innerText(), isSheetOutput, 'table sheet output').ranges;
+    return (await this.readOutput()).ranges;
+  }
+
+  async rowHeights(): Promise<TableSheetOutput['rowHeights']> {
+    return (await this.readOutput()).rowHeights;
+  }
+
+  scrollHeight(): Promise<number> {
+    return this.viewport.evaluate((element) => element.scrollHeight);
   }
 
   lineAfter(position: number, col: number): Promise<string> {
@@ -110,7 +131,7 @@ export class TableSheetSection {
     );
   }
 
-  rowHeights(): Promise<number[]> {
+  boxHeights(): Promise<number[]> {
     return this.grid.evaluate(
       (grid, selector) => [
         ...new Set(

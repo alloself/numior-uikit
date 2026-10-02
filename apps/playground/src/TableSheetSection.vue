@@ -2,7 +2,7 @@
   <section class="panel" aria-labelledby="table-sheet-title">
     <div class="section-heading">
       <h2 id="table-sheet-title">Лист</h2>
-      <span class="tag">NuiTable · bordered · cellStyle · rowHeaders</span>
+      <span class="tag">NuiTable · bordered · cellStyle · rowHeaders · rowHeights</span>
     </div>
     <div class="data-row">
       <NuiButton
@@ -24,12 +24,13 @@
       </div>
       <NuiTable
         v-model:ranges="ranges"
+        v-model:row-heights="rowHeights"
         :columns="SHEET_COLUMNS"
         :rows="SHEET_ROWS"
         :get-key="(row) => row.index"
         :cell-style="styleOf"
         :bordered="bordered"
-        row-headers
+        :row-headers="ROW_HEADERS"
         :hidden="quarter ? LATER_MONTHS : NO_COLUMNS"
         :height="windowed ? '18rem' : undefined"
         :column-menu="false"
@@ -51,6 +52,7 @@ import {
   type NuiTableCellStyle,
   type NuiTableColumnDef,
   type NuiTableRanges,
+  type NuiTableRowHeights,
 } from '@numior/table';
 
 type SheetValue = string | number | null;
@@ -163,6 +165,7 @@ const SHEET_COLUMNS: NuiTableColumnDef<SheetRow>[] = [...LETTERS].map((letter, c
 }));
 
 const COLUMN_INDEX = new Map([...LETTERS].map((letter, col) => [letter, col]));
+const ROW_HEADERS = { resizable: true };
 const QUARTER_COLUMNS = 4;
 const LATER_MONTHS: readonly string[] = [...LETTERS].slice(QUARTER_COLUMNS, -1);
 const NO_COLUMNS: readonly string[] = [];
@@ -179,7 +182,11 @@ const heat = ref(false);
 const windowed = ref(false);
 const quarter = ref(false);
 const ranges = ref<NuiTableRanges>([]);
-const output = computed(() => JSON.stringify({ ranges: ranges.value }));
+const rowHeights = ref<NuiTableRowHeights>({ 0: 44 });
+
+const output = computed(() =>
+  JSON.stringify({ ranges: ranges.value, rowHeights: rowHeights.value }),
+);
 
 const heatOf = (value: number): string =>
   `color-mix(in oklab, var(--nui-success) ${Math.round((Math.max(0, value) / PEAK) * HEAT_LIMIT)}%, transparent)`;
