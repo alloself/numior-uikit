@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { boxOf } from './helpers/geometry';
 import { PlaygroundPage } from './pages/playground';
 
 const PDF = { name: 'contract.pdf', mimeType: 'application/pdf', size: 2048 };
@@ -159,6 +160,25 @@ test.describe('upload', () => {
     await upload.avatarRemove.click();
     await expect(upload.avatarInitials).toHaveText('АС');
     expect((await upload.readOutput()).avatar).toBeNull();
+  });
+
+  test('the avatar badge sits on the rim of the avatar and mirrors in RTL', async ({ page }) => {
+    const playground = new PlaygroundPage(page);
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    const { upload } = playground;
+    await upload.avatar.scrollIntoViewIfNeeded();
+    const reach = await upload.badgeReach();
+
+    expect(Math.hypot(reach.x, reach.y)).toBeCloseTo(reach.radius, 0);
+    expect(reach.x).toBeGreaterThan(0);
+    expect(reach.y).toBeGreaterThan(0);
+    expect((await boxOf(upload.avatarGlyph)).width).toBe(12);
+    await playground.setDirection('rtl');
+    const mirrored = await upload.badgeReach();
+
+    expect(mirrored.x).toBe(-reach.x);
+    expect(mirrored.y).toBe(reach.y);
   });
 
   test('upload has no automatically detectable WCAG AA violations', async ({ page }) => {

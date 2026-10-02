@@ -1,4 +1,5 @@
 import type { Locator, Page } from '@playwright/test';
+import { boxOf } from '../helpers/geometry';
 import {
   isNumber,
   isString,
@@ -93,6 +94,23 @@ export class UploadSection {
 
   get avatarInitials(): Locator {
     return this.avatar.locator('.nui-avatar__initials');
+  }
+
+  get avatarGlyph(): Locator {
+    return this.avatar.locator('.nui-avatar-upload__badge > .nui-icon');
+  }
+
+  async badgeReach(): Promise<{ x: number; y: number; radius: number }> {
+    const [avatar, badge] = await Promise.all([
+      boxOf(this.avatarTrigger),
+      boxOf(this.avatar.locator('.nui-avatar-upload__badge')),
+    ]);
+
+    return {
+      x: badge.x + badge.width / 2 - (avatar.x + avatar.width / 2),
+      y: badge.y + badge.height / 2 - (avatar.y + avatar.height / 2),
+      radius: avatar.width / 2,
+    };
   }
 
   get avatarRemove(): Locator {
