@@ -240,6 +240,7 @@ export type {
   VirtualListOptions,
   VirtualRange,
   VirtualScrollOptions,
+  VirtualSize,
 } from './virtual/useVirtualList';
 export {
   anyOf,

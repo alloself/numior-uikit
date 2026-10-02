@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { buildSizeModel, indexAt, offsetAt, scrollTargetFor } from '../src/virtual/offsets';
+import { createSizeIndex } from '../src/virtual/size-index';
 import { VirtualHarness } from './harness/virtual';
 
 const range = (from: number, to: number): number[] =>
@@ -182,6 +183,40 @@ describe('useVirtualList', () => {
     list.unmount();
   });
 
+  it('takes measured sizes and keeps the first visible row in place', async () => {
+    const sizes = createSizeIndex(1000, 20);
+    const list = VirtualHarness.mount({ height: 200, itemSize: sizes, overscan: 2 });
+
+    await list.settle();
+    await list.scroll(5000);
+    expect(list.range).toEqual({ start: 248, end: 263 });
+    expect(await list.resizeRows([[100, 50]])).toBe(true);
+    expect(list.scrollTop).toBe(5030);
+    expect(list.elementScroll).toBe(5030);
+    expect(list.range).toEqual({ start: 248, end: 263 });
+    expect(list.frame.lead).toBe(4990);
+    expect(await list.resizeRows([[400, 50]])).toBe(true);
+    expect(list.scrollTop).toBe(5030);
+    expect(list.totalSize).toBe(20_060);
+    expect(await list.resizeRows([[250, 60]])).toBe(true);
+    expect(list.scrollTop).toBe(5030);
+    expect(await list.resizeRows([[250, 60]])).toBe(false);
+    await list.scroll(5050);
+    expect(await list.resizeRows([[250, 30]])).toBe(true);
+    expect(list.scrollTop).toBe(5050);
+    list.unmount();
+  });
+
+  it('ignores measured sizes while the rows have one fixed size', async () => {
+    const list = VirtualHarness.mount({ height: 200, itemSize: 20 });
+
+    await list.settle();
+    await list.scroll(5000);
+    expect(await list.resizeRows([[100, 50]])).toBe(false);
+    expect(list.scrollTop).toBe(5000);
+    list.unmount();
+  });
+
   it('reports the offset of the first rendered row relative to the viewport', async () => {
     const list = VirtualHarness.mount({ height: 200, itemSize: 20, overscan: 2 });
     await list.settle();
@@ -248,5 +283,13 @@ describe('virtual offsets', () => {
     expect(scrollTargetFor(model, 12, 0, 100, 'auto')).toBe(30);
     expect(scrollTargetFor(model, 2, 500, 100, 'auto')).toBe(20);
     expect(scrollTargetFor(model, 99, 0, 100, 'start')).toBe(900);
+  });
+
+  it('shows the start of an item taller than the viewport when it scrolls into view', () => {
+    const model = buildSizeModel(4, (index) => [10, 300, 30, 40][index] ?? 0);
+
+    expect(scrollTargetFor(model, 1, 0, 100, 'auto')).toBe(10);
+    expect(scrollTargetFor(model, 2, 0, 100, 'auto')).toBe(240);
+    expect(scrollTargetFor(model, 1, 200, 100, 'auto')).toBe(10);
   });
 });

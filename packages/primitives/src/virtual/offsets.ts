@@ -160,7 +160,7 @@ export const scrollTargetFor = (
       if (start < scrollTop) {
         return bounded(start);
       }
-      return end > scrollTop + viewport ? bounded(end - viewport) : undefined;
+      return end > scrollTop + viewport ? bounded(Math.min(start, end - viewport)) : undefined;
   }
 };
 

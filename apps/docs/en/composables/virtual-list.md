@@ -19,6 +19,7 @@ size. The container stays yours, so the rows can live in a `<tbody>` or any list
     'VirtualFrameStyles',
     'createSizeIndex',
     'SizeIndex',
+    'VirtualSize',
   ]"
 />
 
@@ -61,5 +62,7 @@ when several windows share a scroller, so the rows update once per event.
 the right edge. `maxSize` keeps the canvas below the browser ceiling. Then `canvasSize` is the
 physical height, `scrollTop` the logical one, and `items[].offset` places a row in the canvas.
 
-`createSizeIndex(count, estimate)` keeps measured sizes in a Fenwick tree. Pass it as
-`itemSize` and call `set(index, size)` after measuring a row.
+`createSizeIndex(count, estimate, known)` keeps measured sizes in a Fenwick tree, and `known` seeds
+the sizes you already have. Pass it as `itemSize` and call `resize([[index, size]])` of the list
+after measuring rows. It updates the index and shifts the scroll so that the first visible row
+stays in place.

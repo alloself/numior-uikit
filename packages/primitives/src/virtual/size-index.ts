@@ -1,5 +1,7 @@
 import { shallowRef } from 'vue';
 
+export type VirtualSize = readonly [index: number, size: number];
+
 export interface SizeIndex {
   readonly count: number;
   readonly estimate: number;
@@ -14,11 +16,21 @@ export interface SizeIndex {
 
 const lowestBit = (value: number): number => value & -value;
 
-export const createSizeIndex = (count: number, estimate: number): SizeIndex => {
+export const createSizeIndex = (
+  count: number,
+  estimate: number,
+  known: Iterable<VirtualSize> = [],
+): SizeIndex => {
   let length = Math.max(0, Math.floor(count));
   let sizes = new Float64Array(length).fill(estimate);
   let tree = new Float64Array(length + 1);
   const version = shallowRef(0);
+
+  for (const [index, size] of known) {
+    if (index >= 0 && index < length) {
+      sizes[index] = size;
+    }
+  }
 
   const rebuild = (): void => {
     tree = new Float64Array(length + 1);

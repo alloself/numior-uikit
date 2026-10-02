@@ -9,6 +9,7 @@ import {
   type VirtualFrame,
   type VirtualItem,
   type VirtualList,
+  type VirtualSize,
 } from '../../src';
 
 export interface VirtualHarnessOptions {
@@ -241,6 +242,13 @@ export class VirtualHarness {
   async measure(): Promise<void> {
     this.list.measure();
     await nextTick();
+  }
+
+  async resizeRows(sizes: readonly VirtualSize[]): Promise<boolean> {
+    const changed = this.list.resize(sizes);
+
+    await nextTick();
+    return changed;
   }
 
   async resize(height: number): Promise<void> {

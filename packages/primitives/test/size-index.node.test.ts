@@ -64,4 +64,21 @@ describe('createSizeIndex', () => {
     expect(empty.indexAt(100)).toBe(0);
     expect(empty.set(0, 5)).toBe(false);
   });
+
+  it('starts from known sizes without a revision and drops the ones outside the index', () => {
+    const index = createSizeIndex(4, 10, [
+      [1, 25],
+      [3, 40],
+      [7, 99],
+    ]);
+
+    expect(index.revision()).toBe(0);
+    expect(index.total()).toBe(85);
+    expect(index.offsetAt(2)).toBe(35);
+    expect(index.indexAt(36)).toBe(2);
+    expect(index.set(1, 25)).toBe(false);
+    expect(index.set(1, 30)).toBe(true);
+    expect(index.total()).toBe(90);
+    expect(index.revision()).toBe(1);
+  });
 });
