@@ -1,6 +1,7 @@
 <template>
   <div class="flex flex-col gap-3">
     <NuiTable
+      cell-selection
       v-model:ranges="ranges"
       :columns="columns"
       :rows="orders"

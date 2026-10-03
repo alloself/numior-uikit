@@ -18,8 +18,8 @@ const mountStaff = (options: Partial<TableMountOptions<Staff>> = {}): TableDrive
     rows: staff(100),
     config: { locale: 'ru-RU' },
     width: 900,
-    props: { merges: [BLOCK] },
     ...options,
+    props: { cellSelection: true, merges: [BLOCK], ...options.props },
   });
 
   mounted.push(grid);
@@ -88,6 +88,31 @@ describe('NuiTable merged cells', () => {
     expect(grid.activeCell).toEqual({ row: 1, col: 1 });
     await grid.clickCell(3, 3, { shift: true });
     expect(grid.ranges).toEqual([range(1, 1, 3, 3)]);
+  });
+
+  it('boxes a merge that a whole row selection only crosses', async () => {
+    const grid = mountStaff({ props: { merges: [BLOCK], rowHeaders: true } });
+    await grid.settle();
+    await grid.clickCell(2, 0);
+
+    expect(grid.ranges).toEqual([range(2, 0, 2, 4)]);
+
+    expect(grid.rangeMarks(1, 2)).toEqual([
+      'selected',
+      'ranged',
+      'range-top',
+      'range-bottom',
+      'range-start',
+      'range-end',
+    ]);
+
+    expect(grid.rangeMarks(2, 1)).toEqual([
+      'selected',
+      'ranged',
+      'range-top',
+      'range-bottom',
+      'range-start',
+    ]);
   });
 
   it('continues a tall merge from the first row of the window and from the held row', async () => {

@@ -99,6 +99,7 @@
     </div>
     <NuiTable
       ref="orders-table"
+      cell-selection
       v-model:sort="sort"
       v-model:filters="filters"
       v-model:quick="quick"

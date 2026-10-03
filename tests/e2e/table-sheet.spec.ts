@@ -7,9 +7,9 @@ const SALES = 3;
 const INCOME_TOTAL = 6;
 const COSTS = 8;
 const RESULT = 14;
-const FOOTNOTE = 15;
-const LAST_ROW = 15;
-const JOURNAL = 17;
+const SOURCE = 16;
+const LAST_ROW = 16;
+const JOURNAL = 18;
 const JOURNAL_ROWS = 60;
 const LAST_COLUMN = 14;
 const LAST_QUARTER_COLUMN = 5;
@@ -357,17 +357,17 @@ test.describe('table cell styles', () => {
     const { tableSheet: sheet } = playground;
     await sheet.show();
 
-    await expect(sheet.cell(FOOTNOTE, 1)).toHaveClass(/nui-table__cell--overflow/);
-    expect((await boxOf(sheet.text(FOOTNOTE, 1))).width).toBeCloseTo(CENTRE_WIDTH - 2 * PAD, 3);
-    expect(await sheet.lineAfter(FOOTNOTE, 1)).toBe('0px');
+    await expect(sheet.cell(SOURCE, 1)).toHaveClass(/nui-table__cell--overflow/);
+    expect((await boxOf(sheet.text(SOURCE, 1))).width).toBeCloseTo(CENTRE_WIDTH - 2 * PAD, 3);
+    expect(await sheet.lineAfter(SOURCE, 1)).toBe('0px');
     expect(await sheet.lineAfter(RESULT, 1)).toBe('1px');
-    await sheet.cell(FOOTNOTE, 3).click();
-    await expect(sheet.cell(FOOTNOTE, 3)).toBeFocused();
+    await sheet.cell(SOURCE, 3).click();
+    await expect(sheet.cell(SOURCE, 3)).toBeFocused();
     expect(await sheet.ranges()).toEqual([]);
     await sheet.quarterSwitch.click();
 
     await expect
-      .poll(async () => (await boxOf(sheet.text(FOOTNOTE, 1))).width)
+      .poll(async () => (await boxOf(sheet.text(SOURCE, 1))).width)
       .toBeCloseTo(QUARTER_WIDTH - 2 * PAD, 3);
   });
 
@@ -377,16 +377,13 @@ test.describe('table cell styles', () => {
     await playground.open();
     const { tableSheet: sheet } = playground;
     await sheet.show();
-    const cell = await boxOf(sheet.cell(FOOTNOTE, 1));
+    const cell = await boxOf(sheet.cell(SOURCE, 1));
 
-    expect((await sheet.inkOf(FOOTNOTE, 1)).left - cell.x).toBeCloseTo(PAD, 0);
+    expect((await sheet.inkOf(SOURCE, 1)).left - cell.x).toBeCloseTo(PAD, 0);
     await playground.setDirection('rtl');
-    const mirrored = await boxOf(sheet.cell(FOOTNOTE, 1));
+    const mirrored = await boxOf(sheet.cell(SOURCE, 1));
 
-    expect(mirrored.x + mirrored.width - (await sheet.inkOf(FOOTNOTE, 1)).right).toBeCloseTo(
-      PAD,
-      0,
-    );
+    expect(mirrored.x + mirrored.width - (await sheet.inkOf(SOURCE, 1)).right).toBeCloseTo(PAD, 0);
   });
 
   test('keeps the first rows of the sheet under the header while the rest scroll', async ({

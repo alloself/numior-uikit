@@ -230,38 +230,66 @@ const hitsIn = (segments: TableRowRanges | undefined, visual: number): TableRang
 const hitsOf = (cell: TableDataCell): TableRangeSegment[] =>
   cell.kind === 'data' ? hitsIn(ranged, cell.colIndex - 1) : [];
 
-const hitsBelow = (
-  hits: TableRangeSegment[],
-  lead: TableLeadSpan | undefined,
-  visual: number,
-): TableRangeSegment[] =>
-  lead === undefined || position === undefined
-    ? hits
-    : hitsIn(rangedAt?.(position + lead.rowspan - 1), visual);
+const touches = (segments: TableRowRanges | undefined, from: number, to: number): boolean =>
+  segments?.some((segment) => segment.from <= to && segment.to >= from) === true;
 
-const rangeClass = (cell: TableDataCell): Record<string, boolean> | undefined => {
+const coversAll = (segments: TableRowRanges | undefined, from: number, to: number): boolean => {
+  for (let col = from; col <= to; col += 1) {
+    if (hitsIn(segments, col).length === 0) {
+      return false;
+    }
+  }
+  return true;
+};
+
+const leadRangeClass = (
+  lead: TableLeadSpan,
+  visual: number,
+): Record<string, boolean> | undefined => {
+  const top = position ?? lead.row;
+  const last = visual + lead.span - 1;
+  const rows = Array.from({ length: lead.rowspan }, (_, index) => rangedAt?.(top + index));
+
+  return rows.some((segments) => touches(segments, visual, last))
+    ? {
+        'nui-table__cell--ranged': true,
+        'nui-table__cell--range-top': !coversAll(rangedAt?.(top - 1), visual, last),
+        'nui-table__cell--range-bottom': !coversAll(rangedAt?.(top + lead.rowspan), visual, last),
+        'nui-table__cell--range-start': rows.some(
+          (segments) => !coversAll(segments, visual - 1, visual - 1),
+        ),
+        'nui-table__cell--range-end': rows.some(
+          (segments) => !coversAll(segments, last + 1, last + 1),
+        ),
+      }
+    : undefined;
+};
+
+const plainRangeClass = (cell: TableDataCell): Record<string, boolean> | undefined => {
   const hits = hitsOf(cell);
   const visual = cell.colIndex - 1;
-  const lead = leadOf(cell);
-  const last = visual + (lead?.span ?? 1) - 1;
 
   return hits.length === 0
     ? undefined
     : {
         'nui-table__cell--ranged': true,
         'nui-table__cell--range-top': hits.some((segment) => segment.top),
-        'nui-table__cell--range-bottom': hitsBelow(hits, lead, visual).some(
-          (segment) => segment.bottom,
-        ),
+        'nui-table__cell--range-bottom': hits.some((segment) => segment.bottom),
         'nui-table__cell--range-start': hits.some(
           (segment) => segment.start && segment.from === visual,
         ),
-        'nui-table__cell--range-end': hits.some((segment) => segment.end && segment.to === last),
+        'nui-table__cell--range-end': hits.some((segment) => segment.end && segment.to === visual),
       };
 };
 
+const rangeClass = (cell: TableDataCell): Record<string, boolean> | undefined => {
+  const lead = cell.kind === 'data' ? leadOf(cell) : undefined;
+
+  return lead === undefined ? plainRangeClass(cell) : leadRangeClass(lead, cell.colIndex - 1);
+};
+
 const cellSelected = (cell: TableDataCell): 'true' | undefined =>
-  hitsOf(cell).length === 0 ? undefined : 'true';
+  rangeClass(cell) === undefined ? undefined : 'true';
 
 const paints = computed(() => {
   void revision;

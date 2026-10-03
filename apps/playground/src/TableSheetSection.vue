@@ -30,6 +30,7 @@
       </div>
       <NuiTable
         ref="sheet"
+        cell-selection
         v-model:ranges="ranges"
         v-model:row-heights="rowHeights"
         :columns="SHEET_COLUMNS"
@@ -80,7 +81,7 @@ import {
 import { referenceBoxes, type SheetReference } from './sheet-references';
 
 type SheetValue = string | number | null;
-type SheetRowKind = 'title' | 'head' | 'section' | 'item' | 'total' | 'result' | 'note';
+type SheetRowKind = 'title' | 'head' | 'section' | 'item' | 'total' | 'result' | 'note' | 'source';
 
 interface SheetRow {
   readonly index: number;
@@ -110,9 +111,10 @@ const INCOME_NOTE = 'Рост держат подписки';
 const COSTS_NOTE = 'Маркетинг растёт быстрее выручки';
 const JOURNAL_NOTE = 'Операции сверены с банком';
 const FOOTNOTE = 'Прибыль посчитана после постоянных расходов: 620 тыс. ₽ в месяц';
+const SOURCE = 'Цифры выгружены из учётной системы 1 октября 2026 года';
 const JOURNAL = 60;
 const FROZEN_ROWS = 2;
-const BANDS: readonly number[] = [0, 2, 7];
+const BANDS: readonly number[] = [2, 7];
 
 const NOTES: readonly SheetBlock[] = [
   { top: 3, bottom: 5 },
@@ -145,9 +147,19 @@ const NOTE_STYLE: NuiTableCellStyle = {
   wrap: true,
 };
 
-const FOOTNOTE_STYLE: NuiTableCellStyle = { color: 'var(--nui-text-muted)', overflow: true };
-const TOTAL: NuiTableCellStyle = { style: BOLD, borders: { top: '1px solid var(--nui-text)' } };
-const RESULT: NuiTableCellStyle = { style: BOLD, borders: { top: '3px double var(--nui-text)' } };
+const FOOTNOTE_STYLE: NuiTableCellStyle = { color: 'var(--nui-text-muted)' };
+const SOURCE_STYLE: NuiTableCellStyle = { color: 'var(--nui-text-muted)', overflow: true };
+
+const TOTAL: NuiTableCellStyle = {
+  style: BOLD,
+  borders: { top: '1px solid var(--nui-border-strong)' },
+};
+
+const RESULT: NuiTableCellStyle = {
+  style: BOLD,
+  borders: { top: '3px double var(--nui-border-strong)' },
+};
+
 const PLAIN: NuiTableCellStyle = {};
 const numbers = new Intl.NumberFormat('ru-RU');
 
@@ -216,6 +228,7 @@ const buildRows = (journal: boolean): SheetRow[] => {
       ),
     ],
     ['note', ['Примечание', FOOTNOTE, ...MONTHS.slice(1).map(() => null), null, null]],
+    ['source', ['Источник', SOURCE, ...MONTHS.slice(1).map(() => null), null, null]],
     ...(journal ? journalOf() : []),
   ];
 
@@ -225,6 +238,7 @@ const buildRows = (journal: boolean): SheetRow[] => {
 const SHEET_ROWS: readonly SheetRow[] = buildRows(false);
 const LONG_ROWS: readonly SheetRow[] = buildRows(true);
 const JOURNAL_BAND = SHEET_ROWS.length;
+const FOOTNOTE_ROW = SHEET_ROWS.findIndex((row) => row.kind === 'note');
 const JOURNAL_BLOCK: SheetBlock = { top: JOURNAL_BAND + 1, bottom: JOURNAL_BAND + JOURNAL };
 
 const textOf = (value: SheetValue): string =>
@@ -305,6 +319,7 @@ const merges = computed((): NuiTableRange[] => {
       from: { row: top, col: last },
       to: { row: bottom, col: last },
     })),
+    { from: { row: FOOTNOTE_ROW, col: 1 }, to: { row: FOOTNOTE_ROW, col: last } },
   ];
 });
 
@@ -335,6 +350,7 @@ const PAINTERS: Readonly<
   total: (value) => ({ ...numberStyle(value, false), ...TOTAL }),
   result: (value) => ({ ...numberStyle(value, false), ...RESULT }),
   note: (_, col) => (col === 1 ? FOOTNOTE_STYLE : PLAIN),
+  source: (_, col) => (col === 1 ? SOURCE_STYLE : PLAIN),
 };
 
 const styleOf = ({ row, column }: NuiTableCellRef<SheetRow>): NuiTableCellStyle => {

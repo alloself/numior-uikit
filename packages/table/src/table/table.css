@@ -413,6 +413,8 @@
   padding-inline: 0;
 }
 .nui-table__cell--rowhead {
+  --_grid-x: 1px;
+
   background-color: var(--_head-bg);
   color: var(--nui-text-muted);
   font-size: var(--nui-font-size-xs);

@@ -14,6 +14,7 @@ const mountPeople = (options: Partial<TableMountOptions<Person>> = {}): TableDri
     config: { locale: 'ru-RU' },
     width: 900,
     ...options,
+    props: { cellSelection: true, ...options.props },
   });
 
   mounted.push(grid);

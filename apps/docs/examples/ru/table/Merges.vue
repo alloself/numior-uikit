@@ -1,5 +1,6 @@
 <template>
   <NuiTable
+    cell-selection
     :columns="columns"
     :rows="slots"
     :get-key="keyOf"

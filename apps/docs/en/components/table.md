@@ -192,6 +192,9 @@ is sorted, filtered or grouped.
 
 ### Ranges and clipboard
 
+The `cellSelection` prop turns cell selection on, and without it the table keeps the plain text
+selection.
+
 Dragging with the mouse selects a rectangle of cells, Shift+click adds the rectangle from the last
 clicked cell and Ctrl+click adds one cell. Shift or Ctrl on a selected cell takes it out of the
 selection, so no cell lands in the model twice. While the table has focus, the active cell looks

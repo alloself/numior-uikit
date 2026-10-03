@@ -504,7 +504,7 @@ const {
   nestDelay = NEST_DELAY,
   dragLabel,
   rowLabel,
-  cellSelection = true,
+  cellSelection = false,
   contextMenu = undefined,
   copyLimit = COPY_LIMIT,
   controls,
@@ -1770,7 +1770,7 @@ const resolveRow = (row: T): T | undefined =>
 const ruleTexts = useMessages(formRulesMessages, resolvedLocale);
 const kitControls = useControls();
 
-const editOn = computed(() => cellSelection && !loadingNow.value && canEdit.value);
+const editOn = computed(() => !loadingNow.value && canEdit.value);
 
 const checkCell = (row: T, key: string, value: NuiTableCellValue): string | undefined => {
   const column = columnAt(key);
@@ -1950,7 +1950,7 @@ const cellMenuNode = useTemplateRef<NuiMenuExposed>('cell-menu');
 const contextAnchor = useTemplateRef<HTMLElement>('context-anchor');
 
 const cellMenu = useTableContextMenu<T>({
-  enabled: () => contextMenu !== false,
+  enabled: () => (contextMenu === undefined ? cellSelection : contextMenu !== false),
   extra: () => (contextMenu === false ? undefined : contextMenu),
   frame: () => frame.value,
   anchor: () => contextAnchor.value,
@@ -1962,7 +1962,7 @@ const cellMenu = useTableContextMenu<T>({
   copy: (headers) => {
     void clipboard.copy(headers);
   },
-  editable: () => cellSelection && canEdit.value,
+  editable: () => canEdit.value,
   clearable: () => editing.clearable(),
   cut: () => {
     void editing.cut();
@@ -2148,13 +2148,21 @@ const scopeOf = (row: T, position: number, key: string, pinned: boolean): NuiTab
 const textOf = (row: T, key: string): string =>
   cellTextOf(columnAt(key), row, resolvedLocale.value, booleanTexts.value);
 
-const treeToggleOf = (item: TableBodyRow): VNode =>
-  h(NuiTableTreeToggle, {
-    level: treeOn.value ? item.treeLevel : 0,
-    expandable: item.expanded !== undefined,
-    loading: item.loading,
-    onToggle: () => expansion.toggle(item.index),
-  });
+const treeToggleOf = (item: TableBodyRow): VNode[] => {
+  const level = treeOn.value ? item.treeLevel : 0;
+  const expandable = item.expanded !== undefined;
+
+  return expandable || item.loading || level > 0
+    ? [
+        h(NuiTableTreeToggle, {
+          level,
+          expandable,
+          loading: item.loading,
+          onToggle: () => expansion.toggle(item.index),
+        }),
+      ]
+    : [];
+};
 
 const editorOf = (position: number, column: string): VNode | undefined => {
   const current = cellEditor.session.value;
@@ -2227,7 +2235,7 @@ const CellContent = (props: TableCellContentProps<T>): VNode | VNode[] => {
 
   const parts = [
     ...(item !== undefined && column === gripKey.value ? [gripOf(item)] : []),
-    ...(item !== undefined && column === treeKey.value ? [treeToggleOf(item)] : []),
+    ...(item !== undefined && column === treeKey.value ? treeToggleOf(item) : []),
   ];
 
   return parts.length === 0 ? content : [...parts, content];

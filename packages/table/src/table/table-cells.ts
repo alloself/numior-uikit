@@ -24,6 +24,7 @@ export interface NuiTableCellSource {
 }
 
 export interface NuiTableCells {
+  readonly cellSelection: true;
   readonly rows: readonly number[];
   readonly columns: readonly NuiTableColumn<number>[];
   readonly getKey: (row: number) => number;
@@ -187,6 +188,7 @@ export const tableCells = (source: NuiTableCellSource): NuiTableCells => {
   });
 
   return {
+    cellSelection: true,
     rows: Array.from({ length: source.rows }, (_, row) => row),
     columns,
     getKey: (row) => row,

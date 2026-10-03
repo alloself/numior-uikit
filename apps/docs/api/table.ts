@@ -164,12 +164,12 @@ const docs: DocsMap = {
         en: 'Function that labels a row in the ghost and the announcements; the text of the first text column by default, or of the first data column without one.',
       },
       cellSelection: {
-        ru: 'Выделение прямоугольников ячеек мышью и клавиатурой; по умолчанию включено, false оставляет обычное выделение текста и выключает правку ячеек.',
-        en: 'Selection of cell rectangles with the mouse and the keyboard; on by default, false keeps the plain text selection and turns cell editing off.',
+        ru: 'Выделение прямоугольников ячеек мышью и клавиатурой и меню ячейки; по умолчанию выключено, и таблица оставляет обычное выделение текста. Правка колонок с editable работает и без него.',
+        en: 'Selection of cell rectangles with the mouse and the keyboard, plus the cell menu; off by default, so the table keeps the plain text selection. Editing columns with editable works without it.',
       },
       contextMenu: {
-        ru: 'Пункты контекстного меню ячейки: функция получает строку, колонку, значение, текст и диапазоны, её пункты идут после копирования. false оставляет меню браузера.',
-        en: 'Items of the cell context menu: the function receives the row, column, value, text and ranges, and its items follow the copy items. false keeps the browser menu.',
+        ru: 'Пункты контекстного меню ячейки: функция получает строку, колонку, значение, текст и диапазоны, её пункты идут после копирования. false оставляет меню браузера; без свойства меню есть, только когда включено cellSelection.',
+        en: 'Items of the cell context menu: the function receives the row, column, value, text and ranges, and its items follow the copy items. false keeps the browser menu; without the prop the menu shows only when cellSelection is on.',
       },
       copyLimit: {
         ru: 'Предел ячеек в одном копировании; по умолчанию 200 000, лишние строки отбрасываются с объявлением.',

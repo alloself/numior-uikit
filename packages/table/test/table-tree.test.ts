@@ -38,6 +38,8 @@ describe('NuiTable tree rows', () => {
     expect(grid.rowLevel(0)).toBe('1');
     expect(grid.rowExpanded(0)).toBe('false');
     expect(grid.rowExpanded(2)).toBeUndefined();
+    expect(grid.treeLevel(0)).toBe('0');
+    expect(grid.treeLevel(2)).toBeUndefined();
     await grid.toggleRow(0);
 
     expect(grid.expanded).toEqual(['docs']);

@@ -21,6 +21,7 @@ const reports = ({ row }: NuiTableDetailSlot<Staff>): VNode[] => [
     columns: STAFF_COLUMNS,
     rows: staff(3),
     getKey: (report: Staff) => report.id,
+    cellSelection: true,
     label: `Подчинённые: ${row.name}`,
   }),
 ];
@@ -33,7 +34,7 @@ const mountStaff = (options: Partial<TableMountOptions<Staff>> = {}): TableDrive
     auto: true,
     slots: { detail: dossier },
     ...options,
-    props: { getKey: (row) => row.id, ...options.props },
+    props: { cellSelection: true, getKey: (row) => row.id, ...options.props },
   });
 
   mounted.push(grid);

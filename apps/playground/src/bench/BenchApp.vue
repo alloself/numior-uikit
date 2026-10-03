@@ -39,6 +39,7 @@
       :columns="TABLE_COLUMNS"
       :rows="rows"
       :get-key="(row) => row.id"
+      cell-selection
       height="calc(100dvh - 5rem)"
       label="Бенчмарк таблицы"
       data-testid="bench-table"

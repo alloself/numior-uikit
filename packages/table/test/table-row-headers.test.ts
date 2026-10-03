@@ -20,8 +20,8 @@ const mountStaff = (options: Partial<TableMountOptions<Staff>> = {}): TableDrive
     rows: staff(100),
     config: { locale: 'ru-RU' },
     width: 900,
-    props: { rowHeaders: true },
     ...options,
+    props: { cellSelection: true, rowHeaders: true, ...options.props },
   });
 
   mounted.push(grid);
@@ -178,7 +178,7 @@ describe('NuiTable row headers', () => {
   });
 
   it('keeps headers out of the selection without row headers', async () => {
-    const grid = mountStaff({ props: {} });
+    const grid = mountStaff({ props: { rowHeaders: false } });
     await grid.settle();
     await grid.pressHeader(2);
 

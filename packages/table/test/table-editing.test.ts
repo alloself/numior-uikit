@@ -17,6 +17,7 @@ const mountStaff = (options: Partial<TableMountOptions<Staff>> = {}): TableDrive
       applyStaffEdits(event.changes);
     },
     ...options,
+    props: { cellSelection: true, ...options.props },
   });
 
   mounted.push(grid);

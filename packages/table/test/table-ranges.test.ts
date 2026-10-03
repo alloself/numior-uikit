@@ -15,6 +15,7 @@ const mountPeople = (options: Partial<TableMountOptions<Person>> = {}): TableDri
     config: { locale: 'ru-RU' },
     width: 1600,
     ...options,
+    props: { cellSelection: true, ...options.props },
   });
 
   mounted.push(grid);
@@ -37,6 +38,16 @@ afterEach(() => {
 });
 
 describe('NuiTable cell ranges', () => {
+  it('keeps text selection and the browser menu while cell selection is off', async () => {
+    const grid = mountPeople({ props: { cellSelection: undefined } });
+    await grid.settle();
+    await grid.dragRange({ row: 1, col: 1 }, { row: 3, col: 2 });
+
+    expect(grid.ranges).toEqual([]);
+    expect(grid.rangeMarks(2, 1)).toEqual([]);
+    expect(await grid.openCellMenu(2, 1)).toBe(false);
+  });
+
   it('drags a range over the cells, marks its edges and keeps the row click to itself', async () => {
     const grid = mountPeople();
     await grid.settle();

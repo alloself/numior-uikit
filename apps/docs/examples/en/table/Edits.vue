@@ -9,6 +9,7 @@
       </NuiButton>
     </div>
     <NuiTable
+      cell-selection
       ref="edits-table"
       :columns="columns"
       :rows="orders"
