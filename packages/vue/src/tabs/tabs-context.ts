@@ -25,3 +25,23 @@ export const useTabs = (): TabsContext => {
   }
   return context;
 };
+
+export interface TabListContext {
+  restoreFocus(): void;
+}
+
+const TAB_LIST_KEY: InjectionKey<TabListContext> = Symbol('nui:tab-list');
+
+export const provideTabList = (context: TabListContext): void => {
+  provide(TAB_LIST_KEY, context);
+};
+
+export const useTabList = (): TabListContext => {
+  const context = inject(TAB_LIST_KEY, null);
+
+  if (context === null) {
+    throw new Error('NuiTab must be rendered inside NuiTabList');
+  }
+
+  return context;
+};

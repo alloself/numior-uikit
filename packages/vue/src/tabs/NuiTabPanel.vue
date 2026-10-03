@@ -5,7 +5,7 @@
     role="tabpanel"
     class="nui-tab-panel"
     :aria-labelledby="tabs.tabId(value)"
-    tabindex="0"
+    :tabindex="focusable ? 0 : undefined"
   >
     <slot v-if="rendered" />
   </div>
@@ -16,7 +16,7 @@ import { computed } from 'vue';
 import { useTabs } from './tabs-context';
 import type { NuiTabPanelProps } from './tabs.types';
 
-const { value, lazy = undefined } = defineProps<NuiTabPanelProps>();
+const { value, lazy = undefined, focusable = true } = defineProps<NuiTabPanelProps>();
 const tabs = useTabs();
 const selected = computed(() => tabs.modelValue.value === value);
 const rendered = computed(() => !(lazy ?? tabs.lazy.value) || tabs.seen(value));

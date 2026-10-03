@@ -10,6 +10,7 @@ export interface NuiTabDescriptor {
   readonly label: string;
   readonly icon?: IconAlias | undefined;
   readonly disabled?: boolean | undefined;
+  readonly closable?: boolean | undefined;
 }
 
 export interface NuiTabsProps {
@@ -35,9 +36,11 @@ export interface NuiTabProps {
   value: string;
   icon?: IconAlias | undefined;
   disabled?: boolean | undefined;
+  closable?: boolean | undefined;
 }
 
 export interface NuiTabPanelProps {
   value: string;
   lazy?: boolean | undefined;
+  focusable?: boolean | undefined;
 }

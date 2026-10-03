@@ -133,6 +133,49 @@ test.describe('navigation', () => {
     await expect.poll(async () => (await navigation.readOutput()).manualTab).toBe('week');
   });
 
+  test('closable tabs close from the cross, Delete and the middle button while the indicator stays under the selected tab', async ({
+    page,
+    isMobile,
+  }) => {
+    test.skip(isMobile, 'pointer and keyboard scenario');
+    const playground = new PlaygroundPage(page);
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    const { navigation } = playground;
+
+    await expect(navigation.openDocuments).toHaveText([
+      'Договор',
+      'Счёт на оплату',
+      'Акт',
+      'Смета',
+      'Архив',
+    ]);
+
+    await navigation.documentTab('Акт').click();
+    await expect(navigation.documentPanel).toHaveText('Документ: Акт');
+    await navigation.documentCross('Счёт на оплату').click();
+    await expect(navigation.openDocuments).toHaveText(['Договор', 'Акт', 'Смета', 'Архив']);
+    await expect(navigation.documentPanel).toHaveText('Документ: Акт');
+
+    await expect
+      .poll(() => navigation.indicatorDrift(navigation.closableTabs, navigation.documentTab('Акт')))
+      .toEqual({ start: 0, size: 0 });
+
+    await expect(navigation.documentTab('Акт')).toBeFocused();
+    await page.keyboard.press('Delete');
+    await expect(navigation.openDocuments).toHaveText(['Договор', 'Смета', 'Архив']);
+    await expect(navigation.documentTab('Смета')).toBeFocused();
+    await expect(navigation.documentPanel).toHaveText('Документ: Смета');
+    await navigation.documentTab('Договор').click({ button: 'middle' });
+    await expect(navigation.openDocuments).toHaveText(['Смета', 'Архив']);
+
+    await expect
+      .poll(() =>
+        navigation.indicatorDrift(navigation.closableTabs, navigation.documentTab('Смета')),
+      )
+      .toEqual({ start: 0, size: 0 });
+  });
+
   test('a right click on a tab opens no tab and leaves the focus where it was', async ({
     page,
     isMobile,

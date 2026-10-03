@@ -6,7 +6,7 @@ import {
   shapeOf,
   type Guarded,
 } from '../../../packages/primitives/test/support/guards';
-import { type Box } from '../helpers/geometry';
+import { boxOf, type Box } from '../helpers/geometry';
 
 const isNavigationOutput = shapeOf({
   menuOpen: isBoolean,
@@ -32,6 +32,7 @@ export class NavigationSection {
   readonly externalLink: Locator;
   readonly tabs: Locator;
   readonly manualTabs: Locator;
+  readonly closableTabs: Locator;
   readonly crumbs: Locator;
   readonly shortCrumbs: Locator;
   readonly stepper: Locator;
@@ -48,6 +49,7 @@ export class NavigationSection {
     this.externalLink = page.getByTestId('nav-link-external');
     this.tabs = page.getByTestId('nav-tabs');
     this.manualTabs = page.getByTestId('nav-tabs-manual');
+    this.closableTabs = page.getByTestId('nav-tabs-closable');
     this.crumbs = page.getByTestId('nav-crumbs');
     this.shortCrumbs = page.getByTestId('nav-crumbs-short');
     this.stepper = page.getByTestId('nav-stepper');
@@ -73,6 +75,32 @@ export class NavigationSection {
 
   manualTab(label: string): Locator {
     return this.manualTabs.getByRole('tab', { name: label });
+  }
+
+  get openDocuments(): Locator {
+    return this.closableTabs.getByRole('tab');
+  }
+
+  get documentPanel(): Locator {
+    return this.closableTabs.getByRole('tabpanel');
+  }
+
+  documentTab(label: string): Locator {
+    return this.closableTabs.getByRole('tab', { name: label, exact: true });
+  }
+
+  documentCross(label: string): Locator {
+    return this.documentTab(label).locator('xpath=..').locator('.nui-tab__close');
+  }
+
+  async indicatorDrift(tabs: Locator, tab: Locator): Promise<{ start: number; size: number }> {
+    const indicator = await this.indicatorBox(tabs);
+    const selected = await boxOf(tab);
+
+    return {
+      start: Math.abs(Math.round(indicator.x - selected.x)),
+      size: Math.abs(Math.round(indicator.width - selected.width)),
+    };
   }
 
   get activePanel(): Locator {

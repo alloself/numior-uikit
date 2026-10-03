@@ -1,5 +1,5 @@
-import { mount, type DOMWrapper, type VueWrapper } from '@vue/test-utils';
-import { defineComponent, h, nextTick, ref, type Ref } from 'vue';
+import { DOMWrapper, mount, type VueWrapper } from '@vue/test-utils';
+import { defineComponent, h, nextTick, ref, shallowRef, type Ref } from 'vue';
 import {
   NuiTab,
   NuiTabList,
@@ -9,6 +9,7 @@ import {
   type NuiTabsPanelSlot,
   type NuiTabsProps,
 } from '../../src';
+import { ResizeObservers } from '../support/resize-observers';
 import { ComponentDriver } from './component';
 
 export interface TabsMountOptions {
@@ -17,6 +18,14 @@ export interface TabsMountOptions {
   readonly fromData?: boolean;
   readonly dir?: 'ltr' | 'rtl';
   readonly lazyPanels?: readonly string[];
+  readonly closable?: readonly string[];
+  readonly unfocusablePanels?: readonly string[];
+  readonly observed?: boolean;
+}
+
+interface TabBox {
+  readonly start: number;
+  readonly size: number;
 }
 
 const DESCRIPTORS: readonly NuiTabDescriptor[] = [
@@ -26,24 +35,45 @@ const DESCRIPTORS: readonly NuiTabDescriptor[] = [
   { value: 'danger', label: 'Danger' },
 ];
 
-const parts = (lazyPanels: readonly string[]) => () => [
-  h(NuiTabList, { label: 'Settings' }, () =>
-    DESCRIPTORS.map((tab) =>
-      h(
-        NuiTab,
-        { key: tab.value, value: tab.value, icon: tab.icon, disabled: tab.disabled },
-        () => tab.label,
+const parts =
+  (
+    shown: readonly NuiTabDescriptor[],
+    lazyPanels: readonly string[],
+    unfocusablePanels: readonly string[],
+    close: (value: string) => void,
+  ) =>
+  () => [
+    h(NuiTabList, { label: 'Settings' }, () =>
+      shown.map((tab) =>
+        h(
+          NuiTab,
+          {
+            key: tab.value,
+            value: tab.value,
+            icon: tab.icon,
+            disabled: tab.disabled,
+            closable: tab.closable,
+            onClose: () => {
+              close(tab.value);
+            },
+          },
+          () => tab.label,
+        ),
       ),
     ),
-  ),
-  ...DESCRIPTORS.map((tab) =>
-    h(
-      NuiTabPanel,
-      { key: tab.value, value: tab.value, lazy: lazyPanels.includes(tab.value) ? true : undefined },
-      () => `${tab.label} panel`,
+    ...shown.map((tab) =>
+      h(
+        NuiTabPanel,
+        {
+          key: tab.value,
+          value: tab.value,
+          lazy: lazyPanels.includes(tab.value) ? true : undefined,
+          focusable: unfocusablePanels.includes(tab.value) ? false : undefined,
+        },
+        () => `${tab.label} panel`,
+      ),
     ),
-  ),
-];
+  ];
 
 const fromData = () => ({
   panel: (slot: NuiTabsPanelSlot) => `${slot.tab.label} panel`,
@@ -58,12 +88,32 @@ export class TabsDriver extends ComponentDriver {
     fromData: data = false,
     dir = 'ltr',
     lazyPanels = [],
+    closable = [],
+    unfocusablePanels = [],
+    observed = false,
   }: TabsMountOptions = {}) {
+    const observers = observed ? new ResizeObservers() : undefined;
     const model = ref(modelValue);
+    const closed: string[] = [];
+
+    const shown = shallowRef(
+      DESCRIPTORS.map((tab) => ({ ...tab, closable: closable.includes(tab.value) })),
+    );
+
+    const close = (value: string): void => {
+      const index = shown.value.findIndex((tab) => tab.value === value);
+
+      closed.push(value);
+      shown.value = shown.value.filter((tab) => tab.value !== value);
+
+      if (model.value === value) {
+        model.value = (shown.value[index] ?? shown.value[index - 1])?.value;
+      }
+    };
 
     const tabsProps = () => ({
       ...props,
-      ...(data ? { tabs: DESCRIPTORS, label: 'Settings' } : {}),
+      ...(data ? { tabs: shown.value, label: 'Settings', onClose: close } : {}),
       ...(model.value === undefined ? {} : { modelValue: model.value }),
       'onUpdate:modelValue': (value: string | undefined) => {
         model.value = value;
@@ -75,17 +125,21 @@ export class TabsDriver extends ComponentDriver {
         h('div', { dir }, [
           data
             ? h(NuiTabs, tabsProps(), fromData())
-            : h(NuiTabs, tabsProps(), { default: parts(lazyPanels) }),
+            : h(NuiTabs, tabsProps(), {
+                default: parts(shown.value, lazyPanels, unfocusablePanels, close),
+              }),
           h('button', { type: 'button', class: 'outside' }, 'Outside'),
         ]),
     });
 
-    return new TabsDriver(mount(Host, { attachTo: document.body }), model);
+    return new TabsDriver(mount(Host, { attachTo: document.body }), model, closed, observers);
   }
 
   private constructor(
     wrapper: VueWrapper,
     private readonly model: Ref<string | undefined>,
+    readonly closed: readonly string[],
+    private readonly observers: ResizeObservers | undefined,
   ) {
     super(wrapper);
   }
@@ -129,8 +183,20 @@ export class TabsDriver extends ComponentDriver {
     };
   }
 
+  get closableLabels(): string[] {
+    return this.tabs
+      .filter(
+        (tab) => tab.element.parentElement?.querySelector('.nui-tab__close') instanceof HTMLElement,
+      )
+      .map((tab) => tab.find('.nui-tab__label').text());
+  }
+
   hasRootModifier(modifier: string): boolean {
     return this.root.classes().includes(`nui-tabs--${modifier}`);
+  }
+
+  crossHiddenFromAssistiveTechnology(label: string): boolean {
+    return this.cross(label).attributes('aria-hidden') === 'true';
   }
 
   tab(label: string): DOMWrapper<HTMLButtonElement> {
@@ -150,6 +216,10 @@ export class TabsDriver extends ComponentDriver {
       throw new Error(`No panel for ${value}`);
     }
     return found;
+  }
+
+  panelTabIndex(value: string): string | undefined {
+    return this.panel(value).attributes('tabindex');
   }
 
   panelVisible(value: string): boolean {
@@ -180,6 +250,23 @@ export class TabsDriver extends ComponentDriver {
     return event.defaultPrevented;
   }
 
+  async clickCross(label: string): Promise<void> {
+    await this.cross(label).trigger('click');
+  }
+
+  async middleClickTab(label: string): Promise<void> {
+    await this.tab(label).trigger('auxclick', { button: 1 });
+  }
+
+  async resizeTab(label: string, { start, size }: TabBox): Promise<void> {
+    const { element } = this.tab(label);
+
+    Object.defineProperty(element, 'offsetLeft', { configurable: true, value: start });
+    Object.defineProperty(element, 'offsetWidth', { configurable: true, value: size });
+    this.observers?.resize(element);
+    await nextTick();
+  }
+
   async press(key: string): Promise<void> {
     const event = new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true });
     (document.activeElement ?? document.body).dispatchEvent(event);
@@ -194,5 +281,20 @@ export class TabsDriver extends ComponentDriver {
   async receive(value: string): Promise<void> {
     this.model.value = value;
     await nextTick();
+  }
+
+  override unmount(): void {
+    super.unmount();
+    this.observers?.restore();
+  }
+
+  private cross(label: string): DOMWrapper<HTMLElement> {
+    const cross =
+      this.tab(label).element.parentElement?.querySelector<HTMLElement>('.nui-tab__close');
+
+    if (cross === null || cross === undefined) {
+      throw new Error(`No close button on the tab ${label}`);
+    }
+    return new DOMWrapper(cross);
   }
 }

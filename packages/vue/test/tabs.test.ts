@@ -95,6 +95,13 @@ describe('NuiTabs', () => {
     tabs.unmount();
   });
 
+  it('keeps a panel in the Tab order unless it holds controls of its own', () => {
+    const tabs = TabsDriver.mount({ modelValue: 'general', unfocusablePanels: ['team'] });
+    expect(tabs.panelTabIndex('general')).toBe('0');
+    expect(tabs.panelTabIndex('team')).toBeUndefined();
+    tabs.unmount();
+  });
+
   it('builds the list and panels from data and exposes the indicator position', async () => {
     const tabs = TabsDriver.mount({
       modelValue: 'team',
@@ -110,6 +117,65 @@ describe('NuiTabs', () => {
     await tabs.clickTab('Danger');
     expect(tabs.selected).toBe('danger');
     expect(tabs.panelVisible('danger')).toBe(true);
+    tabs.unmount();
+  });
+
+  it('keeps the indicator under the selected tab when the tab changes its size', async () => {
+    const tabs = TabsDriver.mount({ modelValue: 'team', observed: true });
+    await tabs.ready();
+    expect(tabs.indicatorVars).toEqual({ start: '0px', size: '0px' });
+    await tabs.resizeTab('Team', { start: 96, size: 140 });
+    expect(tabs.indicatorVars).toEqual({ start: '96px', size: '140px' });
+    await tabs.resizeTab('General', { start: 0, size: 120 });
+    expect(tabs.indicatorVars).toEqual({ start: '96px', size: '140px' });
+    tabs.unmount();
+  });
+
+  it('closes a closable tab from its cross, the middle button and Delete', async () => {
+    const tabs = TabsDriver.mount({
+      modelValue: 'general',
+      closable: ['general', 'team', 'danger'],
+    });
+
+    expect(tabs.closableLabels).toEqual(['General', 'Team', 'Danger']);
+    expect(tabs.crossHiddenFromAssistiveTechnology('Team')).toBe(true);
+    await tabs.clickCross('Danger');
+    expect(tabs.closed).toEqual(['danger']);
+    expect(tabs.selected).toBe('general');
+    await tabs.middleClickTab('Team');
+    expect(tabs.closed).toEqual(['danger', 'team']);
+    expect(tabs.labels).toEqual(['General', 'Billing']);
+    await tabs.middleClickTab('Billing');
+    expect(tabs.closed).toEqual(['danger', 'team']);
+    await tabs.focusTab('General');
+    await tabs.press('Delete');
+    expect(tabs.closed).toEqual(['danger', 'team', 'general']);
+    expect(tabs.labels).toEqual(['Billing']);
+    tabs.unmount();
+  });
+
+  it('moves the focus of a closed tab to the selected one', async () => {
+    const tabs = TabsDriver.mount({ modelValue: 'team', closable: ['team'] });
+    await tabs.focusTab('Team');
+    await tabs.press('Delete');
+    expect(tabs.labels).toEqual(['General', 'Billing', 'Danger']);
+    expect(tabs.selected).toBe('danger');
+    expect(tabs.focusedTab).toBe('Danger');
+    tabs.unmount();
+  });
+
+  it('leaves a disabled tab open and reports a closed tab of the data list by its value', async () => {
+    const tabs = TabsDriver.mount({
+      modelValue: 'general',
+      fromData: true,
+      closable: ['billing', 'team'],
+    });
+
+    await tabs.clickCross('Billing');
+    expect(tabs.closed).toEqual([]);
+    await tabs.clickCross('Team');
+    expect(tabs.closed).toEqual(['team']);
+    expect(tabs.labels).toEqual(['General', 'Billing', 'Danger']);
     tabs.unmount();
   });
 });

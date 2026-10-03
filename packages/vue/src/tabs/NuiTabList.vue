@@ -16,11 +16,16 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, useTemplateRef, watch } from 'vue';
-import { useResizeObserver } from '@vueuse/core';
+import { computed, onMounted, shallowRef, useTemplateRef, watch } from 'vue';
+import { useMutationObserver, useResizeObserver } from '@vueuse/core';
 import { useListNavigation } from '@numior/primitives';
-import { useTabs } from './tabs-context';
+import { provideTabList, useTabs } from './tabs-context';
 import type { NuiTabListProps } from './tabs.types';
+
+const TAB = '[role="tab"]';
+
+const tabsOf = (list: HTMLElement | null): HTMLElement[] =>
+  Array.from(list?.querySelectorAll<HTMLElement>(TAB) ?? []);
 
 const inlineStartOf = (list: HTMLElement, tab: HTMLElement): number =>
   getComputedStyle(list).direction === 'rtl'
@@ -31,14 +36,24 @@ const { label } = defineProps<NuiTabListProps>();
 const tabs = useTabs();
 const orientation = computed(() => tabs.orientation.value);
 const listElement = useTemplateRef<HTMLElement>('list');
+const tabElements = shallowRef<HTMLElement[]>([]);
 
 const selectedTab = (): HTMLElement | null => {
-  const found = listElement.value?.querySelector('[role="tab"][aria-selected="true"]');
+  const found = listElement.value?.querySelector(`${TAB}[aria-selected="true"]`);
   return found instanceof HTMLElement ? found : null;
 };
 
+const collect = (): void => {
+  const found = tabsOf(listElement.value);
+  const known = tabElements.value;
+
+  if (found.length !== known.length || found.some((tab, index) => tab !== known[index])) {
+    tabElements.value = found;
+  }
+};
+
 const navigation = useListNavigation(listElement, {
-  selector: '[role="tab"]',
+  selector: TAB,
   orientation,
   loop: true,
   typeahead: false,
@@ -77,9 +92,18 @@ const onFocusout = (event: FocusEvent): void => {
   }
 };
 
+provideTabList({
+  restoreFocus: () => {
+    (selectedTab() ?? tabsOf(listElement.value)[0])?.focus();
+  },
+});
+
 onMounted(() => {
   navigation.reset();
+  collect();
   watch([() => tabs.modelValue.value, orientation], measure, { immediate: true, flush: 'post' });
   useResizeObserver(listElement, measure);
+  useResizeObserver(tabElements, measure);
+  useMutationObserver(listElement, collect, { childList: true, subtree: true });
 });
 </script>

@@ -14,6 +14,8 @@
         :value="tab.value"
         :icon="tab.icon"
         :disabled="tab.disabled"
+        :closable="tab.closable"
+        @close="emit('close', tab.value)"
       >
         {{ tab.label }}
       </NuiTab>
@@ -48,6 +50,7 @@ const {
 } = defineProps<NuiTabsProps>();
 
 const model = defineModel<string>();
+const emit = defineEmits<{ close: [value: string] }>();
 defineSlots<{ default(): unknown; panel(props: NuiTabsPanelSlot): unknown }>();
 
 const baseId = useControlId(() => id);

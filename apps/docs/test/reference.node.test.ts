@@ -127,7 +127,11 @@ describe('docs reference', () => {
     ]);
 
     expect(tabs.props.some((prop) => prop.name === 'modelValue')).toBe(false);
-    expect(tabs.events).toEqual([]);
+
+    expect(tabs.events).toEqual([
+      { name: 'close', type: '[value: string]', description: undefined },
+    ]);
+
     expect(tabs.slots.map((slot) => slot.name)).toEqual(['default', 'panel']);
   });
 

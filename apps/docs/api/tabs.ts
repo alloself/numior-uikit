@@ -28,6 +28,12 @@ const docs: DocsMap = {
       label: { ru: 'Доступное имя списка вкладок.', en: 'Accessible name of the tab list.' },
     },
     models: { 'v-model': { ru: 'Значение выбранной вкладки.', en: 'Value of the selected tab.' } },
+    events: {
+      close: {
+        ru: 'Закрыта вкладка из tabs; приходит её значение.',
+        en: 'A tab from tabs was closed; its value arrives.',
+      },
+    },
     slots: {
       default: { ru: 'Части NuiTabList и NuiTabPanel.', en: 'NuiTabList and NuiTabPanel parts.' },
       panel: {
@@ -67,6 +73,10 @@ const docs: DocsMap = {
       { keys: 'Home', description: { ru: 'Первая вкладка.', en: 'First tab.' } },
       { keys: 'End', description: { ru: 'Последняя вкладка.', en: 'Last tab.' } },
       {
+        keys: 'Delete',
+        description: { ru: 'Закрывает вкладку с closable.', en: 'Closes a closable tab.' },
+      },
+      {
         keys: 'Enter',
         description: {
           ru: 'Выбирает вкладку в режиме manual.',
@@ -93,8 +103,18 @@ const docs: DocsMap = {
       value: { ru: 'Значение вкладки для v-model.', en: 'Tab value for v-model.' },
       icon: { ru: 'Иконка перед подписью.', en: 'Icon before the label.' },
       disabled: {
-        ru: 'Вкладка видна, но не выбирается.',
-        en: 'The tab is visible but cannot be selected.',
+        ru: 'Вкладка видна, но не выбирается и не закрывается.',
+        en: 'The tab is visible but cannot be selected or closed.',
+      },
+      closable: {
+        ru: 'Крестик на вкладке; он, средняя кнопка мыши и Delete шлют close.',
+        en: 'A cross on the tab; it, the middle mouse button and Delete emit close.',
+      },
+    },
+    events: {
+      close: {
+        ru: 'Вкладку просят закрыть; убирает её приложение.',
+        en: 'The tab is asked to close; the application removes it.',
       },
     },
     slots: { default: { ru: 'Подпись вкладки.', en: 'Tab label.' } },
@@ -108,6 +128,10 @@ const docs: DocsMap = {
       lazy: {
         ru: 'Рендерить содержимое при первом показе.',
         en: 'Render the content on first show.',
+      },
+      focusable: {
+        ru: 'Остановка Tab на самой панели; false — когда в панели всегда есть свои кнопки и ссылки.',
+        en: 'A Tab stop on the panel itself; false when the panel always holds buttons and links of its own.',
       },
     },
     slots: { default: { ru: 'Содержимое панели.', en: 'Panel content.' } },

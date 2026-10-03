@@ -62,6 +62,23 @@
     >
       <template #panel="{ tab: period }">Период: {{ period.label }}</template>
     </NuiTabs>
+    <NuiTabs v-model="openDocument" data-testid="nav-tabs-closable">
+      <NuiTabList label="Открытые документы">
+        <NuiTab
+          v-for="file in documents"
+          :key="file.value"
+          :value="file.value"
+          :disabled="file.disabled"
+          closable
+          @close="closeDocument(file.value)"
+        >
+          {{ file.label }}
+        </NuiTab>
+      </NuiTabList>
+      <NuiTabPanel v-for="file in documents" :key="file.value" :value="file.value">
+        Документ: {{ file.label }}
+      </NuiTabPanel>
+    </NuiTabs>
     <NuiBreadcrumbs :items="path" :max-items="3" label="Путь" data-testid="nav-crumbs" />
     <NuiBreadcrumbs
       :items="path.slice(0, 3)"
@@ -162,6 +179,16 @@ const sort = ref('name');
 const lastAction = ref('');
 const tab = ref('overview');
 const manualTab = ref('day');
+const openDocument = ref('contract');
+
+const documents = ref<NuiTabDescriptor[]>([
+  { value: 'contract', label: 'Договор' },
+  { value: 'invoice', label: 'Счёт на оплату' },
+  { value: 'act', label: 'Акт' },
+  { value: 'estimate', label: 'Смета' },
+  { value: 'archive', label: 'Архив', disabled: true },
+]);
+
 const signupStep = ref('profile');
 const settingsStep = ref('access');
 
@@ -171,6 +198,17 @@ const signupIndex = computed(() =>
 
 const act = (name: string): void => {
   lastAction.value = name;
+};
+
+const closeDocument = (value: string): void => {
+  const index = documents.value.findIndex((file) => file.value === value);
+
+  documents.value = documents.value.filter((file) => file.value !== value);
+
+  if (openDocument.value === value) {
+    openDocument.value =
+      documents.value.at(Math.min(index, documents.value.length - 1))?.value ?? '';
+  }
 };
 
 const moveSignup = (delta: number): void => {

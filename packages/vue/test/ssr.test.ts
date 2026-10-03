@@ -641,6 +641,28 @@ describe('server rendering', () => {
     expect(html).toContain('display:none');
   });
 
+  it('renders the close button of a closable tab beside it, hidden from assistive technology', async () => {
+    const html = await renderMarkup(() =>
+      h(NuiTabs, {
+        id: 'files',
+        modelValue: 'contract',
+        tabs: [
+          { value: 'contract', label: 'Contract', closable: true },
+          { value: 'invoice', label: 'Invoice' },
+        ],
+      }),
+    );
+
+    const close = /<button[^>]*class="[^"]*nui-tab__close[^"]*"[^>]*>/.exec(html)?.[0] ?? '';
+
+    expect(html.match(/nui-tab--closable/g)).toHaveLength(1);
+    expect(html.match(/role="tab"/g)).toHaveLength(2);
+    expect(close).toContain('nui-button--variant-ghost');
+    expect(close).toContain('tabindex="-1"');
+    expect(close).toContain('aria-hidden="true"');
+    expect(html.match(/<button/g)).toHaveLength(3);
+  });
+
   it('renders breadcrumbs as a labelled nav with the current page marked', async () => {
     const html = await renderMarkup(() =>
       h(NuiBreadcrumbs, {

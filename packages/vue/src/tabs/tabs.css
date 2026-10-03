@@ -53,6 +53,20 @@
   background: var(--nui-surface-muted);
 }
 
+.nui-tab-item {
+  --_close-size: calc(var(--_font-size) * 1.3125);
+  --_close-font: calc(var(--_font-size) * 0.875);
+  --_close-gap: calc(var(--_padding) / 2);
+
+  display: inline-grid;
+  flex: none;
+}
+.nui-tab-list--orientation-vertical .nui-tab-item {
+  display: grid;
+}
+.nui-tab-item > * {
+  grid-area: 1 / 1;
+}
 .nui-tab {
   box-sizing: border-box;
   position: relative;
@@ -80,7 +94,8 @@
 .nui-tab-list--orientation-vertical .nui-tab {
   justify-content: flex-start;
 }
-.nui-tab:hover {
+.nui-tab:hover,
+.nui-tab-item:hover > .nui-tab {
   color: var(--nui-text);
 }
 .nui-tab--selected {
@@ -98,6 +113,28 @@
 }
 .nui-tab__icon {
   color: inherit;
+}
+.nui-tab--closable {
+  padding-inline-end: calc(var(--_close-gap) + var(--_close-size) + var(--nui-space-1));
+}
+.nui-tab-item > .nui-tab__close {
+  --_height: var(--_close-size);
+  --_font-size: var(--_close-font);
+
+  z-index: 2;
+  align-self: center;
+  justify-self: end;
+  block-size: var(--_height);
+  margin-inline-end: var(--_close-gap);
+  padding-block: 0;
+  border-radius: var(--nui-radius-sm);
+  color: var(--nui-text-muted);
+}
+.nui-tab-item > .nui-tab__close:hover:not(:disabled) {
+  color: var(--nui-text);
+}
+.nui-tab-item > .nui-tab__close:active:not(:disabled) {
+  scale: 1;
 }
 
 .nui-tab-list__indicator {
