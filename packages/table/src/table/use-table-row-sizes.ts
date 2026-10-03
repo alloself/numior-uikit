@@ -71,7 +71,7 @@ export const useTableRowSizes = <T>(options: TableRowSizesOptions<T>): TableRowS
 
     void options.arrangement();
 
-    if (keys.size === 0 || options.mode() !== 'fixed') {
+    if (keys.size === 0 || options.mode() === 'fluid') {
       return NO_POSITIONS;
     }
     const start = options.pageStart();
@@ -102,7 +102,9 @@ export const useTableRowSizes = <T>(options: TableRowSizesOptions<T>): TableRowS
   const sizeFor = (mode: TableRowMode, base: number): ItemSize => {
     switch (mode) {
       case 'flow':
-        return base;
+        return sizedPositions.value.size === 0
+          ? base
+          : createSizeIndex(options.count(), base, sizedRows(base));
       case 'fixed':
         return options.spots().length === 0 && sizedPositions.value.size === 0
           ? base

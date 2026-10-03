@@ -102,6 +102,24 @@ describe('NuiTable overlay', () => {
     });
   });
 
+  it('follows the row heights model in a table that grows with its rows', async () => {
+    const grid = mountStaff({
+      slots: { overlay: marks },
+      rows: staff(20),
+      rowHeights: { 0: 60 },
+      auto: true,
+    });
+
+    await grid.settle();
+
+    expect(grid.overlayMarks[0]).toEqual({
+      top: '100px',
+      start: '80px',
+      width: '300px',
+      height: '80px',
+    });
+  });
+
   it('reports the rendered window and finds the data cell under a point', async () => {
     const grid = mountStaff();
     await grid.settle();
