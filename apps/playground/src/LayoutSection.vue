@@ -89,12 +89,14 @@
                 >
                   <NuiSidebarItem
                     label="Продажи"
+                    icon="file"
                     :current="active === 'report-sales'"
                     data-testid="layout-item-report-sales"
                     @click="active = 'report-sales'"
                   />
                   <NuiSidebarItem
                     label="Команда"
+                    icon="file"
                     :current="active === 'report-team'"
                     data-testid="layout-item-report-team"
                     @click="active = 'report-team'"

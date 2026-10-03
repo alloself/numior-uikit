@@ -297,6 +297,12 @@
   visibility: visible;
   transition-delay: 0s;
 }
+.nui-sidebar-sub__list:has(.nui-row__leading) {
+  padding-inline-start: var(--nui-space-1);
+}
+.nui-sidebar-sub__list:has(.nui-row__leading) .nui-list-item__inner {
+  padding-inline-start: var(--nui-space-1);
+}
 .nui-sidebar-sub__list > .nui-list__items {
   padding-block-start: 2px;
 }
