@@ -65,7 +65,7 @@ describe('NuiTable pinned rows', () => {
     await grid.press('End', { ctrl: true });
     expect(grid.focusedCell).toEqual({ row: 101, col: 18 });
     await grid.press('Home', { ctrl: true });
-    expect(grid.focusedCell).toEqual({ row: 0, col: 0 });
+    expect(grid.focusedCell).toEqual({ row: 0, col: 1 });
     await grid.focusCell(1, 3);
     await grid.press(' ');
 

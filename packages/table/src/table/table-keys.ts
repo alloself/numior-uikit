@@ -12,6 +12,7 @@ export interface TableBounds {
   readonly cols: number;
   readonly page: number;
   readonly rtl: boolean;
+  readonly first?: number | undefined;
   readonly edge?: TableEdgeOf | undefined;
 }
 
@@ -104,7 +105,9 @@ const edgeTarget = (
 
   switch (input.key) {
     case 'Home':
-      return input.ctrl ? { row: bounds.rows > 0 ? 0 : -1, col: 0 } : { row: from.row, col: 0 };
+      return input.ctrl
+        ? { row: bounds.rows > 0 ? 0 : -1, col: bounds.first ?? 0 }
+        : { row: from.row, col: 0 };
     case 'End':
       return input.ctrl
         ? { row: lastRowOf(bounds), col: lastCol }

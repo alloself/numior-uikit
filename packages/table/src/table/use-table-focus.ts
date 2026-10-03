@@ -14,6 +14,7 @@ export interface TableFocusOptions {
   readonly pinnedRows: () => number;
   readonly headRows: () => number;
   readonly colCount: () => number;
+  readonly firstCol: () => number;
   readonly pageRows: (row: number, forward: boolean) => number;
   readonly centreIndexOf: (visual: number) => number | undefined;
   readonly columnIndexOf: (key: string) => number;
@@ -128,6 +129,7 @@ export const useTableFocus = (options: TableFocusOptions): TableFocus => {
       cols: options.colCount(),
       page: options.pageRows(options.active.value.row, event.key === 'PageDown'),
       rtl: options.isRtl(),
+      first: options.firstCol(),
       edge: options.edge,
     });
 

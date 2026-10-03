@@ -13,6 +13,7 @@ import { SmartFormSection } from './smart-form';
 import { TableSection } from './table';
 import { TableDetailSection } from './table-detail';
 import { TableSheetSection } from './table-sheet';
+import { TableCellsSection } from './table-cells';
 import { TreeSection } from './tree';
 import { UploadSection } from './upload';
 import { WizardSection } from './wizard';
@@ -181,6 +182,7 @@ export class PlaygroundPage {
   readonly table: TableSection;
   readonly tableDetail: TableDetailSection;
   readonly tableSheet: TableSheetSection;
+  readonly tableCells: TableCellsSection;
 
   constructor(readonly page: Page) {
     this.workspace = page.getByRole('main');
@@ -225,6 +227,7 @@ export class PlaygroundPage {
     this.table = new TableSection(page);
     this.tableDetail = new TableDetailSection(page);
     this.tableSheet = new TableSheetSection(page);
+    this.tableCells = new TableCellsSection(page);
   }
 
   async open(path: '/' = '/'): Promise<void> {

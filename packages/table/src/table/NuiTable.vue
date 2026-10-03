@@ -925,6 +925,7 @@ const focus = useTableFocus({
   pinnedRows: () => pinnedCount.value,
   headRows: () => headRows.value,
   colCount: () => layout.value.visual.length,
+  firstCol: () => dataOffset.value,
   pageRows: (row, forward) => pageRows(row - pinnedCount.value, forward),
   centreIndexOf: (visual) => centreIndexOf(layout.value, visual),
   columnIndexOf: (key) => layout.value.visual.findIndex((column) => column.key === key),

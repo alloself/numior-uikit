@@ -152,6 +152,20 @@ source turn it off, and `pinnedRows` stay for rows outside the data.
 
 <Example name="table/Frozen" />
 
+### Sheet from a cell source
+
+`tableCells(source)` turns a cell source into table props. Rows become the row numbers of the
+sheet, and columns get letters from A to XFD. The source gives `rows`, `cols` and
+`cellAt(row, col)` with the text and the style of a cell.
+
+The table asks for each cell once per render, and Ctrl with an arrow goes to the edge of the
+data. When the storage knows its empty areas, its `nextEdge` replaces the walk over cells.
+
+The source keeps no object per row or column. A sheet of 1 048 576 rows and 16 384 columns
+therefore opens like a small one.
+
+<Example name="table/CellSource" />
+
 ### Row drag
 
 `rowDrag` shows a grip in the first column of a row. The top of a target row drops the row

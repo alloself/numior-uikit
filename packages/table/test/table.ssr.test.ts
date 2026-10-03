@@ -4,6 +4,8 @@ import { createSSRApp, h } from 'vue';
 import { renderToString } from 'vue/server-renderer';
 import {
   NuiTable,
+  columnName,
+  tableCells,
   type TableNodeId,
   type TableSort,
   type NuiTableFilters,
@@ -451,6 +453,26 @@ describe('NuiTable on the server', () => {
     expect(html).toContain('--_frozen:80px');
     expect(html).toContain('--_top:calc(var(--_head-size) + 40px)');
     expect(html.match(/aria-rowindex/g)).toHaveLength(31);
+  });
+
+  it('renders a sheet from a cell source with lettered columns and numbered rows on the server', async () => {
+    const cells = tableCells({
+      rows: 1_048_576,
+      cols: 16_384,
+      cellAt: (row, col) =>
+        row < 3 && col < 3 ? { text: `${columnName(col)}${row + 1}` } : undefined,
+    });
+
+    const html = await renderToString(
+      createSSRApp({ render: () => h(NuiTable<number>, { ...cells, height: '300px' }) }),
+    );
+
+    expect(html).toContain('aria-rowcount="1048577"');
+    expect(html).toContain('aria-colcount="16385"');
+    expect(html).toContain('<span class="nui-table__text">A</span>');
+    expect(html).toContain('>B2<');
+    expect(html).not.toContain('>D4<');
+    expect(html.match(/role="rowheader"/g)).toHaveLength(30);
   });
 
   it('renders skeleton rows for a source without asking it for rows on the server', async () => {

@@ -177,7 +177,7 @@ const localImports = async (file, seen = new Set()) => {
   return seen;
 };
 
-const tableCode = await importBuild('table', ['NuiTable']);
+const tableCode = await importBuild('table', ['NuiTable', 'tableEditor', 'tableCells']);
 
 assert.match(tableCode, /from ['"]@numior\/vue['"]/, 'table must keep @numior/vue external');
 assert.doesNotMatch(tableCode, /formRulesMessages\s*=/, 'table must keep @numior/forms external');

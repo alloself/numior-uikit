@@ -116,5 +116,40 @@
     "move the row window by a viewport, main-thread ms": {
       "p95Ms": 22
     }
+  },
+  "sheet": {
+    "build the cell adapter of the sheet": {
+      "p95Ms": 150
+    },
+    "cold mount to the first painted row": {
+      "p95Ms": 500
+    },
+    "warm remount to the first painted row": {
+      "p95Ms": 300
+    },
+    "arrow down to the next paint": {
+      "p95Ms": 100
+    },
+    "arrow across columns to the next paint": {
+      "p95Ms": 100
+    },
+    "page down to the next paint": {
+      "p95Ms": 100
+    },
+    "jump between the first and the last cell of the sheet to the next paint": {
+      "p95Ms": 150
+    },
+    "walk a million empty cells to the edge of the data to the next paint": {
+      "p95Ms": 250
+    },
+    "frame time while wheeling through rows": {
+      "p95Ms": 34
+    },
+    "frame time while wheeling across columns": {
+      "p95Ms": 34
+    },
+    "move the row window by a viewport, main-thread ms": {
+      "p95Ms": 45
+    }
   }
 }

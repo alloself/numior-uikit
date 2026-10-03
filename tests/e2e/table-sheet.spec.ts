@@ -461,7 +461,7 @@ test.describe('table cell styles', () => {
     await page.keyboard.press('PageUp');
     expect((await sheet.bandOf(focused)).top).toBeGreaterThanOrEqual(FROZEN_BOTTOM);
     await page.keyboard.press('Control+Home');
-    await expect(sheet.rowHeader(TITLE)).toBeFocused();
+    await expect(sheet.cell(TITLE, 0)).toBeFocused();
     expect(await sheet.scrollTop()).toBeGreaterThan(0);
   });
 

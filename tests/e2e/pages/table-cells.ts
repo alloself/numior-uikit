@@ -1,0 +1,87 @@
+import type { Locator, Page } from '@playwright/test';
+import {
+  isNumber,
+  listOf,
+  parseAs,
+  shapeOf,
+  type Guarded,
+} from '../../../packages/primitives/test/support/guards';
+
+const isCorner = shapeOf({ row: isNumber, col: isNumber });
+
+const isCellsOutput = shapeOf({
+  ranges: listOf(shapeOf({ from: isCorner, to: isCorner })),
+});
+
+export type TableCellsOutput = Guarded<typeof isCellsOutput>;
+
+export interface TableCellsSpot {
+  readonly row: string;
+  readonly col: string;
+}
+
+const HEAD_ROWS = 1;
+const ROW_HEADERS = 1;
+
+export class TableCellsSection {
+  readonly scope = '[data-testid="table-cells"]';
+  readonly toggle: Locator;
+  readonly root: Locator;
+  readonly viewport: Locator;
+  readonly grid: Locator;
+  readonly output: Locator;
+
+  constructor(page: Page) {
+    this.toggle = page.getByTestId('table-cells-toggle');
+    this.root = page.getByTestId('table-cells');
+    this.viewport = this.root.locator(':scope > .nui-table__frame > .nui-table__viewport');
+    this.grid = this.viewport.locator(':scope > .nui-table__grid');
+    this.output = page.getByTestId('table-cells-output');
+  }
+
+  async show(): Promise<void> {
+    await this.toggle.scrollIntoViewIfNeeded();
+    await this.toggle.click();
+    await this.root.scrollIntoViewIfNeeded();
+  }
+
+  private row(position: number): Locator {
+    return this.grid.locator(
+      `:scope > .nui-table__body > [role="row"][aria-rowindex="${position + HEAD_ROWS + 1}"]`,
+    );
+  }
+
+  cell(position: number, col: number): Locator {
+    return this.row(position).locator(`:scope > [aria-colindex="${col + ROW_HEADERS + 1}"]`);
+  }
+
+  rowHeader(position: number): Locator {
+    return this.row(position).locator(':scope > [role="rowheader"]');
+  }
+
+  columnHeader(col: number): Locator {
+    return this.grid.locator(
+      `:scope > .nui-table__header [role="columnheader"][aria-colindex="${col + ROW_HEADERS + 1}"]`,
+    );
+  }
+
+  spot(): Promise<TableCellsSpot> {
+    return this.grid.evaluate((grid) => {
+      const cell = document.activeElement?.closest('[aria-colindex]');
+      const row = cell?.parentElement;
+
+      const header = grid.querySelector(
+        `:scope > .nui-table__header [aria-colindex="${cell?.getAttribute('aria-colindex') ?? ''}"]`,
+      );
+
+      return {
+        row: row?.querySelector(':scope > [role="rowheader"]')?.textContent?.trim() ?? '',
+        col: header?.textContent?.trim() ?? '',
+      };
+    });
+  }
+
+  async ranges(): Promise<TableCellsOutput['ranges']> {
+    return parseAs(await this.output.innerText(), isCellsOutput, 'table cells output').ranges;
+  }
+}

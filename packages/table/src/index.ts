@@ -1,5 +1,7 @@
 export { default as NuiTable } from './table/NuiTable.vue';
 export { tableEditor } from './table/table-editors';
+export { cellEdge, columnName, tableCells } from './table/table-cells';
+export type { NuiTableCellSource, NuiTableCells, NuiTableSourceCell } from './table/table-cells';
 export type { NuiTableEditorOptions } from './table/table-editors';
 export type { NuiTableMessages } from './table/table.messages';
 export type {

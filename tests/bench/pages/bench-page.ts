@@ -72,6 +72,7 @@ export abstract class BenchPage {
     target: Locator,
     steps: number,
     delta: number,
+    across = 0,
   ): Promise<number[]> {
     const box = await target.boundingBox();
 
@@ -85,7 +86,7 @@ export abstract class BenchPage {
     });
 
     for (let step = 0; step < steps; step += 1) {
-      await this.page.mouse.wheel(0, delta);
+      await this.page.mouse.wheel(across, delta);
       await this.nextFrame();
     }
     return this.page.evaluate(() => {

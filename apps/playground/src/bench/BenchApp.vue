@@ -20,6 +20,16 @@
       data-testid="bench-tree"
     />
     <NuiTable
+      v-else-if="shown && cells"
+      v-bind="cells"
+      :column-menu="false"
+      bordered
+      size="sm"
+      height="calc(100dvh - 5rem)"
+      label="Бенчмарк листа"
+      data-testid="bench-sheet"
+    />
+    <NuiTable
       v-else-if="shown"
       v-model:sort="sort"
       v-model:filters="filters"
@@ -40,9 +50,16 @@
 <script setup lang="ts">
 import { nextTick, onMounted, ref } from 'vue';
 import { NuiInput, NuiTree } from '@numior/vue';
-import { NuiTable, type TableNodeId, type TableSort, type NuiTableFilters } from '@numior/table';
+import {
+  NuiTable,
+  tableCells,
+  type TableNodeId,
+  type TableSort,
+  type NuiTableFilters,
+} from '@numior/table';
 import { TABLE_COLUMNS, generateRows } from '../../../../packages/table/bench/dataset';
 import { generateTreeNodes } from '../../../../packages/vue/bench/dataset';
+import { bigSheet, SHEET_COLS, SHEET_ROWS } from '../sheet-source';
 import {
   afterPaint,
   createFrameRecorder,
@@ -53,22 +70,43 @@ import {
   type InputClock,
 } from './bench-hooks';
 
+type BenchView = 'table' | 'tree' | 'sheet';
+
 const DEFAULT_ROWS = 1_000_000;
 
+const viewOf = (value: string | null): BenchView => {
+  switch (value) {
+    case 'tree':
+    case 'sheet':
+      return value;
+    default:
+      return 'table';
+  }
+};
+
 const params = new URL(window.location.href).searchParams;
-const view = params.get('view') === 'tree' ? 'tree' : 'table';
+const view = viewOf(params.get('view'));
 const requested = Number(params.get('rows'));
 const count = Number.isInteger(requested) && requested > 0 ? requested : DEFAULT_ROWS;
 const generating = performance.now();
 const rows = view === 'table' ? generateRows(count) : [];
 const nodes = view === 'tree' ? generateTreeNodes(count) : [];
+const cells = view === 'sheet' ? tableCells(bigSheet) : undefined;
 const dataReady = performance.now();
 const shown = ref(true);
 
-const caption =
-  view === 'tree'
-    ? `${count.toLocaleString('ru-RU')} узлов`
-    : `${count.toLocaleString('ru-RU')} строк × ${TABLE_COLUMNS.length} колонок`;
+const captionOf = (): string => {
+  switch (view) {
+    case 'tree':
+      return `${count.toLocaleString('ru-RU')} узлов`;
+    case 'sheet':
+      return `${SHEET_ROWS.toLocaleString('ru-RU')} строк × ${SHEET_COLS.toLocaleString('ru-RU')} колонок`;
+    case 'table':
+      return `${count.toLocaleString('ru-RU')} строк × ${TABLE_COLUMNS.length} колонок`;
+  }
+};
+
+const caption = captionOf();
 
 const sort = ref<readonly TableSort[]>([]);
 const filters = ref<NuiTableFilters>([]);
@@ -94,7 +132,7 @@ const remount = async (): Promise<number> => {
 };
 
 const hooks: BenchHooks = {
-  rows: count,
+  rows: view === 'sheet' ? SHEET_ROWS : count,
   dataMs: dataReady - generating,
   firstRowMs: null,
   latencies,
