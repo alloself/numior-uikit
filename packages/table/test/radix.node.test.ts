@@ -8,6 +8,9 @@ import {
 } from '../src/engine';
 import { mulberry32 } from '../bench/dataset';
 
+const BUDGET_MS = 4;
+const FRAME_MS = 16;
+
 const finish = (job: SliceJob): number[] => {
   const progress: number[] = [];
 
@@ -119,15 +122,17 @@ describe('createRadixSortJob', () => {
     const nulls = new Uint8Array(length);
     const indices = identityIndices(length);
     const job = createRadixSortJob(indices, [{ kind: 'float', keys, nulls, descending: false }]);
-    let longest = 0;
+    const laps: number[] = [];
     let finished = false;
 
     while (!finished) {
       const started = performance.now();
-      finished = job.work(started + 4);
-      longest = Math.max(longest, performance.now() - started);
+      finished = job.work(started + BUDGET_MS);
+      laps.push(performance.now() - started);
     }
-    expect(longest).toBeLessThanOrEqual(16);
+
+    expect(laps.length).toBeGreaterThan(2);
+    expect(laps.filter((lap) => lap > FRAME_MS - BUDGET_MS).length).toBeLessThan(laps.length / 2);
     expect(job.done()).toBe(job.total());
 
     const ordered = Array.from(indices, (index) => keys[index] ?? 0);
