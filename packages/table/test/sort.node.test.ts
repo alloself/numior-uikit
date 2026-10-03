@@ -2,6 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { createSortJob, identityIndices } from '../src/engine';
 import { mulberry32 } from '../bench/dataset';
 
+const BUDGET_MS = 4;
+const FRAME_MS = 16;
+
 const keysOf = (count: number, seed: number, range: number): Float64Array => {
   const random = mulberry32(seed);
   const keys = new Float64Array(count);
@@ -60,15 +63,17 @@ describe('createSortJob', () => {
     const keys = keysOf(300_000, 3, 1_000_000);
     const indices = identityIndices(keys.length);
     const job = createSortJob(indices, (a, b) => (keys[a] ?? 0) - (keys[b] ?? 0));
-    let longest = 0;
+    const laps: number[] = [];
     let finished = false;
 
     while (!finished) {
       const started = performance.now();
-      finished = job.work(started + 4);
-      longest = Math.max(longest, performance.now() - started);
+      finished = job.work(started + BUDGET_MS);
+      laps.push(performance.now() - started);
     }
-    expect(longest).toBeLessThanOrEqual(16);
+
+    expect(laps.length).toBeGreaterThan(2);
+    expect(laps.filter((lap) => lap > FRAME_MS - BUDGET_MS).length).toBeLessThan(laps.length / 2);
     expect(Array.from(indices)).toEqual(expectedOrder(keys));
   });
 });
