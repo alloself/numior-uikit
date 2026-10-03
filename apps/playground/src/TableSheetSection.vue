@@ -51,7 +51,7 @@
       >
         <template v-if="refs" #overlay="{ rectOf }">
           <div
-            v-for="box in referenceBoxes(rectOf)"
+            v-for="box in referenceBoxes(rectOf, REFERENCES)"
             :key="box.key"
             class="sheet-ref"
             :style="box.style"
@@ -73,11 +73,11 @@ import {
   type NuiTableCellStyle,
   type NuiTableColumnDef,
   type NuiTableExposed,
-  type NuiTableRect,
   type NuiTableRange,
   type NuiTableRanges,
   type NuiTableRowHeights,
 } from '@numior/table';
+import { referenceBoxes, type SheetReference } from './sheet-references';
 
 type SheetValue = string | number | null;
 type SheetRowKind = 'title' | 'head' | 'section' | 'item' | 'total' | 'result' | 'note';
@@ -92,11 +92,6 @@ interface SheetLine {
   readonly label: string;
   readonly base: number;
   readonly step: number;
-}
-
-interface SheetReference {
-  readonly range: NuiTableRange;
-  readonly tone: string;
 }
 
 interface SheetBlock {
@@ -288,26 +283,6 @@ const shownKeys = computed(() => {
 
   return [...LETTERS].filter((letter) => !hidden.has(letter));
 });
-
-const referenceBoxes = (rectOf: (range: NuiTableRange) => NuiTableRect | undefined) =>
-  REFERENCES.flatMap((reference) => {
-    const rect = rectOf(reference.range);
-
-    return rect === undefined
-      ? []
-      : [
-          {
-            key: reference.tone,
-            style: {
-              '--_ref': reference.tone,
-              insetBlockStart: `${rect.top}px`,
-              insetInlineStart: `${rect.start}px`,
-              inlineSize: `${rect.width}px`,
-              blockSize: `${rect.height}px`,
-            },
-          },
-        ];
-  });
 
 const onPointer = (event: PointerEvent): void => {
   const cell = sheet.value?.cellFromPoint(event.clientX, event.clientY);

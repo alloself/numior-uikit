@@ -40,7 +40,7 @@ const FOCUSABLE = 'input, textarea, select, button, [tabindex]';
 const PINNED = '.nui-table__cell--pin-start, .nui-table__cell--pin-end';
 const ERROR = '.nui-table__error';
 
-const { spec, value, label, errorId, error, typed, passive, keep, attach, commit, cancel } =
+const { spec, value, label, errorId, error, typed, passive, keep, pick, attach, commit, cancel } =
   defineProps<NuiTableCellEditorProps>();
 
 const emit = defineEmits<{ update: [value: unknown] }>();
@@ -101,7 +101,7 @@ const moveOf = (event: KeyboardEvent): NuiTableEditMove | undefined => {
 const onKeydown = (event: KeyboardEvent): void => {
   event.stopPropagation();
 
-  if (event.defaultPrevented || event.isComposing) {
+  if (event.defaultPrevented || event.isComposing || pick?.(event) === true) {
     return;
   }
   const move = moveOf(event);

@@ -139,6 +139,10 @@ const docs: DocsMap = {
         ru: 'Элементы вне таблицы, фокус на которых не завершает правку ячейки, например строка формул: (target) → true. Когда фокус уходит из такого элемента, правку завершает приложение через commitEdit или cancelEdit.',
         en: 'Elements outside the table whose focus keeps a cell edit open, such as a formula bar: (target) → true. When focus leaves such an element, the app ends the edit with commitEdit or cancelEdit.',
       },
+      picking: {
+        ru: 'Выбор ссылок в формулу: (draft) → true, пока черновик открытой правки ждёт ссылку, например кончается оператором. Тогда нажатие и протяжка по ячейкам, касание и стрелки в редакторе ячейки не завершают правку, а шлют событие pick.',
+        en: 'Reference picking for formulas: (draft) → true while the draft of the open edit waits for a reference, for example ends with an operator. Then pressing and dragging over cells, a tap and the arrows in the cell editor keep the edit open and send the pick event.',
+      },
       frozenRows: {
         ru: 'Число первых строк тела, которые остаются под шапкой при прокрутке. Это строки данных: выделение, правка и копирование работают с ними как с остальными. Нужен height; группы, дерево, детали строк и source закрепление отключают.',
         en: 'How many first body rows stay under the header while the rest scroll. They are data rows: selection, editing and copying treat them like the others. Needs height; groups, a tree, row details and source turn freezing off.',
@@ -274,6 +278,10 @@ const docs: DocsMap = {
       editRefused: {
         ru: 'Свой редактор колонки не открылся: row, key и reason — control (контрола нет в реестре), props (пропсы не прошли проверку реестра) или value (значение ячейки не подходит контролу).',
         en: 'The editor of a column did not open: row, key and reason, which is control (the registry has no such control), props (the props failed the registry check) or value (the cell value does not fit the control).',
+      },
+      pick: {
+        ru: 'Выбрана ссылка, пока picking отвечает true: диапазон в координатах ranges, расширенный до объединённых ячеек. Вставляет её в черновик приложение.',
+        en: 'A reference was picked while picking answers true: a range in the coordinates of ranges grown to merged cells. The app inserts it into the draft.',
       },
       window: {
         ru: 'Сменилось окно отрисовки: rows и cols — позиции отрисованных строк и колонок данных { start, end }, end не входит.',
@@ -421,6 +429,13 @@ const docs: DocsMap = {
         description: {
           ru: 'В редакторе сохраняет значение и переходит в следующую или предыдущую колонку.',
           en: 'In the editor saves the value and moves to the next or the previous column.',
+        },
+      },
+      {
+        keys: 'Arrow / Shift+Arrow',
+        description: {
+          ru: 'В редакторе ячейки, пока picking отвечает true, выбирают ссылку от ячейки правки или от прошлой ссылки; с Shift растягивают её.',
+          en: 'In the cell editor, while picking answers true, pick a reference from the edited cell or from the last reference; with Shift they stretch it.',
         },
       },
       {

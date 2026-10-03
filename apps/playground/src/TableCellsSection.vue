@@ -44,10 +44,21 @@
         bordered
         size="sm"
         height="20rem"
+        :picking="picking"
         label="Лист из источника ячеек"
         data-testid="table-cells"
         @edit="onEdit"
-      />
+        @pick="onPick"
+      >
+        <template #overlay="{ rectOf }">
+          <div
+            v-for="box in referenceBoxes(rectOf, formulaReferences)"
+            :key="box.key"
+            class="sheet-ref"
+            :style="box.style"
+          ></div>
+        </template>
+      </NuiTable>
       <pre class="output" data-testid="table-cells-output">{{ output }}</pre>
     </div>
   </section>
@@ -58,8 +69,9 @@ import { computed, ref, shallowRef, useTemplateRef } from 'vue';
 import { NuiButton, NuiInput } from '@numior/vue';
 import {
   NuiTable,
+  cellName,
   columnIndex,
-  columnName,
+  rangeName,
   tableCells,
   type NuiTableCellSource,
   type NuiTableCellValue,
@@ -67,10 +79,27 @@ import {
   type NuiTableDraft,
   type NuiTableEditEvent,
   type NuiTableExposed,
+  type NuiTableRange,
   type NuiTableRanges,
   type TableCellPosition,
 } from '@numior/table';
+import { referenceBoxes, type SheetReference } from './sheet-references';
 import { bigSheet, SHEET_COLS } from './sheet-source';
+
+interface SheetPick {
+  readonly text: string;
+  readonly at: number;
+}
+
+const OPERATOR = /[=(+\-*/,;:]$/;
+const REFERENCE = /([A-Z]{1,3})(\d+)(?::([A-Z]{1,3})(\d+))?/g;
+
+const TONES = [
+  'var(--nui-primary)',
+  'var(--nui-success)',
+  'var(--nui-warning)',
+  'var(--nui-danger)',
+];
 
 const BAR_KEYS: Readonly<Record<string, (table: NuiTableExposed) => void>> = {
   Enter: (table) => {
@@ -89,6 +118,7 @@ const ranges = ref<NuiTableRanges>([]);
 const active = ref<TableCellPosition>();
 const draft = ref<NuiTableDraft>();
 const entries = shallowRef<ReadonlyMap<number, string>>(new Map());
+const lastPick = shallowRef<SheetPick>();
 const sheet = useTemplateRef<NuiTableExposed>('sheet');
 const area = useTemplateRef<HTMLElement>('area');
 const bar = useTemplateRef<HTMLElement>('bar');
@@ -119,10 +149,42 @@ const barText = computed(() => {
 
 const output = computed(() => JSON.stringify({ ranges: ranges.value }));
 
+const cellOf = (letters = 'A', digits = '1'): TableCellPosition => ({
+  row: Number(digits) - 1,
+  col: columnIndex(letters),
+});
+
+const referenceOfMatch = (match: RegExpMatchArray, index: number): SheetReference => {
+  const from = cellOf(match[1], match[2]);
+
+  return {
+    range: { from, to: match[3] === undefined ? from : cellOf(match[3], match[4]) },
+    tone: TONES[index % TONES.length] ?? 'var(--nui-primary)',
+  };
+};
+
+const formulaReferences = computed<readonly SheetReference[]>(() => {
+  const text = draftText(draft.value?.value);
+
+  return text.startsWith('=') ? [...text.matchAll(REFERENCE)].map(referenceOfMatch) : [];
+});
+
 const nameOf = (position: TableCellPosition | undefined): string =>
-  position === undefined ? '' : `${columnName(position.col)}${position.row + 1}`;
+  position === undefined ? '' : cellName(position);
 
 const textOf = (value: NuiTableCellValue): string => (value === null ? '' : String(value));
+
+const pickAt = (text: string): number => {
+  const pick = lastPick.value;
+
+  return pick !== undefined && text.slice(pick.at) === pick.text ? pick.at : text.length;
+};
+
+const picking = (next: NuiTableDraft): boolean => {
+  const text = draftText(next.value);
+
+  return text.startsWith('=') && (OPERATOR.test(text) || pickAt(text) < text.length);
+};
 
 const editable = (source: NuiTableCells): NuiTableCells => ({
   ...source,
@@ -146,6 +208,18 @@ const onEdit = (event: NuiTableEditEvent<number>): void => {
     next.set(indexOf(change.row, columnIndex(change.key)), textOf(change.value));
   }
   entries.value = next;
+};
+
+const onPick = (range: NuiTableRange): void => {
+  const current = draft.value;
+  const text = draftText(current?.value);
+  const at = pickAt(text);
+  const reference = rangeName(range);
+
+  if (current !== undefined) {
+    lastPick.value = { text: reference, at };
+    draft.value = { ...current, value: `${text.slice(0, at)}${reference}` };
+  }
 };
 
 const onBarFocus = (): void => {

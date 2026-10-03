@@ -264,6 +264,18 @@ editor writes the value into every cell of the selection with the same column ty
 
 <Example name="table/FormulaBar" />
 
+### Picking references
+
+The `picking(draft)` prop turns reference picking on while the draft waits for a reference, for
+example ends with `=`, a bracket or an operator. Pressing and dragging over cells, a tap on a phone
+and the arrows in the cell editor then keep the edit open.
+
+Every pick arrives as the `pick` event with a range, and the app inserts the reference into the
+draft. The `cellName` and `rangeName` helpers give addresses such as `B2` and `B2:C4`. The table
+does not compute formulas, and the `overlay` layer highlights their references.
+
+<Example name="table/Picking" />
+
 ### Export to CSV
 
 The `exportCsv` method of the table ref builds CSV from the rows after filters and sorting, from

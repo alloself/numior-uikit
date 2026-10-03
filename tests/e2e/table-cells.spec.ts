@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { boxGaps, boxOf } from './helpers/geometry';
 import { PlaygroundPage } from './pages/playground';
 
 const SHEET_ROWS = 1_048_576;
@@ -7,6 +8,7 @@ const LEDGER_END = 499;
 const LEDGER_LAST_COLUMN = 29;
 const B2 = '4,8';
 const C3 = '9,6';
+const C6 = '18,9';
 
 const BLOCK: readonly (readonly [row: number, col: number])[] = [
   [3, 1],
@@ -112,6 +114,78 @@ test.describe('table cell source', () => {
     for (const [row, col] of BLOCK) {
       await expect(cells.cell(row, col)).toHaveText('7');
     }
+  });
+
+  test('picks references into a formula with the pointer and draws them over the cells', async ({
+    page,
+  }) => {
+    const playground = new PlaygroundPage(page);
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    const { tableCells: cells } = playground;
+    await cells.show();
+    await cells.cell(1, 1).click();
+    await cells.formula.click();
+    await cells.formula.fill('=SUM(');
+    await cells.cell(2, 3).click();
+
+    await expect(cells.formula).toHaveValue('=SUM(D3');
+    await expect(cells.formula).toBeFocused();
+    await cells.dragAcross(cells.cell(2, 3), cells.cell(4, 4));
+    await expect(cells.formula).toHaveValue('=SUM(D3:E5');
+    await expect(cells.references).toHaveCount(1);
+
+    expect(
+      boxGaps(await boxOf(cells.references.first()), await cells.spanOf([2, 3], [4, 4])),
+    ).toEqual([0, 0, 0, 0]);
+
+    await cells.formula.press('End');
+    await page.keyboard.type(')');
+    await page.keyboard.press('Enter');
+    await expect(cells.cell(1, 1)).toHaveText('=SUM(D3:E5)');
+  });
+
+  test('picks references with the arrows in the cell editor and starts again after an operator', async ({
+    page,
+  }) => {
+    const playground = new PlaygroundPage(page);
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    const { tableCells: cells } = playground;
+    await cells.show();
+    await cells.cell(5, 2).click();
+    await page.keyboard.type('=');
+    await page.keyboard.press('ArrowUp');
+
+    await expect(cells.editor(5, 2)).toHaveValue('=C5');
+    await page.keyboard.press('ArrowRight');
+    await expect(cells.editor(5, 2)).toHaveValue('=D5');
+    await page.keyboard.press('Shift+ArrowDown');
+    await expect(cells.editor(5, 2)).toHaveValue('=D5:D6');
+    await page.keyboard.type('+');
+    await page.keyboard.press('ArrowLeft');
+    await expect(cells.editor(5, 2)).toHaveValue('=D5:D6+B6');
+    await expect(cells.references).toHaveCount(2);
+    await page.keyboard.press('Escape');
+    await expect(cells.cell(5, 2)).toHaveText(C6);
+  });
+
+  test('picks a reference with a tap on a phone', async ({ page, isMobile }) => {
+    test.skip(!isMobile, 'touch only');
+    const playground = new PlaygroundPage(page);
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    const { tableCells: cells } = playground;
+    await cells.show();
+    await cells.cell(1, 1).tap();
+    await cells.formula.tap();
+    await cells.formula.fill('=');
+    await cells.cell(3, 2).tap();
+
+    await expect(cells.formula).toHaveValue('=C4');
+    await expect(cells.formula).toBeFocused();
+    await page.keyboard.press('Escape');
+    await expect(cells.cell(1, 1)).toHaveText(B2);
   });
 
   test('a sheet from a cell source has no automatically detectable WCAG AA violations', async ({

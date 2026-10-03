@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { boxOf, type Box } from './helpers/geometry';
+import { boxGaps, boxOf } from './helpers/geometry';
 import { PlaygroundPage } from './pages/playground';
 
 const INCOME = 2;
@@ -25,11 +25,6 @@ const HEAD_HEIGHT = 32;
 const TITLE_HEIGHT = 44;
 const FROZEN_BOTTOM = HEAD_HEIGHT + TITLE_HEIGHT + ROW;
 const BAND_SCROLLS = [97, 333];
-
-const near = (box: Box, cells: Box): number[] =>
-  [box.x - cells.x, box.y - cells.y, box.width - cells.width, box.height - cells.height].map(
-    (gap) => Math.round(Math.abs(gap)),
-  );
 
 const expectSolidHeader = async (page: Page): Promise<void> => {
   const playground = new PlaygroundPage(page);
@@ -525,15 +520,15 @@ test.describe('table cell styles', () => {
     await sheet.refsSwitch.click();
     await expect(sheet.references).toHaveCount(2);
 
-    expect(near(await boxOf(sheet.references.first()), await sheet.spanOf([3, 1], [5, 3]))).toEqual(
-      [0, 0, 0, 0],
-    );
+    expect(
+      boxGaps(await boxOf(sheet.references.first()), await sheet.spanOf([3, 1], [5, 3])),
+    ).toEqual([0, 0, 0, 0]);
 
     await sheet.scrollTo(2 * ROW, 0);
 
     await expect
       .poll(async () =>
-        near(await boxOf(sheet.references.first()), await sheet.spanOf([3, 1], [5, 3])),
+        boxGaps(await boxOf(sheet.references.first()), await sheet.spanOf([3, 1], [5, 3])),
       )
       .toEqual([0, 0, 0, 0]);
 

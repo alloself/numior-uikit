@@ -1,7 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import { createSSRApp, h } from 'vue';
 import { renderToString } from 'vue/server-renderer';
-import { cellEdge, columnIndex, columnName, tableCells, type NuiTableSourceCell } from '../src';
+import {
+  cellEdge,
+  cellName,
+  columnIndex,
+  columnName,
+  rangeName,
+  tableCells,
+  type NuiTableSourceCell,
+} from '../src';
 
 const COLUMN: ReadonlySet<number> = new Set([2, 3, 4, 7]);
 
@@ -34,6 +42,9 @@ describe('tableCells', () => {
 
     expect(indices.map((index) => columnIndex(columnName(index)))).toEqual(indices);
     expect(columnIndex('xfd')).toBe(16_383);
+    expect(cellName({ row: 1_048_575, col: 16_383 })).toBe('XFD1048576');
+    expect(rangeName({ from: { row: 4, col: 2 }, to: { row: 1, col: 0 } })).toBe('A2:C5');
+    expect(rangeName({ from: { row: 3, col: 27 }, to: { row: 3, col: 27 } })).toBe('AB4');
   });
 
   it('finds the edge of the data the way Ctrl and an arrow do in a spreadsheet', () => {

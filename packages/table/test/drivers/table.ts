@@ -168,6 +168,7 @@ interface TableEvents<T> {
   readonly refusals: NuiTableEditRefusal<T>[];
   readonly errors: unknown[];
   readonly windows: NuiTableWindow[];
+  readonly picks: NuiTableRange[];
   readonly waiters: Array<() => void>;
 }
 
@@ -333,6 +334,7 @@ export class TableDriver<T> {
       refusals: [],
       errors: [],
       windows: [],
+      picks: [],
       waiters: [],
     };
 
@@ -422,6 +424,9 @@ export class TableDriver<T> {
               },
               onWindow: (next: NuiTableWindow) => {
                 events.windows.push(next);
+              },
+              onPick: (range: NuiTableRange) => {
+                events.picks.push(range);
               },
               onEditRefused: (event: NuiTableEditRefusal<T>) => {
                 events.refusals.push(event);
@@ -1050,6 +1055,10 @@ export class TableDriver<T> {
 
   get windows(): readonly NuiTableWindow[] {
     return this.events.windows;
+  }
+
+  get picks(): readonly NuiTableRange[] {
+    return this.events.picks;
   }
 
   get overlayMarks(): Array<Record<'top' | 'start' | 'width' | 'height', string>> {

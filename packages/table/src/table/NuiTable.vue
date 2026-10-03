@@ -322,6 +322,7 @@ import {
   anchorOf,
   consecutiveRuns,
   createMergeIndex,
+  expandToMerges,
   keepSpans,
   leaveMerge,
   leaveMergeBy,
@@ -360,6 +361,7 @@ import { useTableClipboard, type TableCopyCell } from './use-table-clipboard';
 import { useTableContextMenu } from './use-table-context-menu';
 import { useTableCellEditor } from './use-table-cell-editor';
 import { createEchoes } from './table-echoes';
+import { useTablePicking } from './use-table-picking';
 import { useTableEditing } from './use-table-editing';
 import { useTableExport } from './use-table-export';
 import { editorPlan } from './table-editors';
@@ -497,6 +499,7 @@ const {
   frozenRows = 0,
   nextEdge,
   keepEditing,
+  picking,
   rowDrag: rowDragOn = false,
   nestDelay = NEST_DELAY,
   dragLabel,
@@ -1489,6 +1492,12 @@ const leaveFrom = (from: TableCellPosition, key: string): TableCellPosition => {
     : visualCellOf(leaveMerge(mergeIndex.value, data, key, direction.isRtl()));
 };
 
+const cellOfTarget = (target: EventTarget | null): TableCellPosition | undefined => {
+  const cell = rangeSelect.cellAt(target);
+
+  return cell === undefined ? undefined : anchorOf(mergeIndex.value, cell);
+};
+
 const activeData = (): TableCellPosition | undefined => {
   const body = bodyActive();
   const col = body === undefined ? -1 : body.col - dataOffset.value;
@@ -1844,10 +1853,7 @@ const cellEditor = useTableCellEditor<T>({
     emit('editRefused', { row, key, reason });
   },
   bounds: () => ({ rows: visibleRows.value, cols: dataKeys.value.length }),
-  locate: (target) => {
-    const cell = rangeSelect.cellAt(target);
-    return cell === undefined ? undefined : anchorOf(mergeIndex.value, cell);
-  },
+  locate: (target) => cellOfTarget(target),
   leave: (from, move) => leaveMergeBy(mergeIndex.value, from, move),
   focus: (position) => {
     const current = activeData();
@@ -1868,6 +1874,38 @@ const cellEditor = useTableCellEditor<T>({
   ],
   messages,
   announce,
+});
+
+const picker = useTablePicking({
+  active: () => {
+    const now = cellEditor.current();
+
+    return now !== undefined && picking?.(now) === true;
+  },
+  origin: () => cellEditor.session.value?.position,
+  locate: (target) => {
+    const cell =
+      target instanceof Element && target.closest('.nui-table__editor') === null
+        ? cellOfTarget(target)
+        : undefined;
+
+    return sameSpot(cell, cellEditor.session.value?.position) ? undefined : cell;
+  },
+  cellAt: (x, y) => rangeSelect.cellAtPoint(x, y),
+  whole: (range) =>
+    expandToMerges(mergeIndex.value, range, {
+      rows: visibleRows.value,
+      cols: dataKeys.value.length,
+    }),
+  leave: (from, move) => leaveMergeBy(mergeIndex.value, from, move),
+  bounds: () => ({ rows: visibleRows.value, cols: dataKeys.value.length }),
+  isRtl: direction.isRtl,
+  reveal: (position) => {
+    focus.reveal(visualCellOf(position));
+  },
+  pick: (range) => {
+    emit('pick', range);
+  },
 });
 
 const selectForMenu = (target: TableCellPosition): NuiTableRanges => {
@@ -2047,13 +2085,23 @@ const viewportEvents = {
     cellEditor.onFocusin(event);
     focus.onFocusin(ownDetailOf(event.target, viewport.value)?.parentElement ?? event.target);
   },
-  pointerdown: outsideDetail(rangeSelect.onPointerdown),
-  mousedown: outsideDetail(rangeSelect.onMousedown),
+  pointerdown: outsideDetail((event: PointerEvent) => {
+    if (!picker.onPointerdown(event)) {
+      rangeSelect.onPointerdown(event);
+    }
+  }),
+  mousedown: outsideDetail((event: MouseEvent) => {
+    if (!picker.onMousedown(event)) {
+      rangeSelect.onMousedown(event);
+    }
+  }),
   contextmenu: outsideDetail(cellMenu.onContextmenu),
   paste: outsideDetail(editing.onPaste),
   click: outsideDetail((event: MouseEvent) => {
-    rangeSelect.onClick(event);
-    cellEditor.onClick(event);
+    if (!picker.onClick(event)) {
+      rangeSelect.onClick(event);
+      cellEditor.onClick(event);
+    }
   }),
   dblclick: outsideDetail(cellEditor.onDblclick),
   pointerup: outsideDetail(cellEditor.onPointerup),
@@ -2123,10 +2171,14 @@ const editorOf = (position: number, column: string): VNode | undefined => {
     typed: current.typed,
     passive: current.passive,
     keep: keepEditing,
+    pick: picker.onKeydown,
     attach: cellEditor.attach,
     commit: cellEditor.commit,
     cancel: cellEditor.cancel,
-    onUpdate: cellEditor.input,
+    onUpdate: (value: unknown) => {
+      picker.reset();
+      cellEditor.input(value);
+    },
   });
 };
 
@@ -2272,6 +2324,10 @@ watch(draft, (next) => {
   if (!draftEchoes.echoed(next)) {
     cellEditor.receive(next);
   }
+});
+
+watch(cellEditor.session, () => {
+  picker.reset();
 });
 
 watch(visibleRows, clampActive);

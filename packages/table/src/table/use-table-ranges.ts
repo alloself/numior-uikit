@@ -61,6 +61,7 @@ export interface TableRanges {
   segmentsOf(row: number): TableRowRanges | undefined;
   contains(position: TableCellPosition): boolean;
   cellAt(target: EventTarget | null): TableCellPosition | undefined;
+  cellAtPoint(x: number, y: number): TableCellPosition | undefined;
   onPointerdown(event: PointerEvent): void;
   onMousedown(event: MouseEvent): void;
   onClick(event: MouseEvent): void;
@@ -724,6 +725,7 @@ export const useTableRanges = (options: TableRangesOptions): TableRanges => {
     segmentsOf: segments,
     contains: (position) => inRanges(latest(), position),
     cellAt: startOf,
+    cellAtPoint: (x, y) => hitAt({ x, y }),
     onPointerdown,
     onMousedown: (event) => {
       if (holdFocus || keepsMenuFocus(event)) {

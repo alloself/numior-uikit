@@ -160,6 +160,7 @@ export interface NuiTableProps<T> {
   frozenRows?: number | undefined;
   nextEdge?: NuiTableNextEdge | undefined;
   keepEditing?: ((target: Element) => boolean) | undefined;
+  picking?: ((draft: NuiTableDraft) => boolean) | undefined;
   rowDrag?: boolean | undefined;
   nestDelay?: number | undefined;
   dragLabel?: ((row: T) => string) | undefined;
@@ -358,6 +359,7 @@ export interface NuiTableCellEditorProps {
   typed?: string | undefined;
   passive?: boolean | undefined;
   keep?: ((target: Element) => boolean) | undefined;
+  pick?: ((event: KeyboardEvent) => boolean) | undefined;
   attach: (flush: () => void) => () => void;
   commit: (move: NuiTableEditMove) => boolean;
   cancel: () => void;
@@ -482,6 +484,7 @@ export interface NuiTableEvents<T> {
   editRefused: [event: NuiTableEditRefusal<T>];
   error: [error: unknown];
   window: [window: NuiTableWindow];
+  pick: [range: NuiTableRange];
 }
 
 export type NuiTableSort = readonly TableSort[];

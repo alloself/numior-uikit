@@ -2,6 +2,7 @@ import { getCurrentInstance } from 'vue';
 import type {
   NuiTableCellStyle,
   NuiTableCellStyler,
+  NuiTableRange,
   NuiTableColumn,
   NuiTableEdgeDirection,
   NuiTableNextEdge,
@@ -55,6 +56,23 @@ export const columnIndex = (name: string): number =>
     (sum, letter) => sum * LETTERS + letter.charCodeAt(0) - CODE_A + 1,
     0,
   ) - 1;
+
+export const cellName = (position: TableCellPosition): string =>
+  `${columnName(position.col)}${position.row + 1}`;
+
+export const rangeName = (range: NuiTableRange): string => {
+  const start = cellName({
+    row: Math.min(range.from.row, range.to.row),
+    col: Math.min(range.from.col, range.to.col),
+  });
+
+  const end = cellName({
+    row: Math.max(range.from.row, range.to.row),
+    col: Math.max(range.from.col, range.to.col),
+  });
+
+  return start === end ? start : `${start}:${end}`;
+};
 
 const STEPS: Readonly<Record<NuiTableEdgeDirection, TableCellPosition>> = {
   up: { row: -1, col: 0 },

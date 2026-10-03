@@ -1,6 +1,6 @@
 import { clamp } from '@vueuse/core';
 import { listMoveFor } from '@numior/primitives';
-import type { NuiTableEdgeDirection, TableCellPosition } from './table.types';
+import type { NuiTableEdgeDirection, NuiTableEditMove, TableCellPosition } from './table.types';
 
 export type TableEdgeOf = (
   from: TableCellPosition,
@@ -21,7 +21,33 @@ export interface TableKey {
   readonly ctrl: boolean;
 }
 
+export interface TableSize {
+  readonly rows: number;
+  readonly cols: number;
+}
+
 const lastRowOf = (bounds: TableBounds): number => (bounds.rows > 0 ? bounds.rows - 1 : -1);
+
+export const stepCell = (
+  from: TableCellPosition,
+  move: NuiTableEditMove,
+  size: TableSize,
+): TableCellPosition => {
+  switch (move) {
+    case 'down':
+      return { row: Math.min(from.row + 1, size.rows - 1), col: from.col };
+    case 'up':
+      return { row: Math.max(from.row - 1, 0), col: from.col };
+    case 'next':
+      return { row: from.row, col: Math.min(from.col + 1, size.cols - 1) };
+    case 'previous':
+      return { row: from.row, col: Math.max(from.col - 1, 0) };
+    case 'stay':
+    case 'fill':
+    case 'blur':
+      return from;
+  }
+};
 
 const windowHeight = (): number => (typeof window === 'undefined' ? 0 : window.innerHeight);
 

@@ -1,6 +1,6 @@
 import type { Locator, Page } from '@playwright/test';
 import { paintedRgbAt, rgbDelta, type Point, type Rgb } from '../helpers/color';
-import { boxOf, type Box } from '../helpers/geometry';
+import { boxOf, spanBox, type Box } from '../helpers/geometry';
 import {
   isNumber,
   listOf,
@@ -149,15 +149,8 @@ export class TableSheetSection {
     });
   }
 
-  async spanOf(from: [row: number, col: number], to: [row: number, col: number]): Promise<Box> {
-    const [first, last] = await Promise.all([boxOf(this.cell(...from)), boxOf(this.cell(...to))]);
-
-    return {
-      x: first.x,
-      y: first.y,
-      width: last.x + last.width - first.x,
-      height: last.y + last.height - first.y,
-    };
+  spanOf(from: [row: number, col: number], to: [row: number, col: number]): Promise<Box> {
+    return spanBox(this.cell(...from), this.cell(...to));
   }
 
   async tintOver(target: Locator, outside: Locator): Promise<number> {

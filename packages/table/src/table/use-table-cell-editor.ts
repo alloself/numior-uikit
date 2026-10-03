@@ -7,6 +7,7 @@ import {
   type ShallowRef,
   type WatchSource,
 } from 'vue';
+import { stepCell } from './table-keys';
 import type { RangeBounds } from './table-ranges';
 import type { NuiTableMessages } from './table.messages';
 import type {
@@ -49,6 +50,7 @@ export interface TableCellEditor<T> {
   readonly session: Readonly<ShallowRef<TableEditSession<T> | undefined>>;
   readonly draft: Readonly<ShallowRef<unknown>>;
   readonly error: Readonly<Ref<string | undefined>>;
+  current(): NuiTableDraft | undefined;
   input(value: unknown): void;
   receive(next: NuiTableDraft | undefined): void;
   start(mode: NuiTableEditMode, focus: boolean): boolean;
@@ -115,27 +117,6 @@ const openingOf = (event: KeyboardEvent): TableOpening | undefined => {
   return typed === undefined ? undefined : { kind: 'typed', text: typed };
 };
 
-const stepOf = (
-  from: TableCellPosition,
-  move: NuiTableEditMove,
-  bounds: RangeBounds,
-): TableCellPosition => {
-  switch (move) {
-    case 'down':
-      return { row: Math.min(from.row + 1, bounds.rows - 1), col: from.col };
-    case 'up':
-      return { row: Math.max(from.row - 1, 0), col: from.col };
-    case 'next':
-      return { row: from.row, col: Math.min(from.col + 1, bounds.cols - 1) };
-    case 'previous':
-      return { row: from.row, col: Math.max(from.col - 1, 0) };
-    case 'stay':
-    case 'fill':
-    case 'blur':
-      return from;
-  }
-};
-
 const clampTo = (position: TableCellPosition, bounds: RangeBounds): TableCellPosition => ({
   row: Math.max(0, Math.min(position.row, bounds.rows - 1)),
   col: Math.max(0, Math.min(position.col, bounds.cols - 1)),
@@ -157,16 +138,17 @@ export const useTableCellEditor = <T>(options: TableCellEditorOptions<T>): Table
   let pointer = '';
   let strict = false;
 
-  const setDraft = (value: unknown): void => {
+  const positioned = (value: unknown): NuiTableDraft | undefined => {
     const current = session.value;
 
-    draft.value = value;
+    return current === undefined
+      ? undefined
+      : { row: current.position.row, col: current.position.col, key: current.key, value };
+  };
 
-    options.share(
-      current === undefined
-        ? undefined
-        : { row: current.position.row, col: current.position.col, key: current.key, value },
-    );
+  const setDraft = (value: unknown): void => {
+    draft.value = value;
+    options.share(positioned(value));
   };
 
   const close = (): void => {
@@ -299,7 +281,7 @@ export const useTableCellEditor = <T>(options: TableCellEditorOptions<T>): Table
       options.announce(options.messages.value.editDiscarded({ error: failure }));
     }
     if (move !== 'blur') {
-      options.focus(stepOf(options.leave(current.position, move), move, options.bounds()));
+      options.focus(stepCell(options.leave(current.position, move), move, options.bounds()));
     }
     return true;
   };
@@ -415,6 +397,7 @@ export const useTableCellEditor = <T>(options: TableCellEditorOptions<T>): Table
     session,
     draft,
     error,
+    current: () => positioned(draft.value),
     input,
     receive,
     start,
