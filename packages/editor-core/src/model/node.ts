@@ -58,6 +58,29 @@ export const withContent = (node: ElementNode, content: readonly ContentNode[]):
   return { ...node, content: normalized, size: contentSize(normalized) + 2 };
 };
 
+export const spliceContent = (
+  node: ElementNode,
+  first: number,
+  last: number,
+  replacement: readonly ContentNode[],
+): ElementNode => {
+  const from = Math.max(0, first - 1);
+  const to = Math.min(node.content.length, last + 1);
+  const removed = node.content.slice(from, to);
+
+  const middle = normalizeContent([
+    ...node.content.slice(from, first),
+    ...replacement,
+    ...node.content.slice(last, to),
+  ]);
+
+  return {
+    ...node,
+    content: [...node.content.slice(0, from), ...middle, ...node.content.slice(to)],
+    size: node.size - contentSize(removed) + contentSize(middle),
+  };
+};
+
 export const childOffsets = (node: ElementNode): readonly number[] => {
   const cached = offsetCache.get(node);
 

@@ -1,6 +1,6 @@
 import { createDoc } from '../doc/doc';
 import type { Doc } from '../doc/doc.types';
-import { childOffsets, nodeSize, sameMarks, withContent } from '../model/node';
+import { childIndexAt, childOffsets, sameMarks, spliceContent } from '../model/node';
 import type { ContentNode, ElementNode, Mark, TextNode } from '../model/node.types';
 import type { Schema } from '../schema/schema.types';
 import type { StepResult } from './step.types';
@@ -32,30 +32,39 @@ const splitAt = (node: TextNode, start: number, task: MarkTask): ContentNode[] =
   ];
 };
 
+const markChild = (
+  child: ContentNode,
+  childStart: number,
+  allowed: boolean,
+  task: MarkTask,
+): ContentNode[] => {
+  if (child.kind === 'text') {
+    return allowed ? splitAt(child, childStart, task) : [child];
+  }
+  return [child.leaf ? child : markNode(child, childStart + 1, task)];
+};
+
 const markNode = (node: ElementNode, start: number, task: MarkTask): ElementNode => {
   const offsets = childOffsets(node);
   const allowed = task.schema.nodes.get(node.type)?.marks.has(task.type) === true;
+  const first = childIndexAt(node, Math.max(0, task.from - start));
+  const touched: ContentNode[] = [];
+  let last = first;
   let changed = false;
 
-  const content = node.content.flatMap((child, index): ContentNode[] => {
-    const childStart = start + (offsets[index] ?? 0);
+  for (; last < node.content.length; last += 1) {
+    const child = node.content[last];
+    const childStart = start + (offsets[last] ?? 0);
 
-    if (childStart + nodeSize(child) <= task.from || childStart >= task.to) {
-      return [child];
+    if (child === undefined || childStart >= task.to) {
+      break;
     }
-    if (child.kind === 'text') {
-      const parts = allowed ? splitAt(child, childStart, task) : [child];
+    const parts = markChild(child, childStart, allowed, task);
 
-      changed ||= parts.length > 1;
-      return parts;
-    }
-    const next = child.leaf ? child : markNode(child, childStart + 1, task);
-
-    changed ||= next !== child;
-    return [next];
-  });
-
-  return changed ? withContent(node, content) : node;
+    changed ||= parts.length !== 1 || parts[0] !== child;
+    touched.push(...parts);
+  }
+  return changed ? spliceContent(node, first, last, touched) : node;
 };
 
 const rankedAdd = (schema: Schema, mark: Mark): MarkChange => {

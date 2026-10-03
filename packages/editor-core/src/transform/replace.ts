@@ -1,7 +1,7 @@
 import { createDoc } from '../doc/doc';
 import type { Doc, ResolvedPos, Slice } from '../doc/doc.types';
-import { childOffsets, contentSize, nodeSize, withContent } from '../model/node';
-import type { ContentNode, ElementNode, NodeId } from '../model/node.types';
+import { childOffsets, contentSize, nodeSize, spliceContent } from '../model/node';
+import type { ElementNode, NodeId } from '../model/node.types';
 import { checkNodes } from '../schema/check';
 import type { Schema } from '../schema/schema.types';
 import type { StepResult } from './step.types';
@@ -159,13 +159,7 @@ export const applyPlan = (doc: Doc, plan: ReplacePlan): StepResult => {
     return failed('depth');
   }
 
-  const content: ContentNode[] = [
-    ...node.content.slice(0, region.first),
-    ...built.content,
-    ...node.content.slice(region.last),
-  ];
-
-  const next = withContent(node, content);
+  const next = spliceContent(node, region.first, region.last, built.content);
 
   if (![next, ...built.rebuilt].every((element) => fits(doc.schema, element))) {
     return failed('content');

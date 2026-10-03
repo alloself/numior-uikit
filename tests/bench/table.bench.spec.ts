@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { TABLE_COLUMNS } from '../../packages/table/bench/dataset';
-import { record, summarize, type Operation } from '../../packages/table/bench/harness';
+import { record, summarize, type Operation } from '../../scripts/bench-harness';
 import { TableBenchPage } from './pages/table-bench';
 
 const ROWS = 1_000_000;

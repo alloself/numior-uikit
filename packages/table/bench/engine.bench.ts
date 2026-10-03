@@ -12,7 +12,7 @@ import {
   type BenchNode,
   type BenchRow,
 } from './dataset.ts';
-import { measure, record, type Operation } from './harness.ts';
+import { measure, record, type Operation } from '../../../scripts/bench-harness.ts';
 
 const ROWS = 1_000_000;
 const rows = generateRows(ROWS);

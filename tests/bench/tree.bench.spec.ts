@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { record, summarize, type Operation } from '../../packages/table/bench/harness';
+import { record, summarize, type Operation } from '../../scripts/bench-harness';
 import { TreeBenchPage } from './pages/tree-bench';
 
 const NODES = 100_000;

@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { record, summarize, type Operation } from '../../packages/table/bench/harness';
+import { record, summarize, type Operation } from '../../scripts/bench-harness';
 import { SheetBenchPage } from './pages/sheet-bench';
 
 const RESULTS = new URL('../../packages/table/bench/results/', import.meta.url);

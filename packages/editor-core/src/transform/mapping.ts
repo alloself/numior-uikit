@@ -43,6 +43,21 @@ const mapRanges = (ranges: readonly MapRange[], pos: number, assoc: Assoc): MapR
   return untouched(pos + diff);
 };
 
+const mapPosition = (ranges: readonly MapRange[], pos: number, assoc: Assoc): number => {
+  let diff = 0;
+
+  for (const range of ranges) {
+    if (pos < range.start) {
+      break;
+    }
+    if (pos <= range.start + range.oldSize) {
+      return range.start + diff + (sideOf(range, pos, assoc) < 0 ? 0 : range.newSize);
+    }
+    diff += range.newSize - range.oldSize;
+  }
+  return pos + diff;
+};
+
 const invertRanges = (ranges: readonly MapRange[]): MapRange[] => {
   let diff = 0;
 
@@ -59,7 +74,7 @@ export const createStepMap = (ranges: readonly MapRange[]): StepMap => {
 
   const map: StepMap = {
     ranges: kept,
-    map: (pos, assoc = 1) => mapRanges(kept, pos, assoc).pos,
+    map: (pos, assoc = 1) => mapPosition(kept, pos, assoc),
     mapResult: (pos, assoc = 1) => mapRanges(kept, pos, assoc),
     invert: () => createStepMap(invertRanges(kept)),
   };
@@ -83,7 +98,14 @@ export const createMapping = (maps: readonly StepMap[] = []): Mapping => {
 
   return {
     maps,
-    map: (pos, assoc = 1) => maps.reduce((current, map) => map.map(current, assoc), pos),
+    map: (pos, assoc = 1) => {
+      let current = pos;
+
+      for (const map of maps) {
+        current = map.map(current, assoc);
+      }
+      return current;
+    },
     mapResult,
     append: (map) => createMapping([...maps, map]),
     concat: (other) => createMapping([...maps, ...other.maps]),

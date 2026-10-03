@@ -41,19 +41,20 @@ playground проверяет реальный `dist`, типы и внешню�
 
 ## Команды качества
 
-| Команда                             | Проверка                                                                                  |
-| ----------------------------------- | ----------------------------------------------------------------------------------------- |
-| `pnpm check`                        | Формат, lint, типы, анализ, unit, build, artifacts, docs                                  |
-| `pnpm lint`                         | Oxlint для JS/TS и eslint-plugin-vue для шаблонов                                         |
-| `pnpm format` / `pnpm format:check` | Oxfmt: запись / проверка                                                                  |
-| `pnpm typecheck`                    | Vue SFC и TypeScript strict                                                               |
-| `pnpm analyze`                      | Fallow: dead code/deps/cycles/boundaries, дубли, сложность и CRAP по покрытию unit-тестов |
-| `pnpm test` / `pnpm test:coverage`  | Vitest; coverage V8 в формате Istanbul для Fallow                                         |
-| `pnpm test:e2e`                     | Playwright по production build, темы, RTL, Tailwind, axe                                  |
-| `pnpm arch:check`                   | Archcore CLI: структура и связи                                                           |
-| `pnpm bench:engine`                 | Бенчмарк движка таблицы в Node на миллионе строк, запись в `packages/table/bench/results` |
-| `pnpm bench:browser`                | Бенчмарк `NuiTable` в Chromium: ввод до отрисовки, кадры прокрутки, монтаж, куча          |
-| `pnpm bench:check`                  | Сверка последних результатов с `packages/table/bench/thresholds.json`                     |
+| Команда                             | Проверка                                                                                                    |
+| ----------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `pnpm check`                        | Формат, lint, типы, анализ, unit, build, artifacts, docs                                                    |
+| `pnpm lint`                         | Oxlint для JS/TS и eslint-plugin-vue для шаблонов                                                           |
+| `pnpm format` / `pnpm format:check` | Oxfmt: запись / проверка                                                                                    |
+| `pnpm typecheck`                    | Vue SFC и TypeScript strict                                                                                 |
+| `pnpm analyze`                      | Fallow: dead code/deps/cycles/boundaries, дубли, сложность и CRAP по покрытию unit-тестов                   |
+| `pnpm test` / `pnpm test:coverage`  | Vitest; coverage V8 в формате Istanbul для Fallow                                                           |
+| `pnpm test:e2e`                     | Playwright по production build, темы, RTL, Tailwind, axe                                                    |
+| `pnpm arch:check`                   | Archcore CLI: структура и связи                                                                             |
+| `pnpm bench:engine`                 | Бенчмарк движка таблицы в Node на миллионе строк, запись в `packages/table/bench/results`                   |
+| `pnpm bench:editor`                 | Бенчмарк ядра редактора в Node на документе из 10 000 блоков, запись в `packages/editor-core/bench/results` |
+| `pnpm bench:browser`                | Бенчмарк `NuiTable` в Chromium: ввод до отрисовки, кадры прокрутки, монтаж, куча                            |
+| `pnpm bench:check`                  | Сверка последних результатов с порогами `packages/{table,vue,editor-core}/bench/thresholds.json`            |
 
 Перед браузерными тестами: `pnpm exec playwright install`.
 В Linux при отсутствии системных библиотек: `pnpm exec playwright install --with-deps`.

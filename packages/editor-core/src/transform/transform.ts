@@ -32,17 +32,30 @@ const portionsOf = (doc: Doc, from: number, to: number, type: string): Portion[]
   return portions;
 };
 
-const mergeRuns = (runs: readonly Portion[]): Portion[] =>
-  runs.reduce<Portion[]>((merged, run) => {
-    const last = merged.at(-1);
+const runsWhere = (
+  portions: readonly Portion[],
+  keep: (portion: Portion) => boolean,
+): Portion[] => {
+  const runs: Portion[] = [];
+  let open = false;
 
-    if (last !== undefined && last.to === run.from && sameMarks(last.marks, run.marks)) {
-      merged[merged.length - 1] = { ...last, to: run.to };
+  for (const portion of portions) {
+    const last = runs.at(-1);
+
+    if (!keep(portion)) {
+      open = false;
+    } else if (open && last !== undefined) {
+      runs[runs.length - 1] = { ...last, to: portion.to };
     } else {
-      merged.push(run);
+      runs.push(portion);
+      open = true;
     }
-    return merged;
-  }, []);
+  }
+  return runs;
+};
+
+const holds = (portion: Portion, mark: Mark): boolean =>
+  portion.marks.some((item) => sameMarks([item], [mark]));
 
 const matches = (mark: Mark, filter: Mark | string | undefined): boolean => {
   if (filter === undefined) {
@@ -96,16 +109,9 @@ export const createTransform = (start: Doc, options: TransformOptions = {}): Tra
     return result;
   };
 
-  const markSteps = (
-    portions: readonly Portion[],
-    make: (run: Portion) => Step | undefined,
-  ): void => {
-    for (const run of mergeRuns(portions)) {
-      const step = make(run);
-
-      if (step !== undefined) {
-        maybeStep(step);
-      }
+  const markSteps = (runs: readonly Portion[], make: (run: Portion) => Step): void => {
+    for (const run of runs) {
+      maybeStep(make(run));
     }
   };
 
@@ -172,48 +178,44 @@ export const createTransform = (start: Doc, options: TransformOptions = {}): Tra
           });
     },
     addMark: (from, to, mark) => {
-      const portions = portionsOf(doc, from, to, mark.type);
+      const olds = new Set(
+        portionsOf(doc, from, to, mark.type).flatMap((portion) => portion.marks),
+      );
 
-      for (const old of new Set(portions.flatMap((portion) => portion.marks))) {
+      for (const old of olds) {
         if (old.type === mark.type && !sameMarks([old], [mark])) {
-          markSteps(
-            portions
-              .filter((portion) => portion.marks.includes(old))
-              .map((portion) => ({ ...portion, marks: [old] })),
-            (run) => ({ kind: 'removeMark', from: run.from, to: run.to, mark: old }),
+          const runs = runsWhere(portionsOf(doc, from, to, mark.type), (portion) =>
+            holds(portion, old),
           );
+
+          markSteps(runs, (run) => ({ kind: 'removeMark', from: run.from, to: run.to, mark: old }));
         }
       }
 
-      markSteps(
-        portionsOf(doc, from, to, mark.type)
-          .filter((portion) => !portion.marks.some((item) => sameMarks([item], [mark])))
-          .map((portion) => ({ ...portion, marks: [] })),
-        (run) => ({ kind: 'addMark', from: run.from, to: run.to, mark }),
+      const missing = runsWhere(
+        portionsOf(doc, from, to, mark.type),
+        (portion) => !holds(portion, mark),
       );
 
+      markSteps(missing, (run) => ({ kind: 'addMark', from: run.from, to: run.to, mark }));
       return transform;
     },
     removeMark: (from, to, filter) => {
-      const portions =
-        doc.schema.marks.size === 0
-          ? []
-          : [...doc.schema.marks.keys()].flatMap((type) => portionsOf(doc, from, to, type));
-
       const found = new Map<string, Mark>();
 
-      for (const portion of portions) {
-        for (const mark of portion.marks.filter((item) => matches(item, filter))) {
-          found.set(JSON.stringify(mark), mark);
+      for (const type of doc.schema.marks.keys()) {
+        for (const portion of portionsOf(doc, from, to, type)) {
+          for (const mark of portion.marks.filter((item) => matches(item, filter))) {
+            found.set(JSON.stringify(mark), mark);
+          }
         }
       }
       for (const mark of found.values()) {
-        markSteps(
-          portionsOf(doc, from, to, mark.type)
-            .filter((portion) => portion.marks.some((item) => sameMarks([item], [mark])))
-            .map((portion) => ({ ...portion, marks: [] })),
-          (run) => ({ kind: 'removeMark', from: run.from, to: run.to, mark }),
+        const runs = runsWhere(portionsOf(doc, from, to, mark.type), (portion) =>
+          holds(portion, mark),
         );
+
+        markSteps(runs, (run) => ({ kind: 'removeMark', from: run.from, to: run.to, mark }));
       }
       return transform;
     },
