@@ -175,6 +175,14 @@ const docs: DocsMap = {
         ru: 'Предел ячеек в одном копировании; по умолчанию 200 000, лишние строки отбрасываются с объявлением.',
         en: 'Limit of cells in one copy; 200,000 by default, the rows past it are dropped with an announcement.',
       },
+      clipboard: {
+        ru: 'Свой формат буфера обмена: serialize({ ranges, headers, rowAt, keyAt }) → { text, html } заменяет копирование и вырезание, а copyLimit на него не действует. parse(data, target) получает текст и HTML вставки с левой верхней ячейкой цели и возвращает блок строк для обычной вставки; undefined оставляет разбор таблице.',
+        en: 'A custom clipboard format: serialize({ ranges, headers, rowAt, keyAt }) → { text, html } replaces copy and cut, and copyLimit does not apply to it. parse(data, target) receives the text and HTML of a paste with the top left target cell and returns a block of strings for the usual paste; undefined leaves the parsing to the table.',
+      },
+      commands: {
+        ru: 'История правок приложения вместо встроенной: push(command) получает каждую правку вместе с событием edit, а Ctrl+Z, Ctrl+Y и методы undo и redo вызывают undo() и redo(), которые возвращают число изменённых ячеек.',
+        en: 'An app edit history instead of the built-in one: push(command) receives every edit along with the edit event, and Ctrl+Z, Ctrl+Y and the undo and redo methods call undo() and redo(), which return the number of changed cells.',
+      },
       controls: {
         ru: 'Реестр контролов для ключей editor у колонок; без него таблица берёт реестр из createNuiConfig({ controls }).',
         en: 'Control registry for the editor keys of columns; without it the table takes the registry from createNuiConfig({ controls }).',

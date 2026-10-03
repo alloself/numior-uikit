@@ -39,7 +39,7 @@
       >
         <div class="nui-table__content">
           <slot v-if="cell.kind !== 'data'" name="utility" :column="cell.key" />
-          <slot v-else :column="cell.key" :merge="leadOf(cell)" />
+          <slot v-else :column="cell.key" :merge="leadOf(cell)" :revision="ownRevision" />
         </div>
         <NuiTableResizer
           v-if="resizerOf(cell)"
@@ -75,6 +75,7 @@ const {
   paint,
   active = 0,
   revision,
+  revisionOf,
   level,
   group,
   expanded = undefined,
@@ -101,7 +102,7 @@ const emit = defineEmits<{
 }>();
 
 defineSlots<{
-  default(props: { column: string; merge: TableLeadSpan | undefined }): unknown;
+  default(props: { column: string; merge: TableLeadSpan | undefined; revision: number }): unknown;
   utility(props: { column: string }): unknown;
 }>();
 
@@ -291,8 +292,11 @@ const rangeClass = (cell: TableDataCell): Record<string, boolean> | undefined =>
 const cellSelected = (cell: TableDataCell): 'true' | undefined =>
   rangeClass(cell) === undefined ? undefined : 'true';
 
+const ownRevision = computed(() => (position === undefined ? 0 : (revisionOf?.(position) ?? 0)));
+
 const paints = computed(() => {
   void revision;
+  void ownRevision.value;
   return position === undefined ? undefined : paint?.(position, spans);
 });
 

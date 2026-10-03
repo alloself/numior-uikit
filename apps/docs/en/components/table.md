@@ -164,6 +164,10 @@ data. When the storage knows its empty areas, its `nextEdge` replaces the walk o
 The source keeps no object per row or column. A sheet of 1 048 576 rows and 16 384 columns
 therefore opens like a small one.
 
+The `invalidate(ranges)` method of the table ref redraws the rows of the ranges. Call it when the
+source data changed without an edit in the table, for example after a recalculation. Without an
+argument the table reads every row again.
+
 <Example name="table/CellSource" />
 
 ### Layer over the cells
@@ -219,6 +223,10 @@ Rows stay in place after an edit even when the column is sorted or filtered. Tot
 and without `getKey` the edit history resets when `rows` change. The `undo` and `redo` methods of
 the table ref do the same from code.
 
+The `commands` prop hands the history to the app, and every edit arrives in its `push`. Ctrl+Z and
+Ctrl+Y call the `undo()` and `redo()` of the app. They return the number of changed cells for the
+announcement.
+
 Ctrl+V pastes a block of tab separated text at the active cell, and the pasted area becomes the
 selection. A single value fills the whole selection, a block repeats over a multiple of its size,
 and cells past the table edge are dropped. Numbers, dates and booleans are read by the column type,
@@ -236,6 +244,17 @@ clear skip the cells that break the rules.
 On a phone a double tap opens the editor. Pinned rows and group rows are not edited.
 
 <Example name="table/Edits" />
+
+### Custom clipboard format
+
+The `clipboard` prop replaces the clipboard format. `serialize` receives the ranges, the rows and
+the column keys and returns the text and HTML to copy, and `copyLimit` does not apply to it.
+
+`parse` receives the text and HTML of a paste with the top left target cell and returns a block of
+strings. The block goes through the usual paste: parsing by column type, the rules and one undo
+step. An `undefined` answer leaves the parsing to the table.
+
+<Example name="table/Clipboard" />
 
 ### Custom editors
 

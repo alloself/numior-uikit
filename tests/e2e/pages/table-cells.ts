@@ -34,6 +34,7 @@ export class TableCellsSection {
   readonly nameBox: Locator;
   readonly formula: Locator;
   readonly references: Locator;
+  readonly recalc: Locator;
 
   constructor(private readonly page: Page) {
     this.toggle = page.getByTestId('table-cells-toggle');
@@ -44,6 +45,7 @@ export class TableCellsSection {
     this.nameBox = page.getByTestId('table-cells-name');
     this.formula = page.getByTestId('table-cells-formula');
     this.references = this.grid.locator(':scope > .nui-table__overlay .sheet-ref');
+    this.recalc = page.getByTestId('table-cells-recalc');
   }
 
   async show(): Promise<void> {
@@ -73,6 +75,17 @@ export class TableCellsSection {
     await this.page.mouse.down();
     await this.page.mouse.move(end.x + end.width / 2, end.y + end.height / 2, { steps: 5 });
     await this.page.mouse.up();
+  }
+
+  async paste(text: string): Promise<void> {
+    await this.page.evaluate((pasted) => {
+      const data = new DataTransfer();
+      const event = new ClipboardEvent('paste', { bubbles: true, cancelable: true });
+
+      data.setData('text/plain', pasted);
+      Object.defineProperty(event, 'clipboardData', { value: data });
+      document.activeElement?.dispatchEvent(event);
+    }, text);
   }
 
   editor(position: number, col: number): Locator {

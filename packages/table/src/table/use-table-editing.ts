@@ -7,6 +7,9 @@ import { boxOf, type RangeBounds, type RangeBox } from './table-ranges';
 import type { NuiTableMessages } from './table.messages';
 import type {
   NuiTableCellValue,
+  NuiTableClipboardBlock,
+  NuiTableClipboardData,
+  NuiTableCommandSink,
   NuiTableEdit,
   NuiTableEditEvent,
   NuiTableRanges,
@@ -26,8 +29,14 @@ export interface TableEditingOptions<T> {
   readonly limit: () => number;
   readonly copy: () => Promise<boolean>;
   readonly emit: (event: NuiTableEditEvent<T>) => void;
+  readonly sink: () => NuiTableCommandSink<T> | undefined;
+  readonly keys: () => readonly string[];
   readonly applied: (keys: readonly string[]) => void;
   readonly parse: (row: T, key: string, text: string) => ParsedCell;
+  readonly readBlock: (
+    data: NuiTableClipboardData,
+    target: TableCellPosition,
+  ) => NuiTableClipboardBlock | undefined;
   readonly check: (row: T, key: string, value: NuiTableCellValue) => string | undefined;
   readonly bounds: () => RangeBounds;
   readonly select: (ranges: NuiTableRanges) => void;
@@ -46,7 +55,7 @@ export interface TableEditing<T> {
   redo(): boolean;
   reset(): void;
   pastable(): boolean;
-  paste(text: string): boolean;
+  paste(data: NuiTableClipboardData): boolean;
   pasteFromClipboard(): Promise<boolean>;
   onPaste(event: ClipboardEvent): void;
   onKeydown(event: KeyboardEvent): boolean;
@@ -174,8 +183,15 @@ export const useTableEditing = <T>(options: TableEditingOptions<T>): TableEditin
     if (changes.length === 0) {
       return;
     }
+    const sink = options.sink();
+
     options.emit({ kind, changes });
-    history.push({ kind, changes });
+
+    if (sink === undefined) {
+      history.push({ kind, changes });
+    } else {
+      sink.push({ kind, changes });
+    }
     options.applied(keysOf(changes));
   };
 
@@ -256,7 +272,24 @@ export const useTableEditing = <T>(options: TableEditingOptions<T>): TableEditin
     return resolved.length;
   };
 
+  const replayOutside = (sink: NuiTableCommandSink<T>, kind: 'undo' | 'redo'): boolean => {
+    const count = kind === 'undo' ? sink.undo() : sink.redo();
+    const texts = options.messages.value;
+
+    if (count === 0) {
+      return false;
+    }
+    options.applied(options.keys());
+    options.announce(kind === 'undo' ? texts.undone({ count }) : texts.redone({ count }));
+    return true;
+  };
+
   const undo = (): boolean => {
+    const sink = options.sink();
+
+    if (sink !== undefined) {
+      return replayOutside(sink, 'undo');
+    }
     const command = history.undo();
 
     if (command === undefined) {
@@ -272,6 +305,11 @@ export const useTableEditing = <T>(options: TableEditingOptions<T>): TableEditin
   };
 
   const redo = (): boolean => {
+    const sink = options.sink();
+
+    if (sink !== undefined) {
+      return replayOutside(sink, 'redo');
+    }
     const command = history.redo();
 
     if (command === undefined) {
@@ -324,11 +362,29 @@ export const useTableEditing = <T>(options: TableEditingOptions<T>): TableEditin
     return true;
   };
 
-  const paste = (text: string): boolean => {
+  const targetCell = (): TableCellPosition | undefined => {
+    const last = options.ranges().at(-1);
+
+    if (last === undefined) {
+      return options.cell();
+    }
+    const box = boxOf(last);
+
+    return { row: box.top, col: box.start };
+  };
+
+  const blockOf = (data: NuiTableClipboardData): NuiTableClipboardBlock => {
+    const target = targetCell();
+    const block = target === undefined ? undefined : options.readBlock(data, target);
+
+    return block ?? parseTsv(data.text);
+  };
+
+  const paste = (data: NuiTableClipboardData): boolean => {
     const limit = options.limit();
 
     const plan = planPaste(
-      parseTsv(text),
+      blockOf(data),
       options.ranges(),
       options.cell(),
       options.bounds(),
@@ -353,7 +409,7 @@ export const useTableEditing = <T>(options: TableEditingOptions<T>): TableEditin
       options.announce(options.messages.value.pasteDenied);
       return false;
     }
-    return paste(text);
+    return paste({ text });
   };
 
   const onModified = (event: KeyboardEvent): boolean => {
@@ -390,16 +446,17 @@ export const useTableEditing = <T>(options: TableEditingOptions<T>): TableEditin
       history.clear();
     },
     pastable: () => options.enabled() && options.readable(),
-    paste: (text) => options.enabled() && paste(text),
+    paste: (data) => options.enabled() && paste(data),
     pasteFromClipboard,
     onPaste: (event) => {
       const text = event.clipboardData?.getData('text/plain') ?? '';
+      const html = event.clipboardData?.getData('text/html') ?? '';
 
       if (!options.enabled() || text === '' || !options.owns(document.activeElement)) {
         return;
       }
       event.preventDefault();
-      paste(text);
+      paste(html === '' ? { text } : { text, html });
     },
     onKeydown: (event) => {
       if (!options.enabled() || event.altKey || !isCellTarget(event.target)) {

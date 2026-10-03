@@ -127,6 +127,7 @@
                 :paint="bodyPaint"
                 :active="focus.activeIn(item.index + pinnedCount)"
                 :revision="item.revision"
+                :revision-of="revisionOf"
                 :level="item.level"
                 :group="item.group"
                 :expanded="item.expanded"
@@ -152,12 +153,13 @@
                     @toggle="selection.toggle(rowAt(item.index))"
                   />
                 </template>
-                <template #default="{ column, merge }">
+                <template #default="{ column, merge, revision: cellRevision }">
                   <CellContent
                     :item="item"
                     :position="item.index"
                     :column="column"
                     :merge="merge"
+                    :revision="cellRevision"
                   />
                 </template>
               </NuiTableRow>
@@ -261,6 +263,7 @@ import {
   onMounted,
   ref,
   renderSlot,
+  shallowReactive,
   shallowRef,
   useSlots,
   useTemplateRef,
@@ -367,7 +370,7 @@ import { useTableExport } from './use-table-export';
 import { editorPlan } from './table-editors';
 import { parseCell } from './table-parse';
 import { ruleFailure } from './table-rules';
-import { clampPosition, columnSpansOf, type RangeBox } from './table-ranges';
+import { boxOf, clampPosition, columnSpansOf, type RangeBox } from './table-ranges';
 import { useTableRanges } from './use-table-ranges';
 import { pageRowsOf, pageStepOf } from './table-keys';
 import { useTableExpansion } from './use-table-expansion';
@@ -507,6 +510,8 @@ const {
   cellSelection = false,
   contextMenu = undefined,
   copyLimit = COPY_LIMIT,
+  clipboard: clipboardHooks,
+  commands,
   controls,
 } = defineProps<NuiTableProps<T>>();
 
@@ -586,6 +591,8 @@ const waiting = ref(!engine.value.settled());
 const loadingNow = computed(() => loading || waiting.value);
 const rowCount = ref(0);
 const revision = ref(0);
+const touched = shallowReactive(new Map<number, number>());
+let stamp = 0;
 const arrangement = ref(0);
 const announcement = ref('');
 const rowsIntent = createIntent<'rows'>();
@@ -1722,6 +1729,8 @@ const pinnedPaint = computed(() => (cellStyle === undefined ? undefined : paintP
 const clipboard = useTableClipboard<T>({
   ranges: () => ranges.value,
   cell: copyCell,
+  position: activeData,
+  serialize: () => clipboardHooks?.serialize,
   rowAt: rowAtPosition,
   keyAt: (col) => dataKeys.value[col],
   labelOf: (key) => columnAt(key).label,
@@ -1797,17 +1806,14 @@ const editing = useTableEditing<T>({
   emit: (event) => {
     emit('edit', event);
   },
+  sink: () => commands,
+  keys: () => dataKeys.value,
   applied: (keys) => {
-    totals.reset();
-
-    const ran = currentQuery();
-
-    engine.value.patch(ran, keys);
-    totals.take(ran);
-    sync();
+    applyChanged(keys);
   },
   parse: (row, key, text) =>
     parseCell(columnAt(key), text, row, resolvedLocale.value, booleanTexts.value),
+  readBlock: (data, target) => clipboardHooks?.parse?.(data, target),
   check: checkCell,
   bounds: () => ({ rows: visibleRows.value, cols: dataKeys.value.length }),
   select: (next) => {
@@ -2257,8 +2263,52 @@ const ensureRows = (): void => {
 };
 
 const sync = (): void => {
+  stamp += 1;
   rowCount.value = engine.value.count();
-  revision.value += 1;
+  revision.value = stamp;
+
+  if (touched.size > 0) {
+    touched.clear();
+  }
+};
+
+const applyChanged = (keys: readonly string[]): void => {
+  totals.reset();
+
+  const ran = currentQuery();
+
+  engine.value.patch(ran, keys);
+  totals.take(ran);
+  sync();
+};
+
+const queryActive = (): boolean =>
+  footRows.value > 0 ||
+  quick.value !== '' ||
+  sort.value.length > 0 ||
+  filters.value.length > 0 ||
+  grouping.value.length > 0;
+
+const revisionOf = (position: number): number => touched.get(position) ?? 0;
+
+const touchRows = (list: NuiTableRanges): void => {
+  const boxes = list.map(boxOf);
+
+  stamp += 1;
+
+  for (const item of rowWindow.items.value) {
+    if (boxes.some((box) => item.index >= box.top && item.index <= box.bottom)) {
+      touched.set(item.index, stamp);
+    }
+  }
+};
+
+const invalidate = (list?: NuiTableRanges): void => {
+  if (list === undefined || queryActive()) {
+    applyChanged(dataKeys.value);
+    return;
+  }
+  touchRows(list);
 };
 
 const rearrange = (): void => {
@@ -2452,5 +2502,6 @@ defineExpose<NuiTableExposed>({
   cancelEdit: () => {
     cellEditor.cancel();
   },
+  invalidate,
 });
 </script>

@@ -4,7 +4,12 @@ import { yieldToHost } from '../engine';
 import { copyShapeOf, spanItems, spanLength, type RangeSpan } from './table-ranges';
 import { htmlOf, tsvOf } from './table-clipboard';
 import type { NuiTableMessages } from './table.messages';
-import type { NuiTableRanges } from './table.types';
+import type {
+  NuiTableClipboardData,
+  NuiTableClipboardScope,
+  NuiTableRanges,
+  TableCellPosition,
+} from './table.types';
 
 export interface TableCopyCell<T> {
   readonly row: T;
@@ -14,6 +19,10 @@ export interface TableCopyCell<T> {
 export interface TableClipboardOptions<T> {
   readonly ranges: () => NuiTableRanges;
   readonly cell: () => TableCopyCell<T> | undefined;
+  readonly position: () => TableCellPosition | undefined;
+  readonly serialize: () =>
+    | ((scope: NuiTableClipboardScope<T>) => NuiTableClipboardData)
+    | undefined;
   readonly rowAt: (position: number) => T | undefined;
   readonly keyAt: (col: number) => string | undefined;
   readonly labelOf: (key: string) => string;
@@ -179,9 +188,35 @@ export const useTableClipboard = <T>(options: TableClipboardOptions<T>): TableCl
     return write(headerOf(plan.keys, headers), job.lines, doneOf(job));
   };
 
+  const scopeRanges = (): NuiTableRanges => {
+    const ranges = options.ranges();
+    const at = options.position();
+
+    return ranges.length > 0 || at === undefined ? ranges : [{ from: at, to: at }];
+  };
+
+  const delegate = async (
+    serialize: (scope: NuiTableClipboardScope<T>) => NuiTableClipboardData,
+    headers: boolean,
+  ): Promise<boolean> => {
+    const ranges = scopeRanges();
+    const shape = copyShapeOf(ranges);
+    const count = shape.kind === 'disjoint' ? 0 : spanLength(shape.rows);
+    const data = serialize({ ranges, headers, rowAt: options.rowAt, keyAt: options.keyAt });
+    const copied = await clipboard.copyRich(data);
+    const texts = options.messages.value;
+
+    options.announce(copied ? texts.copied({ count }) : texts.copyFailed);
+    return copied;
+  };
+
   const copy = (headers: boolean): Promise<boolean> => {
     const plan = planOf();
+    const serialize = options.serialize();
 
+    if (serialize !== undefined && plan !== undefined && plan.kind !== 'disjoint') {
+      return delegate(serialize, headers);
+    }
     switch (plan?.kind) {
       case undefined:
         return Promise.resolve(false);

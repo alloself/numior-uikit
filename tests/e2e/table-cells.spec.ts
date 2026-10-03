@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { copiedTexts, stubClipboard } from './helpers/clipboard';
 import { boxGaps, boxOf } from './helpers/geometry';
 import { PlaygroundPage } from './pages/playground';
 
@@ -186,6 +187,59 @@ test.describe('table cell source', () => {
     await expect(cells.formula).toBeFocused();
     await page.keyboard.press('Escape');
     await expect(cells.cell(1, 1)).toHaveText(B2);
+  });
+
+  test('copies and pastes semicolon separated lines through the clipboard hooks', async ({
+    page,
+  }) => {
+    await stubClipboard(page);
+    const playground = new PlaygroundPage(page);
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    const { tableCells: cells } = playground;
+    await cells.show();
+    await cells.cell(1, 1).click();
+    await cells.cell(2, 2).click({ modifiers: ['Shift'] });
+    await page.keyboard.press('Control+c');
+
+    await expect.poll(() => copiedTexts(page)).toEqual([`${B2};6,5\n7,9;${C3}`]);
+    await cells.cell(6, 1).click();
+    await cells.paste('1;2;3');
+    await expect(cells.cell(6, 1)).toHaveText('1');
+    await expect(cells.cell(6, 2)).toHaveText('2');
+    await expect(cells.cell(6, 3)).toHaveText('3');
+  });
+
+  test('undoes and redoes sheet edits through the history of the app', async ({ page }) => {
+    const playground = new PlaygroundPage(page);
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    const { tableCells: cells } = playground;
+    await cells.show();
+    await cells.cell(1, 1).click();
+    await page.keyboard.type('5');
+    await page.keyboard.press('Enter');
+
+    await expect(cells.cell(1, 1)).toHaveText('5');
+    await page.keyboard.press('Control+z');
+    await expect(cells.cell(1, 1)).toHaveText(B2);
+    await page.keyboard.press('Control+y');
+    await expect(cells.cell(1, 1)).toHaveText('5');
+  });
+
+  test('redraws recalculated cells when the app invalidates their range', async ({ page }) => {
+    const playground = new PlaygroundPage(page);
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    const { tableCells: cells } = playground;
+    await cells.show();
+    await cells.recalc.click();
+
+    await expect(cells.cell(1, 1)).toHaveText('111');
+    await expect(cells.cell(3, 3)).toHaveText('133');
+    await cells.recalc.click();
+    await expect(cells.cell(1, 1)).toHaveText('211');
+    await expect(cells.cell(4, 1)).toHaveText('14,1');
   });
 
   test('a sheet from a cell source has no automatically detectable WCAG AA violations', async ({

@@ -168,6 +168,8 @@ export interface NuiTableProps<T> {
   cellSelection?: boolean | undefined;
   contextMenu?: NuiTableContextMenu<T> | false | undefined;
   copyLimit?: number | undefined;
+  clipboard?: NuiTableClipboard<T> | undefined;
+  commands?: NuiTableCommandSink<T> | undefined;
   controls?: NuiControlRegistry | undefined;
 }
 
@@ -278,6 +280,36 @@ export type NuiTableContextMenu<T> = (scope: NuiTableContextScope<T>) => readonl
 
 export interface NuiTableCopyOptions {
   readonly headers?: boolean | undefined;
+}
+
+export interface NuiTableCommandSink<T> {
+  push(command: NuiTableEditEvent<T>): void;
+  undo(): number;
+  redo(): number;
+}
+
+export interface NuiTableClipboardData {
+  readonly text: string;
+  readonly html?: string | undefined;
+}
+
+export interface NuiTableClipboardScope<T> {
+  readonly ranges: NuiTableRanges;
+  readonly headers: boolean;
+  readonly rowAt: (position: number) => T | undefined;
+  readonly keyAt: (col: number) => string | undefined;
+}
+
+export type NuiTableClipboardBlock = readonly (readonly string[])[];
+
+export interface NuiTableClipboard<T> {
+  readonly serialize?: ((scope: NuiTableClipboardScope<T>) => NuiTableClipboardData) | undefined;
+  readonly parse?:
+    | ((
+        data: NuiTableClipboardData,
+        target: TableCellPosition,
+      ) => NuiTableClipboardBlock | undefined)
+    | undefined;
 }
 
 export interface NuiTableCsvOptions {
@@ -439,6 +471,7 @@ export interface TableCellContentProps<T> {
   readonly row?: T | undefined;
   readonly item?: TableBodyRow | undefined;
   readonly pinned?: boolean | undefined;
+  readonly revision?: number | undefined;
 }
 
 export interface TablePinnedRow<T> {
@@ -558,6 +591,7 @@ export interface NuiTableExposed {
   startEdit(mode: NuiTableEditMode, options?: NuiTableStartEditOptions): boolean;
   commitEdit(move?: NuiTableEditMove): boolean;
   cancelEdit(): void;
+  invalidate(ranges?: NuiTableRanges): void;
 }
 
 export type TablePaneName = 'start' | 'centre' | 'end';
@@ -710,6 +744,7 @@ export interface NuiTableRowProps {
   paint?: TableRowPainter | undefined;
   active?: number | undefined;
   revision?: number | undefined;
+  revisionOf?: ((position: number) => number) | undefined;
   level?: number | undefined;
   group?: TableGroupRow | undefined;
   expanded?: boolean | undefined;

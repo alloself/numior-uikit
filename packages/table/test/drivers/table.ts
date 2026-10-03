@@ -1104,11 +1104,12 @@ export class TableDriver<T> {
     await nextTick();
   }
 
-  async paste(text: string): Promise<void> {
+  async paste(text: string, html = ''): Promise<void> {
     const event = new Event('paste', { bubbles: true, cancelable: true });
+    const parts: Readonly<Record<string, string>> = { 'text/plain': text, 'text/html': html };
 
     Object.defineProperty(event, 'clipboardData', {
-      value: { getData: (type: string) => (type === 'text/plain' ? text : '') },
+      value: { getData: (type: string) => parts[type] ?? '' },
     });
 
     (document.activeElement ?? this.element).dispatchEvent(event);
@@ -2067,6 +2068,11 @@ export class TableDriver<T> {
 
   async cancelEdit(): Promise<void> {
     this.exposed.value?.cancelEdit();
+    await nextTick();
+  }
+
+  async invalidate(ranges?: NuiTableRanges): Promise<void> {
+    this.exposed.value?.invalidate(ranges);
     await nextTick();
   }
 
