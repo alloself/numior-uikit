@@ -67,9 +67,8 @@
         :aria-label="clockText"
         :disabled="isDisabled || isReadonly"
         v-bind="control.invokerAttrs.value"
-      >
-        <NuiIcon alias="clock" />
-      </NuiButton>
+        icon="clock"
+      />
       <div
         :ref="setPanel"
         class="nui-time-field__panel"
@@ -116,7 +115,6 @@ import {
 } from '@numior/primitives';
 import NuiFieldFrame from '../field/NuiFieldFrame';
 import NuiButton from '../button/NuiButton.vue';
-import NuiIcon from '../icon/NuiIcon.vue';
 import { useTriggerElement } from '../shared/trigger-ref';
 import NuiTimeSegment from './NuiTimeSegment.vue';
 import NuiTimeWheels from './NuiTimeWheels.vue';

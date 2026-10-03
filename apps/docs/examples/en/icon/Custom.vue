@@ -1,8 +1,6 @@
 <template>
   <div class="flex items-center gap-3">
-    <NuiButton variant="ghost" tone="error" aria-label="Delete">
-      <NuiIcon alias="trash" />
-    </NuiButton>
+    <NuiButton variant="ghost" tone="error" aria-label="Delete" icon="trash" />
     <NuiButton variant="outline" tone="neutral">
       <NuiIcon :icon="Heart" /> Add to favourites
     </NuiButton>

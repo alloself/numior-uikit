@@ -3,22 +3,19 @@
     variant="ghost"
     tone="neutral"
     size="sm"
-    icon-only
     class="nui-sidebar-trigger"
     :aria-label="labelText"
     :aria-expanded="expanded ? 'true' : 'false'"
     :aria-controls="layout.sidebarId.value"
+    :icon="layout.mobile.value ? 'menu' : 'sidebar'"
     @click="layout.toggle()"
-  >
-    <NuiIcon :alias="layout.mobile.value ? 'menu' : 'sidebar'" />
-  </NuiButton>
+  />
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useMessages } from '@numior/primitives';
 import NuiButton from '../button/NuiButton.vue';
-import NuiIcon from '../icon/NuiIcon.vue';
 import { useLayout } from '../layout/layout-context';
 import { sidebarMessages } from './sidebar.messages';
 import type { NuiSidebarTriggerProps } from './sidebar.types';

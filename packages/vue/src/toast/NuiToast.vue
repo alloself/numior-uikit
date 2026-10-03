@@ -29,10 +29,9 @@
       size="sm"
       class="nui-toast__close"
       :aria-label="closeText"
+      icon="x"
       @click="dismiss"
-    >
-      <NuiIcon alias="x" />
-    </NuiButton>
+    />
   </div>
 </template>
 

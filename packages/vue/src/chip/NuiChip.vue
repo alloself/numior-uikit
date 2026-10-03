@@ -19,10 +19,9 @@
       :aria-label="removeText"
       :tabindex="removeTabbable ? undefined : -1"
       :disabled="disabled"
+      icon="x"
       @click="emit('remove')"
-    >
-      <NuiIcon alias="x" />
-    </NuiButton>
+    />
   </span>
 </template>
 

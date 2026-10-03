@@ -81,9 +81,9 @@
           tone="neutral"
           size="sm"
           :disabled="!canAdd"
+          icon="plus"
           @click="add"
         >
-          <NuiIcon alias="plus" />
           {{ texts.add }}
         </NuiButton>
       </slot>

@@ -1,9 +1,13 @@
 <template>
   <NuiMenu :items="entries" placement="bottom-end" label="Действия с заказом">
     <template #trigger="{ attrs }">
-      <NuiButton v-bind="attrs" variant="ghost" tone="neutral" aria-label="Действия">
-        <NuiIcon alias="ellipsis" />
-      </NuiButton>
+      <NuiButton
+        v-bind="attrs"
+        variant="ghost"
+        tone="neutral"
+        aria-label="Действия"
+        icon="ellipsis"
+      />
     </template>
   </NuiMenu>
   <p class="text-sm text-muted-foreground">Действие: {{ last || 'не выбрано' }}</p>
@@ -11,7 +15,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { NuiButton, NuiIcon, NuiMenu, type NuiMenuEntry } from '@numior/vue';
+import { NuiButton, NuiMenu, type NuiMenuEntry } from '@numior/vue';
 
 const last = ref('');
 

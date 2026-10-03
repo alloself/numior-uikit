@@ -68,6 +68,31 @@ describe('NuiButton', () => {
     expect(ButtonDriver.mount({ props: { iconOnly: true } }).hasModifier('icon-only')).toBe(true);
   });
 
+  it('takes its icon from the icon prop and squares itself when there is no text', () => {
+    const close = ButtonDriver.mount({
+      content: 'none',
+      props: { icon: 'x' },
+      attrs: { 'aria-label': 'Close' },
+    });
+
+    expect(close.iconAliases).toEqual(['x']);
+    expect(close.hasModifier('icon-only')).toBe(true);
+
+    const add = ButtonDriver.mount({ props: { icon: 'plus' }, label: 'Add' });
+
+    expect(add.iconAliases).toEqual(['plus']);
+    expect(add.hasModifier('icon-only')).toBe(false);
+    expect(add.node.textContent).toBe('Add');
+
+    expect(
+      ButtonDriver.mount({ content: 'none', props: { icon: 'x', iconOnly: false } }).hasModifier(
+        'icon-only',
+      ),
+    ).toBe(false);
+
+    expect(ButtonDriver.mount({ content: 'none' }).hasModifier('icon-only')).toBe(false);
+  });
+
   it('renders as a link when given a destination and keeps the button contract', () => {
     const link = ButtonDriver.mount({ props: { href: '/docs', variant: 'outline' } });
     expect(link.tag).toBe('a');

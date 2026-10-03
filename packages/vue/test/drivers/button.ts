@@ -5,7 +5,7 @@ import { configPlugins } from '../support/config';
 import { RouterStub } from '../support/router-stub';
 import { ComponentDriver } from './component';
 
-export type ButtonContent = 'text' | 'icon' | 'icon-with-text';
+export type ButtonContent = 'text' | 'icon' | 'icon-with-text' | 'none';
 
 export interface ButtonMountOptions {
   readonly props?: NuiButtonProps;
@@ -45,7 +45,7 @@ export class ButtonDriver extends ComponentDriver {
       mount(NuiButton, {
         props: viaRouter ? { ...props, as: RouterStub } : props,
         attrs: onClick ? { ...attrs, onClick } : attrs,
-        slots: { default: slotFor(content, label) },
+        slots: content === 'none' ? {} : { default: slotFor(content, label) },
         global: {
           plugins: configPlugins(config),
           components: routerComponent ? { RouterLink: routerComponent } : {},
@@ -61,6 +61,10 @@ export class ButtonDriver extends ComponentDriver {
 
   get node(): HTMLElement {
     return this.wrapper.find<HTMLElement>('.nui-button').element;
+  }
+
+  get iconAliases(): unknown[] {
+    return this.wrapper.findAllComponents(NuiIcon).map((icon) => icon.props('alias'));
   }
 
   get tag(): string {

@@ -27,10 +27,9 @@
       size="sm"
       class="nui-alert__close"
       :aria-label="dismissText"
+      icon="x"
       @click="dismiss"
-    >
-      <NuiIcon alias="x" />
-    </NuiButton>
+    />
   </div>
 </template>
 

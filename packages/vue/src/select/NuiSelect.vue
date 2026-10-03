@@ -43,10 +43,9 @@
         size="sm"
         class="nui-select__clear"
         :aria-label="clearText"
+        icon="x"
         @click="clear"
-      >
-        <NuiIcon alias="x" />
-      </NuiButton>
+      />
       <NuiTree
         v-if="isTree"
         :ref="setListbox"

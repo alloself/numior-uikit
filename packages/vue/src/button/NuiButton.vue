@@ -9,13 +9,14 @@
       {
         'nui-button--loading': loading,
         'nui-button--disabled': disabled,
-        'nui-button--icon-only': iconOnly ?? isIconOnlyContent(slots.default),
+        'nui-button--icon-only': squared(),
       },
     ]"
     v-bind="controlAttrs"
     @click="onClick"
   >
     <span class="nui-button__content">
+      <NuiIcon v-if="icon" :alias="icon" />
       <slot />
     </span>
     <span v-if="loading" class="nui-button__loader">
@@ -29,7 +30,7 @@ import { computed, useSlots } from 'vue';
 import NuiIcon from '../icon/NuiIcon.vue';
 import { destinationAttrs, useLinkTag } from '../shared/destination';
 import type { NuiButtonProps } from './button.types';
-import { isIconOnlyContent } from './icon-only';
+import { slotContent } from './icon-only';
 
 const {
   variant = 'solid',
@@ -39,6 +40,7 @@ const {
   disabled = false,
   loading = false,
   iconOnly = undefined,
+  icon,
   as,
   href,
   to,
@@ -47,6 +49,13 @@ const {
 defineSlots<{ default?(): unknown }>();
 
 const slots = useSlots();
+
+const squared = (): boolean => {
+  const content = slotContent(slots.default);
+
+  return iconOnly ?? (content === 'icons' || (content === 'empty' && icon !== undefined));
+};
+
 const isLink = computed(() => href !== undefined || to !== undefined);
 const linkTag = useLinkTag(() => ({ as, to }));
 const tag = computed(() => (isLink.value ? linkTag.value : 'button'));

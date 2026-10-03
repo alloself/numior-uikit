@@ -25,10 +25,9 @@
               icon-only
               :aria-label="cancelLabel"
               :disabled="disabled"
+              icon="x"
               @click="cancel"
-            >
-              <NuiIcon alias="x" />
-            </NuiButton>
+            />
             <template v-else>
               <NuiButton
                 v-if="canRetry"
@@ -38,10 +37,9 @@
                 icon-only
                 :aria-label="retryLabel"
                 :disabled="disabled"
+                icon="refresh"
                 @click="retry"
-              >
-                <NuiIcon alias="refresh" />
-              </NuiButton>
+              />
               <NuiButton
                 variant="ghost"
                 tone="neutral"
@@ -49,10 +47,9 @@
                 icon-only
                 :aria-label="removeLabel"
                 :disabled="disabled"
+                icon="x"
                 @click="remove"
-              >
-                <NuiIcon alias="x" />
-              </NuiButton>
+              />
             </template>
           </span>
         </template>

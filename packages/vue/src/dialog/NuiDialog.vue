@@ -33,10 +33,9 @@
       size="sm"
       class="nui-dialog__close"
       :aria-label="closeText"
+      icon="x"
       @click="control.close()"
-    >
-      <NuiIcon alias="x" />
-    </NuiButton>
+    />
   </dialog>
 </template>
 
@@ -44,7 +43,6 @@
 import { computed, useSlots, useTemplateRef } from 'vue';
 import { useDialog, useMessages } from '@numior/primitives';
 import NuiButton from '../button/NuiButton.vue';
-import NuiIcon from '../icon/NuiIcon.vue';
 import { useDialogLabels } from './dialog-labels';
 import { dialogMessages } from './dialog.messages';
 import type { NuiDialogProps } from './dialog.types';

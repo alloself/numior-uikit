@@ -24,22 +24,24 @@ const childrenOf = (child: Child): VNodeArrayChildren | undefined => {
 
 const isIcon = (child: Child): boolean => isVNode(child) && child.type === NuiIcon;
 
-export const isIconOnlyContent = (slot: Slot | undefined): boolean => {
+export const slotContent = (slot: Slot | undefined): 'empty' | 'icons' | 'other' => {
   if (!slot) {
-    return false;
+    return 'empty';
   }
   const queue: VNodeArrayChildren = [...slot()];
   let icons = 0;
+
   while (queue.length > 0) {
     const child = queue.pop();
     const nested = childrenOf(child);
+
     if (nested) {
       queue.push(...nested);
     } else if (isIcon(child)) {
       icons += 1;
     } else if (!isIgnorable(child)) {
-      return false;
+      return 'other';
     }
   }
-  return icons > 0;
+  return icons > 0 ? 'icons' : 'empty';
 };

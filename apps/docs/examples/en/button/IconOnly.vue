@@ -1,12 +1,8 @@
 <template>
-  <NuiButton aria-label="Add">
-    <NuiIcon alias="plus" />
-  </NuiButton>
-  <NuiButton variant="ghost" tone="neutral" aria-label="Close">
-    <NuiIcon alias="x" />
-  </NuiButton>
+  <NuiButton icon="plus" aria-label="Add" />
+  <NuiButton variant="ghost" tone="neutral" icon="x" aria-label="Close" />
 </template>
 
 <script setup lang="ts">
-import { NuiButton, NuiIcon } from '@numior/vue';
+import { NuiButton } from '@numior/vue';
 </script>

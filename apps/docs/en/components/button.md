@@ -33,13 +33,13 @@ so the form does not jump.
 
 ### With an icon
 
-An icon in the slot sits before the text with the shared gap.
+The `icon` prop puts a registry icon before the text with the shared gap. An icon in the slot works too.
 
 <Example name="button/WithIcon" />
 
 ### Icon only
 
-A button with a lone icon squares itself; it needs an `aria-label`.
+A button with a lone icon from `icon` or from the slot squares itself; it needs an `aria-label`.
 
 <Example name="button/IconOnly" />
 

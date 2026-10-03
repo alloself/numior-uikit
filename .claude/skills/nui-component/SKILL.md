@@ -119,8 +119,10 @@ commitDraft() })`; `NuiFormField` runs these commits before a programmatic submi
 - A prop typed as `Function | false` (or any union with `boolean`) gets a destructure default
   `= undefined`, exactly like tri-state booleans: Vue's Boolean casting turns an absent prop
   into `false` otherwise (`filter` in NuiCombobox).
-- A button whose slot holds only `NuiIcon` squares itself (`nui-button--icon-only`, no
-  horizontal padding); `:icon-only` forces or disables it. It always needs `aria-label`.
+- A button takes its glyph from the `icon` prop (`<NuiButton icon="x" />`), not from a
+  hand-placed `NuiIcon` in the slot. A button with `icon` and no text, or with a slot of only
+  `NuiIcon`, squares itself (`nui-button--icon-only`, no horizontal padding); `:icon-only`
+  forces or disables it. It always needs `aria-label`.
   Every button, icon-only included, shares the press feedback (`scale: 0.97`). Close buttons
   in cards align their glyph with the first text line
   (`margin-block-start: calc((font-size * line-height - var(--_height)) / 2)`) and with the

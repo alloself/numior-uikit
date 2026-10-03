@@ -53,10 +53,9 @@
           class="nui-combobox__clear"
           :aria-label="texts.clear"
           tabindex="-1"
+          icon="x"
           @click="clear"
-        >
-          <NuiIcon alias="x" />
-        </NuiButton>
+        />
         <NuiButton
           variant="ghost"
           tone="neutral"
@@ -116,7 +115,6 @@ import { createIntent, useFieldControl, useMessages, useSplitAttrs } from '@numi
 import NuiFieldFrame from '../field/NuiFieldFrame';
 import NuiButton from '../button/NuiButton.vue';
 import NuiChip from '../chip/NuiChip.vue';
-import NuiIcon from '../icon/NuiIcon.vue';
 import NuiList from '../list/NuiList.vue';
 import { isComposing } from '../shared/composition';
 import { filterOptions, flattenEntries, optionElementId, type NuiOption } from '../shared/options';

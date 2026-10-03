@@ -7,9 +7,7 @@
         own.</NuiCardDescription
       >
       <template #actions>
-        <NuiButton variant="ghost" tone="neutral" size="sm" aria-label="More">
-          <NuiIcon alias="ellipsis" />
-        </NuiButton>
+        <NuiButton variant="ghost" tone="neutral" size="sm" aria-label="More" icon="ellipsis" />
       </template>
     </NuiCardHeader>
     <NuiCardFooter>
@@ -27,6 +25,5 @@ import {
   NuiCardFooter,
   NuiCardHeader,
   NuiCardTitle,
-  NuiIcon,
 } from '@numior/vue';
 </script>

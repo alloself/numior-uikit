@@ -12,10 +12,9 @@
           tone="neutral"
           size="sm"
           :aria-label="clipboard.copied.value ? texts.copied : texts.copyCode"
+          :icon="clipboard.copied.value ? 'check' : 'copy'"
           @click="copy"
-        >
-          <NuiIcon :alias="clipboard.copied.value ? 'check' : 'copy'" />
-        </NuiButton>
+        />
       </div>
     </div>
     <NuiTabPanel value="preview" class="mt-2">
@@ -54,7 +53,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import { useClipboard } from '@numior/primitives';
-import { NuiButton, NuiCode, NuiIcon, NuiTab, NuiTabList, NuiTabPanel, NuiTabs } from '@numior/vue';
+import { NuiButton, NuiCode, NuiTab, NuiTabList, NuiTabPanel, NuiTabs } from '@numior/vue';
 import type { ExampleFile } from '../../examples/example.types';
 import type { ExampleFrameProps, PreviewOption } from '../theme.types';
 import PreviewFrame from './PreviewFrame.vue';

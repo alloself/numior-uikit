@@ -65,10 +65,9 @@
             icon-only
             class="nui-avatar-upload__retry"
             :aria-label="texts.retry"
+            icon="refresh"
             @click="retry"
-          >
-            <NuiIcon alias="refresh" />
-          </NuiButton>
+          />
           <NuiButton
             v-if="canRemove"
             variant="ghost"
@@ -77,10 +76,9 @@
             icon-only
             class="nui-avatar-upload__remove"
             :aria-label="texts.remove"
+            icon="x"
             @click="remove"
-          >
-            <NuiIcon alias="x" />
-          </NuiButton>
+          />
         </span>
         <NuiProgress
           v-if="uploading && model"

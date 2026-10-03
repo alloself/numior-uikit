@@ -33,9 +33,9 @@
         size="sm"
         class="font-normal text-muted-foreground"
         :aria-label="texts.search"
+        icon="search"
         @click="emit('search')"
       >
-        <NuiIcon alias="search" />
         <span v-if="!layout.mobile.value">{{ texts.search }}</span>
         <NuiKbd v-if="!layout.mobile.value" keys="mod+k" size="sm" />
       </NuiButton>
@@ -47,9 +47,8 @@
             tone="neutral"
             size="sm"
             :aria-label="texts.theme"
-          >
-            <NuiIcon :alias="schemeIcon" />
-          </NuiButton>
+            :icon="schemeIcon"
+          />
         </template>
         <NuiMenuRadioGroup v-model="scheme.scheme.value">
           <NuiMenuRadioItem value="light">{{ texts.light }}</NuiMenuRadioItem>
@@ -65,9 +64,8 @@
             tone="neutral"
             size="sm"
             :aria-label="texts.language"
-          >
-            <NuiIcon alias="languages" />
-          </NuiButton>
+            icon="languages"
+          />
         </template>
         <NuiMenuItem v-for="locale in locales" :key="locale.key" :href="locale.link">
           {{ locale.label }}

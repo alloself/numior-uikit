@@ -47,11 +47,10 @@
           tabindex="-1"
           :aria-label="decrementText"
           :disabled="!canDecrement"
+          icon="minus"
           @pointerdown.prevent
           @click="stepBy(-1)"
-        >
-          <NuiIcon alias="minus" />
-        </NuiButton>
+        />
         <NuiButton
           variant="ghost"
           tone="neutral"
@@ -61,11 +60,10 @@
           tabindex="-1"
           :aria-label="incrementText"
           :disabled="!canIncrement"
+          icon="plus"
           @pointerdown.prevent
           @click="stepBy(1)"
-        >
-          <NuiIcon alias="plus" />
-        </NuiButton>
+        />
       </span>
       <input v-if="name" type="hidden" :name="name" :value="model ?? ''" :disabled="isDisabled" />
     </div>
@@ -89,7 +87,6 @@ import {
 } from '@numior/primitives';
 import NuiFieldFrame from '../field/NuiFieldFrame';
 import NuiButton from '../button/NuiButton.vue';
-import NuiIcon from '../icon/NuiIcon.vue';
 import { numberFieldMessages } from './number-field.messages';
 import type { NuiNumberFieldProps } from './number-field.types';
 

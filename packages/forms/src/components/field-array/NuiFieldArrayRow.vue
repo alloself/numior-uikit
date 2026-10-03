@@ -15,11 +15,10 @@
       size="md"
       :aria-label="moveLabel"
       :disabled="gripDisabled"
+      icon="grip"
       @pointerdown="emit('grab', $event)"
       @keydown="emit('grip-keydown', $event)"
-    >
-      <NuiIcon alias="grip" />
-    </NuiButton>
+    />
     <div class="nui-field-array__content">
       <slot />
       <p v-if="error" class="nui-field-array__row-error">{{ error }}</p>
@@ -32,17 +31,16 @@
         tone="neutral"
         size="md"
         :aria-label="removeLabel"
+        icon="trash"
         @click="emit('remove')"
-      >
-        <NuiIcon alias="trash" />
-      </NuiButton>
+      />
     </slot>
   </li>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import { NuiButton, NuiIcon } from '@numior/vue';
+import { NuiButton } from '@numior/vue';
 import type { NuiFieldArrayRowProps } from './field-array.types';
 
 const {

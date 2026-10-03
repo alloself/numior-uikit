@@ -11,9 +11,8 @@
               size="sm"
               class="nui-breadcrumbs__more"
               :aria-label="moreText"
-            >
-              <NuiIcon alias="ellipsis" />
-            </NuiButton>
+              icon="ellipsis"
+            />
           </template>
         </NuiMenu>
         <slot v-else name="item" :item="entry.item" :index="entry.index" :current="entry.current">
@@ -33,7 +32,6 @@
 import { computed } from 'vue';
 import { useMessages } from '@numior/primitives';
 import NuiButton from '../button/NuiButton.vue';
-import NuiIcon from '../icon/NuiIcon.vue';
 import NuiMenu from '../menu/NuiMenu.vue';
 import NuiBreadcrumbCrumb from './NuiBreadcrumbCrumb.vue';
 import { layoutBreadcrumbs } from './breadcrumbs-layout';

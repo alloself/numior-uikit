@@ -25,10 +25,9 @@
       class="nui-date-picker__clear"
       :aria-label="clearLabel"
       tabindex="-1"
+      icon="x"
       @click="emit('clear')"
-    >
-      <NuiIcon alias="x" />
-    </NuiButton>
+    />
     <NuiButton
       variant="ghost"
       tone="neutral"
@@ -40,10 +39,9 @@
       :aria-expanded="popover.open.value ? 'true' : 'false'"
       :aria-controls="popover.control.id.value"
       :disabled="disabled || readonly"
+      icon="calendar"
       @click="popover.toggle"
-    >
-      <NuiIcon alias="calendar" />
-    </NuiButton>
+    />
     <div
       :ref="popover.setPanel"
       class="nui-date-picker__panel"
@@ -62,7 +60,6 @@
 <script setup lang="ts">
 import { useTemplateRef } from 'vue';
 import NuiButton from '../button/NuiButton.vue';
-import NuiIcon from '../icon/NuiIcon.vue';
 import type { NuiSize } from '../shared/scale.types';
 import type { PickerPopover } from './use-picker-popover';
 

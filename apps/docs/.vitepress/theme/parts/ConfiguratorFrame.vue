@@ -15,10 +15,9 @@
           tone="neutral"
           size="sm"
           :aria-label="clipboard.copied.value ? texts.copied : texts.copyCode"
+          :icon="clipboard.copied.value ? 'check' : 'copy'"
           @click="copy"
-        >
-          <NuiIcon :alias="clipboard.copied.value ? 'check' : 'copy'" />
-        </NuiButton>
+        />
       </div>
     </div>
     <NuiTabPanel value="preview" class="mt-2 flex flex-col gap-4">
@@ -72,7 +71,6 @@ import { useClipboard } from '@numior/primitives';
 import {
   NuiButton,
   NuiCode,
-  NuiIcon,
   NuiInput,
   NuiTab,
   NuiTabList,

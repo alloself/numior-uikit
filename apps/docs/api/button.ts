@@ -28,6 +28,10 @@ const docs: DocsMap = {
         ru: 'Делает кнопку квадратной; определяется сам по содержимому из одной иконки.',
         en: 'Squares the button; detected automatically for a lone icon.',
       },
+      icon: {
+        ru: 'Иконка из реестра перед текстом; без текста кнопка становится квадратной.',
+        en: 'Registry icon before the text; without text the button becomes square.',
+      },
       as: {
         ru: 'Переопределяет тег или компонент в режиме ссылки; без него to берёт роутер.',
         en: 'Overrides the tag or component of the link mode; without it to takes the router.',

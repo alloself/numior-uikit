@@ -6,9 +6,7 @@
         >Вся карточка ведёт к разделу, кнопка в шапке живёт отдельно.</NuiCardDescription
       >
       <template #actions>
-        <NuiButton variant="ghost" tone="neutral" size="sm" aria-label="Ещё">
-          <NuiIcon alias="ellipsis" />
-        </NuiButton>
+        <NuiButton variant="ghost" tone="neutral" size="sm" aria-label="Ещё" icon="ellipsis" />
       </template>
     </NuiCardHeader>
     <NuiCardFooter>
@@ -26,6 +24,5 @@ import {
   NuiCardFooter,
   NuiCardHeader,
   NuiCardTitle,
-  NuiIcon,
 } from '@numior/vue';
 </script>
