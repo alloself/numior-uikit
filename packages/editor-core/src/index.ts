@@ -29,3 +29,17 @@ export type {
   SchemaLimits,
   SchemaSpec,
 } from './schema/schema.types';
+export { createMapping, createStepMap } from './transform/mapping';
+export type {
+  Assoc,
+  MapRange,
+  MapResult,
+  Mappable,
+  Mapping,
+  StepMap,
+} from './transform/mapping.types';
+export { sliceSize } from './transform/replace';
+export { applyStep, invertStep, mapStep, mergeSteps, stepMapOf } from './transform/step';
+export type { Step, StepFailure, StepResult } from './transform/step.types';
+export { createTransform } from './transform/transform';
+export type { SplitType, Transform, TransformOptions } from './transform/transform.types';

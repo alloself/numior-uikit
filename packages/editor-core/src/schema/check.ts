@@ -114,6 +114,9 @@ const checkElement = (context: CheckContext, path: readonly number[], node: Elem
   });
 };
 
+const resultOf = (context: CheckContext): DocCheck =>
+  context.issues.length === 0 ? { ok: true } : { ok: false, issues: context.issues };
+
 export const checkTree = (schema: SchemaShape, root: ElementNode): DocCheck => {
   const context: CheckContext = { schema, issues: [], ids: new Set() };
 
@@ -121,5 +124,15 @@ export const checkTree = (schema: SchemaShape, root: ElementNode): DocCheck => {
     context.issues.push({ kind: 'type', path: [], type: root.type });
   }
   checkElement(context, [], root);
-  return context.issues.length === 0 ? { ok: true } : { ok: false, issues: context.issues };
+  return resultOf(context);
+};
+
+export const checkNodes = (schema: SchemaShape, nodes: readonly ElementNode[]): DocCheck => {
+  const context: CheckContext = { schema, issues: [], ids: new Set() };
+
+  nodes.forEach((node, index) => {
+    checkElement(context, [index], node);
+  });
+
+  return resultOf(context);
 };

@@ -74,6 +74,7 @@ export const resolveIn = (root: ElementNode, size: number, pos: number): Resolve
     nodeBefore,
     nodeAfter,
     node: (level) => levelAt(levels, level).node,
+    indexAt: (level) => levelAt(levels, level).index,
     start,
     end,
     before: (level) => start(level) - 1,

@@ -11,6 +11,7 @@ export interface ResolvedPos {
   readonly nodeBefore: ContentNode | undefined;
   readonly nodeAfter: ContentNode | undefined;
   node(depth: number): ElementNode;
+  indexAt(depth: number): number;
   start(depth: number): number;
   end(depth: number): number;
   before(depth: number): number;
