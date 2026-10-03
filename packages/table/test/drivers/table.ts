@@ -40,8 +40,12 @@ import {
   type NuiTableWidths,
   type NuiTableColumnOrder,
   type NuiTableReorderEvent,
+  type NuiTableDraft,
   type NuiTableEditEvent,
+  type NuiTableEditMode,
+  type NuiTableEditMove,
   type NuiTableEditRefusal,
+  type NuiTableStartEditOptions,
   type NuiTableCsvOptions,
   type NuiTableProps,
   type NuiTableColumnDef,
@@ -66,6 +70,7 @@ export interface TableMountOptions<T> {
   readonly widths?: NuiTableWidths;
   readonly columnOrder?: NuiTableColumnOrder;
   readonly rowHeights?: NuiTableRowHeights;
+  readonly active?: TableCellPosition;
   readonly selected?: readonly T[];
   readonly page?: number;
   readonly pageSize?: number;
@@ -147,6 +152,8 @@ interface TableModels<T> {
   readonly pageSize: ShallowRef<number>;
   readonly ranges: Ref<NuiTableRanges>;
   readonly rowHeights: ShallowRef<NuiTableRowHeights>;
+  readonly active: ShallowRef<TableCellPosition | undefined>;
+  readonly draft: ShallowRef<NuiTableDraft | undefined>;
 }
 
 type TableProps<T> = Omit<NuiTableProps<T>, 'columns' | 'rows'>;
@@ -309,6 +316,8 @@ export class TableDriver<T> {
     const pageSize = shallowRef(settings.pageSize ?? 20);
     const ranges = ref<NuiTableRanges>([]);
     const rowHeights = shallowRef<NuiTableRowHeights>(settings.rowHeights ?? {});
+    const active = shallowRef<TableCellPosition | undefined>(settings.active);
+    const draft = shallowRef<NuiTableDraft>();
     const props = shallowRef<TableProps<T>>(settings.props ?? {});
     const stubs = new TopLayerStubs();
     const observers = stubRowObserver();
@@ -397,6 +406,14 @@ export class TableDriver<T> {
               'onUpdate:rowHeights': (next: NuiTableRowHeights) => {
                 rowHeights.value = next;
               },
+              active: active.value,
+              'onUpdate:active': (next: TableCellPosition | undefined) => {
+                active.value = next;
+              },
+              draft: draft.value,
+              'onUpdate:draft': (next: NuiTableDraft | undefined) => {
+                draft.value = next;
+              },
               onRowClick: (row: T) => {
                 events.clicks.push(row);
               },
@@ -454,6 +471,8 @@ export class TableDriver<T> {
       pageSize,
       ranges,
       rowHeights,
+      active,
+      draft,
     };
 
     const driver = new TableDriver<T>(wrapper, source, props, models, exposed, events, {
@@ -2002,6 +2021,48 @@ export class TableDriver<T> {
 
     this.models.quick.value = text;
     await settled;
+    await nextTick();
+  }
+
+  get activeModel(): TableCellPosition | undefined {
+    return this.models.active.value;
+  }
+
+  get draftModel(): NuiTableDraft | undefined {
+    return this.models.draft.value;
+  }
+
+  async setActive(next: TableCellPosition): Promise<void> {
+    this.models.active.value = next;
+    await nextTick();
+  }
+
+  async setDraft(next: NuiTableDraft): Promise<void> {
+    this.models.draft.value = next;
+    await nextTick();
+  }
+
+  async startEdit(mode: NuiTableEditMode, options?: NuiTableStartEditOptions): Promise<boolean> {
+    const opened = this.exposed.value?.startEdit(mode, options) ?? false;
+
+    await nextTick();
+    return opened;
+  }
+
+  async commitEdit(move?: NuiTableEditMove): Promise<boolean> {
+    const committed = this.exposed.value?.commitEdit(move) ?? false;
+
+    await nextTick();
+    return committed;
+  }
+
+  async cancelEdit(): Promise<void> {
+    this.exposed.value?.cancelEdit();
+    await nextTick();
+  }
+
+  async focusOutside(target: HTMLElement): Promise<void> {
+    target.focus();
     await nextTick();
   }
 

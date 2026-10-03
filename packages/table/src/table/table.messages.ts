@@ -101,6 +101,7 @@ export interface NuiTableMessages {
   readonly editDiscarded: (params: { readonly error: string }) => string;
   readonly menuPaste: string;
   readonly pasted: (params: { readonly count: number; readonly skipped: number }) => string;
+  readonly filled: (params: { readonly count: number; readonly skipped: number }) => string;
   readonly pasteDenied: string;
   readonly loadFailed: string;
   readonly exported: (params: { readonly count: number }) => string;
@@ -206,6 +207,8 @@ export const tableMessages: NuiMessageCatalog<'table'> = {
     menuPaste: 'Paste',
     pasted: ({ count, skipped }) =>
       `Pasted ${count.toLocaleString('en-US')} ${plural('en', count, { one: 'cell', other: 'cells' })}${skipped > 0 ? `, skipped ${skipped.toLocaleString('en-US')}` : ''}`,
+    filled: ({ count, skipped }) =>
+      `Filled ${count.toLocaleString('en-US')} ${plural('en', count, { one: 'cell', other: 'cells' })}${skipped > 0 ? `, skipped ${skipped.toLocaleString('en-US')}` : ''}`,
     pasteDenied: 'The browser did not share the clipboard; press Ctrl+V',
     loadFailed: 'Rows could not be loaded',
     exported: ({ count }) =>
@@ -310,6 +313,8 @@ export const tableMessages: NuiMessageCatalog<'table'> = {
     menuPaste: 'Вставить',
     pasted: ({ count, skipped }) =>
       `${plural('ru', count, { one: 'Вставлена', few: 'Вставлены', many: 'Вставлено', other: 'Вставлено' })} ${count.toLocaleString('ru-RU')} ${plural('ru', count, { one: 'ячейка', few: 'ячейки', many: 'ячеек', other: 'ячейки' })}${skipped > 0 ? `, пропущено: ${skipped.toLocaleString('ru-RU')}` : ''}`,
+    filled: ({ count, skipped }) =>
+      `${plural('ru', count, { one: 'Заполнена', few: 'Заполнены', many: 'Заполнено', other: 'Заполнено' })} ${count.toLocaleString('ru-RU')} ${plural('ru', count, { one: 'ячейка', few: 'ячейки', many: 'ячеек', other: 'ячейки' })}${skipped > 0 ? `, пропущено: ${skipped.toLocaleString('ru-RU')}` : ''}`,
     pasteDenied: 'Браузер не дал прочитать буфер обмена, нажмите Ctrl+V',
     loadFailed: 'Не удалось загрузить строки',
     exported: ({ count }) =>

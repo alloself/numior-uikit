@@ -225,6 +225,25 @@ label:has(> input[type='checkbox']) {
   justify-content: flex-end;
   gap: var(--nui-space-2);
 }
+.sheet-area {
+  display: grid;
+  gap: var(--nui-space-3);
+}
+.sheet-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--nui-space-2);
+}
+.sheet-name {
+  box-sizing: border-box;
+  min-inline-size: 4.5rem;
+  color: var(--nui-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+.sheet-formula {
+  flex: 1;
+  min-inline-size: 0;
+}
 .sheet-ref {
   position: absolute;
   box-sizing: border-box;

@@ -51,6 +51,7 @@ export interface TableEditing<T> {
   onPaste(event: ClipboardEvent): void;
   onKeydown(event: KeyboardEvent): boolean;
   commitCell(row: T, key: string, value: NuiTableCellValue): boolean;
+  fillCells(value: NuiTableCellValue, accepts: (key: string) => boolean): boolean;
 }
 
 type ClearKind = 'clear' | 'cut';
@@ -187,6 +188,33 @@ export const useTableEditing = <T>(options: TableEditingOptions<T>): TableEditin
     return options.check(row, key, null) === undefined
       ? { row, key, value: null, previous }
       : 'skip';
+  };
+
+  const fillOutcome = (
+    { row, key }: TableEditCell<T>,
+    value: NuiTableCellValue,
+    accepts: (key: string) => boolean,
+  ): CellOutcome<T> => {
+    if (!accepts(key) || options.check(row, key, value) !== undefined) {
+      return 'skip';
+    }
+    const previous = options.valueOf(row, key);
+
+    return sameValue(previous, value) ? 'same' : { row, key, value, previous };
+  };
+
+  const fillCells = (value: NuiTableCellValue, accepts: (key: string) => boolean): boolean => {
+    const ranges = targets();
+
+    if (!withinLimit(ranges)) {
+      return false;
+    }
+    const outcomes = cellsIn(ranges).map((cell) => fillOutcome(cell, value, accepts));
+    const skipped = skippedOf(outcomes);
+
+    record('edit', outcomes.filter(isChange));
+    options.announce(options.messages.value.filled({ count: outcomes.length - skipped, skipped }));
+    return true;
   };
 
   const clearCells = (kind: ClearKind): boolean => {
@@ -396,5 +424,6 @@ export const useTableEditing = <T>(options: TableEditingOptions<T>): TableEditin
       record('edit', [{ row, key, value, previous }]);
       return true;
     },
+    fillCells,
   };
 };

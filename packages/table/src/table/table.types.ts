@@ -159,6 +159,7 @@ export interface NuiTableProps<T> {
   pinnedRows?: readonly T[] | undefined;
   frozenRows?: number | undefined;
   nextEdge?: NuiTableNextEdge | undefined;
+  keepEditing?: ((target: Element) => boolean) | undefined;
   rowDrag?: boolean | undefined;
   nestDelay?: number | undefined;
   dragLabel?: ((row: T) => string) | undefined;
@@ -306,7 +307,20 @@ export interface NuiTableEditRefusal<T> {
   readonly reason: NuiTableEditRefusalReason;
 }
 
-export type TableEditorMove = 'down' | 'up' | 'next' | 'previous' | 'stay' | 'blur';
+export type NuiTableEditMove = 'down' | 'up' | 'next' | 'previous' | 'stay' | 'fill' | 'blur';
+
+export type NuiTableEditMode = 'replace' | 'append';
+
+export interface NuiTableStartEditOptions {
+  readonly focus?: boolean | undefined;
+}
+
+export interface NuiTableDraft {
+  readonly row: number;
+  readonly col: number;
+  readonly key: string;
+  readonly value: unknown;
+}
 
 export type ParsedCell =
   | { readonly kind: 'value'; readonly value: NuiTableCellValue }
@@ -332,6 +346,7 @@ export interface TableEditSession<T> {
   readonly label: string;
   readonly spec: TableCellEditorSpec;
   readonly typed: string | undefined;
+  readonly passive: boolean;
 }
 
 export interface NuiTableCellEditorProps {
@@ -341,7 +356,10 @@ export interface NuiTableCellEditorProps {
   errorId: string;
   error?: string | undefined;
   typed?: string | undefined;
-  commit: (move: TableEditorMove) => boolean;
+  passive?: boolean | undefined;
+  keep?: ((target: Element) => boolean) | undefined;
+  attach: (flush: () => void) => () => void;
+  commit: (move: NuiTableEditMove) => boolean;
   cancel: () => void;
 }
 
@@ -534,6 +552,9 @@ export interface NuiTableExposed {
   refresh(): void;
   rectOf(range: NuiTableRange): NuiTableRect | undefined;
   cellFromPoint(x: number, y: number): TableCellPosition | undefined;
+  startEdit(mode: NuiTableEditMode, options?: NuiTableStartEditOptions): boolean;
+  commitEdit(move?: NuiTableEditMove): boolean;
+  cancelEdit(): void;
 }
 
 export type TablePaneName = 'start' | 'centre' | 'end';

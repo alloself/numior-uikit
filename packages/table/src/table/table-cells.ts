@@ -1,3 +1,4 @@
+import { getCurrentInstance } from 'vue';
 import type {
   NuiTableCellStyle,
   NuiTableCellStyler,
@@ -48,6 +49,12 @@ export const columnName = (col: number): string => {
   }
   return name;
 };
+
+export const columnIndex = (name: string): number =>
+  [...name.toUpperCase()].reduce(
+    (sum, letter) => sum * LETTERS + letter.charCodeAt(0) - CODE_A + 1,
+    0,
+  ) - 1;
 
 const STEPS: Readonly<Record<NuiTableEdgeDirection, TableCellPosition>> = {
   up: { row: -1, col: 0 },
@@ -109,7 +116,7 @@ export const cellEdge = (
     : nextFilled(walk, from);
 };
 
-const onceAnEvent = (read: CellRead, cols: number): CellRead => {
+const oncePerRender = (read: CellRead, cols: number): CellRead => {
   const seen = new Map<number, NuiTableSourceCell | undefined>();
   let queued = false;
 
@@ -119,6 +126,9 @@ const onceAnEvent = (read: CellRead, cols: number): CellRead => {
   };
 
   return (row, col) => {
+    if (getCurrentInstance() === null) {
+      return read(row, col);
+    }
     const key = row * cols + col;
 
     if (seen.has(key)) {
@@ -137,7 +147,7 @@ const onceAnEvent = (read: CellRead, cols: number): CellRead => {
 };
 
 export const tableCells = (source: NuiTableCellSource): NuiTableCells => {
-  const read = onceAnEvent((row, col) => source.cellAt(row, col), source.cols);
+  const read = oncePerRender((row, col) => source.cellAt(row, col), source.cols);
   const indexOf = new Map<string, number>();
 
   const columns = Array.from({ length: source.cols }, (_, col): NuiTableColumn<number> => {

@@ -11,9 +11,12 @@ import type { RangeBounds } from './table-ranges';
 import type { NuiTableMessages } from './table.messages';
 import type {
   NuiTableCellValue,
+  NuiTableDraft,
+  NuiTableEditMode,
+  NuiTableEditMove,
   NuiTableEditRefusalReason,
+  TableCellEditorSpec,
   TableCellPosition,
-  TableEditorMove,
   TableEditorPlan,
   TableEditSession,
 } from './table.types';
@@ -28,9 +31,11 @@ export interface TableCellEditorOptions<T> {
   readonly valueOf: (row: T, key: string) => NuiTableCellValue;
   readonly plan: (row: T, key: string) => TableEditorPlan;
   readonly check: (row: T, key: string, value: NuiTableCellValue) => string | undefined;
-  readonly leave: (from: TableCellPosition, move: TableEditorMove) => TableCellPosition;
+  readonly leave: (from: TableCellPosition, move: NuiTableEditMove) => TableCellPosition;
   readonly invalid: () => string;
   readonly save: (row: T, key: string, value: NuiTableCellValue) => void;
+  readonly fill: (key: string, value: NuiTableCellValue) => void;
+  readonly share: (draft: NuiTableDraft | undefined) => void;
   readonly refuse: (row: T, key: string, reason: NuiTableEditRefusalReason) => void;
   readonly bounds: () => RangeBounds;
   readonly locate: (target: EventTarget | null) => TableCellPosition | undefined;
@@ -45,9 +50,13 @@ export interface TableCellEditor<T> {
   readonly draft: Readonly<ShallowRef<unknown>>;
   readonly error: Readonly<Ref<string | undefined>>;
   input(value: unknown): void;
-  commit(move: TableEditorMove): boolean;
+  receive(next: NuiTableDraft | undefined): void;
+  start(mode: NuiTableEditMode, focus: boolean): boolean;
+  attach(flush: () => void): () => void;
+  commit(move: NuiTableEditMove): boolean;
   cancel(): void;
   onKeydown(event: KeyboardEvent): boolean;
+  onFocusin(event: FocusEvent): void;
   onClick(event: MouseEvent): void;
   onDblclick(event: MouseEvent): void;
   onPointerup(event: PointerEvent): void;
@@ -64,11 +73,26 @@ interface TableEditOutcome {
   readonly failure: string | undefined;
 }
 
+interface TableEditTarget<T> {
+  readonly position: TableCellPosition;
+  readonly row: T;
+  readonly key: string;
+}
+
+type TableOpening =
+  | { readonly kind: 'gesture' }
+  | { readonly kind: 'typed'; readonly text: string }
+  | { readonly kind: 'start'; readonly mode: NuiTableEditMode; readonly focus: boolean };
+
 const DOUBLE_TAP = 300;
 const TAP_GRACE = 500;
+const GESTURE: TableOpening = { kind: 'gesture' };
 
 const isCellTarget = (target: EventTarget | null): boolean =>
   target instanceof HTMLElement && target.matches('.nui-table__cell');
+
+const inEditor = (target: EventTarget | null): boolean =>
+  target instanceof Element && target.closest('.nui-table__editor') !== null;
 
 const isPlain = (event: KeyboardEvent): boolean =>
   !event.altKey && !event.ctrlKey && !event.metaKey && !event.shiftKey;
@@ -82,9 +106,18 @@ const typedOf = (event: KeyboardEvent): string | undefined => {
     : undefined;
 };
 
+const openingOf = (event: KeyboardEvent): TableOpening | undefined => {
+  if (event.key === 'Enter') {
+    return isPlain(event) ? GESTURE : undefined;
+  }
+  const typed = typedOf(event);
+
+  return typed === undefined ? undefined : { kind: 'typed', text: typed };
+};
+
 const stepOf = (
   from: TableCellPosition,
-  move: TableEditorMove,
+  move: NuiTableEditMove,
   bounds: RangeBounds,
 ): TableCellPosition => {
   switch (move) {
@@ -97,6 +130,7 @@ const stepOf = (
     case 'previous':
       return { row: from.row, col: Math.max(from.col - 1, 0) };
     case 'stay':
+    case 'fill':
     case 'blur':
       return from;
   }
@@ -117,16 +151,29 @@ export const useTableCellEditor = <T>(options: TableCellEditorOptions<T>): Table
   const session = shallowRef<TableEditSession<T>>();
   const draft = shallowRef<unknown>();
   const error = ref<string>();
+  const flushers = new Set<() => void>();
   let tap: TableTap | undefined;
   let tapped = Number.NEGATIVE_INFINITY;
   let pointer = '';
   let strict = false;
 
+  const setDraft = (value: unknown): void => {
+    const current = session.value;
+
+    draft.value = value;
+
+    options.share(
+      current === undefined
+        ? undefined
+        : { row: current.position.row, col: current.position.col, key: current.key, value },
+    );
+  };
+
   const close = (): void => {
     session.value = undefined;
-    draft.value = undefined;
     error.value = undefined;
     strict = false;
+    setDraft(undefined);
   };
 
   const toggle = (row: T, key: string): boolean => {
@@ -141,7 +188,27 @@ export const useTableCellEditor = <T>(options: TableCellEditorOptions<T>): Table
     return true;
   };
 
-  const open = (position: TableCellPosition, typed?: string): boolean => {
+  const begin = (
+    target: TableEditTarget<T>,
+    spec: TableCellEditorSpec,
+    opening: TableOpening,
+  ): void => {
+    const blank = opening.kind === 'start' && opening.mode === 'replace';
+
+    session.value = {
+      ...target,
+      label: options.labelOf(target.key),
+      spec,
+      typed: opening.kind === 'typed' ? opening.text : undefined,
+      passive: opening.kind === 'start' && !opening.focus,
+    };
+
+    error.value = undefined;
+    strict = false;
+    setDraft(spec.toControl(blank ? null : options.valueOf(target.row, target.key)));
+  };
+
+  const open = (position: TableCellPosition, opening: TableOpening): boolean => {
     const row = options.rowAt(position.row);
     const key = options.keyAt(position.col);
 
@@ -152,17 +219,39 @@ export const useTableCellEditor = <T>(options: TableCellEditorOptions<T>): Table
 
     switch (plan.kind) {
       case 'toggle':
-        return typed === undefined && toggle(row, key);
+        return opening.kind === 'gesture' && toggle(row, key);
       case 'refused':
         options.refuse(row, key, plan.reason);
         return false;
       case 'editor':
-        session.value = { position, row, key, label: options.labelOf(key), spec: plan.spec, typed };
-        draft.value = plan.spec.toControl(options.valueOf(row, key));
-        error.value = undefined;
-        strict = false;
+        begin({ position, row, key }, plan.spec, opening);
         return true;
     }
+  };
+
+  const start = (mode: NuiTableEditMode, focus: boolean): boolean => {
+    const cell = options.cell();
+
+    if (session.value !== undefined) {
+      return true;
+    }
+    if (!options.enabled() || cell === undefined) {
+      return false;
+    }
+    const opened = open(cell, { kind: 'start', mode, focus });
+
+    if (!opened) {
+      options.announce(options.messages.value.cellReadOnly);
+    }
+    return opened;
+  };
+
+  const attach = (flush: () => void): (() => void) => {
+    flushers.add(flush);
+
+    return () => {
+      flushers.delete(flush);
+    };
   };
 
   const outcomeOf = (current: TableEditSession<T>, control: unknown): TableEditOutcome => {
@@ -173,7 +262,22 @@ export const useTableCellEditor = <T>(options: TableCellEditorOptions<T>): Table
       : { value: parsed.value, failure: options.check(current.row, current.key, parsed.value) };
   };
 
-  const commit = (move: TableEditorMove): boolean => {
+  const store = (
+    current: TableEditSession<T>,
+    value: NuiTableCellValue,
+    move: NuiTableEditMove,
+  ): void => {
+    if (move === 'fill') {
+      options.fill(current.key, value);
+    } else {
+      options.save(current.row, current.key, value);
+    }
+  };
+
+  const commit = (move: NuiTableEditMove): boolean => {
+    for (const flush of flushers) {
+      flush();
+    }
     const current = session.value;
 
     if (current === undefined) {
@@ -190,7 +294,7 @@ export const useTableCellEditor = <T>(options: TableCellEditorOptions<T>): Table
     close();
 
     if (failure === undefined) {
-      options.save(current.row, current.key, value);
+      store(current, value, move);
     } else {
       options.announce(options.messages.value.editDiscarded({ error: failure }));
     }
@@ -212,10 +316,23 @@ export const useTableCellEditor = <T>(options: TableCellEditorOptions<T>): Table
   const input = (value: unknown): void => {
     const current = session.value;
 
-    draft.value = value;
+    setDraft(value);
 
     if (current !== undefined && strict) {
       error.value = outcomeOf(current, value).failure;
+    }
+  };
+
+  const receive = (next: NuiTableDraft | undefined): void => {
+    const at = session.value?.position;
+
+    if (
+      next !== undefined &&
+      next.row === at?.row &&
+      next.col === at.col &&
+      next.value !== draft.value
+    ) {
+      input(next.value);
     }
   };
 
@@ -233,19 +350,24 @@ export const useTableCellEditor = <T>(options: TableCellEditorOptions<T>): Table
     if (event.key === 'F2' && isPlain(event)) {
       event.preventDefault();
 
-      if (!open(cell)) {
+      if (!open(cell, GESTURE)) {
         options.announce(options.messages.value.cellReadOnly);
       }
       return true;
     }
-    const typed = event.key === 'Enter' ? undefined : typedOf(event);
-    const opens = event.key === 'Enter' ? isPlain(event) : typed !== undefined;
+    const opening = openingOf(event);
 
-    if (opens && open(cell, typed)) {
+    if (opening !== undefined && open(cell, opening)) {
       event.preventDefault();
       return true;
     }
     return false;
+  };
+
+  const onFocusin = (event: FocusEvent): void => {
+    if (session.value !== undefined && !inEditor(event.target) && !inEditor(event.relatedTarget)) {
+      commit('blur');
+    }
   };
 
   const locate = (target: EventTarget | null): TableCellPosition | undefined =>
@@ -255,7 +377,7 @@ export const useTableCellEditor = <T>(options: TableCellEditorOptions<T>): Table
     const position = event.timeStamp - tapped < TAP_GRACE ? undefined : locate(event.target);
 
     if (position !== undefined) {
-      open(position);
+      open(position, GESTURE);
     }
   };
 
@@ -266,7 +388,7 @@ export const useTableCellEditor = <T>(options: TableCellEditorOptions<T>): Table
     if (position !== undefined && next !== undefined && doubled(tap, next)) {
       tap = undefined;
       tapped = next.time;
-      open(position);
+      open(position, GESTURE);
     } else {
       tap = next;
     }
@@ -294,9 +416,13 @@ export const useTableCellEditor = <T>(options: TableCellEditorOptions<T>): Table
     draft,
     error,
     input,
+    receive,
+    start,
+    attach,
     commit,
     cancel,
     onKeydown,
+    onFocusin,
     onClick,
     onDblclick,
     onPointerup: (event) => {

@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { cellEdge, columnName, tableCells, type NuiTableSourceCell } from '../src';
+import { createSSRApp, h } from 'vue';
+import { renderToString } from 'vue/server-renderer';
+import { cellEdge, columnIndex, columnName, tableCells, type NuiTableSourceCell } from '../src';
 
 const COLUMN: ReadonlySet<number> = new Set([2, 3, 4, 7]);
 
@@ -14,8 +16,10 @@ const downFrom = (row: number): number =>
 const upFrom = (row: number): number => cellEdge(inColumn, COLUMN_SIZE, { row, col: 0 }, 'up').row;
 
 describe('tableCells', () => {
-  it('names columns as spreadsheets do', () => {
-    expect([0, 1, 25, 26, 27, 51, 52, 701, 702, 16_383].map(columnName)).toEqual([
+  it('names columns as spreadsheets do and reads the names back', () => {
+    const indices = [0, 1, 25, 26, 27, 51, 52, 701, 702, 16_383];
+
+    expect(indices.map(columnName)).toEqual([
       'A',
       'B',
       'Z',
@@ -27,6 +31,9 @@ describe('tableCells', () => {
       'AAA',
       'XFD',
     ]);
+
+    expect(indices.map((index) => columnIndex(columnName(index)))).toEqual(indices);
+    expect(columnIndex('xfd')).toBe(16_383);
   });
 
   it('finds the edge of the data the way Ctrl and an arrow do in a spreadsheet', () => {
@@ -67,13 +74,43 @@ describe('tableCells', () => {
         : cells.cellStyle({ row: 4, column: second, position: 4, pinned: false }),
     ).toEqual({ fill: 'gold' });
 
-    expect(reads).toEqual(['4:1', '5:1']);
-    await Promise.resolve();
-    expect(second?.value(4)).toBe('B5');
     expect(reads).toEqual(['4:1', '5:1', '4:1']);
     expect(cells.rowHeaders.label?.(9, 0)).toBe('10');
     expect(cells.nextEdge({ row: 1, col: 3 }, 'down')).toEqual({ row: 2, col: 3 });
     expect(cells.nextEdge({ row: 0, col: 3 }, 'next')).toEqual({ row: 0, col: 29 });
+  });
+
+  it('reads a cell once per render for its text and its style and afresh outside renders', async () => {
+    const reads: string[] = [];
+    let text = 'old';
+
+    const cells = tableCells({
+      rows: 10,
+      cols: 3,
+      cellAt: (row, col) => {
+        reads.push(`${row}:${col}`);
+        return { text, style: { fill: 'gold' } };
+      },
+    });
+
+    const column = cells.columns[1];
+
+    const styleOf = (): string =>
+      JSON.stringify(
+        column === undefined
+          ? undefined
+          : cells.cellStyle({ row: 2, column, position: 2, pinned: false }),
+      );
+
+    const probe = createSSRApp({
+      render: () => h('p', [String(column?.value(2)), styleOf(), String(column?.value(2))]),
+    });
+
+    expect(await renderToString(probe)).toBe('<p>old{&quot;fill&quot;:&quot;gold&quot;}old</p>');
+    expect(reads).toEqual(['2:1']);
+    text = 'new';
+    expect(column?.value(2)).toBe('new');
+    expect(reads).toEqual(['2:1', '2:1']);
   });
 
   it('leaves the edges to the source when it knows them', () => {

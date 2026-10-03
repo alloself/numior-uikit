@@ -249,6 +249,21 @@ The table then sends the `editRefused` event.
 
 <Example name="table/Editors" />
 
+### Formula bar
+
+The `active` and `draft` models connect the table to a field outside it. `active` gives the active
+cell, and `draft` gives the cell and the value of the open editor. Writing a new value into `draft`
+changes the text in the cell.
+
+The `startEdit('append', { focus: false })` method of the table ref opens the editor and leaves
+focus in the field. `'replace'` starts from an empty value. `commitEdit('down')` saves the edit,
+`cancelEdit()` drops it, and focus returns to the table.
+
+The `keepEditing` prop lists the elements whose focus keeps the edit open. Ctrl+Enter in the
+editor writes the value into every cell of the selection with the same column type.
+
+<Example name="table/FormulaBar" />
+
 ### Export to CSV
 
 The `exportCsv` method of the table ref builds CSV from the rows after filters and sorting, from

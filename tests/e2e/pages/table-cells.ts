@@ -30,6 +30,8 @@ export class TableCellsSection {
   readonly viewport: Locator;
   readonly grid: Locator;
   readonly output: Locator;
+  readonly nameBox: Locator;
+  readonly formula: Locator;
 
   constructor(page: Page) {
     this.toggle = page.getByTestId('table-cells-toggle');
@@ -37,6 +39,8 @@ export class TableCellsSection {
     this.viewport = this.root.locator(':scope > .nui-table__frame > .nui-table__viewport');
     this.grid = this.viewport.locator(':scope > .nui-table__grid');
     this.output = page.getByTestId('table-cells-output');
+    this.nameBox = page.getByTestId('table-cells-name');
+    this.formula = page.getByTestId('table-cells-formula');
   }
 
   async show(): Promise<void> {
@@ -53,6 +57,10 @@ export class TableCellsSection {
 
   cell(position: number, col: number): Locator {
     return this.row(position).locator(`:scope > [aria-colindex="${col + ROW_HEADERS + 1}"]`);
+  }
+
+  editor(position: number, col: number): Locator {
+    return this.cell(position, col).locator('.nui-table__editor input');
   }
 
   rowHeader(position: number): Locator {

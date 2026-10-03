@@ -1,9 +1,9 @@
 import { boxOf, type RangeBounds, type RangeBox } from './table-ranges';
 import type {
+  NuiTableEditMove,
   NuiTableRange,
   TableCellPosition,
   TableCellSpan,
-  TableEditorMove,
   TableMergeLayout,
   TableMergePiece,
   TableMergeSlot,
@@ -148,12 +148,13 @@ export const anchorOf = (
   return merge === undefined ? position : { row: merge.top, col: merge.start };
 };
 
-const MOVE_SIDES: Readonly<Record<TableEditorMove, MergeSide | undefined>> = {
+const MOVE_SIDES: Readonly<Record<NuiTableEditMove, MergeSide | undefined>> = {
   down: 'bottom',
   up: 'top',
   next: 'end',
   previous: 'start',
   stay: undefined,
+  fill: undefined,
   blur: undefined,
 };
 
@@ -205,7 +206,7 @@ export const leaveMerge = (
 export const leaveMergeBy = (
   index: TableMergeIndex,
   from: TableCellPosition,
-  move: TableEditorMove,
+  move: NuiTableEditMove,
 ): TableCellPosition => toEdge(index, from, MOVE_SIDES[move]);
 
 export const consecutiveRuns = (positions: readonly number[], edge = 0): number[][] => {

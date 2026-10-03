@@ -135,6 +135,10 @@ const docs: DocsMap = {
         ru: 'Край данных для Ctrl со стрелками: (from, direction) → позиция, куда перейти; позиции — как в ranges, direction — up, down, previous или next. Без него Ctrl со стрелкой ведёт к краю таблицы. Ответ вне таблицы прижимается к её краю.',
         en: 'Edge of the data for Ctrl with the arrows: (from, direction) → the position to move to; positions are as in ranges, direction is up, down, previous or next. Without it Ctrl with an arrow goes to the edge of the table. An answer outside the table is pulled to its edge.',
       },
+      keepEditing: {
+        ru: 'Элементы вне таблицы, фокус на которых не завершает правку ячейки, например строка формул: (target) → true. Когда фокус уходит из такого элемента, правку завершает приложение через commitEdit или cancelEdit.',
+        en: 'Elements outside the table whose focus keeps a cell edit open, such as a formula bar: (target) → true. When focus leaves such an element, the app ends the edit with commitEdit or cancelEdit.',
+      },
       frozenRows: {
         ru: 'Число первых строк тела, которые остаются под шапкой при прокрутке. Это строки данных: выделение, правка и копирование работают с ними как с остальными. Нужен height; группы, дерево, детали строк и source закрепление отключают.',
         en: 'How many first body rows stay under the header while the rest scroll. They are data rows: selection, editing and copying treat them like the others. Needs height; groups, a tree, row details and source turn freezing off.',
@@ -228,6 +232,14 @@ const docs: DocsMap = {
       'v-model:ranges': {
         ru: 'Выделенные прямоугольники ячеек: from и to с row — позицией строки на странице — и col — позицией среди видимых колонок данных. Прямоугольники не пересекаются: новый вырезается из прежних, а Ctrl на выделенной ячейке снимает с неё выделение. Сбрасываются при сортировке, фильтре, группировке, смене страницы, колонок и строк.',
         en: 'Selected cell rectangles: from and to with row as the position on the page and col as the position among the shown data columns. Rectangles never overlap: a new one is cut out of the earlier ones, and Ctrl on a selected cell takes it out. They reset on sorting, filtering, grouping and changes of the page, the columns and the rows.',
+      },
+      'v-model:active': {
+        ru: 'Активная ячейка в координатах ranges: row — позиция строки на странице, col — позиция среди видимых колонок данных; undefined, пока курсор в шапке, подвале или служебной колонке. Запись переносит курсор и показывает ячейку, а фокус переходит, только если он уже в таблице.',
+        en: 'Active cell in the coordinates of ranges: row is the position on the page, col the position among the shown data columns; undefined while the cursor is in the header, the footer or a utility column. Writing it moves the cursor and reveals the cell, and focus follows only when it is already in the table.',
+      },
+      'v-model:draft': {
+        ru: 'Черновик открытого редактора: { row, col, key, value }, где row и col — ячейка в координатах ranges, а value — значение контрола; undefined, пока правки нет. Запись с той же ячейкой меняет значение в редакторе, поэтому строка формул и ячейка показывают один текст.',
+        en: 'Draft of the open editor: { row, col, key, value }, where row and col name the cell in the coordinates of ranges and value is the value of its control; undefined while nothing is edited. Writing it for the same cell changes the value in the editor, so a formula bar and the cell show the same text.',
       },
       'v-model:hidden': {
         ru: 'Ключи скрытых колонок; скрытая колонка не рисуется и не участвует в навигации, но её фильтры и сортировка продолжают действовать.',
@@ -409,6 +421,13 @@ const docs: DocsMap = {
         description: {
           ru: 'В редакторе сохраняет значение и переходит в следующую или предыдущую колонку.',
           en: 'In the editor saves the value and moves to the next or the previous column.',
+        },
+      },
+      {
+        keys: 'Ctrl+Enter',
+        description: {
+          ru: 'В редакторе записывает значение во все изменяемые ячейки выделения с тем же типом колонки и оставляет курсор на месте.',
+          en: 'In the editor writes the value into every editable cell of the selection with the same column type and keeps the cursor in place.',
         },
       },
       {

@@ -31,16 +31,16 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, useTemplateRef, watch } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from 'vue';
 import { provideDraftCommits } from '@numior/primitives';
 import { NuiTooltip } from '@numior/vue';
-import type { NuiTableCellEditorProps, TableEditorMove } from './table.types';
+import type { NuiTableCellEditorProps, NuiTableEditMove } from './table.types';
 
 const FOCUSABLE = 'input, textarea, select, button, [tabindex]';
 const PINNED = '.nui-table__cell--pin-start, .nui-table__cell--pin-end';
 const ERROR = '.nui-table__error';
 
-const { spec, value, label, errorId, error, typed, commit, cancel } =
+const { spec, value, label, errorId, error, typed, passive, keep, attach, commit, cancel } =
   defineProps<NuiTableCellEditorProps>();
 
 const emit = defineEmits<{ update: [value: unknown] }>();
@@ -51,14 +51,14 @@ const control = useTemplateRef<{ focus?: () => void }>('control');
 const message = ref(error ?? '');
 let settled = false;
 let popup = false;
+let detach = (): void => undefined;
 
 const invalid = computed(() => error !== undefined);
 
 const keepOpen = (): void => undefined;
 
-const finish = (move: TableEditorMove): void => {
+const finish = (move: NuiTableEditMove): void => {
   if (!settled) {
-    drafts.commitAll();
     settled = commit(move);
   }
 };
@@ -78,7 +78,13 @@ const bound = computed(() => ({
 const breaksLine = (event: KeyboardEvent): boolean =>
   event.key === 'Enter' && event.shiftKey && event.target instanceof HTMLTextAreaElement;
 
-const moveOf = (event: KeyboardEvent): TableEditorMove | undefined => {
+const fills = (event: KeyboardEvent): boolean =>
+  event.key === 'Enter' && (event.ctrlKey || event.metaKey) && !event.altKey && !event.shiftKey;
+
+const moveOf = (event: KeyboardEvent): NuiTableEditMove | undefined => {
+  if (fills(event)) {
+    return 'fill';
+  }
   if (event.altKey || event.ctrlKey || event.metaKey || breaksLine(event)) {
     return undefined;
   }
@@ -113,7 +119,10 @@ const onKeydown = (event: KeyboardEvent): void => {
 const onFocusout = (event: FocusEvent): void => {
   const next = event.relatedTarget;
 
-  if (next instanceof Node && root.value?.contains(next) === true) {
+  if (
+    (next instanceof Node && root.value?.contains(next) === true) ||
+    (next instanceof Element && keep?.(next) === true)
+  ) {
     return;
   }
 
@@ -222,6 +231,14 @@ watch(
 );
 
 onMounted(() => {
+  detach = attach(() => {
+    drafts.commitAll();
+  });
+
+  if (passive) {
+    reveal();
+    return;
+  }
   control.value?.focus?.();
 
   if (root.value?.contains(document.activeElement) !== true) {
@@ -239,5 +256,9 @@ onMounted(() => {
     typeInto(field, typed);
   }
   field.setSelectionRange(field.value.length, field.value.length);
+});
+
+onBeforeUnmount(() => {
+  detach();
 });
 </script>

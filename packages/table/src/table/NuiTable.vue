@@ -359,6 +359,7 @@ import { useTableOverlay } from './use-table-overlay';
 import { useTableClipboard, type TableCopyCell } from './use-table-clipboard';
 import { useTableContextMenu } from './use-table-context-menu';
 import { useTableCellEditor } from './use-table-cell-editor';
+import { createEchoes } from './table-echoes';
 import { useTableEditing } from './use-table-editing';
 import { useTableExport } from './use-table-export';
 import { editorPlan } from './table-editors';
@@ -415,6 +416,7 @@ import type {
   NuiTableColumnOrder,
   NuiTableContextScope,
   NuiTableCellValue,
+  NuiTableDraft,
   NuiTableEdgeDirection,
   NuiTableRanges,
   NuiTableRowHeaders,
@@ -455,6 +457,9 @@ const BLOCK_SIZE = 100;
 const SKELETON_ROWS = 5;
 const LONG_PRESS = 500;
 
+const sameSpot = (a: TableCellPosition | undefined, b: TableCellPosition | undefined): boolean =>
+  a?.row === b?.row && a?.col === b?.col;
+
 const {
   columns,
   rows = [],
@@ -491,6 +496,7 @@ const {
   pinnedRows = [],
   frozenRows = 0,
   nextEdge,
+  keepEditing,
   rowDrag: rowDragOn = false,
   nestDelay = NEST_DELAY,
   dragLabel,
@@ -515,6 +521,10 @@ const page = defineModel<number>('page', { default: 1 });
 const pageSize = defineModel<number>('pageSize', { default: 20 });
 const ranges = defineModel<NuiTableRanges>('ranges', { default: () => [] });
 const rowHeights = defineModel<NuiTableRowHeights>('rowHeights', { default: () => ({}) });
+const activeCell = defineModel<TableCellPosition | undefined>('active');
+const draft = defineModel<NuiTableDraft | undefined>('draft');
+const activeEchoes = createEchoes<TableCellPosition | undefined>(sameSpot);
+const draftEchoes = createEchoes<NuiTableDraft | undefined>(Object.is);
 const emit = defineEmits<NuiTableEvents<T>>();
 const slots = defineSlots<NuiTableSlots<T>>();
 const rawSlots = useSlots();
@@ -1488,6 +1498,12 @@ const activeData = (): TableCellPosition | undefined => {
     : undefined;
 };
 
+const shownActive = computed<TableCellPosition | undefined>((previous) => {
+  const next = activeData();
+
+  return sameSpot(next, previous) ? previous : next;
+});
+
 const rangeAnchor = (): TableCellPosition | undefined =>
   viewport.value?.contains(document.activeElement) === true ? activeData() : undefined;
 
@@ -1815,6 +1831,15 @@ const cellEditor = useTableCellEditor<T>({
   save: (row, key, value) => {
     editing.commitCell(row, key, value);
   },
+  fill: (key, value) => {
+    const type = columnAt(key).type;
+
+    editing.fillCells(value, (target) => columnAt(target).type === type);
+  },
+  share: (next) => {
+    draftEchoes.sent(next);
+    draft.value = next;
+  },
   refuse: (row, key, reason) => {
     emit('editRefused', { row, key, reason });
   },
@@ -2019,6 +2044,7 @@ const outsideDetail =
 const viewportEvents = {
   keydown: outsideDetail(onKeydown),
   focusin: (event: FocusEvent): void => {
+    cellEditor.onFocusin(event);
     focus.onFocusin(ownDetailOf(event.target, viewport.value)?.parentElement ?? event.target);
   },
   pointerdown: outsideDetail(rangeSelect.onPointerdown),
@@ -2095,6 +2121,9 @@ const editorOf = (position: number, column: string): VNode | undefined => {
     errorId: `${gridId.value}-error`,
     error: cellEditor.error.value,
     typed: current.typed,
+    passive: current.passive,
+    keep: keepEditing,
+    attach: cellEditor.attach,
     commit: cellEditor.commit,
     cancel: cellEditor.cancel,
     onUpdate: cellEditor.input,
@@ -2191,6 +2220,58 @@ const clampActive = (): void => {
 
 watch(quick, () => {
   rowsIntent.set('rows');
+});
+
+const moveActiveTo = (position: TableCellPosition): boolean => {
+  if (
+    position.row < 0 ||
+    position.row >= visibleRows.value ||
+    position.col < 0 ||
+    position.col >= dataKeys.value.length
+  ) {
+    return false;
+  }
+  const target = visualCellOf(anchorOf(mergeIndex.value, position));
+
+  if (viewport.value?.contains(document.activeElement) === true) {
+    focus.focusCell(target);
+  } else {
+    active.value = target;
+
+    if (viewport.value !== null) {
+      focus.reveal(target);
+    }
+  }
+  return true;
+};
+
+const shareActive = (next: TableCellPosition | undefined): void => {
+  activeEchoes.sent(next);
+  activeCell.value = next;
+};
+
+watch(
+  activeCell,
+  (next) => {
+    if (
+      activeEchoes.echoed(next) ||
+      next === undefined ||
+      sameSpot(next, shownActive.value) ||
+      moveActiveTo(next)
+    ) {
+      return;
+    }
+    shareActive(shownActive.value);
+  },
+  { immediate: true },
+);
+
+watch(shownActive, shareActive, { immediate: true });
+
+watch(draft, (next) => {
+  if (!draftEchoes.echoed(next)) {
+    cellEditor.receive(next);
+  }
 });
 
 watch(visibleRows, clampActive);
@@ -2302,5 +2383,10 @@ defineExpose<NuiTableExposed>({
   },
   rectOf: overlay.rectOf,
   cellFromPoint: overlay.cellFromPoint,
+  startEdit: (mode, options) => cellEditor.start(mode, options?.focus ?? true),
+  commitEdit: (move = 'stay') => cellEditor.commit(move),
+  cancelEdit: () => {
+    cellEditor.cancel();
+  },
 });
 </script>
