@@ -103,14 +103,14 @@
 .nui-tab-list__indicator {
   position: absolute;
   inset-block-end: 0;
-  left: var(--_indicator-start);
+  inset-inline-start: var(--_indicator-start);
   inline-size: var(--_indicator-size);
   block-size: var(--_indicator-thickness);
   border-radius: var(--nui-radius-full);
   background: var(--nui-primary);
   pointer-events: none;
   transition:
-    left var(--nui-duration-slow) var(--nui-easing),
+    inset-inline-start var(--nui-duration-slow) var(--nui-easing),
     top var(--nui-duration-slow) var(--nui-easing),
     inline-size var(--nui-duration-slow) var(--nui-easing),
     block-size var(--nui-duration-slow) var(--nui-easing);
@@ -119,7 +119,7 @@
   inset-block-end: auto;
   inset-inline-end: 0;
   top: var(--_indicator-start);
-  left: auto;
+  inset-inline-start: auto;
   inline-size: var(--_indicator-thickness);
   block-size: var(--_indicator-size);
 }

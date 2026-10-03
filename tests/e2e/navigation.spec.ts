@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { boxOf } from './helpers/geometry';
 import { PlaygroundPage } from './pages/playground';
 
 test.describe('navigation', () => {
@@ -114,6 +115,11 @@ test.describe('navigation', () => {
     const settingsIndicator = await navigation.indicatorBox(navigation.tabs);
     expect(settingsIndicator.x).toBeGreaterThan(teamIndicator.x);
     await playground.setDirection('rtl');
+
+    await expect
+      .poll(async () => (await navigation.indicatorBox(navigation.tabs)).x)
+      .toBeCloseTo((await boxOf(navigation.tab('Настройки'))).x, 0);
+
     await navigation.tab('Команда').click();
     await page.keyboard.press('ArrowLeft');
     await expect(navigation.tab('Настройки')).toBeFocused();

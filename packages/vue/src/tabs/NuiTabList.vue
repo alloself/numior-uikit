@@ -22,6 +22,11 @@ import { useListNavigation } from '@numior/primitives';
 import { useTabs } from './tabs-context';
 import type { NuiTabListProps } from './tabs.types';
 
+const inlineStartOf = (list: HTMLElement, tab: HTMLElement): number =>
+  getComputedStyle(list).direction === 'rtl'
+    ? list.clientWidth - tab.offsetLeft - tab.offsetWidth
+    : tab.offsetLeft;
+
 const { label } = defineProps<NuiTabListProps>();
 const tabs = useTabs();
 const orientation = computed(() => tabs.orientation.value);
@@ -57,7 +62,11 @@ const measure = (): void => {
 
   const vertical = orientation.value === 'vertical';
 
-  list.style.setProperty('--_indicator-start', `${vertical ? tab.offsetTop : tab.offsetLeft}px`);
+  list.style.setProperty(
+    '--_indicator-start',
+    `${vertical ? tab.offsetTop : inlineStartOf(list, tab)}px`,
+  );
+
   list.style.setProperty('--_indicator-size', `${vertical ? tab.offsetHeight : tab.offsetWidth}px`);
 };
 
