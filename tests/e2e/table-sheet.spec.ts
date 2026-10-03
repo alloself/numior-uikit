@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { boxOf } from './helpers/geometry';
+import { boxOf, type Box } from './helpers/geometry';
 import { PlaygroundPage } from './pages/playground';
 
 const INCOME = 2;
@@ -25,6 +25,11 @@ const HEAD_HEIGHT = 32;
 const TITLE_HEIGHT = 44;
 const FROZEN_BOTTOM = HEAD_HEIGHT + TITLE_HEIGHT + ROW;
 const BAND_SCROLLS = [97, 333];
+
+const near = (box: Box, cells: Box): number[] =>
+  [box.x - cells.x, box.y - cells.y, box.width - cells.width, box.height - cells.height].map(
+    (gap) => Math.round(Math.abs(gap)),
+  );
 
 const expectSolidHeader = async (page: Page): Promise<void> => {
   const playground = new PlaygroundPage(page);
@@ -506,6 +511,56 @@ test.describe('table cell styles', () => {
     await page.keyboard.press('Escape');
     await page.keyboard.press('Control+ArrowUp');
     await expect(sheet.cell(TITLE, 1)).toBeFocused();
+  });
+
+  test('draws references over the cells they name and scrolls them under the header', async ({
+    page,
+  }) => {
+    const playground = new PlaygroundPage(page);
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    const { tableSheet: sheet } = playground;
+    await sheet.show();
+    await sheet.windowSwitch.click();
+    await sheet.refsSwitch.click();
+    await expect(sheet.references).toHaveCount(2);
+
+    expect(near(await boxOf(sheet.references.first()), await sheet.spanOf([3, 1], [5, 3]))).toEqual(
+      [0, 0, 0, 0],
+    );
+
+    await sheet.scrollTo(2 * ROW, 0);
+
+    await expect
+      .poll(async () =>
+        near(await boxOf(sheet.references.first()), await sheet.spanOf([3, 1], [5, 3])),
+      )
+      .toEqual([0, 0, 0, 0]);
+
+    expect(
+      await sheet.tintOver(sheet.references.first(), sheet.cell(SALES + 2, 0)),
+    ).toBeGreaterThan(5);
+
+    await sheet.scrollTo(4 * ROW + 20, 0);
+
+    await expect
+      .poll(() => sheet.tintOver(sheet.references.first(), sheet.columnHeader(0)))
+      .toBeLessThanOrEqual(3);
+  });
+
+  test('names the cell under the pointer', async ({ page, isMobile }) => {
+    test.skip(isMobile, 'a hovering pointer');
+    const playground = new PlaygroundPage(page);
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    const { tableSheet: sheet } = playground;
+    await sheet.show();
+    await sheet.cell(SALES + 1, 2).hover();
+
+    await expect(sheet.pointer).toHaveText('C5');
+    await sheet.quarterSwitch.click();
+    await sheet.cell(SALES + 1, LAST_QUARTER_COLUMN - 1).hover();
+    await expect(sheet.pointer).toHaveText('N5');
   });
 
   test('a painted sheet has no automatically detectable WCAG AA violations', async ({ page }) => {

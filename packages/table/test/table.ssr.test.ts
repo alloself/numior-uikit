@@ -13,6 +13,7 @@ import {
   type NuiTableCellStyle,
   type NuiTableColumnDef,
   type NuiTableDetailSlot,
+  type NuiTableOverlaySlot,
 } from '../src';
 import { FILE_COLUMNS, FILES, type FileNode } from './support/files';
 import { people, PEOPLE_COLUMNS, type Person } from './support/people';
@@ -473,6 +474,33 @@ describe('NuiTable on the server', () => {
     expect(html).toContain('>B2<');
     expect(html).not.toContain('>D4<');
     expect(html.match(/role="rowheader"/g)).toHaveLength(30);
+  });
+
+  it('renders the overlay over the cells it names on the server', async () => {
+    const html = await renderToString(
+      createSSRApp({
+        render: () =>
+          h(
+            NuiTable<Person>,
+            { columns: PEOPLE_COLUMNS, rows: people(20), height: '300px' },
+            {
+              overlay: ({ rectOf }: NuiTableOverlaySlot) => {
+                const rect = rectOf({ from: { row: 2, col: 1 }, to: { row: 3, col: 2 } });
+
+                return rect === undefined
+                  ? []
+                  : [h('i', { class: 'mark', 'data-rect': JSON.stringify(rect) })];
+              },
+            },
+          ),
+      }),
+    );
+
+    expect(html).toContain('class="nui-table__overlay"');
+
+    expect(html).toContain(
+      'data-rect="{&quot;top&quot;:120,&quot;start&quot;:80,&quot;width&quot;:300,&quot;height&quot;:80}"',
+    );
   });
 
   it('renders skeleton rows for a source without asking it for rows on the server', async () => {

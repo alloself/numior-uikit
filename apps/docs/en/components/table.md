@@ -166,6 +166,21 @@ therefore opens like a small one.
 
 <Example name="table/CellSource" />
 
+### Layer over the cells
+
+The `overlay` slot draws what scrolls with the cells: reference highlights, images, charts. The
+slot receives `rectOf(range)` with the position of a range and `window` with the rendered rows
+and columns.
+
+The sticky header and pinned columns lie over the layer, and the pointer passes through it to
+the cells. The `rectOf` and `cellFromPoint(x, y)` methods of the table ref give the same
+coordinates and the cell under a screen point.
+
+The layer takes row heights from `rowHeight` and the `rowHeights` model. It does not follow
+rows that grow with their content, such as wrapped text.
+
+<Example name="table/Overlay" />
+
 ### Row drag
 
 `rowDrag` shows a grip in the first column of a row. The top of a target row drops the row

@@ -157,6 +157,7 @@
   scroll-padding-block: 0px;
 }
 .nui-table__grid {
+  position: relative;
   table-layout: fixed;
   border-collapse: separate;
   border-spacing: 0;
@@ -1092,6 +1093,25 @@
   overflow: hidden;
   clip-path: inset(50%);
   white-space: nowrap;
+}
+.nui-table__overlay {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  z-index: 1;
+  inline-size: 0;
+  block-size: 0;
+  padding: 0;
+  pointer-events: none;
+}
+.nui-table__plane {
+  --_plane-lead: 0px;
+
+  position: absolute;
+  inset-block-start: calc(var(--_head-lap) - var(--_plane-lead));
+  inset-inline-start: 0;
+  inline-size: 0;
+  block-size: 0;
 }
 .nui-table__busy {
   position: absolute;

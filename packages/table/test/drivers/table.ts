@@ -45,8 +45,12 @@ import {
   type NuiTableCsvOptions,
   type NuiTableProps,
   type NuiTableColumnDef,
+  type NuiTableRange,
   type NuiTableRanges,
+  type NuiTableRect,
   type NuiTableRowHeights,
+  type NuiTableWindow,
+  type TableCellPosition,
 } from '../../src';
 
 export interface TableMountOptions<T> {
@@ -156,6 +160,7 @@ interface TableEvents<T> {
   readonly edits: NuiTableEditEvent<T>[];
   readonly refusals: NuiTableEditRefusal<T>[];
   readonly errors: unknown[];
+  readonly windows: NuiTableWindow[];
   readonly waiters: Array<() => void>;
 }
 
@@ -318,6 +323,7 @@ export class TableDriver<T> {
       edits: [],
       refusals: [],
       errors: [],
+      windows: [],
       waiters: [],
     };
 
@@ -396,6 +402,9 @@ export class TableDriver<T> {
               },
               onReorder: (event: NuiTableReorderEvent<T>) => {
                 events.reorders.push(event);
+              },
+              onWindow: (next: NuiTableWindow) => {
+                events.windows.push(next);
               },
               onEditRefused: (event: NuiTableEditRefusal<T>) => {
                 events.refusals.push(event);
@@ -1018,6 +1027,43 @@ export class TableDriver<T> {
 
   get errors(): readonly unknown[] {
     return this.events.errors;
+  }
+
+  get windows(): readonly NuiTableWindow[] {
+    return this.events.windows;
+  }
+
+  get overlayMarks(): Array<Record<'top' | 'start' | 'width' | 'height', string>> {
+    return [...this.element.querySelectorAll<HTMLElement>('.nui-table__plane > *')].map((mark) => ({
+      top: mark.style.insetBlockStart,
+      start: mark.style.insetInlineStart,
+      width: mark.style.inlineSize,
+      height: mark.style.blockSize,
+    }));
+  }
+
+  rectOf(range: NuiTableRange): NuiTableRect | undefined {
+    return this.exposed.value?.rectOf(range);
+  }
+
+  cellAtPoint(position: number, col: number): TableCellPosition | undefined {
+    const cell = this.cell(position, col);
+    const own = Object.getOwnPropertyDescriptor(document, 'elementsFromPoint');
+
+    Object.defineProperty(document, 'elementsFromPoint', {
+      configurable: true,
+      value: () => (cell === null ? [] : [cell.firstElementChild ?? cell, cell]),
+    });
+
+    try {
+      return this.exposed.value?.cellFromPoint(0, 0);
+    } finally {
+      if (own === undefined) {
+        Reflect.deleteProperty(document, 'elementsFromPoint');
+      } else {
+        Object.defineProperty(document, 'elementsFromPoint', own);
+      }
+    }
   }
 
   get pendingRows(): number {
@@ -1956,6 +2002,11 @@ export class TableDriver<T> {
 
     this.models.quick.value = text;
     await settled;
+    await nextTick();
+  }
+
+  async setRowHeights(next: NuiTableRowHeights): Promise<void> {
+    this.models.rowHeights.value = next;
     await nextTick();
   }
 

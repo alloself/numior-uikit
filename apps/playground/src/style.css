@@ -225,6 +225,14 @@ label:has(> input[type='checkbox']) {
   justify-content: flex-end;
   gap: var(--nui-space-2);
 }
+.sheet-ref {
+  position: absolute;
+  box-sizing: border-box;
+  border: 2px solid var(--_ref);
+  border-radius: 2px;
+  background: color-mix(in oklab, var(--_ref) 10%, transparent);
+}
+
 .output {
   margin-block: var(--nui-space-4) 0;
   padding: var(--nui-space-3);

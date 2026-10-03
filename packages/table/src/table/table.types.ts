@@ -234,6 +234,28 @@ export type TableRowPainter = (position: number, spans?: TableRowSpan) => TableR
 
 export type NuiTableEdgeDirection = 'up' | 'down' | 'previous' | 'next';
 
+export interface NuiTableRect {
+  readonly top: number;
+  readonly start: number;
+  readonly width: number;
+  readonly height: number;
+}
+
+export interface NuiTableSpan {
+  readonly start: number;
+  readonly end: number;
+}
+
+export interface NuiTableWindow {
+  readonly rows: NuiTableSpan;
+  readonly cols: NuiTableSpan;
+}
+
+export interface NuiTableOverlaySlot {
+  readonly rectOf: (range: NuiTableRange) => NuiTableRect | undefined;
+  readonly window: NuiTableWindow;
+}
+
 export type NuiTableNextEdge = (
   from: TableCellPosition,
   direction: NuiTableEdgeDirection,
@@ -441,6 +463,7 @@ export interface NuiTableEvents<T> {
   edit: [event: NuiTableEditEvent<T>];
   editRefused: [event: NuiTableEditRefusal<T>];
   error: [error: unknown];
+  window: [window: NuiTableWindow];
 }
 
 export type NuiTableSort = readonly TableSort[];
@@ -492,6 +515,7 @@ export type NuiTableSlots<T> = {
   loading?: () => unknown;
   caption?: () => unknown;
   detail?: (scope: NuiTableDetailSlot<T>) => unknown;
+  overlay?: (scope: NuiTableOverlaySlot) => unknown;
 } & {
   [name: `cell-${string}`]: ((scope: NuiTableCellSlot<T>) => unknown) | undefined;
 } & {
@@ -508,6 +532,8 @@ export interface NuiTableExposed {
   redo(): boolean;
   exportCsv(options?: NuiTableCsvOptions): Promise<string>;
   refresh(): void;
+  rectOf(range: NuiTableRange): NuiTableRect | undefined;
+  cellFromPoint(x: number, y: number): TableCellPosition | undefined;
 }
 
 export type TablePaneName = 'start' | 'centre' | 'end';

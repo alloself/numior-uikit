@@ -3,8 +3,8 @@
     <div class="section-heading">
       <h2 id="table-sheet-title">Лист</h2>
       <span class="tag"
-        >NuiTable · bordered · cellStyle · rowHeaders · rowHeights · merges · overflow ·
-        frozenRows</span
+        >NuiTable · bordered · cellStyle · rowHeaders · rowHeights · merges · overflow · frozenRows
+        · overlay</span
       >
     </div>
     <div class="data-row">
@@ -26,8 +26,10 @@
         <NuiSwitch v-model="quarter" data-testid="table-sheet-quarter">Первый квартал</NuiSwitch>
         <NuiSwitch v-model="long" data-testid="table-sheet-long">Журнал</NuiSwitch>
         <NuiSwitch v-model="frozen" data-testid="table-sheet-frozen">Закрепить шапку</NuiSwitch>
+        <NuiSwitch v-model="refs" data-testid="table-sheet-refs">Ссылки</NuiSwitch>
       </div>
       <NuiTable
+        ref="sheet"
         v-model:ranges="ranges"
         v-model:row-heights="rowHeights"
         :columns="SHEET_COLUMNS"
@@ -44,20 +46,34 @@
         size="sm"
         label="Бюджет"
         data-testid="table-sheet"
-      />
+        @pointermove="onPointer"
+        @pointerleave="pointer = ''"
+      >
+        <template v-if="refs" #overlay="{ rectOf }">
+          <div
+            v-for="box in referenceBoxes(rectOf)"
+            :key="box.key"
+            class="sheet-ref"
+            :style="box.style"
+          ></div>
+        </template>
+      </NuiTable>
       <pre class="output" data-testid="table-sheet-output">{{ output }}</pre>
+      <p class="output" data-testid="table-sheet-pointer">{{ pointer }}</p>
     </template>
   </section>
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, ref, useTemplateRef } from 'vue';
 import { NuiButton, NuiSwitch } from '@numior/vue';
 import {
   NuiTable,
   type NuiTableCellRef,
   type NuiTableCellStyle,
   type NuiTableColumnDef,
+  type NuiTableExposed,
+  type NuiTableRect,
   type NuiTableRange,
   type NuiTableRanges,
   type NuiTableRowHeights,
@@ -76,6 +92,11 @@ interface SheetLine {
   readonly label: string;
   readonly base: number;
   readonly step: number;
+}
+
+interface SheetReference {
+  readonly range: NuiTableRange;
+  readonly tone: string;
 }
 
 interface SheetBlock {
@@ -238,6 +259,11 @@ const QUARTER_COLUMNS = 4;
 const LATER_MONTHS: readonly string[] = [...LETTERS].slice(QUARTER_COLUMNS, MONTHS.length + 1);
 const NO_COLUMNS: readonly string[] = [];
 
+const REFERENCES: readonly SheetReference[] = [
+  { range: { from: { row: 3, col: 1 }, to: { row: 5, col: 3 } }, tone: 'var(--nui-primary)' },
+  { range: { from: { row: 6, col: 1 }, to: { row: 6, col: 3 } }, tone: 'var(--nui-success)' },
+];
+
 const PEAK = Math.max(
   ...SHEET_ROWS.flatMap((row) =>
     row.kind === 'item' ? row.cells.slice(1, MONTHS.length + 1).map((value) => Number(value)) : [],
@@ -251,8 +277,43 @@ const windowed = ref(false);
 const quarter = ref(false);
 const long = ref(false);
 const frozen = ref(false);
+const refs = ref(false);
+const pointer = ref('');
+const sheet = useTemplateRef<NuiTableExposed>('sheet');
 const ranges = ref<NuiTableRanges>([]);
 const rowHeights = ref<NuiTableRowHeights>({ 0: 44 });
+
+const shownKeys = computed(() => {
+  const hidden = new Set(quarter.value ? LATER_MONTHS : NO_COLUMNS);
+
+  return [...LETTERS].filter((letter) => !hidden.has(letter));
+});
+
+const referenceBoxes = (rectOf: (range: NuiTableRange) => NuiTableRect | undefined) =>
+  REFERENCES.flatMap((reference) => {
+    const rect = rectOf(reference.range);
+
+    return rect === undefined
+      ? []
+      : [
+          {
+            key: reference.tone,
+            style: {
+              '--_ref': reference.tone,
+              insetBlockStart: `${rect.top}px`,
+              insetInlineStart: `${rect.start}px`,
+              inlineSize: `${rect.width}px`,
+              blockSize: `${rect.height}px`,
+            },
+          },
+        ];
+  });
+
+const onPointer = (event: PointerEvent): void => {
+  const cell = sheet.value?.cellFromPoint(event.clientX, event.clientY);
+
+  pointer.value = cell === undefined ? '' : `${shownKeys.value[cell.col] ?? ''}${cell.row + 1}`;
+};
 
 const output = computed(() =>
   JSON.stringify({ ranges: ranges.value, rowHeights: rowHeights.value }),

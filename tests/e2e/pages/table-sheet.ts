@@ -1,6 +1,6 @@
 import type { Locator, Page } from '@playwright/test';
-import { paintedRgbAt, type Point, type Rgb } from '../helpers/color';
-import { boxOf } from '../helpers/geometry';
+import { paintedRgbAt, rgbDelta, type Point, type Rgb } from '../helpers/color';
+import { boxOf, type Box } from '../helpers/geometry';
 import {
   isNumber,
   listOf,
@@ -69,6 +69,7 @@ const BAND_BOTTOM = 107;
 const BAND_STEP = 0.5;
 const BAND_COLUMNS: readonly number[] = [60, 150, 420];
 const HIT_COLUMN = 120;
+const TINT_INSET = 40;
 
 const BAND_POINTS: readonly Point[] = Array.from(
   { length: Math.floor((BAND_BOTTOM - BAND_TOP) / BAND_STEP) + 1 },
@@ -89,6 +90,9 @@ export class TableSheetSection {
   readonly quarterSwitch: Locator;
   readonly longSwitch: Locator;
   readonly frozenSwitch: Locator;
+  readonly refsSwitch: Locator;
+  readonly references: Locator;
+  readonly pointer: Locator;
   readonly journalNote: Locator;
   readonly corner: Locator;
   readonly output: Locator;
@@ -98,12 +102,19 @@ export class TableSheetSection {
     this.root = page.getByTestId('table-sheet');
     this.viewport = this.root.locator(':scope > .nui-table__frame > .nui-table__viewport');
     this.grid = this.viewport.locator(':scope > .nui-table__grid');
+
+    this.references = this.viewport.locator(
+      ':scope > .nui-table__grid > .nui-table__overlay .sheet-ref',
+    );
+
     this.borderedSwitch = page.getByTestId('table-sheet-bordered');
     this.heatSwitch = page.getByTestId('table-sheet-heat');
     this.windowSwitch = page.getByTestId('table-sheet-window');
     this.quarterSwitch = page.getByTestId('table-sheet-quarter');
     this.longSwitch = page.getByTestId('table-sheet-long');
     this.frozenSwitch = page.getByTestId('table-sheet-frozen');
+    this.refsSwitch = page.getByTestId('table-sheet-refs');
+    this.pointer = page.getByTestId('table-sheet-pointer');
     this.journalNote = this.grid.locator('.nui-table__cell--tall', { hasText: 'Операции сверены' });
     this.corner = this.grid.locator(':scope > .nui-table__header [aria-colindex="1"]');
     this.output = page.getByTestId('table-sheet-output');
@@ -136,6 +147,30 @@ export class TableSheetSection {
 
       return { left, right };
     });
+  }
+
+  async spanOf(from: [row: number, col: number], to: [row: number, col: number]): Promise<Box> {
+    const [first, last] = await Promise.all([boxOf(this.cell(...from)), boxOf(this.cell(...to))]);
+
+    return {
+      x: first.x,
+      y: first.y,
+      width: last.x + last.width - first.x,
+      height: last.y + last.height - first.y,
+    };
+  }
+
+  async tintOver(target: Locator, outside: Locator): Promise<number> {
+    const [box, other, root] = await Promise.all([boxOf(target), boxOf(outside), boxOf(this.root)]);
+
+    const y = other.y + other.height / 2 - root.y;
+
+    const [inner, outer] = await paintedRgbAt(this.root, [
+      [box.x + TINT_INSET - root.x, y],
+      [other.x + other.width / 2 - root.x, y],
+    ]);
+
+    return inner === undefined || outer === undefined ? Number.NaN : rgbDelta(inner, outer);
   }
 
   content(cell: Locator): Locator {

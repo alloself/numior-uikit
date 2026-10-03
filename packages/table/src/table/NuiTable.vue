@@ -18,6 +18,11 @@
           :style="windowFrame.windowStyle.value"
           v-bind="gridAria"
         >
+          <caption v-if="slots.overlay" class="nui-table__overlay" aria-hidden="true">
+            <div class="nui-table__plane" :style="overlay.planeStyle.value">
+              <slot name="overlay" v-bind="overlay.scope.value" />
+            </div>
+          </caption>
           <NuiTableTracks :tracks="rowCells.tracks" />
           <thead class="nui-table__header" @click="header.onClick">
             <NuiTableRow
@@ -350,6 +355,7 @@ import NuiTableFilter from './NuiTableFilter.vue';
 import NuiTableFooterCell from './NuiTableFooterCell.vue';
 import NuiTableHeaderMarks from './NuiTableHeaderMarks.vue';
 import { useTableFocus } from './use-table-focus';
+import { useTableOverlay } from './use-table-overlay';
 import { useTableClipboard, type TableCopyCell } from './use-table-clipboard';
 import { useTableContextMenu } from './use-table-context-menu';
 import { useTableCellEditor } from './use-table-cell-editor';
@@ -2260,6 +2266,22 @@ onMounted(() => {
   watch(neededRange, ensureRows, { immediate: true });
 });
 
+const overlay = useTableOverlay({
+  viewport,
+  rows: rowWindow,
+  columns: columnWindow,
+  layout: () => layout.value,
+  dataKeys: () => dataKeys.value,
+  rowCount: () => visibleRows.value,
+  headSize: () => rowSize.value * (headRows.value + pinnedCount.value),
+  headRows: () => headRows.value,
+  pinnedRows: () => pinnedCount.value,
+  dataOffset: () => dataOffset.value,
+  onWindow: (next) => {
+    emit('window', next);
+  },
+});
+
 defineExpose<NuiTableExposed>({
   scrollToRow: (position) => {
     rowWindow.scrollTo(position, { align: 'start' });
@@ -2278,5 +2300,7 @@ defineExpose<NuiTableExposed>({
   refresh: () => {
     engine.value.refresh();
   },
+  rectOf: overlay.rectOf,
+  cellFromPoint: overlay.cellFromPoint,
 });
 </script>

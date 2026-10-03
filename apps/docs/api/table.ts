@@ -263,6 +263,10 @@ const docs: DocsMap = {
         ru: 'Свой редактор колонки не открылся: row, key и reason — control (контрола нет в реестре), props (пропсы не прошли проверку реестра) или value (значение ячейки не подходит контролу).',
         en: 'The editor of a column did not open: row, key and reason, which is control (the registry has no such control), props (the props failed the registry check) or value (the cell value does not fit the control).',
       },
+      window: {
+        ru: 'Сменилось окно отрисовки: rows и cols — позиции отрисованных строк и колонок данных { start, end }, end не входит.',
+        en: 'The rendered window changed: rows and cols are the positions of the rendered rows and data columns { start, end }, end excluded.',
+      },
       edit: {
         ru: 'Правка ячеек: kind (edit, clear, cut, paste, undo, redo) и changes со строкой, ключом колонки, новым и прежним значением. Таблица строки не меняет, изменения применяет потребитель.',
         en: 'An edit of cells: kind (edit, clear, cut, paste, undo, redo) and changes with the row, the column key, the new and the previous value. The table never changes rows; the consumer applies the changes.',
@@ -277,6 +281,10 @@ const docs: DocsMap = {
       caption: {
         ru: 'Подпись над таблицей вместо caption.',
         en: 'Caption above the table instead of caption.',
+      },
+      overlay: {
+        ru: 'Слой поверх ячеек в координатах прокручиваемого содержимого: слот получает rectOf(range) → { top, start, width, height } и window с отрисованными строками и колонками. Слой прокручивается вместе с ячейками, липкая шапка и закреплённые колонки ложатся поверх него, а указатель он пропускает, пока элементу не задан pointer-events: auto.',
+        en: 'Layer over the cells in the coordinates of the scrolled content: the slot receives rectOf(range) → { top, start, width, height } and window with the rendered rows and columns. The layer scrolls with the cells, the sticky header and pinned columns lie over it, and it lets the pointer through until an element sets pointer-events: auto.',
       },
       detail: {
         ru: 'Деталь раскрытой строки на всю ширину таблицы: слот получает строку и её позицию. Раскрытые ключи лежат в expanded; в дереве строк слот не работает.',
