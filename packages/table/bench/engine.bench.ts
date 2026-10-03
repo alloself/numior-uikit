@@ -17,7 +17,7 @@ import { measure, record, type Operation } from './harness.ts';
 const ROWS = 1_000_000;
 const rows = generateRows(ROWS);
 const heavy = { iterations: 3, warmup: 1 };
-const light = { iterations: 5, warmup: 1 };
+const light = { iterations: 20, warmup: 1 };
 
 const yieldTo = (): Promise<void> =>
   new Promise((resolve) => {

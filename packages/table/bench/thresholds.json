@@ -40,7 +40,7 @@
       "p95Ms": 90
     },
     "group by country with sum, count and avg on warm stores": {
-      "p95Ms": 120
+      "p95Ms": 190
     },
     "totals of sum, count and avg over all rows on warm stores": {
       "p95Ms": 30

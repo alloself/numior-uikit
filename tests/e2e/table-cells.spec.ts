@@ -242,6 +242,37 @@ test.describe('table cell source', () => {
     await expect(cells.cell(4, 1)).toHaveText('14,1');
   });
 
+  test('mirrors the sheet in RTL: arrows follow the reading direction and boxes cover their cells', async ({
+    page,
+    isMobile,
+  }) => {
+    test.skip(isMobile, 'keyboard scenario');
+    const playground = new PlaygroundPage(page);
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    await playground.setDirection('rtl');
+    const { tableCells: cells } = playground;
+    await cells.show();
+
+    expect((await boxOf(cells.rowHeader(1))).x).toBeGreaterThan((await boxOf(cells.cell(1, 0))).x);
+    await cells.cell(1, 1).click();
+    await page.keyboard.press('ArrowLeft');
+    await expect.poll(() => cells.spot()).toEqual({ row: '2', col: 'C' });
+    await page.keyboard.type('=');
+    await page.keyboard.press('ArrowLeft');
+    await expect(cells.editor(1, 2)).toHaveValue('=D2');
+    await page.keyboard.press('Shift+ArrowDown');
+    await expect(cells.editor(1, 2)).toHaveValue('=D2:D3');
+    await expect(cells.references).toHaveCount(1);
+
+    expect(
+      boxGaps(await boxOf(cells.references.first()), await cells.spanOf([1, 3], [2, 3])),
+    ).toEqual([0, 0, 0, 0]);
+
+    await page.keyboard.press('Escape');
+    await expect(cells.editor(1, 2)).toHaveCount(0);
+  });
+
   test('a sheet from a cell source has no automatically detectable WCAG AA violations', async ({
     page,
   }) => {

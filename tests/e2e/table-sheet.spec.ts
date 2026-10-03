@@ -555,6 +555,32 @@ test.describe('table cell styles', () => {
     await expect(sheet.pointer).toHaveText('N5');
   });
 
+  test('mirrors the row headers, the references and the pointer name in RTL', async ({
+    page,
+    isMobile,
+  }) => {
+    test.skip(isMobile, 'a hovering pointer');
+    const playground = new PlaygroundPage(page);
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    await playground.setDirection('rtl');
+    const { tableSheet: sheet } = playground;
+    await sheet.show();
+    await sheet.refsSwitch.click();
+    await expect(sheet.references).toHaveCount(2);
+
+    expect((await boxOf(sheet.rowHeader(SALES))).x).toBeGreaterThan(
+      (await boxOf(sheet.cell(SALES, 0))).x,
+    );
+
+    expect(
+      boxGaps(await boxOf(sheet.references.first()), await sheet.spanOf([3, 1], [5, 3])),
+    ).toEqual([0, 0, 0, 0]);
+
+    await sheet.cell(SALES + 1, 2).hover();
+    await expect(sheet.pointer).toHaveText('C5');
+  });
+
   test('a painted sheet has no automatically detectable WCAG AA violations', async ({ page }) => {
     const playground = new PlaygroundPage(page);
     await playground.emulate({ reducedMotion: 'reduce' });
