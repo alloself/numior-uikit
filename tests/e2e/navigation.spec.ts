@@ -133,6 +133,21 @@ test.describe('navigation', () => {
     await expect.poll(async () => (await navigation.readOutput()).manualTab).toBe('week');
   });
 
+  test('a right click on a tab opens no tab and leaves the focus where it was', async ({
+    page,
+    isMobile,
+  }) => {
+    test.skip(isMobile, 'mouse scenario');
+    const playground = new PlaygroundPage(page);
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    const { navigation } = playground;
+    await navigation.tab('Команда').click({ button: 'right' });
+
+    await expect(navigation.activePanel).toHaveText('Панель обзора');
+    await expect(navigation.tab('Команда')).not.toBeFocused();
+  });
+
   test('breadcrumbs collapse the middle into a menu that keeps the hidden links', async ({
     page,
   }) => {

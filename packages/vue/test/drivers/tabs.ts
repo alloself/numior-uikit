@@ -173,6 +173,13 @@ export class TabsDriver extends ComponentDriver {
     await this.tab(label).trigger('click');
   }
 
+  pressTabButton(label: string, button: number): boolean {
+    const event = new MouseEvent('mousedown', { button, bubbles: true, cancelable: true });
+
+    this.tab(label).element.dispatchEvent(event);
+    return event.defaultPrevented;
+  }
+
   async press(key: string): Promise<void> {
     const event = new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true });
     (document.activeElement ?? document.body).dispatchEvent(event);

@@ -51,6 +51,15 @@ describe('NuiTabs', () => {
     tabs.unmount();
   });
 
+  it('keeps right and middle clicks from focusing and so activating a tab', () => {
+    const tabs = TabsDriver.mount({ modelValue: 'general' });
+
+    expect(tabs.pressTabButton('Team', 2)).toBe(true);
+    expect(tabs.pressTabButton('Team', 1)).toBe(true);
+    expect(tabs.pressTabButton('Team', 0)).toBe(false);
+    expect(tabs.selected).toBe('general');
+  });
+
   it('swaps arrows in RTL and walks vertical lists with ArrowDown', async () => {
     const rtl = TabsDriver.mount({ modelValue: 'general', dir: 'rtl' });
     await rtl.focusTab('General');
