@@ -8,6 +8,7 @@
     "packages/table/src/index.ts",
     "packages/editor-core/src/index.ts",
     "packages/editor-core/src/fixtures/index.ts",
+    "packages/editor-core/src/view/index.ts",
     "apps/playground/src/tailwind.css",
     "scripts/vite-package-assets.ts",
     "scripts/build-css.ts",

@@ -1,4 +1,6 @@
 import { contentSize, normalizeContent } from '../model/node';
+import { contentHole, renderTag } from '../render/render';
+import type { MarkRender, NodeRender } from '../render/render.types';
 import type { AttrValue, Attrs, ElementNode, Mark, TextNode } from '../model/node.types';
 import { checkTree } from './check';
 import { parseContentExpression } from './content-expression';
@@ -21,6 +23,21 @@ interface Allowed {
 }
 
 const EMPTY = parseContentExpression('');
+
+const renderBlock: NodeRender = () => renderTag('div', {}, [contentHole]);
+
+const renderLeaf: NodeRender = () => renderTag('div');
+
+const renderInline: NodeRender = () => renderTag('span');
+
+const renderMark: MarkRender = () => renderTag('span', {}, [contentHole]);
+
+const defaultRender = (inline: boolean, leaf: boolean): NodeRender => {
+  if (inline) {
+    return renderInline;
+  }
+  return leaf ? renderLeaf : renderBlock;
+};
 
 const groupsOf = (group: string | undefined): Set<string> =>
   new Set((group ?? '').split(/\s+/).filter((name) => name !== ''));
@@ -90,15 +107,18 @@ const compileNode = (
   if (inlineContent && inlineTypes.includes(false)) {
     throw new SyntaxError(`The content of "${name}" mixes inline and block nodes`);
   }
+  const inline = isInline(spec, name);
+
   return {
     name,
     groups: groupsOf(node.group),
-    inline: isInline(spec, name),
+    inline,
     leaf,
     inlineContent,
     content,
     marks: allowedMarks(spec, allowed, node.marks, inlineContent),
     attrs: node.attrs ?? {},
+    render: node.render ?? defaultRender(inline, leaf),
   };
 };
 
@@ -151,7 +171,13 @@ const compileMarks = (spec: SchemaSpec, allowed: Allowed): Map<string, MarkType>
       .filter(([name]) => allowed.marks.has(name))
       .map(([name, mark], rank) => [
         name,
-        { name, rank, groups: groupsOf(mark.group), attrs: mark.attrs ?? {} },
+        {
+          name,
+          rank,
+          groups: groupsOf(mark.group),
+          attrs: mark.attrs ?? {},
+          render: mark.render ?? renderMark,
+        },
       ]),
   );
 

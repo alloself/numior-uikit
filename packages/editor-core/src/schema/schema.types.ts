@@ -6,6 +6,7 @@ import type {
   NodeId,
   TextNode,
 } from '../model/node.types';
+import type { MarkRender, NodeRender } from '../render/render.types';
 
 export interface AttrSpec {
   readonly default?: AttrValue | undefined;
@@ -20,11 +21,13 @@ export interface NodeSpec {
   readonly inline?: boolean | undefined;
   readonly marks?: string | undefined;
   readonly attrs?: AttrSpecs | undefined;
+  readonly render?: NodeRender | undefined;
 }
 
 export interface MarkSpec {
   readonly group?: string | undefined;
   readonly attrs?: AttrSpecs | undefined;
+  readonly render?: MarkRender | undefined;
 }
 
 export interface SchemaSpec {
@@ -49,6 +52,7 @@ export interface NodeType {
   readonly content: ContentMatch;
   readonly marks: ReadonlySet<string>;
   readonly attrs: AttrSpecs;
+  readonly render: NodeRender;
 }
 
 export interface MarkType {
@@ -56,6 +60,7 @@ export interface MarkType {
   readonly rank: number;
   readonly groups: ReadonlySet<string>;
   readonly attrs: AttrSpecs;
+  readonly render: MarkRender;
 }
 
 export interface ElementInit {

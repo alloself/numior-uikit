@@ -11,6 +11,16 @@ export type {
   NodeId,
   TextNode,
 } from './model/node.types';
+export { contentHole, renderTag } from './render/render';
+export type {
+  MarkRender,
+  NodeRender,
+  RenderAttrValue,
+  RenderChild,
+  RenderElement,
+  RenderHole,
+  RenderText,
+} from './render/render.types';
 export { parseContentExpression } from './schema/content-expression';
 export type { ContentExpr } from './schema/content-expression';
 export { createSchema } from './schema/schema';

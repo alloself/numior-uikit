@@ -18,6 +18,11 @@
       "@numior/source": "./src/fixtures/index.ts",
       "types": "./dist/fixtures/index.d.ts",
       "import": "./dist/fixtures.js"
+    },
+    "./view": {
+      "@numior/source": "./src/view/index.ts",
+      "types": "./dist/view/index.d.ts",
+      "import": "./dist/view.js"
     }
   },
   "scripts": {

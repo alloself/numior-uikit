@@ -10,7 +10,7 @@ export const contentSize = (content: readonly ContentNode[]): number =>
 
 export const typeOf = (node: ContentNode): string => (node.kind === 'text' ? 'text' : node.type);
 
-const sameAttrs = (left: Attrs, right: Attrs): boolean => {
+export const sameAttrs = (left: Attrs, right: Attrs): boolean => {
   const keys = Object.keys(left);
 
   return (

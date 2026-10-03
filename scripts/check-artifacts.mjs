@@ -211,19 +211,29 @@ assert.equal(
   'editor-core/fixtures must export the document generator',
 );
 
-for (const entry of ['index.js', 'fixtures.js']) {
-  for (const file of await localImports(resolve('packages/editor-core/dist', entry))) {
-    const bundle = await readFile(file, 'utf8');
+const editorView = await import(pathToFileURL(resolve('packages/editor-core/dist/view.js')).href);
 
+assert.equal(
+  typeof editorView.createEditorView,
+  'function',
+  'editor-core/view must export the editor view',
+);
+
+for (const entry of ['index.js', 'fixtures.js', 'view.js']) {
+  for (const file of await localImports(resolve('packages/editor-core/dist', entry))) {
     assert.doesNotMatch(
-      bundle,
+      await readFile(file, 'utf8'),
       /from ['"](?:vue|@vueuse\/[\w-]+|@numior\/[\w-]+)['"]/,
       `editor-core must stay free of Vue and UI packages: ${file}`,
     );
+  }
+}
 
+for (const entry of ['index.js', 'fixtures.js']) {
+  for (const file of await localImports(resolve('packages/editor-core/dist', entry))) {
     assert.doesNotMatch(
-      bundle,
-      /\b(?:document|window|navigator)\./,
+      await readFile(file, 'utf8'),
+      /\b(?:document|window|navigator|Node)\.|\bResizeObserver\b/,
       `editor-core must not touch the DOM outside its view entry: ${file}`,
     );
   }

@@ -9,6 +9,7 @@ export default defineConfig({
       entry: {
         index: fileURLToPath(new URL('./src/index.ts', import.meta.url)),
         fixtures: fileURLToPath(new URL('./src/fixtures/index.ts', import.meta.url)),
+        view: fileURLToPath(new URL('./src/view/index.ts', import.meta.url)),
       },
       formats: ['es'],
       fileName: (_format, name) => `${name}.js`,
