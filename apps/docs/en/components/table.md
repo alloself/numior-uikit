@@ -39,8 +39,8 @@ The fill lies over the row background, so a translucent colour keeps the stripes
 The `top`, `end`, `bottom` and `start` lines are drawn over the grid and leave the row height
 alone.
 
-A line between two cells belongs to the cell before it. So `end` and `bottom` sit on the grid,
-while `top` and `start` stay inside the cell.
+Every line replaces the grid line under it, so the `top` of a cell and the `bottom` of the cell
+above share one place. A merged cell keeps `top` and `start` inside itself.
 
 The table asks for a style once per shown cell. It asks again when the row changes or when
 reactive state read by the function changes.
@@ -203,6 +203,9 @@ Dragging with the mouse selects a rectangle of cells, Shift+click adds the recta
 clicked cell and Ctrl+click adds one cell. Shift or Ctrl on a selected cell takes it out of the
 selection, so no cell lands in the model twice. While the table has focus, the active cell looks
 like a one-cell selection.
+
+Escape clears the selection together with the look of the active cell, and a press outside the
+table clears the ranges. Elements from `keepEditing`, such as a formula bar, keep the selection.
 
 Ctrl+C copies the selection as tab separated text and an HTML table, so a paste into Excel or
 Google Sheets keeps the grid.

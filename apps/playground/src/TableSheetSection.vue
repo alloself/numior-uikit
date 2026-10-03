@@ -3,8 +3,8 @@
     <div class="section-heading">
       <h2 id="table-sheet-title">Лист</h2>
       <span class="tag"
-        >NuiTable · bordered · cellStyle · rowHeaders · rowHeights · merges · overflow · frozenRows
-        · overlay</span
+        >NuiTable · bordered · cellStyle · rowHeaders · rowHeights · merges · frozenRows ·
+        overlay</span
       >
     </div>
     <div class="data-row">
@@ -114,7 +114,7 @@ const FOOTNOTE = 'Прибыль посчитана после постоянн�
 const SOURCE = 'Цифры выгружены из учётной системы 1 октября 2026 года';
 const JOURNAL = 60;
 const FROZEN_ROWS = 2;
-const BANDS: readonly number[] = [2, 7];
+const BANDS: readonly number[] = [0, 2, 7];
 
 const NOTES: readonly SheetBlock[] = [
   { top: 3, bottom: 5 },
@@ -148,16 +148,12 @@ const NOTE_STYLE: NuiTableCellStyle = {
 };
 
 const FOOTNOTE_STYLE: NuiTableCellStyle = { color: 'var(--nui-text-muted)' };
-const SOURCE_STYLE: NuiTableCellStyle = { color: 'var(--nui-text-muted)', overflow: true };
-
-const TOTAL: NuiTableCellStyle = {
-  style: BOLD,
-  borders: { top: '1px solid var(--nui-border-strong)' },
-};
+const STRONG_LINE = '1px solid var(--nui-border-strong)';
+const TOTAL: NuiTableCellStyle = { style: BOLD, borders: { top: STRONG_LINE } };
 
 const RESULT: NuiTableCellStyle = {
   style: BOLD,
-  borders: { top: '3px double var(--nui-border-strong)' },
+  borders: { top: STRONG_LINE, bottom: STRONG_LINE },
 };
 
 const PLAIN: NuiTableCellStyle = {};
@@ -238,7 +234,11 @@ const buildRows = (journal: boolean): SheetRow[] => {
 const SHEET_ROWS: readonly SheetRow[] = buildRows(false);
 const LONG_ROWS: readonly SheetRow[] = buildRows(true);
 const JOURNAL_BAND = SHEET_ROWS.length;
-const FOOTNOTE_ROW = SHEET_ROWS.findIndex((row) => row.kind === 'note');
+
+const FOOTNOTE_ROWS: readonly number[] = SHEET_ROWS.flatMap((row) =>
+  row.kind === 'note' || row.kind === 'source' ? [row.index] : [],
+);
+
 const JOURNAL_BLOCK: SheetBlock = { top: JOURNAL_BAND + 1, bottom: JOURNAL_BAND + JOURNAL };
 
 const textOf = (value: SheetValue): string =>
@@ -319,7 +319,7 @@ const merges = computed((): NuiTableRange[] => {
       from: { row: top, col: last },
       to: { row: bottom, col: last },
     })),
-    { from: { row: FOOTNOTE_ROW, col: 1 }, to: { row: FOOTNOTE_ROW, col: last } },
+    ...FOOTNOTE_ROWS.map((row) => ({ from: { row, col: 1 }, to: { row, col: last } })),
   ];
 });
 
@@ -350,7 +350,7 @@ const PAINTERS: Readonly<
   total: (value) => ({ ...numberStyle(value, false), ...TOTAL }),
   result: (value) => ({ ...numberStyle(value, false), ...RESULT }),
   note: (_, col) => (col === 1 ? FOOTNOTE_STYLE : PLAIN),
-  source: (_, col) => (col === 1 ? SOURCE_STYLE : PLAIN),
+  source: (_, col) => (col === 1 ? FOOTNOTE_STYLE : PLAIN),
 };
 
 const styleOf = ({ row, column }: NuiTableCellRef<SheetRow>): NuiTableCellStyle => {

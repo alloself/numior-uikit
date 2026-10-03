@@ -8,6 +8,8 @@ import { people, PEOPLE_COLUMNS, type Person } from './support/people';
 const mounted: TableDriver<Person>[] = [];
 let clipboard: ClipboardStub | undefined;
 
+const isBar = (target: Element): boolean => target.classList.contains('bar');
+
 const mountPeople = (options: Partial<TableMountOptions<Person>> = {}): TableDriver<Person> => {
   const grid = TableDriver.mount<Person>({
     columns: PEOPLE_COLUMNS,
@@ -172,6 +174,27 @@ describe('NuiTable cell ranges', () => {
     await grid.press('ArrowDown');
     expect(grid.ranges).toEqual([]);
     expect(grid.focusedCell).toEqual({ row: 3, col: 2 });
+  });
+
+  it('drops the selection with Escape and with a press outside the table', async () => {
+    const grid = mountPeople({ props: { keepEditing: isBar } });
+    await grid.focusCell(2, 2);
+
+    await grid.press('a', { ctrl: true });
+    expect(await grid.pressHandled('Escape')).toBe(true);
+    expect(grid.ranges).toEqual([]);
+    expect(grid.hasModifier('deselected')).toBe(true);
+    expect(await grid.pressHandled('Escape')).toBe(false);
+    await grid.press('ArrowDown');
+    expect(grid.hasModifier('deselected')).toBe(false);
+    expect(await grid.pressHandled('Escape')).toBe(true);
+    expect(grid.hasModifier('deselected')).toBe(true);
+    await grid.press('ArrowDown', { shift: true });
+    expect(grid.ranges).toEqual([range(3, 2, 4, 2)]);
+    await grid.pressOutside('bar');
+    expect(grid.ranges).toEqual([range(3, 2, 4, 2)]);
+    await grid.pressOutside();
+    expect(grid.ranges).toEqual([]);
   });
 
   it('selects everything from a header cell and starts from the clicked cell when the table had no focus', async () => {

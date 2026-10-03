@@ -42,7 +42,7 @@ const columns: NuiTableColumn<Line>[] = [
 
 const TOTAL: NuiTableCellStyle = {
   fill: 'var(--nui-surface-muted)',
-  borders: { top: '1px solid var(--nui-text)' },
+  borders: { top: '1px solid var(--nui-border-strong)' },
   style: { 'font-weight': '600' },
 };
 

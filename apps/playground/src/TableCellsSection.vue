@@ -3,8 +3,8 @@
     <div class="section-heading">
       <h2 id="table-cells-title">Лист из источника ячеек</h2>
       <span class="tag"
-        >tableCells · nextEdge · active · draft · startEdit · picking · clipboard · commands · 1 048
-        576 × 16 384</span
+        >tableCells · nextEdge · active · draft · startEdit · picking · clipboard · commands ·
+        overflow · 1 048 576 × 16 384</span
       >
     </div>
     <div class="data-row">

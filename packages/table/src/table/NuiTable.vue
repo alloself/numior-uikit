@@ -1,5 +1,5 @@
 <template>
-  <div class="nui-table" :class="rootClass" :style="rootStyle">
+  <div ref="root" class="nui-table" :class="rootClass" :style="rootStyle">
     <p v-if="hasCaption" :id="captionId" class="nui-table__caption">
       <slot name="caption">{{ caption }}</slot>
     </p>
@@ -537,6 +537,7 @@ const emit = defineEmits<NuiTableEvents<T>>();
 const slots = defineSlots<NuiTableSlots<T>>();
 const rawSlots = useSlots();
 
+const root = useTemplateRef<HTMLElement>('root');
 const viewport = useTemplateRef<HTMLElement>('viewport');
 const frame = useTemplateRef<HTMLElement>('frame');
 const tree = computed(() => columnTreeOf(columns));
@@ -930,7 +931,8 @@ const rootClass = computed(() => [
       order.dragging.value !== undefined || rowDrag.dragging.value !== undefined,
     'nui-table--ranging': rangeSelect.dragging.value,
     'nui-table--cell-selection': cellSelection && !loadingNow.value,
-    'nui-table--ranged': ranges.value.length > 0 || rangeSelect.deselected.value,
+    'nui-table--ranged': ranges.value.length > 0,
+    'nui-table--deselected': rangeSelect.deselected.value,
   },
 ]);
 
@@ -1584,6 +1586,9 @@ const rangeSelect = useTableRanges({
   lines: () => rowHead.value !== undefined,
   ranges,
   viewport: () => viewport.value,
+  inside: (target) =>
+    root.value?.contains(target) === true ||
+    (target instanceof Element && keepEditing?.(target) === true),
   bounds: () => ({ rows: visibleRows.value, cols: dataKeys.value.length }),
   offset: () => dataOffset.value,
   headRows: () => headRows.value,

@@ -7,16 +7,15 @@ const SALES = 3;
 const INCOME_TOTAL = 6;
 const COSTS = 8;
 const RESULT = 14;
-const SOURCE = 16;
 const LAST_ROW = 16;
 const JOURNAL = 18;
 const JOURNAL_ROWS = 60;
 const LAST_COLUMN = 14;
 const LAST_QUARTER_COLUMN = 5;
 const ROW = 32;
-const PAD = 8;
 const CENTRE_WIDTH = 13 * 92 + 170;
-const QUARTER_WIDTH = 4 * 92 + 170;
+const LINE_TOLERANCE = 12;
+const LINE_THICKNESS = 1.6;
 const PIXEL_FRACTIONS = [0.05, 0.3, 0.55, 0.8];
 const PIXEL_RATIOS = [1.25, 1.5];
 const TITLE = 0;
@@ -67,8 +66,12 @@ test.describe('table cell styles', () => {
     await sheet.show();
 
     expect(await sheet.topEdge(INCOME_TOTAL, 2)).toEqual({ width: '1px', style: 'solid' });
-    expect(await sheet.topEdge(RESULT, 2)).toEqual({ width: '3px', style: 'double' });
+    expect(await sheet.topEdge(RESULT, 2)).toEqual({ width: '1px', style: 'solid' });
     expect(await sheet.topEdge(SALES, 2)).toBeNull();
+    const line = await sheet.lineAbove(INCOME_TOTAL, 1);
+
+    expect(line.thickness).toBeLessThan(LINE_THICKNESS);
+    expect(line.strong).toBeLessThan(LINE_TOLERANCE);
     expect(await sheet.boxHeights()).toEqual([44, 32]);
     await sheet.windowSwitch.click();
     await expect(sheet.cell(INCOME_TOTAL, 2)).toBeVisible();
@@ -346,44 +349,6 @@ test.describe('table cell styles', () => {
     await expect(sheet.text(JOURNAL, LAST_COLUMN)).toHaveCount(0);
     await expect(sheet.journalNote).toContainText('Операции сверены с банком');
     expect(await sheet.canvasTop(sheet.content(sheet.journalNote))).toBe(top);
-  });
-
-  test('lets a long text flow over the empty cells after it and leaves them to the pointer', async ({
-    page,
-  }) => {
-    const playground = new PlaygroundPage(page);
-    await playground.emulate({ reducedMotion: 'reduce' });
-    await playground.open();
-    const { tableSheet: sheet } = playground;
-    await sheet.show();
-
-    await expect(sheet.cell(SOURCE, 1)).toHaveClass(/nui-table__cell--overflow/);
-    expect((await boxOf(sheet.text(SOURCE, 1))).width).toBeCloseTo(CENTRE_WIDTH - 2 * PAD, 3);
-    expect(await sheet.lineAfter(SOURCE, 1)).toBe('0px');
-    expect(await sheet.lineAfter(RESULT, 1)).toBe('1px');
-    await sheet.cell(SOURCE, 3).click();
-    await expect(sheet.cell(SOURCE, 3)).toBeFocused();
-    expect(await sheet.ranges()).toEqual([]);
-    await sheet.quarterSwitch.click();
-
-    await expect
-      .poll(async () => (await boxOf(sheet.text(SOURCE, 1))).width)
-      .toBeCloseTo(QUARTER_WIDTH - 2 * PAD, 3);
-  });
-
-  test('starts a flowing text at its own cell in either direction', async ({ page }) => {
-    const playground = new PlaygroundPage(page);
-    await playground.emulate({ reducedMotion: 'reduce' });
-    await playground.open();
-    const { tableSheet: sheet } = playground;
-    await sheet.show();
-    const cell = await boxOf(sheet.cell(SOURCE, 1));
-
-    expect((await sheet.inkOf(SOURCE, 1)).left - cell.x).toBeCloseTo(PAD, 0);
-    await playground.setDirection('rtl');
-    const mirrored = await boxOf(sheet.cell(SOURCE, 1));
-
-    expect(mirrored.x + mirrored.width - (await sheet.inkOf(SOURCE, 1)).right).toBeCloseTo(PAD, 0);
   });
 
   test('keeps the first rows of the sheet under the header while the rest scroll', async ({

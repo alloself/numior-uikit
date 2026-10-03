@@ -88,6 +88,27 @@ export class TableCellsSection {
     }, text);
   }
 
+  text(position: number, col: number): Locator {
+    return this.cell(position, col).locator('.nui-table__text');
+  }
+
+  lineAfter(position: number, col: number): Promise<string> {
+    return this.cell(position, col).evaluate(
+      (element) => getComputedStyle(element).borderInlineEndWidth,
+    );
+  }
+
+  inkOf(position: number, col: number): Promise<{ left: number; right: number }> {
+    return this.text(position, col).evaluate((element) => {
+      const range = document.createRange();
+
+      range.selectNodeContents(element);
+      const { left, right } = range.getBoundingClientRect();
+
+      return { left, right };
+    });
+  }
+
   editor(position: number, col: number): Locator {
     return this.cell(position, col).locator('.nui-table__editor input');
   }

@@ -1,4 +1,5 @@
 import { onScopeDispose, ref, watch, type ComputedRef, type Ref, type WatchSource } from 'vue';
+import { useEventListener } from '@vueuse/core';
 import { useEdgeScroll, type EdgePoint } from '@numior/primitives';
 import {
   allOf,
@@ -35,6 +36,7 @@ export interface TableRangesOptions {
   readonly lines: () => boolean;
   readonly ranges: Ref<NuiTableRanges>;
   readonly viewport: () => HTMLElement | null;
+  readonly inside: (target: Node) => boolean;
   readonly bounds: () => RangeBounds;
   readonly offset: () => number;
   readonly headRows: () => number;
@@ -174,6 +176,9 @@ const isAllKey = (event: KeyboardEvent): boolean =>
 
 const isCellTarget = (target: EventTarget | null): boolean =>
   target instanceof HTMLElement && target.matches('.nui-table__cell');
+
+const isBodyTarget = (target: EventTarget | null): boolean =>
+  target instanceof Element && target.closest(BODY_ROW) !== null;
 
 const clearTextSelection = (): void => {
   window.getSelection()?.removeAllRanges();
@@ -634,12 +639,19 @@ export const useTableRanges = (options: TableRangesOptions): TableRanges => {
   };
 
   const onEscape = (event: KeyboardEvent): boolean => {
-    if (latest().length === 0) {
+    if (latest().length === 0 && (deselected.value || !isBodyTarget(event.target))) {
       return false;
     }
     event.preventDefault();
     clear();
+    deselected.value = true;
     return true;
+  };
+
+  const onOutside = (event: PointerEvent): void => {
+    if (event.target instanceof Node && !options.inside(event.target)) {
+      clear();
+    }
   };
 
   const onHeaderKey = (event: KeyboardEvent): boolean => {
@@ -712,6 +724,13 @@ export const useTableRanges = (options: TableRangesOptions): TableRanges => {
   });
 
   onScopeDispose(finish);
+
+  useEventListener(
+    () => (options.ranges.value.length > 0 ? document : undefined),
+    'pointerdown',
+    onOutside,
+    { capture: true, passive: true },
+  );
 
   const keepsMenuFocus = (event: MouseEvent): boolean => {
     const start = event.button === 2 && options.enabled() ? startOf(event.target) : undefined;

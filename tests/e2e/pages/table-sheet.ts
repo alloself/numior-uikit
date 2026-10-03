@@ -1,5 +1,5 @@
 import type { Locator, Page } from '@playwright/test';
-import { paintedRgbAt, rgbDelta, type Point, type Rgb } from '../helpers/color';
+import { paintedColumn, paintedRgbAt, rgbDelta, type Point, type Rgb } from '../helpers/color';
 import { boxOf, spanBox, type Box } from '../helpers/geometry';
 import {
   isNumber,
@@ -24,6 +24,11 @@ export interface TableSheetEdge {
   readonly style: string;
 }
 
+export interface TableSheetLine {
+  readonly thickness: number;
+  readonly strong: number;
+}
+
 export interface TableSheetBand {
   readonly top: number;
   readonly bottom: number;
@@ -40,6 +45,9 @@ const HEAD_ROWS = 1;
 const ROW_HEADERS = 1;
 const BODY_ROWS = ':scope > .nui-table__body > [role="row"]';
 const LEAK = 12;
+const LINE_INSET = 4;
+const LINE_REACH = 3;
+const LINE_CONTRAST = 24;
 const HEADER_TOP: readonly number[] = [0.3, 0.6, 0.9, 1.2, 1.5, 1.8, 2.1, 2.4, 2.7, 3, 3.3, 3.6];
 
 const HEADER_POINTS: readonly Point[] = HEADER_TOP.flatMap((y): Point[] => [
@@ -138,17 +146,6 @@ export class TableSheetSection {
     return this.cell(position, col).locator('.nui-table__text');
   }
 
-  inkOf(position: number, col: number): Promise<{ left: number; right: number }> {
-    return this.text(position, col).evaluate((element) => {
-      const range = document.createRange();
-
-      range.selectNodeContents(element);
-      const { left, right } = range.getBoundingClientRect();
-
-      return { left, right };
-    });
-  }
-
   spanOf(from: [row: number, col: number], to: [row: number, col: number]): Promise<Box> {
     return spanBox(this.cell(...from), this.cell(...to));
   }
@@ -223,6 +220,57 @@ export class TableSheetSection {
     return this.cell(position, col).evaluate(
       (element) => getComputedStyle(element).borderInlineEndWidth,
     );
+  }
+
+  async lineAbove(position: number, col: number): Promise<TableSheetLine> {
+    await this.page.mouse.move(0, 0);
+
+    const [cell, root, strong] = await Promise.all([
+      boxOf(this.cell(position, col)),
+      boxOf(this.root),
+      this.tokenRgb('--nui-border-strong'),
+    ]);
+
+    const top = cell.y - root.y;
+
+    const column = await paintedColumn(
+      this.root,
+      cell.x + LINE_INSET - root.x,
+      top - LINE_REACH,
+      top + LINE_REACH,
+    );
+
+    const background = column.pixels.at(-1) ?? [0, 0, 0];
+    const marked = column.pixels.filter((pixel) => rgbDelta(pixel, background) > LINE_CONTRAST);
+
+    const darkest = marked.reduce<Rgb>(
+      (dark, pixel) => (rgbDelta(pixel, background) > rgbDelta(dark, background) ? pixel : dark),
+      background,
+    );
+
+    return { thickness: marked.length / column.ratio, strong: rgbDelta(darkest, strong) };
+  }
+
+  tokenRgb(token: string): Promise<Rgb> {
+    return this.root.evaluate((element, name): Rgb => {
+      const probe = document.createElement('span');
+      const canvas = document.createElement('canvas');
+      const context = canvas.getContext('2d', { willReadFrequently: true });
+
+      probe.style.color = `var(${name})`;
+      element.append(probe);
+      const color = getComputedStyle(probe).color;
+
+      probe.remove();
+      if (!context) {
+        throw new Error('2D canvas is unavailable');
+      }
+      context.fillStyle = color;
+      context.fillRect(0, 0, 1, 1);
+      const [red = 0, green = 0, blue = 0] = context.getImageData(0, 0, 1, 1).data;
+
+      return [red, green, blue];
+    }, token);
   }
 
   topEdge(position: number, col: number): Promise<TableSheetEdge | null> {

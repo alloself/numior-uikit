@@ -6,6 +6,8 @@ import { PlaygroundPage } from './pages/playground';
 const SHEET_ROWS = 1_048_576;
 const SHEET_COLS = 16_384;
 const LEDGER_END = 499;
+const NOTE_ROW = LEDGER_END + 1;
+const PAD = 8;
 const LEDGER_LAST_COLUMN = 29;
 const B2 = '4,8';
 const C3 = '9,6';
@@ -271,6 +273,56 @@ test.describe('table cell source', () => {
 
     await page.keyboard.press('Escape');
     await expect(cells.editor(1, 2)).toHaveCount(0);
+  });
+
+  test('lets the note under the ledger flow over the empty cells and leaves them to the pointer', async ({
+    page,
+  }) => {
+    const playground = new PlaygroundPage(page);
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    const { tableCells: cells } = playground;
+    await cells.show();
+    await cells.cell(1, 0).click();
+    await page.keyboard.press('Control+ArrowDown');
+
+    await expect.poll(() => cells.spot()).toEqual({ row: String(NOTE_ROW + 1), col: 'A' });
+    await expect(cells.cell(NOTE_ROW, 0)).toHaveClass(/nui-table__cell--overflow/);
+
+    const [note, cell] = await Promise.all([
+      boxOf(cells.text(NOTE_ROW, 0)),
+      boxOf(cells.cell(NOTE_ROW, 0)),
+    ]);
+
+    expect(note.width).toBeGreaterThan(2 * cell.width);
+    expect(await cells.lineAfter(NOTE_ROW, 0)).toBe('0px');
+    await cells.cell(NOTE_ROW, 2).click();
+    await expect(cells.cell(NOTE_ROW, 2)).toBeFocused();
+    expect(await cells.ranges()).toEqual([]);
+  });
+
+  test('starts the flowing note at its own cell in either direction', async ({
+    page,
+    isMobile,
+  }) => {
+    test.skip(isMobile, 'keyboard scenario');
+    const playground = new PlaygroundPage(page);
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    const { tableCells: cells } = playground;
+    await cells.show();
+    await cells.cell(1, 0).click();
+    await page.keyboard.press('Control+ArrowDown');
+    const cell = await boxOf(cells.cell(NOTE_ROW, 0));
+
+    expect((await cells.inkOf(NOTE_ROW, 0)).left - cell.x).toBeCloseTo(PAD, 0);
+    await playground.setDirection('rtl');
+    const mirrored = await boxOf(cells.cell(NOTE_ROW, 0));
+
+    expect(mirrored.x + mirrored.width - (await cells.inkOf(NOTE_ROW, 0)).right).toBeCloseTo(
+      PAD,
+      0,
+    );
   });
 
   test('a sheet from a cell source has no automatically detectable WCAG AA violations', async ({

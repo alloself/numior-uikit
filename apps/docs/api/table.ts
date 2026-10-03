@@ -64,8 +64,8 @@ const docs: DocsMap = {
         en: 'Marks the rows that have a detail: the others get no toggle. Without the function every row has a detail while the detail slot is set.',
       },
       cellStyle: {
-        ru: 'Оформление ячейки тела и закреплённых строк: функция получает { row, column, position, pinned } и возвращает fill, color, align, wrap, overflow, borders, class и style либо undefined. fill ложится поверх фона строки и под выделение. wrap переносит текст одной ячейки, как wrap колонки. overflow продолжает текст в одну строку поверх пустых ячеек после неё, а при выравнивании к концу — перед ней, до первой непустой ячейки, объединения или края закреплённой панели; центрированный текст, текст в закреплённой колонке и ячейка со своим слотом остаются в своих границах. borders рисует линии top, end, bottom и start поверх сетки и не меняет высоту строки: end и bottom встают на линии сетки, top и start — внутри ячейки. Функция вызывается один раз на показанную ячейку и снова, когда меняется строка или реактивное состояние, которое она читает.',
-        en: 'Style of a body or pinned row cell: the function takes { row, column, position, pinned } and returns fill, color, align, wrap, overflow, borders, class and style, or undefined. fill lies over the row background and under the selection. wrap breaks the text of a single cell, like wrap of a column. overflow carries a one-line text over the empty cells after it, or before it when it is end aligned, up to the first filled cell, a merge or the edge of a pinned pane; a centred text, a text in a pinned column and a cell with a slot of its own stay within their cell. borders draws the top, end, bottom and start lines over the grid and leaves the row height alone: end and bottom sit on the grid lines, top and start stay inside the cell. The function runs once per shown cell and again when the row or reactive state it reads changes.',
+        ru: 'Оформление ячейки тела и закреплённых строк: функция получает { row, column, position, pinned } и возвращает fill, color, align, wrap, overflow, borders, class и style либо undefined. fill ложится поверх фона строки и под выделение. wrap переносит текст одной ячейки, как wrap колонки. overflow продолжает текст в одну строку поверх пустых ячеек после неё, а при выравнивании к концу — перед ней, до первой непустой ячейки, объединения или края закреплённой панели; центрированный текст, текст в закреплённой колонке и ячейка со своим слотом остаются в своих границах. borders рисует линии top, end, bottom и start на линиях сетки вместо них и не меняет высоту строки; у объединённой ячейки top и start идут внутри неё. Функция вызывается один раз на показанную ячейку и снова, когда меняется строка или реактивное состояние, которое она читает.',
+        en: 'Style of a body or pinned row cell: the function takes { row, column, position, pinned } and returns fill, color, align, wrap, overflow, borders, class and style, or undefined. fill lies over the row background and under the selection. wrap breaks the text of a single cell, like wrap of a column. overflow carries a one-line text over the empty cells after it, or before it when it is end aligned, up to the first filled cell, a merge or the edge of a pinned pane; a centred text, a text in a pinned column and a cell with a slot of its own stay within their cell. borders draws the top, end, bottom and start lines on the grid lines in their place and leaves the row height alone; a merged cell keeps top and start inside itself. The function runs once per shown cell and again when the row or reactive state it reads changes.',
       },
       merges: {
         ru: 'Объединённые ячейки: прямоугольники from и to в координатах v-model:ranges, то есть позиция строки на странице и позиция среди видимых колонок данных. Объединение показывает содержимое и оформление своей первой ячейки, курсор и выделение берут его целиком, а правка меняет первую ячейку. Объединение из нескольких строк остаётся на фоне таблицы: наведение, полосы и выбор строки его не красят. Прямоугольники не должны пересекаться: из двух пересекающихся остаётся первый. При группировке, в дереве и с деталями объединения выключены.',
@@ -136,8 +136,8 @@ const docs: DocsMap = {
         en: 'Edge of the data for Ctrl with the arrows: (from, direction) → the position to move to; positions are as in ranges, direction is up, down, previous or next. Without it Ctrl with an arrow goes to the edge of the table. An answer outside the table is pulled to its edge.',
       },
       keepEditing: {
-        ru: 'Элементы вне таблицы, фокус на которых не завершает правку ячейки, например строка формул: (target) → true. Когда фокус уходит из такого элемента, правку завершает приложение через commitEdit или cancelEdit.',
-        en: 'Elements outside the table whose focus keeps a cell edit open, such as a formula bar: (target) → true. When focus leaves such an element, the app ends the edit with commitEdit or cancelEdit.',
+        ru: 'Элементы вне таблицы, фокус на которых не завершает правку ячейки, например строка формул: (target) → true. Нажатие на такой элемент не снимает выделение ячеек. Когда фокус уходит из такого элемента, правку завершает приложение через commitEdit или cancelEdit.',
+        en: 'Elements outside the table whose focus keeps a cell edit open, such as a formula bar: (target) → true. A press on such an element keeps the cell selection. When focus leaves such an element, the app ends the edit with commitEdit or cancelEdit.',
       },
       picking: {
         ru: 'Выбор ссылок в формулу: (draft) → true, пока черновик открытой правки ждёт ссылку, например кончается оператором. Тогда нажатие и протяжка по ячейкам, касание и стрелки в редакторе ячейки не завершают правку, а шлют событие pick.',
@@ -407,8 +407,8 @@ const docs: DocsMap = {
       {
         keys: 'Shift+Space / Ctrl+Space / Ctrl+A',
         description: {
-          ru: 'Выделяет строки диапазона целиком, его колонки целиком или все ячейки страницы; Escape снимает выделение.',
-          en: 'Selects the whole rows of the range, its whole columns or every cell of the page; Escape clears the selection.',
+          ru: 'Выделяет строки диапазона целиком, его колонки целиком или все ячейки страницы; Escape снимает выделение и подсветку активной ячейки.',
+          en: 'Selects the whole rows of the range, its whole columns or every cell of the page; Escape clears the selection and the look of the active cell.',
         },
       },
       {

@@ -1512,6 +1512,20 @@ export class TableDriver<T> {
     await nextTick();
   }
 
+  hasModifier(name: string): boolean {
+    return this.element.closest('.nui-table')?.classList.contains(`nui-table--${name}`) ?? false;
+  }
+
+  async pressOutside(className = 'outside'): Promise<void> {
+    const target = document.createElement('button');
+
+    target.className = className;
+    document.body.append(target);
+    target.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, button: 0 }));
+    target.remove();
+    await nextTick();
+  }
+
   selectText(position: number, col: number): void {
     const cell = this.cell(position, col);
 
@@ -1886,6 +1900,14 @@ export class TableDriver<T> {
 
   async press(key: string, options: KeyOptions = {}): Promise<void> {
     await pressKey(document.activeElement ?? this.element, key, options);
+  }
+
+  async pressHandled(key: string): Promise<boolean> {
+    const event = new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true });
+
+    (document.activeElement ?? this.element).dispatchEvent(event);
+    await nextTick();
+    return event.defaultPrevented;
   }
 
   async clickBand(label: string): Promise<void> {

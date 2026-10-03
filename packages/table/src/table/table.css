@@ -262,13 +262,17 @@
   content: '';
   box-sizing: border-box;
   position: absolute;
-  inset-block: 0 -1px;
-  inset-inline: 0 calc(-1 * var(--_grid-x));
+  inset-block: -1px;
+  inset-inline: calc(-1 * var(--_grid)) calc(-1 * var(--_grid-x));
   border-block-start: var(--_edge-top, 0 none);
   border-inline-end: var(--_edge-end, 0 none);
   border-block-end: var(--_edge-bottom, 0 none);
   border-inline-start: var(--_edge-start, 0 none);
   pointer-events: none;
+}
+.nui-table__cell--merged.nui-table__cell--edged::before {
+  inset-block-start: 0;
+  inset-inline-start: 0;
 }
 .nui-table__cell--ranged {
   --_range-t: 0px;
@@ -290,14 +294,14 @@
     inset calc(-1 * var(--_range-s)) 0 0 var(--nui-primary),
     inset var(--_range-e) 0 0 var(--nui-primary);
 }
-.nui-table--cell-selection:not(.nui-table--ranged)
+.nui-table--cell-selection:not(.nui-table--ranged, .nui-table--deselected)
   > .nui-table__frame
   > .nui-table__viewport
   > .nui-table__grid
   > .nui-table__body
   > .nui-table__row--body:not(.nui-table__row--group)
   > .nui-table__cell--data.nui-table__cell--active:focus,
-.nui-table--cell-selection:not(.nui-table--ranged)
+.nui-table--cell-selection:not(.nui-table--ranged, .nui-table--deselected)
   > .nui-table__frame
   > .nui-table__viewport
   > .nui-table__grid
@@ -312,14 +316,14 @@
     inset calc(-1 * var(--_ring-r)) 0 0 var(--nui-primary);
 }
 .nui-table__cell--filled.nui-table__cell--ranged,
-.nui-table--cell-selection:not(.nui-table--ranged)
+.nui-table--cell-selection:not(.nui-table--ranged, .nui-table--deselected)
   > .nui-table__frame
   > .nui-table__viewport
   > .nui-table__grid
   > .nui-table__body:has(> .nui-table__row > .nui-table__cell--active:focus)
   > .nui-table__row
   > .nui-table__cell--filled.nui-table__cell--allied,
-.nui-table--cell-selection:not(.nui-table--ranged)
+.nui-table--cell-selection:not(.nui-table--ranged, .nui-table--deselected)
   > .nui-table__frame
   > .nui-table__viewport
   > .nui-table__grid

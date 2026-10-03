@@ -105,5 +105,56 @@ export const paintedRgbAt = async (locator: Locator, points: readonly Point[]): 
   return locator.page().evaluate(readPixels, { base64: png.toString('base64'), points });
 };
 
+export interface PaintedColumn {
+  readonly ratio: number;
+  readonly pixels: readonly Rgb[];
+}
+
+const readColumn = async ({
+  base64,
+  x,
+  from,
+  to,
+}: {
+  base64: string;
+  x: number;
+  from: number;
+  to: number;
+}): Promise<PaintedColumn> => {
+  const image = new Image();
+  image.src = `data:image/png;base64,${base64}`;
+  await image.decode();
+  const canvas = document.createElement('canvas');
+  canvas.width = image.naturalWidth;
+  canvas.height = image.naturalHeight;
+  const context = canvas.getContext('2d', { willReadFrequently: true });
+  if (!context) {
+    throw new Error('2D canvas is unavailable');
+  }
+  context.drawImage(image, 0, 0);
+  const top = Math.round(from * devicePixelRatio);
+  const height = Math.round(to * devicePixelRatio) - top;
+  const data = context.getImageData(Math.round(x * devicePixelRatio), top, 1, height).data;
+
+  return {
+    ratio: devicePixelRatio,
+    pixels: Array.from({ length: height }, (_, row): Rgb => [
+      data[row * 4] ?? 0,
+      data[row * 4 + 1] ?? 0,
+      data[row * 4 + 2] ?? 0,
+    ]),
+  };
+};
+
+export const paintedColumn = async (
+  locator: Locator,
+  x: number,
+  from: number,
+  to: number,
+): Promise<PaintedColumn> => {
+  const png = await locator.screenshot({ animations: 'disabled' });
+  return locator.page().evaluate(readColumn, { base64: png.toString('base64'), x, from, to });
+};
+
 export const rgbDelta = (a: Rgb, b: Rgb): number =>
   a.reduce((max, channel, i) => Math.max(max, Math.abs(channel - (b[i] ?? 0))), 0);

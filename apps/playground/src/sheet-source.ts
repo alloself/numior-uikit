@@ -19,6 +19,12 @@ const HEAD: NuiTableCellStyle = {
 };
 
 const NUMBER: NuiTableCellStyle = { align: 'end' };
+
+const LEDGER_END: NuiTableSourceCell = {
+  text: 'Конец журнала: ниже лист пуст, и эта подпись идёт поверх пустых ячеек справа',
+  style: { color: 'var(--nui-text-muted)', overflow: true },
+};
+
 const numbers = new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 1 });
 
 const ledgerCell = (row: number, col: number): NuiTableSourceCell =>
@@ -34,8 +40,11 @@ const isMark = (row: number, col: number): boolean =>
 const markCell = (row: number, col: number): NuiTableSourceCell | undefined =>
   isMark(row, col) ? { text: `${columnName(col)}${row + 1}` } : undefined;
 
+const outsideCell = (row: number, col: number): NuiTableSourceCell | undefined =>
+  row === LEDGER_ROWS && col === 0 ? LEDGER_END : markCell(row, col);
+
 export const bigSheet: NuiTableCellSource = {
   rows: SHEET_ROWS,
   cols: SHEET_COLS,
-  cellAt: (row, col) => (inLedger(row, col) ? ledgerCell(row, col) : markCell(row, col)),
+  cellAt: (row, col) => (inLedger(row, col) ? ledgerCell(row, col) : outsideCell(row, col)),
 };
