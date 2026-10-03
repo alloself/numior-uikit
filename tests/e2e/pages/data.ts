@@ -33,6 +33,8 @@ export class DataSection {
   readonly cardLink: Locator;
   readonly cardButton: Locator;
   readonly cardNested: Locator;
+  readonly cardSoft: Locator;
+  readonly cardDense: Locator;
   readonly list: Locator;
   readonly selectList: Locator;
   readonly singleList: Locator;
@@ -51,6 +53,8 @@ export class DataSection {
     this.cardLink = page.getByTestId('data-card-link');
     this.cardButton = page.getByTestId('data-card-button');
     this.cardNested = page.getByTestId('data-card-nested');
+    this.cardSoft = page.getByTestId('data-card-soft');
+    this.cardDense = page.getByTestId('data-card-dense');
     this.list = page.getByTestId('data-list');
     this.selectList = page.getByTestId('data-list-select');
     this.singleList = page.getByTestId('data-list-single');
@@ -93,6 +97,17 @@ export class DataSection {
     return card
       .locator('.nui-card__action')
       .evaluate((element) => getComputedStyle(element, '::after').outlineStyle);
+  }
+
+  insetOf(card: Locator): Promise<{ padding: number; gap: number }> {
+    return card.evaluate((element) => {
+      const style = getComputedStyle(element);
+
+      return {
+        padding: Number.parseFloat(style.paddingInlineStart),
+        gap: Number.parseFloat(style.rowGap),
+      };
+    });
   }
 
   async typeIn(list: Locator, key: string): Promise<void> {

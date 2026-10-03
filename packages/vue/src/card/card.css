@@ -28,6 +28,10 @@
     box-shadow var(--nui-duration-fast) var(--nui-easing),
     background-color var(--nui-duration-fast) var(--nui-easing);
 }
+.nui-card--padding-xs {
+  --_padding: var(--nui-space-3);
+  --_gap: var(--nui-space-3);
+}
 .nui-card--padding-sm {
   --_padding: var(--nui-space-4);
   --_gap: var(--nui-space-4);

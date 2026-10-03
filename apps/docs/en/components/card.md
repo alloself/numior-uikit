@@ -50,7 +50,9 @@ import '@numior/vue/styles/card.css';
 
 ### Variants and padding
 
-`variant` picks an outline, a shadow or a soft fill, `padding` the inset of every part.
+`variant` picks an outline, a shadow or a soft fill, `padding` the inset of every part: `xs`, `sm`,
+`md` (the default) or `lg`. The gap between the parts equals the inset; `xs` suits a dense grid of
+cards.
 
 <Example name="card/Variants" />
 

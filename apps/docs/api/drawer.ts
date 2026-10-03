@@ -22,8 +22,8 @@ const docs: DocsMap = {
       },
       description: { ru: 'Описание под заголовком.', en: 'Description under the title.' },
       size: {
-        ru: 'Ширина для start и end, максимальная высота для top и bottom.',
-        en: 'Width for start and end, maximum height for top and bottom.',
+        ru: 'Ширина для start и end, максимальная высота для top и bottom; xl — для редактора рядом со страницей.',
+        en: 'Width for start and end, maximum height for top and bottom; xl suits an editor beside the page.',
       },
       closable: {
         ru: 'Крест, Esc и клик по фону закрывают панель.',

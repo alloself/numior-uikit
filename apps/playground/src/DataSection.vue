@@ -79,6 +79,12 @@
           <NuiAvatarGroup :items="team.slice(0, 2)" size="sm" label="Участники" />
         </NuiCardContent>
       </NuiCard>
+      <NuiCard
+        padding="xs"
+        title="Плотная карточка"
+        description="С отступом xs"
+        data-testid="data-card-dense"
+      />
     </div>
     <div class="data-lists">
       <NuiList variant="divided" :items="linkItems" data-testid="data-list" />

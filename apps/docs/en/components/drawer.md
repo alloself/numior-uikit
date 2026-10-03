@@ -18,7 +18,8 @@ import '@numior/vue/styles/drawer.css';
 ### Sides
 
 `size` sets the width for `start` and `end` and the maximum height for `top` and `bottom`; the
-drawer slides in from its edge.
+drawer slides in from its edge. Besides the dialog's `sm`, `md` and `lg`, a drawer takes `xl`
+(40rem) for an editor that sits beside the page.
 
 <Example name="drawer/Sides" />
 

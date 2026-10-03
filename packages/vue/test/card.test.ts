@@ -20,6 +20,13 @@ describe('NuiCard', () => {
     plain.unmount();
   });
 
+  it('takes the tightest step of the padding scale for a dense grid of cards', () => {
+    const card = CardDriver.mount({ props: { padding: 'xs', title: 'Orders' } });
+
+    expect(card.hasModifier('padding-xs')).toBe(true);
+    card.unmount();
+  });
+
   it('composes header, title tag, content, footer and media parts', () => {
     const card = CardDriver.mount({
       parts: {

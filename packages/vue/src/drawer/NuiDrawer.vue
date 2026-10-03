@@ -4,7 +4,6 @@
     :id="id"
     :title="title"
     :description="description"
-    :size="size"
     :closable="closable"
     :close-on-backdrop="closeOnBackdrop"
     :close-label="closeLabel"

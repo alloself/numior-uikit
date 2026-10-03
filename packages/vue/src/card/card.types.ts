@@ -2,7 +2,7 @@ import type { NuiRouteLocation } from '../shared/destination';
 import type { Component } from 'vue';
 
 export type NuiCardVariant = 'outline' | 'elevated' | 'soft';
-export type NuiCardPadding = 'sm' | 'md' | 'lg';
+export type NuiCardPadding = 'xs' | 'sm' | 'md' | 'lg';
 export type NuiCardTitleTag = 'h2' | 'h3' | 'h4' | 'h5' | 'h6';
 
 export interface NuiCardProps {

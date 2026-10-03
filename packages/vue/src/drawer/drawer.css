@@ -23,6 +23,9 @@
 .nui-drawer--size-lg {
   --_size: 28rem;
 }
+.nui-drawer--size-xl {
+  --_size: 40rem;
+}
 .nui-drawer--side-start {
   --_shift: -100% 0;
 

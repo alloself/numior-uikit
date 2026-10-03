@@ -74,6 +74,14 @@ test.describe('data display', () => {
     }
   });
 
+  test('a card steps its padding and the gap between its parts down together', async ({ page }) => {
+    const playground = new PlaygroundPage(page);
+    await playground.open();
+    const { data } = playground;
+    expect(await data.insetOf(data.cardSoft)).toEqual({ padding: 16, gap: 16 });
+    expect(await data.insetOf(data.cardDense)).toEqual({ padding: 12, gap: 12 });
+  });
+
   test('selectable list moves with arrows, toggles with Space and click and finds Cyrillic titles by typeahead', async ({
     page,
     isMobile,
