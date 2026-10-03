@@ -1,5 +1,6 @@
 import { ref, watch, type ComputedRef, type Ref } from 'vue';
 import {
+  createIntent,
   formatDateText,
   formatTimeModel,
   joinDateTime,
@@ -20,6 +21,7 @@ export interface DateText {
   readonly draft: Ref<string>;
   input(text: string): void;
   settle(): void;
+  tidy(text: string): string | undefined;
 }
 
 const displayDateTime = (value: string, locale: string): string => {
@@ -71,26 +73,32 @@ export const useDateText = (options: DateTextOptions): DateText => {
   };
 
   const draft = ref(display(options.value()));
+  const echo = createIntent<string | null>();
 
   watch(
     () => [options.value(), options.locale.value],
     () => {
       const value = options.value();
 
-      if (parse(draft.value) !== value) {
+      if (echo.take() !== value && parse(draft.value) !== value) {
         draft.value = display(value);
       }
     },
   );
+
+  const commit = (value: string | null): void => {
+    echo.set(value);
+    options.commit(value);
+  };
 
   const input = (text: string): void => {
     draft.value = text;
     const parsed = parse(text);
 
     if (parsed !== null) {
-      options.commit(parsed);
+      commit(parsed);
     } else if (text.trim() === '') {
-      options.commit(null);
+      commit(null);
     }
   };
 
@@ -104,5 +112,11 @@ export const useDateText = (options: DateTextOptions): DateText => {
     }
   };
 
-  return { draft, input, settle };
+  const tidy = (text: string): string | undefined => {
+    const parsed = parseAny(text);
+
+    return parsed === null ? undefined : display(parsed);
+  };
+
+  return { draft, input, settle, tidy };
 };

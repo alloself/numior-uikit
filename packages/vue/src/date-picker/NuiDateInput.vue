@@ -11,7 +11,9 @@
     :disabled="disabled || undefined"
     :readonly="readonly || undefined"
     :aria-label="label"
+    @beforeinput="onBeforeinput"
     @input="onInput"
+    @compositionend="onCompositionend"
     @change="text.settle"
     @blur="text.settle"
   />
@@ -19,10 +21,24 @@
 
 <script setup lang="ts">
 import { computed, useTemplateRef } from 'vue';
-import { datePatternOf, isWithin, useMessages } from '@numior/primitives';
+import {
+  dateMaskOf,
+  datePatternOf,
+  isWithin,
+  maskDateText,
+  typeIntoDateText,
+  useMessages,
+  type MaskedDateText,
+} from '@numior/primitives';
 import { datePickerMessages } from './date-picker.messages';
 import type { NuiDateInputProps } from './date-picker.types';
 import { useDateText } from './use-date-text';
+
+const WHOLE_INPUTS: ReadonlySet<string> = new Set([
+  'insertFromPaste',
+  'insertFromDrop',
+  'insertReplacementText',
+]);
 
 const {
   modelValue,
@@ -65,11 +81,64 @@ const pattern = computed(() => {
   return time ? `${date} ${messages.value.timeGlyphs}` : date;
 });
 
-const onInput = (): void => {
+const parts = computed(() => dateMaskOf(locale, time));
+
+const apply = (element: HTMLInputElement, masked: MaskedDateText): void => {
+  if (element.value !== masked.text) {
+    element.value = masked.text;
+  }
+  if (element.ownerDocument.activeElement === element) {
+    element.setSelectionRange(masked.caret, masked.caret);
+  }
+  text.input(masked.text);
+};
+
+const caretOf = (element: HTMLInputElement): number =>
+  element.selectionStart ?? element.value.length;
+
+const settleRaw = (element: HTMLInputElement, eager: boolean): void => {
+  apply(element, maskDateText(element.value, caretOf(element), parts.value, eager));
+};
+
+const onBeforeinput = (event: InputEvent): void => {
+  const element = inputElement.value;
+
+  if (
+    !element ||
+    event.isComposing ||
+    event.inputType !== 'insertText' ||
+    event.data === null ||
+    element.selectionStart !== element.selectionEnd
+  ) {
+    return;
+  }
+  event.preventDefault();
+  apply(element, typeIntoDateText(element.value, caretOf(element), event.data, parts.value));
+};
+
+const isWhole = (event: Event): boolean =>
+  !(event instanceof InputEvent) || WHOLE_INPUTS.has(event.inputType);
+
+const onInput = (event: Event): void => {
+  const element = inputElement.value;
+
+  if (!element || (event instanceof InputEvent && event.isComposing)) {
+    return;
+  }
+  const tidy = isWhole(event) ? text.tidy(element.value) : undefined;
+
+  if (tidy !== undefined) {
+    apply(element, { text: tidy, caret: tidy.length });
+    return;
+  }
+  settleRaw(element, !(event instanceof InputEvent && event.inputType.startsWith('delete')));
+};
+
+const onCompositionend = (): void => {
   const element = inputElement.value;
 
   if (element) {
-    text.input(element.value);
+    settleRaw(element, true);
   }
 };
 

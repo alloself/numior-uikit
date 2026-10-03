@@ -10,6 +10,7 @@ import {
 import { configScope } from '../support/config-scope';
 import { TopLayerStubs } from '../support/top-layer';
 import { ComponentDriver } from './component';
+import { typeInto } from '../support/text-input';
 import { isDateRange } from '../support/guards';
 
 export interface DateRangePickerMountOptions {
@@ -103,6 +104,10 @@ export class DateRangePickerDriver extends ComponentDriver {
     return document.activeElement === this.inputs[0]?.element;
   }
 
+  get endFocused(): boolean {
+    return document.activeElement === this.inputs[1]?.element;
+  }
+
   get hiddenValues(): string[] {
     return this.wrapper
       .findAll<HTMLInputElement>('input[type="hidden"]')
@@ -118,6 +123,29 @@ export class DateRangePickerDriver extends ComponentDriver {
 
     input.element.value = text;
     await input.trigger('input');
+    await nextTick();
+  }
+
+  async clickInput(index: number): Promise<void> {
+    const input = this.inputs[index];
+
+    if (!input) {
+      throw new Error(`No input ${index}`);
+    }
+
+    input.element.focus();
+    await input.trigger('click');
+    await nextTick();
+  }
+
+  async typeKeys(index: number, keys: string): Promise<void> {
+    const input = this.inputs[index];
+
+    if (!input) {
+      throw new Error(`No input ${index}`);
+    }
+
+    typeInto(input.element, keys);
     await nextTick();
   }
 

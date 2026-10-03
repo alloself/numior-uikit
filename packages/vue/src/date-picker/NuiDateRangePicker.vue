@@ -27,6 +27,7 @@
         v-bind="{ ...controlAttrs, ...split.controlAttrs() }"
         @update:model-value="setStart"
         @keydown="onInputKeydown"
+        @click="onInputClick"
       />
       <span class="nui-date-picker__separator" aria-hidden="true">–</span>
       <NuiDateInput
@@ -43,6 +44,7 @@
         :aria-invalid="controlAttrs['aria-invalid']"
         @update:model-value="setEnd"
         @keydown="onInputKeydown"
+        @click="onInputClick"
       />
       <template #panel>
         <NuiCalendar
@@ -122,6 +124,7 @@ const {
   months = 2,
   today,
   clearable = false,
+  openOnClick = false,
   readonly = undefined,
   placement = 'bottom-start',
   startPlaceholder,
@@ -158,10 +161,12 @@ const {
   exposed,
   focusInput,
   onInputKeydown,
+  onInputClick,
 } = useDatePickerShell({
   control: () => ({ id, disabled, readonly, required, invalid, label, description, error }),
   locale: () => localeProp,
   placement: () => placement,
+  openOnClick: () => openOnClick,
   focusDate: () => model.value.start,
 });
 

@@ -67,6 +67,38 @@ test.describe('dates', () => {
     await expect.poll(async () => (await dates.readOutput()).picked).toBeNull();
   });
 
+  test('date fields mask typed digits and a field opens its calendar from a click', async ({
+    page,
+  }) => {
+    const playground = new PlaygroundPage(page);
+    await playground.open();
+    const { dates } = playground;
+    const typed = dates.input(dates.picker);
+    await typed.scrollIntoViewIfNeeded();
+    await typed.click();
+    await page.keyboard.type('4.5');
+
+    await expect(typed).toHaveValue('04.05.');
+    await expect(dates.dialog(dates.picker)).toBeHidden();
+    await page.keyboard.type('2026');
+    await expect.poll(async () => (await dates.readOutput()).picked).toBe('2026-05-04');
+    await page.keyboard.press('Home');
+    await page.keyboard.type('1');
+    await expect(typed).toHaveValue('14.05.2026');
+    const input = dates.input(dates.clickPicker);
+    await input.scrollIntoViewIfNeeded();
+    await input.click();
+
+    await expect(dates.dialog(dates.clickPicker)).toBeVisible();
+    await expect(input).toBeFocused();
+    await page.keyboard.type('03102026');
+    await expect(input).toHaveValue('03.10.2026');
+    await expect.poll(async () => (await dates.readOutput()).delivery).toBe('2026-10-03');
+    await page.keyboard.press('Escape');
+    await expect(dates.dialog(dates.clickPicker)).toBeHidden();
+    await expect(input).toBeFocused();
+  });
+
   test('range picker takes two picks or a preset and the time picker keeps the time', async ({
     page,
     isMobile,

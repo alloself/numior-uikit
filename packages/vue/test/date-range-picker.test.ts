@@ -21,6 +21,18 @@ describe('NuiDateRangePicker', () => {
     picker.unmount();
   });
 
+  it('masks both ends and opens the calendar from a click on either of them', async () => {
+    const picker = DateRangePickerDriver.mount({ props: { openOnClick: true } });
+
+    await picker.clickInput(1);
+    expect(picker.isOpen).toBe(true);
+    expect(picker.endFocused).toBe(true);
+    await picker.typeKeys(1, '20092026');
+    expect(picker.texts).toEqual(['', '20.09.2026']);
+    expect(picker.value).toEqual({ start: null, end: '2026-09-20' });
+    picker.unmount();
+  });
+
   it('opens two months, closes after the second pick or a preset and focuses the start input', async () => {
     const picker = DateRangePickerDriver.mount({
       props: {

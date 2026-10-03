@@ -1,5 +1,6 @@
 import { ref, useTemplateRef, watch, type ComputedRef, type Ref } from 'vue';
 import {
+  createIntent,
   useFieldControl,
   useLocale,
   useMessages,
@@ -19,6 +20,7 @@ export interface DatePickerShellOptions {
   readonly locale: () => string | undefined;
   readonly placement: () => FloatingPlacement;
   readonly focusDate: () => string | null;
+  readonly openOnClick: () => boolean;
 }
 
 export interface DatePickerExposed {
@@ -42,6 +44,7 @@ export interface DatePickerShell {
   readonly exposed: DatePickerExposed;
   focusInput(): void;
   onInputKeydown(event: KeyboardEvent): void;
+  onInputClick(): void;
 }
 
 export const useDatePickerShell = (options: DatePickerShellOptions): DatePickerShell => {
@@ -62,22 +65,40 @@ export const useDatePickerShell = (options: DatePickerShellOptions): DatePickerS
     returnFocus: focusInput,
   });
 
+  const keepFocus = createIntent<true>();
+
   const canOpen = (): boolean =>
     !popover.open.value && !control.readonly.value && !control.disabled.value;
+
+  const focusCalendar = (): void => {
+    calendar.value?.focus(options.focusDate() ?? undefined);
+  };
 
   const onInputKeydown = (event: KeyboardEvent): void => {
     if (event.key === 'ArrowDown' && canOpen()) {
       event.preventDefault();
       popover.show();
+    } else if (event.key === 'ArrowDown' && popover.open.value) {
+      event.preventDefault();
+      focusCalendar();
     } else if (event.key === 'Escape' && popover.open.value) {
       event.preventDefault();
       popover.hide({ focus: true });
     }
   };
 
+  const onInputClick = (): void => {
+    if (options.openOnClick() && canOpen()) {
+      keepFocus.set(true);
+      popover.show();
+    }
+  };
+
   watch(popover.open, (isOpen) => {
-    if (isOpen) {
-      calendar.value?.focus(options.focusDate() ?? undefined);
+    const quiet = keepFocus.take() === true;
+
+    if (isOpen && !quiet) {
+      focusCalendar();
     }
   });
 
@@ -96,5 +117,6 @@ export const useDatePickerShell = (options: DatePickerShellOptions): DatePickerS
     exposed: { focus: focusInput, open: () => popover.show(), close: () => popover.hide() },
     focusInput,
     onInputKeydown,
+    onInputClick,
   };
 };

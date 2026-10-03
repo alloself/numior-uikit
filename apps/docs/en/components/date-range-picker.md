@@ -17,8 +17,10 @@ import '@numior/vue/styles/date-picker.css';
 
 ## Behaviour
 
-Each field is parsed like in [Date picker](/en/components/date-picker); an end before the
-start swaps them. In the calendar the first click opens the range, the second closes it and the
+Each field keeps the mask and is parsed like in [Date picker](/en/components/date-picker); an end
+before the start swaps them. `openOnClick` opens the calendar on a click in either field.
+
+In the calendar the first click opens the range, the second closes it and the
 dialog, a preset does the same with one press. The clear button resets both ends, `startName`
 and `endName` add hidden form fields.
 

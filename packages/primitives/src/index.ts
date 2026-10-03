@@ -99,6 +99,8 @@ export {
 export type { MonthWidth, WeekdayWidth } from './date/locale';
 export { datePatternOf, formatDateText, parseDateText } from './date/text';
 export type { DateTextPart } from './date/text';
+export { dateMaskOf, maskDateText, typeIntoDateText } from './date/mask';
+export type { DateMaskField, DateMaskPart, MaskedDateText } from './date/mask';
 export { joinDateTime, splitDateTime } from './date/datetime';
 export type { DateTimeParts } from './date/datetime';
 export type { MaskResult } from './mask/mask';

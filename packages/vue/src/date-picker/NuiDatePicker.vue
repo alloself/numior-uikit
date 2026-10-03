@@ -27,6 +27,7 @@
         v-bind="{ ...controlAttrs, ...split.controlAttrs() }"
         @update:model-value="setValue"
         @keydown="onInputKeydown"
+        @click="onInputClick"
       />
       <template #panel>
         <NuiCalendar
@@ -102,6 +103,7 @@ const {
   months = 1,
   today,
   clearable = false,
+  openOnClick = false,
   readonly = undefined,
   placement = 'bottom-start',
   placeholder,
@@ -140,10 +142,12 @@ const {
   exposed,
   focusInput,
   onInputKeydown,
+  onInputClick,
 } = useDatePickerShell({
   control: () => ({ id, disabled, readonly, required, invalid, label, description, error }),
   locale: () => localeProp,
   placement: () => placement,
+  openOnClick: () => openOnClick,
   focusDate: () => dateValue.value,
 });
 

@@ -34,6 +34,10 @@ const calendar = {
     en: 'Today; without it taken from the clock after mounting.',
   },
   clearable: { ru: 'Кнопка очистки в поле.', en: 'Clear button inside the field.' },
+  openOnClick: {
+    ru: 'Открывает календарь щелчком по полю; фокус остаётся в поле, и дату можно набрать.',
+    en: 'Opens the calendar on a click in the field; the focus stays in the field for typing.',
+  },
   readonly: {
     ru: 'Запрещает ввод и открытие календаря.',
     en: 'Blocks typing and opening the calendar.',
@@ -90,8 +94,8 @@ const docs: DocsMap = {
       {
         keys: 'ArrowDown',
         description: {
-          ru: 'В поле открывает календарь на выбранном дне.',
-          en: 'In the field opens the calendar on the selected day.',
+          ru: 'В поле открывает календарь на выбранном дне, а в открытый календарь переводит фокус.',
+          en: 'In the field opens the calendar on the selected day, or moves the focus into it.',
         },
       },
       { keys: 'Escape', description: { ru: 'Закрывает календарь.', en: 'Closes the calendar.' } },
@@ -135,7 +139,10 @@ const docs: DocsMap = {
     keyboard: [
       {
         keys: 'ArrowDown',
-        description: { ru: 'В поле открывает календарь.', en: 'In a field opens the calendar.' },
+        description: {
+          ru: 'В поле открывает календарь, а в открытый календарь переводит фокус.',
+          en: 'In a field opens the calendar, or moves the focus into it.',
+        },
       },
       { keys: 'Escape', description: { ru: 'Закрывает календарь.', en: 'Closes the calendar.' } },
     ],

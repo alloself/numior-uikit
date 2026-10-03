@@ -18,6 +18,7 @@ const isDatesOutput = shapeOf({
   picked: nullable(isString),
   period: isRange,
   moment: nullable(isString),
+  delivery: nullable(isString),
   today: isString,
 });
 
@@ -38,6 +39,7 @@ export class DatesSection {
   readonly picker: Locator;
   readonly rangePicker: Locator;
   readonly timePicker: Locator;
+  readonly clickPicker: Locator;
   readonly output: Locator;
 
   constructor(private readonly page: Page) {
@@ -47,6 +49,7 @@ export class DatesSection {
     this.picker = page.getByTestId('date-picker').locator(PICKER_ROOT);
     this.rangePicker = page.getByTestId('date-range-picker').locator(PICKER_ROOT);
     this.timePicker = page.getByTestId('date-time-picker').locator(PICKER_ROOT);
+    this.clickPicker = page.getByTestId('date-picker-click').locator(PICKER_ROOT);
     this.output = page.getByTestId('dates-output');
   }
 

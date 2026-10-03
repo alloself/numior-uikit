@@ -29,6 +29,67 @@ describe('NuiDatePicker', () => {
     american.unmount();
   });
 
+  it('masks typed digits by the locale pattern and commits the date once it is whole', async () => {
+    const picker = DatePickerDriver.mount({ field: { label: 'Дата' } });
+
+    await picker.typeKeys('0310');
+    expect(picker.text).toBe('03.10.');
+    expect(picker.value).toBeNull();
+    await picker.typeKeys('2026');
+    expect(picker.text).toBe('03.10.2026');
+    expect(picker.value).toBe('2026-10-03');
+    await picker.placeCaret(3);
+    await picker.typeKeys('7');
+    expect(picker.text).toBe('03.07.2026');
+    expect(picker.value).toBe('2026-07-03');
+    expect(picker.caret).toBe(6);
+    await picker.placeCaret(10);
+    await picker.pressBackspace();
+    await picker.pressBackspace();
+    await picker.pressBackspace();
+    await picker.pressBackspace();
+    expect(picker.text).toBe('03.07');
+    expect(picker.value).toBe('2026-07-03');
+    await picker.typeKeys('.26');
+    expect(picker.text).toBe('03.07.26');
+    await picker.blur();
+    expect(picker.text).toBe('03.07.2026');
+    picker.unmount();
+  });
+
+  it('masks a date with a time and fills single digits in the order of the locale', async () => {
+    const picker = DatePickerDriver.mount({ locale: 'en-US', props: { time: true } });
+
+    await picker.typeKeys('9.4.2026 7:5');
+    expect(picker.text).toBe('09/04/2026 07:5');
+    await picker.typeKeys('0');
+    expect(picker.text).toBe('09/04/2026 07:50');
+    expect(picker.value).toBe('2026-09-04T07:50');
+    picker.unmount();
+  });
+
+  it('opens the calendar from a click on the field and leaves the caret in it', async () => {
+    const plain = DatePickerDriver.mount();
+
+    await plain.clickInput();
+    expect(plain.isOpen).toBe(false);
+    plain.unmount();
+    const picker = DatePickerDriver.mount({ props: { openOnClick: true } });
+
+    await picker.clickInput();
+    expect(picker.isOpen).toBe(true);
+    expect(picker.inputFocused).toBe(true);
+    await picker.typeKeys('05');
+    expect(picker.text).toBe('05.');
+    await picker.pressInput('ArrowDown');
+    expect(picker.focusedDate).toBe('2026-09-24');
+    await picker.clickDay('2026-09-12');
+    expect(picker.value).toBe('2026-09-12');
+    expect(picker.isOpen).toBe(false);
+    expect(picker.inputFocused).toBe(true);
+    picker.unmount();
+  });
+
   it('opens a dialog from the button or ArrowDown, focuses the selected day and picks with focus returned', async () => {
     const picker = DatePickerDriver.mount({ modelValue: '2026-09-24' });
 

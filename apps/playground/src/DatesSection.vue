@@ -20,6 +20,9 @@
       <NuiField label="Встреча" description="Дата и время">
         <NuiDatePicker v-model="moment" time :time-step="30" data-testid="date-time-picker" />
       </NuiField>
+      <NuiField label="Дата доставки" description="Календарь открывается щелчком по полю">
+        <NuiDatePicker v-model="delivery" open-on-click data-testid="date-picker-click" />
+      </NuiField>
     </div>
     <div class="dates-grid">
       <NuiCalendar
@@ -96,6 +99,7 @@ const range = ref<NuiDateRange>({ start: null, end: null });
 const picked = ref<string | null>(null);
 const period = ref<NuiDateRange>({ start: null, end: null });
 const moment = ref<string | null>('2026-09-24T09:30');
+const delivery = ref<string | null>(null);
 
 const output = computed(() =>
   JSON.stringify(
@@ -107,6 +111,7 @@ const output = computed(() =>
       picked: picked.value,
       period: period.value,
       moment: moment.value,
+      delivery: delivery.value,
       today: localToday(),
     },
     null,

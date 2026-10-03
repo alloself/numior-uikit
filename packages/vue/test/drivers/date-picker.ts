@@ -4,6 +4,7 @@ import { NuiDatePicker, NuiField, type NuiDatePickerProps, type NuiFieldProps } 
 import { configScope } from '../support/config-scope';
 import { TopLayerStubs } from '../support/top-layer';
 import { ComponentDriver } from './component';
+import { eraseBefore, typeInto } from '../support/text-input';
 import { isString, nullable } from '../../../primitives/test/support/guards';
 
 const isModel = nullable(isString);
@@ -138,6 +139,32 @@ export class DatePickerDriver extends ComponentDriver {
   async type(text: string): Promise<void> {
     this.input.element.value = text;
     await this.input.trigger('input');
+    await nextTick();
+  }
+
+  get caret(): number | null {
+    return this.input.element.selectionStart;
+  }
+
+  async typeKeys(keys: string): Promise<void> {
+    typeInto(this.input.element, keys);
+    await nextTick();
+  }
+
+  async pressBackspace(): Promise<void> {
+    eraseBefore(this.input.element);
+    await nextTick();
+  }
+
+  async placeCaret(at: number): Promise<void> {
+    this.input.element.focus();
+    this.input.element.setSelectionRange(at, at);
+    await nextTick();
+  }
+
+  async clickInput(): Promise<void> {
+    this.input.element.focus();
+    await this.input.trigger('click');
     await nextTick();
   }
 
