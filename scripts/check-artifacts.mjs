@@ -199,6 +199,36 @@ for (const file of await localImports(tableEngineFile)) {
   );
 }
 
+await importBuild('editor-core', ['createSchema', 'createDoc', 'createIdSource']);
+
+const editorFixtures = await import(
+  pathToFileURL(resolve('packages/editor-core/dist/fixtures.js')).href
+);
+
+assert.equal(
+  typeof editorFixtures.generateDoc,
+  'function',
+  'editor-core/fixtures must export the document generator',
+);
+
+for (const entry of ['index.js', 'fixtures.js']) {
+  for (const file of await localImports(resolve('packages/editor-core/dist', entry))) {
+    const bundle = await readFile(file, 'utf8');
+
+    assert.doesNotMatch(
+      bundle,
+      /from ['"](?:vue|@vueuse\/[\w-]+|@numior\/[\w-]+)['"]/,
+      `editor-core must stay free of Vue and UI packages: ${file}`,
+    );
+
+    assert.doesNotMatch(
+      bundle,
+      /\b(?:document|window|navigator)\./,
+      `editor-core must not touch the DOM outside its view entry: ${file}`,
+    );
+  }
+}
+
 const nuxtModule = await import(pathToFileURL(resolve('packages/nuxt/dist/module.js')).href);
 
 assert.equal(typeof nuxtModule.default, 'function', 'nuxt must export the module');

@@ -6,6 +6,7 @@ const ROOTS = [
   'packages/vue/test',
   'packages/forms/test',
   'packages/table/test',
+  'packages/editor-core/test',
 ];
 
 const RULES = [

@@ -1,0 +1,26 @@
+{
+  "name": "@numior/editor-core",
+  "version": "0.0.0",
+  "private": true,
+  "license": "MIT",
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "@numior/source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./fixtures": {
+      "@numior/source": "./src/fixtures/index.ts",
+      "types": "./dist/fixtures/index.d.ts",
+      "import": "./dist/fixtures.js"
+    }
+  },
+  "scripts": {
+    "build": "vite build && vue-tsc -p tsconfig.build.json"
+  }
+}
