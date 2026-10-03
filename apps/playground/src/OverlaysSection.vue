@@ -9,6 +9,9 @@
       <NuiButton variant="outline" data-testid="persistent-open" @click="persistentOpen = true"
         >Без закрытия по Esc</NuiButton
       >
+      <NuiButton variant="outline" data-testid="long-dialog-open" @click="longOpen = true"
+        >Длинный диалог</NuiButton
+      >
       <NuiButton variant="soft" data-testid="drawer-open" @click="drawerOpen = true"
         >Открыть панель</NuiButton
       >
@@ -72,6 +75,17 @@
         >
       </template>
     </NuiDialog>
+    <NuiDialog
+      v-model:open="longOpen"
+      title="Условия сервиса"
+      description="Прочитайте до конца, чтобы принять."
+      data-testid="long-dialog"
+    >
+      <p v-for="term in TERMS" :key="term">{{ term }}</p>
+      <template #footer>
+        <NuiButton data-testid="long-dialog-accept" @click="longOpen = false">Принять</NuiButton>
+      </template>
+    </NuiDialog>
     <NuiDrawer
       v-model:open="drawerOpen"
       :side="side"
@@ -120,7 +134,14 @@ import {
   type NuiDrawerSide,
 } from '@numior/vue';
 
+const TERMS = Array.from(
+  { length: 14 },
+  (_, index) =>
+    `${index + 1}. Сервис хранит данные проекта, пока аккаунт активен, и удаляет их через тридцать дней после закрытия аккаунта.`,
+);
+
 const dialogOpen = ref(false);
+const longOpen = ref(false);
 const dialogResult = ref('');
 const persistentOpen = ref(false);
 const stackedOpen = ref(false);

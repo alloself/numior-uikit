@@ -38,6 +38,13 @@ height changes.
 
 <Example name="dialog/Placement" />
 
+### Long content
+
+Long text scrolls inside the dialog body, while the title and the footer with its buttons stay in
+place. The scrollbar stays inside the rounded corners.
+
+<Example name="dialog/Long" />
+
 ## Accessibility
 
 `title` and `description` are linked through `aria-labelledby` and `aria-describedby` with ids

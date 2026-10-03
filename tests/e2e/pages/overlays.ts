@@ -35,6 +35,9 @@ export class OverlaysSection {
   readonly stackedOpen: Locator;
   readonly stackedDialog: Locator;
   readonly stackedClose: Locator;
+  readonly longDialogOpen: Locator;
+  readonly longDialog: Locator;
+  readonly longDialogAccept: Locator;
   readonly drawerOpen: Locator;
   readonly drawer: Locator;
   readonly drawerInput: Locator;
@@ -58,6 +61,9 @@ export class OverlaysSection {
     this.stackedOpen = page.getByTestId('stacked-open');
     this.stackedDialog = page.getByTestId('stacked-dialog');
     this.stackedClose = page.getByTestId('stacked-close');
+    this.longDialogOpen = page.getByTestId('long-dialog-open');
+    this.longDialog = page.getByTestId('long-dialog');
+    this.longDialogAccept = page.getByTestId('long-dialog-accept');
     this.drawerOpen = page.getByTestId('drawer-open');
     this.drawer = page.getByTestId('drawer');
     this.drawerInput = page.getByTestId('drawer-input');
@@ -121,6 +127,23 @@ export class OverlaysSection {
       throw new Error('Surface has no bounding box');
     }
     return { right: Math.round(box.x + box.width), top: Math.round(box.y) };
+  }
+
+  scrollers(dialog: Locator): Promise<{ readonly frame: boolean; readonly body: boolean }> {
+    return dialog.evaluate((element) => {
+      const body = element.querySelector('.nui-dialog__body');
+
+      return {
+        frame: element.scrollHeight > element.clientHeight + 1,
+        body: body !== null && body.scrollHeight > body.clientHeight + 1,
+      };
+    });
+  }
+
+  async scrollBodyToEnd(dialog: Locator): Promise<void> {
+    await dialog.locator('.nui-dialog__body').evaluate((element) => {
+      element.scrollTop = element.scrollHeight;
+    });
   }
 
   backdropColor(dialog: Locator): Promise<string> {

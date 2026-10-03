@@ -35,6 +35,13 @@ import '@numior/vue/styles/dialog.css';
 
 <Example name="dialog/Placement" />
 
+### Длинное содержимое
+
+Длинный текст прокручивается внутри тела диалога, а заголовок и подвал с кнопками остаются на месте.
+Полоса прокрутки не выходит за скруглённые углы.
+
+<Example name="dialog/Long" />
+
 ## Доступность
 
 `title` и `description` связаны через `aria-labelledby` и `aria-describedby` с id, известными

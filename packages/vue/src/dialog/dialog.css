@@ -1,12 +1,14 @@
 .nui-dialog {
   --_width: 32rem;
   --_padding: var(--nui-space-6);
+  --_seam: var(--nui-space-3);
 
   box-sizing: border-box;
   inline-size: min(var(--_width), calc(100% - var(--nui-space-8)));
   max-block-size: calc(100dvh - var(--nui-space-8));
   margin: auto;
   padding: 0;
+  overflow: hidden;
   border: 1px solid var(--nui-border);
   border-radius: var(--nui-radius-lg);
   background: var(--nui-surface-overlay);
@@ -33,9 +35,6 @@
   margin-block-start: min(15dvh, var(--nui-space-8) * 4);
   translate: 0 calc(var(--nui-space-2) * -1);
 }
-.nui-dialog--bare {
-  overflow: hidden;
-}
 .nui-dialog--bare .nui-dialog__header {
   position: absolute;
   inline-size: 1px;
@@ -54,6 +53,8 @@
   border-radius: inherit;
 }
 .nui-dialog[open] {
+  display: flex;
+  flex-direction: column;
   opacity: 1;
   translate: 0 0;
   scale: 1;
@@ -90,9 +91,10 @@
 }
 .nui-dialog__header {
   box-sizing: border-box;
+  flex: none;
   display: grid;
   gap: var(--nui-space-1);
-  padding: var(--_padding) calc(var(--_padding) + var(--nui-space-8)) 0 var(--_padding);
+  padding: var(--_padding) calc(var(--_padding) + var(--nui-space-8)) var(--_seam) var(--_padding);
 }
 .nui-dialog__title {
   margin: 0;
@@ -108,7 +110,11 @@
 }
 .nui-dialog__body {
   box-sizing: border-box;
-  padding: var(--_padding);
+  flex: 0 1 auto;
+  min-block-size: 0;
+  padding: calc(var(--_padding) - var(--_seam)) var(--_padding);
+  overflow-y: auto;
+  overscroll-behavior: contain;
   font-size: var(--nui-font-size-sm);
   line-height: var(--nui-line-height);
 }
@@ -120,11 +126,18 @@
 }
 .nui-dialog__footer {
   box-sizing: border-box;
+  flex: none;
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-end;
   gap: var(--nui-space-2);
-  padding: 0 var(--_padding) var(--_padding);
+  padding: var(--_seam) var(--_padding) var(--_padding);
+}
+.nui-dialog:not(.nui-dialog--bare, :has(> .nui-dialog__header)) > .nui-dialog__body {
+  padding-block-start: var(--_padding);
+}
+.nui-dialog:not(.nui-dialog--bare, :has(> .nui-dialog__footer)) > .nui-dialog__body {
+  padding-block-end: var(--_padding);
 }
 .nui-dialog__close {
   position: absolute;

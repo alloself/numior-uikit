@@ -84,6 +84,29 @@ test.describe('layers', () => {
     await expect(overlays.persistentDialog).toBeHidden();
   });
 
+  test('a long dialog scrolls its body and keeps the title and the footer in view', async ({
+    page,
+  }) => {
+    const playground = new PlaygroundPage(page);
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    const { overlays } = playground;
+    await overlays.longDialogOpen.click();
+    await expect(overlays.longDialog).toBeVisible();
+
+    expect(await overlays.scrollers(overlays.longDialog)).toEqual({ frame: false, body: true });
+    expect(await overlays.isInsideViewport(overlays.longDialog)).toBe(true);
+    await overlays.scrollBodyToEnd(overlays.longDialog);
+
+    await expect(
+      overlays.longDialog.getByRole('heading', { name: 'Условия сервиса' }),
+    ).toBeInViewport();
+
+    await expect(overlays.longDialogAccept).toBeInViewport();
+    await overlays.longDialogAccept.click();
+    await expect(overlays.longDialog).toBeHidden();
+  });
+
   test('drawer docks to the end edge and shows its content', async ({ page }) => {
     const playground = new PlaygroundPage(page);
     await playground.emulate({ reducedMotion: 'reduce' });
