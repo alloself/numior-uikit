@@ -1,5 +1,6 @@
 import { createDoc } from '../doc/doc';
-import type { Doc, ResolvedPos, Slice } from '../doc/doc.types';
+import type { Doc, Slice } from '../doc/doc.types';
+import { sharedDepth } from '../doc/resolve';
 import { childOffsets, contentSize, nodeSize, spliceContent } from '../model/node';
 import type { ElementNode, NodeId } from '../model/node.types';
 import { checkNodes } from '../schema/check';
@@ -31,18 +32,6 @@ const failed = (reason: 'range' | 'depth' | 'content' | 'id'): StepResult => ({
   ok: false,
   reason,
 });
-
-const sharedDepth = (left: ResolvedPos, right: ResolvedPos): number => {
-  let depth = 0;
-
-  while (
-    depth < Math.min(left.depth, right.depth) &&
-    left.node(depth + 1) === right.node(depth + 1)
-  ) {
-    depth += 1;
-  }
-  return depth;
-};
 
 const regionOf = (node: ElementNode, start: number, from: number, to: number): Region => {
   const offsets = childOffsets(node);

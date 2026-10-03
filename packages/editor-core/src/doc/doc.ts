@@ -2,7 +2,7 @@ import { childIndexAt, childOffsets, nodeSize, withContent } from '../model/node
 import type { ContentNode, ElementNode, NodeId } from '../model/node.types';
 import type { Schema } from '../schema/schema.types';
 import type { Doc, NodeVisitor, Slice } from './doc.types';
-import { resolveIn } from './resolve';
+import { resolveIn, sharedDepth } from './resolve';
 
 interface Placed {
   readonly node: ElementNode;
@@ -73,20 +73,6 @@ const cutContent = (node: ElementNode, start: number, from: number, to: number):
   });
 };
 
-const sharedDepth = (doc: Doc, from: number, to: number): number => {
-  const left = doc.resolve(from);
-  const right = doc.resolve(to);
-  let depth = 0;
-
-  while (
-    depth < Math.min(left.depth, right.depth) &&
-    left.node(depth + 1) === right.node(depth + 1)
-  ) {
-    depth += 1;
-  }
-  return depth;
-};
-
 export const createDoc = (schema: Schema, root: ElementNode): Doc => {
   if (root.type !== schema.top.name) {
     throw new RangeError(`A document needs a "${schema.top.name}" root, not "${root.type}"`);
@@ -126,9 +112,9 @@ export const createDoc = (schema: Schema, root: ElementNode): Doc => {
       if (from > to) {
         throw new RangeError(`A slice cannot run backwards from ${from} to ${to}`);
       }
-      const depth = sharedDepth(doc, from, to);
       const left = doc.resolve(from);
       const right = doc.resolve(to);
+      const depth = sharedDepth(left, right);
 
       return {
         content: cutContent(left.node(depth), left.start(depth), from, to),

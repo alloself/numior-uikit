@@ -81,3 +81,15 @@ export const resolveIn = (root: ElementNode, size: number, pos: number): Resolve
     after: (level) => end(level) + 1,
   };
 };
+
+export const sharedDepth = (left: ResolvedPos, right: ResolvedPos): number => {
+  let depth = 0;
+
+  while (
+    depth < Math.min(left.depth, right.depth) &&
+    left.node(depth + 1) === right.node(depth + 1)
+  ) {
+    depth += 1;
+  }
+  return depth;
+};

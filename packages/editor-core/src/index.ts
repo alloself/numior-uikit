@@ -43,3 +43,36 @@ export { applyStep, invertStep, mapStep, mergeSteps, stepMapOf } from './transfo
 export type { Step, StepFailure, StepResult } from './transform/step.types';
 export { createTransform } from './transform/transform';
 export type { SplitType, Transform, TransformOptions } from './transform/transform.types';
+export {
+  chainCommands,
+  deleteSelection,
+  joinBackward,
+  joinForward,
+  selectAll,
+  setBlockType,
+  splitBlock,
+  toggleMark,
+} from './commands/commands';
+export { createMetaKey, definePlugin } from './state/plugin';
+export {
+  isCursor,
+  mapSelection,
+  nearestCursor,
+  selectionRange,
+  textSelection,
+  validSelection,
+} from './state/selection';
+export type { CellRef, Selection, SelectionRange } from './state/selection.types';
+export { createState } from './state/state';
+export type {
+  AppliedTransaction,
+  Command,
+  Dispatch,
+  EditorState,
+  EditorStateConfig,
+  MetaKey,
+  Plugin,
+  PluginSpec,
+  PluginStateSpec,
+  Transaction,
+} from './state/state.types';

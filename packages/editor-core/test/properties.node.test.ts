@@ -1,6 +1,14 @@
 import * as fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
-import { createTransform, invertStep, type Doc, type Transform } from '../src';
+import {
+  createTransform,
+  invertStep,
+  mapSelection,
+  textSelection,
+  validSelection,
+  type Doc,
+  type Transform,
+} from '../src';
 import { fixtureSchema, generateDoc } from '../src/fixtures';
 
 type Change = (transform: Transform) => void;
@@ -190,6 +198,27 @@ describe('step properties', () => {
         const kept = !result.deletedBefore && !result.deletedAfter;
 
         expect(kept ? mapping.invert().map(result.pos) : low).toBe(low);
+      }),
+      { numRuns: 150 },
+    );
+  });
+
+  it('keeps text selections valid when they are mapped through random edits', () => {
+    fc.assert(
+      fc.property(scenario, fc.nat(), fc.nat(), ({ blocks, seed, changes }, left, right) => {
+        const transform = replay(blocks, seed, changes);
+        const spots = textSpots(transform.before);
+        const anchor = pick(spots, left)?.pos ?? 1;
+        const head = pick(spots, right)?.pos ?? 1;
+
+        const mapped = mapSelection(
+          textSelection(anchor, head),
+          transform.mapping,
+          transform.before,
+          transform.doc,
+        );
+
+        expect(validSelection(transform.doc, mapped)).toBe(mapped);
       }),
       { numRuns: 150 },
     );
