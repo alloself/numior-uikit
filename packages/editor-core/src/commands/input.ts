@@ -6,7 +6,15 @@ import { createMetaKey } from '../state/plugin';
 import { isCursor, nearestCursor, selectionRange, textSelection } from '../state/selection';
 import type { SelectionRange } from '../state/selection.types';
 import type { Command, EditorState } from '../state/state.types';
-import { deleteSelection, joinBackward, joinForward, splitBlock, toggleMark } from './commands';
+import { liftAtStart, splitListItem } from './blocks';
+import {
+  chainCommands,
+  deleteSelection,
+  joinBackward,
+  joinForward,
+  splitBlock,
+  toggleMark,
+} from './commands';
 
 export const inputSource = createMetaKey<InputSource>('input');
 
@@ -290,13 +298,16 @@ export const intentCommand = (intent: InputIntent): Command => {
     case 'compose':
       return insertText(intent.text, intent.range);
     case 'insertParagraph':
-      return insertParagraph;
+      return chainCommands(splitListItem, insertParagraph);
     case 'insertLineBreak':
       return insertLineBreak;
     case 'delete':
-      return intent.range === undefined
-        ? deleteText(intent.direction, intent.unit)
-        : deleteRange(intent.range);
+      if (intent.range !== undefined) {
+        return deleteRange(intent.range);
+      }
+      return intent.direction === 'backward'
+        ? chainCommands(liftAtStart, deleteText(intent.direction, intent.unit))
+        : deleteText(intent.direction, intent.unit);
     case 'format':
       return formatCommand(intent.mark);
     case 'paste':

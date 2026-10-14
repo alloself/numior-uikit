@@ -87,6 +87,33 @@ export {
   splitBlock,
   toggleMark,
 } from './commands/commands';
+export {
+  insertBeforeTextblock,
+  liftAtStart,
+  liftListItem,
+  retypeTextblock,
+  sinkListItem,
+  splitListItem,
+  wrapInBlock,
+  wrapInList,
+  turnIntoList,
+  wrapTextblock,
+} from './commands/blocks';
+export {
+  addToHistory,
+  closeHistory,
+  history,
+  redo,
+  redoDepth,
+  undo,
+  undoDepth,
+} from './history/history';
+export type { HistoryEvent, HistoryOptions, HistoryState } from './history/history.types';
+export { baseKeymap, keyName, keymap } from './keymap/keymap';
+export type { Keymap } from './keymap/keymap';
+export { inputRules } from './rules/input-rules';
+export type { InputRule, InputRuleMatch } from './rules/input-rules.types';
+export { markdownRules } from './rules/markdown';
 export { createMetaKey, definePlugin } from './state/plugin';
 export {
   isCursor,
