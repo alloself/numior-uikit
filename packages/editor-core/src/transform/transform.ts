@@ -119,6 +119,7 @@ export const createTransform = (start: Doc, options: TransformOptions = {}): Tra
     get before() {
       return start;
     },
+    newId: freshId,
     get doc() {
       return doc;
     },

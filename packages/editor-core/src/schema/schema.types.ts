@@ -21,6 +21,7 @@ export interface NodeSpec {
   readonly inline?: boolean | undefined;
   readonly marks?: string | undefined;
   readonly attrs?: AttrSpecs | undefined;
+  readonly code?: boolean | undefined;
   readonly render?: NodeRender | undefined;
 }
 
@@ -52,6 +53,7 @@ export interface NodeType {
   readonly content: ContentMatch;
   readonly marks: ReadonlySet<string>;
   readonly attrs: AttrSpecs;
+  readonly code: boolean;
   readonly render: NodeRender;
 }
 

@@ -51,15 +51,26 @@ const lastTextblock = (doc: Doc, from: number, to: number): number | undefined =
   return found;
 };
 
-export const nearestCursor = (doc: Doc, pos: number): Selection => {
+const textNear = (doc: Doc, pos: number, bias: -1 | 1): number | undefined =>
+  bias > 0
+    ? (firstTextblock(doc, pos, doc.size) ?? lastTextblock(doc, 0, pos))
+    : (lastTextblock(doc, 0, pos) ?? firstTextblock(doc, pos, doc.size));
+
+export const nearestCursor = (doc: Doc, pos: number, bias: -1 | 1 = 1): Selection => {
   const clamped = Math.max(0, Math.min(doc.size, pos));
 
   if (inText(doc, clamped)) {
     return textSelection(clamped);
   }
-  const found = firstTextblock(doc, clamped, doc.size) ?? lastTextblock(doc, 0, clamped);
+  const found = textNear(doc, clamped, bias);
 
   return found === undefined ? { kind: 'all' } : textSelection(found);
+};
+
+export const textPosition = (doc: Doc, pos: number, bias: -1 | 1): number | undefined => {
+  const clamped = Math.max(0, Math.min(doc.size, pos));
+
+  return inText(doc, clamped) ? clamped : textNear(doc, clamped, bias);
 };
 
 export const selectionRange = (doc: Doc, selection: Selection): SelectionRange => {

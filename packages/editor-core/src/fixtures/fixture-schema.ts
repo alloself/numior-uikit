@@ -47,6 +47,7 @@ export const fixtureSchema = createSchema({
       group: 'block',
       content: 'text*',
       marks: '',
+      code: true,
       attrs: { language: { default: null } },
       render: () => renderTag('pre', {}, [renderTag('code', {}, [contentHole])]),
     },

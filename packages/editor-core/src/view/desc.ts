@@ -164,6 +164,39 @@ const fillChildren = (context: ViewContext, desc: ElementDesc): void => {
   syncHack(context, desc);
 };
 
+export const redrawContent = (context: ViewContext, desc: ElementDesc): void => {
+  for (const child of desc.children) {
+    forget(context, child);
+  }
+  fillChildren(context, desc);
+};
+
+export const descAround = (context: ViewContext, node: Node | null): Desc | undefined => {
+  for (let current = node; current !== null; current = current.parentNode) {
+    const desc = context.descs.get(current);
+
+    if (desc !== undefined) {
+      return desc;
+    }
+  }
+  return undefined;
+};
+
+export const textblockAround = (
+  context: ViewContext,
+  node: Node | null,
+): ElementDesc | undefined => {
+  const found = descAround(context, node);
+
+  for (let desc = found?.kind === 'text' ? found.parent : found; desc !== undefined;) {
+    if (desc.parent === null || isTextblock(context, desc)) {
+      return desc;
+    }
+    desc = desc.parent;
+  }
+  return undefined;
+};
+
 export const createRootDesc = (
   context: ViewContext,
   dom: HTMLElement,

@@ -12,7 +12,8 @@ const startOf = (desc: Desc): number => {
   return contentStart(parent) + (childOffsets(parent.node)[desc.index] ?? 0);
 };
 
-const contentStart = (desc: ElementDesc): number => (desc.parent === null ? 0 : startOf(desc) + 1);
+export const contentStart = (desc: ElementDesc): number =>
+  desc.parent === null ? 0 : startOf(desc) + 1;
 
 const contentEnd = (desc: ElementDesc): number => contentStart(desc) + desc.node.size - 2;
 

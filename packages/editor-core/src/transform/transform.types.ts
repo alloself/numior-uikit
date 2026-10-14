@@ -1,5 +1,5 @@
 import type { Doc, Slice } from '../doc/doc.types';
-import type { AttrValue, ContentNode, IdSource, Mark } from '../model/node.types';
+import type { AttrValue, ContentNode, IdSource, Mark, NodeId } from '../model/node.types';
 import type { Mapping } from './mapping.types';
 import type { Step, StepResult } from './step.types';
 
@@ -19,6 +19,7 @@ export interface Transform {
   readonly docs: readonly Doc[];
   readonly mapping: Mapping;
   readonly changed: boolean;
+  newId(): NodeId;
   step(step: Step): Transform;
   maybeStep(step: Step): StepResult;
   replace(from: number, to: number, slice?: Slice): Transform;

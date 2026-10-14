@@ -54,6 +54,19 @@ export type { Step, StepFailure, StepResult } from './transform/step.types';
 export { createTransform } from './transform/transform';
 export type { SplitType, Transform, TransformOptions } from './transform/transform.types';
 export {
+  deleteRange,
+  deleteText,
+  inlineText,
+  inputSource,
+  insertLineBreak,
+  insertParagraph,
+  insertPlainText,
+  insertText,
+  intentCommand,
+  isAtom,
+  selectAtom,
+} from './commands/input';
+export {
   chainCommands,
   deleteSelection,
   joinBackward,
@@ -69,15 +82,24 @@ export {
   mapSelection,
   nearestCursor,
   selectionRange,
+  textPosition,
   textSelection,
   validSelection,
 } from './state/selection';
+export type {
+  InputIntent,
+  InputSource,
+  KeyInput,
+  TextDirection,
+  TextUnit,
+} from './state/input.types';
 export type { CellRef, Selection, SelectionRange } from './state/selection.types';
 export { createState } from './state/state';
 export type {
   AppliedTransaction,
   Command,
   Dispatch,
+  EditorProps,
   EditorState,
   EditorStateConfig,
   MetaKey,

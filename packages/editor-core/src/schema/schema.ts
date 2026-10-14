@@ -118,6 +118,7 @@ const compileNode = (
     content,
     marks: allowedMarks(spec, allowed, node.marks, inlineContent),
     attrs: node.attrs ?? {},
+    code: node.code === true,
     render: node.render ?? defaultRender(inline, leaf),
   };
 };

@@ -1,0 +1,209 @@
+import { afterEach, describe, expect, it } from 'vitest';
+import { definePlugin, inputSource, textSelection, type InputSource } from '../src';
+import { fixtureSchema } from '../src/fixtures';
+import { EditorViewDriver } from './drivers/view';
+import { buildWith } from './support/notes';
+
+const { doc, node } = buildWith(fixtureSchema);
+
+let driver: EditorViewDriver | undefined;
+
+const mounted = (...args: Parameters<typeof EditorViewDriver.mount>): EditorViewDriver => {
+  driver = EditorViewDriver.mount(...args);
+  return driver;
+};
+
+afterEach(() => {
+  driver?.destroy();
+  driver = undefined;
+});
+
+const twoParagraphs = () => doc(node('paragraph', ['ab']), node('paragraph', ['cd']));
+
+describe('editor view input', () => {
+  it('types through beforeinput into the model and moves the cursor after the text', () => {
+    const view = mounted(twoParagraphs());
+
+    view.place(3);
+
+    expect(view.type('xy')).toBe(true);
+    expect(view.modelTexts).toEqual(['abxy', 'cd']);
+    expect(view.domTexts).toEqual(['abxy', 'cd']);
+    expect(view.selection).toEqual(textSelection(5));
+    expect(view.domSpan).toEqual({ anchor: 5, head: 5 });
+  });
+
+  it('splits on Enter, breaks the line on Shift+Enter and joins blocks on Backspace', () => {
+    const view = mounted(twoParagraphs());
+
+    view.place(2);
+    view.input('insertParagraph');
+
+    expect(view.modelTexts).toEqual(['a', 'b', 'cd']);
+
+    view.input('insertLineBreak');
+
+    expect(view.markup).toContain('<p><br>b</p>');
+
+    view.place(8);
+    view.input('deleteContentBackward');
+
+    expect(view.modelTexts).toEqual(['a', '\ufffcbcd']);
+  });
+
+  it('formats the selection, pastes plain text lines as blocks and clears a selected document', () => {
+    const view = mounted(twoParagraphs());
+
+    view.place(1, 3);
+    view.input('formatBold');
+
+    expect(view.markup).toContain('<p><strong>ab</strong></p>');
+
+    view.place(7);
+
+    expect(view.paste('one\ntwo')).toBe(true);
+    expect(view.modelTexts).toEqual(['ab', 'cdone', 'two']);
+
+    view.selectAll();
+    view.input('deleteContentBackward');
+
+    expect(view.modelTexts).toEqual(['']);
+    expect(view.selection).toEqual(textSelection(1));
+  });
+
+  it('reads the DOM selection into the model and writes model selections back to the DOM', () => {
+    const view = mounted(twoParagraphs());
+
+    view.focus();
+    view.selectInDom(2, 6);
+
+    expect(view.selection).toEqual(textSelection(2, 6));
+
+    view.selectRootChildren(0, 2);
+
+    expect(view.selection).toEqual(textSelection(1, 7));
+
+    view.place(6);
+
+    expect(view.domSpan).toEqual({ anchor: 6, head: 6 });
+  });
+
+  it('lets the composition edit the DOM and catches the model up when it ends', async () => {
+    const view = mounted(twoParagraphs());
+
+    view.place(3);
+
+    expect(await view.compose('й')).toBe(true);
+    expect(view.view.composing).toBe(false);
+    expect(view.modelTexts).toEqual(['abй', 'cd']);
+    expect(view.domTexts).toEqual(['abй', 'cd']);
+    expect(view.selection).toEqual(textSelection(4));
+  });
+
+  it('reads a DOM edit made without beforeinput back into the model', async () => {
+    const view = mounted(twoParagraphs());
+
+    view.place(7);
+    await view.editDom(1, 'cxd');
+
+    expect(view.modelTexts).toEqual(['ab', 'cxd']);
+    expect(view.domTexts).toEqual(['ab', 'cxd']);
+  });
+
+  it('selects an atom by a click and steps over it with the arrows', () => {
+    const mention = node('mention', [], { user: 'u1', label: 'Ann' });
+    const view = mounted(doc(node('paragraph', ['a', mention, 'b'])));
+
+    expect(view.clickNode(mention.id)).toBe(true);
+    expect(view.selection).toEqual({ kind: 'node', id: mention.id });
+    expect(view.selectedNodes).toBe(1);
+
+    view.place(2);
+
+    expect(view.press('ArrowRight')).toBe(true);
+    expect(view.selection).toEqual({ kind: 'node', id: mention.id });
+
+    view.press('ArrowRight');
+
+    expect(view.selection).toEqual(textSelection(3));
+    expect(view.selectedNodes).toBe(0);
+    expect(view.press('ArrowRight')).toBe(false);
+  });
+
+  it('lets plugins take keys and intents first and tags transactions with their input source', () => {
+    const keys: string[] = [];
+    const sources: (InputSource | undefined)[] = [];
+
+    const plugin = definePlugin({
+      name: 'probe',
+      props: {
+        handleKey: (key) => {
+          keys.push(key.key);
+          return key.key === 'Tab';
+        },
+        handleIntent: (intent, state, dispatch) => {
+          if (intent.kind !== 'insertText' || intent.text !== '!') {
+            return false;
+          }
+          dispatch(state.tr.insertText('?', 1));
+          return true;
+        },
+      },
+      filterTransaction: (tr) => {
+        sources.push(inputSource.read(tr));
+        return true;
+      },
+    });
+
+    const view = mounted(twoParagraphs(), fixtureSchema, [plugin]);
+
+    view.place(3);
+
+    expect(view.press('Tab')).toBe(true);
+    expect(view.press('x')).toBe(false);
+
+    view.type('!');
+    view.type('z');
+
+    expect(keys).toEqual(['Tab', 'x']);
+    expect(view.modelTexts).toEqual(['?abz', 'cd']);
+    expect(sources).toEqual([undefined, 'type', 'type']);
+  });
+
+  it('measures the caret from a collapsed range or from the character beside it', () => {
+    const view = mounted(doc(node('paragraph', ['abc']), node('paragraph')));
+
+    view.layText({ collapsedHeight: 20 });
+
+    expect(view.view.coordsAtPos(3)).toEqual({ left: 20, right: 20, top: 0, bottom: 20 });
+
+    view.destroy();
+    const flat = mounted(doc(node('paragraph', ['abc']), node('paragraph')));
+
+    flat.layText({ collapsedHeight: 0 });
+
+    expect(flat.view.coordsAtPos(3)).toEqual({ left: 20, right: 20, top: 0, bottom: 20 });
+    expect(flat.view.coordsAtPos(1)).toEqual({ left: 0, right: 0, top: 0, bottom: 20 });
+    expect(flat.view.coordsAtPos(6)).toEqual({ left: 0, right: 0, top: 0, bottom: 0 });
+  });
+
+  it('finds the position under a point through whichever caret API the browser has', () => {
+    const view = mounted(twoParagraphs());
+
+    view.caretFrom('position', 'cd', 1);
+
+    expect(view.view.posAtCoords(5, 5)).toBe(6);
+
+    view.caretFrom('range', 'ab', 2);
+
+    expect(view.view.posAtCoords(5, 5)).toBe(3);
+
+    view.caretFrom('range', undefined, 0);
+
+    expect(view.view.posAtCoords(5, 5)).toBeUndefined();
+
+    view.caretFrom('none', 'ab', 0);
+
+    expect(view.view.posAtCoords(5, 5)).toBeUndefined();
+  });
+});

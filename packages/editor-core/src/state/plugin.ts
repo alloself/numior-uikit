@@ -17,6 +17,7 @@ export const definePlugin = <S>(spec: PluginSpec<S>): Plugin<S> => {
 
   return {
     name: spec.name,
+    props: spec.props ?? {},
     getState: (state) => states.get(state),
     attach: (after, before, tr) => {
       const previous = before === undefined ? undefined : states.get(before);

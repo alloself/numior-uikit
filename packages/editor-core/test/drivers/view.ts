@@ -2,10 +2,14 @@ import { vi } from 'vitest';
 import {
   createDoc,
   createState,
+  inlineText,
+  textSelection,
   type EditorState,
   type ElementNode,
   type NodeId,
+  type Plugin,
   type Schema,
+  type Selection,
   type Transaction,
 } from '../../src';
 import { fixtureSchema } from '../../src/fixtures';
@@ -16,6 +20,55 @@ export interface BlockStyle {
   readonly visibility: string;
   readonly intrinsicSize: string;
 }
+
+export interface DomSpan {
+  readonly anchor: number;
+  readonly head: number;
+}
+
+export interface KeyOptions {
+  readonly shift?: boolean;
+  readonly ctrl?: boolean;
+}
+
+export type CaretApi = 'position' | 'range' | 'none';
+
+export interface LayoutOptions {
+  readonly collapsedHeight: number;
+}
+
+const CHAR = 10;
+const LINE = 20;
+
+const textRects = (range: Range, options: LayoutOptions): DOMRect[] => {
+  const height = range.collapsed ? options.collapsedHeight : LINE;
+  const width = (range.endOffset - range.startOffset) * CHAR;
+
+  return range.startContainer instanceof Text
+    ? [new DOMRect(range.startOffset * CHAR, 0, width, height)]
+    : [];
+};
+
+const replaceMember = (target: object, name: string, value: unknown): (() => void) => {
+  const original = Object.getOwnPropertyDescriptor(target, name);
+
+  Object.defineProperty(target, name, { configurable: true, writable: true, value });
+  return () => {
+    if (original === undefined) {
+      Reflect.deleteProperty(target, name);
+    } else {
+      Object.defineProperty(target, name, original);
+    }
+  };
+};
+
+const settle = (): Promise<void> =>
+  new Promise((resolve) => {
+    setTimeout(resolve, 0);
+  });
+
+const beforeinput = (inputType: string, data: string | null = null): InputEvent =>
+  new InputEvent('beforeinput', { inputType, data, bubbles: true, cancelable: true });
 
 const textNodesOf = (root: Node): Text[] => {
   const found: Text[] = [];
@@ -42,28 +95,184 @@ const withoutStyles = (root: HTMLElement): string => {
 };
 
 export class EditorViewDriver {
-  private state: EditorState;
   private blocksBefore: readonly Element[] = [];
   private textsBefore: readonly Text[] = [];
   private mutations: MutationObserver | undefined;
+  private readonly restores: (() => void)[] = [];
 
   private constructor(
     readonly view: EditorView,
     readonly host: HTMLElement,
-  ) {
-    this.state = view.state;
-  }
+  ) {}
 
-  static mount(root: ElementNode, schema: Schema = fixtureSchema): EditorViewDriver {
+  static mount(
+    root: ElementNode,
+    schema: Schema = fixtureSchema,
+    plugins: readonly Plugin[] = [],
+  ): EditorViewDriver {
     installResizeObservers();
 
     const host = document.createElement('div');
 
+    host.tabIndex = 0;
     document.body.append(host);
 
-    const state = createState({ doc: createDoc(schema, root) });
+    const state = createState({ doc: createDoc(schema, root), plugins });
 
     return new EditorViewDriver(createEditorView(host, { state }), host);
+  }
+
+  private get state(): EditorState {
+    return this.view.state;
+  }
+
+  get selection(): Selection {
+    return this.state.selection;
+  }
+
+  get modelTexts(): readonly string[] {
+    return this.state.doc.root.content.map((block) =>
+      block.kind === 'element' ? inlineText(block) : block.text,
+    );
+  }
+
+  get domSpan(): DomSpan | undefined {
+    const selection = document.getSelection();
+
+    const anchor = selection?.anchorNode ?? null;
+    const focus = selection?.focusNode ?? null;
+
+    if (selection === null || anchor === null || focus === null) {
+      return undefined;
+    }
+    return {
+      anchor: this.view.posAtDOM(anchor, selection.anchorOffset),
+      head: this.view.posAtDOM(focus, selection.focusOffset),
+    };
+  }
+
+  get selectedNodes(): number {
+    return this.host.querySelectorAll('.nui-editor__selected').length;
+  }
+
+  focus(): void {
+    this.view.focus();
+  }
+
+  place(anchor: number, head = anchor): void {
+    this.view.focus();
+    this.view.dispatch(this.state.tr.setSelection(textSelection(anchor, head)));
+  }
+
+  selectAll(): void {
+    this.view.dispatch(this.state.tr.setSelection({ kind: 'all' }));
+  }
+
+  selectInDom(anchor: number, head = anchor): void {
+    const from = this.view.domAtPos(anchor);
+    const to = this.view.domAtPos(head);
+
+    document.getSelection()?.setBaseAndExtent(from.node, from.offset, to.node, to.offset);
+    document.dispatchEvent(new Event('selectionchange'));
+  }
+
+  selectRootChildren(from: number, to: number): void {
+    document.getSelection()?.setBaseAndExtent(this.host, from, this.host, to);
+    document.dispatchEvent(new Event('selectionchange'));
+  }
+
+  type(text: string): boolean {
+    return [...text].every((char) => !this.host.dispatchEvent(beforeinput('insertText', char)));
+  }
+
+  input(inputType: string, data: string | null = null): boolean {
+    return !this.host.dispatchEvent(beforeinput(inputType, data));
+  }
+
+  press(key: string, options: KeyOptions = {}): boolean {
+    return !this.host.dispatchEvent(
+      new KeyboardEvent('keydown', {
+        key,
+        shiftKey: options.shift ?? false,
+        ctrlKey: options.ctrl ?? false,
+        bubbles: true,
+        cancelable: true,
+      }),
+    );
+  }
+
+  paste(text: string): boolean {
+    const event = new Event('paste', { bubbles: true, cancelable: true });
+
+    Object.defineProperty(event, 'clipboardData', { value: { getData: () => text } });
+    return !this.host.dispatchEvent(event);
+  }
+
+  clickNode(id: NodeId): boolean {
+    return !(
+      this.view
+        .nodeDOM(id)
+        ?.dispatchEvent(
+          new MouseEvent('mousedown', { bubbles: true, cancelable: true, button: 0 }),
+        ) ?? true
+    );
+  }
+
+  async compose(text: string): Promise<boolean> {
+    const selection = document.getSelection();
+    const anchor = selection?.anchorNode;
+    const offset = selection?.anchorOffset ?? 0;
+
+    this.host.dispatchEvent(new CompositionEvent('compositionstart', { bubbles: true }));
+    const passive = this.host.dispatchEvent(beforeinput('insertCompositionText', text));
+
+    if (anchor instanceof Text) {
+      anchor.insertData(offset, text);
+    }
+    await settle();
+    this.host.dispatchEvent(new CompositionEvent('compositionend', { bubbles: true, data: text }));
+    await settle();
+    return passive;
+  }
+
+  async editDom(block: number, text: string): Promise<void> {
+    const node = textNodesOf(this.blocks[block] ?? this.host)[0];
+
+    if (node !== undefined) {
+      node.data = text;
+    }
+    await settle();
+  }
+
+  layText(options: LayoutOptions): void {
+    this.restores.push(
+      replaceMember(Range.prototype, 'getClientRects', function (this: Range) {
+        return textRects(this, options);
+      }),
+    );
+  }
+
+  caretFrom(api: CaretApi, text: string | undefined, offset: number): void {
+    const node =
+      text === undefined
+        ? document.body
+        : textNodesOf(this.host).find((candidate) => candidate.data === text);
+
+    const position = () => (node === undefined ? null : { offsetNode: node, offset });
+
+    const range = () => {
+      const found = document.createRange();
+
+      if (node !== undefined) {
+        found.setStart(node, offset);
+      }
+      return found;
+    };
+
+    this.restores.push(
+      replaceMember(document, 'caretPositionFromPoint', api === 'position' ? position : undefined),
+      replaceMember(document, 'caretRangeFromPoint', api === 'range' ? range : undefined),
+    );
   }
 
   get markup(): string {
@@ -102,6 +311,10 @@ export class EditorViewDriver {
     return this.state.doc.size;
   }
 
+  get domTexts(): readonly string[] {
+    return this.blocks.map((block) => block.textContent ?? '');
+  }
+
   get rootChanges(): number {
     return (this.mutations?.takeRecords() ?? []).reduce(
       (sum, record) => sum + record.addedNodes.length + record.removedNodes.length,
@@ -118,8 +331,7 @@ export class EditorViewDriver {
   }
 
   change(edit: (tr: Transaction) => Transaction): void {
-    this.state = this.state.apply(edit(this.state.tr));
-    this.view.update(this.state);
+    this.view.dispatch(edit(this.state.tr));
   }
 
   receive(state: EditorState): void {
@@ -192,6 +404,9 @@ export class EditorViewDriver {
       return;
     }
     this.mutations?.disconnect();
+    for (const restore of this.restores.splice(0).toReversed()) {
+      restore();
+    }
     this.view.destroy();
     this.host.remove();
     vi.unstubAllGlobals();

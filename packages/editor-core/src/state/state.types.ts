@@ -1,8 +1,9 @@
 import type { Doc, Slice } from '../doc/doc.types';
-import type { AttrValue, ContentNode, IdSource, Mark } from '../model/node.types';
+import type { AttrValue, ContentNode, IdSource, Mark, NodeId } from '../model/node.types';
 import type { Mapping } from '../transform/mapping.types';
 import type { Step, StepResult } from '../transform/step.types';
 import type { SplitType } from '../transform/transform.types';
+import type { InputIntent, KeyInput } from './input.types';
 import type { Selection } from './selection.types';
 
 export interface MetaKey<T> {
@@ -23,6 +24,7 @@ export interface Transaction {
   readonly selectionSet: boolean;
   readonly storedMarks: readonly Mark[] | null;
   readonly storedMarksSet: boolean;
+  newId(): NodeId;
   step(step: Step): Transaction;
   maybeStep(step: Step): StepResult;
   replace(from: number, to: number, slice?: Slice): Transaction;
@@ -48,9 +50,19 @@ export interface PluginStateSpec<S> {
   apply(tr: Transaction, value: S, before: EditorState, after: EditorState): S;
 }
 
+export interface EditorProps {
+  readonly handleKey?:
+    | ((key: KeyInput, state: EditorState, dispatch: Dispatch) => boolean)
+    | undefined;
+  readonly handleIntent?:
+    | ((intent: InputIntent, state: EditorState, dispatch: Dispatch) => boolean)
+    | undefined;
+}
+
 export interface PluginSpec<S> {
   readonly name: string;
   readonly state?: PluginStateSpec<S> | undefined;
+  readonly props?: EditorProps | undefined;
   readonly filterTransaction?: ((tr: Transaction, state: EditorState) => boolean) | undefined;
   readonly appendTransaction?:
     | ((
@@ -63,6 +75,7 @@ export interface PluginSpec<S> {
 
 export interface Plugin<S = unknown> {
   readonly name: string;
+  readonly props: EditorProps;
   getState(state: EditorState): S | undefined;
   attach(after: EditorState, before?: EditorState, tr?: Transaction): void;
   filterTransaction(tr: Transaction, state: EditorState): boolean;

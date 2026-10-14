@@ -1,7 +1,7 @@
 import type { Doc, Slice } from '../doc/doc.types';
 import { sharedDepth } from '../doc/resolve';
 import { withContent } from '../model/node';
-import type { ContentNode, IdSource } from '../model/node.types';
+import type { ContentNode, ElementNode, IdSource } from '../model/node.types';
 import { createMapping } from '../transform/mapping';
 import { sliceSize } from '../transform/replace';
 import { createTransform } from '../transform/transform';
@@ -45,6 +45,37 @@ const deleteRange = (transform: Transform, from: number, to: number): boolean =>
   };
 
   return transform.maybeStep({ kind: 'replace', from, to, slice }).ok;
+};
+
+const emptyBlockOf = (doc: Doc, id: string): ElementNode | undefined => {
+  const schema = doc.schema;
+
+  const name = [...schema.top.content.next.keys()].find((type) => {
+    const spec = schema.nodes.get(type);
+
+    return (
+      spec?.inlineContent === true &&
+      Object.values(spec.attrs).every((attr) => attr.default !== undefined)
+    );
+  });
+
+  return name === undefined ? undefined : schema.element(name, { id });
+};
+
+const clearDoc = (transform: Transform): boolean => {
+  const doc = transform.doc;
+  const first = doc.root.content[0];
+  const block = first?.kind === 'element' ? emptyBlockOf(doc, first.id) : undefined;
+
+  return (
+    block !== undefined &&
+    transform.maybeStep({
+      kind: 'replace',
+      from: 0,
+      to: doc.size,
+      slice: { content: [block], openStart: 0, openEnd: 0 },
+    }).ok
+  );
 };
 
 export const createTransaction = (
@@ -116,6 +147,7 @@ export const createTransaction = (
     get storedMarksSet() {
       return storedMarksSet;
     },
+    newId: () => transform.newId(),
     step: (step) => {
       transform.step(step);
       return transaction;
@@ -195,6 +227,8 @@ export const createTransaction = (
 
       if (range.from < range.to && deleteRange(transform, range.from, range.to)) {
         placeCursor(range.from);
+      } else if (range.from === 0 && range.to === transform.doc.size && clearDoc(transform)) {
+        placeCursor(1);
       }
       return transaction;
     },
