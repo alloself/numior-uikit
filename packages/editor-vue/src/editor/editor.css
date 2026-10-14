@@ -87,6 +87,3 @@
 .nui-editor__content span.nui-editor__selected {
   outline-offset: 0;
 }
-.nui-editor__content ::selection {
-  background: color-mix(in oklab, var(--nui-primary) 22%, transparent);
-}

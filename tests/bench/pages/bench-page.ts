@@ -11,10 +11,13 @@ export abstract class BenchPage {
   protected constructor(
     protected readonly page: Page,
     private readonly query: string,
+    private readonly countParam = 'rows',
   ) {}
 
-  async open(rows: number): Promise<void> {
-    await this.page.goto(`/bench.html?${this.query}rows=${rows}`, { timeout: OPEN_TIMEOUT });
+  async open(count: number): Promise<void> {
+    await this.page.goto(`/bench.html?${this.query}${this.countParam}=${count}`, {
+      timeout: OPEN_TIMEOUT,
+    });
 
     await this.page.waitForFunction(
       () => typeof window.numiorBench?.firstRowMs === 'number',

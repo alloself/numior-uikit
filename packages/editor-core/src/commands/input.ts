@@ -3,6 +3,7 @@ import type { ContentNode, ElementNode } from '../model/node.types';
 import type { NodeType, Schema } from '../schema/schema.types';
 import type { InputIntent, InputSource, TextDirection, TextUnit } from '../state/input.types';
 import { createMetaKey } from '../state/plugin';
+import { sliceSize } from '../transform/replace';
 import { isCursor, nearestCursor, selectionRange, textSelection } from '../state/selection';
 import type { SelectionRange } from '../state/selection.types';
 import type { Command, EditorState } from '../state/state.types';
@@ -211,20 +212,31 @@ export const insertPlainText =
     if (inCode(state)) {
       return insertText(text.replace(/\r\n?/gu, '\n'))(state, dispatch);
     }
-    const [first = '', ...rest] = text.split(LINE);
-    const tr = state.tr.deleteSelection().insertText(first);
+    const lines = text.split(LINE);
+    const tr = state.tr.deleteSelection();
+    const head = tr.selection.kind === 'text' ? tr.selection.head : undefined;
 
-    for (const line of rest) {
-      const head = tr.selection.kind === 'text' ? tr.selection.head : undefined;
-
-      if (head === undefined) {
-        break;
-      }
-
-      tr.split(head)
-        .setSelection(textSelection(head + 2))
-        .insertText(line);
+    if (lines.length === 1 || head === undefined) {
+      tr.insertText(lines.join(' '));
+      dispatch?.(tr);
+      return true;
     }
+    const cursor = tr.doc.resolve(head);
+    const before = cursor.nodeBefore;
+    const marks = tr.storedMarks ?? (before?.kind === 'text' ? before.marks : []);
+    const { schema } = tr.doc;
+
+    const content = lines.map((line) =>
+      schema.element(cursor.parent.type, {
+        id: tr.newId(),
+        attrs: cursor.parent.attrs,
+        content: line === '' ? [] : [schema.text(line, marks)],
+      }),
+    );
+
+    const slice = { content, openStart: 1, openEnd: 1 };
+
+    tr.replace(head, head, slice).setSelection(textSelection(head + sliceSize(slice)));
     dispatch?.(tr);
     return true;
   };

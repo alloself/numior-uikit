@@ -86,6 +86,14 @@ describe('input commands', () => {
     const start = stateOf(doc(node('paragraph', ['[]'])), textSelection(2));
 
     expect(texts(run(start, insertPlainText('a\r\nb\nc')))).toEqual(['[a', 'b', 'c]']);
+    expect(run(start, insertPlainText('a\r\nb\nc')).selection).toEqual(textSelection(9));
+    const heading = stateOf(doc(node('heading', ['[]'], { level: 2 })), textSelection(2));
+    const headings = run(heading, insertPlainText('a\nb')).doc.root.content;
+
+    expect(headings.map((block) => (block.kind === 'element' ? block.attrs.level : 0))).toEqual([
+      2, 2,
+    ]);
+
     const code = stateOf(doc(node('code_block', [])), textSelection(1));
 
     expect(texts(run(code, insertPlainText('a\r\nb')))).toEqual(['a\nb']);
