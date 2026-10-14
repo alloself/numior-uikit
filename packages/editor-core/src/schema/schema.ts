@@ -300,6 +300,8 @@ const buildSchema = (spec: SchemaSpec, allowed: Allowed): Schema => {
     });
 
   const schema: Schema = {
+    name: spec.name ?? 'document',
+    version: spec.version ?? 1,
     spec,
     top,
     nodes,

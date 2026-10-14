@@ -1,5 +1,16 @@
 export { createDoc } from './doc/doc';
 export type { Doc, NodeVisitor, ResolvedPos, Slice } from './doc/doc.types';
+export { fromJSON, toJSON } from './doc/json';
+export type {
+  DocJSON,
+  DocJSONIssue,
+  DocJSONResult,
+  ElementJSON,
+  MarkJSON,
+  NodeJSON,
+  SchemaStamp,
+  TextJSON,
+} from './doc/json.types';
 export { contentSize, createIdSource, nodeSize, sameMarks } from './model/node';
 export type {
   AttrValue,

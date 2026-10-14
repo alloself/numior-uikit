@@ -32,6 +32,8 @@ export interface MarkSpec {
 }
 
 export interface SchemaSpec {
+  readonly name?: string | undefined;
+  readonly version?: number | undefined;
   readonly nodes: Readonly<Record<string, NodeSpec>>;
   readonly marks?: Readonly<Record<string, MarkSpec>> | undefined;
   readonly top?: string | undefined;
@@ -104,6 +106,8 @@ export type DocCheck =
   | { readonly ok: false; readonly issues: readonly DocIssue[] };
 
 export interface Schema {
+  readonly name: string;
+  readonly version: number;
   readonly spec: SchemaSpec;
   readonly top: NodeType;
   readonly nodes: ReadonlyMap<string, NodeType>;

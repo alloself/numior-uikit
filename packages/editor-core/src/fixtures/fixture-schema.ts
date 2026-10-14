@@ -14,6 +14,8 @@ const spanOf = (value: AttrValue | undefined): number | undefined =>
   typeof value === 'number' && value > 1 ? value : undefined;
 
 export const fixtureSchema = createSchema({
+  name: 'fixture',
+  version: 1,
   nodes: {
     doc: { content: 'block+' },
     paragraph: { group: 'block', content: 'inline*', render: () => renderTag('p') },
