@@ -7,6 +7,7 @@ const ROOTS = [
   'packages/forms/test',
   'packages/table/test',
   'packages/editor-core/test',
+  'packages/content/test',
 ];
 
 const RULES = [

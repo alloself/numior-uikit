@@ -239,6 +239,30 @@ for (const entry of ['index.js', 'fixtures.js']) {
   }
 }
 
+const contentCode = await importBuild('content', ['NuiContent', 'contentSchema', 'renderContent']);
+
+assert.match(
+  contentCode,
+  /from ['"]@numior\/editor-core['"]/,
+  'content must keep @numior/editor-core external',
+);
+
+for (const file of await localImports(resolve('packages/content/dist/index.js'))) {
+  const bundle = await readFile(file, 'utf8');
+
+  assert.doesNotMatch(
+    bundle,
+    /beforeinput|compositionstart|MutationObserver/,
+    `content must not carry the editing runtime: ${file}`,
+  );
+
+  assert.doesNotMatch(
+    bundle,
+    /from ['"]@numior\/editor-core\/view['"]/,
+    `content must not import the editor view: ${file}`,
+  );
+}
+
 const nuxtModule = await import(pathToFileURL(resolve('packages/nuxt/dist/module.js')).href);
 
 assert.equal(typeof nuxtModule.default, 'function', 'nuxt must export the module');
