@@ -86,9 +86,15 @@ const targetRange = (event: InputEvent, host: ViewHost): SelectionRange | undefi
 const textOf = (event: InputEvent): string =>
   event.data ?? event.dataTransfer?.getData('text/plain') ?? '';
 
+const collapsed = (host: ViewHost): boolean => {
+  const selection = host.state().selection;
+
+  return selection.kind === 'text' && selection.anchor === selection.head;
+};
+
 const deletion = (event: InputEvent, host: ViewHost): InputIntent | undefined => {
   const kind = DELETES[event.inputType];
-  const range = kind === undefined ? undefined : targetRange(event, host);
+  const range = kind === undefined || !collapsed(host) ? undefined : targetRange(event, host);
 
   if (kind === undefined) {
     return undefined;
@@ -216,12 +222,11 @@ export const attachInput = (host: ViewHost, parts: InputParts): (() => void) => 
   const doc = root.ownerDocument;
 
   const onKeydown = (event: KeyboardEvent): void => {
-    if (
-      !host.composing() &&
-      !event.isComposing &&
-      event.key !== 'Process' &&
-      handleKey(host, event)
-    ) {
+    if (host.composing() || event.isComposing || event.key === 'Process') {
+      return;
+    }
+    parts.sync.read();
+    if (handleKey(host, event)) {
       event.preventDefault();
     }
   };
@@ -230,6 +235,7 @@ export const attachInput = (host: ViewHost, parts: InputParts): (() => void) => 
     if (PASSIVE.has(event.inputType) || event.isComposing || host.composing()) {
       return;
     }
+    parts.sync.read();
     event.preventDefault();
     const intent = readIntent(event, host);
 
@@ -242,6 +248,7 @@ export const attachInput = (host: ViewHost, parts: InputParts): (() => void) => 
     const text = event.clipboardData?.getData('text/plain') ?? '';
 
     event.preventDefault();
+    parts.sync.read();
     if (text !== '') {
       runIntent(host, { kind: 'paste', text });
     }

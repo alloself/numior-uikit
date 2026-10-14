@@ -263,6 +263,21 @@ for (const file of await localImports(resolve('packages/content/dist/index.js'))
   );
 }
 
+const editorVueCode = await importBuild('editor-vue', ['NuiEditor']);
+
+for (const external of [
+  'vue',
+  '@numior/editor-core',
+  '@numior/editor-core/view',
+  '@numior/content',
+]) {
+  assert.match(
+    editorVueCode,
+    new RegExp(`from ['"]${external.replaceAll('/', '\\/')}['"]`),
+    `editor-vue must keep ${external} external`,
+  );
+}
+
 const nuxtModule = await import(pathToFileURL(resolve('packages/nuxt/dist/module.js')).href);
 
 assert.equal(typeof nuxtModule.default, 'function', 'nuxt must export the module');

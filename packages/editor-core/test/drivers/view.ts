@@ -228,6 +228,7 @@ export class EditorViewDriver {
 
     if (anchor instanceof Text) {
       anchor.insertData(offset, text);
+      selection?.collapse(anchor, offset + text.length);
     }
     await settle();
     this.host.dispatchEvent(new CompositionEvent('compositionend', { bubbles: true, data: text }));

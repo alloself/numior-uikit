@@ -34,7 +34,7 @@ describe('NuiContent', () => {
     const view = mounted({ document: doc });
 
     expect(view.markup).toBe(
-      renderContent(doc).replace(' checked disabled', ' checked="" disabled=""'),
+      renderContent(doc).replace(' checked tabindex', ' checked="" tabindex'),
     );
 
     expect(view.checks).toEqual([true]);

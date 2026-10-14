@@ -9,6 +9,9 @@
     "preview": "vite preview --host 127.0.0.1 --port 4173 --strictPort"
   },
   "dependencies": {
+    "@numior/content": "workspace:*",
+    "@numior/editor-core": "workspace:*",
+    "@numior/editor-vue": "workspace:*",
     "@numior/forms": "workspace:*",
     "@numior/table": "workspace:*",
     "@numior/tailwind": "workspace:*",

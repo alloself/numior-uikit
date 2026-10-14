@@ -10,6 +10,7 @@
     "packages/editor-core/src/fixtures/index.ts",
     "packages/editor-core/src/view/index.ts",
     "packages/content/src/index.ts",
+    "packages/editor-vue/src/index.ts",
     "apps/playground/src/tailwind.css",
     "scripts/vite-package-assets.ts",
     "scripts/build-css.ts",
@@ -90,6 +91,10 @@
         "patterns": ["packages/content/**"]
       },
       {
+        "name": "editor-vue",
+        "patterns": ["packages/editor-vue/**"]
+      },
+      {
         "name": "nuxt",
         "patterns": ["packages/nuxt/**"]
       },
@@ -136,6 +141,10 @@
         "allow": ["tokens", "editor-core", "content"]
       },
       {
+        "from": "editor-vue",
+        "allow": ["tokens", "primitives", "vue", "editor-core", "content", "editor-vue"]
+      },
+      {
         "from": "nuxt",
         "allow": ["tokens", "primitives", "vue", "forms", "table", "nuxt"]
       },
@@ -150,6 +159,7 @@
           "table",
           "editor-core",
           "content",
+          "editor-vue",
           "nuxt",
           "apps"
         ]
@@ -165,6 +175,7 @@
           "table",
           "editor-core",
           "content",
+          "editor-vue",
           "nuxt",
           "apps",
           "tests"

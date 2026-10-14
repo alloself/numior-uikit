@@ -1,0 +1,92 @@
+.nui-editor {
+  --_padding: var(--nui-field-padding-md);
+  --_text: var(--nui-font-size-md);
+  --_min: 8rem;
+
+  position: relative;
+  box-sizing: border-box;
+  inline-size: 100%;
+  border: 1px solid var(--nui-border);
+  border-radius: var(--nui-radius);
+  background: var(--nui-surface);
+  color: var(--nui-text);
+  transition:
+    border-color var(--nui-duration-fast) var(--nui-easing),
+    outline-color var(--nui-duration-fast) var(--nui-easing);
+}
+.nui-editor--size-sm {
+  --_padding: var(--nui-field-padding-sm);
+  --_text: var(--nui-font-size-sm);
+  --_min: 6rem;
+}
+.nui-editor--size-lg {
+  --_padding: var(--nui-field-padding-lg);
+  --_text: var(--nui-font-size-lg);
+  --_min: 10rem;
+}
+.nui-editor:hover:not(
+    .nui-editor--disabled,
+    .nui-editor--readonly,
+    .nui-editor--invalid,
+    :focus-within
+  ) {
+  border-color: var(--nui-border-strong);
+}
+.nui-editor:focus-within {
+  border-color: var(--nui-focus);
+  outline: var(--nui-focus-ring-width) solid var(--nui-focus);
+  outline-offset: var(--nui-focus-ring-offset);
+}
+.nui-editor--invalid,
+.nui-editor--invalid:focus-within {
+  border-color: var(--nui-error);
+  outline-color: var(--nui-error);
+}
+.nui-editor--disabled {
+  opacity: var(--nui-disabled-opacity);
+  cursor: not-allowed;
+}
+.nui-editor .nui-editor__content {
+  --_size: var(--_text);
+
+  position: relative;
+  box-sizing: border-box;
+  min-block-size: var(--_min);
+  padding: var(--nui-space-3) var(--_padding);
+  outline: none;
+  caret-color: var(--nui-text);
+}
+.nui-editor__content[hidden] {
+  display: none;
+}
+.nui-editor--readonly .nui-editor__content {
+  cursor: default;
+}
+.nui-editor--empty .nui-editor__content::before {
+  content: attr(aria-placeholder);
+  position: absolute;
+  inset-block-start: var(--nui-space-3);
+  inset-inline: var(--_padding);
+  color: var(--nui-text-muted);
+  pointer-events: none;
+}
+.nui-editor__selected {
+  border-radius: var(--nui-radius-sm);
+  outline: 2px solid var(--nui-focus);
+  outline-offset: 2px;
+  transition: outline-color var(--nui-duration-fast) var(--nui-easing);
+}
+.nui-editor__content .nui-content__code {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  overflow-x: visible;
+}
+.nui-editor__content .nui-content__code-inline {
+  white-space: normal;
+}
+.nui-editor__content span.nui-editor__selected {
+  outline-offset: 0;
+}
+.nui-editor__content ::selection {
+  background: color-mix(in oklab, var(--nui-primary) 22%, transparent);
+}

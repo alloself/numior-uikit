@@ -106,6 +106,12 @@ const selectionOfSpan = (doc: Doc, span: Span): Selection => {
   if (span.anchor === span.head) {
     return nearestCursor(doc, span.anchor);
   }
+  if (
+    low <= (textPosition(doc, 0, 1) ?? 0) &&
+    high >= (textPosition(doc, doc.size, -1) ?? doc.size)
+  ) {
+    return { kind: 'all' };
+  }
   const forward = span.anchor <= span.head;
   const anchor = textPosition(doc, span.anchor, forward ? 1 : -1);
   const head = textPosition(doc, span.head, forward ? -1 : 1);

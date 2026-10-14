@@ -1,0 +1,44 @@
+{
+  "name": "@numior/editor-vue",
+  "version": "0.0.0",
+  "private": true,
+  "license": "MIT",
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "exports": {
+    ".": {
+      "@numior/source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./styles.css": {
+      "@numior/source": "./src/styles.css",
+      "default": "./dist/styles.css"
+    },
+    "./styles/*.css": {
+      "@numior/source": "./src/*/*.css",
+      "default": "./dist/styles/*.css"
+    }
+  },
+  "scripts": {
+    "build": "vite build && vue-tsc -p tsconfig.build.json"
+  },
+  "dependencies": {
+    "@numior/content": "workspace:*",
+    "@numior/editor-core": "workspace:*",
+    "@numior/primitives": "workspace:*",
+    "@numior/vue": "workspace:*"
+  },
+  "devDependencies": {
+    "@vue/test-utils": "2.5.1"
+  },
+  "peerDependencies": {
+    "@numior/tokens": "workspace:*",
+    "vue": "^3.5.0"
+  }
+}

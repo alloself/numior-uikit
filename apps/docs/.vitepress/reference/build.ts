@@ -24,6 +24,7 @@ const PACKAGES = [
   { name: '@numior/forms', dir: 'packages/forms' },
   { name: '@numior/table', dir: 'packages/table' },
   { name: '@numior/content', dir: 'packages/content' },
+  { name: '@numior/editor-vue', dir: 'packages/editor-vue' },
 ] as const;
 
 const PRIMITIVES = { name: '@numior/primitives', dir: 'packages/primitives' } as const;

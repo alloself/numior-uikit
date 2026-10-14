@@ -70,7 +70,7 @@ export const EVERY_BLOCK_MARKUP = [
   '<p class="nui-content__paragraph"><br></p>',
   '<ul class="nui-content__list nui-content__list--bullet"><li class="nui-content__item"><p class="nui-content__paragraph">one</p></li></ul>',
   '<ol class="nui-content__list nui-content__list--ordered" start="3"><li class="nui-content__item"><p class="nui-content__paragraph">two</p></li></ol>',
-  '<ul class="nui-content__list nui-content__list--todo"><li class="nui-content__todo nui-content__todo--checked"><input class="nui-content__check" type="checkbox" checked disabled aria-label="done"><div class="nui-content__todo-body"><p class="nui-content__paragraph">done</p></div></li></ul>',
+  '<ul class="nui-content__list nui-content__list--todo"><li class="nui-content__todo nui-content__todo--checked"><input class="nui-content__check" type="checkbox" checked tabindex="-1" aria-readonly="true" aria-label="done"><div class="nui-content__todo-body"><p class="nui-content__paragraph">done</p></div></li></ul>',
   '<pre class="nui-content__code"><code>let x</code></pre>',
   '<hr class="nui-content__divider">',
   '<div class="nui-content__callout nui-content__callout--tone-warning" role="note"><p class="nui-content__paragraph">Note</p></div>',

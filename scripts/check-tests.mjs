@@ -8,6 +8,7 @@ const ROOTS = [
   'packages/table/test',
   'packages/editor-core/test',
   'packages/content/test',
+  'packages/editor-vue/test',
 ];
 
 const RULES = [

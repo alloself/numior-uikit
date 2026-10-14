@@ -40,6 +40,42 @@ const readInline = (context: ViewContext, parent: Node): string => {
   return text;
 };
 
+const sizeOf = (context: ViewContext, node: Node): number => {
+  if (isLeafDom(context, node)) {
+    return 1;
+  }
+  return node instanceof Text ? node.data.length : readInline(context, node).length;
+};
+
+const offsetWithin = (context: ViewContext, parent: Node, target: Node, offset: number): number => {
+  const children = [...parent.childNodes];
+
+  if (parent === target) {
+    return children.slice(0, offset).reduce((sum, child) => sum + sizeOf(context, child), 0);
+  }
+  let count = 0;
+
+  for (const child of children) {
+    if (child === target && child instanceof Text) {
+      return count + offset;
+    }
+    if (child.contains(target)) {
+      return count + (isLeafDom(context, child) ? 0 : offsetWithin(context, child, target, offset));
+    }
+    count += sizeOf(context, child);
+  }
+  return count;
+};
+
+const caretIn = (context: ViewContext, content: Node): number | undefined => {
+  const selection = content.ownerDocument?.getSelection();
+  const focus = selection?.focusNode;
+
+  return focus === null || focus === undefined || !content.contains(focus)
+    ? undefined
+    : offsetWithin(context, content, focus, selection?.focusOffset ?? 0);
+};
+
 const commonPrefix = (left: string, right: string): number => {
   let index = 0;
 
@@ -74,10 +110,13 @@ const intentOf = (
   const suffix = commonSuffix(model, dom, prefix);
   const start = contentStart(desc);
 
+  const caret = caretIn(context, desc.contentDOM);
+
   return {
     kind: 'compose',
     text: dom.slice(prefix, dom.length - suffix).replaceAll(ATOM, ''),
     range: { from: start + prefix, to: start + model.length - suffix },
+    caret: caret === undefined ? undefined : start + caret,
   };
 };
 

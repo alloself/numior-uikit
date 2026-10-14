@@ -20,6 +20,7 @@ import { WizardSection } from './wizard';
 import { LayoutSection } from './layout';
 import { TypographySection } from './typography';
 import { ChromeSection } from './chrome';
+import { EditorSection } from './editor';
 import {
   isBoolean,
   isNumber,
@@ -183,6 +184,7 @@ export class PlaygroundPage {
   readonly tableDetail: TableDetailSection;
   readonly tableSheet: TableSheetSection;
   readonly tableCells: TableCellsSection;
+  readonly editor: EditorSection;
 
   constructor(readonly page: Page) {
     this.workspace = page.getByRole('main');
@@ -228,6 +230,7 @@ export class PlaygroundPage {
     this.tableDetail = new TableDetailSection(page);
     this.tableSheet = new TableSheetSection(page);
     this.tableCells = new TableCellsSection(page);
+    this.editor = new EditorSection(page);
   }
 
   async open(path: '/' = '/'): Promise<void> {

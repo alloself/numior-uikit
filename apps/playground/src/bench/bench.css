@@ -17,3 +17,7 @@
   color: var(--nui-text-muted);
   font-size: var(--nui-font-size-sm);
 }
+.bench__editor .nui-editor__content {
+  max-block-size: calc(100dvh - 8rem);
+  overflow-y: auto;
+}

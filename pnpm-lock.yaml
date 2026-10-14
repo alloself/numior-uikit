@@ -147,6 +147,15 @@ importers:
 
   apps/playground:
     dependencies:
+      '@numior/content':
+        specifier: workspace:*
+        version: link:../../packages/content
+      '@numior/editor-core':
+        specifier: workspace:*
+        version: link:../../packages/editor-core
+      '@numior/editor-vue':
+        specifier: workspace:*
+        version: link:../../packages/editor-vue
       '@numior/forms':
         specifier: workspace:*
         version: link:../../packages/forms
@@ -194,6 +203,31 @@ importers:
       fast-check:
         specifier: 4.10.2
         version: 4.10.2
+
+  packages/editor-vue:
+    dependencies:
+      '@numior/content':
+        specifier: workspace:*
+        version: link:../content
+      '@numior/editor-core':
+        specifier: workspace:*
+        version: link:../editor-core
+      '@numior/primitives':
+        specifier: workspace:*
+        version: link:../primitives
+      '@numior/tokens':
+        specifier: workspace:*
+        version: link:../tokens
+      '@numior/vue':
+        specifier: workspace:*
+        version: link:../vue
+      vue:
+        specifier: ^3.5.0
+        version: 3.5.43(typescript@5.9.3)
+    devDependencies:
+      '@vue/test-utils':
+        specifier: 2.5.1
+        version: 2.5.1(@vue/compiler-dom@3.5.43)(@vue/server-renderer@3.5.43)(vue@3.5.43(typescript@5.9.3))
 
   packages/forms:
     dependencies:

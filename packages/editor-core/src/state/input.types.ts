@@ -19,7 +19,12 @@ export type InputIntent =
   | { readonly kind: 'format'; readonly mark: string }
   | { readonly kind: 'history'; readonly action: 'undo' | 'redo' }
   | { readonly kind: 'paste'; readonly text: string }
-  | { readonly kind: 'compose'; readonly text: string; readonly range: SelectionRange };
+  | {
+      readonly kind: 'compose';
+      readonly text: string;
+      readonly range: SelectionRange;
+      readonly caret?: number | undefined;
+    };
 
 export interface KeyInput {
   readonly key: string;

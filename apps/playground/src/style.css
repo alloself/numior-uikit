@@ -357,3 +357,27 @@ footer {
   margin: 0 0 var(--nui-space-2);
   font-weight: 600;
 }
+
+.editor-demo {
+  display: grid;
+  gap: var(--nui-space-6);
+  margin-block-start: var(--nui-space-4);
+}
+@media (width >= 64rem) {
+  .editor-demo {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: start;
+  }
+}
+.editor-demo__preview {
+  box-sizing: border-box;
+  padding: var(--nui-space-4);
+  border: 1px dashed var(--nui-border);
+  border-radius: var(--nui-radius);
+}
+.editor-demo__title {
+  margin: 0 0 var(--nui-space-3);
+  color: var(--nui-text-muted);
+  font-size: var(--nui-font-size-sm);
+  font-weight: var(--nui-font-weight-medium);
+}

@@ -115,16 +115,15 @@ export const deleteRange =
   };
 
 export const insertText =
-  (text: string, range?: SelectionRange): Command =>
+  (text: string, range?: SelectionRange, caret?: number): Command =>
   (state, dispatch) => {
     const tr = state.tr;
 
     if (range === undefined) {
       tr.deleteSelection().insertText(text);
     } else {
-      tr.insertText(text, range.from, range.to).setSelection(
-        textSelection(range.from + text.length),
-      );
+      tr.insertText(text, range.from, range.to);
+      tr.setSelection(nearestCursor(tr.doc, caret ?? range.from + text.length));
     }
     dispatch?.(tr);
     return true;
@@ -296,7 +295,7 @@ export const intentCommand = (intent: InputIntent): Command => {
     case 'insertText':
       return insertText(intent.text, intent.range);
     case 'compose':
-      return insertText(intent.text, intent.range);
+      return insertText(intent.text, intent.range, intent.caret);
     case 'insertParagraph':
       return chainCommands(splitListItem, insertParagraph);
     case 'insertLineBreak':

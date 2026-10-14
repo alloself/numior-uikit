@@ -1,7 +1,8 @@
 import type { Doc, Slice } from '../doc/doc.types';
+import { emptyTextblock } from '../doc/empty';
 import { sharedDepth } from '../doc/resolve';
 import { withContent } from '../model/node';
-import type { ContentNode, ElementNode, IdSource } from '../model/node.types';
+import type { ContentNode, IdSource } from '../model/node.types';
 import { createMapping } from '../transform/mapping';
 import { sliceSize } from '../transform/replace';
 import { createTransform } from '../transform/transform';
@@ -47,25 +48,10 @@ const deleteRange = (transform: Transform, from: number, to: number): boolean =>
   return transform.maybeStep({ kind: 'replace', from, to, slice }).ok;
 };
 
-const emptyBlockOf = (doc: Doc, id: string): ElementNode | undefined => {
-  const schema = doc.schema;
-
-  const name = [...schema.top.content.next.keys()].find((type) => {
-    const spec = schema.nodes.get(type);
-
-    return (
-      spec?.inlineContent === true &&
-      Object.values(spec.attrs).every((attr) => attr.default !== undefined)
-    );
-  });
-
-  return name === undefined ? undefined : schema.element(name, { id });
-};
-
 const clearDoc = (transform: Transform): boolean => {
   const doc = transform.doc;
   const first = doc.root.content[0];
-  const block = first?.kind === 'element' ? emptyBlockOf(doc, first.id) : undefined;
+  const block = first?.kind === 'element' ? emptyTextblock(doc.schema, first.id) : undefined;
 
   return (
     block !== undefined &&

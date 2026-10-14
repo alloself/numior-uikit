@@ -11,8 +11,15 @@
         data-testid="bench-quick"
       />
     </div>
+    <NuiEditor
+      v-if="shown && view === 'editor'"
+      v-model:document="document"
+      class="bench__editor"
+      label="Бенчмарк редактора"
+      data-testid="bench-editor"
+    />
     <NuiTree
-      v-if="shown && view === 'tree'"
+      v-else-if="shown && view === 'tree'"
       :items="nodes"
       virtual
       height="calc(100dvh - 5rem)"
@@ -50,6 +57,10 @@
 
 <script setup lang="ts">
 import { nextTick, onMounted, ref } from 'vue';
+import { contentSchema } from '@numior/content';
+import { toJSON, type DocJSON } from '@numior/editor-core';
+import { generateDoc } from '@numior/editor-core/fixtures';
+import { NuiEditor } from '@numior/editor-vue';
 import { NuiInput, NuiTree } from '@numior/vue';
 import {
   NuiTable,
@@ -71,14 +82,17 @@ import {
   type InputClock,
 } from './bench-hooks';
 
-type BenchView = 'table' | 'tree' | 'sheet';
+type BenchView = 'table' | 'tree' | 'sheet' | 'editor';
 
 const DEFAULT_ROWS = 1_000_000;
+
+const DEFAULT_BLOCKS = 10_000;
 
 const viewOf = (value: string | null): BenchView => {
   switch (value) {
     case 'tree':
     case 'sheet':
+    case 'editor':
       return value;
     default:
       return 'table';
@@ -93,21 +107,34 @@ const generating = performance.now();
 const rows = view === 'table' ? generateRows(count) : [];
 const nodes = view === 'tree' ? generateTreeNodes(count) : [];
 const cells = view === 'sheet' ? tableCells(bigSheet) : undefined;
+const blocks = Number(params.get('blocks'));
+const seed = Number(params.get('seed'));
+
+const document = ref<DocJSON | undefined>(
+  view === 'editor'
+    ? toJSON(
+        generateDoc(contentSchema, {
+          blocks: Number.isInteger(blocks) && blocks > 0 ? blocks : DEFAULT_BLOCKS,
+          seed: Number.isInteger(seed) && seed > 0 ? seed : 1,
+        }),
+      )
+    : undefined,
+);
+
 const dataReady = performance.now();
 const shown = ref(true);
 
-const captionOf = (): string => {
-  switch (view) {
-    case 'tree':
-      return `${count.toLocaleString('ru-RU')} узлов`;
-    case 'sheet':
-      return `${SHEET_ROWS.toLocaleString('ru-RU')} строк × ${SHEET_COLS.toLocaleString('ru-RU')} колонок`;
-    case 'table':
-      return `${count.toLocaleString('ru-RU')} строк × ${TABLE_COLUMNS.length} колонок`;
-  }
+const blocksShown = (): number => document.value?.root.content?.length ?? 0;
+
+const CAPTIONS: Readonly<Record<BenchView, () => string>> = {
+  tree: () => `${count.toLocaleString('ru-RU')} узлов`,
+  editor: () => `${blocksShown().toLocaleString('ru-RU')} блоков`,
+  sheet: () =>
+    `${SHEET_ROWS.toLocaleString('ru-RU')} строк × ${SHEET_COLS.toLocaleString('ru-RU')} колонок`,
+  table: () => `${count.toLocaleString('ru-RU')} строк × ${TABLE_COLUMNS.length} колонок`,
 };
 
-const caption = captionOf();
+const caption = CAPTIONS[view]();
 
 const sort = ref<readonly TableSort[]>([]);
 const filters = ref<NuiTableFilters>([]);
@@ -132,8 +159,15 @@ const remount = async (): Promise<number> => {
   return (await afterPaint()) - started;
 };
 
+const ROWS: Readonly<Record<BenchView, () => number>> = {
+  tree: () => count,
+  editor: blocksShown,
+  sheet: () => SHEET_ROWS,
+  table: () => count,
+};
+
 const hooks: BenchHooks = {
-  rows: view === 'sheet' ? SHEET_ROWS : count,
+  rows: ROWS[view](),
   dataMs: dataReady - generating,
   firstRowMs: null,
   latencies,

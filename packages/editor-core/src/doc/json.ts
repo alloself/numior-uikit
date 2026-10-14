@@ -52,12 +52,25 @@ const nodeToJSON = (node: ContentNode): NodeJSON => {
   return elementToJSON(node);
 };
 
-const elementToJSON = (node: ElementNode): ElementJSON => ({
-  id: node.id,
-  type: node.type,
-  ...withAttrs(node.attrs),
-  ...(node.content.length === 0 ? {} : { content: node.content.map(nodeToJSON) }),
-});
+const written = new WeakMap<ElementNode, ElementJSON>();
+
+const elementToJSON = (node: ElementNode): ElementJSON => {
+  const known = written.get(node);
+
+  if (known !== undefined) {
+    return known;
+  }
+
+  const json: ElementJSON = {
+    id: node.id,
+    type: node.type,
+    ...withAttrs(node.attrs),
+    ...(node.content.length === 0 ? {} : { content: node.content.map(nodeToJSON) }),
+  };
+
+  written.set(node, json);
+  return json;
+};
 
 export const toJSON = (doc: Doc): DocJSON => ({
   format: 1,

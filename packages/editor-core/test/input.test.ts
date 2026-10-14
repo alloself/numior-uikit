@@ -79,9 +79,13 @@ describe('editor view input', () => {
 
     expect(view.selection).toEqual(textSelection(2, 6));
 
+    view.selectRootChildren(0, 1);
+
+    expect(view.selection).toEqual(textSelection(1, 3));
+
     view.selectRootChildren(0, 2);
 
-    expect(view.selection).toEqual(textSelection(1, 7));
+    expect(view.selection).toEqual({ kind: 'all' });
 
     view.place(6);
 

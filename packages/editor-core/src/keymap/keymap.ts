@@ -1,4 +1,5 @@
 import { liftListItem, sinkListItem } from '../commands/blocks';
+import { selectAll } from '../commands/commands';
 import { intentCommand } from '../commands/input';
 import { redo, undo } from '../history/history';
 import type { KeyInput } from '../state/input.types';
@@ -75,6 +76,7 @@ export const baseKeymap: Keymap = {
   'Mod-b': format('bold'),
   'Mod-i': format('italic'),
   'Mod-u': format('underline'),
+  'Mod-a': selectAll,
   'Mod-z': undo,
   'Mod-Shift-z': redo,
   'Mod-y': redo,
