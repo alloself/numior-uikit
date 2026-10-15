@@ -12,6 +12,16 @@
         },
       ]"
     >
+      <NuiEditorToolbar
+        v-if="toolbar === 'fixed' && !isReadonly"
+        ref="toolbar"
+        class="nui-editor__toolbar"
+        :state="current"
+        :disabled="isDisabled"
+        :controls="controlAttrs.id"
+        @run="onToolbarRun"
+        @leave="editor.focus()"
+      />
       <NuiContent
         v-if="!ready"
         class="nui-editor__content nui-editor__static"
@@ -26,6 +36,7 @@
         @focus="emit('focus', $event)"
         @blur="emit('blur', $event)"
         @paste="onPaste"
+        @keydown="onKeydown"
       />
     </div>
   </NuiFieldFrame>
@@ -45,6 +56,7 @@ import {
   keymap,
   markdownRules,
   toJSON,
+  type Command,
   type Doc,
   type DocJSON,
   type EditorState,
@@ -58,11 +70,13 @@ import {
   onBeforeUnmount,
   onMounted,
   ref,
+  shallowRef,
   toRaw,
   useAttrs,
   useTemplateRef,
   watch,
 } from 'vue';
+import NuiEditorToolbar from '../toolbar/NuiEditorToolbar.vue';
 import type { NuiEditorApi, NuiEditorPaste, NuiEditorProps } from './editor.types';
 
 defineOptions({ inheritAttrs: false });
@@ -81,6 +95,7 @@ const {
   schema = contentSchema,
   placeholder,
   autofocus = false,
+  toolbar = 'fixed',
 } = defineProps<NuiEditorProps>();
 
 const document = defineModel<DocJSON | undefined>('document');
@@ -113,6 +128,7 @@ const {
 }));
 
 const contentElement = useTemplateRef<HTMLElement>('content');
+const toolbarElement = useTemplateRef<InstanceType<typeof NuiEditorToolbar>>('toolbar');
 
 const plugins = [inputRules(markdownRules), keymap(baseKeymap), history()];
 
@@ -123,6 +139,7 @@ const docOf = (json: DocJSON | undefined): Doc => {
 };
 
 const initial = docOf(document.value === undefined ? undefined : toRaw(document.value));
+const current = shallowRef<EditorState>(createState({ doc: initial, plugins }));
 const ready = ref(false);
 const empty = ref(isEmptyDoc(initial));
 let view: EditorView | undefined;
@@ -161,6 +178,7 @@ const dispatch = (tr: Transaction): void => {
   const applied = view.state.applyTransaction(tr);
 
   view.update(applied.state);
+  current.value = applied.state;
   if (applied.transactions.some((step) => step.changed)) {
     publish(applied.state);
   }
@@ -174,6 +192,20 @@ const editor: NuiEditorApi = {
   focus: () => view?.focus(),
 };
 
+const onToolbarRun = (command: Command, refocus: boolean): void => {
+  run(command);
+  if (refocus) {
+    editor.focus();
+  }
+};
+
+const onKeydown = (event: KeyboardEvent): void => {
+  if (event.altKey && event.key === 'F10') {
+    event.preventDefault();
+    toolbarElement.value?.focus();
+  }
+};
+
 watch(document, (value) => {
   const json = value === undefined ? undefined : toRaw(value);
 
@@ -184,7 +216,8 @@ watch(document, (value) => {
 
   written = json;
   empty.value = isEmptyDoc(doc);
-  view.update(createState({ doc, plugins }));
+  current.value = createState({ doc, plugins });
+  view.update(current.value);
 });
 
 watch(editable, (value) => {
@@ -199,7 +232,7 @@ onMounted(() => {
   }
 
   view = createEditorView(element, {
-    state: createState({ doc: initial, plugins }),
+    state: current.value,
     editable: editable.value,
     dispatch,
   });

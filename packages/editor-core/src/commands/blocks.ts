@@ -4,6 +4,7 @@ import type { AttrValue, ContentNode, ElementNode } from '../model/node.types';
 import type { Schema } from '../schema/schema.types';
 import { isCursor, textSelection } from '../state/selection';
 import type { Command, Dispatch, EditorState, Transaction } from '../state/state.types';
+import { ancestorTypes, sequence } from './format';
 
 type Attrs = Readonly<Record<string, AttrValue>>;
 
@@ -412,3 +413,102 @@ export const turnIntoList = (listType: string, attrs: Attrs = {}): Command =>
 
 export const wrapInBlock = (type: string, attrs: Attrs = {}): Command =>
   toggleWrap((tr, pos) => wrapTextblock(tr, pos, [{ type, attrs }]));
+
+const listTypeAt = (state: EditorState): string | undefined =>
+  ancestorTypes(state).find((type) => state.doc.schema.nodes.get(type)?.groups.has('list'));
+
+export const toggleList = (listType: string, attrs: Attrs = {}): Command => {
+  const wrap = turnIntoList(listType, attrs);
+
+  return (state, dispatch) => {
+    const current = listTypeAt(state);
+
+    if (current === listType) {
+      return liftListItem(state, dispatch);
+    }
+    return current === undefined
+      ? wrap(state, dispatch)
+      : sequence(liftListItem, wrap)(state, dispatch);
+  };
+};
+
+const unwrap = (tr: Transaction, $pos: ResolvedPos, depth: number): boolean => {
+  const result = tr.maybeStep({
+    kind: 'replaceAround',
+    from: $pos.before(depth),
+    to: $pos.after(depth),
+    gapFrom: $pos.start(depth),
+    gapTo: $pos.end(depth),
+    slice: { content: [], openStart: 0, openEnd: 0 },
+    insert: 0,
+  });
+
+  return result.ok;
+};
+
+export const toggleWrapper = (type: string, attrs: Attrs = {}): Command => {
+  const wrap = wrapInBlock(type, attrs);
+
+  return (state, dispatch) => {
+    const head = headOf(state);
+    const $pos = head === undefined ? undefined : state.doc.resolve(head);
+    const depth = $pos === undefined ? -1 : ancestorDepth($pos, type);
+
+    if ($pos === undefined || depth < 1) {
+      return wrap(state, dispatch);
+    }
+    return attempt(state, dispatch, (tr) => unwrap(tr, $pos, depth));
+  };
+};
+
+const ancestorDepth = ($pos: ResolvedPos, type: string): number => {
+  for (let depth = $pos.depth; depth >= 1; depth -= 1) {
+    if ($pos.node(depth).type === type) {
+      return depth;
+    }
+  }
+  return -1;
+};
+
+const followingTextblock = (schema: Schema, parent: ElementNode): string | undefined =>
+  [...(schema.nodes.get(parent.type)?.content.next.keys() ?? [])].find((name) => {
+    const type = schema.nodes.get(name);
+
+    return (
+      type?.inlineContent === true &&
+      Object.values(type.attrs).every((attr) => attr.default !== undefined)
+    );
+  });
+
+export const insertDivider =
+  (type = 'divider'): Command =>
+  (state, dispatch) => {
+    const head = headOf(state);
+    const $pos = head === undefined ? undefined : state.doc.resolve(head);
+
+    if ($pos === undefined || head === undefined || !isTextblock(state.doc.schema, $pos.parent)) {
+      return false;
+    }
+    if ($pos.parent.content.length === 0) {
+      return attempt(state, dispatch, (tr) => insertBeforeTextblock(tr, head, type));
+    }
+    const container = $pos.node($pos.depth - 1);
+    const next = followingTextblock(state.doc.schema, container);
+
+    return attempt(state, dispatch, (tr) => {
+      const at = $pos.after($pos.depth);
+      const { schema } = tr.doc;
+
+      if (next === undefined) {
+        return false;
+      }
+
+      tr.insert(at, [
+        schema.element(type, { id: tr.newId() }),
+        schema.element(next, { id: tr.newId() }),
+      ]);
+
+      tr.setSelection(textSelection(at + 2));
+      return true;
+    });
+  };

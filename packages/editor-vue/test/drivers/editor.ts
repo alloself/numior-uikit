@@ -1,5 +1,5 @@
 import { mount, type VueWrapper } from '@vue/test-utils';
-import type { Command, DocJSON } from '@numior/editor-core';
+import { textSelection, type Command, type DocJSON } from '@numior/editor-core';
 import { createSSRApp, h, nextTick } from 'vue';
 import { renderToString } from 'vue/server-renderer';
 import { NuiEditor, type NuiEditorApi, type NuiEditorProps } from '../../src';
@@ -15,6 +15,7 @@ const isApi = (value: unknown): value is NuiEditorApi =>
 export interface KeyOptions {
   readonly ctrl?: boolean;
   readonly shift?: boolean;
+  readonly alt?: boolean;
 }
 
 export class EditorDriver {
@@ -165,10 +166,92 @@ export class EditorDriver {
         code: key.length === 1 ? `Key${key.toUpperCase()}` : key,
         ctrlKey: options.ctrl ?? false,
         shiftKey: options.shift ?? false,
+        altKey: options.alt ?? false,
         bubbles: true,
         cancelable: true,
       }),
     );
+
+    await nextTick();
+  }
+
+  get hasToolbar(): boolean {
+    return this.root.querySelector('[role="toolbar"]') !== null;
+  }
+
+  private tool(label: string): HTMLButtonElement {
+    const found = [...this.root.querySelectorAll('.nui-editor-toolbar__control')].find(
+      (button) => button.getAttribute('aria-label') === label,
+    );
+
+    if (!(found instanceof HTMLButtonElement)) {
+      throw new Error(`No toolbar button reads ${label}`);
+    }
+    return found;
+  }
+
+  get tools(): readonly string[] {
+    return [...this.root.querySelectorAll('.nui-editor-toolbar__control')].map(
+      (button) => button.getAttribute('aria-label') ?? '',
+    );
+  }
+
+  pressed(label: string): boolean {
+    return this.tool(label).getAttribute('aria-pressed') === 'true';
+  }
+
+  available(label: string): boolean {
+    return !this.tool(label).disabled;
+  }
+
+  get blockType(): string {
+    return this.root.querySelector('.nui-editor-toolbar__current')?.textContent?.trim() ?? '';
+  }
+
+  get toolbarFocus(): string | null {
+    const active = this.wrapper.element.ownerDocument.activeElement;
+
+    return active instanceof HTMLElement && this.root.contains(active) && active !== this.content
+      ? active.getAttribute('aria-label')
+      : null;
+  }
+
+  async useTool(label: string): Promise<void> {
+    const button = this.tool(label);
+    const pressDown = new MouseEvent('mousedown', { bubbles: true, cancelable: true });
+
+    button.dispatchEvent(pressDown);
+    button.click();
+    await nextTick();
+  }
+
+  async chooseBlock(label: string): Promise<void> {
+    const trigger = this.root.querySelector('.nui-editor-toolbar__blocks');
+
+    const option = [
+      ...this.wrapper.element.ownerDocument.querySelectorAll('[role="menuitemradio"]'),
+    ].find((item) => item.textContent?.trim() === label);
+
+    if (!(trigger instanceof HTMLElement) || !(option instanceof HTMLElement)) {
+      throw new Error(`No block type option reads ${label}`);
+    }
+    trigger.click();
+    option.click();
+    await nextTick();
+  }
+
+  async toolbarKey(key: string): Promise<void> {
+    const active = this.wrapper.element.ownerDocument.activeElement;
+
+    active?.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }));
+    await nextTick();
+  }
+
+  async select(anchor: number, head = anchor): Promise<void> {
+    this.api.run((state, dispatch) => {
+      dispatch?.(state.tr.setSelection(textSelection(anchor, head)));
+      return true;
+    });
 
     await nextTick();
   }

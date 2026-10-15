@@ -21,6 +21,10 @@ const docs: DocsMap = {
         ru: 'Ставит фокус в редактор после монтирования.',
         en: 'Focuses the editor once it is mounted.',
       },
+      toolbar: {
+        ru: 'Панель форматирования над текстом: fixed — липкая панель, none — без неё; в режиме чтения её нет. Alt+F10 переводит в неё фокус, Escape возвращает в текст.',
+        en: 'The formatting bar above the text: fixed is a sticky bar, none hides it; read-only editors have none. Alt+F10 moves focus into it, Escape returns to the text.',
+      },
     },
     models: {
       'v-model:document': {

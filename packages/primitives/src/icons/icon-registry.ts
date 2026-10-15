@@ -74,6 +74,22 @@ export type IconAlias =
   | 'eraser'
   | 'table'
   | 'move-horizontal'
+  | 'bold'
+  | 'italic'
+  | 'underline'
+  | 'strikethrough'
+  | 'list'
+  | 'list-ordered'
+  | 'list-todo'
+  | 'quote'
+  | 'undo'
+  | 'redo'
+  | 'separator'
+  | 'text'
+  | 'heading-1'
+  | 'heading-2'
+  | 'heading-3'
+  | 'code-block'
   | (string & NonNullable<unknown>);
 
 export type IconRegistry = Readonly<Record<string, Component>>;

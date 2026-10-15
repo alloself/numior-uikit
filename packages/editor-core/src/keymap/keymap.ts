@@ -76,6 +76,8 @@ export const baseKeymap: Keymap = {
   'Mod-b': format('bold'),
   'Mod-i': format('italic'),
   'Mod-u': format('underline'),
+  'Mod-Shift-s': format('strike'),
+  'Mod-e': format('code'),
   'Mod-a': selectAll,
   'Mod-z': undo,
   'Mod-Shift-z': redo,

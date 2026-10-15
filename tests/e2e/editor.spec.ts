@@ -135,6 +135,32 @@ test.describe('editor', () => {
     expect((await editor.readOutput()).paste).toBe('sheets');
   });
 
+  test('formats from the toolbar without losing the selection and changes blocks from its menu', async ({
+    page,
+  }) => {
+    const { editor } = await openEditor(page);
+
+    await editor.clear();
+    await page.keyboard.type('Hello world');
+    for (let step = 0; step < 'world'.length; step += 1) {
+      await page.keyboard.press('Shift+ArrowLeft');
+    }
+    await editor.tool('Жирный').click();
+    await expect(editor.content.locator('strong')).toHaveText('world');
+    await expect(editor.tool('Жирный')).toHaveAttribute('aria-pressed', 'true');
+    await expect(editor.content).toBeFocused();
+    await editor.blockMenu().click();
+    await page.getByRole('menuitemradio', { name: 'Заголовок 1' }).click();
+    await expect.poll(() => editor.blockTags()).toEqual(['h1']);
+    await expect(editor.content).toBeFocused();
+    await page.keyboard.press('Alt+F10');
+    await expect(editor.tool('Тип блока: Заголовок 1')).toBeFocused();
+    await page.keyboard.press('ArrowRight');
+    await expect(editor.tool('Жирный')).toBeFocused();
+    await page.keyboard.press('Escape');
+    await expect(editor.content).toBeFocused();
+  });
+
   test('passes axe in light and dark, fits phones and types in RTL', async ({ page }) => {
     const playground = await openEditor(page);
     const { editor } = playground;

@@ -99,6 +99,14 @@ export class EditorSection {
     );
   }
 
+  tool(name: string): Locator {
+    return this.root.getByRole('toolbar').getByRole('button', { name, exact: true });
+  }
+
+  blockMenu(): Locator {
+    return this.root.locator('.nui-editor-toolbar__blocks');
+  }
+
   selectedAtoms(): Locator {
     return this.content.locator('.nui-editor__selected');
   }

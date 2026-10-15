@@ -5,7 +5,10 @@ export interface NuiEditorProps extends NuiFieldControlProps {
   schema?: Schema | undefined;
   placeholder?: string | undefined;
   autofocus?: boolean | undefined;
+  toolbar?: NuiEditorToolbarMode | undefined;
 }
+
+export type NuiEditorToolbarMode = 'fixed' | 'none';
 
 export interface NuiEditorApi {
   state(): EditorState | undefined;

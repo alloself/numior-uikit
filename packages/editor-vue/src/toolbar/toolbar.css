@@ -1,0 +1,66 @@
+.nui-editor-toolbar {
+  --_separator: calc(var(--nui-space-2) * 2 + 1px);
+
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 1;
+  overflow: clip;
+  box-sizing: border-box;
+  padding: var(--nui-space-1);
+  border-block-end: 1px solid var(--nui-border);
+  border-start-start-radius: inherit;
+  border-start-end-radius: inherit;
+  background: var(--nui-surface);
+}
+.nui-editor-toolbar__groups {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-inline-start: calc(var(--_separator) * -1);
+}
+.nui-editor-toolbar__group {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding-inline-start: var(--_separator);
+}
+.nui-editor-toolbar__group::before {
+  content: '';
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: var(--nui-space-2);
+  inline-size: 1px;
+  margin-block: auto;
+  block-size: 1.25rem;
+  background: var(--nui-border);
+}
+.nui-editor-toolbar .nui-editor-toolbar__control {
+  transition:
+    background-color var(--nui-duration-fast) var(--nui-easing),
+    color var(--nui-duration-fast) var(--nui-easing);
+}
+.nui-editor-toolbar .nui-editor-toolbar__control--pressed,
+.nui-editor-toolbar .nui-editor-toolbar__control--pressed:hover:not(:disabled) {
+  background: var(--nui-primary-soft);
+  color: var(--nui-primary-soft-foreground);
+}
+.nui-editor-toolbar__blocks .nui-button__content {
+  gap: var(--nui-space-1);
+}
+.nui-editor-toolbar__current {
+  min-inline-size: 5.5rem;
+  text-align: start;
+}
+.nui-editor-toolbar__chevron {
+  color: var(--nui-text-muted);
+}
+.nui-editor-toolbar__hint {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--nui-space-2);
+}
+.nui-editor-toolbar__hint .nui-kbd__key {
+  color: inherit;
+  opacity: 0.72;
+}

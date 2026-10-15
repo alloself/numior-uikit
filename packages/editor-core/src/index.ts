@@ -104,8 +104,13 @@ export {
   splitBlock,
   toggleMark,
 } from './commands/commands';
+export { activeBlock, activeMarks, ancestorTypes, sequence } from './commands/format';
+export type { ActiveBlock } from './commands/format';
 export {
   insertBeforeTextblock,
+  insertDivider,
+  toggleList,
+  toggleWrapper,
   liftAtStart,
   liftListItem,
   retypeTextblock,
