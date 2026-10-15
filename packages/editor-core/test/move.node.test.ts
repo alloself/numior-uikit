@@ -1,11 +1,14 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import {
-  blockIndex,
-  deleteBlock,
-  duplicateBlock,
-  moveBlock,
+  deleteChild,
+  duplicateChild,
+  moveChild,
+  selectionSlot,
+  slotAt,
   textSelection,
   type Command,
+  type ContentNode,
+  type ElementNode,
 } from '../src';
 import { fixtureSchema } from '../src/fixtures';
 import { EditingHarness } from './harness/editing';
@@ -15,12 +18,12 @@ const { doc, node } = buildWith(fixtureSchema);
 
 let harness: EditingHarness | undefined;
 
-const three = (): EditingHarness => {
-  harness = EditingHarness.of(
-    doc(node('paragraph', ['a']), node('heading', ['b']), node('paragraph', ['c'])),
-    textSelection(2),
-  );
+const p = (text: string) => node('paragraph', [text]);
 
+const li = (text: string, ...rest: readonly ContentNode[]) => node('list_item', [p(text), ...rest]);
+
+const started = (...blocks: readonly ElementNode[]): EditingHarness => {
+  harness = EditingHarness.of(doc(...blocks), textSelection(2));
   return harness;
 };
 
@@ -37,39 +40,76 @@ afterEach(() => {
   harness = undefined;
 });
 
-describe('block moves', () => {
-  it('moves a block with its id and the cursor in one undo step', () => {
-    const editor = three();
+describe('moving children', () => {
+  it('moves a top-level block with its id and the cursor in one undo step', () => {
+    const editor = started(p('a'), node('heading', ['b']), p('c'));
+    const root = editor.state.doc.root.id;
     const before = ids(editor);
 
-    expect(runs(editor, moveBlock(0, 2))).toBe(true);
+    expect(runs(editor, moveChild(root, 0, 2))).toBe(true);
     expect(editor.outline).toBe('heading("b") paragraph("c") paragraph("a")');
     expect(ids(editor)).toEqual([before[1], before[2], before[0]]);
     expect(editor.selection).toEqual(textSelection(8));
-    expect(blockIndex(editor.state)).toBe(2);
+    expect(selectionSlot(editor.state)).toEqual({ parent: root, index: 2 });
 
     expect(editor.press('Mod-Shift-ArrowUp')).toBe(true);
     expect(editor.outline).toBe('heading("b") paragraph("a") paragraph("c")');
     expect(editor.press('Mod-z')).toBe(true);
     expect(editor.outline).toBe('heading("b") paragraph("c") paragraph("a")');
-    expect(moveBlock(0, 0)(editor.state)).toBe(false);
-    expect(moveBlock(0, 5)(editor.state)).toBe(false);
+    expect(moveChild(root, 0, 0)(editor.state)).toBe(false);
+    expect(moveChild(root, 0, 5)(editor.state)).toBe(false);
+    expect(moveChild('missing', 0, 1)(editor.state)).toBe(false);
   });
 
-  it('duplicates a block under fresh ids and deletes blocks down to one empty block', () => {
-    const editor = three();
+  it('finds list items as the deepest movable children and reorders them inside their list', () => {
+    const editor = started(
+      node('bullet_list', [li('one'), li('two', node('bullet_list', [li('deep')])), li('three')]),
+    );
 
-    expect(runs(editor, duplicateBlock(1))).toBe(true);
-    expect(editor.outline).toBe('paragraph("a") heading("b") heading("b") paragraph("c")');
+    const list = editor.state.doc.root.content[0];
+    const listId = list?.kind === 'element' ? list.id : '';
+
+    expect(slotAt(editor.state.doc, 3)).toEqual({ parent: listId, index: 0 });
+
+    editor.placeIn('deep', 1);
+    const deep = selectionSlot(editor.state);
+
+    expect(deep?.index).toBe(0);
+    expect(deep?.parent).not.toBe(listId);
+
+    editor.placeIn('one', 1);
+
+    expect(editor.press('Mod-Shift-ArrowDown')).toBe(true);
+
+    expect(editor.outline).toBe(
+      'bullet_list(list_item(paragraph("two") bullet_list(list_item(paragraph("deep")))) list_item(paragraph("one")) list_item(paragraph("three")))',
+    );
+  });
+
+  it('duplicates under fresh ids and deletes up to the enclosing list and down to one empty block', () => {
+    const editor = started(p('a'), node('bullet_list', [li('x')]), p('c'));
+    const root = editor.state.doc.root.id;
+
+    expect(runs(editor, duplicateChild({ parent: root, index: 0 }))).toBe(true);
+
+    expect(editor.outline).toBe(
+      'paragraph("a") paragraph("a") bullet_list(list_item(paragraph("x"))) paragraph("c")',
+    );
+
     expect(new Set(ids(editor)).size).toBe(4);
-    expect(duplicateBlock(9)(editor.state)).toBe(false);
+    expect(duplicateChild({ parent: root, index: 9 })(editor.state)).toBe(false);
 
-    for (const index of [3, 2, 1]) {
-      expect(runs(editor, deleteBlock(index))).toBe(true);
+    editor.placeIn('x', 0);
+    const item = selectionSlot(editor.state);
+
+    expect(item !== undefined && runs(editor, deleteChild(item))).toBe(true);
+    expect(editor.outline).toBe('paragraph("a") paragraph("a") paragraph("c")');
+
+    for (const index of [2, 1, 0]) {
+      expect(runs(editor, deleteChild({ parent: root, index }))).toBe(true);
     }
-    expect(runs(editor, deleteBlock(0))).toBe(true);
     expect(editor.outline).toBe('paragraph()');
     expect(editor.selection).toEqual(textSelection(1));
-    expect(deleteBlock(4)(editor.state)).toBe(false);
+    expect(deleteChild({ parent: root, index: 4 })(editor.state)).toBe(false);
   });
 });

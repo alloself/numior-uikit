@@ -33,7 +33,8 @@
     "@numior/editor-core": "workspace:*",
     "@numior/primitives": "workspace:*",
     "@numior/vue": "workspace:*",
-    "@vueuse/core": "15.0.0"
+    "@vueuse/core": "15.0.0",
+    "lucide-vue-next": "1.0.0"
   },
   "devDependencies": {
     "@vue/test-utils": "2.5.1"

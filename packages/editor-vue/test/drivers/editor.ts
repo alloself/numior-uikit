@@ -211,7 +211,11 @@ export class EditorDriver {
   }
 
   get blockType(): string {
-    return this.root.querySelector('.nui-editor-toolbar__current')?.textContent?.trim() ?? '';
+    const label = this.root
+      .querySelector('.nui-editor-toolbar__blocks')
+      ?.getAttribute('aria-label');
+
+    return label?.slice(label.indexOf(':') + 1).trim() ?? '';
   }
 
   get toolbarFocus(): string | null {
@@ -235,8 +239,8 @@ export class EditorDriver {
     const trigger = this.root.querySelector('.nui-editor-toolbar__blocks');
 
     const option = [
-      ...this.wrapper.element.ownerDocument.querySelectorAll('[role="menuitemradio"]'),
-    ].find((item) => item.textContent?.trim() === label);
+      ...this.root.querySelectorAll('.nui-editor-blocks [role="menuitemradio"]'),
+    ].find((item) => item.getAttribute('aria-label') === label);
 
     if (!(trigger instanceof HTMLElement) || !(option instanceof HTMLElement)) {
       throw new Error(`No block type option reads ${label}`);
@@ -290,6 +294,33 @@ export class EditorDriver {
   }
 
   dropShown = false;
+
+  async hoverItem(text: string): Promise<void> {
+    const item = [...this.content.querySelectorAll('li')].find(
+      (candidate) => candidate.textContent === text,
+    );
+
+    item?.dispatchEvent(new PointerEvent('pointermove', { bubbles: true }));
+    await nextTick();
+  }
+
+  get itemTexts(): readonly string[] {
+    return [...this.content.querySelectorAll('li')].map((item) => item.textContent ?? '');
+  }
+
+  async hoverGap(): Promise<void> {
+    this.content
+      .querySelector('.nui-editor__chunk')
+      ?.dispatchEvent(new PointerEvent('pointermove', { bubbles: true }));
+
+    await nextTick();
+  }
+
+  get pushedTexts(): readonly string[] {
+    return [...this.content.querySelectorAll('.nui-editor__pushed')].map(
+      (block) => `${block.tagName.toLowerCase()}:${block.textContent ?? ''}`,
+    );
+  }
 
   get handleShown(): boolean {
     return this.root.querySelector('.nui-editor-handle--shown') !== null;

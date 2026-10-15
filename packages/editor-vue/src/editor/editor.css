@@ -2,6 +2,7 @@
   --_padding: var(--nui-field-padding-md);
   --_text: var(--nui-font-size-md);
   --_min: 8rem;
+  --_grip: 1.75rem;
 
   position: relative;
   box-sizing: border-box;
@@ -71,8 +72,14 @@
 .nui-editor__content.nui-editor__all {
   caret-color: transparent;
 }
-.nui-editor__chunk > * {
-  transition: background-color var(--nui-duration-fast) var(--nui-easing);
+.nui-editor__chunk > *,
+.nui-editor__content li {
+  transition:
+    background-color var(--nui-duration-fast) var(--nui-easing),
+    margin-inline-start var(--nui-duration-fast) var(--nui-easing);
+}
+.nui-editor__content .nui-editor__pushed {
+  margin-inline-start: calc(var(--_grip) + var(--nui-space-2));
 }
 .nui-editor__all > .nui-editor__chunk > * {
   background-color: color-mix(in oklab, var(--nui-primary) 16%, transparent);

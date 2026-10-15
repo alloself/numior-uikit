@@ -233,11 +233,29 @@ test.describe('editor', () => {
     if (fine) {
       await editor.dragBlock(0, 2);
       await expect.poll(() => editor.blockTexts()).toEqual(['Three', 'Two', 'One']);
-      await editor.block(1).hover();
+      await editor.hoverStart(editor.block(1));
     }
     await editor.grip().click();
     await page.getByRole('menuitem', { name: 'Дублировать' }).click();
     await expect.poll(async () => (await editor.blockTexts()).length).toBe(4);
+  });
+
+  test('reorders list items by their handle', async ({ page }) => {
+    const { editor } = await openEditor(page);
+
+    const fine = await page.evaluate(
+      () => matchMedia('(hover: hover) and (pointer: fine)').matches,
+    );
+
+    test.skip(!fine, 'dragging by the handle needs a mouse');
+    await editor.clear();
+    await page.keyboard.type('- one');
+    await page.keyboard.press('Enter');
+    await page.keyboard.type('two');
+    await page.keyboard.press('Enter');
+    await page.keyboard.type('three');
+    await editor.drag(editor.item('one'), editor.item('three'));
+    await expect(editor.content.locator('li')).toHaveText(['two', 'three', 'one']);
   });
 
   test('passes axe in light and dark, fits phones and types in RTL', async ({ page }) => {

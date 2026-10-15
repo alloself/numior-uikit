@@ -35,3 +35,9 @@ export interface NuiEditorBlockMenuProps {
   blocks: ToolbarBlocks;
   disabled?: boolean | undefined;
 }
+
+export interface ColourOption {
+  readonly value: string;
+  readonly label: string;
+  readonly modifier: string | undefined;
+}

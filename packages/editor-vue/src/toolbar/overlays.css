@@ -30,6 +30,11 @@
 .nui-editor-bubble .nui-editor-colours__trigger {
   color: var(--_text, var(--_tone-soft-foreground));
 }
+.nui-editor-colours__option {
+  display: flex;
+  align-items: center;
+  gap: var(--nui-space-2);
+}
 .nui-editor-colours__swatch {
   display: inline-flex;
   flex: none;
@@ -38,7 +43,6 @@
   box-sizing: border-box;
   inline-size: 1.25rem;
   block-size: 1.25rem;
-  margin-inline-end: var(--nui-space-2);
   border: 1px solid var(--nui-border);
   border-radius: var(--nui-radius-sm);
   background: var(--_fill, transparent);
@@ -127,12 +131,9 @@
 .nui-editor-slash__icon {
   color: var(--nui-text-muted);
 }
-.nui-editor--handles .nui-editor__content {
-  padding-inline-start: calc(var(--_padding) + 1.75rem);
-}
 .nui-editor-handle {
   position: absolute;
-  inset-inline-start: calc(var(--_padding) - var(--nui-space-1));
+  inline-size: var(--_grip);
   z-index: 1;
   translate: 0 -0.125rem;
   opacity: 0;
@@ -153,7 +154,7 @@
 }
 .nui-editor__drop {
   position: absolute;
-  inset-inline: calc(var(--_padding) + 1.75rem) var(--_padding);
+  inset-inline: var(--_padding);
   block-size: 2px;
   border-radius: 1px;
   background: var(--nui-primary);
@@ -164,4 +165,35 @@
 }
 .nui-editor__drop--shown {
   opacity: 1;
+}
+.nui-editor__ghost {
+  position: absolute;
+  inset-block-start: var(--_ghost-top);
+  inset-inline-start: var(--_ghost-start);
+  z-index: 2;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: var(--nui-space-1);
+  min-inline-size: min(100%, 12rem);
+  max-inline-size: min(calc(100% - var(--_ghost-start) - var(--_padding)), 24rem);
+  block-size: 2.25rem;
+  padding-inline: var(--nui-space-2) var(--nui-space-4);
+  border: 1px solid var(--nui-border);
+  border-radius: var(--nui-radius-sm);
+  background: var(--nui-surface-elevated);
+  box-shadow: var(--nui-shadow-md);
+  font-size: var(--nui-font-size-sm);
+  pointer-events: none;
+}
+.nui-editor__ghost-grip {
+  inline-size: 0.875rem;
+  block-size: 0.875rem;
+  color: var(--nui-text-muted);
+}
+.nui-editor__ghost-label {
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }

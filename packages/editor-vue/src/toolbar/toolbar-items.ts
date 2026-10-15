@@ -65,6 +65,7 @@ export interface ToolbarBlocks {
   readonly kind: 'blocks';
   readonly key: 'blocks';
   readonly label: string;
+  readonly icon: IconAlias;
   readonly options: readonly ToolbarBlock[];
 }
 
@@ -170,14 +171,16 @@ const blockOptions = (facts: Facts): ToolbarBlock[] => {
 
 const blockItems = (facts: Facts): ToolbarItem[] => {
   const options = blockOptions(facts);
+  const current = options.find((option) => option.active) ?? options[0];
 
-  return options.length === 0
+  return current === undefined
     ? []
     : [
         {
           kind: 'blocks',
           key: 'blocks',
-          label: options.find((option) => option.active)?.label ?? facts.texts.text,
+          label: current.active ? current.label : facts.texts.text,
+          icon: current.icon,
           options,
         },
       ];

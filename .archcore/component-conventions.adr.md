@@ -21,6 +21,10 @@ status: accepted
   реестр иконок (`provideIcons`, `useIcon`, `lazyIcon`, `createNuiConfig`), `useSplitAttrs`,
   `useControlId`. `@numior/vue` потребляет его и объявляет `@numior/primitives` и
   `lucide-vue-next` external в сборке, чтобы injection-ключи существовали в одном экземпляре.
+  Иконки, нужные одному пакету (редактор), не входят в общий `defaultIcons` и объединение
+  `IconAlias`: пакет держит свой реестр и подключает его в корне компонента через
+  `provideIconDefaults`, где иконки приложения из `provideIcons`/`createNuiConfig` побеждают
+  иконки пакета (2026-10-15).
 - Native-first: реальные `<input>`, `<textarea>`, checkbox с `role="switch"`; `appearance:
   none`, контрол остаётся в потоке под индикатором. Вид checked/indeterminate берётся из
   псевдоклассов.

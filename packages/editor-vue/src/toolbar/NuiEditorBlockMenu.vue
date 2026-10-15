@@ -1,5 +1,5 @@
 <template>
-  <NuiMenu :items="entries" :label="texts.blockType" class="nui-editor-toolbar__menu">
+  <NuiMenu :label="texts.blockType" class="nui-editor-toolbar__menu nui-editor-blocks">
     <template #trigger="{ attrs }">
       <NuiButton
         v-bind="attrs"
@@ -8,20 +8,31 @@
         tone="neutral"
         size="sm"
         tabindex="-1"
+        :icon-only="false"
         :aria-label="texts.currentBlock({ type: blocks.label })"
         :disabled="disabled"
       >
-        <span class="nui-editor-toolbar__current">{{ blocks.label }}</span>
+        <NuiIcon :alias="blocks.icon" class="nui-editor-toolbar__current-icon" />
         <NuiIcon alias="chevron-down" class="nui-editor-toolbar__chevron" />
       </NuiButton>
     </template>
+    <NuiMenuRadioGroup :model-value="current" @update:model-value="choose">
+      <NuiMenuRadioItem
+        v-for="option in blocks.options"
+        :key="option.key"
+        :value="option.key"
+        :icon="option.icon"
+        :aria-label="option.label"
+        :title="option.label"
+      />
+    </NuiMenuRadioGroup>
   </NuiMenu>
 </template>
 
 <script setup lang="ts">
 import type { Command } from '@numior/editor-core';
 import { useMessages } from '@numior/primitives';
-import { NuiButton, NuiIcon, NuiMenu, type NuiMenuEntry } from '@numior/vue';
+import { NuiButton, NuiIcon, NuiMenu, NuiMenuRadioGroup, NuiMenuRadioItem } from '@numior/vue';
 import { computed } from 'vue';
 import { editorMessages } from '../editor/editor.messages';
 import type { NuiEditorBlockMenuProps } from './toolbar.types';
@@ -34,18 +45,13 @@ const emit = defineEmits<{
 
 const texts = useMessages(editorMessages);
 
-const entries = computed((): NuiMenuEntry[] => [
-  {
-    type: 'radio-group',
-    value: blocks.options.find((option) => option.active)?.key ?? '',
-    items: blocks.options.map((option) => ({ value: option.key, label: option.label })),
-    onChange: (key) => {
-      const option = blocks.options.find((candidate) => candidate.key === key);
+const current = computed(() => blocks.options.find((option) => option.active)?.key ?? '');
 
-      if (option !== undefined) {
-        emit('run', option.command);
-      }
-    },
-  },
-]);
+const choose = (key: string | undefined): void => {
+  const option = blocks.options.find((candidate) => candidate.key === key);
+
+  if (option !== undefined) {
+    emit('run', option.command);
+  }
+};
 </script>

@@ -45,14 +45,18 @@
   background: var(--nui-primary-soft);
   color: var(--nui-primary-soft-foreground);
 }
-.nui-editor-toolbar__blocks .nui-button__content {
-  gap: var(--nui-space-1);
+.nui-editor-toolbar .nui-editor-toolbar__blocks {
+  padding-inline: var(--nui-space-2) var(--nui-space-1);
 }
-.nui-editor-toolbar__current {
-  min-inline-size: 5.5rem;
-  text-align: start;
+.nui-editor-toolbar__blocks .nui-button__content {
+  gap: 2px;
+}
+.nui-editor-toolbar__current-icon {
+  color: var(--nui-text);
 }
 .nui-editor-toolbar__chevron {
+  inline-size: 0.875rem;
+  block-size: 0.875rem;
   color: var(--nui-text-muted);
 }
 .nui-editor-toolbar__hint {
@@ -63,4 +67,7 @@
 .nui-editor-toolbar__hint .nui-kbd__key {
   color: inherit;
   opacity: 0.72;
+}
+.nui-editor-blocks.nui-menu {
+  min-inline-size: 0;
 }

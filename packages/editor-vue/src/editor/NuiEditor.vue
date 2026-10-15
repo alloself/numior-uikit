@@ -9,7 +9,6 @@
           'nui-editor--disabled': isDisabled,
           'nui-editor--readonly': isReadonly,
           'nui-editor--empty': empty,
-          'nui-editor--handles': handlesShown,
         },
       ]"
       ref="frame"
@@ -54,11 +53,23 @@
         ref="handle"
         v-model:open="handles.menuOpen.value"
         :state="current"
-        :index="handles.index.value"
+        :target="handles.slot.value"
         :dragging="handles.dragging.value"
         @run="onHandleRun"
         @grip="handles.onGripPointerdown"
       />
+      <div
+        v-if="handles.ghost.value"
+        class="nui-editor__ghost"
+        :style="{
+          '--_ghost-top': `${handles.ghost.value.top}px`,
+          '--_ghost-start': `${handles.ghost.value.start}px`,
+        }"
+        aria-hidden="true"
+      >
+        <NuiIcon alias="grip" class="nui-editor__ghost-grip" />
+        <span class="nui-editor__ghost-label">{{ handles.ghost.value.label }}</span>
+      </div>
       <div
         ref="drop"
         class="nui-editor__drop"
@@ -124,8 +135,8 @@ import {
   type Transaction,
 } from '@numior/editor-core';
 import { createEditorView, type EditorView } from '@numior/editor-core/view';
-import { useFieldControl } from '@numior/primitives';
-import { NuiFieldFrame } from '@numior/vue';
+import { provideIconDefaults, useFieldControl } from '@numior/primitives';
+import { NuiFieldFrame, NuiIcon } from '@numior/vue';
 import {
   computed,
   onBeforeUnmount,
@@ -140,6 +151,7 @@ import {
 } from 'vue';
 import { useMediaQuery } from '@vueuse/core';
 import NuiEditorBubble from '../bubble/NuiEditorBubble.vue';
+import { editorIcons } from '../icons/editor-icons';
 import NuiEditorLinkPanel from '../link/NuiEditorLinkPanel.vue';
 import NuiEditorToolbar from '../toolbar/NuiEditorToolbar.vue';
 import NuiEditorBlockHandle from '../handle/NuiEditorBlockHandle.vue';
@@ -181,6 +193,8 @@ const emit = defineEmits<{
 }>();
 
 const attrs = useAttrs();
+
+provideIconDefaults(editorIcons);
 
 const {
   attrs: controlAttrs,
@@ -339,6 +353,7 @@ const handlesShown = computed(() => blockHandles && editable.value);
 
 const handles = useBlockHandle({
   frame: frameElement,
+  content: contentElement,
   handle: handleElement,
   drop: dropElement,
   view: () => view,

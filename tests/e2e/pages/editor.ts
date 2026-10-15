@@ -117,23 +117,42 @@ export class EditorSection {
     return this.content.locator('.nui-editor__chunk > *').nth(index);
   }
 
+  item(text: string): Locator {
+    return this.content.locator('li', { hasText: text }).last();
+  }
+
   async dragBlock(from: number, to: number): Promise<void> {
-    await this.block(from).hover();
+    await this.drag(this.block(from), this.block(to));
+  }
 
-    const grip = await this.grip().boundingBox();
-    const target = await this.block(to).boundingBox();
+  async hoverStart(block: Locator): Promise<void> {
+    const box = await block.boundingBox();
 
-    if (grip === null || target === null) {
-      throw new Error('The block handle or its target has no box');
+    if (box === null) {
+      throw new Error('The block has no box');
     }
-    await this.page.mouse.move(grip.x + grip.width / 2, grip.y + grip.height / 2);
-    await this.page.mouse.down();
-    await this.page.mouse.move(grip.x + grip.width / 2, grip.y + 30, { steps: 4 });
+    await this.page.mouse.move(box.x + 4, box.y + 6);
+  }
 
-    await this.page.mouse.move(grip.x + grip.width / 2, target.y + target.height - 2, {
-      steps: 8,
+  async drag(source: Locator, target: Locator): Promise<void> {
+    await source.evaluate((element) => {
+      element.scrollIntoView({ block: 'center' });
     });
 
+    await this.hoverStart(source);
+
+    const grip = await this.grip().boundingBox();
+    const box = await target.boundingBox();
+
+    if (grip === null || box === null) {
+      throw new Error('The block handle or its target has no box');
+    }
+    const x = grip.x + grip.width / 2;
+
+    await this.page.mouse.move(x, grip.y + grip.height / 2);
+    await this.page.mouse.down();
+    await this.page.mouse.move(x, grip.y + 30, { steps: 4 });
+    await this.page.mouse.move(x, box.y + box.height - 2, { steps: 8 });
     await this.page.mouse.up();
   }
 

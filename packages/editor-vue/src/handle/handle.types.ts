@@ -1,7 +1,7 @@
-import type { EditorState } from '@numior/editor-core';
+import type { ChildSlot, EditorState } from '@numior/editor-core';
 
 export interface NuiEditorBlockHandleProps {
   state: EditorState;
-  index: number | undefined;
+  target: ChildSlot | undefined;
   dragging: boolean;
 }

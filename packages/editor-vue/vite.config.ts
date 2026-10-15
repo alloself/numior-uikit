@@ -21,6 +21,7 @@ export default defineConfig({
       external: [
         /^vue$/,
         /^@vueuse\/core$/,
+        /^lucide-vue-next(\/|$)/,
         /^@numior\/(editor-core|content|primitives|vue)(\/[\w-]+)?$/,
       ],
     },

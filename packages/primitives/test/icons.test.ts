@@ -1,7 +1,7 @@
 import { mount } from '@vue/test-utils';
 import { describe, expect, it, vi } from 'vitest';
 import { defineComponent, h } from 'vue';
-import { createNuiConfig, lazyIcon, provideIcons, useIcon } from '../src';
+import { createNuiConfig, lazyIcon, provideIconDefaults, provideIcons, useIcon } from '../src';
 import { captureSetup, nest, providing } from './harness/capture';
 
 const glyph = (name: string) => defineComponent({ name, render: () => h('svg') });
@@ -25,6 +25,22 @@ describe('icon registry', () => {
     expect(icons.check.value).toBe(innerCheck);
     expect(icons.x.value).toBe(outerX);
     expect(icons.missing.value).toBeUndefined();
+  });
+
+  it('lets a package fill in icons the app has not chosen', () => {
+    const appBold = glyph('AppBold');
+    const packageBold = glyph('PackageBold');
+    const packageQuote = glyph('PackageQuote');
+
+    const icons = captureSetup(() => ({ bold: useIcon('bold'), quote: useIcon('quote') }), {
+      wrap: nest(
+        providing(() => provideIcons({ bold: appBold })),
+        providing(() => provideIconDefaults({ bold: packageBold, quote: packageQuote })),
+      ),
+    }).value;
+
+    expect(icons.bold.value).toBe(appBold);
+    expect(icons.quote.value).toBe(packageQuote);
   });
 
   it('accepts app-level configuration through the plugin', () => {

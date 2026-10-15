@@ -2,7 +2,7 @@
   <div
     class="nui-editor-handle"
     :class="{
-      'nui-editor-handle--shown': index !== undefined,
+      'nui-editor-handle--shown': target !== undefined,
       'nui-editor-handle--dragging': dragging,
     }"
   >
@@ -32,11 +32,12 @@
 
 <script setup lang="ts">
 import {
-  deleteBlock,
-  duplicateBlock,
-  focusBlock,
-  moveBlock,
+  deleteChild,
+  duplicateChild,
+  focusChild,
+  moveChild,
   sequence,
+  type ChildSlot,
   type Command,
 } from '@numior/editor-core';
 import { useMessages } from '@numior/primitives';
@@ -46,7 +47,7 @@ import { editorMessages } from '../editor/editor.messages';
 import { slashItems } from '../slash/slash-items';
 import type { NuiEditorBlockHandleProps } from './handle.types';
 
-const { state, index, dragging } = defineProps<NuiEditorBlockHandleProps>();
+const { state, target, dragging } = defineProps<NuiEditorBlockHandleProps>();
 
 const open = defineModel<boolean>('open', { default: false });
 
@@ -57,45 +58,49 @@ const emit = defineEmits<{
 
 const texts = useMessages(editorMessages);
 
-const turnInto = (at: number): NuiMenuEntry[] =>
+const turnInto = (at: ChildSlot): NuiMenuEntry[] =>
   slashItems(state.doc.schema, texts.value)
     .filter((item) => item.key !== 'divider')
     .map((item) => ({
       key: item.key,
       label: item.label,
       icon: item.icon,
-      onSelect: () => emit('run', sequence(focusBlock(at), item.command)),
+      onSelect: () => emit('run', sequence(focusChild(at), item.command)),
     }));
 
+const siblings = (at: ChildSlot): number =>
+  (at.parent === state.doc.root.id ? state.doc.root : state.doc.byId(at.parent))?.content.length ??
+  0;
+
 const entries = computed((): NuiMenuEntry[] => {
-  const at = index ?? 0;
-  const last = state.doc.root.content.length - 1;
+  const at = target ?? { parent: state.doc.root.id, index: 0 };
+  const last = siblings(at) - 1;
 
   return [
     { type: 'sub', label: texts.value.turnInto, icon: 'refresh', items: turnInto(at) },
     {
       label: texts.value.duplicate,
       icon: 'copy',
-      onSelect: () => emit('run', duplicateBlock(at)),
+      onSelect: () => emit('run', duplicateChild(at)),
     },
     {
       label: texts.value.moveUp,
       icon: 'arrow-up',
-      disabled: at === 0,
-      onSelect: () => emit('run', moveBlock(at, at - 1)),
+      disabled: at.index === 0,
+      onSelect: () => emit('run', moveChild(at.parent, at.index, at.index - 1)),
     },
     {
       label: texts.value.moveDown,
       icon: 'arrow-down',
-      disabled: at >= last,
-      onSelect: () => emit('run', moveBlock(at, at + 1)),
+      disabled: at.index >= last,
+      onSelect: () => emit('run', moveChild(at.parent, at.index, at.index + 1)),
     },
     { type: 'separator' },
     {
       label: texts.value.deleteBlock,
       icon: 'trash',
       tone: 'error',
-      onSelect: () => emit('run', deleteBlock(at)),
+      onSelect: () => emit('run', deleteChild(at)),
     },
   ];
 });

@@ -1,11 +1,21 @@
-import { blockIndex, moveBlock, type Command, type EditorState } from '@numior/editor-core';
+import {
+  childNode,
+  moveChild,
+  selectionSlot,
+  slotAt,
+  type ChildSlot,
+  type Command,
+  type EditorState,
+  type ElementNode,
+} from '@numior/editor-core';
 import type { EditorView } from '@numior/editor-core/view';
 import { useReorder, type ReorderState } from '@numior/primitives';
 import { useMediaQuery } from '@vueuse/core';
-import { computed, ref, watch, type ComputedRef, type Ref } from 'vue';
+import { computed, ref, shallowRef, watch, type ComputedRef, type Ref, type ShallowRef } from 'vue';
 
 export interface BlockHandleOptions {
   readonly frame: Readonly<Ref<HTMLElement | null>>;
+  readonly content: Readonly<Ref<HTMLElement | null>>;
   readonly handle: Readonly<Ref<HTMLElement | null>>;
   readonly drop: Readonly<Ref<HTMLElement | null>>;
   readonly view: () => EditorView | undefined;
@@ -15,38 +25,57 @@ export interface BlockHandleOptions {
   readonly run: (command: Command) => boolean;
 }
 
+export interface BlockGhost {
+  readonly label: string;
+  readonly top: number;
+  readonly start: number;
+}
+
 export interface BlockHandle {
-  readonly index: ComputedRef<number | undefined>;
+  readonly slot: ComputedRef<ChildSlot | undefined>;
   readonly dragging: ComputedRef<boolean>;
+  readonly ghost: ShallowRef<BlockGhost | undefined>;
   readonly menuOpen: Ref<boolean>;
   readonly onPointermove: (event: PointerEvent) => void;
   readonly onPointerleave: () => void;
   readonly onGripPointerdown: (event: PointerEvent) => void;
 }
 
+interface Grab {
+  readonly slot: ChildSlot;
+  readonly offset: number;
+  readonly label: string;
+  readonly start: number;
+}
+
+const PUSHED = 'nui-editor__pushed';
+
 const BLOCK = '.nui-editor__chunk > *';
 
-const blockElement = (view: EditorView, state: EditorState, index: number): Element | undefined => {
-  const node = state.doc.root.content[index];
+const LABEL = 80;
 
-  return node?.kind === 'element' ? view.nodeDOM(node.id) : undefined;
+const ZONE = 48;
+
+const parentNode = (state: EditorState, id: string): ElementNode | undefined =>
+  id === state.doc.root.id ? state.doc.root : state.doc.byId(id);
+
+const elementOf = (view: EditorView, slot: ChildSlot | undefined): Element | undefined => {
+  const node = slot === undefined ? undefined : childNode(view.state.doc, slot);
+
+  return node === undefined ? undefined : view.nodeDOM(node.id);
 };
 
-const indexOfElement = (view: EditorView, element: Element): number | undefined => {
-  const pos = view.posAtDOM(element, 0);
-  const $pos = view.state.doc.resolve(pos);
+const sameSlot = (left: ChildSlot | undefined, right: ChildSlot | undefined): boolean =>
+  left?.parent === right?.parent && left?.index === right?.index;
 
-  return $pos.depth >= 1 ? $pos.indexAt(0) : $pos.index;
-};
-
-const indexAtY = (view: EditorView, clientY: number): number => {
-  const { state } = view;
+const indexAtY = (view: EditorView, parent: string, clientY: number): number => {
+  const count = parentNode(view.state, parent)?.content.length ?? 0;
   let low = 0;
-  let high = state.doc.root.content.length - 1;
+  let high = count - 1;
 
   while (low < high) {
     const middle = (low + high) >> 1;
-    const rect = blockElement(view, state, middle)?.getBoundingClientRect();
+    const rect = elementOf(view, { parent, index: middle })?.getBoundingClientRect();
 
     if (rect !== undefined && clientY > rect.bottom) {
       low = middle + 1;
@@ -54,13 +83,42 @@ const indexAtY = (view: EditorView, clientY: number): number => {
       high = middle;
     }
   }
-  return low;
+  return Math.max(0, low);
+};
+
+const markerSpace = (element: Element): number => {
+  const parent = element.parentElement;
+
+  return parent === null || getComputedStyle(element).display !== 'list-item'
+    ? 0
+    : Number.parseFloat(getComputedStyle(parent).paddingInlineStart) || 0;
+};
+
+const startEdge = (frame: DOMRect, element: Element, rtl: boolean): number => {
+  const rect = element.getBoundingClientRect();
+  const edge = rtl ? frame.right - rect.right : rect.left - frame.left;
+
+  return edge - markerSpace(element);
 };
 
 export const useBlockHandle = (options: BlockHandleOptions): BlockHandle => {
-  const hovered = ref<number | undefined>();
+  const hovered = shallowRef<ChildSlot | undefined>();
+  const ghost = shallowRef<BlockGhost | undefined>();
   const menuOpen = ref(false);
   const coarse = useMediaQuery('(pointer: coarse)');
+  let grab: Grab | undefined;
+  let pushed: Element | undefined;
+
+  const rtl = (): boolean =>
+    options.frame.value !== null && getComputedStyle(options.frame.value).direction === 'rtl';
+
+  const push = (element: Element | undefined): void => {
+    if (element !== pushed) {
+      pushed?.classList.remove(PUSHED);
+      element?.classList.add(PUSHED);
+      pushed = element;
+    }
+  };
 
   const place = (
     target: HTMLElement | null,
@@ -74,78 +132,147 @@ export const useBlockHandle = (options: BlockHandleOptions): BlockHandle => {
       return;
     }
     target.style.top = `${String((edge === 'top' ? rect.top : rect.bottom) - frame.top)}px`;
+    target.style.insetInlineStart = `${String(startEdge(frame, element ?? target, rtl()))}px`;
   };
 
-  const showDrop = (state: ReorderState): void => {
+  const follow = (state: ReorderState): void => {
     const view = options.view();
-    const drop = options.drop.value;
-    const target = state.phase === 'dragging' && view !== undefined ? state : undefined;
+    const frame = options.frame.value?.getBoundingClientRect();
+    const dragging = state.phase === 'dragging' ? state : undefined;
 
-    if (target === undefined || view === undefined) {
-      drop?.style.removeProperty('top');
+    if (dragging === undefined || view === undefined || grab === undefined || frame === undefined) {
+      ghost.value = undefined;
+      options.drop.value?.style.removeProperty('top');
       return;
     }
+    const target = elementOf(view, { parent: grab.slot.parent, index: dragging.to });
 
-    place(
-      drop,
-      blockElement(view, view.state, target.to),
-      target.to > target.from ? 'bottom' : 'top',
-    );
+    place(options.drop.value, target, dragging.to > dragging.from ? 'bottom' : 'top');
+
+    ghost.value = {
+      label: grab.label,
+      top: Math.min(Math.max(0, dragging.position - frame.top - grab.offset), frame.height),
+      start: grab.start,
+    };
   };
 
   const reorder = useReorder({
     axis: 'y',
-    count: () => options.state().doc.root.content.length,
+    count: () => {
+      const parent = grab === undefined ? undefined : parentNode(options.state(), grab.slot.parent);
+
+      return parent?.content.length ?? 0;
+    },
     container: options.frame,
     indexAt: (client) => {
       const view = options.view();
 
-      return view === undefined ? 0 : indexAtY(view, client);
+      return view === undefined || grab === undefined
+        ? 0
+        : indexAtY(view, grab.slot.parent, client);
     },
     onMove: (from, to) => {
-      options.run(moveBlock(from, to));
+      if (grab !== undefined) {
+        options.run(moveChild(grab.slot.parent, from, to));
+      }
       hovered.value = undefined;
     },
-    onChange: showDrop,
+    onChange: follow,
   });
 
   const dragging = computed(() => reorder.state.value.phase === 'dragging');
 
-  const index = computed(() => {
+  const slot = computed(() => {
     if (!options.enabled()) {
       return undefined;
     }
-    const caret = coarse.value && options.focused() ? blockIndex(options.state()) : undefined;
+    const caret = coarse.value && options.focused() ? selectionSlot(options.state()) : undefined;
+    const source = reorder.source.value;
 
-    return reorder.source.value ?? hovered.value ?? caret;
+    return source !== undefined && grab !== undefined
+      ? { parent: grab.slot.parent, index: source }
+      : (hovered.value ?? caret);
   });
 
   watch(
-    index,
-    (value) => {
+    slot,
+    (value, previous) => {
       const view = options.view();
 
-      if (value !== undefined && view !== undefined) {
-        place(options.handle.value, blockElement(view, view.state, value), 'top');
+      if (sameSlot(value, previous) && value !== undefined) {
+        return;
       }
+      const element = view === undefined ? undefined : elementOf(view, value);
+
+      place(options.handle.value, element, 'top');
+      push(element);
     },
     { flush: 'post' },
   );
 
+  const nearStart = (
+    event: PointerEvent,
+    view: EditorView,
+    next: ChildSlot | undefined,
+  ): boolean => {
+    const element = elementOf(view, next);
+    const rect = element?.getBoundingClientRect();
+
+    if (element === undefined || rect === undefined) {
+      return false;
+    }
+    const space = markerSpace(element);
+    const offset = rtl() ? rect.right + space - event.clientX : event.clientX - rect.left + space;
+
+    return offset <= ZONE + space;
+  };
+
   const onPointermove = (event: PointerEvent): void => {
     const view = options.view();
-    const target = event.target instanceof Element ? event.target.closest(BLOCK) : null;
+    const target = event.target;
 
-    if (view === undefined || target === null || menuOpen.value || dragging.value) {
+    if (
+      view === undefined ||
+      !(target instanceof Element) ||
+      target.closest(BLOCK) === null ||
+      options.content.value?.contains(target) !== true ||
+      menuOpen.value ||
+      dragging.value
+    ) {
       return;
     }
-    hovered.value = indexOfElement(view, target);
-    place(options.handle.value, target, 'top');
+    const next = slotAt(view.state.doc, view.posAtDOM(target, 0));
+
+    if (!sameSlot(next, hovered.value)) {
+      hovered.value = nearStart(event, view, next) ? next : undefined;
+    }
+  };
+
+  const onGripPointerdown = (event: PointerEvent): void => {
+    const view = options.view();
+    const current = slot.value;
+    const element = view === undefined ? undefined : elementOf(view, current);
+    const frame = options.frame.value?.getBoundingClientRect();
+    const rect = element?.getBoundingClientRect();
+
+    if (current === undefined || rect === undefined || frame === undefined) {
+      return;
+    }
+
+    grab = {
+      slot: current,
+      offset: event.clientY - rect.top,
+      label: (element?.textContent ?? '').trim().slice(0, LABEL),
+      start: element === undefined ? 0 : startEdge(frame, element, rtl()),
+    };
+
+    reorder.onPointerdown(current.index, event);
   };
 
   return {
-    index,
+    slot,
     dragging,
+    ghost,
     menuOpen,
     onPointermove,
     onPointerleave: () => {
@@ -153,12 +280,6 @@ export const useBlockHandle = (options: BlockHandleOptions): BlockHandle => {
         hovered.value = undefined;
       }
     },
-    onGripPointerdown: (event) => {
-      const current = index.value;
-
-      if (current !== undefined) {
-        reorder.onPointerdown(current, event);
-      }
-    },
+    onGripPointerdown,
   };
 };

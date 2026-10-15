@@ -24,14 +24,17 @@ export type {
   TextNode,
 } from './model/node.types';
 export {
-  blockIndex,
-  blockStart,
-  deleteBlock,
-  focusBlock,
-  duplicateBlock,
-  moveBlock,
-  moveCurrentBlock,
+  childNode,
+  childStart,
+  deleteChild,
+  duplicateChild,
+  focusChild,
+  moveChild,
+  moveCurrent,
+  selectionSlot,
+  slotAt,
 } from './commands/move';
+export type { ChildSlot } from './commands/move';
 export { insertHTML, insertPlainText, pasteSchema } from './commands/paste';
 export { fromHTML } from './html/parse';
 export { detectPasteSource } from './html/sources';

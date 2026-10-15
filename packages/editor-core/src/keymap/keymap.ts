@@ -1,4 +1,4 @@
-import { moveCurrentBlock } from '../commands/move';
+import { moveCurrent } from '../commands/move';
 import { liftListItem, sinkListItem } from '../commands/blocks';
 import { selectAll } from '../commands/commands';
 import { intentCommand } from '../commands/input';
@@ -83,8 +83,8 @@ export const baseKeymap: Keymap = {
   'Mod-z': undo,
   'Mod-Shift-z': redo,
   'Mod-y': redo,
-  'Mod-Shift-ArrowUp': moveCurrentBlock(-1),
-  'Mod-Shift-ArrowDown': moveCurrentBlock(1),
+  'Mod-Shift-ArrowUp': moveCurrent(-1),
+  'Mod-Shift-ArrowDown': moveCurrent(1),
   Tab: sinkListItem,
   'Shift-Tab': liftListItem,
 };

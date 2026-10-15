@@ -74,23 +74,6 @@ export type IconAlias =
   | 'eraser'
   | 'table'
   | 'move-horizontal'
-  | 'bold'
-  | 'italic'
-  | 'underline'
-  | 'strikethrough'
-  | 'list'
-  | 'list-ordered'
-  | 'list-todo'
-  | 'quote'
-  | 'undo'
-  | 'redo'
-  | 'separator'
-  | 'text'
-  | 'heading-1'
-  | 'heading-2'
-  | 'heading-3'
-  | 'code-block'
-  | 'text-colour'
   | (string & NonNullable<unknown>);
 
 export type IconRegistry = Readonly<Record<string, Component>>;
@@ -103,6 +86,12 @@ const EMPTY: IconRegistry = Object.freeze({});
 
 export const provideIcons = (registry: IconRegistry): IconRegistry => {
   const merged: IconRegistry = { ...inject(ICONS_KEY, EMPTY), ...registry };
+  provide(ICONS_KEY, merged);
+  return merged;
+};
+
+export const provideIconDefaults = (registry: IconRegistry): IconRegistry => {
+  const merged: IconRegistry = { ...registry, ...inject(ICONS_KEY, EMPTY) };
   provide(ICONS_KEY, merged);
   return merged;
 };

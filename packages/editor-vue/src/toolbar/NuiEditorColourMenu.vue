@@ -20,20 +20,15 @@
         :model-value="colours.colour ?? ''"
         @update:model-value="choose('color', $event)"
       >
-        <NuiMenuRadioItem value="">
-          <span
-            class="nui-editor-colours__swatch nui-editor-colours__swatch--text"
-            aria-hidden="true"
-          />
-          {{ texts.defaultColour }}
-        </NuiMenuRadioItem>
-        <NuiMenuRadioItem v-for="name in colours.colours" :key="name" :value="name">
-          <span
-            class="nui-editor-colours__swatch nui-editor-colours__swatch--text"
-            :class="`nui-editor-colours--text-${name}`"
-            aria-hidden="true"
-          />
-          {{ texts.colourName({ name }) }}
+        <NuiMenuRadioItem v-for="option in textOptions" :key="option.value" :value="option.value">
+          <span class="nui-editor-colours__option">
+            <span
+              class="nui-editor-colours__swatch nui-editor-colours__swatch--text"
+              :class="option.modifier"
+              aria-hidden="true"
+            />
+            {{ option.label }}
+          </span>
         </NuiMenuRadioItem>
       </NuiMenuRadioGroup>
     </template>
@@ -44,20 +39,15 @@
         :model-value="colours.highlight ?? ''"
         @update:model-value="choose('highlight', $event)"
       >
-        <NuiMenuRadioItem value="">
-          <span
-            class="nui-editor-colours__swatch nui-editor-colours__swatch--fill"
-            aria-hidden="true"
-          />
-          {{ texts.noHighlight }}
-        </NuiMenuRadioItem>
-        <NuiMenuRadioItem v-for="name in colours.highlights" :key="name" :value="name">
-          <span
-            class="nui-editor-colours__swatch nui-editor-colours__swatch--fill"
-            :class="`nui-editor-colours--fill-${name}`"
-            aria-hidden="true"
-          />
-          {{ texts.colourName({ name }) }}
+        <NuiMenuRadioItem v-for="option in fillOptions" :key="option.value" :value="option.value">
+          <span class="nui-editor-colours__option">
+            <span
+              class="nui-editor-colours__swatch nui-editor-colours__swatch--fill"
+              :class="option.modifier"
+              aria-hidden="true"
+            />
+            {{ option.label }}
+          </span>
         </NuiMenuRadioItem>
       </NuiMenuRadioGroup>
     </template>
@@ -74,8 +64,9 @@ import {
   NuiMenuRadioItem,
   NuiMenuSeparator,
 } from '@numior/vue';
+import { computed } from 'vue';
 import { editorMessages } from '../editor/editor.messages';
-import type { ColourMark, NuiEditorColourMenuProps } from './toolbar.types';
+import type { ColourMark, ColourOption, NuiEditorColourMenuProps } from './toolbar.types';
 
 const { colours, disabled = false } = defineProps<NuiEditorColourMenuProps>();
 
@@ -84,6 +75,23 @@ const emit = defineEmits<{
 }>();
 
 const texts = useMessages(editorMessages);
+
+const optionsOf = (
+  names: readonly string[],
+  kind: 'text' | 'fill',
+  none: string,
+): ColourOption[] => [
+  { value: '', label: none, modifier: undefined },
+  ...names.map((name) => ({
+    value: name,
+    label: texts.value.colourName({ name }),
+    modifier: `nui-editor-colours--${kind}-${name}`,
+  })),
+];
+
+const textOptions = computed(() => optionsOf(colours.colours, 'text', texts.value.defaultColour));
+
+const fillOptions = computed(() => optionsOf(colours.highlights, 'fill', texts.value.noHighlight));
 
 const choose = (mark: ColourMark, value: string | undefined): void => {
   emit('choose', mark, value === undefined || value === '' ? null : value);

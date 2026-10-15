@@ -23,6 +23,9 @@ afterEach(() => {
 const block = (id: string, type: string, text: string, attrs = {}) =>
   contentSchema.element(type, { id, attrs, content: [contentSchema.text(text)] });
 
+const item = (id: string, text: string) =>
+  contentSchema.element('list_item', { id, content: [block(`${id}p`, 'paragraph', text)] });
+
 const three = () =>
   toJSON(
     createDoc(
@@ -47,6 +50,11 @@ describe('NuiEditor block handles', () => {
     await editor.hoverBlock(1);
 
     expect(editor.handleShown).toBe(true);
+    expect(editor.pushedTexts).toEqual(['h2:b']);
+
+    await editor.hoverGap();
+
+    expect(editor.pushedTexts).toEqual(['h2:b']);
 
     await editor.blockAction('Duplicate');
 
@@ -67,6 +75,38 @@ describe('NuiEditor block handles', () => {
 
     expect(editor.blockTexts).toEqual(['h2:b', 'h2:b', 'h1:c']);
     expect(editor.focused).toBe(true);
+  });
+
+  it('puts the handle on list items and moves them among their siblings', async () => {
+    const editor = mounted({
+      document: toJSON(
+        createDoc(
+          contentSchema,
+          contentSchema.element('doc', {
+            id: 'root',
+            content: [
+              contentSchema.element('bullet_list', {
+                id: 'list',
+                content: [item('i1', 'one'), item('i2', 'two'), item('i3', 'three')],
+              }),
+            ],
+          }),
+        ),
+      ),
+    });
+
+    await editor.hoverItem('one');
+
+    expect(editor.handleShown).toBe(true);
+
+    await editor.blockAction('Move down');
+
+    expect(editor.itemTexts).toEqual(['two', 'one', 'three']);
+
+    await editor.hoverItem('three');
+    await editor.blockAction('Delete');
+
+    expect(editor.itemTexts).toEqual(['two', 'one']);
   });
 
   it('drags a block by its handle past the blocks below it', async () => {
