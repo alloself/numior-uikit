@@ -96,6 +96,41 @@ describe('transforms', () => {
     expect(createTransform(linked.doc).removeMark(0, 9).steps).toHaveLength(2);
   });
 
+  it('marks a range with mixed marks in one step and takes back exactly what it changed', () => {
+    const bold = notes.mark('bold');
+
+    const before = createDoc(
+      notes,
+      doc(
+        node('paragraph', ['a', text('b', [bold]), 'c']),
+        node('paragraph', [text('d', [bold]), 'e']),
+      ),
+    );
+
+    const added = createTransform(before).addMark(1, 9, bold);
+
+    expect(added.steps).toHaveLength(1);
+    expect(runs(added.doc, 0)).toEqual([['abc', ['bold']]]);
+    expect(undo(added).root).toEqual(before.root);
+
+    const removed = createTransform(before).removeMark(1, 9, bold);
+
+    expect(removed.steps).toHaveLength(1);
+    expect(runs(removed.doc, 1)).toEqual([['de', []]]);
+    expect(undo(removed).root).toEqual(before.root);
+
+    expect(invertStep(added.steps[0] ?? { kind: 'docAttrs', attrs: {} }, before)).toEqual({
+      kind: 'removeMark',
+      from: 1,
+      to: 8,
+      mark: bold,
+      skip: [
+        { from: 2, to: 3 },
+        { from: 6, to: 7 },
+      ],
+    });
+  });
+
   it('splits blocks with a fresh id and an optional new type and joins them back', () => {
     const before = start();
 

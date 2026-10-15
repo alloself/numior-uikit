@@ -1,6 +1,11 @@
 import type { Doc, Slice } from '../doc/doc.types';
 import type { Attrs, Mark } from '../model/node.types';
 
+export interface StepSpan {
+  readonly from: number;
+  readonly to: number;
+}
+
 export type Step =
   | { readonly kind: 'replace'; readonly from: number; readonly to: number; readonly slice: Slice }
   | {
@@ -12,8 +17,13 @@ export type Step =
       readonly slice: Slice;
       readonly insert: number;
     }
-  | { readonly kind: 'addMark'; readonly from: number; readonly to: number; readonly mark: Mark }
-  | { readonly kind: 'removeMark'; readonly from: number; readonly to: number; readonly mark: Mark }
+  | {
+      readonly kind: 'addMark' | 'removeMark';
+      readonly from: number;
+      readonly to: number;
+      readonly mark: Mark;
+      readonly skip?: readonly StepSpan[] | undefined;
+    }
   | { readonly kind: 'attrs'; readonly pos: number; readonly attrs: Attrs }
   | { readonly kind: 'docAttrs'; readonly attrs: Attrs };
 

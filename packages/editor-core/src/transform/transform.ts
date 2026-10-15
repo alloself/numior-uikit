@@ -110,8 +110,11 @@ export const createTransform = (start: Doc, options: TransformOptions = {}): Tra
   };
 
   const markSteps = (runs: readonly Portion[], make: (run: Portion) => Step): void => {
-    for (const run of runs) {
-      maybeStep(make(run));
+    const first = runs[0];
+    const last = runs.at(-1);
+
+    if (first !== undefined && last !== undefined) {
+      maybeStep(make({ from: first.from, to: last.to, marks: [] }));
     }
   };
 

@@ -3,7 +3,7 @@ import { normalizeContent, sameMarks } from '../model/node';
 import { applyAttrs, applyDocAttrs } from './attrs';
 import { createStepMap, EMPTY_MAP } from './mapping';
 import type { Mappable, StepMap } from './mapping.types';
-import { applyMark } from './marks';
+import { applyMark, heldSpans } from './marks';
 import { applyPlan, aroundPlan, replacePlan, sliceSize } from './replace';
 import type { Step, StepResult } from './step.types';
 import { cutTokens, rebuild, sliceFrame } from './tokens';
@@ -38,7 +38,7 @@ export const applyStep = (doc: Doc, step: Step): StepResult => {
     }
     case 'addMark':
     case 'removeMark':
-      return applyMark(doc, step.from, step.to, step.mark, step.kind === 'addMark');
+      return applyMark(doc, step.from, step.to, step.mark, step.kind === 'addMark', step.skip);
     case 'attrs':
       return applyAttrs(doc, step.pos, step.attrs);
     case 'docAttrs':
@@ -88,6 +88,19 @@ const invertAround = (step: Extract<Step, { kind: 'replaceAround' }>, doc: Doc):
   };
 };
 
+const invertMark = (step: Extract<Step, { kind: 'addMark' | 'removeMark' }>, doc: Doc): Step => {
+  const added = step.kind === 'addMark';
+  const skip = heldSpans(doc, step.from, step.to, step.mark, added);
+
+  return {
+    kind: added ? 'removeMark' : 'addMark',
+    from: step.from,
+    to: step.to,
+    mark: step.mark,
+    ...(skip.length === 0 ? {} : { skip }),
+  };
+};
+
 export const invertStep = (step: Step, doc: Doc): Step => {
   switch (step.kind) {
     case 'replace':
@@ -100,9 +113,8 @@ export const invertStep = (step: Step, doc: Doc): Step => {
     case 'replaceAround':
       return invertAround(step, doc);
     case 'addMark':
-      return { ...step, kind: 'removeMark' };
     case 'removeMark':
-      return { ...step, kind: 'addMark' };
+      return invertMark(step, doc);
     case 'attrs': {
       const target = doc.nodeAt(step.pos);
 
@@ -149,7 +161,17 @@ const mapMarkStep = (
   const from = mapping.map(step.from, 1);
   const to = mapping.map(step.to, -1);
 
-  return from >= to ? undefined : { ...step, from, to };
+  const skip = (step.skip ?? []).flatMap((span) => {
+    const start = mapping.map(span.from, 1);
+    const end = mapping.map(span.to, -1);
+
+    return start < end ? [{ from: start, to: end }] : [];
+  });
+
+  if (from >= to) {
+    return undefined;
+  }
+  return skip.length === 0 ? { ...step, from, to, skip: undefined } : { ...step, from, to, skip };
 };
 
 export const mapStep = (step: Step, mapping: Mappable): Step | undefined => {
@@ -209,6 +231,8 @@ export const mergeSteps = (first: Step, second: Step): Step | undefined => {
     (first.kind === 'addMark' || first.kind === 'removeMark') &&
     second.kind === first.kind &&
     sameMarks([first.mark], [second.mark]) &&
+    (first.skip ?? []).length === 0 &&
+    (second.skip ?? []).length === 0 &&
     first.to >= second.from &&
     second.to >= first.from
   ) {
