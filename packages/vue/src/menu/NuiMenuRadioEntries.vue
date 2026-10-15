@@ -4,6 +4,7 @@
       v-for="option in entry.items"
       :key="option.value"
       :value="option.value"
+      :icon="option.icon"
       :disabled="option.disabled"
     >
       {{ option.label }}

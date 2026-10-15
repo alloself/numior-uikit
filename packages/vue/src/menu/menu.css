@@ -87,23 +87,15 @@
   opacity: var(--nui-disabled-opacity);
   cursor: not-allowed;
 }
-.nui-menu-item--checkable {
-  padding-inline-start: calc(var(--nui-space-2) * 2 + var(--_indicator));
-}
-.nui-menu-item__indicator {
-  position: absolute;
-  inset-inline-start: var(--nui-space-2);
+.nui-menu-item__check {
   display: inline-flex;
+  flex: none;
   align-items: center;
   justify-content: center;
   inline-size: var(--_indicator);
   block-size: var(--_indicator);
-}
-.nui-menu-item__dot {
-  inline-size: 0.5rem;
-  block-size: 0.5rem;
-  border-radius: var(--nui-radius-full);
-  background: currentColor;
+  margin-inline-start: auto;
+  color: var(--nui-primary);
 }
 .nui-menu-item__icon {
   color: var(--nui-text-muted);

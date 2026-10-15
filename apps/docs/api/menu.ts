@@ -171,6 +171,7 @@ const docs: DocsMap = {
   NuiMenuRadioItem: {
     props: {
       value: { ru: 'Значение, которое получает группа.', en: 'Value the group receives.' },
+      icon,
       disabled,
       closeOnSelect: { ru: 'Закрывать меню после выбора.', en: 'Close the menu after picking.' },
     },

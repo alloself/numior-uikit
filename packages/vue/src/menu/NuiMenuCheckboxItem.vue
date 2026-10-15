@@ -3,15 +3,17 @@
     type="button"
     role="menuitemcheckbox"
     tabindex="-1"
-    class="nui-menu-item nui-menu-item--checkable"
+    class="nui-menu-item"
     :class="{ 'nui-menu-item--disabled': disabled, 'nui-menu-item--checked': checked }"
     :aria-checked="checked ? 'true' : 'false'"
     :aria-disabled="disabled || undefined"
     @click="toggle"
   >
     <NuiMenuRow :icon="icon">
-      <template #indicator><NuiIcon v-if="checked" alias="check" /></template>
       <slot />
+      <template #trailing>
+        <span class="nui-menu-item__check"><NuiIcon v-if="checked" alias="check" /></span>
+      </template>
     </NuiMenuRow>
   </button>
 </template>

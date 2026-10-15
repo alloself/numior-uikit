@@ -34,6 +34,7 @@ export interface NuiMenuCheckboxEntry {
 export interface NuiMenuRadioOption {
   readonly value: string;
   readonly label: string;
+  readonly icon?: IconAlias | undefined;
   readonly disabled?: boolean | undefined;
 }
 
@@ -122,6 +123,7 @@ export interface NuiMenuCheckboxItemProps {
 
 export interface NuiMenuRadioItemProps<T> {
   value: T;
+  icon?: IconAlias | undefined;
   disabled?: boolean | undefined;
   closeOnSelect?: boolean | undefined;
 }

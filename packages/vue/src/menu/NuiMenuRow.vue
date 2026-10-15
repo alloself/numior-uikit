@@ -1,7 +1,4 @@
 <template>
-  <span v-if="$slots.indicator" class="nui-menu-item__indicator">
-    <slot name="indicator" />
-  </span>
   <NuiIcon v-if="icon" :alias="icon" class="nui-menu-item__icon" />
   <span class="nui-menu-item__label"
     ><bdi><slot /></bdi
