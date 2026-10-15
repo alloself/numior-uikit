@@ -31,6 +31,9 @@ export interface NuiEditorMessages {
   readonly noHighlight: string;
   readonly colourName: (params: { readonly name: string }) => string;
   readonly formatting: string;
+  readonly callout: string;
+  readonly toggle: string;
+  readonly blocks: string;
 }
 
 const EN_COLOURS: Readonly<Record<string, string>> = {
@@ -90,6 +93,9 @@ export const editorMessages: NuiMessageCatalog<'editor'> = {
     noHighlight: 'None',
     colourName: ({ name }) => EN_COLOURS[name] ?? name,
     formatting: 'Selection formatting',
+    callout: 'Callout',
+    toggle: 'Toggle',
+    blocks: 'Blocks',
   },
   ru: {
     toolbar: 'Форматирование',
@@ -122,5 +128,8 @@ export const editorMessages: NuiMessageCatalog<'editor'> = {
     noHighlight: 'Нет',
     colourName: ({ name }) => RU_COLOURS[name] ?? name,
     formatting: 'Форматирование выделения',
+    callout: 'Выноска',
+    toggle: 'Раскрывающийся блок',
+    blocks: 'Блоки',
   },
 };

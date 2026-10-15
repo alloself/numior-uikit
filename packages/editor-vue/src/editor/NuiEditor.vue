@@ -58,6 +58,16 @@
         @colour="overlays.colour"
         @leave="editor.focus()"
       />
+      <NuiEditorSlashMenu
+        v-if="ready"
+        :id="slashId"
+        :items="slash.items.value"
+        :active="slash.active.value"
+        :anchor="anchorElement"
+        :open="slash.open.value"
+        @choose="slash.choose"
+        @hover="slash.hover"
+      />
       <NuiEditorLinkPanel
         v-if="hasLinks && ready"
         v-model:open="overlays.linkOpen.value"
@@ -105,6 +115,7 @@ import {
   shallowRef,
   toRaw,
   useAttrs,
+  useId,
   useTemplateRef,
   watch,
 } from 'vue';
@@ -112,6 +123,8 @@ import { useMediaQuery } from '@vueuse/core';
 import NuiEditorBubble from '../bubble/NuiEditorBubble.vue';
 import NuiEditorLinkPanel from '../link/NuiEditorLinkPanel.vue';
 import NuiEditorToolbar from '../toolbar/NuiEditorToolbar.vue';
+import NuiEditorSlashMenu from '../slash/NuiEditorSlashMenu.vue';
+import { useSlash } from '../slash/use-slash';
 import { useEditorOverlays } from './use-editor-overlays';
 import type { NuiEditorApi, NuiEditorPaste, NuiEditorProps } from './editor.types';
 
@@ -178,7 +191,17 @@ const limitedSchema = schema.restrict({
   },
 });
 
+const slashId = useId();
+
+const slash = useSlash({
+  schema,
+  state: () => current.value,
+  enabled: () => editable.value && ready.value && overlays.focused.value,
+  run: (command) => run(command),
+});
+
 const plugins = [
+  slash.plugin,
   pasteSchema(limitedSchema),
   inputRules(markdownRules),
   keymap(baseKeymap),
@@ -216,6 +239,12 @@ const toolOptions = computed(() => ({ colours, highlights }));
 const validLink = (href: string): boolean =>
   schema.marks.get('link')?.attrs.href?.verify?.(href) ?? true;
 
+const slashOption = computed(() => {
+  const item = slash.items.value[slash.active.value];
+
+  return slash.open.value && item !== undefined ? `${slashId}-${item.key}` : undefined;
+});
+
 const contentAttrs = computed(() => ({
   id: controlAttrs.value.id,
   'aria-labelledby': field.value?.labelledBy.value,
@@ -225,6 +254,8 @@ const contentAttrs = computed(() => ({
   'aria-readonly': isReadonly.value || undefined,
   'aria-disabled': isDisabled.value || undefined,
   'aria-placeholder': placeholder,
+  'aria-controls': slash.open.value ? slashId : undefined,
+  'aria-activedescendant': slashOption.value,
 }));
 
 const onPaste = (event: ClipboardEvent): void => {
@@ -264,6 +295,7 @@ const overlays = useEditorOverlays({
   run: (command) => run(command),
   focus: () => view?.focus(),
   bubble: () => bubbleToolbar.value,
+  caret: () => slash.open.value,
   editable: () => editable.value,
 });
 

@@ -21,11 +21,13 @@ export interface EditorOverlayOptions {
   readonly run: (command: Command) => boolean;
   readonly focus: () => void;
   readonly bubble: () => boolean;
+  readonly caret: () => boolean;
   readonly editable: () => boolean;
 }
 
 export interface EditorOverlays {
   readonly bubbleOpen: ComputedRef<boolean>;
+  readonly focused: Readonly<Ref<boolean>>;
   readonly linkOpen: Ref<boolean>;
   readonly linkHref: Ref<string>;
   readonly linkRemovable: Ref<boolean>;
@@ -66,7 +68,7 @@ export const useEditorOverlays = (options: EditorOverlayOptions): EditorOverlays
   );
 
   const place = (): void => {
-    const view = bubbleOpen.value || linkOpen.value ? options.view() : undefined;
+    const view = bubbleOpen.value || linkOpen.value || options.caret() ? options.view() : undefined;
     const anchor = options.anchor.value;
     const frame = options.frame.value?.getBoundingClientRect();
 
@@ -123,7 +125,7 @@ export const useEditorOverlays = (options: EditorOverlayOptions): EditorOverlays
     options.focus();
   };
 
-  watch([options.state, bubbleOpen, linkOpen], place, { flush: 'post' });
+  watch([options.state, bubbleOpen, linkOpen, options.caret], place, { flush: 'post' });
 
   useEventListener(globalThis, 'pointerup', () => {
     selecting.value = false;
@@ -131,6 +133,7 @@ export const useEditorOverlays = (options: EditorOverlayOptions): EditorOverlays
 
   return {
     bubbleOpen,
+    focused: inside,
     linkOpen,
     linkHref,
     linkRemovable,

@@ -13,6 +13,8 @@ const noRects = (): DOMRectList => document.createElement('div').getClientRects(
 
 const noRect = (): DOMRect => new DOMRect();
 
+const stay = (): void => {};
+
 const showPopover = function (this: HTMLElement): void {
   shown.add(this);
   announce(this, 'open');
@@ -28,6 +30,7 @@ export const installPopovers = (): void => {
   Range.prototype.getBoundingClientRect = noRect;
   HTMLElement.prototype.showPopover = showPopover;
   HTMLElement.prototype.hidePopover = hidePopover;
+  Element.prototype.scrollIntoView = stay;
 };
 
 export const isShown = (element: Element | null): boolean =>

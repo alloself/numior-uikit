@@ -103,3 +103,27 @@
 .nui-editor-colours--fill-red {
   --_fill: var(--nui-content-highlight-red);
 }
+.nui-editor-slash.nui-popover {
+  min-inline-size: 14rem;
+  max-block-size: min(20rem, 50vh);
+  padding: var(--nui-space-1);
+  overflow-y: auto;
+}
+.nui-editor-slash__option {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: var(--nui-space-2);
+  min-block-size: 2rem;
+  padding: var(--nui-space-1) var(--nui-space-2);
+  border-radius: var(--nui-radius-sm);
+  color: var(--nui-text);
+  cursor: default;
+  transition: background-color var(--nui-duration-fast) var(--nui-easing);
+}
+.nui-editor-slash__option--active {
+  background: var(--nui-neutral-soft);
+}
+.nui-editor-slash__icon {
+  color: var(--nui-text-muted);
+}

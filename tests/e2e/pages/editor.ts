@@ -109,6 +109,10 @@ export class EditorSection {
     return this.root.locator('.nui-editor-bubble');
   }
 
+  slashMenu(): Locator {
+    return this.root.locator('.nui-editor-slash');
+  }
+
   linkField(): Locator {
     return this.root.locator('.nui-editor-link input');
   }

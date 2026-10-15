@@ -146,6 +146,13 @@ export type { Keymap } from './keymap/keymap';
 export { inputRules } from './rules/input-rules';
 export type { InputRule, InputRuleMatch } from './rules/input-rules.types';
 export { markdownRules } from './rules/markdown';
+export { createSuggestion } from './suggest/suggest';
+export type {
+  Suggestion,
+  SuggestionMatch,
+  SuggestionSpec,
+  SuggestionState,
+} from './suggest/suggest.types';
 export { createMetaKey, definePlugin } from './state/plugin';
 export {
   isCursor,

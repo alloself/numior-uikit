@@ -266,6 +266,28 @@ export class EditorDriver {
     return isShown(this.root.querySelector('.nui-editor-link'));
   }
 
+  get slashShown(): boolean {
+    return isShown(this.root.querySelector('.nui-editor-slash'));
+  }
+
+  get slashOptions(): readonly string[] {
+    return [...this.root.querySelectorAll('.nui-editor-slash [role="option"]')].map(
+      (option) => option.textContent?.trim() ?? '',
+    );
+  }
+
+  async clickSlash(label: string): Promise<void> {
+    const option = [...this.root.querySelectorAll('.nui-editor-slash [role="option"]')].find(
+      (item) => item.textContent?.trim() === label,
+    );
+
+    if (!(option instanceof HTMLElement)) {
+      throw new Error(`No slash option reads ${label}`);
+    }
+    option.click();
+    await nextTick();
+  }
+
   get bubbleShown(): boolean {
     return isShown(this.root.querySelector('.nui-editor-bubble'));
   }

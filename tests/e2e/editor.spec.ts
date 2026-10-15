@@ -195,6 +195,26 @@ test.describe('editor', () => {
     await expect(editor.preview.locator('.nui-content__colour--red')).toHaveText('world');
   });
 
+  test('turns blocks from the slash menu by keyboard and pointer', async ({ page }) => {
+    const { editor } = await openEditor(page);
+
+    await editor.clear();
+    await page.keyboard.type('/');
+    await expect(editor.slashMenu()).toBeVisible();
+    await page.keyboard.type('h2');
+    await expect(editor.slashMenu().getByRole('option')).toHaveText(['Заголовок 2']);
+    await page.keyboard.press('Enter');
+    await expect.poll(() => editor.blockTags()).toEqual(['h2']);
+    await expect(editor.slashMenu()).toBeHidden();
+    await page.keyboard.type('Plan');
+    await page.keyboard.press('Enter');
+    await page.keyboard.type('/цит');
+    await expect(editor.slashMenu().getByRole('option')).toHaveText(['Цитата']);
+    await editor.slashMenu().getByRole('option', { name: 'Цитата' }).click();
+    await expect.poll(() => editor.blockTags()).toEqual(['h2', 'blockquote']);
+    await expect.poll(() => editor.blockTexts()).toEqual(['Plan', '']);
+  });
+
   test('passes axe in light and dark, fits phones and types in RTL', async ({ page }) => {
     const playground = await openEditor(page);
     const { editor } = playground;
