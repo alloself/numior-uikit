@@ -6,9 +6,11 @@ export interface NuiEditorProps extends NuiFieldControlProps {
   placeholder?: string | undefined;
   autofocus?: boolean | undefined;
   toolbar?: NuiEditorToolbarMode | undefined;
+  colours?: readonly string[] | undefined;
+  highlights?: readonly string[] | undefined;
 }
 
-export type NuiEditorToolbarMode = 'fixed' | 'none';
+export type NuiEditorToolbarMode = 'fixed' | 'bubble' | 'both' | 'none';
 
 export interface NuiEditorApi {
   state(): EditorState | undefined;

@@ -92,9 +92,12 @@ export interface ElementInit {
   readonly content?: readonly ContentNode[] | undefined;
 }
 
+export type AttrLimits = Readonly<Record<string, Readonly<Record<string, readonly AttrValue[]>>>>;
+
 export interface SchemaLimits {
   readonly nodes?: readonly string[] | undefined;
   readonly marks?: readonly string[] | undefined;
+  readonly values?: AttrLimits | undefined;
 }
 
 export type DocIssue =

@@ -1,6 +1,4 @@
-.nui-content {
-  --_size: var(--nui-font-size-md);
-  --_flow: 0.75em;
+:root {
   --nui-content-colour-gray: light-dark(oklch(0.5 0.01 260), oklch(0.78 0.01 260));
   --nui-content-colour-brown: light-dark(oklch(0.48 0.06 55), oklch(0.78 0.06 55));
   --nui-content-colour-orange: light-dark(oklch(0.52 0.14 50), oklch(0.8 0.12 55));
@@ -19,6 +17,10 @@
   --nui-content-highlight-purple: light-dark(oklch(0.93 0.045 300), oklch(0.33 0.07 300));
   --nui-content-highlight-pink: light-dark(oklch(0.93 0.045 350), oklch(0.34 0.07 350));
   --nui-content-highlight-red: light-dark(oklch(0.93 0.045 25), oklch(0.34 0.07 25));
+}
+.nui-content {
+  --_size: var(--nui-font-size-md);
+  --_flow: 0.75em;
 
   box-sizing: border-box;
   color: var(--nui-text);

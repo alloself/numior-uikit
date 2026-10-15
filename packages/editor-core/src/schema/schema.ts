@@ -6,6 +6,7 @@ import { checkTree } from './check';
 import { parseContentExpression } from './content-expression';
 import { compileContent, reachesEnd, typesOf, type NameResolver } from './content-match';
 import type {
+  AttrLimits,
   AttrSpecs,
   ElementInit,
   MarkType,
@@ -19,6 +20,7 @@ import type {
 interface Allowed {
   readonly nodes: ReadonlySet<string>;
   readonly marks: ReadonlySet<string>;
+  readonly values: AttrLimits;
   readonly restricted: boolean;
 }
 
@@ -38,6 +40,26 @@ const defaultRender = (inline: boolean, leaf: boolean): NodeRender => {
   }
   return leaf ? renderLeaf : renderBlock;
 };
+
+const limitedAttrs = (specs: AttrSpecs, limits: AttrLimits[string] | undefined): AttrSpecs =>
+  limits === undefined
+    ? specs
+    : Object.fromEntries(
+        Object.entries(specs).map(([name, spec]) => {
+          const values = limits[name];
+
+          return [
+            name,
+            values === undefined
+              ? spec
+              : {
+                  ...spec,
+                  verify: (value: AttrValue) =>
+                    values.includes(value) && (spec.verify === undefined || spec.verify(value)),
+                },
+          ];
+        }),
+      );
 
 const groupsOf = (group: string | undefined): Set<string> =>
   new Set((group ?? '').split(/\s+/).filter((name) => name !== ''));
@@ -117,7 +139,7 @@ const compileNode = (
     inlineContent,
     content,
     marks: allowedMarks(spec, allowed, node.marks, inlineContent),
-    attrs: node.attrs ?? {},
+    attrs: limitedAttrs(node.attrs ?? {}, allowed.values[name]),
     code: node.code === true,
     render: node.render ?? defaultRender(inline, leaf),
     parse: node.parse ?? [],
@@ -177,7 +199,7 @@ const compileMarks = (spec: SchemaSpec, allowed: Allowed): Map<string, MarkType>
           name,
           rank,
           groups: groupsOf(mark.group),
-          attrs: mark.attrs ?? {},
+          attrs: limitedAttrs(mark.attrs ?? {}, allowed.values[name]),
           render: mark.render ?? renderMark,
           parse: mark.parse ?? [],
         },
@@ -284,6 +306,37 @@ const limitedTo = (
   return new Set([...(names ?? current), ...kept].filter((name) => current.has(name)));
 };
 
+const ownerAttrs = (spec: SchemaSpec, owner: string): AttrSpecs | undefined =>
+  spec.nodes[owner]?.attrs ?? spec.marks?.[owner]?.attrs;
+
+const mergeValues = (
+  spec: SchemaSpec,
+  current: AttrLimits,
+  added: AttrLimits | undefined,
+): AttrLimits => {
+  const merged: Record<string, Record<string, readonly AttrValue[]>> = {};
+
+  for (const [owner, attrs] of Object.entries(current)) {
+    merged[owner] = { ...attrs };
+  }
+  for (const [owner, attrs] of Object.entries(added ?? {})) {
+    const known = ownerAttrs(spec, owner);
+
+    for (const [name, values] of Object.entries(attrs)) {
+      if (known === undefined || !Object.hasOwn(known, name)) {
+        throw new RangeError(`Unknown attribute "${name}" on "${owner}" in the schema limits`);
+      }
+      const before = merged[owner]?.[name];
+
+      merged[owner] = {
+        ...merged[owner],
+        [name]: before === undefined ? values : values.filter((value) => before.includes(value)),
+      };
+    }
+  }
+  return merged;
+};
+
 const buildSchema = (spec: SchemaSpec, allowed: Allowed): Schema => {
   const topName = spec.top ?? 'doc';
   const nodes = settleNodes(spec, allowed);
@@ -298,6 +351,7 @@ const buildSchema = (spec: SchemaSpec, allowed: Allowed): Schema => {
     buildSchema(spec, {
       nodes: limitedTo('node type', spec.nodes, allowed.nodes, limits.nodes, [topName, 'text']),
       marks: limitedTo('mark', spec.marks ?? {}, allowed.marks, limits.marks, []),
+      values: mergeValues(spec, allowed.values, limits.values),
       restricted: true,
     });
 
@@ -320,5 +374,6 @@ export const createSchema = (spec: SchemaSpec): Schema =>
   buildSchema(spec, {
     nodes: new Set(Object.keys(spec.nodes)),
     marks: new Set(Object.keys(spec.marks ?? {})),
+    values: {},
     restricted: false,
   });

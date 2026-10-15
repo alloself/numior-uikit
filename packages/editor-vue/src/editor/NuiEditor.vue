@@ -11,15 +11,22 @@
           'nui-editor--empty': empty,
         },
       ]"
+      ref="frame"
+      @focusin="overlays.onFocusin"
+      @focusout="overlays.onFocusout"
+      @pointerdown="overlays.onPointerdown"
     >
       <NuiEditorToolbar
-        v-if="toolbar === 'fixed' && !isReadonly"
+        v-if="fixedToolbar"
         ref="toolbar"
         class="nui-editor__toolbar"
         :state="current"
+        :options="toolOptions"
         :disabled="isDisabled"
         :controls="controlAttrs.id"
         @run="onToolbarRun"
+        @link="overlays.openLink"
+        @colour="overlays.colour"
         @leave="editor.focus()"
       />
       <NuiContent
@@ -38,15 +45,40 @@
         @paste="onPaste"
         @keydown="onKeydown"
       />
+      <span ref="anchor" class="nui-editor__anchor" aria-hidden="true" />
+      <NuiEditorBubble
+        v-if="bubbleToolbar && ready"
+        ref="bubble"
+        :state="current"
+        :options="toolOptions"
+        :anchor="anchorElement"
+        :open="overlays.bubbleOpen.value"
+        @run="onToolbarRun"
+        @link="overlays.openLink"
+        @colour="overlays.colour"
+        @leave="editor.focus()"
+      />
+      <NuiEditorLinkPanel
+        v-if="hasLinks && ready"
+        v-model:open="overlays.linkOpen.value"
+        :anchor="anchorElement"
+        :href="overlays.linkHref.value"
+        :removable="overlays.linkRemovable.value"
+        :valid="validLink"
+        @apply="overlays.applyLink"
+        @remove="overlays.removeLink"
+        @cancel="overlays.closeLink"
+      />
     </div>
   </NuiFieldFrame>
 </template>
 
 <script setup lang="ts">
-import { contentSchema, NuiContent } from '@numior/content';
+import { CONTENT_COLOURS, contentSchema, NuiContent } from '@numior/content';
 import {
   baseKeymap,
   createEmptyDoc,
+  pasteSchema,
   createState,
   detectPasteSource,
   fromJSON,
@@ -76,7 +108,11 @@ import {
   useTemplateRef,
   watch,
 } from 'vue';
+import { useMediaQuery } from '@vueuse/core';
+import NuiEditorBubble from '../bubble/NuiEditorBubble.vue';
+import NuiEditorLinkPanel from '../link/NuiEditorLinkPanel.vue';
 import NuiEditorToolbar from '../toolbar/NuiEditorToolbar.vue';
+import { useEditorOverlays } from './use-editor-overlays';
 import type { NuiEditorApi, NuiEditorPaste, NuiEditorProps } from './editor.types';
 
 defineOptions({ inheritAttrs: false });
@@ -96,6 +132,8 @@ const {
   placeholder,
   autofocus = false,
   toolbar = 'fixed',
+  colours = CONTENT_COLOURS,
+  highlights = CONTENT_COLOURS,
 } = defineProps<NuiEditorProps>();
 
 const document = defineModel<DocJSON | undefined>('document');
@@ -128,9 +166,24 @@ const {
 }));
 
 const contentElement = useTemplateRef<HTMLElement>('content');
+const frameElement = useTemplateRef<HTMLElement>('frame');
+const anchorElement = useTemplateRef<HTMLElement>('anchor');
 const toolbarElement = useTemplateRef<InstanceType<typeof NuiEditorToolbar>>('toolbar');
+const bubbleElement = useTemplateRef<InstanceType<typeof NuiEditorBubble>>('bubble');
 
-const plugins = [inputRules(markdownRules), keymap(baseKeymap), history()];
+const limitedSchema = schema.restrict({
+  values: {
+    ...(schema.marks.has('color') ? { color: { name: colours } } : {}),
+    ...(schema.marks.has('highlight') ? { highlight: { name: highlights } } : {}),
+  },
+});
+
+const plugins = [
+  pasteSchema(limitedSchema),
+  inputRules(markdownRules),
+  keymap(baseKeymap),
+  history(),
+];
 
 const docOf = (json: DocJSON | undefined): Doc => {
   const read = json === undefined ? undefined : fromJSON(schema, json);
@@ -146,6 +199,22 @@ let view: EditorView | undefined;
 let written: DocJSON | undefined = document.value === undefined ? undefined : toRaw(document.value);
 
 const editable = computed(() => !isDisabled.value && !isReadonly.value);
+
+const fixedToolbar = computed(
+  () => (toolbar === 'fixed' || toolbar === 'both') && !isReadonly.value,
+);
+
+const finePointer = useMediaQuery('(hover: hover) and (pointer: fine)');
+
+const bubbleToolbar = computed(
+  () => (toolbar === 'bubble' || toolbar === 'both') && (finePointer.value || toolbar === 'bubble'),
+);
+
+const hasLinks = schema.marks.has('link');
+const toolOptions = computed(() => ({ colours, highlights }));
+
+const validLink = (href: string): boolean =>
+  schema.marks.get('link')?.attrs.href?.verify?.(href) ?? true;
 
 const contentAttrs = computed(() => ({
   id: controlAttrs.value.id,
@@ -186,6 +255,18 @@ const dispatch = (tr: Transaction): void => {
 
 const run: NuiEditorApi['run'] = (command) => view !== undefined && command(view.state, dispatch);
 
+const overlays = useEditorOverlays({
+  frame: frameElement,
+  content: contentElement,
+  anchor: anchorElement,
+  view: () => view,
+  state: () => current.value,
+  run: (command) => run(command),
+  focus: () => view?.focus(),
+  bubble: () => bubbleToolbar.value,
+  editable: () => editable.value,
+});
+
 const editor: NuiEditorApi = {
   state: () => view?.state,
   run,
@@ -199,10 +280,16 @@ const onToolbarRun = (command: Command, refocus: boolean): void => {
   }
 };
 
+const isLinkKey = (event: KeyboardEvent): boolean =>
+  (event.ctrlKey || event.metaKey) && !event.altKey && event.code === 'KeyK';
+
 const onKeydown = (event: KeyboardEvent): void => {
   if (event.altKey && event.key === 'F10') {
     event.preventDefault();
-    toolbarElement.value?.focus();
+    (toolbarElement.value ?? bubbleElement.value)?.focus();
+  } else if (isLinkKey(event) && hasLinks && editable.value) {
+    event.preventDefault();
+    overlays.openLink();
   }
 };
 

@@ -37,6 +37,8 @@ describe('NuiEditor toolbar', () => {
       'Underline',
       'Strikethrough',
       'Inline code',
+      'Link',
+      'Colour',
       'Bulleted list',
       'Numbered list',
       'To-do list',

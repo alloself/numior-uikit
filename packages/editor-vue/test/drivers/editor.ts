@@ -3,6 +3,7 @@ import { textSelection, type Command, type DocJSON } from '@numior/editor-core';
 import { createSSRApp, h, nextTick } from 'vue';
 import { renderToString } from 'vue/server-renderer';
 import { NuiEditor, type NuiEditorApi, type NuiEditorProps } from '../../src';
+import { isShown } from '../support/popovers';
 
 const withoutComments = (html: string): string => html.replaceAll(/<!--[\s\S]*?-->/g, '');
 
@@ -11,6 +12,11 @@ const isDocument = (value: unknown): value is DocJSON =>
 
 const isApi = (value: unknown): value is NuiEditorApi =>
   typeof value === 'object' && value !== null && 'run' in value && 'state' in value;
+
+const labelOf = (item: Element): string =>
+  (item.textContent ?? '')
+    .replace(item.querySelector('.nui-editor-colours__swatch')?.textContent ?? '', '')
+    .trim();
 
 export interface KeyOptions {
   readonly ctrl?: boolean;
@@ -244,6 +250,105 @@ export class EditorDriver {
     const active = this.wrapper.element.ownerDocument.activeElement;
 
     active?.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }));
+    await nextTick();
+  }
+
+  private find(selector: string): HTMLElement {
+    const element = this.root.querySelector(selector);
+
+    if (!(element instanceof HTMLElement)) {
+      throw new Error(`Nothing matches ${selector}`);
+    }
+    return element;
+  }
+
+  get linkShown(): boolean {
+    return isShown(this.root.querySelector('.nui-editor-link'));
+  }
+
+  get bubbleShown(): boolean {
+    return isShown(this.root.querySelector('.nui-editor-bubble'));
+  }
+
+  get bubbleTools(): readonly string[] {
+    return [...this.root.querySelectorAll('.nui-editor-bubble .nui-editor-toolbar__control')].map(
+      (button) => button.getAttribute('aria-label') ?? '',
+    );
+  }
+
+  private get linkInput(): HTMLInputElement {
+    const input = this.find('.nui-editor-link').querySelector('input');
+
+    if (!(input instanceof HTMLInputElement)) {
+      throw new Error('The link panel has no field');
+    }
+    return input;
+  }
+
+  get linkDraft(): string {
+    return this.linkInput.value;
+  }
+
+  get linkError(): string {
+    return (
+      this.find('.nui-editor-link').querySelector('.nui-field__error')?.textContent?.trim() ?? ''
+    );
+  }
+
+  get linkFocused(): boolean {
+    return this.wrapper.element.ownerDocument.activeElement === this.linkInput;
+  }
+
+  async submitLink(href: string): Promise<void> {
+    this.linkInput.value = href;
+    this.linkInput.dispatchEvent(new Event('input', { bubbles: true }));
+    await nextTick();
+
+    this.find('.nui-editor-link__form').dispatchEvent(
+      new Event('submit', { bubbles: true, cancelable: true }),
+    );
+
+    await nextTick();
+  }
+
+  async removeLink(): Promise<void> {
+    const remove = [...this.find('.nui-editor-link').querySelectorAll('button')].find(
+      (button) => button.getAttribute('type') !== 'submit',
+    );
+
+    remove?.click();
+    await nextTick();
+  }
+
+  get colourOptions(): readonly string[] {
+    return [...this.find('.nui-editor-colours').querySelectorAll('[role="menuitemradio"]')].map(
+      labelOf,
+    );
+  }
+
+  async chooseColour(group: number, label: string): Promise<void> {
+    const radios = this.find('.nui-editor-colours').querySelectorAll('[role="group"]')[group];
+
+    const option = [...(radios?.querySelectorAll('[role="menuitemradio"]') ?? [])].find(
+      (item) => labelOf(item) === label,
+    );
+
+    if (!(option instanceof HTMLElement)) {
+      throw new Error(`No colour reads ${label}`);
+    }
+    option.click();
+    await nextTick();
+  }
+
+  async pasteHTML(html: string, text = ''): Promise<void> {
+    const data: Readonly<Record<string, string>> = { 'text/html': html, 'text/plain': text };
+    const event = new Event('paste', { bubbles: true, cancelable: true });
+
+    Object.defineProperty(event, 'clipboardData', {
+      value: { getData: (format: string) => data[format] ?? '' },
+    });
+
+    this.content.dispatchEvent(event);
     await nextTick();
   }
 

@@ -11,22 +11,15 @@
     @mousedown="onMousedown"
   >
     <div class="nui-editor-toolbar__groups">
-      <div v-for="group in groups" :key="group.key" class="nui-editor-toolbar__group">
-        <template v-for="item in group.items" :key="item.key">
-          <NuiEditorBlockMenu
-            v-if="item.kind === 'blocks'"
-            :blocks="item"
-            :disabled="disabled"
-            @run="emit('run', $event, true)"
-          />
-          <NuiEditorToolbarButton
-            v-else
-            :action="item"
-            :disabled="disabled"
-            @run="emit('run', $event, false)"
-          />
-        </template>
-      </div>
+      <NuiEditorToolbarGroup
+        v-for="group in groups"
+        :key="group.key"
+        :group="group"
+        :disabled="disabled"
+        @run="(command, refocus) => emit('run', command, refocus)"
+        @link="emit('link')"
+        @colour="(mark, name) => emit('colour', mark, name)"
+      />
     </div>
   </div>
 </template>
@@ -36,21 +29,22 @@ import type { Command } from '@numior/editor-core';
 import { useListNavigation, useMessages } from '@numior/primitives';
 import { computed, onMounted, useTemplateRef } from 'vue';
 import { editorMessages } from '../editor/editor.messages';
-import NuiEditorBlockMenu from './NuiEditorBlockMenu.vue';
-import NuiEditorToolbarButton from './NuiEditorToolbarButton.vue';
+import NuiEditorToolbarGroup from './NuiEditorToolbarGroup.vue';
 import { toolbarGroups } from './toolbar-items';
-import type { NuiEditorToolbarProps } from './toolbar.types';
+import type { ColourMark, NuiEditorToolbarProps } from './toolbar.types';
 
-const { state, disabled = false, controls } = defineProps<NuiEditorToolbarProps>();
+const { state, options, disabled = false, controls } = defineProps<NuiEditorToolbarProps>();
 
 const emit = defineEmits<{
   run: [command: Command, refocus: boolean];
+  link: [];
+  colour: [mark: ColourMark, name: string | null];
   leave: [];
 }>();
 
 const root = useTemplateRef<HTMLElement>('root');
 const texts = useMessages(editorMessages);
-const groups = computed(() => toolbarGroups(state, texts.value));
+const groups = computed(() => toolbarGroups(state, texts.value, options));
 
 const navigation = useListNavigation(root, {
   selector: '.nui-editor-toolbar__control',

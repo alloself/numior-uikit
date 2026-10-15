@@ -80,4 +80,5 @@ export const defaultIcons: IconRegistry = {
   'heading-2': lazyIcon(() => import('lucide-vue-next/dist/esm/icons/heading-2.js')),
   'heading-3': lazyIcon(() => import('lucide-vue-next/dist/esm/icons/heading-3.js')),
   'code-block': lazyIcon(() => import('lucide-vue-next/dist/esm/icons/code-xml.js')),
+  'text-colour': lazyIcon(() => import('lucide-vue-next/dist/esm/icons/baseline.js')),
 };

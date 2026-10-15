@@ -4,7 +4,12 @@ import {
   activeMarks,
   ancestorTypes,
   insertDivider,
+  insertMarked,
+  markAttrs,
+  markExtent,
+  pasteSchema,
   sequence,
+  setMark,
   textSelection,
   toggleList,
   toggleMark,
@@ -18,6 +23,8 @@ import { buildWith } from './support/notes';
 const { doc, node, text } = buildWith(fixtureSchema);
 
 const bold = fixtureSchema.mark('bold');
+
+const link = (href: string) => fixtureSchema.mark('link', { href });
 
 let harness: EditingHarness | undefined;
 
@@ -103,5 +110,61 @@ describe('toolbar state and commands', () => {
 
     expect(runs(editor, insertDivider())).toBe(true);
     expect(editor.outline).toBe('heading("T") divider paragraph() divider paragraph()');
+  });
+
+  it('finds the whole link around the cursor and sets, changes and removes marks with attributes', () => {
+    const editor = started(
+      doc(
+        node('paragraph', ['a ', text('bo', [link('/x'), bold]), text('ld', [link('/x')]), ' c']),
+      ),
+      textSelection(4),
+    );
+
+    expect(markExtent(editor.state.doc, 4, 'link')).toEqual({ from: 3, to: 7 });
+    expect(markAttrs(editor.state, 'link')).toEqual({ href: '/x' });
+    expect(runs(editor, setMark('link', { href: '/y' }))).toBe(true);
+    expect(markExtent(editor.state.doc, 6, 'link')).toEqual({ from: 3, to: 7 });
+    expect(markAttrs(editor.state, 'link')).toEqual({ href: '/y' });
+    expect(runs(editor, setMark('link', null))).toBe(true);
+    expect(editor.outline).toBe('paragraph("a " bold:"bo" "ld c")');
+
+    editor.select(textSelection(1));
+
+    expect(runs(editor, setMark('color', { name: 'red' }))).toBe(true);
+    expect(editor.state.storedMarks).toEqual([fixtureSchema.mark('color', { name: 'red' })]);
+  });
+
+  it('inserts linked text at a cursor and keeps typing outside the link', () => {
+    const editor = started(doc(node('paragraph', ['ab'])), textSelection(2));
+
+    expect(runs(editor, insertMarked('/docs', 'link', { href: '/docs' }))).toBe(true);
+    expect(editor.outline).toBe('paragraph("a" link:"/docs" "b")');
+
+    editor.type('!');
+
+    expect(editor.outline).toBe('paragraph("a" link:"/docs" "!b")');
+    expect(insertMarked('', 'link', { href: '/x' })(editor.state)).toBe(false);
+  });
+
+  it('limits attribute values in a restricted schema and parses pastes with it', () => {
+    const limited = fixtureSchema.restrict({ values: { color: { name: ['red', 'blue'] } } });
+    const narrower = limited.restrict({ values: { color: { name: ['blue', 'green'] } } });
+
+    expect(() => limited.mark('color', { name: 'green' })).toThrow(RangeError);
+
+    expect(narrower.mark('color', { name: 'blue' })).toEqual({
+      type: 'color',
+      attrs: { name: 'blue' },
+    });
+
+    expect(() => narrower.mark('color', { name: 'red' })).toThrow(RangeError);
+    expect(() => fixtureSchema.restrict({ values: { color: { hue: [1] } } })).toThrow(RangeError);
+
+    const editor = started(doc(node('paragraph', ['ab'])), textSelection(2), [
+      pasteSchema(limited),
+    ]);
+
+    expect(editor.paste('<b>x</b>y', 'xy')).toBe(true);
+    expect(editor.outline).toBe('paragraph("a" bold:"x" "yb")');
   });
 });

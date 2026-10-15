@@ -12,6 +12,7 @@
         description="Markdown: # заголовок, - список, **жирный**, Ctrl+Z — отмена"
         placeholder="Начните писать…"
         :readonly="readonly"
+        toolbar="both"
         data-testid="editor"
         @change="changes++"
         @paste="pasted = $event.source"

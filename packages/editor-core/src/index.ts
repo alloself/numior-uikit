@@ -23,7 +23,7 @@ export type {
   NodeId,
   TextNode,
 } from './model/node.types';
-export { insertHTML, insertPlainText } from './commands/paste';
+export { insertHTML, insertPlainText, pasteSchema } from './commands/paste';
 export { fromHTML } from './html/parse';
 export { detectPasteSource } from './html/sources';
 export { contentToHTML, toHTML } from './html/serialize';
@@ -51,6 +51,7 @@ export { parseContentExpression } from './schema/content-expression';
 export type { ContentExpr } from './schema/content-expression';
 export { createSchema } from './schema/schema';
 export type {
+  AttrLimits,
   AttrSpec,
   AttrSpecs,
   ContentMatch,
@@ -104,7 +105,16 @@ export {
   splitBlock,
   toggleMark,
 } from './commands/commands';
-export { activeBlock, activeMarks, ancestorTypes, sequence } from './commands/format';
+export {
+  activeBlock,
+  activeMarks,
+  ancestorTypes,
+  insertMarked,
+  markAttrs,
+  markExtent,
+  sequence,
+  setMark,
+} from './commands/format';
 export type { ActiveBlock } from './commands/format';
 export {
   insertBeforeTextblock,

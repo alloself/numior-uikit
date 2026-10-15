@@ -22,8 +22,16 @@ const docs: DocsMap = {
         en: 'Focuses the editor once it is mounted.',
       },
       toolbar: {
-        ru: 'Панель форматирования над текстом: fixed — липкая панель, none — без неё; в режиме чтения её нет. Alt+F10 переводит в неё фокус, Escape возвращает в текст.',
-        en: 'The formatting bar above the text: fixed is a sticky bar, none hides it; read-only editors have none. Alt+F10 moves focus into it, Escape returns to the text.',
+        ru: 'Панели форматирования: fixed — липкая панель над текстом, bubble — меню над выделенным текстом, both — обе, none — без них; в режиме чтения панелей нет. Alt+F10 переводит фокус в панель, Escape возвращает в текст, Ctrl+K открывает правку ссылки.',
+        en: 'Formatting bars: fixed is a sticky bar above the text, bubble a menu over selected text, both shows both, none hides them; read-only editors have none. Alt+F10 moves focus into the bar, Escape returns to the text, Ctrl+K opens link editing.',
+      },
+      colours: {
+        ru: 'Пресеты цвета текста, которые предлагает меню и принимает вставка; по умолчанию все девять. Цвета, которые уже есть в документе, сохраняются.',
+        en: 'Text colour presets the menu offers and pastes keep; all nine by default. Colours already in the document stay.',
+      },
+      highlights: {
+        ru: 'Пресеты фонового выделения, которые предлагает меню и принимает вставка; по умолчанию все девять.',
+        en: 'Highlight presets the menu offers and pastes keep; all nine by default.',
       },
     },
     models: {

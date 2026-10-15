@@ -90,6 +90,7 @@ export type IconAlias =
   | 'heading-2'
   | 'heading-3'
   | 'code-block'
+  | 'text-colour'
   | (string & NonNullable<unknown>);
 
 export type IconRegistry = Readonly<Record<string, Component>>;

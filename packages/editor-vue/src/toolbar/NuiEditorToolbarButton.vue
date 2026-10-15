@@ -13,7 +13,7 @@
         :aria-label="action.label"
         :aria-pressed="action.pressed === undefined ? undefined : String(action.pressed)"
         :disabled="disabled || action.disabled"
-        @click="emit('run', action.command)"
+        @click="emit('press')"
       />
     </template>
     <span class="nui-editor-toolbar__hint">
@@ -24,13 +24,12 @@
 </template>
 
 <script setup lang="ts">
-import type { Command } from '@numior/editor-core';
 import { NuiButton, NuiKbd, NuiTooltip } from '@numior/vue';
 import type { NuiEditorToolbarButtonProps } from './toolbar.types';
 
 const { action, disabled = false } = defineProps<NuiEditorToolbarButtonProps>();
 
 const emit = defineEmits<{
-  run: [command: Command];
+  press: [];
 }>();
 </script>

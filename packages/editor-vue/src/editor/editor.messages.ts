@@ -19,7 +19,43 @@ export interface NuiEditorMessages {
   readonly todoList: string;
   readonly quote: string;
   readonly divider: string;
+  readonly link: string;
+  readonly linkAddress: string;
+  readonly linkApply: string;
+  readonly linkRemove: string;
+  readonly linkInvalid: string;
+  readonly colour: string;
+  readonly textColour: string;
+  readonly defaultColour: string;
+  readonly highlight: string;
+  readonly noHighlight: string;
+  readonly colourName: (params: { readonly name: string }) => string;
+  readonly formatting: string;
 }
+
+const EN_COLOURS: Readonly<Record<string, string>> = {
+  gray: 'Gray',
+  brown: 'Brown',
+  orange: 'Orange',
+  yellow: 'Yellow',
+  green: 'Green',
+  blue: 'Blue',
+  purple: 'Purple',
+  pink: 'Pink',
+  red: 'Red',
+};
+
+const RU_COLOURS: Readonly<Record<string, string>> = {
+  gray: 'Серый',
+  brown: 'Коричневый',
+  orange: 'Оранжевый',
+  yellow: 'Жёлтый',
+  green: 'Зелёный',
+  blue: 'Синий',
+  purple: 'Фиолетовый',
+  pink: 'Розовый',
+  red: 'Красный',
+};
 
 export const editorMessages: NuiMessageCatalog<'editor'> = {
   namespace: 'editor',
@@ -42,6 +78,18 @@ export const editorMessages: NuiMessageCatalog<'editor'> = {
     todoList: 'To-do list',
     quote: 'Quote',
     divider: 'Divider',
+    link: 'Link',
+    linkAddress: 'Link address',
+    linkApply: 'Apply',
+    linkRemove: 'Remove link',
+    linkInvalid: 'This address cannot be linked',
+    colour: 'Colour',
+    textColour: 'Text colour',
+    defaultColour: 'Default',
+    highlight: 'Highlight',
+    noHighlight: 'None',
+    colourName: ({ name }) => EN_COLOURS[name] ?? name,
+    formatting: 'Selection formatting',
   },
   ru: {
     toolbar: 'Форматирование',
@@ -62,5 +110,17 @@ export const editorMessages: NuiMessageCatalog<'editor'> = {
     todoList: 'Список задач',
     quote: 'Цитата',
     divider: 'Разделитель',
+    link: 'Ссылка',
+    linkAddress: 'Адрес ссылки',
+    linkApply: 'Готово',
+    linkRemove: 'Убрать ссылку',
+    linkInvalid: 'Такой адрес нельзя сделать ссылкой',
+    colour: 'Цвет',
+    textColour: 'Цвет текста',
+    defaultColour: 'Обычный',
+    highlight: 'Выделение',
+    noHighlight: 'Нет',
+    colourName: ({ name }) => RU_COLOURS[name] ?? name,
+    formatting: 'Форматирование выделения',
   },
 };

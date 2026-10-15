@@ -18,7 +18,11 @@ export default defineConfig({
     },
     sourcemap: true,
     rolldownOptions: {
-      external: [/^vue$/, /^@numior\/(editor-core|content|primitives|vue)(\/[\w-]+)?$/],
+      external: [
+        /^vue$/,
+        /^@vueuse\/core$/,
+        /^@numior\/(editor-core|content|primitives|vue)(\/[\w-]+)?$/,
+      ],
     },
   },
 });

@@ -100,7 +100,17 @@ export class EditorSection {
   }
 
   tool(name: string): Locator {
-    return this.root.getByRole('toolbar').getByRole('button', { name, exact: true });
+    return this.root
+      .getByRole('toolbar', { name: 'Форматирование', exact: true })
+      .getByRole('button', { name, exact: true });
+  }
+
+  bubble(): Locator {
+    return this.root.locator('.nui-editor-bubble');
+  }
+
+  linkField(): Locator {
+    return this.root.locator('.nui-editor-link input');
   }
 
   blockMenu(): Locator {

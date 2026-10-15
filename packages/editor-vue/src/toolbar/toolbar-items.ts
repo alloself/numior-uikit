@@ -3,6 +3,7 @@ import {
   activeMarks,
   ancestorTypes,
   insertDivider,
+  markAttrs,
   redo,
   redoDepth,
   setBlockType,
@@ -17,15 +18,39 @@ import {
 import type { IconAlias } from '@numior/primitives';
 import type { NuiEditorMessages } from '../editor/editor.messages';
 
-export interface ToolbarAction {
-  readonly kind: 'action';
-  readonly key: string;
+export interface ToolbarFace {
   readonly label: string;
   readonly icon: IconAlias;
   readonly shortcut?: string | undefined;
   readonly pressed?: boolean | undefined;
   readonly disabled: boolean;
+}
+
+export interface ToolbarAction extends ToolbarFace {
+  readonly kind: 'action';
+  readonly key: string;
   readonly command: Command;
+}
+
+export interface ToolbarLink extends ToolbarFace {
+  readonly kind: 'link';
+  readonly key: 'link';
+}
+
+export interface ToolbarColours {
+  readonly kind: 'colours';
+  readonly key: 'colours';
+  readonly label: string;
+  readonly colour: string | null;
+  readonly highlight: string | null;
+  readonly colours: readonly string[];
+  readonly highlights: readonly string[];
+  readonly disabled: boolean;
+}
+
+export interface ToolbarOptions {
+  readonly colours: readonly string[];
+  readonly highlights: readonly string[];
 }
 
 export interface ToolbarBlock {
@@ -43,7 +68,7 @@ export interface ToolbarBlocks {
   readonly options: readonly ToolbarBlock[];
 }
 
-export type ToolbarItem = ToolbarAction | ToolbarBlocks;
+export type ToolbarItem = ToolbarAction | ToolbarBlocks | ToolbarLink | ToolbarColours;
 
 export interface ToolbarGroup {
   readonly key: string;
@@ -53,6 +78,7 @@ export interface ToolbarGroup {
 interface Facts {
   readonly state: EditorState;
   readonly texts: NuiEditorMessages;
+  readonly options: ToolbarOptions;
   readonly marks: ReadonlySet<string>;
   readonly allowed: ReadonlySet<string>;
   readonly ancestors: readonly string[];
@@ -157,9 +183,51 @@ const blockItems = (facts: Facts): ToolbarItem[] => {
       ];
 };
 
-const markItems = (facts: Facts): ToolbarItem[] =>
-  MARKS.filter(([mark]) => facts.state.doc.schema.marks.has(mark)).map(
-    ([mark, text, icon, shortcut]) => ({
+const nameOf = (state: EditorState, mark: string): string | null => {
+  const name = markAttrs(state, mark)?.name;
+
+  return typeof name === 'string' ? name : null;
+};
+
+const linkItems = (facts: Facts): ToolbarItem[] =>
+  facts.state.doc.schema.marks.has('link')
+    ? [
+        {
+          kind: 'link',
+          key: 'link',
+          label: facts.texts.link,
+          icon: 'link',
+          shortcut: 'mod+k',
+          pressed: markAttrs(facts.state, 'link') !== undefined,
+          disabled: !facts.allowed.has('link'),
+        },
+      ]
+    : [];
+
+const colourItems = (facts: Facts): ToolbarItem[] => {
+  const { marks } = facts.state.doc.schema;
+  const colours = marks.has('color') ? facts.options.colours : [];
+  const highlights = marks.has('highlight') ? facts.options.highlights : [];
+
+  return colours.length + highlights.length === 0
+    ? []
+    : [
+        {
+          kind: 'colours',
+          key: 'colours',
+          label: facts.texts.colour,
+          colour: nameOf(facts.state, 'color'),
+          highlight: nameOf(facts.state, 'highlight'),
+          colours,
+          highlights,
+          disabled: !facts.allowed.has('color') && !facts.allowed.has('highlight'),
+        },
+      ];
+};
+
+const markItems = (facts: Facts): ToolbarItem[] => [
+  ...MARKS.filter(([mark]) => facts.state.doc.schema.marks.has(mark)).map(
+    ([mark, text, icon, shortcut]): ToolbarItem => ({
       kind: 'action',
       key: mark,
       label: textOf(facts.texts, text),
@@ -169,7 +237,10 @@ const markItems = (facts: Facts): ToolbarItem[] =>
       disabled: !facts.allowed.has(mark),
       command: toggleMark(mark),
     }),
-  );
+  ),
+  ...linkItems(facts),
+  ...colourItems(facts),
+];
 
 const blockActions = (facts: Facts): ToolbarItem[] => {
   const { state, texts, ancestors } = facts;
@@ -224,13 +295,18 @@ const blockActions = (facts: Facts): ToolbarItem[] => {
   ];
 };
 
-export const toolbarGroups = (state: EditorState, texts: NuiEditorMessages): ToolbarGroup[] => {
+export const toolbarGroups = (
+  state: EditorState,
+  texts: NuiEditorMessages,
+  options: ToolbarOptions,
+): ToolbarGroup[] => {
   const block = activeBlock(state);
   const blockType = block === undefined ? undefined : state.doc.schema.nodes.get(block.type);
 
   const facts: Facts = {
     state,
     texts,
+    options,
     marks: activeMarks(state),
     allowed: blockType?.marks ?? new Set(state.doc.schema.marks.keys()),
     ancestors: ancestorTypes(state),

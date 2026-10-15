@@ -32,7 +32,8 @@
     "@numior/content": "workspace:*",
     "@numior/editor-core": "workspace:*",
     "@numior/primitives": "workspace:*",
-    "@numior/vue": "workspace:*"
+    "@numior/vue": "workspace:*",
+    "@vueuse/core": "15.0.0"
   },
   "devDependencies": {
     "@vue/test-utils": "2.5.1"

@@ -5,7 +5,8 @@ import { contentSize } from '../model/node';
 import type { ContentNode, ElementNode } from '../model/node.types';
 import type { Schema } from '../schema/schema.types';
 import { nearestCursor, textSelection } from '../state/selection';
-import type { Command, Transaction } from '../state/state.types';
+import { definePlugin } from '../state/plugin';
+import type { Command, Plugin, Transaction } from '../state/state.types';
 import { sliceSize } from '../transform/replace';
 
 const LINE = /\r\n?|\n/u;
@@ -158,8 +159,8 @@ const flatten = (
   );
 };
 
-const parsedBlocks = (tr: Transaction, html: string): ElementNode[] => {
-  const doc = fromHTML(tr.doc.schema, html, { ids: { next: () => tr.newId() } });
+const parsedBlocks = (tr: Transaction, html: string, schema: Schema): ElementNode[] => {
+  const doc = fromHTML(schema, html, { ids: { next: () => tr.newId() } });
 
   return isEmptyDoc(doc)
     ? []
@@ -167,11 +168,15 @@ const parsedBlocks = (tr: Transaction, html: string): ElementNode[] => {
 };
 
 export const insertHTML =
-  (html: string, text: string): Command =>
+  (html: string, text: string, schema?: Schema): Command =>
   (state, dispatch) => {
     const tr = state.tr.deleteSelection();
     const head = headOf(tr);
-    const blocks = head === undefined || inCodeAt(tr, head) ? [] : parsedBlocks(tr, html);
+
+    const blocks =
+      head === undefined || inCodeAt(tr, head)
+        ? []
+        : parsedBlocks(tr, html, schema ?? state.doc.schema);
 
     const placed =
       head !== undefined &&
@@ -187,3 +192,15 @@ export const insertHTML =
 
 export const pasteCommand = (text: string, html: string | undefined): Command =>
   html === undefined || html === '' ? insertPlainText(text) : insertHTML(html, text);
+
+export const pasteSchema = (schema: Schema): Plugin =>
+  definePlugin({
+    name: 'paste-schema',
+    props: {
+      handleIntent: (intent, state, dispatch) =>
+        intent.kind === 'paste' &&
+        intent.html !== undefined &&
+        intent.html !== '' &&
+        insertHTML(intent.html, intent.text, schema)(state, dispatch),
+    },
+  });

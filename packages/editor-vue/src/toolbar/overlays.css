@@ -1,0 +1,105 @@
+.nui-editor__anchor {
+  position: absolute;
+  pointer-events: none;
+}
+.nui-editor-bubble.nui-popover {
+  min-inline-size: 0;
+  max-inline-size: none;
+  padding: var(--nui-space-1);
+}
+.nui-editor-bubble .nui-editor-toolbar__group {
+  padding: 0;
+}
+.nui-editor-bubble .nui-editor-toolbar__group::before {
+  content: none;
+}
+.nui-editor-link.nui-popover {
+  inline-size: min(22rem, calc(100vw - var(--nui-space-4)));
+  max-inline-size: none;
+}
+.nui-editor-link__form {
+  display: grid;
+  gap: var(--nui-space-3);
+}
+.nui-editor-link__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--nui-space-2);
+}
+.nui-editor-toolbar .nui-editor-colours__trigger,
+.nui-editor-bubble .nui-editor-colours__trigger {
+  color: var(--_text, var(--_tone-soft-foreground));
+}
+.nui-editor-colours__swatch {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  inline-size: 1.25rem;
+  block-size: 1.25rem;
+  margin-inline-end: var(--nui-space-2);
+  border: 1px solid var(--nui-border);
+  border-radius: var(--nui-radius-sm);
+  background: var(--_fill, transparent);
+  color: var(--_text, var(--nui-text));
+  font-size: var(--nui-font-size-xs);
+  font-weight: var(--nui-font-weight-semibold);
+}
+.nui-editor-colours__swatch--text::before {
+  content: 'A';
+}
+.nui-editor-colours--text-gray {
+  --_text: var(--nui-content-colour-gray);
+}
+.nui-editor-colours--text-brown {
+  --_text: var(--nui-content-colour-brown);
+}
+.nui-editor-colours--text-orange {
+  --_text: var(--nui-content-colour-orange);
+}
+.nui-editor-colours--text-yellow {
+  --_text: var(--nui-content-colour-yellow);
+}
+.nui-editor-colours--text-green {
+  --_text: var(--nui-content-colour-green);
+}
+.nui-editor-colours--text-blue {
+  --_text: var(--nui-content-colour-blue);
+}
+.nui-editor-colours--text-purple {
+  --_text: var(--nui-content-colour-purple);
+}
+.nui-editor-colours--text-pink {
+  --_text: var(--nui-content-colour-pink);
+}
+.nui-editor-colours--text-red {
+  --_text: var(--nui-content-colour-red);
+}
+.nui-editor-colours--fill-gray {
+  --_fill: var(--nui-content-highlight-gray);
+}
+.nui-editor-colours--fill-brown {
+  --_fill: var(--nui-content-highlight-brown);
+}
+.nui-editor-colours--fill-orange {
+  --_fill: var(--nui-content-highlight-orange);
+}
+.nui-editor-colours--fill-yellow {
+  --_fill: var(--nui-content-highlight-yellow);
+}
+.nui-editor-colours--fill-green {
+  --_fill: var(--nui-content-highlight-green);
+}
+.nui-editor-colours--fill-blue {
+  --_fill: var(--nui-content-highlight-blue);
+}
+.nui-editor-colours--fill-purple {
+  --_fill: var(--nui-content-highlight-purple);
+}
+.nui-editor-colours--fill-pink {
+  --_fill: var(--nui-content-highlight-pink);
+}
+.nui-editor-colours--fill-red {
+  --_fill: var(--nui-content-highlight-red);
+}

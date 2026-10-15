@@ -161,6 +161,40 @@ test.describe('editor', () => {
     await expect(editor.content).toBeFocused();
   });
 
+  test('links with Ctrl+K and colours a selection from the bubble over it', async ({ page }) => {
+    const { editor } = await openEditor(page);
+
+    const fine = await page.evaluate(
+      () => matchMedia('(hover: hover) and (pointer: fine)').matches,
+    );
+
+    const colours = fine
+      ? editor.bubble()
+      : editor.root.getByRole('toolbar', { name: 'Форматирование' });
+
+    await editor.clear();
+    await page.keyboard.type('Hello world');
+    for (let step = 0; step < 'world'.length; step += 1) {
+      await page.keyboard.press('Shift+ArrowLeft');
+    }
+    await expect(editor.bubble()).toBeVisible({ visible: fine });
+    await page.keyboard.press('ControlOrMeta+k');
+    await expect(editor.linkField()).toBeFocused();
+    await page.keyboard.type('https://numior.test');
+    await page.keyboard.press('Enter');
+    await expect(editor.content.locator('a')).toHaveText('world');
+    await expect(editor.content).toBeFocused();
+    await colours.getByRole('button', { name: 'Цвет' }).click();
+
+    await page
+      .getByRole('menuitemradio', { name: /Красный/ })
+      .first()
+      .click();
+
+    await expect(editor.content.locator('.nui-content__colour--red')).toHaveText('world');
+    await expect(editor.preview.locator('.nui-content__colour--red')).toHaveText('world');
+  });
+
   test('passes axe in light and dark, fits phones and types in RTL', async ({ page }) => {
     const playground = await openEditor(page);
     const { editor } = playground;
