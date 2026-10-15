@@ -120,6 +120,7 @@ const compileNode = (
     attrs: node.attrs ?? {},
     code: node.code === true,
     render: node.render ?? defaultRender(inline, leaf),
+    parse: node.parse ?? [],
   };
 };
 
@@ -178,6 +179,7 @@ const compileMarks = (spec: SchemaSpec, allowed: Allowed): Map<string, MarkType>
           groups: groupsOf(mark.group),
           attrs: mark.attrs ?? {},
           render: mark.render ?? renderMark,
+          parse: mark.parse ?? [],
         },
       ]),
   );

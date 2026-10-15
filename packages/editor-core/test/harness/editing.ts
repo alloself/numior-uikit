@@ -10,7 +10,6 @@ import {
   keymap,
   markdownRules,
   textSelection,
-  type ContentNode,
   type EditorState,
   type ElementNode,
   type InputIntent,
@@ -21,6 +20,7 @@ import {
   type Transaction,
 } from '../../src';
 import { fixtureSchema } from '../../src/fixtures';
+import { outlineOf } from '../support/outline';
 
 const SOURCES: Readonly<Record<InputIntent['kind'], InputSource>> = {
   insertText: 'type',
@@ -45,29 +45,6 @@ const keyOf = (name: string, code = ''): KeyInput => {
     alt: modifiers.has('Alt'),
     shift: modifiers.has('Shift'),
   };
-};
-
-const attrsText = (node: ElementNode): string => {
-  const defaults = fixtureSchema.element(node.type, { id: 'defaults' }).attrs;
-
-  const changed = Object.entries(node.attrs).filter(
-    ([key, value]) => defaults[key] !== value && key !== 'src',
-  );
-
-  return changed.length === 0
-    ? ''
-    : `{${changed.map(([key, value]) => `${key}=${String(value)}`).join(',')}}`;
-};
-
-const outlineOf = (node: ContentNode): string => {
-  if (node.kind === 'text') {
-    const marks = node.marks.map((mark) => mark.type).join('+');
-
-    return marks === '' ? JSON.stringify(node.text) : `${marks}:${JSON.stringify(node.text)}`;
-  }
-  const inner = node.content.map(outlineOf).join(' ');
-
-  return `${node.type}${attrsText(node)}${node.leaf ? '' : `(${inner})`}`;
 };
 
 const defaultPlugins = (): readonly Plugin[] => [
@@ -100,7 +77,7 @@ export class EditingHarness {
   }
 
   get outline(): string {
-    return this.current.doc.root.content.map(outlineOf).join(' ');
+    return outlineOf(this.current.doc.root);
   }
 
   private dispatcher(source: InputSource | undefined): (tr: Transaction) => void {
@@ -131,6 +108,10 @@ export class EditingHarness {
 
   composeText(text: string, from: number, to = from): boolean {
     return this.intent({ kind: 'compose', text, range: { from, to } });
+  }
+
+  paste(html: string, text = ''): boolean {
+    return this.intent({ kind: 'paste', text, html });
   }
 
   backspace(): boolean {

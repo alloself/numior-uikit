@@ -23,7 +23,19 @@ export type {
   NodeId,
   TextNode,
 } from './model/node.types';
+export { insertHTML, insertPlainText } from './commands/paste';
+export { fromHTML } from './html/parse';
+export { contentToHTML, toHTML } from './html/serialize';
+export type {
+  FromHTMLOptions,
+  HtmlElement,
+  HtmlNode,
+  HtmlText,
+  HtmlWhitespace,
+} from './html/html.types';
 export { contentHole, renderTag } from './render/render';
+export { renderTree } from './render/render-tree';
+export type { RenderBuilder } from './render/render-tree';
 export type {
   MarkRender,
   NodeRender,
@@ -43,10 +55,13 @@ export type {
   DocCheck,
   DocIssue,
   ElementInit,
+  MarkParseRule,
   MarkSpec,
   MarkType,
+  NodeParseRule,
   NodeSpec,
   NodeType,
+  ParsedAttrs,
   Schema,
   SchemaLimits,
   SchemaSpec,
@@ -72,7 +87,6 @@ export {
   inputSource,
   insertLineBreak,
   insertParagraph,
-  insertPlainText,
   insertText,
   intentCommand,
   isAtom,

@@ -10,6 +10,11 @@ const isEditorOutput = shapeOf({ blocks: isNumber, changes: isNumber });
 
 export type EditorOutput = Guarded<typeof isEditorOutput>;
 
+export interface Copied {
+  readonly text: string;
+  readonly html: string;
+}
+
 export class EditorSection {
   readonly root: Locator;
   readonly content: Locator;
@@ -100,23 +105,41 @@ export class EditorSection {
     return this.content.locator('.nui-content__mention');
   }
 
-  async paste(text: string): Promise<void> {
-    await this.content.evaluate((root, value) => {
+  async paste(text: string, html = ''): Promise<void> {
+    await this.content.evaluate(
+      (root, value) => {
+        const data = new DataTransfer();
+
+        data.setData('text/plain', value.text);
+        if (value.html !== '') {
+          data.setData('text/html', value.html);
+        }
+
+        const event = new ClipboardEvent('paste', {
+          clipboardData: data,
+          bubbles: true,
+          cancelable: true,
+        });
+
+        if (event.clipboardData?.getData('text/plain') !== value.text) {
+          Object.defineProperty(event, 'clipboardData', { value: data });
+        }
+        root.dispatchEvent(event);
+      },
+      { text, html },
+    );
+  }
+
+  async copy(): Promise<Copied> {
+    return this.content.evaluate((root) => {
       const data = new DataTransfer();
 
-      data.setData('text/plain', value);
+      const event = new ClipboardEvent('copy', { bubbles: true, cancelable: true });
 
-      const event = new ClipboardEvent('paste', {
-        clipboardData: data,
-        bubbles: true,
-        cancelable: true,
-      });
-
-      if (event.clipboardData?.getData('text/plain') !== value) {
-        Object.defineProperty(event, 'clipboardData', { value: data });
-      }
+      Object.defineProperty(event, 'clipboardData', { value: data });
       root.dispatchEvent(event);
-    }, text);
+      return { text: data.getData('text/plain'), html: data.getData('text/html') };
+    });
   }
 
   async composeThroughCdp(text: string): Promise<void> {

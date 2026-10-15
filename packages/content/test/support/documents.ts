@@ -66,7 +66,7 @@ export const everyBlock = () =>
 
 export const EVERY_BLOCK_MARKUP = [
   '<h2 class="nui-content__heading nui-content__heading--level-2">Title</h2>',
-  '<p class="nui-content__paragraph">plain <a class="nui-content__link" href="https://numior.test"><strong class="nui-content__bold">both</strong></a><span class="nui-content__mention">@Ann</span><br><br></p>',
+  '<p class="nui-content__paragraph">plain <a class="nui-content__link" href="https://numior.test"><strong class="nui-content__bold">both</strong></a><span class="nui-content__mention" data-user="u1">@Ann</span><br><br></p>',
   '<p class="nui-content__paragraph"><br></p>',
   '<ul class="nui-content__list nui-content__list--bullet"><li class="nui-content__item"><p class="nui-content__paragraph">one</p></li></ul>',
   '<ol class="nui-content__list nui-content__list--ordered" start="3"><li class="nui-content__item"><p class="nui-content__paragraph">two</p></li></ol>',

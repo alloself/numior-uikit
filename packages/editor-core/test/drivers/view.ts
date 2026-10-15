@@ -210,27 +210,31 @@ export class EditorViewDriver {
     );
   }
 
-  paste(text: string): boolean {
+  paste(text: string, html = ''): boolean {
     const event = new Event('paste', { bubbles: true, cancelable: true });
+    const data: Readonly<Record<string, string>> = { 'text/plain': text, 'text/html': html };
 
-    Object.defineProperty(event, 'clipboardData', { value: { getData: () => text } });
+    Object.defineProperty(event, 'clipboardData', {
+      value: { getData: (format: string) => data[format] ?? '' },
+    });
+
     return !this.host.dispatchEvent(event);
   }
 
-  copy(type: 'copy' | 'cut'): string | undefined {
-    let copied: string | undefined;
+  copy(type: 'copy' | 'cut', format = 'text/plain'): string | undefined {
+    const copied = new Map<string, string>();
     const event = new Event(type, { bubbles: true, cancelable: true });
 
     Object.defineProperty(event, 'clipboardData', {
       value: {
-        setData: (_format: string, value: string) => {
-          copied = value;
+        setData: (name: string, value: string) => {
+          copied.set(name, value);
         },
       },
     });
 
     this.host.dispatchEvent(event);
-    return copied;
+    return copied.get(format);
   }
 
   get selectsAll(): boolean {

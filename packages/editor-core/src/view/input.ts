@@ -1,5 +1,6 @@
 import { intentCommand, isAtom, selectAtom } from '../commands/input';
-import { nearestCursor } from '../state/selection';
+import { clipboardHTML } from '../html/clipboard';
+import { nearestCursor, selectionRange } from '../state/selection';
 import type { SelectionRange } from '../state/selection.types';
 import type {
   InputIntent,
@@ -104,15 +105,18 @@ const deletion = (event: InputEvent, host: ViewHost): InputIntent | undefined =>
     : { kind: 'delete', direction: kind[0], unit: kind[1], range };
 };
 
+const pasted = (text: string, html: string | undefined): InputIntent | undefined =>
+  text === '' && (html ?? '') === '' ? undefined : { kind: 'paste', text, html };
+
 const insertion = (event: InputEvent, host: ViewHost): InputIntent | undefined => {
   const text = textOf(event);
   const range = event.inputType === 'insertReplacementText' ? targetRange(event, host) : undefined;
 
+  if (PASTES.has(event.inputType)) {
+    return pasted(text, event.dataTransfer?.getData('text/html'));
+  }
   if (text === '') {
     return undefined;
-  }
-  if (PASTES.has(event.inputType)) {
-    return { kind: 'paste', text };
   }
   return range === undefined ? { kind: 'insertText', text } : { kind: 'insertText', text, range };
 };
@@ -266,39 +270,51 @@ export const attachInput = (host: ViewHost, parts: InputParts): (() => void) => 
   };
 
   const onPaste = (event: ClipboardEvent): void => {
-    const text = event.clipboardData?.getData('text/plain') ?? '';
+    const intent = pasted(
+      event.clipboardData?.getData('text/plain') ?? '',
+      event.clipboardData?.getData('text/html'),
+    );
 
     event.preventDefault();
     parts.sync.read();
-    if (text !== '') {
-      runIntent(host, { kind: 'paste', text });
+    if (intent !== undefined) {
+      runIntent(host, intent);
     }
   };
 
   const onCopy = (event: ClipboardEvent): void => {
+    parts.sync.read();
     const state = host.state();
+    const range = selectionRange(state.doc, state.selection);
 
-    if (state.selection.kind !== 'all' || event.clipboardData === null) {
+    if (range.from === range.to || event.clipboardData === null) {
       return;
     }
+    const slice = state.doc.slice(range.from, range.to);
+
     event.preventDefault();
-    event.clipboardData.setData('text/plain', state.doc.textBetween(0, state.doc.size, '\n'));
-    if (event.type === 'cut') {
+    event.clipboardData.setData('text/plain', state.doc.textBetween(range.from, range.to, '\n'));
+    event.clipboardData.setData('text/html', clipboardHTML(state.doc.schema, slice.content));
+    if (event.type === 'cut' && root.getAttribute('contenteditable') === 'true') {
       runIntent(host, { kind: 'delete', direction: 'backward', unit: 'character' });
     }
   };
 
   const onDrop = (event: DragEvent): void => {
-    const text = event.dataTransfer?.getData('text/plain') ?? '';
+    const intent = pasted(
+      event.dataTransfer?.getData('text/plain') ?? '',
+      event.dataTransfer?.getData('text/html'),
+    );
+
     const pos = posAtCoords(host, event.clientX, event.clientY);
     const state = host.state();
 
     event.preventDefault();
-    if (text === '' || pos === undefined) {
+    if (intent === undefined || pos === undefined) {
       return;
     }
     host.dispatch(state.tr.setSelection(nearestCursor(state.doc, pos)), 'pointer');
-    runIntent(host, { kind: 'paste', text });
+    runIntent(host, intent);
   };
 
   const onMousedown = (event: MouseEvent): void => {

@@ -1,6 +1,5 @@
-import type { ElementNode, Schema } from '@numior/editor-core';
+import { renderTree, type ElementNode, type Schema } from '@numior/editor-core';
 import { h, type FunctionalComponent, type VNode } from 'vue';
-import { buildContent } from './content-tree';
 
 interface ContentNodesProps {
   readonly root: ElementNode;
@@ -22,7 +21,7 @@ const element = (
 const text = (value: string): string => value;
 
 export const ContentNodes: FunctionalComponent<ContentNodesProps> = (props) => [
-  ...buildContent<VNode | string>(props.schema, props.root, { element, text }),
+  ...renderTree<VNode | string>(props.schema, props.root.content, { element, text }),
 ];
 
 ContentNodes.props = ['root', 'schema'];

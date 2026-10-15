@@ -88,6 +88,32 @@ test.describe('editor', () => {
     expect((await editor.readOutput()).changes).toBe(before);
   });
 
+  test('pastes markup from other pages as blocks and copies the selection as markup', async ({
+    page,
+  }) => {
+    const { editor } = await openEditor(page);
+
+    await editor.clear();
+
+    await editor.paste(
+      'Title\none',
+      '<meta charset="utf-8"><h2>Title</h2><ul><li><b>one</b></li></ul>',
+    );
+
+    await expect.poll(() => editor.blockTags()).toEqual(['h2', 'ul']);
+    await expect(editor.content.locator('ul strong')).toHaveText('one');
+    await expect(editor.preview.locator('ul strong')).toHaveText('one');
+    await page.keyboard.press('ControlOrMeta+a');
+
+    const copied = await editor.copy();
+
+    expect(copied.text).toBe('Title\none');
+
+    expect(copied.html).toContain(
+      '<h2 class="nui-content__heading nui-content__heading--level-2">Title</h2>',
+    );
+  });
+
   test('passes axe in light and dark, fits phones and types in RTL', async ({ page }) => {
     const playground = await openEditor(page);
     const { editor } = playground;

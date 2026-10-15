@@ -211,6 +211,26 @@ describe('editor view input', () => {
     expect(view.view.posAtCoords(5, 5)).toBeUndefined();
   });
 
+  it('pastes clipboard HTML as blocks and copies a selection as text and marked markup', () => {
+    const view = mounted(twoParagraphs());
+
+    view.place(2);
+
+    expect(view.paste('x\ny', '<ul><li>x</li></ul><p><b>y</b></p>')).toBe(true);
+    expect(view.markup).toContain('<p>a</p><ul><li><p>x</p></li></ul><p><strong>y</strong>b</p>');
+
+    view.place(11, 16);
+
+    expect(view.copy('copy')).toBe('yb\nc');
+
+    expect(view.copy('copy', 'text/html')).toBe(
+      '<div data-numior-editor="1"><p><strong>y</strong>b</p><p>c</p></div>',
+    );
+
+    expect(view.copy('cut')).toBe('yb\nc');
+    expect(view.markup).toContain('<p>a</p><ul><li><p>x</p></li></ul><p>d</p>');
+  });
+
   it('keeps a whole-document selection in the model and copies, cuts and leaves it by itself', () => {
     const view = mounted(twoParagraphs());
 

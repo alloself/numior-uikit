@@ -6,6 +6,7 @@ import type {
   NodeId,
   TextNode,
 } from '../model/node.types';
+import type { HtmlElement } from '../html/html.types';
 import type { MarkRender, NodeRender } from '../render/render.types';
 
 export interface AttrSpec {
@@ -15,6 +16,20 @@ export interface AttrSpec {
 
 export type AttrSpecs = Readonly<Record<string, AttrSpec>>;
 
+export type ParsedAttrs = Readonly<Record<string, AttrValue>> | false;
+
+export interface NodeParseRule {
+  readonly tag: string;
+  readonly priority?: number | undefined;
+  readonly attrs?: ((element: HtmlElement) => ParsedAttrs) | undefined;
+}
+
+export interface MarkParseRule {
+  readonly tag?: string | undefined;
+  readonly style?: string | undefined;
+  readonly attrs?: ((element: HtmlElement) => ParsedAttrs) | undefined;
+}
+
 export interface NodeSpec {
   readonly content?: string | undefined;
   readonly group?: string | undefined;
@@ -23,12 +38,14 @@ export interface NodeSpec {
   readonly attrs?: AttrSpecs | undefined;
   readonly code?: boolean | undefined;
   readonly render?: NodeRender | undefined;
+  readonly parse?: readonly NodeParseRule[] | undefined;
 }
 
 export interface MarkSpec {
   readonly group?: string | undefined;
   readonly attrs?: AttrSpecs | undefined;
   readonly render?: MarkRender | undefined;
+  readonly parse?: readonly MarkParseRule[] | undefined;
 }
 
 export interface SchemaSpec {
@@ -57,6 +74,7 @@ export interface NodeType {
   readonly attrs: AttrSpecs;
   readonly code: boolean;
   readonly render: NodeRender;
+  readonly parse: readonly NodeParseRule[];
 }
 
 export interface MarkType {
@@ -65,6 +83,7 @@ export interface MarkType {
   readonly groups: ReadonlySet<string>;
   readonly attrs: AttrSpecs;
   readonly render: MarkRender;
+  readonly parse: readonly MarkParseRule[];
 }
 
 export interface ElementInit {

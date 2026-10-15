@@ -1,13 +1,8 @@
-import type {
-  ContentNode,
-  ElementNode,
-  RenderChild,
-  RenderElement,
-  Schema,
-  TextNode,
-} from '@numior/editor-core';
+import type { ContentNode, ElementNode, TextNode } from '../model/node.types';
+import type { Schema } from '../schema/schema.types';
+import type { RenderChild, RenderElement } from './render.types';
 
-export interface ContentBuilder<T> {
+export interface RenderBuilder<T> {
   readonly element: (
     tag: string,
     attrs: Readonly<Record<string, string>>,
@@ -19,7 +14,7 @@ export interface ContentBuilder<T> {
 
 interface Walk<T> {
   readonly schema: Schema;
-  readonly builder: ContentBuilder<T>;
+  readonly builder: RenderBuilder<T>;
 }
 
 const fromSpec = <T>(
@@ -82,18 +77,18 @@ const fromElement = <T>(walk: Walk<T>, node: ElementNode): readonly T[] => {
   return fromSpec(
     walk,
     withHole(type.render(node), type.leaf),
-    () => [...fromChildren(walk, node), ...trail],
+    () => [...fromChildren(walk, node.content), ...trail],
     node.id,
   );
 };
 
-const fromChildren = <T>(walk: Walk<T>, node: ElementNode): readonly T[] =>
-  node.content.flatMap((child) =>
+const fromChildren = <T>(walk: Walk<T>, content: readonly ContentNode[]): readonly T[] =>
+  content.flatMap((child) =>
     child.kind === 'text' ? fromText(walk, child) : fromElement(walk, child),
   );
 
-export const buildContent = <T>(
+export const renderTree = <T>(
   schema: Schema,
-  root: ElementNode,
-  builder: ContentBuilder<T>,
-): readonly T[] => fromChildren({ schema, builder }, root);
+  content: readonly ContentNode[],
+  builder: RenderBuilder<T>,
+): readonly T[] => fromChildren({ schema, builder }, content);

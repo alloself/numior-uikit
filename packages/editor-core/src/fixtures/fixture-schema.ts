@@ -18,24 +18,45 @@ export const fixtureSchema = createSchema({
   version: 1,
   nodes: {
     doc: { content: 'block+' },
-    paragraph: { group: 'block', content: 'inline*', render: () => renderTag('p') },
+    paragraph: {
+      group: 'block',
+      content: 'inline*',
+      render: () => renderTag('p'),
+      parse: [{ tag: 'p' }],
+    },
     heading: {
       group: 'block',
       content: 'inline*',
       attrs: { level: { default: 1, verify: isLevel } },
       render: (node) => renderTag(`h${String(node.attrs.level)}`),
+      parse: [1, 2, 3].map((level) => ({ tag: `h${String(level)}`, attrs: () => ({ level }) })),
     },
-    blockquote: { group: 'block', content: 'block+', render: () => renderTag('blockquote') },
-    bullet_list: { group: 'block list', content: 'list_item+', render: () => renderTag('ul') },
+    blockquote: {
+      group: 'block',
+      content: 'block+',
+      render: () => renderTag('blockquote'),
+      parse: [{ tag: 'blockquote' }],
+    },
+    bullet_list: {
+      group: 'block list',
+      content: 'list_item+',
+      render: () => renderTag('ul'),
+      parse: [{ tag: 'ul' }],
+    },
     ordered_list: {
       group: 'block list',
       content: 'list_item+',
       attrs: { start: { default: 1 } },
       render: (node) =>
         renderTag('ol', { start: node.attrs.start === 1 ? null : node.attrs.start }),
+      parse: [{ tag: 'ol', attrs: (list) => ({ start: Number(list.attr('start') ?? 1) }) }],
     },
     todo_list: { group: 'block list', content: 'todo_item+', render: () => renderTag('ul') },
-    list_item: { content: 'paragraph (paragraph | list)*', render: () => renderTag('li') },
+    list_item: {
+      content: 'paragraph (paragraph | list)*',
+      render: () => renderTag('li'),
+      parse: [{ tag: 'li' }],
+    },
     todo_item: {
       content: 'paragraph (paragraph | list)*',
       attrs: { checked: { default: false } },
@@ -52,8 +73,9 @@ export const fixtureSchema = createSchema({
       code: true,
       attrs: { language: { default: null } },
       render: () => renderTag('pre', {}, [renderTag('code', {}, [contentHole])]),
+      parse: [{ tag: 'pre' }],
     },
-    divider: { group: 'block', render: () => renderTag('hr') },
+    divider: { group: 'block', render: () => renderTag('hr'), parse: [{ tag: 'hr' }] },
     callout: {
       group: 'block',
       content: 'block+',
@@ -75,6 +97,7 @@ export const fixtureSchema = createSchema({
           alt: textOf(node.attrs.alt),
           width: node.attrs.width,
         }),
+      parse: [{ tag: 'img', attrs: (image) => ({ src: image.attr('src') ?? null }) }],
     },
     columns: { group: 'block', content: 'column{2,4}', render: () => renderTag('div') },
     column: { content: 'block+', render: () => renderTag('div') },
@@ -82,8 +105,9 @@ export const fixtureSchema = createSchema({
       group: 'block',
       content: 'table_row+',
       render: () => renderTag('table', {}, [renderTag('tbody', {}, [contentHole])]),
+      parse: [{ tag: 'table' }],
     },
-    table_row: { content: 'table_cell+', render: () => renderTag('tr') },
+    table_row: { content: 'table_cell+', render: () => renderTag('tr'), parse: [{ tag: 'tr' }] },
     table_cell: {
       content: 'paragraph+',
       attrs: { colspan: { default: 1 }, rowspan: { default: 1 }, header: { default: false } },
@@ -92,9 +116,18 @@ export const fixtureSchema = createSchema({
           colspan: spanOf(node.attrs.colspan),
           rowspan: spanOf(node.attrs.rowspan),
         }),
+      parse: [
+        { tag: 'td', attrs: (cell) => ({ colspan: Number(cell.attr('colspan') ?? 1) }) },
+        { tag: 'th', attrs: () => ({ header: true }) },
+      ],
     },
     text: { group: 'inline', inline: true },
-    hard_break: { group: 'inline', inline: true, render: () => renderTag('br') },
+    hard_break: {
+      group: 'inline',
+      inline: true,
+      render: () => renderTag('br'),
+      parse: [{ tag: 'br' }],
+    },
     mention: {
       group: 'inline',
       inline: true,
@@ -103,14 +136,23 @@ export const fixtureSchema = createSchema({
     },
   },
   marks: {
-    bold: { group: 'format', render: () => renderTag('strong') },
-    italic: { group: 'format', render: () => renderTag('em') },
-    underline: { group: 'format', render: () => renderTag('u') },
-    strike: { group: 'format', render: () => renderTag('s') },
-    code: { render: () => renderTag('code') },
+    bold: {
+      group: 'format',
+      render: () => renderTag('strong'),
+      parse: [{ tag: 'strong' }, { tag: 'b' }],
+    },
+    italic: {
+      group: 'format',
+      render: () => renderTag('em'),
+      parse: [{ tag: 'em' }, { tag: 'i' }],
+    },
+    underline: { group: 'format', render: () => renderTag('u'), parse: [{ tag: 'u' }] },
+    strike: { group: 'format', render: () => renderTag('s'), parse: [{ tag: 's' }] },
+    code: { render: () => renderTag('code'), parse: [{ tag: 'code' }] },
     link: {
       attrs: { href: { verify: isText } },
       render: (mark) => renderTag('a', { href: textOf(mark.attrs.href) }),
+      parse: [{ tag: 'a', attrs: (link) => ({ href: link.attr('href') ?? null }) }],
     },
     color: {
       attrs: { name: { verify: isText } },
