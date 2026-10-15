@@ -95,6 +95,10 @@ describe('NuiEditor block handles', () => {
       ),
     });
 
+    await editor.hoverList();
+
+    expect(editor.pushedTexts).toEqual(['li:one']);
+
     await editor.hoverItem('one');
 
     expect(editor.handleShown).toBe(true);
@@ -115,6 +119,7 @@ describe('NuiEditor block handles', () => {
     await editor.dragHandle(0, 40);
 
     expect(editor.dropShown).toBe(true);
+    expect(editor.ghostCopy).toEqual(['p:a']);
     expect(editor.blockTexts).toEqual(['h2:b', 'p:c', 'p:a']);
     expect(editor.handleShown).toBe(false);
   });

@@ -32,6 +32,9 @@ const parentOf = (doc: Doc, id: NodeId): Parent | undefined => {
 const inList = (doc: Doc, node: ElementNode): boolean =>
   doc.schema.nodes.get(node.type)?.groups.has('list') === true;
 
+export const holdsSlots = (doc: Doc, node: ElementNode): boolean =>
+  node.id === doc.root.id || inList(doc, node);
+
 export const slotAt = (doc: Doc, pos: number): ChildSlot | undefined => {
   const $pos = doc.resolve(pos);
 

@@ -289,11 +289,26 @@ export class EditorDriver {
     }
     await nextTick();
     this.dropShown = this.root.querySelector('.nui-editor__drop--shown') !== null;
+
+    this.ghostCopy = [
+      ...(this.root.querySelector('.nui-editor__ghost--shown')?.children ?? []),
+    ].map((block) => `${block.tagName.toLowerCase()}:${block.textContent ?? ''}`);
+
     globalThis.dispatchEvent(new PointerEvent('pointerup', { ...pointer, clientY }));
     await nextTick();
   }
 
   dropShown = false;
+
+  ghostCopy: readonly string[] = [];
+
+  async hoverList(): Promise<void> {
+    this.content
+      .querySelector('ul')
+      ?.dispatchEvent(new PointerEvent('pointermove', { bubbles: true }));
+
+    await nextTick();
+  }
 
   async hoverItem(text: string): Promise<void> {
     const item = [...this.content.querySelectorAll('li')].find(

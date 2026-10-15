@@ -29,6 +29,7 @@ export {
   deleteChild,
   duplicateChild,
   focusChild,
+  holdsSlots,
   moveChild,
   moveCurrent,
   selectionSlot,

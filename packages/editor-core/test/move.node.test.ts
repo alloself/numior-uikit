@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import {
   deleteChild,
   duplicateChild,
+  holdsSlots,
   moveChild,
   selectionSlot,
   slotAt,
@@ -34,6 +35,9 @@ const runs = (editor: EditingHarness, command: Command): boolean =>
 
 const ids = (editor: EditingHarness): string[] =>
   editor.state.doc.root.content.flatMap((block) => (block.kind === 'element' ? [block.id] : []));
+
+const elements = (nodes: readonly ContentNode[]): ElementNode[] =>
+  nodes.flatMap((child) => (child.kind === 'element' ? [child] : []));
 
 afterEach(() => {
   harness?.release();
@@ -84,6 +88,16 @@ describe('moving children', () => {
     expect(editor.outline).toBe(
       'bullet_list(list_item(paragraph("two") bullet_list(list_item(paragraph("deep")))) list_item(paragraph("one")) list_item(paragraph("three")))',
     );
+  });
+
+  it('holds movable children only in the root and in lists', () => {
+    const { doc: current } = started(node('bullet_list', [li('one')])).state;
+    const [list] = elements(current.root.content);
+    const [item] = elements(list?.content ?? []);
+
+    expect(
+      [current.root, list, item].map((each) => each !== undefined && holdsSlots(current, each)),
+    ).toEqual([true, true, false]);
   });
 
   it('duplicates under fresh ids and deletes up to the enclosing list and down to one empty block', () => {

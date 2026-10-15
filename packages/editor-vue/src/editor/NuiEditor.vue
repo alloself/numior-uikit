@@ -59,17 +59,12 @@
         @grip="handles.onGripPointerdown"
       />
       <div
-        v-if="handles.ghost.value"
-        class="nui-editor__ghost"
-        :style="{
-          '--_ghost-top': `${handles.ghost.value.top}px`,
-          '--_ghost-start': `${handles.ghost.value.start}px`,
-        }"
+        ref="ghost"
+        class="nui-content nui-editor__ghost"
+        :class="{ 'nui-editor__ghost--shown': handles.dragging.value }"
         aria-hidden="true"
-      >
-        <NuiIcon alias="grip" class="nui-editor__ghost-grip" />
-        <span class="nui-editor__ghost-label">{{ handles.ghost.value.label }}</span>
-      </div>
+        inert
+      />
       <div
         ref="drop"
         class="nui-editor__drop"
@@ -136,7 +131,7 @@ import {
 } from '@numior/editor-core';
 import { createEditorView, type EditorView } from '@numior/editor-core/view';
 import { provideIconDefaults, useFieldControl } from '@numior/primitives';
-import { NuiFieldFrame, NuiIcon } from '@numior/vue';
+import { NuiFieldFrame } from '@numior/vue';
 import {
   computed,
   onBeforeUnmount,
@@ -221,6 +216,7 @@ const toolbarElement = useTemplateRef<InstanceType<typeof NuiEditorToolbar>>('to
 const bubbleElement = useTemplateRef<InstanceType<typeof NuiEditorBubble>>('bubble');
 const handleComponent = useTemplateRef<InstanceType<typeof NuiEditorBlockHandle>>('handle');
 const dropElement = useTemplateRef<HTMLElement>('drop');
+const ghostElement = useTemplateRef<HTMLElement>('ghost');
 
 const handleElement = computed(() => {
   const element: unknown = handleComponent.value?.$el;
@@ -356,6 +352,7 @@ const handles = useBlockHandle({
   content: contentElement,
   handle: handleElement,
   drop: dropElement,
+  ghost: ghostElement,
   view: () => view,
   state: () => current.value,
   enabled: () => handlesShown.value && ready.value,

@@ -76,7 +76,11 @@
 .nui-editor__content li {
   transition:
     background-color var(--nui-duration-fast) var(--nui-easing),
-    margin-inline-start var(--nui-duration-fast) var(--nui-easing);
+    margin-inline-start var(--nui-duration-fast) var(--nui-easing),
+    opacity var(--nui-duration-fast) var(--nui-easing);
+}
+.nui-editor__content .nui-editor__lifted {
+  opacity: 0.4;
 }
 .nui-editor__content .nui-editor__pushed {
   margin-inline-start: calc(var(--_grip) + var(--nui-space-2));

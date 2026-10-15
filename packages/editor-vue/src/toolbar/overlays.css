@@ -154,6 +154,7 @@
 }
 .nui-editor__drop {
   position: absolute;
+  z-index: 3;
   inset-inline: var(--_padding);
   block-size: 2px;
   border-radius: 1px;
@@ -166,34 +167,27 @@
 .nui-editor__drop--shown {
   opacity: 1;
 }
-.nui-editor__ghost {
+.nui-editor .nui-editor__ghost {
+  --_size: var(--_text);
+  --_inset: var(--nui-space-2);
+
   position: absolute;
-  inset-block-start: var(--_ghost-top);
-  inset-inline-start: var(--_ghost-start);
+  inset-block-start: calc(var(--_ghost-top, 0px) - var(--nui-space-1) - 1px);
+  inset-inline-start: calc(var(--_ghost-start, 0px) - var(--_inset) - 1px);
   z-index: 2;
   box-sizing: border-box;
-  display: flex;
-  align-items: center;
-  gap: var(--nui-space-1);
-  min-inline-size: min(100%, 12rem);
-  max-inline-size: min(calc(100% - var(--_ghost-start) - var(--_padding)), 24rem);
-  block-size: 2.25rem;
-  padding-inline: var(--nui-space-2) var(--nui-space-4);
+  inline-size: calc(var(--_ghost-width, 0px) + var(--_inset) * 2 + 2px);
+  max-block-size: 12rem;
+  padding: var(--nui-space-1) var(--_inset);
+  overflow: hidden;
   border: 1px solid var(--nui-border);
   border-radius: var(--nui-radius-sm);
   background: var(--nui-surface-elevated);
   box-shadow: var(--nui-shadow-md);
-  font-size: var(--nui-font-size-sm);
+  opacity: 0;
   pointer-events: none;
+  transition: opacity var(--nui-duration-fast) var(--nui-easing);
 }
-.nui-editor__ghost-grip {
-  inline-size: 0.875rem;
-  block-size: 0.875rem;
-  color: var(--nui-text-muted);
-}
-.nui-editor__ghost-label {
-  min-inline-size: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.nui-editor .nui-editor__ghost--shown {
+  opacity: 1;
 }
