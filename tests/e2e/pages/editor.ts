@@ -33,13 +33,17 @@ export class EditorSection {
 
   blockTags(): Promise<string[]> {
     return this.content.evaluate((root) =>
-      [...root.children].map((child) => child.tagName.toLowerCase()),
+      [...root.querySelectorAll(':scope > .nui-editor__chunk > *')].map((block) =>
+        block.tagName.toLowerCase(),
+      ),
     );
   }
 
   blockTexts(): Promise<string[]> {
     return this.content.evaluate((root) =>
-      [...root.children].map((child) => child.textContent ?? ''),
+      [...root.querySelectorAll(':scope > .nui-editor__chunk > *')].map(
+        (block) => block.textContent ?? '',
+      ),
     );
   }
 

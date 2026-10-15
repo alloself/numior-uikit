@@ -109,21 +109,31 @@ describe('editor view', () => {
     );
   });
 
-  it('lets top-level blocks skip rendering off screen and remembers their measured size', () => {
-    const heading = node('heading', ['Title'], { level: 1 });
+  it('groups top-level blocks into chunks that skip rendering off screen together', () => {
+    const paragraphs = Array.from({ length: 70 }, (_, index) => node('paragraph', [`p${index}`]));
+    const view = mounted(doc(...paragraphs));
 
-    const view = mounted(
-      doc(heading, node('bullet_list', [node('list_item', [node('paragraph', ['a'])])])),
+    expect(view.chunkSizes).toEqual([32, 32, 6]);
+    expect(view.chunkStyle(0)).toEqual({ visibility: 'auto', intrinsicSize: 'auto 768px' });
+    expect(view.blocks).toHaveLength(70);
+
+    view.change((tr) =>
+      tr.insert(
+        view.positionOf(paragraphs[1]?.id ?? ''),
+        Array.from({ length: 40 }, () => fixtureSchema.element('paragraph', { id: tr.newId() })),
+      ),
     );
 
-    expect(view.blockStyle(0)).toEqual({ visibility: 'auto', intrinsicSize: 'auto 24px' });
-    expect(view.observed).toBe(2);
-    view.resizeBlock(0, 120);
-    view.change((tr) => tr.setNodeAttrs(view.positionOf(heading.id), { level: 3 }));
+    expect(view.chunkSizes).toEqual([32, 32, 8, 32, 6]);
 
-    expect(view.markup).toContain('<h3>Title</h3>');
-    expect(view.blockStyle(0)).toEqual({ visibility: 'auto', intrinsicSize: 'auto 120px' });
-    expect(view.observed).toBe(2);
+    expect(view.roundTrip(view.positionOf(paragraphs[60]?.id ?? '') + 1)).toBe(
+      view.positionOf(paragraphs[60]?.id ?? '') + 1,
+    );
+
+    view.change((tr) => tr.delete(0, view.positionOf(paragraphs[40]?.id ?? '')));
+
+    expect(view.chunkSizes.reduce((sum, size) => sum + size, 0)).toBe(30);
+    expect(view.chunkSizes.every((size) => size > 0)).toBe(true);
   });
 
   it('types into the same text node and leaves every other block alone', () => {
@@ -277,6 +287,5 @@ describe('editor view', () => {
     expect(view.markup).toBe('');
     expect(view.editable).toBeNull();
     expect(view.role).toBeNull();
-    expect(view.observed).toBe(0);
   });
 });

@@ -79,11 +79,11 @@ describe('editor view input', () => {
 
     expect(view.selection).toEqual(textSelection(2, 6));
 
-    view.selectRootChildren(0, 1);
+    view.selectBlocks(0, 1);
 
     expect(view.selection).toEqual(textSelection(1, 3));
 
-    view.selectRootChildren(0, 2);
+    view.selectRootChildren(0, 1);
 
     expect(view.selection).toEqual({ kind: 'all' });
 
@@ -209,5 +209,37 @@ describe('editor view input', () => {
     view.caretFrom('none', 'ab', 0);
 
     expect(view.view.posAtCoords(5, 5)).toBeUndefined();
+  });
+
+  it('keeps a whole-document selection in the model and copies, cuts and leaves it by itself', () => {
+    const view = mounted(twoParagraphs());
+
+    view.focus();
+    view.selectAll();
+
+    expect(view.selectsAll).toBe(true);
+    expect(view.domSpan).toEqual({ anchor: 1, head: 1 });
+    expect(view.copy('copy')).toBe('ab\ncd');
+    expect(view.press('ArrowRight')).toBe(true);
+    expect(view.selection).toEqual(textSelection(7));
+    expect(view.selectsAll).toBe(false);
+
+    view.selectAll();
+
+    expect(view.copy('cut')).toBe('ab\ncd');
+    expect(view.modelTexts).toEqual(['']);
+
+    view.type('ab');
+    view.selectAll();
+
+    expect(view.press('Backspace')).toBe(true);
+    expect(view.modelTexts).toEqual(['']);
+
+    view.type('x');
+    view.selectAll();
+    view.type('y');
+
+    expect(view.modelTexts).toEqual(['y']);
+    expect(view.copy('copy')).toBeUndefined();
   });
 });

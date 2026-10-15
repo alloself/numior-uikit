@@ -56,6 +56,30 @@
   outline: none;
   caret-color: var(--nui-text);
 }
+.nui-editor__content > .nui-editor__chunk {
+  margin-block-start: 0;
+}
+.nui-editor__chunk > * {
+  margin-block-start: var(--_flow);
+}
+.nui-editor__chunk > .nui-content__heading {
+  margin-block-start: 1.4em;
+}
+.nui-editor__chunk:first-child > :first-child {
+  margin-block-start: 0;
+}
+.nui-editor__content.nui-editor__all {
+  caret-color: transparent;
+}
+.nui-editor__chunk > * {
+  transition: background-color var(--nui-duration-fast) var(--nui-easing);
+}
+.nui-editor__all > .nui-editor__chunk > * {
+  background-color: color-mix(in oklab, var(--nui-primary) 16%, transparent);
+}
+.nui-editor__all > .nui-editor__chunk > :not(.nui-content__callout, .nui-content__code) {
+  border-radius: var(--nui-radius-sm);
+}
 .nui-editor__content[hidden] {
   display: none;
 }

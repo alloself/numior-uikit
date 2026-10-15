@@ -8,6 +8,8 @@ import type { DomPoint } from './view.types';
 
 const SELECTED_CLASS = 'nui-editor__selected';
 
+export const ALL_CLASS = 'nui-editor__all';
+
 interface Span {
   readonly anchor: number;
   readonly head: number;
@@ -63,10 +65,10 @@ const pointsOf = (
     return nodePoints(host, selection.id);
   }
   if (selection.kind === 'all') {
-    return [
-      { node: host.root, offset: 0 },
-      { node: host.root, offset: host.root.childNodes.length },
-    ];
+    const doc = host.state().doc;
+    const point = domAtPos(host.rootDesc, doc, textPosition(doc, 0, 1) ?? 0);
+
+    return [point, point];
   }
   const doc = host.state().doc;
   const span = spanOf(doc, selection);
@@ -95,6 +97,13 @@ const domSpan = (host: ViewHost): Span | undefined => {
   };
 };
 
+const allCaret = (doc: Doc): number => textPosition(doc, 0, 1) ?? 0;
+
+const coversAll = (doc: Doc, span: Span): boolean =>
+  Math.min(span.anchor, span.head) <= allCaret(doc) &&
+  Math.max(span.anchor, span.head) >= (textPosition(doc, doc.size, -1) ?? doc.size) &&
+  span.anchor !== span.head;
+
 const selectionOfSpan = (doc: Doc, span: Span): Selection => {
   const low = Math.min(span.anchor, span.head);
   const high = Math.max(span.anchor, span.head);
@@ -106,10 +115,7 @@ const selectionOfSpan = (doc: Doc, span: Span): Selection => {
   if (span.anchor === span.head) {
     return nearestCursor(doc, span.anchor);
   }
-  if (
-    low <= (textPosition(doc, 0, 1) ?? 0) &&
-    high >= (textPosition(doc, doc.size, -1) ?? doc.size)
-  ) {
+  if (coversAll(doc, span)) {
     return { kind: 'all' };
   }
   const forward = span.anchor <= span.head;
@@ -132,6 +138,13 @@ export const createSelectionSync = (host: ViewHost): SelectionSync => {
 
   const matches = (span: Span): boolean => {
     const state = host.state();
+
+    if (state.selection.kind === 'all') {
+      return (
+        coversAll(state.doc, span) ||
+        (span.anchor === span.head && span.head === allCaret(state.doc))
+      );
+    }
     const expected = spanOf(state.doc, state.selection);
 
     return expected.anchor === span.anchor && expected.head === span.head;
@@ -177,6 +190,8 @@ export const createSelectionSync = (host: ViewHost): SelectionSync => {
     mark: () => {
       const selection = host.state().selection;
       const next = selection.kind === 'node' ? host.context.byId.get(selection.id)?.dom : undefined;
+
+      host.root.classList.toggle(ALL_CLASS, selection.kind === 'all');
 
       if (next === marked) {
         return;

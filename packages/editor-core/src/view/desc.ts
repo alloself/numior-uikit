@@ -1,7 +1,7 @@
 import { sameAttrs, sameMarks } from '../model/node';
 import type { ContentNode, ElementNode, NodeId, TextNode } from '../model/node.types';
 import type { NodeType, Schema } from '../schema/schema.types';
-import type { BlockSizes } from './block-sizes';
+import { fillChunks, placeInChunks, tidyChunks } from './chunks';
 import { renderLeaf, renderParent, type RenderedDom } from './render-dom';
 
 export interface ElementDesc {
@@ -31,10 +31,10 @@ export interface ViewContext {
   readonly schema: Schema;
   readonly descs: WeakMap<Node, Desc>;
   readonly byId: Map<NodeId, ElementDesc>;
-  readonly blocks: BlockSizes;
+  readonly chunks: WeakSet<Node>;
 }
 
-const outerOf = (desc: Desc): ChildNode => (desc.kind === 'text' ? desc.outer : desc.dom);
+export const outerOf = (desc: Desc): ChildNode => (desc.kind === 'text' ? desc.outer : desc.dom);
 
 const typeOf = (schema: Schema, name: string): NodeType => {
   const type = schema.nodes.get(name);
@@ -110,7 +110,19 @@ const createText = (
   return desc;
 };
 
-const isTopLevel = (desc: ElementDesc): boolean => desc.parent?.parent === null;
+const LINE_HEIGHT = 24;
+
+const LINE_LENGTH = 80;
+
+const estimateOf = (context: ViewContext, block: Element): number => {
+  const desc = context.descs.get(block);
+  const size = desc?.kind === 'element' ? desc.node.size : LINE_LENGTH;
+
+  return Math.max(1, Math.ceil(size / LINE_LENGTH)) * LINE_HEIGHT;
+};
+
+const chunked = (context: ViewContext, desc: ElementDesc): boolean =>
+  desc.parent === null && context.schema.nodes.get(desc.node.type)?.inlineContent !== true;
 
 const createElement = (
   context: ViewContext,
@@ -137,9 +149,6 @@ const createElement = (
   }
   context.byId.set(node.id, desc);
   fillChildren(context, desc);
-  if (isTopLevel(desc)) {
-    context.blocks.watch(dom, node);
-  }
   return desc;
 };
 
@@ -160,7 +169,13 @@ const fillChildren = (context: ViewContext, desc: ElementDesc): void => {
     return;
   }
   desc.children = desc.node.content.map((child, index) => createDesc(context, child, desc, index));
-  content.replaceChildren(...desc.children.map(outerOf));
+  if (chunked(context, desc)) {
+    fillChunks(content, desc.children.map(outerOf), context.chunks, (block) =>
+      estimateOf(context, block),
+    );
+  } else {
+    content.replaceChildren(...desc.children.map(outerOf));
+  }
   syncHack(context, desc);
 };
 
@@ -225,9 +240,6 @@ const forget = (context: ViewContext, desc: Desc): void => {
   }
   if (context.byId.get(desc.node.id) === desc) {
     context.byId.delete(desc.node.id);
-  }
-  if (isTopLevel(desc)) {
-    context.blocks.unwatch(desc.dom);
   }
   for (const child of desc.children) {
     forget(context, child);
@@ -416,7 +428,14 @@ export const syncElement = (context: ViewContext, desc: ElementDesc, node: Eleme
     child.index = node.content.length - suffix + offset;
   });
 
-  placeBefore(content, middle, kept[0] === undefined ? null : outerOf(kept[0]));
+  const anchor = kept[0] === undefined ? null : outerOf(kept[0]);
+
+  if (chunked(context, desc)) {
+    placeInChunks(content, middle.map(outerOf), anchor, context.chunks);
+    tidyChunks(content, context.chunks, (block) => estimateOf(context, block));
+  } else {
+    placeBefore(content, middle, anchor);
+  }
   desc.children = [...previous.slice(0, prefix), ...middle, ...kept];
   syncHack(context, desc);
 };

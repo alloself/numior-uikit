@@ -1,6 +1,6 @@
 import type { Doc } from '../doc/doc.types';
 import { childOffsets } from '../model/node';
-import type { Desc, ElementDesc, ViewContext } from './desc';
+import { outerOf, type Desc, type ElementDesc, type ViewContext } from './desc';
 import type { DomPoint } from './view.types';
 
 const startOf = (desc: Desc): number => {
@@ -27,13 +27,42 @@ const positionAtChild = (
 
   for (let at = index; at < nodes.length; at += 1) {
     const node = nodes[at];
-    const child = node === undefined ? undefined : context.descs.get(node);
+    const child = node === undefined ? undefined : childDesc(context, node);
 
     if (child !== undefined && child.parent === desc) {
       return startOf(child);
     }
   }
   return contentEnd(desc);
+};
+
+const childDesc = (context: ViewContext, node: Node): Desc | undefined => {
+  if (!context.chunks.has(node)) {
+    return context.descs.get(node);
+  }
+  for (const block of node.childNodes) {
+    const desc = context.descs.get(block);
+
+    if (desc !== undefined) {
+      return desc;
+    }
+  }
+  return undefined;
+};
+
+const chunkPosition = (context: ViewContext, chunk: Node, offset: number): number => {
+  const root = chunk.parentNode;
+  const rootDesc = root === null ? undefined : context.descs.get(root);
+  const block = chunk.childNodes[offset];
+  const desc = block === undefined ? undefined : context.descs.get(block);
+
+  if (desc !== undefined) {
+    return startOf(desc);
+  }
+  if (rootDesc?.kind !== 'element' || !(root instanceof HTMLElement)) {
+    throw new RangeError('A chunk lies outside the editor root');
+  }
+  return positionAtChild(context, rootDesc, root, indexOf(chunk) + 1);
 };
 
 const precedes = (container: Node, offset: number, content: HTMLElement): boolean => {
@@ -85,6 +114,9 @@ export const posAtDOM = (context: ViewContext, node: Node, offset: number): numb
     if (desc !== undefined) {
       return positionIn(context, desc, current, at);
     }
+    if (context.chunks.has(current)) {
+      return chunkPosition(context, current, at);
+    }
     const parent = current.parentNode;
 
     if (parent === null) {
@@ -122,5 +154,20 @@ export const domAtPos = (root: ElementDesc, doc: Doc, pos: number): DomPoint => 
   if (desc.contentDOM === null) {
     throw new RangeError(`Position ${pos} lies inside a leaf`);
   }
-  return { node: desc.contentDOM, offset: resolved.index };
+  return pointBetween(desc.contentDOM, child ?? before, child === undefined, resolved.index);
+};
+
+const pointBetween = (
+  content: HTMLElement,
+  near: Desc | undefined,
+  after: boolean,
+  index: number,
+): DomPoint => {
+  const outer = near === undefined ? undefined : outerOf(near);
+  const parent = outer?.parentNode;
+
+  if (outer === undefined || parent === null || parent === undefined || parent === content) {
+    return { node: content, offset: index };
+  }
+  return { node: parent, offset: indexOf(outer) + (after ? 1 : 0) };
 };

@@ -14,12 +14,13 @@ import {
 } from '../../src';
 import { fixtureSchema } from '../../src/fixtures';
 import { createEditorView, type EditorView } from '../../src/view';
-import { installResizeObservers, observedTargets, resizeTarget } from '../support/resize-observers';
 
-export interface BlockStyle {
+export interface ChunkStyle {
   readonly visibility: string;
   readonly intrinsicSize: string;
 }
+
+const CHUNK = '.nui-editor__chunk';
 
 export interface DomSpan {
   readonly anchor: number;
@@ -91,6 +92,9 @@ const withoutStyles = (root: HTMLElement): string => {
   for (const element of copy.querySelectorAll('[style]')) {
     element.removeAttribute('style');
   }
+  for (const chunk of copy.querySelectorAll(CHUNK)) {
+    chunk.replaceWith(...chunk.childNodes);
+  }
   return copy.innerHTML;
 };
 
@@ -110,8 +114,6 @@ export class EditorViewDriver {
     schema: Schema = fixtureSchema,
     plugins: readonly Plugin[] = [],
   ): EditorViewDriver {
-    installResizeObservers();
-
     const host = document.createElement('div');
 
     host.tabIndex = 0;
@@ -181,6 +183,13 @@ export class EditorViewDriver {
     document.dispatchEvent(new Event('selectionchange'));
   }
 
+  selectBlocks(from: number, to: number): void {
+    const chunk = this.blocks[from]?.parentNode ?? this.host;
+
+    document.getSelection()?.setBaseAndExtent(chunk, from, chunk, to);
+    document.dispatchEvent(new Event('selectionchange'));
+  }
+
   type(text: string): boolean {
     return [...text].every((char) => !this.host.dispatchEvent(beforeinput('insertText', char)));
   }
@@ -206,6 +215,26 @@ export class EditorViewDriver {
 
     Object.defineProperty(event, 'clipboardData', { value: { getData: () => text } });
     return !this.host.dispatchEvent(event);
+  }
+
+  copy(type: 'copy' | 'cut'): string | undefined {
+    let copied: string | undefined;
+    const event = new Event(type, { bubbles: true, cancelable: true });
+
+    Object.defineProperty(event, 'clipboardData', {
+      value: {
+        setData: (_format: string, value: string) => {
+          copied = value;
+        },
+      },
+    });
+
+    this.host.dispatchEvent(event);
+    return copied;
+  }
+
+  get selectsAll(): boolean {
+    return this.host.classList.contains('nui-editor__all');
   }
 
   clickNode(id: NodeId): boolean {
@@ -281,7 +310,26 @@ export class EditorViewDriver {
   }
 
   get blocks(): readonly Element[] {
-    return [...this.host.children];
+    return [...this.host.children].flatMap((child) =>
+      child.matches(CHUNK) ? [...child.children] : [child],
+    );
+  }
+
+  get chunkSizes(): readonly number[] {
+    return [...this.host.querySelectorAll(CHUNK)].map((chunk) => chunk.children.length);
+  }
+
+  chunkStyle(index: number): ChunkStyle {
+    const chunk = this.host.querySelectorAll(CHUNK)[index];
+
+    return {
+      visibility:
+        chunk instanceof HTMLElement ? chunk.style.getPropertyValue('content-visibility') : '',
+      intrinsicSize:
+        chunk instanceof HTMLElement
+          ? chunk.style.getPropertyValue('contain-intrinsic-block-size')
+          : '',
+    };
   }
 
   get texts(): readonly string[] {
@@ -304,10 +352,6 @@ export class EditorViewDriver {
     return this.host.getAttribute('role');
   }
 
-  get observed(): number {
-    return observedTargets();
-  }
-
   get docSize(): number {
     return this.state.doc.size;
   }
@@ -317,10 +361,13 @@ export class EditorViewDriver {
   }
 
   get rootChanges(): number {
-    return (this.mutations?.takeRecords() ?? []).reduce(
-      (sum, record) => sum + record.addedNodes.length + record.removedNodes.length,
-      0,
-    );
+    return (this.mutations?.takeRecords() ?? [])
+      .filter(
+        (record) =>
+          record.target === this.host ||
+          (record.target instanceof Element && record.target.matches(CHUNK)),
+      )
+      .reduce((sum, record) => sum + record.addedNodes.length + record.removedNodes.length, 0);
   }
 
   remember(): void {
@@ -328,7 +375,7 @@ export class EditorViewDriver {
     this.textsBefore = textNodesOf(this.host);
     this.mutations?.disconnect();
     this.mutations = new MutationObserver(() => undefined);
-    this.mutations.observe(this.host, { childList: true });
+    this.mutations.observe(this.host, { childList: true, subtree: true });
   }
 
   change(edit: (tr: Transaction) => Transaction): void {
@@ -337,27 +384,6 @@ export class EditorViewDriver {
 
   receive(state: EditorState): void {
     this.view.update(state);
-  }
-
-  blockStyle(index: number): BlockStyle {
-    const block = this.blocks[index];
-
-    return {
-      visibility:
-        block instanceof HTMLElement ? block.style.getPropertyValue('content-visibility') : '',
-      intrinsicSize:
-        block instanceof HTMLElement
-          ? block.style.getPropertyValue('contain-intrinsic-block-size')
-          : '',
-    };
-  }
-
-  resizeBlock(index: number, blockSize: number): void {
-    const block = this.blocks[index];
-
-    if (block !== undefined) {
-      resizeTarget(block, blockSize);
-    }
   }
 
   positionOf(id: NodeId): number {

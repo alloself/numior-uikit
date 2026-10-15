@@ -175,6 +175,14 @@ const hasModifier = (event: KeyboardEvent): boolean =>
 const isRtl = (host: ViewHost): boolean =>
   host.root.ownerDocument.defaultView?.getComputedStyle(host.root).direction === 'rtl';
 
+const leaveAll = (host: ViewHost, forward: boolean): boolean => {
+  const state = host.state();
+  const edge = forward ? state.doc.size : 0;
+
+  host.dispatch(state.tr.setSelection(nearestCursor(state.doc, edge, forward ? -1 : 1)), 'key');
+  return true;
+};
+
 const moveByArrow = (host: ViewHost, event: KeyboardEvent): boolean => {
   const arrow = ARROWS[event.key];
 
@@ -184,10 +192,22 @@ const moveByArrow = (host: ViewHost, event: KeyboardEvent): boolean => {
   const forward = arrow.vertical ? arrow.forward : arrow.forward !== isRtl(host);
   const state = host.state();
 
+  if (state.selection.kind === 'all') {
+    return leaveAll(host, forward);
+  }
+
   return selectAtom(forward ? 'forward' : 'backward', arrow.vertical)(state, (tr) => {
     host.dispatch(tr, 'key');
   });
 };
+
+const DELETE_KEYS = new Set(['Backspace', 'Delete']);
+
+const deleteAll = (host: ViewHost, event: KeyboardEvent): boolean =>
+  host.state().selection.kind === 'all' &&
+  DELETE_KEYS.has(event.key) &&
+  !hasModifier(event) &&
+  runIntent(host, { kind: 'delete', direction: 'backward', unit: 'character' });
 
 const handleKey = (host: ViewHost, event: KeyboardEvent): boolean => {
   const key = keyOf(event);
@@ -199,7 +219,8 @@ const handleKey = (host: ViewHost, event: KeyboardEvent): boolean => {
 
   return (
     state.plugins.some((plugin) => plugin.props.handleKey?.(key, state, dispatch) === true) ||
-    moveByArrow(host, event)
+    moveByArrow(host, event) ||
+    deleteAll(host, event)
   );
 };
 
@@ -254,6 +275,19 @@ export const attachInput = (host: ViewHost, parts: InputParts): (() => void) => 
     }
   };
 
+  const onCopy = (event: ClipboardEvent): void => {
+    const state = host.state();
+
+    if (state.selection.kind !== 'all' || event.clipboardData === null) {
+      return;
+    }
+    event.preventDefault();
+    event.clipboardData.setData('text/plain', state.doc.textBetween(0, state.doc.size, '\n'));
+    if (event.type === 'cut') {
+      runIntent(host, { kind: 'delete', direction: 'backward', unit: 'character' });
+    }
+  };
+
   const onDrop = (event: DragEvent): void => {
     const text = event.dataTransfer?.getData('text/plain') ?? '';
     const pos = posAtCoords(host, event.clientX, event.clientY);
@@ -295,6 +329,8 @@ export const attachInput = (host: ViewHost, parts: InputParts): (() => void) => 
   root.addEventListener('keydown', onKeydown);
   root.addEventListener('beforeinput', onBeforeinput);
   root.addEventListener('paste', onPaste);
+  root.addEventListener('copy', onCopy);
+  root.addEventListener('cut', onCopy);
   root.addEventListener('drop', onDrop);
   root.addEventListener('dragover', onDrag);
   root.addEventListener('dragstart', onDrag);
@@ -307,6 +343,8 @@ export const attachInput = (host: ViewHost, parts: InputParts): (() => void) => 
     root.removeEventListener('keydown', onKeydown);
     root.removeEventListener('beforeinput', onBeforeinput);
     root.removeEventListener('paste', onPaste);
+    root.removeEventListener('copy', onCopy);
+    root.removeEventListener('cut', onCopy);
     root.removeEventListener('drop', onDrop);
     root.removeEventListener('dragover', onDrag);
     root.removeEventListener('dragstart', onDrag);

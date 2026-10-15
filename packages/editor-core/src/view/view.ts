@@ -1,14 +1,13 @@
 import { inputSource } from '../commands/input';
 import type { InputSource } from '../state/input.types';
 import type { EditorState, Transaction } from '../state/state.types';
-import { createBlockSizes } from './block-sizes';
 import { coordsAtPos, posAtCoords } from './coords';
 import { createRootDesc, syncElement, type ViewContext } from './desc';
 import { createDomWatch } from './dom-change';
 import type { ViewHost } from './host.types';
 import { attachInput, runIntent } from './input';
 import { domAtPos, posAtDOM } from './positions';
-import { createSelectionSync } from './selection-sync';
+import { ALL_CLASS, createSelectionSync } from './selection-sync';
 import type { EditorView, EditorViewOptions } from './view.types';
 
 const ROOT_ATTRS = ['contenteditable', 'role', 'aria-multiline', 'translate'] as const;
@@ -40,7 +39,7 @@ export const createEditorView = (root: HTMLElement, options: EditorViewOptions):
     schema: state.doc.schema,
     descs: new WeakMap(),
     byId: new Map(),
-    blocks: createBlockSizes(),
+    chunks: new WeakSet(),
   };
 
   prepareRoot(root, options.editable ?? true);
@@ -120,9 +119,9 @@ export const createEditorView = (root: HTMLElement, options: EditorViewOptions):
     posAtCoords: (x, y) => posAtCoords(host, x, y),
     nodeDOM: (id) => context.byId.get(id)?.dom,
     destroy: () => {
+      root.classList.remove(ALL_CLASS);
       detach();
       watch.destroy();
-      context.blocks.destroy();
       context.byId.clear();
       releaseRoot(root);
     },
