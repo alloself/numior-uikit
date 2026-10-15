@@ -9,12 +9,15 @@
           'nui-editor--disabled': isDisabled,
           'nui-editor--readonly': isReadonly,
           'nui-editor--empty': empty,
+          'nui-editor--handles': handlesShown,
         },
       ]"
       ref="frame"
       @focusin="overlays.onFocusin"
       @focusout="overlays.onFocusout"
       @pointerdown="overlays.onPointerdown"
+      @pointermove="handles.onPointermove"
+      @pointerleave="handles.onPointerleave"
     >
       <NuiEditorToolbar
         v-if="fixedToolbar"
@@ -46,6 +49,22 @@
         @keydown="onKeydown"
       />
       <span ref="anchor" class="nui-editor__anchor" aria-hidden="true" />
+      <NuiEditorBlockHandle
+        v-if="handlesShown && ready"
+        ref="handle"
+        v-model:open="handles.menuOpen.value"
+        :state="current"
+        :index="handles.index.value"
+        :dragging="handles.dragging.value"
+        @run="onHandleRun"
+        @grip="handles.onGripPointerdown"
+      />
+      <div
+        ref="drop"
+        class="nui-editor__drop"
+        :class="{ 'nui-editor__drop--shown': handles.dragging.value }"
+        aria-hidden="true"
+      />
       <NuiEditorBubble
         v-if="bubbleToolbar && ready"
         ref="bubble"
@@ -123,6 +142,8 @@ import { useMediaQuery } from '@vueuse/core';
 import NuiEditorBubble from '../bubble/NuiEditorBubble.vue';
 import NuiEditorLinkPanel from '../link/NuiEditorLinkPanel.vue';
 import NuiEditorToolbar from '../toolbar/NuiEditorToolbar.vue';
+import NuiEditorBlockHandle from '../handle/NuiEditorBlockHandle.vue';
+import { useBlockHandle } from '../handle/use-block-handle';
 import NuiEditorSlashMenu from '../slash/NuiEditorSlashMenu.vue';
 import { useSlash } from '../slash/use-slash';
 import { useEditorOverlays } from './use-editor-overlays';
@@ -147,6 +168,7 @@ const {
   toolbar = 'fixed',
   colours = CONTENT_COLOURS,
   highlights = CONTENT_COLOURS,
+  blockHandles = true,
 } = defineProps<NuiEditorProps>();
 
 const document = defineModel<DocJSON | undefined>('document');
@@ -183,6 +205,14 @@ const frameElement = useTemplateRef<HTMLElement>('frame');
 const anchorElement = useTemplateRef<HTMLElement>('anchor');
 const toolbarElement = useTemplateRef<InstanceType<typeof NuiEditorToolbar>>('toolbar');
 const bubbleElement = useTemplateRef<InstanceType<typeof NuiEditorBubble>>('bubble');
+const handleComponent = useTemplateRef<InstanceType<typeof NuiEditorBlockHandle>>('handle');
+const dropElement = useTemplateRef<HTMLElement>('drop');
+
+const handleElement = computed(() => {
+  const element: unknown = handleComponent.value?.$el;
+
+  return element instanceof HTMLElement ? element : null;
+});
 
 const limitedSchema = schema.restrict({
   values: {
@@ -303,6 +333,24 @@ const editor: NuiEditorApi = {
   state: () => view?.state,
   run,
   focus: () => view?.focus(),
+};
+
+const handlesShown = computed(() => blockHandles && editable.value);
+
+const handles = useBlockHandle({
+  frame: frameElement,
+  handle: handleElement,
+  drop: dropElement,
+  view: () => view,
+  state: () => current.value,
+  enabled: () => handlesShown.value && ready.value,
+  focused: () => overlays.focused.value,
+  run: (command) => run(command),
+});
+
+const onHandleRun = (command: Command): void => {
+  run(command);
+  editor.focus();
 };
 
 const onToolbarRun = (command: Command, refocus: boolean): void => {

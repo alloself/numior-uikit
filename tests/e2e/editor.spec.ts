@@ -215,6 +215,31 @@ test.describe('editor', () => {
     await expect.poll(() => editor.blockTexts()).toEqual(['Plan', '']);
   });
 
+  test('moves blocks by keyboard and handle and duplicates one from its menu', async ({ page }) => {
+    const { editor } = await openEditor(page);
+
+    const fine = await page.evaluate(
+      () => matchMedia('(hover: hover) and (pointer: fine)').matches,
+    );
+
+    await editor.clear();
+    await page.keyboard.type('One');
+    await page.keyboard.press('Enter');
+    await page.keyboard.type('Two');
+    await page.keyboard.press('Enter');
+    await page.keyboard.type('Three');
+    await page.keyboard.press('ControlOrMeta+Shift+ArrowUp');
+    await expect.poll(() => editor.blockTexts()).toEqual(['One', 'Three', 'Two']);
+    if (fine) {
+      await editor.dragBlock(0, 2);
+      await expect.poll(() => editor.blockTexts()).toEqual(['Three', 'Two', 'One']);
+      await editor.block(1).hover();
+    }
+    await editor.grip().click();
+    await page.getByRole('menuitem', { name: 'Дублировать' }).click();
+    await expect.poll(async () => (await editor.blockTexts()).length).toBe(4);
+  });
+
   test('passes axe in light and dark, fits phones and types in RTL', async ({ page }) => {
     const playground = await openEditor(page);
     const { editor } = playground;

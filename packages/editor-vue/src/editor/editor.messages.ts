@@ -34,6 +34,12 @@ export interface NuiEditorMessages {
   readonly callout: string;
   readonly toggle: string;
   readonly blocks: string;
+  readonly blockActions: string;
+  readonly turnInto: string;
+  readonly duplicate: string;
+  readonly moveUp: string;
+  readonly moveDown: string;
+  readonly deleteBlock: string;
 }
 
 const EN_COLOURS: Readonly<Record<string, string>> = {
@@ -96,6 +102,12 @@ export const editorMessages: NuiMessageCatalog<'editor'> = {
     callout: 'Callout',
     toggle: 'Toggle',
     blocks: 'Blocks',
+    blockActions: 'Block actions',
+    turnInto: 'Turn into',
+    duplicate: 'Duplicate',
+    moveUp: 'Move up',
+    moveDown: 'Move down',
+    deleteBlock: 'Delete',
   },
   ru: {
     toolbar: 'Форматирование',
@@ -131,5 +143,11 @@ export const editorMessages: NuiMessageCatalog<'editor'> = {
     callout: 'Выноска',
     toggle: 'Раскрывающийся блок',
     blocks: 'Блоки',
+    blockActions: 'Действия с блоком',
+    turnInto: 'Превратить в',
+    duplicate: 'Дублировать',
+    moveUp: 'Переместить выше',
+    moveDown: 'Переместить ниже',
+    deleteBlock: 'Удалить',
   },
 };

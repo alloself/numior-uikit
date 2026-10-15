@@ -109,6 +109,34 @@ export class EditorSection {
     return this.root.locator('.nui-editor-bubble');
   }
 
+  grip(): Locator {
+    return this.root.locator('.nui-editor-handle__grip');
+  }
+
+  block(index: number): Locator {
+    return this.content.locator('.nui-editor__chunk > *').nth(index);
+  }
+
+  async dragBlock(from: number, to: number): Promise<void> {
+    await this.block(from).hover();
+
+    const grip = await this.grip().boundingBox();
+    const target = await this.block(to).boundingBox();
+
+    if (grip === null || target === null) {
+      throw new Error('The block handle or its target has no box');
+    }
+    await this.page.mouse.move(grip.x + grip.width / 2, grip.y + grip.height / 2);
+    await this.page.mouse.down();
+    await this.page.mouse.move(grip.x + grip.width / 2, grip.y + 30, { steps: 4 });
+
+    await this.page.mouse.move(grip.x + grip.width / 2, target.y + target.height - 2, {
+      steps: 8,
+    });
+
+    await this.page.mouse.up();
+  }
+
   slashMenu(): Locator {
     return this.root.locator('.nui-editor-slash');
   }

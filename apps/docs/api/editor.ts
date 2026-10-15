@@ -29,6 +29,10 @@ const docs: DocsMap = {
         ru: 'Пресеты цвета текста, которые предлагает меню и принимает вставка; по умолчанию все девять. Цвета, которые уже есть в документе, сохраняются.',
         en: 'Text colour presets the menu offers and pastes keep; all nine by default. Colours already in the document stay.',
       },
+      blockHandles: {
+        ru: 'Ручка у блока под указателем (на сенсорных экранах — у блока с курсором): меню «Превратить в», «Дублировать», «Переместить», «Удалить» и перетаскивание блока. Ctrl+Shift+↑/↓ переносит блок с курсором.',
+        en: 'A handle on the block under the pointer (on touch screens, the block with the caret): a menu to turn, duplicate, move or delete the block and dragging. Ctrl+Shift+Up/Down moves the block with the caret.',
+      },
       highlights: {
         ru: 'Пресеты фонового выделения, которые предлагает меню и принимает вставка; по умолчанию все девять.',
         en: 'Highlight presets the menu offers and pastes keep; all nine by default.',

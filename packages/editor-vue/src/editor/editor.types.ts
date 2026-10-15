@@ -8,6 +8,7 @@ export interface NuiEditorProps extends NuiFieldControlProps {
   toolbar?: NuiEditorToolbarMode | undefined;
   colours?: readonly string[] | undefined;
   highlights?: readonly string[] | undefined;
+  blockHandles?: boolean | undefined;
 }
 
 export type NuiEditorToolbarMode = 'fixed' | 'bubble' | 'both' | 'none';

@@ -23,6 +23,15 @@ export type {
   NodeId,
   TextNode,
 } from './model/node.types';
+export {
+  blockIndex,
+  blockStart,
+  deleteBlock,
+  focusBlock,
+  duplicateBlock,
+  moveBlock,
+  moveCurrentBlock,
+} from './commands/move';
 export { insertHTML, insertPlainText, pasteSchema } from './commands/paste';
 export { fromHTML } from './html/parse';
 export { detectPasteSource } from './html/sources';

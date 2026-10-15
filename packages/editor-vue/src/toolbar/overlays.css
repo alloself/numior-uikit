@@ -127,3 +127,41 @@
 .nui-editor-slash__icon {
   color: var(--nui-text-muted);
 }
+.nui-editor--handles .nui-editor__content {
+  padding-inline-start: calc(var(--_padding) + 1.75rem);
+}
+.nui-editor-handle {
+  position: absolute;
+  inset-inline-start: calc(var(--_padding) - var(--nui-space-1));
+  z-index: 1;
+  translate: 0 -0.125rem;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--nui-duration-fast) var(--nui-easing);
+}
+.nui-editor-handle--shown {
+  opacity: 1;
+  pointer-events: auto;
+}
+.nui-editor-handle .nui-editor-handle__grip {
+  color: var(--nui-text-muted);
+  cursor: grab;
+  touch-action: none;
+}
+.nui-editor-handle--dragging .nui-editor-handle__grip {
+  cursor: grabbing;
+}
+.nui-editor__drop {
+  position: absolute;
+  inset-inline: calc(var(--_padding) + 1.75rem) var(--_padding);
+  block-size: 2px;
+  border-radius: 1px;
+  background: var(--nui-primary);
+  translate: 0 -1px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--nui-duration-fast) var(--nui-easing);
+}
+.nui-editor__drop--shown {
+  opacity: 1;
+}

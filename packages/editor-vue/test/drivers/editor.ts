@@ -266,6 +266,55 @@ export class EditorDriver {
     return isShown(this.root.querySelector('.nui-editor-link'));
   }
 
+  async hoverBlock(index: number): Promise<void> {
+    const block = this.content.querySelectorAll('.nui-editor__chunk > *')[index];
+
+    block?.dispatchEvent(new PointerEvent('pointermove', { bubbles: true }));
+    await nextTick();
+  }
+
+  async dragHandle(from: number, clientY: number): Promise<void> {
+    await this.hoverBlock(from);
+
+    const grip = this.root.querySelector('.nui-editor-handle__grip');
+    const pointer = { bubbles: true, pointerId: 1, button: 0, clientX: 0 };
+
+    grip?.dispatchEvent(new PointerEvent('pointerdown', { ...pointer, clientY: 0 }));
+    for (const step of [clientY / 2, clientY]) {
+      globalThis.dispatchEvent(new PointerEvent('pointermove', { ...pointer, clientY: step }));
+    }
+    await nextTick();
+    this.dropShown = this.root.querySelector('.nui-editor__drop--shown') !== null;
+    globalThis.dispatchEvent(new PointerEvent('pointerup', { ...pointer, clientY }));
+    await nextTick();
+  }
+
+  dropShown = false;
+
+  get handleShown(): boolean {
+    return this.root.querySelector('.nui-editor-handle--shown') !== null;
+  }
+
+  async blockAction(...path: readonly string[]): Promise<void> {
+    for (const label of path) {
+      const item = [...this.root.querySelectorAll('.nui-editor-handle [role="menuitem"]')].find(
+        (candidate) => candidate.textContent?.trim() === label,
+      );
+
+      if (!(item instanceof HTMLElement)) {
+        throw new Error(`No block action reads ${label}`);
+      }
+      item.click();
+      await nextTick();
+    }
+  }
+
+  get blockTexts(): readonly string[] {
+    return [...this.content.querySelectorAll('.nui-editor__chunk > *')].map(
+      (block) => `${block.tagName.toLowerCase()}:${block.textContent ?? ''}`,
+    );
+  }
+
   get slashShown(): boolean {
     return isShown(this.root.querySelector('.nui-editor-slash'));
   }
