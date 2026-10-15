@@ -25,6 +25,7 @@
         v-bind="{ ...contentAttrs, ...attrs }"
         @focus="emit('focus', $event)"
         @blur="emit('blur', $event)"
+        @paste="onPaste"
       />
     </div>
   </NuiFieldFrame>
@@ -36,6 +37,7 @@ import {
   baseKeymap,
   createEmptyDoc,
   createState,
+  detectPasteSource,
   fromJSON,
   history,
   inputRules,
@@ -61,7 +63,7 @@ import {
   useTemplateRef,
   watch,
 } from 'vue';
-import type { NuiEditorApi, NuiEditorProps } from './editor.types';
+import type { NuiEditorApi, NuiEditorPaste, NuiEditorProps } from './editor.types';
 
 defineOptions({ inheritAttrs: false });
 
@@ -87,6 +89,7 @@ const emit = defineEmits<{
   change: [document: DocJSON];
   focus: [event: FocusEvent];
   blur: [event: FocusEvent];
+  paste: [paste: NuiEditorPaste];
 }>();
 
 const attrs = useAttrs();
@@ -137,6 +140,12 @@ const contentAttrs = computed(() => ({
   'aria-disabled': isDisabled.value || undefined,
   'aria-placeholder': placeholder,
 }));
+
+const onPaste = (event: ClipboardEvent): void => {
+  if (editable.value) {
+    emit('paste', { source: detectPasteSource(event.clipboardData?.getData('text/html') ?? '') });
+  }
+};
 
 const publish = (state: EditorState): void => {
   written = toJSON(state.doc);

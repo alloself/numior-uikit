@@ -1,0 +1,270 @@
+[
+  {
+    "type": "heading",
+    "attrs": {
+      "level": 1
+    },
+    "content": [
+      {
+        "text": "Квартальный отчёт"
+      }
+    ]
+  },
+  {
+    "type": "heading",
+    "attrs": {
+      "level": 2
+    },
+    "content": [
+      {
+        "text": "Итоги Q3"
+      }
+    ]
+  },
+  {
+    "type": "paragraph",
+    "content": [
+      {
+        "text": "Выручка выросла на "
+      },
+      {
+        "text": "12 %",
+        "marks": [
+          {
+            "type": "bold"
+          }
+        ]
+      },
+      {
+        "text": ", а "
+      },
+      {
+        "text": "расходы",
+        "marks": [
+          {
+            "type": "italic"
+          }
+        ]
+      },
+      {
+        "text": " — на "
+      },
+      {
+        "text": "3 %",
+        "marks": [
+          {
+            "type": "underline"
+          }
+        ]
+      },
+      {
+        "text": ". Подробности в "
+      },
+      {
+        "text": "таблице",
+        "marks": [
+          {
+            "type": "link",
+            "attrs": {
+              "href": "https://example.com/q3"
+            }
+          }
+        ]
+      },
+      {
+        "text": "."
+      }
+    ]
+  },
+  {
+    "type": "bullet_list",
+    "content": [
+      {
+        "type": "list_item",
+        "content": [
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "text": "Новые клиенты"
+              }
+            ]
+          },
+          {
+            "type": "bullet_list",
+            "content": [
+              {
+                "type": "list_item",
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "text": "Москва"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "list_item",
+        "content": [
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "text": "Повторные покупки"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "type": "ordered_list",
+    "attrs": {
+      "start": 3
+    },
+    "content": [
+      {
+        "type": "list_item",
+        "content": [
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "text": "Собрать данные"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "list_item",
+        "content": [
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "text": "Отправить "
+              },
+              {
+                "text": "в пятницу",
+                "marks": [
+                  {
+                    "type": "strike"
+                  }
+                ]
+              },
+              {
+                "text": " в понедельник"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "type": "table",
+    "content": [
+      {
+        "type": "table_row",
+        "content": [
+          {
+            "type": "table_cell",
+            "attrs": {
+              "colspan": 1,
+              "rowspan": 1,
+              "header": false
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "text": "Город",
+                    "marks": [
+                      {
+                        "type": "bold"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "table_cell",
+            "attrs": {
+              "colspan": 1,
+              "rowspan": 1,
+              "header": false
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "text": "Клиенты",
+                    "marks": [
+                      {
+                        "type": "bold"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "table_row",
+        "content": [
+          {
+            "type": "table_cell",
+            "attrs": {
+              "colspan": 1,
+              "rowspan": 1,
+              "header": false
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "text": "Москва"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "table_cell",
+            "attrs": {
+              "colspan": 1,
+              "rowspan": 1,
+              "header": false
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "text": "120"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+]

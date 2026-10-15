@@ -51,6 +51,7 @@ export const openElement = (tag: string, attrs: ReadonlyMap<string, string>): Op
   const element: HtmlElement = {
     kind: 'element',
     tag,
+    attributes: attrs,
     children,
     attr: (name) => attrs.get(name),
     hasClass: (name) => classList().includes(name),
@@ -67,4 +68,15 @@ export const openElement = (tag: string, attrs: ReadonlyMap<string, string>): Op
   };
 
   return { element, children };
+};
+
+export const htmlElement = (
+  tag: string,
+  attrs: ReadonlyMap<string, string>,
+  children: readonly HtmlNode[],
+): HtmlElement => {
+  const built = openElement(tag, attrs);
+
+  built.children.push(...children);
+  return built.element;
 };

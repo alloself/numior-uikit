@@ -25,6 +25,7 @@ export type {
 } from './model/node.types';
 export { insertHTML, insertPlainText } from './commands/paste';
 export { fromHTML } from './html/parse';
+export { detectPasteSource } from './html/sources';
 export { contentToHTML, toHTML } from './html/serialize';
 export type {
   FromHTMLOptions,
@@ -32,6 +33,7 @@ export type {
   HtmlNode,
   HtmlText,
   HtmlWhitespace,
+  PasteSource,
 } from './html/html.types';
 export { contentHole, renderTag } from './render/render';
 export { renderTree } from './render/render-tree';

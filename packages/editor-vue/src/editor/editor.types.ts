@@ -1,4 +1,4 @@
-import type { Command, EditorState, Schema } from '@numior/editor-core';
+import type { Command, EditorState, PasteSource, Schema } from '@numior/editor-core';
 import type { NuiFieldControlProps } from '@numior/vue';
 
 export interface NuiEditorProps extends NuiFieldControlProps {
@@ -11,4 +11,8 @@ export interface NuiEditorApi {
   state(): EditorState | undefined;
   run(command: Command): boolean;
   focus(): void;
+}
+
+export interface NuiEditorPaste {
+  readonly source: PasteSource;
 }

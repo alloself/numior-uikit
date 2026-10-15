@@ -1,0 +1,156 @@
+[
+  {
+    "type": "table",
+    "content": [
+      {
+        "type": "table_row",
+        "content": [
+          {
+            "type": "table_cell",
+            "attrs": {
+              "colspan": 1,
+              "rowspan": 1,
+              "header": false
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "text": "Товар",
+                    "marks": [
+                      {
+                        "type": "bold"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "table_cell",
+            "attrs": {
+              "colspan": 1,
+              "rowspan": 1,
+              "header": false
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "text": "Цена",
+                    "marks": [
+                      {
+                        "type": "bold"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "table_row",
+        "content": [
+          {
+            "type": "table_cell",
+            "attrs": {
+              "colspan": 1,
+              "rowspan": 1,
+              "header": false
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "text": "Яблоки",
+                    "marks": [
+                      {
+                        "type": "italic"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "hard_break"
+                  },
+                  {
+                    "text": "сезонные",
+                    "marks": [
+                      {
+                        "type": "italic"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "table_cell",
+            "attrs": {
+              "colspan": 1,
+              "rowspan": 1,
+              "header": false
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "text": "120"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "table_row",
+        "content": [
+          {
+            "type": "table_cell",
+            "attrs": {
+              "colspan": 1,
+              "rowspan": 1,
+              "header": false
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "text": "Груши"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "table_cell",
+            "attrs": {
+              "colspan": 1,
+              "rowspan": 1,
+              "header": false
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "text": "95,5"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+]

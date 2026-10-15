@@ -61,6 +61,16 @@ describe('HTML parsing', () => {
     ).toBe('paragraph("keep") paragraph("& A&unknown; < <" "bare")'.replace('" "', ''));
   });
 
+  it('nests a list that follows an item and keeps spaces the markup asks to keep', () => {
+    expect(
+      read(
+        '<ul><li>a</li> <ul><li>b</li></ul></ul><p><span style="white-space:pre-wrap">x  y</span> z  w</p>',
+      ),
+    ).toBe(
+      'bullet_list(list_item(paragraph("a") bullet_list(list_item(paragraph("b"))))) paragraph("x  y z w")',
+    );
+  });
+
   it('reads blank input as one empty block and survives deep nesting', () => {
     expect(read('  \n ')).toBe('paragraph()');
     expect(read(`${'<div>'.repeat(5000)}x${'</div>'.repeat(5000)}`)).toBe('paragraph("x")');

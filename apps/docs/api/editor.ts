@@ -32,6 +32,10 @@ const docs: DocsMap = {
       change: { ru: 'Документ изменился.', en: 'The document changed.' },
       focus: { ru: 'Редактор получил фокус.', en: 'The editor received focus.' },
       blur: { ru: 'Редактор потерял фокус.', en: 'The editor lost focus.' },
+      paste: {
+        ru: 'Пользователь вставил содержимое; source — откуда оно: own, word, google-docs, excel, sheets, html или text.',
+        en: 'The user pasted content; source tells where it came from: own, word, google-docs, excel, sheets, html or text.',
+      },
     },
     exposed: {
       editor: {

@@ -95,6 +95,12 @@ const checkboxOf = (item: HtmlElement): HtmlElement | undefined => {
   return first?.tag === 'input' && first.attr('type') === 'checkbox' ? first : undefined;
 };
 
+const isTask = (item: HtmlElement): boolean =>
+  checkboxOf(item) !== undefined || item.attr('role') === 'checkbox';
+
+const isChecked = (item: HtmlElement): boolean =>
+  checkboxOf(item)?.attr('checked') !== undefined || item.attr('aria-checked') === 'true';
+
 const isTodoList = (list: HtmlElement): boolean => {
   const items = list.children.filter(
     (child): child is HtmlElement => child.kind === 'element' && child.tag === 'li',
@@ -103,7 +109,7 @@ const isTodoList = (list: HtmlElement): boolean => {
   return (
     list.hasClass('nui-content__list--todo') ||
     list.hasClass('contains-task-list') ||
-    (items.length > 0 && items.every((item) => checkboxOf(item) !== undefined))
+    (items.length > 0 && items.every(isTask))
   );
 };
 
@@ -267,7 +273,7 @@ export const contentSchema = createSchema({
       parse: [
         {
           tag: 'li',
-          attrs: (item) => ({ checked: checkboxOf(item)?.attr('checked') !== undefined }),
+          attrs: (item) => ({ checked: isChecked(item) }),
         },
       ],
     },

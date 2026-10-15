@@ -13,6 +13,7 @@
     "test-results/**",
     ".release/**",
     "**/.nuxt/**",
-    "**/.output/**"
+    "**/.output/**",
+    "tests/e2e/fixtures/paste/**"
   ]
 }

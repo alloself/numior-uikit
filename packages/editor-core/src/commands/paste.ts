@@ -1,6 +1,5 @@
 import type { ResolvedPos, Slice } from '../doc/doc.types';
 import { isEmptyDoc } from '../doc/empty';
-import { isOwnHTML } from '../html/clipboard';
 import { fromHTML } from '../html/parse';
 import { contentSize } from '../model/node';
 import type { ContentNode, ElementNode } from '../model/node.types';
@@ -160,10 +159,7 @@ const flatten = (
 };
 
 const parsedBlocks = (tr: Transaction, html: string): ElementNode[] => {
-  const doc = fromHTML(tr.doc.schema, html, {
-    ids: { next: () => tr.newId() },
-    whitespace: isOwnHTML(html) ? 'preserve' : 'collapse',
-  });
+  const doc = fromHTML(tr.doc.schema, html, { ids: { next: () => tr.newId() } });
 
   return isEmptyDoc(doc)
     ? []

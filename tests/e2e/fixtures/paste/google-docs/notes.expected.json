@@ -1,0 +1,250 @@
+[
+  {
+    "type": "heading",
+    "attrs": {
+      "level": 1
+    },
+    "content": [
+      {
+        "text": "Планёрка"
+      }
+    ]
+  },
+  {
+    "type": "paragraph",
+    "content": [
+      {
+        "text": "Обсудили "
+      },
+      {
+        "text": "сроки",
+        "marks": [
+          {
+            "type": "bold"
+          }
+        ]
+      },
+      {
+        "text": " релиза",
+        "marks": [
+          {
+            "type": "italic"
+          }
+        ]
+      },
+      {
+        "text": "  и "
+      },
+      {
+        "text": "план",
+        "marks": [
+          {
+            "type": "link",
+            "attrs": {
+              "href": "https://example.com/plan"
+            }
+          }
+        ]
+      },
+      {
+        "text": " старый",
+        "marks": [
+          {
+            "type": "strike"
+          }
+        ]
+      },
+      {
+        "text": "."
+      }
+    ]
+  },
+  {
+    "type": "bullet_list",
+    "content": [
+      {
+        "type": "list_item",
+        "content": [
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "text": "Дизайн"
+              }
+            ]
+          },
+          {
+            "type": "bullet_list",
+            "content": [
+              {
+                "type": "list_item",
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "text": "Иконки"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "list_item",
+        "content": [
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "text": "Тексты"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "type": "todo_list",
+    "content": [
+      {
+        "type": "todo_item",
+        "attrs": {
+          "checked": true
+        },
+        "content": [
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "text": "Согласовать бюджет",
+                "marks": [
+                  {
+                    "type": "strike"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "todo_item",
+        "attrs": {
+          "checked": false
+        },
+        "content": [
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "text": "Нанять дизайнера"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "type": "table",
+    "content": [
+      {
+        "type": "table_row",
+        "content": [
+          {
+            "type": "table_cell",
+            "attrs": {
+              "colspan": 1,
+              "rowspan": 1,
+              "header": false
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "text": "Задача",
+                    "marks": [
+                      {
+                        "type": "bold"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "table_cell",
+            "attrs": {
+              "colspan": 1,
+              "rowspan": 1,
+              "header": false
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "text": "Срок",
+                    "marks": [
+                      {
+                        "type": "bold"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "table_row",
+        "content": [
+          {
+            "type": "table_cell",
+            "attrs": {
+              "colspan": 1,
+              "rowspan": 1,
+              "header": false
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "text": "Релиз"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "table_cell",
+            "attrs": {
+              "colspan": 1,
+              "rowspan": 1,
+              "header": false
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "text": "15 ноября"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+]

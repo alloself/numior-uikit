@@ -1,0 +1,15 @@
+[
+  {
+    "type": "paragraph",
+    "content": [
+      {
+        "text": "Итого",
+        "marks": [
+          {
+            "type": "bold"
+          }
+        ]
+      }
+    ]
+  }
+]

@@ -1,0 +1,145 @@
+[
+  {
+    "type": "table",
+    "content": [
+      {
+        "type": "table_row",
+        "content": [
+          {
+            "type": "table_cell",
+            "attrs": {
+              "colspan": 1,
+              "rowspan": 1,
+              "header": false
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "text": "Статья",
+                    "marks": [
+                      {
+                        "type": "bold"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "table_cell",
+            "attrs": {
+              "colspan": 1,
+              "rowspan": 1,
+              "header": false
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "text": "Сумма",
+                    "marks": [
+                      {
+                        "type": "bold"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "table_row",
+        "content": [
+          {
+            "type": "table_cell",
+            "attrs": {
+              "colspan": 1,
+              "rowspan": 1,
+              "header": false
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "text": "Аренда"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "table_cell",
+            "attrs": {
+              "colspan": 1,
+              "rowspan": 1,
+              "header": false
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "text": "50 000"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "table_row",
+        "content": [
+          {
+            "type": "table_cell",
+            "attrs": {
+              "colspan": 1,
+              "rowspan": 1,
+              "header": false
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "text": "Связь",
+                    "marks": [
+                      {
+                        "type": "italic"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "table_cell",
+            "attrs": {
+              "colspan": 1,
+              "rowspan": 1,
+              "header": false
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "text": "1 200"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+]

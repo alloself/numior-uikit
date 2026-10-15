@@ -1,5 +1,9 @@
+import { readFileSync } from 'node:fs';
 import { expect, test, type Page } from '@playwright/test';
 import { PlaygroundPage } from './pages/playground';
+
+const office = (path: string): string =>
+  readFileSync(new URL(`fixtures/paste/${path}`, import.meta.url), 'utf8');
 
 const openEditor = async (page: Page): Promise<PlaygroundPage> => {
   const playground = new PlaygroundPage(page);
@@ -112,6 +116,23 @@ test.describe('editor', () => {
     expect(copied.html).toContain(
       '<h2 class="nui-content__heading nui-content__heading--level-2">Title</h2>',
     );
+  });
+
+  test('cleans up pastes from Word and Google Sheets and reports their source', async ({
+    page,
+  }) => {
+    const { editor } = await openEditor(page);
+
+    await editor.clear();
+    await editor.paste('report', office('word/report.html'));
+    await expect.poll(() => editor.blockTags()).toEqual(['h1', 'h2', 'p', 'ul', 'ol', 'div']);
+    await expect(editor.content.locator('ul ul li')).toHaveText('Москва');
+    await expect(editor.content.locator('ol')).toHaveAttribute('start', '3');
+    expect((await editor.readOutput()).paste).toBe('word');
+    await editor.clear();
+    await editor.paste('budget', office('sheets/budget.html'));
+    await expect(editor.content.locator('td strong')).toHaveText(['Статья', 'Сумма']);
+    expect((await editor.readOutput()).paste).toBe('sheets');
   });
 
   test('passes axe in light and dark, fits phones and types in RTL', async ({ page }) => {

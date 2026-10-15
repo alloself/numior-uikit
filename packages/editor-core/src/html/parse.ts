@@ -17,6 +17,7 @@ import {
 } from './builder';
 import type { FromHTMLOptions, HtmlElement, HtmlNode } from './html.types';
 import { marksOf, nodeCandidates, type NodeCandidate } from './rules';
+import { detectPasteSource, normalizeSource } from './sources';
 import { parseTree } from './tree';
 
 interface Walk {
@@ -105,6 +106,11 @@ const BLOCKS = new Set([
   'ul',
 ]);
 
+const PRESERVED = new Set(['pre', 'pre-wrap', 'break-spaces']);
+
+const keepsSpaces = (element: HtmlElement): boolean =>
+  element.tag === 'pre' || PRESERVED.has(element.style('white-space') ?? '');
+
 const withMarks = (active: readonly Mark[], added: readonly Mark[]): readonly Mark[] =>
   added.length === 0
     ? active
@@ -132,7 +138,7 @@ const walkChildren = (walk: Walk, element: HtmlElement, marks: readonly Mark[]):
   const outer = { marks: walk.marks, pre: walk.pre };
 
   walk.marks = marks;
-  walk.pre = walk.pre || element.tag === 'pre';
+  walk.pre = walk.pre || keepsSpaces(element);
   for (const child of childrenOf(element)) {
     walkNode(walk, child);
   }
@@ -163,7 +169,7 @@ const walkInto = (walk: Walk, element: HtmlElement, candidate: NodeCandidate): v
     walkTransparent(walk, element);
     return;
   }
-  walkChildren(walk, element, walk.marks);
+  walkChildren(walk, element, withMarks(walk.marks, marksOf(walk.builder.schema, element)));
   closeNode(walk.builder, open);
 };
 
@@ -196,11 +202,12 @@ const build = (
   schema: Schema,
   nodes: readonly HtmlNode[],
   options: FromHTMLOptions,
+  preserve: boolean,
 ): Doc | undefined => {
   const ids = options.ids ?? createIdSource('h');
 
   const walk: Walk = {
-    builder: createBuilder(schema, ids, options.whitespace === 'preserve'),
+    builder: createBuilder(schema, ids, preserve),
     marks: [],
     pre: false,
   };
@@ -213,5 +220,13 @@ const build = (
   return schema.check(root).ok ? createDoc(schema, root) : undefined;
 };
 
-export const fromHTML = (schema: Schema, html: string, options: FromHTMLOptions = {}): Doc =>
-  build(schema, parseTree(html).children, options) ?? createEmptyDoc(schema, options.ids);
+export const fromHTML = (schema: Schema, html: string, options: FromHTMLOptions = {}): Doc => {
+  const source = options.source ?? detectPasteSource(html);
+  const whitespace = options.whitespace ?? (source === 'own' ? 'preserve' : 'collapse');
+  const tree = normalizeSource(parseTree(html), source);
+
+  return (
+    build(schema, tree.children, options, whitespace === 'preserve') ??
+    createEmptyDoc(schema, options.ids)
+  );
+};

@@ -14,6 +14,7 @@
         :readonly="readonly"
         data-testid="editor"
         @change="changes++"
+        @paste="pasted = $event.source"
       />
       <div class="editor-demo__preview">
         <h3 class="editor-demo__title">Опубликованный вид</h3>
@@ -26,6 +27,7 @@
 
 <script setup lang="ts">
 import { NuiContent } from '@numior/content';
+import type { PasteSource } from '@numior/editor-core';
 import { NuiEditor } from '@numior/editor-vue';
 import { NuiSwitch } from '@numior/vue';
 import { computed, ref } from 'vue';
@@ -34,8 +36,13 @@ import { blockCount, editorSample } from './editor-sample';
 const document = ref(editorSample());
 const readonly = ref(false);
 const changes = ref(0);
+const pasted = ref<PasteSource | null>(null);
 
 const output = computed(() =>
-  JSON.stringify({ blocks: blockCount(document.value), changes: changes.value }),
+  JSON.stringify({
+    blocks: blockCount(document.value),
+    changes: changes.value,
+    paste: pasted.value,
+  }),
 );
 </script>

@@ -1,12 +1,14 @@
 import type { Locator, Page } from '@playwright/test';
 import {
   isNumber,
+  isString,
+  nullable,
   parseAs,
   shapeOf,
   type Guarded,
 } from '../../../packages/primitives/test/support/guards';
 
-const isEditorOutput = shapeOf({ blocks: isNumber, changes: isNumber });
+const isEditorOutput = shapeOf({ blocks: isNumber, changes: isNumber, paste: nullable(isString) });
 
 export type EditorOutput = Guarded<typeof isEditorOutput>;
 
