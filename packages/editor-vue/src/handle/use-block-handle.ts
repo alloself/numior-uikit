@@ -1,6 +1,7 @@
 import {
   childNode,
   holdsSlots,
+  listSlot,
   moveChild,
   selectionSlot,
   slotAt,
@@ -34,6 +35,7 @@ export interface BlockHandle {
   readonly onPointermove: (event: PointerEvent) => void;
   readonly onPointerleave: () => void;
   readonly onGripPointerdown: (event: PointerEvent) => void;
+  readonly wholeList: () => void;
 }
 
 interface Grab {
@@ -88,6 +90,20 @@ const markerSpace = (element: Element): number => {
   return parent === null || getComputedStyle(element).display !== 'list-item'
     ? 0
     : Number.parseFloat(getComputedStyle(parent).paddingInlineStart) || 0;
+};
+
+const paddingBox = (element: HTMLElement | null): DOMRect | undefined => {
+  if (element === null) {
+    return undefined;
+  }
+  const rect = element.getBoundingClientRect();
+
+  return new DOMRect(
+    rect.left + element.clientLeft,
+    rect.top + element.clientTop,
+    element.clientWidth,
+    element.clientHeight,
+  );
 };
 
 const marginStart = (element: Element): number =>
@@ -178,13 +194,14 @@ export const useBlockHandle = (options: BlockHandleOptions): BlockHandle => {
   let grab: Grab | undefined;
   let pushed: Element | undefined;
   let lifted: Element | undefined;
+  let pin: { armed: boolean } | undefined;
   let ghostHeight = 0;
 
   const rtl = (): boolean =>
     options.frame.value !== null && getComputedStyle(options.frame.value).direction === 'rtl';
 
   const push = (element: Element | undefined): void => {
-    if (element !== pushed) {
+    if (element !== pushed || element?.classList.contains(PUSHED) === false) {
       pushed?.classList.remove(PUSHED);
       element?.classList.add(PUSHED);
       pushed = element;
@@ -204,7 +221,7 @@ export const useBlockHandle = (options: BlockHandleOptions): BlockHandle => {
     element: Element | undefined,
     edge: 'top' | 'bottom',
   ): void => {
-    const frame = options.frame.value?.getBoundingClientRect();
+    const frame = paddingBox(options.frame.value);
     const rect = element?.getBoundingClientRect();
 
     if (target === null || frame === undefined || rect === undefined) {
@@ -216,7 +233,7 @@ export const useBlockHandle = (options: BlockHandleOptions): BlockHandle => {
 
   const follow = (state: ReorderState): void => {
     const view = options.view();
-    const frame = options.frame.value?.getBoundingClientRect();
+    const frame = paddingBox(options.frame.value);
     const dragging = state.phase === 'dragging' ? state : undefined;
     const ghost = options.ghost.value;
 
@@ -282,13 +299,22 @@ export const useBlockHandle = (options: BlockHandleOptions): BlockHandle => {
   });
 
   watch(
-    slot,
-    (value, previous) => {
-      const view = options.view();
+    () => options.state(),
+    (state, previous) => {
+      const lost = hovered.value !== undefined && childNode(state.doc, hovered.value) === undefined;
+      const moved = coarse.value && state.selection !== previous.selection;
 
-      if (sameSlot(value, previous) && value !== undefined) {
-        return;
+      if (lost || moved) {
+        hovered.value = undefined;
+        pin = undefined;
       }
+    },
+  );
+
+  watch(
+    [slot, () => options.state().doc],
+    ([value]) => {
+      const view = options.view();
       const element = view === undefined ? undefined : elementOf(view, value);
 
       place(options.handle.value, element, 'top');
@@ -296,6 +322,21 @@ export const useBlockHandle = (options: BlockHandleOptions): BlockHandle => {
     },
     { flush: 'post' },
   );
+
+  const held = (view: EditorView, target: Element): boolean => {
+    if (pin === undefined) {
+      return false;
+    }
+    if (elementOf(view, hovered.value)?.contains(target) === true) {
+      pin.armed = true;
+      return true;
+    }
+    if (pin.armed) {
+      pin = undefined;
+      return false;
+    }
+    return true;
+  };
 
   const nearStart = (
     event: PointerEvent,
@@ -320,7 +361,8 @@ export const useBlockHandle = (options: BlockHandleOptions): BlockHandle => {
       target.closest(BLOCK) === null ||
       options.content.value?.contains(target) !== true ||
       menuOpen.value ||
-      dragging.value
+      dragging.value ||
+      held(view, target)
     ) {
       return;
     }
@@ -336,7 +378,7 @@ export const useBlockHandle = (options: BlockHandleOptions): BlockHandle => {
     const view = options.view();
     const current = slot.value;
     const element = view === undefined ? undefined : elementOf(view, current);
-    const frame = options.frame.value?.getBoundingClientRect();
+    const frame = paddingBox(options.frame.value);
     const rect = element?.getBoundingClientRect();
 
     if (
@@ -366,10 +408,20 @@ export const useBlockHandle = (options: BlockHandleOptions): BlockHandle => {
     menuOpen,
     onPointermove,
     onPointerleave: () => {
-      if (!menuOpen.value && !dragging.value) {
+      if (!menuOpen.value && !dragging.value && pin?.armed !== false) {
         hovered.value = undefined;
+        pin = undefined;
       }
     },
     onGripPointerdown,
+    wholeList: () => {
+      const outer =
+        slot.value === undefined ? undefined : listSlot(options.state().doc, slot.value);
+
+      if (outer !== undefined) {
+        hovered.value = outer;
+        pin = { armed: false };
+      }
+    },
   };
 };

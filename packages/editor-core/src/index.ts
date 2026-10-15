@@ -30,6 +30,7 @@ export {
   duplicateChild,
   focusChild,
   holdsSlots,
+  listSlot,
   moveChild,
   moveCurrent,
   selectionSlot,

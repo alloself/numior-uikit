@@ -3,6 +3,7 @@ import {
   deleteChild,
   duplicateChild,
   holdsSlots,
+  listSlot,
   moveChild,
   selectionSlot,
   slotAt,
@@ -98,6 +99,22 @@ describe('moving children', () => {
     expect(
       [current.root, list, item].map((each) => each !== undefined && holdsSlots(current, each)),
     ).toEqual([true, true, false]);
+  });
+
+  it('finds the list around an item unless the list sits inside another item', () => {
+    const editor = started(node('bullet_list', [li('one', node('bullet_list', [li('deep')]))]));
+    const { doc: current } = editor.state;
+    const [list] = elements(current.root.content);
+    const [item] = elements(list?.content ?? []);
+    const [, inner] = elements(item?.content ?? []);
+
+    expect(listSlot(current, { parent: list?.id ?? '', index: 0 })).toEqual({
+      parent: current.root.id,
+      index: 0,
+    });
+
+    expect(listSlot(current, { parent: inner?.id ?? '', index: 0 })).toBeUndefined();
+    expect(listSlot(current, { parent: current.root.id, index: 0 })).toBeUndefined();
   });
 
   it('duplicates under fresh ids and deletes up to the enclosing list and down to one empty block', () => {

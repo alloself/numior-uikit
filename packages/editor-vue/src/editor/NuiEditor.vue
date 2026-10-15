@@ -57,6 +57,7 @@
         :dragging="handles.dragging.value"
         @run="onHandleRun"
         @grip="handles.onGripPointerdown"
+        @whole-list="handles.wholeList"
       />
       <div
         ref="ghost"

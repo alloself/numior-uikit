@@ -67,6 +67,13 @@ export const childNode = (doc: Doc, slot: ChildSlot): ElementNode | undefined =>
   return child?.kind === 'element' ? child : undefined;
 };
 
+export const listSlot = (doc: Doc, slot: ChildSlot): ChildSlot | undefined => {
+  const pos = slot.parent === doc.root.id ? undefined : doc.positionOf(slot.parent);
+  const outer = pos === undefined ? undefined : slotAt(doc, pos);
+
+  return outer !== undefined && childNode(doc, outer)?.id === slot.parent ? outer : undefined;
+};
+
 const moved = (content: readonly ContentNode[], from: number, to: number): ContentNode[] => {
   const node = content[from];
   const rest = content.filter((_, index) => index !== from);

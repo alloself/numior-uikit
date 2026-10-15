@@ -39,6 +39,7 @@ export interface NuiEditorMessages {
   readonly duplicate: string;
   readonly moveUp: string;
   readonly moveDown: string;
+  readonly wholeList: string;
   readonly deleteBlock: string;
 }
 
@@ -107,6 +108,7 @@ export const editorMessages: NuiMessageCatalog<'editor'> = {
     duplicate: 'Duplicate',
     moveUp: 'Move up',
     moveDown: 'Move down',
+    wholeList: 'Whole list',
     deleteBlock: 'Delete',
   },
   ru: {
@@ -148,6 +150,7 @@ export const editorMessages: NuiMessageCatalog<'editor'> = {
     duplicate: 'Дублировать',
     moveUp: 'Переместить выше',
     moveDown: 'Переместить ниже',
+    wholeList: 'Весь список',
     deleteBlock: 'Удалить',
   },
 };

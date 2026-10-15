@@ -256,6 +256,20 @@ test.describe('editor', () => {
     await page.keyboard.type('three');
     await editor.drag(editor.item('one'), editor.item('three'));
     await expect(editor.content.locator('li')).toHaveText(['two', 'three', 'one']);
+    await editor.hoverStart(editor.item('three'));
+    await editor.grip().click();
+    await page.getByRole('menuitem', { name: 'Весь список' }).click();
+    await editor.grip().click();
+    await page.getByRole('menuitem', { name: 'Дублировать' }).click();
+
+    await expect(editor.content.locator('li')).toHaveText([
+      'two',
+      'three',
+      'one',
+      'two',
+      'three',
+      'one',
+    ]);
   });
 
   test('passes axe in light and dark, fits phones and types in RTL', async ({ page }) => {

@@ -111,6 +111,27 @@ describe('NuiEditor block handles', () => {
     await editor.blockAction('Delete');
 
     expect(editor.itemTexts).toEqual(['two', 'one']);
+
+    await editor.hoverItem('two');
+    await editor.blockAction('Whole list');
+
+    expect(editor.pushedTexts).toEqual(['ul:twoone']);
+
+    await editor.leave();
+
+    expect(editor.pushedTexts).toEqual(['ul:twoone']);
+
+    await editor.hoverItem('one');
+
+    expect(editor.pushedTexts).toEqual(['ul:twoone']);
+
+    await editor.blockAction('Duplicate');
+
+    expect(editor.itemTexts).toEqual(['two', 'one', 'two', 'one']);
+
+    await editor.leave();
+
+    expect(editor.handleShown).toBe(false);
   });
 
   it('drags a block by its handle past the blocks below it', async () => {

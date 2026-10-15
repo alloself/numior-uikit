@@ -302,6 +302,11 @@ export class EditorDriver {
 
   ghostCopy: readonly string[] = [];
 
+  async leave(): Promise<void> {
+    this.root.dispatchEvent(new PointerEvent('pointerleave'));
+    await nextTick();
+  }
+
   async hoverList(): Promise<void> {
     this.content
       .querySelector('ul')

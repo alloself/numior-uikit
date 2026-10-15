@@ -35,6 +35,7 @@ import {
   deleteChild,
   duplicateChild,
   focusChild,
+  listSlot,
   moveChild,
   sequence,
   type ChildSlot,
@@ -54,6 +55,7 @@ const open = defineModel<boolean>('open', { default: false });
 const emit = defineEmits<{
   run: [command: Command];
   grip: [event: PointerEvent];
+  wholeList: [];
 }>();
 
 const texts = useMessages(editorMessages);
@@ -71,6 +73,11 @@ const turnInto = (at: ChildSlot): NuiMenuEntry[] =>
 const siblings = (at: ChildSlot): number =>
   (at.parent === state.doc.root.id ? state.doc.root : state.doc.byId(at.parent))?.content.length ??
   0;
+
+const wholeList = (at: ChildSlot): NuiMenuEntry[] =>
+  listSlot(state.doc, at) === undefined
+    ? []
+    : [{ label: texts.value.wholeList, icon: 'group', onSelect: () => emit('wholeList') }];
 
 const entries = computed((): NuiMenuEntry[] => {
   const at = target ?? { parent: state.doc.root.id, index: 0 };
@@ -95,6 +102,7 @@ const entries = computed((): NuiMenuEntry[] => {
       disabled: at.index >= last,
       onSelect: () => emit('run', moveChild(at.parent, at.index, at.index + 1)),
     },
+    ...wholeList(at),
     { type: 'separator' },
     {
       label: texts.value.deleteBlock,
