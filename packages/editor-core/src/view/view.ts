@@ -2,7 +2,8 @@ import { inputSource } from '../commands/input';
 import type { InputSource } from '../state/input.types';
 import type { EditorState, Transaction } from '../state/state.types';
 import { coordsAtPos, posAtCoords } from './coords';
-import { createRootDesc, syncElement, type ViewContext } from './desc';
+import { blockDecorations, changedBlocks } from './decorate';
+import { createRootDesc, redrawContent, syncElement, type ViewContext } from './desc';
 import { createDomWatch } from './dom-change';
 import type { ViewHost } from './host.types';
 import { attachInput, runIntent } from './input';
@@ -41,6 +42,7 @@ export const createEditorView = (root: HTMLElement, options: EditorViewOptions):
     byId: new Map(),
     chunks: new WeakSet(),
     nodeViews: options.nodeViews ?? {},
+    decorations: blockDecorations(state),
   };
 
   prepareRoot(root, options.editable ?? true);
@@ -77,7 +79,18 @@ export const createEditorView = (root: HTMLElement, options: EditorViewOptions):
     if (next.doc.schema !== context.schema) {
       throw new RangeError('The view renders one schema; create a new view for another');
     }
+    const before = context.decorations;
+    const after = composing ? before : blockDecorations(next);
+
+    context.decorations = after;
     syncElement(context, rootDesc, next.doc.root);
+    for (const id of changedBlocks(before, after)) {
+      const desc = context.byId.get(id);
+
+      if (desc !== undefined) {
+        redrawContent(context, desc);
+      }
+    }
     state = next;
     watch.ignoreOwn();
     sync.mark();

@@ -284,6 +284,14 @@ export class EditorViewDriver {
     );
   }
 
+  startComposition(): void {
+    this.host.dispatchEvent(new CompositionEvent('compositionstart', { bubbles: true }));
+  }
+
+  endComposition(): void {
+    this.host.dispatchEvent(new CompositionEvent('compositionend', { bubbles: true, data: '' }));
+  }
+
   async compose(text: string): Promise<boolean> {
     const selection = document.getSelection();
     const anchor = selection?.anchorNode;

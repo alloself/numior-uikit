@@ -1,6 +1,13 @@
 import type { Doc } from '../doc/doc.types';
 import { childOffsets } from '../model/node';
-import { outerOf, type Desc, type ElementDesc, type ViewContext } from './desc';
+import {
+  outerOf,
+  type Desc,
+  type ElementDesc,
+  type TextDesc,
+  type TextPart,
+  type ViewContext,
+} from './desc';
 import type { DomPoint } from './view.types';
 
 const startOf = (desc: Desc): number => {
@@ -77,12 +84,31 @@ const precedes = (container: Node, offset: number, content: HTMLElement): boolea
   );
 };
 
+const endOfPart = (part: TextPart): number => part.start + part.dom.data.length;
+
+const partsWithin = (desc: TextDesc, node: Node): readonly TextPart[] =>
+  desc.parts.filter((part) => node.contains(part.dom));
+
+const textOffsetIn = (desc: TextDesc, node: Node, offset: number): number => {
+  const direct = desc.parts.find((part) => part.dom === node);
+
+  if (direct !== undefined) {
+    return direct.start + Math.max(0, Math.min(offset, direct.dom.data.length));
+  }
+
+  const child = node.childNodes[offset];
+
+  if (child === undefined) {
+    const last = partsWithin(desc, node).at(-1);
+
+    return last === undefined ? desc.node.text.length : endOfPart(last);
+  }
+  return partsWithin(desc, child)[0]?.start ?? (offset === 0 ? 0 : desc.node.text.length);
+};
+
 const positionIn = (context: ViewContext, desc: Desc, node: Node, offset: number): number => {
   if (desc.kind === 'text') {
-    if (node === desc.dom) {
-      return startOf(desc) + Math.max(0, Math.min(offset, desc.dom.data.length));
-    }
-    return startOf(desc) + (offset === 0 ? 0 : desc.node.text.length);
+    return startOf(desc) + textOffsetIn(desc, node, offset);
   }
   const content = desc.contentDOM;
 
@@ -143,18 +169,27 @@ export const domAtPos = (root: ElementDesc, doc: Doc, pos: number): DomPoint => 
   const before = desc.children[resolved.index - 1];
 
   if (resolved.textOffset > 0 && child?.kind === 'text') {
-    return { node: child.dom, offset: resolved.textOffset };
+    return pointInText(child, resolved.textOffset);
   }
   if (before?.kind === 'text') {
-    return { node: before.dom, offset: before.dom.data.length };
+    return pointInText(before, before.node.text.length);
   }
   if (child?.kind === 'text') {
-    return { node: child.dom, offset: 0 };
+    return pointInText(child, 0);
   }
   if (desc.contentDOM === null) {
     throw new RangeError(`Position ${pos} lies inside a leaf`);
   }
   return pointBetween(desc.contentDOM, child ?? before, child === undefined, resolved.index);
+};
+
+const pointInText = (desc: TextDesc, offset: number): DomPoint => {
+  const part = desc.parts.findLast((candidate) => candidate.start < offset) ?? desc.parts[0];
+
+  if (part === undefined) {
+    throw new RangeError('A text node has no rendered parts');
+  }
+  return { node: part.dom, offset: offset - part.start };
 };
 
 const pointBetween = (

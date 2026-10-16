@@ -1,3 +1,4 @@
+import type { DecorationSet } from '../decorations/decorations.types';
 import type { Doc, Slice } from '../doc/doc.types';
 import type { AttrValue, ContentNode, IdSource, Mark, NodeId } from '../model/node.types';
 import type { Mapping } from '../transform/mapping.types';
@@ -57,6 +58,7 @@ export interface EditorProps {
   readonly handleIntent?:
     | ((intent: InputIntent, state: EditorState, dispatch: Dispatch) => boolean)
     | undefined;
+  readonly decorations?: ((state: EditorState) => DecorationSet | undefined) | undefined;
 }
 
 export interface PluginSpec<S> {

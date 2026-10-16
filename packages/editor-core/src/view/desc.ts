@@ -1,7 +1,8 @@
-import { sameAttrs, sameMarks } from '../model/node';
+import { childOffsets, sameAttrs, sameMarks } from '../model/node';
 import type { ContentNode, ElementNode, NodeId, TextNode } from '../model/node.types';
 import type { NodeType, Schema } from '../schema/schema.types';
 import { fillChunks, placeInChunks, tidyChunks } from './chunks';
+import { segmentsOf, type BlockDecorations, type LocalDecoration } from './decorate';
 import { renderLeaf, renderParent, type RenderedDom } from './render-dom';
 import type { NodeView, NodeViewFactory } from './view.types';
 
@@ -17,10 +18,16 @@ export interface ElementDesc {
   hack: HTMLBRElement | null;
 }
 
+export interface TextPart {
+  readonly dom: Text;
+  readonly start: number;
+}
+
 export interface TextDesc {
   readonly kind: 'text';
   node: TextNode;
-  readonly dom: Text;
+  readonly parts: readonly TextPart[];
+  readonly decorated: boolean;
   readonly outer: ChildNode;
   readonly parent: ElementDesc;
   index: number;
@@ -35,6 +42,7 @@ export interface ViewContext {
   readonly byId: Map<NodeId, ElementDesc>;
   readonly chunks: WeakSet<Node>;
   readonly nodeViews: Readonly<Record<string, NodeViewFactory>>;
+  decorations: BlockDecorations;
 }
 
 export const outerOf = (desc: Desc): ChildNode => (desc.kind === 'text' ? desc.outer : desc.dom);
@@ -109,14 +117,64 @@ const syncHack = (context: ViewContext, desc: ElementDesc): void => {
   }
 };
 
+interface TextBody {
+  readonly inner: ChildNode;
+  readonly parts: readonly TextPart[];
+}
+
+const plainBody = (context: ViewContext, text: string): TextBody => {
+  const dom = context.document.createTextNode(text);
+
+  return { inner: dom, parts: [{ dom, start: 0 }] };
+};
+
+const decoratedBody = (
+  context: ViewContext,
+  local: readonly LocalDecoration[],
+  text: string,
+  start: number,
+): TextBody => {
+  const container = context.document.createElement('span');
+  const parts: TextPart[] = [];
+
+  for (const segment of segmentsOf(local, start, text.length)) {
+    const dom = context.document.createTextNode(text.slice(segment.from, segment.to));
+
+    parts.push({ dom, start: segment.from });
+    if (segment.classes.length === 0) {
+      container.append(dom);
+    } else {
+      const span = context.document.createElement('span');
+
+      span.className = segment.classes.join(' ');
+      span.append(dom);
+      container.append(span);
+    }
+  }
+  return { inner: container, parts };
+};
+
+const bodyOf = (
+  context: ViewContext,
+  node: TextNode,
+  parent: ElementDesc,
+  index: number,
+): TextBody => {
+  const local = context.decorations.get(parent.node.id);
+
+  return local === undefined
+    ? plainBody(context, node.text)
+    : decoratedBody(context, local, node.text, childOffsets(parent.node)[index] ?? 0);
+};
+
 const createText = (
   context: ViewContext,
   node: TextNode,
   parent: ElementDesc,
   index: number,
 ): TextDesc => {
-  const dom = context.document.createTextNode(node.text);
-  let outer: ChildNode = dom;
+  const body = bodyOf(context, node, parent, index);
+  let outer: ChildNode = body.inner;
 
   for (const mark of node.marks.toReversed()) {
     const type = context.schema.marks.get(mark.type);
@@ -129,10 +187,21 @@ const createText = (
     wrapper.contentDOM?.append(outer);
     outer = wrapper.dom;
   }
-  const desc: TextDesc = { kind: 'text', node, dom, outer, parent, index };
 
-  for (let current: Node | null = dom; current !== null; current = current.parentNode) {
-    context.descs.set(current, desc);
+  const desc: TextDesc = {
+    kind: 'text',
+    node,
+    parts: body.parts,
+    decorated: context.decorations.has(parent.node.id),
+    outer,
+    parent,
+    index,
+  };
+
+  for (const part of body.parts) {
+    for (let current: Node | null = part.dom; current !== null; current = current.parentNode) {
+      context.descs.set(current, desc);
+    }
   }
   return desc;
 };
@@ -333,6 +402,7 @@ const findText = (matching: Matching, node: TextNode): TextMatch | undefined => 
 
     if (
       desc?.kind === 'text' &&
+      !desc.decorated &&
       !matching.used.has(desc) &&
       sameMarks(desc.node.marks, node.marks)
     ) {
@@ -343,10 +413,12 @@ const findText = (matching: Matching, node: TextNode): TextMatch | undefined => 
 };
 
 const syncText = (desc: TextDesc, node: TextNode, index: number): void => {
+  const part = desc.parts[0];
+
   desc.node = node;
   desc.index = index;
-  if (desc.dom.data !== node.text) {
-    desc.dom.data = node.text;
+  if (part !== undefined && part.dom.data !== node.text) {
+    part.dom.data = node.text;
   }
 };
 
@@ -357,7 +429,7 @@ const matchText = (
   node: TextNode,
   index: number,
 ): Desc => {
-  const match = findText(matching, node);
+  const match = context.decorations.has(parent.node.id) ? undefined : findText(matching, node);
 
   if (match === undefined) {
     return createText(context, node, parent, index);
