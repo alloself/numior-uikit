@@ -23,6 +23,25 @@ wraps long lines instead of scrolling horizontally.
 
 <Example name="code/Collapsed" />
 
+## Highlighter
+
+Without `tokens` the block asks the highlighter from `createNuiConfig({ highlighter })` or the
+`highlighter` prop; `false` turns highlighting off. The highlighter knows its languages with
+aliases and returns tokens at once or as a promise. Until it answers, and on the server, the code
+renders in one colour at the same height; answers are cached by language and text.
+
+A ready Shiki highlighter lives in its own entry: Shiki loads on the first highlight and the
+grammars load one per language.
+
+```ts
+import { createNuiConfig } from '@numior/vue';
+import { createShikiHighlighter } from '@numior/vue/shiki';
+
+app.use(createNuiConfig({ highlighter: createShikiHighlighter() }));
+```
+
+<SignatureReference :names="['useHighlighter', 'highlightCode', 'languageOf', 'NuiHighlighter']" />
+
 ## Behaviour
 
 `tokens` describe the lines in parallel with `code`: every line is a list of pieces with a

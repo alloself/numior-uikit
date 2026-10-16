@@ -131,6 +131,7 @@ const code = await importBuild('vue', [
 ]);
 
 assert.doesNotMatch(code, /(?:tiptap|prosemirror|reka-ui|spreadsheet|tailwindcss|vee-validate)/i);
+assert.doesNotMatch(code, /['"]shiki['"]/, 'the vue base bundle must not import shiki');
 
 const formsCode = await importBuild('forms', [
   'NuiForm',
@@ -396,6 +397,16 @@ const bundleOf = async (source) => {
 const vueControls = await import(pathToFileURL(resolve('packages/vue/dist/controls.js')).href);
 
 assert.equal(typeof vueControls.kitControls, 'object', 'vue/controls must export the kit controls');
+
+const vueShiki = await readFile('packages/vue/dist/shiki.js', 'utf8');
+
+assert.match(vueShiki, /import\(['"]shiki['"]\)/, 'vue/shiki must load shiki lazily');
+
+assert.doesNotMatch(
+  vueShiki,
+  /^import[^;]*['"]shiki['"]/m,
+  'vue/shiki must not import shiki eagerly',
+);
 
 const vueEntry = JSON.stringify(resolve('packages/vue/dist/index.js'));
 const buttonOnly = await bundleOf(`export { NuiButton } from ${vueEntry};`);

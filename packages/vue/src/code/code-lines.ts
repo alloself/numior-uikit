@@ -1,4 +1,4 @@
-import type { NuiCodeLine } from './code.types';
+import type { NuiCodeLine } from '@numior/primitives';
 
 export const codeLines = (
   code: string,

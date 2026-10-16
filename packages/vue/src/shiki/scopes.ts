@@ -1,4 +1,4 @@
-import type { NuiSyntaxScope } from '@numior/vue';
+import type { NuiSyntaxScope } from '@numior/primitives';
 
 const SCOPE_RULES: ReadonlyArray<readonly [RegExp, NuiSyntaxScope]> = [
   [/^comment/, 'comment'],

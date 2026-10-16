@@ -17,6 +17,8 @@ import {
   type NuiTranslate,
 } from '../messages/messages';
 import { CONTROLS_KEY, provideControls } from '../controls/control-registry';
+import { HIGHLIGHTER_KEY, provideHighlighter } from '../highlight/highlighter';
+import type { NuiHighlighter } from '../highlight/highlight.types';
 import type { NuiControlRegistry } from '../controls/control.types';
 import { createToastStore, type ToastStoreOptions } from '../toast/toast-store';
 import { TOASTS_KEY, provideToasts } from '../toast/useToast';
@@ -31,6 +33,7 @@ export interface NuiConfigOptions {
   readonly colorScheme?: ColorSchemeOptions | undefined;
   readonly link?: NuiLinkComponent | undefined;
   readonly controls?: NuiControlRegistry | undefined;
+  readonly highlighter?: NuiHighlighter | undefined;
 }
 
 const hasMessages = (options: NuiConfigOptions): boolean =>
@@ -60,6 +63,9 @@ export const provideNuiConfig = (options: NuiConfigOptions): void => {
   }
   if (options.controls !== undefined) {
     provideControls(options.controls);
+  }
+  if (options.highlighter !== undefined) {
+    provideHighlighter(options.highlighter);
   }
 };
 
@@ -102,6 +108,9 @@ export const createNuiConfig = (options: NuiConfigOptions): Plugin => ({
     }
     if (options.controls !== undefined) {
       app.provide(CONTROLS_KEY, options.controls);
+    }
+    if (options.highlighter !== undefined) {
+      app.provide(HIGHLIGHTER_KEY, options.highlighter);
     }
   },
 });

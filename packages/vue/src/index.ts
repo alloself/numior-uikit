@@ -6,7 +6,15 @@ export type { NuiSeparatorOrientation, NuiSeparatorProps } from './separator/sep
 export { default as NuiKbd } from './kbd/NuiKbd.vue';
 export type { NuiKbdPlatform, NuiKbdProps, NuiKbdSize, NuiKbdVariant } from './kbd/kbd.types';
 export { default as NuiCode } from './code/NuiCode.vue';
-export type { NuiCodeLine, NuiCodeProps, NuiCodeToken, NuiSyntaxScope } from './code/code.types';
+export type { NuiCodeProps } from './code/code.types';
+export type {
+  NuiCodeLanguage,
+  NuiCodeLine,
+  NuiCodeToken,
+  NuiCodeTokens,
+  NuiHighlighter,
+  NuiSyntaxScope,
+} from '@numior/primitives';
 export type { NuiCodeMessages } from './code/code.messages';
 export { default as NuiToggleGroup } from './toggle-group/NuiToggleGroup.vue';
 export type {

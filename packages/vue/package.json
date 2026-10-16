@@ -21,6 +21,11 @@
       "types": "./dist/controls/index.d.ts",
       "import": "./dist/controls.js"
     },
+    "./shiki": {
+      "@numior/source": "./src/shiki/index.ts",
+      "types": "./dist/shiki/index.d.ts",
+      "import": "./dist/shiki.js"
+    },
     "./styles.css": {
       "@numior/source": "./src/styles.css",
       "default": "./dist/styles.css"
@@ -39,10 +44,17 @@
     "lucide-vue-next": "1.0.0"
   },
   "devDependencies": {
-    "@vue/test-utils": "2.5.1"
+    "@vue/test-utils": "2.5.1",
+    "shiki": "4.4.3"
   },
   "peerDependencies": {
     "@numior/tokens": "workspace:*",
+    "shiki": "^4.4.3",
     "vue": "^3.5.0"
+  },
+  "peerDependenciesMeta": {
+    "shiki": {
+      "optional": true
+    }
   }
 }

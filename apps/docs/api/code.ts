@@ -16,7 +16,14 @@ const docs: DocsMap = {
         ru: 'Токены подсветки по строкам; без них код выводится одним цветом.',
         en: 'Highlight tokens per line; without them the code renders in one colour.',
       },
-      language: { ru: 'Подпись языка в шапке.', en: 'Language caption in the header.' },
+      language: {
+        ru: 'Язык: подпись в шапке и выбор языка у подсветчика.',
+        en: 'Language: the header caption and the language for the highlighter.',
+      },
+      highlighter: {
+        ru: 'Подсветчик вместо настроенного в `createNuiConfig`; `false` выключает подсветку.',
+        en: 'A highlighter instead of the one set in `createNuiConfig`; `false` turns highlighting off.',
+      },
       title: { ru: 'Имя файла в шапке.', en: 'File name in the header.' },
       lineNumbers: { ru: 'Номера строк.', en: 'Line numbers.' },
       highlight: {

@@ -24,7 +24,7 @@
             v-for="(line, index) in lines"
             :key="index"
             :tokens="line"
-            :highlighted="highlighted.has(index + 1)"
+            :highlighted="marked.has(index + 1)"
           />
         </code>
       </div>
@@ -55,6 +55,7 @@ import NuiCodeRow from './NuiCodeRow.vue';
 import { codeLines } from './code-lines';
 import { codeMessages } from './code.messages';
 import type { NuiCodeProps } from './code.types';
+import { useCodeTokens } from './use-code-tokens';
 
 const {
   code,
@@ -70,6 +71,7 @@ const {
   copiedLabel,
   expandLabel,
   collapseLabel,
+  highlighter = undefined,
 } = defineProps<NuiCodeProps>();
 
 const expanded = ref(false);
@@ -84,8 +86,9 @@ const texts = computed(() => ({
   collapse: collapseLabel ?? messages.value.collapse,
 }));
 
-const lines = computed(() => codeLines(code, tokens));
-const highlighted = computed(() => new Set(highlight ?? []));
+const highlighted = useCodeTokens(() => ({ code, language, highlighter }));
+const lines = computed(() => codeLines(code, tokens ?? highlighted.value));
+const marked = computed(() => new Set(highlight ?? []));
 const hasHeader = computed(() => title !== undefined || language !== undefined);
 
 const rootStyle = computed(() =>

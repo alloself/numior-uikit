@@ -35,6 +35,7 @@ createApp(App)
 | `toasts`      | `{ duration?, exitDuration?, limit? }` | Lifetime and number of simultaneous toasts, see [Toast](/en/components/toast).                                            |
 | `link`        | `Component` or a component name        | Link component for `to`; without it the app's `NuxtLink` or `RouterLink` is used.                                         |
 | `controls`    | `NuiControlRegistry`                   | Control registry for forms from JSON and editors, for example `kitControls`, see [useControls](/en/composables/controls). |
+| `highlighter` | `NuiHighlighter`                       | Code highlighter for `NuiCode`, the editor and published content, see [Code](/en/components/code#highlighter).            |
 
 A custom component reads `link` through `useConfiguredLink()`: without the option it returns
 `null`.

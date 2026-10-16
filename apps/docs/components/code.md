@@ -24,6 +24,25 @@ import '@numior/vue/styles/code.css';
 
 <Example name="code/Collapsed" />
 
+## Подсветчик
+
+Без `tokens` блок спрашивает подсветчик из `createNuiConfig({ highlighter })` или из пропа
+`highlighter`; `false` выключает подсветку. Подсветчик знает свои языки с алиасами и отдаёт
+токены сразу или обещанием. Пока ответа нет, и на сервере, код выводится одним цветом той же
+высоты, ответы кешируются по языку и тексту.
+
+Готовый подсветчик на Shiki лежит в отдельном входе: Shiki грузится при первой подсветке, а
+грамматики — по одной на язык.
+
+```ts
+import { createNuiConfig } from '@numior/vue';
+import { createShikiHighlighter } from '@numior/vue/shiki';
+
+app.use(createNuiConfig({ highlighter: createShikiHighlighter() }));
+```
+
+<SignatureReference :names="['useHighlighter', 'highlightCode', 'languageOf', 'NuiHighlighter']" />
+
 ## Поведение
 
 `tokens` описывают строки параллельно `code`: каждая строка — список фрагментов с областью

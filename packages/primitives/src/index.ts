@@ -290,6 +290,21 @@ export type {
   NuiControlEntry,
   NuiControlRegistry,
 } from './controls/control.types';
+export {
+  HIGHLIGHTER_KEY,
+  highlightCode,
+  languageOf,
+  provideHighlighter,
+  useHighlighter,
+} from './highlight/highlighter';
+export type {
+  NuiCodeLanguage,
+  NuiCodeLine,
+  NuiCodeToken,
+  NuiCodeTokens,
+  NuiHighlighter,
+  NuiSyntaxScope,
+} from './highlight/highlight.types';
 export { createIntent } from './intent/createIntent';
 export type { Intent } from './intent/createIntent';
 export { useBlockSizeTween } from './motion/useBlockSizeTween';

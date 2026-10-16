@@ -1,22 +1,4 @@
-export type NuiSyntaxScope =
-  | 'keyword'
-  | 'string'
-  | 'number'
-  | 'function'
-  | 'type'
-  | 'tag'
-  | 'attribute'
-  | 'property'
-  | 'comment'
-  | 'punctuation'
-  | 'variable';
-
-export interface NuiCodeToken {
-  readonly text: string;
-  readonly scope?: NuiSyntaxScope | undefined;
-}
-
-export type NuiCodeLine = readonly NuiCodeToken[];
+import type { NuiCodeLine, NuiHighlighter } from '@numior/primitives';
 
 export interface NuiCodeProps {
   code: string;
@@ -32,6 +14,7 @@ export interface NuiCodeProps {
   copiedLabel?: string | undefined;
   expandLabel?: string | undefined;
   collapseLabel?: string | undefined;
+  highlighter?: NuiHighlighter | false | undefined;
 }
 
 export interface NuiCodeCopyProps {

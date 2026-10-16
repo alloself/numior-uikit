@@ -13,13 +13,20 @@ export default defineConfig({
       entry: {
         index: fileURLToPath(new URL('./src/index.ts', import.meta.url)),
         controls: fileURLToPath(new URL('./src/controls/index.ts', import.meta.url)),
+        shiki: fileURLToPath(new URL('./src/shiki/index.ts', import.meta.url)),
       },
       formats: ['es'],
       fileName: (_format, name) => `${name}.js`,
     },
     sourcemap: true,
     rolldownOptions: {
-      external: [/^vue$/, /^@numior\/primitives$/, /^lucide-vue-next(\/|$)/, /^@vueuse\/core$/],
+      external: [
+        /^vue$/,
+        /^@numior\/primitives$/,
+        /^lucide-vue-next(\/|$)/,
+        /^@vueuse\/core$/,
+        /^shiki(\/|$)/,
+      ],
       output: { chunkFileNames: 'shared-[hash].js' },
     },
   },

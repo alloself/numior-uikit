@@ -1,4 +1,4 @@
-import { mount } from '@vue/test-utils';
+import { flushPromises, mount } from '@vue/test-utils';
 import { nextTick } from 'vue';
 import { NuiCode, type NuiCodeProps, type NuiConfigOptions } from '../../src';
 import { configPlugins } from '../support/config';
@@ -77,6 +77,10 @@ export class CodeDriver extends ComponentDriver {
 
   get expanded(): boolean {
     return this.wrapper.find('.nui-code__expand').attributes('aria-expanded') === 'true';
+  }
+
+  async settle(): Promise<void> {
+    await flushPromises();
   }
 
   async copy(): Promise<void> {

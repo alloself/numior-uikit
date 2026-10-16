@@ -35,6 +35,7 @@ createApp(App)
 | `toasts`      | `{ duration?, exitDuration?, limit? }` | Время жизни и число одновременных уведомлений, см. [Toast](/components/toast).                                    |
 | `link`        | `Component` или имя компонента         | Компонент ссылки для `to`; без него берётся `NuxtLink` или `RouterLink` приложения.                               |
 | `controls`    | `NuiControlRegistry`                   | Реестр контролов для форм из JSON и редакторов, например `kitControls`, см. [useControls](/composables/controls). |
+| `highlighter` | `NuiHighlighter`                       | Подсветчик кода для `NuiCode`, редактора и опубликованного контента, см. [Code](/components/code#подсветчик).     |
 
 Свой компонент читает `link` через `useConfiguredLink()`: без опции он возвращает `null`.
 

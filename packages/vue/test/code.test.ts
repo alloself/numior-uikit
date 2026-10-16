@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from 'vite-plus/test';
 import { installClipboard, type ClipboardStub } from '../../primitives/test/support/clipboard';
-import type { NuiCodeLine } from '../src';
+import type { NuiCodeLine, NuiHighlighter } from '../src';
 import { CodeDriver } from './drivers/code';
 
 const SAMPLE = "const answer = 42;\nconsole.log('hi');\n";
@@ -20,6 +20,14 @@ const TOKENS: readonly NuiCodeLine[] = [
     { text: ';', scope: 'punctuation' },
   ],
 ];
+
+const highlighterOf = (calls: string[], lazy = false): NuiHighlighter => ({
+  languages: [{ id: 'typescript', label: 'TypeScript', aliases: ['ts'] }],
+  tokens: (code, language) => {
+    calls.push(`${language}:${code.length}`);
+    return lazy ? Promise.resolve(TOKENS) : TOKENS;
+  },
+});
 
 describe('NuiCode', () => {
   let clipboard: ClipboardStub | undefined;
@@ -94,5 +102,43 @@ describe('NuiCode', () => {
     expect(long.expanded).toBe(true);
     expect(long.hasModifier('collapsed')).toBe(false);
     expect(long.expandLabel).toBe('Show less');
+  });
+
+  it('colours code through the configured highlighter by language or alias and leaves the rest plain', async () => {
+    const calls: string[] = [];
+    const config = { highlighter: highlighterOf(calls) };
+    const coloured = CodeDriver.mount({ props: { code: SAMPLE, language: 'ts' }, config });
+
+    await coloured.settle();
+    expect(coloured.scopesOf(1)).toEqual(['keyword', 'number', 'punctuation']);
+
+    const unknown = CodeDriver.mount({ props: { code: SAMPLE, language: 'go' }, config });
+
+    const off = CodeDriver.mount({
+      props: { code: SAMPLE, language: 'typescript', highlighter: false },
+      config,
+    });
+
+    await unknown.settle();
+    await off.settle();
+    expect(unknown.scopesOf(1)).toEqual([]);
+    expect(off.scopesOf(1)).toEqual([]);
+    expect(calls).toEqual(['typescript:38']);
+  });
+
+  it('shows plain code until a lazy highlighter answers and reuses its answer', async () => {
+    const calls: string[] = [];
+    const config = { highlighter: highlighterOf(calls, true) };
+    const first = CodeDriver.mount({ props: { code: SAMPLE, language: 'typescript' }, config });
+
+    expect(first.scopesOf(1)).toEqual([]);
+    await first.settle();
+    expect(first.scopesOf(2)).toEqual(['punctuation', 'function', 'punctuation']);
+
+    const second = CodeDriver.mount({ props: { code: SAMPLE, language: 'ts' }, config });
+
+    await second.settle();
+    expect(second.scopesOf(1)).toEqual(['keyword', 'number', 'punctuation']);
+    expect(calls).toEqual(['typescript:38']);
   });
 });
