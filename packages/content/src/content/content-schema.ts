@@ -11,6 +11,7 @@ import {
   type Schema,
   type SchemaSpec,
 } from '@numior/editor-core';
+import { TABLE_NODES } from './content-table';
 import type { NuiContentAlign, NuiContentColour, NuiContentTone } from './content.types';
 
 export const CONTENT_TONES: readonly NuiContentTone[] = ['info', 'success', 'warning', 'error'];
@@ -146,12 +147,6 @@ const imageAttrs = (image: HtmlElement | undefined, figure?: HtmlElement): Parse
   };
 };
 
-const cellAttrs = (cell: HtmlElement): ParsedAttrs => ({
-  colspan: countOf(cell.attr('colspan')) ?? 1,
-  rowspan: countOf(cell.attr('rowspan')) ?? 1,
-  header: cell.tag === 'th',
-});
-
 const mentionAttrs = (span: HtmlElement): ParsedAttrs => {
   const user = span.attr('data-user');
 
@@ -213,7 +208,7 @@ const renderImage = (node: ElementNode) => {
 
 const CONTENT_SPEC: SchemaSpec = {
   name: 'numior-content',
-  version: 1,
+  version: 2,
   nodes: {
     doc: { content: 'block+' },
     paragraph: {
@@ -402,34 +397,7 @@ const CONTENT_SPEC: SchemaSpec = {
         },
       ],
     },
-    table: {
-      group: 'block',
-      content: 'table_row+',
-      render: () =>
-        renderTag('div', { class: part('table') }, [
-          renderTag('table', {}, [renderTag('tbody', {}, [contentHole])]),
-        ]),
-      parse: [{ tag: 'table' }],
-    },
-    table_row: { content: 'table_cell+', render: () => renderTag('tr'), parse: [{ tag: 'tr' }] },
-    table_cell: {
-      content: 'paragraph+',
-      attrs: {
-        colspan: { default: 1, verify: isCount },
-        rowspan: { default: 1, verify: isCount },
-        header: { default: false, verify: isFlag },
-      },
-      render: (node) =>
-        renderTag(node.attrs.header === true ? 'th' : 'td', {
-          class: part('cell'),
-          colspan: node.attrs.colspan === 1 ? null : node.attrs.colspan,
-          rowspan: node.attrs.rowspan === 1 ? null : node.attrs.rowspan,
-        }),
-      parse: [
-        { tag: 'td', attrs: cellAttrs },
-        { tag: 'th', attrs: cellAttrs },
-      ],
-    },
+    ...TABLE_NODES,
     text: { group: 'inline', inline: true },
     hard_break: {
       group: 'inline',

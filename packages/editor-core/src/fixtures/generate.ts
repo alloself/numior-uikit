@@ -155,27 +155,71 @@ const listOf = (generator: Generator, depth: number): ElementNode => {
   return element(generator, kind, items);
 };
 
-const table = (generator: Generator): ElementNode => {
-  const cols = generator.random.int(2, 4);
+const COLUMN_TYPES = ['text', 'number', 'date', 'boolean', 'select'] as const;
 
-  const rows = Array.from({ length: generator.random.int(2, 5) }, (_, row) =>
-    element(
-      generator,
-      'table_row',
-      Array.from({ length: cols }, () =>
-        element(
-          generator,
-          'table_cell',
-          [element(generator, 'paragraph', inline(generator, 1, 4))],
-          {
-            header: row === 0,
-          },
-        ),
+type ColumnType = (typeof COLUMN_TYPES)[number];
+
+interface FixtureColumn {
+  readonly type: ColumnType;
+  readonly options: readonly string[];
+}
+
+const twoDigits = (value: number): string => String(value).padStart(2, '0');
+
+const optionsOf = (generator: Generator, type: ColumnType): readonly string[] =>
+  type === 'select' ? [...new Set(Array.from({ length: 3 }, () => word(generator)))] : [];
+
+const cellValue = (generator: Generator, column: FixtureColumn): AttrValue => {
+  const { random } = generator;
+
+  if (random.chance(0.1)) {
+    return null;
+  }
+  switch (column.type) {
+    case 'text':
+      return sentence(generator, 1, 3);
+    case 'number':
+      return random.int(0, 99_999) / 10;
+    case 'date':
+      return `2026-${twoDigits(random.int(1, 12))}-${twoDigits(random.int(1, 28))}`;
+    case 'boolean':
+      return random.chance(0.5);
+    case 'select':
+      return column.options[random.int(0, column.options.length - 1)] ?? null;
+  }
+};
+
+const table = (generator: Generator): ElementNode => {
+  const columns = Array.from({ length: generator.random.int(2, 4) }, (): FixtureColumn => {
+    const type = generator.random.pick(COLUMN_TYPES);
+
+    return { type, options: optionsOf(generator, type) };
+  });
+
+  const head = element(
+    generator,
+    'table_head',
+    columns.map((column) =>
+      element(
+        generator,
+        'table_column',
+        column.options.map((label) => element(generator, 'table_option', [], { label })),
+        { name: word(generator), type: column.type },
       ),
     ),
   );
 
-  return element(generator, 'table', rows);
+  const rows = Array.from({ length: generator.random.int(1, 5) }, () =>
+    element(
+      generator,
+      'table_row',
+      columns.map((column) =>
+        element(generator, 'table_cell', [], { value: cellValue(generator, column) }),
+      ),
+    ),
+  );
+
+  return element(generator, 'table', [head, element(generator, 'table_body', rows)]);
 };
 
 const code = (generator: Generator): ElementNode => {

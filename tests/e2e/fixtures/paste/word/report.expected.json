@@ -174,92 +174,47 @@
     "type": "table",
     "content": [
       {
-        "type": "table_row",
+        "type": "table_head",
         "content": [
           {
-            "type": "table_cell",
+            "type": "table_column",
             "attrs": {
-              "colspan": 1,
-              "rowspan": 1,
-              "header": false
-            },
-            "content": [
-              {
-                "type": "paragraph",
-                "content": [
-                  {
-                    "text": "Город",
-                    "marks": [
-                      {
-                        "type": "bold"
-                      }
-                    ]
-                  }
-                ]
-              }
-            ]
+              "name": "Город",
+              "type": "text",
+              "width": null,
+              "sort": null,
+              "sortRank": null
+            }
           },
           {
-            "type": "table_cell",
+            "type": "table_column",
             "attrs": {
-              "colspan": 1,
-              "rowspan": 1,
-              "header": false
-            },
-            "content": [
-              {
-                "type": "paragraph",
-                "content": [
-                  {
-                    "text": "Клиенты",
-                    "marks": [
-                      {
-                        "type": "bold"
-                      }
-                    ]
-                  }
-                ]
-              }
-            ]
+              "name": "Клиенты",
+              "type": "number",
+              "width": null,
+              "sort": null,
+              "sortRank": null
+            }
           }
         ]
       },
       {
-        "type": "table_row",
+        "type": "table_body",
         "content": [
           {
-            "type": "table_cell",
-            "attrs": {
-              "colspan": 1,
-              "rowspan": 1,
-              "header": false
-            },
+            "type": "table_row",
             "content": [
               {
-                "type": "paragraph",
-                "content": [
-                  {
-                    "text": "Москва"
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "type": "table_cell",
-            "attrs": {
-              "colspan": 1,
-              "rowspan": 1,
-              "header": false
-            },
-            "content": [
+                "type": "table_cell",
+                "attrs": {
+                  "value": "Москва"
+                }
+              },
               {
-                "type": "paragraph",
-                "content": [
-                  {
-                    "text": "120"
-                  }
-                ]
+                "type": "table_cell",
+                "attrs": {
+                  "value": 120
+                }
               }
             ]
           }

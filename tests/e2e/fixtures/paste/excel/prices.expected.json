@@ -3,149 +3,64 @@
     "type": "table",
     "content": [
       {
-        "type": "table_row",
+        "type": "table_head",
         "content": [
           {
-            "type": "table_cell",
+            "type": "table_column",
             "attrs": {
-              "colspan": 1,
-              "rowspan": 1,
-              "header": false
-            },
-            "content": [
-              {
-                "type": "paragraph",
-                "content": [
-                  {
-                    "text": "Товар",
-                    "marks": [
-                      {
-                        "type": "bold"
-                      }
-                    ]
-                  }
-                ]
-              }
-            ]
+              "name": "Товар",
+              "type": "text",
+              "width": null,
+              "sort": null,
+              "sortRank": null
+            }
           },
           {
-            "type": "table_cell",
+            "type": "table_column",
             "attrs": {
-              "colspan": 1,
-              "rowspan": 1,
-              "header": false
-            },
-            "content": [
-              {
-                "type": "paragraph",
-                "content": [
-                  {
-                    "text": "Цена",
-                    "marks": [
-                      {
-                        "type": "bold"
-                      }
-                    ]
-                  }
-                ]
-              }
-            ]
+              "name": "Цена",
+              "type": "number",
+              "width": null,
+              "sort": null,
+              "sortRank": null
+            }
           }
         ]
       },
       {
-        "type": "table_row",
+        "type": "table_body",
         "content": [
           {
-            "type": "table_cell",
-            "attrs": {
-              "colspan": 1,
-              "rowspan": 1,
-              "header": false
-            },
+            "type": "table_row",
             "content": [
               {
-                "type": "paragraph",
-                "content": [
-                  {
-                    "text": "Яблоки",
-                    "marks": [
-                      {
-                        "type": "italic"
-                      }
-                    ]
-                  },
-                  {
-                    "type": "hard_break"
-                  },
-                  {
-                    "text": "сезонные",
-                    "marks": [
-                      {
-                        "type": "italic"
-                      }
-                    ]
-                  }
-                ]
+                "type": "table_cell",
+                "attrs": {
+                  "value": "Яблоки сезонные"
+                }
+              },
+              {
+                "type": "table_cell",
+                "attrs": {
+                  "value": 120
+                }
               }
             ]
           },
           {
-            "type": "table_cell",
-            "attrs": {
-              "colspan": 1,
-              "rowspan": 1,
-              "header": false
-            },
+            "type": "table_row",
             "content": [
               {
-                "type": "paragraph",
-                "content": [
-                  {
-                    "text": "120"
-                  }
-                ]
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "type": "table_row",
-        "content": [
-          {
-            "type": "table_cell",
-            "attrs": {
-              "colspan": 1,
-              "rowspan": 1,
-              "header": false
-            },
-            "content": [
+                "type": "table_cell",
+                "attrs": {
+                  "value": "Груши"
+                }
+              },
               {
-                "type": "paragraph",
-                "content": [
-                  {
-                    "text": "Груши"
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "type": "table_cell",
-            "attrs": {
-              "colspan": 1,
-              "rowspan": 1,
-              "header": false
-            },
-            "content": [
-              {
-                "type": "paragraph",
-                "content": [
-                  {
-                    "text": "95,5"
-                  }
-                ]
+                "type": "table_cell",
+                "attrs": {
+                  "value": 95.5
+                }
               }
             ]
           }

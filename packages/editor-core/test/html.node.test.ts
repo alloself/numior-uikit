@@ -1,5 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { createDoc, fromHTML, toHTML, type Doc, type ElementNode } from '../src';
+import {
+  createDoc,
+  createSchema,
+  fromHTML,
+  tableGrid,
+  toHTML,
+  type Doc,
+  type ElementNode,
+  type HtmlTableGrid,
+} from '../src';
 import { fixtureSchema } from '../src/fixtures';
 import { buildWith } from './support/notes';
 import { outlineOf } from './support/outline';
@@ -10,6 +19,32 @@ const read = (html: string, whitespace?: 'collapse' | 'preserve'): string =>
   outlineOf(fromHTML(fixtureSchema, html, { whitespace }).root);
 
 const docOf = (...blocks: readonly ElementNode[]): Doc => createDoc(fixtureSchema, doc(...blocks));
+
+const gridOf = (html: string): HtmlTableGrid | undefined => {
+  let grid: HtmlTableGrid | undefined;
+
+  const probe = createSchema({
+    nodes: {
+      doc: { content: 'block*' },
+      probe: {
+        group: 'block',
+        parse: [
+          {
+            tag: 'table',
+            attrs: (table) => {
+              grid = tableGrid(table);
+              return {};
+            },
+          },
+        ],
+      },
+      text: { group: 'inline', inline: true },
+    },
+  });
+
+  fromHTML(probe, html);
+  return grid;
+};
 
 describe('HTML parsing', () => {
   it('wraps loose text into paragraphs and reads marks from tags', () => {
@@ -29,21 +64,44 @@ describe('HTML parsing', () => {
     expect(read('<pre>a<br>b</pre>')).toBe('code_block("a\\nb")');
   });
 
-  it('builds nested lists, tables and closes the items and cells HTML leaves open', () => {
-    expect(
-      read(
-        '<ul><li>one<li>two<ul><li>deep</ul></ul><ol start=3><li><p>three</ol><table><tr><th>H<td colspan=2>V</table>',
-      ),
-    ).toBe(
+  it('builds nested lists and closes the items HTML leaves open', () => {
+    expect(read('<ul><li>one<li>two<ul><li>deep</ul></ul><ol start=3><li><p>three</ol>')).toBe(
       'bullet_list(list_item(paragraph("one")) list_item(paragraph("two") bullet_list(list_item(paragraph("deep"))))) ' +
-        'ordered_list{start=3}(list_item(paragraph("three"))) ' +
-        'table(table_row(table_cell{header=true}(paragraph("H")) table_cell{colspan=2}(paragraph("V"))))',
+        'ordered_list{start=3}(list_item(paragraph("three")))',
     );
   });
 
-  it('wraps stray items and cells in their containers and fills required content', () => {
-    expect(read('<li>orphan</li><td>cell</td><blockquote></blockquote>')).toBe(
-      'bullet_list(list_item(paragraph("orphan"))) table(table_row(table_cell(paragraph("cell")))) blockquote(paragraph())',
+  it('reads a whole table through its rule and spreads merged cells over the grid', () => {
+    expect(
+      read(
+        '<p>before<table><tr><th>H<td colspan=2>V<tr><td>a<td rowspan=2>b<td>c<tr><td>d<td>e</table><table></table>',
+      ),
+    ).toBe(
+      'paragraph("before") table(table_head(table_column{name=H}() table_column{name=V}() table_column()) ' +
+        'table_body(table_row(table_cell{value=a} table_cell{value=b} table_cell{value=c}) ' +
+        'table_row(table_cell{value=d} table_cell table_cell{value=e})))',
+    );
+  });
+
+  it('lays table sections out as a padded grid and counts the head rows', () => {
+    const grid = gridOf(
+      '<table><thead><tr><th>A<th>B</thead><tbody><tr><td colspan=3>wide<tr><td>  a  b </td></tbody></table>',
+    );
+
+    expect(grid?.head).toBe(1);
+
+    expect(grid?.rows.map((row) => row.map((cell) => cell.text))).toEqual([
+      ['A', 'B', ''],
+      ['wide', '', ''],
+      ['a b', '', ''],
+    ]);
+
+    expect(grid?.rows[0]?.[0]?.header).toBe(true);
+  });
+
+  it('wraps stray items in their containers and fills required content', () => {
+    expect(read('<li>orphan</li><blockquote></blockquote>')).toBe(
+      'bullet_list(list_item(paragraph("orphan"))) blockquote(paragraph())',
     );
   });
 
@@ -123,7 +181,10 @@ describe('HTML serialization', () => {
       node('code_block', ['let x\n  y']),
       node('divider'),
       node('table', [
-        node('table_row', [node('table_cell', [node('paragraph', ['c'])], { colspan: 2 })]),
+        node('table_head', [
+          node('table_column', [node('table_option', [], { label: 'x' })], { name: 'N' }),
+        ]),
+        node('table_body', [node('table_row', [node('table_cell', [], { value: 'c' })])]),
       ]),
     );
 

@@ -136,6 +136,7 @@ const compileNode = (
     groups: groupsOf(node.group),
     inline,
     leaf,
+    atom: leaf || node.atom === true,
     inlineContent,
     content,
     marks: allowedMarks(spec, allowed, node.marks, inlineContent),

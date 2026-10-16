@@ -84,7 +84,9 @@ interface ViewSource {
 }
 
 const viewOf = (source: ViewSource, block: NuiEditorBlock, node: ElementNode): NodeView => {
-  const { dom, contentDOM } = renderNodeDOM(source.document, source.schema, node);
+  const drawn = renderNodeDOM(source.document, source.schema, node);
+  const { dom } = drawn;
+  const contentDOM = source.schema.nodes.get(node.type)?.atom === true ? null : drawn.contentDOM;
   const widget = source.document.createElement('div');
   const key = source.key();
   const current = shallowRef(node);

@@ -22,7 +22,7 @@ export default defineConfig({
         /^vue$/,
         /^@vueuse\/core$/,
         /^lucide-vue-next(\/|$)/,
-        /^@numior\/(editor-core|content|primitives|vue)(\/[\w-]+)?$/,
+        /^@numior\/(editor-core|content|primitives|table|vue)(\/[\w-]+)?$/,
       ],
     },
   },

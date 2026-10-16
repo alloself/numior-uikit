@@ -62,6 +62,7 @@ describe('NuiEditor slash menu', () => {
       '2 columns',
       '3 columns',
       '4 columns',
+      'Table',
     ]);
 
     await editor.type('h2');

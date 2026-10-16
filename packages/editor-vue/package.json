@@ -32,6 +32,7 @@
     "@numior/content": "workspace:*",
     "@numior/editor-core": "workspace:*",
     "@numior/primitives": "workspace:*",
+    "@numior/table": "workspace:*",
     "@numior/vue": "workspace:*",
     "@vueuse/core": "15.0.0",
     "lucide-vue-next": "1.0.0"

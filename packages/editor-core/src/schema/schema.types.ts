@@ -18,10 +18,19 @@ export type AttrSpecs = Readonly<Record<string, AttrSpec>>;
 
 export type ParsedAttrs = Readonly<Record<string, AttrValue>> | false;
 
+export type NodeMaker = (
+  type: string,
+  attrs?: Readonly<Record<string, AttrValue>>,
+  content?: readonly ContentNode[],
+) => ElementNode;
+
+export type ParsedContent = readonly ContentNode[] | false;
+
 export interface NodeParseRule {
   readonly tag: string;
   readonly priority?: number | undefined;
   readonly attrs?: ((element: HtmlElement) => ParsedAttrs) | undefined;
+  readonly read?: ((element: HtmlElement, make: NodeMaker) => ParsedContent) | undefined;
 }
 
 export interface MarkParseRule {
@@ -37,6 +46,7 @@ export interface NodeSpec {
   readonly marks?: string | undefined;
   readonly attrs?: AttrSpecs | undefined;
   readonly code?: boolean | undefined;
+  readonly atom?: boolean | undefined;
   readonly slots?: NodeSlots | undefined;
   readonly render?: NodeRender | undefined;
   readonly parse?: readonly NodeParseRule[] | undefined;
@@ -71,6 +81,7 @@ export interface NodeType {
   readonly groups: ReadonlySet<string>;
   readonly inline: boolean;
   readonly leaf: boolean;
+  readonly atom: boolean;
   readonly inlineContent: boolean;
   readonly content: ContentMatch;
   readonly marks: ReadonlySet<string>;

@@ -35,7 +35,7 @@
 .nui-content--size-lg {
   --_size: var(--nui-font-size-lg);
 }
-.nui-content :where(p, h1, h2, h3, blockquote, ul, ol, li, pre, hr, figure, table) {
+.nui-content :where(p, h1, h2, h3, blockquote, ul, ol, li, pre, hr, figure) {
   margin: 0;
 }
 .nui-content > *,
@@ -310,16 +310,17 @@
     flex: none;
   }
 }
-.nui-content__table {
+.nui-content__grid {
+  display: block;
   overflow-x: auto;
-}
-.nui-content__table > table {
-  min-inline-size: 100%;
+  max-inline-size: 100%;
+  margin: 0;
   border-collapse: collapse;
   font-size: 0.9em;
   line-height: var(--nui-line-height);
 }
-.nui-content__cell {
+.nui-content__table-column,
+.nui-content__table-cell {
   box-sizing: border-box;
   min-inline-size: 6em;
   padding: 0.5em 0.75em;
@@ -327,9 +328,14 @@
   text-align: start;
   vertical-align: top;
 }
-th.nui-content__cell {
+.nui-content__table-column {
   background: var(--nui-surface-muted);
   font-weight: var(--nui-font-weight-semibold);
+}
+.nui-content__table-column--type-number,
+.nui-content__table-cell--number {
+  font-variant-numeric: tabular-nums;
+  text-align: end;
 }
 .nui-content__mention {
   -webkit-box-decoration-break: clone;

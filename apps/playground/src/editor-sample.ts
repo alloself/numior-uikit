@@ -35,6 +35,37 @@ const paragraph = (...content: readonly Child[]): ElementNode => node('paragraph
 
 const item = (text: string): ElementNode => node('list_item', [paragraph(text)]);
 
+const STATUSES = ['План', 'В работе', 'Готово'];
+
+const column = (name: string, type: string, options: readonly string[] = []): ElementNode =>
+  node(
+    'table_column',
+    options.map((label) => node('table_option', [], { label })),
+    { name, type },
+  );
+
+const row = (...values: readonly (string | number | boolean | null)[]): ElementNode =>
+  node(
+    'table_row',
+    values.map((value) => node('table_cell', [], { value })),
+  );
+
+const plan = (): ElementNode =>
+  node('table', [
+    node('table_head', [
+      column('Задача', 'text'),
+      column('Срок', 'date'),
+      column('Бюджет', 'number'),
+      column('Готово', 'boolean'),
+      column('Статус', 'select', STATUSES),
+    ]),
+    node('table_body', [
+      row('Лендинг', '2026-10-20', 120_000, true, 'Готово'),
+      row('Рассылка', '2026-10-22', 45_000, false, 'В работе'),
+      row('Вебинар', '2026-10-28', 80_000, false, 'План'),
+    ]),
+  ]);
+
 export const editorSample = (): DocJSON =>
   toJSON(
     createDoc(
@@ -64,6 +95,7 @@ export const editorSample = (): DocJSON =>
         node('code_block', ['pnpm release:check'], { language: 'bash' }),
         node('divider'),
         paragraph('Наберите # и пробел для заголовка или - для списка.'),
+        plan(),
       ]),
     ),
   );

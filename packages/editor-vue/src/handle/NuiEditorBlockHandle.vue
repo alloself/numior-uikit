@@ -100,8 +100,20 @@ const entries = computed((): NuiMenuEntry[] => {
   const at = target ?? { parent: state.doc.root.id, index: 0 };
   const last = siblings(at) - 1;
 
+  const node = childNode(state.doc, at);
+  const atom = node !== undefined && state.doc.schema.nodes.get(node.type)?.atom === true;
+
   return [
-    { type: 'sub', label: texts.value.turnInto, icon: 'refresh', items: turnInto(at) },
+    ...(atom
+      ? []
+      : [
+          {
+            type: 'sub' as const,
+            label: texts.value.turnInto,
+            icon: 'refresh',
+            items: turnInto(at),
+          },
+        ]),
     {
       label: texts.value.duplicate,
       icon: 'copy',

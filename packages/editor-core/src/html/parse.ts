@@ -5,13 +5,14 @@ import { createIdSource } from '../model/node';
 import type { Mark } from '../model/node.types';
 import type { Schema } from '../schema/schema.types';
 import {
-  addLeaf,
+  addNode,
   addText,
   closeNode,
   closeTextblocks,
   createBuilder,
   finishBuilder,
   inCode,
+  nodeMaker,
   openNode,
   type Builder,
 } from './builder';
@@ -158,9 +159,25 @@ const walkTransparent = (walk: Walk, element: HtmlElement): void => {
   }
 };
 
+const walkWhole = (walk: Walk, element: HtmlElement, candidate: NodeCandidate): boolean => {
+  const content = candidate.read?.(element, nodeMaker(walk.builder));
+
+  if (content === undefined || content === false) {
+    return false;
+  }
+  addNode(walk.builder, candidate.type, candidate.attrs, content);
+  return true;
+};
+
 const walkInto = (walk: Walk, element: HtmlElement, candidate: NodeCandidate): void => {
   if (candidate.type.leaf) {
-    addLeaf(walk.builder, candidate.type, candidate.attrs);
+    addNode(walk.builder, candidate.type, candidate.attrs);
+    return;
+  }
+  if (candidate.read !== undefined) {
+    if (!walkWhole(walk, element, candidate)) {
+      walkTransparent(walk, element);
+    }
     return;
   }
   const open = openNode(walk.builder, candidate.type, candidate.attrs);

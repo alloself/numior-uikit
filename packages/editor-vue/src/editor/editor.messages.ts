@@ -50,7 +50,37 @@ export interface NuiEditorMessages {
   readonly columns: (params: { readonly count: number }) => string;
   readonly columnWidth: (params: { readonly index: number }) => string;
   readonly deleteBlock: string;
+  readonly table: string;
+  readonly tableColumn: (params: { readonly index: number }) => string;
+  readonly tableAddRow: string;
+  readonly tableAddColumn: string;
+  readonly tableRowAbove: string;
+  readonly tableRowBelow: string;
+  readonly tableDeleteRow: string;
+  readonly tableColumnBefore: string;
+  readonly tableColumnAfter: string;
+  readonly tableDeleteColumn: string;
+  readonly tableRename: string;
+  readonly tableColumnName: string;
+  readonly tableType: string;
+  readonly tableTypeName: (params: { readonly type: string }) => string;
 }
+
+const EN_TYPES: Readonly<Record<string, string>> = {
+  text: 'Text',
+  number: 'Number',
+  date: 'Date',
+  boolean: 'Checkbox',
+  select: 'Select',
+};
+
+const RU_TYPES: Readonly<Record<string, string>> = {
+  text: 'Текст',
+  number: 'Число',
+  date: 'Дата',
+  boolean: 'Флажок',
+  select: 'Выбор',
+};
 
 const EN_WHOLE: Readonly<Record<string, string>> = {
   bullet_list: 'Whole list',
@@ -166,6 +196,20 @@ export const editorMessages: NuiMessageCatalog<'editor'> = {
     columns: ({ count }) => `${String(count)} columns`,
     columnWidth: ({ index }) => `Column ${String(index)} width`,
     deleteBlock: 'Delete',
+    table: 'Table',
+    tableColumn: ({ index }) => `Column ${String(index)}`,
+    tableAddRow: 'Row',
+    tableAddColumn: 'Column',
+    tableRowAbove: 'Insert row above',
+    tableRowBelow: 'Insert row below',
+    tableDeleteRow: 'Delete row',
+    tableColumnBefore: 'Insert column before',
+    tableColumnAfter: 'Insert column after',
+    tableDeleteColumn: 'Delete column',
+    tableRename: 'Rename',
+    tableColumnName: 'Column name',
+    tableType: 'Type',
+    tableTypeName: ({ type }) => EN_TYPES[type] ?? type,
   },
   ru: {
     toolbar: 'Форматирование',
@@ -217,5 +261,19 @@ export const editorMessages: NuiMessageCatalog<'editor'> = {
     columns: ({ count }) => `${String(count)} колонки`,
     columnWidth: ({ index }) => `Ширина колонки ${String(index)}`,
     deleteBlock: 'Удалить',
+    table: 'Таблица',
+    tableColumn: ({ index }) => `Колонка ${String(index)}`,
+    tableAddRow: 'Строка',
+    tableAddColumn: 'Колонка',
+    tableRowAbove: 'Вставить строку выше',
+    tableRowBelow: 'Вставить строку ниже',
+    tableDeleteRow: 'Удалить строку',
+    tableColumnBefore: 'Вставить колонку перед',
+    tableColumnAfter: 'Вставить колонку после',
+    tableDeleteColumn: 'Удалить колонку',
+    tableRename: 'Переименовать',
+    tableColumnName: 'Название колонки',
+    tableType: 'Тип',
+    tableTypeName: ({ type }) => RU_TYPES[type] ?? type,
   },
 };

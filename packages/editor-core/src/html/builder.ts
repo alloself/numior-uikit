@@ -1,6 +1,6 @@
 import { normalizeContent } from '../model/node';
 import type { Attrs, ContentNode, ElementNode, IdSource, Mark } from '../model/node.types';
-import type { ContentMatch, NodeType, Schema } from '../schema/schema.types';
+import type { ContentMatch, NodeMaker, NodeType, Schema } from '../schema/schema.types';
 import { fillEnd, findWrapping } from './fit';
 
 export interface OpenNode {
@@ -133,11 +133,24 @@ export const closeNode = (builder: Builder, open: OpenNode): void => {
   }
 };
 
-export const addLeaf = (builder: Builder, type: NodeType, attrs: Attrs): void => {
+export const addNode = (
+  builder: Builder,
+  type: NodeType,
+  attrs: Attrs,
+  content: readonly ContentNode[] = [],
+): void => {
   if (place(builder, type.name)) {
-    append(topOf(builder), builder.schema.element(type.name, { id: builder.ids.next(), attrs }));
+    append(
+      topOf(builder),
+      builder.schema.element(type.name, { id: builder.ids.next(), attrs, content }),
+    );
   }
 };
+
+export const nodeMaker =
+  (builder: Builder): NodeMaker =>
+  (type, attrs = {}, content = []) =>
+    builder.schema.element(type, { id: builder.ids.next(), attrs, content });
 
 export const closeTextblocks = (builder: Builder): void => {
   while (builder.stack.length > 1 && topOf(builder).type.inlineContent) {

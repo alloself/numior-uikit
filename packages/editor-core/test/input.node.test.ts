@@ -118,6 +118,25 @@ describe('input commands', () => {
     );
   });
 
+  it('selects a table of cells as one atom before Backspace deletes it', () => {
+    const table = node('table', [
+      node('table_head', [node('table_column', [], { name: 'A' })]),
+      node('table_body', [node('table_row', [node('table_cell', [], { value: 'x' })])]),
+    ]);
+
+    const after = node('paragraph', ['cd']);
+    const root = doc(node('paragraph', ['ab']), table, after);
+    const start = createDoc(fixtureSchema, root).positionOf(after.id) ?? 0;
+
+    const selected = run(
+      stateOf(root, textSelection(start + 1)),
+      deleteText('backward', 'character'),
+    );
+
+    expect(selected.selection).toEqual({ kind: 'node', id: table.id });
+    expect(texts(run(selected, deleteText('backward', 'character')))).toEqual(['ab', 'cd']);
+  });
+
   it('finds text positions with a direction and falls back the other way', () => {
     const root = createDoc(
       fixtureSchema,

@@ -21,7 +21,12 @@
       />
       <div class="editor-demo__preview">
         <h3 class="editor-demo__title">Опубликованный вид</h3>
-        <NuiContent :document="document" :schema="playgroundSchema" data-testid="editor-preview" />
+        <NuiContent
+          :document="document"
+          :schema="playgroundSchema"
+          :views="views"
+          data-testid="editor-preview"
+        />
       </div>
     </div>
     <pre class="output" data-testid="editor-output">{{ output }}</pre>
@@ -30,6 +35,7 @@
 
 <script setup lang="ts">
 import { NuiContent } from '@numior/content';
+import { NuiContentTable } from '@numior/content/table';
 import type { PasteSource } from '@numior/editor-core';
 import { editorBlocks, NuiEditor } from '@numior/editor-vue';
 import { NuiSwitch } from '@numior/vue';
@@ -38,6 +44,7 @@ import { playgroundSchema, taskStatusBlock } from './editor-blocks';
 import { blockCount, editorSample } from './editor-sample';
 
 const blocks = [...editorBlocks, taskStatusBlock];
+const views = { table: NuiContentTable };
 const document = ref(editorSample());
 const readonly = ref(false);
 const changes = ref(0);

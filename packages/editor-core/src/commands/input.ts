@@ -145,7 +145,7 @@ export const isAtom = (schema: Schema, node: ContentNode | undefined): node is E
   const type = node === undefined ? undefined : typeOf(schema, node);
 
   return (
-    node?.kind === 'element' && type !== undefined && type.leaf && type.name !== breakTypeOf(schema)
+    node?.kind === 'element' && type !== undefined && type.atom && type.name !== breakTypeOf(schema)
   );
 };
 

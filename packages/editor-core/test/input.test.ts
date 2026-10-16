@@ -134,6 +134,20 @@ describe('editor view input', () => {
     expect(view.press('ArrowRight')).toBe(false);
   });
 
+  it('selects the whole table when a click lands on one of its cells', () => {
+    const cell = node('table_cell', [], { value: 1 });
+
+    const table = node('table', [
+      node('table_head', [node('table_column', [], { name: 'A' })]),
+      node('table_body', [node('table_row', [cell])]),
+    ]);
+
+    const view = mounted(doc(node('paragraph', ['a']), table));
+
+    expect(view.clickNode(cell.id)).toBe(true);
+    expect(view.selection).toEqual({ kind: 'node', id: table.id });
+  });
+
   it('lets plugins take keys and intents first and tags transactions with their input source', () => {
     const keys: string[] = [];
     const sources: (InputSource | undefined)[] = [];

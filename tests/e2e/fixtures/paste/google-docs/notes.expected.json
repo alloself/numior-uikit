@@ -154,92 +154,47 @@
     "type": "table",
     "content": [
       {
-        "type": "table_row",
+        "type": "table_head",
         "content": [
           {
-            "type": "table_cell",
+            "type": "table_column",
             "attrs": {
-              "colspan": 1,
-              "rowspan": 1,
-              "header": false
-            },
-            "content": [
-              {
-                "type": "paragraph",
-                "content": [
-                  {
-                    "text": "Задача",
-                    "marks": [
-                      {
-                        "type": "bold"
-                      }
-                    ]
-                  }
-                ]
-              }
-            ]
+              "name": "Задача",
+              "type": "text",
+              "width": null,
+              "sort": null,
+              "sortRank": null
+            }
           },
           {
-            "type": "table_cell",
+            "type": "table_column",
             "attrs": {
-              "colspan": 1,
-              "rowspan": 1,
-              "header": false
-            },
-            "content": [
-              {
-                "type": "paragraph",
-                "content": [
-                  {
-                    "text": "Срок",
-                    "marks": [
-                      {
-                        "type": "bold"
-                      }
-                    ]
-                  }
-                ]
-              }
-            ]
+              "name": "Срок",
+              "type": "text",
+              "width": null,
+              "sort": null,
+              "sortRank": null
+            }
           }
         ]
       },
       {
-        "type": "table_row",
+        "type": "table_body",
         "content": [
           {
-            "type": "table_cell",
-            "attrs": {
-              "colspan": 1,
-              "rowspan": 1,
-              "header": false
-            },
+            "type": "table_row",
             "content": [
               {
-                "type": "paragraph",
-                "content": [
-                  {
-                    "text": "Релиз"
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "type": "table_cell",
-            "attrs": {
-              "colspan": 1,
-              "rowspan": 1,
-              "header": false
-            },
-            "content": [
+                "type": "table_cell",
+                "attrs": {
+                  "value": "Релиз"
+                }
+              },
               {
-                "type": "paragraph",
-                "content": [
-                  {
-                    "text": "15 ноября"
-                  }
-                ]
+                "type": "table_cell",
+                "attrs": {
+                  "value": "15 ноября"
+                }
               }
             ]
           }

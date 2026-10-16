@@ -2,9 +2,11 @@ import type { AttrValue, Attrs, Mark } from '../model/node.types';
 import type {
   AttrSpecs,
   MarkParseRule,
+  NodeMaker,
   MarkType,
   NodeParseRule,
   NodeType,
+  ParsedContent,
   Schema,
 } from '../schema/schema.types';
 import type { HtmlElement } from './html.types';
@@ -28,6 +30,7 @@ interface RuleIndex {
 export interface NodeCandidate {
   readonly type: NodeType;
   readonly attrs: Attrs;
+  readonly read: ((element: HtmlElement, make: NodeMaker) => ParsedContent) | undefined;
 }
 
 const indexes = new WeakMap<Schema, RuleIndex>();
@@ -106,7 +109,7 @@ export const nodeCandidates = (schema: Schema, element: HtmlElement): NodeCandid
   (indexOf(schema).nodes.get(element.tag) ?? []).flatMap(({ type, rule }) => {
     const attrs = attrsBy(rule, type.attrs, element);
 
-    return attrs === undefined ? [] : [{ type, attrs }];
+    return attrs === undefined ? [] : [{ type, attrs, read: rule.read }];
   });
 
 const styled = (rule: MarkParseRule, element: HtmlElement): boolean =>

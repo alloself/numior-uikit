@@ -269,6 +269,22 @@ for (const file of await localImports(resolve('packages/content/dist/index.js'))
   );
 }
 
+for (const file of await localImports(resolve('packages/content/dist/index.js'))) {
+  assert.doesNotMatch(
+    await readFile(file, 'utf8'),
+    /from ['"]@numior\/(?:table|vue)['"]/,
+    `content must leave the table view to its table entry: ${file}`,
+  );
+}
+
+const contentTable = await readFile('packages/content/dist/table.js', 'utf8');
+
+assert.match(
+  contentTable,
+  /from ['"]@numior\/table['"]/,
+  'content/table must keep @numior/table external',
+);
+
 const editorVueCode = await importBuild('editor-vue', [
   'NuiEditor',
   'defineBlock',
@@ -287,6 +303,18 @@ for (const external of [
     `editor-vue must keep ${external} external`,
   );
 }
+
+assert.doesNotMatch(
+  editorVueCode,
+  /from ['"]@numior\/(?:table|content\/table)['"]/,
+  'editor-vue must load the table block on demand',
+);
+
+assert.match(
+  editorVueCode,
+  /import\(['"]\.\/[^'"]*NuiEditorTable[^'"]*['"]\)/,
+  'editor-vue must split the table block into its own chunk',
+);
 
 for (const name of await readdir('packages')) {
   const dist = resolve('packages', name, 'dist');

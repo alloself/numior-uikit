@@ -230,12 +230,18 @@ const handleKey = (host: ViewHost, event: KeyboardEvent): boolean => {
 
 const atomAt = (host: ViewHost, target: EventTarget | null): string | undefined => {
   const desc = target instanceof Node ? descAround(host.context, target) : undefined;
+  let found: string | undefined;
 
-  return desc?.kind === 'element' &&
-    desc.contentDOM === null &&
-    isAtom(host.context.schema, desc.node)
-    ? desc.node.id
-    : undefined;
+  for (
+    let current = (desc?.kind === 'text' ? desc.parent : desc) ?? null;
+    current !== null;
+    current = current.parent
+  ) {
+    if (isAtom(host.context.schema, current.node)) {
+      found = current.node.id;
+    }
+  }
+  return found;
 };
 
 const INTERACTIVE = 'button, input, select, textarea, a, label, [role], [tabindex]';

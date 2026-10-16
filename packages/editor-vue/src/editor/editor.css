@@ -3,6 +3,7 @@
   --_text: var(--nui-font-size-md);
   --_min: 8rem;
   --_grip: var(--nui-control-height-sm);
+  --_halo: 4px;
 
   position: relative;
   box-sizing: border-box;
@@ -58,7 +59,8 @@
   caret-color: var(--nui-text);
 }
 .nui-editor__content > .nui-editor__chunk {
-  margin-block-start: 0;
+  margin: calc(-1 * var(--_halo));
+  padding: var(--_halo);
 }
 .nui-editor__chunk > * {
   margin-block-start: var(--_flow);

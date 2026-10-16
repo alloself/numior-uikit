@@ -12,6 +12,10 @@ const docs: DocsMap = {
         en: 'Schema that reads JSON; contentSchema by default.',
       },
       size: { ru: 'Кегль текста.', en: 'Text size.' },
+      views: {
+        ru: 'Свои компоненты для типов узлов: компонент получает проп node и рисуется вместо разметки схемы. Таблицы данных как NuiTable с сортировкой и фильтрами — { table: NuiContentTable } из @numior/content/table; без этого таблица остаётся обычной <table>.',
+        en: 'Own components for node types: the component receives the node prop and replaces the schema markup. Data tables as NuiTable with sorting and filters take { table: NuiContentTable } from @numior/content/table; without it a table stays a plain <table>.',
+      },
     },
     events: {
       invalid: {

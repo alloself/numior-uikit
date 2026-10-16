@@ -80,6 +80,8 @@ const joinTowards = (
     const from = offset < 0 ? boundary - neighbour.size : boundary;
 
     tr.delete(from, from + neighbour.size);
+  } else if (state.doc.schema.nodes.get(neighbour.type)?.atom === true) {
+    tr.setSelection({ kind: 'node', id: neighbour.id });
   } else if (
     isTextblock(state.doc.schema, neighbour) &&
     tr.maybeStep({ kind: 'replace', from: boundary - 1, to: boundary + 1, slice: EMPTY_SLICE }).ok

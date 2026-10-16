@@ -45,6 +45,8 @@ export { insertHTML, insertPlainText, pasteSchema } from './commands/paste';
 export { fromHTML } from './html/parse';
 export { detectPasteSource } from './html/sources';
 export { contentToHTML, toHTML } from './html/serialize';
+export { tableGrid } from './html/table-grid';
+export type { HtmlTableCell, HtmlTableGrid } from './html/table-grid';
 export type {
   FromHTMLOptions,
   HtmlElement,
@@ -79,11 +81,13 @@ export type {
   MarkParseRule,
   MarkSpec,
   MarkType,
+  NodeMaker,
   NodeParseRule,
   NodeSlots,
   NodeSpec,
   NodeType,
   ParsedAttrs,
+  ParsedContent,
   Schema,
   SchemaLimits,
   SchemaSpec,

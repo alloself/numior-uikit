@@ -100,14 +100,5 @@ describe('markdown input rules', () => {
     marked.type('```');
 
     expect(marked.outline).toBe('paragraph("```" bold:"b")');
-
-    const cell = started(
-      doc(node('table', [node('table_row', [node('table_cell', [node('paragraph')])])])),
-      textSelection(4),
-    );
-
-    cell.type('- ');
-
-    expect(cell.outline).toBe('table(table_row(table_cell(paragraph("- "))))');
   });
 });

@@ -343,6 +343,10 @@ export class EditorDriver {
 
   ghostCopy: readonly string[] = [];
 
+  get vueWrapper(): VueWrapper {
+    return this.wrapper;
+  }
+
   async showBlocks(): Promise<void> {
     await nextTick();
   }

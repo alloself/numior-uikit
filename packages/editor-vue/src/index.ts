@@ -3,6 +3,7 @@ export {
   calloutBlock,
   columnsBlock,
   editorBlocks,
+  tableBlock,
   todoBlock,
   toggleBlock,
 } from './blocks/editor-blocks';

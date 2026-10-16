@@ -60,3 +60,14 @@
 .nui-editor-columns__separator--active::after {
   opacity: 1;
 }
+.nui-editor-table__actions {
+  display: flex;
+  gap: var(--nui-space-1);
+  margin-block-start: var(--nui-space-1);
+}
+.nui-editor-table__rename {
+  inline-size: 16rem;
+}
+.nui-editor__content .nui-content__table > .nui-editor__widget:empty {
+  min-block-size: 8rem;
+}

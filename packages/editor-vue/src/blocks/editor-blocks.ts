@@ -1,3 +1,4 @@
+import { defineAsyncComponent } from 'vue';
 import { leaveClosedToggle, toggleTodo } from './block-commands';
 import type { NuiEditorBlock } from './block.types';
 import { calloutToneOf, toneEntries } from './callout/callout-tones';
@@ -5,6 +6,7 @@ import NuiEditorCalloutTone from './callout/NuiEditorCalloutTone.vue';
 import { COLUMN_COUNTS, insertColumns } from './columns/columns';
 import NuiEditorColumnsResize from './columns/NuiEditorColumnsResize.vue';
 import { defineBlock } from './define-block';
+import { insertTable } from './table/table-commands';
 import NuiEditorTodoCheck from './todo/NuiEditorTodoCheck.vue';
 import NuiEditorToggleButton from './toggle/NuiEditorToggleButton.vue';
 
@@ -56,9 +58,29 @@ export const columnsBlock = defineBlock({
     })),
 });
 
+const TABLE_SIZE = 3;
+
+export const tableBlock = defineBlock({
+  name: 'table',
+  view: defineAsyncComponent(() => import('./table/NuiEditorTable.vue')),
+  slash: (texts) => [
+    {
+      key: 'table',
+      label: texts.table,
+      icon: 'table',
+      keywords: ['table', 'grid', 'data', 'таблица'],
+      command: insertTable(
+        Array.from({ length: TABLE_SIZE }, (_, index) => texts.tableColumn({ index: index + 1 })),
+        TABLE_SIZE,
+      ),
+    },
+  ],
+});
+
 export const editorBlocks: readonly NuiEditorBlock[] = [
   todoBlock,
   toggleBlock,
   calloutBlock,
   columnsBlock,
+  tableBlock,
 ];

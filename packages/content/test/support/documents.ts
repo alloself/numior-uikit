@@ -56,9 +56,22 @@ export const everyBlock = () =>
     node('image', [], { src: 'a.png', alt: 'A', caption: 'Cap' }),
     node('columns', [node('column', [p('L')], { width: 1.5 }), node('column', [p('R')])]),
     node('table', [
-      node('table_row', [
-        node('table_cell', [p('H')], { header: true }),
-        node('table_cell', [p('V')], { colspan: 2 }),
+      node('table_head', [
+        node('table_column', [], { name: 'Name' }),
+        node('table_column', [], { name: 'Sum', type: 'number', width: 120 }),
+        node('table_column', [], { name: 'Paid', type: 'boolean' }),
+        node('table_column', [node('table_option', [], { label: 'Open' })], {
+          name: 'State',
+          type: 'select',
+        }),
+      ]),
+      node('table_body', [
+        node('table_row', [
+          node('table_cell', [], { value: 'Ann' }),
+          node('table_cell', [], { value: 12.5 }),
+          node('table_cell', [], { value: true }),
+          node('table_cell', [], { value: 'Open' }),
+        ]),
       ]),
     ]),
     p(text('hi', [mark('highlight', { name: 'yellow' }), mark('color', { name: 'red' })])),
@@ -79,6 +92,12 @@ export const EVERY_BLOCK_MARKUP = [
   '<figure class="nui-content__image nui-content__image--align-center"><img class="nui-content__picture" src="a.png" alt="A" loading="lazy"><figcaption class="nui-content__caption">Cap</figcaption></figure>',
   '<div class="nui-content__columns"><div class="nui-content__columns-track"><div class="nui-content__column" style="flex-grow: 1.5;"><p class="nui-content__paragraph">L</p></div>',
   '<div class="nui-content__column"><p class="nui-content__paragraph">R</p></div></div></div>',
-  '<div class="nui-content__table"><table><tbody><tr><th class="nui-content__cell"><p class="nui-content__paragraph">H</p></th><td class="nui-content__cell" colspan="2"><p class="nui-content__paragraph">V</p></td></tr></tbody></table></div>',
+  '<div class="nui-content__table"><table class="nui-content__grid"><thead><tr>',
+  '<th class="nui-content__table-column nui-content__table-column--type-text"><span>Name</span><datalist></datalist></th>',
+  '<th class="nui-content__table-column nui-content__table-column--type-number" style="width: 120px;"><span>Sum</span><datalist></datalist></th>',
+  '<th class="nui-content__table-column nui-content__table-column--type-boolean"><span>Paid</span><datalist></datalist></th>',
+  '<th class="nui-content__table-column nui-content__table-column--type-select"><span>State</span><datalist><option value="Open"></option></datalist></th>',
+  '</tr></thead><tbody><tr><td class="nui-content__table-cell">Ann</td><td class="nui-content__table-cell nui-content__table-cell--number">12.5</td>',
+  '<td class="nui-content__table-cell"><input type="checkbox" checked disabled tabindex="-1"></td><td class="nui-content__table-cell">Open</td></tr></tbody></table></div>',
   '<p class="nui-content__paragraph"><span class="nui-content__colour nui-content__colour--red"><mark class="nui-content__highlight nui-content__highlight--yellow">hi</mark></span></p>',
 ].join('');

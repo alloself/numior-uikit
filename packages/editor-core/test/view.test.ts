@@ -59,7 +59,8 @@ describe('editor view', () => {
           node('hard_break'),
         ]),
         node('table', [
-          node('table_row', [node('table_cell', [node('paragraph', ['H'])], { header: true })]),
+          node('table_head', [node('table_column', [], { name: 'H' })]),
+          node('table_body', [node('table_row', [node('table_cell', [], { value: 1 })])]),
         ]),
       ),
     );
@@ -74,7 +75,7 @@ describe('editor view', () => {
         '<hr contenteditable="false">',
         '<img src="a.png" alt="A" contenteditable="false">',
         '<p><span contenteditable="false">@Ann</span>end<br><br></p>',
-        '<table><tbody><tr><th><p>H</p></th></tr></tbody></table>',
+        '<table contenteditable="false"><thead><tr><th><span contenteditable="false">H</span><datalist></datalist></th></tr></thead><tbody><tr><td contenteditable="false">1</td></tr></tbody></table>',
       ].join(''),
     );
 

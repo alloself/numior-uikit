@@ -19,4 +19,22 @@ export const editorIcons: IconRegistry = {
   'code-block': lazyIcon(() => import('lucide-vue-next/dist/esm/icons/braces.js')),
   group: lazyIcon(() => import('lucide-vue-next/dist/esm/icons/group.js')),
   'text-colour': lazyIcon(() => import('lucide-vue-next/dist/esm/icons/baseline.js')),
+  type: lazyIcon(() => import('lucide-vue-next/dist/esm/icons/type.js')),
+  'square-check': lazyIcon(() => import('lucide-vue-next/dist/esm/icons/square-check.js')),
+  'circle-chevron-down': lazyIcon(
+    () => import('lucide-vue-next/dist/esm/icons/circle-chevron-down.js'),
+  ),
+  pencil: lazyIcon(() => import('lucide-vue-next/dist/esm/icons/pencil.js')),
+  'between-vertical-start': lazyIcon(
+    () => import('lucide-vue-next/dist/esm/icons/between-vertical-start.js'),
+  ),
+  'between-horizontal-start': lazyIcon(
+    () => import('lucide-vue-next/dist/esm/icons/between-horizontal-start.js'),
+  ),
+  'between-horizontal-end': lazyIcon(
+    () => import('lucide-vue-next/dist/esm/icons/between-horizontal-end.js'),
+  ),
+  'between-vertical-end': lazyIcon(
+    () => import('lucide-vue-next/dist/esm/icons/between-vertical-end.js'),
+  ),
 };

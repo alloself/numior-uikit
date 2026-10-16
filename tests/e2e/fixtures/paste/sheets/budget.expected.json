@@ -3,138 +3,64 @@
     "type": "table",
     "content": [
       {
-        "type": "table_row",
+        "type": "table_head",
         "content": [
           {
-            "type": "table_cell",
+            "type": "table_column",
             "attrs": {
-              "colspan": 1,
-              "rowspan": 1,
-              "header": false
-            },
-            "content": [
-              {
-                "type": "paragraph",
-                "content": [
-                  {
-                    "text": "Статья",
-                    "marks": [
-                      {
-                        "type": "bold"
-                      }
-                    ]
-                  }
-                ]
-              }
-            ]
+              "name": "Статья",
+              "type": "text",
+              "width": null,
+              "sort": null,
+              "sortRank": null
+            }
           },
           {
-            "type": "table_cell",
+            "type": "table_column",
             "attrs": {
-              "colspan": 1,
-              "rowspan": 1,
-              "header": false
-            },
-            "content": [
-              {
-                "type": "paragraph",
-                "content": [
-                  {
-                    "text": "Сумма",
-                    "marks": [
-                      {
-                        "type": "bold"
-                      }
-                    ]
-                  }
-                ]
-              }
-            ]
+              "name": "Сумма",
+              "type": "number",
+              "width": null,
+              "sort": null,
+              "sortRank": null
+            }
           }
         ]
       },
       {
-        "type": "table_row",
+        "type": "table_body",
         "content": [
           {
-            "type": "table_cell",
-            "attrs": {
-              "colspan": 1,
-              "rowspan": 1,
-              "header": false
-            },
+            "type": "table_row",
             "content": [
               {
-                "type": "paragraph",
-                "content": [
-                  {
-                    "text": "Аренда"
-                  }
-                ]
+                "type": "table_cell",
+                "attrs": {
+                  "value": "Аренда"
+                }
+              },
+              {
+                "type": "table_cell",
+                "attrs": {
+                  "value": 50000
+                }
               }
             ]
           },
           {
-            "type": "table_cell",
-            "attrs": {
-              "colspan": 1,
-              "rowspan": 1,
-              "header": false
-            },
+            "type": "table_row",
             "content": [
               {
-                "type": "paragraph",
-                "content": [
-                  {
-                    "text": "50 000"
-                  }
-                ]
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "type": "table_row",
-        "content": [
-          {
-            "type": "table_cell",
-            "attrs": {
-              "colspan": 1,
-              "rowspan": 1,
-              "header": false
-            },
-            "content": [
+                "type": "table_cell",
+                "attrs": {
+                  "value": "Связь"
+                }
+              },
               {
-                "type": "paragraph",
-                "content": [
-                  {
-                    "text": "Связь",
-                    "marks": [
-                      {
-                        "type": "italic"
-                      }
-                    ]
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "type": "table_cell",
-            "attrs": {
-              "colspan": 1,
-              "rowspan": 1,
-              "header": false
-            },
-            "content": [
-              {
-                "type": "paragraph",
-                "content": [
-                  {
-                    "text": "1 200"
-                  }
-                ]
+                "type": "table_cell",
+                "attrs": {
+                  "value": 1200
+                }
               }
             ]
           }

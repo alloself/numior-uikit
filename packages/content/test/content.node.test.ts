@@ -6,7 +6,7 @@ import { EVERY_BLOCK_MARKUP, docOf, everyBlock, node } from './support/documents
 
 const stamped = (blocks: readonly unknown[]) => ({
   format: 1,
-  schema: { name: 'numior-content', version: 1 },
+  schema: { name: 'numior-content', version: 2 },
   root: { id: 'r', type: 'doc', content: blocks },
 });
 

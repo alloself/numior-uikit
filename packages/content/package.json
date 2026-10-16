@@ -16,6 +16,11 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
+    "./table": {
+      "@numior/source": "./src/table/index.ts",
+      "types": "./dist/table/index.d.ts",
+      "import": "./dist/table.js"
+    },
     "./styles.css": {
       "@numior/source": "./src/styles.css",
       "default": "./dist/styles.css"
@@ -32,10 +37,27 @@
     "@numior/editor-core": "workspace:*"
   },
   "devDependencies": {
+    "@numior/primitives": "workspace:*",
+    "@numior/table": "workspace:*",
+    "@numior/vue": "workspace:*",
     "@vue/test-utils": "2.5.1"
   },
   "peerDependencies": {
+    "@numior/primitives": "workspace:*",
+    "@numior/table": "workspace:*",
     "@numior/tokens": "workspace:*",
+    "@numior/vue": "workspace:*",
     "vue": "^3.5.0"
+  },
+  "peerDependenciesMeta": {
+    "@numior/primitives": {
+      "optional": true
+    },
+    "@numior/table": {
+      "optional": true
+    },
+    "@numior/vue": {
+      "optional": true
+    }
   }
 }

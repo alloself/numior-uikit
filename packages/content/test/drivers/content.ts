@@ -45,7 +45,11 @@ export class ContentDriver {
   }
 
   get checks(): readonly boolean[] {
-    return this.wrapper.findAll('input').map((input) => input.element.checked);
+    return this.wrapper
+      .findAll('.nui-content__check')
+      .flatMap((input) =>
+        input.element instanceof HTMLInputElement ? [input.element.checked] : [],
+      );
   }
 
   get invalid(): readonly (readonly DocJSONIssue[])[] {
@@ -54,6 +58,51 @@ export class ContentDriver {
 
       return isIssues(issues) ? [issues] : [];
     });
+  }
+
+  get tableHeads(): readonly string[] {
+    return this.wrapper
+      .findAll('.nui-table thead th')
+      .map((cell) => cell.text().trim())
+      .filter((text) => text !== '');
+  }
+
+  get tableRows(): readonly string[] {
+    return this.wrapper
+      .findAll('.nui-table tbody tr')
+      .map((row) =>
+        row
+          .findAll('td')
+          .map((cell) => cell.text().trim())
+          .join('|'),
+      )
+      .filter((row) => row !== '');
+  }
+
+  get tableChecks(): readonly string[] {
+    return this.wrapper
+      .findAll('.nui-table tbody input[type="checkbox"]')
+      .map((input) =>
+        input.element instanceof HTMLInputElement
+          ? `${String(input.element.checked)}:${input.attributes('aria-readonly') ?? ''}`
+          : '',
+      );
+  }
+
+  get tableMenus(): number {
+    return this.wrapper.findAll('.nui-table thead button').length;
+  }
+
+  async clickHeader(index: number): Promise<void> {
+    await this.wrapper.findAll('.nui-table thead th')[index]?.trigger('click');
+  }
+
+  get badges(): readonly string[] {
+    return this.wrapper.findAll('.nui-table .nui-badge').map((badge) => badge.text().trim());
+  }
+
+  get staticTables(): number {
+    return this.wrapper.findAll('table.nui-content__grid').length;
   }
 
   get folds(): readonly string[] {

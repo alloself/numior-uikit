@@ -1,6 +1,11 @@
 <template>
   <div class="nui-content" :class="`nui-content--size-${size}`">
-    <ContentNodes v-if="read.ok" :root="read.doc.root" :schema="read.doc.schema" />
+    <ContentNodes
+      v-if="read.ok"
+      :root="read.doc.root"
+      :schema="read.doc.schema"
+      :views="views ?? NO_VIEWS"
+    />
   </div>
 </template>
 
@@ -9,9 +14,11 @@ import { fromJSON, type DocJSONIssue, type DocJSONResult } from '@numior/editor-
 import { computed, watch } from 'vue';
 import { ContentNodes } from './content-nodes';
 import { contentSchema } from './content-schema';
-import type { NuiContentProps } from './content.types';
+import type { NuiContentProps, NuiContentViews } from './content.types';
 
-const { document, schema = contentSchema, size = 'md' } = defineProps<NuiContentProps>();
+const NO_VIEWS: NuiContentViews = {};
+
+const { document, schema = contentSchema, size = 'md', views } = defineProps<NuiContentProps>();
 
 const emit = defineEmits<{
   invalid: [issues: readonly DocJSONIssue[]];

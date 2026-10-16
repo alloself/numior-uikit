@@ -68,7 +68,7 @@ export class EditorSection {
 
   async placeAtEnd(): Promise<void> {
     await this.content.evaluate((root) => {
-      const last = root.lastElementChild ?? root;
+      const last = [...root.querySelectorAll('p')].at(-1) ?? root;
       const range = document.createRange();
 
       range.selectNodeContents(last);
@@ -205,6 +205,63 @@ export class EditorSection {
 
   columns(): Locator {
     return this.content.locator('.nui-content__column');
+  }
+
+  table(): Locator {
+    return this.content.locator('.nui-table');
+  }
+
+  publishedTable(): Locator {
+    return this.preview.locator('.nui-table');
+  }
+
+  tableCell(row: number, col: number): Locator {
+    return this.table().locator('tbody tr').nth(row).locator('td').nth(col);
+  }
+
+  async showTable(): Promise<void> {
+    await this.content.locator('.nui-content__table').evaluate((block) => {
+      block.scrollIntoView({ block: 'center' });
+    });
+  }
+
+  tableHeads(table = this.table()): Promise<string[]> {
+    return table
+      .locator('thead th')
+      .evaluateAll((cells) =>
+        cells.map((cell) => cell.textContent?.trim() ?? '').filter((text) => text !== ''),
+      );
+  }
+
+  tableColumn(table: Locator, col: number): Promise<string[]> {
+    return table
+      .locator('tbody tr')
+      .evaluateAll(
+        (rows, index) =>
+          rows.map((row) =>
+            (row.children[index]?.textContent ?? '').replaceAll(/\s+/gu, ' ').trim(),
+          ),
+        col,
+      );
+  }
+
+  async openColumnMenu(col: number): Promise<void> {
+    const head = this.table().locator('thead th').nth(col);
+
+    await head.evaluate((cell) => {
+      cell.scrollIntoView({ block: 'center' });
+    });
+
+    await head.hover();
+    await head.getByRole('button', { name: /^Меню колонки/u }).click();
+  }
+
+  tableAction(name: string): Locator {
+    return this.root.locator('.nui-editor-table__actions').getByRole('button', { name });
+  }
+
+  renameField(): Locator {
+    return this.root.locator('.nui-editor-table__rename input');
   }
 
   slashMenu(): Locator {

@@ -56,9 +56,15 @@ export const renderNodeDOM = (
   const type = typeOf(schema, node.type);
   const spec = type.render(node);
 
-  return type.leaf
-    ? { dom: renderLeaf(document, spec), contentDOM: null }
-    : renderParent(document, spec);
+  if (type.leaf) {
+    return { dom: renderLeaf(document, spec), contentDOM: null };
+  }
+  const rendered = renderParent(document, spec);
+
+  if (type.atom) {
+    rendered.dom.setAttribute('contenteditable', 'false');
+  }
+  return rendered;
 };
 
 const renderNode = (

@@ -79,7 +79,7 @@ test.describe('editor', () => {
     await editor.paste('one\ntwo');
 
     await expect
-      .poll(async () => (await editor.blockTexts()).slice(-2))
+      .poll(async () => (await editor.blockTexts()).slice(-3, -1))
       .toEqual(['Наберите # и пробел для заголовка или - для списка.one', 'two']);
 
     const before = (await editor.readOutput()).changes;
@@ -131,7 +131,8 @@ test.describe('editor', () => {
     expect((await editor.readOutput()).paste).toBe('word');
     await editor.clear();
     await editor.paste('budget', office('sheets/budget.html'));
-    await expect(editor.content.locator('td strong')).toHaveText(['Статья', 'Сумма']);
+    await expect.poll(() => editor.tableHeads()).toEqual(['Статья', 'Сумма']);
+    await expect.poll(() => editor.tableColumn(editor.table(), 1)).toEqual(['50 000', '1 200']);
     expect((await editor.readOutput()).paste).toBe('sheets');
   });
 
@@ -396,6 +397,97 @@ test.describe('editor', () => {
     );
   });
 
+  test('edits a data table in place, undoes from inside it and publishes its sort', async ({
+    page,
+  }) => {
+    const { editor } = await openEditor(page);
+    const published = editor.publishedTable();
+
+    await editor.showTable();
+    await editor.tableCell(0, 0).click();
+    await page.keyboard.type('Site');
+    await page.keyboard.press('Enter');
+
+    await expect
+      .poll(() => editor.tableColumn(published, 0))
+      .toEqual(['Site', 'Рассылка', 'Вебинар']);
+
+    await page.keyboard.press('ControlOrMeta+z');
+
+    await expect
+      .poll(() => editor.tableColumn(published, 0))
+      .toEqual(['Лендинг', 'Рассылка', 'Вебинар']);
+
+    await editor.tableAction('Строка').click();
+    await expect(published.locator('tbody tr')).toHaveCount(4);
+    await editor.openColumnMenu(2);
+    await page.getByRole('menuitem', { name: 'Переименовать' }).click();
+    await expect(editor.renameField()).toBeFocused();
+    await page.keyboard.press('ControlOrMeta+a');
+    await page.keyboard.type('Budget');
+    await page.keyboard.press('Enter');
+    await expect.poll(() => editor.tableHeads(published)).toContain('Budget');
+    await editor.tableCell(1, 0).click({ button: 'right' });
+    await page.getByRole('menuitem', { name: 'Удалить строку' }).click();
+    await expect.poll(() => editor.tableColumn(published, 0)).toEqual(['Лендинг', 'Вебинар', '']);
+    await editor.table().locator('thead th').first().click();
+
+    await expect
+      .poll(() => editor.tableColumn(editor.table(), 0))
+      .toEqual(['Вебинар', 'Лендинг', '']);
+
+    await expect.poll(() => editor.tableColumn(published, 0)).toEqual(['Вебинар', 'Лендинг', '']);
+    await expect(published.locator('thead button')).toHaveCount(0);
+    await published.locator('thead th').first().click();
+    await expect.poll(() => editor.tableColumn(published, 0)).toEqual(['Вебинар', 'Лендинг', '']);
+  });
+
+  test('selects cell ranges inside the editor and keeps the clicked cell marked under the menu', async ({
+    page,
+  }) => {
+    const { editor } = await openEditor(page);
+
+    const fine = await page.evaluate(
+      () => matchMedia('(hover: hover) and (pointer: fine)').matches,
+    );
+
+    test.skip(!fine, 'ranges are drawn with a mouse');
+
+    await editor.showTable();
+
+    const from = await editor.tableCell(0, 1).boundingBox();
+    const to = await editor.tableCell(1, 2).boundingBox();
+
+    if (from === null || to === null) {
+      throw new Error('The table cells have no box');
+    }
+    await page.mouse.move(from.x + 20, from.y + 10);
+    await page.mouse.down();
+    await page.mouse.move(to.x + 20, to.y + 10, { steps: 8 });
+    await page.mouse.up();
+    await expect(editor.table().locator('td.nui-table__cell--ranged')).toHaveCount(4);
+    await page.mouse.click(to.x + 20, to.y + 10, { button: 'right' });
+    await expect(page.getByRole('menuitem', { name: 'Копировать', exact: true })).toBeVisible();
+    await expect(editor.table().locator('td.nui-table__cell--ranged')).toHaveCount(4);
+    await expect(editor.table()).toHaveClass(/nui-table--cell-menu/u);
+  });
+
+  test('gives the table block a handle without turning it into text', async ({ page }) => {
+    const { editor } = await openEditor(page);
+
+    const fine = await page.evaluate(
+      () => matchMedia('(hover: hover) and (pointer: fine)').matches,
+    );
+
+    test.skip(!fine, 'the handle follows a mouse');
+
+    await editor.showTable();
+    await editor.hoverStart(editor.content.locator('.nui-editor__chunk > .nui-content__table'));
+    await editor.grip().click();
+    await expect(page.getByRole('menuitem', { name: 'Дублировать' })).toBeVisible();
+    await expect(page.getByRole('menuitem', { name: 'Превратить в' })).toHaveCount(0);
+  });
+
   test('passes axe in light and dark, fits phones and types in RTL', async ({ page }) => {
     const playground = await openEditor(page);
     const { editor } = playground;
@@ -411,7 +503,7 @@ test.describe('editor', () => {
     await playground.setDirection('rtl');
     await editor.placeAtEnd();
     await page.keyboard.type(' abc');
-    await expect.poll(async () => (await editor.blockTexts()).at(-1)).toMatch(/ abc$/);
+    await expect.poll(async () => (await editor.blockTexts()).at(-2)).toMatch(/ abc$/);
     expect(await editor.content.evaluate((root) => getComputedStyle(root).direction)).toBe('rtl');
   });
 });

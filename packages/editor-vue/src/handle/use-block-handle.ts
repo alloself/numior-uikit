@@ -50,6 +50,19 @@ const PUSHED = 'nui-editor__pushed';
 
 const ZONE = 48;
 
+const atomAround = (target: Element): Element | undefined => {
+  const owner = target.closest(WIDGET)?.parentElement;
+
+  return owner?.getAttribute('contenteditable') === 'false' ? owner : undefined;
+};
+
+const hoverPoint = (target: Element): Element | undefined => {
+  if (target.closest(BLOCK) === null) {
+    return undefined;
+  }
+  return target.closest(WIDGET) === null ? target : atomAround(target);
+};
+
 export const useBlockHandle = (options: BlockHandleOptions): BlockHandle => {
   const hovered = shallowRef<ChildSlot | undefined>();
   const menuOpen = ref(false);
@@ -179,19 +192,19 @@ export const useBlockHandle = (options: BlockHandleOptions): BlockHandle => {
       release();
       return;
     }
+    const point = target instanceof Element ? hoverPoint(target) : undefined;
+
     if (
       view === undefined ||
-      !(target instanceof Element) ||
-      target.closest(BLOCK) === null ||
-      target.closest(WIDGET) !== null ||
-      options.content.value?.contains(target) !== true ||
+      point === undefined ||
+      options.content.value?.contains(point) !== true ||
       menuOpen.value ||
       dragging.value ||
-      held(view, target)
+      held(view, point)
     ) {
       return;
     }
-    const found = slotAt(view.state.doc, view.posAtDOM(target, 0));
+    const found = slotAt(view.state.doc, view.posAtDOM(point, 0));
     const next = found === undefined ? undefined : deepestSlot(view, found, event.clientY);
 
     if (!sameSlot(next, hovered.value)) {

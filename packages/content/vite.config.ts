@@ -12,13 +12,14 @@ export default defineConfig({
     lib: {
       entry: {
         index: fileURLToPath(new URL('./src/index.ts', import.meta.url)),
+        table: fileURLToPath(new URL('./src/table/index.ts', import.meta.url)),
       },
       formats: ['es'],
       fileName: (_format, name) => `${name}.js`,
     },
     sourcemap: true,
     rolldownOptions: {
-      external: [/^vue$/, /^@numior\/editor-core$/],
+      external: [/^vue$/, /^@numior\/(editor-core|primitives|table|vue)$/],
     },
   },
 });
