@@ -132,6 +132,12 @@ const NAVIGATION = new Set([
 const INTERACTIVE =
   'button, a[href], input, select, textarea, label, [contenteditable="true"], .nui-table__toggle, .nui-table__editor';
 
+const controlled = (target: Element): boolean => {
+  const control = target.closest(INTERACTIVE);
+
+  return control !== null && control.closest('.nui-table') !== null;
+};
+
 const modeOf = (event: MouseEvent): SessionMode => {
   if (event.shiftKey) {
     return 'extend';
@@ -264,7 +270,7 @@ export const useTableRanges = (options: TableRangesOptions): TableRanges => {
   };
 
   const startOf = (target: EventTarget | null): TableCellPosition | undefined => {
-    if (!(target instanceof Element) || target.closest(INTERACTIVE) !== null) {
+    if (!(target instanceof Element) || controlled(target)) {
       return undefined;
     }
     const element = target.closest(`${START_ROW} > .nui-table__cell[aria-colindex]`);
@@ -312,7 +318,7 @@ export const useTableRanges = (options: TableRangesOptions): TableRanges => {
     if (cell !== undefined) {
       return { kind: 'lines', lines: 'cells', position: cell };
     }
-    return options.lines() && target instanceof Element && target.closest(INTERACTIVE) === null
+    return options.lines() && target instanceof Element && !controlled(target)
       ? lineOrigin(target)
       : undefined;
   };
@@ -569,9 +575,7 @@ export const useTableRanges = (options: TableRangesOptions): TableRanges => {
     const target = touched && options.enabled() && options.lines() ? event.target : null;
 
     const origin =
-      target instanceof Element && target.closest(INTERACTIVE) === null
-        ? lineOrigin(target)
-        : undefined;
+      target instanceof Element && !controlled(target) ? lineOrigin(target) : undefined;
 
     if (origin !== undefined) {
       selectOrigin(origin);

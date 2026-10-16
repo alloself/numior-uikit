@@ -50,6 +50,17 @@ describe('NuiTable cell ranges', () => {
     expect(await grid.openCellMenu(2, 1)).toBe(false);
   });
 
+  it('drags a range inside an editable page the way it does on its own', async () => {
+    document.body.setAttribute('contenteditable', 'true');
+
+    const grid = mountPeople();
+    await grid.settle();
+    await grid.dragRange({ row: 1, col: 1 }, { row: 2, col: 2 });
+    document.body.removeAttribute('contenteditable');
+
+    expect(grid.ranges).toEqual([range(1, 1, 2, 2)]);
+  });
+
   it('drags a range over the cells, marks its edges and keeps the row click to itself', async () => {
     const grid = mountPeople();
     await grid.settle();
@@ -248,8 +259,10 @@ describe('NuiTable cell ranges', () => {
     expect(clipboard.htmls[1]).toContain('<tr><td>Сотрудник 1</td><td>Казань</td>');
     expect(grid.announcement).toBe('Скопированы 2 строки');
     expect(await grid.openCellMenu(2, 2)).toBe(true);
+    expect(grid.hasModifier('cell-menu')).toBe(true);
     expect(grid.cellMenuLabels).toEqual(['Копировать', 'Копировать с заголовками']);
     await grid.chooseCellMenu('Копировать с заголовками');
+    expect(grid.hasModifier('cell-menu')).toBe(false);
     expect(clipboard.copies[2]).toBe(['Имя\tГород\tНанят', ...block].join('\n'));
     expect(grid.ranges).toHaveLength(2);
   });

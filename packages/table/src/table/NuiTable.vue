@@ -933,6 +933,7 @@ const rootClass = computed(() => [
     'nui-table--cell-selection': cellSelection && !loadingNow.value,
     'nui-table--ranged': ranges.value.length > 0,
     'nui-table--deselected': rangeSelect.deselected.value,
+    'nui-table--cell-menu': cellMenu.open.value,
   },
 ]);
 

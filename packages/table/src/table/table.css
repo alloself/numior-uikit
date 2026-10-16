@@ -300,12 +300,14 @@
   > .nui-table__grid
   > .nui-table__body
   > .nui-table__row--body:not(.nui-table__row--group)
-  > .nui-table__cell--data.nui-table__cell--active:focus,
+  > .nui-table__cell--data.nui-table__cell--active:is(:focus, .nui-table--cell-menu *),
 .nui-table--cell-selection:not(.nui-table--ranged, .nui-table--deselected)
   > .nui-table__frame
   > .nui-table__viewport
   > .nui-table__grid
-  > .nui-table__body:has(> .nui-table__row > .nui-table__cell--active:focus)
+  > .nui-table__body:has(
+    > .nui-table__row > .nui-table__cell--active:is(:focus, .nui-table--cell-menu *)
+  )
   > .nui-table__row
   > .nui-table__cell--allied {
   background-color: color-mix(in oklab, var(--_row-bg), var(--nui-primary) 12%);
@@ -320,7 +322,9 @@
   > .nui-table__frame
   > .nui-table__viewport
   > .nui-table__grid
-  > .nui-table__body:has(> .nui-table__row > .nui-table__cell--active:focus)
+  > .nui-table__body:has(
+    > .nui-table__row > .nui-table__cell--active:is(:focus, .nui-table--cell-menu *)
+  )
   > .nui-table__row
   > .nui-table__cell--filled.nui-table__cell--allied,
 .nui-table--cell-selection:not(.nui-table--ranged, .nui-table--deselected)
@@ -329,7 +333,7 @@
   > .nui-table__grid
   > .nui-table__body
   > .nui-table__row--body:not(.nui-table__row--group)
-  > .nui-table__cell--filled.nui-table__cell--active:focus {
+  > .nui-table__cell--filled.nui-table__cell--active:is(:focus, .nui-table--cell-menu *) {
   background-color: var(--_row-bg);
   background-image:
     linear-gradient(var(--_tint), var(--_tint)), linear-gradient(var(--_fill), var(--_fill));
@@ -356,7 +360,8 @@
   outline: none;
   pointer-events: none;
 }
-.nui-table__cell:focus-visible {
+.nui-table__cell:focus-visible,
+.nui-table--cell-menu:not(.nui-table--cell-selection) .nui-table__cell--active {
   outline: var(--nui-focus-ring-width) solid var(--nui-focus);
   outline-offset: calc(-1 * var(--nui-focus-ring-width));
 }
