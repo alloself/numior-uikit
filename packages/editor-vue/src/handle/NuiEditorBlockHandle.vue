@@ -33,10 +33,10 @@
 <script setup lang="ts">
 import {
   childNode,
+  containerSlot,
   deleteChild,
   duplicateChild,
   focusChild,
-  listSlot,
   moveChild,
   sequence,
   type ChildSlot,
@@ -56,7 +56,7 @@ const open = defineModel<boolean>('open', { default: false });
 const emit = defineEmits<{
   run: [command: Command];
   grip: [event: PointerEvent];
-  wholeList: [];
+  container: [];
 }>();
 
 const texts = useMessages(editorMessages);
@@ -75,10 +75,20 @@ const siblings = (at: ChildSlot): number =>
   (at.parent === state.doc.root.id ? state.doc.root : state.doc.byId(at.parent))?.content.length ??
   0;
 
-const wholeList = (at: ChildSlot): NuiMenuEntry[] =>
-  listSlot(state.doc, at) === undefined
+const wholeOf = (at: ChildSlot): NuiMenuEntry[] => {
+  const outer = containerSlot(state.doc, at);
+  const container = outer === undefined ? undefined : childNode(state.doc, outer);
+
+  return container === undefined
     ? []
-    : [{ label: texts.value.wholeList, icon: 'group', onSelect: () => emit('wholeList') }];
+    : [
+        {
+          label: texts.value.wholeOf({ type: container.type }),
+          icon: 'group',
+          onSelect: () => emit('container'),
+        },
+      ];
+};
 
 const own = (at: ChildSlot): NuiMenuEntry[] => {
   const node = childNode(state.doc, at);
@@ -109,7 +119,7 @@ const entries = computed((): NuiMenuEntry[] => {
       disabled: at.index >= last,
       onSelect: () => emit('run', moveChild(at.parent, at.index, at.index + 1)),
     },
-    ...wholeList(at),
+    ...wholeOf(at),
     ...own(at),
     { type: 'separator' },
     {

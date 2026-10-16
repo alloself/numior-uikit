@@ -37,6 +37,7 @@ export interface NodeSpec {
   readonly marks?: string | undefined;
   readonly attrs?: AttrSpecs | undefined;
   readonly code?: boolean | undefined;
+  readonly slots?: NodeSlots | undefined;
   readonly render?: NodeRender | undefined;
   readonly parse?: readonly NodeParseRule[] | undefined;
 }
@@ -63,6 +64,8 @@ export interface ContentMatch {
   matchContent(content: readonly ContentNode[]): ContentMatch | undefined;
 }
 
+export type NodeSlots = 'all' | 'rest';
+
 export interface NodeType {
   readonly name: string;
   readonly groups: ReadonlySet<string>;
@@ -73,6 +76,7 @@ export interface NodeType {
   readonly marks: ReadonlySet<string>;
   readonly attrs: AttrSpecs;
   readonly code: boolean;
+  readonly slots: NodeSlots | 'none';
   readonly render: NodeRender;
   readonly parse: readonly NodeParseRule[];
 }

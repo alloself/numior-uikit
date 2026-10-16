@@ -4,6 +4,7 @@ import { contentSize, nodeSize } from '../model/node';
 import type { ContentNode, ElementNode, NodeId } from '../model/node.types';
 import { nearestCursor, selectionRange, textSelection } from '../state/selection';
 import type { Selection } from '../state/selection.types';
+import type { NodeSlots } from '../schema/schema.types';
 import type { Command, EditorState } from '../state/state.types';
 
 export interface ChildSlot {
@@ -29,11 +30,16 @@ const parentOf = (doc: Doc, id: NodeId): Parent | undefined => {
   return node === undefined || pos === undefined ? undefined : { node, start: pos + 1 };
 };
 
-const inList = (doc: Doc, node: ElementNode): boolean =>
-  doc.schema.nodes.get(node.type)?.groups.has('list') === true;
+export const slotRule = (doc: Doc, node: ElementNode): NodeSlots | 'none' =>
+  node.id === doc.root.id ? 'all' : (doc.schema.nodes.get(node.type)?.slots ?? 'none');
 
-export const holdsSlots = (doc: Doc, node: ElementNode): boolean =>
-  node.id === doc.root.id || inList(doc, node);
+export const holdsSlots = (doc: Doc, node: ElementNode): boolean => slotRule(doc, node) !== 'none';
+
+export const isSlot = (doc: Doc, parent: ElementNode, index: number): boolean => {
+  const rule = slotRule(doc, parent);
+
+  return rule === 'all' || (rule === 'rest' && index > 0);
+};
 
 export const slotAt = (doc: Doc, pos: number): ChildSlot | undefined => {
   const $pos = doc.resolve(pos);
@@ -41,7 +47,7 @@ export const slotAt = (doc: Doc, pos: number): ChildSlot | undefined => {
   for (let depth = $pos.depth; depth >= 1; depth -= 1) {
     const parent = $pos.node(depth - 1);
 
-    if (depth === 1 || inList(doc, parent)) {
+    if (isSlot(doc, parent, $pos.indexAt(depth - 1))) {
       return { parent: parent.id, index: $pos.indexAt(depth - 1) };
     }
   }
@@ -67,11 +73,10 @@ export const childNode = (doc: Doc, slot: ChildSlot): ElementNode | undefined =>
   return child?.kind === 'element' ? child : undefined;
 };
 
-export const listSlot = (doc: Doc, slot: ChildSlot): ChildSlot | undefined => {
+export const containerSlot = (doc: Doc, slot: ChildSlot): ChildSlot | undefined => {
   const pos = slot.parent === doc.root.id ? undefined : doc.positionOf(slot.parent);
-  const outer = pos === undefined ? undefined : slotAt(doc, pos);
 
-  return outer !== undefined && childNode(doc, outer)?.id === slot.parent ? outer : undefined;
+  return pos === undefined ? undefined : slotAt(doc, pos);
 };
 
 const moved = (content: readonly ContentNode[], from: number, to: number): ContentNode[] => {

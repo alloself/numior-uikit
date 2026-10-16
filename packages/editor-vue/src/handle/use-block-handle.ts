@@ -1,7 +1,8 @@
 import {
   childNode,
+  containerSlot,
   holdsSlots,
-  listSlot,
+  isSlot,
   moveChild,
   selectionSlot,
   slotAt,
@@ -35,7 +36,7 @@ export interface BlockHandle {
   readonly onPointermove: (event: PointerEvent) => void;
   readonly onPointerleave: () => void;
   readonly onGripPointerdown: (event: PointerEvent) => void;
-  readonly wholeList: () => void;
+  readonly selectContainer: () => void;
 }
 
 interface Grab {
@@ -126,9 +127,11 @@ const spans = (element: Element | undefined, clientY: number): boolean => {
 
 const innerSlot = (view: EditorView, node: ElementNode, clientY: number): ChildSlot | undefined => {
   if (holdsSlots(view.state.doc, node)) {
-    return node.content.length === 0
+    const index = indexAtY(view, node.id, clientY);
+
+    return node.content.length === 0 || !isSlot(view.state.doc, node, index)
       ? undefined
-      : { parent: node.id, index: indexAtY(view, node.id, clientY) };
+      : { parent: node.id, index };
   }
   for (const child of node.content) {
     if (child.kind === 'element' && spans(view.nodeDOM(child.id), clientY)) {
@@ -427,9 +430,9 @@ export const useBlockHandle = (options: BlockHandleOptions): BlockHandle => {
     onPointermove,
     onPointerleave: release,
     onGripPointerdown,
-    wholeList: () => {
+    selectContainer: () => {
       const outer =
-        slot.value === undefined ? undefined : listSlot(options.state().doc, slot.value);
+        slot.value === undefined ? undefined : containerSlot(options.state().doc, slot.value);
 
       if (outer !== undefined) {
         hovered.value = outer;

@@ -29,14 +29,18 @@ export {
   deleteChild,
   duplicateChild,
   focusChild,
+  containerSlot,
   holdsSlots,
-  listSlot,
+  isSlot,
   moveChild,
   moveCurrent,
   selectionSlot,
   slotAt,
+  slotRule,
 } from './commands/move';
 export type { ChildSlot } from './commands/move';
+export { moveBlock } from './commands/move-across';
+export type { BlockTarget } from './commands/move-across';
 export { insertHTML, insertPlainText, pasteSchema } from './commands/paste';
 export { fromHTML } from './html/parse';
 export { detectPasteSource } from './html/sources';
@@ -76,6 +80,7 @@ export type {
   MarkSpec,
   MarkType,
   NodeParseRule,
+  NodeSlots,
   NodeSpec,
   NodeType,
   ParsedAttrs,

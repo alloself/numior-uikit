@@ -58,7 +58,7 @@
         :block-menu="blockMenu"
         @run="onHandleRun"
         @grip="handles.onGripPointerdown"
-        @whole-list="handles.wholeList"
+        @container="handles.selectContainer"
       />
       <NuiEditorNodeViews
         v-if="ready"

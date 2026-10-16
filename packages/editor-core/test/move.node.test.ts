@@ -3,7 +3,7 @@ import {
   deleteChild,
   duplicateChild,
   holdsSlots,
-  listSlot,
+  containerSlot,
   moveChild,
   selectionSlot,
   slotAt,
@@ -39,6 +39,11 @@ const ids = (editor: EditingHarness): string[] =>
 
 const elements = (nodes: readonly ContentNode[]): ElementNode[] =>
   nodes.flatMap((child) => (child.kind === 'element' ? [child] : []));
+
+const idsOf = (root: ElementNode): string[] => [
+  root.id,
+  ...elements(root.content).flatMap((child) => idsOf(child)),
+];
 
 afterEach(() => {
   harness?.release();
@@ -101,20 +106,22 @@ describe('moving children', () => {
     ).toEqual([true, true, false]);
   });
 
-  it('finds the list around an item unless the list sits inside another item', () => {
+  it('finds the nearest movable container around a slot', () => {
     const editor = started(node('bullet_list', [li('one', node('bullet_list', [li('deep')]))]));
     const { doc: current } = editor.state;
-    const [list] = elements(current.root.content);
-    const [item] = elements(list?.content ?? []);
-    const [, inner] = elements(item?.content ?? []);
+    const nested = idsOf(current.root);
 
-    expect(listSlot(current, { parent: list?.id ?? '', index: 0 })).toEqual({
+    expect(containerSlot(current, { parent: nested[1] ?? '', index: 0 })).toEqual({
       parent: current.root.id,
       index: 0,
     });
 
-    expect(listSlot(current, { parent: inner?.id ?? '', index: 0 })).toBeUndefined();
-    expect(listSlot(current, { parent: current.root.id, index: 0 })).toBeUndefined();
+    expect(containerSlot(current, { parent: nested[4] ?? '', index: 0 })).toEqual({
+      parent: nested[1],
+      index: 0,
+    });
+
+    expect(containerSlot(current, { parent: current.root.id, index: 0 })).toBeUndefined();
   });
 
   it('duplicates under fresh ids and deletes up to the enclosing list and down to one empty block', () => {

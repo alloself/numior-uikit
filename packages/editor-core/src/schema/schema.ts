@@ -141,6 +141,7 @@ const compileNode = (
     marks: allowedMarks(spec, allowed, node.marks, inlineContent),
     attrs: limitedAttrs(node.attrs ?? {}, allowed.values[name]),
     code: node.code === true,
+    slots: node.slots ?? (groupsOf(node.group).has('list') ? 'all' : 'none'),
     render: node.render ?? defaultRender(inline, leaf),
     parse: node.parse ?? [],
   };

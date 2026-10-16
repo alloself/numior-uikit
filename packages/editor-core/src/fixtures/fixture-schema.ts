@@ -34,6 +34,7 @@ export const fixtureSchema = createSchema({
     blockquote: {
       group: 'block',
       content: 'block+',
+      slots: 'rest',
       render: () => renderTag('blockquote'),
       parse: [{ tag: 'blockquote' }],
     },
@@ -79,12 +80,14 @@ export const fixtureSchema = createSchema({
     callout: {
       group: 'block',
       content: 'block+',
+      slots: 'rest',
       attrs: { tone: { default: 'info' } },
       render: () => renderTag('div', { role: 'note' }),
     },
     toggle: {
       group: 'block',
       content: 'paragraph block*',
+      slots: 'rest',
       attrs: { open: { default: false } },
       render: () => renderTag('div'),
     },
@@ -100,7 +103,7 @@ export const fixtureSchema = createSchema({
       parse: [{ tag: 'img', attrs: (image) => ({ src: image.attr('src') ?? null }) }],
     },
     columns: { group: 'block', content: 'column{2,4}', render: () => renderTag('div') },
-    column: { content: 'block+', render: () => renderTag('div') },
+    column: { content: 'block+', slots: 'all', render: () => renderTag('div') },
     table: {
       group: 'block',
       content: 'table_row+',

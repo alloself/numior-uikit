@@ -39,7 +39,7 @@ export interface NuiEditorMessages {
   readonly duplicate: string;
   readonly moveUp: string;
   readonly moveDown: string;
-  readonly wholeList: string;
+  readonly wholeOf: (params: { readonly type: string }) => string;
   readonly done: (params: { readonly text: string }) => string;
   readonly expand: string;
   readonly collapse: string;
@@ -49,6 +49,30 @@ export interface NuiEditorMessages {
   readonly calloutTone: (params: { readonly tone: string }) => string;
   readonly deleteBlock: string;
 }
+
+const EN_WHOLE: Readonly<Record<string, string>> = {
+  bullet_list: 'Whole list',
+  ordered_list: 'Whole list',
+  todo_list: 'Whole list',
+  list_item: 'Whole item',
+  todo_item: 'Whole item',
+  blockquote: 'Whole quote',
+  callout: 'Whole callout',
+  toggle: 'Whole toggle',
+  columns: 'All columns',
+};
+
+const RU_WHOLE: Readonly<Record<string, string>> = {
+  bullet_list: 'Весь список',
+  ordered_list: 'Весь список',
+  todo_list: 'Весь список',
+  list_item: 'Весь пункт',
+  todo_item: 'Весь пункт',
+  blockquote: 'Вся цитата',
+  callout: 'Вся выноска',
+  toggle: 'Весь раскрывающийся блок',
+  columns: 'Все колонки',
+};
 
 const EN_TONES: Readonly<Record<string, string>> = {
   info: 'Info',
@@ -129,7 +153,7 @@ export const editorMessages: NuiMessageCatalog<'editor'> = {
     duplicate: 'Duplicate',
     moveUp: 'Move up',
     moveDown: 'Move down',
-    wholeList: 'Whole list',
+    wholeOf: ({ type }) => EN_WHOLE[type] ?? 'Whole block',
     done: ({ text }) => (text === '' ? 'Done' : `Done: ${text}`),
     expand: 'Expand',
     collapse: 'Collapse',
@@ -178,7 +202,7 @@ export const editorMessages: NuiMessageCatalog<'editor'> = {
     duplicate: 'Дублировать',
     moveUp: 'Переместить выше',
     moveDown: 'Переместить ниже',
-    wholeList: 'Весь список',
+    wholeOf: ({ type }) => RU_WHOLE[type] ?? 'Весь блок',
     done: ({ text }) => (text === '' ? 'Выполнено' : `Выполнено: ${text}`),
     expand: 'Развернуть',
     collapse: 'Свернуть',

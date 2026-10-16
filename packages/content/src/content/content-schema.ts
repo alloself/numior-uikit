@@ -227,6 +227,7 @@ const CONTENT_SPEC: SchemaSpec = {
     blockquote: {
       group: 'block',
       content: 'block+',
+      slots: 'rest',
       render: () => renderTag('blockquote', { class: part('quote') }),
       parse: [{ tag: 'blockquote' }],
     },
@@ -307,6 +308,7 @@ const CONTENT_SPEC: SchemaSpec = {
     callout: {
       group: 'block',
       content: 'block+',
+      slots: 'rest',
       attrs: { tone: { default: 'info', verify: oneOf(CONTENT_TONES) } },
       render: (node) =>
         renderTag('div', {
@@ -325,6 +327,7 @@ const CONTENT_SPEC: SchemaSpec = {
     toggle: {
       group: 'block',
       content: 'paragraph block*',
+      slots: 'rest',
       attrs: { open: { default: false, verify: isFlag } },
       render: (node) =>
         renderTag('div', { class: part('toggle', node.attrs.open === true && 'open') }, [
@@ -369,6 +372,7 @@ const CONTENT_SPEC: SchemaSpec = {
     },
     column: {
       content: 'block+',
+      slots: 'all',
       render: () => renderTag('div', { class: part('column') }),
       parse: [{ tag: 'div', attrs: classed('nui-content__column') }],
     },
