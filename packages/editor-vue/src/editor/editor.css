@@ -81,6 +81,9 @@
     margin-inline-start var(--nui-duration-fast) var(--nui-easing),
     opacity var(--nui-duration-fast) var(--nui-easing);
 }
+.nui-editor__chunk > [contenteditable='false'] {
+  transition-property: background-color, opacity;
+}
 .nui-editor__body > * {
   margin-block-start: var(--_flow);
 }

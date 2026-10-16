@@ -56,6 +56,28 @@ const atomAround = (target: Element): Element | undefined => {
   return owner?.getAttribute('contenteditable') === 'false' ? owner : undefined;
 };
 
+const atomStart = (element: Element | undefined): number | undefined =>
+  element instanceof HTMLElement && element.getAttribute('contenteditable') === 'false'
+    ? element.getBoundingClientRect().left
+    : undefined;
+
+const glide = (element: Element | undefined, before: number | undefined): void => {
+  const shift =
+    element instanceof HTMLElement && before !== undefined
+      ? before - element.getBoundingClientRect().left
+      : 0;
+
+  if (!(element instanceof HTMLElement) || shift === 0 || typeof element.animate !== 'function') {
+    return;
+  }
+  const style = getComputedStyle(element);
+
+  element.animate([{ translate: `${String(shift)}px 0` }, { translate: '0 0' }], {
+    duration: Number.parseFloat(style.getPropertyValue('--nui-duration-fast')) || 0,
+    easing: style.getPropertyValue('--nui-easing').trim() || 'ease',
+  });
+};
+
 const hoverPoint = (target: Element): Element | undefined => {
   if (target.closest(BLOCK) === null) {
     return undefined;
@@ -75,9 +97,15 @@ export const useBlockHandle = (options: BlockHandleOptions): BlockHandle => {
 
   const push = (element: Element | undefined): void => {
     if (element !== pushed || element?.classList.contains(PUSHED) === false) {
-      pushed?.classList.remove(PUSHED);
+      const before = pushed;
+      const leaving = atomStart(before);
+      const coming = atomStart(element);
+
+      before?.classList.remove(PUSHED);
       element?.classList.add(PUSHED);
       pushed = element;
+      glide(before, leaving);
+      glide(element, coming);
     }
   };
 

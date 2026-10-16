@@ -226,6 +226,14 @@ export class EditorTableDriver {
     await nextTick();
   }
 
+  async hover(): Promise<void> {
+    this.element
+      .querySelector('tbody td')
+      ?.dispatchEvent(new PointerEvent('pointermove', { bubbles: true }));
+
+    await nextTick();
+  }
+
   get checks(): readonly boolean[] {
     return [...this.element.querySelectorAll('tbody input[type="checkbox"]')].map(
       (input) => input instanceof HTMLInputElement && input.checked,

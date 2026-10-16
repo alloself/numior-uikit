@@ -196,6 +196,38 @@ describe('NuiEditor table block', () => {
     expect(table.checks).toEqual([false]);
   });
 
+  it('slides the table aside for the block handle instead of squeezing it frame by frame', async () => {
+    const slides: string[] = [];
+    const measure = Element.prototype.getBoundingClientRect;
+
+    Element.prototype.getBoundingClientRect = function (this: Element): DOMRect {
+      return new DOMRect(this.classList.contains('nui-editor__pushed') ? 30 : 0, 0, 300, 20);
+    };
+
+    Object.defineProperty(Element.prototype, 'animate', {
+      configurable: true,
+      value: (frames: unknown) => {
+        slides.push(JSON.stringify(frames));
+      },
+    });
+
+    try {
+      const { editor, table } = await shown();
+
+      await table.hover();
+      expect(editor.handleShown).toBe(true);
+      await editor.hoverBlock(0);
+
+      expect(slides).toEqual([
+        '[{"translate":"-30px 0"},{"translate":"0 0"}]',
+        '[{"translate":"30px 0"},{"translate":"0 0"}]',
+      ]);
+    } finally {
+      Element.prototype.getBoundingClientRect = measure;
+      Reflect.deleteProperty(Element.prototype, 'animate');
+    }
+  });
+
   it('turns a pasted sheet into a typed table', async () => {
     const { editor } = await shown();
 
