@@ -302,6 +302,14 @@ export class EditorDriver {
 
   ghostCopy: readonly string[] = [];
 
+  async hoverToolbar(): Promise<void> {
+    this.find('.nui-editor__toolbar button').dispatchEvent(
+      new PointerEvent('pointermove', { bubbles: true }),
+    );
+
+    await nextTick();
+  }
+
   async leave(): Promise<void> {
     this.root.dispatchEvent(new PointerEvent('pointerleave'));
     await nextTick();

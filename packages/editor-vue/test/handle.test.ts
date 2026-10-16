@@ -56,6 +56,13 @@ describe('NuiEditor block handles', () => {
 
     expect(editor.pushedTexts).toEqual(['h2:b']);
 
+    await editor.hoverToolbar();
+
+    expect(editor.handleShown).toBe(false);
+    expect(editor.pushedTexts).toEqual([]);
+
+    await editor.hoverBlock(1);
+
     await editor.blockAction('Duplicate');
 
     expect(editor.blockTexts).toEqual(['p:a', 'h2:b', 'h2:b', 'p:c']);

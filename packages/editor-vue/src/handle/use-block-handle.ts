@@ -351,10 +351,25 @@ export const useBlockHandle = (options: BlockHandleOptions): BlockHandle => {
     return (rtl() ? rect.right - event.clientX : event.clientX - rect.left) <= ZONE;
   };
 
+  const release = (): void => {
+    if (!menuOpen.value && !dragging.value && pin?.armed !== false) {
+      hovered.value = undefined;
+      pin = undefined;
+    }
+  };
+
+  const outside = (target: Element): boolean =>
+    options.content.value?.contains(target) !== true &&
+    options.handle.value?.contains(target) !== true;
+
   const onPointermove = (event: PointerEvent): void => {
     const view = options.view();
     const target = event.target;
 
+    if (target instanceof Element && outside(target)) {
+      release();
+      return;
+    }
     if (
       view === undefined ||
       !(target instanceof Element) ||
@@ -407,12 +422,7 @@ export const useBlockHandle = (options: BlockHandleOptions): BlockHandle => {
     dragging,
     menuOpen,
     onPointermove,
-    onPointerleave: () => {
-      if (!menuOpen.value && !dragging.value && pin?.armed !== false) {
-        hovered.value = undefined;
-        pin = undefined;
-      }
-    },
+    onPointerleave: release,
     onGripPointerdown,
     wholeList: () => {
       const outer =
