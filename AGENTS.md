@@ -33,7 +33,9 @@ that its features are implemented. Component and test conventions live in the sk
 - Keep public exports explicit, CSS opt-in and heavy engines outside base UI imports.
 - Record architecture changes in Archcore; use its MCP tools when available.
 - Use Node 24.15+ and pnpm 10.31.0. Install with `pnpm install --frozen-lockfile`.
-- Run `pnpm check` and, for browser behavior, `pnpm test:e2e`.
+- The toolchain is Vite+ (`vp`): one root `vite.config.ts` holds fmt, lint (Oxlint), test (Vitest,
+  imports from `vite-plus/test`) and run tasks; ESLint covers Vue templates and vue-tsc the types.
+- Run `pnpm check` (its steps run through `vp run --cache`) and, for browser behavior, `pnpm test:e2e`.
 - `pnpm arch:check` checks Archcore when its CLI is available.
 - Do not disable checks globally to hide findings or use `passWithNoTests`.
 - Keep packages private until the complete 1.0 release criteria are met.

@@ -10,11 +10,13 @@
 
 ## Запуск
 
-Версия Node закреплена в `.nvmrc`; pnpm — в `packageManager`.
+Тулчейн — [Vite+](https://viteplus.dev) (`vite-plus` в devDependencies, команда `vp`):
+Vite и Rolldown для сборки, Vitest для тестов, Oxlint и Oxfmt для проверки и формата,
+Vite Task для задач с кешем; все настройки — в корневом `vite.config.ts`. Версия Node
+закреплена в `.node-version`; pnpm — в `packageManager`.
 
 ```sh
-nvm install
-nvm use
+nvm install $(cat .node-version)
 corepack enable
 pnpm install --frozen-lockfile
 pnpm dev
@@ -41,27 +43,34 @@ playground проверяет реальный `dist`, типы и внешню�
 
 ## Команды качества
 
-| Команда                             | Проверка                                                                                                    |
-| ----------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| `pnpm check`                        | Формат, lint, типы, анализ, unit, build, artifacts, docs                                                    |
-| `pnpm lint`                         | Oxlint для JS/TS и eslint-plugin-vue для шаблонов                                                           |
-| `pnpm format` / `pnpm format:check` | Oxfmt: запись / проверка                                                                                    |
-| `pnpm typecheck`                    | Vue SFC и TypeScript strict                                                                                 |
-| `pnpm analyze`                      | Fallow: dead code/deps/cycles/boundaries, дубли, сложность и CRAP по покрытию unit-тестов                   |
-| `pnpm test` / `pnpm test:coverage`  | Vitest; coverage V8 в формате Istanbul для Fallow                                                           |
-| `pnpm test:e2e`                     | Playwright по production build, темы, RTL, Tailwind, axe                                                    |
-| `pnpm arch:check`                   | Archcore CLI: структура и связи                                                                             |
-| `pnpm bench:engine`                 | Бенчмарк движка таблицы в Node на миллионе строк, запись в `packages/table/bench/results`                   |
-| `pnpm bench:editor`                 | Бенчмарк ядра редактора в Node на документе из 10 000 блоков, запись в `packages/editor-core/bench/results` |
-| `pnpm bench:browser`                | Бенчмарк `NuiTable` в Chromium: ввод до отрисовки, кадры прокрутки, монтаж, куча                            |
-| `pnpm bench:check`                  | Сверка последних результатов с порогами `packages/{table,vue,editor-core}/bench/thresholds.json`            |
+| Команда                              | Проверка                                                                                                    |
+| ------------------------------------ | ----------------------------------------------------------------------------------------------------------- |
+| `pnpm check`                         | Формат, lint, типы, анализ, unit, build, artifacts, docs; шаги идут через `vp run --cache`                  |
+| `pnpm lint`                          | `vp lint` (Oxlint) для JS/TS и eslint-plugin-vue для шаблонов                                               |
+| `pnpm format` / `pnpm format:check`  | `vp fmt` (Oxfmt): запись / проверка                                                                         |
+| `pnpm typecheck`                     | Vue SFC и TypeScript strict                                                                                 |
+| `pnpm analyze`                       | Fallow: dead code/deps/cycles/boundaries, дубли, сложность и CRAP по покрытию unit-тестов                   |
+| `pnpm test` / `vp run test:coverage` | `vp test` (Vitest 5); coverage V8 в формате Istanbul для Fallow в `node_modules/.cache/coverage`            |
+| `pnpm test:e2e`                      | Playwright по production build, темы, RTL, Tailwind, axe                                                    |
+| `pnpm arch:check`                    | Archcore CLI: структура и связи                                                                             |
+| `pnpm bench:engine`                  | Бенчмарк движка таблицы в Node на миллионе строк, запись в `packages/table/bench/results`                   |
+| `pnpm bench:editor`                  | Бенчмарк ядра редактора в Node на документе из 10 000 блоков, запись в `packages/editor-core/bench/results` |
+| `pnpm bench:browser`                 | Бенчмарк `NuiTable` в Chromium: ввод до отрисовки, кадры прокрутки, монтаж, куча                            |
+| `pnpm bench:check`                   | Сверка последних результатов с порогами `packages/{table,vue,editor-core}/bench/thresholds.json`            |
 
 Перед браузерными тестами: `pnpm exec playwright install`.
 В Linux при отсутствии системных библиотек: `pnpm exec playwright install --with-deps`.
 Playwright 1.63 требует поддерживаемую ОС; Ubuntu 20.04 для него уже не подходит.
 Локальная матрица проверена в официальном `mcr.microsoft.com/playwright:v1.63.0-noble`
 с Node 24.21.0. CI использует актуальный Ubuntu runner.
-CI запускает `pnpm check`, coverage и всю браузерную матрицу; публикация отключена по умолчанию.
+CI ставит Node, pnpm и `vp` через `voidzero-dev/setup-vp`, хранит кеш задач Vite Task между
+запусками, запускает `pnpm check`, coverage и всю браузерную матрицу; публикация отключена по
+умолчанию.
+
+Повторный `pnpm check` без изменений берёт шаги из кеша Vite Task (`node_modules/.vite/task-cache`,
+очистка — `vp cache clean`): шаг перезапускается, только если изменился прочитанный им файл.
+Без кеша идут `test:nuxt` и `docs:build`: под отслеживанием файлов Vite+ не может запустить
+служебный процесс esbuild, который им нужен.
 
 ## Semantic release
 
