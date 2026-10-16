@@ -39,8 +39,8 @@ export {
   slotRule,
 } from './commands/move';
 export type { ChildSlot } from './commands/move';
-export { moveBlock } from './commands/move-across';
-export type { BlockTarget } from './commands/move-across';
+export { moveBlock, placeBeside } from './commands/move-across';
+export type { BesideSide, BlockTarget, ColumnTypes } from './commands/move-across';
 export { insertHTML, insertPlainText, pasteSchema } from './commands/paste';
 export { fromHTML } from './html/parse';
 export { detectPasteSource } from './html/sources';
@@ -138,6 +138,7 @@ export type { ActiveBlock } from './commands/format';
 export {
   insertBeforeTextblock,
   insertDivider,
+  insertBlock,
   insertLeaf,
   toggleList,
   toggleWrapper,

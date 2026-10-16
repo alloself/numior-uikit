@@ -47,6 +47,8 @@ export interface NuiEditorMessages {
   readonly tone: string;
   readonly toneName: (params: { readonly tone: string }) => string;
   readonly calloutTone: (params: { readonly tone: string }) => string;
+  readonly columns: (params: { readonly count: number }) => string;
+  readonly columnWidth: (params: { readonly index: number }) => string;
   readonly deleteBlock: string;
 }
 
@@ -161,6 +163,8 @@ export const editorMessages: NuiMessageCatalog<'editor'> = {
     tone: 'Tone',
     toneName: ({ tone }) => EN_TONES[tone] ?? tone,
     calloutTone: ({ tone }) => `Callout tone: ${EN_TONES[tone] ?? tone}`,
+    columns: ({ count }) => `${String(count)} columns`,
+    columnWidth: ({ index }) => `Column ${String(index)} width`,
     deleteBlock: 'Delete',
   },
   ru: {
@@ -210,6 +214,8 @@ export const editorMessages: NuiMessageCatalog<'editor'> = {
     tone: 'Тон',
     toneName: ({ tone }) => RU_TONES[tone] ?? tone,
     calloutTone: ({ tone }) => `Тон выноски: ${RU_TONES[tone] ?? tone}`,
+    columns: ({ count }) => `${String(count)} колонки`,
+    columnWidth: ({ index }) => `Ширина колонки ${String(index)}`,
     deleteBlock: 'Удалить',
   },
 };

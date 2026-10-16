@@ -78,6 +78,14 @@ describe('NuiEditor block drag across containers', () => {
     expect(editor.itemTexts).toEqual(['z', 'one', 'two']);
   });
 
+  it('places a block beside another as columns from the far edge', async () => {
+    const editor = mounted();
+
+    await editor.dragBlockTo('a', 395, 160);
+
+    expect(editor.blockTexts).toEqual(['div:notemore', 'ul:onetwo', 'div:za']);
+  });
+
   it('keeps a block where it is when it lands on its own place', async () => {
     const editor = mounted();
 

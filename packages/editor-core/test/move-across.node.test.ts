@@ -1,11 +1,13 @@
 import * as fc from 'fast-check';
 import { afterEach, describe, expect, it } from 'vitest';
 import {
+  childNode,
   createState,
   createTransform,
   invertStep,
   isSlot,
   moveBlock,
+  placeBeside,
   toJSON,
   type Doc,
   type Step,
@@ -191,6 +193,55 @@ const undone = (start: Doc, steps: readonly Step[], docs: readonly Doc[]): Doc =
     return result.doc;
   }, start);
 
+const COLUMNS = { columns: 'columns', column: 'column', most: 3 } as const;
+
+const beside = (editor: EditingHarness, from: ChildSlot, id: string, side: 'start' | 'end') =>
+  placeBeside(
+    from,
+    id,
+    side,
+    COLUMNS,
+  )(editor.state, (tr) => {
+    editor.change(() => tr);
+  });
+
+describe('placing blocks beside others', () => {
+  it('wraps two blocks into columns and adds columns next to a block inside one', () => {
+    const editor = started(p('a'), p('b'), p('c'), p('d'));
+
+    expect(beside(editor, slot(editor, 0), block(editor, 1).id, 'end')).toBe(true);
+
+    expect(editor.outline).toBe(
+      'columns(column(paragraph("b")) column(paragraph("a"))) paragraph("c") paragraph("d")',
+    );
+
+    expect(beside(editor, slot(editor, 1), block(editor, 0, 1, 0).id, 'start')).toBe(true);
+
+    expect(editor.outline).toBe(
+      'columns(column(paragraph("b")) column(paragraph("c")) column(paragraph("a"))) paragraph("d")',
+    );
+
+    expect(beside(editor, slot(editor, 1), block(editor, 0, 0, 0).id, 'end')).toBe(false);
+    expect(beside(editor, slot(editor, 0, 0, 0), block(editor, 0, 0, 0).id, 'end')).toBe(false);
+
+    editor.press('Mod-z');
+
+    expect(editor.outline).toBe(
+      'columns(column(paragraph("b")) column(paragraph("a"))) paragraph("c") paragraph("d")',
+    );
+  });
+
+  it('turns a list item dropped beside a block into a list of its kind', () => {
+    const editor = started(p('a'), node('bullet_list', [li('one'), li('two')]));
+
+    expect(beside(editor, slot(editor, 0, 1), block(editor, 0).id, 'start')).toBe(true);
+
+    expect(editor.outline).toBe(
+      'columns(column(bullet_list(list_item(paragraph("one")))) column(paragraph("a"))) bullet_list(list_item(paragraph("two")))',
+    );
+  });
+});
+
 describe('moving blocks across containers, generated', () => {
   it('keeps every document valid, loses no text and inverts in one go', () => {
     let moved = 0;
@@ -219,5 +270,44 @@ describe('moving blocks across containers, generated', () => {
     );
 
     expect(moved).toBeGreaterThan(100);
+  });
+
+  it('keeps documents valid when blocks are placed beside others', () => {
+    let placed = 0;
+
+    fc.assert(
+      fc.property(
+        fc.integer({ min: 1, max: 10_000 }),
+        fc.nat(),
+        fc.nat(),
+        fc.boolean(),
+        (seed, pick, near, start) => {
+          const sample = generateDoc(fixtureSchema, { blocks: 12, seed });
+          const slots = slotsOf(sample);
+          const from = slots[pick % slots.length];
+          const target = slots[near % slots.length];
+          const neighbour = target === undefined ? undefined : childNode(sample, target);
+
+          if (from === undefined || neighbour === undefined) {
+            return;
+          }
+
+          placeBeside(
+            from,
+            neighbour.id,
+            start ? 'start' : 'end',
+            COLUMNS,
+          )(createState({ doc: sample }), (tr) => {
+            placed += 1;
+            expect(fixtureSchema.check(tr.doc.root).ok).toBe(true);
+            expect(textOf(tr.doc)).toBe(textOf(sample));
+            expect(toJSON(undone(tr.doc, tr.steps, tr.docs))).toEqual(toJSON(sample));
+          });
+        },
+      ),
+      { numRuns: 300, seed: 11 },
+    );
+
+    expect(placed).toBeGreaterThan(50);
   });
 });

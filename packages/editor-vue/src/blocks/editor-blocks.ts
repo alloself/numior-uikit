@@ -2,6 +2,8 @@ import { leaveClosedToggle, toggleTodo } from './block-commands';
 import type { NuiEditorBlock } from './block.types';
 import { calloutToneOf, toneEntries } from './callout/callout-tones';
 import NuiEditorCalloutTone from './callout/NuiEditorCalloutTone.vue';
+import { COLUMN_COUNTS, insertColumns } from './columns/columns';
+import NuiEditorColumnsResize from './columns/NuiEditorColumnsResize.vue';
 import { defineBlock } from './define-block';
 import NuiEditorTodoCheck from './todo/NuiEditorTodoCheck.vue';
 import NuiEditorToggleButton from './toggle/NuiEditorToggleButton.vue';
@@ -40,4 +42,23 @@ export const calloutBlock = defineBlock({
   },
 });
 
-export const editorBlocks: readonly NuiEditorBlock[] = [todoBlock, toggleBlock, calloutBlock];
+export const columnsBlock = defineBlock({
+  name: 'columns',
+  view: NuiEditorColumnsResize,
+  at: 'end',
+  slash: (texts) =>
+    COLUMN_COUNTS.map((count) => ({
+      key: `columns-${String(count)}`,
+      label: texts.columns({ count }),
+      icon: 'columns',
+      keywords: ['columns', 'layout', `${String(count)}`],
+      command: insertColumns(count),
+    })),
+});
+
+export const editorBlocks: readonly NuiEditorBlock[] = [
+  todoBlock,
+  toggleBlock,
+  calloutBlock,
+  columnsBlock,
+];

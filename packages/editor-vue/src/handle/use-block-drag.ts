@@ -1,7 +1,8 @@
-import { moveBlock, type ChildSlot, type Command } from '@numior/editor-core';
+import { moveBlock, placeBeside, type ChildSlot, type Command } from '@numior/editor-core';
 import type { EditorView } from '@numior/editor-core/view';
 import { useEdgeScroll } from '@numior/primitives';
 import { computed, shallowRef, type ComputedRef, type Ref } from 'vue';
+import { COLUMN_TYPES } from '../blocks/columns/columns';
 import {
   elementOf,
   ghostOf,
@@ -27,6 +28,7 @@ export interface BlockDrag {
   readonly source: ComputedRef<ChildSlot | undefined>;
   readonly dragging: ComputedRef<boolean>;
   readonly aiming: ComputedRef<boolean>;
+  readonly aimingSide: ComputedRef<boolean>;
   start(slot: ChildSlot, element: Element, event: PointerEvent): void;
 }
 
@@ -60,6 +62,21 @@ export const useBlockDrag = (options: BlockDragOptions): BlockDrag => {
     }
   };
 
+  const placeSide = (
+    line: HTMLElement,
+    frame: DOMRect,
+    rect: DOMRect,
+    side: 'start' | 'end',
+  ): void => {
+    const rtl = options.rtl();
+    const physical = (side === 'start') === !rtl ? rect.left : rect.right;
+
+    line.style.top = `${String(rect.top - frame.top)}px`;
+    line.style.insetInlineStart = `${String(rtl ? frame.right - physical : physical - frame.left)}px`;
+    line.style.blockSize = `${String(rect.height)}px`;
+    line.style.removeProperty('inline-size');
+  };
+
   const placeLine = (target: DropTarget | undefined): void => {
     const line = options.drop.value;
     const frame = paddingBox(options.frame.value);
@@ -69,11 +86,17 @@ export const useBlockDrag = (options: BlockDragOptions): BlockDrag => {
       line?.style.removeProperty('top');
       return;
     }
+    if (target.kind === 'beside') {
+      placeSide(line, frame, rect, target.side);
+      return;
+    }
     const start = startEdge(frame, target.anchor, options.rtl());
+    const width = rect.width + marginStart(target.anchor) + markerSpace(target.anchor);
 
     line.style.top = `${String((target.edge === 'top' ? rect.top : rect.bottom) - frame.top)}px`;
     line.style.insetInlineStart = `${String(start)}px`;
-    line.style.inlineSize = `${String(rect.width + marginStart(target.anchor) + markerSpace(target.anchor))}px`;
+    line.style.inlineSize = `${String(width)}px`;
+    line.style.removeProperty('block-size');
   };
 
   const placeGhost = (current: Session): void => {
@@ -103,7 +126,12 @@ export const useBlockDrag = (options: BlockDragOptions): BlockDrag => {
     const target =
       view === undefined || content === null
         ? undefined
-        : dropTargetAt(view, content, current.slot, current.x, current.y);
+        : dropTargetAt(view, content, current.slot, {
+            x: current.x,
+            y: current.y,
+            originX: current.originX,
+            rtl: options.rtl(),
+          });
 
     return { ...current, target };
   };
@@ -163,7 +191,12 @@ export const useBlockDrag = (options: BlockDragOptions): BlockDrag => {
 
     finish();
     if (target !== undefined) {
-      options.run(moveBlock(current.slot, target.to));
+      options.run(
+        target.kind === 'between'
+          ? moveBlock(current.slot, target.to)
+          : placeBeside(current.slot, target.id, target.side, COLUMN_TYPES),
+      );
+
       options.onDone();
     }
   };
@@ -178,6 +211,7 @@ export const useBlockDrag = (options: BlockDragOptions): BlockDrag => {
     source: computed(() => session.value?.slot),
     dragging: computed(() => session.value?.moving === true),
     aiming: computed(() => session.value?.target !== undefined),
+    aimingSide: computed(() => session.value?.target?.kind === 'beside'),
     start: (slot, element, event) => {
       const frame = paddingBox(options.frame.value);
       const rect = element.getBoundingClientRect();

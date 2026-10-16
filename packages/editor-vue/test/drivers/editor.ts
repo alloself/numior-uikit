@@ -390,6 +390,29 @@ export class EditorDriver {
     return [...(this.content.querySelectorAll(selector)[nth]?.classList ?? [])];
   }
 
+  attributeOf(selector: string, name: string, nth = 0): string | null {
+    return this.content.querySelectorAll(selector)[nth]?.getAttribute(name) ?? null;
+  }
+
+  async dragSeparator(toX: number): Promise<void> {
+    layOut(this.content);
+
+    const separator = this.content.querySelector('[role="separator"]');
+    const pointer = { bubbles: true, pointerId: 1, button: 0, clientY: 10 };
+
+    separator?.dispatchEvent(new PointerEvent('pointerdown', { ...pointer, clientX: 200 }));
+    separator?.dispatchEvent(new PointerEvent('pointermove', { ...pointer, clientX: toX }));
+    separator?.dispatchEvent(new PointerEvent('pointerup', { ...pointer, clientX: toX }));
+    await nextTick();
+  }
+
+  async pressOn(selector: string, key: string, nth = 0): Promise<void> {
+    const target = this.content.querySelectorAll(selector)[nth];
+
+    target?.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }));
+    await nextTick();
+  }
+
   labelOf(selector: string, nth = 0): string | null {
     return this.content.querySelectorAll(selector)[nth]?.getAttribute('aria-label') ?? null;
   }

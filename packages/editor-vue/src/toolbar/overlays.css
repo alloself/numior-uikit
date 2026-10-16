@@ -168,6 +168,10 @@
 .nui-editor__drop--shown {
   opacity: 1;
 }
+.nui-editor__drop--side {
+  inline-size: 2px;
+  translate: -1px 0;
+}
 .nui-editor .nui-editor__ghost {
   --_size: var(--_text);
   --_inset: var(--nui-space-2);

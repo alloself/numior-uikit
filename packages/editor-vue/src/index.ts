@@ -1,5 +1,11 @@
 export { defineBlock, defineBlockState } from './blocks/define-block';
-export { calloutBlock, editorBlocks, todoBlock, toggleBlock } from './blocks/editor-blocks';
+export {
+  calloutBlock,
+  columnsBlock,
+  editorBlocks,
+  todoBlock,
+  toggleBlock,
+} from './blocks/editor-blocks';
 export type { NuiEditorBlockState } from './blocks/define-block';
 export type {
   NuiEditorBlock,

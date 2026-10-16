@@ -59,6 +59,9 @@ describe('NuiEditor slash menu', () => {
       'Callout',
       'Toggle',
       'Divider',
+      '2 columns',
+      '3 columns',
+      '4 columns',
     ]);
 
     await editor.type('h2');

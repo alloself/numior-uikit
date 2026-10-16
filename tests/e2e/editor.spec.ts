@@ -347,6 +347,55 @@ test.describe('editor', () => {
     );
   });
 
+  test('lays blocks out in columns from the slash menu, the keyboard and a side drop', async ({
+    page,
+  }) => {
+    const { editor } = await openEditor(page);
+
+    const fine = await page.evaluate(
+      () => matchMedia('(hover: hover) and (pointer: fine)').matches,
+    );
+
+    await editor.clear();
+    await page.keyboard.type('/columns');
+    await page.keyboard.press('Enter');
+    await page.keyboard.type('Left');
+    await expect(editor.columns()).toHaveCount(2);
+    await expect(editor.columns().first()).toHaveText('Left');
+
+    const [first, second] = await Promise.all([
+      editor.columns().first().boundingBox(),
+      editor.columns().last().boundingBox(),
+    ]);
+
+    if (!fine) {
+      expect((second?.y ?? 0) > (first?.y ?? 0)).toBe(true);
+      return;
+    }
+    expect(second?.y).toBe(first?.y);
+
+    const separator = editor.content.getByRole('separator', { name: 'Ширина колонки 1' });
+
+    await separator.focus();
+    await page.keyboard.press('ArrowRight');
+    await expect(separator).toHaveAttribute('aria-valuenow', '55');
+    await editor.content.locator('p').last().click();
+    await page.keyboard.type('Beside me');
+    await page.keyboard.press('Enter');
+    await page.keyboard.type('Moved');
+
+    await editor.dragBeside(
+      editor.content.locator('p', { hasText: 'Moved' }),
+      editor.content.locator('p', { hasText: 'Beside me' }),
+    );
+
+    await expect(editor.content.locator('.nui-content__columns')).toHaveCount(2);
+
+    await expect(editor.content.locator('.nui-content__columns').last()).toHaveText(
+      'Beside meMoved',
+    );
+  });
+
   test('passes axe in light and dark, fits phones and types in RTL', async ({ page }) => {
     const playground = await openEditor(page);
     const { editor } = playground;

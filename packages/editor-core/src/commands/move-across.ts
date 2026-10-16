@@ -351,6 +351,16 @@ const planOf = (doc: Doc, from: ChildSlot, to: BlockTarget): Plan | undefined =>
     : { node, source, target, sourcePath, targetPath };
 };
 
+const lifted = (doc: Doc, tr: Transaction, node: ElementNode, sourcePath: Path): ElementNode =>
+  cleaned(
+    doc.schema,
+    editAt(doc.schema, doc.root, sourcePath, (parent) =>
+      parent.content.filter((child) => child.kind !== 'element' || child.id !== node.id),
+    ),
+    sourcePath,
+    tr,
+  );
+
 const rebuilt = (
   doc: Doc,
   tr: Transaction,
@@ -362,11 +372,7 @@ const rebuilt = (
   const inserted = converted({ tr, schema, node, source, target });
   const anchor = { before: idAt(target, to.index - 1), after: idAt(target, to.index) };
 
-  const taken = editAt(schema, doc.root, sourcePath, (parent) =>
-    parent.content.filter((child) => child.kind !== 'element' || child.id !== node.id),
-  );
-
-  const tidy = cleaned(schema, taken, sourcePath, tr);
+  const tidy = lifted(doc, tr, node, sourcePath);
   const place = atPath(tidy, targetPath);
 
   if (inserted === undefined || place === undefined) {
@@ -375,6 +381,25 @@ const rebuilt = (
   const content = spliced(schema, place.content, anchoredIndex(place, anchor), inserted);
 
   return fits(schema, place, content) ? editAt(schema, tidy, targetPath, () => content) : undefined;
+};
+
+const committed = (
+  doc: Doc,
+  tr: Transaction,
+  sourcePath: Path,
+  placed: Placed | undefined,
+): boolean => {
+  const common =
+    placed === undefined
+      ? undefined
+      : sourcePath.slice(0, commonDepth(sourcePath, placed.path) + 1);
+
+  const before = common === undefined ? undefined : atPath(doc.root, common);
+
+  const after =
+    common === undefined || placed === undefined ? undefined : atPath(placed.tree, common);
+
+  return before !== undefined && after !== undefined && replaceWithin(doc, tr, before, after);
 };
 
 export const moveBlock =
@@ -392,16 +417,148 @@ export const moveBlock =
     const plan = planOf(doc, from, to);
     const tr = state.tr;
     const tree = plan === undefined ? undefined : rebuilt(doc, tr, plan, to);
-    const common = plan?.sourcePath.slice(0, commonDepth(plan.sourcePath, plan.targetPath) + 1);
-    const before = common === undefined ? undefined : atPath(doc.root, common);
-    const after = common === undefined || tree === undefined ? undefined : atPath(tree, common);
 
-    if (
-      plan === undefined ||
-      before === undefined ||
-      after === undefined ||
-      !replaceWithin(doc, tr, before, after)
-    ) {
+    const placed =
+      tree === undefined || plan === undefined ? undefined : { tree, path: plan.targetPath };
+
+    if (plan === undefined || !committed(doc, tr, plan.sourcePath, placed)) {
+      return false;
+    }
+    follow(tr, doc, plan.node, state.selection);
+    dispatch?.(tr);
+    return true;
+  };
+
+export type BesideSide = 'start' | 'end';
+
+export interface ColumnTypes {
+  readonly columns: string;
+  readonly column: string;
+  readonly most: number;
+}
+
+interface Beside {
+  readonly tr: Transaction;
+  readonly tree: ElementNode;
+  readonly path: Path;
+  readonly column: ElementNode;
+  readonly side: BesideSide;
+  readonly types: ColumnTypes;
+}
+
+interface Placed {
+  readonly tree: ElementNode;
+  readonly path: Path;
+}
+
+const addColumn = (schema: Schema, beside: Beside, parent: ElementNode): Placed | undefined => {
+  const path = beside.path.slice(0, -2);
+  const columns = atPath(beside.tree, path);
+  const index = columns === undefined ? -1 : childWith(columns, parent.id);
+
+  if (columns === undefined || index < 0 || columns.content.length >= beside.types.most) {
+    return undefined;
+  }
+  const content = [...columns.content];
+
+  content.splice(index + (beside.side === 'end' ? 1 : 0), 0, beside.column);
+  return fits(schema, columns, content)
+    ? { tree: editAt(schema, beside.tree, path, () => content), path }
+    : undefined;
+};
+
+const wrapColumns = (
+  schema: Schema,
+  beside: Beside,
+  parent: ElementNode,
+  id: NodeId,
+): Placed | undefined => {
+  const index = childWith(parent, id);
+  const neighbour = parent.content[index];
+
+  if (neighbour === undefined) {
+    return undefined;
+  }
+  const own = schema.element(beside.types.column, { id: beside.tr.newId(), content: [neighbour] });
+
+  const wrapper = schema.element(beside.types.columns, {
+    id: beside.tr.newId(),
+    content: beside.side === 'start' ? [beside.column, own] : [own, beside.column],
+  });
+
+  const content = parent.content.map((child, at) => (at === index ? wrapper : child));
+  const path = beside.path.slice(0, -1);
+
+  return fits(schema, parent, content)
+    ? { tree: editAt(schema, beside.tree, path, () => content), path }
+    : undefined;
+};
+
+interface BesidePlan {
+  readonly node: ElementNode;
+  readonly inserted: readonly ContentNode[];
+  readonly sourcePath: Path;
+  readonly path: Path;
+}
+
+const besidePlanOf = (
+  doc: Doc,
+  tr: Transaction,
+  from: ChildSlot,
+  id: NodeId,
+  types: ColumnTypes,
+): BesidePlan | undefined => {
+  const node = childNode(doc, from);
+  const source = nodeOf(doc, from.parent);
+  const sourcePath = pathTo(doc, from.parent);
+  const path = pathTo(doc, id);
+  const target = doc.schema.element(types.column, { id: 'shell' });
+
+  const inserted =
+    node === undefined || source === undefined
+      ? undefined
+      : converted({ tr, schema: doc.schema, node, source, target });
+
+  return node === undefined ||
+    inserted === undefined ||
+    sourcePath === undefined ||
+    path === undefined ||
+    path.includes(node.id)
+    ? undefined
+    : { node, inserted, sourcePath, path };
+};
+
+const placedBeside = (
+  doc: Doc,
+  tr: Transaction,
+  plan: BesidePlan,
+  side: BesideSide,
+  types: ColumnTypes,
+): Placed | undefined => {
+  const { schema } = doc;
+  const tree = lifted(doc, tr, plan.node, plan.sourcePath);
+  const parent = atPath(tree, plan.path.slice(0, -1));
+  const column = schema.element(types.column, { id: tr.newId(), content: plan.inserted });
+  const beside: Beside = { tr, tree, path: plan.path, column, side, types };
+  const id = plan.path.at(-1) ?? '';
+
+  if (parent === undefined) {
+    return undefined;
+  }
+  return parent.type === types.column
+    ? addColumn(schema, beside, parent)
+    : wrapColumns(schema, beside, parent, id);
+};
+
+export const placeBeside =
+  (from: ChildSlot, id: NodeId, side: BesideSide, types: ColumnTypes): Command =>
+  (state, dispatch) => {
+    const { doc } = state;
+    const tr = state.tr;
+    const plan = besidePlanOf(doc, tr, from, id, types);
+    const placed = plan === undefined ? undefined : placedBeside(doc, tr, plan, side, types);
+
+    if (plan === undefined || !committed(doc, tr, plan.sourcePath, placed)) {
       return false;
     }
     follow(tr, doc, plan.node, state.selection);

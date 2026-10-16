@@ -184,6 +184,29 @@ export class EditorSection {
     await this.page.mouse.up();
   }
 
+  async dragBeside(source: Locator, target: Locator): Promise<void> {
+    await this.hoverStart(source);
+
+    const grip = await this.grip().boundingBox();
+    const box = await target.boundingBox();
+
+    if (grip === null || box === null) {
+      throw new Error('The block handle or its target has no box');
+    }
+    const x = grip.x + grip.width / 2;
+    const y = grip.y + grip.height / 2;
+
+    await this.page.mouse.move(x, y);
+    await this.page.mouse.down();
+    await this.page.mouse.move(x + 20, y + 10, { steps: 4 });
+    await this.page.mouse.move(box.x + box.width - 8, box.y + box.height / 2, { steps: 10 });
+    await this.page.mouse.up();
+  }
+
+  columns(): Locator {
+    return this.content.locator('.nui-content__column');
+  }
+
   slashMenu(): Locator {
     return this.root.locator('.nui-editor-slash');
   }

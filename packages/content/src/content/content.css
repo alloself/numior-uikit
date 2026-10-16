@@ -285,10 +285,23 @@
   text-align: center;
 }
 .nui-content__columns {
-  display: grid;
-  grid-auto-columns: minmax(0, 1fr);
-  grid-auto-flow: column;
+  container-type: inline-size;
+}
+.nui-content__columns-track {
+  display: flex;
   gap: 1.5em;
+}
+.nui-content__column {
+  flex: 1 1 0;
+  min-inline-size: min(100%, 6rem);
+}
+@container (inline-size < 24rem) {
+  .nui-content__columns-track {
+    flex-direction: column;
+  }
+  .nui-content__column {
+    flex: none;
+  }
 }
 .nui-content__table {
   overflow-x: auto;

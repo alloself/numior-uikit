@@ -50,6 +50,17 @@ const isFlag = (value: AttrValue): boolean => typeof value === 'boolean';
 const isCount = (value: AttrValue): boolean =>
   typeof value === 'number' && Number.isInteger(value) && value >= 1;
 
+const MAX_SHARE = 20;
+
+const isShare = (value: AttrValue): boolean =>
+  typeof value === 'number' && Number.isFinite(value) && value > 0 && value <= MAX_SHARE;
+
+const shareOf = (value: string | undefined): number => {
+  const share = Number.parseFloat(value ?? '');
+
+  return isShare(share) ? share : 1;
+};
+
 const oneOf =
   (values: readonly AttrValue[]) =>
   (value: AttrValue): boolean =>
@@ -367,14 +378,29 @@ const CONTENT_SPEC: SchemaSpec = {
     columns: {
       group: 'block',
       content: 'column{2,4}',
-      render: () => renderTag('div', { class: part('columns') }),
+      render: () =>
+        renderTag('div', { class: part('columns') }, [
+          renderTag('div', { class: part('columns-track') }, [contentHole]),
+        ]),
       parse: [{ tag: 'div', attrs: classed('nui-content__columns') }],
     },
     column: {
       content: 'block+',
       slots: 'all',
-      render: () => renderTag('div', { class: part('column') }),
-      parse: [{ tag: 'div', attrs: classed('nui-content__column') }],
+      attrs: { width: { default: 1, verify: isShare } },
+      render: (node) =>
+        renderTag('div', {
+          class: part('column'),
+          style: node.attrs.width === 1 ? null : `flex-grow: ${String(node.attrs.width)};`,
+        }),
+      parse: [
+        {
+          tag: 'div',
+          attrs: classed('nui-content__column', (column) => ({
+            width: shareOf(column.style('flex-grow')),
+          })),
+        },
+      ],
     },
     table: {
       group: 'block',

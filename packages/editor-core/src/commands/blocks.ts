@@ -2,7 +2,7 @@ import type { ResolvedPos } from '../doc/doc.types';
 import { withContent } from '../model/node';
 import type { AttrValue, ContentNode, ElementNode } from '../model/node.types';
 import type { Schema } from '../schema/schema.types';
-import { isCursor, textSelection } from '../state/selection';
+import { isCursor, textPosition, textSelection } from '../state/selection';
 import type { Command, Dispatch, EditorState, Transaction } from '../state/state.types';
 import { ancestorTypes, sequence } from './format';
 
@@ -216,21 +216,23 @@ export const retypeTextblock = (
   return true;
 };
 
-export const insertBeforeTextblock = (tr: Transaction, pos: number, type: string): boolean => {
+const placeBefore = (tr: Transaction, pos: number, node: ElementNode): boolean => {
   const { schema } = tr.doc;
   const $pos = tr.doc.resolve(pos);
 
-  if ($pos.depth < 1 || !schema.nodes.has(type)) {
-    return false;
-  }
-  const node = schema.element(type, { id: tr.newId() });
-
-  if (!fits(schema, $pos.node($pos.depth - 1), $pos.indexAt($pos.depth - 1), [node, $pos.parent])) {
+  if (
+    $pos.depth < 1 ||
+    !fits(schema, $pos.node($pos.depth - 1), $pos.indexAt($pos.depth - 1), [node, $pos.parent])
+  ) {
     return false;
   }
   tr.insert($pos.before($pos.depth), [node]);
   return true;
 };
+
+export const insertBeforeTextblock = (tr: Transaction, pos: number, type: string): boolean =>
+  tr.doc.schema.nodes.has(type) &&
+  placeBefore(tr, pos, tr.doc.schema.element(type, { id: tr.newId() }));
 
 const liftItem = (tr: Transaction, state: EditorState, spot: ItemSpot, head: number): boolean => {
   const { schema } = state.doc;
@@ -480,8 +482,16 @@ const followingTextblock = (schema: Schema, parent: ElementNode): string | undef
     );
   });
 
-export const insertLeaf =
-  (type: string): Command =>
+const caretInto = (tr: Transaction, start: number): void => {
+  const caret = textPosition(tr.doc, start, 1);
+
+  if (caret !== undefined) {
+    tr.setSelection(textSelection(caret));
+  }
+};
+
+export const insertBlock =
+  (build: (tr: Transaction) => ElementNode): Command =>
   (state, dispatch) => {
     const head = headOf(state);
     const $pos = head === undefined ? undefined : state.doc.resolve(head);
@@ -489,28 +499,33 @@ export const insertLeaf =
     if ($pos === undefined || head === undefined || !isTextblock(state.doc.schema, $pos.parent)) {
       return false;
     }
+    const before = $pos.before($pos.depth);
+
     if ($pos.parent.content.length === 0) {
-      return attempt(state, dispatch, (tr) => insertBeforeTextblock(tr, head, type));
+      return attempt(state, dispatch, (tr) => {
+        const placed = placeBefore(tr, head, build(tr));
+
+        if (placed) {
+          caretInto(tr, before);
+        }
+        return placed;
+      });
     }
-    const container = $pos.node($pos.depth - 1);
-    const next = followingTextblock(state.doc.schema, container);
+    const next = followingTextblock(state.doc.schema, $pos.node($pos.depth - 1));
 
     return attempt(state, dispatch, (tr) => {
       const at = $pos.after($pos.depth);
-      const { schema } = tr.doc;
 
       if (next === undefined) {
         return false;
       }
-
-      tr.insert(at, [
-        schema.element(type, { id: tr.newId() }),
-        schema.element(next, { id: tr.newId() }),
-      ]);
-
-      tr.setSelection(textSelection(at + 2));
+      tr.insert(at, [build(tr), tr.doc.schema.element(next, { id: tr.newId() })]);
+      caretInto(tr, at);
       return true;
     });
   };
+
+export const insertLeaf = (type: string): Command =>
+  insertBlock((tr) => tr.doc.schema.element(type, { id: tr.newId() }));
 
 export const insertDivider = (type = 'divider'): Command => insertLeaf(type);

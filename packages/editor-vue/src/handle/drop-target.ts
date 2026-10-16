@@ -2,22 +2,45 @@ import {
   childNode,
   containerSlot,
   moveBlock,
+  placeBeside,
   slotAt,
   slotRule,
+  type BesideSide,
   type BlockTarget,
   type ChildSlot,
   type EditorState,
+  type NodeId,
 } from '@numior/editor-core';
 import type { EditorView } from '@numior/editor-core/view';
+import { COLUMN_TYPES, hasColumns } from '../blocks/columns/columns';
 import { BLOCK, deepestSlot, elementOf, indexAtY } from './block-geometry';
 
 export type DropEdge = 'top' | 'bottom';
 
-export interface DropTarget {
-  readonly to: BlockTarget;
-  readonly anchor: Element;
-  readonly edge: DropEdge;
+export type DropTarget =
+  | {
+      readonly kind: 'between';
+      readonly to: BlockTarget;
+      readonly anchor: Element;
+      readonly edge: DropEdge;
+    }
+  | {
+      readonly kind: 'beside';
+      readonly id: NodeId;
+      readonly anchor: Element;
+      readonly side: BesideSide;
+    };
+
+export interface DropPointer {
+  readonly x: number;
+  readonly y: number;
+  readonly originX: number;
+  readonly rtl: boolean;
 }
+
+const SIDE = 48;
+
+const DELIBERATE = 16;
 
 const ROOM = 4;
 
@@ -66,7 +89,7 @@ const intoContainer = (view: EditorView, slot: ChildSlot, y: number): DropTarget
     y > line.bottom ||
     box.bottom - line.bottom <= ROOM
     ? undefined
-    : { to: { parent: node.id, index: 1 }, anchor: head, edge: 'bottom' };
+    : { kind: 'between', to: { parent: node.id, index: 1 }, anchor: head, edge: 'bottom' };
 };
 
 const beside = (view: EditorView, slot: ChildSlot, y: number): DropTarget | undefined => {
@@ -79,28 +102,28 @@ const beside = (view: EditorView, slot: ChildSlot, y: number): DropTarget | unde
   const edge: DropEdge = y < rect.top + rect.height / 2 ? 'top' : 'bottom';
 
   return {
+    kind: 'between',
     to: { parent: slot.parent, index: slot.index + (edge === 'bottom' ? 1 : 0) },
     anchor: element,
     edge,
   };
 };
 
-export const dropTargetAt = (
+const betweenAt = (
   view: EditorView,
-  content: HTMLElement,
   from: ChildSlot,
-  x: number,
+  pointed: ChildSlot,
   y: number,
 ): DropTarget | undefined => {
   const { state } = view;
 
   for (
-    let slot: ChildSlot | undefined = pointedSlot(view, content, x, y);
+    let slot: ChildSlot | undefined = pointed;
     slot !== undefined;
     slot = containerSlot(state.doc, slot)
   ) {
     const target = [intoContainer(view, slot, y), beside(view, slot, y)].find(
-      (candidate) => candidate !== undefined && allowed(state, from, candidate.to),
+      (candidate) => candidate?.kind === 'between' && allowed(state, from, candidate.to),
     );
 
     if (target !== undefined) {
@@ -108,4 +131,63 @@ export const dropTargetAt = (
     }
   }
   return undefined;
+};
+
+const sideOf = (rect: DOMRect, pointer: DropPointer): BesideSide | undefined => {
+  const zone = Math.min(SIDE, rect.width / 5);
+  const left = pointer.x < rect.left + zone;
+  const right = pointer.x > rect.right - zone;
+
+  const start = pointer.rtl
+    ? right && pointer.x > pointer.originX + DELIBERATE
+    : left && pointer.x < pointer.originX - DELIBERATE;
+
+  const end = pointer.rtl ? left : right;
+
+  return start ? 'start' : end ? 'end' : undefined;
+};
+
+const columnLevel = (state: EditorState, slot: ChildSlot): ChildSlot | undefined => {
+  for (let current: ChildSlot | undefined = slot; current !== undefined;) {
+    const parent =
+      current.parent === state.doc.root.id ? state.doc.root : state.doc.byId(current.parent);
+
+    if (parent === state.doc.root || parent?.type === COLUMN_TYPES.column) {
+      return current;
+    }
+    current = containerSlot(state.doc, current);
+  }
+  return undefined;
+};
+
+const besideAt = (
+  view: EditorView,
+  from: ChildSlot,
+  pointed: ChildSlot,
+  pointer: DropPointer,
+): DropTarget | undefined => {
+  const { state } = view;
+  const level = hasColumns(state.doc.schema) ? columnLevel(state, pointed) : undefined;
+  const node = level === undefined ? undefined : childNode(state.doc, level);
+  const anchor = level === undefined ? undefined : elementOf(view, level);
+  const rect = anchor?.getBoundingClientRect();
+  const side = rect === undefined ? undefined : sideOf(rect, pointer);
+
+  return node === undefined ||
+    anchor === undefined ||
+    side === undefined ||
+    !placeBeside(from, node.id, side, COLUMN_TYPES)(state)
+    ? undefined
+    : { kind: 'beside', id: node.id, anchor, side };
+};
+
+export const dropTargetAt = (
+  view: EditorView,
+  content: HTMLElement,
+  from: ChildSlot,
+  pointer: DropPointer,
+): DropTarget | undefined => {
+  const pointed = pointedSlot(view, content, pointer.x, pointer.y);
+
+  return besideAt(view, from, pointed, pointer) ?? betweenAt(view, from, pointed, pointer.y);
 };

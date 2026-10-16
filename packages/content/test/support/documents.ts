@@ -54,7 +54,7 @@ export const everyBlock = () =>
     node('callout', [p('Note')], { tone: 'warning' }),
     node('toggle', [p('Head'), p('Body')], { open: true }),
     node('image', [], { src: 'a.png', alt: 'A', caption: 'Cap' }),
-    node('columns', [node('column', [p('L')]), node('column', [p('R')])]),
+    node('columns', [node('column', [p('L')], { width: 1.5 }), node('column', [p('R')])]),
     node('table', [
       node('table_row', [
         node('table_cell', [p('H')], { header: true }),
@@ -77,7 +77,8 @@ export const EVERY_BLOCK_MARKUP = [
   '<div class="nui-content__toggle nui-content__toggle--open"><button type="button" class="nui-content__toggle-button" aria-expanded="true" aria-label="Head"></button>',
   '<div class="nui-content__toggle-body"><p class="nui-content__paragraph">Head</p><p class="nui-content__paragraph">Body</p></div></div>',
   '<figure class="nui-content__image nui-content__image--align-center"><img class="nui-content__picture" src="a.png" alt="A" loading="lazy"><figcaption class="nui-content__caption">Cap</figcaption></figure>',
-  '<div class="nui-content__columns"><div class="nui-content__column"><p class="nui-content__paragraph">L</p></div><div class="nui-content__column"><p class="nui-content__paragraph">R</p></div></div>',
+  '<div class="nui-content__columns"><div class="nui-content__columns-track"><div class="nui-content__column" style="flex-grow: 1.5;"><p class="nui-content__paragraph">L</p></div>',
+  '<div class="nui-content__column"><p class="nui-content__paragraph">R</p></div></div></div>',
   '<div class="nui-content__table"><table><tbody><tr><th class="nui-content__cell"><p class="nui-content__paragraph">H</p></th><td class="nui-content__cell" colspan="2"><p class="nui-content__paragraph">V</p></td></tr></tbody></table></div>',
   '<p class="nui-content__paragraph"><span class="nui-content__colour nui-content__colour--red"><mark class="nui-content__highlight nui-content__highlight--yellow">hi</mark></span></p>',
 ].join('');

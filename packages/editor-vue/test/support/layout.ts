@@ -41,6 +41,8 @@ const depthOf = (element: Element): number => {
   return depth;
 };
 
+const keep = (): void => {};
+
 const rectOf = function (this: Element): DOMRect {
   return rects.get(this) ?? new DOMRect();
 };
@@ -60,5 +62,6 @@ export const layOut = (content: Element): void => {
   }
   rects.set(content, new DOMRect(0, 0, WIDTH, cursor));
   Element.prototype.getBoundingClientRect = rectOf;
+  Element.prototype.setPointerCapture = keep;
   Document.prototype.elementsFromPoint = hits;
 };

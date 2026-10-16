@@ -151,4 +151,25 @@ describe('NuiEditor built-in blocks', () => {
 
     expect(editor.classesOf('.nui-content__toggle')).toContain('nui-content__toggle--open');
   });
+
+  it('inserts columns from the slash menu and resizes them from the keyboard', async () => {
+    const editor = mounted({ document: documentOf(element('paragraph', 'p', [])) });
+
+    editor.focus();
+    await editor.select(1);
+    await editor.type('/columns');
+    await editor.press('Enter');
+
+    expect(editor.blockTexts).toEqual(['div:', 'p:']);
+    expect(editor.attributeOf('[role="separator"]', 'aria-valuenow')).toBe('50');
+
+    await editor.pressOn('[role="separator"]', 'ArrowRight');
+
+    expect(editor.attributeOf('[role="separator"]', 'aria-valuenow')).toBe('55');
+    expect(editor.attributeOf('.nui-content__column', 'style')).toBe('flex-grow: 1.1;');
+
+    await editor.dragSeparator(15 + 0.7 * 385);
+
+    expect(editor.attributeOf('[role="separator"]', 'aria-valuenow')).toBe('70');
+  });
 });

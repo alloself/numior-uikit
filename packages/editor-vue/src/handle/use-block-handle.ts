@@ -38,6 +38,7 @@ export interface BlockHandle {
   readonly slot: ComputedRef<ChildSlot | undefined>;
   readonly dragging: ComputedRef<boolean>;
   readonly aiming: ComputedRef<boolean>;
+  readonly aimingSide: ComputedRef<boolean>;
   readonly menuOpen: Ref<boolean>;
   readonly onPointermove: (event: PointerEvent) => void;
   readonly onPointerleave: () => void;
@@ -212,6 +213,7 @@ export const useBlockHandle = (options: BlockHandleOptions): BlockHandle => {
     slot,
     dragging,
     aiming: drag.aiming,
+    aimingSide: drag.aimingSide,
     menuOpen,
     onPointermove,
     onPointerleave: release,
