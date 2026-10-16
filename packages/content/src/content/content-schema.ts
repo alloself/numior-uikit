@@ -327,7 +327,15 @@ const CONTENT_SPEC: SchemaSpec = {
       content: 'paragraph block*',
       attrs: { open: { default: false, verify: isFlag } },
       render: (node) =>
-        renderTag('div', { class: part('toggle', node.attrs.open === true && 'open') }),
+        renderTag('div', { class: part('toggle', node.attrs.open === true && 'open') }, [
+          renderTag('button', {
+            type: 'button',
+            class: part('toggle-button'),
+            'aria-expanded': node.attrs.open === true ? 'true' : 'false',
+            'aria-label': firstText(node),
+          }),
+          renderTag('div', { class: part('toggle-body') }, [contentHole]),
+        ]),
       parse: [
         {
           tag: 'div',

@@ -74,6 +74,23 @@ describe('node views', () => {
     expect(view.view.state.doc).toBe(before);
   });
 
+  it('selects a leaf node from the plain part of its widget but not from its controls', () => {
+    driver = EditorViewDriver.mount(
+      doc(node('paragraph', ['before']), node('divider')),
+      fixtureSchema,
+      [],
+      boxViews({ updates: [], destroyed: [] }),
+    );
+
+    const rule = driver.view.state.doc.root.content[1];
+    const id = rule?.kind === 'element' ? rule.id : '';
+
+    expect(driver.pressInWidget(id, 'button')).toBe(false);
+    expect(driver.selection.kind).toBe('text');
+    expect(driver.pressInWidget(id, '.box__label')).toBe(true);
+    expect(driver.selection).toEqual({ kind: 'node', id });
+  });
+
   it('destroys views of removed nodes and of the whole document', () => {
     const log: NodeViewLog = { updates: [], destroyed: [] };
     const view = mounted(log);

@@ -41,7 +41,7 @@
 .nui-content > *,
 .nui-content__quote > *,
 .nui-content__callout > *,
-.nui-content__toggle > *,
+.nui-content__toggle-body > *,
 .nui-content__column > *,
 .nui-content__item > *,
 .nui-content__todo-body > * {
@@ -59,7 +59,7 @@
 .nui-content > :first-child,
 .nui-content__quote > :first-child,
 .nui-content__callout > :first-child,
-.nui-content__toggle > :first-child,
+.nui-content__toggle-body > :first-child,
 .nui-content__column > :first-child,
 .nui-content__item > :first-child,
 .nui-content__todo-body > :first-child {
@@ -205,18 +205,47 @@
 }
 .nui-content__toggle {
   --_turn: 0deg;
+  --_mark: 1.25em;
 
   position: relative;
-  padding-inline-start: 1.5em;
+  padding-inline-start: calc(var(--_mark) + 0.5em);
 }
 .nui-content__toggle--open {
   --_turn: 90deg;
 }
-.nui-content__toggle > :first-child::before {
+.nui-content__toggle:not(.nui-content__toggle--open)
+  > .nui-content__toggle-body
+  > :not(:first-child) {
+  display: none;
+}
+.nui-content__toggle-button {
+  position: absolute;
+  inset-block-start: calc((var(--nui-line-height-relaxed) * 1em - var(--_mark)) / 2);
+  inset-inline-start: 0;
+  box-sizing: border-box;
+  inline-size: var(--_mark);
+  block-size: var(--_mark);
+  padding: 0;
+  border: 0;
+  border-radius: var(--nui-radius-sm);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  transition: background-color var(--nui-duration-fast) var(--nui-easing);
+}
+.nui-content__toggle-button:hover {
+  background: var(--nui-neutral-soft);
+}
+.nui-content__toggle-button:focus-visible {
+  outline: var(--nui-focus-ring-width) solid var(--nui-focus);
+  outline-offset: var(--nui-focus-ring-offset);
+}
+.nui-content__toggle-button::before {
   content: '';
   position: absolute;
-  inset-block-start: calc(var(--nui-line-height-relaxed) * 0.5em - 0.25em);
-  inset-inline-start: 0.4em;
+  inset-block-start: calc(50% - 0.25em);
+  inset-inline-start: calc(50% - 0.35em);
   box-sizing: border-box;
   inline-size: 0.5em;
   block-size: 0.5em;
@@ -225,11 +254,9 @@
   transform: rotate(calc(45deg + var(--_turn)));
   transition: transform var(--nui-duration-fast) var(--nui-easing);
 }
-.nui-content__toggle > :first-child:dir(rtl)::before {
+.nui-content__toggle-button:dir(rtl)::before {
+  inset-inline-start: calc(50% - 0.15em);
   transform: rotate(calc(-45deg - var(--_turn)));
-}
-.nui-content__toggle:not(.nui-content__toggle--open) > :not(:first-child) {
-  display: none;
 }
 .nui-content__image {
   display: flex;

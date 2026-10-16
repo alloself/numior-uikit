@@ -11,7 +11,7 @@ import type {
 } from '../state/input.types';
 import type { Transaction } from '../state/state.types';
 import { posAtCoords } from './coords';
-import { descAround, widgetAround } from './desc';
+import { descAround, widgetAround, widgetOwner } from './desc';
 import type { DomWatch } from './dom-change';
 import type { ViewHost } from './host.types';
 import { posAtDOM } from './positions';
@@ -238,6 +238,21 @@ const atomAt = (host: ViewHost, target: EventTarget | null): string | undefined 
     : undefined;
 };
 
+const INTERACTIVE = 'button, input, select, textarea, a, label, [role], [tabindex]';
+
+const interactive = (target: EventTarget | null, owner: Element): boolean => {
+  for (
+    let current = target instanceof Element ? target : null;
+    current !== null && current !== owner;
+    current = current.parentElement
+  ) {
+    if (current.matches(INTERACTIVE)) {
+      return true;
+    }
+  }
+  return false;
+};
+
 const onDrag = (event: DragEvent): void => {
   event.preventDefault();
 };
@@ -317,14 +332,25 @@ export const attachInput = (host: ViewHost, parts: InputParts): (() => void) => 
     runIntent(host, intent);
   };
 
+  const selectNode = (event: MouseEvent, id: string): void => {
+    event.preventDefault();
+    root.focus({ preventScroll: true });
+    host.dispatch(host.state().tr.setSelection({ kind: 'node', id }), 'pointer');
+  };
+
   const onMousedown = (event: MouseEvent): void => {
     const id = event.button === 0 ? atomAt(host, event.target) : undefined;
-    const state = host.state();
 
     if (id !== undefined) {
-      event.preventDefault();
-      root.focus({ preventScroll: true });
-      host.dispatch(state.tr.setSelection({ kind: 'node', id }), 'pointer');
+      selectNode(event, id);
+    }
+  };
+
+  const onWidgetMousedown = (event: MouseEvent): void => {
+    const owner = widgetOwner(host.context, event.target);
+
+    if (owner?.contentDOM === null && event.button === 0 && !interactive(event.target, owner.dom)) {
+      selectNode(event, owner.node.id);
     }
   };
 
@@ -371,6 +397,7 @@ export const attachInput = (host: ViewHost, parts: InputParts): (() => void) => 
   root.addEventListener('dragover', drag);
   root.addEventListener('dragstart', drag);
   root.addEventListener('mousedown', mousedown);
+  root.addEventListener('mousedown', onWidgetMousedown);
   root.addEventListener('compositionstart', compositionstart);
   root.addEventListener('compositionend', compositionend);
   doc.addEventListener('selectionchange', onSelectionchange);
@@ -385,6 +412,7 @@ export const attachInput = (host: ViewHost, parts: InputParts): (() => void) => 
     root.removeEventListener('dragover', drag);
     root.removeEventListener('dragstart', drag);
     root.removeEventListener('mousedown', mousedown);
+    root.removeEventListener('mousedown', onWidgetMousedown);
     root.removeEventListener('compositionstart', compositionstart);
     root.removeEventListener('compositionend', compositionend);
     doc.removeEventListener('selectionchange', onSelectionchange);

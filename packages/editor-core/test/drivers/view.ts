@@ -139,6 +139,16 @@ export class EditorViewDriver {
     await settle();
   }
 
+  pressInWidget(id: NodeId, selector: string): boolean {
+    const target = this.widgetOf(id).querySelector(selector);
+
+    return !(
+      target?.dispatchEvent(
+        new MouseEvent('mousedown', { bubbles: true, cancelable: true, button: 0 }),
+      ) ?? true
+    );
+  }
+
   typeInWidget(id: NodeId, text: string): boolean {
     return !this.widgetOf(id).dispatchEvent(beforeinput('insertText', text));
   }

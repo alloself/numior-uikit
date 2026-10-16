@@ -79,9 +79,6 @@
     margin-inline-start var(--nui-duration-fast) var(--nui-easing),
     opacity var(--nui-duration-fast) var(--nui-easing);
 }
-.nui-editor__widget {
-  user-select: none;
-}
 .nui-editor__body > * {
   margin-block-start: var(--_flow);
 }
@@ -128,6 +125,10 @@
 }
 .nui-editor__content .nui-content__code-inline {
   white-space: normal;
+}
+.nui-editor__selected::selection,
+.nui-editor__selected *::selection {
+  background: transparent;
 }
 .nui-editor__content span.nui-editor__selected {
   outline-offset: 0;

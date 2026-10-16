@@ -132,4 +132,23 @@ describe('NuiEditor built-in blocks', () => {
     expect(editor.classesOf('.nui-content__callout')).toContain('nui-content__callout--tone-error');
     expect(editor.labelOf('.nui-editor__widget button')).toBe('Callout tone: Error');
   });
+
+  it('keeps blocks readable in read-only mode: folds still open, controls stay quiet', async () => {
+    const editor = mounted({
+      readonly: true,
+      document: documentOf(
+        element('callout', 'c', [element('paragraph', 'cp', ['Note'])], { tone: 'warning' }),
+        element('toggle', 'g', [element('paragraph', 's', ['Details'])]),
+      ),
+    });
+
+    await editor.showBlocks();
+
+    expect(editor.labelOf('.nui-editor-callout__tone')).toBeNull();
+    expect(editor.classesOf('.nui-editor-callout__mark')).toEqual(['nui-editor-callout__mark']);
+
+    await editor.clickControl('.nui-editor-toggle__button');
+
+    expect(editor.classesOf('.nui-content__toggle')).toContain('nui-content__toggle--open');
+  });
 });

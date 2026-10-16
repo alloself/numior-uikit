@@ -30,6 +30,24 @@ const boxOf = (node: ElementNode, log: NodeViewLog): NodeView => {
   };
 };
 
+const ruleOf = (): NodeView => {
+  const dom = document.createElement('div');
+  const widget = document.createElement('div');
+  const label = document.createElement('span');
+  const button = document.createElement('button');
+
+  dom.setAttribute('contenteditable', 'false');
+  widget.className = 'box__widget';
+  label.className = 'box__label';
+  label.append('Rule');
+  button.type = 'button';
+  widget.append(label, button);
+  dom.append(widget);
+
+  return { dom, contentDOM: null, update: () => true, destroy: () => undefined };
+};
+
 export const boxViews = (log: NodeViewLog): Readonly<Record<string, NodeViewFactory>> => ({
   callout: (node) => boxOf(node, log),
+  divider: () => ruleOf(),
 });

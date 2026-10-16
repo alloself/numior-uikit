@@ -1,6 +1,6 @@
 import { mount, type VueWrapper } from '@vue/test-utils';
 import type { Doc, DocJSON, DocJSONIssue } from '@numior/editor-core';
-import { createSSRApp, h } from 'vue';
+import { createSSRApp, h, nextTick } from 'vue';
 import { renderToString } from 'vue/server-renderer';
 import { NuiContent, type NuiContentProps } from '../../src';
 
@@ -54,6 +54,25 @@ export class ContentDriver {
 
       return isIssues(issues) ? [issues] : [];
     });
+  }
+
+  get folds(): readonly string[] {
+    return this.wrapper
+      .findAll('.nui-content__toggle')
+      .map(
+        (toggle) =>
+          `${toggle.find('button').attributes('aria-label') ?? ''}:${toggle.classes().includes('nui-content__toggle--open') ? 'open' : 'closed'}:${toggle.find('button').attributes('aria-expanded') ?? ''}`,
+      );
+  }
+
+  async fold(nth = 0): Promise<void> {
+    const button = this.wrapper.findAll('.nui-content__toggle-button')[nth]?.element;
+
+    if (!(button instanceof HTMLElement)) {
+      throw new Error(`No fold button at ${String(nth)}`);
+    }
+    button.click();
+    await nextTick();
   }
 
   async show(document: Doc | DocJSON): Promise<void> {

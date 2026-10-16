@@ -4,7 +4,7 @@
     <NuiSelect
       :model-value="status"
       :options="TASK_STATUSES"
-      :disabled="!editable"
+      :readonly="!editable"
       size="sm"
       aria-label="Статус задачи"
       data-testid="task-status"

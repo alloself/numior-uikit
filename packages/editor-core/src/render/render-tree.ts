@@ -8,6 +8,7 @@ export interface RenderBuilder<T> {
     attrs: Readonly<Record<string, string>>,
     children: readonly T[],
     key: string | undefined,
+    node: ElementNode | undefined,
   ) => T;
   readonly text: (text: string) => T;
 }
@@ -21,7 +22,7 @@ const fromSpec = <T>(
   walk: Walk<T>,
   spec: RenderChild,
   hole: () => readonly T[],
-  key?: string,
+  node?: ElementNode,
 ): readonly T[] => {
   switch (spec.kind) {
     case 'text':
@@ -34,7 +35,8 @@ const fromSpec = <T>(
           spec.tag,
           spec.attrs,
           spec.children.flatMap((child) => fromSpec(walk, child, hole)),
-          key,
+          node?.id,
+          node,
         ),
       ];
   }
@@ -71,14 +73,14 @@ const fromElement = <T>(walk: Walk<T>, node: ElementNode): readonly T[] => {
 
   const trail =
     type.inlineContent && rendersBreak(walk.schema, node.content.at(-1))
-      ? [walk.builder.element('br', {}, [], undefined)]
+      ? [walk.builder.element('br', {}, [], undefined, undefined)]
       : [];
 
   return fromSpec(
     walk,
     withHole(type.render(node), type.leaf),
     () => [...fromChildren(walk, node.content), ...trail],
-    node.id,
+    node,
   );
 };
 

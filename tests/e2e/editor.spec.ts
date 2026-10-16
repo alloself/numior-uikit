@@ -289,6 +289,12 @@ test.describe('editor', () => {
     await expect(editor.toggle()).toContainText('Ветка release/2.4');
     expect((await editor.readOutput()).changes).toBe(changes);
 
+    const published = editor.preview.locator('.nui-content__toggle');
+
+    await expect(published.getByText('Ветка release/2.4')).toBeHidden();
+    await published.getByRole('button', { name: 'Детали релиза' }).click();
+    await expect(published.getByText('Ветка release/2.4')).toBeVisible();
+
     await editor.calloutTone().click();
     await page.getByRole('menuitemradio', { name: 'Предупреждение' }).click();
     await expect(editor.callout()).toHaveClass(/nui-content__callout--tone-warning/);
@@ -300,6 +306,9 @@ test.describe('editor', () => {
 
   test('edits a custom block through its own control and undoes the change', async ({ page }) => {
     const { editor } = await openEditor(page);
+
+    await editor.content.getByText('Статус задачи').click();
+    await expect(editor.selectedAtoms()).toHaveCount(1);
 
     await expect(editor.publishedStatus()).toHaveText('Статус задачи: В работе');
     await editor.taskStatus().click();

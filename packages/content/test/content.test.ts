@@ -40,6 +40,20 @@ describe('NuiContent', () => {
     expect(view.checks).toEqual([true]);
   });
 
+  it('lets readers fold and unfold a toggle without changing the document', async () => {
+    const view = mounted({ document: everyBlock() });
+
+    expect(view.folds).toEqual(['Head:open:true']);
+
+    await view.fold();
+
+    expect(view.folds).toEqual(['Head:closed:false']);
+
+    await view.fold();
+
+    expect(view.folds).toEqual(['Head:open:true']);
+  });
+
   it('reads JSON through its schema and reports a document it cannot read', async () => {
     const doc = docOf(node('paragraph', ['Hello']));
     const view = mounted({ document: toJSON(doc) });

@@ -257,22 +257,28 @@ export const createRootDesc = (
   return desc;
 };
 
-export const widgetAround = (context: ViewContext, target: EventTarget | null): boolean => {
+export const widgetOwner = (
+  context: ViewContext,
+  target: EventTarget | null,
+): ElementDesc | undefined => {
   for (let current = target instanceof Node ? target : null; current !== null;) {
     const desc = context.descs.get(current);
 
     if (desc !== undefined) {
-      return (
-        desc.kind === 'element' &&
+      return desc.kind === 'element' &&
         desc.view !== undefined &&
         current === desc.dom &&
         current !== desc.contentDOM
-      );
+        ? desc
+        : undefined;
     }
     current = current.parentNode;
   }
-  return false;
+  return undefined;
 };
+
+export const widgetAround = (context: ViewContext, target: EventTarget | null): boolean =>
+  widgetOwner(context, target) !== undefined;
 
 const forget = (context: ViewContext, desc: Desc): void => {
   if (desc.kind === 'text') {

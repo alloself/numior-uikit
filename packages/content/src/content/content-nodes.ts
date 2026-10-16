@@ -1,5 +1,6 @@
 import { renderTree, type ElementNode, type Schema } from '@numior/editor-core';
 import { h, type FunctionalComponent, type VNode } from 'vue';
+import { ContentToggle } from './content-toggle';
 
 interface ContentNodesProps {
   readonly root: ElementNode;
@@ -11,12 +12,15 @@ const element = (
   attrs: Readonly<Record<string, string>>,
   children: readonly (VNode | string)[],
   key: string | undefined,
+  node: ElementNode | undefined,
 ): VNode =>
-  h(
-    tag,
-    key === undefined ? { ...attrs } : { ...attrs, key },
-    children.length === 0 ? undefined : [...children],
-  );
+  node?.type === 'toggle'
+    ? h(ContentToggle, { key: node.id, open: node.attrs.open === true, attrs, content: children })
+    : h(
+        tag,
+        key === undefined ? { ...attrs } : { ...attrs, key },
+        children.length === 0 ? undefined : [...children],
+      );
 
 const text = (value: string): string => value;
 

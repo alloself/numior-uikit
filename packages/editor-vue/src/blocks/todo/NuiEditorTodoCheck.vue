@@ -3,7 +3,7 @@
     class="nui-editor-todo__check"
     size="sm"
     :model-value="node.attrs.checked === true"
-    :disabled="!editable"
+    :readonly="!editable"
     :aria-label="texts.done({ text: summary })"
     @update:model-value="toggle"
   />
