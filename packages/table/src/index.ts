@@ -59,6 +59,8 @@ export type {
   NuiTableRect,
   NuiTableSpan,
   NuiTableWindow,
+  NuiTableColumnMenu,
+  NuiTableColumnMenuScope,
   NuiTableContextMenu,
   NuiTableContextScope,
   NuiTableCopyOptions,

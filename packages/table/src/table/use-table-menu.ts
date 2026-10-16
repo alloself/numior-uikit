@@ -24,6 +24,7 @@ export interface TableMenuTarget {
 
 export interface TableMenuOptions<T> {
   readonly enabled: () => boolean;
+  readonly extra: (key: string, anchor: HTMLElement) => readonly NuiMenuEntry[];
   readonly leaves: () => readonly NuiTableColumn<T>[];
   readonly layout: () => TableLayout;
   readonly columnAt: (key: string) => NuiTableColumn<T>;
@@ -170,9 +171,20 @@ export const useTableMenu = <T>(options: TableMenuOptions<T>): TableMenu => {
   const items = computed<readonly NuiMenuEntry[]>(() => {
     const current = target.value;
 
-    return current === null
-      ? []
-      : columnMenuEntries(stateOf(current.key), actionsFor(current), options.messages.value);
+    if (current === null) {
+      return [];
+    }
+    const own = options.extra(current.key, current.anchor);
+
+    const built = columnMenuEntries(
+      stateOf(current.key),
+      actionsFor(current),
+      options.messages.value,
+    );
+
+    return own.length === 0
+      ? built
+      : [...own, { type: 'separator', key: 'separator-own' }, ...built];
   });
 
   const labelOf = (key: string): string | undefined =>

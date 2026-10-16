@@ -188,8 +188,8 @@ const docs: DocsMap = {
         en: 'Control registry for the editor keys of columns; without it the table takes the registry from createNuiConfig({ controls }).',
       },
       columnMenu: {
-        ru: 'Меню колонки в шапке: сортировка, фильтр, группировка, закрепление, скрытие и список колонок. false убирает кнопку меню, и Alt+ArrowDown открывает фильтр.',
-        en: 'Column menu in the header: sort, filter, grouping, pinning, hiding and the column list. false drops the menu button, and Alt+ArrowDown opens the filter.',
+        ru: 'Меню колонки в шапке: сортировка, фильтр, группировка, закрепление, скрытие и список колонок. Функция ({ column, anchor }) → пункты добавляет свои пункты первыми, anchor — ячейка шапки для своих всплывающих окон. false убирает кнопку меню, и Alt+ArrowDown открывает фильтр.',
+        en: 'Column menu in the header: sort, filter, grouping, pinning, hiding and the column list. A function ({ column, anchor }) → entries puts its own entries first, and anchor is the header cell for own popovers. false drops the menu button, and Alt+ArrowDown opens the filter.',
       },
     },
     models: {

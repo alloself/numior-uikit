@@ -121,6 +121,31 @@ describe('NuiTable column menu', () => {
     expect(grid.role).toBe('grid');
   });
 
+  it('puts entries of the app before its own and hands them the header cell', async () => {
+    const anchors: string[] = [];
+
+    const grid = mountPeople({
+      props: {
+        columnMenu: ({ column, anchor }) => {
+          anchors.push(anchor.tagName);
+          return [
+            { key: 'rename', label: `Переименовать ${column.label}`, onSelect: () => undefined },
+          ];
+        },
+      },
+    });
+
+    await grid.settle();
+    await grid.openColumnMenu(1);
+
+    expect(grid.menuLabels.slice(0, 2)).toEqual([
+      'Переименовать Имя',
+      'Сортировать по возрастанию',
+    ]);
+
+    expect(anchors.at(-1)).toBe('TH');
+  });
+
   it('drops the menu buttons and keeps Alt+ArrowDown on the filter when the menu is off', async () => {
     const grid = mountPeople({ props: { columnMenu: false } });
     await grid.settle();

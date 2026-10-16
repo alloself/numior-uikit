@@ -1146,7 +1146,9 @@ const gripOf = (item: TableBodyRow): VNode =>
   });
 
 const menu: TableMenu = useTableMenu({
-  enabled: () => columnMenu,
+  enabled: () => columnMenu !== false,
+  extra: (key, anchor) =>
+    typeof columnMenu === 'function' ? columnMenu({ column: columnAt(key), anchor }) : [],
   leaves: () => tree.value.leaves,
   layout: () => layout.value,
   columnAt,

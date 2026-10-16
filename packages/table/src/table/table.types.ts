@@ -145,7 +145,7 @@ export interface NuiTableProps<T> {
   bordered?: boolean | undefined;
   rowHeaders?: NuiTableRowHeaders<T> | boolean | undefined;
   treeColumn?: string | undefined;
-  columnMenu?: boolean | undefined;
+  columnMenu?: NuiTableColumnMenu<T> | boolean | undefined;
   selectable?: NuiTableSelection | undefined;
   striped?: boolean | undefined;
   caption?: string | undefined;
@@ -277,6 +277,13 @@ export interface NuiTableContextScope<T> extends NuiTableCellSlot<T> {
 }
 
 export type NuiTableContextMenu<T> = (scope: NuiTableContextScope<T>) => readonly NuiMenuEntry[];
+
+export interface NuiTableColumnMenuScope<T> {
+  readonly column: NuiTableColumn<T>;
+  readonly anchor: HTMLElement;
+}
+
+export type NuiTableColumnMenu<T> = (scope: NuiTableColumnMenuScope<T>) => readonly NuiMenuEntry[];
 
 export interface NuiTableCopyOptions {
   readonly headers?: boolean | undefined;
