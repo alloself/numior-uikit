@@ -1,13 +1,15 @@
 <template>
-  <div
-    ref="content"
-    class="nui-popover nui-editor-link"
+  <NuiPopover
+    v-model:open="open"
+    class="nui-editor-link"
+    :anchor="anchor"
+    placement="bottom-start"
+    :offset="8"
     role="dialog"
     :aria-label="texts.link"
-    v-bind="contentAttrs"
     @toggle="onToggle"
   >
-    <form class="nui-editor-link__form" @submit.prevent="apply">
+    <form ref="form" class="nui-editor-link__form" @submit.prevent="apply">
       <NuiField :label="texts.linkAddress" :error="invalid ? texts.linkInvalid : undefined">
         <NuiInput
           v-model="draft"
@@ -30,12 +32,12 @@
         <NuiButton type="submit" size="sm">{{ texts.linkApply }}</NuiButton>
       </div>
     </form>
-  </div>
+  </NuiPopover>
 </template>
 
 <script setup lang="ts">
-import { useFloating, useMessages, usePopover } from '@numior/primitives';
-import { NuiButton, NuiField, NuiInput } from '@numior/vue';
+import { useMessages } from '@numior/primitives';
+import { NuiButton, NuiField, NuiInput, NuiPopover } from '@numior/vue';
 import { ref, useTemplateRef, watch } from 'vue';
 import { editorMessages } from '../editor/editor.messages';
 import type { NuiEditorLinkPanelProps } from './link.types';
@@ -50,14 +52,10 @@ const emit = defineEmits<{
   cancel: [];
 }>();
 
-const content = useTemplateRef<HTMLElement>('content');
+const form = useTemplateRef<HTMLElement>('form');
 const texts = useMessages(editorMessages);
 const draft = ref(href);
 const invalid = ref(false);
-
-const { contentAttrs } = usePopover(content, { open, mode: 'auto' });
-
-useFloating(() => anchor, content, { placement: 'bottom-start', offset: 8, enabled: open });
 
 const apply = (): void => {
   const value = draft.value.trim();
@@ -87,7 +85,7 @@ watch(open, (value) => {
 
 const onToggle = (event: Event): void => {
   if ('newState' in event && event.newState === 'open') {
-    content.value?.querySelector('input')?.focus();
+    form.value?.querySelector('input')?.focus();
   }
 };
 </script>

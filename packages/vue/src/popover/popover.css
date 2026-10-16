@@ -29,6 +29,9 @@
     display var(--nui-duration-fast) allow-discrete,
     overlay var(--nui-duration-fast) allow-discrete;
 }
+.nui-popover--padding-sm {
+  padding: var(--nui-space-1);
+}
 .nui-popover:popover-open {
   opacity: 1;
   translate: 0 0;

@@ -160,6 +160,12 @@
   gap: var(--nui-space-2);
   transition: opacity var(--nui-duration-fast) var(--nui-easing);
 }
+.nui-button__icon-end {
+  inline-size: 1em;
+  block-size: 1em;
+  margin-inline-start: calc(var(--nui-space-1) - var(--nui-space-2));
+  opacity: 0.72;
+}
 .nui-button--loading .nui-button__content {
   opacity: 0;
 }

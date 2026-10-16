@@ -279,6 +279,12 @@ export class EditorDriver {
     return element;
   }
 
+  get activeOption(): string {
+    const id = this.content.getAttribute('aria-activedescendant');
+
+    return id === null ? '' : (document.getElementById(id)?.textContent?.trim() ?? '');
+  }
+
   get linkShown(): boolean {
     return isShown(this.root.querySelector('.nui-editor-link'));
   }

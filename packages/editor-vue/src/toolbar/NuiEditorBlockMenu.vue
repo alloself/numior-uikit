@@ -8,13 +8,11 @@
         tone="neutral"
         size="sm"
         tabindex="-1"
-        :icon-only="false"
+        :icon="blocks.icon"
+        icon-end="chevron-down"
         :aria-label="texts.currentBlock({ type: blocks.label })"
         :disabled="disabled"
-      >
-        <NuiIcon :alias="blocks.icon" class="nui-editor-toolbar__current-icon" />
-        <NuiIcon alias="chevron-down" class="nui-editor-toolbar__chevron" />
-      </NuiButton>
+      />
     </template>
     <NuiMenuRadioGroup :model-value="current" @update:model-value="choose">
       <NuiMenuRadioItem
@@ -32,7 +30,7 @@
 <script setup lang="ts">
 import type { Command } from '@numior/editor-core';
 import { useMessages } from '@numior/primitives';
-import { NuiButton, NuiIcon, NuiMenu, NuiMenuRadioGroup, NuiMenuRadioItem } from '@numior/vue';
+import { NuiButton, NuiMenu, NuiMenuRadioGroup, NuiMenuRadioItem } from '@numior/vue';
 import { computed } from 'vue';
 import { editorMessages } from '../editor/editor.messages';
 import type { NuiEditorBlockMenuProps } from './toolbar.types';

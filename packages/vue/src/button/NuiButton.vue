@@ -18,6 +18,7 @@
     <span class="nui-button__content">
       <NuiIcon v-if="icon" :alias="icon" />
       <slot />
+      <NuiIcon v-if="iconEnd" :alias="iconEnd" class="nui-button__icon-end" />
     </span>
     <span v-if="loading" class="nui-button__loader">
       <NuiIcon alias="loader" class="nui-button__spinner" />
@@ -41,6 +42,7 @@ const {
   loading = false,
   iconOnly = undefined,
   icon,
+  iconEnd,
   as,
   href,
   to,
@@ -53,7 +55,10 @@ const slots = useSlots();
 const squared = (): boolean => {
   const content = slotContent(slots.default);
 
-  return iconOnly ?? (content === 'icons' || (content === 'empty' && icon !== undefined));
+  return (
+    iconOnly ??
+    (iconEnd === undefined && (content === 'icons' || (content === 'empty' && icon !== undefined)))
+  );
 };
 
 const isLink = computed(() => href !== undefined || to !== undefined);

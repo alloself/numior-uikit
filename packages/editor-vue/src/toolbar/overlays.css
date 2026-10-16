@@ -2,20 +2,11 @@
   position: absolute;
   pointer-events: none;
 }
-.nui-editor-bubble.nui-popover {
-  min-inline-size: 0;
-  max-inline-size: none;
-  padding: var(--nui-space-1);
-}
 .nui-editor-bubble .nui-editor-toolbar__group {
   padding: 0;
 }
 .nui-editor-bubble .nui-editor-toolbar__group::before {
   content: none;
-}
-.nui-editor-link.nui-popover {
-  inline-size: min(22rem, calc(100vw - var(--nui-space-4)));
-  max-inline-size: none;
 }
 .nui-editor-link__form {
   display: grid;
@@ -26,9 +17,9 @@
   justify-content: flex-end;
   gap: var(--nui-space-2);
 }
-.nui-editor-toolbar .nui-editor-colours__trigger,
-.nui-editor-bubble .nui-editor-colours__trigger {
-  color: var(--_text, var(--_tone-soft-foreground));
+.nui-editor-colours__mark {
+  display: inline-flex;
+  color: var(--_text, currentColor);
 }
 .nui-editor-colours__option {
   display: flex;
@@ -107,30 +98,6 @@
 .nui-editor-colours--fill-red {
   --_fill: var(--nui-content-highlight-red);
 }
-.nui-editor-slash.nui-popover {
-  min-inline-size: 14rem;
-  max-block-size: min(20rem, 50vh);
-  padding: var(--nui-space-1);
-  overflow-y: auto;
-}
-.nui-editor-slash__option {
-  box-sizing: border-box;
-  display: flex;
-  align-items: center;
-  gap: var(--nui-space-2);
-  min-block-size: 2rem;
-  padding: var(--nui-space-1) var(--nui-space-2);
-  border-radius: var(--nui-radius-sm);
-  color: var(--nui-text);
-  cursor: default;
-  transition: background-color var(--nui-duration-fast) var(--nui-easing);
-}
-.nui-editor-slash__option--active {
-  background: var(--nui-neutral-soft);
-}
-.nui-editor-slash__icon {
-  color: var(--nui-text-muted);
-}
 .nui-editor-handle {
   position: absolute;
   inline-size: var(--_grip);
@@ -143,14 +110,6 @@
 .nui-editor-handle--shown {
   opacity: 1;
   pointer-events: auto;
-}
-.nui-editor-handle .nui-editor-handle__grip {
-  color: var(--nui-text-muted);
-  cursor: grab;
-  touch-action: none;
-}
-.nui-editor-handle--dragging .nui-editor-handle__grip {
-  cursor: grabbing;
 }
 .nui-editor__drop {
   position: absolute;

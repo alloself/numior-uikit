@@ -48,7 +48,7 @@ export type { NuiSplitterOrientation, NuiSplitterProps } from './splitter/splitt
 export type { NuiSplitterMessages } from './splitter/splitter.messages';
 export type { NuiLinkProps, NuiLinkUnderline } from './link/link.types';
 export { default as NuiIcon } from './icon/NuiIcon.vue';
-export type { NuiIconProps } from './icon/icon.types';
+export type { NuiIconProps, NuiIconTransform } from './icon/icon.types';
 export { defaultIcons } from './icon/default-icons';
 export { default as NuiField } from './field/NuiField.vue';
 export { default as NuiFieldFrame } from './field/NuiFieldFrame';
@@ -157,6 +157,7 @@ export { default as NuiDrawer } from './drawer/NuiDrawer.vue';
 export type { NuiDrawerProps, NuiDrawerSide, NuiDrawerSize } from './drawer/drawer.types';
 export { default as NuiPopover } from './popover/NuiPopover.vue';
 export type {
+  NuiPopoverPadding,
   NuiPopoverProps,
   NuiPopoverTriggerAttrs,
   NuiPopoverTriggerSlot,
@@ -289,6 +290,7 @@ export type {
   NuiOptionKey,
   NuiOptionSource,
 } from './shared/options';
+export { optionElementId, optionIndexOf } from './shared/options';
 export type { NuiRouteLocation, NuiRouteRegister } from './shared/destination';
 export { default as NuiToaster } from './toast/NuiToaster.vue';
 export { default as NuiToast } from './toast/NuiToast.vue';

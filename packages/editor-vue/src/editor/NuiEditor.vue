@@ -146,7 +146,7 @@ import {
 } from '@numior/editor-core';
 import { createEditorView, type EditorView } from '@numior/editor-core/view';
 import { provideIconDefaults, useFieldControl, useMessages } from '@numior/primitives';
-import { NuiFieldFrame, type NuiMenuEntry } from '@numior/vue';
+import { NuiFieldFrame, optionElementId, type NuiMenuEntry } from '@numior/vue';
 import {
   computed,
   onBeforeUnmount,
@@ -318,11 +318,11 @@ const toolOptions = computed(() => ({ colours, highlights }));
 const validLink = (href: string): boolean =>
   schema.marks.get('link')?.attrs.href?.verify?.(href) ?? true;
 
-const slashOption = computed(() => {
-  const item = slash.items.value[slash.active.value];
-
-  return slash.open.value && item !== undefined ? `${slashId}-${item.key}` : undefined;
-});
+const slashOption = computed(() =>
+  slash.open.value && slash.items.value.length > 0
+    ? optionElementId(slashId, slash.active.value)
+    : undefined,
+);
 
 const contentAttrs = computed(() => ({
   id: controlAttrs.value.id,

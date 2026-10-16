@@ -8,7 +8,7 @@
         v-bind="attrs"
         class="nui-editor-callout__tone"
         variant="ghost"
-        tone="neutral"
+        :tone="tone"
         size="sm"
         :icon="tone"
         :aria-label="texts.calloutTone({ tone })"

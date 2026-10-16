@@ -14,6 +14,7 @@ export interface NuiButtonProps {
   loading?: boolean | undefined;
   iconOnly?: boolean | undefined;
   icon?: IconAlias | undefined;
+  iconEnd?: IconAlias | undefined;
   as?: string | Component | undefined;
   href?: string | undefined;
   to?: NuiRouteLocation | undefined;

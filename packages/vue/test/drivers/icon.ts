@@ -62,6 +62,14 @@ export class IconDriver extends ComponentDriver {
     return this.wrapper.find(GLYPH).attributes(name);
   }
 
+  get rotation(): string | undefined {
+    return this.wrapper.find('.nui-icon').attributes('style');
+  }
+
+  async receive(props: Partial<NuiIconProps>): Promise<void> {
+    await this.wrapper.setProps(props);
+  }
+
   get empty(): boolean {
     return !this.wrapper.find(GLYPH).exists();
   }

@@ -84,6 +84,15 @@ describe('NuiButton', () => {
     expect(add.hasModifier('icon-only')).toBe(false);
     expect(add.node.textContent).toBe('Add');
 
+    const picker = ButtonDriver.mount({
+      content: 'none',
+      props: { icon: 'calendar', iconEnd: 'chevron-down' },
+      attrs: { 'aria-label': 'Pick' },
+    });
+
+    expect(picker.iconAliases).toEqual(['calendar', 'chevron-down']);
+    expect(picker.hasModifier('icon-only')).toBe(false);
+
     expect(
       ButtonDriver.mount({ content: 'none', props: { icon: 'x', iconOnly: false } }).hasModifier(
         'icon-only',

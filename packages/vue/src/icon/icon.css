@@ -4,6 +4,11 @@
   flex: none;
   inline-size: 1.25em;
   block-size: 1.25em;
+  rotate: var(--_rotate, 0deg);
+  scale: var(--_scale, 1);
+  transition:
+    rotate var(--nui-duration-fast) var(--nui-easing),
+    scale var(--nui-duration-fast) var(--nui-easing);
 }
 .nui-icon__glyph {
   inline-size: 100%;

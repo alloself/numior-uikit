@@ -1,33 +1,25 @@
 <template>
-  <div
-    ref="content"
-    class="nui-popover nui-editor-slash"
-    role="listbox"
-    :aria-label="texts.blocks"
-    v-bind="contentAttrs"
-    @mousedown.prevent
-  >
-    <div
-      v-for="(item, index) in items"
-      :id="`${id}-${item.key}`"
-      :key="item.key"
-      role="option"
-      class="nui-editor-slash__option"
-      :class="{ 'nui-editor-slash__option--active': index === active }"
-      :aria-selected="index === active ? 'true' : 'false'"
-      @click="emit('choose', item)"
-      @pointermove="emit('hover', index)"
-    >
-      <NuiIcon :alias="item.icon" class="nui-editor-slash__icon" />
-      <span>{{ item.label }}</span>
-    </div>
-  </div>
+  <NuiList
+    :ref="setList"
+    class="nui-editor-slash"
+    variant="floating"
+    size="sm"
+    selectable="single"
+    :items="entries"
+    :keyboard="false"
+    :active-id="activeId"
+    :label="texts.blocks"
+    v-bind="{ ...contentAttrs, id }"
+    @select="choose"
+    @pointermove="hover"
+    @pointerdown.prevent
+  />
 </template>
 
 <script setup lang="ts">
 import { useFloating, useMessages, usePopover } from '@numior/primitives';
-import { NuiIcon } from '@numior/vue';
-import { ref, useTemplateRef, watch } from 'vue';
+import { NuiList, optionElementId, optionIndexOf, type NuiListEntry } from '@numior/vue';
+import { computed, ref, shallowRef, watch, type ComponentPublicInstance } from 'vue';
 import { editorMessages } from '../editor/editor.messages';
 import type { SlashItem } from './slash-items';
 import type { NuiEditorSlashMenuProps } from './slash.types';
@@ -39,13 +31,41 @@ const emit = defineEmits<{
   hover: [index: number];
 }>();
 
-const content = useTemplateRef<HTMLElement>('content');
+const list = shallowRef<HTMLElement | null>(null);
 const texts = useMessages(editorMessages);
 const shown = ref(open);
 
-const { contentAttrs } = usePopover(content, { open: shown, mode: 'manual', id: () => id });
+const entries = computed((): NuiListEntry<string>[] =>
+  items.map((item) => ({ value: item.key, label: item.label, icon: item.icon })),
+);
 
-useFloating(() => anchor, content, { placement: 'bottom-start', offset: 6, enabled: shown });
+const activeId = computed(() => optionElementId(id, active));
+
+const setList = (instance: Element | ComponentPublicInstance | null): void => {
+  const element: unknown = instance instanceof Element ? instance : instance?.$el;
+
+  list.value = element instanceof HTMLElement ? element : null;
+};
+
+const { contentAttrs } = usePopover(list, { open: shown, mode: 'manual', id: () => id });
+
+useFloating(() => anchor, list, { placement: 'bottom-start', offset: 6, enabled: shown });
+
+const choose = (entry: NuiListEntry<string>): void => {
+  const item = items.find((candidate) => candidate.key === entry.value);
+
+  if (item !== undefined) {
+    emit('choose', item);
+  }
+};
+
+const hover = (event: PointerEvent): void => {
+  const option = event.target instanceof Element ? event.target.closest('[role="option"]') : null;
+
+  if (option !== null) {
+    emit('hover', optionIndexOf(option));
+  }
+};
 
 watch(
   () => open,
@@ -55,11 +75,9 @@ watch(
 );
 
 watch(
-  () => active,
-  () => {
-    content.value?.querySelector('.nui-editor-slash__option--active')?.scrollIntoView({
-      block: 'nearest',
-    });
+  activeId,
+  (value) => {
+    list.value?.ownerDocument.getElementById(value)?.scrollIntoView({ block: 'nearest' });
   },
   { flush: 'post' },
 );

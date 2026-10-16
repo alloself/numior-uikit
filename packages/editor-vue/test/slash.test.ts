@@ -79,7 +79,7 @@ describe('NuiEditor slash menu', () => {
     await editor.type('head');
     await editor.press('ArrowDown');
 
-    expect(editor.attribute('aria-activedescendant')).toMatch(/-heading-2$/);
+    expect(editor.activeOption).toBe('Heading 2');
     expect(editor.attribute('aria-controls')).not.toBeNull();
 
     await editor.press('Enter');

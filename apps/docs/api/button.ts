@@ -32,6 +32,10 @@ const docs: DocsMap = {
         ru: 'Иконка из реестра перед текстом; без текста кнопка становится квадратной.',
         en: 'Registry icon before the text; without text the button becomes square.',
       },
+      iconEnd: {
+        ru: 'Иконка после содержимого, приглушённая и на шаг меньше (стрелка раскрытия у выбора); с ней кнопка не становится квадратной.',
+        en: 'An icon after the content, muted and a step smaller (a disclosure arrow on a picker); the button stays non-square with it.',
+      },
       as: {
         ru: 'Переопределяет тег или компонент в режиме ссылки; без него to берёт роутер.',
         en: 'Overrides the tag or component of the link mode; without it to takes the router.',

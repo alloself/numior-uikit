@@ -1,6 +1,11 @@
 <template>
   <slot name="trigger" :attrs="triggerAttrs" :open="open" />
-  <div ref="content" class="nui-popover" v-bind="{ ...contentAttrs, ...$attrs }">
+  <div
+    ref="content"
+    class="nui-popover"
+    :class="`nui-popover--padding-${padding}`"
+    v-bind="{ ...contentAttrs, ...$attrs }"
+  >
     <slot />
     <span v-if="arrow" ref="arrow-node" class="nui-popover__arrow"></span>
   </div>
@@ -17,15 +22,31 @@ import type {
 } from './popover.types';
 
 defineOptions({ inheritAttrs: false });
-const { id, placement = 'bottom', offset = 8, arrow = false } = defineProps<NuiPopoverProps>();
+
+const {
+  id,
+  placement = 'bottom',
+  offset = 8,
+  arrow = false,
+  padding = 'md',
+  anchor,
+  mode = 'auto',
+} = defineProps<NuiPopoverProps>();
+
 const open = defineModel<boolean>('open', { default: false });
-defineSlots<{ trigger(props: NuiPopoverTriggerSlot): unknown; default(): unknown }>();
+defineSlots<{ trigger?(props: NuiPopoverTriggerSlot): unknown; default(): unknown }>();
 const { trigger, setTrigger } = useTriggerElement();
+const reference = computed(() => (anchor === undefined ? trigger.value : anchor));
 const contentElement = useTemplateRef<HTMLElement>('content');
 const arrowNode = useTemplateRef<HTMLElement>('arrow-node');
-const { contentAttrs, invokerAttrs } = usePopover(contentElement, { open, id: () => id });
 
-useFloating(trigger, contentElement, {
+const { contentAttrs, invokerAttrs } = usePopover(contentElement, {
+  open,
+  id: () => id,
+  mode: () => mode,
+});
+
+useFloating(reference, contentElement, {
   placement: () => placement,
   offset: () => offset,
   arrow: arrowNode,

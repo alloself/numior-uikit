@@ -29,4 +29,21 @@ describe('NuiIcon', () => {
     await missing.ready();
     expect(missing.empty).toBe(true);
   });
+
+  it('turns and scales its glyph without swapping it', async () => {
+    const icon = IconDriver.mount({ alias: 'chevron-right' });
+
+    await icon.ready();
+
+    expect(icon.rotation).toBeUndefined();
+
+    await icon.receive({ transform: { rotate: 90 } });
+
+    expect(icon.rotation).toBe('--_rotate: 90deg;');
+
+    await icon.receive({ transform: { rotate: -90, scale: 1.2 } });
+
+    expect(icon.rotation).toBe('--_rotate: -90deg; --_scale: 1.2;');
+    expect(icon.glyphClasses).toContain('lucide-chevron-right');
+  });
 });

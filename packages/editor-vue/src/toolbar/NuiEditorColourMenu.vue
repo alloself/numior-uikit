@@ -4,15 +4,23 @@
       <NuiButton
         v-bind="attrs"
         class="nui-editor-toolbar__control nui-editor-colours__trigger"
-        :class="colours.colour === null ? undefined : `nui-editor-colours--text-${colours.colour}`"
         variant="ghost"
         tone="neutral"
         size="sm"
         tabindex="-1"
-        icon="text-colour"
+        :icon-only="true"
         :aria-label="texts.colour"
         :disabled="disabled || colours.disabled"
-      />
+      >
+        <span
+          class="nui-editor-colours__mark"
+          :class="
+            colours.colour === null ? undefined : `nui-editor-colours--text-${colours.colour}`
+          "
+        >
+          <NuiIcon alias="text-colour" />
+        </span>
+      </NuiButton>
     </template>
     <template v-if="colours.colours.length > 0">
       <NuiMenuLabel>{{ texts.textColour }}</NuiMenuLabel>
@@ -58,6 +66,7 @@
 import { useMessages } from '@numior/primitives';
 import {
   NuiButton,
+  NuiIcon,
   NuiMenu,
   NuiMenuLabel,
   NuiMenuRadioGroup,

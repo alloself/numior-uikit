@@ -1,27 +1,37 @@
 <template>
-  <div
-    ref="content"
-    class="nui-popover nui-editor-bubble"
-    role="toolbar"
-    :aria-label="texts.formatting"
-    v-bind="contentAttrs"
+  <NuiPopover
+    v-model:open="shown"
+    class="nui-editor-bubble"
+    :anchor="anchor"
+    mode="manual"
+    placement="top"
+    :offset="8"
+    padding="sm"
     @mousedown.prevent
-    @keydown="onKeydown"
-    @focusin="navigation.onFocusin"
   >
-    <NuiEditorToolbarGroup
-      v-if="group"
-      :group="group"
-      @run="(command, refocus) => emit('run', command, refocus)"
-      @link="emit('link')"
-      @colour="(mark, name) => emit('colour', mark, name)"
-    />
-  </div>
+    <div
+      ref="bar"
+      class="nui-editor-bubble__bar"
+      role="toolbar"
+      :aria-label="texts.formatting"
+      @keydown="onKeydown"
+      @focusin="navigation.onFocusin"
+    >
+      <NuiEditorToolbarGroup
+        v-if="group"
+        :group="group"
+        @run="(command, refocus) => emit('run', command, refocus)"
+        @link="emit('link')"
+        @colour="(mark, name) => emit('colour', mark, name)"
+      />
+    </div>
+  </NuiPopover>
 </template>
 
 <script setup lang="ts">
 import type { Command } from '@numior/editor-core';
-import { useFloating, useListNavigation, useMessages, usePopover } from '@numior/primitives';
+import { useListNavigation, useMessages } from '@numior/primitives';
+import { NuiPopover } from '@numior/vue';
 import { computed, ref, useTemplateRef, watch } from 'vue';
 import { editorMessages } from '../editor/editor.messages';
 import NuiEditorToolbarGroup from '../toolbar/NuiEditorToolbarGroup.vue';
@@ -38,7 +48,7 @@ const emit = defineEmits<{
   leave: [];
 }>();
 
-const content = useTemplateRef<HTMLElement>('content');
+const bar = useTemplateRef<HTMLElement>('bar');
 const shown = ref(open);
 const texts = useMessages(editorMessages);
 
@@ -46,11 +56,7 @@ const group = computed(() =>
   toolbarGroups(state, texts.value, options).find((candidate) => candidate.key === 'marks'),
 );
 
-const { contentAttrs } = usePopover(content, { open: shown, mode: 'manual' });
-
-useFloating(() => anchor, content, { placement: 'top', offset: 8, enabled: shown });
-
-const navigation = useListNavigation(content, {
+const navigation = useListNavigation(bar, {
   selector: '.nui-editor-toolbar__control',
   orientation: 'horizontal',
   typeahead: false,

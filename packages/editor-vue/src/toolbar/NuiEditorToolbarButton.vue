@@ -4,9 +4,8 @@
       <NuiButton
         v-bind="attrs"
         class="nui-editor-toolbar__control"
-        :class="{ 'nui-editor-toolbar__control--pressed': action.pressed }"
-        variant="ghost"
-        tone="neutral"
+        :variant="action.pressed ? 'soft' : 'ghost'"
+        :tone="action.pressed ? 'primary' : 'neutral'"
         size="sm"
         tabindex="-1"
         :icon="action.icon"
