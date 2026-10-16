@@ -718,12 +718,16 @@ const active = ref<TableCellPosition>({ row: rowCount.value > 0 ? 0 : -1, col: 0
 
 const { width: room } = useElementSize(viewport);
 
+const flexing = computed(() =>
+  orderedLeaves.value.some((column) => (column.flex ?? 0) > 0 && !(column.key in widths.value)),
+);
+
 const layoutOptions = computed(() => ({
   pins: pins.value,
   hidden: hidden.value,
   widths: widths.value,
   select: selectOn.value,
-  room: room.value,
+  room: flexing.value ? room.value : 0,
   wrap: height === undefined || rowHeight === 'auto',
   rowHeader: rowHeadSize.value,
 }));
