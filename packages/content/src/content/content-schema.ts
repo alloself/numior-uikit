@@ -107,14 +107,24 @@ const firstElement = (element: HtmlElement): HtmlElement | undefined =>
 const checkboxOf = (item: HtmlElement): HtmlElement | undefined => {
   const first = firstElement(item);
 
-  return first?.tag === 'input' && first.attr('type') === 'checkbox' ? first : undefined;
+  return (first?.tag === 'input' && first.attr('type') === 'checkbox') ||
+    first?.attr('role') === 'checkbox'
+    ? first
+    : undefined;
 };
 
 const isTask = (item: HtmlElement): boolean =>
   checkboxOf(item) !== undefined || item.attr('role') === 'checkbox';
 
-const isChecked = (item: HtmlElement): boolean =>
-  checkboxOf(item)?.attr('checked') !== undefined || item.attr('aria-checked') === 'true';
+const isChecked = (item: HtmlElement): boolean => {
+  const box = checkboxOf(item);
+
+  return (
+    box?.attr('checked') !== undefined ||
+    box?.attr('aria-checked') === 'true' ||
+    item.attr('aria-checked') === 'true'
+  );
+};
 
 const isTodoList = (list: HtmlElement): boolean => {
   const items = list.children.filter(
@@ -270,11 +280,10 @@ const CONTENT_SPEC: SchemaSpec = {
       attrs: { checked: { default: false, verify: isFlag } },
       render: (node) =>
         renderTag('li', { class: part('todo', node.attrs.checked === true && 'checked') }, [
-          renderTag('input', {
+          renderTag('span', {
             class: part('check'),
-            type: 'checkbox',
-            checked: node.attrs.checked === true,
-            tabindex: -1,
+            role: 'checkbox',
+            'aria-checked': node.attrs.checked === true ? 'true' : 'false',
             'aria-readonly': 'true',
             'aria-label': firstText(node),
           }),

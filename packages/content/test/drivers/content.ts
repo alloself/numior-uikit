@@ -47,9 +47,7 @@ export class ContentDriver {
   get checks(): readonly boolean[] {
     return this.wrapper
       .findAll('.nui-content__check')
-      .flatMap((input) =>
-        input.element instanceof HTMLInputElement ? [input.element.checked] : [],
-      );
+      .map((box) => box.attributes('aria-checked') === 'true');
   }
 
   get invalid(): readonly (readonly DocJSONIssue[])[] {
