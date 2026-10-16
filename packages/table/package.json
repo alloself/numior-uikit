@@ -19,7 +19,7 @@
     "./engine": {
       "@numior/source": "./src/engine/index.ts",
       "types": "./dist/engine/index.d.ts",
-      "import": "./dist/engine.js"
+      "import": "./dist/engine/index.js"
     },
     "./styles.css": {
       "@numior/source": "./src/styles.css",

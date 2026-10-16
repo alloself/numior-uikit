@@ -12,7 +12,7 @@ export default defineConfig({
     lib: {
       entry: {
         index: fileURLToPath(new URL('./src/index.ts', import.meta.url)),
-        engine: fileURLToPath(new URL('./src/engine/index.ts', import.meta.url)),
+        'engine/index': fileURLToPath(new URL('./src/engine/index.ts', import.meta.url)),
       },
       formats: ['es'],
       fileName: (_format, name) => `${name}.js`,

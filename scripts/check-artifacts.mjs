@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { existsSync } from 'node:fs';
 import { readFile, readdir } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -182,7 +183,7 @@ const tableCode = await importBuild('table', ['NuiTable', 'tableEditor', 'tableC
 assert.match(tableCode, /from ['"]@numior\/vue['"]/, 'table must keep @numior/vue external');
 assert.doesNotMatch(tableCode, /formRulesMessages\s*=/, 'table must keep @numior/forms external');
 
-const tableEngineFile = resolve('packages/table/dist/engine.js');
+const tableEngineFile = resolve('packages/table/dist/engine/index.js');
 const tableEngine = await import(pathToFileURL(tableEngineFile).href);
 
 assert.equal(
@@ -285,6 +286,29 @@ for (const external of [
     new RegExp(`from ['"]${external.replaceAll('/', '\\/')}['"]`),
     `editor-vue must keep ${external} external`,
   );
+}
+
+for (const name of await readdir('packages')) {
+  const dist = resolve('packages', name, 'dist');
+
+  const declarations = existsSync(dist)
+    ? (await readdir(dist, { recursive: true })).filter((file) => file.endsWith('.d.ts'))
+    : [];
+
+  for (const file of declarations) {
+    const path = resolve(dist, file);
+
+    for (const [, specifier] of (await readFile(path, 'utf8')).matchAll(
+      /from ['"](\.{1,2}\/[^'"]+)['"]/g,
+    )) {
+      const target = resolve(dirname(path), specifier);
+
+      assert.ok(
+        !existsSync(`${target}.js`) || existsSync(`${target}.d.ts`),
+        `${name}: ${file} imports ${specifier}, which resolves to a bundle without types`,
+      );
+    }
+  }
 }
 
 const nuxtModule = await import(pathToFileURL(resolve('packages/nuxt/dist/module.js')).href);
