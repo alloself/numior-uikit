@@ -1,0 +1,96 @@
+import { afterEach, describe, expect, it } from 'vitest';
+import { nodeSize } from '../src';
+import { fixtureSchema } from '../src/fixtures';
+import { EditorViewDriver } from './drivers/view';
+import { buildWith } from './support/notes';
+import { boxViews, type NodeViewLog } from './support/node-views';
+
+const { doc, node } = buildWith(fixtureSchema);
+
+let driver: EditorViewDriver | undefined;
+
+afterEach(() => {
+  driver?.destroy();
+  driver = undefined;
+});
+
+const mounted = (log: NodeViewLog): EditorViewDriver => {
+  driver = EditorViewDriver.mount(
+    doc(
+      node('callout', [node('paragraph', ['note'])], { tone: 'info' }),
+      node('paragraph', ['after']),
+    ),
+    fixtureSchema,
+    [],
+    boxViews(log),
+  );
+
+  return driver;
+};
+
+const calloutId = (view: EditorViewDriver): string => {
+  const first = view.view.state.doc.root.content[0];
+
+  return first?.kind === 'element' ? first.id : '';
+};
+
+describe('node views', () => {
+  it('renders a node through its view and keeps the element when the view accepts new attributes', () => {
+    const log: NodeViewLog = { updates: [], destroyed: [] };
+    const view = mounted(log);
+    const id = calloutId(view);
+    const before = view.view.nodeDOM(id);
+
+    expect(view.markup).toBe(
+      '<div class="box box--info"><span contenteditable="false" class="box__widget"></span><div><p>note</p></div></div><p>after</p>',
+    );
+
+    view.change((tr) => tr.setNodeAttrs(view.positionOf(id), { tone: 'warning' }));
+
+    expect(view.view.nodeDOM(id)).toBe(before);
+    expect(before?.className).toBe('box box--warning');
+    expect(log.updates).toEqual([`${id}:warning`]);
+
+    view.change((tr) => tr.setNodeAttrs(view.positionOf(id), { tone: 'locked' }));
+
+    expect(view.view.nodeDOM(id)).not.toBe(before);
+    expect(log.destroyed).toEqual([id]);
+  });
+
+  it('leaves mutations and input inside a widget to the widget', async () => {
+    const log: NodeViewLog = { updates: [], destroyed: [] };
+    const view = mounted(log);
+    const id = calloutId(view);
+    const before = view.view.state.doc;
+    const paragraph = view.view.nodeDOM(id)?.querySelector('p');
+
+    await view.writeInWidget(id, 'chrome');
+
+    expect(view.view.nodeDOM(id)?.querySelector('p')).toBe(paragraph);
+
+    expect(view.view.nodeDOM(id)?.textContent).toBe('chromenote');
+    expect(view.view.state.doc).toBe(before);
+    expect(view.typeInWidget(id, 'x')).toBe(false);
+    expect(view.view.state.doc).toBe(before);
+  });
+
+  it('destroys views of removed nodes and of the whole document', () => {
+    const log: NodeViewLog = { updates: [], destroyed: [] };
+    const view = mounted(log);
+    const id = calloutId(view);
+    const start = view.positionOf(id);
+    const first = view.view.state.doc.root.content[0];
+    const size = first === undefined ? 0 : nodeSize(first);
+
+    view.change((tr) => tr.delete(start, start + size));
+
+    expect(log.destroyed).toEqual([id]);
+
+    const second = mounted({ updates: [], destroyed: log.destroyed });
+    const other = calloutId(second);
+
+    second.destroy();
+
+    expect(log.destroyed).toEqual([id, other]);
+  });
+});

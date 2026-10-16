@@ -11,7 +11,7 @@ import type {
 } from '../state/input.types';
 import type { Transaction } from '../state/state.types';
 import { posAtCoords } from './coords';
-import { descAround } from './desc';
+import { descAround, widgetAround } from './desc';
 import type { DomWatch } from './dom-change';
 import type { ViewHost } from './host.types';
 import { posAtDOM } from './positions';
@@ -339,34 +339,54 @@ export const attachInput = (host: ViewHost, parts: InputParts): (() => void) => 
   };
 
   const onSelectionchange = (): void => {
-    parts.sync.read();
+    if (!widgetAround(host.context, doc.getSelection()?.focusNode ?? null)) {
+      parts.sync.read();
+    }
   };
 
-  root.addEventListener('keydown', onKeydown);
-  root.addEventListener('beforeinput', onBeforeinput);
-  root.addEventListener('paste', onPaste);
-  root.addEventListener('copy', onCopy);
-  root.addEventListener('cut', onCopy);
-  root.addEventListener('drop', onDrop);
-  root.addEventListener('dragover', onDrag);
-  root.addEventListener('dragstart', onDrag);
-  root.addEventListener('mousedown', onMousedown);
-  root.addEventListener('compositionstart', onCompositionstart);
-  root.addEventListener('compositionend', onCompositionend);
+  const own =
+    <E extends Event>(handler: (event: E) => void) =>
+    (event: E): void => {
+      if (!widgetAround(host.context, event.target)) {
+        handler(event);
+      }
+    };
+
+  const keydown = own(onKeydown);
+  const beforeinput = own(onBeforeinput);
+  const paste = own(onPaste);
+  const copy = own(onCopy);
+  const drop = own(onDrop);
+  const drag = own(onDrag);
+  const mousedown = own(onMousedown);
+  const compositionstart = own(onCompositionstart);
+  const compositionend = own(onCompositionend);
+
+  root.addEventListener('keydown', keydown);
+  root.addEventListener('beforeinput', beforeinput);
+  root.addEventListener('paste', paste);
+  root.addEventListener('copy', copy);
+  root.addEventListener('cut', copy);
+  root.addEventListener('drop', drop);
+  root.addEventListener('dragover', drag);
+  root.addEventListener('dragstart', drag);
+  root.addEventListener('mousedown', mousedown);
+  root.addEventListener('compositionstart', compositionstart);
+  root.addEventListener('compositionend', compositionend);
   doc.addEventListener('selectionchange', onSelectionchange);
 
   return () => {
-    root.removeEventListener('keydown', onKeydown);
-    root.removeEventListener('beforeinput', onBeforeinput);
-    root.removeEventListener('paste', onPaste);
-    root.removeEventListener('copy', onCopy);
-    root.removeEventListener('cut', onCopy);
-    root.removeEventListener('drop', onDrop);
-    root.removeEventListener('dragover', onDrag);
-    root.removeEventListener('dragstart', onDrag);
-    root.removeEventListener('mousedown', onMousedown);
-    root.removeEventListener('compositionstart', onCompositionstart);
-    root.removeEventListener('compositionend', onCompositionend);
+    root.removeEventListener('keydown', keydown);
+    root.removeEventListener('beforeinput', beforeinput);
+    root.removeEventListener('paste', paste);
+    root.removeEventListener('copy', copy);
+    root.removeEventListener('cut', copy);
+    root.removeEventListener('drop', drop);
+    root.removeEventListener('dragover', drag);
+    root.removeEventListener('dragstart', drag);
+    root.removeEventListener('mousedown', mousedown);
+    root.removeEventListener('compositionstart', compositionstart);
+    root.removeEventListener('compositionend', compositionend);
     doc.removeEventListener('selectionchange', onSelectionchange);
   };
 };

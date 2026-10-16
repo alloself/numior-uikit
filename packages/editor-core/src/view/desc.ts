@@ -3,12 +3,14 @@ import type { ContentNode, ElementNode, NodeId, TextNode } from '../model/node.t
 import type { NodeType, Schema } from '../schema/schema.types';
 import { fillChunks, placeInChunks, tidyChunks } from './chunks';
 import { renderLeaf, renderParent, type RenderedDom } from './render-dom';
+import type { NodeView, NodeViewFactory } from './view.types';
 
 export interface ElementDesc {
   readonly kind: 'element';
   node: ElementNode;
   readonly dom: HTMLElement;
   readonly contentDOM: HTMLElement | null;
+  readonly view: NodeView | undefined;
   children: Desc[];
   readonly parent: ElementDesc | null;
   index: number;
@@ -32,6 +34,7 @@ export interface ViewContext {
   readonly descs: WeakMap<Node, Desc>;
   readonly byId: Map<NodeId, ElementDesc>;
   readonly chunks: WeakSet<Node>;
+  readonly nodeViews: Readonly<Record<string, NodeViewFactory>>;
 }
 
 export const outerOf = (desc: Desc): ChildNode => (desc.kind === 'text' ? desc.outer : desc.dom);
@@ -45,13 +48,31 @@ const typeOf = (schema: Schema, name: string): NodeType => {
   return type;
 };
 
-const renderNode = (context: ViewContext, node: ElementNode): RenderedDom => {
-  const type = typeOf(context.schema, node.type);
+export const renderNodeDOM = (
+  document: Document,
+  schema: Schema,
+  node: ElementNode,
+): RenderedDom => {
+  const type = typeOf(schema, node.type);
   const spec = type.render(node);
 
   return type.leaf
-    ? { dom: renderLeaf(context.document, spec), contentDOM: null }
-    : renderParent(context.document, spec);
+    ? { dom: renderLeaf(document, spec), contentDOM: null }
+    : renderParent(document, spec);
+};
+
+const renderNode = (
+  context: ViewContext,
+  node: ElementNode,
+): RenderedDom & { readonly view: NodeView | undefined } => {
+  const factory = context.nodeViews[node.type];
+
+  if (factory === undefined) {
+    return { ...renderNodeDOM(context.document, context.schema, node), view: undefined };
+  }
+  const view = factory(node);
+
+  return { dom: view.dom, contentDOM: view.contentDOM, view };
 };
 
 const isTextblock = (context: ViewContext, desc: ElementDesc): boolean =>
@@ -130,13 +151,14 @@ const createElement = (
   parent: ElementDesc,
   index: number,
 ): ElementDesc => {
-  const { dom, contentDOM } = renderNode(context, node);
+  const { dom, contentDOM, view } = renderNode(context, node);
 
   const desc: ElementDesc = {
     kind: 'element',
     node,
     dom,
     contentDOM,
+    view,
     children: [],
     parent,
     index,
@@ -222,6 +244,7 @@ export const createRootDesc = (
     node,
     dom,
     contentDOM: dom,
+    view: undefined,
     children: [],
     parent: null,
     index: 0,
@@ -234,10 +257,28 @@ export const createRootDesc = (
   return desc;
 };
 
+export const widgetAround = (context: ViewContext, target: EventTarget | null): boolean => {
+  for (let current = target instanceof Node ? target : null; current !== null;) {
+    const desc = context.descs.get(current);
+
+    if (desc !== undefined) {
+      return (
+        desc.kind === 'element' &&
+        desc.view !== undefined &&
+        current === desc.dom &&
+        current !== desc.contentDOM
+      );
+    }
+    current = current.parentNode;
+  }
+  return false;
+};
+
 const forget = (context: ViewContext, desc: Desc): void => {
   if (desc.kind === 'text') {
     return;
   }
+  desc.view?.destroy();
   if (context.byId.get(desc.node.id) === desc) {
     context.byId.delete(desc.node.id);
   }
@@ -257,8 +298,10 @@ const elementsById = (children: readonly Desc[]): Map<NodeId, ElementDesc> => {
   return found;
 };
 
-const sameRender = (before: ElementNode, after: ElementNode): boolean =>
-  before.type === after.type && sameAttrs(before.attrs, after.attrs);
+const sameRender = (desc: ElementDesc, after: ElementNode): boolean =>
+  desc.view === undefined
+    ? desc.node.type === after.type && sameAttrs(desc.node.attrs, after.attrs)
+    : desc.node.type === after.type && desc.view.update(after);
 
 interface Matching {
   readonly previous: readonly Desc[];
@@ -322,7 +365,7 @@ const matchElement = (
 ): Desc => {
   const found = matching.reusable.get(node.id);
 
-  if (found === undefined || matching.used.has(found) || !sameRender(found.node, node)) {
+  if (found === undefined || matching.used.has(found) || !sameRender(found, node)) {
     return createElement(context, node, parent, index);
   }
   matching.used.add(found);

@@ -13,7 +13,7 @@ import {
   type Transaction,
 } from '../../src';
 import { fixtureSchema } from '../../src/fixtures';
-import { createEditorView, type EditorView } from '../../src/view';
+import { createEditorView, type EditorView, type NodeViewFactory } from '../../src/view';
 
 export interface ChunkStyle {
   readonly visibility: string;
@@ -113,6 +113,7 @@ export class EditorViewDriver {
     root: ElementNode,
     schema: Schema = fixtureSchema,
     plugins: readonly Plugin[] = [],
+    nodeViews: Readonly<Record<string, NodeViewFactory>> = {},
   ): EditorViewDriver {
     const host = document.createElement('div');
 
@@ -121,7 +122,25 @@ export class EditorViewDriver {
 
     const state = createState({ doc: createDoc(schema, root), plugins });
 
-    return new EditorViewDriver(createEditorView(host, { state }), host);
+    return new EditorViewDriver(createEditorView(host, { state, nodeViews }), host);
+  }
+
+  widgetOf(id: NodeId): HTMLElement {
+    const widget = this.view.nodeDOM(id)?.querySelector('.box__widget');
+
+    if (!(widget instanceof HTMLElement)) {
+      throw new Error(`Node ${id} has no widget`);
+    }
+    return widget;
+  }
+
+  async writeInWidget(id: NodeId, text: string): Promise<void> {
+    this.widgetOf(id).append(text);
+    await settle();
+  }
+
+  typeInWidget(id: NodeId, text: string): boolean {
+    return !this.widgetOf(id).dispatchEvent(beforeinput('insertText', text));
   }
 
   private get state(): EditorState {

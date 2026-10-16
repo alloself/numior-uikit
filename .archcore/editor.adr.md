@@ -389,6 +389,18 @@ SSR не загружают runtime редактора, а документ на
   `contentSchema`). Страница документации `NuiEditor` — в долге блока F, описания пропов — в
   `apps/docs/api/editor.ts`.
 
+### Node views (C14, 2026-10-16)
+
+- `EditorViewOptions.nodeViews` — фабрики по типу узла, `(node) => NodeView { dom, contentDOM,
+  update(node), destroy() }`. Вид спрашивает фабрику вместо спецификации `render`; узел с видом
+  переживает смену атрибутов, если `update` вернул `true` (без вида смена атрибутов пересоздаёт
+  DOM узла), а `destroy` вызывается при удалении узла и при закрытии вида. `renderNodeDOM`
+  отдаёт фабрике DOM по спецификации схемы, чтобы вид не повторял разметку `NuiContent`.
+- Всё внутри `dom` узла с видом, но вне его `contentDOM`, принадлежит виджету: мутации там не
+  читаются как ввод, а `keydown`, `beforeinput`, вставка, копирование, `mousedown`, композиция
+  и `selectionchange` оттуда редактор не обрабатывает. Отдельных `stopEvent` и
+  `ignoreMutation` у вида нет: правило одно для всех, пока свой блок не попросит другого.
+
 ## Alternatives Considered
 
 - ProseMirror, Tiptap или Lexical как основа отвергнуты планом 1.0; модель написана заново.

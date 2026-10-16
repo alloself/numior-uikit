@@ -1,4 +1,4 @@
-import type { NodeId } from '../model/node.types';
+import type { ElementNode, NodeId } from '../model/node.types';
 import type { EditorState, Transaction } from '../state/state.types';
 
 export interface DomPoint {
@@ -13,10 +13,20 @@ export interface CaretRect {
   readonly bottom: number;
 }
 
+export interface NodeView {
+  readonly dom: HTMLElement;
+  readonly contentDOM: HTMLElement | null;
+  update(node: ElementNode): boolean;
+  destroy(): void;
+}
+
+export type NodeViewFactory = (node: ElementNode) => NodeView;
+
 export interface EditorViewOptions {
   readonly state: EditorState;
   readonly editable?: boolean | undefined;
   readonly dispatch?: ((tr: Transaction) => void) | undefined;
+  readonly nodeViews?: Readonly<Record<string, NodeViewFactory>> | undefined;
 }
 
 export interface EditorView {

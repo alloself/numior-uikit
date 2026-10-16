@@ -40,6 +40,7 @@ export const createEditorView = (root: HTMLElement, options: EditorViewOptions):
     descs: new WeakMap(),
     byId: new Map(),
     chunks: new WeakSet(),
+    nodeViews: options.nodeViews ?? {},
   };
 
   prepareRoot(root, options.editable ?? true);
@@ -122,6 +123,9 @@ export const createEditorView = (root: HTMLElement, options: EditorViewOptions):
       root.classList.remove(ALL_CLASS);
       detach();
       watch.destroy();
+      for (const desc of context.byId.values()) {
+        desc.view?.destroy();
+      }
       context.byId.clear();
       releaseRoot(root);
     },

@@ -4,6 +4,7 @@ import {
   descAround,
   redrawContent,
   textblockAround,
+  widgetAround,
   type ElementDesc,
   type ViewContext,
 } from './desc';
@@ -147,6 +148,10 @@ export const createDomWatch = (host: ViewHost, apply: (intent: InputIntent) => v
 
   const collect = (records: readonly MutationRecord[]): void => {
     for (const record of records) {
+      if (widgetAround(host.context, record.target)) {
+        continue;
+      }
+
       const desc =
         textblockAround(host.context, record.target) ?? descAround(host.context, record.target);
 
