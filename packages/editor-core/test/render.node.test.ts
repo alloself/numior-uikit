@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import { contentHole, createSchema, renderTag } from '../src';
 import { fixtureSchema } from '../src/fixtures';
 import { buildWith } from './support/notes';

@@ -1,5 +1,5 @@
 import { mount } from '@vue/test-utils';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vite-plus/test';
 import { defineComponent, h } from 'vue';
 import { createNuiConfig, lazyIcon, provideIconDefaults, provideIcons, useIcon } from '../src';
 import { captureSetup, nest, providing } from './harness/capture';

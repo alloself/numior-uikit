@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vite-plus/test';
 import { h } from 'vue';
 import { NumberFieldDriver } from './drivers/number-field';
 import { fieldTextsOf } from './support/field-texts';

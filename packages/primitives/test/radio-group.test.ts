@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import { computed, ref } from 'vue';
 import { provideRadioGroup, useRadioGroup } from '../src';
 import { captureSetup, providing } from './harness/capture';

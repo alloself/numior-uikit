@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import { h } from 'vue';
 import { InputDriver, mountInputWithFocusHandle } from './drivers/input';
 import { fieldTextsOf } from './support/field-texts';

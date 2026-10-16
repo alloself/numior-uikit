@@ -1,5 +1,5 @@
 import { DOMWrapper, mount, type VueWrapper } from '@vue/test-utils';
-import { vi } from 'vitest';
+import { vi } from 'vite-plus/test';
 import { defineComponent, h, nextTick, ref, type Ref } from 'vue';
 import { NuiTooltip, type NuiTooltipProps, type NuiTooltipTriggerSlot } from '../../src';
 import { TopLayerStubs } from '../support/top-layer';

@@ -1,5 +1,5 @@
 import { mount, type DOMWrapper, type VueWrapper } from '@vue/test-utils';
-import { vi } from 'vitest';
+import { vi } from 'vite-plus/test';
 import { defineComponent, h, nextTick, ref, shallowRef, type Ref, type ShallowRef } from 'vue';
 import {
   NuiMenu,

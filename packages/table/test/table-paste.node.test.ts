@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import { csvLine, parseTsv, tsvOf } from '../src/table/table-clipboard';
 import { parseBooleanCell, parseDateCell, parseNumberCell } from '../src/table/table-parse';
 import { planPaste } from '../src/table/table-paste';

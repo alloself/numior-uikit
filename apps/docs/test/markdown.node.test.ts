@@ -1,5 +1,5 @@
 import { fileURLToPath } from 'node:url';
-import { beforeAll, describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vite-plus/test';
 import { createMarkdownRenderer, type MarkdownRenderer } from 'vitepress';
 import { createHighlighter } from 'shiki';
 import { docsMarkdown } from '../.vitepress/markdown';

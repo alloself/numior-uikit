@@ -1,5 +1,5 @@
 import { NuiInput, NuiList, NuiRadio, NuiRadioGroup } from '@numior/vue';
-import { describe, expect, expectTypeOf, it } from 'vitest';
+import { describe, expect, expectTypeOf, it } from 'vite-plus/test';
 import { h } from 'vue';
 import { custom, formConfig, required, type ControlProps, type ControlValue } from '../src';
 import { SmartFormDriver } from './drivers/smart-form';

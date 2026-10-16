@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vite-plus/test';
 import { flushPromises } from '@vue/test-utils';
 import { installClipboard, type ClipboardStub } from '../../primitives/test/support/clipboard';
 import type {

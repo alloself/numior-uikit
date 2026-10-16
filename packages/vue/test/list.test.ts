@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 import type { NuiListEntry } from '../src';
 import { ListDriver } from './drivers/list';
 import { ConfiguredLinkStub, RouterStub } from './support/router-stub';

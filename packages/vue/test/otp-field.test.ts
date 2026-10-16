@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 import { OtpFieldDriver } from './drivers/otp-field';
 import { fieldTextsOf } from './support/field-texts';
 import { installWebOtp, type WebOtpStub } from '../../primitives/test/support/web-otp';

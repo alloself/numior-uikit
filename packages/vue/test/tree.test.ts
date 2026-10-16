@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 import { applyCheck, checkStates } from '../src/tree/cascade';
 import { defaultOptionKey } from '../src/shared/options';
 import { TreeDriver } from './drivers/tree';

@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import { createDoc, createIdSource, createTransform, invertStep, type Doc } from '../src';
 import { buildWith, notes } from './support/notes';
 

@@ -1,5 +1,5 @@
 import * as fc from 'fast-check';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import { createDoc, fromJSON, toJSON, type DocJSONResult } from '../src';
 import { fixtureSchema, generateDoc } from '../src/fixtures';
 import { buildWith, notes } from './support/notes';

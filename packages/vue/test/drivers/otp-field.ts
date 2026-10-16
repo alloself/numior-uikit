@@ -1,5 +1,5 @@
 import { flushPromises, mount, type DOMWrapper, type VueWrapper } from '@vue/test-utils';
-import { vi } from 'vitest';
+import { vi } from 'vite-plus/test';
 import { defineComponent, h, nextTick, ref, useTemplateRef, type Ref } from 'vue';
 import { NuiField, NuiOtpField, type NuiFieldProps, type NuiOtpFieldProps } from '../../src';
 import { ComponentDriver } from './component';

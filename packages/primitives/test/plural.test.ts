@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import { plural } from '../src';
 
 const files = { one: 'файл', few: 'файла', many: 'файлов', other: 'файла' };

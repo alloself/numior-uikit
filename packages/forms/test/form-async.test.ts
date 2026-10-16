@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 import { customAsync, required } from '../src';
 import { CodeCheck } from './harness/code-check';
 import { DocumentCheck } from './harness/document';

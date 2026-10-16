@@ -1,5 +1,5 @@
 import type { ElementNode } from '@numior/editor-core';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vite-plus/test';
 import { defineComponent, h } from 'vue';
 import { NuiContentTable, type NuiContentCellViewProps } from '../../src/table';
 import { ContentDriver } from '../drivers/content';

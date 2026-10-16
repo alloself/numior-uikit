@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vite-plus/test';
 import type { NuiTableDraft, NuiTableRange } from '../src';
 import { TableDriver, type TableMountOptions } from './drivers/table';
 import { applyStaffEdits, staff, STAFF_COLUMNS, type Staff } from './support/staff';

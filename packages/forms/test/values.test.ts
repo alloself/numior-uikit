@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import { reactive, readonly } from 'vue';
 import { deleteAt, expandPattern, getAt } from '../src/values/access';
 import { cloneValue } from '../src/values/clone';

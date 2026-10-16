@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import { exampleFile, ExampleFrameDriver } from './drivers/example-frame';
 
 const SINGLE = [

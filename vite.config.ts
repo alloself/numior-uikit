@@ -1,0 +1,117 @@
+import vue from '@vitejs/plugin-vue';
+import { configDefaults, defineConfig } from 'vite-plus';
+
+export default defineConfig({
+  plugins: [vue()],
+  resolve: { conditions: ['@numior/source'] },
+  ssr: { resolve: { conditions: ['@numior/source'] } },
+  test: {
+    server: { deps: { inline: [/^@numior\//] } },
+    projects: [
+      {
+        extends: true,
+        test: {
+          name: 'jsdom',
+          environment: 'jsdom',
+          testTimeout: 15_000,
+          include: ['packages/**/*.test.ts', 'apps/docs/test/**/*.test.ts'],
+          exclude: [...configDefaults.exclude, '**/*.node.test.ts', 'packages/nuxt/test/nuxt/**'],
+          setupFiles: ['./packages/vue/test/support/preload-icons.ts'],
+        },
+      },
+      {
+        extends: true,
+        test: {
+          name: 'node',
+          environment: 'node',
+          include: ['apps/docs/test/**/*.node.test.ts', 'packages/**/*.node.test.ts'],
+        },
+      },
+    ],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text-summary', 'json'],
+      reportsDirectory: 'node_modules/.cache/coverage',
+      clean: false,
+      include: [
+        'packages/{primitives,vue,forms,table,editor-core,content,editor-vue}/src/**/*.{ts,vue}',
+        'apps/docs/.vitepress/{content,examples,markdown,reference,theme}/**/*.{ts,vue}',
+      ],
+      exclude: ['**/*.types.ts', '**/*.d.ts'],
+    },
+  },
+  fmt: {
+    semi: true,
+    singleQuote: true,
+    printWidth: 100,
+    ignorePatterns: [
+      'pnpm-lock.yaml',
+      '.archcore/**',
+      '**/dist/**',
+      '**/coverage/**',
+      '**/.vitepress/cache/**',
+      'playwright-report/**',
+      'test-results/**',
+      '.release/**',
+      '**/.nuxt/**',
+      '**/.output/**',
+      'tests/e2e/fixtures/paste/**',
+    ],
+  },
+  lint: {
+    plugins: ['typescript', 'unicorn', 'oxc', 'import', 'vue', 'vitest', 'promise'],
+    categories: {
+      correctness: 'error',
+      suspicious: 'error',
+    },
+    env: {
+      builtin: true,
+    },
+    ignorePatterns: [
+      '**/dist/**',
+      '**/coverage/**',
+      '**/.vitepress/cache/**',
+      'playwright-report/**',
+      'test-results/**',
+      '.release/**',
+      '**/.nuxt/**',
+      '**/.output/**',
+      '**/node_modules/**',
+    ],
+    rules: {
+      'no-debugger': 'error',
+      eqeqeq: 'error',
+      curly: ['error', 'all'],
+      'func-style': ['error', 'expression'],
+      'prefer-arrow-callback': 'error',
+      'import/no-unassigned-import': [
+        'error',
+        {
+          allow: ['**/*.css'],
+        },
+      ],
+      'vite-plus/prefer-vite-plus-imports': 'error',
+    },
+    options: {
+      typeAware: false,
+      typeCheck: false,
+    },
+    jsPlugins: [
+      {
+        name: 'vite-plus',
+        specifier: 'vite-plus/oxlint-plugin',
+      },
+    ],
+  },
+  run: {
+    tasks: {
+      'test:coverage': {
+        command: 'vp test run --coverage',
+        cache: {
+          input: [{ auto: true }, '!node_modules/.cache/coverage/**'],
+          output: ['node_modules/.cache/coverage/coverage-final.json'],
+        },
+      },
+    },
+  },
+});

@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import type { FieldRule } from '../src';
 import { FormHarness } from './harness/form';
 import { routingSchema } from './harness/schemas';

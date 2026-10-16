@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import { movedKeys, orderLeaves } from '../src/table/table-order';
 import { PEOPLE_COLUMNS } from './support/people';
 

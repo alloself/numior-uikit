@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import { ApiKeyboardDriver } from './drivers/api-keyboard';
 
 const KEYS = [

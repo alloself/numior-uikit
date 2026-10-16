@@ -1,5 +1,5 @@
 import { NuiInput } from '@numior/vue';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import { formConfig } from '../src';
 import { itemOf } from '../src/components/smart-form/items';
 import { orderByArea, parseLayout, planLayout } from '../src/components/smart-form/layout';

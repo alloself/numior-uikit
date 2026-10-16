@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import { createFormEngine } from '../src/engine/form-engine';
 import { EngineHarness } from './harness/engine';
 

@@ -1,5 +1,5 @@
 import { fromHTML, toJSON } from '@numior/editor-core';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import { cellValueOf, columnLetter, contentSchema, contentTableData, parseCellText } from '../src';
 import { node } from './support/documents';
 

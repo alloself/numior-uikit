@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vite-plus/test';
 import { h, type VNode } from 'vue';
 import type { NuiTableOverlaySlot, NuiTableRange } from '../src';
 import { TableDriver, type TableMountOptions } from './drivers/table';

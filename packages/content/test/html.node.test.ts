@@ -1,6 +1,6 @@
 import { fromHTML, toHTML, toJSON } from '@numior/editor-core';
 import { generateDoc } from '@numior/editor-core/fixtures';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import { contentSchema } from '../src';
 import { everyBlock } from './support/documents';
 

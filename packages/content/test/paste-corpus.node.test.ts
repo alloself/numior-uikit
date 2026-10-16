@@ -1,6 +1,6 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import { detectPasteSource, fromHTML, toJSON } from '@numior/editor-core';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import { contentSchema } from '../src';
 
 const CORPUS = new URL('../../../tests/e2e/fixtures/paste/', import.meta.url);

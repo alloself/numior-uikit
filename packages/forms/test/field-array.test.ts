@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import { customAsync, min, required } from '../src';
 import { ArrayHarness, type ArrayHarnessOptions } from './harness/array';
 

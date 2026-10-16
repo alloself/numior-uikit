@@ -16,7 +16,7 @@
     }
   },
   "scripts": {
-    "build": "vite build && vue-tsc -p tsconfig.build.json"
+    "build": "vp build && vue-tsc -p tsconfig.build.json"
   },
   "dependencies": {
     "@floating-ui/dom": "1.8.0",

@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vite-plus/test';
 import { required } from '@numior/forms';
 import type { NuiTableColumn } from '../src';
 import { TableDriver, type TableMountOptions } from './drivers/table';

@@ -1,5 +1,5 @@
 import { fileURLToPath } from 'node:url';
-import { defineConfig } from 'vite';
+import { defineConfig } from 'vite-plus';
 import { packageAssets } from '../../scripts/vite-package-assets.ts';
 
 export default defineConfig({

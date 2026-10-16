@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import { LinkDriver } from './drivers/link';
 import { ConfiguredLinkStub, RouterStub } from './support/router-stub';
 

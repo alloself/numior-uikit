@@ -1,5 +1,5 @@
 import { NuiCheckbox, NuiInput } from '@numior/vue';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import { h } from 'vue';
 import { NuiFormError, formConfig, required } from '../src';
 import { SmartFormDriver } from './drivers/smart-form';

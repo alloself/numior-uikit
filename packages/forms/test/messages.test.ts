@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import type { NuiMessageCatalog } from '@numior/primitives';
 import type { NuiFormsMessages } from '../src';
 import { fieldArrayMessages } from '../src/components/field-array/field-array.messages';

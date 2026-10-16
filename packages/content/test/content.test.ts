@@ -1,5 +1,5 @@
 import { toJSON } from '@numior/editor-core';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vite-plus/test';
 import { renderContent } from '../src';
 import { ContentDriver } from './drivers/content';
 import { docOf, everyBlock, node } from './support/documents';

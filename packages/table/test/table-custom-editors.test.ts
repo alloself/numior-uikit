@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vite-plus/test';
 import { isString } from '@numior/primitives';
 import { NuiCombobox, NuiSelect, type NuiOption } from '@numior/vue';
 import { kitControls } from '@numior/vue/controls';

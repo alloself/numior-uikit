@@ -1,5 +1,5 @@
 import { flushPromises } from '@vue/test-utils';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vite-plus/test';
 import { h, type VNode } from 'vue';
 import { installClipboard, type ClipboardStub } from '../../primitives/test/support/clipboard';
 import { NuiTable, type NuiTableDetailSlot } from '../src';

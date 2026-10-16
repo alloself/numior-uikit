@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import { createCommandStack } from '../src/table/table-commands';
 import { EngineHarness, ORDERS, ORDER_TOTALS, type Order } from './harness/engine';
 

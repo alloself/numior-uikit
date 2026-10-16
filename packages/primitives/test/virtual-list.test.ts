@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import { buildSizeModel, indexAt, offsetAt, scrollTargetFor } from '../src/virtual/offsets';
 import { createSizeIndex } from '../src/virtual/size-index';
 import { VirtualHarness } from './harness/virtual';

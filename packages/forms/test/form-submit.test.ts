@@ -1,4 +1,4 @@
-import { describe, expect, expectTypeOf, it } from 'vitest';
+import { describe, expect, expectTypeOf, it } from 'vite-plus/test';
 import { NuiFormError, type FieldFlush, type SubmitHelpers, type SubmittedValues } from '../src';
 import { Deferred } from './harness/deferred';
 import { FormHarness } from './harness/form';

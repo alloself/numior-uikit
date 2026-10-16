@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import { createSortJob, identityIndices } from '../src/engine';
 import { mulberry32 } from '../bench/dataset';
 

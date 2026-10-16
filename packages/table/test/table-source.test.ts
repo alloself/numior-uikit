@@ -1,5 +1,5 @@
 import { flushPromises } from '@vue/test-utils';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vite-plus/test';
 import { TableDriver, type TableMountOptions } from './drivers/table';
 import { RemoteStaff } from './support/remote';
 import { STAFF_COLUMNS, type Staff } from './support/staff';

@@ -1,5 +1,5 @@
 import { mount } from '@vue/test-utils';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vite-plus/test';
 import { defineComponent, h } from 'vue';
 import { NuiDialog, NuiIcon, useLocale, type NuiConfigOptions } from '../src';
 import { configScope } from './support/config-scope';

@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import { custom, min, required, type FieldRule } from '../src';
 import { FormDriver, type FormDriverOptions } from './drivers/form';
 

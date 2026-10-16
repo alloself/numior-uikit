@@ -221,6 +221,7 @@
     "@localSearchIndex",
     "virtual:nui-examples",
     "virtual:nui-reference",
-    "#components"
+    "#components",
+    "vite-plus"
   ]
 }

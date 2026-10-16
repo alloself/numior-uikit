@@ -1,5 +1,5 @@
 import { fileURLToPath } from 'node:url';
-import { beforeAll, describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vite-plus/test';
 import { createChecker, type MetaCheckerOptions } from 'vue-component-meta';
 import { catalogReference } from '../.vitepress/reference/catalogs';
 import { parseBlocks, parseTokens } from '../.vitepress/reference/css';

@@ -1,5 +1,5 @@
 import { flushPromises, mount, type VueWrapper } from '@vue/test-utils';
-import { vi } from 'vitest';
+import { vi } from 'vite-plus/test';
 import { h } from 'vue';
 import { NuiIcon, type IconRegistry, type NuiIconProps } from '../../src';
 import { configScope } from '../support/config-scope';

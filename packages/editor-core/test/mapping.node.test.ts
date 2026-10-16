@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import { createMapping, createStepMap } from '../src';
 
 const insertion = createStepMap([{ start: 4, oldSize: 0, newSize: 3 }]);

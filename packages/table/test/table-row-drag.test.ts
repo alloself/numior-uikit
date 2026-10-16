@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 import { TableDriver, type TableMountOptions } from './drivers/table';
 import { FILE_COLUMNS, FILES, type FileNode } from './support/files';
 import { people, PEOPLE_COLUMNS, type Person } from './support/people';

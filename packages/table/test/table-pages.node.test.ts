@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import { countBelow, detailsBefore } from '../src/table/table-detail';
 import { pageStepOf } from '../src/table/table-keys';
 import { pageCountOf, pageWindowOf, resolvePagination } from '../src/table/table-pages';

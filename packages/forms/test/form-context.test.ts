@@ -1,4 +1,4 @@
-import { describe, expect, expectTypeOf, it } from 'vitest';
+import { describe, expect, expectTypeOf, it } from 'vite-plus/test';
 import { contextOutsideForm, TwoFormsHarness } from './harness/context';
 import { FormHarness } from './harness/form';
 import { issue, probeSchema, type SchemaValues } from './harness/schema';

@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import type { TableEngineColumn } from '../src/engine';
 import { CHECK_INTERVAL } from '../src/engine/slicer';
 import { EngineHarness, ORDERS, ORDER_COLUMNS, type Order } from './harness/engine';

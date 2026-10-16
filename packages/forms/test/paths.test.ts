@@ -1,4 +1,4 @@
-import { describe, expect, expectTypeOf, it } from 'vitest';
+import { describe, expect, expectTypeOf, it } from 'vite-plus/test';
 import type { FormAfterSlotPath, FormPath, FormSlotPath } from '../src';
 import { isUnder, joinPath, matchesPattern, normalizePath, patternOf } from '../src/paths/paths';
 

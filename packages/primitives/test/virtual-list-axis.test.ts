@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import { createSizeIndex } from '../src';
 import { canvasScaleFor } from '../src/virtual/offsets';
 import { VirtualHarness } from './harness/virtual';

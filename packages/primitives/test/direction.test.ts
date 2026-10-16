@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vite-plus/test';
 import { defineComponent, h, ref, type Component } from 'vue';
 import { createNuiConfig, provideDirection, useDirection } from '../src';
 import { captureSetup, providing } from './harness/capture';

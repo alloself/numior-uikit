@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import type { ReferenceBundle } from '../.vitepress/reference/reference.types';
 import { apiSearchText, referencedComponents } from '../.vitepress/reference/search-text';
 

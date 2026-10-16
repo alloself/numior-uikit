@@ -1,6 +1,6 @@
 import { fileURLToPath } from 'node:url';
 import { createHighlighter, type Highlighter } from 'shiki';
-import { beforeAll, describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vite-plus/test';
 import {
   exampleModule,
   exampleNames,

@@ -50,11 +50,11 @@ const {
 
 - A control that holds an uncommitted draft (lazy text, a number before blur, custom combobox
   text, an unclamped time) passes its commit to `useFieldControl(props, { commit: () =>
-commitDraft() })`; `NuiFormField` runs these commits before a programmatic submit.
+  commitDraft() })`; `NuiFormField` runs these commits before a programmatic submit.
 - Props interface in `<name>.types.ts`, optional keys typed `| undefined`,
   `extends NuiFieldControlProps` for form controls. A field control passes `label`, `description`
   and `error` into `useFieldControl` and wraps its root in `<NuiFieldFrame v-bind="fieldFrame"
-:reserve-error="reserveError">` (`inline` for box controls, `group` for groups), so the texts
+  :reserve-error="reserveError">` (`inline` for box controls, `group` for groups), so the texts
   render on the control itself; `NuiField` stays for slots and multi-control fields. Generic components use
   `<script setup lang="ts" generic="T">` and `defineProps<NuiThingProps<T>>()`.
 - Never `withDefaults`, runtime prop objects, `PropType`, `as`, `!`, or comments.
@@ -141,7 +141,7 @@ commitDraft() })`; `NuiFormField` runs these commits before a programmatic submi
   ghost the header band, a row ghost a compact chip at the row start) while the line runs the
   full width or height beside it. The ghost's grip stays under the pointer.
 - Focus ring: `outline: var(--nui-focus-ring-width) solid var(--nui-focus); outline-offset:
-var(--nui-focus-ring-offset)`. Disabled: `opacity: var(--nui-disabled-opacity)`.
+  var(--nui-focus-ring-offset)`. Disabled: `opacity: var(--nui-disabled-opacity)`.
 - Logical properties only (`inline-size`, `inset-inline-start`, `padding-inline`).
 - Icons through `<NuiIcon alias="check" />`; new aliases go to `IconAlias` in primitives and
   to `default-icons.ts` as `lazyIcon(() => import('lucide-vue-next/dist/esm/icons/<file>.js'))`.

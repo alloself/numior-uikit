@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 import { nextTick, ref } from 'vue';
 import { useDialog, type DialogOptions } from '../src';
 import { captureWithElements } from './harness/elements';

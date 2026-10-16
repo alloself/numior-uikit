@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import { byPath } from '../src';
 import { readSelected, recordPath } from '../src/paths/selector';
 import { recordReads } from '../src/values/reads';

@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import { parseTime, timeLayout, timeToDraft, type TimeValue } from '@numior/primitives';
 import {
   minuteInterval,

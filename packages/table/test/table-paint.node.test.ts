@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import { paintOf } from '../src/table/table-paint';
 
 describe('table cell paint', () => {

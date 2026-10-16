@@ -1,4 +1,4 @@
-import { describe, expect, expectTypeOf, it } from 'vitest';
+import { describe, expect, expectTypeOf, it } from 'vite-plus/test';
 import { NuiFormError, custom, type KeepValue } from '../src';
 import { FormHarness } from './harness/form';
 import { companySchema } from './harness/schemas';

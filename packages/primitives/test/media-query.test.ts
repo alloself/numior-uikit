@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 import { nextTick, ref } from 'vue';
 import { useMediaQuery } from '../src';
 import { captureSetup } from './harness/capture';

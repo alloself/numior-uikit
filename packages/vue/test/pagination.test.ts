@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import { PaginationDriver } from './drivers/pagination';
 import { paginationRange } from '../src/pagination/pagination-range';
 

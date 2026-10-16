@@ -1,6 +1,6 @@
 import { createNuiConfig, type NuiConfigOptions } from '@numior/primitives';
 import { mount, type DOMWrapper, type VueWrapper } from '@vue/test-utils';
-import { vi } from 'vitest';
+import { vi } from 'vite-plus/test';
 import {
   defineComponent,
   h,

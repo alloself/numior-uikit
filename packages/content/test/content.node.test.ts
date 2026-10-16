@@ -1,6 +1,6 @@
 import { fromJSON, toJSON } from '@numior/editor-core';
 import { generateDoc } from '@numior/editor-core/fixtures';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import { contentSchema, renderContent } from '../src';
 import { EVERY_BLOCK_MARKUP, docOf, everyBlock, node } from './support/documents';
 

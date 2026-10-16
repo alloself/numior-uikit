@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import { RadioGroupDriver } from './drivers/radio';
 import { fieldTextsOf } from './support/field-texts';
 

@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import { createEchoes } from '../src/table/table-echoes';
 
 describe('createEchoes', () => {

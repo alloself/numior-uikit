@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import { formRulesMessages, min, required } from '@numior/forms';
 import type { NuiTableColumn } from '../src';
 import { ruleFailure } from '../src/table/table-rules';

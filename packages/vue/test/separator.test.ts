@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import { SeparatorDriver } from './drivers/separator';
 
 describe('NuiSeparator', () => {

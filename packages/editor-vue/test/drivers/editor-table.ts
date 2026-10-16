@@ -2,7 +2,7 @@ import { flushPromises, type VueWrapper } from '@vue/test-utils';
 import type { NuiContentTableRow } from '@numior/content';
 import { NuiTable, type NuiTableColumnDef } from '@numior/table';
 import type { NuiMenuEntry } from '@numior/vue';
-import { vi } from 'vitest';
+import { vi } from 'vite-plus/test';
 import { nextTick } from 'vue';
 import type { EditorDriver } from './editor';
 

@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 import { SelectDriver } from './drivers/select';
 import { fieldTextsOf } from './support/field-texts';
 import { CATEGORIES } from './support/options';

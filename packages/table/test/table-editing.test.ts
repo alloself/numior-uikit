@@ -1,5 +1,5 @@
 import { flushPromises } from '@vue/test-utils';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vite-plus/test';
 import { installClipboard, type ClipboardStub } from '../../primitives/test/support/clipboard';
 import { TableDriver, type TableMountOptions } from './drivers/table';
 import { applyStaffEdits, staff, STAFF_COLUMNS, type Staff } from './support/staff';

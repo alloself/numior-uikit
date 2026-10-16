@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vite-plus/test';
 import { placeHeadings } from '../../primitives/test/support/headings';
 import { TocDriver } from './drivers/toc';
 

@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import { custom, email, max, min, pattern, required, type FieldRuleContext } from '../src';
 import { formRulesMessages } from '../src/rules/form-rules.messages';
 import { FormHarness } from './harness/form';

@@ -1,5 +1,5 @@
 import { createHighlighter, type Highlighter } from 'shiki';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it } from 'vite-plus/test';
 import { CODE_LANGUAGES } from '../.vitepress/markdown/languages';
 import { codeLanguageOf, tokenizeCode } from '../.vitepress/markdown/tokens';
 

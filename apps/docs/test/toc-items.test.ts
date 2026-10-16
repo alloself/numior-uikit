@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import { tocItemsOf } from '../.vitepress/theme/toc-items';
 
 describe('docs table of contents', () => {

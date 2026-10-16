@@ -1,5 +1,5 @@
 import { flushPromises } from '@vue/test-utils';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 import { installClipboard, type ClipboardStub } from '../../primitives/test/support/clipboard';
 import type { NuiTableContextScope } from '../src';
 import { TableDriver, type TableMountOptions } from './drivers/table';

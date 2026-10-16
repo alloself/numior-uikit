@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import { FormHarness } from './harness/form';
 import { signupSchema } from './harness/schemas';
 

@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vite-plus/test';
 import { createDoc, createSchema, createState, renderTag, contentHole } from '../src';
 import { fixtureSchema, generateDoc } from '../src/fixtures';
 import { EditorViewDriver } from './drivers/view';

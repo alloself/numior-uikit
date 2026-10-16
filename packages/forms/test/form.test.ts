@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import { NuiFormError, required, type FieldRule } from '../src';
 import { FormDriver, type FormFieldConfig } from './drivers/form';
 import { SubmitGate } from './harness/gate';

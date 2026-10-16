@@ -1,5 +1,5 @@
 import { mount, type VueWrapper } from '@vue/test-utils';
-import { vi } from 'vitest';
+import { vi } from 'vite-plus/test';
 import { defineComponent, h, nextTick, shallowRef } from 'vue';
 import {
   useReorder,

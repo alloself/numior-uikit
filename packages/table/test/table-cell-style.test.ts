@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vite-plus/test';
 import { ref } from 'vue';
 import type { NuiTableCellRef, NuiTableCellStyle } from '../src';
 import { TableDriver, type TableMountOptions } from './drivers/table';

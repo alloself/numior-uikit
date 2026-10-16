@@ -16,7 +16,7 @@
     }
   },
   "scripts": {
-    "build": "vite build && vue-tsc -p tsconfig.build.json",
+    "build": "vp build && vue-tsc -p tsconfig.build.json",
     "fixture:build": "nuxi build test/fixture",
     "fixture:start": "node test/fixture/.output/server/index.mjs"
   },
@@ -26,7 +26,8 @@
   },
   "devDependencies": {
     "@nuxt/test-utils": "4.3.2",
-    "nuxt": "4.5.2"
+    "nuxt": "4.5.2",
+    "vitest": "catalog:"
   },
   "peerDependencies": {
     "@numior/forms": "workspace:*",

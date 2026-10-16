@@ -1,6 +1,6 @@
 import { contentSchema } from '@numior/content';
 import { createDoc, selectAll, toJSON } from '@numior/editor-core';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vite-plus/test';
 import { EditorDriver } from './drivers/editor';
 
 let driver: EditorDriver | undefined;

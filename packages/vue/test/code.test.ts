@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vite-plus/test';
 import { installClipboard, type ClipboardStub } from '../../primitives/test/support/clipboard';
 import type { NuiCodeLine } from '../src';
 import { CodeDriver } from './drivers/code';

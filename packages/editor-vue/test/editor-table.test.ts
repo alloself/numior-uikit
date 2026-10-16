@@ -1,6 +1,6 @@
 import { contentSchema } from '@numior/content';
 import { createDoc, toJSON, type DocJSON, type ElementNode } from '@numior/editor-core';
-import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, describe, expect, it, vi } from 'vite-plus/test';
 import { EditorDriver } from './drivers/editor';
 import { EditorTableDriver } from './drivers/editor-table';
 import { installPopovers } from './support/popovers';

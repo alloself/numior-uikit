@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vite-plus/test';
 import { textSelection, type ContentNode } from '../src';
 import { fixtureSchema } from '../src/fixtures';
 import { EditingHarness } from './harness/editing';

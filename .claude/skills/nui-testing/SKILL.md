@@ -87,7 +87,7 @@ it('waits for a commit with the lazy modifier', async () => {
   measurement is state by design), expose a single-tick `settle()` and await it in the spec
   (`VirtualHarness`).
 - jsdom has no layout: give a scroll container a size with `Object.defineProperty(el,
-'clientHeight', { value })` and dispatch `scroll`; `useVirtualList` re-measures on every
+  'clientHeight', { value })` and dispatch `scroll`; `useVirtualList` re-measures on every
   scroll event, so no internal API is needed (`TreeDriver.setHeight`, `TableDriver.mount({ width, height })`).
 - Leftover trees from a failed test share generated ids across apps, so resolve
   `aria-activedescendant` inside the driver's wrapper, never via `document.getElementById`.

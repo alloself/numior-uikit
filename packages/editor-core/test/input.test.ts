@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vite-plus/test';
 import { definePlugin, inputSource, textSelection, type InputSource } from '../src';
 import { fixtureSchema } from '../src/fixtures';
 import { EditorViewDriver } from './drivers/view';

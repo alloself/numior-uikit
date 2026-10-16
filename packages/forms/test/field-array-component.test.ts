@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import { min, required } from '../src';
 import { FieldArrayDriver } from './drivers/field-array';
 import { issue, probeSchema, type SchemaValues } from './harness/schema';

@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import { composableCoverage, signatureNamesOf } from '../.vitepress/reference/coverage';
 import type { DeclarationReference } from '../.vitepress/reference/reference.types';
 

@@ -1,4 +1,4 @@
-import { afterEach, beforeAll, describe, expect, it } from 'vitest';
+import { afterEach, beforeAll, describe, expect, it } from 'vite-plus/test';
 import { EditorDriver } from './drivers/editor';
 import { blockDocument, blockSchema, testBlocks } from './support/blocks';
 import { installPopovers } from './support/popovers';

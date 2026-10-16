@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vite-plus/test';
 import { WebOtpHarness } from './harness/web-otp';
 import { installWebOtp, type WebOtpStub } from './support/web-otp';
 

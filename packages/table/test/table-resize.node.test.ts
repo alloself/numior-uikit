@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { computed, ref } from 'vue';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import { tableLayout } from '../src/table/table-layout';
 import { tableMessages } from '../src/table/table.messages';
 import { useTableResize } from '../src/table/use-table-resize';

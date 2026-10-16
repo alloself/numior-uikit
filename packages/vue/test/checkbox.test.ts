@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 import { CheckboxDriver, CheckboxGroupDriver } from './drivers/checkbox';
 import { fieldTextsOf } from './support/field-texts';
 
