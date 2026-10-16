@@ -1,3 +1,4 @@
+import { graphemesOf } from './graphemes';
 import { numberSymbols } from './number-format';
 import type { TimeValue } from './time-model';
 
@@ -166,7 +167,9 @@ export const stepSegment = (value: number | null, delta: number, bounds: Segment
 export const formatSegment = (value: number | null, digits: readonly string[]): string =>
   value === null
     ? ''
-    : [...String(value).padStart(2, '0')].map((digit) => digits[Number(digit)] ?? digit).join('');
+    : graphemesOf(String(value).padStart(2, '0'))
+        .map((digit) => digits[Number(digit)] ?? digit)
+        .join('');
 
 export const segmentLabels = (locale: string): Record<TimeSegmentType, string> => {
   try {

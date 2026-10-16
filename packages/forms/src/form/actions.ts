@@ -47,7 +47,7 @@ export const createActions = <V extends object, O>(
       value,
       check: (context) => rules.check(getAt(context.values, path.value), context),
       checkAsync: (context) => rules.checkAsync(value(), context),
-      hasAsync: rules.hasAsync,
+      hasAsync: () => rules.hasAsync(),
       debounce: () => toValue(options.debounce),
       validateOn: () => toValue(options.validateOn),
       keepValue: () => toValue(options.keepValue) ?? true,

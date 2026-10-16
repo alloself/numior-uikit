@@ -266,7 +266,7 @@ export class ListDriver extends ComponentDriver {
     await nextTick();
   }
 
-  async receiveItems(items: NuiListSource<NuiListEntry<string>>): Promise<void> {
+  async receiveItems(items: NuiListSource<NuiListEntry>): Promise<void> {
     this.itemsRef.value = items;
     await nextTick();
   }

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vite-plus/test';
 import {
   dateMaskOf,
+  graphemesOf,
   maskDateText,
   typeIntoDateText,
   type DateMaskPart,
@@ -11,7 +12,7 @@ const RU = dateMaskOf('ru-RU');
 const US_TIME = dateMaskOf('en-US', true);
 
 const typed = (keys: string, parts: readonly DateMaskPart[], start = ''): MaskedDateText =>
-  [...keys].reduce((state, key) => typeIntoDateText(state.text, state.caret, key, parts), {
+  graphemesOf(keys).reduce((state, key) => typeIntoDateText(state.text, state.caret, key, parts), {
     text: start,
     caret: start.length,
   });

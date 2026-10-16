@@ -1,3 +1,4 @@
+import type { NuiTableColumn } from '@numior/table';
 import type { MarkdownRenderer } from 'vitepress';
 import type { Component } from 'vue';
 import type { ConfiguratorChange, ConfiguratorState } from './configurator-code';
@@ -170,6 +171,14 @@ export interface ApiRow {
   readonly default?: string | undefined;
   readonly required?: boolean | undefined;
   readonly description: LocalizedText | undefined;
+}
+
+export interface ApiTableProps<T extends ApiRow> {
+  title: string;
+  columns: readonly NuiTableColumn<T>[];
+  rows: readonly T[];
+  locale: ExampleLocale;
+  requiredLabel?: string | undefined;
 }
 
 export interface ApiKeyboardProps {

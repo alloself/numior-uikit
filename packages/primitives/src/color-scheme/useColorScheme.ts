@@ -151,7 +151,10 @@ export const useColorScheme = (options?: ColorSchemeOptions): ColorSchemeControl
   const shared = options === undefined ? inject(COLOR_SCHEME_KEY, null) : null;
   const control = shared ?? createColorScheme(options ?? {}, runInline);
 
-  onMounted(control.start);
+  onMounted(() => {
+    control.start();
+  });
+
   return control;
 };
 

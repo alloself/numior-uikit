@@ -1,3 +1,4 @@
+import { runInThisContext } from 'node:vm';
 import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 import { nextTick } from 'vue';
 import {
@@ -100,16 +101,16 @@ describe('useColorScheme', () => {
 
   it('applies the stored scheme before paint through the head script', () => {
     localStorage.setItem('nui-theme', 'dark');
-    new Function(colorSchemeScript('nui-theme'))();
+    runInThisContext(colorSchemeScript('nui-theme'));
     expect(document.documentElement.getAttribute('data-nui-theme')).toBe('dark');
     localStorage.setItem('nui-theme', 'bogus');
     document.documentElement.removeAttribute('data-nui-theme');
-    new Function(colorSchemeScript('nui-theme'))();
+    runInThisContext(colorSchemeScript('nui-theme'));
     expect(document.documentElement.hasAttribute('data-nui-theme')).toBe(false);
-    new Function(colorSchemeScript('nui-theme', 'light'))();
+    runInThisContext(colorSchemeScript('nui-theme', 'light'));
     expect(document.documentElement.getAttribute('data-nui-theme')).toBe('light');
     localStorage.setItem('nui-theme', 'dark');
-    new Function(colorSchemeScript('nui-theme', 'light'))();
+    runInThisContext(colorSchemeScript('nui-theme', 'light'));
     expect(document.documentElement.getAttribute('data-nui-theme')).toBe('dark');
   });
 

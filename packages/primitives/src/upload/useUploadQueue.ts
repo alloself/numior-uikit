@@ -40,7 +40,7 @@ interface QueueState<R> {
 
 const DEFAULT_CONCURRENCY = 3;
 
-const positionsOf = (items: readonly UploadItem<unknown>[]): Map<string, number> =>
+const positionsOf = (items: readonly UploadItem[]): Map<string, number> =>
   new Map(items.map((item, position) => [item.id, position] as const));
 
 const nextFrame = (run: () => void): (() => void) => {
@@ -93,7 +93,7 @@ const fileOf = <R>(item: UploadItem<R>): UploadFile => ({
   url: item.url,
 });
 
-const isPending = (item: UploadItem<unknown>): boolean =>
+const isPending = (item: UploadItem): boolean =>
   item.status === 'queued' || item.status === 'uploading';
 
 export const useUploadQueue = <R>(options: UploadQueueOptions<R>): UploadQueue<R> => {

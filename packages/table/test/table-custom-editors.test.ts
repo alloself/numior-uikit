@@ -8,7 +8,7 @@ import { applyStaffEdits, staff, STAFF_COLUMNS, type Staff } from './support/sta
 
 const mounted: TableDriver<Staff>[] = [];
 
-const CITY_OPTIONS: NuiOption<string>[] = [
+const CITY_OPTIONS: NuiOption[] = [
   { value: 'Москва', label: 'Москва' },
   { value: 'Казань', label: 'Казань' },
   { value: 'Ереван', label: 'Ереван' },

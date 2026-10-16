@@ -272,8 +272,7 @@ describe('NuiTree', () => {
 
   it('selects on click, toggles on the chevron and on double click and renders the item slot', async () => {
     const tree = TreeDriver.mount({
-      itemSlot: ({ item, level }) =>
-        `${typeof item === 'object' && item && 'label' in item ? String(item.label) : ''}@${level}`,
+      itemSlot: ({ item, level }) => `${item.label}@${level}`,
     });
 
     expect(tree.labels[0]).toBe('src@1');

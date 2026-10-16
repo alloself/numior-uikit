@@ -43,15 +43,15 @@ export const useForm = <V extends object, O = V>(options: UseFormOptions<V, O>):
     formErrors: views.formErrors,
     touched: views.touched,
     meta: views.meta,
-    isFieldDirty: views.isFieldDirty,
-    isFieldTouched: views.isFieldTouched,
-    hasErrors: views.hasErrors,
-    errorsUnder: views.errorsUnder,
-    firstInvalidPath: views.firstInvalidPath,
-    focusField: views.focusField,
+    isFieldDirty: (path) => views.isFieldDirty(path),
+    isFieldTouched: (path) => views.isFieldTouched(path),
+    hasErrors: (prefix) => views.hasErrors(prefix),
+    errorsUnder: (prefix) => views.errorsUnder(prefix),
+    firstInvalidPath: (prefix) => views.firstInvalidPath(prefix),
+    focusField: (path) => views.focusField(path),
     resetForm,
     submit,
-    settled: core.tracker.settled,
+    settled: () => core.tracker.settled(),
   };
 
   provideForm(form);

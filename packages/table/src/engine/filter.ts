@@ -310,9 +310,9 @@ export const createFilterSetup = <T>(
   const job = createScanJob(pending.flatMap((entry) => entry.scans));
 
   return {
-    total: job.total,
-    done: job.done,
-    work: job.work,
+    total: () => job.total(),
+    done: () => job.done(),
+    work: (deadline) => job.work(deadline),
     tests: () => pending.map((entry) => entry.test()),
   };
 };

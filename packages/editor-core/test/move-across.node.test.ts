@@ -180,7 +180,7 @@ const targetsOf = (sample: Doc): BlockTarget[] =>
   );
 
 const textOf = (sample: Doc): string =>
-  [...sample.textBetween(0, sample.size, '')].toSorted().join('');
+  sample.textBetween(0, sample.size, '').split('').toSorted().join('');
 
 const undone = (start: Doc, steps: readonly Step[], docs: readonly Doc[]): Doc =>
   steps.toReversed().reduce((current, step, index) => {

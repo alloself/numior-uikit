@@ -198,11 +198,12 @@ describe('NuiEditor table block', () => {
 
   it('slides the table aside for the block handle instead of squeezing it frame by frame', async () => {
     const slides: string[] = [];
-    const measure = Element.prototype.getBoundingClientRect;
 
-    Element.prototype.getBoundingClientRect = function (this: Element): DOMRect {
-      return new DOMRect(this.classList.contains('nui-editor__pushed') ? 30 : 0, 0, 300, 20);
-    };
+    const measure = vi
+      .spyOn(Element.prototype, 'getBoundingClientRect')
+      .mockImplementation(function (this: Element): DOMRect {
+        return new DOMRect(this.classList.contains('nui-editor__pushed') ? 30 : 0, 0, 300, 20);
+      });
 
     Object.defineProperty(Element.prototype, 'animate', {
       configurable: true,
@@ -223,7 +224,7 @@ describe('NuiEditor table block', () => {
         '[{"translate":"30px 0"},{"translate":"0 0"}]',
       ]);
     } finally {
-      Element.prototype.getBoundingClientRect = measure;
+      measure.mockRestore();
       Reflect.deleteProperty(Element.prototype, 'animate');
     }
   });

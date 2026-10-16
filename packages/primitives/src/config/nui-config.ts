@@ -92,7 +92,10 @@ export const createNuiConfig = (options: NuiConfigOptions): Plugin => ({
       const handle = createColorSchemeControl(options.colorScheme);
 
       app.provide(COLOR_SCHEME_KEY, handle);
-      app.onUnmount(handle.stop);
+
+      app.onUnmount(() => {
+        handle.stop();
+      });
     }
     if (options.link !== undefined) {
       app.provide(LINK_KEY, options.link);

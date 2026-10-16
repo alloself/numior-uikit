@@ -87,7 +87,14 @@ export const useMenuSurface = (options: MenuSurfaceOptions): MenuSurface => {
   const opening = createIntent<Exclude<MenuFocusRequest, 'none'>>();
   let inside = false;
   let pointer = false;
-  const close = (): void => (options.close ?? control.hide)();
+
+  const close = (): void => {
+    if (options.close === undefined) {
+      control.hide();
+    } else {
+      options.close();
+    }
+  };
 
   const context: MenuContext = {
     level: (options.parent?.level ?? -1) + 1,

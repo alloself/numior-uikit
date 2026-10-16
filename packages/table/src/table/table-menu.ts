@@ -72,7 +72,9 @@ const sortSection = (
       key: 'filter',
       label: texts.menuFilter,
       icon: 'filter',
-      onSelect: actions.filter,
+      onSelect: () => {
+        actions.filter();
+      },
     });
   }
   return entries;
@@ -124,7 +126,9 @@ const widthSection = (
           key: 'width-reset',
           label: texts.menuResetWidth,
           icon: 'move-horizontal',
-          onSelect: actions.resetWidth,
+          onSelect: () => {
+            actions.resetWidth();
+          },
         },
       ]
     : [];
@@ -139,7 +143,9 @@ const visibilitySection = (
     label: texts.menuHide,
     icon: 'eye-off',
     disabled: !state.hideable,
-    onSelect: actions.hide,
+    onSelect: () => {
+      actions.hide();
+    },
   },
   {
     type: 'sub',

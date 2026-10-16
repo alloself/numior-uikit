@@ -69,7 +69,7 @@ const ERROR_LABELS: Readonly<Record<NuiUploadError['reason'], ErrorLabel>> = {
   upload: (error, texts) => error.message ?? texts.failed,
 };
 
-const canPreview = (item: NuiUploadItem<unknown>): boolean =>
+const canPreview = (item: NuiUploadItem): boolean =>
   item.type.startsWith('image/') && typeof URL.createObjectURL === 'function';
 
 export const useUploadField = (

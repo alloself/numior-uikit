@@ -29,19 +29,10 @@
 </template>
 
 <script setup lang="ts" generic="T extends ApiRow">
-import { NuiTable, type NuiTableColumn } from '@numior/table';
-import type { ExampleLocale } from '../../examples/example.types';
-import type { ApiRow } from '../theme.types';
+import { NuiTable } from '@numior/table';
+import type { ApiRow, ApiTableProps } from '../theme.types';
 
-interface ApiTableProps {
-  title: string;
-  columns: readonly NuiTableColumn<T>[];
-  rows: readonly T[];
-  locale: ExampleLocale;
-  requiredLabel?: string | undefined;
-}
-
-const { title, columns, rows, locale, requiredLabel } = defineProps<ApiTableProps>();
+const { title, columns, rows, locale, requiredLabel } = defineProps<ApiTableProps<T>>();
 
 const keyOf = (row: ApiRow): string => row.name;
 const isRequired = (row: ApiRow): boolean => row.required === true && requiredLabel !== undefined;

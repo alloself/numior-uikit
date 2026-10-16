@@ -27,7 +27,10 @@ test('the editor keeps typing within budget on ten thousand blocks', async ({ pa
   operations.push(summarize('warm remount to the first painted block', warm));
   await bench.placeAtStart();
 
-  const typed = [...TYPED.repeat(4)].slice(0, 200).map((char) => (char === ' ' ? 'Space' : char));
+  const typed = TYPED.repeat(4)
+    .split('')
+    .slice(0, 200)
+    .map((char) => (char === ' ' ? 'Space' : char));
 
   operations.push(summarize('type a character to the next paint', await bench.pressEach(typed)));
 

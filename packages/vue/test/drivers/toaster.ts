@@ -35,7 +35,17 @@ export interface StackItemView {
 const customToast = (slot: NuiToasterSlot) =>
   h('article', { class: 'custom-toast' }, [
     slot.toast.title,
-    h('button', { class: 'custom-dismiss', type: 'button', onClick: slot.dismiss }, 'x'),
+    h(
+      'button',
+      {
+        class: 'custom-dismiss',
+        type: 'button',
+        onClick: () => {
+          slot.dismiss();
+        },
+      },
+      'x',
+    ),
   ]);
 
 const readItem = (item: DOMWrapper<HTMLElement>): StackItemView => ({

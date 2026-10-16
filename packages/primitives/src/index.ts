@@ -118,6 +118,7 @@ export {
   parseNumber,
   withStepPrecision,
 } from './intl/number-format';
+export { graphemesOf } from './intl/graphemes';
 export type { NumberSymbols } from './intl/number-format';
 export { clampNumber, decimalPlaces, snapToStep, stepNumber } from './intl/number-step';
 export type { NumberBounds, SnapMode } from './intl/number-step';

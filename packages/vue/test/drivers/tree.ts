@@ -18,7 +18,7 @@ const isStringList = listOf(isString);
 
 export interface TreeMountOptions {
   readonly props?: Partial<Omit<NuiTreeProps<unknown>, 'items'>>;
-  readonly items?: readonly NuiTreeItem<string>[];
+  readonly items?: readonly NuiTreeItem[];
   readonly modelValue?: SelectionValue;
   readonly expanded?: readonly string[];
   readonly dir?: 'ltr' | 'rtl';
@@ -41,10 +41,7 @@ const labelOfItem = (item: unknown): string =>
 const textOf = (element: Element): string =>
   (element.querySelector('.nui-row__title')?.textContent ?? '').trim();
 
-const findItem = (
-  items: readonly NuiTreeItem<string>[],
-  label: string,
-): NuiTreeItem<string> | undefined => {
+const findItem = (items: readonly NuiTreeItem[], label: string): NuiTreeItem | undefined => {
   for (const item of items) {
     const match = item.label === label ? item : findItem(item.children ?? [], label);
 
@@ -77,7 +74,7 @@ export class TreeDriver extends ComponentDriver {
     );
 
     const expandedRef = ref<string[]>([...expanded]);
-    const itemsRef = ref<readonly NuiTreeItem<string>[]>(structuredClone(items));
+    const itemsRef = ref<readonly NuiTreeItem[]>(structuredClone(items));
     const loads: string[] = [];
     const events: string[] = [];
 
@@ -120,7 +117,7 @@ export class TreeDriver extends ComponentDriver {
     wrapper: VueWrapper,
     private readonly selection: Selection,
     private readonly expandedRef: Ref<string[]>,
-    private readonly itemsRef: Ref<readonly NuiTreeItem<string>[]>,
+    private readonly itemsRef: Ref<readonly NuiTreeItem[]>,
     readonly loads: string[],
     readonly events: string[],
   ) {
@@ -311,7 +308,7 @@ export class TreeDriver extends ComponentDriver {
     await nextTick();
   }
 
-  async receiveItems(items: readonly NuiTreeItem<string>[]): Promise<void> {
+  async receiveItems(items: readonly NuiTreeItem[]): Promise<void> {
     this.itemsRef.value = items;
     await nextTick();
   }

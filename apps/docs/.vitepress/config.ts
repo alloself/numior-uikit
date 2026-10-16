@@ -416,7 +416,7 @@ export default defineConfigWithTheme<DocsThemeConfig>({
   },
   themeConfig: {
     nav: [],
-    sidebar: [],
+    sidebar: {},
     texts: ru,
     search: { provider: 'local', options: searchOptions },
   },

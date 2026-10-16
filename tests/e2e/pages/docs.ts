@@ -1,5 +1,5 @@
-import { AxeBuilder } from '@axe-core/playwright';
 import type { Locator, Page } from '@playwright/test';
+import { wcagViolationsOf, type AxeViolations } from '../helpers/axe';
 import { copiedTexts, stubClipboard } from '../helpers/clipboard';
 import { boxOf } from '../helpers/geometry';
 
@@ -206,11 +206,7 @@ export class DocsSite {
     await this.page.emulateMedia(options);
   }
 
-  async wcagViolations() {
-    const results = await new AxeBuilder({ page: this.page })
-      .withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa'])
-      .analyze();
-
-    return results.violations;
+  wcagViolations(): Promise<AxeViolations> {
+    return wcagViolationsOf(this.page);
   }
 }

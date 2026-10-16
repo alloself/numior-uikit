@@ -5,29 +5,36 @@ declare module '@localSearchIndex' {
 }
 
 declare module 'virtual:nui-examples' {
-  import type { ExampleRegistry } from '../examples/example.types';
-
-  const registry: ExampleRegistry;
+  const registry: import('../examples/example.types').ExampleRegistry;
 
   export default registry;
 }
 
 declare module 'virtual:nui-reference' {
-  import type {
-    CatalogReference,
-    ComponentReference,
-    DeclarationSlice,
-  } from '../reference/reference.types';
-
   interface ReferenceRegistry {
     readonly components: Readonly<
-      Record<string, () => Promise<{ readonly default: ComponentReference | null }>>
+      Record<
+        string,
+        () => Promise<{
+          readonly default: import('../reference/reference.types').ComponentReference | null;
+        }>
+      >
     >;
     readonly catalogs: Readonly<
-      Record<string, () => Promise<{ readonly default: CatalogReference | null }>>
+      Record<
+        string,
+        () => Promise<{
+          readonly default: import('../reference/reference.types').CatalogReference | null;
+        }>
+      >
     >;
     readonly declarations: Readonly<
-      Record<string, () => Promise<{ readonly default: DeclarationSlice | null }>>
+      Record<
+        string,
+        () => Promise<{
+          readonly default: import('../reference/reference.types').DeclarationSlice | null;
+        }>
+      >
     >;
   }
 

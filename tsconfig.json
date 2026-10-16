@@ -10,6 +10,7 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
+    "noImplicitReturns": true,
     "verbatimModuleSyntax": true,
     "isolatedModules": true,
     "resolveJsonModule": true,
@@ -18,13 +19,16 @@
     "types": ["node", "vite/client"],
     "customConditions": ["@numior/source"],
     "allowImportingTsExtensions": true,
-    "noEmit": true
+    "noEmit": true,
+    "rootDirs": [".", "./node_modules/.cache/vue-dts"]
   },
   "include": [
     "packages/**/*.ts",
     "packages/**/*.vue",
     "apps/**/*.ts",
     "apps/**/*.vue",
+    "apps/docs/.vitepress/**/*.ts",
+    "apps/docs/.vitepress/**/*.vue",
     "tests/**/*.ts",
     "scripts/**/*.ts",
     "*.config.ts"

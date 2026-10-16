@@ -18,11 +18,19 @@ pnpm workspace, TypeScript strict, ESM, Vue 3.5+ как peer. Основание
 режиме библиотеки, `vp test` (Vitest 5, импорты `vite-plus/test`), `vp lint` (Oxlint) и `vp fmt`
 (Oxfmt) настроены в корневом `vite.config.ts`, шаги `pnpm check` идут через `vp run --cache`.
 Пробелы Vite+ закрыты своими инструментами, проверки не ослаблены: eslint-plugin-vue и
-@stylistic остаются в ESLint (Oxlint не разбирает Vue-шаблоны), типы проверяет vue-tsc
-(`typeCheck` Vite+ на tsgo не читает `.vue`, поэтому `typeAware`/`typeCheck` выключены),
+@stylistic остаются в ESLint (Oxlint не разбирает Vue-шаблоны). Типы проверяет vue-tsc, а
+`vp lint` работает с `typeAware` и `typeCheck`: tsgolint (tsgo) не читает `.vue`, поэтому задача
+`typecheck` (`scripts/vue-declarations.ts`) вместе с проверкой выпускает декларации `.vue.d.ts` в
+`node_modules/.cache/vue-dts`, а `rootDirs` корневого `tsconfig.json` показывает их tsgo; сам
+vue-tsc их не читает, `lint` зависит от `typecheck`. Это обход до поддержки Vue в oxc
+(oxc-project/oxc#15761), без shim-модулей и `any`. Правило `typescript/consistent-return`
+выключено в пользу `noImplicitReturns` tsconfig (так рекомендует typescript-eslint: проверка
+компилятора учитывает исчерпывающие `switch`). Строки делятся на символы через `graphemesOf`
+(`Intl.Segmenter`), а не распаковкой. Доки — VitePress 2 (v1 несовместим с Rolldown).
 `@nuxt/test-utils` запускается обычным `vitest` пакета nuxt (с вшитым в Vite+ Vitest он не видит
-текущий набор тестов), а `test:nuxt` и `docs:build` не кешируются (под отслеживанием файлов
-Vite Task не запускается служебный процесс esbuild). Fallow проверяет ненужный код/зависимости, циклы, архитектурные границы, дубли и сложность. Публичные entry exports сохраняются даже при private workspace; не объявлять все src entry points и не выключать анализ исходников ради зелёного CI.
+текущий набор тестов), а `test:nuxt` и `lint` не кешируются: под отслеживанием файлов Vite Task на WSL2
+запуск бинарников из воркспейса (esbuild в Nitro, tsgolint) падает с `spawn EBUSY`
+(voidzero-dev/vite-plus#1643). Fallow проверяет ненужный код/зависимости, циклы, архитектурные границы, дубли и сложность. Публичные entry exports сохраняются даже при private workspace; не объявлять все src entry points и не выключать анализ исходников ради зелёного CI.
 
 ## Alternatives Considered
 

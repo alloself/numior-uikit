@@ -1,6 +1,6 @@
 import type { NuiTreeItem } from '../../src';
 
-export const FILES: readonly NuiTreeItem<string>[] = [
+export const FILES: readonly NuiTreeItem[] = [
   {
     value: 'src',
     label: 'src',
@@ -28,7 +28,7 @@ export const FILES: readonly NuiTreeItem<string>[] = [
   { value: 'design', label: 'Дизайн', children: [{ value: 'logo', label: 'logo.svg' }] },
 ];
 
-export const withTrailing = (): NuiTreeItem<string>[] =>
+export const withTrailing = (): NuiTreeItem[] =>
   FILES.map((item) => {
     switch (item.value) {
       case 'src':
@@ -42,10 +42,10 @@ export const withTrailing = (): NuiTreeItem<string>[] =>
     }
   });
 
-export const withDocs = (children: readonly NuiTreeItem<string>[]): NuiTreeItem<string>[] =>
+export const withDocs = (children: readonly NuiTreeItem[]): NuiTreeItem[] =>
   FILES.map((item) => (item.value === 'docs' ? { ...item, children } : item));
 
-export const manyNodes = (count: number): NuiTreeItem<string>[] =>
+export const manyNodes = (count: number): NuiTreeItem[] =>
   Array.from({ length: count }, (_, index) => ({
     value: `n${index}`,
     label: `Узел ${index}`,

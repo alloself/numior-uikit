@@ -79,7 +79,7 @@ export const useFieldArray = <V extends object, Row>(
     value: () => items(engine.raw),
     check: (context) => rules.check(items(context.values), context),
     checkAsync: (context) => rules.checkAsync(items(context.values), context),
-    hasAsync: rules.hasAsync,
+    hasAsync: () => rules.hasAsync(),
     debounce: () => undefined,
     validateOn: () => toValue(options.validateOn),
     keepValue: () => true,

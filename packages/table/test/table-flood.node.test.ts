@@ -1,3 +1,4 @@
+import { graphemesOf } from '@numior/primitives';
 import { describe, expect, it } from 'vite-plus/test';
 import {
   floodOf,
@@ -53,7 +54,7 @@ const rowOf = (
 
 const paintsOf = (keys: string): Map<string, TableCellPaint> =>
   new Map(
-    [...keys].flatMap((key) => {
+    graphemesOf(keys).flatMap((key) => {
       const paint = paintOf({ overflow: true });
 
       return paint === undefined ? [] : [[key, paint]];

@@ -1,4 +1,5 @@
 import { datePatternOf } from './text';
+import { graphemesOf } from '../intl/graphemes';
 
 export type DateMaskField = 'year' | 'month' | 'day' | 'hour' | 'minute';
 
@@ -47,7 +48,7 @@ const masks = new Map<string, readonly DateMaskPart[]>();
 
 const isDigit = (char: string): boolean => DIGIT.test(char);
 
-const digitsIn = (text: string): number => [...text].filter(isDigit).length;
+const digitsIn = (text: string): number => graphemesOf(text).filter(isDigit).length;
 
 const opensEarly = (part: DigitsPart, char: string): boolean => {
   const limit = EARLY[part.field];
@@ -135,7 +136,7 @@ export const maskDateText = (
   eager = true,
 ): MaskedDateText => {
   const run: MaskRun = {
-    chars: [...raw],
+    chars: graphemesOf(raw),
     target: digitsIn(raw.slice(0, caret)),
     eager,
     index: 0,
@@ -263,10 +264,11 @@ export const typeIntoDateText = (
   data: string,
   parts: readonly DateMaskPart[],
 ): MaskedDateText => {
-  const digits = [...data].filter(isDigit);
+  const characters = graphemesOf(data);
+  const digits = characters.filter(isDigit);
 
   if (digits.length === 0) {
-    return [...data].some((char) => SEPARATOR.test(char))
+    return characters.some((char) => SEPARATOR.test(char))
       ? typeSeparator(text, caret, parts)
       : { text, caret };
   }

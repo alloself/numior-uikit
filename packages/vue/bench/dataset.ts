@@ -1,6 +1,6 @@
 import type { NuiTreeItem } from '../src/tree/tree.types';
 
-export const generateTreeNodes = (count: number): NuiTreeItem<string>[] =>
+export const generateTreeNodes = (count: number): NuiTreeItem[] =>
   Array.from({ length: count }, (_, index) => ({
     value: `n${index}`,
     label: `Узел ${index + 1}`,

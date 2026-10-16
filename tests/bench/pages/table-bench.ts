@@ -113,7 +113,7 @@ export class TableBenchPage extends BenchPage {
   async quickLatencies(text: string, erase: number): Promise<number[]> {
     await this.quick.click();
     await this.clearSettles();
-    const keys = [...text, ...Array.from({ length: erase }, () => 'Backspace')];
+    const keys = [...text.split(''), ...Array.from({ length: erase }, () => 'Backspace')];
 
     for (const [step, key] of keys.entries()) {
       await this.page.keyboard.press(key);

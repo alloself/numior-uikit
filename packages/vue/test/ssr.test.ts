@@ -509,8 +509,8 @@ const scenarios: Scenario[] = [
 describe('server rendering', () => {
   for (const scenario of scenarios) {
     it(`${scenario.name} renders deterministic markup without a DOM`, async () => {
-      const first = await renderMarkup(scenario.render);
-      expect(first).toBe(await renderMarkup(scenario.render));
+      const first = await renderMarkup(() => scenario.render());
+      expect(first).toBe(await renderMarkup(() => scenario.render()));
       expect(first).not.toContain('undefined');
       expect(first).not.toMatch(/aria-describedby=""|id=""/);
     });

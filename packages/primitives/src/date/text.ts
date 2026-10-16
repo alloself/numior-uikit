@@ -1,5 +1,6 @@
 import { parseNumber } from '../intl/number-format';
 import { formatIsoDate, parseIsoDate, partsOf, toUtc } from './iso';
+import { graphemesOf } from '../intl/graphemes';
 
 export type DateTextPart =
   | { readonly type: 'year' | 'month' | 'day'; readonly length: number }
@@ -44,7 +45,7 @@ export const datePatternOf = (locale: string): DateTextPart[] => {
       .formatToParts(PATTERN_DATE)
       .map((part) =>
         isDatePart(part.type)
-          ? { type: part.type, length: [...part.value].length }
+          ? { type: part.type, length: graphemesOf(part.value).length }
           : { type: 'literal', text: part.value },
       );
 
@@ -71,7 +72,7 @@ const digitGroups = (text: string): string[] =>
 const readField = (group: string, type: DateField, locale: string): number | null => {
   const value = parseNumber(group, locale);
 
-  return type === 'year' && [...group].length < 4 ? null : value;
+  return type === 'year' && graphemesOf(group).length < 4 ? null : value;
 };
 
 const readFields = (groups: readonly string[], order: readonly DateField[], locale: string) => {

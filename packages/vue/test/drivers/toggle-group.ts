@@ -10,7 +10,7 @@ export interface ToggleGroupMountOptions {
   readonly modelValue?: SelectionValue;
 }
 
-const THEME_ITEMS: readonly NuiToggleItem<string>[] = [
+const THEME_ITEMS: readonly NuiToggleItem[] = [
   { value: 'light', label: 'Light', icon: 'sun' },
   { value: 'dark', label: 'Dark', icon: 'moon' },
   { value: 'system', label: 'System', icon: 'monitor', disabled: true },

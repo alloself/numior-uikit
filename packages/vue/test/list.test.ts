@@ -3,7 +3,7 @@ import type { NuiListEntry } from '../src';
 import { ListDriver } from './drivers/list';
 import { ConfiguredLinkStub, RouterStub } from './support/router-stub';
 
-const LANGUAGES: readonly NuiListEntry<string>[] = [
+const LANGUAGES: readonly NuiListEntry[] = [
   { label: 'Go', value: 'go', description: 'Compiled' },
   { label: 'Rust', value: 'rust' },
   { label: 'Ruby', value: 'ruby', disabled: true },

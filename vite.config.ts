@@ -91,10 +91,11 @@ export default defineConfig({
         },
       ],
       'vite-plus/prefer-vite-plus-imports': 'error',
+      'typescript/consistent-return': 'off',
     },
     options: {
-      typeAware: false,
-      typeCheck: false,
+      typeAware: true,
+      typeCheck: true,
     },
     jsPlugins: [
       {
@@ -105,6 +106,13 @@ export default defineConfig({
   },
   run: {
     tasks: {
+      typecheck: {
+        command: 'node scripts/vue-declarations.ts',
+        cache: {
+          input: [{ auto: true }, '!node_modules/.cache/vue-dts/**'],
+          output: ['node_modules/.cache/vue-dts/**'],
+        },
+      },
       'test:coverage': {
         command: 'vp test run --coverage',
         cache: {

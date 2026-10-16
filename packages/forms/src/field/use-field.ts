@@ -76,7 +76,7 @@ export const useField = <V extends object, R>(
       rules.check(readSelected(context.values, select.value, path.value), context),
     checkAsync: (context) =>
       rules.checkAsync(readSelected(context.values, select.value, path.value), context),
-    hasAsync: rules.hasAsync,
+    hasAsync: () => rules.hasAsync(),
     debounce: () => toValue(options.debounce),
     validateOn: () => toValue(options.validateOn),
     keepValue: () => toValue(options.keepValue) ?? true,

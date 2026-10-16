@@ -1,3 +1,5 @@
+import { graphemesOf } from '../intl/graphemes';
+
 export interface MaskResult {
   readonly masked: string;
   readonly raw: string;
@@ -78,7 +80,7 @@ const stepMask = (
 
 export const applyMask = (input: string, mask: string): MaskResult => {
   const slots = parseMask(mask);
-  const chars = [...input];
+  const chars = graphemesOf(input);
   let walk: MaskWalk = { masked: '', raw: '', position: 0, cursor: 0 };
   for (let next = stepMask(walk, slots, chars); next; next = stepMask(next, slots, chars)) {
     walk = next;

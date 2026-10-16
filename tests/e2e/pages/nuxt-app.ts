@@ -1,5 +1,5 @@
-import { AxeBuilder } from '@axe-core/playwright';
 import type { Locator, Page } from '@playwright/test';
+import { wcagViolationsOf, type AxeViolations } from '../helpers/axe';
 
 export type NuxtScheme = 'light' | 'dark' | 'system';
 
@@ -66,11 +66,7 @@ export class NuxtApp {
     return this.page.locator('html').getAttribute('data-nui-mark');
   }
 
-  async wcagViolations() {
-    const results = await new AxeBuilder({ page: this.page })
-      .withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa'])
-      .analyze();
-
-    return results.violations;
+  wcagViolations(): Promise<AxeViolations> {
+    return wcagViolationsOf(this.page);
   }
 }

@@ -1,5 +1,5 @@
-import { AxeBuilder } from '@axe-core/playwright';
 import type { Locator, Page } from '@playwright/test';
+import { wcagViolationsOf, type AxeViolations } from '../helpers/axe';
 import { DataSection } from './data';
 import { DatesSection } from './dates';
 import { FeedbackSection } from './feedback';
@@ -287,16 +287,7 @@ export class PlaygroundPage {
     return this.page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
   }
 
-  async wcagViolations(scope?: string) {
-    const builder = new AxeBuilder({ page: this.page }).withTags([
-      'wcag2a',
-      'wcag2aa',
-      'wcag21aa',
-      'wcag22aa',
-    ]);
-
-    const results = await (scope === undefined ? builder : builder.include(scope)).analyze();
-
-    return results.violations;
+  wcagViolations(scope?: string): Promise<AxeViolations> {
+    return wcagViolationsOf(this.page, scope);
   }
 }

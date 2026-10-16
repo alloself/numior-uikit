@@ -162,9 +162,13 @@ export const createValidation = <V extends object, O>(core: FormCore<V, O>): Val
     if (!isPromise(outcome)) {
       return outcome;
     }
-    entries.forEach(pending.hold);
+    for (const entry of entries) {
+      pending.hold(entry);
+    }
     return outcome.finally(() => {
-      entries.forEach(pending.release);
+      for (const entry of entries) {
+        pending.release(entry);
+      }
     });
   };
 

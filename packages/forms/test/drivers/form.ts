@@ -54,7 +54,7 @@ interface FieldScope {
   readonly pending: boolean;
 }
 
-const PLANS: NuiOptionSource<string> = [
+const PLANS: NuiOptionSource = [
   { value: 'free', label: 'Free' },
   { value: 'team', label: 'Team' },
 ];

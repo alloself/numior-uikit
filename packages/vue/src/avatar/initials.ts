@@ -1,4 +1,6 @@
-const firstLetter = (word: string): string => [...word].slice(0, 1).join('');
+import { graphemesOf } from '@numior/primitives';
+
+const firstLetter = (word: string): string => graphemesOf(word)[0] ?? '';
 
 export const initialsOf = (name: string): string => {
   const words = name.split(/\s+/).filter((word) => word !== '');

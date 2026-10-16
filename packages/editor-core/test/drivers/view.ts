@@ -15,6 +15,8 @@ import {
 import { fixtureSchema } from '../../src/fixtures';
 import { createEditorView, type EditorView, type NodeViewFactory } from '../../src/view';
 
+const GRAPHEMES = new Intl.Segmenter(undefined, { granularity: 'grapheme' });
+
 export interface ChunkStyle {
   readonly visibility: string;
   readonly intrinsicSize: string;
@@ -220,7 +222,9 @@ export class EditorViewDriver {
   }
 
   type(text: string): boolean {
-    return [...text].every((char) => !this.host.dispatchEvent(beforeinput('insertText', char)));
+    return Array.from(GRAPHEMES.segment(text), (part) => part.segment).every(
+      (char) => !this.host.dispatchEvent(beforeinput('insertText', char)),
+    );
   }
 
   input(inputType: string, data: string | null = null): boolean {

@@ -48,7 +48,7 @@ playground проверяет реальный `dist`, типы и внешню�
 | `pnpm check`                         | Формат, lint, типы, анализ, unit, build, artifacts, docs; шаги идут через `vp run --cache`                  |
 | `pnpm lint`                          | `vp lint` (Oxlint) для JS/TS и eslint-plugin-vue для шаблонов                                               |
 | `pnpm format` / `pnpm format:check`  | `vp fmt` (Oxfmt): запись / проверка                                                                         |
-| `pnpm typecheck`                     | Vue SFC и TypeScript strict                                                                                 |
+| `vp run typecheck`                   | vue-tsc: Vue SFC и TypeScript strict, декларации `.vue.d.ts` для type-aware `vp lint`                       |
 | `pnpm analyze`                       | Fallow: dead code/deps/cycles/boundaries, дубли, сложность и CRAP по покрытию unit-тестов                   |
 | `pnpm test` / `vp run test:coverage` | `vp test` (Vitest 5); coverage V8 в формате Istanbul для Fallow в `node_modules/.cache/coverage`            |
 | `pnpm test:e2e`                      | Playwright по production build, темы, RTL, Tailwind, axe                                                    |

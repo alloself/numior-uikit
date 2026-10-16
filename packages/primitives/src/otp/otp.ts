@@ -1,3 +1,5 @@
+import { graphemesOf } from '../intl/graphemes';
+
 export type OtpCharset = 'digits' | 'alphanumeric';
 
 export type OtpDirection = 'forward' | 'backward';
@@ -37,7 +39,7 @@ const asciiDigitOf = (char: string): string | undefined => {
 
 const acceptChar = (char: string, charset: OtpCharset): string => {
   const plain = char.normalize('NFKC');
-  const digit = [...plain].length === 1 ? asciiDigitOf(plain) : undefined;
+  const digit = graphemesOf(plain).length === 1 ? asciiDigitOf(plain) : undefined;
 
   if (digit !== undefined) {
     return digit;

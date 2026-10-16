@@ -1,3 +1,4 @@
+import { graphemesOf } from '@numior/primitives';
 import type { FieldRule, FieldRuleContext } from '../core/form.types';
 import { marked } from './origin';
 
@@ -18,7 +19,7 @@ const isEmptyValue = (value: unknown): boolean =>
 
 const measure = (value: unknown): readonly [Measure, number] | undefined => {
   if (typeof value === 'string') {
-    return ['Length', [...value].length];
+    return ['Length', graphemesOf(value).length];
   }
   if (typeof value === 'number' && !Number.isNaN(value)) {
     return ['Value', value];

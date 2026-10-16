@@ -107,7 +107,7 @@ export const createHost = <V extends object, O>(
   };
 
   const flush = async (entries: readonly Entry<V>[]): Promise<void> => {
-    await Promise.all(entries.map((entry) => entry.flush?.(commitFor(entry))));
+    await Promise.all(entries.map((entry) => Promise.resolve(entry.flush?.(commitFor(entry)))));
   };
 
   const revalidate = (entries: readonly Entry<V>[], scope?: ApplyScope): Promise<void> => {

@@ -15,6 +15,7 @@
     "apps/playground/src/tailwind.css",
     "scripts/vite-package-assets.ts",
     "scripts/build-css.ts",
+    "scripts/vue-declarations.ts",
     "apps/docs/scripts/check-examples.ts",
     "apps/docs/examples/**/*.vue",
     "apps/docs/scripts/reference.ts",

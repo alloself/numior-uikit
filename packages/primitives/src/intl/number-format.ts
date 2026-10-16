@@ -1,3 +1,4 @@
+import { graphemesOf } from './graphemes';
 import { decimalPlaces } from './number-step';
 
 export interface NumberSymbols {
@@ -124,14 +125,14 @@ export const parseNumber = (
 export const isPartialNumber = (text: string, symbols: NumberSymbols): boolean => {
   const allowed = new Set([
     ...symbols.digits,
-    ...'0123456789',
+    ...graphemesOf('0123456789'),
     symbols.decimal,
     symbols.group,
-    ...'.,-−+   ()',
-    ...symbols.literals,
+    ...graphemesOf('.,-−+   ()'),
+    ...graphemesOf(symbols.literals),
   ]);
 
-  return [...text].every((char) => allowed.has(char));
+  return graphemesOf(text).every((char) => allowed.has(char));
 };
 
 export const withStepPrecision = (

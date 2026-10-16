@@ -121,7 +121,7 @@ const createArray = (host: ArrayHost, path: () => string): EngineArray => {
       write(swapped(current(), first, second));
     },
     replace: (next) => {
-      order.splice(0, order.length, ...next.map(host.fresh));
+      order.splice(0, order.length, ...next.map(() => host.fresh()));
       write(next.map(cloneValue));
     },
   };

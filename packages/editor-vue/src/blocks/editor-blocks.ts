@@ -53,7 +53,7 @@ export const columnsBlock = defineBlock({
       key: `columns-${String(count)}`,
       label: texts.columns({ count }),
       icon: 'columns',
-      keywords: ['columns', 'layout', `${String(count)}`],
+      keywords: ['columns', 'layout', String(count)],
       command: insertColumns(count),
     })),
 });

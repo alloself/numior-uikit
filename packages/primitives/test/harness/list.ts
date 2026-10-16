@@ -49,8 +49,12 @@ export class ListHarness {
               {
                 ref: container,
                 role: 'listbox',
-                onKeydown: navigation.onKeydown,
-                onFocusin: navigation.onFocusin,
+                onKeydown: (event: KeyboardEvent) => {
+                  navigation.onKeydown(event);
+                },
+                onFocusin: (event: FocusEvent) => {
+                  navigation.onFocusin(event);
+                },
               },
               labels.value.map((label, index) =>
                 h(

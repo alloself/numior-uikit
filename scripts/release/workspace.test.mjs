@@ -50,7 +50,7 @@ const fixture = async (t, isPrivate, dependencies) => {
   };
 };
 
-test('conventional commits produce patch, minor, major and no release', async () => {
+await test('conventional commits produce patch, minor, major and no release', async () => {
   const [, options] = releaseConfig.plugins[0];
   for (const [message, expected] of [
     ['fix(vue): prevent duplicate submission', 'patch'],
@@ -67,7 +67,7 @@ test('conventional commits produce patch, minor, major and no release', async ()
   }
 });
 
-test('disabled and private packages cannot reach prepare or publish', async (t) => {
+await test('disabled and private packages cannot reach prepare or publish', async (t) => {
   const context = await fixture(t, true, {});
   await assert.rejects(verifyConditions({}, context), /disabled/);
   await assert.rejects(prepare({}, context), /disabled/);
@@ -80,7 +80,7 @@ test('disabled and private packages cannot reach prepare or publish', async (t) 
   assert.equal(await readFile(join(context.cwd, 'packages/vue/package.json'), 'utf8'), before);
 });
 
-test('packing synchronizes versions and replaces workspace protocols without publishing', async (t) => {
+await test('packing synchronizes versions and replaces workspace protocols without publishing', async (t) => {
   const context = await fixture(t, false, {});
   context.env.NUMIOR_RELEASE_ENABLED = 'true';
 
@@ -114,7 +114,7 @@ test('packing synchronizes versions and replaces workspace protocols without pub
   assert.equal(JSON.parse(await readFile(join(context.cwd, 'package.json'), 'utf8')).private, true);
 });
 
-test('a prerelease dependency blocks publication but not a dry run', async (t) => {
+await test('a prerelease dependency blocks publication but not a dry run', async (t) => {
   const context = await fixture(t, false, { 'vee-validate': '5.0.0-beta.1' });
   context.env.NUMIOR_RELEASE_ENABLED = 'true';
 
@@ -127,7 +127,7 @@ test('a prerelease dependency blocks publication but not a dry run', async (t) =
   await verifyConditions({}, { ...context, options: { dryRun: true } });
 });
 
-test('prerelease versions are rejected before changing package versions', async (t) => {
+await test('prerelease versions are rejected before changing package versions', async (t) => {
   const context = await fixture(t, false, {});
   context.env.NUMIOR_RELEASE_ENABLED = 'true';
   context.nextRelease.version = '1.0.0-beta.1';
@@ -139,7 +139,7 @@ test('prerelease versions are rejected before changing package versions', async 
   );
 });
 
-test('semantic-release calculates the first 1.0.0 in dry-run without tags or package mutations', async (t) => {
+await test('semantic-release calculates the first 1.0.0 in dry-run without tags or package mutations', async (t) => {
   const context = await fixture(t, true, {});
 
   const git = (...args) =>

@@ -1,3 +1,4 @@
+import { graphemesOf } from '@numior/primitives';
 import {
   ref,
   shallowRef,
@@ -101,7 +102,7 @@ const isPlain = (event: KeyboardEvent): boolean =>
 
 const typedOf = (event: KeyboardEvent): string | undefined => {
   const chord = event.ctrlKey || event.altKey;
-  const printable = [...event.key].length === 1 && event.key !== ' ';
+  const printable = graphemesOf(event.key).length === 1 && event.key !== ' ';
 
   return printable && !event.metaKey && (!chord || event.getModifierState('AltGraph'))
     ? event.key

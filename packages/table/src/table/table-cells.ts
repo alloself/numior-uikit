@@ -1,3 +1,4 @@
+import { graphemesOf } from '@numior/primitives';
 import { getCurrentInstance } from 'vue';
 import type {
   NuiTableCellStyle,
@@ -53,7 +54,7 @@ export const columnName = (col: number): string => {
 };
 
 export const columnIndex = (name: string): number =>
-  [...name.toUpperCase()].reduce(
+  graphemesOf(name.toUpperCase()).reduce(
     (sum, letter) => sum * LETTERS + letter.charCodeAt(0) - CODE_A + 1,
     0,
   ) - 1;
