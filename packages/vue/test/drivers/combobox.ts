@@ -117,6 +117,10 @@ export class ComboboxDriver extends ComponentDriver {
     return status.exists() ? status.text() : '';
   }
 
+  get toggleIcon(): boolean {
+    return this.wrapper.find('.nui-combobox__toggle .nui-combobox__chevron.nui-icon').exists();
+  }
+
   get toggleLabel(): string | undefined {
     return this.wrapper.find('.nui-combobox__toggle').attributes('aria-label');
   }

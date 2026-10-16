@@ -115,6 +115,7 @@ import { createIntent, useFieldControl, useMessages, useSplitAttrs } from '@numi
 import NuiFieldFrame from '../field/NuiFieldFrame';
 import NuiButton from '../button/NuiButton.vue';
 import NuiChip from '../chip/NuiChip.vue';
+import NuiIcon from '../icon/NuiIcon.vue';
 import NuiList from '../list/NuiList.vue';
 import { isComposing } from '../shared/composition';
 import { filterOptions, flattenEntries, optionElementId, type NuiOption } from '../shared/options';
@@ -308,9 +309,9 @@ const commitCustom = (): boolean => {
   if (!customValue || text === '') {
     return false;
   }
-  add(customValue(text));
   draft.value = LABEL;
   open.value = false;
+  add(customValue(text));
   return true;
 };
 

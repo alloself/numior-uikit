@@ -111,7 +111,7 @@ export class BreadcrumbsDriver extends ComponentDriver {
   }
 
   get separatorCount(): number {
-    return this.wrapper.findAll('.nui-breadcrumbs__separator').length;
+    return this.wrapper.findAll('.nui-breadcrumbs__separator.nui-icon').length;
   }
 
   get customCrumbs(): string[] {

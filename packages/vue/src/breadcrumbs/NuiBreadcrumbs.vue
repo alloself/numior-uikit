@@ -32,6 +32,7 @@
 import { computed } from 'vue';
 import { useMessages } from '@numior/primitives';
 import NuiButton from '../button/NuiButton.vue';
+import NuiIcon from '../icon/NuiIcon.vue';
 import NuiMenu from '../menu/NuiMenu.vue';
 import NuiBreadcrumbCrumb from './NuiBreadcrumbCrumb.vue';
 import { layoutBreadcrumbs } from './breadcrumbs-layout';

@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { isString } from '@numior/primitives';
-import { NuiSelect, type NuiOption } from '@numior/vue';
+import { NuiCombobox, NuiSelect, type NuiOption } from '@numior/vue';
 import { kitControls } from '@numior/vue/controls';
 import { tableEditor, type NuiTableColumn, type NuiTableControlEditor } from '../src';
 import { TableDriver, type TableMountOptions } from './drivers/table';
@@ -88,6 +88,37 @@ describe('NuiTable custom editors', () => {
     expect(grid.editing).toBeUndefined();
     expect(grid.cellText(1, 2)).toBe('Самара');
     expect(grid.focusedCell).toEqual({ row: 1, col: 2 });
+  });
+
+  it('saves a value typed into a combobox editor that takes new values as one edit', async () => {
+    const rows = staff(20);
+
+    const columns = STAFF_COLUMNS.map((column) =>
+      column.key === 'city' && column.type === 'text'
+        ? {
+            ...column,
+            editor: tableEditor(NuiCombobox, isString, {
+              props: { options: CITY_OPTIONS, customValue: (text: string) => text },
+            }),
+          }
+        : column,
+    );
+
+    const grid = mountStaff({ rows, columns });
+    await grid.focusCell(1, 2);
+
+    await grid.press('Enter');
+    await grid.typeInEditor('Тверь');
+    await grid.press('Enter');
+
+    expect(grid.edits).toEqual([
+      {
+        kind: 'edit',
+        changes: [{ row: rows[1], key: 'city', value: 'Тверь', previous: 'Казань' }],
+      },
+    ]);
+
+    expect(grid.cellText(1, 2)).toBe('Тверь');
   });
 
   it('takes registry controls from the config and refuses unknown controls, wrong props and values', async () => {
