@@ -5,21 +5,7 @@
   block-size: calc(var(--nui-line-height-relaxed) * 1em);
 }
 .nui-editor__content .nui-content__toggle > .nui-editor__widget {
-  position: absolute;
-  inset-block-start: calc((var(--nui-line-height-relaxed) * 1em - var(--_mark)) / 2);
-  inset-inline-start: 0;
-  display: flex;
-  inline-size: var(--_mark);
-  block-size: var(--_mark);
-}
-.nui-editor-toggle__button .nui-icon {
-  color: var(--nui-text-muted);
-  rotate: var(--_turn);
-  transition: rotate var(--nui-duration-fast) var(--nui-easing);
-}
-.nui-editor-toggle__button:dir(rtl) .nui-icon {
-  rotate: calc(var(--_turn) * -1);
-  scale: -1 1;
+  display: contents;
 }
 .nui-editor__content .nui-content__callout::before {
   content: none;
@@ -45,7 +31,6 @@
 .nui-editor-callout__tone .nui-icon {
   color: var(--_tone-colour);
 }
-.nui-editor .nui-editor-toggle__button.nui-button,
 .nui-editor .nui-editor-callout__tone.nui-button {
   flex: none;
   inline-size: 100%;

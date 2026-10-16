@@ -16,7 +16,7 @@ export const editorIcons: IconRegistry = {
   'heading-1': lazyIcon(() => import('lucide-vue-next/dist/esm/icons/heading-1.js')),
   'heading-2': lazyIcon(() => import('lucide-vue-next/dist/esm/icons/heading-2.js')),
   'heading-3': lazyIcon(() => import('lucide-vue-next/dist/esm/icons/heading-3.js')),
-  'code-block': lazyIcon(() => import('lucide-vue-next/dist/esm/icons/square-code.js')),
+  'code-block': lazyIcon(() => import('lucide-vue-next/dist/esm/icons/braces.js')),
   group: lazyIcon(() => import('lucide-vue-next/dist/esm/icons/group.js')),
   'text-colour': lazyIcon(() => import('lucide-vue-next/dist/esm/icons/baseline.js')),
 };

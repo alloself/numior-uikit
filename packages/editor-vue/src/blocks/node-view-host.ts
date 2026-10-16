@@ -12,7 +12,7 @@ const MARGIN = '100% 0px';
 export const createNodeViewHost = (): NodeViewHost => {
   const entries = new Map<number, NodeViewEntry>();
   const shown = shallowReactive(new Map<number, NodeViewEntry>());
-  const byWidget = new WeakMap<Element, NodeViewEntry>();
+  const byElement = new WeakMap<Element, NodeViewEntry>();
 
   const show = (entry: NodeViewEntry): void => {
     if (entries.has(entry.key)) {
@@ -25,7 +25,7 @@ export const createNodeViewHost = (): NodeViewHost => {
       ? new IntersectionObserver(
           (records) => {
             for (const record of records) {
-              const entry = byWidget.get(record.target);
+              const entry = byElement.get(record.target);
 
               if (record.isIntersecting && entry !== undefined) {
                 show(entry);
@@ -42,18 +42,18 @@ export const createNodeViewHost = (): NodeViewHost => {
     sink: {
       add: (entry) => {
         entries.set(entry.key, entry);
-        byWidget.set(entry.widget, entry);
+        byElement.set(entry.dom, entry);
         if (observer === undefined) {
           show(entry);
         } else {
-          observer.observe(entry.widget);
+          observer.observe(entry.dom);
         }
       },
       remove: (key) => {
         const entry = entries.get(key);
 
         if (entry !== undefined) {
-          observer?.unobserve(entry.widget);
+          observer?.unobserve(entry.dom);
         }
         entries.delete(key);
         shown.delete(key);

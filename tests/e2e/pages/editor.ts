@@ -114,7 +114,7 @@ export class EditorSection {
   }
 
   toggleButton(): Locator {
-    return this.content.locator('.nui-editor-toggle__button');
+    return this.content.locator('.nui-content__toggle-button');
   }
 
   toggle(): Locator {

@@ -147,7 +147,7 @@ describe('NuiEditor built-in blocks', () => {
     expect(editor.labelOf('.nui-editor-callout__tone')).toBeNull();
     expect(editor.classesOf('.nui-editor-callout__mark')).toEqual(['nui-editor-callout__mark']);
 
-    await editor.clickControl('.nui-editor-toggle__button');
+    await editor.clickControl('.nui-content__toggle-button');
 
     expect(editor.classesOf('.nui-content__toggle')).toContain('nui-content__toggle--open');
   });

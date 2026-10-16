@@ -1,10 +1,7 @@
 <template>
-  <NuiButton
-    class="nui-editor-toggle__button"
-    variant="ghost"
-    tone="neutral"
-    size="sm"
-    icon="chevron-right"
+  <button
+    type="button"
+    class="nui-content__toggle-button"
     :aria-expanded="open"
     :aria-label="open ? texts.collapse : texts.expand"
     @mousedown.prevent
@@ -14,7 +11,6 @@
 
 <script setup lang="ts">
 import { useMessages } from '@numior/primitives';
-import { NuiButton } from '@numior/vue';
 import { watch } from 'vue';
 import { editorMessages } from '../../editor/editor.messages';
 import type { NuiEditorBlockViewProps } from '../block.types';
