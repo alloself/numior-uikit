@@ -1,5 +1,5 @@
 <template>
-  <NuiToggleGroup v-model="side" :items="sides" label="Side" variant="segmented" size="sm" />
+  <NuiToggleGroup v-model="side" :items="sides" label="Side" variant="segmented" />
   <NuiButton variant="outline" @click="open = true">Open drawer</NuiButton>
   <NuiDrawer v-model:open="open" :side="side ?? 'end'" title="Notifications" size="sm">
     <p>No new notifications.</p>
@@ -14,8 +14,8 @@ const open = ref(false);
 const side = ref<NuiDrawerSide | null>('end');
 
 const sides = [
-  { value: 'start', label: 'Start' },
-  { value: 'end', label: 'End' },
+  { value: 'start', label: 'Left' },
+  { value: 'end', label: 'Right' },
   { value: 'top', label: 'Top' },
   { value: 'bottom', label: 'Bottom' },
 ];

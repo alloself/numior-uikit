@@ -12,6 +12,7 @@
 ```ts
 import { NuiAppBar, NuiLayout } from '@numior/vue';
 import '@numior/vue/styles/layout.css';
+import '@numior/vue/styles/skip-link.css';
 ```
 
 ## Примеры
@@ -35,8 +36,12 @@ import '@numior/vue/styles/layout.css';
 Область содержимого — `main` (или `contentAs`), верхняя панель — `header`, кнопка-триггер
 держит `aria-expanded` и `aria-controls` панели или ящика.
 
+Первым элементом каркас ставит `NuiSkipLink` «К содержимому» (WCAG 2.4.1). Ссылка видна
+только с фокусом клавиатуры и переносит его в область содержимого мимо шапки и панели. `skipLabel` меняет текст, `:skip-link="false"` убирает ссылку, если у страницы уже
+есть своя.
+
 <KeyboardReference name="NuiLayout" />
 
 ## API
 
-<ApiReference :names="['NuiLayout', 'NuiAppBar']" />
+<ApiReference :names="['NuiLayout', 'NuiAppBar', 'NuiSkipLink']" />

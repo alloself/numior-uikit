@@ -40,6 +40,7 @@ export interface ReferenceBlock {
 
 export interface ReferenceStyles {
   readonly import: string;
+  readonly importTokens?: readonly NuiCodeLine[] | undefined;
   readonly blocks: readonly ReferenceBlock[];
   readonly tokens: readonly string[];
 }

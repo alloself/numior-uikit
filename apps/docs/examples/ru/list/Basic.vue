@@ -1,6 +1,6 @@
 <template>
   <div class="flex flex-col gap-3 w-full max-w-sm">
-    <NuiList variant="divided" class="w-full max-w-sm">
+    <NuiList variant="bordered" class="w-full max-w-sm">
       <NuiListItem icon="file" label="Договор.pdf" description="348 КБ · вчера" href="#contract" />
       <NuiListItem icon="image" label="Макет.png" description="1,2 МБ · сегодня" href="#layout" />
       <NuiListItem

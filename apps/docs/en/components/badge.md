@@ -1,8 +1,8 @@
 # Badge
 
 `NuiBadge` is a non-interactive label smaller than a chip: a status, a counter or a status dot.
-`tone` sets the colour, `variant` the look, `size` the height. Removable values belong to
-[Chip](/en/components/chip).
+`tone` sets the colour, `variant` the look, `size` the height. Values the user picks and removes
+are shown by a [Chip](/en/components/chip).
 
 <Example name="badge/Basic" />
 

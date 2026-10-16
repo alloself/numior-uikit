@@ -4,6 +4,10 @@
 scrolling content with groups of items, nested lists and the footer. `collapsible` sets what
 collapsing does: an icon rail, off canvas or nothing.
 
+A sidebar is permanent navigation that shares the screen with the content. A temporary panel
+over the page for one task is a [Drawer](/en/components/drawer); the sidebar turns into one on a
+narrow screen.
+
 <Example name="sidebar/Basic" />
 
 ## Installation

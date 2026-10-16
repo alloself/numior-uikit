@@ -161,8 +161,8 @@ NuiCommand, NuiToc, NuiSkipLink, NuiSplitter; режимы NuiLayout.
 Тема VitePress написана с нуля: `theme/index.ts` отдаёт `Layout` и регистрирует kit,
 `config.ts` типизирован через `defineConfigWithTheme<DocsThemeConfig>` (`nav`, `sidebar`,
 `texts` на локаль, `search.provider = 'local'`), `appearance: false` и инлайн
-`colorSchemeScript('nui-theme')` в `head` вместо скрипта VitePress. `Layout.vue` — NuiSkipLink и
-NuiLayout (`header="full"`, `sticky`, `end-width`, мобильный порог 64rem) с частями `parts/*`:
+`colorSchemeScript('nui-theme')` в `head` вместо скрипта VitePress. `Layout.vue` —
+NuiLayout со встроенным NuiSkipLink (с 2026-10-17 каркас ставит его сам, отдельной страницы нет) (`header="full"`, `sticky`, `end-width`, мобильный порог 64rem) с частями `parts/*`:
 DocsHeader (NuiAppBar: триггер сайдбара на телефоне, словомарка, разделы, кнопка поиска с
 NuiKbd, меню темы на NuiMenuRadioGroup поверх общего контрола, меню языка со ссылками на ту
 же страницу другой локали), DocsSidebar (NuiSidebar и сворачиваемые группы из конфига),

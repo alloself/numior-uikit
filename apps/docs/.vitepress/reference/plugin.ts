@@ -42,6 +42,28 @@ const declarationModule = (
   return `export default ${JSON.stringify({ ...declaration, tokens: tokenize(declaration.signature) })};\n`;
 };
 
+const componentModule = (
+  bundle: ReferenceBundle,
+  name: string,
+  tokenize: SignatureTokenizer,
+): string => {
+  const component = bundle.components[name];
+
+  if (component === undefined) {
+    return 'export default null;\n';
+  }
+
+  const styles =
+    component.styles === undefined
+      ? undefined
+      : {
+          ...component.styles,
+          importTokens: tokenize(`import '${component.styles.import}';`),
+        };
+
+  return `export default ${JSON.stringify({ ...component, styles })};\n`;
+};
+
 const sliceModule = (
   bundle: ReferenceBundle,
   key: string,
@@ -51,7 +73,7 @@ const sliceModule = (
 
   switch (kind) {
     case 'component':
-      return `export default ${JSON.stringify(bundle.components[name ?? ''] ?? null)};\n`;
+      return componentModule(bundle, name ?? '', tokenize);
     case 'catalog':
       return `export default ${JSON.stringify(bundle.catalogs[name ?? ''] ?? null)};\n`;
     case 'declaration':

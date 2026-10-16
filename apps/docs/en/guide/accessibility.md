@@ -40,7 +40,8 @@ durations are zero, and infinite animations (skeleton, indeterminate progress) o
 
 ## What the app does
 
-- Places [Skip link](/en/components/skip-link) as the first element of the page.
+- Without a [Layout](/en/components/layout) places a `NuiSkipLink` as the first element of the
+  page; the layout does it itself.
 - Gives pages an `h1` heading and skips no levels; `headingLevel` on Collapsible and
   Accordion fits the sections into the outline.
 - Checks the contrast of own colours when replacing a `--nui-<role>` and

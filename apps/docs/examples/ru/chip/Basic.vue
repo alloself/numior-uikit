@@ -1,8 +1,8 @@
 <template>
-  <NuiChip tone="success">Оплачено</NuiChip>
-  <NuiChip tone="warning" variant="outline">Ждёт склада</NuiChip>
-  <NuiChip tone="error" variant="solid">Отменён</NuiChip>
-  <NuiChip tone="info" icon="check">Доставлен</NuiChip>
+  <NuiChip icon="user">Анна Титова</NuiChip>
+  <NuiChip tone="primary">Дизайн-система</NuiChip>
+  <NuiChip>Vue</NuiChip>
+  <NuiChip variant="outline">Доступность</NuiChip>
 </template>
 
 <script setup lang="ts">

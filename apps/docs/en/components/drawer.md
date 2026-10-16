@@ -3,6 +3,10 @@
 `NuiDrawer` is the same modal `<dialog>` as [Dialog](/en/components/dialog), docked to a screen
 edge. The side is logical: `start` and `end` swap in RTL, `top` and `bottom` take the full width.
 
+A drawer is a temporary panel over the page for one task: filters, a cart, record details. The
+app's permanent navigation is a [Sidebar](/en/components/sidebar). It sits in the layout next
+to the content and becomes a drawer on phones.
+
 <Example name="drawer/Filters" />
 
 ## Installation

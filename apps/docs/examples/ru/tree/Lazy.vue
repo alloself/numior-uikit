@@ -1,5 +1,11 @@
 <template>
-  <NuiTree :items="folders" label="Хранилище" class="w-full max-w-sm" @load="load" />
+  <NuiTree
+    variant="bordered"
+    :items="folders"
+    label="Хранилище"
+    class="w-full max-w-sm"
+    @load="load"
+  />
 </template>
 
 <script setup lang="ts">

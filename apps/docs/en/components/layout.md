@@ -12,6 +12,7 @@ for the drawer on a narrow one. The sidebar itself is described by
 ```ts
 import { NuiAppBar, NuiLayout } from '@numior/vue';
 import '@numior/vue/styles/layout.css';
+import '@numior/vue/styles/skip-link.css';
 ```
 
 ## Examples
@@ -35,8 +36,12 @@ toggles the sidebar outside input fields.
 The content area is a `main` (or `contentAs`) and the top bar a `header`. The trigger button
 holds `aria-expanded` and `aria-controls` of the sidebar or the drawer.
 
+The layout starts with a `NuiSkipLink` «Skip to content» (WCAG 2.4.1). The link shows only
+with keyboard focus and moves it into the content area past the bar and the sidebar. `skipLabel` changes the text, `:skip-link="false"` drops the link when the page already
+has one.
+
 <KeyboardReference name="NuiLayout" />
 
 ## API
 
-<ApiReference :names="['NuiLayout', 'NuiAppBar']" />
+<ApiReference :names="['NuiLayout', 'NuiAppBar', 'NuiSkipLink']" />

@@ -1,7 +1,8 @@
 # Button
 
 `NuiButton` is a native button with two styling axes: `variant` sets the shape, `tone` the role.
-Role colours come from the tokens, so an accent change updates every variant at once.
+Role colours come from the tokens, so an accent change updates every variant at once. A link
+inside a paragraph is a [Link](/en/components/link), not `variant="link"`.
 
 <Example name="button/Basic" />
 

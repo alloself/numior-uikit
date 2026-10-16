@@ -1,8 +1,8 @@
 <template>
-  <NuiChip tone="success">Paid</NuiChip>
-  <NuiChip tone="warning" variant="outline">Awaiting stock</NuiChip>
-  <NuiChip tone="error" variant="solid">Cancelled</NuiChip>
-  <NuiChip tone="info" icon="check">Delivered</NuiChip>
+  <NuiChip icon="user">Anna Titova</NuiChip>
+  <NuiChip tone="primary">Design system</NuiChip>
+  <NuiChip>Vue</NuiChip>
+  <NuiChip variant="outline">Accessibility</NuiChip>
 </template>
 
 <script setup lang="ts">

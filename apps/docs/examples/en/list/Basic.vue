@@ -1,6 +1,6 @@
 <template>
   <div class="flex flex-col gap-3 w-full max-w-sm">
-    <NuiList variant="divided" class="w-full max-w-sm">
+    <NuiList variant="bordered" class="w-full max-w-sm">
       <NuiListItem
         icon="file"
         label="Contract.pdf"

@@ -1,5 +1,5 @@
 <template>
-  <NuiToggleGroup v-model="side" :items="sides" label="Сторона" variant="segmented" size="sm" />
+  <NuiToggleGroup v-model="side" :items="sides" label="Сторона" variant="segmented" />
   <NuiButton variant="outline" @click="open = true">Открыть панель</NuiButton>
   <NuiDrawer v-model:open="open" :side="side ?? 'end'" title="Уведомления" size="sm">
     <p>Новых уведомлений нет.</p>
@@ -14,8 +14,8 @@ const open = ref(false);
 const side = ref<NuiDrawerSide | null>('end');
 
 const sides = [
-  { value: 'start', label: 'В начале' },
-  { value: 'end', label: 'В конце' },
+  { value: 'start', label: 'Слева' },
+  { value: 'end', label: 'Справа' },
   { value: 'top', label: 'Сверху' },
   { value: 'bottom', label: 'Снизу' },
 ];

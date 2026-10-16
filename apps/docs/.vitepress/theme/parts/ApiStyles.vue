@@ -1,7 +1,7 @@
 <template>
   <div class="flex flex-col gap-2">
     <h4>{{ texts.apiStyles }}</h4>
-    <NuiCode :code="`import '${styles.import}';`" language="ts" />
+    <NuiCode :code="`import '${styles.import}';`" :tokens="styles.importTokens" language="ts" />
     <ApiCodeList :label="texts.apiClasses" prefix="." :items="classes" />
     <ApiCodeList
       v-if="styles.tokens.length > 0"

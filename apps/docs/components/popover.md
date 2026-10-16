@@ -22,6 +22,14 @@ import '@numior/vue/styles/popover.css';
 
 <Example name="popover/Placement" />
 
+### По наведению
+
+`trigger="hover"` открывает слой при наведении через `openDelay` и закрывает через
+`closeDelay` после ухода курсора; пока курсор над слоем, он остаётся открытым. С клавиатуры
+слой открывается фокусом на триггере, на телефоне — касанием.
+
+<Example name="popover/Hover" />
+
 ## Доступность
 
 Слот `trigger` отдаёт `attrs` с `popovertarget`, `aria-expanded` и `aria-controls`; свяжите их

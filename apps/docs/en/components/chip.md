@@ -1,7 +1,8 @@
 # Chip
 
-`NuiChip` is a compact label on the role tokens: `tone` sets the colour, `variant` the look,
-`size` the height. The same chip shows the selected values in `NuiCombobox`.
+`NuiChip` is a value token: a picked tag, a filter or a recipient. The user controls a chip: it
+can be removed, and the same chip shows the selection in `NuiCombobox`. A state that is only
+reported is a [Badge](/en/components/badge).
 
 <Example name="chip/Basic" />
 

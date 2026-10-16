@@ -274,6 +274,18 @@ describe('docs reference', () => {
       '"name":"NuiButton"',
     );
 
+    expect(
+      loadReferenceModule(current, '\0virtual:nui-reference/component/NuiButton', (code) => [
+        [{ text: code, scope: 'string' }],
+      ]),
+    ).toContain(
+      '"importTokens":[[{"text":"import \'@numior/vue/styles/button.css\';","scope":"string"}]]',
+    );
+
+    expect(loadReferenceModule(current, '\0virtual:nui-reference/component/nope')).toBe(
+      'export default null;\n',
+    );
+
     expect(loadReferenceModule(current, '\0virtual:nui-reference/catalog/code')).toContain(
       '"namespace":"code"',
     );

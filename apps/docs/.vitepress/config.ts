@@ -118,7 +118,6 @@ const ruComponents: DocsSidebarGroup[] = [
       { text: 'Pagination', link: '/components/pagination' },
       { text: 'Command', link: '/components/command' },
       { text: 'Toc', link: '/components/toc' },
-      { text: 'Skip link', link: '/components/skip-link' },
     ],
   },
   {
@@ -299,7 +298,6 @@ const enComponents: DocsSidebarGroup[] = [
       { text: 'Pagination', link: '/en/components/pagination' },
       { text: 'Command', link: '/en/components/command' },
       { text: 'Toc', link: '/en/components/toc' },
-      { text: 'Skip link', link: '/en/components/skip-link' },
     ],
   },
   {
