@@ -322,6 +322,43 @@ export class EditorDriver {
     await nextTick();
   }
 
+  async hoverWidget(nth = 0): Promise<void> {
+    const widget = this.content.querySelectorAll('.nui-editor__widget')[nth];
+
+    widget?.dispatchEvent(new PointerEvent('pointermove', { bubbles: true }));
+    await nextTick();
+  }
+
+  async clickControl(selector: string, nth = 0): Promise<void> {
+    const control = this.content.querySelectorAll(selector)[nth];
+
+    if (!(control instanceof HTMLElement)) {
+      throw new Error(`Nothing matches ${selector} at ${String(nth)}`);
+    }
+    control.click();
+    await nextTick();
+  }
+
+  async chooseInWidget(label: string): Promise<void> {
+    const option = [
+      ...this.content.querySelectorAll('.nui-editor__widget [role^="menuitem"]'),
+    ].find((candidate) => candidate.textContent?.trim() === label);
+
+    if (!(option instanceof HTMLElement)) {
+      throw new Error(`No widget menu item reads ${label}`);
+    }
+    option.click();
+    await nextTick();
+  }
+
+  classesOf(selector: string, nth = 0): readonly string[] {
+    return [...(this.content.querySelectorAll(selector)[nth]?.classList ?? [])];
+  }
+
+  labelOf(selector: string, nth = 0): string | null {
+    return this.content.querySelectorAll(selector)[nth]?.getAttribute('aria-label') ?? null;
+  }
+
   blockElement(index: number): Element | undefined {
     return this.content.querySelectorAll('.nui-editor__chunk > *')[index];
   }
@@ -380,7 +417,7 @@ export class EditorDriver {
 
   async blockAction(...path: readonly string[]): Promise<void> {
     for (const label of path) {
-      const item = [...this.root.querySelectorAll('.nui-editor-handle [role="menuitem"]')].find(
+      const item = [...this.root.querySelectorAll('.nui-editor-handle [role^="menuitem"]')].find(
         (candidate) => candidate.textContent?.trim() === label,
       );
 

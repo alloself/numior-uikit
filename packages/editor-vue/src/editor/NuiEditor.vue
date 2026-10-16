@@ -62,8 +62,8 @@
       />
       <NuiEditorNodeViews
         v-if="ready"
-        :entries="nodeViews"
-        :state="current"
+        :entries="nodeViews.shown"
+        :selected="selectedNode"
         :editable="editable"
         :run="run"
         :focus="editor.focus"
@@ -138,6 +138,7 @@ import {
   type DocJSON,
   type EditorState,
   type ElementNode,
+  type Keymap,
   type Transaction,
 } from '@numior/editor-core';
 import { createEditorView, type EditorView } from '@numior/editor-core/view';
@@ -148,7 +149,6 @@ import {
   onBeforeUnmount,
   onMounted,
   ref,
-  shallowReactive,
   shallowRef,
   toRaw,
   useAttrs,
@@ -158,8 +158,11 @@ import {
 } from 'vue';
 import { useMediaQuery } from '@vueuse/core';
 import { blockContext } from '../blocks/block-context';
-import { NO_BLOCKS, provideBlockStates } from '../blocks/define-block';
-import { createNodeViews, type NodeViewEntry } from '../blocks/node-views';
+import type { NuiEditorBlock, NuiEditorBlockEditor } from '../blocks/block.types';
+import { provideBlockStates } from '../blocks/define-block';
+import { editorBlocks } from '../blocks/editor-blocks';
+import { createNodeViewHost } from '../blocks/node-view-host';
+import { createNodeViews } from '../blocks/node-views';
 import NuiEditorNodeViews from '../blocks/NuiEditorNodeViews.vue';
 import NuiEditorBubble from '../bubble/NuiEditorBubble.vue';
 import { editorIcons } from '../icons/editor-icons';
@@ -193,7 +196,7 @@ const {
   colours = CONTENT_COLOURS,
   highlights = CONTENT_COLOURS,
   blockHandles = true,
-  blocks = NO_BLOCKS,
+  blocks = editorBlocks,
 } = defineProps<NuiEditorProps>();
 
 const document = defineModel<DocJSON | undefined>('document');
@@ -260,16 +263,23 @@ const slash = useSlash({
   blocks,
 });
 
+let view: EditorView | undefined;
+
+const blockEditor: NuiEditorBlockEditor = { element: (nodeId) => view?.nodeDOM(nodeId) };
+
+const keysOf = (keys: NonNullable<NuiEditorBlock['keymap']>): Keymap =>
+  typeof keys === 'function' ? keys(blockEditor) : keys;
+
 const plugins = [
   slash.plugin,
   pasteSchema(limitedSchema),
   inputRules(markdownRules),
-  ...blocks.flatMap((block) => (block.keymap === undefined ? [] : [keymap(block.keymap)])),
+  ...blocks.flatMap((block) => (block.keymap === undefined ? [] : [keymap(keysOf(block.keymap))])),
   keymap(baseKeymap),
   history(),
 ];
 
-const nodeViews = shallowReactive(new Map<number, NodeViewEntry>());
+const nodeViews = createNodeViewHost();
 
 const docOf = (json: DocJSON | undefined): Doc => {
   const read = json === undefined ? undefined : fromJSON(schema, json);
@@ -281,10 +291,13 @@ const initial = docOf(document.value === undefined ? undefined : toRaw(document.
 const current = shallowRef<EditorState>(createState({ doc: initial, plugins }));
 const ready = ref(false);
 const empty = ref(isEmptyDoc(initial));
-let view: EditorView | undefined;
 let written: DocJSON | undefined = document.value === undefined ? undefined : toRaw(document.value);
 
 const editable = computed(() => !isDisabled.value && !isReadonly.value);
+
+const selectedNode = computed(() =>
+  current.value.selection.kind === 'node' ? current.value.selection.id : undefined,
+);
 
 const fixedToolbar = computed(
   () => (toolbar === 'fixed' || toolbar === 'both') && !isReadonly.value,
@@ -453,14 +466,7 @@ onMounted(() => {
     state: current.value,
     editable: editable.value,
     dispatch,
-    nodeViews: createNodeViews(element.ownerDocument, schema, blocks, {
-      add: (entry) => {
-        nodeViews.set(entry.key, entry);
-      },
-      remove: (key) => {
-        nodeViews.delete(key);
-      },
-    }),
+    nodeViews: createNodeViews(element.ownerDocument, schema, blocks, nodeViews.sink),
   });
 
   ready.value = true;
@@ -470,6 +476,7 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
+  nodeViews.stop();
   view?.destroy();
   view = undefined;
 });

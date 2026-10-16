@@ -85,7 +85,8 @@
 .nui-editor__body > * {
   margin-block-start: var(--_flow);
 }
-.nui-editor__body > :first-child {
+.nui-editor__body > :first-child,
+.nui-editor__widget + .nui-editor__body {
   margin-block-start: 0;
 }
 .nui-editor__content .nui-editor__lifted {

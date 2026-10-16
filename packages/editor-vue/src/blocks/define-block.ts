@@ -10,8 +10,6 @@ const BLOCK_STATES: InjectionKey<object> = Symbol('nui-editor-block-states');
 
 const DETACHED = {};
 
-export const NO_BLOCKS: readonly NuiEditorBlock[] = [];
-
 export const defineBlock = (block: NuiEditorBlock): NuiEditorBlock => block;
 
 export const provideBlockStates = (): void => {

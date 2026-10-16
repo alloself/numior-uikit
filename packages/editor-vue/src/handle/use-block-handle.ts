@@ -52,6 +52,8 @@ const MARKS = [PUSHED, LIFTED, 'nui-editor__selected'];
 
 const BLOCK = '.nui-editor__chunk > *';
 
+const WIDGET = '.nui-editor__widget';
+
 const ZONE = 48;
 
 const parentNode = (state: EditorState, id: string): ElementNode | undefined =>
@@ -374,6 +376,7 @@ export const useBlockHandle = (options: BlockHandleOptions): BlockHandle => {
       view === undefined ||
       !(target instanceof Element) ||
       target.closest(BLOCK) === null ||
+      target.closest(WIDGET) !== null ||
       options.content.value?.contains(target) !== true ||
       menuOpen.value ||
       dragging.value ||

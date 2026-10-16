@@ -13,7 +13,7 @@
         placeholder="Начните писать…"
         :readonly="readonly"
         :schema="playgroundSchema"
-        :blocks="[taskStatusBlock]"
+        :blocks="blocks"
         toolbar="both"
         data-testid="editor"
         @change="changes++"
@@ -31,12 +31,13 @@
 <script setup lang="ts">
 import { NuiContent } from '@numior/content';
 import type { PasteSource } from '@numior/editor-core';
-import { NuiEditor } from '@numior/editor-vue';
+import { editorBlocks, NuiEditor } from '@numior/editor-vue';
 import { NuiSwitch } from '@numior/vue';
 import { computed, ref } from 'vue';
 import { playgroundSchema, taskStatusBlock } from './editor-blocks';
 import { blockCount, editorSample } from './editor-sample';
 
+const blocks = [...editorBlocks, taskStatusBlock];
 const document = ref(editorSample());
 const readonly = ref(false);
 const changes = ref(0);

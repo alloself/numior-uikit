@@ -109,6 +109,26 @@ export class EditorSection {
     return this.root.locator('.nui-editor-bubble');
   }
 
+  todoCheck(text: string): Locator {
+    return this.content.getByRole('checkbox', { name: `Выполнено: ${text}` });
+  }
+
+  toggleButton(): Locator {
+    return this.content.locator('.nui-editor-toggle__button');
+  }
+
+  toggle(): Locator {
+    return this.content.locator('.nui-content__toggle');
+  }
+
+  calloutTone(): Locator {
+    return this.content.locator('.nui-editor-callout__tone');
+  }
+
+  callout(): Locator {
+    return this.content.locator('.nui-content__callout');
+  }
+
   taskStatus(): Locator {
     return this.content.getByTestId('task-status');
   }

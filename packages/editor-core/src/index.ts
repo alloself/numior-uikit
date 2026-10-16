@@ -12,7 +12,7 @@ export type {
   SchemaStamp,
   TextJSON,
 } from './doc/json.types';
-export { contentSize, createIdSource, nodeSize, sameMarks } from './model/node';
+export { contentSize, createIdSource, nodeSize, sameAttrs, sameMarks } from './model/node';
 export type {
   AttrValue,
   Attrs,

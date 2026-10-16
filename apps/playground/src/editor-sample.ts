@@ -60,6 +60,7 @@ export const editorSample = (): DocJSON =>
         node('task_status', [], { status: 'doing' }),
         node('blockquote', [paragraph('Сначала качество, потом скорость.')]),
         node('callout', [paragraph('Релиз во вторник в 10:00.')], { tone: 'info' }),
+        node('toggle', [paragraph('Детали релиза'), paragraph('Ветка release/2.4, миграций: 3.')]),
         node('code_block', ['pnpm release:check'], { language: 'bash' }),
         node('divider'),
         paragraph('Наберите # и пробел для заголовка или - для списка.'),

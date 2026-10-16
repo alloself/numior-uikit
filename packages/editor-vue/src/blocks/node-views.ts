@@ -1,4 +1,4 @@
-import type { ElementNode, Schema } from '@numior/editor-core';
+import { sameAttrs, type ElementNode, type Schema } from '@numior/editor-core';
 import { renderNodeDOM, type NodeView, type NodeViewFactory } from '@numior/editor-core/view';
 import { shallowRef, type ShallowRef } from 'vue';
 import type { NuiEditorBlock } from './block.types';
@@ -107,12 +107,14 @@ const viewOf = (source: ViewSource, block: NuiEditorBlock, node: ElementNode): N
     dom,
     contentDOM: content,
     update: (next) => {
-      const fresh = renderNodeDOM(source.document, source.schema, next).dom;
+      if (!sameAttrs(current.value.attrs, next.attrs)) {
+        const fresh = renderNodeDOM(source.document, source.schema, next).dom;
 
-      if (rendered instanceof Element) {
-        syncAttrs(dom, rendered, fresh);
+        if (rendered instanceof Element) {
+          syncAttrs(dom, rendered, fresh);
+        }
+        rendered = fresh;
       }
-      rendered = fresh;
       current.value = next;
       return true;
     },

@@ -272,6 +272,32 @@ test.describe('editor', () => {
     ]);
   });
 
+  test('checks to-dos, folds toggles for the reader and sets callout tones', async ({ page }) => {
+    const { editor } = await openEditor(page);
+
+    await editor.todoCheck('Подготовить письмо').click();
+    await expect(editor.preview.locator('li.nui-content__todo--checked')).toHaveCount(2);
+    await editor.content.locator('p').first().click();
+    await page.keyboard.press('ControlOrMeta+z');
+    await expect(editor.preview.locator('li.nui-content__todo--checked')).toHaveCount(1);
+
+    const { changes } = await editor.readOutput();
+
+    await expect(editor.toggleButton()).toHaveAttribute('aria-expanded', 'false');
+    await editor.toggleButton().click();
+    await expect(editor.toggle()).toHaveClass(/nui-content__toggle--open/);
+    await expect(editor.toggle()).toContainText('Ветка release/2.4');
+    expect((await editor.readOutput()).changes).toBe(changes);
+
+    await editor.calloutTone().click();
+    await page.getByRole('menuitemradio', { name: 'Предупреждение' }).click();
+    await expect(editor.callout()).toHaveClass(/nui-content__callout--tone-warning/);
+
+    await expect(editor.preview.locator('.nui-content__callout')).toHaveClass(
+      /nui-content__callout--tone-warning/,
+    );
+  });
+
   test('edits a custom block through its own control and undoes the change', async ({ page }) => {
     const { editor } = await openEditor(page);
 

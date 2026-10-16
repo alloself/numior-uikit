@@ -40,8 +40,29 @@ export interface NuiEditorMessages {
   readonly moveUp: string;
   readonly moveDown: string;
   readonly wholeList: string;
+  readonly done: (params: { readonly text: string }) => string;
+  readonly expand: string;
+  readonly collapse: string;
+  readonly openByDefault: string;
+  readonly tone: string;
+  readonly toneName: (params: { readonly tone: string }) => string;
+  readonly calloutTone: (params: { readonly tone: string }) => string;
   readonly deleteBlock: string;
 }
+
+const EN_TONES: Readonly<Record<string, string>> = {
+  info: 'Info',
+  success: 'Success',
+  warning: 'Warning',
+  error: 'Error',
+};
+
+const RU_TONES: Readonly<Record<string, string>> = {
+  info: 'Информация',
+  success: 'Успех',
+  warning: 'Предупреждение',
+  error: 'Ошибка',
+};
 
 const EN_COLOURS: Readonly<Record<string, string>> = {
   gray: 'Gray',
@@ -109,6 +130,13 @@ export const editorMessages: NuiMessageCatalog<'editor'> = {
     moveUp: 'Move up',
     moveDown: 'Move down',
     wholeList: 'Whole list',
+    done: ({ text }) => (text === '' ? 'Done' : `Done: ${text}`),
+    expand: 'Expand',
+    collapse: 'Collapse',
+    openByDefault: 'Open by default',
+    tone: 'Tone',
+    toneName: ({ tone }) => EN_TONES[tone] ?? tone,
+    calloutTone: ({ tone }) => `Callout tone: ${EN_TONES[tone] ?? tone}`,
     deleteBlock: 'Delete',
   },
   ru: {
@@ -151,6 +179,13 @@ export const editorMessages: NuiMessageCatalog<'editor'> = {
     moveUp: 'Переместить выше',
     moveDown: 'Переместить ниже',
     wholeList: 'Весь список',
+    done: ({ text }) => (text === '' ? 'Выполнено' : `Выполнено: ${text}`),
+    expand: 'Развернуть',
+    collapse: 'Свернуть',
+    openByDefault: 'Открыт по умолчанию',
+    tone: 'Тон',
+    toneName: ({ tone }) => RU_TONES[tone] ?? tone,
+    calloutTone: ({ tone }) => `Тон выноски: ${RU_TONES[tone] ?? tone}`,
     deleteBlock: 'Удалить',
   },
 };
