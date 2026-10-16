@@ -302,6 +302,30 @@ export class EditorDriver {
 
   ghostCopy: readonly string[] = [];
 
+  async showBlocks(): Promise<void> {
+    await nextTick();
+  }
+
+  get widgetTexts(): readonly string[] {
+    return [...this.content.querySelectorAll('.nui-editor__widget')].map(
+      (widget) => widget.textContent ?? '',
+    );
+  }
+
+  async clickWidget(index: number): Promise<void> {
+    const button = this.content.querySelectorAll('.nui-editor__widget button')[index];
+
+    if (!(button instanceof HTMLElement)) {
+      throw new Error(`No widget button at ${String(index)}`);
+    }
+    button.click();
+    await nextTick();
+  }
+
+  blockElement(index: number): Element | undefined {
+    return this.content.querySelectorAll('.nui-editor__chunk > *')[index];
+  }
+
   async hoverToolbar(): Promise<void> {
     this.find('.nui-editor__toolbar button').dispatchEvent(
       new PointerEvent('pointermove', { bubbles: true }),

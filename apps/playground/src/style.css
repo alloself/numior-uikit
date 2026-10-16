@@ -381,3 +381,15 @@ footer {
   font-size: var(--nui-font-size-sm);
   font-weight: var(--nui-font-weight-medium);
 }
+
+.task-status {
+  color: var(--nui-text-muted);
+}
+.task-status__control {
+  display: flex;
+  align-items: center;
+  gap: var(--nui-space-3);
+}
+.task-status__label {
+  color: var(--nui-text-muted);
+}

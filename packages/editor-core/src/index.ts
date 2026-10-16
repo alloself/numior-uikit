@@ -133,6 +133,7 @@ export type { ActiveBlock } from './commands/format';
 export {
   insertBeforeTextblock,
   insertDivider,
+  insertLeaf,
   toggleList,
   toggleWrapper,
   liftAtStart,

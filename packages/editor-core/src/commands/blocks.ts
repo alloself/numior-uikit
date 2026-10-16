@@ -480,8 +480,8 @@ const followingTextblock = (schema: Schema, parent: ElementNode): string | undef
     );
   });
 
-export const insertDivider =
-  (type = 'divider'): Command =>
+export const insertLeaf =
+  (type: string): Command =>
   (state, dispatch) => {
     const head = headOf(state);
     const $pos = head === undefined ? undefined : state.doc.resolve(head);
@@ -512,3 +512,5 @@ export const insertDivider =
       return true;
     });
   };
+
+export const insertDivider = (type = 'divider'): Command => insertLeaf(type);

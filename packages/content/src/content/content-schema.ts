@@ -6,7 +6,10 @@ import {
   type AttrValue,
   type ElementNode,
   type HtmlElement,
+  type NodeSpec,
   type ParsedAttrs,
+  type Schema,
+  type SchemaSpec,
 } from '@numior/editor-core';
 import type { NuiContentAlign, NuiContentColour, NuiContentTone } from './content.types';
 
@@ -197,7 +200,7 @@ const renderImage = (node: ElementNode) => {
   ]);
 };
 
-export const contentSchema = createSchema({
+const CONTENT_SPEC: SchemaSpec = {
   name: 'numior-content',
   version: 1,
   nodes: {
@@ -479,4 +482,9 @@ export const contentSchema = createSchema({
       ],
     },
   },
-});
+};
+
+export const contentSchema = createSchema(CONTENT_SPEC);
+
+export const extendContentSchema = (nodes: Readonly<Record<string, NodeSpec>>): Schema =>
+  createSchema({ ...CONTENT_SPEC, nodes: { ...CONTENT_SPEC.nodes, ...nodes } });

@@ -61,7 +61,7 @@ export class EditorSection {
   }
 
   async clear(): Promise<void> {
-    await this.content.click();
+    await this.block(0).click();
     await this.page.keyboard.press('ControlOrMeta+a');
     await this.page.keyboard.press('Backspace');
   }
@@ -107,6 +107,14 @@ export class EditorSection {
 
   bubble(): Locator {
     return this.root.locator('.nui-editor-bubble');
+  }
+
+  taskStatus(): Locator {
+    return this.content.getByTestId('task-status');
+  }
+
+  publishedStatus(): Locator {
+    return this.preview.locator('.task-status');
   }
 
   grip(): Locator {

@@ -1,5 +1,6 @@
 import type { Command, EditorState, PasteSource, Schema } from '@numior/editor-core';
 import type { NuiFieldControlProps } from '@numior/vue';
+import type { NuiEditorBlock } from '../blocks/block.types';
 
 export interface NuiEditorProps extends NuiFieldControlProps {
   schema?: Schema | undefined;
@@ -9,6 +10,7 @@ export interface NuiEditorProps extends NuiFieldControlProps {
   colours?: readonly string[] | undefined;
   highlights?: readonly string[] | undefined;
   blockHandles?: boolean | undefined;
+  blocks?: readonly NuiEditorBlock[] | undefined;
 }
 
 export type NuiEditorToolbarMode = 'fixed' | 'bubble' | 'both' | 'none';

@@ -55,9 +55,18 @@
         :state="current"
         :target="handles.slot.value"
         :dragging="handles.dragging.value"
+        :block-menu="blockMenu"
         @run="onHandleRun"
         @grip="handles.onGripPointerdown"
         @whole-list="handles.wholeList"
+      />
+      <NuiEditorNodeViews
+        v-if="ready"
+        :entries="nodeViews"
+        :state="current"
+        :editable="editable"
+        :run="run"
+        :focus="editor.focus"
       />
       <div
         ref="ghost"
@@ -128,16 +137,18 @@ import {
   type Doc,
   type DocJSON,
   type EditorState,
+  type ElementNode,
   type Transaction,
 } from '@numior/editor-core';
 import { createEditorView, type EditorView } from '@numior/editor-core/view';
-import { provideIconDefaults, useFieldControl } from '@numior/primitives';
-import { NuiFieldFrame } from '@numior/vue';
+import { provideIconDefaults, useFieldControl, useMessages } from '@numior/primitives';
+import { NuiFieldFrame, type NuiMenuEntry } from '@numior/vue';
 import {
   computed,
   onBeforeUnmount,
   onMounted,
   ref,
+  shallowReactive,
   shallowRef,
   toRaw,
   useAttrs,
@@ -146,6 +157,10 @@ import {
   watch,
 } from 'vue';
 import { useMediaQuery } from '@vueuse/core';
+import { blockContext } from '../blocks/block-context';
+import { NO_BLOCKS, provideBlockStates } from '../blocks/define-block';
+import { createNodeViews, type NodeViewEntry } from '../blocks/node-views';
+import NuiEditorNodeViews from '../blocks/NuiEditorNodeViews.vue';
 import NuiEditorBubble from '../bubble/NuiEditorBubble.vue';
 import { editorIcons } from '../icons/editor-icons';
 import NuiEditorLinkPanel from '../link/NuiEditorLinkPanel.vue';
@@ -154,6 +169,7 @@ import NuiEditorBlockHandle from '../handle/NuiEditorBlockHandle.vue';
 import { useBlockHandle } from '../handle/use-block-handle';
 import NuiEditorSlashMenu from '../slash/NuiEditorSlashMenu.vue';
 import { useSlash } from '../slash/use-slash';
+import { editorMessages } from './editor.messages';
 import { useEditorOverlays } from './use-editor-overlays';
 import type { NuiEditorApi, NuiEditorPaste, NuiEditorProps } from './editor.types';
 
@@ -177,6 +193,7 @@ const {
   colours = CONTENT_COLOURS,
   highlights = CONTENT_COLOURS,
   blockHandles = true,
+  blocks = NO_BLOCKS,
 } = defineProps<NuiEditorProps>();
 
 const document = defineModel<DocJSON | undefined>('document');
@@ -191,6 +208,7 @@ const emit = defineEmits<{
 const attrs = useAttrs();
 
 provideIconDefaults(editorIcons);
+provideBlockStates();
 
 const {
   attrs: controlAttrs,
@@ -239,15 +257,19 @@ const slash = useSlash({
   state: () => current.value,
   enabled: () => editable.value && ready.value && overlays.focused.value,
   run: (command) => run(command),
+  blocks,
 });
 
 const plugins = [
   slash.plugin,
   pasteSchema(limitedSchema),
   inputRules(markdownRules),
+  ...blocks.flatMap((block) => (block.keymap === undefined ? [] : [keymap(block.keymap)])),
   keymap(baseKeymap),
   history(),
 ];
+
+const nodeViews = shallowReactive(new Map<number, NodeViewEntry>());
 
 const docOf = (json: DocJSON | undefined): Doc => {
   const read = json === undefined ? undefined : fromJSON(schema, json);
@@ -361,6 +383,16 @@ const handles = useBlockHandle({
   run: (command) => run(command),
 });
 
+const blockTexts = useMessages(editorMessages);
+
+const blockMenu = (node: ElementNode): NuiMenuEntry[] =>
+  blocks
+    .filter((block) => block.name === node.type)
+    .flatMap(
+      (block) =>
+        block.menu?.(node, blockContext(node.id, run, editor.focus), blockTexts.value) ?? [],
+    );
+
 const onHandleRun = (command: Command): void => {
   run(command);
   editor.focus();
@@ -376,7 +408,13 @@ const onToolbarRun = (command: Command, refocus: boolean): void => {
 const isLinkKey = (event: KeyboardEvent): boolean =>
   (event.ctrlKey || event.metaKey) && !event.altKey && event.code === 'KeyK';
 
+const fromWidget = (event: Event): boolean =>
+  event.target instanceof Element && event.target.closest('.nui-editor__widget') !== null;
+
 const onKeydown = (event: KeyboardEvent): void => {
+  if (fromWidget(event)) {
+    return;
+  }
   if (event.altKey && event.key === 'F10') {
     event.preventDefault();
     (toolbarElement.value ?? bubbleElement.value)?.focus();
@@ -415,6 +453,14 @@ onMounted(() => {
     state: current.value,
     editable: editable.value,
     dispatch,
+    nodeViews: createNodeViews(element.ownerDocument, schema, blocks, {
+      add: (entry) => {
+        nodeViews.set(entry.key, entry);
+      },
+      remove: (key) => {
+        nodeViews.delete(key);
+      },
+    }),
   });
 
   ready.value = true;

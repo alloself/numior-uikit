@@ -32,6 +32,7 @@
 
 <script setup lang="ts">
 import {
+  childNode,
   deleteChild,
   duplicateChild,
   focusChild,
@@ -48,7 +49,7 @@ import { editorMessages } from '../editor/editor.messages';
 import { slashItems } from '../slash/slash-items';
 import type { NuiEditorBlockHandleProps } from './handle.types';
 
-const { state, target, dragging } = defineProps<NuiEditorBlockHandleProps>();
+const { state, target, dragging, blockMenu } = defineProps<NuiEditorBlockHandleProps>();
 
 const open = defineModel<boolean>('open', { default: false });
 
@@ -79,6 +80,12 @@ const wholeList = (at: ChildSlot): NuiMenuEntry[] =>
     ? []
     : [{ label: texts.value.wholeList, icon: 'group', onSelect: () => emit('wholeList') }];
 
+const own = (at: ChildSlot): NuiMenuEntry[] => {
+  const node = childNode(state.doc, at);
+
+  return node === undefined ? [] : blockMenu(node);
+};
+
 const entries = computed((): NuiMenuEntry[] => {
   const at = target ?? { parent: state.doc.root.id, index: 0 };
   const last = siblings(at) - 1;
@@ -103,6 +110,7 @@ const entries = computed((): NuiMenuEntry[] => {
       onSelect: () => emit('run', moveChild(at.parent, at.index, at.index + 1)),
     },
     ...wholeList(at),
+    ...own(at),
     { type: 'separator' },
     {
       label: texts.value.deleteBlock,

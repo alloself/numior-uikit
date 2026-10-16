@@ -239,7 +239,12 @@ for (const entry of ['index.js', 'fixtures.js']) {
   }
 }
 
-const contentCode = await importBuild('content', ['NuiContent', 'contentSchema', 'renderContent']);
+const contentCode = await importBuild('content', [
+  'NuiContent',
+  'contentSchema',
+  'extendContentSchema',
+  'renderContent',
+]);
 
 assert.match(
   contentCode,
@@ -263,7 +268,11 @@ for (const file of await localImports(resolve('packages/content/dist/index.js'))
   );
 }
 
-const editorVueCode = await importBuild('editor-vue', ['NuiEditor']);
+const editorVueCode = await importBuild('editor-vue', [
+  'NuiEditor',
+  'defineBlock',
+  'defineBlockState',
+]);
 
 for (const external of [
   'vue',

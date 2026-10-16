@@ -400,6 +400,18 @@ SSR не загружают runtime редактора, а документ на
   читаются как ввод, а `keydown`, `beforeinput`, вставка, копирование, `mousedown`, композиция
   и `selectionchange` оттуда редактор не обрабатывает. Отдельных `stopEvent` и
   `ignoreMutation` у вида нет: правило одно для всех, пока свой блок не попросит другого.
+- `@numior/editor-vue` строит node views из `defineBlock({ name, view, at, keymap, slash, menu })`
+  (проп `blocks` у `NuiEditor`, читается при монтировании). Фабрика берёт DOM узла по схеме,
+  убирает статичную обвязку рядом с дыркой (её место занимает виджет), у узла без дырки внутри
+  корня заводит тело `nui-editor__body`, а виджет `nui-editor__widget` (`contenteditable=false`)
+  ставит в начало или конец. Компонент блока телепортируется в виджет из хоста
+  `NuiEditorNodeViews` внутри того же приложения (работают конфиг, иконки, словарь) и получает
+  `node`, `element`, `selected`, `editable` и `editor` (`setAttrs`, `remove`, `run`, `focus`).
+  `update` всегда принимает узел и переносит на корень только то, что поменялось между двумя
+  отрисовками схемы, поэтому классы, которые ставит сам блок, не стираются. Состояние просмотра
+  (`defineBlockState`) живёт на редактор и узел, без шагов истории, и переживает пересоздание
+  DOM. `extendContentSchema(nodes)` добавляет узлы к `contentSchema` для редактора и
+  `NuiContent`; `insertLeaf(type)` вставляет блок-лист, как разделитель.
 
 ## Alternatives Considered
 

@@ -1,4 +1,3 @@
-import { contentSchema } from '@numior/content';
 import {
   createDoc,
   createIdSource,
@@ -7,6 +6,7 @@ import {
   type DocJSON,
   type ElementNode,
 } from '@numior/editor-core';
+import { playgroundSchema } from './editor-blocks';
 
 type Child = ContentNode | string;
 
@@ -17,18 +17,18 @@ const node = (
   content: readonly Child[] = [],
   attrs: Readonly<Record<string, string | number | boolean | null>> = {},
 ): ElementNode =>
-  contentSchema.element(type, {
+  playgroundSchema.element(type, {
     id: ids.next(),
     attrs,
     content: content.map((child) =>
-      typeof child === 'string' ? contentSchema.text(child) : child,
+      typeof child === 'string' ? playgroundSchema.text(child) : child,
     ),
   });
 
 const marked = (text: string, ...marks: readonly string[]): ContentNode =>
-  contentSchema.text(
+  playgroundSchema.text(
     text,
-    marks.map((mark) => contentSchema.mark(mark)),
+    marks.map((mark) => playgroundSchema.mark(mark)),
   );
 
 const paragraph = (...content: readonly Child[]): ElementNode => node('paragraph', content);
@@ -38,7 +38,7 @@ const item = (text: string): ElementNode => node('list_item', [paragraph(text)])
 export const editorSample = (): DocJSON =>
   toJSON(
     createDoc(
-      contentSchema,
+      playgroundSchema,
       node('doc', [
         node('heading', ['План запуска'], { level: 2 }),
         paragraph(
@@ -57,6 +57,7 @@ export const editorSample = (): DocJSON =>
           node('todo_item', [paragraph('Согласовать дату')], { checked: true }),
           node('todo_item', [paragraph('Подготовить письмо')]),
         ]),
+        node('task_status', [], { status: 'doing' }),
         node('blockquote', [paragraph('Сначала качество, потом скорость.')]),
         node('callout', [paragraph('Релиз во вторник в 10:00.')], { tone: 'info' }),
         node('code_block', ['pnpm release:check'], { language: 'bash' }),

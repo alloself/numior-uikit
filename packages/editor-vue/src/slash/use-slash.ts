@@ -13,6 +13,7 @@ import {
 import { useMessages } from '@numior/primitives';
 import { computed, ref, type ComputedRef } from 'vue';
 import { editorMessages } from '../editor/editor.messages';
+import type { NuiEditorBlock } from '../blocks/block.types';
 import { filterSlash, slashItems, type SlashItem } from './slash-items';
 
 export interface SlashOptions {
@@ -20,6 +21,7 @@ export interface SlashOptions {
   readonly state: () => EditorState;
   readonly enabled: () => boolean;
   readonly run: (command: Command) => boolean;
+  readonly blocks: readonly NuiEditorBlock[];
 }
 
 export interface Slash {
@@ -36,7 +38,13 @@ const MOVES: Readonly<Record<string, number>> = { ArrowDown: 1, ArrowUp: -1 };
 export const useSlash = (options: SlashOptions): Slash => {
   const texts = useMessages(editorMessages);
   const pointer = ref({ query: '', index: 0 });
-  const all = computed(() => slashItems(options.schema, texts.value));
+
+  const all = computed(() => [
+    ...slashItems(options.schema, texts.value),
+    ...options.blocks.flatMap((block) =>
+      options.schema.nodes.has(block.name) ? (block.slash?.(texts.value) ?? []) : [],
+    ),
+  ]);
 
   const onKey = (key: KeyInput, match: SuggestionMatch): boolean => keyed(key, match);
 

@@ -272,6 +272,19 @@ test.describe('editor', () => {
     ]);
   });
 
+  test('edits a custom block through its own control and undoes the change', async ({ page }) => {
+    const { editor } = await openEditor(page);
+
+    await expect(editor.publishedStatus()).toHaveText('Статус задачи: В работе');
+    await editor.taskStatus().click();
+    await page.getByRole('option', { name: 'Готово' }).click();
+    await expect(editor.publishedStatus()).toHaveText('Статус задачи: Готово');
+    await editor.content.locator('p').first().click();
+    await page.keyboard.press('ControlOrMeta+z');
+    await expect(editor.publishedStatus()).toHaveText('Статус задачи: В работе');
+    await expect(editor.taskStatus()).toContainText('В работе');
+  });
+
   test('passes axe in light and dark, fits phones and types in RTL', async ({ page }) => {
     const playground = await openEditor(page);
     const { editor } = playground;

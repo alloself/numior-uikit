@@ -12,6 +12,8 @@
         description="Markdown: # заголовок, - список, **жирный**, Ctrl+Z — отмена"
         placeholder="Начните писать…"
         :readonly="readonly"
+        :schema="playgroundSchema"
+        :blocks="[taskStatusBlock]"
         toolbar="both"
         data-testid="editor"
         @change="changes++"
@@ -19,7 +21,7 @@
       />
       <div class="editor-demo__preview">
         <h3 class="editor-demo__title">Опубликованный вид</h3>
-        <NuiContent :document="document" data-testid="editor-preview" />
+        <NuiContent :document="document" :schema="playgroundSchema" data-testid="editor-preview" />
       </div>
     </div>
     <pre class="output" data-testid="editor-output">{{ output }}</pre>
@@ -32,6 +34,7 @@ import type { PasteSource } from '@numior/editor-core';
 import { NuiEditor } from '@numior/editor-vue';
 import { NuiSwitch } from '@numior/vue';
 import { computed, ref } from 'vue';
+import { playgroundSchema, taskStatusBlock } from './editor-blocks';
 import { blockCount, editorSample } from './editor-sample';
 
 const document = ref(editorSample());
