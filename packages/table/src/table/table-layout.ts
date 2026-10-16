@@ -139,6 +139,32 @@ export const pinStyleOf = (
   }
 };
 
+const DEVICE_STEPS = [1, 2, 3, 4];
+
+const deviceStepOf = (scale: number): number | undefined =>
+  DEVICE_STEPS.find((step) => Math.abs(step * scale - Math.round(step * scale)) < 1e-6);
+
+const snapToDevice = (inputs: readonly PlaceInput[], scale: number): readonly PlaceInput[] => {
+  const step = deviceStepOf(scale);
+
+  if (step === undefined || step === 1) {
+    return inputs;
+  }
+
+  let total = 0;
+  let edge = 0;
+
+  return inputs.map((input) => {
+    total += input.width;
+
+    const next = Math.max(edge + step, Math.round(total / step) * step);
+    const width = next - edge;
+
+    edge = next;
+    return { ...input, width };
+  });
+};
+
 const placePane = (
   inputs: readonly PlaceInput[],
   pane: TablePaneName,
@@ -188,6 +214,7 @@ export interface LayoutOptions {
   readonly room: number;
   readonly wrap: boolean;
   readonly rowHeader?: number | undefined;
+  readonly scale?: number | undefined;
 }
 
 const DEFAULT_OPTIONS: LayoutOptions = {
@@ -241,7 +268,11 @@ export const tableLayout = <T>(
     ...(options.select ? [SELECT_INPUT] : []),
   ];
 
-  const ordered = stretch([...utilities, ...starts, ...centres, ...ends], options.room);
+  const ordered = snapToDevice(
+    stretch([...utilities, ...starts, ...centres, ...ends], options.room),
+    options.scale ?? 1,
+  );
+
   const startCount = utilities.length + (options.sticky ? starts.length : 0);
   const endCount = options.sticky ? ends.length : 0;
   const start = placePane(ordered.slice(0, startCount), 'start', 0);

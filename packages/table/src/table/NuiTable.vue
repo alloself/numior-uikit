@@ -271,7 +271,7 @@ import {
   watch,
   type VNode,
 } from 'vue';
-import { clamp, onLongPress, useElementSize } from '@vueuse/core';
+import { clamp, onLongPress, useDevicePixelRatio, useElementSize } from '@vueuse/core';
 import { formRulesMessages } from '@numior/forms';
 import {
   createIntent,
@@ -718,6 +718,18 @@ rowCount.value = engine.value.count();
 const active = ref<TableCellPosition>({ row: rowCount.value > 0 ? 0 : -1, col: 0 });
 
 const { width: room } = useElementSize(viewport);
+const { pixelRatio } = useDevicePixelRatio();
+const scale = shallowRef(1);
+
+onMounted(() => {
+  watch(
+    pixelRatio,
+    (ratio) => {
+      scale.value = ratio;
+    },
+    { immediate: true },
+  );
+});
 
 const flexing = computed(() =>
   orderedLeaves.value.some((column) => (column.flex ?? 0) > 0 && !(column.key in widths.value)),
@@ -731,6 +743,7 @@ const layoutOptions = computed(() => ({
   room: flexing.value ? room.value : 0,
   wrap: height === undefined || rowHeight === 'auto',
   rowHeader: rowHeadSize.value,
+  scale: scale.value,
 }));
 
 const pinnedLayout = computed(() =>

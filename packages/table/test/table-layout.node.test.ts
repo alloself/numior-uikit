@@ -34,6 +34,9 @@ const COLUMNS = [
   column('status', 160, 'end'),
 ];
 
+const edgesOf = (layout: TableLayout): number[] =>
+  layout.visual.map((placed) => (placed.offset + placed.width) * 1.25);
+
 const panesOf = (layout: TableLayout): Record<string, string[]> => ({
   start: layout.start.map((placed) => placed.key),
   centre: layout.centre.map((placed) => placed.key),
@@ -54,6 +57,39 @@ describe('tableLayout', () => {
 
     expect(panesOf(layout)).toEqual({ start: ['id', 'city'], centre: ['status'], end: [] });
     expect(layout.visual.map((placed) => placed.cell.colIndex)).toEqual([1, 2, 3]);
+  });
+
+  it('puts every column edge on a whole device pixel at a fractional scale', () => {
+    const columns = [column('time', 96), column('a', 170), column('b', 170), column('c', 170)];
+
+    const options = {
+      pins: {},
+      hidden: [],
+      widths: {},
+      sticky: true,
+      select: false,
+      room: 0,
+      wrap: true,
+    };
+
+    const sharp = tableLayout(columns, { ...options, scale: 1.25 });
+
+    expect(edgesOf(sharp).map((edge) => Math.abs(edge - Math.round(edge)) < 1e-9)).toEqual([
+      true,
+      true,
+      true,
+      true,
+    ]);
+
+    expect(sharp.visual.map((placed) => placed.width)).toEqual([96, 172, 168, 172]);
+
+    expect(
+      tableLayout(columns, { ...options, scale: 1.1 }).visual.map((placed) => placed.width),
+    ).toEqual([96, 170, 170, 170]);
+
+    expect(tableLayout(columns, options).visual.map((placed) => placed.width)).toEqual([
+      96, 170, 170, 170,
+    ]);
   });
 
   it('stretches flex columns into the free width once the room is known', () => {
