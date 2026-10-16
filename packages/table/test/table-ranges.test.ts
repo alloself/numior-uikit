@@ -333,6 +333,22 @@ describe('NuiTable cell ranges', () => {
     expect(grid.cellMenuLabels.at(-1)).toBe('Открыть Казань');
   });
 
+  it('drops a long press that is still pending when the table goes away', async () => {
+    const grid = mountPeople();
+    await grid.settle();
+
+    vi.useFakeTimers();
+    await grid.holdCell(2, 1, 100);
+    grid.unmount();
+    vi.stubGlobal('Element', undefined);
+
+    try {
+      expect(() => vi.advanceTimersByTime(600)).not.toThrow();
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
   it('leaves the native menu and the pointer alone when the features are off', async () => {
     const grid = mountPeople({ props: { contextMenu: false, cellSelection: false } });
     await grid.settle();

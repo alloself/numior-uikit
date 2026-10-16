@@ -260,6 +260,7 @@
 import {
   computed,
   h,
+  onBeforeUnmount,
   onMounted,
   ref,
   renderSlot,
@@ -2014,10 +2015,16 @@ const refocusActive = (): void => {
   focus.focusCell(active.value);
 };
 
+let unmounted = false;
+
+onBeforeUnmount(() => {
+  unmounted = true;
+});
+
 onLongPress(
   viewport,
   (event) => {
-    if (!inDetail(event) && cellMenu.onLongPress(event)) {
+    if (!unmounted && !inDetail(event) && cellMenu.onLongPress(event)) {
       rangeSelect.swallowClick();
     }
   },
