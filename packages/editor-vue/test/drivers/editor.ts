@@ -3,6 +3,7 @@ import { textSelection, type Command, type DocJSON } from '@numior/editor-core';
 import { createSSRApp, h, nextTick } from 'vue';
 import { renderToString } from 'vue/server-renderer';
 import { NuiEditor, type NuiEditorApi, type NuiEditorProps } from '../../src';
+import { layOut } from '../support/layout';
 import { isShown } from '../support/popovers';
 
 const withoutComments = (html: string): string => html.replaceAll(/<!--[\s\S]*?-->/g, '');
@@ -23,6 +24,18 @@ export interface KeyOptions {
   readonly shift?: boolean;
   readonly alt?: boolean;
 }
+
+const textWithoutWidgets = (block: Element): string => {
+  const copy = block.cloneNode(true);
+
+  if (!(copy instanceof Element)) {
+    return '';
+  }
+  for (const widget of copy.querySelectorAll('.nui-editor__widget')) {
+    widget.remove();
+  }
+  return copy.textContent ?? '';
+};
 
 export class EditorDriver {
   private constructor(private readonly wrapper: VueWrapper) {}
@@ -300,6 +313,28 @@ export class EditorDriver {
 
   dropShown = false;
 
+  async dragBlockTo(text: string, x: number, y: number): Promise<void> {
+    const block = [...this.content.querySelectorAll('p')].find(
+      (candidate) => candidate.textContent === text,
+    );
+
+    layOut(this.content);
+    block?.dispatchEvent(new PointerEvent('pointermove', { bubbles: true }));
+    await nextTick();
+
+    const grip = this.root.querySelector('.nui-editor-handle__grip');
+    const pointer = { bubbles: true, pointerId: 1, button: 0 };
+
+    grip?.dispatchEvent(new PointerEvent('pointerdown', { ...pointer, clientX: x, clientY: 0 }));
+
+    globalThis.dispatchEvent(
+      new PointerEvent('pointermove', { ...pointer, clientX: x, clientY: y }),
+    );
+
+    globalThis.dispatchEvent(new PointerEvent('pointerup', { ...pointer, clientX: x, clientY: y }));
+    await nextTick();
+  }
+
   ghostCopy: readonly string[] = [];
 
   async showBlocks(): Promise<void> {
@@ -431,7 +466,7 @@ export class EditorDriver {
 
   get blockTexts(): readonly string[] {
     return [...this.content.querySelectorAll('.nui-editor__chunk > *')].map(
-      (block) => `${block.tagName.toLowerCase()}:${block.textContent ?? ''}`,
+      (block) => `${block.tagName.toLowerCase()}:${textWithoutWidgets(block)}`,
     );
   }
 

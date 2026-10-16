@@ -320,6 +320,33 @@ test.describe('editor', () => {
     await expect(editor.taskStatus()).toContainText('В работе');
   });
 
+  test('drags blocks into a callout and lifts list items out of their list', async ({ page }) => {
+    const { editor } = await openEditor(page);
+
+    const fine = await page.evaluate(
+      () => matchMedia('(hover: hover) and (pointer: fine)').matches,
+    );
+
+    test.skip(!fine, 'dragging by the handle needs a mouse');
+
+    await editor.drag(
+      editor.content.locator('p', { hasText: 'Наберите' }),
+      editor.callout().locator('p').first(),
+    );
+
+    await expect(editor.callout().locator('p')).toHaveText([
+      'Релиз во вторник в 10:00.',
+      'Наберите # и пробел для заголовка или - для списка.',
+    ]);
+
+    await editor.drag(editor.item('Обновить тарифы'), editor.toggle());
+    await expect(editor.content.locator('ul.nui-content__list--bullet')).toHaveCount(2);
+
+    await expect(editor.content.locator('ul.nui-content__list--bullet').last()).toHaveText(
+      'Обновить тарифы',
+    );
+  });
+
   test('passes axe in light and dark, fits phones and types in RTL', async ({ page }) => {
     const playground = await openEditor(page);
     const { editor } = playground;

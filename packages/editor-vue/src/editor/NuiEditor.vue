@@ -78,7 +78,7 @@
       <div
         ref="drop"
         class="nui-editor__drop"
-        :class="{ 'nui-editor__drop--shown': handles.dragging.value }"
+        :class="{ 'nui-editor__drop--shown': handles.aiming.value }"
         aria-hidden="true"
       />
       <NuiEditorBubble

@@ -155,7 +155,8 @@
 .nui-editor__drop {
   position: absolute;
   z-index: 3;
-  inset-inline: var(--_padding);
+  inset-inline-start: var(--_padding);
+  inline-size: calc(100% - var(--_padding) * 2);
   block-size: 2px;
   border-radius: 1px;
   background: var(--nui-primary);
