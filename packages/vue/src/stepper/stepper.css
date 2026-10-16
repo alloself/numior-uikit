@@ -9,6 +9,7 @@
   line-height: var(--nui-line-height);
 }
 .nui-stepper--orientation-horizontal {
+  inline-size: 100%;
   container-type: inline-size;
 }
 .nui-stepper__list {

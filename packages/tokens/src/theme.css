@@ -16,31 +16,24 @@
 
   --nui-primary: light-dark(oklch(0.457 0.215 277.02), oklch(0.785 0.104 274.71));
   --nui-primary-foreground: light-dark(oklch(1 0 0), oklch(0.257 0.086 281.29));
-  --nui-primary-soft: color-mix(in oklab, var(--nui-primary) 14%, var(--nui-surface));
   --nui-primary-soft-foreground: var(--nui-primary);
   --nui-secondary: light-dark(oklch(0.92 0.004 286.32), oklch(0.37 0.012 285.81));
   --nui-secondary-foreground: light-dark(oklch(0.21 0.006 285.89), oklch(0.985 0 0));
-  --nui-secondary-soft: color-mix(in oklab, var(--nui-secondary) 60%, var(--nui-surface));
   --nui-secondary-soft-foreground: var(--nui-text);
   --nui-success: light-dark(oklch(0.448 0.108 151.33), oklch(0.871 0.136 154.45));
   --nui-success-foreground: light-dark(oklch(1 0 0), oklch(0.266 0.063 152.93));
-  --nui-success-soft: color-mix(in oklab, var(--nui-success) 14%, var(--nui-surface));
   --nui-success-soft-foreground: var(--nui-success);
   --nui-warning: light-dark(oklch(0.476 0.103 61.91), oklch(0.905 0.166 98.11));
   --nui-warning-foreground: light-dark(oklch(1 0 0), oklch(0.286 0.064 53.81));
-  --nui-warning-soft: color-mix(in oklab, var(--nui-warning) 14%, var(--nui-surface));
   --nui-warning-soft-foreground: var(--nui-warning);
   --nui-error: light-dark(oklch(0.505 0.19 27.52), oklch(0.808 0.103 19.57));
   --nui-error-foreground: light-dark(oklch(1 0 0), oklch(0.258 0.089 26.04));
-  --nui-error-soft: color-mix(in oklab, var(--nui-error) 14%, var(--nui-surface));
   --nui-error-soft-foreground: var(--nui-error);
   --nui-info: light-dark(oklch(0.443 0.1 240.79), oklch(0.828 0.101 230.32));
   --nui-info-foreground: light-dark(oklch(1 0 0), oklch(0.293 0.063 243.16));
-  --nui-info-soft: color-mix(in oklab, var(--nui-info) 14%, var(--nui-surface));
   --nui-info-soft-foreground: var(--nui-info);
   --nui-neutral: light-dark(oklch(0.21 0.006 285.89), oklch(0.967 0.001 286.38));
   --nui-neutral-foreground: light-dark(oklch(0.985 0 0), oklch(0.21 0.006 285.89));
-  --nui-neutral-soft: color-mix(in oklab, var(--nui-neutral) 10%, var(--nui-surface));
   --nui-neutral-soft-foreground: var(--nui-text);
 
   --nui-focus: var(--nui-primary);
@@ -127,16 +120,44 @@
 }
 
 :root,
+[data-nui-theme],
+.nui-layer {
+  --nui-primary-soft: color-mix(in oklab, var(--nui-primary) 14%, var(--nui-layer-surface));
+  --nui-secondary-soft: color-mix(in oklab, var(--nui-secondary) 60%, var(--nui-layer-surface));
+  --nui-success-soft: color-mix(in oklab, var(--nui-success) 14%, var(--nui-layer-surface));
+  --nui-warning-soft: color-mix(in oklab, var(--nui-warning) 14%, var(--nui-layer-surface));
+  --nui-error-soft: color-mix(in oklab, var(--nui-error) 14%, var(--nui-layer-surface));
+  --nui-info-soft: color-mix(in oklab, var(--nui-info) 14%, var(--nui-layer-surface));
+  --nui-neutral-soft: color-mix(in oklab, var(--nui-neutral) 10%, var(--nui-layer-surface));
+}
+
+:root,
+[data-nui-theme] {
+  --nui-layer-surface: var(--nui-surface);
+}
+
+.nui-layer {
+  --nui-layer-surface: var(--nui-surface-overlay);
+}
+
+.nui-layer--elevated {
+  --nui-layer-surface: var(--nui-surface-elevated);
+}
+
+:root,
 [data-nui-density='comfortable'] {
+  --nui-control-height-xs: 1.75rem;
   --nui-control-height-sm: 2rem;
   --nui-control-height-md: 2.5rem;
   --nui-control-height-lg: 3rem;
+  --nui-control-padding-xs: 0.5rem;
   --nui-control-padding-sm: 0.75rem;
   --nui-control-padding-md: 1rem;
   --nui-control-padding-lg: 1.25rem;
   --nui-field-padding-sm: 0.625rem;
   --nui-field-padding-md: 0.75rem;
   --nui-field-padding-lg: 1rem;
+  --nui-control-font-size-xs: var(--nui-font-size-xs);
   --nui-control-font-size-sm: var(--nui-font-size-sm);
   --nui-control-font-size-md: var(--nui-font-size-sm);
   --nui-control-font-size-lg: var(--nui-font-size-md);
@@ -146,15 +167,18 @@
 }
 
 [data-nui-density='compact'] {
+  --nui-control-height-xs: 1.5rem;
   --nui-control-height-sm: 1.75rem;
   --nui-control-height-md: 2rem;
   --nui-control-height-lg: 2.5rem;
+  --nui-control-padding-xs: 0.375rem;
   --nui-control-padding-sm: 0.625rem;
   --nui-control-padding-md: 0.75rem;
   --nui-control-padding-lg: 1rem;
   --nui-field-padding-sm: 0.5rem;
   --nui-field-padding-md: 0.625rem;
   --nui-field-padding-lg: 0.75rem;
+  --nui-control-font-size-xs: var(--nui-font-size-xs);
   --nui-control-font-size-sm: var(--nui-font-size-xs);
   --nui-control-font-size-md: var(--nui-font-size-sm);
   --nui-control-font-size-lg: var(--nui-font-size-sm);

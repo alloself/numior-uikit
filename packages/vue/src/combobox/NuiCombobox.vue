@@ -20,6 +20,7 @@
           <NuiChip
             v-for="chip in chips"
             :key="chip.key"
+            size="sm"
             :removable="!isReadonly"
             :remove-tabbable="false"
             :remove-label="`${texts.remove} ${chip.label}`"
@@ -49,7 +50,7 @@
           v-if="showClear"
           variant="ghost"
           tone="neutral"
-          size="sm"
+          size="xs"
           class="nui-combobox__clear"
           :aria-label="texts.clear"
           tabindex="-1"
@@ -59,7 +60,7 @@
         <NuiButton
           variant="ghost"
           tone="neutral"
-          size="sm"
+          size="xs"
           class="nui-combobox__toggle"
           :aria-label="texts.toggle"
           :aria-expanded="open ? 'true' : 'false'"

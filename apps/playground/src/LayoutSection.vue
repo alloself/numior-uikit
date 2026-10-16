@@ -56,6 +56,7 @@
         v-model:mobile-open="mobileOpen"
         :header="header"
         content-as="div"
+        :skip-link="false"
         data-testid="layout"
       >
         <template #sidebar>

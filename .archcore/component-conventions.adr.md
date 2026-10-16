@@ -16,6 +16,14 @@ status: accepted
   `light-dark()`; производные состояния через `color-mix()` от роли; у каждой роли пара
   `-soft`/`-soft-foreground`; density сдвигает всю шкалу контролов и наследуется через
   вложенные темы; размер элемента — `size: sm | md | lg`.
+- Слои (2026-10-17): `-soft` смешивается не с `--nui-surface`, а с `--nui-layer-surface`.
+  Блок `nui-layer` в `@numior/tokens` переобъявляет soft-токены от `--nui-surface-overlay`,
+  `nui-layer--elevated` — от `--nui-surface-elevated`; корни всплывающих поверхностей кита
+  (поповер, меню, диалог, плавающий список и дерево, тост, command, панели дат и времени,
+  подменю сайдбара) и приподнятая карточка несут этот класс. Без него в тёмной теме заливки
+  hover, аватары и мягкие бейджи внутри слоя совпадали с его фоном. Полупрозрачные soft-токены
+  отвергнуты: сквозь фон выбранной строки в закреплённой колонке таблицы просвечивало бы
+  содержимое.
 - `@numior/primitives` — headless-пакет (Vue peer, без CSS): контекст поля
   (`provideField`/`useFieldContext`/`useFieldControl`), `useCheckedState`, контекст radio-группы,
   реестр иконок (`provideIcons`, `useIcon`, `lazyIcon`, `createNuiConfig`), `useSplitAttrs`,

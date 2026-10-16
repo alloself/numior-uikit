@@ -1,5 +1,9 @@
 <template>
-  <div class="nui-command" :class="{ 'nui-command--loading': loading }" @focusout="onFocusout">
+  <div
+    class="nui-command nui-layer"
+    :class="{ 'nui-command--loading': loading }"
+    @focusout="onFocusout"
+  >
     <div class="nui-command__field">
       <NuiIcon alias="search" class="nui-command__icon" />
       <input

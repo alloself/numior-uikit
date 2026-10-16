@@ -35,6 +35,8 @@ export interface LayoutMountOptions {
   readonly sticky?: boolean;
   readonly collapsibleGroup?: boolean;
   readonly variant?: NuiSidebarVariant;
+  readonly skipLink?: boolean;
+  readonly skipLabel?: string;
 }
 
 type MediaListener = (event: { readonly matches: boolean }) => void;
@@ -73,6 +75,8 @@ export class LayoutDriver extends ComponentDriver {
     sticky = false,
     collapsibleGroup = false,
     variant = 'panel',
+    skipLink,
+    skipLabel,
   }: LayoutMountOptions = {}): LayoutDriver {
     const stubs = new TopLayerStubs();
     const media = fakeMedia(mobile);
@@ -137,6 +141,8 @@ export class LayoutDriver extends ComponentDriver {
             header,
             sticky,
             contentAs: 'div',
+            skipLink,
+            skipLabel,
             open: open.value,
             'onUpdate:open': (value: boolean) => {
               open.value = value;
@@ -193,6 +199,18 @@ export class LayoutDriver extends ComponentDriver {
 
   get active(): string {
     return this.activeModel.value;
+  }
+
+  get skipLink(): DOMWrapper<HTMLAnchorElement> {
+    return this.wrapper.find<HTMLAnchorElement>('.nui-skip-link');
+  }
+
+  get contentFocused(): boolean {
+    return document.activeElement === this.wrapper.find('.nui-layout__content').element;
+  }
+
+  async followSkipLink(): Promise<void> {
+    await this.skipLink.trigger('click');
   }
 
   get sidebar(): DOMWrapper<Element> {

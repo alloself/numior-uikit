@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { expectRgb } from './helpers/color';
+import { expectRgb, rgbOf, tokenRgbIn } from './helpers/color';
 import { PlaygroundPage } from './pages/playground';
 
 test('standalone button activates by keyboard and loading blocks activation', async ({
@@ -60,6 +60,22 @@ test('theme, scoped overrides, density and RTL work without Tailwind', async ({ 
   await playground.setDirection('rtl');
   await expect(playground.workspace).toHaveCSS('direction', 'rtl');
   expect(await playground.hasHorizontalOverflow()).toBe(false);
+});
+
+test('soft fills inside an overlay mix with the overlay surface, not the page', async ({
+  page,
+}) => {
+  const playground = new PlaygroundPage(page);
+  await playground.emulate({ colorScheme: 'dark', reducedMotion: 'reduce' });
+  await playground.open();
+  const { navigation } = playground;
+  await navigation.menuTrigger.click();
+  await expect(navigation.menu).toBeVisible();
+  const onPage = await tokenRgbIn(playground.workspace, '--nui-neutral-soft');
+  const inMenu = await tokenRgbIn(navigation.menu, '--nui-neutral-soft');
+  const menuSurface = await rgbOf(navigation.menu, 'background-color');
+  expect(inMenu[0]).toBeGreaterThan(onPage[0]);
+  expect(inMenu[0]).toBeGreaterThan(menuSurface[0] + 8);
 });
 
 test('Tailwind utilities consume the same runtime tokens as native CSS', async ({ page }) => {

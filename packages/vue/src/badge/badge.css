@@ -18,7 +18,7 @@
   block-size: var(--_height);
   padding-inline: var(--_padding);
   border: 1px solid transparent;
-  border-radius: var(--nui-radius-full);
+  border-radius: var(--nui-radius-sm);
   background: var(--_tone-soft);
   color: var(--_tone-soft-foreground);
   font-family: var(--nui-font);
@@ -85,6 +85,7 @@
 .nui-badge--count {
   --_padding: var(--nui-space-1);
 
+  border-radius: var(--nui-radius-full);
   font-variant-numeric: tabular-nums;
 }
 .nui-badge--dot {

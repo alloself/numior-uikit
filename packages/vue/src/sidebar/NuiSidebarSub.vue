@@ -29,7 +29,7 @@
       <div
         v-if="controlsFlyout"
         ref="flyout-node"
-        class="nui-sidebar-sub__flyout"
+        class="nui-sidebar-sub__flyout nui-layer"
         role="group"
         :aria-labelledby="titleId"
         v-bind="{ ...flyout.contentAttrs.value, ...flyout.contentHandlers }"

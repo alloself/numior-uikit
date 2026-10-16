@@ -1,5 +1,6 @@
 .nui-smart-form {
   box-sizing: border-box;
+  inline-size: 100%;
   container-type: inline-size;
 }
 

@@ -1,6 +1,6 @@
 .nui-splitter {
   --_ratio: 0.5;
-  --_divider: 0.75rem;
+  --_divider: 13px;
 
   box-sizing: border-box;
   display: flex;
@@ -18,7 +18,7 @@
   overflow: auto;
 }
 .nui-splitter__pane--start {
-  flex: 0 0 calc(var(--_ratio) * 100% - var(--_divider) / 2);
+  flex: 0 0 round(down, calc(var(--_ratio) * 100% - var(--_divider) / 2), 1px);
 }
 .nui-splitter__pane--end {
   flex: 1 1 0;
@@ -54,22 +54,19 @@
 .nui-splitter__grip {
   position: relative;
   z-index: 1;
-  inline-size: 4px;
+  inline-size: 5px;
   block-size: 2rem;
   border-radius: var(--nui-radius-full);
   background: var(--nui-border-strong);
-  transition:
-    background-color var(--nui-duration-fast) var(--nui-easing),
-    scale var(--nui-duration-fast) var(--nui-easing);
+  transition: background-color var(--nui-duration-fast) var(--nui-easing);
 }
 .nui-splitter--orientation-vertical .nui-splitter__grip {
   inline-size: 2rem;
-  block-size: 4px;
+  block-size: 5px;
 }
 .nui-splitter__divider:hover .nui-splitter__grip,
 .nui-splitter--dragging .nui-splitter__grip {
   background: var(--nui-primary);
-  scale: 1.15;
 }
 .nui-splitter__divider:hover::before,
 .nui-splitter--dragging .nui-splitter__divider::before {

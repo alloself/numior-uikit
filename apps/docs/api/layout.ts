@@ -27,6 +27,14 @@ const docs: DocsMap = {
         en: 'Columns stick to the viewport height and scroll on their own.',
       },
       contentAs: { ru: 'Тег области содержимого.', en: 'Tag of the content area.' },
+      skipLink: {
+        ru: 'Ссылка «К содержимому» первым элементом каркаса.',
+        en: 'The «Skip to content» link as the first element of the layout.',
+      },
+      skipLabel: {
+        ru: 'Текст ссылки «К содержимому»; по умолчанию из словаря.',
+        en: 'Text of the skip link; from the dictionary by default.',
+      },
     },
     models: {
       'v-model:open': {

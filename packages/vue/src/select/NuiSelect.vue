@@ -40,7 +40,7 @@
         v-if="showClear"
         variant="ghost"
         tone="neutral"
-        size="sm"
+        size="xs"
         class="nui-select__clear"
         :aria-label="clearText"
         icon="x"

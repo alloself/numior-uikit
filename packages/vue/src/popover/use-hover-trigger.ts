@@ -1,0 +1,111 @@
+import { useEventListener } from '@vueuse/core';
+import { useDelayedOpen } from '@numior/primitives';
+import { computed, type ComputedRef, type MaybeRefOrGetter, type Ref } from 'vue';
+import type { NuiPopoverHoverAttrs } from './popover.types';
+
+const POINTER_FOCUS_WINDOW = 500;
+
+export interface HoverTriggerOptions {
+  readonly open: Ref<boolean>;
+  readonly enabled: () => boolean;
+  readonly openDelay: MaybeRefOrGetter<number>;
+  readonly closeDelay: MaybeRefOrGetter<number>;
+  readonly content: () => HTMLElement | null;
+  readonly trigger: () => HTMLElement | null;
+}
+
+export interface HoverTrigger {
+  readonly triggerAttrs: ComputedRef<NuiPopoverHoverAttrs>;
+  readonly contentAttrs: ComputedRef<NuiPopoverHoverAttrs>;
+}
+
+const within = (target: EventTarget | null, ...roots: readonly (HTMLElement | null)[]): boolean =>
+  target instanceof Node && roots.some((root) => root?.contains(target) === true);
+
+const pageDocument = (): Document | undefined =>
+  typeof document === 'undefined' ? undefined : document;
+
+export const useHoverTrigger = (options: HoverTriggerOptions): HoverTrigger => {
+  const delay = useDelayedOpen(options.open, {
+    openDelay: options.openDelay,
+    closeDelay: options.closeDelay,
+  });
+
+  let pointerPressedAt = 0;
+  let returning = false;
+
+  const onPointerenter = (event: PointerEvent): void => {
+    if (event.pointerType === 'touch') {
+      return;
+    }
+    delay.scheduleOpen();
+  };
+
+  const onPointerleave = (event: PointerEvent): void => {
+    if (event.pointerType !== 'touch') {
+      delay.scheduleClose();
+    }
+  };
+
+  const onPointerdown = (event: PointerEvent): void => {
+    pointerPressedAt = Date.now();
+
+    if (event.pointerType === 'touch') {
+      if (options.open.value) {
+        delay.closeNow();
+      } else {
+        delay.openNow();
+      }
+    }
+  };
+
+  const onFocus = (): void => {
+    if (returning) {
+      returning = false;
+    } else if (Date.now() - pointerPressedAt > POINTER_FOCUS_WINDOW) {
+      delay.openNow();
+    }
+  };
+
+  const onFocusout = (event: FocusEvent): void => {
+    if (!within(event.relatedTarget, options.content(), options.trigger())) {
+      delay.closeNow();
+    }
+  };
+
+  const onDocumentKeydown = (event: KeyboardEvent): void => {
+    if (event.key !== 'Escape' || !options.open.value) {
+      return;
+    }
+    delay.closeNow();
+
+    if (within(document.activeElement, options.content())) {
+      returning = true;
+      options.trigger()?.focus();
+    }
+  };
+
+  useEventListener(pageDocument, 'keydown', (event: KeyboardEvent) => {
+    if (options.enabled()) {
+      onDocumentKeydown(event);
+    }
+  });
+
+  const triggerAttrs = computed<NuiPopoverHoverAttrs>(() =>
+    options.enabled() ? { onPointerenter, onPointerleave, onPointerdown, onFocus, onFocusout } : {},
+  );
+
+  const contentAttrs = computed<NuiPopoverHoverAttrs>(() =>
+    options.enabled()
+      ? {
+          onPointerenter: () => {
+            delay.cancel();
+          },
+          onPointerleave,
+          onFocusout,
+        }
+      : {},
+  );
+
+  return { triggerAttrs, contentAttrs };
+};

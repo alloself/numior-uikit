@@ -2,7 +2,7 @@
   <dialog
     :id="dialogId"
     ref="dialog"
-    class="nui-dialog"
+    class="nui-dialog nui-layer"
     :class="[
       `nui-dialog--size-${size}`,
       `nui-dialog--placement-${placement}`,

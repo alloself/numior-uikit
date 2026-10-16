@@ -10,6 +10,8 @@ export interface NuiLayoutProps {
   shortcut?: boolean | undefined;
   sticky?: boolean | undefined;
   contentAs?: string | undefined;
+  skipLink?: boolean | undefined;
+  skipLabel?: string | undefined;
 }
 
 export interface NuiAppBarProps {

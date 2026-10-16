@@ -7,6 +7,7 @@
       `nui-list--variant-${variant}`,
       `nui-tree--size-${size}`,
       {
+        'nui-layer': variant === 'floating',
         'nui-tree--virtual': virtual,
         'nui-tree--checkable': checkable,
         'nui-tree--multiple': mode === 'multiple',

@@ -6,7 +6,11 @@
     :class="[
       `nui-list--variant-${variant}`,
       `nui-list--size-${size}`,
-      { 'nui-list--selectable': selectable !== undefined, 'nui-list--empty': isEmpty },
+      {
+        'nui-list--selectable': selectable !== undefined,
+        'nui-list--empty': isEmpty,
+        'nui-layer': variant === 'floating',
+      },
     ]"
     v-bind="rootAria"
     @keydown="onKeydown"

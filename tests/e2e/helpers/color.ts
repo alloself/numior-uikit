@@ -45,6 +45,25 @@ export const expectRgb = async (
     .toBe('match');
 };
 
+export const tokenRgbIn = async (locator: Locator, token: string): Promise<Rgb> => {
+  await locator.evaluate((element, name) => {
+    const probe = document.createElement('span');
+
+    probe.className = 'e2e-token-probe';
+    probe.style.background = `var(${name})`;
+    element.append(probe);
+  }, token);
+
+  const probe = locator.locator('.e2e-token-probe');
+  const rgb = await rgbOf(probe, 'background-color');
+
+  await probe.evaluate((element) => {
+    element.remove();
+  });
+
+  return rgb;
+};
+
 const readBottomPixel = async (base64: string): Promise<Rgb> => {
   const image = new Image();
   image.src = `data:image/png;base64,${base64}`;

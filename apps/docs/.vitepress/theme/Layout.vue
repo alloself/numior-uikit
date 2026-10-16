@@ -1,6 +1,12 @@
 <template>
-  <NuiSkipLink target="docs-content" :label="texts.skip" />
-  <NuiLayout header="full" sticky :mobile-query="MOBILE_QUERY" end-width="16rem">
+  <NuiLayout
+    id="docs-layout"
+    header="full"
+    sticky
+    :mobile-query="MOBILE_QUERY"
+    end-width="16rem"
+    :skip-label="texts.skip"
+  >
     <template #header>
       <DocsHeader @search="searchOpen = true" />
     </template>
@@ -21,7 +27,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
 import { useData, useRoute } from 'vitepress';
-import { NuiLayout, NuiSkipLink, NuiToaster, useMediaQuery } from '@numior/vue';
+import { NuiLayout, NuiToaster, useMediaQuery } from '@numior/vue';
 import { useDocs } from './composables/use-docs';
 import DocsHeader from './parts/DocsHeader.vue';
 import DocsHome from './parts/DocsHome.vue';

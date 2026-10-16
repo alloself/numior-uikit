@@ -20,7 +20,7 @@
       v-if="clearable"
       variant="ghost"
       tone="neutral"
-      size="sm"
+      size="xs"
       icon-only
       class="nui-date-picker__clear"
       :aria-label="clearLabel"
@@ -31,7 +31,7 @@
     <NuiButton
       variant="ghost"
       tone="neutral"
-      size="sm"
+      size="xs"
       icon-only
       class="nui-date-picker__open"
       :aria-label="openLabel"
@@ -44,7 +44,7 @@
     />
     <div
       :ref="popover.setPanel"
-      class="nui-date-picker__panel"
+      class="nui-date-picker__panel nui-layer"
       role="dialog"
       aria-modal="false"
       :aria-label="labelledBy ? undefined : dialogLabel"

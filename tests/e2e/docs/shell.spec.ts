@@ -99,5 +99,5 @@ test('the skip link moves focus to the content', async ({ page, isMobile }) => {
   await page.keyboard.press('Tab');
   await expect(page.getByRole('link', { name: 'К содержимому' })).toBeFocused();
   await page.keyboard.press('Enter');
-  await expect(docs.article).toBeFocused();
+  await expect(docs.main).toBeFocused();
 });

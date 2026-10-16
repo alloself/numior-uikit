@@ -1,5 +1,5 @@
 import { flushPromises } from '@vue/test-utils';
-import { describe, expect, it } from 'vite-plus/test';
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 import { PopoverDriver } from './drivers/popover';
 
 describe('NuiPopover', () => {
@@ -61,5 +61,68 @@ describe('NuiPopover', () => {
     expect(popover.content.attributes('style')).toContain('position: fixed');
     popover.unmount();
     anchor.remove();
+  });
+
+  describe('opened by hover', () => {
+    afterEach(() => vi.useRealTimers());
+
+    it('opens after the delay, stays open while the pointer is over the content and closes after leaving', async () => {
+      vi.useFakeTimers();
+
+      const popover = PopoverDriver.mount({
+        props: { id: 'card', trigger: 'hover', openDelay: 400, closeDelay: 200 },
+      });
+
+      expect(popover.trigger.attributes('popovertarget')).toBeUndefined();
+      expect(popover.trigger.attributes('aria-controls')).toBe('card');
+      expect(popover.content.attributes('popover')).toBe('manual');
+      await popover.hover();
+      await popover.advance(399);
+      expect(popover.modelOpen).toBe(false);
+      await popover.advance(1);
+      expect(popover.modelOpen).toBe(true);
+      expect(popover.trigger.attributes('aria-expanded')).toBe('true');
+      await popover.leave();
+      await popover.hoverContent();
+      await popover.advance(500);
+      expect(popover.modelOpen).toBe(true);
+      await popover.leaveContent();
+      await popover.advance(199);
+      expect(popover.modelOpen).toBe(true);
+      await popover.advance(1);
+      expect(popover.modelOpen).toBe(false);
+      popover.unmount();
+    });
+
+    it('opens on keyboard focus, keeps focus inside the content and closes on Escape back to the trigger', async () => {
+      const popover = PopoverDriver.mount({ props: { trigger: 'hover' } });
+
+      await popover.focusTrigger();
+      expect(popover.modelOpen).toBe(true);
+      await popover.focusContent();
+      expect(popover.modelOpen).toBe(true);
+      await popover.pressEscape();
+      expect(popover.modelOpen).toBe(false);
+      expect(popover.triggerFocused).toBe(true);
+      await popover.focusOutside();
+      await popover.focusTrigger();
+      expect(popover.modelOpen).toBe(true);
+      await popover.focusOutside();
+      expect(popover.modelOpen).toBe(false);
+      popover.unmount();
+    });
+
+    it('toggles on a tap and ignores a mouse press that focuses the trigger', async () => {
+      const popover = PopoverDriver.mount({ props: { trigger: 'hover' } });
+
+      await popover.click();
+      expect(popover.modelOpen).toBe(false);
+      await popover.focusOutside();
+      await popover.tap();
+      expect(popover.modelOpen).toBe(true);
+      await popover.tap();
+      expect(popover.modelOpen).toBe(false);
+      popover.unmount();
+    });
   });
 });

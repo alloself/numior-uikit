@@ -78,6 +78,7 @@ export class DocsSite {
   readonly trigger: Locator;
   readonly toc: Locator;
   readonly article: Locator;
+  readonly main: Locator;
   readonly searchButton: Locator;
   readonly themeButton: Locator;
   readonly languageButton: Locator;
@@ -91,6 +92,7 @@ export class DocsSite {
     this.trigger = page.locator('.nui-sidebar-trigger');
     this.toc = page.locator('nav.nui-toc');
     this.article = page.locator('#docs-content');
+    this.main = page.locator('#docs-layout-content');
     this.searchButton = this.header.getByRole('button', { name: /Поиск|Search/ });
     this.themeButton = this.header.getByRole('button', { name: /^(Тема|Theme)$/ });
     this.languageButton = this.header.getByRole('button', { name: /^(Язык|Language)$/ });

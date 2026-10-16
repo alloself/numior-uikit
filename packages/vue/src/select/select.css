@@ -45,7 +45,7 @@
     outline-color var(--nui-duration-fast) var(--nui-easing);
 }
 .nui-select--clearable .nui-select__value {
-  padding-inline-end: var(--nui-control-height-sm);
+  padding-inline-end: calc(var(--nui-control-height-xs) + var(--nui-space-2));
 }
 .nui-select:not(.nui-select--invalid) .nui-select__trigger:hover:not(:disabled, :focus-visible) {
   border-color: var(--nui-border-strong);
@@ -92,6 +92,12 @@
 }
 .nui-select--open .nui-select__chevron {
   rotate: 180deg;
+}
+.nui-select .nui-select__clear {
+  --_tone-soft-foreground: var(--nui-text-muted);
+}
+.nui-select .nui-select__clear:hover {
+  --_tone-soft-foreground: var(--nui-text);
 }
 .nui-select__clear {
   position: absolute;

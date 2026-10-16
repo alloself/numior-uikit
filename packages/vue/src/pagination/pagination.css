@@ -3,6 +3,7 @@
   --_font-size: var(--nui-control-font-size-md);
 
   box-sizing: border-box;
+  inline-size: 100%;
   container-type: inline-size;
   display: flex;
   flex-wrap: wrap;

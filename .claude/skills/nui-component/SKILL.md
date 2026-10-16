@@ -112,6 +112,17 @@ const {
 - The block root and every part with padding or a border declare `box-sizing: border-box`;
   never rely on a page reset. The playground has none, so a missing declaration shows up in
   e2e sizes and screenshots.
+- A block with `container-type: inline-size` also declares `inline-size: 100%`: size
+  containment drops the intrinsic width, and in a shrink-to-fit parent (a flex row, an
+  auto-width dialog) the block collapses to single letters otherwise.
+- `overscroll-behavior: contain` only on boxes that really scroll (a fixed height); on an
+  `overflow: auto` box without overflow it still swallows the page wheel.
+- The root of a surface that floats over the page (popover, menu, dialog, floating list,
+  toast, command, picker panels) carries `nui-layer`, an elevated card `nui-layer
+  nui-layer--elevated`: the `*-soft` tokens re-derive from that surface instead of the page,
+  so soft fills inside stay visible in the dark theme.
+- Action buttons inside fields (clear, open, toggle) are `NuiButton size="xs"` ghost neutral
+  with `--nui-text-muted` icons that brighten on hover.
 - Every state change has `transition`/`animation` via `--nui-duration-fast|normal|slow` and
   `--nui-easing` (`slow` for layout moves such as stacks and layers); infinite animations
   only slow down under reduced motion, and a sweep (skeleton, indeterminate progress)

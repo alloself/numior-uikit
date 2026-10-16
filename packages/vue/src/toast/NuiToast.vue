@@ -1,7 +1,7 @@
 <template>
   <div
     ref="root"
-    class="nui-toast"
+    class="nui-toast nui-layer"
     :class="[`nui-toast--tone-${toast.tone}`, { 'nui-toast--leaving': toast.leaving }]"
     :role="toast.tone === 'error' ? 'alert' : undefined"
     tabindex="-1"

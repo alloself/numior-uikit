@@ -26,6 +26,15 @@ status: accepted
   `popovertarget`, `aria-expanded`/`aria-controls` (или `aria-describedby` и обработчики
   pointer/focus/keyboard) и function-ref, поэтому триггером служит любой элемент.
   Композиция из частей доступна через экспорт `usePopover`, `useDialog`, `useFloating`.
+- `NuiPopover trigger="hover"` (2026-10-17) — карточка по наведению вместо отдельного
+  HoverCard: слой `manual`, `popovertarget` у триггера нет, открытие через `openDelay` (400),
+  закрытие через `closeDelay` (200) после ухода курсора с триггера и слоя, фокус с клавиатуры
+  открывает сразу, нажатие мышью — нет, касание переключает, Escape закрывает и возвращает
+  фокус на триггер без повторного открытия (`use-hover-trigger.ts`).
+- Геометрия диалога (`position: fixed`, `inset: 0`, `block-size: fit-content`,
+  `flex-direction: column`) задана в базовом правиле, а не под `[open]`: при закрытии
+  `display` ещё держится переходом, а модальные UA-стили `:modal` уже сняты, и диалог
+  растягивался на высоту окна и выстраивал части в строку.
 - Модель `v-model:open` синхронизируется с нативным состоянием: `beforetoggle` пишет
   light dismiss и нативные открытия обратно в модель; `showModal`/`close` и
   `showPopover`/`hidePopover` вызываются из post-flush watcher после монтирования и

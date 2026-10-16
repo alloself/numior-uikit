@@ -4,7 +4,12 @@
   --_seam: var(--nui-space-3);
 
   box-sizing: border-box;
+  position: fixed;
+  inset: 0;
+  flex-direction: column;
   inline-size: min(var(--_width), calc(100% - var(--nui-space-8)));
+  block-size: fit-content;
+  max-inline-size: none;
   max-block-size: calc(100dvh - var(--nui-space-8));
   margin: auto;
   padding: 0;
@@ -54,7 +59,6 @@
 }
 .nui-dialog[open] {
   display: flex;
-  flex-direction: column;
   opacity: 1;
   translate: 0 0;
   scale: 1;

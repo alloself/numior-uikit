@@ -6,6 +6,26 @@ describe('NuiLayout with NuiSidebar', () => {
     vi.useRealTimers();
   });
 
+  it('leads with a skip link that moves focus to the content and can be renamed or left out', async () => {
+    const layout = LayoutDriver.mount();
+
+    expect(layout.skipLink.text()).toBe('Skip to content');
+    expect(layout.skipLink.attributes('href')).toBe('#app-content');
+    await layout.followSkipLink();
+    expect(layout.contentFocused).toBe(true);
+    layout.unmount();
+
+    const renamed = LayoutDriver.mount({ skipLabel: 'К заказам' });
+
+    expect(renamed.skipLink.text()).toBe('К заказам');
+    renamed.unmount();
+
+    const bare = LayoutDriver.mount({ skipLink: false });
+
+    expect(bare.skipLink.exists()).toBe(false);
+    bare.unmount();
+  });
+
   it('starts open, wires the trigger to the sidebar and collapses to a rail that describes its items', async () => {
     const layout = LayoutDriver.mount({ collapsible: 'icon' });
     expect(layout.sidebarLabel).toBe('Navigation');

@@ -25,6 +25,18 @@ const docs: DocsMap = {
         ru: '`auto` закрывается по клику снаружи и Escape, `manual` открывается и закрывается только моделью.',
         en: '`auto` closes on an outside click and Escape, `manual` opens and closes only through the model.',
       },
+      trigger: {
+        ru: '`click` открывает слой нажатием на триггер, `hover` — наведением и фокусом.',
+        en: '`click` opens the layer when the trigger is pressed, `hover` on hover and focus.',
+      },
+      openDelay: {
+        ru: 'Задержка открытия при наведении в миллисекундах.',
+        en: 'Delay before opening on hover, in milliseconds.',
+      },
+      closeDelay: {
+        ru: 'Задержка закрытия после ухода курсора в миллисекундах.',
+        en: 'Delay before closing after the pointer leaves, in milliseconds.',
+      },
     },
     models: { 'v-model:open': { ru: 'Открыт ли слой.', en: 'Whether the layer is open.' } },
     slots: {

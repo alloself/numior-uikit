@@ -9,11 +9,26 @@ export interface NuiPopoverProps {
   padding?: NuiPopoverPadding | undefined;
   anchor?: HTMLElement | null | undefined;
   mode?: PopoverMode | undefined;
+  trigger?: NuiPopoverTrigger | undefined;
+  openDelay?: number | undefined;
+  closeDelay?: number | undefined;
 }
 
 export type NuiPopoverPadding = 'sm' | 'md';
 
-export interface NuiPopoverTriggerAttrs extends PopoverInvokerAttrs {
+export type NuiPopoverTrigger = 'click' | 'hover';
+
+export interface NuiPopoverHoverAttrs {
+  readonly onPointerenter?: (event: PointerEvent) => void;
+  readonly onPointerleave?: (event: PointerEvent) => void;
+  readonly onPointerdown?: (event: PointerEvent) => void;
+  readonly onFocus?: () => void;
+  readonly onFocusout?: (event: FocusEvent) => void;
+}
+
+export interface NuiPopoverTriggerAttrs
+  extends Omit<PopoverInvokerAttrs, 'popovertarget'>, NuiPopoverHoverAttrs {
+  readonly popovertarget?: string;
   readonly ref: NuiTriggerRef;
 }
 

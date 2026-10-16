@@ -13,12 +13,15 @@
     ]"
     :style="{ '--_sidebar-size': sidebarWidth, '--_rail-size': railWidth, '--_end-size': endWidth }"
   >
+    <NuiSkipLink v-if="skipLink" :target="contentId" :label="skipLabel" />
     <slot v-if="header === 'full'" name="header" />
     <div class="nui-layout__row">
       <slot name="sidebar" />
       <div class="nui-layout__body">
         <slot v-if="header === 'inset'" name="header" />
-        <component :is="contentAs" class="nui-layout__content"><slot /></component>
+        <component :is="contentAs" :id="contentId" class="nui-layout__content">
+          <slot />
+        </component>
       </div>
       <div v-if="$slots.end" class="nui-layout__end">
         <slot name="end" />
@@ -30,6 +33,7 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue';
 import { useControlId, useHotkey, useMediaQuery } from '@numior/primitives';
+import NuiSkipLink from '../skip-link/NuiSkipLink.vue';
 import { provideLayout } from './layout-context';
 import type { NuiLayoutProps } from './layout.types';
 
@@ -43,6 +47,8 @@ const {
   shortcut = true,
   sticky = false,
   contentAs = 'main',
+  skipLink = true,
+  skipLabel,
 } = defineProps<NuiLayoutProps>();
 
 const open = defineModel<boolean>('open', { default: true });
@@ -53,6 +59,7 @@ defineSlots<{ sidebar?(): unknown; header?(): unknown; default?(): unknown; end?
 const mobile = useMediaQuery(() => mobileQuery);
 const mounted = ref(false);
 const sidebarId = useControlId(() => (id === undefined ? undefined : `${id}-sidebar`));
+const contentId = useControlId(() => (id === undefined ? undefined : `${id}-content`));
 
 const toggle = (): void => {
   if (mobile.value) {

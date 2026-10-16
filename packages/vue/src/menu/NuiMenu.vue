@@ -4,7 +4,7 @@
     ref="content"
     role="menu"
     tabindex="-1"
-    class="nui-menu"
+    class="nui-menu nui-layer"
     :aria-label="label"
     :aria-labelledby="label === undefined ? triggerId : undefined"
     v-bind="{ ...contentAttrs, ...surfaceAttrs, ...$attrs }"

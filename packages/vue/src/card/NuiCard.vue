@@ -4,7 +4,10 @@
     :class="[
       `nui-card--variant-${variant}`,
       `nui-card--padding-${padding}`,
-      { 'nui-card--interactive': action !== undefined },
+      {
+        'nui-card--interactive': action !== undefined,
+        'nui-layer nui-layer--elevated': variant === 'elevated',
+      },
     ]"
   >
     <NuiCardHeader v-if="title || description">

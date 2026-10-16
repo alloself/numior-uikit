@@ -56,8 +56,14 @@
   flex: none;
   margin-inline-start: auto;
 }
-.nui-time-field--open .nui-time-field__clock {
-  color: var(--nui-primary);
+.nui-time-field .nui-time-field__clock {
+  --_tone-soft-foreground: var(--nui-text-muted);
+}
+.nui-time-field .nui-time-field__clock:hover {
+  --_tone-soft-foreground: var(--nui-text);
+}
+.nui-time-field.nui-time-field--open .nui-time-field__clock {
+  --_tone-soft-foreground: var(--nui-primary);
 }
 .nui-time-field--disabled .nui-time-field__segment {
   cursor: not-allowed;

@@ -61,7 +61,7 @@
       <NuiButton
         variant="ghost"
         tone="neutral"
-        size="sm"
+        size="xs"
         icon-only
         class="nui-time-field__clock"
         :aria-label="clockText"
@@ -71,7 +71,7 @@
       />
       <div
         :ref="setPanel"
-        class="nui-time-field__panel"
+        class="nui-time-field__panel nui-layer"
         role="group"
         :aria-label="clockText"
         v-bind="control.contentAttrs.value"

@@ -1,5 +1,5 @@
 export { default as NuiButton } from './button/NuiButton.vue';
-export type { NuiButtonProps, NuiButtonVariant } from './button/button.types';
+export type { NuiButtonProps, NuiButtonSize, NuiButtonVariant } from './button/button.types';
 export { default as NuiLink } from './link/NuiLink.vue';
 export { default as NuiSeparator } from './separator/NuiSeparator.vue';
 export type { NuiSeparatorOrientation, NuiSeparatorProps } from './separator/separator.types';
@@ -157,8 +157,10 @@ export { default as NuiDrawer } from './drawer/NuiDrawer.vue';
 export type { NuiDrawerProps, NuiDrawerSide, NuiDrawerSize } from './drawer/drawer.types';
 export { default as NuiPopover } from './popover/NuiPopover.vue';
 export type {
+  NuiPopoverHoverAttrs,
   NuiPopoverPadding,
   NuiPopoverProps,
+  NuiPopoverTrigger,
   NuiPopoverTriggerAttrs,
   NuiPopoverTriggerSlot,
 } from './popover/popover.types';
