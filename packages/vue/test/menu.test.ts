@@ -1,3 +1,4 @@
+import { flushPromises } from '@vue/test-utils';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { NuiMenuEntry } from '../src';
 import { MenuDriver } from './drivers/menu';
@@ -20,6 +21,16 @@ describe('NuiMenu', () => {
     expect(menu.triggerFocused).toBe(true);
     await menu.pressTrigger('ArrowUp');
     expect(menu.focusedLabel).toBe('Delete');
+    menu.unmount();
+  });
+
+  it('fits its height into the room the viewport has so a long menu scrolls', async () => {
+    const menu = MenuDriver.mount({ parts: true });
+
+    await menu.pressTrigger('ArrowDown');
+    await flushPromises();
+
+    expect(menu.menu.element.style.getPropertyValue('max-block-size')).toMatch(/px$/u);
     menu.unmount();
   });
 

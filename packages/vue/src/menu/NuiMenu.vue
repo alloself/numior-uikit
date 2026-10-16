@@ -61,6 +61,7 @@ const {
   content: contentElement,
   placement: () => placement,
   offset: () => offset,
+  size: { fitHeight: true },
   loop: () => loop,
   typeahead: () => typeahead,
   closeOnSelect: () => closeOnSelect,
