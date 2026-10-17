@@ -14,8 +14,14 @@ export interface BlockDecoration {
   readonly class: string;
 }
 
+export interface WidgetDecoration {
+  readonly pos: number;
+  readonly key: string;
+}
+
 export interface DecorationSet {
   readonly decorations: readonly InlineDecoration[];
   readonly blocks: readonly BlockDecoration[];
+  readonly widgets: readonly WidgetDecoration[];
   map(mapping: Mappable): DecorationSet;
 }

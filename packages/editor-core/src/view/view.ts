@@ -10,6 +10,7 @@ import { attachInput, runIntent } from './input';
 import { domAtPos, posAtDOM } from './positions';
 import { ALL_CLASS, createSelectionSync } from './selection-sync';
 import type { EditorView, EditorViewOptions } from './view.types';
+import { placeWidgets } from './widgets';
 
 const ROOT_ATTRS = ['contenteditable', 'role', 'aria-multiline', 'translate'] as const;
 
@@ -21,6 +22,8 @@ const prepareRoot = (root: HTMLElement, editable: boolean): void => {
   root.style.setProperty('white-space', 'pre-wrap');
   root.style.setProperty('overflow-wrap', 'break-word');
 };
+
+const noWidget = (): undefined => undefined;
 
 const releaseRoot = (root: HTMLElement): void => {
   root.replaceChildren();
@@ -42,12 +45,17 @@ export const createEditorView = (root: HTMLElement, options: EditorViewOptions):
     byId: new Map(),
     chunks: new WeakSet(),
     nodeViews: options.nodeViews ?? {},
+    widget: options.widget ?? noWidget,
+    widgets: new WeakSet(),
+    placed: new Map(),
     decorations: blockDecorations(state),
   };
 
   prepareRoot(root, options.editable ?? true);
 
   const rootDesc = createRootDesc(context, root, state.doc.root);
+
+  placeWidgets(context, state);
 
   const dispatch = (tr: Transaction, source?: InputSource): void => {
     if (source !== undefined) {
@@ -71,9 +79,15 @@ export const createEditorView = (root: HTMLElement, options: EditorViewOptions):
 
   const sync = createSelectionSync(host);
 
-  const watch = createDomWatch(host, (intent) => {
-    runIntent(host, intent);
-  });
+  const watch = createDomWatch(
+    host,
+    (intent) => {
+      runIntent(host, intent);
+    },
+    () => {
+      placeWidgets(context, state);
+    },
+  );
 
   const update = (next: EditorState): void => {
     if (next.doc.schema !== context.schema) {
@@ -92,6 +106,7 @@ export const createEditorView = (root: HTMLElement, options: EditorViewOptions):
       }
     }
     state = next;
+    placeWidgets(context, next);
     watch.ignoreOwn();
     sync.mark();
     sync.write();
@@ -140,6 +155,7 @@ export const createEditorView = (root: HTMLElement, options: EditorViewOptions):
         desc.view?.destroy();
       }
       context.byId.clear();
+      context.placed.clear();
       releaseRoot(root);
     },
   };

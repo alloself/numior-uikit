@@ -274,6 +274,7 @@ export const intentCommand = (intent: InputIntent): Command => {
     case 'paste':
       return pasteCommand(intent.text, intent.html);
     case 'history':
+    case 'files':
       return () => false;
   }
 };

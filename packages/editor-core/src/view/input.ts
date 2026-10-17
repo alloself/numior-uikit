@@ -108,6 +108,15 @@ const deletion = (event: InputEvent, host: ViewHost): InputIntent | undefined =>
 const pasted = (text: string, html: string | undefined): InputIntent | undefined =>
   text === '' && (html ?? '') === '' ? undefined : { kind: 'paste', text, html };
 
+const transferred = (data: DataTransfer | null): InputIntent | undefined => {
+  const text = data?.getData('text/plain') ?? '';
+  const files = [...(data?.files ?? [])];
+
+  return files.length > 0 && text === ''
+    ? { kind: 'files', files }
+    : pasted(text, data?.getData('text/html'));
+};
+
 const insertion = (event: InputEvent, host: ViewHost): InputIntent | undefined => {
   const text = textOf(event);
   const range = event.inputType === 'insertReplacementText' ? targetRange(event, host) : undefined;
@@ -144,6 +153,7 @@ const sourceOf = (intent: InputIntent): InputSource => {
     case 'delete':
       return 'delete';
     case 'paste':
+    case 'files':
       return 'paste';
     default:
       return 'key';
@@ -291,10 +301,7 @@ export const attachInput = (host: ViewHost, parts: InputParts): (() => void) => 
   };
 
   const onPaste = (event: ClipboardEvent): void => {
-    const intent = pasted(
-      event.clipboardData?.getData('text/plain') ?? '',
-      event.clipboardData?.getData('text/html'),
-    );
+    const intent = transferred(event.clipboardData);
 
     event.preventDefault();
     parts.sync.read();
@@ -322,10 +329,7 @@ export const attachInput = (host: ViewHost, parts: InputParts): (() => void) => 
   };
 
   const onDrop = (event: DragEvent): void => {
-    const intent = pasted(
-      event.dataTransfer?.getData('text/plain') ?? '',
-      event.dataTransfer?.getData('text/html'),
-    );
+    const intent = transferred(event.dataTransfer);
 
     const pos = posAtCoords(host, event.clientX, event.clientY);
     const state = host.state();

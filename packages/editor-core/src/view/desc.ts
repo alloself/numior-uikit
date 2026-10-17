@@ -42,6 +42,9 @@ export interface ViewContext {
   readonly byId: Map<NodeId, ElementDesc>;
   readonly chunks: WeakSet<Node>;
   readonly nodeViews: Readonly<Record<string, NodeViewFactory>>;
+  readonly widget: (key: string) => HTMLElement | undefined;
+  readonly widgets: WeakSet<Node>;
+  readonly placed: Map<string, HTMLElement>;
   decorations: BlockDecorations;
 }
 
@@ -352,8 +355,18 @@ export const widgetOwner = (
   return undefined;
 };
 
+const insideWidget = (context: ViewContext, target: EventTarget | null): boolean => {
+  for (let current = target instanceof Node ? target : null; current !== null;) {
+    if (context.widgets.has(current)) {
+      return true;
+    }
+    current = current.parentNode;
+  }
+  return false;
+};
+
 export const widgetAround = (context: ViewContext, target: EventTarget | null): boolean =>
-  widgetOwner(context, target) !== undefined;
+  widgetOwner(context, target) !== undefined || insideWidget(context, target);
 
 const forget = (context: ViewContext, desc: Desc): void => {
   if (desc.kind === 'text') {

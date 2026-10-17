@@ -19,6 +19,7 @@ export type InputIntent =
   | { readonly kind: 'format'; readonly mark: string }
   | { readonly kind: 'history'; readonly action: 'undo' | 'redo' }
   | { readonly kind: 'paste'; readonly text: string; readonly html?: string | undefined }
+  | { readonly kind: 'files'; readonly files: readonly File[] }
   | {
       readonly kind: 'compose';
       readonly text: string;

@@ -116,6 +116,7 @@ export class EditorViewDriver {
     schema: Schema = fixtureSchema,
     plugins: readonly Plugin[] = [],
     nodeViews: Readonly<Record<string, NodeViewFactory>> = {},
+    widget?: (key: string) => HTMLElement | undefined,
   ): EditorViewDriver {
     const host = document.createElement('div');
 
@@ -124,7 +125,7 @@ export class EditorViewDriver {
 
     const state = createState({ doc: createDoc(schema, root), plugins });
 
-    return new EditorViewDriver(createEditorView(host, { state, nodeViews }), host);
+    return new EditorViewDriver(createEditorView(host, { state, nodeViews, widget }), host);
   }
 
   widgetOf(id: NodeId): HTMLElement {
@@ -249,6 +250,16 @@ export class EditorViewDriver {
 
     Object.defineProperty(event, 'clipboardData', {
       value: { getData: (format: string) => data[format] ?? '' },
+    });
+
+    return !this.host.dispatchEvent(event);
+  }
+
+  pasteFiles(files: readonly File[], text = ''): boolean {
+    const event = new Event('paste', { bubbles: true, cancelable: true });
+
+    Object.defineProperty(event, 'clipboardData', {
+      value: { files, getData: (format: string) => (format === 'text/plain' ? text : '') },
     });
 
     return !this.host.dispatchEvent(event);

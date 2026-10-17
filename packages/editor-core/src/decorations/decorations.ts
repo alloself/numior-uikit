@@ -1,6 +1,11 @@
 import type { Mappable } from '../transform/mapping.types';
 import type { NodeId } from '../model/node.types';
-import type { BlockDecoration, DecorationSet, InlineDecoration } from './decorations.types';
+import type {
+  BlockDecoration,
+  DecorationSet,
+  InlineDecoration,
+  WidgetDecoration,
+} from './decorations.types';
 
 export const inlineDecoration = (
   from: number,
@@ -19,6 +24,8 @@ export const blockDecoration = (
   className: string,
 ): BlockDecoration => ({ block, from, to, class: className });
 
+export const widgetDecoration = (pos: number, key: string): WidgetDecoration => ({ pos, key });
+
 const byStart = (left: InlineDecoration, right: InlineDecoration): number =>
   left.from - right.from || left.to - right.to;
 
@@ -34,6 +41,7 @@ const visible = (decoration: InlineDecoration): boolean =>
 export const decorationSet = (
   decorations: readonly InlineDecoration[],
   blocks: readonly BlockDecoration[] = [],
+  widgets: readonly WidgetDecoration[] = [],
 ): DecorationSet => {
   const sorted = decorations.filter(visible).toSorted(byStart);
   const kept = blocks.filter(visible);
@@ -41,10 +49,12 @@ export const decorationSet = (
   return {
     decorations: sorted,
     blocks: kept,
+    widgets,
     map: (mapping) =>
       decorationSet(
         sorted.map((decoration) => mapped(decoration, mapping)),
         kept,
+        widgets.map((widget) => ({ ...widget, pos: mapping.map(widget.pos, -1) })),
       ),
   };
 };

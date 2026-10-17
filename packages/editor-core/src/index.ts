@@ -3,11 +3,13 @@ export {
   decorationSet,
   emptyDecorations,
   inlineDecoration,
+  widgetDecoration,
 } from './decorations/decorations';
 export type {
   BlockDecoration,
   DecorationSet,
   InlineDecoration,
+  WidgetDecoration,
 } from './decorations/decorations.types';
 export { createDoc } from './doc/doc';
 export type { Doc, NodeVisitor, ResolvedPos, Slice } from './doc/doc.types';
@@ -221,3 +223,13 @@ export type {
   PluginStateSpec,
   Transaction,
 } from './state/state.types';
+export {
+  dropUploads,
+  finishUpload,
+  pendingUploads,
+  placeBlock,
+  startUploads,
+  uploadPlace,
+  uploadsOf,
+} from './uploads/uploads';
+export type { PendingUpload } from './uploads/uploads.types';

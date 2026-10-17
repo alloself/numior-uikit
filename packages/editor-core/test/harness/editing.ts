@@ -10,6 +10,7 @@ import {
   keymap,
   markdownRules,
   textSelection,
+  type Command,
   type EditorState,
   type ElementNode,
   type InputIntent,
@@ -30,6 +31,7 @@ const SOURCES: Readonly<Record<InputIntent['kind'], InputSource>> = {
   format: 'key',
   history: 'key',
   paste: 'paste',
+  files: 'paste',
   compose: 'compose',
 };
 
@@ -148,6 +150,10 @@ export class EditingHarness {
 
   select(selection: Selection): void {
     this.dispatcher('pointer')(this.current.tr.setSelection(selection));
+  }
+
+  run(command: Command): boolean {
+    return command(this.current, this.dispatcher('key'));
   }
 
   change(edit: (tr: Transaction) => Transaction): void {

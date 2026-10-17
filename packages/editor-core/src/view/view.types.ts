@@ -27,6 +27,7 @@ export interface EditorViewOptions {
   readonly editable?: boolean | undefined;
   readonly dispatch?: ((tr: Transaction) => void) | undefined;
   readonly nodeViews?: Readonly<Record<string, NodeViewFactory>> | undefined;
+  readonly widget?: ((key: string) => HTMLElement | undefined) | undefined;
 }
 
 export interface EditorView {

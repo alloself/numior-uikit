@@ -121,7 +121,11 @@ const intentOf = (
   };
 };
 
-export const createDomWatch = (host: ViewHost, apply: (intent: InputIntent) => void): DomWatch => {
+export const createDomWatch = (
+  host: ViewHost,
+  apply: (intent: InputIntent) => void,
+  redrawn: () => void,
+): DomWatch => {
   const pending = new Set<ElementDesc>();
   let composing = false;
   let observer: MutationObserver | undefined;
@@ -139,6 +143,7 @@ export const createDomWatch = (host: ViewHost, apply: (intent: InputIntent) => v
           : intentOf(host.context, desc, readInline(host.context, content));
 
       redrawContent(host.context, desc);
+      redrawn();
       observer?.takeRecords();
       if (intent !== undefined) {
         apply(intent);
