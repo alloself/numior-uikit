@@ -26,6 +26,11 @@
       "types": "./dist/code/index.d.ts",
       "import": "./dist/code.js"
     },
+    "./media": {
+      "@numior/source": "./src/media/index.ts",
+      "types": "./dist/media/index.d.ts",
+      "import": "./dist/media.js"
+    },
     "./styles.css": {
       "@numior/source": "./src/styles.css",
       "default": "./dist/styles.css"

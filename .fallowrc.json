@@ -12,6 +12,7 @@
     "packages/content/src/index.ts",
     "packages/content/src/table/index.ts",
     "packages/content/src/code/index.ts",
+    "packages/content/src/media/index.ts",
     "packages/editor-vue/src/index.ts",
     "apps/playground/src/tailwind.css",
     "scripts/vite-package-assets.ts",
@@ -98,6 +99,10 @@
         "patterns": ["packages/content/src/code/**", "packages/content/test/code/**"]
       },
       {
+        "name": "content-media",
+        "patterns": ["packages/content/src/media/**", "packages/content/test/media/**"]
+      },
+      {
         "name": "content",
         "patterns": ["packages/content/**"]
       },
@@ -156,6 +161,10 @@
         "allow": ["tokens", "primitives", "vue", "editor-core", "content", "content-code"]
       },
       {
+        "from": "content-media",
+        "allow": ["tokens", "primitives", "vue", "editor-core", "content", "content-media"]
+      },
+      {
         "from": "content",
         "allow": ["tokens", "editor-core", "content"]
       },
@@ -190,6 +199,7 @@
           "content",
           "content-table",
           "content-code",
+          "content-media",
           "editor-vue",
           "nuxt",
           "apps"
@@ -208,6 +218,7 @@
           "content",
           "content-table",
           "content-code",
+          "content-media",
           "editor-vue",
           "nuxt",
           "apps",

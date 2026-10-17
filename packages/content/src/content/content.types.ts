@@ -14,7 +14,7 @@ export type NuiContentColour =
   | 'pink'
   | 'red';
 
-export type NuiContentAlign = 'center' | 'start' | 'end' | 'wide';
+export type NuiContentAlign = 'start' | 'center' | 'end';
 
 export type NuiContentSize = 'sm' | 'md' | 'lg';
 

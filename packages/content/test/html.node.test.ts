@@ -61,7 +61,7 @@ describe('content HTML', () => {
       blocksOf(
         '<ul class="contains-task-list"><li class="task-list-item"><input type="checkbox" checked disabled> done</li><li><input type="checkbox"> open</li></ul>' +
           '<details open><summary>More</summary><p>Body</p></details>' +
-          '<figure><img src="/a.png" alt="A" width="320"><figcaption> Cap </figcaption></figure>' +
+          '<figure style="width: 50%"><img src="/a.png" alt="A" width="320"><figcaption> Cap </figcaption></figure>' +
           '<h5>Deep</h5><pre><code class="language-ts">let x</code></pre><mark>hi</mark>',
       ),
     ).toEqual([
@@ -79,7 +79,7 @@ describe('content HTML', () => {
       },
       {
         type: 'image',
-        attrs: { src: '/a.png', alt: 'A', caption: 'Cap', width: 320, align: 'center' },
+        attrs: { src: '/a.png', alt: 'A', caption: 'Cap', width: 0.5, align: 'center' },
       },
       { type: 'heading', attrs: { level: 3 }, content: [{ text: 'Deep' }] },
       { type: 'code_block', attrs: { language: 'ts' }, content: [{ text: 'let x' }] },

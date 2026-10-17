@@ -28,13 +28,23 @@ export const CONTENT_COLOURS: readonly NuiContentColour[] = [
   'red',
 ];
 
-const ALIGNS: readonly NuiContentAlign[] = ['center', 'start', 'end', 'wide'];
+export const CONTENT_ALIGNS: readonly NuiContentAlign[] = ['start', 'center', 'end'];
+
+export const IMAGE_WIDTH = { min: 0.2, max: 1 } as const;
 
 const SCHEME = /^([a-z][\d+.a-z-]*):/i;
 
 const LINK_SCHEMES = new Set(['http', 'https', 'mailto', 'tel']);
 
 const IMAGE_SCHEMES = new Set(['http', 'https', 'blob']);
+
+const FILE_SCHEMES = new Set(['http', 'https']);
+
+const PERCENT = /^\s*(\d+(?:\.\d+)?)%\s*$/u;
+
+const BYTE_UNITS = ['byte', 'kilobyte', 'megabyte', 'gigabyte', 'terabyte'] as const;
+
+const BYTE_STEP = 1024;
 
 const DATA_IMAGE = /^data:image\/(?:png|jpeg|gif|webp|avif);/i;
 
@@ -84,6 +94,22 @@ const isImageSource = (value: AttrValue): boolean => {
 
   return scheme === undefined || IMAGE_SCHEMES.has(scheme) || DATA_IMAGE.test(value.trim());
 };
+
+const isFileLink = (value: AttrValue): boolean => {
+  if (typeof value !== 'string' || value.trim() === '') {
+    return false;
+  }
+  const scheme = schemeOf(value);
+
+  return scheme === undefined || FILE_SCHEMES.has(scheme);
+};
+
+const isWidth = (value: AttrValue): boolean =>
+  value === null ||
+  (typeof value === 'number' && value >= IMAGE_WIDTH.min && value <= IMAGE_WIDTH.max);
+
+const isSize = (value: AttrValue): boolean =>
+  value === null || (typeof value === 'number' && Number.isInteger(value) && value >= 0);
 
 const isLanguage = (value: AttrValue): boolean =>
   value === null || (typeof value === 'string' && LANGUAGE.test(value));
@@ -142,6 +168,21 @@ const languageOf = (pre: HtmlElement): ParsedAttrs => ({
   language: pre.classWith('language-') ?? pre.find('code')?.classWith('language-') ?? null,
 });
 
+const shareIn = (element: HtmlElement | undefined): number | null => {
+  const match = PERCENT.exec(element?.style('inline-size') ?? element?.style('width') ?? '');
+  const share = match?.[1] === undefined ? Number.NaN : Number.parseFloat(match[1]) / 100;
+
+  return Number.isFinite(share)
+    ? Math.min(IMAGE_WIDTH.max, Math.max(IMAGE_WIDTH.min, share))
+    : null;
+};
+
+const alignIn = (figure: HtmlElement | undefined): string => {
+  const align = figure?.classWith('nui-content__image--align-');
+
+  return align !== undefined && CONTENT_ALIGNS.some((known) => known === align) ? align : 'center';
+};
+
 const imageAttrs = (image: HtmlElement | undefined, figure?: HtmlElement): ParsedAttrs => {
   const src = image?.attr('src');
 
@@ -151,10 +192,86 @@ const imageAttrs = (image: HtmlElement | undefined, figure?: HtmlElement): Parse
   return {
     src,
     alt: image.attr('alt') ?? '',
-    width: countOf(image.attr('width')) ?? null,
+    width: shareIn(figure) ?? shareIn(image),
     caption: figure?.find('figcaption')?.text().trim() ?? '',
-    align: figure?.classWith('nui-content__image--align-') ?? 'center',
+    align: alignIn(figure),
   };
+};
+
+const nameIn = (link: HtmlElement): string =>
+  (
+    link.children.find(
+      (child): child is HtmlElement =>
+        child.kind === 'element' && child.hasClass('nui-content__file-name'),
+    ) ?? link
+  )
+    .text()
+    .trim();
+
+const fileAttrs = (link: HtmlElement): ParsedAttrs => {
+  const url = link.attr('href');
+  const size = Number.parseInt(link.attr('data-size') ?? '', 10);
+
+  return link.hasClass('nui-content__file') && url !== undefined
+    ? {
+        url,
+        name: link.attr('download') ?? nameIn(link),
+        size: Number.isInteger(size) && size >= 0 ? size : null,
+        type: link.attr('type') ?? '',
+      }
+    : false;
+};
+
+export type NuiContentFileKind =
+  | 'file'
+  | 'image'
+  | 'video'
+  | 'audio'
+  | 'pdf'
+  | 'archive'
+  | 'sheet'
+  | 'text';
+
+const KIND_BY_EXTENSION: Readonly<Record<string, NuiContentFileKind>> = {
+  pdf: 'pdf',
+  zip: 'archive',
+  rar: 'archive',
+  '7z': 'archive',
+  gz: 'archive',
+  tar: 'archive',
+  xls: 'sheet',
+  xlsx: 'sheet',
+  csv: 'sheet',
+  ods: 'sheet',
+  doc: 'text',
+  docx: 'text',
+  txt: 'text',
+  md: 'text',
+  rtf: 'text',
+  odt: 'text',
+};
+
+export const fileKindOf = (type: string, name: string): NuiContentFileKind => {
+  const family = type.split('/')[0] ?? '';
+
+  if (family === 'image' || family === 'video' || family === 'audio') {
+    return family;
+  }
+  return KIND_BY_EXTENSION[name.split('.').at(-1)?.toLowerCase() ?? ''] ?? 'file';
+};
+
+const fileSizeText = (bytes: number, locale = 'en'): string => {
+  const exponent = Math.min(
+    BYTE_UNITS.length - 1,
+    Math.floor(Math.log(Math.max(bytes, 1)) / Math.log(BYTE_STEP)),
+  );
+
+  return new Intl.NumberFormat(locale, {
+    style: 'unit',
+    unit: BYTE_UNITS[exponent],
+    unitDisplay: 'short',
+    maximumFractionDigits: exponent === 0 ? 0 : 1,
+  }).format(bytes / BYTE_STEP ** exponent);
 };
 
 const mentionAttrs = (span: HtmlElement): ParsedAttrs => {
@@ -201,24 +318,56 @@ const firstText = (node: ElementNode): string => {
   return first?.kind === 'element' ? inlineText(first).replaceAll('￼', '').trim() : '';
 };
 
+export const imageWidthStyle = (width: AttrValue | undefined): string | null =>
+  typeof width === 'number' ? `inline-size: ${String(Math.round(width * 1000) / 10)}%;` : null;
+
 const renderImage = (node: ElementNode) => {
   const caption = textOf(node.attrs.caption);
 
-  return renderTag('figure', { class: part('image', `align-${textOf(node.attrs.align)}`) }, [
-    renderTag('img', {
-      class: part('picture'),
-      src: textOf(node.attrs.src),
-      alt: textOf(node.attrs.alt),
-      width: node.attrs.width,
-      loading: 'lazy',
-    }),
-    ...(caption === '' ? [] : [renderTag('figcaption', { class: part('caption') }, [caption])]),
-  ]);
+  return renderTag(
+    'figure',
+    {
+      class: part('image', `align-${textOf(node.attrs.align)}`),
+      style: imageWidthStyle(node.attrs.width),
+    },
+    [
+      renderTag('img', {
+        class: part('picture'),
+        src: textOf(node.attrs.src),
+        alt: textOf(node.attrs.alt),
+        loading: 'lazy',
+      }),
+      ...(caption === '' ? [] : [renderTag('figcaption', { class: part('caption') }, [caption])]),
+    ],
+  );
+};
+
+const renderFile = (node: ElementNode) => {
+  const name = textOf(node.attrs.name);
+  const size = node.attrs.size;
+
+  return renderTag(
+    'a',
+    {
+      class: part('file', `kind-${fileKindOf(textOf(node.attrs.type), name)}`),
+      href: textOf(node.attrs.url),
+      download: name,
+      type: textOf(node.attrs.type) === '' ? null : textOf(node.attrs.type),
+      'data-size': typeof size === 'number' ? String(size) : null,
+    },
+    [
+      renderTag('span', { class: part('file-icon'), 'aria-hidden': 'true' }),
+      renderTag('span', { class: part('file-name') }, [name]),
+      ...(typeof size === 'number'
+        ? [renderTag('span', { class: part('file-size') }, [fileSizeText(size)])]
+        : []),
+    ],
+  );
 };
 
 const CONTENT_SPEC: SchemaSpec = {
   name: 'numior-content',
-  version: 2,
+  version: 3,
   nodes: {
     doc: { content: 'block+' },
     paragraph: {
@@ -370,14 +519,25 @@ const CONTENT_SPEC: SchemaSpec = {
         src: { verify: isImageSource },
         alt: { default: '', verify: isText },
         caption: { default: '', verify: isText },
-        width: { default: null, verify: (value) => value === null || isCount(value) },
-        align: { default: 'center', verify: oneOf(ALIGNS) },
+        width: { default: null, verify: isWidth },
+        align: { default: 'center', verify: oneOf(CONTENT_ALIGNS) },
       },
       render: renderImage,
       parse: [
         { tag: 'figure', attrs: (figure) => imageAttrs(figure.find('img'), figure) },
         { tag: 'img', attrs: (image) => imageAttrs(image) },
       ],
+    },
+    file: {
+      group: 'block',
+      attrs: {
+        url: { verify: isFileLink },
+        name: { default: '', verify: isText },
+        size: { default: null, verify: isSize },
+        type: { default: '', verify: isText },
+      },
+      render: renderFile,
+      parse: [{ tag: 'a', priority: 1, attrs: fileAttrs }],
     },
     columns: {
       group: 'block',

@@ -6,7 +6,7 @@ import { EVERY_BLOCK_MARKUP, docOf, everyBlock, node } from './support/documents
 
 const stamped = (blocks: readonly unknown[]) => ({
   format: 1,
-  schema: { name: 'numior-content', version: 2 },
+  schema: { name: 'numior-content', version: 3 },
   root: { id: 'r', type: 'doc', content: blocks },
 });
 
@@ -24,7 +24,17 @@ const linked = (href: string) => ({
   content: [{ text: 'x', marks: [{ type: 'link', attrs: { href } }] }],
 });
 
-const image = (src: string) => ({ id: `image ${src}`, type: 'image', attrs: { src } });
+const image = (src: string, attrs: object = {}) => ({
+  id: `image ${src}`,
+  type: 'image',
+  attrs: { src, ...attrs },
+});
+
+const file = (url: string, attrs: object = {}) => ({
+  id: `file ${url}`,
+  type: 'file',
+  attrs: { url, ...attrs },
+});
 
 describe('content schema', () => {
   it('holds the generated ten-thousand-block mix of the editor fixtures', () => {
@@ -67,5 +77,28 @@ describe('content schema', () => {
         image(''),
       ]),
     ).toEqual(['href', 'href', 'src', 'src', 'src']);
+  });
+
+  it('keeps files on web or relative links and image widths inside a fifth to the whole line', () => {
+    expect(
+      attrIssues([
+        file('https://numior.test/a.pdf', { name: 'a.pdf', size: 10, type: 'application/pdf' }),
+        file('files/a.zip'),
+        image('a.png', { width: 0.2, align: 'start' }),
+        image('b.png', { width: 1, align: 'end' }),
+      ]),
+    ).toEqual([]);
+
+    expect(
+      attrIssues([
+        file('javascript:alert(1)'),
+        file('data:application/pdf;base64,AAAA'),
+        file('blob:https://numior.test/1'),
+        file('a.pdf', { size: -1 }),
+        image('a.png', { width: 0.1 }),
+        image('b.png', { width: 320 }),
+        image('c.png', { align: 'wide' }),
+      ]),
+    ).toEqual(['url', 'url', 'url', 'size', 'width', 'width', 'align']);
   });
 });

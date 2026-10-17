@@ -294,6 +294,14 @@ assert.match(
   'content/code must keep @numior/vue external',
 );
 
+const contentMediaView = await readFile('packages/content/dist/media.js', 'utf8');
+
+assert.match(
+  contentMediaView,
+  /from ['"]@numior\/vue['"]/,
+  'content/media must keep @numior/vue external',
+);
+
 const editorVueCode = await importBuild('editor-vue', [
   'NuiEditor',
   'defineBlock',

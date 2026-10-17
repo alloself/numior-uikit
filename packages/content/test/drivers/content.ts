@@ -142,6 +142,47 @@ export class ContentDriver {
     await nextTick();
   }
 
+  get figures(): readonly string[] {
+    return this.wrapper
+      .findAll('figure')
+      .map(
+        (figure) =>
+          `${figure.classes().join(' ')}|${figure.attributes('style') ?? ''}|${figure.find('.nui-content__zoom').attributes('aria-label') ?? ''}`,
+      );
+  }
+
+  get viewer(): string | undefined {
+    const dialog = document.querySelector('.nui-content__viewer');
+
+    return dialog === null
+      ? undefined
+      : `${dialog.hasAttribute('open') ? 'open' : 'closed'}:${dialog.querySelector('.nui-content__lightbox')?.getAttribute('src') ?? ''}`;
+  }
+
+  async zoom(nth = 0): Promise<void> {
+    await this.wrapper.findAll('.nui-content__zoom')[nth]?.trigger('click');
+    await flushPromises();
+  }
+
+  async closeViewer(): Promise<void> {
+    const close = document.querySelector('.nui-content__viewer-close');
+
+    if (!(close instanceof HTMLElement)) {
+      throw new Error('The image viewer is not open');
+    }
+    close.click();
+    await flushPromises();
+  }
+
+  get files(): readonly string[] {
+    return this.wrapper
+      .findAll('.nui-content__file')
+      .map(
+        (file) =>
+          `${file.classes().join(' ')}|${file.attributes('href') ?? ''}|${file.attributes('download') ?? ''}|${file.text()}`,
+      );
+  }
+
   async show(document: Doc | DocJSON): Promise<void> {
     await this.wrapper.setProps({ document });
   }

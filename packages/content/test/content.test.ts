@@ -33,7 +33,9 @@ describe('NuiContent', () => {
     const doc = everyBlock();
     const view = mounted({ document: doc });
 
-    expect(view.markup).toBe(renderContent(doc).replaceAll(/ (checked|disabled)(?= )/gu, ' $1=""'));
+    expect(view.markup).toBe(
+      renderContent(doc).replaceAll(/ (checked|disabled|alt)(?= )/gu, ' $1=""'),
+    );
 
     expect(view.checks).toEqual([true]);
   });
@@ -66,7 +68,7 @@ describe('NuiContent', () => {
       [
         {
           kind: 'schema',
-          expected: { name: 'numior-content', version: 2 },
+          expected: { name: 'numior-content', version: 3 },
           found: { name: 'other', version: 1 },
         },
       ],

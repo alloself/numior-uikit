@@ -1,10 +1,15 @@
 export { default as NuiContent } from './content/NuiContent.vue';
 export {
+  CONTENT_ALIGNS,
   CONTENT_COLOURS,
   CONTENT_TONES,
+  IMAGE_WIDTH,
   contentSchema,
   extendContentSchema,
+  fileKindOf,
+  imageWidthStyle,
 } from './content/content-schema';
+export type { NuiContentFileKind } from './content/content-schema';
 export { contentTableData } from './content/content-table';
 export { filterAttrs } from './content/table-view';
 export {
