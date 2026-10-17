@@ -54,6 +54,34 @@ export class EditorSection {
     );
   }
 
+  async caretAtEndOf(block: Locator): Promise<void> {
+    await block.click();
+
+    await block.evaluate((element) => {
+      const range = document.createRange();
+
+      range.selectNodeContents(element);
+      range.collapse(false);
+      document.getSelection()?.removeAllRanges();
+      document.getSelection()?.addRange(range);
+    });
+  }
+
+  async clickBelowContent(): Promise<void> {
+    const last = this.content.locator(':scope > .nui-editor__chunk > *').last();
+
+    await last.evaluate((block) => {
+      globalThis.scrollBy(0, block.getBoundingClientRect().bottom - globalThis.innerHeight / 2);
+    });
+
+    const box = await last.boundingBox();
+
+    if (box === null) {
+      throw new Error('The editor has no last block');
+    }
+    await this.page.mouse.click(box.x + 24, box.y + box.height + 16);
+  }
+
   previewTexts(): Promise<string[]> {
     return this.preview.evaluate((root) =>
       [...root.children].map((child) => child.textContent ?? ''),

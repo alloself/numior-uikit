@@ -580,6 +580,36 @@ test.describe('editor', () => {
     expect(await editor.gripBeside(table)).toBe(true);
   });
 
+  test('writes after the last blocks and leaves a toggle from its empty last line', async ({
+    page,
+  }) => {
+    const { editor } = await openEditor(page);
+    const file = editor.file('Заметки к релизу');
+
+    await file.scrollIntoViewIfNeeded();
+    await file.click();
+    await page.keyboard.press('Enter');
+    await page.keyboard.type('после файла');
+    await expect(file.locator('xpath=following-sibling::*[1]')).toHaveText('после файла');
+
+    await editor.clickBelowContent();
+    await page.keyboard.type('в самом конце');
+    await expect.poll(async () => (await editor.blockTexts()).at(-1)).toBe('в самом конце');
+
+    await editor.toggleButton().first().click();
+
+    const body = editor.toggle().first().locator('p').nth(1);
+
+    await editor.caretAtEndOf(body);
+    await page.keyboard.press('Enter');
+    await page.keyboard.press('Enter');
+    await page.keyboard.type('после блока');
+
+    await expect(editor.toggle().first().locator('xpath=following-sibling::*[1]')).toHaveText(
+      'после блока',
+    );
+  });
+
   test('passes axe in light and dark, fits phones and types in RTL', async ({ page }) => {
     const playground = await openEditor(page);
     const { editor } = playground;

@@ -54,7 +54,7 @@
   position: relative;
   box-sizing: border-box;
   min-block-size: var(--_min);
-  padding: var(--nui-space-3) var(--_padding);
+  padding: var(--nui-space-3) var(--_padding) var(--nui-space-8);
   outline: none;
   caret-color: var(--nui-text);
 }
