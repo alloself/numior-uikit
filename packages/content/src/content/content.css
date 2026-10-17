@@ -613,3 +613,96 @@
     grid-auto-flow: row;
   }
 }
+.nui-content__embed {
+  box-sizing: border-box;
+}
+.nui-content__embed-link {
+  display: flex;
+  box-sizing: border-box;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 16 / 9;
+  border: 1px dashed var(--nui-border-strong);
+  border-radius: var(--nui-radius);
+  background: var(--nui-surface-muted);
+  color: var(--nui-text-muted);
+  font-size: 0.875em;
+  text-decoration: none;
+}
+.nui-content__embed-frame {
+  display: block;
+  box-sizing: border-box;
+  inline-size: 100%;
+  block-size: auto;
+  border: 0;
+  border-radius: var(--nui-radius);
+  background: var(--nui-surface-muted);
+}
+.nui-content__bookmark {
+  position: relative;
+}
+.nui-content__bookmark-link {
+  display: flex;
+  box-sizing: border-box;
+  align-items: stretch;
+  overflow: hidden;
+  border: 1px solid var(--nui-border);
+  border-radius: var(--nui-radius);
+  background: var(--nui-surface);
+  color: var(--nui-text);
+  text-decoration: none;
+  transition:
+    background-color var(--nui-duration-fast) var(--nui-easing),
+    border-color var(--nui-duration-fast) var(--nui-easing);
+}
+.nui-content__bookmark-link:hover {
+  border-color: var(--nui-border-strong);
+  background: var(--nui-surface-muted);
+}
+.nui-content__bookmark-link:focus-visible {
+  outline: var(--nui-focus-ring-width) solid var(--nui-focus);
+  outline-offset: var(--nui-focus-ring-offset);
+}
+.nui-content__bookmark-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--nui-space-1);
+  min-inline-size: 0;
+  padding: var(--nui-space-3);
+  font-size: 0.875em;
+  line-height: var(--nui-line-height);
+}
+.nui-content__bookmark-title {
+  overflow: hidden;
+  font-weight: var(--nui-font-weight-medium);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.nui-content__bookmark-description {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--nui-text-muted);
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+.nui-content__bookmark-site {
+  display: flex;
+  align-items: center;
+  gap: var(--nui-space-2);
+  overflow: hidden;
+  color: var(--nui-text-muted);
+  font-size: 0.875em;
+  white-space: nowrap;
+}
+.nui-content__bookmark-icon {
+  flex: none;
+  inline-size: 1em;
+  block-size: 1em;
+}
+.nui-content__bookmark-image {
+  flex: none;
+  inline-size: 30%;
+  max-inline-size: 12rem;
+  object-fit: cover;
+}

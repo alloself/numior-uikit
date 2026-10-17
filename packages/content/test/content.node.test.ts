@@ -36,6 +36,18 @@ const file = (url: string, attrs: object = {}) => ({
   attrs: { url, ...attrs },
 });
 
+const embed = (url: string, provider: string) => ({
+  id: `embed ${url} ${provider}`,
+  type: 'embed',
+  attrs: { url, provider },
+});
+
+const bookmark = (url: string, picture: string) => ({
+  id: `bookmark ${url}`,
+  type: 'bookmark',
+  attrs: { url, image: picture },
+});
+
 describe('content schema', () => {
   it('holds the generated ten-thousand-block mix of the editor fixtures', () => {
     const doc = generateDoc(contentSchema, { blocks: 10_000, seed: 3 });
@@ -100,5 +112,20 @@ describe('content schema', () => {
         image('c.png', { align: 'wide' }),
       ]),
     ).toEqual(['url', 'url', 'url', 'size', 'width', 'width', 'align']);
+  });
+
+  it('keeps embeds and bookmarks on web addresses with a plain provider name', () => {
+    expect(
+      attrIssues([embed('https://youtu.be/x', 'youtube'), bookmark('https://numior.test', '')]),
+    ).toEqual([]);
+
+    expect(
+      attrIssues([
+        embed('javascript:alert(1)', 'youtube'),
+        embed('https://youtu.be/x', '"><script>'),
+        bookmark('/relative', ''),
+        bookmark('https://numior.test', 'data:image/png;base64,AAAA'),
+      ]),
+    ).toEqual(['url', 'provider', 'url', 'image']);
   });
 });

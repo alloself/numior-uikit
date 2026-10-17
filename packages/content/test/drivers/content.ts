@@ -174,6 +174,16 @@ export class ContentDriver {
     await flushPromises();
   }
 
+  get embeds(): readonly string[] {
+    return this.wrapper.findAll('.nui-content__embed').map((embed) => {
+      const frame = embed.find('iframe');
+
+      return frame.exists()
+        ? `frame:${frame.attributes('src') ?? ''}:${frame.attributes('title') ?? ''}:${frame.attributes('sandbox') ?? ''}`
+        : `link:${embed.find('a').attributes('href') ?? ''}`;
+    });
+  }
+
   get files(): readonly string[] {
     return this.wrapper
       .findAll('.nui-content__file')

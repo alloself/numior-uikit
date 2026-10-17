@@ -11,6 +11,7 @@ import {
   type Schema,
   type SchemaSpec,
 } from '@numior/editor-core';
+import { LINK_NODES } from './content-links';
 import { TABLE_NODES } from './content-table';
 import type { NuiContentAlign, NuiContentColour, NuiContentTone } from './content.types';
 
@@ -546,6 +547,7 @@ const CONTENT_SPEC: SchemaSpec = {
       ],
     },
     ...TABLE_NODES,
+    ...LINK_NODES,
     text: { group: 'inline', inline: true },
     hard_break: {
       group: 'inline',

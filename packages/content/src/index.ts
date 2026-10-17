@@ -10,6 +10,14 @@ export {
   imageWidthStyle,
 } from './content/content-schema';
 export type { NuiContentFileKind } from './content/content-schema';
+export {
+  EMBED_PRESETS,
+  embedLabel,
+  embedProviders,
+  resolveEmbed,
+  webAddress,
+} from './content/embeds';
+export type { NuiEmbed, NuiEmbedPresetId, NuiEmbedProvider } from './content/embeds';
 export { contentTableData } from './content/content-table';
 export { filterAttrs } from './content/table-view';
 export {

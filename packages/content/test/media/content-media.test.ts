@@ -89,4 +89,21 @@ describe('NuiContent media views', () => {
     expect(html).toContain('<span class="nui-content__file-size">2.4 MB</span>');
     expect(html).not.toContain('<dialog');
   });
+
+  it('plays only embeds whose link an allowed provider recognises', () => {
+    driver = ContentDriver.mount({
+      document: docOf(
+        node('embed', [], { url: 'https://youtu.be/dQw4w9WgXcQ', provider: 'youtube' }),
+        node('embed', [], { url: 'https://evil.test/watch?v=dQw4w9WgXcQ', provider: 'youtube' }),
+        node('embed', [], { url: 'https://board.test/42', provider: 'board' }),
+      ),
+      views: contentMediaViews,
+    });
+
+    expect(driver.embeds).toEqual([
+      'frame:https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ:YouTube embed:allow-scripts allow-same-origin allow-popups allow-presentation',
+      'link:https://evil.test/watch?v=dQw4w9WgXcQ',
+      'link:https://board.test/42',
+    ]);
+  });
 });

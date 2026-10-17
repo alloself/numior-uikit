@@ -56,6 +56,19 @@ export const everyBlock = () =>
     node('image', [], { src: 'a.png', alt: 'A', caption: 'Cap' }),
     node('image', [], { src: 'b.png', width: 0.45, align: 'start' }),
     node('file', [], { url: 'https://numior.test/r.pdf', name: 'Report.pdf', size: 2_516_582 }),
+    node('embed', [], {
+      url: 'https://youtu.be/dQw4w9WgXcQ',
+      provider: 'youtube',
+      caption: 'Talk',
+    }),
+    node('bookmark', [], {
+      url: 'https://numior.test/blog',
+      title: 'Blog',
+      description: 'News',
+      image: 'https://numior.test/cover.png',
+      icon: 'https://numior.test/icon.png',
+      site: 'numior.test',
+    }),
     node('columns', [node('column', [p('L')], { width: 1.5 }), node('column', [p('R')])]),
     node('table', [
       node('table_head', [
@@ -94,6 +107,8 @@ export const EVERY_BLOCK_MARKUP = [
   '<figure class="nui-content__image nui-content__image--align-center"><img class="nui-content__picture" src="a.png" alt="A" loading="lazy"><figcaption class="nui-content__caption">Cap</figcaption></figure>',
   '<figure class="nui-content__image nui-content__image--align-start" style="inline-size: 45%;"><img class="nui-content__picture" src="b.png" alt loading="lazy"></figure>',
   '<a class="nui-content__file nui-content__file--kind-pdf" href="https://numior.test/r.pdf" download="Report.pdf" data-size="2516582"><span class="nui-content__file-icon" aria-hidden="true"></span><span class="nui-content__file-name">Report.pdf</span></a>',
+  '<figure class="nui-content__embed nui-content__embed--provider-youtube"><a class="nui-content__embed-link" href="https://youtu.be/dQw4w9WgXcQ">YouTube</a><figcaption class="nui-content__caption">Talk</figcaption></figure>',
+  '<div class="nui-content__bookmark"><a class="nui-content__bookmark-link" href="https://numior.test/blog"><span class="nui-content__bookmark-body"><span class="nui-content__bookmark-title">Blog</span><span class="nui-content__bookmark-description">News</span><span class="nui-content__bookmark-site"><img class="nui-content__bookmark-icon" src="https://numior.test/icon.png" alt loading="lazy">numior.test</span></span><img class="nui-content__bookmark-image" src="https://numior.test/cover.png" alt loading="lazy"></a></div>',
   '<div class="nui-content__columns"><div class="nui-content__columns-track"><div class="nui-content__column" style="flex-grow: 1.5;"><p class="nui-content__paragraph">L</p></div>',
   '<div class="nui-content__column"><p class="nui-content__paragraph">R</p></div></div></div>',
   '<div class="nui-content__table"><table class="nui-content__grid"><thead><tr>',
