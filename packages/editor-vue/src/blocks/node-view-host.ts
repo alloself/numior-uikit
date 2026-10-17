@@ -9,10 +9,13 @@ export interface NodeViewHost {
 
 const MARGIN = '100% 0px';
 
+const CHUNK = '.nui-editor__chunk';
+
 export const createNodeViewHost = (): NodeViewHost => {
   const entries = new Map<number, NodeViewEntry>();
   const shown = shallowReactive(new Map<number, NodeViewEntry>());
   const byElement = new WeakMap<Element, NodeViewEntry>();
+  const chunks = new WeakSet<Element>();
 
   const show = (entry: NodeViewEntry): void => {
     if (entries.has(entry.key)) {
@@ -20,22 +23,46 @@ export const createNodeViewHost = (): NodeViewHost => {
     }
   };
 
+  const showInside = (chunk: Element): void => {
+    for (const entry of entries.values()) {
+      if (!shown.has(entry.key) && chunk.contains(entry.dom)) {
+        show(entry);
+        observer?.unobserve(entry.dom);
+      }
+    }
+  };
+
+  const reveal = (target: Element): void => {
+    const entry = byElement.get(target);
+
+    if (chunks.has(target)) {
+      showInside(target);
+    } else if (entry !== undefined) {
+      show(entry);
+      observer?.unobserve(target);
+    }
+  };
+
   const observer =
     typeof IntersectionObserver === 'function'
       ? new IntersectionObserver(
           (records) => {
-            for (const record of records) {
-              const entry = byElement.get(record.target);
-
-              if (record.isIntersecting && entry !== undefined) {
-                show(entry);
-                observer?.unobserve(record.target);
-              }
+            for (const record of records.filter((found) => found.isIntersecting)) {
+              reveal(record.target);
             }
           },
           { rootMargin: MARGIN },
         )
       : undefined;
+
+  const watchChunk = (entry: NodeViewEntry): void => {
+    const chunk = entry.dom.closest(CHUNK);
+
+    if (chunk !== null && !shown.has(entry.key) && !chunks.has(chunk)) {
+      chunks.add(chunk);
+      observer?.observe(chunk);
+    }
+  };
 
   return {
     shown,
@@ -47,6 +74,10 @@ export const createNodeViewHost = (): NodeViewHost => {
           show(entry);
         } else {
           observer.observe(entry.dom);
+
+          queueMicrotask(() => {
+            watchChunk(entry);
+          });
         }
       },
       remove: (key) => {
