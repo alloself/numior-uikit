@@ -134,7 +134,18 @@
   padding: var(--nui-space-2);
   color: var(--nui-text-muted);
 }
+.nui-list--variant-floating .nui-list__empty {
+  padding: 0;
+}
+.nui-list--variant-floating .nui-list__empty .nui-empty {
+  --_padding: var(--_padding-block) var(--_padding-inline);
+
+  justify-items: start;
+  text-align: start;
+}
 .nui-list--variant-floating .nui-list__empty .nui-empty__title {
+  color: var(--nui-text-muted);
+  font-size: inherit;
   font-weight: 400;
 }
 .nui-list__spinner {

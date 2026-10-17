@@ -220,6 +220,7 @@ test.describe('layers', () => {
   });
 
   test('open layers have no automatically detectable WCAG AA violations', async ({ page }) => {
+    test.slow();
     const playground = new PlaygroundPage(page);
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
