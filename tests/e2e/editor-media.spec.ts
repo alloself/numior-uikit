@@ -117,7 +117,7 @@ test.describe('editor media', () => {
     await image.scrollIntoViewIfNeeded();
     expect(await widthOf(image)).toBe(60);
 
-    await editor.dragGrip(image, 'end', -40);
+    await editor.dragGrip(image, 'bottom-end', -40, 0);
     await expect.poll(() => widthOf(image)).toBeLessThan(60);
 
     const dragged = await widthOf(image);
@@ -130,7 +130,7 @@ test.describe('editor media', () => {
     const keyed = await widthOf(image);
     const aspect = await editor.imageAspect(image);
 
-    await editor.dragCorner(image, 'bottom-end', 0, 40);
+    await editor.dragGrip(image, 'bottom-end', 0, 40);
     await expect.poll(() => widthOf(image)).toBeGreaterThan(keyed);
     expect(await editor.imageAspect(image)).toBeCloseTo(aspect, 1);
 

@@ -25,21 +25,13 @@
       </div>
       <template v-if="editable">
         <span
-          v-for="side in SIDES"
-          :key="side"
+          v-for="grip in GRIPS"
+          :key="`${grip.edge}-${grip.side}`"
           class="nui-editor-image__grip"
-          :class="`nui-editor-image__grip--side-${side}`"
-          v-bind="side === 'start' ? slider : HIDDEN_GRIP"
-          @pointerdown="onGripDown({ side, lift: 0 }, $event)"
+          :class="`nui-editor-image__grip--at-${grip.edge}-${grip.side}`"
+          v-bind="grip.edge === 'bottom' && grip.side === 'end' ? slider : HIDDEN_GRIP"
+          @pointerdown="onGripDown(grip, $event)"
           @keydown="onGripKeydown"
-        />
-        <span
-          v-for="corner in CORNERS"
-          :key="`${corner.edge}-${corner.side}`"
-          class="nui-editor-image__corner"
-          :class="`nui-editor-image__corner--at-${corner.edge}-${corner.side}`"
-          aria-hidden="true"
-          @pointerdown="onGripDown(corner, $event)"
         />
         <NuiPopover
           v-if="tooled"
@@ -158,17 +150,12 @@ type GripSide = 'start' | 'end';
 type GripEdge = 'top' | 'bottom';
 
 interface Grip {
+  readonly edge: GripEdge;
   readonly side: GripSide;
   readonly lift: number;
 }
 
-interface Corner extends Grip {
-  readonly edge: GripEdge;
-}
-
-const SIDES: readonly GripSide[] = ['start', 'end'];
-
-const CORNERS: readonly Corner[] = [
+const GRIPS: readonly Grip[] = [
   { edge: 'top', side: 'start', lift: -1 },
   { edge: 'top', side: 'end', lift: -1 },
   { edge: 'bottom', side: 'start', lift: 1 },
