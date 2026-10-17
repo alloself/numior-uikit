@@ -1,9 +1,22 @@
 import { mount, type VueWrapper } from '@vue/test-utils';
-import { textSelection, type Command, type DocJSON } from '@numior/editor-core';
+import { contentSchema } from '@numior/content';
+import {
+  createEmptyDoc,
+  textSelection,
+  toJSON,
+  type Command,
+  type DocJSON,
+} from '@numior/editor-core';
 import { provideDraftCommits, type DraftCommits } from '@numior/primitives';
 import { createSSRApp, defineComponent, h, nextTick, ref } from 'vue';
 import { renderToString } from 'vue/server-renderer';
-import { NuiEditor, type NuiEditorApi, type NuiEditorProps } from '../../src';
+import {
+  NuiEditor,
+  type NuiEditorApi,
+  type NuiEditorFormat,
+  type NuiEditorProps,
+  type NuiEditorValue,
+} from '../../src';
 import { layOut } from '../support/layout';
 import { isShown } from '../support/popovers';
 
@@ -38,9 +51,25 @@ const textWithoutWidgets = (block: Element): string => {
   return copy.textContent ?? '';
 };
 
-type EditorMountProps = NuiEditorProps & {
+type EditorMountProps = Omit<NuiEditorProps, 'format'> & {
   readonly document?: DocJSON | undefined;
   readonly modelValue?: string;
+};
+
+const modelOf = (
+  props: EditorMountProps,
+): { readonly format: NuiEditorFormat; readonly modelValue: NuiEditorValue } =>
+  props.modelValue === undefined
+    ? {
+        format: 'json',
+        modelValue: props.document ?? toJSON(createEmptyDoc(props.schema ?? contentSchema)),
+      }
+    : { format: 'html', modelValue: props.modelValue };
+
+const withoutModel = (props: EditorMountProps): NuiEditorProps => {
+  const { document: _document, modelValue: _modelValue, ...rest } = props;
+
+  return rest;
 };
 
 export class EditorDriver {
@@ -53,9 +82,9 @@ export class EditorDriver {
   static mount(props: EditorMountProps = {}): EditorDriver {
     const wrapper: VueWrapper = mount(NuiEditor, {
       props: {
-        ...props,
-        'onUpdate:document': (document: DocJSON | undefined) => wrapper.setProps({ document }),
-        'onUpdate:modelValue': async (modelValue: string) => {
+        ...withoutModel(props),
+        ...modelOf(props),
+        'onUpdate:modelValue': async (modelValue: NuiEditorValue | undefined) => {
           await wrapper.setProps({ modelValue });
         },
       },
@@ -74,10 +103,12 @@ export class EditorDriver {
         drafts = provideDraftCommits();
         return () =>
           h(NuiEditor, {
-            ...props,
+            ...withoutModel(props),
             modelValue: html.value,
-            'onUpdate:modelValue': (value: string) => {
-              html.value = value;
+            'onUpdate:modelValue': (value: NuiEditorValue | undefined) => {
+              if (typeof value === 'string') {
+                html.value = value;
+              }
             },
           });
       },
@@ -102,24 +133,23 @@ export class EditorDriver {
     await this.wrapper.setProps({ modelValue });
   }
 
-  static async ssr(
-    props: NuiEditorProps & { readonly document?: DocJSON | undefined },
-  ): Promise<string> {
+  static async ssr(props: EditorMountProps): Promise<string> {
+    const shown = { ...withoutModel(props), ...modelOf(props) };
+
     return withoutComments(
-      await renderToString(createSSRApp({ render: () => h(NuiEditor, props) })),
+      await renderToString(createSSRApp({ render: () => h(NuiEditor, shown) })),
     );
   }
 
-  static async hydrate(
-    props: NuiEditorProps & { readonly document?: DocJSON | undefined },
-  ): Promise<readonly string[]> {
+  static async hydrate(props: EditorMountProps): Promise<readonly string[]> {
+    const shown = { ...withoutModel(props), ...modelOf(props) };
     const host = document.createElement('div');
     const warnings: string[] = [];
 
-    host.innerHTML = await renderToString(createSSRApp({ render: () => h(NuiEditor, props) }));
+    host.innerHTML = await renderToString(createSSRApp({ render: () => h(NuiEditor, shown) }));
     document.body.append(host);
 
-    const app = createSSRApp({ render: () => h(NuiEditor, props) });
+    const app = createSSRApp({ render: () => h(NuiEditor, shown) });
 
     app.config.warnHandler = (message) => {
       warnings.push(message);
@@ -183,7 +213,7 @@ export class EditorDriver {
   }
 
   get documents(): readonly DocJSON[] {
-    return (this.wrapper.emitted('update:document') ?? []).flatMap(([value]: unknown[]) =>
+    return (this.wrapper.emitted('update:modelValue') ?? []).flatMap(([value]: unknown[]) =>
       isDocument(value) ? [value] : [],
     );
   }
@@ -700,7 +730,9 @@ export class EditorDriver {
   async receive(
     props: Partial<NuiEditorProps> & { readonly document?: DocJSON | undefined },
   ): Promise<void> {
-    await this.wrapper.setProps(props);
+    const { document: next, ...rest } = props;
+
+    await this.wrapper.setProps(next === undefined ? rest : { ...rest, modelValue: next });
   }
 
   destroy(): void {

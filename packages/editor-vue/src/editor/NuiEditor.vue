@@ -167,15 +167,13 @@
   </NuiFieldFrame>
 </template>
 
-<script setup lang="ts">
+<script setup lang="ts" generic="V extends NuiEditorValue | undefined">
 import { CONTENT_COLOURS, contentSchema, embedProviders, NuiContent } from '@numior/content';
 import {
   baseKeymap,
-  createEmptyDoc,
   pasteSchema,
   createState,
   detectPasteSource,
-  fromJSON,
   history,
   inputRules,
   isEmptyDoc,
@@ -214,7 +212,6 @@ import {
   onMounted,
   ref,
   shallowRef,
-  toRaw,
   useAttrs,
   useId,
   useTemplateRef,
@@ -247,9 +244,9 @@ import type { MediaKind } from '../uploads/uploads.types';
 import { provideEditorUploads } from '../uploads/uploads-context';
 import { useEditorUploads } from '../uploads/use-editor-uploads';
 import { editorMessages } from './editor.messages';
-import { useEditorHTML } from './use-editor-html';
+import { useEditorValue, type EditorValue } from './use-editor-value';
 import { useEditorOverlays } from './use-editor-overlays';
-import type { NuiEditorApi, NuiEditorPaste, NuiEditorProps } from './editor.types';
+import type { NuiEditorApi, NuiEditorPaste, NuiEditorProps, NuiEditorValue } from './editor.types';
 
 defineOptions({ inheritAttrs: false });
 
@@ -279,10 +276,10 @@ const {
   embeds = NO_EMBEDS,
   linkMetadata,
   mentions,
+  format = 'html',
 } = defineProps<NuiEditorProps>();
 
-const html = defineModel<string>({ default: '' });
-const document = defineModel<DocJSON | undefined>('document');
+const model = defineModel<V>({ required: true });
 
 const emit = defineEmits<{
   change: [document: DocJSON];
@@ -317,7 +314,7 @@ const {
   }),
   {
     commit: () => {
-      markup.flush();
+      sync.flush();
     },
   },
 );
@@ -522,32 +519,21 @@ const plugins = [
 
 const nodeViews = createNodeViewHost();
 
-const docOf = (json: DocJSON | undefined): Doc => {
-  const read = json === undefined ? undefined : fromJSON(schema, json);
-
-  return read?.ok === true ? read.doc : createEmptyDoc(schema);
-};
-
-const markup = useEditorHTML({
+const sync: EditorValue = useEditorValue({
   schema,
-  model: html,
+  model,
+  format: () => format,
   state: () => current.value,
   receive: (doc) => {
-    written = toJSON(doc);
-    document.value = written;
     replace(doc);
   },
 });
 
-const initial =
-  document.value === undefined && markup.initial !== undefined
-    ? markup.initial
-    : docOf(document.value === undefined ? undefined : toRaw(document.value));
+const initial = sync.initial;
 
 const current = shallowRef<EditorState>(createState({ doc: initial, plugins }));
 const ready = ref(false);
 const empty = ref(isEmptyDoc(initial));
-let written: DocJSON | undefined = document.value === undefined ? undefined : toRaw(document.value);
 
 const editable = computed(() => !isDisabled.value && !isReadonly.value);
 
@@ -606,11 +592,9 @@ const onPaste = (event: ClipboardEvent): void => {
 };
 
 const publish = (state: EditorState): void => {
-  written = toJSON(state.doc);
   empty.value = isEmptyDoc(state.doc);
-  document.value = written;
-  markup.changed();
-  emit('change', written);
+  sync.changed();
+  emit('change', toJSON(state.doc));
 };
 
 const replace = (doc: Doc): void => {
@@ -623,7 +607,7 @@ const replace = (doc: Doc): void => {
 };
 
 const onBlur = (event: FocusEvent): void => {
-  markup.flush();
+  sync.flush();
   emit('blur', event);
 };
 
@@ -731,17 +715,6 @@ const onKeydown = (event: KeyboardEvent): void => {
     overlays.openLink();
   }
 };
-
-watch(document, (value) => {
-  const json = value === undefined ? undefined : toRaw(value);
-
-  if (view === undefined || json === written) {
-    return;
-  }
-  written = json;
-  replace(docOf(json));
-  markup.changed();
-});
 
 watch(editable, (value) => {
   view?.setEditable(value);

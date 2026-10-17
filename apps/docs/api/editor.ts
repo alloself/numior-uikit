@@ -41,6 +41,10 @@ const docs: DocsMap = {
         ru: 'Наибольший размер загружаемого файла в байтах.',
         en: 'The largest upload size in bytes.',
       },
+      format: {
+        ru: 'Что отдаёт `v-model`: `html` — строку разметки, `json` — документ JSON.',
+        en: 'What `v-model` carries: `html` is a markup string, `json` a JSON document.',
+      },
       embeds: {
         ru: 'Разрешённые встраивания: id пресетов (`youtube`, `vimeo`, `loom`, `figma`, `maps`, `codepen`) или свои правила `{ id, label, aspect, source(url) }`. Ссылка разрешённого провайдера встраивается окном, в документе хранится только исходная ссылка. Без пропа встраиваний нет.',
         en: 'Allowed embeds: preset ids (`youtube`, `vimeo`, `loom`, `figma`, `maps`, `codepen`) or own rules `{ id, label, aspect, source(url) }`. A link of an allowed provider is embedded as a frame and only the original link is kept in the document. Without the prop there are no embeds.',
@@ -72,12 +76,8 @@ const docs: DocsMap = {
     },
     models: {
       'v-model': {
-        ru: 'Документ как строка HTML для форм и хранилищ разметки. Обновляется после паузы в наборе (300 мс), сразу при уходе фокуса и при отправке формы; HTML, заданный снаружи, читается схемой. Разметка блоков кешируется, поэтому после правки пересчитываются только изменённые блоки.',
-        en: 'The document as an HTML string for forms and markup stores. It updates after a pause in typing (300 ms), right away on blur and when a form submits; HTML set from outside is read through the schema. Block markup is cached, so an edit re-renders only the blocks it changed.',
-      },
-      'v-model:document': {
-        ru: 'Документ в JSON формата 1; новый объект снаружи начинает историю заново.',
-        en: 'The document as format 1 JSON; a new object from outside restarts the history.',
+        ru: 'Документ в формате из `format`: строка HTML (по умолчанию) или JSON формата 1. Тип значения выводится из привязки. HTML обновляется через 300 мс после правки, сразу при уходе фокуса и при отправке формы, JSON — на каждую правку; значение, заданное снаружи, читается схемой и начинает историю заново.',
+        en: 'The document in the `format` encoding: an HTML string (the default) or format 1 JSON. The value type follows the binding. HTML updates 300 ms after an edit, right away on blur and when a form submits, JSON on every edit; a value set from outside is read through the schema and restarts the history.',
       },
     },
     events: {
@@ -87,12 +87,6 @@ const docs: DocsMap = {
       paste: {
         ru: 'Пользователь вставил содержимое; source — откуда оно: own, word, google-docs, excel, sheets, html или text.',
         en: 'The user pasted content; source tells where it came from: own, word, google-docs, excel, sheets, html or text.',
-      },
-    },
-    exposed: {
-      editor: {
-        ru: 'Доступ к состоянию, запуск команд ядра и фокус.',
-        en: 'Access to the state, core commands and focus.',
       },
     },
   },

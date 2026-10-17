@@ -1,5 +1,5 @@
 import type { NuiEmbedPresetId, NuiEmbedProvider } from '@numior/content';
-import type { Command, EditorState, PasteSource, Schema } from '@numior/editor-core';
+import type { Command, DocJSON, EditorState, PasteSource, Schema } from '@numior/editor-core';
 import type { NuiHighlighter } from '@numior/primitives';
 import type { NuiFieldControlProps } from '@numior/vue';
 import type { NuiEditorBlock } from '../blocks/block.types';
@@ -7,7 +7,12 @@ import type { NuiEditorLinkMetadata } from '../links/links.types';
 import type { NuiEditorMentions } from '../mentions/mentions.types';
 import type { NuiEditorUploadAdapter } from '../uploads/uploads.types';
 
+export type NuiEditorFormat = 'html' | 'json';
+
+export type NuiEditorValue = string | DocJSON;
+
 export interface NuiEditorProps extends NuiFieldControlProps {
+  format?: NuiEditorFormat | undefined;
   schema?: Schema | undefined;
   placeholder?: string | undefined;
   autofocus?: boolean | undefined;

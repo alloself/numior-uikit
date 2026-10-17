@@ -13,7 +13,8 @@
     </div>
     <NuiEditor
       v-if="shown && view === 'editor'"
-      v-model:document="document"
+      v-model="document"
+      format="json"
       class="bench__editor"
       label="Бенчмарк редактора"
       data-testid="bench-editor"

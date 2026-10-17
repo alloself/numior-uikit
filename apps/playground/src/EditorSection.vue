@@ -12,7 +12,8 @@
     </div>
     <div class="editor-demo">
       <NuiEditor
-        v-model:document="document"
+        v-model="document"
+        format="json"
         label="Заметка"
         description="Markdown: # заголовок, - список, **жирный**, Ctrl+Z — отмена"
         placeholder="Начните писать…"

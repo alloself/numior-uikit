@@ -25,9 +25,11 @@ export type { SlashItem as NuiEditorSlashItem } from './slash/slash-items';
 export { default as NuiEditor } from './editor/NuiEditor.vue';
 export type {
   NuiEditorApi,
+  NuiEditorFormat,
   NuiEditorPaste,
   NuiEditorProps,
   NuiEditorToolbarMode,
+  NuiEditorValue,
 } from './editor/editor.types';
 export type { NuiEditorLinkMetadata, NuiEditorLinkPreview } from './links/links.types';
 export type { NuiEditorMention, NuiEditorMentions } from './mentions/mentions.types';

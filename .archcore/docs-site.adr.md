@@ -362,8 +362,10 @@ RU/EN каждого нового пропа/слота/события в `apps/
   фикстур) — вместе со страницами редактора.
 - `@numior/content`: страница `NuiContent` и `renderContent` с блоками, пресетами цвета и
   правилами адресов; описания пропов уже в `apps/docs/api/content.ts`.
-- `@numior/editor-vue`: страница `NuiEditor` (поле, `v-model:document`, шорткаты, клавиши,
-  история, SSR); описания пропов уже в `apps/docs/api/editor.ts`.
+- `@numior/editor-vue`: страница `NuiEditor` (поле, `v-model` и `format`, шорткаты, клавиши,
+  история, SSR); описания пропов уже в `apps/docs/api/editor.ts`. Раздел expose (`editor`:
+  состояние, команды ядра, фокус) — прозой на странице: `vue-component-meta` не видит
+  `defineExpose` обобщённых компонентов (так же у `NuiTable`), справочник его не покажет.
 
 ### Главная и тексты после ревью (шаг 5)
 
