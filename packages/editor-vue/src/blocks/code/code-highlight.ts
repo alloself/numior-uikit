@@ -42,7 +42,9 @@ interface CodeBlock {
   readonly language: string | undefined;
 }
 
-const answerKey = createMetaKey<CodeAnswer>('code-answer');
+const answerKey = createMetaKey<readonly CodeAnswer[]>('code-answers');
+
+const SLICE_MS = 8;
 
 const languageOf = (node: ElementNode): string | undefined =>
   typeof node.attrs.language === 'string' ? node.attrs.language : undefined;
@@ -150,10 +152,10 @@ export const codeHighlightPlugin = (): Plugin<CodePaints> => {
     state: {
       init: () => new Map(),
       apply: (tr, value, before, after) => {
-        const answer = tr.getMeta(answerKey);
+        const answers = tr.getMeta(answerKey) ?? [];
         const moved = tr.changed ? followed(value, tr, before) : value;
 
-        return answer === undefined ? moved : answered(moved, after, answer);
+        return answers.reduce((paints, answer) => answered(paints, after, answer), moved);
       },
     },
     props: {
@@ -212,35 +214,58 @@ interface Seen {
   readonly highlighter: NuiHighlighter;
 }
 
+const nextTask = (): Promise<void> =>
+  new Promise((resolve) => {
+    setTimeout(resolve, 0);
+  });
+
 export const createCodeHighlighter = (
   highlighter: () => NuiHighlighter | null,
   dispatch: (tr: Transaction) => void,
   state: () => EditorState,
 ): CodeHighlighter => {
   const asked = new Map<NodeId, string>();
+  const queue = new Map<NodeId, CodeBlock>();
   let seen: Seen | undefined;
+  let running = false;
 
-  const send = (block: CodeBlock, tokens: NuiCodeTokens): void => {
-    if (asked.get(block.id) === keyOf(block)) {
-      dispatch(state().tr.setMeta(answerKey, { id: block.id, text: block.text, tokens }));
+  const current = (block: CodeBlock): boolean => asked.get(block.id) === keyOf(block);
+
+  const send = (answers: readonly CodeAnswer[]): void => {
+    if (answers.length > 0) {
+      dispatch(state().tr.setMeta(answerKey, answers));
     }
   };
 
-  const later = async (block: CodeBlock, pending: Promise<NuiCodeTokens>): Promise<void> => {
-    send(block, await pending);
+  const drain = async (active: NuiHighlighter): Promise<void> => {
+    let answers: CodeAnswer[] = [];
+    let started = performance.now();
+
+    for (const [id, block] of queue) {
+      queue.delete(id);
+      if (current(block)) {
+        const tokens = await highlightCode(active, block.text, block.language);
+
+        if (current(block)) {
+          answers.push({ id, text: block.text, tokens });
+        }
+      }
+      if (performance.now() - started > SLICE_MS) {
+        send(answers);
+        answers = [];
+        await nextTask();
+        started = performance.now();
+      }
+    }
+    send(answers);
   };
 
-  const ask = (active: NuiHighlighter, block: CodeBlock): void => {
-    asked.set(block.id, keyOf(block));
-
-    const result = highlightCode(active, block.text, block.language);
-
-    if (result instanceof Promise) {
-      void later(block, result);
-    } else {
-      queueMicrotask(() => {
-        send(block, result);
-      });
+  const work = async (active: NuiHighlighter): Promise<void> => {
+    running = true;
+    try {
+      await drain(active);
+    } finally {
+      running = false;
     }
   };
 
@@ -257,9 +282,13 @@ export const createCodeHighlighter = (
       changedCode(seen?.highlighter === active ? seen.root : undefined, next.doc.root, found);
       seen = { root: next.doc.root, highlighter: active };
       for (const block of found) {
-        if (asked.get(block.id) !== keyOf(block)) {
-          ask(active, block);
+        if (!current(block)) {
+          asked.set(block.id, keyOf(block));
+          queue.set(block.id, block);
         }
+      }
+      if (!running && queue.size > 0) {
+        void work(active);
       }
     },
   };
