@@ -1,4 +1,4 @@
-import { cloneVNode, defineComponent, h, isVNode, ref, type VNode } from 'vue';
+import { cloneVNode, defineComponent, h, isVNode, ref, watch, type VNode } from 'vue';
 
 const OPEN = 'nui-content__toggle--open';
 
@@ -14,6 +14,13 @@ export const ContentToggle = defineComponent(
     content: readonly (VNode | string)[];
   }) => {
     const open = ref(props.open);
+
+    watch(
+      () => props.open,
+      (value) => {
+        open.value = value;
+      },
+    );
 
     const flip = (): void => {
       open.value = !open.value;

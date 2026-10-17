@@ -16,6 +16,9 @@ afterEach(() => {
   driver = undefined;
 });
 
+const toggle = (open: boolean) =>
+  docOf(node('toggle', [node('paragraph', ['Head']), node('paragraph', ['Body'])], { open }));
+
 describe('NuiContent', () => {
   it('renders a document like renderContent on the server and hydrates it without mismatches', async () => {
     const doc = everyBlock();
@@ -50,6 +53,16 @@ describe('NuiContent', () => {
     expect(view.folds).toEqual(['Head:closed:false']);
 
     await view.fold();
+
+    expect(view.folds).toEqual(['Head:open:true']);
+  });
+
+  it('opens or closes a shown toggle when the author changes its default', async () => {
+    const view = mounted({ document: toggle(false) });
+
+    expect(view.folds).toEqual(['Head:closed:false']);
+
+    await view.show(toggle(true));
 
     expect(view.folds).toEqual(['Head:open:true']);
   });
