@@ -93,7 +93,7 @@ export const EVERY_BLOCK_MARKUP = [
   '<div class="nui-content__toggle-body"><p class="nui-content__paragraph">Head</p><p class="nui-content__paragraph">Body</p></div></div>',
   '<figure class="nui-content__image nui-content__image--align-center"><img class="nui-content__picture" src="a.png" alt="A" loading="lazy"><figcaption class="nui-content__caption">Cap</figcaption></figure>',
   '<figure class="nui-content__image nui-content__image--align-start" style="inline-size: 45%;"><img class="nui-content__picture" src="b.png" alt loading="lazy"></figure>',
-  '<a class="nui-content__file nui-content__file--kind-pdf" href="https://numior.test/r.pdf" download="Report.pdf" data-size="2516582"><span class="nui-content__file-icon" aria-hidden="true"></span><span class="nui-content__file-name">Report.pdf</span><span class="nui-content__file-size">2.4 MB</span></a>',
+  '<a class="nui-content__file nui-content__file--kind-pdf" href="https://numior.test/r.pdf" download="Report.pdf" data-size="2516582"><span class="nui-content__file-icon" aria-hidden="true"></span><span class="nui-content__file-name">Report.pdf</span></a>',
   '<div class="nui-content__columns"><div class="nui-content__columns-track"><div class="nui-content__column" style="flex-grow: 1.5;"><p class="nui-content__paragraph">L</p></div>',
   '<div class="nui-content__column"><p class="nui-content__paragraph">R</p></div></div></div>',
   '<div class="nui-content__table"><table class="nui-content__grid"><thead><tr>',

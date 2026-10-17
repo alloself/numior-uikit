@@ -36,15 +36,11 @@ const SCHEME = /^([a-z][\d+.a-z-]*):/i;
 
 const LINK_SCHEMES = new Set(['http', 'https', 'mailto', 'tel']);
 
-const IMAGE_SCHEMES = new Set(['http', 'https', 'blob']);
+const IMAGE_SCHEMES = new Set(['http', 'https']);
 
 const FILE_SCHEMES = new Set(['http', 'https']);
 
 const PERCENT = /^\s*(\d+(?:\.\d+)?)%\s*$/u;
-
-const BYTE_UNITS = ['byte', 'kilobyte', 'megabyte', 'gigabyte', 'terabyte'] as const;
-
-const BYTE_STEP = 1024;
 
 const DATA_IMAGE = /^data:image\/(?:png|jpeg|gif|webp|avif);/i;
 
@@ -260,20 +256,6 @@ export const fileKindOf = (type: string, name: string): NuiContentFileKind => {
   return KIND_BY_EXTENSION[name.split('.').at(-1)?.toLowerCase() ?? ''] ?? 'file';
 };
 
-const fileSizeText = (bytes: number, locale = 'en'): string => {
-  const exponent = Math.min(
-    BYTE_UNITS.length - 1,
-    Math.floor(Math.log(Math.max(bytes, 1)) / Math.log(BYTE_STEP)),
-  );
-
-  return new Intl.NumberFormat(locale, {
-    style: 'unit',
-    unit: BYTE_UNITS[exponent],
-    unitDisplay: 'short',
-    maximumFractionDigits: exponent === 0 ? 0 : 1,
-  }).format(bytes / BYTE_STEP ** exponent);
-};
-
 const mentionAttrs = (span: HtmlElement): ParsedAttrs => {
   const user = span.attr('data-user');
 
@@ -358,9 +340,6 @@ const renderFile = (node: ElementNode) => {
     [
       renderTag('span', { class: part('file-icon'), 'aria-hidden': 'true' }),
       renderTag('span', { class: part('file-name') }, [name]),
-      ...(typeof size === 'number'
-        ? [renderTag('span', { class: part('file-size') }, [fileSizeText(size)])]
-        : []),
     ],
   );
 };

@@ -62,7 +62,6 @@ describe('content schema', () => {
         linked('/docs'),
         linked('#top'),
         image('https://numior.test/a.png'),
-        image('blob:https://numior.test/1'),
         image('data:image/png;base64,AAAA'),
         image('pictures/a.png'),
       ]),
@@ -74,9 +73,10 @@ describe('content schema', () => {
         linked(' JavaScript:alert(1)'),
         image('data:text/html,<b>'),
         image('javascript:alert(1)'),
+        image('blob:https://numior.test/1'),
         image(''),
       ]),
-    ).toEqual(['href', 'href', 'src', 'src', 'src']);
+    ).toEqual(['href', 'href', 'src', 'src', 'src', 'src']);
   });
 
   it('keeps files on web or relative links and image widths inside a fifth to the whole line', () => {
