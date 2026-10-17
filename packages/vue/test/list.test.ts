@@ -169,6 +169,17 @@ describe('NuiList', () => {
     labelled.unmount();
   });
 
+  it('puts a leading part from the slot before every item from items', () => {
+    const list = ListDriver.mount({
+      props: { items: [{ label: 'Анна' }, { label: 'Борис', icon: 'user' }] },
+      leadingSlot: ({ item }) => item.label.charAt(0),
+    });
+
+    expect(list.leadings).toEqual(['А', 'Б']);
+    expect(list.titles).toEqual(['Анна', 'Борис']);
+    list.unmount();
+  });
+
   it('renders groups with captions, nests their items and keeps option ids sequential', async () => {
     const list = ListDriver.mount({
       props: {

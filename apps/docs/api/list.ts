@@ -73,6 +73,10 @@ const docs: DocsMap = {
         ru: 'Разметка пункта из items; получает пункт и состояния.',
         en: 'Markup of an item from items; receives the item and its states.',
       },
+      leading: {
+        ru: 'Часть перед текстом пункта из items (аватар, значок); получает пункт и заменяет иконку.',
+        en: 'A part before the text of an item from items (an avatar, a mark); receives the item and replaces the icon.',
+      },
       default: { ru: 'Пункты NuiListItem.', en: 'NuiListItem parts.' },
       empty: { ru: 'Содержимое пустого списка.', en: 'Content of the empty list.' },
     },

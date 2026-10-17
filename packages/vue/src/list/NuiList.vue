@@ -34,8 +34,10 @@
               :list-id="listId"
               :link-as="linkAs"
               :index-of="indexOf"
+              :leading="$slots.leading !== undefined"
             >
               <template #item="slot"><slot name="item" v-bind="slot" /></template>
+              <template #leading="slot"><slot name="leading" v-bind="slot" /></template>
             </NuiListEntries>
           </ul>
         </li>
@@ -45,8 +47,10 @@
           :list-id="listId"
           :link-as="linkAs"
           :index-of="indexOf"
+          :leading="$slots.leading !== undefined"
         >
           <template #item="slot"><slot name="item" v-bind="slot" /></template>
+          <template #leading="slot"><slot name="leading" v-bind="slot" /></template>
         </NuiListEntries>
       </template>
       <slot />

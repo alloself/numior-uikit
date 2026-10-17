@@ -28,6 +28,7 @@ export interface ListMountOptions {
   readonly modelValue?: SelectionValue;
   readonly parts?: readonly ListPart[];
   readonly itemSlot?: ((slot: NuiListItemSlot<NuiListEntry<unknown>>) => string) | undefined;
+  readonly leadingSlot?: ((slot: { readonly item: NuiListEntry<unknown> }) => string) | undefined;
   readonly viaRouter?: boolean;
   readonly routerComponent?: Component;
   readonly config?: NuiConfigOptions;
@@ -70,6 +71,7 @@ export class ListDriver extends ComponentDriver {
     modelValue,
     parts = [],
     itemSlot,
+    leadingSlot,
     viaRouter = false,
     routerComponent,
     config,
@@ -82,6 +84,7 @@ export class ListDriver extends ComponentDriver {
       default: () =>
         parts.map((part) => h(NuiListItem, partProps(part, clicks, viaRouter), partSlots(part))),
       ...(itemSlot ? { item: itemSlot } : {}),
+      ...(leadingSlot ? { leading: leadingSlot } : {}),
     };
 
     const Host = defineComponent({
@@ -146,6 +149,12 @@ export class ListDriver extends ComponentDriver {
 
   private get items(): DOMWrapper<HTMLElement>[] {
     return this.wrapper.findAll<HTMLElement>('.nui-list-item');
+  }
+
+  get leadings(): string[] {
+    return this.items.map((item) =>
+      (item.element.querySelector('.nui-row__leading')?.textContent ?? '').trim(),
+    );
   }
 
   get titles(): string[] {

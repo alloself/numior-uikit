@@ -19,6 +19,9 @@
     <template v-if="$slots.item" #default="{ selected, active }">
       <slot name="item" :item="entry" :selected="selected" :active="active" />
     </template>
+    <template v-if="leading" #leading>
+      <slot name="leading" :item="entry" />
+    </template>
   </NuiListItem>
 </template>
 
@@ -27,11 +30,18 @@ import type { Component } from 'vue';
 import { optionElementId, type NuiListEntry } from '../shared/options';
 import NuiListItem from './NuiListItem.vue';
 
-const { entries, listId, linkAs, indexOf } = defineProps<{
+const {
+  entries,
+  listId,
+  linkAs,
+  indexOf,
+  leading = false,
+} = defineProps<{
   entries: readonly E[];
   listId: string;
   linkAs?: string | Component | undefined;
   indexOf: (entry: E) => number;
+  leading?: boolean | undefined;
 }>();
 
 const idFor = (entry: E): string => optionElementId(listId, indexOf(entry));
