@@ -1,7 +1,7 @@
 <template>
   <div
     class="nui-command nui-layer"
-    :class="{ 'nui-command--loading': loading }"
+    :class="{ 'nui-command--loading': loading, 'nui-command--embedded': embedded }"
     @focusout="onFocusout"
   >
     <div class="nui-command__field">
@@ -79,6 +79,7 @@ const {
   loading = false,
   loop = true,
   autofocus = false,
+  embedded = false,
   getKey,
   label,
   placeholder,

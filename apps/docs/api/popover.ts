@@ -14,8 +14,8 @@ const docs: DocsMap = {
       offset: { ru: 'Отступ от триггера в пикселях.', en: 'Distance from the trigger in pixels.' },
       arrow: { ru: 'Стрелка, указывающая на триггер.', en: 'Arrow pointing at the trigger.' },
       padding: {
-        ru: 'Внутренний отступ: `md` для текста и форм, `sm` для списков и панелей кнопок.',
-        en: 'Inner padding: `md` for text and forms, `sm` for lists and button bars.',
+        ru: 'Внутренний отступ: `md` для текста и форм, `sm` для списков и панелей кнопок, `none` для содержимого со своей рамкой (палитра команд).',
+        en: 'Inner padding: `md` for text and forms, `sm` for lists and button bars, `none` for content with its own frame (a command palette).',
       },
       anchor: {
         ru: 'Элемент, к которому крепится слой вместо триггера (выделение текста, каретка); триггер тогда не нужен.',

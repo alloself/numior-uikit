@@ -17,6 +17,7 @@ export interface NuiCommandProps<T = string> {
   loading?: boolean | undefined;
   loop?: boolean | undefined;
   autofocus?: boolean | undefined;
+  embedded?: boolean | undefined;
   getKey?: NuiOptionKey<T> | undefined;
   label?: string | undefined;
   placeholder?: string | undefined;
@@ -29,7 +30,7 @@ export interface NuiCommandItemSlot<T = string> {
   readonly active: boolean;
 }
 
-export interface NuiCommandDialogProps<T = string> extends NuiCommandProps<T> {
+export interface NuiCommandDialogProps<T = string> extends Omit<NuiCommandProps<T>, 'embedded'> {
   title?: string | undefined;
   hotkey?: string | false | undefined;
   closeOnSelect?: boolean | undefined;

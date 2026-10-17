@@ -33,6 +33,10 @@ const docs: DocsMap = {
         en: 'Arrows wrap from the last command to the first.',
       },
       autofocus: { ru: 'Ставит фокус в поле при монтировании.', en: 'Focuses the input on mount.' },
+      embedded: {
+        ru: 'Без своей рамки и скругления — внутри поповера или диалога, который уже даёт поверхность.',
+        en: 'Drops its own border and radius inside a popover or a dialog that already draws the surface.',
+      },
       getKey: { ru: 'Ключ значения для объектов.', en: 'Value key for objects.' },
       label: dictionary('Доступное имя поля и списка', 'Accessible name of the input and the list'),
       placeholder: dictionary('Подсказка в пустом поле', 'Hint in the empty input'),

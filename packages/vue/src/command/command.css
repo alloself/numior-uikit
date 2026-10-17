@@ -13,6 +13,10 @@
   font-family: var(--nui-font);
   overflow: hidden;
 }
+.nui-command--embedded {
+  border: 0;
+  border-radius: inherit;
+}
 .nui-command__field {
   box-sizing: border-box;
   display: flex;

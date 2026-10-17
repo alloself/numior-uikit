@@ -14,7 +14,7 @@ export interface NuiPopoverProps {
   closeDelay?: number | undefined;
 }
 
-export type NuiPopoverPadding = 'sm' | 'md';
+export type NuiPopoverPadding = 'none' | 'sm' | 'md';
 
 export type NuiPopoverTrigger = 'click' | 'hover';
 

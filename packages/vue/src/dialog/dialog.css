@@ -57,10 +57,6 @@
 .nui-dialog--bare .nui-dialog__body {
   padding: 0;
 }
-.nui-dialog--bare .nui-dialog__body > .nui-command {
-  border: 0;
-  border-radius: inherit;
-}
 .nui-dialog[open] {
   display: flex;
   opacity: 1;

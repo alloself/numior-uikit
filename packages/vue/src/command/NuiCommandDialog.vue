@@ -23,6 +23,7 @@
       :empty-label="emptyLabel"
       :loading-label="loadingLabel"
       autofocus
+      embedded
       @select="onSelect"
       @search="emit('search', $event)"
     >
