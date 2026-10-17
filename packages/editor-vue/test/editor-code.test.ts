@@ -83,9 +83,11 @@ describe('NuiEditor code blocks', () => {
     const code = EditorCodeDriver.of(editor);
 
     await code.settle();
+    expect(code.checkedLanguage(0)).toBe('TypeScript');
     await code.pickLanguage(0, 'Python');
 
     expect(code.language(0)).toBe('Python');
+    expect(code.checkedLanguage(0)).toBe('Python');
     expect(code.tokens(0)).toEqual(['string:x = 1']);
     expect(JSON.stringify(editor.documents.at(-1))).toContain('"language":"python"');
 

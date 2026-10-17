@@ -49,6 +49,21 @@ describe('NuiCommand', () => {
     expect(command.selections.map((item) => item.value)).toEqual(['home']);
   });
 
+  it('marks the selected command, starts on it and keeps it until the app changes it', async () => {
+    const command = CommandDriver.mount({ props: { selected: 'theme' } });
+    await command.ready();
+    expect(command.selectedLabels).toEqual(['Toggle theme']);
+    expect(command.activeLabel).toBe('Toggle theme');
+    await command.type('do');
+    expect(command.activeLabel).toBe('Documentation');
+    await command.clickOption('Documentation');
+    expect(command.selections.map((item) => item.value)).toEqual(['docs']);
+    expect(command.selectedLabels).toEqual([]);
+    await command.type('');
+    expect(command.selectedLabels).toEqual(['Toggle theme']);
+    expect(command.activeLabel).toBe('Toggle theme');
+  });
+
   it('leaves filtering to the app when filter is false and speaks the configured language', async () => {
     const remote = CommandDriver.mount({ props: { filter: false, loading: true } });
     await remote.ready();

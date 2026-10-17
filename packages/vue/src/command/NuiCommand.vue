@@ -60,7 +60,12 @@ import { useControlId, useListNavigation, useMessages } from '@numior/primitives
 import NuiIcon from '../icon/NuiIcon.vue';
 import NuiList from '../list/NuiList.vue';
 import { isComposing } from '../shared/composition';
-import { filterOptions, flattenEntries, optionElementId } from '../shared/options';
+import {
+  defaultOptionKey,
+  filterOptions,
+  flattenEntries,
+  optionElementId,
+} from '../shared/options';
 import { useTriggerElement } from '../shared/trigger-ref';
 import { defaultCommandFilter } from './command-filter';
 import { commandMessages } from './command.messages';
@@ -69,6 +74,7 @@ import type { NuiCommandItem, NuiCommandItemSlot, NuiCommandProps } from './comm
 const {
   id,
   items,
+  selected = undefined,
   filter = undefined,
   loading = false,
   loop = true,
@@ -94,7 +100,7 @@ const inputId = useControlId(() => id);
 const listId = computed(() => `${inputId.value}-list`);
 const input = useTemplateRef<HTMLInputElement>('input');
 const { trigger: listElement, setTrigger: setListbox } = useTriggerElement();
-const picked = shallowRef<T | null>(null);
+const picked = shallowRef<T | null>(selected ?? null);
 
 const texts = computed(() => ({
   label: label ?? messages.value.label,
@@ -119,8 +125,20 @@ const navigation = useListNavigation(listElement, {
   typeahead: false,
 });
 
+const startIndex = (): number => {
+  const entries = flattenEntries(filtered.value).map((item) => (item.disabled ? undefined : item));
+  const keyOf = getKey ?? defaultOptionKey;
+
+  const chosen =
+    selected === undefined || query.value !== ''
+      ? -1
+      : entries.findIndex((item) => item !== undefined && keyOf(item.value) === keyOf(selected));
+
+  return chosen < 0 ? entries.findIndex((item) => item !== undefined) : chosen;
+};
+
 const activateFirst = (): void => {
-  const first = flattenEntries(filtered.value).findIndex((item) => !item.disabled);
+  const first = startIndex();
 
   navigation.setActive(first < 0 ? null : optionElementId(listId.value, first), { focus: false });
 };
@@ -129,7 +147,6 @@ const onInput = (event: Event): void => {
   if (event.target instanceof HTMLInputElement) {
     query.value = event.target.value;
     emit('search', event.target.value);
-    activateFirst();
   }
 };
 
@@ -155,7 +172,7 @@ const activateHovered = (event: PointerEvent): void => {
 };
 
 const onSelect = (item: NuiCommandItem<T>): void => {
-  picked.value = null;
+  picked.value = selected ?? null;
   emit('select', item);
 };
 
@@ -167,9 +184,14 @@ const onFocusout = (event: FocusEvent): void => {
   }
 };
 
+watch([() => items, query], () => activateFirst(), { flush: 'pre' });
+
 watch(
-  () => items,
-  () => activateFirst(),
+  () => selected,
+  (next) => {
+    picked.value = next ?? null;
+    activateFirst();
+  },
   { flush: 'pre' },
 );
 
@@ -187,5 +209,10 @@ onMounted(() => {
   }
 });
 
-defineExpose({ focus: () => input.value?.focus() });
+defineExpose({
+  focus: () => {
+    input.value?.focus();
+    navigation.reveal();
+  },
+});
 </script>

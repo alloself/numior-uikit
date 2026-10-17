@@ -44,6 +44,7 @@
   color: var(--nui-text-subtle);
 }
 .nui-command__list {
+  position: relative;
   flex: 1 1 auto;
   min-block-size: 0;
   max-block-size: 20rem;

@@ -16,6 +16,10 @@ const docs: DocsMap = {
         ru: 'Команды или группы команд; функция даёт асинхронный источник.',
         en: 'Commands or groups of commands; a function gives an async source.',
       },
+      selected: {
+        ru: 'Значение текущей команды: отмечено галочкой и активно, пока запрос пуст; выбор его не меняет.',
+        en: 'Value of the current command: checked and active while the query is empty; picking does not change it.',
+      },
       filter: {
         ru: 'Своя функция отбора по запросу; false отдаёт фильтрацию источнику.',
         en: 'Own filter by query; false leaves filtering to the source.',
@@ -68,6 +72,10 @@ const docs: DocsMap = {
       items: {
         ru: 'Команды или группы команд; функция даёт асинхронный источник.',
         en: 'Commands or groups of commands; a function gives an async source.',
+      },
+      selected: {
+        ru: 'Значение текущей команды: отмечено галочкой и активно, пока запрос пуст; выбор его не меняет.',
+        en: 'Value of the current command: checked and active while the query is empty; picking does not change it.',
       },
       filter: {
         ru: 'Своя функция отбора по запросу; false отдаёт фильтрацию источнику.',

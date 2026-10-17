@@ -78,6 +78,12 @@ export class CommandDriver extends ComponentDriver {
     return active?.find('.nui-row__title').text();
   }
 
+  get selectedLabels(): string[] {
+    return this.options
+      .filter((option) => option.attributes('aria-selected') === 'true')
+      .map((option) => option.find('.nui-row__title').text());
+  }
+
   get groupLabels(): string[] {
     return this.wrapper.findAll('.nui-list__group-label').map((group) => group.text());
   }

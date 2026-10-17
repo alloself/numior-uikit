@@ -13,6 +13,7 @@
       ref="command"
       v-model:query="query"
       :items="items"
+      :selected="selected"
       :filter="filter"
       :loading="loading"
       :loop="loop"
@@ -48,6 +49,7 @@ import type { NuiCommandDialogProps, NuiCommandItem, NuiCommandItemSlot } from '
 const {
   id,
   items,
+  selected = undefined,
   filter = undefined,
   loading = false,
   loop = true,

@@ -79,6 +79,10 @@ test.describe('editor', () => {
     await page.keyboard.press('Enter');
     await expect(editor.codeLanguage()).toHaveText('Python');
     await expect(editor.preview.locator('.nui-code__title').first()).toHaveText('Python');
+
+    await editor.codeLanguage().click();
+    await expect(editor.codeLanguageOption('Python')).toHaveAttribute('aria-selected', 'true');
+    await expect(editor.codeLanguageOption('Python')).toBeInViewport();
   });
 
   test('formats a selection with the keyboard and selects the mention as one piece', async ({

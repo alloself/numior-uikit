@@ -12,6 +12,7 @@ export type NuiCommandFilter<T> = (item: NuiCommandItem<T>, query: string) => bo
 export interface NuiCommandProps<T = string> {
   id?: string | undefined;
   items: NuiCommandSource<T>;
+  selected?: T | undefined;
   filter?: NuiCommandFilter<T> | false | undefined;
   loading?: boolean | undefined;
   loop?: boolean | undefined;

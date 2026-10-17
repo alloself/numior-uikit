@@ -23,8 +23,10 @@
       </template>
       <NuiCommand
         ref="languages"
+        v-model:query="search"
         class="nui-editor-code__languages"
         :items="items"
+        :selected="known?.id ?? language ?? PLAIN"
         :label="texts.codeLanguage"
         :placeholder="texts.codeLanguageSearch"
         @select="choose"
@@ -60,6 +62,7 @@ const texts = useMessages(editorMessages);
 const highlighter = useHighlighter();
 const clipboard = useClipboard();
 const picking = ref(false);
+const search = ref('');
 const languages = useTemplateRef<{ focus(): void }>('languages');
 
 const language = computed(() =>
@@ -82,8 +85,13 @@ const items = computed((): NuiCommandItem[] => [
 ]);
 
 const onToggle = (event: Event): void => {
-  if ('newState' in event && event.newState === 'open') {
+  if (!('newState' in event)) {
+    return;
+  }
+  if (event.newState === 'open') {
     languages.value?.focus();
+  } else {
+    search.value = '';
   }
 };
 

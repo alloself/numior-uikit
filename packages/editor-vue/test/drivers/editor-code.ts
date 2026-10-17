@@ -35,6 +35,13 @@ export class EditorCodeDriver {
     ).trim();
   }
 
+  checkedLanguage(index: number): string {
+    return (
+      this.block(index).querySelector('.nui-editor-code__languages [aria-selected="true"]')
+        ?.textContent ?? ''
+    ).trim();
+  }
+
   async settle(): Promise<void> {
     await flushPromises();
   }

@@ -113,6 +113,13 @@ export class EditorSection {
     return this.content.locator('.nui-editor-code__language').first();
   }
 
+  codeLanguageOption(label: string): Locator {
+    return this.content
+      .locator('.nui-editor-code__languages')
+      .first()
+      .getByRole('option', { name: label });
+  }
+
   codeToken(scope: string): Locator {
     return this.content.locator(`.nui-content__token--scope-${scope}`).first();
   }
