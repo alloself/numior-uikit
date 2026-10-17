@@ -1,9 +1,11 @@
 import type { ResolvedPos } from '../doc/doc.types';
+import { emptyTextblock } from '../doc/empty';
+import { nodeSize } from '../model/node';
 import type { ContentNode, ElementNode } from '../model/node.types';
 import type { NodeType, Schema } from '../schema/schema.types';
 import type { InputIntent, InputSource, TextDirection, TextUnit } from '../state/input.types';
 import { createMetaKey } from '../state/plugin';
-import { nearestCursor, selectionRange } from '../state/selection';
+import { nearestCursor, selectionRange, textSelection } from '../state/selection';
 import type { SelectionRange } from '../state/selection.types';
 import type { Command, EditorState } from '../state/state.types';
 import { liftAtStart, splitListItem } from './blocks';
@@ -117,6 +119,37 @@ export const insertText =
     dispatch?.(tr);
     return true;
   };
+
+const typeOverBlock =
+  (text: string): Command =>
+  (state, dispatch) => {
+    const { selection, doc } = state;
+    const node = selection.kind === 'node' ? doc.byId(selection.id) : undefined;
+    const at = node === undefined ? undefined : doc.positionOf(node.id);
+    const tr = state.tr;
+    const block = node === undefined ? undefined : emptyTextblock(doc.schema, tr.newId());
+
+    if (
+      node === undefined ||
+      at === undefined ||
+      block === undefined ||
+      isInline(doc.schema, node)
+    ) {
+      return false;
+    }
+    tr.delete(at, at + nodeSize(node));
+
+    tr.insert(at, [
+      doc.schema.element(block.type, { id: block.id, content: [doc.schema.text(text)] }),
+    ]);
+
+    tr.setSelection(textSelection(at + 1 + text.length));
+    dispatch?.(tr);
+    return true;
+  };
+
+const isInline = (schema: Schema, node: ContentNode): boolean =>
+  schema.nodes.get(node.kind === 'element' ? node.type : 'text')?.inline !== false;
 
 const typeOf = (schema: Schema, node: ContentNode): NodeType | undefined =>
   node.kind === 'element' ? schema.nodes.get(node.type) : undefined;
@@ -255,7 +288,9 @@ const formatCommand =
 export const intentCommand = (intent: InputIntent): Command => {
   switch (intent.kind) {
     case 'insertText':
-      return insertText(intent.text, intent.range);
+      return intent.range === undefined
+        ? chainCommands(typeOverBlock(intent.text), insertText(intent.text))
+        : insertText(intent.text, intent.range);
     case 'compose':
       return insertText(intent.text, intent.range, intent.caret);
     case 'insertParagraph':

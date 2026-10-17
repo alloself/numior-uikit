@@ -189,6 +189,13 @@ export class EditorViewDriver {
     };
   }
 
+  selectionInside(id: NodeId): boolean {
+    const selection = document.getSelection();
+    const dom = this.view.nodeDOM(id);
+
+    return dom !== undefined && selection?.anchorNode === dom && selection.focusNode === dom;
+  }
+
   get selectedNodes(): number {
     return this.host.querySelectorAll('.nui-editor__selected').length;
   }

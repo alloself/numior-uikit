@@ -2,6 +2,7 @@ import { isAtom } from '../commands/input';
 import type { Doc } from '../doc/doc.types';
 import { nearestCursor, selectionRange, textPosition, textSelection } from '../state/selection';
 import type { Selection } from '../state/selection.types';
+import { widgetAround } from './desc';
 import type { ViewHost } from './host.types';
 import { domAtPos, posAtDOM } from './positions';
 import type { DomPoint } from './view.types';
@@ -43,11 +44,18 @@ const indexIn = (node: Node): number => {
 };
 
 const nodePoints = (host: ViewHost, id: string): readonly [DomPoint, DomPoint] | undefined => {
-  const dom = host.context.byId.get(id)?.dom;
+  const desc = host.context.byId.get(id);
+  const dom = desc?.dom;
   const parent = dom?.parentNode;
 
   if (dom === undefined || parent === null || parent === undefined) {
     return undefined;
+  }
+  if (desc?.view !== undefined && desc.contentDOM === null) {
+    return [
+      { node: dom, offset: 0 },
+      { node: dom, offset: dom.childNodes.length },
+    ];
   }
   const index = indexIn(dom);
 
@@ -97,6 +105,21 @@ const domSpan = (host: ViewHost): Span | undefined => {
   };
 };
 
+const holds = (selection: globalThis.Selection, points: readonly [DomPoint, DomPoint]): boolean =>
+  selection.anchorNode === points[0].node &&
+  selection.anchorOffset === points[0].offset &&
+  selection.focusNode === points[1].node &&
+  selection.focusOffset === points[1].offset;
+
+const inWidget = (host: ViewHost): boolean => {
+  const selection = host.root.ownerDocument.getSelection();
+
+  return (
+    widgetAround(host.context, selection?.anchorNode ?? null) ||
+    widgetAround(host.context, selection?.focusNode ?? null)
+  );
+};
+
 const allCaret = (doc: Doc): number => textPosition(doc, 0, 1) ?? 0;
 
 const coversAll = (doc: Doc, span: Span): boolean =>
@@ -130,7 +153,11 @@ const selectionOfSpan = (doc: Doc, span: Span): Selection => {
 const focused = (host: ViewHost): boolean => {
   const active = host.root.ownerDocument.activeElement;
 
-  return active !== null && (active === host.root || host.root.contains(active));
+  return (
+    active !== null &&
+    (active === host.root || host.root.contains(active)) &&
+    !widgetAround(host.context, active)
+  );
 };
 
 export const createSelectionSync = (host: ViewHost): SelectionSync => {
@@ -152,7 +179,7 @@ export const createSelectionSync = (host: ViewHost): SelectionSync => {
 
   return {
     read: () => {
-      const span = host.composing() ? undefined : domSpan(host);
+      const span = host.composing() || inWidget(host) ? undefined : domSpan(host);
 
       if (span === undefined || matches(span)) {
         return;
@@ -176,6 +203,7 @@ export const createSelectionSync = (host: ViewHost): SelectionSync => {
         !focused(host) ||
         selection === null ||
         points === undefined ||
+        holds(selection, points) ||
         (span !== undefined && matches(span))
       ) {
         return;

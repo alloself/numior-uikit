@@ -113,7 +113,39 @@ describe('node views', () => {
 
     driver.releaseMouse();
 
-    expect(driver.domSpan).toEqual({ anchor: 8, head: 9 });
+    expect(driver.selectionInside(id)).toBe(true);
+  });
+
+  it('keeps a selected leaf between leaves and edits over it from the keyboard', () => {
+    driver = EditorViewDriver.mount(
+      doc(node('paragraph', ['before']), node('divider'), node('divider')),
+      fixtureSchema,
+      [],
+      boxViews({ updates: [], destroyed: [] }),
+    );
+
+    driver.focus();
+
+    const rule = driver.view.state.doc.root.content[2];
+    const id = rule?.kind === 'element' ? rule.id : '';
+
+    driver.pressInWidget(id, '.box__label');
+    driver.releaseMouse();
+
+    expect(driver.press('Shift')).toBe(false);
+    expect(driver.selection).toEqual({ kind: 'node', id });
+    expect(driver.press('x')).toBe(true);
+    expect(driver.modelTexts).toEqual(['before', '', 'x']);
+    expect(driver.selection).toEqual({ kind: 'text', anchor: 11, head: 11 });
+
+    const first = driver.view.state.doc.root.content[1];
+    const firstId = first?.kind === 'element' ? first.id : '';
+
+    driver.pressInWidget(firstId, '.box__label');
+    driver.releaseMouse();
+
+    expect(driver.press('Backspace')).toBe(true);
+    expect(driver.modelTexts).toEqual(['before', 'x']);
   });
 
   it('destroys views of removed nodes and of the whole document', () => {

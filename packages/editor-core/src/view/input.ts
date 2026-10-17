@@ -224,6 +224,28 @@ const deleteAll = (host: ViewHost, event: KeyboardEvent): boolean =>
   !hasModifier(event) &&
   runIntent(host, { kind: 'delete', direction: 'backward', unit: 'character' });
 
+const NODE_KEYS: Readonly<Record<string, InputIntent>> = {
+  Backspace: { kind: 'delete', direction: 'backward', unit: 'character' },
+  Delete: { kind: 'delete', direction: 'forward', unit: 'character' },
+  Enter: { kind: 'insertParagraph' },
+};
+
+const overNode = (event: KeyboardEvent): InputIntent | undefined => {
+  if (event.ctrlKey || event.metaKey || event.altKey) {
+    return undefined;
+  }
+  return (
+    NODE_KEYS[event.key] ??
+    (Array.from(event.key).length === 1 ? { kind: 'insertText', text: event.key } : undefined)
+  );
+};
+
+const editNode = (host: ViewHost, event: KeyboardEvent): boolean => {
+  const intent = host.state().selection.kind === 'node' ? overNode(event) : undefined;
+
+  return intent !== undefined && runIntent(host, intent);
+};
+
 const handleKey = (host: ViewHost, event: KeyboardEvent): boolean => {
   const key = keyOf(event);
   const state = host.state();
@@ -235,7 +257,8 @@ const handleKey = (host: ViewHost, event: KeyboardEvent): boolean => {
   return (
     state.plugins.some((plugin) => plugin.props.handleKey?.(key, state, dispatch) === true) ||
     moveByArrow(host, event) ||
-    deleteAll(host, event)
+    deleteAll(host, event) ||
+    editNode(host, event)
   );
 };
 
@@ -420,10 +443,29 @@ export const attachInput = (host: ViewHost, parts: InputParts): (() => void) => 
       }
     };
 
+  const selectedOwner = (target: EventTarget | null): boolean => {
+    const { selection } = host.state();
+    const owner = widgetOwner(host.context, target);
+
+    return (
+      selection.kind === 'node' &&
+      owner?.node.id === selection.id &&
+      !interactive(target, owner.dom)
+    );
+  };
+
+  const clipboard =
+    <E extends Event>(handler: (event: E) => void) =>
+    (event: E): void => {
+      if (!widgetAround(host.context, event.target) || selectedOwner(event.target)) {
+        handler(event);
+      }
+    };
+
   const keydown = own(onKeydown);
   const beforeinput = own(onBeforeinput);
-  const paste = own(onPaste);
-  const copy = own(onCopy);
+  const paste = clipboard(onPaste);
+  const copy = clipboard(onCopy);
   const drop = own(onDrop);
   const drag = own(onDrag);
   const mousedown = own(onMousedown);
