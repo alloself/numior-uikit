@@ -385,6 +385,8 @@ provideEditorLinks({
   embedOf: links.embedOf,
   refresh: links.refresh,
   turn: links.turn,
+  relink: links.relink,
+  accepts: links.accepts,
 });
 
 const pastedProvider = computed(() => {

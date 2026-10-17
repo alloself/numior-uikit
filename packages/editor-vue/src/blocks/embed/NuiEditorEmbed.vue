@@ -23,6 +23,9 @@
         :anchor="frame"
         :label="texts.embed"
         :actions="actions"
+        :address="address"
+        @relink="relink"
+        @done="editor.focus()"
       />
     </div>
     <NuiEditorCaption :node="node" :editor="editor" :editable="editable" :selected="selected" />
@@ -35,7 +38,7 @@ import { useMessages } from '@numior/primitives';
 import { computed, ref, useTemplateRef, watch } from 'vue';
 import { editorMessages } from '../../editor/editor.messages';
 import { useEditorLinkContext } from '../../links/links-context';
-import type { LinkBarAction } from '../../links/links.types';
+import type { LinkAddress, LinkBarAction } from '../../links/links.types';
 import NuiEditorLinkBar from '../../links/NuiEditorLinkBar.vue';
 import type { NuiEditorBlockViewProps } from '../block.types';
 import NuiEditorCaption from '../caption/NuiEditorCaption.vue';
@@ -65,6 +68,16 @@ const actions = computed((): LinkBarAction[] => [
     },
   },
 ]);
+
+const address = computed((): LinkAddress => ({
+  url: url.value,
+  valid: (next) => links?.accepts('embed', next) === true,
+  invalidText: texts.value.embedInvalid,
+}));
+
+const relink = (next: string): void => {
+  links?.relink(node.id, next);
+};
 
 watch(
   () => selected,

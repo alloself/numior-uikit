@@ -21,6 +21,12 @@ export interface PastedLink {
 
 export type LinkKind = 'embed' | 'bookmark';
 
+export interface LinkAddress {
+  readonly url: string;
+  readonly valid: (url: string) => boolean;
+  readonly invalidText: string;
+}
+
 export interface LinkBarAction {
   readonly key: string;
   readonly label: string;

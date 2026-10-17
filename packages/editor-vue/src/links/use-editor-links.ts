@@ -7,6 +7,7 @@ import {
   nodeSize,
   placeBlock,
   setMark,
+  type Attrs,
   type Command,
   type EditorState,
   type ElementNode,
@@ -40,6 +41,8 @@ export interface EditorLinks {
   insert(kind: LinkKind, url: string): boolean;
   convert(kind: LinkKind): boolean;
   turn(id: NodeId, kind: LinkKind): boolean;
+  relink(id: NodeId, url: string): boolean;
+  accepts(kind: LinkKind, url: string): boolean;
   refresh(id: NodeId): void;
   follow(state: EditorState): void;
   dismiss(): void;
@@ -74,17 +77,20 @@ const emptyParagraph = (state: EditorState): ElementNode | undefined => {
   return parent.type === 'paragraph' && parent.content.length === 0 ? parent : undefined;
 };
 
-const setPreview =
-  (id: NodeId, preview: NuiEditorLinkPreview): Command =>
+const setLinkAttrs =
+  (id: NodeId, attrs: Attrs, remembered: boolean): Command =>
   (state, dispatch) => {
     const at = state.doc.positionOf(id);
 
     if (at === undefined) {
       return false;
     }
-    dispatch?.(state.tr.setNodeAttrs(at, previewAttrs(preview)).setMeta(addToHistory, false));
+    dispatch?.(state.tr.setNodeAttrs(at, attrs).setMeta(addToHistory, remembered));
     return true;
   };
+
+const setPreview = (id: NodeId, preview: NuiEditorLinkPreview): Command =>
+  setLinkAttrs(id, previewAttrs(preview), false);
 
 const replacing =
   (link: PastedLink) =>
@@ -145,6 +151,28 @@ export const useEditorLinks = (options: EditorLinkOptions): EditorLinks => {
           attrs: { url, site: webAddress(url)?.hostname ?? '' },
         })
       : undefined;
+  };
+
+  const accepts = (kind: LinkKind, url: string): boolean =>
+    kind === 'embed' ? embedOf(url) !== undefined : webAddress(url) !== undefined;
+
+  const addressAttrs = (type: string, url: string): Attrs | undefined => {
+    switch (type) {
+      case 'embed': {
+        const embed = embedOf(url);
+
+        return embed === undefined ? undefined : { url, provider: embed.provider.id };
+      }
+      case 'bookmark': {
+        const address = webAddress(url);
+
+        return address === undefined
+          ? undefined
+          : { ...previewAttrs({}), url, site: address.hostname };
+      }
+      default:
+        return undefined;
+    }
   };
 
   const refresh = (id: NodeId): void => {
@@ -254,6 +282,23 @@ export const useEditorLinks = (options: EditorLinkOptions): EditorLinks => {
       return link !== undefined && inserted(kind, link.url, replacing(link));
     },
     refresh,
+    accepts,
+    relink: (id, url) => {
+      const node = options.state().doc.byId(id);
+      const attrs = node === undefined ? undefined : addressAttrs(node.type, url);
+
+      if (node === undefined || attrs === undefined || node.attrs.url === url) {
+        return node !== undefined && node.attrs.url === url;
+      }
+      controllers.get(id)?.abort();
+
+      const done = options.run(setLinkAttrs(id, attrs, true));
+
+      if (done && node.type === 'bookmark') {
+        refresh(id);
+      }
+      return done;
+    },
     turn: (id, kind) => {
       const url = options.state().doc.byId(id)?.attrs.url;
 

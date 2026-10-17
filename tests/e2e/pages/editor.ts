@@ -479,6 +479,27 @@ export class EditorSection {
     return this.page.locator('.nui-editor-media');
   }
 
+  bookmark(site: string): Locator {
+    return this.content.locator('.nui-content__bookmark', { hasText: site });
+  }
+
+  publishedBookmark(site: string): Locator {
+    return this.preview.locator('.nui-content__bookmark', { hasText: site });
+  }
+
+  linkBar(): Locator {
+    return this.page.locator('.nui-editor-link-bar:popover-open');
+  }
+
+  async relink(url: string): Promise<void> {
+    await this.linkBar().getByRole('button', { name: 'Изменить ссылку' }).click();
+
+    const field = this.page.locator('.nui-editor-link-bar__edit').getByRole('textbox');
+
+    await field.fill(url);
+    await field.press('Enter');
+  }
+
   imageViewer(): Locator {
     return this.page.locator('.nui-content__viewer');
   }

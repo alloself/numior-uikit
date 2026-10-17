@@ -63,6 +63,8 @@ export interface NuiEditorMessages {
   readonly toBookmark: string;
   readonly toEmbed: string;
   readonly linkRefresh: string;
+  readonly linkEdit: string;
+  readonly linkSave: string;
   readonly linkLoading: string;
   readonly embedTitle: (params: { readonly provider: string }) => string;
   readonly embedUnavailable: (params: { readonly provider: string }) => string;
@@ -259,6 +261,8 @@ export const editorMessages: NuiMessageCatalog<'editor'> = {
     toBookmark: 'Show as bookmark',
     toEmbed: 'Embed',
     linkRefresh: 'Refresh',
+    linkEdit: 'Edit link',
+    linkSave: 'Save',
     linkLoading: 'Loading…',
     embedTitle: ({ provider }) => `${provider} embed`,
     embedUnavailable: ({ provider }) => `${provider} embeds are not allowed here`,
@@ -374,6 +378,8 @@ export const editorMessages: NuiMessageCatalog<'editor'> = {
     toBookmark: 'Показать закладкой',
     toEmbed: 'Встроить',
     linkRefresh: 'Обновить',
+    linkEdit: 'Изменить ссылку',
+    linkSave: 'Сохранить',
     linkLoading: 'Загрузка…',
     embedTitle: ({ provider }) => `Встраивание ${provider}`,
     embedUnavailable: ({ provider }) => `Встраивания ${provider} здесь не разрешены`,

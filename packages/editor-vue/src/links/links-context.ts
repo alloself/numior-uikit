@@ -9,6 +9,8 @@ export interface EditorLinkContext {
   embedOf(url: string, provider?: string): NuiEmbed | undefined;
   refresh(id: NodeId): void;
   turn(id: NodeId, kind: LinkKind): boolean;
+  relink(id: NodeId, url: string): boolean;
+  accepts(kind: LinkKind, url: string): boolean;
 }
 
 const LINKS: InjectionKey<EditorLinkContext> = Symbol('nui-editor-links');

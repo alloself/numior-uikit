@@ -168,7 +168,7 @@ describe('NuiEditor embeds and bookmarks', () => {
     await editor.showBlocks();
     await links.select('.nui-editor-embed__cover');
 
-    expect(links.barActions).toEqual(['Open link', 'Show as bookmark']);
+    expect(links.barActions).toEqual(['Open link', 'Show as bookmark', 'Edit link']);
 
     await links.act('Show as bookmark');
 
@@ -199,5 +199,48 @@ describe('NuiEditor embeds and bookmarks', () => {
     await editor.showBlocks();
 
     expect(links.frames).toEqual(['none:YouTube embeds are not allowed here']);
+  });
+
+  it('changes the address of an embed and a bookmark from their bars within what each holds', async () => {
+    const editor = await editing(lines(''), {
+      embeds: ['youtube', 'vimeo'],
+      linkMetadata: metadata,
+    });
+
+    const links = EditorLinksDriver.of(editor);
+
+    await editor.select(1);
+    await editor.pasteHTML('', VIDEO);
+    await links.choosePaste('Embed YouTube');
+    await editor.showBlocks();
+    await links.select('.nui-editor-embed__cover');
+    await links.act('Edit link');
+    await links.relink('https://numior.test/news');
+
+    expect(links.relinkError).toBe('This link cannot be embedded');
+
+    await links.relink('https://vimeo.com/76979871');
+
+    expect(links.editing).toBe(false);
+
+    expect(outline(editor.documents.at(-1))).toEqual([
+      'embed:vimeo:https://vimeo.com/76979871',
+      'paragraph:',
+    ]);
+
+    await editor.press('z', { ctrl: true });
+
+    expect(outline(editor.documents.at(-1))).toEqual([`embed:youtube:${VIDEO}`, 'paragraph:']);
+
+    await links.act('Show as bookmark');
+    await editor.showBlocks();
+    await links.select('.nui-content__bookmark-link');
+    await links.act('Edit link');
+    await links.relink('https://blog.numior.test/2-4');
+
+    expect(outline(editor.documents.at(-1))).toEqual([
+      'bookmark:Numior blog:blog.numior.test',
+      'paragraph:',
+    ]);
   });
 });

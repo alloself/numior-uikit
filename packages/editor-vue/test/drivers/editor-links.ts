@@ -80,12 +80,14 @@ export class EditorLinksDriver {
 
   get barActions(): readonly string[] {
     return [
-      ...this.content.querySelectorAll('.nui-editor-link-bar button, .nui-editor-link-bar a'),
+      ...this.content.querySelectorAll(
+        '.nui-editor-link-bar__actions button, .nui-editor-link-bar__actions a',
+      ),
     ].map((action) => action.getAttribute('aria-label') ?? '');
   }
 
   async act(label: string): Promise<void> {
-    const action = [...this.content.querySelectorAll('.nui-editor-link-bar button')].find(
+    const action = [...this.content.querySelectorAll('.nui-editor-link-bar__actions button')].find(
       (candidate) => candidate.getAttribute('aria-label') === label,
     );
 
@@ -94,5 +96,31 @@ export class EditorLinksDriver {
     }
     action.click();
     await this.settle();
+  }
+
+  async relink(url: string): Promise<void> {
+    const input = this.content.querySelector('.nui-editor-link-bar__edit input');
+    const form = input?.closest('form');
+
+    if (!(input instanceof HTMLInputElement) || form === null || form === undefined) {
+      throw new Error('The link bar has no address field');
+    }
+    input.value = url;
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    await nextTick();
+    form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    await this.settle();
+  }
+
+  get relinkError(): string {
+    return (
+      this.content
+        .querySelector('.nui-editor-link-bar__edit .nui-field__error')
+        ?.textContent?.trim() ?? ''
+    );
+  }
+
+  get editing(): boolean {
+    return this.content.querySelector('.nui-editor-link-bar__edit') !== null;
   }
 }

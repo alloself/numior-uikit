@@ -82,6 +82,49 @@ test.describe('editor links', () => {
     await expect(editor.mediaPanel()).toContainText('Эту ссылку нельзя встроить');
   });
 
+  test('changes the address of a bookmark from its bar and asks for the new metadata', async ({
+    page,
+  }) => {
+    const playground = await openEditor(page);
+    const { editor } = playground;
+    const card = editor.bookmark('numior.test');
+
+    await card.scrollIntoViewIfNeeded();
+    await card.locator('.nui-content__bookmark-title').click();
+    await expect(editor.linkBar()).toBeVisible();
+    await editor.relink('https://docs.example.test/start');
+
+    await expect(editor.publishedBookmark('docs.example.test')).toContainText(
+      'Страница docs.example.test',
+    );
+
+    await expect(editor.linkBar()).toBeVisible();
+    await page.keyboard.press('ControlOrMeta+z');
+    await expect(editor.publishedBookmark('numior.test')).toContainText('Релиз 2.4');
+  });
+
+  test('keeps a bookmark between other blocks selected and types over it from the keyboard', async ({
+    page,
+  }) => {
+    const playground = await openEditor(page);
+    const { editor } = playground;
+    const card = editor.bookmark('numior.test');
+
+    await card.scrollIntoViewIfNeeded();
+    await card.locator('.nui-content__bookmark-description').click();
+    await page.keyboard.press('Shift');
+    await expect(editor.selectedAtoms()).toHaveCount(1);
+    await expect(editor.linkBar()).toBeVisible();
+    await page.keyboard.press('x');
+    await expect(editor.bookmark('numior.test')).toHaveCount(0);
+    await expect(editor.content.locator('p', { hasText: /^x$/u })).toHaveCount(1);
+    await page.keyboard.press('ControlOrMeta+z');
+    await expect(editor.bookmark('numior.test')).toHaveCount(1);
+    await editor.bookmark('numior.test').locator('.nui-content__bookmark-title').click();
+    await page.keyboard.press('Backspace');
+    await expect(editor.bookmark('numior.test')).toHaveCount(0);
+  });
+
   test('passes axe with the paste menu and the bookmark bar open', async ({ page }) => {
     const playground = await openEditor(page);
     const { editor } = playground;
@@ -97,5 +140,8 @@ test.describe('editor links', () => {
     await card.click();
     await expect(page.locator('.nui-editor-link-bar').last()).toBeVisible();
     expect(await playground.wcagViolations('section[aria-labelledby="editor-title"]')).toEqual([]);
+    await editor.linkBar().getByRole('button', { name: 'Изменить ссылку' }).click();
+    await expect(page.locator('.nui-editor-link-bar__edit')).toBeVisible();
+    expect(await playground.wcagViolations('.nui-editor-link-bar__edit')).toEqual([]);
   });
 });
