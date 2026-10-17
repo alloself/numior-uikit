@@ -610,6 +610,27 @@ test.describe('editor', () => {
     );
   });
 
+  test('takes back empty lines after a to-do list and reaches the task status with arrows', async ({
+    page,
+  }) => {
+    const { editor } = await openEditor(page);
+    const list = editor.content.locator('.nui-content__list--todo');
+    const item = list.locator('li').last().locator('p');
+
+    await item.scrollIntoViewIfNeeded();
+    await editor.caretAtEndOf(item);
+    for (const key of ['Enter', 'Enter', 'Enter', 'Backspace', 'Backspace', 'Backspace']) {
+      await page.keyboard.press(key);
+    }
+
+    await expect(list.locator('xpath=following-sibling::*[1]')).toHaveClass(/task-status/u);
+    await expect(item).toHaveText('Подготовить письм');
+
+    await page.keyboard.press('ArrowDown');
+    await expect(editor.selectedAtoms()).toHaveCount(1);
+    await expect(editor.selectedAtoms()).toHaveClass(/task-status/u);
+  });
+
   test('passes axe in light and dark, fits phones and types in RTL', async ({ page }) => {
     const playground = await openEditor(page);
     const { editor } = playground;

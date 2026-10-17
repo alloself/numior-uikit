@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vite-plus/test';
-import { nodeSize } from '../src';
+import { nodeSize, textSelection } from '../src';
 import { fixtureSchema } from '../src/fixtures';
 import { EditorViewDriver } from './drivers/view';
 import { buildWith } from './support/notes';
@@ -161,6 +161,30 @@ describe('node views', () => {
     expect(driver.selection).toEqual({ kind: 'text', anchor: 10, head: 10 });
     expect(driver.clickBelow()).toBe(true);
     expect(driver.modelTexts).toEqual(['before', '', '']);
+  });
+
+  it('reaches a leaf between text lines with the vertical arrows and leaves it the same way', () => {
+    driver = EditorViewDriver.mount(
+      doc(node('paragraph', ['a']), node('divider'), node('paragraph', ['b'])),
+      fixtureSchema,
+      [],
+      boxViews({ updates: [], destroyed: [] }),
+    );
+
+    driver.layText({ collapsedHeight: 20 });
+    driver.focus();
+
+    driver.view.update(
+      driver.view.state.apply(driver.view.state.tr.setSelection(textSelection(2))),
+    );
+
+    const rule = driver.view.state.doc.root.content[1];
+    const id = rule?.kind === 'element' ? rule.id : '';
+
+    expect(driver.press('ArrowDown')).toBe(true);
+    expect(driver.selection).toEqual({ kind: 'node', id });
+    expect(driver.press('ArrowUp')).toBe(true);
+    expect(driver.selection).toEqual(textSelection(2));
   });
 
   it('destroys views of removed nodes and of the whole document', () => {

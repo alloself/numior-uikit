@@ -17,6 +17,7 @@ import type { DomWatch } from './dom-change';
 import type { ViewHost } from './host.types';
 import { posAtDOM } from './positions';
 import type { SelectionSync } from './selection-sync';
+import { atomAcross } from './vertical';
 
 export interface InputParts {
   readonly sync: SelectionSync;
@@ -68,6 +69,12 @@ const ARROWS: Readonly<Record<string, Arrow>> = {
   ArrowDown: { forward: true, vertical: true },
 };
 
+const withinBlock = (host: ViewHost, from: number, to: number): boolean => {
+  const { doc } = host.state();
+
+  return doc.resolve(from).parent.id === doc.resolve(to).parent.id;
+};
+
 const targetRange = (event: InputEvent, host: ViewHost): SelectionRange | undefined => {
   const first =
     typeof event.getTargetRanges === 'function' ? event.getTargetRanges()[0] : undefined;
@@ -83,7 +90,7 @@ const targetRange = (event: InputEvent, host: ViewHost): SelectionRange | undefi
   const from = posAtDOM(host.context, first.startContainer, first.startOffset);
   const to = posAtDOM(host.context, first.endContainer, first.endOffset);
 
-  return from < to ? { from, to } : undefined;
+  return from < to && withinBlock(host, from, to) ? { from, to } : undefined;
 };
 
 const textOf = (event: InputEvent): string =>
@@ -210,6 +217,13 @@ const moveByArrow = (host: ViewHost, event: KeyboardEvent): boolean => {
 
   if (state.selection.kind === 'all') {
     return leaveAll(host, forward);
+  }
+
+  const across = arrow.vertical ? atomAcross(host, forward) : undefined;
+
+  if (across !== undefined) {
+    host.dispatch(state.tr.setSelection({ kind: 'node', id: across }), 'key');
+    return true;
   }
 
   return selectAtom(forward ? 'forward' : 'backward', arrow.vertical)(state, (tr) => {
