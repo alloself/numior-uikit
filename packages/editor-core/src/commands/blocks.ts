@@ -431,13 +431,8 @@ export const caretAtEnd: Command = (state, dispatch) => {
   if (last === undefined || at === undefined) {
     return false;
   }
-  if (
-    type?.inlineContent === true &&
-    !type.code &&
-    last.kind === 'element' &&
-    last.content.length === 0
-  ) {
-    dispatch?.(state.tr.setSelection(textSelection(at + 1)));
+  if (type?.inlineContent === true) {
+    dispatch?.(state.tr.setSelection(textSelection(at + nodeSize(last) - 1)));
     return true;
   }
   return attempt(state, dispatch, (tr) => {

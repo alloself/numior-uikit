@@ -173,6 +173,11 @@ describe('input commands', () => {
     expect(types(ended)).toEqual(['paragraph', 'divider', 'paragraph']);
     expect(types(run(ended, caretAtEnd))).toEqual(['paragraph', 'divider', 'paragraph']);
     expect(run(ended, caretAtEnd).selection).toEqual(textSelection(5));
+
+    const written = stateOf(doc(node('paragraph', ['text'])), textSelection(1));
+
+    expect(types(run(written, caretAtEnd))).toEqual(['paragraph']);
+    expect(run(written, caretAtEnd).selection).toEqual(textSelection(5));
   });
 
   it('removes an empty line beside a list with Backspace and Delete', () => {
