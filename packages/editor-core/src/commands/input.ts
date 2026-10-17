@@ -5,7 +5,7 @@ import type { ContentNode, ElementNode } from '../model/node.types';
 import type { NodeType, Schema } from '../schema/schema.types';
 import type { InputIntent, InputSource, TextDirection, TextUnit } from '../state/input.types';
 import { createMetaKey } from '../state/plugin';
-import { nearestCursor, selectionRange, textSelection } from '../state/selection';
+import { nearestCursor, selectionRange, textPosition, textSelection } from '../state/selection';
 import type { SelectionRange } from '../state/selection.types';
 import type { Command, EditorState } from '../state/state.types';
 import { attempt, exitEmptyLast, liftAtStart, splitListItem } from './blocks';
@@ -68,6 +68,30 @@ const spanOf = (text: string, unit: TextUnit, direction: TextDirection): number 
   return unit === 'character' ? (ordered.at(-1)?.length ?? 0) : wordSpan(ordered);
 };
 
+const dropEmpty =
+  (backward: boolean): Command =>
+  (state, dispatch) => {
+    const cursor = textCursor(state);
+
+    if (cursor === undefined || cursor.parent.content.length > 0 || cursor.depth < 1) {
+      return false;
+    }
+    const start = cursor.before(cursor.depth);
+    const size = nodeSize(cursor.parent);
+
+    return attempt(state, dispatch, (tr) => {
+      tr.delete(start, start + size);
+
+      const target = textPosition(tr.doc, start, backward ? -1 : 1);
+
+      if (target === undefined) {
+        return false;
+      }
+      tr.setSelection(textSelection(target));
+      return true;
+    });
+  };
+
 export const deleteText =
   (direction: TextDirection, unit: TextUnit): Command =>
   (state, dispatch) => {
@@ -84,7 +108,10 @@ export const deleteText =
     const backward = direction === 'backward';
 
     if (backward ? offset === 0 : offset === text.length) {
-      return backward ? joinBackward(state, dispatch) : joinForward(state, dispatch);
+      return chainCommands(backward ? joinBackward : joinForward, dropEmpty(backward))(
+        state,
+        dispatch,
+      );
     }
     const span = spanOf(backward ? text.slice(0, offset) : text.slice(offset), unit, direction);
     const from = backward ? cursor.pos - span : cursor.pos;

@@ -175,6 +175,38 @@ describe('input commands', () => {
     expect(run(ended, caretAtEnd).selection).toEqual(textSelection(5));
   });
 
+  it('removes an empty line beside a list with Backspace and Delete', () => {
+    const list = () => node('bullet_list', [node('list_item', [node('paragraph', ['item'])])]);
+
+    const before = stateOf(
+      doc(node('paragraph', ['a']), node('paragraph'), list()),
+      textSelection(4),
+    );
+
+    const first = stateOf(doc(node('paragraph'), list()), textSelection(1));
+
+    const after = stateOf(
+      doc(list(), node('paragraph'), node('paragraph', ['z'])),
+      textSelection(11),
+    );
+
+    expect(types(run(before, deleteText('forward', 'character')))).toEqual([
+      'paragraph',
+      'bullet_list',
+    ]);
+
+    expect(run(before, deleteText('forward', 'character')).selection).toEqual(textSelection(6));
+    expect(types(run(first, deleteText('forward', 'character')))).toEqual(['bullet_list']);
+    expect(types(run(first, deleteText('backward', 'character')))).toEqual(['bullet_list']);
+
+    expect(types(run(after, deleteText('backward', 'character')))).toEqual([
+      'bullet_list',
+      'paragraph',
+    ]);
+
+    expect(run(after, deleteText('backward', 'character')).selection).toEqual(textSelection(7));
+  });
+
   it('finds text positions with a direction and falls back the other way', () => {
     const root = createDoc(
       fixtureSchema,
