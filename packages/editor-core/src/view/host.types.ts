@@ -9,4 +9,5 @@ export interface ViewHost {
   readonly state: () => EditorState;
   readonly dispatch: (tr: Transaction, source?: InputSource) => void;
   readonly composing: () => boolean;
+  readonly holding: () => boolean;
 }

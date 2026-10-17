@@ -21,6 +21,7 @@ export interface InputParts {
   readonly sync: SelectionSync;
   readonly watch: DomWatch;
   readonly setComposing: (composing: boolean) => void;
+  readonly setHolding: (holding: boolean) => void;
 }
 
 interface Arrow {
@@ -383,7 +384,15 @@ export const attachInput = (host: ViewHost, parts: InputParts): (() => void) => 
     const owner = widgetOwner(host.context, event.target);
 
     if (owner?.contentDOM === null && event.button === 0 && !interactive(event.target, owner.dom)) {
+      parts.setHolding(true);
       selectNode(event, owner.node.id);
+    }
+  };
+
+  const onMouseup = (): void => {
+    if (host.holding()) {
+      parts.setHolding(false);
+      parts.sync.write();
     }
   };
 
@@ -398,7 +407,7 @@ export const attachInput = (host: ViewHost, parts: InputParts): (() => void) => 
   };
 
   const onSelectionchange = (): void => {
-    if (!widgetAround(host.context, doc.getSelection()?.focusNode ?? null)) {
+    if (!host.holding() && !widgetAround(host.context, doc.getSelection()?.focusNode ?? null)) {
       parts.sync.read();
     }
   };
@@ -433,6 +442,7 @@ export const attachInput = (host: ViewHost, parts: InputParts): (() => void) => 
   root.addEventListener('dragstart', drag);
   root.addEventListener('mousedown', mousedown);
   root.addEventListener('mousedown', onWidgetMousedown);
+  doc.addEventListener('mouseup', onMouseup);
   root.addEventListener('compositionstart', compositionstart);
   root.addEventListener('compositionend', compositionend);
   doc.addEventListener('selectionchange', onSelectionchange);
@@ -450,6 +460,7 @@ export const attachInput = (host: ViewHost, parts: InputParts): (() => void) => 
     root.removeEventListener('dragstart', drag);
     root.removeEventListener('mousedown', mousedown);
     root.removeEventListener('mousedown', onWidgetMousedown);
+    doc.removeEventListener('mouseup', onMouseup);
     root.removeEventListener('compositionstart', compositionstart);
     root.removeEventListener('compositionend', compositionend);
     doc.removeEventListener('selectionchange', onSelectionchange);

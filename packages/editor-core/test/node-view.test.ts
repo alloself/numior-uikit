@@ -91,6 +91,31 @@ describe('node views', () => {
     expect(driver.selection).toEqual({ kind: 'node', id });
   });
 
+  it('writes the selection of a pressed leaf node to the page only once the button is released', () => {
+    driver = EditorViewDriver.mount(
+      doc(node('paragraph', ['before']), node('divider')),
+      fixtureSchema,
+      [],
+      boxViews({ updates: [], destroyed: [] }),
+    );
+
+    driver.focus();
+
+    const caret = driver.domSpan;
+
+    const rule = driver.view.state.doc.root.content[1];
+    const id = rule?.kind === 'element' ? rule.id : '';
+
+    driver.pressInWidget(id, '.box__label');
+
+    expect(driver.selection).toEqual({ kind: 'node', id });
+    expect(driver.domSpan).toEqual(caret);
+
+    driver.releaseMouse();
+
+    expect(driver.domSpan).toEqual({ anchor: 8, head: 9 });
+  });
+
   it('destroys views of removed nodes and of the whole document', () => {
     const log: NodeViewLog = { updates: [], destroyed: [] };
     const view = mounted(log);

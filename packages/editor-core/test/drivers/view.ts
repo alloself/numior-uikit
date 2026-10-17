@@ -152,6 +152,10 @@ export class EditorViewDriver {
     );
   }
 
+  releaseMouse(): void {
+    document.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, button: 0 }));
+  }
+
   typeInWidget(id: NodeId, text: string): boolean {
     return !this.widgetOf(id).dispatchEvent(beforeinput('insertText', text));
   }

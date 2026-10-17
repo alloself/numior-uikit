@@ -172,6 +172,7 @@ export const createSelectionSync = (host: ViewHost): SelectionSync => {
 
       if (
         host.composing() ||
+        host.holding() ||
         !focused(host) ||
         selection === null ||
         points === undefined ||

@@ -54,6 +54,7 @@ const releaseRoot = (root: HTMLElement): void => {
 export const createEditorView = (root: HTMLElement, options: EditorViewOptions): EditorView => {
   let state = options.state;
   let composing = false;
+  let holding = false;
 
   let sets = decorationSets(state);
 
@@ -95,6 +96,7 @@ export const createEditorView = (root: HTMLElement, options: EditorViewOptions):
     state: () => state,
     dispatch,
     composing: () => composing,
+    holding: () => holding,
   };
 
   const sync = createSelectionSync(host);
@@ -143,6 +145,9 @@ export const createEditorView = (root: HTMLElement, options: EditorViewOptions):
     watch,
     setComposing: (value) => {
       composing = value;
+    },
+    setHolding: (value) => {
+      holding = value;
     },
   });
 
