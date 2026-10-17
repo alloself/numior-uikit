@@ -84,6 +84,7 @@ export interface NuiMenuProps {
   typeahead?: boolean | undefined;
   label?: string | undefined;
   anchor?: HTMLElement | null | undefined;
+  compact?: boolean | undefined;
 }
 
 export type NuiMenuFocus = 'first' | 'last';

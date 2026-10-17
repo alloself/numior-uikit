@@ -39,6 +39,10 @@ const docs: DocsMap = {
         ru: 'Доступное имя меню вместо имени триггера.',
         en: 'Accessible name of the menu instead of the trigger name.',
       },
+      compact: {
+        ru: 'Ширина по пунктам без минимума — для списков из одних иконок.',
+        en: 'Fits the width to the items without a minimum, for icon-only lists.',
+      },
       anchor: {
         ru: 'Внешний элемент вместо слота trigger: ячейка, строка или точка контекстного меню. Такое меню открывает метод show(focus) через ссылку на компонент, а после закрытия фокус возвращается в якорь.',
         en: 'An external element instead of the trigger slot: a cell, a row or a context menu point. The show(focus) method opens such a menu through a component ref, and focus returns to the anchor after it closes.',

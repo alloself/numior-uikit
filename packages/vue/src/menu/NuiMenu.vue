@@ -5,6 +5,7 @@
     role="menu"
     tabindex="-1"
     class="nui-menu nui-layer"
+    :class="{ 'nui-menu--compact': compact }"
     :aria-label="label"
     :aria-labelledby="label === undefined ? triggerId : undefined"
     v-bind="{ ...contentAttrs, ...surfaceAttrs, ...$attrs }"
@@ -40,6 +41,7 @@ const {
   typeahead = true,
   label,
   anchor,
+  compact = false,
 } = defineProps<NuiMenuProps>();
 
 const open = defineModel<boolean>('open', { default: false });

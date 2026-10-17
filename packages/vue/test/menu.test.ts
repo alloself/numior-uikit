@@ -24,6 +24,16 @@ describe('NuiMenu', () => {
     menu.unmount();
   });
 
+  it('drops the minimum width when it is compact for icon-only lists', () => {
+    const wide = MenuDriver.mount({ parts: true });
+    const compact = MenuDriver.mount({ parts: true, props: { compact: true } });
+
+    expect(wide.menu.classes()).not.toContain('nui-menu--compact');
+    expect(compact.menu.classes()).toContain('nui-menu--compact');
+    wide.unmount();
+    compact.unmount();
+  });
+
   it('fits its height into the room the viewport has so a long menu scrolls', async () => {
     const menu = MenuDriver.mount({ parts: true });
 
