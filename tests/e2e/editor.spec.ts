@@ -592,6 +592,15 @@ test.describe('editor', () => {
     await page.keyboard.type('после файла');
     await expect(file.locator('xpath=following-sibling::*[1]')).toHaveText('после файла');
 
+    await editor.clickBeside(file);
+    await page.keyboard.press('Enter');
+    await page.keyboard.type('рядом с файлом');
+    await expect(file.locator('xpath=following-sibling::*[1]')).toHaveText('рядом с файлом');
+
+    await expect(editor.content.locator(':scope > .nui-editor__chunk > *').first()).toHaveText(
+      'План запуска',
+    );
+
     await editor.clickBelowContent();
     await page.keyboard.type('в самом конце');
     await expect.poll(async () => (await editor.blockTexts()).at(-1)).toBe('в самом конце');

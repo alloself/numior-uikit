@@ -67,6 +67,17 @@ export class EditorSection {
     });
   }
 
+  async clickBeside(block: Locator): Promise<void> {
+    await block.scrollIntoViewIfNeeded();
+
+    const [own, editor] = await Promise.all([block.boundingBox(), this.content.boundingBox()]);
+
+    if (own === null || editor === null) {
+      throw new Error('The block or the editor has no box');
+    }
+    await this.page.mouse.click(editor.x + editor.width - 12, own.y + own.height / 2);
+  }
+
   async clickBelowContent(): Promise<void> {
     const last = this.content.locator(':scope > .nui-editor__chunk > *').last();
 

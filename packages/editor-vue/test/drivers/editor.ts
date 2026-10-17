@@ -504,6 +504,27 @@ export class EditorDriver {
     return this.content.querySelectorAll(selector)[nth]?.getAttribute(name) ?? null;
   }
 
+  async clickBeside(selector: string): Promise<void> {
+    layOut(this.content);
+
+    const block = this.content.querySelector(selector);
+    const chunk = block?.parentElement;
+    const box = block?.getBoundingClientRect();
+
+    chunk?.dispatchEvent(
+      new MouseEvent('mousedown', {
+        bubbles: true,
+        cancelable: true,
+        button: 0,
+        clientX: 1000,
+        clientY: (box?.top ?? 0) + 1,
+      }),
+    );
+
+    document.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, button: 0 }));
+    await nextTick();
+  }
+
   async dragSeparator(toX: number): Promise<void> {
     layOut(this.content);
 

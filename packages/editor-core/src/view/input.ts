@@ -17,6 +17,7 @@ import type { DomWatch } from './dom-change';
 import type { ViewHost } from './host.types';
 import { posAtDOM } from './positions';
 import type { SelectionSync } from './selection-sync';
+import { atomBeside } from './beside';
 import { atomAcross } from './vertical';
 
 export interface InputParts {
@@ -426,9 +427,13 @@ export const attachInput = (host: ViewHost, parts: InputParts): (() => void) => 
 
   const onMousedown = (event: MouseEvent): void => {
     const id = event.button === 0 ? atomAt(host, event.target) : undefined;
+    const beside = id === undefined ? atomBeside(host.context, root, event) : undefined;
 
     if (id !== undefined) {
       selectNode(event, id);
+    } else if (beside !== undefined) {
+      parts.setHolding(true);
+      selectNode(event, beside);
     } else if (belowContent(event)) {
       event.preventDefault();
       root.focus({ preventScroll: true });
