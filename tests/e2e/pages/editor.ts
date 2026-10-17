@@ -516,6 +516,29 @@ export class EditorSection {
     await this.page.mouse.move(box.x + box.width / 2 + by, y, { steps: 6 });
     await this.page.mouse.up();
   }
+
+  async dragCorner(image: Locator, corner: string, x: number, y: number): Promise<void> {
+    await image.hover();
+
+    const box = await image.locator(`.nui-editor-image__corner--at-${corner}`).boundingBox();
+
+    if (box === null) {
+      throw new Error('The image corner has no box');
+    }
+
+    const from = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+
+    await this.page.mouse.move(from.x, from.y);
+    await this.page.mouse.down();
+    await this.page.mouse.move(from.x + x, from.y + y, { steps: 6 });
+    await this.page.mouse.up();
+  }
+
+  async imageAspect(image: Locator): Promise<number> {
+    const box = await image.locator('img').boundingBox();
+
+    return box === null ? Number.NaN : box.width / box.height;
+  }
 }
 
 export interface PastedFile {

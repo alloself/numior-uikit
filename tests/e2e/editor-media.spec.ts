@@ -127,6 +127,13 @@ test.describe('editor media', () => {
     await page.keyboard.press('ArrowRight');
     await expect.poll(() => widthOf(image)).toBeCloseTo(dragged + 5, 0);
 
+    const keyed = await widthOf(image);
+    const aspect = await editor.imageAspect(image);
+
+    await editor.dragCorner(image, 'bottom-end', 0, 40);
+    await expect.poll(() => widthOf(image)).toBeGreaterThan(keyed);
+    expect(await editor.imageAspect(image)).toBeCloseTo(aspect, 1);
+
     await image.locator('img').click();
     await image.getByRole('radio', { name: 'К концу строки' }).click();
     await expect(image).toHaveClass(/nui-content__image--align-end/u);

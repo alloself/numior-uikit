@@ -18,6 +18,25 @@ export const draggedShare = (
   symmetric: boolean,
 ): number => clampShare((start + delta * (symmetric ? 2 : 1)) / Math.max(line, 1));
 
+export const aspectOf = (picture: HTMLImageElement | null): number => {
+  const box = picture?.getBoundingClientRect();
+
+  return box === undefined || box.height === 0 ? 0 : box.width / box.height;
+};
+
+export interface GripPull {
+  readonly sign: number;
+  readonly lift: number;
+  readonly ratio: number;
+}
+
+export const pullOf = (pull: GripPull, x: number, y: number): number => {
+  const across = x * pull.sign;
+  const along = y * pull.lift * pull.ratio;
+
+  return Math.abs(along) > Math.abs(across) ? along : across;
+};
+
 export const lineWidthOf = (element: HTMLElement): number => {
   const parent = element.parentElement;
 

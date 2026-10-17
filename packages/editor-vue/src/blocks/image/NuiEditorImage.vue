@@ -30,8 +30,16 @@
           class="nui-editor-image__grip"
           :class="`nui-editor-image__grip--side-${side}`"
           v-bind="side === 'start' ? slider : HIDDEN_GRIP"
-          @pointerdown="onGripDown(side, $event)"
+          @pointerdown="onGripDown({ side, lift: 0 }, $event)"
           @keydown="onGripKeydown"
+        />
+        <span
+          v-for="corner in CORNERS"
+          :key="`${corner.edge}-${corner.side}`"
+          class="nui-editor-image__corner"
+          :class="`nui-editor-image__corner--at-${corner.edge}-${corner.side}`"
+          aria-hidden="true"
+          @pointerdown="onGripDown(corner, $event)"
         />
         <NuiPopover
           v-if="tooled"
@@ -138,14 +146,34 @@ import {
   WIDE_STEP,
   WIDTH_STEP,
   alignOf,
+  aspectOf,
   clampShare,
   draggedShare,
   lineWidthOf,
+  pullOf,
 } from './image-size';
 
 type GripSide = 'start' | 'end';
 
+type GripEdge = 'top' | 'bottom';
+
+interface Grip {
+  readonly side: GripSide;
+  readonly lift: number;
+}
+
+interface Corner extends Grip {
+  readonly edge: GripEdge;
+}
+
 const SIDES: readonly GripSide[] = ['start', 'end'];
+
+const CORNERS: readonly Corner[] = [
+  { edge: 'top', side: 'start', lift: -1 },
+  { edge: 'top', side: 'end', lift: -1 },
+  { edge: 'bottom', side: 'start', lift: 1 },
+  { edge: 'bottom', side: 'end', lift: 1 },
+];
 
 const MIN_PERCENT = 20;
 
@@ -222,7 +250,7 @@ const setAlign = (value: NuiContentAlign | null): void => {
   }
 };
 
-const onGripDown = (side: GripSide, event: PointerEvent): void => {
+const onGripDown = ({ side, lift }: Grip, event: PointerEvent): void => {
   const grip = event.currentTarget;
 
   if (event.button !== 0 || !(grip instanceof HTMLElement)) {
@@ -235,14 +263,17 @@ const onGripDown = (side: GripSide, event: PointerEvent): void => {
   const line = lineWidthOf(element);
   const start = share.value * line;
   const before = element.style.getPropertyValue('inline-size');
-  const sign = (side === 'end') === rtl() ? -1 : 1;
+  const pull = { sign: (side === 'end') === rtl() ? -1 : 1, lift, ratio: aspectOf(picture.value) };
   const symmetric = align.value === 'center';
   let next: number | undefined;
 
   resizing.value = true;
 
   const move = (moved: PointerEvent): void => {
-    next = draggedShare(start, (moved.clientX - event.clientX) * sign, line, symmetric);
+    const pulled = pullOf(pull, moved.clientX - event.clientX, moved.clientY - event.clientY);
+
+    next = draggedShare(start, pulled, line, symmetric);
+
     editor.setStyle('inline-size', `${String(next * 100)}%`);
   };
 

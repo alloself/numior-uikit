@@ -160,6 +160,58 @@
 .nui-editor-image__grip--side-end {
   inset-inline-end: 0;
 }
+.nui-editor-image__corner {
+  --_cursor: nwse-resize;
+
+  position: absolute;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: var(--nui-space-6);
+  block-size: var(--nui-space-6);
+  cursor: var(--_cursor);
+  opacity: var(--_grip-opacity);
+  touch-action: none;
+  transition: opacity var(--nui-duration-fast) var(--nui-easing);
+}
+.nui-editor-image__corner::before {
+  content: '';
+  box-sizing: border-box;
+  inline-size: 10px;
+  block-size: 10px;
+  border: 1px solid color-mix(in oklab, var(--nui-surface) 70%, transparent);
+  border-radius: 50%;
+  background: color-mix(in oklab, var(--nui-text) 70%, transparent);
+}
+.nui-editor-image__corner--at-top-start {
+  inset-block-start: 0;
+  inset-inline-start: 0;
+}
+.nui-editor-image__corner--at-top-end {
+  --_cursor: nesw-resize;
+
+  inset-block-start: 0;
+  inset-inline-end: 0;
+}
+.nui-editor-image__corner--at-bottom-start {
+  --_cursor: nesw-resize;
+
+  inset-block-end: 0;
+  inset-inline-start: 0;
+}
+.nui-editor-image__corner--at-bottom-end {
+  inset-block-end: 0;
+  inset-inline-end: 0;
+}
+.nui-editor-image__corner--at-top-start:dir(rtl),
+.nui-editor-image__corner--at-bottom-end:dir(rtl) {
+  --_cursor: nesw-resize;
+}
+.nui-editor-image__corner--at-top-end:dir(rtl),
+.nui-editor-image__corner--at-bottom-start:dir(rtl) {
+  --_cursor: nwse-resize;
+}
 .nui-editor-image__bar {
   display: flex;
   align-items: center;
