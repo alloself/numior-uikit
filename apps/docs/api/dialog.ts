@@ -20,7 +20,10 @@ const docs: DocsMap = {
         ru: 'Описание под заголовком; связывается через aria-describedby.',
         en: 'Description under the title; linked through aria-describedby.',
       },
-      size: { ru: 'Ширина диалога.', en: 'Dialog width.' },
+      size: {
+        ru: 'Ширина диалога; auto — по содержимому, не шире экрана (просмотр картинки).',
+        en: 'Dialog width; auto fits the content within the screen (an image viewer).',
+      },
       closable: {
         ru: 'Крест, Esc и клик по фону закрывают диалог.',
         en: 'The cross, Esc and a backdrop click close the dialog.',

@@ -36,6 +36,10 @@
 .nui-dialog--size-lg {
   --_width: 48rem;
 }
+.nui-dialog--size-auto {
+  inline-size: fit-content;
+  max-inline-size: calc(100% - var(--nui-space-8));
+}
 .nui-dialog--placement-top {
   margin-block-start: min(15dvh, var(--nui-space-8) * 4);
   translate: 0 calc(var(--nui-space-2) * -1);

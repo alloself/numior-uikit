@@ -160,7 +160,7 @@ export type {
 export { default as NuiSwitch } from './switch/NuiSwitch.vue';
 export type { NuiSwitchProps } from './switch/switch.types';
 export { default as NuiDialog } from './dialog/NuiDialog.vue';
-export type { NuiDialogPlacement, NuiDialogProps } from './dialog/dialog.types';
+export type { NuiDialogPlacement, NuiDialogProps, NuiDialogSize } from './dialog/dialog.types';
 export { default as NuiDrawer } from './drawer/NuiDrawer.vue';
 export type { NuiDrawerProps, NuiDrawerSide, NuiDrawerSize } from './drawer/drawer.types';
 export { default as NuiPopover } from './popover/NuiPopover.vue';
