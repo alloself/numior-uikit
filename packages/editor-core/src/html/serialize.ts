@@ -44,3 +44,22 @@ export const contentToHTML = (schema: Schema, content: readonly ContentNode[]): 
   renderTree(schema, content, { element, text: escapeHTML }).join('');
 
 export const toHTML = (doc: Doc): string => contentToHTML(doc.schema, doc.root.content);
+
+export const createHTMLWriter = (): ((doc: Doc) => string) => {
+  const blocks = new WeakMap<ContentNode, string>();
+
+  return (doc) =>
+    doc.root.content
+      .map((block) => {
+        const known = blocks.get(block);
+
+        if (known !== undefined) {
+          return known;
+        }
+        const html = contentToHTML(doc.schema, [block]);
+
+        blocks.set(block, html);
+        return html;
+      })
+      .join('');
+};

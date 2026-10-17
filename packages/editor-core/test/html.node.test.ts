@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vite-plus/test';
 import {
   createDoc,
+  createHTMLWriter,
   createSchema,
+  createState,
   fromHTML,
   tableGrid,
   toHTML,
@@ -9,7 +11,7 @@ import {
   type ElementNode,
   type HtmlTableGrid,
 } from '../src';
-import { fixtureSchema } from '../src/fixtures';
+import { fixtureSchema, generateDoc } from '../src/fixtures';
 import { buildWith } from './support/notes';
 import { outlineOf } from './support/outline';
 
@@ -191,5 +193,18 @@ describe('HTML serialization', () => {
     expect(toHTML(fromHTML(fixtureSchema, toHTML(page), { whitespace: 'preserve' }))).toBe(
       toHTML(page),
     );
+  });
+
+  it('writes the same markup from cached blocks and renders only the blocks an edit replaced', () => {
+    const write = createHTMLWriter();
+    const before = createState({ doc: generateDoc(fixtureSchema, { blocks: 300, seed: 7 }) });
+
+    expect(write(before.doc)).toBe(toHTML(before.doc));
+
+    const after = before.apply(before.tr.insertText('!', 2));
+
+    expect(after.doc.root.content.slice(1)).toEqual(before.doc.root.content.slice(1));
+    expect(after.doc.root.content[9]).toBe(before.doc.root.content[9]);
+    expect(write(after.doc)).toBe(toHTML(after.doc));
   });
 });

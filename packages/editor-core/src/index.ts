@@ -57,7 +57,7 @@ export type { BesideSide, BlockTarget, ColumnTypes } from './commands/move-acros
 export { insertHTML, insertPlainText, pasteSchema } from './commands/paste';
 export { fromHTML } from './html/parse';
 export { detectPasteSource } from './html/sources';
-export { contentToHTML, toHTML } from './html/serialize';
+export { contentToHTML, createHTMLWriter, toHTML } from './html/serialize';
 export { tableGrid } from './html/table-grid';
 export type { HtmlTableCell, HtmlTableGrid } from './html/table-grid';
 export type {
