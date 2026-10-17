@@ -22,6 +22,7 @@ export interface SlashOptions {
   readonly enabled: () => boolean;
   readonly run: (command: Command) => boolean;
   readonly blocks: readonly NuiEditorBlock[];
+  readonly extra?: (() => readonly SlashItem[]) | undefined;
 }
 
 export interface Slash {
@@ -44,6 +45,7 @@ export const useSlash = (options: SlashOptions): Slash => {
     ...options.blocks.flatMap((block) =>
       options.schema.nodes.has(block.name) ? (block.slash?.(texts.value) ?? []) : [],
     ),
+    ...(options.extra?.() ?? []),
   ]);
 
   const onKey = (key: KeyInput, match: SuggestionMatch): boolean => keyed(key, match);

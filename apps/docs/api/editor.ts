@@ -29,6 +29,18 @@ const docs: DocsMap = {
         ru: 'Пресеты цвета текста, которые предлагает меню и принимает вставка; по умолчанию все девять. Цвета, которые уже есть в документе, сохраняются.',
         en: 'Text colour presets the menu offers and pastes keep; all nine by default. Colours already in the document stay.',
       },
+      upload: {
+        ru: 'Адаптер загрузки `(file, { onProgress, signal }) => Promise<{ url }>`: вставка, перетаскивание и «Картинка»/«Файл» из меню «/» загружают файлы, показывают карточку с прогрессом и вставляют блок после ответа. Без адаптера картинки и файлы вставляются только по ссылке.',
+        en: 'An upload adapter `(file, { onProgress, signal }) => Promise<{ url }>`: pasting, dropping and Image/File from the slash menu upload files, show a card with progress and insert the block once the adapter answers. Without it images and files are inserted by link only.',
+      },
+      accept: {
+        ru: 'Допустимые типы загружаемых файлов в формате атрибута `accept`.',
+        en: 'Accepted upload types in the format of the `accept` attribute.',
+      },
+      maxSize: {
+        ru: 'Наибольший размер загружаемого файла в байтах.',
+        en: 'The largest upload size in bytes.',
+      },
       highlighter: {
         ru: 'Подсветчик блоков кода вместо настроенного в `createNuiConfig`; `false` выключает подсветку.',
         en: 'A highlighter for code blocks instead of the one set in `createNuiConfig`; `false` turns highlighting off.',

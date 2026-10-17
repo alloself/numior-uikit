@@ -2,6 +2,7 @@ import type { Command, EditorState, PasteSource, Schema } from '@numior/editor-c
 import type { NuiHighlighter } from '@numior/primitives';
 import type { NuiFieldControlProps } from '@numior/vue';
 import type { NuiEditorBlock } from '../blocks/block.types';
+import type { NuiEditorUploadAdapter } from '../uploads/uploads.types';
 
 export interface NuiEditorProps extends NuiFieldControlProps {
   schema?: Schema | undefined;
@@ -13,6 +14,9 @@ export interface NuiEditorProps extends NuiFieldControlProps {
   blockHandles?: boolean | undefined;
   blocks?: readonly NuiEditorBlock[] | undefined;
   highlighter?: NuiHighlighter | false | undefined;
+  upload?: NuiEditorUploadAdapter | undefined;
+  accept?: string | undefined;
+  maxSize?: number | undefined;
 }
 
 export type NuiEditorToolbarMode = 'fixed' | 'bubble' | 'both' | 'none';

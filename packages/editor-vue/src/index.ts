@@ -4,6 +4,8 @@ export {
   codeBlock,
   columnsBlock,
   editorBlocks,
+  fileBlock,
+  imageBlock,
   tableBlock,
   todoBlock,
   toggleBlock,
@@ -24,6 +26,11 @@ export type {
   NuiEditorProps,
   NuiEditorToolbarMode,
 } from './editor/editor.types';
+export type {
+  NuiEditorUploadAdapter,
+  NuiEditorUploaded,
+  NuiEditorUploadItem,
+} from './uploads/uploads.types';
 export { editorMessages } from './editor/editor.messages';
 export type { NuiEditorMessages } from './editor/editor.messages';
 export type { NuiEditorPackageMessages } from './messages.types';

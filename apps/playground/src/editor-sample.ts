@@ -102,6 +102,18 @@ export const editorSample = (): DocJSON =>
         ),
         node('divider'),
         paragraph('Наберите # и пробел для заголовка или - для списка.'),
+        node('image', [], {
+          src: '/media/sunrise.svg',
+          alt: 'Рассвет над заливом: солнце над горами и морем',
+          caption: 'Рассвет над заливом',
+          width: 0.6,
+        }),
+        node('file', [], {
+          url: '/media/release-notes.txt',
+          name: 'Заметки к релизу.txt',
+          size: 97,
+          type: 'text/plain',
+        }),
         plan(),
       ]),
     ),

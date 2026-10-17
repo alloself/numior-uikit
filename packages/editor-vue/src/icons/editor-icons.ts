@@ -37,4 +37,10 @@ export const editorIcons: IconRegistry = {
   'between-vertical-end': lazyIcon(
     () => import('lucide-vue-next/dist/esm/icons/between-vertical-end.js'),
   ),
+  'align-start': lazyIcon(() => import('lucide-vue-next/dist/esm/icons/text-align-start.js')),
+  'align-center': lazyIcon(() => import('lucide-vue-next/dist/esm/icons/text-align-center.js')),
+  'align-end': lazyIcon(() => import('lucide-vue-next/dist/esm/icons/text-align-end.js')),
+  'image-up': lazyIcon(() => import('lucide-vue-next/dist/esm/icons/image-up.js')),
+  download: lazyIcon(() => import('lucide-vue-next/dist/esm/icons/download.js')),
+  captions: lazyIcon(() => import('lucide-vue-next/dist/esm/icons/captions.js')),
 };

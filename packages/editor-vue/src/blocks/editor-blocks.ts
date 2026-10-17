@@ -7,6 +7,9 @@ import NuiEditorCodeBar from './code/NuiEditorCodeBar.vue';
 import { COLUMN_COUNTS, insertColumns } from './columns/columns';
 import NuiEditorColumnsResize from './columns/NuiEditorColumnsResize.vue';
 import { defineBlock } from './define-block';
+import NuiEditorFile from './file/NuiEditorFile.vue';
+import { alignOf, download } from './image/image-size';
+import NuiEditorImage from './image/NuiEditorImage.vue';
 import { insertTable } from './table/table-commands';
 import NuiEditorTodoCheck from './todo/NuiEditorTodoCheck.vue';
 import NuiEditorToggleButton from './toggle/NuiEditorToggleButton.vue';
@@ -83,6 +86,61 @@ export const tableBlock = defineBlock({
   ],
 });
 
+const ALIGN_ICONS = { start: 'align-start', center: 'align-center', end: 'align-end' } as const;
+
+const linkOf = (value: unknown): string => (typeof value === 'string' ? value : '');
+
+export const imageBlock = defineBlock({
+  name: 'image',
+  view: NuiEditorImage,
+  menu: (node, editor, texts) => {
+    const align = alignOf(node.attrs.align);
+
+    return [
+      {
+        type: 'sub',
+        label: texts.imageAlign,
+        icon: ALIGN_ICONS[align],
+        items: [
+          {
+            type: 'radio-group',
+            value: align,
+            onChange: (value) => {
+              editor.setAttrs({ align: alignOf(value) });
+            },
+            items: [
+              { value: 'start', label: texts.imageAlignStart, icon: ALIGN_ICONS.start },
+              { value: 'center', label: texts.imageAlignCenter, icon: ALIGN_ICONS.center },
+              { value: 'end', label: texts.imageAlignEnd, icon: ALIGN_ICONS.end },
+            ],
+          },
+        ],
+      },
+      {
+        label: texts.download,
+        icon: 'download',
+        onSelect: () => {
+          download(document, linkOf(node.attrs.src));
+        },
+      },
+    ];
+  },
+});
+
+export const fileBlock = defineBlock({
+  name: 'file',
+  view: NuiEditorFile,
+  menu: (node, _editor, texts) => [
+    {
+      label: texts.download,
+      icon: 'download',
+      onSelect: () => {
+        download(document, linkOf(node.attrs.url));
+      },
+    },
+  ],
+});
+
 export const editorBlocks: readonly NuiEditorBlock[] = [
   todoBlock,
   toggleBlock,
@@ -90,4 +148,6 @@ export const editorBlocks: readonly NuiEditorBlock[] = [
   codeBlock,
   columnsBlock,
   tableBlock,
+  imageBlock,
+  fileBlock,
 ];

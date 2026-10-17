@@ -4,7 +4,11 @@
       <h2 id="editor-title">Редактор</h2>
       <span class="tag">NuiEditor · NuiContent</span>
     </div>
-    <NuiSwitch v-model="readonly" label="Только чтение" data-testid="editor-readonly" />
+    <div class="editor-demo__switches">
+      <NuiSwitch v-model="readonly" label="Только чтение" data-testid="editor-readonly" />
+      <NuiSwitch v-model="uploading" label="Загрузка файлов" data-testid="editor-uploads" />
+      <NuiSwitch v-model="failing" label="Загрузка с ошибкой" data-testid="editor-upload-fail" />
+    </div>
     <div class="editor-demo">
       <NuiEditor
         v-model:document="document"
@@ -14,6 +18,8 @@
         :readonly="readonly"
         :schema="playgroundSchema"
         :blocks="blocks"
+        :upload="uploading ? upload : undefined"
+        :max-size="MAX_SIZE"
         toolbar="both"
         data-testid="editor"
         @change="changes++"
@@ -36,18 +42,25 @@
 <script setup lang="ts">
 import { NuiContent } from '@numior/content';
 import { NuiContentCode } from '@numior/content/code';
+import { contentMediaViews } from '@numior/content/media';
 import { NuiContentTable } from '@numior/content/table';
 import type { PasteSource } from '@numior/editor-core';
 import { editorBlocks, NuiEditor } from '@numior/editor-vue';
 import { NuiSwitch } from '@numior/vue';
 import { computed, ref } from 'vue';
 import { playgroundSchema, taskStatusBlock } from './editor-blocks';
+import { fakeUpload } from './editor-upload';
 import { blockCount, editorSample } from './editor-sample';
 
 const blocks = [...editorBlocks, taskStatusBlock];
-const views = { table: NuiContentTable, code_block: NuiContentCode };
+const MAX_SIZE = 20 * 1024 * 1024;
+
+const views = { ...contentMediaViews, table: NuiContentTable, code_block: NuiContentCode };
 const document = ref(editorSample());
 const readonly = ref(false);
+const uploading = ref(true);
+const failing = ref(false);
+const upload = fakeUpload(() => failing.value);
 const changes = ref(0);
 const pasted = ref<PasteSource | null>(null);
 

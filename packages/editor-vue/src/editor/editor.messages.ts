@@ -69,6 +69,36 @@ export interface NuiEditorMessages {
   readonly tableColumnName: string;
   readonly tableType: string;
   readonly tableTypeName: (params: { readonly type: string }) => string;
+  readonly image: string;
+  readonly file: string;
+  readonly mediaUpload: string;
+  readonly mediaLink: string;
+  readonly chooseImage: string;
+  readonly chooseFile: string;
+  readonly mediaDropHint: string;
+  readonly mediaAddress: string;
+  readonly mediaInsert: string;
+  readonly mediaInvalid: string;
+  readonly uploading: (params: { readonly percent: number }) => string;
+  readonly uploadCancel: (params: { readonly name: string }) => string;
+  readonly uploadRetry: string;
+  readonly uploadDismiss: string;
+  readonly uploaded: (params: { readonly name: string }) => string;
+  readonly uploadFailed: (params: { readonly name: string }) => string;
+  readonly uploadType: (params: { readonly name: string }) => string;
+  readonly uploadSize: (params: { readonly name: string; readonly size: string }) => string;
+  readonly uploadUnavailable: string;
+  readonly imageWidth: string;
+  readonly imageAlign: string;
+  readonly imageAlignStart: string;
+  readonly imageAlignCenter: string;
+  readonly imageAlignEnd: string;
+  readonly imageReplace: string;
+  readonly download: string;
+  readonly imageAlt: string;
+  readonly imageAltHint: string;
+  readonly imageAltSave: string;
+  readonly imageCaption: string;
 }
 
 const EN_TYPES: Readonly<Record<string, string>> = {
@@ -220,6 +250,36 @@ export const editorMessages: NuiMessageCatalog<'editor'> = {
     tableColumnName: 'Column name',
     tableType: 'Type',
     tableTypeName: ({ type }) => EN_TYPES[type] ?? type,
+    image: 'Image',
+    file: 'File',
+    mediaUpload: 'Upload',
+    mediaLink: 'By link',
+    chooseImage: 'Choose an image',
+    chooseFile: 'Choose files',
+    mediaDropHint: 'Or drop files into the editor or paste them',
+    mediaAddress: 'Address',
+    mediaInsert: 'Insert',
+    mediaInvalid: 'Enter a web address',
+    uploading: ({ percent }) => `Uploading… ${String(percent)}%`,
+    uploadCancel: ({ name }) => `Cancel the upload of ${name}`,
+    uploadRetry: 'Retry',
+    uploadDismiss: 'Remove',
+    uploaded: ({ name }) => `${name} is uploaded`,
+    uploadFailed: ({ name }) => `Could not upload ${name}`,
+    uploadType: ({ name }) => `${name}: this file type is not accepted`,
+    uploadSize: ({ name, size }) => `${name} is larger than ${size}`,
+    uploadUnavailable: 'Files cannot be uploaded here; insert them by link',
+    imageWidth: 'Image width',
+    imageAlign: 'Alignment',
+    imageAlignStart: 'Align to the line start',
+    imageAlignCenter: 'Centre',
+    imageAlignEnd: 'Align to the line end',
+    imageReplace: 'Replace',
+    download: 'Download',
+    imageAlt: 'Alt text',
+    imageAltHint: 'Describes the image to people who cannot see it',
+    imageAltSave: 'Save',
+    imageCaption: 'Add a caption',
   },
   ru: {
     toolbar: 'Форматирование',
@@ -290,5 +350,35 @@ export const editorMessages: NuiMessageCatalog<'editor'> = {
     tableColumnName: 'Название колонки',
     tableType: 'Тип',
     tableTypeName: ({ type }) => RU_TYPES[type] ?? type,
+    image: 'Картинка',
+    file: 'Файл',
+    mediaUpload: 'Загрузить',
+    mediaLink: 'По ссылке',
+    chooseImage: 'Выбрать картинку',
+    chooseFile: 'Выбрать файлы',
+    mediaDropHint: 'Или перетащите файлы в редактор либо вставьте их',
+    mediaAddress: 'Адрес',
+    mediaInsert: 'Вставить',
+    mediaInvalid: 'Введите веб-адрес',
+    uploading: ({ percent }) => `Загрузка… ${String(percent)} %`,
+    uploadCancel: ({ name }) => `Отменить загрузку ${name}`,
+    uploadRetry: 'Повторить',
+    uploadDismiss: 'Убрать',
+    uploaded: ({ name }) => `${name} загружен`,
+    uploadFailed: ({ name }) => `Не удалось загрузить ${name}`,
+    uploadType: ({ name }) => `${name}: такой тип файла не принимается`,
+    uploadSize: ({ name, size }) => `${name} больше ${size}`,
+    uploadUnavailable: 'Сюда нельзя загрузить файлы — вставьте их по ссылке',
+    imageWidth: 'Ширина картинки',
+    imageAlign: 'Выравнивание',
+    imageAlignStart: 'К началу строки',
+    imageAlignCenter: 'По центру',
+    imageAlignEnd: 'К концу строки',
+    imageReplace: 'Заменить',
+    download: 'Скачать',
+    imageAlt: 'Описание',
+    imageAltHint: 'Рассказывает о картинке тем, кто её не видит',
+    imageAltSave: 'Сохранить',
+    imageCaption: 'Добавьте подпись',
   },
 };

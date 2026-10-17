@@ -112,7 +112,7 @@ test.describe('editor', () => {
     await editor.paste('one\ntwo');
 
     await expect
-      .poll(async () => (await editor.blockTexts()).slice(-3, -1))
+      .poll(async () => (await editor.blockTexts()).slice(-5, -3))
       .toEqual(['Наберите # и пробел для заголовка или - для списка.one', 'two']);
 
     const before = (await editor.readOutput()).changes;
@@ -557,7 +557,7 @@ test.describe('editor', () => {
     await playground.setDirection('rtl');
     await editor.placeAtEnd();
     await page.keyboard.type(' abc');
-    await expect.poll(async () => (await editor.blockTexts()).at(-2)).toMatch(/ abc$/);
+    await expect.poll(async () => (await editor.blockTexts()).at(-4)).toMatch(/ abc$/);
     expect(await editor.content.evaluate((root) => getComputedStyle(root).direction)).toBe('rtl');
   });
 });

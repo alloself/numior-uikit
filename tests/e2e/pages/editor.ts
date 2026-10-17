@@ -402,4 +402,103 @@ export class EditorSection {
       { find, replace },
     );
   }
+
+  async pasteFiles(files: readonly PastedFile[]): Promise<void> {
+    await this.content.evaluate(async (root, list) => {
+      const data = new DataTransfer();
+
+      for (const file of list) {
+        const canvas = document.createElement('canvas');
+
+        canvas.width = 320;
+        canvas.height = 200;
+
+        const context = canvas.getContext('2d');
+
+        if (context !== null) {
+          context.fillStyle = '#5b7cfa';
+          context.fillRect(0, 0, 320, 200);
+        }
+
+        const picture = await new Promise<Blob | null>((resolve) => {
+          canvas.toBlob(resolve, 'image/png');
+        });
+
+        const body = file.type.startsWith('image/') && picture !== null ? picture : 'x'.repeat(256);
+
+        data.items.add(new File([body], file.name, { type: file.type }));
+      }
+
+      const event = new ClipboardEvent('paste', {
+        clipboardData: data,
+        bubbles: true,
+        cancelable: true,
+      });
+
+      if (event.clipboardData?.files.length !== list.length) {
+        Object.defineProperty(event, 'clipboardData', { value: data });
+      }
+      root.dispatchEvent(event);
+    }, files);
+  }
+
+  uploadCards(): Locator {
+    return this.content.locator('.nui-editor-upload');
+  }
+
+  image(source: string): Locator {
+    return this.content
+      .locator('.nui-content__image')
+      .filter({ has: this.page.locator(`img[src${source}]`) });
+  }
+
+  file(name: string): Locator {
+    return this.content.locator('.nui-content__file', { hasText: name });
+  }
+
+  publishedImage(source: string): Locator {
+    return this.preview
+      .locator('.nui-content__image')
+      .filter({ has: this.page.locator(`img[src${source}]`) });
+  }
+
+  async showCaret(): Promise<void> {
+    await this.content.evaluate((root) => {
+      const focus = document.getSelection()?.focusNode;
+      const block = focus instanceof Element ? focus : focus?.parentElement;
+
+      (block ?? root).scrollIntoView({ block: 'center' });
+    });
+  }
+
+  mediaPanel(): Locator {
+    return this.page.locator('.nui-editor-media');
+  }
+
+  imageViewer(): Locator {
+    return this.page.locator('.nui-content__viewer');
+  }
+
+  async dragGrip(image: Locator, side: 'start' | 'end', by: number): Promise<void> {
+    const grip = image.locator(`.nui-editor-image__grip--side-${side}`);
+
+    await image.hover();
+
+    const box = await grip.boundingBox();
+
+    if (box === null) {
+      throw new Error('The image grip has no box');
+    }
+    const y = box.y + box.height / 2;
+
+    await this.page.mouse.move(box.x + box.width / 2, y);
+    await this.page.mouse.down();
+    await this.page.mouse.move(box.x + box.width / 2 + by, y, { steps: 6 });
+    await this.page.mouse.up();
+  }
+}
+
+export interface PastedFile {
+  readonly name: string;
+  readonly type: string;
 }

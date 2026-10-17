@@ -358,6 +358,11 @@ footer {
   font-weight: 600;
 }
 
+.editor-demo__switches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--nui-space-4);
+}
 .editor-demo {
   display: grid;
   gap: var(--nui-space-6);

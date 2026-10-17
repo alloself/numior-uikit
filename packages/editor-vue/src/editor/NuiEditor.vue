@@ -68,6 +68,19 @@
         :run="run"
         :focus="editor.focus"
       />
+      <template v-if="ready">
+        <Teleport v-for="card in uploads.cards.value" :key="card.item.id" :to="card.element">
+          <NuiEditorUploadCard
+            :item="card.item"
+            :preview="card.preview"
+            @cancel="uploads.cancel(card.item.id)"
+            @retry="uploads.retry(card.item.id)"
+          />
+        </Teleport>
+      </template>
+      <span class="nui-editor__live" aria-live="polite" aria-atomic="true">{{
+        uploads.announcement.value
+      }}</span>
       <div
         ref="ghost"
         class="nui-content nui-editor__ghost"
@@ -106,6 +119,18 @@
         @choose="slash.choose"
         @hover="slash.hover"
       />
+      <NuiEditorMediaPanel
+        v-if="hasMedia && ready"
+        v-model:open="mediaOpen"
+        :anchor="anchorElement"
+        :kind="mediaKind"
+        :uploadable="uploads.enabled.value"
+        :accept="accept"
+        :valid="validMedia"
+        @files="onMediaFiles"
+        @link="onMediaLink"
+        @cancel="closeMedia"
+      />
       <NuiEditorLinkPanel
         v-if="hasLinks && ready"
         v-model:open="overlays.linkOpen.value"
@@ -135,6 +160,7 @@ import {
   isEmptyDoc,
   keymap,
   markdownRules,
+  pendingUploads,
   toJSON,
   type Command,
   type Doc,
@@ -183,6 +209,12 @@ import NuiEditorBlockHandle from '../handle/NuiEditorBlockHandle.vue';
 import { useBlockHandle } from '../handle/use-block-handle';
 import NuiEditorSlashMenu from '../slash/NuiEditorSlashMenu.vue';
 import { useSlash } from '../slash/use-slash';
+import type { SlashItem } from '../slash/slash-items';
+import NuiEditorMediaPanel from '../uploads/NuiEditorMediaPanel.vue';
+import NuiEditorUploadCard from '../uploads/NuiEditorUploadCard.vue';
+import type { MediaKind } from '../uploads/uploads.types';
+import { provideEditorUploads } from '../uploads/uploads-context';
+import { useEditorUploads } from '../uploads/use-editor-uploads';
 import { editorMessages } from './editor.messages';
 import { useEditorOverlays } from './use-editor-overlays';
 import type { NuiEditorApi, NuiEditorPaste, NuiEditorProps } from './editor.types';
@@ -209,6 +241,9 @@ const {
   blockHandles = true,
   blocks = editorBlocks,
   highlighter = undefined,
+  upload,
+  accept,
+  maxSize,
 } = defineProps<NuiEditorProps>();
 
 const document = defineModel<DocJSON | undefined>('document');
@@ -221,6 +256,7 @@ const emit = defineEmits<{
 }>();
 
 const attrs = useAttrs();
+const blockTexts = useMessages(editorMessages);
 
 provideIconDefaults(editorIcons);
 provideBlockStates();
@@ -267,12 +303,39 @@ const limitedSchema = schema.restrict({
 
 const slashId = useId();
 
+const hasMedia = schema.nodes.has('image') || schema.nodes.has('file');
+const mediaOpen = ref(false);
+const mediaKind = ref<MediaKind>('image');
+
+const openMedia =
+  (kind: MediaKind): Command =>
+  () => {
+    mediaKind.value = kind;
+    mediaOpen.value = true;
+    return true;
+  };
+
+const MEDIA_SLASH: readonly { readonly kind: MediaKind; readonly keywords: readonly string[] }[] = [
+  { kind: 'image', keywords: ['image', 'picture', 'photo', 'img', 'картинка', 'изображение'] },
+  { kind: 'file', keywords: ['file', 'attachment', 'upload', 'pdf', 'файл', 'вложение'] },
+];
+
+const mediaSlash = (): readonly SlashItem[] =>
+  MEDIA_SLASH.filter((entry) => schema.nodes.has(entry.kind)).map((entry) => ({
+    key: entry.kind,
+    label: entry.kind === 'image' ? blockTexts.value.image : blockTexts.value.file,
+    icon: entry.kind,
+    keywords: entry.keywords,
+    command: openMedia(entry.kind),
+  }));
+
 const slash = useSlash({
   schema,
   state: () => current.value,
   enabled: () => editable.value && ready.value && overlays.focused.value,
   run: (command) => run(command),
   blocks,
+  extra: mediaSlash,
 });
 
 let view: EditorView | undefined;
@@ -289,7 +352,20 @@ if (highlighter !== undefined) {
   provideHighlighter(highlighter === false ? NO_HIGHLIGHT : highlighter);
 }
 
+const uploads = useEditorUploads({
+  schema,
+  upload: () => upload,
+  accept: () => accept,
+  maxSize: () => maxSize,
+  state: () => current.value,
+  run: (command) => run(command),
+  document: () => contentElement.value?.ownerDocument,
+});
+
+provideEditorUploads(uploads);
+
 const plugins = [
+  ...(hasMedia ? [pendingUploads, uploads.plugin] : []),
   ...(schema.nodes.has('code_block') ? [codeHighlightPlugin()] : []),
   slash.plugin,
   pasteSchema(limitedSchema),
@@ -398,7 +474,7 @@ const overlays = useEditorOverlays({
   run: (command) => run(command),
   focus: () => view?.focus(),
   bubble: () => bubbleToolbar.value,
-  caret: () => slash.open.value,
+  caret: () => slash.open.value || mediaOpen.value,
   editable: () => editable.value,
 });
 
@@ -423,8 +499,6 @@ const handles = useBlockHandle({
   run: (command) => run(command),
 });
 
-const blockTexts = useMessages(editorMessages);
-
 const blockMenu = (node: ElementNode): NuiMenuEntry[] =>
   blocks
     .filter((block) => block.name === node.type)
@@ -432,6 +506,27 @@ const blockMenu = (node: ElementNode): NuiMenuEntry[] =>
       (block) =>
         block.menu?.(node, blockContext(node.id, run, editor.focus), blockTexts.value) ?? [],
     );
+
+const validMedia = (url: string): boolean => {
+  const attr = mediaKind.value === 'image' ? 'src' : 'url';
+
+  return schema.nodes.get(mediaKind.value)?.attrs[attr]?.verify?.(url) ?? true;
+};
+
+const closeMedia = (): void => {
+  mediaOpen.value = false;
+  editor.focus();
+};
+
+const onMediaFiles = (files: readonly File[]): void => {
+  closeMedia();
+  uploads.add(files, undefined, mediaKind.value === 'image' ? 'image/*' : undefined);
+};
+
+const onMediaLink = (url: string): void => {
+  closeMedia();
+  uploads.insertLink(mediaKind.value, url);
+};
 
 const onHandleRun = (command: Command): void => {
   run(command);
@@ -495,6 +590,7 @@ onMounted(() => {
     editable: editable.value,
     dispatch,
     nodeViews: createNodeViews(element.ownerDocument, schema, blocks, nodeViews.sink),
+    widget: uploads.widget,
   });
 
   code.update(current.value);
