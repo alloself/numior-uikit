@@ -54,7 +54,7 @@ export const decorationSet = (
       decorationSet(
         sorted.map((decoration) => mapped(decoration, mapping)),
         kept,
-        widgets.map((widget) => ({ ...widget, pos: mapping.map(widget.pos, -1) })),
+        widgets.map((widget) => ({ ...widget, pos: mapping.map(widget.pos, 1) })),
       ),
   };
 };

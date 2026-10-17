@@ -118,4 +118,19 @@ describe('pending uploads', () => {
       'bullet_list(list_item(paragraph("Item"))) image paragraph("After")',
     );
   });
+
+  it('stays between blocks when the blocks around it join', () => {
+    const editor = editing(doc(node('paragraph', ['A']), node('paragraph', ['B'])), 2);
+
+    editor.run(startUploads(['a']));
+
+    expect(uploadsOf(editor.state)).toEqual([{ id: 'a', pos: 3 }]);
+
+    editor.select(textSelection(4));
+    editor.backspace();
+
+    expect(editor.outline).toBe('paragraph("AB")');
+    expect(uploadsOf(editor.state)).toEqual([{ id: 'a', pos: 4 }]);
+    expect(editor.run(startUploads([]))).toBe(false);
+  });
 });

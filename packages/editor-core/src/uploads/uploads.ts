@@ -25,9 +25,22 @@ const changed = (
   }
 };
 
-const moved = (uploads: readonly PendingUpload[], tr: Transaction): readonly PendingUpload[] =>
-  tr.changed
-    ? uploads.map((upload) => ({ ...upload, pos: tr.mapping.map(upload.pos, 1) }))
+const isTextblock = (doc: Doc, node: ElementNode): boolean =>
+  doc.schema.nodes.get(node.type)?.inlineContent === true;
+
+const boundary = (doc: Doc, pos: number): number => {
+  const $pos = doc.resolve(Math.min(Math.max(pos, 0), doc.size));
+
+  return $pos.depth > 0 && isTextblock(doc, $pos.parent) ? $pos.after($pos.depth) : $pos.pos;
+};
+
+const moved = (
+  uploads: readonly PendingUpload[],
+  tr: Transaction,
+  doc: Doc,
+): readonly PendingUpload[] =>
+  tr.changed && uploads.length > 0
+    ? uploads.map((upload) => ({ ...upload, pos: boundary(doc, tr.mapping.map(upload.pos, 1)) }))
     : uploads;
 
 const sets = new WeakMap<readonly PendingUpload[], DecorationSet>();
@@ -55,7 +68,8 @@ export const pendingUploads: Plugin<readonly PendingUpload[]> = definePlugin<
   name: 'uploads',
   state: {
     init: () => NONE,
-    apply: (tr, value) => changed(moved(value, tr), tr.getMeta(uploadChange)),
+    apply: (tr, value, _before, after) =>
+      changed(moved(value, tr, after.doc), tr.getMeta(uploadChange)),
   },
   props: {
     decorations: (state) => decorationsOf(pendingUploads.getState(state) ?? NONE),
@@ -64,9 +78,6 @@ export const pendingUploads: Plugin<readonly PendingUpload[]> = definePlugin<
 
 export const uploadsOf = (state: EditorState): readonly PendingUpload[] =>
   pendingUploads.getState(state) ?? NONE;
-
-const isTextblock = (doc: Doc, node: ElementNode): boolean =>
-  doc.schema.nodes.get(node.type)?.inlineContent === true;
 
 export const uploadPlace = (state: EditorState): number => {
   const range = selectionRange(state.doc, state.selection);
@@ -122,6 +133,10 @@ export const startUploads =
   (state, dispatch) => {
     const at = pos ?? uploadPlace(state);
 
+    if (ids.length === 0) {
+      return false;
+    }
+
     dispatch?.(
       state.tr.setMeta(uploadChange, {
         kind: 'add',
@@ -129,7 +144,7 @@ export const startUploads =
       }),
     );
 
-    return ids.length > 0;
+    return true;
   };
 
 export const dropUploads =

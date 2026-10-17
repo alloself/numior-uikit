@@ -137,4 +137,12 @@ describe('editor view widgets', () => {
 
     expect(intents.at(-1)).toEqual({ kind: 'paste', text: 'caption', html: '' });
   });
+
+  it('takes files dropped on a widget instead of letting the browser open them', () => {
+    const view = mounted(twoParagraphs(), [widgetDecoration(5, 'a')]);
+    const file = new File(['x'], 'photo.png', { type: 'image/png' });
+
+    expect(view.dropFilesOn(elements.get('a'), [file])).toBe(true);
+    expect(intents).toEqual([{ kind: 'files', files: [file] }]);
+  });
 });

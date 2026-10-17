@@ -1,4 +1,4 @@
-import type { WidgetDecoration } from '../decorations/decorations.types';
+import type { DecorationSet, WidgetDecoration } from '../decorations/decorations.types';
 import type { EditorState } from '../state/state.types';
 import { outerOf, type ElementDesc, type ViewContext } from './desc';
 
@@ -11,9 +11,6 @@ interface PlacedWidget {
   readonly dom: HTMLElement;
   readonly slot: WidgetSlot;
 }
-
-const widgetsOf = (state: EditorState): readonly WidgetDecoration[] =>
-  state.plugins.flatMap((plugin) => plugin.props.decorations?.(state)?.widgets ?? []);
 
 const slotOf = (
   context: ViewContext,
@@ -94,11 +91,15 @@ const prepare = (context: ViewContext, dom: HTMLElement): HTMLElement => {
   return dom;
 };
 
-export const placeWidgets = (context: ViewContext, state: EditorState): void => {
+export const placeWidgets = (
+  context: ViewContext,
+  state: EditorState,
+  sets: readonly DecorationSet[],
+): void => {
   const placed: PlacedWidget[] = [];
   const keys = new Set<string>();
 
-  for (const widget of widgetsOf(state)) {
+  for (const widget of sets.flatMap((set) => set.widgets)) {
     const slot = keys.has(widget.key) ? undefined : slotOf(context, state, widget);
     const dom = slot === undefined ? undefined : context.widget(widget.key);
 

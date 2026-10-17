@@ -3,6 +3,7 @@ export type { RenderedDom } from './render-dom';
 export { createEditorView } from './view';
 export type {
   CaretRect,
+  ChunkWatch,
   DomPoint,
   EditorView,
   EditorViewOptions,

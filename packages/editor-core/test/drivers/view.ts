@@ -265,6 +265,18 @@ export class EditorViewDriver {
     return !this.host.dispatchEvent(event);
   }
 
+  dropFilesOn(target: Element | undefined, files: readonly File[]): boolean {
+    const transfer = { files, types: ['Files'], getData: () => '' };
+    const over = new Event('dragover', { bubbles: true, cancelable: true });
+    const drop = new Event('drop', { bubbles: true, cancelable: true });
+
+    Object.defineProperty(over, 'dataTransfer', { value: transfer });
+    Object.defineProperty(drop, 'dataTransfer', { value: transfer });
+    target?.dispatchEvent(over);
+
+    return over.defaultPrevented && !(target?.dispatchEvent(drop) ?? true);
+  }
+
   copy(type: 'copy' | 'cut', format = 'text/plain'): string | undefined {
     const copied = new Map<string, string>();
     const event = new Event(type, { bubbles: true, cancelable: true });

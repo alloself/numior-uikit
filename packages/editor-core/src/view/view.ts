@@ -2,14 +2,15 @@ import { inputSource } from '../commands/input';
 import type { InputSource } from '../state/input.types';
 import type { EditorState, Transaction } from '../state/state.types';
 import { coordsAtPos, posAtCoords } from './coords';
-import { blockDecorations, changedBlocks } from './decorate';
-import { createRootDesc, redrawContent, syncElement, type ViewContext } from './desc';
+import { blockDecorations, changedBlocks, decorationSets, sameSets } from './decorate';
+import { createRootDesc, redrawContent, syncElement, widgetAround, type ViewContext } from './desc';
 import { createDomWatch } from './dom-change';
 import type { ViewHost } from './host.types';
 import { attachInput, runIntent } from './input';
 import { domAtPos, posAtDOM } from './positions';
 import { ALL_CLASS, createSelectionSync } from './selection-sync';
-import type { EditorView, EditorViewOptions } from './view.types';
+import type { ChunkSet } from './chunks';
+import type { ChunkWatch, EditorView, EditorViewOptions } from './view.types';
 import { placeWidgets } from './widgets';
 
 const ROOT_ATTRS = ['contenteditable', 'role', 'aria-multiline', 'translate'] as const;
@@ -25,6 +26,22 @@ const prepareRoot = (root: HTMLElement, editable: boolean): void => {
 
 const noWidget = (): undefined => undefined;
 
+const chunkSet = (watch: ChunkWatch | undefined): ChunkSet => {
+  const known = new WeakSet<Node>();
+
+  return {
+    has: (node) => known.has(node),
+    add: (chunk) => {
+      known.add(chunk);
+      watch?.added(chunk);
+    },
+    drop: (chunk) => {
+      known.delete(chunk);
+      watch?.removed(chunk);
+    },
+  };
+};
+
 const releaseRoot = (root: HTMLElement): void => {
   root.replaceChildren();
   for (const name of ROOT_ATTRS) {
@@ -38,24 +55,27 @@ export const createEditorView = (root: HTMLElement, options: EditorViewOptions):
   let state = options.state;
   let composing = false;
 
+  let sets = decorationSets(state);
+
   const context: ViewContext = {
     document: root.ownerDocument,
     schema: state.doc.schema,
     descs: new WeakMap(),
     byId: new Map(),
-    chunks: new WeakSet(),
+    chunks: chunkSet(options.chunks),
     nodeViews: options.nodeViews ?? {},
     widget: options.widget ?? noWidget,
     widgets: new WeakSet(),
     placed: new Map(),
-    decorations: blockDecorations(state),
+    redraw: new Set(),
+    decorations: blockDecorations(state, sets),
   };
 
   prepareRoot(root, options.editable ?? true);
 
   const rootDesc = createRootDesc(context, root, state.doc.root);
 
-  placeWidgets(context, state);
+  placeWidgets(context, state, sets);
 
   const dispatch = (tr: Transaction, source?: InputSource): void => {
     if (source !== undefined) {
@@ -85,7 +105,7 @@ export const createEditorView = (root: HTMLElement, options: EditorViewOptions):
       runIntent(host, intent);
     },
     () => {
-      placeWidgets(context, state);
+      placeWidgets(context, state, sets);
     },
   );
 
@@ -94,19 +114,25 @@ export const createEditorView = (root: HTMLElement, options: EditorViewOptions):
       throw new RangeError('The view renders one schema; create a new view for another');
     }
     const before = context.decorations;
-    const after = composing ? before : blockDecorations(next);
+    const nextSets = composing ? sets : decorationSets(next);
+    const after = sameSets(nextSets, sets) ? before : blockDecorations(next, nextSets);
 
+    sets = nextSets;
     context.decorations = after;
-    syncElement(context, rootDesc, next.doc.root);
     for (const id of changedBlocks(before, after)) {
+      context.redraw.add(id);
+    }
+    syncElement(context, rootDesc, next.doc.root);
+    for (const id of context.redraw) {
       const desc = context.byId.get(id);
 
       if (desc !== undefined) {
         redrawContent(context, desc);
       }
     }
+    context.redraw.clear();
     state = next;
-    placeWidgets(context, next);
+    placeWidgets(context, next, sets);
     watch.ignoreOwn();
     sync.mark();
     sync.write();
@@ -147,6 +173,7 @@ export const createEditorView = (root: HTMLElement, options: EditorViewOptions):
     coordsAtPos: (pos) => coordsAtPos(host, pos),
     posAtCoords: (x, y) => posAtCoords(host, x, y),
     nodeDOM: (id) => context.byId.get(id)?.dom,
+    inWidget: (target) => widgetAround(context, target),
     destroy: () => {
       root.classList.remove(ALL_CLASS);
       detach();

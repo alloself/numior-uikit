@@ -28,6 +28,12 @@ export interface EditorViewOptions {
   readonly dispatch?: ((tr: Transaction) => void) | undefined;
   readonly nodeViews?: Readonly<Record<string, NodeViewFactory>> | undefined;
   readonly widget?: ((key: string) => HTMLElement | undefined) | undefined;
+  readonly chunks?: ChunkWatch | undefined;
+}
+
+export interface ChunkWatch {
+  added(chunk: HTMLElement): void;
+  removed(chunk: HTMLElement): void;
 }
 
 export interface EditorView {
@@ -44,5 +50,6 @@ export interface EditorView {
   coordsAtPos(pos: number): CaretRect | undefined;
   posAtCoords(x: number, y: number): number | undefined;
   nodeDOM(id: NodeId): HTMLElement | undefined;
+  inWidget(target: EventTarget | null): boolean;
   destroy(): void;
 }

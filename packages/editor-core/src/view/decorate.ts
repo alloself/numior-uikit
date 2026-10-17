@@ -20,7 +20,7 @@ export interface TextSegment {
   readonly classes: readonly string[];
 }
 
-const setsOf = (state: EditorState): readonly DecorationSet[] =>
+export const decorationSets = (state: EditorState): readonly DecorationSet[] =>
   state.plugins.flatMap((plugin) => {
     const set = plugin.props.decorations?.(state);
 
@@ -71,11 +71,19 @@ const addTo = (
   }
 };
 
-export const blockDecorations = (state: EditorState): BlockDecorations => {
+export const sameSets = (
+  left: readonly DecorationSet[],
+  right: readonly DecorationSet[],
+): boolean => left.length === right.length && left.every((set, index) => set === right[index]);
+
+export const blockDecorations = (
+  state: EditorState,
+  sets: readonly DecorationSet[],
+): BlockDecorations => {
   const blocks = new Map<NodeId, LocalDecoration[]>();
   const limit = state.doc.root.size - 2;
 
-  for (const set of setsOf(state)) {
+  for (const set of sets) {
     for (const decoration of set.decorations) {
       const local =
         decoration.from < 0 || decoration.to > limit ? undefined : localOf(state, decoration);

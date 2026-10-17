@@ -1,7 +1,7 @@
 import { childOffsets, sameAttrs, sameMarks } from '../model/node';
 import type { ContentNode, ElementNode, NodeId, TextNode } from '../model/node.types';
 import type { NodeType, Schema } from '../schema/schema.types';
-import { fillChunks, placeInChunks, tidyChunks } from './chunks';
+import { fillChunks, placeInChunks, tidyChunks, type ChunkSet } from './chunks';
 import { segmentsOf, type BlockDecorations, type LocalDecoration } from './decorate';
 import { renderLeaf, renderParent, type RenderedDom } from './render-dom';
 import type { NodeView, NodeViewFactory } from './view.types';
@@ -40,11 +40,12 @@ export interface ViewContext {
   readonly schema: Schema;
   readonly descs: WeakMap<Node, Desc>;
   readonly byId: Map<NodeId, ElementDesc>;
-  readonly chunks: WeakSet<Node>;
+  readonly chunks: ChunkSet;
   readonly nodeViews: Readonly<Record<string, NodeViewFactory>>;
   readonly widget: (key: string) => HTMLElement | undefined;
   readonly widgets: WeakSet<Node>;
   readonly placed: Map<string, HTMLElement>;
+  readonly redraw: Set<NodeId>;
   decorations: BlockDecorations;
 }
 
@@ -548,6 +549,10 @@ export const syncElement = (context: ViewContext, desc: ElementDesc, node: Eleme
     return;
   }
   desc.node = node;
+  if (context.redraw.delete(node.id)) {
+    redrawContent(context, desc);
+    return;
+  }
   if (content === null) {
     return;
   }

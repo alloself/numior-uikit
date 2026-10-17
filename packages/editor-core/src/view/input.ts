@@ -269,6 +269,9 @@ const interactive = (target: EventTarget | null, owner: Element): boolean => {
   return false;
 };
 
+const carriesFiles = (event: DragEvent): boolean =>
+  [...(event.dataTransfer?.types ?? [])].includes('Files');
+
 const onDrag = (event: DragEvent): void => {
   event.preventDefault();
 };
@@ -342,6 +345,26 @@ export const attachInput = (host: ViewHost, parts: InputParts): (() => void) => 
     runIntent(host, intent);
   };
 
+  const onWidgetDrag = (event: DragEvent): void => {
+    if (widgetAround(host.context, event.target) && carriesFiles(event)) {
+      event.preventDefault();
+    }
+  };
+
+  const onWidgetDrop = (event: DragEvent): void => {
+    if (!widgetAround(host.context, event.target) || !carriesFiles(event)) {
+      return;
+    }
+    const owner = widgetOwner(host.context, event.target);
+    const files = [...(event.dataTransfer?.files ?? [])];
+
+    event.preventDefault();
+    if (owner !== undefined) {
+      host.dispatch(host.state().tr.setSelection({ kind: 'node', id: owner.node.id }), 'pointer');
+    }
+    runIntent(host, { kind: 'files', files });
+  };
+
   const selectNode = (event: MouseEvent, id: string): void => {
     event.preventDefault();
     root.focus({ preventScroll: true });
@@ -404,6 +427,8 @@ export const attachInput = (host: ViewHost, parts: InputParts): (() => void) => 
   root.addEventListener('copy', copy);
   root.addEventListener('cut', copy);
   root.addEventListener('drop', drop);
+  root.addEventListener('drop', onWidgetDrop);
+  root.addEventListener('dragover', onWidgetDrag);
   root.addEventListener('dragover', drag);
   root.addEventListener('dragstart', drag);
   root.addEventListener('mousedown', mousedown);
@@ -419,6 +444,8 @@ export const attachInput = (host: ViewHost, parts: InputParts): (() => void) => 
     root.removeEventListener('copy', copy);
     root.removeEventListener('cut', copy);
     root.removeEventListener('drop', drop);
+    root.removeEventListener('drop', onWidgetDrop);
+    root.removeEventListener('dragover', onWidgetDrag);
     root.removeEventListener('dragover', drag);
     root.removeEventListener('dragstart', drag);
     root.removeEventListener('mousedown', mousedown);

@@ -6,13 +6,27 @@ const CHUNK_CLASS = 'nui-editor__chunk';
 
 export type SizeOf = (block: Element) => number;
 
-const createChunk = (document: Document, chunks: WeakSet<Node>): HTMLElement => {
+export interface ChunkSet {
+  has(node: Node): boolean;
+  add(chunk: HTMLElement): void;
+  drop(chunk: HTMLElement): void;
+}
+
+const createChunk = (document: Document, chunks: ChunkSet): HTMLElement => {
   const chunk = document.createElement('div');
 
   chunk.className = CHUNK_CLASS;
   chunk.style.setProperty('content-visibility', 'auto');
   chunks.add(chunk);
   return chunk;
+};
+
+const dropChunks = (root: HTMLElement, chunks: ChunkSet): void => {
+  for (const child of root.children) {
+    if (child instanceof HTMLElement && chunks.has(child)) {
+      chunks.drop(child);
+    }
+  }
 };
 
 const estimate = (chunk: HTMLElement, sizeOf: SizeOf): void => {
@@ -24,7 +38,7 @@ const estimate = (chunk: HTMLElement, sizeOf: SizeOf): void => {
   chunk.style.setProperty('contain-intrinsic-block-size', `auto ${Math.max(1, total)}px`);
 };
 
-const lastChunk = (root: HTMLElement, chunks: WeakSet<Node>): HTMLElement => {
+const lastChunk = (root: HTMLElement, chunks: ChunkSet): HTMLElement => {
   const last = root.lastElementChild;
 
   if (last instanceof HTMLElement && chunks.has(last)) {
@@ -39,10 +53,12 @@ const lastChunk = (root: HTMLElement, chunks: WeakSet<Node>): HTMLElement => {
 export const fillChunks = (
   root: HTMLElement,
   blocks: readonly ChildNode[],
-  chunks: WeakSet<Node>,
+  chunks: ChunkSet,
   sizeOf: SizeOf,
 ): void => {
   const made: HTMLElement[] = [];
+
+  dropChunks(root, chunks);
 
   for (let start = 0; start < blocks.length; start += CHUNK_SIZE) {
     const chunk = createChunk(root.ownerDocument, chunks);
@@ -58,7 +74,7 @@ export const placeInChunks = (
   root: HTMLElement,
   blocks: readonly ChildNode[],
   anchor: ChildNode | null,
-  chunks: WeakSet<Node>,
+  chunks: ChunkSet,
 ): void => {
   let next = anchor;
 
@@ -78,7 +94,7 @@ export const placeInChunks = (
   }
 };
 
-const split = (chunk: HTMLElement, chunks: WeakSet<Node>, sizeOf: SizeOf): void => {
+const split = (chunk: HTMLElement, chunks: ChunkSet, sizeOf: SizeOf): void => {
   const blocks = [...chunk.children];
   let after: HTMLElement = chunk;
 
@@ -93,12 +109,13 @@ const split = (chunk: HTMLElement, chunks: WeakSet<Node>, sizeOf: SizeOf): void 
   estimate(chunk, sizeOf);
 };
 
-export const tidyChunks = (root: HTMLElement, chunks: WeakSet<Node>, sizeOf: SizeOf): void => {
+export const tidyChunks = (root: HTMLElement, chunks: ChunkSet, sizeOf: SizeOf): void => {
   for (const chunk of Array.from(root.children)) {
     if (!(chunk instanceof HTMLElement) || !chunks.has(chunk)) {
       continue;
     }
     if (chunk.childNodes.length === 0) {
+      chunks.drop(chunk);
       chunk.remove();
     } else if (chunk.children.length > CHUNK_LIMIT) {
       split(chunk, chunks, sizeOf);
