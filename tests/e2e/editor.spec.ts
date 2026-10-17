@@ -542,6 +542,31 @@ test.describe('editor', () => {
     await expect(page.getByRole('menuitem', { name: 'Превратить в' })).toHaveCount(0);
   });
 
+  test('keeps the handle inside the editor beside a table that slides aside with motion on', async ({
+    page,
+  }) => {
+    const playground = new PlaygroundPage(page);
+
+    await playground.open();
+    await playground.editor.root.scrollIntoViewIfNeeded();
+
+    const { editor } = playground;
+
+    const fine = await page.evaluate(
+      () => matchMedia('(hover: hover) and (pointer: fine)').matches,
+    );
+
+    test.skip(!fine, 'the handle follows a mouse');
+
+    const table = editor.content.locator('.nui-editor__chunk > .nui-content__table');
+
+    await editor.showTable();
+    await editor.hoverStart(table);
+    await page.waitForTimeout(400);
+
+    expect(await editor.gripBeside(table)).toBe(true);
+  });
+
   test('passes axe in light and dark, fits phones and types in RTL', async ({ page }) => {
     const playground = await openEditor(page);
     const { editor } = playground;

@@ -207,6 +207,8 @@ const keyOf = (block: CodeBlock): string => `${block.language ?? ''}\n${block.te
 
 export interface CodeHighlighter {
   update(state: EditorState): void;
+  reset(): void;
+  stop(): void;
 }
 
 interface Seen {
@@ -228,6 +230,7 @@ export const createCodeHighlighter = (
   const queue = new Map<NodeId, CodeBlock>();
   let seen: Seen | undefined;
   let running = false;
+  let stopped = false;
 
   const current = (block: CodeBlock): boolean => asked.get(block.id) === keyOf(block);
 
@@ -237,18 +240,38 @@ export const createCodeHighlighter = (
     }
   };
 
+  const ask = async (active: NuiHighlighter, block: CodeBlock): Promise<CodeAnswer | undefined> => {
+    try {
+      const tokens = await highlightCode(active, block.text, block.language);
+
+      return current(block) ? { id: block.id, text: block.text, tokens } : undefined;
+    } catch {
+      asked.delete(block.id);
+      return undefined;
+    }
+  };
+
+  const prune = (): void => {
+    const { doc } = state();
+
+    for (const id of asked.keys()) {
+      if (doc.byId(id) === undefined) {
+        asked.delete(id);
+      }
+    }
+  };
+
   const drain = async (active: NuiHighlighter): Promise<void> => {
     let answers: CodeAnswer[] = [];
     let started = performance.now();
 
     for (const [id, block] of queue) {
       queue.delete(id);
-      if (current(block)) {
-        const tokens = await highlightCode(active, block.text, block.language);
 
-        if (current(block)) {
-          answers.push({ id, text: block.text, tokens });
-        }
+      const answer = stopped || !current(block) ? undefined : await ask(active, block);
+
+      if (answer !== undefined && !stopped) {
+        answers.push(answer);
       }
       if (performance.now() - started > SLICE_MS) {
         send(answers);
@@ -257,7 +280,10 @@ export const createCodeHighlighter = (
         started = performance.now();
       }
     }
-    send(answers);
+    if (!stopped) {
+      send(answers);
+      prune();
+    }
   };
 
   const work = async (active: NuiHighlighter): Promise<void> => {
@@ -279,6 +305,9 @@ export const createCodeHighlighter = (
 
       const found: CodeBlock[] = [];
 
+      if (seen !== undefined && seen.highlighter !== active) {
+        asked.clear();
+      }
       changedCode(seen?.highlighter === active ? seen.root : undefined, next.doc.root, found);
       seen = { root: next.doc.root, highlighter: active };
       for (const block of found) {
@@ -287,9 +316,18 @@ export const createCodeHighlighter = (
           queue.set(block.id, block);
         }
       }
-      if (!running && queue.size > 0) {
+      if (!running && queue.size > 0 && !stopped) {
         void work(active);
       }
+    },
+    reset: () => {
+      asked.clear();
+      queue.clear();
+      seen = undefined;
+    },
+    stop: () => {
+      stopped = true;
+      queue.clear();
     },
   };
 };

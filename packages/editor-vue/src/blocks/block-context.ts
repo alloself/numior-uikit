@@ -18,6 +18,7 @@ export const blockContext = (
   id: NodeId,
   run: (command: Command) => boolean,
   focus: () => void,
+  element: () => HTMLElement | undefined,
 ): NuiEditorBlockContext => ({
   setAttrs: (attrs) =>
     run(
@@ -35,4 +36,12 @@ export const blockContext = (
     ),
   run,
   focus,
+  element,
+  setStyle: (property, value) => {
+    if (value === null) {
+      element()?.style.removeProperty(property);
+    } else {
+      element()?.style.setProperty(property, value);
+    }
+  },
 });

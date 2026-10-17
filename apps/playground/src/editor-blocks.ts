@@ -34,6 +34,7 @@ export const taskStatusBlock = defineBlock({
       label: 'Статус задачи',
       icon: 'list-todo',
       keywords: ['status', 'task', 'статус'],
+      kind: 'command',
       command: insertLeaf('task_status'),
     },
   ],

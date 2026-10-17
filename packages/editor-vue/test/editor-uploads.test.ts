@@ -238,4 +238,46 @@ describe('NuiEditor uploads', () => {
       'paragraph:',
     ]);
   });
+
+  it('ignores dropped files in read mode and announces an address the schema refuses', async () => {
+    const server = new FakeUploads();
+    const editor = await editing(paragraphs('Intro'), { upload: server.adapter });
+    const uploads = EditorUploadDriver.of(editor);
+
+    await uploads.pasteFiles([fileOf('local.png', 'image/png')]);
+    server.of('local.png').finish('blob:https://numior.test/1');
+    await uploads.settle();
+
+    expect(uploads.cards).toEqual([]);
+    expect(uploads.announcement).toBe('local.png is uploaded, but there is no place left for it');
+    expect(editor.changes).toBe(0);
+
+    await editor.receive({ readonly: true });
+    await uploads.pasteFiles([fileOf('late.png', 'image/png')]);
+
+    expect(uploads.cards).toEqual([]);
+    expect(server.started.map((upload) => upload.file.name)).toEqual(['local.png']);
+  });
+
+  it('offers image uploads only for image types the editor accepts', async () => {
+    const server = new FakeUploads();
+
+    const editor = await editing(paragraphs('Intro', ''), {
+      upload: server.adapter,
+      accept: 'application/pdf, .png',
+    });
+
+    const uploads = EditorUploadDriver.of(editor);
+
+    await editor.select(8);
+    await editor.type('/ima');
+    await editor.clickSlash('Image');
+
+    expect(uploads.panelTabs).toEqual(['Upload', 'By link']);
+    expect(uploads.pickerAccept).toBe('.png');
+
+    await editor.receive({ accept: 'application/pdf' });
+
+    expect(uploads.panelTabs).toEqual([]);
+  });
 });

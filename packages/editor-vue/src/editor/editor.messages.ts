@@ -88,6 +88,7 @@ export interface NuiEditorMessages {
   readonly uploadType: (params: { readonly name: string }) => string;
   readonly uploadSize: (params: { readonly name: string; readonly size: string }) => string;
   readonly uploadUnavailable: string;
+  readonly uploadLost: (params: { readonly name: string }) => string;
   readonly imageWidth: string;
   readonly imageAlign: string;
   readonly imageAlignStart: string;
@@ -269,6 +270,7 @@ export const editorMessages: NuiMessageCatalog<'editor'> = {
     uploadType: ({ name }) => `${name}: this file type is not accepted`,
     uploadSize: ({ name, size }) => `${name} is larger than ${size}`,
     uploadUnavailable: 'Files cannot be uploaded here; insert them by link',
+    uploadLost: ({ name }) => `${name} is uploaded, but there is no place left for it`,
     imageWidth: 'Image width',
     imageAlign: 'Alignment',
     imageAlignStart: 'Align to the line start',
@@ -369,6 +371,7 @@ export const editorMessages: NuiMessageCatalog<'editor'> = {
     uploadType: ({ name }) => `${name}: такой тип файла не принимается`,
     uploadSize: ({ name, size }) => `${name} больше ${size}`,
     uploadUnavailable: 'Сюда нельзя загрузить файлы — вставьте их по ссылке',
+    uploadLost: ({ name }) => `${name} загружен, но вставить его некуда`,
     imageWidth: 'Ширина картинки',
     imageAlign: 'Выравнивание',
     imageAlignStart: 'К началу строки',

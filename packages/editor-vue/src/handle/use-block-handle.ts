@@ -9,16 +9,18 @@ import {
 } from '@numior/editor-core';
 import type { EditorView } from '@numior/editor-core/view';
 import { useMediaQuery } from '@vueuse/core';
-import { computed, ref, shallowRef, watch, type ComputedRef, type Ref } from 'vue';
+import { computed, onScopeDispose, ref, shallowRef, watch, type ComputedRef, type Ref } from 'vue';
 import {
   BLOCK,
   deepestSlot,
   elementOf,
+  lineStart,
   paddingBox,
   sameSlot,
   startEdge,
   WIDGET,
 } from './block-geometry';
+import type { NuiEditorHandlePlacement } from '../blocks/block.types';
 import { useBlockDrag } from './use-block-drag';
 
 export interface BlockHandleOptions {
@@ -32,6 +34,7 @@ export interface BlockHandleOptions {
   readonly enabled: () => boolean;
   readonly focused: () => boolean;
   readonly run: (command: Command) => boolean;
+  readonly placement: (type: string) => NuiEditorHandlePlacement;
 }
 
 export interface BlockHandle {
@@ -50,11 +53,10 @@ const PUSHED = 'nui-editor__pushed';
 
 const ZONE = 48;
 
-const atomAround = (target: Element): Element | undefined => {
-  const owner = target.closest(WIDGET)?.parentElement;
+const BESIDE_GAP = 'var(--nui-space-2)';
 
-  return owner?.getAttribute('contenteditable') === 'false' ? owner : undefined;
-};
+const widgetBlock = (target: Element): Element | undefined =>
+  target.closest(WIDGET)?.parentElement ?? undefined;
 
 const atomStart = (element: Element | undefined): number | undefined =>
   element instanceof HTMLElement && element.getAttribute('contenteditable') === 'false'
@@ -82,7 +84,7 @@ const hoverPoint = (target: Element): Element | undefined => {
   if (target.closest(BLOCK) === null) {
     return undefined;
   }
-  return target.closest(WIDGET) === null ? target : atomAround(target);
+  return target.closest(WIDGET) === null ? target : widgetBlock(target);
 };
 
 export const useBlockHandle = (options: BlockHandleOptions): BlockHandle => {
@@ -94,6 +96,32 @@ export const useBlockHandle = (options: BlockHandleOptions): BlockHandle => {
 
   const rtl = (): boolean =>
     options.frame.value !== null && getComputedStyle(options.frame.value).direction === 'rtl';
+
+  const besideOf = (slot: ChildSlot | undefined): boolean => {
+    const node = slot === undefined ? undefined : childNode(options.state().doc, slot);
+
+    return node !== undefined && options.placement(node.type) === 'beside';
+  };
+
+  const placeBeside = (target: HTMLElement, element: Element, frame: DOMRect): boolean => {
+    const rect = element.getBoundingClientRect();
+    const end = rtl() ? rect.right - frame.left : frame.right - rect.left;
+
+    target.style.insetInlineStart = 'auto';
+    target.style.insetInlineEnd = `${String(end)}px`;
+    target.style.marginInlineEnd = BESIDE_GAP;
+
+    const placed = target.getBoundingClientRect();
+    const start = rtl() ? frame.right - placed.right : placed.left - frame.left;
+
+    return start >= lineStart(frame, element, rtl()) - 1;
+  };
+
+  const placeAtStart = (target: HTMLElement, element: Element, frame: DOMRect): void => {
+    target.style.insetInlineEnd = 'auto';
+    target.style.marginInlineEnd = '';
+    target.style.insetInlineStart = `${String(startEdge(frame, element, rtl()))}px`;
+  };
 
   const push = (element: Element | undefined): void => {
     if (element !== pushed || element?.classList.contains(PUSHED) === false) {
@@ -109,19 +137,31 @@ export const useBlockHandle = (options: BlockHandleOptions): BlockHandle => {
     }
   };
 
-  const place = (
-    target: HTMLElement | null,
-    element: Element | undefined,
-    edge: 'top' | 'bottom',
-  ): void => {
+  const place = (element: Element | undefined, beside: boolean): void => {
+    const target = options.handle.value;
     const frame = paddingBox(options.frame.value);
-    const rect = element?.getBoundingClientRect();
 
-    if (target === null || frame === undefined || rect === undefined) {
+    if (target === null || frame === undefined || element === undefined) {
+      push(undefined);
       return;
     }
-    target.style.top = `${String((edge === 'top' ? rect.top : rect.bottom) - frame.top)}px`;
-    target.style.insetInlineStart = `${String(startEdge(frame, element ?? target, rtl()))}px`;
+    target.style.top = `${String(element.getBoundingClientRect().top - frame.top)}px`;
+
+    const wasPushed = beside && element.classList.contains(PUSHED);
+
+    if (wasPushed) {
+      element.classList.remove(PUSHED);
+    }
+
+    const apart = beside && placeBeside(target, element, frame);
+
+    if (!apart) {
+      if (wasPushed) {
+        element.classList.add(PUSHED);
+      }
+      placeAtStart(target, element, frame);
+    }
+    push(apart ? undefined : element);
   };
 
   const drag = useBlockDrag({
@@ -161,14 +201,41 @@ export const useBlockHandle = (options: BlockHandleOptions): BlockHandle => {
     },
   );
 
+  let measured: Element | undefined;
+  let measuredBeside = false;
+
+  const sizes =
+    typeof ResizeObserver === 'function'
+      ? new ResizeObserver(() => {
+          place(measured, measuredBeside);
+        })
+      : undefined;
+
+  const measure = (element: Element | undefined, beside: boolean): void => {
+    measuredBeside = beside;
+    if (element !== measured) {
+      if (measured !== undefined) {
+        sizes?.unobserve(measured);
+      }
+      if (element !== undefined) {
+        sizes?.observe(element);
+      }
+      measured = element;
+    }
+  };
+
+  onScopeDispose(() => {
+    sizes?.disconnect();
+  });
+
   watch(
     [slot, () => options.state().doc],
     ([value]) => {
       const view = options.view();
       const element = view === undefined ? undefined : elementOf(view, value);
 
-      place(options.handle.value, element, 'top');
-      push(element);
+      measure(element, besideOf(value));
+      place(element, besideOf(value));
     },
     { flush: 'post' },
   );
@@ -193,12 +260,15 @@ export const useBlockHandle = (options: BlockHandleOptions): BlockHandle => {
     view: EditorView,
     next: ChildSlot | undefined,
   ): boolean => {
-    const rect = elementOf(view, next)?.getBoundingClientRect();
+    const element = elementOf(view, next);
+    const rect = element?.getBoundingClientRect();
 
-    if (rect === undefined) {
+    if (element === undefined || rect === undefined) {
       return false;
     }
-    return (rtl() ? rect.right - event.clientX : event.clientX - rect.left) <= ZONE;
+    return (
+      besideOf(next) || (rtl() ? rect.right - event.clientX : event.clientX - rect.left) <= ZONE
+    );
   };
 
   const release = (): void => {

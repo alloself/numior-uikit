@@ -479,6 +479,12 @@ export class EditorDriver {
     );
   }
 
+  get handleBeside(): boolean {
+    const handle = this.root.querySelector('.nui-editor-handle');
+
+    return handle instanceof HTMLElement && handle.style.insetInlineStart === 'auto';
+  }
+
   get handleShown(): boolean {
     return this.root.querySelector('.nui-editor-handle--shown') !== null;
   }

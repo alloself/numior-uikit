@@ -16,6 +16,7 @@ export type {
   NuiEditorBlockContext,
   NuiEditorBlockEditor,
   NuiEditorBlockPlace,
+  NuiEditorHandlePlacement,
   NuiEditorBlockViewProps,
 } from './blocks/block.types';
 export type { SlashItem as NuiEditorSlashItem } from './slash/slash-items';

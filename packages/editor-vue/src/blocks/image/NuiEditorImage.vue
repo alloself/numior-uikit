@@ -7,8 +7,15 @@
       'nui-editor-image--captioned': captionDraft !== '',
     }"
   >
-    <div class="nui-editor-image__frame">
-      <img class="nui-content__picture" :src="src" :alt="alt" draggable="false" />
+    <div ref="frame" class="nui-editor-image__frame">
+      <img
+        ref="picture"
+        class="nui-content__picture"
+        :src="src"
+        :alt="alt"
+        draggable="false"
+        @load="measure"
+      />
       <div v-if="pending !== undefined" class="nui-editor-image__busy">
         <NuiProgress
           class="nui-editor-image__progress"
@@ -23,78 +30,81 @@
           :key="side"
           class="nui-editor-image__grip"
           :class="`nui-editor-image__grip--side-${side}`"
-          role="slider"
-          tabindex="0"
-          aria-orientation="horizontal"
-          :aria-label="texts.imageWidth"
-          :aria-valuemin="MIN_PERCENT"
-          :aria-valuemax="MAX_PERCENT"
-          :aria-valuenow="widthPercent"
-          :aria-valuetext="`${String(widthPercent)} %`"
+          v-bind="side === 'start' ? slider : HIDDEN_GRIP"
           @pointerdown="onGripDown(side, $event)"
           @keydown="onGripKeydown"
         />
-        <div v-if="selected" class="nui-editor-image__bar" role="toolbar" :aria-label="texts.image">
-          <NuiToggleGroup
-            :model-value="align"
-            :items="alignItems"
-            :label="texts.imageAlign"
-            size="sm"
-            icon-only
-            required
-            @update:model-value="setAlign"
-          />
-          <NuiButton
-            v-if="uploads?.enabled.value"
-            variant="ghost"
-            tone="neutral"
-            size="sm"
-            icon="image-up"
-            :aria-label="texts.imageReplace"
-            @click="choose"
-          />
-          <NuiButton
-            variant="ghost"
-            tone="neutral"
-            size="sm"
-            icon="download"
-            :href="src"
-            download=""
-            :aria-label="texts.download"
-          />
-          <NuiPopover
-            v-model:open="describing"
-            placement="bottom-end"
-            padding="sm"
-            @toggle="onAltToggle"
-          >
-            <template #trigger="{ attrs }">
-              <NuiButton
-                v-bind="attrs"
-                variant="ghost"
-                tone="neutral"
-                size="sm"
-                icon="captions"
-                :aria-label="texts.imageAlt"
-              />
-            </template>
-            <form ref="altForm" class="nui-editor-image__alt" @submit.prevent="saveAlt">
-              <NuiField :label="texts.imageAlt" :description="texts.imageAltHint">
-                <NuiInput v-model="altDraft" size="sm" />
-              </NuiField>
-              <NuiButton type="submit" size="sm">{{ texts.imageAltSave }}</NuiButton>
-            </form>
-          </NuiPopover>
-          <input
-            ref="picker"
-            class="nui-editor-image__picker"
-            type="file"
-            accept="image/*"
-            tabindex="-1"
-            aria-hidden="true"
-            @change="onPick"
-          />
-        </div>
+        <NuiPopover
+          v-if="tooled"
+          class="nui-editor-image__toolbar"
+          :open="selected && focused && !resizing"
+          :anchor="frame"
+          mode="manual"
+          placement="top-end"
+          :offset="8"
+          padding="sm"
+        >
+          <div class="nui-editor-image__bar" role="toolbar" :aria-label="texts.image">
+            <NuiToggleGroup
+              :model-value="align"
+              :items="alignItems"
+              :label="texts.imageAlign"
+              size="sm"
+              icon-only
+              required
+              @update:model-value="setAlign"
+            />
+            <NuiButton
+              v-if="uploads?.enabled.value && uploads.images.value !== undefined"
+              variant="ghost"
+              tone="neutral"
+              size="sm"
+              icon="image-up"
+              :aria-label="texts.imageReplace"
+              @click="choose"
+            />
+            <NuiButton
+              variant="ghost"
+              tone="neutral"
+              size="sm"
+              icon="download"
+              :href="src"
+              download=""
+              target="_blank"
+              rel="noopener"
+              :aria-label="texts.download"
+            />
+            <NuiPopover v-model:open="describing" placement="bottom-end" padding="sm">
+              <template #trigger="{ attrs }">
+                <NuiButton
+                  v-bind="attrs"
+                  variant="ghost"
+                  tone="neutral"
+                  size="sm"
+                  icon="captions"
+                  :aria-label="texts.imageAlt"
+                />
+              </template>
+              <form class="nui-editor-image__alt" @submit.prevent="saveAlt">
+                <NuiField :label="texts.imageAlt" :description="texts.imageAltHint">
+                  <NuiInput v-model="altDraft" size="sm" autofocus />
+                </NuiField>
+                <div class="nui-editor-image__actions">
+                  <NuiButton type="submit" size="sm">{{ texts.imageAltSave }}</NuiButton>
+                </div>
+              </form>
+            </NuiPopover>
+            <input
+              ref="picker"
+              class="nui-editor-image__picker"
+              type="file"
+              :accept="uploads?.images.value"
+              tabindex="-1"
+              aria-hidden="true"
+              @change="onPick"
+            />
+          </div>
+        </NuiPopover>
       </template>
     </div>
     <textarea
@@ -127,7 +137,7 @@ import {
 } from '@numior/vue';
 import { useResizeObserver } from '@vueuse/core';
 import type { NuiContentAlign } from '@numior/content';
-import { computed, onMounted, ref, useTemplateRef, watch } from 'vue';
+import { computed, onMounted, ref, useTemplateRef, watch, type HTMLAttributes } from 'vue';
 import { editorMessages } from '../../editor/editor.messages';
 import { useEditorUploadContext } from '../../uploads/uploads-context';
 import type { NuiEditorBlockViewProps } from '../block.types';
@@ -138,7 +148,6 @@ import {
   clampShare,
   draggedShare,
   lineWidthOf,
-  previewWidth,
 } from './image-size';
 
 type GripSide = 'start' | 'end';
@@ -149,17 +158,22 @@ const MIN_PERCENT = 20;
 
 const MAX_PERCENT = 100;
 
-const { node, element, selected, editable, editor } = defineProps<NuiEditorBlockViewProps>();
+const HIDDEN_GRIP = { 'aria-hidden': 'true' } as const;
+
+const { node, element, selected, focused, editable, editor } =
+  defineProps<NuiEditorBlockViewProps>();
 
 const texts = useMessages(editorMessages);
 const uploads = useEditorUploadContext();
 const picker = useTemplateRef<HTMLInputElement>('picker');
-const altForm = useTemplateRef<HTMLElement>('altForm');
+const frame = useTemplateRef<HTMLElement>('frame');
 const captionField = useTemplateRef<HTMLTextAreaElement>('captionField');
+const picture = useTemplateRef<HTMLImageElement>('picture');
 const resizing = ref(false);
 const describing = ref(false);
 const altDraft = ref('');
 const measured = ref(1);
+const tooled = ref(selected);
 
 const textOf = (value: unknown): string => (typeof value === 'string' ? value : '');
 
@@ -175,6 +189,17 @@ const share = computed(() =>
 
 const widthPercent = computed(() => Math.round(share.value * 100));
 
+const slider = computed((): HTMLAttributes => ({
+  role: 'slider',
+  tabindex: 0,
+  'aria-orientation': 'horizontal',
+  'aria-label': texts.value.imageWidth,
+  'aria-valuemin': MIN_PERCENT,
+  'aria-valuemax': MAX_PERCENT,
+  'aria-valuenow': widthPercent.value,
+  'aria-valuetext': `${String(widthPercent.value)} %`,
+}));
+
 const pending = computed(() => uploads?.replacing.value.get(node.id));
 
 const percent = computed(() =>
@@ -189,17 +214,21 @@ const alignItems = computed((): NuiToggleItem<NuiContentAlign>[] => [
 
 const rtl = (): boolean => getComputedStyle(element).direction === 'rtl';
 
+const fitsItself = typeof CSS !== 'undefined' && CSS.supports('field-sizing', 'content');
+
 const fitCaption = (): void => {
   const field = captionField.value;
 
-  if (field !== null) {
+  if (field !== null && !fitsItself) {
     field.style.blockSize = 'auto';
     field.style.blockSize = `${String(field.scrollHeight)}px`;
   }
 };
 
 const measure = (): void => {
-  measured.value = clampShare(element.getBoundingClientRect().width / lineWidthOf(element));
+  const natural = picture.value?.naturalWidth ?? 0;
+
+  measured.value = natural > 0 ? clampShare(natural / lineWidthOf(element)) : 1;
   fitCaption();
 };
 
@@ -224,7 +253,8 @@ const onGripDown = (side: GripSide, event: PointerEvent): void => {
   grip.setPointerCapture(event.pointerId);
 
   const line = lineWidthOf(element);
-  const start = element.getBoundingClientRect().width;
+  const start = share.value * line;
+  const before = element.style.getPropertyValue('inline-size');
   const sign = (side === 'end') === rtl() ? -1 : 1;
   const symmetric = align.value === 'center';
   let next: number | undefined;
@@ -233,22 +263,31 @@ const onGripDown = (side: GripSide, event: PointerEvent): void => {
 
   const move = (moved: PointerEvent): void => {
     next = draggedShare(start, (moved.clientX - event.clientX) * sign, line, symmetric);
-    previewWidth(element, next);
+    editor.setStyle('inline-size', `${String(next * 100)}%`);
   };
 
-  const end = (): void => {
+  const finish = (): void => {
     grip.removeEventListener('pointermove', move);
-    grip.removeEventListener('pointerup', end);
-    grip.removeEventListener('pointercancel', end);
+    grip.removeEventListener('pointerup', commit);
+    grip.removeEventListener('pointercancel', cancel);
     resizing.value = false;
+  };
+
+  const commit = (): void => {
+    finish();
     if (next !== undefined) {
       setWidth(next);
     }
   };
 
+  const cancel = (): void => {
+    finish();
+    editor.setStyle('inline-size', before === '' ? null : before);
+  };
+
   grip.addEventListener('pointermove', move);
-  grip.addEventListener('pointerup', end);
-  grip.addEventListener('pointercancel', end);
+  grip.addEventListener('pointerup', commit);
+  grip.addEventListener('pointercancel', cancel);
 };
 
 const keyStep = (event: KeyboardEvent): number | undefined => {
@@ -299,12 +338,11 @@ const onPick = (): void => {
   }
 };
 
-const onAltToggle = (event: Event): void => {
-  if ('newState' in event && event.newState === 'open') {
+watch(describing, (value) => {
+  if (value) {
     altDraft.value = alt.value;
-    altForm.value?.querySelector('input')?.focus();
   }
-};
+});
 
 const saveAlt = (): void => {
   describing.value = false;
@@ -353,6 +391,13 @@ const onCaptionKeydown = (event: KeyboardEvent): void => {
     editor.focus();
   }
 };
+
+watch(
+  () => selected,
+  (value) => {
+    tooled.value ||= value;
+  },
+);
 
 watch(caption, (value) => {
   captionDraft.value = value;

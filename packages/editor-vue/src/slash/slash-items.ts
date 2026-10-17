@@ -9,13 +9,18 @@ import {
 import type { IconAlias } from '@numior/primitives';
 import type { NuiEditorMessages } from '../editor/editor.messages';
 
-export interface SlashItem {
+interface SlashLabel {
   readonly key: string;
   readonly label: string;
   readonly icon: IconAlias;
   readonly keywords: readonly string[];
-  readonly command: Command;
 }
+
+export type SlashCommandItem = SlashLabel & { readonly kind: 'command'; readonly command: Command };
+
+export type SlashItem =
+  | SlashCommandItem
+  | (SlashLabel & { readonly kind: 'open'; readonly open: () => void });
 
 interface SlashEntry {
   readonly key: string;
@@ -109,12 +114,13 @@ const ENTRIES: readonly SlashEntry[] = [
   },
 ];
 
-export const slashItems = (schema: Schema, texts: NuiEditorMessages): SlashItem[] =>
+export const slashItems = (schema: Schema, texts: NuiEditorMessages): SlashCommandItem[] =>
   ENTRIES.filter((entry) => schema.nodes.has(entry.node)).map((entry) => ({
     key: entry.key,
     label: entry.label(texts),
     icon: entry.icon,
     keywords: entry.keywords,
+    kind: 'command',
     command: entry.command(),
   }));
 

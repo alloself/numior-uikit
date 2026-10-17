@@ -33,15 +33,15 @@ export const lineWidthOf = (element: HTMLElement): number => {
   );
 };
 
-export const previewWidth = (element: HTMLElement, share: number): void => {
-  element.style.inlineSize = `${String(share * 100)}%`;
-};
+export const download = (owner: HTMLElement | undefined, url: string): void => {
+  const link = owner?.ownerDocument.createElement('a');
 
-export const download = (document: Document, url: string): void => {
-  const link = document.createElement('a');
-
+  if (link === undefined) {
+    return;
+  }
   link.href = url;
   link.download = '';
+  link.target = '_blank';
   link.rel = 'noopener';
   link.click();
 };

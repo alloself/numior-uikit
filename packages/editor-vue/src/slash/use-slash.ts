@@ -70,7 +70,17 @@ export const useSlash = (options: SlashOptions): Slash => {
   };
 
   const apply = (item: SlashItem, found: SuggestionMatch): void => {
-    options.run(sequence(deleteRange({ from: found.from, to: found.to }), item.command));
+    const query = deleteRange({ from: found.from, to: found.to });
+
+    switch (item.kind) {
+      case 'command':
+        options.run(sequence(query, item.command));
+        break;
+      case 'open':
+        options.run(query);
+        item.open();
+        break;
+    }
   };
 
   const keyed = (key: KeyInput, found: SuggestionMatch): boolean => {

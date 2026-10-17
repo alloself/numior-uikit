@@ -68,7 +68,7 @@ export class EditorSection {
 
   async placeAtEnd(): Promise<void> {
     await this.content.evaluate((root) => {
-      const last = [...root.querySelectorAll('p')].at(-1) ?? root;
+      const last = [...root.querySelectorAll(':scope > .nui-editor__chunk > p')].at(-1) ?? root;
       const range = document.createRange();
 
       range.selectNodeContents(last);
@@ -477,6 +477,22 @@ export class EditorSection {
 
   imageViewer(): Locator {
     return this.page.locator('.nui-content__viewer');
+  }
+
+  async gripBeside(block: Locator): Promise<boolean> {
+    const [grip, target, frame] = await Promise.all([
+      this.grip().boundingBox(),
+      block.boundingBox(),
+      this.frame.boundingBox(),
+    ]);
+
+    return (
+      grip !== null &&
+      target !== null &&
+      frame !== null &&
+      grip.x >= frame.x &&
+      grip.x + grip.width <= target.x
+    );
   }
 
   async dragGrip(image: Locator, side: 'start' | 'end', by: number): Promise<void> {

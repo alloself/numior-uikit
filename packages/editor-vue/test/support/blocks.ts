@@ -62,6 +62,7 @@ export const testBlocks: readonly NuiEditorBlock[] = [
         label: 'Box',
         icon: 'info',
         keywords: ['box'],
+        kind: 'command',
         command: wrapInBlock('callout'),
       },
     ],

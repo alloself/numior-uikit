@@ -1,15 +1,15 @@
+import type { ChunkWatch } from '@numior/editor-core/view';
 import { shallowReactive } from 'vue';
 import type { NodeViewEntry, NodeViewSink } from './node-views';
 
 export interface NodeViewHost {
   readonly shown: ReadonlyMap<number, NodeViewEntry>;
   readonly sink: NodeViewSink;
+  readonly chunks: ChunkWatch;
   stop(): void;
 }
 
 const MARGIN = '100% 0px';
-
-const CHUNK = '.nui-editor__chunk';
 
 export const createNodeViewHost = (): NodeViewHost => {
   const entries = new Map<number, NodeViewEntry>();
@@ -55,15 +55,6 @@ export const createNodeViewHost = (): NodeViewHost => {
         )
       : undefined;
 
-  const watchChunk = (entry: NodeViewEntry): void => {
-    const chunk = entry.dom.closest(CHUNK);
-
-    if (chunk !== null && !shown.has(entry.key) && !chunks.has(chunk)) {
-      chunks.add(chunk);
-      observer?.observe(chunk);
-    }
-  };
-
   return {
     shown,
     sink: {
@@ -74,10 +65,6 @@ export const createNodeViewHost = (): NodeViewHost => {
           show(entry);
         } else {
           observer.observe(entry.dom);
-
-          queueMicrotask(() => {
-            watchChunk(entry);
-          });
         }
       },
       remove: (key) => {
@@ -88,6 +75,16 @@ export const createNodeViewHost = (): NodeViewHost => {
         }
         entries.delete(key);
         shown.delete(key);
+      },
+    },
+    chunks: {
+      added: (chunk) => {
+        chunks.add(chunk);
+        observer?.observe(chunk);
+      },
+      removed: (chunk) => {
+        chunks.delete(chunk);
+        observer?.unobserve(chunk);
       },
     },
     stop: () => {

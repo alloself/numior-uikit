@@ -20,11 +20,6 @@ afterEach(() => {
   document.body.replaceChildren();
 });
 
-const settle = (): Promise<void> =>
-  new Promise((resolve) => {
-    queueMicrotask(resolve);
-  });
-
 const chunkWith = (count: number): { chunk: HTMLElement; entries: NodeViewEntry[] } => {
   const chunk = document.createElement('div');
 
@@ -52,14 +47,13 @@ const chunkWith = (count: number): { chunk: HTMLElement; entries: NodeViewEntry[
 const shownKeys = (current: NodeViewHost): readonly number[] => [...current.shown.keys()];
 
 describe('node view host', () => {
-  it('mounts a view once its block comes near the screen', async () => {
+  it('mounts a view once its block comes near the screen', () => {
     const { entries } = chunkWith(2);
 
     host = createNodeViewHost();
     for (const entry of entries) {
       host.sink.add(entry);
     }
-    await settle();
 
     expect(shownKeys(host)).toEqual([]);
 
@@ -72,14 +66,14 @@ describe('node view host', () => {
     expect(shownKeys(host)).toEqual([0]);
   });
 
-  it('mounts every waiting view of a chunk when the chunk comes into view', async () => {
+  it('mounts every waiting view of a chunk when the chunk comes into view', () => {
     const { chunk, entries } = chunkWith(3);
 
     host = createNodeViewHost();
     for (const entry of entries) {
       host.sink.add(entry);
     }
-    await settle();
+    host.chunks.added(chunk);
 
     expect(intersections.watches(chunk)).toBe(true);
 
@@ -87,5 +81,9 @@ describe('node view host', () => {
     intersections.cross(chunk);
 
     expect(shownKeys(host)).toEqual([0, 1]);
+
+    host.chunks.removed(chunk);
+
+    expect(intersections.watches(chunk)).toBe(false);
   });
 });

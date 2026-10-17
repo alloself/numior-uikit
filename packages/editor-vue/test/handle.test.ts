@@ -174,4 +174,32 @@ describe('NuiEditor block handles', () => {
 
     expect(editor.handleShown).toBe(false);
   });
+
+  it('stands beside an image with room before it instead of pushing it off its alignment', async () => {
+    const editor = mounted({
+      document: toJSON(
+        createDoc(
+          contentSchema,
+          contentSchema.element('doc', {
+            id: 'root',
+            content: [
+              block('a', 'paragraph', 'a'),
+              contentSchema.element('image', { id: 'i', attrs: { src: 'a.png', width: 0.4 } }),
+            ],
+          }),
+        ),
+      ),
+    });
+
+    await editor.hoverBlock(1);
+
+    expect(editor.handleShown).toBe(true);
+    expect(editor.handleBeside).toBe(true);
+    expect(editor.pushedTexts).toEqual([]);
+
+    await editor.hoverBlock(0);
+
+    expect(editor.handleBeside).toBe(false);
+    expect(editor.pushedTexts).toEqual(['p:a']);
+  });
 });

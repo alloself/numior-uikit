@@ -5,6 +5,7 @@ import type { NuiEditorUploadItem } from './uploads.types';
 export interface EditorUploadContext {
   readonly enabled: ComputedRef<boolean>;
   readonly replacing: ComputedRef<ReadonlyMap<NodeId, NuiEditorUploadItem>>;
+  readonly images: ComputedRef<string | undefined>;
   replace(id: NodeId, file: File): void;
 }
 

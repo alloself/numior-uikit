@@ -67,7 +67,7 @@ describe('NuiEditor built-in blocks', () => {
 
     await editor.hoverWidget(0);
 
-    expect(editor.handleShown).toBe(false);
+    expect(editor.handleShown).toBe(true);
 
     await editor.clickControl('.nui-editor__widget input');
 

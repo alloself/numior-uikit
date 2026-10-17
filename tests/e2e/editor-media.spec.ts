@@ -12,7 +12,7 @@ const openEditor = async (page: Page): Promise<PlaygroundPage> => {
 
 const SAMPLE = '="/media/sunrise.svg"';
 
-const UPLOADED = '^="blob:"';
+const UPLOADED = '^="data:image/"';
 
 const widthOf = async (figure: Locator): Promise<number> =>
   Number.parseFloat((await figure.getAttribute('style'))?.replace(/[^\d.]/gu, '') ?? 'NaN');

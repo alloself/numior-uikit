@@ -39,6 +39,7 @@ export interface EditorUploadOptions {
   readonly state: () => EditorState;
   readonly run: (command: Command) => boolean;
   readonly document: () => Document | undefined;
+  readonly editable: () => boolean;
 }
 
 export interface EditorUploads {
@@ -46,6 +47,7 @@ export interface EditorUploads {
   readonly enabled: ComputedRef<boolean>;
   readonly cards: ComputedRef<readonly UploadCard[]>;
   readonly replacing: ComputedRef<ReadonlyMap<NodeId, NuiEditorUploadItem>>;
+  readonly images: ComputedRef<string | undefined>;
   readonly announcement: Ref<string>;
   widget(key: string): HTMLElement | undefined;
   add(files: readonly File[], target?: UploadTarget, accept?: string): void;
@@ -53,6 +55,7 @@ export interface EditorUploads {
   retry(id: string): void;
   insertLink(kind: MediaKind, url: string): boolean;
   replace(id: NodeId, file: File): void;
+  reset(): void;
 }
 
 interface LinkedFile {
@@ -65,6 +68,21 @@ interface LinkedFile {
 const UPLOAD_CLASS = 'nui-editor__upload';
 
 const isImage = (type: string): boolean => type.startsWith('image/');
+
+const IMAGE_EXTENSIONS = new Set(['.png', '.jpg', '.jpeg', '.gif', '.webp', '.avif', '.svg']);
+
+const imageAccept = (accept: string | undefined): string | undefined => {
+  if (accept === undefined || accept.trim() === '') {
+    return 'image/*';
+  }
+
+  const tokens = accept
+    .split(',')
+    .map((token) => token.trim().toLowerCase())
+    .filter((token) => token.startsWith('image/') || IMAGE_EXTENSIONS.has(token));
+
+  return tokens.length === 0 ? undefined : tokens.join(',');
+};
 
 const nameOfLink = (url: string): string => {
   const path = url.split(/[?#]/u)[0] ?? '';
@@ -100,6 +118,7 @@ export const useEditorUploads = (options: EditorUploadOptions): EditorUploads =>
   const { schema } = options;
 
   const enabled = computed(() => options.upload() !== undefined);
+  const images = computed(() => imageAccept(options.accept()));
 
   const announce = (text: string): void => {
     announcement.value = text;
@@ -132,17 +151,28 @@ export const useEditorUploads = (options: EditorUploadOptions): EditorUploads =>
           attrs: { url: file.url, name: file.name, size: file.size, type: file.type },
         });
 
-  const place = (item: NuiEditorUploadItem, url: string): void => {
+  const accepts = (kind: MediaKind, url: string): boolean =>
+    schema.nodes.get(kind)?.attrs[kind === 'image' ? 'src' : 'url']?.verify?.(url) ?? true;
+
+  const placed = (item: NuiEditorUploadItem, url: string): boolean => {
     const target = targets.get(item.id);
-    const kind = kindOf(item.type);
+    const kind = target?.kind === 'replace' ? 'image' : kindOf(item.type);
     const file = { url, name: item.name, size: item.size, type: item.type };
 
-    if (target?.kind === 'replace') {
-      options.run(replaceSource(target.id, url));
-    } else if (kind === undefined) {
-      options.run(dropUploads([item.id]));
+    if (kind === undefined || !accepts(kind, url)) {
+      return false;
+    }
+    return target?.kind === 'replace'
+      ? options.run(replaceSource(target.id, url))
+      : options.run(finishUpload(item.id, (tr) => nodeFor(tr, kind, file)));
+  };
+
+  const place = (item: NuiEditorUploadItem, url: string): void => {
+    if (placed(item, url)) {
+      announce(texts.value.uploaded({ name: item.name }));
     } else {
-      options.run(finishUpload(item.id, (tr) => nodeFor(tr, kind, file)));
+      options.run(dropUploads([item.id]));
+      announce(texts.value.uploadLost({ name: item.name }));
     }
   };
 
@@ -160,7 +190,6 @@ export const useEditorUploads = (options: EditorUploadOptions): EditorUploads =>
 
       if (url !== undefined) {
         place(item, url);
-        announce(texts.value.uploaded({ name: item.name }));
       }
       queue.remove(item.id);
       forget(item.id);
@@ -197,43 +226,79 @@ export const useEditorUploads = (options: EditorUploadOptions): EditorUploads =>
     return element;
   };
 
-  const add = (files: readonly File[], target?: UploadTarget, accept?: string): void => {
-    if (!enabled.value) {
-      announce(texts.value.uploadUnavailable);
-      return;
-    }
+  const cancel = (id: string): void => {
+    queue.remove(id);
+    options.run(dropUploads([id]));
+    forget(id);
+  };
 
-    const { accepted, rejected } = validateFiles(files, {
+  const accepted = (
+    files: readonly File[],
+    target: UploadTarget | undefined,
+    accept: string | undefined,
+  ): readonly File[] => {
+    const checked = validateFiles(files, {
       accept: accept ?? options.accept(),
       maxSize: options.maxSize(),
       maxFiles: target?.kind === 'replace' ? 1 : undefined,
     });
 
-    if (rejected[0] !== undefined) {
-      announce(rejected.map(refusal).join(' '));
+    if (checked.rejected.length > 0) {
+      announce(checked.rejected.map(refusal).join(' '));
     }
-    if (accepted.length === 0) {
-      return;
+    return checked.accepted;
+  };
+
+  const supersede = (spot: UploadTarget): void => {
+    for (const [id, existing] of targets) {
+      if (spot.kind === 'replace' && existing.kind === 'replace' && existing.id === spot.id) {
+        cancel(id);
+      }
     }
-    const spot = target ?? { kind: 'place', pos: uploadPlace(options.state()) };
-    const created = queue.add(accepted.map((file) => ({ file })));
+  };
+
+  const preview = (item: NuiEditorUploadItem): void => {
+    if (isImage(item.type) && typeof URL.createObjectURL === 'function' && item.file) {
+      previews.set(item.id, URL.createObjectURL(item.file));
+    }
+  };
+
+  const enqueue = (files: readonly File[], spot: UploadTarget): void => {
+    supersede(spot);
+
+    const created = queue.add(files.map((file) => ({ file })));
 
     for (const item of created) {
       targets.set(item.id, spot);
-      if (isImage(item.type) && typeof URL.createObjectURL === 'function' && item.file) {
-        previews.set(item.id, URL.createObjectURL(item.file));
-      }
-      if (spot.kind === 'place') {
-        elementFor(item.id);
-      }
     }
     if (spot.kind === 'place') {
+      for (const item of created) {
+        preview(item);
+        elementFor(item.id);
+      }
+
       options.run(
         startUploads(
           created.map((item) => item.id),
           spot.pos,
         ),
       );
+    }
+  };
+
+  const add = (files: readonly File[], target?: UploadTarget, accept?: string): void => {
+    if (!options.editable()) {
+      return;
+    }
+    if (!enabled.value) {
+      announce(texts.value.uploadUnavailable);
+      return;
+    }
+
+    const valid = accepted(files, target, accept);
+
+    if (valid.length > 0) {
+      enqueue(valid, target ?? { kind: 'place', pos: uploadPlace(options.state()) });
     }
   };
 
@@ -284,22 +349,25 @@ export const useEditorUploads = (options: EditorUploadOptions): EditorUploads =>
   return {
     plugin,
     enabled,
+    images,
     cards,
     replacing,
     announcement,
     widget: (key) => elements.get(key),
     add,
-    cancel: (id) => {
-      queue.remove(id);
-      options.run(dropUploads([id]));
-      forget(id);
-    },
+    cancel,
     retry: (id) => {
       queue.retry(id);
     },
     insertLink,
+    reset: () => {
+      for (const id of targets.keys()) {
+        queue.remove(id);
+        forget(id);
+      }
+    },
     replace: (id, file) => {
-      add([file], { kind: 'replace', id }, 'image/*');
+      add([file], { kind: 'replace', id }, images.value);
     },
   };
 };

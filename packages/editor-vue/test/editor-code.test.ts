@@ -96,6 +96,17 @@ describe('NuiEditor code blocks', () => {
     expect(code.tokens(0)).toEqual([]);
   });
 
+  it('paints again when the application hands over a copy of the same document', async () => {
+    const editor = mounted(withCode('const a = 1', 'ts'));
+    const code = EditorCodeDriver.of(editor);
+
+    await code.settle();
+    await editor.receive({ document: structuredClone(withCode('const a = 1', 'ts')) });
+    await code.settle();
+
+    expect(code.tokens(0)).toEqual(['keyword:const']);
+  });
+
   it('names the language without a picker while reading', async () => {
     const code = EditorCodeDriver.of(mounted(withCode('print(1)', 'py'), true));
 

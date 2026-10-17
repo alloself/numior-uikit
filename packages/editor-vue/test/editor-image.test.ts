@@ -68,7 +68,7 @@ describe('NuiEditor image', () => {
       'nui-content__image nui-content__image--align-center|inline-size: 50%;',
     );
 
-    expect(image.grips).toEqual(['Image width:50', 'Image width:50']);
+    expect(image.grips).toEqual(['Image width:50']);
 
     await image.pressGrip('ArrowRight');
 
@@ -147,5 +147,37 @@ describe('NuiEditor image', () => {
 
     expect(imageAttrs(editor)?.src).toBe('https://cdn.test/b.png');
     expect(image.progress).toBeUndefined();
+  });
+
+  it('keeps the latest replacement when two uploads race for one image', async () => {
+    const server = new FakeUploads();
+    const editor = await mounted({ upload: server.adapter });
+    const image = EditorImageDriver.of(editor);
+    const uploads = EditorUploadDriver.of(editor);
+
+    await image.select();
+    await image.replaceWith(fileOf('big.png', 'image/png'));
+    await image.replaceWith(fileOf('small.png', 'image/png'));
+
+    expect(server.of('big.png').signal.aborted).toBe(true);
+
+    server.of('small.png').finish('https://cdn.test/small.png');
+    server.of('big.png').finish('https://cdn.test/big.png');
+    await uploads.settle();
+
+    expect(imageAttrs(editor)?.src).toBe('https://cdn.test/small.png');
+  });
+
+  it('hides the image bar when the focus leaves the editor', async () => {
+    const editor = await mounted();
+    const image = EditorImageDriver.of(editor);
+
+    await image.select();
+
+    expect(image.barShown).toBe(true);
+
+    await editor.blur();
+
+    expect(image.barShown).toBe(false);
   });
 });

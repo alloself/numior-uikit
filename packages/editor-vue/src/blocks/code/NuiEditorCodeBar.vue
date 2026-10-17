@@ -4,7 +4,7 @@
       v-if="editable"
       v-model:open="picking"
       placement="bottom-start"
-      padding="sm"
+      padding="none"
       @toggle="onToggle"
     >
       <template #trigger="{ attrs }">
@@ -21,16 +21,18 @@
           {{ label }}
         </NuiButton>
       </template>
-      <NuiCommand
-        ref="languages"
-        v-model:query="search"
-        class="nui-editor-code__languages"
-        :items="items"
-        :selected="known?.id ?? language ?? PLAIN"
-        :label="texts.codeLanguage"
-        :placeholder="texts.codeLanguageSearch"
-        @select="choose"
-      />
+      <div class="nui-editor-code__languages">
+        <NuiCommand
+          ref="languages"
+          v-model:query="search"
+          :items="items"
+          :selected="known?.id ?? language ?? PLAIN"
+          :label="texts.codeLanguage"
+          :placeholder="texts.codeLanguageSearch"
+          embedded
+          @select="choose"
+        />
+      </div>
     </NuiPopover>
     <span v-else class="nui-editor-code__label">{{ label }}</span>
     <NuiButton

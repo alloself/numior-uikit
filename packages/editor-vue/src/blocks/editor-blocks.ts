@@ -63,6 +63,7 @@ export const columnsBlock = defineBlock({
       label: texts.columns({ count }),
       icon: 'columns',
       keywords: ['columns', 'layout', String(count)],
+      kind: 'command',
       command: insertColumns(count),
     })),
 });
@@ -78,6 +79,7 @@ export const tableBlock = defineBlock({
       label: texts.table,
       icon: 'table',
       keywords: ['table', 'grid', 'data', 'таблица'],
+      kind: 'command',
       command: insertTable(
         Array.from({ length: TABLE_SIZE }, (_, index) => texts.tableColumn({ index: index + 1 })),
         TABLE_SIZE,
@@ -93,6 +95,7 @@ const linkOf = (value: unknown): string => (typeof value === 'string' ? value : 
 export const imageBlock = defineBlock({
   name: 'image',
   view: NuiEditorImage,
+  handle: 'beside',
   menu: (node, editor, texts) => {
     const align = alignOf(node.attrs.align);
 
@@ -120,7 +123,7 @@ export const imageBlock = defineBlock({
         label: texts.download,
         icon: 'download',
         onSelect: () => {
-          download(document, linkOf(node.attrs.src));
+          download(editor.element(), linkOf(node.attrs.src));
         },
       },
     ];
@@ -130,12 +133,12 @@ export const imageBlock = defineBlock({
 export const fileBlock = defineBlock({
   name: 'file',
   view: NuiEditorFile,
-  menu: (node, _editor, texts) => [
+  menu: (node, editor, texts) => [
     {
       label: texts.download,
       icon: 'download',
       onSelect: () => {
-        download(document, linkOf(node.attrs.url));
+        download(editor.element(), linkOf(node.attrs.url));
       },
     },
   ],

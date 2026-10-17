@@ -7,64 +7,55 @@
     :offset="8"
     role="dialog"
     :aria-label="title"
-    @toggle="onToggle"
   >
-    <div ref="body" class="nui-editor-media__body">
-      <NuiTabs v-if="uploadable" v-model="tab" size="sm" :tabs="tabs" :label="title">
-        <template #panel="{ tab: shown }">
-          <div v-if="shown.value === 'upload'" class="nui-editor-media__upload">
-            <NuiButton class="nui-editor-media__choose" size="sm" icon="upload" @click="choose">{{
-              kind === 'image' ? texts.chooseImage : texts.chooseFile
-            }}</NuiButton>
-            <p class="nui-editor-media__hint">{{ texts.mediaDropHint }}</p>
-          </div>
-          <form v-else class="nui-editor-media__form" @submit.prevent="insert">
-            <NuiField :label="texts.mediaAddress" :error="invalid ? texts.mediaInvalid : undefined">
-              <NuiInput
-                v-model="address"
-                size="sm"
-                placeholder="https://"
-                autocomplete="url"
-                @keydown="onKeydown"
-                @update:model-value="invalid = false"
-              />
-            </NuiField>
-            <NuiButton type="submit" size="sm">{{ texts.mediaInsert }}</NuiButton>
-          </form>
-        </template>
-      </NuiTabs>
-      <form v-else class="nui-editor-media__form" @submit.prevent="insert">
-        <NuiField :label="texts.mediaAddress" :error="invalid ? texts.mediaInvalid : undefined">
-          <NuiInput
-            v-model="address"
+    <NuiTabs v-if="uploadable" :key="session" v-model="tab" size="sm" :tabs="tabs" :label="title">
+      <template #panel="{ tab: shown }">
+        <div v-if="shown.value === 'upload'" class="nui-editor-media__upload">
+          <NuiButton
+            class="nui-editor-media__choose"
             size="sm"
-            placeholder="https://"
-            autocomplete="url"
-            @keydown="onKeydown"
-            @update:model-value="invalid = false"
-          />
-        </NuiField>
-        <NuiButton type="submit" size="sm">{{ texts.mediaInsert }}</NuiButton>
-      </form>
-      <input
-        ref="picker"
-        class="nui-editor-media__picker"
-        type="file"
-        tabindex="-1"
-        aria-hidden="true"
-        :accept="kind === 'image' ? 'image/*' : accept"
-        :multiple="kind === 'file'"
-        @change="onPick"
-      />
-    </div>
+            icon="upload"
+            autofocus
+            @click="choose"
+            >{{ kind === 'image' ? texts.chooseImage : texts.chooseFile }}</NuiButton
+          >
+          <p class="nui-editor-media__hint">{{ texts.mediaDropHint }}</p>
+        </div>
+        <NuiEditorMediaLink
+          v-else
+          class="nui-editor-media__form--tabbed"
+          :valid="valid"
+          @link="emit('link', $event)"
+          @cancel="emit('cancel')"
+        />
+      </template>
+    </NuiTabs>
+    <NuiEditorMediaLink
+      v-else
+      :key="session"
+      :valid="valid"
+      @link="emit('link', $event)"
+      @cancel="emit('cancel')"
+    />
+    <input
+      ref="picker"
+      class="nui-editor-media__picker"
+      type="file"
+      tabindex="-1"
+      aria-hidden="true"
+      :accept="accept === '' ? undefined : accept"
+      :multiple="kind === 'file'"
+      @change="onPick"
+    />
   </NuiPopover>
 </template>
 
 <script setup lang="ts">
 import { useMessages } from '@numior/primitives';
-import { NuiButton, NuiField, NuiInput, NuiPopover, NuiTabs } from '@numior/vue';
+import { NuiButton, NuiPopover, NuiTabs } from '@numior/vue';
 import { computed, ref, useTemplateRef, watch } from 'vue';
 import { editorMessages } from '../editor/editor.messages';
+import NuiEditorMediaLink from './NuiEditorMediaLink.vue';
 import type { MediaKind } from './uploads.types';
 
 const { anchor, kind, uploadable, accept, valid } = defineProps<{
@@ -84,11 +75,9 @@ const emit = defineEmits<{
 }>();
 
 const texts = useMessages(editorMessages);
-const body = useTemplateRef<HTMLElement>('body');
 const picker = useTemplateRef<HTMLInputElement>('picker');
 const tab = ref('upload');
-const address = ref('');
-const invalid = ref(false);
+const session = ref(0);
 
 const title = computed(() => (kind === 'image' ? texts.value.image : texts.value.file));
 
@@ -112,34 +101,10 @@ const onPick = (): void => {
   }
 };
 
-const insert = (): void => {
-  const url = address.value.trim();
-
-  if (url !== '' && valid(url)) {
-    emit('link', url);
-  } else {
-    invalid.value = true;
-  }
-};
-
-const onKeydown = (event: KeyboardEvent): void => {
-  if (event.key === 'Escape') {
-    event.preventDefault();
-    emit('cancel');
-  }
-};
-
 watch(open, (value) => {
   if (value) {
-    tab.value = uploadable ? 'upload' : 'link';
-    address.value = '';
-    invalid.value = false;
+    tab.value = 'upload';
+    session.value += 1;
   }
 });
-
-const onToggle = (event: Event): void => {
-  if ('newState' in event && event.newState === 'open') {
-    body.value?.querySelector<HTMLElement>('[role="tab"][aria-selected="true"], input')?.focus();
-  }
-};
 </script>

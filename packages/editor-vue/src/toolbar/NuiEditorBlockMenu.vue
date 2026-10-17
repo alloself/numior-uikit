@@ -1,5 +1,5 @@
 <template>
-  <NuiMenu :label="texts.blockType" class="nui-editor-toolbar__menu nui-editor-blocks">
+  <NuiMenu :label="texts.blockType" class="nui-editor-toolbar__menu nui-editor-blocks" compact>
     <template #trigger="{ attrs }">
       <NuiButton
         v-bind="attrs"

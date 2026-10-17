@@ -69,9 +69,23 @@ export const paddingBox = (element: HTMLElement | null): DOMRect | undefined => 
 export const marginStart = (element: Element): number =>
   Number.parseFloat(getComputedStyle(element).marginInlineStart) || 0;
 
+export const lineStart = (frame: DOMRect, element: Element, rtl: boolean): number => {
+  const parent = element.parentElement ?? element;
+  const rect = parent.getBoundingClientRect();
+  const style = getComputedStyle(parent);
+
+  return rtl
+    ? frame.right - rect.right + (Number.parseFloat(style.paddingInlineEnd) || 0)
+    : rect.left - frame.left + (Number.parseFloat(style.paddingInlineStart) || 0);
+};
+
+const shiftOf = (element: Element): number =>
+  Number.parseFloat(getComputedStyle(element).translate.split(' ')[0] ?? '') || 0;
+
 export const startEdge = (frame: DOMRect, element: Element, rtl: boolean): number => {
   const rect = element.getBoundingClientRect();
-  const edge = rtl ? frame.right - rect.right : rect.left - frame.left;
+  const shift = shiftOf(element);
+  const edge = rtl ? frame.right - rect.right + shift : rect.left - frame.left - shift;
 
   return edge - marginStart(element) - markerSpace(element);
 };

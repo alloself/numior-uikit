@@ -64,23 +64,21 @@
         v-if="ready"
         :entries="nodeViews.shown"
         :selected="selectedNode"
+        :focused="overlays.focused.value"
         :editable="editable"
         :run="run"
         :focus="editor.focus"
       />
-      <template v-if="ready">
-        <Teleport v-for="card in uploads.cards.value" :key="card.item.id" :to="card.element">
-          <NuiEditorUploadCard
-            :item="card.item"
-            :preview="card.preview"
-            @cancel="uploads.cancel(card.item.id)"
-            @retry="uploads.retry(card.item.id)"
-          />
-        </Teleport>
-      </template>
-      <span class="nui-editor__live" aria-live="polite" aria-atomic="true">{{
-        uploads.announcement.value
-      }}</span>
+      <NuiEditorUploads
+        v-if="ready"
+        v-model:open="mediaOpen"
+        :uploads="uploads"
+        :schema="schema"
+        :anchor="anchorElement"
+        :kind="mediaKind"
+        :accept="accept"
+        @done="editor.focus()"
+      />
       <div
         ref="ghost"
         class="nui-content nui-editor__ghost"
@@ -118,18 +116,6 @@
         :open="slash.open.value"
         @choose="slash.choose"
         @hover="slash.hover"
-      />
-      <NuiEditorMediaPanel
-        v-if="hasMedia && ready"
-        v-model:open="mediaOpen"
-        :anchor="anchorElement"
-        :kind="mediaKind"
-        :uploadable="uploads.enabled.value"
-        :accept="accept"
-        :valid="validMedia"
-        @files="onMediaFiles"
-        @link="onMediaLink"
-        @cancel="closeMedia"
       />
       <NuiEditorLinkPanel
         v-if="hasLinks && ready"
@@ -210,8 +196,7 @@ import { useBlockHandle } from '../handle/use-block-handle';
 import NuiEditorSlashMenu from '../slash/NuiEditorSlashMenu.vue';
 import { useSlash } from '../slash/use-slash';
 import type { SlashItem } from '../slash/slash-items';
-import NuiEditorMediaPanel from '../uploads/NuiEditorMediaPanel.vue';
-import NuiEditorUploadCard from '../uploads/NuiEditorUploadCard.vue';
+import NuiEditorUploads from '../uploads/NuiEditorUploads.vue';
 import type { MediaKind } from '../uploads/uploads.types';
 import { provideEditorUploads } from '../uploads/uploads-context';
 import { useEditorUploads } from '../uploads/use-editor-uploads';
@@ -307,13 +292,10 @@ const hasMedia = schema.nodes.has('image') || schema.nodes.has('file');
 const mediaOpen = ref(false);
 const mediaKind = ref<MediaKind>('image');
 
-const openMedia =
-  (kind: MediaKind): Command =>
-  () => {
-    mediaKind.value = kind;
-    mediaOpen.value = true;
-    return true;
-  };
+const openMedia = (kind: MediaKind): void => {
+  mediaKind.value = kind;
+  mediaOpen.value = true;
+};
 
 const MEDIA_SLASH: readonly { readonly kind: MediaKind; readonly keywords: readonly string[] }[] = [
   { kind: 'image', keywords: ['image', 'picture', 'photo', 'img', 'картинка', 'изображение'] },
@@ -326,7 +308,10 @@ const mediaSlash = (): readonly SlashItem[] =>
     label: entry.kind === 'image' ? blockTexts.value.image : blockTexts.value.file,
     icon: entry.kind,
     keywords: entry.keywords,
-    command: openMedia(entry.kind),
+    kind: 'open',
+    open: () => {
+      openMedia(entry.kind);
+    },
   }));
 
 const slash = useSlash({
@@ -360,6 +345,7 @@ const uploads = useEditorUploads({
   state: () => current.value,
   run: (command) => run(command),
   document: () => contentElement.value?.ownerDocument,
+  editable: () => editable.value,
 });
 
 provideEditorUploads(uploads);
@@ -497,6 +483,7 @@ const handles = useBlockHandle({
   enabled: () => handlesShown.value && ready.value,
   focused: () => overlays.focused.value,
   run: (command) => run(command),
+  placement: (type) => blocks.find((block) => block.name === type)?.handle ?? 'push',
 });
 
 const blockMenu = (node: ElementNode): NuiMenuEntry[] =>
@@ -504,29 +491,12 @@ const blockMenu = (node: ElementNode): NuiMenuEntry[] =>
     .filter((block) => block.name === node.type)
     .flatMap(
       (block) =>
-        block.menu?.(node, blockContext(node.id, run, editor.focus), blockTexts.value) ?? [],
+        block.menu?.(
+          node,
+          blockContext(node.id, run, editor.focus, () => view?.nodeDOM(node.id)),
+          blockTexts.value,
+        ) ?? [],
     );
-
-const validMedia = (url: string): boolean => {
-  const attr = mediaKind.value === 'image' ? 'src' : 'url';
-
-  return schema.nodes.get(mediaKind.value)?.attrs[attr]?.verify?.(url) ?? true;
-};
-
-const closeMedia = (): void => {
-  mediaOpen.value = false;
-  editor.focus();
-};
-
-const onMediaFiles = (files: readonly File[]): void => {
-  closeMedia();
-  uploads.add(files, undefined, mediaKind.value === 'image' ? 'image/*' : undefined);
-};
-
-const onMediaLink = (url: string): void => {
-  closeMedia();
-  uploads.insertLink(mediaKind.value, url);
-};
 
 const onHandleRun = (command: Command): void => {
   run(command);
@@ -543,11 +513,8 @@ const onToolbarRun = (command: Command, refocus: boolean): void => {
 const isLinkKey = (event: KeyboardEvent): boolean =>
   (event.ctrlKey || event.metaKey) && !event.altKey && event.code === 'KeyK';
 
-const fromWidget = (event: Event): boolean =>
-  event.target instanceof Element && event.target.closest('.nui-editor__widget') !== null;
-
 const onKeydown = (event: KeyboardEvent): void => {
-  if (fromWidget(event)) {
+  if (view === undefined || view.inWidget(event.target)) {
     return;
   }
   if (event.altKey && event.key === 'F10') {
@@ -571,7 +538,9 @@ watch(document, (value) => {
   empty.value = isEmptyDoc(doc);
   current.value = createState({ doc, plugins });
   view.update(current.value);
+  code.reset();
   code.update(current.value);
+  uploads.reset();
 });
 
 watch(editable, (value) => {
@@ -591,6 +560,7 @@ onMounted(() => {
     dispatch,
     nodeViews: createNodeViews(element.ownerDocument, schema, blocks, nodeViews.sink),
     widget: uploads.widget,
+    chunks: nodeViews.chunks,
   });
 
   code.update(current.value);
@@ -601,6 +571,7 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
+  code.stop();
   nodeViews.stop();
   view?.destroy();
   view = undefined;

@@ -95,17 +95,15 @@
   line-height: var(--nui-line-height);
 }
 .nui-editor-media__form {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
+  display: grid;
   gap: var(--nui-space-2);
+}
+.nui-editor-media__form--tabbed {
   padding-block-start: var(--nui-space-3);
 }
-.nui-editor-media__body > .nui-editor-media__form {
-  padding-block-start: 0;
-}
-.nui-editor-media__form > .nui-field {
-  align-self: stretch;
+.nui-editor-media__actions {
+  display: flex;
+  justify-content: flex-end;
 }
 .nui-editor-media__picker {
   display: none;

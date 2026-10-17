@@ -1,5 +1,6 @@
 import { flushPromises, type VueWrapper } from '@vue/test-utils';
 import { nextTick } from 'vue';
+import { isShown } from '../support/popovers';
 import type { EditorDriver } from './editor';
 
 export class EditorImageDriver {
@@ -45,7 +46,7 @@ export class EditorImageDriver {
   }
 
   get barShown(): boolean {
-    return this.figure.querySelector('.nui-editor-image__bar') !== null;
+    return isShown(this.figure.querySelector('.nui-editor-image__toolbar'));
   }
 
   get barControls(): readonly string[] {
