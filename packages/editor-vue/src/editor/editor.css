@@ -131,8 +131,9 @@
 .nui-editor__content .nui-content__code-inline {
   white-space: normal;
 }
-.nui-editor__selected::selection,
-.nui-editor__selected *::selection {
+.nui-editor__selected:not(:has(input, textarea, .nui-layer))::selection,
+.nui-editor__selected
+  :not(input, textarea, .nui-layer, .nui-layer *, :has(input, textarea, .nui-layer))::selection {
   background: transparent;
 }
 .nui-editor__content span.nui-editor__selected {
