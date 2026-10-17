@@ -7,6 +7,7 @@ export interface NuiPopoverProps {
   offset?: number | undefined;
   arrow?: boolean | undefined;
   padding?: NuiPopoverPadding | undefined;
+  size?: NuiPopoverSize | undefined;
   anchor?: HTMLElement | null | undefined;
   mode?: PopoverMode | undefined;
   trigger?: NuiPopoverTrigger | undefined;
@@ -15,6 +16,8 @@ export interface NuiPopoverProps {
 }
 
 export type NuiPopoverPadding = 'none' | 'sm' | 'md';
+
+export type NuiPopoverSize = 'md' | 'auto';
 
 export type NuiPopoverTrigger = 'click' | 'hover';
 

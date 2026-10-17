@@ -4,12 +4,14 @@
   --_shift: calc(-1 * var(--_side-x) * var(--nui-space-1))
     calc(-1 * var(--_side-y) * var(--nui-space-1));
   --_arrow: 0.625rem;
+  --_min-inline: 8rem;
+  --_max-inline: min(20rem, calc(100vw - var(--nui-space-4)));
 
   box-sizing: border-box;
   position: fixed;
   inset: auto;
-  min-inline-size: 8rem;
-  max-inline-size: min(20rem, calc(100vw - var(--nui-space-4)));
+  min-inline-size: var(--_min-inline);
+  max-inline-size: var(--_max-inline);
   margin: 0;
   padding: var(--nui-space-3);
   border: 1px solid var(--nui-border);
@@ -28,6 +30,10 @@
     translate var(--nui-duration-normal) var(--nui-easing),
     display var(--nui-duration-fast) allow-discrete,
     overlay var(--nui-duration-fast) allow-discrete;
+}
+.nui-popover--size-auto {
+  --_min-inline: 0;
+  --_max-inline: calc(100vw - var(--nui-space-4));
 }
 .nui-popover--padding-sm {
   padding: var(--nui-space-1);

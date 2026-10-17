@@ -24,10 +24,11 @@ describe('NuiPopover', () => {
   it('follows native light dismiss and writes the resolved side onto the element', async () => {
     const popover = PopoverDriver.mount({
       open: true,
-      props: { placement: 'right-start', arrow: true, padding: 'sm' },
+      props: { placement: 'right-start', arrow: true, padding: 'sm', size: 'auto' },
     });
 
     expect(popover.content.classes()).toContain('nui-popover--padding-sm');
+    expect(popover.content.classes()).toContain('nui-popover--size-auto');
 
     expect(popover.popoverCalls.show).toBe(1);
     expect(popover.sideVector).toBe('1 0');

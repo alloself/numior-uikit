@@ -17,6 +17,10 @@ const docs: DocsMap = {
         ru: 'Внутренний отступ: `md` для текста и форм, `sm` для списков и панелей кнопок, `none` для содержимого со своей рамкой (палитра команд).',
         en: 'Inner padding: `md` for text and forms, `sm` for lists and button bars, `none` for content with its own frame (a command palette).',
       },
+      size: {
+        ru: 'Ширина: `md` — от 8 до 20rem для текста, форм и списков, `auto` — по содержимому, не шире экрана (панели кнопок).',
+        en: 'Width: `md` keeps 8 to 20rem for text, forms and lists, `auto` follows the content up to the screen width (button bars).',
+      },
       anchor: {
         ru: 'Элемент, к которому крепится слой вместо триггера (выделение текста, каретка); триггер тогда не нужен.',
         en: 'An element the layer sticks to instead of the trigger (a text selection, a caret); no trigger is needed then.',

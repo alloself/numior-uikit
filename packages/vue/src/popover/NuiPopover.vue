@@ -3,7 +3,7 @@
   <div
     ref="content"
     class="nui-popover nui-layer"
-    :class="`nui-popover--padding-${padding}`"
+    :class="[`nui-popover--padding-${padding}`, `nui-popover--size-${size}`]"
     v-bind="{ ...contentAttrs, ...hover.contentAttrs.value, ...$attrs }"
   >
     <slot />
@@ -30,6 +30,7 @@ const {
   offset = 8,
   arrow = false,
   padding = 'md',
+  size = 'md',
   anchor,
   mode = 'auto',
   trigger: activation = 'click',

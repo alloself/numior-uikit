@@ -168,6 +168,7 @@ export type {
   NuiPopoverHoverAttrs,
   NuiPopoverPadding,
   NuiPopoverProps,
+  NuiPopoverSize,
   NuiPopoverTrigger,
   NuiPopoverTriggerAttrs,
   NuiPopoverTriggerSlot,
