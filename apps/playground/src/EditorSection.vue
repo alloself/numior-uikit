@@ -8,6 +8,7 @@
       <NuiSwitch v-model="readonly" label="Только чтение" data-testid="editor-readonly" />
       <NuiSwitch v-model="uploading" label="Загрузка файлов" data-testid="editor-uploads" />
       <NuiSwitch v-model="failing" label="Загрузка с ошибкой" data-testid="editor-upload-fail" />
+      <NuiSwitch v-model="liveLinks" label="Метаданные из сети" data-testid="editor-live-links" />
     </div>
     <div class="editor-demo">
       <NuiEditor
@@ -20,7 +21,7 @@
         :blocks="blocks"
         :upload="uploading ? upload : undefined"
         :embeds="EMBEDS"
-        :link-metadata="fakeLinkMetadata"
+        :link-metadata="liveLinks ? liveLinkMetadata : fakeLinkMetadata"
         :max-size="MAX_SIZE"
         toolbar="both"
         data-testid="editor"
@@ -51,7 +52,7 @@ import { editorBlocks, NuiEditor } from '@numior/editor-vue';
 import { NuiSwitch } from '@numior/vue';
 import { computed, ref } from 'vue';
 import { playgroundSchema, taskStatusBlock } from './editor-blocks';
-import { fakeLinkMetadata } from './editor-links';
+import { fakeLinkMetadata, liveLinkMetadata } from './editor-links';
 import { fakeUpload } from './editor-upload';
 import { blockCount, editorSample } from './editor-sample';
 
@@ -65,6 +66,7 @@ const document = ref(editorSample());
 const readonly = ref(false);
 const uploading = ref(true);
 const failing = ref(false);
+const liveLinks = ref(true);
 const upload = fakeUpload(() => failing.value);
 const changes = ref(0);
 const pasted = ref<PasteSource | null>(null);

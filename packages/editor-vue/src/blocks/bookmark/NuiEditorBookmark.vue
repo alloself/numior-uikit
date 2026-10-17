@@ -25,8 +25,8 @@
     :anchor="card"
     :label="texts.bookmark"
     :actions="actions"
-    :address="address"
-    @relink="relink"
+    :edit="linkEdit"
+    @save="save"
     @done="editor.focus()"
   />
 </template>
@@ -37,7 +37,7 @@ import { useMessages } from '@numior/primitives';
 import { computed, ref, useTemplateRef, watch } from 'vue';
 import { editorMessages } from '../../editor/editor.messages';
 import { useEditorLinkContext } from '../../links/links-context';
-import type { LinkAddress, LinkBarAction } from '../../links/links.types';
+import type { LinkBarAction, LinkChange, LinkEdit } from '../../links/links.types';
 import NuiEditorLinkBar from '../../links/NuiEditorLinkBar.vue';
 import type { NuiEditorBlockViewProps } from '../block.types';
 
@@ -90,14 +90,16 @@ const actions = computed((): LinkBarAction[] => [
       ]),
 ]);
 
-const address = computed((): LinkAddress => ({
+const linkEdit = computed((): LinkEdit => ({
   url: url.value,
+  label: texts.value.bookmarkEdit,
   valid: (next) => links?.accepts('bookmark', next) === true,
   invalidText: texts.value.mediaInvalid,
+  details: { title: title.value, description: description.value },
 }));
 
-const relink = (next: string): void => {
-  links?.relink(node.id, next);
+const save = (change: LinkChange): void => {
+  links?.change(node.id, change);
 };
 
 watch(

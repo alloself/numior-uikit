@@ -8,6 +8,7 @@ const openEditor = async (page: Page): Promise<PlaygroundPage> => {
 
   await playground.emulate({ reducedMotion: 'reduce' });
   await playground.open();
+  await playground.editor.liveLinksSwitch().click();
   await playground.editor.root.scrollIntoViewIfNeeded();
   return playground;
 };
@@ -101,6 +102,9 @@ test.describe('editor links', () => {
     await expect(editor.linkBar()).toBeVisible();
     await page.keyboard.press('ControlOrMeta+z');
     await expect(editor.publishedBookmark('numior.test')).toContainText('Релиз 2.4');
+    await editor.bookmark('numior.test').locator('.nui-content__bookmark-title').click();
+    await editor.relink('https://numior.test/blog/release-2-4', 'Что нового в 2.4');
+    await expect(editor.publishedBookmark('numior.test')).toContainText('Что нового в 2.4');
   });
 
   test('keeps a bookmark between other blocks selected and types over it from the keyboard', async ({
@@ -140,7 +144,7 @@ test.describe('editor links', () => {
     await card.click();
     await expect(page.locator('.nui-editor-link-bar').last()).toBeVisible();
     expect(await playground.wcagViolations('section[aria-labelledby="editor-title"]')).toEqual([]);
-    await editor.linkBar().getByRole('button', { name: 'Изменить ссылку' }).click();
+    await editor.linkBar().getByRole('button', { name: 'Изменить закладку' }).click();
     await expect(page.locator('.nui-editor-link-bar__edit')).toBeVisible();
     expect(await playground.wcagViolations('.nui-editor-link-bar__edit')).toEqual([]);
   });

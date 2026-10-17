@@ -385,7 +385,7 @@ provideEditorLinks({
   embedOf: links.embedOf,
   refresh: links.refresh,
   turn: links.turn,
-  relink: links.relink,
+  change: links.change,
   accepts: links.accepts,
 });
 

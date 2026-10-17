@@ -27,7 +27,7 @@
         </template>
         {{ action.label }}
       </NuiTooltip>
-      <NuiTooltip v-if="address !== undefined" placement="bottom">
+      <NuiTooltip v-if="edit !== undefined" placement="bottom">
         <template #trigger="{ attrs }">
           <NuiButton
             v-bind="attrs"
@@ -35,60 +35,50 @@
             tone="neutral"
             size="sm"
             icon="pencil"
-            :aria-label="texts.linkEdit"
+            :aria-label="edit.label"
             :aria-expanded="String(editing)"
             @click="editing = !editing"
           />
         </template>
-        {{ texts.linkEdit }}
+        {{ edit.label }}
       </NuiTooltip>
     </div>
     <NuiPopover
-      v-if="address !== undefined"
+      v-if="edit !== undefined"
       v-model:open="editing"
       :anchor="bar"
       placement="bottom-end"
       :offset="8"
     >
       <div v-if="editing" class="nui-editor-link-bar__edit">
-        <NuiEditorMediaLink
-          :value="address.url"
-          :valid="address.valid"
-          :invalid-text="address.invalidText"
-          :submit="texts.linkSave"
-          @link="save"
-          @cancel="cancel"
-        />
+        <NuiEditorLinkForm :edit="edit" @save="save" @cancel="cancel" />
       </div>
     </NuiPopover>
   </NuiPopover>
 </template>
 
 <script setup lang="ts">
-import { useMessages } from '@numior/primitives';
 import { NuiButton, NuiPopover, NuiTooltip } from '@numior/vue';
 import { ref, useTemplateRef, watch } from 'vue';
-import { editorMessages } from '../editor/editor.messages';
-import NuiEditorMediaLink from '../uploads/NuiEditorMediaLink.vue';
-import type { LinkAddress, LinkBarAction } from './links.types';
+import NuiEditorLinkForm from './NuiEditorLinkForm.vue';
+import type { LinkBarAction, LinkChange, LinkEdit } from './links.types';
 
-const { open, anchor, label, actions, address } = defineProps<{
+const { open, anchor, label, actions, edit } = defineProps<{
   open: boolean;
   anchor: HTMLElement | null;
   label: string;
   actions: readonly LinkBarAction[];
-  address?: LinkAddress | undefined;
+  edit?: LinkEdit | undefined;
 }>();
 
-const emit = defineEmits<{ relink: [url: string]; done: [] }>();
+const emit = defineEmits<{ save: [change: LinkChange]; done: [] }>();
 
-const texts = useMessages(editorMessages);
 const bar = useTemplateRef<HTMLElement>('bar');
 const editing = ref(false);
 
-const save = (url: string): void => {
+const save = (change: LinkChange): void => {
   editing.value = false;
-  emit('relink', url);
+  emit('save', change);
   emit('done');
 };
 

@@ -18,6 +18,7 @@ import {
 } from '@numior/editor-core';
 import { onScopeDispose, shallowReactive, shallowRef, type ShallowRef } from 'vue';
 import type {
+  LinkChange,
   LinkKind,
   NuiEditorLinkMetadata,
   NuiEditorLinkPreview,
@@ -41,7 +42,7 @@ export interface EditorLinks {
   insert(kind: LinkKind, url: string): boolean;
   convert(kind: LinkKind): boolean;
   turn(id: NodeId, kind: LinkKind): boolean;
-  relink(id: NodeId, url: string): boolean;
+  change(id: NodeId, change: LinkChange): boolean;
   accepts(kind: LinkKind, url: string): boolean;
   refresh(id: NodeId): void;
   follow(state: EditorState): void;
@@ -89,8 +90,19 @@ const setLinkAttrs =
     return true;
   };
 
-const setPreview = (id: NodeId, preview: NuiEditorLinkPreview): Command =>
-  setLinkAttrs(id, previewAttrs(preview), false);
+const setPreview = (id: NodeId, preview: NuiEditorLinkPreview, kept: readonly string[]): Command =>
+  setLinkAttrs(
+    id,
+    Object.fromEntries(
+      Object.entries(previewAttrs(preview)).filter(([name]) => !kept.includes(name)),
+    ),
+    false,
+  );
+
+const detailAttrs = (change: LinkChange): Attrs => ({
+  ...(change.title === undefined ? {} : { title: change.title }),
+  ...(change.description === undefined ? {} : { description: change.description }),
+});
 
 const replacing =
   (link: PastedLink) =>
@@ -175,7 +187,7 @@ export const useEditorLinks = (options: EditorLinkOptions): EditorLinks => {
     }
   };
 
-  const refresh = (id: NodeId): void => {
+  const refresh = (id: NodeId, kept: readonly string[] = []): void => {
     const adapter = options.metadata();
     const address = options.state().doc.byId(id)?.attrs.url;
 
@@ -192,7 +204,7 @@ export const useEditorLinks = (options: EditorLinkOptions): EditorLinks => {
     adapter(address, { signal: controller.signal })
       .then((preview) => {
         if (!controller.signal.aborted) {
-          options.run(setPreview(id, preview));
+          options.run(setPreview(id, preview, kept));
         }
         return preview;
       })
@@ -283,19 +295,24 @@ export const useEditorLinks = (options: EditorLinkOptions): EditorLinks => {
     },
     refresh,
     accepts,
-    relink: (id, url) => {
+    change: (id, change) => {
       const node = options.state().doc.byId(id);
-      const attrs = node === undefined ? undefined : addressAttrs(node.type, url);
+      const moved = node !== undefined && node.attrs.url !== change.url;
+      const address = moved ? addressAttrs(node.type, change.url) : {};
+      const details = detailAttrs(change);
 
-      if (node === undefined || attrs === undefined || node.attrs.url === url) {
-        return node !== undefined && node.attrs.url === url;
+      if (node === undefined || address === undefined) {
+        return false;
+      }
+      if (!moved && Object.keys(details).length === 0) {
+        return true;
       }
       controllers.get(id)?.abort();
 
-      const done = options.run(setLinkAttrs(id, attrs, true));
+      const done = options.run(setLinkAttrs(id, { ...address, ...details }, true));
 
-      if (done && node.type === 'bookmark') {
-        refresh(id);
+      if (done && moved && node.type === 'bookmark') {
+        refresh(id, Object.keys(details));
       }
       return done;
     },

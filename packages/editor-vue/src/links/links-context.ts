@@ -1,7 +1,7 @@
 import type { NuiEmbed } from '@numior/content';
 import type { NodeId } from '@numior/editor-core';
 import { inject, provide, type InjectionKey } from 'vue';
-import type { LinkKind } from './links.types';
+import type { LinkChange, LinkKind } from './links.types';
 
 export interface EditorLinkContext {
   readonly loading: ReadonlySet<NodeId>;
@@ -9,7 +9,7 @@ export interface EditorLinkContext {
   embedOf(url: string, provider?: string): NuiEmbed | undefined;
   refresh(id: NodeId): void;
   turn(id: NodeId, kind: LinkKind): boolean;
-  relink(id: NodeId, url: string): boolean;
+  change(id: NodeId, change: LinkChange): boolean;
   accepts(kind: LinkKind, url: string): boolean;
 }
 

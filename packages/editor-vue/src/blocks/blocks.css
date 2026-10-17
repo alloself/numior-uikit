@@ -271,6 +271,14 @@
 .nui-editor-link-bar__edit {
   inline-size: min(18rem, calc(100vw - var(--nui-space-8)));
 }
+.nui-editor-link-form {
+  display: grid;
+  gap: var(--nui-space-2);
+}
+.nui-editor-link-form__actions {
+  display: flex;
+  justify-content: flex-end;
+}
 .nui-editor-link-bar__actions {
   display: flex;
   align-items: center;

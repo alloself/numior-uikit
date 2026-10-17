@@ -491,13 +491,23 @@ export class EditorSection {
     return this.page.locator('.nui-editor-link-bar:popover-open');
   }
 
-  async relink(url: string): Promise<void> {
-    await this.linkBar().getByRole('button', { name: 'Изменить ссылку' }).click();
+  liveLinksSwitch(): Locator {
+    return this.page.getByTestId('editor-live-links');
+  }
 
-    const field = this.page.locator('.nui-editor-link-bar__edit').getByRole('textbox');
+  async relink(url: string, title?: string): Promise<void> {
+    await this.linkBar()
+      .getByRole('button', { name: /^Изменить (ссылку|закладку)$/u })
+      .click();
 
-    await field.fill(url);
-    await field.press('Enter');
+    const form = this.page.locator('.nui-editor-link-bar__edit');
+    const address = form.getByRole('textbox', { name: 'Адрес' });
+
+    await address.fill(url);
+    if (title !== undefined) {
+      await form.getByRole('textbox', { name: 'Заголовок' }).fill(title);
+    }
+    await address.press('Enter');
   }
 
   imageViewer(): Locator {

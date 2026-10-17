@@ -235,12 +235,26 @@ describe('NuiEditor embeds and bookmarks', () => {
     await links.act('Show as bookmark');
     await editor.showBlocks();
     await links.select('.nui-content__bookmark-link');
-    await links.act('Edit link');
+    await links.act('Edit bookmark');
     await links.relink('https://blog.numior.test/2-4');
 
     expect(outline(editor.documents.at(-1))).toEqual([
       'bookmark:Numior blog:blog.numior.test',
       'paragraph:',
     ]);
+
+    await links.act('Edit bookmark');
+    await links.relink('https://blog.numior.test/2-4', { title: 'Release 2.4' });
+
+    expect(outline(editor.documents.at(-1))).toEqual([
+      'bookmark:Release 2.4:blog.numior.test',
+      'paragraph:',
+    ]);
+
+    await links.act('Edit bookmark');
+    await links.relink('https://numior.test/news', { description: 'Our news' });
+    await editor.showBlocks();
+
+    expect(links.bookmarks).toEqual(['Numior blog|Our news|numior.test']);
   });
 });

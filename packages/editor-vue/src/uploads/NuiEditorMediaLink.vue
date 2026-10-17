@@ -12,7 +12,7 @@
       />
     </NuiField>
     <div class="nui-editor-media__actions">
-      <NuiButton type="submit" size="sm">{{ submit ?? texts.mediaInsert }}</NuiButton>
+      <NuiButton type="submit" size="sm">{{ texts.mediaInsert }}</NuiButton>
     </div>
   </form>
 </template>
@@ -23,22 +23,15 @@ import { NuiButton, NuiField, NuiInput } from '@numior/vue';
 import { ref } from 'vue';
 import { editorMessages } from '../editor/editor.messages';
 
-const {
-  valid,
-  invalidText,
-  value = '',
-  submit,
-} = defineProps<{
+const { valid, invalidText } = defineProps<{
   valid: (url: string) => boolean;
   invalidText: string;
-  value?: string | undefined;
-  submit?: string | undefined;
 }>();
 
 const emit = defineEmits<{ link: [url: string]; cancel: [] }>();
 
 const texts = useMessages(editorMessages);
-const address = ref(value);
+const address = ref('');
 const invalid = ref(false);
 
 const insert = (): void => {

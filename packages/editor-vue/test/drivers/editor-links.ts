@@ -3,6 +3,16 @@ import { nextTick } from 'vue';
 import { isShown } from '../support/popovers';
 import type { EditorDriver } from './editor';
 
+const fill = (
+  field: HTMLInputElement | HTMLTextAreaElement | null | undefined,
+  value?: string,
+): void => {
+  if (field !== null && field !== undefined && value !== undefined) {
+    field.value = value;
+    field.dispatchEvent(new Event('input', { bubbles: true }));
+  }
+};
+
 export class EditorLinksDriver {
   constructor(private readonly wrapper: VueWrapper) {}
 
@@ -98,15 +108,18 @@ export class EditorLinksDriver {
     await this.settle();
   }
 
-  async relink(url: string): Promise<void> {
-    const input = this.content.querySelector('.nui-editor-link-bar__edit input');
-    const form = input?.closest('form');
+  async relink(url: string, details: { title?: string; description?: string } = {}): Promise<void> {
+    const form = this.content.querySelector('.nui-editor-link-bar__edit form');
+    const [address, title] = form?.querySelectorAll('input') ?? [];
+    const description = form?.querySelector('textarea');
 
-    if (!(input instanceof HTMLInputElement) || form === null || form === undefined) {
+    if (address === undefined || form === null || form === undefined) {
       throw new Error('The link bar has no address field');
     }
-    input.value = url;
-    input.dispatchEvent(new Event('input', { bubbles: true }));
+
+    fill(address, url);
+    fill(title, details.title);
+    fill(description, details.description);
     await nextTick();
     form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
     await this.settle();
