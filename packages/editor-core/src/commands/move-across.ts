@@ -95,17 +95,12 @@ const asTextblock = (schema: Schema, node: ElementNode): ElementNode | undefined
   const paragraph = emptyTextblock(schema, node.id);
   const type = schema.nodes.get(node.type);
 
-  if (paragraph === undefined || type?.inlineContent !== true) {
+  if (paragraph === undefined || type?.inlineContent !== true || type.code) {
     return undefined;
   }
   return node.type === paragraph.type
     ? node
-    : schema.element(paragraph.type, {
-        id: node.id,
-        content: node.content.map((child) =>
-          child.kind === 'text' && type.code ? schema.text(child.text) : child,
-        ),
-      });
+    : schema.element(paragraph.type, { id: node.id, content: node.content });
 };
 
 const retyped = (schema: Schema, item: ElementNode, type: string): ElementNode =>

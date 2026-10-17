@@ -97,6 +97,18 @@ describe('moving blocks across containers', () => {
     expect(block(editor, 0, 1, 0).id).toBe(heading);
   });
 
+  it('refuses to turn a code block into a list item and leaves it whole', () => {
+    const editor = started(
+      node('code_block', ['let x\nlet y'], { language: 'ts' }),
+      node('bullet_list', [li('one')]),
+    );
+
+    const before = editor.outline;
+
+    expect(moves(editor, slot(editor, 0), slot(editor, 1, 1))).toBe(false);
+    expect(editor.outline).toBe(before);
+  });
+
   it('lifts an item out as a list of its kind, joins a neighbouring list and drops the emptied one', () => {
     const editor = started(
       node('bullet_list', [li('one')]),

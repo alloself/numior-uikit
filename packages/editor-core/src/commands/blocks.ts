@@ -37,7 +37,7 @@ const fits = (
   return schema.nodes.get(parent.type)?.content.matchContent(content)?.validEnd === true;
 };
 
-const attempt = (
+export const attempt = (
   state: EditorState,
   dispatch: Dispatch | undefined,
   build: (tr: Transaction) => boolean,
@@ -472,7 +472,7 @@ const ancestorDepth = ($pos: ResolvedPos, type: string): number => {
   return -1;
 };
 
-const followingTextblock = (schema: Schema, parent: ElementNode): string | undefined =>
+export const followingTextblock = (schema: Schema, parent: ElementNode): string | undefined =>
   [...(schema.nodes.get(parent.type)?.content.next.keys() ?? [])].find((name) => {
     const type = schema.nodes.get(name);
 
@@ -482,7 +482,7 @@ const followingTextblock = (schema: Schema, parent: ElementNode): string | undef
     );
   });
 
-const caretInto = (tr: Transaction, start: number): void => {
+export const caretInto = (tr: Transaction, start: number): void => {
   const caret = textPosition(tr.doc, start, 1);
 
   if (caret !== undefined) {

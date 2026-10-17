@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { createStepMap, decorationSet, emptyDecorations, inlineDecoration } from '../src';
+import {
+  blockDecoration,
+  createStepMap,
+  decorationSet,
+  emptyDecorations,
+  inlineDecoration,
+} from '../src';
 
 const rangesOf = (set: ReturnType<typeof decorationSet>): string[] =>
   set.decorations.map((decoration) => `${decoration.class}:${decoration.from}-${decoration.to}`);
@@ -27,6 +33,17 @@ describe('decoration sets', () => {
 
     expect(rangesOf(set.map(createStepMap([{ start: 1, oldSize: 4, newSize: 0 }])))).toEqual([
       'b:4-6',
+    ]);
+  });
+
+  it('keep decorations anchored to a block through any mapping', () => {
+    const set = decorationSet(
+      [],
+      [blockDecoration('b1', 0, 3, 'kw'), blockDecoration('b1', 2, 2, 'gone')],
+    );
+
+    expect(set.map(createStepMap([{ start: 0, oldSize: 5, newSize: 0 }])).blocks).toEqual([
+      blockDecoration('b1', 0, 3, 'kw'),
     ]);
   });
 });

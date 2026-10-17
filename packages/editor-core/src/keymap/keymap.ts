@@ -1,6 +1,7 @@
 import { moveCurrent } from '../commands/move';
 import { liftListItem, sinkListItem } from '../commands/blocks';
-import { selectAll } from '../commands/commands';
+import { exitCode, indentCode, outdentCode } from '../commands/code';
+import { chainCommands, selectAll } from '../commands/commands';
 import { intentCommand } from '../commands/input';
 import { redo, undo } from '../history/history';
 import type { KeyInput } from '../state/input.types';
@@ -85,6 +86,7 @@ export const baseKeymap: Keymap = {
   'Mod-y': redo,
   'Mod-Shift-ArrowUp': moveCurrent(-1),
   'Mod-Shift-ArrowDown': moveCurrent(1),
-  Tab: sinkListItem,
-  'Shift-Tab': liftListItem,
+  'Mod-Enter': exitCode,
+  Tab: chainCommands(indentCode, sinkListItem),
+  'Shift-Tab': chainCommands(outdentCode, liftListItem),
 };

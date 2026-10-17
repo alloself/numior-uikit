@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it } from 'vite-plus/test';
 import {
+  blockDecoration,
   createMetaKey,
   decorationSet,
   definePlugin,
@@ -101,5 +102,18 @@ describe('editor view decorations', () => {
     view.endComposition();
     view.change((tr) => tr);
     expect(view.markup).toBe('<p>let value = 1</p><p>plain</p>');
+  });
+
+  it('paints decorations anchored to a block wherever the block is', () => {
+    const view = mounted([]);
+    const second = view.blockIds[1] ?? '';
+
+    view.change((tr) =>
+      tr.setMeta(paint, decorationSet([], [blockDecoration(second, 0, 5, 'mark')])),
+    );
+
+    expect(view.markup).toBe(
+      '<p>let value = 1</p><p><span><span class="mark">plain</span></span></p>',
+    );
   });
 });

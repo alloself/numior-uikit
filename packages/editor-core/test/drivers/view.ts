@@ -431,6 +431,12 @@ export class EditorViewDriver {
     this.view.update(state);
   }
 
+  get blockIds(): readonly NodeId[] {
+    return this.state.doc.root.content.flatMap((block) =>
+      block.kind === 'element' ? [block.id] : [],
+    );
+  }
+
   positionOf(id: NodeId): number {
     return this.state.doc.positionOf(id) ?? -1;
   }

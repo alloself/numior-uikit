@@ -1,5 +1,14 @@
-export { decorationSet, emptyDecorations, inlineDecoration } from './decorations/decorations';
-export type { DecorationSet, InlineDecoration } from './decorations/decorations.types';
+export {
+  blockDecoration,
+  decorationSet,
+  emptyDecorations,
+  inlineDecoration,
+} from './decorations/decorations';
+export type {
+  BlockDecoration,
+  DecorationSet,
+  InlineDecoration,
+} from './decorations/decorations.types';
 export { createDoc } from './doc/doc';
 export type { Doc, NodeVisitor, ResolvedPos, Slice } from './doc/doc.types';
 export { createEmptyDoc, isEmptyDoc } from './doc/empty';

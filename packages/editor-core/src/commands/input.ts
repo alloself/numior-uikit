@@ -7,6 +7,7 @@ import { nearestCursor, selectionRange } from '../state/selection';
 import type { SelectionRange } from '../state/selection.types';
 import type { Command, EditorState } from '../state/state.types';
 import { liftAtStart, splitListItem } from './blocks';
+import { codeFence, codeNewline, codeToParagraph } from './code';
 import { inCode, textCursor } from './cursor';
 import { pasteCommand } from './paste';
 import {
@@ -182,7 +183,10 @@ const paragraphAfterNode: Command = (state, dispatch) => {
 };
 
 export const insertParagraph: Command = (state, dispatch) =>
-  newline(state, dispatch) || splitBlock(state, dispatch) || paragraphAfterNode(state, dispatch);
+  codeFence(state, dispatch) ||
+  codeNewline(state, dispatch) ||
+  splitBlock(state, dispatch) ||
+  paragraphAfterNode(state, dispatch);
 
 export const insertLineBreak: Command = (state, dispatch) =>
   newline(state, dispatch) || insertBreak(state, dispatch) || splitBlock(state, dispatch);
@@ -263,7 +267,7 @@ export const intentCommand = (intent: InputIntent): Command => {
         return deleteRange(intent.range);
       }
       return intent.direction === 'backward'
-        ? chainCommands(liftAtStart, deleteText(intent.direction, intent.unit))
+        ? chainCommands(codeToParagraph, liftAtStart, deleteText(intent.direction, intent.unit))
         : deleteText(intent.direction, intent.unit);
     case 'format':
       return formatCommand(intent.mark);

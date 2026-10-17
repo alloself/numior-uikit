@@ -30,7 +30,9 @@ describe('markdown input rules', () => {
     ['7. x', 'ordered_list{start=7}(list_item(paragraph("x")))'],
     ['[ ] x', 'todo_list(todo_item(paragraph("x")))'],
     ['[x] x', 'todo_list(todo_item{checked=true}(paragraph("x")))'],
-    ['```x', 'code_block("x")'],
+    ['``` x', 'code_block("x")'],
+    ['```TS x', 'code_block{language=ts}("x")'],
+    ['```x', 'paragraph("```x")'],
     ['---x', 'divider paragraph("x")'],
   ])('turns %j typed at the start of a block into a block', (typed, outline) => {
     const editor = blank();

@@ -87,7 +87,12 @@ export const markdownRules: readonly InputRule[] = [
     /^(#{1,3})\s$/,
     retype('heading', (match) => ({ level: match[1]?.length ?? 1 })),
   ),
-  blockRule(/^```$/, retype('code_block')),
+  blockRule(
+    /^```([\w#+.-]{1,32})?\s$/,
+    retype('code_block', (match) =>
+      match[1] === undefined ? {} : { language: match[1].toLowerCase() },
+    ),
+  ),
   blockRule(
     /^>\s$/,
     (tr, pos) => has(tr, 'blockquote') && wrapTextblock(tr, pos, [{ type: 'blockquote' }]),

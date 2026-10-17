@@ -1,4 +1,8 @@
-import type { InlineDecoration } from '../decorations/decorations.types';
+import type {
+  BlockDecoration,
+  DecorationSet,
+  InlineDecoration,
+} from '../decorations/decorations.types';
 import type { NodeId } from '../model/node.types';
 import type { EditorState } from '../state/state.types';
 
@@ -16,8 +20,23 @@ export interface TextSegment {
   readonly classes: readonly string[];
 }
 
-const collect = (state: EditorState): readonly InlineDecoration[] =>
-  state.plugins.flatMap((plugin) => plugin.props.decorations?.(state)?.decorations ?? []);
+const setsOf = (state: EditorState): readonly DecorationSet[] =>
+  state.plugins.flatMap((plugin) => {
+    const set = plugin.props.decorations?.(state);
+
+    return set === undefined ? [] : [set];
+  });
+
+const fitsBlock = (state: EditorState, decoration: BlockDecoration): boolean => {
+  const node = state.doc.byId(decoration.block);
+
+  return (
+    node !== undefined &&
+    state.doc.schema.nodes.get(node.type)?.inlineContent === true &&
+    decoration.from >= 0 &&
+    decoration.to <= node.size - 2
+  );
+};
 
 const localOf = (state: EditorState, decoration: InlineDecoration) => {
   const resolved = state.doc.resolve(decoration.from);
@@ -38,16 +57,41 @@ const localOf = (state: EditorState, decoration: InlineDecoration) => {
     : undefined;
 };
 
+const addTo = (
+  blocks: Map<NodeId, LocalDecoration[]>,
+  id: NodeId,
+  decoration: LocalDecoration,
+): void => {
+  const list = blocks.get(id);
+
+  if (list === undefined) {
+    blocks.set(id, [decoration]);
+  } else {
+    list.push(decoration);
+  }
+};
+
 export const blockDecorations = (state: EditorState): BlockDecorations => {
   const blocks = new Map<NodeId, LocalDecoration[]>();
   const limit = state.doc.root.size - 2;
 
-  for (const decoration of collect(state)) {
-    const local =
-      decoration.from < 0 || decoration.to > limit ? undefined : localOf(state, decoration);
+  for (const set of setsOf(state)) {
+    for (const decoration of set.decorations) {
+      const local =
+        decoration.from < 0 || decoration.to > limit ? undefined : localOf(state, decoration);
 
-    if (local !== undefined) {
-      blocks.set(local.id, [...(blocks.get(local.id) ?? []), local.decoration]);
+      if (local !== undefined) {
+        addTo(blocks, local.id, local.decoration);
+      }
+    }
+    for (const decoration of set.blocks) {
+      if (fitsBlock(state, decoration)) {
+        addTo(blocks, decoration.block, {
+          from: decoration.from,
+          to: decoration.to,
+          class: decoration.class,
+        });
+      }
     }
   }
   return blocks;

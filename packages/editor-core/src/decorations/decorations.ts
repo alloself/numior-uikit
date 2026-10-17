@@ -1,5 +1,6 @@
 import type { Mappable } from '../transform/mapping.types';
-import type { DecorationSet, InlineDecoration } from './decorations.types';
+import type { NodeId } from '../model/node.types';
+import type { BlockDecoration, DecorationSet, InlineDecoration } from './decorations.types';
 
 export const inlineDecoration = (
   from: number,
@@ -11,6 +12,13 @@ export const inlineDecoration = (
   class: className,
 });
 
+export const blockDecoration = (
+  block: NodeId,
+  from: number,
+  to: number,
+  className: string,
+): BlockDecoration => ({ block, from, to, class: className });
+
 const byStart = (left: InlineDecoration, right: InlineDecoration): number =>
   left.from - right.from || left.to - right.to;
 
@@ -20,14 +28,24 @@ const mapped = (decoration: InlineDecoration, mapping: Mappable): InlineDecorati
   to: mapping.map(decoration.to, -1),
 });
 
-export const decorationSet = (decorations: readonly InlineDecoration[]): DecorationSet => {
-  const sorted = decorations
-    .filter((decoration) => decoration.to > decoration.from && decoration.class !== '')
-    .toSorted(byStart);
+const visible = (decoration: InlineDecoration): boolean =>
+  decoration.to > decoration.from && decoration.class !== '';
+
+export const decorationSet = (
+  decorations: readonly InlineDecoration[],
+  blocks: readonly BlockDecoration[] = [],
+): DecorationSet => {
+  const sorted = decorations.filter(visible).toSorted(byStart);
+  const kept = blocks.filter(visible);
 
   return {
     decorations: sorted,
-    map: (mapping) => decorationSet(sorted.map((decoration) => mapped(decoration, mapping))),
+    blocks: kept,
+    map: (mapping) =>
+      decorationSet(
+        sorted.map((decoration) => mapped(decoration, mapping)),
+        kept,
+      ),
   };
 };
 
