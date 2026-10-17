@@ -118,6 +118,21 @@
       >
         <NuiTimeField v-bind="field" data-testid="signup-call" />
       </NuiFormField>
+      <NuiFormField
+        v-slot="{ field }"
+        :form="form"
+        :name="(v) => v.about"
+        label="О себе"
+        description="Текст с форматированием уходит в форму разметкой HTML"
+      >
+        <NuiEditor
+          v-bind="field"
+          toolbar="bubble"
+          :block-handles="false"
+          placeholder="Пара слов о вас"
+          data-testid="signup-about"
+        />
+      </NuiFormField>
       <NuiFormField v-slot="{ field }" :form="form" :name="(v) => v.terms" :rules="termsRules">
         <NuiCheckbox v-bind="field" data-testid="signup-terms"
           >Принимаю условия сервиса</NuiCheckbox
@@ -143,6 +158,7 @@
 </template>
 
 <script setup lang="ts">
+import { NuiEditor } from '@numior/editor-vue';
 import { computed, ref } from 'vue';
 import {
   NuiButton,
@@ -183,6 +199,7 @@ interface Signup {
   seats: number | null;
   tags: string[];
   call: string | null;
+  about: string;
   terms: boolean;
 }
 
@@ -234,14 +251,15 @@ const termsRules = [required({ message: 'Нужно принять услови�
 const server = ref<ServerMode>('ok');
 const reserveError = ref(false);
 const submitted = ref(0);
-type Delivered = Pick<SubmittedValues<Signup>, 'seats' | 'tags'>;
+type Delivered = Pick<SubmittedValues<Signup>, 'seats' | 'tags' | 'about'>;
 
 const deliveredOf = (values: SubmittedValues<Signup>): Delivered => ({
   seats: values.seats ?? null,
   tags: values.tags ?? [],
+  about: values.about ?? '',
 });
 
-const delivered = ref<Delivered>({ seats: null, tags: [] });
+const delivered = ref<Delivered>({ seats: null, tags: [], about: '' });
 
 const form = useForm<Signup>({
   initialValues: {
@@ -254,6 +272,7 @@ const form = useForm<Signup>({
     seats: 1,
     tags: [],
     call: null,
+    about: '',
     terms: false,
   },
   rules: { confirm: [required(), matchesPassword] },
@@ -281,6 +300,7 @@ const output = computed(() =>
       formErrors: form.formErrors.value.map((error) => error.message),
       seats: delivered.value.seats,
       tags: delivered.value.tags,
+      about: delivered.value.about,
     },
     null,
     2,

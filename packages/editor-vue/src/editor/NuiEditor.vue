@@ -45,7 +45,7 @@
         :hidden="!ready"
         v-bind="{ ...contentAttrs, ...attrs }"
         @focus="emit('focus', $event)"
-        @blur="emit('blur', $event)"
+        @blur="onBlur"
         @paste="onPaste"
         @keydown="onKeydown"
       />
@@ -247,6 +247,7 @@ import type { MediaKind } from '../uploads/uploads.types';
 import { provideEditorUploads } from '../uploads/uploads-context';
 import { useEditorUploads } from '../uploads/use-editor-uploads';
 import { editorMessages } from './editor.messages';
+import { useEditorHTML } from './use-editor-html';
 import { useEditorOverlays } from './use-editor-overlays';
 import type { NuiEditorApi, NuiEditorPaste, NuiEditorProps } from './editor.types';
 
@@ -280,6 +281,7 @@ const {
   mentions,
 } = defineProps<NuiEditorProps>();
 
+const html = defineModel<string>({ default: '' });
 const document = defineModel<DocJSON | undefined>('document');
 
 const emit = defineEmits<{
@@ -302,16 +304,23 @@ const {
   readonly: isReadonly,
   field,
   frame: fieldFrame,
-} = useFieldControl(() => ({
-  id,
-  disabled,
-  readonly,
-  required,
-  invalid,
-  label,
-  description,
-  error,
-}));
+} = useFieldControl(
+  () => ({
+    id,
+    disabled,
+    readonly,
+    required,
+    invalid,
+    label,
+    description,
+    error,
+  }),
+  {
+    commit: () => {
+      markup.flush();
+    },
+  },
+);
 
 const contentElement = useTemplateRef<HTMLElement>('content');
 const frameElement = useTemplateRef<HTMLElement>('frame');
@@ -519,7 +528,22 @@ const docOf = (json: DocJSON | undefined): Doc => {
   return read?.ok === true ? read.doc : createEmptyDoc(schema);
 };
 
-const initial = docOf(document.value === undefined ? undefined : toRaw(document.value));
+const markup = useEditorHTML({
+  schema,
+  model: html,
+  state: () => current.value,
+  receive: (doc) => {
+    written = toJSON(doc);
+    document.value = written;
+    replace(doc);
+  },
+});
+
+const initial =
+  document.value === undefined && markup.initial !== undefined
+    ? markup.initial
+    : docOf(document.value === undefined ? undefined : toRaw(document.value));
+
 const current = shallowRef<EditorState>(createState({ doc: initial, plugins }));
 const ready = ref(false);
 const empty = ref(isEmptyDoc(initial));
@@ -585,7 +609,22 @@ const publish = (state: EditorState): void => {
   written = toJSON(state.doc);
   empty.value = isEmptyDoc(state.doc);
   document.value = written;
+  markup.changed();
   emit('change', written);
+};
+
+const replace = (doc: Doc): void => {
+  empty.value = isEmptyDoc(doc);
+  current.value = createState({ doc, plugins });
+  view?.update(current.value);
+  code.reset();
+  code.update(current.value);
+  uploads.reset();
+};
+
+const onBlur = (event: FocusEvent): void => {
+  markup.flush();
+  emit('blur', event);
 };
 
 const dispatch = (tr: Transaction): void => {
@@ -699,15 +738,9 @@ watch(document, (value) => {
   if (view === undefined || json === written) {
     return;
   }
-  const doc = docOf(json);
-
   written = json;
-  empty.value = isEmptyDoc(doc);
-  current.value = createState({ doc, plugins });
-  view.update(current.value);
-  code.reset();
-  code.update(current.value);
-  uploads.reset();
+  replace(docOf(json));
+  markup.changed();
 });
 
 watch(editable, (value) => {

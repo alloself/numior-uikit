@@ -71,6 +71,10 @@ const docs: DocsMap = {
       },
     },
     models: {
+      'v-model': {
+        ru: 'Документ как строка HTML для форм и хранилищ разметки. Обновляется после паузы в наборе (300 мс), сразу при уходе фокуса и при отправке формы; HTML, заданный снаружи, читается схемой. Разметка блоков кешируется, поэтому после правки пересчитываются только изменённые блоки.',
+        en: 'The document as an HTML string for forms and markup stores. It updates after a pause in typing (300 ms), right away on blur and when a form submits; HTML set from outside is read through the schema. Block markup is cached, so an edit re-renders only the blocks it changed.',
+      },
       'v-model:document': {
         ru: 'Документ в JSON формата 1; новый объект снаружи начинает историю заново.',
         en: 'The document as format 1 JSON; a new object from outside restarts the history.',

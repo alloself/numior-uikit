@@ -1,6 +1,7 @@
 import { mount, type VueWrapper } from '@vue/test-utils';
 import { textSelection, type Command, type DocJSON } from '@numior/editor-core';
-import { createSSRApp, h, nextTick } from 'vue';
+import { provideDraftCommits, type DraftCommits } from '@numior/primitives';
+import { createSSRApp, defineComponent, h, nextTick, ref } from 'vue';
 import { renderToString } from 'vue/server-renderer';
 import { NuiEditor, type NuiEditorApi, type NuiEditorProps } from '../../src';
 import { layOut } from '../support/layout';
@@ -37,21 +38,68 @@ const textWithoutWidgets = (block: Element): string => {
   return copy.textContent ?? '';
 };
 
-export class EditorDriver {
-  private constructor(private readonly wrapper: VueWrapper) {}
+type EditorMountProps = NuiEditorProps & {
+  readonly document?: DocJSON | undefined;
+  readonly modelValue?: string;
+};
 
-  static mount(
-    props: NuiEditorProps & { readonly document?: DocJSON | undefined } = {},
-  ): EditorDriver {
+export class EditorDriver {
+  private constructor(
+    private readonly wrapper: VueWrapper,
+    private readonly mounted: VueWrapper = wrapper,
+    private readonly drafts?: DraftCommits,
+  ) {}
+
+  static mount(props: EditorMountProps = {}): EditorDriver {
     const wrapper: VueWrapper = mount(NuiEditor, {
       props: {
         ...props,
         'onUpdate:document': (document: DocJSON | undefined) => wrapper.setProps({ document }),
+        'onUpdate:modelValue': async (modelValue: string) => {
+          await wrapper.setProps({ modelValue });
+        },
       },
       attachTo: document.body,
     });
 
     return new EditorDriver(wrapper);
+  }
+
+  static mountInField(props: EditorMountProps = {}): EditorDriver {
+    const html = ref(props.modelValue ?? '');
+    let drafts: DraftCommits | undefined;
+
+    const Host = defineComponent({
+      setup: () => {
+        drafts = provideDraftCommits();
+        return () =>
+          h(NuiEditor, {
+            ...props,
+            modelValue: html.value,
+            'onUpdate:modelValue': (value: string) => {
+              html.value = value;
+            },
+          });
+      },
+    });
+
+    const root = mount(Host, { attachTo: document.body });
+
+    return new EditorDriver(root.findComponent(NuiEditor), root, drafts);
+  }
+
+  commitDrafts(): void {
+    this.drafts?.commitAll();
+  }
+
+  get htmls(): readonly string[] {
+    return (this.wrapper.emitted('update:modelValue') ?? []).flatMap(([value]: unknown[]) =>
+      typeof value === 'string' ? [value] : [],
+    );
+  }
+
+  async receiveHTML(modelValue: string): Promise<void> {
+    await this.wrapper.setProps({ modelValue });
   }
 
   static async ssr(
@@ -656,6 +704,6 @@ export class EditorDriver {
   }
 
   destroy(): void {
-    this.wrapper.unmount();
+    this.mounted.unmount();
   }
 }

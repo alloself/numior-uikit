@@ -18,6 +18,7 @@ const isSignupOutput = shapeOf({
   formErrors: listOf(isString),
   seats: nullable(isNumber),
   tags: listOf(isString),
+  about: isString,
 });
 
 export type SignupOutput = Guarded<typeof isSignupOutput>;
@@ -42,6 +43,7 @@ export class SignupSection {
   readonly seats: Locator;
   readonly tags: Locator;
   readonly call: Locator;
+  readonly about: Locator;
   readonly terms: Locator;
   readonly submit: Locator;
   readonly reset: Locator;
@@ -59,6 +61,7 @@ export class SignupSection {
     this.seats = page.getByTestId('signup-seats');
     this.tags = page.getByTestId('signup-tags');
     this.call = page.getByTestId('signup-call');
+    this.about = page.getByTestId('signup-about');
     this.terms = page.getByTestId('signup-terms');
     this.submit = page.getByTestId('signup-submit');
     this.reset = page.getByTestId('signup-reset');

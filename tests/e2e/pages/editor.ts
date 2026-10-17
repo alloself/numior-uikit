@@ -500,7 +500,7 @@ export class EditorSection {
   }
 
   mentionList(): Locator {
-    return this.page.locator('.nui-editor-mentions');
+    return this.root.locator('.nui-editor-mentions');
   }
 
   mentions(): Locator {
@@ -512,11 +512,11 @@ export class EditorSection {
   }
 
   pasteMenu(): Locator {
-    return this.page.locator('.nui-editor-paste');
+    return this.root.locator('.nui-editor-paste');
   }
 
   mediaPanel(): Locator {
-    return this.page.locator('.nui-editor-media');
+    return this.root.locator('.nui-editor-media');
   }
 
   bookmark(site: string): Locator {
@@ -528,7 +528,7 @@ export class EditorSection {
   }
 
   linkBar(): Locator {
-    return this.page.locator('.nui-editor-link-bar:popover-open');
+    return this.root.locator('.nui-editor-link-bar:popover-open');
   }
 
   liveLinksSwitch(): Locator {
@@ -540,7 +540,7 @@ export class EditorSection {
       .getByRole('button', { name: /^Изменить (ссылку|закладку)$/u })
       .click();
 
-    const form = this.page.locator('.nui-editor-link-bar__edit');
+    const form = this.root.locator('.nui-editor-link-bar__edit');
     const address = form.getByRole('textbox', { name: 'Адрес' });
 
     await address.fill(url);

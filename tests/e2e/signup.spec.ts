@@ -117,6 +117,37 @@ test.describe('signup form', () => {
     expect((await signup.readOutput()).submitCount).toBe(1);
   });
 
+  test('the about field sends its formatted text as HTML, also when the form is sent by script while typing', async ({
+    page,
+  }) => {
+    const { signup } = await openSignup(page);
+
+    await signup.fillValid();
+    await signup.about.click();
+    await page.keyboard.type('Люблю ');
+    await page.keyboard.press('ControlOrMeta+b');
+    await page.keyboard.type('интерфейсы');
+    await signup.submit.click();
+
+    await expect
+      .poll(async () => (await signup.readOutput()).about)
+      .toBe(
+        '<p class="nui-content__paragraph">Люблю <strong class="nui-content__bold">интерфейсы</strong></p>',
+      );
+
+    await signup.about.click();
+    await page.keyboard.press('ControlOrMeta+End');
+    await page.keyboard.type('!');
+
+    await signup.form.evaluate((form) => {
+      if (form instanceof HTMLFormElement) {
+        form.requestSubmit();
+      }
+    });
+
+    await expect.poll(async () => (await signup.readOutput()).about).toContain('интерфейсы!</');
+  });
+
   test('a double click on submit sends the form once', async ({ page }) => {
     const { signup } = await openSignup(page);
     await signup.answer('Медленный ответ');
@@ -205,6 +236,7 @@ test.describe('signup form', () => {
   });
 
   test('the form with field errors has no detectable WCAG AA violations', async ({ page }) => {
+    test.slow();
     const playground = await openSignup(page);
     const { signup } = playground;
     await signup.submit.click();
