@@ -148,6 +148,21 @@ describe('node views', () => {
     expect(driver.modelTexts).toEqual(['before', 'x']);
   });
 
+  it('puts the caret into a new last paragraph when the page is clicked below a closing leaf', () => {
+    driver = EditorViewDriver.mount(
+      doc(node('paragraph', ['before']), node('divider')),
+      fixtureSchema,
+      [],
+      boxViews({ updates: [], destroyed: [] }),
+    );
+
+    expect(driver.clickBelow()).toBe(true);
+    expect(driver.modelTexts).toEqual(['before', '', '']);
+    expect(driver.selection).toEqual({ kind: 'text', anchor: 10, head: 10 });
+    expect(driver.clickBelow()).toBe(true);
+    expect(driver.modelTexts).toEqual(['before', '', '']);
+  });
+
   it('destroys views of removed nodes and of the whole document', () => {
     const log: NodeViewLog = { updates: [], destroyed: [] };
     const view = mounted(log);

@@ -8,7 +8,7 @@ import { createMetaKey } from '../state/plugin';
 import { nearestCursor, selectionRange, textSelection } from '../state/selection';
 import type { SelectionRange } from '../state/selection.types';
 import type { Command, EditorState } from '../state/state.types';
-import { liftAtStart, splitListItem } from './blocks';
+import { attempt, exitEmptyLast, liftAtStart, splitListItem } from './blocks';
 import { codeFence, codeNewline, codeToParagraph } from './code';
 import { inCode, textCursor } from './cursor';
 import { pasteCommand } from './paste';
@@ -205,19 +205,34 @@ const insertBreak: Command = (state, dispatch) => {
 const newline: Command = (state, dispatch) => inCode(state) && insertText('\n')(state, dispatch);
 
 const paragraphAfterNode: Command = (state, dispatch) => {
-  if (state.selection.kind !== 'node') {
+  const { selection, doc } = state;
+  const node = selection.kind === 'node' ? doc.byId(selection.id) : undefined;
+  const at = node === undefined ? undefined : doc.positionOf(node.id);
+
+  if (node === undefined || at === undefined) {
     return false;
   }
-  const range = selectionRange(state.doc, state.selection);
-  const tr = state.tr.setSelection(nearestCursor(state.doc, range.to));
+  if (isInline(doc.schema, node)) {
+    dispatch?.(state.tr.setSelection(nearestCursor(doc, at + nodeSize(node))));
+    return true;
+  }
+  return attempt(state, dispatch, (tr) => {
+    const block = emptyTextblock(doc.schema, tr.newId());
+    const end = at + nodeSize(node);
 
-  dispatch?.(tr);
-  return true;
+    if (block === undefined) {
+      return false;
+    }
+    tr.insert(end, [block]);
+    tr.setSelection(textSelection(end + 1));
+    return true;
+  });
 };
 
 export const insertParagraph: Command = (state, dispatch) =>
   codeFence(state, dispatch) ||
   codeNewline(state, dispatch) ||
+  exitEmptyLast(state, dispatch) ||
   splitBlock(state, dispatch) ||
   paragraphAfterNode(state, dispatch);
 

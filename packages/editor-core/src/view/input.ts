@@ -1,3 +1,4 @@
+import { caretAtEnd } from '../commands/blocks';
 import { intentCommand, isAtom, selectAtom } from '../commands/input';
 import { clipboardHTML } from '../html/clipboard';
 import { nearestCursor, selectionRange } from '../state/selection';
@@ -395,11 +396,32 @@ export const attachInput = (host: ViewHost, parts: InputParts): (() => void) => 
     host.dispatch(host.state().tr.setSelection({ kind: 'node', id }), 'pointer');
   };
 
+  const belowContent = (event: MouseEvent): boolean => {
+    const last = host.state().doc.root.content.at(-1);
+    const dom = last?.kind === 'element' ? host.context.byId.get(last.id)?.dom : undefined;
+    const target = event.target;
+
+    return (
+      event.button === 0 &&
+      dom !== undefined &&
+      target instanceof Element &&
+      (target === root || target.parentElement === root) &&
+      event.clientY > dom.getBoundingClientRect().bottom
+    );
+  };
+
   const onMousedown = (event: MouseEvent): void => {
     const id = event.button === 0 ? atomAt(host, event.target) : undefined;
 
     if (id !== undefined) {
       selectNode(event, id);
+    } else if (belowContent(event)) {
+      event.preventDefault();
+      root.focus({ preventScroll: true });
+
+      caretAtEnd(host.state(), (tr) => {
+        host.dispatch(tr, 'pointer');
+      });
     }
   };
 

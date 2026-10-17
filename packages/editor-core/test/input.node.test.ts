@@ -15,6 +15,7 @@ import {
   type EditorState,
   type Selection,
 } from '../src';
+import { caretAtEnd } from '../src/commands/blocks';
 import { fixtureSchema } from '../src/fixtures';
 import { buildWith } from './support/notes';
 
@@ -39,6 +40,9 @@ const textOfBlock = (block: ContentNode): string =>
     : '';
 
 const texts = (state: EditorState): string[] => state.doc.root.content.map(textOfBlock);
+
+const types = (state: EditorState): string[] =>
+  state.doc.root.content.map((block) => (block.kind === 'element' ? block.type : 'text'));
 
 describe('input commands', () => {
   it('deletes a grapheme, a word or the rest of the line before the cursor', () => {
@@ -135,6 +139,40 @@ describe('input commands', () => {
 
     expect(selected.selection).toEqual({ kind: 'node', id: table.id });
     expect(texts(run(selected, deleteText('backward', 'character')))).toEqual(['ab', 'cd']);
+  });
+
+  it('opens a paragraph after a selected block, leaves a container from its empty last line and reaches the end', () => {
+    const rule = stateOf(doc(node('paragraph', ['a']), node('divider')), textSelection(1));
+    const divider = rule.doc.root.content[1];
+
+    const opened = run(
+      rule.apply(
+        rule.tr.setSelection({ kind: 'node', id: divider?.kind === 'element' ? divider.id : '' }),
+      ),
+      insertParagraph,
+    );
+
+    expect(types(opened)).toEqual(['paragraph', 'divider', 'paragraph']);
+    expect(opened.selection).toEqual(textSelection(5));
+
+    for (const wrapper of ['blockquote', 'toggle']) {
+      const nested = doc(node(wrapper, [node('paragraph', ['q']), node('paragraph')]));
+      const inside = stateOf(nested, textSelection(5));
+      const left = run(inside, insertParagraph);
+
+      expect(types(left)).toEqual([wrapper, 'paragraph']);
+      expect(left.selection).toEqual(textSelection(6));
+    }
+
+    const single = stateOf(doc(node('callout', [node('paragraph')])), textSelection(2));
+
+    expect(types(run(single, insertParagraph))).toEqual(['callout']);
+
+    const ended = run(rule, caretAtEnd);
+
+    expect(types(ended)).toEqual(['paragraph', 'divider', 'paragraph']);
+    expect(types(run(ended, caretAtEnd))).toEqual(['paragraph', 'divider', 'paragraph']);
+    expect(run(ended, caretAtEnd).selection).toEqual(textSelection(5));
   });
 
   it('finds text positions with a direction and falls back the other way', () => {

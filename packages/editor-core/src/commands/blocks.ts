@@ -1,5 +1,6 @@
 import type { ResolvedPos } from '../doc/doc.types';
-import { withContent } from '../model/node';
+import { emptyTextblock } from '../doc/empty';
+import { nodeSize, withContent } from '../model/node';
 import type { AttrValue, ContentNode, ElementNode } from '../model/node.types';
 import type { Schema } from '../schema/schema.types';
 import { isCursor, textPosition, textSelection } from '../state/selection';
@@ -382,6 +383,72 @@ const liftFromWrapper: Command = (state, dispatch) => {
   return attempt(state, dispatch, (tr) => {
     tr.insert(wrapperStart, [child]).delete(from, to);
     tr.setSelection(textSelection(wrapperStart + head - childStart));
+    return true;
+  });
+};
+
+export const exitEmptyLast: Command = (state, dispatch) => {
+  const head = headOf(state);
+  const $pos = head === undefined ? undefined : state.doc.resolve(head);
+
+  if (
+    $pos === undefined ||
+    state.selection.kind !== 'text' ||
+    !isCursor(state.selection) ||
+    $pos.depth < 2 ||
+    $pos.parent.content.length > 0
+  ) {
+    return false;
+  }
+  const wrapper = $pos.node($pos.depth - 1);
+  const type = state.doc.schema.nodes.get(wrapper.type);
+
+  if (
+    type?.groups.has('block') !== true ||
+    type.groups.has('list') ||
+    wrapper.content.length < 2 ||
+    $pos.indexAt($pos.depth - 1) !== wrapper.content.length - 1
+  ) {
+    return false;
+  }
+  const start = $pos.before($pos.depth);
+  const size = nodeSize($pos.parent);
+  const after = $pos.after($pos.depth - 1);
+
+  return attempt(state, dispatch, (tr) => {
+    tr.insert(after, [$pos.parent]).delete(start, start + size);
+    tr.setSelection(textSelection(after - size + 1));
+    return true;
+  });
+};
+
+export const caretAtEnd: Command = (state, dispatch) => {
+  const { doc } = state;
+  const last = doc.root.content.at(-1);
+  const at = last?.kind === 'element' ? doc.positionOf(last.id) : undefined;
+  const type = last?.kind === 'element' ? doc.schema.nodes.get(last.type) : undefined;
+
+  if (last === undefined || at === undefined) {
+    return false;
+  }
+  if (
+    type?.inlineContent === true &&
+    !type.code &&
+    last.kind === 'element' &&
+    last.content.length === 0
+  ) {
+    dispatch?.(state.tr.setSelection(textSelection(at + 1)));
+    return true;
+  }
+  return attempt(state, dispatch, (tr) => {
+    const block = emptyTextblock(doc.schema, tr.newId());
+    const end = at + nodeSize(last);
+
+    if (block === undefined) {
+      return false;
+    }
+    tr.insert(end, [block]);
+    tr.setSelection(textSelection(end + 1));
     return true;
   });
 };

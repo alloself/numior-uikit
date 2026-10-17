@@ -152,6 +152,12 @@ export class EditorViewDriver {
     );
   }
 
+  clickBelow(): boolean {
+    return !this.host.dispatchEvent(
+      new MouseEvent('mousedown', { bubbles: true, cancelable: true, button: 0, clientY: 900 }),
+    );
+  }
+
   releaseMouse(): void {
     document.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, button: 0 }));
   }
