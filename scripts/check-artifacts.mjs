@@ -286,6 +286,14 @@ assert.match(
   'content/table must keep @numior/table external',
 );
 
+const contentCodeView = await readFile('packages/content/dist/code.js', 'utf8');
+
+assert.match(
+  contentCodeView,
+  /from ['"]@numior\/vue['"]/,
+  'content/code must keep @numior/vue external',
+);
+
 const editorVueCode = await importBuild('editor-vue', [
   'NuiEditor',
   'defineBlock',

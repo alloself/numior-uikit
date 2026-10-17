@@ -109,6 +109,18 @@ export class EditorSection {
     return this.root.locator('.nui-editor-bubble');
   }
 
+  codeLanguage(): Locator {
+    return this.content.locator('.nui-editor-code__language').first();
+  }
+
+  codeToken(scope: string): Locator {
+    return this.content.locator(`.nui-content__token--scope-${scope}`).first();
+  }
+
+  codeText(): Promise<string> {
+    return this.content.locator('pre > code').first().innerText();
+  }
+
   todoCheck(text: string): Locator {
     return this.content.getByRole('checkbox', { name: `Выполнено: ${text}` });
   }

@@ -179,6 +179,40 @@
 .nui-content__code > code {
   font: inherit;
 }
+.nui-content__token--scope-keyword {
+  color: var(--nui-syntax-keyword);
+}
+.nui-content__token--scope-string {
+  color: var(--nui-syntax-string);
+}
+.nui-content__token--scope-number {
+  color: var(--nui-syntax-number);
+}
+.nui-content__token--scope-function {
+  color: var(--nui-syntax-function);
+}
+.nui-content__token--scope-type {
+  color: var(--nui-syntax-type);
+}
+.nui-content__token--scope-tag {
+  color: var(--nui-syntax-tag);
+}
+.nui-content__token--scope-attribute {
+  color: var(--nui-syntax-attribute);
+}
+.nui-content__token--scope-property {
+  color: var(--nui-syntax-property);
+}
+.nui-content__token--scope-comment {
+  color: var(--nui-syntax-comment);
+  font-style: italic;
+}
+.nui-content__token--scope-punctuation {
+  color: var(--nui-syntax-punctuation);
+}
+.nui-content__token--scope-variable {
+  color: var(--nui-syntax-variable);
+}
 .nui-content__divider {
   box-sizing: content-box;
   block-size: 1px;

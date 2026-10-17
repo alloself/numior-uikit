@@ -13,8 +13,8 @@ const docs: DocsMap = {
       },
       size: { ru: 'Кегль текста.', en: 'Text size.' },
       views: {
-        ru: 'Свои компоненты для типов узлов: компонент получает проп node и рисуется вместо разметки схемы. Таблицы данных как NuiTable с сортировкой и фильтрами — { table: NuiContentTable } из @numior/content/table; без этого таблица остаётся обычной <table>.',
-        en: 'Own components for node types: the component receives the node prop and replaces the schema markup. Data tables as NuiTable with sorting and filters take { table: NuiContentTable } from @numior/content/table; without it a table stays a plain <table>.',
+        ru: 'Свои компоненты для типов узлов: компонент получает проп node и рисуется вместо разметки схемы. Таблицы данных как NuiTable с сортировкой и фильтрами — { table: NuiContentTable } из @numior/content/table; без этого таблица остаётся обычной <table>. Блоки кода с подсветкой, языком и копированием — { code_block: NuiContentCode } из @numior/content/code.',
+        en: 'Own components for node types: the component receives the node prop and replaces the schema markup. Data tables as NuiTable with sorting and filters take { table: NuiContentTable } from @numior/content/table; without it a table stays a plain <table>. Code blocks with highlighting, a language and copying take { code_block: NuiContentCode } from @numior/content/code.',
       },
     },
     events: {

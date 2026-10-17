@@ -35,6 +35,7 @@
 
 <script setup lang="ts">
 import { NuiContent } from '@numior/content';
+import { NuiContentCode } from '@numior/content/code';
 import { NuiContentTable } from '@numior/content/table';
 import type { PasteSource } from '@numior/editor-core';
 import { editorBlocks, NuiEditor } from '@numior/editor-vue';
@@ -44,7 +45,7 @@ import { playgroundSchema, taskStatusBlock } from './editor-blocks';
 import { blockCount, editorSample } from './editor-sample';
 
 const blocks = [...editorBlocks, taskStatusBlock];
-const views = { table: NuiContentTable };
+const views = { table: NuiContentTable, code_block: NuiContentCode };
 const document = ref(editorSample());
 const readonly = ref(false);
 const changes = ref(0);

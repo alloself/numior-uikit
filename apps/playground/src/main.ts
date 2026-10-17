@@ -1,5 +1,6 @@
 import { createApp } from 'vue';
 import { createNuiConfig, type NuiLocaleMessages } from '@numior/vue';
+import { createShikiHighlighter } from '@numior/vue/shiki';
 import '@numior/tokens/theme.css';
 import '@numior/tokens/base.css';
 import '@numior/tokens/accents.css';
@@ -21,5 +22,12 @@ const messages: NuiLocaleMessages = {
 };
 
 createApp(App)
-  .use(createNuiConfig({ toasts: { duration: 4000 }, locale: 'ru-RU', messages }))
+  .use(
+    createNuiConfig({
+      toasts: { duration: 4000 },
+      locale: 'ru-RU',
+      messages,
+      highlighter: createShikiHighlighter(),
+    }),
+  )
   .mount('#app');

@@ -1,6 +1,7 @@
 export { defineBlock, defineBlockState } from './blocks/define-block';
 export {
   calloutBlock,
+  codeBlock,
   columnsBlock,
   editorBlocks,
   tableBlock,

@@ -21,6 +21,11 @@
       "types": "./dist/table/index.d.ts",
       "import": "./dist/table.js"
     },
+    "./code": {
+      "@numior/source": "./src/code/index.ts",
+      "types": "./dist/code/index.d.ts",
+      "import": "./dist/code.js"
+    },
     "./styles.css": {
       "@numior/source": "./src/styles.css",
       "default": "./dist/styles.css"

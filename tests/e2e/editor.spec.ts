@@ -52,6 +52,35 @@ test.describe('editor', () => {
     await expect(editor.content.locator('ul ul')).toHaveCount(1);
   });
 
+  test('writes highlighted code after a fence, indents with Tab and leaves with Mod+Enter', async ({
+    page,
+  }) => {
+    const { editor } = await openEditor(page);
+
+    await editor.clear();
+    await page.keyboard.type('```ts ');
+    await expect(editor.codeLanguage()).toHaveText('TypeScript');
+    await page.keyboard.type('const answer = 42;');
+    await expect(editor.codeToken('keyword')).toHaveText('const');
+    await page.keyboard.press('Enter');
+    await page.keyboard.press('Tab');
+    await page.keyboard.type('done();');
+    await expect.poll(() => editor.codeText()).toBe('const answer = 42;\n  done();');
+    await page.keyboard.press('ControlOrMeta+Enter');
+    await page.keyboard.type('after');
+    await expect.poll(() => editor.blockTags()).toEqual(['pre', 'p']);
+
+    await expect(editor.preview.locator('.nui-code__token--scope-keyword').first()).toHaveText(
+      'const',
+    );
+
+    await editor.codeLanguage().click();
+    await page.keyboard.type('py');
+    await page.keyboard.press('Enter');
+    await expect(editor.codeLanguage()).toHaveText('Python');
+    await expect(editor.preview.locator('.nui-code__title').first()).toHaveText('Python');
+  });
+
   test('formats a selection with the keyboard and selects the mention as one piece', async ({
     page,
   }) => {
@@ -346,6 +375,27 @@ test.describe('editor', () => {
     await expect(editor.content.locator('ul.nui-content__list--bullet').last()).toHaveText(
       'Обновить тарифы',
     );
+  });
+
+  test('keeps a dragged code block whole and highlighted where a list cannot hold it', async ({
+    page,
+  }) => {
+    const { editor } = await openEditor(page);
+
+    const fine = await page.evaluate(
+      () => matchMedia('(hover: hover) and (pointer: fine)').matches,
+    );
+
+    test.skip(!fine, 'dragging by the handle needs a mouse');
+
+    const code = editor.content.locator('pre', { hasText: 'const release' });
+
+    await expect(editor.codeToken('keyword')).toBeVisible();
+    await editor.drag(code, editor.item('Собрать отзывы'));
+    await expect(code).toHaveCount(1);
+    await expect(editor.item('Собрать отзывы').locator('pre')).toHaveCount(0);
+    await editor.drag(code, editor.content.locator('p', { hasText: 'Наберите' }));
+    await expect(code.locator('.nui-content__token--scope-keyword').first()).toHaveText('const');
   });
 
   test('lays blocks out in columns from the slash menu, the keyboard and a side drop', async ({

@@ -29,6 +29,10 @@ const docs: DocsMap = {
         ru: 'Пресеты цвета текста, которые предлагает меню и принимает вставка; по умолчанию все девять. Цвета, которые уже есть в документе, сохраняются.',
         en: 'Text colour presets the menu offers and pastes keep; all nine by default. Colours already in the document stay.',
       },
+      highlighter: {
+        ru: 'Подсветчик блоков кода вместо настроенного в `createNuiConfig`; `false` выключает подсветку.',
+        en: 'A highlighter for code blocks instead of the one set in `createNuiConfig`; `false` turns highlighting off.',
+      },
       blocks: {
         ru: 'Свои блоки из `defineBlock`: Vue-компонент в узле схемы (node view), клавиши, пункты меню «/» и меню ручки. Читается один раз при монтировании.',
         en: 'Custom blocks from `defineBlock`: a Vue component inside a schema node (a node view), keys, slash menu items and handle menu entries. Read once on mount.',

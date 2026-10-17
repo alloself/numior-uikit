@@ -47,6 +47,11 @@ export interface NuiEditorMessages {
   readonly tone: string;
   readonly toneName: (params: { readonly tone: string }) => string;
   readonly calloutTone: (params: { readonly tone: string }) => string;
+  readonly codeLanguage: string;
+  readonly codePlain: string;
+  readonly codeLanguageSearch: string;
+  readonly copyCode: string;
+  readonly codeCopied: string;
   readonly columns: (params: { readonly count: number }) => string;
   readonly columnWidth: (params: { readonly index: number }) => string;
   readonly deleteBlock: string;
@@ -193,6 +198,11 @@ export const editorMessages: NuiMessageCatalog<'editor'> = {
     tone: 'Tone',
     toneName: ({ tone }) => EN_TONES[tone] ?? tone,
     calloutTone: ({ tone }) => `Callout tone: ${EN_TONES[tone] ?? tone}`,
+    codeLanguage: 'Code language',
+    codePlain: 'Plain text',
+    codeLanguageSearch: 'Search languages',
+    copyCode: 'Copy code',
+    codeCopied: 'Copied',
     columns: ({ count }) => `${String(count)} columns`,
     columnWidth: ({ index }) => `Column ${String(index)} width`,
     deleteBlock: 'Delete',
@@ -258,6 +268,11 @@ export const editorMessages: NuiMessageCatalog<'editor'> = {
     tone: 'Тон',
     toneName: ({ tone }) => RU_TONES[tone] ?? tone,
     calloutTone: ({ tone }) => `Тон выноски: ${RU_TONES[tone] ?? tone}`,
+    codeLanguage: 'Язык кода',
+    codePlain: 'Обычный текст',
+    codeLanguageSearch: 'Найти язык',
+    copyCode: 'Копировать код',
+    codeCopied: 'Скопировано',
     columns: ({ count }) => `${String(count)} колонки`,
     columnWidth: ({ index }) => `Ширина колонки ${String(index)}`,
     deleteBlock: 'Удалить',

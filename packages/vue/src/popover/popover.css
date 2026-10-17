@@ -32,6 +32,13 @@
 .nui-popover--padding-sm {
   padding: var(--nui-space-1);
 }
+.nui-popover:has(> .nui-command) {
+  padding: 0;
+}
+.nui-popover > .nui-command {
+  border: 0;
+  border-radius: inherit;
+}
 .nui-popover:popover-open {
   opacity: 1;
   translate: 0 0;

@@ -71,3 +71,26 @@
 .nui-editor__content .nui-content__table > .nui-editor__widget:empty {
   min-block-size: 8rem;
 }
+.nui-editor__content .nui-content__code > .nui-editor__widget {
+  display: block;
+  margin-block-end: var(--nui-space-2);
+}
+.nui-editor-code {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--nui-space-2);
+  font-family: var(--nui-font);
+  white-space: normal;
+}
+.nui-editor-code__language {
+  margin-inline-start: calc(-1 * var(--nui-space-2));
+}
+.nui-editor-code__languages {
+  inline-size: 14rem;
+  max-block-size: 18rem;
+}
+.nui-editor-code__label {
+  color: var(--nui-text-muted);
+  font-size: var(--nui-font-size-xs);
+}

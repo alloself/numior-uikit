@@ -13,6 +13,7 @@ export default defineConfig({
       entry: {
         index: fileURLToPath(new URL('./src/index.ts', import.meta.url)),
         table: fileURLToPath(new URL('./src/table/index.ts', import.meta.url)),
+        code: fileURLToPath(new URL('./src/code/index.ts', import.meta.url)),
       },
       formats: ['es'],
       fileName: (_format, name) => `${name}.js`,

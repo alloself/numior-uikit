@@ -93,6 +93,13 @@ export const editorSample = (): DocJSON =>
         node('callout', [paragraph('Релиз во вторник в 10:00.')], { tone: 'info' }),
         node('toggle', [paragraph('Детали релиза'), paragraph('Ветка release/2.4, миграций: 3.')]),
         node('code_block', ['pnpm release:check'], { language: 'bash' }),
+        node(
+          'code_block',
+          [
+            "const release = (version: string): boolean => {\n  return version.startsWith('2.');\n};",
+          ],
+          { language: 'ts' },
+        ),
         node('divider'),
         paragraph('Наберите # и пробел для заголовка или - для списка.'),
         plan(),

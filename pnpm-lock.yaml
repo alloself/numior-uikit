@@ -185,6 +185,9 @@ importers:
       '@numior/vue':
         specifier: workspace:*
         version: link:../../packages/vue
+      shiki:
+        specifier: 4.4.3
+        version: 4.4.3
       vue:
         specifier: 3.5.43
         version: 3.5.43(typescript@5.9.3)

@@ -1,6 +1,6 @@
-import { mount, type VueWrapper } from '@vue/test-utils';
+import { flushPromises, mount, type VueWrapper } from '@vue/test-utils';
 import type { Doc, DocJSON, DocJSONIssue } from '@numior/editor-core';
-import { createSSRApp, h, nextTick } from 'vue';
+import { createSSRApp, h, nextTick, type Plugin } from 'vue';
 import { renderToString } from 'vue/server-renderer';
 import { NuiContent, type NuiContentProps } from '../../src';
 
@@ -11,8 +11,10 @@ const isIssues = (value: unknown): value is readonly DocJSONIssue[] => Array.isA
 export class ContentDriver {
   private constructor(private readonly wrapper: VueWrapper) {}
 
-  static mount(props: NuiContentProps): ContentDriver {
-    return new ContentDriver(mount(NuiContent, { props, attachTo: document.body }));
+  static mount(props: NuiContentProps, plugins: readonly Plugin[] = []): ContentDriver {
+    return new ContentDriver(
+      mount(NuiContent, { props, attachTo: document.body, global: { plugins: [...plugins] } }),
+    );
   }
 
   static async ssr(props: NuiContentProps): Promise<string> {
@@ -38,6 +40,24 @@ export class ContentDriver {
     app.unmount();
     host.remove();
     return warnings;
+  }
+
+  get codeTitles(): readonly string[] {
+    return this.wrapper.findAll('.nui-code__title').map((title) => title.text());
+  }
+
+  get codeScopes(): readonly string[] {
+    return this.wrapper.findAll('.nui-code__token').flatMap((token) =>
+      token.classes().flatMap((name) => {
+        const scope = /^nui-code__token--scope-(.+)$/.exec(name)?.[1];
+
+        return scope === undefined ? [] : [`${scope}:${token.text()}`];
+      }),
+    );
+  }
+
+  async settle(): Promise<void> {
+    await flushPromises();
   }
 
   get markup(): string {

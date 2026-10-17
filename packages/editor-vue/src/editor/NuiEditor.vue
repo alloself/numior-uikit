@@ -145,7 +145,15 @@ import {
   type Transaction,
 } from '@numior/editor-core';
 import { createEditorView, type EditorView } from '@numior/editor-core/view';
-import { provideIconDefaults, useFieldControl, useMessages } from '@numior/primitives';
+import {
+  provideHighlighter,
+  provideIconDefaults,
+  useFieldControl,
+  useHighlighter,
+  useMessages,
+  type NuiHighlighter,
+} from '@numior/primitives';
+import { codeHighlightPlugin, createCodeHighlighter } from '../blocks/code/code-highlight';
 import { NuiFieldFrame, optionElementId, type NuiMenuEntry } from '@numior/vue';
 import {
   computed,
@@ -200,6 +208,7 @@ const {
   highlights = CONTENT_COLOURS,
   blockHandles = true,
   blocks = editorBlocks,
+  highlighter = undefined,
 } = defineProps<NuiEditorProps>();
 
 const document = defineModel<DocJSON | undefined>('document');
@@ -273,7 +282,15 @@ const blockEditor: NuiEditorBlockEditor = { element: (nodeId) => view?.nodeDOM(n
 const keysOf = (keys: NonNullable<NuiEditorBlock['keymap']>): Keymap =>
   typeof keys === 'function' ? keys(blockEditor) : keys;
 
+const configuredHighlighter = useHighlighter();
+const NO_HIGHLIGHT: NuiHighlighter = { languages: [], tokens: () => undefined };
+
+if (highlighter !== undefined) {
+  provideHighlighter(highlighter === false ? NO_HIGHLIGHT : highlighter);
+}
+
 const plugins = [
+  ...(schema.nodes.has('code_block') ? [codeHighlightPlugin()] : []),
   slash.plugin,
   pasteSchema(limitedSchema),
   inputRules(markdownRules),
@@ -358,10 +375,17 @@ const dispatch = (tr: Transaction): void => {
 
   view.update(applied.state);
   current.value = applied.state;
+  code.update(applied.state);
   if (applied.transactions.some((step) => step.changed)) {
     publish(applied.state);
   }
 };
+
+const code = createCodeHighlighter(
+  () => (highlighter === false ? null : (highlighter ?? configuredHighlighter)),
+  dispatch,
+  () => current.value,
+);
 
 const run: NuiEditorApi['run'] = (command) => view !== undefined && command(view.state, dispatch);
 
@@ -452,6 +476,7 @@ watch(document, (value) => {
   empty.value = isEmptyDoc(doc);
   current.value = createState({ doc, plugins });
   view.update(current.value);
+  code.update(current.value);
 });
 
 watch(editable, (value) => {
@@ -472,6 +497,7 @@ onMounted(() => {
     nodeViews: createNodeViews(element.ownerDocument, schema, blocks, nodeViews.sink),
   });
 
+  code.update(current.value);
   ready.value = true;
   if (autofocus) {
     view.focus();
