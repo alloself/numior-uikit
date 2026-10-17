@@ -55,8 +55,16 @@ const ZONE = 48;
 
 const BESIDE_GAP = 'var(--nui-space-2)';
 
-const widgetBlock = (target: Element): Element | undefined =>
-  target.closest(WIDGET)?.parentElement ?? undefined;
+const CONTROL = 'button, input, select, textarea, a, label, [role], [tabindex]';
+
+const widgetBlock = (target: Element): Element | undefined => {
+  const widget = target.closest(WIDGET);
+  const owner = widget?.parentElement ?? undefined;
+  const control = target.closest(CONTROL);
+  const atom = owner?.getAttribute('contenteditable') === 'false';
+
+  return !atom && control !== null && widget?.contains(control) === true ? undefined : owner;
+};
 
 const atomStart = (element: Element | undefined): number | undefined =>
   element instanceof HTMLElement && element.getAttribute('contenteditable') === 'false'
