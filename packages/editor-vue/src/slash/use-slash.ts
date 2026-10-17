@@ -6,23 +6,17 @@ import {
   type EditorState,
   type KeyInput,
   type Plugin,
-  type Schema,
   type SuggestionMatch,
   type SuggestionState,
 } from '@numior/editor-core';
-import { useMessages } from '@numior/primitives';
 import { computed, ref, type ComputedRef } from 'vue';
-import { editorMessages } from '../editor/editor.messages';
-import type { NuiEditorBlock } from '../blocks/block.types';
-import { filterSlash, slashItems, type SlashItem } from './slash-items';
+import { filterSlash, type SlashItem } from './slash-items';
 
 export interface SlashOptions {
-  readonly schema: Schema;
   readonly state: () => EditorState;
   readonly enabled: () => boolean;
   readonly run: (command: Command) => boolean;
-  readonly blocks: readonly NuiEditorBlock[];
-  readonly extra?: (() => readonly SlashItem[]) | undefined;
+  readonly items: () => readonly SlashItem[];
 }
 
 export interface Slash {
@@ -37,16 +31,9 @@ export interface Slash {
 const MOVES: Readonly<Record<string, number>> = { ArrowDown: 1, ArrowUp: -1 };
 
 export const useSlash = (options: SlashOptions): Slash => {
-  const texts = useMessages(editorMessages);
   const pointer = ref({ query: '', index: 0 });
 
-  const all = computed(() => [
-    ...slashItems(options.schema, texts.value),
-    ...options.blocks.flatMap((block) =>
-      options.schema.nodes.has(block.name) ? (block.slash?.(texts.value) ?? []) : [],
-    ),
-    ...(options.extra?.() ?? []),
-  ]);
+  const all = computed(() => options.items());
 
   const onKey = (key: KeyInput, match: SuggestionMatch): boolean => keyed(key, match);
 

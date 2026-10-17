@@ -24,9 +24,11 @@
         class="nui-editor__toolbar"
         :state="current"
         :options="toolOptions"
+        :inserts="inserts"
         :disabled="isDisabled"
         :controls="controlAttrs.id"
         @run="onToolbarRun"
+        @open="onInsertOpen"
         @link="overlays.openLink"
         @colour="overlays.colour"
         @leave="editor.focus()"
@@ -195,7 +197,7 @@ import NuiEditorBlockHandle from '../handle/NuiEditorBlockHandle.vue';
 import { useBlockHandle } from '../handle/use-block-handle';
 import NuiEditorSlashMenu from '../slash/NuiEditorSlashMenu.vue';
 import { useSlash } from '../slash/use-slash';
-import type { SlashItem } from '../slash/slash-items';
+import { slashItems, type SlashItem } from '../slash/slash-items';
 import NuiEditorUploads from '../uploads/NuiEditorUploads.vue';
 import type { MediaKind } from '../uploads/uploads.types';
 import { provideEditorUploads } from '../uploads/uploads-context';
@@ -314,13 +316,19 @@ const mediaSlash = (): readonly SlashItem[] =>
     },
   }));
 
+const inserts = computed((): readonly SlashItem[] => [
+  ...slashItems(schema, blockTexts.value),
+  ...blocks.flatMap((block) =>
+    schema.nodes.has(block.name) ? (block.slash?.(blockTexts.value) ?? []) : [],
+  ),
+  ...mediaSlash(),
+]);
+
 const slash = useSlash({
-  schema,
   state: () => current.value,
   enabled: () => editable.value && ready.value && overlays.focused.value,
   run: (command) => run(command),
-  blocks,
-  extra: mediaSlash,
+  items: () => inserts.value,
 });
 
 let view: EditorView | undefined;
@@ -501,6 +509,12 @@ const blockMenu = (node: ElementNode): NuiMenuEntry[] =>
 const onHandleRun = (command: Command): void => {
   run(command);
   editor.focus();
+};
+
+const onInsertOpen = (item: SlashItem): void => {
+  if (item.kind === 'open') {
+    item.open();
+  }
 };
 
 const onToolbarRun = (command: Command, refocus: boolean): void => {

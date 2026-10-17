@@ -31,6 +31,7 @@ describe('NuiEditor toolbar', () => {
     expect(editor.tools).toEqual([
       'Undo',
       'Redo',
+      'Insert',
       'Block type: Text',
       'Bold',
       'Italic',
@@ -139,8 +140,9 @@ describe('NuiEditor toolbar', () => {
     editor.focus();
     await editor.press('F10', { alt: true });
 
-    expect(editor.toolbarFocus).toBe('Block type: Text');
+    expect(editor.toolbarFocus).toBe('Insert');
 
+    await editor.toolbarKey('ArrowRight');
     await editor.toolbarKey('ArrowRight');
     await editor.toolbarKey('ArrowRight');
 

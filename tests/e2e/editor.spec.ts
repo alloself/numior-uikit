@@ -169,6 +169,16 @@ test.describe('editor', () => {
     expect((await editor.readOutput()).paste).toBe('sheets');
   });
 
+  test('inserts a callout from the toolbar menu with the slash menu items', async ({ page }) => {
+    const { editor } = await openEditor(page);
+
+    await editor.clear();
+    await editor.tool('Вставить').click();
+    await expect(page.getByRole('menuitem', { name: 'Картинка' })).toBeVisible();
+    await page.getByRole('menuitem', { name: 'Выноска' }).click();
+    await expect(editor.content.locator('.nui-content__callout')).toHaveCount(1);
+  });
+
   test('formats from the toolbar without losing the selection and changes blocks from its menu', async ({
     page,
   }) => {
@@ -188,6 +198,8 @@ test.describe('editor', () => {
     await expect.poll(() => editor.blockTags()).toEqual(['h1']);
     await expect(editor.content).toBeFocused();
     await page.keyboard.press('Alt+F10');
+    await expect(editor.tool('Вставить')).toBeFocused();
+    await page.keyboard.press('ArrowRight');
     await expect(editor.tool('Тип блока: Заголовок 1')).toBeFocused();
     await page.keyboard.press('ArrowRight');
     await expect(editor.tool('Жирный')).toBeFocused();

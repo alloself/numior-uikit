@@ -17,6 +17,7 @@ import {
 } from '@numior/editor-core';
 import type { IconAlias } from '@numior/primitives';
 import type { NuiEditorMessages } from '../editor/editor.messages';
+import type { SlashItem } from '../slash/slash-items';
 
 export interface ToolbarFace {
   readonly label: string;
@@ -69,7 +70,24 @@ export interface ToolbarBlocks {
   readonly options: readonly ToolbarBlock[];
 }
 
-export type ToolbarItem = ToolbarAction | ToolbarBlocks | ToolbarLink | ToolbarColours;
+export interface ToolbarInsert {
+  readonly kind: 'insert';
+  readonly key: 'insert';
+  readonly label: string;
+  readonly entries: readonly ToolbarInsertEntry[];
+}
+
+export interface ToolbarInsertEntry {
+  readonly item: SlashItem;
+  readonly disabled: boolean;
+}
+
+export type ToolbarItem =
+  | ToolbarAction
+  | ToolbarBlocks
+  | ToolbarLink
+  | ToolbarColours
+  | ToolbarInsert;
 
 export interface ToolbarGroup {
   readonly key: string;
@@ -298,10 +316,30 @@ const blockActions = (facts: Facts): ToolbarItem[] => {
   ];
 };
 
+const insertItems = (
+  state: EditorState,
+  texts: NuiEditorMessages,
+  inserts: readonly SlashItem[],
+): ToolbarItem[] =>
+  inserts.length === 0
+    ? []
+    : [
+        {
+          kind: 'insert',
+          key: 'insert',
+          label: texts.insert,
+          entries: inserts.map((item) => ({
+            item,
+            disabled: item.kind === 'command' && !item.command(state),
+          })),
+        },
+      ];
+
 export const toolbarGroups = (
   state: EditorState,
   texts: NuiEditorMessages,
   options: ToolbarOptions,
+  inserts: readonly SlashItem[] = [],
 ): ToolbarGroup[] => {
   const block = activeBlock(state);
   const blockType = block === undefined ? undefined : state.doc.schema.nodes.get(block.type);
@@ -317,6 +355,7 @@ export const toolbarGroups = (
 
   return [
     { key: 'history', items: historyItems(facts) },
+    { key: 'insert', items: insertItems(state, texts, inserts) },
     { key: 'blocks', items: blockItems(facts) },
     { key: 'marks', items: markItems(facts) },
     { key: 'structure', items: blockActions(facts) },

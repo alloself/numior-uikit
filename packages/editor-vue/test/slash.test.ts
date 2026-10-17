@@ -118,4 +118,19 @@ describe('NuiEditor slash menu', () => {
     expect(editor.markup).toContain('<hr class="nui-content__divider"');
     expect(editor.text).toBe('');
   });
+
+  it('inserts from the toolbar the same blocks the slash menu offers', async () => {
+    const editor = await typedSlash();
+
+    const slash = editor.slashOptions;
+
+    expect(editor.insertOptions).toEqual(slash);
+    expect(slash).toEqual(expect.arrayContaining(['Callout', 'Table', 'Image', 'File']));
+
+    await editor.press('Escape');
+    await editor.press('Backspace');
+    await editor.chooseInsert('Callout');
+
+    expect(editor.markup).toContain('nui-content__callout');
+  });
 });

@@ -7,6 +7,13 @@
         :disabled="disabled"
         @run="emit('run', $event, true)"
       />
+      <NuiEditorInsertMenu
+        v-else-if="item.kind === 'insert'"
+        :insert="item"
+        :disabled="disabled"
+        @run="emit('run', $event, true)"
+        @open="emit('open', $event)"
+      />
       <NuiEditorColourMenu
         v-else-if="item.kind === 'colours'"
         :colours="item"
@@ -32,7 +39,9 @@
 <script setup lang="ts">
 import type { Command } from '@numior/editor-core';
 import NuiEditorBlockMenu from './NuiEditorBlockMenu.vue';
+import type { SlashItem } from '../slash/slash-items';
 import NuiEditorColourMenu from './NuiEditorColourMenu.vue';
+import NuiEditorInsertMenu from './NuiEditorInsertMenu.vue';
 import NuiEditorToolbarButton from './NuiEditorToolbarButton.vue';
 import type { ColourMark, NuiEditorToolbarGroupProps } from './toolbar.types';
 
@@ -40,6 +49,7 @@ const { group, disabled = false } = defineProps<NuiEditorToolbarGroupProps>();
 
 const emit = defineEmits<{
   run: [command: Command, refocus: boolean];
+  open: [item: SlashItem];
   link: [];
   colour: [mark: ColourMark, name: string | null];
 }>();

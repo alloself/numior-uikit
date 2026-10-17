@@ -56,6 +56,7 @@ export interface NuiEditorMessages {
   readonly columnWidth: (params: { readonly index: number }) => string;
   readonly deleteBlock: string;
   readonly table: string;
+  readonly insert: string;
   readonly tableColumn: (params: { readonly index: number }) => string;
   readonly tableAddRow: string;
   readonly tableAddColumn: string;
@@ -238,6 +239,7 @@ export const editorMessages: NuiMessageCatalog<'editor'> = {
     columnWidth: ({ index }) => `Column ${String(index)} width`,
     deleteBlock: 'Delete',
     table: 'Table',
+    insert: 'Insert',
     tableColumn: ({ index }) => `Column ${String(index)}`,
     tableAddRow: 'Row',
     tableAddColumn: 'Column',
@@ -339,6 +341,7 @@ export const editorMessages: NuiMessageCatalog<'editor'> = {
     columnWidth: ({ index }) => `Ширина колонки ${String(index)}`,
     deleteBlock: 'Удалить',
     table: 'Таблица',
+    insert: 'Вставить',
     tableColumn: ({ index }) => `Колонка ${String(index)}`,
     tableAddRow: 'Строка',
     tableAddColumn: 'Колонка',

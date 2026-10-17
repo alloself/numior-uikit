@@ -4,14 +4,22 @@ import type {
   ToolbarColours,
   ToolbarFace,
   ToolbarGroup,
+  ToolbarInsert,
   ToolbarOptions,
 } from './toolbar-items';
+import type { SlashItem } from '../slash/slash-items';
 
 export interface NuiEditorToolbarProps {
   state: EditorState;
   options: ToolbarOptions;
+  inserts?: readonly SlashItem[] | undefined;
   disabled?: boolean | undefined;
   controls?: string | undefined;
+}
+
+export interface NuiEditorInsertMenuProps {
+  insert: ToolbarInsert;
+  disabled?: boolean | undefined;
 }
 
 export interface NuiEditorToolbarGroupProps {

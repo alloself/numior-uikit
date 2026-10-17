@@ -263,6 +263,24 @@ export class EditorDriver {
     await nextTick();
   }
 
+  get insertOptions(): readonly string[] {
+    return [...this.root.querySelectorAll('.nui-editor-insert [role^="menuitem"]')].map(
+      (item) => item.textContent?.trim() ?? '',
+    );
+  }
+
+  async chooseInsert(label: string): Promise<void> {
+    const option = [...this.root.querySelectorAll('.nui-editor-insert [role^="menuitem"]')].find(
+      (item) => item.textContent?.trim() === label,
+    );
+
+    if (!(option instanceof HTMLElement)) {
+      throw new Error(`No insert option reads ${label}`);
+    }
+    option.click();
+    await nextTick();
+  }
+
   async toolbarKey(key: string): Promise<void> {
     const active = this.wrapper.element.ownerDocument.activeElement;
 
