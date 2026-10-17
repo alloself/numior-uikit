@@ -30,6 +30,7 @@ export type {
   NuiEditorToolbarMode,
 } from './editor/editor.types';
 export type { NuiEditorLinkMetadata, NuiEditorLinkPreview } from './links/links.types';
+export type { NuiEditorMention, NuiEditorMentions } from './mentions/mentions.types';
 export type {
   NuiEditorUploadAdapter,
   NuiEditorUploaded,

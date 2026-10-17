@@ -22,6 +22,7 @@
         :upload="uploading ? upload : undefined"
         :embeds="EMBEDS"
         :link-metadata="liveLinks ? liveLinkMetadata : fakeLinkMetadata"
+        :mentions="fakeMentions"
         :max-size="MAX_SIZE"
         toolbar="both"
         data-testid="editor"
@@ -53,6 +54,7 @@ import { NuiSwitch } from '@numior/vue';
 import { computed, ref } from 'vue';
 import { playgroundSchema, taskStatusBlock } from './editor-blocks';
 import { fakeLinkMetadata, liveLinkMetadata } from './editor-links';
+import { fakeMentions } from './editor-mentions';
 import { fakeUpload } from './editor-upload';
 import { blockCount, editorSample } from './editor-sample';
 

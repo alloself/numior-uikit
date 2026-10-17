@@ -119,16 +119,39 @@
         @colour="overlays.colour"
         @leave="editor.focus()"
       />
-      <NuiEditorSlashMenu
+      <NuiEditorSuggestMenu
         v-if="ready"
         :id="slashId"
-        :items="slash.items.value"
+        class="nui-editor-slash"
+        :entries="slashEntries"
         :active="slash.active.value"
         :anchor="anchorElement"
         :open="slash.open.value"
-        @choose="slash.choose"
+        :label="blockTexts.blocks"
+        @choose="onSlashChoose"
         @hover="slash.hover"
       />
+      <NuiEditorSuggestMenu
+        v-if="mentionsShown"
+        :id="mentionsId"
+        class="nui-editor-mentions"
+        :entries="mentionEntries"
+        :active="mention.active.value"
+        :anchor="anchorElement"
+        :open="mention.open.value"
+        :label="blockTexts.mentions"
+        :loading="mention.loading.value"
+        :loading-label="blockTexts.mentionsLoading"
+        :empty-label="mentionsEmpty"
+        @choose="onMentionChoose"
+        @hover="mention.hover"
+      >
+        <template #leading="{ item }">
+          <span class="nui-editor-mentions__avatar" aria-hidden="true">
+            <NuiAvatar :src="avatarOf(item.value)" :name="item.label" size="sm" />
+          </span>
+        </template>
+      </NuiEditorSuggestMenu>
       <NuiEditorLinkPanel
         v-if="hasLinks && ready"
         v-model:open="overlays.linkOpen.value"
@@ -178,7 +201,13 @@ import {
   type NuiHighlighter,
 } from '@numior/primitives';
 import { codeHighlightPlugin, createCodeHighlighter } from '../blocks/code/code-highlight';
-import { NuiFieldFrame, optionElementId, type NuiMenuEntry } from '@numior/vue';
+import {
+  NuiAvatar,
+  NuiFieldFrame,
+  optionElementId,
+  type NuiListEntry,
+  type NuiMenuEntry,
+} from '@numior/vue';
 import {
   computed,
   onBeforeUnmount,
@@ -205,7 +234,8 @@ import NuiEditorLinkPanel from '../link/NuiEditorLinkPanel.vue';
 import NuiEditorToolbar from '../toolbar/NuiEditorToolbar.vue';
 import NuiEditorBlockHandle from '../handle/NuiEditorBlockHandle.vue';
 import { useBlockHandle } from '../handle/use-block-handle';
-import NuiEditorSlashMenu from '../slash/NuiEditorSlashMenu.vue';
+import { useMentions } from '../mentions/use-mentions';
+import NuiEditorSuggestMenu from '../suggest/NuiEditorSuggestMenu.vue';
 import { useSlash } from '../slash/use-slash';
 import { slashItems, type SlashItem } from '../slash/slash-items';
 import NuiEditorUploads from '../uploads/NuiEditorUploads.vue';
@@ -247,6 +277,7 @@ const {
   maxSize,
   embeds = NO_EMBEDS,
   linkMetadata,
+  mentions,
 } = defineProps<NuiEditorProps>();
 
 const document = defineModel<DocJSON | undefined>('document');
@@ -352,6 +383,53 @@ const slash = useSlash({
   items: () => inserts.value,
 });
 
+const slashEntries = computed((): NuiListEntry<string>[] =>
+  slash.items.value.map((item) => ({ value: item.key, label: item.label, icon: item.icon })),
+);
+
+const onSlashChoose = (key: string): void => {
+  const item = slash.items.value.find((candidate) => candidate.key === key);
+
+  if (item !== undefined) {
+    slash.choose(item);
+  }
+};
+
+const mentionsId = useId();
+
+const mention = useMentions({
+  state: () => current.value,
+  enabled: () =>
+    editable.value && ready.value && overlays.focused.value && schema.nodes.has('mention'),
+  run: (command) => run(command),
+  search: () => mentions,
+});
+
+const mentionEntries = computed((): NuiListEntry<string>[] =>
+  mention.people.value.map((person) => ({
+    value: person.id,
+    label: person.label,
+    description: person.description,
+  })),
+);
+
+const mentionsShown = computed(() => ready.value && mentions !== undefined);
+
+const mentionsEmpty = computed(() =>
+  mention.failed.value ? blockTexts.value.mentionsFailed : blockTexts.value.mentionsEmpty,
+);
+
+const avatarOf = (user: string | undefined): string | undefined =>
+  mention.people.value.find((person) => person.id === user)?.avatar;
+
+const onMentionChoose = (user: string): void => {
+  const person = mention.people.value.find((candidate) => candidate.id === user);
+
+  if (person !== undefined) {
+    mention.choose(person);
+  }
+};
+
 let view: EditorView | undefined;
 
 const blockEditor: NuiEditorBlockEditor = { element: (nodeId) => view?.nodeDOM(nodeId) };
@@ -425,6 +503,7 @@ const plugins = [
   ...(hasMedia ? [pendingUploads, uploads.plugin] : []),
   ...(schema.nodes.has('code_block') ? [codeHighlightPlugin()] : []),
   slash.plugin,
+  mention.plugin,
   pasteSchema(limitedSchema),
   inputRules(markdownRules),
   ...blocks.flatMap((block) => (block.keymap === undefined ? [] : [keymap(keysOf(block.keymap))])),
@@ -468,11 +547,20 @@ const toolOptions = computed(() => ({ colours, highlights }));
 const validLink = (href: string): boolean =>
   schema.marks.get('link')?.attrs.href?.verify?.(href) ?? true;
 
-const slashOption = computed(() =>
-  slash.open.value && slash.items.value.length > 0
-    ? optionElementId(slashId, slash.active.value)
-    : undefined,
-);
+const suggestList = computed(() => {
+  if (slash.open.value) {
+    return { id: slashId, option: optionElementId(slashId, slash.active.value) };
+  }
+  return mention.open.value
+    ? {
+        id: mentionsId,
+        option:
+          mention.people.value.length > 0
+            ? optionElementId(mentionsId, mention.active.value)
+            : undefined,
+      }
+    : undefined;
+});
 
 const contentAttrs = computed(() => ({
   id: controlAttrs.value.id,
@@ -483,8 +571,8 @@ const contentAttrs = computed(() => ({
   'aria-readonly': isReadonly.value || undefined,
   'aria-disabled': isDisabled.value || undefined,
   'aria-placeholder': placeholder,
-  'aria-controls': slash.open.value ? slashId : undefined,
-  'aria-activedescendant': slashOption.value,
+  'aria-controls': suggestList.value?.id,
+  'aria-activedescendant': suggestList.value?.option,
 }));
 
 const onPaste = (event: ClipboardEvent): void => {
@@ -532,7 +620,8 @@ const overlays = useEditorOverlays({
   run: (command) => run(command),
   focus: () => view?.focus(),
   bubble: () => bubbleToolbar.value,
-  caret: () => slash.open.value || mediaOpen.value || links.pasted.value !== undefined,
+  caret: () =>
+    slash.open.value || mention.open.value || mediaOpen.value || links.pasted.value !== undefined,
   editable: () => editable.value,
 });
 

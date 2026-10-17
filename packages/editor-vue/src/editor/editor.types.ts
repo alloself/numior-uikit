@@ -4,6 +4,7 @@ import type { NuiHighlighter } from '@numior/primitives';
 import type { NuiFieldControlProps } from '@numior/vue';
 import type { NuiEditorBlock } from '../blocks/block.types';
 import type { NuiEditorLinkMetadata } from '../links/links.types';
+import type { NuiEditorMentions } from '../mentions/mentions.types';
 import type { NuiEditorUploadAdapter } from '../uploads/uploads.types';
 
 export interface NuiEditorProps extends NuiFieldControlProps {
@@ -19,6 +20,7 @@ export interface NuiEditorProps extends NuiFieldControlProps {
   upload?: NuiEditorUploadAdapter | undefined;
   embeds?: readonly (NuiEmbedPresetId | NuiEmbedProvider)[] | undefined;
   linkMetadata?: NuiEditorLinkMetadata | undefined;
+  mentions?: NuiEditorMentions | undefined;
   accept?: string | undefined;
   maxSize?: number | undefined;
 }

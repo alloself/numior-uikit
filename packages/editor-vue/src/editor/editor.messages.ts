@@ -64,6 +64,10 @@ export interface NuiEditorMessages {
   readonly toEmbed: string;
   readonly linkRefresh: string;
   readonly linkEdit: string;
+  readonly mentions: string;
+  readonly mentionsLoading: string;
+  readonly mentionsEmpty: string;
+  readonly mentionsFailed: string;
   readonly bookmarkEdit: string;
   readonly linkTitle: string;
   readonly linkDescription: string;
@@ -265,6 +269,10 @@ export const editorMessages: NuiMessageCatalog<'editor'> = {
     toEmbed: 'Embed',
     linkRefresh: 'Refresh',
     linkEdit: 'Edit link',
+    mentions: 'People',
+    mentionsLoading: 'Searching…',
+    mentionsEmpty: 'Nobody found',
+    mentionsFailed: 'People could not be loaded',
     bookmarkEdit: 'Edit bookmark',
     linkTitle: 'Title',
     linkDescription: 'Description',
@@ -385,6 +393,10 @@ export const editorMessages: NuiMessageCatalog<'editor'> = {
     toEmbed: 'Встроить',
     linkRefresh: 'Обновить',
     linkEdit: 'Изменить ссылку',
+    mentions: 'Люди',
+    mentionsLoading: 'Ищем…',
+    mentionsEmpty: 'Никого не нашли',
+    mentionsFailed: 'Не удалось загрузить людей',
     bookmarkEdit: 'Изменить закладку',
     linkTitle: 'Заголовок',
     linkDescription: 'Описание',

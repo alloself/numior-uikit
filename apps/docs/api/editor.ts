@@ -49,6 +49,10 @@ const docs: DocsMap = {
         ru: 'Адаптер `(url, { signal }) => Promise<{ title, description, image, icon, site }>` для закладок: ответ сохраняется в документе снимком, «Обновить» на панели закладки запрашивает заново. Без адаптера закладка показывает адрес и домен.',
         en: 'An adapter `(url, { signal }) => Promise<{ title, description, image, icon, site }>` for bookmarks: the answer is kept in the document as a snapshot and Refresh on the bookmark bar asks again. Without it a bookmark shows the address and the domain.',
       },
+      mentions: {
+        ru: 'Поиск людей `(query, { signal }) => Promise<{ id, label, description?, avatar? }[]>` для упоминаний: «@» открывает список у каретки, запрос уходит после паузы в наборе, устаревший отменяется; выбор вставляет узел `mention`. Без адаптера «@» — обычный символ.',
+        en: 'A people search `(query, { signal }) => Promise<{ id, label, description?, avatar? }[]>` for mentions: @ opens a list at the caret, the request goes out once typing pauses and a stale one is aborted; a choice inserts a `mention` node. Without it @ is a plain character.',
+      },
       highlighter: {
         ru: 'Подсветчик блоков кода вместо настроенного в `createNuiConfig`; `false` выключает подсветку.',
         en: 'A highlighter for code blocks instead of the one set in `createNuiConfig`; `false` turns highlighting off.',

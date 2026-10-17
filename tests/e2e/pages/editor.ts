@@ -471,6 +471,18 @@ export class EditorSection {
     });
   }
 
+  mentionList(): Locator {
+    return this.page.locator('.nui-editor-mentions');
+  }
+
+  mentions(): Locator {
+    return this.content.locator('.nui-content__mention');
+  }
+
+  publishedMentions(): Locator {
+    return this.preview.locator('.nui-content__mention');
+  }
+
   pasteMenu(): Locator {
     return this.page.locator('.nui-editor-paste');
   }

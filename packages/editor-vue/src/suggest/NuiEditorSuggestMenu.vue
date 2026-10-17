@@ -1,43 +1,55 @@
 <template>
   <NuiList
     :ref="setList"
-    class="nui-editor-slash"
+    class="nui-editor-suggest"
     variant="floating"
     size="sm"
     selectable="single"
     :items="entries"
     :keyboard="false"
     :active-id="activeId"
-    :label="texts.blocks"
+    :label="label"
+    :loading="loading && entries.length === 0"
+    :loading-label="loadingLabel"
+    :empty-label="emptyLabel"
     v-bind="{ ...contentAttrs, id }"
     @select="choose"
     @pointermove="hover"
     @pointerdown.prevent
-  />
+  >
+    <template v-if="$slots.leading" #leading="{ item }">
+      <slot name="leading" :item="item" />
+    </template>
+  </NuiList>
 </template>
 
 <script setup lang="ts">
-import { useFloating, useMessages, usePopover } from '@numior/primitives';
+import { useFloating, usePopover } from '@numior/primitives';
 import { NuiList, optionElementId, optionIndexOf, type NuiListEntry } from '@numior/vue';
 import { computed, ref, shallowRef, watch, type ComponentPublicInstance } from 'vue';
-import { editorMessages } from '../editor/editor.messages';
-import type { SlashItem } from './slash-items';
-import type { NuiEditorSlashMenuProps } from './slash.types';
+import type { NuiEditorSuggestMenuProps } from './suggest.types';
 
-const { id, items, active, anchor, open } = defineProps<NuiEditorSlashMenuProps>();
+const {
+  id,
+  entries,
+  active,
+  anchor,
+  open,
+  label,
+  loading = false,
+  loadingLabel,
+  emptyLabel,
+} = defineProps<NuiEditorSuggestMenuProps>();
 
 const emit = defineEmits<{
-  choose: [item: SlashItem];
+  choose: [key: string];
   hover: [index: number];
 }>();
 
-const list = shallowRef<HTMLElement | null>(null);
-const texts = useMessages(editorMessages);
-const shown = ref(open);
+defineSlots<{ leading?(props: { item: NuiListEntry<string> }): unknown }>();
 
-const entries = computed((): NuiListEntry<string>[] =>
-  items.map((item) => ({ value: item.key, label: item.label, icon: item.icon })),
-);
+const list = shallowRef<HTMLElement | null>(null);
+const shown = ref(open);
 
 const activeId = computed(() => optionElementId(id, active));
 
@@ -52,10 +64,8 @@ const { contentAttrs } = usePopover(list, { open: shown, mode: 'manual', id: () 
 useFloating(() => anchor, list, { placement: 'bottom-start', offset: 6, enabled: shown });
 
 const choose = (entry: NuiListEntry<string>): void => {
-  const item = items.find((candidate) => candidate.key === entry.value);
-
-  if (item !== undefined) {
-    emit('choose', item);
+  if (entry.value !== undefined) {
+    emit('choose', entry.value);
   }
 };
 

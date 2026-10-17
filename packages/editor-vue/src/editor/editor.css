@@ -139,3 +139,6 @@
 .nui-editor__content span.nui-editor__selected {
   outline-offset: 0;
 }
+.nui-editor-mentions__avatar {
+  display: inline-flex;
+}
