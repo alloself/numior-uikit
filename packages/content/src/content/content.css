@@ -507,6 +507,7 @@
 .nui-content__mention {
   -webkit-box-decoration-break: clone;
   box-decoration-break: clone;
+  margin-inline-end: 0.15em;
   padding: 0.05em 0.35em;
   border-radius: var(--nui-radius-sm);
   background: var(--nui-primary-soft);
