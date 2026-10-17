@@ -4,7 +4,6 @@
     :class="{
       'nui-editor-image--selected': selected,
       'nui-editor-image--resizing': resizing,
-      'nui-editor-image--captioned': captionDraft !== '',
     }"
   >
     <div ref="frame" class="nui-editor-image__frame">
@@ -107,24 +106,17 @@
         </NuiPopover>
       </template>
     </div>
-    <textarea
-      v-if="editable"
-      ref="captionField"
-      class="nui-content__caption nui-editor-image__caption"
-      rows="1"
-      :value="captionDraft"
-      :placeholder="texts.imageCaption"
-      :aria-label="texts.imageCaption"
-      @input="onCaptionInput"
-      @change="commitCaption"
-      @keydown="onCaptionKeydown"
+    <NuiEditorCaption
+      ref="caption"
+      :node="node"
+      :editor="editor"
+      :editable="editable"
+      :selected="selected"
     />
-    <span v-else-if="caption !== ''" class="nui-content__caption">{{ caption }}</span>
   </div>
 </template>
 
 <script setup lang="ts">
-import { nodeSize, textSelection, type Command } from '@numior/editor-core';
 import { useMessages } from '@numior/primitives';
 import {
   NuiButton,
@@ -137,8 +129,9 @@ import {
 } from '@numior/vue';
 import { useResizeObserver } from '@vueuse/core';
 import type { NuiContentAlign } from '@numior/content';
-import { computed, onMounted, ref, useTemplateRef, watch, type HTMLAttributes } from 'vue';
+import { computed, ref, useTemplateRef, watch, type HTMLAttributes } from 'vue';
 import { editorMessages } from '../../editor/editor.messages';
+import NuiEditorCaption from '../caption/NuiEditorCaption.vue';
 import { useEditorUploadContext } from '../../uploads/uploads-context';
 import type { NuiEditorBlockViewProps } from '../block.types';
 import {
@@ -167,7 +160,7 @@ const texts = useMessages(editorMessages);
 const uploads = useEditorUploadContext();
 const picker = useTemplateRef<HTMLInputElement>('picker');
 const frame = useTemplateRef<HTMLElement>('frame');
-const captionField = useTemplateRef<HTMLTextAreaElement>('captionField');
+const captionView = useTemplateRef<{ fit(): void }>('caption');
 const picture = useTemplateRef<HTMLImageElement>('picture');
 const resizing = ref(false);
 const describing = ref(false);
@@ -179,9 +172,7 @@ const textOf = (value: unknown): string => (typeof value === 'string' ? value : 
 
 const src = computed(() => textOf(node.attrs.src));
 const alt = computed(() => textOf(node.attrs.alt));
-const caption = computed(() => textOf(node.attrs.caption));
 const align = computed(() => alignOf(node.attrs.align));
-const captionDraft = ref(caption.value);
 
 const share = computed(() =>
   typeof node.attrs.width === 'number' ? node.attrs.width : measured.value,
@@ -214,22 +205,11 @@ const alignItems = computed((): NuiToggleItem<NuiContentAlign>[] => [
 
 const rtl = (): boolean => getComputedStyle(element).direction === 'rtl';
 
-const fitsItself = typeof CSS !== 'undefined' && CSS.supports('field-sizing', 'content');
-
-const fitCaption = (): void => {
-  const field = captionField.value;
-
-  if (field !== null && !fitsItself) {
-    field.style.blockSize = 'auto';
-    field.style.blockSize = `${String(field.scrollHeight)}px`;
-  }
-};
-
 const measure = (): void => {
   const natural = picture.value?.naturalWidth ?? 0;
 
   measured.value = natural > 0 ? clampShare(natural / lineWidthOf(element)) : 1;
-  fitCaption();
+  captionView.value?.fit();
 };
 
 const setWidth = (next: number): void => {
@@ -350,62 +330,12 @@ const saveAlt = (): void => {
   editor.focus();
 };
 
-const onCaptionInput = (event: Event): void => {
-  if (event.target instanceof HTMLTextAreaElement) {
-    captionDraft.value = event.target.value;
-  }
-  fitCaption();
-};
-
-const commitCaption = (): void => {
-  if (captionDraft.value.trim() !== caption.value) {
-    editor.setAttrs({ caption: captionDraft.value.trim() });
-  }
-};
-
-const paragraphAfter: Command = (state, dispatch) => {
-  const from = state.doc.positionOf(node.id);
-  const current = state.doc.byId(node.id);
-
-  if (from === undefined || current === undefined || !state.doc.schema.nodes.has('paragraph')) {
-    return false;
-  }
-  const at = from + nodeSize(current);
-  const tr = state.tr;
-
-  tr.insert(at, [state.doc.schema.element('paragraph', { id: tr.newId() })]);
-  tr.setSelection(textSelection(at + 1));
-  dispatch?.(tr);
-  return true;
-};
-
-const onCaptionKeydown = (event: KeyboardEvent): void => {
-  if (event.key === 'Enter' && !event.isComposing) {
-    event.preventDefault();
-    commitCaption();
-    editor.run(paragraphAfter);
-    editor.focus();
-  } else if (event.key === 'Escape') {
-    event.preventDefault();
-    captionDraft.value = caption.value;
-    editor.focus();
-  }
-};
-
 watch(
   () => selected,
   (value) => {
     tooled.value ||= value;
   },
 );
-
-watch(caption, (value) => {
-  captionDraft.value = value;
-});
-
-watch(captionDraft, fitCaption, { flush: 'post' });
-
-onMounted(fitCaption);
 
 useResizeObserver(
   () => element,

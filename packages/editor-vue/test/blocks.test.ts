@@ -52,7 +52,7 @@ describe('NuiEditor blocks', () => {
 
     expect(editor.widgetTexts).toEqual(['info 0', 'stamp final', 'stamp draft']);
 
-    await editor.type('/bo');
+    await editor.type('/box');
 
     expect(editor.slashOptions).toEqual(['Box']);
 

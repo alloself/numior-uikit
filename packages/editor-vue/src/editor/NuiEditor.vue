@@ -71,10 +71,20 @@
         :run="run"
         :focus="editor.focus"
       />
+      <NuiEditorPasteMenu
+        v-if="ready"
+        :pasted="links.pasted.value"
+        :anchor="anchorElement"
+        :provider="pastedProvider"
+        :bookmark="schema.nodes.has('bookmark')"
+        @choose="onPasteChoice"
+        @dismiss="onPasteDismiss"
+      />
       <NuiEditorUploads
         v-if="ready"
         v-model:open="mediaOpen"
         :uploads="uploads"
+        :links="links"
         :schema="schema"
         :anchor="anchorElement"
         :kind="mediaKind"
@@ -135,7 +145,7 @@
 </template>
 
 <script setup lang="ts">
-import { CONTENT_COLOURS, contentSchema, NuiContent } from '@numior/content';
+import { CONTENT_COLOURS, contentSchema, embedProviders, NuiContent } from '@numior/content';
 import {
   baseKeymap,
   createEmptyDoc,
@@ -199,6 +209,10 @@ import NuiEditorSlashMenu from '../slash/NuiEditorSlashMenu.vue';
 import { useSlash } from '../slash/use-slash';
 import { slashItems, type SlashItem } from '../slash/slash-items';
 import NuiEditorUploads from '../uploads/NuiEditorUploads.vue';
+import { provideEditorLinks } from '../links/links-context';
+import type { LinkKind } from '../links/links.types';
+import NuiEditorPasteMenu from '../links/NuiEditorPasteMenu.vue';
+import { NO_EMBEDS, useEditorLinks } from '../links/use-editor-links';
 import type { MediaKind } from '../uploads/uploads.types';
 import { provideEditorUploads } from '../uploads/uploads-context';
 import { useEditorUploads } from '../uploads/use-editor-uploads';
@@ -231,6 +245,8 @@ const {
   upload,
   accept,
   maxSize,
+  embeds = NO_EMBEDS,
+  linkMetadata,
 } = defineProps<NuiEditorProps>();
 
 const document = defineModel<DocJSON | undefined>('document');
@@ -302,12 +318,17 @@ const openMedia = (kind: MediaKind): void => {
 const MEDIA_SLASH: readonly { readonly kind: MediaKind; readonly keywords: readonly string[] }[] = [
   { kind: 'image', keywords: ['image', 'picture', 'photo', 'img', 'картинка', 'изображение'] },
   { kind: 'file', keywords: ['file', 'attachment', 'upload', 'pdf', 'файл', 'вложение'] },
+  { kind: 'embed', keywords: ['embed', 'video', 'youtube', 'figma', 'встроить', 'видео'] },
+  { kind: 'bookmark', keywords: ['bookmark', 'link', 'card', 'закладка', 'ссылка'] },
 ];
 
+const offered = (kind: MediaKind): boolean =>
+  schema.nodes.has(kind) && (kind !== 'embed' || providers.value.length > 0);
+
 const mediaSlash = (): readonly SlashItem[] =>
-  MEDIA_SLASH.filter((entry) => schema.nodes.has(entry.kind)).map((entry) => ({
+  MEDIA_SLASH.filter((entry) => offered(entry.kind)).map((entry) => ({
     key: entry.kind,
-    label: entry.kind === 'image' ? blockTexts.value.image : blockTexts.value.file,
+    label: blockTexts.value[entry.kind],
     icon: entry.kind,
     keywords: entry.keywords,
     kind: 'open',
@@ -345,6 +366,45 @@ if (highlighter !== undefined) {
   provideHighlighter(highlighter === false ? NO_HIGHLIGHT : highlighter);
 }
 
+const providers = computed(() => embedProviders(embeds));
+
+const links = useEditorLinks({
+  schema,
+  providers: () => providers.value,
+  metadata: () => linkMetadata,
+  run: (command) => run(command),
+  state: () => current.value,
+  editable: () => editable.value,
+});
+
+provideEditorLinks({
+  loading: links.loading,
+  get previews() {
+    return linkMetadata !== undefined;
+  },
+  embedOf: links.embedOf,
+  refresh: links.refresh,
+  turn: links.turn,
+});
+
+const pastedProvider = computed(() => {
+  const link = links.pasted.value;
+
+  return link === undefined || !schema.nodes.has('embed')
+    ? undefined
+    : links.embedOf(link.url)?.provider.label;
+});
+
+const onPasteChoice = (kind: LinkKind): void => {
+  links.convert(kind);
+  editor.focus();
+};
+
+const onPasteDismiss = (): void => {
+  links.dismiss();
+  editor.focus();
+};
+
 const uploads = useEditorUploads({
   schema,
   upload: () => upload,
@@ -359,6 +419,7 @@ const uploads = useEditorUploads({
 provideEditorUploads(uploads);
 
 const plugins = [
+  links.plugin,
   ...(hasMedia ? [pendingUploads, uploads.plugin] : []),
   ...(schema.nodes.has('code_block') ? [codeHighlightPlugin()] : []),
   slash.plugin,
@@ -445,6 +506,7 @@ const dispatch = (tr: Transaction): void => {
 
   view.update(applied.state);
   current.value = applied.state;
+  links.follow(applied.state);
   code.update(applied.state);
   if (applied.transactions.some((step) => step.changed)) {
     publish(applied.state);
@@ -468,7 +530,7 @@ const overlays = useEditorOverlays({
   run: (command) => run(command),
   focus: () => view?.focus(),
   bubble: () => bubbleToolbar.value,
-  caret: () => slash.open.value || mediaOpen.value,
+  caret: () => slash.open.value || mediaOpen.value || links.pasted.value !== undefined,
   editable: () => editable.value,
 });
 
@@ -586,6 +648,7 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   code.stop();
+  links.stop();
   nodeViews.stop();
   view?.destroy();
   view = undefined;

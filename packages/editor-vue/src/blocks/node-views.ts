@@ -9,6 +9,7 @@ export interface NodeViewEntry {
   readonly dom: HTMLElement;
   readonly widget: HTMLElement;
   readonly node: ShallowRef<ElementNode>;
+  mount(): void;
 }
 
 export interface NodeViewSink {
@@ -91,8 +92,13 @@ const viewOf = (source: ViewSource, block: NuiEditorBlock, node: ElementNode): N
   const key = source.key();
   const current = shallowRef(node);
   let rendered = dom.cloneNode(false);
+  let fallback = drawn.contentDOM === null;
 
-  stripStatic(dom, contentDOM);
+  if (fallback) {
+    widget.append(...dom.childNodes);
+  } else {
+    stripStatic(dom, contentDOM);
+  }
   widget.className = WIDGET;
   widget.setAttribute('contenteditable', 'false');
 
@@ -103,7 +109,20 @@ const viewOf = (source: ViewSource, block: NuiEditorBlock, node: ElementNode): N
   } else {
     dom.prepend(widget);
   }
-  source.sink.add({ key, block, dom, widget, node: current });
+
+  source.sink.add({
+    key,
+    block,
+    dom,
+    widget,
+    node: current,
+    mount: () => {
+      if (fallback) {
+        fallback = false;
+        widget.replaceChildren();
+      }
+    },
+  });
 
   return {
     dom,
@@ -114,6 +133,9 @@ const viewOf = (source: ViewSource, block: NuiEditorBlock, node: ElementNode): N
 
         if (rendered instanceof Element) {
           syncAttrs(dom, rendered, fresh);
+        }
+        if (fallback) {
+          widget.replaceChildren(...fresh.childNodes);
         }
         rendered = fresh;
       }

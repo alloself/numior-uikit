@@ -3,7 +3,9 @@ export {
   calloutBlock,
   codeBlock,
   columnsBlock,
+  bookmarkBlock,
   editorBlocks,
+  embedBlock,
   fileBlock,
   imageBlock,
   tableBlock,
@@ -27,6 +29,7 @@ export type {
   NuiEditorProps,
   NuiEditorToolbarMode,
 } from './editor/editor.types';
+export type { NuiEditorLinkMetadata, NuiEditorLinkPreview } from './links/links.types';
 export type {
   NuiEditorUploadAdapter,
   NuiEditorUploaded,

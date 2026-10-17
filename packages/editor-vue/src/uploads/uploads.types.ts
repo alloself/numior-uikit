@@ -13,7 +13,9 @@ export type UploadTarget =
   | { readonly kind: 'place'; readonly pos: number }
   | { readonly kind: 'replace'; readonly id: NodeId };
 
-export type MediaKind = 'image' | 'file';
+export type UploadKind = 'image' | 'file';
+
+export type MediaKind = UploadKind | 'embed' | 'bookmark';
 
 export interface UploadCard {
   readonly item: NuiEditorUploadItem;

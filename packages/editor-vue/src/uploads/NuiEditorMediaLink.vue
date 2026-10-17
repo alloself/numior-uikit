@@ -1,6 +1,6 @@
 <template>
   <form class="nui-editor-media__form" @submit.prevent="insert">
-    <NuiField :label="texts.mediaAddress" :error="invalid ? texts.mediaInvalid : undefined">
+    <NuiField :label="texts.mediaAddress" :error="invalid ? invalidText : undefined">
       <NuiInput
         v-model="address"
         size="sm"
@@ -23,7 +23,10 @@ import { NuiButton, NuiField, NuiInput } from '@numior/vue';
 import { ref } from 'vue';
 import { editorMessages } from '../editor/editor.messages';
 
-const { valid } = defineProps<{ valid: (url: string) => boolean }>();
+const { valid, invalidText } = defineProps<{
+  valid: (url: string) => boolean;
+  invalidText: string;
+}>();
 
 const emit = defineEmits<{ link: [url: string]; cancel: [] }>();
 

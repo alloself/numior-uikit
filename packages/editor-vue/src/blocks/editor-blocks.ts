@@ -1,6 +1,8 @@
 import { defineAsyncComponent } from 'vue';
 import { leaveClosedToggle, toggleTodo } from './block-commands';
-import type { NuiEditorBlock } from './block.types';
+import type { ElementNode } from '@numior/editor-core';
+import type { NuiEditorMessages } from '../editor/editor.messages';
+import type { NuiEditorBlock, NuiEditorBlockContext } from './block.types';
 import { calloutToneOf, toneEntries } from './callout/callout-tones';
 import NuiEditorCalloutTone from './callout/NuiEditorCalloutTone.vue';
 import NuiEditorCodeBar from './code/NuiEditorCodeBar.vue';
@@ -8,7 +10,9 @@ import { COLUMN_COUNTS, insertColumns } from './columns/columns';
 import NuiEditorColumnsResize from './columns/NuiEditorColumnsResize.vue';
 import { defineBlock } from './define-block';
 import NuiEditorFile from './file/NuiEditorFile.vue';
-import { alignOf, download } from './image/image-size';
+import { alignOf, follow } from './image/image-size';
+import NuiEditorBookmark from './bookmark/NuiEditorBookmark.vue';
+import NuiEditorEmbed from './embed/NuiEditorEmbed.vue';
 import NuiEditorImage from './image/NuiEditorImage.vue';
 import { insertTable } from './table/table-commands';
 import NuiEditorTodoCheck from './todo/NuiEditorTodoCheck.vue';
@@ -123,7 +127,7 @@ export const imageBlock = defineBlock({
         label: texts.download,
         icon: 'download',
         onSelect: () => {
-          download(editor.element(), linkOf(node.attrs.src));
+          follow(editor.element(), linkOf(node.attrs.src), true);
         },
       },
     ];
@@ -138,10 +142,32 @@ export const fileBlock = defineBlock({
       label: texts.download,
       icon: 'download',
       onSelect: () => {
-        download(editor.element(), linkOf(node.attrs.url));
+        follow(editor.element(), linkOf(node.attrs.url), true);
       },
     },
   ],
+});
+
+const openLink = (node: ElementNode, editor: NuiEditorBlockContext, texts: NuiEditorMessages) => [
+  {
+    label: texts.openLink,
+    icon: 'external-link',
+    onSelect: () => {
+      follow(editor.element(), linkOf(node.attrs.url), false);
+    },
+  },
+];
+
+export const embedBlock = defineBlock({
+  name: 'embed',
+  view: NuiEditorEmbed,
+  menu: openLink,
+});
+
+export const bookmarkBlock = defineBlock({
+  name: 'bookmark',
+  view: NuiEditorBookmark,
+  menu: openLink,
 });
 
 export const editorBlocks: readonly NuiEditorBlock[] = [
@@ -153,4 +179,6 @@ export const editorBlocks: readonly NuiEditorBlock[] = [
   tableBlock,
   imageBlock,
   fileBlock,
+  embedBlock,
+  bookmarkBlock,
 ];

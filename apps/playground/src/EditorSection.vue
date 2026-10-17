@@ -19,6 +19,8 @@
         :schema="playgroundSchema"
         :blocks="blocks"
         :upload="uploading ? upload : undefined"
+        :embeds="EMBEDS"
+        :link-metadata="fakeLinkMetadata"
         :max-size="MAX_SIZE"
         toolbar="both"
         data-testid="editor"
@@ -49,11 +51,14 @@ import { editorBlocks, NuiEditor } from '@numior/editor-vue';
 import { NuiSwitch } from '@numior/vue';
 import { computed, ref } from 'vue';
 import { playgroundSchema, taskStatusBlock } from './editor-blocks';
+import { fakeLinkMetadata } from './editor-links';
 import { fakeUpload } from './editor-upload';
 import { blockCount, editorSample } from './editor-sample';
 
 const blocks = [...editorBlocks, taskStatusBlock];
 const MAX_SIZE = 20 * 1024 * 1024;
+
+const EMBEDS = ['youtube', 'vimeo', 'loom', 'figma', 'maps', 'codepen'] as const;
 
 const views = { ...contentMediaViews, table: NuiContentTable, code_block: NuiContentCode };
 const document = ref(editorSample());

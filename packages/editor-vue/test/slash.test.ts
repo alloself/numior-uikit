@@ -65,6 +65,7 @@ describe('NuiEditor slash menu', () => {
       'Table',
       'Image',
       'File',
+      'Bookmark',
     ]);
 
     await editor.type('h2');

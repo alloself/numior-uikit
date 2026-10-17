@@ -41,6 +41,14 @@ const docs: DocsMap = {
         ru: 'Наибольший размер загружаемого файла в байтах.',
         en: 'The largest upload size in bytes.',
       },
+      embeds: {
+        ru: 'Разрешённые встраивания: id пресетов (`youtube`, `vimeo`, `loom`, `figma`, `maps`, `codepen`) или свои правила `{ id, label, aspect, source(url) }`. Ссылка разрешённого провайдера встраивается окном, в документе хранится только исходная ссылка. Без пропа встраиваний нет.',
+        en: 'Allowed embeds: preset ids (`youtube`, `vimeo`, `loom`, `figma`, `maps`, `codepen`) or own rules `{ id, label, aspect, source(url) }`. A link of an allowed provider is embedded as a frame and only the original link is kept in the document. Without the prop there are no embeds.',
+      },
+      linkMetadata: {
+        ru: 'Адаптер `(url, { signal }) => Promise<{ title, description, image, icon, site }>` для закладок: ответ сохраняется в документе снимком, «Обновить» на панели закладки запрашивает заново. Без адаптера закладка показывает адрес и домен.',
+        en: 'An adapter `(url, { signal }) => Promise<{ title, description, image, icon, site }>` for bookmarks: the answer is kept in the document as a snapshot and Refresh on the bookmark bar asks again. Without it a bookmark shows the address and the domain.',
+      },
       highlighter: {
         ru: 'Подсветчик блоков кода вместо настроенного в `createNuiConfig`; `false` выключает подсветку.',
         en: 'A highlighter for code blocks instead of the one set in `createNuiConfig`; `false` turns highlighting off.',

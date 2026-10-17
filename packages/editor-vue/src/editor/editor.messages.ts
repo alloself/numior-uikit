@@ -57,6 +57,19 @@ export interface NuiEditorMessages {
   readonly deleteBlock: string;
   readonly table: string;
   readonly insert: string;
+  readonly embed: string;
+  readonly bookmark: string;
+  readonly openLink: string;
+  readonly toBookmark: string;
+  readonly toEmbed: string;
+  readonly linkRefresh: string;
+  readonly linkLoading: string;
+  readonly embedTitle: (params: { readonly provider: string }) => string;
+  readonly embedUnavailable: (params: { readonly provider: string }) => string;
+  readonly embedInvalid: string;
+  readonly pasteAs: string;
+  readonly pasteEmbed: (params: { readonly provider: string }) => string;
+  readonly pasteLink: string;
   readonly tableColumn: (params: { readonly index: number }) => string;
   readonly tableAddRow: string;
   readonly tableAddColumn: string;
@@ -240,6 +253,19 @@ export const editorMessages: NuiMessageCatalog<'editor'> = {
     deleteBlock: 'Delete',
     table: 'Table',
     insert: 'Insert',
+    embed: 'Embed',
+    bookmark: 'Bookmark',
+    openLink: 'Open link',
+    toBookmark: 'Show as bookmark',
+    toEmbed: 'Embed',
+    linkRefresh: 'Refresh',
+    linkLoading: 'Loading…',
+    embedTitle: ({ provider }) => `${provider} embed`,
+    embedUnavailable: ({ provider }) => `${provider} embeds are not allowed here`,
+    embedInvalid: 'This link cannot be embedded',
+    pasteAs: 'Paste the link as',
+    pasteEmbed: ({ provider }) => `Embed ${provider}`,
+    pasteLink: 'Keep as a link',
     tableColumn: ({ index }) => `Column ${String(index)}`,
     tableAddRow: 'Row',
     tableAddColumn: 'Column',
@@ -342,6 +368,19 @@ export const editorMessages: NuiMessageCatalog<'editor'> = {
     deleteBlock: 'Удалить',
     table: 'Таблица',
     insert: 'Вставить',
+    embed: 'Встраивание',
+    bookmark: 'Закладка',
+    openLink: 'Открыть ссылку',
+    toBookmark: 'Показать закладкой',
+    toEmbed: 'Встроить',
+    linkRefresh: 'Обновить',
+    linkLoading: 'Загрузка…',
+    embedTitle: ({ provider }) => `Встраивание ${provider}`,
+    embedUnavailable: ({ provider }) => `Встраивания ${provider} здесь не разрешены`,
+    embedInvalid: 'Эту ссылку нельзя встроить',
+    pasteAs: 'Вставить ссылку как',
+    pasteEmbed: ({ provider }) => `Встроить ${provider}`,
+    pasteLink: 'Оставить ссылкой',
     tableColumn: ({ index }) => `Колонка ${String(index)}`,
     tableAddRow: 'Строка',
     tableAddColumn: 'Колонка',

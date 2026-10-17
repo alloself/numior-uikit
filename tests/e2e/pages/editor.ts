@@ -471,6 +471,10 @@ export class EditorSection {
     });
   }
 
+  pasteMenu(): Locator {
+    return this.page.locator('.nui-editor-paste');
+  }
+
   mediaPanel(): Locator {
     return this.page.locator('.nui-editor-media');
   }

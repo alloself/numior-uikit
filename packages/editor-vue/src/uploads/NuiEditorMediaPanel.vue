@@ -25,6 +25,7 @@
           v-else
           class="nui-editor-media__form--tabbed"
           :valid="valid"
+          :invalid-text="invalidText"
           @link="emit('link', $event)"
           @cancel="emit('cancel')"
         />
@@ -34,6 +35,7 @@
       v-else
       :key="session"
       :valid="valid"
+      :invalid-text="invalidText"
       @link="emit('link', $event)"
       @cancel="emit('cancel')"
     />
@@ -58,12 +60,13 @@ import { editorMessages } from '../editor/editor.messages';
 import NuiEditorMediaLink from './NuiEditorMediaLink.vue';
 import type { MediaKind } from './uploads.types';
 
-const { anchor, kind, uploadable, accept, valid } = defineProps<{
+const { anchor, kind, uploadable, accept, valid, invalidText } = defineProps<{
   anchor: HTMLElement | null;
   kind: MediaKind;
   uploadable: boolean;
   accept: string | undefined;
   valid: (url: string) => boolean;
+  invalidText: string;
 }>();
 
 const open = defineModel<boolean>('open', { default: false });
@@ -79,7 +82,7 @@ const picker = useTemplateRef<HTMLInputElement>('picker');
 const tab = ref('upload');
 const session = ref(0);
 
-const title = computed(() => (kind === 'image' ? texts.value.image : texts.value.file));
+const title = computed(() => texts.value[kind]);
 
 const tabs = computed(() => [
   { value: 'upload', label: texts.value.mediaUpload },

@@ -112,7 +112,7 @@ test.describe('editor', () => {
     await editor.paste('one\ntwo');
 
     await expect
-      .poll(async () => (await editor.blockTexts()).slice(-5, -3))
+      .poll(async () => (await editor.blockTexts()).slice(-6, -4))
       .toEqual(['Наберите # и пробел для заголовка или - для списка.one', 'two']);
 
     const before = (await editor.readOutput()).changes;
@@ -353,6 +353,7 @@ test.describe('editor', () => {
   test('edits a custom block through its own control and undoes the change', async ({ page }) => {
     const { editor } = await openEditor(page);
 
+    await expect(editor.taskStatus()).toBeVisible();
     await editor.content.getByText('Статус задачи').click();
     await expect(editor.selectedAtoms()).toHaveCount(1);
 
@@ -594,7 +595,7 @@ test.describe('editor', () => {
     await playground.setDirection('rtl');
     await editor.placeAtEnd();
     await page.keyboard.type(' abc');
-    await expect.poll(async () => (await editor.blockTexts()).at(-4)).toMatch(/ abc$/);
+    await expect.poll(async () => (await editor.blockTexts()).at(-5)).toMatch(/ abc$/);
     expect(await editor.content.evaluate((root) => getComputedStyle(root).direction)).toBe('rtl');
   });
 });

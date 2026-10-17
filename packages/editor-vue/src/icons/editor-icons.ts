@@ -43,4 +43,6 @@ export const editorIcons: IconRegistry = {
   'image-up': lazyIcon(() => import('lucide-vue-next/dist/esm/icons/image-up.js')),
   download: lazyIcon(() => import('lucide-vue-next/dist/esm/icons/download.js')),
   captions: lazyIcon(() => import('lucide-vue-next/dist/esm/icons/captions.js')),
+  embed: lazyIcon(() => import('lucide-vue-next/dist/esm/icons/square-play.js')),
+  bookmark: lazyIcon(() => import('lucide-vue-next/dist/esm/icons/bookmark.js')),
 };

@@ -24,7 +24,7 @@ import {
 import { computed, onScopeDispose, ref, shallowReactive, type ComputedRef, type Ref } from 'vue';
 import { editorMessages } from '../editor/editor.messages';
 import type {
-  MediaKind,
+  UploadKind,
   NuiEditorUploadAdapter,
   NuiEditorUploadItem,
   UploadCard,
@@ -53,7 +53,7 @@ export interface EditorUploads {
   add(files: readonly File[], target?: UploadTarget, accept?: string): void;
   cancel(id: string): void;
   retry(id: string): void;
-  insertLink(kind: MediaKind, url: string): boolean;
+  insertLink(kind: UploadKind, url: string): boolean;
   replace(id: NodeId, file: File): void;
   reset(): void;
 }
@@ -136,14 +136,14 @@ export const useEditorUploads = (options: EditorUploadOptions): EditorUploads =>
     elements.delete(id);
   };
 
-  const kindOf = (type: string): MediaKind | undefined => {
+  const kindOf = (type: string): UploadKind | undefined => {
     if (isImage(type) && schema.nodes.has('image')) {
       return 'image';
     }
     return schema.nodes.has('file') ? 'file' : undefined;
   };
 
-  const nodeFor = (tr: Transaction, kind: MediaKind, file: LinkedFile): ElementNode =>
+  const nodeFor = (tr: Transaction, kind: UploadKind, file: LinkedFile): ElementNode =>
     kind === 'image'
       ? schema.element('image', { id: tr.newId(), attrs: { src: file.url } })
       : schema.element('file', {
@@ -151,7 +151,7 @@ export const useEditorUploads = (options: EditorUploadOptions): EditorUploads =>
           attrs: { url: file.url, name: file.name, size: file.size, type: file.type },
         });
 
-  const accepts = (kind: MediaKind, url: string): boolean =>
+  const accepts = (kind: UploadKind, url: string): boolean =>
     schema.nodes.get(kind)?.attrs[kind === 'image' ? 'src' : 'url']?.verify?.(url) ?? true;
 
   const placed = (item: NuiEditorUploadItem, url: string): boolean => {
@@ -334,7 +334,7 @@ export const useEditorUploads = (options: EditorUploadOptions): EditorUploads =>
       ),
   );
 
-  const insertLink = (kind: MediaKind, url: string): boolean =>
+  const insertLink = (kind: UploadKind, url: string): boolean =>
     schema.nodes.has(kind) &&
     options.run(
       placeBlock((tr) => nodeFor(tr, kind, { url, name: nameOfLink(url), size: null, type: '' })),

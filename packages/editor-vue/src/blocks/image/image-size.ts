@@ -33,14 +33,16 @@ export const lineWidthOf = (element: HTMLElement): number => {
   );
 };
 
-export const download = (owner: HTMLElement | undefined, url: string): void => {
+export const follow = (owner: HTMLElement | undefined, url: string, save: boolean): void => {
   const link = owner?.ownerDocument.createElement('a');
 
   if (link === undefined) {
     return;
   }
   link.href = url;
-  link.download = '';
+  if (save) {
+    link.download = '';
+  }
   link.target = '_blank';
   link.rel = 'noopener';
   link.click();

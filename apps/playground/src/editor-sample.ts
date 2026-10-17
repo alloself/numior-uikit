@@ -108,6 +108,12 @@ export const editorSample = (): DocJSON =>
           caption: 'Рассвет над заливом',
           width: 0.6,
         }),
+        node('bookmark', [], {
+          url: 'https://numior.test/blog/release-2-4',
+          title: 'Релиз 2.4: редактор и загрузки',
+          description: 'Что нового в редакторе: картинки, файлы, встраивания и закладки.',
+          site: 'numior.test',
+        }),
         node('file', [], {
           url: '/media/release-notes.txt',
           name: 'Заметки к релизу.txt',
