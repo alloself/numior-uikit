@@ -62,12 +62,22 @@ export const createShikiHighlighter = (options: ShikiHighlighterOptions = {}): N
   let created: Promise<Highlighter> | undefined;
 
   const shiki = (): Promise<typeof import('shiki')> => {
-    loading ??= import('shiki');
+    loading ??= import('shiki').catch((error: unknown) => {
+      loading = undefined;
+      throw error;
+    });
+
     return loading;
   };
 
   const highlighter = (): Promise<Highlighter> => {
-    created ??= shiki().then((module) => module.createHighlighter({ themes: [theme], langs: [] }));
+    created ??= shiki()
+      .then((module) => module.createHighlighter({ themes: [theme], langs: [] }))
+      .catch((error: unknown) => {
+        created = undefined;
+        throw error;
+      });
+
     return created;
   };
 
