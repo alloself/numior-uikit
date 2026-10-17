@@ -3,10 +3,12 @@ import {
   activeMarks,
   ancestorTypes,
   insertDivider,
+  liftListItem,
   markAttrs,
   redo,
   redoDepth,
   setBlockType,
+  sinkListItem,
   toggleList,
   toggleMark,
   toggleWrapper,
@@ -52,6 +54,7 @@ export interface ToolbarColours {
 export interface ToolbarOptions {
   readonly colours: readonly string[];
   readonly highlights: readonly string[];
+  readonly docked?: boolean | undefined;
 }
 
 export interface ToolbarBlock {
@@ -316,6 +319,28 @@ const blockActions = (facts: Facts): ToolbarItem[] => {
   ];
 };
 
+const nestingItems = ({ state, texts, options }: Facts): ToolbarItem[] =>
+  options.docked === true
+    ? [
+        {
+          kind: 'action',
+          key: 'outdent',
+          label: texts.outdent,
+          icon: 'list-indent-decrease',
+          disabled: !liftListItem(state),
+          command: liftListItem,
+        },
+        {
+          kind: 'action',
+          key: 'indent',
+          label: texts.indent,
+          icon: 'list-indent-increase',
+          disabled: !sinkListItem(state),
+          command: sinkListItem,
+        },
+      ]
+    : [];
+
 const insertItems = (
   state: EditorState,
   texts: NuiEditorMessages,
@@ -359,5 +384,6 @@ export const toolbarGroups = (
     { key: 'blocks', items: blockItems(facts) },
     { key: 'marks', items: markItems(facts) },
     { key: 'structure', items: blockActions(facts) },
+    { key: 'nesting', items: nestingItems(facts) },
   ].filter((group) => group.items.length > 0);
 };

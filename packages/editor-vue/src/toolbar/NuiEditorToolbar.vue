@@ -2,7 +2,7 @@
   <div
     ref="root"
     class="nui-editor-toolbar"
-    :class="{ 'nui-editor-toolbar--disabled': disabled }"
+    :class="{ 'nui-editor-toolbar--disabled': disabled, 'nui-editor-toolbar--docked': docked }"
     role="toolbar"
     :aria-label="texts.toolbar"
     :aria-controls="controls"
@@ -33,6 +33,7 @@ import { editorMessages } from '../editor/editor.messages';
 import NuiEditorToolbarGroup from './NuiEditorToolbarGroup.vue';
 import type { SlashItem } from '../slash/slash-items';
 import { toolbarGroups } from './toolbar-items';
+import { useKeyboardInset } from './use-keyboard-inset';
 import type { ColourMark, NuiEditorToolbarProps } from './toolbar.types';
 
 const {
@@ -41,6 +42,7 @@ const {
   inserts = [],
   disabled = false,
   controls,
+  docked = false,
 } = defineProps<NuiEditorToolbarProps>();
 
 const emit = defineEmits<{
@@ -53,7 +55,9 @@ const emit = defineEmits<{
 
 const root = useTemplateRef<HTMLElement>('root');
 const texts = useMessages(editorMessages);
-const groups = computed(() => toolbarGroups(state, texts.value, options, inserts));
+const groups = computed(() => toolbarGroups(state, texts.value, { ...options, docked }, inserts));
+
+useKeyboardInset(root, () => docked);
 
 const navigation = useListNavigation(root, {
   selector: '.nui-editor-toolbar__control',

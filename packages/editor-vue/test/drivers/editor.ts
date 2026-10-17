@@ -272,6 +272,10 @@ export class EditorDriver {
     await nextTick();
   }
 
+  get dockedToolbar(): boolean {
+    return this.root.querySelector('.nui-editor-toolbar--docked') !== null;
+  }
+
   get hasToolbar(): boolean {
     return this.root.querySelector('[role="toolbar"]') !== null;
   }

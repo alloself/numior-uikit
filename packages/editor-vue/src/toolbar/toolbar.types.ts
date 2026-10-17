@@ -15,6 +15,7 @@ export interface NuiEditorToolbarProps {
   inserts?: readonly SlashItem[] | undefined;
   disabled?: boolean | undefined;
   controls?: string | undefined;
+  docked?: boolean | undefined;
 }
 
 export interface NuiEditorInsertMenuProps {

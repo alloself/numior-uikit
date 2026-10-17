@@ -631,6 +631,40 @@ test.describe('editor', () => {
     await expect(editor.selectedAtoms()).toHaveClass(/task-status/u);
   });
 
+  test('docks the toolbar at the bottom of a touch screen while text is edited', async ({
+    page,
+  }) => {
+    const { editor } = await openEditor(page);
+    const coarse = await page.evaluate(() => matchMedia('(pointer: coarse)').matches);
+
+    test.skip(!coarse, 'the docked toolbar belongs to touch screens');
+    await expect(editor.frame.locator('.nui-editor-toolbar')).toHaveCount(0);
+
+    const item = editor.content.locator('.nui-content__list--todo li').last().locator('p');
+
+    await editor.caretAtEndOf(item);
+
+    const dock = editor.dock();
+
+    await expect(dock).toBeVisible();
+
+    await expect
+      .poll(async () => {
+        const box = await dock.boundingBox();
+
+        return box === null ? Number.NaN : Math.round(box.y + box.height);
+      })
+      .toBe(page.viewportSize()?.height);
+
+    await dock.getByRole('button', { name: 'Сдвинуть вправо' }).click();
+
+    await expect(
+      editor.content.locator('.nui-content__list--todo .nui-content__list--todo'),
+    ).toHaveCount(1);
+
+    expect(await editor.isFocused()).toBe(true);
+  });
+
   test('passes axe in light and dark, fits phones and types in RTL', async ({ page }) => {
     const playground = await openEditor(page);
     const { editor } = playground;

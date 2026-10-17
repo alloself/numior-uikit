@@ -499,6 +499,14 @@ export class EditorSection {
     });
   }
 
+  isFocused(): Promise<boolean> {
+    return this.content.evaluate((root) => root.ownerDocument.activeElement === root);
+  }
+
+  dock(): Locator {
+    return this.root.locator('.nui-editor-toolbar--docked');
+  }
+
   mentionList(): Locator {
     return this.root.locator('.nui-editor-mentions');
   }

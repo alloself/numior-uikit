@@ -40,3 +40,27 @@
   align-items: center;
   gap: var(--nui-space-2);
 }
+.nui-editor-toolbar--docked {
+  position: fixed;
+  inset-block: auto var(--_keyboard, 0px);
+  inset-inline: 0;
+  z-index: 10;
+  overflow: visible;
+  padding-block-end: max(var(--nui-space-1), env(safe-area-inset-bottom));
+  border-block-start: 1px solid var(--nui-border);
+  border-block-end: 0;
+  border-radius: 0;
+  box-shadow: var(--nui-shadow-md);
+  translate: 0 0;
+  transition: translate var(--nui-duration-normal) var(--nui-easing);
+}
+@starting-style {
+  .nui-editor-toolbar--docked {
+    translate: 0 100%;
+  }
+}
+.nui-editor-toolbar--docked .nui-editor-toolbar__groups {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: none;
+}

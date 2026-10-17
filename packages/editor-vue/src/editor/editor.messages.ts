@@ -2,6 +2,8 @@ import type { NuiMessageCatalog } from '@numior/primitives';
 
 export interface NuiEditorMessages {
   readonly toolbar: string;
+  readonly indent: string;
+  readonly outdent: string;
   readonly undo: string;
   readonly redo: string;
   readonly blockType: string;
@@ -207,6 +209,8 @@ export const editorMessages: NuiMessageCatalog<'editor'> = {
   namespace: 'editor',
   en: {
     toolbar: 'Formatting',
+    indent: 'Indent',
+    outdent: 'Outdent',
     undo: 'Undo',
     redo: 'Redo',
     blockType: 'Block type',
@@ -331,6 +335,8 @@ export const editorMessages: NuiMessageCatalog<'editor'> = {
   },
   ru: {
     toolbar: 'Форматирование',
+    indent: 'Сдвинуть вправо',
+    outdent: 'Сдвинуть влево',
     undo: 'Отменить',
     redo: 'Повторить',
     blockType: 'Тип блока',

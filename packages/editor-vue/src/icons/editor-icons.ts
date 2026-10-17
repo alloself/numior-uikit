@@ -45,4 +45,10 @@ export const editorIcons: IconRegistry = {
   captions: lazyIcon(() => import('lucide-vue-next/dist/esm/icons/captions.js')),
   embed: lazyIcon(() => import('lucide-vue-next/dist/esm/icons/square-play.js')),
   bookmark: lazyIcon(() => import('lucide-vue-next/dist/esm/icons/bookmark.js')),
+  'list-indent-increase': lazyIcon(
+    () => import('lucide-vue-next/dist/esm/icons/list-indent-increase.js'),
+  ),
+  'list-indent-decrease': lazyIcon(
+    () => import('lucide-vue-next/dist/esm/icons/list-indent-decrease.js'),
+  ),
 };

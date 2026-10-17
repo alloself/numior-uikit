@@ -19,9 +19,10 @@
       @pointerleave="handles.onPointerleave"
     >
       <NuiEditorToolbar
-        v-if="fixedToolbar"
+        v-if="toolbarShown"
         ref="toolbar"
         class="nui-editor__toolbar"
+        :docked="docked"
         :state="current"
         :options="toolOptions"
         :inserts="inserts"
@@ -44,7 +45,7 @@
         class="nui-content nui-editor__content"
         :hidden="!ready"
         v-bind="{ ...contentAttrs, ...attrs }"
-        @focus="emit('focus', $event)"
+        @focus="onFocus"
         @blur="onBlur"
         @paste="onPaste"
         @keydown="onKeydown"
@@ -546,6 +547,9 @@ const fixedToolbar = computed(
 );
 
 const finePointer = useMediaQuery('(hover: hover) and (pointer: fine)');
+const coarsePointer = useMediaQuery('(pointer: coarse)');
+
+const docked = computed(() => fixedToolbar.value && coarsePointer.value && editable.value);
 
 const bubbleToolbar = computed(
   () => (toolbar === 'bubble' || toolbar === 'both') && (finePointer.value || toolbar === 'bubble'),
@@ -606,6 +610,13 @@ const replace = (doc: Doc): void => {
   uploads.reset();
 };
 
+const writing = ref(false);
+
+const onFocus = (event: FocusEvent): void => {
+  writing.value = true;
+  emit('focus', event);
+};
+
 const onBlur = (event: FocusEvent): void => {
   sync.flush();
   emit('blur', event);
@@ -653,6 +664,17 @@ const editor: NuiEditorApi = {
   run,
   focus: () => view?.focus(),
 };
+
+const toolbarShown = computed(
+  () => fixedToolbar.value && (!docked.value || (overlays.focused.value && writing.value)),
+);
+
+watch(
+  () => overlays.focused.value,
+  (value) => {
+    writing.value &&= value;
+  },
+);
 
 const handlesShown = computed(() => blockHandles && editable.value);
 
@@ -719,6 +741,31 @@ const onKeydown = (event: KeyboardEvent): void => {
 watch(editable, (value) => {
   view?.setEditable(value);
 });
+
+const DOCK_GAP = 8;
+
+const hiddenUnder = (caret: { top: number; bottom: number }, dock: HTMLElement): number => {
+  const top = dock.getBoundingClientRect().top;
+
+  return caret.top < top && caret.bottom + DOCK_GAP > top ? caret.bottom + DOCK_GAP - top : 0;
+};
+
+watch(
+  () => current.value.selection,
+  (selection) => {
+    const dock: unknown = toolbarElement.value?.$el;
+    const typing = docked.value && view?.hasFocus() === true && selection.kind === 'text';
+    const caret = typing ? view?.coordsAtPos(selection.head) : undefined;
+
+    const overlap =
+      caret !== undefined && dock instanceof HTMLElement ? hiddenUnder(caret, dock) : 0;
+
+    if (overlap > 0 && dock instanceof HTMLElement) {
+      dock.ownerDocument.defaultView?.scrollBy({ top: overlap });
+    }
+  },
+  { flush: 'post' },
+);
 
 onMounted(() => {
   const element = contentElement.value;
