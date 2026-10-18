@@ -175,6 +175,7 @@ import {
   pasteSchema,
   createState,
   detectPasteSource,
+  commentAnchors,
   history,
   inputRules,
   isEmptyDoc,
@@ -517,6 +518,7 @@ const plugins = [
   ...blocks.flatMap((block) => (block.keymap === undefined ? [] : [keymap(keysOf(block.keymap))])),
   keymap(baseKeymap),
   history(),
+  commentAnchors,
 ];
 
 const nodeViews = createNodeViewHost();

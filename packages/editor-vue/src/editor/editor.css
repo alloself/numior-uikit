@@ -149,6 +149,17 @@
 .nui-editor-mentions__avatar {
   display: inline-flex;
 }
+.nui-editor__content .nui-editor__anchor {
+  background: color-mix(in oklab, var(--nui-warning) 18%, transparent);
+  box-shadow: inset 0 -2px 0 color-mix(in oklab, var(--nui-warning) 55%, transparent);
+  transition:
+    background-color var(--nui-duration-fast) var(--nui-easing),
+    box-shadow var(--nui-duration-fast) var(--nui-easing);
+}
+.nui-editor__content .nui-editor__anchor--active {
+  background: color-mix(in oklab, var(--nui-warning) 36%, transparent);
+  box-shadow: inset 0 -2px 0 var(--nui-warning);
+}
 .nui-editor__content .nui-editor__gap {
   position: relative;
 }

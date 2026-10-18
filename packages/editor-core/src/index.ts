@@ -175,10 +175,29 @@ export {
   history,
   redo,
   redoDepth,
+  remoteChange,
   undo,
   undoDepth,
 } from './history/history';
 export type { HistoryEvent, HistoryOptions, HistoryState } from './history/history.types';
+export {
+  activateAnchor,
+  activeAnchor,
+  anchorFromJSON,
+  anchorToJSON,
+  anchorsAt,
+  anchorsOf,
+  commentAnchors,
+  removeAnchor,
+  setAnchor,
+} from './anchors/anchors';
+export type {
+  Anchor,
+  AnchorChange,
+  AnchorJSON,
+  AnchorRange,
+  AnchorsState,
+} from './anchors/anchors.types';
 export { baseKeymap, keyName, keymap } from './keymap/keymap';
 export type { Keymap } from './keymap/keymap';
 export { inputRules } from './rules/input-rules';

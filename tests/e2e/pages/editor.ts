@@ -342,6 +342,14 @@ export class EditorSection {
     return this.root.locator('.nui-editor-toolbar__blocks');
   }
 
+  anchors(): Locator {
+    return this.content.locator('.nui-editor__anchor');
+  }
+
+  async markSelection(): Promise<void> {
+    await this.page.getByTestId('editor-anchor').click();
+  }
+
   selectedAtoms(): Locator {
     return this.content.locator('.nui-editor__selected');
   }

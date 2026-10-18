@@ -1,11 +1,13 @@
 import { inputSource } from '../commands/input';
 import type { InputSource } from '../state/input.types';
 import { createMetaKey, definePlugin } from '../state/plugin';
-import { mapSelection } from '../state/selection';
+import type { Selection } from '../state/selection.types';
 import type { Command, EditorState, Plugin, Transaction } from '../state/state.types';
-import { invertStep, mapStep } from '../transform/step';
+import type { StepMap } from '../transform/mapping.types';
+import { invertStep, mapStep, stepMapOf } from '../transform/step';
 import type { Step } from '../transform/step.types';
 import type { HistoryAction, HistoryEvent, HistoryOptions, HistoryState } from './history.types';
+import { mirrored, passedStep, type MirrorMaps } from './rebase';
 
 interface HistorySettings {
   readonly depth: number;
@@ -20,6 +22,8 @@ export const addToHistory = createMetaKey<boolean>('addToHistory');
 
 export const closeHistory = createMetaKey<boolean>('closeHistory');
 
+export const remoteChange = createMetaKey<boolean>('remote');
+
 const registry = new WeakMap<object, Plugin<HistoryState>>();
 
 const EMPTY: HistoryState = { done: [], undone: [], time: 0, source: undefined, open: false };
@@ -32,22 +36,70 @@ const eventOf = (tr: Transaction, before: EditorState): HistoryEvent => ({
   selection: before.selection,
 });
 
-const mapEvents = (
+interface Rebased {
+  readonly steps: readonly Step[];
+  readonly chain: MirrorMaps;
+}
+
+const idle = (step: Step): boolean => {
+  switch (step.kind) {
+    case 'replace':
+      return step.from === step.to && step.slice.content.length === 0;
+    case 'addMark':
+    case 'removeMark':
+      return step.from >= step.to;
+    default:
+      return false;
+  }
+};
+
+const movedStep = (step: Step, chain: MirrorMaps): Step | undefined => {
+  const moved = mapStep(step, mirrored(chain));
+
+  return moved === undefined || idle(moved) ? undefined : moved;
+};
+
+const rebaseSteps = (steps: readonly Step[], chain: MirrorMaps): Rebased =>
+  steps.reduce<Rebased>(
+    (done, step) => {
+      const moved = movedStep(step, done.chain);
+      const back = stepMapOf(step).invert();
+
+      return moved === undefined
+        ? { steps: done.steps, chain: passedStep(done.chain, back) }
+        : {
+            steps: [...done.steps, moved],
+            chain: passedStep(done.chain, back, stepMapOf(moved)),
+          };
+    },
+    { steps: [], chain },
+  );
+
+const movedSelection = (selection: Selection, chain: MirrorMaps): Selection => {
+  const mapping = mirrored(chain);
+
+  return selection.kind === 'text'
+    ? { kind: 'text', anchor: mapping.map(selection.anchor), head: mapping.map(selection.head) }
+    : selection;
+};
+
+const rebaseEvents = (
   events: readonly HistoryEvent[],
-  tr: Transaction,
-  before: EditorState,
-): readonly HistoryEvent[] =>
-  events.flatMap((event) => {
-    const steps = event.steps.flatMap((step) => {
-      const mapped = mapStep(step, tr.mapping);
+  maps: readonly StepMap[],
+): readonly HistoryEvent[] => {
+  let chain: MirrorMaps = { maps, mirrors: new Map() };
+  const kept: HistoryEvent[] = [];
 
-      return mapped === undefined ? [] : [mapped];
-    });
+  for (const event of events.toReversed()) {
+    const rebased = rebaseSteps(event.steps, chain);
 
-    return steps.length === 0
-      ? []
-      : [{ steps, selection: mapSelection(event.selection, tr.mapping, before.doc, tr.doc) }];
-  });
+    chain = rebased.chain;
+    if (rebased.steps.length > 0) {
+      kept.push({ steps: rebased.steps, selection: movedSelection(event.selection, chain) });
+    }
+  }
+  return kept.toReversed();
+};
 
 const travelled = (
   value: HistoryState,
@@ -110,11 +162,12 @@ const applyHistory = (
   if (!tr.changed) {
     return tr.selectionSet ? { ...value, open: false } : value;
   }
-  if (addToHistory.read(tr) === false) {
+  if (addToHistory.read(tr) === false || remoteChange.read(tr) === true) {
     return {
       ...value,
-      done: mapEvents(value.done, tr, before),
-      undone: mapEvents(value.undone, tr, before),
+      done: rebaseEvents(value.done, tr.mapping.maps),
+      undone: rebaseEvents(value.undone, tr.mapping.maps),
+      open: false,
     };
   }
   return recorded(value, tr, before, options);

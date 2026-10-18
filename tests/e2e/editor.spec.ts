@@ -663,6 +663,22 @@ test.describe('editor', () => {
     await expect.poll(async () => (await editor.blockTexts()).at(-1)).toBe('под таблицей');
   });
 
+  test('marks a commented range that follows the text typed inside it', async ({ page }) => {
+    const { editor } = await openEditor(page);
+
+    await editor.placeInText('Наберите', 0);
+    for (let step = 0; step < 8; step += 1) {
+      await page.keyboard.press('Shift+ArrowRight');
+    }
+    await editor.markSelection();
+    await expect(editor.anchors()).toHaveText(['Наберите']);
+
+    await editor.placeInText('Наберите', 3);
+    await page.keyboard.type('xy');
+    await expect(editor.anchors()).toHaveText(['Набxyерите']);
+    await expect(editor.output).toContainText('"anchors":1');
+  });
+
   test('takes back empty lines after a to-do list and reaches the task status with arrows', async ({
     page,
   }) => {

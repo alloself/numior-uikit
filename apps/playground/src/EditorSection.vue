@@ -9,9 +9,19 @@
       <NuiSwitch v-model="uploading" label="Загрузка файлов" data-testid="editor-uploads" />
       <NuiSwitch v-model="failing" label="Загрузка с ошибкой" data-testid="editor-upload-fail" />
       <NuiSwitch v-model="liveLinks" label="Метаданные из сети" data-testid="editor-live-links" />
+      <NuiButton
+        variant="outline"
+        size="sm"
+        data-testid="editor-anchor"
+        @mousedown.prevent
+        @click="markSelection"
+      >
+        Отметить выделение
+      </NuiButton>
     </div>
     <div class="editor-demo">
       <NuiEditor
+        ref="editorView"
         v-model="document"
         format="json"
         label="Заметка"
@@ -49,10 +59,10 @@ import { NuiContent } from '@numior/content';
 import { NuiContentCode } from '@numior/content/code';
 import { contentMediaViews } from '@numior/content/media';
 import { NuiContentTable } from '@numior/content/table';
-import type { PasteSource } from '@numior/editor-core';
-import { editorBlocks, NuiEditor } from '@numior/editor-vue';
-import { NuiSwitch } from '@numior/vue';
-import { computed, ref } from 'vue';
+import { setAnchor, type PasteSource } from '@numior/editor-core';
+import { editorBlocks, NuiEditor, type NuiEditorApi } from '@numior/editor-vue';
+import { NuiButton, NuiSwitch } from '@numior/vue';
+import { computed, ref, useTemplateRef } from 'vue';
 import { playgroundSchema, taskStatusBlock } from './editor-blocks';
 import { fakeLinkMetadata, liveLinkMetadata } from './editor-links';
 import { fakeMentions } from './editor-mentions';
@@ -73,12 +83,21 @@ const liveLinks = ref(true);
 const upload = fakeUpload(() => failing.value);
 const changes = ref(0);
 const pasted = ref<PasteSource | null>(null);
+const anchors = ref(0);
+const editorView = useTemplateRef<{ editor: NuiEditorApi }>('editorView');
+
+const markSelection = (): void => {
+  if (editorView.value?.editor.run(setAnchor(`c${String(anchors.value + 1)}`)) === true) {
+    anchors.value += 1;
+  }
+};
 
 const output = computed(() =>
   JSON.stringify({
     blocks: blockCount(document.value),
     changes: changes.value,
     paste: pasted.value,
+    anchors: anchors.value,
   }),
 );
 </script>
