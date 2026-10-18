@@ -1,13 +1,15 @@
-import { MAX_COLS, containsCell, rangeOf } from '../address';
+import { MAX_COLS, MAX_ROWS, containsCell, rangeOf } from '../address';
 import type { CellRange, CellValue } from '../cell.types';
-import type { FormulaLocale, FormulaParse } from '../formula/formula.types';
+import type { FormulaLocale, FormulaNode, FormulaParse } from '../formula/formula.types';
 import { EN_FORMULAS } from '../formula/locale';
 import { parseFormula } from '../formula/parser';
 import { formulaReferences, type FormulaReference } from '../formula/references';
-import { numberValue } from '../values';
+import { EMPTY, errorValue, numberValue } from '../values';
 import type { Sheet, Workbook } from '../workbook';
 import type {
+  ArrayValue,
   FormulaCell,
+  FormulaResult,
   FunctionRegistry,
   Limitation,
   RecalcOptions,
@@ -15,7 +17,7 @@ import type {
 } from './calc.types';
 import { lookupKey } from './coerce';
 import { evaluateFormula, lineRange, type EvalContext } from './evaluate';
-import { BASE_FUNCTIONS, createFunctionRegistry } from './functions';
+import { BASE_FUNCTIONS } from './functions';
 import {
   colOfKey,
   createDependencyGraph,
@@ -24,6 +26,8 @@ import {
   rowOfKey,
   type Precedent,
 } from './graph';
+import { createFunctionRegistry } from './registry';
+import { createSpills, forEachSpillCell, type SpillArea, type SpillCell } from './spills';
 
 export interface Calculator {
   setFormula(
@@ -35,6 +39,7 @@ export interface Calculator {
   ): FormulaParse;
   setValue(sheet: Sheet, row: number, col: number, value: CellValue): void;
   formulaAt(sheet: Sheet, row: number, col: number): FormulaCell | undefined;
+  spillOf(sheet: Sheet, row: number, col: number): CellRange | undefined;
   recalculate(options?: RecalcOptions): Recalculation;
   readonly pending: number;
   readonly limitations: readonly Limitation[];
@@ -42,6 +47,8 @@ export interface Calculator {
 
 export interface CalculatorOptions {
   readonly functions?: FunctionRegistry | undefined;
+  readonly clock?: (() => Date) | undefined;
+  readonly random?: (() => number) | undefined;
 }
 
 interface FormulaRecord {
@@ -52,10 +59,13 @@ interface FormulaRecord {
 }
 
 interface Run {
-  readonly queue: readonly number[];
-  readonly cycles: ReadonlySet<number>;
+  queue: readonly number[];
+  cycles: ReadonlySet<number>;
   readonly budget: number;
+  index: number;
   done: number;
+  total: number;
+  passes: number;
   cancelled: boolean;
 }
 
@@ -68,12 +78,33 @@ const DEFAULT_BUDGET = 8;
 
 const CHECK_EVERY = 32;
 
+const MAX_PASSES = 16;
+
+const DAY_MS = 86_400_000;
+
+const SERIAL_EPOCH = Date.UTC(1899, 11, 30);
+
 const BASE_REGISTRY = createFunctionRegistry(BASE_FUNCTIONS);
+
+const SPILL_ERROR = errorValue('#SPILL!');
 
 const nextTask = (): Promise<void> =>
   new Promise((resolve) => {
     setTimeout(resolve, 0);
   });
+
+const serialOf = (date: Date): number =>
+  (Date.UTC(
+    date.getFullYear(),
+    date.getMonth(),
+    date.getDate(),
+    date.getHours(),
+    date.getMinutes(),
+    date.getSeconds(),
+    date.getMilliseconds(),
+  ) -
+    SERIAL_EPOCH) /
+  DAY_MS;
 
 const referenceRange = (found: Exclude<FormulaReference, { readonly kind: 'name' }>): CellRange => {
   switch (found.kind) {
@@ -100,6 +131,23 @@ const precedentsOf = (record: FormulaRecord, workbook: Workbook): Precedent[] =>
     return target === undefined ? [] : [{ sheet: target.id, range: referenceRange(found) }];
   });
 
+const usesVolatile = (node: FormulaNode, functions: FunctionRegistry): boolean => {
+  switch (node.kind) {
+    case 'call':
+      return (
+        functions.get(node.name)?.volatile === true ||
+        node.args.some((arg) => usesVolatile(arg, functions))
+      );
+    case 'unary':
+    case 'percent':
+      return usesVolatile(node.operand, functions);
+    case 'binary':
+      return usesVolatile(node.left, functions) || usesVolatile(node.right, functions);
+    default:
+      return false;
+  }
+};
+
 const indexColumn = (sheet: Sheet, range: CellRange, version: number): LookupIndex => {
   const rows = new Map<string, number>();
 
@@ -114,18 +162,38 @@ const indexColumn = (sheet: Sheet, range: CellRange, version: number): LookupInd
   return { version, rows };
 };
 
+const spillArea = (record: FormulaRecord, result: ArrayValue): SpillArea => ({
+  sheet: record.sheet,
+  range: {
+    top: record.row,
+    left: record.col,
+    bottom: record.row + result.rows.length - 1,
+    right: record.col + (result.rows[0]?.length ?? 1) - 1,
+  },
+});
+
+const insideSheet = (range: CellRange): boolean =>
+  range.bottom < MAX_ROWS && range.right < MAX_COLS;
+
 export const createCalculator = (
   workbook: Workbook,
-  { functions = BASE_REGISTRY }: CalculatorOptions = {},
+  {
+    functions = BASE_REGISTRY,
+    clock = () => new Date(),
+    random = Math.random,
+  }: CalculatorOptions = {},
 ): Calculator => {
   const graph = createDependencyGraph();
+  const spills = createSpills();
   const formulas = new Map<number, FormulaRecord>();
   const pending = new Set<number>();
+  const volatiles = new Set<number>();
   const versions = new Map<number, number>();
   const lookups = new Map<string, LookupIndex>();
   const unknown = new Set<string>();
   const contexts = new Map<Sheet, EvalContext>();
   let current: Run | undefined;
+  let now = 0;
 
   const columnVersion = (sheet: Sheet, col: number): number =>
     versions.get(sheet.id * MAX_COLS + col) ?? 0;
@@ -159,6 +227,9 @@ export const createCalculator = (
       functions,
       lookup,
       unknown: (name) => unknown.add(name),
+      spillRange: (target, row, col) => spills.areaOf(formulaKey(target.id, row, col))?.range,
+      now: () => now,
+      random,
     };
 
     contexts.set(sheet, context);
@@ -171,43 +242,98 @@ export const createCalculator = (
     }
   };
 
+  const touch = (cell: SpillCell): void => {
+    graph.forEachDependent(cell.sheet.id, cell.row, cell.col, (dependent) =>
+      pending.add(dependent),
+    );
+
+    spills.waiting(cell.sheet, cell.row, cell.col, (anchor) => pending.add(anchor));
+  };
+
+  const release = (key: number): void => {
+    spills.release(key, (cell) => {
+      write(cell.sheet, cell.row, cell.col, EMPTY);
+      touch(cell);
+    });
+  };
+
+  const occupied = (area: SpillArea): boolean => {
+    let taken = false;
+
+    forEachSpillCell(area, (cell, key) => {
+      taken ||= cell.sheet.cells.has(cell.row, cell.col) || formulas.has(key) || spills.owns(key);
+    });
+
+    return taken;
+  };
+
+  const readsOwnArea = (key: number, area: SpillArea): boolean => {
+    let reads = false;
+
+    forEachSpillCell(area, (cell) => {
+      graph.forEachDependent(cell.sheet.id, cell.row, cell.col, (dependent) => {
+        reads ||= dependent === key;
+      });
+    });
+
+    return reads;
+  };
+
+  const writeAnchor = (record: FormulaRecord, value: CellValue, cycle = false): void => {
+    write(record.sheet, record.row, record.col, value);
+    record.cell.state = cycle ? 'cycle' : 'fresh';
+  };
+
+  const spill = (key: number, record: FormulaRecord, result: ArrayValue): void => {
+    const area = spillArea(record, result);
+
+    if (!insideSheet(area.range) || occupied(area)) {
+      spills.block(key, area);
+      writeAnchor(record, SPILL_ERROR);
+      return;
+    }
+    if (readsOwnArea(key, area)) {
+      writeAnchor(record, numberValue(0), true);
+      return;
+    }
+    spills.occupy(key, area);
+    writeAnchor(record, result.rows[0]?.[0] ?? EMPTY);
+
+    forEachSpillCell(area, (cell) => {
+      write(
+        cell.sheet,
+        cell.row,
+        cell.col,
+        result.rows[cell.row - record.row]?.[cell.col - record.col] ?? EMPTY,
+      );
+
+      touch(cell);
+    });
+  };
+
+  const place = (key: number, record: FormulaRecord, result: FormulaResult): void => {
+    release(key);
+    if (result.kind === 'array') {
+      spill(key, record, result);
+    } else {
+      writeAnchor(record, result);
+    }
+  };
+
   const compute = (key: number, cycles: ReadonlySet<number>): void => {
+    const listed = pending.delete(key);
     const record = formulas.get(key);
 
-    if (record === undefined || !pending.delete(key)) {
+    if (record === undefined || !listed) {
       return;
     }
     if (cycles.has(key)) {
-      record.cell.state = 'cycle';
-      write(record.sheet, record.row, record.col, numberValue(0));
+      release(key);
+      writeAnchor(record, numberValue(0), true);
       return;
     }
-
-    write(
-      record.sheet,
-      record.row,
-      record.col,
-      evaluateFormula(record.cell.ast, contextFor(record.sheet)),
-    );
-
-    record.cell.state = 'fresh';
+    place(key, record, evaluateFormula(record.cell.ast, contextFor(record.sheet)));
   };
-
-  const step = (run: Run): boolean => {
-    const started = performance.now();
-
-    while (run.done < run.queue.length && !run.cancelled) {
-      compute(run.queue[run.done] ?? -1, run.cycles);
-      run.done += 1;
-      if (run.done % CHECK_EVERY === 0 && performance.now() - started > run.budget) {
-        return run.done >= run.queue.length;
-      }
-    }
-    return true;
-  };
-
-  const proceed = (run: Run, yieldTo: () => Promise<void>): Promise<void> =>
-    yieldTo().then(() => (step(run) || run.cancelled ? undefined : proceed(run, yieldTo)));
 
   const visible = (key: number, viewport: NonNullable<RecalcOptions['viewport']>): boolean => {
     const record = formulas.get(key);
@@ -254,6 +380,69 @@ export const createCalculator = (
     return [...order.filter((key) => needed.has(key)), ...order.filter((key) => !needed.has(key))];
   };
 
+  const plan = (viewport: RecalcOptions['viewport']) => {
+    const planned = planRecalc(pending, graph);
+
+    planned.order.forEach((key) => {
+      const record = formulas.get(key);
+
+      pending.add(key);
+      if (record !== undefined) {
+        record.cell.state = 'stale';
+      }
+    });
+
+    return { queue: prioritised(planned.order, viewport), cycles: planned.cycles };
+  };
+
+  const replan = (run: Run): boolean => {
+    if (pending.size === 0 || run.passes >= MAX_PASSES) {
+      return false;
+    }
+    const next = plan(undefined);
+
+    run.queue = next.queue;
+    run.cycles = next.cycles;
+    run.index = 0;
+    run.passes += 1;
+    run.total += next.queue.length;
+    return true;
+  };
+
+  const step = (run: Run): boolean => {
+    const started = performance.now();
+
+    while (!run.cancelled && (run.index < run.queue.length || replan(run))) {
+      compute(run.queue[run.index] ?? -1, run.cycles);
+      run.index += 1;
+      run.done += 1;
+      if (run.done % CHECK_EVERY === 0 && performance.now() - started > run.budget) {
+        return false;
+      }
+    }
+    return true;
+  };
+
+  const proceed = (run: Run, yieldTo: () => Promise<void>): Promise<void> =>
+    yieldTo().then(() => (step(run) || run.cancelled ? undefined : proceed(run, yieldTo)));
+
+  const forget = (key: number): void => {
+    if (formulas.delete(key)) {
+      graph.remove(key);
+      pending.delete(key);
+      volatiles.delete(key);
+      release(key);
+    }
+  };
+
+  const claim = (key: number): void => {
+    const owner = spills.claim(key);
+
+    if (owner !== undefined) {
+      pending.add(owner);
+    }
+  };
+
   return {
     setFormula: (sheet, row, col, text, locale = EN_FORMULAS) => {
       const parsed = parseFormula(text, locale);
@@ -271,41 +460,44 @@ export const createCalculator = (
       };
 
       interrupt();
+      claim(key);
       formulas.set(key, record);
       graph.set(key, precedentsOf(record, workbook));
       pending.add(key);
+      if (usesVolatile(parsed.ast, functions)) {
+        volatiles.add(key);
+      } else {
+        volatiles.delete(key);
+      }
       return parsed;
     },
     setValue: (sheet, row, col, value) => {
       const key = formulaKey(sheet.id, row, col);
 
       interrupt();
-      if (formulas.delete(key)) {
-        graph.remove(key);
-        pending.delete(key);
-      }
+      forget(key);
+      claim(key);
       write(sheet, row, col, value);
-      graph.forEachDependent(sheet.id, row, col, (dependent) => pending.add(dependent));
+      touch({ sheet, row, col });
     },
     formulaAt: (sheet, row, col) => formulas.get(formulaKey(sheet.id, row, col))?.cell,
+    spillOf: (sheet, row, col) => spills.areaOf(formulaKey(sheet.id, row, col))?.range,
     recalculate: (options = {}) => {
       interrupt();
-      const plan = planRecalc(pending, graph);
+      now = serialOf(clock());
+      if (options.volatile !== false) {
+        volatiles.forEach((key) => pending.add(key));
+      }
 
-      plan.order.forEach((key) => {
-        const record = formulas.get(key);
-
-        pending.add(key);
-        if (record !== undefined) {
-          record.cell.state = 'stale';
-        }
-      });
+      const first = plan(options.viewport);
 
       const run: Run = {
-        queue: prioritised(plan.order, options.viewport),
-        cycles: plan.cycles,
+        ...first,
         budget: options.budgetMs ?? DEFAULT_BUDGET,
+        index: 0,
         done: 0,
+        total: first.queue.length,
+        passes: 0,
         cancelled: false,
       };
 
@@ -313,7 +505,9 @@ export const createCalculator = (
       const settled = step(run) ? Promise.resolve() : proceed(run, options.yieldTo ?? nextTask);
 
       return {
-        total: run.queue.length,
+        get total() {
+          return run.total;
+        },
         get done() {
           return run.done;
         },

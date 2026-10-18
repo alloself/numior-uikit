@@ -2,10 +2,17 @@ import type { CellRange, CellValue } from '../cell.types';
 import type { FormulaNode } from '../formula/formula.types';
 import type { Sheet } from '../workbook';
 
+export interface ArrayValue {
+  readonly kind: 'array';
+  readonly rows: readonly (readonly CellValue[])[];
+}
+
 export type EvalValue =
   | CellValue
   | { readonly kind: 'reference'; readonly sheet: Sheet; readonly range: CellRange }
-  | { readonly kind: 'array'; readonly rows: readonly (readonly CellValue[])[] };
+  | ArrayValue;
+
+export type FormulaResult = CellValue | ArrayValue;
 
 export type FormulaState = 'fresh' | 'stale' | 'cycle';
 
@@ -25,12 +32,18 @@ export interface FunctionArgs {
   logical(index: number, fallback?: boolean): boolean;
   forEachValue(from: number, visit: (value: CellValue, direct: boolean) => void): void;
   lookup(table: EvalValue, column: number, wanted: CellValue): number | undefined;
+  matrix(index: number): readonly (readonly CellValue[])[];
+  now(): number;
+  random(): number;
 }
 
 export interface FunctionSpec {
   readonly name: string;
   readonly min: number;
   readonly max: number;
+  readonly volatile?: boolean | undefined;
+  readonly lift?: readonly number[] | undefined;
+  readonly broadcast?: readonly number[] | undefined;
   evaluate(args: FunctionArgs): EvalValue;
 }
 
@@ -55,4 +68,5 @@ export interface RecalcOptions {
   readonly budgetMs?: number | undefined;
   readonly yieldTo?: (() => Promise<void>) | undefined;
   readonly viewport?: { readonly sheet: Sheet; readonly range: CellRange } | undefined;
+  readonly volatile?: boolean | undefined;
 }

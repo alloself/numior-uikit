@@ -1,8 +1,11 @@
 import type { CellValue } from '../cell.types';
 import { booleanValue, numberValue } from '../values';
-import type { EvalValue, FunctionArgs, FunctionRegistry, FunctionSpec } from './calc.types';
+import type { EvalValue, FunctionArgs, FunctionSpec } from './calc.types';
 import { compareValues, numberFromText, raise, toLogical, toNumber } from './coerce';
+import { ARRAY_FUNCTIONS } from './array-functions';
 import { scalarOf } from './evaluate';
+import { defineFunction } from './registry';
+import { VOLATILE_FUNCTIONS } from './volatile-functions';
 
 interface Grid {
   readonly rows: number;
@@ -11,17 +14,6 @@ interface Grid {
 }
 
 const MANY = 255;
-
-export const defineFunction = (spec: FunctionSpec): FunctionSpec => spec;
-
-export const createFunctionRegistry = (specs: readonly FunctionSpec[]): FunctionRegistry => {
-  const byName = new Map(specs.map((spec) => [spec.name.toUpperCase(), spec]));
-
-  return {
-    get: (name) => byName.get(name.toUpperCase()),
-    names: [...byName.keys()],
-  };
-};
 
 const eachNumber = (args: FunctionArgs, visit: (value: number) => void): void => {
   args.forEachValue(0, (value, direct) => {
@@ -234,18 +226,22 @@ export const BASE_FUNCTIONS: readonly FunctionSpec[] = [
     name: 'ABS',
     min: 1,
     max: 1,
+    lift: [0],
     evaluate: (args) => numberValue(Math.abs(args.number(0))),
   }),
   defineFunction({
     name: 'ROUND',
     min: 2,
     max: 2,
+    lift: [0, 1],
     evaluate: (args) => numberValue(roundHalfAway(args.number(0), args.number(1))),
   }),
   defineFunction({
     name: 'IF',
     min: 2,
     max: 3,
+    lift: [0],
+    broadcast: [0, 1, 2],
     evaluate: (args) => {
       if (args.logical(0)) {
         return args.value(1);
@@ -259,13 +255,18 @@ export const BASE_FUNCTIONS: readonly FunctionSpec[] = [
     name: 'NOT',
     min: 1,
     max: 1,
+    lift: [0],
     evaluate: (args) => booleanValue(!args.logical(0)),
   }),
   defineFunction({
     name: 'IFERROR',
     min: 2,
     max: 2,
+    lift: [0],
+    broadcast: [0, 1],
     evaluate: (args) => (args.scalar(0).kind === 'error' ? args.value(1) : args.value(0)),
   }),
-  defineFunction({ name: 'VLOOKUP', min: 3, max: 4, evaluate: vlookup }),
+  defineFunction({ name: 'VLOOKUP', min: 3, max: 4, lift: [0], evaluate: vlookup }),
+  ...ARRAY_FUNCTIONS,
+  ...VOLATILE_FUNCTIONS,
 ];

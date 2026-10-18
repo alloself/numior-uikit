@@ -3,7 +3,23 @@ import type { CellRange, CellValue } from '../cell.types';
 import type { FormulaNode } from '../formula/formula.types';
 import { EMPTY, errorValue, numberValue, textValue } from '../values';
 import type { Sheet, Workbook } from '../workbook';
-import type { EvalValue, FunctionArgs, FunctionRegistry } from './calc.types';
+import {
+  blankAsZero,
+  broadcastShape,
+  buildArray,
+  elementAt,
+  isMultiCell,
+  matrixOf,
+  shapeOf,
+} from './array';
+import type {
+  ArrayValue,
+  EvalValue,
+  FormulaResult,
+  FunctionArgs,
+  FunctionRegistry,
+  FunctionSpec,
+} from './calc.types';
 import { CellErrorSignal, compareValues, raise, toLogical, toNumber, toText } from './coerce';
 
 export interface EvalContext {
@@ -12,9 +28,16 @@ export interface EvalContext {
   readonly functions: FunctionRegistry;
   unknown(name: string): void;
   lookup(sheet: Sheet, range: CellRange, wanted: CellValue): number | undefined;
+  spillRange(sheet: Sheet, row: number, col: number): CellRange | undefined;
+  now(): number;
+  random(): number;
 }
 
 type Binary = Extract<FormulaNode, { readonly kind: 'binary' }>;
+
+type Call = Extract<FormulaNode, { readonly kind: 'call' }>;
+
+type Operand = CellValue | ArrayValue;
 
 const VALUE_ERROR = errorValue('#VALUE!');
 
@@ -116,9 +139,9 @@ const constantOf = (node: FormulaNode): CellValue => {
   }
 };
 
-const safely = (node: FormulaNode, context: EvalContext): EvalValue => {
+const attempt = <T extends EvalValue>(run: () => T): T | CellValue => {
   try {
-    return evaluate(node, context);
+    return run();
   } catch (error) {
     if (error instanceof CellErrorSignal) {
       return errorValue(error.code);
@@ -127,10 +150,31 @@ const safely = (node: FormulaNode, context: EvalContext): EvalValue => {
   }
 };
 
-const scalar = (node: FormulaNode, context: EvalContext): CellValue =>
-  node.kind === 'cell'
-    ? sheetOf(node.sheet, context).cells.get(node.ref.row, node.ref.col)
-    : scalarOf(evaluate(node, context));
+const safely = (node: FormulaNode, context: EvalContext): EvalValue =>
+  attempt(() => evaluate(node, context));
+
+const operandOf = (node: FormulaNode, context: EvalContext): Operand => {
+  if (node.kind === 'cell') {
+    return sheetOf(node.sheet, context).cells.get(node.ref.row, node.ref.col);
+  }
+  const value = safely(node, context);
+
+  return isMultiCell(value) ? { kind: 'array', rows: matrixOf(value) } : scalarOf(value);
+};
+
+const lifted = (operands: readonly Operand[], item: (cells: CellValue[]) => CellValue) => {
+  const matrices = operands.map((operand) => matrixOf(operand));
+  const shape = broadcastShape(operands.map(shapeOf));
+
+  return buildArray(shape, (row, col) =>
+    attempt(() => item(matrices.map((matrix) => elementAt(matrix, row, col)))),
+  );
+};
+
+const applied = (operands: readonly Operand[], item: (cells: CellValue[]) => CellValue) =>
+  operands.some((operand) => operand.kind === 'array')
+    ? lifted(operands, item)
+    : item(operands.filter((operand): operand is CellValue => operand.kind !== 'array'));
 
 const visitValues = (
   value: EvalValue,
@@ -156,34 +200,23 @@ const visitValues = (
   }
 };
 
-const argumentsOf = (nodes: readonly FormulaNode[], context: EvalContext): FunctionArgs => {
-  const cache = new Map<number, EvalValue>();
-
-  const value = (index: number): EvalValue => {
-    const node = nodes[index];
-    const known = cache.get(index);
-
-    if (known !== undefined || node === undefined) {
-      return known ?? EMPTY;
-    }
-    const computed = safely(node, context);
-
-    cache.set(index, computed);
-    return computed;
-  };
+const argumentsFrom = (
+  nodes: readonly FormulaNode[],
+  value: (index: number) => EvalValue,
+  context: EvalContext,
+): FunctionArgs => {
+  const missing = (index: number): boolean => (nodes[index]?.kind ?? 'missing') === 'missing';
 
   return {
     count: nodes.length,
-    missing: (index) => (nodes[index]?.kind ?? 'missing') === 'missing',
+    missing,
     value,
     scalar: (index) => scalarOf(value(index)),
     number: (index, fallback) =>
-      index >= nodes.length && fallback !== undefined ? fallback : toNumber(scalarOf(value(index))),
+      missing(index) && fallback !== undefined ? fallback : toNumber(scalarOf(value(index))),
     text: (index) => toText(scalarOf(value(index))),
     logical: (index, fallback) =>
-      index >= nodes.length && fallback !== undefined
-        ? fallback
-        : toLogical(scalarOf(value(index))),
+      missing(index) && fallback !== undefined ? fallback : toLogical(scalarOf(value(index))),
     forEachValue: (from, visit) => {
       for (let index = from; index < nodes.length; index += 1) {
         visitValues(value(index), visit);
@@ -197,22 +230,68 @@ const argumentsOf = (nodes: readonly FormulaNode[], context: EvalContext): Funct
             wanted,
           )
         : undefined,
+    matrix: (index) => matrixOf(value(index)),
+    now: () => context.now(),
+    random: () => context.random(),
   };
 };
 
-const call = (
-  node: Extract<FormulaNode, { readonly kind: 'call' }>,
+const lazyValues = (
+  nodes: readonly FormulaNode[],
   context: EvalContext,
-): EvalValue => {
+): ((index: number) => EvalValue) => {
+  const cache = new Map<number, EvalValue>();
+
+  return (index) => {
+    const node = nodes[index];
+    const known = cache.get(index);
+
+    if (known !== undefined || node === undefined) {
+      return known ?? EMPTY;
+    }
+    const computed = safely(node, context);
+
+    cache.set(index, computed);
+    return computed;
+  };
+};
+
+const liftCall = (
+  spec: FunctionSpec,
+  nodes: readonly FormulaNode[],
+  value: (index: number) => EvalValue,
+  context: EvalContext,
+): ArrayValue => {
+  const spread = (spec.broadcast ?? spec.lift ?? []).filter((index) => isMultiCell(value(index)));
+  const matrices = new Map(spread.map((index) => [index, matrixOf(value(index))]));
+  const shape = broadcastShape(spread.map((index) => shapeOf(value(index))));
+
+  return buildArray(shape, (row, col) => {
+    const at = (index: number): EvalValue => {
+      const matrix = matrices.get(index);
+
+      return matrix === undefined ? value(index) : elementAt(matrix, row, col);
+    };
+
+    return scalarOf(attempt(() => spec.evaluate(argumentsFrom(nodes, at, context))));
+  });
+};
+
+const call = (node: Call, context: EvalContext): EvalValue => {
   const spec = context.functions.get(node.name);
 
   if (spec === undefined) {
     context.unknown(node.name);
     return raise('#NAME?');
   }
-  return node.args.length < spec.min || node.args.length > spec.max
-    ? raise('#VALUE!')
-    : spec.evaluate(argumentsOf(node.args, context));
+  if (node.args.length < spec.min || node.args.length > spec.max) {
+    return raise('#VALUE!');
+  }
+  const value = lazyValues(node.args, context);
+
+  return spec.lift?.some((index) => isMultiCell(value(index))) === true
+    ? liftCall(spec, node.args, value, context)
+    : spec.evaluate(argumentsFrom(node.args, value, context));
 };
 
 const reference = (
@@ -225,19 +304,33 @@ const reference = (
   range,
 });
 
+const spilled = (
+  node: Extract<FormulaNode, { readonly kind: 'spill' }>,
+  context: EvalContext,
+): EvalValue => {
+  const sheet = sheetOf(node.sheet, context);
+  const range = context.spillRange(sheet, node.ref.row, node.ref.col);
+
+  return range === undefined ? raise('#REF!') : { kind: 'reference', sheet, range };
+};
+
 const operation = (node: FormulaNode, context: EvalContext): EvalValue => {
   switch (node.kind) {
     case 'call':
       return call(node, context);
-    case 'unary': {
-      const operand = scalar(node.operand, context);
-
-      return node.op === '-' ? numberValue(-toNumber(operand)) : operand;
-    }
+    case 'unary':
+      return applied([operandOf(node.operand, context)], ([operand = EMPTY]) =>
+        node.op === '-' ? numberValue(-toNumber(operand)) : operand,
+      );
     case 'percent':
-      return numberValue(toNumber(scalar(node.operand, context)) / 100);
+      return applied([operandOf(node.operand, context)], ([operand = EMPTY]) =>
+        numberValue(toNumber(operand) / 100),
+      );
     case 'binary':
-      return operate(node.op, scalar(node.left, context), scalar(node.right, context));
+      return applied(
+        [operandOf(node.left, context), operandOf(node.right, context)],
+        ([left = EMPTY, right = EMPTY]) => operate(node.op, left, right),
+      );
     case 'array':
       return { kind: 'array', rows: node.rows.map((row) => row.map(constantOf)) };
     default:
@@ -255,7 +348,7 @@ const evaluate = (node: FormulaNode, context: EvalContext): EvalValue => {
     case 'rows':
       return reference(node.sheet, lineRange(node), context);
     case 'spill':
-      return raise('#REF!');
+      return spilled(node, context);
     case 'name':
       return raise('#NAME?');
     default:
@@ -263,8 +356,10 @@ const evaluate = (node: FormulaNode, context: EvalContext): EvalValue => {
   }
 };
 
-export const evaluateFormula = (node: FormulaNode, context: EvalContext): CellValue => {
-  const result = scalarOf(safely(node, context));
+export const evaluateFormula = (node: FormulaNode, context: EvalContext): FormulaResult => {
+  const value = safely(node, context);
 
-  return result.kind === 'empty' ? numberValue(0) : result;
+  return isMultiCell(value)
+    ? { kind: 'array', rows: matrixOf(value).map((row) => row.map(blankAsZero)) }
+    : blankAsZero(scalarOf(value));
 };

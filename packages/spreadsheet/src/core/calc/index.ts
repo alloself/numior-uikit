@@ -1,5 +1,7 @@
 export type {
+  ArrayValue,
   EvalValue,
+  FormulaResult,
   FormulaCell,
   FormulaState,
   FunctionArgs,
@@ -10,4 +12,5 @@ export type {
   Recalculation,
 } from './calc.types';
 export { createCalculator, type Calculator, type CalculatorOptions } from './calculator';
-export { BASE_FUNCTIONS, createFunctionRegistry, defineFunction } from './functions';
+export { BASE_FUNCTIONS } from './functions';
+export { createFunctionRegistry, defineFunction } from './registry';

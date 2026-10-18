@@ -42,9 +42,11 @@ export type {
 } from './formula';
 export { BASE_FUNCTIONS, createCalculator, createFunctionRegistry, defineFunction } from './calc';
 export type {
+  ArrayValue,
   Calculator,
   CalculatorOptions,
   EvalValue,
+  FormulaResult,
   FormulaCell,
   FormulaState,
   FunctionArgs,
