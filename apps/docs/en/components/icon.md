@@ -22,7 +22,7 @@ import '@numior/vue/styles/icon.css';
 
 ### Own component
 
-`icon` also takes any component, including a functional one built with `h`: it renders as is,
+`icon` also takes any component, such as an own SVG icon in an SFC: it renders as is,
 without the registry.
 
 <Example name="icon/Custom" />
