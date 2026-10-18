@@ -7,17 +7,23 @@
 
 ## Сигнатура
 
-<SignatureReference :names="['useIcons', 'lazyIcon', 'IconRegistry', 'NuiIconAliases']" />
+<SignatureReference :names="['useIcons', 'lazyIcon', 'IconRegistry', 'NuiIconSets']" />
 
 ## Использование
 
-```ts
-import { h } from 'vue';
-import { lazyIcon, useIcons } from '@numior/vue';
+Реестр нужен там, где иконку ждёт не `NuiIcon`, а чужой компонент: ему передаётся тот же
+глиф, который приложение выбрало для алиаса.
+
+```vue
+<template>
+  <ExternalTabs :items="tabs" :close-icon="icons.x" />
+</template>
+
+<script setup lang="ts">
+import { useIcons } from '@numior/vue';
 
 const icons = useIcons();
-const save = lazyIcon(() => import('./icons/SaveIcon.vue'));
-const render = () => (icons.check === undefined ? null : h(icons.check));
+</script>
 ```
 
 Алиас, которого нет в реестре, даёт `undefined`. Реестр, свои наборы и объявление своих алиасов

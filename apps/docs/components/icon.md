@@ -38,34 +38,29 @@ import { createApp } from 'vue';
 import { createNuiConfig, lazyIcon } from '@numior/vue';
 import CheckIcon from './icons/CheckIcon.vue';
 
+const appIcons = {
+  check: CheckIcon,
+  loader: lazyIcon(() => import('./icons/SpinnerIcon.vue')),
+  'app:save': lazyIcon(() => import('./icons/SaveIcon.vue')),
+};
+
+declare module '@numior/primitives' {
+  interface NuiIconSets {
+    app: typeof appIcons;
+  }
+}
+
 createApp(App)
-  .use(
-    createNuiConfig({
-      icons: {
-        check: CheckIcon,
-        loader: lazyIcon(() => import('./icons/SpinnerIcon.vue')),
-        'app:save': lazyIcon(() => import('./icons/SaveIcon.vue')),
-      },
-    }),
-  )
+  .use(createNuiConfig({ icons: appIcons }))
   .mount('#app');
 ```
 
-Алиасы типизированы: `icon` принимает только ключи интерфейса `NuiIconAliases`, поэтому опечатка —
-ошибка типов. Свой алиас приложение объявляет расширением интерфейса, а пакеты kit (например,
-редактор) так же добавляют свои:
+Алиас — это ключ одного из наборов в `NuiIconSets`. Кит объявляет там свой набор, редактор —
+свой, а приложение добавляет одну строку со своим реестром, как выше.
 
-```ts
-declare module '@numior/primitives' {
-  interface NuiIconAliases {
-    readonly 'app:save': true;
-  }
-}
-```
-
-После этого `<NuiIcon icon="app:save" />` проходит проверку типов. Объявленный, но не
-зарегистрированный алиас не рисует ничего. `lazyIcon` загружает модуль один раз при первом
-рендере.
+Поэтому `icon` принимает только существующие ключи, и опечатка становится ошибкой типов:
+`<NuiIcon icon="app:save" />` проходит проверку, `<NuiIcon icon="app:sav" />` — нет. `lazyIcon`
+загружает модуль один раз при первом рендере.
 
 ## Доступность
 

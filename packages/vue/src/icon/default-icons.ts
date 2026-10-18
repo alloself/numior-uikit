@@ -1,6 +1,6 @@
-import { lazyIcon, type IconRegistry } from '@numior/primitives';
+import { lazyIcon } from '@numior/primitives';
 
-export const defaultIcons: IconRegistry = {
+export const defaultIcons = {
   check: lazyIcon(() => import('lucide-vue-next/dist/esm/icons/check.js')),
   minus: lazyIcon(() => import('lucide-vue-next/dist/esm/icons/minus.js')),
   loader: lazyIcon(() => import('lucide-vue-next/dist/esm/icons/loader-circle.js')),
@@ -65,3 +65,9 @@ export const defaultIcons: IconRegistry = {
   table: lazyIcon(() => import('lucide-vue-next/dist/esm/icons/table-2.js')),
   'move-horizontal': lazyIcon(() => import('lucide-vue-next/dist/esm/icons/move-horizontal.js')),
 };
+
+declare module '@numior/primitives' {
+  interface NuiIconSets {
+    kit: typeof defaultIcons;
+  }
+}

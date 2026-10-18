@@ -38,33 +38,29 @@ import { createApp } from 'vue';
 import { createNuiConfig, lazyIcon } from '@numior/vue';
 import CheckIcon from './icons/CheckIcon.vue';
 
+const appIcons = {
+  check: CheckIcon,
+  loader: lazyIcon(() => import('./icons/SpinnerIcon.vue')),
+  'app:save': lazyIcon(() => import('./icons/SaveIcon.vue')),
+};
+
+declare module '@numior/primitives' {
+  interface NuiIconSets {
+    app: typeof appIcons;
+  }
+}
+
 createApp(App)
-  .use(
-    createNuiConfig({
-      icons: {
-        check: CheckIcon,
-        loader: lazyIcon(() => import('./icons/SpinnerIcon.vue')),
-        'app:save': lazyIcon(() => import('./icons/SaveIcon.vue')),
-      },
-    }),
-  )
+  .use(createNuiConfig({ icons: appIcons }))
   .mount('#app');
 ```
 
-Aliases are typed: `icon` takes only the keys of the `NuiIconAliases` interface, so a typo is a
-type error. An app declares its own alias by extending the interface, and kit packages such as
-the editor add theirs the same way:
+An alias is a key of one of the sets in `NuiIconSets`. The kit declares its set there, the
+editor declares its own, and an app adds one line with its registry as above.
 
-```ts
-declare module '@numior/primitives' {
-  interface NuiIconAliases {
-    readonly 'app:save': true;
-  }
-}
-```
-
-After that `<NuiIcon icon="app:save" />` type-checks. An alias that is declared but not
-registered draws nothing. `lazyIcon` loads the module once on the first render.
+So `icon` takes only existing keys and a typo becomes a type error: `<NuiIcon icon="app:save" />`
+type-checks, `<NuiIcon icon="app:sav" />` does not. `lazyIcon` loads the module once on the first
+render.
 
 ## Accessibility
 

@@ -1,6 +1,6 @@
-import { lazyIcon, type IconRegistry } from '@numior/primitives';
+import { lazyIcon } from '@numior/primitives';
 
-const EDITOR_ICONS = {
+export const editorIcons = {
   bold: lazyIcon(() => import('lucide-vue-next/dist/esm/icons/bold.js')),
   italic: lazyIcon(() => import('lucide-vue-next/dist/esm/icons/italic.js')),
   underline: lazyIcon(() => import('lucide-vue-next/dist/esm/icons/underline.js')),
@@ -58,10 +58,8 @@ const EDITOR_ICONS = {
   ),
 };
 
-type EditorIconAlias = keyof typeof EDITOR_ICONS;
-
 declare module '@numior/primitives' {
-  interface NuiIconAliases extends Readonly<Record<EditorIconAlias, true>> {}
+  interface NuiIconSets {
+    editor: typeof editorIcons;
+  }
 }
-
-export const editorIcons: IconRegistry = EDITOR_ICONS;

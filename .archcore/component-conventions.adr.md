@@ -32,13 +32,16 @@ status: accepted
   Иконки, нужные одному пакету (редактор), не входят в общий `defaultIcons`: пакет держит свой
   реестр и подключает его в корне компонента через `provideIconDefaults`, где иконки приложения
   из `provideIcons`/`createNuiConfig` побеждают иконки пакета (2026-10-15).
-- Алиас иконки типизирован (2026-10-18): `IconAlias = keyof NuiIconAliases`, интерфейс в
-  `@numior/primitives` перечисляет алиасы кита, пакет или приложение добавляет свои расширением
-  интерфейса (`declare module '@numior/primitives' { interface NuiIconAliases { … } }`; редактор
-  выводит ключи из своего реестра, `extends Readonly<Record<EditorIconAlias, true>>`). Прежнее
-  `string & {}` пропускало опечатки. Реестр — `Partial<Record<IconAlias, Component>>`.
-  `NuiIcon` принимает один проп `icon: IconAlias | Component`, как `icon` у кнопки, меню и
-  остальных частей кита; отдельный `alias` убран. `useIcon` удалён — им пользовались только
+- Алиас иконки типизирован (2026-10-18): алиасы — ключи наборов иконок. В `@numior/primitives`
+  лежит пустой интерфейс `NuiIconSets`, `IconAlias` — объединение ключей всех его наборов. Кит
+  объявляет набор рядом с реестром (`declare module '@numior/primitives' { interface NuiIconSets
+  { kit: typeof defaultIcons } }` в `default-icons.ts`), редактор так же (`editor: typeof
+  editorIcons`), приложение — одной строкой со своим реестром. Ключи нигде не повторяются списком,
+  а опечатка в алиасе — ошибка типов (прежнее `string & {}` её пропускало). Объявление стоит в
+  `.ts`-модуле с реестром, а не в `.d.ts`: расширение должно попасть в выпущенные объявления
+  пакета, а `vue-tsc` не копирует ручные `.d.ts`. Реестр — `Partial<Record<IconAlias,
+  Component>>`. `NuiIcon` принимает один проп `icon: IconAlias | Component`, как `icon` у кнопки,
+  меню и остальных частей кита; отдельный `alias` убран. `useIcon` удалён — им пользовались только
   тесты, `NuiIcon` читает реестр через `useIcons`.
 - Native-first: реальные `<input>`, `<textarea>`, checkbox с `role="switch"`; `appearance:
   none`, контрол остаётся в потоке под индикатором. Вид checked/indeterminate берётся из

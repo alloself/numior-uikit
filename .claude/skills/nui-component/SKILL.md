@@ -154,10 +154,10 @@ const {
 - Focus ring: `outline: var(--nui-focus-ring-width) solid var(--nui-focus); outline-offset:
   var(--nui-focus-ring-offset)`. Disabled: `opacity: var(--nui-disabled-opacity)`.
 - Logical properties only (`inline-size`, `inset-inline-start`, `padding-inline`).
-- Icons through `<NuiIcon icon="check" />` (`icon` also takes a component); new kit aliases go
-  to `NuiIconAliases` in primitives and to `default-icons.ts` as
-  `lazyIcon(() => import('lucide-vue-next/dist/esm/icons/<file>.js'))`; a package with its own
-  icons extends `NuiIconAliases` from its registry keys (see `editor-vue/src/icons`).
+- Icons through `<NuiIcon icon="check" />` (`icon` also takes a component); a new kit alias is a new key in
+  `default-icons.ts` (`lazyIcon(() => import('lucide-vue-next/dist/esm/icons/<file>.js'))`), the
+  key becomes an `IconAlias` through the `kit` entry of `NuiIconSets`; a package with its own icons
+  declares its registry as another `NuiIconSets` entry (see `editor-vue/src/icons`).
 
 ## Wiring
 

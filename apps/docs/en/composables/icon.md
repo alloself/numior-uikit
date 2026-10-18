@@ -6,17 +6,23 @@ into a component that loads once on the first render. `NuiIcon` is built on thes
 
 ## Signature
 
-<SignatureReference :names="['useIcons', 'lazyIcon', 'IconRegistry', 'NuiIconAliases']" />
+<SignatureReference :names="['useIcons', 'lazyIcon', 'IconRegistry', 'NuiIconSets']" />
 
 ## Usage
 
-```ts
-import { h } from 'vue';
-import { lazyIcon, useIcons } from '@numior/vue';
+The registry helps where a component other than `NuiIcon` expects an icon: it gets the same
+glyph the app chose for the alias.
+
+```vue
+<template>
+  <ExternalTabs :items="tabs" :close-icon="icons.x" />
+</template>
+
+<script setup lang="ts">
+import { useIcons } from '@numior/vue';
 
 const icons = useIcons();
-const save = lazyIcon(() => import('./icons/SaveIcon.vue'));
-const render = () => (icons.check === undefined ? null : h(icons.check));
+</script>
 ```
 
 An alias missing from the registry gives `undefined`. The registry, own sets and declaring own

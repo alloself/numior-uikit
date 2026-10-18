@@ -1,13 +1,12 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { defineComponent, h } from 'vue';
+import { defineComponent, h, type Component } from 'vue';
 import { IconDriver } from './drivers/icon';
 
 const Custom = defineComponent({ render: () => h('svg', { 'data-custom': 'true' }) });
 
 declare module '@numior/primitives' {
-  interface NuiIconAliases {
-    readonly 'test-brand': true;
-    readonly 'test-unregistered': true;
+  interface NuiIconSets {
+    test: Readonly<Record<'test-brand' | 'test-unregistered', Component>>;
   }
 }
 
