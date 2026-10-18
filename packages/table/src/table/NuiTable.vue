@@ -334,6 +334,7 @@ import {
   pieceOf,
 } from './table-merges';
 import { alignOfCell, floodRow, paneOfCell, type TableFloodRow } from './table-flood';
+import { useTextMeasure } from './use-text-measure';
 import { paintOf } from './table-paint';
 import { ownCellAt, ownDetailOf } from './table-dom';
 import { cellTextOf, cellValueOf, engineColumnOf, valueTextOf } from './table-format';
@@ -541,6 +542,7 @@ const rawSlots = useSlots();
 const root = useTemplateRef<HTMLElement>('root');
 const viewport = useTemplateRef<HTMLElement>('viewport');
 const frame = useTemplateRef<HTMLElement>('frame');
+const textMeasure = useTextMeasure(root, () => size);
 const tree = computed(() => columnTreeOf(columns));
 const orderedLeaves = computed(() => orderLeaves(tree.value.leaves, columnOrder.value));
 const gridId = useControlId(() => id);
@@ -1718,6 +1720,7 @@ const floodRowOf = (row: T, position: number, spans: TableRowSpan | undefined): 
     alignAt: (index) => alignOfCell(cells[index]),
     freeAt: (index) => textAt(index) === '',
     flowsAt: (index) => (textAt(index) ?? '') !== '',
+    needAt: (index) => textMeasure.needOf(textAt(index) ?? ''),
   };
 };
 

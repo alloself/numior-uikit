@@ -17,6 +17,7 @@ export interface TableFloodRow extends TableFloodCells {
   readonly keyAt: (index: number) => string | undefined;
   readonly alignAt: (index: number) => NuiTableAlign;
   readonly flowsAt: (index: number) => boolean;
+  readonly needAt: (index: number) => number;
 }
 
 export interface TableFlood {
@@ -39,6 +40,7 @@ export const floodOf = (
   cells: TableFloodCells,
   origin: number,
   align: NuiTableAlign,
+  need = Number.POSITIVE_INFINITY,
 ): TableFlood | undefined => {
   if (align === 'center' || cells.paneAt(origin) !== 'centre') {
     return undefined;
@@ -49,7 +51,11 @@ export const floodOf = (
 
   for (
     let index = origin + step;
-    index >= 0 && index < cells.count && cells.paneAt(index) === 'centre' && cells.freeAt(index);
+    width < need &&
+    index >= 0 &&
+    index < cells.count &&
+    cells.paneAt(index) === 'centre' &&
+    cells.freeAt(index);
     index += step
   ) {
     edge = index;
@@ -87,7 +93,7 @@ const originAt = (
   if (key === undefined || paint?.overflow !== true || !row.flowsAt(at)) {
     return undefined;
   }
-  const flood = floodOf(cells, at, paint.align ?? row.alignAt(at));
+  const flood = floodOf(cells, at, paint.align ?? row.alignAt(at), row.needAt(at));
 
   return flood === undefined ? undefined : { key, paint, flood };
 };
