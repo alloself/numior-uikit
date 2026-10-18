@@ -471,14 +471,29 @@ export interface TableRangeSegment {
 
 export type TableRowRanges = readonly TableRangeSegment[];
 
-export interface TableCellContentProps<T> {
-  readonly column: string;
+export type TableCellLead =
+  | ({ readonly kind: 'grip' } & Readonly<NuiTableRowGripProps>)
+  | ({ readonly kind: 'toggle' } & Readonly<NuiTableTreeToggleProps>);
+
+export type TableCellView<T> =
+  | { readonly kind: 'skeleton' }
+  | { readonly kind: 'group'; readonly cell: TableGroupCell | undefined }
+  | {
+      readonly kind: 'data';
+      readonly leads: readonly TableCellLead[];
+      readonly editing: boolean;
+      readonly scope: NuiTableCellSlot<T>;
+    };
+
+export interface NuiTableCellContentProps<T> {
+  view: TableCellView<T>;
+  editor?: NuiTableCellEditorProps | undefined;
+}
+
+export interface TableCellContent<T> {
   readonly position: number;
-  readonly merge?: TableLeadSpan | undefined;
-  readonly row?: T | undefined;
-  readonly item?: TableBodyRow | undefined;
-  readonly pinned?: boolean | undefined;
-  readonly revision?: number | undefined;
+  readonly key: string;
+  readonly row: T;
 }
 
 export interface TablePinnedRow<T> {

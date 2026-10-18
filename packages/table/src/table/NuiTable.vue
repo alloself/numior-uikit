@@ -89,7 +89,9 @@
                 />
               </template>
               <template #default="{ column }">
-                <CellContent :row="item.row" :position="item.index" :column="column" pinned />
+                <slot :name="`cell-${column}`" v-bind="scopeOf(item.row, item.index, column, true)">
+                  <span class="nui-table__text">{{ textOf(item.row, column) }}</span>
+                </slot>
               </template>
             </NuiTableRow>
           </tbody>
@@ -153,14 +155,18 @@
                     @toggle="selection.toggle(rowAt(item.index))"
                   />
                 </template>
-                <template #default="{ column, merge, revision: cellRevision }">
-                  <CellContent
-                    :item="item"
-                    :position="item.index"
-                    :column="column"
-                    :merge="merge"
-                    :revision="cellRevision"
-                  />
+                <template #default="{ column, merge }">
+                  <NuiTableCellContent
+                    :view="cellViewOf(item, column, merge)"
+                    :editor="editorProps"
+                    @toggle="expansion.toggle(item.index)"
+                    @grab="(event: PointerEvent) => rowDrag.grab(item.index, event)"
+                    @update="onEditorUpdate"
+                  >
+                    <template #content="scope">
+                      <slot :name="`cell-${scope.column.key}`" v-bind="scope" />
+                    </template>
+                  </NuiTableCellContent>
                 </template>
               </NuiTableRow>
             </template>
@@ -259,17 +265,14 @@
 <script setup lang="ts" generic="T">
 import {
   computed,
-  h,
   onBeforeUnmount,
   onMounted,
   ref,
-  renderSlot,
   shallowReactive,
   shallowRef,
   useSlots,
   useTemplateRef,
   watch,
-  type VNode,
 } from 'vue';
 import { clamp, onLongPress, useDevicePixelRatio, useElementSize } from '@vueuse/core';
 import { formRulesMessages } from '@numior/forms';
@@ -304,14 +307,11 @@ import {
   type TableNode,
   type TableNodeId,
 } from '../engine';
-import NuiTableCellEditor from './NuiTableCellEditor.vue';
+import NuiTableCellContent from './NuiTableCellContent.vue';
 import NuiTableDetailRow from './NuiTableDetailRow.vue';
 import NuiTableDragLayer from './NuiTableDragLayer.vue';
-import NuiTableRowGrip from './NuiTableRowGrip.vue';
-import NuiTableGroupCell from './NuiTableGroupCell.vue';
 import NuiTableRow from './NuiTableRow.vue';
 import NuiTableTracks from './NuiTableTracks.vue';
-import NuiTableTreeToggle from './NuiTableTreeToggle.vue';
 import NuiTableUtilityCell from './NuiTableUtilityCell.vue';
 import { tableMessages } from './table.messages';
 import {
@@ -388,7 +388,9 @@ import { useTableTotals } from './use-table-totals';
 import { useTableSelection, type TableSelectionKey } from './use-table-selection';
 import type {
   TableBodyRow,
-  TableCellContentProps,
+  TableCellContent,
+  TableCellLead,
+  TableCellView,
   TableCellLayout,
   TableCellPaint,
   TableCellPosition,
@@ -1156,14 +1158,8 @@ const rowUtility = (item: TableBodyRow, column: string): NuiTableUtilityCellProp
     : { control: 'checkbox', checked: item.selected, label: selectText.value };
 };
 
-const gripOf = (item: TableBodyRow): VNode =>
-  h(NuiTableRowGrip, {
-    label:
-      dragLabel?.(rowAt(item.index)) ?? messages.value.dragRow({ row: labelOf(rowAt(item.index)) }),
-    disabled: !dragEnabled.value,
-    active: rowDrag.dragging.value === item.index,
-    onGrab: (event: PointerEvent) => rowDrag.grab(item.index, event),
-  });
+const gripLabel = (item: TableBodyRow): string =>
+  dragLabel?.(rowAt(item.index)) ?? messages.value.dragRow({ row: labelOf(rowAt(item.index)) });
 
 const menu: TableMenu = useTableMenu({
   enabled: () => columnMenu !== false,
@@ -2189,97 +2185,105 @@ const scopeOf = (row: T, position: number, key: string, pinned: boolean): NuiTab
 const textOf = (row: T, key: string): string =>
   cellTextOf(columnAt(key), row, resolvedLocale.value, booleanTexts.value);
 
-const treeToggleOf = (item: TableBodyRow): VNode[] => {
-  const level = treeOn.value ? item.treeLevel : 0;
-  const expandable = item.expanded !== undefined;
+const treeLevelOf = (item: TableBodyRow): number => (treeOn.value ? item.treeLevel : 0);
 
-  return expandable || item.loading || level > 0
-    ? [
-        h(NuiTableTreeToggle, {
-          level,
-          expandable,
-          loading: item.loading,
-          onToggle: () => expansion.toggle(item.index),
-        }),
-      ]
-    : [];
-};
+const hasTreeToggle = (item: TableBodyRow): boolean =>
+  item.expanded !== undefined || item.loading || treeLevelOf(item) > 0;
 
-const editorOf = (position: number, column: string): VNode | undefined => {
+const editorProps = computed(() => {
   const current = cellEditor.session.value;
 
-  if (current?.position.row !== position || current.key !== column) {
-    return undefined;
-  }
-  return h(NuiTableCellEditor, {
-    spec: current.spec,
-    value: cellEditor.draft.value,
-    label: current.label,
-    errorId: `${gridId.value}-error`,
-    error: cellEditor.error.value,
-    typed: current.typed,
-    passive: current.passive,
-    keep: keepEditing,
-    pick: picker.onKeydown,
-    attach: cellEditor.attach,
-    commit: cellEditor.commit,
-    cancel: cellEditor.cancel,
-    onUpdate: (value: unknown) => {
-      picker.reset();
-      cellEditor.input(value);
-    },
-  });
+  return current === undefined
+    ? undefined
+    : {
+        spec: current.spec,
+        value: cellEditor.draft.value,
+        label: current.label,
+        errorId: `${gridId.value}-error`,
+        error: cellEditor.error.value,
+        typed: current.typed,
+        passive: current.passive,
+        keep: keepEditing,
+        pick: picker.onKeydown,
+        attach: cellEditor.attach,
+        commit: cellEditor.commit,
+        cancel: cellEditor.cancel,
+      };
+});
+
+const onEditorUpdate = (value: unknown): void => {
+  picker.reset();
+  cellEditor.input(value);
 };
 
-const mergedContent = (merge: TableLeadSpan): VNode | VNode[] => {
-  const key = dataKeys.value[merge.anchor.col];
-  const row = rowAtPosition(merge.anchor.row);
+const contentOf = (
+  item: TableBodyRow,
+  column: string,
+  merge: TableLeadSpan | undefined,
+): TableCellContent<T> => {
+  const key = merge === undefined ? undefined : dataKeys.value[merge.anchor.col];
+  const row = merge === undefined ? undefined : rowAtPosition(merge.anchor.row);
 
-  if (key === undefined || row === undefined) {
-    return [];
-  }
-  const editor = editorOf(merge.anchor.row, key);
-
-  return editor !== undefined && hostsCursor(merge)
-    ? editor
-    : renderSlot(rawSlots, `cell-${key}`, { ...scopeOf(row, merge.anchor.row, key, false) }, () => [
-        h('span', { class: 'nui-table__text' }, textOf(row, key)),
-      ]);
+  return merge === undefined || key === undefined || row === undefined
+    ? { position: item.index, key: column, row: rowAt(item.index) }
+    : { position: merge.anchor.row, key, row };
 };
 
-const CellContent = (props: TableCellContentProps<T>): VNode | VNode[] => {
-  const { item, column } = props;
+const editsCell = (cell: TableCellContent<T>, merge: TableLeadSpan | undefined): boolean => {
+  const current = cellEditor.session.value;
 
-  if (props.merge !== undefined) {
-    return mergedContent(props.merge);
+  return (
+    current?.position.row === cell.position &&
+    current.key === cell.key &&
+    (merge === undefined || hostsCursor(merge))
+  );
+};
+
+const leadsOf = (item: TableBodyRow, column: string): TableCellLead[] => {
+  const grip: TableCellLead[] =
+    column === gripKey.value
+      ? [
+          {
+            kind: 'grip',
+            label: gripLabel(item),
+            disabled: !dragEnabled.value,
+            active: rowDrag.dragging.value === item.index,
+          },
+        ]
+      : [];
+
+  return column === treeKey.value && hasTreeToggle(item)
+    ? [
+        ...grip,
+        {
+          kind: 'toggle',
+          level: treeLevelOf(item),
+          expandable: item.expanded !== undefined,
+          loading: item.loading,
+        },
+      ]
+    : grip;
+};
+
+const cellViewOf = (
+  item: TableBodyRow,
+  column: string,
+  merge: TableLeadSpan | undefined,
+): TableCellView<T> => {
+  if (merge === undefined && item.pending) {
+    return { kind: 'skeleton' };
   }
-  if (item?.pending === true) {
-    return h(NuiSkeleton, TEXT_SKELETON);
+  if (merge === undefined && item.group !== undefined) {
+    return { kind: 'group', cell: item.group.cells[column] };
   }
-  if (item?.group !== undefined) {
-    return h(NuiTableGroupCell, {
-      cell: item.group.cells[column],
-      onToggle: () => expansion.toggle(item.index),
-    });
-  }
-  const row = props.row ?? rowAt(props.position);
-  const editor = item === undefined ? undefined : editorOf(props.position, column);
+  const cell = contentOf(item, column, merge);
 
-  const content =
-    editor ??
-    renderSlot(
-      rawSlots,
-      `cell-${column}`,
-      { ...scopeOf(row, props.position, column, props.pinned === true) },
-      () => [h('span', { class: 'nui-table__text' }, textOf(row, column))],
-    );
-
-  const parts = [
-    ...(item !== undefined && column === gripKey.value ? [gripOf(item)] : []),
-    ...(item !== undefined && column === treeKey.value ? treeToggleOf(item) : []),
-  ];
-
-  return parts.length === 0 ? content : [...parts, content];
+  return {
+    kind: 'data',
+    leads: merge === undefined ? leadsOf(item, column) : [],
+    editing: editsCell(cell, merge),
+    scope: scopeOf(cell.row, cell.position, cell.key, false),
+  };
 };
 
 const neededRange = computed(() => {
