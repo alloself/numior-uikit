@@ -30,3 +30,13 @@ export {
 } from './values';
 export { createWorkbook, validSheetName } from './workbook';
 export type { Sheet, Workbook } from './workbook';
+export { EN_FORMULAS, RU_FORMULAS, formulaReferences, parseFormula, printFormula } from './formula';
+export type {
+  BinaryOperator,
+  FormulaFailure,
+  FormulaLocale,
+  FormulaNode,
+  FormulaParse,
+  FormulaReference,
+  LineRef,
+} from './formula';
