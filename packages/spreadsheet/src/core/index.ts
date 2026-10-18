@@ -40,3 +40,17 @@ export type {
   FormulaReference,
   LineRef,
 } from './formula';
+export { BASE_FUNCTIONS, createCalculator, createFunctionRegistry, defineFunction } from './calc';
+export type {
+  Calculator,
+  CalculatorOptions,
+  EvalValue,
+  FormulaCell,
+  FormulaState,
+  FunctionArgs,
+  FunctionRegistry,
+  FunctionSpec,
+  Limitation,
+  RecalcOptions,
+  Recalculation,
+} from './calc';
