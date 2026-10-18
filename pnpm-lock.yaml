@@ -173,6 +173,9 @@ importers:
       '@numior/forms':
         specifier: workspace:*
         version: link:../../packages/forms
+      '@numior/spreadsheet':
+        specifier: workspace:*
+        version: link:../../packages/spreadsheet
       '@numior/table':
         specifier: workspace:*
         version: link:../../packages/table

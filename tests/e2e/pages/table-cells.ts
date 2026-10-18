@@ -25,7 +25,7 @@ const HEAD_ROWS = 1;
 const ROW_HEADERS = 1;
 
 export class TableCellsSection {
-  readonly scope = '[data-testid="table-cells"]';
+  readonly scope: string;
   readonly toggle: Locator;
   readonly root: Locator;
   readonly viewport: Locator;
@@ -36,16 +36,20 @@ export class TableCellsSection {
   readonly references: Locator;
   readonly recalc: Locator;
 
-  constructor(private readonly page: Page) {
-    this.toggle = page.getByTestId('table-cells-toggle');
-    this.root = page.getByTestId('table-cells');
+  constructor(
+    protected readonly page: Page,
+    id = 'table-cells',
+  ) {
+    this.scope = `[data-testid="${id}"]`;
+    this.toggle = page.getByTestId(`${id}-toggle`);
+    this.root = page.getByTestId(id);
     this.viewport = this.root.locator(':scope > .nui-table__frame > .nui-table__viewport');
     this.grid = this.viewport.locator(':scope > .nui-table__grid');
-    this.output = page.getByTestId('table-cells-output');
-    this.nameBox = page.getByTestId('table-cells-name');
-    this.formula = page.getByTestId('table-cells-formula');
+    this.output = page.getByTestId(`${id}-output`);
+    this.nameBox = page.getByTestId(`${id}-name`);
+    this.formula = page.getByTestId(`${id}-formula`);
     this.references = this.grid.locator(':scope > .nui-table__overlay .sheet-ref');
-    this.recalc = page.getByTestId('table-cells-recalc');
+    this.recalc = page.getByTestId(`${id}-recalc`);
   }
 
   async show(): Promise<void> {

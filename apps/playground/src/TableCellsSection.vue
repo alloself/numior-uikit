@@ -82,9 +82,7 @@ import { computed, ref, shallowRef, useTemplateRef } from 'vue';
 import { NuiButton, NuiInput } from '@numior/vue';
 import {
   NuiTable,
-  cellName,
   columnIndex,
-  rangeName,
   tableCells,
   type NuiTableCellSource,
   type NuiTableCellValue,
@@ -92,52 +90,24 @@ import {
   type NuiTableCommandSink,
   type NuiTableEdit,
   type NuiTableCells,
-  type NuiTableDraft,
   type NuiTableEditEvent,
   type NuiTableExposed,
   type NuiTableRange,
   type NuiTableRanges,
   type TableCellPosition,
 } from '@numior/table';
-import { referenceBoxes, type SheetReference } from './sheet-references';
+import { referenceBoxes } from './sheet-references';
 import { bigSheet, SHEET_COLS } from './sheet-source';
+import { useFormulaBar } from './use-formula-bar';
 
-interface SheetPick {
-  readonly text: string;
-  readonly at: number;
-}
-
-const OPERATOR = /[=(+\-*/,;:]$/;
 const COPY_ROWS = 5000;
 const RECALC: NuiTableRange = { from: { row: 1, col: 1 }, to: { row: 3, col: 3 } };
 const COPY_COLS = 100;
 const REFERENCE = /([A-Z]{1,3})(\d+)(?::([A-Z]{1,3})(\d+))?/g;
 
-const TONES = [
-  'var(--nui-primary)',
-  'var(--nui-success)',
-  'var(--nui-warning)',
-  'var(--nui-danger)',
-];
-
-const BAR_KEYS: Readonly<Record<string, (table: NuiTableExposed) => void>> = {
-  Enter: (table) => {
-    table.commitEdit('down');
-  },
-  Tab: (table) => {
-    table.commitEdit('next');
-  },
-  Escape: (table) => {
-    table.cancelEdit();
-  },
-};
-
 const cells = shallowRef<NuiTableCells>();
 const ranges = ref<NuiTableRanges>([]);
-const active = ref<TableCellPosition>();
-const draft = ref<NuiTableDraft>();
 const entries = shallowRef<ReadonlyMap<number, string>>(new Map());
-const lastPick = shallowRef<SheetPick>();
 const done = shallowRef<readonly NuiTableEditEvent<number>[]>([]);
 const undone = shallowRef<readonly NuiTableEditEvent<number>[]>([]);
 const sheet = useTemplateRef<NuiTableExposed>('sheet');
@@ -159,6 +129,36 @@ const editableSheet: NuiTableCellSource = {
   },
 };
 
+const textAt = (position: TableCellPosition): string =>
+  editableSheet.cellAt(position.row, position.col)?.text ?? '';
+
+const cellOf = (letters = 'A', digits = '1'): TableCellPosition => ({
+  row: Number(digits) - 1,
+  col: columnIndex(letters),
+});
+
+const referencesOf = (formula: string): NuiTableRange[] =>
+  [...formula.matchAll(REFERENCE)].map((match) => {
+    const from = cellOf(match[1], match[2]);
+
+    return { from, to: match[3] === undefined ? from : cellOf(match[3], match[4]) };
+  });
+
+const {
+  active,
+  draft,
+  barText,
+  formulaReferences,
+  nameOf,
+  picking,
+  inBar,
+  onPick,
+  onBarFocus,
+  onBarInput,
+  onBarKeydown,
+  onBarBlur,
+} = useFormulaBar({ sheet, area, bar, textAt, referencesOf });
+
 const recalculateRow = (row: number): void => {
   for (let col = RECALC.from.col; col <= RECALC.to.col; col += 1) {
     recalculated.set(indexOf(row, col), String(rounds * 100 + row * 10 + col));
@@ -173,9 +173,6 @@ const recalculate = (): void => {
   }
   sheet.value?.invalidate([RECALC]);
 };
-
-const textAt = (position: TableCellPosition): string =>
-  editableSheet.cellAt(position.row, position.col)?.text ?? '';
 
 const spanOf = (from: number, to: number, limit: number): number[] =>
   Array.from(
@@ -199,63 +196,14 @@ const SHEET_CLIPBOARD: NuiTableClipboard<number> = {
       : undefined,
 };
 
-const draftText = (value: unknown): string => (typeof value === 'string' ? value : '');
-
-const barText = computed(() => {
-  if (draft.value !== undefined) {
-    return draftText(draft.value.value);
-  }
-  return active.value === undefined ? '' : textAt(active.value);
-});
-
 const output = computed(() => JSON.stringify({ ranges: ranges.value }));
 
-const cellOf = (letters = 'A', digits = '1'): TableCellPosition => ({
-  row: Number(digits) - 1,
-  col: columnIndex(letters),
-});
-
-const referenceOfMatch = (match: RegExpMatchArray, index: number): SheetReference => {
-  const from = cellOf(match[1], match[2]);
-
-  return {
-    range: { from, to: match[3] === undefined ? from : cellOf(match[3], match[4]) },
-    tone: TONES[index % TONES.length] ?? 'var(--nui-primary)',
-  };
-};
-
-const formulaReferences = computed<readonly SheetReference[]>(() => {
-  const text = draftText(draft.value?.value);
-
-  return text.startsWith('=') ? [...text.matchAll(REFERENCE)].map(referenceOfMatch) : [];
-});
-
-const nameOf = (position: TableCellPosition | undefined): string =>
-  position === undefined ? '' : cellName(position);
-
 const textOf = (value: NuiTableCellValue): string => (value === null ? '' : String(value));
-
-const pickAt = (text: string): number => {
-  const pick = lastPick.value;
-
-  return pick !== undefined && text.slice(pick.at) === pick.text ? pick.at : text.length;
-};
-
-const picking = (next: NuiTableDraft): boolean => {
-  const text = draftText(next.value);
-
-  return text.startsWith('=') && (OPERATOR.test(text) || pickAt(text) < text.length);
-};
 
 const editable = (source: NuiTableCells): NuiTableCells => ({
   ...source,
   columns: source.columns.map((column) => ({ ...column, editable: true })),
 });
-
-const inArea = (target: EventTarget | null): boolean =>
-  target instanceof Node && area.value?.contains(target) === true;
-
-const inBar = (target: Element): boolean => bar.value?.contains(target) === true;
 
 const toggle = (): void => {
   cells.value = cells.value === undefined ? editable(tableCells(editableSheet)) : undefined;
@@ -305,43 +253,5 @@ const SHEET_COMMANDS: NuiTableCommandSink<number> = {
     writeAll(next.changes, false);
     return next.changes.length;
   },
-};
-
-const onPick = (range: NuiTableRange): void => {
-  const current = draft.value;
-  const text = draftText(current?.value);
-  const at = pickAt(text);
-  const reference = rangeName(range);
-
-  if (current !== undefined) {
-    lastPick.value = { text: reference, at };
-    draft.value = { ...current, value: `${text.slice(0, at)}${reference}` };
-  }
-};
-
-const onBarFocus = (): void => {
-  sheet.value?.startEdit('append', { focus: false });
-};
-
-const onBarInput = (text: string): void => {
-  if (draft.value !== undefined) {
-    draft.value = { ...draft.value, value: text };
-  }
-};
-
-const onBarKeydown = (event: KeyboardEvent): void => {
-  const action = BAR_KEYS[event.key];
-  const table = sheet.value;
-
-  if (action !== undefined && table !== null) {
-    event.preventDefault();
-    action(table);
-  }
-};
-
-const onBarBlur = (event: FocusEvent): void => {
-  if (!inArea(event.relatedTarget)) {
-    sheet.value?.commitEdit('blur');
-  }
 };
 </script>

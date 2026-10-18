@@ -231,6 +231,7 @@ label:has(> input[type='checkbox']) {
 }
 .sheet-bar {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: var(--nui-space-2);
 }
@@ -242,7 +243,23 @@ label:has(> input[type='checkbox']) {
 }
 .sheet-formula {
   flex: 1;
-  min-inline-size: 0;
+  min-inline-size: min(100%, 14rem);
+}
+.sheet-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--nui-space-3);
+}
+.sheet-progress {
+  flex: 1;
+  min-inline-size: 8rem;
+  max-inline-size: 16rem;
+}
+.sheet-status {
+  color: var(--nui-text-muted);
+  font-size: var(--nui-font-size-sm);
+  font-variant-numeric: tabular-nums;
 }
 .sheet-ref {
   position: absolute;
