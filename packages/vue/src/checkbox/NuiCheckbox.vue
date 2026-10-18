@@ -37,7 +37,7 @@
 <script setup lang="ts">
 import { computed, nextTick, useTemplateRef, watchPostEffect } from 'vue';
 import { useFieldControl, useSplitAttrs } from '@numior/primitives';
-import NuiFieldFrame from '../field/NuiFieldFrame';
+import NuiFieldFrame from '../field/NuiFieldFrame.vue';
 import NuiIcon from '../icon/NuiIcon.vue';
 import { useCheckboxGroup } from './checkbox-group-context';
 import type { NuiCheckboxProps } from './checkbox.types';

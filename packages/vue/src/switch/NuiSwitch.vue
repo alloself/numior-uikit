@@ -36,7 +36,7 @@
 <script setup lang="ts">
 import { nextTick, useTemplateRef } from 'vue';
 import { useFieldControl, useSplitAttrs } from '@numior/primitives';
-import NuiFieldFrame from '../field/NuiFieldFrame';
+import NuiFieldFrame from '../field/NuiFieldFrame.vue';
 import type { NuiSwitchProps } from './switch.types';
 
 defineOptions({ inheritAttrs: false });

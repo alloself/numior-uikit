@@ -93,7 +93,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { normalizeRange } from '@numior/primitives';
-import NuiFieldFrame from '../field/NuiFieldFrame';
+import NuiFieldFrame from '../field/NuiFieldFrame.vue';
 import NuiCalendar from '../calendar/NuiCalendar.vue';
 import type { NuiCalendarValue, NuiDateRange } from '../calendar/calendar.types';
 import { isDateRange } from '../calendar/day-state';

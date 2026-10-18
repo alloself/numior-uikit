@@ -113,7 +113,7 @@ import {
   type TimeSegmentType,
   type TimeValue,
 } from '@numior/primitives';
-import NuiFieldFrame from '../field/NuiFieldFrame';
+import NuiFieldFrame from '../field/NuiFieldFrame.vue';
 import NuiButton from '../button/NuiButton.vue';
 import { useTriggerElement } from '../shared/trigger-ref';
 import NuiTimeSegment from './NuiTimeSegment.vue';

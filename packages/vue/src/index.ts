@@ -59,7 +59,7 @@ export { default as NuiIcon } from './icon/NuiIcon.vue';
 export type { NuiIconProps, NuiIconTransform } from './icon/icon.types';
 export { defaultIcons } from './icon/default-icons';
 export { default as NuiField } from './field/NuiField.vue';
-export { default as NuiFieldFrame } from './field/NuiFieldFrame';
+export { default as NuiFieldFrame } from './field/NuiFieldFrame.vue';
 export { default as NuiFieldLabel } from './field/NuiFieldLabel.vue';
 export { default as NuiFieldDescription } from './field/NuiFieldDescription.vue';
 export { default as NuiFieldError } from './field/NuiFieldError.vue';

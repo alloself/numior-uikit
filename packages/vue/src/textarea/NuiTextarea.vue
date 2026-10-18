@@ -20,7 +20,7 @@
 <script setup lang="ts">
 import { ref, useAttrs, useTemplateRef, watch } from 'vue';
 import { useFieldControl } from '@numior/primitives';
-import NuiFieldFrame from '../field/NuiFieldFrame';
+import NuiFieldFrame from '../field/NuiFieldFrame.vue';
 import type { NuiTextareaModifiers, NuiTextareaProps } from './textarea.types';
 
 defineOptions({ inheritAttrs: false });

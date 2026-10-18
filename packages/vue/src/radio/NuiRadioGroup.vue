@@ -38,7 +38,7 @@
 <script setup lang="ts" generic="T">
 import { computed, useAttrs } from 'vue';
 import { provideRadioGroup, useFieldControl } from '@numior/primitives';
-import NuiFieldFrame from '../field/NuiFieldFrame';
+import NuiFieldFrame from '../field/NuiFieldFrame.vue';
 import { defaultOptionKey } from '../shared/options';
 import NuiRadio from './NuiRadio.vue';
 import type { NuiRadioGroupProps } from './radio.types';

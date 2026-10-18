@@ -34,7 +34,7 @@
 <script setup lang="ts">
 import { ref, useTemplateRef, watch } from 'vue';
 import { applyMask, maskCaret, useFieldControl, useSplitAttrs } from '@numior/primitives';
-import NuiFieldFrame from '../field/NuiFieldFrame';
+import NuiFieldFrame from '../field/NuiFieldFrame.vue';
 import type { NuiInputModifiers, NuiInputProps } from './input.types';
 
 const isBackspace = (event: Event): boolean =>

@@ -36,7 +36,7 @@
 <script setup lang="ts" generic="T">
 import { computed, useAttrs } from 'vue';
 import { useFieldControl } from '@numior/primitives';
-import NuiFieldFrame from '../field/NuiFieldFrame';
+import NuiFieldFrame from '../field/NuiFieldFrame.vue';
 import { defaultOptionKey } from '../shared/options';
 import NuiCheckbox from './NuiCheckbox.vue';
 import { provideCheckboxGroup } from './checkbox-group-context';

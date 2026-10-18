@@ -82,7 +82,7 @@ import {
   type OtpEdit,
   type OtpSelection,
 } from '@numior/primitives';
-import NuiFieldFrame from '../field/NuiFieldFrame';
+import NuiFieldFrame from '../field/NuiFieldFrame.vue';
 import NuiIcon from '../icon/NuiIcon.vue';
 import NuiOtpSlot from './NuiOtpSlot.vue';
 import type { NuiOtpFieldProps } from './otp-field.types';

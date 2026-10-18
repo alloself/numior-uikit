@@ -98,7 +98,7 @@ import {
   type FileRejection,
   type UploadEntry,
 } from '@numior/primitives';
-import NuiFieldFrame from '../field/NuiFieldFrame';
+import NuiFieldFrame from '../field/NuiFieldFrame.vue';
 import NuiButton from '../button/NuiButton.vue';
 import NuiIcon from '../icon/NuiIcon.vue';
 import NuiUploadRow from './NuiUploadRow.vue';

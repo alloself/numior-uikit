@@ -18,7 +18,7 @@
 <script setup lang="ts">
 import { useSlots } from 'vue';
 import { provideField } from '@numior/primitives';
-import NuiFieldFrame from './NuiFieldFrame';
+import NuiFieldFrame from './NuiFieldFrame.vue';
 import type { NuiFieldProps } from './field.types';
 
 const {

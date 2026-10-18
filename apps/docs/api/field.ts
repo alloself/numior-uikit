@@ -47,6 +47,45 @@ const docs: DocsMap = {
       error: { ru: 'Разметка ошибки вместо текста.', en: 'Error markup instead of the text.' },
     },
   },
+  NuiFieldFrame: {
+    props: {
+      field: {
+        ru: 'Контекст поля из `useFieldControl().field`.',
+        en: 'Field context from `useFieldControl().field`.',
+      },
+      own: {
+        ru: 'Контрол сам рисует обвязку поля; иначе её рисует внешний NuiField, и рамка отдаёт только содержимое.',
+        en: 'The control draws its own field frame; otherwise the outer NuiField draws it and the frame passes the content through.',
+      },
+      label: { ru: 'Текст подписи.', en: 'Label text.' },
+      description: {
+        ru: 'Текст описания под контролом.',
+        en: 'Description text under the control.',
+      },
+      error: { ru: 'Текст ошибки.', en: 'Error text.' },
+      reserveError: {
+        ru: 'Держит место под ошибку, чтобы раскладка не прыгала.',
+        en: 'Keeps room for the error so the layout does not jump.',
+      },
+      group: {
+        ru: 'Рисует fieldset для группы контролов.',
+        en: 'Draws a fieldset for a group of controls.',
+      },
+      inline: {
+        ru: 'Контрол в одну строку со своей подписью: внешняя подпись не рисуется.',
+        en: 'A control on one line with its own label: the outer label is not drawn.',
+      },
+    },
+    slots: {
+      default: { ru: 'Контрол.', en: 'The control.' },
+      label: { ru: 'Разметка подписи вместо текста.', en: 'Label markup instead of the text.' },
+      description: {
+        ru: 'Разметка описания вместо текста.',
+        en: 'Description markup instead of the text.',
+      },
+      error: { ru: 'Разметка ошибки вместо текста.', en: 'Error markup instead of the text.' },
+    },
+  },
   NuiFieldLabel: {
     props: fieldProp,
     slots: { default: { ru: 'Текст подписи.', en: 'Label text.' } },

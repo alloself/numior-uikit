@@ -103,7 +103,7 @@
 <script setup lang="ts" generic="R = unknown">
 import { computed, ref, useTemplateRef } from 'vue';
 import { useFileDrop, useUploadQueue, validateFiles, type UploadEntry } from '@numior/primitives';
-import NuiFieldFrame from '../field/NuiFieldFrame';
+import NuiFieldFrame from '../field/NuiFieldFrame.vue';
 import NuiAvatar from '../avatar/NuiAvatar.vue';
 import NuiButton from '../button/NuiButton.vue';
 import NuiIcon from '../icon/NuiIcon.vue';

@@ -85,7 +85,7 @@ import {
   useSplitAttrs,
   withStepPrecision,
 } from '@numior/primitives';
-import NuiFieldFrame from '../field/NuiFieldFrame';
+import NuiFieldFrame from '../field/NuiFieldFrame.vue';
 import NuiButton from '../button/NuiButton.vue';
 import { numberFieldMessages } from './number-field.messages';
 import type { NuiNumberFieldProps } from './number-field.types';

@@ -72,7 +72,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { joinDateTime, splitDateTime } from '@numior/primitives';
-import NuiFieldFrame from '../field/NuiFieldFrame';
+import NuiFieldFrame from '../field/NuiFieldFrame.vue';
 import NuiCalendar from '../calendar/NuiCalendar.vue';
 import type { NuiCalendarValue } from '../calendar/calendar.types';
 import NuiTimeField from '../time-field/NuiTimeField.vue';

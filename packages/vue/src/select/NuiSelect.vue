@@ -112,7 +112,7 @@
 <script setup lang="ts" generic="T">
 import { computed, onMounted, ref, shallowRef, useTemplateRef, watch } from 'vue';
 import { createIntent, useFieldControl, useMessages, useSplitAttrs } from '@numior/primitives';
-import NuiFieldFrame from '../field/NuiFieldFrame';
+import NuiFieldFrame from '../field/NuiFieldFrame.vue';
 import NuiButton from '../button/NuiButton.vue';
 import NuiIcon from '../icon/NuiIcon.vue';
 import NuiList from '../list/NuiList.vue';
