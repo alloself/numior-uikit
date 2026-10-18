@@ -165,6 +165,31 @@ export const createCellStore = (strings: SharedStrings): CellStore => {
     }
   };
 
+  const visitBand = (
+    present: readonly { readonly chunk: Chunk; readonly col: number }[],
+    band: number,
+    range: CellRange,
+    visit: CellVisitor,
+  ): void => {
+    const top = Math.max(range.top, band * CHUNK_ROWS);
+    const bottom = Math.min(range.bottom, band * CHUNK_ROWS + CHUNK_ROWS - 1);
+
+    for (let row = top; row <= bottom; row += 1) {
+      for (const { chunk, col: columnBand } of present) {
+        const left = Math.max(range.left, columnBand * CHUNK_COLS);
+        const right = Math.min(range.right, columnBand * CHUNK_COLS + CHUNK_COLS - 1);
+
+        for (let col = left; col <= right; col += 1) {
+          const slot = slotOf(row, col);
+
+          if (chunk.kinds[slot] !== Kind.Empty) {
+            visit(row, col, read(chunk, slot, strings));
+          }
+        }
+      }
+    }
+  };
+
   const scanTo = (start: Point, step: Point, wanted: boolean): number => {
     let point = start;
 
@@ -211,13 +236,17 @@ export const createCellStore = (strings: SharedStrings): CellStore => {
       }
     },
     forEachInRange: (range, visit) => {
-      for (const row of bandsOf(range.top, range.bottom, CHUNK_ROWS)) {
-        for (const col of bandsOf(range.left, range.right, CHUNK_COLS)) {
-          const chunk = chunks.get(row * CHUNKS_PER_ROW + col);
+      const columns = bandsOf(range.left, range.right, CHUNK_COLS);
 
-          if (chunk !== undefined) {
-            visitChunk(chunk, { row, col }, range, visit);
-          }
+      for (const band of bandsOf(range.top, range.bottom, CHUNK_ROWS)) {
+        const present = columns.flatMap((col) => {
+          const chunk = chunks.get(band * CHUNKS_PER_ROW + col);
+
+          return chunk === undefined ? [] : [{ chunk, col }];
+        });
+
+        if (present.length > 0) {
+          visitBand(present, band, range, visit);
         }
       }
     },

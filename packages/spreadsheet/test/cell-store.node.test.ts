@@ -54,6 +54,23 @@ describe('cell store', () => {
     expect(store().usedRange()).toBeUndefined();
   });
 
+  it('visits a range row by row even when it crosses chunks', () => {
+    const cells = store();
+    const seen: string[] = [];
+
+    cells.set(0, 40, numberValue(2));
+    cells.set(0, 1, numberValue(1));
+    cells.set(1, 0, numberValue(3));
+    cells.set(600, 33, numberValue(5));
+    cells.set(600, 0, numberValue(4));
+
+    cells.forEachInRange({ top: 0, left: 0, bottom: 700, right: 50 }, (_row, _col, value) => {
+      seen.push(value.kind === 'number' ? String(value.value) : '?');
+    });
+
+    expect(seen).toEqual(['1', '2', '3', '4', '5']);
+  });
+
   it('jumps like Ctrl with the arrows to the edges of filled runs and of the sheet', () => {
     const cells = store();
 

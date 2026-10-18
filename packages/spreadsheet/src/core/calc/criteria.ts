@@ -7,28 +7,27 @@ type Operator = '=' | '<>' | '<' | '>' | '<=' | '>=';
 
 const OPERATORS: readonly Operator[] = ['<=', '>=', '<>', '=', '<', '>'];
 
-const REGEX_SPECIAL = /[.+^${}()|[\]\\/]/u;
+const WILDCARD = /~[*?~]|[*?]|[.+^${}()|[\]\\]/gu;
 
-const wildcardPattern = (text: string): RegExp => {
-  let pattern = '';
-
-  for (let index = 0; index < text.length; index += 1) {
-    const char = text[index] ?? '';
-    const next = text[index + 1] ?? '';
-
-    if (char === '~' && (next === '*' || next === '?' || next === '~')) {
-      pattern += `\\${next}`;
-      index += 1;
-    } else if (char === '*') {
-      pattern += '[\\s\\S]*';
-    } else if (char === '?') {
-      pattern += '[\\s\\S]';
-    } else {
-      pattern += REGEX_SPECIAL.test(char) ? `\\${char}` : char;
-    }
+const wildcardToken = (token: string): string => {
+  switch (token) {
+    case '*':
+      return '[\\s\\S]*';
+    case '?':
+      return '[\\s\\S]';
+    case '~~':
+      return '~';
+    case '~*':
+    case '~?':
+      return `\\${token.slice(1)}`;
+    default:
+      return `\\${token}`;
   }
-  return new RegExp(`^${pattern}$`, 'iu');
 };
+
+export const wildcardSource = (text: string): string => text.replaceAll(WILDCARD, wildcardToken);
+
+const wildcardPattern = (text: string): RegExp => new RegExp(`^${wildcardSource(text)}$`, 'iu');
 
 const holds = (op: Operator, order: number): boolean => {
   switch (op) {

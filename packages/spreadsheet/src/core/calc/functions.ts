@@ -1,13 +1,14 @@
 import type { CellValue } from '../cell.types';
-import { booleanValue } from '../values';
 import type { EvalValue, FunctionArgs, FunctionSpec } from './calc.types';
-import { MANY } from './aggregate';
-import { compareValues, raise, toLogical } from './coerce';
+import { compareValues, raise } from './coerce';
 import { ARRAY_FUNCTIONS } from './array-functions';
 import { scalarOf } from './evaluate';
+import { INFORMATION_FUNCTIONS } from './information-functions';
+import { LOGICAL_FUNCTIONS } from './logical-functions';
 import { MATH_FUNCTIONS } from './math-functions';
 import { defineFunction } from './registry';
 import { STATISTICS_FUNCTIONS } from './statistics-functions';
+import { TEXT_FUNCTIONS } from './text-functions';
 import { VOLATILE_FUNCTIONS } from './volatile-functions';
 
 interface Grid {
@@ -15,27 +16,6 @@ interface Grid {
   readonly cols: number;
   at(row: number, col: number): CellValue;
 }
-
-const logicalFold =
-  (all: boolean) =>
-  (args: FunctionArgs): EvalValue => {
-    let seen = false;
-    let result = all;
-
-    args.forEachValue(0, (value, direct) => {
-      if (value.kind === 'error') {
-        raise(value.code);
-      }
-      if (direct || value.kind === 'number' || value.kind === 'boolean') {
-        const truth = toLogical(value);
-
-        seen = true;
-        result = all ? result && truth : result || truth;
-      }
-    });
-
-    return seen ? booleanValue(result) : raise('#VALUE!');
-  };
 
 const gridOf = (value: EvalValue): Grid => {
   switch (value.kind) {
@@ -119,36 +99,9 @@ const vlookup = (args: FunctionArgs): EvalValue => {
 export const BASE_FUNCTIONS: readonly FunctionSpec[] = [
   ...MATH_FUNCTIONS,
   ...STATISTICS_FUNCTIONS,
-  defineFunction({
-    name: 'IF',
-    min: 2,
-    max: 3,
-    lift: [0],
-    broadcast: [0, 1, 2],
-    evaluate: (args) => {
-      if (args.logical(0)) {
-        return args.value(1);
-      }
-      return args.count > 2 ? args.value(2) : booleanValue(false);
-    },
-  }),
-  defineFunction({ name: 'AND', min: 1, max: MANY, evaluate: logicalFold(true) }),
-  defineFunction({ name: 'OR', min: 1, max: MANY, evaluate: logicalFold(false) }),
-  defineFunction({
-    name: 'NOT',
-    min: 1,
-    max: 1,
-    lift: [0],
-    evaluate: (args) => booleanValue(!args.logical(0)),
-  }),
-  defineFunction({
-    name: 'IFERROR',
-    min: 2,
-    max: 2,
-    lift: [0],
-    broadcast: [0, 1],
-    evaluate: (args) => (args.scalar(0).kind === 'error' ? args.value(1) : args.value(0)),
-  }),
+  ...LOGICAL_FUNCTIONS,
+  ...TEXT_FUNCTIONS,
+  ...INFORMATION_FUNCTIONS,
   defineFunction({ name: 'VLOOKUP', min: 3, max: 4, lift: [0], evaluate: vlookup }),
   ...ARRAY_FUNCTIONS,
   ...VOLATILE_FUNCTIONS,
