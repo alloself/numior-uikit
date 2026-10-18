@@ -5,10 +5,12 @@ import type { ContentNode, ElementNode } from '../model/node.types';
 import type { InputIntent, InputSource, TextDirection, TextUnit } from '../state/input.types';
 import { createMetaKey } from '../state/plugin';
 import { nearestCursor, selectionRange, textPosition, textSelection } from '../state/selection';
-import type { SelectionRange } from '../state/selection.types';
+import type { Selection, SelectionRange } from '../state/selection.types';
 import type { Command, EditorState } from '../state/state.types';
-import { ATOM, breakTypeOf, isAtom, isInline, selectionNear } from './atoms';
-import { attempt, exitEmptyLast, liftAtStart, splitListItem } from './blocks';
+import { ATOM, breakTypeOf, caretNear, isAtom, isInline } from './atoms';
+import { gapDelete, gapEnter, gapSpot, gapText } from './gap';
+import { attempt } from './attempt';
+import { exitEmptyLast, liftAtStart, splitListItem } from './blocks';
 import { codeFence, codeNewline, codeToParagraph } from './code';
 import { inCode, textCursor } from './cursor';
 import { pasteCommand } from './paste';
@@ -105,7 +107,7 @@ const deleteNode =
       tr.delete(at, at + nodeSize(node));
 
       if (tr.changed) {
-        tr.setSelection(selectionNear(tr.doc, at, backward ? -1 : 1));
+        tr.setSelection(caretNear(tr.doc, at, backward ? -1 : 1));
         return true;
       }
       const block = emptyTextblock(doc.schema, tr.newId());
@@ -123,7 +125,11 @@ const deleteNode =
 export const deleteText =
   (direction: TextDirection, unit: TextUnit): Command =>
   (state, dispatch) => {
-    if (deleteNode(direction === 'backward')(state, dispatch) || deleteSelection(state, dispatch)) {
+    if (
+      gapDelete(direction === 'backward')(state, dispatch) ||
+      deleteNode(direction === 'backward')(state, dispatch) ||
+      deleteSelection(state, dispatch)
+    ) {
       return true;
     }
     const cursor = textCursor(state);
@@ -284,26 +290,59 @@ const atomBeside = (
   return isAtom(schema, block) ? block : undefined;
 };
 
-const leaveNode =
-  (state: EditorState, backward: boolean): Command =>
-  (_, dispatch) => {
-    const range = selectionRange(state.doc, state.selection);
+const leaveNode = (state: EditorState, backward: boolean, vertical: boolean): Selection => {
+  const { selection, doc } = state;
+  const node = selection.kind === 'node' ? doc.byId(selection.id) : undefined;
+  const range = selectionRange(doc, selection);
 
-    const target = backward
-      ? selectionNear(state.doc, range.from, -1)
-      : selectionNear(state.doc, range.to, 1);
+  if (node !== undefined && !vertical && !isInline(doc.schema, node)) {
+    return { kind: 'gap', id: node.id, side: backward ? 'start' : 'end' };
+  }
+  return backward ? caretNear(doc, range.from, -1) : caretNear(doc, range.to, 1);
+};
 
-    dispatch?.(state.tr.setSelection(target));
-    return true;
-  };
+const leaveGap = (
+  state: EditorState,
+  backward: boolean,
+  vertical: boolean,
+): Selection | undefined => {
+  const spot = gapSpot(state.doc, state.selection);
+
+  if (spot === undefined) {
+    return undefined;
+  }
+  if (!vertical && spot.side === (backward ? 'end' : 'start')) {
+    return { kind: 'gap', id: spot.node.id, side: backward ? 'start' : 'end' };
+  }
+  return backward
+    ? caretNear(state.doc, spot.at, -1)
+    : caretNear(state.doc, spot.at + nodeSize(spot.node), 1);
+};
+
+const leaving = (
+  state: EditorState,
+  backward: boolean,
+  vertical: boolean,
+): Selection | undefined => {
+  switch (state.selection.kind) {
+    case 'node':
+      return leaveNode(state, backward, vertical);
+    case 'gap':
+      return leaveGap(state, backward, vertical);
+    default:
+      return undefined;
+  }
+};
 
 export const selectAtom =
   (direction: TextDirection, vertical = false): Command =>
   (state, dispatch) => {
     const backward = direction === 'backward';
+    const left = leaving(state, backward, vertical);
 
-    if (state.selection.kind === 'node') {
-      return leaveNode(state, backward)(state, dispatch);
+    if (left !== undefined) {
+      dispatch?.(state.tr.setSelection(left));
+      return true;
     }
     const cursor = vertical ? undefined : textCursor(state);
     const atom = cursor === undefined ? undefined : atomBeside(state, cursor, backward);
@@ -311,7 +350,15 @@ export const selectAtom =
     if (atom === undefined) {
       return false;
     }
-    dispatch?.(state.tr.setSelection({ kind: 'node', id: atom.id }));
+
+    dispatch?.(
+      state.tr.setSelection(
+        isInline(state.doc.schema, atom)
+          ? { kind: 'node', id: atom.id }
+          : { kind: 'gap', id: atom.id, side: backward ? 'end' : 'start' },
+      ),
+    );
+
     return true;
   };
 
@@ -324,14 +371,14 @@ export const intentCommand = (intent: InputIntent): Command => {
   switch (intent.kind) {
     case 'insertText':
       return intent.range === undefined
-        ? chainCommands(typeOverBlock(intent.text), insertText(intent.text))
+        ? chainCommands(gapText(intent.text), typeOverBlock(intent.text), insertText(intent.text))
         : insertText(intent.text, intent.range);
     case 'compose':
       return insertText(intent.text, intent.range, intent.caret);
     case 'insertParagraph':
-      return chainCommands(splitListItem, insertParagraph);
+      return chainCommands(gapEnter, splitListItem, insertParagraph);
     case 'insertLineBreak':
-      return insertLineBreak;
+      return chainCommands(gapEnter, insertLineBreak);
     case 'delete':
       if (intent.range !== undefined) {
         return deleteRange(intent.range);

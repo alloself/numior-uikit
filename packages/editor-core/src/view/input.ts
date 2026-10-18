@@ -3,7 +3,7 @@ import { isAtom } from '../commands/atoms';
 import { intentCommand, selectAtom } from '../commands/input';
 import { clipboardHTML } from '../html/clipboard';
 import { nearestCursor, selectionRange } from '../state/selection';
-import type { SelectionRange } from '../state/selection.types';
+import type { Selection, SelectionRange } from '../state/selection.types';
 import type {
   InputIntent,
   InputSource,
@@ -18,8 +18,9 @@ import type { DomWatch } from './dom-change';
 import type { ViewHost } from './host.types';
 import { posAtDOM } from './positions';
 import type { SelectionSync } from './selection-sync';
-import { atomBeside } from './beside';
-import { atomAcross } from './vertical';
+import { pointBeside } from './beside';
+import { sideOutside } from './gap';
+import { verticalTarget } from './vertical';
 
 export interface InputParts {
   readonly sync: SelectionSync;
@@ -221,10 +222,10 @@ const moveByArrow = (host: ViewHost, event: KeyboardEvent): boolean => {
     return leaveAll(host, forward);
   }
 
-  const across = arrow.vertical ? atomAcross(host, forward) : undefined;
+  const across = arrow.vertical ? verticalTarget(host, forward) : undefined;
 
   if (across !== undefined) {
-    host.dispatch(state.tr.setSelection({ kind: 'node', id: across }), 'key');
+    host.dispatch(state.tr.setSelection(across), 'key');
     return true;
   }
 
@@ -281,10 +282,47 @@ const deleteAtEdge = (host: ViewHost, event: KeyboardEvent): boolean => {
 };
 
 const editNode = (host: ViewHost, event: KeyboardEvent): boolean => {
-  const intent = host.state().selection.kind === 'node' ? overNode(event) : undefined;
+  const { kind } = host.state().selection;
+  const intent = kind === 'node' || kind === 'gap' ? overNode(event) : undefined;
 
   return intent !== undefined && runIntent(host, intent);
 };
+
+const GAP_KEYS: Readonly<Record<string, 'start' | 'end' | 'select'>> = {
+  Home: 'start',
+  End: 'end',
+  'Shift+ArrowLeft': 'select',
+  'Shift+ArrowRight': 'select',
+};
+
+const moveInGap = (host: ViewHost, event: KeyboardEvent): boolean => {
+  const state = host.state();
+  const { selection } = state;
+  const move = GAP_KEYS[`${event.shiftKey ? 'Shift+' : ''}${event.key}`];
+
+  if (
+    selection.kind !== 'gap' ||
+    move === undefined ||
+    event.ctrlKey ||
+    event.metaKey ||
+    event.altKey
+  ) {
+    return false;
+  }
+
+  host.dispatch(
+    state.tr.setSelection(
+      move === 'select'
+        ? { kind: 'node', id: selection.id }
+        : { kind: 'gap', id: selection.id, side: move },
+    ),
+    'key',
+  );
+
+  return true;
+};
+
+const IME_KEYS = new Set(['Process', 'Unidentified']);
 
 const handleKey = (host: ViewHost, event: KeyboardEvent): boolean => {
   const key = keyOf(event);
@@ -296,6 +334,7 @@ const handleKey = (host: ViewHost, event: KeyboardEvent): boolean => {
 
   return (
     state.plugins.some((plugin) => plugin.props.handleKey?.(key, state, dispatch) === true) ||
+    moveInGap(host, event) ||
     moveByArrow(host, event) ||
     deleteAll(host, event) ||
     editNode(host, event) ||
@@ -345,7 +384,17 @@ export const attachInput = (host: ViewHost, parts: InputParts): (() => void) => 
   const { root } = host;
   const doc = root.ownerDocument;
 
+  const openGap = (): void => {
+    if (host.state().selection.kind === 'gap') {
+      runIntent(host, { kind: 'insertText', text: '' });
+      parts.sync.write();
+    }
+  };
+
   const onKeydown = (event: KeyboardEvent): void => {
+    if (IME_KEYS.has(event.key)) {
+      openGap();
+    }
     if (host.composing() || event.isComposing || event.key === 'Process') {
       return;
     }
@@ -430,10 +479,16 @@ export const attachInput = (host: ViewHost, parts: InputParts): (() => void) => 
     runIntent(host, { kind: 'files', files });
   };
 
-  const selectNode = (event: MouseEvent, id: string): void => {
+  const place = (event: MouseEvent, selection: Selection): void => {
     event.preventDefault();
     root.focus({ preventScroll: true });
-    host.dispatch(host.state().tr.setSelection({ kind: 'node', id }), 'pointer');
+    host.dispatch(host.state().tr.setSelection(selection), 'pointer');
+  };
+
+  const pointAt = (event: MouseEvent, id: string): Selection => {
+    const side = sideOutside(host, id, event.clientX);
+
+    return side === undefined ? { kind: 'node', id } : { kind: 'gap', id, side };
   };
 
   const belowContent = (event: MouseEvent): boolean => {
@@ -452,13 +507,16 @@ export const attachInput = (host: ViewHost, parts: InputParts): (() => void) => 
 
   const onMousedown = (event: MouseEvent): void => {
     const id = event.button === 0 ? atomAt(host, event.target) : undefined;
-    const beside = id === undefined ? atomBeside(host.context, root, event) : undefined;
+    const beside = id === undefined ? pointBeside(host, event) : undefined;
 
     if (id !== undefined) {
-      selectNode(event, id);
+      const point = pointAt(event, id);
+
+      parts.setHolding(point.kind === 'gap');
+      place(event, point);
     } else if (beside !== undefined) {
       parts.setHolding(true);
-      selectNode(event, beside);
+      place(event, beside);
     } else if (belowContent(event)) {
       event.preventDefault();
       root.focus({ preventScroll: true });
@@ -474,7 +532,7 @@ export const attachInput = (host: ViewHost, parts: InputParts): (() => void) => 
 
     if (owner?.contentDOM === null && event.button === 0 && !interactive(event.target, owner.dom)) {
       parts.setHolding(true);
-      selectNode(event, owner.node.id);
+      place(event, pointAt(event, owner.node.id));
     }
   };
 
@@ -503,6 +561,7 @@ export const attachInput = (host: ViewHost, parts: InputParts): (() => void) => 
   };
 
   const onCompositionstart = (): void => {
+    openGap();
     parts.setComposing(true);
     parts.watch.startComposition();
   };

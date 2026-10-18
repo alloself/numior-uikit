@@ -93,7 +93,7 @@ export class EditorImageDriver {
   }
 
   async describe(text: string): Promise<void> {
-    const trigger = this.figure.querySelector('.nui-editor-image__bar [aria-controls]');
+    const trigger = this.figure.querySelector('.nui-editor-image__bar [aria-expanded]');
 
     if (!(trigger instanceof HTMLElement)) {
       throw new Error('The image bar has no alt text button');

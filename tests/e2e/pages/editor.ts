@@ -67,7 +67,7 @@ export class EditorSection {
     });
   }
 
-  async clickBeside(block: Locator): Promise<void> {
+  async clickBeside(block: Locator, side: 'start' | 'end' = 'end'): Promise<void> {
     await block.click({ trial: true });
 
     const [own, editor] = await Promise.all([block.boundingBox(), this.content.boundingBox()]);
@@ -75,7 +75,11 @@ export class EditorSection {
     if (own === null || editor === null) {
       throw new Error('The block or the editor has no box');
     }
-    await this.page.mouse.click(editor.x + editor.width - 12, own.y + own.height / 2);
+
+    await this.page.mouse.click(
+      side === 'end' ? editor.x + editor.width - 12 : editor.x + 12,
+      own.y + own.height / 2,
+    );
   }
 
   async clickBelowContent(): Promise<void> {

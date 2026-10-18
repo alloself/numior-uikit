@@ -148,7 +148,7 @@ describe('node views', () => {
     expect(driver.modelTexts).toEqual(['before', 'x']);
   });
 
-  it('puts the caret into a new last paragraph when the page is clicked below a closing leaf', () => {
+  it('puts the caret after a closing leaf when the page is clicked below it', () => {
     driver = EditorViewDriver.mount(
       doc(node('paragraph', ['before']), node('divider')),
       fixtureSchema,
@@ -156,14 +156,17 @@ describe('node views', () => {
       boxViews({ updates: [], destroyed: [] }),
     );
 
+    const rule = driver.view.state.doc.root.content[1];
+    const id = rule?.kind === 'element' ? rule.id : '';
+
     expect(driver.clickBelow()).toBe(true);
-    expect(driver.modelTexts).toEqual(['before', '', '']);
-    expect(driver.selection).toEqual({ kind: 'text', anchor: 10, head: 10 });
-    expect(driver.clickBelow()).toBe(true);
-    expect(driver.modelTexts).toEqual(['before', '', '']);
+    expect(driver.modelTexts).toEqual(['before', '']);
+    expect(driver.selection).toEqual({ kind: 'gap', id, side: 'end' });
+    expect(driver.press('x')).toBe(true);
+    expect(driver.modelTexts).toEqual(['before', '', 'x']);
   });
 
-  it('reaches a leaf between text lines with the vertical arrows and leaves it the same way', () => {
+  it('puts the caret beside a leaf between text lines with the vertical arrows and leaves the same way', () => {
     driver = EditorViewDriver.mount(
       doc(node('paragraph', ['a']), node('divider'), node('paragraph', ['b'])),
       fixtureSchema,
@@ -182,7 +185,7 @@ describe('node views', () => {
     const id = rule?.kind === 'element' ? rule.id : '';
 
     expect(driver.press('ArrowDown')).toBe(true);
-    expect(driver.selection).toEqual({ kind: 'node', id });
+    expect(driver.selection).toEqual({ kind: 'gap', id, side: 'start' });
     expect(driver.press('ArrowUp')).toBe(true);
     expect(driver.selection).toEqual(textSelection(2));
   });

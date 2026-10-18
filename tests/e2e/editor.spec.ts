@@ -602,8 +602,8 @@ test.describe('editor', () => {
     );
 
     await editor.clickBelowContent();
-    await page.keyboard.type('в самом конце');
-    await expect.poll(async () => (await editor.blockTexts()).at(-1)).toBe('в самом конце');
+    await page.keyboard.type('at the end');
+    await expect.poll(async () => (await editor.blockTexts()).at(-1)).toBe('at the end');
 
     await editor.toggleButton().first().click();
 
@@ -619,25 +619,31 @@ test.describe('editor', () => {
     );
   });
 
-  test('steps over blocks without text and takes back the lines beside them first', async ({
+  test('puts the caret beside blocks without text and takes back the lines beside them first', async ({
     page,
   }) => {
     const { editor } = await openEditor(page);
     const file = editor.file('Заметки к релизу');
     const bookmark = editor.bookmark('numior.test');
+    const image = editor.image('="/media/sunrise.svg"');
 
     await editor.clickBeside(file);
+    await expect(file).toHaveClass(/nui-editor__gap/u);
     await page.keyboard.press('Enter');
     await page.keyboard.press('Backspace');
-    await expect(file).toHaveClass(/nui-editor__selected/u);
+    await expect(file).toHaveClass(/nui-editor__gap/u);
     await expect(file.locator('xpath=following-sibling::*[1]')).toHaveClass(/nui-content__table/u);
 
-    await page.keyboard.press('ArrowLeft');
-    await expect(bookmark).toHaveClass(/nui-editor__selected/u);
-    await page.keyboard.press('ArrowRight');
+    await page.keyboard.press('Backspace');
+    await expect(file).toHaveClass(/nui-editor__selected/u);
     await page.keyboard.press('Backspace');
     await expect(file).toHaveCount(0);
-    await expect(bookmark).toHaveClass(/nui-editor__selected/u);
+    await expect(bookmark).toHaveClass(/nui-editor__gap/u);
+
+    await editor.clickBeside(image, 'start');
+    await expect(image).toHaveClass(/nui-editor__gap/u);
+    await page.keyboard.type('before');
+    await expect(image.locator('xpath=preceding-sibling::*[1]')).toHaveText('before');
 
     await editor.placeInText('Наберите', 0);
     await page.keyboard.press('Backspace');
@@ -671,6 +677,8 @@ test.describe('editor', () => {
     await expect(item).toHaveText('Подготовить письм');
 
     await page.keyboard.press('ArrowDown');
+    await expect(list.locator('xpath=following-sibling::*[1]')).toHaveClass(/nui-editor__gap/u);
+    await page.keyboard.press('Shift+ArrowLeft');
     await expect(editor.selectedAtoms()).toHaveCount(1);
     await expect(editor.selectedAtoms()).toHaveClass(/task-status/u);
   });

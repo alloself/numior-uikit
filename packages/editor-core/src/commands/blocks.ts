@@ -4,8 +4,11 @@ import { nodeSize, withContent } from '../model/node';
 import type { AttrValue, ContentNode, ElementNode } from '../model/node.types';
 import type { Schema } from '../schema/schema.types';
 import { isCursor, textPosition, textSelection } from '../state/selection';
-import type { Command, Dispatch, EditorState, Transaction } from '../state/state.types';
+import type { Command, EditorState, Transaction } from '../state/state.types';
+import { attempt } from './attempt';
 import { ancestorTypes, sequence } from './format';
+import { isBlockAtom } from './atoms';
+import { insertAtGap } from './gap';
 
 type Attrs = Readonly<Record<string, AttrValue>>;
 
@@ -36,27 +39,6 @@ const fits = (
   ];
 
   return schema.nodes.get(parent.type)?.content.matchContent(content)?.validEnd === true;
-};
-
-export const attempt = (
-  state: EditorState,
-  dispatch: Dispatch | undefined,
-  build: (tr: Transaction) => boolean,
-): boolean => {
-  const tr = state.tr;
-
-  try {
-    if (!build(tr)) {
-      return false;
-    }
-  } catch (error) {
-    if (error instanceof RangeError) {
-      return false;
-    }
-    throw error;
-  }
-  dispatch?.(tr);
-  return true;
 };
 
 const headOf = (state: EditorState): number | undefined =>
@@ -435,6 +417,10 @@ export const caretAtEnd: Command = (state, dispatch) => {
     dispatch?.(state.tr.setSelection(textSelection(at + nodeSize(last) - 1)));
     return true;
   }
+  if (isBlockAtom(doc.schema, last)) {
+    dispatch?.(state.tr.setSelection({ kind: 'gap', id: last.id, side: 'end' }));
+    return true;
+  }
   return attempt(state, dispatch, (tr) => {
     const block = emptyTextblock(doc.schema, tr.newId());
     const end = at + nodeSize(last);
@@ -558,6 +544,9 @@ export const insertBlock =
     const head = headOf(state);
     const $pos = head === undefined ? undefined : state.doc.resolve(head);
 
+    if (state.selection.kind === 'gap') {
+      return attempt(state, dispatch, (tr) => insertAtGap(tr, build));
+    }
     if ($pos === undefined || head === undefined || !isTextblock(state.doc.schema, $pos.parent)) {
       return false;
     }

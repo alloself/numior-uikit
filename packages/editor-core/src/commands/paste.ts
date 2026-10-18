@@ -6,9 +6,10 @@ import type { ContentNode, ElementNode } from '../model/node.types';
 import type { Schema } from '../schema/schema.types';
 import { textSelection } from '../state/selection';
 import { definePlugin } from '../state/plugin';
-import type { Command, Plugin, Transaction } from '../state/state.types';
+import type { Command, EditorState, Plugin, Transaction } from '../state/state.types';
 import { sliceSize } from '../transform/replace';
-import { selectionNear } from './atoms';
+import { caretNear } from './atoms';
+import { openGapLine } from './gap';
 
 const LINE = /\r\n?|\n/u;
 
@@ -18,10 +19,23 @@ const headOf = (tr: Transaction): number | undefined =>
 const inCodeAt = (tr: Transaction, head: number | undefined): boolean =>
   head !== undefined && tr.doc.schema.nodes.get(tr.doc.resolve(head).parent.type)?.code === true;
 
+const opened = (state: EditorState): Transaction => {
+  const tr = state.tr;
+
+  try {
+    openGapLine(tr);
+  } catch (error) {
+    if (!(error instanceof RangeError)) {
+      throw error;
+    }
+  }
+  return tr;
+};
+
 export const insertPlainText =
   (text: string): Command =>
   (state, dispatch) => {
-    const tr = state.tr.deleteSelection();
+    const tr = opened(state).deleteSelection();
     const head = headOf(tr);
 
     if (inCodeAt(tr, head)) {
@@ -83,7 +97,7 @@ const fillEmpty = (
   ) {
     return false;
   }
-  tr.setSelection(selectionNear(tr.doc, from + contentSize(blocks), -1));
+  tr.setSelection(caretNear(tr.doc, from + contentSize(blocks), -1));
   return true;
 };
 
@@ -171,7 +185,7 @@ const parsedBlocks = (tr: Transaction, html: string, schema: Schema): ElementNod
 export const insertHTML =
   (html: string, text: string, schema?: Schema): Command =>
   (state, dispatch) => {
-    const tr = state.tr.deleteSelection();
+    const tr = opened(state).deleteSelection();
     const head = headOf(tr);
 
     const blocks =

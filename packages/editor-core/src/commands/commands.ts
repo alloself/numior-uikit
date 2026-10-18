@@ -78,10 +78,17 @@ const joinTowards = (
   const tr = state.tr;
 
   if (isAtom(state.doc.schema, neighbour)) {
-    if (cursor.parent.content.length === 0) {
+    const empty = cursor.parent.content.length === 0;
+
+    if (empty) {
       tr.delete(cursor.before(cursor.depth), cursor.after(cursor.depth));
     }
-    tr.setSelection({ kind: 'node', id: neighbour.id });
+
+    tr.setSelection(
+      empty
+        ? { kind: 'gap', id: neighbour.id, side: offset < 0 ? 'end' : 'start' }
+        : { kind: 'node', id: neighbour.id },
+    );
   } else if (
     isTextblock(state.doc.schema, neighbour) &&
     tr.maybeStep({ kind: 'replace', from: boundary - 1, to: boundary + 1, slice: EMPTY_SLICE }).ok

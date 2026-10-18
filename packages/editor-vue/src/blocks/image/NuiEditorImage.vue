@@ -44,7 +44,7 @@
           :offset="0"
           padding="sm"
         >
-          <div class="nui-editor-image__bar" role="toolbar" :aria-label="texts.image">
+          <div ref="bar" class="nui-editor-image__bar" role="toolbar" :aria-label="texts.image">
             <NuiToggleGroup
               :model-value="align"
               :items="alignItems"
@@ -54,46 +54,20 @@
               required
               @update:model-value="setAlign"
             />
-            <NuiButton
-              v-if="uploads?.enabled.value && uploads.images.value !== undefined"
-              variant="ghost"
-              tone="neutral"
-              size="sm"
-              icon="image-up"
-              :aria-label="texts.imageReplace"
-              @click="choose"
-            />
-            <NuiButton
-              variant="ghost"
-              tone="neutral"
-              size="sm"
-              icon="download"
-              :href="src"
-              download=""
-              target="_blank"
-              rel="noopener"
-              :aria-label="texts.download"
-            />
-            <NuiPopover v-model:open="describing" placement="bottom-end" padding="sm">
+            <NuiTooltip v-for="action in actions" :key="action.key" placement="bottom">
               <template #trigger="{ attrs }">
                 <NuiButton
-                  v-bind="attrs"
+                  v-bind="{ ...attrs, ...actionAttrs(action) }"
                   variant="ghost"
                   tone="neutral"
                   size="sm"
-                  icon="captions"
-                  :aria-label="texts.imageAlt"
+                  :icon="action.icon"
+                  :aria-label="action.label"
+                  @click="action.run?.()"
                 />
               </template>
-              <form class="nui-editor-image__alt" @submit.prevent="saveAlt">
-                <NuiField :label="texts.imageAlt" :description="texts.imageAltHint">
-                  <NuiInput v-model="altDraft" size="sm" autofocus />
-                </NuiField>
-                <div class="nui-editor-image__actions">
-                  <NuiButton type="submit" size="sm">{{ texts.imageAltSave }}</NuiButton>
-                </div>
-              </form>
-            </NuiPopover>
+              {{ action.label }}
+            </NuiTooltip>
             <input
               ref="picker"
               class="nui-editor-image__picker"
@@ -104,6 +78,22 @@
               @change="onPick"
             />
           </div>
+          <NuiPopover
+            v-model:open="describing"
+            :anchor="bar"
+            placement="bottom-end"
+            :offset="8"
+            padding="sm"
+          >
+            <form class="nui-editor-image__alt" @submit.prevent="saveAlt">
+              <NuiField :label="texts.imageAlt" :description="texts.imageAltHint">
+                <NuiInput v-model="altDraft" size="sm" autofocus />
+              </NuiField>
+              <div class="nui-editor-image__actions">
+                <NuiButton type="submit" size="sm">{{ texts.imageAltSave }}</NuiButton>
+              </div>
+            </form>
+          </NuiPopover>
         </NuiPopover>
       </template>
     </div>
@@ -118,7 +108,7 @@
 </template>
 
 <script setup lang="ts">
-import { useMessages } from '@numior/primitives';
+import { useMessages, type IconAlias } from '@numior/primitives';
 import {
   NuiButton,
   NuiField,
@@ -126,6 +116,7 @@ import {
   NuiPopover,
   NuiProgress,
   NuiToggleGroup,
+  NuiTooltip,
   type NuiToggleItem,
 } from '@numior/vue';
 import { useResizeObserver } from '@vueuse/core';
@@ -147,6 +138,14 @@ import {
 } from './image-size';
 
 type GripSide = 'start' | 'end';
+
+interface ImageAction {
+  readonly key: string;
+  readonly icon: IconAlias;
+  readonly label: string;
+  readonly href?: string | undefined;
+  readonly run?: (() => void) | undefined;
+}
 
 type GripEdge = 'top' | 'bottom';
 
@@ -175,6 +174,7 @@ const { node, element, selected, focused, editable, editor } =
 const texts = useMessages(editorMessages);
 const uploads = useEditorUploadContext();
 const picker = useTemplateRef<HTMLInputElement>('picker');
+const bar = useTemplateRef<HTMLElement>('bar');
 const corner = useTemplateRef<HTMLElement>('corner');
 const captionView = useTemplateRef<{ fit(): void }>('caption');
 const picture = useTemplateRef<HTMLImageElement>('picture');
@@ -325,6 +325,26 @@ const onGripKeydown = (event: KeyboardEvent): void => {
 const choose = (): void => {
   picker.value?.click();
 };
+
+const actionAttrs = (action: ImageAction): Record<string, string | undefined> =>
+  action.href === undefined
+    ? { 'aria-expanded': action.key === 'alt' ? String(describing.value) : undefined }
+    : { href: action.href, download: '', target: '_blank', rel: 'noopener' };
+
+const actions = computed((): readonly ImageAction[] => [
+  ...(uploads?.enabled.value === true && uploads.images.value !== undefined
+    ? [{ key: 'replace', icon: 'image-up', label: texts.value.imageReplace, run: choose }]
+    : []),
+  { key: 'download', icon: 'download', label: texts.value.download, href: src.value },
+  {
+    key: 'alt',
+    icon: 'captions',
+    label: texts.value.imageAlt,
+    run: () => {
+      describing.value = !describing.value;
+    },
+  },
+]);
 
 const onPick = (): void => {
   const file = picker.value?.files?.[0];

@@ -3,6 +3,7 @@ import type { Doc } from '../doc/doc.types';
 import { nearestCursor, selectionRange, textPosition, textSelection } from '../state/selection';
 import type { Selection } from '../state/selection.types';
 import { widgetAround } from './desc';
+import { clearGap, paintGap } from './gap';
 import type { ViewHost } from './host.types';
 import { domAtPos, posAtDOM } from './positions';
 import type { DomPoint } from './view.types';
@@ -26,7 +27,11 @@ const spanOf = (doc: Doc, selection: Selection): Span => {
   if (selection.kind === 'text') {
     return { anchor: selection.anchor, head: selection.head };
   }
-  const range = selectionRange(doc, selection);
+
+  const range = selectionRange(
+    doc,
+    selection.kind === 'gap' ? { kind: 'node', id: selection.id } : selection,
+  );
 
   return { anchor: range.from, head: range.to };
 };
@@ -69,7 +74,7 @@ const pointsOf = (
   host: ViewHost,
   selection: Selection,
 ): readonly [DomPoint, DomPoint] | undefined => {
-  if (selection.kind === 'node') {
+  if (selection.kind === 'node' || selection.kind === 'gap') {
     return nodePoints(host, selection.id);
   }
   if (selection.kind === 'all') {
@@ -162,6 +167,19 @@ const focused = (host: ViewHost): boolean => {
 
 export const createSelectionSync = (host: ViewHost): SelectionSync => {
   let marked: HTMLElement | undefined;
+  let gapped: HTMLElement | undefined;
+
+  const markGap = (selection: Selection): void => {
+    const next = selection.kind === 'gap' ? host.context.byId.get(selection.id)?.dom : undefined;
+
+    if (gapped !== undefined && gapped !== next) {
+      clearGap(gapped);
+    }
+    gapped = next;
+    if (next !== undefined && selection.kind === 'gap') {
+      paintGap(host, next, selection.id, selection.side);
+    }
+  };
 
   const matches = (span: Span): boolean => {
     const state = host.state();
@@ -221,6 +239,7 @@ export const createSelectionSync = (host: ViewHost): SelectionSync => {
       const next = selection.kind === 'node' ? host.context.byId.get(selection.id)?.dom : undefined;
 
       host.root.classList.toggle(ALL_CLASS, selection.kind === 'all');
+      markGap(selection);
 
       if (next === marked) {
         return;

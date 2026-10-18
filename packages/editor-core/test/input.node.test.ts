@@ -5,6 +5,7 @@ import {
   deleteText,
   insertLineBreak,
   insertParagraph,
+  intentCommand,
   insertPlainText,
   nearestCursor,
   selectAtom,
@@ -15,7 +16,7 @@ import {
   type EditorState,
   type Selection,
 } from '../src';
-import { caretAtEnd } from '../src/commands/blocks';
+import { caretAtEnd, insertDivider } from '../src/commands/blocks';
 import { fixtureSchema } from '../src/fixtures';
 import { buildWith } from './support/notes';
 
@@ -103,7 +104,7 @@ describe('input commands', () => {
     expect(texts(run(code, insertPlainText('a\r\nb')))).toEqual(['a\nb']);
   });
 
-  it('selects atoms beside the cursor and leaves them on either side', () => {
+  it('selects inline atoms and puts the caret beside block atoms with the arrows', () => {
     const image = node('image', [], { src: 'a.png' });
     const mention = node('mention', [], { user: 'u', label: 'Ann' });
     const root = doc(node('paragraph', ['ab', mention]), image, node('paragraph', ['cd']));
@@ -111,11 +112,16 @@ describe('input commands', () => {
 
     expect(run(atEnd, selectAtom('forward')).selection).toEqual({ kind: 'node', id: mention.id });
     const afterMention = stateOf(root, textSelection(4));
-    const onImage = run(afterMention, selectAtom('forward'));
+    const beforeImage = run(afterMention, selectAtom('forward'));
 
-    expect(onImage.selection).toEqual({ kind: 'node', id: image.id });
-    expect(run(onImage, selectAtom('forward')).selection).toEqual(textSelection(7));
-    expect(run(onImage, selectAtom('backward', true)).selection).toEqual(textSelection(4));
+    expect(beforeImage.selection).toEqual({ kind: 'gap', id: image.id, side: 'start' });
+
+    const afterImage = run(beforeImage, selectAtom('forward'));
+
+    expect(afterImage.selection).toEqual({ kind: 'gap', id: image.id, side: 'end' });
+    expect(run(afterImage, selectAtom('forward')).selection).toEqual(textSelection(7));
+    expect(run(afterImage, selectAtom('backward', true)).selection).toEqual(textSelection(4));
+    expect(run(beforeImage, selectAtom('backward')).selection).toEqual(textSelection(4));
 
     expect(run(stateOf(root, textSelection(1)), selectAtom('backward')).selection).toEqual(
       textSelection(1),
@@ -141,7 +147,7 @@ describe('input commands', () => {
     expect(texts(run(selected, deleteText('backward', 'character')))).toEqual(['ab', 'cd']);
   });
 
-  it('steps through neighbouring atoms and deletes a selected one towards the key', () => {
+  it('steps between neighbouring atoms and deletes a selected one towards the key', () => {
     const image = node('image', [], { src: 'a.png' });
     const divider = node('divider');
 
@@ -155,30 +161,83 @@ describe('input commands', () => {
 
     const onImage = stateOf(root, { kind: 'node', id: image.id });
     const onDivider = stateOf(root, { kind: 'node', id: divider.id });
+    const afterImage = run(onImage, selectAtom('forward'));
 
-    expect(run(onImage, selectAtom('forward')).selection).toEqual({ kind: 'node', id: divider.id });
+    expect(afterImage.selection).toEqual({ kind: 'gap', id: image.id, side: 'end' });
+
+    expect(run(afterImage, selectAtom('forward')).selection).toEqual({
+      kind: 'gap',
+      id: divider.id,
+      side: 'start',
+    });
 
     expect(run(onDivider, selectAtom('backward')).selection).toEqual({
-      kind: 'node',
-      id: image.id,
+      kind: 'gap',
+      id: divider.id,
+      side: 'start',
     });
 
     const emptied = run(stateOf(root, textSelection(6)), deleteText('backward', 'character'));
 
     expect(types(emptied)).toEqual(['paragraph', 'image', 'divider', 'paragraph']);
-    expect(emptied.selection).toEqual({ kind: 'node', id: divider.id });
+    expect(emptied.selection).toEqual({ kind: 'gap', id: divider.id, side: 'end' });
 
-    const back = run(onDivider, deleteText('backward', 'character'));
-
-    expect(types(back)).toEqual(['paragraph', 'image', 'paragraph', 'paragraph']);
-    expect(back.selection).toEqual({ kind: 'node', id: image.id });
-
-    expect(run(onImage, deleteText('forward', 'character')).selection).toEqual({
+    expect(run(emptied, deleteText('backward', 'character')).selection).toEqual({
       kind: 'node',
       id: divider.id,
     });
 
+    const back = run(onDivider, deleteText('backward', 'character'));
+
+    expect(types(back)).toEqual(['paragraph', 'image', 'paragraph', 'paragraph']);
+    expect(back.selection).toEqual({ kind: 'gap', id: image.id, side: 'end' });
+
+    expect(run(onImage, deleteText('forward', 'character')).selection).toEqual({
+      kind: 'gap',
+      id: divider.id,
+      side: 'start',
+    });
+
     expect(run(onImage, deleteText('backward', 'character')).selection).toEqual(textSelection(2));
+  });
+
+  it('types, breaks lines and deletes at a caret beside a block without text', () => {
+    const image = node('image', [], { src: 'a.png' });
+    const divider = node('divider');
+    const root = doc(node('paragraph', ['a']), image, node('paragraph'), divider);
+    const after = stateOf(root, { kind: 'gap', id: image.id, side: 'end' });
+    const before = stateOf(root, { kind: 'gap', id: image.id, side: 'start' });
+    const typed = run(after, intentCommand({ kind: 'insertText', text: 'x' }));
+
+    expect(texts(typed)).toEqual(['a', '', 'x', '', '']);
+    expect(typed.selection).toEqual(textSelection(6));
+
+    const broken = run(before, intentCommand({ kind: 'insertParagraph' }));
+
+    expect(types(broken)).toEqual(['paragraph', 'paragraph', 'image', 'paragraph', 'divider']);
+    expect(broken.selection).toEqual(before.selection);
+    expect(run(before, deleteText('backward', 'character')).selection).toEqual(textSelection(2));
+
+    expect(run(before, deleteText('forward', 'character')).selection).toEqual({
+      kind: 'node',
+      id: image.id,
+    });
+
+    const cleared = run(after, deleteText('forward', 'character'));
+
+    expect(types(cleared)).toEqual(['paragraph', 'image', 'divider']);
+    expect(cleared.selection).toEqual(after.selection);
+
+    const ruled = run(after, insertDivider());
+    const added = ruled.doc.root.content[2];
+
+    expect(types(ruled)).toEqual(['paragraph', 'image', 'divider', 'paragraph', 'divider']);
+
+    expect(ruled.selection).toEqual({
+      kind: 'gap',
+      id: added?.kind === 'element' ? added.id : '',
+      side: 'end',
+    });
   });
 
   it('leaves an empty line where the last block of a container was deleted', () => {
@@ -239,9 +298,13 @@ describe('input commands', () => {
 
     const ended = run(rule, caretAtEnd);
 
-    expect(types(ended)).toEqual(['paragraph', 'divider', 'paragraph']);
-    expect(types(run(ended, caretAtEnd))).toEqual(['paragraph', 'divider', 'paragraph']);
-    expect(run(ended, caretAtEnd).selection).toEqual(textSelection(5));
+    expect(types(ended)).toEqual(['paragraph', 'divider']);
+
+    expect(ended.selection).toEqual({
+      kind: 'gap',
+      id: divider?.kind === 'element' ? divider.id : '',
+      side: 'end',
+    });
 
     const written = stateOf(doc(node('paragraph', ['text'])), textSelection(1));
 

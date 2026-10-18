@@ -23,8 +23,8 @@ const docs: DocsMap = {
       },
       disabled: { ru: 'Выключает всю группу.', en: 'Disables the whole group.' },
       iconOnly: {
-        ru: 'Только иконки; подписи уходят в доступное имя.',
-        en: 'Icons only; the labels become the accessible names.',
+        ru: 'Только иконки; подписи уходят в доступное имя и в подсказку при наведении и фокусе.',
+        en: 'Icons only; the labels become the accessible names and the tooltips on hover and focus.',
       },
       label: { ru: 'Доступное имя группы.', en: 'Accessible name of the group.' },
       getKey: { ru: 'Ключ значения для объектов.', en: 'Value key for objects.' },

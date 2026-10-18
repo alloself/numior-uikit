@@ -15,20 +15,28 @@
     @focusin="navigation.onFocusin"
     @focusout="onFocusout"
   >
-    <button
+    <NuiTooltip
       v-for="item in items"
       :key="keyOf(item.value)"
-      type="button"
-      class="nui-toggle-group__item"
-      :class="{ 'nui-toggle-group__item--selected': isSelected(item.value) }"
-      v-bind="itemAttrs(item)"
-      @click="toggle(item.value)"
+      :disabled="!iconOnly"
+      :placement="orientation === 'vertical' ? 'right' : 'bottom'"
     >
-      <slot name="item" :item="item" :selected="isSelected(item.value)">
-        <NuiIcon v-if="item.icon" :alias="item.icon" class="nui-toggle-group__icon" />
-        <span v-if="!iconOnly" class="nui-toggle-group__label">{{ item.label }}</span>
-      </slot>
-    </button>
+      <template #trigger="{ attrs }">
+        <button
+          type="button"
+          class="nui-toggle-group__item"
+          :class="{ 'nui-toggle-group__item--selected': isSelected(item.value) }"
+          v-bind="{ ...itemAttrs(item), ...attrs }"
+          @click="toggle(item.value)"
+        >
+          <slot name="item" :item="item" :selected="isSelected(item.value)">
+            <NuiIcon v-if="item.icon" :alias="item.icon" class="nui-toggle-group__icon" />
+            <span v-if="!iconOnly" class="nui-toggle-group__label">{{ item.label }}</span>
+          </slot>
+        </button>
+      </template>
+      {{ item.label }}
+    </NuiTooltip>
   </div>
 </template>
 
@@ -36,6 +44,7 @@
 import { computed, onMounted, useTemplateRef } from 'vue';
 import { useListNavigation, type AttrRecord } from '@numior/primitives';
 import NuiIcon from '../icon/NuiIcon.vue';
+import NuiTooltip from '../tooltip/NuiTooltip.vue';
 import { useOptionSelection } from '../shared/use-option-selection';
 import type { NuiToggleGroupProps, NuiToggleItem, NuiToggleItemSlot } from './toggle-group.types';
 

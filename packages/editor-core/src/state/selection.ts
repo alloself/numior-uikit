@@ -1,7 +1,7 @@
 import type { Doc } from '../doc/doc.types';
 import type { ContentNode, ElementNode, NodeId } from '../model/node.types';
 import type { Mappable } from '../transform/mapping.types';
-import type { Selection, SelectionRange } from './selection.types';
+import type { GapSide, Selection, SelectionRange } from './selection.types';
 
 export const textSelection = (anchor: number, head = anchor): Selection => ({
   kind: 'text',
@@ -73,6 +73,20 @@ export const textPosition = (doc: Doc, pos: number, bias: -1 | 1): number | unde
   return inText(doc, clamped) ? clamped : textNear(doc, clamped, bias);
 };
 
+const gapRange = (doc: Doc, id: NodeId, side: GapSide): SelectionRange => {
+  const block = blockAround(doc, id);
+  const at = (side === 'start' ? block?.from : block?.to) ?? 0;
+
+  return { from: at, to: at };
+};
+
+const blocksRange = (doc: Doc, anchorId: NodeId, headId: NodeId): SelectionRange => {
+  const anchor = blockAround(doc, anchorId) ?? { from: 0, to: 0 };
+  const head = blockAround(doc, headId) ?? anchor;
+
+  return { from: Math.min(anchor.from, head.from), to: Math.max(anchor.to, head.to) };
+};
+
 export const selectionRange = (doc: Doc, selection: Selection): SelectionRange => {
   switch (selection.kind) {
     case 'text':
@@ -82,12 +96,10 @@ export const selectionRange = (doc: Doc, selection: Selection): SelectionRange =
       };
     case 'node':
       return blockAround(doc, selection.id) ?? { from: 0, to: 0 };
-    case 'block': {
-      const anchor = blockAround(doc, selection.anchorId) ?? { from: 0, to: 0 };
-      const head = blockAround(doc, selection.headId) ?? anchor;
-
-      return { from: Math.min(anchor.from, head.from), to: Math.max(anchor.to, head.to) };
-    }
+    case 'gap':
+      return gapRange(doc, selection.id, selection.side);
+    case 'block':
+      return blocksRange(doc, selection.anchorId, selection.headId);
     case 'cell':
       return blockAround(doc, selection.tableId) ?? { from: 0, to: 0 };
     case 'all':
@@ -108,6 +120,7 @@ export const validSelection = (doc: Doc, selection: Selection): Selection => {
         ? selection
         : nearestCursor(doc, selection.head);
     case 'node':
+    case 'gap':
       return present(doc, selection.id) ? selection : nearestCursor(doc, 0);
     case 'block':
       return present(doc, selection.anchorId, selection.headId) ? selection : nearestCursor(doc, 0);

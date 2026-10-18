@@ -41,23 +41,19 @@ export const isAtom = (schema: Schema, node: ContentNode | undefined): node is E
   );
 };
 
-const blockAtom = (doc: Doc, pos: number, bias: -1 | 1): ElementNode | undefined => {
+export const isBlockAtom = (schema: Schema, node: ContentNode | undefined): node is ElementNode =>
+  isAtom(schema, node) && !isInline(schema, node);
+
+export const caretNear = (doc: Doc, pos: number, bias: -1 | 1): Selection => {
   const place = doc.resolve(pos);
-  const beside = bias < 0 ? place.nodeBefore : place.nodeAfter;
+  const own = bias < 0 ? place.nodeBefore : place.nodeAfter;
+  const other = bias < 0 ? place.nodeAfter : place.nodeBefore;
 
-  return isAtom(doc.schema, beside) && !isInline(doc.schema, beside) ? beside : undefined;
-};
-
-const hasSide = (doc: Doc, pos: number, bias: -1 | 1): boolean => {
-  const place = doc.resolve(pos);
-
-  return (bias < 0 ? place.nodeBefore : place.nodeAfter) !== undefined;
-};
-
-export const selectionNear = (doc: Doc, pos: number, bias: -1 | 1): Selection => {
-  const own = blockAtom(doc, pos, bias);
-  const other = hasSide(doc, pos, bias) ? undefined : blockAtom(doc, pos, bias < 0 ? 1 : -1);
-  const atom = own ?? other;
-
-  return atom === undefined ? nearestCursor(doc, pos, bias) : { kind: 'node', id: atom.id };
+  if (isBlockAtom(doc.schema, own)) {
+    return { kind: 'gap', id: own.id, side: bias < 0 ? 'end' : 'start' };
+  }
+  if (own === undefined && isBlockAtom(doc.schema, other)) {
+    return { kind: 'gap', id: other.id, side: bias < 0 ? 'start' : 'end' };
+  }
+  return nearestCursor(doc, pos, bias);
 };

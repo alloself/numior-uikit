@@ -1,5 +1,9 @@
-import { isAtom } from '../commands/atoms';
-import type { ViewContext } from './desc';
+import { isBlockAtom } from '../commands/atoms';
+import { nearestCursor } from '../state/selection';
+import type { Selection } from '../state/selection.types';
+import { posAtCoords } from './coords';
+import { sideNearest, sideOutside } from './gap';
+import type { ViewHost } from './host.types';
 
 const spans = (element: Element, y: number): boolean => {
   const box = element.getBoundingClientRect();
@@ -20,19 +24,46 @@ const nearest = (elements: readonly Element[], y: number): Element | undefined =
     undefined,
   );
 
-const atomIn = (context: ViewContext, chunk: Element, y: number): string | undefined => {
-  const blocks = [...chunk.children].filter((child) => context.descs.has(child));
-  const block = blocks.find((child) => spans(child, y)) ?? nearest(blocks, y);
-  const desc = block === undefined ? undefined : context.descs.get(block);
+const clamp = (value: number, low: number, high: number): number =>
+  Math.min(Math.max(value, low), high);
 
-  return desc?.kind === 'element' && isAtom(context.schema, desc.node) ? desc.node.id : undefined;
+const textBeside = (host: ViewHost, box: DOMRect, x: number, y: number): Selection | undefined => {
+  const pos = posAtCoords(
+    host,
+    clamp(x, box.left + 1, box.right - 1),
+    clamp(y, box.top + 1, box.bottom - 1),
+  );
+
+  return pos === undefined ? undefined : nearestCursor(host.state().doc, pos);
 };
 
-export const atomBeside = (
-  context: ViewContext,
-  root: HTMLElement,
-  event: MouseEvent,
-): string | undefined => {
+const gapIn = (host: ViewHost, chunk: Element, x: number, y: number): Selection | undefined => {
+  const { context } = host;
+  const blocks = [...chunk.children].filter((child) => context.descs.has(child));
+  const row = blocks.find((child) => spans(child, y));
+  const block = row ?? nearest(blocks, y);
+  const desc = block === undefined ? undefined : context.descs.get(block);
+
+  if (block === undefined || desc?.kind !== 'element') {
+    return undefined;
+  }
+  const box = block.getBoundingClientRect();
+
+  if (!isBlockAtom(context.schema, desc.node)) {
+    return textBeside(host, box, x, y);
+  }
+  const id = desc.node.id;
+  const above = y < box.top;
+
+  const side =
+    sideOutside(host, id, x) ??
+    (row === undefined ? (above ? 'start' : 'end') : sideNearest(host, id, x));
+
+  return { kind: 'gap', id, side };
+};
+
+export const pointBeside = (host: ViewHost, event: MouseEvent): Selection | undefined => {
+  const { root } = host;
   const target = event.target;
 
   if (event.button !== 0 || !(target instanceof Element)) {
@@ -43,5 +74,5 @@ export const atomBeside = (
   }
   const chunk = [...root.children].find((child) => spans(child, event.clientY));
 
-  return chunk === undefined ? undefined : atomIn(context, chunk, event.clientY);
+  return chunk === undefined ? undefined : gapIn(host, chunk, event.clientX, event.clientY);
 };

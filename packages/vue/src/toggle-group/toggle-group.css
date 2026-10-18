@@ -58,25 +58,25 @@
     color var(--nui-duration-fast) var(--nui-easing),
     box-shadow var(--nui-duration-fast) var(--nui-easing);
 }
-.nui-toggle-group--orientation-horizontal .nui-toggle-group__item + .nui-toggle-group__item {
+.nui-toggle-group--orientation-horizontal .nui-toggle-group__item ~ .nui-toggle-group__item {
   margin-inline-start: -1px;
 }
-.nui-toggle-group--orientation-vertical .nui-toggle-group__item + .nui-toggle-group__item {
+.nui-toggle-group--orientation-vertical .nui-toggle-group__item ~ .nui-toggle-group__item {
   margin-block-start: -1px;
 }
-.nui-toggle-group--orientation-horizontal .nui-toggle-group__item:first-child {
+.nui-toggle-group--orientation-horizontal .nui-toggle-group__item:first-of-type {
   border-start-start-radius: var(--nui-radius);
   border-end-start-radius: var(--nui-radius);
 }
-.nui-toggle-group--orientation-horizontal .nui-toggle-group__item:last-child {
+.nui-toggle-group--orientation-horizontal .nui-toggle-group__item:last-of-type {
   border-start-end-radius: var(--nui-radius);
   border-end-end-radius: var(--nui-radius);
 }
-.nui-toggle-group--orientation-vertical .nui-toggle-group__item:first-child {
+.nui-toggle-group--orientation-vertical .nui-toggle-group__item:first-of-type {
   border-start-start-radius: var(--nui-radius);
   border-start-end-radius: var(--nui-radius);
 }
-.nui-toggle-group--orientation-vertical .nui-toggle-group__item:last-child {
+.nui-toggle-group--orientation-vertical .nui-toggle-group__item:last-of-type {
   border-end-start-radius: var(--nui-radius);
   border-end-end-radius: var(--nui-radius);
 }

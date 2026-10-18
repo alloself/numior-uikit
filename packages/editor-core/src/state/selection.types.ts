@@ -1,5 +1,7 @@
 import type { NodeId } from '../model/node.types';
 
+export type GapSide = 'start' | 'end';
+
 export interface CellRef {
   readonly row: number;
   readonly col: number;
@@ -8,6 +10,7 @@ export interface CellRef {
 export type Selection =
   | { readonly kind: 'text'; readonly anchor: number; readonly head: number }
   | { readonly kind: 'node'; readonly id: NodeId }
+  | { readonly kind: 'gap'; readonly id: NodeId; readonly side: GapSide }
   | { readonly kind: 'block'; readonly anchorId: NodeId; readonly headId: NodeId }
   | {
       readonly kind: 'cell';

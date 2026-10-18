@@ -208,7 +208,7 @@ export type {
   TextDirection,
   TextUnit,
 } from './state/input.types';
-export type { CellRef, Selection, SelectionRange } from './state/selection.types';
+export type { CellRef, GapSide, Selection, SelectionRange } from './state/selection.types';
 export { createState } from './state/state';
 export type {
   AppliedTransaction,

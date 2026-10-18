@@ -2,7 +2,8 @@ import type { ResolvedPos } from '../doc/doc.types';
 import type { ElementNode } from '../model/node.types';
 import { textSelection } from '../state/selection';
 import type { Command, EditorState, Transaction } from '../state/state.types';
-import { attempt, caretInto, followingTextblock, retypeTextblock } from './blocks';
+import { attempt } from './attempt';
+import { caretInto, followingTextblock, retypeTextblock } from './blocks';
 import { textCursor } from './cursor';
 
 const CODE_TYPE = 'code_block';

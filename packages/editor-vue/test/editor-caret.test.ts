@@ -36,15 +36,15 @@ const withFile = (): DocJSON =>
 const types = (document: DocJSON | undefined): readonly string[] =>
   (document?.root.content ?? []).map((block) => ('type' in block ? block.type : 'text'));
 
-describe('NuiEditor beside blocks without text', () => {
-  it('selects a file clicked beside its card and opens a line after it with Enter', async () => {
+describe('NuiEditor caret beside blocks without text', () => {
+  it('puts the caret after a file clicked beside its card and opens a line there with Enter', async () => {
     const editor = EditorDriver.mount({ document: withFile() });
 
     driver = editor;
     editor.focus();
     await editor.clickBeside('.nui-content__file');
 
-    expect(editor.classesOf('.nui-content__file')).toContain('nui-editor__selected');
+    expect(editor.classesOf('.nui-content__file')).toContain('nui-editor__gap');
 
     await editor.press('Enter');
     await editor.type('after');

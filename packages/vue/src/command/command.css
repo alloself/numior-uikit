@@ -59,6 +59,9 @@
 .nui-command .nui-command__list {
   --_indent: 0px;
 }
+.nui-command__list .nui-list-item {
+  border-radius: var(--nui-radius-sm);
+}
 .nui-command__list .nui-list__group-label {
   padding-block: var(--nui-space-2) var(--nui-space-1);
 }

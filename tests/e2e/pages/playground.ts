@@ -140,6 +140,8 @@ const CLICKABLE_CONTROLS = [
   '[role="treeitem"]',
 ].join(', ');
 
+const ZOOM_CONTROLS = '.nui-content__zoom';
+
 const DRAG_GRIPS = '.nui-table__row-grip, .nui-field-array__grip';
 
 export class PlaygroundPage {
@@ -266,10 +268,15 @@ export class PlaygroundPage {
 
   controlsWithoutPointer(): Promise<string[]> {
     return this.page.evaluate(
-      ({ selector, grips }) =>
+      ({ selector, grips, zooms }) =>
         [...document.querySelectorAll(selector)].flatMap((element) => {
           const cursor = getComputedStyle(element).cursor;
-          const expected = element.matches(grips) ? 'grab' : 'pointer';
+
+          const expected = element.matches(grips)
+            ? 'grab'
+            : element.matches(zooms)
+              ? 'zoom-in'
+              : 'pointer';
 
           const inert =
             element.closest('[aria-disabled="true"]') !== null ||
@@ -279,7 +286,7 @@ export class PlaygroundPage {
             ? []
             : [`${element.tagName.toLowerCase()}.${element.className} → ${cursor}`];
         }),
-      { selector: CLICKABLE_CONTROLS, grips: DRAG_GRIPS },
+      { selector: CLICKABLE_CONTROLS, grips: DRAG_GRIPS, zooms: ZOOM_CONTROLS },
     );
   }
 
