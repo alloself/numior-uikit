@@ -15,16 +15,13 @@
     >
       <template #default="{ field, error, invalid, touched, pending }">
         <component :is="entry.component" v-bind="{ ...controlProps, ...bindModel(field) }">
-          <template v-if="slots[slotName]" #default>
-            <SmartSlot
-              :render="slots[slotName]"
-              :scope="{ error, invalid, touched, pending, row }"
-            />
+          <template v-if="$slots[slotName]" #default>
+            <slot :name="slotName" v-bind="{ error, invalid, touched, pending, row }" />
           </template>
         </component>
       </template>
     </NuiFormField>
-    <SmartSlot :render="slots[`${slotName}:after`]" :scope="{ row }" />
+    <slot :name="`${slotName}:after`" :row="row" />
   </div>
 </template>
 
@@ -34,12 +31,11 @@ import { FORM_HOST } from '../../form/form-context';
 import type { FieldScopeBinding } from '../form-field/form-field.types';
 import NuiFormField from '../form-field/NuiFormField.vue';
 import { slotNameOf } from './items';
-import type { NuiSmartFormCellProps } from './smart-form.types';
-import { SmartSlot, useSmartSlots } from './smart-slots';
+import type { NuiSmartFormPartSlots, NuiSmartFormCellProps } from './smart-form.types';
 
 const { form, entry, path, area, row } = defineProps<NuiSmartFormCellProps<T>>();
 
-const slots = useSmartSlots();
+defineSlots<NuiSmartFormPartSlots>();
 const { values } = form[FORM_HOST].engine;
 
 const slotName = computed(() => slotNameOf(path));

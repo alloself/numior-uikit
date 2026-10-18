@@ -6,6 +6,7 @@ import type { FieldArrayRow } from '../../field/use-field-array';
 import type { FormContext } from '../../form/form-context';
 import type { FieldSelector } from '../../paths/selector';
 import type { AnyFieldRule } from '../../rules/async-rule';
+import type { SmartItem } from './items';
 
 export type SmartRow = FieldArrayRow<unknown>;
 
@@ -86,6 +87,11 @@ export interface NuiSmartFormAfterScope {
   readonly row: SmartRow | undefined;
 }
 
+export type NuiSmartFormPartSlots = Record<
+  string,
+  (scope: NuiSmartFormFieldScope | NuiSmartFormAfterScope) => unknown
+>;
+
 export interface NuiSmartFormActionsScope {
   readonly pending: boolean;
   readonly dirty: boolean;
@@ -135,6 +141,18 @@ export interface NuiSmartFormEntriesProps<T extends object> {
   layout?: string | undefined;
   prefix?: string | undefined;
   row?: SmartRow | undefined;
+}
+
+export interface NuiSmartFormGroupProps<T extends object> {
+  form: FormContext<T>;
+  item: Exclude<SmartItem<T>, { readonly kind: 'field' }>;
+  area: string;
+  prefix?: string | undefined;
+  row?: SmartRow | undefined;
+}
+
+export interface NuiSmartFormGroupSlots<T extends object> {
+  content: (scope: Omit<NuiSmartFormEntriesProps<T>, 'form'>) => unknown;
 }
 
 export interface NuiSmartFormCellProps<T extends object> {

@@ -20,8 +20,16 @@
       :statuses="statuses"
       :live="stepText"
       @select="select"
-    />
-    <NuiSmartFormEntries v-else :form="form" :entries="entries" :layout="layout" />
+    >
+      <template v-for="name in forwarded" #[name]="scope">
+        <slot :name="name" v-bind="scope" />
+      </template>
+    </NuiSmartFormSteps>
+    <NuiSmartFormEntries v-else :form="form" :entries="entries" :layout="layout">
+      <template v-for="name in forwarded" #[name]="scope">
+        <slot :name="name" v-bind="scope" />
+      </template>
+    </NuiSmartFormEntries>
     <template v-if="$slots['form-errors']" #form-errors="props">
       <slot name="form-errors" v-bind="props" />
     </template>
@@ -50,7 +58,7 @@
 </template>
 
 <script setup lang="ts" generic="T extends object">
-import { computed, shallowRef, useSlots, useTemplateRef, watch } from 'vue';
+import { computed, shallowRef, useTemplateRef, watch } from 'vue';
 import { createIntent, useMessages } from '@numior/primitives';
 import { NuiButton } from '@numior/vue';
 import type { SubmitResult } from '../../core/form.types';
@@ -61,9 +69,9 @@ import { FOCUSABLE } from '../form-field/focus-control';
 import NuiSmartFormEntries from './NuiSmartFormEntries.vue';
 import NuiSmartFormSteps from './NuiSmartFormSteps.vue';
 import { declareEntries } from './declarations';
+import { isSlotOf } from './items';
 import { smartFormMessages } from './smart-form.messages';
 import type { NuiSmartFormProps, NuiSmartFormSlots } from './smart-form.types';
-import { provideSmartSlots } from './smart-slots';
 import { stepOf, stepPaths } from './steps';
 
 const {
@@ -82,9 +90,9 @@ const {
 
 const step = defineModel<string | undefined>('step');
 
-defineSlots<NuiSmartFormSlots<T>>();
+const slots = defineSlots<NuiSmartFormSlots<T>>();
 
-provideSmartSlots(useSlots());
+const forwarded = computed(() => Object.keys(slots).filter((name) => isSlotOf(slots, name)));
 
 const formRef = useTemplateRef<{ requestSubmit: () => void }>('form');
 

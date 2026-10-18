@@ -20,49 +20,27 @@
         :path="item.path"
         :area="areaFor(item)"
         :row="row"
-      />
-      <fieldset
-        v-else-if="item.kind === 'section'"
-        class="nui-smart-form__cell nui-smart-form__section"
-        :style="cellStyle(item)"
       >
-        <legend class="nui-smart-form__legend">{{ item.entry.title }}</legend>
-        <p v-if="item.entry.description" class="nui-smart-form__section-description">
-          {{ item.entry.description }}
-        </p>
-        <NuiSmartFormEntries
-          :form="form"
-          :entries="item.entry.fields"
-          :layout="item.entry.layout"
-          :prefix="prefix"
-          :row="row"
-        />
-      </fieldset>
-      <div v-else class="nui-smart-form__cell" :style="cellStyle(item)">
-        <NuiFieldArray
-          :form="form"
-          :name="item.entry.name"
-          :label="item.entry.label"
-          :description="item.entry.description"
-          :min="item.entry.min"
-          :max="item.entry.max"
-          :reorderable="item.entry.reorderable"
-          :new-row="item.entry.newRow"
-          :add-label="item.entry.addLabel"
-          :remove-label="item.entry.removeLabel"
-          :move-label="item.entry.moveLabel"
-        >
-          <template #default="{ row: current }">
-            <NuiSmartFormEntries
-              :form="form"
-              :array="item.entry"
-              :layout="item.entry.layout"
-              :prefix="current.path"
-              :row="current"
-            />
-          </template>
-        </NuiFieldArray>
-      </div>
+        <template v-for="name in Object.keys($slots)" #[name]="scope">
+          <slot :name="name" v-bind="scope" />
+        </template>
+      </NuiSmartFormCell>
+      <NuiSmartFormGroup
+        v-else
+        :form="form"
+        :item="item"
+        :area="areaFor(item)"
+        :prefix="prefix"
+        :row="row"
+      >
+        <template #content="group">
+          <NuiSmartFormEntries :form="form" v-bind="group">
+            <template v-for="name in Object.keys($slots)" #[name]="scope">
+              <slot :name="name" v-bind="scope" />
+            </template>
+          </NuiSmartFormEntries>
+        </template>
+      </NuiSmartFormGroup>
     </template>
   </TransitionGroup>
 </template>
@@ -71,12 +49,12 @@
 import { computed, useTemplateRef } from 'vue';
 import { useBlockSizeTween } from '@numior/primitives';
 import { FORM_HOST } from '../../form/form-context';
-import NuiFieldArray from '../field-array/NuiFieldArray.vue';
 import NuiSmartFormCell from './NuiSmartFormCell.vue';
+import NuiSmartFormGroup from './NuiSmartFormGroup.vue';
 import { declareEntries, isShown } from './declarations';
 import { itemOf, type SmartItem } from './items';
 import { orderByArea, planLayout } from './layout';
-import type { NuiSmartFormEntriesProps } from './smart-form.types';
+import type { NuiSmartFormPartSlots, NuiSmartFormEntriesProps } from './smart-form.types';
 
 const {
   form,
@@ -86,6 +64,8 @@ const {
   prefix = '',
   row,
 } = defineProps<NuiSmartFormEntriesProps<T>>();
+
+defineSlots<NuiSmartFormPartSlots>();
 
 const { raw, values } = form[FORM_HOST].engine;
 
@@ -107,8 +87,6 @@ const gridStyle = computed(() =>
 );
 
 const areaFor = (item: SmartItem<T>): string => (planned.value.has(item.area) ? item.area : 'auto');
-
-const cellStyle = (item: SmartItem<T>) => ({ '--_area': areaFor(item) });
 
 const grid = useTemplateRef<{ $el: unknown }>('grid');
 
