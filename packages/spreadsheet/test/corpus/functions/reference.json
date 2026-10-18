@@ -1,0 +1,110 @@
+{
+  "family": "reference",
+  "provenance": "derived",
+  "cells": {
+    "A1": 1,
+    "A2": 2,
+    "A3": 3,
+    "B1": 10,
+    "B2": 20,
+    "B3": 30,
+    "C1": "B2"
+  },
+  "functions": ["ROW", "COLUMN", "ROWS", "COLUMNS", "ADDRESS", "OFFSET", "INDIRECT"],
+  "cases": [
+    {
+      "formula": "=ROW()",
+      "expected": 1
+    },
+    {
+      "formula": "=COLUMN()",
+      "expected": 27
+    },
+    {
+      "formula": "=ROW(B3)",
+      "expected": 3
+    },
+    {
+      "formula": "=COLUMN(C1)",
+      "expected": 3
+    },
+    {
+      "formula": "=ROW(A1:A3)",
+      "expected": [[1], [2], [3]]
+    },
+    {
+      "formula": "=ROWS(A1:B3)",
+      "expected": 3
+    },
+    {
+      "formula": "=COLUMNS(A1:B3)",
+      "expected": 2
+    },
+    {
+      "formula": "=ROWS({1,2;3,4})",
+      "expected": 2
+    },
+    {
+      "formula": "=ADDRESS(2,3)",
+      "expected": "$C$2"
+    },
+    {
+      "formula": "=ADDRESS(2,3,4)",
+      "expected": "C2"
+    },
+    {
+      "formula": "=ADDRESS(2,3,2)",
+      "expected": "C$2"
+    },
+    {
+      "formula": "=ADDRESS(2,3,1,FALSE)",
+      "expected": "R2C3"
+    },
+    {
+      "formula": "=ADDRESS(2,3,4,FALSE)",
+      "expected": "R[2]C[3]"
+    },
+    {
+      "formula": "=ADDRESS(1,1,1,TRUE,\"My Sheet\")",
+      "expected": "'My Sheet'!$A$1"
+    },
+    {
+      "formula": "=OFFSET(A1,1,1)",
+      "expected": 20
+    },
+    {
+      "formula": "=SUM(OFFSET(A1,0,0,3,1))",
+      "expected": 6
+    },
+    {
+      "formula": "=OFFSET(A1,-1,0)",
+      "expected": {
+        "error": "#REF!"
+      }
+    },
+    {
+      "formula": "=INDIRECT(\"B3\")",
+      "expected": 30
+    },
+    {
+      "formula": "=INDIRECT(C1)",
+      "expected": 20
+    },
+    {
+      "formula": "=SUM(INDIRECT(\"A1:A3\"))",
+      "expected": 6
+    },
+    {
+      "formula": "=INDIRECT(\"nope\")",
+      "expected": {
+        "error": "#REF!"
+      }
+    },
+    {
+      "formula": "=INDIRECT(\"R1C1\",FALSE)",
+      "expected": {
+        "error": "#REF!"
+      }
+    }
+  ]
+}

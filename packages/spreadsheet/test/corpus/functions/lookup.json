@@ -11,16 +11,175 @@
     "C1": "Pear",
     "C2": "apple",
     "D1": 2.25,
-    "D2": 1.5
+    "D2": 1.5,
+    "E1": "x",
+    "F1": "y",
+    "G1": "z",
+    "E2": 1,
+    "F2": 2,
+    "G2": 3
   },
-  "functions": ["VLOOKUP"],
+  "functions": ["VLOOKUP", "HLOOKUP", "MATCH", "XMATCH", "XLOOKUP", "INDEX", "LOOKUP", "CHOOSE"],
   "cases": [
-    { "formula": "=VLOOKUP(7,A1:B3,2)", "expected": "mid" },
-    { "formula": "=VLOOKUP(10,A1:B3,2,TRUE)", "expected": "high" },
-    { "formula": "=VLOOKUP(0,A1:B3,2)", "expected": { "error": "#N/A" } },
-    { "formula": "=VLOOKUP(\"APPLE\",C1:D2,2,FALSE)", "expected": 1.5 },
-    { "formula": "=VLOOKUP(\"plum\",C1:D2,2,FALSE)", "expected": { "error": "#N/A" } },
-    { "formula": "=VLOOKUP(1,A1:B3,3)", "expected": { "error": "#REF!" } },
-    { "formula": "=VLOOKUP(1,A1:B3,0)", "expected": { "error": "#VALUE!" } }
+    {
+      "formula": "=VLOOKUP(7,A1:B3,2)",
+      "expected": "mid"
+    },
+    {
+      "formula": "=VLOOKUP(10,A1:B3,2,TRUE)",
+      "expected": "high"
+    },
+    {
+      "formula": "=VLOOKUP(0,A1:B3,2)",
+      "expected": {
+        "error": "#N/A"
+      }
+    },
+    {
+      "formula": "=VLOOKUP(\"APPLE\",C1:D2,2,FALSE)",
+      "expected": 1.5
+    },
+    {
+      "formula": "=VLOOKUP(\"plum\",C1:D2,2,FALSE)",
+      "expected": {
+        "error": "#N/A"
+      }
+    },
+    {
+      "formula": "=VLOOKUP(1,A1:B3,3)",
+      "expected": {
+        "error": "#REF!"
+      }
+    },
+    {
+      "formula": "=VLOOKUP(1,A1:B3,0)",
+      "expected": {
+        "error": "#VALUE!"
+      }
+    },
+    {
+      "formula": "=VLOOKUP(\"APP*\",C1:D2,2,FALSE)",
+      "expected": 1.5
+    },
+    {
+      "formula": "=HLOOKUP(\"y\",E1:G2,2,FALSE)",
+      "expected": 2
+    },
+    {
+      "formula": "=HLOOKUP(\"z*\",E1:G2,2,FALSE)",
+      "expected": 3
+    },
+    {
+      "formula": "=MATCH(5,A1:A3,0)",
+      "expected": 2
+    },
+    {
+      "formula": "=MATCH(7,A1:A3)",
+      "expected": 2
+    },
+    {
+      "formula": "=MATCH(\"app*\",C1:C2,0)",
+      "expected": 2
+    },
+    {
+      "formula": "=MATCH(4,A1:A3,0)",
+      "expected": {
+        "error": "#N/A"
+      }
+    },
+    {
+      "formula": "=MATCH(7,{10,5,1},-1)",
+      "expected": 1
+    },
+    {
+      "formula": "=XMATCH(5,A1:A3)",
+      "expected": 2
+    },
+    {
+      "formula": "=XMATCH(7,A1:A3,-1)",
+      "expected": 2
+    },
+    {
+      "formula": "=XMATCH(7,A1:A3,1)",
+      "expected": 3
+    },
+    {
+      "formula": "=XMATCH(\"a?ple\",C1:C2,2)",
+      "expected": 2
+    },
+    {
+      "formula": "=XMATCH(1,{1,2,1},0,-1)",
+      "expected": 3
+    },
+    {
+      "formula": "=XLOOKUP(\"apple\",C1:C2,D1:D2)",
+      "expected": 1.5
+    },
+    {
+      "formula": "=XLOOKUP(\"plum\",C1:C2,D1:D2,\"none\")",
+      "expected": "none"
+    },
+    {
+      "formula": "=XLOOKUP(\"plum\",C1:C2,D1:D2)",
+      "expected": {
+        "error": "#N/A"
+      }
+    },
+    {
+      "formula": "=XLOOKUP(5,A1:A3,A1:B3)",
+      "expected": [[5, "mid"]]
+    },
+    {
+      "formula": "=XLOOKUP(7,A1:A3,B1:B3,,1)",
+      "expected": "high"
+    },
+    {
+      "formula": "=XLOOKUP(1,A1:A3,B1:B2)",
+      "expected": {
+        "error": "#VALUE!"
+      }
+    },
+    {
+      "formula": "=INDEX(A1:B3,2,2)",
+      "expected": "mid"
+    },
+    {
+      "formula": "=INDEX({1,2,3},2)",
+      "expected": 2
+    },
+    {
+      "formula": "=INDEX(A1:B3,0,2)",
+      "expected": [["low"], ["mid"], ["high"]]
+    },
+    {
+      "formula": "=SUM(INDEX(A1:B3,0,1))",
+      "expected": 16
+    },
+    {
+      "formula": "=INDEX(A1:B3,4,1)",
+      "expected": {
+        "error": "#REF!"
+      }
+    },
+    {
+      "formula": "=LOOKUP(7,A1:A3,B1:B3)",
+      "expected": "mid"
+    },
+    {
+      "formula": "=LOOKUP(0,A1:A3)",
+      "expected": {
+        "error": "#N/A"
+      }
+    },
+    {
+      "formula": "=CHOOSE(2,\"a\",\"b\",\"c\")",
+      "expected": "b"
+    },
+    {
+      "formula": "=CHOOSE(4,\"a\",\"b\")",
+      "expected": {
+        "error": "#VALUE!"
+      }
+    }
   ]
 }

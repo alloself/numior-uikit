@@ -1,6 +1,7 @@
 import { MAX_COLS, MAX_ROWS, rangeOf } from '../address';
 import type { CellRange, CellValue } from '../cell.types';
 import type { FormulaNode } from '../formula/formula.types';
+import { parseFormula } from '../formula/parser';
 import { EMPTY, errorValue, numberValue, textValue } from '../values';
 import type { Sheet, Workbook } from '../workbook';
 import {
@@ -16,6 +17,7 @@ import type {
   ArrayValue,
   EvalValue,
   FormulaResult,
+  FormulaPlace,
   FunctionArgs,
   FunctionRegistry,
   FunctionSpec,
@@ -31,6 +33,8 @@ export interface EvalContext {
   spillRange(sheet: Sheet, row: number, col: number): CellRange | undefined;
   now(): number;
   random(): number;
+  here(): FormulaPlace;
+  track(sheet: Sheet, range: CellRange): void;
 }
 
 type Binary = Extract<FormulaNode, { readonly kind: 'binary' }>;
@@ -233,7 +237,30 @@ const argumentsFrom = (
     matrix: (index) => matrixOf(value(index)),
     now: () => context.now(),
     random: () => context.random(),
+    here: () => context.here(),
+    refer: (sheet, range) => {
+      context.track(sheet, range);
+      return { kind: 'reference', sheet, range };
+    },
+    indirect: (text) => indirect(text, context),
   };
+};
+
+const REFERENCE_KINDS = new Set(['cell', 'range', 'columns', 'rows']);
+
+const indirect = (text: string, context: EvalContext): EvalValue => {
+  const parsed = parseFormula(text);
+
+  if (!parsed.ok || !REFERENCE_KINDS.has(parsed.ast.kind)) {
+    return raise('#REF!');
+  }
+  const value = evaluate(parsed.ast, context);
+
+  if (value.kind !== 'reference') {
+    return raise('#REF!');
+  }
+  context.track(value.sheet, value.range);
+  return value;
 };
 
 const lazyValues = (

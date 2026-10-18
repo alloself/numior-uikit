@@ -35,6 +35,15 @@ export interface FunctionArgs {
   matrix(index: number): readonly (readonly CellValue[])[];
   now(): number;
   random(): number;
+  here(): FormulaPlace;
+  refer(sheet: Sheet, range: CellRange): EvalValue;
+  indirect(text: string): EvalValue;
+}
+
+export interface FormulaPlace {
+  readonly sheet: Sheet;
+  readonly row: number;
+  readonly col: number;
 }
 
 export interface FunctionSpec {

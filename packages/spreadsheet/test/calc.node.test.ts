@@ -107,11 +107,11 @@ describe('base functions', () => {
   it('answers #NAME? for unknown functions and reports them', () => {
     const sheet = openSheet();
 
-    sheet.enter('A1', '=XLOOKUP(1, B:B, C:C)');
+    sheet.enter('A1', '=WEBSERVICE("https://numior.test")');
     sheet.recalc();
 
     expect(sheet.value('A1')).toEqual({ kind: 'error', code: '#NAME?' });
-    expect(sheet.calculator.limitations).toEqual([{ kind: 'function', name: 'XLOOKUP' }]);
+    expect(sheet.calculator.limitations).toEqual([{ kind: 'function', name: 'WEBSERVICE' }]);
   });
 });
 
@@ -226,6 +226,25 @@ describe('recalculation', () => {
     expect(sheet.value('A2000')).toEqual(numberValue(2000));
     expect(run.busyMs).toBeGreaterThan(0);
     expect(run.busyMs).toBeLessThanOrEqual(performance.now() - started);
+  });
+
+  it('orders formulas by the references INDIRECT and OFFSET find while computing', () => {
+    const sheet = openSheet();
+
+    sheet.enter('A1', '=INDIRECT("B1")*2');
+    sheet.enter('A2', '=SUM(OFFSET(B1,0,0,2,1))');
+    sheet.enter('B1', '=C1+1');
+    sheet.enter('B2', 5);
+    sheet.enter('C1', 4);
+    sheet.recalc();
+
+    expect([sheet.value('A1'), sheet.value('A2')]).toEqual([numberValue(10), numberValue(10)]);
+
+    sheet.enter('C1', 9);
+    sheet.recalc({ budgetMs: Number.POSITIVE_INFINITY, volatile: false });
+
+    expect([sheet.value('A1'), sheet.value('A2')]).toEqual([numberValue(20), numberValue(15)]);
+    expect(sheet.calculator.pending).toBe(0);
   });
 
   it('computes the visible cells first', () => {

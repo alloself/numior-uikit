@@ -56,6 +56,8 @@ interface FormulaRecord {
   readonly sheet: Sheet;
   readonly row: number;
   readonly col: number;
+  readonly precedents: readonly Precedent[];
+  dynamic: boolean;
 }
 
 interface Run {
@@ -80,6 +82,8 @@ const DEFAULT_BUDGET = 8;
 const CHECK_EVERY = 32;
 
 const MAX_PASSES = 16;
+
+const SMALL_AREA = 4096;
 
 const DAY_MS = 86_400_000;
 
@@ -138,7 +142,10 @@ const referenceRange = (found: Exclude<FormulaReference, { readonly kind: 'name'
 const oneCell = (range: CellRange): boolean =>
   range.top === range.bottom && range.left === range.right;
 
-const precedentsOf = (record: FormulaRecord, workbook: Workbook): Precedent[] =>
+const precedentsOf = (
+  record: Pick<FormulaRecord, 'cell' | 'sheet'>,
+  workbook: Workbook,
+): Precedent[] =>
   formulaReferences(record.cell.ast).flatMap((found) => {
     if (found.kind === 'name') {
       return [];
@@ -211,6 +218,8 @@ export const createCalculator = (
   const contexts = new Map<Sheet, EvalContext>();
   let current: Run | undefined;
   let now = 0;
+  let evaluating: FormulaRecord | undefined;
+  const dynamic: Precedent[] = [];
 
   const columnVersion = (sheet: Sheet, col: number): number =>
     versions.get(sheet.id * MAX_COLS + col) ?? 0;
@@ -247,6 +256,14 @@ export const createCalculator = (
       spillRange: (target, row, col) => spills.areaOf(formulaKey(target.id, row, col))?.range,
       now: () => now,
       random,
+      here: () => ({
+        sheet: evaluating?.sheet ?? sheet,
+        row: evaluating?.row ?? 0,
+        col: evaluating?.col ?? 0,
+      }),
+      track: (target, range) => {
+        dynamic.push({ sheet: target.id, range });
+      },
     };
 
     contexts.set(sheet, context);
@@ -337,6 +354,37 @@ export const createCalculator = (
     }
   };
 
+  const pendingInside = (precedent: Precedent): boolean => {
+    const { range } = precedent;
+
+    if ((range.bottom - range.top + 1) * (range.right - range.left + 1) > SMALL_AREA) {
+      return [...pending].some(
+        (key) =>
+          formulas.get(key)?.sheet.id === precedent.sheet &&
+          containsCell(range, rowOfKey(key), colOfKey(key)),
+      );
+    }
+    for (let row = range.top; row <= range.bottom; row += 1) {
+      for (let col = range.left; col <= range.right; col += 1) {
+        if (pending.has(formulaKey(precedent.sheet, row, col))) {
+          return true;
+        }
+      }
+    }
+    return false;
+  };
+
+  const settleDynamic = (key: number, record: FormulaRecord, found: Precedent[]): void => {
+    if (found.length === 0 && !record.dynamic) {
+      return;
+    }
+    record.dynamic = found.length > 0;
+    graph.set(key, [...record.precedents, ...found]);
+    if (found.some(pendingInside)) {
+      pending.add(key);
+    }
+  };
+
   const compute = (key: number, cycles: ReadonlySet<number>): void => {
     const listed = pending.delete(key);
     const record = formulas.get(key);
@@ -349,7 +397,13 @@ export const createCalculator = (
       writeAnchor(record, numberValue(0), true);
       return;
     }
-    place(key, record, evaluateFormula(record.cell.ast, contextFor(record.sheet)));
+    evaluating = record;
+    dynamic.length = 0;
+    const result = evaluateFormula(record.cell.ast, contextFor(record.sheet));
+
+    evaluating = undefined;
+    settleDynamic(key, record, dynamic);
+    place(key, record, result);
   };
 
   const visible = (key: number, viewport: NonNullable<RecalcOptions['viewport']>): boolean => {
@@ -475,17 +529,21 @@ export const createCalculator = (
       }
       const key = formulaKey(sheet.id, row, col);
 
+      const cell: FormulaCell = { text, ast: parsed.ast, state: 'stale' };
+
       const record: FormulaRecord = {
-        cell: { text, ast: parsed.ast, state: 'stale' },
+        cell,
         sheet,
         row,
         col,
+        precedents: precedentsOf({ cell, sheet }, workbook),
+        dynamic: false,
       };
 
       interrupt();
       claim(key);
       formulas.set(key, record);
-      graph.set(key, precedentsOf(record, workbook));
+      graph.set(key, record.precedents);
       pending.add(key);
       if (usesVolatile(parsed.ast, functions)) {
         volatiles.add(key);
