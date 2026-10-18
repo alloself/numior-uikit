@@ -49,6 +49,35 @@ const TEMPLATE_GLYPHS = [
   '…',
 ];
 
+const RENDER_FUNCTIONS = {
+  'no-restricted-imports': [
+    'error',
+    {
+      paths: [
+        {
+          name: 'vue',
+          importNames: [
+            'h',
+            'defineComponent',
+            'createVNode',
+            'createElementVNode',
+            'createTextVNode',
+            'cloneVNode',
+            'renderSlot',
+            'renderList',
+            'resolveComponent',
+            'resolveDynamicComponent',
+            'withCtx',
+            'FunctionalComponent',
+          ],
+          message:
+            'Components are SFCs; .archcore/component-authoring.rule.md lists the only exception.',
+        },
+      ],
+    },
+  ],
+};
+
 const CATALOG_MESSAGE = 'User-facing texts live in *.messages.ts catalogs.';
 
 const catalogTexts = {
@@ -105,6 +134,11 @@ export default [
       ...spacing,
       'vue/multi-word-component-names': ['error', { ignores: ['Example', 'Configurator'] }],
     },
+  },
+  {
+    files: ['**/*.ts', '**/*.mts', '**/*.js', '**/*.mjs', '**/*.vue'],
+    ignores: ['packages/content/src/content/content-nodes.ts'],
+    rules: RENDER_FUNCTIONS,
   },
   {
     files: ['packages/*/src/**/*.ts', 'packages/*/src/**/*.vue'],

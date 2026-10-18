@@ -1,7 +1,7 @@
 declare module 'lucide-vue-next/dist/esm/icons/*' {
-  import type { FunctionalComponent } from 'vue';
+  import type { Component } from 'vue';
 
-  const icon: FunctionalComponent;
+  const icon: Component;
 
   export default icon;
 }
