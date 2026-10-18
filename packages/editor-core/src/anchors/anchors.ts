@@ -8,9 +8,9 @@ import type { Anchor, AnchorChange, AnchorJSON, AnchorRange, AnchorsState } from
 
 const anchorChange = createMetaKey<AnchorChange>('anchors');
 
-const ANCHOR_CLASS = 'nui-editor__anchor';
+const ANCHOR_CLASS = 'nui-editor__comment';
 
-const ACTIVE_CLASS = 'nui-editor__anchor--active';
+const ACTIVE_CLASS = 'nui-editor__comment--active';
 
 const EMPTY: AnchorsState = { anchors: new Map(), active: undefined };
 

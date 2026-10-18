@@ -906,7 +906,7 @@ Notion) выбран «всё в тексте, как Docs».
   его не возвращает. Команды `setAnchor(id, range?)` (по умолчанию выделение),
   `removeAnchor`, `activateAnchor`; `anchorsOf`, `anchorsAt(pos)`; для хранения снаружи —
   `anchorToJSON`/`anchorFromJSON` в виде id текстового блока и смещения в нём. Подсветка —
-  инлайн-декорации `nui-editor__anchor` и `--active`. `NuiEditor` ставит плагин всегда; панель
+  инлайн-декорации `nui-editor__comment` и `--active` (не `nui-editor__anchor`: это класс служебного якоря всплывающих панелей с `position: absolute`). `NuiEditor` ставит плагин всегда; панель
   комментариев, адаптер и сохранение якорей — блок E (`@numior/collaboration`). В песочнице кнопка
   «Отметить выделение».
 

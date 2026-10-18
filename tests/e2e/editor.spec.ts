@@ -673,6 +673,12 @@ test.describe('editor', () => {
     await editor.markSelection();
     await expect(editor.anchors()).toHaveText(['Наберите']);
 
+    expect(
+      await editor
+        .anchors()
+        .evaluateAll((marks) => marks.map((mark) => getComputedStyle(mark).position)),
+    ).toEqual(['static']);
+
     await editor.placeInText('Наберите', 3);
     await page.keyboard.type('xy');
     await expect(editor.anchors()).toHaveText(['Набxyерите']);

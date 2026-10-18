@@ -57,7 +57,7 @@ describe('comment anchors', () => {
     const editor = editing();
 
     expect(editor.run(setAnchor('c1'))).toBe(true);
-    expect(spans(editor.state)).toEqual(['world:nui-editor__anchor']);
+    expect(spans(editor.state)).toEqual(['world:nui-editor__comment']);
 
     editor.select(textSelection(9));
     editor.type('X');
@@ -104,7 +104,7 @@ describe('comment anchors', () => {
     editor.run(setAnchor('c2', { kind: 'node', id: ruleId }));
     editor.run(activateAnchor('c1'));
 
-    expect(spans(editor.state)).toEqual(['world:nui-editor__anchor nui-editor__anchor--active']);
+    expect(spans(editor.state)).toEqual(['world:nui-editor__comment nui-editor__comment--active']);
     expect(anchorsAt(editor.state, 9)).toEqual(['c1']);
     expect(anchorsAt(editor.state, 14)).toEqual(['c2']);
     expect(editor.run(activateAnchor('missing'))).toBe(false);

@@ -344,7 +344,7 @@ export class EditorSection {
   }
 
   anchors(): Locator {
-    return this.content.locator('.nui-editor__anchor');
+    return this.content.locator('.nui-editor__comment');
   }
 
   async markSelection(): Promise<void> {
