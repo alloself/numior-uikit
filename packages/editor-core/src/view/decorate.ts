@@ -1,6 +1,7 @@
 import type {
   BlockDecoration,
   DecorationSet,
+  DecorationTag,
   InlineDecoration,
 } from '../decorations/decorations.types';
 import type { NodeId } from '../model/node.types';
@@ -10,6 +11,7 @@ export interface LocalDecoration {
   readonly from: number;
   readonly to: number;
   readonly class: string;
+  readonly tag: DecorationTag;
 }
 
 export type BlockDecorations = ReadonlyMap<NodeId, readonly LocalDecoration[]>;
@@ -18,6 +20,7 @@ export interface TextSegment {
   readonly from: number;
   readonly to: number;
   readonly classes: readonly string[];
+  readonly tag: DecorationTag;
 }
 
 export const decorationSets = (state: EditorState): readonly DecorationSet[] =>
@@ -52,7 +55,12 @@ const localOf = (state: EditorState, decoration: InlineDecoration) => {
   return to > decoration.from - start
     ? {
         id: resolved.parent.id,
-        decoration: { from: decoration.from - start, to, class: decoration.class },
+        decoration: {
+          from: decoration.from - start,
+          to,
+          class: decoration.class,
+          tag: decoration.tag,
+        },
       }
     : undefined;
 };
@@ -98,6 +106,7 @@ export const blockDecorations = (
           from: decoration.from,
           to: decoration.to,
           class: decoration.class,
+          tag: decoration.tag,
         });
       }
     }
@@ -107,7 +116,9 @@ export const blockDecorations = (
 
 const signatureOf = (decorations: readonly LocalDecoration[] | undefined): string =>
   (decorations ?? [])
-    .map((decoration) => `${decoration.from}:${decoration.to}:${decoration.class}`)
+    .map(
+      (decoration) => `${decoration.from}:${decoration.to}:${decoration.tag}:${decoration.class}`,
+    )
     .join(' ');
 
 export const changedBlocks = (before: BlockDecorations, after: BlockDecorations): NodeId[] =>
@@ -135,12 +146,15 @@ export const segmentsOf = (
   return sorted.slice(1).map((to, index) => {
     const from = sorted[index] ?? 0;
 
+    const covering = decorations.filter(
+      (decoration) => decoration.from - start < to && decoration.to - start > from,
+    );
+
     return {
       from,
       to,
-      classes: decorations
-        .filter((decoration) => decoration.from - start < to && decoration.to - start > from)
-        .map((decoration) => decoration.class),
+      classes: covering.map((decoration) => decoration.class),
+      tag: covering.some((decoration) => decoration.tag === 'mark') ? 'mark' : 'span',
     };
   });
 };

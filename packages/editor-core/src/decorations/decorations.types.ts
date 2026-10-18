@@ -1,10 +1,13 @@
 import type { NodeId } from '../model/node.types';
 import type { Mappable } from '../transform/mapping.types';
 
+export type DecorationTag = 'span' | 'mark';
+
 export interface InlineDecoration {
   readonly from: number;
   readonly to: number;
   readonly class: string;
+  readonly tag: DecorationTag;
 }
 
 export interface BlockDecoration {
@@ -12,6 +15,7 @@ export interface BlockDecoration {
   readonly from: number;
   readonly to: number;
   readonly class: string;
+  readonly tag: DecorationTag;
 }
 
 export interface WidgetDecoration {

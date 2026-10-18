@@ -150,6 +150,7 @@
   display: inline-flex;
 }
 .nui-editor__content .nui-editor__comment {
+  color: inherit;
   background: color-mix(in oklab, var(--nui-warning) 18%, transparent);
   box-shadow: inset 0 -2px 0 color-mix(in oklab, var(--nui-warning) 55%, transparent);
   transition:

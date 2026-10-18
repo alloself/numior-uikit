@@ -148,11 +148,11 @@ const decoratedBody = (
     if (segment.classes.length === 0) {
       container.append(dom);
     } else {
-      const span = context.document.createElement('span');
+      const wrapper = context.document.createElement(segment.tag);
 
-      span.className = segment.classes.join(' ');
-      span.append(dom);
-      container.append(span);
+      wrapper.className = segment.classes.join(' ');
+      wrapper.append(dom);
+      container.append(wrapper);
     }
   }
   return { inner: container, parts };

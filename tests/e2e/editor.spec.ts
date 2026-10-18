@@ -674,10 +674,15 @@ test.describe('editor', () => {
     await expect(editor.anchors()).toHaveText(['Наберите']);
 
     expect(
-      await editor
-        .anchors()
-        .evaluateAll((marks) => marks.map((mark) => getComputedStyle(mark).position)),
-    ).toEqual(['static']);
+      await editor.anchors().evaluateAll((marks) =>
+        marks.map((mark) => ({
+          tag: mark.tagName,
+          position: getComputedStyle(mark).position,
+          inherits:
+            getComputedStyle(mark).color === getComputedStyle(mark.parentElement ?? mark).color,
+        })),
+      ),
+    ).toEqual([{ tag: 'MARK', position: 'static', inherits: true }]);
 
     await editor.placeInText('Наберите', 3);
     await page.keyboard.type('xy');

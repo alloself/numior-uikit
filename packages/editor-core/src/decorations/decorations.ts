@@ -3,6 +3,7 @@ import type { NodeId } from '../model/node.types';
 import type {
   BlockDecoration,
   DecorationSet,
+  DecorationTag,
   InlineDecoration,
   WidgetDecoration,
 } from './decorations.types';
@@ -11,10 +12,12 @@ export const inlineDecoration = (
   from: number,
   to: number,
   className: string,
+  tag: DecorationTag = 'span',
 ): InlineDecoration => ({
   from,
   to,
   class: className,
+  tag,
 });
 
 export const blockDecoration = (
@@ -22,7 +25,8 @@ export const blockDecoration = (
   from: number,
   to: number,
   className: string,
-): BlockDecoration => ({ block, from, to, class: className });
+  tag: DecorationTag = 'span',
+): BlockDecoration => ({ block, from, to, class: className, tag });
 
 export const widgetDecoration = (pos: number, key: string): WidgetDecoration => ({ pos, key });
 

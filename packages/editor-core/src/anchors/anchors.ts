@@ -78,6 +78,7 @@ const decorationsOf = (value: AnchorsState): DecorationSet => {
               range.from,
               range.to,
               id === value.active ? `${ANCHOR_CLASS} ${ACTIVE_CLASS}` : ANCHOR_CLASS,
+              'mark',
             ),
           ]
         : [],

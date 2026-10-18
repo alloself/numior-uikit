@@ -7,6 +7,7 @@ export {
 } from './decorations/decorations';
 export type {
   BlockDecoration,
+  DecorationTag,
   DecorationSet,
   InlineDecoration,
   WidgetDecoration,
