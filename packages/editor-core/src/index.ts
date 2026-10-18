@@ -230,6 +230,7 @@ export {
   placeBlock,
   startUploads,
   uploadPlace,
+  uploadPoint,
   uploadsOf,
 } from './uploads/uploads';
-export type { PendingUpload } from './uploads/uploads.types';
+export type { PendingUpload, PlaceBuilder } from './uploads/uploads.types';

@@ -10,7 +10,7 @@ import { COLUMN_COUNTS, insertColumns } from './columns/columns';
 import NuiEditorColumnsResize from './columns/NuiEditorColumnsResize.vue';
 import { defineBlock } from './define-block';
 import NuiEditorFile from './file/NuiEditorFile.vue';
-import { alignOf, follow } from './image/image-size';
+import { follow } from './image/image-size';
 import NuiEditorBookmark from './bookmark/NuiEditorBookmark.vue';
 import NuiEditorEmbed from './embed/NuiEditorEmbed.vue';
 import NuiEditorImage from './image/NuiEditorImage.vue';
@@ -92,60 +92,18 @@ export const tableBlock = defineBlock({
   ],
 });
 
-const ALIGN_ICONS = { start: 'align-start', center: 'align-center', end: 'align-end' } as const;
-
 const linkOf = (value: unknown): string => (typeof value === 'string' ? value : '');
 
 export const imageBlock = defineBlock({
   name: 'image',
   view: NuiEditorImage,
-  handle: 'beside',
-  menu: (node, editor, texts) => {
-    const align = alignOf(node.attrs.align);
-
-    return [
-      {
-        type: 'sub',
-        label: texts.imageAlign,
-        icon: ALIGN_ICONS[align],
-        items: [
-          {
-            type: 'radio-group',
-            value: align,
-            onChange: (value) => {
-              editor.setAttrs({ align: alignOf(value) });
-            },
-            items: [
-              { value: 'start', label: texts.imageAlignStart, icon: ALIGN_ICONS.start },
-              { value: 'center', label: texts.imageAlignCenter, icon: ALIGN_ICONS.center },
-              { value: 'end', label: texts.imageAlignEnd, icon: ALIGN_ICONS.end },
-            ],
-          },
-        ],
-      },
-      {
-        label: texts.download,
-        icon: 'download',
-        onSelect: () => {
-          follow(editor.element(), linkOf(node.attrs.src), true);
-        },
-      },
-    ];
-  },
+  handle: (node) =>
+    node.attrs.wrap === 'break' && node.attrs.align !== 'start' ? 'beside' : 'push',
 });
 
 export const fileBlock = defineBlock({
   name: 'file',
   view: NuiEditorFile,
-  menu: (node, editor, texts) => [
-    {
-      label: texts.download,
-      icon: 'download',
-      onSelect: () => {
-        follow(editor.element(), linkOf(node.attrs.url), true);
-      },
-    },
-  ],
 });
 
 const openLink = (node: ElementNode, editor: NuiEditorBlockContext, texts: NuiEditorMessages) => [

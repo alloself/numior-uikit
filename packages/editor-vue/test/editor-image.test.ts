@@ -25,9 +25,14 @@ const picture = (): DocJSON =>
       contentSchema.element('doc', {
         id: 'root',
         content: [
-          contentSchema.element('image', {
-            id: 'img',
-            attrs: { src: 'https://cdn.test/a.png', width: 0.5 },
+          contentSchema.element('paragraph', {
+            id: 'line',
+            content: [
+              contentSchema.element('image', {
+                id: 'img',
+                attrs: { src: 'https://cdn.test/a.png', width: 0.5, wrap: 'break' },
+              }),
+            ],
           }),
           contentSchema.element('paragraph', { id: 'p', content: [contentSchema.text('After')] }),
         ],
@@ -38,13 +43,15 @@ const picture = (): DocJSON =>
 const isElement = (value: unknown): value is ElementJSON =>
   typeof value === 'object' && value !== null && 'type' in value;
 
-const imageAttrs = (editor: EditorDriver) => {
-  const image = editor.documents
-    .at(-1)
-    ?.root.content?.find((block) => isElement(block) && block.type === 'image');
+const imagesIn = (nodes: readonly unknown[]): ElementJSON[] =>
+  nodes.flatMap((node) =>
+    isElement(node)
+      ? [...(node.type === 'image' ? [node] : []), ...imagesIn(node.content ?? [])]
+      : [],
+  );
 
-  return isElement(image) ? image.attrs : undefined;
-};
+const imageAttrs = (editor: EditorDriver) =>
+  imagesIn(editor.documents.at(-1)?.root.content ?? [])[0]?.attrs;
 
 const blockTypes = (editor: EditorDriver): readonly string[] =>
   (editor.documents.at(-1)?.root.content ?? []).map((block) =>
@@ -65,7 +72,7 @@ describe('NuiEditor image', () => {
     const image = EditorImageDriver.of(editor);
 
     expect(image.look).toBe(
-      'nui-content__image nui-content__image--align-center|inline-size: 50%;',
+      'nui-content__image nui-content__image--wrap-break nui-content__image--align-center|inline-size: 50%;',
     );
 
     expect(image.grips).toEqual(['Image width:50']);
@@ -93,6 +100,9 @@ describe('NuiEditor image', () => {
     await image.select();
 
     expect(image.barControls).toEqual([
+      'In line with text',
+      'Wrap text',
+      'Break text',
       'Align to the line start',
       'Centre',
       'Align to the line end',
@@ -104,6 +114,23 @@ describe('NuiEditor image', () => {
 
     expect(imageAttrs(editor)?.align).toBe('end');
     expect(image.look).toContain('nui-content__image--align-end');
+
+    await image.align('Wrap text');
+
+    expect(imageAttrs(editor)?.wrap).toBe('wrap');
+    expect(image.barControls).not.toContain('Centre');
+
+    await image.align('In line with text');
+
+    expect(imageAttrs(editor)?.wrap).toBe('inline');
+
+    expect(image.barControls).toEqual([
+      'In line with text',
+      'Wrap text',
+      'Break text',
+      'Download',
+      'Alt text',
+    ]);
 
     await image.describe('  A red fox  ');
 
@@ -117,7 +144,7 @@ describe('NuiEditor image', () => {
     await image.writeCaption('Fox in the snow');
 
     expect(imageAttrs(editor)?.caption).toBe('Fox in the snow');
-    expect(blockTypes(editor)).toEqual(['image', 'paragraph', 'paragraph']);
+    expect(blockTypes(editor)).toEqual(['paragraph', 'paragraph', 'paragraph']);
     expect(editor.focused).toBe(true);
 
     await image.writeCaption('Ignored', 'Escape');

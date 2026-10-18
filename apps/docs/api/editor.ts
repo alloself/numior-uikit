@@ -30,8 +30,8 @@ const docs: DocsMap = {
         en: 'Text colour presets the menu offers and pastes keep; all nine by default. Colours already in the document stay.',
       },
       upload: {
-        ru: 'Адаптер загрузки `(file, { onProgress, signal }) => Promise<{ url }>`: вставка, перетаскивание и «Картинка»/«Файл» из меню «/» загружают файлы, показывают карточку с прогрессом и вставляют блок после ответа. Без адаптера картинки и файлы вставляются только по ссылке.',
-        en: 'An upload adapter `(file, { onProgress, signal }) => Promise<{ url }>`: pasting, dropping and Image/File from the slash menu upload files, show a card with progress and insert the block once the adapter answers. Without it images and files are inserted by link only.',
+        ru: 'Адаптер загрузки `(file, { onProgress, signal }) => Promise<{ url }>`: вставка, перетаскивание и «Картинка»/«Файл» из меню «/» загружают файлы, показывают карточку с прогрессом и после ответа ставят картинку или файл в строку у каретки (в пустой строке картинка встаёт отдельной строкой). Без адаптера картинки и файлы вставляются только по ссылке.',
+        en: 'An upload adapter `(file, { onProgress, signal }) => Promise<{ url }>`: pasting, dropping and Image/File from the slash menu upload files, show a card with progress and put the image or file into the line at the caret once the adapter answers (in an empty line an image breaks the text). Without it images and files are inserted by link only.',
       },
       accept: {
         ru: 'Допустимые типы загружаемых файлов в формате атрибута `accept`.',

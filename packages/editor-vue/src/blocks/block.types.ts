@@ -35,7 +35,10 @@ export interface NuiEditorBlock {
   readonly name: string;
   readonly view?: Component | undefined;
   readonly at?: NuiEditorBlockPlace | undefined;
-  readonly handle?: NuiEditorHandlePlacement | undefined;
+  readonly handle?:
+    | NuiEditorHandlePlacement
+    | ((node: ElementNode) => NuiEditorHandlePlacement)
+    | undefined;
   readonly keymap?: Keymap | ((editor: NuiEditorBlockEditor) => Keymap) | undefined;
   readonly slash?: ((texts: NuiEditorMessages) => readonly SlashItem[]) | undefined;
   readonly menu?:

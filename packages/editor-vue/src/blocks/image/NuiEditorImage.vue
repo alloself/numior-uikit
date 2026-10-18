@@ -6,7 +6,7 @@
       'nui-editor-image--resizing': resizing,
     }"
   >
-    <div class="nui-editor-image__frame">
+    <div ref="frame" class="nui-editor-image__frame">
       <img
         ref="picture"
         class="nui-content__picture"
@@ -30,22 +30,31 @@
           :key="`${grip.edge}-${grip.side}`"
           class="nui-editor-image__grip"
           :class="`nui-editor-image__grip--at-${grip.edge}-${grip.side}`"
-          v-bind="grip.edge === 'bottom' && grip.side === 'end' ? slider : HIDDEN_GRIP"
+          v-bind="gripAttrs(grip)"
           @pointerdown="onGripDown(grip, $event)"
           @keydown="onGripKeydown"
         />
         <NuiPopover
           v-if="tooled"
           class="nui-editor-image__toolbar"
-          :open="selected && focused && !resizing"
-          :anchor="corner"
+          :open="barOpen"
+          v-bind="barSpot"
           mode="manual"
-          placement="bottom-end"
-          :offset="0"
           padding="sm"
+          @toggle="fitBar"
         >
           <div ref="bar" class="nui-editor-image__bar" role="toolbar" :aria-label="texts.image">
             <NuiToggleGroup
+              :model-value="wrap"
+              :items="wrapItems"
+              :label="texts.imageWrap"
+              size="sm"
+              icon-only
+              required
+              @update:model-value="setWrap"
+            />
+            <NuiToggleGroup
+              v-if="captioned"
               :model-value="align"
               :items="alignItems"
               :label="texts.imageAlign"
@@ -98,6 +107,7 @@
       </template>
     </div>
     <NuiEditorCaption
+      v-if="captioned"
       ref="caption"
       :node="node"
       :editor="editor"
@@ -120,7 +130,7 @@ import {
   type NuiToggleItem,
 } from '@numior/vue';
 import { useResizeObserver } from '@vueuse/core';
-import type { NuiContentAlign } from '@numior/content';
+import type { NuiContentAlign, NuiContentWrap } from '@numior/content';
 import { computed, ref, useTemplateRef, watch, type HTMLAttributes } from 'vue';
 import { editorMessages } from '../../editor/editor.messages';
 import NuiEditorCaption from '../caption/NuiEditorCaption.vue';
@@ -135,6 +145,7 @@ import {
   draggedShare,
   lineWidthOf,
   pullOf,
+  wrapOf,
 } from './image-size';
 
 type GripSide = 'start' | 'end';
@@ -175,6 +186,8 @@ const texts = useMessages(editorMessages);
 const uploads = useEditorUploadContext();
 const picker = useTemplateRef<HTMLInputElement>('picker');
 const bar = useTemplateRef<HTMLElement>('bar');
+const frame = useTemplateRef<HTMLElement>('frame');
+const roomy = ref(true);
 const corner = useTemplateRef<HTMLElement>('corner');
 const captionView = useTemplateRef<{ fit(): void }>('caption');
 const picture = useTemplateRef<HTMLImageElement>('picture');
@@ -189,6 +202,19 @@ const textOf = (value: unknown): string => (typeof value === 'string' ? value : 
 const src = computed(() => textOf(node.attrs.src));
 const alt = computed(() => textOf(node.attrs.alt));
 const align = computed(() => alignOf(node.attrs.align));
+const wrap = computed(() => wrapOf(node.attrs.wrap));
+const captioned = computed(() => wrap.value !== 'inline');
+const centred = computed(() => align.value === 'center' && wrap.value === 'break');
+const barOpen = computed(() => selected && focused && !resizing.value);
+
+const barSpot = computed(() =>
+  roomy.value
+    ? { anchor: corner.value, placement: 'bottom-end' as const, offset: 0 }
+    : { anchor: frame.value, placement: 'top-start' as const, offset: 8 },
+);
+
+const gripAttrs = (grip: Grip): HTMLAttributes =>
+  grip.edge === 'bottom' && grip.side === 'end' ? slider.value : HIDDEN_GRIP;
 
 const share = computed(() =>
   typeof node.attrs.width === 'number' ? node.attrs.width : measured.value,
@@ -215,21 +241,48 @@ const percent = computed(() =>
 
 const alignItems = computed((): NuiToggleItem<NuiContentAlign>[] => [
   { value: 'start', label: texts.value.imageAlignStart, icon: 'align-start' },
-  { value: 'center', label: texts.value.imageAlignCenter, icon: 'align-center' },
+  ...(wrap.value === 'break'
+    ? [{ value: 'center' as const, label: texts.value.imageAlignCenter, icon: 'align-center' }]
+    : []),
   { value: 'end', label: texts.value.imageAlignEnd, icon: 'align-end' },
 ]);
 
+const wrapItems = computed((): NuiToggleItem<NuiContentWrap>[] => [
+  { value: 'inline', label: texts.value.imageWrapInline, icon: 'wrap-inline' },
+  { value: 'wrap', label: texts.value.imageWrapWrap, icon: 'wrap-text' },
+  { value: 'break', label: texts.value.imageWrapBreak, icon: 'wrap-break' },
+]);
+
 const rtl = (): boolean => getComputedStyle(element).direction === 'rtl';
+
+const BAR_MARGIN = 64;
+
+const fitBar = (): void => {
+  const width = bar.value?.offsetWidth ?? 0;
+
+  roomy.value = width === 0 || (frame.value?.clientWidth ?? 0) >= width + BAR_MARGIN;
+};
 
 const measure = (): void => {
   const natural = picture.value?.naturalWidth ?? 0;
 
   measured.value = natural > 0 ? clampShare(natural / lineWidthOf(element)) : 1;
   captionView.value?.fit();
+  fitBar();
 };
 
 const setWidth = (next: number): void => {
   editor.setAttrs({ width: clampShare(next) });
+};
+
+const setWrap = (value: NuiContentWrap | null): void => {
+  if (value !== null) {
+    editor.setAttrs(
+      value === 'wrap' && align.value === 'center'
+        ? { wrap: value, align: 'start' }
+        : { wrap: value },
+    );
+  }
 };
 
 const setAlign = (value: NuiContentAlign | null): void => {
@@ -252,7 +305,7 @@ const onGripDown = ({ side, lift }: Grip, event: PointerEvent): void => {
   const start = share.value * line;
   const before = element.style.getPropertyValue('inline-size');
   const pull = { sign: (side === 'end') === rtl() ? -1 : 1, lift, ratio: aspectOf(picture.value) };
-  const symmetric = align.value === 'center';
+  const symmetric = centred.value;
   let next: number | undefined;
 
   resizing.value = true;

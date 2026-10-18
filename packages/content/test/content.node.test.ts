@@ -6,7 +6,7 @@ import { EVERY_BLOCK_MARKUP, docOf, everyBlock, node } from './support/documents
 
 const stamped = (blocks: readonly unknown[]) => ({
   format: 1,
-  schema: { name: 'numior-content', version: 3 },
+  schema: { name: 'numior-content', version: 4 },
   root: { id: 'r', type: 'doc', content: blocks },
 });
 
@@ -24,17 +24,17 @@ const linked = (href: string) => ({
   content: [{ text: 'x', marks: [{ type: 'link', attrs: { href } }] }],
 });
 
-const image = (src: string, attrs: object = {}) => ({
-  id: `image ${src}`,
-  type: 'image',
-  attrs: { src, ...attrs },
+const inLine = (id: string, child: object) => ({
+  id: `line ${id}`,
+  type: 'paragraph',
+  content: [child],
 });
 
-const file = (url: string, attrs: object = {}) => ({
-  id: `file ${url}`,
-  type: 'file',
-  attrs: { url, ...attrs },
-});
+const image = (src: string, attrs: object = {}) =>
+  inLine(src, { id: `image ${src}`, type: 'image', attrs: { src, ...attrs } });
+
+const file = (url: string, attrs: object = {}) =>
+  inLine(url, { id: `file ${url}`, type: 'file', attrs: { url, ...attrs } });
 
 const embed = (url: string, provider: string) => ({
   id: `embed ${url} ${provider}`,
@@ -110,8 +110,9 @@ describe('content schema', () => {
         image('a.png', { width: 0.1 }),
         image('b.png', { width: 320 }),
         image('c.png', { align: 'wide' }),
+        image('d.png', { wrap: 'float' }),
       ]),
-    ).toEqual(['url', 'url', 'url', 'size', 'width', 'width', 'align']);
+    ).toEqual(['url', 'url', 'url', 'size', 'width', 'width', 'align', 'wrap']);
   });
 
   it('keeps embeds and bookmarks on web addresses with a plain provider name', () => {

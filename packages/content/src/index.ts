@@ -3,6 +3,7 @@ export {
   CONTENT_ALIGNS,
   CONTENT_COLOURS,
   CONTENT_TONES,
+  CONTENT_WRAPS,
   IMAGE_WIDTH,
   contentSchema,
   extendContentSchema,
@@ -31,6 +32,7 @@ export { renderContent } from './content/render-content';
 export type { RenderContentOptions } from './content/render-content';
 export type {
   NuiContentAlign,
+  NuiContentWrap,
   NuiContentCellValue,
   NuiContentColour,
   NuiContentProps,

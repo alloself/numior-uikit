@@ -1,11 +1,13 @@
 import { decorationSet, widgetDecoration } from '../decorations/decorations';
 import type { DecorationSet } from '../decorations/decorations.types';
-import type { Doc } from '../doc/doc.types';
+import type { Doc, ResolvedPos } from '../doc/doc.types';
+import { emptyTextblock } from '../doc/empty';
+import { nodeSize } from '../model/node';
 import type { ElementNode } from '../model/node.types';
 import { createMetaKey, definePlugin } from '../state/plugin';
-import { selectionRange } from '../state/selection';
+import { selectionRange, textSelection } from '../state/selection';
 import type { Command, EditorState, Plugin, Transaction } from '../state/state.types';
-import type { PendingUpload, UploadChange } from './uploads.types';
+import type { PendingUpload, PlaceBuilder, UploadChange } from './uploads.types';
 
 const uploadChange = createMetaKey<UploadChange>('uploads');
 
@@ -34,13 +36,32 @@ const boundary = (doc: Doc, pos: number): number => {
   return $pos.depth > 0 && isTextblock(doc, $pos.parent) ? $pos.after($pos.depth) : $pos.pos;
 };
 
+const lineAt = (doc: Doc, at: number | undefined): ResolvedPos | undefined => {
+  if (at === undefined || at < 0 || at > doc.size) {
+    return undefined;
+  }
+  const $at = doc.resolve(at);
+
+  return $at.depth > 0 && isTextblock(doc, $at.parent) ? $at : undefined;
+};
+
+const movedPoint = (tr: Transaction, doc: Doc, at: number | undefined): number | undefined => {
+  const next = at === undefined ? undefined : tr.mapping.map(at, 1);
+
+  return lineAt(doc, next) === undefined ? undefined : next;
+};
+
 const moved = (
   uploads: readonly PendingUpload[],
   tr: Transaction,
   doc: Doc,
 ): readonly PendingUpload[] =>
   tr.changed && uploads.length > 0
-    ? uploads.map((upload) => ({ ...upload, pos: boundary(doc, tr.mapping.map(upload.pos, 1)) }))
+    ? uploads.map((upload) => ({
+        ...upload,
+        pos: boundary(doc, tr.mapping.map(upload.pos, 1)),
+        at: movedPoint(tr, doc, upload.at),
+      }))
     : uploads;
 
 const sets = new WeakMap<readonly PendingUpload[], DecorationSet>();
@@ -113,25 +134,96 @@ const placeFor = (doc: Doc, pos: number, node: ElementNode): number | undefined 
   return candidates.find((candidate) => fitsAt(doc, candidate, node));
 };
 
-export const placeBlock =
-  (build: (tr: Transaction) => ElementNode, pos?: number): Command =>
-  (state, dispatch) => {
-    const tr = state.tr;
-    const node = build(tr);
-    const at = placeFor(tr.doc, pos ?? uploadPlace(state), node);
+export const uploadPoint = (state: EditorState): number | undefined => {
+  const { selection, doc } = state;
 
-    if (at === undefined) {
+  return selection.kind === 'text' && lineAt(doc, selection.head) !== undefined
+    ? selectionRange(doc, selection).to
+    : undefined;
+};
+
+const lineFor = (tr: Transaction, node: ElementNode): ElementNode | undefined => {
+  const line = emptyTextblock(tr.doc.schema, tr.newId());
+
+  return line === undefined
+    ? undefined
+    : tr.doc.schema.element(line.type, { id: line.id, content: [node] });
+};
+
+const insertedInText = (tr: Transaction, node: ElementNode, at: number): boolean => {
+  try {
+    tr.insert(at, [node]);
+    return true;
+  } catch (error) {
+    if (error instanceof RangeError) {
       return false;
     }
-    tr.insert(at, [node]);
+    throw error;
+  }
+};
+
+const insertInline = (
+  tr: Transaction,
+  node: ElementNode,
+  at: number | undefined,
+  pos: number,
+): number | undefined => {
+  if (at !== undefined && lineAt(tr.doc, at) !== undefined && insertedInText(tr, node, at)) {
+    return at + nodeSize(node);
+  }
+  const line = lineFor(tr, node);
+  const place = line === undefined ? undefined : placeFor(tr.doc, pos, line);
+
+  if (line === undefined || place === undefined) {
+    return undefined;
+  }
+  tr.insert(place, [line]);
+  return place + 1 + nodeSize(node);
+};
+
+const placeNode = (
+  tr: Transaction,
+  build: PlaceBuilder,
+  at: number | undefined,
+  pos: number,
+): number | undefined => {
+  const line = lineAt(tr.doc, at);
+  const node = build(tr, line === undefined || line.parent.content.length === 0);
+
+  if (tr.doc.schema.nodes.get(node.type)?.inline === true) {
+    return insertInline(tr, node, at, pos);
+  }
+  const place = placeFor(tr.doc, pos, node);
+
+  if (place === undefined) {
+    return undefined;
+  }
+  tr.insert(place, [node]);
+  return place + nodeSize(node);
+};
+
+export const placeBlock =
+  (build: PlaceBuilder, pos?: number): Command =>
+  (state, dispatch) => {
+    const tr = state.tr;
+    const inline = pos === undefined ? uploadPoint(state) : undefined;
+    const after = placeNode(tr, build, inline, pos ?? uploadPlace(state));
+
+    if (after === undefined) {
+      return false;
+    }
+    if (inline !== undefined && lineAt(tr.doc, after) !== undefined) {
+      tr.setSelection(textSelection(after));
+    }
     dispatch?.(tr);
     return true;
   };
 
 export const startUploads =
-  (ids: readonly string[], pos?: number): Command =>
+  (ids: readonly string[], pos?: number, at?: number): Command =>
   (state, dispatch) => {
-    const at = pos ?? uploadPlace(state);
+    const place = pos ?? uploadPlace(state);
+    const point = pos === undefined ? uploadPoint(state) : at;
 
     if (ids.length === 0) {
       return false;
@@ -140,7 +232,7 @@ export const startUploads =
     dispatch?.(
       state.tr.setMeta(uploadChange, {
         kind: 'add',
-        uploads: ids.map((id) => ({ id, pos: at })),
+        uploads: ids.map((id) => ({ id, pos: place, at: point })),
       }),
     );
 
@@ -159,7 +251,7 @@ export const dropUploads =
   };
 
 export const finishUpload =
-  (id: string, build: (tr: Transaction) => ElementNode): Command =>
+  (id: string, build: PlaceBuilder): Command =>
   (state, dispatch) => {
     const upload = uploadsOf(state).find((candidate) => candidate.id === id);
 
@@ -167,13 +259,9 @@ export const finishUpload =
       return false;
     }
     const tr = state.tr;
-    const node = build(tr);
-    const at = placeFor(tr.doc, upload.pos, node);
+    const after = placeNode(tr, build, upload.at, upload.pos);
 
     tr.setMeta(uploadChange, { kind: 'drop', ids: [id] });
-    if (at !== undefined) {
-      tr.insert(at, [node]);
-    }
     dispatch?.(tr);
-    return at !== undefined;
+    return after !== undefined;
   };

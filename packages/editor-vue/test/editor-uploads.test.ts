@@ -36,21 +36,24 @@ const paragraphs = (...texts: readonly string[]): DocJSON =>
 const textOf = (node: NodeJSON): string =>
   'text' in node ? node.text : (node.content ?? []).map(textOf).join('');
 
-const blockOf = (block: NodeJSON): string => {
-  if ('text' in block) {
-    return block.text;
+const pieceOf = (node: NodeJSON): string => {
+  if ('text' in node) {
+    return node.text;
   }
-  const attrs = block.attrs ?? {};
+  const attrs = node.attrs ?? {};
 
-  switch (block.type) {
+  switch (node.type) {
     case 'image':
-      return `image:${String(attrs.src)}`;
+      return `[image:${String(attrs.src)}:${String(attrs.wrap ?? 'inline')}]`;
     case 'file':
-      return `file:${String(attrs.name)}:${String(attrs.size)}:${String(attrs.type)}`;
+      return `[file:${String(attrs.name)}:${String(attrs.size)}:${String(attrs.type)}]`;
     default:
-      return `${block.type}:${textOf(block)}`;
+      return textOf(node);
   }
 };
+
+const blockOf = (block: NodeJSON): string =>
+  'text' in block ? block.text : `${block.type}:${(block.content ?? []).map(pieceOf).join('')}`;
 
 const blocksOf = (document: DocJSON | undefined): readonly string[] =>
   (document?.root.content ?? []).map(blockOf);
@@ -97,8 +100,7 @@ describe('NuiEditor uploads', () => {
     await uploads.settle();
 
     expect(blocksOf(editor.documents.at(-1))).toEqual([
-      'paragraph:Intro',
-      'image:https://cdn.test/photo.png',
+      'paragraph:Intro[image:https://cdn.test/photo.png:inline]',
       'paragraph:Next',
     ]);
 
@@ -109,9 +111,7 @@ describe('NuiEditor uploads', () => {
     await uploads.settle();
 
     expect(blocksOf(editor.documents.at(-1))).toEqual([
-      'paragraph:Intro',
-      'image:https://cdn.test/photo.png',
-      'file:report.pdf:2048:application/pdf',
+      'paragraph:Intro[image:https://cdn.test/photo.png:inline][file:report.pdf:2048:application/pdf]',
       'paragraph:Next',
     ]);
 
@@ -143,8 +143,7 @@ describe('NuiEditor uploads', () => {
     await uploads.settle();
 
     expect(blocksOf(editor.documents.at(-1))).toEqual([
-      'paragraph:Intro',
-      'file:notes.txt:4:text/plain',
+      'paragraph:Intro[file:notes.txt:4:text/plain]',
     ]);
   });
 
@@ -205,8 +204,7 @@ describe('NuiEditor uploads', () => {
 
     expect(blocksOf(editor.documents.at(-1))).toEqual([
       'paragraph:Intro',
-      'image:https://cdn.test/cat.jpg',
-      'paragraph:',
+      'paragraph:[image:https://cdn.test/cat.jpg:break]',
     ]);
   });
 
@@ -234,8 +232,7 @@ describe('NuiEditor uploads', () => {
 
     expect(blocksOf(editor.documents.at(-1))).toEqual([
       'paragraph:Intro',
-      'file:Price list.pdf:null:',
-      'paragraph:',
+      'paragraph:[file:Price list.pdf:null:]',
     ]);
   });
 

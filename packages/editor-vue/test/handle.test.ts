@@ -184,7 +184,15 @@ describe('NuiEditor block handles', () => {
             id: 'root',
             content: [
               block('a', 'paragraph', 'a'),
-              contentSchema.element('image', { id: 'i', attrs: { src: 'a.png', width: 0.4 } }),
+              contentSchema.element('paragraph', {
+                id: 'line',
+                content: [
+                  contentSchema.element('image', {
+                    id: 'i',
+                    attrs: { src: 'a.png', width: 0.4, wrap: 'break' },
+                  }),
+                ],
+              }),
             ],
           }),
         ),

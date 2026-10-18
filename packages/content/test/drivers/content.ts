@@ -142,12 +142,12 @@ export class ContentDriver {
     await nextTick();
   }
 
-  get figures(): readonly string[] {
+  get images(): readonly string[] {
     return this.wrapper
-      .findAll('figure')
+      .findAll('.nui-content__image')
       .map(
-        (figure) =>
-          `${figure.classes().join(' ')}|${figure.attributes('style') ?? ''}|${figure.find('.nui-content__zoom').attributes('aria-label') ?? ''}`,
+        (image) =>
+          `${image.classes().join(' ')}|${image.attributes('style') ?? ''}|${image.find('.nui-content__zoom').attributes('aria-label') ?? ''}`,
       );
   }
 
@@ -182,6 +182,12 @@ export class ContentDriver {
         ? `frame:${frame.attributes('src') ?? ''}:${frame.attributes('title') ?? ''}:${frame.attributes('sandbox') ?? ''}`
         : `link:${embed.find('a').attributes('href') ?? ''}`;
     });
+  }
+
+  get captions(): readonly string[] {
+    return this.wrapper
+      .findAll('.nui-content__image .nui-content__caption')
+      .map((caption) => caption.text());
   }
 
   get files(): readonly string[] {

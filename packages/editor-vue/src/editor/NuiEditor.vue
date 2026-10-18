@@ -223,6 +223,7 @@ import { blockContext } from '../blocks/block-context';
 import type { NuiEditorBlock, NuiEditorBlockEditor } from '../blocks/block.types';
 import { provideBlockStates } from '../blocks/define-block';
 import { editorBlocks } from '../blocks/editor-blocks';
+import { handlePlacement } from '../blocks/handle-placement';
 import { createNodeViewHost } from '../blocks/node-view-host';
 import { createNodeViews } from '../blocks/node-views';
 import NuiEditorNodeViews from '../blocks/NuiEditorNodeViews.vue';
@@ -687,9 +688,9 @@ const handles = useBlockHandle({
   view: () => view,
   state: () => current.value,
   enabled: () => handlesShown.value && ready.value,
-  focused: () => overlays.focused.value,
+  focused: () => overlays.focused.value && writing.value,
   run: (command) => run(command),
-  placement: (type) => blocks.find((block) => block.name === type)?.handle ?? 'push',
+  placement: (node) => handlePlacement(blocks, node),
 });
 
 const blockMenu = (node: ElementNode): NuiMenuEntry[] =>

@@ -6,6 +6,7 @@ import {
   type ChildSlot,
   type Command,
   type EditorState,
+  type ElementNode,
 } from '@numior/editor-core';
 import type { EditorView } from '@numior/editor-core/view';
 import { useMediaQuery } from '@vueuse/core';
@@ -34,7 +35,7 @@ export interface BlockHandleOptions {
   readonly enabled: () => boolean;
   readonly focused: () => boolean;
   readonly run: (command: Command) => boolean;
-  readonly placement: (type: string) => NuiEditorHandlePlacement;
+  readonly placement: (node: ElementNode) => NuiEditorHandlePlacement;
 }
 
 export interface BlockHandle {
@@ -70,6 +71,9 @@ const atomStart = (element: Element | undefined): number | undefined =>
   element instanceof HTMLElement && element.getAttribute('contenteditable') === 'false'
     ? element.getBoundingClientRect().left
     : undefined;
+
+const leadOf = (element: Element): Element =>
+  element.matches(':has(> .nui-editor__widget)') ? element : (element.firstElementChild ?? element);
 
 const glide = (element: Element | undefined, before: number | undefined): void => {
   const shift =
@@ -108,11 +112,11 @@ export const useBlockHandle = (options: BlockHandleOptions): BlockHandle => {
   const besideOf = (slot: ChildSlot | undefined): boolean => {
     const node = slot === undefined ? undefined : childNode(options.state().doc, slot);
 
-    return node !== undefined && options.placement(node.type) === 'beside';
+    return node?.kind === 'element' && options.placement(node) === 'beside';
   };
 
   const placeBeside = (target: HTMLElement, element: Element, frame: DOMRect): boolean => {
-    const rect = element.getBoundingClientRect();
+    const rect = leadOf(element).getBoundingClientRect();
     const end = rtl() ? rect.right - frame.left : frame.right - rect.left;
 
     target.style.insetInlineStart = 'auto';
@@ -191,7 +195,12 @@ export const useBlockHandle = (options: BlockHandleOptions): BlockHandle => {
     if (!options.enabled()) {
       return undefined;
     }
-    const caret = coarse.value && options.focused() ? selectionSlot(options.state()) : undefined;
+    const state = options.state();
+
+    const caret =
+      coarse.value && options.focused() && state.selection.kind !== 'gap'
+        ? selectionSlot(state)
+        : undefined;
 
     return drag.source.value ?? hovered.value ?? caret;
   });
@@ -294,6 +303,9 @@ export const useBlockHandle = (options: BlockHandleOptions): BlockHandle => {
     const view = options.view();
     const target = event.target;
 
+    if (event.pointerType === 'touch') {
+      return;
+    }
     if (target instanceof Element && outside(target)) {
       release();
       return;

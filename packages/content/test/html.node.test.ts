@@ -78,8 +78,20 @@ describe('content HTML', () => {
         content: [paragraph({ text: 'More' }), paragraph({ text: 'Body' })],
       },
       {
-        type: 'image',
-        attrs: { src: '/a.png', alt: 'A', caption: 'Cap', width: 0.5, align: 'center' },
+        type: 'paragraph',
+        content: [
+          {
+            type: 'image',
+            attrs: {
+              src: '/a.png',
+              alt: 'A',
+              caption: 'Cap',
+              width: 0.5,
+              align: 'center',
+              wrap: 'break',
+            },
+          },
+        ],
       },
       { type: 'heading', attrs: { level: 3 }, content: [{ text: 'Deep' }] },
       { type: 'code_block', attrs: { language: 'ts' }, content: [{ text: 'let x' }] },

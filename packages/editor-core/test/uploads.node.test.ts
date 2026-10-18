@@ -60,7 +60,7 @@ describe('pending uploads', () => {
 
     empty.run(startUploads(['c']));
 
-    expect(uploadsOf(empty.state)).toEqual([{ id: 'c', pos: 7 }]);
+    expect(uploadsOf(empty.state)).toEqual([{ id: 'c', pos: 7, at: 8 }]);
   });
 
   it('follows edits before its place and inserts the node there in one undoable step', () => {
@@ -73,7 +73,7 @@ describe('pending uploads', () => {
     expect(uploadsOf(editor.state).map((upload) => upload.pos)).toEqual([11, 11]);
     expect(editor.run(finishUpload('a', image('a.png')))).toBe(true);
     expect(editor.outline).toBe('paragraph("Big Intro") image paragraph("Next")');
-    expect(uploadsOf(editor.state)).toEqual([{ id: 'b', pos: 12 }]);
+    expect(uploadsOf(editor.state)).toEqual([{ id: 'b', pos: 12, at: 10 }]);
 
     editor.run(finishUpload('b', image('b.png')));
 
@@ -87,6 +87,27 @@ describe('pending uploads', () => {
 
     expect(editor.outline).toBe('paragraph("Big Intro") image paragraph("Next")');
     expect(uploadsOf(editor.state)).toEqual([]);
+  });
+
+  it('puts an inline node at the caret where the upload began and on its own line elsewhere', () => {
+    const editor = editing(doc(node('paragraph', ['Intro']), node('paragraph', ['Next'])), 3);
+    const alone: boolean[] = [];
+
+    const mention = (tr: Transaction, single: boolean) => {
+      alone.push(single);
+      return fixtureSchema.element('mention', { id: tr.newId(), attrs: { user: 'u', label: 'A' } });
+    };
+
+    editor.run(startUploads(['a']));
+    editor.run(startUploads(['b'], 7));
+    editor.run(finishUpload('a', mention));
+    editor.run(finishUpload('b', mention));
+
+    expect(editor.outline).toBe(
+      'paragraph("In" mention{user=u,label=A} "tro") paragraph(mention{user=u,label=A}) paragraph("Next")',
+    );
+
+    expect(alone).toEqual([false, true]);
   });
 
   it('drops a cancelled or failed upload without a trace in the document or the history', () => {
@@ -124,13 +145,13 @@ describe('pending uploads', () => {
 
     editor.run(startUploads(['a']));
 
-    expect(uploadsOf(editor.state)).toEqual([{ id: 'a', pos: 3 }]);
+    expect(uploadsOf(editor.state)).toEqual([{ id: 'a', pos: 3, at: 2 }]);
 
     editor.select(textSelection(4));
     editor.backspace();
 
     expect(editor.outline).toBe('paragraph("AB")');
-    expect(uploadsOf(editor.state)).toEqual([{ id: 'a', pos: 4 }]);
+    expect(uploadsOf(editor.state)).toEqual([{ id: 'a', pos: 4, at: 2 }]);
     expect(editor.run(startUploads([]))).toBe(false);
   });
 });

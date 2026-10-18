@@ -64,7 +64,9 @@ const paragraphAfter: Command = (state, dispatch) => {
   if (from === undefined || current === undefined || !state.doc.schema.nodes.has('paragraph')) {
     return false;
   }
-  const at = from + nodeSize(current);
+  const place = state.doc.resolve(from);
+  const inLine = state.doc.schema.nodes.get(place.parent.type)?.inlineContent === true;
+  const at = inLine ? place.after(place.depth) : from + nodeSize(current);
   const tr = state.tr;
 
   tr.insert(at, [state.doc.schema.element('paragraph', { id: tr.newId() })]);

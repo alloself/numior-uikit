@@ -119,6 +119,10 @@ export interface NuiEditorMessages {
   readonly imageAlignStart: string;
   readonly imageAlignCenter: string;
   readonly imageAlignEnd: string;
+  readonly imageWrap: string;
+  readonly imageWrapInline: string;
+  readonly imageWrapWrap: string;
+  readonly imageWrapBreak: string;
   readonly imageReplace: string;
   readonly download: string;
   readonly imageAlt: string;
@@ -326,6 +330,10 @@ export const editorMessages: NuiMessageCatalog<'editor'> = {
     imageAlignStart: 'Align to the line start',
     imageAlignCenter: 'Centre',
     imageAlignEnd: 'Align to the line end',
+    imageWrap: 'Text wrapping',
+    imageWrapInline: 'In line with text',
+    imageWrapWrap: 'Wrap text',
+    imageWrapBreak: 'Break text',
     imageReplace: 'Replace',
     download: 'Download',
     imageAlt: 'Alt text',
@@ -452,6 +460,10 @@ export const editorMessages: NuiMessageCatalog<'editor'> = {
     imageAlignStart: 'К началу строки',
     imageAlignCenter: 'По центру',
     imageAlignEnd: 'К концу строки',
+    imageWrap: 'Обтекание текстом',
+    imageWrapInline: 'В тексте',
+    imageWrapWrap: 'Обтекание',
+    imageWrapBreak: 'Отдельной строкой',
     imageReplace: 'Заменить',
     download: 'Скачать',
     imageAlt: 'Описание',

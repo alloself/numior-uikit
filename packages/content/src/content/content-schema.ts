@@ -13,7 +13,12 @@ import {
 } from '@numior/editor-core';
 import { LINK_NODES } from './content-links';
 import { TABLE_NODES } from './content-table';
-import type { NuiContentAlign, NuiContentColour, NuiContentTone } from './content.types';
+import type {
+  NuiContentAlign,
+  NuiContentColour,
+  NuiContentTone,
+  NuiContentWrap,
+} from './content.types';
 
 export const CONTENT_TONES: readonly NuiContentTone[] = ['info', 'success', 'warning', 'error'];
 
@@ -30,6 +35,8 @@ export const CONTENT_COLOURS: readonly NuiContentColour[] = [
 ];
 
 export const CONTENT_ALIGNS: readonly NuiContentAlign[] = ['start', 'center', 'end'];
+
+export const CONTENT_WRAPS: readonly NuiContentWrap[] = ['inline', 'wrap', 'break'];
 
 export const IMAGE_WIDTH = { min: 0.2, max: 1 } as const;
 
@@ -180,7 +187,27 @@ const alignIn = (figure: HtmlElement | undefined): string => {
   return align !== undefined && CONTENT_ALIGNS.some((known) => known === align) ? align : 'center';
 };
 
-const imageAttrs = (image: HtmlElement | undefined, figure?: HtmlElement): ParsedAttrs => {
+const wrapIn = (holder: HtmlElement | undefined): string => {
+  const wrap = holder?.classWith('nui-content__image--wrap-');
+
+  if (holder?.tag === 'figure') {
+    return 'break';
+  }
+  return wrap !== undefined && CONTENT_WRAPS.some((known) => known === wrap) ? wrap : 'inline';
+};
+
+const captionIn = (holder: HtmlElement | undefined): string =>
+  (
+    holder?.find('figcaption') ??
+    holder?.children.find(
+      (child): child is HtmlElement =>
+        child.kind === 'element' && child.hasClass('nui-content__caption'),
+    )
+  )
+    ?.text()
+    .trim() ?? '';
+
+const imageAttrs = (image: HtmlElement | undefined, holder?: HtmlElement): ParsedAttrs => {
   const src = image?.attr('src');
 
   if (image === undefined || src === undefined) {
@@ -189,9 +216,10 @@ const imageAttrs = (image: HtmlElement | undefined, figure?: HtmlElement): Parse
   return {
     src,
     alt: image.attr('alt') ?? '',
-    width: shareIn(figure) ?? shareIn(image),
-    caption: figure?.find('figcaption')?.text().trim() ?? '',
-    align: alignIn(figure),
+    width: shareIn(holder) ?? shareIn(image),
+    caption: captionIn(holder),
+    align: alignIn(holder),
+    wrap: wrapIn(holder),
   };
 };
 
@@ -305,12 +333,13 @@ export const imageWidthStyle = (width: AttrValue | undefined): string | null =>
   typeof width === 'number' ? `inline-size: ${String(Math.round(width * 1000) / 10)}%;` : null;
 
 const renderImage = (node: ElementNode) => {
-  const caption = textOf(node.attrs.caption);
+  const wrap = textOf(node.attrs.wrap);
+  const caption = wrap === 'inline' ? '' : textOf(node.attrs.caption);
 
   return renderTag(
-    'figure',
+    'span',
     {
-      class: part('image', `align-${textOf(node.attrs.align)}`),
+      class: part('image', `wrap-${wrap}`, `align-${textOf(node.attrs.align)}`),
       style: imageWidthStyle(node.attrs.width),
     },
     [
@@ -320,7 +349,7 @@ const renderImage = (node: ElementNode) => {
         alt: textOf(node.attrs.alt),
         loading: 'lazy',
       }),
-      ...(caption === '' ? [] : [renderTag('figcaption', { class: part('caption') }, [caption])]),
+      ...(caption === '' ? [] : [renderTag('span', { class: part('caption') }, [caption])]),
     ],
   );
 };
@@ -347,7 +376,7 @@ const renderFile = (node: ElementNode) => {
 
 const CONTENT_SPEC: SchemaSpec = {
   name: 'numior-content',
-  version: 3,
+  version: 4,
   nodes: {
     doc: { content: 'block+' },
     paragraph: {
@@ -494,22 +523,31 @@ const CONTENT_SPEC: SchemaSpec = {
       ],
     },
     image: {
-      group: 'block',
+      group: 'inline',
+      inline: true,
       attrs: {
         src: { verify: isImageSource },
         alt: { default: '', verify: isText },
         caption: { default: '', verify: isText },
         width: { default: null, verify: isWidth },
         align: { default: 'center', verify: oneOf(CONTENT_ALIGNS) },
+        wrap: { default: 'inline', verify: oneOf(CONTENT_WRAPS) },
       },
       render: renderImage,
       parse: [
         { tag: 'figure', attrs: (figure) => imageAttrs(figure.find('img'), figure) },
+        {
+          tag: 'span',
+          priority: 1,
+          attrs: (span) =>
+            span.hasClass('nui-content__image') ? imageAttrs(span.find('img'), span) : false,
+        },
         { tag: 'img', attrs: (image) => imageAttrs(image) },
       ],
     },
     file: {
-      group: 'block',
+      group: 'inline',
+      inline: true,
       attrs: {
         url: { verify: isFileLink },
         name: { default: '', verify: isText },

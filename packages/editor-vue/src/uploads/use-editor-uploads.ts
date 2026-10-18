@@ -5,6 +5,7 @@ import {
   placeBlock,
   startUploads,
   uploadPlace,
+  uploadPoint,
   type Command,
   type EditorState,
   type ElementNode,
@@ -143,9 +144,17 @@ export const useEditorUploads = (options: EditorUploadOptions): EditorUploads =>
     return schema.nodes.has('file') ? 'file' : undefined;
   };
 
-  const nodeFor = (tr: Transaction, kind: UploadKind, file: LinkedFile): ElementNode =>
+  const nodeFor = (
+    tr: Transaction,
+    kind: UploadKind,
+    file: LinkedFile,
+    alone: boolean,
+  ): ElementNode =>
     kind === 'image'
-      ? schema.element('image', { id: tr.newId(), attrs: { src: file.url } })
+      ? schema.element('image', {
+          id: tr.newId(),
+          attrs: alone ? { src: file.url, wrap: 'break' } : { src: file.url },
+        })
       : schema.element('file', {
           id: tr.newId(),
           attrs: { url: file.url, name: file.name, size: file.size, type: file.type },
@@ -164,7 +173,7 @@ export const useEditorUploads = (options: EditorUploadOptions): EditorUploads =>
     }
     return target?.kind === 'replace'
       ? options.run(replaceSource(target.id, url))
-      : options.run(finishUpload(item.id, (tr) => nodeFor(tr, kind, file)));
+      : options.run(finishUpload(item.id, (tr, alone) => nodeFor(tr, kind, file, alone)));
   };
 
   const place = (item: NuiEditorUploadItem, url: string): void => {
@@ -281,6 +290,7 @@ export const useEditorUploads = (options: EditorUploadOptions): EditorUploads =>
         startUploads(
           created.map((item) => item.id),
           spot.pos,
+          spot.at,
         ),
       );
     }
@@ -298,7 +308,14 @@ export const useEditorUploads = (options: EditorUploadOptions): EditorUploads =>
     const valid = accepted(files, target, accept);
 
     if (valid.length > 0) {
-      enqueue(valid, target ?? { kind: 'place', pos: uploadPlace(options.state()) });
+      enqueue(
+        valid,
+        target ?? {
+          kind: 'place',
+          pos: uploadPlace(options.state()),
+          at: uploadPoint(options.state()),
+        },
+      );
     }
   };
 
@@ -309,7 +326,7 @@ export const useEditorUploads = (options: EditorUploadOptions): EditorUploads =>
         if (intent.kind !== 'files') {
           return false;
         }
-        add(intent.files, { kind: 'place', pos: uploadPlace(state) });
+        add(intent.files, { kind: 'place', pos: uploadPlace(state), at: uploadPoint(state) });
         return true;
       },
     },
@@ -337,7 +354,9 @@ export const useEditorUploads = (options: EditorUploadOptions): EditorUploads =>
   const insertLink = (kind: UploadKind, url: string): boolean =>
     schema.nodes.has(kind) &&
     options.run(
-      placeBlock((tr) => nodeFor(tr, kind, { url, name: nameOfLink(url), size: null, type: '' })),
+      placeBlock((tr, alone) =>
+        nodeFor(tr, kind, { url, name: nameOfLink(url), size: null, type: '' }, alone),
+      ),
     );
 
   onScopeDispose(() => {

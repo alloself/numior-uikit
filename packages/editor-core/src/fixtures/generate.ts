@@ -233,6 +233,17 @@ const code = (generator: Generator): ElementNode => {
   });
 };
 
+const image = (generator: Generator): ElementNode => {
+  const picture = element(generator, 'image', [], {
+    src: `https://example.com/images/${generator.random.int(1, 500)}.png`,
+    alt: sentence(generator, 2, 5),
+  });
+
+  return generator.schema.nodes.get('image')?.inline === true
+    ? element(generator, 'paragraph', [picture])
+    : picture;
+};
+
 const BUILDERS: Readonly<Record<FixtureBlock, (generator: Generator) => ElementNode>> = {
   paragraph,
   heading: (generator) =>
@@ -240,11 +251,7 @@ const BUILDERS: Readonly<Record<FixtureBlock, (generator: Generator) => ElementN
   list: (generator) => listOf(generator, 1),
   table,
   code,
-  image: (generator) =>
-    element(generator, 'image', [], {
-      src: `https://example.com/images/${generator.random.int(1, 500)}.png`,
-      alt: sentence(generator, 2, 5),
-    }),
+  image,
   callout: (generator) =>
     element(generator, 'callout', paragraphs(generator, 1, 3), {
       tone: generator.random.pick(TONES),

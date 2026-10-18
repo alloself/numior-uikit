@@ -111,9 +111,8 @@ test.describe('editor', () => {
     await editor.placeAtEnd();
     await editor.paste('one\ntwo');
 
-    await expect
-      .poll(async () => (await editor.blockTexts()).slice(-6, -4))
-      .toEqual(['Наберите # и пробел для заголовка или - для списка.one', 'two']);
+    await expect.poll(async () => (await editor.blockTexts()).at(-2)).toBe('two');
+    expect((await editor.blockTexts()).at(-3)).toMatch(/перед созвоном\.one$/u);
 
     const before = (await editor.readOutput()).changes;
 
@@ -584,18 +583,18 @@ test.describe('editor', () => {
     page,
   }) => {
     const { editor } = await openEditor(page);
-    const file = editor.file('Заметки к релизу');
+    const bookmark = editor.bookmark('numior.test');
 
-    await file.scrollIntoViewIfNeeded();
-    await file.click();
+    await bookmark.scrollIntoViewIfNeeded();
+    await bookmark.click();
     await page.keyboard.press('Enter');
-    await page.keyboard.type('после файла');
-    await expect(file.locator('xpath=following-sibling::*[1]')).toHaveText('после файла');
+    await page.keyboard.type('после закладки');
+    await expect(bookmark.locator('xpath=following-sibling::*[1]')).toHaveText('после закладки');
 
-    await editor.clickBeside(file);
+    await editor.clickBeside(bookmark);
     await page.keyboard.press('Enter');
-    await page.keyboard.type('рядом с файлом');
-    await expect(file.locator('xpath=following-sibling::*[1]')).toHaveText('рядом с файлом');
+    await page.keyboard.type('рядом с закладкой');
+    await expect(bookmark.locator('xpath=following-sibling::*[1]')).toHaveText('рядом с закладкой');
 
     await expect(editor.content.locator(':scope > .nui-editor__chunk > *').first()).toHaveText(
       'План запуска',
@@ -619,7 +618,7 @@ test.describe('editor', () => {
     );
   });
 
-  test('puts the caret beside blocks without text and takes back the lines beside them first', async ({
+  test('puts the caret beside blocks without text and writes beside pictures and files in the line', async ({
     page,
   }) => {
     const { editor } = await openEditor(page);
@@ -627,23 +626,27 @@ test.describe('editor', () => {
     const bookmark = editor.bookmark('numior.test');
     const image = editor.image('="/media/sunrise.svg"');
 
-    await editor.clickBeside(file);
-    await expect(file).toHaveClass(/nui-editor__gap/u);
+    await editor.clickBeside(bookmark);
+    await expect(bookmark).toHaveClass(/nui-editor__gap/u);
     await page.keyboard.press('Enter');
     await page.keyboard.press('Backspace');
-    await expect(file).toHaveClass(/nui-editor__gap/u);
-    await expect(file.locator('xpath=following-sibling::*[1]')).toHaveClass(/nui-content__table/u);
+    await expect(bookmark).toHaveClass(/nui-editor__gap/u);
+    await expect(bookmark.locator('xpath=following-sibling::*[1]')).toContainText('Заметки лежат');
 
     await page.keyboard.press('Backspace');
-    await expect(file).toHaveClass(/nui-editor__selected/u);
+    await expect(bookmark).toHaveClass(/nui-editor__selected/u);
     await page.keyboard.press('Backspace');
-    await expect(file).toHaveCount(0);
-    await expect(bookmark).toHaveClass(/nui-editor__gap/u);
+    await expect(bookmark).toHaveCount(0);
+
+    await file.click();
+    await expect(file).toHaveClass(/nui-editor__selected/u);
+    await page.keyboard.press('ArrowRight');
+    await page.keyboard.type(' ok');
+    await expect(file.locator('xpath=..')).toContainText(' ok — прочитайте');
 
     await editor.clickBeside(image, 'start');
-    await expect(image).toHaveClass(/nui-editor__gap/u);
-    await page.keyboard.type('before');
-    await expect(image.locator('xpath=preceding-sibling::*[1]')).toHaveText('before');
+    await page.keyboard.type('before ');
+    await expect(image.locator('xpath=..')).toHaveText(/^before /u);
 
     await editor.placeInText('Наберите', 0);
     await page.keyboard.press('Backspace');
@@ -732,7 +735,7 @@ test.describe('editor', () => {
     await playground.setDirection('rtl');
     await editor.placeAtEnd();
     await page.keyboard.type(' abc');
-    await expect.poll(async () => (await editor.blockTexts()).at(-5)).toMatch(/ abc$/);
+    await expect.poll(async () => (await editor.blockTexts()).at(-2)).toMatch(/ abc$/);
     expect(await editor.content.evaluate((root) => getComputedStyle(root).direction)).toBe('rtl');
   });
 });

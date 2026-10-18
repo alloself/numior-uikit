@@ -81,7 +81,7 @@ describe('NuiContent', () => {
       [
         {
           kind: 'schema',
-          expected: { name: 'numior-content', version: 3 },
+          expected: { name: 'numior-content', version: 4 },
           found: { name: 'other', version: 1 },
         },
       ],

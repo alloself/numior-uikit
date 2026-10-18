@@ -10,7 +10,7 @@ export type NuiEditorUploadAdapter = UploadAdapter<NuiEditorUploaded>;
 export type NuiEditorUploadItem = UploadItem<NuiEditorUploaded>;
 
 export type UploadTarget =
-  | { readonly kind: 'place'; readonly pos: number }
+  | { readonly kind: 'place'; readonly pos: number; readonly at: number | undefined }
   | { readonly kind: 'replace'; readonly id: NodeId };
 
 export type UploadKind = 'image' | 'file';

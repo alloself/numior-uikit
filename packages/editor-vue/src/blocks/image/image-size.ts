@@ -1,4 +1,10 @@
-import { CONTENT_ALIGNS, IMAGE_WIDTH, type NuiContentAlign } from '@numior/content';
+import {
+  CONTENT_ALIGNS,
+  CONTENT_WRAPS,
+  IMAGE_WIDTH,
+  type NuiContentAlign,
+  type NuiContentWrap,
+} from '@numior/content';
 import { clamp } from '@vueuse/core';
 
 export const WIDTH_STEP = 0.05;
@@ -7,6 +13,9 @@ export const WIDE_STEP = 0.1;
 
 export const alignOf = (value: unknown): NuiContentAlign =>
   CONTENT_ALIGNS.find((align) => align === value) ?? 'center';
+
+export const wrapOf = (value: unknown): NuiContentWrap =>
+  CONTENT_WRAPS.find((wrap) => wrap === value) ?? 'inline';
 
 export const clampShare = (share: number): number =>
   Math.round(clamp(share, IMAGE_WIDTH.min, IMAGE_WIDTH.max) * 1000) / 1000;

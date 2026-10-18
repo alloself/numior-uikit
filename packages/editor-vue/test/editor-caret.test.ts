@@ -15,7 +15,7 @@ afterEach(() => {
   driver = undefined;
 });
 
-const withFile = (): DocJSON =>
+const withDivider = (): DocJSON =>
   toJSON(
     createDoc(
       contentSchema,
@@ -23,11 +23,8 @@ const withFile = (): DocJSON =>
         id: 'root',
         content: [
           contentSchema.element('paragraph', { id: 'p', content: [contentSchema.text('Intro')] }),
-          contentSchema.element('file', {
-            id: 'f',
-            attrs: { url: '/notes.txt', name: 'notes.txt', size: 10, type: 'text/plain' },
-          }),
           contentSchema.element('divider', { id: 'd' }),
+          contentSchema.element('paragraph', { id: 'o', content: [contentSchema.text('Outro')] }),
         ],
       }),
     ),
@@ -37,19 +34,25 @@ const types = (document: DocJSON | undefined): readonly string[] =>
   (document?.root.content ?? []).map((block) => ('type' in block ? block.type : 'text'));
 
 describe('NuiEditor caret beside blocks without text', () => {
-  it('puts the caret after a file clicked beside its card and opens a line there with Enter', async () => {
-    const editor = EditorDriver.mount({ document: withFile() });
+  it('puts the caret after a divider clicked beside it and opens a line there with Enter', async () => {
+    const editor = EditorDriver.mount({ document: withDivider() });
 
     driver = editor;
     editor.focus();
-    await editor.clickBeside('.nui-content__file');
+    await editor.clickBeside('.nui-content__divider');
 
-    expect(editor.classesOf('.nui-content__file')).toContain('nui-editor__gap');
+    expect(editor.classesOf('.nui-content__divider')).toContain('nui-editor__gap');
 
     await editor.press('Enter');
     await editor.type('after');
 
-    expect(types(editor.documents.at(-1))).toEqual(['paragraph', 'file', 'paragraph', 'divider']);
-    expect(editor.blockTexts).toEqual(['p:Intro', 'a:', 'p:after', 'hr:']);
+    expect(types(editor.documents.at(-1))).toEqual([
+      'paragraph',
+      'divider',
+      'paragraph',
+      'paragraph',
+    ]);
+
+    expect(editor.blockTexts).toEqual(['p:Intro', 'hr:', 'p:after', 'p:Outro']);
   });
 });

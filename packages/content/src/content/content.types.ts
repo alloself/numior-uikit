@@ -16,6 +16,8 @@ export type NuiContentColour =
 
 export type NuiContentAlign = 'start' | 'center' | 'end';
 
+export type NuiContentWrap = 'inline' | 'wrap' | 'break';
+
 export type NuiContentSize = 'sm' | 'md' | 'lg';
 
 export type NuiContentTableType = 'text' | 'number' | 'date' | 'boolean' | 'select';

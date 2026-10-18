@@ -77,7 +77,7 @@ export class EditorSection {
     }
 
     await this.page.mouse.click(
-      side === 'end' ? editor.x + editor.width - 12 : editor.x + 12,
+      side === 'end' ? editor.x + editor.width - 4 : editor.x + 4,
       own.y + own.height / 2,
     );
   }

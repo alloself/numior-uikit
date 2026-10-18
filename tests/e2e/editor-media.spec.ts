@@ -71,8 +71,9 @@ test.describe('editor media', () => {
 
   test('picks an image from the slash menu and inserts files by link', async ({ page }) => {
     const { editor } = await openEditor(page);
+    const hint = editor.content.locator('p', { hasText: 'Наберите' });
 
-    await editor.placeAtEnd();
+    await editor.caretAtEndOf(hint);
     await page.keyboard.press('Enter');
     await page.keyboard.type('/ima');
     await page.keyboard.press('Enter');
@@ -97,7 +98,7 @@ test.describe('editor media', () => {
     await expect(editor.image(UPLOADED)).toBeVisible();
 
     await page.getByTestId('editor-uploads').click();
-    await editor.placeAtEnd();
+    await editor.caretAtEndOf(hint);
     await editor.showCaret();
     await page.keyboard.press('Enter');
     await page.keyboard.type('/fil');
@@ -115,10 +116,10 @@ test.describe('editor media', () => {
     const image = editor.image(SAMPLE);
 
     await image.scrollIntoViewIfNeeded();
-    expect(await widthOf(image)).toBe(60);
+    expect(await widthOf(image)).toBe(45);
 
     await editor.dragGrip(image, 'bottom-end', -40, 0);
-    await expect.poll(() => widthOf(image)).toBeLessThan(60);
+    await expect.poll(() => widthOf(image)).toBeLessThan(45);
 
     const dragged = await widthOf(image);
     const grip = image.locator('[role="slider"]').first();
@@ -137,6 +138,11 @@ test.describe('editor media', () => {
     await image.locator('img').click();
     await image.getByRole('radio', { name: 'К концу строки' }).click();
     await expect(image).toHaveClass(/nui-content__image--align-end/u);
+    await image.getByRole('radio', { name: 'В тексте' }).click();
+    await expect(image).toHaveClass(/nui-content__image--wrap-inline/u);
+    await expect(image.getByRole('textbox', { name: 'Добавьте подпись' })).toHaveCount(0);
+    await image.getByRole('radio', { name: 'Отдельной строкой' }).click();
+    await expect(image).toHaveClass(/nui-content__image--wrap-break/u);
 
     const caption = image.getByRole('textbox', { name: 'Добавьте подпись' });
 
@@ -144,11 +150,11 @@ test.describe('editor media', () => {
     await caption.press('Enter');
     await page.keyboard.type('Дальше текст');
 
-    await expect(editor.publishedImage(SAMPLE).locator('figcaption')).toHaveText(
+    await expect(editor.publishedImage(SAMPLE).locator('.nui-content__caption')).toHaveText(
       'Рассвет над морем',
     );
 
-    await expect(image.locator('xpath=following-sibling::*[1]')).toHaveText('Дальше текст');
+    await expect(image.locator('xpath=../following-sibling::*[1]')).toHaveText('Дальше текст');
 
     const zoom = editor.publishedImage(SAMPLE).getByRole('button');
 
