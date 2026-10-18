@@ -27,7 +27,7 @@
   <div
     ref="content"
     role="menu"
-    tabindex="-1"
+    :tabindex="open ? 0 : -1"
     class="nui-menu nui-menu--sub"
     :aria-labelledby="triggerId"
     v-bind="{ ...contentAttrs, ...surfaceAttrs }"

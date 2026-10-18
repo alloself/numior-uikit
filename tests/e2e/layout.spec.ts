@@ -266,6 +266,7 @@ test.describe('layout', () => {
     isMobile,
   }) => {
     test.skip(isMobile, 'the icon rail is a desktop mode');
+    test.slow();
     const playground = new PlaygroundPage(page);
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();

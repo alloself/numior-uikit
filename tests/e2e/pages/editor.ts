@@ -217,11 +217,12 @@ export class EditorSection {
 
   async hoverStart(block: Locator): Promise<void> {
     const box = await block.boundingBox();
+    const rtl = await block.evaluate((element) => getComputedStyle(element).direction === 'rtl');
 
     if (box === null) {
       throw new Error('The block has no box');
     }
-    await this.page.mouse.move(box.x + 4, box.y + 6);
+    await this.page.mouse.move(rtl ? box.x + box.width - 4 : box.x + 4, box.y + 6);
   }
 
   async drag(source: Locator, target: Locator): Promise<void> {

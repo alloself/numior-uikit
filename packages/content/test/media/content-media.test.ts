@@ -95,6 +95,10 @@ describe('NuiContent media views', () => {
     expect(html).toContain('<button type="button" class="nui-content__zoom"');
     expect(html).toContain('<span class="nui-content__file-size">2.4 MB</span>');
     expect(html).not.toContain('<dialog');
+
+    expect(await ContentDriver.hydrate({ document: media(), views: contentMediaViews })).toEqual(
+      [],
+    );
   });
 
   it('plays only embeds whose link an allowed provider recognises', () => {

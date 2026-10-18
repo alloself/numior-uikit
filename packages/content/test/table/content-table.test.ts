@@ -52,6 +52,7 @@ describe('NuiContentTable', () => {
     expect(view.tableChecks).toEqual(['true:true']);
     expect(view.badges).toEqual(['Open']);
     expect(await ContentDriver.ssr({ document: doc, views })).toContain('class="nui-table');
+    expect(await ContentDriver.hydrate({ document: doc, views })).toEqual([]);
     expect(mounted({ document: doc }).staticTables).toBe(1);
   });
 

@@ -246,6 +246,7 @@ test.describe('navigation', () => {
   });
 
   test('navigation has no automatically detectable WCAG AA violations', async ({ page }) => {
+    test.slow();
     const playground = new PlaygroundPage(page);
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();

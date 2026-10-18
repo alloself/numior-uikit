@@ -3,7 +3,7 @@
   <div
     ref="content"
     role="menu"
-    tabindex="-1"
+    :tabindex="open ? 0 : -1"
     class="nui-menu nui-layer"
     :class="{ 'nui-menu--compact': compact }"
     :aria-label="label"
