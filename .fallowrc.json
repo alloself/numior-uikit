@@ -14,6 +14,7 @@
     "packages/content/src/code/index.ts",
     "packages/content/src/media/index.ts",
     "packages/editor-vue/src/index.ts",
+    "packages/spreadsheet/src/core/index.ts",
     "apps/playground/src/tailwind.css",
     "scripts/vite-package-assets.ts",
     "scripts/build-css.ts",
@@ -111,6 +112,10 @@
         "patterns": ["packages/editor-vue/**"]
       },
       {
+        "name": "spreadsheet",
+        "patterns": ["packages/spreadsheet/**"]
+      },
+      {
         "name": "nuxt",
         "patterns": ["packages/nuxt/**"]
       },
@@ -183,6 +188,10 @@
         ]
       },
       {
+        "from": "spreadsheet",
+        "allow": ["spreadsheet"]
+      },
+      {
         "from": "nuxt",
         "allow": ["tokens", "primitives", "vue", "forms", "table", "nuxt"]
       },
@@ -201,6 +210,7 @@
           "content-code",
           "content-media",
           "editor-vue",
+          "spreadsheet",
           "nuxt",
           "apps"
         ]
@@ -220,6 +230,7 @@
           "content-code",
           "content-media",
           "editor-vue",
+          "spreadsheet",
           "nuxt",
           "apps",
           "tests"

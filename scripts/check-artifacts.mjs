@@ -241,6 +241,32 @@ for (const entry of ['index.js', 'fixtures.js']) {
   }
 }
 
+const spreadsheetCore = await import(
+  pathToFileURL(resolve('packages/spreadsheet/dist/core.js')).href
+);
+
+assert.equal(
+  typeof spreadsheetCore.createWorkbook,
+  'function',
+  'spreadsheet/core must export the workbook',
+);
+
+for (const file of await localImports(resolve('packages/spreadsheet/dist/core.js'))) {
+  const source = await readFile(file, 'utf8');
+
+  assert.doesNotMatch(
+    source,
+    /from ['"](?:vue|@vueuse\/[\w-]+|@numior\/[\w-]+|fflate)['"]/,
+    `spreadsheet/core must stay free of Vue, UI packages and the zip codec: ${file}`,
+  );
+
+  assert.doesNotMatch(
+    source,
+    /\b(?:document|window|navigator)\.|\bResizeObserver\b/,
+    `spreadsheet/core must not touch the DOM: ${file}`,
+  );
+}
+
 const contentCode = await importBuild('content', [
   'NuiContent',
   'contentSchema',

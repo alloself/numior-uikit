@@ -1,0 +1,75 @@
+import { createCellStore, type CellStore } from './cell-store';
+import { createSharedStrings, type SharedStrings } from './strings';
+
+export interface Sheet {
+  readonly id: number;
+  name: string;
+  readonly cells: CellStore;
+}
+
+export interface Workbook {
+  readonly strings: SharedStrings;
+  readonly sheets: readonly Sheet[];
+  addSheet(name?: string): Sheet;
+  sheet(name: string): Sheet | undefined;
+  renameSheet(sheet: Sheet, name: string): boolean;
+}
+
+const FORBIDDEN = /[[\]:*?/\\]/u;
+
+const MAX_NAME = 31;
+
+export const validSheetName = (name: string): boolean =>
+  name.trim() !== '' &&
+  name.length <= MAX_NAME &&
+  !FORBIDDEN.test(name) &&
+  !name.startsWith("'") &&
+  !name.endsWith("'");
+
+export const createWorkbook = (): Workbook => {
+  const strings = createSharedStrings();
+  const sheets: Sheet[] = [];
+  let next = 1;
+
+  const sheet = (name: string): Sheet | undefined => {
+    const wanted = name.toLowerCase();
+
+    return sheets.find((candidate) => candidate.name.toLowerCase() === wanted);
+  };
+
+  const freeName = (): string => {
+    let index = sheets.length + 1;
+
+    while (sheet(`Sheet${String(index)}`) !== undefined) {
+      index += 1;
+    }
+    return `Sheet${String(index)}`;
+  };
+
+  return {
+    strings,
+    sheets,
+    sheet,
+    addSheet: (name) => {
+      const title = name ?? freeName();
+
+      if (!validSheetName(title) || sheet(title) !== undefined) {
+        throw new RangeError(`The sheet name ${title} is taken or not allowed`);
+      }
+      const created: Sheet = { id: next, name: title, cells: createCellStore(strings) };
+
+      next += 1;
+      sheets.push(created);
+      return created;
+    },
+    renameSheet: (target, name) => {
+      const taken = sheet(name);
+
+      if (!validSheetName(name) || (taken !== undefined && taken !== target)) {
+        return false;
+      }
+      target.name = name;
+      return true;
+    },
+  };
+};
