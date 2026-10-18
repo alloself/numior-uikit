@@ -34,7 +34,7 @@
         <span class="nui-select__value">
           <slot name="value" :selected="selectedOptions">{{ displayLabel }}</slot>
         </span>
-        <NuiIcon alias="chevron-down" class="nui-select__chevron" />
+        <NuiIcon icon="chevron-down" class="nui-select__chevron" />
       </button>
       <NuiButton
         v-if="showClear"

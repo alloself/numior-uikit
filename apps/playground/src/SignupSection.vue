@@ -23,7 +23,7 @@
       >
         <NuiInput v-bind="field" data-testid="signup-login" autocomplete="username">
           <template #suffix>
-            <NuiIcon v-if="pending" alias="loader" class="form-demo__spinner" />
+            <NuiIcon v-if="pending" icon="loader" class="form-demo__spinner" />
           </template>
         </NuiInput>
       </NuiFormField>

@@ -8,7 +8,7 @@
     ]"
     :role="tone === 'error' ? 'alert' : undefined"
   >
-    <NuiIcon v-if="iconAlias" :alias="iconAlias" class="nui-alert__icon" />
+    <NuiIcon v-if="iconAlias" :icon="iconAlias" class="nui-alert__icon" />
     <div class="nui-alert__body">
       <p v-if="hasTitle()" class="nui-alert__title">
         <slot name="title">{{ title }}</slot>

@@ -16,12 +16,12 @@
     @click="onClick"
   >
     <span class="nui-button__content">
-      <NuiIcon v-if="icon" :alias="icon" />
+      <NuiIcon v-if="icon" :icon="icon" />
       <slot />
-      <NuiIcon v-if="iconEnd" :alias="iconEnd" class="nui-button__icon-end" />
+      <NuiIcon v-if="iconEnd" :icon="iconEnd" class="nui-button__icon-end" />
     </span>
     <span v-if="loading" class="nui-button__loader">
-      <NuiIcon alias="loader" class="nui-button__spinner" />
+      <NuiIcon icon="loader" class="nui-button__spinner" />
     </span>
   </component>
 </template>

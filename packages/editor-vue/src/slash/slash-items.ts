@@ -9,6 +9,12 @@ import {
 import type { IconAlias } from '@numior/primitives';
 import type { NuiEditorMessages } from '../editor/editor.messages';
 
+const HEADING_ICONS: Readonly<Record<1 | 2 | 3, IconAlias>> = {
+  1: 'heading-1',
+  2: 'heading-2',
+  3: 'heading-3',
+};
+
 interface SlashLabel {
   readonly key: string;
   readonly label: string;
@@ -44,7 +50,7 @@ const ENTRIES: readonly SlashEntry[] = [
     key: `heading-${String(level)}`,
     node: 'heading',
     label: (texts) => texts.heading({ level }),
-    icon: `heading-${String(level)}`,
+    icon: HEADING_ICONS[level],
     keywords: ['heading', 'title', `h${String(level)}`],
     command: () => setBlockType('heading', { level }),
   })),

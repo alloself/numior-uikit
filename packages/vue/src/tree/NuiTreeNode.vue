@@ -19,8 +19,8 @@
     <template #leading>
       <span class="nui-tree__controls">
         <span class="nui-tree__toggle" aria-hidden="true">
-          <NuiIcon v-if="node.loading" alias="loader" class="nui-tree__spinner" />
-          <NuiIcon v-else-if="node.hasChildren" alias="chevron-right" class="nui-tree__chevron" />
+          <NuiIcon v-if="node.loading" icon="loader" class="nui-tree__spinner" />
+          <NuiIcon v-else-if="node.hasChildren" icon="chevron-right" class="nui-tree__chevron" />
         </span>
         <span
           v-if="checked"
@@ -41,10 +41,10 @@
           />
         </span>
         <span v-if="folder" class="nui-tree__icon nui-tree__icon--folder" aria-hidden="true">
-          <NuiIcon alias="folder" class="nui-tree__glyph nui-tree__glyph--closed" />
-          <NuiIcon alias="folder-open" class="nui-tree__glyph nui-tree__glyph--open" />
+          <NuiIcon icon="folder" class="nui-tree__glyph nui-tree__glyph--closed" />
+          <NuiIcon icon="folder-open" class="nui-tree__glyph nui-tree__glyph--open" />
         </span>
-        <NuiIcon v-else-if="icon" :alias="icon" class="nui-tree__icon" />
+        <NuiIcon v-else-if="icon" :icon="icon" class="nui-tree__icon" />
       </span>
     </template>
     <template v-if="$slots.default" #default="{ selected }">

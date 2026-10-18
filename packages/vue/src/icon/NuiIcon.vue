@@ -10,7 +10,7 @@ import { useIcons } from '@numior/primitives';
 import { defaultIcons } from './default-icons';
 import type { NuiIconProps } from './icon.types';
 
-const { alias, icon, transform } = defineProps<NuiIconProps>();
+const { icon, transform } = defineProps<NuiIconProps>();
 const icons = useIcons();
 
 const transformStyle = computed(() =>
@@ -22,10 +22,7 @@ const transformStyle = computed(() =>
       },
 );
 
-const glyph = computed(() => {
-  if (icon) {
-    return icon;
-  }
-  return alias === undefined ? undefined : (icons[alias] ?? defaultIcons[alias]);
-});
+const glyph = computed(() =>
+  typeof icon === 'string' ? (icons[icon] ?? defaultIcons[icon]) : icon,
+);
 </script>

@@ -362,6 +362,7 @@ export type {
   IconAlias,
   IconLoader,
   IconRegistry,
+  NuiIconAliases,
   NuiConfigOptions,
   NuiLinkComponent,
   NuiLocaleMessages,

@@ -18,7 +18,7 @@
         <span class="nui-collapsible__label"
           ><slot name="trigger" :open="open">{{ label }}</slot></span
         >
-        <NuiIcon alias="chevron-down" class="nui-collapsible__chevron" />
+        <NuiIcon icon="chevron-down" class="nui-collapsible__chevron" />
       </button>
     </component>
     <div class="nui-collapsible__panel" @transitionend="settle">

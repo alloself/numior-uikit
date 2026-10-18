@@ -37,7 +37,7 @@
       :aria-expanded="expanded ? 'true' : 'false'"
       @click="expanded = !expanded"
     >
-      <NuiIcon alias="chevron-down" class="nui-code__expand-icon" />
+      <NuiIcon icon="chevron-down" class="nui-code__expand-icon" />
       {{ expanded ? texts.collapse : texts.expand }}
     </button>
     <span class="nui-code__status" role="status" aria-live="polite">{{

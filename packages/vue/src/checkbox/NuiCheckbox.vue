@@ -25,7 +25,7 @@
         @change="onChange"
       />
       <span class="nui-checkbox__box">
-        <NuiIcon :alias="indeterminate ? 'minus' : 'check'" class="nui-checkbox__mark" />
+        <NuiIcon :icon="indeterminate ? 'minus' : 'check'" class="nui-checkbox__mark" />
       </span>
       <span v-if="$slots.default || label" class="nui-checkbox__label">
         <slot>{{ label }}</slot>

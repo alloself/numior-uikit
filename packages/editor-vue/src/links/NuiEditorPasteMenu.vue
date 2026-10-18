@@ -11,6 +11,7 @@
 </template>
 
 <script setup lang="ts">
+import { ifDefined, onlyIf } from '../editor/only-if';
 import { useMessages } from '@numior/primitives';
 import { NuiMenu, type NuiMenuEntry, type NuiMenuExposed } from '@numior/vue';
 import { computed, ref, useTemplateRef, watch } from 'vue';
@@ -37,28 +38,20 @@ const choose = (kind: LinkKind): void => {
 };
 
 const items = computed((): NuiMenuEntry[] => [
-  ...(provider === undefined
-    ? []
-    : [
-        {
-          label: texts.value.pasteEmbed({ provider }),
-          icon: 'embed',
-          onSelect: () => {
-            choose('embed');
-          },
-        },
-      ]),
-  ...(bookmark
-    ? [
-        {
-          label: texts.value.bookmark,
-          icon: 'bookmark',
-          onSelect: () => {
-            choose('bookmark');
-          },
-        },
-      ]
-    : []),
+  ...ifDefined<string, NuiMenuEntry>(provider, (name) => ({
+    label: texts.value.pasteEmbed({ provider: name }),
+    icon: 'embed',
+    onSelect: () => {
+      choose('embed');
+    },
+  })),
+  ...onlyIf<NuiMenuEntry>(bookmark, () => ({
+    label: texts.value.bookmark,
+    icon: 'bookmark',
+    onSelect: () => {
+      choose('bookmark');
+    },
+  })),
   {
     label: texts.value.pasteLink,
     icon: 'link',

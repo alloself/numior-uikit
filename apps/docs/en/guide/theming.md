@@ -29,7 +29,7 @@ arguments returns it. With arguments a separate scheme is created for the `scope
 ```vue
 <template>
   <NuiButton variant="ghost" tone="neutral" :aria-label="texts[scheme]" @click="cycle()">
-    <NuiIcon :alias="icons[resolved]" />
+    <NuiIcon :icon="icons[resolved]" />
   </NuiButton>
 </template>
 

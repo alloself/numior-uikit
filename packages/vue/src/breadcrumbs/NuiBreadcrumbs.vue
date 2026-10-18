@@ -20,7 +20,7 @@
         </slot>
         <NuiIcon
           v-if="position < entries.length - 1"
-          :alias="separator"
+          :icon="separator"
           class="nui-breadcrumbs__separator"
         />
       </li>

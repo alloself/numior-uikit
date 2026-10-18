@@ -14,7 +14,7 @@
     aria-hidden="true"
   >
     <div class="nui-table__ghost-body">
-      <NuiIcon alias="grip" class="nui-table__ghost-grip" />
+      <NuiIcon icon="grip" class="nui-table__ghost-grip" />
       <span class="nui-table__ghost-label">{{ ghost.label }}</span>
     </div>
   </div>

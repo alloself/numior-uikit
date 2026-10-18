@@ -1,7 +1,7 @@
 <template>
   <div class="nui-card__media" :style="{ '--_aspect': aspect }">
     <img v-if="src" class="nui-card__image" :src="src" :alt="alt" />
-    <slot v-else><NuiIcon alias="image" class="nui-card__placeholder" /></slot>
+    <slot v-else><NuiIcon icon="image" class="nui-card__placeholder" /></slot>
   </div>
 </template>
 

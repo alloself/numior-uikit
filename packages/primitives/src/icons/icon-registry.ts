@@ -1,82 +1,74 @@
-import {
-  computed,
-  defineAsyncComponent,
-  inject,
-  provide,
-  toValue,
-  type Component,
-  type ComputedRef,
-  type InjectionKey,
-  type MaybeRefOrGetter,
-} from 'vue';
+import { defineAsyncComponent, inject, provide, type Component, type InjectionKey } from 'vue';
 
-export type IconAlias =
-  | 'check'
-  | 'minus'
-  | 'loader'
-  | 'chevron-down'
-  | 'x'
-  | 'search'
-  | 'info'
-  | 'success'
-  | 'warning'
-  | 'error'
-  | 'chevron-right'
-  | 'chevron-left'
-  | 'chevrons-left'
-  | 'chevrons-right'
-  | 'ellipsis'
-  | 'external-link'
-  | 'user'
-  | 'image'
-  | 'inbox'
-  | 'folder'
-  | 'folder-open'
-  | 'file'
-  | 'arrow-up'
-  | 'arrow-up-down'
-  | 'grip'
-  | 'plus'
-  | 'clock'
-  | 'calendar'
-  | 'upload'
-  | 'refresh'
-  | 'sidebar'
-  | 'menu'
-  | 'trash'
-  | 'sun'
-  | 'moon'
-  | 'monitor'
-  | 'copy'
-  | 'hash'
-  | 'link'
-  | 'languages'
-  | 'command'
-  | 'arrow-left'
-  | 'arrow-right'
-  | 'code'
-  | 'eye'
-  | 'terminal'
-  | 'chevrons-up-down'
-  | 'chevron-up'
-  | 'smartphone'
-  | 'tablet'
-  | 'maximize'
-  | 'grip-horizontal'
-  | 'direction'
-  | 'filter'
-  | 'arrow-down'
-  | 'eye-off'
-  | 'list-tree'
-  | 'columns'
-  | 'scissors'
-  | 'clipboard-paste'
-  | 'eraser'
-  | 'table'
-  | 'move-horizontal'
-  | (string & NonNullable<unknown>);
+export interface NuiIconAliases {
+  readonly check: true;
+  readonly minus: true;
+  readonly loader: true;
+  readonly 'chevron-down': true;
+  readonly x: true;
+  readonly search: true;
+  readonly info: true;
+  readonly success: true;
+  readonly warning: true;
+  readonly error: true;
+  readonly 'chevron-right': true;
+  readonly 'chevron-left': true;
+  readonly 'chevrons-left': true;
+  readonly 'chevrons-right': true;
+  readonly ellipsis: true;
+  readonly 'external-link': true;
+  readonly user: true;
+  readonly image: true;
+  readonly inbox: true;
+  readonly folder: true;
+  readonly 'folder-open': true;
+  readonly file: true;
+  readonly 'arrow-up': true;
+  readonly 'arrow-up-down': true;
+  readonly grip: true;
+  readonly plus: true;
+  readonly clock: true;
+  readonly calendar: true;
+  readonly upload: true;
+  readonly refresh: true;
+  readonly sidebar: true;
+  readonly menu: true;
+  readonly trash: true;
+  readonly sun: true;
+  readonly moon: true;
+  readonly monitor: true;
+  readonly copy: true;
+  readonly hash: true;
+  readonly link: true;
+  readonly languages: true;
+  readonly command: true;
+  readonly 'arrow-left': true;
+  readonly 'arrow-right': true;
+  readonly code: true;
+  readonly eye: true;
+  readonly terminal: true;
+  readonly 'chevrons-up-down': true;
+  readonly 'chevron-up': true;
+  readonly smartphone: true;
+  readonly tablet: true;
+  readonly maximize: true;
+  readonly 'grip-horizontal': true;
+  readonly direction: true;
+  readonly filter: true;
+  readonly 'arrow-down': true;
+  readonly 'eye-off': true;
+  readonly 'list-tree': true;
+  readonly columns: true;
+  readonly scissors: true;
+  readonly 'clipboard-paste': true;
+  readonly eraser: true;
+  readonly table: true;
+  readonly 'move-horizontal': true;
+}
 
-export type IconRegistry = Readonly<Record<string, Component>>;
+export type IconAlias = keyof NuiIconAliases;
+
+export type IconRegistry = Readonly<Partial<Record<IconAlias, Component>>>;
 
 export type IconLoader = () => Promise<Component | { default: Component }>;
 
@@ -98,16 +90,6 @@ export const provideIconDefaults = (registry: IconRegistry): IconRegistry => {
 
 export const useIcons = (): IconRegistry => {
   return inject(ICONS_KEY, EMPTY);
-};
-
-export const useIcon = (
-  alias: MaybeRefOrGetter<IconAlias | undefined>,
-): ComputedRef<Component | undefined> => {
-  const icons = useIcons();
-  return computed(() => {
-    const key = toValue(alias);
-    return key === undefined ? undefined : icons[key];
-  });
 };
 
 export const lazyIcon = (loader: IconLoader): Component => {

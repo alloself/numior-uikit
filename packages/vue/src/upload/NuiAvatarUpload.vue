@@ -52,7 +52,7 @@
           :style="{ '--_progress': percent / 100 }"
         />
         <span class="nui-avatar-upload__badge" aria-hidden="true">
-          <NuiIcon alias="upload" />
+          <NuiIcon icon="upload" />
         </span>
       </button>
       <span class="nui-avatar-upload__aside">

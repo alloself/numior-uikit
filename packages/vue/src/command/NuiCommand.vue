@@ -5,7 +5,7 @@
     @focusout="onFocusout"
   >
     <div class="nui-command__field">
-      <NuiIcon alias="search" class="nui-command__icon" />
+      <NuiIcon icon="search" class="nui-command__icon" />
       <input
         ref="input"
         :id="inputId"

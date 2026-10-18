@@ -1,7 +1,7 @@
 <template>
   <span class="nui-row" :class="{ 'nui-row--nowrap': nowrap, 'nui-row--inline': inline }">
     <span v-if="icon || $slots.leading" class="nui-row__leading">
-      <slot name="leading"><NuiIcon v-if="icon" :alias="icon" /></slot>
+      <slot name="leading"><NuiIcon v-if="icon" :icon="icon" /></slot>
     </span>
     <span class="nui-row__body">
       <span class="nui-row__title"
@@ -13,7 +13,7 @@
     </span>
     <span v-if="$slots.trailing" class="nui-row__trailing"><slot name="trailing" /></span>
     <span v-if="check !== undefined" class="nui-row__check">
-      <NuiIcon v-if="check" alias="check" />
+      <NuiIcon v-if="check" icon="check" />
     </span>
   </span>
 </template>

@@ -167,7 +167,7 @@ const scenarios: Scenario[] = [
     name: 'NuiButton as link',
     render: () => h(NuiButton, { href: '/docs', variant: 'outline' }, () => 'Docs'),
   },
-  { name: 'NuiIcon', render: () => h(NuiIcon, { alias: 'check' }) },
+  { name: 'NuiIcon', render: () => h(NuiIcon, { icon: 'check' }) },
   { name: 'NuiSeparator', render: () => h(NuiSeparator, { label: 'or' }) },
   { name: 'NuiKbd', render: () => h(NuiKbd, { keys: 'mod+k' }) },
   { name: 'NuiSkipLink', render: () => h(NuiSkipLink, { target: 'main' }) },
@@ -1039,7 +1039,7 @@ describe('server rendering', () => {
   });
 
   it('renders lazy default icons on the server', async () => {
-    const html = await renderMarkup(() => h(NuiIcon, { alias: 'check' }));
+    const html = await renderMarkup(() => h(NuiIcon, { icon: 'check' }));
     expect(html).toContain('lucide-check');
   });
 

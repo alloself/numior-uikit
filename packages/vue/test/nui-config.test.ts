@@ -20,8 +20,8 @@ describe('provideNuiConfig', () => {
       configScope({ icons: { check: glyph('outer'), x: glyph('outer-x') } }, () =>
         h(
           configScope({ icons: { check: glyph('inner') } }, () => [
-            h(NuiIcon, { alias: 'check' }),
-            h(NuiIcon, { alias: 'x' }),
+            h(NuiIcon, { icon: 'check' }),
+            h(NuiIcon, { icon: 'x' }),
           ]),
         ),
       ),

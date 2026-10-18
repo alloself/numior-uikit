@@ -7,7 +7,7 @@
     tabindex="-1"
     @keydown.escape="onEscape"
   >
-    <NuiIcon v-if="icon" :alias="icon" class="nui-toast__icon" />
+    <NuiIcon v-if="icon" :icon="icon" class="nui-toast__icon" />
     <div class="nui-toast__body">
       <p class="nui-toast__title">{{ toast.title }}</p>
       <p v-if="toast.description" class="nui-toast__description">{{ toast.description }}</p>

@@ -70,7 +70,7 @@
         <NuiMenuItem v-for="locale in locales" :key="locale.key" :href="locale.link">
           {{ locale.label }}
           <template v-if="locale.current" #trailing>
-            <NuiIcon alias="check" />
+            <NuiIcon icon="check" />
           </template>
         </NuiMenuItem>
       </NuiMenu>

@@ -21,7 +21,7 @@
       @mousedown="onMousedown"
       @auxclick="onAuxclick"
     >
-      <NuiIcon v-if="icon" :alias="icon" class="nui-tab__icon" />
+      <NuiIcon v-if="icon" :icon="icon" class="nui-tab__icon" />
       <span class="nui-tab__label"><slot /></span>
     </button>
     <NuiButton

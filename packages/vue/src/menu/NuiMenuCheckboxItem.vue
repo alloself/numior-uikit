@@ -12,7 +12,7 @@
     <NuiMenuRow :icon="icon">
       <slot />
       <template #trailing>
-        <span class="nui-menu-item__check"><NuiIcon v-if="checked" alias="check" /></span>
+        <span class="nui-menu-item__check"><NuiIcon v-if="checked" icon="check" /></span>
       </template>
     </NuiMenuRow>
   </button>

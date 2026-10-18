@@ -1,5 +1,5 @@
 <template>
-  <NuiIcon v-if="icon" :alias="icon" class="nui-menu-item__icon" />
+  <NuiIcon v-if="icon" :icon="icon" class="nui-menu-item__icon" />
   <span class="nui-menu-item__label"
     ><bdi><slot /></bdi
   ></span>

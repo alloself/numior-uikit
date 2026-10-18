@@ -10,7 +10,7 @@
     @mousedown.prevent
     @click="open = !open"
   >
-    <NuiIcon :alias="pointing.alias" :transform="{ rotate: open ? pointing.open : 0 }" />
+    <NuiIcon :icon="pointing.alias" :transform="{ rotate: open ? pointing.open : 0 }" />
   </NuiButton>
 </template>
 

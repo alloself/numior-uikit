@@ -90,6 +90,9 @@ const wholeOf = (at: ChildSlot): NuiMenuEntry[] => {
       ];
 };
 
+const turnIntoMenu = (at: ChildSlot, atom: boolean): NuiMenuEntry[] =>
+  atom ? [] : [{ type: 'sub', label: texts.value.turnInto, icon: 'refresh', items: turnInto(at) }];
+
 const own = (at: ChildSlot): NuiMenuEntry[] => {
   const node = childNode(state.doc, at);
 
@@ -104,16 +107,7 @@ const entries = computed((): NuiMenuEntry[] => {
   const atom = node !== undefined && state.doc.schema.nodes.get(node.type)?.atom === true;
 
   return [
-    ...(atom
-      ? []
-      : [
-          {
-            type: 'sub' as const,
-            label: texts.value.turnInto,
-            icon: 'refresh',
-            items: turnInto(at),
-          },
-        ]),
+    ...turnIntoMenu(at, atom),
     {
       label: texts.value.duplicate,
       icon: 'copy',

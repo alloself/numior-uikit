@@ -17,7 +17,7 @@
     <ul class="nui-pagination__list">
       <li v-if="edges" class="nui-pagination__item nui-pagination__item--edge">
         <NuiPaginationControl v-bind="controlProps(1, texts.first, page === 1)" @select="go">
-          <NuiIcon alias="chevrons-left" class="nui-pagination__arrow" />
+          <NuiIcon icon="chevrons-left" class="nui-pagination__arrow" />
         </NuiPaginationControl>
       </li>
       <li class="nui-pagination__item">
@@ -26,7 +26,7 @@
           class="nui-pagination__previous"
           @select="go"
         >
-          <NuiIcon alias="chevron-left" class="nui-pagination__arrow" />
+          <NuiIcon icon="chevron-left" class="nui-pagination__arrow" />
         </NuiPaginationControl>
       </li>
       <li class="nui-pagination__item nui-pagination__item--status" aria-hidden="true">
@@ -61,7 +61,7 @@
           class="nui-pagination__next"
           @select="go"
         >
-          <NuiIcon alias="chevron-right" class="nui-pagination__arrow" />
+          <NuiIcon icon="chevron-right" class="nui-pagination__arrow" />
         </NuiPaginationControl>
       </li>
       <li v-if="edges" class="nui-pagination__item nui-pagination__item--edge">
@@ -69,7 +69,7 @@
           v-bind="controlProps(pageCount, texts.last, page === pageCount)"
           @select="go"
         >
-          <NuiIcon alias="chevrons-right" class="nui-pagination__arrow" />
+          <NuiIcon icon="chevrons-right" class="nui-pagination__arrow" />
         </NuiPaginationControl>
       </li>
     </ul>

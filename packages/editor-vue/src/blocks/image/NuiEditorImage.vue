@@ -118,6 +118,7 @@
 </template>
 
 <script setup lang="ts">
+import { onlyIf } from '../../editor/only-if';
 import { useMessages, type IconAlias } from '@numior/primitives';
 import {
   NuiButton,
@@ -241,9 +242,11 @@ const percent = computed(() =>
 
 const alignItems = computed((): NuiToggleItem<NuiContentAlign>[] => [
   { value: 'start', label: texts.value.imageAlignStart, icon: 'align-start' },
-  ...(wrap.value === 'break'
-    ? [{ value: 'center' as const, label: texts.value.imageAlignCenter, icon: 'align-center' }]
-    : []),
+  ...onlyIf<NuiToggleItem<NuiContentAlign>>(wrap.value === 'break', () => ({
+    value: 'center',
+    label: texts.value.imageAlignCenter,
+    icon: 'align-center',
+  })),
   { value: 'end', label: texts.value.imageAlignEnd, icon: 'align-end' },
 ]);
 
@@ -385,9 +388,15 @@ const actionAttrs = (action: ImageAction): Record<string, string | undefined> =>
     : { href: action.href, download: '', target: '_blank', rel: 'noopener' };
 
 const actions = computed((): readonly ImageAction[] => [
-  ...(uploads?.enabled.value === true && uploads.images.value !== undefined
-    ? [{ key: 'replace', icon: 'image-up', label: texts.value.imageReplace, run: choose }]
-    : []),
+  ...onlyIf<ImageAction>(
+    uploads?.enabled.value === true && uploads.images.value !== undefined,
+    () => ({
+      key: 'replace',
+      icon: 'image-up',
+      label: texts.value.imageReplace,
+      run: choose,
+    }),
+  ),
   { key: 'download', icon: 'download', label: texts.value.download, href: src.value },
   {
     key: 'alt',

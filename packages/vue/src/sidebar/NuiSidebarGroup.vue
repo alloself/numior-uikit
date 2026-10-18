@@ -13,7 +13,7 @@
       @click="open = !open"
     >
       <span class="nui-sidebar-group__text">{{ label }}</span>
-      <NuiIcon alias="chevron-down" class="nui-sidebar-group__chevron" />
+      <NuiIcon icon="chevron-down" class="nui-sidebar-group__chevron" />
     </button>
     <div v-else-if="label" :id="labelId" class="nui-sidebar-group__label">{{ label }}</div>
     <div class="nui-sidebar-group__panel">

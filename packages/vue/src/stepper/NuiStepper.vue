@@ -29,7 +29,7 @@
           <NuiRow :description="view.step.description">
             <template #leading>
               <span class="nui-stepper__indicator" aria-hidden="true">
-                <NuiIcon v-if="view.mark" :alias="view.mark" class="nui-stepper__mark" />
+                <NuiIcon v-if="view.mark" :icon="view.mark" class="nui-stepper__mark" />
                 <template v-else>{{ numbers.format(index + 1) }}</template>
               </span>
             </template>

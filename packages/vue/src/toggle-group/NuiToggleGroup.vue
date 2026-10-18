@@ -30,7 +30,7 @@
           @click="toggle(item.value)"
         >
           <slot name="item" :item="item" :selected="isSelected(item.value)">
-            <NuiIcon v-if="item.icon" :alias="item.icon" class="nui-toggle-group__icon" />
+            <NuiIcon v-if="item.icon" :icon="item.icon" class="nui-toggle-group__icon" />
             <span v-if="!iconOnly" class="nui-toggle-group__label">{{ item.label }}</span>
           </slot>
         </button>

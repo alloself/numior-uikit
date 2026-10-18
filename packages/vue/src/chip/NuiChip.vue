@@ -8,7 +8,7 @@
       { 'nui-chip--removable': removable, 'nui-chip--disabled': disabled },
     ]"
   >
-    <NuiIcon v-if="icon" :alias="icon" class="nui-chip__icon" />
+    <NuiIcon v-if="icon" :icon="icon" class="nui-chip__icon" />
     <span class="nui-chip__label"><slot /></span>
     <NuiButton
       v-if="removable"

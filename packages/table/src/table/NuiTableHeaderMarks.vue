@@ -10,7 +10,7 @@
     aria-hidden="true"
   >
     <NuiIcon
-      :alias="state.direction === undefined ? 'arrow-up-down' : 'arrow-up'"
+      :icon="state.direction === undefined ? 'arrow-up-down' : 'arrow-up'"
       class="nui-table__sort-icon"
     />
     <span v-if="state.order" class="nui-table__sort-order">{{ state.order }}</span>
@@ -27,7 +27,7 @@
     :aria-label="filterLabel"
     @click.stop="emit('filter', $event)"
   >
-    <NuiIcon alias="filter" />
+    <NuiIcon icon="filter" />
   </button>
   <button
     v-if="menuLabel"
@@ -39,7 +39,7 @@
     :aria-label="menuLabel"
     @click.stop="emit('menu', $event)"
   >
-    <NuiIcon alias="ellipsis" />
+    <NuiIcon icon="ellipsis" />
   </button>
 </template>
 

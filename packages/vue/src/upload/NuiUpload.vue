@@ -41,13 +41,13 @@
         @click="open"
       >
         <slot name="button">
-          <NuiIcon alias="upload" />
+          <NuiIcon icon="upload" />
           {{ texts.browse }}
         </slot>
       </NuiButton>
       <div v-else class="nui-upload__zone" v-bind="drop.attrs" @click="onZoneClick">
         <slot :open="open" :dragging="drop.dragging.value">
-          <NuiIcon alias="upload" class="nui-upload__icon" />
+          <NuiIcon icon="upload" class="nui-upload__icon" />
           <span class="nui-upload__text">{{ texts.drop }}</span>
           <NuiButton
             :id="controlAttrs.id"

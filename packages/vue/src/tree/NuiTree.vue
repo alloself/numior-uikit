@@ -48,7 +48,7 @@
         <template v-if="$slots.item" #default="slot"><slot name="item" v-bind="slot" /></template>
       </NuiTreeNode>
       <li v-if="loading" key="status" class="nui-list__status" role="presentation">
-        <NuiIcon alias="loader" class="nui-list__spinner" />
+        <NuiIcon icon="loader" class="nui-list__spinner" />
         {{ loadingText }}
       </li>
       <li v-else-if="isEmpty" key="empty" class="nui-list__empty" role="presentation">

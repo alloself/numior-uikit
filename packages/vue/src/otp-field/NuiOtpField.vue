@@ -18,7 +18,7 @@
         <template v-for="(group, groupIndex) in layout" :key="groupIndex">
           <span v-if="groupIndex > 0" class="nui-otp-field__separator">
             <slot name="separator">
-              <NuiIcon alias="minus" />
+              <NuiIcon icon="minus" />
             </slot>
           </span>
           <span class="nui-otp-field__group">

@@ -10,7 +10,7 @@
     v-bind="linkAttrs"
   >
     <slot />
-    <NuiIcon v-if="external" alias="external-link" class="nui-link__icon" />
+    <NuiIcon v-if="external" icon="external-link" class="nui-link__icon" />
   </component>
 </template>
 

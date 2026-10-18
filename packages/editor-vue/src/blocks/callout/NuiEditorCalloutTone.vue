@@ -1,6 +1,6 @@
 <template>
   <span v-if="!editable" class="nui-editor-callout__mark">
-    <NuiIcon :alias="tone" />
+    <NuiIcon :icon="tone" />
   </span>
   <NuiMenu v-else :items="items" :label="texts.tone" placement="bottom-start">
     <template #trigger="{ attrs }">

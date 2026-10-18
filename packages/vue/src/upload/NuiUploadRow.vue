@@ -13,7 +13,7 @@
         >
         <template #leading>
           <img v-if="preview" class="nui-upload-item__thumb" :src="preview" alt="" />
-          <NuiIcon v-else :alias="isImage ? 'image' : 'file'" class="nui-upload-item__icon" />
+          <NuiIcon v-else :icon="isImage ? 'image' : 'file'" class="nui-upload-item__icon" />
         </template>
         <template #trailing>
           <span class="nui-upload-item__actions">

@@ -20,7 +20,7 @@
     <NuiMenuRow :icon="icon">
       <slot name="label">{{ label }}</slot>
       <template #trailing>
-        <NuiIcon alias="chevron-right" class="nui-menu-item__chevron" />
+        <NuiIcon icon="chevron-right" class="nui-menu-item__chevron" />
       </template>
     </NuiMenuRow>
   </button>

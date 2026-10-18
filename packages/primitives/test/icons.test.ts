@@ -1,7 +1,7 @@
 import { mount } from '@vue/test-utils';
 import { describe, expect, it, vi } from 'vite-plus/test';
 import { defineComponent, h } from 'vue';
-import { createNuiConfig, lazyIcon, provideIconDefaults, provideIcons, useIcon } from '../src';
+import { createNuiConfig, lazyIcon, provideIconDefaults, provideIcons, useIcons } from '../src';
 import { captureSetup, nest, providing } from './harness/capture';
 
 const glyph = (name: string) => defineComponent({ name, render: () => h('svg') });
@@ -13,7 +13,11 @@ describe('icon registry', () => {
     const innerCheck = glyph('InnerCheck');
 
     const icons = captureSetup(
-      () => ({ check: useIcon('check'), x: useIcon('x'), missing: useIcon('missing') }),
+      () => {
+        const registry = useIcons();
+
+        return { check: registry.check, x: registry.x, missing: registry.trash };
+      },
       {
         wrap: nest(
           providing(() => provideIcons({ check: outerCheck, x: outerX })),
@@ -22,35 +26,35 @@ describe('icon registry', () => {
       },
     ).value;
 
-    expect(icons.check.value).toBe(innerCheck);
-    expect(icons.x.value).toBe(outerX);
-    expect(icons.missing.value).toBeUndefined();
+    expect(icons.check).toBe(innerCheck);
+    expect(icons.x).toBe(outerX);
+    expect(icons.missing).toBeUndefined();
   });
 
   it('lets a package fill in icons the app has not chosen', () => {
-    const appBold = glyph('AppBold');
-    const packageBold = glyph('PackageBold');
-    const packageQuote = glyph('PackageQuote');
+    const appSearch = glyph('AppSearch');
+    const packageSearch = glyph('PackageSearch');
+    const packageCopy = glyph('PackageCopy');
 
-    const icons = captureSetup(() => ({ bold: useIcon('bold'), quote: useIcon('quote') }), {
+    const icons = captureSetup(() => useIcons(), {
       wrap: nest(
-        providing(() => provideIcons({ bold: appBold })),
-        providing(() => provideIconDefaults({ bold: packageBold, quote: packageQuote })),
+        providing(() => provideIcons({ search: appSearch })),
+        providing(() => provideIconDefaults({ search: packageSearch, copy: packageCopy })),
       ),
     }).value;
 
-    expect(icons.bold.value).toBe(appBold);
-    expect(icons.quote.value).toBe(packageQuote);
+    expect(icons.search).toBe(appSearch);
+    expect(icons.copy).toBe(packageCopy);
   });
 
   it('accepts app-level configuration through the plugin', () => {
     const appCheck = glyph('AppCheck');
 
-    const icon = captureSetup(() => useIcon('check'), {
+    const icons = captureSetup(() => useIcons(), {
       plugins: [createNuiConfig({ icons: { check: appCheck } })],
     }).value;
 
-    expect(icon.value).toBe(appCheck);
+    expect(icons.check).toBe(appCheck);
   });
 
   it('loads a lazy icon once and renders it after resolution', async () => {

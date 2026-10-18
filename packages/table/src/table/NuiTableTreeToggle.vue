@@ -1,13 +1,13 @@
 <template>
   <span class="nui-table__tree" :style="{ '--_level': level }" aria-hidden="true">
-    <NuiIcon v-if="loading" alias="loader" class="nui-table__spinner" />
+    <NuiIcon v-if="loading" icon="loader" class="nui-table__spinner" />
     <span
       v-else-if="expandable"
       class="nui-table__toggle nui-table__toggle--expandable"
       @mousedown.prevent
       @click="emit('toggle')"
     >
-      <NuiIcon alias="chevron-right" class="nui-table__chevron" />
+      <NuiIcon icon="chevron-right" class="nui-table__chevron" />
     </span>
     <span v-else class="nui-table__toggle"></span>
   </span>

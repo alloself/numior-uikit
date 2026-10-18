@@ -24,7 +24,7 @@ const slotFor = (content: ButtonContent, label: string) => {
     return label;
   }
   return () =>
-    content === 'icon' ? [h(NuiIcon, { alias: 'x' })] : [h(NuiIcon, { alias: 'x' }), label];
+    content === 'icon' ? [h(NuiIcon, { icon: 'x' })] : [h(NuiIcon, { icon: 'x' }), label];
 };
 
 export class ButtonDriver extends ComponentDriver {
@@ -64,7 +64,7 @@ export class ButtonDriver extends ComponentDriver {
   }
 
   get iconAliases(): unknown[] {
-    return this.wrapper.findAllComponents(NuiIcon).map((icon) => icon.props('alias'));
+    return this.wrapper.findAllComponents(NuiIcon).map((icon) => icon.props('icon'));
   }
 
   get tag(): string {

@@ -1,6 +1,6 @@
 <template>
   <span v-if="current" class="nui-breadcrumbs__current" aria-current="page">
-    <NuiIcon v-if="item.icon" :alias="item.icon" class="nui-breadcrumbs__icon" />
+    <NuiIcon v-if="item.icon" :icon="item.icon" class="nui-breadcrumbs__icon" />
     {{ item.label }}
   </span>
   <NuiLink
@@ -12,7 +12,7 @@
     underline="hover"
     class="nui-breadcrumbs__link"
   >
-    <NuiIcon v-if="item.icon" :alias="item.icon" class="nui-breadcrumbs__icon" />
+    <NuiIcon v-if="item.icon" :icon="item.icon" class="nui-breadcrumbs__icon" />
     {{ item.label }}
   </NuiLink>
 </template>

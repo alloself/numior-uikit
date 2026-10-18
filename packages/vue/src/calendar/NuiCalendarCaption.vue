@@ -11,7 +11,7 @@
       :tabindex="first ? undefined : -1"
       @click="calendar.shift(-1)"
     >
-      <NuiIcon alias="chevron-left" class="nui-calendar__arrow" />
+      <NuiIcon icon="chevron-left" class="nui-calendar__arrow" />
     </NuiButton>
     <div :id="captionId" class="nui-calendar__title" aria-live="polite">
       <button
@@ -39,7 +39,7 @@
       :tabindex="last ? undefined : -1"
       @click="calendar.shift(1)"
     >
-      <NuiIcon alias="chevron-right" class="nui-calendar__arrow" />
+      <NuiIcon icon="chevron-right" class="nui-calendar__arrow" />
     </NuiButton>
   </div>
 </template>

@@ -28,7 +28,7 @@ import '@numior/tokens/accents.css';
 ```vue
 <template>
   <NuiButton variant="ghost" tone="neutral" :aria-label="texts[scheme]" @click="cycle()">
-    <NuiIcon :alias="icons[resolved]" />
+    <NuiIcon :icon="icons[resolved]" />
   </NuiButton>
 </template>
 

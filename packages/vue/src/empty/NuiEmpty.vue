@@ -1,7 +1,7 @@
 <template>
   <div class="nui-empty" :class="`nui-empty--size-${size}`">
     <span v-if="hasMedia()" class="nui-empty__media">
-      <slot name="media"><NuiIcon :alias="icon" class="nui-empty__icon" /></slot>
+      <slot name="media"><NuiIcon :icon="icon" class="nui-empty__icon" /></slot>
     </span>
     <p v-if="hasTitle()" class="nui-empty__title">
       <slot name="title">{{ title }}</slot>

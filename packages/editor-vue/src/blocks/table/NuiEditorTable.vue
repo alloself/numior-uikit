@@ -54,7 +54,7 @@ import {
 } from '@numior/content';
 import { NuiContentTable } from '@numior/content/table';
 import { redo, undo } from '@numior/editor-core';
-import { useMessages } from '@numior/primitives';
+import { useMessages, type IconAlias } from '@numior/primitives';
 import type {
   NuiTableCellValue,
   NuiTableColumnMenu,
@@ -104,7 +104,7 @@ const cancelled = ref(false);
 
 const data = computed(() => contentTableData(node));
 
-const TYPE_ICONS: Readonly<Record<NuiContentTableType, string>> = {
+const TYPE_ICONS: Readonly<Record<NuiContentTableType, IconAlias>> = {
   text: 'type',
   number: 'hash',
   date: 'calendar',

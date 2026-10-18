@@ -16,7 +16,7 @@
     @click="toggle"
   >
     <template #trailing>
-      <NuiIcon alias="chevron-down" class="nui-sidebar-sub__chevron" />
+      <NuiIcon icon="chevron-down" class="nui-sidebar-sub__chevron" />
     </template>
     <template #nested>
       <NuiTooltip

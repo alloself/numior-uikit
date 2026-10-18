@@ -2,7 +2,7 @@
   <div class="nui-editor-upload" :class="`nui-editor-upload--status-${item.status}`">
     <img v-if="preview" class="nui-editor-upload__preview" :src="preview" alt="" />
     <span v-else class="nui-editor-upload__icon">
-      <NuiIcon :alias="image ? 'image' : 'file'" />
+      <NuiIcon :icon="image ? 'image' : 'file'" />
     </span>
     <div class="nui-editor-upload__body">
       <span class="nui-editor-upload__name">{{ item.name }}</span>

@@ -1,7 +1,7 @@
 <template>
   <span v-if="cell?.kind === 'toggle'" class="nui-table__group" @click="emit('toggle')">
     <span class="nui-table__toggle" aria-hidden="true">
-      <NuiIcon alias="chevron-right" class="nui-table__chevron" />
+      <NuiIcon icon="chevron-right" class="nui-table__chevron" />
     </span>
     <span class="nui-table__text">{{ cell.text }}</span>
     <span class="nui-table__count">{{ cell.count }}</span>

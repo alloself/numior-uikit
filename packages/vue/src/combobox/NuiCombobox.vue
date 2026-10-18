@@ -69,7 +69,7 @@
           :disabled="isDisabled || isReadonly"
           @click="toggle"
         >
-          <NuiIcon alias="chevron-down" class="nui-combobox__chevron" />
+          <NuiIcon icon="chevron-down" class="nui-combobox__chevron" />
         </NuiButton>
       </div>
       <NuiList

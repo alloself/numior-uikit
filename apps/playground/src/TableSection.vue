@@ -15,7 +15,7 @@
         data-testid="table-quick"
       >
         <template #prefix>
-          <NuiIcon alias="search" />
+          <NuiIcon icon="search" />
         </template>
       </NuiInput>
       <NuiSelect
@@ -173,7 +173,7 @@
           data-testid="table-remote-quick"
         >
           <template #prefix>
-            <NuiIcon alias="search" />
+            <NuiIcon icon="search" />
           </template>
         </NuiInput>
         <NuiSelect

@@ -17,7 +17,7 @@
       <img v-if="showImage" class="nui-avatar__image" :src="src" :alt="label" @error="fail" />
       <slot v-else>
         <span v-if="initials" class="nui-avatar__initials">{{ initials }}</span>
-        <NuiIcon v-else :alias="icon" class="nui-avatar__icon" />
+        <NuiIcon v-else :icon="icon" class="nui-avatar__icon" />
       </slot>
     </span>
     <span v-if="status" class="nui-avatar__status" role="img" :aria-label="statusText" />

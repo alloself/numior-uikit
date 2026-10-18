@@ -1,6 +1,7 @@
 import { defineAsyncComponent } from 'vue';
 import { leaveClosedToggle, toggleTodo } from './block-commands';
 import type { ElementNode } from '@numior/editor-core';
+import type { NuiMenuEntry } from '@numior/vue';
 import type { NuiEditorMessages } from '../editor/editor.messages';
 import type { NuiEditorBlock, NuiEditorBlockContext } from './block.types';
 import { calloutToneOf, toneEntries } from './callout/callout-tones';
@@ -106,7 +107,11 @@ export const fileBlock = defineBlock({
   view: NuiEditorFile,
 });
 
-const openLink = (node: ElementNode, editor: NuiEditorBlockContext, texts: NuiEditorMessages) => [
+const openLink = (
+  node: ElementNode,
+  editor: NuiEditorBlockContext,
+  texts: NuiEditorMessages,
+): NuiMenuEntry[] => [
   {
     label: texts.openLink,
     icon: 'external-link',

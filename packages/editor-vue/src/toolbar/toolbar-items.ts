@@ -20,6 +20,7 @@ import {
 import type { IconAlias } from '@numior/primitives';
 import type { NuiEditorMessages } from '../editor/editor.messages';
 import type { SlashItem } from '../slash/slash-items';
+import { onlyIf } from '../editor/only-if';
 
 export interface ToolbarFace {
   readonly label: string;
@@ -122,6 +123,12 @@ const LISTS: readonly (readonly [string, keyof NuiEditorMessages, IconAlias])[] 
 
 const HEADINGS = [1, 2, 3] as const;
 
+const HEADING_ICONS: Readonly<Record<(typeof HEADINGS)[number], IconAlias>> = {
+  1: 'heading-1',
+  2: 'heading-2',
+  3: 'heading-3',
+};
+
 const textOf = (texts: NuiEditorMessages, key: keyof NuiEditorMessages): string => {
   const text = texts[key];
 
@@ -154,39 +161,31 @@ const blockOptions = (facts: Facts): ToolbarBlock[] => {
   const current = activeBlock(facts.state);
 
   const headings = schema.nodes.has('heading')
-    ? HEADINGS.map((level) => ({
+    ? HEADINGS.map((level): ToolbarBlock => ({
         key: `heading-${String(level)}`,
         label: facts.texts.heading({ level }),
-        icon: `heading-${String(level)}`,
+        icon: HEADING_ICONS[level],
         active: current?.type === 'heading' && current.attrs.level === level,
         command: setBlockType('heading', { level }),
       }))
     : [];
 
   return [
-    ...(schema.nodes.has('paragraph')
-      ? [
-          {
-            key: 'paragraph',
-            label: facts.texts.text,
-            icon: 'text',
-            active: current?.type === 'paragraph',
-            command: setBlockType('paragraph'),
-          },
-        ]
-      : []),
+    ...onlyIf<ToolbarBlock>(schema.nodes.has('paragraph'), () => ({
+      key: 'paragraph',
+      label: facts.texts.text,
+      icon: 'text',
+      active: current?.type === 'paragraph',
+      command: setBlockType('paragraph'),
+    })),
     ...headings,
-    ...(schema.nodes.has('code_block')
-      ? [
-          {
-            key: 'code_block',
-            label: facts.texts.codeBlock,
-            icon: 'code-block',
-            active: current?.type === 'code_block',
-            command: setBlockType('code_block'),
-          },
-        ]
-      : []),
+    ...onlyIf<ToolbarBlock>(schema.nodes.has('code_block'), () => ({
+      key: 'code_block',
+      label: facts.texts.codeBlock,
+      icon: 'code-block',
+      active: current?.type === 'code_block',
+      command: setBlockType('code_block'),
+    })),
   ];
 };
 
@@ -291,31 +290,23 @@ const blockActions = (facts: Facts): ToolbarItem[] => {
 
   return [
     ...lists,
-    ...(schema.nodes.has('blockquote')
-      ? [
-          {
-            kind: 'action' as const,
-            key: 'blockquote',
-            label: texts.quote,
-            icon: 'quote',
-            pressed: ancestors.includes('blockquote'),
-            disabled: !quote(state),
-            command: quote,
-          },
-        ]
-      : []),
-    ...(schema.nodes.has('divider')
-      ? [
-          {
-            kind: 'action' as const,
-            key: 'divider',
-            label: texts.divider,
-            icon: 'separator',
-            disabled: !divider(state),
-            command: divider,
-          },
-        ]
-      : []),
+    ...onlyIf<ToolbarItem>(schema.nodes.has('blockquote'), () => ({
+      kind: 'action',
+      key: 'blockquote',
+      label: texts.quote,
+      icon: 'quote',
+      pressed: ancestors.includes('blockquote'),
+      disabled: !quote(state),
+      command: quote,
+    })),
+    ...onlyIf<ToolbarItem>(schema.nodes.has('divider'), () => ({
+      kind: 'action',
+      key: 'divider',
+      label: texts.divider,
+      icon: 'separator',
+      disabled: !divider(state),
+      command: divider,
+    })),
   ];
 };
 

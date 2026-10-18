@@ -1,7 +1,7 @@
 <template>
   <div class="w-full grid-auto-sm gap-3">
     <div v-for="alias in aliases" :key="alias" class="flex flex-col items-center gap-1">
-      <NuiIcon :alias="alias" class="text-lg" />
+      <NuiIcon :icon="alias" class="text-lg" />
       <span class="text-xs text-muted-foreground">{{ alias }}</span>
     </div>
   </div>

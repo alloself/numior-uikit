@@ -8,8 +8,8 @@
     :aria-label="label"
     @click="emit('copy')"
   >
-    <NuiIcon alias="copy" class="nui-code__glyph nui-code__glyph--copy" />
-    <NuiIcon alias="check" class="nui-code__glyph nui-code__glyph--done" />
+    <NuiIcon icon="copy" class="nui-code__glyph nui-code__glyph--copy" />
+    <NuiIcon icon="check" class="nui-code__glyph nui-code__glyph--done" />
   </NuiButton>
 </template>
 

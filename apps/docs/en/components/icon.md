@@ -1,7 +1,7 @@
 # Icon
 
-The kit components request icons by alias through a registry, and `NuiIcon` draws an icon by
-alias or takes a ready component. By default the aliases point to
+The kit components request icons by alias through a registry, and `NuiIcon` draws what `icon`
+holds: an alias from the registry or a ready component. By default the aliases point to
 [Lucide](https://lucide.dev). Every icon loads as a separate module on first use, and only
 the requested glyphs reach the bundle.
 
@@ -22,8 +22,8 @@ import '@numior/vue/styles/icon.css';
 
 ### Own component
 
-`icon` takes any component, including a functional one built with `h`; it takes priority
-over `alias`.
+`icon` also takes any component, including a functional one built with `h`: it renders as is,
+without the registry.
 
 <Example name="icon/Custom" />
 
@@ -51,8 +51,20 @@ createApp(App)
   .mount('#app');
 ```
 
-Own aliases such as `app:save` are available as `<NuiIcon alias="app:save" />`; an unknown
-alias draws nothing. `lazyIcon` loads the module once on the first render.
+Aliases are typed: `icon` takes only the keys of the `NuiIconAliases` interface, so a typo is a
+type error. An app declares its own alias by extending the interface, and kit packages such as
+the editor add theirs the same way:
+
+```ts
+declare module '@numior/primitives' {
+  interface NuiIconAliases {
+    readonly 'app:save': true;
+  }
+}
+```
+
+After that `<NuiIcon icon="app:save" />` type-checks. An alias that is declared but not
+registered draws nothing. `lazyIcon` loads the module once on the first render.
 
 ## Accessibility
 

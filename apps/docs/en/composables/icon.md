@@ -1,23 +1,23 @@
-# useIcon
+# useIcons
 
-`useIcon(alias)` returns the icon component from the registry of the nearest configuration,
-`useIcons()` the whole registry. `lazyIcon(loader)` wraps a dynamic import into a component
-that loads once on the first render. `NuiIcon` is built on these.
+`useIcons()` returns the icon registry of the nearest configuration: an "alias → component"
+object where the app icons lie over the package sets. `lazyIcon(loader)` wraps a dynamic import
+into a component that loads once on the first render. `NuiIcon` is built on these.
 
 ## Signature
 
-<SignatureReference :names="['useIcon', 'useIcons', 'lazyIcon', 'IconRegistry']" />
+<SignatureReference :names="['useIcons', 'lazyIcon', 'IconRegistry', 'NuiIconAliases']" />
 
 ## Usage
 
 ```ts
 import { h } from 'vue';
-import { lazyIcon, useIcon } from '@numior/vue';
+import { lazyIcon, useIcons } from '@numior/vue';
 
-const check = useIcon('check');
+const icons = useIcons();
 const save = lazyIcon(() => import('./icons/SaveIcon.vue'));
-const render = () => (check.value ? h(check.value) : null);
+const render = () => (icons.check === undefined ? null : h(icons.check));
 ```
 
-An unknown alias gives `undefined`. The registry and own sets are described on the
-[Icon](/en/components/icon) page.
+An alias missing from the registry gives `undefined`. The registry, own sets and declaring own
+aliases are described on the [Icon](/en/components/icon) page.

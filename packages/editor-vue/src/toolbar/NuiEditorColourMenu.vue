@@ -18,7 +18,7 @@
             colours.colour === null ? undefined : `nui-editor-colours--text-${colours.colour}`
           "
         >
-          <NuiIcon alias="text-colour" />
+          <NuiIcon icon="text-colour" />
         </span>
       </NuiButton>
     </template>

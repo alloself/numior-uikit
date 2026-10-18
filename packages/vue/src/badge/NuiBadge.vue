@@ -16,7 +16,7 @@
     :aria-hidden="dot && !label ? 'true' : undefined"
   >
     <template v-if="!dot">
-      <NuiIcon v-if="icon" :alias="icon" class="nui-badge__icon" />
+      <NuiIcon v-if="icon" :icon="icon" class="nui-badge__icon" />
       <span v-if="$slots.default || count !== undefined" class="nui-badge__label">
         <slot>{{ countText }}</slot>
       </span>

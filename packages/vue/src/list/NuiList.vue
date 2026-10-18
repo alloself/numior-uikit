@@ -55,7 +55,7 @@
       </template>
       <slot />
       <li v-if="loading" class="nui-list__status" :role="selectable ? 'presentation' : undefined">
-        <NuiIcon alias="loader" class="nui-list__spinner" />
+        <NuiIcon icon="loader" class="nui-list__spinner" />
         {{ loadingText }}
       </li>
       <li

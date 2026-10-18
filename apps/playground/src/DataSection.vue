@@ -14,7 +14,7 @@
       <NuiBadge tone="success" dot label="В сети" data-testid="data-badge-dot" />
       <span class="floating-host">
         <NuiButton variant="outline" tone="neutral" aria-label="Уведомления">
-          <NuiIcon alias="inbox" />
+          <NuiIcon icon="inbox" />
         </NuiButton>
         <NuiBadge tone="error" :count="3" floating data-testid="data-badge-floating" />
       </span>
@@ -62,7 +62,7 @@
               data-testid="data-card-nested"
               @click="nestedClicks += 1"
             >
-              <NuiIcon alias="ellipsis" />
+              <NuiIcon icon="ellipsis" />
             </NuiButton>
           </template>
         </NuiCardHeader>
