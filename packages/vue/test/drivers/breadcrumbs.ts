@@ -1,11 +1,7 @@
 import { mount, type DOMWrapper, type VueWrapper } from '@vue/test-utils';
-import { defineComponent, h, markRaw, nextTick } from 'vue';
-import {
-  NuiBreadcrumbs,
-  type NuiBreadcrumbItem,
-  type NuiBreadcrumbsItemSlot,
-  type NuiConfigOptions,
-} from '../../src';
+import { nextTick } from 'vue';
+import type { NuiBreadcrumbItem, NuiConfigOptions } from '../../src';
+import BreadcrumbsScene from '../fixtures/BreadcrumbsScene.vue';
 import { configPlugins } from '../support/config';
 import { TopLayerStubs } from '../support/top-layer';
 import { ComponentDriver } from './component';
@@ -28,18 +24,6 @@ const PATH: readonly NuiBreadcrumbItem[] = [
   { label: 'Billing' },
 ];
 
-const RouterStub = markRaw(
-  defineComponent({
-    props: { to: { type: String, required: true } },
-    setup(props, { slots }) {
-      return () => h('a', { href: `/router${props.to}` }, slots.default?.());
-    },
-  }),
-);
-
-const customItem = (slot: NuiBreadcrumbsItemSlot) =>
-  h('em', { class: 'custom-crumb' }, `${slot.index}:${slot.item.label}${slot.current ? '*' : ''}`);
-
 export class BreadcrumbsDriver extends ComponentDriver {
   protected readonly block = 'nui-breadcrumbs';
 
@@ -54,24 +38,12 @@ export class BreadcrumbsDriver extends ComponentDriver {
   }: BreadcrumbsMountOptions = {}) {
     const stubs = new TopLayerStubs();
 
-    const Host = defineComponent({
-      setup: () => () =>
-        h('div', { dir }, [
-          h(
-            NuiBreadcrumbs,
-            {
-              items: viaRouter ? items.map((item) => ({ ...item, to: item.href })) : items,
-              ...(maxItems === undefined ? {} : { maxItems }),
-              ...(viaRouter ? { as: RouterStub } : {}),
-              label,
-            },
-            customItems ? { item: customItem } : undefined,
-          ),
-        ]),
-    });
-
     return new BreadcrumbsDriver(
-      mount(Host, { attachTo: document.body, global: { plugins: configPlugins(config) } }),
+      mount(BreadcrumbsScene, {
+        props: { items, maxItems, customItems, viaRouter, dir, label },
+        attachTo: document.body,
+        global: { plugins: configPlugins(config) },
+      }),
       stubs,
     );
   }

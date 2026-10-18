@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from 'vite-plus/test';
-import { h, type VNode } from 'vue';
-import type { NuiTableOverlaySlot, NuiTableRange } from '../src';
+import type { NuiTableRange } from '../src';
+import RangeMarks from './fixtures/RangeMarks.vue';
 import { TableDriver, type TableMountOptions } from './drivers/table';
 import { staff, STAFF_COLUMNS, type Staff } from './support/staff';
 
@@ -10,27 +10,6 @@ const range = (top: number, start: number, bottom: number, end: number): NuiTabl
   from: { row: top, col: start },
   to: { row: bottom, col: end },
 });
-
-const MARKED: readonly NuiTableRange[] = [range(1, 1, 2, 2), range(5, 0, 5, 4)];
-
-const marks = ({ rectOf }: NuiTableOverlaySlot): VNode[] =>
-  MARKED.flatMap((marked, index) => {
-    const rect = rectOf(marked);
-
-    return rect === undefined
-      ? []
-      : [
-          h('div', {
-            key: index,
-            style: {
-              insetBlockStart: `${rect.top}px`,
-              insetInlineStart: `${rect.start}px`,
-              inlineSize: `${rect.width}px`,
-              blockSize: `${rect.height}px`,
-            },
-          }),
-        ];
-  });
 
 const mountStaff = (options: Partial<TableMountOptions<Staff>> = {}): TableDriver<Staff> => {
   const grid = TableDriver.mount<Staff>({
@@ -53,7 +32,7 @@ afterEach(() => {
 
 describe('NuiTable overlay', () => {
   it('lays the overlay over the cells it names and keeps it in canvas coordinates', async () => {
-    const grid = mountStaff({ slots: { overlay: marks } });
+    const grid = mountStaff({ slots: { overlay: RangeMarks } });
     await grid.settle();
 
     expect(grid.overlayMarks).toEqual([
@@ -82,7 +61,7 @@ describe('NuiTable overlay', () => {
   });
 
   it('follows the row heights model', async () => {
-    const grid = mountStaff({ slots: { overlay: marks }, rowHeights: { 0: 60 } });
+    const grid = mountStaff({ slots: { overlay: RangeMarks }, rowHeights: { 0: 60 } });
     await grid.settle();
 
     expect(grid.overlayMarks[0]).toEqual({
@@ -104,7 +83,7 @@ describe('NuiTable overlay', () => {
 
   it('follows the row heights model in a table that grows with its rows', async () => {
     const grid = mountStaff({
-      slots: { overlay: marks },
+      slots: { overlay: RangeMarks },
       rows: staff(20),
       rowHeights: { 0: 60 },
       auto: true,

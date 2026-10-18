@@ -1,16 +1,15 @@
 import { mount, type DOMWrapper, type VueWrapper } from '@vue/test-utils';
-import { defineComponent, h, nextTick, shallowRef, type VNode } from 'vue';
-import {
-  NuiSmartForm,
-  useForm,
-  type FormContext,
-  type NuiSmartFormEntry,
-  type NuiSmartFormStep,
-  type SubmitHandler,
-  type SubmittedValues,
+import { markRaw, nextTick } from 'vue';
+import type {
+  FormContext,
+  NuiSmartFormEntry,
+  NuiSmartFormStep,
+  SubmitHandler,
+  SubmittedValues,
+  UseFormOptions,
 } from '../../src';
-
-type SlotRender = (props: Record<string, unknown>) => VNode | VNode[];
+import SmartFormScene from '../fixtures/SmartFormScene.vue';
+import type { SmartFormPart } from '../fixtures/scenes.types';
 
 export interface SmartFormDriverOptions<V extends object> {
   readonly initialValues: V;
@@ -22,53 +21,28 @@ export interface SmartFormDriverOptions<V extends object> {
   readonly inline?: boolean | 'grow';
   readonly readonly?: boolean;
   readonly reserveError?: boolean;
-  readonly slots?: Readonly<Record<string, SlotRender>>;
+  readonly parts?: readonly SmartFormPart[];
 }
 
 export class SmartFormDriver<V extends object> {
   static mount<V extends object>(options: SmartFormDriverOptions<V>): SmartFormDriver<V> {
+    const { initialValues, onSubmit, ...props } = options;
     const submissions: SubmittedValues<V>[] = [];
-    const captured = shallowRef<FormContext<V> | null>(null);
-    const step = shallowRef(options.step);
 
-    const Host = defineComponent({
-      setup: () => {
-        const form = useForm<V, unknown>({
-          initialValues: options.initialValues,
-          onSubmit: (values, helpers) => {
-            submissions.push(values);
-            return options.onSubmit?.(values, helpers);
-          },
-        });
-
-        captured.value = form;
-        return () =>
-          h(
-            NuiSmartForm<V>,
-            {
-              form,
-              fields: options.fields,
-              steps: options.steps,
-              layout: options.layout,
-              inline: options.inline,
-              readonly: options.readonly,
-              reserveError: options.reserveError,
-              ...(step.value === undefined ? {} : { step: step.value }),
-              'onUpdate:step': (value: string | undefined) => {
-                step.value = value;
-              },
-            },
-            options.slots ?? {},
-          );
+    const formOptions: UseFormOptions<V, unknown> = {
+      initialValues,
+      onSubmit: (values, helpers) => {
+        submissions.push(values);
+        return onSubmit?.(values, helpers);
       },
+    };
+
+    const wrapper = mount(SmartFormScene<V>, {
+      props: { ...props, options: markRaw(formOptions) },
+      attachTo: document.body,
     });
 
-    const wrapper = mount(Host, { attachTo: document.body });
-
-    if (!captured.value) {
-      throw new Error('useForm did not run');
-    }
-    return new SmartFormDriver(wrapper, captured.value, submissions);
+    return new SmartFormDriver(wrapper, wrapper.vm.form, submissions);
   }
 
   private constructor(

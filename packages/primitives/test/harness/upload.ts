@@ -1,13 +1,14 @@
 import { mount, type VueWrapper } from '@vue/test-utils';
-import { customRef, defineComponent, h, nextTick, ref, watch, type Ref } from 'vue';
+import { customRef, nextTick, ref, watch, type Ref } from 'vue';
 import {
-  useFileDrop,
   useUploadQueue,
   type UploadContext,
   type UploadEntry,
   type UploadItem,
   type UploadQueue,
 } from '../../src';
+import FileDropZone from '../fixtures/FileDropZone.vue';
+import { captureSetup } from './capture';
 
 interface AdapterCall {
   readonly file: File;
@@ -28,7 +29,7 @@ interface ControlledModel {
   commit(): void;
 }
 
-type Outcome<T> = { readonly ran: true; readonly value: T } | { readonly ran: false };
+type FileDropWrapper = VueWrapper<InstanceType<typeof FileDropZone>>;
 
 export const fileOf = (name: string, size = 3, type = 'text/plain'): File =>
   new File([new Uint8Array(size)], name, { type });
@@ -82,42 +83,32 @@ export class UploadQueueHarness {
     const calls: AdapterCall[] = [];
     const settled: string[] = [];
     const writes = { count: 0 };
-    const outcome: { current: Outcome<UploadQueue<string>> } = { current: { ran: false } };
 
-    const Probe = defineComponent({
-      setup() {
-        const queue = useUploadQueue<string>({
-          items: model.items,
-          concurrency: options.concurrency,
-          auto: options.auto,
-          upload: (file, context) =>
-            new Promise<string>((resolve, reject) => {
-              calls.push({ file, context, resolve, reject });
-            }),
-          onDone: (item) => settled.push(`done:${item.name}`),
-          onError: (item) => settled.push(`error:${item.name}`),
-        });
+    const capture = captureSetup(() => {
+      const queue = useUploadQueue<string>({
+        items: model.items,
+        concurrency: options.concurrency,
+        auto: options.auto,
+        upload: (file, context) =>
+          new Promise<string>((resolve, reject) => {
+            calls.push({ file, context, resolve, reject });
+          }),
+        onDone: (item) => settled.push(`done:${item.name}`),
+        onError: (item) => settled.push(`error:${item.name}`),
+      });
 
-        watch(
-          model.items,
-          () => {
-            writes.count += 1;
-          },
-          { flush: 'sync' },
-        );
+      watch(
+        model.items,
+        () => {
+          writes.count += 1;
+        },
+        { flush: 'sync' },
+      );
 
-        outcome.current = { ran: true, value: queue };
-        return () => h('i');
-      },
+      return queue;
     });
 
-    const wrapper = mount(Probe);
-
-    if (!outcome.current.ran) {
-      throw new Error('useUploadQueue did not run');
-    }
-
-    return new UploadQueueHarness(wrapper, outcome.current.value, model, calls, settled, writes);
+    return new UploadQueueHarness(capture.wrapper, capture.value, model, calls, settled, writes);
   }
 
   private constructor(
@@ -216,38 +207,22 @@ export class FileDropHarness {
     const dropped: File[][] = [];
     const disabled = ref(options.disabled ?? false);
 
-    const outcome: { current: Outcome<ReturnType<typeof useFileDrop>> } = {
-      current: { ran: false },
-    };
-
-    const Probe = defineComponent({
-      setup() {
-        const drop = useFileDrop({ disabled, onFiles: (files) => dropped.push(files) });
-        outcome.current = { ran: true, value: drop };
-
-        return () =>
-          h('div', { class: 'zone', ...drop.attrs }, [h('span', { class: 'child' }, 'inner')]);
-      },
+    const wrapper = mount(FileDropZone, {
+      props: { disabled: () => disabled.value, onFiles: (files: File[]) => dropped.push(files) },
+      attachTo: document.body,
     });
 
-    const wrapper = mount(Probe, { attachTo: document.body });
-
-    if (!outcome.current.ran) {
-      throw new Error('useFileDrop did not run');
-    }
-
-    return new FileDropHarness(wrapper, outcome.current.value, dropped, disabled);
+    return new FileDropHarness(wrapper, dropped, disabled);
   }
 
   private constructor(
-    private readonly wrapper: VueWrapper,
-    private readonly drop: ReturnType<typeof useFileDrop>,
+    private readonly wrapper: FileDropWrapper,
     readonly dropped: File[][],
     private readonly disabled: Ref<boolean>,
   ) {}
 
   get dragging(): boolean {
-    return this.drop.dragging.value;
+    return this.wrapper.vm.drop.dragging.value;
   }
 
   private dispatch(target: string, type: string, transfer: FileTransferStub): boolean {

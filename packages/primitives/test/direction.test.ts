@@ -1,10 +1,9 @@
+import { mount } from '@vue/test-utils';
 import { afterEach, describe, expect, it } from 'vite-plus/test';
-import { defineComponent, h, ref, type Component } from 'vue';
+import { ref } from 'vue';
 import { createNuiConfig, provideDirection, useDirection } from '../src';
-import { captureSetup, providing } from './harness/capture';
-
-const inRtlContainer = (child: Component): Component =>
-  defineComponent({ setup: () => () => h('div', { dir: 'rtl' }, [h(child)]) });
+import RtlAnchor from './fixtures/RtlAnchor.vue';
+import { captureSetup } from './harness/capture';
 
 describe('direction context', () => {
   afterEach(() => {
@@ -18,12 +17,9 @@ describe('direction context', () => {
   });
 
   it('follows the nearest dir attribute above the anchor element', () => {
-    const anchor = ref<HTMLElement | null>(null);
+    const wrapper = mount(RtlAnchor);
 
-    const capture = captureSetup(() => useDirection(anchor), { wrap: inRtlContainer });
-
-    anchor.value = capture.wrapper.find('i').element;
-    expect(capture.value.isRtl()).toBe(true);
+    expect(wrapper.vm.direction.isRtl()).toBe(true);
   });
 
   it('lets the plugin or a provider decide and keeps that decision reactive', () => {
@@ -38,7 +34,7 @@ describe('direction context', () => {
     expect(fromPlugin.value.isRtl()).toBe(false);
 
     const fromProvider = captureSetup(() => useDirection(), {
-      wrap: providing(() => provideDirection('rtl')),
+      layers: [() => provideDirection('rtl')],
     });
 
     expect(fromProvider.value.dir()).toBe('rtl');

@@ -1,38 +1,21 @@
 import { createNuiConfig, type NuiConfigOptions } from '@numior/primitives';
-import {
-  NuiCheckbox,
-  NuiInput,
-  NuiNumberField,
-  NuiSelect,
-  type NuiOptionSource,
-} from '@numior/vue';
 import { mount, type DOMWrapper, type VueWrapper } from '@vue/test-utils';
-import { defineComponent, h, nextTick, reactive, shallowRef, type VNode } from 'vue';
-import {
-  NuiForm,
-  NuiFormField,
-  byPath,
-  useForm,
-  type AnyFieldRule,
-  type FormContext,
-  type FormEngineFactory,
-  type StandardSchema,
-  type SubmitHandler,
-  type ValidateOn,
-  type SubmittedValues,
+import { markRaw, nextTick, reactive } from 'vue';
+import type {
+  AnyFieldRule,
+  FormContext,
+  FormEngineFactory,
+  StandardSchema,
+  SubmitHandler,
+  UseFormOptions,
+  ValidateOn,
+  SubmittedValues,
 } from '../../src';
+import ControlsForm from '../fixtures/ControlsForm.vue';
+import { fieldId } from '../fixtures/field-id';
+import type { FormFieldConfig, FormView } from '../fixtures/scenes.types';
 
-export type ControlKind = 'input' | 'select' | 'checkbox' | 'number';
-
-export interface FormFieldConfig {
-  readonly path: string;
-  readonly label: string;
-  readonly control?: ControlKind;
-  readonly rules?: readonly AnyFieldRule[];
-  readonly validateOn?: ValidateOn;
-  readonly keepValue?: boolean;
-  readonly readonly?: boolean;
-}
+export type { FormFieldConfig } from '../fixtures/scenes.types';
 
 export interface FormDriverOptions<V extends object> {
   readonly initialValues: V;
@@ -47,80 +30,11 @@ export interface FormDriverOptions<V extends object> {
   readonly engine?: FormEngineFactory;
 }
 
-interface FieldScope {
-  readonly field: { readonly name: string };
-  readonly value: unknown;
-  readonly setValue: (value: unknown) => void;
-  readonly pending: boolean;
-}
-
-const PLANS: NuiOptionSource = [
-  { value: 'free', label: 'Free' },
-  { value: 'team', label: 'Team' },
-];
-
-const fieldId = (path: string): string => `field-${path.replaceAll('.', '-')}`;
-
-const textOf = (value: unknown): string => (typeof value === 'string' ? value : '');
-
-const controlFor = (kind: ControlKind, { field, value, setValue }: FieldScope): VNode => {
-  const bound = { name: field.name, 'onUpdate:modelValue': setValue };
-
-  if (kind === 'select') {
-    return h(NuiSelect<string>, {
-      ...bound,
-      modelValue: typeof value === 'string' ? value : null,
-      options: PLANS,
-    });
-  }
-  if (kind === 'checkbox') {
-    return h(NuiCheckbox, { ...bound, modelValue: value === true });
-  }
-  if (kind === 'number') {
-    return h(NuiNumberField, { ...bound, modelValue: typeof value === 'number' ? value : null });
-  }
-  return h(NuiInput, { ...bound, modelValue: textOf(value) });
-};
-
-const renderControl = (kind: ControlKind, scope: FieldScope): VNode[] => [
-  controlFor(kind, scope),
-  ...(scope.pending ? [h('span', { class: 'pending-mark' })] : []),
-];
-
-interface View {
-  readonly hidden: Set<string>;
-  readonly rules: Map<string, readonly AnyFieldRule[]>;
-  readonly validateOn: Map<string, ValidateOn>;
-  disabled: boolean;
-  readonly: boolean;
-}
-
-const renderField = <V extends object>(
-  form: FormContext<V>,
-  config: FormFieldConfig,
-  view: View,
-): VNode =>
-  h(
-    NuiFormField<V, unknown>,
-    {
-      key: config.path,
-      form,
-      id: fieldId(config.path),
-      name: byPath(config.path),
-      label: config.label,
-      rules: view.rules.get(config.path) ?? config.rules,
-      validateOn: view.validateOn.get(config.path) ?? config.validateOn,
-      keepValue: config.keepValue,
-      readonly: config.readonly,
-    },
-    { default: (scope: FieldScope) => renderControl(config.control ?? 'input', scope) },
-  );
-
 export class FormDriver<V extends object> {
   static mount<V extends object>(options: FormDriverOptions<V>): FormDriver<V> {
     const submissions: SubmittedValues<V>[] = [];
 
-    const view: View = reactive({
+    const view: FormView = reactive({
       hidden: new Set<string>(),
       rules: new Map<string, readonly AnyFieldRule[]>(),
       validateOn: new Map<string, ValidateOn>(),
@@ -128,58 +42,36 @@ export class FormDriver<V extends object> {
       readonly: options.readonly ?? false,
     });
 
-    const captured = shallowRef<FormContext<V> | null>(null);
-
-    const Host = defineComponent({
-      setup: () => {
-        const form = useForm<V, unknown>({
-          initialValues: options.initialValues,
-          schema: options.schema,
-          engine: options.engine,
-          onSubmit: (values, helpers) => {
-            submissions.push(values);
-            return options.onSubmit?.(values, helpers);
-          },
-        });
-
-        captured.value = form;
-        return () =>
-          h('div', [
-            h(
-              NuiForm<V>,
-              {
-                form,
-                disabled: view.disabled,
-                readonly: view.readonly,
-                submitLabel: options.submitLabel,
-                errorTitle: options.errorTitle,
-              },
-              () =>
-                options.fields
-                  .filter((config) => !view.hidden.has(config.path))
-                  .map((config) => renderField(form, config, view)),
-            ),
-            h('button', { type: 'button', class: 'outside' }, 'Outside'),
-          ]);
+    const formOptions: UseFormOptions<V, unknown> = {
+      initialValues: options.initialValues,
+      schema: options.schema,
+      engine: options.engine,
+      onSubmit: (values, helpers) => {
+        submissions.push(values);
+        return options.onSubmit?.(values, helpers);
       },
-    });
+    };
 
-    const wrapper = mount(Host, {
+    const wrapper = mount(ControlsForm<V>, {
+      props: {
+        options: markRaw(formOptions),
+        fields: options.fields,
+        view,
+        submitLabel: options.submitLabel,
+        errorTitle: options.errorTitle,
+      },
       attachTo: document.body,
       global: { plugins: options.config === undefined ? [] : [createNuiConfig(options.config)] },
     });
 
-    if (!captured.value) {
-      throw new Error('useForm did not run');
-    }
-    return new FormDriver(wrapper, captured.value, submissions, view);
+    return new FormDriver(wrapper, wrapper.vm.form, submissions, view);
   }
 
   private constructor(
     private readonly wrapper: VueWrapper,
     readonly form: FormContext<V>,
     readonly submissions: readonly SubmittedValues<V>[],
-    private readonly view: View,
+    private readonly view: FormView,
   ) {}
 
   private control(path: string): DOMWrapper<HTMLElement> {

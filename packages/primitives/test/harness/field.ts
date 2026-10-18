@@ -11,12 +11,12 @@ import {
   type FieldControlProps,
   type FieldOptions,
 } from '../../src';
-import { captureSetup, providing, type Capture } from './capture';
+import { captureSetup, type Capture } from './capture';
 
 export class FieldHarness {
   static inside(options: FieldOptions): FieldHarness {
     return new FieldHarness(
-      captureSetup(() => useFieldContext(), { wrap: providing(() => provideField(options)) }),
+      captureSetup(() => useFieldContext(), { layers: [() => provideField(options)] }),
     );
   }
 
@@ -83,7 +83,7 @@ export class ControlHarness {
   ): ControlHarness {
     const capture = captureSetup(
       () => useFieldControl(() => props, options),
-      field ? { wrap: providing(() => provideField(field)) } : {},
+      field ? { layers: [() => provideField(field)] } : {},
     );
 
     return new ControlHarness(capture.value);
@@ -137,9 +137,11 @@ export class DraftHarness {
     const drafts = shallowRef<DraftCommits | null>(null);
 
     const capture = captureSetup(() => useFieldControl(() => ({}), { commit }), {
-      wrap: providing(() => {
-        drafts.value = provideDraftCommits();
-      }),
+      layers: [
+        () => {
+          drafts.value = provideDraftCommits();
+        },
+      ],
     });
 
     if (!drafts.value) {

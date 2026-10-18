@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { createSSRApp, h } from 'vue';
-import { renderToString } from 'vue/server-renderer';
+import { renderToString } from '@vue/test-utils';
 import {
   cellEdge,
   cellName,
@@ -10,6 +9,7 @@ import {
   tableCells,
   type NuiTableSourceCell,
 } from '../src';
+import RenderProbe from './fixtures/RenderProbe.vue';
 
 const COLUMN: ReadonlySet<number> = new Set([2, 3, 4, 7]);
 
@@ -113,11 +113,12 @@ describe('tableCells', () => {
           : cells.cellStyle({ row: 2, column, position: 2, pinned: false }),
       );
 
-    const probe = createSSRApp({
-      render: () => h('p', [String(column?.value(2)), styleOf(), String(column?.value(2))]),
-    });
+    const read = (): string => `${String(column?.value(2))}${styleOf()}${String(column?.value(2))}`;
 
-    expect(await renderToString(probe)).toBe('<p>old{&quot;fill&quot;:&quot;gold&quot;}old</p>');
+    expect(await renderToString(RenderProbe, { props: { read } })).toBe(
+      '<p>old{&quot;fill&quot;:&quot;gold&quot;}old</p>',
+    );
+
     expect(reads).toEqual(['2:1']);
     text = 'new';
     expect(column?.value(2)).toBe('new');

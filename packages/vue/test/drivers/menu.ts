@@ -1,21 +1,8 @@
 import { mount, type DOMWrapper, type VueWrapper } from '@vue/test-utils';
 import { vi } from 'vite-plus/test';
-import { defineComponent, h, nextTick, ref, shallowRef, type Ref, type ShallowRef } from 'vue';
-import {
-  NuiMenu,
-  NuiMenuCheckboxItem,
-  NuiMenuItem,
-  NuiMenuLabel,
-  NuiMenuRadioGroup,
-  NuiMenuRadioItem,
-  NuiMenuSeparator,
-  NuiMenuSub,
-  type NuiMenuEntry,
-  type NuiMenuExposed,
-  type NuiMenuFocus,
-  type NuiMenuProps,
-  type NuiMenuTriggerSlot,
-} from '../../src';
+import { nextTick } from 'vue';
+import type { NuiMenuEntry, NuiMenuFocus, NuiMenuProps } from '../../src';
+import MenuScene from '../fixtures/MenuScene.vue';
 import { dismissPopoverNatively, TopLayerStubs } from '../support/top-layer';
 import { ComponentDriver } from './component';
 
@@ -27,155 +14,55 @@ export interface MenuMountOptions {
   readonly anchored?: boolean;
 }
 
-interface PartsState {
-  readonly log: string[];
-  readonly bold: Ref<boolean>;
-  readonly align: Ref<string>;
-}
+type MenuSceneWrapper = VueWrapper<InstanceType<typeof MenuScene>>;
 
 const ITEM = '.nui-menu-item';
 const LABEL = '.nui-menu-item__label';
-
-const item = (label: string, state: PartsState, extra: Record<string, unknown> = {}) =>
-  h(NuiMenuItem, { ...extra, onSelect: () => state.log.push(label) }, () => label);
-
 const TRAILING = '.nui-menu-item__trailing-mark';
-
-const markedItem = (label: string, state: PartsState, extra: Record<string, unknown> = {}) =>
-  h(
-    NuiMenuItem,
-    { ...extra, onSelect: () => state.log.push(label) },
-    { default: () => label, trailing: () => h('span', { class: TRAILING.slice(1) }, '✓') },
-  );
-
-const parts = (state: PartsState) => () => [
-  item('Rename', state, { icon: 'check', shortcut: '⌘R' }),
-  item('Locked', state, { disabled: true }),
-  markedItem('Docs', state, { href: '/docs' }),
-  h(
-    NuiMenuCheckboxItem,
-    {
-      checked: state.bold.value,
-      'onUpdate:checked': (value: boolean) => {
-        state.bold.value = value;
-      },
-    },
-    () => 'Bold',
-  ),
-  h(
-    NuiMenuRadioGroup,
-    {
-      modelValue: state.align.value,
-      'onUpdate:modelValue': (value: unknown) => {
-        if (typeof value === 'string') {
-          state.align.value = value;
-        }
-      },
-    },
-    () => [
-      h(NuiMenuRadioItem, { value: 'left' }, () => 'Left'),
-      h(NuiMenuRadioItem, { value: 'center' }, () => 'Center'),
-    ],
-  ),
-  h(NuiMenuSeparator),
-  h(NuiMenuLabel, null, () => 'More'),
-  h(NuiMenuSub, { label: 'Share' }, () => [item('Email', state), item('Link', state)]),
-  item('Delete', state, { tone: 'error' }),
-];
 
 const labelText = (element: Element): string =>
   (element.querySelector(LABEL)?.textContent ?? '').trim();
 
-const trigger = (slot: NuiMenuTriggerSlot) =>
-  h('button', { ...slot.attrs, type: 'button' }, 'Actions');
-
-const isExposed = (value: unknown): value is NuiMenuExposed =>
-  typeof value === 'object' &&
-  value !== null &&
-  'show' in value &&
-  typeof value.show === 'function';
-
 export class MenuDriver extends ComponentDriver {
   protected readonly block = 'nui-menu';
 
-  static mount({
-    props = {},
-    entries,
-    parts: withParts = false,
-    open = false,
-    anchored = false,
-  }: MenuMountOptions = {}) {
+  static mount({ props, entries, parts, open, anchored }: MenuMountOptions = {}) {
     const stubs = new TopLayerStubs();
-    const model = ref(open);
-    const state: PartsState = { log: [], bold: ref(false), align: ref('left') };
-    const anchor = shallowRef<HTMLElement | null>(null);
-    const exposed = shallowRef<NuiMenuExposed | null>(null);
-    const items = shallowRef(entries);
 
-    const setAnchor = (element: unknown): void => {
-      anchor.value = element instanceof HTMLElement ? element : null;
-    };
-
-    const setExposed = (value: unknown): void => {
-      exposed.value = isExposed(value) ? value : null;
-    };
-
-    const Host = defineComponent({
-      setup: () => () => [
-        anchored ? h('button', { ref: setAnchor, type: 'button', class: 'anchor' }, 'Cell') : null,
-        h(
-          NuiMenu,
-          {
-            ...props,
-            ...(anchored ? { anchor: anchor.value } : {}),
-            items: items.value,
-            open: model.value,
-            'onUpdate:open': (value: boolean) => {
-              model.value = value;
-            },
-            ref: setExposed,
-          },
-          {
-            ...(anchored ? {} : { trigger }),
-            ...(withParts ? { default: parts(state) } : {}),
-          },
-        ),
-      ],
+    const wrapper = mount(MenuScene, {
+      props: { props, entries, parts, initiallyOpen: open, anchored },
+      attachTo: document.body,
     });
 
-    const wrapper = mount(Host, { attachTo: document.body });
-    return new MenuDriver(wrapper, stubs, model, state, anchor, exposed, items);
+    return new MenuDriver(wrapper, stubs);
   }
 
   private constructor(
-    wrapper: VueWrapper,
+    private readonly scene: MenuSceneWrapper,
     private readonly stubs: TopLayerStubs,
-    private readonly model: Ref<boolean>,
-    private readonly state: PartsState,
-    private readonly anchor: ShallowRef<HTMLElement | null>,
-    private readonly exposed: ShallowRef<NuiMenuExposed | null>,
-    private readonly items: ShallowRef<readonly NuiMenuEntry[] | undefined>,
   ) {
-    super(wrapper);
+    super(scene);
   }
 
   get anchorFocused(): boolean {
-    return this.anchor.value !== null && document.activeElement === this.anchor.value;
+    const anchor = this.scene.vm.anchor;
+
+    return anchor !== null && document.activeElement === anchor;
   }
 
   async focusAnchor(): Promise<void> {
-    this.anchor.value?.focus();
+    this.scene.vm.anchor?.focus();
     await nextTick();
   }
 
   async show(focus?: NuiMenuFocus): Promise<void> {
-    this.exposed.value?.show(focus);
+    this.scene.vm.show(focus);
     await nextTick();
   }
 
   async showWith(entries: readonly NuiMenuEntry[], focus: NuiMenuFocus): Promise<void> {
-    this.items.value = entries;
-    this.exposed.value?.show(focus);
+    this.scene.vm.items = entries;
+    this.scene.vm.show(focus);
     await nextTick();
   }
 
@@ -188,7 +75,7 @@ export class MenuDriver extends ComponentDriver {
   }
 
   get isOpen(): boolean {
-    return this.model.value;
+    return this.scene.vm.open;
   }
 
   get labels(): string[] {
@@ -216,15 +103,15 @@ export class MenuDriver extends ComponentDriver {
   }
 
   get selections(): string[] {
-    return this.state.log;
+    return this.scene.vm.log;
   }
 
   get bold(): boolean {
-    return this.state.bold.value;
+    return this.scene.vm.bold;
   }
 
   get align(): string {
-    return this.state.align.value;
+    return this.scene.vm.align;
   }
 
   private item(label: string): DOMWrapper<HTMLElement> {
@@ -257,12 +144,12 @@ export class MenuDriver extends ComponentDriver {
   }
 
   async open(): Promise<void> {
-    this.model.value = true;
+    this.scene.vm.open = true;
     await nextTick();
   }
 
   async close(): Promise<void> {
-    this.model.value = false;
+    this.scene.vm.open = false;
     await nextTick();
   }
 

@@ -1,5 +1,6 @@
 import { mount, type VueWrapper } from '@vue/test-utils';
-import { defineComponent, h, shallowRef, type Ref } from 'vue';
+import type { Ref } from 'vue';
+import ElementsProbe from '../fixtures/ElementsProbe.vue';
 
 type Outcome<T> = { readonly ran: true; readonly value: T } | { readonly ran: false };
 
@@ -17,16 +18,16 @@ export const captureWithElements = <T>(
 ): ElementsCapture<T> => {
   const outcome: { current: Outcome<T> } = { current: { ran: false } };
 
-  const Host = defineComponent({
-    setup() {
-      const first = shallowRef<HTMLElement | null>(null);
-      const second = shallowRef<HTMLElement | null>(null);
-      outcome.current = { ran: true, value: setup(first, second) };
-      return () => [h(tags[0], { ref: first }), h(tags[1], { ref: second })];
+  const wrapper = mount(ElementsProbe, {
+    props: {
+      tags,
+      run: (first: Ref<HTMLElement | null>, second: Ref<HTMLElement | null>) => {
+        outcome.current = { ran: true, value: setup(first, second) };
+      },
     },
+    attachTo: document.body,
   });
 
-  const wrapper = mount(Host, { attachTo: document.body });
   if (!outcome.current.ran) {
     throw new Error('setup did not run');
   }

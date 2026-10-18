@@ -1,7 +1,8 @@
 import { flushPromises, mount, type DOMWrapper, type VueWrapper } from '@vue/test-utils';
 import type { NuiConfigOptions } from '@numior/primitives';
-import { defineComponent, h, nextTick, ref, type Ref } from 'vue';
-import { NuiAvatarUpload, type NuiAvatarUploadProps, type NuiUploadItem } from '../../src';
+import { nextTick } from 'vue';
+import type { NuiAvatarUploadProps, NuiUploadItem } from '../../src';
+import AvatarUploadScene from '../fixtures/AvatarUploadScene.vue';
 import { configPlugins } from '../support/config';
 import { ComponentDriver } from './component';
 import { stubObjectUrls, transferEvent, type AdapterCall, type UrlLog } from './upload';
@@ -18,52 +19,41 @@ export class AvatarUploadDriver extends ComponentDriver {
   protected readonly block = 'nui-avatar-upload';
 
   static mount({ props = {}, modelValue = null, config }: AvatarUploadMountOptions = {}) {
-    const model = ref<NuiUploadItem<string> | null>(modelValue);
     const calls: AdapterCall[] = [];
-    const events: string[] = [];
     const urls: UrlLog = { created: [], revoked: [] };
     const restoreUrls = stubObjectUrls(urls);
 
-    const Host = defineComponent({
-      setup: () => () =>
-        h(NuiAvatarUpload<string>, {
-          ...props,
-          modelValue: model.value,
-          'onUpdate:modelValue': (value: NuiUploadItem<string> | null) => {
-            model.value = value;
-          },
-          upload: (file, context) =>
-            new Promise<string>((resolve, reject) => {
-              calls.push({ file, context, resolve, reject });
-            }),
-          onReject: (error) => events.push(`reject:${error.reason}`),
-          onDone: (item) => events.push(`done:${item.name}`),
-          onError: (item) => events.push(`error:${item.name}`),
-          onRemove: (item) => events.push(`remove:${item.name}`),
-        }),
-    });
-
-    const wrapper = mount(Host, {
+    const scene = mount(AvatarUploadScene, {
+      props: {
+        avatar: props,
+        modelValue,
+        upload: (file, context) =>
+          new Promise<string>((resolve, reject) => {
+            calls.push({ file, context, resolve, reject });
+          }),
+      },
       attachTo: document.body,
       global: { plugins: configPlugins(config) },
     });
 
-    return new AvatarUploadDriver(wrapper, model, calls, events, urls, restoreUrls);
+    return new AvatarUploadDriver(scene, calls, urls, restoreUrls);
   }
 
   private constructor(
-    wrapper: VueWrapper,
-    private readonly model: Ref<NuiUploadItem<string> | null>,
+    private readonly scene: VueWrapper<InstanceType<typeof AvatarUploadScene>>,
     readonly calls: AdapterCall[],
-    readonly events: string[],
     readonly urls: UrlLog,
     private readonly restoreUrls: () => void,
   ) {
-    super(wrapper);
+    super(scene);
   }
 
   get item(): NuiUploadItem<string> | null {
-    return this.model.value;
+    return this.scene.vm.model;
+  }
+
+  get events(): readonly string[] {
+    return this.scene.vm.events;
   }
 
   get input(): DOMWrapper<HTMLInputElement> {

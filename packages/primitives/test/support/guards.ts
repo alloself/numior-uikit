@@ -6,11 +6,9 @@ export {
   isString,
   listOf,
   nullable,
-  oneOf,
   optional,
   parseAs,
   recordOf,
   shapeOf,
-  type Guard,
   type Guarded,
 } from '../../src/guards/guards';

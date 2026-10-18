@@ -6,7 +6,7 @@ import {
   type NuiConfigOptions,
   type NuiMessageCatalog,
 } from '../../src';
-import { captureSetup, nest, providing } from './capture';
+import { captureSetup } from './capture';
 
 interface ProbeMessages {
   readonly close: string;
@@ -48,10 +48,7 @@ export class MessagesHarness {
   ): MessagesHarness {
     return new MessagesHarness(
       captureSetup(() => useMessages(probeMessages, locale), {
-        wrap: nest(
-          providing(() => provideNuiConfig(outer)),
-          providing(() => provideNuiConfig(inner)),
-        ),
+        layers: [() => provideNuiConfig(outer), () => provideNuiConfig(inner)],
       }).value,
     );
   }

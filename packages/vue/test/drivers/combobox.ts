@@ -1,16 +1,12 @@
 import { mount, type DOMWrapper, type VueWrapper } from '@vue/test-utils';
-import { defineComponent, h, nextTick, ref, type Ref } from 'vue';
-import {
-  NuiCombobox,
-  NuiField,
-  type NuiComboboxProps,
-  type NuiConfigOptions,
-  type NuiFieldProps,
-} from '../../src';
+import { nextTick } from 'vue';
+import type { NuiComboboxProps, NuiConfigOptions, NuiFieldProps } from '../../src';
+import { anyOf, isString, listOf, nullable } from '../../../primitives/test/support/guards';
+import ComboboxScene from '../fixtures/ComboboxScene.vue';
 import { configPlugins } from '../support/config';
 import { FRUITS } from '../support/options';
 import { TopLayerStubs } from '../support/top-layer';
-import { createSelection, type Selection, type SelectionValue } from '../support/selection';
+import type { SelectionValue } from '../support/selection';
 import { ComponentDriver } from './component';
 
 export interface ComboboxMountOptions {
@@ -20,6 +16,19 @@ export interface ComboboxMountOptions {
   readonly custom?: boolean;
   readonly config?: NuiConfigOptions;
 }
+
+type ComboboxProps = Partial<NuiComboboxProps<unknown>>;
+
+const isStrings = listOf(isString);
+
+const isSelection = anyOf(nullable(isString), isStrings);
+
+const asText = (text: string): string => text;
+
+const withCustom = (
+  props: NuiComboboxProps<unknown>,
+  custom: boolean,
+): NuiComboboxProps<unknown> => (custom ? { ...props, customValue: asText } : props);
 
 const labelOf = (element: Element): string =>
   (element.querySelector('.nui-row__title')?.textContent ?? '').trim();
@@ -35,47 +44,32 @@ export class ComboboxDriver extends ComponentDriver {
     config,
   }: ComboboxMountOptions = {}) {
     const stubs = new TopLayerStubs();
-    const selection = createSelection(modelValue, props.multiple === true);
-    const extra = ref<Partial<NuiComboboxProps<unknown>>>({});
-    const searches: string[] = [];
 
-    const combobox = () =>
-      h(NuiCombobox, {
-        options: FRUITS,
-        ...props,
-        ...extra.value,
-        ...(custom ? { customValue: (text: string) => text } : {}),
-        ...selection.props(),
-        onSearch: (query: string) => {
-          searches.push(query);
-        },
-      });
-
-    const Host = defineComponent({
-      setup: () => () =>
-        h('div', [
-          field ? h(NuiField, field, combobox) : combobox(),
-          h('button', { type: 'button', class: 'outside' }, 'Outside'),
-        ]),
+    const scene = mount(ComboboxScene, {
+      props: {
+        combobox: withCustom({ options: FRUITS, ...props }, custom),
+        field,
+        modelValue: typeof modelValue === 'string' ? modelValue : null,
+        values: isStrings(modelValue) ? modelValue : [],
+      },
+      attachTo: document.body,
+      global: { plugins: configPlugins(config) },
     });
 
-    return new ComboboxDriver(
-      mount(Host, { attachTo: document.body, global: { plugins: configPlugins(config) } }),
-      stubs,
-      selection,
-      extra,
-      searches,
-    );
+    return new ComboboxDriver(scene, stubs, props.multiple === true, custom);
   }
 
   private constructor(
-    wrapper: VueWrapper,
+    private readonly scene: VueWrapper<InstanceType<typeof ComboboxScene>>,
     private readonly stubs: TopLayerStubs,
-    private readonly selection: Selection,
-    private readonly extra: Ref<Partial<NuiComboboxProps<unknown>>>,
-    readonly searches: string[],
+    private readonly multiple: boolean,
+    private readonly custom: boolean,
   ) {
-    super(wrapper);
+    super(scene);
+  }
+
+  get searches(): readonly string[] {
+    return this.scene.vm.searches;
   }
 
   override hasModifier(modifier: string): boolean {
@@ -99,7 +93,12 @@ export class ComboboxDriver extends ComponentDriver {
   }
 
   get value(): SelectionValue {
-    return this.selection.value();
+    const value = this.multiple ? this.scene.vm.values : this.scene.vm.model;
+
+    if (!isSelection(value)) {
+      throw new Error('the selection holds a value that is not a string');
+    }
+    return value;
   }
 
   get activeLabel(): string | undefined {
@@ -219,9 +218,10 @@ export class ComboboxDriver extends ComponentDriver {
     await nextTick();
   }
 
-  async receive(patch: Partial<NuiComboboxProps<unknown>>): Promise<void> {
-    this.extra.value = { ...this.extra.value, ...patch };
-    await nextTick();
+  async receive(patch: ComboboxProps): Promise<void> {
+    await this.scene.setProps({
+      combobox: withCustom({ ...this.scene.props('combobox'), ...patch }, this.custom),
+    });
   }
 
   override unmount(): void {

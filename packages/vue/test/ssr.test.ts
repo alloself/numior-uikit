@@ -1,6 +1,6 @@
 // @vitest-environment node
+import { config, renderToString } from '@vue/test-utils';
 import { describe, expect, it } from 'vite-plus/test';
-import { h, type VNode } from 'vue';
 import {
   NuiAlert,
   NuiAvatar,
@@ -11,70 +11,59 @@ import {
   NuiButton,
   NuiCalendar,
   NuiCard,
-  NuiCardContent,
-  NuiCardMedia,
   NuiCheckbox,
   NuiChip,
-  NuiCombobox,
+  NuiCollapsible,
+  NuiCommand,
   NuiDatePicker,
   NuiDateRangePicker,
   NuiDialog,
   NuiDrawer,
   NuiEmpty,
-  NuiField,
   NuiIcon,
   NuiInput,
-  NuiLink,
-  NuiList,
-  NuiPagination,
-  NuiMenu,
-  NuiNumberField,
-  NuiOtpField,
-  NuiPopover,
-  NuiProgress,
-  NuiRadio,
-  NuiSkeleton,
-  NuiStepper,
-  NuiRadioGroup,
-  NuiSelect,
-  NuiSeparator,
   NuiKbd,
   NuiCode,
-  NuiToggleGroup,
-  NuiCollapsible,
-  NuiAccordion,
-  NuiAccordionItem,
-  NuiCommand,
-  NuiToc,
+  NuiLink,
+  NuiList,
+  NuiNumberField,
+  NuiPagination,
+  NuiProgress,
+  NuiSelect,
+  NuiSeparator,
+  NuiSkeleton,
   NuiSkipLink,
-  NuiSplitter,
+  NuiStepper,
   NuiSwitch,
   NuiTabs,
   NuiTextarea,
-  NuiAppBar,
-  NuiLayout,
-  NuiSidebar,
-  NuiSidebarContent,
-  NuiSidebarGroup,
-  NuiSidebarItem,
-  NuiSidebarTrigger,
   NuiTimeField,
   NuiToast,
-  NuiUpload,
   NuiToaster,
-  NuiTooltip,
+  NuiToc,
+  NuiToggleGroup,
   NuiTree,
-  type NuiMenuEntry,
-  type NuiMenuTriggerSlot,
-  type NuiPopoverTriggerSlot,
-  type NuiTabsPanelSlot,
-  type NuiTooltipTriggerSlot,
+  NuiUpload,
 } from '../src';
-import { configScope } from './support/config-scope';
+import AccordionScene from './fixtures/ssr/AccordionScene.vue';
+import AvatarGroupScene from './fixtures/ssr/AvatarGroupScene.vue';
+import CardScene from './fixtures/ssr/CardScene.vue';
+import DisabledControlsForm from './fixtures/ssr/DisabledControlsForm.vue';
+import FieldScene from './fixtures/ssr/FieldScene.vue';
+import LayoutScene from './fixtures/ssr/LayoutScene.vue';
+import MenuScene from './fixtures/ssr/MenuScene.vue';
+import PopoverScene from './fixtures/ssr/PopoverScene.vue';
+import SplitterScene from './fixtures/ssr/SplitterScene.vue';
+import TabsScene from './fixtures/ssr/TabsScene.vue';
+import TooltipScene from './fixtures/ssr/TooltipScene.vue';
+import NestedConfig from './fixtures/NestedConfig.vue';
+import { configPlugins } from './support/config';
 import { RouterStub } from './support/router-stub';
-import { labelTarget, popoverTarget, renderMarkup } from './support/ssr';
+import { labelTarget, popoverTarget } from './support/ssr';
 import { FILES, manyNodes } from './support/tree-items';
 import { CATEGORIES } from './support/options';
+
+config.global.stubs = { transition: false, 'transition-group': false };
 
 const STEPPER_STEPS = [
   { value: 'account', label: 'Account' },
@@ -82,372 +71,360 @@ const STEPPER_STEPS = [
   { value: 'plan', label: 'Plan' },
 ];
 
+const REPORT = {
+  id: 'existing-1',
+  name: 'report.pdf',
+  size: 2048,
+  type: 'application/pdf',
+  status: 'done',
+  url: 'https://cdn.example/report.pdf',
+} as const;
+
 interface Scenario {
   readonly name: string;
-  render(): VNode;
+  render(): Promise<string>;
 }
 
-const fieldWithInput = () =>
-  h(NuiField, { label: 'Email', description: 'Work', error: 'Required' }, () =>
-    h(NuiInput, { modelValue: 'a', placeholder: 'name@example.com' }),
-  );
+const fieldWithInput = () => renderToString(FieldScene, { props: { scene: 'input' } });
 
-const menuEntries: NuiMenuEntry[] = [
-  { label: 'Copy', shortcut: '⌘C' },
-  { type: 'separator' },
-  { type: 'checkbox', label: 'Grid', checked: true, onCheckedChange: () => undefined },
-  { type: 'sub', label: 'Export', items: [{ label: 'PDF' }] },
-];
+const renderMenu = () => renderToString(MenuScene);
 
-const renderMenu = () =>
-  h(
-    NuiMenu,
-    { id: 'actions', items: menuEntries },
-    { trigger: (slot: NuiMenuTriggerSlot) => h('button', slot.attrs, 'Actions') },
-  );
+const renderTabs = () => renderToString(TabsScene);
 
-const renderTabs = () =>
-  h(
-    NuiTabs,
-    {
-      id: 'settings',
-      modelValue: 'team',
-      tabs: [
-        { value: 'general', label: 'General' },
-        { value: 'team', label: 'Team' },
-      ],
-    },
-    { panel: (slot: NuiTabsPanelSlot) => `${slot.tab.label} panel` },
-  );
-
-const renderSelect = () =>
-  h(NuiField, { label: 'Fruit' }, () =>
-    h(NuiSelect, {
-      modelValue: 'banana',
-      name: 'fruit',
-      options: [
-        { value: 'apple', label: 'Apple' },
-        { value: 'banana', label: 'Banana' },
-      ],
-    }),
-  );
+const renderSelect = () => renderToString(FieldScene, { props: { scene: 'select' } });
 
 const renderReadonlySelect = () =>
-  h(NuiSelect, {
-    modelValue: 'banana',
-    readonly: true,
-    options: [{ value: 'banana', label: 'Banana' }],
+  renderToString(NuiSelect, {
+    props: {
+      modelValue: 'banana',
+      readonly: true,
+      options: [{ value: 'banana', label: 'Banana' }],
+    },
   });
 
-const renderCombobox = () =>
-  h(NuiField, { label: 'Fruit' }, () =>
-    h(NuiCombobox, {
-      modelValue: 'banana',
-      name: 'fruit',
-      options: [
-        { value: 'apple', label: 'Apple' },
-        { value: 'banana', label: 'Banana' },
-      ],
-    }),
-  );
+const renderCombobox = () => renderToString(FieldScene, { props: { scene: 'combobox' } });
 
-const renderPopover = () =>
-  h(
-    NuiPopover,
-    { open: true },
-    {
-      trigger: (slot: NuiPopoverTriggerSlot) => h('button', slot.attrs, 'Open'),
-      default: () => 'Content',
-    },
-  );
+const renderPopover = () => renderToString(PopoverScene);
 
 const scenarios: Scenario[] = [
-  { name: 'NuiButton', render: () => h(NuiButton, { loading: true }, () => 'Save') },
+  {
+    name: 'NuiButton',
+    render: () =>
+      renderToString(NuiButton, { props: { loading: true }, slots: { default: 'Save' } }),
+  },
   {
     name: 'NuiButton as link',
-    render: () => h(NuiButton, { href: '/docs', variant: 'outline' }, () => 'Docs'),
-  },
-  { name: 'NuiIcon', render: () => h(NuiIcon, { icon: 'check' }) },
-  { name: 'NuiSeparator', render: () => h(NuiSeparator, { label: 'or' }) },
-  { name: 'NuiKbd', render: () => h(NuiKbd, { keys: 'mod+k' }) },
-  { name: 'NuiSkipLink', render: () => h(NuiSkipLink, { target: 'main' }) },
-  {
-    name: 'NuiSplitter',
     render: () =>
-      h(
-        NuiSplitter,
-        { id: 'panes', ratio: 0.4 },
-        { start: () => h('p', 'Preview'), end: () => h('p', 'Code') },
-      ),
+      renderToString(NuiButton, {
+        props: { href: '/docs', variant: 'outline' },
+        slots: { default: 'Docs' },
+      }),
   },
+  { name: 'NuiIcon', render: () => renderToString(NuiIcon, { props: { icon: 'check' } }) },
+  { name: 'NuiSeparator', render: () => renderToString(NuiSeparator, { props: { label: 'or' } }) },
+  { name: 'NuiKbd', render: () => renderToString(NuiKbd, { props: { keys: 'mod+k' } }) },
+  {
+    name: 'NuiSkipLink',
+    render: () => renderToString(NuiSkipLink, { props: { target: 'main' } }),
+  },
+  { name: 'NuiSplitter', render: () => renderToString(SplitterScene) },
   {
     name: 'NuiToc',
     render: () =>
-      h(NuiToc, {
-        items: [
-          { id: 'install', label: 'Install' },
-          { id: 'usage', label: 'Usage', children: [{ id: 'basic', label: 'Basic' }] },
-        ],
+      renderToString(NuiToc, {
+        props: {
+          items: [
+            { id: 'install', label: 'Install' },
+            { id: 'usage', label: 'Usage', children: [{ id: 'basic', label: 'Basic' }] },
+          ],
+        },
       }),
   },
   {
     name: 'NuiCommand',
     render: () =>
-      h(NuiCommand, {
-        id: 'palette',
-        items: [
-          { label: 'Pages', items: [{ value: 'home', label: 'Home', shortcut: 'mod+h' }] },
-          { value: 'theme', label: 'Toggle theme' },
-        ],
+      renderToString(NuiCommand, {
+        props: {
+          id: 'palette',
+          items: [
+            { label: 'Pages', items: [{ value: 'home', label: 'Home', shortcut: 'mod+h' }] },
+            { value: 'theme', label: 'Toggle theme' },
+          ],
+        },
       }),
   },
   {
     name: 'NuiCollapsible',
-    render: () => h(NuiCollapsible, { label: 'Details', headingLevel: 3 }, () => 'Hidden text'),
-  },
-  {
-    name: 'NuiAccordion',
     render: () =>
-      h(NuiAccordion, { modelValue: 'a', variant: 'card' }, () => [
-        h(NuiAccordionItem, { value: 'a', label: 'First' }, () => 'One'),
-        h(NuiAccordionItem, { value: 'b', label: 'Second' }, () => 'Two'),
-      ]),
+      renderToString(NuiCollapsible, {
+        props: { label: 'Details', headingLevel: 3 },
+        slots: { default: 'Hidden text' },
+      }),
   },
+  { name: 'NuiAccordion', render: () => renderToString(AccordionScene) },
   {
     name: 'NuiToggleGroup',
     render: () =>
-      h(NuiToggleGroup, {
-        modelValue: 'dark',
-        label: 'Theme',
-        variant: 'segmented',
-        items: [
-          { value: 'light', label: 'Light', icon: 'sun' },
-          { value: 'dark', label: 'Dark', icon: 'moon' },
-        ],
+      renderToString(NuiToggleGroup, {
+        props: {
+          modelValue: 'dark',
+          label: 'Theme',
+          variant: 'segmented',
+          items: [
+            { value: 'light', label: 'Light', icon: 'sun' },
+            { value: 'dark', label: 'Dark', icon: 'moon' },
+          ],
+        },
       }),
   },
   {
     name: 'NuiCode',
     render: () =>
-      h(NuiCode, {
-        code: 'const a = 1;\nconst b = 2;\n',
-        title: 'main.ts',
-        lineNumbers: true,
-        highlight: [2],
-        tokens: [
-          [{ text: 'const', scope: 'keyword' }, { text: ' a = ' }, { text: '1', scope: 'number' }],
-          [{ text: 'const', scope: 'keyword' }, { text: ' b = ' }, { text: '2', scope: 'number' }],
-        ],
+      renderToString(NuiCode, {
+        props: {
+          code: 'const a = 1;\nconst b = 2;\n',
+          title: 'main.ts',
+          lineNumbers: true,
+          highlight: [2],
+          tokens: [
+            [
+              { text: 'const', scope: 'keyword' },
+              { text: ' a = ' },
+              { text: '1', scope: 'number' },
+            ],
+            [
+              { text: 'const', scope: 'keyword' },
+              { text: ' b = ' },
+              { text: '2', scope: 'number' },
+            ],
+          ],
+        },
       }),
   },
   {
     name: 'NuiChip',
     render: () =>
-      h(NuiChip, { tone: 'success', removable: true, removeLabel: 'Remove Vue' }, () => 'Vue'),
+      renderToString(NuiChip, {
+        props: { tone: 'success', removable: true, removeLabel: 'Remove Vue' },
+        slots: { default: 'Vue' },
+      }),
   },
-  { name: 'NuiBadge', render: () => h(NuiBadge, { count: 120, tone: 'error' }) },
+  {
+    name: 'NuiBadge',
+    render: () => renderToString(NuiBadge, { props: { count: 120, tone: 'error' } }),
+  },
   {
     name: 'NuiEmpty',
-    render: () => h(NuiEmpty, { title: 'Nothing here', description: 'Add an item' }),
+    render: () =>
+      renderToString(NuiEmpty, { props: { title: 'Nothing here', description: 'Add an item' } }),
   },
   {
     name: 'NuiList',
     render: () =>
-      h(NuiList, {
-        items: [
-          { label: 'Docs', href: '/docs', description: 'Guides' },
-          { label: 'Plain', icon: 'check' },
-        ],
-        variant: 'divided',
+      renderToString(NuiList, {
+        props: {
+          items: [
+            { label: 'Docs', href: '/docs', description: 'Guides' },
+            { label: 'Plain', icon: 'check' },
+          ],
+          variant: 'divided',
+        },
       }),
   },
   {
     name: 'NuiList nav',
     render: () =>
-      h(NuiList, {
-        items: [
-          { label: 'Inbox', href: '/inbox', icon: 'inbox', current: true, badge: 3 },
-          { label: 'Drafts', href: '/drafts' },
-        ],
-        variant: 'nav',
+      renderToString(NuiList, {
+        props: {
+          items: [
+            { label: 'Inbox', href: '/inbox', icon: 'inbox', current: true, badge: 3 },
+            { label: 'Drafts', href: '/drafts' },
+          ],
+          variant: 'nav',
+        },
       }),
   },
   {
     name: 'NuiTree',
-    render: () => h(NuiTree, { id: 'files', items: FILES, expanded: ['src'], modelValue: 'index' }),
-  },
-  {
-    name: 'NuiCard',
     render: () =>
-      h(NuiCard, { href: '/plans', title: 'Plans', description: 'Pick one' }, () => [
-        h(NuiCardMedia, { src: '/cover.png', alt: 'Cover' }),
-        h(NuiCardContent, null, () => 'Body'),
-      ]),
+      renderToString(NuiTree, {
+        props: { id: 'files', items: FILES, expanded: ['src'], modelValue: 'index' },
+      }),
   },
+  { name: 'NuiCard', render: () => renderToString(CardScene, { props: { body: 'Body' } }) },
   {
     name: 'NuiAvatar',
-    render: () => h(NuiAvatar, { src: '/alice.png', name: 'Alice Brown', status: 'online' }),
+    render: () =>
+      renderToString(NuiAvatar, {
+        props: { src: '/alice.png', name: 'Alice Brown', status: 'online' },
+      }),
   },
   {
     name: 'NuiAvatarGroup',
     render: () =>
-      h(NuiAvatarGroup, { items: [{ name: 'Alice Brown' }, { name: 'Bob Stone' }], max: 1 }),
+      renderToString(NuiAvatarGroup, {
+        props: { items: [{ name: 'Alice Brown' }, { name: 'Bob Stone' }], max: 1 },
+      }),
   },
   {
     name: 'NuiLink',
-    render: () => h(NuiLink, { href: 'https://example.com', external: true }, () => 'Docs'),
+    render: () =>
+      renderToString(NuiLink, {
+        props: { href: 'https://example.com', external: true },
+        slots: { default: 'Docs' },
+      }),
   },
   {
     name: 'NuiStepper',
-    render: () => h(NuiStepper, { steps: STEPPER_STEPS, modelValue: 'profile' }),
+    render: () =>
+      renderToString(NuiStepper, { props: { steps: STEPPER_STEPS, modelValue: 'profile' } }),
   },
   {
     name: 'NuiDialog in a Russian config',
     render: () =>
-      h(configScope({ locale: 'ru-RU' }, () => h(NuiDialog, { title: 'Удалить?' }, () => 'Текст'))),
+      renderToString(NuiDialog, {
+        props: { title: 'Удалить?' },
+        slots: { default: 'Текст' },
+        global: { plugins: configPlugins({ locale: 'ru-RU' }) },
+      }),
   },
   {
     name: 'provideNuiConfig scope',
     render: () =>
-      h(configScope({ locale: 'de-DE' }, () => h(NuiNumberField, { modelValue: 1234.5 }))),
+      renderToString(NestedConfig, {
+        props: { inner: { locale: 'de-DE' }, content: 'number' },
+      }),
   },
   { name: 'NuiField with NuiInput', render: fieldWithInput },
   {
     name: 'NuiField keeping room for an error',
-    render: () => h(NuiField, { label: 'Email', reserveError: true }, () => h(NuiInput)),
+    render: () => renderToString(FieldScene, { props: { scene: 'reserved-error' } }),
   },
-  { name: 'NuiTextarea', render: () => h(NuiTextarea, { modelValue: 'text', invalid: true }) },
+  {
+    name: 'NuiTextarea',
+    render: () => renderToString(NuiTextarea, { props: { modelValue: 'text', invalid: true } }),
+  },
   {
     name: 'NuiTimeField',
-    render: () => h(NuiTimeField, { modelValue: '13:05', locale: 'en-US', name: 'start' }),
+    render: () =>
+      renderToString(NuiTimeField, {
+        props: { modelValue: '13:05', locale: 'en-US', name: 'start' },
+      }),
   },
   {
     name: 'NuiOtpField',
-    render: () =>
-      h(NuiField, { label: 'Code' }, () =>
-        h(NuiOtpField, { modelValue: '48', groupSize: 3, placeholder: '·', name: 'code' }),
-      ),
+    render: () => renderToString(FieldScene, { props: { scene: 'otp' } }),
   },
   {
     name: 'NuiDatePicker',
     render: () =>
-      h(NuiDatePicker, {
-        modelValue: '2026-09-24',
-        locale: 'ru-RU',
-        name: 'trip',
-        today: '2026-09-24',
+      renderToString(NuiDatePicker, {
+        props: {
+          modelValue: '2026-09-24',
+          locale: 'ru-RU',
+          name: 'trip',
+          today: '2026-09-24',
+        },
       }),
   },
   {
     name: 'NuiDateRangePicker',
     render: () =>
-      h(NuiDateRangePicker, {
-        modelValue: { start: '2026-09-21', end: '2026-09-27' },
-        locale: 'en-US',
-        startName: 'from',
-        endName: 'to',
-        today: '2026-09-24',
+      renderToString(NuiDateRangePicker, {
+        props: {
+          modelValue: { start: '2026-09-21', end: '2026-09-27' },
+          locale: 'en-US',
+          startName: 'from',
+          endName: 'to',
+          today: '2026-09-24',
+        },
       }),
   },
   {
     name: 'NuiUpload',
     render: () =>
-      h(NuiUpload<string>, {
-        upload: () => Promise.resolve('ok'),
-        hint: 'PDF up to 1 MB',
-        modelValue: [
-          {
-            id: 'existing-1',
-            name: 'report.pdf',
-            size: 2048,
-            type: 'application/pdf',
-            status: 'done',
-            url: 'https://cdn.example/report.pdf',
-          },
-        ],
+      renderToString(NuiUpload<string>, {
+        props: {
+          upload: () => Promise.resolve('ok'),
+          hint: 'PDF up to 1 MB',
+          modelValue: [REPORT],
+        },
       }),
   },
-  {
-    name: 'NuiLayout',
-    render: () =>
-      h(
-        NuiLayout,
-        { id: 'shell', contentAs: 'div' },
-        {
-          sidebar: () =>
-            h(NuiSidebar, { collapsible: 'icon', label: 'Sections' }, () =>
-              h(NuiSidebarContent, () =>
-                h(NuiSidebarGroup, { label: 'Overview' }, () => [
-                  h(NuiSidebarItem, { label: 'Inbox', icon: 'inbox', current: true }),
-                  h(NuiSidebarItem, { label: 'Docs', href: '#docs' }),
-                ]),
-              ),
-            ),
-          header: () =>
-            h(NuiAppBar, null, { start: () => h(NuiSidebarTrigger), default: () => 'Inbox' }),
-          default: () => h('p', 'Content'),
-        },
-      ),
-  },
+  { name: 'NuiLayout', render: () => renderToString(LayoutScene) },
   {
     name: 'NuiDatePicker with time',
     render: () =>
-      h(NuiDatePicker, {
-        modelValue: '2026-09-24T09:30',
-        locale: 'ru-RU',
-        time: true,
-        today: '2026-09-24',
+      renderToString(NuiDatePicker, {
+        props: {
+          modelValue: '2026-09-24T09:30',
+          locale: 'ru-RU',
+          time: true,
+          today: '2026-09-24',
+        },
       }),
   },
   {
     name: 'NuiCalendar',
     render: () =>
-      h(NuiCalendar, {
-        modelValue: { start: '2026-09-21', end: '2026-09-25' },
-        mode: 'range',
-        month: '2026-09',
-        locale: 'ru-RU',
-        today: '2026-09-24',
-        weekNumbers: true,
-        months: 2,
+      renderToString(NuiCalendar, {
+        props: {
+          modelValue: { start: '2026-09-21', end: '2026-09-25' },
+          mode: 'range',
+          month: '2026-09',
+          locale: 'ru-RU',
+          today: '2026-09-24',
+          weekNumbers: true,
+          months: 2,
+        },
       }),
   },
   {
     name: 'NuiNumberField',
     render: () =>
-      h(NuiNumberField, {
-        modelValue: 1234.5,
-        locale: 'de-DE',
-        formatOptions: { style: 'currency', currency: 'EUR' },
-        name: 'price',
-        min: 0,
+      renderToString(NuiNumberField, {
+        props: {
+          modelValue: 1234.5,
+          locale: 'de-DE',
+          formatOptions: { style: 'currency', currency: 'EUR' },
+          name: 'price',
+          min: 0,
+        },
       }),
   },
   {
     name: 'NuiCheckbox',
-    render: () => h(NuiCheckbox, { modelValue: true, indeterminate: true }, () => 'Terms'),
+    render: () =>
+      renderToString(NuiCheckbox, {
+        props: { modelValue: true, indeterminate: true },
+        slots: { default: 'Terms' },
+      }),
   },
   {
     name: 'NuiRadioGroup in a group field',
-    render: () =>
-      h(NuiField, { label: 'Plan', group: true }, () =>
-        h(NuiRadioGroup, { modelValue: 'a' }, () => [
-          h(NuiRadio, { value: 'a' }, () => 'A'),
-          h(NuiRadio, { value: 'b' }, () => 'B'),
-        ]),
-      ),
+    render: () => renderToString(FieldScene, { props: { scene: 'radio-group' } }),
   },
-  { name: 'NuiSwitch', render: () => h(NuiSwitch, { modelValue: true }, () => 'Notify') },
+  {
+    name: 'NuiSwitch',
+    render: () =>
+      renderToString(NuiSwitch, { props: { modelValue: true }, slots: { default: 'Notify' } }),
+  },
   {
     name: 'NuiDialog',
     render: () =>
-      h(
-        NuiDialog,
-        { open: true, id: 'confirm', title: 'Delete?', description: 'Sure?' },
-        () => 'Body',
-      ),
+      renderToString(NuiDialog, {
+        props: { open: true, id: 'confirm', title: 'Delete?', description: 'Sure?' },
+        slots: { default: 'Body' },
+      }),
   },
-  { name: 'NuiDrawer', render: () => h(NuiDrawer, { open: true, side: 'start' }, () => 'Body') },
+  {
+    name: 'NuiDrawer',
+    render: () =>
+      renderToString(NuiDrawer, {
+        props: { open: true, side: 'start' },
+        slots: { default: 'Body' },
+      }),
+  },
   { name: 'NuiPopover', render: renderPopover },
   { name: 'NuiMenu', render: renderMenu },
   { name: 'NuiTabs', render: renderTabs },
@@ -455,69 +432,75 @@ const scenarios: Scenario[] = [
   { name: 'NuiCombobox in a field', render: renderCombobox },
   {
     name: 'NuiPagination',
-    render: () => h(NuiPagination, { total: 60, page: 2, href: (page: number) => `#page-${page}` }),
+    render: () =>
+      renderToString(NuiPagination, {
+        props: { total: 60, page: 2, href: (page: number) => `#page-${page}` },
+      }),
   },
   {
     name: 'NuiBreadcrumbs',
     render: () =>
-      h(NuiBreadcrumbs, {
-        items: [
-          { label: 'Home', href: '/' },
-          { label: 'Projects', href: '/p' },
-          { label: 'Numior' },
-        ],
+      renderToString(NuiBreadcrumbs, {
+        props: {
+          items: [
+            { label: 'Home', href: '/' },
+            { label: 'Projects', href: '/p' },
+            { label: 'Numior' },
+          ],
+        },
       }),
   },
-  { name: 'NuiToaster', render: () => h(NuiToaster, { label: 'Notifications' }) },
+  {
+    name: 'NuiToaster',
+    render: () => renderToString(NuiToaster, { props: { label: 'Notifications' } }),
+  },
   {
     name: 'NuiAlert',
-    render: () => h(NuiAlert, { tone: 'error', title: 'Failed', dismissible: true }),
+    render: () =>
+      renderToString(NuiAlert, { props: { tone: 'error', title: 'Failed', dismissible: true } }),
   },
-  { name: 'NuiProgress determinate', render: () => h(NuiProgress, { value: 40, label: 'Upload' }) },
-  { name: 'NuiProgress indeterminate', render: () => h(NuiProgress, { label: 'Loading' }) },
-  { name: 'NuiSkeleton', render: () => h(NuiSkeleton, { lines: 2 }) },
+  {
+    name: 'NuiProgress determinate',
+    render: () => renderToString(NuiProgress, { props: { value: 40, label: 'Upload' } }),
+  },
+  {
+    name: 'NuiProgress indeterminate',
+    render: () => renderToString(NuiProgress, { props: { label: 'Loading' } }),
+  },
+  { name: 'NuiSkeleton', render: () => renderToString(NuiSkeleton, { props: { lines: 2 } }) },
   {
     name: 'NuiToast',
     render: () =>
-      h(NuiToast, {
-        toast: {
-          id: 'saved',
-          title: 'Failed',
-          description: undefined,
-          tone: 'error',
-          duration: 0,
-          action: undefined,
-          dismissible: true,
-          leaving: false,
+      renderToString(NuiToast, {
+        props: {
+          toast: {
+            id: 'saved',
+            title: 'Failed',
+            description: undefined,
+            tone: 'error',
+            duration: 0,
+            action: undefined,
+            dismissible: true,
+            leaving: false,
+          },
         },
       }),
   },
-  {
-    name: 'NuiTooltip',
-    render: () =>
-      h(
-        NuiTooltip,
-        { id: 'hint' },
-        {
-          trigger: (slot: NuiTooltipTriggerSlot) => h('button', slot.attrs, 'Save'),
-          default: () => 'Saves the document',
-        },
-      ),
-  },
+  { name: 'NuiTooltip', render: () => renderToString(TooltipScene) },
 ];
 
 describe('server rendering', () => {
   for (const scenario of scenarios) {
     it(`${scenario.name} renders deterministic markup without a DOM`, async () => {
-      const first = await renderMarkup(() => scenario.render());
-      expect(first).toBe(await renderMarkup(() => scenario.render()));
+      const first = await scenario.render();
+      expect(first).toBe(await scenario.render());
       expect(first).not.toContain('undefined');
       expect(first).not.toMatch(/aria-describedby=""|id=""/);
     });
   }
 
   it('wires field ids and values on the server so hydration needs no fixups', async () => {
-    const html = await renderMarkup(fieldWithInput);
+    const html = await fieldWithInput();
     const controlId = labelTarget(html);
     expect(controlId).toBeTruthy();
     expect(html).toContain(`id="${controlId}"`);
@@ -527,9 +510,7 @@ describe('server rendering', () => {
   });
 
   it('renders the room kept for an error as a hidden line on the server', async () => {
-    const html = await renderMarkup(() =>
-      h(NuiField, { label: 'Email', reserveError: true }, () => h(NuiInput)),
-    );
+    const html = await renderToString(FieldScene, { props: { scene: 'reserved-error' } });
 
     expect(html).toContain('nui-field--reserve-error');
     expect(html).toContain('<span class="nui-field__reserve" aria-hidden="true"></span>');
@@ -537,9 +518,10 @@ describe('server rendering', () => {
   });
 
   it('renders dialogs closed with their labels resolved on the server', async () => {
-    const html = await renderMarkup(() =>
-      h(NuiDialog, { open: true, id: 'confirm', title: 'Delete?' }, () => 'Body'),
-    );
+    const html = await renderToString(NuiDialog, {
+      props: { open: true, id: 'confirm', title: 'Delete?' },
+      slots: { default: 'Body' },
+    });
 
     expect(html).toMatch(/<dialog[^>]*id="confirm"/);
     expect(html).not.toMatch(/<dialog[^>]* open/);
@@ -548,30 +530,28 @@ describe('server rendering', () => {
   });
 
   it('renders built-in texts in the configured language and with overrides', async () => {
-    const russian = await renderMarkup(() =>
-      h(configScope({ locale: 'ru-RU' }, () => h(NuiDialog))),
-    );
+    const russian = await renderToString(NuiDialog, {
+      global: { plugins: configPlugins({ locale: 'ru-RU' }) },
+    });
 
-    const overridden = await renderMarkup(() =>
-      h(
-        configScope({ locale: 'ru-RU', messages: { ru: { dialog: { close: 'Скрыть' } } } }, () =>
-          h(NuiDialog),
-        ),
-      ),
-    );
+    const overridden = await renderToString(NuiDialog, {
+      global: {
+        plugins: configPlugins({
+          locale: 'ru-RU',
+          messages: { ru: { dialog: { close: 'Скрыть' } } },
+        }),
+      },
+    });
 
     expect(russian).toContain('aria-label="Закрыть"');
     expect(overridden).toContain('aria-label="Скрыть"');
   });
 
   it('renders a stepper as a labelled list with the current step and localized numbers', async () => {
-    const html = await renderMarkup(() =>
-      h(
-        configScope({ locale: 'ar-EG' }, () =>
-          h(NuiStepper, { steps: STEPPER_STEPS, modelValue: 'plan' }),
-        ),
-      ),
-    );
+    const html = await renderToString(NuiStepper, {
+      props: { steps: STEPPER_STEPS, modelValue: 'plan' },
+      global: { plugins: configPlugins({ locale: 'ar-EG' }) },
+    });
 
     expect(html).toContain(
       '<nav class="nui-stepper nui-stepper--orientation-horizontal" aria-label="Steps">',
@@ -583,31 +563,20 @@ describe('server rendering', () => {
   });
 
   it('links popover triggers and content by id on the server and keeps them hidden', async () => {
-    const html = await renderMarkup(renderPopover);
+    const html = await renderPopover();
     const id = popoverTarget(html);
     expect(id).toBeTruthy();
     expect(html).toContain(`id="${id}"`);
     expect(html).toContain('popover="auto"');
     expect(html).toContain('aria-expanded="true"');
-
-    const tooltip = await renderMarkup(() =>
-      h(
-        NuiTooltip,
-        { id: 'hint' },
-        {
-          trigger: (slot: NuiTooltipTriggerSlot) => h('button', slot.attrs, 'Save'),
-          default: () => 'Saves the document',
-        },
-      ),
-    );
-
+    const tooltip = await renderToString(TooltipScene);
     expect(tooltip).toContain('aria-describedby="hint"');
     expect(tooltip).toContain('role="tooltip"');
     expect(tooltip).toContain('popover="manual"');
   });
 
   it('renders a menu with its parts closed and without a live tab stop', async () => {
-    const html = await renderMarkup(renderMenu);
+    const html = await renderMenu();
     expect(html).toContain('role="menu"');
     expect(html).toContain('popover="auto"');
     expect(html).toContain('aria-haspopup="menu"');
@@ -619,20 +588,27 @@ describe('server rendering', () => {
   });
 
   it('renders a button with to through the configured link and as an anchor without one', async () => {
-    const configured = await renderMarkup(() =>
-      h(configScope({ link: RouterStub }, () => h(NuiButton, { to: '/guide' }, () => 'Guide'))),
-    );
+    const configured = await renderToString(NuiButton, {
+      props: { to: '/guide' },
+      slots: { default: 'Guide' },
+      global: { plugins: configPlugins({ link: RouterStub }) },
+    });
 
     expect(configured).toContain('href="/router/guide"');
     expect(configured).not.toContain(' to=');
-    const plain = await renderMarkup(() => h(NuiButton, { to: '/guide' }, () => 'Guide'));
+
+    const plain = await renderToString(NuiButton, {
+      props: { to: '/guide' },
+      slots: { default: 'Guide' },
+    });
+
     expect(plain).toContain('<a');
     expect(plain).toContain('href="/guide"');
     expect(plain).not.toContain(' to=');
   });
 
   it('renders tabs with one selected tab stop and hidden inactive panels', async () => {
-    const html = await renderMarkup(renderTabs);
+    const html = await renderTabs();
     expect(html.match(/aria-selected="true"/g)).toHaveLength(1);
     expect(html.match(/tabindex="0"/g)).toHaveLength(3);
     expect(html).toContain('id="settings-tab-team"');
@@ -642,16 +618,16 @@ describe('server rendering', () => {
   });
 
   it('renders the close button of a closable tab beside it, hidden from assistive technology', async () => {
-    const html = await renderMarkup(() =>
-      h(NuiTabs, {
+    const html = await renderToString(NuiTabs, {
+      props: {
         id: 'files',
         modelValue: 'contract',
         tabs: [
           { value: 'contract', label: 'Contract', closable: true },
           { value: 'invoice', label: 'Invoice' },
         ],
-      }),
-    );
+      },
+    });
 
     const close = /<button[^>]*class="[^"]*nui-tab__close[^"]*"[^>]*>/.exec(html)?.[0] ?? '';
 
@@ -664,16 +640,16 @@ describe('server rendering', () => {
   });
 
   it('renders breadcrumbs as a labelled nav with the current page marked', async () => {
-    const html = await renderMarkup(() =>
-      h(NuiBreadcrumbs, {
+    const html = await renderToString(NuiBreadcrumbs, {
+      props: {
         items: [
           { label: 'Home', href: '/' },
           { label: 'Projects', href: '/p' },
           { label: 'Numior' },
         ],
         maxItems: 2,
-      }),
-    );
+      },
+    });
 
     expect(html).toContain('aria-label="Breadcrumb"');
     expect(html).toContain('aria-current="page"');
@@ -684,7 +660,7 @@ describe('server rendering', () => {
   });
 
   it('renders a select as a closed combobox with its value in a hidden input', async () => {
-    const html = await renderMarkup(renderSelect);
+    const html = await renderSelect();
     expect(html).toContain('role="combobox"');
     expect(html).toContain('aria-haspopup="listbox"');
     expect(html).toContain('aria-expanded="false"');
@@ -692,13 +668,13 @@ describe('server rendering', () => {
     expect(html).toContain('aria-selected="true"');
     expect(html).toContain('class="nui-select__value"');
     expect(html).toContain('Banana');
-    expect(await renderMarkup(renderReadonlySelect)).toContain('aria-readonly="true"');
+    expect(await renderReadonlySelect()).toContain('aria-readonly="true"');
   });
 
   it('renders a calendar grid with one tab stop and a deterministic today marker', async () => {
-    const html = await renderMarkup(() =>
-      h(NuiCalendar, { modelValue: '2026-09-24', locale: 'ru-RU', today: '2026-09-24' }),
-    );
+    const html = await renderToString(NuiCalendar, {
+      props: { modelValue: '2026-09-24', locale: 'ru-RU', today: '2026-09-24' },
+    });
 
     expect(html).toContain('role="grid"');
     expect(html.match(/tabindex="0"/g)).toHaveLength(1);
@@ -707,16 +683,18 @@ describe('server rendering', () => {
     expect(html).toContain('сентябрь');
     expect(html).not.toContain('nui-calendar__picker');
 
-    const bare = await renderMarkup(() => h(NuiCalendar, { month: '2026-09', locale: 'en-US' }));
+    const bare = await renderToString(NuiCalendar, {
+      props: { month: '2026-09', locale: 'en-US' },
+    });
 
     expect(bare).not.toContain('aria-current');
     expect(bare).toContain('September');
   });
 
   it('renders a date picker closed with localised text and a hidden ISO value', async () => {
-    const html = await renderMarkup(() =>
-      h(NuiDatePicker, { modelValue: '2026-09-24', locale: 'ru-RU', name: 'trip' }),
-    );
+    const html = await renderToString(NuiDatePicker, {
+      props: { modelValue: '2026-09-24', locale: 'ru-RU', name: 'trip' },
+    });
 
     expect(html).toContain('value="24.09.2026"');
     expect(html).toContain('popover="manual"');
@@ -729,15 +707,15 @@ describe('server rendering', () => {
   });
 
   it('renders a number field formatted on the server with spinbutton semantics', async () => {
-    const html = await renderMarkup(() =>
-      h(NuiNumberField, {
+    const html = await renderToString(NuiNumberField, {
+      props: {
         modelValue: 1234.5,
         locale: 'de-DE',
         formatOptions: { style: 'currency', currency: 'EUR' },
         name: 'price',
         min: 0,
-      }),
-    );
+      },
+    });
 
     expect(html).toContain('role="spinbutton"');
     expect(html).toMatch(/value="1\.234,50\s€"/);
@@ -748,26 +726,7 @@ describe('server rendering', () => {
   });
 
   it('renders the app shell with an expanded sidebar and no drawer on the server', async () => {
-    const html = await renderMarkup(() =>
-      h(
-        NuiLayout,
-        { id: 'shell', contentAs: 'div' },
-        {
-          sidebar: () =>
-            h(NuiSidebar, { collapsible: 'icon', variant: 'inset', label: 'Sections' }, () =>
-              h(NuiSidebarContent, () =>
-                h(NuiSidebarGroup, { label: 'Overview' }, () => [
-                  h(NuiSidebarItem, { label: 'Inbox', icon: 'inbox', current: true }),
-                  h(NuiSidebarItem, { label: 'Docs', href: '#docs' }),
-                ]),
-              ),
-            ),
-          header: () =>
-            h(NuiAppBar, null, { start: () => h(NuiSidebarTrigger), default: () => 'Inbox' }),
-          default: () => h('p', 'Content'),
-        },
-      ),
-    );
+    const html = await renderToString(LayoutScene, { props: { variant: 'inset' } });
 
     expect(html).toContain('<aside');
     expect(html).toContain('nui-sidebar--variant-inset');
@@ -782,23 +741,14 @@ describe('server rendering', () => {
   });
 
   it('renders an upload zone with a labelled button and existing files without previews', async () => {
-    const html = await renderMarkup(() =>
-      h(NuiUpload<string>, {
+    const html = await renderToString(NuiUpload<string>, {
+      props: {
         upload: () => Promise.resolve('ok'),
         id: 'attachments',
         hint: 'PDF up to 1 MB',
-        modelValue: [
-          {
-            id: 'existing-1',
-            name: 'report.pdf',
-            size: 2048,
-            type: 'application/pdf',
-            status: 'done',
-            url: 'https://cdn.example/report.pdf',
-          },
-        ],
-      }),
-    );
+        modelValue: [REPORT],
+      },
+    });
 
     expect(html).toContain('type="file"');
     expect(html).toContain('id="attachments"');
@@ -810,13 +760,13 @@ describe('server rendering', () => {
     expect(html).not.toContain('<img');
     expect(html).not.toContain('<progress');
 
-    const avatar = await renderMarkup(() =>
-      h(NuiAvatarUpload<string>, {
+    const avatar = await renderToString(NuiAvatarUpload<string>, {
+      props: {
         upload: () => Promise.resolve('ok'),
         name: 'Ann Smith',
         label: 'Photo',
-      }),
-    );
+      },
+    });
 
     expect(avatar).toContain('aria-label="Choose an image"');
     expect(avatar).toContain('AS');
@@ -824,9 +774,9 @@ describe('server rendering', () => {
   });
 
   it('renders a time field with one tab stop, filled segments and a closed list', async () => {
-    const html = await renderMarkup(() =>
-      h(NuiTimeField, { modelValue: '13:05', locale: 'en-US', name: 'start' }),
-    );
+    const html = await renderToString(NuiTimeField, {
+      props: { modelValue: '13:05', locale: 'en-US', name: 'start' },
+    });
 
     expect(html).toContain('role="group"');
     expect(html.match(/role="spinbutton"/g)).toHaveLength(3);
@@ -839,21 +789,16 @@ describe('server rendering', () => {
     expect(html).toContain('aria-expanded="false"');
     expect(html).not.toContain('aria-activedescendant');
 
-    const german = await renderMarkup(() =>
-      h(NuiTimeField, { modelValue: '13:05', locale: 'de-DE' }),
-    );
+    const german = await renderToString(NuiTimeField, {
+      props: { modelValue: '13:05', locale: 'de-DE' },
+    });
 
     expect(german).toContain('value="13"');
     expect(german.match(/role="spinbutton"/g)).toHaveLength(2);
   });
 
   it('renders a one-time code field with its value on the labelled input and hidden slots', async () => {
-    const html = await renderMarkup(() =>
-      h(NuiField, { label: 'Code' }, () =>
-        h(NuiOtpField, { modelValue: '48', groupSize: 3, placeholder: '·', name: 'code' }),
-      ),
-    );
-
+    const html = await renderToString(FieldScene, { props: { scene: 'otp' } });
     const controlId = labelTarget(html);
     expect(controlId).toBeTruthy();
     expect(html).toContain(`id="${controlId}"`);
@@ -867,7 +812,7 @@ describe('server rendering', () => {
   });
 
   it('renders a combobox input with its selected label and no active descendant', async () => {
-    const html = await renderMarkup(renderCombobox);
+    const html = await renderCombobox();
     expect(html).toContain('role="combobox"');
     expect(html).toContain('aria-autocomplete="list"');
     expect(html).toContain('popover="manual"');
@@ -877,9 +822,9 @@ describe('server rendering', () => {
   });
 
   it('renders pagination links with the current page marked', async () => {
-    const html = await renderMarkup(() =>
-      h(NuiPagination, { total: 60, page: 2, href: (page: number) => `#page-${page}` }),
-    );
+    const html = await renderToString(NuiPagination, {
+      props: { total: 60, page: 2, href: (page: number) => `#page-${page}` },
+    });
 
     expect(html).toContain('aria-label="Pagination"');
     expect(html).toContain('aria-current="page"');
@@ -888,79 +833,67 @@ describe('server rendering', () => {
   });
 
   it('renders the toaster as an empty manual live region', async () => {
-    const html = await renderMarkup(() => h(NuiToaster, { label: 'Notifications' }));
+    const html = await renderToString(NuiToaster, { props: { label: 'Notifications' } });
     expect(html).toContain('popover="manual"');
     expect(html).toContain('aria-live="polite"');
     expect(html).not.toContain('nui-toast ');
   });
 
   it('renders feedback components with their native semantics on the server', async () => {
-    const alert = await renderMarkup(() => h(NuiAlert, { tone: 'error', title: 'Failed' }));
+    const alert = await renderToString(NuiAlert, { props: { tone: 'error', title: 'Failed' } });
     expect(alert).toContain('role="alert"');
-    const determinate = await renderMarkup(() => h(NuiProgress, { value: 40 }));
+    const determinate = await renderToString(NuiProgress, { props: { value: 40 } });
     expect(determinate).toContain('value="40"');
-    const indeterminate = await renderMarkup(() => h(NuiProgress, {}));
+    const indeterminate = await renderToString(NuiProgress);
     expect(indeterminate).not.toContain('value=');
-    const skeleton = await renderMarkup(() => h(NuiSkeleton, {}));
+    const skeleton = await renderToString(NuiSkeleton);
     expect(skeleton).toContain('aria-hidden="true"');
   });
 
   it('renders badge counts and dot labels on the server', async () => {
-    const count = await renderMarkup(() => h(NuiBadge, { count: 120, tone: 'error' }));
+    const count = await renderToString(NuiBadge, { props: { count: 120, tone: 'error' } });
     expect(count).toContain('99+');
-    const dot = await renderMarkup(() => h(NuiBadge, { dot: true, label: 'Online' }));
+    const dot = await renderToString(NuiBadge, { props: { dot: true, label: 'Online' } });
     expect(dot).toContain('role="img"');
     expect(dot).toContain('aria-label="Online"');
   });
 
   it('renders avatars with their image, initials or icon and groups with the overflow count', async () => {
-    const image = await renderMarkup(() =>
-      h(NuiAvatar, { src: '/alice.png', name: 'Alice Brown' }),
-    );
+    const image = await renderToString(NuiAvatar, {
+      props: { src: '/alice.png', name: 'Alice Brown' },
+    });
 
     expect(image).toContain('<img');
     expect(image).toContain('alt="Alice Brown"');
     expect(image).not.toContain('nui-avatar__initials');
-    expect(await renderMarkup(() => h(NuiAvatar, { name: 'Alice Brown' }))).toContain('AB');
-    expect(await renderMarkup(() => h(NuiAvatar, {}))).toContain('lucide-user');
+    expect(await renderToString(NuiAvatar, { props: { name: 'Alice Brown' } })).toContain('AB');
+    expect(await renderToString(NuiAvatar)).toContain('lucide-user');
 
-    const items = await renderMarkup(() =>
-      h(NuiAvatarGroup, { items: [{ name: 'Alice' }, { name: 'Bob' }, { name: 'Cara' }], max: 1 }),
-    );
+    const items = await renderToString(NuiAvatarGroup, {
+      props: { items: [{ name: 'Alice' }, { name: 'Bob' }, { name: 'Cara' }], max: 1 },
+    });
 
     expect(items).toContain('+2');
-
-    const slotted = await renderMarkup(() =>
-      h(NuiAvatarGroup, { max: 1, size: 'lg' }, () => [
-        h(NuiAvatar, { name: 'Alice' }),
-        h(NuiAvatar, { name: 'Bob' }),
-        h(NuiAvatar, { name: 'Cara' }),
-      ]),
-    );
-
+    const slotted = await renderToString(AvatarGroupScene);
     expect(slotted).toContain('+2');
     expect(slotted.match(/nui-avatar--size-lg/g)).toHaveLength(2);
   });
 
   it('renders the empty state with its icon and inside an empty listbox', async () => {
-    const empty = await renderMarkup(() => h(NuiEmpty, { title: 'Nothing here' }));
+    const empty = await renderToString(NuiEmpty, { props: { title: 'Nothing here' } });
     expect(empty).toContain('lucide-inbox');
     expect(empty).toContain('Nothing here');
 
-    const select = await renderMarkup(() =>
-      h(NuiSelect, { options: [], emptyLabel: 'No options' }),
-    );
+    const select = await renderToString(NuiSelect, {
+      props: { options: [], emptyLabel: 'No options' },
+    });
 
     expect(select).toContain('nui-list__empty');
     expect(select).toContain('No options');
   });
 
   it('renders a linked card with its stretched action and a plain card without one', async () => {
-    const linked = await renderMarkup(() =>
-      h(NuiCard, { href: '/plans', title: 'Plans', description: 'Pick one' }, () =>
-        h(NuiCardMedia, { src: '/cover.png', alt: 'Cover' }),
-      ),
-    );
+    const linked = await renderToString(CardScene);
 
     expect(linked).toContain('nui-card--interactive');
 
@@ -971,7 +904,7 @@ describe('server rendering', () => {
     expect(linked).toContain('href="/plans"');
     expect(linked).toContain('<h3');
     expect(linked).toContain('<img');
-    const plain = await renderMarkup(() => h(NuiCard, { title: 'Plans' }));
+    const plain = await renderToString(NuiCard, { props: { title: 'Plans' } });
     expect(plain).not.toContain('nui-card__action');
     expect(plain).not.toContain('nui-card--interactive');
   });
@@ -982,30 +915,30 @@ describe('server rendering', () => {
       { label: 'Rust', value: 'rust' },
     ];
 
-    const html = await renderMarkup(() =>
-      h(NuiList, { items, selectable: 'single', modelValue: 'rust', label: 'Languages' }),
-    );
+    const html = await renderToString(NuiList, {
+      props: { items, selectable: 'single', modelValue: 'rust', label: 'Languages' },
+    });
 
     expect(html).toContain('role="listbox"');
     expect(html.match(/aria-selected="true"/g)).toHaveLength(1);
     expect(html.match(/tabindex="0"/g)).toHaveLength(1);
     expect(html).toContain('aria-label="Languages"');
 
-    const links = await renderMarkup(() =>
-      h(NuiList, { items: [{ label: 'Docs', href: '/docs' }] }),
-    );
+    const links = await renderToString(NuiList, {
+      props: { items: [{ label: 'Docs', href: '/docs' }] },
+    });
 
     expect(links).toContain('href="/docs"');
     expect(links).not.toContain('role="listbox"');
-    const empty = await renderMarkup(() => h(NuiList, { items: [], emptyLabel: 'Nothing' }));
+    const empty = await renderToString(NuiList, { props: { items: [], emptyLabel: 'Nothing' } });
     expect(empty).toContain('nui-empty');
     expect(empty).toContain('Nothing');
   });
 
   it('renders a tree flat with levels and one selected node and windows long trees', async () => {
-    const html = await renderMarkup(() =>
-      h(NuiTree, { id: 'files', items: FILES, expanded: ['src'], modelValue: 'index' }),
-    );
+    const html = await renderToString(NuiTree, {
+      props: { id: 'files', items: FILES, expanded: ['src'], modelValue: 'index' },
+    });
 
     expect(html).toContain('role="tree"');
     expect(html).toContain('tabindex="0"');
@@ -1018,9 +951,9 @@ describe('server rendering', () => {
     expect(html.match(/aria-selected="true"/g)).toHaveLength(1);
     expect(html).not.toContain('aria-activedescendant');
 
-    const windowed = await renderMarkup(() =>
-      h(NuiTree, { items: manyNodes(500), virtual: true, height: '10rem' }),
-    );
+    const windowed = await renderToString(NuiTree, {
+      props: { items: manyNodes(500), virtual: true, height: '10rem' },
+    });
 
     expect(windowed.match(/role="treeitem"/g)).toHaveLength(20);
     expect(windowed).toContain('--_window-lead:0px');
@@ -1029,9 +962,9 @@ describe('server rendering', () => {
   });
 
   it('renders a select with nested options as a tree on the server', async () => {
-    const html = await renderMarkup(() =>
-      h(NuiSelect, { options: CATEGORIES, modelValue: 'laptops', label: 'Category' }),
-    );
+    const html = await renderToString(NuiSelect, {
+      props: { options: CATEGORIES, modelValue: 'laptops', label: 'Category' },
+    });
 
     expect(html).toContain('aria-haspopup="tree"');
     expect(html).toContain('role="tree"');
@@ -1039,14 +972,14 @@ describe('server rendering', () => {
   });
 
   it('renders lazy default icons on the server', async () => {
-    const html = await renderMarkup(() => h(NuiIcon, { icon: 'check' }));
+    const html = await renderToString(NuiIcon, { props: { icon: 'check' } });
     expect(html).toContain('lucide-check');
   });
 
   it('renders the own field texts of a control with matching ids on the server', async () => {
-    const markup = await renderMarkup(() =>
-      h(NuiInput, { modelValue: '', label: 'Имя', description: 'Подсказка', error: 'Ошибка' }),
-    );
+    const markup = await renderToString(NuiInput, {
+      props: { modelValue: '', label: 'Имя', description: 'Подсказка', error: 'Ошибка' },
+    });
 
     const id = labelTarget(markup);
 
@@ -1058,24 +991,7 @@ describe('server rendering', () => {
   });
 
   it('disables the hidden inputs of disabled controls so native forms skip their values', async () => {
-    const html = await renderMarkup(() =>
-      h('form', [
-        h(NuiNumberField, { modelValue: 5, name: 'quantity', disabled: true }),
-        h(NuiSelect, {
-          modelValue: 'apple',
-          name: 'fruit',
-          disabled: true,
-          options: [{ value: 'apple', label: 'Apple' }],
-        }),
-        h(NuiDatePicker, {
-          modelValue: '2026-09-26',
-          locale: 'en-US',
-          name: 'date',
-          disabled: true,
-        }),
-      ]),
-    );
-
+    const html = await renderToString(DisabledControlsForm);
     expect(html.match(/type="hidden"[^>]*disabled/g)).toHaveLength(3);
   });
 });

@@ -1,5 +1,4 @@
 import { afterEach, describe, expect, it } from 'vite-plus/test';
-import { h } from 'vue';
 import { NumberFieldDriver } from './drivers/number-field';
 import { fieldTextsOf } from './support/field-texts';
 
@@ -158,7 +157,7 @@ describe('NuiNumberField', () => {
       modelValue: 1234.5,
       props: { name: 'price', invalid: true },
       field: { label: 'Price', description: 'Net' },
-      slots: { prefix: () => h('span', '$') },
+      prefix: '$',
     });
 
     expect(field.fieldLabelFor).toBe(field.control.attributes('id'));

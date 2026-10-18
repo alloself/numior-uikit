@@ -8,13 +8,9 @@ import {
   type ContentNode,
   type ElementNode,
 } from '@numior/editor-core';
-import { defineComponent, h } from 'vue';
-import {
-  defineBlock,
-  defineBlockState,
-  type NuiEditorBlock,
-  type NuiEditorBlockContext,
-} from '../../src';
+import { defineBlock, type NuiEditorBlock } from '../../src';
+import StampBlockView from '../fixtures/StampBlockView.vue';
+import ToneBlockView from '../fixtures/ToneBlockView.vue';
 
 export const blockSchema = extendContentSchema({
   stamp: {
@@ -24,37 +20,10 @@ export const blockSchema = extendContentSchema({
   },
 });
 
-const clicks = defineBlockState(() => 0);
-
-const ToneView = defineComponent(
-  (props: { node: ElementNode; editor: NuiEditorBlockContext }) => {
-    const count = clicks.use(props.node);
-
-    return () =>
-      h(
-        'button',
-        {
-          type: 'button',
-          onClick: () => {
-            count.value += 1;
-            props.editor.setAttrs({ tone: 'warning' });
-          },
-        },
-        `${String(props.node.attrs.tone)} ${String(count.value)}`,
-      );
-  },
-  { props: ['node', 'editor'] },
-);
-
-const StampView = defineComponent(
-  (props: { node: ElementNode }) => () => h('span', `stamp ${String(props.node.attrs.label)}`),
-  { props: ['node'] },
-);
-
 export const testBlocks: readonly NuiEditorBlock[] = [
   defineBlock({
     name: 'callout',
-    view: ToneView,
+    view: ToneBlockView,
     keymap: { 'Mod-Alt-s': insertLeaf('stamp') },
     slash: () => [
       {
@@ -71,7 +40,7 @@ export const testBlocks: readonly NuiEditorBlock[] = [
       { label: `Tone ${String(node.attrs.tone)}`, disabled: true },
     ],
   }),
-  defineBlock({ name: 'stamp', view: StampView }),
+  defineBlock({ name: 'stamp', view: StampBlockView }),
 ];
 
 const element = (

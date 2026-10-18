@@ -1,6 +1,6 @@
 import { mount, type DOMWrapper, type VueWrapper } from '@vue/test-utils';
-import { defineComponent, h, ref, type Ref } from 'vue';
-import { NuiPagination, type NuiConfigOptions, type NuiPaginationProps } from '../../src';
+import type { NuiConfigOptions, NuiPaginationProps } from '../../src';
+import PaginationScene from '../fixtures/PaginationScene.vue';
 import { configPlugins } from '../support/config';
 import { choosePageSize } from '../support/page-size';
 import { TopLayerStubs } from '../support/top-layer';
@@ -13,44 +13,29 @@ export interface PaginationMountOptions {
   readonly config?: NuiConfigOptions;
 }
 
+type PaginationSceneWrapper = VueWrapper<InstanceType<typeof PaginationScene>>;
+
 export class PaginationDriver extends ComponentDriver {
   protected readonly block = 'nui-pagination';
 
-  static mount({ props, page = 1, pageSize = 20, config }: PaginationMountOptions) {
+  static mount({ props, page, pageSize, config }: PaginationMountOptions) {
     const stubs = new TopLayerStubs();
-    const pageModel = ref(page);
-    const sizeModel = ref(pageSize);
-
-    const Host = defineComponent({
-      setup: () => () =>
-        h(NuiPagination, {
-          ...props,
-          page: pageModel.value,
-          pageSize: sizeModel.value,
-          'onUpdate:page': (value: number) => {
-            pageModel.value = value;
-          },
-          'onUpdate:pageSize': (value: number) => {
-            sizeModel.value = value;
-          },
-        }),
-    });
 
     return new PaginationDriver(
-      mount(Host, { attachTo: document.body, global: { plugins: configPlugins(config) } }),
+      mount(PaginationScene, {
+        props: { props, initialPage: page, initialPageSize: pageSize },
+        attachTo: document.body,
+        global: { plugins: configPlugins(config) },
+      }),
       stubs,
-      pageModel,
-      sizeModel,
     );
   }
 
   private constructor(
-    wrapper: VueWrapper,
+    private readonly scene: PaginationSceneWrapper,
     private readonly stubs: TopLayerStubs,
-    private readonly pageModel: Ref<number>,
-    private readonly sizeModel: Ref<number>,
   ) {
-    super(wrapper);
+    super(scene);
   }
 
   get nav(): DOMWrapper<HTMLElement> {
@@ -58,11 +43,11 @@ export class PaginationDriver extends ComponentDriver {
   }
 
   get page(): number {
-    return this.pageModel.value;
+    return this.scene.vm.page;
   }
 
   get pageSize(): number {
-    return this.sizeModel.value;
+    return this.scene.vm.pageSize;
   }
 
   get entries(): string[] {

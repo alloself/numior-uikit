@@ -1,19 +1,29 @@
-import { mount, type DOMWrapper } from '@vue/test-utils';
-import { h, nextTick, type VNode } from 'vue';
-import { NuiField, NuiInput, type NuiFieldProps } from '../../src';
+import { mount, type DOMWrapper, type VueWrapper } from '@vue/test-utils';
+import type { NuiFieldProps, NuiInputProps } from '../../src';
+import FieldScene from '../fixtures/FieldScene.vue';
 import { ComponentDriver } from './component';
+
+export interface FieldSlotTexts {
+  readonly label?: string | undefined;
+  readonly description?: string | undefined;
+  readonly error?: string | undefined;
+}
 
 export interface FieldMountOptions {
   readonly props?: NuiFieldProps;
-  readonly slots?: Record<string, () => unknown>;
-  readonly control?: () => VNode;
+  readonly slots?: FieldSlotTexts;
+  readonly control?: NuiInputProps;
 }
 
 export class FieldDriver extends ComponentDriver {
   protected readonly block = 'nui-field';
 
-  static mount({ props = {}, slots = {}, control = () => h(NuiInput) }: FieldMountOptions = {}) {
-    return new FieldDriver(mount(NuiField, { props, slots: { default: control, ...slots } }));
+  static mount({ props = {}, slots = {}, control = {} }: FieldMountOptions = {}) {
+    return new FieldDriver(mount(FieldScene, { props: { field: props, control, slots } }));
+  }
+
+  private constructor(private readonly scene: VueWrapper<InstanceType<typeof FieldScene>>) {
+    super(scene);
   }
 
   get tagName(): string {
@@ -49,8 +59,7 @@ export class FieldDriver extends ComponentDriver {
   }
 
   async setError(error: string | undefined): Promise<void> {
-    await this.wrapper.setProps({ error });
-    await nextTick();
+    await this.scene.setProps({ field: { ...this.scene.props('field'), error } });
   }
 
   get showsRequiredMark(): boolean {

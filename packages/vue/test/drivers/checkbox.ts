@@ -1,13 +1,13 @@
 import { mount, type DOMWrapper, type VueWrapper } from '@vue/test-utils';
-import { defineComponent, h, nextTick, ref, type Ref } from 'vue';
+import { nextTick } from 'vue';
 import {
   NuiCheckbox,
   NuiCheckboxGroup,
-  NuiField,
   type NuiCheckboxGroupProps,
   type NuiCheckboxProps,
   type NuiFieldProps,
 } from '../../src';
+import CheckboxGroupScene from '../fixtures/CheckboxGroupScene.vue';
 import { ComponentDriver } from './component';
 import { waitForGlyph } from './icon';
 import { isString, listOf } from '../../../primitives/test/support/guards';
@@ -105,35 +105,19 @@ export class CheckboxGroupDriver extends ComponentDriver {
       disabled: disabledValues.includes(value),
     }));
 
-    const model = ref<string[]>(modelValue);
-    const emitted: string[][] = [];
-
-    const group = () =>
-      h(NuiCheckboxGroup<string>, {
-        ...props,
-        options,
-        modelValue: model.value,
-        'onUpdate:modelValue': (value: unknown) => {
-          if (isStrings(value)) {
-            emitted.push(value);
-            model.value = value;
-          }
-        },
-      });
-
-    const Host = defineComponent({
-      setup: () => () => (field ? h(NuiField, field, group) : group()),
-    });
-
-    return new CheckboxGroupDriver(mount(Host), model, emitted);
+    return new CheckboxGroupDriver(
+      mount(CheckboxGroupScene, { props: { group: props, options, field, modelValue } }),
+    );
   }
 
-  private constructor(
-    wrapper: VueWrapper,
-    private readonly model: Ref<string[]>,
-    readonly emittedModels: readonly string[][],
-  ) {
-    super(wrapper);
+  private constructor(private readonly scene: VueWrapper<InstanceType<typeof CheckboxGroupScene>>) {
+    super(scene);
+  }
+
+  get emittedModels(): string[][] {
+    return (this.scene.findComponent(NuiCheckboxGroup).emitted('update:modelValue') ?? []).flatMap(
+      ([value]) => (isStrings(value) ? [value] : []),
+    );
   }
 
   get group(): DOMWrapper<Element> {
@@ -163,7 +147,7 @@ export class CheckboxGroupDriver extends ComponentDriver {
   }
 
   async receive(modelValue: string[]): Promise<void> {
-    this.model.value = modelValue;
+    this.scene.vm.model = modelValue;
     await nextTick();
   }
 }

@@ -44,7 +44,17 @@ export class ThingDriver extends ComponentDriver {
 - Factories are synchronous; anything asynchronous (lazy icons) waits behind
   `await driver.ready()` (see `IconDriver`, `CheckboxDriver`).
 - Typed access: `find<HTMLInputElement>()`, `emitted()` filtered by type guards, exposed
-  methods through a host component with `useTemplateRef<InstanceType<typeof NuiThing>>`.
+  methods through a fixture SFC that holds `useTemplateRef('thing')` and re-exposes them
+  (`test/fixtures/InputFocusHandle.vue`, read as `wrapper.vm.focusInput()`).
+- Hosts are SFC fixtures, never render functions: `h`, `defineComponent`, `createVNode`,
+  `renderSlot` and `{ setup, render }` objects are banned by ESLint in tests too. A scene with
+  slot content or several parts is `test/fixtures/<Name>.vue` (template first, props
+  destructured, slot markup in its template); the driver maps its options to fixture props.
+  Plain text slots may stay strings in `mount(..., { slots: { default: 'Save' } })`.
+- No provider fixtures: config comes from `global.plugins: configPlugins(config)`; a nested
+  layer is a `provideNuiConfig(...)` call inside the fixture's own script
+  (`test/fixtures/NestedConfig.vue`). Components passed into reactive props or config are
+  wrapped in `markRaw` (`test/support/router-stub.ts`).
 - One driver action awaits exactly one `nextTick()`. If an assertion needs a second tick,
   the component chains renders (a post-flush watcher writes reactive state); fix the
   component, never add a second tick or a helper that hides it. `pnpm test:ticks` fails on
@@ -94,14 +104,19 @@ it('waits for a commit with the lazy modifier', async () => {
 
 ## Composable tests (`packages/primitives/test`)
 
-Use `captureSetup(() => useThing(), { wrap: providing(() => provideThing(...)) })` from
-`test/harness/capture.ts`, or a harness class with named getters (`FieldHarness`,
+Use `captureSetup(() => useThing(), { layers: [() => provideThing(...)] })` from
+`test/harness/capture.ts` (each layer runs in the setup of its own `SetupProbe` level, the
+composable runs in the innermost one, since inject only sees ancestors), or a harness class with named getters (`FieldHarness`,
 `ControlHarness`). Read state from the captured context, not from attributes.
 
 ## SSR
 
-Add a scenario to `packages/vue/test/ssr.test.ts`: render twice through `renderMarkup`,
-expect identical markup, no `undefined`, no empty `id`/`aria-describedby`; for fields check
+Render with `renderToString` from `@vue/test-utils` (same `props`/`slots`/`global` options as
+`mount`), the component itself or a scene fixture in `test/fixtures/ssr/`; no
+`createSSRApp({ render })`. VTU stubs `Transition`/`TransitionGroup` by default, so a spec that
+asserts their markup sets `config.global.stubs = { transition: false, 'transition-group': false }`.
+
+Add a scenario to `packages/vue/test/ssr.test.ts`: render twice, expect identical markup, no `undefined`, no empty `id`/`aria-describedby`; for fields check
 that the label `for` matches the control id and that values render on the server.
 
 ## E2E (`tests/e2e`)

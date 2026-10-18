@@ -1,7 +1,9 @@
 import { mount, type DOMWrapper, type VueWrapper } from '@vue/test-utils';
-import { defineComponent, h, nextTick } from 'vue';
-import { NuiAccordion, NuiAccordionItem, type NuiAccordionProps } from '../../src';
-import { createSelection, type Selection, type SelectionValue } from '../support/selection';
+import { nextTick } from 'vue';
+import type { NuiAccordionProps } from '../../src';
+import { isString, listOf } from '../../../primitives/test/support/guards';
+import AccordionScene from '../fixtures/AccordionScene.vue';
+import type { SelectionValue } from '../support/selection';
 import { ComponentDriver } from './component';
 
 export interface AccordionMountOptions {
@@ -9,40 +11,33 @@ export interface AccordionMountOptions {
   readonly modelValue?: SelectionValue;
 }
 
-const SECTIONS = [
-  { value: 'install', label: 'Install' },
-  { value: 'usage', label: 'Usage' },
-  { value: 'api', label: 'API', disabled: true },
-  { value: 'faq', label: 'FAQ' },
-];
+const isStrings = listOf(isString);
 
 export class AccordionDriver extends ComponentDriver {
   protected readonly block = 'nui-accordion';
 
   private constructor(
-    wrapper: VueWrapper,
-    private readonly selection: Selection,
+    private readonly scene: VueWrapper<InstanceType<typeof AccordionScene>>,
+    private readonly multiple: boolean,
   ) {
-    super(wrapper);
+    super(scene);
   }
 
   static mount({ props = {}, modelValue }: AccordionMountOptions = {}) {
-    const selection = createSelection(modelValue, props.multiple === true);
-
-    const Host = defineComponent({
-      setup: () => () =>
-        h(NuiAccordion, { ...props, ...selection.props() }, () =>
-          SECTIONS.map((section) =>
-            h(NuiAccordionItem, { key: section.value, ...section }, () => `${section.label} body`),
-          ),
-        ),
+    const scene = mount(AccordionScene, {
+      props: {
+        accordion: props,
+        modelValue: typeof modelValue === 'string' ? modelValue : null,
+        values: isStrings(modelValue) ? modelValue : [],
+      },
+      attachTo: document.body,
     });
 
-    return new AccordionDriver(mount(Host, { attachTo: document.body }), selection);
+    return new AccordionDriver(scene, props.multiple === true);
   }
 
   get selected(): SelectionValue {
-    return this.selection.value();
+    return this.multiple ? this.scene.vm.values : this.scene.vm.model;
   }
 
   get triggers(): DOMWrapper<HTMLButtonElement>[] {

@@ -1,6 +1,7 @@
-import { mount } from '@vue/test-utils';
-import { h, type Component } from 'vue';
-import { NuiButton, NuiIcon, type NuiButtonProps, type NuiConfigOptions } from '../../src';
+import { mount, type VueWrapper } from '@vue/test-utils';
+import type { Component } from 'vue';
+import { NuiIcon, type NuiButtonProps, type NuiConfigOptions } from '../../src';
+import ButtonScene from '../fixtures/ButtonScene.vue';
 import { configPlugins } from '../support/config';
 import { RouterStub } from '../support/router-stub';
 import { ComponentDriver } from './component';
@@ -19,14 +20,6 @@ export interface ButtonMountOptions {
   readonly config?: NuiConfigOptions;
 }
 
-const slotFor = (content: ButtonContent, label: string) => {
-  if (content === 'text') {
-    return label;
-  }
-  return () =>
-    content === 'icon' ? [h(NuiIcon, { icon: 'x' })] : [h(NuiIcon, { icon: 'x' }), label];
-};
-
 export class ButtonDriver extends ComponentDriver {
   protected readonly block = 'nui-button';
 
@@ -42,10 +35,9 @@ export class ButtonDriver extends ComponentDriver {
     config,
   }: ButtonMountOptions = {}) {
     return new ButtonDriver(
-      mount(NuiButton, {
-        props: viaRouter ? { ...props, as: RouterStub } : props,
+      mount(ButtonScene, {
+        props: { button: viaRouter ? { ...props, as: RouterStub } : props, content, label },
         attrs: onClick ? { ...attrs, onClick } : attrs,
-        slots: content === 'none' ? {} : { default: slotFor(content, label) },
         global: {
           plugins: configPlugins(config),
           components: routerComponent ? { RouterLink: routerComponent } : {},
@@ -53,6 +45,10 @@ export class ButtonDriver extends ComponentDriver {
         ...(attached ? { attachTo: document.body } : {}),
       }),
     );
+  }
+
+  private constructor(private readonly scene: VueWrapper<InstanceType<typeof ButtonScene>>) {
+    super(scene);
   }
 
   get element(): HTMLButtonElement {
@@ -119,6 +115,6 @@ export class ButtonDriver extends ComponentDriver {
   }
 
   async update(props: NuiButtonProps): Promise<void> {
-    await this.wrapper.setProps(props);
+    await this.scene.setProps({ button: { ...this.scene.props('button'), ...props } });
   }
 }

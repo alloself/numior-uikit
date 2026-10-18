@@ -2,15 +2,13 @@ import { flushPromises, mount, type DOMWrapper, type VueWrapper } from '@vue/tes
 import { createNuiConfig, type NuiConfigOptions } from '@numior/primitives';
 import { vi } from 'vite-plus/test';
 import {
-  defineComponent,
-  h,
   nextTick,
   ref,
   shallowRef,
+  type Component,
   type Plugin,
   type Ref,
   type ShallowRef,
-  type Slots,
 } from 'vue';
 import { choosePageSize } from '../../../vue/test/support/page-size';
 import { dismissPopoverNatively, TopLayerStubs } from '../../../vue/test/support/top-layer';
@@ -29,8 +27,8 @@ import {
   type CellPosition,
   type KeyOptions,
 } from './table-surface';
+import TableHost from '../fixtures/TableHost.vue';
 import {
-  NuiTable,
   type TableNodeId,
   type TableSort,
   type NuiTableFilters,
@@ -74,7 +72,7 @@ export interface TableMountOptions<T> {
   readonly selected?: readonly T[];
   readonly page?: number;
   readonly pageSize?: number;
-  readonly slots?: Slots;
+  readonly slots?: TableSlotViews;
   readonly width?: number;
   readonly onEdit?: (event: NuiTableEditEvent<T>) => void;
   readonly height?: number;
@@ -137,6 +135,8 @@ export interface SelectAllState {
   readonly disabled: boolean;
 }
 
+export type TableSlotViews = Readonly<Record<string, Component>>;
+
 interface TableModels<T> {
   readonly sort: ShallowRef<readonly TableSort[]>;
   readonly filters: ShallowRef<NuiTableFilters>;
@@ -157,6 +157,24 @@ interface TableModels<T> {
 }
 
 type TableProps<T> = Omit<NuiTableProps<T>, 'columns' | 'rows'>;
+
+export interface TableHostState<T> extends TableModels<T> {
+  readonly rows: ShallowRef<readonly T[]>;
+  readonly props: ShallowRef<TableProps<T>>;
+}
+
+export interface TableHostListeners<T> {
+  readonly onRowClick: (row: T) => void;
+  readonly onReorder: (event: NuiTableReorderEvent<T>) => void;
+  readonly onWindow: (next: NuiTableWindow) => void;
+  readonly onPick: (range: NuiTableRange) => void;
+  readonly onEditRefused: (event: NuiTableEditRefusal<T>) => void;
+  readonly onError: (error: unknown) => void;
+  readonly onEdit: (event: NuiTableEditEvent<T>) => void;
+  readonly onSettle: () => void;
+  readonly onProgress: () => void;
+  readonly onLoad: (row: T) => void;
+}
 
 interface TableEvents<T> {
   settled: number;
@@ -319,7 +337,12 @@ export class TableDriver<T> {
     const rowHeights = shallowRef<NuiTableRowHeights>(settings.rowHeights ?? {});
     const active = shallowRef<TableCellPosition | undefined>(settings.active);
     const draft = shallowRef<NuiTableDraft>();
-    const props = shallowRef<TableProps<T>>(settings.props ?? {});
+
+    const props = shallowRef<TableProps<T>>({
+      ...(settings.auto === true ? {} : { height: `${settings.height}px` }),
+      ...settings.props,
+    });
+
     const stubs = new TopLayerStubs();
     const observers = stubRowObserver();
     const exposed = shallowRef<NuiTableExposed | null>(null);
@@ -342,124 +365,43 @@ export class TableDriver<T> {
       exposed.value = isExposed(value) ? value : null;
     };
 
-    const Host = defineComponent({
-      setup: () => () =>
-        h('div', { dir: settings.dir }, [
-          h(
-            NuiTable<T>,
-            {
-              ...(settings.auto === true ? {} : { height: `${settings.height}px` }),
-              ...props.value,
-              columns: settings.columns,
-              rows: source.value,
-              sort: sort.value,
-              'onUpdate:sort': (next: readonly TableSort[]) => {
-                sort.value = next;
-              },
-              filters: filters.value,
-              'onUpdate:filters': (next: NuiTableFilters) => {
-                filters.value = next;
-              },
-              quick: quick.value,
-              'onUpdate:quick': (next: string) => {
-                quick.value = next;
-              },
-              groupBy: groupBy.value,
-              'onUpdate:groupBy': (next: readonly string[]) => {
-                groupBy.value = next;
-              },
-              expanded: expanded.value,
-              'onUpdate:expanded': (next: readonly TableNodeId[]) => {
-                expanded.value = next;
-              },
-              pins: pins.value,
-              'onUpdate:pins': (next: NuiTablePins) => {
-                pins.value = next;
-              },
-              hidden: hidden.value,
-              'onUpdate:hidden': (next: NuiTableHidden) => {
-                hidden.value = next;
-              },
-              widths: widths.value,
-              'onUpdate:widths': (next: NuiTableWidths) => {
-                widths.value = next;
-              },
-              columnOrder: columnOrder.value,
-              'onUpdate:columnOrder': (next: NuiTableColumnOrder) => {
-                columnOrder.value = next;
-              },
-              selected: selected.value,
-              'onUpdate:selected': (next: readonly T[]) => {
-                selected.value = next;
-              },
-              page: page.value,
-              'onUpdate:page': (next: number) => {
-                page.value = next;
-              },
-              pageSize: pageSize.value,
-              'onUpdate:pageSize': (next: number) => {
-                pageSize.value = next;
-              },
-              ranges: ranges.value,
-              'onUpdate:ranges': (next: NuiTableRanges) => {
-                ranges.value = next;
-              },
-              rowHeights: rowHeights.value,
-              'onUpdate:rowHeights': (next: NuiTableRowHeights) => {
-                rowHeights.value = next;
-              },
-              active: active.value,
-              'onUpdate:active': (next: TableCellPosition | undefined) => {
-                active.value = next;
-              },
-              draft: draft.value,
-              'onUpdate:draft': (next: NuiTableDraft | undefined) => {
-                draft.value = next;
-              },
-              onRowClick: (row: T) => {
-                events.clicks.push(row);
-              },
-              onReorder: (event: NuiTableReorderEvent<T>) => {
-                events.reorders.push(event);
-              },
-              onWindow: (next: NuiTableWindow) => {
-                events.windows.push(next);
-              },
-              onPick: (range: NuiTableRange) => {
-                events.picks.push(range);
-              },
-              onEditRefused: (event: NuiTableEditRefusal<T>) => {
-                events.refusals.push(event);
-              },
-              onError: (error: unknown) => {
-                events.errors.push(error);
-              },
-              onEdit: (event: NuiTableEditEvent<T>) => {
-                events.edits.push(event);
-                settings.onEdit?.(event);
-              },
-              onSettle: () => {
-                events.settled += 1;
+    const listeners: TableHostListeners<T> = {
+      onRowClick: (row) => {
+        events.clicks.push(row);
+      },
+      onReorder: (event) => {
+        events.reorders.push(event);
+      },
+      onWindow: (next) => {
+        events.windows.push(next);
+      },
+      onPick: (range) => {
+        events.picks.push(range);
+      },
+      onEditRefused: (event) => {
+        events.refusals.push(event);
+      },
+      onError: (error) => {
+        events.errors.push(error);
+      },
+      onEdit: (event) => {
+        events.edits.push(event);
+        settings.onEdit?.(event);
+      },
+      onSettle: () => {
+        events.settled += 1;
 
-                for (const resolve of events.waiters.splice(0)) {
-                  resolve();
-                }
-              },
-              onProgress: () => {
-                events.progress += 1;
-              },
-              onLoad: (row: T) => {
-                events.loads.push(row);
-              },
-              ref: setExposed,
-            },
-            settings.slots,
-          ),
-        ]),
-    });
-
-    const plugins = pluginsOf(settings.config);
-    const wrapper = mount(Host, { attachTo: document.body, global: { plugins } });
+        for (const resolve of events.waiters.splice(0)) {
+          resolve();
+        }
+      },
+      onProgress: () => {
+        events.progress += 1;
+      },
+      onLoad: (row) => {
+        events.loads.push(row);
+      },
+    };
 
     const models = {
       sort,
@@ -479,6 +421,19 @@ export class TableDriver<T> {
       active,
       draft,
     };
+
+    const wrapper = mount(TableHost<T>, {
+      props: {
+        columns: settings.columns,
+        state: { ...models, rows: source, props },
+        listeners,
+        dir: settings.dir,
+        slots: settings.slots ?? {},
+        onTable: setExposed,
+      },
+      attachTo: document.body,
+      global: { plugins: pluginsOf(settings.config) },
+    });
 
     const driver = new TableDriver<T>(wrapper, source, props, models, exposed, events, {
       layers: stubs,

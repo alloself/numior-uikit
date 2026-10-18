@@ -1,6 +1,7 @@
-import { mount, type DOMWrapper } from '@vue/test-utils';
-import { defineComponent, h, nextTick, useTemplateRef } from 'vue';
+import { mount, type ComponentMountingOptions, type DOMWrapper } from '@vue/test-utils';
+import { nextTick } from 'vue';
 import { NuiInput, type NuiInputModifiers, type NuiInputProps } from '../../src';
+import InputFocusHandle from '../fixtures/InputFocusHandle.vue';
 import { ComponentDriver, emittedStrings } from './component';
 
 export interface InputMountOptions {
@@ -8,7 +9,7 @@ export interface InputMountOptions {
   readonly modelValue?: string;
   readonly modifiers?: Partial<Record<NuiInputModifiers, true>>;
   readonly attrs?: Record<string, unknown>;
-  readonly slots?: Record<string, () => unknown>;
+  readonly slots?: ComponentMountingOptions<typeof NuiInput>['slots'];
   readonly attachToBody?: boolean;
 }
 
@@ -96,17 +97,7 @@ export class InputDriver extends ComponentDriver {
 }
 
 export const mountInputWithFocusHandle = () => {
-  const Host = defineComponent({
-    setup() {
-      const input = useTemplateRef<InstanceType<typeof NuiInput>>('input');
-      return { focusInput: () => input.value?.focus() };
-    },
-    render() {
-      return h(NuiInput, { ref: 'input' });
-    },
-  });
-
-  const wrapper = mount(Host, { attachTo: document.body });
+  const wrapper = mount(InputFocusHandle, { attachTo: document.body });
   return {
     focus: () => wrapper.vm.focusInput(),
     control: wrapper.find<HTMLInputElement>('input'),

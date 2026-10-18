@@ -1,13 +1,8 @@
 import { mount, type VueWrapper } from '@vue/test-utils';
 import { vi } from 'vite-plus/test';
-import { defineComponent, h, nextTick, shallowRef } from 'vue';
-import {
-  useReorder,
-  type Reorder,
-  type ReorderAxis,
-  type ReorderEvent,
-  type ReorderState,
-} from '../../src';
+import { nextTick } from 'vue';
+import { type Reorder, type ReorderAxis, type ReorderEvent, type ReorderState } from '../../src';
+import ReorderHost from '../fixtures/ReorderHost.vue';
 
 export interface ReorderHarnessOptions {
   readonly axis?: ReorderAxis;
@@ -27,7 +22,7 @@ const defineViewport = (element: HTMLElement, height: number): void => {
   });
 };
 
-type Outcome = { readonly ran: true; readonly value: Reorder } | { readonly ran: false };
+type HostWrapper = VueWrapper<InstanceType<typeof ReorderHost>>;
 
 const pointer = (type: string, client: number, axis: ReorderAxis, pointerId = 1): PointerEvent =>
   new PointerEvent(type, {
@@ -42,75 +37,41 @@ const pointer = (type: string, client: number, axis: ReorderAxis, pointerId = 1)
 export class ReorderHarness {
   static mount(options: ReorderHarnessOptions = {}): ReorderHarness {
     const axis = options.axis ?? 'y';
-    const size = options.size ?? 40;
-    const count = options.count ?? 5;
     const moves: Array<readonly [number, number]> = [];
     const changes: ReorderState[] = [];
     const events: ReorderEvent[] = [];
-    const outcome: { current: Outcome } = { current: { ran: false } };
 
-    const Host = defineComponent({
-      setup() {
-        const container = shallowRef<HTMLElement | null>(null);
-
-        const scrolled = (client: number): number => client + (container.value?.scrollTop ?? 0);
-
-        const reorder = useReorder({
-          axis,
-          count: () => count,
-          container,
-          indexAt: (client) =>
-            Math.min(count - 1, Math.max(0, Math.floor(scrolled(client) / size))),
-          canMove: options.canMove,
-          onMove: (from, to) => moves.push([from, to]),
-          onChange: (state) => changes.push(state),
-          onEvent: (event) => events.push(event),
-          rtl: () => options.rtl,
-        });
-
-        outcome.current = { ran: true, value: reorder };
-        return () =>
-          h(
-            'div',
-            { ref: container, class: 'list' },
-            Array.from({ length: count }, (_, index) =>
-              h(
-                'button',
-                {
-                  type: 'button',
-                  class: 'handle',
-                  onPointerdown: (event: PointerEvent) => reorder.onPointerdown(index, event),
-                  onKeydown: (event: KeyboardEvent) => {
-                    if (reorder.onKeydown(index, event)) {
-                      event.preventDefault();
-                    }
-                  },
-                },
-                `Item ${index}`,
-              ),
-            ),
-          );
+    const wrapper = mount(ReorderHost, {
+      props: {
+        axis,
+        count: options.count ?? 5,
+        size: options.size ?? 40,
+        canMove: options.canMove,
+        rtl: options.rtl,
+        onMove: (from: number, to: number) => moves.push([from, to]),
+        onChange: (state: ReorderState) => changes.push(state),
+        onEvent: (event: ReorderEvent) => events.push(event),
       },
+      attachTo: document.body,
     });
 
-    const wrapper = mount(Host, { attachTo: document.body });
-    if (!outcome.current.ran) {
-      throw new Error('useReorder did not run');
-    }
     if (options.viewport !== undefined) {
       defineViewport(wrapper.element, options.viewport);
     }
-    return new ReorderHarness(wrapper, outcome.current.value, axis, moves, changes, events);
+    return new ReorderHarness(wrapper, axis, moves, changes, events);
   }
 
   private constructor(
-    private readonly wrapper: VueWrapper,
-    private readonly reorder: Reorder,
+    private readonly wrapper: HostWrapper,
     private readonly axis: ReorderAxis,
     readonly moves: Array<readonly [number, number]>,
     readonly changes: ReorderState[],
     readonly events: ReorderEvent[],
   ) {}
+
+  private get reorder(): Reorder {
+    return this.wrapper.vm.reorder;
+  }
 
   get state(): ReorderState {
     return this.reorder.state.value;

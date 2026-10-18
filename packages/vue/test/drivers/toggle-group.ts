@@ -1,6 +1,7 @@
 import { mount, type DOMWrapper, type VueWrapper } from '@vue/test-utils';
-import { defineComponent, h, nextTick } from 'vue';
-import { NuiToggleGroup, type NuiToggleGroupProps, type NuiToggleItem } from '../../src';
+import { nextTick } from 'vue';
+import type { NuiToggleGroupProps, NuiToggleItem } from '../../src';
+import ToggleGroupScene from '../fixtures/ToggleGroupScene.vue';
 import { createSelection, type Selection, type SelectionValue } from '../support/selection';
 import { ComponentDriver } from './component';
 
@@ -30,15 +31,10 @@ export class ToggleGroupDriver extends ComponentDriver {
   static mount({ props = {}, items = THEME_ITEMS, modelValue }: ToggleGroupMountOptions = {}) {
     const selection = createSelection(modelValue, props.multiple === true);
 
-    const Host = defineComponent({
-      setup: () => () =>
-        h('div', [
-          h(NuiToggleGroup, { ...props, items, ...selection.props() }),
-          h('button', { type: 'button', class: 'outside' }, 'Outside'),
-        ]),
-    });
-
-    return new ToggleGroupDriver(mount(Host, { attachTo: document.body }), selection);
+    return new ToggleGroupDriver(
+      mount(ToggleGroupScene, { props: { props, items, selection }, attachTo: document.body }),
+      selection,
+    );
   }
 
   get selected(): SelectionValue {

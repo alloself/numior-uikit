@@ -1,7 +1,6 @@
 // @vitest-environment node
 import { describe, expect, it } from 'vite-plus/test';
-import { createSSRApp, h } from 'vue';
-import { renderToString } from 'vue/server-renderer';
+import { renderToString } from '@vue/test-utils';
 import {
   NuiTable,
   columnName,
@@ -12,9 +11,10 @@ import {
   type NuiTableCellRef,
   type NuiTableCellStyle,
   type NuiTableColumnDef,
-  type NuiTableDetailSlot,
-  type NuiTableOverlaySlot,
 } from '../src';
+import DossierDetail from './fixtures/DossierDetail.vue';
+import RectProbe from './fixtures/RectProbe.vue';
+import SlottedTable from './fixtures/SlottedTable.vue';
 import { FILE_COLUMNS, FILES, type FileNode } from './support/files';
 import { people, PEOPLE_COLUMNS, type Person } from './support/people';
 
@@ -57,19 +57,16 @@ const RENDER_DEFAULTS: Required<Omit<Query, 'auto' | 'selectable' | 'caption' | 
 const render = (count: number, query: Query = {}): Promise<string> => {
   const { auto, selectable, caption, ...rest } = { ...RENDER_DEFAULTS, ...query };
 
-  return renderToString(
-    createSSRApp({
-      render: () =>
-        h(NuiTable<Person>, {
-          ...rest,
-          rows: people(count),
-          id: 'staff',
-          height: auto === true ? undefined : '28rem',
-          selectable,
-          caption,
-        }),
-    }),
-  );
+  return renderToString(NuiTable<Person>, {
+    props: {
+      ...rest,
+      rows: people(count),
+      id: 'staff',
+      height: auto === true ? undefined : '28rem',
+      selectable,
+      caption,
+    },
+  });
 };
 
 const paintName = ({ row, column }: NuiTableCellRef<Person>): NuiTableCellStyle | undefined =>
@@ -78,50 +75,40 @@ const paintName = ({ row, column }: NuiTableCellRef<Person>): NuiTableCellStyle 
     : undefined;
 
 const renderPainted = (): Promise<string> =>
-  renderToString(
-    createSSRApp({
-      render: () =>
-        h(NuiTable<Person>, {
-          columns: PEOPLE_COLUMNS,
-          rows: people(3),
-          bordered: true,
-          cellStyle: paintName,
-        }),
-    }),
-  );
+  renderToString(NuiTable<Person>, {
+    props: {
+      columns: PEOPLE_COLUMNS,
+      rows: people(3),
+      bordered: true,
+      cellStyle: paintName,
+    },
+  });
 
 const renderTree = (): Promise<string> =>
-  renderToString(
-    createSSRApp({
-      render: () =>
-        h(NuiTable<FileNode>, {
-          columns: FILE_COLUMNS,
-          rows: FILES,
-          getKey: (row: FileNode) => row.path,
-          getChildren: (row: FileNode) => row.items,
-          hasChildren: (row: FileNode) => row.lazy === true,
-          expanded: ['docs'],
-        }),
-    }),
-  );
+  renderToString(NuiTable<FileNode>, {
+    props: {
+      columns: FILE_COLUMNS,
+      rows: FILES,
+      getKey: (row: FileNode) => row.path,
+      getChildren: (row: FileNode) => row.items,
+      hasChildren: (row: FileNode) => row.lazy === true,
+      expanded: ['docs'],
+    },
+  });
 
 const renderDetail = (height: string | undefined): Promise<string> =>
-  renderToString(
-    createSSRApp({
-      render: () =>
-        h(
-          NuiTable<Person>,
-          {
-            columns: PEOPLE_COLUMNS,
-            rows: people(40),
-            getKey: (row: Person) => row.id,
-            expanded: [1],
-            height,
-          },
-          { detail: ({ row }: NuiTableDetailSlot<Person>) => [h('p', `Досье: ${row.name}`)] },
-        ),
-    }),
-  );
+  renderToString(SlottedTable<Person>, {
+    props: {
+      table: {
+        columns: PEOPLE_COLUMNS,
+        rows: people(40),
+        getKey: (row: Person) => row.id,
+        expanded: [1],
+        height,
+      },
+      slots: { detail: DossierDetail },
+    },
+  });
 
 describe('NuiTable on the server', () => {
   it('renders the first screen of rows and columns deterministically without a DOM', async () => {
@@ -329,17 +316,14 @@ describe('NuiTable on the server', () => {
     );
 
     const fluid = (): Promise<string> =>
-      renderToString(
-        createSSRApp({
-          render: () =>
-            h(NuiTable<Person>, {
-              columns,
-              rows: people(1000),
-              height: '28rem',
-              rowHeight: 'auto',
-            }),
-        }),
-      );
+      renderToString(NuiTable<Person>, {
+        props: {
+          columns,
+          rows: people(1000),
+          height: '28rem',
+          rowHeight: 'auto',
+        },
+      });
 
     const html = await fluid();
 
@@ -365,12 +349,9 @@ describe('NuiTable on the server', () => {
   });
 
   it('renders numbered row headers and the corner on the server', async () => {
-    const html = await renderToString(
-      createSSRApp({
-        render: () =>
-          h(NuiTable<Person>, { columns: PEOPLE_COLUMNS, rows: people(3), rowHeaders: true }),
-      }),
-    );
+    const html = await renderToString(NuiTable<Person>, {
+      props: { columns: PEOPLE_COLUMNS, rows: people(3), rowHeaders: true },
+    });
 
     expect(html.match(/role="rowheader"/g)).toHaveLength(3);
     expect(html.match(/scope="row"/g)).toHaveLength(3);
@@ -383,34 +364,28 @@ describe('NuiTable on the server', () => {
   });
 
   it('renders the row heights of the model and their resize handles on the server', async () => {
-    const html = await renderToString(
-      createSSRApp({
-        render: () =>
-          h(NuiTable<Person>, {
-            columns: PEOPLE_COLUMNS,
-            rows: people(3),
-            getKey: (row: Person) => row.id,
-            rowHeaders: { resizable: true },
-            rowHeights: { 1: 72 },
-          }),
-      }),
-    );
+    const html = await renderToString(NuiTable<Person>, {
+      props: {
+        columns: PEOPLE_COLUMNS,
+        rows: people(3),
+        getKey: (row: Person) => row.id,
+        rowHeaders: { resizable: true },
+        rowHeights: { 1: 72 },
+      },
+    });
 
     expect(html.match(/--_row:72px;--_body-min:71px;/g)).toHaveLength(1);
     expect(html.match(/nui-table__resizer--row/g)).toHaveLength(3);
   });
 
   it('renders merged cells with their spans on the server', async () => {
-    const html = await renderToString(
-      createSSRApp({
-        render: () =>
-          h(NuiTable<Person>, {
-            columns: PEOPLE_COLUMNS.filter((column) => column.pin === undefined),
-            rows: people(4),
-            merges: [{ from: { row: 1, col: 0 }, to: { row: 2, col: 1 } }],
-          }),
-      }),
-    );
+    const html = await renderToString(NuiTable<Person>, {
+      props: {
+        columns: PEOPLE_COLUMNS.filter((column) => column.pin === undefined),
+        rows: people(4),
+        merges: [{ from: { row: 1, col: 0 }, to: { row: 2, col: 1 } }],
+      },
+    });
 
     expect(html.match(/nui-table__cell--merged/g)).toHaveLength(1);
     expect(html).toMatch(/rowspan="2" colspan="2"[^>]*aria-colspan="2"/);
@@ -420,16 +395,13 @@ describe('NuiTable on the server', () => {
   });
 
   it('renders the text flow of an overflowing cell on the server', async () => {
-    const html = await renderToString(
-      createSSRApp({
-        render: () =>
-          h(NuiTable<Person>, {
-            columns: PEOPLE_COLUMNS.filter((column) => column.pin === undefined),
-            rows: people(6),
-            cellStyle: ({ column }) => (column.key === 'city' ? { overflow: true } : undefined),
-          }),
-      }),
-    );
+    const html = await renderToString(NuiTable<Person>, {
+      props: {
+        columns: PEOPLE_COLUMNS.filter((column) => column.pin === undefined),
+        rows: people(6),
+        cellStyle: ({ column }) => (column.key === 'city' ? { overflow: true } : undefined),
+      },
+    });
 
     expect(html.match(/nui-table__cell--overflow/g)).toHaveLength(1);
     expect(html.match(/nui-table__cell--seamless/g)).toHaveLength(1);
@@ -437,17 +409,14 @@ describe('NuiTable on the server', () => {
   });
 
   it('renders frozen rows with their offsets under the header on the server', async () => {
-    const html = await renderToString(
-      createSSRApp({
-        render: () =>
-          h(NuiTable<Person>, {
-            columns: PEOPLE_COLUMNS,
-            rows: people(100),
-            height: '300px',
-            frozenRows: 2,
-          }),
-      }),
-    );
+    const html = await renderToString(NuiTable<Person>, {
+      props: {
+        columns: PEOPLE_COLUMNS,
+        rows: people(100),
+        height: '300px',
+        frozenRows: 2,
+      },
+    });
 
     expect(html.match(/nui-table__row--frozen/g)).toHaveLength(2);
     expect(html.match(/nui-table__row--edge/g)).toHaveLength(1);
@@ -464,9 +433,7 @@ describe('NuiTable on the server', () => {
         row < 3 && col < 3 ? { text: `${columnName(col)}${row + 1}` } : undefined,
     });
 
-    const html = await renderToString(
-      createSSRApp({ render: () => h(NuiTable<number>, { ...cells, height: '300px' }) }),
-    );
+    const html = await renderToString(NuiTable<number>, { props: { ...cells, height: '300px' } });
 
     expect(html).toContain('aria-rowcount="1048577"');
     expect(html).toContain('aria-colcount="16385"');
@@ -477,24 +444,12 @@ describe('NuiTable on the server', () => {
   });
 
   it('renders the overlay over the cells it names on the server', async () => {
-    const html = await renderToString(
-      createSSRApp({
-        render: () =>
-          h(
-            NuiTable<Person>,
-            { columns: PEOPLE_COLUMNS, rows: people(20), height: '300px' },
-            {
-              overlay: ({ rectOf }: NuiTableOverlaySlot) => {
-                const rect = rectOf({ from: { row: 2, col: 1 }, to: { row: 3, col: 2 } });
-
-                return rect === undefined
-                  ? []
-                  : [h('i', { class: 'mark', 'data-rect': JSON.stringify(rect) })];
-              },
-            },
-          ),
-      }),
-    );
+    const html = await renderToString(SlottedTable<Person>, {
+      props: {
+        table: { columns: PEOPLE_COLUMNS, rows: people(20), height: '300px' },
+        slots: { overlay: RectProbe },
+      },
+    });
 
     expect(html).toContain('class="nui-table__overlay"');
 
@@ -506,22 +461,19 @@ describe('NuiTable on the server', () => {
   it('renders skeleton rows for a source without asking it for rows on the server', async () => {
     const offsets: number[] = [];
 
-    const html = await renderToString(
-      createSSRApp({
-        render: () =>
-          h(NuiTable<Person>, {
-            columns: PEOPLE_COLUMNS,
-            id: 'staff',
-            height: '400px',
-            source: {
-              fetch: (request) => {
-                offsets.push(request.offset);
-                return Promise.resolve({ rows: [], total: 0 });
-              },
-            },
-          }),
-      }),
-    );
+    const html = await renderToString(NuiTable<Person>, {
+      props: {
+        columns: PEOPLE_COLUMNS,
+        id: 'staff',
+        height: '400px',
+        source: {
+          fetch: (request) => {
+            offsets.push(request.offset);
+            return Promise.resolve({ rows: [], total: 0 });
+          },
+        },
+      },
+    });
 
     expect(html.match(/nui-table__row--skeleton/g)).toHaveLength(5);
     expect(html).toContain('aria-busy="true"');

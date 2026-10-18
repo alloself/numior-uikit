@@ -1,6 +1,6 @@
 import { mount, type VueWrapper } from '@vue/test-utils';
-import { defineComponent, h } from 'vue';
-import { NuiSkipLink, type NuiConfigOptions, type NuiSkipLinkProps } from '../../src';
+import type { NuiConfigOptions, NuiSkipLinkProps } from '../../src';
+import SkipLinkScene from '../fixtures/SkipLinkScene.vue';
 import { configPlugins } from '../support/config';
 import { ComponentDriver } from './component';
 
@@ -17,16 +17,13 @@ export class SkipLinkDriver extends ComponentDriver {
     super(wrapper);
   }
 
-  static mount({ props = {}, config, withTarget = true }: SkipLinkMountOptions = {}) {
-    const Host = defineComponent({
-      setup: () => () => [
-        h(NuiSkipLink, { target: 'main', ...props }),
-        withTarget ? h('main', { id: 'main' }, 'Content') : null,
-      ],
-    });
-
+  static mount({ props, config, withTarget }: SkipLinkMountOptions = {}) {
     return new SkipLinkDriver(
-      mount(Host, { attachTo: document.body, global: { plugins: configPlugins(config) } }),
+      mount(SkipLinkScene, {
+        props: { props, withTarget },
+        attachTo: document.body,
+        global: { plugins: configPlugins(config) },
+      }),
     );
   }
 

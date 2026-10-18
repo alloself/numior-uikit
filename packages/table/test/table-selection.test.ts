@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vite-plus/test';
-import { h } from 'vue';
+import LoadingNote from './fixtures/LoadingNote.vue';
 import { TableDriver, type TableMountOptions } from './drivers/table';
 import { people, PEOPLE_COLUMNS, type Person } from './support/people';
 
@@ -110,7 +110,7 @@ describe('NuiTable selection', () => {
 
     const custom = mountPeople({
       props: { loading: true, loadingRows: 2 },
-      slots: { loading: () => [h('em', 'Загрузка…')] },
+      slots: { loading: LoadingNote },
     });
 
     await custom.settle();

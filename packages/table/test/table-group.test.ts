@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from 'vite-plus/test';
-import { h } from 'vue';
 import type { NuiTableColumn } from '../src';
+import BoldTotal from './fixtures/BoldTotal.vue';
 import { TableDriver, type TableMountOptions } from './drivers/table';
 import { people, PEOPLE_COLUMNS, type Person } from './support/people';
 
@@ -127,7 +127,7 @@ describe('NuiTable groups and totals', () => {
   it('moves into the totals row with the keyboard and fills it through slots and the label', async () => {
     const grid = mountPeople({
       props: { totalsLabel: 'Всего' },
-      slots: { 'footer-m1': ({ text }: { readonly text: string }) => [h('b', text)] },
+      slots: { 'footer-m1': BoldTotal },
     });
 
     await grid.settle();

@@ -1,19 +1,19 @@
 import { mount, type DOMWrapper, type VueWrapper } from '@vue/test-utils';
 import { vi } from 'vite-plus/test';
-import { defineComponent, h, nextTick, ref, type Component, type Ref } from 'vue';
-import {
-  NuiList,
-  NuiListItem,
-  type NuiListEntry,
-  type NuiListItemProps,
-  type NuiListItemSlot,
-  type NuiListProps,
-  type NuiListSource,
-  type NuiConfigOptions,
+import { nextTick, type Component } from 'vue';
+import type {
+  NuiListEntry,
+  NuiListItemProps,
+  NuiListItemSlot,
+  NuiListProps,
+  NuiListSource,
+  NuiConfigOptions,
 } from '../../src';
+import { anyOf, isString, listOf, nullable } from '../../../primitives/test/support/guards';
+import ListScene from '../fixtures/ListScene.vue';
 import { configPlugins } from '../support/config';
 import { RouterStub } from '../support/router-stub';
-import { createSelection, type Selection, type SelectionValue } from '../support/selection';
+import type { SelectionValue } from '../support/selection';
 import { ComponentDriver } from './component';
 
 export interface ListPart extends NuiListItemProps {
@@ -23,12 +23,16 @@ export interface ListPart extends NuiListItemProps {
   readonly clickable?: boolean | undefined;
 }
 
+export type ListItemText = (slot: NuiListItemSlot<NuiListEntry<unknown>>) => string;
+
+export type ListLeadingText = (slot: { readonly item: NuiListEntry<unknown> }) => string;
+
 export interface ListMountOptions {
   readonly props?: Partial<NuiListProps<unknown>>;
   readonly modelValue?: SelectionValue;
   readonly parts?: readonly ListPart[];
-  readonly itemSlot?: ((slot: NuiListItemSlot<NuiListEntry<unknown>>) => string) | undefined;
-  readonly leadingSlot?: ((slot: { readonly item: NuiListEntry<unknown> }) => string) | undefined;
+  readonly itemSlot?: ListItemText | undefined;
+  readonly leadingSlot?: ListLeadingText | undefined;
   readonly viaRouter?: boolean;
   readonly routerComponent?: Component;
   readonly config?: NuiConfigOptions;
@@ -37,31 +41,9 @@ export interface ListMountOptions {
 const titleOf = (element: Element): string =>
   (element.querySelector('.nui-row__title')?.textContent ?? '').trim();
 
-const partSlots = (part: ListPart) => ({
-  ...(part.leading === undefined ? {} : { leading: () => part.leading }),
-  ...(part.trailing === undefined ? {} : { trailing: () => part.trailing }),
-  ...(part.nested === undefined
-    ? {}
-    : { nested: () => h('ul', { class: 'nested' }, [h('li', part.nested)]) }),
-});
+const isStrings = listOf(isString);
 
-const partProps = (part: ListPart, clicks: Ref<number>, viaRouter: boolean) => {
-  const { leading, trailing, nested, clickable, ...props } = part;
-  void leading;
-  void trailing;
-  void nested;
-  return {
-    ...props,
-    ...(viaRouter ? { as: RouterStub } : {}),
-    ...(clickable
-      ? {
-          onClick: () => {
-            clicks.value += 1;
-          },
-        }
-      : {}),
-  };
-};
+const isSelection = anyOf(nullable(isString), isStrings);
 
 export class ListDriver extends ComponentDriver {
   protected readonly block = 'nui-list';
@@ -76,55 +58,31 @@ export class ListDriver extends ComponentDriver {
     routerComponent,
     config,
   }: ListMountOptions = {}) {
-    const selection = createSelection(modelValue, props.selectable === 'multiple');
-    const clicks = ref(0);
-    const items = ref<NuiListSource<NuiListEntry<unknown>> | undefined>(props.items);
-
-    const slots = {
-      default: () =>
-        parts.map((part) => h(NuiListItem, partProps(part, clicks, viaRouter), partSlots(part))),
-      ...(itemSlot ? { item: itemSlot } : {}),
-      ...(leadingSlot ? { leading: leadingSlot } : {}),
-    };
-
-    const Host = defineComponent({
-      setup: () => () =>
-        h('div', [
-          h(
-            NuiList,
-            {
-              ...props,
-              ...(viaRouter ? { linkAs: RouterStub } : {}),
-              ...(items.value === undefined ? {} : { items: items.value }),
-              ...selection.props(),
-            },
-            slots,
-          ),
-          h('button', { type: 'button', class: 'outside' }, 'Outside'),
-        ]),
+    const scene = mount(ListScene, {
+      props: {
+        list: viaRouter ? { ...props, linkAs: RouterStub } : props,
+        parts,
+        viaRouter,
+        itemText: itemSlot,
+        leadingText: leadingSlot,
+        modelValue: typeof modelValue === 'string' ? modelValue : null,
+        values: isStrings(modelValue) ? modelValue : [],
+      },
+      attachTo: document.body,
+      global: {
+        plugins: configPlugins(config),
+        components: routerComponent ? { RouterLink: routerComponent } : {},
+      },
     });
 
-    return new ListDriver(
-      mount(Host, {
-        attachTo: document.body,
-        global: {
-          plugins: configPlugins(config),
-          components: routerComponent ? { RouterLink: routerComponent } : {},
-        },
-      }),
-      selection,
-      clicks,
-      items,
-    );
+    return new ListDriver(scene, props.selectable === 'multiple');
   }
 
   private constructor(
-    wrapper: VueWrapper,
-    private readonly selection: Selection,
-    private readonly clickCount: Ref<number>,
-    private readonly itemsRef: Ref<NuiListSource<NuiListEntry<unknown>> | undefined>,
+    private readonly scene: VueWrapper<InstanceType<typeof ListScene>>,
+    private readonly multiple: boolean,
   ) {
-    super(wrapper);
+    super(scene);
   }
 
   override hasModifier(modifier: string): boolean {
@@ -179,11 +137,16 @@ export class ListDriver extends ComponentDriver {
   }
 
   get value(): SelectionValue {
-    return this.selection.value();
+    const value = this.multiple ? this.scene.vm.values : this.scene.vm.model;
+
+    if (!isSelection(value)) {
+      throw new Error('the selection holds a value that is not a string');
+    }
+    return value;
   }
 
   get clicks(): number {
-    return this.clickCount.value;
+    return this.scene.vm.clicks;
   }
 
   get groupLabels(): string[] {
@@ -276,7 +239,6 @@ export class ListDriver extends ComponentDriver {
   }
 
   async receiveItems(items: NuiListSource<NuiListEntry>): Promise<void> {
-    this.itemsRef.value = items;
-    await nextTick();
+    await this.scene.setProps({ list: { ...this.scene.props('list'), items } });
   }
 }

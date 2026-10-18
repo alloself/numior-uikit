@@ -1,6 +1,5 @@
-import { NuiInput, NuiList, NuiRadio, NuiRadioGroup } from '@numior/vue';
+import { NuiInput, NuiList, NuiRadioGroup } from '@numior/vue';
 import { describe, expect, expectTypeOf, it } from 'vite-plus/test';
-import { h } from 'vue';
 import { custom, formConfig, required, type ControlProps, type ControlValue } from '../src';
 import { SmartFormDriver } from './drivers/smart-form';
 
@@ -33,18 +32,6 @@ const blank: Account = {
   address: { city: '', zip: '' },
   contacts: [{ email: 'ann@example.com' }],
 };
-
-const kindOptions = () => [
-  h(NuiRadio, { value: 'person' }, () => 'Person'),
-  h(NuiRadio, { value: 'company' }, () => 'Company'),
-];
-
-const markdownHint = () => h('p', { class: 'hint' }, 'Markdown works');
-
-const rowHint = () => h('p', { class: 'row-hint' }, 'Work address');
-
-const actionState = (props: Record<string, unknown>) =>
-  h('span', { class: 'state' }, `${String(props.pending)}/${String(props.dirty)}`);
 
 const isCompany = (values: Account): boolean => values.kind === 'company';
 
@@ -124,7 +111,7 @@ describe('NuiSmartForm', () => {
         field(NuiRadioGroup, (values) => values.kind, { label: 'Kind', group: true }),
         field(NuiInput, (values) => values.bio, { label: 'Bio' }),
       ],
-      slots: { kind: kindOptions, 'bio:after': markdownHint },
+      parts: ['kind-options', 'bio-hint'],
     });
 
     expect(form.attribute('name', 'placeholder')).toBe('Ann Lee');
@@ -236,7 +223,7 @@ describe('NuiSmartForm', () => {
           ],
         }),
       ],
-      slots: { 'contacts.email:after': rowHint },
+      parts: ['row-hint'],
     });
 
     expect(form.fields).toEqual(['contacts.0.email']);
@@ -302,7 +289,7 @@ describe('NuiSmartForm', () => {
     const form = SmartFormDriver.mount({
       initialValues: blank,
       fields: [field(NuiInput, (values) => values.name, { label: 'Name' })],
-      slots: { actions: actionState },
+      parts: ['action-state'],
     });
 
     expect(form.text('.state')).toBe('false/false');

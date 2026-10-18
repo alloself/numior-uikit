@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { defineComponent, h, type Component } from 'vue';
+import Sun from 'lucide-vue-next/dist/esm/icons/sun.js';
+import { markRaw, type Component } from 'vue';
 import { IconDriver } from './drivers/icon';
 
-const Custom = defineComponent({ render: () => h('svg', { 'data-custom': 'true' }) });
+const Custom = markRaw(Sun);
 
 declare module '@numior/primitives' {
   interface NuiIconSets {
@@ -24,16 +25,16 @@ describe('NuiIcon', () => {
   it('prefers the provided registry, takes a component as is and stays empty for a declared alias nobody registered', async () => {
     const fromRegistry = IconDriver.mount({ icon: 'check' }, { icons: { check: Custom } });
     await fromRegistry.ready();
-    expect(fromRegistry.glyphAttribute('data-custom')).toBe('true');
+    expect(fromRegistry.glyphClasses).toContain('lucide-sun');
     const fromDefaults = IconDriver.mount({ icon: 'x' }, { icons: { check: Custom } });
     await fromDefaults.ready();
     expect(fromDefaults.glyphClasses).toContain('lucide-x');
     const appAlias = IconDriver.mount({ icon: 'test-brand' }, { icons: { 'test-brand': Custom } });
     await appAlias.ready();
-    expect(appAlias.glyphAttribute('data-custom')).toBe('true');
+    expect(appAlias.glyphClasses).toContain('lucide-sun');
     const component = IconDriver.mount({ icon: Custom });
     await component.ready();
-    expect(component.glyphAttribute('data-custom')).toBe('true');
+    expect(component.glyphClasses).toContain('lucide-sun');
     const missing = IconDriver.mount({ icon: 'test-unregistered' }, { expectGlyph: false });
     await missing.ready();
     expect(missing.empty).toBe(true);

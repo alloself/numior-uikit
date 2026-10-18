@@ -1,5 +1,5 @@
 import { mount } from '@vue/test-utils';
-import { defineComponent, h, nextTick, shallowRef, type Ref } from 'vue';
+import { nextTick, reactive } from 'vue';
 import type {
   EngineArray,
   EntryState,
@@ -7,11 +7,8 @@ import type {
   FormEngineFactory,
 } from '../../src/engine/engine.types';
 import { getAt } from '../../src/values/access';
-
-interface Slot {
-  readonly path: Ref<string>;
-  readonly visible: Ref<boolean>;
-}
+import EngineScene from '../fixtures/EngineScene.vue';
+import type { EngineProbe } from '../fixtures/scenes.types';
 
 export class EngineHarness<V extends object> {
   static mount<V extends object>(
@@ -20,64 +17,20 @@ export class EngineHarness<V extends object> {
     names: readonly string[],
     arrays: readonly string[] = [],
   ): EngineHarness<V> {
-    const fields = new Map<string, EntryState>();
-    const lists = new Map<string, EngineArray>();
+    const probes = names.map((name) => reactive({ name, path: name, visible: true }));
 
-    const slots = new Map<string, Slot>(
-      names.map((name) => [name, { path: shallowRef(name), visible: shallowRef(true) }]),
-    );
-
-    const captured = shallowRef<FormEngine<V> | null>(null);
-
-    const Host = defineComponent({
-      setup: () => {
-        const engine = factory(initialValues);
-
-        for (const path of arrays) {
-          lists.set(
-            path,
-            engine.array(() => path),
-          );
-        }
-
-        const probe = (name: string, slot: Slot) =>
-          defineComponent({
-            setup: () => {
-              fields.set(
-                name,
-                engine.field(
-                  () => slot.path.value,
-                  () => undefined,
-                ),
-              );
-
-              return () => h('i');
-            },
-          });
-
-        const probes = [...slots].map(([name, slot]) => [name, slot, probe(name, slot)] as const);
-
-        captured.value = engine;
-        return () =>
-          probes
-            .filter(([, slot]) => slot.visible.value)
-            .map(([name, , Probe]) => h(Probe, { key: name }));
-      },
+    const wrapper = mount(EngineScene<V>, {
+      props: { factory, initialValues, probes, arrays },
     });
 
-    mount(Host);
-
-    if (!captured.value) {
-      throw new Error('the engine was not created');
-    }
-    return new EngineHarness(captured.value, fields, lists, slots);
+    return new EngineHarness(wrapper.vm.engine, wrapper.vm.fields, wrapper.vm.lists, probes);
   }
 
   private constructor(
     readonly engine: FormEngine<V>,
     private readonly fields: Map<string, EntryState>,
     private readonly lists: Map<string, EngineArray>,
-    private readonly slots: Map<string, Slot>,
+    private readonly probes: readonly EngineProbe[],
   ) {}
 
   valueAt(path: string): unknown {
@@ -102,24 +55,24 @@ export class EngineHarness<V extends object> {
     return list;
   }
 
-  private slot(name: string): Slot {
-    const slot = this.slots.get(name);
+  private probe(name: string): EngineProbe {
+    const probe = this.probes.find((candidate) => candidate.name === name);
 
-    if (!slot) {
-      throw new Error(`no slot ${name}`);
+    if (!probe) {
+      throw new Error(`no probe ${name}`);
     }
-    return slot;
+    return probe;
   }
 
   async move(name: string, path: string): Promise<void> {
-    this.slot(name).path.value = path;
+    this.probe(name).path = path;
     await nextTick();
   }
 
   async toggle(name: string): Promise<void> {
-    const { visible } = this.slot(name);
+    const probe = this.probe(name);
 
-    visible.value = !visible.value;
+    probe.visible = !probe.visible;
     await nextTick();
   }
 

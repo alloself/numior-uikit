@@ -1,10 +1,11 @@
 import { mount, type VueWrapper } from '@vue/test-utils';
-import { defineComponent, h, type Component, type Plugin } from 'vue';
+import type { Plugin } from 'vue';
+import SetupProbe from '../fixtures/SetupProbe.vue';
 
 type Outcome<T> = { readonly ran: true; readonly value: T } | { readonly ran: false };
 
 export interface CaptureOptions {
-  readonly wrap?: (child: Component) => Component;
+  readonly layers?: readonly (() => void)[];
   readonly plugins?: Plugin[];
 }
 
@@ -18,14 +19,13 @@ export class Capture<T> {
 export const captureSetup = <T>(setup: () => T, options: CaptureOptions = {}): Capture<T> => {
   const outcome: { current: Outcome<T> } = { current: { ran: false } };
 
-  const Probe = defineComponent({
-    setup() {
-      outcome.current = { ran: true, value: setup() };
-      return () => h('i');
+  const wrapper = mount(SetupProbe, {
+    props: {
+      layers: options.layers ?? [],
+      run: () => {
+        outcome.current = { ran: true, value: setup() };
+      },
     },
-  });
-
-  const wrapper = mount(options.wrap ? options.wrap(Probe) : Probe, {
     global: { plugins: options.plugins ?? [] },
   });
 
@@ -34,19 +34,3 @@ export const captureSetup = <T>(setup: () => T, options: CaptureOptions = {}): C
   }
   return new Capture(outcome.current.value, wrapper);
 };
-
-export const providing =
-  (provide: () => void) =>
-  (child: Component): Component =>
-    defineComponent({
-      setup() {
-        provide();
-        return () => h(child);
-      },
-    });
-
-export const nest = (...layers: Array<(child: Component) => Component>) =>
-  layers.reduceRight<(child: Component) => Component>(
-    (inner, outer) => (child) => outer(inner(child)),
-    (child) => child,
-  );

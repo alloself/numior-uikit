@@ -1,16 +1,14 @@
 import { mount, type VueWrapper } from '@vue/test-utils';
-import { defineComponent, h, nextTick, ref, shallowRef, type VNode } from 'vue';
+import { nextTick } from 'vue';
 import {
-  useVirtualFrame,
-  useVirtualList,
   type ItemSize,
   type VirtualAlign,
   type VirtualAxis,
   type VirtualFrame,
-  type VirtualItem,
   type VirtualList,
   type VirtualSize,
 } from '../../src';
+import VirtualListHost from '../fixtures/VirtualListHost.vue';
 
 export interface VirtualHarnessOptions {
   readonly count?: number;
@@ -28,38 +26,17 @@ export interface VirtualHarnessOptions {
   readonly listen?: boolean;
 }
 
-type Outcome = { readonly ran: true; readonly value: VirtualList } | { readonly ran: false };
+type HostWrapper = VueWrapper<InstanceType<typeof VirtualListHost>>;
 
 interface SpacerStyles {
   readonly lead: string;
   readonly rest: string;
 }
 
-interface HarnessInputs {
-  readonly count: { value: number };
-  readonly itemSize: { value: ItemSize };
-  readonly pinned: { value: number | undefined };
-  readonly frozen: { value: number | undefined };
-}
-
 interface HarnessView {
   readonly axis: VirtualAxis;
   readonly renders: readonly SpacerStyles[];
 }
-
-const rowOf = (item: VirtualItem, axis: VirtualAxis): VNode =>
-  h(
-    'div',
-    {
-      key: item.index,
-      class: 'row',
-      'data-index': item.index,
-      style: {
-        transform: axis === 'x' ? `translateX(${item.offset}px)` : `translateY(${item.offset}px)`,
-      },
-    },
-    `Row ${item.index}`,
-  );
 
 const spacersOf = (element: HTMLElement): SpacerStyles => ({
   lead: element.style.getPropertyValue('--_window-lead'),
@@ -71,87 +48,27 @@ const defineSize = (element: HTMLElement, name: string, value: number): void => 
 };
 
 export class VirtualHarness {
-  static mount(options: VirtualHarnessOptions = {}): VirtualHarness {
-    const count = ref(options.count ?? 1000);
-    const itemSize = shallowRef<ItemSize>(options.itemSize ?? 20);
-    const pinned = ref(options.pinned);
-    const frozen = ref(options.frozen);
-    const height = options.height ?? 200;
+  static mount({ height = 200, ...options }: VirtualHarnessOptions = {}): VirtualHarness {
     const axis = options.axis ?? 'y';
-    const outcome: { current: Outcome } = { current: { ran: false } };
     const renders: SpacerStyles[] = [];
 
-    const Host = defineComponent({
-      setup() {
-        const container = shallowRef<HTMLElement | null>(null);
-
-        const virtual = useVirtualList(container, {
-          count,
-          itemSize,
-          axis,
-          overscan: () => options.overscan,
-          initialCount: () => options.initialCount,
-          enabled: () => options.enabled,
-          pinned,
-          frozen,
-          maxSize: () => options.maxSize,
-          inset: () => options.inset,
-          listen: () => options.listen,
-        });
-
-        const framed = useVirtualFrame(container, virtual.frame);
-
-        outcome.current = { ran: true, value: virtual };
-
-        const setContainer = (element: unknown): void => {
-          if (element instanceof HTMLElement) {
-            defineSize(element, axis === 'x' ? 'clientWidth' : 'clientHeight', height);
-            container.value = element;
-          } else {
-            container.value = null;
-          }
-        };
-
-        return () => {
-          if (container.value !== null) {
-            renders.push(spacersOf(container.value));
-          }
-          return h(
-            'div',
-            {
-              ref: setContainer,
-              class: 'viewport',
-              dir: options.dir,
-              style: framed.canvasStyle.value,
-            },
-            [
-              h(
-                'div',
-                {
-                  class: 'body',
-                  style: { height: `${virtual.canvasSize.value}px`, ...framed.windowStyle.value },
-                },
-                virtual.items.value.map((item) => rowOf(item, axis)),
-              ),
-            ],
-          );
-        };
+    const wrapper = mount(VirtualListHost, {
+      props: {
+        ...options,
+        count: options.count ?? 1000,
+        itemSize: options.itemSize ?? 20,
+        axis,
+        onAttach: (element: HTMLElement) => {
+          defineSize(element, axis === 'x' ? 'clientWidth' : 'clientHeight', height);
+        },
+        onRender: (element: HTMLElement) => {
+          renders.push(spacersOf(element));
+        },
       },
+      attachTo: document.body,
     });
 
-    const wrapper = mount(Host, { attachTo: document.body });
-    if (!outcome.current.ran) {
-      throw new Error('useVirtualList did not run');
-    }
-    return new VirtualHarness(
-      wrapper,
-      outcome.current.value,
-      { count, itemSize, pinned, frozen },
-      {
-        axis,
-        renders,
-      },
-    );
+    return new VirtualHarness(wrapper, { axis, renders });
   }
 
   async settle(): Promise<void> {
@@ -159,11 +76,13 @@ export class VirtualHarness {
   }
 
   private constructor(
-    private readonly wrapper: VueWrapper,
-    private readonly list: VirtualList,
-    private readonly inputs: HarnessInputs,
+    private readonly wrapper: HostWrapper,
     private readonly view: HarnessView,
   ) {}
+
+  private get list(): VirtualList {
+    return this.wrapper.vm.virtual;
+  }
 
   private get axis(): VirtualAxis {
     return this.view.axis;
@@ -292,23 +211,19 @@ export class VirtualHarness {
   }
 
   async setCount(count: number): Promise<void> {
-    this.inputs.count.value = count;
-    await nextTick();
+    await this.wrapper.setProps({ count });
   }
 
   async setItemSize(size: ItemSize): Promise<void> {
-    this.inputs.itemSize.value = size;
-    await nextTick();
+    await this.wrapper.setProps({ itemSize: size });
   }
 
   async pin(index: number | undefined): Promise<void> {
-    this.inputs.pinned.value = index;
-    await nextTick();
+    await this.wrapper.setProps({ pinned: index });
   }
 
   async freeze(count: number | undefined): Promise<void> {
-    this.inputs.frozen.value = count;
-    await nextTick();
+    await this.wrapper.setProps({ frozen: count });
   }
 
   unmount(): void {

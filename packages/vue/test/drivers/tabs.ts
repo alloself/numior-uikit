@@ -1,14 +1,7 @@
 import { DOMWrapper, mount, type VueWrapper } from '@vue/test-utils';
-import { defineComponent, h, nextTick, ref, shallowRef, type Ref } from 'vue';
-import {
-  NuiTab,
-  NuiTabList,
-  NuiTabPanel,
-  NuiTabs,
-  type NuiTabDescriptor,
-  type NuiTabsPanelSlot,
-  type NuiTabsProps,
-} from '../../src';
+import { nextTick } from 'vue';
+import type { NuiTabDescriptor, NuiTabsProps } from '../../src';
+import TabsScene from '../fixtures/TabsScene.vue';
 import { ResizeObservers } from '../support/resize-observers';
 import { ComponentDriver } from './component';
 
@@ -35,113 +28,49 @@ const DESCRIPTORS: readonly NuiTabDescriptor[] = [
   { value: 'danger', label: 'Danger' },
 ];
 
-const parts =
-  (
-    shown: readonly NuiTabDescriptor[],
-    lazyPanels: readonly string[],
-    unfocusablePanels: readonly string[],
-    close: (value: string) => void,
-  ) =>
-  () => [
-    h(NuiTabList, { label: 'Settings' }, () =>
-      shown.map((tab) =>
-        h(
-          NuiTab,
-          {
-            key: tab.value,
-            value: tab.value,
-            icon: tab.icon,
-            disabled: tab.disabled,
-            closable: tab.closable,
-            onClose: () => {
-              close(tab.value);
-            },
-          },
-          () => tab.label,
-        ),
-      ),
-    ),
-    ...shown.map((tab) =>
-      h(
-        NuiTabPanel,
-        {
-          key: tab.value,
-          value: tab.value,
-          lazy: lazyPanels.includes(tab.value) ? true : undefined,
-          focusable: unfocusablePanels.includes(tab.value) ? false : undefined,
-        },
-        () => `${tab.label} panel`,
-      ),
-    ),
-  ];
-
-const fromData = () => ({
-  panel: (slot: NuiTabsPanelSlot) => `${slot.tab.label} panel`,
-});
+type TabsSceneWrapper = VueWrapper<InstanceType<typeof TabsScene>>;
 
 export class TabsDriver extends ComponentDriver {
   protected readonly block = 'nui-tabs';
 
   static mount({
-    props = {},
+    props,
     modelValue,
-    fromData: data = false,
-    dir = 'ltr',
-    lazyPanels = [],
-    closable = [],
-    unfocusablePanels = [],
+    fromData,
+    dir,
+    lazyPanels,
+    closable,
+    unfocusablePanels,
     observed = false,
   }: TabsMountOptions = {}) {
     const observers = observed ? new ResizeObservers() : undefined;
-    const model = ref(modelValue);
-    const closed: string[] = [];
 
-    const shown = shallowRef(
-      DESCRIPTORS.map((tab) => ({ ...tab, closable: closable.includes(tab.value) })),
-    );
-
-    const close = (value: string): void => {
-      const index = shown.value.findIndex((tab) => tab.value === value);
-
-      closed.push(value);
-      shown.value = shown.value.filter((tab) => tab.value !== value);
-
-      if (model.value === value) {
-        model.value = (shown.value[index] ?? shown.value[index - 1])?.value;
-      }
-    };
-
-    const tabsProps = () => ({
-      ...props,
-      ...(data ? { tabs: shown.value, label: 'Settings', onClose: close } : {}),
-      ...(model.value === undefined ? {} : { modelValue: model.value }),
-      'onUpdate:modelValue': (value: string | undefined) => {
-        model.value = value;
+    const wrapper = mount(TabsScene, {
+      props: {
+        props,
+        descriptors: DESCRIPTORS,
+        initialValue: modelValue,
+        fromData,
+        dir,
+        lazyPanels,
+        closable,
+        unfocusablePanels,
       },
+      attachTo: document.body,
     });
 
-    const Host = defineComponent({
-      setup: () => () =>
-        h('div', { dir }, [
-          data
-            ? h(NuiTabs, tabsProps(), fromData())
-            : h(NuiTabs, tabsProps(), {
-                default: parts(shown.value, lazyPanels, unfocusablePanels, close),
-              }),
-          h('button', { type: 'button', class: 'outside' }, 'Outside'),
-        ]),
-    });
-
-    return new TabsDriver(mount(Host, { attachTo: document.body }), model, closed, observers);
+    return new TabsDriver(wrapper, observers);
   }
 
   private constructor(
-    wrapper: VueWrapper,
-    private readonly model: Ref<string | undefined>,
-    readonly closed: readonly string[],
+    private readonly scene: TabsSceneWrapper,
     private readonly observers: ResizeObservers | undefined,
   ) {
-    super(wrapper);
+    super(scene);
+  }
+
+  get closed(): readonly string[] {
+    return this.scene.vm.closed;
   }
 
   get root(): DOMWrapper<HTMLElement> {
@@ -161,7 +90,7 @@ export class TabsDriver extends ComponentDriver {
   }
 
   get selected(): string | undefined {
-    return this.model.value;
+    return this.scene.vm.model;
   }
 
   get tabIndexes(): number[] {
@@ -279,7 +208,7 @@ export class TabsDriver extends ComponentDriver {
   }
 
   async receive(value: string): Promise<void> {
-    this.model.value = value;
+    this.scene.vm.model = value;
     await nextTick();
   }
 

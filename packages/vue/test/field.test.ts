@@ -1,6 +1,4 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { h } from 'vue';
-import { NuiInput } from '../src';
 import { FieldDriver } from './drivers/field';
 
 describe('NuiField', () => {
@@ -79,11 +77,7 @@ describe('NuiField', () => {
   it('accepts slots for label, description and error', () => {
     const field = FieldDriver.mount({
       props: { id: 'bio' },
-      slots: {
-        label: () => 'Bio',
-        description: () => h('em', 'Markdown ok'),
-        error: () => 'Too long',
-      },
+      slots: { label: 'Bio', description: 'Markdown ok', error: 'Too long' },
     });
 
     expect(field.label.text()).toBe('Bio');
@@ -101,7 +95,7 @@ describe('NuiField', () => {
 
     const released = FieldDriver.mount({
       props: { label: 'Code', readonly: true },
-      control: () => h(NuiInput, { readonly: false }),
+      control: { readonly: false },
     });
 
     expect(released.control.attributes('readonly')).toBeUndefined();

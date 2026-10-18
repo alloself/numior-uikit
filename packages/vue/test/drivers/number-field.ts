@@ -1,75 +1,41 @@
 import { mount, type DOMWrapper, type VueWrapper } from '@vue/test-utils';
-import { defineComponent, h, nextTick, ref, type Ref } from 'vue';
-import { NuiField, NuiNumberField, type NuiFieldProps, type NuiNumberFieldProps } from '../../src';
-import { configScope } from '../support/config-scope';
+import { nextTick, ref, type Ref } from 'vue';
+import type { NuiFieldProps, NuiNumberFieldProps } from '../../src';
+import NumberFieldScene from '../fixtures/NumberFieldScene.vue';
+import { configPlugins } from '../support/config';
 import { ComponentDriver } from './component';
-import { isNumber, nullable } from '../../../primitives/test/support/guards';
-
-const isModel = nullable(isNumber);
 
 export interface NumberFieldMountOptions {
   readonly props?: NuiNumberFieldProps;
   readonly modelValue?: number | null;
   readonly field?: NuiFieldProps;
   readonly locale?: string;
-  readonly slots?: Record<string, () => unknown>;
+  readonly prefix?: string;
 }
+
+type NumberFieldSceneWrapper = VueWrapper<InstanceType<typeof NumberFieldScene>>;
 
 export class NumberFieldDriver extends ComponentDriver {
   protected readonly block = 'nui-number-field';
 
-  static mount({
-    props = {},
-    modelValue = null,
-    field,
-    locale,
-    slots = {},
-  }: NumberFieldMountOptions = {}) {
-    const model = ref<number | null>(modelValue);
-    const history: Array<number | null> = [];
-    const localeRef = ref(locale);
-
-    const control = () =>
-      h(
-        NuiNumberField,
-        {
-          ...props,
-          modelValue: model.value,
-          'onUpdate:modelValue': (value: unknown) => {
-            if (isModel(value)) {
-              model.value = value;
-              history.push(value);
-            }
-          },
-        },
-        slots,
-      );
-
-    const inField = () => (field ? h(NuiField, field, control) : control());
-
-    const Host = defineComponent({
-      setup: () => () =>
-        h('div', [
-          h(configScope({ locale: () => localeRef.value }, inField)),
-          h('button', { type: 'button', class: 'outside' }, 'Outside'),
-        ]),
-    });
+  static mount({ props, modelValue, field, locale, prefix }: NumberFieldMountOptions = {}) {
+    const current = ref(locale);
 
     return new NumberFieldDriver(
-      mount(Host, { attachTo: document.body }),
-      model,
-      history,
-      localeRef,
+      mount(NumberFieldScene, {
+        props: { props, initialValue: modelValue, field, prefix },
+        attachTo: document.body,
+        global: { plugins: configPlugins({ locale: () => current.value }) },
+      }),
+      current,
     );
   }
 
   private constructor(
-    wrapper: VueWrapper,
-    private readonly model: Ref<number | null>,
-    readonly history: Array<number | null>,
-    private readonly localeRef: Ref<string | undefined>,
+    private readonly scene: NumberFieldSceneWrapper,
+    private readonly locale: Ref<string | undefined>,
   ) {
-    super(wrapper);
+    super(scene);
   }
 
   override hasModifier(modifier: string): boolean {
@@ -88,7 +54,7 @@ export class NumberFieldDriver extends ComponentDriver {
   }
 
   get value(): number | null {
-    return this.model.value;
+    return this.scene.vm.model;
   }
 
   get ariaNow(): string | undefined {
@@ -176,12 +142,12 @@ export class NumberFieldDriver extends ComponentDriver {
   }
 
   async receiveModelValue(value: number | null): Promise<void> {
-    this.model.value = value;
+    this.scene.vm.model = value;
     await nextTick();
   }
 
   async setLocale(locale: string): Promise<void> {
-    this.localeRef.value = locale;
+    this.locale.value = locale;
     await nextTick();
   }
 }

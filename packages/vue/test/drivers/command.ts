@@ -1,5 +1,5 @@
 import { mount, type DOMWrapper } from '@vue/test-utils';
-import { defineComponent, h, nextTick } from 'vue';
+import { nextTick } from 'vue';
 import {
   NuiCommand,
   type NuiCommandItem,
@@ -34,12 +34,12 @@ export class CommandDriver extends ComponentDriver {
   protected readonly block = 'nui-command';
 
   static mount({ props = {}, config }: CommandMountOptions = {}) {
-    const Host = defineComponent({
-      setup: () => () => h(NuiCommand, { items: COMMANDS, ...props }),
-    });
-
     return new CommandDriver(
-      mount(Host, { attachTo: document.body, global: { plugins: configPlugins(config) } }),
+      mount(NuiCommand, {
+        props: { items: COMMANDS, ...props },
+        attachTo: document.body,
+        global: { plugins: configPlugins(config) },
+      }),
     );
   }
 

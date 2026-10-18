@@ -6,7 +6,7 @@ import { ComponentDriver } from './component';
 export interface AlertMountOptions {
   readonly props?: NuiAlertProps;
   readonly open?: boolean;
-  readonly slots?: Record<string, () => unknown>;
+  readonly slots?: Record<string, string | (new () => unknown)>;
   readonly config?: NuiConfigOptions;
 }
 

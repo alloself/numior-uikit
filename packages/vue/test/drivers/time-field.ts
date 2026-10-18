@@ -1,12 +1,10 @@
 import { mount, type DOMWrapper, type VueWrapper } from '@vue/test-utils';
-import { defineComponent, h, nextTick, ref, type Ref } from 'vue';
-import { NuiField, NuiTimeField, type NuiFieldProps, type NuiTimeFieldProps } from '../../src';
-import { configScope } from '../support/config-scope';
+import { nextTick, ref, type Ref } from 'vue';
+import type { NuiFieldProps, NuiTimeFieldProps } from '../../src';
+import TimeFieldScene from '../fixtures/TimeFieldScene.vue';
+import { configPlugins } from '../support/config';
 import { TopLayerStubs, dismissPopoverNatively, openPopoverNatively } from '../support/top-layer';
 import { ComponentDriver } from './component';
-import { isString, nullable } from '../../../primitives/test/support/guards';
-
-const isModel = nullable(isString);
 
 export interface TimeFieldMountOptions {
   readonly props?: NuiTimeFieldProps;
@@ -15,6 +13,8 @@ export interface TimeFieldMountOptions {
   readonly locale?: string;
   readonly dir?: 'ltr' | 'rtl';
 }
+
+type TimeFieldSceneWrapper = VueWrapper<InstanceType<typeof TimeFieldScene>>;
 
 const normalize = (text: string): string => text.replace(/\s/gu, ' ').trim();
 
@@ -55,42 +55,25 @@ const mousePointer = (type: string, clientY: number): PointerEvent =>
 export class TimeFieldDriver extends ComponentDriver {
   protected readonly block = 'nui-time-field';
 
-  static mount({ props = {}, modelValue = null, field, locale, dir }: TimeFieldMountOptions = {}) {
+  static mount({ props, modelValue, field, locale, dir }: TimeFieldMountOptions = {}) {
     const stubs = new TopLayerStubs();
-    const model = ref<string | null>(modelValue);
-    const localeRef = ref(locale);
+    const current = ref(locale);
 
-    const control = () =>
-      h(NuiTimeField, {
-        ...props,
-        modelValue: model.value,
-        'onUpdate:modelValue': (value: unknown) => {
-          if (isModel(value)) {
-            model.value = value;
-          }
-        },
-      });
-
-    const inField = () => (field ? h(NuiField, field, control) : control());
-
-    const Host = defineComponent({
-      setup: () => () =>
-        h('div', { dir }, [
-          h(configScope({ locale: () => localeRef.value }, inField)),
-          h('button', { type: 'button', class: 'outside' }, 'Outside'),
-        ]),
+    const wrapper = mount(TimeFieldScene, {
+      props: { props, initialValue: modelValue, field, dir },
+      attachTo: document.body,
+      global: { plugins: configPlugins({ locale: () => current.value }) },
     });
 
-    return new TimeFieldDriver(mount(Host, { attachTo: document.body }), stubs, model, localeRef);
+    return new TimeFieldDriver(wrapper, stubs, current);
   }
 
   private constructor(
-    wrapper: VueWrapper,
+    private readonly scene: TimeFieldSceneWrapper,
     private readonly stubs: TopLayerStubs,
-    private readonly model: Ref<string | null>,
-    private readonly localeRef: Ref<string | undefined>,
+    private readonly locale: Ref<string | undefined>,
   ) {
-    super(wrapper);
+    super(scene);
   }
 
   override hasModifier(modifier: string): boolean {
@@ -130,7 +113,7 @@ export class TimeFieldDriver extends ComponentDriver {
   }
 
   get value(): string | null {
-    return this.model.value;
+    return this.scene.vm.model;
   }
 
   get focusedSegment(): number {
@@ -308,12 +291,12 @@ export class TimeFieldDriver extends ComponentDriver {
   }
 
   async receiveModelValue(value: string | null): Promise<void> {
-    this.model.value = value;
+    this.scene.vm.model = value;
     await nextTick();
   }
 
   async setLocale(locale: string): Promise<void> {
-    this.localeRef.value = locale;
+    this.locale.value = locale;
     await nextTick();
   }
 

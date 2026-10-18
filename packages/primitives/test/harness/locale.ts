@@ -1,5 +1,5 @@
 import { createNuiConfig, provideLocale, useLocale } from '../../src';
-import { captureSetup, nest, providing } from './capture';
+import { captureSetup } from './capture';
 
 type Explicit = () => string | undefined;
 
@@ -22,10 +22,7 @@ export class LocaleHarness {
   ): LocaleHarness {
     return new LocaleHarness(
       captureSetup(() => useLocale(explicit), {
-        wrap: nest(
-          providing(() => provideLocale(outer)),
-          providing(() => provideLocale(inner)),
-        ),
+        layers: [() => provideLocale(outer), () => provideLocale(inner)],
       }).value.value,
     );
   }

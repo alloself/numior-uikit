@@ -1,12 +1,6 @@
 import { mount, type DOMWrapper, type VueWrapper } from '@vue/test-utils';
-import { h } from 'vue';
-import {
-  NuiField,
-  NuiRadio,
-  NuiRadioGroup,
-  type NuiFieldProps,
-  type NuiRadioGroupProps,
-} from '../../src';
+import { NuiRadioGroup, type NuiFieldProps, type NuiRadioGroupProps } from '../../src';
+import RadioGroupScene from '../fixtures/RadioGroupScene.vue';
 import { ComponentDriver } from './component';
 
 export interface RadioGroupMountOptions {
@@ -27,36 +21,10 @@ export class RadioGroupDriver extends ComponentDriver {
     super(wrapper);
   }
 
-  static mount({
-    props = {},
-    modelValue,
-    values = ['a', 'b', 'c'],
-    field,
-    disabledValues = [],
-  }: RadioGroupMountOptions = {}) {
-    const radios = () =>
-      values.map((value) =>
-        h(
-          NuiRadio,
-          { value, key: value, ...(disabledValues.includes(value) ? { disabled: true } : {}) },
-          () => value,
-        ),
-      );
+  static mount(options: RadioGroupMountOptions = {}) {
+    const wrapper = mount(RadioGroupScene, { props: options });
 
-    const group = () => h(NuiRadioGroup<string | undefined>, { ...props, modelValue }, radios);
-
-    if (field) {
-      const host = mount(NuiField, { props: field, slots: { default: group } });
-
-      return new RadioGroupDriver(host, host.findComponent(NuiRadioGroup));
-    }
-
-    const wrapper = mount(NuiRadioGroup<string | undefined>, {
-      props: { ...props, modelValue },
-      slots: { default: radios },
-    });
-
-    return new RadioGroupDriver(wrapper, wrapper);
+    return new RadioGroupDriver(wrapper, wrapper.findComponent(NuiRadioGroup));
   }
 
   get group(): DOMWrapper<Element> {

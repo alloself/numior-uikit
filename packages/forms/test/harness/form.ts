@@ -1,43 +1,23 @@
 import { createNuiConfig, type NuiConfigOptions } from '@numior/primitives';
 import { mount, type DOMWrapper, type VueWrapper } from '@vue/test-utils';
 import { vi } from 'vite-plus/test';
-import {
-  defineComponent,
-  h,
-  nextTick,
-  onBeforeUnmount,
-  reactive,
-  shallowRef,
-  type Component,
-} from 'vue';
-import {
-  byPath,
-  useField,
-  useForm,
-  type AnyFieldRule,
-  type FieldFlush,
-  type FormContext,
-  type FormField,
-  type FormMessage,
-  type FormMeta,
-  type ResetOptions,
-  type SubmitResult,
-  type UseFormOptions,
-  type ValidateOn,
-  type ValidateOptions,
-  type ValidationSummary,
-  type SubmittedValues,
+import { markRaw, nextTick, reactive } from 'vue';
+import type {
+  FormContext,
+  FormField,
+  FormMessage,
+  FormMeta,
+  ResetOptions,
+  SubmitResult,
+  UseFormOptions,
+  ValidateOptions,
+  ValidationSummary,
+  SubmittedValues,
 } from '../../src';
+import FieldProbesForm from '../fixtures/FieldProbesForm.vue';
+import type { FieldProbes, FieldSpec, FieldView } from '../fixtures/scenes.types';
 
-export interface FieldSpec {
-  readonly path: string;
-  readonly validateOn?: ValidateOn;
-  readonly keepValue?: boolean;
-  readonly debounce?: number;
-  readonly rules?: readonly AnyFieldRule[];
-  readonly label?: string;
-  readonly flush?: FieldFlush;
-}
+export type { FieldSpec } from '../fixtures/scenes.types';
 
 export interface FormHarnessOptions<V extends object, O> extends Omit<
   UseFormOptions<V, O>,
@@ -49,129 +29,46 @@ export interface FormHarnessOptions<V extends object, O> extends Omit<
   readonly onSubmit?: UseFormOptions<V, O>['onSubmit'];
 }
 
-interface View {
-  readonly hidden: Set<string>;
-  readonly inactive: Set<string>;
-  readonly disabled: Set<string>;
-}
-
 const specOf = (input: string | FieldSpec): FieldSpec =>
   typeof input === 'string' ? { path: input } : input;
 
-const display = (value: unknown): string => (typeof value === 'string' ? value : '');
-
-interface Probes {
-  readonly fields: Map<string, FormField<unknown>>;
-  readonly work: Map<string, Promise<void>>;
-}
-
-const probeFor = <V extends object>(
-  spec: FieldSpec,
-  view: View,
-  { fields, work }: Probes,
-  form: () => FormContext<V>,
-) =>
-  defineComponent({
-    setup: () => {
-      const element = shallowRef<HTMLInputElement | null>(null);
-      const { path, ...options } = spec;
-
-      const field = useField(byPath(path), {
-        ...options,
-        form: form(),
-        element,
-        active: () => !view.inactive.has(path),
-        disabled: () => view.disabled.has(path),
-      });
-
-      fields.set(path, field);
-      onBeforeUnmount(() => fields.delete(path));
-
-      const onInput = (event: Event): void => {
-        if (event.target instanceof HTMLInputElement) {
-          work.set(path, field.setValue(event.target.value));
-        }
-      };
-
-      const onBlur = (): void => {
-        work.set(path, field.handleBlur());
-      };
-
-      return () =>
-        h('label', { class: 'probe' }, [
-          h('input', {
-            ref: element,
-            id: path,
-            value: display(field.value.value),
-            onInput,
-            onBlur,
-          }),
-          field.errorMessage.value === undefined
-            ? null
-            : h('span', { id: `${path}-error` }, field.errorMessage.value),
-        ]);
-    },
-  });
-
 export class FormHarness<V extends object> {
   static mount<V extends object, O = V>(options: FormHarnessOptions<V, O>): FormHarness<V> {
-    const { fields: inputs, hidden = [], config, onSubmit, ...formOptions } = options;
-    const probes: Probes = { fields: new Map(), work: new Map() };
+    const { fields, hidden = [], config, onSubmit, ...rest } = options;
     const submissions: SubmittedValues<V>[] = [];
 
-    const view: View = reactive({
+    const view: FieldView = reactive({
       hidden: new Set(hidden),
       inactive: new Set<string>(),
       disabled: new Set<string>(),
     });
 
-    const captured = shallowRef<FormContext<V> | null>(null);
-
-    const current = (): FormContext<V> => {
-      if (!captured.value) {
-        throw new Error('useForm did not run');
-      }
-      return captured.value;
+    const formOptions: UseFormOptions<V, O> = {
+      ...rest,
+      onSubmit: (values, helpers) => {
+        submissions.push(values);
+        return onSubmit?.(values, helpers);
+      },
     };
 
-    const components = inputs
-      .map(specOf)
-      .map((spec) => [spec, probeFor(spec, view, probes, current)] as const);
-
-    const Host: Component = defineComponent({
-      setup: () => {
-        captured.value = useForm<V, O>({
-          ...formOptions,
-          onSubmit: (values, helpers) => {
-            submissions.push(values);
-            return onSubmit?.(values, helpers);
-          },
-        });
-
-        return () =>
-          h(
-            'form',
-            { novalidate: true },
-            components
-              .filter(([spec]) => !view.hidden.has(spec.path))
-              .map(([spec, Probe]) => h(Probe, { key: spec.path })),
-          );
+    const wrapper = mount(FieldProbesForm<V, O>, {
+      props: {
+        options: markRaw(formOptions),
+        specs: fields.map(specOf),
+        view,
       },
-    });
-
-    const wrapper = mount(Host, {
       attachTo: document.body,
       global: { plugins: config === undefined ? [] : [createNuiConfig(config)] },
     });
 
-    return new FormHarness(current(), wrapper, probes, view, submissions);
+    return new FormHarness(wrapper.vm.form, wrapper, wrapper.vm.probes, view, submissions);
   }
 
   private constructor(
     readonly form: FormContext<V>,
     private readonly wrapper: VueWrapper,
-    private readonly probes: Probes,
-    private readonly view: View,
+    private readonly probes: FieldProbes,
+    private readonly view: FieldView,
     readonly submissions: readonly SubmittedValues<V>[],
   ) {}
 

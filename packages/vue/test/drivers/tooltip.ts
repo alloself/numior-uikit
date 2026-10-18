@@ -1,7 +1,8 @@
 import { DOMWrapper, mount, type VueWrapper } from '@vue/test-utils';
 import { vi } from 'vite-plus/test';
-import { defineComponent, h, nextTick, ref, type Ref } from 'vue';
-import { NuiTooltip, type NuiTooltipProps, type NuiTooltipTriggerSlot } from '../../src';
+import { nextTick } from 'vue';
+import type { NuiTooltipProps } from '../../src';
+import TooltipScene from '../fixtures/TooltipScene.vue';
 import { TopLayerStubs } from '../support/top-layer';
 import { ComponentDriver } from './component';
 
@@ -10,50 +11,28 @@ export interface TooltipMountOptions {
   readonly anchored?: boolean;
 }
 
+type TooltipSceneWrapper = VueWrapper<InstanceType<typeof TooltipScene>>;
+
 export class TooltipDriver extends ComponentDriver {
   protected readonly block = 'nui-tooltip';
 
-  static mount({ props = {}, anchored = false }: TooltipMountOptions = {}) {
+  static mount({ props, anchored = false }: TooltipMountOptions = {}) {
     const stubs = new TopLayerStubs();
-    const model = ref(false);
     const anchor = anchored ? document.body.appendChild(document.createElement('button')) : null;
 
-    const slots = anchor
-      ? { default: () => 'Saves the document' }
-      : {
-          trigger: (slot: NuiTooltipTriggerSlot) => h('button', slot.attrs, 'Save'),
-          default: () => 'Saves the document',
-        };
-
-    const Host = defineComponent({
-      setup: () => () =>
-        h('div', [
-          h('input', { class: 'outside' }),
-          h(
-            NuiTooltip,
-            {
-              ...props,
-              ...(anchor ? { anchor } : {}),
-              open: model.value,
-              'onUpdate:open': (value: boolean) => {
-                model.value = value;
-              },
-            },
-            slots,
-          ),
-        ]),
-    });
-
-    return new TooltipDriver(mount(Host, { attachTo: document.body }), stubs, model, anchor);
+    return new TooltipDriver(
+      mount(TooltipScene, { props: { props, anchor }, attachTo: document.body }),
+      stubs,
+      anchor,
+    );
   }
 
   private constructor(
-    wrapper: VueWrapper,
+    private readonly scene: TooltipSceneWrapper,
     private readonly stubs: TopLayerStubs,
-    private readonly model: Ref<boolean>,
     private readonly anchor: HTMLButtonElement | null,
   ) {
-    super(wrapper);
+    super(scene);
   }
 
   get trigger(): DOMWrapper<HTMLButtonElement> {
@@ -67,7 +46,7 @@ export class TooltipDriver extends ComponentDriver {
   }
 
   get modelOpen(): boolean {
-    return this.model.value;
+    return this.scene.vm.open;
   }
 
   get popoverCalls(): { show: number; hide: number } {

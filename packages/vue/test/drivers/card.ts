@@ -1,17 +1,6 @@
-import { mount, type DOMWrapper } from '@vue/test-utils';
-import { defineComponent, h, ref, type Ref, type VNode } from 'vue';
-import {
-  NuiCard,
-  NuiCardContent,
-  NuiCardDescription,
-  NuiCardFooter,
-  NuiCardHeader,
-  NuiCardMedia,
-  NuiCardTitle,
-  type NuiCardMediaProps,
-  type NuiCardProps,
-  type NuiCardTitleProps,
-} from '../../src';
+import { mount, type DOMWrapper, type VueWrapper } from '@vue/test-utils';
+import type { NuiCardMediaProps, NuiCardProps, NuiCardTitleProps } from '../../src';
+import CardScene from '../fixtures/CardScene.vue';
 import { RouterStub } from '../support/router-stub';
 import { ComponentDriver } from './component';
 
@@ -31,89 +20,17 @@ export interface CardMountOptions {
   readonly viaRouter?: boolean;
 }
 
-const isActionClick = (event: Event): boolean =>
-  event.target instanceof Element && event.target.closest('.nui-card__action') !== null;
-
-const renderHeader = (parts: CardParts, nested: Ref<number>): VNode | undefined => {
-  if (parts.title === undefined && parts.description === undefined) {
-    return undefined;
-  }
-
-  const heading = [
-    ...(parts.title === undefined
-      ? []
-      : [h(NuiCardTitle, { as: parts.titleAs }, () => parts.title)]),
-    ...(parts.description === undefined
-      ? []
-      : [h(NuiCardDescription, null, () => parts.description)]),
-  ];
-
-  const slots = {
-    default: () => heading,
-    ...(parts.actions
-      ? {
-          actions: () =>
-            h(
-              'button',
-              {
-                type: 'button',
-                class: 'nested',
-                onClick: () => {
-                  nested.value += 1;
-                },
-              },
-              'More',
-            ),
-        }
-      : {}),
-  };
-
-  return h(NuiCardHeader, null, slots);
-};
-
-const renderParts = (parts: CardParts, nested: Ref<number>): VNode[] => {
-  const header = renderHeader(parts, nested);
-  return [
-    ...(parts.media ? [h(NuiCardMedia, parts.media)] : []),
-    ...(header === undefined ? [] : [header]),
-    ...(parts.content === undefined ? [] : [h(NuiCardContent, null, () => parts.content)]),
-    ...(parts.footer === undefined ? [] : [h(NuiCardFooter, null, () => parts.footer)]),
-  ];
-};
-
 export class CardDriver extends ComponentDriver {
   protected readonly block = 'nui-card';
 
   static mount({ props = {}, parts = {}, viaRouter = false }: CardMountOptions = {}) {
-    const clicks = ref(0);
-    const nested = ref(0);
-    const cardProps = viaRouter ? { ...props, as: RouterStub } : props;
+    const card = viaRouter ? { ...props, as: RouterStub } : props;
 
-    const Host = defineComponent({
-      setup: () => () =>
-        h(
-          NuiCard,
-          {
-            ...cardProps,
-            onClick: (event: Event) => {
-              if (isActionClick(event)) {
-                clicks.value += 1;
-              }
-            },
-          },
-          () => renderParts(parts, nested),
-        ),
-    });
-
-    return new CardDriver(mount(Host, { attachTo: document.body }), clicks, nested);
+    return new CardDriver(mount(CardScene, { props: { card, parts }, attachTo: document.body }));
   }
 
-  private constructor(
-    wrapper: ReturnType<typeof mount>,
-    private readonly clickCount: Ref<number>,
-    private readonly nestedCount: Ref<number>,
-  ) {
-    super(wrapper);
+  private constructor(private readonly scene: VueWrapper<InstanceType<typeof CardScene>>) {
+    super(scene);
   }
 
   override hasModifier(modifier: string): boolean {
@@ -166,11 +83,11 @@ export class CardDriver extends ComponentDriver {
   }
 
   get clicks(): number {
-    return this.clickCount.value;
+    return this.scene.vm.clicks;
   }
 
   get nestedClicks(): number {
-    return this.nestedCount.value;
+    return this.scene.vm.nested;
   }
 
   async clickAction(): Promise<void> {

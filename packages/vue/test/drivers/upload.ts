@@ -1,42 +1,16 @@
 import { mount, type DOMWrapper, type VueWrapper } from '@vue/test-utils';
 import { vi } from 'vite-plus/test';
-import { defineComponent, h, nextTick, ref, useTemplateRef, type Ref, type ShallowRef } from 'vue';
-import {
-  NuiField,
-  NuiUpload,
-  type NuiFieldProps,
-  type NuiUploadAdapter,
-  type NuiUploadItem,
-  type NuiUploadProps,
-  type NuiConfigOptions,
+import { nextTick } from 'vue';
+import type {
+  NuiFieldProps,
+  NuiUploadAdapter,
+  NuiUploadItem,
+  NuiUploadProps,
+  NuiConfigOptions,
 } from '../../src';
+import UploadScene from '../fixtures/UploadScene.vue';
 import { configPlugins } from '../support/config';
 import { ComponentDriver } from './component';
-import {
-  anyOf,
-  isNumber,
-  isString,
-  listOf,
-  oneOf,
-  optional,
-  shapeOf,
-} from '../../../primitives/test/support/guards';
-
-const UPLOAD_FILE = { id: isString, name: isString, size: isNumber, type: isString };
-
-const isUploadError = shapeOf({
-  reason: oneOf('type', 'size', 'count', 'custom', 'upload'),
-  message: optional(isString),
-});
-
-const isItem = anyOf(
-  shapeOf({ ...UPLOAD_FILE, status: oneOf('queued') }),
-  shapeOf({ ...UPLOAD_FILE, status: oneOf('uploading'), progress: isNumber }),
-  shapeOf({ ...UPLOAD_FILE, status: oneOf('done'), result: optional(isString) }),
-  shapeOf({ ...UPLOAD_FILE, status: oneOf('error'), error: isUploadError }),
-);
-
-const isItems = listOf(isItem);
 
 type UploadProps = Omit<NuiUploadProps<string>, 'upload'>;
 type UploadContext = Parameters<NuiUploadAdapter<string>>[1];
@@ -53,13 +27,6 @@ export interface AdapterCall {
   readonly context: UploadContext;
   resolve(result: string): void;
   reject(error: unknown): void;
-}
-
-interface UploadExposed {
-  open(): void;
-  start(): void;
-  retry(id: string): void;
-  remove(id: string): void;
 }
 
 export interface UrlLog {
@@ -117,53 +84,26 @@ export const transferEvent = (type: string, files: File[]): Event => {
 export class UploadDriver extends ComponentDriver {
   protected readonly block = 'nui-upload';
 
-  static mount({
-    props = {},
-    modelValue = [],
-    field,
-    config,
-  }: UploadMountOptions = {}): UploadDriver {
-    const model = ref<NuiUploadItem<string>[]>(modelValue);
+  static mount({ props, modelValue, field, config }: UploadMountOptions = {}): UploadDriver {
     const calls: AdapterCall[] = [];
-    const events: string[] = [];
     const urls: UrlLog = { created: [], revoked: [] };
     const restoreUrls = stubObjectUrls(urls);
-    const exposed: { current: ShallowRef<UploadExposed | null> | null } = { current: null };
 
-    const control = () =>
-      h(NuiUpload<string>, {
-        ...props,
-        ref: 'upload',
-        modelValue: model.value,
-        'onUpdate:modelValue': (value: unknown) => {
-          if (isItems(value)) {
-            model.value = value;
-          }
-        },
-        upload: (file, context) =>
+    const wrapper = mount(UploadScene, {
+      props: {
+        props,
+        initialItems: modelValue,
+        field,
+        adapter: (file, context) =>
           new Promise<string>((resolve, reject) => {
             calls.push({ file, context, resolve, reject });
           }),
-        onReject: (rejections) =>
-          events.push(`reject:${rejections.map((entry) => entry.file.name).join(',')}`),
-        onDone: (item) => events.push(`done:${item.name}`),
-        onError: (item) => events.push(`error:${item.name}`),
-        onRemove: (item) => events.push(`remove:${item.name}`),
-      });
-
-    const Host = defineComponent({
-      setup() {
-        exposed.current = useTemplateRef<UploadExposed>('upload');
-        return () => (field ? h(NuiField, field, control) : control());
       },
-    });
-
-    const wrapper = mount(Host, {
       attachTo: document.body,
       global: { plugins: configPlugins(config) },
     });
 
-    const driver = new UploadDriver(wrapper, model, calls, events, urls, exposed, restoreUrls);
+    const driver = new UploadDriver(wrapper, calls, urls, restoreUrls);
 
     Object.defineProperty(driver.input.element, 'click', {
       value: driver.clicks,
@@ -174,15 +114,16 @@ export class UploadDriver extends ComponentDriver {
   }
 
   private constructor(
-    wrapper: VueWrapper,
-    private readonly model: Ref<NuiUploadItem<string>[]>,
+    private readonly scene: VueWrapper<InstanceType<typeof UploadScene>>,
     readonly calls: AdapterCall[],
-    readonly events: string[],
     readonly urls: UrlLog,
-    private readonly exposed: { current: ShallowRef<UploadExposed | null> | null },
     private readonly restoreUrls: () => void,
   ) {
-    super(wrapper);
+    super(scene);
+  }
+
+  get events(): readonly string[] {
+    return this.scene.vm.events;
   }
 
   readonly clicks = vi.fn<() => void>();
@@ -208,7 +149,7 @@ export class UploadDriver extends ComponentDriver {
   }
 
   get items(): NuiUploadItem<string>[] {
-    return this.model.value;
+    return this.scene.vm.model;
   }
 
   get statuses(): string[] {
@@ -358,16 +299,16 @@ export class UploadDriver extends ComponentDriver {
   }
 
   async start(): Promise<void> {
-    this.exposed.current?.value?.start();
+    this.scene.vm.start();
     await nextTick();
   }
 
   open(): void {
-    this.exposed.current?.value?.open();
+    this.scene.vm.open();
   }
 
   async removeById(id: string): Promise<void> {
-    this.exposed.current?.value?.remove(id);
+    this.scene.vm.remove(id);
     await nextTick();
   }
 

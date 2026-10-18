@@ -7,7 +7,7 @@ import {
   useColorScheme,
   type ColorSchemeControl,
 } from '../src';
-import { captureSetup, providing } from './harness/capture';
+import { captureSetup } from './harness/capture';
 
 const fakeMedia = (matches: boolean) => {
   const listeners = new Set<() => void>();
@@ -45,9 +45,11 @@ describe('useColorScheme', () => {
 
     const inner = captureSetup(() => useColorScheme(), {
       plugins: [createNuiConfig({ colorScheme: { storageKey: 'nui-theme' } })],
-      wrap: providing(() => {
-        outer.control = useColorScheme();
-      }),
+      layers: [
+        () => {
+          outer.control = useColorScheme();
+        },
+      ],
     }).value;
 
     expect(inner).toBe(outer.control);

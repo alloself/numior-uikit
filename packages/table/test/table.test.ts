@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it } from 'vite-plus/test';
-import { h } from 'vue';
+import ColumnLabelHeader from './fixtures/ColumnLabelHeader.vue';
+import UpperCaseCell from './fixtures/UpperCaseCell.vue';
 import { TableDriver } from './drivers/table';
 import { people, PEOPLE_COLUMNS, type Person } from './support/people';
 
@@ -201,8 +202,8 @@ describe('NuiTable', () => {
   it('renders custom cells and headers through slots and an empty state that follows the rows', async () => {
     const grid = mountPeople({
       slots: {
-        'cell-name': ({ text }: { text: string }) => [h('strong', text.toUpperCase())],
-        'header-salary': ({ column }: { column: { label: string } }) => [h('em', column.label)],
+        'cell-name': UpperCaseCell,
+        'header-salary': ColumnLabelHeader,
       },
     });
 

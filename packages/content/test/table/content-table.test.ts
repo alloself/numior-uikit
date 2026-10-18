@@ -1,8 +1,7 @@
-import type { ElementNode } from '@numior/editor-core';
 import { afterEach, describe, expect, it } from 'vite-plus/test';
-import { defineComponent, h } from 'vue';
-import { NuiContentTable, type NuiContentCellViewProps } from '../../src/table';
+import { NuiContentTable } from '../../src/table';
 import { ContentDriver } from '../drivers/content';
+import StarsTable from './fixtures/StarsTable.vue';
 import { docOf, everyBlock, node } from '../support/documents';
 
 let driver: ContentDriver | undefined;
@@ -66,18 +65,7 @@ describe('NuiContentTable', () => {
   });
 
   it('draws cells of a type through the view the app registers', async () => {
-    const Stars = defineComponent(
-      (props: NuiContentCellViewProps) => () => h('b', '★'.repeat(Number(props.value ?? 0))),
-      { props: ['value', 'row', 'column', 'label', 'editable'] },
-    );
-
-    const Table = defineComponent(
-      (props: { node: ElementNode }) => () =>
-        h(NuiContentTable, { node: props.node, cells: { number: Stars } }),
-      { props: ['node'] },
-    );
-
-    const view = mounted({ document: sums(), views: { table: Table } });
+    const view = mounted({ document: sums(), views: { table: StarsTable } });
 
     expect(view.tableRows).toEqual(['c|★★★★★★★★★|', 'b|★★★|']);
   });

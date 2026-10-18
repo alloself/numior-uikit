@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { h } from 'vue';
 import { InputDriver, mountInputWithFocusHandle } from './drivers/input';
+import InputSuffixMark from './fixtures/InputSuffixMark.vue';
 import { fieldTextsOf } from './support/field-texts';
 
 describe('NuiInput', () => {
@@ -87,7 +87,7 @@ describe('NuiInput', () => {
   it('renders prefix and suffix slots only when provided', () => {
     const bare = InputDriver.mount();
     expect(bare.prefix.exists()).toBe(false);
-    const input = InputDriver.mount({ slots: { prefix: () => '@', suffix: () => h('b', '.ru') } });
+    const input = InputDriver.mount({ slots: { prefix: '@', suffix: InputSuffixMark } });
     expect(input.prefix.text()).toBe('@');
     expect(input.suffix.find('b').text()).toBe('.ru');
   });

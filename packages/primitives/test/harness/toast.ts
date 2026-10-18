@@ -9,7 +9,7 @@ import {
   type ToastStore,
   type ToastStoreOptions,
 } from '../../src';
-import { captureSetup, providing } from './capture';
+import { captureSetup } from './capture';
 
 export class ToastHarness {
   static create(options?: ToastStoreOptions): ToastHarness {
@@ -30,7 +30,7 @@ export class ToastHarness {
   static scoped(options: ToastStoreOptions): ToastHarness {
     return new ToastHarness(
       captureSetup(() => useToastStore(), {
-        wrap: providing(() => provideNuiConfig({ toasts: options })),
+        layers: [() => provideNuiConfig({ toasts: options })],
       }).value,
     );
   }

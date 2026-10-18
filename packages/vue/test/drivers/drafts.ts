@@ -1,39 +1,22 @@
 import { mount, type VueWrapper } from '@vue/test-utils';
-import { defineComponent, nextTick, shallowRef, type VNode } from 'vue';
-import { provideDraftCommits, type DraftCommits } from '@numior/primitives';
+import { nextTick } from 'vue';
+import DraftsScene from '../fixtures/DraftsScene.vue';
+
+export type DraftControl = InstanceType<typeof DraftsScene>['$props']['control'];
 
 export class DraftsDriver {
-  static mount(render: (record: (value: unknown) => void) => VNode): DraftsDriver {
-    const emitted: unknown[] = [];
-    const drafts = shallowRef<DraftCommits | null>(null);
-
-    const record = (value: unknown): void => {
-      emitted.push(value);
-    };
-
-    const Host = defineComponent({
-      setup: () => {
-        drafts.value = provideDraftCommits();
-        return () => render(record);
-      },
-    });
-
-    const wrapper = mount(Host, { attachTo: document.body });
-
-    if (!drafts.value) {
-      throw new Error('the draft commits were not provided');
-    }
-    return new DraftsDriver(wrapper, drafts.value, emitted);
+  static mount(control: DraftControl): DraftsDriver {
+    return new DraftsDriver(mount(DraftsScene, { props: { control }, attachTo: document.body }));
   }
 
-  private constructor(
-    private readonly wrapper: VueWrapper,
-    private readonly drafts: DraftCommits,
-    readonly emitted: readonly unknown[],
-  ) {}
+  private constructor(private readonly scene: VueWrapper<InstanceType<typeof DraftsScene>>) {}
+
+  get emitted(): readonly unknown[] {
+    return (this.scene.emitted('record') ?? []).map(([value]) => value);
+  }
 
   async type(selector: string, text: string): Promise<void> {
-    const element = this.wrapper.find(selector).element;
+    const element = this.scene.find(selector).element;
 
     if (element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement) {
       element.value = text;
@@ -43,7 +26,7 @@ export class DraftsDriver {
   }
 
   async flush(): Promise<void> {
-    this.drafts.commitAll();
+    this.scene.vm.drafts.commitAll();
     await nextTick();
   }
 }

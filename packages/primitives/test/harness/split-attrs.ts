@@ -1,38 +1,23 @@
 import { mount, type DOMWrapper, type VueWrapper } from '@vue/test-utils';
-import { defineComponent, h, nextTick, ref } from 'vue';
-import { useSplitAttrs } from '../../src';
+import SplitAttrsHost from '../fixtures/SplitAttrsHost.vue';
 
-const Split = defineComponent({
-  inheritAttrs: false,
-  setup() {
-    const split = useSplitAttrs();
-    return () => h('div', split.rootAttrs(), [h('input', split.controlAttrs())]);
-  },
-});
+type HostWrapper = VueWrapper<InstanceType<typeof SplitAttrsHost>>;
 
 export class SplitAttrsHarness {
   readonly focusCount = { value: 0 };
-  private readonly placeholder = ref('Name');
-  private readonly wrapper: VueWrapper;
+  private readonly wrapper: HostWrapper;
 
   constructor() {
-    const placeholder = this.placeholder;
     const focusCount = this.focusCount;
 
-    this.wrapper = mount(
-      defineComponent({
-        setup: () => () =>
-          h(Split, {
-            class: 'wide',
-            style: 'color: red',
-            placeholder: placeholder.value,
-            'aria-label': 'Name',
-            onFocus: () => {
-              focusCount.value += 1;
-            },
-          }),
-      }),
-    );
+    this.wrapper = mount(SplitAttrsHost, {
+      props: {
+        placeholder: 'Name',
+        onFocus: () => {
+          focusCount.value += 1;
+        },
+      },
+    });
   }
 
   get root(): DOMWrapper<HTMLDivElement> {
@@ -48,7 +33,6 @@ export class SplitAttrsHarness {
   }
 
   async renamePlaceholder(next: string): Promise<void> {
-    this.placeholder.value = next;
-    await nextTick();
+    await this.wrapper.setProps({ placeholder: next });
   }
 }

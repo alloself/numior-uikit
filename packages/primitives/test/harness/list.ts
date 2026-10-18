@@ -1,12 +1,8 @@
 import { mount, type VueWrapper } from '@vue/test-utils';
 import { vi } from 'vite-plus/test';
-import { defineComponent, h, nextTick, ref, shallowRef, type Ref } from 'vue';
-import {
-  useListNavigation,
-  type ListFocusMode,
-  type ListNavigation,
-  type ListOrientation,
-} from '../../src';
+import { nextTick } from 'vue';
+import { type ListFocusMode, type ListNavigation, type ListOrientation } from '../../src';
+import ListNavigationHost from '../fixtures/ListNavigationHost.vue';
 
 export interface ListHarnessOptions {
   readonly labels?: readonly string[];
@@ -21,72 +17,23 @@ export interface ListHarnessOptions {
 
 const DEFAULT_LABELS = ['Apple', 'Banana', 'Blueberry', 'Cherry', 'Date'];
 
-type Outcome = { readonly ran: true; readonly value: ListNavigation } | { readonly ran: false };
+type HostWrapper = VueWrapper<InstanceType<typeof ListNavigationHost>>;
 
 export class ListHarness {
   static mount(options: ListHarnessOptions = {}): ListHarness {
-    const labels = ref([...(options.labels ?? DEFAULT_LABELS)]);
-    const role = options.role ?? 'option';
-    const outcome: { current: Outcome } = { current: { ran: false } };
-
-    const Host = defineComponent({
-      setup() {
-        const container = shallowRef<HTMLElement | null>(null);
-
-        const navigation = useListNavigation(container, {
-          selector: `[role="${role}"]`,
-          mode: () => options.mode,
-          orientation: () => options.orientation,
-          loop: () => options.loop,
-          pageSize: () => options.pageSize,
-        });
-
-        outcome.current = { ran: true, value: navigation };
-        return () =>
-          h('div', { dir: options.dir }, [
-            h(
-              'div',
-              {
-                ref: container,
-                role: 'listbox',
-                onKeydown: (event: KeyboardEvent) => {
-                  navigation.onKeydown(event);
-                },
-                onFocusin: (event: FocusEvent) => {
-                  navigation.onFocusin(event);
-                },
-              },
-              labels.value.map((label, index) =>
-                h(
-                  'button',
-                  {
-                    key: label,
-                    type: 'button',
-                    role,
-                    id: `item-${index}`,
-                    tabindex: -1,
-                    'aria-disabled': options.disabled?.includes(index) ? 'true' : undefined,
-                  },
-                  label,
-                ),
-              ),
-            ),
-          ]);
-      },
+    const wrapper = mount(ListNavigationHost, {
+      props: { ...options, labels: options.labels ?? DEFAULT_LABELS },
+      attachTo: document.body,
     });
 
-    const wrapper = mount(Host, { attachTo: document.body });
-    if (!outcome.current.ran) {
-      throw new Error('setup did not run');
-    }
-    return new ListHarness(wrapper, outcome.current.value, labels);
+    return new ListHarness(wrapper);
   }
 
-  private constructor(
-    private readonly wrapper: VueWrapper,
-    readonly navigation: ListNavigation,
-    private readonly labels: Ref<string[]>,
-  ) {}
+  private constructor(private readonly wrapper: HostWrapper) {}
+
+  get navigation(): ListNavigation {
+    return this.wrapper.vm.navigation;
+  }
 
   private get container(): HTMLElement {
     return this.wrapper.find<HTMLElement>('[role="listbox"]').element;
@@ -177,8 +124,7 @@ export class ListHarness {
   }
 
   async append(...labels: string[]): Promise<void> {
-    this.labels.value = [...this.labels.value, ...labels];
-    await nextTick();
+    await this.wrapper.setProps({ labels: [...this.wrapper.props('labels'), ...labels] });
   }
 
   unmount(): void {

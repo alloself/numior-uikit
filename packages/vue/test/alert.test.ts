@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { h } from 'vue';
 import { AlertDriver } from './drivers/alert';
+import AlertUndoAction from './fixtures/AlertUndoAction.vue';
 
 describe('NuiAlert', () => {
   it('renders a soft info alert with the tone icon, title and description', () => {
@@ -30,7 +30,7 @@ describe('NuiAlert', () => {
   it('dismisses through the close button, emits and follows the open model', async () => {
     const alert = AlertDriver.mount({
       props: { title: 'Saved', dismissible: true, dismissLabel: 'Закрыть' },
-      slots: { actions: () => h('button', 'Undo') },
+      slots: { actions: AlertUndoAction },
     });
 
     expect(alert.actions.text()).toBe('Undo');

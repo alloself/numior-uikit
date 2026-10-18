@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vite-plus/test';
 import { computed, ref } from 'vue';
 import { provideRadioGroup, useRadioGroup } from '../src';
-import { captureSetup, providing } from './harness/capture';
+import { captureSetup } from './harness/capture';
 
 describe('radio group context', () => {
   it('is null outside a group', () => {
@@ -12,18 +12,19 @@ describe('radio group context', () => {
     const model = ref<string | undefined>('a');
 
     const group = captureSetup(() => useRadioGroup(), {
-      wrap: providing(() =>
-        provideRadioGroup<string>({
-          name: computed(() => 'plan'),
-          modelValue: model,
-          disabled: computed(() => false),
-          readonly: computed(() => false),
-          invalid: computed(() => false),
-          select: (value) => {
-            model.value = value;
-          },
-        }),
-      ),
+      layers: [
+        () =>
+          provideRadioGroup<string>({
+            name: computed(() => 'plan'),
+            modelValue: model,
+            disabled: computed(() => false),
+            readonly: computed(() => false),
+            invalid: computed(() => false),
+            select: (value) => {
+              model.value = value;
+            },
+          }),
+      ],
     }).value;
 
     expect(group?.name.value).toBe('plan');

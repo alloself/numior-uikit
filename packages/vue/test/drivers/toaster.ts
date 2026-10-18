@@ -1,19 +1,17 @@
 import { mount, type DOMWrapper, type VueWrapper } from '@vue/test-utils';
 import { vi } from 'vite-plus/test';
-import { defineComponent, h, nextTick } from 'vue';
+import { nextTick } from 'vue';
 import {
   createNuiConfig,
-  NuiToaster,
-  useToast,
   type NuiConfigOptions,
   type NuiToasterProps,
-  type NuiToasterSlot,
   type ToastMessageOptions,
   type ToastOptions,
   type ToastService,
   type ToastStoreOptions,
   type ToastTone,
 } from '../../src';
+import ToasterScene from '../fixtures/ToasterScene.vue';
 import { TopLayerStubs } from '../support/top-layer';
 import { ComponentDriver } from './component';
 
@@ -32,21 +30,7 @@ export interface StackItemView {
   readonly leaving: boolean;
 }
 
-const customToast = (slot: NuiToasterSlot) =>
-  h('article', { class: 'custom-toast' }, [
-    slot.toast.title,
-    h(
-      'button',
-      {
-        class: 'custom-dismiss',
-        type: 'button',
-        onClick: () => {
-          slot.dismiss();
-        },
-      },
-      'x',
-    ),
-  ]);
+type ToasterSceneWrapper = VueWrapper<InstanceType<typeof ToasterScene>>;
 
 const readItem = (item: DOMWrapper<HTMLElement>): StackItemView => ({
   index: Number(item.element.style.getPropertyValue('--_index')),
@@ -115,11 +99,11 @@ export class ToasterDriver extends ComponentDriver {
   protected readonly block = 'nui-toaster';
 
   static mount({
-    props = {},
+    props,
     storeOptions,
     withPlugin = true,
     modalOpen = false,
-    customToast: custom = false,
+    customToast,
     config,
   }: ToasterMountOptions = {}) {
     const stubs = new TopLayerStubs();
@@ -128,34 +112,26 @@ export class ToasterDriver extends ComponentDriver {
       dialog.setAttribute('open', '');
       document.body.append(dialog);
     }
-    const services: ToastService[] = [];
 
-    const Host = defineComponent({
-      setup() {
-        services.push(useToast());
-        return () => h(NuiToaster, props, custom ? { default: customToast } : undefined);
-      },
-    });
-
-    const wrapper = mount(Host, {
+    const wrapper = mount(ToasterScene, {
+      props: { props, customToast },
       attachTo: document.body,
       global: { plugins: withPlugin ? [createNuiConfig({ ...config, toasts: storeOptions })] : [] },
     });
 
-    const [service] = services;
-    if (!service) {
-      throw new Error('useToast did not run');
-    }
-    return new ToasterDriver(wrapper, stubs, service, dialog);
+    return new ToasterDriver(wrapper, stubs, dialog);
   }
 
   private constructor(
-    wrapper: VueWrapper,
+    private readonly scene: ToasterSceneWrapper,
     private readonly stubs: TopLayerStubs,
-    private readonly service: ToastService,
     private readonly dialog: HTMLDialogElement | null,
   ) {
-    super(wrapper);
+    super(scene);
+  }
+
+  private get service(): ToastService {
+    return this.scene.vm.toast;
   }
 
   get region(): DOMWrapper<HTMLElement> {

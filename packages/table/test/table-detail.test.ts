@@ -1,8 +1,8 @@
 import { flushPromises } from '@vue/test-utils';
 import { afterEach, describe, expect, it } from 'vite-plus/test';
-import { h, type VNode } from 'vue';
 import { installClipboard, type ClipboardStub } from '../../primitives/test/support/clipboard';
-import { NuiTable, type NuiTableDetailSlot } from '../src';
+import DossierDetail from './fixtures/DossierDetail.vue';
+import StaffReports from './fixtures/StaffReports.vue';
 import { TableDriver, type TableMountOptions } from './drivers/table';
 import { RemoteStaff } from './support/remote';
 import { staff, STAFF_COLUMNS, type Staff } from './support/staff';
@@ -10,29 +10,13 @@ import { staff, STAFF_COLUMNS, type Staff } from './support/staff';
 const mounted: Array<{ unmount(): void }> = [];
 let clipboard: ClipboardStub | undefined;
 
-const dossier = ({ row }: NuiTableDetailSlot<Staff>): VNode[] => [
-  h('p', `Досье: ${row.name}`),
-  h('button', { type: 'button' }, 'Открыть досье'),
-  h('input', { 'aria-label': 'Заметка' }),
-];
-
-const reports = ({ row }: NuiTableDetailSlot<Staff>): VNode[] => [
-  h(NuiTable<Staff>, {
-    columns: STAFF_COLUMNS,
-    rows: staff(3),
-    getKey: (report: Staff) => report.id,
-    cellSelection: true,
-    label: `Подчинённые: ${row.name}`,
-  }),
-];
-
 const mountStaff = (options: Partial<TableMountOptions<Staff>> = {}): TableDriver<Staff> => {
   const grid = TableDriver.mount<Staff>({
     columns: STAFF_COLUMNS,
     rows: staff(6),
     config: { locale: 'ru-RU' },
     auto: true,
-    slots: { detail: dossier },
+    slots: { detail: DossierDetail },
     ...options,
     props: { cellSelection: true, getKey: (row) => row.id, ...options.props },
   });
@@ -126,7 +110,7 @@ describe('NuiTable detail rows', () => {
   });
 
   it('leaves the keys, clicks and ranges of a nested table to that table', async () => {
-    const grid = mountStaff({ expanded: [1], slots: { detail: reports } });
+    const grid = mountStaff({ expanded: [1], slots: { detail: StaffReports } });
     await grid.settle();
     await grid.focusCell(4, 1);
     await grid.focusNestedCell(2, { row: 0, col: 1 });

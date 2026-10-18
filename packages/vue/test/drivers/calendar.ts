@@ -1,11 +1,8 @@
 import { mount, type DOMWrapper, type VueWrapper } from '@vue/test-utils';
-import { defineComponent, h, nextTick, ref, type Ref } from 'vue';
-import { NuiCalendar, type NuiCalendarProps, type NuiCalendarValue } from '../../src';
+import { nextTick } from 'vue';
+import type { NuiCalendarProps, NuiCalendarValue } from '../../src';
+import CalendarScene from '../fixtures/CalendarScene.vue';
 import { ComponentDriver } from './component';
-import { anyOf, isString, listOf, nullable } from '../../../primitives/test/support/guards';
-import { isDateRange } from '../support/guards';
-
-const isValue = anyOf(nullable(isString), listOf(isString), isDateRange);
 
 export interface CalendarMountOptions {
   readonly props?: NuiCalendarProps;
@@ -40,46 +37,22 @@ export class CalendarDriver extends ComponentDriver {
     actions,
     clock = false,
   }: CalendarMountOptions = {}) {
-    const model = ref<NuiCalendarValue>(modelValue);
-    const monthRef = ref<string | undefined>(month);
-
-    const Host = defineComponent({
-      setup: () => () =>
-        h('div', { dir }, [
-          h(
-            NuiCalendar,
-            {
-              locale: 'ru-RU',
-              ...(clock ? {} : { today: '2026-09-24' }),
-              ...props,
-              modelValue: model.value,
-              'onUpdate:modelValue': (value: unknown) => {
-                if (isValue(value)) {
-                  model.value = value;
-                }
-              },
-              ...(monthRef.value === undefined ? {} : { month: monthRef.value }),
-              'onUpdate:month': (value: unknown) => {
-                if (typeof value === 'string') {
-                  monthRef.value = value;
-                }
-              },
-            },
-            actions === undefined ? undefined : { actions: () => actions },
-          ),
-          h('button', { type: 'button', class: 'outside' }, 'Outside'),
-        ]),
+    const scene = mount(CalendarScene, {
+      props: {
+        calendar: { locale: 'ru-RU', ...(clock ? {} : { today: '2026-09-24' }), ...props },
+        modelValue,
+        month,
+        dir,
+        actions,
+      },
+      attachTo: document.body,
     });
 
-    return new CalendarDriver(mount(Host, { attachTo: document.body }), model, monthRef);
+    return new CalendarDriver(scene);
   }
 
-  private constructor(
-    wrapper: VueWrapper,
-    private readonly model: Ref<NuiCalendarValue>,
-    private readonly monthRef: Ref<string | undefined>,
-  ) {
-    super(wrapper);
+  private constructor(private readonly scene: VueWrapper<InstanceType<typeof CalendarScene>>) {
+    super(scene);
   }
 
   override hasModifier(modifier: string): boolean {
@@ -91,11 +64,11 @@ export class CalendarDriver extends ComponentDriver {
   }
 
   get value(): NuiCalendarValue {
-    return this.model.value;
+    return this.scene.vm.model;
   }
 
   get monthValue(): string | undefined {
-    return this.monthRef.value;
+    return this.scene.vm.month;
   }
 
   get captions(): string[] {
@@ -320,7 +293,7 @@ export class CalendarDriver extends ComponentDriver {
   }
 
   async receive(value: NuiCalendarValue): Promise<void> {
-    this.model.value = value;
+    this.scene.vm.model = value;
     await nextTick();
   }
 }

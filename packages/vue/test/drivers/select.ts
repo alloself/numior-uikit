@@ -1,15 +1,9 @@
 import { mount, type DOMWrapper, type VueWrapper } from '@vue/test-utils';
 import { vi } from 'vite-plus/test';
-import { defineComponent, h, nextTick } from 'vue';
-import {
-  NuiField,
-  NuiSelect,
-  type NuiConfigOptions,
-  type NuiFieldProps,
-  type NuiSelectProps,
-} from '../../src';
+import { nextTick } from 'vue';
+import type { NuiConfigOptions, NuiFieldProps, NuiSelectProps } from '../../src';
+import SelectScene from '../fixtures/SelectScene.vue';
 import { configPlugins } from '../support/config';
-import { FRUITS } from '../support/options';
 import { TopLayerStubs } from '../support/top-layer';
 import { createSelection, type Selection, type SelectionValue } from '../support/selection';
 import { ComponentDriver } from './component';
@@ -31,23 +25,12 @@ export class SelectDriver extends ComponentDriver {
     const stubs = new TopLayerStubs();
     const selection = createSelection(modelValue, props.multiple === true);
 
-    const select = () =>
-      h(NuiSelect, {
-        options: FRUITS,
-        ...props,
-        ...selection.props(),
-      });
-
-    const Host = defineComponent({
-      setup: () => () =>
-        h('div', [
-          field ? h(NuiField, field, select) : select(),
-          h('button', { type: 'button', class: 'outside' }, 'Outside'),
-        ]),
-    });
-
     return new SelectDriver(
-      mount(Host, { attachTo: document.body, global: { plugins: configPlugins(config) } }),
+      mount(SelectScene, {
+        props: { props, selection, field },
+        attachTo: document.body,
+        global: { plugins: configPlugins(config) },
+      }),
       stubs,
       selection,
     );

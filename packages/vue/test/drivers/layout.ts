@@ -1,23 +1,14 @@
 import { mount, type DOMWrapper, type VueWrapper } from '@vue/test-utils';
 import { vi } from 'vite-plus/test';
-import { defineComponent, h, nextTick, ref, type Ref } from 'vue';
-import {
-  NuiAppBar,
-  NuiLayout,
-  NuiSidebar,
-  NuiSidebarContent,
-  NuiSidebarFooter,
-  NuiSidebarGroup,
-  NuiSidebarHeader,
-  NuiSidebarItem,
-  NuiSidebarSub,
-  NuiSidebarTrigger,
-  type NuiConfigOptions,
-  type NuiLayoutHeader,
-  type NuiSidebarCollapsible,
-  type NuiSidebarSide,
-  type NuiSidebarVariant,
+import { nextTick } from 'vue';
+import type {
+  NuiConfigOptions,
+  NuiLayoutHeader,
+  NuiSidebarCollapsible,
+  NuiSidebarSide,
+  NuiSidebarVariant,
 } from '../../src';
+import LayoutScene from '../fixtures/LayoutScene.vue';
 import { configPlugins } from '../support/config';
 import { TopLayerStubs } from '../support/top-layer';
 import { ComponentDriver } from './component';
@@ -65,7 +56,7 @@ export class LayoutDriver extends ComponentDriver {
   static mount({
     collapsible = 'icon',
     side = 'start',
-    open: initialOpen = true,
+    open = true,
     mobile = false,
     shortcut = true,
     label,
@@ -81,124 +72,51 @@ export class LayoutDriver extends ComponentDriver {
     const stubs = new TopLayerStubs();
     const media = fakeMedia(mobile);
     vi.stubGlobal('matchMedia', () => media);
-    const open = ref(initialOpen);
-    const mobileOpen = ref(false);
-    const subOpen = ref(false);
-    const active = ref('inbox');
 
-    const item = (text: string, key: string, extra: Record<string, unknown> = {}) =>
-      h(NuiSidebarItem, {
-        label: text,
-        icon: 'inbox',
-        current: active.value === key,
-        onClick: () => {
-          active.value = key;
-        },
-        ...extra,
-      });
-
-    const sidebar = () =>
-      h(NuiSidebar, { collapsible, side, label, variant }, () => [
-        h(NuiSidebarHeader, () => h('strong', 'Brand')),
-        h(NuiSidebarContent, () => [
-          h(
-            NuiSidebarGroup,
-            { label: 'Overview', id: 'overview', collapsible: collapsibleGroup },
-            () => [
-              item('Inbox', 'inbox', { badge: 3 }),
-              item('Calendar', 'calendar'),
-              item('Docs', 'docs', { href: '#docs' }),
-            ],
-          ),
-          h(NuiSidebarGroup, { label: 'Data' }, () =>
-            h(
-              NuiSidebarSub,
-              {
-                label: 'Reports',
-                icon: 'folder',
-                id: 'reports',
-                open: subOpen.value,
-                'onUpdate:open': (value: boolean) => {
-                  subOpen.value = value;
-                },
-              },
-              () => [item('Sales', 'sales'), item('Team', 'team')],
-            ),
-          ),
-        ]),
-        h(NuiSidebarFooter, () =>
-          h(NuiSidebarGroup, () => item('Profile', 'profile', { tooltip: 'Open profile' })),
-        ),
-      ]);
-
-    const Host = defineComponent({
-      setup: () => () =>
-        h(
-          NuiLayout,
-          {
-            id: 'app',
-            shortcut,
-            header,
-            sticky,
-            contentAs: 'div',
-            skipLink,
-            skipLabel,
-            open: open.value,
-            'onUpdate:open': (value: boolean) => {
-              open.value = value;
-            },
-            mobileOpen: mobileOpen.value,
-            'onUpdate:mobileOpen': (value: boolean) => {
-              mobileOpen.value = value;
-            },
-          },
-          {
-            sidebar,
-            header: () =>
-              h(NuiAppBar, null, {
-                start: () => h(NuiSidebarTrigger),
-                default: () => active.value,
-              }),
-            default: () => [h('input', { class: 'editor', type: 'text' }), h('p', 'Content')],
-            ...(end ? { end: () => h('nav', 'Outline') } : {}),
-          },
-        ),
-    });
-
-    const wrapper = mount(Host, {
+    const scene = mount(LayoutScene, {
+      props: {
+        open,
+        collapsible,
+        side,
+        shortcut,
+        label,
+        header,
+        end,
+        sticky,
+        collapsibleGroup,
+        variant,
+        skipLink,
+        skipLabel,
+      },
       attachTo: document.body,
       global: { plugins: configPlugins(config) },
     });
 
-    return new LayoutDriver(wrapper, stubs, media, open, mobileOpen, subOpen, active);
+    return new LayoutDriver(scene, stubs, media);
   }
 
   private constructor(
-    wrapper: VueWrapper,
+    private readonly scene: VueWrapper<InstanceType<typeof LayoutScene>>,
     private readonly stubs: TopLayerStubs,
     private readonly media: FakeMediaList,
-    private readonly openModel: Ref<boolean>,
-    private readonly mobileOpenModel: Ref<boolean>,
-    private readonly subOpenModel: Ref<boolean>,
-    private readonly activeModel: Ref<string>,
   ) {
-    super(wrapper);
+    super(scene);
   }
 
   get open(): boolean {
-    return this.openModel.value;
+    return this.scene.vm.open;
   }
 
   get mobileOpen(): boolean {
-    return this.mobileOpenModel.value;
+    return this.scene.vm.mobileOpen;
   }
 
   get subOpen(): boolean {
-    return this.subOpenModel.value;
+    return this.scene.vm.subOpen;
   }
 
   get active(): string {
-    return this.activeModel.value;
+    return this.scene.vm.active;
   }
 
   get skipLink(): DOMWrapper<HTMLAnchorElement> {
@@ -324,7 +242,7 @@ export class LayoutDriver extends ComponentDriver {
   }
 
   async activate(key: string): Promise<void> {
-    this.activeModel.value = key;
+    this.scene.vm.active = key;
     await nextTick();
   }
 

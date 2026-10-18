@@ -1,12 +1,11 @@
 import { mount, type DOMWrapper } from '@vue/test-utils';
-import { h } from 'vue';
 import {
   NuiAvatar,
-  NuiAvatarGroup,
   type NuiAvatarGroupProps,
   type NuiAvatarProps,
   type NuiConfigOptions,
 } from '../../src';
+import AvatarGroupScene from '../fixtures/AvatarGroupScene.vue';
 import { configPlugins } from '../support/config';
 import { ComponentDriver } from './component';
 
@@ -77,10 +76,7 @@ export class AvatarGroupDriver extends ComponentDriver {
   protected readonly block = 'nui-avatar-group';
 
   static mount({ props = {}, children = [] }: AvatarGroupMountOptions = {}) {
-    const slots =
-      children.length === 0 ? {} : { default: () => children.map((child) => h(NuiAvatar, child)) };
-
-    return new AvatarGroupDriver(mount(NuiAvatarGroup, { props, slots }));
+    return new AvatarGroupDriver(mount(AvatarGroupScene, { props: { group: props, children } }));
   }
 
   get avatars(): DOMWrapper<Element>[] {

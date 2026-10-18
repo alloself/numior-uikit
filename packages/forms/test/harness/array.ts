@@ -1,26 +1,15 @@
-import { mount, type DOMWrapper, type VueWrapper } from '@vue/test-utils';
-import { defineComponent, h, nextTick, onBeforeUnmount, shallowRef, toRef } from 'vue';
-import {
-  useField,
-  useFieldArray,
-  useForm,
-  type AnyFieldRule,
-  type FieldArray,
-  type FieldArrayRow,
-  type FormContext,
-  type FormField,
-  type SubmitResult,
-  type SubmittedValues,
+import { mount, type DOMWrapper } from '@vue/test-utils';
+import { nextTick } from 'vue';
+import type {
+  AnyFieldRule,
+  FieldArray,
+  FormContext,
+  FormField,
+  SubmitResult,
+  SubmittedValues,
 } from '../../src';
-
-export interface Contact {
-  name: string;
-}
-
-export interface Team {
-  title: string;
-  contacts: Contact[];
-}
+import ArrayScene from '../fixtures/ArrayScene.vue';
+import type { Contact, RowProbes, Team } from '../fixtures/scenes.types';
 
 export interface ArrayHarnessOptions {
   readonly initialValues: Team;
@@ -28,117 +17,30 @@ export interface ArrayHarnessOptions {
   readonly rowRules?: readonly AnyFieldRule<string | undefined, Team>[];
 }
 
-interface Parts {
-  readonly rows: Map<string, FormField<string | undefined>>;
-  readonly work: Map<string, Promise<void>>;
-  readonly active: { value: boolean };
-  readonly submissions: SubmittedValues<Team>[];
-  readonly form: () => FormContext<Team>;
-}
-
-const text = (value: unknown): string => (typeof value === 'string' ? value : '');
-
-const rowComponent = (options: ArrayHarnessOptions, parts: Parts) =>
-  defineComponent(
-    (props: { readonly row: FieldArrayRow<Contact> }) => {
-      const field = useField(
-        toRef(() => (values: Team) => values.contacts[props.row.index]?.name),
-        { form: parts.form(), rules: options.rowRules ?? [] },
-      );
-
-      const { key } = props.row;
-
-      parts.rows.set(key, field);
-      onBeforeUnmount(() => parts.rows.delete(key));
-
-      const onInput = (event: Event): void => {
-        if (event.target instanceof HTMLInputElement) {
-          parts.work.set(key, field.setValue(event.target.value));
-        }
-      };
-
-      const onBlur = (): void => {
-        parts.work.set(key, field.handleBlur());
-      };
-
-      return () =>
-        h('li', [
-          h('input', { id: `row-${key}`, value: text(field.value.value), onInput, onBlur }),
-          field.errorMessage.value === undefined
-            ? null
-            : h('span', { id: `row-${key}-error` }, field.errorMessage.value),
-        ]);
+const mountScene = (options: ArrayHarnessOptions) =>
+  mount(ArrayScene, {
+    props: {
+      initialValues: options.initialValues,
+      listRules: options.listRules,
+      rowRules: options.rowRules,
     },
-    { props: ['row'] },
-  );
+    attachTo: document.body,
+  });
+
+type ArraySceneWrapper = ReturnType<typeof mountScene>;
 
 export class ArrayHarness {
   static mount(options: ArrayHarnessOptions): ArrayHarness {
-    const active = shallowRef(true);
-    const form = shallowRef<FormContext<Team> | null>(null);
-    const list = shallowRef<FieldArray<Contact> | null>(null);
+    const wrapper = mountScene(options);
 
-    const current = (): FormContext<Team> => {
-      if (!form.value) {
-        throw new Error('useForm did not run');
-      }
-      return form.value;
-    };
-
-    const parts: Parts = {
-      rows: new Map(),
-      work: new Map(),
-      active,
-      submissions: [],
-      form: current,
-    };
-
-    const Row = rowComponent(options, parts);
-
-    const List = defineComponent(() => {
-      const array = useFieldArray((values: Team) => values.contacts, {
-        form: current(),
-        rules: options.listRules ?? [],
-        active: () => active.value,
-      });
-
-      list.value = array;
-      return () =>
-        h('section', [
-          h(
-            'ol',
-            array.fields.value.map((row) => h(Row, { key: row.key, row })),
-          ),
-          array.errorMessage.value === undefined
-            ? null
-            : h('p', { id: 'list-error' }, array.errorMessage.value),
-        ]);
-    });
-
-    const Host = defineComponent(() => {
-      form.value = useForm<Team>({
-        initialValues: options.initialValues,
-        onSubmit: (values) => {
-          parts.submissions.push(values);
-        },
-      });
-
-      return () => h(List);
-    });
-
-    const wrapper = mount(Host, { attachTo: document.body });
-
-    if (!list.value) {
-      throw new Error('useFieldArray did not run');
-    }
-    return new ArrayHarness(wrapper, current(), list.value, parts);
+    return new ArrayHarness(wrapper, wrapper.vm.form, wrapper.vm.list, wrapper.vm.probes);
   }
 
   private constructor(
-    private readonly wrapper: VueWrapper,
+    private readonly wrapper: ArraySceneWrapper,
     readonly form: FormContext<Team>,
     readonly list: FieldArray<Contact>,
-    private readonly parts: Parts,
+    private readonly probes: RowProbes,
   ) {}
 
   get keys(): readonly string[] {
@@ -150,7 +52,7 @@ export class ArrayHarness {
   }
 
   get submissions(): readonly SubmittedValues<Team>[] {
-    return this.parts.submissions;
+    return this.wrapper.vm.submissions;
   }
 
   get listError(): string | undefined {
@@ -172,7 +74,7 @@ export class ArrayHarness {
   }
 
   row(index: number): FormField<string | undefined> {
-    const field = this.parts.rows.get(this.keyAt(index));
+    const field = this.probes.rows.get(this.keyAt(index));
 
     if (!field) {
       throw new Error(`the row ${index} has no mounted field`);
@@ -190,13 +92,13 @@ export class ArrayHarness {
 
     input.element.value = value;
     await input.trigger('input');
-    await this.parts.work.get(this.keyAt(index));
+    await this.probes.work.get(this.keyAt(index));
     await nextTick();
   }
 
   async blur(index: number): Promise<void> {
     await this.input(index).trigger('blur');
-    await this.parts.work.get(this.keyAt(index));
+    await this.probes.work.get(this.keyAt(index));
     await nextTick();
   }
 
@@ -241,8 +143,7 @@ export class ArrayHarness {
   }
 
   async deactivate(): Promise<void> {
-    this.parts.active.value = false;
-    await nextTick();
+    await this.wrapper.setProps({ active: false });
   }
 
   async submit(): Promise<SubmitResult> {

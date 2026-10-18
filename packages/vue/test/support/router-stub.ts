@@ -1,15 +1,7 @@
-import { defineComponent, h, markRaw } from 'vue';
+import { markRaw } from 'vue';
+import ConfiguredLink from '../fixtures/ConfiguredLinkStub.vue';
+import RouterLink from '../fixtures/RouterStub.vue';
 
-const linkStub = (prefix: string) =>
-  markRaw(
-    defineComponent({
-      props: { to: { type: String, required: true } },
-      setup(props, { slots }) {
-        return () => h('a', { href: `${prefix}${props.to}` }, slots.default?.());
-      },
-    }),
-  );
+export const RouterStub = markRaw(RouterLink);
 
-export const RouterStub = linkStub('/router');
-
-export const ConfiguredLinkStub = linkStub('/configured');
+export const ConfiguredLinkStub = markRaw(ConfiguredLink);

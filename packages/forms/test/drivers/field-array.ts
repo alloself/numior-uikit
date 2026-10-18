@@ -1,26 +1,9 @@
 import { createNuiConfig, type NuiConfigOptions } from '@numior/primitives';
-import { NuiInput } from '@numior/vue';
 import { mount, type DOMWrapper, type VueWrapper } from '@vue/test-utils';
-import { defineComponent, h, nextTick, shallowRef } from 'vue';
-import {
-  NuiFieldArray,
-  NuiForm,
-  NuiFormField,
-  useForm,
-  type AnyFieldRule,
-  type FieldArrayRow,
-  type FormContext,
-  type FormEngineFactory,
-  type StandardSchema,
-} from '../../src';
-
-interface Contact {
-  name: string;
-}
-
-interface Contacts {
-  contacts: Contact[];
-}
+import { markRaw, nextTick } from 'vue';
+import type { AnyFieldRule, FormContext, FormEngineFactory, StandardSchema } from '../../src';
+import ContactsArrayForm from '../fixtures/ContactsArrayForm.vue';
+import type { Contact, Contacts } from '../fixtures/scenes.types';
 
 export interface FieldArrayDriverOptions {
   readonly names: readonly string[];
@@ -36,19 +19,9 @@ export interface FieldArrayDriverOptions {
   readonly engine?: FormEngineFactory;
 }
 
-interface FieldScope {
-  readonly field: {
-    readonly name: string;
-    readonly modelValue: string | undefined;
-    readonly 'onUpdate:modelValue': (value: string | undefined) => void;
-  };
-}
-
 const ROW_HEIGHT = 60;
 
 const ROWS = '.nui-field-array__row:not(.nui-field-array__row--leaving)';
-
-const newContact = (): Contact => ({ name: '' });
 
 const rectOf = (top: number, height: number): DOMRect => ({
   x: 0,
@@ -76,67 +49,15 @@ const pointerAt = (type: string, clientY: number): PointerEvent =>
 
 export class FieldArrayDriver {
   static mount(options: FieldArrayDriverOptions): FieldArrayDriver {
-    const captured = shallowRef<FormContext<Contacts> | null>(null);
+    const { config, schema, ...props } = options;
 
-    const current = (): FormContext<Contacts> => {
-      if (!captured.value) {
-        throw new Error('useForm did not run');
-      }
-      return captured.value;
-    };
-
-    const renderRow = ({ row }: { readonly row: FieldArrayRow<Contact> }) =>
-      h(
-        NuiFormField<Contacts, string | undefined>,
-        {
-          form: current(),
-          name: (values: Contacts) => values.contacts[row.index]?.name,
-          label: 'Name',
-          rules: options.rowRules,
-        },
-        {
-          default: ({ field }: FieldScope) =>
-            h(NuiInput, { ...field, modelValue: field.modelValue ?? '' }),
-        },
-      );
-
-    const Host = defineComponent({
-      setup: () => {
-        const form = useForm<Contacts, unknown>({
-          initialValues: { contacts: options.names.map((name) => ({ name })) },
-          schema: options.schema,
-          engine: options.engine,
-          onSubmit: () => undefined,
-        });
-
-        captured.value = form;
-        return () =>
-          h(NuiForm<Contacts>, { form }, () =>
-            h(
-              NuiFieldArray<Contacts, Contact>,
-              {
-                form,
-                name: (values: Contacts) => values.contacts,
-                label: 'Contacts',
-                min: options.min,
-                max: options.max,
-                reorderable: options.reorderable,
-                readonly: options.readonly,
-                newRow: options.addable === false ? undefined : newContact,
-                rules: options.listRules,
-              },
-              { default: renderRow },
-            ),
-          );
-      },
-    });
-
-    const wrapper = mount(Host, {
+    const wrapper = mount(ContactsArrayForm, {
+      props: { ...props, schema: schema === undefined ? undefined : markRaw(schema) },
       attachTo: document.body,
-      global: { plugins: options.config === undefined ? [] : [createNuiConfig(options.config)] },
+      global: { plugins: config === undefined ? [] : [createNuiConfig(config)] },
     });
 
-    return new FieldArrayDriver(wrapper, current());
+    return new FieldArrayDriver(wrapper, wrapper.vm.form);
   }
 
   private constructor(

@@ -1,7 +1,7 @@
-import { flushPromises, mount, type VueWrapper } from '@vue/test-utils';
+import { flushPromises, mount, renderToString, type VueWrapper } from '@vue/test-utils';
 import type { Doc, DocJSON, DocJSONIssue } from '@numior/editor-core';
-import { createSSRApp, h, nextTick, type Plugin } from 'vue';
-import { renderToString } from 'vue/server-renderer';
+import { createSSRApp, nextTick, type Plugin } from 'vue';
+import { renderToString as renderAppToString } from 'vue/server-renderer';
 import { NuiContent, type NuiContentProps } from '../../src';
 
 const withoutComments = (html: string): string => html.replaceAll(/<!--[\s\S]*?-->/g, '');
@@ -18,19 +18,17 @@ export class ContentDriver {
   }
 
   static async ssr(props: NuiContentProps): Promise<string> {
-    return withoutComments(
-      await renderToString(createSSRApp({ render: () => h(NuiContent, props) })),
-    );
+    return withoutComments(await renderToString(NuiContent, { props }));
   }
 
   static async hydrate(props: NuiContentProps): Promise<readonly string[]> {
     const host = document.createElement('div');
     const warnings: string[] = [];
 
-    host.innerHTML = await renderToString(createSSRApp({ render: () => h(NuiContent, props) }));
+    host.innerHTML = await renderAppToString(createSSRApp(NuiContent, { ...props }));
     document.body.append(host);
 
-    const app = createSSRApp({ render: () => h(NuiContent, props) });
+    const app = createSSRApp(NuiContent, { ...props });
 
     app.config.warnHandler = (message) => {
       warnings.push(message);

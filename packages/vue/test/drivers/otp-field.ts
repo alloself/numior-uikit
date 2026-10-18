@@ -1,9 +1,9 @@
 import { flushPromises, mount, type DOMWrapper, type VueWrapper } from '@vue/test-utils';
 import { vi } from 'vite-plus/test';
-import { defineComponent, h, nextTick, ref, useTemplateRef, type Ref } from 'vue';
-import { NuiField, NuiOtpField, type NuiFieldProps, type NuiOtpFieldProps } from '../../src';
+import { nextTick } from 'vue';
+import type { NuiFieldProps, NuiOtpFieldProps } from '../../src';
+import OtpFieldScene from '../fixtures/OtpFieldScene.vue';
 import { ComponentDriver } from './component';
-import { isString } from '../../../primitives/test/support/guards';
 
 export interface OtpFieldMountOptions {
   readonly props?: NuiOtpFieldProps;
@@ -17,6 +17,8 @@ export interface OtpNativeSelection {
   readonly start: number | null;
   readonly end: number | null;
 }
+
+type OtpFieldSceneWrapper = VueWrapper<InstanceType<typeof OtpFieldScene>>;
 
 const SLOT_WIDTH = 40;
 
@@ -85,60 +87,21 @@ const indexesOf = (slots: readonly DOMWrapper<HTMLElement>[], selector: string):
 export class OtpFieldDriver extends ComponentDriver {
   protected readonly block = 'nui-otp-field';
 
-  static mount({
-    props = {},
-    modelValue = '',
-    attrs = {},
-    field,
-    separator,
-  }: OtpFieldMountOptions = {}) {
-    const model = ref(modelValue);
-    const completions: string[] = [];
-
-    const Host = defineComponent({
-      setup() {
-        const control = useTemplateRef<InstanceType<typeof NuiOtpField>>('control');
-
-        return { focusControl: () => control.value?.focus() };
-      },
-      render() {
-        const control = h(
-          NuiOtpField,
-          {
-            ...props,
-            ...attrs,
-            ref: 'control',
-            modelValue: model.value,
-            'onUpdate:modelValue': (value: unknown) => {
-              if (isString(value)) {
-                model.value = value;
-              }
-            },
-            onComplete: (code: unknown) => {
-              if (isString(code)) {
-                completions.push(code);
-              }
-            },
-          },
-          separator === undefined ? {} : { separator: () => separator },
-        );
-
-        return field ? h(NuiField, field, () => control) : control;
-      },
-    });
-
-    const wrapper = mount(Host, { attachTo: document.body });
-
-    return new OtpFieldDriver(wrapper, model, completions, () => wrapper.vm.focusControl());
+  static mount({ props, modelValue, attrs, field, separator }: OtpFieldMountOptions = {}) {
+    return new OtpFieldDriver(
+      mount(OtpFieldScene, {
+        props: { props, initialValue: modelValue, attrs, field, separator },
+        attachTo: document.body,
+      }),
+    );
   }
 
-  private constructor(
-    wrapper: VueWrapper,
-    private readonly model: Ref<string>,
-    readonly completions: readonly string[],
-    private readonly focusHandle: () => void,
-  ) {
-    super(wrapper);
+  private constructor(private readonly scene: OtpFieldSceneWrapper) {
+    super(scene);
+  }
+
+  get completions(): readonly string[] {
+    return this.scene.vm.completions;
   }
 
   get control(): DOMWrapper<HTMLInputElement> {
@@ -150,7 +113,7 @@ export class OtpFieldDriver extends ComponentDriver {
   }
 
   get value(): string {
-    return this.model.value;
+    return this.scene.vm.model;
   }
 
   get nativeValue(): string {
@@ -227,7 +190,7 @@ export class OtpFieldDriver extends ComponentDriver {
   }
 
   async focusThroughHandle(): Promise<void> {
-    this.focusHandle();
+    this.scene.vm.focusControl();
     await nextTick();
   }
 
@@ -349,7 +312,7 @@ export class OtpFieldDriver extends ComponentDriver {
   }
 
   async receiveModelValue(value: string): Promise<void> {
-    this.model.value = value;
+    this.scene.vm.model = value;
     await nextTick();
   }
 

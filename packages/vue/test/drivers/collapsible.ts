@@ -1,6 +1,7 @@
 import { mount, type DOMWrapper, type VueWrapper } from '@vue/test-utils';
-import { defineComponent, h, nextTick, ref, type Ref } from 'vue';
-import { NuiCollapsible, type NuiCollapsibleProps } from '../../src';
+import { computed, nextTick, type ComputedRef } from 'vue';
+import type { NuiCollapsibleProps } from '../../src';
+import CollapsibleScene from '../fixtures/CollapsibleScene.vue';
 import { ComponentDriver } from './component';
 
 export interface CollapsibleMountOptions {
@@ -13,39 +14,22 @@ export interface CollapsibleMountOptions {
 export class CollapsibleDriver extends ComponentDriver {
   protected readonly block = 'nui-collapsible';
 
-  private constructor(
-    wrapper: VueWrapper,
-    readonly open: Ref<boolean>,
-  ) {
-    super(wrapper);
+  readonly open: ComputedRef<boolean>;
+
+  private constructor(private readonly scene: VueWrapper<InstanceType<typeof CollapsibleScene>>) {
+    super(scene);
+    this.open = computed(() => scene.vm.open);
   }
 
   static mount({
     props = {},
-    open: initial = false,
+    open = false,
     content = 'Details',
     trigger,
   }: CollapsibleMountOptions = {}) {
-    const open = ref(initial);
-
-    const Host = defineComponent({
-      setup: () => () =>
-        h(
-          NuiCollapsible,
-          {
-            ...props,
-            open: open.value,
-            'onUpdate:open': (value: boolean) => {
-              open.value = value;
-            },
-          },
-          trigger === undefined
-            ? { default: () => content }
-            : { default: () => content, trigger: () => trigger },
-        ),
-    });
-
-    return new CollapsibleDriver(mount(Host), open);
+    return new CollapsibleDriver(
+      mount(CollapsibleScene, { props: { collapsible: props, open, content, trigger } }),
+    );
   }
 
   get root(): DOMWrapper<HTMLElement> {
@@ -105,7 +89,7 @@ export class CollapsibleDriver extends ComponentDriver {
   }
 
   async receive(open: boolean): Promise<void> {
-    this.open.value = open;
+    this.scene.vm.open = open;
     await nextTick();
   }
 }

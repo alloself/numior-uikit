@@ -1,17 +1,11 @@
 import { mount, type DOMWrapper, type VueWrapper } from '@vue/test-utils';
-import { defineComponent, h, nextTick, ref, type Ref } from 'vue';
-import {
-  NuiDateRangePicker,
-  NuiField,
-  type NuiDateRange,
-  type NuiDateRangePickerProps,
-  type NuiFieldProps,
-} from '../../src';
-import { configScope } from '../support/config-scope';
+import { nextTick } from 'vue';
+import type { NuiDateRange, NuiDateRangePickerProps, NuiFieldProps } from '../../src';
+import DateRangePickerScene from '../fixtures/DateRangePickerScene.vue';
+import { configPlugins } from '../support/config';
 import { TopLayerStubs } from '../support/top-layer';
 import { ComponentDriver } from './component';
 import { typeInto } from '../support/text-input';
-import { isDateRange } from '../support/guards';
 
 export interface DateRangePickerMountOptions {
   readonly props?: NuiDateRangePickerProps;
@@ -28,39 +22,21 @@ export class DateRangePickerDriver extends ComponentDriver {
     field,
   }: DateRangePickerMountOptions = {}) {
     const stubs = new TopLayerStubs();
-    const model = ref<NuiDateRange>(modelValue);
 
-    const control = () =>
-      h(NuiDateRangePicker, {
-        today: '2026-09-24',
-        ...props,
-        modelValue: model.value,
-        'onUpdate:modelValue': (value: unknown) => {
-          if (isDateRange(value)) {
-            model.value = value;
-          }
-        },
-      });
-
-    const inField = () => (field ? h(NuiField, field, control) : control());
-
-    const Host = defineComponent({
-      setup: () => () =>
-        h('div', [
-          h(configScope({ locale: 'ru-RU' }, inField)),
-          h('button', { type: 'button', class: 'outside' }, 'Outside'),
-        ]),
+    const scene = mount(DateRangePickerScene, {
+      props: { picker: { today: '2026-09-24', ...props }, field, modelValue },
+      attachTo: document.body,
+      global: { plugins: configPlugins({ locale: 'ru-RU' }) },
     });
 
-    return new DateRangePickerDriver(mount(Host, { attachTo: document.body }), stubs, model);
+    return new DateRangePickerDriver(scene, stubs);
   }
 
   private constructor(
-    wrapper: VueWrapper,
+    private readonly scene: VueWrapper<InstanceType<typeof DateRangePickerScene>>,
     private readonly stubs: TopLayerStubs,
-    private readonly model: Ref<NuiDateRange>,
   ) {
-    super(wrapper);
+    super(scene);
   }
 
   override unmount(): void {
@@ -85,7 +61,7 @@ export class DateRangePickerDriver extends ComponentDriver {
   }
 
   get value(): NuiDateRange {
-    return this.model.value;
+    return this.scene.vm.model;
   }
 
   get isOpen(): boolean {

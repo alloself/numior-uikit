@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { h, type VNode } from 'vue';
 import {
   control,
   controlProps,
@@ -9,10 +8,8 @@ import {
   provideControls,
   useControls,
 } from '../src';
-import { captureSetup, providing } from './harness/capture';
-
-const Echo = (props: { readonly modelValue?: string | undefined }): VNode =>
-  h('span', props.modelValue ?? '');
+import Echo from './fixtures/EchoControl.vue';
+import { captureSetup } from './harness/capture';
 
 const text = control(Echo, isString, { props: controlProps({ placeholder: optional(isString) }) });
 
@@ -38,7 +35,7 @@ describe('control registry', () => {
     expect(captureSetup(() => useControls()).value).toBeNull();
 
     expect(
-      captureSetup(() => useControls(), { wrap: providing(() => provideControls(registry)) }).value,
+      captureSetup(() => useControls(), { layers: [() => provideControls(registry)] }).value,
     ).toBe(registry);
   });
 });

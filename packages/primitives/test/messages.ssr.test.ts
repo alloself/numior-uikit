@@ -1,23 +1,19 @@
 // @vitest-environment node
+import { renderToString } from '@vue/test-utils';
 import { describe, expect, it } from 'vite-plus/test';
-import { createSSRApp, defineComponent, h } from 'vue';
-import { renderToString } from 'vue/server-renderer';
-import { createNuiConfig, useMessages } from '../src';
-import { probeMessages } from './harness/messages';
+import { createNuiConfig } from '../src';
+import MessagesButton from './fixtures/MessagesButton.vue';
 
 describe('message dictionary on the server', () => {
   it('renders the configured language and overrides like the client', async () => {
-    const Probe = defineComponent({
-      setup() {
-        const messages = useMessages(probeMessages);
-        return () =>
-          h('button', { 'aria-label': messages.value.close }, messages.value.count({ count: 2 }));
+    const html = await renderToString(MessagesButton, {
+      global: {
+        plugins: [
+          createNuiConfig({ locale: 'ru-RU', messages: { ru: { probe: { close: 'Скрыть' } } } }),
+        ],
       },
     });
 
-    const app = createSSRApp(Probe);
-
-    app.use(createNuiConfig({ locale: 'ru-RU', messages: { ru: { probe: { close: 'Скрыть' } } } }));
-    expect(await renderToString(app)).toBe('<button aria-label="Скрыть">Выбрано: 2</button>');
+    expect(html).toBe('<button aria-label="Скрыть">Выбрано: 2</button>');
   });
 });

@@ -1,53 +1,45 @@
 import { mount } from '@vue/test-utils';
 import { describe, expect, it, vi } from 'vite-plus/test';
-import { defineComponent, h } from 'vue';
-import { NuiDialog, NuiIcon, useLocale, type NuiConfigOptions } from '../src';
-import { configScope } from './support/config-scope';
+import Heart from 'lucide-vue-next/dist/esm/icons/heart.js';
+import Star from 'lucide-vue-next/dist/esm/icons/star.js';
+import Sun from 'lucide-vue-next/dist/esm/icons/sun.js';
+import { markRaw } from 'vue';
+import type { NuiConfigOptions } from '../src';
+import NestedConfig from './fixtures/NestedConfig.vue';
+import { configPlugins } from './support/config';
 
 const closeText = (outer: NuiConfigOptions, inner: NuiConfigOptions = {}) => {
-  const wrapper = mount(configScope(outer, () => h(configScope(inner, () => h(NuiDialog)))));
+  const wrapper = mount(NestedConfig, {
+    props: { inner, content: 'dialog' },
+    global: { plugins: configPlugins(outer) },
+  });
+
   const label = wrapper.find('.nui-dialog__close').attributes('aria-label');
 
   wrapper.unmount();
   return label;
 };
 
-const glyph = (name: string) => defineComponent({ render: () => h('svg', { 'data-icon': name }) });
-
 describe('provideNuiConfig', () => {
   it('layers nested icon registries for the subtree', async () => {
-    const wrapper = mount(
-      configScope({ icons: { check: glyph('outer'), x: glyph('outer-x') } }, () =>
-        h(
-          configScope({ icons: { check: glyph('inner') } }, () => [
-            h(NuiIcon, { icon: 'check' }),
-            h(NuiIcon, { icon: 'x' }),
-          ]),
-        ),
-      ),
-    );
+    const wrapper = mount(NestedConfig, {
+      props: { inner: { icons: { check: markRaw(Sun) } }, content: 'icons' },
+      global: { plugins: configPlugins({ icons: { check: markRaw(Heart), x: markRaw(Star) } }) },
+    });
 
-    await vi.waitFor(() =>
-      expect(wrapper.findAll('svg').map((svg) => svg.attributes('data-icon'))).toEqual([
-        'inner',
-        'outer-x',
-      ]),
-    );
+    await vi.waitFor(() => expect(wrapper.findAll('svg')).toHaveLength(2));
+
+    expect(wrapper.findAll('svg')[0]?.classes()).toContain('lucide-sun');
+    expect(wrapper.findAll('svg')[1]?.classes()).toContain('lucide-star');
   });
 
   it('supplies the locale to descendants through empty layers', () => {
-    const Probe = defineComponent({
-      setup: () => {
-        const locale = useLocale();
-        return () => h('output', locale.value);
-      },
+    const wrapper = mount(NestedConfig, {
+      props: { content: 'number' },
+      global: { plugins: configPlugins({ locale: 'de-DE' }) },
     });
 
-    const wrapper = mount(
-      configScope({ locale: 'de-DE' }, () => h(configScope({}, () => h(Probe)))),
-    );
-
-    expect(wrapper.find('output').text()).toBe('de-DE');
+    expect(wrapper.find('input').element.value).toBe('1.234,5');
   });
 
   it('resolves built-in texts through nested configs and a translate hook', () => {

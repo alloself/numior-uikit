@@ -1,8 +1,7 @@
 import { flushPromises, mount, type VueWrapper } from '@vue/test-utils';
 import { vi } from 'vite-plus/test';
-import { h } from 'vue';
 import { NuiIcon, type IconRegistry, type NuiIconProps } from '../../src';
-import { configScope } from '../support/config-scope';
+import { configPlugins } from '../support/config';
 import { ComponentDriver } from './component';
 
 export interface IconMountOptions {
@@ -28,9 +27,11 @@ export class IconDriver extends ComponentDriver {
     props: NuiIconProps,
     { icons, attrs = {}, expectGlyph = true }: IconMountOptions = {},
   ) {
-    const wrapper: VueWrapper = icons
-      ? mount(configScope({ icons }, () => h(NuiIcon, { ...props, ...attrs })))
-      : mount(NuiIcon, { props, attrs });
+    const wrapper = mount(NuiIcon, {
+      props,
+      attrs,
+      global: { plugins: configPlugins(icons === undefined ? undefined : { icons }) },
+    });
 
     return new IconDriver(wrapper, expectGlyph);
   }
@@ -56,10 +57,6 @@ export class IconDriver extends ComponentDriver {
 
   get glyphClasses(): string[] {
     return this.wrapper.find(GLYPH).classes();
-  }
-
-  glyphAttribute(name: string): string | undefined {
-    return this.wrapper.find(GLYPH).attributes(name);
   }
 
   get rotation(): string | undefined {

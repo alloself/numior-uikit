@@ -1,79 +1,25 @@
 import { mount } from '@vue/test-utils';
-import { defineComponent, h, shallowRef, type Component } from 'vue';
-import {
-  provideForm,
-  useField,
-  useForm,
-  useFormContext,
-  type FormContext,
-  type FormField,
-  type FormHandle,
-} from '../../src';
-
-export type Lookup = 'injected' | 'provided';
-
-interface Names {
-  readonly name: string;
-}
-
-interface Found {
-  readonly contexts: Map<Lookup, FormHandle | null>;
-  field: FormField<string> | null;
-}
-
-const noop = (): void => undefined;
-
-const lookup = (kind: Lookup, found: Found) =>
-  defineComponent({
-    setup: () => {
-      found.contexts.set(kind, useFormContext());
-      return () => h('i');
-    },
-  });
-
-const fieldOf = (form: FormContext<Names>, found: Found) =>
-  defineComponent({
-    setup: () => {
-      found.field = useField((values: Names) => values.name, { form });
-      return () => h('i');
-    },
-  });
-
-const providing = (form: FormHandle, child: Component): Component =>
-  defineComponent({
-    setup: () => {
-      provideForm(form);
-      return () => h(child);
-    },
-  });
+import { shallowRef } from 'vue';
+import type { FormContext, FormField, FormHandle } from '../../src';
+import FormContextProbe from '../fixtures/FormContextProbe.vue';
+import TwoFormsScene from '../fixtures/TwoFormsScene.vue';
+import type { Lookup, Names } from '../fixtures/scenes.types';
 
 export class TwoFormsHarness {
   static mount(first: Names, second: Names): TwoFormsHarness {
-    const found: Found = { contexts: new Map(), field: null };
-    const forms = shallowRef<readonly [FormContext<Names>, FormContext<Names>] | null>(null);
+    const contexts = new Map<Lookup, FormHandle | null>();
 
-    const Host = defineComponent({
-      setup: () => {
-        const pair = [
-          useForm({ initialValues: first, onSubmit: noop }),
-          useForm({ initialValues: second, onSubmit: noop }),
-        ] as const;
-
-        forms.value = pair;
-        return () => [
-          h(fieldOf(pair[0], found)),
-          h(lookup('injected', found)),
-          h(providing(pair[0], lookup('provided', found))),
-        ];
+    const wrapper = mount(TwoFormsScene, {
+      props: {
+        first,
+        second,
+        found: (kind, context) => {
+          contexts.set(kind, context);
+        },
       },
     });
 
-    mount(Host);
-
-    if (!forms.value || !found.field) {
-      throw new Error('useForm did not run');
-    }
-    return new TwoFormsHarness(forms.value, found.field, found.contexts);
+    return new TwoFormsHarness(wrapper.vm.forms, wrapper.vm.field, contexts);
   }
 
   private constructor(
@@ -90,14 +36,13 @@ export class TwoFormsHarness {
 export const contextOutsideForm = (): FormHandle | null => {
   const captured = shallowRef<FormHandle | null>(null);
 
-  mount(
-    defineComponent({
-      setup: () => {
-        captured.value = useFormContext();
-        return () => h('i');
+  mount(FormContextProbe, {
+    props: {
+      found: (context) => {
+        captured.value = context;
       },
-    }),
-  );
+    },
+  });
 
   return captured.value;
 };

@@ -1,6 +1,5 @@
 import { NuiCheckbox, NuiInput } from '@numior/vue';
 import { describe, expect, it } from 'vite-plus/test';
-import { h } from 'vue';
 import { NuiFormError, formConfig, required } from '../src';
 import { SmartFormDriver } from './drivers/smart-form';
 
@@ -39,13 +38,6 @@ const STEPS = [
 const emailTaken = (): never => {
   throw new NuiFormError({ email: 'This email is taken' });
 };
-
-const stepState = (props: Record<string, unknown>) =>
-  h(
-    'span',
-    { class: 'state' },
-    `${String(props.step)}:${String(props.first)}:${String(props.last)}`,
-  );
 
 const mountWizard = (options: { readonly step?: string } = {}) =>
   SmartFormDriver.mount({ initialValues: blank, steps: STEPS, onSubmit: emailTaken, ...options });
@@ -126,7 +118,7 @@ describe('NuiSmartForm steps', () => {
       initialValues: blank,
       steps: STEPS,
       step: 'confirm',
-      slots: { actions: stepState },
+      parts: ['step-state'],
     });
 
     expect(form.text('.state')).toBe('confirm:false:true');

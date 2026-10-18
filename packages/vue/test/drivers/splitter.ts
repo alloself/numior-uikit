@@ -1,6 +1,7 @@
 import { mount, type DOMWrapper, type VueWrapper } from '@vue/test-utils';
-import { defineComponent, h, nextTick, ref, type Ref } from 'vue';
-import { NuiSplitter, type NuiConfigOptions, type NuiSplitterProps } from '../../src';
+import { nextTick, toRef, type Ref } from 'vue';
+import type { NuiConfigOptions, NuiSplitterProps } from '../../src';
+import SplitterScene from '../fixtures/SplitterScene.vue';
 import { configPlugins } from '../support/config';
 import { ComponentDriver } from './component';
 
@@ -24,15 +25,16 @@ const rectOf = (size: { readonly width: number; readonly height: number }): DOMR
   toJSON: () => ({}),
 });
 
+type SplitterSceneWrapper = VueWrapper<InstanceType<typeof SplitterScene>>;
+
 export class SplitterDriver extends ComponentDriver {
   protected readonly block = 'nui-splitter';
 
   private constructor(
-    wrapper: VueWrapper,
-    readonly ratio: Ref<number>,
+    private readonly scene: SplitterSceneWrapper,
     size: { readonly width: number; readonly height: number },
   ) {
-    super(wrapper);
+    super(scene);
 
     Object.defineProperty(this.root.element, 'getBoundingClientRect', {
       value: () => rectOf(size),
@@ -40,36 +42,24 @@ export class SplitterDriver extends ComponentDriver {
   }
 
   static mount({
-    props = {},
-    ratio: initial = 0.5,
-    dir = 'ltr',
+    props,
+    ratio,
+    dir,
     config,
     size = { width: 400, height: 200 },
   }: SplitterMountOptions = {}) {
-    const ratio = ref(initial);
-
-    const Host = defineComponent({
-      setup: () => () =>
-        h('div', { dir }, [
-          h(
-            NuiSplitter,
-            {
-              ...props,
-              ratio: ratio.value,
-              'onUpdate:ratio': (value: number) => {
-                ratio.value = value;
-              },
-            },
-            { start: () => h('p', 'Start'), end: () => h('p', 'End') },
-          ),
-        ]),
-    });
-
     return new SplitterDriver(
-      mount(Host, { attachTo: document.body, global: { plugins: configPlugins(config) } }),
-      ratio,
+      mount(SplitterScene, {
+        props: { props, initialRatio: ratio, dir },
+        attachTo: document.body,
+        global: { plugins: configPlugins(config) },
+      }),
       size,
     );
+  }
+
+  get ratio(): Readonly<Ref<number>> {
+    return toRef(() => this.scene.vm.ratio);
   }
 
   get root(): DOMWrapper<HTMLElement> {

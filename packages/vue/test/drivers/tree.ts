@@ -1,20 +1,12 @@
 import { flushPromises, mount, type DOMWrapper, type VueWrapper } from '@vue/test-utils';
 import { vi } from 'vite-plus/test';
-import { defineComponent, h, nextTick, ref, type Ref } from 'vue';
-import {
-  NuiTree,
-  type NuiConfigOptions,
-  type NuiTreeItem,
-  type NuiTreeItemSlot,
-  type NuiTreeProps,
-} from '../../src';
+import { nextTick } from 'vue';
+import type { NuiConfigOptions, NuiTreeItem, NuiTreeItemSlot, NuiTreeProps } from '../../src';
+import TreeScene from '../fixtures/TreeScene.vue';
 import { FILES } from '../support/tree-items';
 import { configPlugins } from '../support/config';
 import { createSelection, type Selection, type SelectionValue } from '../support/selection';
 import { ComponentDriver } from './component';
-import { isString, listOf } from '../../../primitives/test/support/guards';
-
-const isStringList = listOf(isString);
 
 export interface TreeMountOptions {
   readonly props?: Partial<Omit<NuiTreeProps<unknown>, 'items'>>;
@@ -26,17 +18,14 @@ export interface TreeMountOptions {
   readonly config?: NuiConfigOptions;
 }
 
+type TreeSceneWrapper = VueWrapper<InstanceType<typeof TreeScene>>;
+
 interface TreeWindowFrame {
   readonly lead: string;
   readonly rest: string;
   readonly clampStart: string;
   readonly clampEnd: string;
 }
-
-const labelOfItem = (item: unknown): string =>
-  typeof item === 'object' && item !== null && 'label' in item && typeof item.label === 'string'
-    ? item.label
-    : '';
 
 const textOf = (element: Element): string =>
   (element.querySelector('.nui-row__title')?.textContent ?? '').trim();
@@ -63,7 +52,7 @@ export class TreeDriver extends ComponentDriver {
     props = {},
     items = FILES,
     modelValue,
-    expanded = [],
+    expanded,
     dir,
     itemSlot,
     config,
@@ -73,55 +62,35 @@ export class TreeDriver extends ComponentDriver {
       props.selectable === 'multiple' || props.checkable === true,
     );
 
-    const expandedRef = ref<string[]>([...expanded]);
-    const itemsRef = ref<readonly NuiTreeItem[]>(structuredClone(items));
-    const loads: string[] = [];
-    const events: string[] = [];
-
-    const Host = defineComponent({
-      setup: () => () =>
-        h('div', { dir }, [
-          h(
-            NuiTree,
-            {
-              ...props,
-              items: itemsRef.value,
-              ...selection.props(),
-              expanded: expandedRef.value,
-              'onUpdate:expanded': (value: unknown) => {
-                if (isStringList(value)) {
-                  expandedRef.value = value;
-                }
-              },
-              onLoad: (item: unknown) => loads.push(labelOfItem(item)),
-              onExpand: (item: unknown) => events.push(`expand:${labelOfItem(item)}`),
-              onCollapse: (item: unknown) => events.push(`collapse:${labelOfItem(item)}`),
-              onSelect: (item: unknown) => events.push(`select:${labelOfItem(item)}`),
-            },
-            itemSlot ? { item: itemSlot } : undefined,
-          ),
-        ]),
+    const wrapper = mount(TreeScene, {
+      props: {
+        props,
+        initialItems: structuredClone(items),
+        selection,
+        initiallyExpanded: expanded,
+        dir,
+        itemSlot,
+      },
+      attachTo: document.body,
+      global: { plugins: configPlugins(config) },
     });
 
-    return new TreeDriver(
-      mount(Host, { attachTo: document.body, global: { plugins: configPlugins(config) } }),
-      selection,
-      expandedRef,
-      itemsRef,
-      loads,
-      events,
-    );
+    return new TreeDriver(wrapper, selection);
   }
 
   private constructor(
-    wrapper: VueWrapper,
+    private readonly scene: TreeSceneWrapper,
     private readonly selection: Selection,
-    private readonly expandedRef: Ref<string[]>,
-    private readonly itemsRef: Ref<readonly NuiTreeItem[]>,
-    readonly loads: string[],
-    readonly events: string[],
   ) {
-    super(wrapper);
+    super(scene);
+  }
+
+  get loads(): string[] {
+    return this.scene.vm.loads;
+  }
+
+  get events(): string[] {
+    return this.scene.vm.events;
   }
 
   override hasModifier(modifier: string): boolean {
@@ -185,7 +154,7 @@ export class TreeDriver extends ComponentDriver {
   }
 
   get expandedValues(): string[] {
-    return this.expandedRef.value;
+    return this.scene.vm.expanded;
   }
 
   get statusText(): string {
@@ -309,17 +278,17 @@ export class TreeDriver extends ComponentDriver {
   }
 
   async receiveItems(items: readonly NuiTreeItem[]): Promise<void> {
-    this.itemsRef.value = items;
+    this.scene.vm.items = items;
     await nextTick();
   }
 
   async setExpanded(values: readonly string[]): Promise<void> {
-    this.expandedRef.value = [...values];
+    this.scene.vm.expanded = [...values];
     await nextTick();
   }
 
   async rename(label: string, next: string): Promise<void> {
-    const found = findItem(this.itemsRef.value, label);
+    const found = findItem(this.scene.vm.items, label);
 
     if (!found) {
       throw new Error(`No tree item labelled ${label}`);

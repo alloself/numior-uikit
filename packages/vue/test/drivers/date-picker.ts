@@ -1,13 +1,11 @@
 import { mount, type DOMWrapper, type VueWrapper } from '@vue/test-utils';
-import { defineComponent, h, nextTick, ref, type Ref } from 'vue';
-import { NuiDatePicker, NuiField, type NuiDatePickerProps, type NuiFieldProps } from '../../src';
-import { configScope } from '../support/config-scope';
+import { nextTick } from 'vue';
+import type { NuiDatePickerProps, NuiFieldProps } from '../../src';
+import DatePickerScene from '../fixtures/DatePickerScene.vue';
+import { configPlugins } from '../support/config';
 import { TopLayerStubs } from '../support/top-layer';
 import { ComponentDriver } from './component';
 import { eraseBefore, typeInto } from '../support/text-input';
-import { isString, nullable } from '../../../primitives/test/support/guards';
-
-const isModel = nullable(isString);
 
 export interface DatePickerMountOptions {
   readonly props?: NuiDatePickerProps;
@@ -26,39 +24,21 @@ export class DatePickerDriver extends ComponentDriver {
     locale = 'ru-RU',
   }: DatePickerMountOptions = {}) {
     const stubs = new TopLayerStubs();
-    const model = ref<string | null>(modelValue);
 
-    const control = () =>
-      h(NuiDatePicker, {
-        today: '2026-09-24',
-        ...props,
-        modelValue: model.value,
-        'onUpdate:modelValue': (value: unknown) => {
-          if (isModel(value)) {
-            model.value = value;
-          }
-        },
-      });
-
-    const inField = () => (field ? h(NuiField, field, control) : control());
-
-    const Host = defineComponent({
-      setup: () => () =>
-        h('div', [
-          h(configScope({ locale }, inField)),
-          h('button', { type: 'button', class: 'outside' }, 'Outside'),
-        ]),
+    const scene = mount(DatePickerScene, {
+      props: { picker: { today: '2026-09-24', ...props }, field, modelValue },
+      attachTo: document.body,
+      global: { plugins: configPlugins({ locale }) },
     });
 
-    return new DatePickerDriver(mount(Host, { attachTo: document.body }), stubs, model);
+    return new DatePickerDriver(scene, stubs);
   }
 
   private constructor(
-    wrapper: VueWrapper,
+    private readonly scene: VueWrapper<InstanceType<typeof DatePickerScene>>,
     private readonly stubs: TopLayerStubs,
-    private readonly model: Ref<string | null>,
   ) {
-    super(wrapper);
+    super(scene);
   }
 
   override unmount(): void {
@@ -79,7 +59,7 @@ export class DatePickerDriver extends ComponentDriver {
   }
 
   get value(): string | null {
-    return this.model.value;
+    return this.scene.vm.model;
   }
 
   get panel(): DOMWrapper<HTMLElement> {
@@ -217,7 +197,7 @@ export class DatePickerDriver extends ComponentDriver {
   }
 
   async receive(value: string | null): Promise<void> {
-    this.model.value = value;
+    this.scene.vm.model = value;
     await nextTick();
   }
 }

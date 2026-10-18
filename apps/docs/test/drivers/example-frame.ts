@@ -1,15 +1,12 @@
 import { mount, type DOMWrapper, type VueWrapper } from '@vue/test-utils';
-import { defineComponent, h, markRaw, nextTick } from 'vue';
+import { markRaw, nextTick } from 'vue';
 import type { ExampleFile } from '../../.vitepress/examples/example.types';
 import ExampleFrame from '../../.vitepress/theme/parts/ExampleFrame.vue';
 import { ru } from '../../.vitepress/theme/texts';
 import { installClipboard } from '../../../../packages/primitives/test/support/clipboard';
+import SampleButton from '../fixtures/SampleButton.vue';
 
-const SampleComponent = markRaw(
-  defineComponent({
-    setup: () => () => h('button', { class: 'sample' }, 'Кнопка'),
-  }),
-);
+const SampleComponent = markRaw(SampleButton);
 
 export const exampleFile = (name: string, source: string): ExampleFile => ({
   name,

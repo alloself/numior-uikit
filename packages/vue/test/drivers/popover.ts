@@ -1,7 +1,8 @@
 import { mount, type DOMWrapper, type VueWrapper } from '@vue/test-utils';
 import { vi } from 'vite-plus/test';
-import { defineComponent, h, nextTick, ref, type Ref } from 'vue';
-import { NuiPopover, type NuiPopoverProps, type NuiPopoverTriggerSlot } from '../../src';
+import { nextTick } from 'vue';
+import type { NuiPopoverProps } from '../../src';
+import PopoverScene from '../fixtures/PopoverScene.vue';
 import { dismissPopoverNatively, TopLayerStubs } from '../support/top-layer';
 import { ComponentDriver } from './component';
 
@@ -10,44 +11,25 @@ export interface PopoverMountOptions {
   readonly open?: boolean;
 }
 
+type PopoverSceneWrapper = VueWrapper<InstanceType<typeof PopoverScene>>;
+
 export class PopoverDriver extends ComponentDriver {
   protected readonly block = 'nui-popover';
 
-  static mount({ props = {}, open = false }: PopoverMountOptions = {}) {
+  static mount({ props, open }: PopoverMountOptions = {}) {
     const stubs = new TopLayerStubs();
-    const model = ref(open);
 
-    const Host = defineComponent({
-      setup: () => () =>
-        h('div', [
-          h(
-            NuiPopover,
-            {
-              ...props,
-              open: model.value,
-              'onUpdate:open': (value: boolean) => {
-                model.value = value;
-              },
-            },
-            {
-              trigger: (slot: NuiPopoverTriggerSlot) =>
-                h('button', { ...slot.attrs, class: 'opener' }, 'Open'),
-              default: () => h('a', { href: '#profile' }, 'Content'),
-            },
-          ),
-          h('button', { type: 'button', class: 'outside' }, 'Outside'),
-        ]),
-    });
-
-    return new PopoverDriver(mount(Host, { attachTo: document.body }), stubs, model);
+    return new PopoverDriver(
+      mount(PopoverScene, { props: { props, initiallyOpen: open }, attachTo: document.body }),
+      stubs,
+    );
   }
 
   private constructor(
-    wrapper: VueWrapper,
+    private readonly scene: PopoverSceneWrapper,
     private readonly stubs: TopLayerStubs,
-    private readonly model: Ref<boolean>,
   ) {
-    super(wrapper);
+    super(scene);
   }
 
   get trigger(): DOMWrapper<HTMLButtonElement> {
@@ -59,7 +41,7 @@ export class PopoverDriver extends ComponentDriver {
   }
 
   get modelOpen(): boolean {
-    return this.model.value;
+    return this.scene.vm.open;
   }
 
   get popoverCalls(): { show: number; hide: number } {
@@ -77,7 +59,7 @@ export class PopoverDriver extends ComponentDriver {
   }
 
   async receiveOpen(value: boolean): Promise<void> {
-    this.model.value = value;
+    this.scene.vm.open = value;
     await nextTick();
   }
 

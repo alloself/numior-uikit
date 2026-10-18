@@ -1,12 +1,8 @@
 import { mount, type DOMWrapper, type VueWrapper } from '@vue/test-utils';
 import { vi } from 'vite-plus/test';
-import { defineComponent, h, nextTick, ref, type Ref } from 'vue';
-import {
-  NuiStepper,
-  type NuiConfigOptions,
-  type NuiStepperProps,
-  type NuiStepperStep,
-} from '../../src';
+import { nextTick } from 'vue';
+import type { NuiConfigOptions, NuiStepperProps, NuiStepperStep } from '../../src';
+import StepperScene from '../fixtures/StepperScene.vue';
 import { configPlugins } from '../support/config';
 import { ComponentDriver } from './component';
 
@@ -33,43 +29,31 @@ const markOf = (indicator: DOMWrapper<Element>): string => {
   return MARKS.find((mark) => classes.includes(`lucide-${mark}`)) ?? indicator.text();
 };
 
+type StepperSceneWrapper = VueWrapper<InstanceType<typeof StepperScene>>;
+
 export class StepperDriver extends ComponentDriver {
   protected readonly block = 'nui-stepper';
 
   static mount({
     steps = STEPS,
     modelValue = 'profile',
-    props = {},
+    props,
     config,
   }: StepperMountOptions = {}): StepperDriver {
-    const model = ref(modelValue);
-
-    const Host = defineComponent({
-      setup: () => () =>
-        h(NuiStepper, {
-          steps,
-          ...props,
-          modelValue: model.value,
-          'onUpdate:modelValue': (value: unknown) => {
-            if (typeof value === 'string') {
-              model.value = value;
-            }
-          },
-        }),
-    });
-
-    return new StepperDriver(mount(Host, { global: { plugins: configPlugins(config) } }), model);
+    return new StepperDriver(
+      mount(StepperScene, {
+        props: { steps, initialValue: modelValue, props },
+        global: { plugins: configPlugins(config) },
+      }),
+    );
   }
 
-  private constructor(
-    wrapper: VueWrapper,
-    private readonly model: Ref<string>,
-  ) {
-    super(wrapper);
+  private constructor(private readonly scene: StepperSceneWrapper) {
+    super(scene);
   }
 
   get value(): string {
-    return this.model.value;
+    return this.scene.vm.model;
   }
 
   get label(): string | undefined {

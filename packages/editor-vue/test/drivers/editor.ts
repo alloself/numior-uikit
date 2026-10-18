@@ -1,4 +1,4 @@
-import { mount, type VueWrapper } from '@vue/test-utils';
+import { mount, renderToString, type VueWrapper } from '@vue/test-utils';
 import { contentSchema } from '@numior/content';
 import {
   createEmptyDoc,
@@ -7,9 +7,9 @@ import {
   type Command,
   type DocJSON,
 } from '@numior/editor-core';
-import { provideDraftCommits, type DraftCommits } from '@numior/primitives';
-import { createSSRApp, defineComponent, h, nextTick, ref } from 'vue';
-import { renderToString } from 'vue/server-renderer';
+import type { DraftCommits } from '@numior/primitives';
+import { createSSRApp, nextTick } from 'vue';
+import { renderToString as renderAppToString } from 'vue/server-renderer';
 import {
   NuiEditor,
   type NuiEditorApi,
@@ -17,6 +17,7 @@ import {
   type NuiEditorProps,
   type NuiEditorValue,
 } from '../../src';
+import FieldEditor from '../fixtures/FieldEditor.vue';
 import { layOut } from '../support/layout';
 import { isShown } from '../support/popovers';
 
@@ -95,28 +96,12 @@ export class EditorDriver {
   }
 
   static mountInField(props: EditorMountProps = {}): EditorDriver {
-    const html = ref(props.modelValue ?? '');
-    let drafts: DraftCommits | undefined;
-
-    const Host = defineComponent({
-      setup: () => {
-        drafts = provideDraftCommits();
-        return () =>
-          h(NuiEditor, {
-            ...withoutModel(props),
-            modelValue: html.value,
-            'onUpdate:modelValue': (value: NuiEditorValue | undefined) => {
-              if (typeof value === 'string') {
-                html.value = value;
-              }
-            },
-          });
-      },
+    const root = mount(FieldEditor, {
+      props: { editor: withoutModel(props), initial: props.modelValue },
+      attachTo: document.body,
     });
 
-    const root = mount(Host, { attachTo: document.body });
-
-    return new EditorDriver(root.findComponent(NuiEditor), root, drafts);
+    return new EditorDriver(root.findComponent(NuiEditor), root, root.vm.drafts);
   }
 
   commitDrafts(): void {
@@ -136,9 +121,7 @@ export class EditorDriver {
   static async ssr(props: EditorMountProps): Promise<string> {
     const shown = { ...withoutModel(props), ...modelOf(props) };
 
-    return withoutComments(
-      await renderToString(createSSRApp({ render: () => h(NuiEditor, shown) })),
-    );
+    return withoutComments(await renderToString(NuiEditor, { props: shown }));
   }
 
   static async hydrate(props: EditorMountProps): Promise<readonly string[]> {
@@ -146,10 +129,10 @@ export class EditorDriver {
     const host = document.createElement('div');
     const warnings: string[] = [];
 
-    host.innerHTML = await renderToString(createSSRApp({ render: () => h(NuiEditor, shown) }));
+    host.innerHTML = await renderAppToString(createSSRApp(NuiEditor, shown));
     document.body.append(host);
 
-    const app = createSSRApp({ render: () => h(NuiEditor, shown) });
+    const app = createSSRApp(NuiEditor, shown);
 
     app.config.warnHandler = (message) => {
       warnings.push(message);
