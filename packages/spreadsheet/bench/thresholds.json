@@ -1,0 +1,31 @@
+{
+  "node": {
+    "fill a 20,000 × 50 sheet with 1,000,000 values": {
+      "p95Ms": 150
+    },
+    "read every cell of a 1,000,000 cell sheet": {
+      "p95Ms": 40
+    },
+    "parse 100,050 formulas": {
+      "p95Ms": 400
+    },
+    "enter 100,050 formulas with their dependencies": {
+      "p95Ms": 900
+    },
+    "recalculate 100,050 formulas from scratch": {
+      "p95Ms": 600
+    },
+    "edit the head of a 20,000 deep chain to the first chunk": {
+      "p95Ms": 100
+    },
+    "change a lookup rate to the first chunk": {
+      "p95Ms": 100
+    },
+    "edit an unrelated cell": {
+      "p95Ms": 5
+    },
+    "finish the recalculation after editing the chain head": {
+      "p95Ms": 250
+    }
+  }
+}

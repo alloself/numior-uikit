@@ -43,20 +43,21 @@ playground проверяет реальный `dist`, типы и внешню�
 
 ## Команды качества
 
-| Команда                              | Проверка                                                                                                    |
-| ------------------------------------ | ----------------------------------------------------------------------------------------------------------- |
-| `pnpm check`                         | Формат, lint, типы, анализ, unit, build, artifacts, docs; шаги идут через `vp run --cache`                  |
-| `pnpm lint`                          | `vp lint` (Oxlint) для JS/TS и eslint-plugin-vue для шаблонов                                               |
-| `pnpm format` / `pnpm format:check`  | `vp fmt` (Oxfmt): запись / проверка                                                                         |
-| `vp run typecheck`                   | vue-tsc: Vue SFC и TypeScript strict, декларации `.vue.d.ts` для type-aware `vp lint`                       |
-| `pnpm analyze`                       | Fallow: dead code/deps/cycles/boundaries, дубли, сложность и CRAP по покрытию unit-тестов                   |
-| `pnpm test` / `vp run test:coverage` | `vp test` (Vitest 5); coverage V8 в формате Istanbul для Fallow в `node_modules/.cache/coverage`            |
-| `pnpm test:e2e`                      | Playwright по production build, темы, RTL, Tailwind, axe                                                    |
-| `pnpm arch:check`                    | Archcore CLI: структура и связи                                                                             |
-| `pnpm bench:engine`                  | Бенчмарк движка таблицы в Node на миллионе строк, запись в `packages/table/bench/results`                   |
-| `pnpm bench:editor`                  | Бенчмарк ядра редактора в Node на документе из 10 000 блоков, запись в `packages/editor-core/bench/results` |
-| `pnpm bench:browser`                 | Бенчмарк `NuiTable` в Chromium: ввод до отрисовки, кадры прокрутки, монтаж, куча                            |
-| `pnpm bench:check`                   | Сверка последних результатов с порогами `packages/{table,vue,editor-core}/bench/thresholds.json`            |
+| Команда                              | Проверка                                                                                                     |
+| ------------------------------------ | ------------------------------------------------------------------------------------------------------------ |
+| `pnpm check`                         | Формат, lint, типы, анализ, unit, build, artifacts, docs; шаги идут через `vp run --cache`                   |
+| `pnpm lint`                          | `vp lint` (Oxlint) для JS/TS и eslint-plugin-vue для шаблонов                                                |
+| `pnpm format` / `pnpm format:check`  | `vp fmt` (Oxfmt): запись / проверка                                                                          |
+| `vp run typecheck`                   | vue-tsc: Vue SFC и TypeScript strict, декларации `.vue.d.ts` для type-aware `vp lint`                        |
+| `pnpm analyze`                       | Fallow: dead code/deps/cycles/boundaries, дубли, сложность и CRAP по покрытию unit-тестов                    |
+| `pnpm test` / `vp run test:coverage` | `vp test` (Vitest 5); coverage V8 в формате Istanbul для Fallow в `node_modules/.cache/coverage`             |
+| `pnpm test:e2e`                      | Playwright по production build, темы, RTL, Tailwind, axe                                                     |
+| `pnpm arch:check`                    | Archcore CLI: структура и связи                                                                              |
+| `pnpm bench:engine`                  | Бенчмарк движка таблицы в Node на миллионе строк, запись в `packages/table/bench/results`                    |
+| `pnpm bench:editor`                  | Бенчмарк ядра редактора в Node на документе из 10 000 блоков, запись в `packages/editor-core/bench/results`  |
+| `pnpm bench:spreadsheet`             | Бенчмарк ядра листа в Node: миллион ячеек и 100 000 формул, запись в `packages/spreadsheet/bench/results`    |
+| `pnpm bench:browser`                 | Бенчмарк `NuiTable` в Chromium: ввод до отрисовки, кадры прокрутки, монтаж, куча                             |
+| `pnpm bench:check`                   | Сверка последних результатов с порогами `packages/{table,vue,editor-core,spreadsheet}/bench/thresholds.json` |
 
 Перед браузерными тестами: `pnpm exec playwright install`.
 В Linux при отсутствии системных библиотек: `pnpm exec playwright install --with-deps`.
