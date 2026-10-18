@@ -209,6 +209,25 @@ describe('recalculation', () => {
     expect(sheet.state('A2000')).toBe('fresh');
   });
 
+  it('yields to the host on its own and counts only the time it spent computing', async () => {
+    const sheet = openSheet();
+    const started = performance.now();
+
+    sheet.enter('A1', 1);
+    for (let row = 2; row <= 2000; row += 1) {
+      sheet.enter(`A${String(row)}`, `=A${String(row - 1)}+1`);
+    }
+
+    const run = sheet.recalc({ budgetMs: 0 });
+
+    await run.settled;
+
+    expect(run.done).toBe(run.total);
+    expect(sheet.value('A2000')).toEqual(numberValue(2000));
+    expect(run.busyMs).toBeGreaterThan(0);
+    expect(run.busyMs).toBeLessThanOrEqual(performance.now() - started);
+  });
+
   it('computes the visible cells first', () => {
     const sheet = openSheet();
 

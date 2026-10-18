@@ -219,7 +219,9 @@ const report = (run: Recalculation, started: number): void => {
   const unknown = book.value?.calculator.limitations.map((item) => item.name) ?? [];
 
   const parts = [
-    `Пересчитано формул: ${String(run.done)} за ${String(Math.round(performance.now() - started))} мс`,
+    `Пересчитано формул: ${String(run.done)}`,
+    `работа ${String(Math.round(run.busyMs))} мс`,
+    `до конца ${String(Math.round(performance.now() - started))} мс`,
     unknown.length > 0 ? `неизвестные функции: ${unknown.join(', ')}` : '',
   ];
 

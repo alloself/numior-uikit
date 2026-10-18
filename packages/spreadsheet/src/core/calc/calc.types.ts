@@ -60,6 +60,7 @@ export interface Limitation {
 export interface Recalculation {
   readonly total: number;
   readonly done: number;
+  readonly busyMs: number;
   readonly settled: Promise<void>;
   cancel(): void;
 }

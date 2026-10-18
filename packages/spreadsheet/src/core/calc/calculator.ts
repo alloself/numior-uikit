@@ -66,6 +66,7 @@ interface Run {
   done: number;
   total: number;
   passes: number;
+  busy: number;
   cancelled: boolean;
 }
 
@@ -90,7 +91,23 @@ const SPILL_ERROR = errorValue('#SPILL!');
 
 const nextTask = (): Promise<void> =>
   new Promise((resolve) => {
-    setTimeout(resolve, 0);
+    if (typeof MessageChannel === 'undefined') {
+      setTimeout(resolve, 0);
+      return;
+    }
+    const channel = new MessageChannel();
+
+    channel.port1.addEventListener(
+      'message',
+      () => {
+        channel.port1.close();
+        resolve();
+      },
+      { once: true },
+    );
+
+    channel.port1.start();
+    channel.port2.postMessage(null);
   });
 
 const serialOf = (date: Date): number =>
@@ -409,9 +426,7 @@ export const createCalculator = (
     return true;
   };
 
-  const step = (run: Run): boolean => {
-    const started = performance.now();
-
+  const slice = (run: Run, started: number): boolean => {
     while (!run.cancelled && (run.index < run.queue.length || replan(run))) {
       compute(run.queue[run.index] ?? -1, run.cycles);
       run.index += 1;
@@ -421,6 +436,14 @@ export const createCalculator = (
       }
     }
     return true;
+  };
+
+  const step = (run: Run): boolean => {
+    const started = performance.now();
+    const finished = slice(run, started);
+
+    run.busy += performance.now() - started;
+    return finished;
   };
 
   const proceed = (run: Run, yieldTo: () => Promise<void>): Promise<void> =>
@@ -498,6 +521,7 @@ export const createCalculator = (
         done: 0,
         total: first.queue.length,
         passes: 0,
+        busy: 0,
         cancelled: false,
       };
 
@@ -510,6 +534,9 @@ export const createCalculator = (
         },
         get done() {
           return run.done;
+        },
+        get busyMs() {
+          return run.busy;
         },
         settled,
         cancel: () => {
