@@ -128,9 +128,9 @@ export {
   insertParagraph,
   insertText,
   intentCommand,
-  isAtom,
   selectAtom,
 } from './commands/input';
+export { isAtom } from './commands/atoms';
 export {
   chainCommands,
   deleteSelection,

@@ -1,6 +1,7 @@
 import type { ResolvedPos } from '../doc/doc.types';
 import type { AttrValue, ContentNode, ElementNode, Mark } from '../model/node.types';
 import type { Schema } from '../schema/schema.types';
+import { isAtom } from './atoms';
 import { isCursor, selectionRange, textSelection } from '../state/selection';
 import type { Command, EditorState, Transaction } from '../state/state.types';
 
@@ -76,11 +77,10 @@ const joinTowards = (
   const { cursor, neighbour, boundary } = plan;
   const tr = state.tr;
 
-  if (neighbour.leaf) {
-    const from = offset < 0 ? boundary - neighbour.size : boundary;
-
-    tr.delete(from, from + neighbour.size);
-  } else if (state.doc.schema.nodes.get(neighbour.type)?.atom === true) {
+  if (isAtom(state.doc.schema, neighbour)) {
+    if (cursor.parent.content.length === 0) {
+      tr.delete(cursor.before(cursor.depth), cursor.after(cursor.depth));
+    }
     tr.setSelection({ kind: 'node', id: neighbour.id });
   } else if (
     isTextblock(state.doc.schema, neighbour) &&

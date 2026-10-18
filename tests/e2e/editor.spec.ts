@@ -619,6 +619,41 @@ test.describe('editor', () => {
     );
   });
 
+  test('steps over blocks without text and takes back the lines beside them first', async ({
+    page,
+  }) => {
+    const { editor } = await openEditor(page);
+    const file = editor.file('Заметки к релизу');
+    const bookmark = editor.bookmark('numior.test');
+
+    await editor.clickBeside(file);
+    await page.keyboard.press('Enter');
+    await page.keyboard.press('Backspace');
+    await expect(file).toHaveClass(/nui-editor__selected/u);
+    await expect(file.locator('xpath=following-sibling::*[1]')).toHaveClass(/nui-content__table/u);
+
+    await page.keyboard.press('ArrowLeft');
+    await expect(bookmark).toHaveClass(/nui-editor__selected/u);
+    await page.keyboard.press('ArrowRight');
+    await page.keyboard.press('Backspace');
+    await expect(file).toHaveCount(0);
+    await expect(bookmark).toHaveClass(/nui-editor__selected/u);
+
+    await editor.placeInText('Наберите', 0);
+    await page.keyboard.press('Backspace');
+    await expect(editor.selectedAtoms()).toHaveClass(/nui-content__divider/u);
+    await expect(editor.content.locator('p', { hasText: 'Наберите' })).toHaveCount(1);
+
+    await editor.showTable();
+    await editor.tableCell(1, 0).click();
+    await page.keyboard.press('Escape');
+    await page.keyboard.press('Escape');
+    await expect(editor.tableBlock()).toHaveClass(/nui-editor__selected/u);
+    await page.keyboard.press('Enter');
+    await page.keyboard.type('под таблицей');
+    await expect.poll(async () => (await editor.blockTexts()).at(-1)).toBe('под таблицей');
+  });
+
   test('takes back empty lines after a to-do list and reaches the task status with arrows', async ({
     page,
   }) => {

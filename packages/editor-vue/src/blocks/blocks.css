@@ -268,6 +268,16 @@
   border-radius: var(--nui-radius);
   cursor: pointer;
 }
+.nui-editor__corner {
+  position: absolute;
+  inset-block-start: var(--nui-space-2);
+  inset-inline: var(--nui-space-2);
+  block-size: 0;
+  pointer-events: none;
+}
+.nui-editor-image__frame > .nui-editor__corner {
+  inset-inline-end: var(--nui-space-8);
+}
 .nui-editor-link-bar__edit {
   inline-size: min(18rem, calc(100vw - var(--nui-space-8)));
 }

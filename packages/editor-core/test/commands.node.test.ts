@@ -33,6 +33,14 @@ const stateAt = (selection: Selection): EditorState =>
     selection,
   });
 
+const imageSelected = (state: EditorState | undefined): boolean => {
+  const image = state?.doc.root.content[2];
+
+  return (
+    state?.selection.kind === 'node' && image?.kind === 'element' && state.selection.id === image.id
+  );
+};
+
 const run = (command: Command, state: EditorState): EditorState | undefined => {
   let next: EditorState | undefined;
 
@@ -75,7 +83,7 @@ describe('commands', () => {
     expect(run(splitBlock, stateAt({ kind: 'all' }))).toBeUndefined();
   });
 
-  it('joins with the block before or after and removes a leaf neighbour', () => {
+  it('joins with the block before or after and selects an atom beside the caret', () => {
     expect(blocks(run(joinBackward, stateAt(textSelection(8))))).toEqual([
       'heading:TitleHello bold',
       'image:',
@@ -84,9 +92,12 @@ describe('commands', () => {
 
     expect(run(joinBackward, stateAt(textSelection(8)))?.selection).toEqual(textSelection(6));
 
-    expect(blocks(run(joinBackward, stateAt(textSelection(20))))).toEqual([
+    expect(imageSelected(run(joinBackward, stateAt(textSelection(21))))).toBe(true);
+
+    expect(blocks(run(joinBackward, stateAt(textSelection(21))))).toEqual([
       'heading:Title',
       'paragraph:Hello bold',
+      'image:',
       'paragraph:End',
     ]);
 
@@ -96,11 +107,7 @@ describe('commands', () => {
       'paragraph:End',
     ]);
 
-    expect(blocks(run(joinForward, stateAt(textSelection(18))))).toEqual([
-      'heading:Title',
-      'paragraph:Hello bold',
-      'paragraph:End',
-    ]);
+    expect(imageSelected(run(joinForward, stateAt(textSelection(18))))).toBe(true);
 
     expect(run(joinBackward, stateAt(textSelection(1)))).toBeUndefined();
     expect(run(joinBackward, stateAt(textSelection(9)))).toBeUndefined();

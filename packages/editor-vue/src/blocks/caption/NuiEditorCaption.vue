@@ -82,7 +82,7 @@ const onKeydown = (event: KeyboardEvent): void => {
   } else if (event.key === 'Escape') {
     event.preventDefault();
     draft.value = caption.value;
-    editor.focus();
+    editor.enter();
   }
 };
 

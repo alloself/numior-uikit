@@ -9,6 +9,7 @@ export interface NuiEditorBlockContext {
   remove(): boolean;
   run(command: Command): boolean;
   focus(): void;
+  enter(): void;
   setStyle(property: string, value: string | null): void;
   element(): HTMLElement | undefined;
 }

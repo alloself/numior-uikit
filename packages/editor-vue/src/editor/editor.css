@@ -131,10 +131,16 @@
 .nui-editor__content .nui-content__code-inline {
   white-space: normal;
 }
-.nui-editor__selected:not(:has(input, textarea, .nui-layer))::selection,
-.nui-editor__selected
-  :not(input, textarea, .nui-layer, .nui-layer *, :has(input, textarea, .nui-layer))::selection {
+.nui-editor__chunk:has(> .nui-editor__selected)::selection,
+.nui-editor__selected::selection,
+.nui-editor__selected *::selection {
   background: transparent;
+}
+.nui-editor__selected :is(input, textarea):focus::selection,
+.nui-editor__selected .nui-layer::selection,
+.nui-editor__selected .nui-layer *::selection {
+  background: Highlight;
+  color: HighlightText;
 }
 .nui-editor__content span.nui-editor__selected {
   outline-offset: 0;

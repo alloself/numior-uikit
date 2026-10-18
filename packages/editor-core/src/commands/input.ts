@@ -2,12 +2,12 @@ import type { ResolvedPos } from '../doc/doc.types';
 import { emptyTextblock } from '../doc/empty';
 import { nodeSize } from '../model/node';
 import type { ContentNode, ElementNode } from '../model/node.types';
-import type { NodeType, Schema } from '../schema/schema.types';
 import type { InputIntent, InputSource, TextDirection, TextUnit } from '../state/input.types';
 import { createMetaKey } from '../state/plugin';
 import { nearestCursor, selectionRange, textPosition, textSelection } from '../state/selection';
 import type { SelectionRange } from '../state/selection.types';
 import type { Command, EditorState } from '../state/state.types';
+import { ATOM, breakTypeOf, isAtom, isInline, selectionNear } from './atoms';
 import { attempt, exitEmptyLast, liftAtStart, splitListItem } from './blocks';
 import { codeFence, codeNewline, codeToParagraph } from './code';
 import { inCode, textCursor } from './cursor';
@@ -23,7 +23,6 @@ import {
 
 export const inputSource = createMetaKey<InputSource>('input');
 
-const ATOM = '￼';
 const SPACE = /^\s+$/u;
 
 const segmenters = new Map<string, Intl.Segmenter>();
@@ -92,10 +91,39 @@ const dropEmpty =
     });
   };
 
+const deleteNode =
+  (backward: boolean): Command =>
+  (state, dispatch) => {
+    const { selection, doc } = state;
+    const node = selection.kind === 'node' ? doc.byId(selection.id) : undefined;
+    const at = node === undefined ? undefined : doc.positionOf(node.id);
+
+    if (node === undefined || at === undefined || isInline(doc.schema, node)) {
+      return false;
+    }
+    return attempt(state, dispatch, (tr) => {
+      tr.delete(at, at + nodeSize(node));
+
+      if (tr.changed) {
+        tr.setSelection(selectionNear(tr.doc, at, backward ? -1 : 1));
+        return true;
+      }
+      const block = emptyTextblock(doc.schema, tr.newId());
+
+      if (block === undefined) {
+        return false;
+      }
+      tr.insert(at, [block]);
+      tr.delete(at + nodeSize(block), at + nodeSize(block) + nodeSize(node));
+      tr.setSelection(textSelection(at + 1));
+      return true;
+    });
+  };
+
 export const deleteText =
   (direction: TextDirection, unit: TextUnit): Command =>
   (state, dispatch) => {
-    if (deleteSelection(state, dispatch)) {
+    if (deleteNode(direction === 'backward')(state, dispatch) || deleteSelection(state, dispatch)) {
       return true;
     }
     const cursor = textCursor(state);
@@ -174,41 +202,6 @@ const typeOverBlock =
     dispatch?.(tr);
     return true;
   };
-
-const isInline = (schema: Schema, node: ContentNode): boolean =>
-  schema.nodes.get(node.kind === 'element' ? node.type : 'text')?.inline !== false;
-
-const typeOf = (schema: Schema, node: ContentNode): NodeType | undefined =>
-  node.kind === 'element' ? schema.nodes.get(node.type) : undefined;
-
-const breakTypes = new WeakMap<Schema, string | null>();
-
-const probes = (type: NodeType): boolean =>
-  type.name !== 'text' &&
-  type.inline &&
-  type.leaf &&
-  Object.values(type.attrs).every((attr) => attr.default !== undefined);
-
-const findBreakType = (schema: Schema): string | null =>
-  [...schema.nodes.values()].find(
-    (type) => probes(type) && type.render(schema.element(type.name, { id: ATOM })).tag === 'br',
-  )?.name ?? null;
-
-const breakTypeOf = (schema: Schema): string | undefined => {
-  const known = breakTypes.get(schema);
-  const name = known === undefined ? findBreakType(schema) : known;
-
-  breakTypes.set(schema, name);
-  return name ?? undefined;
-};
-
-export const isAtom = (schema: Schema, node: ContentNode | undefined): node is ElementNode => {
-  const type = node === undefined ? undefined : typeOf(schema, node);
-
-  return (
-    node?.kind === 'element' && type !== undefined && type.atom && type.name !== breakTypeOf(schema)
-  );
-};
 
 const insertBreak: Command = (state, dispatch) => {
   const name = breakTypeOf(state.doc.schema);
@@ -297,8 +290,8 @@ const leaveNode =
     const range = selectionRange(state.doc, state.selection);
 
     const target = backward
-      ? nearestCursor(state.doc, range.from, -1)
-      : nearestCursor(state.doc, range.to, 1);
+      ? selectionNear(state.doc, range.from, -1)
+      : selectionNear(state.doc, range.to, 1);
 
     dispatch?.(state.tr.setSelection(target));
     return true;

@@ -1,6 +1,7 @@
 <template>
   <div class="nui-editor-embed">
-    <div ref="frame" class="nui-editor-embed__frame">
+    <div class="nui-editor-embed__frame">
+      <span v-if="editable" ref="corner" class="nui-editor__corner" />
       <iframe
         v-if="embed !== undefined"
         class="nui-content__embed-frame"
@@ -20,7 +21,8 @@
       <NuiEditorLinkBar
         v-if="editable && tooled"
         :open="selected && focused"
-        :anchor="frame"
+        :anchor="corner"
+        inside
         :label="texts.embed"
         :actions="actions"
         :edit="linkEdit"
@@ -47,7 +49,7 @@ const { node, selected, focused, editable, editor } = defineProps<NuiEditorBlock
 
 const texts = useMessages(editorMessages);
 const links = useEditorLinkContext();
-const frame = useTemplateRef<HTMLElement>('frame');
+const corner = useTemplateRef<HTMLElement>('corner');
 const tooled = ref(selected);
 
 const textOf = (value: unknown): string => (typeof value === 'string' ? value : '');

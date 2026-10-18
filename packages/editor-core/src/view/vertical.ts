@@ -1,4 +1,4 @@
-import { isAtom } from '../commands/input';
+import { isAtom } from '../commands/atoms';
 import type { Doc } from '../doc/doc.types';
 import { nodeSize } from '../model/node';
 import type { Selection } from '../state/selection.types';

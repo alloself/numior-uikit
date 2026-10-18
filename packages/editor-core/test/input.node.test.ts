@@ -141,6 +141,75 @@ describe('input commands', () => {
     expect(texts(run(selected, deleteText('backward', 'character')))).toEqual(['ab', 'cd']);
   });
 
+  it('steps through neighbouring atoms and deletes a selected one towards the key', () => {
+    const image = node('image', [], { src: 'a.png' });
+    const divider = node('divider');
+
+    const root = doc(
+      node('paragraph', ['a']),
+      image,
+      divider,
+      node('paragraph'),
+      node('paragraph', ['z']),
+    );
+
+    const onImage = stateOf(root, { kind: 'node', id: image.id });
+    const onDivider = stateOf(root, { kind: 'node', id: divider.id });
+
+    expect(run(onImage, selectAtom('forward')).selection).toEqual({ kind: 'node', id: divider.id });
+
+    expect(run(onDivider, selectAtom('backward')).selection).toEqual({
+      kind: 'node',
+      id: image.id,
+    });
+
+    const emptied = run(stateOf(root, textSelection(6)), deleteText('backward', 'character'));
+
+    expect(types(emptied)).toEqual(['paragraph', 'image', 'divider', 'paragraph']);
+    expect(emptied.selection).toEqual({ kind: 'node', id: divider.id });
+
+    const back = run(onDivider, deleteText('backward', 'character'));
+
+    expect(types(back)).toEqual(['paragraph', 'image', 'paragraph', 'paragraph']);
+    expect(back.selection).toEqual({ kind: 'node', id: image.id });
+
+    expect(run(onImage, deleteText('forward', 'character')).selection).toEqual({
+      kind: 'node',
+      id: divider.id,
+    });
+
+    expect(run(onImage, deleteText('backward', 'character')).selection).toEqual(textSelection(2));
+  });
+
+  it('leaves an empty line where the last block of a container was deleted', () => {
+    const rule = node('divider');
+
+    const only = run(
+      stateOf(doc(rule), { kind: 'node', id: rule.id }),
+      deleteText('backward', 'character'),
+    );
+
+    expect(types(only)).toEqual(['paragraph']);
+    expect(only.selection).toEqual(textSelection(1));
+
+    const image = node('image', [], { src: 'a.png' });
+
+    const columns = doc(
+      node('columns', [node('column', [image]), node('column', [node('paragraph', ['x'])])]),
+    );
+
+    const cleared = run(
+      stateOf(columns, { kind: 'node', id: image.id }),
+      deleteText('forward', 'character'),
+    );
+
+    const left = cleared.doc.root.content[0];
+    const first = left?.kind === 'element' ? left.content[0] : undefined;
+
+    expect(first?.kind === 'element' ? first.content.map(textOfBlock) : []).toEqual(['']);
+    expect(cleared.selection).toEqual(textSelection(3));
+  });
+
   it('opens a paragraph after a selected block, leaves a container from its empty last line and reaches the end', () => {
     const rule = stateOf(doc(node('paragraph', ['a']), node('divider')), textSelection(1));
     const divider = rule.doc.root.content[1];

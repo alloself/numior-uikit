@@ -1,4 +1,4 @@
-import { isAtom } from '../commands/input';
+import { isAtom } from '../commands/atoms';
 import type { ViewContext } from './desc';
 
 const spans = (element: Element, y: number): boolean => {

@@ -68,7 +68,7 @@ export class EditorSection {
   }
 
   async clickBeside(block: Locator): Promise<void> {
-    await block.scrollIntoViewIfNeeded();
+    await block.click({ trial: true });
 
     const [own, editor] = await Promise.all([block.boundingBox(), this.content.boundingBox()]);
 
@@ -267,6 +267,10 @@ export class EditorSection {
 
   table(): Locator {
     return this.content.locator('.nui-table');
+  }
+
+  tableBlock(): Locator {
+    return this.content.locator('.nui-content__table');
   }
 
   publishedTable(): Locator {

@@ -100,7 +100,7 @@ const onToggle = (event: Event): void => {
 const choose = (item: NuiCommandItem): void => {
   picking.value = false;
   editor.setAttrs({ language: item.value === PLAIN ? null : item.value });
-  editor.focus();
+  editor.enter();
 };
 
 const copy = (): void => {

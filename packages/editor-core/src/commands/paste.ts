@@ -4,10 +4,11 @@ import { fromHTML } from '../html/parse';
 import { contentSize } from '../model/node';
 import type { ContentNode, ElementNode } from '../model/node.types';
 import type { Schema } from '../schema/schema.types';
-import { nearestCursor, textSelection } from '../state/selection';
+import { textSelection } from '../state/selection';
 import { definePlugin } from '../state/plugin';
 import type { Command, Plugin, Transaction } from '../state/state.types';
 import { sliceSize } from '../transform/replace';
+import { selectionNear } from './atoms';
 
 const LINE = /\r\n?|\n/u;
 
@@ -82,7 +83,7 @@ const fillEmpty = (
   ) {
     return false;
   }
-  tr.setSelection(nearestCursor(tr.doc, from + contentSize(blocks), -1));
+  tr.setSelection(selectionNear(tr.doc, from + contentSize(blocks), -1));
   return true;
 };
 

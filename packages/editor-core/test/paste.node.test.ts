@@ -69,6 +69,15 @@ describe('pasting HTML', () => {
     expect(editor.selection).toEqual(textSelection(15));
   });
 
+  it('selects a pasted block without text that ends the paste', () => {
+    const editor = started(doc(p('a'), p(), p('z')), textSelection(4));
+
+    editor.paste('<p>b</p><hr>');
+
+    expect(editor.outline).toBe('paragraph("a") paragraph("b") divider paragraph("z")');
+    expect(editor.selection.kind).toBe('node');
+  });
+
   it('flattens blocks that the surrounding container cannot hold into its own blocks', () => {
     const editor = started(doc(node('bullet_list', [li('ab')])), textSelection(3));
 

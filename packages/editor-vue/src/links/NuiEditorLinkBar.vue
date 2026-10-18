@@ -4,8 +4,8 @@
     :open="open"
     :anchor="anchor"
     mode="manual"
-    placement="top-end"
-    :offset="8"
+    :placement="inside ? 'bottom-end' : 'top-end'"
+    :offset="inside ? 0 : 8"
     padding="sm"
     size="auto"
   >
@@ -63,9 +63,17 @@ import { ref, useTemplateRef, watch } from 'vue';
 import NuiEditorLinkForm from './NuiEditorLinkForm.vue';
 import type { LinkBarAction, LinkChange, LinkEdit } from './links.types';
 
-const { open, anchor, label, actions, edit } = defineProps<{
+const {
+  open,
+  anchor,
+  inside = false,
+  label,
+  actions,
+  edit,
+} = defineProps<{
   open: boolean;
   anchor: HTMLElement | null;
+  inside?: boolean | undefined;
   label: string;
   actions: readonly LinkBarAction[];
   edit?: LinkEdit | undefined;

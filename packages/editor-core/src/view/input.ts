@@ -1,5 +1,6 @@
 import { caretAtEnd } from '../commands/blocks';
-import { intentCommand, isAtom, selectAtom } from '../commands/input';
+import { isAtom } from '../commands/atoms';
+import { intentCommand, selectAtom } from '../commands/input';
 import { clipboardHTML } from '../html/clipboard';
 import { nearestCursor, selectionRange } from '../state/selection';
 import type { SelectionRange } from '../state/selection.types';
@@ -256,6 +257,29 @@ const overNode = (event: KeyboardEvent): InputIntent | undefined => {
   );
 };
 
+const atTextEdge = (host: ViewHost, backward: boolean): boolean => {
+  const { selection, doc } = host.state();
+
+  if (selection.kind !== 'text' || selection.anchor !== selection.head) {
+    return false;
+  }
+  const cursor = doc.resolve(selection.head);
+
+  return (
+    doc.schema.nodes.get(cursor.parent.type)?.inlineContent === true &&
+    (backward ? cursor.parentOffset === 0 : cursor.pos === cursor.end(cursor.depth))
+  );
+};
+
+const deleteAtEdge = (host: ViewHost, event: KeyboardEvent): boolean => {
+  const intent =
+    DELETE_KEYS.has(event.key) && !hasModifier(event) ? NODE_KEYS[event.key] : undefined;
+
+  return (
+    intent !== undefined && atTextEdge(host, event.key === 'Backspace') && runIntent(host, intent)
+  );
+};
+
 const editNode = (host: ViewHost, event: KeyboardEvent): boolean => {
   const intent = host.state().selection.kind === 'node' ? overNode(event) : undefined;
 
@@ -274,7 +298,8 @@ const handleKey = (host: ViewHost, event: KeyboardEvent): boolean => {
     state.plugins.some((plugin) => plugin.props.handleKey?.(key, state, dispatch) === true) ||
     moveByArrow(host, event) ||
     deleteAll(host, event) ||
-    editNode(host, event)
+    editNode(host, event) ||
+    deleteAtEdge(host, event)
   );
 };
 
@@ -453,6 +478,23 @@ export const attachInput = (host: ViewHost, parts: InputParts): (() => void) => 
     }
   };
 
+  const onWidgetKeydown = (event: KeyboardEvent): void => {
+    const owner = widgetOwner(host.context, event.target);
+    const target = event.target;
+
+    if (
+      event.key !== 'Escape' ||
+      event.defaultPrevented ||
+      owner?.contentDOM !== null ||
+      (target instanceof Element && target.closest('.nui-layer') !== null)
+    ) {
+      return;
+    }
+    event.preventDefault();
+    root.focus({ preventScroll: true });
+    host.dispatch(host.state().tr.setSelection({ kind: 'node', id: owner.node.id }), 'key');
+  };
+
   const onMouseup = (): void => {
     if (host.holding()) {
       parts.setHolding(false);
@@ -514,6 +556,7 @@ export const attachInput = (host: ViewHost, parts: InputParts): (() => void) => 
   const compositionend = own(onCompositionend);
 
   root.addEventListener('keydown', keydown);
+  root.addEventListener('keydown', onWidgetKeydown);
   root.addEventListener('beforeinput', beforeinput);
   root.addEventListener('paste', paste);
   root.addEventListener('copy', copy);
@@ -532,6 +575,7 @@ export const attachInput = (host: ViewHost, parts: InputParts): (() => void) => 
 
   return () => {
     root.removeEventListener('keydown', keydown);
+    root.removeEventListener('keydown', onWidgetKeydown);
     root.removeEventListener('beforeinput', beforeinput);
     root.removeEventListener('paste', paste);
     root.removeEventListener('copy', copy);

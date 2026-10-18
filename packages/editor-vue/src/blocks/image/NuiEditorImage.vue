@@ -6,7 +6,7 @@
       'nui-editor-image--resizing': resizing,
     }"
   >
-    <div ref="frame" class="nui-editor-image__frame">
+    <div class="nui-editor-image__frame">
       <img
         ref="picture"
         class="nui-content__picture"
@@ -24,6 +24,7 @@
         />
       </div>
       <template v-if="editable">
+        <span ref="corner" class="nui-editor__corner" />
         <span
           v-for="grip in GRIPS"
           :key="`${grip.edge}-${grip.side}`"
@@ -37,10 +38,10 @@
           v-if="tooled"
           class="nui-editor-image__toolbar"
           :open="selected && focused && !resizing"
-          :anchor="frame"
+          :anchor="corner"
           mode="manual"
-          placement="top-end"
-          :offset="8"
+          placement="bottom-end"
+          :offset="0"
           padding="sm"
         >
           <div class="nui-editor-image__bar" role="toolbar" :aria-label="texts.image">
@@ -174,7 +175,7 @@ const { node, element, selected, focused, editable, editor } =
 const texts = useMessages(editorMessages);
 const uploads = useEditorUploadContext();
 const picker = useTemplateRef<HTMLInputElement>('picker');
-const frame = useTemplateRef<HTMLElement>('frame');
+const corner = useTemplateRef<HTMLElement>('corner');
 const captionView = useTemplateRef<{ fit(): void }>('caption');
 const picture = useTemplateRef<HTMLImageElement>('picture');
 const resizing = ref(false);

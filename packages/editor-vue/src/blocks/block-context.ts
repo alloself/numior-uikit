@@ -1,4 +1,11 @@
-import { nodeSize, type Command, type NodeId } from '@numior/editor-core';
+import {
+  isAtom,
+  nearestCursor,
+  nodeSize,
+  selectionRange,
+  type Command,
+  type NodeId,
+} from '@numior/editor-core';
 import type { NuiEditorBlockContext } from './block.types';
 
 const atNode =
@@ -12,6 +19,28 @@ const atNode =
       from !== undefined &&
       change(from, from + nodeSize(node))(state, dispatch)
     );
+  };
+
+const enter =
+  (id: NodeId) =>
+  (from: number, to: number): Command =>
+  (state, dispatch) => {
+    const range = selectionRange(state.doc, state.selection);
+    const node = state.doc.byId(id);
+
+    if (node === undefined || (range.from >= from && range.to <= to)) {
+      return false;
+    }
+
+    dispatch?.(
+      state.tr.setSelection(
+        isAtom(state.doc.schema, node)
+          ? { kind: 'node', id }
+          : nearestCursor(state.doc, to - 1, -1),
+      ),
+    );
+
+    return true;
   };
 
 export const blockContext = (
@@ -36,6 +65,10 @@ export const blockContext = (
     ),
   run,
   focus,
+  enter: () => {
+    run(atNode(id, enter(id)));
+    focus();
+  },
   element,
   setStyle: (property, value) => {
     if (value === null) {
