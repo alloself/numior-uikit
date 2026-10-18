@@ -1,5 +1,6 @@
 import { expect } from 'vite-plus/test';
 import {
+  booleanValue,
   createCalculator,
   createWorkbook,
   formatRange,
@@ -15,6 +16,8 @@ import {
 } from '../src/core';
 
 type Shown = number | string | boolean | null;
+
+type Input = number | string | boolean;
 
 const at = (address: string): { readonly row: number; readonly col: number } => {
   const ref = parseCell(address);
@@ -41,11 +44,13 @@ export const openSheet = (options: CalculatorOptions = {}) => {
   const sheet = workbook.addSheet();
   const calculator = createCalculator(workbook, options);
 
-  const place = (target: Sheet, address: string, input: string | number): void => {
+  const place = (target: Sheet, address: string, input: Input): void => {
     const { row, col } = at(address);
 
     if (typeof input === 'number') {
       calculator.setValue(target, row, col, numberValue(input));
+    } else if (typeof input === 'boolean') {
+      calculator.setValue(target, row, col, booleanValue(input));
     } else if (input.startsWith('=')) {
       expect(calculator.setFormula(target, row, col, input).ok).toBe(true);
     } else {
@@ -57,7 +62,7 @@ export const openSheet = (options: CalculatorOptions = {}) => {
     workbook,
     sheet,
     calculator,
-    enter: (address: string, input: string | number, target: Sheet = sheet): void => {
+    enter: (address: string, input: Input, target: Sheet = sheet): void => {
       place(target, address, input);
     },
     clear: (address: string): void => {

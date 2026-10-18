@@ -1,0 +1,18 @@
+{
+  "family": "logical",
+  "provenance": "derived",
+  "functions": ["IF", "AND", "OR", "NOT", "IFERROR"],
+  "cases": [
+    { "formula": "=IF(1>2,\"a\",\"b\")", "expected": "b" },
+    { "formula": "=IF(FALSE,1)", "expected": false },
+    { "formula": "=IF(TRUE,1,1/0)", "expected": 1 },
+    { "formula": "=AND(TRUE,1)", "expected": true },
+    { "formula": "=AND(A1:A2)", "cells": { "A1": true, "A2": "x" }, "expected": true },
+    { "formula": "=AND(\"x\")", "expected": { "error": "#VALUE!" } },
+    { "formula": "=OR(0,0)", "expected": false },
+    { "formula": "=OR(A1:A2,FALSE)", "cells": { "A1": 0, "A2": 3 }, "expected": true },
+    { "formula": "=NOT(1)", "expected": false },
+    { "formula": "=IFERROR(#N/A,1)", "expected": 1 },
+    { "formula": "=IFERROR(5,1)", "expected": 5 }
+  ]
+}

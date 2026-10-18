@@ -1,0 +1,12 @@
+{
+  "family": "volatile",
+  "provenance": "derived",
+  "functions": ["NOW", "TODAY", "RAND", "RANDBETWEEN", "RANDARRAY"],
+  "cases": [
+    { "formula": "=NOW()", "expected": 46313.5 },
+    { "formula": "=TODAY()", "expected": 46313 },
+    { "formula": "=RAND()", "expected": 0.5 },
+    { "formula": "=RANDBETWEEN(1,10)", "expected": 6 },
+    { "formula": "=RANDARRAY(1,2)", "expected": [[0.5, 0.5]] }
+  ]
+}

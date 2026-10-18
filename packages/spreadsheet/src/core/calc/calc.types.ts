@@ -30,7 +30,7 @@ export interface FunctionArgs {
   number(index: number, fallback?: number): number;
   text(index: number): string;
   logical(index: number, fallback?: boolean): boolean;
-  forEachValue(from: number, visit: (value: CellValue, direct: boolean) => void): void;
+  forEachValue(from: number, visit: (value: CellValue, direct: boolean) => void, to?: number): void;
   lookup(table: EvalValue, column: number, wanted: CellValue): number | undefined;
   matrix(index: number): readonly (readonly CellValue[])[];
   now(): number;

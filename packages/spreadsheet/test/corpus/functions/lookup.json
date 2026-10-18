@@ -1,0 +1,26 @@
+{
+  "family": "lookup",
+  "provenance": "derived",
+  "cells": {
+    "A1": 1,
+    "A2": 5,
+    "A3": 10,
+    "B1": "low",
+    "B2": "mid",
+    "B3": "high",
+    "C1": "Pear",
+    "C2": "apple",
+    "D1": 2.25,
+    "D2": 1.5
+  },
+  "functions": ["VLOOKUP"],
+  "cases": [
+    { "formula": "=VLOOKUP(7,A1:B3,2)", "expected": "mid" },
+    { "formula": "=VLOOKUP(10,A1:B3,2,TRUE)", "expected": "high" },
+    { "formula": "=VLOOKUP(0,A1:B3,2)", "expected": { "error": "#N/A" } },
+    { "formula": "=VLOOKUP(\"APPLE\",C1:D2,2,FALSE)", "expected": 1.5 },
+    { "formula": "=VLOOKUP(\"plum\",C1:D2,2,FALSE)", "expected": { "error": "#N/A" } },
+    { "formula": "=VLOOKUP(1,A1:B3,3)", "expected": { "error": "#REF!" } },
+    { "formula": "=VLOOKUP(1,A1:B3,0)", "expected": { "error": "#VALUE!" } }
+  ]
+}

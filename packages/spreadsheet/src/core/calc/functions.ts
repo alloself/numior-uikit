@@ -1,10 +1,13 @@
 import type { CellValue } from '../cell.types';
-import { booleanValue, numberValue } from '../values';
+import { booleanValue } from '../values';
 import type { EvalValue, FunctionArgs, FunctionSpec } from './calc.types';
-import { compareValues, numberFromText, raise, toLogical, toNumber } from './coerce';
+import { MANY } from './aggregate';
+import { compareValues, raise, toLogical } from './coerce';
 import { ARRAY_FUNCTIONS } from './array-functions';
 import { scalarOf } from './evaluate';
+import { MATH_FUNCTIONS } from './math-functions';
 import { defineFunction } from './registry';
+import { STATISTICS_FUNCTIONS } from './statistics-functions';
 import { VOLATILE_FUNCTIONS } from './volatile-functions';
 
 interface Grid {
@@ -12,47 +15,6 @@ interface Grid {
   readonly cols: number;
   at(row: number, col: number): CellValue;
 }
-
-const MANY = 255;
-
-const eachNumber = (args: FunctionArgs, visit: (value: number) => void): void => {
-  args.forEachValue(0, (value, direct) => {
-    if (value.kind === 'error') {
-      raise(value.code);
-    }
-    if (value.kind === 'number') {
-      visit(value.value);
-    } else if (direct) {
-      visit(toNumber(value));
-    }
-  });
-};
-
-const counts = (value: CellValue, direct: boolean): boolean => {
-  switch (value.kind) {
-    case 'number':
-      return true;
-    case 'boolean':
-    case 'empty':
-      return direct;
-    case 'string':
-      return direct && numberFromText(value.value) !== undefined;
-    default:
-      return false;
-  }
-};
-
-const extreme =
-  (pick: (left: number, right: number) => number) =>
-  (args: FunctionArgs): EvalValue => {
-    let found: number | undefined;
-
-    eachNumber(args, (value) => {
-      found = found === undefined ? value : pick(found, value);
-    });
-
-    return numberValue(found ?? 0);
-  };
 
 const logicalFold =
   (all: boolean) =>
@@ -74,13 +36,6 @@ const logicalFold =
 
     return seen ? booleanValue(result) : raise('#VALUE!');
   };
-
-const roundHalfAway = (value: number, digits: number): number => {
-  const factor = 10 ** Math.trunc(digits);
-  const scaled = Number((Math.abs(value) * factor).toPrecision(15));
-
-  return (Math.sign(value) * Math.round(scaled)) / factor;
-};
 
 const gridOf = (value: EvalValue): Grid => {
   switch (value.kind) {
@@ -162,80 +117,8 @@ const vlookup = (args: FunctionArgs): EvalValue => {
 };
 
 export const BASE_FUNCTIONS: readonly FunctionSpec[] = [
-  defineFunction({
-    name: 'SUM',
-    min: 1,
-    max: MANY,
-    evaluate: (args) => {
-      let total = 0;
-
-      eachNumber(args, (value) => {
-        total += value;
-      });
-
-      return numberValue(total);
-    },
-  }),
-  defineFunction({
-    name: 'AVERAGE',
-    min: 1,
-    max: MANY,
-    evaluate: (args) => {
-      let total = 0;
-      let count = 0;
-
-      eachNumber(args, (value) => {
-        total += value;
-        count += 1;
-      });
-
-      return count === 0 ? raise('#DIV/0!') : numberValue(total / count);
-    },
-  }),
-  defineFunction({ name: 'MIN', min: 1, max: MANY, evaluate: extreme(Math.min) }),
-  defineFunction({ name: 'MAX', min: 1, max: MANY, evaluate: extreme(Math.max) }),
-  defineFunction({
-    name: 'COUNT',
-    min: 1,
-    max: MANY,
-    evaluate: (args) => {
-      let count = 0;
-
-      args.forEachValue(0, (value, direct) => {
-        count += Number(counts(value, direct));
-      });
-
-      return numberValue(count);
-    },
-  }),
-  defineFunction({
-    name: 'COUNTA',
-    min: 1,
-    max: MANY,
-    evaluate: (args) => {
-      let count = 0;
-
-      args.forEachValue(0, () => {
-        count += 1;
-      });
-
-      return numberValue(count);
-    },
-  }),
-  defineFunction({
-    name: 'ABS',
-    min: 1,
-    max: 1,
-    lift: [0],
-    evaluate: (args) => numberValue(Math.abs(args.number(0))),
-  }),
-  defineFunction({
-    name: 'ROUND',
-    min: 2,
-    max: 2,
-    lift: [0, 1],
-    evaluate: (args) => numberValue(roundHalfAway(args.number(0), args.number(1))),
-  }),
+  ...MATH_FUNCTIONS,
+  ...STATISTICS_FUNCTIONS,
   defineFunction({
     name: 'IF',
     min: 2,

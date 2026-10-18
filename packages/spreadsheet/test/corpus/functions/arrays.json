@@ -1,0 +1,18 @@
+{
+  "family": "arrays",
+  "provenance": "derived",
+  "functions": ["SEQUENCE", "TRANSPOSE"],
+  "cases": [
+    { "formula": "=SUM(SEQUENCE(4))", "expected": 10 },
+    {
+      "formula": "=SEQUENCE(2,2,10,5)",
+      "expected": [
+        [10, 15],
+        [20, 25]
+      ]
+    },
+    { "formula": "=SEQUENCE(2,,3)", "expected": [[3], [4]] },
+    { "formula": "=SEQUENCE(0)", "expected": { "error": "#CALC!" } },
+    { "formula": "=TRANSPOSE({1,2})", "expected": [[1], [2]] }
+  ]
+}

@@ -217,8 +217,8 @@ const argumentsFrom = (
     text: (index) => toText(scalarOf(value(index))),
     logical: (index, fallback) =>
       missing(index) && fallback !== undefined ? fallback : toLogical(scalarOf(value(index))),
-    forEachValue: (from, visit) => {
-      for (let index = from; index < nodes.length; index += 1) {
+    forEachValue: (from, visit, to = nodes.length) => {
+      for (let index = from; index < Math.min(to, nodes.length); index += 1) {
         visitValues(value(index), visit);
       }
     },
