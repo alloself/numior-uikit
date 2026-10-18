@@ -46,7 +46,12 @@ export const shikiTokens = (
 ): NuiCodeLine[] | undefined =>
   highlighter.getLoadedLanguages().includes(language)
     ? highlighter
-        .codeToTokensBase(code, { lang: language, theme, includeExplanation: 'scopeName' })
+        .codeToTokensBase(code, {
+          lang: language,
+          theme,
+          includeExplanation: 'scopeName',
+          tokenizeTimeLimit: 0,
+        })
         .map((line) => mergeTokens(line.flatMap(piecesOf)))
     : undefined;
 
