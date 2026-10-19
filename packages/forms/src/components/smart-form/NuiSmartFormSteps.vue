@@ -14,11 +14,7 @@
     role="group"
     :aria-label="item.label"
   >
-    <NuiSmartFormEntries :form="form" :entries="item.fields" :layout="item.layout">
-      <template v-for="name in Object.keys($slots)" #[name]="scope">
-        <slot :name="name" v-bind="scope" />
-      </template>
-    </NuiSmartFormEntries>
+    <NuiSmartFormEntries :form="form" :entries="item.fields" :layout="item.layout" :slots="slots" />
   </div>
   <span class="nui-smart-form__live" aria-live="polite">{{ live }}</span>
 </template>
@@ -27,11 +23,9 @@
 import { computed, useTemplateRef } from 'vue';
 import { NuiStepper } from '@numior/vue';
 import NuiSmartFormEntries from './NuiSmartFormEntries.vue';
-import type { NuiSmartFormPartSlots, NuiSmartFormStepsProps } from './smart-form.types';
+import type { NuiSmartFormStepsProps } from './smart-form.types';
 
-const { form, steps, current, statuses, live } = defineProps<NuiSmartFormStepsProps<T>>();
-
-defineSlots<NuiSmartFormPartSlots>();
+const { form, steps, current, statuses, live, slots } = defineProps<NuiSmartFormStepsProps<T>>();
 
 const emit = defineEmits<{ select: [value: string] }>();
 

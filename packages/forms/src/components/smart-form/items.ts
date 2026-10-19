@@ -60,6 +60,3 @@ export const itemOf = <T extends object>(
     ? { kind: 'field', key: `field:${path}`, area, path, entry }
     : { kind: 'array', key: `array:${path}`, area, path, entry };
 };
-
-export const isSlotOf = <S extends object>(slots: S, name: PropertyKey): name is keyof S =>
-  name in slots;
