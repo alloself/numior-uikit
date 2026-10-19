@@ -1,30 +1,32 @@
-# useIcons
+# useIcon
 
-`useIcons()` возвращает реестр иконок ближайшей конфигурации: объект «алиас → компонент», в
-котором поверх наборов пакетов лежат иконки приложения. `lazyIcon(loader)` оборачивает
-динамический импорт в компонент, который загружается один раз при первом рендере. На этом
-построен `NuiIcon`.
+`useIcon(icon)` превращает источник иконки в компонент, на этом построен `NuiIcon`. Алиас даёт
+иконку из конфигурации, а без неё — иконку Lucide из кита, которая загружается при первом
+обращении. Компонент остаётся как есть.
+
+`lazyIcon(loader)` оборачивает динамический импорт в компонент, который загружается один раз при
+первом рендере.
 
 ## Сигнатура
 
-<SignatureReference :names="['useIcons', 'lazyIcon', 'IconRegistry', 'NuiIconSets']" />
+<SignatureReference :names="['useIcon', 'useIcons', 'lazyIcon', 'IconSource', 'IconRegistry']" />
 
 ## Использование
 
-Реестр нужен там, где иконку ждёт не `NuiIcon`, а чужой компонент: ему передаётся тот же
+`useIcon` нужен там, где иконку ждёт не `NuiIcon`, а чужой компонент: ему передаётся тот же
 глиф, который приложение выбрало для алиаса.
 
 ```vue
 <template>
-  <ExternalTabs :items="tabs" :close-icon="icons.x" />
+  <ExternalTabs :items="tabs" :close-icon="close" />
 </template>
 
 <script setup lang="ts">
-import { useIcons } from '@numior/vue';
+import { useIcon } from '@numior/vue';
 
-const icons = useIcons();
+const close = useIcon('x');
 </script>
 ```
 
-Алиас, которого нет в реестре, даёт `undefined`. Реестр, свои наборы и объявление своих алиасов
-описаны на странице [Icon](/components/icon).
+`useIcons()` возвращает только переопределения ближайшей конфигурации. Как заменить иконки кита,
+описано на странице [Icon](/components/icon).

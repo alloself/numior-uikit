@@ -31,6 +31,7 @@
 </template>
 
 <script setup lang="ts">
+import { Group } from '@lucide/vue';
 import {
   childNode,
   containerSlot,
@@ -84,7 +85,7 @@ const wholeOf = (at: ChildSlot): NuiMenuEntry[] => {
     : [
         {
           label: texts.value.wholeOf({ type: container.type }),
-          icon: 'group',
+          icon: Group,
           onSelect: () => emit('container'),
         },
       ];

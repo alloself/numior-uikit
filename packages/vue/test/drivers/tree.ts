@@ -1,4 +1,4 @@
-import { flushPromises, mount, type DOMWrapper, type VueWrapper } from '@vue/test-utils';
+import { mount, type DOMWrapper, type VueWrapper } from '@vue/test-utils';
 import { vi } from 'vite-plus/test';
 import { nextTick } from 'vue';
 import type { NuiConfigOptions, NuiTreeItem, NuiTreeItemSlot, NuiTreeProps } from '../../src';
@@ -208,8 +208,14 @@ export class TreeDriver extends ComponentDriver {
   }
 
   async iconOf(label: string): Promise<string | undefined> {
-    await flushPromises();
     const node = this.node(label);
+
+    await vi.waitFor(() => {
+      if (node.findAll('.nui-icon').some((icon) => !icon.find('svg').exists())) {
+        throw new Error(`Icons of ${label} are still loading`);
+      }
+    });
+
     const expanded = node.classes().includes('nui-tree__item--expanded');
 
     const pair = node.find(

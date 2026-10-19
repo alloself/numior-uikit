@@ -1,4 +1,4 @@
-import type { IconAlias } from '@numior/primitives';
+import type { IconSource } from '@numior/primitives';
 import type { NodeId } from '@numior/editor-core';
 
 export interface NuiEditorLinkPreview {
@@ -43,7 +43,7 @@ export interface LinkChange {
 export interface LinkBarAction {
   readonly key: string;
   readonly label: string;
-  readonly icon: IconAlias;
+  readonly icon: IconSource;
   readonly href?: string | undefined;
   readonly run?: (() => void) | undefined;
 }

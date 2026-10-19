@@ -9,7 +9,7 @@ export interface NuiCalendarMessages {
   readonly week: string;
 }
 
-export const calendarMessages: NuiMessageCatalog<'calendar'> = {
+export const calendarMessages: NuiMessageCatalog<NuiCalendarMessages> = {
   namespace: 'calendar',
   en: {
     previous: 'Previous month',

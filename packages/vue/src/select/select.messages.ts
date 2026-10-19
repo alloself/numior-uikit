@@ -6,7 +6,7 @@ export interface NuiSelectMessages {
   readonly count: (params: { readonly count: number }) => string;
 }
 
-export const selectMessages: NuiMessageCatalog<'select'> = {
+export const selectMessages: NuiMessageCatalog<NuiSelectMessages> = {
   namespace: 'select',
   en: { empty: 'No options', clear: 'Clear', count: ({ count }) => `${count} selected` },
   ru: { empty: 'Нет вариантов', clear: 'Очистить', count: ({ count }) => `Выбрано: ${count}` },

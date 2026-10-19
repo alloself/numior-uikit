@@ -9,7 +9,3 @@ export interface NuiFormsMessages {
   readonly formRules: NuiFormRulesMessages;
   readonly smartForm: NuiSmartFormMessages;
 }
-
-declare module '@numior/primitives' {
-  interface NuiMessages extends NuiFormsMessages {}
-}

@@ -1,10 +1,9 @@
 import { defineAsyncComponent, inject, provide, type Component, type InjectionKey } from 'vue';
+import type { iconAliases } from './icon-aliases';
 
-export interface NuiIconSets {}
+export type IconAlias = keyof typeof iconAliases;
 
-export type IconAlias = {
-  [K in keyof NuiIconSets]: keyof NuiIconSets[K] & string;
-}[keyof NuiIconSets];
+export type IconSource = IconAlias | Component;
 
 export type IconRegistry = Readonly<Partial<Record<IconAlias, Component>>>;
 
@@ -16,12 +15,6 @@ const EMPTY: IconRegistry = Object.freeze({});
 
 export const provideIcons = (registry: IconRegistry): IconRegistry => {
   const merged: IconRegistry = { ...inject(ICONS_KEY, EMPTY), ...registry };
-  provide(ICONS_KEY, merged);
-  return merged;
-};
-
-export const provideIconDefaults = (registry: IconRegistry): IconRegistry => {
-  const merged: IconRegistry = { ...registry, ...inject(ICONS_KEY, EMPTY) };
   provide(ICONS_KEY, merged);
   return merged;
 };

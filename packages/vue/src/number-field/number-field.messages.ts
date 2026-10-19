@@ -5,7 +5,7 @@ export interface NuiNumberFieldMessages {
   readonly decrement: string;
 }
 
-export const numberFieldMessages: NuiMessageCatalog<'numberField'> = {
+export const numberFieldMessages: NuiMessageCatalog<NuiNumberFieldMessages> = {
   namespace: 'numberField',
   en: { increment: 'Increment', decrement: 'Decrement' },
   ru: { increment: 'Увеличить', decrement: 'Уменьшить' },

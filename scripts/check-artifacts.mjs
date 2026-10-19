@@ -417,7 +417,7 @@ const bundleOf = async (source) => {
         input: 'nui-probe',
         preserveEntrySignatures: 'strict',
         treeshake: { moduleSideEffects: 'no-external' },
-        external: [/^vue$/, /^@numior\/primitives$/, /^lucide-vue-next(\/|$)/, /^@vueuse\/core$/],
+        external: [/^vue$/, /^@numior\/primitives$/, /^@lucide\/vue$/, /^@vueuse\/core$/],
       },
     },
     plugins: [

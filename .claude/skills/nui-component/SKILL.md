@@ -88,9 +88,10 @@ const {
 
 - Every user-facing text (button names, empty states, announcements, errors) lives in
   `src/<name>/<name>.messages.ts`: an interface `Nui<Name>Messages` with flat keys and a typed
-  literal `export const <name>Messages: NuiMessageCatalog<'<name>'> = { namespace, en, ru }`.
-  Register the interface in `src/messages.types.ts` (`NuiVueMessages`); the registry test then asks
-  for the catalog and a Russian text for every English one.
+  literal `export const <name>Messages: NuiMessageCatalog<Nui<Name>Messages> = { namespace, en, ru }`.
+  Add the namespace to the package dictionary in `src/messages.types.ts` (`NuiVueMessages`, a plain
+  exported interface, no `declare module`); apps type overrides with it and the registry test
+  asks for the catalog and a Russian text for every English one.
 - Text props (`label`, `*Label`, `announce`) take no default. Resolve them in the script:
   `const messages = useMessages(<name>Messages, locale?)` and
   `const closeText = computed(() => closeLabel ?? messages.value.close)`; several texts share
@@ -154,10 +155,10 @@ const {
 - Focus ring: `outline: var(--nui-focus-ring-width) solid var(--nui-focus); outline-offset:
   var(--nui-focus-ring-offset)`. Disabled: `opacity: var(--nui-disabled-opacity)`.
 - Logical properties only (`inline-size`, `inset-inline-start`, `padding-inline`).
-- Icons through `<NuiIcon icon="check" />` (`icon` also takes a component); a new kit alias is a new key in
-  `default-icons.ts` (`lazyIcon(() => import('lucide-vue-next/dist/esm/icons/<file>.js'))`), the
-  key becomes an `IconAlias` through the `kit` entry of `NuiIconSets`; a package with its own icons
-  declares its registry as another `NuiIconSets` entry (see `editor-vue/src/icons`).
+- Icons through `<NuiIcon icon="check" />` (`icon` also takes a component); a new kit alias is a
+  new entry in `primitives/src/icons/icon-aliases.ts` (alias → Lucide file name) plus that file
+  name in the glob of `vue/src/icon/kit-icons.ts`. Packages and apps pass their own icons as
+  components (`import { Bold } from '@lucide/vue'`), never through `declare module`.
 
 ## Wiring
 

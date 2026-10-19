@@ -18,7 +18,7 @@
             colours.colour === null ? undefined : `nui-editor-colours--text-${colours.colour}`
           "
         >
-          <NuiIcon icon="text-colour" />
+          <NuiIcon :icon="Baseline" />
         </span>
       </NuiButton>
     </template>
@@ -63,6 +63,7 @@
 </template>
 
 <script setup lang="ts">
+import { Baseline } from '@lucide/vue';
 import { useMessages } from '@numior/primitives';
 import {
   NuiButton,

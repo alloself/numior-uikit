@@ -21,7 +21,7 @@ export interface NuiFieldArrayMessages {
   readonly cancelled: (params: { readonly index: number }) => string;
 }
 
-export const fieldArrayMessages: NuiMessageCatalog<'fieldArray'> = {
+export const fieldArrayMessages: NuiMessageCatalog<NuiFieldArrayMessages> = {
   namespace: 'fieldArray',
   en: {
     add: 'Add row',

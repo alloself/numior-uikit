@@ -1,4 +1,4 @@
-import type { IconAlias } from '@numior/primitives';
+import type { IconSource } from '@numior/primitives';
 import type { NuiTone } from '../shared/scale.types';
 
 export type NuiBadgeVariant = 'soft' | 'outline' | 'solid';
@@ -8,7 +8,7 @@ export interface NuiBadgeProps {
   tone?: NuiTone | undefined;
   variant?: NuiBadgeVariant | undefined;
   size?: NuiBadgeSize | undefined;
-  icon?: IconAlias | undefined;
+  icon?: IconSource | undefined;
   dot?: boolean | undefined;
   count?: number | undefined;
   max?: number | undefined;

@@ -4,7 +4,7 @@ export interface NuiAlertMessages {
   readonly dismiss: string;
 }
 
-export const alertMessages: NuiMessageCatalog<'alert'> = {
+export const alertMessages: NuiMessageCatalog<NuiAlertMessages> = {
   namespace: 'alert',
   en: { dismiss: 'Close' },
   ru: { dismiss: 'Закрыть' },

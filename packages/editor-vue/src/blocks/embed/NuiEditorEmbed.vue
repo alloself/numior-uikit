@@ -35,6 +35,7 @@
 </template>
 
 <script setup lang="ts">
+import { Bookmark } from '@lucide/vue';
 import { embedLabel } from '@numior/content';
 import { useMessages } from '@numior/primitives';
 import { computed, ref, useTemplateRef, watch } from 'vue';
@@ -64,7 +65,7 @@ const actions = computed((): LinkBarAction[] => [
   {
     key: 'bookmark',
     label: texts.value.toBookmark,
-    icon: 'bookmark',
+    icon: Bookmark,
     run: () => {
       links?.turn(node.id, 'bookmark');
     },

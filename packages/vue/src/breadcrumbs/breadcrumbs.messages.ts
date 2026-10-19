@@ -5,7 +5,7 @@ export interface NuiBreadcrumbsMessages {
   readonly more: string;
 }
 
-export const breadcrumbsMessages: NuiMessageCatalog<'breadcrumbs'> = {
+export const breadcrumbsMessages: NuiMessageCatalog<NuiBreadcrumbsMessages> = {
   namespace: 'breadcrumbs',
   en: { label: 'Breadcrumb', more: 'Show path' },
   ru: { label: 'Навигационная цепочка', more: 'Показать путь' },

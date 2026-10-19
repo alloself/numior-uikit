@@ -201,7 +201,7 @@ const ruComposables: DocsSidebarGroup[] = [
     text: 'Разное',
     items: [
       { text: 'useLayout', link: '/composables/layout' },
-      { text: 'useIcons', link: '/composables/icon' },
+      { text: 'useIcon', link: '/composables/icon' },
       { text: 'useBlockSizeTween', link: '/composables/block-size-tween' },
     ],
   },
@@ -381,7 +381,7 @@ const enComposables: DocsSidebarGroup[] = [
     text: 'Miscellaneous',
     items: [
       { text: 'useLayout', link: '/en/composables/layout' },
-      { text: 'useIcons', link: '/en/composables/icon' },
+      { text: 'useIcon', link: '/en/composables/icon' },
       { text: 'useBlockSizeTween', link: '/en/composables/block-size-tween' },
     ],
   },

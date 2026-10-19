@@ -1,4 +1,4 @@
-import type { IconAlias } from '@numior/primitives';
+import type { IconSource } from '@numior/primitives';
 import type { NuiOption, NuiOptionKey } from '../shared/options';
 import type { NuiSize } from '../shared/scale.types';
 import type { CheckState } from './cascade';
@@ -50,7 +50,7 @@ export interface NuiTreeNodeProps<T> {
   node: TreeNode<T>;
   id: string;
   checked?: CheckState | undefined;
-  icon?: IconAlias | undefined;
+  icon?: IconSource | undefined;
   folder: boolean;
   revealing?: boolean | undefined;
 }

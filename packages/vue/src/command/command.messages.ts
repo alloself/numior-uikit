@@ -7,7 +7,7 @@ export interface NuiCommandMessages {
   readonly title: string;
 }
 
-export const commandMessages: NuiMessageCatalog<'command'> = {
+export const commandMessages: NuiMessageCatalog<NuiCommandMessages> = {
   namespace: 'command',
   en: {
     label: 'Commands',

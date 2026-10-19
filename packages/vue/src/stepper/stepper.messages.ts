@@ -7,7 +7,7 @@ export interface NuiStepperMessages {
   readonly summary: (params: { readonly current: string; readonly total: string }) => string;
 }
 
-export const stepperMessages: NuiMessageCatalog<'stepper'> = {
+export const stepperMessages: NuiMessageCatalog<NuiStepperMessages> = {
   namespace: 'stepper',
   en: {
     label: 'Steps',

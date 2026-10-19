@@ -40,10 +40,10 @@
   },
   "dependencies": {
     "@numior/primitives": "workspace:*",
-    "@vueuse/core": "15.0.0",
-    "lucide-vue-next": "1.0.0"
+    "@vueuse/core": "15.0.0"
   },
   "devDependencies": {
+    "@lucide/vue": "1.50.0",
     "@vue/test-utils": "2.5.1",
     "shiki": "4.4.3"
   },

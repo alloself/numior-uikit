@@ -1,6 +1,6 @@
 import type { NuiRouteLocation } from '../shared/destination';
 import type { Component } from 'vue';
-import type { FloatingPlacement, IconAlias, PopoverInvokerAttrs } from '@numior/primitives';
+import type { FloatingPlacement, IconSource, PopoverInvokerAttrs } from '@numior/primitives';
 import type { NuiTriggerRef } from '../shared/trigger-ref';
 
 export type NuiMenuItemTone = 'neutral' | 'error';
@@ -9,7 +9,7 @@ export interface NuiMenuItemEntry {
   readonly type?: 'item' | undefined;
   readonly key?: string | undefined;
   readonly label: string;
-  readonly icon?: IconAlias | undefined;
+  readonly icon?: IconSource | undefined;
   readonly shortcut?: string | undefined;
   readonly disabled?: boolean | undefined;
   readonly tone?: NuiMenuItemTone | undefined;
@@ -24,7 +24,7 @@ export interface NuiMenuCheckboxEntry {
   readonly type: 'checkbox';
   readonly key?: string | undefined;
   readonly label: string;
-  readonly icon?: IconAlias | undefined;
+  readonly icon?: IconSource | undefined;
   readonly disabled?: boolean | undefined;
   readonly checked: boolean;
   readonly closeOnSelect?: boolean | undefined;
@@ -34,7 +34,7 @@ export interface NuiMenuCheckboxEntry {
 export interface NuiMenuRadioOption {
   readonly value: string;
   readonly label: string;
-  readonly icon?: IconAlias | undefined;
+  readonly icon?: IconSource | undefined;
   readonly disabled?: boolean | undefined;
 }
 
@@ -61,7 +61,7 @@ export interface NuiMenuSubEntry {
   readonly type: 'sub';
   readonly key?: string | undefined;
   readonly label: string;
-  readonly icon?: IconAlias | undefined;
+  readonly icon?: IconSource | undefined;
   readonly disabled?: boolean | undefined;
   readonly items: readonly NuiMenuEntry[];
 }
@@ -106,7 +106,7 @@ export interface NuiMenuTriggerSlot {
 }
 
 export interface NuiMenuItemProps {
-  icon?: IconAlias | undefined;
+  icon?: IconSource | undefined;
   shortcut?: string | undefined;
   disabled?: boolean | undefined;
   tone?: NuiMenuItemTone | undefined;
@@ -117,14 +117,14 @@ export interface NuiMenuItemProps {
 }
 
 export interface NuiMenuCheckboxItemProps {
-  icon?: IconAlias | undefined;
+  icon?: IconSource | undefined;
   disabled?: boolean | undefined;
   closeOnSelect?: boolean | undefined;
 }
 
 export interface NuiMenuRadioItemProps<T> {
   value: T;
-  icon?: IconAlias | undefined;
+  icon?: IconSource | undefined;
   disabled?: boolean | undefined;
   closeOnSelect?: boolean | undefined;
 }
@@ -132,13 +132,13 @@ export interface NuiMenuRadioItemProps<T> {
 export interface NuiMenuSubProps {
   id?: string | undefined;
   label?: string | undefined;
-  icon?: IconAlias | undefined;
+  icon?: IconSource | undefined;
   disabled?: boolean | undefined;
   openDelay?: number | undefined;
   closeDelay?: number | undefined;
 }
 
 export interface NuiMenuRowProps {
-  icon?: IconAlias | undefined;
+  icon?: IconSource | undefined;
   shortcut?: string | undefined;
 }

@@ -209,7 +209,7 @@ const RU_COLOURS: Readonly<Record<string, string>> = {
   red: 'Красный',
 };
 
-export const editorMessages: NuiMessageCatalog<'editor'> = {
+export const editorMessages: NuiMessageCatalog<NuiEditorMessages> = {
   namespace: 'editor',
   en: {
     toolbar: 'Formatting',

@@ -16,7 +16,6 @@ export default defineConfig({
           testTimeout: 15_000,
           include: ['packages/**/*.test.ts', 'apps/docs/test/**/*.test.ts'],
           exclude: [...configDefaults.exclude, '**/*.node.test.ts', 'packages/nuxt/test/nuxt/**'],
-          setupFiles: ['./packages/vue/test/support/preload-icons.ts'],
         },
       },
       {

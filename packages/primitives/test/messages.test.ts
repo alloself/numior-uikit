@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 import { ref } from 'vue';
 import type { NuiLocaleMessages, NuiTranslate } from '../src';
-import { MessagesHarness } from './harness/messages';
+import { MessagesHarness, type ProbeDictionary } from './harness/messages';
 
 const languageDescriptor = Object.getOwnPropertyDescriptor(navigator, 'language');
 
@@ -41,7 +41,7 @@ describe('message dictionary', () => {
   });
 
   it('adds a partial language that falls back to English and prefers the regional tag', () => {
-    const messages: NuiLocaleMessages = {
+    const messages: NuiLocaleMessages<ProbeDictionary> = {
       de: { probe: { close: 'Schließen', open: 'Öffnen' } },
       'de-AT': { probe: { open: 'Aufmachen' } },
     };
@@ -56,7 +56,7 @@ describe('message dictionary', () => {
   });
 
   it('treats an English override as the fallback for other languages but not over Russian', () => {
-    const messages: NuiLocaleMessages = { en: { probe: { close: 'Dismiss' } } };
+    const messages: NuiLocaleMessages<ProbeDictionary> = { en: { probe: { close: 'Dismiss' } } };
 
     expect(MessagesHarness.withPlugin({ locale: 'de-DE', messages }).close).toBe('Dismiss');
     expect(MessagesHarness.withPlugin({ locale: 'ru-RU', messages }).close).toBe('Закрыть');
@@ -83,7 +83,7 @@ describe('message dictionary', () => {
 
   it('recomputes when the locale or the messages change', () => {
     const locale = ref('en-US');
-    const messages = ref<NuiLocaleMessages | undefined>(undefined);
+    const messages = ref<NuiLocaleMessages<ProbeDictionary> | undefined>(undefined);
 
     const harness = MessagesHarness.withPlugin({ locale, messages });
 

@@ -15,7 +15,7 @@ export interface NuiPaginationMessages {
   }) => string;
 }
 
-export const paginationMessages: NuiMessageCatalog<'pagination'> = {
+export const paginationMessages: NuiMessageCatalog<NuiPaginationMessages> = {
   namespace: 'pagination',
   en: {
     label: 'Pagination',

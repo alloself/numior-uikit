@@ -1,18 +1,18 @@
 import type { NuiRouteLocation } from '../shared/destination';
 import type { Component } from 'vue';
-import type { IconAlias } from '@numior/primitives';
+import type { IconSource } from '@numior/primitives';
 
 export interface NuiBreadcrumbItem {
   readonly label: string;
   readonly href?: string | undefined;
   readonly to?: NuiRouteLocation | undefined;
-  readonly icon?: IconAlias | undefined;
+  readonly icon?: IconSource | undefined;
 }
 
 export interface NuiBreadcrumbsProps {
   items: readonly NuiBreadcrumbItem[];
   maxItems?: number | undefined;
-  separator?: IconAlias | undefined;
+  separator?: IconSource | undefined;
   label?: string | undefined;
   moreLabel?: string | undefined;
   as?: string | Component | undefined;

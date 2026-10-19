@@ -1,4 +1,4 @@
-import type { IconAlias } from '@numior/primitives';
+import type { IconSource } from '@numior/primitives';
 
 export type NuiAvatarSize = 'sm' | 'md' | 'lg' | 'xl';
 export type NuiAvatarShape = 'circle' | 'square';
@@ -12,7 +12,7 @@ export interface NuiAvatarProps {
   shape?: NuiAvatarShape | undefined;
   status?: NuiAvatarStatus | undefined;
   statusLabel?: string | undefined;
-  icon?: IconAlias | undefined;
+  icon?: IconSource | undefined;
 }
 
 export interface NuiAvatarItem {

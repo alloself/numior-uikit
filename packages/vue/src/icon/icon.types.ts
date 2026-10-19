@@ -1,8 +1,7 @@
-import type { Component } from 'vue';
-import type { IconAlias } from '@numior/primitives';
+import type { IconSource } from '@numior/primitives';
 
 export interface NuiIconProps {
-  icon?: IconAlias | Component | undefined;
+  icon?: IconSource | undefined;
   transform?: NuiIconTransform | undefined;
 }
 

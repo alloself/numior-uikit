@@ -24,7 +24,7 @@ import { tocMessages } from '../src/toc/toc.messages';
 import { toastMessages } from '../src/toast/toast.messages';
 import { uploadMessages } from '../src/upload/upload.messages';
 
-const catalogs: { readonly [N in keyof NuiVueMessages]: NuiMessageCatalog<N> } = {
+const catalogs: { readonly [N in keyof NuiVueMessages]: NuiMessageCatalog<NuiVueMessages[N]> } = {
   alert: alertMessages,
   avatar: avatarMessages,
   breadcrumbs: breadcrumbsMessages,

@@ -1,4 +1,4 @@
-import type { IconAlias } from '@numior/primitives';
+import type { IconSource } from '@numior/primitives';
 import type { NuiTone } from '../shared/scale.types';
 
 export type NuiChipVariant = 'soft' | 'outline' | 'solid';
@@ -8,7 +8,7 @@ export interface NuiChipProps {
   tone?: NuiTone | undefined;
   variant?: NuiChipVariant | undefined;
   size?: NuiChipSize | undefined;
-  icon?: IconAlias | undefined;
+  icon?: IconSource | undefined;
   removable?: boolean | undefined;
   removeTabbable?: boolean | undefined;
   removeLabel?: string | undefined;

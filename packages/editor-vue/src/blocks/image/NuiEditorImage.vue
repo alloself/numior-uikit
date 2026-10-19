@@ -118,8 +118,19 @@
 </template>
 
 <script setup lang="ts">
+import {
+  Baseline,
+  BetweenHorizontalStart,
+  Captions,
+  Download,
+  ImageUp,
+  TextAlignCenter,
+  TextAlignEnd,
+  TextAlignStart,
+  TextWrap,
+} from '@lucide/vue';
 import { onlyIf } from '../../editor/only-if';
-import { useMessages, type IconAlias } from '@numior/primitives';
+import { useMessages, type IconSource } from '@numior/primitives';
 import {
   NuiButton,
   NuiField,
@@ -153,7 +164,7 @@ type GripSide = 'start' | 'end';
 
 interface ImageAction {
   readonly key: string;
-  readonly icon: IconAlias;
+  readonly icon: IconSource;
   readonly label: string;
   readonly href?: string | undefined;
   readonly run?: (() => void) | undefined;
@@ -241,19 +252,19 @@ const percent = computed(() =>
 );
 
 const alignItems = computed((): NuiToggleItem<NuiContentAlign>[] => [
-  { value: 'start', label: texts.value.imageAlignStart, icon: 'align-start' },
+  { value: 'start', label: texts.value.imageAlignStart, icon: TextAlignStart },
   ...onlyIf<NuiToggleItem<NuiContentAlign>>(wrap.value === 'break', () => ({
     value: 'center',
     label: texts.value.imageAlignCenter,
-    icon: 'align-center',
+    icon: TextAlignCenter,
   })),
-  { value: 'end', label: texts.value.imageAlignEnd, icon: 'align-end' },
+  { value: 'end', label: texts.value.imageAlignEnd, icon: TextAlignEnd },
 ]);
 
 const wrapItems = computed((): NuiToggleItem<NuiContentWrap>[] => [
-  { value: 'inline', label: texts.value.imageWrapInline, icon: 'wrap-inline' },
-  { value: 'wrap', label: texts.value.imageWrapWrap, icon: 'wrap-text' },
-  { value: 'break', label: texts.value.imageWrapBreak, icon: 'wrap-break' },
+  { value: 'inline', label: texts.value.imageWrapInline, icon: Baseline },
+  { value: 'wrap', label: texts.value.imageWrapWrap, icon: TextWrap },
+  { value: 'break', label: texts.value.imageWrapBreak, icon: BetweenHorizontalStart },
 ]);
 
 const rtl = (): boolean => getComputedStyle(element).direction === 'rtl';
@@ -392,15 +403,15 @@ const actions = computed((): readonly ImageAction[] => [
     uploads?.enabled.value === true && uploads.images.value !== undefined,
     () => ({
       key: 'replace',
-      icon: 'image-up',
+      icon: ImageUp,
       label: texts.value.imageReplace,
       run: choose,
     }),
   ),
-  { key: 'download', icon: 'download', label: texts.value.download, href: src.value },
+  { key: 'download', icon: Download, label: texts.value.download, href: src.value },
   {
     key: 'alt',
-    icon: 'captions',
+    icon: Captions,
     label: texts.value.imageAlt,
     run: () => {
       describing.value = !describing.value;

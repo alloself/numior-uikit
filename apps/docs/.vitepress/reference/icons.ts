@@ -1,7 +1,6 @@
 import type { IconReference } from './reference.types.ts';
 
-const ICON_RE =
-  /(?:'([\w-]+)'|([\w-]+)):\s*lazyIcon\(\(\) => import\('lucide-vue-next\/dist\/esm\/icons\/([\w-]+)\.js'\)\)/g;
+const ICON_RE = /^\s+(?:'([\w-]+)'|([\w-]+)): '([\w-]+)',$/gm;
 
 export const parseIconAliases = (source: string): IconReference[] =>
   [...source.matchAll(ICON_RE)].flatMap((match) => {

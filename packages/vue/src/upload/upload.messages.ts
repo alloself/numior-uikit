@@ -19,7 +19,7 @@ export interface NuiUploadMessages {
   readonly removeImage: string;
 }
 
-export const uploadMessages: NuiMessageCatalog<'upload'> = {
+export const uploadMessages: NuiMessageCatalog<NuiUploadMessages> = {
   namespace: 'upload',
   en: {
     drop: 'Drop files here',

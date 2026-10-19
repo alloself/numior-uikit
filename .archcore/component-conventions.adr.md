@@ -27,22 +27,17 @@ status: accepted
 - `@numior/primitives` — headless-пакет (Vue peer, без CSS): контекст поля
   (`provideField`/`useFieldContext`/`useFieldControl`), `useCheckedState`, контекст radio-группы,
   реестр иконок (`provideIcons`, `useIcons`, `lazyIcon`, `createNuiConfig`), `useSplitAttrs`,
-  `useControlId`. `@numior/vue` потребляет его и объявляет `@numior/primitives` и
-  `lucide-vue-next` external в сборке, чтобы injection-ключи существовали в одном экземпляре.
-  Иконки, нужные одному пакету (редактор), не входят в общий `defaultIcons`: пакет держит свой
-  реестр и подключает его в корне компонента через `provideIconDefaults`, где иконки приложения
-  из `provideIcons`/`createNuiConfig` побеждают иконки пакета (2026-10-15).
-- Алиас иконки типизирован (2026-10-18): алиасы — ключи наборов иконок. В `@numior/primitives`
-  лежит пустой интерфейс `NuiIconSets`, `IconAlias` — объединение ключей всех его наборов. Кит
-  объявляет набор рядом с реестром (`declare module '@numior/primitives' { interface NuiIconSets
-  { kit: typeof defaultIcons } }` в `default-icons.ts`), редактор так же (`editor: typeof
-  editorIcons`), приложение — одной строкой со своим реестром. Ключи нигде не повторяются списком,
-  а опечатка в алиасе — ошибка типов (прежнее `string & {}` её пропускало). Объявление стоит в
-  `.ts`-модуле с реестром, а не в `.d.ts`: расширение должно попасть в выпущенные объявления
-  пакета, а `vue-tsc` не копирует ручные `.d.ts`. Реестр — `Partial<Record<IconAlias,
-  Component>>`. `NuiIcon` принимает один проп `icon: IconAlias | Component`, как `icon` у кнопки,
-  меню и остальных частей кита; отдельный `alias` убран. `useIcon` удалён — им пользовались только
-  тесты, `NuiIcon` читает реестр через `useIcons`.
+  `useControlId`. `@numior/vue` потребляет его и объявляет `@numior/primitives` external в
+  сборке, чтобы injection-ключи существовали в одном экземпляре; иконки Lucide кит собирает в
+  свой `dist` отдельными чанками.
+- Иконки (2026-10-19). Алиас кита типизирован ключами `iconAliases` (primitives: алиас → имя
+  файла Lucide), `IconSource = IconAlias | Component` — тип пропа `icon` у `NuiIcon`, кнопки, меню
+  и остальных частей. `useIcon(source)` (vue) отдаёт переопределение из конфигурации или иконку
+  Lucide, загруженную по ключу из glob файлов кита и закешированную; на нём построен `NuiIcon`.
+  Пакеты (редактор) своих алиасов и реестров не держат и передают компоненты `@lucide/vue`;
+  `NuiIconSets`, `declare module` для наборов, `provideIconDefaults` и `defaultIcons` удалены
+  после ревью пользователя («дерьмо костыльное»). До этого (2026-10-18) алиасы были ключами
+  наборов, которые пакеты дописывали в `NuiIconSets` через module augmentation.
 - Native-first: реальные `<input>`, `<textarea>`, checkbox с `role="switch"`; `appearance:
   none`, контрол остаётся в потоке под индикатором. Вид checked/indeterminate берётся из
   псевдоклассов.
@@ -53,8 +48,10 @@ status: accepted
 - Варианты: `variant` (форма) × `tone` (роль) × `size`; BEM-модификаторы задают приватные
   CSS-переменные. Упаковка CSS: манифест `src/styles.css`, плоский `dist/styles.css` и
   `dist/styles/<name>.css` через export `./styles/*.css`.
-- Иконки: алиасы `check`, `minus`, `loader`, `chevron-down`, `x`, `search`; дефолт — Lucide,
-  загружаемый по требованию пофайловыми `import()`; переопределение через плагин
+- Иконки: алиасы `check`, `minus`, `loader`, `chevron-down`, `x`, `search`; дефолт — Lucide
+  (`@lucide/vue`, преемник устаревшего `lucide-vue-next`, заменён 2026-10-19), загружаемый по
+  ключу из glob файлов кита с кешем, без своих `d.ts` и без `declare module`; приложение
+  переопределяет только алиасы кита, свои иконки передаёт компонентом; переопределение через плагин
   `createNuiConfig` для приложения и `provideNuiConfig` в `setup` для поддерева.
   Компонентов-провайдеров в духе React кит не поставляет (2026-09-25: `NuiConfigProvider`
   удалён, конфигурация — только опции плагина и композабл).

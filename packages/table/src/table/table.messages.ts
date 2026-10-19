@@ -107,7 +107,7 @@ export interface NuiTableMessages {
   readonly exported: (params: { readonly count: number }) => string;
 }
 
-export const tableMessages: NuiMessageCatalog<'table'> = {
+export const tableMessages: NuiMessageCatalog<NuiTableMessages> = {
   namespace: 'table',
   en: {
     label: 'Data grid',

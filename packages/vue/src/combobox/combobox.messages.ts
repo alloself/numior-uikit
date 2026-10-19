@@ -7,7 +7,7 @@ export interface NuiComboboxMessages {
   readonly toggle: string;
 }
 
-export const comboboxMessages: NuiMessageCatalog<'combobox'> = {
+export const comboboxMessages: NuiMessageCatalog<NuiComboboxMessages> = {
   namespace: 'combobox',
   en: { empty: 'No matches', clear: 'Clear', remove: 'Remove', toggle: 'Show options' },
   ru: {

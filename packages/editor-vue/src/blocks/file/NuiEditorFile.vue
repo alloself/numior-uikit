@@ -13,6 +13,7 @@
 </template>
 
 <script setup lang="ts">
+import { Download } from '@lucide/vue';
 import { formatFileSize, useLocale, useMessages } from '@numior/primitives';
 import { useEventListener } from '@vueuse/core';
 import { computed, ref, watch } from 'vue';
@@ -40,7 +41,7 @@ const actions = computed((): readonly LinkBarAction[] => [
   {
     key: 'download',
     label: texts.value.download,
-    icon: 'download',
+    icon: Download,
     run: () => {
       follow(element, url.value, true);
     },

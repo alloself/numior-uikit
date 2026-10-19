@@ -4,6 +4,7 @@ import type { Plugin } from 'vite';
 interface PackageAssetsOptions {
   readonly root: URL;
   readonly styles?: string;
+  readonly bundled?: readonly string[];
 }
 
 const RELATIVE_IMPORT = /^@import\s+['"](\.{1,2}\/[^'"]+\.css)['"]\s*;\s*$/;
@@ -35,37 +36,49 @@ export const inlineCss = async (file: URL, seen = new Set<string>()): Promise<st
   return output.join('\n');
 };
 
-export const packageAssets = ({ root, styles }: PackageAssetsOptions): Plugin => ({
-  name: 'package-assets',
-  async generateBundle() {
-    this.emitFile({
-      type: 'asset',
-      fileName: 'LICENSE',
-      source: await readFile(new URL('../../LICENSE', root), 'utf8'),
-    });
+type Emit = (file: { type: 'asset'; fileName: string; source: string }) => unknown;
 
-    if (styles === undefined) {
-      return;
+const emitLicenses = async (emit: Emit, root: URL, bundled: readonly string[]): Promise<void> => {
+  emit({
+    type: 'asset',
+    fileName: 'LICENSE',
+    source: await readFile(new URL('../../LICENSE', root), 'utf8'),
+  });
+
+  for (const name of bundled) {
+    emit({
+      type: 'asset',
+      fileName: `LICENSE-${name.replace(/^@/, '').replace('/', '-')}`,
+      source: await readFile(new URL(`node_modules/${name}/LICENSE`, root), 'utf8'),
+    });
+  }
+};
+
+const emitStyles = async (emit: Emit, manifest: URL): Promise<void> => {
+  emit({ type: 'asset', fileName: 'styles.css', source: await inlineCss(manifest) });
+
+  for (const line of (await readFile(manifest, 'utf8')).split('\n')) {
+    const target = importTarget(line, manifest);
+
+    if (!target) {
+      continue;
     }
 
-    const manifest = new URL(styles, root);
+    const name = target.pathname.slice(target.pathname.lastIndexOf('/') + 1);
 
-    this.emitFile({ type: 'asset', fileName: 'styles.css', source: await inlineCss(manifest) });
+    emit({ type: 'asset', fileName: `styles/${name}`, source: await inlineCss(target) });
+  }
+};
 
-    for (const line of (await readFile(manifest, 'utf8')).split('\n')) {
-      const target = importTarget(line, manifest);
+export const packageAssets = ({ root, styles, bundled = [] }: PackageAssetsOptions): Plugin => ({
+  name: 'package-assets',
+  async generateBundle() {
+    const emit: Emit = (file) => this.emitFile(file);
 
-      if (!target) {
-        continue;
-      }
+    await emitLicenses(emit, root, bundled);
 
-      const name = target.pathname.slice(target.pathname.lastIndexOf('/') + 1);
-
-      this.emitFile({
-        type: 'asset',
-        fileName: `styles/${name}`,
-        source: await inlineCss(target),
-      });
+    if (styles !== undefined) {
+      await emitStyles(emit, new URL(styles, root));
     }
   },
 });

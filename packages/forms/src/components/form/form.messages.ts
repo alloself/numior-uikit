@@ -5,7 +5,7 @@ export interface NuiFormMessages {
   readonly errorTitle: string;
 }
 
-export const formMessages: NuiMessageCatalog<'form'> = {
+export const formMessages: NuiMessageCatalog<NuiFormMessages> = {
   namespace: 'form',
   en: {
     submit: 'Submit',

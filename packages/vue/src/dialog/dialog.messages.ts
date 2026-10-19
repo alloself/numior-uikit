@@ -4,7 +4,7 @@ export interface NuiDialogMessages {
   readonly close: string;
 }
 
-export const dialogMessages: NuiMessageCatalog<'dialog'> = {
+export const dialogMessages: NuiMessageCatalog<NuiDialogMessages> = {
   namespace: 'dialog',
   en: { close: 'Close' },
   ru: { close: 'Закрыть' },

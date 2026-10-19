@@ -5,7 +5,7 @@ export interface NuiSidebarMessages {
   readonly toggle: string;
 }
 
-export const sidebarMessages: NuiMessageCatalog<'sidebar'> = {
+export const sidebarMessages: NuiMessageCatalog<NuiSidebarMessages> = {
   namespace: 'sidebar',
   en: { label: 'Navigation', toggle: 'Toggle sidebar' },
   ru: { label: 'Навигация', toggle: 'Переключить боковую панель' },

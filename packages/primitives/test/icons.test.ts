@@ -1,6 +1,6 @@
 import { mount } from '@vue/test-utils';
 import { describe, expect, it, vi } from 'vite-plus/test';
-import { createNuiConfig, lazyIcon, provideIconDefaults, provideIcons, useIcons } from '../src';
+import { createNuiConfig, lazyIcon, provideIcons, useIcons } from '../src';
 import CircleGlyph from './fixtures/CircleGlyph.vue';
 import IconPair from './fixtures/IconPair.vue';
 import SquareGlyph from './fixtures/SquareGlyph.vue';
@@ -26,18 +26,6 @@ describe('icon registry', () => {
     expect(icons.check).toBe(TriangleGlyph);
     expect(icons.x).toBe(CircleGlyph);
     expect(icons.missing).toBeUndefined();
-  });
-
-  it('lets a package fill in icons the app has not chosen', () => {
-    const icons = captureSetup(() => useIcons(), {
-      layers: [
-        () => provideIcons({ search: SquareGlyph }),
-        () => provideIconDefaults({ search: CircleGlyph, copy: TriangleGlyph }),
-      ],
-    }).value;
-
-    expect(icons.search).toBe(SquareGlyph);
-    expect(icons.copy).toBe(TriangleGlyph);
   });
 
   it('accepts app-level configuration through the plugin', () => {

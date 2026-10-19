@@ -1,29 +1,31 @@
-# useIcons
+# useIcon
 
-`useIcons()` returns the icon registry of the nearest configuration: an "alias → component"
-object where the app icons lie over the package sets. `lazyIcon(loader)` wraps a dynamic import
-into a component that loads once on the first render. `NuiIcon` is built on these.
+`useIcon(icon)` turns an icon source into a component, and `NuiIcon` is built on it. An alias
+gives the icon from the configuration or else the kit's Lucide icon, loaded on first use. A
+component stays as it is.
+
+`lazyIcon(loader)` wraps a dynamic import into a component that loads once on the first render.
 
 ## Signature
 
-<SignatureReference :names="['useIcons', 'lazyIcon', 'IconRegistry', 'NuiIconSets']" />
+<SignatureReference :names="['useIcon', 'useIcons', 'lazyIcon', 'IconSource', 'IconRegistry']" />
 
 ## Usage
 
-The registry helps where a component other than `NuiIcon` expects an icon: it gets the same
+`useIcon` helps where a component other than `NuiIcon` expects an icon: it gets the same
 glyph the app chose for the alias.
 
 ```vue
 <template>
-  <ExternalTabs :items="tabs" :close-icon="icons.x" />
+  <ExternalTabs :items="tabs" :close-icon="close" />
 </template>
 
 <script setup lang="ts">
-import { useIcons } from '@numior/vue';
+import { useIcon } from '@numior/vue';
 
-const icons = useIcons();
+const close = useIcon('x');
 </script>
 ```
 
-An alias missing from the registry gives `undefined`. The registry, own sets and declaring own
-aliases are described on the [Icon](/en/components/icon) page.
+`useIcons()` returns only the overrides of the nearest configuration. Overriding kit icons is
+described on the [Icon](/en/components/icon) page.

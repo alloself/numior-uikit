@@ -46,6 +46,16 @@
 
 <script setup lang="ts">
 import {
+  BetweenHorizontalEnd,
+  BetweenHorizontalStart,
+  BetweenVerticalEnd,
+  BetweenVerticalStart,
+  CircleChevronDown,
+  Pencil,
+  SquareCheck,
+  Type,
+} from '@lucide/vue';
+import {
   CONTENT_TABLE_TYPES,
   contentTableData,
   type NuiContentCellValue,
@@ -54,7 +64,7 @@ import {
 } from '@numior/content';
 import { NuiContentTable } from '@numior/content/table';
 import { redo, undo } from '@numior/editor-core';
-import { useMessages, type IconAlias } from '@numior/primitives';
+import { useMessages, type IconSource } from '@numior/primitives';
 import type {
   NuiTableCellValue,
   NuiTableColumnMenu,
@@ -104,12 +114,12 @@ const cancelled = ref(false);
 
 const data = computed(() => contentTableData(node));
 
-const TYPE_ICONS: Readonly<Record<NuiContentTableType, IconAlias>> = {
-  text: 'type',
+const TYPE_ICONS: Readonly<Record<NuiContentTableType, IconSource>> = {
+  text: Type,
   number: 'hash',
   date: 'calendar',
-  boolean: 'square-check',
-  select: 'circle-chevron-down',
+  boolean: SquareCheck,
+  select: CircleChevronDown,
 };
 
 const isType = (value: string): value is NuiContentTableType =>
@@ -160,7 +170,7 @@ const columnMenu: NuiTableColumnMenu<NuiContentTableRow> = ({ column, anchor }) 
     {
       key: 'rename',
       label: texts.value.tableRename,
-      icon: 'pencil',
+      icon: Pencil,
       onSelect: () => startRename(column.key, anchor),
     },
     {
@@ -188,13 +198,13 @@ const columnMenu: NuiTableColumnMenu<NuiContentTableRow> = ({ column, anchor }) 
     {
       key: 'before',
       label: texts.value.tableColumnBefore,
-      icon: 'between-vertical-start',
+      icon: BetweenVerticalStart,
       onSelect: () => addColumn(index),
     },
     {
       key: 'after',
       label: texts.value.tableColumnAfter,
-      icon: 'between-vertical-end',
+      icon: BetweenVerticalEnd,
       onSelect: () => addColumn(index + 1),
     },
     {
@@ -211,13 +221,13 @@ const contextMenu: NuiTableContextMenu<NuiContentTableRow> = ({ row }) => [
   {
     key: 'above',
     label: texts.value.tableRowAbove,
-    icon: 'between-horizontal-start',
+    icon: BetweenHorizontalStart,
     onSelect: () => editor.run(insertTableRows(node.id, rowIndex(row))),
   },
   {
     key: 'below',
     label: texts.value.tableRowBelow,
-    icon: 'between-horizontal-end',
+    icon: BetweenHorizontalEnd,
     onSelect: () => editor.run(insertTableRows(node.id, rowIndex(row) + 1)),
   },
   {

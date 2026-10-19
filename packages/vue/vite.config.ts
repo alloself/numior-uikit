@@ -6,7 +6,11 @@ import { packageAssets } from '../../scripts/vite-package-assets.ts';
 export default defineConfig({
   plugins: [
     vue(),
-    packageAssets({ root: new URL('./', import.meta.url), styles: './src/styles.css' }),
+    packageAssets({
+      root: new URL('./', import.meta.url),
+      styles: './src/styles.css',
+      bundled: ['@lucide/vue'],
+    }),
   ],
   build: {
     lib: {
@@ -20,13 +24,7 @@ export default defineConfig({
     },
     sourcemap: true,
     rolldownOptions: {
-      external: [
-        /^vue$/,
-        /^@numior\/primitives$/,
-        /^lucide-vue-next(\/|$)/,
-        /^@vueuse\/core$/,
-        /^shiki(\/|$)/,
-      ],
+      external: [/^vue$/, /^@numior\/primitives$/, /^@vueuse\/core$/, /^shiki(\/|$)/],
       output: { chunkFileNames: 'shared-[hash].js' },
     },
   },

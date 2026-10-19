@@ -1,4 +1,16 @@
 import {
+  Braces,
+  Heading1,
+  Heading2,
+  Heading3,
+  List,
+  ListOrdered,
+  ListTodo,
+  Pilcrow,
+  SeparatorHorizontal,
+  TextQuote,
+} from '@lucide/vue';
+import {
   insertDivider,
   setBlockType,
   toggleList,
@@ -6,19 +18,19 @@ import {
   type Command,
   type Schema,
 } from '@numior/editor-core';
-import type { IconAlias } from '@numior/primitives';
+import type { IconSource } from '@numior/primitives';
 import type { NuiEditorMessages } from '../editor/editor.messages';
 
-const HEADING_ICONS: Readonly<Record<1 | 2 | 3, IconAlias>> = {
-  1: 'heading-1',
-  2: 'heading-2',
-  3: 'heading-3',
+const HEADING_ICONS: Readonly<Record<1 | 2 | 3, IconSource>> = {
+  1: Heading1,
+  2: Heading2,
+  3: Heading3,
 };
 
 interface SlashLabel {
   readonly key: string;
   readonly label: string;
-  readonly icon: IconAlias;
+  readonly icon: IconSource;
   readonly keywords: readonly string[];
 }
 
@@ -32,7 +44,7 @@ interface SlashEntry {
   readonly key: string;
   readonly node: string;
   readonly label: (texts: NuiEditorMessages) => string;
-  readonly icon: IconAlias;
+  readonly icon: IconSource;
   readonly keywords: readonly string[];
   readonly command: () => Command;
 }
@@ -42,7 +54,7 @@ const ENTRIES: readonly SlashEntry[] = [
     key: 'paragraph',
     node: 'paragraph',
     label: (texts) => texts.text,
-    icon: 'text',
+    icon: Pilcrow,
     keywords: ['text', 'paragraph', 'p'],
     command: () => setBlockType('paragraph'),
   },
@@ -58,7 +70,7 @@ const ENTRIES: readonly SlashEntry[] = [
     key: 'bullet_list',
     node: 'bullet_list',
     label: (texts) => texts.bulletList,
-    icon: 'list',
+    icon: List,
     keywords: ['bullet', 'list', 'ul'],
     command: () => toggleList('bullet_list'),
   },
@@ -66,7 +78,7 @@ const ENTRIES: readonly SlashEntry[] = [
     key: 'ordered_list',
     node: 'ordered_list',
     label: (texts) => texts.orderedList,
-    icon: 'list-ordered',
+    icon: ListOrdered,
     keywords: ['numbered', 'ordered', 'list', 'ol'],
     command: () => toggleList('ordered_list'),
   },
@@ -74,7 +86,7 @@ const ENTRIES: readonly SlashEntry[] = [
     key: 'todo_list',
     node: 'todo_list',
     label: (texts) => texts.todoList,
-    icon: 'list-todo',
+    icon: ListTodo,
     keywords: ['todo', 'task', 'check'],
     command: () => toggleList('todo_list'),
   },
@@ -82,7 +94,7 @@ const ENTRIES: readonly SlashEntry[] = [
     key: 'blockquote',
     node: 'blockquote',
     label: (texts) => texts.quote,
-    icon: 'quote',
+    icon: TextQuote,
     keywords: ['quote', 'blockquote'],
     command: () => wrapInBlock('blockquote'),
   },
@@ -90,7 +102,7 @@ const ENTRIES: readonly SlashEntry[] = [
     key: 'code_block',
     node: 'code_block',
     label: (texts) => texts.codeBlock,
-    icon: 'code-block',
+    icon: Braces,
     keywords: ['code', 'pre', 'snippet'],
     command: () => setBlockType('code_block'),
   },
@@ -114,7 +126,7 @@ const ENTRIES: readonly SlashEntry[] = [
     key: 'divider',
     node: 'divider',
     label: (texts) => texts.divider,
-    icon: 'separator',
+    icon: SeparatorHorizontal,
     keywords: ['divider', 'hr', 'line', 'separator'],
     command: () => insertDivider(),
   },

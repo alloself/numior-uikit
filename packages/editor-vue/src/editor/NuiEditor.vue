@@ -169,6 +169,7 @@
 </template>
 
 <script setup lang="ts" generic="V extends NuiEditorValue | undefined">
+import { Bookmark, SquarePlay } from '@lucide/vue';
 import { CONTENT_COLOURS, contentSchema, embedProviders, NuiContent } from '@numior/content';
 import {
   baseKeymap,
@@ -194,10 +195,10 @@ import {
 import { createEditorView, type EditorView } from '@numior/editor-core/view';
 import {
   provideHighlighter,
-  provideIconDefaults,
   useFieldControl,
   useHighlighter,
   useMessages,
+  type IconSource,
   type NuiHighlighter,
 } from '@numior/primitives';
 import { codeHighlightPlugin, createCodeHighlighter } from '../blocks/code/code-highlight';
@@ -229,7 +230,6 @@ import { createNodeViewHost } from '../blocks/node-view-host';
 import { createNodeViews } from '../blocks/node-views';
 import NuiEditorNodeViews from '../blocks/NuiEditorNodeViews.vue';
 import NuiEditorBubble from '../bubble/NuiEditorBubble.vue';
-import { editorIcons } from '../icons/editor-icons';
 import NuiEditorLinkPanel from '../link/NuiEditorLinkPanel.vue';
 import NuiEditorToolbar from '../toolbar/NuiEditorToolbar.vue';
 import NuiEditorBlockHandle from '../handle/NuiEditorBlockHandle.vue';
@@ -294,7 +294,6 @@ const emit = defineEmits<{
 const attrs = useAttrs();
 const blockTexts = useMessages(editorMessages);
 
-provideIconDefaults(editorIcons);
 provideBlockStates();
 
 const {
@@ -355,11 +354,31 @@ const openMedia = (kind: MediaKind): void => {
   mediaOpen.value = true;
 };
 
-const MEDIA_SLASH: readonly { readonly kind: MediaKind; readonly keywords: readonly string[] }[] = [
-  { kind: 'image', keywords: ['image', 'picture', 'photo', 'img', 'картинка', 'изображение'] },
-  { kind: 'file', keywords: ['file', 'attachment', 'upload', 'pdf', 'файл', 'вложение'] },
-  { kind: 'embed', keywords: ['embed', 'video', 'youtube', 'figma', 'встроить', 'видео'] },
-  { kind: 'bookmark', keywords: ['bookmark', 'link', 'card', 'закладка', 'ссылка'] },
+const MEDIA_SLASH: readonly {
+  readonly kind: MediaKind;
+  readonly icon: IconSource;
+  readonly keywords: readonly string[];
+}[] = [
+  {
+    kind: 'image',
+    icon: 'image',
+    keywords: ['image', 'picture', 'photo', 'img', 'картинка', 'изображение'],
+  },
+  {
+    kind: 'file',
+    icon: 'file',
+    keywords: ['file', 'attachment', 'upload', 'pdf', 'файл', 'вложение'],
+  },
+  {
+    kind: 'embed',
+    icon: SquarePlay,
+    keywords: ['embed', 'video', 'youtube', 'figma', 'встроить', 'видео'],
+  },
+  {
+    kind: 'bookmark',
+    icon: Bookmark,
+    keywords: ['bookmark', 'link', 'card', 'закладка', 'ссылка'],
+  },
 ];
 
 const offered = (kind: MediaKind): boolean =>
@@ -369,7 +388,7 @@ const mediaSlash = (): readonly SlashItem[] =>
   MEDIA_SLASH.filter((entry) => offered(entry.kind)).map((entry) => ({
     key: entry.kind,
     label: blockTexts.value[entry.kind],
-    icon: entry.kind,
+    icon: entry.icon,
     keywords: entry.keywords,
     kind: 'open',
     open: () => {

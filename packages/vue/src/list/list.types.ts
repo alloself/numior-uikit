@@ -1,5 +1,5 @@
 import type { NuiRouteLocation } from '../shared/destination';
-import type { IconAlias } from '@numior/primitives';
+import type { IconSource } from '@numior/primitives';
 import type { Component } from 'vue';
 import type { NuiListEntry, NuiListSource, NuiOptionKey } from '../shared/options';
 import type { NuiSize } from '../shared/scale.types';
@@ -39,7 +39,7 @@ export interface NuiListItemProps {
   id?: string | undefined;
   label?: string | undefined;
   description?: string | undefined;
-  icon?: IconAlias | false | undefined;
+  icon?: IconSource | false | undefined;
   href?: string | undefined;
   to?: NuiRouteLocation | undefined;
   as?: string | Component | undefined;

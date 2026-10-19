@@ -9,23 +9,23 @@ import {
 } from 'vue';
 import { DEFAULT_LOCALE, useLocale } from '../locale/locale-context';
 
-export interface NuiMessages {}
-
-export type NuiMessageNamespace = keyof NuiMessages;
-
 type BuiltInLocale = 'en' | 'ru';
 
-export interface NuiMessageCatalog<N extends NuiMessageNamespace> {
-  readonly namespace: N;
-  readonly en: NuiMessages[N];
-  readonly ru: NuiMessages[N];
+export interface NuiMessageCatalog<M extends object> {
+  readonly namespace: string;
+  readonly en: M;
+  readonly ru: M;
 }
 
-export type NuiMessageOverrides = {
-  readonly [N in NuiMessageNamespace]?: Partial<NuiMessages[N]>;
+type AnyMessages = Readonly<Record<string, Readonly<Record<string, unknown>>>>;
+
+export type NuiMessageOverrides<M extends object = AnyMessages> = {
+  readonly [N in keyof M]?: Partial<M[N]>;
 };
 
-export type NuiLocaleMessages = Readonly<Record<string, NuiMessageOverrides>>;
+export type NuiLocaleMessages<M extends object = AnyMessages> = Readonly<
+  Record<string, NuiMessageOverrides<M>>
+>;
 
 export type NuiMessageParams = Readonly<Record<string, unknown>>;
 
@@ -84,26 +84,34 @@ const localeChain = (locale: string): readonly string[] => {
 
 const isBuiltInLocale = (tag: string): tag is BuiltInLocale => tag === 'en' || tag === 'ru';
 
-const builtIn = <N extends NuiMessageNamespace>(
-  catalog: NuiMessageCatalog<N>,
-  tag: string,
-): NuiMessages[N] | undefined => (isBuiltInLocale(tag) ? catalog[tag] : undefined);
+const builtIn = <M extends object>(catalog: NuiMessageCatalog<M>, tag: string): M | undefined =>
+  isBuiltInLocale(tag) ? catalog[tag] : undefined;
 
-const merge = <T extends object>(base: T, patch: Partial<T> | undefined): T => ({
-  ...base,
-  ...patch,
-});
+const fitting = (
+  base: object,
+  patch: Readonly<Record<string, unknown>> | undefined,
+): Readonly<Record<string, unknown>> =>
+  Object.fromEntries(
+    Object.entries(patch ?? {}).filter(
+      ([key, value]) => typeof value === typeof Reflect.get(base, key),
+    ),
+  );
 
-const resolveMessages = <N extends NuiMessageNamespace>(
-  catalog: NuiMessageCatalog<N>,
+const overlay = <M extends object>(
+  base: M,
+  patch: Readonly<Record<string, unknown>> | undefined,
+): M => Object.assign({}, base, fitting(base, patch));
+
+const resolveMessages = <M extends object>(
+  catalog: NuiMessageCatalog<M>,
   layers: readonly NuiLocaleMessages[],
   locale: string,
-): NuiMessages[N] =>
-  localeChain(locale).reduce<NuiMessages[N]>(
+): M =>
+  localeChain(locale).reduce<M>(
     (merged, tag) =>
-      layers.reduce<NuiMessages[N]>(
-        (inner, layer) => merge(inner, layer[tag]?.[catalog.namespace]),
-        merge(merged, builtIn(catalog, tag)),
+      layers.reduce<M>(
+        (inner, layer) => overlay(inner, layer[tag]?.[catalog.namespace]),
+        Object.assign({}, merged, builtIn(catalog, tag)),
       ),
     catalog.en,
   );
@@ -145,10 +153,10 @@ const translated = <T extends object>(
     },
   });
 
-export const useMessages = <N extends NuiMessageNamespace>(
-  catalog: NuiMessageCatalog<N>,
+export const useMessages = <M extends object>(
+  catalog: NuiMessageCatalog<M>,
   locale?: MaybeRefOrGetter<string | undefined>,
-): ComputedRef<NuiMessages[N]> => {
+): ComputedRef<M> => {
   const current = useLocale(locale);
   const layers = inject(MESSAGES_KEY, null);
 

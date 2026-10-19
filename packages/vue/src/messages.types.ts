@@ -45,7 +45,3 @@ export interface NuiVueMessages {
   readonly toast: NuiToastMessages;
   readonly upload: NuiUploadMessages;
 }
-
-declare module '@numior/primitives' {
-  interface NuiMessages extends NuiVueMessages {}
-}

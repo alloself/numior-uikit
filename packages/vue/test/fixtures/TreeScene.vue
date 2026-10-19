@@ -15,7 +15,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, type Ref } from 'vue';
 import { NuiTree, type NuiTreeItem, type NuiTreeItemSlot, type NuiTreeProps } from '../../src';
 import type { Selection } from '../support/selection';
 
@@ -35,7 +35,7 @@ const {
   itemSlot?: ((slot: NuiTreeItemSlot<unknown>) => string) | undefined;
 }>();
 
-const items = ref<readonly NuiTreeItem[]>(initialItems);
+const items: Ref<readonly NuiTreeItem[]> = ref(initialItems);
 const expanded = ref<string[]>([...initiallyExpanded]);
 const loads: string[] = [];
 const events: string[] = [];

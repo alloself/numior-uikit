@@ -1,8 +1,6 @@
 import { mount } from '@vue/test-utils';
 import { describe, expect, it, vi } from 'vite-plus/test';
-import Heart from 'lucide-vue-next/dist/esm/icons/heart.js';
-import Star from 'lucide-vue-next/dist/esm/icons/star.js';
-import Sun from 'lucide-vue-next/dist/esm/icons/sun.js';
+import { Heart, Star, Sun } from '@lucide/vue';
 import { markRaw } from 'vue';
 import type { NuiConfigOptions } from '../src';
 import NestedConfig from './fixtures/NestedConfig.vue';

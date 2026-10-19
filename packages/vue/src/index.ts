@@ -57,7 +57,7 @@ export type { NuiSplitterMessages } from './splitter/splitter.messages';
 export type { NuiLinkProps, NuiLinkUnderline } from './link/link.types';
 export { default as NuiIcon } from './icon/NuiIcon.vue';
 export type { NuiIconProps, NuiIconTransform } from './icon/icon.types';
-export { defaultIcons } from './icon/default-icons';
+export { useIcon } from './icon/use-icon';
 export { default as NuiField } from './field/NuiField.vue';
 export { default as NuiFieldFrame } from './field/NuiFieldFrame.vue';
 export { default as NuiFieldLabel } from './field/NuiFieldLabel.vue';
@@ -324,6 +324,7 @@ export {
   colorSchemeScript,
   createNuiConfig,
   createToastStore,
+  iconAliases,
   lazyIcon,
   plural,
   provideLink,
@@ -362,7 +363,7 @@ export type {
   IconAlias,
   IconLoader,
   IconRegistry,
-  NuiIconSets,
+  IconSource,
   NuiConfigOptions,
   NuiLinkComponent,
   NuiLocaleMessages,

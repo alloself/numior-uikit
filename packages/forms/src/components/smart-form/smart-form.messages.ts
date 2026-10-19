@@ -10,7 +10,7 @@ export interface NuiSmartFormMessages {
   }) => string;
 }
 
-export const smartFormMessages: NuiMessageCatalog<'smartForm'> = {
+export const smartFormMessages: NuiMessageCatalog<NuiSmartFormMessages> = {
   namespace: 'smartForm',
   en: {
     next: 'Next',

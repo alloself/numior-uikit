@@ -19,14 +19,9 @@ export type {
 } from './field/useFieldControl';
 export { RADIO_GROUP_KEY, provideRadioGroup, useRadioGroup } from './radio/radio-group-context';
 export type { RadioGroupContext } from './radio/radio-group-context';
-export {
-  ICONS_KEY,
-  lazyIcon,
-  provideIconDefaults,
-  provideIcons,
-  useIcons,
-} from './icons/icon-registry';
-export type { IconAlias, IconLoader, IconRegistry, NuiIconSets } from './icons/icon-registry';
+export { ICONS_KEY, lazyIcon, provideIcons, useIcons } from './icons/icon-registry';
+export type { IconAlias, IconLoader, IconRegistry, IconSource } from './icons/icon-registry';
+export { iconAliases } from './icons/icon-aliases';
 export { createNuiConfig, provideNuiConfig } from './config/nui-config';
 export type { NuiConfigOptions } from './config/nui-config';
 export { DEFAULT_LOCALE, LOCALE_KEY, provideLocale, useLocale } from './locale/locale-context';
@@ -39,10 +34,8 @@ export type { NuiPluralForms } from './messages/plural';
 export type {
   NuiLocaleMessages,
   NuiMessageCatalog,
-  NuiMessageNamespace,
   NuiMessageOverrides,
   NuiMessageParams,
-  NuiMessages,
   NuiTranslate,
 } from './messages/messages';
 export type { Direction, DirectionControl } from './direction/direction-context';

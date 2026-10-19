@@ -34,7 +34,7 @@
             variant="ghost"
             tone="neutral"
             size="sm"
-            icon="pencil"
+            :icon="Pencil"
             :aria-label="edit.label"
             :aria-expanded="String(editing)"
             @click="editing = !editing"
@@ -58,6 +58,7 @@
 </template>
 
 <script setup lang="ts">
+import { Pencil } from '@lucide/vue';
 import { NuiButton, NuiPopover, NuiTooltip } from '@numior/vue';
 import { ref, useTemplateRef, watch } from 'vue';
 import NuiEditorLinkForm from './NuiEditorLinkForm.vue';

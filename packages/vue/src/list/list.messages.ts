@@ -5,7 +5,7 @@ export interface NuiListMessages {
   readonly empty: string;
 }
 
-export const listMessages: NuiMessageCatalog<'list'> = {
+export const listMessages: NuiMessageCatalog<NuiListMessages> = {
   namespace: 'list',
   en: { loading: 'Loading', empty: 'No items' },
   ru: { loading: 'Загрузка', empty: 'Список пуст' },

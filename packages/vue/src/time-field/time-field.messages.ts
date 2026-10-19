@@ -5,7 +5,7 @@ export interface NuiTimeFieldMessages {
   readonly empty: string;
 }
 
-export const timeFieldMessages: NuiMessageCatalog<'timeField'> = {
+export const timeFieldMessages: NuiMessageCatalog<NuiTimeFieldMessages> = {
   namespace: 'timeField',
   en: { clock: 'Choose time', empty: 'No times' },
   ru: { clock: 'Выбрать время', empty: 'Нет доступного времени' },

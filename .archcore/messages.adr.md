@@ -14,13 +14,18 @@ date: 2026-09-26
 
 ## Decision
 
-- `@numior/primitives` даёт механизм. `interface NuiMessages {}` расширяют пакеты через module
-  augmentation; `NuiMessageCatalog<N>` — типизированный литерал `{ namespace, en, ru }` рядом с
-  компонентом (`<comp>.messages.ts`) без вызова фабрики, чтобы неиспользуемый каталог уходил при
-  tree-shaking. Пропущенный ключ или неверная сигнатура в `en` или `ru` — ошибка typecheck.
-  Реестр `@numior/vue` — `NuiVueMessages` в `src/messages.types.ts`, экспортируется типом, поэтому
-  аугментация видна потребителю через `index.d.ts`.
-- `useMessages(catalog, locale?)` → `ComputedRef<NuiMessages[N]>`. Локаль — проп, конфиг или
+- `@numior/primitives` даёт механизм. `NuiMessageCatalog<M>` — типизированный литерал
+  `{ namespace, en, ru }` рядом с компонентом (`<comp>.messages.ts`), где `M` — интерфейс текстов
+  компонента; фабрики нет, чтобы неиспользуемый каталог уходил при tree-shaking. Пропущенный ключ
+  или неверная сигнатура в `en` или `ru` — ошибка typecheck. Каждый пакет экспортирует обычный
+  интерфейс своего словаря (`NuiVueMessages`, `NuiFormsMessages`, `NuiTablePackageMessages`,
+  `NuiContentPackageMessages`, `NuiEditorPackageMessages`): пространство имён → интерфейс текстов.
+  Глобального реестра нет (до 2026-10-19 пакеты дописывали `NuiMessages` в primitives через
+  module augmentation; пользователь отверг это как костыль). Переопределения типизирует
+  приложение: `NuiLocaleMessages<NuiVueMessages & NuiFormsMessages>` проверяет пространства имён,
+  ключи и сигнатуры подключённых пакетов, а сам параметр `messages` конфигурации принимает
+  любой словарь; при слиянии берётся только значение того же вида, что у встроенного текста.
+- `useMessages(catalog, locale?)` → `ComputedRef<M>`. Локаль — проп, конфиг или
   `en-US`; цепочка тегов `en → язык → полный тег` строится через `Intl.Locale().baseName`; на
   каждом теге сначала встроенный текст, затем слои конфига снаружи внутрь. Поэтому более точный
   тег побеждает ближний слой, а `en`-оверрайд служит только запасным текстом.

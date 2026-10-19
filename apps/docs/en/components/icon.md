@@ -2,8 +2,8 @@
 
 The kit components request icons by alias through a registry, and `NuiIcon` draws what `icon`
 holds: an alias from the registry or a ready component. By default the aliases point to
-[Lucide](https://lucide.dev). Every icon loads as a separate module on first use, and only
-the requested glyphs reach the bundle.
+[Lucide](https://lucide.dev) from the `@lucide/vue` package. Every kit icon is a separate small
+module that `NuiIcon` loads on the first use of its alias and keeps.
 
 <Example name="icon/Basic" />
 
@@ -27,40 +27,31 @@ without the registry.
 
 <Example name="icon/Custom" />
 
-### Own set
+### Own icons instead of kit icons
 
-The registry is an "alias → component" object. `createNuiConfig` passes it for the app,
-`provideNuiConfig` in the `setup` of an own component for a subtree. Nested calls layer and
-override only the given aliases.
+The kit aliases (`check`, `x`, `chevron-down`, `loader` and others) can be overridden. The app
+uses `createNuiConfig`, a subtree uses `provideNuiConfig` in the `setup` of an own component. Nested calls layer and change only the given aliases; the rest stay Lucide icons.
 
 ```ts
 import { createApp } from 'vue';
 import { createNuiConfig, lazyIcon } from '@numior/vue';
 import CheckIcon from './icons/CheckIcon.vue';
 
-const appIcons = {
-  check: CheckIcon,
-  loader: lazyIcon(() => import('./icons/SpinnerIcon.vue')),
-  'app:save': lazyIcon(() => import('./icons/SaveIcon.vue')),
-};
-
-declare module '@numior/primitives' {
-  interface NuiIconSets {
-    app: typeof appIcons;
-  }
-}
-
 createApp(App)
-  .use(createNuiConfig({ icons: appIcons }))
+  .use(
+    createNuiConfig({
+      icons: {
+        check: CheckIcon,
+        loader: lazyIcon(() => import('./icons/SpinnerIcon.vue')),
+      },
+    }),
+  )
   .mount('#app');
 ```
 
-An alias is a key of one of the sets in `NuiIconSets`. The kit declares its set there, the
-editor declares its own, and an app adds one line with its registry as above.
-
-So `icon` takes only existing keys and a typo becomes a type error: `<NuiIcon icon="app:save" />`
-type-checks, `<NuiIcon icon="app:sav" />` does not. `lazyIcon` loads the module once on the first
-render.
+The registry keys are kit aliases only, so a typo becomes a type error. App icons need no
+alias: the component goes into `icon` directly, for example `<NuiIcon :icon="Save" />` with
+`import { Save } from '@lucide/vue'`.
 
 ## Accessibility
 

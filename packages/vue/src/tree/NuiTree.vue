@@ -74,7 +74,7 @@ import {
   useMessages,
   useVirtualFrame,
   useVirtualList,
-  type IconAlias,
+  type IconSource,
 } from '@numior/primitives';
 import NuiEmpty from '../empty/NuiEmpty.vue';
 import NuiIcon from '../icon/NuiIcon.vue';
@@ -241,7 +241,7 @@ const rootStyle = computed(() => ({
 const folderFor = (node: TreeNode<T>): boolean =>
   icons && node.item.icon === undefined && node.hasChildren;
 
-const iconFor = (node: TreeNode<T>): IconAlias | undefined => {
+const iconFor = (node: TreeNode<T>): IconSource | undefined => {
   if (!icons || node.item.icon === false) {
     return undefined;
   }

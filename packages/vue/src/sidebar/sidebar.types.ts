@@ -1,5 +1,5 @@
 import type { NuiRouteLocation } from '../shared/destination';
-import type { IconAlias } from '@numior/primitives';
+import type { IconSource } from '@numior/primitives';
 import type { Component } from 'vue';
 import type { NuiListEntry } from '../shared/options';
 
@@ -29,7 +29,7 @@ export interface NuiSidebarGroupProps {
 
 export interface NuiSidebarItemProps {
   label: string;
-  icon?: IconAlias | false | undefined;
+  icon?: IconSource | false | undefined;
   href?: string | undefined;
   to?: NuiRouteLocation | undefined;
   as?: string | Component | undefined;
@@ -41,7 +41,7 @@ export interface NuiSidebarItemProps {
 
 export interface NuiSidebarSubProps {
   label: string;
-  icon?: IconAlias | false | undefined;
+  icon?: IconSource | false | undefined;
   active?: boolean | undefined;
   id?: string | undefined;
 }

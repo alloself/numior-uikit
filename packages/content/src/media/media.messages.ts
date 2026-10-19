@@ -7,7 +7,7 @@ export interface NuiContentMessages {
   readonly embedTitle: (params: { readonly provider: string }) => string;
 }
 
-export const contentMessages: NuiMessageCatalog<'content'> = {
+export const contentMessages: NuiMessageCatalog<NuiContentMessages> = {
   namespace: 'content',
   en: {
     openImage: 'Open the image',

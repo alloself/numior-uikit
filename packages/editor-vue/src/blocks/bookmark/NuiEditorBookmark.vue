@@ -32,6 +32,7 @@
 </template>
 
 <script setup lang="ts">
+import { SquarePlay } from '@lucide/vue';
 import { webAddress } from '@numior/content';
 import { useMessages } from '@numior/primitives';
 import { computed, ref, useTemplateRef, watch } from 'vue';
@@ -82,7 +83,7 @@ const actions = computed((): LinkBarAction[] => [
         {
           key: 'embed',
           label: texts.value.toEmbed,
-          icon: 'embed',
+          icon: SquarePlay,
           run: () => {
             links.turn(node.id, 'embed');
           },

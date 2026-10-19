@@ -1,4 +1,4 @@
-import type { IconAlias } from '@numior/primitives';
+import type { IconSource } from '@numior/primitives';
 import type { NuiSize } from '../shared/scale.types';
 
 export type NuiTabsActivation = 'automatic' | 'manual';
@@ -8,7 +8,7 @@ export type NuiTabsVariant = 'line' | 'soft';
 export interface NuiTabDescriptor {
   readonly value: string;
   readonly label: string;
-  readonly icon?: IconAlias | undefined;
+  readonly icon?: IconSource | undefined;
   readonly disabled?: boolean | undefined;
   readonly closable?: boolean | undefined;
 }
@@ -34,7 +34,7 @@ export interface NuiTabListProps {
 
 export interface NuiTabProps {
   value: string;
-  icon?: IconAlias | undefined;
+  icon?: IconSource | undefined;
   disabled?: boolean | undefined;
   closable?: boolean | undefined;
 }

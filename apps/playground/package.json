@@ -9,6 +9,7 @@
     "preview": "vp preview --host 127.0.0.1 --port 4173 --strictPort"
   },
   "dependencies": {
+    "@lucide/vue": "1.50.0",
     "@numior/content": "workspace:*",
     "@numior/editor-core": "workspace:*",
     "@numior/editor-vue": "workspace:*",

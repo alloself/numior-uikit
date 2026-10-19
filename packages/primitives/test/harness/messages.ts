@@ -14,13 +14,11 @@ interface ProbeMessages {
   readonly count: (params: { readonly count: number }) => string;
 }
 
-declare module '../../src' {
-  interface NuiMessages {
-    readonly probe: ProbeMessages;
-  }
+export interface ProbeDictionary {
+  readonly probe: ProbeMessages;
 }
 
-export const probeMessages: NuiMessageCatalog<'probe'> = {
+export const probeMessages: NuiMessageCatalog<ProbeMessages> = {
   namespace: 'probe',
   en: { close: 'Close', open: 'Open', count: ({ count }) => `${count} selected` },
   ru: { close: 'Закрыть', open: 'Открыть', count: ({ count }) => `Выбрано: ${count}` },

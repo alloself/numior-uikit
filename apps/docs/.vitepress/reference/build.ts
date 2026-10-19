@@ -115,7 +115,7 @@ export const buildReference = async (root: string, docs: DocsMap): Promise<Refer
       ),
       tokens: parseThemeTokens(readFileSync(join(root, 'packages/tokens/src/theme.css'), 'utf8')),
       icons: parseIconAliases(
-        readFileSync(join(root, 'packages/vue/src/icon/default-icons.ts'), 'utf8'),
+        readFileSync(join(root, 'packages/primitives/src/icons/icon-aliases.ts'), 'utf8'),
       ),
     },
     problems,

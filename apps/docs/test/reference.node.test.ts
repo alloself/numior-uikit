@@ -41,10 +41,11 @@ const THEME_CSS = `
 `;
 
 const ICONS_SOURCE = `
-export const defaultIcons = {
-  check: lazyIcon(() => import('lucide-vue-next/dist/esm/icons/check.js')),
-  'chevron-down': lazyIcon(() => import('lucide-vue-next/dist/esm/icons/chevron-down.js')),
-};
+export const iconAliases = {
+  check: 'check',
+  'chevron-down': 'chevron-down',
+  loader: 'loader-circle',
+} as const;
 `;
 
 const buttonEntry = () => {
@@ -168,6 +169,7 @@ describe('docs reference', () => {
     expect(parseIconAliases(ICONS_SOURCE)).toEqual([
       { alias: 'check', icon: 'check' },
       { alias: 'chevron-down', icon: 'chevron-down' },
+      { alias: 'loader', icon: 'loader-circle' },
     ]);
   });
 

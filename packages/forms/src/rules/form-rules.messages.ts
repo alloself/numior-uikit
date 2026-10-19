@@ -19,7 +19,7 @@ const characters = (count: number): string =>
 const items = (count: number): string =>
   plural('ru', count, { one: 'элемента', few: 'элементов', many: 'элементов', other: 'элемента' });
 
-export const formRulesMessages: NuiMessageCatalog<'formRules'> = {
+export const formRulesMessages: NuiMessageCatalog<NuiFormRulesMessages> = {
   namespace: 'formRules',
   en: {
     required: 'Fill in this field',

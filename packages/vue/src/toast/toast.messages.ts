@@ -5,7 +5,7 @@ export interface NuiToastMessages {
   readonly label: string;
 }
 
-export const toastMessages: NuiMessageCatalog<'toast'> = {
+export const toastMessages: NuiMessageCatalog<NuiToastMessages> = {
   namespace: 'toast',
   en: { close: 'Close', label: 'Notifications' },
   ru: { close: 'Закрыть', label: 'Уведомления' },

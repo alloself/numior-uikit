@@ -4,7 +4,7 @@ export interface NuiChipMessages {
   readonly remove: string;
 }
 
-export const chipMessages: NuiMessageCatalog<'chip'> = {
+export const chipMessages: NuiMessageCatalog<NuiChipMessages> = {
   namespace: 'chip',
   en: { remove: 'Remove' },
   ru: { remove: 'Убрать' },

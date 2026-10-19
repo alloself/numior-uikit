@@ -1,5 +1,5 @@
 import { createApp } from 'vue';
-import { createNuiConfig, type NuiLocaleMessages } from '@numior/vue';
+import { createNuiConfig, type NuiLocaleMessages, type NuiVueMessages } from '@numior/vue';
 import { createShikiHighlighter } from '@numior/vue/shiki';
 import '@numior/tokens/theme.css';
 import '@numior/tokens/base.css';
@@ -14,7 +14,7 @@ import './tailwind.css';
 import './style.css';
 import App from './App.vue';
 
-const messages: NuiLocaleMessages = {
+const messages: NuiLocaleMessages<NuiVueMessages> = {
   de: {
     numberField: { increment: 'Erhöhen', decrement: 'Verringern' },
     timeField: { clock: 'Uhrzeit wählen', empty: 'Keine Uhrzeiten verfügbar' },

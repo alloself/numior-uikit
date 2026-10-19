@@ -1,43 +1,42 @@
+import { Sun } from '@lucide/vue';
 import { describe, expect, it } from 'vite-plus/test';
-import Sun from 'lucide-vue-next/dist/esm/icons/sun.js';
-import { markRaw, type Component } from 'vue';
-import { IconDriver } from './drivers/icon';
+import { markRaw } from 'vue';
+import { iconAliases } from '../src';
+import { IconDriver, kitAliases } from './drivers/icon';
 
 const Custom = markRaw(Sun);
 
-declare module '@numior/primitives' {
-  interface NuiIconSets {
-    test: Readonly<Record<'test-brand' | 'test-unregistered', Component>>;
-  }
-}
-
 describe('NuiIcon', () => {
-  it('lazily renders the Lucide default for a known alias as decorative markup', async () => {
+  it('renders the Lucide default for a known alias as decorative markup', async () => {
     const icon = IconDriver.mount({ icon: 'check' });
     await icon.ready();
     expect(icon.decorative).toBe(true);
     expect(icon.glyphClasses).toContain('lucide-check');
     const trash = IconDriver.mount({ icon: 'trash' });
     await trash.ready();
-    expect(trash.glyphClasses).toContain('lucide-trash-2');
+    expect(trash.glyphClasses).toContain('lucide-trash');
   });
 
-  it('prefers the provided registry, takes a component as is and stays empty for a declared alias nobody registered', async () => {
+  it('prefers the provided registry and takes a component as is', async () => {
     const fromRegistry = IconDriver.mount({ icon: 'check' }, { icons: { check: Custom } });
     await fromRegistry.ready();
     expect(fromRegistry.glyphClasses).toContain('lucide-sun');
     const fromDefaults = IconDriver.mount({ icon: 'x' }, { icons: { check: Custom } });
     await fromDefaults.ready();
     expect(fromDefaults.glyphClasses).toContain('lucide-x');
-    const appAlias = IconDriver.mount({ icon: 'test-brand' }, { icons: { 'test-brand': Custom } });
-    await appAlias.ready();
-    expect(appAlias.glyphClasses).toContain('lucide-sun');
     const component = IconDriver.mount({ icon: Custom });
     await component.ready();
     expect(component.glyphClasses).toContain('lucide-sun');
-    const missing = IconDriver.mount({ icon: 'test-unregistered' }, { expectGlyph: false });
-    await missing.ready();
-    expect(missing.empty).toBe(true);
+  });
+
+  it('draws the Lucide file of every kit alias', async () => {
+    for (const alias of kitAliases()) {
+      const icon = IconDriver.mount({ icon: alias });
+
+      await icon.ready();
+
+      expect(icon.glyphClasses).toContain(`lucide-${iconAliases[alias]}`);
+    }
   });
 
   it('turns and scales its glyph without swapping it', async () => {

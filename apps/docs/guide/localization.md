@@ -23,37 +23,44 @@
 ## Переопределить тексты
 
 ```ts
-createNuiConfig({
-  locale: 'ru-RU',
-  messages: { ru: { dialog: { close: 'Закрыть окно' } } },
-});
+import { createNuiConfig, type NuiLocaleMessages, type NuiVueMessages } from '@numior/vue';
+import type { NuiFormsMessages } from '@numior/forms';
+
+const messages: NuiLocaleMessages<NuiVueMessages & NuiFormsMessages> = {
+  ru: { dialog: { close: 'Закрыть окно' } },
+};
+
+createNuiConfig({ locale: 'ru-RU', messages });
 ```
 
 Меняются только указанные ключи. `messages` принимает значение, ref или геттер; вложенный
-`provideNuiConfig({ messages })` добавляет слой для поддерева. Ключи типизированы: опечатка
-в пространстве имён или ключе — ошибка TypeScript.
+`provideNuiConfig({ messages })` добавляет слой для поддерева.
+
+Словарь каждого пакета — обычный экспортируемый тип: `NuiVueMessages`, `NuiFormsMessages`,
+`NuiTablePackageMessages` и другие. Приложение перечисляет в `NuiLocaleMessages<...>` пакеты,
+которые подключило, и опечатка в пространстве имён, ключе или виде текста становится ошибкой
+TypeScript.
 
 ## Свой язык
 
 ```ts
-import { createNuiConfig, plural } from '@numior/vue';
+import { createNuiConfig, plural, type NuiLocaleMessages, type NuiVueMessages } from '@numior/vue';
 
-createNuiConfig({
-  locale: 'de-DE',
-  messages: {
-    de: {
-      numberField: { increment: 'Erhöhen', decrement: 'Verringern' },
-      upload: {
-        moreThan: ({ count }) =>
-          `Mehr als ${count} ${plural('de', count, { one: 'Datei', other: 'Dateien' })}`,
-      },
+const messages: NuiLocaleMessages<NuiVueMessages> = {
+  de: {
+    numberField: { increment: 'Erhöhen', decrement: 'Verringern' },
+    upload: {
+      moreThan: ({ count }) =>
+        `Mehr als ${count} ${plural('de', count, { one: 'Datei', other: 'Dateien' })}`,
     },
   },
-});
+};
+
+createNuiConfig({ locale: 'de-DE', messages });
 ```
 
-Недостающие тексты частичного языка берутся из английского; полный словарь описывает тип
-`NuiVueMessages`, формы добавляют `NuiFormsMessages`. Тексты с параметрами — функции одного
+Недостающие тексты частичного языка берутся из английского; полный словарь кита описывает тип
+`NuiVueMessages`, у остальных пакетов — свои типы. Тексты с параметрами — функции одного
 объекта; `plural(language, count, forms)` выбирает форму через `Intl.PluralRules` по языку
 текста, а не по локали приложения.
 

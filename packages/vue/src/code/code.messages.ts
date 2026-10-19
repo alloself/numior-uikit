@@ -7,7 +7,7 @@ export interface NuiCodeMessages {
   readonly collapse: string;
 }
 
-export const codeMessages: NuiMessageCatalog<'code'> = {
+export const codeMessages: NuiMessageCatalog<NuiCodeMessages> = {
   namespace: 'code',
   en: { copy: 'Copy code', copied: 'Copied', expand: 'Show more', collapse: 'Show less' },
   ru: {

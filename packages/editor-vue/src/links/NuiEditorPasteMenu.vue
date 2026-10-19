@@ -11,6 +11,7 @@
 </template>
 
 <script setup lang="ts">
+import { Bookmark, SquarePlay } from '@lucide/vue';
 import { ifDefined, onlyIf } from '../editor/only-if';
 import { useMessages } from '@numior/primitives';
 import { NuiMenu, type NuiMenuEntry, type NuiMenuExposed } from '@numior/vue';
@@ -40,14 +41,14 @@ const choose = (kind: LinkKind): void => {
 const items = computed((): NuiMenuEntry[] => [
   ...ifDefined<string, NuiMenuEntry>(provider, (name) => ({
     label: texts.value.pasteEmbed({ provider: name }),
-    icon: 'embed',
+    icon: SquarePlay,
     onSelect: () => {
       choose('embed');
     },
   })),
   ...onlyIf<NuiMenuEntry>(bookmark, () => ({
     label: texts.value.bookmark,
-    icon: 'bookmark',
+    icon: Bookmark,
     onSelect: () => {
       choose('bookmark');
     },

@@ -1,4 +1,4 @@
-import type { IconAlias } from '@numior/primitives';
+import type { IconSource } from '@numior/primitives';
 import type { NuiOptionKey } from '../shared/options';
 import type { NuiSize } from '../shared/scale.types';
 
@@ -9,7 +9,7 @@ export type NuiToggleGroupOrientation = 'horizontal' | 'vertical';
 export interface NuiToggleItem<T = string> {
   readonly value: T;
   readonly label: string;
-  readonly icon?: IconAlias | undefined;
+  readonly icon?: IconSource | undefined;
   readonly disabled?: boolean | undefined;
 }
 

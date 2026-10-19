@@ -6,13 +6,10 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import { useIcons, type IconRegistry } from '@numior/primitives';
-import { defaultIcons } from './default-icons';
+import { useIcon } from './use-icon';
 import type { NuiIconProps } from './icon.types';
 
 const { icon, transform } = defineProps<NuiIconProps>();
-const icons = useIcons();
-const kitIcons: IconRegistry = defaultIcons;
 
 const transformStyle = computed(() =>
   transform === undefined
@@ -23,5 +20,5 @@ const transformStyle = computed(() =>
       },
 );
 
-const glyph = computed(() => (typeof icon === 'string' ? (icons[icon] ?? kitIcons[icon]) : icon));
+const glyph = useIcon(() => icon);
 </script>

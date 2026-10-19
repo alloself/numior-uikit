@@ -1,9 +1,9 @@
-import type { IconAlias } from '@numior/primitives';
+import type { IconSource } from '@numior/primitives';
 
 export type NuiEmptySize = 'sm' | 'md';
 
 export interface NuiEmptyProps {
-  icon?: IconAlias | undefined;
+  icon?: IconSource | undefined;
   hideIcon?: boolean | undefined;
   title?: string | undefined;
   description?: string | undefined;

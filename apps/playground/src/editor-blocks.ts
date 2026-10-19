@@ -1,3 +1,4 @@
+import { ListTodo } from '@lucide/vue';
 import { extendContentSchema } from '@numior/content';
 import { insertLeaf, renderTag } from '@numior/editor-core';
 import { defineBlock } from '@numior/editor-vue';
@@ -32,7 +33,7 @@ export const taskStatusBlock = defineBlock({
     {
       key: 'task_status',
       label: 'Статус задачи',
-      icon: 'list-todo',
+      icon: ListTodo,
       keywords: ['status', 'task', 'статус'],
       kind: 'command',
       command: insertLeaf('task_status'),

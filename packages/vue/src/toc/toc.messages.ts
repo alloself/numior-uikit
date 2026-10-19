@@ -4,7 +4,7 @@ export interface NuiTocMessages {
   readonly title: string;
 }
 
-export const tocMessages: NuiMessageCatalog<'toc'> = {
+export const tocMessages: NuiMessageCatalog<NuiTocMessages> = {
   namespace: 'toc',
   en: { title: 'On this page' },
   ru: { title: 'На странице' },

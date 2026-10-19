@@ -12,7 +12,7 @@ export interface NuiDatePickerMessages {
   readonly timeGlyphs: string;
 }
 
-export const datePickerMessages: NuiMessageCatalog<'datePicker'> = {
+export const datePickerMessages: NuiMessageCatalog<NuiDatePickerMessages> = {
   namespace: 'datePicker',
   en: {
     open: 'Choose date',

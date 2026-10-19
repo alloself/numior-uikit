@@ -4,8 +4,8 @@ const docs: DocsMap = {
   NuiIcon: {
     props: {
       icon: {
-        ru: 'Алиас из реестра иконок или готовый компонент. Алиасы типизированы: алиасы — это ключи наборов иконок: кит и пакеты объявляют свои наборы в `NuiIconSets`, приложение — свой.',
-        en: 'An alias from the icon registry or a ready component. Aliases are typed: aliases are the keys of the icon sets: the kit and packages declare their sets in `NuiIconSets`, an app declares its own.',
+        ru: 'Алиас иконки кита или готовый компонент. Алиас берёт иконку из конфигурации, а без неё — иконку Lucide, загруженную при первом обращении.',
+        en: 'A kit icon alias or a ready component. An alias takes the icon from the configuration, or else the Lucide icon loaded on first use.',
       },
       transform: {
         ru: 'Преобразование глифа: `rotate` в градусах и `scale`; смена анимируется, сам глиф не меняется (шеврон раскрытия).',

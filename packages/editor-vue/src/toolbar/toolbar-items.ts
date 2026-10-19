@@ -1,4 +1,24 @@
 import {
+  Bold,
+  Braces,
+  Heading1,
+  Heading2,
+  Heading3,
+  Italic,
+  List,
+  ListIndentDecrease,
+  ListIndentIncrease,
+  ListOrdered,
+  ListTodo,
+  Pilcrow,
+  Redo2,
+  SeparatorHorizontal,
+  Strikethrough,
+  TextQuote,
+  Underline,
+  Undo2,
+} from '@lucide/vue';
+import {
   activeBlock,
   activeMarks,
   ancestorTypes,
@@ -17,14 +37,14 @@ import {
   type Command,
   type EditorState,
 } from '@numior/editor-core';
-import type { IconAlias } from '@numior/primitives';
+import type { IconSource } from '@numior/primitives';
 import type { NuiEditorMessages } from '../editor/editor.messages';
 import type { SlashItem } from '../slash/slash-items';
 import { onlyIf } from '../editor/only-if';
 
 export interface ToolbarFace {
   readonly label: string;
-  readonly icon: IconAlias;
+  readonly icon: IconSource;
   readonly shortcut?: string | undefined;
   readonly pressed?: boolean | undefined;
   readonly disabled: boolean;
@@ -61,7 +81,7 @@ export interface ToolbarOptions {
 export interface ToolbarBlock {
   readonly key: string;
   readonly label: string;
-  readonly icon: IconAlias;
+  readonly icon: IconSource;
   readonly active: boolean;
   readonly command: Command;
 }
@@ -70,7 +90,7 @@ export interface ToolbarBlocks {
   readonly kind: 'blocks';
   readonly key: 'blocks';
   readonly label: string;
-  readonly icon: IconAlias;
+  readonly icon: IconSource;
   readonly options: readonly ToolbarBlock[];
 }
 
@@ -107,26 +127,26 @@ interface Facts {
   readonly ancestors: readonly string[];
 }
 
-const MARKS: readonly (readonly [string, keyof NuiEditorMessages, IconAlias, string])[] = [
-  ['bold', 'bold', 'bold', 'mod+b'],
-  ['italic', 'italic', 'italic', 'mod+i'],
-  ['underline', 'underline', 'underline', 'mod+u'],
-  ['strike', 'strike', 'strikethrough', 'mod+shift+s'],
+const MARKS: readonly (readonly [string, keyof NuiEditorMessages, IconSource, string])[] = [
+  ['bold', 'bold', Bold, 'mod+b'],
+  ['italic', 'italic', Italic, 'mod+i'],
+  ['underline', 'underline', Underline, 'mod+u'],
+  ['strike', 'strike', Strikethrough, 'mod+shift+s'],
   ['code', 'code', 'code', 'mod+e'],
 ];
 
-const LISTS: readonly (readonly [string, keyof NuiEditorMessages, IconAlias])[] = [
-  ['bullet_list', 'bulletList', 'list'],
-  ['ordered_list', 'orderedList', 'list-ordered'],
-  ['todo_list', 'todoList', 'list-todo'],
+const LISTS: readonly (readonly [string, keyof NuiEditorMessages, IconSource])[] = [
+  ['bullet_list', 'bulletList', List],
+  ['ordered_list', 'orderedList', ListOrdered],
+  ['todo_list', 'todoList', ListTodo],
 ];
 
 const HEADINGS = [1, 2, 3] as const;
 
-const HEADING_ICONS: Readonly<Record<(typeof HEADINGS)[number], IconAlias>> = {
-  1: 'heading-1',
-  2: 'heading-2',
-  3: 'heading-3',
+const HEADING_ICONS: Readonly<Record<(typeof HEADINGS)[number], IconSource>> = {
+  1: Heading1,
+  2: Heading2,
+  3: Heading3,
 };
 
 const textOf = (texts: NuiEditorMessages, key: keyof NuiEditorMessages): string => {
@@ -140,7 +160,7 @@ const historyItems = (facts: Facts): ToolbarItem[] => [
     kind: 'action',
     key: 'undo',
     label: facts.texts.undo,
-    icon: 'undo',
+    icon: Undo2,
     shortcut: 'mod+z',
     disabled: undoDepth(facts.state) === 0,
     command: undo,
@@ -149,7 +169,7 @@ const historyItems = (facts: Facts): ToolbarItem[] => [
     kind: 'action',
     key: 'redo',
     label: facts.texts.redo,
-    icon: 'redo',
+    icon: Redo2,
     shortcut: 'mod+shift+z',
     disabled: redoDepth(facts.state) === 0,
     command: redo,
@@ -174,7 +194,7 @@ const blockOptions = (facts: Facts): ToolbarBlock[] => {
     ...onlyIf<ToolbarBlock>(schema.nodes.has('paragraph'), () => ({
       key: 'paragraph',
       label: facts.texts.text,
-      icon: 'text',
+      icon: Pilcrow,
       active: current?.type === 'paragraph',
       command: setBlockType('paragraph'),
     })),
@@ -182,7 +202,7 @@ const blockOptions = (facts: Facts): ToolbarBlock[] => {
     ...onlyIf<ToolbarBlock>(schema.nodes.has('code_block'), () => ({
       key: 'code_block',
       label: facts.texts.codeBlock,
-      icon: 'code-block',
+      icon: Braces,
       active: current?.type === 'code_block',
       command: setBlockType('code_block'),
     })),
@@ -294,7 +314,7 @@ const blockActions = (facts: Facts): ToolbarItem[] => {
       kind: 'action',
       key: 'blockquote',
       label: texts.quote,
-      icon: 'quote',
+      icon: TextQuote,
       pressed: ancestors.includes('blockquote'),
       disabled: !quote(state),
       command: quote,
@@ -303,7 +323,7 @@ const blockActions = (facts: Facts): ToolbarItem[] => {
       kind: 'action',
       key: 'divider',
       label: texts.divider,
-      icon: 'separator',
+      icon: SeparatorHorizontal,
       disabled: !divider(state),
       command: divider,
     })),
@@ -317,7 +337,7 @@ const nestingItems = ({ state, texts, options }: Facts): ToolbarItem[] =>
           kind: 'action',
           key: 'outdent',
           label: texts.outdent,
-          icon: 'list-indent-decrease',
+          icon: ListIndentDecrease,
           disabled: !liftListItem(state),
           command: liftListItem,
         },
@@ -325,7 +345,7 @@ const nestingItems = ({ state, texts, options }: Facts): ToolbarItem[] =>
           kind: 'action',
           key: 'indent',
           label: texts.indent,
-          icon: 'list-indent-increase',
+          icon: ListIndentIncrease,
           disabled: !sinkListItem(state),
           command: sinkListItem,
         },

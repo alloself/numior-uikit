@@ -1,12 +1,12 @@
 import type { NuiRouteLocation } from './destination';
-import type { IconAlias } from '@numior/primitives';
+import type { IconSource } from '@numior/primitives';
 
 export interface NuiListEntry<T = string> {
   readonly key?: string | undefined;
   readonly value?: T | undefined;
   readonly label: string;
   readonly description?: string | undefined;
-  readonly icon?: IconAlias | false | undefined;
+  readonly icon?: IconSource | false | undefined;
   readonly disabled?: boolean | undefined;
   readonly href?: string | undefined;
   readonly to?: NuiRouteLocation | undefined;

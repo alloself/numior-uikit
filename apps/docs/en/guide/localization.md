@@ -23,37 +23,44 @@ their own `locale` prop. Labels never diverge from the format.
 ## Override texts
 
 ```ts
-createNuiConfig({
-  locale: 'en-US',
-  messages: { en: { dialog: { close: 'Close window' } } },
-});
+import { createNuiConfig, type NuiLocaleMessages, type NuiVueMessages } from '@numior/vue';
+import type { NuiFormsMessages } from '@numior/forms';
+
+const messages: NuiLocaleMessages<NuiVueMessages & NuiFormsMessages> = {
+  en: { dialog: { close: 'Close window' } },
+};
+
+createNuiConfig({ locale: 'en-US', messages });
 ```
 
 Only the given keys change. `messages` takes a value, a ref or a getter; a nested
-`provideNuiConfig({ messages })` adds a layer for a subtree. The keys are typed: a typo in a
-namespace or a key is a TypeScript error.
+`provideNuiConfig({ messages })` adds a layer for a subtree.
+
+The dictionary of every package is a plain exported type: `NuiVueMessages`, `NuiFormsMessages`,
+`NuiTablePackageMessages` and others. The app lists the packages it uses in
+`NuiLocaleMessages<...>`, and a typo in a namespace, a key or a text kind becomes a TypeScript
+error.
 
 ## Own language
 
 ```ts
-import { createNuiConfig, plural } from '@numior/vue';
+import { createNuiConfig, plural, type NuiLocaleMessages, type NuiVueMessages } from '@numior/vue';
 
-createNuiConfig({
-  locale: 'de-DE',
-  messages: {
-    de: {
-      numberField: { increment: 'Erhöhen', decrement: 'Verringern' },
-      upload: {
-        moreThan: ({ count }) =>
-          `Mehr als ${count} ${plural('de', count, { one: 'Datei', other: 'Dateien' })}`,
-      },
+const messages: NuiLocaleMessages<NuiVueMessages> = {
+  de: {
+    numberField: { increment: 'Erhöhen', decrement: 'Verringern' },
+    upload: {
+      moreThan: ({ count }) =>
+        `Mehr als ${count} ${plural('de', count, { one: 'Datei', other: 'Dateien' })}`,
     },
   },
-});
+};
+
+createNuiConfig({ locale: 'de-DE', messages });
 ```
 
-Missing texts of a partial language come from English; the `NuiVueMessages` type describes
-the full dictionary, the forms add `NuiFormsMessages`. Texts with parameters are functions of
+Missing texts of a partial language come from English; the `NuiVueMessages` type describes the
+full kit dictionary, the other packages have their own types. Texts with parameters are functions of
 one object. `plural(language, count, forms)` picks the form through `Intl.PluralRules` by the
 language of the text, not the app locale.
 

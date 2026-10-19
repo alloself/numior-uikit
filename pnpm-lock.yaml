@@ -161,6 +161,9 @@ importers:
 
   apps/playground:
     dependencies:
+      '@lucide/vue':
+        specifier: 1.50.0
+        version: 1.50.0(vue@3.5.43(typescript@5.9.3))
       '@numior/content':
         specifier: workspace:*
         version: link:../../packages/content
@@ -235,6 +238,9 @@ importers:
 
   packages/editor-vue:
     dependencies:
+      '@lucide/vue':
+        specifier: 1.50.0
+        version: 1.50.0(vue@3.5.43(typescript@5.9.3))
       '@numior/content':
         specifier: workspace:*
         version: link:../content
@@ -256,9 +262,6 @@ importers:
       '@vueuse/core':
         specifier: 15.0.0
         version: 15.0.0(vue@3.5.43(typescript@5.9.3))
-      lucide-vue-next:
-        specifier: 1.0.0
-        version: 1.0.0(vue@3.5.43(typescript@5.9.3))
       vue:
         specifier: ^3.5.0
         version: 3.5.43(typescript@5.9.3)
@@ -401,13 +404,13 @@ importers:
       '@vueuse/core':
         specifier: 15.0.0
         version: 15.0.0(vue@3.5.43(typescript@5.9.3))
-      lucide-vue-next:
-        specifier: 1.0.0
-        version: 1.0.0(vue@3.5.43(typescript@5.9.3))
       vue:
         specifier: ^3.5.0
         version: 3.5.43(typescript@5.9.3)
     devDependencies:
+      '@lucide/vue':
+        specifier: 1.50.0
+        version: 1.50.0(vue@3.5.43(typescript@5.9.3))
       '@vue/test-utils':
         specifier: 2.5.1
         version: 2.5.1(@vue/compiler-dom@3.5.43)(@vue/server-renderer@3.5.43)(vue@3.5.43(typescript@5.9.3))
@@ -1072,6 +1075,11 @@ packages:
 
   '@kwsites/promise-deferred@1.1.1':
     resolution: {integrity: sha512-GaHYm+c0O9MjZRu0ongGBRbinu8gVAMd2UZjji6jVmqKtZluZnptXGWhz1E8j8D2HJ3f/yMxKAUC0b+57wncIw==}
+
+  '@lucide/vue@1.50.0':
+    resolution: {integrity: sha512-/cYAYqHIMUcVbhGYPk+GqgPqlqTKCFfyGrpXvH/6z5v7sWRoWBHViYwO3cNgmupZCBY+4WB016wN6CkXNcy0Yw==}
+    peerDependencies:
+      vue: '>=3.0.1'
 
   '@mapbox/node-pre-gyp@2.0.3':
     resolution: {integrity: sha512-uwPAhccfFJlsfCxMYTwOdVfOz3xqyj8xYL3zJj8f0pb30tLohnnFPhLuqp4/qoEz8sNxe4SESZedcBojRefIzg==}
@@ -4374,11 +4382,6 @@ packages:
   lru-cache@5.1.1:
     resolution: {integrity: sha512-KpNARQA3Iwv+jTA0utUVVbrh+Jlrr1Fv0e56GGzAFOXN7dk/FviaDW8LHmK52DlcH4WP2n6gI8vN1aesBFgo9w==}
 
-  lucide-vue-next@1.0.0:
-    resolution: {integrity: sha512-V6SPvx1IHTj/UY+FrIYWV5faISsPSb8BnWSFDxAtezWKvWc9ZZ40PDrdu1/Qb5vg4lHWr1hs1BAMGVGm6V1Xdg==}
-    peerDependencies:
-      vue: '>=3.0.1'
-
   lz-string@1.5.0:
     resolution: {integrity: sha512-h5bgJWpxJNswbU7qCrV0tIKQCaS3blPDrqKWx+QxzuzL1zGUzij9XCWLrSLsJPu5t+eWA/ycetzYAO5IOMcWAQ==}
     hasBin: true
@@ -7083,6 +7086,10 @@ snapshots:
       - supports-color
 
   '@kwsites/promise-deferred@1.1.1': {}
+
+  '@lucide/vue@1.50.0(vue@3.5.43(typescript@5.9.3))':
+    dependencies:
+      vue: 3.5.43(typescript@5.9.3)
 
   '@mapbox/node-pre-gyp@2.0.3':
     dependencies:
@@ -10417,10 +10424,6 @@ snapshots:
   lru-cache@5.1.1:
     dependencies:
       yallist: 3.1.1
-
-  lucide-vue-next@1.0.0(vue@3.5.43(typescript@5.9.3)):
-    dependencies:
-      vue: 3.5.43(typescript@5.9.3)
 
   lz-string@1.5.0: {}
 
