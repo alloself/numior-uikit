@@ -7,6 +7,7 @@ import type { FormatToken, FormattedValue, NumberLocale } from './format/format.
 import { currencyFormat } from './format/number-locale';
 import { readValueText } from './format/read-value';
 import type { FormulaFailure, FormulaNode } from './formula/formula.types';
+import { referenceRange } from './formula/origin';
 import { parseFormula } from './formula/parser';
 import { printFormula } from './formula/printer';
 import { formulaReferences, type FormulaReference } from './formula/references';
@@ -253,16 +254,21 @@ const resultFormat = (node: FormulaNode, locale: NumberLocale): string | undefin
   return RATE_RESULTS.has(name) ? '0%' : undefined;
 };
 
-const referencedFormat = (node: FormulaNode, book: Workbook, sheet: Sheet): string | undefined => {
+const referencedFormat = (
+  node: FormulaNode,
+  book: Workbook,
+  sheet: Sheet,
+  origin: CellAddress,
+): string | undefined => {
   const first = inherits(node) ? formulaReferences(node).find(isCellOrRange) : undefined;
   const source = first?.sheet === undefined ? sheet : book.sheet(first.sheet);
+  const range = first === undefined ? undefined : referenceRange(first, origin);
 
-  if (first === undefined || source === undefined) {
+  if (range === undefined || source === undefined) {
     return undefined;
   }
 
-  const ref = first.kind === 'cell' ? first.ref : first.from;
-  const id = source.formats.get(ref.row, ref.col);
+  const id = source.formats.get(range.top, range.left);
 
   return id === 0 ? undefined : book.formats.code(id);
 };
@@ -286,7 +292,7 @@ export const createCellEditor = (book: Workbook, calculator: Calculator): CellEd
     text: string,
     locale: BookLocale,
   ): EntryResult => {
-    const parsed = parseFormula(text, locale.formulas);
+    const parsed = parseFormula(text, locale.formulas, position);
 
     if (!parsed.ok) {
       return parsed;
@@ -295,7 +301,7 @@ export const createCellEditor = (book: Workbook, calculator: Calculator): CellEd
     const format =
       sheet.formats.get(position.row, position.col) === 0
         ? (resultFormat(parsed.ast, calculator.locale.numbers) ??
-          referencedFormat(parsed.ast, book, sheet))
+          referencedFormat(parsed.ast, book, sheet, position))
         : undefined;
 
     return entry(sheet, { ...position, content: { kind: 'formula', ast: parsed.ast }, format });
@@ -345,7 +351,7 @@ export const createCellEditor = (book: Workbook, calculator: Calculator): CellEd
 
       return formula === undefined
         ? editText(sheet.cells.get(row, col), formatAt(sheet, row, col), locale.numbers)
-        : `=${printFormula(formula.ast, locale.formulas)}`;
+        : `=${printFormula(formula.ast, locale.formulas, { row, col })}`;
     },
     shown: (sheet, row, col) =>
       formatValue(sheet.cells.get(row, col), formatAt(sheet, row, col), calculator.locale.numbers),

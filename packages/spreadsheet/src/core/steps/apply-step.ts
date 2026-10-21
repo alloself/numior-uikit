@@ -1,6 +1,6 @@
 import { MAX_COLS, MAX_ROWS, containsCell } from '../address';
 import type { Calculator } from '../calc/calculator';
-import type { CellContent } from '../calc/calc.types';
+import type { CellContent, ShiftedFormulaCell } from '../calc/calc.types';
 import type { CellRange } from '../cell.types';
 import type { FormulaNode } from '../formula/formula.types';
 import { formulaReferences } from '../formula/references';
@@ -8,10 +8,8 @@ import {
   dropSheetFromFormula,
   renameInFormula,
   sameName,
-  shiftFormula,
   type LineChange,
 } from '../formula/rewrite';
-import { mapCell } from './mapping';
 import { validSheetName, type Sheet, type Workbook } from '../workbook';
 import type { CellEdit, LineAxis, StepRefusal, StepResult, WorkbookStep } from './step.types';
 
@@ -55,10 +53,7 @@ const done = (inverse: WorkbookStep, changes: readonly LineChange[] = NO_CHANGES
   changes,
 });
 
-const movedTo = (position: Located, change: LineChange): Located | undefined =>
-  mapCell([change], change.sheet, position);
-
-const formulaEdits = (rewrites: readonly Rewrite[]): WorkbookStep[] => {
+const formulaEdits = (rewrites: readonly ShiftedFormulaCell[]): WorkbookStep[] => {
   const bySheet = new Map<Sheet, CellEdit[]>();
 
   rewrites.forEach((rewrite) => {
@@ -182,59 +177,40 @@ export const createStepper = (book: Workbook, calculator: Calculator): Stepper =
     });
   };
 
-  const occupied = (sheet: Sheet, range: CellRange): boolean => contentsIn(sheet, range).size > 0;
+  const occupied = (sheet: Sheet, range: CellRange): boolean => {
+    let found = calculator.hasFormulaIn(sheet, range);
 
-  const placeMoved = (
-    sheet: Sheet,
-    change: LineChange,
-    moving: ReadonlyMap<number, CellEdit>,
-    shifted: ReadonlyMap<number, FormulaNode>,
-  ): void => {
-    moving.forEach((cell, key) => {
-      const target = movedTo(cell, change);
-      const ast = shifted.get(key);
-
-      const content: CellContent | undefined =
-        ast === undefined ? cell.content : { kind: 'formula', ast };
-
-      if (target !== undefined) {
-        write(sheet, { ...cell, ...target, content });
-      }
+    sheet.cells.forEachInRange(range, () => {
+      found = true;
     });
+
+    sheet.formats.forEachInRange(range, () => {
+      found = true;
+    });
+
+    return found;
   };
 
   const moveLines = (
     sheet: Sheet,
     change: LineChange,
-  ): { deleted: CellEdit[]; rewrites: Rewrite[] } => {
-    const limit = limitOf(change.axis);
+  ): { deleted: CellEdit[]; rewrites: readonly ShiftedFormulaCell[] } => {
     const removed = Math.max(-change.count, 0);
-    const moving = contentsIn(sheet, linesRange(change.axis, change.at + removed, limit - 1));
 
-    const gone =
+    const deleted =
       removed > 0
-        ? contentsIn(sheet, linesRange(change.axis, change.at, change.at + removed - 1))
-        : new Map<number, CellEdit>();
+        ? [
+            ...contentsIn(
+              sheet,
+              linesRange(change.axis, change.at, change.at + removed - 1),
+            ).values(),
+          ]
+        : [];
 
-    const rewrites = rewriteAll((owner, ast) => shiftFormula(ast, change, owner.name));
-    const local = rewrites.filter((rewrite) => rewrite.sheet === sheet);
+    const rewrites = calculator.shiftLines(sheet, change);
 
-    const shifted = new Map(
-      local.map((rewrite) => [keyOf(rewrite.row, rewrite.col), rewrite.after]),
-    );
-
-    clear(sheet, [...moving.values(), ...gone.values()]);
-    placeMoved(sheet, change, moving, shifted);
-
-    rewrites
-      .filter((rewrite) => {
-        const key = keyOf(rewrite.row, rewrite.col);
-
-        return rewrite.sheet !== sheet || (!moving.has(key) && !gone.has(key));
-      })
-      .forEach(rewriteInPlace);
-
-    return { deleted: [...gone.values()], rewrites };
+    sheet.formats.shiftLines(change.axis, change.at, change.count);
+    return { deleted, rewrites };
   };
 
   const insertLines = (sheet: Sheet, axis: LineAxis, at: number, count: number): StepResult => {

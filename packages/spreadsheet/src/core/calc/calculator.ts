@@ -1,10 +1,12 @@
-import { MAX_COLS, MAX_ROWS, containsCell, rangeOf } from '../address';
+import { MAX_COLS, MAX_ROWS, cellIndex, containsCell } from '../address';
 import type { CellRange, CellValue } from '../cell.types';
 import type { FormulaLocale, FormulaNode, FormulaParse } from '../formula/formula.types';
 import { EN_LOCALE, type BookLocale } from '../locale';
+import { shiftIndex } from '../lines';
+import { referenceRange } from '../formula/origin';
 import { parseFormula } from '../formula/parser';
-import { printFormula } from '../formula/printer';
-import { formulaReferences, type FormulaReference } from '../formula/references';
+import { changesMeaning, shiftFormula, shiftSpan, type LineChange } from '../formula/rewrite';
+import { formulaReferences } from '../formula/references';
 import { EMPTY, errorValue, numberValue } from '../values';
 import type { Sheet, Workbook } from '../workbook';
 import type {
@@ -16,19 +18,14 @@ import type {
   Limitation,
   RecalcOptions,
   Recalculation,
+  ShiftedFormulaCell,
 } from './calc.types';
 import { lookupKey } from './coerce';
-import { evaluateFormula, lineRange, type EvalContext } from './evaluate';
+import { evaluateFormula, type EvalContext } from './evaluate';
 import { BASE_FUNCTIONS } from './functions';
-import {
-  colOfKey,
-  createDependencyGraph,
-  formulaKey,
-  planRecalc,
-  rowOfKey,
-  type Precedent,
-} from './graph';
+import { createDependencyGraph, formulaKey, planRecalc, type Precedent } from './graph';
 import { createFunctionRegistry } from './registry';
+import { nextTask } from './tasks';
 import { createSpills, forEachSpillCell, type SpillArea, type SpillCell } from './spills';
 
 export interface Calculator {
@@ -43,6 +40,8 @@ export interface Calculator {
   setContent(sheet: Sheet, row: number, col: number, content: CellContent): void;
   contentAt(sheet: Sheet, row: number, col: number): CellContent;
   forEachFormula(visit: (sheet: Sheet, row: number, col: number, ast: FormulaNode) => void): void;
+  shiftLines(sheet: Sheet, change: LineChange): readonly ShiftedFormulaCell[];
+  hasFormulaIn(sheet: Sheet, range: CellRange): boolean;
   formulaAt(sheet: Sheet, row: number, col: number): FormulaCell | undefined;
   spillOf(sheet: Sheet, row: number, col: number): CellRange | undefined;
   recalculate(options?: RecalcOptions): Recalculation;
@@ -60,12 +59,20 @@ export interface CalculatorOptions {
 }
 
 interface FormulaRecord {
-  readonly cell: FormulaCell;
+  readonly id: number;
+  cell: FormulaCell;
   readonly sheet: Sheet;
-  readonly row: number;
-  readonly col: number;
-  readonly precedents: readonly Precedent[];
+  row: number;
+  col: number;
+  precedents: readonly Precedent[];
   dynamic: boolean;
+}
+
+interface ShiftPlan {
+  readonly record: FormulaRecord;
+  readonly line: number;
+  readonly ast: FormulaNode;
+  readonly relink: boolean;
 }
 
 interface Run {
@@ -101,27 +108,6 @@ const BASE_REGISTRY = createFunctionRegistry(BASE_FUNCTIONS);
 
 const SPILL_ERROR = errorValue('#SPILL!');
 
-const nextTask = (): Promise<void> =>
-  new Promise((resolve) => {
-    if (typeof MessageChannel === 'undefined') {
-      setTimeout(resolve, 0);
-      return;
-    }
-    const channel = new MessageChannel();
-
-    channel.port1.addEventListener(
-      'message',
-      () => {
-        channel.port1.close();
-        resolve();
-      },
-      { once: true },
-    );
-
-    channel.port1.start();
-    channel.port2.postMessage(null);
-  });
-
 const serialOf = (date: Date): number =>
   (Date.UTC(
     date.getFullYear(),
@@ -135,32 +121,22 @@ const serialOf = (date: Date): number =>
     SERIAL_EPOCH) /
   DAY_MS;
 
-const referenceRange = (found: Exclude<FormulaReference, { readonly kind: 'name' }>): CellRange => {
-  switch (found.kind) {
-    case 'range':
-      return rangeOf(found.from, found.to);
-    case 'columns':
-    case 'rows':
-      return lineRange(found);
-    default:
-      return rangeOf(found.ref, found.ref);
-  }
-};
-
 const oneCell = (range: CellRange): boolean =>
   range.top === range.bottom && range.left === range.right;
 
 const precedentsOf = (
-  record: Pick<FormulaRecord, 'cell' | 'sheet'>,
+  record: Pick<FormulaRecord, 'cell' | 'sheet' | 'row' | 'col'>,
   workbook: Workbook,
 ): Precedent[] =>
   formulaReferences(record.cell.ast).flatMap((found) => {
     if (found.kind === 'name') {
       return [];
     }
-    const target = found.sheet === undefined ? record.sheet : workbook.sheet(found.sheet);
 
-    return target === undefined ? [] : [{ sheet: target.id, range: referenceRange(found) }];
+    const target = found.sheet === undefined ? record.sheet : workbook.sheet(found.sheet);
+    const range = referenceRange(found, record);
+
+    return target === undefined || range === undefined ? [] : [{ sheet: target.id, range }];
   });
 
 const usesVolatile = (node: FormulaNode, functions: FunctionRegistry): boolean => {
@@ -204,6 +180,61 @@ const spillArea = (record: FormulaRecord, result: ArrayValue): SpillArea => ({
   },
 });
 
+const lastLine = (range: CellRange, axis: LineChange['axis']): number =>
+  axis === 'rows' ? range.bottom : range.right;
+
+const shiftPrecedent = (
+  precedent: Precedent,
+  sheet: number,
+  change: LineChange,
+): Precedent | undefined => {
+  const { range } = precedent;
+  const rows = change.axis === 'rows';
+  const first = rows ? range.top : range.left;
+  const last = rows ? range.bottom : range.right;
+  const whole = first === 0 && last === (rows ? MAX_ROWS : MAX_COLS) - 1;
+
+  if (precedent.sheet !== sheet || whole || last < change.at) {
+    return precedent;
+  }
+
+  const span = shiftSpan([first, last], change);
+
+  if (span === undefined) {
+    return undefined;
+  }
+  return {
+    sheet,
+    range: rows
+      ? { ...range, top: span[0], bottom: span[1] }
+      : { ...range, left: span[0], right: span[1] },
+  };
+};
+
+const shiftPrecedents = (
+  precedents: readonly Precedent[],
+  sheet: number,
+  change: LineChange,
+): readonly Precedent[] =>
+  precedents.flatMap((precedent) => {
+    const shifted = shiftPrecedent(precedent, sheet, change);
+
+    return shifted === undefined ? [] : [shifted];
+  });
+
+const applyShift = (move: ShiftPlan, axis: LineChange['axis']): void => {
+  const { record, ast, line } = move;
+
+  if (ast !== record.cell.ast) {
+    record.cell = { ...record.cell, ast };
+  }
+  if (axis === 'rows') {
+    record.row = line;
+  } else {
+    record.col = line;
+  }
+};
+
 const insideSheet = (range: CellRange): boolean =>
   range.bottom < MAX_ROWS && range.right < MAX_COLS;
 
@@ -219,6 +250,8 @@ export const createCalculator = (
   const graph = createDependencyGraph();
   const spills = createSpills();
   const formulas = new Map<number, FormulaRecord>();
+  const positions = new Map<number, Map<number, number>>();
+  let nextId = 0;
   const pending = new Set<number>();
   const volatiles = new Set<number>();
   const versions = new Map<number, number>();
@@ -230,6 +263,36 @@ export const createCalculator = (
   let now = 0;
   let evaluating: FormulaRecord | undefined;
   const dynamic: Precedent[] = [];
+
+  const positionsOf = (sheet: number): Map<number, number> => {
+    const known = positions.get(sheet);
+
+    if (known !== undefined) {
+      return known;
+    }
+
+    const created = new Map<number, number>();
+
+    positions.set(sheet, created);
+    return created;
+  };
+
+  const idAt = (sheet: number, row: number, col: number): number | undefined =>
+    positions.get(sheet)?.get(cellIndex(row, col));
+
+  const recordAt = (sheet: Sheet, row: number, col: number): FormulaRecord | undefined => {
+    const id = idAt(sheet.id, row, col);
+
+    return id === undefined ? undefined : formulas.get(id);
+  };
+
+  const locate = (id: number) => {
+    const record = formulas.get(id);
+
+    return record === undefined
+      ? undefined
+      : { sheet: record.sheet.id, row: record.row, col: record.col };
+  };
 
   const columnVersion = (sheet: Sheet, col: number): number =>
     versions.get(sheet.id * MAX_COLS + col) ?? 0;
@@ -257,6 +320,8 @@ export const createCalculator = (
       return known;
     }
 
+    const home = { sheet, row: 0, col: 0 };
+
     const context: EvalContext = {
       workbook,
       sheet,
@@ -264,14 +329,14 @@ export const createCalculator = (
       locale: locale.numbers,
       lookup,
       unknown: (name) => unknown.add(name),
-      spillRange: (target, row, col) => spills.areaOf(formulaKey(target.id, row, col))?.range,
+      spillRange: (target, row, col) => {
+        const id = idAt(target.id, row, col);
+
+        return id === undefined ? undefined : spills.areaOf(id)?.range;
+      },
       now: () => now,
       random,
-      here: () => ({
-        sheet: evaluating?.sheet ?? sheet,
-        row: evaluating?.row ?? 0,
-        col: evaluating?.col ?? 0,
-      }),
+      here: () => evaluating ?? home,
       track: (target, range) => {
         dynamic.push({ sheet: target.id, range });
       },
@@ -306,7 +371,10 @@ export const createCalculator = (
     let taken = false;
 
     forEachSpillCell(area, (cell, key) => {
-      taken ||= cell.sheet.cells.has(cell.row, cell.col) || formulas.has(key) || spills.owns(key);
+      taken ||=
+        cell.sheet.cells.has(cell.row, cell.col) ||
+        idAt(cell.sheet.id, cell.row, cell.col) !== undefined ||
+        spills.owns(key);
     });
 
     return taken;
@@ -369,15 +437,17 @@ export const createCalculator = (
     const { range } = precedent;
 
     if ((range.bottom - range.top + 1) * (range.right - range.left + 1) > SMALL_AREA) {
-      return [...pending].some(
-        (key) =>
-          formulas.get(key)?.sheet.id === precedent.sheet &&
-          containsCell(range, rowOfKey(key), colOfKey(key)),
-      );
+      return [...pending].some((key) => {
+        const record = formulas.get(key);
+
+        return record?.sheet.id === precedent.sheet && containsCell(range, record.row, record.col);
+      });
     }
     for (let row = range.top; row <= range.bottom; row += 1) {
       for (let col = range.left; col <= range.right; col += 1) {
-        if (pending.has(formulaKey(precedent.sheet, row, col))) {
+        const id = idAt(precedent.sheet, row, col);
+
+        if (id !== undefined && pending.has(id)) {
           return true;
         }
       }
@@ -428,19 +498,27 @@ export const createCalculator = (
     const needed = new Set<number>();
 
     const inside = (precedent: Precedent): number[] =>
-      order.filter(
-        (key) =>
-          formulas.get(key)?.sheet.id === precedent.sheet &&
-          containsCell(precedent.range, rowOfKey(key), colOfKey(key)),
-      );
+      order.filter((key) => {
+        const record = formulas.get(key);
+
+        return (
+          record?.sheet.id === precedent.sheet &&
+          containsCell(precedent.range, record.row, record.col)
+        );
+      });
 
     for (let key = seeds.pop(); key !== undefined; key = seeds.pop()) {
       if (!needed.has(key)) {
         needed.add(key);
 
         graph.precedentsOf(key).forEach((precedent) => {
-          const direct = formulaKey(precedent.sheet, precedent.range.top, precedent.range.left);
-          const found = oneCell(precedent.range) ? [direct] : inside(precedent);
+          const direct = idAt(precedent.sheet, precedent.range.top, precedent.range.left);
+
+          const found = oneCell(precedent.range)
+            ? direct === undefined
+              ? []
+              : [direct]
+            : inside(precedent);
 
           seeds.push(...found.filter((candidate) => planned.has(candidate)));
         });
@@ -463,7 +541,7 @@ export const createCalculator = (
   };
 
   const plan = (viewport: RecalcOptions['viewport']) => {
-    const planned = planRecalc(pending, graph);
+    const planned = planRecalc(pending, graph, locate);
 
     planned.order.forEach((key) => {
       const record = formulas.get(key);
@@ -514,12 +592,16 @@ export const createCalculator = (
   const proceed = (run: Run, yieldTo: () => Promise<void>): Promise<void> =>
     yieldTo().then(() => (step(run) || run.cancelled ? undefined : proceed(run, yieldTo)));
 
-  const forget = (key: number): void => {
-    if (formulas.delete(key)) {
-      graph.remove(key);
-      pending.delete(key);
-      volatiles.delete(key);
-      release(key);
+  const forget = (sheet: Sheet, row: number, col: number): void => {
+    const id = idAt(sheet.id, row, col);
+
+    if (id !== undefined) {
+      formulas.delete(id);
+      positions.get(sheet.id)?.delete(cellIndex(row, col));
+      graph.remove(id);
+      pending.delete(id);
+      volatiles.delete(id);
+      release(id);
     }
   };
 
@@ -531,27 +613,27 @@ export const createCalculator = (
     }
   };
 
-  const setParsed = (
-    sheet: Sheet,
-    row: number,
-    col: number,
-    ast: FormulaNode,
-    text: string,
-  ): void => {
-    const key = formulaKey(sheet.id, row, col);
-    const cell: FormulaCell = { text, ast, state: 'stale' };
+  const setParsed = (sheet: Sheet, row: number, col: number, ast: FormulaNode): void => {
+    const known = idAt(sheet.id, row, col);
+    const key = known ?? nextId;
+    const cell: FormulaCell = { ast, state: 'stale' };
 
     const record: FormulaRecord = {
+      id: key,
       cell,
       sheet,
       row,
       col,
-      precedents: precedentsOf({ cell, sheet }, workbook),
+      precedents: precedentsOf({ cell, sheet, row, col }, workbook),
       dynamic: false,
     };
 
     interrupt();
-    claim(key);
+    if (known === undefined) {
+      nextId += 1;
+      positionsOf(sheet.id).set(cellIndex(row, col), key);
+    }
+    claim(formulaKey(sheet.id, row, col));
     formulas.set(key, record);
     graph.set(key, record.precedents);
     pending.add(key);
@@ -562,22 +644,123 @@ export const createCalculator = (
     }
   };
 
-  const setValue = (sheet: Sheet, row: number, col: number, value: CellValue): void => {
-    const key = formulaKey(sheet.id, row, col);
+  const releaseCrossing = (sheet: Sheet, change: LineChange): void => {
+    const crossing: number[] = [];
 
+    spills.forEachArea((anchor, area) => {
+      if (area.sheet === sheet && lastLine(area.range, change.axis) >= change.at) {
+        crossing.push(anchor);
+      }
+    });
+
+    crossing.forEach((anchor) => {
+      release(anchor);
+      pending.add(anchor);
+    });
+  };
+
+  const shiftPositions = (sheet: Sheet, change: LineChange): void => {
+    const local = positions.get(sheet.id);
+    const start = change.at + Math.max(-change.count, 0);
+    const rows = change.axis === 'rows';
+    const offset = rows ? change.count * MAX_COLS : change.count;
+    const moved: number[] = [];
+
+    local?.forEach((id, cell) => {
+      if ((rows ? Math.floor(cell / MAX_COLS) : cell % MAX_COLS) >= start) {
+        moved.push(cell, id);
+      }
+    });
+
+    for (let index = 0; index < moved.length; index += 2) {
+      local?.delete(moved[index] ?? -1);
+    }
+    for (let index = 0; index < moved.length; index += 2) {
+      local?.set((moved[index] ?? 0) + offset, moved[index + 1] ?? 0);
+    }
+  };
+
+  const shiftLines = (sheet: Sheet, change: LineChange): ShiftedFormulaCell[] => {
     interrupt();
-    forget(key);
-    claim(key);
+    releaseCrossing(sheet, change);
+
+    const shifted: ShiftedFormulaCell[] = [];
+    const rewritten: ShiftPlan[] = [];
+    const rows = change.axis === 'rows';
+
+    formulas.forEach((record) => {
+      const onSheet = record.sheet === sheet;
+      const before = rows ? record.row : record.col;
+      const line = onSheet ? shiftIndex(before, change) : before;
+
+      if (line === undefined) {
+        graph.remove(record.id);
+        forget(record.sheet, record.row, record.col);
+        return;
+      }
+
+      const ast = shiftFormula(record.cell.ast, change, onSheet, record);
+
+      if (ast === record.cell.ast) {
+        if (line !== before) {
+          applyShift({ record, line, ast, relink: false }, change.axis);
+        }
+        return;
+      }
+
+      const semantic = changesMeaning(record.cell.ast, change, onSheet, record);
+      const relink = semantic || record.dynamic;
+
+      if (semantic) {
+        shifted.push({
+          sheet: record.sheet,
+          row: record.row,
+          col: record.col,
+          before: record.cell.ast,
+        });
+      }
+      if (relink) {
+        graph.remove(record.id);
+      }
+      rewritten.push({ record, line, ast, relink });
+    });
+
+    graph.shift(sheet.id, change);
+    shiftPositions(sheet, change);
+
+    rewritten.forEach((move) => {
+      const { record, relink } = move;
+
+      applyShift(move, change.axis);
+      if (relink) {
+        record.precedents = shiftPrecedents(record.precedents, sheet.id, change);
+        graph.set(record.id, record.precedents);
+        record.cell.state = 'stale';
+        pending.add(record.id);
+      } else {
+        record.precedents = graph.precedentsOf(record.id);
+      }
+    });
+
+    sheet.cells.shiftLines(change.axis, change.at, change.count);
+    lookups.clear();
+    return shifted;
+  };
+
+  const setValue = (sheet: Sheet, row: number, col: number, value: CellValue): void => {
+    interrupt();
+    forget(sheet, row, col);
+    claim(formulaKey(sheet.id, row, col));
     write(sheet, row, col, value);
     touch({ sheet, row, col });
   };
 
   return {
     setFormula: (sheet, row, col, text, syntax = locale.formulas) => {
-      const parsed = parseFormula(text, syntax);
+      const parsed = parseFormula(text, syntax, { row, col });
 
       if (parsed.ok) {
-        setParsed(sheet, row, col, parsed.ast, text);
+        setParsed(sheet, row, col, parsed.ast);
       }
       return parsed;
     },
@@ -585,7 +768,7 @@ export const createCalculator = (
     setContent: (sheet, row, col, content) => {
       switch (content.kind) {
         case 'formula':
-          setParsed(sheet, row, col, content.ast, `=${printFormula(content.ast)}`);
+          setParsed(sheet, row, col, content.ast);
           break;
         case 'value':
           setValue(sheet, row, col, content.value);
@@ -596,8 +779,7 @@ export const createCalculator = (
       }
     },
     contentAt: (sheet, row, col) => {
-      const key = formulaKey(sheet.id, row, col);
-      const record = formulas.get(key);
+      const record = recordAt(sheet, row, col);
 
       if (record !== undefined) {
         return { kind: 'formula', ast: record.cell.ast };
@@ -605,9 +787,18 @@ export const createCalculator = (
 
       const value = sheet.cells.get(row, col);
 
-      return value.kind === 'empty' || spills.owns(key)
+      return value.kind === 'empty' || spills.owns(formulaKey(sheet.id, row, col))
         ? { kind: 'empty' }
         : { kind: 'value', value };
+    },
+    shiftLines,
+    hasFormulaIn: (sheet, range) => {
+      for (const cell of positions.get(sheet.id)?.keys() ?? []) {
+        if (containsCell(range, Math.floor(cell / MAX_COLS), cell % MAX_COLS)) {
+          return true;
+        }
+      }
+      return false;
     },
     forEachFormula: (visit) => {
       [...formulas.values()].forEach((record) => {
@@ -623,8 +814,12 @@ export const createCalculator = (
     get locale() {
       return locale;
     },
-    formulaAt: (sheet, row, col) => formulas.get(formulaKey(sheet.id, row, col))?.cell,
-    spillOf: (sheet, row, col) => spills.areaOf(formulaKey(sheet.id, row, col))?.range,
+    formulaAt: (sheet, row, col) => recordAt(sheet, row, col)?.cell,
+    spillOf: (sheet, row, col) => {
+      const id = idAt(sheet.id, row, col);
+
+      return id === undefined ? undefined : spills.areaOf(id)?.range;
+    },
     recalculate: (options = {}) => {
       interrupt();
       now = serialOf(clock());

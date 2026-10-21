@@ -1,5 +1,5 @@
 import { columnIndex, MAX_ROWS, parseCell } from '../address';
-import type { CellRef } from '../cell.types';
+import type { CellAddress, CellRef } from '../cell.types';
 import { isCellError } from '../values';
 import type {
   BinaryOperator,
@@ -11,6 +11,7 @@ import type {
 } from './formula.types';
 import { tokenize, type Token } from './lexer';
 import { EN_FORMULAS } from './locale';
+import { ORIGIN, relativeFormula } from './origin';
 
 class FormulaSyntaxError extends Error {
   readonly failure: FormulaFailure;
@@ -294,7 +295,11 @@ const booleanOf = (token: Token): FormulaNode | undefined => {
     : undefined;
 };
 
-export const parseFormula = (text: string, locale: FormulaLocale = EN_FORMULAS): FormulaParse => {
+export const parseFormula = (
+  text: string,
+  locale: FormulaLocale = EN_FORMULAS,
+  origin: CellAddress = ORIGIN,
+): FormulaParse => {
   const source = text.startsWith('=') ? text.slice(1) : text;
   const offset = text.length - source.length;
   const tokens = tokenize(source, locale);
@@ -303,7 +308,10 @@ export const parseFormula = (text: string, locale: FormulaLocale = EN_FORMULAS):
     return { ok: false, error: { position: tokens.position + offset, reason: 'token' } };
   }
   try {
-    return { ok: true, ast: createParser(tokens, locale, offset).formula() };
+    return {
+      ok: true,
+      ast: relativeFormula(createParser(tokens, locale, offset).formula(), origin),
+    };
   } catch (error) {
     if (error instanceof FormulaSyntaxError) {
       return { ok: false, error: error.failure };

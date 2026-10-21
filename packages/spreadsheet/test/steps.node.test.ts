@@ -29,7 +29,7 @@ const rewritten = (
 };
 
 const shifted = (formula: string, change: LineChange, home = 'Sheet1'): string =>
-  rewritten(formula, (ast) => shiftFormula(ast, change, home));
+  rewritten(formula, (ast) => shiftFormula(ast, change, home === change.sheet, { row: 0, col: 0 }));
 
 const rowsAt = (row: number, count: number): LineChange => ({
   sheet: 'Sheet1',
@@ -215,6 +215,63 @@ describe('workbook steps and history', () => {
     expect(book.shown('B2')).toBe('6');
     expect(book.input('A2')).toBe('2');
     expect(book.input('D1', 'Rates')).toBe('=Sheet1!A3');
+  });
+
+  it('keeps the values of formulas that only moved and recomputes the ones whose ranges changed', () => {
+    const book = openBook();
+
+    book.type('A1', '1');
+    book.type('A2', '2');
+    book.type('A3', '3');
+    book.type('B1', '=A2*2');
+    book.type('B5', '=SUM(A1:A3)');
+    book.type('C1', '=B5');
+    book.type('D3', '5%');
+    book.shown('B5');
+
+    book.commit({ kind: 'insertLines', sheet: 'Sheet1', axis: 'rows', at: 1, count: 1 });
+
+    expect(book.calculator.pending).toBe(1);
+    expect(book.input('B1')).toBe('=A3*2');
+    expect(book.input('B6')).toBe('=SUM(A1:A4)');
+    expect(book.input('C1')).toBe('=B6');
+    expect(book.shown('C1')).toBe('6');
+    expect([book.format('D3'), book.format('D4')]).toEqual(['General', '0%']);
+
+    book.type('A3', '20');
+    book.type('A2', '5', 'Sheet1');
+    book.type('C2', '=Sheet1!A3+1', 'Rates');
+
+    expect([book.shown('B1'), book.shown('B6'), book.shown('C1')]).toEqual(['40', '29', '29']);
+    expect(book.shown('C2', 'Rates')).toBe('21');
+
+    book.commit({ kind: 'deleteLines', sheet: 'Sheet1', axis: 'rows', at: 0, count: 1 });
+    book.type('A2', '7');
+
+    expect([book.input('B5'), book.shown('B5'), book.shown('C2', 'Rates')]).toEqual([
+      '=SUM(A1:A3)',
+      '15',
+      '8',
+    ]);
+  });
+
+  it('keeps every kind of reference pointing at its cells when the formula itself moves', () => {
+    const book = openBook();
+
+    book.type('A1', '1');
+    book.type('A8', '8');
+    book.type('B1', '5', 'Rates');
+    book.type('C10', '=A1+$A$8+A8+Rates!B1+SUM(A:A)+SUM(8:8)');
+    book.shown('C10');
+    book.commit({ kind: 'insertLines', sheet: 'Sheet1', axis: 'rows', at: 4, count: 3 });
+
+    expect(book.input('C13')).toBe('=A1+$A$11+A11+Rates!B1+SUM(A:A)+SUM(11:11)');
+    expect(book.shown('C13')).toBe('39');
+
+    book.commit({ kind: 'insertLines', sheet: 'Sheet1', axis: 'cols', at: 0, count: 1 });
+
+    expect(book.input('D13')).toBe('=B1+$B$11+B11+Rates!B1+SUM(B:B)+SUM(11:11)');
+    expect(book.shown('D13')).toBe('39');
   });
 
   it('moves spilled arrays with their anchor', () => {

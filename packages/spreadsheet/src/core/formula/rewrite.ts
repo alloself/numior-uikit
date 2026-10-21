@@ -1,16 +1,19 @@
-import { MAX_COLS, MAX_ROWS } from '../address';
-import type { CellRef } from '../cell.types';
-import type { FormulaNode, LineRef } from './formula.types';
-import type { FormulaReference } from './references';
+import { limitOf, shiftIndex, type LineMove } from '../lines';
+import type { CellAddress, CellRange } from '../cell.types';
+import type { FormulaNode } from './formula.types';
+import {
+  colOf,
+  lineOf,
+  referenceRange,
+  rowOf,
+  storedReference,
+  type LocatedReference,
+} from './origin';
+import { formulaReferences, mapReferences, type FormulaReference } from './references';
 
-export interface LineChange {
+export interface LineChange extends LineMove {
   readonly sheet: string;
-  readonly axis: 'rows' | 'cols';
-  readonly at: number;
-  readonly count: number;
 }
-
-type Located = Exclude<FormulaReference, { readonly kind: 'name' }>;
 
 type Span = readonly [number, number];
 
@@ -19,70 +22,7 @@ const BROKEN: FormulaNode = { kind: 'error', code: '#REF!' };
 export const sameName = (left: string, right: string): boolean =>
   left.toLowerCase() === right.toLowerCase();
 
-const mapNodes = (
-  nodes: readonly FormulaNode[],
-  visit: (node: FormulaNode) => FormulaNode,
-): readonly FormulaNode[] => {
-  const mapped = nodes.map(visit);
-
-  return mapped.every((node, index) => node === nodes[index]) ? nodes : mapped;
-};
-
-const mapReferences = (
-  node: FormulaNode,
-  visit: (reference: FormulaReference) => FormulaNode,
-): FormulaNode => {
-  const walk = (current: FormulaNode): FormulaNode => {
-    switch (current.kind) {
-      case 'cell':
-      case 'range':
-      case 'columns':
-      case 'rows':
-      case 'spill':
-      case 'name':
-        return visit(current);
-      case 'call': {
-        const args = mapNodes(current.args, walk);
-
-        return args === current.args ? current : { ...current, args };
-      }
-      case 'unary':
-      case 'percent': {
-        const operand = walk(current.operand);
-
-        return operand === current.operand ? current : { ...current, operand };
-      }
-      case 'binary': {
-        const left = walk(current.left);
-        const right = walk(current.right);
-
-        return left === current.left && right === current.right
-          ? current
-          : { ...current, left, right };
-      }
-      default:
-        return current;
-    }
-  };
-
-  return walk(node);
-};
-
-const limitOf = (axis: LineChange['axis']): number => (axis === 'rows' ? MAX_ROWS : MAX_COLS);
-
-export const shiftIndex = (index: number, change: LineChange): number | undefined => {
-  if (index < change.at) {
-    return index;
-  }
-  if (change.count > 0) {
-    const moved = index + change.count;
-
-    return moved < limitOf(change.axis) ? moved : undefined;
-  }
-  return index < change.at - change.count ? undefined : index + change.count;
-};
-
-const shiftSpan = ([first, last]: Span, change: LineChange): Span | undefined => {
+export const shiftSpan = ([first, last]: Span, change: LineChange): Span | undefined => {
   if (change.count > 0) {
     const top = shiftIndex(first, change);
 
@@ -106,97 +46,244 @@ const shiftSpan = ([first, last]: Span, change: LineChange): Span | undefined =>
   return [top, bottom];
 };
 
-const movedRef = (ref: CellRef, change: LineChange): CellRef | undefined => {
-  const index = shiftIndex(change.axis === 'rows' ? ref.row : ref.col, change);
+const axisSpan = (range: CellRange, rows: boolean): Span =>
+  rows ? [range.top, range.bottom] : [range.left, range.right];
 
-  if (index === undefined) {
-    return undefined;
+const withSpan = (range: CellRange, rows: boolean, [first, last]: Span): CellRange =>
+  rows ? { ...range, top: first, bottom: last } : { ...range, left: first, right: last };
+
+const acrossAxis = (reference: LocatedReference, rows: boolean): boolean =>
+  (reference.kind === 'columns' && rows) || (reference.kind === 'rows' && !rows);
+
+const onChangedSheet = (
+  reference: LocatedReference,
+  change: LineChange,
+  onSheet: boolean,
+): boolean => (reference.sheet === undefined ? onSheet : sameName(reference.sheet, change.sheet));
+
+const targetDelta = (line: number, change: LineChange): number | undefined => {
+  if (line < change.at) {
+    return 0;
   }
-  return change.axis === 'rows' ? { ...ref, row: index } : { ...ref, col: index };
+  if (change.count < 0) {
+    return line < change.at - change.count ? undefined : change.count;
+  }
+  return line + change.count < limitOf(change.axis) ? change.count : undefined;
 };
 
-const ordered = (left: number, right: number): Span => [
-  Math.min(left, right),
-  Math.max(left, right),
-];
-
-const placed = (span: Span, ascending: boolean): Span => (ascending ? span : [span[1], span[0]]);
-
-const shiftRange = (
-  node: Extract<FormulaReference, { readonly kind: 'range' }>,
+const keepsEnd = (
+  absolute: boolean,
+  line: number,
   change: LineChange,
-): FormulaNode => {
+  changed: boolean,
+  originDelta: number,
+): boolean => {
+  const delta = changed ? targetDelta(line, change) : 0;
+
+  return delta !== undefined && (absolute ? delta === 0 : delta === originDelta);
+};
+
+const keeps = (
+  reference: LocatedReference,
+  change: LineChange,
+  changed: boolean,
+  origin: CellAddress,
+  originDelta: number,
+): boolean => {
   const rows = change.axis === 'rows';
-  const from = rows ? node.from.row : node.from.col;
-  const to = rows ? node.to.row : node.to.col;
-  const span = shiftSpan(ordered(from, to), change);
 
-  if (span === undefined) {
-    return BROKEN;
+  if (acrossAxis(reference, rows)) {
+    return true;
   }
-
-  const [first, last] = placed(span, from <= to);
-
-  return rows
-    ? { ...node, from: { ...node.from, row: first }, to: { ...node.to, row: last } }
-    : { ...node, from: { ...node.from, col: first }, to: { ...node.to, col: last } };
-};
-
-const shiftLines = (
-  node: Extract<FormulaReference, { readonly kind: 'columns' | 'rows' }>,
-  change: LineChange,
-): FormulaNode => {
-  const span = shiftSpan(ordered(node.from.index, node.to.index), change);
-
-  if (span === undefined) {
-    return BROKEN;
-  }
-
-  const [first, last] = placed(span, node.from.index <= node.to.index);
-  const from: LineRef = { ...node.from, index: first };
-  const to: LineRef = { ...node.to, index: last };
-
-  return { ...node, from, to };
-};
-
-const shiftLocated = (node: Located, change: LineChange): FormulaNode => {
-  switch (node.kind) {
-    case 'cell':
-    case 'spill': {
-      const ref = movedRef(node.ref, change);
-
-      return ref === undefined ? BROKEN : { ...node, ref };
-    }
-    case 'range':
-      return shiftRange(node, change);
-    case 'columns':
-      return change.axis === 'cols' ? shiftLines(node, change) : node;
-    case 'rows':
-      return change.axis === 'rows' ? shiftLines(node, change) : node;
-  }
-};
-
-const unchanged = (node: Located, change: LineChange): boolean => {
-  switch (node.kind) {
+  switch (reference.kind) {
     case 'cell':
     case 'spill':
-      return (change.axis === 'rows' ? node.ref.row : node.ref.col) < change.at;
+      return rows
+        ? keepsEnd(
+            reference.ref.rowAbsolute,
+            rowOf(reference.ref, origin),
+            change,
+            changed,
+            originDelta,
+          )
+        : keepsEnd(
+            reference.ref.colAbsolute,
+            colOf(reference.ref, origin),
+            change,
+            changed,
+            originDelta,
+          );
     case 'range':
-      return change.axis === 'rows'
-        ? Math.max(node.from.row, node.to.row) < change.at
-        : Math.max(node.from.col, node.to.col) < change.at;
-    default:
-      return Math.max(node.from.index, node.to.index) < change.at;
+      return rows
+        ? keepsEnd(
+            reference.from.rowAbsolute,
+            rowOf(reference.from, origin),
+            change,
+            changed,
+            originDelta,
+          ) &&
+            keepsEnd(
+              reference.to.rowAbsolute,
+              rowOf(reference.to, origin),
+              change,
+              changed,
+              originDelta,
+            )
+        : keepsEnd(
+            reference.from.colAbsolute,
+            colOf(reference.from, origin),
+            change,
+            changed,
+            originDelta,
+          ) &&
+            keepsEnd(
+              reference.to.colAbsolute,
+              colOf(reference.to, origin),
+              change,
+              changed,
+              originDelta,
+            );
+    default: {
+      const base = rows ? origin.row : origin.col;
+
+      return (
+        keepsEnd(
+          reference.from.absolute,
+          lineOf(reference.from, base),
+          change,
+          changed,
+          originDelta,
+        ) &&
+        keepsEnd(reference.to.absolute, lineOf(reference.to, base), change, changed, originDelta)
+      );
+    }
   }
 };
 
-export const shiftFormula = (node: FormulaNode, change: LineChange, home: string): FormulaNode =>
-  mapReferences(node, (reference) => {
-    if (reference.kind === 'name' || !sameName(reference.sheet ?? home, change.sheet)) {
+const movedTarget = (
+  reference: LocatedReference,
+  range: CellRange,
+  change: LineChange,
+  changed: boolean,
+): CellRange | undefined => {
+  const rows = change.axis === 'rows';
+
+  if (!changed || acrossAxis(reference, rows)) {
+    return range;
+  }
+
+  const span = shiftSpan(axisSpan(range, rows), change);
+
+  return span === undefined ? undefined : withSpan(range, rows, span);
+};
+
+const movedOrigin = (origin: CellAddress, change: LineChange): CellAddress | undefined => {
+  const rows = change.axis === 'rows';
+  const line = shiftIndex(rows ? origin.row : origin.col, change);
+
+  if (line === undefined) {
+    return undefined;
+  }
+  return rows ? { row: line, col: origin.col } : { row: origin.row, col: line };
+};
+
+const keepsNode = (
+  node: FormulaNode,
+  change: LineChange,
+  onSheet: boolean,
+  origin: CellAddress,
+  originDelta: number,
+): boolean => {
+  switch (node.kind) {
+    case 'cell':
+    case 'range':
+    case 'columns':
+    case 'rows':
+    case 'spill':
+      return keeps(node, change, onChangedSheet(node, change, onSheet), origin, originDelta);
+    case 'call':
+      for (const arg of node.args) {
+        if (!keepsNode(arg, change, onSheet, origin, originDelta)) {
+          return false;
+        }
+      }
+      return true;
+    case 'unary':
+    case 'percent':
+      return keepsNode(node.operand, change, onSheet, origin, originDelta);
+    case 'binary':
+      return (
+        keepsNode(node.left, change, onSheet, origin, originDelta) &&
+        keepsNode(node.right, change, onSheet, origin, originDelta)
+      );
+    default:
+      return true;
+  }
+};
+
+export const shiftFormula = (
+  node: FormulaNode,
+  change: LineChange,
+  onSheet: boolean,
+  origin: CellAddress,
+): FormulaNode => {
+  const line = change.axis === 'rows' ? origin.row : origin.col;
+  const originDelta = onSheet ? (shiftIndex(line, change) ?? line) - line : 0;
+
+  if (keepsNode(node, change, onSheet, origin, originDelta)) {
+    return node;
+  }
+
+  const after = (onSheet ? movedOrigin(origin, change) : origin) ?? origin;
+
+  return mapReferences(node, (reference) => {
+    if (reference.kind === 'name') {
       return reference;
     }
-    return unchanged(reference, change) ? reference : shiftLocated(reference, change);
+
+    const changed = onChangedSheet(reference, change, onSheet);
+
+    if (keeps(reference, change, changed, origin, originDelta)) {
+      return reference;
+    }
+
+    const range = referenceRange(reference, origin);
+    const moved = range === undefined ? undefined : movedTarget(reference, range, change, changed);
+
+    return moved === undefined ? BROKEN : storedReference(reference, moved, origin, after);
   });
+};
+
+const meaningOf = (
+  reference: FormulaReference,
+  change: LineChange,
+  onSheet: boolean,
+  origin: CellAddress,
+): boolean => {
+  if (reference.kind === 'name' || !onChangedSheet(reference, change, onSheet)) {
+    return false;
+  }
+
+  const rows = change.axis === 'rows';
+  const range = referenceRange(reference, origin);
+
+  if (range === undefined || acrossAxis(reference, rows)) {
+    return false;
+  }
+
+  const before = axisSpan(range, rows);
+  const after = shiftSpan(before, change);
+
+  return after === undefined || after[1] - after[0] !== before[1] - before[0];
+};
+
+export const changesMeaning = (
+  node: FormulaNode,
+  change: LineChange,
+  onSheet: boolean,
+  origin: CellAddress,
+): boolean =>
+  formulaReferences(node).some((reference) => meaningOf(reference, change, onSheet, origin));
 
 export const renameInFormula = (node: FormulaNode, from: string, to: string): FormulaNode =>
   mapReferences(node, (reference) =>

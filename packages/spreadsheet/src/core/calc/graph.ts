@@ -1,9 +1,10 @@
 import { MAX_COLS, MAX_ROWS, cellIndex, containsCell } from '../address';
 import type { CellRange } from '../cell.types';
+import type { LineMove } from '../lines';
 
 export interface Precedent {
   readonly sheet: number;
-  readonly range: CellRange;
+  readonly range: { top: number; left: number; bottom: number; right: number };
 }
 
 export interface DependencyGraph {
@@ -11,6 +12,7 @@ export interface DependencyGraph {
   remove(key: number): void;
   precedentsOf(key: number): readonly Precedent[];
   forEachDependent(sheet: number, row: number, col: number, visit: (key: number) => void): void;
+  shift(sheet: number, change: LineMove): void;
 }
 
 export interface RecalcPlan {
@@ -38,12 +40,6 @@ const SPAN_LIMIT = 32;
 
 export const formulaKey = (sheet: number, row: number, col: number): number =>
   sheet * SHEET_CELLS + cellIndex(row, col);
-
-const sheetOfKey = (key: number): number => Math.floor(key / SHEET_CELLS);
-
-export const rowOfKey = (key: number): number => Math.floor((key % SHEET_CELLS) / MAX_COLS);
-
-export const colOfKey = (key: number): number => key % MAX_COLS;
 
 const bandKey = (sheet: number, rowBand: number, colBand: number): number =>
   (sheet * ROW_BANDS + rowBand) * COL_BANDS + colBand;
@@ -84,6 +80,35 @@ const addTo = <K, V>(map: Map<K, Set<V>>, key: K, value: V): void => {
   }
 };
 
+const shiftInPlace = (
+  range: { top: number; bottom: number; left: number; right: number },
+  change: LineMove,
+): void => {
+  if (change.axis === 'rows') {
+    range.top += change.count;
+    range.bottom = Math.min(range.bottom + change.count, MAX_ROWS - 1);
+  } else {
+    range.left += change.count;
+    range.right = Math.min(range.right + change.count, MAX_COLS - 1);
+  }
+};
+
+const firstLine = (range: CellRange, axis: LineMove['axis']): number =>
+  axis === 'rows' ? range.top : range.left;
+
+const moveRange = (range: CellRange, change: LineMove): CellRange =>
+  change.axis === 'rows'
+    ? {
+        ...range,
+        top: range.top + change.count,
+        bottom: Math.min(range.bottom + change.count, MAX_ROWS - 1),
+      }
+    : {
+        ...range,
+        left: range.left + change.count,
+        right: Math.min(range.right + change.count, MAX_COLS - 1),
+      };
+
 const removeFrom = <K, V>(map: Map<K, Set<V>>, key: K, value: V): void => {
   const known = map.get(key);
 
@@ -94,7 +119,21 @@ const removeFrom = <K, V>(map: Map<K, Set<V>>, key: K, value: V): void => {
 };
 
 export const createDependencyGraph = (): DependencyGraph => {
-  const singles = new Map<number, Set<number>>();
+  const singles = new Map<number, Map<number, Set<number>>>();
+
+  const singlesOf = (sheet: number): Map<number, Set<number>> => {
+    const known = singles.get(sheet);
+
+    if (known !== undefined) {
+      return known;
+    }
+
+    const created = new Map<number, Set<number>>();
+
+    singles.set(sheet, created);
+    return created;
+  };
+
   const ranges = new Map<string, RangeEntry>();
   const bands = new Map<number, Set<RangeEntry>>();
   const wide = new Map<number, Set<RangeEntry>>();
@@ -116,7 +155,7 @@ export const createDependencyGraph = (): DependencyGraph => {
 
   const link = (key: number, precedent: Precedent): void => {
     if (single(precedent.range)) {
-      addTo(singles, formulaKey(precedent.sheet, precedent.range.top, precedent.range.left), key);
+      addTo(singlesOf(precedent.sheet), cellIndex(precedent.range.top, precedent.range.left), key);
       return;
     }
     const id = rangeId(precedent);
@@ -126,7 +165,12 @@ export const createDependencyGraph = (): DependencyGraph => {
       known.dependents.add(key);
       return;
     }
-    const entry: RangeEntry = { ...precedent, dependents: new Set([key]) };
+
+    const entry: RangeEntry = {
+      sheet: precedent.sheet,
+      range: { ...precedent.range },
+      dependents: new Set([key]),
+    };
 
     ranges.set(id, entry);
     place(entry, true);
@@ -135,8 +179,8 @@ export const createDependencyGraph = (): DependencyGraph => {
   const unlink = (key: number, precedent: Precedent): void => {
     if (single(precedent.range)) {
       removeFrom(
-        singles,
-        formulaKey(precedent.sheet, precedent.range.top, precedent.range.left),
+        singlesOf(precedent.sheet),
+        cellIndex(precedent.range.top, precedent.range.left),
         key,
       );
 
@@ -173,7 +217,61 @@ export const createDependencyGraph = (): DependencyGraph => {
     });
   };
 
+  const shift = (sheet: number, change: LineMove): void => {
+    const start = change.at + Math.max(-change.count, 0);
+    const offset = change.axis === 'rows' ? change.count * MAX_COLS : change.count;
+
+    const movesRange = (precedent: Precedent): boolean =>
+      precedent.sheet === sheet && firstLine(precedent.range, change.axis) >= start;
+
+    const cells = singles.get(sheet);
+    const moved: (readonly [number, Set<number>])[] = [];
+
+    cells?.forEach((members, cell) => {
+      if ((change.axis === 'rows' ? Math.floor(cell / MAX_COLS) : cell % MAX_COLS) >= start) {
+        moved.push([cell, members]);
+      }
+    });
+
+    moved.forEach(([cell]) => cells?.delete(cell));
+    moved.forEach(([cell, members]) => cells?.set(cell + offset, members));
+
+    const moving: (readonly [string, RangeEntry])[] = [];
+
+    ranges.forEach((entry, id) => {
+      if (movesRange(entry)) {
+        moving.push([id, entry]);
+      }
+    });
+
+    moving.forEach(([id, entry]) => {
+      ranges.delete(id);
+      place(entry, false);
+    });
+
+    moving.forEach(([, entry]) => {
+      const shifted: RangeEntry = { ...entry, range: moveRange(entry.range, change) };
+      const known = ranges.get(rangeId(shifted));
+
+      if (known === undefined) {
+        ranges.set(rangeId(shifted), shifted);
+        place(shifted, true);
+      } else {
+        entry.dependents.forEach((key) => known.dependents.add(key));
+      }
+    });
+
+    precedents.forEach((list) => {
+      list.forEach((precedent) => {
+        if (movesRange(precedent)) {
+          shiftInPlace(precedent.range, change);
+        }
+      });
+    });
+  };
+
   return {
+    shift,
     set: (key, list) => {
       remove(key);
       precedents.set(key, list);
@@ -185,7 +283,7 @@ export const createDependencyGraph = (): DependencyGraph => {
     remove,
     precedentsOf: (key) => precedents.get(key) ?? [],
     forEachDependent: (sheet, row, col, visit) => {
-      singles.get(formulaKey(sheet, row, col))?.forEach(visit);
+      singles.get(sheet)?.get(cellIndex(row, col))?.forEach(visit);
 
       visitEntries(
         bands.get(bandKey(sheet, Math.floor(row / BAND_ROWS), Math.floor(col / BAND_COLS))),
@@ -205,7 +303,17 @@ interface Frame {
   at: number;
 }
 
-export const planRecalc = (seeds: Iterable<number>, graph: DependencyGraph): RecalcPlan => {
+export interface GraphPlace {
+  readonly sheet: number;
+  readonly row: number;
+  readonly col: number;
+}
+
+export const planRecalc = (
+  seeds: Iterable<number>,
+  graph: DependencyGraph,
+  locate: (key: number) => GraphPlace | undefined,
+): RecalcPlan => {
   const index = new Map<number, number>();
   const low = new Map<number, number>();
   const onStack = new Set<number>();
@@ -218,9 +326,13 @@ export const planRecalc = (seeds: Iterable<number>, graph: DependencyGraph): Rec
   const open = (key: number): void => {
     const next: number[] = [];
 
-    graph.forEachDependent(sheetOfKey(key), rowOfKey(key), colOfKey(key), (dependent) => {
-      next.push(dependent);
-    });
+    const place = locate(key);
+
+    if (place !== undefined) {
+      graph.forEachDependent(place.sheet, place.row, place.col, (dependent) => {
+        next.push(dependent);
+      });
+    }
 
     index.set(key, index.size);
     low.set(key, index.size - 1);

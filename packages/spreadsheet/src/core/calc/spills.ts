@@ -22,6 +22,7 @@ export interface Spills {
   claim(cell: number): number | undefined;
   owns(cell: number): boolean;
   waiting(sheet: Sheet, row: number, col: number, visit: (anchor: number) => void): void;
+  forEachArea(visit: (anchor: number, area: SpillArea) => void): void;
 }
 
 export const forEachSpillCell = (
@@ -80,6 +81,11 @@ export const createSpills = (): Spills => {
       return owner;
     },
     owns: (cell) => owners.has(cell),
+    forEachArea: (visit) => {
+      [...areas, ...blocked].forEach(([anchor, area]) => {
+        visit(anchor, area);
+      });
+    },
     waiting: (sheet, row, col, visit) => {
       blocked.forEach((area, anchor) => {
         if (area.sheet === sheet && containsCell(area.range, row, col)) {

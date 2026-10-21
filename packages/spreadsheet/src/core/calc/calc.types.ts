@@ -22,8 +22,14 @@ export type CellContent =
   | { readonly kind: 'value'; readonly value: CellValue }
   | { readonly kind: 'formula'; readonly ast: FormulaNode };
 
+export interface ShiftedFormulaCell {
+  readonly sheet: Sheet;
+  readonly row: number;
+  readonly col: number;
+  readonly before: FormulaNode;
+}
+
 export interface FormulaCell {
-  readonly text: string;
   readonly ast: FormulaNode;
   state: FormulaState;
 }

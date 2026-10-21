@@ -161,6 +161,7 @@ import {
   type CellRange,
   type LineAxis,
   type LineChange,
+  type Loading,
   type Recalculation,
   type Sheet,
   type StepOutcome,
@@ -556,13 +557,36 @@ const commands: NuiTableCommandSink<number> = {
   redo: () => followChanges(book.value?.redo()),
 };
 
+const finishLoading = (): void => {
+  progress.value = undefined;
+  recalculate();
+};
+
+const followLoading = (loading: Loading): void => {
+  const tick = (): void => {
+    if (progress.value === undefined || loading.done >= loading.total) {
+      return;
+    }
+    progress.value = { done: loading.done, total: loading.total };
+    requestAnimationFrame(tick);
+  };
+
+  progress.value = { done: loading.done, total: loading.total };
+  status.value = 'Ввод формул…';
+  requestAnimationFrame(tick);
+
+  void loading.settled.then(() => finishLoading());
+};
+
 const fillLoad = (): void => {
   const opened = book.value;
 
   if (opened !== undefined) {
-    current.value = opened.fillLoad().name;
+    const { sheet: target, loading } = opened.fillLoad();
+
+    current.value = target.name;
     loaded.value = true;
-    recalculate();
+    followLoading(loading);
   }
 };
 

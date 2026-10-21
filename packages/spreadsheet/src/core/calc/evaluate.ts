@@ -1,6 +1,8 @@
-import { MAX_COLS, MAX_ROWS, rangeOf } from '../address';
+import { MAX_COLS, MAX_ROWS } from '../address';
 import type { CellRange, CellValue } from '../cell.types';
 import type { FormulaNode } from '../formula/formula.types';
+import { colOf, referenceRange, rowOf } from '../formula/origin';
+import { EN_FORMULAS } from '../formula/locale';
 import { parseFormula } from '../formula/parser';
 import { EMPTY, errorValue, numberValue, textValue } from '../values';
 import type { Sheet, Workbook } from '../workbook';
@@ -124,17 +126,6 @@ const operate = (
   }
 };
 
-export const lineRange = (
-  node: Extract<FormulaNode, { readonly kind: 'columns' | 'rows' }>,
-): CellRange => {
-  const low = Math.min(node.from.index, node.to.index);
-  const high = Math.max(node.from.index, node.to.index);
-
-  return node.kind === 'columns'
-    ? { top: 0, bottom: MAX_ROWS - 1, left: low, right: high }
-    : { top: low, bottom: high, left: 0, right: MAX_COLS - 1 };
-};
-
 const constantOf = (node: FormulaNode): CellValue => {
   switch (node.kind) {
     case 'number':
@@ -166,7 +157,13 @@ const safely = (node: FormulaNode, context: EvalContext): EvalValue =>
 
 const operandOf = (node: FormulaNode, context: EvalContext): Operand => {
   if (node.kind === 'cell') {
-    return sheetOf(node.sheet, context).cells.get(node.ref.row, node.ref.col);
+    const here = context.here();
+    const row = rowOf(node.ref, here);
+    const col = colOf(node.ref, here);
+
+    return row < 0 || col < 0 || row >= MAX_ROWS || col >= MAX_COLS
+      ? errorValue('#REF!')
+      : sheetOf(node.sheet, context).cells.get(row, col);
   }
   const value = safely(node, context);
 
@@ -261,7 +258,8 @@ const argumentsFrom = (
 const REFERENCE_KINDS = new Set(['cell', 'range', 'columns', 'rows']);
 
 const indirect = (text: string, context: EvalContext): EvalValue => {
-  const parsed = parseFormula(text);
+  const here = context.here();
+  const parsed = parseFormula(text, EN_FORMULAS, here);
 
   if (!parsed.ok || !REFERENCE_KINDS.has(parsed.ast.kind)) {
     return raise('#REF!');
@@ -348,7 +346,8 @@ const spilled = (
   context: EvalContext,
 ): EvalValue => {
   const sheet = sheetOf(node.sheet, context);
-  const range = context.spillRange(sheet, node.ref.row, node.ref.col);
+  const here = context.here();
+  const range = context.spillRange(sheet, rowOf(node.ref, here), colOf(node.ref, here));
 
   return range === undefined ? raise('#REF!') : { kind: 'reference', sheet, range };
 };
@@ -380,12 +379,10 @@ const operation = (node: FormulaNode, context: EvalContext): EvalValue => {
 const evaluate = (node: FormulaNode, context: EvalContext): EvalValue => {
   switch (node.kind) {
     case 'cell':
-      return reference(node.sheet, rangeOf(node.ref, node.ref), context);
     case 'range':
-      return reference(node.sheet, rangeOf(node.from, node.to), context);
     case 'columns':
     case 'rows':
-      return reference(node.sheet, lineRange(node), context);
+      return reference(node.sheet, referenceRange(node, context.here()) ?? raise('#REF!'), context);
     case 'spill':
       return spilled(node, context);
     case 'name':

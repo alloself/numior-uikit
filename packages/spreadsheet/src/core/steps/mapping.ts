@@ -1,5 +1,6 @@
 import type { CellAddress } from '../cell.types';
-import { sameName, shiftIndex, type LineChange } from '../formula/rewrite';
+import { sameName, type LineChange } from '../formula/rewrite';
+import { shiftIndex } from '../lines';
 
 export const mapCell = (
   changes: readonly LineChange[],

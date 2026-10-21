@@ -1,4 +1,11 @@
-import { createStepper, numberValue, parseFormula } from '@numior/spreadsheet/core';
+import {
+  createCalculator,
+  createStepper,
+  createWorkbook,
+  loadCells,
+  numberValue,
+  parseFormula,
+} from '@numior/spreadsheet/core';
 import { filledSheet, ledger, ledgerFormulas, type Ledger } from './fixtures.ts';
 import { measure, record, summarize, type Operation } from '../../../scripts/bench-harness.ts';
 
@@ -122,6 +129,29 @@ operations.push(
     heavy,
   ),
 );
+
+const loadSlices: number[] = [];
+
+for (let index = 0; index < heavy.warmup + heavy.iterations; index += 1) {
+  const workbook = createWorkbook();
+  const target = workbook.addSheet('Ledger');
+
+  workbook.addSheet('Rates');
+
+  const loading = loadCells(
+    createCalculator(workbook),
+    target,
+    texts.map((formula) => ({ row: formula.row, col: formula.col, formula: formula.text })),
+    { yieldTo: () => Promise.resolve() },
+  );
+
+  await loading.settled;
+  if (index >= heavy.warmup) {
+    loadSlices.push(loading.longestMs);
+  }
+}
+
+operations.push(summarize('longest main-thread slice while loading 100,050 formulas', loadSlices));
 
 operations.push(
   await sampled(

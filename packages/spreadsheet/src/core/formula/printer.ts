@@ -1,7 +1,8 @@
 import { columnName, formatCell } from '../address';
-import type { CellRef } from '../cell.types';
+import type { CellAddress, CellRef } from '../cell.types';
 import type { BinaryOperator, FormulaLocale, FormulaNode, LineRef } from './formula.types';
 import { EN_FORMULAS } from './locale';
+import { ORIGIN, absoluteFormula } from './origin';
 
 const PRECEDENCE: Readonly<Record<BinaryOperator, number>> = {
   '=': 1,
@@ -61,7 +62,7 @@ const columnText = (line: LineRef): string =>
 const rowText = (line: LineRef): string => `${line.absolute ? '$' : ''}${String(line.index + 1)}`;
 
 const wrapped = (node: FormulaNode, locale: FormulaLocale, above: number): string => {
-  const text = printFormula(node, locale);
+  const text = printNode(node, locale);
 
   return precedenceOf(node) < above ? `(${text})` : text;
 };
@@ -105,7 +106,7 @@ const referenceText = (node: FormulaNode): string | undefined => {
 const operationText = (node: FormulaNode, locale: FormulaLocale): string => {
   switch (node.kind) {
     case 'call':
-      return `${node.name}(${node.args.map((arg) => printFormula(arg, locale)).join(locale.argument)})`;
+      return `${node.name}(${node.args.map((arg) => printNode(arg, locale)).join(locale.argument)})`;
     case 'unary':
       return `${node.op}${wrapped(node.operand, locale, UNARY)}`;
     case 'percent':
@@ -117,12 +118,18 @@ const operationText = (node: FormulaNode, locale: FormulaLocale): string => {
     }
     case 'array':
       return `{${node.rows
-        .map((row) => row.map((item) => printFormula(item, locale)).join(locale.arrayColumn))
+        .map((row) => row.map((item) => printNode(item, locale)).join(locale.arrayColumn))
         .join(locale.arrayRow)}}`;
     default:
       return '';
   }
 };
 
-export const printFormula = (node: FormulaNode, locale: FormulaLocale = EN_FORMULAS): string =>
+const printNode = (node: FormulaNode, locale: FormulaLocale): string =>
   constantText(node, locale) ?? referenceText(node) ?? operationText(node, locale);
+
+export const printFormula = (
+  node: FormulaNode,
+  locale: FormulaLocale = EN_FORMULAS,
+  origin: CellAddress = ORIGIN,
+): string => printNode(absoluteFormula(node, origin), locale);

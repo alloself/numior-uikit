@@ -45,7 +45,13 @@ export type {
   FormulaReference,
   LineRef,
 } from './formula';
-export { BASE_FUNCTIONS, createCalculator, createFunctionRegistry, defineFunction } from './calc';
+export {
+  BASE_FUNCTIONS,
+  createCalculator,
+  createFunctionRegistry,
+  defineFunction,
+  loadCells,
+} from './calc';
 export type {
   ArrayValue,
   Calculator,
@@ -59,6 +65,10 @@ export type {
   FunctionRegistry,
   FunctionSpec,
   Limitation,
+  LoadEntry,
+  LoadFailure,
+  LoadOptions,
+  Loading,
   RecalcOptions,
   Recalculation,
 } from './calc';

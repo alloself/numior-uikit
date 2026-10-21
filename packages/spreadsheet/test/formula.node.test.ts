@@ -301,3 +301,24 @@ describe('formula references', () => {
     ).toEqual(['A1:B2', 'Sheet1!C3', 'Total', 'D:D']);
   });
 });
+
+describe('references relative to the formula cell', () => {
+  it('stores relative parts as offsets so a formula reads the same from any cell', () => {
+    const here = { row: 4, col: 2 };
+    const parsed = parseFormula('=A1+$B$2+B$7+$C3+A:A+3:3+A1#', EN_FORMULAS, here);
+
+    if (!parsed.ok) {
+      throw new Error('the formula does not parse');
+    }
+
+    expect(printFormula(parsed.ast, EN_FORMULAS, here)).toBe('A1+$B$2+B$7+$C3+A:A+3:3+A1#');
+
+    expect(printFormula(parsed.ast, EN_FORMULAS, { row: 5, col: 3 })).toBe(
+      'B2+$B$2+C$7+$C4+B:B+4:4+B2#',
+    );
+
+    expect(printFormula(parsed.ast, EN_FORMULAS, { row: 0, col: 0 })).toBe(
+      '#REF!+$B$2+#REF!+#REF!+#REF!+#REF!+#REF!',
+    );
+  });
+});

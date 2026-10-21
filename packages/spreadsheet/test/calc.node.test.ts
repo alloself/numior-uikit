@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { RU_LOCALE, numberValue, textValue } from '../src/core';
+import { RU_LOCALE, loadCells, numberValue, textValue, type LoadEntry } from '../src/core';
 import { evaluated, openSheet } from './sheet-harness';
 
 describe('formula evaluation', () => {
@@ -307,5 +307,64 @@ describe('book locale', () => {
 
     expect(sheet.value('A1')).toEqual(textValue('1.234,50'));
     expect(sheet.calculator.locale.numbers.group).toBe('.');
+  });
+});
+
+describe('loading cells in slices', () => {
+  it('enters values and formulas between yields and reports what did not parse', async () => {
+    const sheet = openSheet();
+    let yields = 0;
+
+    const entries: LoadEntry[] = [
+      ...Array.from({ length: 300 }, (_, row): LoadEntry => ({
+        row,
+        col: 0,
+        value: numberValue(row),
+      })),
+      ...Array.from({ length: 300 }, (_, row): LoadEntry => ({
+        row,
+        col: 1,
+        formula: `=A${String(row + 1)}*2`,
+      })),
+      { row: 0, col: 2, formula: '=1+' },
+    ];
+
+    const loading = loadCells(sheet.calculator, sheet.sheet, entries, {
+      budgetMs: 0,
+      yieldTo: async () => {
+        yields += 1;
+      },
+    });
+
+    expect(loading.done).toBeLessThan(loading.total);
+
+    await loading.settled;
+    sheet.recalc();
+
+    expect(yields).toBeGreaterThan(1);
+    expect(loading.done).toBe(601);
+    expect(loading.failures).toEqual([{ position: 3, reason: 'end', row: 0, col: 2 }]);
+    expect(sheet.value('B300')).toEqual(numberValue(598));
+    expect(loading.longestMs).toBeGreaterThanOrEqual(0);
+  });
+
+  it('stops entering when cancelled', async () => {
+    const sheet = openSheet();
+
+    const loading = loadCells(
+      sheet.calculator,
+      sheet.sheet,
+      Array.from({ length: 500 }, (_, row): LoadEntry => ({
+        row,
+        col: 0,
+        value: numberValue(row),
+      })),
+      { budgetMs: 0, yieldTo: async () => undefined },
+    );
+
+    loading.cancel();
+    await loading.settled;
+
+    expect(loading.done).toBeLessThan(500);
   });
 });

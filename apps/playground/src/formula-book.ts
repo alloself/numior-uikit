@@ -8,6 +8,8 @@ import {
   createWorkbook,
   currencyFormat,
   formatColor,
+  loadCells,
+  numberValue,
   formulaReferences,
   parseCell,
   parseFormula,
@@ -19,6 +21,8 @@ import {
   type CellValue,
   type FormulaReference,
   type LineAxis,
+  type LoadEntry,
+  type Loading,
   type StepOutcome,
   type WorkbookStep,
   type NumberLocale,
@@ -192,6 +196,17 @@ interface EntryStep {
   readonly problem: string | undefined;
 }
 
+const loadEntries = (): LoadEntry[] =>
+  Array.from({ length: LOAD_ROWS }, (_, row): LoadEntry[] => {
+    const at = String(row + 1);
+
+    return [
+      { row, col: 0, value: numberValue(row + 1) },
+      { row, col: 1, formula: `=A${at}*2` },
+      { row, col: 2, formula: row === 0 ? '=B1' : `=C${String(row)}+B${at}` },
+    ];
+  }).flat();
+
 export const createFormulaBook = () => {
   const workbook = createWorkbook();
   const budget = workbook.addSheet('Бюджет');
@@ -302,16 +317,10 @@ export const createFormulaBook = () => {
         ? formulaReferences(parsed.ast).flatMap((found) => visibleRange(sheet, found))
         : [];
     },
-    fillLoad: (): Sheet => {
-      for (let row = 0; row < LOAD_ROWS; row += 1) {
-        const at = String(row + 1);
-
-        editor.enter(load, row, 0, String(row + 1), EN_LOCALE);
-        editor.enter(load, row, 1, `=A${at}*2`, EN_LOCALE);
-        editor.enter(load, row, 2, row === 0 ? '=B1' : `=C${String(row)}+B${at}`, EN_LOCALE);
-      }
-      return load;
-    },
+    fillLoad: (): { readonly sheet: Sheet; readonly loading: Loading } => ({
+      sheet: load,
+      loading: loadCells(calculator, load, loadEntries()),
+    }),
   };
 };
 

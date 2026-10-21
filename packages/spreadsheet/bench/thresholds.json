@@ -1,22 +1,25 @@
 {
   "node": {
-    "fill a 20,000 \u00d7 50 sheet with 1,000,000 values": {
-      "p95Ms": 150
+    "fill a 20,000 × 50 sheet with 1,000,000 values": {
+      "p95Ms": 90
     },
     "read every cell of a 1,000,000 cell sheet": {
-      "p95Ms": 40
+      "p95Ms": 20
     },
     "parse 100,050 formulas": {
-      "p95Ms": 400
+      "p95Ms": 240
     },
     "enter 100,050 formulas with their dependencies": {
-      "p95Ms": 900
+      "p95Ms": 580
+    },
+    "longest main-thread slice while loading 100,050 formulas": {
+      "p95Ms": 16
     },
     "recalculate 100,050 formulas from scratch": {
-      "p95Ms": 600
+      "p95Ms": 330
     },
     "insert a row in the middle of the 100,050 formula ledger": {
-      "p95Ms": 600
+      "p95Ms": 100
     },
     "edit the head of a 20,000 deep chain to the first chunk": {
       "p95Ms": 100
@@ -28,7 +31,7 @@
       "p95Ms": 5
     },
     "finish the recalculation after editing the chain head": {
-      "p95Ms": 250
+      "p95Ms": 140
     }
   }
 }

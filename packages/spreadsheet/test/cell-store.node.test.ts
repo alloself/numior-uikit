@@ -86,4 +86,31 @@ describe('cell store', () => {
     expect(cells.nextEdge(0, 5, 0, 1)).toBe(MAX_COLS - 1);
     expect(cells.nextEdge(0, 5, 0, -1)).toBe(0);
   });
+
+  it('moves whole lines of every value kind across chunks and drops deleted lines', () => {
+    const cells = store();
+
+    cells.set(0, 0, numberValue(1));
+    cells.set(511, 1, textValue('edge'));
+    cells.set(600, 2, booleanValue(false));
+    cells.set(MAX_ROWS - 1, 3, errorValue('#N/A'));
+    cells.shiftLines('rows', 1, 2);
+
+    expect(cells.get(0, 0)).toEqual(numberValue(1));
+    expect(cells.get(513, 1)).toEqual(textValue('edge'));
+    expect(cells.get(602, 2)).toEqual(booleanValue(false));
+    expect(cells.get(511, 1)).toEqual({ kind: 'empty' });
+    expect(cells.size).toBe(3);
+
+    cells.shiftLines('rows', 500, -20);
+
+    expect(cells.get(513, 1)).toEqual({ kind: 'empty' });
+    expect(cells.get(582, 2)).toEqual(booleanValue(false));
+    expect(cells.size).toBe(2);
+
+    cells.shiftLines('cols', 1, 30);
+
+    expect(cells.get(582, 32)).toEqual(booleanValue(false));
+    expect(cells.get(0, 0)).toEqual(numberValue(1));
+  });
 });
