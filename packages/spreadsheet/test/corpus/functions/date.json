@@ -1,0 +1,490 @@
+{
+  "family": "date",
+  "provenance": "derived",
+  "tolerance": 1e-12,
+  "functions": [
+    "DATE",
+    "TIME",
+    "DATEVALUE",
+    "TIMEVALUE",
+    "YEAR",
+    "MONTH",
+    "DAY",
+    "HOUR",
+    "MINUTE",
+    "SECOND",
+    "WEEKDAY",
+    "WEEKNUM",
+    "ISOWEEKNUM",
+    "EDATE",
+    "EOMONTH",
+    "DAYS",
+    "DAYS360",
+    "DATEDIF",
+    "YEARFRAC",
+    "NETWORKDAYS",
+    "NETWORKDAYS.INTL",
+    "WORKDAY",
+    "WORKDAY.INTL"
+  ],
+  "cases": [
+    {
+      "formula": "=DATE(2008,1,2)",
+      "expected": 39449
+    },
+    {
+      "formula": "=DATE(108,1,2)",
+      "expected": 39449
+    },
+    {
+      "formula": "=DATE(2008,14,2)",
+      "expected": 39846
+    },
+    {
+      "formula": "=DATE(2008,-3,2)",
+      "expected": 39327
+    },
+    {
+      "formula": "=DATE(2008,1,35)",
+      "expected": 39482
+    },
+    {
+      "formula": "=DATE(1900,1,1)",
+      "expected": 1
+    },
+    {
+      "formula": "=DATE(1900,2,29)",
+      "expected": 60
+    },
+    {
+      "formula": "=DATE(1900,3,1)",
+      "expected": 61
+    },
+    {
+      "formula": "=DATE(10000,1,1)",
+      "expected": {
+        "error": "#NUM!"
+      }
+    },
+    {
+      "formula": "=TIME(12,0,0)",
+      "expected": 0.5
+    },
+    {
+      "formula": "=TIME(16,48,10)",
+      "expected": 0.7001157407407408
+    },
+    {
+      "formula": "=TIME(25,0,0)",
+      "expected": 0.041666666666666664
+    },
+    {
+      "formula": "=TIME(0,0,-1)",
+      "expected": {
+        "error": "#NUM!"
+      }
+    },
+    {
+      "formula": "=DATEVALUE(\"8/22/2011\")",
+      "expected": 40777
+    },
+    {
+      "formula": "=DATEVALUE(\"22-MAY-2011\")",
+      "expected": 40685
+    },
+    {
+      "formula": "=DATEVALUE(\"2011/02/23\")",
+      "expected": 40597
+    },
+    {
+      "formula": "=DATEVALUE(\"21.10.2026\")",
+      "expected": 46316
+    },
+    {
+      "formula": "=DATEVALUE(\"October 21, 2026\")",
+      "expected": 46316
+    },
+    {
+      "formula": "=DATEVALUE(\"22-Aug-2011 6:35 AM\")",
+      "expected": 40777
+    },
+    {
+      "formula": "=DATEVALUE(\"31.02.2026\")",
+      "expected": {
+        "error": "#VALUE!"
+      }
+    },
+    {
+      "formula": "=DATEVALUE(\"soon\")",
+      "expected": {
+        "error": "#VALUE!"
+      }
+    },
+    {
+      "formula": "=TIMEVALUE(\"2:24 AM\")",
+      "expected": 0.1
+    },
+    {
+      "formula": "=TIMEVALUE(\"22-Aug-2011 6:35 AM\")",
+      "expected": 0.2743055555555556
+    },
+    {
+      "formula": "=TIMEVALUE(\"2011-01-01\")",
+      "expected": 0
+    },
+    {
+      "formula": "=TIMEVALUE(\"25:00\")",
+      "expected": {
+        "error": "#VALUE!"
+      }
+    },
+    {
+      "formula": "=YEAR(DATE(2008,7,5))",
+      "expected": 2008
+    },
+    {
+      "formula": "=MONTH(\"15-Apr-2011\")",
+      "expected": 4
+    },
+    {
+      "formula": "=DAY(\"15-Apr-2011\")",
+      "expected": 15
+    },
+    {
+      "formula": "=DAY(60)",
+      "expected": 29
+    },
+    {
+      "formula": "=MONTH(60)",
+      "expected": 2
+    },
+    {
+      "formula": "=YEAR(0)",
+      "expected": 1900
+    },
+    {
+      "formula": "=DAY(0)",
+      "expected": 0
+    },
+    {
+      "formula": "=DAY(-1)",
+      "expected": {
+        "error": "#NUM!"
+      }
+    },
+    {
+      "formula": "=YEAR(A1)",
+      "cells": {
+        "A1": 46316.75
+      },
+      "expected": 2026
+    },
+    {
+      "formula": "=HOUR(0.75)",
+      "expected": 18
+    },
+    {
+      "formula": "=HOUR(\"7/18/2011 7:45\")",
+      "expected": 7
+    },
+    {
+      "formula": "=HOUR(\"2011-01-01\")",
+      "expected": 0
+    },
+    {
+      "formula": "=MINUTE(\"12:45:00 PM\")",
+      "expected": 45
+    },
+    {
+      "formula": "=SECOND(\"4:48:18 PM\")",
+      "expected": 18
+    },
+    {
+      "formula": "=SECOND(0.5)",
+      "expected": 0
+    },
+    {
+      "formula": "=WEEKDAY(DATE(2008,2,14))",
+      "expected": 5
+    },
+    {
+      "formula": "=WEEKDAY(DATE(2008,2,14),2)",
+      "expected": 4
+    },
+    {
+      "formula": "=WEEKDAY(DATE(2008,2,14),3)",
+      "expected": 3
+    },
+    {
+      "formula": "=WEEKDAY(DATE(2008,2,14),11)",
+      "expected": 4
+    },
+    {
+      "formula": "=WEEKDAY(DATE(2008,2,14),17)",
+      "expected": 5
+    },
+    {
+      "formula": "=WEEKDAY(1)",
+      "expected": 1
+    },
+    {
+      "formula": "=WEEKDAY(DATE(2008,2,14),4)",
+      "expected": {
+        "error": "#NUM!"
+      }
+    },
+    {
+      "formula": "=WEEKNUM(DATE(2012,3,9))",
+      "expected": 10
+    },
+    {
+      "formula": "=WEEKNUM(DATE(2012,3,9),2)",
+      "expected": 11
+    },
+    {
+      "formula": "=WEEKNUM(DATE(2012,3,9),21)",
+      "expected": 10
+    },
+    {
+      "formula": "=WEEKNUM(DATE(2021,1,1))",
+      "expected": 1
+    },
+    {
+      "formula": "=WEEKNUM(DATE(2012,3,9),3)",
+      "expected": {
+        "error": "#NUM!"
+      }
+    },
+    {
+      "formula": "=ISOWEEKNUM(DATE(2012,3,9))",
+      "expected": 10
+    },
+    {
+      "formula": "=ISOWEEKNUM(DATE(2021,1,1))",
+      "expected": 53
+    },
+    {
+      "formula": "=ISOWEEKNUM(DATE(2026,12,31))",
+      "expected": 53
+    },
+    {
+      "formula": "=EDATE(DATE(2011,1,15),1)",
+      "expected": 40589
+    },
+    {
+      "formula": "=EDATE(DATE(2011,1,15),-1)",
+      "expected": 40527
+    },
+    {
+      "formula": "=EDATE(DATE(2011,1,15),2)",
+      "expected": 40617
+    },
+    {
+      "formula": "=EDATE(DATE(2011,1,31),1)",
+      "expected": 40602
+    },
+    {
+      "formula": "=EOMONTH(DATE(2011,1,1),1)",
+      "expected": 40602
+    },
+    {
+      "formula": "=EOMONTH(DATE(2011,1,1),-3)",
+      "expected": 40482
+    },
+    {
+      "formula": "=EOMONTH(\"2024-01-15\",1)",
+      "expected": 45351
+    },
+    {
+      "formula": "=DAYS(\"15-MAR-2021\",\"1-FEB-2021\")",
+      "expected": 42
+    },
+    {
+      "formula": "=DAYS(DATE(2021,12,31),DATE(2021,1,1))",
+      "expected": 364
+    },
+    {
+      "formula": "=DAYS360(DATE(2011,1,30),DATE(2011,2,1))",
+      "expected": 1
+    },
+    {
+      "formula": "=DAYS360(DATE(2011,1,1),DATE(2011,12,31))",
+      "expected": 360
+    },
+    {
+      "formula": "=DAYS360(DATE(2011,1,1),DATE(2011,12,31),TRUE)",
+      "expected": 359
+    },
+    {
+      "formula": "=DAYS360(DATE(2011,2,28),DATE(2011,3,31))",
+      "expected": 30
+    },
+    {
+      "formula": "=DATEDIF(DATE(2001,1,1),DATE(2003,1,1),\"Y\")",
+      "expected": 2
+    },
+    {
+      "formula": "=DATEDIF(DATE(2001,6,1),DATE(2002,8,15),\"D\")",
+      "expected": 440
+    },
+    {
+      "formula": "=DATEDIF(DATE(2001,6,1),DATE(2002,8,15),\"YD\")",
+      "expected": 75
+    },
+    {
+      "formula": "=DATEDIF(DATE(2001,6,1),DATE(2002,8,15),\"MD\")",
+      "expected": 14
+    },
+    {
+      "formula": "=DATEDIF(DATE(2001,6,1),DATE(2002,8,15),\"M\")",
+      "expected": 14
+    },
+    {
+      "formula": "=DATEDIF(DATE(2001,6,1),DATE(2002,8,15),\"YM\")",
+      "expected": 2
+    },
+    {
+      "formula": "=DATEDIF(DATE(2001,6,20),DATE(2001,8,15),\"MD\")",
+      "expected": 26
+    },
+    {
+      "formula": "=DATEDIF(DATE(2003,1,1),DATE(2001,1,1),\"Y\")",
+      "expected": {
+        "error": "#NUM!"
+      }
+    },
+    {
+      "formula": "=DATEDIF(DATE(2001,1,1),DATE(2003,1,1),\"W\")",
+      "expected": {
+        "error": "#NUM!"
+      }
+    },
+    {
+      "formula": "=YEARFRAC(DATE(2012,1,1),DATE(2012,7,30))",
+      "expected": 0.5805555555555556
+    },
+    {
+      "formula": "=YEARFRAC(DATE(2012,1,1),DATE(2012,7,30),1)",
+      "expected": 0.5765027322404371
+    },
+    {
+      "formula": "=YEARFRAC(DATE(2012,1,1),DATE(2012,7,30),2)",
+      "expected": 0.5861111111111111
+    },
+    {
+      "formula": "=YEARFRAC(DATE(2012,1,1),DATE(2012,7,30),3)",
+      "expected": 0.5780821917808219
+    },
+    {
+      "formula": "=YEARFRAC(DATE(2012,1,1),DATE(2012,7,30),4)",
+      "expected": 0.5805555555555556
+    },
+    {
+      "formula": "=YEARFRAC(DATE(2010,1,1),DATE(2012,7,30),1)",
+      "expected": 2.5757299270072993
+    },
+    {
+      "formula": "=YEARFRAC(DATE(2012,7,30),DATE(2012,1,1))",
+      "expected": 0.5805555555555556
+    },
+    {
+      "formula": "=YEARFRAC(DATE(2011,12,1),DATE(2012,3,1),1)",
+      "expected": 0.24863387978142076
+    },
+    {
+      "formula": "=YEARFRAC(DATE(2012,6,1),DATE(2013,5,1),1)",
+      "expected": 0.915068493150685
+    },
+    {
+      "formula": "=YEARFRAC(DATE(2012,1,1),DATE(2012,7,30),5)",
+      "expected": {
+        "error": "#NUM!"
+      }
+    },
+    {
+      "formula": "=NETWORKDAYS(DATE(2012,10,1),DATE(2013,3,1))",
+      "expected": 110
+    },
+    {
+      "formula": "=NETWORKDAYS(DATE(2012,10,1),DATE(2013,3,1),A1)",
+      "cells": {
+        "A1": 41235
+      },
+      "expected": 109
+    },
+    {
+      "formula": "=NETWORKDAYS(DATE(2012,10,1),DATE(2013,3,1),A1:A3)",
+      "cells": {
+        "A1": 41235,
+        "A2": 41247,
+        "A3": 41295
+      },
+      "expected": 107
+    },
+    {
+      "formula": "=NETWORKDAYS(DATE(2013,3,1),DATE(2012,10,1))",
+      "expected": -110
+    },
+    {
+      "formula": "=NETWORKDAYS.INTL(DATE(2006,1,1),DATE(2006,1,31))",
+      "expected": 22
+    },
+    {
+      "formula": "=NETWORKDAYS.INTL(DATE(2006,2,28),DATE(2006,1,31))",
+      "expected": -21
+    },
+    {
+      "formula": "=NETWORKDAYS.INTL(DATE(2006,1,1),DATE(2006,2,1),7,{\"2006/1/2\",\"2006/1/16\"})",
+      "expected": 22
+    },
+    {
+      "formula": "=NETWORKDAYS.INTL(DATE(2006,1,1),DATE(2006,2,1),\"0010001\",{\"2006/1/2\",\"2006/1/16\"})",
+      "expected": 20
+    },
+    {
+      "formula": "=NETWORKDAYS.INTL(DATE(2006,1,1),DATE(2006,2,1),\"1111111\")",
+      "expected": {
+        "error": "#VALUE!"
+      }
+    },
+    {
+      "formula": "=WORKDAY(DATE(2008,10,1),151)",
+      "expected": 39933
+    },
+    {
+      "formula": "=WORKDAY(DATE(2008,10,1),151,A1:A3)",
+      "cells": {
+        "A1": 39778,
+        "A2": 39786,
+        "A3": 39834
+      },
+      "expected": 39938
+    },
+    {
+      "formula": "=WORKDAY(DATE(2012,1,9),-5)",
+      "expected": 40910
+    },
+    {
+      "formula": "=WORKDAY(DATE(2012,1,7),0)",
+      "expected": 40915
+    },
+    {
+      "formula": "=WORKDAY.INTL(DATE(2012,1,1),30,0)",
+      "expected": {
+        "error": "#NUM!"
+      }
+    },
+    {
+      "formula": "=WORKDAY.INTL(DATE(2012,1,1),90,11)",
+      "expected": 41013
+    },
+    {
+      "formula": "=WORKDAY.INTL(DATE(2012,1,1),30,17)",
+      "expected": 40944
+    },
+    {
+      "formula": "=YEAR(DATE({2001,2002},1,1))",
+      "expected": [[2001, 2002]]
+    }
+  ]
+}
