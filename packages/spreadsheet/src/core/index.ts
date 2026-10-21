@@ -56,3 +56,21 @@ export type {
   RecalcOptions,
   Recalculation,
 } from './calc';
+export {
+  EN_NUMBERS,
+  FORMAT_PALETTE,
+  RU_NUMBERS,
+  builtinFormat,
+  formatColor,
+  formatValue,
+  numberLocaleOf,
+  parseNumberFormat,
+  renderValue,
+} from './format';
+export type {
+  FormatFill,
+  FormatSection,
+  FormattedValue,
+  NumberFormat,
+  NumberLocale,
+} from './format';

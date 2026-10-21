@@ -1,0 +1,596 @@
+{
+  "provenance": "derived",
+  "cases": [
+    {
+      "code": "####.#",
+      "value": 1234.59,
+      "text": "1234.6"
+    },
+    {
+      "code": "#.000",
+      "value": 8.9,
+      "text": "8.900"
+    },
+    {
+      "code": "0.#",
+      "value": 0.631,
+      "text": "0.6"
+    },
+    {
+      "code": "#.0#",
+      "value": 12,
+      "text": "12.0"
+    },
+    {
+      "code": "#.0#",
+      "value": 1234.568,
+      "text": "1234.57"
+    },
+    {
+      "code": "#.##",
+      "value": 0.5,
+      "text": ".5"
+    },
+    {
+      "code": "0.#",
+      "value": 12,
+      "text": "12."
+    },
+    {
+      "code": "???.???",
+      "value": 44.398,
+      "text": " 44.398"
+    },
+    {
+      "code": "???.???",
+      "value": 102.65,
+      "text": "102.65 "
+    },
+    {
+      "code": "???.???",
+      "value": 2.8,
+      "text": "  2.8  "
+    },
+    {
+      "code": "00000",
+      "value": 123,
+      "text": "00123"
+    },
+    {
+      "code": "000-00-0000",
+      "value": 123456789,
+      "text": "123-45-6789"
+    },
+    {
+      "code": "#,###",
+      "value": 12000,
+      "text": "12,000"
+    },
+    {
+      "code": "#,",
+      "value": 12000,
+      "text": "12"
+    },
+    {
+      "code": "0.0,,",
+      "value": 12200000,
+      "text": "12.2"
+    },
+    {
+      "code": "#,##0.00",
+      "value": 1234567.891,
+      "text": "1,234,567.89"
+    },
+    {
+      "code": "#,##0",
+      "value": -1234.5,
+      "text": "-1,235"
+    },
+    {
+      "code": "0.00",
+      "value": 1.005,
+      "text": "1.01"
+    },
+    {
+      "code": "0",
+      "value": -0.4,
+      "text": "-0"
+    },
+    {
+      "code": "0",
+      "value": 2.5,
+      "text": "3"
+    },
+    {
+      "code": "0",
+      "value": 123456789012345678,
+      "text": "123456789012346000"
+    },
+    {
+      "code": "0%",
+      "value": 0.08,
+      "text": "8%"
+    },
+    {
+      "code": "0.00%",
+      "value": 2.8,
+      "text": "280.00%"
+    },
+    {
+      "code": "0.00E+00",
+      "value": 12200000,
+      "text": "1.22E+07"
+    },
+    {
+      "code": "0.00E+00",
+      "value": 0.000123,
+      "text": "1.23E-04"
+    },
+    {
+      "code": "0.00E-00",
+      "value": 12200000,
+      "text": "1.22E07"
+    },
+    {
+      "code": "##0.0E+0",
+      "value": 12200000,
+      "text": "12.2E+6"
+    },
+    {
+      "code": "##0.0E+0",
+      "value": 1234,
+      "text": "1.2E+3"
+    },
+    {
+      "code": "0.00E+00",
+      "value": 9.999,
+      "text": "1.00E+01"
+    },
+    {
+      "code": "0.00E+00",
+      "value": 0,
+      "text": "0.00E+00"
+    },
+    {
+      "code": "# ?/?",
+      "value": 5.25,
+      "text": "5 1/4"
+    },
+    {
+      "code": "# ??/??",
+      "value": 5.3,
+      "text": "5  3/10"
+    },
+    {
+      "code": "# ??/16",
+      "value": 5.3,
+      "text": "5  5/16"
+    },
+    {
+      "code": "?/?",
+      "value": 0.75,
+      "text": "3/4"
+    },
+    {
+      "code": "# ?/?",
+      "value": 5,
+      "text": "5    "
+    },
+    {
+      "code": "#/#",
+      "value": 1.5,
+      "text": "3/2"
+    },
+    {
+      "code": "0 ?/?",
+      "value": 0.5,
+      "text": "0 1/2"
+    },
+    {
+      "code": "# ?/?",
+      "value": 0.25,
+      "text": " 1/4"
+    },
+    {
+      "code": "# ?/?",
+      "value": 5.99,
+      "text": "6    "
+    },
+    {
+      "code": "$#,##0.00_);($#,##0.00)",
+      "value": -1234.5,
+      "text": "($1,234.50)"
+    },
+    {
+      "code": "$#,##0.00_);($#,##0.00)",
+      "value": 1234.5,
+      "text": "$1,234.50 "
+    },
+    {
+      "code": "0.00;[Red]-0.00",
+      "value": -3,
+      "text": "-3.00",
+      "color": 3
+    },
+    {
+      "code": "0.00;[Red]0.00",
+      "value": -3,
+      "text": "3.00",
+      "color": 3
+    },
+    {
+      "code": "[Red][<=100];[Blue][>100]",
+      "value": 50,
+      "text": "50",
+      "color": 3
+    },
+    {
+      "code": "[Red][<=100];[Blue][>100]",
+      "value": 150,
+      "text": "150",
+      "color": 5
+    },
+    {
+      "code": "[Color10]0",
+      "value": 1,
+      "text": "1",
+      "color": 10
+    },
+    {
+      "code": "[>=1000]#,##0,\"K\";0",
+      "value": 25000,
+      "text": "25K"
+    },
+    {
+      "code": "[>=1000]#,##0,\"K\";0",
+      "value": 999,
+      "text": "999"
+    },
+    {
+      "code": "0;-0;\"zero\";\"text: \"@",
+      "value": 0,
+      "text": "zero"
+    },
+    {
+      "code": "0;-0;\"zero\";\"text: \"@",
+      "value": "abc",
+      "text": "text: abc"
+    },
+    {
+      "code": "0;-0;;@",
+      "value": 0,
+      "text": ""
+    },
+    {
+      "code": "\"Sales \"@",
+      "value": "north",
+      "text": "Sales north"
+    },
+    {
+      "code": "0.00",
+      "value": "abc",
+      "text": "abc"
+    },
+    {
+      "code": "@",
+      "value": 12.5,
+      "text": "12.5"
+    },
+    {
+      "code": "0.00 \"Surplus\";-0.00 \"Shortage\"",
+      "value": -1.23,
+      "text": "-1.23 Shortage"
+    },
+    {
+      "code": "\\$0",
+      "value": 5,
+      "text": "$5"
+    },
+    {
+      "code": "0\" pcs\"",
+      "value": 5,
+      "text": "5 pcs"
+    },
+    {
+      "code": "*-0",
+      "value": 5,
+      "text": "5",
+      "fill": {
+        "char": "-",
+        "at": 0
+      }
+    },
+    {
+      "code": "0*.",
+      "value": 5,
+      "text": "5",
+      "fill": {
+        "char": ".",
+        "at": 1
+      }
+    },
+    {
+      "code": "General",
+      "value": 1234567.891,
+      "text": "1234567.891"
+    },
+    {
+      "code": "General",
+      "value": -1234567.891,
+      "text": "-1234567.89"
+    },
+    {
+      "code": "General",
+      "value": 123456789012,
+      "text": "1.23457E+11"
+    },
+    {
+      "code": "General",
+      "value": 0.0001234567891,
+      "text": "0.000123457"
+    },
+    {
+      "code": "General",
+      "value": 1e-11,
+      "text": "1E-11"
+    },
+    {
+      "code": "General",
+      "value": 0.30000000000000004,
+      "text": "0.3"
+    },
+    {
+      "code": "General",
+      "value": 0,
+      "text": "0"
+    },
+    {
+      "code": "",
+      "value": "42",
+      "text": "42"
+    },
+    {
+      "code": "General",
+      "value": 12345678901,
+      "text": "12345678901"
+    },
+    {
+      "code": "\"$\"General",
+      "value": 5,
+      "text": "$5"
+    },
+    {
+      "code": "General;-General",
+      "value": -5,
+      "text": "-5"
+    },
+    {
+      "code": "m/d/yyyy",
+      "value": 39449,
+      "text": "1/2/2008"
+    },
+    {
+      "code": "dd.mm.yyyy h:mm",
+      "value": 39449.75,
+      "text": "02.01.2008 18:00"
+    },
+    {
+      "code": "dddd, mmmm d, yyyy",
+      "value": 45000,
+      "text": "Wednesday, March 15, 2023"
+    },
+    {
+      "code": "ddd d-mmm-yy",
+      "value": 45000,
+      "text": "Wed 15-Mar-23"
+    },
+    {
+      "code": "mmm-yy",
+      "value": 45000,
+      "text": "Mar-23"
+    },
+    {
+      "code": "yy mmmmm",
+      "value": 45000,
+      "text": "23 M"
+    },
+    {
+      "code": "yyyy",
+      "value": 0,
+      "text": "1900"
+    },
+    {
+      "code": "d",
+      "value": 0,
+      "text": "0"
+    },
+    {
+      "code": "mm/dd",
+      "value": 60,
+      "text": "02/29"
+    },
+    {
+      "code": "dddd",
+      "value": 1,
+      "text": "Sunday"
+    },
+    {
+      "code": "eeee-mm",
+      "value": 45000,
+      "text": "2023-03"
+    },
+    {
+      "code": "h:mm:ss AM/PM",
+      "value": 0.75,
+      "text": "6:00:00 PM"
+    },
+    {
+      "code": "h:mm am/pm",
+      "value": 0.25,
+      "text": "6:00 am"
+    },
+    {
+      "code": "h A/P",
+      "value": 0.25,
+      "text": "6 A"
+    },
+    {
+      "code": "hh:mm",
+      "value": 0.5006898148148148,
+      "text": "12:01"
+    },
+    {
+      "code": "h:mm:ss",
+      "value": 0.5006898148148148,
+      "text": "12:01:00"
+    },
+    {
+      "code": "[h]:mm:ss",
+      "value": 1.5,
+      "text": "36:00:00"
+    },
+    {
+      "code": "[mm]:ss",
+      "value": 0.05,
+      "text": "72:00"
+    },
+    {
+      "code": "[ss]",
+      "value": 0.001,
+      "text": "86"
+    },
+    {
+      "code": "mm:ss.0",
+      "value": 0.000694444,
+      "text": "01:00.0"
+    },
+    {
+      "code": "mmss.0",
+      "value": 0.0010416666666666667,
+      "text": "0130.0"
+    },
+    {
+      "code": "h:mm",
+      "value": 0.999999,
+      "text": "0:00"
+    },
+    {
+      "code": "dd.mm.yyyy",
+      "value": -1,
+      "text": "#",
+      "fill": {
+        "char": "#",
+        "at": 0
+      }
+    },
+    {
+      "code": "[$-F800]",
+      "value": 45000,
+      "text": "Wednesday, March 15, 2023"
+    },
+    {
+      "code": "[$-F400]",
+      "value": 0.75,
+      "text": "18:00:00"
+    },
+    {
+      "code": "[$€-407] #,##0.00",
+      "value": 5,
+      "text": "€ 5.00"
+    },
+    {
+      "code": "d mmmm yyyy",
+      "value": 45000,
+      "text": "15 марта 2023",
+      "locale": "ru"
+    },
+    {
+      "code": "mmmm yyyy",
+      "value": 45000,
+      "text": "Март 2023",
+      "locale": "ru"
+    },
+    {
+      "code": "dddd",
+      "value": 45000,
+      "text": "среда",
+      "locale": "ru"
+    },
+    {
+      "code": "ddd",
+      "value": 45000,
+      "text": "Ср",
+      "locale": "ru"
+    },
+    {
+      "code": "[$-409]mmmm",
+      "value": 45000,
+      "text": "March",
+      "locale": "ru"
+    },
+    {
+      "code": "[$-419]mmmm",
+      "value": 45000,
+      "text": "Март"
+    },
+    {
+      "code": "#,##0.00",
+      "value": 1234567.891,
+      "text": "1 234 567,89",
+      "locale": "ru"
+    },
+    {
+      "code": "0.0%",
+      "value": 0.125,
+      "text": "12,5%",
+      "locale": "ru"
+    },
+    {
+      "code": "#,##0.00\\ \"₽\"",
+      "value": 1234.5,
+      "text": "1 234,50 ₽",
+      "locale": "ru"
+    },
+    {
+      "code": "0.00E+00",
+      "value": 12200000,
+      "text": "1,22E+07",
+      "locale": "ru"
+    },
+    {
+      "code": "General",
+      "value": 1.5,
+      "text": "1,5",
+      "locale": "ru"
+    },
+    {
+      "code": "ss.00",
+      "value": 5.787037037037037e-6,
+      "text": "00,50",
+      "locale": "ru"
+    },
+    {
+      "code": "0.00",
+      "value": true,
+      "text": "TRUE"
+    },
+    {
+      "code": "0.00",
+      "value": false,
+      "text": "ЛОЖЬ",
+      "locale": "ru"
+    },
+    {
+      "code": "0.00",
+      "value": {
+        "error": "#N/A"
+      },
+      "text": "#N/A"
+    },
+    {
+      "code": "0.00",
+      "value": null,
+      "text": ""
+    }
+  ]
+}
