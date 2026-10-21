@@ -175,6 +175,10 @@ const docs: DocsMap = {
         ru: 'Предел ячеек в одном копировании; по умолчанию 200 000, лишние строки отбрасываются с объявлением.',
         en: 'Limit of cells in one copy; 200,000 by default, the rows past it are dropped with an announcement.',
       },
+      warmup: {
+        ru: 'Готовить ключи колонок для сортировки, фильтров и группировки в простое после загрузки строк, чтобы первые действия на больших данных не ждали их построения; по умолчанию включено для строк без source. false экономит память: ключи строятся при первом запросе.',
+        en: 'Build the column keys for sorting, filters and grouping while the page is idle after rows arrive, so first actions on large data do not wait for them; on by default for rows without a source. false saves memory: keys are built on the first request.',
+      },
       clipboard: {
         ru: 'Свой формат буфера обмена: serialize({ ranges, headers, rowAt, keyAt }) → { text, html } заменяет копирование и вырезание, а copyLimit на него не действует. parse(data, target) получает текст и HTML вставки с левой верхней ячейкой цели и возвращает блок строк для обычной вставки; undefined оставляет разбор таблице.',
         en: 'A custom clipboard format: serialize({ ranges, headers, rowAt, keyAt }) → { text, html } replaces copy and cut, and copyLimit does not apply to it. parse(data, target) receives the text and HTML of a paste with the top left target cell and returns a block of strings for the usual paste; undefined leaves the parsing to the table.',

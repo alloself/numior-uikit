@@ -1,0 +1,104 @@
+{
+  "recordedAt": "2026-10-21T21:49:33.712Z",
+  "dataset": "1 048 576 rows × 16 384 columns through tableCells, a filled 500 × 30 block and marks every 1000 rows and 100 columns, viewport 1440×900",
+  "device": {
+    "host": "148d44649413",
+    "cpu": "13th Gen Intel(R) Core(TM) i9-13900KF",
+    "cores": 32,
+    "memoryGb": 31,
+    "platform": "linux 6.18.54.1-microsoft-standard-WSL2",
+    "node": "v24.20.0"
+  },
+  "browser": "chromium 153.0.8010.12",
+  "heapUsedMb": 22,
+  "operations": [
+    {
+      "name": "build the cell adapter of the sheet",
+      "samples": 1,
+      "meanMs": 24,
+      "p50Ms": 24,
+      "p95Ms": 24,
+      "maxMs": 24
+    },
+    {
+      "name": "cold mount to the first painted row",
+      "samples": 1,
+      "meanMs": 118.30000000447035,
+      "p50Ms": 118.30000000447035,
+      "p95Ms": 118.30000000447035,
+      "maxMs": 118.30000000447035
+    },
+    {
+      "name": "warm remount to the first painted row",
+      "samples": 5,
+      "meanMs": 69.59999999850989,
+      "p50Ms": 67.39999999850988,
+      "p95Ms": 81,
+      "maxMs": 81
+    },
+    {
+      "name": "arrow down to the next paint",
+      "samples": 200,
+      "meanMs": 28.457499999776484,
+      "p50Ms": 29.599999994039536,
+      "p95Ms": 33.79999999701977,
+      "maxMs": 39.399999998509884
+    },
+    {
+      "name": "arrow across columns to the next paint",
+      "samples": 60,
+      "meanMs": 30.626666665822267,
+      "p50Ms": 32.19999999552965,
+      "p95Ms": 39.5,
+      "maxMs": 39.900000005960464
+    },
+    {
+      "name": "page down to the next paint",
+      "samples": 50,
+      "meanMs": 32.351999999582766,
+      "p50Ms": 32.399999998509884,
+      "p95Ms": 36.099999994039536,
+      "maxMs": 36.30000000447035
+    },
+    {
+      "name": "jump between the first and the last cell of the sheet to the next paint",
+      "samples": 40,
+      "meanMs": 39.22249999996275,
+      "p50Ms": 35,
+      "p95Ms": 47.899999998509884,
+      "maxMs": 48.399999998509884
+    },
+    {
+      "name": "walk a million empty cells to the edge of the data to the next paint",
+      "samples": 40,
+      "meanMs": 39.05749999955297,
+      "p50Ms": 31.599999994039536,
+      "p95Ms": 48.099999994039536,
+      "maxMs": 48.29999999701977
+    },
+    {
+      "name": "frame time while wheeling through rows",
+      "samples": 479,
+      "meanMs": 16.665903966597078,
+      "p50Ms": 16.700000000000728,
+      "p95Ms": 16.799999999999272,
+      "maxMs": 16.80000000000291
+    },
+    {
+      "name": "frame time while wheeling across columns",
+      "samples": 363,
+      "meanMs": 16.66584573002754,
+      "p50Ms": 16.700000000000728,
+      "p95Ms": 16.700000000000728,
+      "maxMs": 16.80000000000291
+    },
+    {
+      "name": "move the row window by a viewport, main-thread ms",
+      "samples": 20,
+      "meanMs": 27.516549999999995,
+      "p50Ms": 26.032,
+      "p95Ms": 36.575,
+      "maxMs": 40.242
+    }
+  ]
+}

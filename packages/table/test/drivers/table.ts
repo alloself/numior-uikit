@@ -313,6 +313,7 @@ const isExposed = (value: unknown): value is NuiTableExposed =>
   typeof value.scrollToColumn === 'function';
 
 const DETAIL_CONTROLS = 'button, input, a[href]';
+const IDLE_WAIT = 100;
 
 const nameOf = (control: Element): string =>
   control.getAttribute('aria-label') ?? control.textContent?.trim() ?? '';
@@ -1835,6 +1836,17 @@ export class TableDriver<T> {
 
   async settle(): Promise<void> {
     await nextTick();
+  }
+
+  async pressOnPage(key: string): Promise<void> {
+    document.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true }));
+    await nextTick();
+  }
+
+  async idle(): Promise<void> {
+    await new Promise((resolve) => {
+      setTimeout(resolve, IDLE_WAIT);
+    });
   }
 
   async scroll(position: { readonly top?: number; readonly left?: number }): Promise<void> {

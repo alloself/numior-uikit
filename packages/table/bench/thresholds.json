@@ -13,7 +13,7 @@
       "p95Ms": 5100
     },
     "sort numbers with a warm store": {
-      "p95Ms": 110
+      "p95Ms": 100
     },
     "sort strings with a warm store": {
       "p95Ms": 70
@@ -22,7 +22,7 @@
       "p95Ms": 90
     },
     "multi-sort country, city and amount with warm stores": {
-      "p95Ms": 210
+      "p95Ms": 100
     },
     "filter city contains \"an\" with a warm store": {
       "p95Ms": 20
@@ -37,16 +37,16 @@
       "p95Ms": 2300
     },
     "quick filter over every string column with warm stores": {
-      "p95Ms": 90
+      "p95Ms": 100
     },
     "group by country with sum, count and avg on warm stores": {
-      "p95Ms": 190
+      "p95Ms": 100
     },
     "totals of sum, count and avg over all rows on warm stores": {
       "p95Ms": 30
     },
     "group by country and city with aggregates on warm stores": {
-      "p95Ms": 250
+      "p95Ms": 100
     },
     "flatten a 100,000 node tree, sort siblings and walk it": {
       "p95Ms": 360
@@ -57,10 +57,10 @@
   },
   "chromium": {
     "cold mount to the first painted row": {
-      "p95Ms": 250
+      "p95Ms": 100
     },
     "warm remount to the first painted row": {
-      "p95Ms": 150
+      "p95Ms": 100
     },
     "arrow down to the next paint": {
       "p95Ms": 100
@@ -78,54 +78,54 @@
       "p95Ms": 34
     },
     "first sort of a number column from the header to the painted result": {
-      "p95Ms": 250
+      "p95Ms": 100
     },
     "repeat sort of a number column from the header to the painted result": {
-      "p95Ms": 250
+      "p95Ms": 100
     },
     "first sort of a text column from the header to the painted result": {
-      "p95Ms": 250
+      "p95Ms": 100
     },
     "repeat sort of a text column from the header to the painted result": {
-      "p95Ms": 250
+      "p95Ms": 100
     },
     "add a sort key with Shift from the header to the painted result": {
-      "p95Ms": 250
+      "p95Ms": 100
     },
     "apply a set filter from the header popover to the painted result": {
-      "p95Ms": 250
+      "p95Ms": 100
     },
     "first grouping by a column from the model to the painted result": {
-      "p95Ms": 250
+      "p95Ms": 100
     },
     "change the grouping from the model to the painted result": {
-      "p95Ms": 250
+      "p95Ms": 100
     },
     "group by two columns from the model to the painted result": {
-      "p95Ms": 250
+      "p95Ms": 100
     },
     "expand and collapse a group to the next paint": {
       "p95Ms": 100
     },
-    "first quick filter keystroke while text stores build to the painted result": {
-      "p95Ms": 2000
-    },
     "next quick filter keystroke to the painted result": {
-      "p95Ms": 250
+      "p95Ms": 100
     },
     "move the row window by a viewport, main-thread ms": {
       "p95Ms": 22
+    },
+    "first quick filter keystroke after a two-second pause to the painted result": {
+      "p95Ms": 100
     }
   },
   "sheet": {
     "build the cell adapter of the sheet": {
-      "p95Ms": 150
+      "p95Ms": 100
     },
     "cold mount to the first painted row": {
-      "p95Ms": 500
+      "p95Ms": 100
     },
     "warm remount to the first painted row": {
-      "p95Ms": 300
+      "p95Ms": 100
     },
     "arrow down to the next paint": {
       "p95Ms": 100
@@ -137,10 +137,10 @@
       "p95Ms": 100
     },
     "jump between the first and the last cell of the sheet to the next paint": {
-      "p95Ms": 150
+      "p95Ms": 100
     },
     "walk a million empty cells to the edge of the data to the next paint": {
-      "p95Ms": 250
+      "p95Ms": 100
     },
     "frame time while wheeling through rows": {
       "p95Ms": 34

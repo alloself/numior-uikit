@@ -147,4 +147,46 @@ describe('createTableEngine groups', () => {
     expect(harness.nodes().every((node) => node.kind === 'row' && node.level === 0)).toBe(true);
     expect(harness.progress.at(-1)).toMatchObject({ phase: 'group', done: 3, total: 3 });
   });
+
+  it('finds the same group bounds and sums as a plain count on thousands of rows', async () => {
+    const orders = Array.from({ length: 6000 }, (_, index): Order => ({
+      id: index,
+      country: ['RU', 'KZ', 'AM'][(index * 7) % 3] ?? 'RU',
+      city: index % 11 === 0 ? null : `City ${(index * 13) % 17}`,
+      amount: index % 5,
+      paid: null,
+      created: null,
+      note: null,
+    }));
+
+    const expected = new Map<string, { count: number; sum: number }>();
+
+    for (const order of orders) {
+      const key = `${order.country}/${String(order.city)}`;
+      const entry = expected.get(key) ?? { count: 0, sum: 0 };
+
+      expected.set(key, { count: entry.count + 1, sum: entry.sum + (order.amount ?? 0) });
+    }
+
+    const harness = new EngineHarness(ORDER_TOTALS, orders, { defaultExpanded: true });
+
+    await harness.runToEnd({ groupBy: ['country', 'city'] });
+
+    const found = new Map(
+      harness
+        .nodes()
+        .flatMap((node) =>
+          node.kind === 'group' && node.level === 1
+            ? [
+                [
+                  `${String(node.path[0])}/${String(node.value)}`,
+                  { count: node.count, sum: node.aggregates['amount'] },
+                ],
+              ]
+            : [],
+        ),
+    );
+
+    expect(found).toEqual(expected);
+  });
 });

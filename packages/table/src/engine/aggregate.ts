@@ -22,10 +22,11 @@ export const accumulateRange = (
   indices: Uint32Array,
   from: number,
   to: number,
+  countOnly = false,
 ): void => {
   target.count += to - from;
 
-  if (store.kind !== 'number') {
+  if (store.kind !== 'number' || countOnly) {
     return;
   }
   const { keys, nulls } = store;

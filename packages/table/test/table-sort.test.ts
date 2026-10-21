@@ -1,4 +1,5 @@
-import { afterEach, describe, expect, it } from 'vite-plus/test';
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
+import type { NuiTableColumn } from '../src';
 import { TableDriver, type TableMountOptions } from './drivers/table';
 import { people, PEOPLE_COLUMNS, type Person } from './support/people';
 
@@ -21,6 +22,35 @@ afterEach(() => {
     grid.unmount();
   }
 });
+
+const readsOnSort = async (warmup: boolean): Promise<number> => {
+  let reads = 0;
+
+  const columns = PEOPLE_COLUMNS.map((column): NuiTableColumn<Person> =>
+    column.key === 'city' && column.type === 'text'
+      ? {
+          ...column,
+          value: (row) => {
+            reads += 1;
+            return row.city;
+          },
+        }
+      : column,
+  );
+
+  const grid = mountPeople({ columns, props: { warmup } });
+
+  await vi.waitFor(() => {
+    expect(reads).toBeGreaterThanOrEqual(warmup ? 1000 : 0);
+  });
+
+  await grid.idle();
+
+  const before = reads;
+
+  await grid.sortBy(2);
+  return reads - before;
+};
 
 describe('NuiTable sorting', () => {
   it('cycles a header through ascending, descending and none, marks it and announces it', async () => {
@@ -100,5 +130,39 @@ describe('NuiTable sorting', () => {
     await grid.setSource(people(10));
     expect(grid.cellText(0, 0)).toBe('9');
     expect(grid.rowCount).toBe(11);
+  });
+
+  it('builds column keys while the page is idle so the first sort does not read every row', async () => {
+    expect(await readsOnSort(true)).toBeLessThan(1000);
+    expect(await readsOnSort(false)).toBeGreaterThanOrEqual(1000);
+  });
+
+  it('holds the idle key building back while the user keeps typing', async () => {
+    let reads = 0;
+
+    const columns = PEOPLE_COLUMNS.map((column): NuiTableColumn<Person> =>
+      column.key === 'city' && column.type === 'text'
+        ? {
+            ...column,
+            value: (row) => {
+              reads += 1;
+              return row.city;
+            },
+          }
+        : column,
+    );
+
+    const grid = mountPeople({ columns });
+
+    for (let press = 0; press < 6; press += 1) {
+      await grid.pressOnPage('Shift');
+      await grid.idle();
+    }
+
+    expect(reads).toBeLessThan(1000);
+
+    await vi.waitFor(() => {
+      expect(reads).toBeGreaterThanOrEqual(1000);
+    });
   });
 });

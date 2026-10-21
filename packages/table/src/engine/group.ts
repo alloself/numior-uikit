@@ -40,7 +40,7 @@ export interface GroupJob extends SliceJob {
 }
 
 interface OpenGroup {
-  readonly token: number;
+  readonly row: number;
   readonly value: unknown;
   readonly path: readonly unknown[];
   readonly id: string;
@@ -48,11 +48,20 @@ interface OpenGroup {
   readonly accumulators: readonly Accumulator[];
 }
 
-const tokenOf = (store: ColumnStore, index: number): number => {
-  if (store.nulls[index] === 1) {
-    return Number.NaN;
-  }
-  return store.kind === 'number' ? (store.keys[index] ?? 0) : (store.codes[index] ?? 0);
+interface Lane {
+  readonly keys: Float64Array | Uint32Array;
+  readonly nulls: Uint8Array;
+}
+
+const laneOf = (store: ColumnStore): Lane =>
+  store.kind === 'number'
+    ? { keys: store.keys, nulls: store.nulls }
+    : { keys: store.codes, nulls: store.nulls };
+
+const sameIn = (lane: Lane, left: number, right: number): boolean => {
+  const empty = lane.nulls[left] === 1;
+
+  return empty === (lane.nulls[right] === 1) && (empty || lane.keys[left] === lane.keys[right]);
 };
 
 const mergeAll = (into: readonly Accumulator[], from: readonly Accumulator[]): void => {
@@ -94,6 +103,7 @@ export const createGroupJob = <T>(
   const groups: GroupRecord[] = [];
   const open: OpenGroup[] = [];
   const totals = aggregates.map(() => createAccumulator());
+  const lanes = levels.map((level) => laneOf(level.store));
   const length = sorted.length;
   let position = 0;
 
@@ -142,7 +152,7 @@ export const createGroupJob = <T>(
       const path = [...(open[depth - 1]?.path ?? []), value];
 
       open.push({
-        token: tokenOf(current.store, rowIndex),
+        row: rowIndex,
         value,
         path,
         id: JSON.stringify(path),
@@ -153,32 +163,55 @@ export const createGroupJob = <T>(
   };
 
   const firstChange = (rowIndex: number): number => {
-    for (let depth = 0; depth < levels.length; depth += 1) {
-      const current = levels[depth];
+    for (let depth = 0; depth < lanes.length; depth += 1) {
+      const lane = lanes[depth];
       const group = open[depth];
 
-      if (current === undefined || group === undefined) {
-        return depth;
-      }
-      if (!Object.is(group.token, tokenOf(current.store, rowIndex))) {
+      if (lane === undefined || group === undefined || !sameIn(lane, group.row, rowIndex)) {
         return depth;
       }
     }
-    return levels.length;
+    return lanes.length;
+  };
+
+  const sameTuple = (left: number, right: number): boolean => {
+    for (const lane of lanes) {
+      if (!sameIn(lane, left, right)) {
+        return false;
+      }
+    }
+    return true;
   };
 
   const segmentEnd = (from: number): number => {
     const limit = Math.min(length, from + CHECK_INTERVAL);
 
-    if (levels.length === 0) {
+    if (lanes.length === 0) {
       return limit;
     }
-    let end = from + 1;
 
-    while (end < limit && firstChange(sorted[end] ?? 0) === levels.length) {
-      end += 1;
+    const first = sorted[from] ?? 0;
+    const inside = (at: number): boolean => sameTuple(first, sorted[at] ?? 0);
+    let low = from;
+    let step = 1;
+
+    while (low + step < limit && inside(low + step)) {
+      low += step;
+      step *= 2;
     }
-    return end;
+
+    let high = Math.min(low + step, limit);
+
+    while (low + 1 < high) {
+      const middle = (low + high) >> 1;
+
+      if (inside(middle)) {
+        low = middle;
+      } else {
+        high = middle;
+      }
+    }
+    return high;
   };
 
   const accumulateSegment = (from: number, to: number): void => {
@@ -188,7 +221,7 @@ export const createGroupJob = <T>(
       const target = targets[index];
 
       if (target !== undefined) {
-        accumulateRange(target, column.store, sorted, from, to);
+        accumulateRange(target, column.store, sorted, from, to, column.aggregate === 'count');
       }
     });
   };
@@ -203,7 +236,7 @@ export const createGroupJob = <T>(
         const rowIndex = sorted[position] ?? 0;
         const change = firstChange(rowIndex);
 
-        if (change < levels.length) {
+        if (change < lanes.length) {
           closeFrom(change, position);
           openFrom(change, rowIndex, position);
         }

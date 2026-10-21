@@ -783,6 +783,7 @@ export const createSourceEngine = <T>(options: TableSourceEngineOptions<T>): Tab
       return { kind: 'done', count: count(), rows: rowCount() };
     },
     patch: () => undefined,
+    prepare: async () => true,
     visibleIndices: loaded,
     nodeAt,
     positionsOf: () => [],

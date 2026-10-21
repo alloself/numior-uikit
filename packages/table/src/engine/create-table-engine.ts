@@ -1,9 +1,14 @@
-import { createStoresJob } from './column-store';
+import {
+  createRequestJob,
+  createStoresJob,
+  type StoreJob,
+  type StoreRequest,
+} from './column-store';
 import { createDistinctNumbersJob, distinctStrings } from './distinct';
 import { compactPass, createFilterJob, createFilterSetup } from './filter';
 import { createGroupJob, type AggregateColumn, type GroupLevel, type GroupTable } from './group';
 import { createPipeline, type Pipeline, type PipelineStage } from './pipeline';
-import { runSliced, yieldToHost } from './slicer';
+import { runSliced, yieldToHost, type SliceJob } from './slicer';
 import { createOrderJob, type OrderKey } from './order';
 import { identityIndices } from './sort';
 import {
@@ -47,6 +52,11 @@ interface Plan<T> {
   readonly groupBy: readonly string[];
   readonly aggregates: readonly TableEngineColumn<T>[];
   readonly needs: ReadonlyMap<string, StoreNeed>;
+}
+
+interface Building {
+  readonly need: StoreNeed;
+  readonly job: StoreJob;
 }
 
 const DEFAULT_SLICE_MS = 12;
@@ -107,6 +117,7 @@ export const createTableEngine = <T>(options: TableEngineOptions<T>): TableEngin
   const defaultExpanded = options.defaultExpanded ?? true;
   let table: TreeTable<T> = { rows: [], parents: new Int32Array(0), depths: new Uint16Array(0) };
   let stores = new Map<string, ColumnStore>();
+  let building = new Map<string, Building>();
   let prepared = emptyPrepared();
   let visible: Int32Array = new Int32Array(0);
   let details: readonly number[] = NO_DETAILS;
@@ -138,23 +149,47 @@ export const createTableEngine = <T>(options: TableEngineOptions<T>): TableEngin
     return store === undefined || (need === 'ranks' && store.kind === 'codes');
   };
 
-  const storesStage = (
-    needs: ReadonlyMap<string, StoreNeed>,
-    next: () => PipelineStage | null,
-  ): PipelineStage | null => {
+  const storeJobOf = (request: StoreRequest<T>): StoreJob => {
+    const key = request.column.key;
+    const known = building.get(key);
+
+    if (known !== undefined && (known.need === 'ranks' || known.need === request.need)) {
+      return known.job;
+    }
+
+    const job = createRequestJob(request, table.rows, collator);
+
+    building.set(key, { need: request.need, job });
+    return job;
+  };
+
+  const keepStore = (key: string, store: ColumnStore): void => {
+    stores.set(key, store);
+    building.delete(key);
+  };
+
+  const forget = (key: string): void => {
+    stores.delete(key);
+    building.delete(key);
+  };
+
+  const storesJob = (needs: Iterable<readonly [string, StoreNeed]>): SliceJob | null => {
     const pending = [...needs].flatMap(([key, need]) =>
       missing(key, need) ? [{ column: columnOf(key), need, current: stores.get(key) }] : [],
     );
 
-    if (pending.length === 0) {
-      return next();
-    }
+    return pending.length === 0
+      ? null
+      : createStoresJob(pending, table.rows.length, storeJobOf, keepStore);
+  };
 
-    const job = createStoresJob(pending, table.rows, collator, (key, store) => {
-      stores.set(key, store);
-    });
+  const storesStage = (
+    needs: ReadonlyMap<string, StoreNeed>,
+    next: () => PipelineStage | null,
+  ): PipelineStage | null => {
+    const job = storesJob(needs);
 
-    return { phase: 'keys', job, next };
+    return job === null ? next() : { phase: 'keys', job, next };
   };
 
   const quickKeys = (keys: readonly string[] | undefined): readonly string[] => {
@@ -406,8 +441,10 @@ export const createTableEngine = <T>(options: TableEngineOptions<T>): TableEngin
       return flattenRows();
     }
     const detailing = detailsOn();
-    const refs: number[] = [];
+    const rows = prepared.filtered.length;
+    const refs = new Int32Array(groups.length + (detailing ? 2 * rows : rows));
     const hidden: boolean[] = [];
+    let size = 0;
 
     groups.forEach((group, index) => {
       hidden.length = group.level;
@@ -418,20 +455,23 @@ export const createTableEngine = <T>(options: TableEngineOptions<T>): TableEngin
       if (!shown) {
         return;
       }
-      refs.push(-(index + 1));
+      refs[size] = -(index + 1);
+      size += 1;
 
       if (expanded && group.level === prepared.groupDepth - 1) {
         for (let position = group.start; position < group.end; position += 1) {
-          refs.push(position);
+          refs[size] = position;
+          size += 1;
 
           if (detailing && detailed(position)) {
-            refs.push(DETAIL_REF + position);
+            refs[size] = DETAIL_REF + position;
+            size += 1;
           }
         }
       }
     });
 
-    return Int32Array.from(refs);
+    return refs.subarray(0, size);
   };
 
   const refresh = (): void => {
@@ -644,7 +684,7 @@ export const createTableEngine = <T>(options: TableEngineOptions<T>): TableEngin
     const changed = new Set(keys);
 
     for (const key of changed) {
-      stores.delete(key);
+      forget(key);
     }
     rowsVersion += 1;
 
@@ -658,7 +698,7 @@ export const createTableEngine = <T>(options: TableEngineOptions<T>): TableEngin
       return;
     }
     for (const column of plan.aggregates) {
-      stores.delete(column.key);
+      forget(column.key);
     }
     regroup(plan);
   };
@@ -673,6 +713,7 @@ export const createTableEngine = <T>(options: TableEngineOptions<T>): TableEngin
           : flattenTree(next, options.children);
 
       stores = new Map();
+      building = new Map();
       generation += 1;
       rowsVersion += 1;
       toggled.clear();
@@ -718,6 +759,23 @@ export const createTableEngine = <T>(options: TableEngineOptions<T>): TableEngin
     },
     runSync,
     patch,
+    prepare: async (wishes, prepareOptions = {}) => {
+      const version = rowsVersion;
+
+      const job = storesJob(
+        wishes.flatMap((wish) => (columns.has(wish.key) ? [[wish.key, wish.need] as const] : [])),
+      );
+
+      return (
+        job === null ||
+        runSliced(job, {
+          sliceMs: prepareOptions.sliceMs ?? sliceMs,
+          yieldTo: prepareOptions.yieldTo ?? yieldTo,
+          signal: prepareOptions.signal,
+          isStale: () => version !== rowsVersion,
+        })
+      );
+    },
     visibleIndices: () => prepared.filtered,
     nodeAt,
     positionsOf,

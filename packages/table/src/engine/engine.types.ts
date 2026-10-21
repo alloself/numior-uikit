@@ -94,6 +94,17 @@ export type RankedStore = Exclude<ColumnStore, { kind: 'codes' }>;
 
 export type StoreNeed = 'codes' | 'ranks';
 
+export interface TableStoreWish {
+  readonly key: string;
+  readonly need: StoreNeed;
+}
+
+export interface TablePrepareOptions {
+  readonly sliceMs?: number | undefined;
+  readonly yieldTo?: (() => Promise<void>) | undefined;
+  readonly signal?: AbortSignal | undefined;
+}
+
 export type TablePhase = 'keys' | 'filter' | 'sort' | 'group';
 
 export interface TableProgress {
@@ -197,6 +208,7 @@ export interface TableEngine<T> {
   totals(): Readonly<Record<string, unknown>>;
   distinct(key: string, options?: TableDistinctOptions): Promise<TableDistinct | null>;
   store(key: string): ColumnStore | undefined;
+  prepare(wishes: readonly TableStoreWish[], options?: TablePrepareOptions): Promise<boolean>;
   pendingAt(position: number): boolean;
   collect(signal?: AbortSignal): Promise<readonly T[]>;
   ensure(from: number, to: number): void;

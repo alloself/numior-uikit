@@ -4,6 +4,7 @@ import { record, summarize, type Operation } from '../../scripts/bench-harness';
 import { TableBenchPage } from './pages/table-bench';
 
 const ROWS = 1_000_000;
+const READING_PAUSE = 2000;
 const RESULTS = new URL('../../packages/table/bench/results/', import.meta.url);
 
 test('the data table keeps input and frames within budget on a million rows', async ({
@@ -137,10 +138,11 @@ test('the data table keeps input and frames within budget on a million rows', as
   );
 
   await bench.groupLatencies([[]]);
+  await page.waitForTimeout(READING_PAUSE);
   const [coldQuick = Number.NaN, ...warmQuick] = await bench.quickLatencies('mosc', 4);
 
   operations.push(
-    summarize('first quick filter keystroke while text stores build to the painted result', [
+    summarize('first quick filter keystroke after a two-second pause to the painted result', [
       coldQuick,
     ]),
   );

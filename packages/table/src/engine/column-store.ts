@@ -200,7 +200,7 @@ export const createStoreJob = <T>(
   return need === 'codes' ? codes : createRankedStringJob(codes, collator);
 };
 
-const jobFor = <T>(
+export const createRequestJob = <T>(
   request: StoreRequest<T>,
   rows: readonly T[],
   collator: Intl.Collator,
@@ -211,8 +211,8 @@ const jobFor = <T>(
 
 export const createStoresJob = <T>(
   requests: readonly StoreRequest<T>[],
-  rows: readonly T[],
-  collator: Intl.Collator,
+  size: number,
+  jobOf: (request: StoreRequest<T>) => StoreJob,
   onStore: (key: string, store: ColumnStore) => void,
 ): SliceJob => {
   let position = 0;
@@ -224,13 +224,13 @@ export const createStoresJob = <T>(
     if (request === undefined) {
       return null;
     }
-    current ??= jobFor(request, rows, collator);
+    current ??= jobOf(request);
     return current;
   };
 
   return {
-    total: () => Math.max(1, requests.length * rows.length),
-    done: () => position * rows.length + (current?.done() ?? 0),
+    total: () => Math.max(1, requests.length * size),
+    done: () => position * size + (current?.done() ?? 0),
     work: (deadline) => {
       for (let job = currentJob(); job !== null; job = currentJob()) {
         if (!job.work(deadline)) {

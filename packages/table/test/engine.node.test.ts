@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vite-plus/test';
+import type { TableEngineColumn } from '../src/engine';
 import { EngineHarness, PEOPLE, PEOPLE_COLUMNS, type Person } from './harness/engine';
 
 const many = (count: number): Person[] =>
@@ -127,5 +128,51 @@ describe('createTableEngine', () => {
     expect(ages.at(-1)).toBe(0);
     expect(harness.progress.filter((entry) => entry.phase === 'sort').length).toBeGreaterThan(5);
     expect(harness.progress.at(-1)).toMatchObject({ phase: 'sort' });
+  });
+
+  it('prepares stores ahead and lets a run continue a store that is half built', async () => {
+    const rows = many(10_000);
+    let reads = 0;
+
+    const columns: TableEngineColumn<Person>[] = [
+      {
+        kind: 'string',
+        key: 'name',
+        value: (row) => {
+          reads += 1;
+          return row.name;
+        },
+      },
+      ...PEOPLE_COLUMNS.slice(1),
+    ];
+
+    const harness = new EngineHarness(columns, rows, { sliceMs: 0 });
+
+    const preparing = harness.engine.prepare([
+      { key: 'name', need: 'ranks' },
+      { key: 'unknown', need: 'codes' },
+    ]);
+
+    expect(reads).toBeGreaterThan(0);
+    expect(reads).toBeLessThan(rows.length);
+    expect(harness.engine.store('name')).toBeUndefined();
+
+    const sorted = harness.run({ sort: [{ key: 'name', direction: 'asc' }] });
+
+    expect(await harness.settle(Promise.all([preparing, sorted]))).toMatchObject([
+      true,
+      { kind: 'done', rows: rows.length },
+    ]);
+
+    expect(reads).toBe(rows.length);
+    expect(harness.engine.store('name')?.kind).toBe('string');
+    expect(harness.visible('name').slice(0, 2)).toEqual(['Имя 1', 'Имя 2']);
+
+    const stale = harness.engine.prepare([{ key: 'age', need: 'codes' }]);
+
+    harness.engine.setRows(rows);
+
+    expect(await harness.settle(stale)).toBe(false);
+    expect(await harness.settle(harness.engine.prepare([]))).toBe(true);
   });
 });

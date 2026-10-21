@@ -380,6 +380,7 @@ import { useTableHeader, type TableHeader } from './use-table-header';
 import { useTableMenu, type TableMenu } from './use-table-menu';
 import { useTableColumnOrder } from './use-table-column-order';
 import { useTableQuery } from './use-table-query';
+import { useTableWarmup } from './use-table-warmup';
 import { useTableResize } from './use-table-resize';
 import { useTableRowDrag } from './use-table-row-drag';
 import { useTableRowResize } from './use-table-row-resize';
@@ -514,6 +515,7 @@ const {
   cellSelection = false,
   contextMenu = undefined,
   copyLimit = COPY_LIMIT,
+  warmup = true,
   clipboard: clipboardHooks,
   commands,
   controls,
@@ -718,6 +720,12 @@ engine.value.setRows(rows);
 engine.value.setToggled(expanded.value);
 runNow();
 rowCount.value = engine.value.count();
+
+const warming = useTableWarmup({
+  engine,
+  columns: () => tree.value.leaves,
+  enabled: () => warmup && source === undefined,
+});
 
 const active = ref<TableCellPosition>({ row: rowCount.value > 0 ? 0 : -1, col: 0 });
 
@@ -2472,6 +2480,7 @@ watch(
     rearrange();
     clampActive();
     refocusMoved();
+    warming.restart();
   },
 );
 
@@ -2487,6 +2496,7 @@ watch([() => columns, () => source], () => {
   rearrange();
   clampActive();
   ensureRows();
+  warming.restart();
 });
 
 watch(sourceChanges, () => {

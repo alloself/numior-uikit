@@ -168,6 +168,7 @@ export interface NuiTableProps<T> {
   cellSelection?: boolean | undefined;
   contextMenu?: NuiTableContextMenu<T> | false | undefined;
   copyLimit?: number | undefined;
+  warmup?: boolean | undefined;
   clipboard?: NuiTableClipboard<T> | undefined;
   commands?: NuiTableCommandSink<T> | undefined;
   controls?: NuiControlRegistry | undefined;
