@@ -70,6 +70,22 @@ export const fillChunks = (
   root.replaceChildren(...made);
 };
 
+const followedBy = (block: ChildNode, next: ChildNode, chunks: ChunkSet): boolean => {
+  if (block.nextSibling === next) {
+    return true;
+  }
+
+  const chunk = block.parentNode;
+
+  return (
+    chunk !== null &&
+    chunks.has(chunk) &&
+    block.nextSibling === null &&
+    next.previousSibling === null &&
+    next.parentNode === chunk.nextSibling
+  );
+};
+
 export const placeInChunks = (
   root: HTMLElement,
   blocks: readonly ChildNode[],
@@ -80,7 +96,7 @@ export const placeInChunks = (
 
   for (const block of blocks.toReversed()) {
     if (next !== null) {
-      if (block.nextSibling !== next) {
+      if (!followedBy(block, next, chunks)) {
         next.parentNode?.insertBefore(block, next);
       }
     } else {

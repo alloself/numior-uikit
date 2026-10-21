@@ -1,8 +1,8 @@
 {
-  "recordedAt": "2026-10-21T12:36:54.943Z",
+  "recordedAt": "2026-10-21T13:24:00.217Z",
   "dataset": "10000 generated blocks of contentSchema (seed 1) in NuiEditor, viewport 1440×900",
   "device": {
-    "host": "9433ebf95166",
+    "host": "c7bf10f67859",
     "cpu": "13th Gen Intel(R) Core(TM) i9-13900KF",
     "cores": 32,
     "memoryGb": 31,
@@ -10,79 +10,79 @@
     "node": "v24.20.0"
   },
   "browser": "chromium 153.0.8010.12",
-  "heapUsedMb": 100,
+  "heapUsedMb": 96,
   "operations": [
     {
       "name": "generate the document and its JSON in the page",
       "samples": 1,
-      "meanMs": 81.6999999997206,
-      "p50Ms": 81.6999999997206,
-      "p95Ms": 81.6999999997206,
-      "maxMs": 81.6999999997206
+      "meanMs": 82.6000000005588,
+      "p50Ms": 82.6000000005588,
+      "p95Ms": 82.6000000005588,
+      "maxMs": 82.6000000005588
     },
     {
       "name": "cold mount to the first painted block",
       "samples": 1,
-      "meanMs": 1032.8999999999069,
-      "p50Ms": 1032.8999999999069,
-      "p95Ms": 1032.8999999999069,
-      "maxMs": 1032.8999999999069
+      "meanMs": 1062.7000000001863,
+      "p50Ms": 1062.7000000001863,
+      "p95Ms": 1062.7000000001863,
+      "maxMs": 1062.7000000001863
     },
     {
       "name": "warm remount to the first painted block",
       "samples": 5,
-      "meanMs": 882.2400000002235,
-      "p50Ms": 927.2000000001863,
-      "p95Ms": 1034.3000000002794,
-      "maxMs": 1034.3000000002794
+      "meanMs": 899.4199999999255,
+      "p50Ms": 902.8999999994412,
+      "p95Ms": 999.4000000003725,
+      "maxMs": 999.4000000003725
     },
     {
       "name": "type a character to the next paint",
       "samples": 200,
-      "meanMs": 31.57900000002235,
-      "p50Ms": 26.5,
-      "p95Ms": 62.700000000186265,
-      "maxMs": 92.5
+      "meanMs": 25.20650000005029,
+      "p50Ms": 24,
+      "p95Ms": 29,
+      "maxMs": 84.6000000005588
     },
     {
       "name": "split a paragraph with Enter to the next paint",
       "samples": 50,
-      "meanMs": 51.531999999983235,
-      "p50Ms": 45.6999999997206,
-      "p95Ms": 76.60000000009313,
-      "maxMs": 100.5
+      "meanMs": 25.655999999996276,
+      "p50Ms": 24.699999999254942,
+      "p95Ms": 34.69999999925494,
+      "maxMs": 36.39999999944121
     },
     {
       "name": "undo a step to the next paint",
       "samples": 100,
-      "meanMs": 41.613000000040046,
-      "p50Ms": 34.40000000037253,
-      "p95Ms": 70.60000000009313,
-      "maxMs": 92.3000000002794
+      "meanMs": 26.227000000001862,
+      "p50Ms": 25.899999999441206,
+      "p95Ms": 30.40000000037253,
+      "maxMs": 33.60000000055879
     },
     {
       "name": "paste 500 lines as blocks to the next paint",
       "samples": 3,
-      "meanMs": 33.20000000003105,
-      "p50Ms": 33.39999999990687,
-      "p95Ms": 34,
-      "maxMs": 34
+      "meanMs": 39.63333333345751,
+      "p50Ms": 43.09999999962747,
+      "p95Ms": 43.40000000037253,
+      "maxMs": 43.40000000037253
     },
     {
       "name": "select everything and toggle bold to the next paint",
       "samples": 8,
-      "meanMs": 468.3375000000233,
-      "p50Ms": 404.5,
-      "p95Ms": 604.6000000000931,
-      "maxMs": 604.6000000000931
+      "meanMs": 307.47500000032596,
+      "p50Ms": 305.1000000005588,
+      "p95Ms": 329.30000000074506,
+      "maxMs": 329.30000000074506
     },
     {
       "name": "frame time while wheeling through blocks",
       "samples": 395,
-      "meanMs": 16.708101265822776,
+      "meanMs": 16.70802025316456,
       "p50Ms": 16.69999999999709,
-      "p95Ms": 16.799999999995634,
-      "maxMs": 33.29999999999927
+      "p95Ms": 16.700000000000728,
+      "maxMs": 33.39999999999782
     },
     {
       "name": "long tasks while wheeling",

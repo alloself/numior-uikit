@@ -49,6 +49,9 @@
     },
     "undo a step to the next paint": {
       "p95Ms": 100
+    },
+    "select everything and toggle bold to the next paint": {
+      "p95Ms": 700
     }
   }
 }

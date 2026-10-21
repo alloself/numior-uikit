@@ -15,21 +15,42 @@ interface Portion {
 
 const EMPTY: Slice = { content: [], openStart: 0, openEnd: 0 };
 
-const portionsOf = (doc: Doc, from: number, to: number, type: string): Portion[] => {
-  const portions: Portion[] = [];
+interface TextPortion extends Portion {
+  readonly allowed: ReadonlySet<string> | undefined;
+}
+
+const textPortions = (doc: Doc, from: number, to: number): TextPortion[] => {
+  const portions: TextPortion[] = [];
 
   doc.nodesBetween(from, to, (node, pos, parent) => {
-    if (node.kind === 'text' && doc.schema.nodes.get(parent.type)?.marks.has(type) === true) {
+    if (node.kind === 'text') {
       portions.push({
         from: Math.max(from, pos),
         to: Math.min(to, pos + node.text.length),
         marks: node.marks,
+        allowed: doc.schema.nodes.get(parent.type)?.marks,
       });
     }
     return true;
   });
 
   return portions;
+};
+
+const portionsOf = (doc: Doc, from: number, to: number, type: string): Portion[] =>
+  textPortions(doc, from, to).filter((portion) => portion.allowed?.has(type) === true);
+
+const distinctMarks = (portions: readonly Portion[], keep: (mark: Mark) => boolean): Mark[] => {
+  const found: Mark[] = [];
+
+  for (const portion of portions) {
+    for (const mark of portion.marks) {
+      if (keep(mark) && !found.some((known) => sameMarks([known], [mark]))) {
+        found.push(mark);
+      }
+    }
+  }
+  return found;
 };
 
 const runsWhere = (
@@ -220,21 +241,15 @@ export const createTransform = (start: Doc, options: TransformOptions = {}): Tra
       return transform;
     },
     removeMark: (from, to, filter) => {
-      const found = new Map<string, Mark>();
+      const portions = textPortions(doc, from, to);
 
-      for (const type of doc.schema.marks.keys()) {
-        for (const portion of portionsOf(doc, from, to, type)) {
-          for (const mark of portion.marks.filter((item) => matches(item, filter))) {
-            found.set(JSON.stringify(mark), mark);
-          }
-        }
-      }
-      for (const mark of found.values()) {
-        const runs = runsWhere(portionsOf(doc, from, to, mark.type), (portion) =>
-          holds(portion, mark),
+      for (const mark of distinctMarks(portions, (item) => matches(item, filter))) {
+        const allowed = portions.filter((portion) => portion.allowed?.has(mark.type) === true);
+
+        markSteps(
+          runsWhere(allowed, (portion) => holds(portion, mark)),
+          (run) => ({ kind: 'removeMark', from: run.from, to: run.to, mark }),
         );
-
-        markSteps(runs, (run) => ({ kind: 'removeMark', from: run.from, to: run.to, mark }));
       }
       return transform;
     },

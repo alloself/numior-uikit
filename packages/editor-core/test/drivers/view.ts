@@ -400,6 +400,10 @@ export class EditorViewDriver {
     );
   }
 
+  get chunkElements(): readonly Element[] {
+    return [...this.host.querySelectorAll(CHUNK)];
+  }
+
   get chunkSizes(): readonly number[] {
     return [...this.host.querySelectorAll(CHUNK)].map((chunk) => chunk.children.length);
   }

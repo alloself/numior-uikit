@@ -137,6 +137,18 @@ describe('editor view', () => {
     expect(view.chunkSizes.every((size) => size > 0)).toBe(true);
   });
 
+  it('keeps every chunk in place when all blocks change at once', () => {
+    const paragraphs = Array.from({ length: 70 }, (_, index) => node('paragraph', [`p${index}`]));
+    const view = mounted(doc(...paragraphs));
+    const before = view.chunkElements;
+
+    view.change((tr) => tr.addMark(0, tr.doc.size, fixtureSchema.mark('bold')));
+
+    expect(view.chunkSizes).toEqual([32, 32, 6]);
+    expect(view.chunkElements.every((chunk, index) => chunk === before[index])).toBe(true);
+    expect(view.blocks).toHaveLength(70);
+  });
+
   it('types into the same text node and leaves every other block alone', () => {
     const middle = node('paragraph', ['two']);
     const view = mounted(doc(node('paragraph', ['one']), middle, node('paragraph', ['three'])));
