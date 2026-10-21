@@ -178,6 +178,10 @@ export const createTransaction = (
       transform.setNodeAttrs(pos, attrs);
       return transaction;
     },
+    setNodesMarkup: (changes) => {
+      transform.setNodesMarkup(changes);
+      return transaction;
+    },
     setDocAttrs: (attrs) => {
       transform.setDocAttrs(attrs);
       return transaction;

@@ -1,8 +1,16 @@
 import {
   createMapping,
+  createState,
   createTransform,
+  insertDivider,
   invertStep,
+  liftListItem,
+  setBlockType,
+  sinkListItem,
+  toggleList,
+  toggleWrapper,
   type Doc,
+  type Transaction,
   type Transform,
 } from '@numior/editor-core';
 import { createRandom, fixtureSchema, generateDoc } from '@numior/editor-core/fixtures';
@@ -155,6 +163,48 @@ operations.push(
       const cut = createTransform(doc).delete(rangeFrom, rangeTo);
 
       cut.replace(rangeFrom, rangeFrom, slice);
+    },
+    heavy,
+  ),
+);
+
+const everything = createState({ doc, selection: { kind: 'all' } });
+
+const toolbarChecks = [
+  setBlockType('paragraph'),
+  setBlockType('heading', { level: 1 }),
+  setBlockType('heading', { level: 2 }),
+  setBlockType('heading', { level: 3 }),
+  setBlockType('code_block'),
+  toggleList('bullet_list'),
+  toggleList('ordered_list'),
+  toggleList('todo_list'),
+  toggleWrapper('blockquote'),
+  insertDivider(),
+  liftListItem,
+  sinkListItem,
+];
+
+operations.push(
+  await measure(
+    'check the toolbar block commands on a whole-document selection',
+    async () => {
+      for (const check of toolbarChecks) {
+        check(everything);
+      }
+    },
+    light,
+  ),
+);
+
+operations.push(
+  await measure(
+    'turn every textblock of the document into a heading',
+    async () => {
+      const produced: Transaction[] = [];
+
+      setBlockType('heading', { level: 1 })(everything, (tr) => produced.push(tr));
+      everything.apply(produced[0] ?? everything.tr);
     },
     heavy,
   ),

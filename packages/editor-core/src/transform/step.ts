@@ -1,6 +1,7 @@
 import type { Doc, Slice } from '../doc/doc.types';
 import { normalizeContent, sameMarks } from '../model/node';
 import { applyAttrs, applyDocAttrs } from './attrs';
+import { applyMarkup, markupBefore } from './markup';
 import { createStepMap, EMPTY_MAP } from './mapping';
 import type { Mappable, StepMap } from './mapping.types';
 import { applyMark, heldSpans } from './marks';
@@ -41,6 +42,8 @@ export const applyStep = (doc: Doc, step: Step): StepResult => {
       return applyMark(doc, step.from, step.to, step.mark, step.kind === 'addMark', step.skip);
     case 'attrs':
       return applyAttrs(doc, step.pos, step.attrs);
+    case 'markup':
+      return applyMarkup(doc, step.changes);
     case 'docAttrs':
       return applyDocAttrs(doc, step.attrs);
   }
@@ -64,6 +67,7 @@ export const stepMapOf = (step: Step): StepMap => {
     case 'addMark':
     case 'removeMark':
     case 'attrs':
+    case 'markup':
     case 'docAttrs':
       return EMPTY_MAP;
   }
@@ -120,6 +124,8 @@ export const invertStep = (step: Step, doc: Doc): Step => {
 
       return { ...step, attrs: target?.kind === 'element' ? target.attrs : step.attrs };
     }
+    case 'markup':
+      return { kind: 'markup', changes: markupBefore(doc, step.changes) };
     case 'docAttrs':
       return { ...step, attrs: doc.root.attrs };
   }
@@ -174,6 +180,19 @@ const mapMarkStep = (
   return skip.length === 0 ? { ...step, from, to, skip: undefined } : { ...step, from, to, skip };
 };
 
+const mapMarkup = (
+  step: Extract<Step, { kind: 'markup' }>,
+  mapping: Mappable,
+): Step | undefined => {
+  const changes = step.changes.flatMap((change) => {
+    const result = mapping.mapResult(change.pos, 1);
+
+    return result.deletedAfter ? [] : [{ ...change, pos: result.pos }];
+  });
+
+  return changes.length === 0 ? undefined : { kind: 'markup', changes };
+};
+
 export const mapStep = (step: Step, mapping: Mappable): Step | undefined => {
   switch (step.kind) {
     case 'replace': {
@@ -191,6 +210,8 @@ export const mapStep = (step: Step, mapping: Mappable): Step | undefined => {
 
       return result.deletedAfter ? undefined : { ...step, pos: result.pos };
     }
+    case 'markup':
+      return mapMarkup(step, mapping);
     case 'docAttrs':
       return step;
   }

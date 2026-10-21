@@ -117,9 +117,14 @@ export type {
 } from './transform/mapping.types';
 export { sliceSize } from './transform/replace';
 export { applyStep, invertStep, mapStep, mergeSteps, stepMapOf } from './transform/step';
-export type { Step, StepFailure, StepResult } from './transform/step.types';
+export type { MarkupChange, Step, StepFailure, StepResult } from './transform/step.types';
 export { createTransform } from './transform/transform';
-export type { SplitType, Transform, TransformOptions } from './transform/transform.types';
+export type {
+  NodeMarkup,
+  SplitType,
+  Transform,
+  TransformOptions,
+} from './transform/transform.types';
 export {
   deleteRange,
   deleteText,
@@ -132,13 +137,13 @@ export {
   selectAtom,
 } from './commands/input';
 export { isAtom } from './commands/atoms';
+export { setBlockType } from './commands/block-type';
 export {
   chainCommands,
   deleteSelection,
   joinBackward,
   joinForward,
   selectAll,
-  setBlockType,
   splitBlock,
   toggleMark,
 } from './commands/commands';

@@ -5,7 +5,7 @@ import type { AttrSpecs } from '../schema/schema.types';
 import type { StepResult } from './step.types';
 import { liftInto } from './tree';
 
-const validAttrs = (specs: AttrSpecs | undefined, attrs: Attrs): boolean =>
+export const validAttrs = (specs: AttrSpecs | undefined, attrs: Attrs): boolean =>
   specs !== undefined &&
   Object.keys(attrs).every((key) => Object.hasOwn(specs, key)) &&
   Object.entries(specs).every(([key, spec]) => {

@@ -127,16 +127,21 @@ const addOption = (tr: Transaction, id: NodeId, value: NuiContentCellValue): voi
 
 export const setTableCells = (id: NodeId, changes: readonly TableCellChange[]): Command =>
   run(id, (tr, parts) => {
-    for (const change of changes) {
+    const placed = changes.flatMap((change) => {
       const index = columnIndex(parts, change.column);
       const column = elementsOf(parts.head)[index];
       const target = elementsOf(tr.doc.byId(change.row))[index];
       const pos = target === undefined ? undefined : startOf(tr, target);
 
-      if (column !== undefined && pos !== undefined) {
-        tr.setNodeAttrs(pos, { value: change.value });
-        addOption(tr, column.id, change.value);
-      }
+      return column === undefined || pos === undefined
+        ? []
+        : [{ pos, column, value: change.value }];
+    });
+
+    tr.setNodesMarkup(placed.map(({ pos, value }) => ({ pos, attrs: { value } })));
+
+    for (const { column, value } of placed) {
+      addOption(tr, column.id, value);
     }
     return true;
   });
@@ -243,14 +248,15 @@ export const retypeTableColumn = (id: NodeId, column: NodeId, type: NuiContentTa
       cellValueOf(row.cells[index] ?? null, type),
     );
 
-    for (const [position, row] of elementsOf(parts.body).entries()) {
-      const target = elementsOf(row)[index];
-      const pos = target === undefined ? undefined : startOf(tr, target);
+    tr.setNodesMarkup(
+      elementsOf(parts.body).flatMap((row, position) => {
+        const target = elementsOf(row)[index];
+        const pos = target === undefined ? undefined : startOf(tr, target);
 
-      if (pos !== undefined) {
-        tr.setNodeAttrs(pos, { value: values[position] ?? null });
-      }
-    }
+        return pos === undefined ? [] : [{ pos, attrs: { value: values[position] ?? null } }];
+      }),
+    );
+
     for (const option of elementsOf(node)) {
       remove(tr, tr.doc.byId(option.id));
     }

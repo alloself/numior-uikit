@@ -111,6 +111,38 @@ const joining =
     }
   };
 
+const topTextblocks = (doc: Doc): { readonly pos: number; readonly type: string }[] => {
+  const found: { pos: number; type: string }[] = [];
+
+  doc.nodesBetween(0, doc.size, (node, pos, parent) => {
+    if (
+      node.kind === 'element' &&
+      parent === doc.root &&
+      ['paragraph', 'heading'].includes(node.type)
+    ) {
+      found.push({ pos, type: node.type });
+    }
+    return false;
+  });
+
+  return found;
+};
+
+const retyping =
+  (at: number, count: number): Change =>
+  (transform) => {
+    const blocks = topTextblocks(transform.doc);
+    const chosen = blocks.filter((_, index) => (index + at) % Math.max(1, count) === 0);
+
+    transform.setNodesMarkup(
+      chosen.map(({ pos, type }) =>
+        type === 'heading'
+          ? { pos, type: 'paragraph' }
+          : { pos, type: 'heading', attrs: { level: 2 } },
+      ),
+    );
+  };
+
 const change: fc.Arbitrary<Change> = fc.oneof(
   fc
     .tuple(fc.nat(), fc.string({ minLength: 1, maxLength: 4 }))
@@ -126,6 +158,7 @@ const change: fc.Arbitrary<Change> = fc.oneof(
   fc.tuple(fc.nat(), fc.integer({ min: 1, max: 8 })).map(([at, length]) => unmarking(at, length)),
   fc.nat().map(splitting),
   fc.nat().map(joining),
+  fc.tuple(fc.nat(), fc.integer({ min: 1, max: 3 })).map(([at, count]) => retyping(at, count)),
 );
 
 const scenario = fc.record({
@@ -180,7 +213,7 @@ describe('step properties', () => {
     );
 
     expect(applied).toBeGreaterThan(300);
-    expect([...kinds].toSorted()).toEqual(['addMark', 'removeMark', 'replace']);
+    expect([...kinds].toSorted()).toEqual(['addMark', 'markup', 'removeMark', 'replace']);
   });
 
   it('maps positions monotonically and brings back the ones nothing deleted', () => {

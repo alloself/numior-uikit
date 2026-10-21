@@ -176,6 +176,10 @@ const everyHas = (state: EditorState, from: number, to: number, type: string): b
 export const toggleMark =
   (type: string, attrs: Readonly<Record<string, AttrValue>> = {}): Command =>
   (state, dispatch) => {
+    if (dispatch === undefined) {
+      return state.doc.schema.marks.has(type);
+    }
+
     const mark = state.doc.schema.mark(type, attrs);
     const range = selectionRange(state.doc, state.selection);
     const tr = state.tr;
@@ -193,38 +197,6 @@ export const toggleMark =
     } else {
       tr.addMark(range.from, range.to, mark);
     }
-    dispatch?.(tr);
-    return true;
-  };
-
-export const setBlockType =
-  (type: string, attrs: Readonly<Record<string, AttrValue>> = {}): Command =>
-  (state, dispatch) => {
-    const range = selectionRange(state.doc, state.selection);
-    const tr = state.tr;
-
-    state.doc.nodesBetween(range.from, Math.max(range.to, range.from + 1), (node, pos) => {
-      if (!isTextblock(state.doc.schema, node)) {
-        return true;
-      }
-      const target = state.doc.schema.element(type, { id: node.id, attrs });
-
-      tr.maybeStep({
-        kind: 'replaceAround',
-        from: pos,
-        to: pos + node.size,
-        gapFrom: pos + 1,
-        gapTo: pos + node.size - 1,
-        slice: { content: [target], openStart: 0, openEnd: 0 },
-        insert: 1,
-      });
-
-      return false;
-    });
-
-    if (!tr.changed) {
-      return false;
-    }
-    dispatch?.(tr);
+    dispatch(tr);
     return true;
   };

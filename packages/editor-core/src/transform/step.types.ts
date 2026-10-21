@@ -6,6 +6,12 @@ export interface StepSpan {
   readonly to: number;
 }
 
+export interface MarkupChange {
+  readonly pos: number;
+  readonly type: string;
+  readonly attrs: Attrs;
+}
+
 export type Step =
   | { readonly kind: 'replace'; readonly from: number; readonly to: number; readonly slice: Slice }
   | {
@@ -25,6 +31,7 @@ export type Step =
       readonly skip?: readonly StepSpan[] | undefined;
     }
   | { readonly kind: 'attrs'; readonly pos: number; readonly attrs: Attrs }
+  | { readonly kind: 'markup'; readonly changes: readonly MarkupChange[] }
   | { readonly kind: 'docAttrs'; readonly attrs: Attrs };
 
 export type StepFailure = 'range' | 'depth' | 'content' | 'id' | 'target' | 'attrs';

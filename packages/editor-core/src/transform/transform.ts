@@ -4,8 +4,8 @@ import type { ContentNode, ElementNode, Mark, NodeId } from '../model/node.types
 import { createMapping } from './mapping';
 import type { StepMap } from './mapping.types';
 import { applyStep, stepMapOf } from './step';
-import type { Step, StepResult } from './step.types';
-import type { SplitType, Transform, TransformOptions } from './transform.types';
+import type { MarkupChange, Step, StepResult } from './step.types';
+import type { NodeMarkup, SplitType, Transform, TransformOptions } from './transform.types';
 
 interface Portion {
   readonly from: number;
@@ -62,6 +62,21 @@ const matches = (mark: Mark, filter: Mark | string | undefined): boolean => {
     return true;
   }
   return typeof filter === 'string' ? mark.type === filter : sameMarks([mark], [filter]);
+};
+
+const markupOf = (doc: Doc, change: NodeMarkup): MarkupChange => {
+  const target = doc.nodeAt(change.pos);
+
+  if (target?.kind !== 'element') {
+    throw new RangeError(`No element starts at position ${change.pos}`);
+  }
+  if (change.type === undefined || change.type === target.type) {
+    return { pos: change.pos, type: target.type, attrs: { ...target.attrs, ...change.attrs } };
+  }
+
+  const retyped = doc.schema.element(change.type, { id: target.id, attrs: change.attrs ?? {} });
+
+  return { pos: change.pos, type: retyped.type, attrs: retyped.attrs };
 };
 
 export const createTransform = (start: Doc, options: TransformOptions = {}): Transform => {
@@ -230,6 +245,26 @@ export const createTransform = (start: Doc, options: TransformOptions = {}): Tra
         throw new RangeError(`No element starts at position ${pos}`);
       }
       return transform.step({ kind: 'attrs', pos, attrs: { ...target.attrs, ...attrs } });
+    },
+    setNodesMarkup: (changes) => {
+      const latest = new Map<number, NodeMarkup>();
+
+      for (const change of changes) {
+        const earlier = latest.get(change.pos);
+
+        latest.set(change.pos, {
+          pos: change.pos,
+          type: change.type ?? earlier?.type,
+          attrs: { ...earlier?.attrs, ...change.attrs },
+        });
+      }
+
+      return latest.size === 0
+        ? transform
+        : transform.step({
+            kind: 'markup',
+            changes: [...latest.values()].map((change) => markupOf(doc, change)),
+          });
     },
     setDocAttrs: (attrs) =>
       transform.step({ kind: 'docAttrs', attrs: { ...doc.root.attrs, ...attrs } }),

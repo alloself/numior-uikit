@@ -3,7 +3,7 @@ import type { Doc, Slice } from '../doc/doc.types';
 import type { AttrValue, ContentNode, IdSource, Mark, NodeId } from '../model/node.types';
 import type { Mapping } from '../transform/mapping.types';
 import type { Step, StepResult } from '../transform/step.types';
-import type { SplitType } from '../transform/transform.types';
+import type { NodeMarkup, SplitType } from '../transform/transform.types';
 import type { InputIntent, KeyInput } from './input.types';
 import type { Selection } from './selection.types';
 
@@ -35,6 +35,7 @@ export interface Transaction {
   addMark(from: number, to: number, mark: Mark): Transaction;
   removeMark(from: number, to: number, mark?: Mark | string): Transaction;
   setNodeAttrs(pos: number, attrs: Readonly<Record<string, AttrValue>>): Transaction;
+  setNodesMarkup(changes: readonly NodeMarkup[]): Transaction;
   setDocAttrs(attrs: Readonly<Record<string, AttrValue>>): Transaction;
   split(pos: number, depth?: number, after?: SplitType): Transaction;
   join(pos: number, depth?: number): Transaction;

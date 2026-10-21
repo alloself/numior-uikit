@@ -14,6 +14,7 @@ import {
   type Command,
   type EditorState,
   type Selection,
+  type Transaction,
 } from '../src';
 import { buildWith, notes } from './support/notes';
 
@@ -164,6 +165,45 @@ describe('commands', () => {
     });
 
     expect(run(setBlockType('paragraph'), onImage)).toBeUndefined();
+  });
+
+  it('retypes a whole-document selection in one step, leaves blocks their parent refuses and answers dry runs without changes', () => {
+    const shelf = createState({
+      doc: createDoc(
+        notes,
+        doc(
+          node('heading', ['Title']),
+          node('paragraph', ['Hello']),
+          node('list', [node('item', [node('paragraph', ['ab'])])]),
+          node('paragraph', ['End']),
+        ),
+      ),
+      selection: { kind: 'all' },
+    });
+
+    const dispatched: Transaction[] = [];
+
+    expect(setBlockType('heading', { level: 2 })(shelf)).toBe(true);
+    expect(setBlockType('heading', { level: 2 })(shelf, (tr) => dispatched.push(tr))).toBe(true);
+    expect(dispatched.map((tr) => tr.steps.map((step) => step.kind))).toEqual([['markup']]);
+
+    expect(blocks(dispatched[0] === undefined ? undefined : shelf.apply(dispatched[0]))).toEqual([
+      'heading:Title',
+      'heading:Hello',
+      'list:ab',
+      'heading:End',
+    ]);
+
+    const inItem = createState({ doc: shelf.doc, selection: textSelection(17) });
+
+    expect(setBlockType('heading', { level: 1 })(inItem)).toBe(false);
+
+    const unchanged: Transaction[] = [];
+    const onParagraph = createState({ doc: shelf.doc, selection: textSelection(9) });
+
+    expect(setBlockType('paragraph')(onParagraph)).toBe(true);
+    expect(setBlockType('paragraph')(onParagraph, (tr) => unchanged.push(tr))).toBe(true);
+    expect(unchanged).toEqual([]);
   });
 
   it('deletes and selects everything and chains commands until one handles the state', () => {

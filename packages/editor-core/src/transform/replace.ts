@@ -68,7 +68,7 @@ const allowedText = (schema: Schema, node: ElementNode): boolean => {
   );
 };
 
-const fits = (schema: Schema, node: ElementNode): boolean =>
+export const fits = (schema: Schema, node: ElementNode): boolean =>
   schema.nodes.get(node.type)?.content.matchContent(node.content)?.validEnd === true &&
   allowedText(schema, node);
 

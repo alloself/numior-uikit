@@ -7,6 +7,12 @@ export interface TransformOptions {
   readonly ids?: IdSource | undefined;
 }
 
+export interface NodeMarkup {
+  readonly pos: number;
+  readonly type?: string | undefined;
+  readonly attrs?: Readonly<Record<string, AttrValue>> | undefined;
+}
+
 export interface SplitType {
   readonly type: string;
   readonly attrs?: Readonly<Record<string, AttrValue>> | undefined;
@@ -29,6 +35,7 @@ export interface Transform {
   addMark(from: number, to: number, mark: Mark): Transform;
   removeMark(from: number, to: number, mark?: Mark | string): Transform;
   setNodeAttrs(pos: number, attrs: Readonly<Record<string, AttrValue>>): Transform;
+  setNodesMarkup(changes: readonly NodeMarkup[]): Transform;
   setDocAttrs(attrs: Readonly<Record<string, AttrValue>>): Transform;
   split(pos: number, depth?: number, after?: SplitType): Transform;
   join(pos: number, depth?: number): Transform;

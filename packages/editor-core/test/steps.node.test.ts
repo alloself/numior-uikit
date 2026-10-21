@@ -269,6 +269,118 @@ describe('mark and attribute steps', () => {
   });
 });
 
+const typesOf = (target: Doc): string[] =>
+  target.root.content.map((child) => (child.kind === 'element' ? child.type : 'text'));
+
+const shelf = (): Doc =>
+  createDoc(
+    notes,
+    doc(
+      node('paragraph', ['Hello']),
+      node('heading', ['Title']),
+      node('list', [node('item', [node('paragraph', ['ab'])])]),
+    ),
+  );
+
+const markup = (...changes: Extract<Step, { kind: 'markup' }>['changes']): Step => ({
+  kind: 'markup',
+  changes,
+});
+
+describe('markup steps', () => {
+  it('retypes several elements in one step that keeps every position and id', () => {
+    const start = shelf();
+
+    const step: Step = {
+      kind: 'markup',
+      changes: [
+        { pos: 7, type: 'paragraph', attrs: {} },
+        { pos: 0, type: 'heading', attrs: { level: 2 } },
+      ],
+    };
+
+    const changed = applied(start, step);
+
+    expect(typesOf(changed)).toEqual(['heading', 'paragraph', 'list']);
+    expect(changed.size).toBe(start.size);
+
+    expect(changed.root.content.map((child) => (child.kind === 'element' ? child.id : ''))).toEqual(
+      start.root.content.map((child) => (child.kind === 'element' ? child.id : '')),
+    );
+
+    expect(stepMapOf(step).map(5)).toBe(5);
+    expect(roundTrip(start, step).root).toEqual(start.root);
+  });
+
+  it('refuses a change its parent, its content, its attributes or its target cannot take', () => {
+    const start = shelf();
+    const marked = createDoc(notes, doc(node('paragraph', [text('bold', [notes.mark('bold')])])));
+
+    expect(applyStep(start, markup({ pos: 16, type: 'heading', attrs: { level: 1 } }))).toEqual({
+      ok: false,
+      reason: 'content',
+    });
+
+    expect(applyStep(marked, markup({ pos: 0, type: 'code', attrs: {} }))).toEqual({
+      ok: false,
+      reason: 'content',
+    });
+
+    expect(applyStep(start, markup({ pos: 0, type: 'heading', attrs: { level: 9 } }))).toEqual({
+      ok: false,
+      reason: 'attrs',
+    });
+
+    expect(applyStep(start, markup({ pos: 0, type: 'shadow', attrs: {} }))).toEqual({
+      ok: false,
+      reason: 'target',
+    });
+
+    expect(applyStep(start, markup({ pos: 2, type: 'heading', attrs: { level: 1 } }))).toEqual({
+      ok: false,
+      reason: 'target',
+    });
+
+    expect(
+      applyStep(
+        start,
+        markup(
+          { pos: 0, type: 'heading', attrs: { level: 1 } },
+          { pos: 0, type: 'paragraph', attrs: {} },
+        ),
+      ),
+    ).toEqual({ ok: false, reason: 'range' });
+
+    expect(applyStep(start, markup())).toEqual({ ok: false, reason: 'range' });
+  });
+
+  it('follows earlier changes and drops the elements they removed', () => {
+    const step: Step = {
+      kind: 'markup',
+      changes: [
+        { pos: 0, type: 'heading', attrs: { level: 1 } },
+        { pos: 7, type: 'paragraph', attrs: {} },
+      ],
+    };
+
+    expect(mapStep(step, stepMapOf(insert(1)))).toEqual({
+      kind: 'markup',
+      changes: [
+        { pos: 0, type: 'heading', attrs: { level: 1 } },
+        { pos: 9, type: 'paragraph', attrs: {} },
+      ],
+    });
+
+    expect(
+      mapStep(step, stepMapOf({ kind: 'replace', from: 0, to: 7, slice: flatSlice() })),
+    ).toEqual({ kind: 'markup', changes: [{ pos: 0, type: 'paragraph', attrs: {} }] });
+
+    expect(
+      mapStep(step, stepMapOf({ kind: 'replace', from: 0, to: 14, slice: flatSlice() })),
+    ).toBeUndefined();
+  });
+});
+
 describe('mapping and merging steps', () => {
   it('moves steps over earlier changes and drops the ones whose range vanished', () => {
     const earlier = stepMapOf(insert(1));

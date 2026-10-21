@@ -27,6 +27,12 @@
     "cut 1,000 blocks and paste them back": {
       "p95Ms": 40
     },
+    "check the toolbar block commands on a whole-document selection": {
+      "p95Ms": 25
+    },
+    "turn every textblock of the document into a heading": {
+      "p95Ms": 250
+    },
     "invert and apply 1,000 typing steps": {
       "p95Ms": 250
     },
