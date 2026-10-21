@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { createDoc, createIdSource, createTransform, invertStep, type Doc } from '../src';
+import {
+  createDoc,
+  createIdSource,
+  createState,
+  createTransform,
+  invertStep,
+  type Doc,
+} from '../src';
 import { buildWith, notes } from './support/notes';
 
 const { doc, node, text } = buildWith();
@@ -195,5 +202,57 @@ describe('transforms', () => {
     expect(
       createTransform(before).maybeStep({ kind: 'attrs', pos: 0, attrs: { level: 7 } }),
     ).toEqual({ ok: false, reason: 'attrs' });
+  });
+
+  it('numbers new ids after the highest id of the document and places each of them once', () => {
+    const before = createDoc(
+      notes,
+      notes.element('doc', {
+        id: 'n9',
+        content: [
+          notes.element('paragraph', { id: 'nz', content: [notes.text('a')] }),
+          notes.element('paragraph', { id: 'other', content: [notes.text('b')] }),
+        ],
+      }),
+    );
+
+    const transform = createTransform(before);
+    const id = transform.newId();
+    const paragraph = notes.element('paragraph', { id, content: [notes.text('c')] });
+
+    expect(id).toBe('n10');
+
+    transform.maybeStep({
+      kind: 'replace',
+      from: 0,
+      to: 0,
+      slice: { content: [paragraph], openStart: 0, openEnd: 0 },
+    });
+
+    expect(
+      transform.maybeStep({
+        kind: 'replace',
+        from: 0,
+        to: 0,
+        slice: { content: [paragraph], openStart: 0, openEnd: 0 },
+      }),
+    ).toEqual({ ok: false, reason: 'id' });
+  });
+
+  it('never hands out an id that an inserted node already brought into the document', () => {
+    const before = createDoc(
+      notes,
+      notes.element('doc', {
+        id: 'n1',
+        content: [notes.element('paragraph', { id: 'n2', content: [notes.text('a')] })],
+      }),
+    );
+
+    const state = createState({ doc: before });
+    const foreign = notes.element('paragraph', { id: 'n7', content: [notes.text('b')] });
+    const next = state.apply(state.tr.insert(0, [foreign]));
+
+    expect(next.doc.byId('n7')).toBeDefined();
+    expect(next.tr.newId()).toBe('n8');
   });
 });

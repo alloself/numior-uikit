@@ -1,10 +1,11 @@
 import { createDoc } from '../doc/doc';
 import type { Doc, Slice } from '../doc/doc.types';
 import { sharedDepth } from '../doc/resolve';
-import { childOffsets, contentSize, nodeSize, spliceContent } from '../model/node';
-import type { ElementNode, NodeId } from '../model/node.types';
+import { childIndexAt, childOffsets, contentSize, spliceContent } from '../model/node';
+import type { ContentNode, ElementNode, NodeId } from '../model/node.types';
 import { checkNodes } from '../schema/check';
-import type { Schema } from '../schema/schema.types';
+import { matchesSplice } from '../schema/content-match';
+import type { NodeType, Schema } from '../schema/schema.types';
 import type { StepResult } from './step.types';
 import { contentTokens, cutTokens, rebuild, sliceFrame, sliceTokens, type Token } from './tokens';
 import { liftInto } from './tree';
@@ -35,42 +36,68 @@ const failed = (reason: 'range' | 'depth' | 'content' | 'id'): StepResult => ({
 
 const regionOf = (node: ElementNode, start: number, from: number, to: number): Region => {
   const offsets = childOffsets(node);
-  let first = -1;
-  let last = -1;
+  const first = childIndexAt(node, from - start);
+  const firstStart = start + (offsets[first] ?? 0);
 
-  node.content.forEach((child, index) => {
-    const childStart = start + (offsets[index] ?? 0);
-    const childEnd = childStart + nodeSize(child);
-
-    const overlaps =
-      from === to ? childStart < from && childEnd > from : childEnd > from && childStart < to;
-
-    if (overlaps) {
-      first = first < 0 ? index : first;
-      last = index + 1;
-    }
-  });
-
-  if (first >= 0) {
-    return { first, last, start: start + (offsets[first] ?? 0) };
+  if (first >= node.content.length || (from === to && firstStart >= from)) {
+    return { first, last: first, start: from };
   }
-  const index = offsets.filter((offset) => start + offset < from).length;
+  if (from === to) {
+    return { first, last: first + 1, start: firstStart };
+  }
 
-  return { first: index, last: index, start: from };
+  const end = childIndexAt(node, to - start);
+  const last = end < node.content.length && start + (offsets[end] ?? 0) < to ? end + 1 : end;
+
+  return { first, last, start: firstStart };
 };
 
-const allowedText = (schema: Schema, node: ElementNode): boolean => {
-  const type = schema.nodes.get(node.type);
-
-  return node.content.every(
+const allowedText = (type: NodeType | undefined, content: readonly ContentNode[]): boolean =>
+  content.every(
     (child) =>
       child.kind === 'element' || child.marks.every((mark) => type?.marks.has(mark.type) === true),
   );
+
+export const fits = (schema: Schema, node: ElementNode): boolean => {
+  const type = schema.nodes.get(node.type);
+
+  return (
+    type?.content.matchContent(node.content)?.validEnd === true && allowedText(type, node.content)
+  );
 };
 
-export const fits = (schema: Schema, node: ElementNode): boolean =>
-  schema.nodes.get(node.type)?.content.matchContent(node.content)?.validEnd === true &&
-  allowedText(schema, node);
+const sharedEnds = (before: ElementNode, after: ElementNode): readonly [number, number] => {
+  const shortest = Math.min(before.content.length, after.content.length);
+  let prefix = 0;
+  let suffix = 0;
+
+  while (prefix < shortest && before.content[prefix] === after.content[prefix]) {
+    prefix += 1;
+  }
+  while (
+    suffix < shortest - prefix &&
+    before.content.at(-1 - suffix) === after.content.at(-1 - suffix)
+  ) {
+    suffix += 1;
+  }
+  return [prefix, suffix];
+};
+
+const fitsEdited = (schema: Schema, before: ElementNode, after: ElementNode): boolean => {
+  const type = schema.nodes.get(after.type);
+
+  if (type === undefined || before.type !== after.type) {
+    return fits(schema, after);
+  }
+
+  const [prefix, suffix] = sharedEnds(before, after);
+  const inserted = after.content.slice(prefix, after.content.length - suffix);
+
+  return (
+    matchesSplice(type.content, before, prefix, before.content.length - suffix, inserted) &&
+    allowedText(type, inserted)
+  );
+};
 
 const collectIds = (node: ElementNode, into: NodeId[]): void => {
   into.push(node.id);
@@ -95,13 +122,17 @@ const insertedIds = (tokens: readonly Token[]): NodeId[] => {
   return ids;
 };
 
-const idsFree = (doc: Doc, plan: ReplacePlan): boolean => {
+const idsFree = (doc: Doc, plan: ReplacePlan, fresh: ReadonlySet<NodeId>): boolean => {
   const ids = insertedIds(plan.inserted);
   const unique = new Set(ids);
 
   return (
     unique.size === ids.length &&
     ids.every((id) => {
+      if (fresh.has(id)) {
+        return true;
+      }
+
       const pos = doc.positionOf(id);
 
       return id !== doc.root.id && (pos === undefined || plan.freed(pos));
@@ -112,7 +143,7 @@ const idsFree = (doc: Doc, plan: ReplacePlan): boolean => {
 const middleNodes = (tokens: readonly Token[]): ElementNode[] =>
   tokens.flatMap((token) => (token.kind === 'node' ? [token.node] : []));
 
-export const applyPlan = (doc: Doc, plan: ReplacePlan): StepResult => {
+export const applyPlan = (doc: Doc, plan: ReplacePlan, fresh: ReadonlySet<NodeId>): StepResult => {
   const { from, to } = plan;
 
   if (from < 0 || to > doc.size || from > to) {
@@ -128,7 +159,7 @@ export const applyPlan = (doc: Doc, plan: ReplacePlan): StepResult => {
   if (!checkNodes(doc.schema, middleNodes(plan.inserted)).ok) {
     return failed('content');
   }
-  if (!idsFree(doc, plan)) {
+  if (!idsFree(doc, plan, fresh)) {
     return failed('id');
   }
   const base = Math.min(depth, sharedDepth(left, right));
@@ -150,7 +181,10 @@ export const applyPlan = (doc: Doc, plan: ReplacePlan): StepResult => {
 
   const next = spliceContent(node, region.first, region.last, built.content);
 
-  if (![next, ...built.rebuilt].every((element) => fits(doc.schema, element))) {
+  if (
+    !fitsEdited(doc.schema, node, next) ||
+    !built.rebuilt.every((element) => fits(doc.schema, element))
+  ) {
     return failed('content');
   }
   return { ok: true, doc: createDoc(doc.schema, liftInto(left, base, next)) };

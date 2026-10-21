@@ -1,4 +1,12 @@
-import type { Attrs, ContentNode, ElementNode, IdSource, Mark, TextNode } from './node.types';
+import type {
+  Attrs,
+  ContentNode,
+  ElementNode,
+  IdSource,
+  Mark,
+  NodeId,
+  TextNode,
+} from './node.types';
 
 const offsetCache = new WeakMap<ElementNode, readonly number[]>();
 
@@ -19,7 +27,7 @@ export const sameAttrs = (left: Attrs, right: Attrs): boolean => {
   );
 };
 
-const sameMark = (left: Mark, right: Mark): boolean =>
+export const sameMark = (left: Mark, right: Mark): boolean =>
   left.type === right.type && sameAttrs(left.attrs, right.attrs);
 
 export const sameMarks = (left: readonly Mark[], right: readonly Mark[]): boolean =>
@@ -122,8 +130,8 @@ export const childIndexAt = (node: ElementNode, offset: number): number => {
   return found;
 };
 
-export const createIdSource = (prefix = 'n'): IdSource => {
-  let count = 0;
+export const createIdSource = (prefix = 'n', after = 0): IdSource => {
+  let count = after;
 
   return {
     next: () => {
@@ -131,4 +139,53 @@ export const createIdSource = (prefix = 'n'): IdSource => {
       return `${prefix}${count.toString(36)}`;
     },
   };
+};
+
+const ID_COUNT = /^[0-9a-z]+$/;
+
+const countOf = (id: NodeId, prefix: string): number => {
+  const rest = id.slice(prefix.length);
+
+  return id.startsWith(prefix) && ID_COUNT.test(rest) ? Number.parseInt(rest, 36) : 0;
+};
+
+const highestCount = (root: ElementNode, prefix: string): number => {
+  let highest = 0;
+  const pending: ElementNode[] = [root];
+
+  for (let node = pending.pop(); node !== undefined; node = pending.pop()) {
+    highest = Math.max(highest, countOf(node.id, prefix));
+    for (const child of node.content) {
+      if (child.kind === 'element') {
+        pending.push(child);
+      }
+    }
+  }
+  return highest;
+};
+
+interface SeededIds extends IdSource {
+  reserve(id: NodeId): void;
+}
+
+const seededSources = new WeakMap<IdSource, SeededIds>();
+
+export const seededOf = (source: IdSource): SeededIds | undefined => seededSources.get(source);
+
+export const idSourceAfter = (root: ElementNode, prefix = 'n'): SeededIds => {
+  let count: number | undefined;
+  let reserved = 0;
+
+  const source: SeededIds = {
+    next: () => {
+      count = Math.max(count ?? highestCount(root, prefix), reserved) + 1;
+      return `${prefix}${count.toString(36)}`;
+    },
+    reserve: (id) => {
+      reserved = Math.max(reserved, countOf(id, prefix));
+    },
+  };
+
+  seededSources.set(source, source);
+  return source;
 };

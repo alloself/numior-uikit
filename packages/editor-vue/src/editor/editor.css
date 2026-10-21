@@ -48,6 +48,9 @@
   opacity: var(--nui-disabled-opacity);
   cursor: not-allowed;
 }
+.nui-editor__server {
+  display: contents;
+}
 .nui-editor .nui-editor__content {
   --_size: var(--_text);
 

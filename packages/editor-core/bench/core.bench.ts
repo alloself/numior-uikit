@@ -1,4 +1,5 @@
 import {
+  createDoc,
   createMapping,
   createState,
   createTransform,
@@ -184,6 +185,20 @@ const toolbarChecks = [
   liftListItem,
   sinkListItem,
 ];
+
+operations.push(
+  await measure(
+    'check the toolbar block commands with the cursor in a fresh document',
+    async () => {
+      const fresh = createState({ doc: createDoc(fixtureSchema, { ...doc.root }) });
+
+      for (const check of toolbarChecks) {
+        check(fresh);
+      }
+    },
+    light,
+  ),
+);
 
 operations.push(
   await measure(

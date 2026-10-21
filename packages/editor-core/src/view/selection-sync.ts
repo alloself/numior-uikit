@@ -79,14 +79,17 @@ const pointsOf = (
   }
   if (selection.kind === 'all') {
     const doc = host.state().doc;
-    const point = domAtPos(host.rootDesc, doc, textPosition(doc, 0, 1) ?? 0);
+    const point = domAtPos(host.rootDesc, doc, textPosition(doc, 0, 1) ?? 0, host.fresh);
 
     return [point, point];
   }
   const doc = host.state().doc;
   const span = spanOf(doc, selection);
 
-  return [domAtPos(host.rootDesc, doc, span.anchor), domAtPos(host.rootDesc, doc, span.head)];
+  return [
+    domAtPos(host.rootDesc, doc, span.anchor, host.fresh),
+    domAtPos(host.rootDesc, doc, span.head, host.fresh),
+  ];
 };
 
 const domSpan = (host: ViewHost): Span | undefined => {

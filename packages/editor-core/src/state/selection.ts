@@ -1,4 +1,5 @@
 import type { Doc } from '../doc/doc.types';
+import { childIndexAt, childOffsets, nodeSize } from '../model/node';
 import type { ContentNode, ElementNode, NodeId } from '../model/node.types';
 import type { Mappable } from '../transform/mapping.types';
 import type { GapSide, Selection, SelectionRange } from './selection.types';
@@ -24,32 +25,71 @@ const blockAround = (doc: Doc, id: NodeId): SelectionRange | undefined => {
 const isTextblock = (doc: Doc, node: ContentNode): node is ElementNode =>
   node.kind === 'element' && doc.schema.nodes.get(node.type)?.inlineContent === true;
 
-const firstTextblock = (doc: Doc, from: number, to: number): number | undefined => {
-  let found: number | undefined;
+const firstTextblockIn = (
+  doc: Doc,
+  node: ElementNode,
+  start: number,
+  from: number,
+  to: number,
+): number | undefined => {
+  const offsets = childOffsets(node);
 
-  doc.nodesBetween(from, to, (node, pos) => {
-    if (found === undefined && isTextblock(doc, node)) {
-      found = pos + 1;
+  for (let index = childIndexAt(node, Math.max(0, from - start)); ; index += 1) {
+    const child = node.content[index];
+    const childStart = start + (offsets[index] ?? 0);
+
+    if (child === undefined || childStart >= to) {
+      return undefined;
     }
-    return found === undefined;
-  });
+    if (child.kind === 'element') {
+      const found = isTextblock(doc, child)
+        ? childStart + 1
+        : firstTextblockIn(doc, child, childStart + 1, from, to);
 
-  return found;
+      if (found !== undefined) {
+        return found;
+      }
+    }
+  }
 };
 
-const lastTextblock = (doc: Doc, from: number, to: number): number | undefined => {
-  let found: number | undefined;
+const lastTextblockIn = (
+  doc: Doc,
+  node: ElementNode,
+  start: number,
+  from: number,
+  to: number,
+): number | undefined => {
+  const offsets = childOffsets(node);
 
-  doc.nodesBetween(from, to, (node, pos) => {
-    if (isTextblock(doc, node)) {
-      found = pos + node.size - 1;
-      return false;
+  for (
+    let index = Math.min(childIndexAt(node, to - start), node.content.length - 1);
+    ;
+    index -= 1
+  ) {
+    const child = node.content[index];
+    const childStart = start + (offsets[index] ?? 0);
+
+    if (child === undefined || childStart + nodeSize(child) <= from) {
+      return undefined;
     }
-    return true;
-  });
+    if (childStart < to && child.kind === 'element') {
+      const found = isTextblock(doc, child)
+        ? childStart + child.size - 1
+        : lastTextblockIn(doc, child, childStart + 1, from, to);
 
-  return found;
+      if (found !== undefined) {
+        return found;
+      }
+    }
+  }
 };
+
+const firstTextblock = (doc: Doc, from: number, to: number): number | undefined =>
+  firstTextblockIn(doc, doc.root, 0, from, to);
+
+const lastTextblock = (doc: Doc, from: number, to: number): number | undefined =>
+  lastTextblockIn(doc, doc.root, 0, from, to);
 
 const textNear = (doc: Doc, pos: number, bias: -1 | 1): number | undefined =>
   bias > 0

@@ -138,3 +138,17 @@ export const tidyChunks = (root: HTMLElement, chunks: ChunkSet, sizeOf: SizeOf):
     }
   }
 };
+
+export const appendChunk = (
+  root: HTMLElement,
+  blocks: readonly ChildNode[],
+  chunks: ChunkSet,
+  sizeOf: SizeOf,
+  before: ChildNode | null,
+): void => {
+  const chunk = createChunk(root.ownerDocument, chunks);
+
+  chunk.append(...blocks);
+  estimate(chunk, sizeOf);
+  root.insertBefore(chunk, before);
+};

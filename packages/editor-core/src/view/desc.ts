@@ -1,7 +1,7 @@
 import { childOffsets, sameAttrs, sameMarks } from '../model/node';
 import type { ContentNode, ElementNode, NodeId, TextNode } from '../model/node.types';
 import type { NodeType, Schema } from '../schema/schema.types';
-import { fillChunks, placeInChunks, tidyChunks, type ChunkSet } from './chunks';
+import { appendChunk, fillChunks, placeInChunks, tidyChunks, type ChunkSet } from './chunks';
 import { segmentsOf, type BlockDecorations, type LocalDecoration } from './decorate';
 import { renderLeaf, renderParent, type RenderedDom } from './render-dom';
 import type { NodeView, NodeViewFactory } from './view.types';
@@ -46,6 +46,8 @@ export interface ViewContext {
   readonly widgets: WeakSet<Node>;
   readonly placed: Map<string, HTMLElement>;
   readonly redraw: Set<NodeId>;
+  readonly stale: Map<ElementDesc, ElementNode>;
+  visible: (desc: ElementDesc) => boolean;
   decorations: BlockDecorations;
 }
 
@@ -214,11 +216,12 @@ const LINE_HEIGHT = 24;
 
 const LINE_LENGTH = 80;
 
+const heightOf = (size: number): number => Math.max(1, Math.ceil(size / LINE_LENGTH)) * LINE_HEIGHT;
+
 const estimateOf = (context: ViewContext, block: Element): number => {
   const desc = context.descs.get(block);
-  const size = desc?.kind === 'element' ? desc.node.size : LINE_LENGTH;
 
-  return Math.max(1, Math.ceil(size / LINE_LENGTH)) * LINE_HEIGHT;
+  return heightOf(desc?.kind === 'element' ? desc.node.size : LINE_LENGTH);
 };
 
 const chunked = (context: ViewContext, desc: ElementDesc): boolean =>
@@ -313,11 +316,78 @@ export const textblockAround = (
   return undefined;
 };
 
+export interface RootFill {
+  readonly remaining: number;
+  readonly covered: number;
+  readonly height: number;
+  fill(count: number): void;
+  resume(node: ElementNode): number | undefined;
+}
+
+const CHUNK_BLOCKS = 32;
+
+const rootFill = (context: ViewContext, desc: ElementDesc, from: number): RootFill => {
+  let content = desc.node.content;
+  let next = from;
+
+  let height = content
+    .slice(from)
+    .reduce(
+      (total, child) => total + heightOf(child.kind === 'element' ? child.size : LINE_LENGTH),
+      0,
+    );
+
+  return {
+    get remaining() {
+      return content.length - next;
+    },
+    get covered() {
+      return next;
+    },
+    get height() {
+      return height;
+    },
+    resume: (node) => {
+      const waiting = content[next];
+
+      const at =
+        waiting?.kind === 'element'
+          ? node.content.findIndex((child) => child.kind === 'element' && child.id === waiting.id)
+          : -1;
+
+      if (at < 0 || node.content.length - at !== content.length - next) {
+        return undefined;
+      }
+      content = node.content;
+      next = at;
+      return at;
+    },
+    fill: (count) => {
+      const end = Math.min(content.length, next + count);
+
+      while (next < end) {
+        const blocks: ChildNode[] = [];
+
+        for (const child of content.slice(next, Math.min(end, next + CHUNK_BLOCKS))) {
+          const made = createDesc(context, child, desc, next);
+
+          desc.children.push(made);
+          blocks.push(outerOf(made));
+          height -= heightOf(child.kind === 'element' ? child.size : LINE_LENGTH);
+          next += 1;
+        }
+        appendChunk(desc.dom, blocks, context.chunks, (block) => estimateOf(context, block), null);
+      }
+    },
+  };
+};
+
 export const createRootDesc = (
   context: ViewContext,
   dom: HTMLElement,
   node: ElementNode,
-): ElementDesc => {
+  first = Number.POSITIVE_INFINITY,
+): { readonly desc: ElementDesc; readonly rest: RootFill | undefined } => {
   const desc: ElementDesc = {
     kind: 'element',
     node,
@@ -332,8 +402,16 @@ export const createRootDesc = (
 
   context.descs.set(dom, desc);
   context.byId.set(node.id, desc);
-  fillChildren(context, desc);
-  return desc;
+  if (!chunked(context, desc) || node.content.length <= first) {
+    fillChildren(context, desc);
+    return { desc, rest: undefined };
+  }
+  dom.replaceChildren();
+
+  const rest = rootFill(context, desc, 0);
+
+  rest.fill(first);
+  return { desc, rest };
 };
 
 export const widgetOwner = (
@@ -468,8 +546,22 @@ const matchElement = (
   }
   matching.used.add(found);
   found.index = index;
-  syncElement(context, found, node);
+  if (parent.parent === null && found.node !== node && !context.visible(found)) {
+    context.stale.set(found, node);
+  } else {
+    context.stale.delete(found);
+    syncElement(context, found, node);
+  }
   return found;
+};
+
+export const freshen = (context: ViewContext, desc: ElementDesc): void => {
+  const node = context.stale.get(desc);
+
+  if (node !== undefined) {
+    context.stale.delete(desc);
+    syncElement(context, desc, node);
+  }
 };
 
 const sharedPrefix = (previous: readonly Desc[], next: readonly ContentNode[]): number => {
@@ -542,35 +634,27 @@ const placeBefore = (
   }
 };
 
-export const syncElement = (context: ViewContext, desc: ElementDesc, node: ElementNode): void => {
-  const content = desc.contentDOM;
-
-  if (desc.node === node) {
-    return;
-  }
-  desc.node = node;
-  if (context.redraw.delete(node.id)) {
-    redrawContent(context, desc);
-    return;
-  }
-  if (content === null) {
-    return;
-  }
+const syncContent = (
+  context: ViewContext,
+  desc: ElementDesc,
+  content: HTMLElement,
+  nodes: readonly ContentNode[],
+): void => {
   const previous = desc.children;
-  const prefix = sharedPrefix(previous, node.content);
-  const suffix = sharedSuffix(previous, node.content, prefix);
+  const prefix = sharedPrefix(previous, nodes);
+  const suffix = sharedSuffix(previous, nodes, prefix);
   const kept = previous.slice(previous.length - suffix);
 
   const middle = reconcile(
     context,
     desc,
     previous.slice(prefix, previous.length - suffix),
-    node.content.slice(prefix, node.content.length - suffix),
+    nodes.slice(prefix, nodes.length - suffix),
     prefix,
   );
 
   kept.forEach((child, offset) => {
-    child.index = node.content.length - suffix + offset;
+    child.index = nodes.length - suffix + offset;
   });
 
   const anchor = kept[0] === undefined ? null : outerOf(kept[0]);
@@ -583,4 +667,32 @@ export const syncElement = (context: ViewContext, desc: ElementDesc, node: Eleme
   }
   desc.children = [...previous.slice(0, prefix), ...middle, ...kept];
   syncHack(context, desc);
+};
+
+export const syncElement = (context: ViewContext, desc: ElementDesc, node: ElementNode): void => {
+  const content = desc.contentDOM;
+
+  if (desc.node === node) {
+    return;
+  }
+  desc.node = node;
+  if (context.redraw.delete(node.id)) {
+    redrawContent(context, desc);
+    return;
+  }
+  if (content !== null) {
+    syncContent(context, desc, content, node.content);
+  }
+};
+
+export const syncRootPrefix = (
+  context: ViewContext,
+  desc: ElementDesc,
+  node: ElementNode,
+  end: number,
+): void => {
+  if (desc.node !== node) {
+    desc.node = node;
+    syncContent(context, desc, desc.dom, node.content.slice(0, end));
+  }
 };

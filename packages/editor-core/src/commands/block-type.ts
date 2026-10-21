@@ -1,5 +1,6 @@
 import { sameAttrs } from '../model/node';
 import type { AttrValue, ElementNode } from '../model/node.types';
+import { matchesSplice } from '../schema/content-match';
 import type { Schema } from '../schema/schema.types';
 import { selectionRange } from '../state/selection';
 import type { Command, EditorState } from '../state/state.types';
@@ -22,6 +23,13 @@ const acceptsAll = (
   parent: ElementNode,
   retyped: readonly Candidate[],
 ): boolean => {
+  const type = schema.nodes.get(parent.type);
+  const [only, ...others] = retyped;
+
+  if (type !== undefined && only !== undefined && others.length === 0) {
+    return matchesSplice(type.content, parent, only.index, only.index + 1, [only.node]);
+  }
+
   const replaced = new Map(retyped.map((candidate) => [candidate.index, candidate.node]));
 
   return fits(schema, {

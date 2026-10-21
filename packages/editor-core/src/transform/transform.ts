@@ -1,88 +1,72 @@
 import type { Doc, Slice } from '../doc/doc.types';
-import { createIdSource, sameMarks, withContent } from '../model/node';
-import type { ContentNode, ElementNode, Mark, NodeId } from '../model/node.types';
+import { idSourceAfter, sameMark, seededOf, withContent } from '../model/node';
+import type { ContentNode, ElementNode, Mark, NodeId, TextNode } from '../model/node.types';
 import { createMapping } from './mapping';
 import type { StepMap } from './mapping.types';
 import { applyStep, stepMapOf } from './step';
 import type { MarkupChange, Step, StepResult } from './step.types';
 import type { NodeMarkup, SplitType, Transform, TransformOptions } from './transform.types';
 
-interface Portion {
+interface Span {
   readonly from: number;
   readonly to: number;
-  readonly marks: readonly Mark[];
 }
 
 const EMPTY: Slice = { content: [], openStart: 0, openEnd: 0 };
 
-interface TextPortion extends Portion {
-  readonly allowed: ReadonlySet<string> | undefined;
-}
+const allows = (doc: Doc, parent: ElementNode, type: string): boolean =>
+  doc.schema.nodes.get(parent.type)?.marks.has(type) === true;
 
-const textPortions = (doc: Doc, from: number, to: number): TextPortion[] => {
-  const portions: TextPortion[] = [];
+const holds = (marks: readonly Mark[], mark: Mark): boolean =>
+  marks.some((item) => sameMark(item, mark));
+
+const textSpan = (
+  doc: Doc,
+  from: number,
+  to: number,
+  takes: (node: TextNode, parent: ElementNode) => boolean,
+): Span | undefined => {
+  let first: number | undefined;
+  let last = from;
 
   doc.nodesBetween(from, to, (node, pos, parent) => {
-    if (node.kind === 'text') {
-      portions.push({
-        from: Math.max(from, pos),
-        to: Math.min(to, pos + node.text.length),
-        marks: node.marks,
-        allowed: doc.schema.nodes.get(parent.type)?.marks,
-      });
+    if (node.kind === 'text' && takes(node, parent)) {
+      first ??= Math.max(from, pos);
+      last = Math.min(to, pos + node.text.length);
     }
     return true;
   });
 
-  return portions;
+  return first === undefined ? undefined : { from: first, to: last };
 };
 
-const portionsOf = (doc: Doc, from: number, to: number, type: string): Portion[] =>
-  textPortions(doc, from, to).filter((portion) => portion.allowed?.has(type) === true);
-
-const distinctMarks = (portions: readonly Portion[], keep: (mark: Mark) => boolean): Mark[] => {
+const marksWhere = (
+  doc: Doc,
+  from: number,
+  to: number,
+  keep: (mark: Mark, parent: ElementNode) => boolean,
+): Mark[] => {
   const found: Mark[] = [];
 
-  for (const portion of portions) {
-    for (const mark of portion.marks) {
-      if (keep(mark) && !found.some((known) => sameMarks([known], [mark]))) {
-        found.push(mark);
+  doc.nodesBetween(from, to, (node, _pos, parent) => {
+    if (node.kind === 'text') {
+      for (const mark of node.marks) {
+        if (keep(mark, parent) && !holds(found, mark)) {
+          found.push(mark);
+        }
       }
     }
-  }
+    return true;
+  });
+
   return found;
 };
-
-const runsWhere = (
-  portions: readonly Portion[],
-  keep: (portion: Portion) => boolean,
-): Portion[] => {
-  const runs: Portion[] = [];
-  let open = false;
-
-  for (const portion of portions) {
-    const last = runs.at(-1);
-
-    if (!keep(portion)) {
-      open = false;
-    } else if (open && last !== undefined) {
-      runs[runs.length - 1] = { ...last, to: portion.to };
-    } else {
-      runs.push(portion);
-      open = true;
-    }
-  }
-  return runs;
-};
-
-const holds = (portion: Portion, mark: Mark): boolean =>
-  portion.marks.some((item) => sameMarks([item], [mark]));
 
 const matches = (mark: Mark, filter: Mark | string | undefined): boolean => {
   if (filter === undefined) {
     return true;
   }
-  return typeof filter === 'string' ? mark.type === filter : sameMarks([mark], [filter]);
+  return typeof filter === 'string' ? mark.type === filter : sameMark(mark, filter);
 };
 
 const markupOf = (doc: Doc, change: NodeMarkup): MarkupChange => {
@@ -104,17 +88,33 @@ export const createTransform = (start: Doc, options: TransformOptions = {}): Tra
   const steps: Step[] = [];
   const docs: Doc[] = [];
   const maps: StepMap[] = [];
-  const ids = options.ids ?? createIdSource('n');
+  const ids = options.ids ?? idSourceAfter(start.root);
   const used = new Set<NodeId>();
+  const unplaced = new Set<NodeId>();
   let doc = start;
+
+  const seeded = seededOf(ids);
 
   const freshId = (): NodeId => {
     for (;;) {
       const id = ids.next();
 
-      if (!used.has(id) && doc.byId(id) === undefined) {
+      if (!used.has(id) && (seeded !== undefined || doc.byId(id) === undefined)) {
         used.add(id);
+        if (seeded !== undefined) {
+          unplaced.add(id);
+        }
         return id;
+      }
+    }
+  };
+
+  const place = (nodes: readonly ContentNode[]): void => {
+    for (const node of nodes) {
+      if (node.kind === 'element') {
+        unplaced.delete(node.id);
+        seeded?.reserve(node.id);
+        place(node.content);
       }
     }
   };
@@ -134,9 +134,12 @@ export const createTransform = (start: Doc, options: TransformOptions = {}): Tra
     });
 
   const maybeStep = (step: Step): StepResult => {
-    const result = applyStep(doc, step);
+    const result = applyStep(doc, step, unplaced);
 
     if (result.ok) {
+      if (step.kind === 'replace' || step.kind === 'replaceAround') {
+        place(step.slice.content);
+      }
       steps.push(step);
       docs.push(doc);
       maps.push(stepMapOf(step));
@@ -145,12 +148,9 @@ export const createTransform = (start: Doc, options: TransformOptions = {}): Tra
     return result;
   };
 
-  const markSteps = (runs: readonly Portion[], make: (run: Portion) => Step): void => {
-    const first = runs[0];
-    const last = runs.at(-1);
-
-    if (first !== undefined && last !== undefined) {
-      maybeStep(make({ from: first.from, to: last.to, marks: [] }));
+  const markStep = (span: Span | undefined, make: (span: Span) => Step): void => {
+    if (span !== undefined) {
+      maybeStep(make(span));
     }
   };
 
@@ -187,6 +187,11 @@ export const createTransform = (start: Doc, options: TransformOptions = {}): Tra
       const seen = new Set<NodeId>();
 
       const keeps = (id: NodeId): boolean => {
+        if (unplaced.has(id) && !seen.has(id)) {
+          seen.add(id);
+          return true;
+        }
+
         const pos = doc.positionOf(id);
 
         const free =
@@ -218,37 +223,48 @@ export const createTransform = (start: Doc, options: TransformOptions = {}): Tra
           });
     },
     addMark: (from, to, mark) => {
-      const olds = new Set(
-        portionsOf(doc, from, to, mark.type).flatMap((portion) => portion.marks),
+      const replaced = marksWhere(
+        doc,
+        from,
+        to,
+        (old, parent) =>
+          old.type === mark.type && !sameMark(old, mark) && allows(doc, parent, mark.type),
       );
 
-      for (const old of olds) {
-        if (old.type === mark.type && !sameMarks([old], [mark])) {
-          const runs = runsWhere(portionsOf(doc, from, to, mark.type), (portion) =>
-            holds(portion, old),
-          );
-
-          markSteps(runs, (run) => ({ kind: 'removeMark', from: run.from, to: run.to, mark: old }));
-        }
+      for (const old of replaced) {
+        markStep(
+          textSpan(
+            doc,
+            from,
+            to,
+            (node, parent) => allows(doc, parent, old.type) && holds(node.marks, old),
+          ),
+          (span) => ({ kind: 'removeMark', from: span.from, to: span.to, mark: old }),
+        );
       }
 
-      const missing = runsWhere(
-        portionsOf(doc, from, to, mark.type),
-        (portion) => !holds(portion, mark),
+      markStep(
+        textSpan(
+          doc,
+          from,
+          to,
+          (node, parent) => allows(doc, parent, mark.type) && !holds(node.marks, mark),
+        ),
+        (span) => ({ kind: 'addMark', from: span.from, to: span.to, mark }),
       );
 
-      markSteps(missing, (run) => ({ kind: 'addMark', from: run.from, to: run.to, mark }));
       return transform;
     },
     removeMark: (from, to, filter) => {
-      const portions = textPortions(doc, from, to);
-
-      for (const mark of distinctMarks(portions, (item) => matches(item, filter))) {
-        const allowed = portions.filter((portion) => portion.allowed?.has(mark.type) === true);
-
-        markSteps(
-          runsWhere(allowed, (portion) => holds(portion, mark)),
-          (run) => ({ kind: 'removeMark', from: run.from, to: run.to, mark }),
+      for (const mark of marksWhere(doc, from, to, (item) => matches(item, filter))) {
+        markStep(
+          textSpan(
+            doc,
+            from,
+            to,
+            (node, parent) => allows(doc, parent, mark.type) && holds(node.marks, mark),
+          ),
+          (span) => ({ kind: 'removeMark', from: span.from, to: span.to, mark }),
         );
       }
       return transform;

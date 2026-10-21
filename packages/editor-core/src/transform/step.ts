@@ -6,8 +6,11 @@ import { createStepMap, EMPTY_MAP } from './mapping';
 import type { Mappable, StepMap } from './mapping.types';
 import { applyMark, heldSpans } from './marks';
 import { applyPlan, aroundPlan, replacePlan, sliceSize } from './replace';
+import type { NodeId } from '../model/node.types';
 import type { Step, StepResult } from './step.types';
 import { cutTokens, rebuild, sliceFrame } from './tokens';
+
+const NO_IDS: ReadonlySet<NodeId> = new Set();
 
 const flat = (slice: Slice): boolean => slice.openStart === 0 && slice.openEnd === 0;
 
@@ -25,17 +28,21 @@ const removeBetween = (slice: Slice, from: number, to: number): Slice => {
   return { content: built.content, openStart: slice.openStart, openEnd: slice.openEnd };
 };
 
-export const applyStep = (doc: Doc, step: Step): StepResult => {
+export const applyStep = (
+  doc: Doc,
+  step: Step,
+  fresh: ReadonlySet<NodeId> = NO_IDS,
+): StepResult => {
   switch (step.kind) {
     case 'replace': {
       const plan = replacePlan(step.from, step.to, step.slice);
 
-      return plan === undefined ? { ok: false, reason: 'depth' } : applyPlan(doc, plan);
+      return plan === undefined ? { ok: false, reason: 'depth' } : applyPlan(doc, plan, fresh);
     }
     case 'replaceAround': {
       const plan = aroundPlan(doc, step);
 
-      return plan === undefined ? { ok: false, reason: 'range' } : applyPlan(doc, plan);
+      return plan === undefined ? { ok: false, reason: 'range' } : applyPlan(doc, plan, fresh);
     }
     case 'addMark':
     case 'removeMark':

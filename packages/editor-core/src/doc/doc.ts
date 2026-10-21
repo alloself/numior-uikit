@@ -51,26 +51,41 @@ const visitRange = (
   }
 };
 
+const cutChild = (
+  child: ContentNode,
+  childStart: number,
+  from: number,
+  to: number,
+): ContentNode[] => {
+  const childEnd = childStart + nodeSize(child);
+
+  if (childEnd <= from || childStart >= to) {
+    return [];
+  }
+  if (child.kind === 'text') {
+    const text = child.text.slice(Math.max(from, childStart) - childStart, to - childStart);
+
+    return text === '' ? [] : [{ ...child, text }];
+  }
+  if (childStart >= from && childEnd <= to) {
+    return [child];
+  }
+  return [withContent(child, cutContent(child, childStart + 1, from, to))];
+};
+
 const cutContent = (node: ElementNode, start: number, from: number, to: number): ContentNode[] => {
   const offsets = childOffsets(node);
+  const cut: ContentNode[] = [];
 
-  return node.content.flatMap((child, index): ContentNode[] => {
+  for (let index = childIndexAt(node, Math.max(0, from - start)); ; index += 1) {
+    const child = node.content[index];
     const childStart = start + (offsets[index] ?? 0);
-    const childEnd = childStart + nodeSize(child);
 
-    if (childEnd <= from || childStart >= to) {
-      return [];
+    if (child === undefined || childStart >= to) {
+      return cut;
     }
-    if (child.kind === 'text') {
-      const text = child.text.slice(Math.max(from, childStart) - childStart, to - childStart);
-
-      return text === '' ? [] : [{ ...child, text }];
-    }
-    if (childStart >= from && childEnd <= to) {
-      return [child];
-    }
-    return [withContent(child, cutContent(child, childStart + 1, from, to))];
-  });
+    cut.push(...cutChild(child, childStart, from, to));
+  }
 };
 
 export const createDoc = (schema: Schema, root: ElementNode): Doc => {

@@ -1,4 +1,5 @@
 import type { Doc } from '../doc/doc.types';
+import { idSourceAfter } from '../model/node';
 import type { IdSource, Mark } from '../model/node.types';
 import { nearestCursor, validSelection } from './selection';
 import type { Selection } from './selection.types';
@@ -16,7 +17,7 @@ interface StateFields {
   readonly selection: Selection;
   readonly storedMarks: readonly Mark[] | null;
   readonly plugins: readonly Plugin[];
-  readonly ids: IdSource | undefined;
+  readonly ids: IdSource;
 }
 
 const APPEND_ROUNDS = 32;
@@ -40,11 +41,7 @@ const buildState = (fields: StateFields, before?: EditorState, tr?: Transaction)
   return state;
 };
 
-const applyOne = (
-  state: EditorState,
-  ids: IdSource | undefined,
-  tr: Transaction,
-): EditorState | undefined =>
+const applyOne = (state: EditorState, ids: IdSource, tr: Transaction): EditorState | undefined =>
   state.plugins.every((plugin) => plugin.filterTransaction(tr, state))
     ? buildState(
         {
@@ -62,7 +59,7 @@ const applyOne = (
 const appendRound = (
   start: EditorState,
   current: EditorState,
-  ids: IdSource | undefined,
+  ids: IdSource,
   transactions: Transaction[],
   seen: Map<Plugin, number>,
 ): EditorState | undefined => {
@@ -85,11 +82,7 @@ const appendRound = (
   return latest;
 };
 
-const applyAll = (
-  state: EditorState,
-  ids: IdSource | undefined,
-  root: Transaction,
-): AppliedTransaction => {
+const applyAll = (state: EditorState, ids: IdSource, root: Transaction): AppliedTransaction => {
   const first = applyOne(state, ids, root);
 
   if (first === undefined) {
@@ -116,5 +109,5 @@ export const createState = (config: EditorStateConfig): EditorState =>
     selection: validSelection(config.doc, config.selection ?? nearestCursor(config.doc, 0)),
     storedMarks: config.storedMarks ?? null,
     plugins: config.plugins ?? [],
-    ids: config.ids,
+    ids: config.ids ?? idSourceAfter(config.doc.root),
   });

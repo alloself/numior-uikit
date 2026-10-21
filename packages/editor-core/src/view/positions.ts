@@ -153,11 +153,18 @@ export const posAtDOM = (context: ViewContext, node: Node, offset: number): numb
   }
 };
 
-export const domAtPos = (root: ElementDesc, doc: Doc, pos: number): DomPoint => {
+export const domAtPos = (
+  root: ElementDesc,
+  doc: Doc,
+  pos: number,
+  fresh: (parent: ElementDesc, index: number) => void = () => undefined,
+): DomPoint => {
   const resolved = doc.resolve(pos);
   let desc = root;
 
   for (let depth = 0; depth < resolved.depth; depth += 1) {
+    fresh(desc, resolved.indexAt(depth));
+
     const child = desc.children[resolved.indexAt(depth)];
 
     if (child?.kind !== 'element') {

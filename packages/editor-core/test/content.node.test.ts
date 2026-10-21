@@ -1,5 +1,7 @@
+import * as fc from 'fast-check';
 import { describe, expect, it } from 'vite-plus/test';
 import { createSchema, type NodeSpec } from '../src';
+import { matchesSplice } from '../src/schema/content-match';
 import { buildWith, notes } from './support/notes';
 
 const { node } = buildWith();
@@ -108,6 +110,44 @@ describe('content expressions', () => {
 
     expect(schemaWith({ ring: { content: 'loop+' }, loop: { content: 'ring+' } })).toThrow(
       /ring, loop/,
+    );
+  });
+
+  it('checks a splice from the states of the old content as a full match would', () => {
+    const schema = createSchema({
+      nodes: {
+        doc: { content: 'block*' },
+        box: { content: 'heading? (paragraph | quote)+ heading*' },
+        paragraph: { group: 'block', content: 'text*' },
+        heading: { group: 'block', content: 'text*' },
+        quote: { group: 'block', content: 'block+' },
+        text: { inline: true },
+      },
+    });
+
+    const box = schema.nodes.get('box');
+    const kinds = fc.constantFrom('paragraph', 'heading');
+    const elementOf = (type: string) => schema.element(type, { id: type });
+
+    fc.assert(
+      fc.property(
+        fc.array(kinds, { maxLength: 8 }),
+        fc.array(kinds, { maxLength: 3 }),
+        fc.nat(8),
+        fc.nat(3),
+        (types, insertedTypes, at, removed) => {
+          const content = types.map(elementOf);
+          const inserted = insertedTypes.map(elementOf);
+          const from = Math.min(at, content.length);
+          const to = Math.min(from + removed, content.length);
+          const parent = schema.element('box', { id: 'box', content });
+          const spliced = [...content.slice(0, from), ...inserted, ...content.slice(to)];
+
+          expect(
+            box === undefined ? undefined : matchesSplice(box.content, parent, from, to, inserted),
+          ).toBe(box?.content.matchContent(spliced)?.validEnd === true);
+        },
+      ),
     );
   });
 });

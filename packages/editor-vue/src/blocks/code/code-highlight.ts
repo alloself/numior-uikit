@@ -9,6 +9,7 @@ import {
   type Mappable,
   type NodeId,
   type Plugin,
+  type Schema,
   type Transaction,
 } from '@numior/editor-core';
 import { highlightCode, type NuiCodeTokens, type NuiHighlighter } from '@numior/primitives';
@@ -29,6 +30,18 @@ interface CodePaint {
 }
 
 type CodePaints = ReadonlyMap<NodeId, CodePaint>;
+
+interface CodePlace {
+  readonly node: ElementNode;
+  readonly pos: number;
+}
+
+interface CodeState {
+  readonly paints: CodePaints;
+  readonly places: ReadonlyMap<NodeId, CodePlace>;
+}
+
+const NO_CODE: CodeState = { paints: new Map(), places: new Map() };
 
 interface CodeAnswer {
   readonly id: NodeId;
@@ -89,41 +102,67 @@ const follow = (paint: CodePaint, shift: Shift, text: string): CodePaint => ({
     .filter((range) => range.from >= 0 && range.to > range.from && range.to <= shift.size),
 });
 
-const answered = (paints: CodePaints, state: EditorState, answer: CodeAnswer): CodePaints => {
+const answered = (value: CodeState, state: EditorState, answer: CodeAnswer): CodeState => {
   const node = state.doc.byId(answer.id);
+  const pos = state.doc.positionOf(answer.id);
 
-  return node === undefined || codeTextOf(node) !== answer.text
-    ? paints
-    : new Map(paints).set(answer.id, { text: answer.text, ranges: rangesOf(answer.tokens) });
+  return node === undefined || pos === undefined || codeTextOf(node) !== answer.text
+    ? value
+    : {
+        paints: new Map(value.paints).set(answer.id, {
+          text: answer.text,
+          ranges: rangesOf(answer.tokens),
+        }),
+        places: new Map(value.places).set(answer.id, { node, pos }),
+      };
 };
 
-const followed = (paints: CodePaints, tr: Transaction, before: EditorState): CodePaints => {
-  let next: Map<NodeId, CodePaint> | undefined;
+const placeAfter = (id: NodeId, place: CodePlace, tr: Transaction): CodePlace | undefined => {
+  const pos = tr.mapping.map(place.pos, 1);
+  const node = tr.doc.nodeAt(pos);
 
-  for (const [id, paint] of paints) {
-    const old = before.doc.byId(id);
-    const node = tr.doc.byId(id);
+  if (node?.kind === 'element' && node.id === id) {
+    return { node, pos };
+  }
 
-    if (node === undefined) {
-      next ??= new Map(paints);
-      next.delete(id);
-    } else if (node !== old) {
-      const text = codeTextOf(node);
+  const found = tr.doc.byId(id);
+  const at = tr.doc.positionOf(id);
 
+  return found === undefined || at === undefined ? undefined : { node: found, pos: at };
+};
+
+const followed = (value: CodeState, tr: Transaction): CodeState => {
+  let paints: Map<NodeId, CodePaint> | undefined;
+  let places: Map<NodeId, CodePlace> | undefined;
+
+  for (const [id, place] of value.places) {
+    const next = placeAfter(id, place, tr);
+    const paint = value.paints.get(id);
+
+    if (next === undefined || paint === undefined) {
+      paints ??= new Map(value.paints);
+      places ??= new Map(value.places);
+      paints.delete(id);
+      places.delete(id);
+    } else if (next.node !== place.node || next.pos !== place.pos) {
+      const text = codeTextOf(next.node);
+
+      places ??= new Map(value.places);
+      places.set(id, next);
       if (text !== paint.text) {
         const shift = {
           mapping: tr.mapping,
-          before: (before.doc.positionOf(id) ?? 0) + 1,
-          after: (tr.doc.positionOf(id) ?? 0) + 1,
+          before: place.pos + 1,
+          after: next.pos + 1,
           size: text.length,
         };
 
-        next ??= new Map(paints);
-        next.set(id, follow(paint, shift, text));
+        paints ??= new Map(value.paints);
+        paints.set(id, follow(paint, shift, text));
       }
     }
   }
-  return next ?? paints;
+  return places === undefined ? value : { paints: paints ?? value.paints, places };
 };
 
 const setsByPaints = new WeakMap<CodePaints, DecorationSet>();
@@ -146,23 +185,23 @@ const setOf = (paints: CodePaints): DecorationSet => {
   return set;
 };
 
-export const codeHighlightPlugin = (): Plugin<CodePaints> => {
-  const plugin: Plugin<CodePaints> = definePlugin<CodePaints>({
+export const codeHighlightPlugin = (): Plugin<CodeState> => {
+  const plugin: Plugin<CodeState> = definePlugin<CodeState>({
     name: 'code-highlight',
     state: {
-      init: () => new Map(),
-      apply: (tr, value, before, after) => {
+      init: () => NO_CODE,
+      apply: (tr, value, _before, after) => {
         const answers = tr.getMeta(answerKey) ?? [];
-        const moved = tr.changed ? followed(value, tr, before) : value;
+        const moved = tr.changed ? followed(value, tr) : value;
 
-        return answers.reduce((paints, answer) => answered(paints, after, answer), moved);
+        return answers.reduce((current, answer) => answered(current, after, answer), moved);
       },
     },
     props: {
       decorations: (state): DecorationSet | undefined => {
-        const paints = plugin.getState(state);
+        const value = plugin.getState(state);
 
-        return paints === undefined ? undefined : setOf(paints);
+        return value === undefined ? undefined : setOf(value.paints);
       },
     },
   });
@@ -175,7 +214,11 @@ const elementsOf = (node: ElementNode | undefined): ReadonlyMap<NodeId, ElementN
     (node?.content ?? []).flatMap((child) => (child.kind === 'element' ? [[child.id, child]] : [])),
   );
 
+const inlineOnly = (schema: Schema, node: ElementNode): boolean =>
+  node.type !== CODE_TYPE && schema.nodes.get(node.type)?.inlineContent === true;
+
 const changedCode = (
+  schema: Schema,
   before: ElementNode | undefined,
   after: ElementNode,
   found: CodeBlock[],
@@ -194,11 +237,11 @@ const changedCode = (
     if (child.kind === 'element') {
       const aligned = before?.content[index];
 
-      if (aligned === child) {
+      if (aligned === child || inlineOnly(schema, child)) {
         continue;
       }
       previous ??= elementsOf(before);
-      changedCode(previous.get(child.id), child, found);
+      changedCode(schema, previous.get(child.id), child, found);
     }
   }
 };
@@ -308,7 +351,14 @@ export const createCodeHighlighter = (
       if (seen !== undefined && seen.highlighter !== active) {
         asked.clear();
       }
-      changedCode(seen?.highlighter === active ? seen.root : undefined, next.doc.root, found);
+
+      changedCode(
+        next.doc.schema,
+        seen?.highlighter === active ? seen.root : undefined,
+        next.doc.root,
+        found,
+      );
+
       seen = { root: next.doc.root, highlighter: active };
       for (const block of found) {
         if (!current(block)) {

@@ -100,6 +100,28 @@ const withoutStyles = (root: HTMLElement): string => {
   return copy.innerHTML;
 };
 
+type SightCallback = (entries: readonly { target: Element; isIntersecting: boolean }[]) => void;
+
+const sights: SightCallback[] = [];
+
+class FakeIntersectionObserver {
+  constructor(callback: SightCallback) {
+    sights.push(callback);
+  }
+
+  observe(): void {
+    return undefined;
+  }
+
+  unobserve(): void {
+    return undefined;
+  }
+
+  disconnect(): void {
+    return undefined;
+  }
+}
+
 export class EditorViewDriver {
   private blocksBefore: readonly Element[] = [];
   private textsBefore: readonly Text[] = [];
@@ -117,7 +139,14 @@ export class EditorViewDriver {
     plugins: readonly Plugin[] = [],
     nodeViews: Readonly<Record<string, NodeViewFactory>> = {},
     widget?: (key: string) => HTMLElement | undefined,
+    sight = false,
   ): EditorViewDriver {
+    sights.length = 0;
+
+    const restore = sight
+      ? replaceMember(globalThis, 'IntersectionObserver', FakeIntersectionObserver)
+      : undefined;
+
     const host = document.createElement('div');
 
     host.tabIndex = 0;
@@ -125,7 +154,12 @@ export class EditorViewDriver {
 
     const state = createState({ doc: createDoc(schema, root), plugins });
 
-    return new EditorViewDriver(createEditorView(host, { state, nodeViews, widget }), host);
+    const driver = new EditorViewDriver(createEditorView(host, { state, nodeViews, widget }), host);
+
+    if (restore !== undefined) {
+      driver.restores.push(restore);
+    }
+    return driver;
   }
 
   widgetOf(id: NodeId): HTMLElement {
@@ -392,6 +426,22 @@ export class EditorViewDriver {
 
   get markup(): string {
     return withoutStyles(this.host);
+  }
+
+  setChunkInView(index: number, visible: boolean): void {
+    const chunk = this.chunkElements[index];
+
+    if (chunk !== undefined) {
+      for (const callback of sights) {
+        callback([{ target: chunk, isIntersecting: visible }]);
+      }
+    }
+  }
+
+  async finishFilling(): Promise<void> {
+    for (let round = 0; round < 50; round += 1) {
+      await settle();
+    }
   }
 
   get blocks(): readonly Element[] {

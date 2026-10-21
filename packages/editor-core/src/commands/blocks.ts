@@ -2,6 +2,7 @@ import type { ResolvedPos } from '../doc/doc.types';
 import { emptyTextblock } from '../doc/empty';
 import { nodeSize, withContent } from '../model/node';
 import type { AttrValue, ContentNode, ElementNode } from '../model/node.types';
+import { matchesSplice } from '../schema/content-match';
 import type { Schema } from '../schema/schema.types';
 import { isCursor, textPosition, textSelection } from '../state/selection';
 import type { Command, EditorState, Transaction } from '../state/state.types';
@@ -32,13 +33,9 @@ const fits = (
   index: number,
   replacement: readonly ContentNode[],
 ): boolean => {
-  const content = [
-    ...parent.content.slice(0, index),
-    ...replacement,
-    ...parent.content.slice(index + 1),
-  ];
+  const type = schema.nodes.get(parent.type);
 
-  return schema.nodes.get(parent.type)?.content.matchContent(content)?.validEnd === true;
+  return type !== undefined && matchesSplice(type.content, parent, index, index + 1, replacement);
 };
 
 const headOf = (state: EditorState): number | undefined =>

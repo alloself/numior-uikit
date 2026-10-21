@@ -149,6 +149,90 @@ describe('editor view', () => {
     expect(view.blocks).toHaveLength(70);
   });
 
+  it('draws the first screen of a long document at once and the rest after it', async () => {
+    const paragraphs = Array.from({ length: 300 }, (_, index) => node('paragraph', [`p${index}`]));
+    const view = mounted(doc(...paragraphs));
+
+    expect(view.blocks).toHaveLength(128);
+
+    view.change((tr) => tr.insertText('!', view.positionOf(paragraphs[1]?.id ?? '') + 1));
+
+    expect(view.blocks).toHaveLength(128);
+    expect(view.texts[1]).toBe('!p1');
+
+    await view.finishFilling();
+
+    expect(view.blocks).toHaveLength(300);
+    expect(view.texts).toEqual(view.modelTexts);
+
+    expect(view.roundTrip(view.positionOf(paragraphs[299]?.id ?? '') + 1)).toBe(
+      view.positionOf(paragraphs[299]?.id ?? '') + 1,
+    );
+  });
+
+  it('draws edited blocks of the part not drawn yet from the new document', async () => {
+    const paragraphs = Array.from({ length: 300 }, (_, index) => node('paragraph', [`p${index}`]));
+    const view = mounted(doc(...paragraphs));
+
+    view.change((tr) => tr.insertText('!', view.positionOf(paragraphs[250]?.id ?? '') + 1));
+
+    expect(view.blocks).toHaveLength(128);
+
+    await view.finishFilling();
+
+    expect(view.texts[250]).toBe('!p250');
+
+    view.change((tr) => tr.delete(view.positionOf(paragraphs[100]?.id ?? ''), tr.doc.size));
+
+    expect(view.blocks).toHaveLength(100);
+  });
+
+  it('draws the rest at once when a position or a structural edit reaches it', () => {
+    const paragraphs = Array.from({ length: 300 }, (_, index) => node('paragraph', [`p${index}`]));
+    const view = mounted(doc(...paragraphs));
+
+    view.change((tr) => tr.delete(view.positionOf(paragraphs[200]?.id ?? ''), tr.doc.size));
+
+    expect(view.blocks).toHaveLength(200);
+    expect(view.texts).toEqual(view.modelTexts);
+
+    const other = mounted(doc(...paragraphs));
+
+    expect(other.roundTrip(other.positionOf(paragraphs[200]?.id ?? '') + 1)).toBe(
+      other.positionOf(paragraphs[200]?.id ?? '') + 1,
+    );
+
+    expect(other.blocks).toHaveLength(300);
+  });
+
+  it('updates hidden chunks later and brings each one up to date when it comes into view', async () => {
+    const paragraphs = Array.from({ length: 70 }, (_, index) => node('paragraph', [`p${index}`]));
+    const view = mounted(doc(...paragraphs), fixtureSchema, [], {}, undefined, true);
+    const html = (index: number): string | undefined => view.blocks[index]?.innerHTML;
+    const inside = (index: number): number => view.positionOf(paragraphs[index]?.id ?? '') + 2;
+
+    view.setChunkInView(2, false);
+    view.change((tr) => tr.addMark(0, tr.doc.size, fixtureSchema.mark('bold')));
+
+    expect(html(0)).toBe('<strong>p0</strong>');
+    expect(html(69)).toBe('p69');
+
+    view.setChunkInView(2, true);
+
+    expect(html(69)).toBe('<strong>p69</strong>');
+
+    view.setChunkInView(2, false);
+    view.change((tr) => tr.removeMark(0, tr.doc.size, fixtureSchema.mark('bold')));
+
+    expect(html(68)).toBe('<strong>p68</strong>');
+    expect(view.roundTrip(inside(68))).toBe(inside(68));
+    expect(html(68)).toBe('p68');
+
+    await view.finishFilling();
+
+    expect(html(69)).toBe('p69');
+  });
+
   it('types into the same text node and leaves every other block alone', () => {
     const middle = node('paragraph', ['two']);
     const view = mounted(doc(node('paragraph', ['one']), middle, node('paragraph', ['three'])));

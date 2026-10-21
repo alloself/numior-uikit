@@ -1,5 +1,5 @@
 import { typeOf } from '../model/node';
-import type { ContentNode } from '../model/node.types';
+import type { ContentNode, ElementNode } from '../model/node.types';
 import type { ContentExpr } from './content-expression';
 import type { ContentMatch } from './schema.types';
 
@@ -219,3 +219,59 @@ export const reachesEnd = (match: ContentMatch, usable: (type: string) => boolea
 
 export const typesOf = (match: ContentMatch): Set<string> =>
   new Set(reachable(match, () => true).flatMap((state) => [...state.next.keys()]));
+
+interface MatchStates {
+  readonly start: ContentMatch;
+  readonly states: readonly (ContentMatch | undefined)[];
+}
+
+const statesByNode = new WeakMap<ElementNode, MatchStates>();
+
+const statesOf = (
+  start: ContentMatch,
+  node: ElementNode,
+): readonly (ContentMatch | undefined)[] => {
+  const known = statesByNode.get(node);
+
+  if (known?.start === start) {
+    return known.states;
+  }
+
+  const states: (ContentMatch | undefined)[] = [start];
+  let current: ContentMatch | undefined = start;
+
+  for (const child of node.content) {
+    current = current?.matchType(typeOf(child));
+    states.push(current);
+  }
+  statesByNode.set(node, { start, states });
+  return states;
+};
+
+export const matchesSplice = (
+  start: ContentMatch,
+  node: ElementNode,
+  from: number,
+  to: number,
+  inserted: readonly ContentNode[],
+): boolean => {
+  const states = statesOf(start, node);
+  const { content } = node;
+  let current = states[from];
+
+  for (const child of inserted) {
+    current = current?.matchType(typeOf(child));
+  }
+  for (let index = to; index < content.length; index += 1) {
+    const child = content[index];
+
+    if (current === undefined || child === undefined) {
+      return false;
+    }
+    if (current === states[index]) {
+      return states[content.length]?.validEnd === true;
+    }
+    current = current.matchType(typeOf(child));
+  }
+  return current?.validEnd === true;
+};

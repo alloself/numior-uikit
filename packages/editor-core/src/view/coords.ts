@@ -42,7 +42,7 @@ const elementEdge = (node: Node, offset: number): CaretRect | undefined => {
 
 export const coordsAtPos = (host: ViewHost, pos: number): CaretRect | undefined => {
   const doc = host.root.ownerDocument;
-  const point = domAtPos(host.rootDesc, host.state().doc, pos);
+  const point = domAtPos(host.rootDesc, host.state().doc, pos, host.fresh);
   const range = doc.createRange();
 
   range.setStart(point.node, point.offset);

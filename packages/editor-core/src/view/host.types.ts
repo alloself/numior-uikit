@@ -10,4 +10,5 @@ export interface ViewHost {
   readonly dispatch: (tr: Transaction, source?: InputSource) => void;
   readonly composing: () => boolean;
   readonly holding: () => boolean;
+  readonly fresh: (parent: ElementDesc, index: number) => void;
 }

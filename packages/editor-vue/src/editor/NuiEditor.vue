@@ -34,12 +34,14 @@
         @colour="overlays.colour"
         @leave="editor.focus()"
       />
-      <NuiContent
-        v-if="!ready"
-        class="nui-editor__content nui-editor__static"
-        :document="initial"
-        :schema="schema"
-      />
+      <div v-if="!ready" class="nui-editor__server" data-allow-mismatch="children">
+        <NuiContent
+          v-if="onServer"
+          class="nui-editor__content nui-editor__static"
+          :document="initial"
+          :schema="schema"
+        />
+      </div>
       <div
         ref="content"
         class="nui-content nui-editor__content"
@@ -211,10 +213,12 @@ import {
 } from '@numior/vue';
 import {
   computed,
+  inject,
   onBeforeUnmount,
   onMounted,
   ref,
   shallowRef,
+  ssrContextKey,
   useAttrs,
   useId,
   useTemplateRef,
@@ -556,6 +560,7 @@ const initial = sync.initial;
 
 const current = shallowRef<EditorState>(createState({ doc: initial, plugins }));
 const ready = ref(false);
+const onServer = inject(ssrContextKey, null) !== null;
 const empty = ref(isEmptyDoc(initial));
 
 const editable = computed(() => !isDisabled.value && !isReadonly.value);
