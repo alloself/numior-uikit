@@ -16,8 +16,10 @@ export interface NumberLocale {
   readonly longDate: string;
   readonly shortTime: string;
   readonly longTime: string;
-  readonly currency: string;
+  readonly currencyPositive: string;
+  readonly currencyNegative: string;
   readonly currencySymbols: readonly string[];
+  readonly generalName: string;
 }
 
 export type FormatCondition = {

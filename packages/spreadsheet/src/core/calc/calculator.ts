@@ -1,7 +1,7 @@
 import { MAX_COLS, MAX_ROWS, containsCell, rangeOf } from '../address';
 import type { CellRange, CellValue } from '../cell.types';
 import type { FormulaLocale, FormulaNode, FormulaParse } from '../formula/formula.types';
-import { EN_FORMULAS } from '../formula/locale';
+import { EN_LOCALE, type BookLocale } from '../locale';
 import { parseFormula } from '../formula/parser';
 import { formulaReferences, type FormulaReference } from '../formula/references';
 import { EMPTY, errorValue, numberValue } from '../values';
@@ -41,6 +41,8 @@ export interface Calculator {
   formulaAt(sheet: Sheet, row: number, col: number): FormulaCell | undefined;
   spillOf(sheet: Sheet, row: number, col: number): CellRange | undefined;
   recalculate(options?: RecalcOptions): Recalculation;
+  setLocale(locale: BookLocale): void;
+  readonly locale: BookLocale;
   readonly pending: number;
   readonly limitations: readonly Limitation[];
 }
@@ -49,6 +51,7 @@ export interface CalculatorOptions {
   readonly functions?: FunctionRegistry | undefined;
   readonly clock?: (() => Date) | undefined;
   readonly random?: (() => number) | undefined;
+  readonly locale?: BookLocale | undefined;
 }
 
 interface FormulaRecord {
@@ -205,6 +208,7 @@ export const createCalculator = (
     functions = BASE_REGISTRY,
     clock = () => new Date(),
     random = Math.random,
+    locale: initialLocale = EN_LOCALE,
   }: CalculatorOptions = {},
 ): Calculator => {
   const graph = createDependencyGraph();
@@ -217,6 +221,7 @@ export const createCalculator = (
   const unknown = new Set<string>();
   const contexts = new Map<Sheet, EvalContext>();
   let current: Run | undefined;
+  let locale = initialLocale;
   let now = 0;
   let evaluating: FormulaRecord | undefined;
   const dynamic: Precedent[] = [];
@@ -251,6 +256,7 @@ export const createCalculator = (
       workbook,
       sheet,
       functions,
+      locale: locale.numbers,
       lookup,
       unknown: (name) => unknown.add(name),
       spillRange: (target, row, col) => spills.areaOf(formulaKey(target.id, row, col))?.range,
@@ -521,8 +527,8 @@ export const createCalculator = (
   };
 
   return {
-    setFormula: (sheet, row, col, text, locale = EN_FORMULAS) => {
-      const parsed = parseFormula(text, locale);
+    setFormula: (sheet, row, col, text, syntax = locale.formulas) => {
+      const parsed = parseFormula(text, syntax);
 
       if (!parsed.ok) {
         return parsed;
@@ -560,6 +566,15 @@ export const createCalculator = (
       claim(key);
       write(sheet, row, col, value);
       touch({ sheet, row, col });
+    },
+    setLocale: (next) => {
+      interrupt();
+      locale = next;
+      contexts.clear();
+      formulas.forEach((_record, key) => pending.add(key));
+    },
+    get locale() {
+      return locale;
     },
     formulaAt: (sheet, row, col) => formulas.get(formulaKey(sheet.id, row, col))?.cell,
     spillOf: (sheet, row, col) => spills.areaOf(formulaKey(sheet.id, row, col))?.range,

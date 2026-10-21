@@ -29,6 +29,7 @@ export {
   textValue,
 } from './values';
 export { createWorkbook, validSheetName } from './workbook';
+export { EN_LOCALE, RU_LOCALE, type BookLocale } from './locale';
 export type { Sheet, Workbook } from './workbook';
 export { EN_FORMULAS, RU_FORMULAS, formulaReferences, parseFormula, printFormula } from './formula';
 export type {

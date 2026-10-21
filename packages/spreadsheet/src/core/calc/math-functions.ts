@@ -14,6 +14,7 @@ import { matrixOf, shapeOf } from './array';
 import type { EvalValue, FunctionArgs, FunctionSpec } from './calc.types';
 import { raise } from './coerce';
 import { defineFunction } from './registry';
+import { roundHalfAway, scaled } from './rounding';
 
 const MAX_FACTORIAL = 170;
 
@@ -39,14 +40,6 @@ const binary = (
     lift: [0, 1],
     evaluate: (args) => numberValue(compute(args.number(0), args.number(1, fallback))),
   });
-
-const scaled = (value: number, digits: number, round: (value: number) => number): number => {
-  const factor = 10 ** Math.trunc(digits);
-
-  return (Math.sign(value) * round(Number((Math.abs(value) * factor).toPrecision(15)))) / factor;
-};
-
-const roundHalfAway = (value: number, digits: number): number => scaled(value, digits, Math.round);
 
 const nonNegative = (value: number): number => (value < 0 ? raise('#NUM!') : value);
 

@@ -1,4 +1,4 @@
-import { raise } from './coerce';
+import { raise } from './signal';
 
 const DAY_MS = 86_400_000;
 

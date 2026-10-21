@@ -1,0 +1,314 @@
+{
+  "family": "format",
+  "provenance": "derived",
+  "functions": ["TEXT", "FIXED", "DOLLAR"],
+  "cases": [
+    {
+      "formula": "=TEXT(1234.567,\"#,##0.00\")",
+      "expected": "1,234.57"
+    },
+    {
+      "formula": "=TEXT(0.285,\"0.0%\")",
+      "expected": "28.5%"
+    },
+    {
+      "formula": "=TEXT(DATE(2023,3,15),\"dddd, mmmm d, yyyy\")",
+      "expected": "Wednesday, March 15, 2023"
+    },
+    {
+      "formula": "=TEXT(DATE(2023,3,15),\"mmm-yy\")",
+      "expected": "Mar-23"
+    },
+    {
+      "formula": "=TEXT(TIME(18,30,0),\"h:mm AM/PM\")",
+      "expected": "6:30 PM"
+    },
+    {
+      "formula": "=TEXT(1.5,\"[h]:mm\")",
+      "expected": "36:00"
+    },
+    {
+      "formula": "=TEXT(-5,\"0;(0)\")",
+      "expected": "(5)"
+    },
+    {
+      "formula": "=TEXT(\"12.5\",\"0.00\")",
+      "expected": "12.50"
+    },
+    {
+      "formula": "=TEXT(\"abc\",\"0.00\")",
+      "expected": "abc"
+    },
+    {
+      "formula": "=TEXT(\"abc\",\"\"\"Name: \"\"@\")",
+      "expected": "Name: abc"
+    },
+    {
+      "formula": "=TEXT(TRUE,\"0\")",
+      "expected": "TRUE"
+    },
+    {
+      "formula": "=TEXT(-1,\"dd.mm.yyyy\")",
+      "expected": {
+        "error": "#VALUE!"
+      }
+    },
+    {
+      "formula": "=TEXT(1/0,\"0\")",
+      "expected": {
+        "error": "#DIV/0!"
+      }
+    },
+    {
+      "formula": "=TEXT(1234.5,\"$#,##0.00\")",
+      "expected": "$1,234.50"
+    },
+    {
+      "formula": "=TEXT(5.25,\"# ?/?\")",
+      "expected": "5 1/4"
+    },
+    {
+      "formula": "=TEXT(12200000,\"0.00E+00\")",
+      "expected": "1.22E+07"
+    },
+    {
+      "formula": "=TEXT(A1,\"0\")",
+      "expected": "0"
+    },
+    {
+      "formula": "=TEXT(5,\"*-0\")",
+      "expected": "5"
+    },
+    {
+      "formula": "=TEXT({1,2},\"0.0\")",
+      "expected": [["1.0", "2.0"]]
+    },
+    {
+      "formula": "=FIXED(1234.567,1)",
+      "expected": "1,234.6"
+    },
+    {
+      "formula": "=FIXED(1234.567,-1)",
+      "expected": "1,230"
+    },
+    {
+      "formula": "=FIXED(-1234.567,-1,TRUE)",
+      "expected": "-1230"
+    },
+    {
+      "formula": "=FIXED(44.332)",
+      "expected": "44.33"
+    },
+    {
+      "formula": "=FIXED(1234.5,0)",
+      "expected": "1,235"
+    },
+    {
+      "formula": "=FIXED(1,128)",
+      "expected": {
+        "error": "#VALUE!"
+      }
+    },
+    {
+      "formula": "=DOLLAR(1234.567,2)",
+      "expected": "$1,234.57"
+    },
+    {
+      "formula": "=DOLLAR(1234.567,-2)",
+      "expected": "$1,200"
+    },
+    {
+      "formula": "=DOLLAR(-1234.567,-2)",
+      "expected": "($1,200)"
+    },
+    {
+      "formula": "=DOLLAR(-0.123,4)",
+      "expected": "($0.1230)"
+    },
+    {
+      "formula": "=DOLLAR(99.888)",
+      "expected": "$99.89"
+    },
+    {
+      "formula": "=\"1/2/2008\"+0",
+      "expected": 39449
+    },
+    {
+      "formula": "=\"$1,000\"*2",
+      "expected": 2000
+    },
+    {
+      "formula": "=\"12%\"*100",
+      "expected": 12
+    },
+    {
+      "formula": "=\"(5)\"+0",
+      "expected": -5
+    },
+    {
+      "formula": "=\"1 1/2\"*2",
+      "expected": 3
+    },
+    {
+      "formula": "=DATEVALUE(\"21.10.2026\")",
+      "expected": {
+        "error": "#VALUE!"
+      }
+    },
+    {
+      "formula": "=COUNTIF(A1:A3,\">1/1/2008\")",
+      "cells": {
+        "A1": 39448,
+        "A2": 39449,
+        "A3": 39450
+      },
+      "expected": 2
+    },
+    {
+      "formula": "=VALUE(\"1,234.5\")",
+      "expected": 1234.5
+    },
+    {
+      "formula": "=TRUE&\"\"",
+      "expected": "TRUE"
+    },
+    {
+      "formula": "=\"12,34\"+0",
+      "expected": {
+        "error": "#VALUE!"
+      }
+    },
+    {
+      "formula": "=TEXT(1234,567;\"# ##0,00\")",
+      "locale": "ru",
+      "expected": "1 234,57"
+    },
+    {
+      "formula": "=TEXT(1234,567;\"#,##0.00\")",
+      "locale": "ru",
+      "expected": "1 234,57"
+    },
+    {
+      "formula": "=TEXT(DATE(2023;3;15);\"ДД.ММ.ГГГГ\")",
+      "locale": "ru",
+      "expected": "15.03.2023"
+    },
+    {
+      "formula": "=TEXT(DATE(2023;3;15);\"dd.mm.yyyy\")",
+      "locale": "ru",
+      "expected": "15.03.2023"
+    },
+    {
+      "formula": "=TEXT(DATE(2023;3;15);\"Д ММММ ГГГГ\")",
+      "locale": "ru",
+      "expected": "15 марта 2023"
+    },
+    {
+      "formula": "=TEXT(DATE(2023;3;15);\"ДДДД\")",
+      "locale": "ru",
+      "expected": "среда"
+    },
+    {
+      "formula": "=TEXT(TIME(18;30;5);\"чч:мм:сс\")",
+      "locale": "ru",
+      "expected": "18:30:05"
+    },
+    {
+      "formula": "=TEXT(0,5;\"0,0%\")",
+      "locale": "ru",
+      "expected": "50,0%"
+    },
+    {
+      "formula": "=TEXT(1,5;\"Основной\")",
+      "locale": "ru",
+      "expected": "1,5"
+    },
+    {
+      "formula": "=FIXED(1234,567;1)",
+      "locale": "ru",
+      "expected": "1 234,6"
+    },
+    {
+      "formula": "=DOLLAR(1234,567)",
+      "locale": "ru",
+      "expected": "1 234,57 ₽"
+    },
+    {
+      "formula": "=DOLLAR(-1234,567;0)",
+      "locale": "ru",
+      "expected": "-1 235 ₽"
+    },
+    {
+      "formula": "=\"1,5\"+1",
+      "locale": "ru",
+      "expected": 2.5
+    },
+    {
+      "formula": "=\"1 234,5\"*2",
+      "locale": "ru",
+      "expected": 2469
+    },
+    {
+      "formula": "=\"21.10.2026\"+0",
+      "locale": "ru",
+      "expected": 46316
+    },
+    {
+      "formula": "=DATEVALUE(\"21.10.2026\")",
+      "locale": "ru",
+      "expected": 46316
+    },
+    {
+      "formula": "=DATEVALUE(\"15 марта 2023\")",
+      "locale": "ru",
+      "expected": 45000
+    },
+    {
+      "formula": "=DATEVALUE(\"10/21/2026\")",
+      "locale": "ru",
+      "expected": {
+        "error": "#VALUE!"
+      }
+    },
+    {
+      "formula": "=TRUE&\"\"",
+      "locale": "ru",
+      "expected": "ИСТИНА"
+    },
+    {
+      "formula": "=1,5&\"\"",
+      "locale": "ru",
+      "expected": "1,5"
+    },
+    {
+      "formula": "=VALUE(\"12,5%\")",
+      "locale": "ru",
+      "expected": 0.125
+    },
+    {
+      "formula": "=COUNTIF(A1:A3;\">01.01.2008\")",
+      "cells": {
+        "A1": 39448,
+        "A2": 39449,
+        "A3": 39450
+      },
+      "locale": "ru",
+      "expected": 2
+    },
+    {
+      "formula": "=\"15.03.2023\"-\"14.03.2023\"",
+      "locale": "ru",
+      "expected": 1
+    },
+    {
+      "formula": "=AND(\"ИСТИНА\")",
+      "locale": "ru",
+      "expected": true
+    },
+    {
+      "formula": "=\"1 000 ₽\"*2",
+      "locale": "ru",
+      "expected": 2000
+    }
+  ]
+}

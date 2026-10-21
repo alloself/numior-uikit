@@ -1,3 +1,4 @@
+import type { NumberLocale } from '../format/format.types';
 import type { CellRange, CellValue } from '../cell.types';
 import type { FormulaNode } from '../formula/formula.types';
 import type { Sheet } from '../workbook';
@@ -24,6 +25,7 @@ export interface FormulaCell {
 
 export interface FunctionArgs {
   readonly count: number;
+  readonly locale: NumberLocale;
   missing(index: number): boolean;
   value(index: number): EvalValue;
   scalar(index: number): CellValue;

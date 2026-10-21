@@ -22,12 +22,14 @@ import type {
   FunctionRegistry,
   FunctionSpec,
 } from './calc.types';
+import type { NumberLocale } from '../format/format.types';
 import { CellErrorSignal, compareValues, raise, toLogical, toNumber, toText } from './coerce';
 
 export interface EvalContext {
   readonly workbook: Workbook;
   readonly sheet: Sheet;
   readonly functions: FunctionRegistry;
+  readonly locale: NumberLocale;
   unknown(name: string): void;
   lookup(sheet: Sheet, range: CellRange, wanted: CellValue): number | undefined;
   spillRange(sheet: Sheet, row: number, col: number): CellRange | undefined;
@@ -96,7 +98,12 @@ const comparison = (op: Binary['op'], order: number): boolean => {
   }
 };
 
-const operate = (op: Binary['op'], left: CellValue, right: CellValue): CellValue => {
+const operate = (
+  op: Binary['op'],
+  left: CellValue,
+  right: CellValue,
+  locale: NumberLocale,
+): CellValue => {
   if (left.kind === 'error') {
     return raise(left.code);
   }
@@ -105,13 +112,13 @@ const operate = (op: Binary['op'], left: CellValue, right: CellValue): CellValue
   }
   switch (op) {
     case '&':
-      return textValue(toText(left) + toText(right));
+      return textValue(toText(left, locale) + toText(right, locale));
     case '+':
     case '-':
     case '*':
     case '/':
     case '^':
-      return arithmetic(op, toNumber(left), toNumber(right));
+      return arithmetic(op, toNumber(left, locale), toNumber(right, locale));
     default:
       return { kind: 'boolean', value: comparison(op, compareValues(left, right)) };
   }
@@ -216,11 +223,16 @@ const argumentsFrom = (
     missing,
     value,
     scalar: (index) => scalarOf(value(index)),
+    locale: context.locale,
     number: (index, fallback) =>
-      missing(index) && fallback !== undefined ? fallback : toNumber(scalarOf(value(index))),
-    text: (index) => toText(scalarOf(value(index))),
+      missing(index) && fallback !== undefined
+        ? fallback
+        : toNumber(scalarOf(value(index)), context.locale),
+    text: (index) => toText(scalarOf(value(index)), context.locale),
     logical: (index, fallback) =>
-      missing(index) && fallback !== undefined ? fallback : toLogical(scalarOf(value(index))),
+      missing(index) && fallback !== undefined
+        ? fallback
+        : toLogical(scalarOf(value(index)), context.locale),
     forEachValue: (from, visit, to = nodes.length) => {
       for (let index = from; index < Math.min(to, nodes.length); index += 1) {
         visitValues(value(index), visit);
@@ -347,16 +359,16 @@ const operation = (node: FormulaNode, context: EvalContext): EvalValue => {
       return call(node, context);
     case 'unary':
       return applied([operandOf(node.operand, context)], ([operand = EMPTY]) =>
-        node.op === '-' ? numberValue(-toNumber(operand)) : operand,
+        node.op === '-' ? numberValue(-toNumber(operand, context.locale)) : operand,
       );
     case 'percent':
       return applied([operandOf(node.operand, context)], ([operand = EMPTY]) =>
-        numberValue(toNumber(operand) / 100),
+        numberValue(toNumber(operand, context.locale) / 100),
       );
     case 'binary':
       return applied(
         [operandOf(node.left, context), operandOf(node.right, context)],
-        ([left = EMPTY, right = EMPTY]) => operate(node.op, left, right),
+        ([left = EMPTY, right = EMPTY]) => operate(node.op, left, right, context.locale),
       );
     case 'array':
       return { kind: 'array', rows: node.rows.map((row) => row.map(constantOf)) };

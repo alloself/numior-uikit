@@ -93,7 +93,7 @@ describe('built-in formats and colours', () => {
     expect(builtinFormat(14, EN_NUMBERS)).toBe('m/d/yyyy');
     expect(builtinFormat(14, RU_NUMBERS)).toBe('dd.mm.yyyy');
     expect(builtinFormat(22, RU_NUMBERS)).toBe('dd.mm.yyyy h:mm');
-    expect(builtinFormat(5, RU_NUMBERS)).toBe(RU_NUMBERS.currency);
+    expect(builtinFormat(7, RU_NUMBERS)).toBe('#,##0.00\\ "₽";-#,##0.00\\ "₽"');
     expect(builtinFormat(49, EN_NUMBERS)).toBe('@');
     expect(builtinFormat(200, EN_NUMBERS)).toBeUndefined();
   });

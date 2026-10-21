@@ -12,7 +12,7 @@ const truths = (args: FunctionArgs): boolean[] => {
       raise(value.code);
     }
     if (direct || value.kind === 'number' || value.kind === 'boolean') {
-      found.push(toLogical(value));
+      found.push(toLogical(value, args.locale));
     }
   });
 

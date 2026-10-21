@@ -2,9 +2,12 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vite-plus/test';
 import {
   BASE_FUNCTIONS,
+  EN_LOCALE,
+  RU_LOCALE,
   createFunctionRegistry,
   formatCell,
   isCellError,
+  type BookLocale,
   type CellError,
 } from '../src/core';
 import { openSheet } from './sheet-harness';
@@ -21,6 +24,7 @@ interface CorpusCase {
   readonly cells: Readonly<Record<string, Input>>;
   readonly expected: Expected;
   readonly tolerance: number;
+  readonly locale: BookLocale;
 }
 
 interface Corpus {
@@ -92,6 +96,7 @@ const caseOf = (
     cells: { ...shared, ...inputs(value.cells, where) },
     expected: expectedOf(value.expected, `${where} ${value.formula}`),
     tolerance: typeof value.tolerance === 'number' ? value.tolerance : tolerance,
+    locale: value.locale === 'ru' ? RU_LOCALE : EN_LOCALE,
   };
 };
 
@@ -138,7 +143,12 @@ const wantedGrid = (expected: Expected): readonly (readonly Input[])[] => {
 };
 
 const computed = (entry: CorpusCase) => {
-  const sheet = openSheet({ clock: () => new Date(2026, 9, 18, 12), random: () => 0.5 });
+  const sheet = openSheet({
+    clock: () => new Date(2026, 9, 18, 12),
+    random: () => 0.5,
+    locale: entry.locale,
+  });
+
   const wanted = wantedGrid(entry.expected);
 
   const end = formatCell({

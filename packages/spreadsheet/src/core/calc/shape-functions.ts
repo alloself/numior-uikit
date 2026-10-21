@@ -1,3 +1,4 @@
+import type { NumberLocale } from '../format/format.types';
 import type { CellValue } from '../cell.types';
 import { EMPTY, errorValue } from '../values';
 import { MANY } from './aggregate';
@@ -116,7 +117,8 @@ const unique = (args: FunctionArgs): EvalValue =>
     });
   });
 
-const included = (value: CellValue): boolean => (value.kind === 'empty' ? false : toLogical(value));
+const included = (value: CellValue, locale: NumberLocale): boolean =>
+  value.kind === 'empty' ? false : toLogical(value, locale);
 
 const byColumns = (rows: Rows, include: Rows): boolean => {
   if (include.length === rows.length && widthOf(include) === 1) {
@@ -129,7 +131,7 @@ const filter = (args: FunctionArgs): EvalValue => {
   const rows = args.matrix(0);
   const include = args.matrix(1);
   const byCol = byColumns(rows, include);
-  const flags = include.flat().map(included);
+  const flags = include.flat().map((value) => included(value, args.locale));
   const kept = (byCol ? transpose(rows) : rows).filter((_, index) => flags[index] === true);
 
   if (kept.length === 0) {

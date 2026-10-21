@@ -44,8 +44,10 @@ export const EN_NUMBERS: NumberLocale = {
   longDate: 'dddd, mmmm d, yyyy',
   shortTime: 'h:mm',
   longTime: 'h:mm:ss',
-  currency: '"$"#,##0.00;-"$"#,##0.00',
+  currencyPositive: '"$"#',
+  currencyNegative: '("$"#)',
   currencySymbols: ['$'],
+  generalName: 'General',
 };
 
 export const RU_NUMBERS: NumberLocale = {
@@ -92,8 +94,10 @@ export const RU_NUMBERS: NumberLocale = {
   longDate: 'd mmmm yyyy "г."',
   shortTime: 'h:mm',
   longTime: 'h:mm:ss',
-  currency: '#,##0.00\\ "₽";-#,##0.00\\ "₽"',
+  currencyPositive: '#\\ "₽"',
+  currencyNegative: '-#\\ "₽"',
   currencySymbols: ['₽', 'руб.', 'р.'],
+  generalName: 'Основной',
 };
 
 const BY_LCID: Readonly<Record<number, NumberLocale>> = {
@@ -103,3 +107,9 @@ const BY_LCID: Readonly<Record<number, NumberLocale>> = {
 };
 
 export const numberLocaleOf = (lcid: number): NumberLocale | undefined => BY_LCID[lcid & 0xffff];
+
+export const currencyFormat = (locale: NumberLocale, decimals: number): string => {
+  const digits = decimals > 0 ? `#,##0.${'0'.repeat(decimals)}` : '#,##0';
+
+  return `${locale.currencyPositive.replace('#', digits)};${locale.currencyNegative.replace('#', digits)}`;
+};

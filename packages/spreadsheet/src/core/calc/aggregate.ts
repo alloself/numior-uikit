@@ -1,6 +1,7 @@
 import { MAX_COLS, MAX_ROWS } from '../address';
 import type { CellRange, CellValue } from '../cell.types';
 import { EMPTY } from '../values';
+import type { NumberLocale } from '../format/format.types';
 import type { EvalValue, FunctionArgs } from './calc.types';
 import { raise, toNumber } from './coerce';
 import { parseCriterion, type Criterion } from './criteria';
@@ -29,21 +30,25 @@ export const eachNumber = (
       if (value.kind === 'number') {
         visit(value.value);
       } else if (direct) {
-        visit(toNumber(value));
+        visit(toNumber(value, args.locale));
       }
     },
     to,
   );
 };
 
-const numberOfAny = (value: CellValue, direct: boolean): number | undefined => {
+const numberOfAny = (
+  value: CellValue,
+  direct: boolean,
+  locale: NumberLocale,
+): number | undefined => {
   switch (value.kind) {
     case 'number':
       return value.value;
     case 'boolean':
       return value.value ? 1 : 0;
     case 'string':
-      return direct ? toNumber(value) : 0;
+      return direct ? toNumber(value, locale) : 0;
     case 'error':
       return raise(value.code);
     default:
@@ -53,7 +58,7 @@ const numberOfAny = (value: CellValue, direct: boolean): number | undefined => {
 
 export const eachValueAsNumber = (args: FunctionArgs, visit: (value: number) => void): void => {
   args.forEachValue(0, (value, direct) => {
-    const number = numberOfAny(value, direct);
+    const number = numberOfAny(value, direct, args.locale);
 
     if (number !== undefined) {
       visit(number);
@@ -89,7 +94,7 @@ export const conditionsOf = (args: FunctionArgs, from: number): Condition[] => {
   for (let index = from; index + 1 < args.count; index += 2) {
     conditions.push({
       range: referenceOf(args.value(index)),
-      test: parseCriterion(args.scalar(index + 1)),
+      test: parseCriterion(args.scalar(index + 1), args.locale),
     });
   }
 

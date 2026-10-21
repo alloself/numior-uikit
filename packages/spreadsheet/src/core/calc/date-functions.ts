@@ -1,7 +1,7 @@
 import { numberValue } from '../values';
 import type { FunctionArgs, FunctionSpec } from './calc.types';
 import { raise } from './coerce';
-import { readDateText } from './date-text';
+import { readDateText } from '../format/read-date';
 import { days360, yearFraction } from './day-counts';
 import { defineFunction } from './registry';
 import {
@@ -21,7 +21,7 @@ const serialArg = (args: FunctionArgs, index: number): number => {
     return args.number(index);
   }
 
-  const read = readDateText(value.value);
+  const read = readDateText(value.value, args.locale);
 
   return read === undefined ? raise('#VALUE!') : (read.date ?? 0) + (read.time ?? 0);
 };
@@ -41,7 +41,10 @@ const holidaysOf = (args: FunctionArgs, index: number): Set<number> => {
           holidays.add(Math.floor(value.value));
           break;
         case 'string':
-          holidays.add(Math.floor(readDateText(value.value)?.date ?? raise('#VALUE!')));
+          holidays.add(
+            Math.floor(readDateText(value.value, args.locale)?.date ?? raise('#VALUE!')),
+          );
+
           break;
         case 'error':
           raise(value.code);
@@ -190,13 +193,13 @@ const timeOfParts = (hours: number, minutes: number, seconds: number): number =>
 };
 
 const textDate = (args: FunctionArgs): number => {
-  const read = readDateText(args.text(0));
+  const read = readDateText(args.text(0), args.locale);
 
   return read?.date ?? raise('#VALUE!');
 };
 
 const textTime = (args: FunctionArgs): number => {
-  const read = readDateText(args.text(0));
+  const read = readDateText(args.text(0), args.locale);
 
   return read === undefined ? raise('#VALUE!') : (read.time ?? 0);
 };

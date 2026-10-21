@@ -161,7 +161,10 @@ const returnOf = (flows: readonly number[], times: readonly number[], guess: num
     : raise('#NUM!');
 
 const listOf = (args: FunctionArgs, index: number): number[] =>
-  args.matrix(index).flat().map(toNumber);
+  args
+    .matrix(index)
+    .flat()
+    .map((value) => toNumber(value, args.locale));
 
 interface DatedFlows {
   readonly flows: readonly number[];

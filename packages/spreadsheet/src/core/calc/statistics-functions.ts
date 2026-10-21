@@ -1,4 +1,5 @@
 import type { CellValue } from '../cell.types';
+import type { NumberLocale } from '../format/format.types';
 import { numberValue } from '../values';
 import {
   MANY,
@@ -17,7 +18,7 @@ import type { EvalValue, FunctionArgs, FunctionSpec } from './calc.types';
 import { numberFromText, raise } from './coerce';
 import { defineFunction } from './registry';
 
-const counts = (value: CellValue, direct: boolean): boolean => {
+const counts = (value: CellValue, direct: boolean, locale: NumberLocale): boolean => {
   switch (value.kind) {
     case 'number':
       return true;
@@ -25,7 +26,7 @@ const counts = (value: CellValue, direct: boolean): boolean => {
     case 'empty':
       return direct;
     case 'string':
-      return direct && numberFromText(value.value) !== undefined;
+      return direct && numberFromText(value.value, locale) !== undefined;
     default:
       return false;
   }
@@ -256,7 +257,7 @@ export const STATISTICS_FUNCTIONS: readonly FunctionSpec[] = [
       let count = 0;
 
       args.forEachValue(0, (value, direct) => {
-        count += Number(counts(value, direct));
+        count += Number(counts(value, direct, args.locale));
       });
 
       return numberValue(count);

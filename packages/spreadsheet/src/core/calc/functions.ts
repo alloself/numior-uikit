@@ -2,6 +2,7 @@ import { ARRAY_FUNCTIONS } from './array-functions';
 import type { FunctionSpec } from './calc.types';
 import { DATE_FUNCTIONS } from './date-functions';
 import { FINANCIAL_FUNCTIONS } from './financial-functions';
+import { FORMAT_FUNCTIONS } from './format-functions';
 import { INFORMATION_FUNCTIONS } from './information-functions';
 import { LOGICAL_FUNCTIONS } from './logical-functions';
 import { LOOKUP_FUNCTIONS } from './lookup-functions';
@@ -25,4 +26,5 @@ export const BASE_FUNCTIONS: readonly FunctionSpec[] = [
   ...VOLATILE_FUNCTIONS,
   ...DATE_FUNCTIONS,
   ...FINANCIAL_FUNCTIONS,
+  ...FORMAT_FUNCTIONS,
 ];

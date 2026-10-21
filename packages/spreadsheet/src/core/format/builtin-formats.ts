@@ -1,4 +1,5 @@
 import type { NumberLocale } from './format.types';
+import { currencyFormat } from './number-locale';
 
 const FIXED: Readonly<Record<number, string>> = {
   0: 'General',
@@ -39,7 +40,7 @@ export const builtinFormat = (id: number, locale: NumberLocale): string | undefi
     case 6:
     case 7:
     case 8:
-      return locale.currency;
+      return currencyFormat(locale, id === 5 || id === 6 ? 0 : 2);
     default:
       return FIXED[id];
   }

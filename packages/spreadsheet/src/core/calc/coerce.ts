@@ -1,39 +1,18 @@
-import type { CellError, CellValue } from '../cell.types';
+import type { CellValue } from '../cell.types';
+import type { NumberLocale } from '../format/format.types';
+import { readValueText } from '../format/read-value';
+import { raise } from './signal';
 
-export class CellErrorSignal extends Error {
-  readonly code: CellError;
-
-  constructor(code: CellError) {
-    super();
-    this.code = code;
-  }
-}
-
-const SIGNALS = new Map<CellError, CellErrorSignal>();
-
-const NUMERIC = /^[+-]?(?:\d+\.?\d*|\.\d+)(?:e[+-]?\d+)?%?$/iu;
+export { CellErrorSignal, raise } from './signal';
 
 const COLLATOR = new Intl.Collator('en', { sensitivity: 'accent' });
 
 const RANKS = { number: 0, string: 1, boolean: 2 } as const;
 
-export const raise = (code: CellError): never => {
-  const signal = SIGNALS.get(code) ?? new CellErrorSignal(code);
+export const numberFromText = (text: string, locale: NumberLocale): number | undefined =>
+  readValueText(text, locale)?.value;
 
-  SIGNALS.set(code, signal);
-  throw signal;
-};
-
-export const numberFromText = (text: string): number | undefined => {
-  const trimmed = text.trim();
-
-  if (!NUMERIC.test(trimmed)) {
-    return undefined;
-  }
-  return trimmed.endsWith('%') ? Number(trimmed.slice(0, -1)) / 100 : Number(trimmed);
-};
-
-const generalText = (value: number): string => {
+const generalText = (value: number, decimal: string): string => {
   if (Number.isInteger(value) && Math.abs(value) < 1e15) {
     return String(value);
   }
@@ -41,14 +20,14 @@ const generalText = (value: number): string => {
   const digits = mantissa.includes('.') ? mantissa.replace(/\.?0+$/u, '') : mantissa;
 
   if (exponent === undefined) {
-    return digits;
+    return digits.replace('.', decimal);
   }
   const power = Number(exponent);
 
-  return `${digits}E${power < 0 ? '-' : '+'}${String(Math.abs(power)).padStart(2, '0')}`;
+  return `${digits.replace('.', decimal)}E${power < 0 ? '-' : '+'}${String(Math.abs(power)).padStart(2, '0')}`;
 };
 
-export const toNumber = (value: CellValue): number => {
+export const toNumber = (value: CellValue, locale: NumberLocale): number => {
   switch (value.kind) {
     case 'number':
       return value.value;
@@ -57,18 +36,18 @@ export const toNumber = (value: CellValue): number => {
     case 'empty':
       return 0;
     case 'string':
-      return numberFromText(value.value) ?? raise('#VALUE!');
+      return numberFromText(value.value, locale) ?? raise('#VALUE!');
     case 'error':
       return raise(value.code);
   }
 };
 
-export const toText = (value: CellValue): string => {
+export const toText = (value: CellValue, locale: NumberLocale): string => {
   switch (value.kind) {
     case 'number':
-      return generalText(value.value);
+      return generalText(value.value, locale.decimal);
     case 'boolean':
-      return value.value ? 'TRUE' : 'FALSE';
+      return value.value ? locale.trueText : locale.falseText;
     case 'empty':
       return '';
     case 'string':
@@ -78,13 +57,16 @@ export const toText = (value: CellValue): string => {
   }
 };
 
-const logicalFromText = (text: string): boolean => {
+export const logicalFromText = (text: string, locale: NumberLocale): boolean | undefined => {
   const upper = text.toUpperCase();
 
-  return upper === 'TRUE' || (upper === 'FALSE' ? false : raise('#VALUE!'));
+  if (upper === 'TRUE' || upper === locale.trueText) {
+    return true;
+  }
+  return upper === 'FALSE' || upper === locale.falseText ? false : undefined;
 };
 
-export const toLogical = (value: CellValue): boolean => {
+export const toLogical = (value: CellValue, locale: NumberLocale): boolean => {
   switch (value.kind) {
     case 'number':
       return value.value !== 0;
@@ -93,7 +75,7 @@ export const toLogical = (value: CellValue): boolean => {
     case 'empty':
       return false;
     case 'string':
-      return logicalFromText(value.value);
+      return logicalFromText(value.value, locale) ?? raise('#VALUE!');
     case 'error':
       return raise(value.code);
   }

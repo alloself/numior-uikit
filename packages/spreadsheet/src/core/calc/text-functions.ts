@@ -1,3 +1,4 @@
+import { EN_NUMBERS } from '../format/number-locale';
 import { numberValue, textValue } from '../values';
 import { MANY } from './aggregate';
 import { matrixOf } from './array';
@@ -120,7 +121,7 @@ const numberValueOf = (args: FunctionArgs): number => {
   if (body === '') {
     return 0;
   }
-  const parsed = numberFromText(body);
+  const parsed = numberFromText(body, EN_NUMBERS);
 
   return parsed === undefined ? raise('#VALUE!') : parsed / 100 ** percents;
 };
@@ -133,13 +134,13 @@ const piecesOf = (args: FunctionArgs, from: number, keepEmpty: boolean): string[
 
     if (keepEmpty && value.kind === 'reference') {
       matrixOf(value).forEach((row) => {
-        row.forEach((cell) => pieces.push(toText(cell)));
+        row.forEach((cell) => pieces.push(toText(cell, args.locale)));
       });
     } else {
       args.forEachValue(
         index,
         (cell) => {
-          pieces.push(toText(cell));
+          pieces.push(toText(cell, args.locale));
         },
         index + 1,
       );
@@ -151,7 +152,7 @@ const piecesOf = (args: FunctionArgs, from: number, keepEmpty: boolean): string[
 const textJoin = (args: FunctionArgs): EvalValue => {
   const delimiters = matrixOf(args.value(0))
     .flat()
-    .map((cell) => toText(cell));
+    .map((cell) => toText(cell, args.locale));
 
   const keepEmpty = !args.logical(1);
   const pieces = piecesOf(args, 2, keepEmpty).filter((piece) => keepEmpty || piece !== '');
@@ -285,7 +286,9 @@ export const TEXT_FUNCTIONS: readonly FunctionSpec[] = [
     }
     const text = args.text(0).trim();
 
-    return text === '' ? numberValue(0) : numberValue(numberFromText(text) ?? raise('#VALUE!'));
+    return text === ''
+      ? numberValue(0)
+      : numberValue(numberFromText(text, args.locale) ?? raise('#VALUE!'));
   }),
   textual('NUMBERVALUE', 1, 3, (args) => numberValue(numberValueOf(args))),
   textual('T', 1, 1, (args) => {

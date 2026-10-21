@@ -97,7 +97,7 @@
       "expected": 40597
     },
     {
-      "formula": "=DATEVALUE(\"21.10.2026\")",
+      "formula": "=DATEVALUE(\"10/21/2026\")",
       "expected": 46316
     },
     {

@@ -1,5 +1,6 @@
 import type { CellValue } from '../cell.types';
-import { compareValues, numberFromText } from './coerce';
+import type { NumberLocale } from '../format/format.types';
+import { compareValues, logicalFromText, numberFromText } from './coerce';
 
 export type Criterion = (value: CellValue) => boolean;
 
@@ -46,21 +47,21 @@ const holds = (op: Operator, order: number): boolean => {
   }
 };
 
-const numericOf = (value: CellValue): number | undefined => {
+const numericOf = (value: CellValue, locale: NumberLocale): number | undefined => {
   switch (value.kind) {
     case 'number':
       return value.value;
     case 'string':
-      return numberFromText(value.value);
+      return numberFromText(value.value, locale);
     default:
       return undefined;
   }
 };
 
 const numberCriterion =
-  (op: Operator, wanted: number): Criterion =>
+  (op: Operator, wanted: number, locale: NumberLocale): Criterion =>
   (value) => {
-    const number = numericOf(value);
+    const number = numericOf(value, locale);
 
     return number === undefined ? op === '<>' : holds(op, Math.sign(number - wanted));
   };
@@ -91,18 +92,19 @@ const textCriterion = (op: Operator, text: string): Criterion => {
   };
 };
 
-const operandCriterion = (op: Operator, operand: string): Criterion => {
-  const number = numberFromText(operand);
+const operandCriterion = (op: Operator, operand: string, locale: NumberLocale): Criterion => {
+  const number = numberFromText(operand, locale);
+  const logical = logicalFromText(operand, locale);
   const upper = operand.toUpperCase();
 
   if (operand === '') {
     return blankCriterion(op);
   }
   if (number !== undefined) {
-    return numberCriterion(op, number);
+    return numberCriterion(op, number, locale);
   }
-  if (upper === 'TRUE' || upper === 'FALSE') {
-    return sameKind(op, { kind: 'boolean', value: upper === 'TRUE' });
+  if (logical !== undefined) {
+    return sameKind(op, { kind: 'boolean', value: logical });
   }
   if (upper.startsWith('#')) {
     return (value) => (value.kind === 'error' && value.code === upper) === (op !== '<>');
@@ -110,22 +112,22 @@ const operandCriterion = (op: Operator, operand: string): Criterion => {
   return textCriterion(op, operand);
 };
 
-export const parseCriterion = (criterion: CellValue): Criterion => {
+export const parseCriterion = (criterion: CellValue, locale: NumberLocale): Criterion => {
   switch (criterion.kind) {
     case 'number':
-      return numberCriterion('=', criterion.value);
+      return numberCriterion('=', criterion.value, locale);
     case 'boolean':
       return sameKind('=', criterion);
     case 'error':
       return (value) => value.kind === 'error' && value.code === criterion.code;
     case 'empty':
-      return numberCriterion('=', 0);
+      return numberCriterion('=', 0, locale);
     case 'string': {
       const op = OPERATORS.find((candidate) => criterion.value.startsWith(candidate));
 
       return op === undefined
-        ? operandCriterion('=', criterion.value)
-        : operandCriterion(op, criterion.value.slice(op.length));
+        ? operandCriterion('=', criterion.value, locale)
+        : operandCriterion(op, criterion.value.slice(op.length), locale);
     }
   }
 };

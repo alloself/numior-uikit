@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { numberValue, textValue } from '../src/core';
+import { RU_LOCALE, numberValue, textValue } from '../src/core';
 import { evaluated, openSheet } from './sheet-harness';
 
 describe('formula evaluation', () => {
@@ -288,5 +288,24 @@ describe('recalculation', () => {
 
     expect(sheet.value('A500')).toEqual(numberValue(500));
     expect(sheet.calculator.pending).toBe(0);
+  });
+});
+
+describe('book locale', () => {
+  it('reads formulas and texts in the locale and recomputes every formula when it changes', () => {
+    const sheet = openSheet({ locale: RU_LOCALE });
+
+    sheet.enter('A1', '=TEXT(1234,5;"# ##0,00")');
+    sheet.enter('A2', '="1,5"+1');
+    sheet.recalc();
+
+    expect(sheet.value('A1')).toEqual(textValue('1 234,50'));
+    expect(sheet.value('A2')).toEqual(numberValue(2.5));
+
+    sheet.calculator.setLocale({ ...RU_LOCALE, numbers: { ...RU_LOCALE.numbers, group: '.' } });
+    sheet.recalc();
+
+    expect(sheet.value('A1')).toEqual(textValue('1.234,50'));
+    expect(sheet.calculator.locale.numbers.group).toBe('.');
   });
 });
