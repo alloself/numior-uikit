@@ -127,6 +127,46 @@ test.describe('formulas on the calc core', () => {
     await expect(await formulas.reveal(1, 4)).toHaveText('$3,679.65');
   });
 
+  test('inserts and deletes rows from the context menu with references following them', async ({
+    page,
+  }) => {
+    const { formulas } = await openFormulas(page);
+
+    await formulas.fromMenu(1, 1, 'Вставить строки выше');
+
+    await expect(await formulas.reveal(1, 1)).toHaveText('');
+    await expect(await formulas.reveal(2, 1)).toHaveText('4');
+    await expect(await formulas.reveal(8, 3)).toHaveText(`784${NBSP}800,00 ₽`);
+    await (await formulas.reveal(8, 3)).click();
+    await expect(formulas.formula).toHaveValue('=SUM(D3:D7)');
+
+    await formulas.fromMenu(2, 1, 'Удалить строки');
+
+    await expect(await formulas.reveal(7, 3)).toHaveText(`444${NBSP}800,00 ₽`);
+    await (await formulas.reveal(7, 3)).click();
+    await expect(formulas.formula).toHaveValue('=SUM(D3:D6)');
+  });
+
+  test('undoes and redoes edits and row insertions with the keyboard', async ({ page }) => {
+    const { formulas } = await openFormulas(page);
+
+    await formulas.enter(1, 1, '5');
+    await expect(await formulas.reveal(1, 3)).toHaveText(`425${NBSP}000,00 ₽`);
+
+    await formulas.press(1, 3, 'ControlOrMeta+z');
+    await expect(await formulas.reveal(1, 3)).toHaveText(`340${NBSP}000,00 ₽`);
+
+    await formulas.press(1, 3, 'ControlOrMeta+y');
+    await expect(await formulas.reveal(1, 3)).toHaveText(`425${NBSP}000,00 ₽`);
+
+    await formulas.fromMenu(0, 0, 'Вставить строки выше');
+    await expect(await formulas.reveal(8, 3)).toHaveText(`869${NBSP}800,00 ₽`);
+
+    await formulas.press(0, 0, 'ControlOrMeta+z');
+    await expect(await formulas.reveal(7, 3)).toHaveText(`869${NBSP}800,00 ₽`);
+    await expect(await formulas.reveal(0, 0)).toHaveText('Статья');
+  });
+
   test('answers #NAME? for an unknown function and names it in the status', async ({ page }) => {
     const { formulas } = await openFormulas(page);
 

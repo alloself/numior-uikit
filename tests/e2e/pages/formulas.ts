@@ -24,6 +24,19 @@ export class FormulasSection extends TableCellsSection {
     await this.page.getByRole('option', { name, exact: true }).click();
   }
 
+  async fromMenu(row: number, col: number, item: string): Promise<void> {
+    const cell = await this.reveal(row, col);
+
+    await cell.click();
+    await cell.click({ button: 'right' });
+    await this.page.getByRole('menuitem', { name: item }).click();
+  }
+
+  async press(row: number, col: number, keys: string): Promise<void> {
+    await (await this.reveal(row, col)).click();
+    await this.page.keyboard.press(keys);
+  }
+
   async switchLocale(name: string): Promise<void> {
     await this.locales.getByRole('radio', { name }).click();
   }

@@ -1,4 +1,4 @@
-import type { CellRange, CellValue } from './cell.types';
+import type { CellAddress, CellRange, CellValue } from './cell.types';
 import type { Calculator } from './calc/calculator';
 import { logicalFromText, toText } from './calc/coerce';
 import { parseNumberFormat } from './format/format-code';
@@ -7,16 +7,23 @@ import type { FormatToken, FormattedValue, NumberLocale } from './format/format.
 import { currencyFormat } from './format/number-locale';
 import { readValueText } from './format/read-value';
 import type { FormulaFailure, FormulaNode } from './formula/formula.types';
+import { parseFormula } from './formula/parser';
 import { printFormula } from './formula/printer';
 import { formulaReferences, type FormulaReference } from './formula/references';
 import type { BookLocale } from './locale';
-import { EMPTY, booleanValue, numberValue, textValue } from './values';
+import { booleanValue, numberValue, textValue } from './values';
+import { createStepper } from './steps/apply-step';
+import type { CellEdit, WorkbookStep } from './steps/step.types';
 import type { Sheet, Workbook } from './workbook';
 
 export type CellInput =
   | { readonly kind: 'empty' }
   | { readonly kind: 'formula'; readonly text: string }
   | { readonly kind: 'value'; readonly value: CellValue; readonly format: string | undefined };
+
+export type EntryResult =
+  | { readonly ok: true; readonly step: WorkbookStep }
+  | { readonly ok: false; readonly error: FormulaFailure };
 
 export interface CellEditor {
   enter(
@@ -26,6 +33,8 @@ export interface CellEditor {
     text: string,
     locale?: BookLocale,
   ): FormulaFailure | undefined;
+  input(sheet: Sheet, row: number, col: number, text: string, locale?: BookLocale): EntryResult;
+  formatStep(sheet: Sheet, range: CellRange, code: string): WorkbookStep;
   inputText(sheet: Sheet, row: number, col: number): string;
   shown(sheet: Sheet, row: number, col: number): FormattedValue;
   formatAt(sheet: Sheet, row: number, col: number): string;
@@ -126,6 +135,11 @@ const inherits = (node: FormulaNode): boolean => {
       return false;
   }
 };
+
+const entry = (sheet: Sheet, cell: CellEdit): EntryResult => ({
+  ok: true,
+  step: { kind: 'setCells', sheet: sheet.name, cells: [cell] },
+});
 
 const plainText = (text: string): CellInput => ({
   kind: 'value',
@@ -253,55 +267,77 @@ const referencedFormat = (node: FormulaNode, book: Workbook, sheet: Sheet): stri
   return id === 0 ? undefined : book.formats.code(id);
 };
 
+const formatStep = (sheet: Sheet, range: CellRange, code: string): WorkbookStep => ({
+  kind: 'setFormat',
+  sheet: sheet.name,
+  range,
+  format: code,
+});
+
 export const createCellEditor = (book: Workbook, calculator: Calculator): CellEditor => {
+  const stepper = createStepper(book, calculator);
+
   const formatAt = (sheet: Sheet, row: number, col: number): string =>
     book.formats.code(sheet.formats.get(row, col));
 
-  const enterFormula = (
+  const formulaEdit = (
     sheet: Sheet,
-    row: number,
-    col: number,
+    position: CellAddress,
     text: string,
     locale: BookLocale,
-  ): FormulaFailure | undefined => {
-    const parsed = calculator.setFormula(sheet, row, col, text, locale.formulas);
+  ): EntryResult => {
+    const parsed = parseFormula(text, locale.formulas);
 
     if (!parsed.ok) {
-      return parsed.error;
+      return parsed;
     }
 
     const format =
-      sheet.formats.get(row, col) === 0
+      sheet.formats.get(position.row, position.col) === 0
         ? (resultFormat(parsed.ast, calculator.locale.numbers) ??
           referencedFormat(parsed.ast, book, sheet))
         : undefined;
 
-    if (format !== undefined) {
-      sheet.formats.set(row, col, book.formats.id(format));
+    return entry(sheet, { ...position, content: { kind: 'formula', ast: parsed.ast }, format });
+  };
+
+  const input = (
+    sheet: Sheet,
+    row: number,
+    col: number,
+    text: string,
+    locale: BookLocale = calculator.locale,
+  ): EntryResult => {
+    const read =
+      formatAt(sheet, row, col) === TEXT_FORMAT && text !== ''
+        ? plainText(text)
+        : readInput(text, locale.numbers);
+
+    switch (read.kind) {
+      case 'empty':
+        return entry(sheet, { row, col, content: { kind: 'empty' } });
+      case 'formula':
+        return formulaEdit(sheet, { row, col }, read.text, locale);
+      case 'value':
+        return entry(sheet, {
+          row,
+          col,
+          content: { kind: 'value', value: read.value },
+          format: read.format,
+        });
     }
-    return undefined;
   };
 
   return {
-    enter: (sheet, row, col, text, locale = calculator.locale) => {
-      const input =
-        formatAt(sheet, row, col) === TEXT_FORMAT && text !== ''
-          ? plainText(text)
-          : readInput(text, locale.numbers);
+    input,
+    enter: (sheet, row, col, text, locale) => {
+      const result = input(sheet, row, col, text, locale);
 
-      switch (input.kind) {
-        case 'empty':
-          calculator.setValue(sheet, row, col, EMPTY);
-          return undefined;
-        case 'formula':
-          return enterFormula(sheet, row, col, input.text, locale);
-        case 'value':
-          calculator.setValue(sheet, row, col, input.value);
-          if (input.format !== undefined) {
-            sheet.formats.set(row, col, book.formats.id(input.format));
-          }
-          return undefined;
+      if (!result.ok) {
+        return result.error;
       }
+      stepper.apply(result.step);
+      return undefined;
     },
     inputText: (sheet, row, col) => {
       const formula = calculator.formulaAt(sheet, row, col);
@@ -314,8 +350,9 @@ export const createCellEditor = (book: Workbook, calculator: Calculator): CellEd
     shown: (sheet, row, col) =>
       formatValue(sheet.cells.get(row, col), formatAt(sheet, row, col), calculator.locale.numbers),
     formatAt,
+    formatStep,
     setFormat: (sheet, range, code) => {
-      sheet.formats.setRange(range, book.formats.id(code));
+      stepper.apply(formatStep(sheet, range, code));
     },
   };
 };

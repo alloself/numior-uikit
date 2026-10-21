@@ -14,7 +14,8 @@ export interface Workbook {
   readonly strings: SharedStrings;
   readonly formats: NumberFormats;
   readonly sheets: readonly Sheet[];
-  addSheet(name?: string): Sheet;
+  addSheet(name?: string, index?: number): Sheet;
+  removeSheet(sheet: Sheet): void;
   sheet(name: string): Sheet | undefined;
   renameSheet(sheet: Sheet, name: string): boolean;
 }
@@ -56,7 +57,7 @@ export const createWorkbook = (): Workbook => {
     formats,
     sheets,
     sheet,
-    addSheet: (name) => {
+    addSheet: (name, index = sheets.length) => {
       const title = name ?? freeName();
 
       if (!validSheetName(title) || sheet(title) !== undefined) {
@@ -71,8 +72,15 @@ export const createWorkbook = (): Workbook => {
       };
 
       next += 1;
-      sheets.push(created);
+      sheets.splice(Math.min(Math.max(index, 0), sheets.length), 0, created);
       return created;
+    },
+    removeSheet: (target) => {
+      const index = sheets.indexOf(target);
+
+      if (index >= 0) {
+        sheets.splice(index, 1);
+      }
     },
     renameSheet: (target, name) => {
       const taken = sheet(name);

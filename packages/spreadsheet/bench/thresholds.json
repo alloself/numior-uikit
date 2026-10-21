@@ -1,6 +1,6 @@
 {
   "node": {
-    "fill a 20,000 × 50 sheet with 1,000,000 values": {
+    "fill a 20,000 \u00d7 50 sheet with 1,000,000 values": {
       "p95Ms": 150
     },
     "read every cell of a 1,000,000 cell sheet": {
@@ -13,6 +13,9 @@
       "p95Ms": 900
     },
     "recalculate 100,050 formulas from scratch": {
+      "p95Ms": 600
+    },
+    "insert a row in the middle of the 100,050 formula ledger": {
       "p95Ms": 600
     },
     "edit the head of a 20,000 deep chain to the first chunk": {

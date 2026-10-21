@@ -1,4 +1,4 @@
-import { MAX_COLS } from './address';
+import { MAX_COLS, containsCell } from './address';
 import type { CellRange } from './cell.types';
 import { CHUNK_COLS, CHUNK_ROWS } from './cell-store';
 
@@ -11,6 +11,7 @@ export interface CellFormats {
   get(row: number, col: number): number;
   set(row: number, col: number, id: number): void;
   setRange(range: CellRange, id: number): void;
+  forEachInRange(range: CellRange, visit: (row: number, col: number, id: number) => void): void;
   readonly size: number;
 }
 
@@ -57,6 +58,30 @@ export const createCellFormats = (): CellFormats => {
           set(row, col, id);
         }
       }
+    },
+    forEachInRange: (range, visit) => {
+      chunks.forEach((chunk, key) => {
+        const top = Math.floor(key / CHUNKS_PER_ROW) * CHUNK_ROWS;
+        const left = (key % CHUNKS_PER_ROW) * CHUNK_COLS;
+
+        if (
+          top > range.bottom ||
+          top + CHUNK_ROWS <= range.top ||
+          left > range.right ||
+          left + CHUNK_COLS <= range.left
+        ) {
+          return;
+        }
+
+        chunk.ids.forEach((id, slot) => {
+          const row = top + Math.floor(slot / CHUNK_COLS);
+          const col = left + (slot % CHUNK_COLS);
+
+          if (id !== 0 && containsCell(range, row, col)) {
+            visit(row, col, id);
+          }
+        });
+      });
     },
     get size() {
       return size;

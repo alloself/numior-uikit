@@ -1,0 +1,96 @@
+{
+  "recordedAt": "2026-10-21T17:13:42.744Z",
+  "dataset": "20000 × 50 generated values (seed 1); ledger of 100050 formulas on 20000 rows with a 5,000 row lookup table",
+  "device": {
+    "host": "DESKTOP-34B26AK",
+    "cpu": "13th Gen Intel(R) Core(TM) i9-13900KF",
+    "cores": 32,
+    "memoryGb": 31,
+    "platform": "linux 6.18.54.1-microsoft-standard-WSL2",
+    "node": "v24.21.0"
+  },
+  "browser": null,
+  "heapUsedMb": 17,
+  "operations": [
+    {
+      "name": "fill a 20,000 × 50 sheet with 1,000,000 values",
+      "samples": 5,
+      "meanMs": 49.41989260000001,
+      "p50Ms": 48.79404900000003,
+      "p95Ms": 52.51382600000005,
+      "maxMs": 52.51382600000005
+    },
+    {
+      "name": "read every cell of a 1,000,000 cell sheet",
+      "samples": 5,
+      "meanMs": 10.181675000000007,
+      "p50Ms": 9.318985999999995,
+      "p95Ms": 11.93017100000003,
+      "maxMs": 11.93017100000003
+    },
+    {
+      "name": "parse 100,050 formulas",
+      "samples": 5,
+      "meanMs": 162.54283680000003,
+      "p50Ms": 161.19985900000006,
+      "p95Ms": 167.98163999999997,
+      "maxMs": 167.98163999999997
+    },
+    {
+      "name": "enter 100,050 formulas with their dependencies",
+      "samples": 5,
+      "meanMs": 388.83339079999996,
+      "p50Ms": 400.90598599999976,
+      "p95Ms": 404.99452999999994,
+      "maxMs": 404.99452999999994
+    },
+    {
+      "name": "recalculate 100,050 formulas from scratch",
+      "samples": 5,
+      "meanMs": 237.5447992000001,
+      "p50Ms": 244.62712999999985,
+      "p95Ms": 246.69418400000086,
+      "maxMs": 246.69418400000086
+    },
+    {
+      "name": "insert a row in the middle of the 100,050 formula ledger",
+      "samples": 5,
+      "meanMs": 322.2232073999994,
+      "p50Ms": 322.7672219999995,
+      "p95Ms": 365.2034879999992,
+      "maxMs": 365.2034879999992
+    },
+    {
+      "name": "edit the head of a 20,000 deep chain to the first chunk",
+      "samples": 30,
+      "meanMs": 52.97564086666674,
+      "p50Ms": 51.86638900000253,
+      "p95Ms": 59.148793999997,
+      "maxMs": 60.41846000000078
+    },
+    {
+      "name": "change a lookup rate to the first chunk",
+      "samples": 30,
+      "meanMs": 29.68861726666667,
+      "p50Ms": 28.87972500000251,
+      "p95Ms": 32.321586999998544,
+      "maxMs": 37.97727600000144
+    },
+    {
+      "name": "edit an unrelated cell",
+      "samples": 30,
+      "meanMs": 0.0015952000003987147,
+      "p50Ms": 0.0014000000010128133,
+      "p95Ms": 0.0030750000005355105,
+      "maxMs": 0.003695999999763444
+    },
+    {
+      "name": "finish the recalculation after editing the chain head",
+      "samples": 5,
+      "meanMs": 87.25189220000102,
+      "p50Ms": 87.36914800000159,
+      "p95Ms": 92.29170099999828,
+      "maxMs": 92.29170099999828
+    }
+  ]
+}

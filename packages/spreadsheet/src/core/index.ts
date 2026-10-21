@@ -31,7 +31,7 @@ export {
 export { createWorkbook, validSheetName } from './workbook';
 export { EN_LOCALE, RU_LOCALE, type BookLocale } from './locale';
 export { createCellEditor, editText, readInput } from './cell-input';
-export type { CellEditor, CellInput } from './cell-input';
+export type { CellEditor, CellInput, EntryResult } from './cell-input';
 export type { CellFormats } from './cell-formats';
 export type { NumberFormats } from './number-formats';
 export type { Sheet, Workbook } from './workbook';
@@ -49,6 +49,7 @@ export { BASE_FUNCTIONS, createCalculator, createFunctionRegistry, defineFunctio
 export type {
   ArrayValue,
   Calculator,
+  CellContent,
   CalculatorOptions,
   EvalValue,
   FormulaResult,
@@ -80,3 +81,16 @@ export type {
   NumberFormat,
   NumberLocale,
 } from './format';
+export { createStepper, type Stepper } from './steps/apply-step';
+export { createWorkbookHistory } from './steps/history';
+export type { HistoryOptions, WorkbookHistory } from './steps/history';
+export { mapCell } from './steps/mapping';
+export type {
+  CellEdit,
+  LineAxis,
+  StepOutcome,
+  StepRefusal,
+  StepResult,
+  WorkbookStep,
+} from './steps/step.types';
+export type { LineChange } from './formula/rewrite';

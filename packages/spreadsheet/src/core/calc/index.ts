@@ -1,5 +1,6 @@
 export type {
   ArrayValue,
+  CellContent,
   EvalValue,
   FormulaResult,
   FormulaCell,

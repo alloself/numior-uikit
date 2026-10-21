@@ -3,6 +3,8 @@ import {
   RU_LOCALE,
   createCalculator,
   createCellEditor,
+  createStepper,
+  createWorkbookHistory,
   createWorkbook,
   currencyFormat,
   formatColor,
@@ -16,6 +18,9 @@ import {
   type CellRange,
   type CellValue,
   type FormulaReference,
+  type LineAxis,
+  type StepOutcome,
+  type WorkbookStep,
   type NumberLocale,
   type Sheet,
 } from '@numior/spreadsheet/core';
@@ -176,6 +181,17 @@ const FORMATS: readonly (readonly [string, string])[] = [
   ['B18', '0.0%'],
 ];
 
+interface FormulaEntry {
+  readonly row: number;
+  readonly col: number;
+  readonly text: string;
+}
+
+interface EntryStep {
+  readonly step: WorkbookStep;
+  readonly problem: string | undefined;
+}
+
 export const createFormulaBook = () => {
   const workbook = createWorkbook();
   const budget = workbook.addSheet('Бюджет');
@@ -183,19 +199,50 @@ export const createFormulaBook = () => {
   const load = workbook.addSheet('Нагрузка');
   const calculator = createCalculator(workbook, { locale: RU_LOCALE });
   const editor = createCellEditor(workbook, calculator);
+  const history = createWorkbookHistory(createStepper(workbook, calculator));
 
   const staleAt = (sheet: Sheet, row: number, col: number): boolean =>
     calculator.formulaAt(sheet, row, col)?.state === 'stale';
 
-  const enter = (sheet: Sheet, row: number, col: number, text: string): string | undefined => {
-    const failure = editor.enter(sheet, row, col, text);
+  const entryOf = (sheet: Sheet, entry: FormulaEntry): EntryStep => {
+    const result = editor.input(sheet, entry.row, entry.col, entry.text);
 
-    if (failure === undefined) {
-      return undefined;
+    if (result.ok) {
+      return { step: result.step, problem: undefined };
     }
-    calculator.setValue(sheet, row, col, textValue(text));
-    return `символ ${String(failure.position + 1)}`;
+    return {
+      step: {
+        kind: 'setCells',
+        sheet: sheet.name,
+        cells: [
+          {
+            row: entry.row,
+            col: entry.col,
+            content: { kind: 'value', value: textValue(entry.text) },
+          },
+        ],
+      },
+      problem: `символ ${String(result.error.position + 1)}`,
+    };
   };
+
+  const enter = (
+    sheet: Sheet,
+    entries: readonly FormulaEntry[],
+  ): readonly (string | undefined)[] => {
+    const results = entries.map((entry) => entryOf(sheet, entry));
+
+    history.commit(results.map((result) => result.step));
+    return results.map((result) => result.problem);
+  };
+
+  const lines = (
+    kind: 'insertLines' | 'deleteLines',
+    sheet: Sheet,
+    axis: LineAxis,
+    at: number,
+    count: number,
+  ): StepOutcome => history.commit([{ kind, sheet: sheet.name, axis, at, count }]);
 
   const place = (sheet: Sheet, entries: readonly (readonly [string, string | number])[]): void => {
     entries.forEach(([address, input]) => {
@@ -230,10 +277,14 @@ export const createFormulaBook = () => {
       editor.shown(sheet, row, col).text,
     formatAt: (sheet: Sheet, row: number, col: number): string => editor.formatAt(sheet, row, col),
     applyFormat: (sheet: Sheet, ranges: readonly CellRange[], code: string): void => {
-      ranges.forEach((range) => {
-        editor.setFormat(sheet, range, code);
-      });
+      history.commit(ranges.map((range) => editor.formatStep(sheet, range, code)));
     },
+    insertLines: (sheet: Sheet, axis: LineAxis, at: number, count: number): StepOutcome =>
+      lines('insertLines', sheet, axis, at, count),
+    deleteLines: (sheet: Sheet, axis: LineAxis, at: number, count: number): StepOutcome =>
+      lines('deleteLines', sheet, axis, at, count),
+    undo: (): StepOutcome | undefined => history.undo(),
+    redo: (): StepOutcome | undefined => history.redo(),
     setLocale: (locale: BookLocale): void => {
       calculator.setLocale(locale);
     },

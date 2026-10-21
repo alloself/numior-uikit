@@ -17,6 +17,11 @@ export type FormulaResult = CellValue | ArrayValue;
 
 export type FormulaState = 'fresh' | 'stale' | 'cycle';
 
+export type CellContent =
+  | { readonly kind: 'empty' }
+  | { readonly kind: 'value'; readonly value: CellValue }
+  | { readonly kind: 'formula'; readonly ast: FormulaNode };
+
 export interface FormulaCell {
   readonly text: string;
   readonly ast: FormulaNode;

@@ -1,4 +1,4 @@
-import { numberValue, parseFormula } from '@numior/spreadsheet/core';
+import { createStepper, numberValue, parseFormula } from '@numior/spreadsheet/core';
 import { filledSheet, ledger, ledgerFormulas, type Ledger } from './fixtures.ts';
 import { measure, record, summarize, type Operation } from '../../../scripts/bench-harness.ts';
 
@@ -129,6 +129,32 @@ operations.push(
     heavy.iterations,
     () => ledger(ROWS),
     settle,
+  ),
+);
+
+operations.push(
+  await sampled(
+    'insert a row in the middle of the 100,050 formula ledger',
+    heavy.iterations,
+    () => {
+      const fresh = ledger(ROWS);
+
+      settle(fresh);
+      return fresh;
+    },
+    (fresh) => {
+      const result = createStepper(fresh.workbook, fresh.calculator).apply({
+        kind: 'insertLines',
+        sheet: fresh.sheet.name,
+        axis: 'rows',
+        at: ROWS / 2,
+        count: 1,
+      });
+
+      if (!result.ok) {
+        throw new Error(`the insertion was refused: ${result.reason}`);
+      }
+    },
   ),
 );
 

@@ -3,11 +3,13 @@ import type { CellRange, CellValue } from '../cell.types';
 import type { FormulaLocale, FormulaNode, FormulaParse } from '../formula/formula.types';
 import { EN_LOCALE, type BookLocale } from '../locale';
 import { parseFormula } from '../formula/parser';
+import { printFormula } from '../formula/printer';
 import { formulaReferences, type FormulaReference } from '../formula/references';
 import { EMPTY, errorValue, numberValue } from '../values';
 import type { Sheet, Workbook } from '../workbook';
 import type {
   ArrayValue,
+  CellContent,
   FormulaCell,
   FormulaResult,
   FunctionRegistry,
@@ -38,6 +40,9 @@ export interface Calculator {
     locale?: FormulaLocale,
   ): FormulaParse;
   setValue(sheet: Sheet, row: number, col: number, value: CellValue): void;
+  setContent(sheet: Sheet, row: number, col: number, content: CellContent): void;
+  contentAt(sheet: Sheet, row: number, col: number): CellContent;
+  forEachFormula(visit: (sheet: Sheet, row: number, col: number, ast: FormulaNode) => void): void;
   formulaAt(sheet: Sheet, row: number, col: number): FormulaCell | undefined;
   spillOf(sheet: Sheet, row: number, col: number): CellRange | undefined;
   recalculate(options?: RecalcOptions): Recalculation;
@@ -526,46 +531,88 @@ export const createCalculator = (
     }
   };
 
+  const setParsed = (
+    sheet: Sheet,
+    row: number,
+    col: number,
+    ast: FormulaNode,
+    text: string,
+  ): void => {
+    const key = formulaKey(sheet.id, row, col);
+    const cell: FormulaCell = { text, ast, state: 'stale' };
+
+    const record: FormulaRecord = {
+      cell,
+      sheet,
+      row,
+      col,
+      precedents: precedentsOf({ cell, sheet }, workbook),
+      dynamic: false,
+    };
+
+    interrupt();
+    claim(key);
+    formulas.set(key, record);
+    graph.set(key, record.precedents);
+    pending.add(key);
+    if (usesVolatile(ast, functions)) {
+      volatiles.add(key);
+    } else {
+      volatiles.delete(key);
+    }
+  };
+
+  const setValue = (sheet: Sheet, row: number, col: number, value: CellValue): void => {
+    const key = formulaKey(sheet.id, row, col);
+
+    interrupt();
+    forget(key);
+    claim(key);
+    write(sheet, row, col, value);
+    touch({ sheet, row, col });
+  };
+
   return {
     setFormula: (sheet, row, col, text, syntax = locale.formulas) => {
       const parsed = parseFormula(text, syntax);
 
-      if (!parsed.ok) {
-        return parsed;
-      }
-      const key = formulaKey(sheet.id, row, col);
-
-      const cell: FormulaCell = { text, ast: parsed.ast, state: 'stale' };
-
-      const record: FormulaRecord = {
-        cell,
-        sheet,
-        row,
-        col,
-        precedents: precedentsOf({ cell, sheet }, workbook),
-        dynamic: false,
-      };
-
-      interrupt();
-      claim(key);
-      formulas.set(key, record);
-      graph.set(key, record.precedents);
-      pending.add(key);
-      if (usesVolatile(parsed.ast, functions)) {
-        volatiles.add(key);
-      } else {
-        volatiles.delete(key);
+      if (parsed.ok) {
+        setParsed(sheet, row, col, parsed.ast, text);
       }
       return parsed;
     },
-    setValue: (sheet, row, col, value) => {
+    setValue,
+    setContent: (sheet, row, col, content) => {
+      switch (content.kind) {
+        case 'formula':
+          setParsed(sheet, row, col, content.ast, `=${printFormula(content.ast)}`);
+          break;
+        case 'value':
+          setValue(sheet, row, col, content.value);
+          break;
+        case 'empty':
+          setValue(sheet, row, col, EMPTY);
+          break;
+      }
+    },
+    contentAt: (sheet, row, col) => {
       const key = formulaKey(sheet.id, row, col);
+      const record = formulas.get(key);
 
-      interrupt();
-      forget(key);
-      claim(key);
-      write(sheet, row, col, value);
-      touch({ sheet, row, col });
+      if (record !== undefined) {
+        return { kind: 'formula', ast: record.cell.ast };
+      }
+
+      const value = sheet.cells.get(row, col);
+
+      return value.kind === 'empty' || spills.owns(key)
+        ? { kind: 'empty' }
+        : { kind: 'value', value };
+    },
+    forEachFormula: (visit) => {
+      [...formulas.values()].forEach((record) => {
+        visit(record.sheet, record.row, record.col, record.cell.ast);
+      });
     },
     setLocale: (next) => {
       interrupt();

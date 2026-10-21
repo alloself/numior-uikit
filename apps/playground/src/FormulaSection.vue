@@ -88,6 +88,8 @@
         size="sm"
         height="20rem"
         :picking="picking"
+        :context-menu="sheetMenu"
+        :commands="commands"
         label="Лист с формулами"
         data-testid="formulas"
         @edit="onEdit"
@@ -135,6 +137,7 @@ import {
   NuiProgress,
   NuiSelect,
   NuiToggleGroup,
+  type NuiMenuEntry,
   type NuiOption,
   type NuiToggleItem,
 } from '@numior/vue';
@@ -144,6 +147,8 @@ import {
   tableCells,
   type NuiTableCells,
   type NuiTableCellSource,
+  type NuiTableCommandSink,
+  type NuiTableContextScope,
   type NuiTableEditEvent,
   type NuiTableExposed,
   type NuiTableRanges,
@@ -152,9 +157,14 @@ import {
 import {
   EN_LOCALE,
   RU_LOCALE,
+  mapCell,
   type CellRange,
+  type LineAxis,
+  type LineChange,
   type Recalculation,
   type Sheet,
+  type StepOutcome,
+  type StepRefusal,
 } from '@numior/spreadsheet/core';
 import {
   createFormulaBook,
@@ -193,6 +203,10 @@ const LOCALES: readonly NuiToggleItem[] = [
 ];
 
 const CUSTOM = 'custom';
+
+const REFUSALS: Readonly<Partial<Record<StepRefusal, string>>> = {
+  'sheet-full': 'Нельзя вставить: в последних строках или столбцах листа есть данные',
+};
 
 const book = shallowRef<FormulaBook>();
 const current = ref('Бюджет');
@@ -428,17 +442,118 @@ const onEdit = (event: NuiTableEditEvent<number>): void => {
     return;
   }
 
-  const problems = event.changes.flatMap((change) => {
-    const col = columnIndex(change.key);
-    const problem = opened.enter(target, change.row, col, textOf(change.value));
+  const problems = opened
+    .enter(
+      target,
+      event.changes.map((change) => ({
+        row: change.row,
+        col: columnIndex(change.key),
+        text: textOf(change.value),
+      })),
+    )
+    .flatMap((problem, index) => {
+      const change = event.changes[index];
 
-    return problem === undefined ? [] : [`${change.key}${String(change.row + 1)}: ${problem}`];
-  });
+      return problem === undefined || change === undefined
+        ? []
+        : [`${change.key}${String(change.row + 1)}: ${problem}`];
+    });
 
   recalculate();
   if (problems.length > 0) {
     status.value = `Формула не разобрана — ${problems.join(', ')}`;
   }
+};
+
+const refuse = (reason: StepRefusal): number => {
+  status.value = REFUSALS[reason] ?? status.value;
+  return 0;
+};
+
+const moveActive = (changes: readonly LineChange[]): void => {
+  const target = currentSheet();
+  const cell = active.value;
+
+  if (target !== undefined && cell !== undefined) {
+    active.value = mapCell(changes, target.name, cell) ?? { row: 0, col: 0 };
+  }
+};
+
+const followChanges = (outcome: StepOutcome | undefined): number => {
+  if (outcome === undefined) {
+    return 0;
+  }
+  if (!outcome.ok) {
+    return refuse(outcome.reason);
+  }
+  moveActive(outcome.changes);
+  ranges.value = [];
+  recalculate();
+  return 1;
+};
+
+const changeLines = (
+  kind: 'insert' | 'delete',
+  axis: LineAxis,
+  at: number,
+  count: number,
+): void => {
+  const target = currentSheet();
+  const opened = book.value;
+
+  if (target !== undefined && opened !== undefined) {
+    followChanges(
+      kind === 'insert'
+        ? opened.insertLines(target, axis, at, count)
+        : opened.deleteLines(target, axis, at, count),
+    );
+  }
+};
+
+const spanOf = (position: TableCellPosition, axis: LineAxis): readonly [number, number] => {
+  const index = axis === 'rows' ? position.row : position.col;
+
+  const range = selectedRanges().find((candidate) =>
+    axis === 'rows'
+      ? candidate.top <= position.row && position.row <= candidate.bottom
+      : candidate.left <= position.col && position.col <= candidate.right,
+  );
+
+  if (range === undefined) {
+    return [index, 1];
+  }
+  return axis === 'rows'
+    ? [range.top, range.bottom - range.top + 1]
+    : [range.left, range.right - range.left + 1];
+};
+
+const lineItems = (position: TableCellPosition, axis: LineAxis): NuiMenuEntry[] => {
+  const [at, count] = spanOf(position, axis);
+  const rows = axis === 'rows';
+
+  return [
+    {
+      label: rows ? 'Вставить строки выше' : 'Вставить столбцы слева',
+      onSelect: () => changeLines('insert', axis, at, count),
+    },
+    {
+      label: rows ? 'Удалить строки' : 'Удалить столбцы',
+      tone: 'error',
+      onSelect: () => changeLines('delete', axis, at, count),
+    },
+  ];
+};
+
+const sheetMenu = (scope: NuiTableContextScope<number>): readonly NuiMenuEntry[] => {
+  const position = { row: scope.row, col: columnIndex(scope.column.key) };
+
+  return [...lineItems(position, 'rows'), { type: 'separator' }, ...lineItems(position, 'cols')];
+};
+
+const commands: NuiTableCommandSink<number> = {
+  push: () => undefined,
+  undo: () => followChanges(book.value?.undo()),
+  redo: () => followChanges(book.value?.redo()),
 };
 
 const fillLoad = (): void => {
