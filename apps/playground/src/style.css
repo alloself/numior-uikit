@@ -245,6 +245,10 @@ label:has(> input[type='checkbox']) {
   flex: 1;
   min-inline-size: min(100%, 14rem);
 }
+.sheet-format {
+  box-sizing: border-box;
+  inline-size: 13rem;
+}
 .sheet-foot {
   display: flex;
   flex-wrap: wrap;

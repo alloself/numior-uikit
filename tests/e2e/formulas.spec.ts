@@ -3,6 +3,17 @@ import { PlaygroundPage, type Theme } from './pages/playground';
 
 const SECTION = 'section[aria-labelledby="formulas-title"]';
 
+const NBSP = '\u00a0';
+
+const today = (): string => {
+  const now = new Date();
+
+  return [now.getDate(), now.getMonth() + 1]
+    .map((part) => String(part).padStart(2, '0'))
+    .concat(String(now.getFullYear()))
+    .join('.');
+};
+
 const openFormulas = async (page: Page) => {
   const playground = new PlaygroundPage(page);
 
@@ -16,9 +27,14 @@ test.describe('formulas on the calc core', () => {
   test('computes the budget and recalculates what depends on an edited cell', async ({ page }) => {
     const { formulas } = await openFormulas(page);
 
-    expect(await formulas.texts(1, 3, 5)).toEqual(['340000', '3679.65', 'крупная']);
-    expect(await formulas.textAt(7, 3)).toBe('784800');
-    expect(await formulas.textAt(8, 3)).toBe('156960');
+    expect(await formulas.texts(1, 3, 5)).toEqual([
+      `340${NBSP}000,00 ₽`,
+      `$3${NBSP}679,65`,
+      'крупная',
+    ]);
+
+    expect(await formulas.textAt(7, 3)).toBe(`784${NBSP}800,00 ₽`);
+    expect(await formulas.textAt(8, 3)).toBe(`156${NBSP}960,00 ₽`);
     expect(await formulas.textAt(9, 3)).toBe('5');
 
     await expect(await formulas.reveal(11, 1)).toHaveText(
@@ -29,8 +45,8 @@ test.describe('formulas on the calc core', () => {
     await expect(formulas.formula).toHaveValue('=B2*C2');
     await formulas.enter(1, 1, '5');
 
-    await expect(await formulas.reveal(1, 3)).toHaveText('425000');
-    await expect(await formulas.reveal(7, 3)).toHaveText('869800');
+    await expect(await formulas.reveal(1, 3)).toHaveText(`425${NBSP}000,00 ₽`);
+    await expect(await formulas.reveal(7, 3)).toHaveText(`869${NBSP}800,00 ₽`);
     await expect(formulas.status).toContainText('Пересчитано формул');
   });
 
@@ -53,11 +69,62 @@ test.describe('formulas on the calc core', () => {
     const { formulas } = await openFormulas(page);
 
     await formulas.openSheet('Курсы');
-    await expect(formulas.cell(1, 1)).toHaveText('92.4');
+    await expect(formulas.cell(1, 1)).toHaveText('92,4');
     await formulas.enter(1, 1, '100');
     await formulas.openSheet('Бюджет');
 
-    await expect(await formulas.reveal(1, 4)).toHaveText('3400');
+    await expect(await formulas.reveal(1, 4)).toHaveText(`$3${NBSP}400,00`);
+  });
+
+  test('shows dates, percents and money through their formats and reads typed dates', async ({
+    page,
+  }) => {
+    const { formulas } = await openFormulas(page);
+
+    await expect(await formulas.reveal(15, 1)).toHaveText(today());
+    await expect(await formulas.reveal(17, 1)).toHaveText('43,3%');
+    await expect(await formulas.reveal(18, 1)).toHaveText(`-36${NBSP}943,26 ₽`);
+
+    await formulas.enter(1, 6, '01.02.2026');
+    await formulas.enter(2, 6, '12,5%');
+
+    await expect(await formulas.reveal(1, 6)).toHaveText('01.02.2026');
+    await expect(await formulas.reveal(2, 6)).toHaveText('12,50%');
+    await (await formulas.reveal(2, 6)).click();
+    await expect(formulas.formula).toHaveValue('12,5%');
+  });
+
+  test('formats the selected cells from the format list', async ({ page }) => {
+    const { formulas } = await openFormulas(page);
+
+    await (await formulas.reveal(1, 1)).click();
+    await formulas.chooseFormat('Числовой');
+
+    await expect(await formulas.reveal(1, 1)).toHaveText('4,00');
+
+    await formulas.chooseFormat('Процентный');
+
+    await expect(await formulas.reveal(1, 1)).toHaveText('400,00%');
+    await expect(formulas.formula).toHaveValue('400%');
+  });
+
+  test('switches the book locale for numbers and formulas', async ({ page }) => {
+    const { formulas } = await openFormulas(page);
+
+    await (await formulas.reveal(1, 4)).click();
+
+    await expect(formulas.formula).toHaveValue(
+      '=ROUND(D2/VLOOKUP("USD";Курсы!$A$2:$B$4;2;FALSE);2)',
+    );
+
+    await formulas.switchLocale('EN');
+
+    await expect(formulas.formula).toHaveValue(
+      '=ROUND(D2/VLOOKUP("USD",Курсы!$A$2:$B$4,2,FALSE),2)',
+    );
+
+    await expect(await formulas.reveal(1, 3)).toHaveText('340,000.00 ₽');
+    await expect(await formulas.reveal(1, 4)).toHaveText('$3,679.65');
   });
 
   test('answers #NAME? for an unknown function and names it in the status', async ({ page }) => {
@@ -75,7 +142,7 @@ test.describe('formulas on the calc core', () => {
     await formulas.load.click();
 
     await expect(formulas.sheets.getByRole('radio', { name: 'Нагрузка' })).toBeChecked();
-    await expect(formulas.status).toContainText('Пересчитано формул: 40001', { timeout: 30_000 });
+    await expect(formulas.status).toContainText('Пересчитано формул: 40003', { timeout: 30_000 });
     await expect(formulas.cell(2, 2)).toHaveText('12');
     await expect(formulas.load).toBeDisabled();
   });

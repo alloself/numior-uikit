@@ -1,17 +1,22 @@
 import {
-  EMPTY,
-  booleanValue,
+  EN_LOCALE,
+  RU_LOCALE,
   createCalculator,
+  createCellEditor,
   createWorkbook,
+  currencyFormat,
+  formatColor,
   formulaReferences,
-  numberValue,
   parseCell,
   parseFormula,
+  parseRange,
   rangeOf,
   textValue,
+  type BookLocale,
   type CellRange,
   type CellValue,
   type FormulaReference,
+  type NumberLocale,
   type Sheet,
 } from '@numior/spreadsheet/core';
 import type { NuiTableCellStyle, NuiTableRange } from '@numior/table';
@@ -19,8 +24,6 @@ import type { NuiTableCellStyle, NuiTableRange } from '@numior/table';
 export const FORMULA_ROWS = 50_000;
 export const FORMULA_COLS = 26;
 const LOAD_ROWS = 20_000;
-
-const NUMBER = /^[+-]?(?:\d+\.?\d*|\.\d+)(?:e[+-]?\d+)?$/iu;
 
 const BUDGET: readonly (readonly [string, string | number])[] = [
   ['A1', 'Статья'],
@@ -57,6 +60,14 @@ const BUDGET: readonly (readonly [string, string | number])[] = [
   ['B14', '=SEQUENCE(1,5)^2'],
   ['A15', 'Случайное'],
   ['B15', '=RANDBETWEEN(1,100)'],
+  ['A16', 'Сегодня'],
+  ['B16', '=TODAY()'],
+  ['A17', 'Через квартал'],
+  ['B17', '=EDATE(B16,3)'],
+  ['A18', 'Доля ноутбуков'],
+  ['B18', '=D2/D8'],
+  ['A19', 'Платёж в месяц'],
+  ['B19', '=PMT(12%/12,24,D8)'],
 ];
 
 const RATES: readonly (readonly [string, string | number])[] = [
@@ -83,41 +94,13 @@ const ALIGN: Readonly<Record<CellValue['kind'], NuiTableCellStyle['align']>> = {
   empty: undefined,
 };
 
-const logicalInput = (upper: string): CellValue | undefined =>
-  upper === 'TRUE' || upper === 'FALSE' ? booleanValue(upper === 'TRUE') : undefined;
-
-const numericInput = (trimmed: string): CellValue | undefined =>
-  NUMBER.test(trimmed) ? numberValue(Number(trimmed)) : undefined;
-
-const valueOfInput = (text: string): CellValue => {
-  const trimmed = text.trim();
-
-  if (trimmed === '') {
-    return EMPTY;
-  }
-  return logicalInput(trimmed.toUpperCase()) ?? numericInput(trimmed) ?? textValue(text);
-};
-
-const logicalText = (value: CellValue): string => {
-  if (value.kind !== 'boolean') {
-    return '';
-  }
-  return value.value ? 'TRUE' : 'FALSE';
-};
-
-const shown = (value: CellValue): string => {
-  if (value.kind === 'number') {
-    return String(Number(value.value.toPrecision(11)));
-  }
-  if (value.kind === 'error') {
-    return value.code;
-  }
-  return value.kind === 'string' ? value.value : logicalText(value);
-};
-
-const cellStyle = (value: CellValue, stale: boolean): NuiTableCellStyle => ({
+const cellStyle = (
+  value: CellValue,
+  stale: boolean,
+  color: number | undefined,
+): NuiTableCellStyle => ({
   align: ALIGN[value.kind],
-  color: stale ? 'var(--nui-text-muted)' : undefined,
+  color: stale ? 'var(--nui-text-muted)' : color === undefined ? undefined : formatColor(color),
   overflow: value.kind === 'string',
 });
 
@@ -148,8 +131,6 @@ const asRange = (range: CellRange): NuiTableRange => ({
   to: { row: range.bottom, col: range.right },
 });
 
-const keyOf = (row: number, col: number): number => row * FORMULA_COLS + col;
-
 const onSheet = (sheet: Sheet, name: string | undefined): boolean =>
   name === undefined || name === sheet.name;
 
@@ -161,37 +142,59 @@ const visibleRange = (sheet: Sheet, found: FormulaReference): NuiTableRange[] =>
     : [];
 };
 
+export type FormatPreset =
+  | 'general'
+  | 'number'
+  | 'money'
+  | 'percent'
+  | 'date'
+  | 'time'
+  | 'datetime'
+  | 'fraction'
+  | 'scientific'
+  | 'text';
+
+const PRESET_CODES: Readonly<Record<FormatPreset, (locale: NumberLocale) => string>> = {
+  general: () => 'General',
+  number: () => '#,##0.00',
+  money: (locale) => currencyFormat(locale, 2),
+  percent: () => '0.00%',
+  date: (locale) => locale.shortDate,
+  time: (locale) => locale.longTime,
+  datetime: (locale) => `${locale.shortDate} ${locale.shortTime}`,
+  fraction: () => '# ?/?',
+  scientific: () => '0.00E+00',
+  text: () => '@',
+};
+
+export const presetCode = (preset: FormatPreset, locale: NumberLocale): string =>
+  PRESET_CODES[preset](locale);
+
+const FORMATS: readonly (readonly [string, string])[] = [
+  ['C2:D9', currencyFormat(RU_LOCALE.numbers, 2)],
+  ['E2:E8', '"$"#,##0.00'],
+  ['B18', '0.0%'],
+];
+
 export const createFormulaBook = () => {
   const workbook = createWorkbook();
   const budget = workbook.addSheet('Бюджет');
   const rates = workbook.addSheet('Курсы');
   const load = workbook.addSheet('Нагрузка');
-  const calculator = createCalculator(workbook);
-  const inputs = new Map<Sheet, Map<number, string>>();
-
-  const inputsOf = (sheet: Sheet): Map<number, string> => {
-    const known = inputs.get(sheet) ?? new Map<number, string>();
-
-    inputs.set(sheet, known);
-    return known;
-  };
+  const calculator = createCalculator(workbook, { locale: RU_LOCALE });
+  const editor = createCellEditor(workbook, calculator);
 
   const staleAt = (sheet: Sheet, row: number, col: number): boolean =>
     calculator.formulaAt(sheet, row, col)?.state === 'stale';
 
   const enter = (sheet: Sheet, row: number, col: number, text: string): string | undefined => {
-    inputsOf(sheet).set(keyOf(row, col), text);
-    if (!text.startsWith('=') || text.length === 1) {
-      calculator.setValue(sheet, row, col, valueOfInput(text));
-      return undefined;
-    }
-    const parsed = calculator.setFormula(sheet, row, col, text);
+    const failure = editor.enter(sheet, row, col, text);
 
-    if (parsed.ok) {
+    if (failure === undefined) {
       return undefined;
     }
     calculator.setValue(sheet, row, col, textValue(text));
-    return `символ ${String(parsed.error.position + 1)}`;
+    return `символ ${String(failure.position + 1)}`;
   };
 
   const place = (sheet: Sheet, entries: readonly (readonly [string, string | number])[]): void => {
@@ -199,10 +202,18 @@ export const createFormulaBook = () => {
       const cell = parseCell(address);
 
       if (cell !== undefined) {
-        enter(sheet, cell.row, cell.col, String(input));
+        editor.enter(sheet, cell.row, cell.col, String(input), EN_LOCALE);
       }
     });
   };
+
+  FORMATS.forEach(([address, code]) => {
+    const range = parseRange(address);
+
+    if (range !== undefined) {
+      editor.setFormat(budget, range, code);
+    }
+  });
 
   place(rates, RATES);
   place(budget, BUDGET);
@@ -214,18 +225,27 @@ export const createFormulaBook = () => {
     calculator,
     sheets: [budget, rates, load],
     enter,
-    inputAt: (sheet: Sheet, row: number, col: number): string =>
-      inputsOf(sheet).get(keyOf(row, col)) ?? '',
-    displayAt: (sheet: Sheet, row: number, col: number): string => shown(sheet.cells.get(row, col)),
+    inputAt: (sheet: Sheet, row: number, col: number): string => editor.inputText(sheet, row, col),
+    displayAt: (sheet: Sheet, row: number, col: number): string =>
+      editor.shown(sheet, row, col).text,
+    formatAt: (sheet: Sheet, row: number, col: number): string => editor.formatAt(sheet, row, col),
+    applyFormat: (sheet: Sheet, ranges: readonly CellRange[], code: string): void => {
+      ranges.forEach((range) => {
+        editor.setFormat(sheet, range, code);
+      });
+    },
+    setLocale: (locale: BookLocale): void => {
+      calculator.setLocale(locale);
+    },
     styleAt: (sheet: Sheet, row: number, col: number): NuiTableCellStyle => {
       const value = sheet.cells.get(row, col);
 
       return row === 0 && value.kind === 'string'
         ? HEAD
-        : cellStyle(value, staleAt(sheet, row, col));
+        : cellStyle(value, staleAt(sheet, row, col), editor.shown(sheet, row, col).color);
     },
     referencesOf: (sheet: Sheet, text: string): NuiTableRange[] => {
-      const parsed = parseFormula(text);
+      const parsed = parseFormula(text, calculator.locale.formulas);
 
       return parsed.ok
         ? formulaReferences(parsed.ast).flatMap((found) => visibleRange(sheet, found))
@@ -235,9 +255,9 @@ export const createFormulaBook = () => {
       for (let row = 0; row < LOAD_ROWS; row += 1) {
         const at = String(row + 1);
 
-        enter(load, row, 0, String(row + 1));
-        enter(load, row, 1, `=A${at}*2`);
-        enter(load, row, 2, row === 0 ? '=B1' : `=C${String(row)}+B${at}`);
+        editor.enter(load, row, 0, String(row + 1), EN_LOCALE);
+        editor.enter(load, row, 1, `=A${at}*2`, EN_LOCALE);
+        editor.enter(load, row, 2, row === 0 ? '=B1' : `=C${String(row)}+B${at}`, EN_LOCALE);
       }
       return load;
     },

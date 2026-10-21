@@ -1,14 +1,18 @@
+import { createCellFormats, type CellFormats } from './cell-formats';
 import { createCellStore, type CellStore } from './cell-store';
+import { createNumberFormats, type NumberFormats } from './number-formats';
 import { createSharedStrings, type SharedStrings } from './strings';
 
 export interface Sheet {
   readonly id: number;
   name: string;
   readonly cells: CellStore;
+  readonly formats: CellFormats;
 }
 
 export interface Workbook {
   readonly strings: SharedStrings;
+  readonly formats: NumberFormats;
   readonly sheets: readonly Sheet[];
   addSheet(name?: string): Sheet;
   sheet(name: string): Sheet | undefined;
@@ -28,6 +32,7 @@ export const validSheetName = (name: string): boolean =>
 
 export const createWorkbook = (): Workbook => {
   const strings = createSharedStrings();
+  const formats = createNumberFormats();
   const sheets: Sheet[] = [];
   let next = 1;
 
@@ -48,6 +53,7 @@ export const createWorkbook = (): Workbook => {
 
   return {
     strings,
+    formats,
     sheets,
     sheet,
     addSheet: (name) => {
@@ -56,7 +62,13 @@ export const createWorkbook = (): Workbook => {
       if (!validSheetName(title) || sheet(title) !== undefined) {
         throw new RangeError(`The sheet name ${title} is taken or not allowed`);
       }
-      const created: Sheet = { id: next, name: title, cells: createCellStore(strings) };
+
+      const created: Sheet = {
+        id: next,
+        name: title,
+        cells: createCellStore(strings),
+        formats: createCellFormats(),
+      };
 
       next += 1;
       sheets.push(created);

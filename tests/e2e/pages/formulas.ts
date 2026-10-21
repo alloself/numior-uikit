@@ -8,6 +8,7 @@ export class FormulasSection extends TableCellsSection {
   readonly sheets: Locator;
   readonly status: Locator;
   readonly load: Locator;
+  readonly locales: Locator;
 
   constructor(page: Page) {
     super(page, 'formulas');
@@ -15,6 +16,16 @@ export class FormulasSection extends TableCellsSection {
     this.sheets = page.getByTestId('formulas-sheets');
     this.status = page.getByTestId('formulas-status');
     this.load = page.getByTestId('formulas-load');
+    this.locales = page.getByTestId('formulas-locale');
+  }
+
+  async chooseFormat(name: string): Promise<void> {
+    await this.section.getByRole('combobox', { name: 'Формат ячеек' }).click();
+    await this.page.getByRole('option', { name, exact: true }).click();
+  }
+
+  async switchLocale(name: string): Promise<void> {
+    await this.locales.getByRole('radio', { name }).click();
   }
 
   async openSheet(name: string): Promise<void> {
@@ -23,10 +34,14 @@ export class FormulasSection extends TableCellsSection {
 
   async reveal(row: number, col: number): Promise<Locator> {
     await this.viewport.evaluate(
-      (viewport, offset) => {
-        viewport.scrollLeft = offset;
+      (viewport, { left, index }) => {
+        const first = viewport.querySelector('.nui-table__body > [role="row"]');
+        const height = first?.getBoundingClientRect().height ?? 0;
+
+        viewport.scrollLeft = left;
+        viewport.scrollTop = Math.max(0, (index - 4) * height);
       },
-      Math.max(0, (col - 1) * COLUMN_WIDTH),
+      { left: Math.max(0, (col - 1) * COLUMN_WIDTH), index: row },
     );
 
     await this.cell(row, col).waitFor();

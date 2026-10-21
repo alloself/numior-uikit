@@ -8,5 +8,5 @@ export type {
 export { builtinFormat } from './builtin-formats';
 export { parseNumberFormat } from './format-code';
 export { formatValue, renderValue } from './format-value';
-export { EN_NUMBERS, RU_NUMBERS, numberLocaleOf } from './number-locale';
+export { EN_NUMBERS, RU_NUMBERS, currencyFormat, numberLocaleOf } from './number-locale';
 export { FORMAT_PALETTE, formatColor } from './palette';

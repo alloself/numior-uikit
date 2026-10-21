@@ -1,0 +1,321 @@
+import type { CellRange, CellValue } from './cell.types';
+import type { Calculator } from './calc/calculator';
+import { logicalFromText, toText } from './calc/coerce';
+import { parseNumberFormat } from './format/format-code';
+import { formatValue } from './format/format-value';
+import type { FormatToken, FormattedValue, NumberLocale } from './format/format.types';
+import { currencyFormat } from './format/number-locale';
+import { readValueText } from './format/read-value';
+import type { FormulaFailure, FormulaNode } from './formula/formula.types';
+import { printFormula } from './formula/printer';
+import { formulaReferences, type FormulaReference } from './formula/references';
+import type { BookLocale } from './locale';
+import { EMPTY, booleanValue, numberValue, textValue } from './values';
+import type { Sheet, Workbook } from './workbook';
+
+export type CellInput =
+  | { readonly kind: 'empty' }
+  | { readonly kind: 'formula'; readonly text: string }
+  | { readonly kind: 'value'; readonly value: CellValue; readonly format: string | undefined };
+
+export interface CellEditor {
+  enter(
+    sheet: Sheet,
+    row: number,
+    col: number,
+    text: string,
+    locale?: BookLocale,
+  ): FormulaFailure | undefined;
+  inputText(sheet: Sheet, row: number, col: number): string;
+  shown(sheet: Sheet, row: number, col: number): FormattedValue;
+  formatAt(sheet: Sheet, row: number, col: number): string;
+  setFormat(sheet: Sheet, range: CellRange, code: string): void;
+}
+
+const CLOCK = new Set([
+  'hour',
+  'minute',
+  'second',
+  'subsecond',
+  'ampm',
+  'hours',
+  'minutes',
+  'seconds',
+]);
+
+const CALENDAR = new Set(['year', 'month', 'day']);
+
+const TEXT_FORMAT = '@';
+
+const DATE_RESULTS = new Set([
+  'DATE',
+  'TODAY',
+  'EDATE',
+  'EOMONTH',
+  'WORKDAY',
+  'WORKDAY.INTL',
+  'DATEVALUE',
+]);
+
+const TIME_RESULTS = new Set(['TIME', 'TIMEVALUE']);
+
+const MONEY_RESULTS = new Set([
+  'PMT',
+  'PV',
+  'FV',
+  'IPMT',
+  'PPMT',
+  'NPV',
+  'XNPV',
+  'CUMIPMT',
+  'CUMPRINC',
+]);
+
+const RATE_RESULTS = new Set(['RATE', 'IRR', 'XIRR', 'MIRR', 'EFFECT', 'NOMINAL', 'RRI']);
+
+const INHERITING = new Set([
+  'SUM',
+  'SUMIF',
+  'SUMIFS',
+  'SUMPRODUCT',
+  'AVERAGE',
+  'AVERAGEIF',
+  'AVERAGEIFS',
+  'MIN',
+  'MAX',
+  'MINIFS',
+  'MAXIFS',
+  'MEDIAN',
+  'LARGE',
+  'SMALL',
+  'ROUND',
+  'ROUNDUP',
+  'ROUNDDOWN',
+  'MROUND',
+  'TRUNC',
+  'INT',
+  'ABS',
+  'CEILING',
+  'FLOOR',
+  'IF',
+  'IFS',
+  'IFERROR',
+  'IFNA',
+  'CHOOSE',
+  'INDEX',
+  'LOOKUP',
+  'VLOOKUP',
+  'HLOOKUP',
+  'XLOOKUP',
+]);
+
+const ARITHMETIC = new Set(['+', '-', '*', '/', '^']);
+
+const inherits = (node: FormulaNode): boolean => {
+  switch (node.kind) {
+    case 'cell':
+    case 'range':
+    case 'unary':
+    case 'percent':
+      return true;
+    case 'binary':
+      return ARITHMETIC.has(node.op);
+    case 'call':
+      return INHERITING.has(node.name.toUpperCase());
+    default:
+      return false;
+  }
+};
+
+const plainText = (text: string): CellInput => ({
+  kind: 'value',
+  value: textValue(text),
+  format: undefined,
+});
+
+export const readInput = (text: string, locale: NumberLocale): CellInput => {
+  if (text === '') {
+    return { kind: 'empty' };
+  }
+  if (text.startsWith("'")) {
+    return plainText(text.slice(1));
+  }
+  if (text.startsWith('=') && text.length > 1) {
+    return { kind: 'formula', text };
+  }
+
+  const logical = logicalFromText(text.trim(), locale);
+
+  if (logical !== undefined) {
+    return { kind: 'value', value: booleanValue(logical), format: undefined };
+  }
+
+  const read = readValueText(text, locale);
+
+  return read === undefined
+    ? plainText(text)
+    : { kind: 'value', value: numberValue(read.value), format: read.format };
+};
+
+const unitsOf = (tokens: readonly FormatToken[], units: ReadonlySet<string>): boolean =>
+  tokens.some((token) => token.kind === 'date' && units.has(token.unit));
+
+const dateEditText = (
+  value: number,
+  tokens: readonly FormatToken[],
+  locale: NumberLocale,
+): string => {
+  const calendar = unitsOf(tokens, CALENDAR) || value >= 1;
+  const clock = unitsOf(tokens, CLOCK) || !Number.isInteger(value);
+
+  const parts = [
+    calendar ? formatValue(numberValue(value), locale.shortDate, locale).text : '',
+    clock ? formatValue(numberValue(value), locale.longTime, locale).text : '',
+  ];
+
+  return parts.filter((part) => part !== '').join(' ');
+};
+
+const numberEditText = (value: number, code: string, locale: NumberLocale): string => {
+  const section = parseNumberFormat(code).sections[0];
+  const tokens = section?.tokens ?? [];
+
+  if (section?.kind === 'date' && value >= 0) {
+    return dateEditText(value, tokens, locale);
+  }
+  if (tokens.some((token) => token.kind === 'percent')) {
+    return `${toText(numberValue(Number((value * 100).toPrecision(15))), locale)}%`;
+  }
+  return toText(numberValue(value), locale);
+};
+
+const sameText = (text: string, locale: NumberLocale): boolean => {
+  const input = readInput(text, locale);
+
+  return input.kind === 'value' && input.value.kind === 'string' && input.value.value === text;
+};
+
+export const editText = (value: CellValue, code: string, locale: NumberLocale): string => {
+  switch (value.kind) {
+    case 'number':
+      return numberEditText(value.value, code, locale);
+    case 'string':
+      return code === TEXT_FORMAT || sameText(value.value, locale)
+        ? value.value
+        : `'${value.value}`;
+    case 'boolean':
+      return value.value ? locale.trueText : locale.falseText;
+    case 'error':
+      return value.code;
+    case 'empty':
+      return '';
+  }
+};
+
+type CellOrRange = Extract<FormulaReference, { readonly kind: 'cell' | 'range' }>;
+
+const isCellOrRange = (found: FormulaReference): found is CellOrRange =>
+  found.kind === 'cell' || found.kind === 'range';
+
+const resultFormat = (node: FormulaNode, locale: NumberLocale): string | undefined => {
+  if (node.kind !== 'call') {
+    return undefined;
+  }
+
+  const name = node.name.toUpperCase();
+
+  if (DATE_RESULTS.has(name)) {
+    return locale.shortDate;
+  }
+  if (name === 'NOW') {
+    return `${locale.shortDate} ${locale.shortTime}`;
+  }
+  if (TIME_RESULTS.has(name)) {
+    return locale.shortTime;
+  }
+  if (MONEY_RESULTS.has(name)) {
+    return currencyFormat(locale, 2);
+  }
+  return RATE_RESULTS.has(name) ? '0%' : undefined;
+};
+
+const referencedFormat = (node: FormulaNode, book: Workbook, sheet: Sheet): string | undefined => {
+  const first = inherits(node) ? formulaReferences(node).find(isCellOrRange) : undefined;
+  const source = first?.sheet === undefined ? sheet : book.sheet(first.sheet);
+
+  if (first === undefined || source === undefined) {
+    return undefined;
+  }
+
+  const ref = first.kind === 'cell' ? first.ref : first.from;
+  const id = source.formats.get(ref.row, ref.col);
+
+  return id === 0 ? undefined : book.formats.code(id);
+};
+
+export const createCellEditor = (book: Workbook, calculator: Calculator): CellEditor => {
+  const formatAt = (sheet: Sheet, row: number, col: number): string =>
+    book.formats.code(sheet.formats.get(row, col));
+
+  const enterFormula = (
+    sheet: Sheet,
+    row: number,
+    col: number,
+    text: string,
+    locale: BookLocale,
+  ): FormulaFailure | undefined => {
+    const parsed = calculator.setFormula(sheet, row, col, text, locale.formulas);
+
+    if (!parsed.ok) {
+      return parsed.error;
+    }
+
+    const format =
+      sheet.formats.get(row, col) === 0
+        ? (resultFormat(parsed.ast, calculator.locale.numbers) ??
+          referencedFormat(parsed.ast, book, sheet))
+        : undefined;
+
+    if (format !== undefined) {
+      sheet.formats.set(row, col, book.formats.id(format));
+    }
+    return undefined;
+  };
+
+  return {
+    enter: (sheet, row, col, text, locale = calculator.locale) => {
+      const input =
+        formatAt(sheet, row, col) === TEXT_FORMAT && text !== ''
+          ? plainText(text)
+          : readInput(text, locale.numbers);
+
+      switch (input.kind) {
+        case 'empty':
+          calculator.setValue(sheet, row, col, EMPTY);
+          return undefined;
+        case 'formula':
+          return enterFormula(sheet, row, col, input.text, locale);
+        case 'value':
+          calculator.setValue(sheet, row, col, input.value);
+          if (input.format !== undefined) {
+            sheet.formats.set(row, col, book.formats.id(input.format));
+          }
+          return undefined;
+      }
+    },
+    inputText: (sheet, row, col) => {
+      const formula = calculator.formulaAt(sheet, row, col);
+      const { locale } = calculator;
+
+      return formula === undefined
+        ? editText(sheet.cells.get(row, col), formatAt(sheet, row, col), locale.numbers)
+        : `=${printFormula(formula.ast, locale.formulas)}`;
+    },
+    shown: (sheet, row, col) =>
+      formatValue(sheet.cells.get(row, col), formatAt(sheet, row, col), calculator.locale.numbers),
+    formatAt,
+    setFormat: (sheet, range, code) => {
+      sheet.formats.setRange(range, book.formats.id(code));
+    },
+  };
+};

@@ -35,7 +35,7 @@ export const builtinFormat = (id: number, locale: NumberLocale): string | undefi
     case 14:
       return locale.shortDate;
     case 22:
-      return `${locale.shortDate} ${locale.shortTime}`;
+      return `${locale.shortDate} h:mm`;
     case 5:
     case 6:
     case 7:

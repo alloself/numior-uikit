@@ -34,6 +34,26 @@
             @blur="onBarBlur"
           />
         </div>
+        <div class="sheet-format">
+          <NuiSelect
+            :model-value="formatPreset"
+            :options="formatOptions"
+            size="sm"
+            aria-label="Формат ячеек"
+            data-testid="formulas-format"
+            @update:model-value="applyFormat"
+          />
+        </div>
+        <NuiToggleGroup
+          :model-value="localeName"
+          :items="LOCALES"
+          variant="segmented"
+          size="sm"
+          required
+          label="Локаль книги"
+          data-testid="formulas-locale"
+          @update:model-value="switchLocale"
+        />
         <NuiButton
           size="sm"
           variant="outline"
@@ -109,7 +129,15 @@
 
 <script setup lang="ts">
 import { computed, ref, shallowRef, useTemplateRef } from 'vue';
-import { NuiButton, NuiInput, NuiProgress, NuiToggleGroup, type NuiToggleItem } from '@numior/vue';
+import {
+  NuiButton,
+  NuiInput,
+  NuiProgress,
+  NuiSelect,
+  NuiToggleGroup,
+  type NuiOption,
+  type NuiToggleItem,
+} from '@numior/vue';
 import {
   NuiTable,
   columnIndex,
@@ -121,8 +149,21 @@ import {
   type NuiTableRanges,
   type TableCellPosition,
 } from '@numior/table';
-import type { Recalculation, Sheet } from '@numior/spreadsheet/core';
-import { createFormulaBook, FORMULA_COLS, FORMULA_ROWS, type FormulaBook } from './formula-book';
+import {
+  EN_LOCALE,
+  RU_LOCALE,
+  type CellRange,
+  type Recalculation,
+  type Sheet,
+} from '@numior/spreadsheet/core';
+import {
+  createFormulaBook,
+  FORMULA_COLS,
+  FORMULA_ROWS,
+  presetCode,
+  type FormatPreset,
+  type FormulaBook,
+} from './formula-book';
 import { referenceBoxes } from './sheet-references';
 import { useFormulaBar } from './use-formula-bar';
 
@@ -133,12 +174,33 @@ interface Progress {
 
 const VISIBLE = { top: 0, left: 0, bottom: 40, right: FORMULA_COLS - 1 };
 
+const PRESETS: readonly (readonly [FormatPreset, string])[] = [
+  ['general', 'Общий'],
+  ['number', 'Числовой'],
+  ['money', 'Денежный'],
+  ['percent', 'Процентный'],
+  ['date', 'Дата'],
+  ['time', 'Время'],
+  ['datetime', 'Дата и время'],
+  ['fraction', 'Дробный'],
+  ['scientific', 'Экспоненциальный'],
+  ['text', 'Текстовый'],
+];
+
+const LOCALES: readonly NuiToggleItem[] = [
+  { value: 'ru', label: 'RU' },
+  { value: 'en', label: 'EN' },
+];
+
+const CUSTOM = 'custom';
+
 const book = shallowRef<FormulaBook>();
 const current = ref('Бюджет');
 const ranges = ref<NuiTableRanges>([]);
 const status = ref('');
 const progress = shallowRef<Progress>();
 const loaded = ref(false);
+const localeName = ref('ru');
 const sheet = useTemplateRef<NuiTableExposed>('sheet');
 const area = useTemplateRef<HTMLElement>('area');
 const bar = useTemplateRef<HTMLElement>('bar');
@@ -176,6 +238,86 @@ const {
   onBarKeydown,
   onBarBlur,
 } = useFormulaBar({ sheet, area, bar, textAt, referencesOf });
+
+const activeCode = computed(() => {
+  const target = currentSheet();
+  const cell = active.value;
+
+  return target === undefined || cell === undefined
+    ? 'General'
+    : (book.value?.formatAt(target, cell.row, cell.col) ?? 'General');
+});
+
+const localeOf = (name: string) => (name === 'en' ? EN_LOCALE : RU_LOCALE);
+
+const presetOf = (code: string): string =>
+  PRESETS.find(
+    ([preset]) => presetCode(preset, localeOf(localeName.value).numbers) === code,
+  )?.[0] ?? CUSTOM;
+
+const formatPreset = computed(() => presetOf(activeCode.value));
+
+const formatOptions = computed<NuiOption<string>[]>(() => [
+  ...PRESETS.map(([value, label]) => ({ value, label })),
+  ...(formatPreset.value === CUSTOM ? [{ value: CUSTOM, label: `Свой: ${activeCode.value}` }] : []),
+]);
+
+const isPreset = (value: string): value is FormatPreset =>
+  PRESETS.some(([preset]) => preset === value);
+
+const rangeOfSelection = (from: TableCellPosition, to: TableCellPosition): CellRange => ({
+  top: Math.min(from.row, to.row),
+  left: Math.min(from.col, to.col),
+  bottom: Math.max(from.row, to.row),
+  right: Math.max(from.col, to.col),
+});
+
+const selectedRanges = (): CellRange[] => {
+  const cell = active.value;
+
+  if (ranges.value.length > 0) {
+    return ranges.value.map((range) => rangeOfSelection(range.from, range.to));
+  }
+  return cell === undefined ? [] : [rangeOfSelection(cell, cell)];
+};
+
+const refreshBar = (): void => {
+  if (active.value !== undefined) {
+    active.value = { ...active.value };
+  }
+};
+
+const formatSelection = (preset: FormatPreset): void => {
+  const target = currentSheet();
+  const opened = book.value;
+
+  if (target !== undefined && opened !== undefined) {
+    opened.applyFormat(
+      target,
+      selectedRanges(),
+      presetCode(preset, opened.calculator.locale.numbers),
+    );
+
+    sheet.value?.invalidate();
+    refreshBar();
+  }
+};
+
+const applyFormat = (value: unknown): void => {
+  if (typeof value === 'string' && isPreset(value)) {
+    formatSelection(value);
+  }
+};
+
+const switchLocale = (value: unknown): void => {
+  if (typeof value !== 'string' || book.value === undefined) {
+    return;
+  }
+  localeName.value = value;
+  book.value.setLocale(localeOf(value));
+  recalculate();
+  refreshBar();
+};
 
 const sheetItems = computed<readonly NuiToggleItem[]>(() =>
   (book.value?.sheets ?? []).map((item) => ({ value: item.name, label: item.name })),
@@ -312,6 +454,7 @@ const fillLoad = (): void => {
 const toggle = (): void => {
   if (book.value === undefined) {
     book.value = createFormulaBook();
+    localeName.value = 'ru';
     recalculate();
   } else {
     book.value = undefined;
