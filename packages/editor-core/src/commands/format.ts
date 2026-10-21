@@ -17,6 +17,14 @@ const cursorMarks = (state: EditorState, head: number): ReadonlySet<string> => {
   return new Set(marks.map((mark) => mark.type));
 };
 
+const hasType = (marks: readonly Mark[], type: string): boolean =>
+  marks.some((mark) => mark.type === type);
+
+const keptTypes = (types: readonly string[], marks: readonly Mark[]): readonly string[] =>
+  types.every((type) => hasType(marks, type))
+    ? types
+    : types.filter((type) => hasType(marks, type));
+
 export const activeMarks = (state: EditorState): ReadonlySet<string> => {
   const { doc, selection } = state;
 
@@ -24,18 +32,18 @@ export const activeMarks = (state: EditorState): ReadonlySet<string> => {
     return cursorMarks(state, selection.head);
   }
   const range = selectionRange(doc, selection);
-  let shared: Set<string> | undefined;
+  let shared: readonly string[] | undefined;
 
   doc.nodesBetween(range.from, range.to, (node) => {
     if (node.kind === 'text') {
-      const own = new Set(node.marks.map((mark) => mark.type));
+      const marks = node.marks;
 
-      shared = new Set([...(shared ?? own)].filter((type) => own.has(type)));
+      shared = shared === undefined ? marks.map((mark) => mark.type) : keptTypes(shared, marks);
     }
-    return shared === undefined || shared.size > 0;
+    return shared === undefined || shared.length > 0;
   });
 
-  return shared ?? new Set();
+  return new Set(shared);
 };
 
 export const activeBlock = (state: EditorState): ActiveBlock | undefined => {

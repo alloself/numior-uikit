@@ -5,6 +5,7 @@ import {
   fromJSON,
   toJSON,
   type Doc,
+  type DocJSON,
   type EditorState,
   type Schema,
 } from '@numior/editor-core';
@@ -21,7 +22,7 @@ export interface EditorValueOptions<V extends NuiEditorValue | undefined> {
 
 export interface EditorValue {
   readonly initial: Doc;
-  changed(): void;
+  changed(json: DocJSON): void;
   flush(): void;
 }
 
@@ -58,6 +59,13 @@ export const useEditorValue = <V extends NuiEditorValue | undefined>(
     timer = undefined;
   };
 
+  const publish = (value: NuiEditorValue): void => {
+    if (fits(value)) {
+      written = value;
+      options.model.value = value;
+    }
+  };
+
   const flush = (): void => {
     stop();
     if (!pending) {
@@ -66,12 +74,8 @@ export const useEditorValue = <V extends NuiEditorValue | undefined>(
     pending = false;
 
     const { doc } = options.state();
-    const value = options.format() === 'json' ? toJSON(doc) : write(doc);
 
-    if (fits(value)) {
-      written = value;
-      options.model.value = value;
-    }
+    publish(options.format() === 'json' ? toJSON(doc) : write(doc));
   };
 
   watch(options.model, () => {
@@ -90,12 +94,13 @@ export const useEditorValue = <V extends NuiEditorValue | undefined>(
 
   return {
     initial: docOf(options.schema, written),
-    changed: () => {
-      pending = true;
+    changed: (json) => {
       stop();
       if (options.format() === 'json') {
-        flush();
+        pending = false;
+        publish(json);
       } else {
+        pending = true;
         timer = setTimeout(flush, PAUSE_MS);
       }
     },

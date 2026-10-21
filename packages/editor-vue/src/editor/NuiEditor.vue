@@ -618,9 +618,11 @@ const onPaste = (event: ClipboardEvent): void => {
 };
 
 const publish = (state: EditorState): void => {
+  const json = toJSON(state.doc);
+
   empty.value = isEmptyDoc(state.doc);
-  sync.changed();
-  emit('change', toJSON(state.doc));
+  sync.changed(json);
+  emit('change', json);
 };
 
 const replace = (doc: Doc): void => {

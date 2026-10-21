@@ -46,8 +46,10 @@ const mapRanges = (ranges: readonly MapRange[], pos: number, assoc: Assoc): MapR
 const mapPosition = (ranges: readonly MapRange[], pos: number, assoc: Assoc): number => {
   let diff = 0;
 
-  for (const range of ranges) {
-    if (pos < range.start) {
+  for (let index = 0; index < ranges.length; index += 1) {
+    const range = ranges[index];
+
+    if (range === undefined || pos < range.start) {
       break;
     }
     if (pos <= range.start + range.oldSize) {
@@ -101,8 +103,10 @@ export const createMapping = (maps: readonly StepMap[] = []): Mapping => {
     map: (pos, assoc = 1) => {
       let current = pos;
 
-      for (const map of maps) {
-        current = map.map(current, assoc);
+      for (let index = 0; index < maps.length; index += 1) {
+        const ranges = maps[index]?.ranges;
+
+        current = ranges === undefined ? current : mapPosition(ranges, current, assoc);
       }
       return current;
     },
