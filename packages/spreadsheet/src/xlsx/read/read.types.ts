@@ -7,6 +7,7 @@ import type { Bytes, ZipCodec } from '../zip/zip.types';
 export type XlsxLimitationCode =
   | 'date-1904'
   | 'external-links'
+  | 'external-tables'
   | 'linked-objects'
   | 'pivot-tables'
   | 'data-tables'

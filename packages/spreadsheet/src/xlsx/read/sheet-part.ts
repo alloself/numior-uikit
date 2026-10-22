@@ -5,6 +5,7 @@ import type { CellRange, CellValue } from '../../core/cell.types';
 import type { FormulaNode } from '../../core/formula/formula.types';
 import { EN_FORMULAS } from '../../core/formula/locale';
 import { parseFormula } from '../../core/formula/parser';
+import { formulaReferences } from '../../core/formula/references';
 import {
   EMPTY,
   booleanValue,
@@ -43,6 +44,7 @@ export interface SheetCounts {
   comments: number;
   layout: number;
   protection: number;
+  externalTables: number;
   readonly unknown: Set<string>;
 }
 
@@ -91,6 +93,7 @@ const emptyCounts = (): SheetCounts => ({
   comments: 0,
   layout: 0,
   protection: 0,
+  externalTables: 0,
   unknown: new Set(),
 });
 
@@ -235,14 +238,19 @@ export const readSheetPart = async (
       }
     });
 
+    const external = formulaReferences(ast).some(
+      (reference) => reference.kind === 'structured' && reference.book !== undefined,
+    );
+
     counts.formulas += 1;
     counts.kept += known ? 0 : 1;
+    counts.externalTables += external ? 1 : 0;
 
     calculator.importFormula(sheet, current.row, current.col, ast, {
       value,
       spill: spillOf(current),
       recalculate: context.recalculate,
-      keep: !known,
+      keep: !known || external,
     });
   };
 

@@ -24,6 +24,7 @@
   "date: =YEAR(0)": "LibreOffice counts serials without the Excel 1900 leap day and lets years run past 9999",
   "external-links: Linked!A3": "LibreOffice does not read names of an external book from the link cache",
   "external-links: Linked!A4": "LibreOffice does not read names of an external book from the link cache",
+  "external-links: Linked!A8": "the link cache holds no table definitions, so a closed book cannot answer a table reference; both keep the value Excel stored only until they recalculate",
   "financial: =DB(1000000,100000,6,7)": "Excel returns an error here, LibreOffice a number",
   "financial: =EFFECT(0,4)": "Excel returns an error here, LibreOffice a number",
   "financial: =SYD(30000,7500,10,11)": "Excel returns an error here, LibreOffice a number",

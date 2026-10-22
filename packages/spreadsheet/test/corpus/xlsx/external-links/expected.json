@@ -1,8 +1,14 @@
 {
   "kind": "editable",
   "report": {
-    "staleFormulas": 8,
+    "staleFormulas": 9,
     "items": [
+      {
+        "code": "external-tables",
+        "severity": "info",
+        "count": 1,
+        "names": []
+      },
       {
         "code": "external-links",
         "severity": "info",
@@ -88,6 +94,14 @@
             "code": "#N/A"
           },
           "formula": "IF('[1]Q1 data'!B1,'[1]Q1 data'!C1)",
+          "state": "imported"
+        },
+        "A8": {
+          "value": {
+            "kind": "number",
+            "value": 3
+          },
+          "formula": "SUM([1]!Sales[Qty])",
           "state": "imported"
         }
       }

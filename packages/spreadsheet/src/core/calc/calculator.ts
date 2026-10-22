@@ -206,6 +206,10 @@ const structuredLinks = (
   workbook: Workbook,
   links: Links,
 ): void => {
+  if (found.book !== undefined) {
+    return;
+  }
+
   const table = tableFor(workbook, found.table, record.sheet, record.row, record.col);
   const owner = found.table ?? table?.name;
   const range = table === undefined ? undefined : structuredRange(table, found, record.row);

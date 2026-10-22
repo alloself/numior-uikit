@@ -71,6 +71,7 @@ interface Load {
   readonly totals: {
     formulas: number;
     kept: number;
+    external: number;
     linked: number;
     readonly unknown: Set<string>;
   };
@@ -110,6 +111,7 @@ const SHEET_COUNTS: readonly (readonly [keyof Omit<SheetCounts, 'unknown'>, Xlsx
     ['comments', 'comments'],
     ['layout', 'sheet-layout'],
     ['protection', 'protection'],
+    ['externalTables', 'external-tables'],
   ];
 
 const rejected = (reason: XlsxRejection, detail?: string): XlsxRead => ({
@@ -313,6 +315,7 @@ const loadSheet = async (
   load.parsed.add(part);
   load.totals.formulas += counts.formulas;
   load.totals.kept += counts.kept;
+  load.totals.external += counts.externalTables;
   counts.unknown.forEach((name) => load.totals.unknown.add(name));
   load.report.add('tables', refused, entry.name);
   load.report.add('hidden-sheets', entry.hidden ? 1 : 0, entry.name);
@@ -397,7 +400,7 @@ const readBook = async (
       [stringsPart, stylesPart, ...sheetParts.map(({ part }) => part)],
       options,
     ),
-    totals: { formulas: 0, kept: 0, linked: 0, unknown: new Set() },
+    totals: { formulas: 0, kept: 0, external: 0, linked: 0, unknown: new Set() },
   };
 
   const sheets = sheetParts.map(({ entry }) => book.addSheet(entry.name));
@@ -433,7 +436,9 @@ const readBook = async (
   await recalculated(load);
 
   const summary = load.report.build(
-    load.options.recalc === 'chunked' ? load.totals.kept : load.totals.formulas,
+    load.options.recalc === 'chunked'
+      ? load.totals.kept + load.totals.external
+      : load.totals.formulas,
   );
 
   return {

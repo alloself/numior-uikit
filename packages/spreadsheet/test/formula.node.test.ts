@@ -311,6 +311,14 @@ describe('formula parser', () => {
 
     expect(astOf('=СУММ([1]Лист1!A1:A3)', RU_FORMULAS)).toMatchObject({ name: 'SUM' });
     expect(failureOf('=[1]Other')).toEqual({ position: 4, reason: 'token' });
+
+    expect(astOf('=SUM([1]!Sales[Amount])')).toMatchObject({
+      args: [{ kind: 'structured', book: 1, table: 'Sales', area: 'data' }],
+    });
+
+    expect(printFormula(astOf('=SUM([2]!Sales[[#Totals],[Amount]])'))).toBe(
+      'SUM([2]!Sales[[#Totals],[Amount]])',
+    );
   });
 
   it('reads the implicit intersection operator and its file form', () => {

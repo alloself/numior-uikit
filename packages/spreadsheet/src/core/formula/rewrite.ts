@@ -308,7 +308,9 @@ export const dropSheetFromFormula = (node: FormulaNode, name: string): FormulaNo
 
 const ownedBy = (reference: FormulaReference, table: string): boolean =>
   reference.kind === 'structured'
-    ? reference.table !== undefined && sameName(reference.table, table)
+    ? reference.book === undefined &&
+      reference.table !== undefined &&
+      sameName(reference.table, table)
     : reference.kind === 'name' &&
       reference.sheet === undefined &&
       reference.book === undefined &&
@@ -319,7 +321,7 @@ export const mapStructured = (
   visit: (reference: StructuredReference) => FormulaNode,
 ): FormulaNode =>
   mapReferences(node, (reference) =>
-    reference.kind === 'structured' ? visit(reference) : reference,
+    reference.kind === 'structured' && reference.book === undefined ? visit(reference) : reference,
   );
 
 export const renameTableInFormula = (node: FormulaNode, from: string, to: string): FormulaNode =>

@@ -246,8 +246,18 @@ const createParser = (
     return booleanOf(token, locale) ?? reference({}, token) ?? { kind: 'name', name: token.text };
   };
 
+  const bookTable = (place: SheetPlace, token: Token): FormulaNode | undefined => {
+    const found =
+      token.kind === 'structured' && place.book !== undefined && place.sheet === undefined
+        ? parseStructured(token.text, locale)
+        : undefined;
+
+    return found === undefined ? undefined : { ...found, book: place.book };
+  };
+
   const sheetItem = (place: SheetPlace, token: Token): FormulaNode =>
     reference(place, token) ??
+    bookTable(place, token) ??
     (token.kind === 'word' && !isPunct('(') && booleanOf(token, locale) === undefined
       ? { kind: 'name', ...place, name: token.text }
       : fail(token, 'reference'));

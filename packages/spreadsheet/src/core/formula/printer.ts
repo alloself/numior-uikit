@@ -160,7 +160,7 @@ const operationText = (node: FormulaNode, printing: Printing): string => {
 
 const printNode = (node: FormulaNode, printing: Printing): string =>
   node.kind === 'structured'
-    ? printStructured(node, printing.locale)
+    ? `${sheetPrefix({ book: node.book }, printing)}${printStructured(node, printing.locale)}`
     : (constantText(node, printing.locale) ??
       referenceText(node, printing) ??
       operationText(node, printing));

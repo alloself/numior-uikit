@@ -106,6 +106,7 @@ export type FormulaNode =
     }
   | {
       readonly kind: 'structured';
+      readonly book?: number | undefined;
       readonly table?: string | undefined;
       readonly area: StructuredArea;
       readonly columns?: StructuredColumns | undefined;

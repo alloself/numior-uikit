@@ -88,6 +88,23 @@ describe('references into other books', () => {
     expect(sheet.input('A1')).toBe("='[1]Q1 data'!A1");
   });
 
+  it('reads tables of the other book as unreachable and leaves its own tables alone', () => {
+    const sheet = withOtherBook();
+
+    sheet.type('A1', 'Item');
+    sheet.type('B1', 'Amount');
+    sheet.type('A2', 'Pen');
+    sheet.type('B2', '3');
+    sheet.table('A1:B2', { name: 'Sales' });
+    sheet.type('D1', '=СУММ([other.xlsx]!Sales[Amount])+СУММ(Sales[Amount])');
+
+    expect(sheet.shown('D1')).toBe('#ССЫЛКА!');
+
+    sheet.commit({ kind: 'renameTable', from: 'Sales', to: 'Orders' });
+
+    expect(sheet.input('D1')).toBe('=СУММ([other.xlsx]!Sales[Amount])+СУММ(Orders[Amount])');
+  });
+
   it('writes the cached books it has no source for and reads them back', async () => {
     const sheet = withOtherBook();
 

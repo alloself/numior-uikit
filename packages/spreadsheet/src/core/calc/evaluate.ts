@@ -387,7 +387,11 @@ const structured = (
   context: EvalContext,
 ): EvalValue => {
   const here = context.here();
-  const table = tableFor(context.workbook, node.table, here.sheet, here.row, here.col);
+
+  const table =
+    node.book === undefined
+      ? tableFor(context.workbook, node.table, here.sheet, here.row, here.col)
+      : undefined;
 
   if (table === undefined) {
     return raise('#REF!');
