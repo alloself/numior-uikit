@@ -201,7 +201,7 @@ const textDate = (args: FunctionArgs): number => {
 const textTime = (args: FunctionArgs): number => {
   const read = readDateText(args.text(0), args.locale);
 
-  return read === undefined ? raise('#VALUE!') : (read.time ?? 0);
+  return read === undefined ? raise('#VALUE!') : (read.time ?? 0) % 1;
 };
 
 export const DATE_FUNCTIONS: readonly FunctionSpec[] = [

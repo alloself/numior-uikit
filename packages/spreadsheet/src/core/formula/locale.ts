@@ -20,7 +20,10 @@ export const EN_FORMULAS: FormulaLocale = {
   trueText: 'TRUE',
   falseText: 'FALSE',
   errors: EN_ERRORS,
+  rowShorthand: true,
 };
+
+export const FILE_FORMULAS: FormulaLocale = { ...EN_FORMULAS, rowShorthand: false };
 
 export const RU_FORMULAS: FormulaLocale = {
   argument: ';',
@@ -40,4 +43,5 @@ export const RU_FORMULAS: FormulaLocale = {
   trueText: 'ИСТИНА',
   falseText: 'ЛОЖЬ',
   errors: RU_ERRORS,
+  rowShorthand: true,
 };

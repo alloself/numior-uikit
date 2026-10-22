@@ -134,9 +134,7 @@
     },
     {
       "formula": "=TIMEVALUE(\"25:00\")",
-      "expected": {
-        "error": "#VALUE!"
-      }
+      "expected": 0.041666666666666664
     },
     {
       "formula": "=YEAR(DATE(2008,7,5))",

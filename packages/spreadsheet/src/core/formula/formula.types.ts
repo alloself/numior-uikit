@@ -29,6 +29,7 @@ export interface FormulaLocale {
   readonly trueText: string;
   readonly falseText: string;
   readonly errors: ErrorTexts;
+  readonly rowShorthand: boolean;
 }
 
 export interface LineRef {

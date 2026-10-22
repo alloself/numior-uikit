@@ -1,11 +1,13 @@
 import { MAX_COLS, formatCell, formatRange } from '../../core/address';
+import { needsArrayEvaluation } from '../../core/calc/array-formula';
 import type { Calculator } from '../../core/calc/calculator';
 import { CHUNK_ROWS } from '../../core/cell-store';
 import { nextTask } from '../../core/calc/tasks';
 import type { CellRange, CellValue } from '../../core/cell.types';
-import { EN_FORMULAS } from '../../core/formula/locale';
+import { FILE_FORMULAS } from '../../core/formula/locale';
+import type { FormulaNode } from '../../core/formula/formula.types';
 import { printFormula } from '../../core/formula/printer';
-import type { Sheet } from '../../core/workbook';
+import type { Sheet, Workbook } from '../../core/workbook';
 import { escapeAttribute, escapeText } from '../xml/writer';
 import { encodeXstring } from '../xml/xstring';
 import { concatBytes } from '../zip/streams';
@@ -20,6 +22,7 @@ export interface StringTable {
 }
 
 export interface SheetWriting {
+  readonly book: Workbook;
   readonly sheet: Sheet;
   readonly calculator: Calculator;
   readonly outdated: (sheet: Sheet, row: number, col: number) => boolean;
@@ -228,6 +231,31 @@ const createSink = (signal: AbortSignal | undefined): Sink => {
 const multiCell = (range: CellRange | undefined): range is CellRange =>
   range !== undefined && (range.bottom > range.top || range.right > range.left);
 
+const arrayRange = (
+  writing: SheetWriting,
+  place: { readonly row: number; readonly col: number },
+  ast: FormulaNode,
+): CellRange | undefined => {
+  const { sheet, calculator } = writing;
+  const spill = calculator.spillOf(sheet, place.row, place.col);
+
+  if (multiCell(spill)) {
+    return spill;
+  }
+
+  const array = needsArrayEvaluation(ast, {
+    functions: calculator.functions,
+    name: (node) =>
+      node.sheet === undefined
+        ? writing.book.names.resolve(node.name, sheet)?.ast
+        : writing.book.names.get(node.name, writing.book.sheet(node.sheet))?.ast,
+  });
+
+  return array
+    ? { top: place.row, left: place.col, bottom: place.row, right: place.col }
+    : undefined;
+};
+
 const formulaCellXml = (
   writing: SheetWriting,
   place: { readonly row: number; readonly col: number; readonly head: string },
@@ -241,15 +269,15 @@ const formulaCellXml = (
     return undefined;
   }
 
-  const text = escapeText(printFormula(withFuturePrefixes(formula.ast), EN_FORMULAS, place));
-  const spill = calculator.spillOf(sheet, place.row, place.col);
+  const text = escapeText(printFormula(withFuturePrefixes(formula.ast), FILE_FORMULAS, place));
+  const spill = arrayRange(writing, place, formula.ast);
   const fresh = formula.state === 'fresh' || formula.state === 'imported';
   const known = fresh && !writing.outdated(sheet, place.row, place.col);
   const value = sheet.cells.get(place.row, place.col);
   const [type, inner] = known ? valueParts(value, true, writing.strings, q) : ['', ''];
 
   counts.stale += known ? 0 : 1;
-  if (!multiCell(spill)) {
+  if (spill === undefined) {
     return `${place.head}${type}><${q}f>${text}</${q}f>${inner}</${q}c>`;
   }
   counts.spills += 1;

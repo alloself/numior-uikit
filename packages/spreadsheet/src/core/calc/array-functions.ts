@@ -23,6 +23,7 @@ export const arrayShape = (rows: number, cols: number): Shape => {
 export const ARRAY_FUNCTIONS: readonly FunctionSpec[] = [
   defineFunction({
     name: 'SEQUENCE',
+    array: true,
     min: 1,
     max: 4,
     evaluate: (args) => {
@@ -35,6 +36,7 @@ export const ARRAY_FUNCTIONS: readonly FunctionSpec[] = [
   }),
   defineFunction({
     name: 'TRANSPOSE',
+    array: true,
     min: 1,
     max: 1,
     evaluate: (args) => {

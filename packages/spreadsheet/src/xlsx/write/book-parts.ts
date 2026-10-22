@@ -1,7 +1,7 @@
 import { MAX_COLS, MAX_ROWS, formatCell, formatRange } from '../../core/address';
 import type { CellValue } from '../../core/cell.types';
 import type { FormulaNode } from '../../core/formula/formula.types';
-import { EN_FORMULAS } from '../../core/formula/locale';
+import { FILE_FORMULAS } from '../../core/formula/locale';
 import { ORIGIN } from '../../core/formula/origin';
 import { printFormula } from '../../core/formula/printer';
 import { mapReferences } from '../../core/formula/references';
@@ -53,7 +53,7 @@ const definedNamesXml = (book: Workbook): string => {
 
   book.names.forEach((defined) => {
     const local = defined.scope === undefined ? -1 : book.sheets.indexOf(defined.scope);
-    const formula = printFormula(withFuturePrefixes(defined.ast), EN_FORMULAS, ORIGIN);
+    const formula = printFormula(withFuturePrefixes(defined.ast), FILE_FORMULAS, ORIGIN);
 
     names.push(
       `<definedName name="${escapeAttribute(defined.name)}"${local < 0 ? '' : ` localSheetId="${String(local)}"`}>${escapeText(formula)}</definedName>`,
@@ -102,7 +102,7 @@ const localFormula = (ast: FormulaNode): string =>
     mapReferences(ast, (reference) =>
       reference.kind === 'structured' ? reference : { ...reference, book: undefined },
     ),
-    EN_FORMULAS,
+    FILE_FORMULAS,
     ORIGIN,
   );
 

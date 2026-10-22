@@ -360,6 +360,7 @@ const writeSheet = async (writing: Writing, plan: SheetPlan, firstNewId: number)
   const tables = await writeTables(writing.book, plan, writing.original, output);
 
   const sheetOutput = await writeSheetPart({
+    book: writing.book,
     sheet: plan.sheet,
     calculator: writing.calculator,
     outdated: writing.outdated,

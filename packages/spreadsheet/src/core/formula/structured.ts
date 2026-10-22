@@ -235,7 +235,7 @@ const bracketed = (columns: StructuredColumns): string =>
 const innerText = (node: StructuredNode, locale: FormulaLocale): string => {
   const { columns } = node;
 
-  if (node.area === 'row') {
+  if (node.area === 'row' && locale.rowShorthand) {
     if (columns === undefined) {
       return '@';
     }

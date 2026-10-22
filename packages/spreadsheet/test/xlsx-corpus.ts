@@ -1,6 +1,3 @@
-import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
-import { join, relative } from 'node:path';
-import { fileURLToPath } from 'node:url';
 import {
   EN_FORMULAS,
   MAX_COLS,
@@ -12,42 +9,18 @@ import {
   type Sheet,
 } from '../src/core';
 import { writeZip, type Bytes, type XlsxRead } from '../src/xlsx';
+import { corpusSource } from './corpus-files';
 
-const CORPUS = fileURLToPath(new URL('./corpus/xlsx/', import.meta.url));
+export { corpusFixtures, expectedPath } from './corpus-files';
 
 const WHOLE: CellRange = { top: 0, left: 0, bottom: MAX_ROWS - 1, right: MAX_COLS - 1 };
 
 type Opened = Extract<XlsxRead, { readonly kind: 'editable' | 'read-only' }>;
 
-const filesUnder = (folder: string): string[] =>
-  readdirSync(folder).flatMap((entry) => {
-    const path = join(folder, entry);
-
-    return statSync(path).isDirectory() ? filesUnder(path) : [path];
-  });
-
-export const corpusFixtures = (): string[] => readdirSync(CORPUS).toSorted();
-
-export const expectedPath = (name: string): string => join(CORPUS, name, 'expected.json');
-
 export const corpusPackage = async (name: string): Promise<Bytes> => {
-  const single = join(CORPUS, name, 'package.bin');
+  const source = corpusSource(name);
 
-  if (existsSync(single)) {
-    return new Uint8Array(readFileSync(single));
-  }
-
-  const folder = join(CORPUS, name, 'package');
-
-  return writeZip(
-    filesUnder(folder)
-      .map((path) => relative(folder, path).split('\\').join('/'))
-      .toSorted(
-        (left, right) =>
-          Number(right === '[Content_Types].xml') - Number(left === '[Content_Types].xml'),
-      )
-      .map((part) => ({ name: part, data: new Uint8Array(readFileSync(join(folder, part))) })),
-  );
+  return source.kind === 'bytes' ? source.bytes : writeZip(source.parts);
 };
 
 const cellsOf = (read: Opened, sheet: Sheet): Record<string, unknown> => {

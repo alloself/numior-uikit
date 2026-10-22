@@ -123,10 +123,12 @@ const dateOf = (text: string, locale: NumberLocale): readonly [number, string] |
   return named === undefined ? undefined : [named, NAMED_FORMAT];
 };
 
-const clockFormat = (seconds: boolean, half: boolean): string =>
-  `h:mm${seconds ? ':ss' : ''}${half ? ' AM/PM' : ''}`;
+const MAX_HOURS = 9999;
 
-const timeOf = (text: string): Clock | undefined => {
+const clockFormat = (seconds: boolean, half: boolean, elapsed: boolean): string =>
+  `${elapsed ? '[h]' : 'h'}:mm${seconds ? ':ss' : ''}${half ? ' AM/PM' : ''}`;
+
+const timeOf = (text: string, elapsed: boolean): Clock | undefined => {
   const found = TIME.exec(text);
 
   if (found === null) {
@@ -144,17 +146,17 @@ const timeOf = (text: string): Clock | undefined => {
 
   const day = half === undefined ? hours : (hours % 12) + (/^p/iu.test(half) ? 12 : 0);
 
-  return day > 23
+  return day > (elapsed ? MAX_HOURS : 23)
     ? undefined
     : {
         time: (day * 3600 + minutes * 60 + seconds) / 86_400,
-        format: clockFormat(found[3] !== undefined, half !== undefined),
+        format: clockFormat(found[3] !== undefined, half !== undefined, day > 23),
       };
 };
 
 export const readDateText = (raw: string, locale: NumberLocale): DateText | undefined => {
   const text = raw.trim();
-  const clock = timeOf(text);
+  const clock = timeOf(text, true);
 
   if (clock !== undefined) {
     return { date: undefined, time: clock.time, format: clock.format };
@@ -162,7 +164,7 @@ export const readDateText = (raw: string, locale: NumberLocale): DateText | unde
 
   const tail = TIME_TAIL.exec(text);
   const date = dateOf((tail === null ? text : text.slice(0, tail.index)).trim(), locale);
-  const tailClock = tail === null ? undefined : timeOf(tail[1] ?? '');
+  const tailClock = tail === null ? undefined : timeOf(tail[1] ?? '', false);
 
   if (date === undefined || (tail !== null && tailClock === undefined)) {
     return undefined;

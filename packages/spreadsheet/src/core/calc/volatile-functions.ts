@@ -47,6 +47,7 @@ export const VOLATILE_FUNCTIONS: readonly FunctionSpec[] = [
   }),
   defineFunction({
     name: 'RANDARRAY',
+    array: true,
     min: 0,
     max: 5,
     volatile: true,

@@ -37,6 +37,7 @@
     "packages/table/bench/engine.bench.ts",
     "packages/editor-core/bench/core.bench.ts",
     "packages/spreadsheet/bench/core.bench.ts",
+    "packages/spreadsheet/libre/cross-check.ts",
     "playwright.bench.config.ts",
     "tests/bench/**/*.spec.ts",
     "apps/playground/src/bench/main.ts"

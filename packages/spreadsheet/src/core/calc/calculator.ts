@@ -81,6 +81,7 @@ export interface Calculator {
   recalculate(options?: RecalcOptions): Recalculation;
   setLocale(locale: BookLocale): void;
   readonly locale: BookLocale;
+  readonly functions: FunctionRegistry;
   readonly pending: number;
   readonly limitations: readonly Limitation[];
 }
@@ -1127,6 +1128,7 @@ export const createCalculator = (
       contexts.clear();
       formulas.forEach((_record, key) => pending.add(key));
     },
+    functions,
     get locale() {
       return locale;
     },

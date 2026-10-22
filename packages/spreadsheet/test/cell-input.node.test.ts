@@ -120,6 +120,12 @@ describe('reading typed input', () => {
       format: undefined,
     });
 
+    expect(readInput('25:30', EN_NUMBERS)).toEqual({
+      kind: 'value',
+      value: numberValue(25.5 / 24),
+      format: '[h]:mm',
+    });
+
     expect(readInput('=A1+1', EN_NUMBERS)).toEqual({ kind: 'formula', text: '=A1+1' });
     expect(readInput('', EN_NUMBERS)).toEqual({ kind: 'empty' });
 

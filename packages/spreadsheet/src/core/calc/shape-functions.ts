@@ -187,24 +187,38 @@ const stack = (args: FunctionArgs, byCol: boolean): EvalValue => {
 };
 
 export const SHAPE_FUNCTIONS: readonly FunctionSpec[] = [
-  defineFunction({ name: 'FILTER', min: 2, max: 3, evaluate: filter }),
-  defineFunction({ name: 'SORT', min: 1, max: 4, evaluate: sortRows }),
-  defineFunction({ name: 'SORTBY', min: 2, max: MANY, evaluate: sortBy }),
-  defineFunction({ name: 'UNIQUE', min: 1, max: 3, evaluate: unique }),
-  defineFunction({ name: 'TAKE', min: 2, max: 3, evaluate: takeOrDrop(false) }),
-  defineFunction({ name: 'DROP', min: 2, max: 3, evaluate: takeOrDrop(true) }),
+  defineFunction({ name: 'FILTER', array: true, min: 2, max: 3, evaluate: filter }),
+  defineFunction({ name: 'SORT', array: true, min: 1, max: 4, evaluate: sortRows }),
+  defineFunction({ name: 'SORTBY', array: true, min: 2, max: MANY, evaluate: sortBy }),
+  defineFunction({ name: 'UNIQUE', array: true, min: 1, max: 3, evaluate: unique }),
+  defineFunction({ name: 'TAKE', array: true, min: 2, max: 3, evaluate: takeOrDrop(false) }),
+  defineFunction({ name: 'DROP', array: true, min: 2, max: 3, evaluate: takeOrDrop(true) }),
   defineFunction({
     name: 'CHOOSEROWS',
+    array: true,
     min: 2,
     max: MANY,
     evaluate: (args) => arrayOf(pick(args.matrix(0), args)),
   }),
   defineFunction({
     name: 'CHOOSECOLS',
+    array: true,
     min: 2,
     max: MANY,
     evaluate: (args) => arrayOf(transpose(pick(transpose(args.matrix(0)), args))),
   }),
-  defineFunction({ name: 'VSTACK', min: 1, max: MANY, evaluate: (args) => stack(args, false) }),
-  defineFunction({ name: 'HSTACK', min: 1, max: MANY, evaluate: (args) => stack(args, true) }),
+  defineFunction({
+    name: 'VSTACK',
+    array: true,
+    min: 1,
+    max: MANY,
+    evaluate: (args) => stack(args, false),
+  }),
+  defineFunction({
+    name: 'HSTACK',
+    array: true,
+    min: 1,
+    max: MANY,
+    evaluate: (args) => stack(args, true),
+  }),
 ];

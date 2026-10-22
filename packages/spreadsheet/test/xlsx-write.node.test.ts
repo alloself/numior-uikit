@@ -133,6 +133,41 @@ describe('writing xlsx', () => {
     expect(await partOf(bytes, 'xl/metadata.xml')).toContain('XLDAPR');
   });
 
+  it('marks formulas that need array evaluation and writes the file syntax of this-row references', async () => {
+    const book = openBook();
+
+    [
+      ['A1', 'Qty'],
+      ['B1', 'Price'],
+      ['A2', '2'],
+      ['B2', '3'],
+      ['A3', '4'],
+      ['B3', '5'],
+    ].forEach(([address = '', text = '']) => {
+      book.type(address, text);
+    });
+
+    book.table('A1:B3', { name: 'Lines' });
+    book.name('Prices', '=Sheet1!$B$2:$B$3');
+    book.type('D1', '=SUM(A2:A3*B2:B3)');
+    book.type('D2', '=SUM(A2:A3)');
+    book.type('D3', '=SUMPRODUCT(A2:A3,Prices)');
+    book.type('D4', '=MAX(Prices*2)');
+    book.type('C2', '=Lines[@Qty]*Lines[@Price]');
+    book.shown('D1');
+
+    const sheet = await partOf(
+      await written({ book: book.book, calculator: book.calculator }),
+      'xl/worksheets/sheet1.xml',
+    );
+
+    expect(sheet).toContain('<c r="D1" cm="1"><f t="array" ref="D1">SUM(A2:A3*B2:B3)</f>');
+    expect(sheet).toContain('<c r="D2"><f>SUM(A2:A3)</f>');
+    expect(sheet).toContain('<c r="D3"><f>SUMPRODUCT(A2:A3,Prices)</f>');
+    expect(sheet).toContain('<c r="D4" cm="1"><f t="array" ref="D4">MAX(Prices*2)</f>');
+    expect(sheet).toContain('<f>Lines[[#This Row],[Qty]]*Lines[[#This Row],[Price]]</f>');
+  });
+
   it('keeps what it does not understand byte for byte when nothing changed', async () => {
     const source = await xlsxPackage();
     const read = await opened(source);
