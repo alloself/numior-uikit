@@ -17,7 +17,8 @@ import {
   type FormulaReference,
 } from './formula/references';
 import type { BookLocale } from './locale';
-import { booleanValue, numberValue, textValue } from './values';
+import { errorFromText } from './error-texts';
+import { booleanValue, errorValue, numberValue, textValue } from './values';
 import { createStepper } from './steps/apply-step';
 import type { CellEdit, WorkbookStep } from './steps/step.types';
 import { uniqueColumns } from './tables';
@@ -181,6 +182,11 @@ export const readInput = (text: string, locale: NumberLocale): CellInput => {
   }
 
   const logical = logicalFromText(text.trim(), locale);
+  const error = errorFromText(text.trim(), locale.errors);
+
+  if (error !== undefined) {
+    return { kind: 'value', value: errorValue(error), format: undefined };
+  }
 
   if (logical !== undefined) {
     return { kind: 'value', value: booleanValue(logical), format: undefined };
@@ -242,7 +248,7 @@ export const editText = (value: CellValue, code: string, locale: NumberLocale): 
     case 'boolean':
       return value.value ? locale.trueText : locale.falseText;
     case 'error':
-      return value.code;
+      return locale.errors[value.code];
     case 'empty':
       return '';
   }

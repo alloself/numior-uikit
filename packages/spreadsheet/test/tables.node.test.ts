@@ -43,9 +43,9 @@ describe('tables', () => {
   it('reads the table name as its data rows and follows the table when it appears', () => {
     const sheet = withSales();
 
-    sheet.type('A1', '=SUM(Sales)', 'Rates');
+    sheet.type('A1', '=СУММ(Sales)', 'Rates');
 
-    expect(sheet.shown('A1', 'Rates')).toBe('#NAME?');
+    expect(sheet.shown('A1', 'Rates')).toBe('#ИМЯ?');
 
     sheet.table('A1:B3', { name: 'Sales' });
 
@@ -58,7 +58,7 @@ describe('tables', () => {
     sheet.history.undo();
     sheet.history.undo();
 
-    expect(sheet.shown('A1', 'Rates')).toBe('#NAME?');
+    expect(sheet.shown('A1', 'Rates')).toBe('#ИМЯ?');
   });
 
   it('renames a column when its header cell changes', () => {
@@ -91,7 +91,7 @@ describe('tables', () => {
     const sheet = withSales();
 
     sheet.table('A1:B3', { name: 'Sales' });
-    sheet.type('A1', '=SUM(Sales)', 'Rates');
+    sheet.type('A1', '=СУММ(Sales)', 'Rates');
     sheet.insert('3');
     sheet.type('B3', '10');
 
@@ -124,16 +124,16 @@ describe('tables', () => {
     const sheet = withSales();
 
     sheet.table('A1:B3', { name: 'Sales' });
-    sheet.type('A1', '=SUM(Sales)', 'Rates');
+    sheet.type('A1', '=СУММ(Sales)', 'Rates');
     sheet.remove('1');
 
     expect(sheet.tableOf('Sales')).toBeUndefined();
-    expect(sheet.input('A1', 'Rates')).toBe('=SUM(#REF!)');
+    expect(sheet.input('A1', 'Rates')).toBe('=СУММ(#ССЫЛКА!)');
 
     sheet.history.undo();
 
     expect(sheet.tableOf('Sales')?.range).toBe('A1:B3');
-    expect(sheet.input('A1', 'Rates')).toBe('=SUM(Sales)');
+    expect(sheet.input('A1', 'Rates')).toBe('=СУММ(Sales)');
     expect(sheet.shown('A1', 'Rates')).toBe('7');
 
     sheet.remove('2', 2);
@@ -197,13 +197,13 @@ describe('tables', () => {
     const sheet = withSales();
 
     sheet.table('A1:B3');
-    sheet.type('D1', '=SUM(Таблица1)');
-    sheet.name('Total', '=SUM(Таблица1)*2');
+    sheet.type('D1', '=СУММ(Таблица1)');
+    sheet.name('Total', '=СУММ(Таблица1)*2');
     sheet.type('D2', '=Total');
 
     expect(sheet.commit({ kind: 'renameTable', from: 'таблица1', to: 'Sales' }).ok).toBe(true);
-    expect(sheet.input('D1')).toBe('=SUM(Sales)');
-    expect(sheet.definition('Total')).toBe('=SUM(Sales)*2');
+    expect(sheet.input('D1')).toBe('=СУММ(Sales)');
+    expect(sheet.definition('Total')).toBe('=СУММ(Sales)*2');
     expect(sheet.shown('D2')).toBe('14');
 
     expect(sheet.commit({ kind: 'renameTable', from: 'Sales', to: 'Total' })).toEqual({
@@ -213,7 +213,7 @@ describe('tables', () => {
 
     sheet.history.undo();
 
-    expect(sheet.input('D1')).toBe('=SUM(Таблица1)');
+    expect(sheet.input('D1')).toBe('=СУММ(Таблица1)');
     expect(sheet.tableOf('Sales')).toBeUndefined();
     expect(sheet.shown('D1')).toBe('7');
   });

@@ -160,7 +160,7 @@ export const renderValue = (
     case 'boolean':
       return plain(value.value ? locale.trueText : locale.falseText);
     case 'error':
-      return plain(value.code);
+      return plain(locale.errors[value.code]);
     case 'empty':
       return plain('');
   }

@@ -1,4 +1,5 @@
 import type { CellError, CellRef } from '../cell.types';
+import type { ErrorTexts } from '../error-texts';
 
 export type StructuredSpecial = 'all' | 'data' | 'headers' | 'totals' | 'row';
 
@@ -24,6 +25,10 @@ export interface FormulaLocale {
   readonly defaultTable: string;
   readonly defaultColumn: string;
   readonly specials: Readonly<Record<StructuredSpecial, string>>;
+  readonly functions: Readonly<Record<string, string>>;
+  readonly trueText: string;
+  readonly falseText: string;
+  readonly errors: ErrorTexts;
 }
 
 export interface LineRef {

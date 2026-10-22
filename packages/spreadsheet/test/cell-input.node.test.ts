@@ -9,6 +9,7 @@ import {
   createCellEditor,
   createWorkbook,
   editText,
+  errorValue,
   numberValue,
   parseRange,
   readInput,
@@ -107,6 +108,18 @@ describe('reading typed input', () => {
       format: undefined,
     });
 
+    expect(readInput(' #н/д ', RU_NUMBERS)).toEqual({
+      kind: 'value',
+      value: errorValue('#N/A'),
+      format: undefined,
+    });
+
+    expect(readInput('#DIV/0!', RU_NUMBERS)).toEqual({
+      kind: 'value',
+      value: errorValue('#DIV/0!'),
+      format: undefined,
+    });
+
     expect(readInput('=A1+1', EN_NUMBERS)).toEqual({ kind: 'formula', text: '=A1+1' });
     expect(readInput('', EN_NUMBERS)).toEqual({ kind: 'empty' });
 
@@ -125,6 +138,8 @@ describe('reading typed input', () => {
     expect(editText(textValue('0123'), 'General', EN_NUMBERS)).toBe("'0123");
     expect(editText(textValue('note'), 'General', EN_NUMBERS)).toBe('note');
     expect(editText(booleanValue(false), 'General', RU_NUMBERS)).toBe('ЛОЖЬ');
+    expect(editText(errorValue('#DIV/0!'), 'General', RU_NUMBERS)).toBe('#ДЕЛ/0!');
+    expect(editText(errorValue('#DIV/0!'), 'General', EN_NUMBERS)).toBe('#DIV/0!');
   });
 });
 
@@ -175,7 +190,7 @@ describe('cell editor', () => {
 
     expect(sheet.shown(0, 0)).toBe(`1${NBSP}234,50`);
     expect(sheet.shown(2, 0)).toBe(`1${NBSP}234,50`);
-    expect(sheet.input(2, 0)).toBe('=ROUND(A1;1)');
+    expect(sheet.input(2, 0)).toBe('=ОКРУГЛ(A1;1)');
 
     sheet.calculator.setLocale(EN_LOCALE);
 
@@ -186,6 +201,27 @@ describe('cell editor', () => {
     sheet.setFormat('A1:A3', 'General');
 
     expect(sheet.sheet.formats.size).toBe(0);
+  });
+
+  it('shows errors, logical values and functions in the language of the book', () => {
+    const sheet = openEditor();
+
+    sheet.enter(0, 0, '=1/0');
+    sheet.enter(1, 0, '=ЕСЛИ(ЕОШИБКА(A1);ИСТИНА;ЛОЖЬ)');
+    sheet.enter(2, 0, '#Н/Д');
+
+    expect(sheet.shown(0, 0)).toBe('#ДЕЛ/0!');
+    expect(sheet.shown(1, 0)).toBe('ИСТИНА');
+    expect(sheet.shown(2, 0)).toBe('#Н/Д');
+    expect(sheet.input(1, 0)).toBe('=ЕСЛИ(ЕОШИБКА(A1);ИСТИНА;ЛОЖЬ)');
+
+    sheet.calculator.setLocale(EN_LOCALE);
+
+    expect(sheet.shown(0, 0)).toBe('#DIV/0!');
+    expect(sheet.shown(1, 0)).toBe('TRUE');
+    expect(sheet.shown(2, 0)).toBe('#N/A');
+    expect(sheet.input(1, 0)).toBe('=IF(ISERROR(A1),TRUE,FALSE)');
+    expect(sheet.input(2, 0)).toBe('#N/A');
   });
 
   it('keeps entries in a text cell as typed', () => {

@@ -3,6 +3,7 @@ import type { CellAddress, CellRef } from '../cell.types';
 import type { BinaryOperator, FormulaLocale, FormulaNode, LineRef } from './formula.types';
 import { EN_FORMULAS } from './locale';
 import { ORIGIN, absoluteFormula } from './origin';
+import { localFunction } from './localization';
 import { printStructured } from './structured';
 
 const PRECEDENCE: Readonly<Record<BinaryOperator, number>> = {
@@ -75,9 +76,9 @@ const constantText = (node: FormulaNode, locale: FormulaLocale): string | undefi
     case 'string':
       return `"${node.value.replaceAll('"', '""')}"`;
     case 'boolean':
-      return node.value ? 'TRUE' : 'FALSE';
+      return node.value ? locale.trueText : locale.falseText;
     case 'error':
-      return node.code;
+      return locale.errors[node.code];
     case 'missing':
       return '';
     default:
@@ -107,7 +108,7 @@ const referenceText = (node: FormulaNode): string | undefined => {
 const operationText = (node: FormulaNode, locale: FormulaLocale): string => {
   switch (node.kind) {
     case 'call':
-      return `${node.name}(${node.args.map((arg) => printNode(arg, locale)).join(locale.argument)})`;
+      return `${localFunction(node.name, locale)}(${node.args.map((arg) => printNode(arg, locale)).join(locale.argument)})`;
     case 'unary':
       return `${node.op}${wrapped(node.operand, locale, UNARY)}`;
     case 'percent':

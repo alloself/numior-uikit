@@ -1,3 +1,4 @@
+import { EN_ERRORS, RU_ERRORS } from '../error-texts';
 import type { NumberLocale } from './format.types';
 
 export const EN_NUMBERS: NumberLocale = {
@@ -39,6 +40,7 @@ export const EN_NUMBERS: NumberLocale = {
   pm: 'PM',
   trueText: 'TRUE',
   falseText: 'FALSE',
+  errors: EN_ERRORS,
   dateOrder: 'mdy',
   shortDate: 'm/d/yyyy',
   longDate: 'dddd, mmmm d, yyyy',
@@ -89,6 +91,7 @@ export const RU_NUMBERS: NumberLocale = {
   pm: 'PM',
   trueText: 'ИСТИНА',
   falseText: 'ЛОЖЬ',
+  errors: RU_ERRORS,
   dateOrder: 'dmy',
   shortDate: 'dd.mm.yyyy',
   longDate: 'd mmmm yyyy "г."',

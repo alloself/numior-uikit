@@ -242,7 +242,7 @@ describe('formula parser', () => {
   it('reads the Russian separators', () => {
     expect(astOf('=СУММ(1,5;A1)', RU_FORMULAS)).toEqual({
       kind: 'call',
-      name: 'СУММ',
+      name: 'SUM',
       args: [num(1.5), cell(0, 0)],
     });
 
@@ -253,6 +253,30 @@ describe('formula parser', () => {
         [num(3), num(4)],
       ],
     });
+  });
+
+  it('reads Russian and English function names, logical words and errors', () => {
+    expect(astOf('=ЕСЛИ(ИСТИНА;#Н/Д;ложь)', RU_FORMULAS)).toEqual({
+      kind: 'call',
+      name: 'IF',
+      args: [
+        { kind: 'boolean', value: true },
+        { kind: 'error', code: '#N/A' },
+        { kind: 'boolean', value: false },
+      ],
+    });
+
+    expect(astOf('=счет(#ДЕЛ/0!;TRUE)', RU_FORMULAS)).toEqual({
+      kind: 'call',
+      name: 'COUNT',
+      args: [
+        { kind: 'error', code: '#DIV/0!' },
+        { kind: 'boolean', value: true },
+      ],
+    });
+
+    expect(astOf('=СЧЁТЗ(A1)', RU_FORMULAS)).toEqual(astOf('=COUNTA(A1)'));
+    expect(astOf('=ВПР(1;A1:B2;2;0)', RU_FORMULAS)).toEqual(astOf('=VLOOKUP(1,A1:B2,2,0)'));
   });
 
   it('points at the place where a formula breaks', () => {
@@ -279,7 +303,11 @@ describe('formula printer', () => {
   });
 
   it('prints with the separators of the locale', () => {
-    expect(printFormula(astOf('=SUM(1.5,{1,2;3,4})'), RU_FORMULAS)).toBe('SUM(1,5;{1\\2;3\\4})');
+    expect(printFormula(astOf('=SUM(1.5,{1,2;3,4})'), RU_FORMULAS)).toBe('СУММ(1,5;{1\\2;3\\4})');
+
+    expect(printFormula(astOf('=IF(TRUE,#N/A,COUNT(#REF!))'), RU_FORMULAS)).toBe(
+      'ЕСЛИ(ИСТИНА;#Н/Д;СЧЁТ(#ССЫЛКА!))',
+    );
   });
 
   it('reads back every printed tree in both locales', () => {

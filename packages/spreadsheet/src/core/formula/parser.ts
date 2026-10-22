@@ -12,6 +12,7 @@ import type {
 import { tokenize, type Token } from './lexer';
 import { EN_FORMULAS } from './locale';
 import { ORIGIN, relativeFormula } from './origin';
+import { booleanFromWord, canonicalFunction } from './localization';
 import { parseStructured } from './structured';
 
 class FormulaSyntaxError extends Error {
@@ -159,7 +160,7 @@ const createParser = (tokens: readonly Token[], locale: FormulaLocale, offset: n
       case 'error':
         return { kind: 'error', code: isCellError(token.text) ? token.text : '#VALUE!' };
       case 'word':
-        return booleanOf(token) ?? fail(token, 'array');
+        return booleanOf(token, locale) ?? fail(token, 'array');
       case 'op':
         return token.text === '-' && peek().kind === 'number'
           ? { kind: 'number', value: -next().value }
@@ -211,14 +212,16 @@ const createParser = (tokens: readonly Token[], locale: FormulaLocale, offset: n
   const word = (token: Token): FormulaNode => {
     if (isPunct('(')) {
       next();
-      return { kind: 'call', name: token.text.toUpperCase(), args: argumentsOf() };
+      return { kind: 'call', name: canonicalFunction(token.text, locale), args: argumentsOf() };
     }
-    return booleanOf(token) ?? reference(undefined, token) ?? { kind: 'name', name: token.text };
+    return (
+      booleanOf(token, locale) ?? reference(undefined, token) ?? { kind: 'name', name: token.text }
+    );
   };
 
   const sheetItem = (sheet: string, token: Token): FormulaNode =>
     reference(sheet, token) ??
-    (token.kind === 'word' && !isPunct('(') && booleanOf(token) === undefined
+    (token.kind === 'word' && !isPunct('(') && booleanOf(token, locale) === undefined
       ? { kind: 'name', sheet, name: token.text }
       : fail(token, 'reference'));
 
@@ -297,12 +300,10 @@ const createParser = (tokens: readonly Token[], locale: FormulaLocale, offset: n
   };
 };
 
-const booleanOf = (token: Token): FormulaNode | undefined => {
-  const upper = token.text.toUpperCase();
+const booleanOf = (token: Token, locale: FormulaLocale): FormulaNode | undefined => {
+  const value = token.kind === 'word' ? booleanFromWord(token.text, locale) : undefined;
 
-  return upper === 'TRUE' || upper === 'FALSE'
-    ? { kind: 'boolean', value: upper === 'TRUE' }
-    : undefined;
+  return value === undefined ? undefined : { kind: 'boolean', value };
 };
 
 export const parseFormula = (

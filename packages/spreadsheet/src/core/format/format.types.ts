@@ -1,3 +1,5 @@
+import type { ErrorTexts } from '../error-texts';
+
 export interface NumberLocale {
   readonly name: string;
   readonly decimal: string;
@@ -11,6 +13,7 @@ export interface NumberLocale {
   readonly pm: string;
   readonly trueText: string;
   readonly falseText: string;
+  readonly errors: ErrorTexts;
   readonly dateOrder: 'mdy' | 'dmy';
   readonly shortDate: string;
   readonly longDate: string;

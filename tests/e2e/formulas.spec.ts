@@ -57,7 +57,7 @@ test.describe('formulas on the calc core', () => {
 
     expect(await formulas.texts(13, 1, 5)).toEqual(['1', '4', '9', '16', '25']);
     await formulas.enter(13, 3, 'x');
-    await expect(await formulas.reveal(13, 1)).toHaveText('#SPILL!');
+    await expect(await formulas.reveal(13, 1)).toHaveText('#ПЕРЕНОС!');
     await expect(await formulas.reveal(13, 2)).toHaveText('');
 
     await formulas.clear(13, 3);
@@ -113,9 +113,7 @@ test.describe('formulas on the calc core', () => {
 
     await (await formulas.reveal(1, 4)).click();
 
-    await expect(formulas.formula).toHaveValue(
-      '=ROUND(D2/VLOOKUP("USD";Курсы!$A$2:$B$4;2;FALSE);2)',
-    );
+    await expect(formulas.formula).toHaveValue('=ОКРУГЛ(D2/ВПР("USD";Курсы!$A$2:$B$4;2;ЛОЖЬ);2)');
 
     await formulas.switchLocale('EN');
 
@@ -138,13 +136,13 @@ test.describe('formulas on the calc core', () => {
     await expect(await formulas.reveal(2, 1)).toHaveText('4');
     await expect(await formulas.reveal(8, 3)).toHaveText(`784${NBSP}800,00 ₽`);
     await (await formulas.reveal(8, 3)).click();
-    await expect(formulas.formula).toHaveValue('=SUM(D3:D7)');
+    await expect(formulas.formula).toHaveValue('=СУММ(D3:D7)');
 
     await formulas.fromMenu(2, 1, 'Удалить строки');
 
     await expect(await formulas.reveal(7, 3)).toHaveText(`444${NBSP}800,00 ₽`);
     await (await formulas.reveal(7, 3)).click();
-    await expect(formulas.formula).toHaveValue('=SUM(D3:D6)');
+    await expect(formulas.formula).toHaveValue('=СУММ(D3:D6)');
   });
 
   test('undoes and redoes edits and row insertions with the keyboard', async ({ page }) => {
@@ -167,12 +165,12 @@ test.describe('formulas on the calc core', () => {
     await expect(await formulas.reveal(0, 0)).toHaveText('Статья');
   });
 
-  test('answers #NAME? for an unknown function and names it in the status', async ({ page }) => {
+  test('answers #ИМЯ? for an unknown function and names it in the status', async ({ page }) => {
     const { formulas } = await openFormulas(page);
 
     await formulas.enter(1, 7, '=FOO(1)');
 
-    await expect(await formulas.reveal(1, 7)).toHaveText('#NAME?');
+    await expect(await formulas.reveal(1, 7)).toHaveText('#ИМЯ?');
     await expect(formulas.status).toContainText('неизвестные функции: FOO');
   });
 

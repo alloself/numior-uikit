@@ -1,4 +1,4 @@
-import { CELL_ERRORS } from '../values';
+import { errorSpellings } from '../error-texts';
 import type { FormulaLocale } from './formula.types';
 
 export type TokenKind =
@@ -23,6 +23,8 @@ export interface Token {
 export interface LexFailure {
   readonly position: number;
 }
+
+const LONGEST_ERROR = 12;
 
 const WORD_START = /[\p{L}_$]/u;
 
@@ -91,11 +93,16 @@ const quotedEnd = (source: string, at: number, quote: string): number | undefine
 const unquote = (text: string, quote: string): string =>
   text.slice(1, -1).replaceAll(quote + quote, quote);
 
-const errorAt = (source: string, at: number): Token | undefined => {
-  const upper = source.slice(at, at + 8).toUpperCase();
-  const code = CELL_ERRORS.find((candidate) => upper.startsWith(candidate));
+const errorAt = (source: string, at: number, locale: FormulaLocale): Scan | undefined => {
+  const upper = source.slice(at, at + LONGEST_ERROR).toUpperCase();
 
-  return code === undefined ? undefined : token('error', code, at);
+  const spelling = errorSpellings(locale.errors).find((candidate) =>
+    upper.startsWith(candidate.text),
+  );
+
+  return spelling === undefined
+    ? undefined
+    : { token: token('error', spelling.code, at), next: at + spelling.text.length };
 };
 
 const wordEnd = (source: string, at: number): number => {
@@ -166,7 +173,7 @@ const scanWord = (source: string, at: number): Scan => {
     : { token: token('word', text, at), next: end };
 };
 
-const scanSymbol = (source: string, at: number): Scan => {
+const scanSymbol = (source: string, at: number, locale: FormulaLocale): Scan => {
   const char = source[at] ?? '';
   const operator = OPERATORS.find((candidate) => source.startsWith(candidate, at));
 
@@ -174,11 +181,7 @@ const scanSymbol = (source: string, at: number): Scan => {
     return scanStructured(source, at, at);
   }
   if (char === '#') {
-    const error = errorAt(source, at);
-
-    return error === undefined
-      ? { token: token('hash', '#', at), next: at + 1 }
-      : { token: error, next: at + error.text.length };
+    return errorAt(source, at, locale) ?? { token: token('hash', '#', at), next: at + 1 };
   }
   if (operator !== undefined) {
     return { token: token('op', operator, at), next: at + operator.length };
@@ -200,7 +203,7 @@ const scanAt = (source: string, at: number, locale: FormulaLocale): Scan => {
   if (char === '"' || char === "'") {
     return scanQuoted(source, at);
   }
-  return WORD_START.test(char) ? scanWord(source, at) : scanSymbol(source, at);
+  return WORD_START.test(char) ? scanWord(source, at) : scanSymbol(source, at, locale);
 };
 
 export const tokenize = (source: string, locale: FormulaLocale): Token[] | LexFailure => {

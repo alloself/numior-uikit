@@ -158,10 +158,10 @@ describe('defined names', () => {
     expect(sheet.name('A1', '=1')).toEqual({ ok: false, reason: 'invalid-name' });
 
     sheet.type('A1', '2');
-    sheet.name('Ставка', '=IF($A$1>1;0,5;0)');
+    sheet.name('Ставка', '=ЕСЛИ($A$1>1;0,5;0)');
     sheet.type('B1', '=Ставка*4');
 
     expect(sheet.shown('B1')).toBe('2');
-    expect(sheet.definition('ставка')).toBe('=IF(Sheet1!$A$1>1;0,5;0)');
+    expect(sheet.definition('ставка')).toBe('=ЕСЛИ(Sheet1!$A$1>1;0,5;0)');
   });
 });
