@@ -122,6 +122,23 @@ describe('reading xlsx', () => {
     expect(read.report.staleFormulas).toBe(1);
   });
 
+  it('recalculates a book that asks for it on load instead of trusting its cached values', async () => {
+    const read = await opened({
+      'xl/workbook.xml': workbookWith('').replace(
+        '<calcPr calcId="191029"/>',
+        '<calcPr calcId="191029" fullCalcOnLoad="1"/>',
+      ),
+      'xl/worksheets/sheet1.xml': SALES_SHEET.replace(
+        '<f>B2*Rate</f><v>0.75</v>',
+        '<f>B2*Rate</f><v>0</v>',
+      ),
+    });
+
+    expect(viewOf(read).shown('C2')).toBe('75.0%');
+    expect(viewOf(read).state('C2')).toBe('fresh');
+    expect(read.report.items.map((item) => item.code)).toContain('recalc-on-load');
+  });
+
   it('keeps the value Excel computed for functions it does not know until the formula changes', async () => {
     const read = await opened({}, { recalc: 'chunked' });
     const sales = viewOf(read);

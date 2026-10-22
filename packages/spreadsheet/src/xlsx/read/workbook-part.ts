@@ -27,6 +27,7 @@ export interface WorkbookPart {
   readonly sheets: readonly SheetEntry[];
   readonly names: readonly NameEntry[];
   readonly date1904: boolean;
+  readonly recalcOnLoad: boolean;
   readonly externalLinks: readonly string[];
   readonly pivotCaches: number;
   readonly strict: boolean;
@@ -42,6 +43,7 @@ export const readWorkbookPart = async (
   const sheets: SheetEntry[] = [];
   const names: NameEntry[] = [];
   let date1904 = false;
+  let recalcOnLoad = false;
   const externalLinks: string[] = [];
   let pivotCaches = 0;
   let strict = false;
@@ -70,6 +72,9 @@ export const readWorkbookPart = async (
             break;
           case 'workbookPr':
             date1904 = truthy(attributeOf(attributes, 'date1904'));
+            break;
+          case 'calcPr':
+            recalcOnLoad = truthy(attributeOf(attributes, 'fullCalcOnLoad'));
             break;
           case 'definedName': {
             const local = attributeOf(attributes, 'localSheetId');
@@ -107,5 +112,5 @@ export const readWorkbookPart = async (
     options,
   );
 
-  return { sheets, names, date1904, externalLinks, pivotCaches, strict };
+  return { sheets, names, date1904, recalcOnLoad, externalLinks, pivotCaches, strict };
 };

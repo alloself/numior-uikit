@@ -24,6 +24,7 @@ export type XlsxLimitationCode =
   | 'hidden-sheets'
   | 'protection'
   | 'macros'
+  | 'recalc-on-load'
   | 'strict-format'
   | 'tables';
 

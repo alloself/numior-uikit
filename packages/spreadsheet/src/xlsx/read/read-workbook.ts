@@ -324,6 +324,7 @@ const addBookLimits = (load: Load, workbook: WorkbookPart, context: BookContext)
   const { report } = load;
 
   report.add('date-1904', workbook.date1904 ? 1 : 0);
+  report.add('recalc-on-load', workbook.recalcOnLoad ? 1 : 0);
   report.add('strict-format', workbook.strict ? 1 : 0);
   report.add('external-links', load.book.externals.length - load.totals.linked);
   report.add('linked-objects', load.totals.linked);
@@ -385,7 +386,7 @@ const readBook = async (
 
   const load: Load = {
     archive,
-    options,
+    options: { ...options, recalc: options.recalc ?? (workbook.recalcOnLoad ? 'chunked' : 'none') },
     book,
     calculator: createCalculator(book, { locale, functions }),
     functions,
@@ -432,7 +433,7 @@ const readBook = async (
   await recalculated(load);
 
   const summary = load.report.build(
-    options.recalc === 'chunked' ? load.totals.kept : load.totals.formulas,
+    load.options.recalc === 'chunked' ? load.totals.kept : load.totals.formulas,
   );
 
   return {

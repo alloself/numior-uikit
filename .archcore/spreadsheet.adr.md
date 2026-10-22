@@ -475,7 +475,10 @@ XLSX без потерь — без HyperFormula, SheetJS и ExcelJS. Волна
   - Отчёт: `readOnly`, `staleFormulas` (формулы со значением из файла) и пункты
     `{ code, severity, count, sheets, names }`. Только для чтения: `date-1904` (ядро считает в
     системе 1900), `linked-objects` (связи DDE и OLE), `pivot-tables`, `data-tables`,
-    `formula-syntax`. Информационные: `external-links` (значения других книг берутся из кеша
+    `formula-syntax`. Информационные: `recalc-on-load` (файл просит пересчитать при открытии —
+    `calcPr fullCalcOnLoad`; такие файлы пишут генераторы с нулями вместо значений, поэтому без
+    явного `recalc` книга пересчитывается кусками при чтении, как это делает Excel),
+    `external-links` (значения других книг берутся из кеша
     файла и не обновляются), `unsupported-functions` (с именами), `cell-styles` (заливки, шрифты,
     границы — ядро пока хранит только числовой формат), `rich-text`, `merged-cells`,
     `conditional-formats`, `data-validation`, `hyperlinks`, `drawings`, `comments`,
