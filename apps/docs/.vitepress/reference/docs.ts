@@ -50,31 +50,44 @@ const sectionProblems = (
   const names = new Set(members.map((member) => member.name));
 
   return [
-    ...members
-      .filter((member) => !isComplete(described[member.name]))
-      .map(
-        (member) => `${component.name}: ${section} "${member.name}" needs a RU and EN description`,
-      ),
-    ...Object.keys(described)
-      .filter((name) => !names.has(name))
-      .map((name) => `${component.name}: ${section} "${name}" does not exist`),
+    ...members.reduce<string[]>((found, member) => {
+      if (!isComplete(described[member.name])) {
+        found.push(`${component.name}: ${section} "${member.name}" needs a RU and EN description`);
+      }
+      return found;
+    }, []),
+    ...Object.keys(described).reduce<string[]>((found, name) => {
+      if (!names.has(name)) {
+        found.push(`${component.name}: ${section} "${name}" does not exist`);
+      }
+      return found;
+    }, []),
   ];
 };
 
 const configuratorProblems = (component: ComponentReference, docs: ComponentDocs): string[] => {
   const names = new Set(component.props.map((prop) => prop.name));
 
-  return [...(docs.configurator?.props ?? []), ...Object.keys(docs.configurator?.values ?? {})]
-    .filter((name) => !names.has(name))
-    .map((name) => `${component.name}: configurator prop "${name}" does not exist`);
+  return [
+    ...(docs.configurator?.props ?? []),
+    ...Object.keys(docs.configurator?.values ?? {}),
+  ].reduce<string[]>((found, name) => {
+    if (!names.has(name)) {
+      found.push(`${component.name}: configurator prop "${name}" does not exist`);
+    }
+    return found;
+  }, []);
 };
 
 export const checkDocs = (component: ComponentReference, docs: ComponentDocs): string[] => [
   ...SECTIONS.flatMap((section) => sectionProblems(component, docs, section)),
   ...configuratorProblems(component, docs),
-  ...(docs.keyboard ?? [])
-    .filter((key) => !isComplete(key.description))
-    .map((key) => `${component.name}: keyboard "${key.keys}" needs a RU and EN description`),
+  ...(docs.keyboard ?? []).reduce<string[]>((found, key) => {
+    if (!isComplete(key.description)) {
+      found.push(`${component.name}: keyboard "${key.keys}" needs a RU and EN description`);
+    }
+    return found;
+  }, []),
 ];
 
 const isDocsMap = (value: unknown): value is DocsMap =>

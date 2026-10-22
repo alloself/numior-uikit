@@ -37,18 +37,21 @@ const listExamples = (localeDir: string): string[] => {
   }
   return readdirSync(localeDir)
     .toSorted()
-    .filter((component) => isDirectory(join(localeDir, component)))
-    .flatMap((component) => {
+    .reduce<string[]>((found, component) => {
       const componentDir = join(localeDir, component);
 
-      return readdirSync(componentDir)
-        .toSorted()
-        .flatMap((entry) => {
-          const name = exampleNameOf(componentDir, component, entry);
+      if (!isDirectory(componentDir)) {
+        return found;
+      }
+      for (const entry of readdirSync(componentDir).toSorted()) {
+        const name = exampleNameOf(componentDir, component, entry);
 
-          return name === undefined ? [] : [name];
-        });
-    });
+        if (name !== undefined) {
+          found.push(name);
+        }
+      }
+      return found;
+    }, []);
 };
 
 export const exampleNames = (root: string): Readonly<Record<ExampleLocale, readonly string[]>> => ({

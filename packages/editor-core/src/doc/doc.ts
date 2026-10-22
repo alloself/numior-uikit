@@ -37,16 +37,21 @@ const visitRange = (
   visit: NodeVisitor,
 ): void => {
   const offsets = childOffsets(node);
+  const startOf = (index: number): number => start + (offsets[index] ?? 0);
 
-  for (let index = childIndexAt(node, Math.max(0, from - start)); ; index += 1) {
+  for (
+    let index = childIndexAt(node, Math.max(0, from - start));
+    index < node.content.length && startOf(index) < to;
+    index += 1
+  ) {
     const child = node.content[index];
-    const childStart = start + (offsets[index] ?? 0);
 
-    if (child === undefined || childStart >= to) {
-      return;
-    }
-    if (visit(child, childStart, node, index) && child.kind === 'element') {
-      visitRange(child, childStart + 1, from, to, visit);
+    if (
+      child !== undefined &&
+      visit(child, startOf(index), node, index) &&
+      child.kind === 'element'
+    ) {
+      visitRange(child, startOf(index) + 1, from, to, visit);
     }
   }
 };
@@ -75,17 +80,21 @@ const cutChild = (
 
 const cutContent = (node: ElementNode, start: number, from: number, to: number): ContentNode[] => {
   const offsets = childOffsets(node);
+  const startOf = (index: number): number => start + (offsets[index] ?? 0);
   const cut: ContentNode[] = [];
 
-  for (let index = childIndexAt(node, Math.max(0, from - start)); ; index += 1) {
+  for (
+    let index = childIndexAt(node, Math.max(0, from - start));
+    index < node.content.length && startOf(index) < to;
+    index += 1
+  ) {
     const child = node.content[index];
-    const childStart = start + (offsets[index] ?? 0);
 
-    if (child === undefined || childStart >= to) {
-      return cut;
+    if (child !== undefined) {
+      cut.push(...cutChild(child, startOf(index), from, to));
     }
-    cut.push(...cutChild(child, childStart, from, to));
   }
+  return cut;
 };
 
 export const createDoc = (schema: Schema, root: ElementNode): Doc => {

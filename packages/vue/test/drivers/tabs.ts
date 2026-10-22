@@ -113,11 +113,12 @@ export class TabsDriver extends ComponentDriver {
   }
 
   get closableLabels(): string[] {
-    return this.tabs
-      .filter(
-        (tab) => tab.element.parentElement?.querySelector('.nui-tab__close') instanceof HTMLElement,
-      )
-      .map((tab) => tab.find('.nui-tab__label').text());
+    return this.tabs.reduce<string[]>((found, tab) => {
+      if (tab.element.parentElement?.querySelector('.nui-tab__close') instanceof HTMLElement) {
+        found.push(tab.find('.nui-tab__label').text());
+      }
+      return found;
+    }, []);
   }
 
   hasRootModifier(modifier: string): boolean {

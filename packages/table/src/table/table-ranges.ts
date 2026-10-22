@@ -169,9 +169,12 @@ const subtractRange = (range: NuiTableRange, cut: NuiTableRange): NuiTableRange[
     { top, bottom, start: box.start, end: hole.start - 1 },
     { top, bottom, start: hole.end + 1, end: box.end },
     { top: bottom + 1, bottom: box.bottom, start: box.start, end: box.end },
-  ]
-    .filter((piece) => piece.top <= piece.bottom && piece.start <= piece.end)
-    .map(rangeOfBox);
+  ].reduce<NuiTableRange[]>((found, piece) => {
+    if (piece.top <= piece.bottom && piece.start <= piece.end) {
+      found.push(rangeOfBox(piece));
+    }
+    return found;
+  }, []);
 };
 
 export const cutRanges = (ranges: NuiTableRanges, cut: NuiTableRange): NuiTableRange[] =>

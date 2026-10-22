@@ -4,11 +4,17 @@ import { CODE_LANGUAGES } from '../.vitepress/markdown/languages';
 import { codeLanguageOf, tokenizeCode } from '../.vitepress/markdown/tokens';
 
 const textsOf = (highlighter: Highlighter, code: string, lang: string, scope: string): string[] =>
-  (tokenizeCode(highlighter, code, lang) ?? [])
-    .flat()
-    .filter((token) => token.scope === scope)
-    .map((token) => token.text.trim())
-    .filter((text) => text !== '');
+  (tokenizeCode(highlighter, code, lang) ?? []).flat().reduce<string[]>((texts, token) => {
+    if (token.scope !== scope) {
+      return texts;
+    }
+    const text = token.text.trim();
+
+    if (text !== '') {
+      texts.push(text);
+    }
+    return texts;
+  }, []);
 
 describe('tokenizeCode', () => {
   let highlighter: Highlighter;

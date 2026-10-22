@@ -80,10 +80,12 @@ export class MenuDriver extends ComponentDriver {
 
   get labels(): string[] {
     const root = this.menu.element;
-    return this.wrapper
-      .findAll<HTMLElement>(ITEM)
-      .filter((entry) => entry.element.closest('.nui-menu') === root)
-      .map((entry) => labelText(entry.element));
+    return this.wrapper.findAll<HTMLElement>(ITEM).reduce<string[]>((found, entry) => {
+      if (entry.element.closest('.nui-menu') === root) {
+        found.push(labelText(entry.element));
+      }
+      return found;
+    }, []);
   }
 
   get focusedLabel(): string | undefined {

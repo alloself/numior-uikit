@@ -34,9 +34,12 @@ const texts = (input: WheelInput, index: number): string[] =>
   optionsAt(input, index).map((option) => option.text);
 
 const dimmed = (input: WheelInput, index: number): string[] =>
-  optionsAt(input, index)
-    .filter((option) => option.disabled)
-    .map((option) => option.text);
+  optionsAt(input, index).reduce<string[]>((found, option) => {
+    if (option.disabled) {
+      found.push(option.text);
+    }
+    return found;
+  }, []);
 
 const plain = (time: TimeValue): string =>
   `${String(time.hour).padStart(2, '0')}:${String(time.minute).padStart(2, '0')}:${String(time.second).padStart(2, '0')}`;

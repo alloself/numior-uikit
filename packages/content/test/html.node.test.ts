@@ -15,9 +15,12 @@ const stripIds = (value: unknown): unknown => {
     return value;
   }
   return Object.fromEntries(
-    Object.entries(value)
-      .filter(([key]) => key !== 'id')
-      .map(([key, inner]) => [key, stripIds(inner)]),
+    Object.entries(value).reduce<[string, unknown][]>((kept, [key, inner]) => {
+      if (key !== 'id') {
+        kept.push([key, stripIds(inner)]);
+      }
+      return kept;
+    }, []),
   );
 };
 

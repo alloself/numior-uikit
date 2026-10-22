@@ -1,13 +1,11 @@
 import { flushPromises, type VueWrapper } from '@vue/test-utils';
+import { promiseTimeout } from '@vueuse/core';
 import { nextTick } from 'vue';
 import type { EditorDriver } from './editor';
 
 const FRAME = 20;
 
-const settleFrames = (): Promise<void> =>
-  new Promise((resolve) => {
-    setTimeout(resolve, FRAME);
-  });
+const settleFrames = (): Promise<void> => promiseTimeout(FRAME);
 
 export class EditorUploadDriver {
   constructor(private readonly wrapper: VueWrapper) {}

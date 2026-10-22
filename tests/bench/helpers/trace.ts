@@ -33,8 +33,12 @@ const CATEGORIES = ['devtools.timeline', 'disabled-by-default-devtools.timeline'
 
 const mainThreadMs = (events: readonly TraceEvent[]): number => {
   const spans = events
-    .filter((event) => event.ph === 'X' && PHASES.has(event.name))
-    .map((event) => ({ from: event.ts, to: event.ts + (event.dur ?? 0) }))
+    .reduce<{ from: number; to: number }[]>((found, event) => {
+      if (event.ph === 'X' && PHASES.has(event.name)) {
+        found.push({ from: event.ts, to: event.ts + (event.dur ?? 0) });
+      }
+      return found;
+    }, [])
     .toSorted((a, b) => a.from - b.from);
 
   let total = 0;

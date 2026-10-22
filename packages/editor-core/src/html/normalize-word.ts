@@ -154,6 +154,14 @@ const titled = (node: HtmlNode): HtmlNode => {
 };
 
 const wordBlocks: ChildrenRewrite = (children, parent) =>
-  wordLists(children.filter((child) => !isEmptyParagraph(child)).map(titled), parent);
+  wordLists(
+    children.reduce<HtmlNode[]>((found, child) => {
+      if (!isEmptyParagraph(child)) {
+        found.push(titled(child));
+      }
+      return found;
+    }, []),
+    parent,
+  );
 
 export const normalizeWord = (root: HtmlElement): HtmlElement => rewriteTree(root, wordBlocks);

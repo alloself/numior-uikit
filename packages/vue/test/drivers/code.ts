@@ -37,8 +37,12 @@ export class CodeDriver extends ComponentDriver {
     return target.findAll('.nui-code__token').map((token) =>
       token
         .classes()
-        .filter((name) => name.startsWith(SCOPE_PREFIX))
-        .map((name) => name.slice(SCOPE_PREFIX.length))
+        .reduce<string[]>((found, name) => {
+          if (name.startsWith(SCOPE_PREFIX)) {
+            found.push(name.slice(SCOPE_PREFIX.length));
+          }
+          return found;
+        }, [])
         .join(''),
     );
   }

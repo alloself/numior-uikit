@@ -33,24 +33,26 @@ const firstTextblockIn = (
   to: number,
 ): number | undefined => {
   const offsets = childOffsets(node);
+  const startOf = (index: number): number => start + (offsets[index] ?? 0);
 
-  for (let index = childIndexAt(node, Math.max(0, from - start)); ; index += 1) {
+  for (
+    let index = childIndexAt(node, Math.max(0, from - start));
+    index < node.content.length && startOf(index) < to;
+    index += 1
+  ) {
     const child = node.content[index];
-    const childStart = start + (offsets[index] ?? 0);
 
-    if (child === undefined || childStart >= to) {
-      return undefined;
-    }
-    if (child.kind === 'element') {
+    if (child?.kind === 'element') {
       const found = isTextblock(doc, child)
-        ? childStart + 1
-        : firstTextblockIn(doc, child, childStart + 1, from, to);
+        ? startOf(index) + 1
+        : firstTextblockIn(doc, child, startOf(index) + 1, from, to);
 
       if (found !== undefined) {
         return found;
       }
     }
   }
+  return undefined;
 };
 
 const lastTextblockIn = (
@@ -61,28 +63,32 @@ const lastTextblockIn = (
   to: number,
 ): number | undefined => {
   const offsets = childOffsets(node);
+  const startOf = (index: number): number => start + (offsets[index] ?? 0);
+
+  const endsAfterFrom = (index: number): boolean => {
+    const child = node.content[index];
+
+    return child !== undefined && startOf(index) + nodeSize(child) > from;
+  };
 
   for (
     let index = Math.min(childIndexAt(node, to - start), node.content.length - 1);
-    ;
+    index >= 0 && endsAfterFrom(index);
     index -= 1
   ) {
     const child = node.content[index];
-    const childStart = start + (offsets[index] ?? 0);
 
-    if (child === undefined || childStart + nodeSize(child) <= from) {
-      return undefined;
-    }
-    if (childStart < to && child.kind === 'element') {
+    if (startOf(index) < to && child?.kind === 'element') {
       const found = isTextblock(doc, child)
-        ? childStart + child.size - 1
-        : lastTextblockIn(doc, child, childStart + 1, from, to);
+        ? startOf(index) + child.size - 1
+        : lastTextblockIn(doc, child, startOf(index) + 1, from, to);
 
       if (found !== undefined) {
         return found;
       }
     }
   }
+  return undefined;
 };
 
 const firstTextblock = (doc: Doc, from: number, to: number): number | undefined =>

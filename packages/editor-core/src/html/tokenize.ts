@@ -72,27 +72,27 @@ const readAttribute = (cursor: Cursor, attrs: Map<string, string>): void => {
   cursor.at = ATTRIBUTE.lastIndex;
 };
 
+const closesTag = (html: string, at: number): boolean =>
+  html[at] === undefined || html[at] === '>' || (html[at] === '/' && html[at + 1] === '>');
+
 const readAttributes = (cursor: Cursor, attrs: Map<string, string>): boolean => {
   const { html } = cursor;
 
-  for (;;) {
-    skipSpace(cursor);
-    const char = html[cursor.at];
+  skipSpace(cursor);
 
-    if (char === undefined || char === '>') {
-      cursor.at = Math.min(html.length, cursor.at + 1);
-      return false;
-    }
-    if (char === '/' && html[cursor.at + 1] === '>') {
-      cursor.at += 2;
-      return true;
-    }
-    if (char === '/') {
+  while (!closesTag(html, cursor.at)) {
+    if (html[cursor.at] === '/') {
       cursor.at += 1;
     } else {
       readAttribute(cursor, attrs);
     }
+    skipSpace(cursor);
   }
+
+  const selfClosing = html[cursor.at] === '/';
+
+  cursor.at = Math.min(html.length, cursor.at + (selfClosing ? 2 : 1));
+  return selfClosing;
 };
 
 const readRaw = (cursor: Cursor, tag: string): void => {

@@ -95,18 +95,20 @@ export const createTransform = (start: Doc, options: TransformOptions = {}): Tra
 
   const seeded = seededOf(ids);
 
-  const freshId = (): NodeId => {
-    for (;;) {
-      const id = ids.next();
+  const taken = (id: NodeId): boolean =>
+    used.has(id) || (seeded === undefined && doc.byId(id) !== undefined);
 
-      if (!used.has(id) && (seeded !== undefined || doc.byId(id) === undefined)) {
-        used.add(id);
-        if (seeded !== undefined) {
-          unplaced.add(id);
-        }
-        return id;
-      }
+  const freshId = (): NodeId => {
+    let id = ids.next();
+
+    while (taken(id)) {
+      id = ids.next();
     }
+    used.add(id);
+    if (seeded !== undefined) {
+      unplaced.add(id);
+    }
+    return id;
   };
 
   const place = (nodes: readonly ContentNode[]): void => {

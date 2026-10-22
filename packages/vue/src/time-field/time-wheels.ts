@@ -122,22 +122,29 @@ const hourOptions = (input: WheelInput, shown: TimeValue): WheelOption[] => {
   const { cycle, digits } = input.layout;
 
   if (cycle === 'h23') {
-    return every(0, 23, 1)
-      .filter((hour) => reachable(hour, input))
-      .map((hour) => ({ value: hour, text: formatSegment(hour, digits), disabled: false }));
+    return every(0, 23, 1).reduce<WheelOption[]>((found, hour) => {
+      if (reachable(hour, input)) {
+        found.push({ value: hour, text: formatSegment(hour, digits), disabled: false });
+      }
+      return found;
+    }, []);
   }
 
   const period = periodOf(shown.hour);
 
-  return HOURS_12.filter(
-    (hour) =>
+  return HOURS_12.reduce<WheelOption[]>((found, hour) => {
+    if (
       reachable(toDayHour(hour, 'am', cycle), input) ||
-      reachable(toDayHour(hour, 'pm', cycle), input),
-  ).map((hour) => ({
-    value: hour,
-    text: formatSegment(hour, digits),
-    disabled: !reachable(toDayHour(hour, period, cycle), input),
-  }));
+      reachable(toDayHour(hour, 'pm', cycle), input)
+    ) {
+      found.push({
+        value: hour,
+        text: formatSegment(hour, digits),
+        disabled: !reachable(toDayHour(hour, period, cycle), input),
+      });
+    }
+    return found;
+  }, []);
 };
 
 const withValue = (values: number[], value: number): number[] =>

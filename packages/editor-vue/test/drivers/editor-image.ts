@@ -50,9 +50,14 @@ export class EditorImageDriver {
   }
 
   get barControls(): readonly string[] {
-    return [...this.figure.querySelectorAll('.nui-editor-image__bar :is(button, a)')]
-      .filter((control) => control.closest('.nui-editor-image__alt') === null)
-      .map((control) => control.getAttribute('aria-label') ?? control.textContent?.trim() ?? '');
+    return [...this.figure.querySelectorAll('.nui-editor-image__bar :is(button, a)')].reduce<
+      string[]
+    >((found, control) => {
+      if (control.closest('.nui-editor-image__alt') === null) {
+        found.push(control.getAttribute('aria-label') ?? control.textContent?.trim() ?? '');
+      }
+      return found;
+    }, []);
   }
 
   async select(): Promise<void> {

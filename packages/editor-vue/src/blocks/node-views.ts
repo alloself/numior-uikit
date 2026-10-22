@@ -167,11 +167,11 @@ export const createNodeViews = (
   };
 
   return Object.fromEntries(
-    blocks
-      .filter((block) => block.view !== undefined && schema.nodes.has(block.name))
-      .map((block): [string, NodeViewFactory] => [
-        block.name,
-        (node) => viewOf(source, block, node),
-      ]),
+    blocks.reduce<[string, NodeViewFactory][]>((found, block) => {
+      if (block.view !== undefined && schema.nodes.has(block.name)) {
+        found.push([block.name, (node) => viewOf(source, block, node)]);
+      }
+      return found;
+    }, []),
   );
 };

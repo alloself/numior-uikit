@@ -33,24 +33,34 @@ const neighbours = (
   return [parent.content[index - 1], child];
 };
 
+interface ChildPlace {
+  readonly index: number;
+  readonly child: ContentNode | undefined;
+  readonly childStart: number;
+}
+
+const placeIn = (node: ElementNode, start: number, pos: number): ChildPlace => {
+  const index = childIndexAt(node, pos - start);
+
+  return {
+    index,
+    child: node.content[index],
+    childStart: start + (childOffsets(node)[index] ?? 0),
+  };
+};
+
 const descend = (root: ElementNode, pos: number): { levels: Level[]; textOffset: number } => {
-  const levels: Level[] = [];
-  let node = root;
-  let start = 0;
+  let place = placeIn(root, 0, pos);
+  const levels: Level[] = [{ node: root, start: 0, index: place.index }];
 
-  for (;;) {
-    const index = childIndexAt(node, pos - start);
-    const child = node.content[index];
-    const childStart = start + (childOffsets(node)[index] ?? 0);
+  while (place.child?.kind === 'element' && place.childStart !== pos) {
+    const node = place.child;
+    const start = place.childStart + 1;
 
-    levels.push({ node, start, index });
-
-    if (child === undefined || childStart === pos || child.kind === 'text') {
-      return { levels, textOffset: child?.kind === 'text' ? pos - childStart : 0 };
-    }
-    node = child;
-    start = childStart + 1;
+    place = placeIn(node, start, pos);
+    levels.push({ node, start, index: place.index });
   }
+  return { levels, textOffset: place.child?.kind === 'text' ? pos - place.childStart : 0 };
 };
 
 export const resolveIn = (root: ElementNode, size: number, pos: number): ResolvedPos => {

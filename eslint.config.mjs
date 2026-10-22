@@ -78,6 +78,27 @@ const RENDER_FUNCTIONS = {
   ],
 };
 
+const CODE_SHAPE = [
+  {
+    selector:
+      "CallExpression[callee.property.name=/^(?:map|flatMap|forEach|reduce|filter|some|every|find)$/][callee.object.callee.property.name='filter']",
+    message: 'Build the result in one reduce instead of chaining filter with another pass.',
+  },
+  {
+    selector: 'ForStatement[test=null]',
+    message: 'A loop states its condition; no for (;;) with exits hidden in the body.',
+  },
+  {
+    selector: 'WhileStatement[test.value=true], DoWhileStatement[test.value=true]',
+    message: 'A loop states its condition; no while (true) with exits hidden in the body.',
+  },
+];
+
+const TIMERS = {
+  selector: "NewExpression[callee.name='Promise'] CallExpression[callee.name='setTimeout']",
+  message: 'Wait with promiseTimeout, until or useIdle from @vueuse/core.',
+};
+
 const CATALOG_MESSAGE = 'User-facing texts live in *.messages.ts catalogs.';
 
 const catalogTexts = {
@@ -97,6 +118,7 @@ const catalogTexts = {
         'TemplateElement[value.raw=/[A-Za-z]{2,} [a-z]{2,}/]:not(NewExpression > TemplateLiteral > TemplateElement)',
       message: CATALOG_MESSAGE,
     },
+    ...CODE_SHAPE,
   ],
 };
 
@@ -139,6 +161,15 @@ export default [
     files: ['**/*.ts', '**/*.mts', '**/*.js', '**/*.mjs', '**/*.vue'],
     ignores: ['packages/content/src/content/content-nodes.ts'],
     rules: RENDER_FUNCTIONS,
+  },
+  {
+    files: ['**/*.ts', '**/*.mts', '**/*.js', '**/*.mjs', '**/*.vue'],
+    rules: { 'no-restricted-syntax': ['error', ...CODE_SHAPE] },
+  },
+  {
+    files: ['packages/{primitives,vue,table,editor-vue}/{src,test}/**/*.{ts,vue}'],
+    ignores: ['packages/table/src/engine/**'],
+    rules: { 'no-restricted-syntax': ['error', ...CODE_SHAPE, TIMERS] },
   },
   {
     files: ['packages/*/src/**/*.ts', 'packages/*/src/**/*.vue'],

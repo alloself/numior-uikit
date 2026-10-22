@@ -195,8 +195,12 @@ export class CalendarDriver extends ComponentDriver {
   dayClasses(date: string): string[] {
     return this.day(date)
       .classes()
-      .filter((name) => name.startsWith('nui-calendar__day--'))
-      .map((name) => name.replace('nui-calendar__day--', ''));
+      .reduce<string[]>((found, name) => {
+        if (name.startsWith('nui-calendar__day--')) {
+          found.push(name.replace('nui-calendar__day--', ''));
+        }
+        return found;
+      }, []);
   }
 
   dayAttr(date: string, name: string): string | undefined {

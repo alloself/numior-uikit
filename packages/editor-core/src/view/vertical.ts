@@ -1,5 +1,6 @@
 import { isBlockAtom } from '../commands/atoms';
-import type { Doc } from '../doc/doc.types';
+import type { Doc, ResolvedPos } from '../doc/doc.types';
+import type { ContentNode } from '../model/node.types';
 import { nodeSize } from '../model/node';
 import { nearestCursor } from '../state/selection';
 import type { Selection } from '../state/selection.types';
@@ -8,19 +9,18 @@ import { gapX, sideNearest } from './gap';
 import type { ViewHost } from './host.types';
 
 const atomFrom = (doc: Doc, edge: number, forward: boolean): string | undefined => {
+  const besideOf = (at: ResolvedPos): ContentNode | undefined =>
+    forward ? at.nodeAfter : at.nodeBefore;
+
   let place = doc.resolve(edge);
 
-  for (;;) {
-    const beside = forward ? place.nodeAfter : place.nodeBefore;
-
-    if (beside !== undefined) {
-      return isBlockAtom(doc.schema, beside) ? beside.id : undefined;
-    }
-    if (place.depth === 0) {
-      return undefined;
-    }
+  while (besideOf(place) === undefined && place.depth > 0) {
     place = doc.resolve(forward ? place.after(place.depth) : place.before(place.depth));
   }
+
+  const beside = besideOf(place);
+
+  return beside !== undefined && isBlockAtom(doc.schema, beside) ? beside.id : undefined;
 };
 
 const onEdgeLine = (host: ViewHost, head: number, forward: boolean): boolean => {

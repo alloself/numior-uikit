@@ -149,11 +149,12 @@ const compileNode = (
 };
 
 const compileNodes = (spec: SchemaSpec, allowed: Allowed): Map<string, NodeType> =>
-  new Map(
-    Object.entries(spec.nodes)
-      .filter(([name]) => allowed.nodes.has(name))
-      .map(([name, node]) => [name, compileNode(spec, allowed, name, node)]),
-  );
+  Object.entries(spec.nodes).reduce<Map<string, NodeType>>((compiled, [name, node]) => {
+    if (allowed.nodes.has(name)) {
+      compiled.set(name, compileNode(spec, allowed, name, node));
+    }
+    return compiled;
+  }, new Map());
 
 const usableTypes = (types: ReadonlyMap<string, NodeType>): Set<string> => {
   const usable = new Set<string>();
@@ -174,39 +175,36 @@ const usableTypes = (types: ReadonlyMap<string, NodeType>): Set<string> => {
 
 const settleNodes = (spec: SchemaSpec, start: Allowed): Map<string, NodeType> => {
   let allowed = start;
+  let types = compileNodes(spec, allowed);
+  let usable = usableTypes(types);
 
-  for (;;) {
-    const types = compileNodes(spec, allowed);
-    const usable = usableTypes(types);
-
-    if (usable.size === types.size) {
-      return types;
-    }
+  while (usable.size !== types.size) {
     if (!allowed.restricted) {
       const broken = [...types.keys()].filter((name) => !usable.has(name)).join(', ');
 
       throw new SyntaxError(`Node types can never hold valid content: ${broken}`);
     }
     allowed = { ...allowed, nodes: usable };
+    types = compileNodes(spec, allowed);
+    usable = usableTypes(types);
   }
+  return types;
 };
 
 const compileMarks = (spec: SchemaSpec, allowed: Allowed): Map<string, MarkType> =>
-  new Map(
-    Object.entries(spec.marks ?? {})
-      .filter(([name]) => allowed.marks.has(name))
-      .map(([name, mark], rank) => [
+  Object.entries(spec.marks ?? {}).reduce<Map<string, MarkType>>((compiled, [name, mark]) => {
+    if (allowed.marks.has(name)) {
+      compiled.set(name, {
         name,
-        {
-          name,
-          rank,
-          groups: groupsOf(mark.group),
-          attrs: limitedAttrs(mark.attrs ?? {}, allowed.values[name]),
-          render: mark.render ?? renderMark,
-          parse: mark.parse ?? [],
-        },
-      ]),
-  );
+        rank: compiled.size,
+        groups: groupsOf(mark.group),
+        attrs: limitedAttrs(mark.attrs ?? {}, allowed.values[name]),
+        render: mark.render ?? renderMark,
+        parse: mark.parse ?? [],
+      });
+    }
+    return compiled;
+  }, new Map());
 
 const resolveAttrs = (
   owner: string,

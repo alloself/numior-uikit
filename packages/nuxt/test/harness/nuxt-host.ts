@@ -36,9 +36,12 @@ export class NuxtHost {
   }
 
   get headScripts(): string[] {
-    return (this.nuxt.options.app.head.script ?? [])
-      .filter(isScript)
-      .map((script) => script.innerHTML);
+    return (this.nuxt.options.app.head.script ?? []).reduce<string[]>((found, script) => {
+      if (isScript(script)) {
+        found.push(script.innerHTML);
+      }
+      return found;
+    }, []);
   }
 
   get lang(): unknown {
@@ -50,7 +53,12 @@ export class NuxtHost {
   }
 
   get pluginSources(): string[] {
-    return this.nuxt.options.plugins.filter(isSourced).map((plugin) => plugin.src);
+    return this.nuxt.options.plugins.reduce<string[]>((found, plugin) => {
+      if (isSourced(plugin)) {
+        found.push(plugin.src);
+      }
+      return found;
+    }, []);
   }
 
   async components(): Promise<Record<string, string>> {

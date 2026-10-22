@@ -269,18 +269,21 @@ const colourItems = (facts: Facts): ToolbarItem[] => {
 };
 
 const markItems = (facts: Facts): ToolbarItem[] => [
-  ...MARKS.filter(([mark]) => facts.state.doc.schema.marks.has(mark)).map(
-    ([mark, text, icon, shortcut]): ToolbarItem => ({
-      kind: 'action',
-      key: mark,
-      label: textOf(facts.texts, text),
-      icon,
-      shortcut,
-      pressed: facts.marks.has(mark),
-      disabled: !facts.allowed.has(mark),
-      command: toggleMark(mark),
-    }),
-  ),
+  ...MARKS.reduce<ToolbarItem[]>((found, [mark, text, icon, shortcut]) => {
+    if (facts.state.doc.schema.marks.has(mark)) {
+      found.push({
+        kind: 'action',
+        key: mark,
+        label: textOf(facts.texts, text),
+        icon,
+        shortcut,
+        pressed: facts.marks.has(mark),
+        disabled: !facts.allowed.has(mark),
+        command: toggleMark(mark),
+      });
+    }
+    return found;
+  }, []),
   ...linkItems(facts),
   ...colourItems(facts),
 ];
@@ -289,21 +292,24 @@ const blockActions = (facts: Facts): ToolbarItem[] => {
   const { state, texts, ancestors } = facts;
   const { schema } = state.doc;
 
-  const lists = LISTS.filter(([type]) => schema.nodes.has(type)).map(
-    ([type, text, icon]): ToolbarItem => {
-      const command = toggleList(type);
+  const lists = LISTS.reduce<ToolbarItem[]>((found, [type, text, icon]) => {
+    if (!schema.nodes.has(type)) {
+      return found;
+    }
+    const command = toggleList(type);
 
-      return {
-        kind: 'action',
-        key: type,
-        label: textOf(texts, text),
-        icon,
-        pressed: ancestors.includes(type),
-        disabled: !command(state),
-        command,
-      };
-    },
-  );
+    found.push({
+      kind: 'action',
+      key: type,
+      label: textOf(texts, text),
+      icon,
+      pressed: ancestors.includes(type),
+      disabled: !command(state),
+      command,
+    });
+
+    return found;
+  }, []);
 
   const quote = toggleWrapper('blockquote');
   const divider = insertDivider();

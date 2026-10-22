@@ -389,16 +389,21 @@ const offered = (kind: MediaKind): boolean =>
   schema.nodes.has(kind) && (kind !== 'embed' || providers.value.length > 0);
 
 const mediaSlash = (): readonly SlashItem[] =>
-  MEDIA_SLASH.filter((entry) => offered(entry.kind)).map((entry) => ({
-    key: entry.kind,
-    label: blockTexts.value[entry.kind],
-    icon: entry.icon,
-    keywords: entry.keywords,
-    kind: 'open',
-    open: () => {
-      openMedia(entry.kind);
-    },
-  }));
+  MEDIA_SLASH.reduce<SlashItem[]>((found, entry) => {
+    if (offered(entry.kind)) {
+      found.push({
+        key: entry.kind,
+        label: blockTexts.value[entry.kind],
+        icon: entry.icon,
+        keywords: entry.keywords,
+        kind: 'open',
+        open: () => {
+          openMedia(entry.kind);
+        },
+      });
+    }
+    return found;
+  }, []);
 
 const inserts = computed((): readonly SlashItem[] => [
   ...slashItems(schema, blockTexts.value),
@@ -722,16 +727,18 @@ const handles = useBlockHandle({
 });
 
 const blockMenu = (node: ElementNode): NuiMenuEntry[] =>
-  blocks
-    .filter((block) => block.name === node.type)
-    .flatMap(
-      (block) =>
-        block.menu?.(
+  blocks.reduce<NuiMenuEntry[]>((found, block) => {
+    if (block.name === node.type) {
+      found.push(
+        ...(block.menu?.(
           node,
           blockContext(node.id, run, editor.focus, () => view?.nodeDOM(node.id)),
           blockTexts.value,
-        ) ?? [],
-    );
+        ) ?? []),
+      );
+    }
+    return found;
+  }, []);
 
 const onHandleRun = (command: Command): void => {
   run(command);

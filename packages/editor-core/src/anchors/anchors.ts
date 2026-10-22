@@ -154,9 +154,12 @@ const covers = (doc: Doc, range: AnchorRange, pos: number): boolean => {
 };
 
 export const anchorsAt = (state: EditorState, pos: number): readonly string[] =>
-  [...anchorsOf(state).values()]
-    .filter((anchor) => !anchor.lost && covers(state.doc, anchor.range, pos))
-    .map((anchor) => anchor.id);
+  [...anchorsOf(state).values()].reduce<string[]>((found, anchor) => {
+    if (!anchor.lost && covers(state.doc, anchor.range, pos)) {
+      found.push(anchor.id);
+    }
+    return found;
+  }, []);
 
 const pointOf = (doc: Doc, pos: number): { readonly id: string; readonly offset: number } => {
   const place = doc.resolve(pos);

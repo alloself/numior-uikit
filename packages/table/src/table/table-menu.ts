@@ -167,15 +167,24 @@ export const columnMenuEntries = (
   state: ColumnMenuState,
   actions: ColumnMenuActions,
   texts: NuiTableMessages,
-): NuiMenuEntry[] =>
-  [
+): NuiMenuEntry[] => {
+  let shown = 0;
+
+  return [
     sortSection(state, actions, texts),
     groupSection(state, actions, texts),
     pinSection(state, actions, texts),
     widthSection(state, actions, texts),
     visibilitySection(state, actions, texts),
-  ]
-    .filter((section) => section.length > 0)
-    .flatMap((section, index): NuiMenuEntry[] =>
-      index === 0 ? section : [{ type: 'separator', key: `separator-${index}` }, ...section],
-    );
+  ].reduce<NuiMenuEntry[]>((found, section) => {
+    if (section.length === 0) {
+      return found;
+    }
+    if (shown > 0) {
+      found.push({ type: 'separator', key: `separator-${shown}` });
+    }
+    found.push(...section);
+    shown += 1;
+    return found;
+  }, []);
+};

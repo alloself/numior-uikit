@@ -18,10 +18,15 @@ const walk = (dir: string): string[] =>
     });
 
 const styleProblems = (root: string, files: readonly string[]): string[] =>
-  files
-    .filter((file) => file.endsWith('.vue') || file.endsWith('.md'))
-    .filter((file) => /<style[\s>]/.test(readFileSync(file, 'utf8')))
-    .map((file) => `${relative(root, file)}: has a <style> block`);
+  files.reduce<string[]>((found, file) => {
+    if (
+      (file.endsWith('.vue') || file.endsWith('.md')) &&
+      /<style[\s>]/.test(readFileSync(file, 'utf8'))
+    ) {
+      found.push(`${relative(root, file)}: has a <style> block`);
+    }
+    return found;
+  }, []);
 
 const COMPONENT_PAGE_RE = /^(?:en\/)?components\/[^/]+\.md$/;
 const ATTRIBUTE_MUSTACHE_RE = /=\s*"[^"]*\{\{/;
@@ -36,24 +41,35 @@ const STRUCTURE_RULES: ReadonlyArray<readonly [(source: string) => boolean, stri
 
 export const structureProblemsOf = (page: string, source: string): string[] =>
   COMPONENT_PAGE_RE.test(page)
-    ? STRUCTURE_RULES.filter(([passes]) => !passes(source)).map(([, text]) => `${page}: ${text}`)
+    ? STRUCTURE_RULES.reduce<string[]>((found, [passes, text]) => {
+        if (!passes(source)) {
+          found.push(`${page}: ${text}`);
+        }
+        return found;
+      }, [])
     : [];
 
 const pageProblems = (root: string, files: readonly string[]): string[] =>
-  files
-    .filter((file) => file.endsWith('.md'))
-    .map((file) => relative(root, file))
-    .filter((page) => !PENDING_PAGES.includes(page))
-    .flatMap((page) => {
-      const source = readFileSync(join(root, page), 'utf8');
+  files.reduce<string[]>((found, file) => {
+    if (!file.endsWith('.md')) {
+      return found;
+    }
+    const page = relative(root, file);
 
-      return [
-        ...structureProblemsOf(page, source),
-        ...lintProse(source, page.startsWith('en/') ? 'en' : 'ru').map(
-          (problem) => `${page}:${problem.line}: ${problem.rule} — ${problem.text}`,
-        ),
-      ];
-    });
+    if (PENDING_PAGES.includes(page)) {
+      return found;
+    }
+    const source = readFileSync(join(root, page), 'utf8');
+
+    found.push(
+      ...structureProblemsOf(page, source),
+      ...lintProse(source, page.startsWith('en/') ? 'en' : 'ru').map(
+        (problem) => `${page}:${problem.line}: ${problem.rule} — ${problem.text}`,
+      ),
+    );
+
+    return found;
+  }, []);
 
 export const checkContent = (root: string): string[] => {
   const files = walk(root);
@@ -65,7 +81,9 @@ const UNRESOLVED_RE =
   /<(?:Nui[A-Za-z]*|Example|ApiReference|Configurator|SignatureReference|KeyboardReference)\b/;
 
 export const checkDist = (dist: string): string[] =>
-  walk(dist)
-    .filter((file) => file.endsWith('.html'))
-    .filter((file) => UNRESOLVED_RE.test(readFileSync(file, 'utf8')))
-    .map((file) => `${relative(dist, file)}: has an unresolved component tag`);
+  walk(dist).reduce<string[]>((found, file) => {
+    if (file.endsWith('.html') && UNRESOLVED_RE.test(readFileSync(file, 'utf8'))) {
+      found.push(`${relative(dist, file)}: has an unresolved component tag`);
+    }
+    return found;
+  }, []);

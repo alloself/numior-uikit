@@ -10,6 +10,7 @@ import {
 import {
   insertBlock,
   nodeSize,
+  type AttrValue,
   type Command,
   type ElementNode,
   type NodeId,
@@ -116,9 +117,12 @@ const columnIndex = (parts: TableParts, column: NodeId): number =>
 const addOption = (tr: Transaction, id: NodeId, value: NuiContentCellValue): void => {
   const column = tr.doc.byId(id);
 
-  const options = elementsOf(column)
-    .filter((child) => child.type === 'table_option')
-    .map((option) => option.attrs.label);
+  const options = elementsOf(column).reduce<(AttrValue | undefined)[]>((found, child) => {
+    if (child.type === 'table_option') {
+      found.push(child.attrs.label);
+    }
+    return found;
+  }, []);
 
   if (column?.attrs.type === 'select' && typeof value === 'string' && !options.includes(value)) {
     insertAt(tr, id, options.length, [element(tr, 'table_option', { label: value })]);

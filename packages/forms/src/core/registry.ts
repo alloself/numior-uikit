@@ -58,7 +58,13 @@ const insideInactive = (path: string, inactive: ReadonlySet<string>): boolean =>
   prefixesOf(path).some((prefix) => prefix !== path && inactive.has(prefix));
 
 const collect = <V extends object>(placed: readonly Placed<V>[]): RegistryIndex<V> => {
-  const inactive = new Set(placed.filter((item) => !item.active).map((item) => item.path));
+  const inactive = placed.reduce<Set<string>>((found, item) => {
+    if (!item.active) {
+      found.add(item.path);
+    }
+    return found;
+  }, new Set());
+
   const active: Entry<V>[] = [];
   const byPath = new Map<string, Entry<V>[]>();
   const covered = new Set<string>();

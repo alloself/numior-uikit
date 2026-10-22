@@ -68,22 +68,27 @@ const SUFFIXES: Readonly<Record<string, { readonly min: number; readonly max: nu
   '?': { min: 0, max: 1 },
 };
 
+const withSuffix = (cursor: Cursor, expr: ContentExpr): ContentExpr | undefined => {
+  const suffix = SUFFIXES[peek(cursor) ?? ''];
+
+  if (suffix !== undefined) {
+    cursor.position += 1;
+    return { kind: 'repeat', expr, ...suffix };
+  }
+  return take(cursor, '{') ? rangeOf(cursor, expr) : undefined;
+};
+
 const suffixed = (cursor: Cursor, expr: ContentExpr): ContentExpr => {
   let result = expr;
 
-  for (;;) {
-    const token = peek(cursor) ?? '';
-    const suffix = SUFFIXES[token];
-
-    if (suffix !== undefined) {
-      cursor.position += 1;
-      result = { kind: 'repeat', expr: result, ...suffix };
-    } else if (take(cursor, '{')) {
-      result = rangeOf(cursor, result);
-    } else {
-      return result;
-    }
+  for (
+    let next = withSuffix(cursor, result);
+    next !== undefined;
+    next = withSuffix(cursor, result)
+  ) {
+    result = next;
   }
+  return result;
 };
 
 const atomOf = (cursor: Cursor): ContentExpr => {

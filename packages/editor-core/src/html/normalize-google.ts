@@ -28,12 +28,12 @@ const googleBlocks: ChildrenRewrite = (children) => {
   const unwrapped = children.flatMap((child) => (isWrapper(child) ? child.children : [child]));
   const blocky = unwrapped.some((child) => isElement(child) && BLOCKS.has(child.tag));
 
-  return unwrapped
-    .filter(
-      (child) =>
-        !isCheckbox(child) && !isEmptyParagraph(child) && !(blocky && isElement(child, 'br')),
-    )
-    .map((child) => (isElement(child, 'a') ? undecorated(child) : child));
+  return unwrapped.reduce<HtmlNode[]>((found, child) => {
+    if (!isCheckbox(child) && !isEmptyParagraph(child) && !(blocky && isElement(child, 'br'))) {
+      found.push(isElement(child, 'a') ? undecorated(child) : child);
+    }
+    return found;
+  }, []);
 };
 
 export const normalizeGoogleDocs = (root: HtmlElement): HtmlElement =>

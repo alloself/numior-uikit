@@ -171,20 +171,19 @@ const createParser = (tokens: readonly Token[], locale: FormulaLocale, offset: n
   const array = (): FormulaNode => {
     const rows: FormulaNode[][] = [[]];
 
-    for (;;) {
-      rows.at(-1)?.push(constant(next()));
-      if (isPunct(locale.arrayColumn)) {
-        next();
-      } else if (isPunct(locale.arrayRow)) {
-        next();
+    rows.at(-1)?.push(constant(next()));
+
+    while (isPunct(locale.arrayColumn) || isPunct(locale.arrayRow)) {
+      if (isPunct(locale.arrayRow)) {
         rows.push([]);
-      } else {
-        expectPunct('}');
-        return rows.every((row) => row.length === rows[0]?.length)
-          ? { kind: 'array', rows }
-          : fail(peek(-1), 'array');
       }
+      next();
+      rows.at(-1)?.push(constant(next()));
     }
+    expectPunct('}');
+    return rows.every((row) => row.length === rows[0]?.length)
+      ? { kind: 'array', rows }
+      : fail(peek(-1), 'array');
   };
 
   const argumentsOf = (): FormulaNode[] => {
@@ -194,16 +193,18 @@ const createParser = (tokens: readonly Token[], locale: FormulaLocale, offset: n
       next();
       return args;
     }
-    for (;;) {
-      const empty = isPunct(locale.argument) || isPunct(')');
 
-      args.push(empty ? { kind: 'missing' } : expression());
-      if (!isPunct(locale.argument)) {
-        expectPunct(')');
-        return args;
-      }
+    const argument = (): FormulaNode =>
+      isPunct(locale.argument) || isPunct(')') ? { kind: 'missing' } : expression();
+
+    args.push(argument());
+
+    while (isPunct(locale.argument)) {
       next();
+      args.push(argument());
     }
+    expectPunct(')');
+    return args;
   };
 
   const word = (token: Token): FormulaNode => {

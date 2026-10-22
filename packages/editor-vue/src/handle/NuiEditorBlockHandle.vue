@@ -63,14 +63,17 @@ const emit = defineEmits<{
 const texts = useMessages(editorMessages);
 
 const turnInto = (at: ChildSlot): NuiMenuEntry[] =>
-  slashItems(state.doc.schema, texts.value)
-    .filter((item) => item.key !== 'divider')
-    .map((item) => ({
-      key: item.key,
-      label: item.label,
-      icon: item.icon,
-      onSelect: () => emit('run', sequence(focusChild(at), item.command)),
-    }));
+  slashItems(state.doc.schema, texts.value).reduce<NuiMenuEntry[]>((found, item) => {
+    if (item.key !== 'divider') {
+      found.push({
+        key: item.key,
+        label: item.label,
+        icon: item.icon,
+        onSelect: () => emit('run', sequence(focusChild(at), item.command)),
+      });
+    }
+    return found;
+  }, []);
 
 const siblings = (at: ChildSlot): number =>
   (at.parent === state.doc.root.id ? state.doc.root : state.doc.byId(at.parent))?.content.length ??

@@ -118,10 +118,17 @@ const nameOf = (cell: HtmlTableCell | undefined, index: number): string => {
 };
 
 const optionsOf = (cell: HtmlTableCell | undefined): readonly string[] =>
-  elementsOf(cell?.element?.find('datalist'))
-    .filter((option) => option.tag === 'option')
-    .map((option) => option.attr('value') ?? '')
-    .filter((label) => label !== '');
+  elementsOf(cell?.element?.find('datalist')).reduce<string[]>((found, option) => {
+    if (option.tag !== 'option') {
+      return found;
+    }
+    const label = option.attr('value') ?? '';
+
+    if (label !== '') {
+      found.push(label);
+    }
+    return found;
+  }, []);
 
 const parsedWidth = (cell: HtmlTableCell | undefined): number | null => {
   const width = WIDTH.exec(cell?.element?.style('width') ?? '');
@@ -253,9 +260,12 @@ const columnOf = (node: ElementNode): NuiContentTableColumn => ({
   name: textOf(node.attrs.name),
   type: typeOf(node.attrs.type),
   width: widthOf(node.attrs.width),
-  options: elementChildren(node)
-    .filter((child) => child.type === 'table_option')
-    .map((option) => textOf(option.attrs.label)),
+  options: elementChildren(node).reduce<string[]>((found, child) => {
+    if (child.type === 'table_option') {
+      found.push(textOf(child.attrs.label));
+    }
+    return found;
+  }, []),
   filter: filterOf(node),
 });
 

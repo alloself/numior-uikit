@@ -47,8 +47,21 @@ const monthsOf = (locale: string): readonly (readonly string[])[] => {
 
 const namedDate = (text: string, locale: string): number | null => {
   const tokens = text.match(TOKENS) ?? [];
-  const numbers = tokens.filter((token) => DIGITS.test(token)).map(Number);
-  const words = new Set(tokens.filter((token) => !DIGITS.test(token)).map(normalized));
+
+  const numbers = tokens.reduce<number[]>((found, token) => {
+    if (DIGITS.test(token)) {
+      found.push(Number(token));
+    }
+    return found;
+  }, []);
+
+  const words = tokens.reduce<Set<string>>((found, token) => {
+    if (!DIGITS.test(token)) {
+      found.add(normalized(token));
+    }
+    return found;
+  }, new Set());
+
   const month = monthsOf(locale).findIndex((names) => names.some((name) => words.has(name)));
   const year = numbers.find((value) => value >= 1000);
   const day = numbers.find((value) => value >= 1 && value <= 31);

@@ -13,16 +13,25 @@ const stripIds = (value: unknown): unknown => {
     return value;
   }
   return Object.fromEntries(
-    Object.entries(value)
-      .filter(([key]) => key !== 'id')
-      .map(([key, inner]) => [key, stripIds(inner)]),
+    Object.entries(value).reduce<[string, unknown][]>((kept, [key, inner]) => {
+      if (key !== 'id') {
+        kept.push([key, stripIds(inner)]);
+      }
+      return kept;
+    }, []),
   );
 };
 
 const samples = readdirSync(CORPUS).flatMap((source) =>
-  readdirSync(new URL(`${source}/`, CORPUS))
-    .filter((file) => file.endsWith('.html'))
-    .map((file) => ({ source, name: file.replace('.html', '') })),
+  readdirSync(new URL(`${source}/`, CORPUS)).reduce<{ source: string; name: string }[]>(
+    (found, file) => {
+      if (file.endsWith('.html')) {
+        found.push({ source, name: file.replace('.html', '') });
+      }
+      return found;
+    },
+    [],
+  ),
 );
 
 const read = (source: string, file: string): string =>

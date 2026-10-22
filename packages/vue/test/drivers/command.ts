@@ -79,9 +79,12 @@ export class CommandDriver extends ComponentDriver {
   }
 
   get selectedLabels(): string[] {
-    return this.options
-      .filter((option) => option.attributes('aria-selected') === 'true')
-      .map((option) => option.find('.nui-row__title').text());
+    return this.options.reduce<string[]>((found, option) => {
+      if (option.attributes('aria-selected') === 'true') {
+        found.push(option.find('.nui-row__title').text());
+      }
+      return found;
+    }, []);
   }
 
   get groupLabels(): string[] {

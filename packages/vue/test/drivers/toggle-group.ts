@@ -62,9 +62,12 @@ export class ToggleGroupDriver extends ComponentDriver {
   }
 
   get selectedLabels(): string[] {
-    return this.items
-      .filter((item) => item.classes('nui-toggle-group__item--selected'))
-      .map((item) => item.text() || (item.attributes('aria-label') ?? ''));
+    return this.items.reduce<string[]>((found, item) => {
+      if (item.classes('nui-toggle-group__item--selected')) {
+        found.push(item.text() || (item.attributes('aria-label') ?? ''));
+      }
+      return found;
+    }, []);
   }
 
   get checkedStates(): Array<string | undefined> {

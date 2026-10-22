@@ -53,7 +53,12 @@ export const stubRowObserver = (): RowObserverStub => {
   return {
     deliver: (targets) => {
       for (const { observer, notify, watched } of watchers) {
-        const entries = targets.filter((target) => watched.has(target)).map(entryOf);
+        const entries = targets.reduce<ResizeObserverEntry[]>((found, target) => {
+          if (watched.has(target)) {
+            found.push(entryOf(target));
+          }
+          return found;
+        }, []);
 
         if (entries.length > 0) {
           notify(entries, observer);

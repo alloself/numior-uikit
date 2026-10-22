@@ -129,7 +129,12 @@ export class CheckboxGroupDriver extends ComponentDriver {
   }
 
   get checked(): string[] {
-    return this.checkboxes.filter((box) => box.element.checked).map((box) => box.element.value);
+    return this.checkboxes.reduce<string[]>((found, box) => {
+      if (box.element.checked) {
+        found.push(box.element.value);
+      }
+      return found;
+    }, []);
   }
 
   get names(): Array<string | undefined> {

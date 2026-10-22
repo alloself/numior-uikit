@@ -34,13 +34,18 @@ export const composableCoverage = (
       covered[locale].add(name);
     }
   }
-  return declarations.filter(isComposable).flatMap((declaration) => {
+  return declarations.reduce<string[]>((found, declaration) => {
+    if (!isComposable(declaration)) {
+      return found;
+    }
+
     const missing = (['ru', 'en'] as const).filter(
       (locale) => !covered[locale].has(declaration.name),
     );
 
-    return missing.length === 0
-      ? []
-      : [`${declaration.name}: no <SignatureReference> on a ${missing.join(' and ')} page`];
-  });
+    if (missing.length > 0) {
+      found.push(`${declaration.name}: no <SignatureReference> on a ${missing.join(' and ')} page`);
+    }
+    return found;
+  }, []);
 };

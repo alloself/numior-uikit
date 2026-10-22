@@ -1,3 +1,4 @@
+import { promiseTimeout } from '@vueuse/core';
 import {
   createSourceEngine,
   type TableChildrenRequest,
@@ -61,10 +62,7 @@ const groupsOf = (ids: readonly number[], key: string): TableSourceGroup[] => {
     .map(([value, count]) => ({ value, count, aggregates: { id: count } }));
 };
 
-const flush = (): Promise<void> =>
-  new Promise((resolve) => {
-    setTimeout(resolve, 0);
-  });
+const flush = (): Promise<void> => promiseTimeout(0);
 
 export class SourceHarness {
   readonly engine: TableEngine<Item>;

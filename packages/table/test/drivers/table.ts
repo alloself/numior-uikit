@@ -1,5 +1,6 @@
 import { flushPromises, mount, type DOMWrapper, type VueWrapper } from '@vue/test-utils';
 import { createNuiConfig, type NuiConfigOptions } from '@numior/primitives';
+import { promiseTimeout } from '@vueuse/core';
 import { vi } from 'vite-plus/test';
 import {
   nextTick,
@@ -916,9 +917,12 @@ export class TableDriver<T> {
   get menuLabels(): string[] {
     const root = this.columnMenu;
 
-    return this.menuEntries()
-      .filter((entry) => entry.closest('.nui-menu') === root)
-      .map((entry) => entry.querySelector('.nui-menu-item__label')?.textContent?.trim() ?? '');
+    return this.menuEntries().reduce<string[]>((found, entry) => {
+      if (entry.closest('.nui-menu') === root) {
+        found.push(entry.querySelector('.nui-menu-item__label')?.textContent?.trim() ?? '');
+      }
+      return found;
+    }, []);
   }
 
   get focusedMenuItem(): string | undefined {
@@ -1442,9 +1446,12 @@ export class TableDriver<T> {
   }
 
   mergeMarks(position: number, col: number): string[] {
-    return [...(this.cell(position, col)?.classList ?? [])]
-      .filter((name) => MERGE_MARK.test(name))
-      .map((name) => name.replace('nui-table__cell--', ''));
+    return [...(this.cell(position, col)?.classList ?? [])].reduce<string[]>((found, name) => {
+      if (MERGE_MARK.test(name)) {
+        found.push(name.replace('nui-table__cell--', ''));
+      }
+      return found;
+    }, []);
   }
 
   cellRole(position: number, col: number): string | undefined {
@@ -1636,9 +1643,12 @@ export class TableDriver<T> {
   }
 
   get details(): number[] {
-    return bodyRowsOf(this.element)
-      .filter((row) => row.classList.contains('nui-table__row--detail'))
-      .map((row) => numberAttribute(row, 'aria-rowindex') - this.headRows - 1);
+    return bodyRowsOf(this.element).reduce<number[]>((found, row) => {
+      if (row.classList.contains('nui-table__row--detail')) {
+        found.push(numberAttribute(row, 'aria-rowindex') - this.headRows - 1);
+      }
+      return found;
+    }, []);
   }
 
   detailSpan(position: number): string | undefined {
@@ -1844,9 +1854,7 @@ export class TableDriver<T> {
   }
 
   async idle(): Promise<void> {
-    await new Promise((resolve) => {
-      setTimeout(resolve, IDLE_WAIT);
-    });
+    await promiseTimeout(IDLE_WAIT);
   }
 
   async scroll(position: { readonly top?: number; readonly left?: number }): Promise<void> {

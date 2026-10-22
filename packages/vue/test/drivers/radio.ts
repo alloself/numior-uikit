@@ -44,9 +44,12 @@ export class RadioGroupDriver extends ComponentDriver {
   }
 
   get disabledValues(): string[] {
-    return this.radios
-      .filter((radio) => radio.element.disabled)
-      .map((radio) => radio.element.value);
+    return this.radios.reduce<string[]>((found, radio) => {
+      if (radio.element.disabled) {
+        found.push(radio.element.value);
+      }
+      return found;
+    }, []);
   }
 
   get legendText(): string {

@@ -1,3 +1,4 @@
+import { promiseTimeout } from '@vueuse/core';
 import {
   createTableEngine,
   type TableEngine,
@@ -148,10 +149,7 @@ export const FOLDER_COLUMNS: readonly TableEngineColumn<Folder>[] = [
   { kind: 'number', key: 'size', value: (row) => row.size },
 ];
 
-const tick = (): Promise<void> =>
-  new Promise((resolve) => {
-    setTimeout(resolve, 0);
-  });
+const tick = (): Promise<void> => promiseTimeout(0);
 
 export interface EngineHarnessOptions<T> {
   readonly sliceMs?: number;

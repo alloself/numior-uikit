@@ -63,8 +63,12 @@ export const numberSymbols = (
     digits: Array.from({ length: 10 }, (_, digit) => digitFormatter.format(digit)),
     literals: formatter
       .formatToParts(-1234.5)
-      .filter((part) => LITERAL_PARTS.has(part.type))
-      .map((part) => part.value)
+      .reduce<string[]>((found, part) => {
+        if (LITERAL_PARTS.has(part.type)) {
+          found.push(part.value);
+        }
+        return found;
+      }, [])
       .join(''),
   };
 };

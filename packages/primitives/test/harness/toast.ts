@@ -46,7 +46,12 @@ export class ToastHarness {
   }
 
   get leavingIds(): string[] {
-    return this.store.toasts.value.filter((toast) => toast.leaving).map((toast) => toast.id);
+    return this.store.toasts.value.reduce<string[]>((found, toast) => {
+      if (toast.leaving) {
+        found.push(toast.id);
+      }
+      return found;
+    }, []);
   }
 
   get queued(): number {

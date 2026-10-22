@@ -134,15 +134,7 @@ export const posAtDOM = (context: ViewContext, node: Node, offset: number): numb
   let current = node;
   let at = offset;
 
-  for (;;) {
-    const desc = context.descs.get(current);
-
-    if (desc !== undefined) {
-      return positionIn(context, desc, current, at);
-    }
-    if (context.chunks.has(current)) {
-      return chunkPosition(context, current, at);
-    }
+  while (context.descs.get(current) === undefined && !context.chunks.has(current)) {
     const parent = current.parentNode;
 
     if (parent === null) {
@@ -151,6 +143,12 @@ export const posAtDOM = (context: ViewContext, node: Node, offset: number): numb
     at = indexOf(current) + (at > 0 ? 1 : 0);
     current = parent;
   }
+
+  const desc = context.descs.get(current);
+
+  return desc === undefined
+    ? chunkPosition(context, current, at)
+    : positionIn(context, desc, current, at);
 };
 
 export const domAtPos = (

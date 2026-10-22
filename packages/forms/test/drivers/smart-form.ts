@@ -102,8 +102,12 @@ export class SmartFormDriver<V extends object> {
     return this.wrapper.findAll('.nui-stepper__item').map((item) =>
       item
         .classes()
-        .filter((name) => /--(complete|error|upcoming)$/.test(name))
-        .map((name) => name.slice(name.lastIndexOf('--') + 2))
+        .reduce<string[]>((found, name) => {
+          if (/--(complete|error|upcoming)$/.test(name)) {
+            found.push(name.slice(name.lastIndexOf('--') + 2));
+          }
+          return found;
+        }, [])
         .join(''),
     );
   }

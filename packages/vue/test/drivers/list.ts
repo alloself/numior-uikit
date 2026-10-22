@@ -120,9 +120,12 @@ export class ListDriver extends ComponentDriver {
   }
 
   get selectedTitles(): string[] {
-    return this.items
-      .filter((item) => item.attributes('aria-selected') === 'true')
-      .map((item) => titleOf(item.element));
+    return this.items.reduce<string[]>((found, item) => {
+      if (item.attributes('aria-selected') === 'true') {
+        found.push(titleOf(item.element));
+      }
+      return found;
+    }, []);
   }
 
   get tabIndexes(): number[] {

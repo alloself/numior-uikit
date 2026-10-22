@@ -318,9 +318,12 @@ const presetOf =
 const part = (name: string, ...modifiers: readonly (string | false)[]): string =>
   [
     `nui-content__${name}`,
-    ...modifiers
-      .filter((modifier) => modifier !== false)
-      .map((modifier) => `nui-content__${name}--${modifier}`),
+    ...modifiers.reduce<string[]>((found, modifier) => {
+      if (modifier !== false) {
+        found.push(`nui-content__${name}--${modifier}`);
+      }
+      return found;
+    }, []),
   ].join(' ');
 
 const firstText = (node: ElementNode): string => {

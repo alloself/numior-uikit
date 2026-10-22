@@ -45,9 +45,12 @@ export class AccordionDriver extends ComponentDriver {
   }
 
   get expandedLabels(): string[] {
-    return this.triggers
-      .filter((trigger) => trigger.attributes('aria-expanded') === 'true')
-      .map((trigger) => trigger.text());
+    return this.triggers.reduce<string[]>((found, trigger) => {
+      if (trigger.attributes('aria-expanded') === 'true') {
+        found.push(trigger.text());
+      }
+      return found;
+    }, []);
   }
 
   get headingTags(): string[] {

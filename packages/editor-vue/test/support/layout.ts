@@ -49,8 +49,12 @@ const rectOf = function (this: Element): DOMRect {
 
 const hits = (x: number, y: number): Element[] =>
   [...rects.entries()]
-    .filter(([, rect]) => x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom)
-    .map(([element]) => element)
+    .reduce<Element[]>((found, [element, rect]) => {
+      if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
+        found.push(element);
+      }
+      return found;
+    }, [])
     .toSorted((left, right) => depthOf(right) - depthOf(left));
 
 export const layOut = (content: Element): void => {

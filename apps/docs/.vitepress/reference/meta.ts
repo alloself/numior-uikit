@@ -104,11 +104,26 @@ export const componentReference = (
     file: entry.file,
     styles,
     messages,
-    props: own.filter((prop) => !modelProps.has(prop.name)).map(propOf),
+    props: own.reduce<ReferenceProp[]>((found, prop) => {
+      if (!modelProps.has(prop.name)) {
+        found.push(propOf(prop));
+      }
+      return found;
+    }, []),
     models,
-    events: meta.events.filter((event) => !modelEvents.has(event.name)).map(memberOf),
+    events: meta.events.reduce<ReferenceMember[]>((found, event) => {
+      if (!modelEvents.has(event.name)) {
+        found.push(memberOf(event));
+      }
+      return found;
+    }, []),
     slots: meta.slots.map(memberOf),
-    exposed: meta.exposed.filter((member) => !member.name.startsWith('$')).map(memberOf),
+    exposed: meta.exposed.reduce<ReferenceMember[]>((found, member) => {
+      if (!member.name.startsWith('$')) {
+        found.push(memberOf(member));
+      }
+      return found;
+    }, []),
     keyboard: [],
     configurator: undefined,
   };

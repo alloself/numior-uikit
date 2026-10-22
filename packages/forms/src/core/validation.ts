@@ -45,23 +45,27 @@ export const createValidation = <V extends object, O>(core: FormCore<V, O>): Val
   });
 
   const ruleIssues = (values: V, active: readonly Entry<V>[]): FormIssue[] =>
-    active
-      .filter((entry) => !entry.inert())
-      .flatMap((entry) => {
-        const path = entry.path();
-        const rules = core.rulesAt(path).sync;
+    active.reduce<FormIssue[]>((found, entry) => {
+      if (entry.inert()) {
+        return found;
+      }
+      const path = entry.path();
+      const rules = core.rulesAt(path).sync;
 
-        const context = {
-          name: path,
-          label: entry.label(),
-          values,
-          messages: core.messages.value,
-        };
+      const context = {
+        name: path,
+        label: entry.label(),
+        values,
+        messages: core.messages.value,
+      };
 
-        const message = firstFailure(rules, getAt(values, path), context) ?? entry.check(context);
+      const message = firstFailure(rules, getAt(values, path), context) ?? entry.check(context);
 
-        return message === undefined ? [] : [{ path, message }];
-      });
+      if (message !== undefined) {
+        found.push({ path, message });
+      }
+      return found;
+    }, []);
 
   const externalIssues = (): FormIssue[] =>
     [...core.external].flatMap(([path, error]) =>
@@ -196,24 +200,22 @@ export const createValidation = <V extends object, O>(core: FormCore<V, O>): Val
         : Promise.resolve(followAsync(entries, outcome, trigger));
     },
     validateFully: async (entries) => {
-      let result = await attempt(entries, 'attempted', true);
-
-      for (;;) {
-        const passing: Entry<V>[] = [];
-
-        for (const entry of entries) {
-          if (result.byOwner.has(entry.path())) {
+      const passingAfter = (outcome: typeof result): Entry<V>[] =>
+        entries.reduce<Entry<V>[]>((passing, entry) => {
+          if (outcome.byOwner.has(entry.path())) {
             asyncChecks.cancel(entry);
           } else {
             passing.push(entry);
           }
-        }
+          return passing;
+        }, []);
 
-        if (!(await asyncChecks.settle(passing))) {
-          return result;
-        }
+      let result = await attempt(entries, 'attempted', true);
+
+      while (await asyncChecks.settle(passingAfter(result))) {
         result = await execute(undefined, true);
       }
+      return result;
     },
   };
 };

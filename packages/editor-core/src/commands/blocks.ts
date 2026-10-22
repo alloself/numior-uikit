@@ -333,9 +333,10 @@ const liftsFrom = (schema: Schema, wrapper: ElementNode): boolean => {
     type !== undefined &&
     type.groups.has('block') &&
     !type.groups.has('list') &&
-    [...schema.nodes.values()]
-      .filter((candidate) => candidate.groups.has('block'))
-      .every((candidate) => type.content.matchType(candidate.name) !== undefined)
+    [...schema.nodes.values()].every(
+      (candidate) =>
+        !candidate.groups.has('block') || type.content.matchType(candidate.name) !== undefined,
+    )
   );
 };
 

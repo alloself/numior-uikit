@@ -133,14 +133,19 @@ const ENTRIES: readonly SlashEntry[] = [
 ];
 
 export const slashItems = (schema: Schema, texts: NuiEditorMessages): SlashCommandItem[] =>
-  ENTRIES.filter((entry) => schema.nodes.has(entry.node)).map((entry) => ({
-    key: entry.key,
-    label: entry.label(texts),
-    icon: entry.icon,
-    keywords: entry.keywords,
-    kind: 'command',
-    command: entry.command(),
-  }));
+  ENTRIES.reduce<SlashCommandItem[]>((found, entry) => {
+    if (schema.nodes.has(entry.node)) {
+      found.push({
+        key: entry.key,
+        label: entry.label(texts),
+        icon: entry.icon,
+        keywords: entry.keywords,
+        kind: 'command',
+        command: entry.command(),
+      });
+    }
+    return found;
+  }, []);
 
 export const filterSlash = (items: readonly SlashItem[], query: string): SlashItem[] => {
   const needle = query.trim().toLocaleLowerCase();

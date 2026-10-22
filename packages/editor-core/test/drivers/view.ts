@@ -500,13 +500,14 @@ export class EditorViewDriver {
   }
 
   get rootChanges(): number {
-    return (this.mutations?.takeRecords() ?? [])
-      .filter(
-        (record) =>
-          record.target === this.host ||
-          (record.target instanceof Element && record.target.matches(CHUNK)),
-      )
-      .reduce((sum, record) => sum + record.addedNodes.length + record.removedNodes.length, 0);
+    return (this.mutations?.takeRecords() ?? []).reduce<number>(
+      (sum, record) =>
+        record.target === this.host ||
+        (record.target instanceof Element && record.target.matches(CHUNK))
+          ? sum + record.addedNodes.length + record.removedNodes.length
+          : sum,
+      0,
+    );
   }
 
   remember(): void {

@@ -20,8 +20,12 @@ const escapeAttribute = (value: string): string =>
 
 const textOf = (children: readonly AnchorToken[]): string =>
   children
-    .filter((child) => child.type === 'text' || child.type === 'code_inline')
-    .map((child) => child.content)
+    .reduce<string[]>((found, child) => {
+      if (child.type === 'text' || child.type === 'code_inline') {
+        found.push(child.content);
+      }
+      return found;
+    }, [])
     .join('');
 
 export const headingPermalink = (

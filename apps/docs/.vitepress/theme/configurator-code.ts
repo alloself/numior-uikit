@@ -122,8 +122,12 @@ export const configuratorCode = (
   content: string | undefined,
 ): string => {
   const attributes = props
-    .filter((prop) => !isDefault(prop, values[prop.name]))
-    .map((prop) => ` ${attributeOf(prop.name, values[prop.name])}`)
+    .reduce<string[]>((found, prop) => {
+      if (!isDefault(prop, values[prop.name])) {
+        found.push(` ${attributeOf(prop.name, values[prop.name])}`);
+      }
+      return found;
+    }, [])
     .join('');
 
   const tag =

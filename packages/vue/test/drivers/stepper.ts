@@ -77,9 +77,12 @@ export class StepperDriver extends ComponentDriver {
   }
 
   get disabledNames(): string[] {
-    return this.steps
-      .filter((step) => step.attributes('disabled') !== undefined)
-      .map((step) => step.find('.nui-row__title').text());
+    return this.steps.reduce<string[]>((found, step) => {
+      if (step.attributes('disabled') !== undefined) {
+        found.push(step.find('.nui-row__title').text());
+      }
+      return found;
+    }, []);
   }
 
   get statuses(): string[] {

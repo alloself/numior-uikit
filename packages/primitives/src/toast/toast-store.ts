@@ -155,7 +155,14 @@ export const createToastStore = (options: ToastStoreOptions = {}): ToastStore =>
     show,
     dismiss,
     clear: () => {
-      leave(new Set(toasts.value.filter((toast) => !toast.leaving).map((toast) => toast.id)));
+      leave(
+        toasts.value.reduce<Set<string>>((ids, toast) => {
+          if (!toast.leaving) {
+            ids.add(toast.id);
+          }
+          return ids;
+        }, new Set()),
+      );
     },
     pause: (id) => timers.pause(id),
     resume: (id) => timers.resume(id),

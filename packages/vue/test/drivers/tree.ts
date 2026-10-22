@@ -273,9 +273,12 @@ export class TreeDriver extends ComponentDriver {
   }
 
   get activeLabels(): string[] {
-    return this.nodes
-      .filter((node) => node.classes().includes('nui-list-item--active'))
-      .map((node) => textOf(node.element));
+    return this.nodes.reduce<string[]>((found, node) => {
+      if (node.classes().includes('nui-list-item--active')) {
+        found.push(textOf(node.element));
+      }
+      return found;
+    }, []);
   }
 
   async dblclick(label: string): Promise<void> {

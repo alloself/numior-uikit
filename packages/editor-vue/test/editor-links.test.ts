@@ -44,19 +44,26 @@ const lines = (...texts: readonly string[]): DocJSON =>
 
 const isElement = (node: NodeJSON): node is ElementJSON => 'type' in node;
 
-const outline = (document: DocJSON | undefined): readonly string[] =>
-  (document?.root.content ?? []).filter(isElement).map((block) => {
-    const attrs = block.attrs ?? {};
+const lineOf = (block: ElementJSON): string => {
+  const attrs = block.attrs ?? {};
 
-    switch (block.type) {
-      case 'embed':
-        return `embed:${String(attrs.provider)}:${String(attrs.url)}`;
-      case 'bookmark':
-        return `bookmark:${String(attrs.title)}:${String(attrs.site)}`;
-      default:
-        return `${block.type}:${(block.content ?? []).map((child) => ('text' in child ? child.text : '')).join('')}`;
+  switch (block.type) {
+    case 'embed':
+      return `embed:${String(attrs.provider)}:${String(attrs.url)}`;
+    case 'bookmark':
+      return `bookmark:${String(attrs.title)}:${String(attrs.site)}`;
+    default:
+      return `${block.type}:${(block.content ?? []).map((child) => ('text' in child ? child.text : '')).join('')}`;
+  }
+};
+
+const outline = (document: DocJSON | undefined): readonly string[] =>
+  (document?.root.content ?? []).reduce<string[]>((found, node) => {
+    if (isElement(node)) {
+      found.push(lineOf(node));
     }
-  });
+    return found;
+  }, []);
 
 const metadata: NuiEditorLinkMetadata = (url) =>
   Promise.resolve({ title: 'Numior blog', description: 'News', site: new URL(url).hostname });

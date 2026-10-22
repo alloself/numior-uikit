@@ -132,10 +132,12 @@ export const createViews = <V extends object, O>(core: FormCore<V, O>): FormView
   const invalid = (prefix: string): Placed[] => {
     const scope = normalizePath(prefix);
 
-    return core.registry
-      .active()
-      .filter((entry) => entry.state.errors.value.length > 0 && isUnder(entry.path(), scope))
-      .map((entry) => ({ entry, element: connected(entry) }));
+    return core.registry.active().reduce<Placed[]>((found, entry) => {
+      if (entry.state.errors.value.length > 0 && isUnder(entry.path(), scope)) {
+        found.push({ entry, element: connected(entry) });
+      }
+      return found;
+    }, []);
   };
 
   return {

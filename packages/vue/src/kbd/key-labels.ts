@@ -34,7 +34,12 @@ const comboLabels = (hotkey: Hotkey, platform: NuiKbdPlatform): string[] => {
   const modifiers = platform === 'mac' ? MAC_MODIFIERS : OTHER_MODIFIERS;
 
   return [
-    ...MODIFIER_ORDER.filter((name) => hotkey[name]).map((name) => modifiers[name]),
+    ...MODIFIER_ORDER.reduce<string[]>((found, name) => {
+      if (hotkey[name]) {
+        found.push(modifiers[name]);
+      }
+      return found;
+    }, []),
     ...(hotkey.key === '' ? [] : [keyLabel(hotkey.key, hotkey.keyText)]),
   ];
 };
