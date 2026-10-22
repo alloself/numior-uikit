@@ -70,6 +70,41 @@ export const withContent = (node: ElementNode, content: readonly ContentNode[]):
   return { ...node, content: normalized, size: contentSize(normalized) + 2 };
 };
 
+const spliceOffsets = (
+  node: ElementNode,
+  next: ElementNode,
+  splice: {
+    readonly from: number;
+    readonly to: number;
+    readonly middle: readonly ContentNode[];
+    readonly delta: number;
+  },
+): void => {
+  const known = offsetCache.get(node);
+
+  if (known === undefined) {
+    return;
+  }
+
+  const { from, to, middle, delta } = splice;
+  const offsets: number[] = known.slice(0, from);
+  const last = node.content.at(-1);
+
+  let offset =
+    from < known.length
+      ? (known[from] ?? 0)
+      : (known.at(-1) ?? 0) + (last === undefined ? 0 : nodeSize(last));
+
+  for (const child of middle) {
+    offsets.push(offset);
+    offset += nodeSize(child);
+  }
+  for (let at = to; at < known.length; at += 1) {
+    offsets.push((known[at] ?? 0) + delta);
+  }
+  offsetCache.set(next, offsets);
+};
+
 export const spliceContent = (
   node: ElementNode,
   first: number,
@@ -86,11 +121,17 @@ export const spliceContent = (
     ...node.content.slice(last, to),
   ]);
 
-  return {
+  const added = contentSize(middle);
+  const delta = added - contentSize(removed);
+
+  const next: ElementNode = {
     ...node,
     content: [...node.content.slice(0, from), ...middle, ...node.content.slice(to)],
-    size: node.size - contentSize(removed) + contentSize(middle),
+    size: node.size + delta,
   };
+
+  spliceOffsets(node, next, { from, to, middle, delta });
+  return next;
 };
 
 export const childOffsets = (node: ElementNode): readonly number[] => {
@@ -108,6 +149,30 @@ export const childOffsets = (node: ElementNode): readonly number[] => {
   }
   offsetCache.set(node, offsets);
   return offsets;
+};
+
+export const inheritOffsets = (
+  from: ElementNode,
+  to: ElementNode,
+  index: number,
+  delta: number,
+): void => {
+  const known = offsetCache.get(from);
+
+  if (known === undefined || known.length !== to.content.length) {
+    return;
+  }
+  if (delta === 0) {
+    offsetCache.set(to, known);
+    return;
+  }
+
+  const next = known.slice();
+
+  for (let at = index + 1; at < next.length; at += 1) {
+    next[at] = (next[at] ?? 0) + delta;
+  }
+  offsetCache.set(to, next);
 };
 
 export const childIndexAt = (node: ElementNode, offset: number): number => {

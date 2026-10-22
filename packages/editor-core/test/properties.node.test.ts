@@ -10,6 +10,8 @@ import {
   type Transform,
 } from '../src';
 import { fixtureSchema, generateDoc } from '../src/fixtures';
+import { childOffsets, nodeSize, spliceContent } from '../src/model/node';
+import type { ElementNode } from '../src/model/node.types';
 
 type Change = (transform: Transform) => void;
 
@@ -191,7 +193,64 @@ const undone = (transform: Transform): Doc =>
     return result.doc;
   }, transform.doc);
 
+const freshOffsets = (node: ElementNode): number[] =>
+  node.content.reduce<{ offsets: number[]; next: number }>(
+    (state, child) => {
+      state.offsets.push(state.next);
+      state.next += nodeSize(child);
+      return state;
+    },
+    { offsets: [], next: 0 },
+  ).offsets;
+
+const staleOffsets = (doc: Doc): number => {
+  let stale = 0;
+
+  doc.nodesBetween(0, doc.size, (node) => {
+    if (node.kind === 'element') {
+      stale += childOffsets(node).join(',') === freshOffsets(node).join(',') ? 0 : 1;
+    }
+    return true;
+  });
+
+  return stale + (childOffsets(doc.root).join(',') === freshOffsets(doc.root).join(',') ? 0 : 1);
+};
+
 describe('step properties', () => {
+  it('derives child offsets when children are spliced into empty and filled nodes', () => {
+    const { root } = generateDoc(fixtureSchema, { blocks: 4, seed: 3 });
+    const blocks = root.content;
+    const empty: ElementNode = { ...root, content: [], size: 2 };
+
+    const spliced = [
+      [empty, 0, 0, blocks.slice(0, 2)],
+      [root, 0, 0, blocks.slice(1, 2)],
+      [root, 2, 3, blocks.slice(0, 3)],
+      [root, blocks.length, blocks.length, blocks.slice(0, 1)],
+    ] as const;
+
+    spliced.forEach(([node, first, last, replacement]) => {
+      childOffsets(node);
+
+      const next = spliceContent(node, first, last, replacement);
+
+      expect(childOffsets(next)).toEqual(freshOffsets(next));
+    });
+  });
+
+  it('keeps the child offsets it derives for new nodes equal to fresh sums', () => {
+    fc.assert(
+      fc.property(scenario, ({ blocks, seed, changes }) => {
+        const transform = replay(blocks, seed, changes);
+
+        expect([...transform.docs, transform.doc].map(staleOffsets)).toEqual(
+          [...transform.docs, transform.doc].map(() => 0),
+        );
+      }),
+      { numRuns: 120 },
+    );
+  });
+
   it('keeps every document valid and restores the start with the inverse steps', () => {
     const kinds = new Set<string>();
     let applied = 0;

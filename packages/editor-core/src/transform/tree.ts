@@ -1,15 +1,19 @@
 import type { ResolvedPos } from '../doc/doc.types';
-import { nodeSize } from '../model/node';
+import { inheritOffsets, nodeSize } from '../model/node';
 import type { ElementNode } from '../model/node.types';
 
 const replaceChild = (parent: ElementNode, index: number, child: ElementNode): ElementNode => {
   const previous = parent.content[index];
+  const delta = child.size - (previous === undefined ? 0 : nodeSize(previous));
 
-  return {
+  const next: ElementNode = {
     ...parent,
     content: parent.content.with(index, child),
-    size: parent.size - (previous === undefined ? 0 : nodeSize(previous)) + child.size,
+    size: parent.size + delta,
   };
+
+  inheritOffsets(parent, next, index, delta);
+  return next;
 };
 
 export const liftInto = (resolved: ResolvedPos, depth: number, node: ElementNode): ElementNode => {
