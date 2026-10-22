@@ -917,7 +917,9 @@ export const createCalculator = (
   };
 
   const relinkName = (name: string, rewrite?: UserRewrite): void => {
-    [...(nameUsers.get(name) ?? [])].forEach((key) => {
+    const snapshot = [...(nameUsers.get(name) ?? [])];
+
+    snapshot.forEach((key) => {
       const record = formulas.get(key);
 
       if (record === undefined) {
@@ -1170,7 +1172,9 @@ export const createCalculator = (
     setName,
     setTable,
     forEachUser: (name, visit) => {
-      [...(nameUsers.get(name.toLowerCase()) ?? [])].forEach((key) => {
+      const snapshot = [...(nameUsers.get(name.toLowerCase()) ?? [])];
+
+      snapshot.forEach((key) => {
         const record = formulas.get(key);
 
         if (record !== undefined) {
@@ -1187,7 +1191,7 @@ export const createCalculator = (
       return false;
     },
     forEachFormula: (visit) => {
-      [...formulas.values()].forEach((record) => {
+      formulas.forEach((record) => {
         visit(record.sheet, record.row, record.col, record.cell.ast);
       });
     },

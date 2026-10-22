@@ -137,7 +137,9 @@ const createDefinedNames = (): DefinedNames => {
       return [...names.values()].some((defined) => defined.name.toLowerCase() === wanted);
     },
     forEach: (visit) => {
-      [...names.values()].forEach(visit);
+      names.forEach((defined) => {
+        visit(defined);
+      });
     },
   };
 };
@@ -170,7 +172,9 @@ const createSheetTables = (): SheetTables => {
       tables.delete(name.toLowerCase());
     },
     forEach: (visit) => {
-      [...tables.values()].forEach(visit);
+      tables.forEach((table) => {
+        visit(table);
+      });
     },
   };
 };

@@ -94,6 +94,12 @@ const CODE_SHAPE = [
   },
   {
     selector:
+      "CallExpression[callee.property.name='forEach'][callee.object.type='ArrayExpression'][callee.object.elements.length=1][callee.object.elements.0.type='SpreadElement']",
+    message:
+      'Iterate the collection itself (for…of or its own forEach) instead of copying it first.',
+  },
+  {
+    selector:
       'Program > :matches(VariableDeclaration, FunctionDeclaration, ClassDeclaration, ExpressionStatement, ExportDefaultDeclaration, ExportNamedDeclaration[declaration.type=/^(?:VariableDeclaration|FunctionDeclaration|ClassDeclaration)$/]) ~ :matches(TSInterfaceDeclaration, TSTypeAliasDeclaration, ExportNamedDeclaration[declaration.type=/^TS(?:Interface|TypeAlias)Declaration$/])',
     message: 'Types go to a *.types.ts module or to the top of the file, before any code.',
   },

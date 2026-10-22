@@ -138,7 +138,9 @@ const createReport = (): Report => {
       if (sheet !== undefined) {
         entry.sheets.add(sheet);
       }
-      [...names].forEach((name) => entry.names.add(name));
+      for (const name of names) {
+        entry.names.add(name);
+      }
       found.set(code, entry);
     },
     build: (staleFormulas) => {
