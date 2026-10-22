@@ -220,7 +220,49 @@ const QUARTILE = defineFunction({
   evaluate: (args) => numberValue(quartile(args, false)),
 });
 
+const SUBTOTAL_COMPUTE: Readonly<
+  Record<number, (values: readonly number[], filled: number) => number>
+> = {
+  1: (values) => mean(values),
+  2: (values) => values.length,
+  3: (_values, filled) => filled,
+  4: (values) => (values.length === 0 ? 0 : Math.max(...values)),
+  5: (values) => (values.length === 0 ? 0 : Math.min(...values)),
+  6: (values) => (values.length === 0 ? 0 : values.reduce((total, value) => total * value, 1)),
+  7: (values) => Math.sqrt(variance(values, true)),
+  8: (values) => Math.sqrt(variance(values, false)),
+  9: (values) => values.reduce((total, value) => total + value, 0),
+  10: (values) => variance(values, true),
+  11: (values) => variance(values, false),
+};
+
+const subtotal = (args: FunctionArgs): EvalValue => {
+  const code = Math.trunc(args.number(0));
+  const compute = SUBTOTAL_COMPUTE[code > 100 ? code - 100 : code] ?? raise('#VALUE!');
+  const values: number[] = [];
+  let filled = 0;
+
+  for (let index = 1; index < args.count; index += 1) {
+    const { sheet, range } = referenceOf(args.value(index));
+
+    sheet.cells.forEachInRange(range, (row, col, value) => {
+      if (args.subtotalAt(sheet, row, col)) {
+        return;
+      }
+      if (value.kind === 'error') {
+        raise(value.code);
+      }
+      filled += 1;
+      if (value.kind === 'number') {
+        values.push(value.value);
+      }
+    });
+  }
+  return numberValue(compute(values, filled));
+};
+
 export const STATISTICS_FUNCTIONS: readonly FunctionSpec[] = [
+  defineFunction({ name: 'SUBTOTAL', min: 2, max: MANY, evaluate: subtotal }),
   defineFunction({
     name: 'AVERAGE',
     min: 1,

@@ -265,6 +265,37 @@ const linksOf = (ast: FormulaNode, record: Placed, workbook: Workbook): Links =>
   return links;
 };
 
+const SUBTOTALS = new Set(['SUBTOTAL', 'AGGREGATE']);
+
+const subtotals = new WeakMap<FormulaNode, boolean>();
+
+const subtotalIn = (node: FormulaNode): boolean => {
+  switch (node.kind) {
+    case 'call':
+      return SUBTOTALS.has(node.name) || node.args.some(subtotalIn);
+    case 'unary':
+    case 'percent':
+      return subtotalIn(node.operand);
+    case 'binary':
+      return subtotalIn(node.left) || subtotalIn(node.right);
+    default:
+      return false;
+  }
+};
+
+const callsSubtotal = (node: FormulaNode): boolean => {
+  const known = subtotals.get(node);
+
+  if (known !== undefined) {
+    return known;
+  }
+
+  const found = subtotalIn(node);
+
+  subtotals.set(node, found);
+  return found;
+};
+
 const usesVolatile = (node: FormulaNode, functions: FunctionRegistry): boolean => {
   switch (node.kind) {
     case 'call':
@@ -469,6 +500,11 @@ export const createCalculator = (
         dynamic.push({ sheet: target.id, range });
       },
       definedName: (node) => definedFor(workbook, (evaluating ?? home).sheet, node),
+      subtotalAt: (target, row, col) => {
+        const ast = recordAt(target, row, col)?.cell.ast;
+
+        return ast !== undefined && callsSubtotal(ast);
+      },
     };
 
     contexts.set(sheet, context);

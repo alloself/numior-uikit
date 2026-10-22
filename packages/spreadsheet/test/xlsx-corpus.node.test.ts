@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vite-plus/test';
 import { readWorkbook, readZip, writeWorkbook, type Bytes } from '../src/xlsx';
-import { corpusFixtures, corpusPackage, dumpOf, expectedPath, modelOf } from './xlsx-corpus';
+import {
+  corpusFixtures,
+  corpusPackage,
+  differingCells,
+  dumpOf,
+  expectedPath,
+  modelOf,
+} from './xlsx-corpus';
 
 interface RoundTrip {
   readonly written: boolean;
@@ -63,7 +70,27 @@ const roundTripOf = async (bytes: Bytes): Promise<RoundTrip> => {
   };
 };
 
+const recalculatedDifferences = async (bytes: Bytes): Promise<string[]> => {
+  const imported = await readWorkbook(bytes);
+  const computed = await readWorkbook(bytes, { recalc: 'chunked' });
+
+  if (imported.kind === 'rejected' || computed.kind === 'rejected') {
+    return [];
+  }
+
+  const before = modelOf(imported);
+  const after = modelOf(computed);
+
+  return JSON.stringify(before.sheets) === JSON.stringify(after.sheets)
+    ? []
+    : differingCells(before.sheets, after.sheets);
+};
+
 describe.each(corpusFixtures())('xlsx corpus: %s', (name) => {
+  it('computes the values the file caches', async () => {
+    expect(await recalculatedDifferences(await corpusPackage(name))).toEqual([]);
+  });
+
   it('reads the model the corpus expects', async () => {
     const read = await readWorkbook(await corpusPackage(name));
 

@@ -2,16 +2,7 @@
   "kind": "editable",
   "report": {
     "staleFormulas": 18,
-    "items": [
-      {
-        "code": "unsupported-functions",
-        "severity": "info",
-        "count": 2,
-        "names": [
-          "SUBTOTAL"
-        ]
-      }
-    ]
+    "items": []
   },
   "defaultFont": {
     "size": 11,

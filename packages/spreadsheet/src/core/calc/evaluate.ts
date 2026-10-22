@@ -41,6 +41,7 @@ export interface EvalContext {
   here(): FormulaPlace;
   track(sheet: Sheet, range: CellRange): void;
   definedName(node: NameNode): DefinedName | undefined;
+  subtotalAt(sheet: Sheet, row: number, col: number): boolean;
 }
 
 type Binary = Extract<FormulaNode, { readonly kind: 'binary' }>;
@@ -279,6 +280,7 @@ const argumentsFrom = (
       return { kind: 'reference', sheet, range };
     },
     indirect: (text) => indirect(text, context),
+    subtotalAt: (sheet, row, col) => context.subtotalAt(sheet, row, col),
   };
 };
 

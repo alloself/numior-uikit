@@ -59,65 +59,358 @@
     "DEVSQ",
     "AVEDEV",
     "GEOMEAN",
-    "HARMEAN"
+    "HARMEAN",
+    "SUBTOTAL"
   ],
   "cases": [
-    { "formula": "=AVERAGE(A1:A8)", "expected": 5 },
-    { "formula": "=AVERAGE(A1:A8,\"x\")", "expected": { "error": "#VALUE!" } },
-    { "formula": "=AVERAGE(E1:E2)", "expected": { "error": "#DIV/0!" } },
-    { "formula": "=AVERAGEA(B1:B3)", "expected": 1 },
-    { "formula": "=AVERAGEIF(A1:A8,\">4\")", "expected": 6.5 },
-    { "formula": "=AVERAGEIFS(A1:A8,A1:A8,\">2\",A1:A8,\"<9\")", "expected": 4.833333333333333 },
-    { "formula": "=COUNT(A1:A8,\"3\",\"x\",TRUE)", "expected": 10 },
-    { "formula": "=COUNTA(B1:B4)", "expected": 3 },
-    { "formula": "=COUNTBLANK(B1:B5)", "expected": 2 },
-    { "formula": "=COUNTBLANK(D1:D2)", "expected": 2 },
-    { "formula": "=COUNTIF(A1:A8,4)", "expected": 3 },
-    { "formula": "=COUNTIF(A1:A8,\">=5\")", "expected": 4 },
-    { "formula": "=COUNTIF(A1:A8,\"<>4\")", "expected": 5 },
-    { "formula": "=COUNTIF(A1:A10,\"\")", "expected": 2 },
-    { "formula": "=COUNTIF(C1:C3,\"a?ple\")", "expected": 2 },
-    { "formula": "=COUNTIF(C1:C3,\"apple~*\")", "expected": 0 },
-    { "formula": "=COUNTIF(E1:E2,\"a~*\")", "cells": { "E1": "a*", "E2": "ab" }, "expected": 1 },
-    { "formula": "=COUNTIF(B1:B3,TRUE)", "expected": 1 },
-    { "formula": "=COUNTIFS(A1:A8,\">2\",A1:A8,\"<6\")", "expected": 5 },
-    { "formula": "=MIN(A1:A8)", "expected": 2 },
-    { "formula": "=MAX(A1:A8,10)", "expected": 10 },
-    { "formula": "=MIN(E1:E2)", "expected": 0 },
-    { "formula": "=MINA(B1:B3)", "expected": 0 },
-    { "formula": "=MAXA(B1:B3)", "expected": 2 },
-    { "formula": "=MINIFS(A1:A8,A1:A8,\">4\")", "expected": 5 },
-    { "formula": "=MAXIFS(A1:A8,A1:A8,\"<9\")", "expected": 7 },
-    { "formula": "=MEDIAN(A1:A8)", "expected": 4.5 },
-    { "formula": "=MEDIAN(1,2,3)", "expected": 2 },
-    { "formula": "=MODE.SNGL(A1:A8)", "expected": 4 },
-    { "formula": "=MODE(1,2,3)", "expected": { "error": "#N/A" } },
-    { "formula": "=LARGE(A1:A8,2)", "expected": 7 },
-    { "formula": "=SMALL(A1:A8,3)", "expected": 4 },
-    { "formula": "=LARGE(A1:A8,9)", "expected": { "error": "#NUM!" } },
-    { "formula": "=RANK.EQ(5,A1:A8)", "expected": 3 },
-    { "formula": "=RANK(4,A1:A8,1)", "expected": 2 },
-    { "formula": "=RANK(3,A1:A8)", "expected": { "error": "#N/A" } },
-    { "formula": "=PERCENTILE.INC(A1:A8,0.25)", "expected": 4 },
-    { "formula": "=PERCENTILE(A1:A8,0.9)", "expected": 7.6 },
-    { "formula": "=PERCENTILE.EXC(A1:A8,0.25)", "expected": 4 },
-    { "formula": "=PERCENTILE.EXC(A1:A8,0.1)", "expected": { "error": "#NUM!" } },
-    { "formula": "=QUARTILE.INC(A1:A8,1)", "expected": 4 },
-    { "formula": "=QUARTILE(A1:A8,3)", "expected": 5.5 },
-    { "formula": "=QUARTILE.EXC(A1:A8,3)", "expected": 6.5 },
-    { "formula": "=QUARTILE(A1:A8,5)", "expected": { "error": "#NUM!" } },
-    { "formula": "=STDEV.P(A1:A8)", "expected": 2 },
-    { "formula": "=STDEVP(A1:A8)", "expected": 2 },
-    { "formula": "=STDEV.S(A1:A8)", "expected": 2.138089935299395 },
-    { "formula": "=STDEV(1)", "expected": { "error": "#DIV/0!" } },
-    { "formula": "=VAR.P(A1:A8)", "expected": 4 },
-    { "formula": "=VARP(A1:A8)", "expected": 4 },
-    { "formula": "=VAR.S(A1:A8)", "expected": 4.571428571428571 },
-    { "formula": "=VAR(A1:A8)", "expected": 4.571428571428571 },
-    { "formula": "=DEVSQ(A1:A8)", "expected": 32 },
-    { "formula": "=AVEDEV(A1:A8)", "expected": 1.5 },
-    { "formula": "=GEOMEAN(2,8)", "expected": 4 },
-    { "formula": "=GEOMEAN(1,0)", "expected": { "error": "#NUM!" } },
-    { "formula": "=HARMEAN(1,2,4)", "expected": 1.7142857142857142 }
+    {
+      "formula": "=AVERAGE(A1:A8)",
+      "expected": 5
+    },
+    {
+      "formula": "=AVERAGE(A1:A8,\"x\")",
+      "expected": {
+        "error": "#VALUE!"
+      }
+    },
+    {
+      "formula": "=AVERAGE(E1:E2)",
+      "expected": {
+        "error": "#DIV/0!"
+      }
+    },
+    {
+      "formula": "=AVERAGEA(B1:B3)",
+      "expected": 1
+    },
+    {
+      "formula": "=AVERAGEIF(A1:A8,\">4\")",
+      "expected": 6.5
+    },
+    {
+      "formula": "=AVERAGEIFS(A1:A8,A1:A8,\">2\",A1:A8,\"<9\")",
+      "expected": 4.833333333333333
+    },
+    {
+      "formula": "=COUNT(A1:A8,\"3\",\"x\",TRUE)",
+      "expected": 10
+    },
+    {
+      "formula": "=COUNTA(B1:B4)",
+      "expected": 3
+    },
+    {
+      "formula": "=COUNTBLANK(B1:B5)",
+      "expected": 2
+    },
+    {
+      "formula": "=COUNTBLANK(D1:D2)",
+      "expected": 2
+    },
+    {
+      "formula": "=COUNTIF(A1:A8,4)",
+      "expected": 3
+    },
+    {
+      "formula": "=COUNTIF(A1:A8,\">=5\")",
+      "expected": 4
+    },
+    {
+      "formula": "=COUNTIF(A1:A8,\"<>4\")",
+      "expected": 5
+    },
+    {
+      "formula": "=COUNTIF(A1:A10,\"\")",
+      "expected": 2
+    },
+    {
+      "formula": "=COUNTIF(C1:C3,\"a?ple\")",
+      "expected": 2
+    },
+    {
+      "formula": "=COUNTIF(C1:C3,\"apple~*\")",
+      "expected": 0
+    },
+    {
+      "formula": "=COUNTIF(E1:E2,\"a~*\")",
+      "cells": {
+        "E1": "a*",
+        "E2": "ab"
+      },
+      "expected": 1
+    },
+    {
+      "formula": "=COUNTIF(B1:B3,TRUE)",
+      "expected": 1
+    },
+    {
+      "formula": "=COUNTIFS(A1:A8,\">2\",A1:A8,\"<6\")",
+      "expected": 5
+    },
+    {
+      "formula": "=MIN(A1:A8)",
+      "expected": 2
+    },
+    {
+      "formula": "=MAX(A1:A8,10)",
+      "expected": 10
+    },
+    {
+      "formula": "=MIN(E1:E2)",
+      "expected": 0
+    },
+    {
+      "formula": "=MINA(B1:B3)",
+      "expected": 0
+    },
+    {
+      "formula": "=MAXA(B1:B3)",
+      "expected": 2
+    },
+    {
+      "formula": "=MINIFS(A1:A8,A1:A8,\">4\")",
+      "expected": 5
+    },
+    {
+      "formula": "=MAXIFS(A1:A8,A1:A8,\"<9\")",
+      "expected": 7
+    },
+    {
+      "formula": "=MEDIAN(A1:A8)",
+      "expected": 4.5
+    },
+    {
+      "formula": "=MEDIAN(1,2,3)",
+      "expected": 2
+    },
+    {
+      "formula": "=MODE.SNGL(A1:A8)",
+      "expected": 4
+    },
+    {
+      "formula": "=MODE(1,2,3)",
+      "expected": {
+        "error": "#N/A"
+      }
+    },
+    {
+      "formula": "=LARGE(A1:A8,2)",
+      "expected": 7
+    },
+    {
+      "formula": "=SMALL(A1:A8,3)",
+      "expected": 4
+    },
+    {
+      "formula": "=LARGE(A1:A8,9)",
+      "expected": {
+        "error": "#NUM!"
+      }
+    },
+    {
+      "formula": "=RANK.EQ(5,A1:A8)",
+      "expected": 3
+    },
+    {
+      "formula": "=RANK(4,A1:A8,1)",
+      "expected": 2
+    },
+    {
+      "formula": "=RANK(3,A1:A8)",
+      "expected": {
+        "error": "#N/A"
+      }
+    },
+    {
+      "formula": "=PERCENTILE.INC(A1:A8,0.25)",
+      "expected": 4
+    },
+    {
+      "formula": "=PERCENTILE(A1:A8,0.9)",
+      "expected": 7.6
+    },
+    {
+      "formula": "=PERCENTILE.EXC(A1:A8,0.25)",
+      "expected": 4
+    },
+    {
+      "formula": "=PERCENTILE.EXC(A1:A8,0.1)",
+      "expected": {
+        "error": "#NUM!"
+      }
+    },
+    {
+      "formula": "=QUARTILE.INC(A1:A8,1)",
+      "expected": 4
+    },
+    {
+      "formula": "=QUARTILE(A1:A8,3)",
+      "expected": 5.5
+    },
+    {
+      "formula": "=QUARTILE.EXC(A1:A8,3)",
+      "expected": 6.5
+    },
+    {
+      "formula": "=QUARTILE(A1:A8,5)",
+      "expected": {
+        "error": "#NUM!"
+      }
+    },
+    {
+      "formula": "=STDEV.P(A1:A8)",
+      "expected": 2
+    },
+    {
+      "formula": "=STDEVP(A1:A8)",
+      "expected": 2
+    },
+    {
+      "formula": "=STDEV.S(A1:A8)",
+      "expected": 2.138089935299395
+    },
+    {
+      "formula": "=STDEV(1)",
+      "expected": {
+        "error": "#DIV/0!"
+      }
+    },
+    {
+      "formula": "=VAR.P(A1:A8)",
+      "expected": 4
+    },
+    {
+      "formula": "=VARP(A1:A8)",
+      "expected": 4
+    },
+    {
+      "formula": "=VAR.S(A1:A8)",
+      "expected": 4.571428571428571
+    },
+    {
+      "formula": "=VAR(A1:A8)",
+      "expected": 4.571428571428571
+    },
+    {
+      "formula": "=DEVSQ(A1:A8)",
+      "expected": 32
+    },
+    {
+      "formula": "=AVEDEV(A1:A8)",
+      "expected": 1.5
+    },
+    {
+      "formula": "=GEOMEAN(2,8)",
+      "expected": 4
+    },
+    {
+      "formula": "=GEOMEAN(1,0)",
+      "expected": {
+        "error": "#NUM!"
+      }
+    },
+    {
+      "formula": "=HARMEAN(1,2,4)",
+      "expected": 1.7142857142857142
+    },
+    {
+      "formula": "=SUBTOTAL(9,A1:A8)",
+      "expected": 40
+    },
+    {
+      "formula": "=SUBTOTAL(109,A1:A8)",
+      "expected": 40
+    },
+    {
+      "formula": "=SUBTOTAL(1,A1:A8)",
+      "expected": 5
+    },
+    {
+      "formula": "=SUBTOTAL(2,B1:B3)",
+      "expected": 1
+    },
+    {
+      "formula": "=SUBTOTAL(3,B1:B3)",
+      "expected": 3
+    },
+    {
+      "formula": "=SUBTOTAL(4,A1:A8)",
+      "expected": 9
+    },
+    {
+      "formula": "=SUBTOTAL(105,A1:A8)",
+      "expected": 2
+    },
+    {
+      "formula": "=SUBTOTAL(6,A1:A8)",
+      "expected": 201600
+    },
+    {
+      "formula": "=SUBTOTAL(7,A1:A8)",
+      "expected": 2.138089935299395
+    },
+    {
+      "formula": "=SUBTOTAL(8,A1:A8)",
+      "expected": 2
+    },
+    {
+      "formula": "=SUBTOTAL(10,A1:A8)",
+      "expected": 4.571428571428571
+    },
+    {
+      "formula": "=SUBTOTAL(111,A1:A8)",
+      "expected": 4
+    },
+    {
+      "formula": "=SUBTOTAL(9,A1:A2,A7:A8)",
+      "expected": 22
+    },
+    {
+      "formula": "=SUBTOTAL(12,A1:A8)",
+      "expected": {
+        "error": "#VALUE!"
+      }
+    },
+    {
+      "formula": "=SUBTOTAL(9,{1,2})",
+      "expected": {
+        "error": "#VALUE!"
+      }
+    },
+    {
+      "formula": "=SUBTOTAL(9,E1:E4)",
+      "cells": {
+        "E1": 1,
+        "E2": 2,
+        "E3": "=SUBTOTAL(9,E1:E2)",
+        "E4": "=SUM(E1:E2)*SUBTOTAL(9,E1:E2)"
+      },
+      "expected": 3
+    },
+    {
+      "formula": "=SUM(E1:E3)",
+      "cells": {
+        "E1": 1,
+        "E2": 2,
+        "E3": "=SUBTOTAL(9,E1:E2)",
+        "E4": "=SUM(E1:E2)*SUBTOTAL(9,E1:E2)"
+      },
+      "expected": 6
+    },
+    {
+      "formula": "=SUBTOTAL(9,F1:F2)",
+      "cells": {
+        "F1": "=1/0",
+        "F2": 1
+      },
+      "expected": {
+        "error": "#DIV/0!"
+      }
+    },
+    {
+      "formula": "=SUBTOTAL(9;A1:A8)",
+      "locale": "ru",
+      "expected": 40
+    }
   ]
 }

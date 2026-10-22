@@ -57,6 +57,7 @@ export interface FunctionArgs {
   here(): FormulaPlace;
   refer(sheet: Sheet, range: CellRange): EvalValue;
   indirect(text: string): EvalValue;
+  subtotalAt(sheet: Sheet, row: number, col: number): boolean;
 }
 
 export interface FormulaPlace {

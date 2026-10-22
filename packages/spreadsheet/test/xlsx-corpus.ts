@@ -94,7 +94,32 @@ const cellsOf = (read: Opened, sheet: Sheet): Record<string, unknown> => {
   );
 };
 
-export const modelOf = (read: Opened): Record<string, unknown> => {
+interface SheetModel {
+  readonly name: string;
+  readonly cells: Record<string, unknown>;
+}
+
+const valueOf = (cell: unknown): string =>
+  typeof cell === 'object' && cell !== null && 'value' in cell ? JSON.stringify(cell.value) : '';
+
+export const differingCells = (
+  before: readonly SheetModel[],
+  after: readonly SheetModel[],
+): string[] =>
+  before.flatMap((sheet, index) =>
+    Object.entries(sheet.cells).reduce<string[]>((found, [address, cell]) => {
+      const other = after[index]?.cells[address];
+
+      if (valueOf(cell) !== valueOf(other)) {
+        found.push(`${sheet.name}!${address}: ${valueOf(cell)} → ${valueOf(other)}`);
+      }
+      return found;
+    }, []),
+  );
+
+export const modelOf = (
+  read: Opened,
+): { readonly sheets: SheetModel[]; readonly [key: string]: unknown } => {
   const names: unknown[] = [];
   const tables: unknown[] = [];
 
