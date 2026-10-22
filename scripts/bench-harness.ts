@@ -68,6 +68,14 @@ export const summarize = (name: string, samples: readonly number[]): Operation =
   return operation;
 };
 
+const collectGarbage = (): void => {
+  const gc: unknown = Reflect.get(globalThis, 'gc');
+
+  if (typeof gc === 'function') {
+    gc();
+  }
+};
+
 export const measure = async (
   name: string,
   run: () => Promise<void>,
@@ -79,6 +87,8 @@ export const measure = async (
   const samples: number[] = [];
 
   for (let index = 0; index < options.iterations; index += 1) {
+    collectGarbage();
+
     const started = performance.now();
     await run();
     samples.push(performance.now() - started);
