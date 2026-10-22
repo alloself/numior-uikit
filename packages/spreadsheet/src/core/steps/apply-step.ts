@@ -189,7 +189,16 @@ export const createStepper = (book: Workbook, calculator: Calculator): Stepper =
     });
   };
 
-  const pivots = createPivotSteps(book, { contentsIn, write });
+  const snapshotOf = (sheet: Sheet, cells: readonly CellEdit[]): CellEdit[] =>
+    cells.map((cell) => ({
+      row: cell.row,
+      col: cell.col,
+      content: calculator.contentAt(sheet, cell.row, cell.col),
+      format: formatCode(sheet, cell.row, cell.col),
+      decoration: book.decorations.get(sheet.decorations.get(cell.row, cell.col)),
+    }));
+
+  const pivots = createPivotSteps(book, { contentsIn, write, snapshot: snapshotOf });
 
   const snapshot = (): WorkbookStep[] => [
     ...book.sheets.flatMap((each): WorkbookStep[] => [
@@ -441,7 +450,9 @@ export const createStepper = (book: Workbook, calculator: Calculator): Stepper =
   const applyToSheet = (sheet: Sheet, step: SheetStep): StepResult => {
     switch (step.kind) {
       case 'setCells':
-        return setCells(sheet, step.cells);
+        return pivots.covers(sheet, step.cells)
+          ? refused('pivot-output')
+          : setCells(sheet, step.cells);
       case 'setFormat':
         return setFormat(sheet, step.range, step.format);
       case 'insertLines':
@@ -457,7 +468,7 @@ export const createStepper = (book: Workbook, calculator: Calculator): Stepper =
       case 'refreshPivot':
         return pivots.refresh(sheet, step.name);
       case 'putPivot':
-        return pivots.put(sheet, step.name, step.pivot);
+        return pivots.put(sheet, step.name, step.pivot, step.cells);
     }
   };
 

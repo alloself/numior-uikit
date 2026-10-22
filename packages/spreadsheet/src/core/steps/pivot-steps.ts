@@ -1,4 +1,4 @@
-import { MAX_COLS, MAX_ROWS } from '../address';
+import { MAX_COLS, MAX_ROWS, containsCell } from '../address';
 import type { CellRange } from '../cell.types';
 import { sameName, type LineChange } from '../formula/rewrite';
 import { shiftIndex } from '../lines';
@@ -14,12 +14,19 @@ import type { CellEdit, StepResult, WorkbookStep } from './step.types';
 export interface CellAccess {
   contentsIn(sheet: Sheet, range: CellRange): Map<number, CellEdit>;
   write(sheet: Sheet, cell: CellEdit): void;
+  snapshot(sheet: Sheet, cells: readonly CellEdit[]): CellEdit[];
 }
 
 export interface PivotSteps {
   set(sheet: Sheet, name: string, spec: PivotSpec | undefined): StepResult;
   refresh(sheet: Sheet, name: string): StepResult;
-  put(sheet: Sheet, name: string, state: PivotState | undefined): StepResult;
+  put(
+    sheet: Sheet,
+    name: string,
+    state: PivotState | undefined,
+    restored: readonly CellEdit[] | undefined,
+  ): StepResult;
+  covers(sheet: Sheet, cells: readonly CellEdit[]): boolean;
   crossed(sheet: Sheet, change: LineChange): boolean;
   move(sheet: Sheet, change: LineChange): void;
   rename(from: string, to: string): void;
@@ -133,7 +140,7 @@ export const createPivotSteps = (book: Workbook, cells: CellAccess): PivotSteps 
         row: spec.anchor.row + cell.row,
         col: spec.anchor.col + cell.col,
         content: { kind: 'value', value: cell.value },
-        format: cell.format ?? GENERAL,
+        format: cell.format,
       })),
     };
   };
@@ -170,7 +177,7 @@ export const createPivotSteps = (book: Workbook, cells: CellAccess): PivotSteps 
     }
 
     cells.contentsIn(sheet, area).forEach((cell) => {
-      cells.write(sheet, { row: cell.row, col: cell.col, content: EMPTY_CONTENT, format: GENERAL });
+      cells.write(sheet, { row: cell.row, col: cell.col, content: EMPTY_CONTENT });
     });
   };
 
@@ -206,16 +213,11 @@ export const createPivotSteps = (book: Workbook, cells: CellAccess): PivotSteps 
       ok: true,
       changes: [],
       inverse: {
-        kind: 'batch',
-        steps: [
-          {
-            kind: 'putPivot',
-            sheet: sheet.name,
-            name,
-            pivot: previous === undefined ? undefined : stateOf(previous),
-          },
-          { kind: 'setCells', sheet: sheet.name, cells: restore },
-        ],
+        kind: 'putPivot',
+        sheet: sheet.name,
+        name,
+        pivot: previous === undefined ? undefined : stateOf(previous),
+        cells: restore,
       },
     };
   };
@@ -229,8 +231,13 @@ export const createPivotSteps = (book: Workbook, cells: CellAccess): PivotSteps 
         ? { ok: false, reason: 'missing-pivot' }
         : placed(sheet, name, { anchor: pivot.anchor, definition: pivot.definition });
     },
-    put: (sheet, name, state) => {
+    put: (sheet, name, state, restored = []) => {
       const previous = book.pivots.get(sheet, name);
+      const current = cells.snapshot(sheet, restored);
+
+      restored.forEach((cell) => {
+        cells.write(sheet, cell);
+      });
 
       if (previous !== undefined) {
         book.pivots.delete(previous);
@@ -246,9 +253,21 @@ export const createPivotSteps = (book: Workbook, cells: CellAccess): PivotSteps 
           sheet: sheet.name,
           name,
           pivot: previous === undefined ? undefined : stateOf(previous),
+          cells: current,
         },
       };
     },
+    covers: (sheet, edits) =>
+      book.pivots.on(sheet).some((pivot) => {
+        const { footprint } = pivot;
+
+        return (
+          footprint !== undefined &&
+          edits.some(
+            (edit) => edit.content !== undefined && containsCell(footprint, edit.row, edit.col),
+          )
+        );
+      }),
     crossed: (sheet, change) =>
       book.pivots
         .on(sheet)

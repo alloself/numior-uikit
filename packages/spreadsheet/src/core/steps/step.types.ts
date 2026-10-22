@@ -67,6 +67,7 @@ export type WorkbookStep =
       readonly sheet: string;
       readonly name: string;
       readonly pivot: PivotState | undefined;
+      readonly cells?: readonly CellEdit[] | undefined;
     }
   | { readonly kind: 'batch'; readonly steps: readonly WorkbookStep[] };
 
@@ -83,7 +84,8 @@ export type StepRefusal =
   | 'table-overlap'
   | 'invalid-pivot'
   | 'pivot-overlap'
-  | 'missing-pivot';
+  | 'missing-pivot'
+  | 'pivot-output';
 
 export type StepResult =
   | {

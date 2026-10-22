@@ -368,6 +368,34 @@ describe('pivot steps', () => {
     expect(book.footprint()).toBe('A5:E10');
   });
 
+  it('refuses edits to its cells but lets them be formatted', () => {
+    const book = salesBook();
+
+    book.place();
+
+    expect(() => {
+      book.type('B5', '1', 'Rates');
+    }).toThrow('pivot-output');
+
+    expect(
+      book.commit({
+        kind: 'setCells',
+        sheet: 'Rates',
+        cells: [{ row: 4, col: 1, format: '0.0' }],
+      }).ok,
+    ).toBe(true);
+
+    expect(book.shown('B5', 'Rates')).toBe('300.0');
+    expect(book.commit({ kind: 'refreshPivot', sheet: 'Rates', name: 'Sales' }).ok).toBe(true);
+    expect(book.shown('B5', 'Rates')).toBe('300.0');
+    book.history.undo();
+    book.history.undo();
+    book.history.undo();
+    expect(book.footprint()).toBeUndefined();
+    book.type('B5', '1', 'Rates');
+    expect(book.shown('B5', 'Rates')).toBe('1');
+  });
+
   it('refuses pivots over other pivots and fields the source does not have', () => {
     const book = salesBook();
 
