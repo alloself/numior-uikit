@@ -8,6 +8,7 @@ export default defineConfig({
     lib: {
       entry: {
         core: fileURLToPath(new URL('./src/core/index.ts', import.meta.url)),
+        xlsx: fileURLToPath(new URL('./src/xlsx/index.ts', import.meta.url)),
       },
       formats: ['es'],
       fileName: (_format, name) => `${name}.js`,

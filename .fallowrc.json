@@ -15,6 +15,7 @@
     "packages/content/src/media/index.ts",
     "packages/editor-vue/src/index.ts",
     "packages/spreadsheet/src/core/index.ts",
+    "packages/spreadsheet/src/xlsx/index.ts",
     "apps/playground/src/tailwind.css",
     "scripts/vite-package-assets.ts",
     "scripts/build-css.ts",

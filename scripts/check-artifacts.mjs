@@ -267,6 +267,34 @@ for (const file of await localImports(resolve('packages/spreadsheet/dist/core.js
   );
 }
 
+const spreadsheetXlsx = await import(
+  pathToFileURL(resolve('packages/spreadsheet/dist/xlsx.js')).href
+);
+
+assert.deepEqual(
+  ['readZip', 'writeZip', 'createXmlParser', 'createXmlWriter'].map(
+    (name) => typeof spreadsheetXlsx[name],
+  ),
+  ['function', 'function', 'function', 'function'],
+  'spreadsheet/xlsx must export the zip codec and the XML reader and writer',
+);
+
+for (const file of await localImports(resolve('packages/spreadsheet/dist/xlsx.js'))) {
+  const source = await readFile(file, 'utf8');
+
+  assert.doesNotMatch(
+    source,
+    /from ['"](?:vue|@vueuse\/[\w-]+|@numior\/[\w-]+|fflate)['"]/,
+    `spreadsheet/xlsx must stay free of Vue, UI packages and third-party zip code: ${file}`,
+  );
+
+  assert.doesNotMatch(
+    source,
+    /\b(?:document|window|navigator)\.|\bDOMParser\b/,
+    `spreadsheet/xlsx must not touch the DOM: ${file}`,
+  );
+}
+
 const contentCode = await importBuild('content', [
   'NuiContent',
   'contentSchema',

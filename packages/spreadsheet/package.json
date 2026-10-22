@@ -13,6 +13,11 @@
       "@numior/source": "./src/core/index.ts",
       "types": "./dist/core/index.d.ts",
       "import": "./dist/core.js"
+    },
+    "./xlsx": {
+      "@numior/source": "./src/xlsx/index.ts",
+      "types": "./dist/xlsx/index.d.ts",
+      "import": "./dist/xlsx.js"
     }
   },
   "scripts": {
