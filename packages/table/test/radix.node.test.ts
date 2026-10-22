@@ -115,6 +115,25 @@ describe('createRadixSortJob', () => {
     expect(sorted(length, lanes.toReversed())).toEqual(merged(length, lanes.toReversed()));
   });
 
+  it('packs several dictionary ranks across word boundaries and splits keys wider than 64 bits', () => {
+    const random = mulberry32(17);
+    const length = 30_000;
+
+    const lane = (size: number, descending: boolean): RadixLane => ({
+      kind: 'rank',
+      keys: Uint32Array.from({ length }, () => Math.floor(random() * size)),
+      nulls: Uint8Array.from({ length }, () => (random() < 0.03 ? 1 : 0)),
+      descending,
+      size,
+    });
+
+    const packed = [lane(300, true), lane(70_000, false), lane(3_000_000, true)];
+    const wide = [lane(2 ** 31, false), lane(2 ** 31, true), lane(5, false)];
+
+    expect(sorted(length, packed)).toEqual(merged(length, packed));
+    expect(sorted(length, wide)).toEqual(merged(length, wide));
+  });
+
   it('keeps every slice near its budget and reports the whole job as done', () => {
     const random = mulberry32(5);
     const length = 400_000;

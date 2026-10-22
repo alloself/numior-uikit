@@ -15,14 +15,17 @@ export type RadixLane =
       readonly size: number;
     };
 
-type Phase = 'gather' | 'count' | 'scatter';
+type RankLane = Extract<RadixLane, { readonly kind: 'rank' }>;
 
-interface RadixState {
-  lane: number;
-  digit: number;
-  phase: Phase;
-  position: number;
-  done: number;
+type FloatLane = Extract<RadixLane, { readonly kind: 'float' }>;
+
+type Group =
+  | { readonly kind: 'float'; readonly lane: FloatLane }
+  | { readonly kind: 'packed'; readonly lanes: readonly Packed[]; readonly bits: number };
+
+interface Packed {
+  readonly lane: RankLane;
+  readonly shift: number;
 }
 
 interface Buffers {
@@ -34,11 +37,37 @@ interface Buffers {
   nextIdx: Uint32Array;
 }
 
-const DIGIT_BITS = 16;
-const BUCKETS = 1 << DIGIT_BITS;
-const DIGIT_MASK = BUCKETS - 1;
+interface Layout {
+  readonly digits: number;
+  readonly width: number;
+  readonly bits: number;
+}
+
+interface RadixState {
+  group: number;
+  digit: number;
+  gathering: boolean;
+  position: number;
+  done: number;
+}
+
+export interface SortedKeys {
+  readonly hi: Uint32Array;
+  readonly lo: Uint32Array;
+  readonly idx: Uint32Array;
+  release(): void;
+}
+
+export interface KeptRadixJob extends SliceJob {
+  sorted(): SortedKeys | undefined;
+}
+
+const MAX_DIGIT_BITS = 16;
+const WORD_BITS = 32;
+const GROUP_BITS = 64;
 const ALL_ONES = 0xff_ff_ff_ff;
 const SIGN = 0x80_00_00_00;
+const POOLED = 2;
 
 const scratch = new Float64Array(1);
 const words = new Uint32Array(scratch.buffer);
@@ -46,110 +75,224 @@ const LITTLE_ENDIAN = new Uint8Array(new Uint16Array([1]).buffer)[0] === 1;
 const LOW_WORD = LITTLE_ENDIAN ? 0 : 1;
 const HIGH_WORD = LITTLE_ENDIAN ? 1 : 0;
 
-const digitsOf = (lane: RadixLane): number => (lane.kind === 'rank' ? 2 : 4);
+const pools = new Map<number, Buffers[]>();
 
-const digitAt = (buffers: Buffers, digit: number, position: number): number => {
-  const word = digit < 2 ? (buffers.lo[position] ?? 0) : (buffers.hi[position] ?? 0);
-  return digit % 2 === 0 ? word & DIGIT_MASK : word >>> DIGIT_BITS;
+const bitsFor = (value: number): number => (value <= 0 ? 1 : WORD_BITS - Math.clz32(value));
+
+const buffersFor = (length: number): Buffers =>
+  pools.get(length)?.pop() ?? {
+    hi: new Uint32Array(length),
+    lo: new Uint32Array(length),
+    idx: new Uint32Array(length),
+    nextHi: new Uint32Array(length),
+    nextLo: new Uint32Array(length),
+    nextIdx: new Uint32Array(length),
+  };
+
+const release = (length: number, buffers: Buffers): void => {
+  const pool = pools.get(length) ?? [];
+
+  if (pool.length < POOLED) {
+    pool.push(buffers);
+  }
+  pools.set(length, pool);
 };
 
-const writeFloat = (buffers: Buffers, at: number, value: number, descending: boolean): void => {
+const groupsOf = (lanes: readonly RadixLane[]): Group[] =>
+  lanes.reduce<{ groups: Group[]; open: RankLane[] }>(
+    (state, lane, index) => {
+      const close = (): void => {
+        if (state.open.length > 0) {
+          const bits = state.open.map((item) => bitsFor(item.size));
+          let shift = bits.reduce((sum, item) => sum + item, 0);
+          const total = shift;
+
+          state.groups.push({
+            kind: 'packed',
+            bits: total,
+            lanes: state.open.map((item, at) => {
+              shift -= bits[at] ?? 0;
+              return { lane: item, shift };
+            }),
+          });
+
+          state.open = [];
+        }
+      };
+
+      if (lane.kind === 'float') {
+        close();
+        state.groups.push({ kind: 'float', lane });
+      } else {
+        const used = state.open.reduce((sum, item) => sum + bitsFor(item.size), 0);
+
+        if (used + bitsFor(lane.size) > GROUP_BITS) {
+          close();
+        }
+        state.open.push(lane);
+      }
+      if (index === lanes.length - 1) {
+        close();
+      }
+      return state;
+    },
+    { groups: [], open: [] },
+  ).groups;
+
+const layoutOf = (group: Group): Layout => {
+  const bits = group.kind === 'float' ? GROUP_BITS : group.bits;
+  const digits = Math.max(1, Math.ceil(bits / MAX_DIGIT_BITS));
+
+  return { digits, width: Math.ceil(bits / digits), bits };
+};
+
+const digitOf = (hi: number, lo: number, start: number, mask: number): number => {
+  if (start >= WORD_BITS) {
+    return (hi >>> (start - WORD_BITS)) & mask;
+  }
+  return ((lo >>> start) | (start === 0 ? 0 : hi << (WORD_BITS - start))) & mask;
+};
+
+const floatKey = (buffers: Buffers, at: number, value: number, descending: boolean): void => {
   scratch[0] = value === 0 ? 0 : value;
+
   const highWord = words[HIGH_WORD] ?? 0;
   const lowWord = words[LOW_WORD] ?? 0;
   const negative = (highWord & SIGN) !== 0;
   const high = negative ? ~highWord : highWord | SIGN;
   const low = negative ? ~lowWord : lowWord;
 
-  buffers.hi[at] = (descending ? ~high : high) >>> 0;
-  buffers.lo[at] = (descending ? ~low : low) >>> 0;
+  buffers.hi[at] = descending ? ~high : high;
+  buffers.lo[at] = descending ? ~low : low;
 };
 
-const writeKey = (lane: RadixLane, row: number, buffers: Buffers, at: number): void => {
-  if (lane.nulls[row] === 1) {
+const packedKey = (buffers: Buffers, at: number, lanes: readonly Packed[], row: number): void => {
+  let hi = 0;
+  let lo = 0;
+
+  for (const { lane, shift } of lanes) {
+    const rank = lane.keys[row] ?? 0;
+    const value = lane.nulls[row] === 1 ? lane.size : lane.descending ? lane.size - 1 - rank : rank;
+
+    if (shift >= WORD_BITS) {
+      hi |= value << (shift - WORD_BITS);
+    } else {
+      lo |= value << shift;
+      hi |= shift === 0 ? 0 : value >>> (WORD_BITS - shift);
+    }
+  }
+  buffers.hi[at] = hi;
+  buffers.lo[at] = lo;
+};
+
+const writeKey = (group: Group, buffers: Buffers, at: number): void => {
+  const row = buffers.idx[at] ?? 0;
+
+  if (group.kind === 'packed') {
+    packedKey(buffers, at, group.lanes, row);
+  } else if (group.lane.nulls[row] === 1) {
     buffers.hi[at] = ALL_ONES;
     buffers.lo[at] = ALL_ONES;
-  } else if (lane.kind === 'rank') {
-    const rank = lane.keys[row] ?? 0;
-    buffers.hi[at] = 0;
-    buffers.lo[at] = lane.descending ? lane.size - 1 - rank : rank;
   } else {
-    writeFloat(buffers, at, lane.keys[row] ?? 0, lane.descending);
+    floatKey(buffers, at, group.lane.keys[row] ?? 0, group.lane.descending);
   }
 };
 
-const offsetsFrom = (counts: Uint32Array): void => {
+const offsetsFrom = (counts: Uint32Array, from: number, size: number): void => {
   let sum = 0;
 
-  for (let bucket = 0; bucket < BUCKETS; bucket += 1) {
-    const size = counts[bucket] ?? 0;
+  for (let bucket = from; bucket < from + size; bucket += 1) {
+    const count = counts[bucket] ?? 0;
+
     counts[bucket] = sum;
-    sum += size;
+    sum += count;
   }
 };
 
-export const createRadixSortJob = (indices: Uint32Array, lanes: readonly RadixLane[]): SliceJob => {
-  const length = indices.length;
-  const counts = new Uint32Array(BUCKETS);
-  const total = Math.max(1, lanes.reduce((sum, lane) => sum + 1 + digitsOf(lane) * 2, 0) * length);
+const single = (counts: Uint32Array, from: number, size: number, length: number): boolean => {
+  for (let bucket = from; bucket < from + size; bucket += 1) {
+    const count = counts[bucket] ?? 0;
 
-  const buffers: Buffers = {
-    hi: new Uint32Array(length),
-    lo: new Uint32Array(length),
-    idx: indices.slice(),
-    nextHi: new Uint32Array(length),
-    nextLo: new Uint32Array(length),
-    nextIdx: new Uint32Array(length),
-  };
+    if (count !== 0) {
+      return count === length;
+    }
+  }
+  return true;
+};
+
+export const createRadixSortJob = (indices: Uint32Array, lanes: readonly RadixLane[]): SliceJob =>
+  createKeptRadixJob(indices, lanes, false);
+
+export const createKeptRadixJob = (
+  indices: Uint32Array,
+  lanes: readonly RadixLane[],
+  keep: boolean,
+): KeptRadixJob => {
+  const length = indices.length;
+  const groups = groupsOf(lanes);
+  const layouts = groups.map(layoutOf);
+  const buckets = 1 << Math.max(...layouts.map((layout) => layout.width), 1);
+  const counts = new Uint32Array(buckets * Math.max(...layouts.map((layout) => layout.digits), 1));
+  const total = Math.max(1, layouts.reduce((sum, layout) => sum + 1 + layout.digits, 0) * length);
+  const buffers = buffersFor(length);
 
   const state: RadixState = {
-    lane: lanes.length - 1,
+    group: groups.length - 1,
     digit: 0,
-    phase: 'gather',
+    gathering: true,
     position: 0,
     done: 0,
   };
 
-  const due = (deadline: number): boolean =>
-    state.position % CHECK_INTERVAL === 0 && performance.now() >= deadline;
+  buffers.idx.set(indices);
 
-  const gather = (lane: RadixLane, deadline: number): boolean => {
+  const gather = (group: Group, layout: Layout, deadline: number): boolean => {
+    const mask = (1 << layout.width) - 1;
+
     while (state.position < length) {
-      writeKey(lane, buffers.idx[state.position] ?? 0, buffers, state.position);
-      state.position += 1;
+      const stop = Math.min(length, state.position + CHECK_INTERVAL);
 
-      if (due(deadline)) {
+      for (let at = state.position; at < stop; at += 1) {
+        writeKey(group, buffers, at);
+
+        const hi = buffers.hi[at] ?? 0;
+        const lo = buffers.lo[at] ?? 0;
+
+        for (let digit = 0; digit < layout.digits; digit += 1) {
+          const bucket = digit * buckets + digitOf(hi, lo, digit * layout.width, mask);
+
+          counts[bucket] = (counts[bucket] ?? 0) + 1;
+        }
+      }
+      state.position = stop;
+      if (performance.now() >= deadline) {
         return false;
       }
     }
     return true;
   };
 
-  const count = (deadline: number): boolean => {
-    while (state.position < length) {
-      const bucket = digitAt(buffers, state.digit, state.position);
-      counts[bucket] = (counts[bucket] ?? 0) + 1;
-      state.position += 1;
+  const scatter = (layout: Layout, deadline: number): boolean => {
+    const mask = (1 << layout.width) - 1;
+    const start = state.digit * layout.width;
+    const base = state.digit * buckets;
 
-      if (due(deadline)) {
-        return false;
+    while (state.position < length) {
+      const stop = Math.min(length, state.position + CHECK_INTERVAL);
+
+      for (let from = state.position; from < stop; from += 1) {
+        const hi = buffers.hi[from] ?? 0;
+        const lo = buffers.lo[from] ?? 0;
+        const bucket = base + digitOf(hi, lo, start, mask);
+        const target = counts[bucket] ?? 0;
+
+        counts[bucket] = target + 1;
+        buffers.nextHi[target] = hi;
+        buffers.nextLo[target] = lo;
+        buffers.nextIdx[target] = buffers.idx[from] ?? 0;
       }
-    }
-    return true;
-  };
-
-  const scatter = (deadline: number): boolean => {
-    while (state.position < length) {
-      const from = state.position;
-      const bucket = digitAt(buffers, state.digit, from);
-      const target = counts[bucket] ?? 0;
-      counts[bucket] = target + 1;
-      buffers.nextHi[target] = buffers.hi[from] ?? 0;
-      buffers.nextLo[target] = buffers.lo[from] ?? 0;
-      buffers.nextIdx[target] = buffers.idx[from] ?? 0;
-      state.position += 1;
-
-      if (due(deadline)) {
+      state.position = stop;
+      if (performance.now() >= deadline) {
         return false;
       }
     }
@@ -162,70 +305,76 @@ export const createRadixSortJob = (indices: Uint32Array, lanes: readonly RadixLa
     [buffers.idx, buffers.nextIdx] = [buffers.nextIdx, buffers.idx];
   };
 
-  const enter = (phase: Phase): void => {
-    state.phase = phase;
+  const advance = (layout: Layout): void => {
     state.position = 0;
-
-    if (phase === 'count') {
-      counts.fill(0);
-    }
-  };
-
-  const nextDigit = (lane: RadixLane, skipped: boolean): void => {
-    state.done += skipped ? 2 : 1;
     state.digit += 1;
-
-    if (state.digit < digitsOf(lane)) {
-      enter('count');
-      return;
+    while (state.digit < layout.digits && single(counts, state.digit * buckets, buckets, length)) {
+      state.done += length;
+      state.digit += 1;
     }
-    state.lane -= 1;
-    state.digit = 0;
-    enter('gather');
-  };
-
-  const step = (lane: RadixLane, deadline: number): boolean => {
-    switch (state.phase) {
-      case 'gather':
-        if (!gather(lane, deadline)) {
-          return false;
-        }
-        state.done += 1;
-        enter('count');
-        return true;
-      case 'count':
-        if (!count(deadline)) {
-          return false;
-        }
-        if (counts.includes(length)) {
-          nextDigit(lane, true);
-          return true;
-        }
-        state.done += 1;
-        offsetsFrom(counts);
-        enter('scatter');
-        return true;
-      case 'scatter':
-        if (!scatter(deadline)) {
-          return false;
-        }
-        swap();
-        nextDigit(lane, false);
-        return true;
+    if (state.digit < layout.digits) {
+      offsetsFrom(counts, state.digit * buckets, buckets);
     }
   };
+
+  const step = (group: Group, layout: Layout, deadline: number): boolean => {
+    if (state.gathering) {
+      if (!gather(group, layout, deadline)) {
+        return false;
+      }
+      state.done += length;
+      state.gathering = false;
+      state.digit = -1;
+      advance(layout);
+      return true;
+    }
+    if (state.digit < layout.digits) {
+      if (!scatter(layout, deadline)) {
+        return false;
+      }
+      state.done += length;
+      swap();
+      advance(layout);
+      return true;
+    }
+    state.group -= 1;
+    state.gathering = true;
+    state.position = 0;
+    counts.fill(0);
+    return true;
+  };
+
+  let finished = false;
 
   return {
     total: () => total,
-    done: () => Math.min(total, state.done * length + state.position),
+    done: () => (finished ? total : Math.min(total, state.done + state.position)),
     work: (deadline) => {
-      for (let lane = lanes[state.lane]; lane !== undefined; lane = lanes[state.lane]) {
-        if (!step(lane, deadline)) {
+      if (finished) {
+        return true;
+      }
+      for (let group = groups[state.group]; group !== undefined; group = groups[state.group]) {
+        if (!step(group, layouts[state.group] ?? layoutOf(group), deadline)) {
           return false;
         }
       }
       indices.set(buffers.idx);
+      if (!keep) {
+        release(length, buffers);
+      }
+      finished = true;
       return true;
     },
+    sorted: () =>
+      finished && keep
+        ? {
+            hi: buffers.hi,
+            lo: buffers.lo,
+            idx: buffers.idx,
+            release: () => {
+              release(length, buffers);
+            },
+          }
+        : undefined,
   };
 };
