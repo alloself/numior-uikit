@@ -260,6 +260,22 @@ operations.push(
   ),
 );
 
+const recalcSlices: number[] = [];
+
+for (let index = 0; index < heavy.warmup + heavy.iterations; index += 1) {
+  const fresh = ledger(ROWS);
+  const run = fresh.calculator.recalculate({ yieldTo: () => Promise.resolve() });
+
+  await run.settled;
+  if (index >= heavy.warmup) {
+    recalcSlices.push(run.longestMs);
+  }
+}
+
+operations.push(
+  summarize('longest main-thread slice while recalculating 100,050 formulas', recalcSlices),
+);
+
 operations.push(
   await sampled(
     'insert a row in the middle of the 100,050 formula ledger',

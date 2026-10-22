@@ -32,8 +32,16 @@ import type {
 import { lookupKey } from './coerce';
 import { evaluateFormula, type EvalContext } from './evaluate';
 import { BASE_FUNCTIONS } from './functions';
-import { createDependencyGraph, formulaKey, planRecalc, type Precedent } from './graph';
+import {
+  createDependencyGraph,
+  createPlanner,
+  formulaKey,
+  planRecalc,
+  type Precedent,
+  type RecalcPlanner,
+} from './graph';
 import { createFunctionRegistry } from './registry';
+import { createTreeSharing } from './shared-trees';
 import { nextTask } from './tasks';
 import { createSpills, forEachSpillCell, type SpillArea, type SpillCell } from './spills';
 
@@ -112,6 +120,9 @@ interface ShiftPlan {
 }
 
 interface Run {
+  planner: RecalcPlanner | undefined;
+  readonly viewport: RecalcOptions['viewport'];
+  marked: number;
   queue: readonly number[];
   cycles: ReadonlySet<number>;
   readonly budget: number;
@@ -120,6 +131,8 @@ interface Run {
   total: number;
   passes: number;
   busy: number;
+  longest: number;
+  finished: boolean;
   cancelled: boolean;
 }
 
@@ -133,6 +146,11 @@ interface Links {
   readonly names: Set<string>;
 }
 
+interface FoundLinks {
+  readonly precedents: Precedent[];
+  readonly names: ReadonlySet<string>;
+}
+
 type Placed = Pick<FormulaRecord, 'sheet' | 'row' | 'col'>;
 
 const DEFAULT_BUDGET = 8;
@@ -140,6 +158,8 @@ const DEFAULT_BUDGET = 8;
 const CHECK_EVERY = 32;
 
 const MAX_PASSES = 16;
+
+const PLAN_STEPS = 16_384;
 
 const SMALL_AREA = 4096;
 
@@ -264,11 +284,11 @@ const samePrecedents = (left: readonly Precedent[], right: readonly Precedent[])
 const sameNames = (left: ReadonlySet<string>, right: ReadonlySet<string>): boolean =>
   left.size === right.size && [...left].every((name) => right.has(name));
 
-const linksOf = (ast: FormulaNode, record: Placed, workbook: Workbook): Links => {
+const linksOf = (ast: FormulaNode, record: Placed, workbook: Workbook): FoundLinks => {
   const links: Links = { precedents: [], names: new Set() };
 
   collectLinks(ast, record, workbook, links, new Set());
-  return links;
+  return links.names.size === 0 ? { precedents: links.precedents, names: NO_NAMES } : links;
 };
 
 const SUBTOTALS = new Set(['SUBTOTAL', 'AGGREGATE']);
@@ -411,6 +431,7 @@ export const createCalculator = (
   }: CalculatorOptions = {},
 ): Calculator => {
   const graph = createDependencyGraph();
+  const trees = createTreeSharing();
   const spills = createSpills();
   const formulas = new Map<number, FormulaRecord>();
   const positions = new Map<number, Map<number, number>>();
@@ -711,19 +732,54 @@ export const createCalculator = (
     return [...order.filter((key) => needed.has(key)), ...order.filter((key) => !needed.has(key))];
   };
 
+  const markStale = (key: number): void => {
+    const record = formulas.get(key);
+
+    pending.add(key);
+    if (record !== undefined && !kept.has(key)) {
+      record.cell.state = 'stale';
+    }
+  };
+
   const plan = (viewport: RecalcOptions['viewport']) => {
     const planned = planRecalc(pending, graph, locate);
 
-    planned.order.forEach((key) => {
-      const record = formulas.get(key);
-
-      pending.add(key);
-      if (record !== undefined && !kept.has(key)) {
-        record.cell.state = 'stale';
-      }
-    });
-
+    planned.order.forEach(markStale);
     return { queue: prioritised(planned.order, viewport), cycles: planned.cycles };
+  };
+
+  const marked = (run: Run, started: number): boolean => {
+    const from = run.marked;
+
+    while (run.marked < run.queue.length) {
+      markStale(run.queue[run.marked] ?? -1);
+      run.marked += 1;
+      if (
+        run.marked - from >= PLAN_STEPS &&
+        run.marked % CHECK_EVERY === 0 &&
+        performance.now() - started > run.budget
+      ) {
+        return false;
+      }
+    }
+    return true;
+  };
+
+  const planning = (run: Run, started: number): boolean => {
+    const found = run.planner?.advance(() => performance.now() - started > run.budget, PLAN_STEPS);
+
+    if (run.planner === undefined) {
+      return true;
+    }
+    if (found === undefined) {
+      return false;
+    }
+
+    run.planner = undefined;
+    run.queue = prioritised(found.order, run.viewport);
+    run.cycles = found.cycles;
+    run.total = run.queue.length;
+    return true;
   };
 
   const replan = (run: Run): boolean => {
@@ -733,6 +789,7 @@ export const createCalculator = (
     const next = plan(undefined);
 
     run.queue = next.queue;
+    run.marked = next.queue.length;
     run.cycles = next.cycles;
     run.index = 0;
     run.passes += 1;
@@ -741,6 +798,9 @@ export const createCalculator = (
   };
 
   const slice = (run: Run, started: number): boolean => {
+    if (!planning(run, started) || !marked(run, started)) {
+      return false;
+    }
     while (!run.cancelled && (run.index < run.queue.length || replan(run))) {
       compute(run.queue[run.index] ?? -1, run.cycles);
       run.index += 1;
@@ -755,8 +815,11 @@ export const createCalculator = (
   const step = (run: Run): boolean => {
     const started = performance.now();
     const finished = slice(run, started);
+    const spent = performance.now() - started;
 
-    run.busy += performance.now() - started;
+    run.busy += spent;
+    run.longest = Math.max(run.longest, spent);
+    run.finished = finished || run.cancelled;
     return finished;
   };
 
@@ -811,7 +874,8 @@ export const createCalculator = (
     }
   };
 
-  const setParsed = (sheet: Sheet, row: number, col: number, ast: FormulaNode): void => {
+  const setParsed = (sheet: Sheet, row: number, col: number, parsed: FormulaNode): void => {
+    const ast = trees.share(sheet.id, col, parsed);
     const known = idAt(sheet.id, row, col);
     const key = known ?? nextId;
     const cell: FormulaCell = { ast, state: 'stale' };
@@ -1145,16 +1209,20 @@ export const createCalculator = (
         volatiles.forEach((key) => pending.add(key));
       }
 
-      const first = plan(options.viewport);
-
       const run: Run = {
-        ...first,
+        planner: createPlanner(pending, graph, locate),
+        viewport: options.viewport,
+        marked: 0,
+        queue: [],
+        cycles: new Set(),
         budget: options.budgetMs ?? DEFAULT_BUDGET,
         index: 0,
         done: 0,
-        total: first.queue.length,
+        total: 0,
         passes: 0,
         busy: 0,
+        longest: 0,
+        finished: false,
         cancelled: false,
       };
 
@@ -1170,6 +1238,12 @@ export const createCalculator = (
         },
         get busyMs() {
           return run.busy;
+        },
+        get longestMs() {
+          return run.longest;
+        },
+        get finished() {
+          return run.finished || run.cancelled;
         },
         settled,
         cancel: () => {

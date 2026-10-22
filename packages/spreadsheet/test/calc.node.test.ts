@@ -209,6 +209,28 @@ describe('recalculation', () => {
     expect(sheet.state('A2000')).toBe('fresh');
   });
 
+  it('plans a large recalculation across chunks before it computes', async () => {
+    const sheet = openSheet();
+
+    sheet.enter('A1', 1);
+    for (let row = 2; row <= 20_000; row += 1) {
+      sheet.enter(`A${String(row)}`, `=A${String(row - 1)}+1`);
+    }
+
+    const run = sheet.recalc({ budgetMs: 0, yieldTo: () => Promise.resolve() });
+
+    expect(run.finished).toBe(false);
+    expect(run.total).toBe(0);
+    expect(run.done).toBe(0);
+
+    await run.settled;
+
+    expect(run.finished).toBe(true);
+    expect(run.total).toBe(19_999);
+    expect(run.done).toBe(19_999);
+    expect(sheet.value('A20000')).toEqual(numberValue(20_000));
+  });
+
   it('yields to the host on its own and counts only the time it spent computing', async () => {
     const sheet = openSheet();
     const started = performance.now();

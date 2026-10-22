@@ -18,6 +18,9 @@
     "recalculate 100,050 formulas from scratch": {
       "p95Ms": 330
     },
+    "longest main-thread slice while recalculating 100,050 formulas": {
+      "p95Ms": 16
+    },
     "insert a row in the middle of the 100,050 formula ledger": {
       "p95Ms": 100
     },

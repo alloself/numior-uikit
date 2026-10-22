@@ -423,7 +423,7 @@ const recalculate = (): void => {
 
   latest = run;
   sheet.value?.invalidate();
-  if (run.done < run.total) {
+  if (!run.finished) {
     progress.value = { done: run.done, total: run.total };
     follow(run, started);
   } else {

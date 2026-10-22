@@ -15,6 +15,10 @@ export interface DependencyGraph {
   shift(sheet: number, change: LineMove): void;
 }
 
+export interface RecalcPlanner {
+  advance(overdue: () => boolean, minimum: number): RecalcPlan | undefined;
+}
+
 export interface RecalcPlan {
   readonly order: readonly number[];
   readonly cycles: ReadonlySet<number>;
@@ -25,6 +29,8 @@ interface RangeEntry {
   readonly range: CellRange;
   readonly dependents: Set<number>;
 }
+
+type Dependents = number | readonly number[] | Set<number>;
 
 interface Frame {
   readonly key: number;
@@ -49,6 +55,10 @@ const ROW_BANDS = MAX_ROWS / BAND_ROWS;
 const COL_BANDS = MAX_COLS / BAND_COLS;
 
 const SPAN_LIMIT = 32;
+
+const SMALL_DEPENDENTS = 16;
+
+const CHECK_STEPS = 256;
 
 export const formulaKey = (sheet: number, row: number, col: number): number =>
   sheet * SHEET_CELLS + cellIndex(row, col);
@@ -121,6 +131,61 @@ const moveRange = (range: CellRange, change: LineMove): CellRange =>
         right: Math.min(range.right + change.count, MAX_COLS - 1),
       };
 
+const addDependent = (map: Map<number, Dependents>, cell: number, key: number): void => {
+  const known = map.get(cell);
+
+  if (known === undefined) {
+    map.set(cell, key);
+  } else if (typeof known === 'number') {
+    map.set(cell, known === key ? key : [known, key]);
+  } else if (known instanceof Set) {
+    known.add(key);
+  } else if (!known.includes(key)) {
+    map.set(cell, known.length < SMALL_DEPENDENTS ? [...known, key] : new Set([...known, key]));
+  }
+};
+
+const withoutKey = (known: readonly number[], key: number): Dependents | undefined => {
+  const rest = known.reduce<number[]>((kept, member) => {
+    if (member !== key) {
+      kept.push(member);
+    }
+    return kept;
+  }, []);
+
+  return rest.length > 1 ? rest : rest[0];
+};
+
+const remainingAfter = (known: Dependents, key: number): Dependents | undefined => {
+  if (typeof known === 'number') {
+    return known === key ? undefined : known;
+  }
+  if (known instanceof Set) {
+    known.delete(key);
+    return known.size === 0 ? undefined : known;
+  }
+  return withoutKey(known, key);
+};
+
+const removeDependent = (map: Map<number, Dependents>, cell: number, key: number): void => {
+  const known = map.get(cell);
+  const left = known === undefined ? undefined : remainingAfter(known, key);
+
+  if (left === undefined) {
+    map.delete(cell);
+  } else if (left !== known) {
+    map.set(cell, left);
+  }
+};
+
+const visitDependents = (known: Dependents | undefined, visit: (key: number) => void): void => {
+  if (typeof known === 'number') {
+    visit(known);
+  } else {
+    known?.forEach(visit);
+  }
+};
+
 const removeFrom = <K, V>(map: Map<K, Set<V>>, key: K, value: V): void => {
   const known = map.get(key);
 
@@ -131,16 +196,16 @@ const removeFrom = <K, V>(map: Map<K, Set<V>>, key: K, value: V): void => {
 };
 
 export const createDependencyGraph = (): DependencyGraph => {
-  const singles = new Map<number, Map<number, Set<number>>>();
+  const singles = new Map<number, Map<number, Dependents>>();
 
-  const singlesOf = (sheet: number): Map<number, Set<number>> => {
+  const singlesOf = (sheet: number): Map<number, Dependents> => {
     const known = singles.get(sheet);
 
     if (known !== undefined) {
       return known;
     }
 
-    const created = new Map<number, Set<number>>();
+    const created = new Map<number, Dependents>();
 
     singles.set(sheet, created);
     return created;
@@ -167,7 +232,12 @@ export const createDependencyGraph = (): DependencyGraph => {
 
   const link = (key: number, precedent: Precedent): void => {
     if (single(precedent.range)) {
-      addTo(singlesOf(precedent.sheet), cellIndex(precedent.range.top, precedent.range.left), key);
+      addDependent(
+        singlesOf(precedent.sheet),
+        cellIndex(precedent.range.top, precedent.range.left),
+        key,
+      );
+
       return;
     }
     const id = rangeId(precedent);
@@ -190,7 +260,7 @@ export const createDependencyGraph = (): DependencyGraph => {
 
   const unlink = (key: number, precedent: Precedent): void => {
     if (single(precedent.range)) {
-      removeFrom(
+      removeDependent(
         singlesOf(precedent.sheet),
         cellIndex(precedent.range.top, precedent.range.left),
         key,
@@ -237,7 +307,7 @@ export const createDependencyGraph = (): DependencyGraph => {
       precedent.sheet === sheet && firstLine(precedent.range, change.axis) >= start;
 
     const cells = singles.get(sheet);
-    const moved: (readonly [number, Set<number>])[] = [];
+    const moved: (readonly [number, Dependents])[] = [];
 
     cells?.forEach((members, cell) => {
       if ((change.axis === 'rows' ? Math.floor(cell / MAX_COLS) : cell % MAX_COLS) >= start) {
@@ -295,7 +365,7 @@ export const createDependencyGraph = (): DependencyGraph => {
     remove,
     precedentsOf: (key) => precedents.get(key) ?? [],
     forEachDependent: (sheet, row, col, visit) => {
-      singles.get(sheet)?.get(cellIndex(row, col))?.forEach(visit);
+      visitDependents(singles.get(sheet)?.get(cellIndex(row, col)), visit);
 
       visitEntries(
         bands.get(bandKey(sheet, Math.floor(row / BAND_ROWS), Math.floor(col / BAND_COLS))),
@@ -309,16 +379,17 @@ export const createDependencyGraph = (): DependencyGraph => {
   };
 };
 
-export const planRecalc = (
+export const createPlanner = (
   seeds: Iterable<number>,
   graph: DependencyGraph,
   locate: (key: number) => GraphPlace | undefined,
-): RecalcPlan => {
+): RecalcPlanner => {
+  const roots = [...seeds];
   const index = new Map<number, number>();
   const low = new Map<number, number>();
   const onStack = new Set<number>();
   const stack: number[] = [];
-  const components: number[][] = [];
+  const closed: number[] = [];
   const looped = new Set<number>();
   const cycles = new Set<number>();
   const frames: Frame[] = [];
@@ -345,19 +416,18 @@ export const planRecalc = (
     const own = low.get(frame.key) ?? 0;
 
     if (own === index.get(frame.key)) {
-      const component: number[] = [];
+      const start = closed.length;
 
       for (let member = stack.pop(); member !== undefined; member = stack.pop()) {
         onStack.delete(member);
-        component.push(member);
+        closed.push(member);
         if (member === frame.key) {
           break;
         }
       }
-      if (component.length > 1 || looped.has(frame.key)) {
-        component.forEach((member) => cycles.add(member));
+      if (closed.length - start > 1 || looped.has(frame.key)) {
+        closed.slice(start).forEach((member) => cycles.add(member));
       }
-      components.push(component);
     }
     const parent = frames.at(-1);
 
@@ -383,18 +453,51 @@ export const planRecalc = (
     }
   };
 
-  for (const seed of seeds) {
-    if (!index.has(seed)) {
-      open(seed);
-    }
-    for (let frame = frames.at(-1); frame !== undefined; frame = frames.at(-1)) {
-      if (frame.at < frame.next.length) {
-        advance(frame);
-      } else {
-        frames.pop();
-        close(frame);
+  let root = 0;
+  let steps = 0;
+
+  const walk = (): void => {
+    const frame = frames.at(-1);
+
+    if (frame === undefined) {
+      const seed = roots[root] ?? -1;
+
+      root += 1;
+      if (!index.has(seed)) {
+        open(seed);
       }
+    } else if (frame.at < frame.next.length) {
+      advance(frame);
+    } else {
+      frames.pop();
+      close(frame);
     }
-  }
-  return { order: components.toReversed().flat(), cycles };
+  };
+
+  const unfinished = (): boolean => frames.length > 0 || root < roots.length;
+
+  return {
+    advance: (overdue, minimum) => {
+      const from = steps;
+
+      while (unfinished()) {
+        walk();
+        steps += 1;
+        if (steps - from >= minimum && steps % CHECK_STEPS === 0 && overdue()) {
+          return undefined;
+        }
+      }
+      return { order: closed.toReversed(), cycles };
+    },
+  };
+};
+
+export const planRecalc = (
+  seeds: Iterable<number>,
+  graph: DependencyGraph,
+  locate: (key: number) => GraphPlace | undefined,
+): RecalcPlan => {
+  const plan = createPlanner(seeds, graph, locate).advance(() => false, 0);
+
+  return plan ?? { order: [], cycles: new Set() };
 };

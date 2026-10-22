@@ -30,7 +30,7 @@ export interface Loading {
   cancel(): void;
 }
 
-const DEFAULT_BUDGET = 8;
+const DEFAULT_BUDGET = 6;
 
 const CHECK_EVERY = 16;
 
