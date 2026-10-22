@@ -5,6 +5,8 @@ export const EN_FORMULAS: FormulaLocale = {
   decimal: '.',
   arrayColumn: ',',
   arrayRow: ';',
+  defaultTable: 'Table',
+  defaultColumn: 'Column',
 };
 
 export const RU_FORMULAS: FormulaLocale = {
@@ -12,4 +14,6 @@ export const RU_FORMULAS: FormulaLocale = {
   decimal: ',',
   arrayColumn: '\\',
   arrayRow: ';',
+  defaultTable: 'Таблица',
+  defaultColumn: 'Столбец',
 };

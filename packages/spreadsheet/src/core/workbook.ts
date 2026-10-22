@@ -4,6 +4,7 @@ import { createCellStore, type CellStore } from './cell-store';
 import { createNumberFormats, type NumberFormats } from './number-formats';
 import type { FormulaNode } from './formula/formula.types';
 import { createSharedStrings, type SharedStrings } from './strings';
+import type { TableShape } from './tables';
 
 export interface Sheet {
   readonly id: number;
@@ -23,13 +24,28 @@ export interface DefinedNames {
   resolve(name: string, sheet: Sheet): DefinedName | undefined;
   set(name: string, scope: Sheet | undefined, ast: FormulaNode): DefinedName;
   delete(name: string, scope: Sheet | undefined): void;
+  taken(name: string): boolean;
   forEach(visit: (name: DefinedName) => void): void;
+}
+
+export interface SheetTable extends TableShape {
+  readonly name: string;
+  readonly sheet: Sheet;
+}
+
+export interface SheetTables {
+  get(name: string): SheetTable | undefined;
+  on(sheet: Sheet): readonly SheetTable[];
+  set(table: SheetTable): void;
+  delete(name: string): void;
+  forEach(visit: (table: SheetTable) => void): void;
 }
 
 export interface Workbook {
   readonly strings: SharedStrings;
   readonly formats: NumberFormats;
   readonly names: DefinedNames;
+  readonly tables: SheetTables;
   readonly sheets: readonly Sheet[];
   addSheet(name?: string, index?: number): Sheet;
   removeSheet(sheet: Sheet): void;
@@ -80,8 +96,37 @@ const createDefinedNames = (): DefinedNames => {
     delete: (name, scope) => {
       names.delete(nameKey(name, scope));
     },
+    taken: (name) => {
+      const wanted = name.toLowerCase();
+
+      return [...names.values()].some((defined) => defined.name.toLowerCase() === wanted);
+    },
     forEach: (visit) => {
       [...names.values()].forEach(visit);
+    },
+  };
+};
+
+const createSheetTables = (): SheetTables => {
+  const tables = new Map<string, SheetTable>();
+
+  return {
+    get: (name) => tables.get(name.toLowerCase()),
+    on: (sheet) =>
+      [...tables.values()].reduce<SheetTable[]>((found, table) => {
+        if (table.sheet === sheet) {
+          found.push(table);
+        }
+        return found;
+      }, []),
+    set: (table) => {
+      tables.set(table.name.toLowerCase(), table);
+    },
+    delete: (name) => {
+      tables.delete(name.toLowerCase());
+    },
+    forEach: (visit) => {
+      [...tables.values()].forEach(visit);
     },
   };
 };
@@ -111,6 +156,7 @@ export const createWorkbook = (): Workbook => {
     strings,
     formats,
     names: createDefinedNames(),
+    tables: createSheetTables(),
     sheets,
     sheet,
     addSheet: (name, index = sheets.length) => {

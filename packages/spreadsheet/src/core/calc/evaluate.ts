@@ -4,6 +4,7 @@ import type { FormulaNode } from '../formula/formula.types';
 import { colOf, referenceRange, rowOf } from '../formula/origin';
 import { EN_FORMULAS } from '../formula/locale';
 import { parseFormula } from '../formula/parser';
+import { tableData } from '../tables';
 import { EMPTY, errorValue, numberValue, textValue } from '../values';
 import type { DefinedName, Sheet, Workbook } from '../workbook';
 import {
@@ -54,7 +55,11 @@ const named = (node: NameNode, context: EvalContext): EvalValue => {
   const defined = context.definedName(node);
 
   if (defined === undefined) {
-    return raise('#NAME?');
+    const table = node.sheet === undefined ? context.workbook.tables.get(node.name) : undefined;
+
+    return table === undefined
+      ? raise('#NAME?')
+      : { kind: 'reference', sheet: table.sheet, range: tableData(table) };
   }
   if (resolving.has(defined)) {
     return raise('#REF!');

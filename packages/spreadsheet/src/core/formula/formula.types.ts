@@ -5,6 +5,8 @@ export interface FormulaLocale {
   readonly decimal: string;
   readonly arrayColumn: string;
   readonly arrayRow: string;
+  readonly defaultTable: string;
+  readonly defaultColumn: string;
 }
 
 export interface LineRef {

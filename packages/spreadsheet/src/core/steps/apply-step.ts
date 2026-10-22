@@ -10,28 +10,13 @@ import {
   sameName,
   type LineChange,
 } from '../formula/rewrite';
-import {
-  validDefinedName,
-  validSheetName,
-  type DefinedName,
-  type Sheet,
-  type Workbook,
-} from '../workbook';
+import { validDefinedName, validSheetName, type Sheet, type Workbook } from '../workbook';
+import { createRewriter, formulaEdits, nameEdits } from './rewrites';
 import type { CellEdit, LineAxis, StepRefusal, StepResult, WorkbookStep } from './step.types';
+import { createTableSteps, specOf, type TableDrops } from './table-steps';
 
 export interface Stepper {
   apply(step: WorkbookStep): StepResult;
-}
-
-interface Located {
-  readonly row: number;
-  readonly col: number;
-}
-
-interface Rewrite extends Located {
-  readonly sheet: Sheet;
-  readonly before: FormulaNode;
-  readonly after: FormulaNode;
 }
 
 const EMPTY_CONTENT: CellContent = { kind: 'empty' };
@@ -59,38 +44,15 @@ const done = (inverse: WorkbookStep, changes: readonly LineChange[] = NO_CHANGES
   changes,
 });
 
-const nameEdits = (names: readonly ShiftedName[]): WorkbookStep[] =>
-  names.map((shifted) => ({
-    kind: 'setName',
-    name: shifted.name,
-    scope: shifted.scope?.name,
-    ast: shifted.before,
-  }));
-
-const formulaEdits = (rewrites: readonly ShiftedFormulaCell[]): WorkbookStep[] => {
-  const bySheet = new Map<Sheet, CellEdit[]>();
-
-  rewrites.forEach((rewrite) => {
-    const edits = bySheet.get(rewrite.sheet) ?? [];
-
-    edits.push({
-      row: rewrite.row,
-      col: rewrite.col,
-      content: { kind: 'formula', ast: rewrite.before },
-    });
-
-    bySheet.set(rewrite.sheet, edits);
-  });
-
-  return [...bySheet].map(([sheet, cells]) => ({ kind: 'setCells', sheet: sheet.name, cells }));
-};
-
 const mentions = (ast: FormulaNode, name: string): boolean =>
   formulaReferences(ast).some(
     (reference) => reference.sheet !== undefined && sameName(reference.sheet, name),
   );
 
 export const createStepper = (book: Workbook, calculator: Calculator): Stepper => {
+  const rewriter = createRewriter(book, calculator);
+  const tables = createTableSteps(book, calculator, rewriter);
+
   const formatCode = (sheet: Sheet, row: number, col: number): string =>
     book.formats.code(sheet.formats.get(row, col));
 
@@ -134,44 +96,6 @@ export const createStepper = (book: Workbook, calculator: Calculator): Stepper =
     }
   };
 
-  const rewriteInPlace = (rewrite: Rewrite): void => {
-    calculator.setContent(rewrite.sheet, rewrite.row, rewrite.col, {
-      kind: 'formula',
-      ast: rewrite.after,
-    });
-  };
-
-  const rewriteAll = (rewrite: (sheet: Sheet, ast: FormulaNode) => FormulaNode): Rewrite[] => {
-    const found: Rewrite[] = [];
-
-    calculator.forEachFormula((sheet, row, col, before) => {
-      const after = rewrite(sheet, before);
-
-      if (after !== before) {
-        found.push({ sheet, row, col, before, after });
-      }
-    });
-
-    return found;
-  };
-
-  const rewriteNames = (
-    rewrite: (defined: DefinedName) => FormulaNode | undefined,
-  ): ShiftedName[] => {
-    const changed: ShiftedName[] = [];
-
-    book.names.forEach((defined) => {
-      const after = rewrite(defined);
-
-      if (after !== defined.ast) {
-        changed.push({ name: defined.name, scope: defined.scope, before: defined.ast });
-        calculator.setName(defined.name, defined.scope, after);
-      }
-    });
-
-    return changed;
-  };
-
   const setName = (
     name: string,
     scope: Sheet | undefined,
@@ -179,6 +103,9 @@ export const createStepper = (book: Workbook, calculator: Calculator): Stepper =
   ): StepResult => {
     if (!validDefinedName(name)) {
       return refused('invalid-name');
+    }
+    if (ast !== undefined && book.tables.get(name) !== undefined) {
+      return refused('name-taken');
     }
 
     const previous = book.names.get(name, scope);
@@ -202,6 +129,7 @@ export const createStepper = (book: Workbook, calculator: Calculator): Stepper =
       write(sheet, cell);
     });
 
+    tables.syncHeaders(sheet, cells);
     return done({ kind: 'setCells', sheet: sheet.name, cells: previous });
   };
 
@@ -243,6 +171,8 @@ export const createStepper = (book: Workbook, calculator: Calculator): Stepper =
     deleted: CellEdit[];
     rewrites: readonly ShiftedFormulaCell[];
     names: readonly ShiftedName[];
+    drops: TableDrops;
+    restores: WorkbookStep[];
   } => {
     const removed = Math.max(-change.count, 0);
 
@@ -256,11 +186,14 @@ export const createStepper = (book: Workbook, calculator: Calculator): Stepper =
           ]
         : [];
 
+    const moves = tables.plan(sheet, change);
+    const drops = tables.drop(moves.removed);
     const rewrites = calculator.shiftLines(sheet, change);
     const names = calculator.shiftNames(change);
 
     sheet.formats.shiftLines(change.axis, change.at, change.count);
-    return { deleted, rewrites, names };
+    tables.move(sheet, moves, change);
+    return { deleted, rewrites, names, drops, restores: tables.restores(moves) };
   };
 
   const insertLines = (sheet: Sheet, axis: LineAxis, at: number, count: number): StepResult => {
@@ -278,7 +211,7 @@ export const createStepper = (book: Workbook, calculator: Calculator): Stepper =
 
   const deleteLines = (sheet: Sheet, axis: LineAxis, at: number, count: number): StepResult => {
     const change: LineChange = { sheet: sheet.name, axis, at, count: -count };
-    const { deleted, rewrites, names } = moveLines(sheet, change);
+    const { deleted, rewrites, names, drops, restores } = moveLines(sheet, change);
 
     return done(
       {
@@ -288,6 +221,9 @@ export const createStepper = (book: Workbook, calculator: Calculator): Stepper =
           { kind: 'setCells', sheet: sheet.name, cells: deleted },
           ...formulaEdits(rewrites),
           ...nameEdits(names),
+          ...formulaEdits(drops.rewrites),
+          ...nameEdits(drops.names),
+          ...restores,
         ],
       },
       [change],
@@ -322,23 +258,34 @@ export const createStepper = (book: Workbook, calculator: Calculator): Stepper =
 
     const index = book.sheets.indexOf(sheet);
     const contents = [...contentsIn(sheet, WHOLE_SHEET).values()];
+    const removed = book.tables.on(sheet);
 
-    const rewrites = rewriteAll((owner, ast) =>
-      owner === sheet ? ast : dropSheetFromFormula(ast, sheet.name),
+    removed.forEach((table) => {
+      calculator.setTable(table.name, undefined);
+    });
+
+    const rewrites = rewriter.formulas((owner, ast) =>
+      owner === sheet ? ast : tables.strip(removed, dropSheetFromFormula(ast, sheet.name)),
     );
 
-    const names = rewriteNames((defined) =>
-      defined.scope === sheet ? undefined : dropSheetFromFormula(defined.ast, sheet.name),
+    const names = rewriter.names((defined) =>
+      defined.scope === sheet
+        ? undefined
+        : tables.strip(removed, dropSheetFromFormula(defined.ast, sheet.name)),
     );
 
     clear(sheet, contents);
-    rewrites.forEach(rewriteInPlace);
     book.removeSheet(sheet);
     return done({
       kind: 'batch',
       steps: [
         { kind: 'addSheet', name: sheet.name, index },
         { kind: 'setCells', sheet: sheet.name, cells: contents },
+        ...removed.map((table): WorkbookStep => ({
+          kind: 'setTable',
+          name: table.name,
+          table: specOf(table),
+        })),
         ...formulaEdits(rewrites),
         ...nameEdits(names),
       ],
@@ -351,8 +298,8 @@ export const createStepper = (book: Workbook, calculator: Calculator): Stepper =
     if (!book.renameSheet(sheet, to)) {
       return refused('name-taken');
     }
-    rewriteAll((_owner, ast) => renameInFormula(ast, from, to)).forEach(rewriteInPlace);
-    rewriteNames((defined) => renameInFormula(defined.ast, from, to));
+    rewriter.formulas((_owner, ast) => renameInFormula(ast, from, to));
+    rewriter.names((defined) => renameInFormula(defined.ast, from, to));
     return done({ kind: 'renameSheet', from: to, to: from });
   };
 
@@ -399,6 +346,12 @@ export const createStepper = (book: Workbook, calculator: Calculator): Stepper =
         return step.scope === undefined
           ? setName(step.name, undefined, step.ast)
           : onSheet(step.scope, (sheet) => setName(step.name, sheet, step.ast));
+      case 'addTable':
+        return tables.add(step.name, step.table);
+      case 'setTable':
+        return tables.set(step.name, step.table);
+      case 'renameTable':
+        return tables.rename(step.from, step.to);
       case 'batch':
         return applyBatch(step.steps);
     }

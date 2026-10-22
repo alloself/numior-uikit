@@ -8,7 +8,8 @@ import { parseFormula } from '../formula/parser';
 import { changesMeaning, shiftFormula, shiftSpan, type LineChange } from '../formula/rewrite';
 import { formulaReferences } from '../formula/references';
 import { EMPTY, errorValue, numberValue } from '../values';
-import type { DefinedName, Sheet, Workbook } from '../workbook';
+import { tableData } from '../tables';
+import type { DefinedName, Sheet, SheetTable, Workbook } from '../workbook';
 import type {
   ArrayValue,
   CellContent,
@@ -44,6 +45,7 @@ export interface Calculator {
   shiftLines(sheet: Sheet, change: LineChange): readonly ShiftedFormulaCell[];
   shiftNames(change: LineChange): readonly ShiftedName[];
   setName(name: string, scope: Sheet | undefined, ast: FormulaNode | undefined): void;
+  setTable(name: string, table: SheetTable | undefined): void;
   hasFormulaIn(sheet: Sheet, range: CellRange): boolean;
   formulaAt(sheet: Sheet, row: number, col: number): FormulaCell | undefined;
   spillOf(sheet: Sheet, row: number, col: number): CellRange | undefined;
@@ -158,10 +160,14 @@ const collectLinks = (
     if (found.kind === 'name') {
       const defined = definedFor(workbook, record.sheet, found);
 
+      const table = found.sheet === undefined ? workbook.tables.get(found.name) : undefined;
+
       links.names.add(found.name.toLowerCase());
       if (defined !== undefined && !seen.has(defined)) {
         seen.add(defined);
         collectLinks(defined.ast, record, workbook, links, seen);
+      } else if (defined === undefined && table !== undefined) {
+        links.precedents.push({ sheet: table.sheet.id, range: tableData(table) });
       }
       return;
     }
@@ -749,6 +755,16 @@ export const createCalculator = (
     relinkName(name.toLowerCase());
   };
 
+  const setTable = (name: string, table: SheetTable | undefined): void => {
+    interrupt();
+    if (table === undefined) {
+      workbook.tables.delete(name);
+    } else {
+      workbook.tables.set(table);
+    }
+    relinkName(name.toLowerCase());
+  };
+
   const shiftNames = (change: LineChange): ShiftedName[] => {
     const shifted: ShiftedName[] = [];
 
@@ -914,6 +930,7 @@ export const createCalculator = (
     shiftLines,
     shiftNames,
     setName,
+    setTable,
     hasFormulaIn: (sheet, range) => {
       for (const cell of positions.get(sheet.id)?.keys() ?? []) {
         if (containsCell(range, Math.floor(cell / MAX_COLS), cell % MAX_COLS)) {

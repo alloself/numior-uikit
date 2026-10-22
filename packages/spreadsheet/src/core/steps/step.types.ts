@@ -2,6 +2,7 @@ import type { CellContent } from '../calc/calc.types';
 import type { CellRange } from '../cell.types';
 import type { FormulaNode } from '../formula/formula.types';
 import type { LineChange } from '../formula/rewrite';
+import type { TableShape } from '../tables';
 
 export type LineAxis = LineChange['axis'];
 
@@ -10,6 +11,10 @@ export interface CellEdit {
   readonly col: number;
   readonly content?: CellContent | undefined;
   readonly format?: string | undefined;
+}
+
+export interface TableSpec extends TableShape {
+  readonly sheet: string;
 }
 
 export type WorkbookStep =
@@ -36,6 +41,9 @@ export type WorkbookStep =
       readonly scope?: string | undefined;
       readonly ast: FormulaNode | undefined;
     }
+  | { readonly kind: 'addTable'; readonly name: string; readonly table: TableSpec }
+  | { readonly kind: 'setTable'; readonly name: string; readonly table: TableSpec | undefined }
+  | { readonly kind: 'renameTable'; readonly from: string; readonly to: string }
   | { readonly kind: 'batch'; readonly steps: readonly WorkbookStep[] };
 
 export type StepRefusal =
@@ -43,7 +51,10 @@ export type StepRefusal =
   | 'sheet-full'
   | 'name-taken'
   | 'last-sheet'
-  | 'invalid-name';
+  | 'invalid-name'
+  | 'missing-table'
+  | 'invalid-table'
+  | 'table-overlap';
 
 export type StepResult =
   | {

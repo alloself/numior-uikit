@@ -15,6 +15,7 @@ import type { BookLocale } from './locale';
 import { booleanValue, numberValue, textValue } from './values';
 import { createStepper } from './steps/apply-step';
 import type { CellEdit, WorkbookStep } from './steps/step.types';
+import { uniqueColumns } from './tables';
 import type { Sheet, Workbook } from './workbook';
 
 export type CellInput =
@@ -26,6 +27,12 @@ export interface NameOptions {
   readonly scope?: Sheet | undefined;
   readonly anchor?: CellAddress | undefined;
   readonly locale?: BookLocale | undefined;
+}
+
+export interface TableOptions {
+  readonly name?: string | undefined;
+  readonly headers?: boolean | undefined;
+  readonly totals?: boolean | undefined;
 }
 
 export type EntryResult =
@@ -44,6 +51,7 @@ export interface CellEditor {
   formatStep(sheet: Sheet, range: CellRange, code: string): WorkbookStep;
   nameStep(name: string, text: string, sheet: Sheet, options?: NameOptions): EntryResult;
   nameText(name: string, scope?: Sheet, anchor?: CellAddress): string | undefined;
+  tableStep(sheet: Sheet, range: CellRange, options?: TableOptions): WorkbookStep;
   inputText(sheet: Sheet, row: number, col: number): string;
   shown(sheet: Sheet, row: number, col: number): FormattedValue;
   formatAt(sheet: Sheet, row: number, col: number): string;
@@ -322,6 +330,17 @@ export const createCellEditor = (book: Workbook, calculator: Calculator): CellEd
     return entry(sheet, { ...position, content: { kind: 'formula', ast: parsed.ast }, format });
   };
 
+  const inHeader = (sheet: Sheet, row: number, col: number): boolean =>
+    book.tables
+      .on(sheet)
+      .some(
+        (table) =>
+          table.headers &&
+          table.range.top === row &&
+          col >= table.range.left &&
+          col <= table.range.right,
+      );
+
   const input = (
     sheet: Sheet,
     row: number,
@@ -330,7 +349,7 @@ export const createCellEditor = (book: Workbook, calculator: Calculator): CellEd
     locale: BookLocale = calculator.locale,
   ): EntryResult => {
     const read =
-      formatAt(sheet, row, col) === TEXT_FORMAT && text !== ''
+      (formatAt(sheet, row, col) === TEXT_FORMAT || inHeader(sheet, row, col)) && text !== ''
         ? plainText(text)
         : readInput(text, locale.numbers);
 
@@ -372,9 +391,63 @@ export const createCellEditor = (book: Workbook, calculator: Calculator): CellEd
       : parsed;
   };
 
+  const shown = (sheet: Sheet, row: number, col: number): FormattedValue =>
+    formatValue(sheet.cells.get(row, col), formatAt(sheet, row, col), calculator.locale.numbers);
+
+  const freeTableName = (): string => {
+    const prefix = calculator.locale.formulas.defaultTable;
+    let index = 1;
+
+    while (
+      book.tables.get(`${prefix}${String(index)}`) !== undefined ||
+      book.names.taken(`${prefix}${String(index)}`)
+    ) {
+      index += 1;
+    }
+    return `${prefix}${String(index)}`;
+  };
+
+  const tableStep = (sheet: Sheet, range: CellRange, options: TableOptions = {}): WorkbookStep => {
+    const headers = options.headers ?? true;
+    const width = range.right - range.left + 1;
+
+    const texts = Array.from({ length: width }, (_unused, index) =>
+      headers ? shown(sheet, range.top, range.left + index).text : '',
+    );
+
+    const columns = uniqueColumns(texts, calculator.locale.formulas.defaultColumn);
+
+    const cells = columns.reduce<CellEdit[]>((edits, name, index) => {
+      const col = range.left + index;
+      const value = sheet.cells.get(range.top, col);
+
+      if (headers && (value.kind !== 'string' || value.value !== name)) {
+        edits.push({
+          row: range.top,
+          col,
+          content: { kind: 'value', value: textValue(name) },
+        });
+      }
+      return edits;
+    }, []);
+
+    return {
+      kind: 'batch',
+      steps: [
+        { kind: 'setCells', sheet: sheet.name, cells },
+        {
+          kind: 'addTable',
+          name: options.name ?? freeTableName(),
+          table: { sheet: sheet.name, range, columns, headers, totals: options.totals ?? false },
+        },
+      ],
+    };
+  };
+
   return {
     input,
     nameStep,
+    tableStep,
     nameText: (name, scope, anchor = ORIGIN) => {
       const defined = book.names.get(name, scope);
 
@@ -399,8 +472,7 @@ export const createCellEditor = (book: Workbook, calculator: Calculator): CellEd
         ? editText(sheet.cells.get(row, col), formatAt(sheet, row, col), locale.numbers)
         : `=${printFormula(formula.ast, locale.formulas, { row, col })}`;
     },
-    shown: (sheet, row, col) =>
-      formatValue(sheet.cells.get(row, col), formatAt(sheet, row, col), calculator.locale.numbers),
+    shown,
     formatAt,
     formatStep,
     setFormat: (sheet, range, code) => {

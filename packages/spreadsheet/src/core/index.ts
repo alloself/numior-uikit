@@ -31,10 +31,18 @@ export {
 export { createWorkbook, validDefinedName, validSheetName } from './workbook';
 export { EN_LOCALE, RU_LOCALE, type BookLocale } from './locale';
 export { createCellEditor, editText, readInput } from './cell-input';
-export type { CellEditor, CellInput, EntryResult, NameOptions } from './cell-input';
+export type { CellEditor, CellInput, EntryResult, NameOptions, TableOptions } from './cell-input';
 export type { CellFormats } from './cell-formats';
 export type { NumberFormats } from './number-formats';
-export type { DefinedName, DefinedNames, Sheet, Workbook } from './workbook';
+export type {
+  DefinedName,
+  DefinedNames,
+  Sheet,
+  SheetTable,
+  SheetTables,
+  Workbook,
+} from './workbook';
+export { tableData, type TableShape } from './tables';
 export { EN_FORMULAS, RU_FORMULAS, formulaReferences, parseFormula, printFormula } from './formula';
 export type {
   BinaryOperator,
@@ -101,6 +109,7 @@ export type {
   StepOutcome,
   StepRefusal,
   StepResult,
+  TableSpec,
   WorkbookStep,
 } from './steps/step.types';
 export type { LineChange } from './formula/rewrite';

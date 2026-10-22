@@ -296,3 +296,16 @@ export const dropSheetFromFormula = (node: FormulaNode, name: string): FormulaNo
   mapReferences(node, (reference) =>
     reference.sheet !== undefined && sameName(reference.sheet, name) ? BROKEN : reference,
   );
+
+type NameReference = Extract<FormulaReference, { readonly kind: 'name' }>;
+
+const isBookName = (reference: FormulaReference, name: string): reference is NameReference =>
+  reference.kind === 'name' && reference.sheet === undefined && sameName(reference.name, name);
+
+export const renameNameInFormula = (node: FormulaNode, from: string, to: string): FormulaNode =>
+  mapReferences(node, (reference) =>
+    isBookName(reference, from) ? { ...reference, name: to } : reference,
+  );
+
+export const dropNameFromFormula = (node: FormulaNode, name: string): FormulaNode =>
+  mapReferences(node, (reference) => (isBookName(reference, name) ? BROKEN : reference));
