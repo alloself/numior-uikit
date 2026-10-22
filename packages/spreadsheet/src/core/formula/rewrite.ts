@@ -23,6 +23,8 @@ export interface LineChange extends LineMove {
 
 type Span = readonly [number, number];
 
+export type StructuredReference = Extract<FormulaReference, { readonly kind: 'structured' }>;
+
 export const BROKEN: FormulaNode = { kind: 'error', code: '#REF!' };
 
 export const sameName = (left: string, right: string): boolean =>
@@ -303,8 +305,6 @@ export const renameInFormula = (node: FormulaNode, from: string, to: string): Fo
 
 export const dropSheetFromFormula = (node: FormulaNode, name: string): FormulaNode =>
   mapReferences(node, (reference) => (onSheetNamed(reference, name) ? BROKEN : reference));
-
-export type StructuredReference = Extract<FormulaReference, { readonly kind: 'structured' }>;
 
 const ownedBy = (reference: FormulaReference, table: string): boolean =>
   reference.kind === 'structured'

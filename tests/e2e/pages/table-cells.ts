@@ -8,18 +8,18 @@ import {
   type Guarded,
 } from '../../../packages/primitives/test/support/guards';
 
-const isCorner = shapeOf({ row: isNumber, col: isNumber });
-
-const isCellsOutput = shapeOf({
-  ranges: listOf(shapeOf({ from: isCorner, to: isCorner })),
-});
-
 export type TableCellsOutput = Guarded<typeof isCellsOutput>;
 
 export interface TableCellsSpot {
   readonly row: string;
   readonly col: string;
 }
+
+const isCorner = shapeOf({ row: isNumber, col: isNumber });
+
+const isCellsOutput = shapeOf({
+  ranges: listOf(shapeOf({ from: isCorner, to: isCorner })),
+});
 
 const HEAD_ROWS = 1;
 const ROW_HEADERS = 1;

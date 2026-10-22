@@ -21,12 +21,6 @@ import {
 import type { IconSource } from '@numior/primitives';
 import type { NuiEditorMessages } from '../editor/editor.messages';
 
-const HEADING_ICONS: Readonly<Record<1 | 2 | 3, IconSource>> = {
-  1: Heading1,
-  2: Heading2,
-  3: Heading3,
-};
-
 interface SlashLabel {
   readonly key: string;
   readonly label: string;
@@ -48,6 +42,12 @@ interface SlashEntry {
   readonly keywords: readonly string[];
   readonly command: () => Command;
 }
+
+const HEADING_ICONS: Readonly<Record<1 | 2 | 3, IconSource>> = {
+  1: Heading1,
+  2: Heading2,
+  3: Heading3,
+};
 
 const ENTRIES: readonly SlashEntry[] = [
   {

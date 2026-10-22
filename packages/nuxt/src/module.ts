@@ -18,25 +18,25 @@ export type {
   NuiRuntimeOptions,
 } from './module.types';
 
-const VUE = '@numior/vue';
-const DEFAULT_STORAGE_KEY = 'nui-theme';
-const YIELDING_PRIORITY = -1;
-const KIT_CSS = ['@numior/tokens/theme.css', '@numior/tokens/base.css', `${VUE}/styles.css`];
-
 interface OptionalPackage {
   readonly id: string;
   readonly load: () => Promise<ModuleNamespace>;
 }
 
-const OPTIONAL: readonly OptionalPackage[] = [
-  { id: '@numior/forms', load: () => import('@numior/forms') },
-  { id: '@numior/table', load: () => import('@numior/table') },
-];
-
 interface Registration {
   readonly components: boolean;
   readonly composables: boolean;
 }
+
+const VUE = '@numior/vue';
+const DEFAULT_STORAGE_KEY = 'nui-theme';
+const YIELDING_PRIORITY = -1;
+const KIT_CSS = ['@numior/tokens/theme.css', '@numior/tokens/base.css', `${VUE}/styles.css`];
+
+const OPTIONAL: readonly OptionalPackage[] = [
+  { id: '@numior/forms', load: () => import('@numior/forms') },
+  { id: '@numior/table', load: () => import('@numior/table') },
+];
 
 const registerNamespace = (id: string, namespace: ModuleNamespace, what: Registration): void => {
   if (what.components) {

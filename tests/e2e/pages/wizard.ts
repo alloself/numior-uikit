@@ -8,14 +8,14 @@ import {
   type Guarded,
 } from '../../../packages/primitives/test/support/guards';
 
-const isWizardOutput = shapeOf({ step: isString, submitted: isNumber, team: nullable(isString) });
-
 export type WizardOutput = Guarded<typeof isWizardOutput>;
+
+export type WizardStep = 'Аккаунт' | 'Команда' | 'Подтверждение';
+
+const isWizardOutput = shapeOf({ step: isString, submitted: isNumber, team: nullable(isString) });
 
 const parseWizardOutput = (text: string): WizardOutput =>
   parseAs(text, isWizardOutput, 'wizard output');
-
-export type WizardStep = 'Аккаунт' | 'Команда' | 'Подтверждение';
 
 const FIELD = 'xpath=ancestor::*[contains(concat(" ", @class, " "), " nui-field ")][1]';
 

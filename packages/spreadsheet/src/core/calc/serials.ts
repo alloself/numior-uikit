@@ -1,5 +1,11 @@
 import { raise } from './signal';
 
+export interface CivilDate {
+  readonly year: number;
+  readonly month: number;
+  readonly day: number;
+}
+
 const DAY_MS = 86_400_000;
 
 const EPOCH = Date.UTC(1899, 11, 30);
@@ -7,12 +13,6 @@ const EPOCH = Date.UTC(1899, 11, 30);
 const PHANTOM_LEAP_DAY = 60;
 
 const LAST_SERIAL = 2_958_465;
-
-export interface CivilDate {
-  readonly year: number;
-  readonly month: number;
-  readonly day: number;
-}
 
 const utcDays = (year: number, month: number, day: number): number => {
   const date = new Date(0);

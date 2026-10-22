@@ -2,14 +2,14 @@ import type { RankHost, RankSession } from './rank-host';
 import type { SliceJob } from './slicer';
 import { createSortJob } from './sort';
 
-const WORKER_MIN = 10_000;
-const PART_SIZE = 8192;
-
 type Stage =
   | { readonly kind: 'pack'; readonly session: RankSession }
   | { readonly kind: 'wait'; readonly answer: Promise<Uint32Array | undefined> }
   | { readonly kind: 'local'; readonly job: SliceJob }
   | { readonly kind: 'done' };
+
+const WORKER_MIN = 10_000;
+const PART_SIZE = 8192;
 
 export const createCollatedSortJob = (
   order: Uint32Array,

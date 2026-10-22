@@ -26,6 +26,12 @@ export interface TableFlood {
   readonly width: number;
 }
 
+interface FloodOrigin {
+  readonly key: string;
+  readonly paint: TableCellPaint;
+  readonly flood: TableFlood;
+}
+
 const OVERFLOW = 'nui-table__cell--overflow';
 const SEAMLESS = 'nui-table__cell--seamless';
 const SEAM: TableCellPaint = { class: [SEAMLESS], style: {}, align: undefined, overflow: false };
@@ -74,12 +80,6 @@ const overflowing = (paint: TableCellPaint, width: number): TableCellPaint => ({
 
 const seamless = (paint: TableCellPaint | undefined): TableCellPaint =>
   paint === undefined ? SEAM : { ...paint, class: [...paint.class, SEAMLESS] };
-
-interface FloodOrigin {
-  readonly key: string;
-  readonly paint: TableCellPaint;
-  readonly flood: TableFlood;
-}
 
 const originAt = (
   painted: TableRowPaint,

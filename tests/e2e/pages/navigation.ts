@@ -8,6 +8,8 @@ import {
 } from '../../../packages/primitives/test/support/guards';
 import { boxOf, type Box } from '../helpers/geometry';
 
+export type NavigationOutput = Guarded<typeof isNavigationOutput>;
+
 const isNavigationOutput = shapeOf({
   menuOpen: isBoolean,
   gridOn: isBoolean,
@@ -18,8 +20,6 @@ const isNavigationOutput = shapeOf({
   signupStep: isString,
   settingsStep: isString,
 });
-
-export type NavigationOutput = Guarded<typeof isNavigationOutput>;
 
 const parseNavigationOutput = (text: string): NavigationOutput =>
   parseAs(text, isNavigationOutput, 'navigation output');

@@ -49,6 +49,44 @@ interface Found {
   readonly names: Set<string>;
 }
 
+interface Report {
+  readonly add: (
+    code: XlsxLimitationCode,
+    count: number,
+    sheet?: string,
+    names?: Iterable<string>,
+  ) => void;
+  readonly build: (staleFormulas: number) => LimitationsReport;
+}
+
+interface Load {
+  readonly archive: ZipArchive;
+  readonly options: ReadOptions;
+  readonly book: Workbook;
+  readonly calculator: Calculator;
+  readonly functions: FunctionRegistry;
+  readonly report: Report;
+  readonly parsed: Set<string>;
+  readonly parts: PartOptions;
+  readonly totals: {
+    formulas: number;
+    kept: number;
+    linked: number;
+    readonly unknown: Set<string>;
+  };
+}
+
+interface BookContext {
+  readonly strings: SharedStrings;
+  readonly styles: CellStyles;
+  readonly decorations: readonly number[];
+}
+
+interface SheetPart {
+  readonly entry: SheetEntry;
+  readonly part: string | undefined;
+}
+
 const COMPOUND_FILE = [0xd0, 0xcf, 0x11, 0xe0];
 
 const READ_ONLY = new Set<XlsxLimitationCode>([
@@ -82,16 +120,6 @@ const rejected = (reason: XlsxRejection, detail?: string): XlsxRead => ({
 
 const compound = (bytes: Bytes): boolean =>
   COMPOUND_FILE.every((byte, index) => bytes[index] === byte);
-
-interface Report {
-  readonly add: (
-    code: XlsxLimitationCode,
-    count: number,
-    sheet?: string,
-    names?: Iterable<string>,
-  ) => void;
-  readonly build: (staleFormulas: number) => LimitationsReport;
-}
 
 const createReport = (): Report => {
   const found = new Map<XlsxLimitationCode, Found>();
@@ -228,34 +256,6 @@ const loadExternals = async (
 
 const sizeOf = (archive: ZipArchive, part: string | undefined): number =>
   part === undefined ? 0 : (archive.raw(part)?.size ?? 0);
-
-interface Load {
-  readonly archive: ZipArchive;
-  readonly options: ReadOptions;
-  readonly book: Workbook;
-  readonly calculator: Calculator;
-  readonly functions: FunctionRegistry;
-  readonly report: Report;
-  readonly parsed: Set<string>;
-  readonly parts: PartOptions;
-  readonly totals: {
-    formulas: number;
-    kept: number;
-    linked: number;
-    readonly unknown: Set<string>;
-  };
-}
-
-interface BookContext {
-  readonly strings: SharedStrings;
-  readonly styles: CellStyles;
-  readonly decorations: readonly number[];
-}
-
-interface SheetPart {
-  readonly entry: SheetEntry;
-  readonly part: string | undefined;
-}
 
 const progressOf = (
   archive: ZipArchive,

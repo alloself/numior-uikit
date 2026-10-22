@@ -10,6 +10,8 @@ export interface NuiEmbed {
   readonly src: string;
 }
 
+export type NuiEmbedPresetId = keyof typeof EMBED_PRESETS;
+
 const VIDEO = 16 / 9;
 
 const BOARD = 4 / 3;
@@ -97,8 +99,6 @@ export const EMBED_PRESETS = {
     },
   },
 } as const satisfies Readonly<Record<string, NuiEmbedProvider>>;
-
-export type NuiEmbedPresetId = keyof typeof EMBED_PRESETS;
 
 export const embedProviders = (
   allowed: readonly (NuiEmbedPresetId | NuiEmbedProvider)[],

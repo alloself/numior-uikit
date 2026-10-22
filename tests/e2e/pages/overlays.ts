@@ -7,6 +7,10 @@ import {
   type Guarded,
 } from '../../../packages/primitives/test/support/guards';
 
+export type OverlaysOutput = Guarded<typeof isOverlaysOutput>;
+
+export type DrawerSide = 'start' | 'end' | 'top' | 'bottom';
+
 const isOverlaysOutput = shapeOf({
   dialogOpen: isBoolean,
   dialogResult: isString,
@@ -18,12 +22,8 @@ const isOverlaysOutput = shapeOf({
   tooltipOpen: isBoolean,
 });
 
-export type OverlaysOutput = Guarded<typeof isOverlaysOutput>;
-
 const parseOverlaysOutput = (text: string): OverlaysOutput =>
   parseAs(text, isOverlaysOutput, 'overlays output');
-
-export type DrawerSide = 'start' | 'end' | 'top' | 'bottom';
 
 export class OverlaysSection {
   readonly dialogOpen: Locator;

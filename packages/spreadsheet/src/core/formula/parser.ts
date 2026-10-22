@@ -16,6 +16,10 @@ import { ORIGIN, relativeFormula } from './origin';
 import { booleanFromWord, canonicalFunction } from './localization';
 import { parseStructured } from './structured';
 
+interface Parser {
+  formula(): FormulaNode;
+}
+
 class FormulaSyntaxError extends Error {
   readonly failure: FormulaFailure;
 
@@ -52,10 +56,6 @@ const rowLine = (text: string): LineRef | undefined => {
 
 const lineOf = (token: Token): LineRef | undefined =>
   token.kind === 'number' && /^\d+$/u.test(token.text) ? rowLine(token.text) : undefined;
-
-interface Parser {
-  formula(): FormulaNode;
-}
 
 const createParser = (tokens: readonly Token[], locale: FormulaLocale, offset: number): Parser => {
   let at = 0;

@@ -19,6 +19,10 @@ interface Account {
   contacts: Contact[];
 }
 
+interface Preferences {
+  topics: string[];
+}
+
 const { field, section, array } = formConfig<Account>();
 const contact = formConfig<Contact>();
 
@@ -42,10 +46,6 @@ const COMPANY = [
   field(NuiInput, (values) => values.company, { label: 'Company', when: isCompany }),
   field(NuiInput, (values) => values.vat, { label: 'VAT', when: isCompany }),
 ];
-
-interface Preferences {
-  topics: string[];
-}
 
 const preferences = formConfig<Preferences>();
 

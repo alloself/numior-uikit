@@ -9,6 +9,11 @@ import type { FieldRule, FieldRuleContext } from './form.types';
 
 export type FormRules<V> = Readonly<Record<string, readonly AnyFieldRule<unknown, V>[]>>;
 
+export interface PathRules<V> {
+  readonly sync: readonly FieldRule<unknown, V>[];
+  readonly async: readonly AsyncFieldRule<unknown, V>[];
+}
+
 export const firstFailure = <T, V>(
   rules: readonly FieldRule<T, V>[],
   value: T,
@@ -23,11 +28,6 @@ export const firstFailure = <T, V>(
   }
   return undefined;
 };
-
-export interface PathRules<V> {
-  readonly sync: readonly FieldRule<unknown, V>[];
-  readonly async: readonly AsyncFieldRule<unknown, V>[];
-}
 
 const rulesFor = <V>(rules: FormRules<V>, path: string): AnyFieldRule<unknown, V>[] =>
   Object.entries(rules).flatMap(([pattern, list]) =>

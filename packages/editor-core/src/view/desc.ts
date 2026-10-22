@@ -51,6 +51,31 @@ export interface ViewContext {
   decorations: BlockDecorations;
 }
 
+interface TextBody {
+  readonly inner: ChildNode;
+  readonly parts: readonly TextPart[];
+}
+
+export interface RootFill {
+  readonly remaining: number;
+  readonly covered: number;
+  readonly height: number;
+  fill(count: number): void;
+  resume(node: ElementNode): number | undefined;
+}
+
+interface Matching {
+  readonly previous: readonly Desc[];
+  readonly reusable: ReadonlyMap<NodeId, ElementDesc>;
+  readonly used: Set<Desc>;
+  textFrom: number;
+}
+
+interface TextMatch {
+  readonly desc: TextDesc;
+  readonly at: number;
+}
+
 export const outerOf = (desc: Desc): ChildNode => (desc.kind === 'text' ? desc.outer : desc.dom);
 
 const typeOf = (schema: Schema, name: string): NodeType => {
@@ -122,11 +147,6 @@ const syncHack = (context: ViewContext, desc: ElementDesc): void => {
     content.append(hack);
   }
 };
-
-interface TextBody {
-  readonly inner: ChildNode;
-  readonly parts: readonly TextPart[];
-}
 
 const plainBody = (context: ViewContext, text: string): TextBody => {
   const dom = context.document.createTextNode(text);
@@ -316,14 +336,6 @@ export const textblockAround = (
   return undefined;
 };
 
-export interface RootFill {
-  readonly remaining: number;
-  readonly covered: number;
-  readonly height: number;
-  fill(count: number): void;
-  resume(node: ElementNode): number | undefined;
-}
-
 const CHUNK_BLOCKS = 32;
 
 const rootFill = (context: ViewContext, desc: ElementDesc, from: number): RootFill => {
@@ -475,18 +487,6 @@ const sameRender = (desc: ElementDesc, after: ElementNode): boolean =>
   desc.view === undefined
     ? desc.node.type === after.type && sameAttrs(desc.node.attrs, after.attrs)
     : desc.node.type === after.type && desc.view.update(after);
-
-interface Matching {
-  readonly previous: readonly Desc[];
-  readonly reusable: ReadonlyMap<NodeId, ElementDesc>;
-  readonly used: Set<Desc>;
-  textFrom: number;
-}
-
-interface TextMatch {
-  readonly desc: TextDesc;
-  readonly at: number;
-}
 
 const findText = (matching: Matching, node: TextNode): TextMatch | undefined => {
   for (let at = matching.textFrom; at < matching.previous.length; at += 1) {

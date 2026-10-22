@@ -9,13 +9,13 @@ interface Signup {
   tags: string[];
 }
 
+type SignupOutput = z.output<typeof signup>;
+
 const signup = z.object({
   email: z.email('Enter an email'),
   age: z.coerce.number().min(18, 'Adults only'),
   tags: z.array(z.string().min(1, 'Tags cannot be empty')),
 });
-
-type SignupOutput = z.output<typeof signup>;
 
 const blank: Signup = { email: '', age: '', tags: [] };
 

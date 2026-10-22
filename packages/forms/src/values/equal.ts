@@ -2,6 +2,8 @@ import { isObject } from './kinds';
 
 type Entry = readonly [key: string, value: unknown];
 
+type Comparison = (left: object, right: object) => boolean | undefined;
+
 const isDefined = ([, value]: Entry): boolean => value !== undefined;
 
 const definedEntries = (value: object): Entry[] => Object.entries(value).filter(isDefined);
@@ -16,8 +18,6 @@ const equalRecords = (left: object, right: object): boolean => {
     )
   );
 };
-
-type Comparison = (left: object, right: object) => boolean | undefined;
 
 const sameDates: Comparison = (left, right) =>
   left instanceof Date && right instanceof Date ? left.getTime() === right.getTime() : undefined;

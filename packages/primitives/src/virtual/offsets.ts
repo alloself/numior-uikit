@@ -15,6 +15,11 @@ export interface VirtualRange {
 
 export type VirtualAlign = 'auto' | 'start' | 'center' | 'end';
 
+export interface CanvasScale {
+  readonly canvas: number;
+  readonly factor: number;
+}
+
 const isSizeIndex = (value: ItemSize): value is SizeIndex => typeof value === 'object';
 
 export const buildSizeModel = (count: number, itemSize: ItemSize): SizeModel => {
@@ -163,11 +168,6 @@ export const scrollTargetFor = (
       return end > scrollTop + viewport ? bounded(Math.min(start, end - viewport)) : undefined;
   }
 };
-
-export interface CanvasScale {
-  readonly canvas: number;
-  readonly factor: number;
-}
 
 export const canvasScaleFor = (
   total: number,

@@ -5,6 +5,12 @@ import { isAtom } from './atoms';
 import { isCursor, selectionRange, textSelection } from '../state/selection';
 import type { Command, EditorState, Transaction } from '../state/state.types';
 
+interface JoinPlan {
+  readonly cursor: ResolvedPos;
+  readonly neighbour: ElementNode;
+  readonly boundary: number;
+}
+
 const isTextblock = (schema: Schema, node: ContentNode | undefined): node is ElementNode =>
   node?.kind === 'element' && schema.nodes.get(node.type)?.inlineContent === true;
 
@@ -40,12 +46,6 @@ const sibling = (cursor: ResolvedPos, offset: -1 | 1): ElementNode | undefined =
 
   return node?.kind === 'element' ? node : undefined;
 };
-
-interface JoinPlan {
-  readonly cursor: ResolvedPos;
-  readonly neighbour: ElementNode;
-  readonly boundary: number;
-}
 
 const atEdge = (cursor: ResolvedPos, offset: -1 | 1): boolean =>
   offset < 0 ? cursor.parentOffset === 0 : cursor.pos === cursor.end(cursor.depth);

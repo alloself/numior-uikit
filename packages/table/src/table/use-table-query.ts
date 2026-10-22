@@ -16,9 +16,9 @@ export interface TableQueryRunner {
   runNow(): TableQuery;
 }
 
-const BUSY_DELAY = 120;
-
 type RunKind = 'query' | 'totals';
+
+const BUSY_DELAY = 120;
 
 const nextPaint = async (): Promise<void> => {
   if (typeof requestAnimationFrame === 'function') {

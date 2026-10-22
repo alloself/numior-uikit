@@ -19,6 +19,17 @@ interface Automaton {
 
 export type NameResolver = (name: string) => readonly string[];
 
+interface MatchState {
+  readonly validEnd: boolean;
+  readonly next: Map<string, ContentMatch>;
+  readonly match: ContentMatch;
+}
+
+interface MatchStates {
+  readonly start: ContentMatch;
+  readonly states: readonly (ContentMatch | undefined)[];
+}
+
 const addState = (automaton: Automaton): number => {
   automaton.edges.push([]);
   return automaton.edges.length - 1;
@@ -141,12 +152,6 @@ const movesOf = (automaton: Automaton, states: readonly number[]): Map<string, n
   return moves;
 };
 
-interface MatchState {
-  readonly validEnd: boolean;
-  readonly next: Map<string, ContentMatch>;
-  readonly match: ContentMatch;
-}
-
 const createMatchState = (validEnd: boolean): MatchState => {
   const next = new Map<string, ContentMatch>();
 
@@ -219,11 +224,6 @@ export const reachesEnd = (match: ContentMatch, usable: (type: string) => boolea
 
 export const typesOf = (match: ContentMatch): Set<string> =>
   new Set(reachable(match, () => true).flatMap((state) => [...state.next.keys()]));
-
-interface MatchStates {
-  readonly start: ContentMatch;
-  readonly states: readonly (ContentMatch | undefined)[];
-}
 
 const statesByNode = new WeakMap<ElementNode, MatchStates>();
 

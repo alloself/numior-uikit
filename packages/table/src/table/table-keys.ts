@@ -26,6 +26,12 @@ export interface TableSize {
   readonly cols: number;
 }
 
+export interface PageScale {
+  readonly span: number;
+  readonly offsetOf: (index: number) => number;
+  readonly indexAt: (position: number) => number;
+}
+
 const lastRowOf = (bounds: TableBounds): number => (bounds.rows > 0 ? bounds.rows - 1 : -1);
 
 export const stepCell = (
@@ -87,12 +93,6 @@ export const tableEdge = (
       return { row: from.row, col: Math.max(0, cols - 1) };
   }
 };
-
-export interface PageScale {
-  readonly span: number;
-  readonly offsetOf: (index: number) => number;
-  readonly indexAt: (position: number) => number;
-}
 
 export const pageStepOf = (scale: PageScale, from: number, forward: boolean): number => {
   const edge = forward ? scale.offsetOf(from) + scale.span : scale.offsetOf(from + 1) - scale.span;

@@ -1,6 +1,11 @@
 import type { ExampleLocale } from '../examples/example.types.ts';
 import type { ComponentReference, ReferenceBundle } from './reference.types.ts';
 
+interface NamedMember {
+  readonly name: string;
+  readonly description: { readonly ru: string; readonly en: string } | undefined;
+}
+
 const SINGLE_RE = /<ApiReference\s+name="([^"]+)"/g;
 const MANY_RE = /<ApiReference\s+:names="\[([^\]]+)\]"/g;
 
@@ -14,11 +19,6 @@ export const referencedComponents = (source: string): string[] => [
     ),
   ]),
 ];
-
-interface NamedMember {
-  readonly name: string;
-  readonly description: { readonly ru: string; readonly en: string } | undefined;
-}
 
 const memberLines = (members: readonly NamedMember[], locale: ExampleLocale): string[] =>
   members.map((member) =>

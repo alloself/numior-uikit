@@ -11,14 +11,14 @@ import {
 import type { ViewHost } from './host.types';
 import { contentStart } from './positions';
 
-const ATOM = '￼';
-
 export interface DomWatch {
   ignoreOwn(): void;
   startComposition(): void;
   endComposition(): void;
   destroy(): void;
 }
+
+const ATOM = '￼';
 
 const isLeafDom = (context: ViewContext, node: Node): boolean => {
   const desc = context.descs.get(node);

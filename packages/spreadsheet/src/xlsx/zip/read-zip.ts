@@ -20,6 +20,11 @@ interface ZipRefusal {
   readonly reason: ZipFailure;
 }
 
+interface Directory {
+  readonly count: number;
+  readonly offset: number;
+}
+
 const END = 0x06_05_4b_50;
 
 const CENTRAL = 0x02_01_4b_50;
@@ -65,11 +70,6 @@ const endOf = (view: DataView): number | undefined => {
   }
   return undefined;
 };
-
-interface Directory {
-  readonly count: number;
-  readonly offset: number;
-}
 
 const directoryOf = (view: DataView, end: number): Directory | undefined => {
   const count = view.getUint16(end + 10, true);

@@ -10,19 +10,7 @@ import {
 } from '../../../packages/primitives/test/support/guards';
 import { boxOf, type Point } from '../helpers/geometry';
 
-const isSmartFormOutput = shapeOf({
-  filter: shapeOf({ query: isString, status: nullable(isString) }),
-  profile: nullable(isRecord),
-  lead: nullable(isRecord),
-  issues: listOf(isRecord),
-});
-
 export type SmartFormOutput = Guarded<typeof isSmartFormOutput>;
-
-const parseSmartFormOutput = (text: string): SmartFormOutput =>
-  parseAs(text, isSmartFormOutput, 'smart form output');
-
-const FIELD = 'xpath=ancestor::*[contains(concat(" ", @class, " "), " nui-field ")][1]';
 
 export type KindLabel = 'Частное лицо' | 'Компания';
 
@@ -35,6 +23,18 @@ export interface KindSwitchMotion {
   readonly spill: number;
   readonly companyAfter: boolean;
 }
+
+const isSmartFormOutput = shapeOf({
+  filter: shapeOf({ query: isString, status: nullable(isString) }),
+  profile: nullable(isRecord),
+  lead: nullable(isRecord),
+  issues: listOf(isRecord),
+});
+
+const parseSmartFormOutput = (text: string): SmartFormOutput =>
+  parseAs(text, isSmartFormOutput, 'smart form output');
+
+const FIELD = 'xpath=ancestor::*[contains(concat(" ", @class, " "), " nui-field ")][1]';
 
 export class SmartFormSection {
   readonly filter: Locator;

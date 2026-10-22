@@ -25,8 +25,6 @@ interface AsyncState {
   result: AsyncResult | undefined;
 }
 
-const IDLE: AsyncPhase = { kind: 'idle' };
-
 export interface AsyncChecks<V extends object> {
   issues(active: readonly Entry<V>[]): FormIssue[];
   schedule(entry: Entry<V>, delay: number): void;
@@ -36,6 +34,8 @@ export interface AsyncChecks<V extends object> {
   forget(entry: Entry<V>): void;
   reset(): void;
 }
+
+const IDLE: AsyncPhase = { kind: 'idle' };
 
 export const createAsyncChecks = <V extends object, O>(
   core: FormCore<V, O>,

@@ -3,6 +3,13 @@ import type { Highlighter } from 'shiki';
 import type { NuiCodeProps } from '@numior/vue';
 import { tokenizeCode } from './tokens.ts';
 
+interface FenceInfo {
+  readonly lang: string;
+  readonly title: string | undefined;
+  readonly highlight: number[] | undefined;
+  readonly lineNumbers: true | undefined;
+}
+
 const HIGHLIGHT_RE = /\{([\d,-]+)\}/;
 const TITLE_RE = /title="([^"]*)"/;
 const PLAIN_LANGUAGES = new Set(['', 'txt', 'text']);
@@ -31,13 +38,6 @@ const attributeJson = (value: unknown): string =>
     .replaceAll("'", '&#39;')
     .replaceAll('<', '&lt;')
     .replaceAll('>', '&gt;');
-
-interface FenceInfo {
-  readonly lang: string;
-  readonly title: string | undefined;
-  readonly highlight: number[] | undefined;
-  readonly lineNumbers: true | undefined;
-}
 
 const parseFenceInfo = (info: string): FenceInfo => {
   const lines = highlightedLines(info);

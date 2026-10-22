@@ -3,8 +3,6 @@ import { clampWidth, widthOf, type PlacedColumn, type TableLayout } from './tabl
 import type { NuiTableMessages } from './table.messages';
 import type { NuiTableColumn, NuiTableWidths } from './table.types';
 
-const STEP = 10;
-
 export interface TableResizeOptions<T> {
   readonly widths: Ref<NuiTableWidths>;
   readonly layout: () => TableLayout;
@@ -37,6 +35,8 @@ interface ResizeSession {
   readonly sign: number;
   readonly partner: Partner | undefined;
 }
+
+const STEP = 10;
 
 const placedOf = (layout: TableLayout, key: string): PlacedColumn | undefined =>
   layout.visual.find((column) => column.key === key);

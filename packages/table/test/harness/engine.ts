@@ -17,6 +17,31 @@ export interface Person {
   readonly active: boolean | null;
 }
 
+export interface Order {
+  readonly id: number;
+  readonly city: string | null;
+  readonly country: string;
+  readonly amount: number | null;
+  readonly paid: boolean | null;
+  readonly created: Date | null;
+  readonly note: string | null;
+}
+
+export interface Folder {
+  readonly name: string;
+  readonly size: number | null;
+  readonly items?: readonly Folder[];
+}
+
+export interface EngineHarnessOptions<T> {
+  readonly sliceMs?: number;
+  readonly keyOf?: (row: T) => TableNodeId;
+  readonly children?: (row: T) => readonly T[] | null | undefined;
+  readonly hasChildren?: (row: T) => boolean;
+  readonly detail?: (row: T) => boolean;
+  readonly defaultExpanded?: boolean;
+}
+
 export const PEOPLE_COLUMNS: readonly TableEngineColumn<Person>[] = [
   { kind: 'string', key: 'name', value: (row) => row.name },
   { kind: 'number', key: 'age', value: (row) => row.age },
@@ -31,16 +56,6 @@ export const PEOPLE: readonly Person[] = [
   { name: null, age: 29, born: new Date('1996-01-20'), active: true },
   { name: 'Анна', age: 35, born: new Date('1990-07-15'), active: false },
 ];
-
-export interface Order {
-  readonly id: number;
-  readonly city: string | null;
-  readonly country: string;
-  readonly amount: number | null;
-  readonly paid: boolean | null;
-  readonly created: Date | null;
-  readonly note: string | null;
-}
 
 export const ORDERS: readonly Order[] = [
   {
@@ -117,12 +132,6 @@ export const ORDER_TOTALS: readonly TableEngineColumn<Order>[] = [
   },
 ];
 
-export interface Folder {
-  readonly name: string;
-  readonly size: number | null;
-  readonly items?: readonly Folder[];
-}
-
 export const FOLDERS: readonly Folder[] = [
   {
     name: 'docs',
@@ -150,15 +159,6 @@ export const FOLDER_COLUMNS: readonly TableEngineColumn<Folder>[] = [
 ];
 
 const tick = (): Promise<void> => promiseTimeout(0);
-
-export interface EngineHarnessOptions<T> {
-  readonly sliceMs?: number;
-  readonly keyOf?: (row: T) => TableNodeId;
-  readonly children?: (row: T) => readonly T[] | null | undefined;
-  readonly hasChildren?: (row: T) => boolean;
-  readonly detail?: (row: T) => boolean;
-  readonly defaultExpanded?: boolean;
-}
 
 export class EngineHarness<T> {
   readonly engine: TableEngine<T>;

@@ -29,6 +29,11 @@ interface TableParts {
   readonly body: ElementNode;
 }
 
+export interface TableColumnFilter {
+  readonly column: NodeId;
+  readonly filter: NuiContentTableFilter;
+}
+
 const elementsOf = (node: ElementNode | undefined): readonly ElementNode[] =>
   (node?.content ?? []).filter((child): child is ElementNode => child.kind === 'element');
 
@@ -322,11 +327,6 @@ export const sortTable = (id: NodeId, sort: readonly NuiContentTableSort[]): Com
     }
     return true;
   });
-
-export interface TableColumnFilter {
-  readonly column: NodeId;
-  readonly filter: NuiContentTableFilter;
-}
 
 const filterNode = (tr: Transaction, filter: NuiContentTableFilter): ElementNode =>
   tr.doc.schema.element('table_filter', {

@@ -10,13 +10,6 @@ import {
   type Guarded,
 } from '../../../packages/primitives/test/support/guards';
 
-const isCorner = shapeOf({ row: isNumber, col: isNumber });
-
-const isSheetOutput = shapeOf({
-  ranges: listOf(shapeOf({ from: isCorner, to: isCorner })),
-  rowHeights: recordOf(isNumber),
-});
-
 export type TableSheetOutput = Guarded<typeof isSheetOutput>;
 
 export interface TableSheetEdge {
@@ -40,6 +33,13 @@ export interface TableSheetWindow {
   readonly lastBottom: number;
   readonly end: number;
 }
+
+const isCorner = shapeOf({ row: isNumber, col: isNumber });
+
+const isSheetOutput = shapeOf({
+  ranges: listOf(shapeOf({ from: isCorner, to: isCorner })),
+  rowHeights: recordOf(isNumber),
+});
 
 const HEAD_ROWS = 1;
 const ROW_HEADERS = 1;

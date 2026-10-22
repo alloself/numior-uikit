@@ -20,6 +20,19 @@ interface Layout {
   readonly exponentAt: number;
 }
 
+interface Scientific {
+  readonly exponent: number;
+  readonly digits: Digits;
+}
+
+interface Ratio {
+  readonly whole: readonly number[];
+  readonly numerator: readonly number[];
+  readonly slash: number;
+  readonly denominator: readonly number[];
+  readonly fixed: number | undefined;
+}
+
 const LEADING = -1;
 
 const isDigit = (token: FormatToken | undefined): token is Digit => token?.kind === 'digit';
@@ -150,11 +163,6 @@ const placeFraction = (
   return placed;
 };
 
-interface Scientific {
-  readonly exponent: number;
-  readonly digits: Digits;
-}
-
 const exponentParts = (
   value: number,
   layout: Layout,
@@ -249,14 +257,6 @@ const plainNumber = (
 
   return { placed, sign: sign === '' && plus ? '+' : sign };
 };
-
-interface Ratio {
-  readonly whole: readonly number[];
-  readonly numerator: readonly number[];
-  readonly slash: number;
-  readonly denominator: readonly number[];
-  readonly fixed: number | undefined;
-}
 
 const FIXED_DIGIT = /^[0-9]$/u;
 

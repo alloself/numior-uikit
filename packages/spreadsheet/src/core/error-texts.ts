@@ -3,6 +3,11 @@ import { CELL_ERRORS } from './values';
 
 export type ErrorTexts = Readonly<Record<CellError, string>>;
 
+export interface ErrorSpelling {
+  readonly text: string;
+  readonly code: CellError;
+}
+
 export const EN_ERRORS: ErrorTexts = {
   '#NULL!': '#NULL!',
   '#DIV/0!': '#DIV/0!',
@@ -26,11 +31,6 @@ export const RU_ERRORS: ErrorTexts = {
   '#SPILL!': '#ПЕРЕНОС!',
   '#CALC!': '#ВЫЧИСЛ!',
 };
-
-export interface ErrorSpelling {
-  readonly text: string;
-  readonly code: CellError;
-}
 
 const spellings = new WeakMap<ErrorTexts, readonly ErrorSpelling[]>();
 

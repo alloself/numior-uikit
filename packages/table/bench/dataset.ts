@@ -24,6 +24,13 @@ export interface BenchRow {
   readonly score: number;
 }
 
+export interface BenchNode {
+  readonly id: number;
+  readonly name: string;
+  readonly size: number;
+  readonly items?: readonly BenchNode[];
+}
+
 const FIRST_NAMES = [
   'Anna',
   'Ivan',
@@ -237,13 +244,6 @@ export const TABLE_COLUMNS: readonly NuiTableColumn<BenchRow>[] = [
     value: (row) => row.status,
   },
 ];
-
-export interface BenchNode {
-  readonly id: number;
-  readonly name: string;
-  readonly size: number;
-  readonly items?: readonly BenchNode[];
-}
 
 export const TREE_COLUMNS: readonly TableEngineColumn<BenchNode>[] = [
   { kind: 'string', key: 'name', value: (row) => row.name },

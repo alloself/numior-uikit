@@ -26,6 +26,8 @@ import NuiSwitch from '../switch/NuiSwitch.vue';
 import NuiTextarea from '../textarea/NuiTextarea.vue';
 import NuiTimeField from '../time-field/NuiTimeField.vue';
 
+export type NuiKitControls = typeof kitControls;
+
 const size = optional(oneOf('sm', 'md', 'lg'));
 const text = optional(isString);
 const flag = optional(isBoolean);
@@ -106,5 +108,3 @@ export const kitControls = defineControls({
     }),
   }),
 });
-
-export type NuiKitControls = typeof kitControls;

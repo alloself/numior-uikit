@@ -1,3 +1,9 @@
+interface Watch {
+  readonly notify: ResizeObserverCallback;
+  readonly observer: ResizeObserver;
+  readonly targets: Set<Element>;
+}
+
 const entryOf = (target: Element): ResizeObserverEntry => ({
   target,
   contentRect: target.getBoundingClientRect(),
@@ -5,12 +11,6 @@ const entryOf = (target: Element): ResizeObserverEntry => ({
   contentBoxSize: [],
   devicePixelContentBoxSize: [],
 });
-
-interface Watch {
-  readonly notify: ResizeObserverCallback;
-  readonly observer: ResizeObserver;
-  readonly targets: Set<Element>;
-}
 
 export class ResizeObservers {
   private readonly watches = new Set<Watch>();

@@ -10,6 +10,10 @@ import {
   type Guarded,
 } from '../../../packages/primitives/test/support/guards';
 
+export type SignupOutput = Guarded<typeof isSignupOutput>;
+
+export type ServerAnswer = 'Успех' | 'Ошибка поля' | 'Ошибка формы' | 'Медленный ответ';
+
 const isSignupOutput = shapeOf({
   submitted: isNumber,
   submitCount: isNumber,
@@ -21,12 +25,8 @@ const isSignupOutput = shapeOf({
   about: isString,
 });
 
-export type SignupOutput = Guarded<typeof isSignupOutput>;
-
 const parseSignupOutput = (text: string): SignupOutput =>
   parseAs(text, isSignupOutput, 'signup output');
-
-export type ServerAnswer = 'Успех' | 'Ошибка поля' | 'Ошибка формы' | 'Медленный ответ';
 
 const FIELD = 'xpath=ancestor::*[contains(concat(" ", @class, " "), " nui-field ")][1]';
 

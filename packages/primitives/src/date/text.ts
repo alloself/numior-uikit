@@ -6,6 +6,8 @@ export type DateTextPart =
   | { readonly type: 'year' | 'month' | 'day'; readonly length: number }
   | { readonly type: 'literal'; readonly text: string };
 
+type DateField = 'year' | 'month' | 'day';
+
 const PATTERN_DATE = Date.UTC(2001, 10, 22);
 
 const BIDI_MARKS = /[‎‏؜]/gu;
@@ -60,8 +62,6 @@ export const formatDateText = (date: string, locale: string): string => {
 
   return parts ? formatterFor(locale).format(toUtc(parts)) : '';
 };
-
-type DateField = 'year' | 'month' | 'day';
 
 const fieldOrder = (locale: string): DateField[] =>
   datePatternOf(locale).flatMap((part) => (part.type === 'literal' ? [] : [part.type]));

@@ -8,12 +8,6 @@ import {
   type Guarded,
 } from '../../../packages/primitives/test/support/guards';
 
-const isDetailOutput = shapeOf({
-  expanded: listOf(isNumber),
-  opened: nullable(isNumber),
-  lastClick: nullable(isNumber),
-});
-
 export type TableDetailOutput = Guarded<typeof isDetailOutput>;
 
 export interface TableDetailTopRow {
@@ -25,6 +19,12 @@ export interface TableDetailEdges {
   readonly top: number;
   readonly bottom: number;
 }
+
+const isDetailOutput = shapeOf({
+  expanded: listOf(isNumber),
+  opened: nullable(isNumber),
+  lastClick: nullable(isNumber),
+});
 
 const HEAD_ROWS = 1;
 const BODY_ROWS = ':scope > .nui-table__body > [role="row"]';

@@ -6,6 +6,13 @@ import { EditorDriver } from './drivers/editor';
 import { EditorMentionsDriver } from './drivers/editor-mentions';
 import { installPopovers } from './support/popovers';
 
+interface Lookup {
+  readonly query: string;
+  readonly signal: AbortSignal;
+  readonly answer: (people: readonly NuiEditorMention[]) => void;
+  readonly fail: () => void;
+}
+
 let driver: EditorDriver | undefined;
 
 beforeAll(() => {
@@ -27,13 +34,6 @@ const PEOPLE: readonly NuiEditorMention[] = [
   { id: 'ivan', label: 'Ivan Petrov', avatar: '/ivan.png' },
   { id: 'olga', label: 'Olga Smirnova' },
 ];
-
-interface Lookup {
-  readonly query: string;
-  readonly signal: AbortSignal;
-  readonly answer: (people: readonly NuiEditorMention[]) => void;
-  readonly fail: () => void;
-}
 
 const directory = (): { readonly search: NuiEditorMentions; readonly lookups: Lookup[] } => {
   const lookups: Lookup[] = [];

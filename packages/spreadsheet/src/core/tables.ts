@@ -16,6 +16,11 @@ export type TableShift =
 
 type Span = readonly [number, number];
 
+export interface StructuredPart {
+  readonly area: StructuredArea;
+  readonly columns?: StructuredColumns | undefined;
+}
+
 const SAME: TableShift = { kind: 'same' };
 
 const REMOVED: TableShift = { kind: 'removed' };
@@ -31,11 +36,6 @@ export const dataRows = (table: TableShape): number => {
 
   return data.bottom - data.top + 1;
 };
-
-export interface StructuredPart {
-  readonly area: StructuredArea;
-  readonly columns?: StructuredColumns | undefined;
-}
 
 const columnOf = (table: TableShape, name: string): number | undefined => {
   const wanted = name.toLowerCase();

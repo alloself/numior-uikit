@@ -10,6 +10,8 @@ import {
   type Guarded,
 } from '../../../packages/primitives/test/support/guards';
 
+export type DataOutput = Guarded<typeof isDataOutput>;
+
 const isDataOutput = shapeOf({
   picked: listOf(isString),
   channel: nullable(isString),
@@ -18,8 +20,6 @@ const isDataOutput = shapeOf({
   runs: isNumber,
   listEmpty: isBoolean,
 });
-
-export type DataOutput = Guarded<typeof isDataOutput>;
 
 const parseDataOutput = (text: string): DataOutput => parseAs(text, isDataOutput, 'data output');
 

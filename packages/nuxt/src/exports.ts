@@ -1,7 +1,7 @@
+export type ModuleNamespace = Readonly<Record<string, unknown>>;
+
 const COMPONENT_NAME = /^Nui[A-Z]/;
 const COMPOSABLE_NAME = /^use[A-Z]/;
-
-export type ModuleNamespace = Readonly<Record<string, unknown>>;
 
 const isRecord = (value: unknown): value is Readonly<Record<string, unknown>> =>
   typeof value === 'object' && value !== null;

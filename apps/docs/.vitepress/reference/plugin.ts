@@ -6,12 +6,12 @@ import { tokenizeCode } from '../markdown/tokens.ts';
 import { parseBundle } from './bundle.ts';
 import type { ReferenceBundle } from './reference.types.ts';
 
+export type SignatureTokenizer = (code: string) => readonly NuiCodeLine[] | undefined;
+
 const REGISTRY_ID = 'virtual:nui-reference';
 const SLICE_PREFIX = 'virtual:nui-reference/';
 const RESOLVED_REGISTRY = `\0${REGISTRY_ID}`;
 const RESOLVED_PREFIX = `\0${SLICE_PREFIX}`;
-
-export type SignatureTokenizer = (code: string) => readonly NuiCodeLine[] | undefined;
 
 const noTokens: SignatureTokenizer = () => undefined;
 

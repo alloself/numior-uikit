@@ -1,10 +1,10 @@
+export type TaskStatus = (typeof TASK_STATUSES)[number]['value'];
+
 export const TASK_STATUSES = [
   { value: 'todo', label: 'К выполнению' },
   { value: 'doing', label: 'В работе' },
   { value: 'done', label: 'Готово' },
 ] as const;
-
-export type TaskStatus = (typeof TASK_STATUSES)[number]['value'];
 
 export const taskStatusOf = (value: unknown): TaskStatus =>
   TASK_STATUSES.find((status) => status.value === value)?.value ?? 'todo';

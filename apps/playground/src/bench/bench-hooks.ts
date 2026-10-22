@@ -16,6 +16,10 @@ declare global {
   }
 }
 
+export interface InputClock {
+  last: number;
+}
+
 export const afterPaint = (): Promise<number> =>
   new Promise((resolve) => {
     requestAnimationFrame(() => {
@@ -30,10 +34,6 @@ export const afterPaint = (): Promise<number> =>
       channel.port2.postMessage(undefined);
     });
   });
-
-export interface InputClock {
-  last: number;
-}
 
 export const trackInput = (clock: InputClock): void => {
   for (const type of ['pointerdown', 'keydown'] as const) {

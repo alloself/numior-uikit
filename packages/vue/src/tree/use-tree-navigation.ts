@@ -31,14 +31,21 @@ export interface TreeNavigation {
   reset(): void;
 }
 
-const isPrintable = (event: KeyboardEvent): boolean =>
-  event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey;
-
 interface TypeaheadIndex {
   readonly enabled: readonly number[];
   readonly slots: ReadonlyMap<number, number>;
   readonly lowered: readonly string[];
 }
+
+interface Cursor<T> {
+  readonly nodes: readonly TreeNode<T>[];
+  readonly current: number;
+  readonly loop: boolean;
+  readonly page: number;
+}
+
+const isPrintable = (event: KeyboardEvent): boolean =>
+  event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey;
 
 const enabledIndices = <T>(nodes: readonly TreeNode<T>[]): number[] =>
   nodes.flatMap((node, index) => (node.item.disabled ? [] : [index]));
@@ -75,13 +82,6 @@ const walk = <T>(
   }
   return found;
 };
-
-interface Cursor<T> {
-  readonly nodes: readonly TreeNode<T>[];
-  readonly current: number;
-  readonly loop: boolean;
-  readonly page: number;
-}
 
 const firstOf = <T>(nodes: readonly TreeNode<T>[]): number => walk(nodes, 0, 1, 1);
 

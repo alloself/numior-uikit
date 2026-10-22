@@ -15,9 +15,9 @@ export interface ListHarnessOptions {
   readonly pageSize?: number;
 }
 
-const DEFAULT_LABELS = ['Apple', 'Banana', 'Blueberry', 'Cherry', 'Date'];
-
 type HostWrapper = VueWrapper<InstanceType<typeof ListNavigationHost>>;
+
+const DEFAULT_LABELS = ['Apple', 'Banana', 'Blueberry', 'Cherry', 'Date'];
 
 export class ListHarness {
   static mount(options: ListHarnessOptions = {}): ListHarness {

@@ -6,6 +6,11 @@ import type {
   NuiContentTableSort,
 } from '../content/content.types';
 
+export interface NuiContentColumnFilter {
+  readonly column: NodeId;
+  readonly filter: NuiContentTableFilter;
+}
+
 const ISO = /^(\d{4})-(\d{2})-(\d{2})$/u;
 
 const dayOf = (iso: string | null): number | undefined => {
@@ -44,11 +49,6 @@ const contentFilterOf = (filter: NuiTableColumnFilter): NuiContentTableFilter =>
       return { kind: 'set', values: filter.values };
   }
 };
-
-export interface NuiContentColumnFilter {
-  readonly column: NodeId;
-  readonly filter: NuiContentTableFilter;
-}
 
 export const tableSortOf = (sort: readonly NuiContentTableSort[]): NuiTableSort =>
   sort.map((entry) => ({ key: entry.column, direction: entry.direction }));

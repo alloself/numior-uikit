@@ -39,6 +39,17 @@ export interface SheetOutput {
   readonly spills: number;
 }
 
+interface Sink {
+  push(piece: string): void;
+  pause(): Promise<void>;
+  chunks(): Bytes[];
+}
+
+interface CellCounts {
+  stale: number;
+  spills: number;
+}
+
 const MAIN = 'http://schemas.openxmlformats.org/spreadsheetml/2006/main';
 
 const RELATIONSHIPS = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
@@ -181,17 +192,6 @@ const valueParts = (
       return ['', ''];
   }
 };
-
-interface Sink {
-  push(piece: string): void;
-  pause(): Promise<void>;
-  chunks(): Bytes[];
-}
-
-interface CellCounts {
-  stale: number;
-  spills: number;
-}
 
 const createSink = (signal: AbortSignal | undefined): Sink => {
   const encoder = new TextEncoder();

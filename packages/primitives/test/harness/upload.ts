@@ -31,6 +31,12 @@ interface ControlledModel {
 
 type FileDropWrapper = VueWrapper<InstanceType<typeof FileDropZone>>;
 
+interface FileTransferStub {
+  readonly files: File[];
+  readonly types: string[];
+  dropEffect: string;
+}
+
 export const fileOf = (name: string, size = 3, type = 'text/plain'): File =>
   new File([new Uint8Array(size)], name, { type });
 
@@ -182,12 +188,6 @@ export class UploadQueueHarness {
   unmount(): void {
     this.wrapper.unmount();
   }
-}
-
-interface FileTransferStub {
-  readonly files: File[];
-  readonly types: string[];
-  dropEffect: string;
 }
 
 const dragEvent = (type: string, transfer: FileTransferStub): Event => {

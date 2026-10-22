@@ -10,6 +10,16 @@ export interface ActiveBlock {
   readonly attrs: Attrs;
 }
 
+interface Produced {
+  tr?: Transaction | undefined;
+}
+
+interface MarkSpan {
+  readonly from: number;
+  readonly to: number;
+  readonly mark: Mark | undefined;
+}
+
 const cursorMarks = (state: EditorState, head: number): ReadonlySet<string> => {
   const before = state.doc.resolve(head).nodeBefore;
   const marks = state.storedMarks ?? (before?.kind === 'text' ? before.marks : []);
@@ -63,10 +73,6 @@ export const ancestorTypes = (state: EditorState): readonly string[] => {
   return Array.from({ length: $from.depth }, (_, depth) => $from.node($from.depth - depth).type);
 };
 
-interface Produced {
-  tr?: Transaction | undefined;
-}
-
 const appendTo = (combined: Transaction | undefined, next: Transaction): Transaction => {
   if (combined === undefined) {
     return next;
@@ -106,12 +112,6 @@ export const sequence =
     }
     return true;
   };
-
-interface MarkSpan {
-  readonly from: number;
-  readonly to: number;
-  readonly mark: Mark | undefined;
-}
 
 const spansOf = (doc: Doc, pos: number, type: string): MarkSpan[] => {
   const $pos = doc.resolve(pos);

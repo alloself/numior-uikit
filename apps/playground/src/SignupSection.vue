@@ -205,6 +205,8 @@ interface Signup {
 
 type ServerMode = 'ok' | 'field' | 'form' | 'slow';
 
+type Delivered = Pick<SubmittedValues<Signup>, 'seats' | 'tags' | 'about'>;
+
 const SERVER_OPTIONS: NuiOptionSource<ServerMode> = [
   { value: 'ok', label: 'Успех' },
   { value: 'field', label: 'Ошибка поля' },
@@ -251,7 +253,6 @@ const termsRules = [required({ message: 'Нужно принять услови�
 const server = ref<ServerMode>('ok');
 const reserveError = ref(false);
 const submitted = ref(0);
-type Delivered = Pick<SubmittedValues<Signup>, 'seats' | 'tags' | 'about'>;
 
 const deliveredOf = (values: SubmittedValues<Signup>): Delivered => ({
   seats: values.seats ?? null,

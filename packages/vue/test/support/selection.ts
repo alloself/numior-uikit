@@ -1,14 +1,14 @@
 import { ref } from 'vue';
 import { isString, listOf } from '../../../primitives/test/support/guards';
 
-const isStrings = listOf(isString);
-
 export type SelectionValue = string | null | string[];
 
 export interface Selection {
   props(): Record<string, unknown>;
   value(): SelectionValue;
 }
+
+const isStrings = listOf(isString);
 
 export const createSelection = (
   initial: SelectionValue | undefined,

@@ -15,9 +15,6 @@ import {
 import { highlightCode, type NuiCodeTokens, type NuiHighlighter } from '@numior/primitives';
 import { codeTextOf } from './code-text';
 
-const CODE_TYPE = 'code_block';
-const SCOPE_CLASS = 'nui-content__token--scope-';
-
 interface CodeRange {
   readonly from: number;
   readonly to: number;
@@ -41,8 +38,6 @@ interface CodeState {
   readonly places: ReadonlyMap<NodeId, CodePlace>;
 }
 
-const NO_CODE: CodeState = { paints: new Map(), places: new Map() };
-
 interface CodeAnswer {
   readonly id: NodeId;
   readonly text: string;
@@ -54,6 +49,29 @@ interface CodeBlock {
   readonly text: string;
   readonly language: string | undefined;
 }
+
+interface Shift {
+  readonly mapping: Mappable;
+  readonly before: number;
+  readonly after: number;
+  readonly size: number;
+}
+
+export interface CodeHighlighter {
+  update(state: EditorState): void;
+  reset(): void;
+  stop(): void;
+}
+
+interface Seen {
+  readonly root: ElementNode;
+  readonly highlighter: NuiHighlighter;
+}
+
+const CODE_TYPE = 'code_block';
+const SCOPE_CLASS = 'nui-content__token--scope-';
+
+const NO_CODE: CodeState = { paints: new Map(), places: new Map() };
 
 const answerKey = createMetaKey<readonly CodeAnswer[]>('code-answers');
 
@@ -81,13 +99,6 @@ const rangesOf = (tokens: NuiCodeTokens): CodeRange[] => {
   }
   return found;
 };
-
-interface Shift {
-  readonly mapping: Mappable;
-  readonly before: number;
-  readonly after: number;
-  readonly size: number;
-}
 
 const shifted = (range: CodeRange, shift: Shift): CodeRange => ({
   from: shift.mapping.map(range.from + shift.before, 1) - shift.after,
@@ -247,17 +258,6 @@ const changedCode = (
 };
 
 const keyOf = (block: CodeBlock): string => `${block.language ?? ''}\n${block.text}`;
-
-export interface CodeHighlighter {
-  update(state: EditorState): void;
-  reset(): void;
-  stop(): void;
-}
-
-interface Seen {
-  readonly root: ElementNode;
-  readonly highlighter: NuiHighlighter;
-}
 
 const nextTask = (): Promise<void> =>
   new Promise((resolve) => {

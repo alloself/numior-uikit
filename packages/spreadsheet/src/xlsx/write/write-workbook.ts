@@ -56,6 +56,24 @@ interface Output {
   readonly roots: Relationship[];
 }
 
+type GeneratedPart = readonly [part: string, kind: string, type: string, content: string | Bytes];
+
+interface Writing {
+  readonly book: Workbook;
+  readonly calculator: Calculator;
+  readonly original: Original | undefined;
+  readonly output: Output;
+  readonly workbookPart: string;
+  readonly workbookIds: Set<string>;
+  readonly workbookRelationships: PlannedRelationship[];
+  readonly sheets: PlannedSheet[];
+  readonly styles: StyleBook;
+  readonly strings: StringTable;
+  readonly outdated: (sheet: Sheet, row: number, col: number) => boolean;
+  readonly signal: AbortSignal | undefined;
+  readonly totals: { stale: number; spills: number };
+}
+
 const REGENERATED = new Set(['worksheet', 'styles', 'sharedStrings', 'calcChain', 'sheetMetadata']);
 
 const KEEPS_POSITION = new Set([
@@ -265,8 +283,6 @@ const copyParts = async (original: Original | undefined, output: Output): Promis
   return parts.size;
 };
 
-type GeneratedPart = readonly [part: string, kind: string, type: string, content: string | Bytes];
-
 const metadataParts = (spills: number, part: string): GeneratedPart[] =>
   spills > 0 ? [[part, 'sheetMetadata', TYPES.metadata, METADATA_XML]] : [];
 
@@ -300,22 +316,6 @@ const defaultsOf = (original: Original | undefined, output: Output): Map<string,
 
   return defaults;
 };
-
-interface Writing {
-  readonly book: Workbook;
-  readonly calculator: Calculator;
-  readonly original: Original | undefined;
-  readonly output: Output;
-  readonly workbookPart: string;
-  readonly workbookIds: Set<string>;
-  readonly workbookRelationships: PlannedRelationship[];
-  readonly sheets: PlannedSheet[];
-  readonly styles: StyleBook;
-  readonly strings: StringTable;
-  readonly outdated: (sheet: Sheet, row: number, col: number) => boolean;
-  readonly signal: AbortSignal | undefined;
-  readonly totals: { stale: number; spills: number };
-}
 
 const planAll = async (
   book: Workbook,

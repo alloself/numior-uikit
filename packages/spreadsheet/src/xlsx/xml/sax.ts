@@ -18,6 +18,13 @@ interface Open {
   readonly scope: Scope;
 }
 
+export interface XmlStreamOptions {
+  readonly signal?: AbortSignal | undefined;
+  readonly budgetMs?: number | undefined;
+  readonly yieldTo?: (() => Promise<void>) | undefined;
+  readonly onBytes?: ((bytes: number) => void) | undefined;
+}
+
 export const XML_NAMESPACE = 'http://www.w3.org/XML/1998/namespace';
 
 const ROOT: Scope = {
@@ -360,13 +367,6 @@ export const createXmlParser = (handlers: XmlHandlers): XmlParser => {
     },
   };
 };
-
-export interface XmlStreamOptions {
-  readonly signal?: AbortSignal | undefined;
-  readonly budgetMs?: number | undefined;
-  readonly yieldTo?: (() => Promise<void>) | undefined;
-  readonly onBytes?: ((bytes: number) => void) | undefined;
-}
 
 export const parseXmlStream = async (
   stream: ReadableStream<Uint8Array>,

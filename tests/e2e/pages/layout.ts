@@ -8,6 +8,8 @@ import {
   type Guarded,
 } from '../../../packages/primitives/test/support/guards';
 
+export type LayoutOutput = Guarded<typeof isLayoutOutput>;
+
 const isLayoutOutput = shapeOf({
   open: isBoolean,
   mobileOpen: isBoolean,
@@ -16,8 +18,6 @@ const isLayoutOutput = shapeOf({
   side: isString,
   variant: isString,
 });
-
-export type LayoutOutput = Guarded<typeof isLayoutOutput>;
 
 const parseLayoutOutput = (text: string): LayoutOutput =>
   parseAs(text, isLayoutOutput, 'layout output');

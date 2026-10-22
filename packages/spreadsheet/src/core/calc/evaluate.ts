@@ -50,6 +50,8 @@ type Call = Extract<FormulaNode, { readonly kind: 'call' }>;
 
 type NameNode = Extract<FormulaNode, { readonly kind: 'name' }>;
 
+type Operand = CellValue | ArrayValue;
+
 const resolving = new Set<DefinedName>();
 
 const externalNamed = (node: NameNode, book: number, context: EvalContext): EvalValue => {
@@ -82,8 +84,6 @@ const named = (node: NameNode, context: EvalContext): EvalValue => {
     resolving.delete(defined);
   }
 };
-
-type Operand = CellValue | ArrayValue;
 
 const VALUE_ERROR = errorValue('#VALUE!');
 

@@ -12,6 +12,11 @@ export interface TreeLists {
   readonly root: number;
 }
 
+export interface TreeWalk {
+  readonly all: Uint32Array;
+  readonly visible: Int32Array;
+}
+
 export const flattenTree = <T>(
   roots: readonly T[],
   children: (row: T) => readonly T[] | null | undefined,
@@ -165,11 +170,6 @@ export const createSiblingSortJob = (
     },
   };
 };
-
-export interface TreeWalk {
-  readonly all: Uint32Array;
-  readonly visible: Int32Array;
-}
 
 export const walkTree = (tree: TreeLists, isExpanded: (index: number) => boolean): TreeWalk => {
   const all: number[] = [];

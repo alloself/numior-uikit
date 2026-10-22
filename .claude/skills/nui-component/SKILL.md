@@ -64,6 +64,8 @@ const {
 - Related flags or a pending "plan" become a tagged union `{ kind: … }`, taken and cleared in
   one step (`createIntent().take()`) and read with a `switch` on `kind`.
 - A module that holds only types is named `<name>.types.ts`.
+  Types a module keeps for itself stand at the top, right after the imports, never between
+  functions (ESLint `no-restricted-syntax`).
 - Hot paths (typing, row rendering, dragging, per-change validation) never rescan a collection:
   build a key index once per source change, keep derived values identity-stable while their
   content is the same, cache `Intl.Collator` and formatters.

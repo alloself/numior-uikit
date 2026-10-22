@@ -1,9 +1,9 @@
-const SIGNIFICANT = 15;
-
 export interface Digits {
   readonly whole: string;
   readonly fraction: string;
 }
+
+const SIGNIFICANT = 15;
 
 const scaledDigits = (value: number, decimals: number): string => {
   if (value === 0) {

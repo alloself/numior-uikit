@@ -18,13 +18,13 @@ export interface ProbeDictionary {
   readonly probe: ProbeMessages;
 }
 
+type Locale = () => string | undefined;
+
 export const probeMessages: NuiMessageCatalog<ProbeMessages> = {
   namespace: 'probe',
   en: { close: 'Close', open: 'Open', count: ({ count }) => `${count} selected` },
   ru: { close: 'Закрыть', open: 'Открыть', count: ({ count }) => `Выбрано: ${count}` },
 };
-
-type Locale = () => string | undefined;
 
 export class MessagesHarness {
   static standalone(locale?: Locale): MessagesHarness {

@@ -38,6 +38,8 @@ interface MinuteWindow {
 
 type Period = 'am' | 'pm';
 
+type WheelMove = (options: readonly WheelOption[], selected: number) => number | undefined;
+
 const MIDNIGHT: TimeValue = { hour: 0, minute: 0, second: 0 };
 const CLOSED: MinuteWindow = { from: 1, to: 0 };
 const HOURS_12 = [12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
@@ -296,8 +298,6 @@ export const nearestEnabled = (options: readonly WheelOption[], index: number): 
   }
   return index;
 };
-
-type WheelMove = (options: readonly WheelOption[], selected: number) => number | undefined;
 
 const PAGE = 5;
 

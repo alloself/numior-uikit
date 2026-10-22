@@ -8,6 +8,8 @@ export interface SearchRecord {
 
 export type SearchIndex = MiniSearch<SearchRecord>;
 
+export type SearchIndexLoader = () => Promise<{ readonly default: string }>;
+
 export const searchFields = (): Pick<Options<SearchRecord>, 'fields' | 'storeFields'> => ({
   fields: ['title', 'titles', 'text'],
   storeFields: ['title', 'titles'],
@@ -32,8 +34,6 @@ const itemOf = (result: SearchResult): NuiCommandItem | undefined => {
     ? { value: id, label: title }
     : { value: id, label: title, description: titles.join(' › ') };
 };
-
-export type SearchIndexLoader = () => Promise<{ readonly default: string }>;
 
 export const createSearchIndex = (json: string): SearchIndex =>
   MiniSearch.loadJSON<SearchRecord>(json, { ...searchFields(), searchOptions: SEARCH_OPTIONS });

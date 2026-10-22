@@ -26,6 +26,18 @@ interface RangeEntry {
   readonly dependents: Set<number>;
 }
 
+interface Frame {
+  readonly key: number;
+  readonly next: number[];
+  at: number;
+}
+
+export interface GraphPlace {
+  readonly sheet: number;
+  readonly row: number;
+  readonly col: number;
+}
+
 const SHEET_CELLS = MAX_ROWS * MAX_COLS;
 
 const BAND_ROWS = 64;
@@ -296,18 +308,6 @@ export const createDependencyGraph = (): DependencyGraph => {
     },
   };
 };
-
-interface Frame {
-  readonly key: number;
-  readonly next: number[];
-  at: number;
-}
-
-export interface GraphPlace {
-  readonly sheet: number;
-  readonly row: number;
-  readonly col: number;
-}
 
 export const planRecalc = (
   seeds: Iterable<number>,

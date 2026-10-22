@@ -10,6 +10,19 @@ import {
   type Guarded,
 } from '../../../packages/primitives/test/support/guards';
 
+export type UploadDocumentOutput = Guarded<typeof isDocument>;
+
+export type UploadImageOutput = Guarded<typeof isImage>;
+
+export type UploadOutput = Guarded<typeof isUploadOutput>;
+
+export interface FakeFile {
+  readonly name: string;
+  readonly mimeType: string;
+  readonly size?: number;
+  readonly image?: boolean;
+}
+
 const isDocument = shapeOf({
   name: isString,
   status: isString,
@@ -28,21 +41,8 @@ const isUploadOutput = shapeOf({
   rejections: listOf(isString),
 });
 
-export type UploadDocumentOutput = Guarded<typeof isDocument>;
-
-export type UploadImageOutput = Guarded<typeof isImage>;
-
-export type UploadOutput = Guarded<typeof isUploadOutput>;
-
 const parseUploadOutput = (text: string): UploadOutput =>
   parseAs(text, isUploadOutput, 'upload output');
-
-export interface FakeFile {
-  readonly name: string;
-  readonly mimeType: string;
-  readonly size?: number;
-  readonly image?: boolean;
-}
 
 const UPLOAD_ROOT =
   'xpath=ancestor::*[contains(concat(" ", normalize-space(@class), " "), " nui-upload ")][1]';

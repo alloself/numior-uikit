@@ -33,8 +33,6 @@ export type Submission =
   | { readonly phase: 'running'; readonly controller: AbortController }
   | { readonly phase: 'succeeded' };
 
-export const IDLE_SUBMISSION: Submission = { phase: 'idle' };
-
 export interface FormCoreOptions<V extends object, O> {
   readonly initialValues: V;
   readonly schema?: StandardSchema<unknown, O> | undefined;
@@ -59,6 +57,8 @@ export interface FormCore<V extends object, O> {
   readonly retained: Map<string, RetainedState>;
   readonly session: Session;
 }
+
+export const IDLE_SUBMISSION: Submission = { phase: 'idle' };
 
 export const createFormCore = <V extends object, O>(
   options: FormCoreOptions<V, O>,

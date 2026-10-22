@@ -4,16 +4,6 @@ import { shiftIndex, type LineMove } from './lines';
 import type { SharedStrings } from './strings';
 import { CELL_ERRORS, EMPTY } from './values';
 
-export const CHUNK_ROWS = 512;
-
-export const CHUNK_COLS = 32;
-
-const CHUNK_SIZE = CHUNK_ROWS * CHUNK_COLS;
-
-const CHUNKS_PER_ROW = MAX_COLS / CHUNK_COLS;
-
-const Kind = { Empty: 0, Number: 1, String: 2, Boolean: 3, Error: 4 } as const;
-
 interface Chunk {
   readonly kinds: Uint8Array;
   numbers: Float64Array | undefined;
@@ -35,6 +25,29 @@ export interface CellStore {
   readonly size: number;
   readonly chunks: number;
 }
+
+interface RawCells {
+  readonly rows: number[];
+  readonly cols: number[];
+  readonly kinds: number[];
+  readonly numbers: number[];
+  readonly refs: number[];
+}
+
+interface Point {
+  readonly row: number;
+  readonly col: number;
+}
+
+export const CHUNK_ROWS = 512;
+
+export const CHUNK_COLS = 32;
+
+const CHUNK_SIZE = CHUNK_ROWS * CHUNK_COLS;
+
+const CHUNKS_PER_ROW = MAX_COLS / CHUNK_COLS;
+
+const Kind = { Empty: 0, Number: 1, String: 2, Boolean: 3, Error: 4 } as const;
 
 const chunkKey = (row: number, col: number): number =>
   Math.floor(row / CHUNK_ROWS) * CHUNKS_PER_ROW + Math.floor(col / CHUNK_COLS);
@@ -98,14 +111,6 @@ const write = (chunk: Chunk, slot: number, value: CellValue, strings: SharedStri
   }
 };
 
-interface RawCells {
-  readonly rows: number[];
-  readonly cols: number[];
-  readonly kinds: number[];
-  readonly numbers: number[];
-  readonly refs: number[];
-}
-
 const lineOf = (axis: 'rows' | 'cols', row: number, col: number): number =>
   axis === 'rows' ? row : col;
 
@@ -119,11 +124,6 @@ const bandsOf = (from: number, to: number, size: number): number[] => {
   }
   return bands;
 };
-
-interface Point {
-  readonly row: number;
-  readonly col: number;
-}
 
 const inside = (row: number, col: number): boolean =>
   row >= 0 && row < MAX_ROWS && col >= 0 && col < MAX_COLS;

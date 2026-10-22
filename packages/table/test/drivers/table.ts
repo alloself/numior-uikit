@@ -111,25 +111,6 @@ interface TableWindowFrameText {
   readonly clampEnd: string;
 }
 
-const MOUNT_DEFAULTS: MountDefaults = {
-  sort: [],
-  filters: [],
-  groupBy: [],
-  expanded: [],
-  pins: {},
-  hidden: [],
-  widths: {},
-  columnOrder: [],
-  width: 500,
-  height: 300,
-  dir: 'ltr',
-};
-
-const pluginsOf = (config: NuiConfigOptions | undefined): Plugin[] =>
-  config === undefined ? [] : [createNuiConfig(config)];
-
-export type { CellPosition, KeyOptions } from './table-surface';
-
 export interface SelectAllState {
   readonly checked: boolean;
   readonly indeterminate: boolean;
@@ -191,6 +172,39 @@ interface TableEvents<T> {
   readonly waiters: Array<() => void>;
 }
 
+interface Point {
+  readonly x: number;
+  readonly y: number;
+}
+
+type DropSide = 'before' | 'after' | 'inside';
+
+interface DropMark {
+  readonly kind: 'line' | 'box';
+  readonly start: string;
+  readonly size?: string | undefined;
+  readonly inset?: string | undefined;
+}
+
+const MOUNT_DEFAULTS: MountDefaults = {
+  sort: [],
+  filters: [],
+  groupBy: [],
+  expanded: [],
+  pins: {},
+  hidden: [],
+  widths: {},
+  columnOrder: [],
+  width: 500,
+  height: 300,
+  dir: 'ltr',
+};
+
+const pluginsOf = (config: NuiConfigOptions | undefined): Plugin[] =>
+  config === undefined ? [] : [createNuiConfig(config)];
+
+export type { CellPosition, KeyOptions } from './table-surface';
+
 const defineValue = (element: HTMLElement, name: string, value: number): void => {
   Object.defineProperty(element, name, { value, configurable: true, writable: true });
 };
@@ -216,11 +230,6 @@ const dragHandle = async (handle: HTMLElement | null, name: string, dx: number):
 
 const RANGE_POINTER = 4;
 
-interface Point {
-  readonly x: number;
-  readonly y: number;
-}
-
 const pointerInit = (point: Point, options: KeyOptions): PointerEventInit => ({
   bubbles: true,
   cancelable: true,
@@ -236,15 +245,6 @@ const pointerInit = (point: Point, options: KeyOptions): PointerEventInit => ({
 const ROW_EARLY = 10;
 const ROW_MIDDLE = 20;
 const ROW_LATE = 30;
-
-type DropSide = 'before' | 'after' | 'inside';
-
-interface DropMark {
-  readonly kind: 'line' | 'box';
-  readonly start: string;
-  readonly size?: string | undefined;
-  readonly inset?: string | undefined;
-}
 
 const defineRect = (element: Element, rect: DOMRect): void => {
   Object.defineProperty(element, 'getBoundingClientRect', {

@@ -1,3 +1,5 @@
+export type CodeLanguage = (typeof CODE_LANGUAGES)[number];
+
 export const CODE_LANGUAGES = [
   'ts',
   'js',
@@ -10,8 +12,6 @@ export const CODE_LANGUAGES = [
   'md',
   'yaml',
 ] as const;
-
-export type CodeLanguage = (typeof CODE_LANGUAGES)[number];
 
 export const isCodeLanguage = (value: string): value is CodeLanguage =>
   CODE_LANGUAGES.some((language) => language === value);

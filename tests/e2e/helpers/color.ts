@@ -2,6 +2,13 @@ import { expect, type Locator } from '@playwright/test';
 
 export type Rgb = readonly [number, number, number];
 
+export type Point = readonly [number, number];
+
+export interface PaintedColumn {
+  readonly ratio: number;
+  readonly pixels: readonly Rgb[];
+}
+
 export const rgbOf = (locator: Locator, property: string): Promise<Rgb> => {
   return locator.evaluate((element, prop) => {
     const value = getComputedStyle(element).getPropertyValue(prop);
@@ -87,8 +94,6 @@ export const paintedRgb = async (locator: Locator): Promise<Rgb> => {
   return locator.page().evaluate(readBottomPixel, png.toString('base64'));
 };
 
-export type Point = readonly [number, number];
-
 const readPixels = async ({
   base64,
   points,
@@ -123,11 +128,6 @@ export const paintedRgbAt = async (locator: Locator, points: readonly Point[]): 
   const png = await locator.screenshot({ animations: 'disabled' });
   return locator.page().evaluate(readPixels, { base64: png.toString('base64'), points });
 };
-
-export interface PaintedColumn {
-  readonly ratio: number;
-  readonly pixels: readonly Rgb[];
-}
 
 const readColumn = async ({
   base64,

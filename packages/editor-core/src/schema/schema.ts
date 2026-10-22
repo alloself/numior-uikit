@@ -24,6 +24,12 @@ interface Allowed {
   readonly restricted: boolean;
 }
 
+interface Factories {
+  readonly text: Schema['text'];
+  readonly element: Schema['element'];
+  readonly mark: Schema['mark'];
+}
+
 const EMPTY = parseContentExpression('');
 
 const renderBlock: NodeRender = () => renderTag('div', {}, [contentHole]);
@@ -231,12 +237,6 @@ const resolveAttrs = (
   }
   return result;
 };
-
-interface Factories {
-  readonly text: Schema['text'];
-  readonly element: Schema['element'];
-  readonly mark: Schema['mark'];
-}
 
 const factoriesOf = (
   nodes: ReadonlyMap<string, NodeType>,

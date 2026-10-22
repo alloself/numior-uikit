@@ -9,14 +9,14 @@ import {
 } from '../../../packages/primitives/test/support/guards';
 import { type Box } from '../helpers/geometry';
 
+export type FeedbackOutput = Guarded<typeof isFeedbackOutput>;
+
 const isFeedbackOutput = shapeOf({
   placement: isString,
   toastCount: isNumber,
   alertOpen: isBoolean,
   progress: isNumber,
 });
-
-export type FeedbackOutput = Guarded<typeof isFeedbackOutput>;
 
 const parseFeedbackOutput = (text: string): FeedbackOutput =>
   parseAs(text, isFeedbackOutput, 'feedback output');

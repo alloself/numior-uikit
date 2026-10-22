@@ -17,6 +17,13 @@ export interface NodeViewSink {
   remove(key: number): void;
 }
 
+interface ViewSource {
+  readonly document: Document;
+  readonly schema: Schema;
+  readonly sink: NodeViewSink;
+  readonly key: () => number;
+}
+
 const WIDGET = 'nui-editor__widget';
 
 const BODY = 'nui-editor__body';
@@ -76,13 +83,6 @@ const bodyOf = (
   dom.append(body);
   return body;
 };
-
-interface ViewSource {
-  readonly document: Document;
-  readonly schema: Schema;
-  readonly sink: NodeViewSink;
-  readonly key: () => number;
-}
 
 const viewOf = (source: ViewSource, block: NuiEditorBlock, node: ElementNode): NodeView => {
   const drawn = renderNodeDOM(source.document, source.schema, node);

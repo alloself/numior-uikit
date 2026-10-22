@@ -13,6 +13,8 @@ export interface ReorderHarnessOptions {
   readonly viewport?: number;
 }
 
+type HostWrapper = VueWrapper<InstanceType<typeof ReorderHost>>;
+
 const defineViewport = (element: HTMLElement, height: number): void => {
   const rect = { top: 0, bottom: height, left: 0, right: height, width: height, height };
 
@@ -21,8 +23,6 @@ const defineViewport = (element: HTMLElement, height: number): void => {
     configurable: true,
   });
 };
-
-type HostWrapper = VueWrapper<InstanceType<typeof ReorderHost>>;
 
 const pointer = (type: string, client: number, axis: ReorderAxis, pointerId = 1): PointerEvent =>
   new PointerEvent(type, {

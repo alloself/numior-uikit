@@ -7,6 +7,12 @@ import {
 } from '@numior/content';
 import { clamp } from '@vueuse/core';
 
+export interface GripPull {
+  readonly sign: number;
+  readonly lift: number;
+  readonly ratio: number;
+}
+
 export const WIDTH_STEP = 0.05;
 
 export const WIDE_STEP = 0.1;
@@ -32,12 +38,6 @@ export const aspectOf = (picture: HTMLImageElement | null): number => {
 
   return box === undefined || box.height === 0 ? 0 : box.width / box.height;
 };
-
-export interface GripPull {
-  readonly sign: number;
-  readonly lift: number;
-  readonly ratio: number;
-}
 
 export const pullOf = (pull: GripPull, x: number, y: number): number => {
   const across = x * pull.sign;

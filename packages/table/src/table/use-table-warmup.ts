@@ -13,17 +13,17 @@ export interface TableWarmup {
   restart(): void;
 }
 
-const SLICE_MS = 8;
-const QUIET_MS = 500;
-const IDLE_TIMEOUT = 2000;
-const FALLBACK_DELAY = 16;
-const INPUTS = ['pointerdown', 'keydown', 'input', 'wheel', 'touchstart'] as const;
-
 interface WishGroups {
   readonly codes: TableStoreWish[];
   readonly numbers: TableStoreWish[];
   readonly ranks: TableStoreWish[];
 }
+
+const SLICE_MS = 8;
+const QUIET_MS = 500;
+const IDLE_TIMEOUT = 2000;
+const FALLBACK_DELAY = 16;
+const INPUTS = ['pointerdown', 'keydown', 'input', 'wheel', 'touchstart'] as const;
 
 const wishesOf = <T>(columns: readonly NuiTableColumn<T>[]): TableStoreWish[] => {
   const groups = columns.reduce<WishGroups>(

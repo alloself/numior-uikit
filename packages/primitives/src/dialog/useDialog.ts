@@ -36,15 +36,15 @@ export interface DialogControl {
 
 type DialogRef = MaybeRefOrGetter<HTMLDialogElement | null | undefined>;
 
-const modalCapable = (
-  element: HTMLDialogElement | null | undefined,
-): element is HTMLDialogElement =>
-  element !== null && element !== undefined && typeof element.showModal === 'function';
-
 interface RootLock {
   readonly overflow: string;
   readonly padding: string;
 }
+
+const modalCapable = (
+  element: HTMLDialogElement | null | undefined,
+): element is HTMLDialogElement =>
+  element !== null && element !== undefined && typeof element.showModal === 'function';
 
 const openModals = shallowRef<readonly HTMLDialogElement[]>([]);
 

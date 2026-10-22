@@ -66,6 +66,8 @@ import { smartFormMessages } from './smart-form.messages';
 import type { NuiSmartFormProps, NuiSmartFormSlots } from './smart-form.types';
 import { stepOf, stepPaths } from './steps';
 
+type StepFocus = 'control' | 'invalid';
+
 const {
   form,
   fields,
@@ -154,8 +156,6 @@ const goTo = (index: number, target: StepFocus | undefined): void => {
 };
 
 const IGNORED: SubmitResult = { status: 'ignored', invalid: [], formErrors: [] };
-
-type StepFocus = 'control' | 'invalid';
 
 const STEP_TARGETS: Readonly<Record<StepFocus, string>> = {
   control: FOCUSABLE,

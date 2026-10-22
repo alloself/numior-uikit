@@ -128,6 +128,13 @@ interface LookupIndex {
   readonly rows: Map<string, number>;
 }
 
+interface Links {
+  readonly precedents: Precedent[];
+  readonly names: Set<string>;
+}
+
+type Placed = Pick<FormulaRecord, 'sheet' | 'row' | 'col'>;
+
 const DEFAULT_BUDGET = 8;
 
 const CHECK_EVERY = 32;
@@ -161,13 +168,6 @@ const serialOf = (date: Date): number =>
 
 const oneCell = (range: CellRange): boolean =>
   range.top === range.bottom && range.left === range.right;
-
-interface Links {
-  readonly precedents: Precedent[];
-  readonly names: Set<string>;
-}
-
-type Placed = Pick<FormulaRecord, 'sheet' | 'row' | 'col'>;
 
 const definedFor = (
   workbook: Workbook,

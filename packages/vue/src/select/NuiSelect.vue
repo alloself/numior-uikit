@@ -127,6 +127,8 @@ import type { NuiSelectProps } from './select.types';
 
 type SelectEntry<T> = NuiOption<T> | NuiListGroup<NuiOption<T>> | NuiTreeItem<T>;
 
+type OpenFocus = 'selected' | 'first' | 'last';
+
 defineOptions({ inheritAttrs: false });
 
 const {
@@ -317,8 +319,6 @@ onMounted(() => {
 
 const isPrintable = (event: KeyboardEvent): boolean =>
   event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey;
-
-type OpenFocus = 'selected' | 'first' | 'last';
 
 const OPENERS: Readonly<Record<string, OpenFocus>> = {
   ArrowDown: 'selected',

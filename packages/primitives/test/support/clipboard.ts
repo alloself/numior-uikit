@@ -2,10 +2,6 @@ import { vi } from 'vite-plus/test';
 
 type ClipboardPart = string | Blob;
 
-class FakeClipboardItem {
-  constructor(readonly parts: Readonly<Record<string, ClipboardPart>>) {}
-}
-
 export interface ClipboardStub {
   readonly copies: string[];
   readonly htmls: string[];
@@ -17,6 +13,10 @@ export interface ClipboardStub {
 export interface ClipboardStubOptions {
   readonly api?: 'granted' | 'refused' | 'missing';
   readonly legacy?: boolean | 'refused';
+}
+
+class FakeClipboardItem {
+  constructor(readonly parts: Readonly<Record<string, ClipboardPart>>) {}
 }
 
 const textOf = (part: ClipboardPart): Promise<string> =>

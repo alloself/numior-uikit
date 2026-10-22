@@ -9,6 +9,8 @@ export type SymbolicReference = Extract<FormulaReference, { readonly kind: 'name
 
 export type SheetReference = Exclude<FormulaReference, { readonly kind: 'structured' }>;
 
+type Visitor = (reference: FormulaReference) => FormulaNode;
+
 export const onSheetNamed = (
   reference: FormulaReference,
   name: string,
@@ -70,8 +72,6 @@ const mapNodes = (
 
   return mapped.every((node, index) => node === nodes[index]) ? nodes : mapped;
 };
-
-type Visitor = (reference: FormulaReference) => FormulaNode;
 
 const walk = (current: FormulaNode, visit: Visitor): FormulaNode => {
   if (isReference(current)) {

@@ -8,6 +8,13 @@ import {
   type Guarded,
 } from '../../../packages/primitives/test/support/guards';
 
+export type TreeOutput = Guarded<typeof isTreeOutput>;
+
+export interface TreeRowGaps {
+  readonly top: number;
+  readonly bottom: number;
+}
+
 const isTreeOutput = shapeOf({
   selected: nullable(isString),
   expanded: listOf(isString),
@@ -15,13 +22,6 @@ const isTreeOutput = shapeOf({
   loaded: listOf(isString),
   virtualSelected: nullable(isString),
 });
-
-export type TreeOutput = Guarded<typeof isTreeOutput>;
-
-export interface TreeRowGaps {
-  readonly top: number;
-  readonly bottom: number;
-}
 
 const parseTreeOutput = (text: string): TreeOutput => parseAs(text, isTreeOutput, 'tree output');
 

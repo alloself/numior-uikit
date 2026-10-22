@@ -23,6 +23,26 @@ import type { ChunkSet } from './chunks';
 import type { ChunkWatch, EditorView, EditorViewOptions } from './view.types';
 import { placeWidgets } from './widgets';
 
+interface Sight {
+  observe(chunk: HTMLElement): void;
+  unobserve(chunk: HTMLElement): void;
+  visible(chunk: Node | null): boolean;
+  disconnect(): void;
+}
+
+interface Filling {
+  complete(): void;
+  stop(): void;
+  covers(index: number): boolean;
+  prefix(node: ElementNode): number | undefined;
+}
+
+interface CatchUp {
+  schedule(): void;
+  all(): void;
+  stop(): void;
+}
+
 const ROOT_ATTRS = ['contenteditable', 'role', 'aria-multiline', 'translate'] as const;
 
 const prepareRoot = (root: HTMLElement, editable: boolean): void => {
@@ -53,13 +73,6 @@ const chunkSet = (watch: ChunkWatch | undefined, sight: Sight): ChunkSet => {
     },
   };
 };
-
-interface Sight {
-  observe(chunk: HTMLElement): void;
-  unobserve(chunk: HTMLElement): void;
-  visible(chunk: Node | null): boolean;
-  disconnect(): void;
-}
 
 const SIGHT_MARGIN = '200% 0px';
 
@@ -111,13 +124,6 @@ const SLICE_BLOCKS = 32;
 const SLICE_MS = 8;
 
 const IDLE_TIMEOUT = 100;
-
-interface Filling {
-  complete(): void;
-  stop(): void;
-  covers(index: number): boolean;
-  prefix(node: ElementNode): number | undefined;
-}
 
 const nextTask = (run: () => void): (() => void) => {
   if (typeof MessageChannel === 'undefined') {
@@ -233,12 +239,6 @@ const createFilling = (
 };
 
 const JUMPS = new Set(['Home', 'End']);
-
-interface CatchUp {
-  schedule(): void;
-  all(): void;
-  stop(): void;
-}
 
 const createCatchUp = (context: ViewContext, settle: () => void): CatchUp => {
   let cancel: (() => void) | undefined;

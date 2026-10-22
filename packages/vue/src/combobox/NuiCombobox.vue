@@ -125,6 +125,8 @@ import { useOptionSelection } from '../shared/use-option-selection';
 import { comboboxMessages } from './combobox.messages';
 import type { NuiComboboxProps } from './combobox.types';
 
+type Draft = { readonly kind: 'label' } | { readonly kind: 'typed'; readonly text: string };
+
 defineOptions({ inheritAttrs: false });
 
 const {
@@ -207,8 +209,6 @@ const singleLabel = computed(() => {
   const [first] = selectedValues.value;
   return multiple || first === undefined ? '' : labelFor(first);
 });
-
-type Draft = { readonly kind: 'label' } | { readonly kind: 'typed'; readonly text: string };
 
 const LABEL: Draft = { kind: 'label' };
 const draft = shallowRef<Draft>(LABEL);

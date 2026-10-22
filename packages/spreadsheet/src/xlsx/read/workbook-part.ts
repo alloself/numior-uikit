@@ -10,8 +10,6 @@ import {
   type PartOptions,
 } from './ooxml';
 
-const STRICT_MAIN = 'http://purl.oclc.org/ooxml/spreadsheetml/main';
-
 export interface SheetEntry {
   readonly name: string;
   readonly sheetId: number;
@@ -33,6 +31,8 @@ export interface WorkbookPart {
   readonly pivotCaches: number;
   readonly strict: boolean;
 }
+
+const STRICT_MAIN = 'http://purl.oclc.org/ooxml/spreadsheetml/main';
 
 export const readWorkbookPart = async (
   archive: ZipArchive,

@@ -92,6 +92,11 @@ const CODE_SHAPE = [
     selector: 'WhileStatement[test.value=true], DoWhileStatement[test.value=true]',
     message: 'A loop states its condition; no while (true) with exits hidden in the body.',
   },
+  {
+    selector:
+      'Program > :matches(VariableDeclaration, FunctionDeclaration, ClassDeclaration, ExpressionStatement, ExportDefaultDeclaration, ExportNamedDeclaration[declaration.type=/^(?:VariableDeclaration|FunctionDeclaration|ClassDeclaration)$/]) ~ :matches(TSInterfaceDeclaration, TSTypeAliasDeclaration, ExportNamedDeclaration[declaration.type=/^TS(?:Interface|TypeAlias)Declaration$/])',
+    message: 'Types go to a *.types.ts module or to the top of the file, before any code.',
+  },
 ];
 
 const TIMERS = {

@@ -12,8 +12,6 @@ import { ComponentDriver } from './component';
 import { waitForGlyph } from './icon';
 import { isString, listOf } from '../../../primitives/test/support/guards';
 
-const isStrings = listOf(isString);
-
 export interface CheckboxMountOptions {
   readonly props?: NuiCheckboxProps;
   readonly modelValue?: boolean;
@@ -28,6 +26,8 @@ export interface CheckboxGroupMountOptions {
   readonly disabledValues?: readonly string[];
   readonly field?: NuiFieldProps;
 }
+
+const isStrings = listOf(isString);
 
 const MARK_GLYPH = '.nui-checkbox__mark .nui-icon__glyph';
 

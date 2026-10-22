@@ -6,6 +6,12 @@ export interface ProseProblem {
   readonly text: string;
 }
 
+interface Paragraph {
+  readonly line: number;
+  readonly text: string;
+  readonly api: boolean;
+}
+
 const MAX_WORDS = 25;
 const MAX_SENTENCES = 3;
 
@@ -50,12 +56,6 @@ const isSkipped = (line: string): boolean =>
   line.startsWith('<') ||
   line.startsWith(':::') ||
   line.startsWith('---');
-
-interface Paragraph {
-  readonly line: number;
-  readonly text: string;
-  readonly api: boolean;
-}
 
 const stripFrontmatter = (lines: readonly string[]): readonly string[] =>
   lines[0] === '---' ? lines.slice(lines.indexOf('---', 1) + 1) : lines;

@@ -13,9 +13,14 @@ import { corpusSource } from './corpus-files';
 
 export { corpusFixtures, expectedPath } from './corpus-files';
 
-const WHOLE: CellRange = { top: 0, left: 0, bottom: MAX_ROWS - 1, right: MAX_COLS - 1 };
-
 type Opened = Extract<XlsxRead, { readonly kind: 'editable' | 'read-only' }>;
+
+interface SheetModel {
+  readonly name: string;
+  readonly cells: Record<string, unknown>;
+}
+
+const WHOLE: CellRange = { top: 0, left: 0, bottom: MAX_ROWS - 1, right: MAX_COLS - 1 };
 
 export const corpusPackage = async (name: string): Promise<Bytes> => {
   const source = corpusSource(name);
@@ -66,11 +71,6 @@ const cellsOf = (read: Opened, sheet: Sheet): Record<string, unknown> => {
       ]),
   );
 };
-
-interface SheetModel {
-  readonly name: string;
-  readonly cells: Record<string, unknown>;
-}
 
 const valueOf = (cell: unknown): string =>
   typeof cell === 'object' && cell !== null && 'value' in cell ? JSON.stringify(cell.value) : '';

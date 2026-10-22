@@ -8,6 +8,10 @@ import type {
   TextNode,
 } from './node.types';
 
+interface SeededIds extends IdSource {
+  reserve(id: NodeId): void;
+}
+
 const offsetCache = new WeakMap<ElementNode, readonly number[]>();
 
 export const nodeSize = (node: ContentNode): number =>
@@ -163,10 +167,6 @@ const highestCount = (root: ElementNode, prefix: string): number => {
   }
   return highest;
 };
-
-interface SeededIds extends IdSource {
-  reserve(id: NodeId): void;
-}
 
 const seededSources = new WeakMap<IdSource, SeededIds>();
 

@@ -8,6 +8,10 @@ import {
   type Guarded,
 } from '../../../packages/primitives/test/support/guards';
 
+export type DateRangeOutput = Guarded<typeof isRange>;
+
+export type DatesOutput = Guarded<typeof isDatesOutput>;
+
 const isRange = shapeOf({ start: nullable(isString), end: nullable(isString) });
 
 const isDatesOutput = shapeOf({
@@ -21,10 +25,6 @@ const isDatesOutput = shapeOf({
   delivery: nullable(isString),
   today: isString,
 });
-
-export type DateRangeOutput = Guarded<typeof isRange>;
-
-export type DatesOutput = Guarded<typeof isDatesOutput>;
 
 const parseDatesOutput = (text: string): DatesOutput =>
   parseAs(text, isDatesOutput, 'dates output');

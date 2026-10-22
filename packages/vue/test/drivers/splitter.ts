@@ -13,6 +13,8 @@ export interface SplitterMountOptions {
   readonly size?: { readonly width: number; readonly height: number };
 }
 
+type SplitterSceneWrapper = VueWrapper<InstanceType<typeof SplitterScene>>;
+
 const rectOf = (size: { readonly width: number; readonly height: number }): DOMRect => ({
   x: 0,
   y: 0,
@@ -24,8 +26,6 @@ const rectOf = (size: { readonly width: number; readonly height: number }): DOMR
   left: 0,
   toJSON: () => ({}),
 });
-
-type SplitterSceneWrapper = VueWrapper<InstanceType<typeof SplitterScene>>;
 
 export class SplitterDriver extends ComponentDriver {
   protected readonly block = 'nui-splitter';

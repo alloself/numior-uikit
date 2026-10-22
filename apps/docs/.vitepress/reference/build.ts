@@ -19,6 +19,18 @@ import type {
   ReferenceStyles,
 } from './reference.types.ts';
 
+export interface ReferenceBuild {
+  readonly bundle: ReferenceBundle;
+  readonly problems: readonly string[];
+  readonly undocumented: readonly string[];
+}
+
+interface CollectedComponent {
+  readonly component: ComponentReference;
+  readonly catalog: CatalogReference | undefined;
+  readonly problems: readonly string[];
+}
+
 const PACKAGES = [
   { name: '@numior/vue', dir: 'packages/vue' },
   { name: '@numior/forms', dir: 'packages/forms' },
@@ -28,12 +40,6 @@ const PACKAGES = [
 ] as const;
 
 const PRIMITIVES = { name: '@numior/primitives', dir: 'packages/primitives' } as const;
-
-export interface ReferenceBuild {
-  readonly bundle: ReferenceBundle;
-  readonly problems: readonly string[];
-  readonly undocumented: readonly string[];
-}
 
 const stylesOf = (entry: ComponentEntry): ReferenceStyles | undefined => {
   const file = familyFile(entry, '.css');
@@ -49,12 +55,6 @@ const stylesOf = (entry: ComponentEntry): ReferenceStyles | undefined => {
 
 const loadCatalog = async (file: string): Promise<CatalogReference | undefined> =>
   catalogReference(await import(pathToFileURL(file).href));
-
-interface CollectedComponent {
-  readonly component: ComponentReference;
-  readonly catalog: CatalogReference | undefined;
-  readonly problems: readonly string[];
-}
 
 const collectComponent = async (
   checker: ReturnType<typeof createChecker>,

@@ -64,6 +64,8 @@ export interface CellEditor {
   setFormat(sheet: Sheet, range: CellRange, code: string): void;
 }
 
+type CellOrRange = Extract<FormulaReference, { readonly kind: 'cell' | 'range' }>;
+
 const CLOCK = new Set([
   'hour',
   'minute',
@@ -253,8 +255,6 @@ export const editText = (value: CellValue, code: string, locale: NumberLocale): 
       return '';
   }
 };
-
-type CellOrRange = Extract<FormulaReference, { readonly kind: 'cell' | 'range' }>;
 
 const isCellOrRange = (found: FormulaReference): found is CellOrRange =>
   found.kind === 'cell' || found.kind === 'range';

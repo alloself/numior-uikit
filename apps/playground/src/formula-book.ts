@@ -31,6 +31,31 @@ import {
 } from '@numior/spreadsheet/core';
 import type { NuiTableCellStyle, NuiTableRange } from '@numior/table';
 
+export type FormatPreset =
+  | 'general'
+  | 'number'
+  | 'money'
+  | 'percent'
+  | 'date'
+  | 'time'
+  | 'datetime'
+  | 'fraction'
+  | 'scientific'
+  | 'text';
+
+interface FormulaEntry {
+  readonly row: number;
+  readonly col: number;
+  readonly text: string;
+}
+
+interface EntryStep {
+  readonly step: WorkbookStep;
+  readonly problem: string | undefined;
+}
+
+export type FormulaBook = ReturnType<typeof createFormulaBook>;
+
 export const FORMULA_ROWS = 50_000;
 export const FORMULA_COLS = 26;
 const LOAD_ROWS = 20_000;
@@ -152,18 +177,6 @@ const visibleRange = (sheet: Sheet, found: FormulaReference): NuiTableRange[] =>
     : [];
 };
 
-export type FormatPreset =
-  | 'general'
-  | 'number'
-  | 'money'
-  | 'percent'
-  | 'date'
-  | 'time'
-  | 'datetime'
-  | 'fraction'
-  | 'scientific'
-  | 'text';
-
 const PRESET_CODES: Readonly<Record<FormatPreset, (locale: NumberLocale) => string>> = {
   general: () => 'General',
   number: () => '#,##0.00',
@@ -185,17 +198,6 @@ const FORMATS: readonly (readonly [string, string])[] = [
   ['E2:E8', '"$"#,##0.00'],
   ['B18', '0.0%'],
 ];
-
-interface FormulaEntry {
-  readonly row: number;
-  readonly col: number;
-  readonly text: string;
-}
-
-interface EntryStep {
-  readonly step: WorkbookStep;
-  readonly problem: string | undefined;
-}
 
 const loadEntries = (): LoadEntry[] =>
   Array.from({ length: LOAD_ROWS }, (_, row): LoadEntry[] => {
@@ -324,5 +326,3 @@ export const createFormulaBook = () => {
     }),
   };
 };
-
-export type FormulaBook = ReturnType<typeof createFormulaBook>;

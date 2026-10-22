@@ -9,6 +9,8 @@ import {
   type Guarded,
 } from '../../../packages/primitives/test/support/guards';
 
+export type OtpOutput = Guarded<typeof isOtpOutput>;
+
 const isOtpOutput = shapeOf({
   sms: isString,
   state: isString,
@@ -17,8 +19,6 @@ const isOtpOutput = shapeOf({
   pin: isString,
   spare: isString,
 });
-
-export type OtpOutput = Guarded<typeof isOtpOutput>;
 
 const parseOtpOutput = (text: string): OtpOutput => parseAs(text, isOtpOutput, 'otp output');
 

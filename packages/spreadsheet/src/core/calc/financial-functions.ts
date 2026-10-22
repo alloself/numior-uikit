@@ -4,12 +4,6 @@ import type { FunctionArgs, FunctionSpec } from './calc.types';
 import { raise, toNumber } from './coerce';
 import { defineFunction } from './registry';
 
-const ITERATIONS = 100;
-
-const PRECISION = 1e-12;
-
-const DAYS_IN_YEAR = 365;
-
 interface Annuity {
   readonly rate: number;
   readonly periods: number;
@@ -18,6 +12,19 @@ interface Annuity {
   readonly future: number;
   readonly due: boolean;
 }
+
+type AnnuitySlot = keyof Annuity | 'period';
+
+interface DatedFlows {
+  readonly flows: readonly number[];
+  readonly times: readonly number[];
+}
+
+const ITERATIONS = 100;
+
+const PRECISION = 1e-12;
+
+const DAYS_IN_YEAR = 365;
 
 const growth = (rate: number, periods: number): number => (1 + rate) ** periods;
 
@@ -88,8 +95,6 @@ const newton = (
   }
   return raise('#NUM!');
 };
-
-type AnnuitySlot = keyof Annuity | 'period';
 
 const PAYMENT_ORDER = ['rate', 'periods', 'present', 'future', 'due'] as const;
 
@@ -165,11 +170,6 @@ const listOf = (args: FunctionArgs, index: number): number[] =>
     .matrix(index)
     .flat()
     .map((value) => toNumber(value, args.locale));
-
-interface DatedFlows {
-  readonly flows: readonly number[];
-  readonly times: readonly number[];
-}
 
 const datedFlows = (args: FunctionArgs, from: number): DatedFlows => {
   const flows = listOf(args, from);

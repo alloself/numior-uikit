@@ -30,6 +30,13 @@ interface Generator {
   readonly ids: IdSource;
 }
 
+type ColumnType = (typeof COLUMN_TYPES)[number];
+
+interface FixtureColumn {
+  readonly type: ColumnType;
+  readonly options: readonly string[];
+}
+
 export const FIXTURE_MIX: Readonly<Record<FixtureBlock, number>> = {
   paragraph: 55,
   heading: 10,
@@ -156,13 +163,6 @@ const listOf = (generator: Generator, depth: number): ElementNode => {
 };
 
 const COLUMN_TYPES = ['text', 'number', 'date', 'boolean', 'select'] as const;
-
-type ColumnType = (typeof COLUMN_TYPES)[number];
-
-interface FixtureColumn {
-  readonly type: ColumnType;
-  readonly options: readonly string[];
-}
 
 const twoDigits = (value: number): string => String(value).padStart(2, '0');
 

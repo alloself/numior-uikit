@@ -24,6 +24,8 @@ export interface LexFailure {
   readonly position: number;
 }
 
+type Scan = { readonly token: Token; readonly next: number } | LexFailure;
+
 const LONGEST_ERROR = 12;
 
 const LONGEST_BOOK = 12;
@@ -117,8 +119,6 @@ const wordEnd = (source: string, at: number): number => {
   }
   return end;
 };
-
-type Scan = { readonly token: Token; readonly next: number } | LexFailure;
 
 const bracketEnd = (source: string, at: number): number | undefined => {
   let depth = 0;

@@ -2,9 +2,6 @@ import { computed, onScopeDispose, shallowRef, type ComputedRef, type Ref } from
 import type { NuiTableMessages } from './table.messages';
 import type { NuiTableRowHeights } from './table.types';
 
-const STEP = 8;
-const SMALLEST_HEIGHT = 20;
-
 export interface TableRowResizeOptions {
   readonly enabled: () => boolean;
   readonly heights: Ref<NuiTableRowHeights>;
@@ -29,6 +26,9 @@ interface RowResizeSession {
   readonly origin: number;
   readonly height: number;
 }
+
+const STEP = 8;
+const SMALLEST_HEIGHT = 20;
 
 const clampHeight = (px: number): number => Math.max(SMALLEST_HEIGHT, Math.round(px));
 

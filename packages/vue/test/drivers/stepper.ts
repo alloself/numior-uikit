@@ -6,19 +6,21 @@ import StepperScene from '../fixtures/StepperScene.vue';
 import { configPlugins } from '../support/config';
 import { ComponentDriver } from './component';
 
-const STEPS: readonly NuiStepperStep[] = [
-  { value: 'account', label: 'Account' },
-  { value: 'profile', label: 'Profile', description: 'Name and photo' },
-  { value: 'plan', label: 'Plan' },
-  { value: 'review', label: 'Review' },
-];
-
 export interface StepperMountOptions {
   readonly steps?: readonly NuiStepperStep[];
   readonly modelValue?: string;
   readonly props?: Partial<Omit<NuiStepperProps, 'steps'>>;
   readonly config?: NuiConfigOptions;
 }
+
+type StepperSceneWrapper = VueWrapper<InstanceType<typeof StepperScene>>;
+
+const STEPS: readonly NuiStepperStep[] = [
+  { value: 'account', label: 'Account' },
+  { value: 'profile', label: 'Profile', description: 'Name and photo' },
+  { value: 'plan', label: 'Plan' },
+  { value: 'review', label: 'Review' },
+];
 
 const MARKS = ['check', 'x'] as const;
 
@@ -28,8 +30,6 @@ const markOf = (indicator: DOMWrapper<Element>): string => {
 
   return MARKS.find((mark) => classes.includes(`lucide-${mark}`)) ?? indicator.text();
 };
-
-type StepperSceneWrapper = VueWrapper<InstanceType<typeof StepperScene>>;
 
 export class StepperDriver extends ComponentDriver {
   protected readonly block = 'nui-stepper';

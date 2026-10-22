@@ -22,6 +22,17 @@ import FieldEditor from '../fixtures/FieldEditor.vue';
 import { layOut } from '../support/layout';
 import { isShown } from '../support/popovers';
 
+export interface KeyOptions {
+  readonly ctrl?: boolean;
+  readonly shift?: boolean;
+  readonly alt?: boolean;
+}
+
+type EditorMountProps = Omit<NuiEditorProps, 'format'> & {
+  readonly document?: DocJSON | undefined;
+  readonly modelValue?: string;
+};
+
 const withoutComments = (html: string): string => html.replaceAll(/<!--[\s\S]*?-->/g, '');
 
 const isDocument = (value: unknown): value is DocJSON =>
@@ -39,12 +50,6 @@ const labelOf = (item: Element): string =>
     .replace(item.querySelector('.nui-editor-colours__swatch')?.textContent ?? '', '')
     .trim();
 
-export interface KeyOptions {
-  readonly ctrl?: boolean;
-  readonly shift?: boolean;
-  readonly alt?: boolean;
-}
-
 const textWithoutWidgets = (block: Element): string => {
   const copy = block.cloneNode(true);
 
@@ -55,11 +60,6 @@ const textWithoutWidgets = (block: Element): string => {
     widget.remove();
   }
   return copy.textContent ?? '';
-};
-
-type EditorMountProps = Omit<NuiEditorProps, 'format'> & {
-  readonly document?: DocJSON | undefined;
-  readonly modelValue?: string;
 };
 
 const modelOf = (

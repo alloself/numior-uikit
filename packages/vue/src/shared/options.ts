@@ -34,6 +34,11 @@ export type NuiOptionSource<T = string> = NuiListSource<NuiOption<T>>;
 
 export type NuiOptionKey<T> = (value: T) => string;
 
+interface EntryGroup<E> {
+  readonly label: string | undefined;
+  readonly items: readonly E[];
+}
+
 export const isListGroup = <E>(entry: E | NuiListGroup<E>): entry is NuiListGroup<E> =>
   typeof entry === 'object' && entry !== null && 'items' in entry && Array.isArray(entry.items);
 
@@ -49,11 +54,6 @@ export const flattenOptions = <T>(source: NuiOptionSource<T>): NuiOption<T>[] =>
   source.flatMap((entry) =>
     isListGroup(entry) ? entry.items.flatMap(withDescendants) : withDescendants(entry),
   );
-
-interface EntryGroup<E> {
-  readonly label: string | undefined;
-  readonly items: readonly E[];
-}
 
 export const groupEntries = <E>(source: NuiListSource<E>): EntryGroup<E>[] => {
   const groups: Array<{ label: string | undefined; items: E[] }> = [];

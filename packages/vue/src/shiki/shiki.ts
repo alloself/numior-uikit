@@ -4,6 +4,11 @@ import { SHIKI_LANGUAGES } from './languages';
 import { scopeOf } from './scopes';
 import type { ShikiHighlighterOptions } from './shiki.types';
 
+interface Loaded {
+  readonly instance: Highlighter;
+  readonly language: BundledLanguage;
+}
+
 const TOKEN_THEME: BundledTheme = 'github-light';
 
 const mergeTokens = (tokens: readonly NuiCodeToken[]): NuiCodeToken[] =>
@@ -54,11 +59,6 @@ export const shikiTokens = (
         })
         .map((line) => mergeTokens(line.flatMap(piecesOf)))
     : undefined;
-
-interface Loaded {
-  readonly instance: Highlighter;
-  readonly language: BundledLanguage;
-}
 
 export const createShikiHighlighter = (options: ShikiHighlighterOptions = {}): NuiHighlighter => {
   const languages = options.languages ?? SHIKI_LANGUAGES;

@@ -1,14 +1,14 @@
 import type { ReferenceBlock } from './reference.types.ts';
 
-const CLASS_RE =
-  /\.nui-([a-z0-9]+(?:-[a-z0-9]+)*?)(__[a-z0-9]+(?:-[a-z0-9]+)*)?(--[a-z0-9]+(?:-[a-z0-9]+)*)?(?![a-z0-9_-])/g;
-
-const TOKEN_RE = /var\(--nui-([a-z0-9-]+)/g;
-
 interface BlockDraft {
   readonly parts: Set<string>;
   readonly modifiers: Set<string>;
 }
+
+const CLASS_RE =
+  /\.nui-([a-z0-9]+(?:-[a-z0-9]+)*?)(__[a-z0-9]+(?:-[a-z0-9]+)*)?(--[a-z0-9]+(?:-[a-z0-9]+)*)?(?![a-z0-9_-])/g;
+
+const TOKEN_RE = /var\(--nui-([a-z0-9-]+)/g;
 
 const draftOf = (drafts: Map<string, BlockDraft>, name: string): BlockDraft => {
   const existing = drafts.get(name);

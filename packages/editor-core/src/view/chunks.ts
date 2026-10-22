@@ -1,9 +1,3 @@
-const CHUNK_SIZE = 32;
-
-const CHUNK_LIMIT = CHUNK_SIZE * 2;
-
-const CHUNK_CLASS = 'nui-editor__chunk';
-
 export type SizeOf = (block: Element) => number;
 
 export interface ChunkSet {
@@ -11,6 +5,12 @@ export interface ChunkSet {
   add(chunk: HTMLElement): void;
   drop(chunk: HTMLElement): void;
 }
+
+const CHUNK_SIZE = 32;
+
+const CHUNK_LIMIT = CHUNK_SIZE * 2;
+
+const CHUNK_CLASS = 'nui-editor__chunk';
 
 const createChunk = (document: Document, chunks: ChunkSet): HTMLElement => {
   const chunk = document.createElement('div');

@@ -12,6 +12,10 @@ export interface TabsContext {
   panelId(value: string): string;
 }
 
+export interface TabListContext {
+  restoreFocus(): void;
+}
+
 const TABS_KEY: InjectionKey<TabsContext> = Symbol('nui:tabs');
 
 export const provideTabs = (context: TabsContext): void => {
@@ -25,10 +29,6 @@ export const useTabs = (): TabsContext => {
   }
   return context;
 };
-
-export interface TabListContext {
-  restoreFocus(): void;
-}
 
 const TAB_LIST_KEY: InjectionKey<TabListContext> = Symbol('nui:tab-list');
 

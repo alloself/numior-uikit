@@ -33,6 +33,12 @@ export interface ColorSchemeControl {
   cycle(): void;
 }
 
+type StartRunner = (begin: () => void) => void;
+
+export interface ColorSchemeHandle extends ColorSchemeControl {
+  stop(): void;
+}
+
 export const COLOR_SCHEME_KEY: InjectionKey<ColorSchemeControl> = Symbol('nui-color-scheme');
 
 const CYCLE: readonly ColorScheme[] = ['light', 'dark', 'system'];
@@ -62,8 +68,6 @@ const writeStored = (key: string | undefined, value: ColorScheme): void => {
     return;
   }
 };
-
-type StartRunner = (begin: () => void) => void;
 
 const createColorScheme = (options: ColorSchemeOptions, run: StartRunner): ColorSchemeControl => {
   const scheme = ref<ColorScheme>(options.initial ?? 'system');
@@ -132,10 +136,6 @@ const createColorScheme = (options: ColorSchemeOptions, run: StartRunner): Color
 const runInline: StartRunner = (begin) => {
   begin();
 };
-
-export interface ColorSchemeHandle extends ColorSchemeControl {
-  stop(): void;
-}
 
 export const createColorSchemeControl = (options: ColorSchemeOptions = {}): ColorSchemeHandle => {
   const scope = effectScope(true);

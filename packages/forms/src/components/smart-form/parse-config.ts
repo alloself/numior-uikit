@@ -35,6 +35,12 @@ import type { NuiSmartFormCondition, NuiSmartFormEntry } from './smart-form.type
 
 type JsonRow = Readonly<Record<string, unknown>>;
 
+interface Builder<S extends object> {
+  readonly issues: FormConfigIssue[];
+  readonly controls: NuiControlRegistry;
+  entries(list: readonly FormJsonEntry[], at: string): NuiSmartFormEntry<S>[];
+}
+
 const isList = listOf(isUnknown);
 const isRows = listOf(isRecord);
 
@@ -144,12 +150,6 @@ const fieldRules = <S extends object>(
   specs?.map((spec) =>
     adaptRule(ruleOf(spec), (_value: unknown, values: S) => [getAt(values, path), values] as const),
   );
-
-interface Builder<S extends object> {
-  readonly issues: FormConfigIssue[];
-  readonly controls: NuiControlRegistry;
-  entries(list: readonly FormJsonEntry[], at: string): NuiSmartFormEntry<S>[];
-}
 
 const buildField = <S extends object>(
   builder: Builder<S>,

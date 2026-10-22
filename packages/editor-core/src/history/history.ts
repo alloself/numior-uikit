@@ -14,6 +14,11 @@ interface HistorySettings {
   readonly groupDelay: number;
 }
 
+interface Rebased {
+  readonly steps: readonly Step[];
+  readonly chain: MirrorMaps;
+}
+
 const GROUPED: ReadonlySet<InputSource> = new Set(['type', 'delete', 'compose']);
 
 const historyAction = createMetaKey<HistoryAction>('historyAction');
@@ -35,11 +40,6 @@ const eventOf = (tr: Transaction, before: EditorState): HistoryEvent => ({
   steps: invertAll(tr),
   selection: before.selection,
 });
-
-interface Rebased {
-  readonly steps: readonly Step[];
-  readonly chain: MirrorMaps;
-}
 
 const idle = (step: Step): boolean => {
   switch (step.kind) {

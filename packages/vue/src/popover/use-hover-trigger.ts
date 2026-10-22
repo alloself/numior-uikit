@@ -3,8 +3,6 @@ import { useDelayedOpen } from '@numior/primitives';
 import { computed, type ComputedRef, type MaybeRefOrGetter, type Ref } from 'vue';
 import type { NuiPopoverHoverAttrs } from './popover.types';
 
-const POINTER_FOCUS_WINDOW = 500;
-
 export interface HoverTriggerOptions {
   readonly open: Ref<boolean>;
   readonly enabled: () => boolean;
@@ -18,6 +16,8 @@ export interface HoverTrigger {
   readonly triggerAttrs: ComputedRef<NuiPopoverHoverAttrs>;
   readonly contentAttrs: ComputedRef<NuiPopoverHoverAttrs>;
 }
+
+const POINTER_FOCUS_WINDOW = 500;
 
 const within = (target: EventTarget | null, ...roots: readonly (HTMLElement | null)[]): boolean =>
   target instanceof Node && roots.some((root) => root?.contains(target) === true);

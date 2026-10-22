@@ -20,6 +20,16 @@ import type {
   NuiContentWrap,
 } from './content.types';
 
+export type NuiContentFileKind =
+  | 'file'
+  | 'image'
+  | 'video'
+  | 'audio'
+  | 'pdf'
+  | 'archive'
+  | 'sheet'
+  | 'text';
+
 export const CONTENT_TONES: readonly NuiContentTone[] = ['info', 'success', 'warning', 'error'];
 
 export const CONTENT_COLOURS: readonly NuiContentColour[] = [
@@ -246,16 +256,6 @@ const fileAttrs = (link: HtmlElement): ParsedAttrs => {
       }
     : false;
 };
-
-export type NuiContentFileKind =
-  | 'file'
-  | 'image'
-  | 'video'
-  | 'audio'
-  | 'pdf'
-  | 'archive'
-  | 'sheet'
-  | 'text';
 
 const KIND_BY_EXTENSION: Readonly<Record<string, NuiContentFileKind>> = {
   pdf: 'pdf',

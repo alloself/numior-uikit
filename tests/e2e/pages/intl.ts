@@ -8,6 +8,8 @@ import {
   type Guarded,
 } from '../../../packages/primitives/test/support/guards';
 
+export type IntlOutput = Guarded<typeof isIntlOutput>;
+
 const isIntlOutput = shapeOf({
   locale: isString,
   price: nullable(isNumber),
@@ -16,8 +18,6 @@ const isIntlOutput = shapeOf({
   start: nullable(isString),
   precise: nullable(isString),
 });
-
-export type IntlOutput = Guarded<typeof isIntlOutput>;
 
 const parseIntlOutput = (text: string): IntlOutput => parseAs(text, isIntlOutput, 'intl output');
 

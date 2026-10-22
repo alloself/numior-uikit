@@ -21,14 +21,14 @@ interface TabBox {
   readonly size: number;
 }
 
+type TabsSceneWrapper = VueWrapper<InstanceType<typeof TabsScene>>;
+
 const DESCRIPTORS: readonly NuiTabDescriptor[] = [
   { value: 'general', label: 'General', icon: 'check' },
   { value: 'billing', label: 'Billing', disabled: true },
   { value: 'team', label: 'Team' },
   { value: 'danger', label: 'Danger' },
 ];
-
-type TabsSceneWrapper = VueWrapper<InstanceType<typeof TabsScene>>;
 
 export class TabsDriver extends ComponentDriver {
   protected readonly block = 'nui-tabs';

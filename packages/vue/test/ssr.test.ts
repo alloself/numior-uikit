@@ -63,6 +63,11 @@ import { labelTarget, popoverTarget } from './support/ssr';
 import { FILES, manyNodes } from './support/tree-items';
 import { CATEGORIES } from './support/options';
 
+interface Scenario {
+  readonly name: string;
+  render(): Promise<string>;
+}
+
 config.global.stubs = { transition: false, 'transition-group': false };
 
 const STEPPER_STEPS = [
@@ -79,11 +84,6 @@ const REPORT = {
   status: 'done',
   url: 'https://cdn.example/report.pdf',
 } as const;
-
-interface Scenario {
-  readonly name: string;
-  render(): Promise<string>;
-}
 
 const fieldWithInput = () => renderToString(FieldScene, { props: { scene: 'input' } });
 

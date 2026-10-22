@@ -19,8 +19,6 @@ import {
 } from '@numior/primitives';
 import type { MenuContext, MenuFocusRequest } from './menu-context';
 
-const MENU_ITEMS = '[role="menuitem"], [role="menuitemcheckbox"], [role="menuitemradio"]';
-
 export interface MenuSurfaceOptions {
   readonly open: Ref<boolean>;
   readonly id?: MaybeRefOrGetter<string | undefined>;
@@ -50,6 +48,8 @@ export interface MenuSurface {
   readonly context: MenuContext;
   readonly attrs: MenuSurfaceAttrs;
 }
+
+const MENU_ITEMS = '[role="menuitem"], [role="menuitemcheckbox"], [role="menuitemradio"]';
 
 const itemAt = (target: EventTarget | null): HTMLElement | null => {
   const item = target instanceof HTMLElement ? target.closest(MENU_ITEMS) : null;

@@ -1,9 +1,9 @@
-const TYPEAHEAD_RESET = 500;
-
 export interface TypeaheadState {
   readonly query: string;
   readonly at: number;
 }
+
+const TYPEAHEAD_RESET = 500;
 
 export const emptyTypeahead: TypeaheadState = { query: '', at: 0 };
 

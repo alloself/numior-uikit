@@ -8,6 +8,12 @@ interface Level {
   readonly index: number;
 }
 
+interface ChildPlace {
+  readonly index: number;
+  readonly child: ContentNode | undefined;
+  readonly childStart: number;
+}
+
 const levelAt = (levels: readonly Level[], depth: number): Level => {
   const level = levels[depth];
 
@@ -32,12 +38,6 @@ const neighbours = (
   }
   return [parent.content[index - 1], child];
 };
-
-interface ChildPlace {
-  readonly index: number;
-  readonly child: ContentNode | undefined;
-  readonly childStart: number;
-}
 
 const placeIn = (node: ElementNode, start: number, pos: number): ChildPlace => {
   const index = childIndexAt(node, pos - start);

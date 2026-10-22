@@ -36,6 +36,13 @@ export interface NuiTableCells {
 
 type CellRead = (row: number, col: number) => NuiTableSourceCell | undefined;
 
+interface EdgeWalk {
+  readonly read: CellRead;
+  readonly rows: number;
+  readonly cols: number;
+  readonly step: TableCellPosition;
+}
+
 const LETTERS = 26;
 const CODE_A = 65;
 const COLUMN_WIDTH = 96;
@@ -82,13 +89,6 @@ const STEPS: Readonly<Record<NuiTableEdgeDirection, TableCellPosition>> = {
   previous: { row: 0, col: -1 },
   next: { row: 0, col: 1 },
 };
-
-interface EdgeWalk {
-  readonly read: CellRead;
-  readonly rows: number;
-  readonly cols: number;
-  readonly step: TableCellPosition;
-}
 
 const inside = (walk: EdgeWalk, at: TableCellPosition): boolean =>
   at.row >= 0 && at.row < walk.rows && at.col >= 0 && at.col < walk.cols;

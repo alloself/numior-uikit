@@ -27,6 +27,8 @@ interface BandFlags {
   readonly middle: boolean;
 }
 
+type ValueShape = 'none' | 'single' | 'multiple' | 'range';
+
 const NO_BAND: BandFlags = { inBand: false, start: false, end: false, middle: false };
 
 export const isDateRange = (value: NuiCalendarValue): value is NuiDateRange =>
@@ -47,8 +49,6 @@ export const selectedDatesOf = (value: NuiCalendarValue): string[] => {
 
   return [value.start, value.end].flatMap((date) => (date === null ? [] : [date]));
 };
-
-type ValueShape = 'none' | 'single' | 'multiple' | 'range';
 
 const shapeOf = (value: NuiCalendarValue): ValueShape => {
   if (value === null) {

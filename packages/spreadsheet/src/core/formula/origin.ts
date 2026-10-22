@@ -5,6 +5,10 @@ import { isSymbolic, mapReferences, type FormulaReference } from './references';
 
 export type LocatedReference = Exclude<FormulaReference, { readonly kind: 'name' | 'structured' }>;
 
+type RangeReference = Extract<LocatedReference, { readonly kind: 'range' }>;
+
+type LinesReference = Extract<LocatedReference, { readonly kind: 'columns' | 'rows' }>;
+
 export const ORIGIN: CellAddress = { row: 0, col: 0 };
 
 const BROKEN: FormulaNode = { kind: 'error', code: '#REF!' };
@@ -129,10 +133,6 @@ export const absoluteFormula = (node: FormulaNode, origin: CellAddress): Formula
       ? BROKEN
       : moveOrigin(reference, origin, ORIGIN);
   });
-
-type RangeReference = Extract<LocatedReference, { readonly kind: 'range' }>;
-
-type LinesReference = Extract<LocatedReference, { readonly kind: 'columns' | 'rows' }>;
 
 const storedRange = (
   node: RangeReference,

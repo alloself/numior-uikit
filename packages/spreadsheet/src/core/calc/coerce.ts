@@ -5,6 +5,8 @@ import { raise } from './signal';
 
 export { CellErrorSignal, raise } from './signal';
 
+type Comparable = Exclude<CellValue, { readonly kind: 'empty' } | { readonly kind: 'error' }>;
+
 const COLLATOR = new Intl.Collator('en', { sensitivity: 'accent' });
 
 const RANKS = { number: 0, string: 1, boolean: 2 } as const;
@@ -80,8 +82,6 @@ export const toLogical = (value: CellValue, locale: NumberLocale): boolean => {
       return raise(value.code);
   }
 };
-
-type Comparable = Exclude<CellValue, { readonly kind: 'empty' } | { readonly kind: 'error' }>;
 
 const blankLike = (other: CellValue): Comparable => {
   switch (other.kind) {

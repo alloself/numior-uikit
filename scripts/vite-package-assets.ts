@@ -7,6 +7,8 @@ interface PackageAssetsOptions {
   readonly bundled?: readonly string[];
 }
 
+type Emit = (file: { type: 'asset'; fileName: string; source: string }) => unknown;
+
 const RELATIVE_IMPORT = /^@import\s+['"](\.{1,2}\/[^'"]+\.css)['"]\s*;\s*$/;
 
 const importTarget = (line: string, from: URL): URL | null => {
@@ -35,8 +37,6 @@ export const inlineCss = async (file: URL, seen = new Set<string>()): Promise<st
 
   return output.join('\n');
 };
-
-type Emit = (file: { type: 'asset'; fileName: string; source: string }) => unknown;
 
 const emitLicenses = async (emit: Emit, root: URL, bundled: readonly string[]): Promise<void> => {
   emit({

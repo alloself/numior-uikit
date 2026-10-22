@@ -41,6 +41,17 @@ export interface CornerKey {
   readonly edge?: TableEdgeOf | undefined;
 }
 
+interface RangeItem {
+  readonly box: RangeBox;
+  readonly range: NuiTableRange | undefined;
+}
+
+interface RangeJoin {
+  readonly first: number;
+  readonly second: number;
+  readonly box: RangeBox;
+}
+
 export const boxOf = (range: NuiTableRange): RangeBox => ({
   top: Math.min(range.from.row, range.to.row),
   bottom: Math.max(range.from.row, range.to.row),
@@ -184,17 +195,6 @@ export const withLast = (others: NuiTableRanges, last: NuiTableRange): NuiTableR
   ...cutRanges(others, last),
   last,
 ];
-
-interface RangeItem {
-  readonly box: RangeBox;
-  readonly range: NuiTableRange | undefined;
-}
-
-interface RangeJoin {
-  readonly first: number;
-  readonly second: number;
-  readonly box: RangeBox;
-}
 
 const joinBoxes = (a: RangeBox, b: RangeBox): RangeBox | undefined => {
   const sameCols = a.start === b.start && a.end === b.end;

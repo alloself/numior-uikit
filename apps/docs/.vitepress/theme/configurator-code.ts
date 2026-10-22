@@ -12,6 +12,14 @@ export interface ConfiguratorState {
   readonly strings: Record<string, string>;
 }
 
+export type ConfiguratorSeeds = Readonly<Record<string, ConfiguratorSeed>>;
+
+export type ConfiguratorChange =
+  | { readonly kind: 'enum'; readonly name: string; readonly value: string | null }
+  | { readonly kind: 'boolean'; readonly name: string; readonly value: boolean }
+  | { readonly kind: 'number'; readonly name: string; readonly value: number | null }
+  | { readonly kind: 'string'; readonly name: string; readonly value: string };
+
 const literalOf = (raw: string | undefined): ConfiguratorValue => {
   if (raw === undefined) {
     return undefined;
@@ -27,8 +35,6 @@ const literalOf = (raw: string | undefined): ConfiguratorValue => {
   }
   return /^".*"$/.test(raw) ? raw.slice(1, -1) : undefined;
 };
-
-export type ConfiguratorSeeds = Readonly<Record<string, ConfiguratorSeed>>;
 
 const seedOf = (
   seed: ConfiguratorSeed | undefined,
@@ -61,12 +67,6 @@ export const configuratorState = (
   }
   return state;
 };
-
-export type ConfiguratorChange =
-  | { readonly kind: 'enum'; readonly name: string; readonly value: string | null }
-  | { readonly kind: 'boolean'; readonly name: string; readonly value: boolean }
-  | { readonly kind: 'number'; readonly name: string; readonly value: number | null }
-  | { readonly kind: 'string'; readonly name: string; readonly value: string };
 
 export const applyChange = (state: ConfiguratorState, change: ConfiguratorChange): void => {
   switch (change.kind) {

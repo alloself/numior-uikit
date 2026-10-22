@@ -2,6 +2,11 @@ import { openElement, type OpenElement } from './element';
 import type { HtmlElement } from './html.types';
 import { tokenize, type HtmlToken } from './tokenize';
 
+interface Implied {
+  readonly closes: ReadonlySet<string>;
+  readonly scope: ReadonlySet<string>;
+}
+
 const MAX_DEPTH = 256;
 
 const VOID = new Set([
@@ -60,11 +65,6 @@ const SCOPE = new Set(['#root', 'table', 'td', 'th', 'caption', 'button', 'templ
 const LIST_SCOPE = new Set([...SCOPE, 'ul', 'ol', 'menu']);
 
 const ROW_SCOPE = new Set([...SCOPE, 'tr']);
-
-interface Implied {
-  readonly closes: ReadonlySet<string>;
-  readonly scope: ReadonlySet<string>;
-}
 
 const IMPLIED: ReadonlyMap<string, Implied> = new Map([
   ['li', { closes: new Set(['li']), scope: LIST_SCOPE }],

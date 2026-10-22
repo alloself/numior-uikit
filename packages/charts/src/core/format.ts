@@ -1,5 +1,7 @@
 import type { TimeUnit } from './chart.types';
 
+export type NumberStyle = 'plain' | 'compact' | 'percent';
+
 const ELLIPSIS = '…';
 
 const TIME_PARTS: Readonly<Record<TimeUnit, Intl.DateTimeFormatOptions>> = {
@@ -23,8 +25,6 @@ const fractionDigits = (step: number): number => {
 
 export const estimateWidth = (text: string, fontSize: number): number =>
   text.length * fontSize * 0.6;
-
-export type NumberStyle = 'plain' | 'compact' | 'percent';
 
 export const numberStyle = (largest: number, percent: boolean): NumberStyle => {
   if (percent) {

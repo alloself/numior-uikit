@@ -20,6 +20,13 @@ export interface SheetExtras {
   readonly after: string;
 }
 
+interface SheetHead {
+  readonly root: string;
+  readonly prefix: string;
+  readonly before: string;
+  readonly closed: boolean;
+}
+
 const CONTENT_TYPES = 'http://schemas.openxmlformats.org/package/2006/content-types';
 
 const NAME = '(?:[\\w.-]+:)?';
@@ -77,13 +84,6 @@ export const readContentTypes = async (archive: ZipArchive): Promise<ContentType
 
   return { defaults, overrides };
 };
-
-interface SheetHead {
-  readonly root: string;
-  readonly prefix: string;
-  readonly before: string;
-  readonly closed: boolean;
-}
 
 const headOf = (text: string): SheetHead | undefined => {
   const root = new RegExp(`<(${NAME})worksheet(?=[\\s/>])[^>]*>`, 'u').exec(text);

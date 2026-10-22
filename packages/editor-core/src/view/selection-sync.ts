@@ -8,10 +8,6 @@ import type { ViewHost } from './host.types';
 import { domAtPos, posAtDOM } from './positions';
 import type { DomPoint } from './view.types';
 
-const SELECTED_CLASS = 'nui-editor__selected';
-
-export const ALL_CLASS = 'nui-editor__all';
-
 interface Span {
   readonly anchor: number;
   readonly head: number;
@@ -22,6 +18,10 @@ export interface SelectionSync {
   write(): void;
   mark(): void;
 }
+
+const SELECTED_CLASS = 'nui-editor__selected';
+
+export const ALL_CLASS = 'nui-editor__all';
 
 const spanOf = (doc: Doc, selection: Selection): Span => {
   if (selection.kind === 'text') {

@@ -14,9 +14,9 @@ interface Described {
   readonly description: LocalizedText | undefined;
 }
 
-const SECTIONS = ['props', 'models', 'events', 'slots', 'exposed'] as const;
-
 type Section = (typeof SECTIONS)[number];
+
+const SECTIONS = ['props', 'models', 'events', 'slots', 'exposed'] as const;
 
 const describe = <T extends Described>(
   members: readonly T[],

@@ -12,6 +12,12 @@ export interface Rebuilt {
   readonly rebuilt: readonly ElementNode[];
 }
 
+export interface SliceFrame {
+  readonly head: readonly Token[];
+  readonly inner: readonly Token[];
+  readonly tail: readonly Token[];
+}
+
 const CLOSE: Token = { kind: 'close' };
 
 const tokenSize = (token: Token): number => {
@@ -99,12 +105,6 @@ const frameTokens = (
     ];
   });
 };
-
-export interface SliceFrame {
-  readonly head: readonly Token[];
-  readonly inner: readonly Token[];
-  readonly tail: readonly Token[];
-}
 
 export const sliceFrame = (
   content: readonly ContentNode[],

@@ -1,3 +1,10 @@
+interface TsvState {
+  readonly rows: string[][];
+  row: string[];
+  field: string;
+  quoted: boolean;
+}
+
 const QUOTED = /[\t\n\r"]/;
 
 const ENTITIES: Readonly<Record<string, string>> = {
@@ -27,13 +34,6 @@ export const htmlOf = (
 
   return `<table>${head}<tbody>${lines.map((cells) => htmlRow(cells, 'td')).join('')}</tbody></table>`;
 };
-
-interface TsvState {
-  readonly rows: string[][];
-  row: string[];
-  field: string;
-  quoted: boolean;
-}
 
 const endField = (state: TsvState): void => {
   state.row.push(state.field);

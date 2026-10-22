@@ -53,13 +53,13 @@ interface Collected {
   readonly cells: ExternalCell[];
 }
 
+type Opener = (found: Collected, attributes: readonly XmlAttribute[]) => void;
+
 const sheetIndex = (text: string | undefined): number | undefined => {
   const index = text === undefined ? Number.NaN : Number(text);
 
   return Number.isInteger(index) && index >= 0 ? index : undefined;
 };
-
-type Opener = (found: Collected, attributes: readonly XmlAttribute[]) => void;
 
 const linked: Opener = (found) => {
   found.linked = true;

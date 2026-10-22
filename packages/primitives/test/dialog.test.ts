@@ -4,6 +4,12 @@ import { useDialog, type DialogOptions } from '../src';
 import { captureWithElements } from './harness/elements';
 import { installTopLayer } from './harness/top-layer';
 
+interface RootMetrics {
+  readonly scrollHeight: number;
+  readonly clientHeight: number;
+  readonly scrollbar: number;
+}
+
 const asDialog = (element: HTMLElement | null): HTMLDialogElement | null =>
   element instanceof HTMLDialogElement ? element : null;
 
@@ -25,12 +31,6 @@ const press = (dialog: HTMLElement, clientX: number) => {
   dialog.dispatchEvent(new PointerEvent('pointerdown', { clientX, clientY: 0, bubbles: true }));
   dialog.dispatchEvent(new MouseEvent('click', { clientX, clientY: 0, bubbles: true }));
 };
-
-interface RootMetrics {
-  readonly scrollHeight: number;
-  readonly clientHeight: number;
-  readonly scrollbar: number;
-}
 
 const ROOT_METRICS = ['scrollHeight', 'clientHeight', 'clientWidth'] as const;
 

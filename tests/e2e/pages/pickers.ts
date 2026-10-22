@@ -10,6 +10,8 @@ import {
   type Guarded,
 } from '../../../packages/primitives/test/support/guards';
 
+export type PickersOutput = Guarded<typeof isPickersOutput>;
+
 const isPickersOutput = shapeOf({
   country: nullable(isString),
   tags: listOf(isString),
@@ -21,8 +23,6 @@ const isPickersOutput = shapeOf({
   pageSize: isNumber,
   linkPage: isNumber,
 });
-
-export type PickersOutput = Guarded<typeof isPickersOutput>;
 
 const parsePickersOutput = (text: string): PickersOutput =>
   parseAs(text, isPickersOutput, 'pickers output');

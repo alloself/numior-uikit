@@ -2,12 +2,12 @@ import { describe, expect, it } from 'vite-plus/test';
 import { createFormEngine } from '../src/engine/form-engine';
 import { EngineHarness } from './harness/engine';
 
-const marked = ['Taken'];
-
 interface Draft {
   name: string;
   stale?: boolean;
 }
+
+const marked = ['Taken'];
 
 const stale: Draft = { name: 'Ann', stale: true };
 

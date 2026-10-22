@@ -46,6 +46,11 @@ export interface TableSteps {
   strip(tables: readonly SheetTable[], ast: FormulaNode): FormulaNode;
 }
 
+interface Loss {
+  readonly table: SheetTable;
+  readonly lost: ReadonlySet<string> | undefined;
+}
+
 const NO_DROPS: TableDrops = { rewrites: [], names: [] };
 
 export const specOf = (table: SheetTable): TableSpec => ({
@@ -116,11 +121,6 @@ const renamedColumns = (
 
 const strip = (tables: readonly SheetTable[], ast: FormulaNode): FormulaNode =>
   tables.reduce((current, table) => dropTableFromFormula(current, table.name), ast);
-
-interface Loss {
-  readonly table: SheetTable;
-  readonly lost: ReadonlySet<string> | undefined;
-}
 
 const aimsAt = (
   table: SheetTable,

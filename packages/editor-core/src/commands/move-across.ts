@@ -15,6 +15,56 @@ export interface BlockTarget {
 
 type Path = readonly NodeId[];
 
+interface Move {
+  readonly tr: Transaction;
+  readonly schema: Schema;
+  readonly node: ElementNode;
+  readonly source: ElementNode;
+  readonly target: ElementNode;
+}
+
+interface Anchor {
+  readonly before: NodeId | undefined;
+  readonly after: NodeId | undefined;
+}
+
+interface Plan {
+  readonly node: ElementNode;
+  readonly source: ElementNode;
+  readonly target: ElementNode;
+  readonly sourcePath: Path;
+  readonly targetPath: Path;
+}
+
+export type BesideSide = 'start' | 'end';
+
+export interface ColumnTypes {
+  readonly columns: string;
+  readonly column: string;
+  readonly most: number;
+}
+
+interface Beside {
+  readonly tr: Transaction;
+  readonly tree: ElementNode;
+  readonly path: Path;
+  readonly column: ElementNode;
+  readonly side: BesideSide;
+  readonly types: ColumnTypes;
+}
+
+interface Placed {
+  readonly tree: ElementNode;
+  readonly path: Path;
+}
+
+interface BesidePlan {
+  readonly node: ElementNode;
+  readonly inserted: readonly ContentNode[];
+  readonly sourcePath: Path;
+  readonly path: Path;
+}
+
 const element = (schema: Schema, node: ElementNode, content: readonly ContentNode[]): ElementNode =>
   schema.element(node.type, { id: node.id, attrs: node.attrs, content });
 
@@ -105,14 +155,6 @@ const asTextblock = (schema: Schema, node: ElementNode): ElementNode | undefined
 
 const retyped = (schema: Schema, item: ElementNode, type: string): ElementNode =>
   item.type === type ? item : schema.element(type, { id: item.id, content: item.content });
-
-interface Move {
-  readonly tr: Transaction;
-  readonly schema: Schema;
-  readonly node: ElementNode;
-  readonly source: ElementNode;
-  readonly target: ElementNode;
-}
 
 const intoList = (move: Move): readonly ContentNode[] | undefined => {
   const { schema, node, target, tr } = move;
@@ -225,11 +267,6 @@ const spliced = (
   return [...before, ...middle, ...after];
 };
 
-interface Anchor {
-  readonly before: NodeId | undefined;
-  readonly after: NodeId | undefined;
-}
-
 const idAt = (node: ElementNode, index: number): NodeId | undefined => {
   const child = node.content[index];
 
@@ -319,14 +356,6 @@ const follow = (tr: Transaction, before: Doc, node: ElementNode, selection: Sele
     );
   }
 };
-
-interface Plan {
-  readonly node: ElementNode;
-  readonly source: ElementNode;
-  readonly target: ElementNode;
-  readonly sourcePath: Path;
-  readonly targetPath: Path;
-}
 
 const planOf = (doc: Doc, from: ChildSlot, to: BlockTarget): Plan | undefined => {
   const node = childNode(doc, from);
@@ -424,28 +453,6 @@ export const moveBlock =
     return true;
   };
 
-export type BesideSide = 'start' | 'end';
-
-export interface ColumnTypes {
-  readonly columns: string;
-  readonly column: string;
-  readonly most: number;
-}
-
-interface Beside {
-  readonly tr: Transaction;
-  readonly tree: ElementNode;
-  readonly path: Path;
-  readonly column: ElementNode;
-  readonly side: BesideSide;
-  readonly types: ColumnTypes;
-}
-
-interface Placed {
-  readonly tree: ElementNode;
-  readonly path: Path;
-}
-
 const addColumn = (schema: Schema, beside: Beside, parent: ElementNode): Placed | undefined => {
   const path = beside.path.slice(0, -2);
   const columns = atPath(beside.tree, path);
@@ -488,13 +495,6 @@ const wrapColumns = (
     ? { tree: editAt(schema, beside.tree, path, () => content), path }
     : undefined;
 };
-
-interface BesidePlan {
-  readonly node: ElementNode;
-  readonly inserted: readonly ContentNode[];
-  readonly sourcePath: Path;
-  readonly path: Path;
-}
 
 const besidePlanOf = (
   doc: Doc,

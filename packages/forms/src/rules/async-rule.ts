@@ -1,14 +1,14 @@
 import type { AsyncRuleContext, FieldRule } from '../core/form.types';
 import { marked } from './origin';
 
-const ASYNC_RULE: unique symbol = Symbol('nui:async-rule');
-
 export type AsyncFieldRule<T = unknown, V = unknown> = ((
   value: T,
   context: AsyncRuleContext<V>,
 ) => Promise<true | string>) & { readonly [ASYNC_RULE]: true };
 
 export type AnyFieldRule<T = unknown, V = unknown> = FieldRule<T, V> | AsyncFieldRule<T, V>;
+
+const ASYNC_RULE: unique symbol = Symbol('nui:async-rule');
 
 export const isAsyncRule = <T, V>(rule: AnyFieldRule<T, V>): rule is AsyncFieldRule<T, V> =>
   ASYNC_RULE in rule;

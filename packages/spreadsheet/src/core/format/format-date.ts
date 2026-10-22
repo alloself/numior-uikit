@@ -4,10 +4,6 @@ import { createOutput, type Output } from './output';
 
 type DateToken = Extract<FormatToken, { kind: 'date' }>;
 
-const DAY_SECONDS = 86_400;
-
-const LAST_SERIAL = 2_958_466;
-
 interface Moment {
   readonly date: CivilDate;
   readonly weekday: number;
@@ -16,6 +12,10 @@ interface Moment {
   readonly ticks: number;
   readonly precision: number;
 }
+
+const DAY_SECONDS = 86_400;
+
+const LAST_SERIAL = 2_958_466;
 
 const two = (value: number): string => String(value).padStart(2, '0');
 

@@ -8,6 +8,18 @@ import {
   type Schema,
 } from '../../src';
 
+type Child = ContentNode | string;
+
+export interface NotesBuilder {
+  readonly text: (text: string, marks?: readonly Mark[]) => ContentNode;
+  readonly node: (
+    type: string,
+    content?: readonly Child[],
+    attrs?: Readonly<Record<string, AttrValue>>,
+  ) => ElementNode;
+  readonly doc: (...blocks: readonly ElementNode[]) => ElementNode;
+}
+
 export const notes = createSchema({
   nodes: {
     doc: { content: 'block+' },
@@ -30,18 +42,6 @@ export const notes = createSchema({
     link: { attrs: { href: {} } },
   },
 });
-
-type Child = ContentNode | string;
-
-export interface NotesBuilder {
-  readonly text: (text: string, marks?: readonly Mark[]) => ContentNode;
-  readonly node: (
-    type: string,
-    content?: readonly Child[],
-    attrs?: Readonly<Record<string, AttrValue>>,
-  ) => ElementNode;
-  readonly doc: (...blocks: readonly ElementNode[]) => ElementNode;
-}
 
 export const buildWith = (schema: Schema = notes): NotesBuilder => {
   const ids = createIdSource('t');

@@ -275,6 +275,24 @@ interface Order {
   readonly status: OrderStatus;
 }
 
+interface Unit {
+  readonly id: string;
+  readonly name: string;
+  readonly head: string;
+  readonly people: number;
+  readonly budget: number;
+  readonly note: string;
+  readonly children?: readonly Unit[];
+  readonly lazy?: boolean;
+}
+
+interface RemoteOrder {
+  readonly id: number;
+  readonly customer: string;
+  readonly city: string;
+  readonly amount: number;
+}
+
 const FIRST_NAMES = ['Анна', 'Иван', 'Мария', 'Павел', 'Ольга', 'Сергей', 'Елена', 'Дмитрий'];
 const LAST_NAMES = ['Смирнова', 'Иванов', 'Кузнецова', 'Попов', 'Соколова', 'Лебедев'];
 const CITIES = ['Москва', 'Казань', 'Ереван', 'Алматы', 'Белград', 'Тбилиси', 'Минск'];
@@ -299,17 +317,6 @@ const STATUS_TONES: Readonly<Record<OrderStatus, NuiTone>> = {
   shipped: 'neutral',
   returned: 'warning',
 };
-
-interface Unit {
-  readonly id: string;
-  readonly name: string;
-  readonly head: string;
-  readonly people: number;
-  readonly budget: number;
-  readonly note: string;
-  readonly children?: readonly Unit[];
-  readonly lazy?: boolean;
-}
 
 const UNITS: readonly Unit[] = [
   {
@@ -653,13 +660,6 @@ const ORDER_SETTERS: Readonly<Record<string, (row: Order, value: NuiTableCellVal
 
 const ordersTable = useTemplateRef<NuiTableExposed>('orders-table');
 const remoteTable = useTemplateRef<NuiTableExposed>('remote-table');
-
-interface RemoteOrder {
-  readonly id: number;
-  readonly customer: string;
-  readonly city: string;
-  readonly amount: number;
-}
 
 const REMOTE_DELAY = 250;
 

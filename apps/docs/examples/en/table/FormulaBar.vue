@@ -49,9 +49,9 @@ interface Contact {
   phone: string;
 }
 
-const FIELDS = ['name', 'city', 'phone'] as const;
-
 type Field = (typeof FIELDS)[number];
+
+const FIELDS = ['name', 'city', 'phone'] as const;
 
 const BAR_LABEL = 'Cell content';
 const CAPTION = 'Contacts';

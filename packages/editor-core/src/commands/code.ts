@@ -6,17 +6,17 @@ import { attempt } from './attempt';
 import { caretInto, followingTextblock, retypeTextblock } from './blocks';
 import { textCursor } from './cursor';
 
-const CODE_TYPE = 'code_block';
-const FENCE = /^```([\w#+.-]{1,32})?$/;
-const INDENT = '  ';
-const LEADING = /^[ \t]*/;
-
 interface CodeSpot {
   readonly $from: ResolvedPos;
   readonly $to: ResolvedPos;
   readonly text: string;
   readonly start: number;
 }
+
+const CODE_TYPE = 'code_block';
+const FENCE = /^```([\w#+.-]{1,32})?$/;
+const INDENT = '  ';
+const LEADING = /^[ \t]*/;
 
 const plainText = (node: ElementNode): string | undefined =>
   node.content.every((child) => child.kind === 'text')

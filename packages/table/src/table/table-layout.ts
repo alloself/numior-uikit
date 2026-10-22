@@ -50,6 +50,18 @@ interface PlaceInput {
   readonly wrap: boolean;
 }
 
+export interface LayoutOptions {
+  readonly pins: NuiTablePins;
+  readonly hidden: NuiTableHidden;
+  readonly widths: NuiTableWidths;
+  readonly sticky: boolean;
+  readonly select: boolean;
+  readonly room: number;
+  readonly wrap: boolean;
+  readonly rowHeader?: number | undefined;
+  readonly scale?: number | undefined;
+}
+
 const DEFAULT_WIDTH = 160;
 const SMALLEST_WIDTH = 48;
 const UTILITY_WIDTH = 40;
@@ -204,18 +216,6 @@ const placePane = (
 
   return { placed, width };
 };
-
-export interface LayoutOptions {
-  readonly pins: NuiTablePins;
-  readonly hidden: NuiTableHidden;
-  readonly widths: NuiTableWidths;
-  readonly sticky: boolean;
-  readonly select: boolean;
-  readonly room: number;
-  readonly wrap: boolean;
-  readonly rowHeader?: number | undefined;
-  readonly scale?: number | undefined;
-}
 
 const DEFAULT_OPTIONS: LayoutOptions = {
   pins: {},

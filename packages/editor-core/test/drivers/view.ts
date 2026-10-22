@@ -15,14 +15,10 @@ import {
 import { fixtureSchema } from '../../src/fixtures';
 import { createEditorView, type EditorView, type NodeViewFactory } from '../../src/view';
 
-const GRAPHEMES = new Intl.Segmenter(undefined, { granularity: 'grapheme' });
-
 export interface ChunkStyle {
   readonly visibility: string;
   readonly intrinsicSize: string;
 }
-
-const CHUNK = '.nui-editor__chunk';
 
 export interface DomSpan {
   readonly anchor: number;
@@ -39,6 +35,12 @@ export type CaretApi = 'position' | 'range' | 'none';
 export interface LayoutOptions {
   readonly collapsedHeight: number;
 }
+
+type SightCallback = (entries: readonly { target: Element; isIntersecting: boolean }[]) => void;
+
+const GRAPHEMES = new Intl.Segmenter(undefined, { granularity: 'grapheme' });
+
+const CHUNK = '.nui-editor__chunk';
 
 const CHAR = 10;
 const LINE = 20;
@@ -99,8 +101,6 @@ const withoutStyles = (root: HTMLElement): string => {
   }
   return copy.innerHTML;
 };
-
-type SightCallback = (entries: readonly { target: Element; isIntersecting: boolean }[]) => void;
 
 const sights: SightCallback[] = [];
 

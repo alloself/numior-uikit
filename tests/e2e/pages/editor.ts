@@ -8,14 +8,19 @@ import {
   type Guarded,
 } from '../../../packages/primitives/test/support/guards';
 
-const isEditorOutput = shapeOf({ blocks: isNumber, changes: isNumber, paste: nullable(isString) });
-
 export type EditorOutput = Guarded<typeof isEditorOutput>;
 
 export interface Copied {
   readonly text: string;
   readonly html: string;
 }
+
+export interface PastedFile {
+  readonly name: string;
+  readonly type: string;
+}
+
+const isEditorOutput = shapeOf({ blocks: isNumber, changes: isNumber, paste: nullable(isString) });
 
 export class EditorSection {
   readonly root: Locator;
@@ -633,9 +638,4 @@ export class EditorSection {
 
     return box === null ? Number.NaN : box.width / box.height;
   }
-}
-
-export interface PastedFile {
-  readonly name: string;
-  readonly type: string;
 }

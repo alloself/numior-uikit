@@ -17,6 +17,8 @@ export interface ArrayHarnessOptions {
   readonly rowRules?: readonly AnyFieldRule<string | undefined, Team>[];
 }
 
+type ArraySceneWrapper = ReturnType<typeof mountScene>;
+
 const mountScene = (options: ArrayHarnessOptions) =>
   mount(ArrayScene, {
     props: {
@@ -26,8 +28,6 @@ const mountScene = (options: ArrayHarnessOptions) =>
     },
     attachTo: document.body,
   });
-
-type ArraySceneWrapper = ReturnType<typeof mountScene>;
 
 export class ArrayHarness {
   static mount(options: ArrayHarnessOptions): ArrayHarness {

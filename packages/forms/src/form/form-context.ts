@@ -74,8 +74,6 @@ export interface FormHandle {
   settled(): Promise<void>;
 }
 
-export const FORM_HOST: unique symbol = Symbol('nui:form-host');
-
 export interface FormContext<V extends object> extends FormHandle {
   readonly [FORM_HOST]: FormHost<V>;
   readonly values: FormValues<V>;
@@ -84,6 +82,8 @@ export interface FormContext<V extends object> extends FormHandle {
   setValues(values: DeepPartial<V>): Promise<void>;
   resetForm(options?: ResetOptions<V>): void;
 }
+
+export const FORM_HOST: unique symbol = Symbol('nui:form-host');
 
 export const FORM_KEY: InjectionKey<FormHandle> = Symbol('nui:form');
 

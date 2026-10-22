@@ -9,14 +9,14 @@ import ProfileFields from './fixtures/ProfileFields.vue';
 import SignupForm from './fixtures/SignupForm.vue';
 import SmartFormScene from './fixtures/SmartFormScene.vue';
 
-const noop = (): void => undefined;
-
 interface Signup {
   kind: string;
   name: string;
   email: string;
   company: string;
 }
+
+const noop = (): void => undefined;
 
 const signup = formConfig<Signup>();
 

@@ -2,13 +2,13 @@ import { afterEach, describe, expect, it } from 'vite-plus/test';
 import { tableCells, type NuiTableCellSource } from '../src';
 import { TableDriver } from './drivers/table';
 
-const mounted: TableDriver<number>[] = [];
-
 interface CountedSheet {
   readonly source: NuiTableCellSource;
   readonly reads: Set<number>;
   readonly texts: Map<string, string>;
 }
+
+const mounted: TableDriver<number>[] = [];
 
 const countedSheet = (): CountedSheet => {
   const reads = new Set<number>();

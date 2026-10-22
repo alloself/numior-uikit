@@ -32,6 +32,25 @@ import {
   type Guarded,
 } from '../../../packages/primitives/test/support/guards';
 
+export type FormsOutput = Guarded<typeof isFormsOutput>;
+
+export type Theme = 'system' | 'light' | 'dark';
+
+export type Accent =
+  | 'indigo'
+  | 'blue'
+  | 'violet'
+  | 'emerald'
+  | 'teal'
+  | 'rose'
+  | 'orange'
+  | 'amber'
+  | 'slate';
+
+export type Density = 'comfortable' | 'compact';
+
+export type Direction = 'ltr' | 'rtl';
+
 const isFormsOutput = shapeOf({
   name: isString,
   email: isString,
@@ -44,24 +63,8 @@ const isFormsOutput = shapeOf({
   submitted: isNumber,
 });
 
-export type FormsOutput = Guarded<typeof isFormsOutput>;
-
 const parseFormsOutput = (text: string): FormsOutput =>
   parseAs(text, isFormsOutput, 'forms output');
-
-export type Theme = 'system' | 'light' | 'dark';
-export type Accent =
-  | 'indigo'
-  | 'blue'
-  | 'violet'
-  | 'emerald'
-  | 'teal'
-  | 'rose'
-  | 'orange'
-  | 'amber'
-  | 'slate';
-export type Density = 'comfortable' | 'compact';
-export type Direction = 'ltr' | 'rtl';
 
 export class FormsSection {
   readonly root: Locator;
