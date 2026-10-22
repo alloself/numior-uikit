@@ -279,6 +279,33 @@ describe('formula parser', () => {
     expect(astOf('=ВПР(1;A1:B2;2;0)', RU_FORMULAS)).toEqual(astOf('=VLOOKUP(1,A1:B2,2,0)'));
   });
 
+  it('reads references into other books by their link number', () => {
+    expect(astOf('=[1]Other!$A$1')).toEqual({
+      kind: 'cell',
+      book: 1,
+      sheet: 'Other',
+      ref: { row: 0, col: 0, rowAbsolute: true, colAbsolute: true },
+    });
+
+    expect(astOf("='[2]Q1 data'!A1:B2")).toMatchObject({
+      kind: 'range',
+      book: 2,
+      sheet: 'Q1 data',
+    });
+
+    expect(astOf('=[1]!Rate')).toEqual({ kind: 'name', book: 1, name: 'Rate' });
+
+    expect(astOf("='[1]Q1 data'!Base")).toEqual({
+      kind: 'name',
+      book: 1,
+      sheet: 'Q1 data',
+      name: 'Base',
+    });
+
+    expect(astOf('=СУММ([1]Лист1!A1:A3)', RU_FORMULAS)).toMatchObject({ name: 'SUM' });
+    expect(failureOf('=[1]Other')).toEqual({ position: 4, reason: 'token' });
+  });
+
   it('points at the place where a formula breaks', () => {
     expect(failureOf('=1+')).toEqual({ position: 3, reason: 'end' });
     expect(failureOf('=1+)')).toEqual({ position: 3, reason: 'token' });
@@ -304,6 +331,10 @@ describe('formula printer', () => {
 
   it('prints with the separators of the locale', () => {
     expect(printFormula(astOf('=SUM(1.5,{1,2;3,4})'), RU_FORMULAS)).toBe('СУММ(1,5;{1\\2;3\\4})');
+
+    expect(printFormula(astOf("=[1]Other!$A$1+'[2]Q1 data'!B2+[1]!Rate"))).toBe(
+      "[1]Other!$A$1+'[2]Q1 data'!B2+[1]!Rate",
+    );
 
     expect(printFormula(astOf('=IF(TRUE,#N/A,COUNT(#REF!))'), RU_FORMULAS)).toBe(
       'ЕСЛИ(ИСТИНА;#Н/Д;СЧЁТ(#ССЫЛКА!))',

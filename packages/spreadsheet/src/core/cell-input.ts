@@ -22,7 +22,7 @@ import { booleanValue, errorValue, numberValue, textValue } from './values';
 import { createStepper } from './steps/apply-step';
 import type { CellEdit, WorkbookStep } from './steps/step.types';
 import { uniqueColumns } from './tables';
-import type { Sheet, Workbook } from './workbook';
+import { localSheet, type Sheet, type Workbook } from './workbook';
 
 export type CellInput =
   | { readonly kind: 'empty' }
@@ -288,7 +288,7 @@ const referencedFormat = (
   origin: CellAddress,
 ): string | undefined => {
   const first = inherits(node) ? formulaReferences(node).find(isCellOrRange) : undefined;
-  const source = first?.sheet === undefined ? sheet : book.sheet(first.sheet);
+  const source = first === undefined ? undefined : localSheet(book, first, sheet);
   const range = first === undefined ? undefined : referenceRange(first, origin);
 
   if (range === undefined || source === undefined) {

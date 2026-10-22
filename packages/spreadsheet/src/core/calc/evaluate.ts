@@ -1,6 +1,6 @@
 import { MAX_COLS, MAX_ROWS } from '../address';
 import type { CellRange, CellValue } from '../cell.types';
-import type { FormulaNode } from '../formula/formula.types';
+import type { FormulaNode, SheetPlace } from '../formula/formula.types';
 import { colOf, referenceRange, rowOf } from '../formula/origin';
 import { EN_FORMULAS } from '../formula/locale';
 import { parseFormula } from '../formula/parser';
@@ -52,7 +52,17 @@ type NameNode = Extract<FormulaNode, { readonly kind: 'name' }>;
 
 const resolving = new Set<DefinedName>();
 
+const externalNamed = (node: NameNode, book: number, context: EvalContext): EvalValue => {
+  const ast = context.workbook.externals[book - 1]?.name(node.name, node.sheet)?.ast;
+
+  return ast === undefined ? raise('#REF!') : evaluate(ast, context);
+};
+
 const named = (node: NameNode, context: EvalContext): EvalValue => {
+  if (node.book !== undefined) {
+    return externalNamed(node, node.book, context);
+  }
+
   const defined = context.definedName(node);
 
   if (defined === undefined) {
@@ -77,8 +87,12 @@ type Operand = CellValue | ArrayValue;
 
 const VALUE_ERROR = errorValue('#VALUE!');
 
-const sheetOf = (name: string | undefined, context: EvalContext): Sheet =>
-  name === undefined ? context.sheet : (context.workbook.sheet(name) ?? raise('#REF!'));
+const sheetOf = ({ book, sheet }: SheetPlace, context: EvalContext): Sheet => {
+  if (book !== undefined) {
+    return context.workbook.externals[book - 1]?.sheet(sheet ?? '') ?? raise('#REF!');
+  }
+  return sheet === undefined ? context.sheet : (context.workbook.sheet(sheet) ?? raise('#REF!'));
+};
 
 const single = (range: CellRange): boolean =>
   range.top === range.bottom && range.left === range.right;
@@ -191,7 +205,7 @@ const operandOf = (node: FormulaNode, context: EvalContext): Operand => {
 
     return row < 0 || col < 0 || row >= MAX_ROWS || col >= MAX_COLS
       ? errorValue('#REF!')
-      : sheetOf(node.sheet, context).cells.get(row, col);
+      : sheetOf(node, context).cells.get(row, col);
   }
   const value = safely(node, context);
 
@@ -360,13 +374,9 @@ const call = (node: Call, context: EvalContext): EvalValue => {
     : spec.evaluate(argumentsFrom(node.args, value, context));
 };
 
-const reference = (
-  sheet: string | undefined,
-  range: CellRange,
-  context: EvalContext,
-): EvalValue => ({
+const reference = (place: SheetPlace, range: CellRange, context: EvalContext): EvalValue => ({
   kind: 'reference',
-  sheet: sheetOf(sheet, context),
+  sheet: sheetOf(place, context),
   range,
 });
 
@@ -392,7 +402,7 @@ const spilled = (
   node: Extract<FormulaNode, { readonly kind: 'spill' }>,
   context: EvalContext,
 ): EvalValue => {
-  const sheet = sheetOf(node.sheet, context);
+  const sheet = sheetOf(node, context);
   const here = context.here();
   const range = context.spillRange(sheet, rowOf(node.ref, here), colOf(node.ref, here));
 
@@ -429,7 +439,7 @@ const evaluate = (node: FormulaNode, context: EvalContext): EvalValue => {
     case 'range':
     case 'columns':
     case 'rows':
-      return reference(node.sheet, referenceRange(node, context.here()) ?? raise('#REF!'), context);
+      return reference(node, referenceRange(node, context.here()) ?? raise('#REF!'), context);
     case 'spill':
       return spilled(node, context);
     case 'name':

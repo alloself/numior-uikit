@@ -49,6 +49,9 @@ export type { NumberFormats } from './number-formats';
 export type {
   DefinedName,
   DefinedNames,
+  ExternalBook,
+  ExternalBookInit,
+  ExternalName,
   Sheet,
   SheetTable,
   SheetTables,

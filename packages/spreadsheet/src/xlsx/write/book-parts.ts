@@ -1,8 +1,11 @@
-import { formatRange } from '../../core/address';
+import { MAX_COLS, MAX_ROWS, formatCell, formatRange } from '../../core/address';
+import type { CellValue } from '../../core/cell.types';
+import type { FormulaNode } from '../../core/formula/formula.types';
 import { EN_FORMULAS } from '../../core/formula/locale';
 import { ORIGIN } from '../../core/formula/origin';
 import { printFormula } from '../../core/formula/printer';
-import type { SheetTable, Workbook } from '../../core/workbook';
+import { mapReferences } from '../../core/formula/references';
+import type { ExternalBook, Sheet, SheetTable, Workbook } from '../../core/workbook';
 import { escapeAttribute, escapeText } from '../xml/writer';
 import { encodeXstring } from '../xml/xstring';
 import { withFuturePrefixes } from './future-functions';
@@ -38,6 +41,7 @@ export const TYPES = {
   strings: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml',
   table: 'application/vnd.openxmlformats-officedocument.spreadsheetml.table+xml',
   metadata: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheetMetadata+xml',
+  externalLink: 'application/vnd.openxmlformats-officedocument.spreadsheetml.externalLink+xml',
   relationships: 'application/vnd.openxmlformats-package.relationships+xml',
   xml: 'application/xml',
 } as const;
@@ -59,10 +63,21 @@ const definedNamesXml = (book: Workbook): string => {
   return names.length === 0 ? '' : `<definedNames>${names.join('')}</definedNames>`;
 };
 
+const externalReferencesXml = (ids: readonly string[]): string =>
+  ids.length === 0
+    ? ''
+    : `<externalReferences>${ids
+        .map((id) => `<externalReference r:id="${escapeAttribute(id)}"/>`)
+        .join('')}</externalReferences>`;
+
 export const workbookXml = (
   book: Workbook,
   sheets: readonly PlannedSheet[],
-  options: { readonly properties: string | undefined; readonly recalculate: boolean },
+  options: {
+    readonly properties: string | undefined;
+    readonly recalculate: boolean;
+    readonly externals: readonly string[];
+  },
 ): string =>
   [
     HEADER,
@@ -74,9 +89,88 @@ export const workbookXml = (
         `<sheet name="${escapeAttribute(encodeXstring(sheet.name))}" sheetId="${String(sheet.sheetId)}"${sheet.hidden ? ' state="hidden"' : ''} r:id="${sheet.relationship}"/>`,
     ),
     '</sheets>',
+    externalReferencesXml(options.externals),
     definedNamesXml(book),
     `<calcPr calcId="191029"${options.recalculate ? ' fullCalcOnLoad="1"' : ''}/>`,
     '</workbook>',
+  ].join('');
+
+const WHOLE = { top: 0, left: 0, bottom: MAX_ROWS - 1, right: MAX_COLS - 1 };
+
+const localFormula = (ast: FormulaNode): string =>
+  printFormula(
+    mapReferences(ast, (reference) =>
+      reference.kind === 'structured' ? reference : { ...reference, book: undefined },
+    ),
+    EN_FORMULAS,
+    ORIGIN,
+  );
+
+const cachedCellXml = (row: number, col: number, value: CellValue): string => {
+  const reference = formatCell({ row, col, rowAbsolute: false, colAbsolute: false });
+
+  switch (value.kind) {
+    case 'number':
+      return `<cell r="${reference}"><v>${String(value.value)}</v></cell>`;
+    case 'string':
+      return `<cell r="${reference}" t="str"><v>${escapeText(encodeXstring(value.value))}</v></cell>`;
+    case 'boolean':
+      return `<cell r="${reference}" t="b"><v>${value.value ? '1' : '0'}</v></cell>`;
+    case 'error':
+      return `<cell r="${reference}" t="e"><v>${escapeText(value.code)}</v></cell>`;
+    default:
+      return '';
+  }
+};
+
+const cachedSheetXml = (sheet: Sheet, index: number): string => {
+  const rows = new Map<number, [number, string][]>();
+
+  sheet.cells.forEachInRange(WHOLE, (row, col, value) => {
+    const cells = rows.get(row) ?? [];
+
+    cells.push([col, cachedCellXml(row, col, value)]);
+    rows.set(row, cells);
+  });
+
+  return `<sheetData sheetId="${String(index)}">${[...rows]
+    .toSorted(([left], [right]) => left - right)
+    .map(
+      ([row, cells]) =>
+        `<row r="${String(row + 1)}">${cells
+          .toSorted(([left], [right]) => left - right)
+          .map(([, xml]) => xml)
+          .join('')}</row>`,
+    )
+    .join('')}</sheetData>`;
+};
+
+const externalNamesXml = (external: ExternalBook): string => {
+  const names = external.names.reduce<string[]>((found, entry) => {
+    const scope = external.sheets.findIndex((sheet) => sheet.name === entry.sheet);
+
+    if (entry.ast !== undefined) {
+      found.push(
+        `<definedName name="${escapeAttribute(entry.name)}" refersTo="${escapeAttribute(`=${localFormula(entry.ast)}`)}"${scope < 0 ? '' : ` sheetId="${String(scope)}"`}/>`,
+      );
+    }
+    return found;
+  }, []);
+
+  return names.length === 0 ? '' : `<definedNames>${names.join('')}</definedNames>`;
+};
+
+export const externalLinkXml = (external: ExternalBook): string =>
+  [
+    HEADER,
+    `<externalLink xmlns="${MAIN}" xmlns:r="${OFFICE}"><externalBook r:id="rId1"><sheetNames>`,
+    ...external.sheets.map(
+      (sheet) => `<sheetName val="${escapeAttribute(encodeXstring(sheet.name))}"/>`,
+    ),
+    '</sheetNames>',
+    externalNamesXml(external),
+    `<sheetDataSet>${external.sheets.map(cachedSheetXml).join('')}</sheetDataSet>`,
+    '</externalBook></externalLink>',
   ].join('');
 
 export const tableXml = (table: SheetTable, id: number): string => {

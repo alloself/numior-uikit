@@ -29,7 +29,7 @@ export interface WorkbookPart {
   readonly sheets: readonly SheetEntry[];
   readonly names: readonly NameEntry[];
   readonly date1904: boolean;
-  readonly externalLinks: number;
+  readonly externalLinks: readonly string[];
   readonly pivotCaches: number;
   readonly strict: boolean;
 }
@@ -42,7 +42,7 @@ export const readWorkbookPart = async (
   const sheets: SheetEntry[] = [];
   const names: NameEntry[] = [];
   let date1904 = false;
-  let externalLinks = 0;
+  const externalLinks: string[] = [];
   let pivotCaches = 0;
   let strict = false;
   let name: { name: string; sheet: number | undefined; text: string } | undefined;
@@ -83,7 +83,7 @@ export const readWorkbookPart = async (
             break;
           }
           case 'externalReference':
-            externalLinks += 1;
+            externalLinks.push(attributeOf(attributes, 'id', RELATIONSHIP_ATTRIBUTES) ?? '');
             break;
           case 'pivotCache':
             pivotCaches += 1;

@@ -3,7 +3,7 @@ import { createCellFormats, type CellFormats } from './cell-formats';
 import { createCellStore, type CellStore } from './cell-store';
 import { createDecorations, type CellDecorations } from './decorations';
 import { createNumberFormats, type NumberFormats } from './number-formats';
-import type { FormulaNode } from './formula/formula.types';
+import type { FormulaNode, SheetPlace } from './formula/formula.types';
 import { createSharedStrings, type SharedStrings } from './strings';
 import type { TableShape } from './tables';
 
@@ -45,6 +45,26 @@ export interface SheetTables {
   forEach(visit: (table: SheetTable) => void): void;
 }
 
+export interface ExternalName {
+  readonly name: string;
+  readonly sheet: string | undefined;
+  readonly ast: FormulaNode | undefined;
+}
+
+export interface ExternalBookInit {
+  readonly target: string;
+  readonly sheets: readonly string[];
+  readonly names: readonly ExternalName[];
+}
+
+export interface ExternalBook {
+  readonly target: string;
+  readonly sheets: readonly Sheet[];
+  readonly names: readonly ExternalName[];
+  sheet(name: string): Sheet | undefined;
+  name(name: string, sheet: string | undefined): ExternalName | undefined;
+}
+
 export interface Workbook {
   readonly strings: SharedStrings;
   readonly formats: NumberFormats;
@@ -52,7 +72,9 @@ export interface Workbook {
   readonly names: DefinedNames;
   readonly tables: SheetTables;
   readonly sheets: readonly Sheet[];
+  readonly externals: readonly ExternalBook[];
   addSheet(name?: string, index?: number): Sheet;
+  addExternal(init: ExternalBookInit): ExternalBook;
   removeSheet(sheet: Sheet): void;
   sheet(name: string): Sheet | undefined;
   renameSheet(sheet: Sheet, name: string): boolean;
@@ -145,6 +167,17 @@ const createSheetTables = (): SheetTables => {
   };
 };
 
+export const localSheet = (
+  book: Workbook,
+  place: SheetPlace,
+  current: Sheet,
+): Sheet | undefined => {
+  if (place.book !== undefined) {
+    return undefined;
+  }
+  return place.sheet === undefined ? current : book.sheet(place.sheet);
+};
+
 export const tableFor = (
   book: Workbook,
   table: string | undefined,
@@ -154,17 +187,45 @@ export const tableFor = (
 ): SheetTable | undefined =>
   table === undefined ? book.tables.at(sheet, row, col) : book.tables.get(table);
 
+const named = (sheets: readonly Sheet[], name: string): Sheet | undefined => {
+  const wanted = name.toLowerCase();
+
+  return sheets.find((candidate) => candidate.name.toLowerCase() === wanted);
+};
+
+const blankSheet = (id: number, name: string, strings: SharedStrings): Sheet => ({
+  id,
+  name,
+  cells: createCellStore(strings),
+  formats: createCellFormats(),
+  decorations: createCellFormats(),
+  shifts: 0,
+});
+
+const externalBook = (init: ExternalBookInit, sheets: readonly Sheet[]): ExternalBook => ({
+  target: init.target,
+  sheets,
+  names: init.names,
+  sheet: (name) => named(sheets, name),
+  name: (name, sheet) => {
+    const wanted = name.toLowerCase();
+    const scope = sheet?.toLowerCase();
+
+    return init.names.find(
+      (candidate) =>
+        candidate.name.toLowerCase() === wanted && candidate.sheet?.toLowerCase() === scope,
+    );
+  },
+});
+
 export const createWorkbook = (): Workbook => {
   const strings = createSharedStrings();
   const formats = createNumberFormats();
   const sheets: Sheet[] = [];
+  const externals: ExternalBook[] = [];
   let next = 1;
 
-  const sheet = (name: string): Sheet | undefined => {
-    const wanted = name.toLowerCase();
-
-    return sheets.find((candidate) => candidate.name.toLowerCase() === wanted);
-  };
+  const sheet = (name: string): Sheet | undefined => named(sheets, name);
 
   const freeName = (): string => {
     let index = sheets.length + 1;
@@ -182,6 +243,7 @@ export const createWorkbook = (): Workbook => {
     names: createDefinedNames(),
     tables: createSheetTables(),
     sheets,
+    externals,
     sheet,
     addSheet: (name, index = sheets.length) => {
       const title = name ?? freeName();
@@ -190,18 +252,19 @@ export const createWorkbook = (): Workbook => {
         throw new RangeError(`The sheet name ${title} is taken or not allowed`);
       }
 
-      const created: Sheet = {
-        id: next,
-        name: title,
-        cells: createCellStore(strings),
-        formats: createCellFormats(),
-        decorations: createCellFormats(),
-        shifts: 0,
-      };
+      const created = blankSheet(next, title, strings);
 
       next += 1;
       sheets.splice(Math.min(Math.max(index, 0), sheets.length), 0, created);
       return created;
+    },
+    addExternal: (init) => {
+      const cached = init.sheets.map((name, index) => blankSheet(next + index, name, strings));
+      const added = externalBook(init, cached);
+
+      next += cached.length;
+      externals.push(added);
+      return added;
     },
     removeSheet: (target) => {
       const index = sheets.indexOf(target);

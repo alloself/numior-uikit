@@ -314,5 +314,6 @@
       "totals": true,
       "sheet": "Sales"
     }
-  ]
+  ],
+  "externals": []
 }

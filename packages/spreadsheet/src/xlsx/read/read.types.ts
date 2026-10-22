@@ -7,6 +7,7 @@ import type { Bytes, ZipCodec } from '../zip/zip.types';
 export type XlsxLimitationCode =
   | 'date-1904'
   | 'external-links'
+  | 'linked-objects'
   | 'pivot-tables'
   | 'data-tables'
   | 'formula-syntax'
@@ -52,6 +53,7 @@ export interface OriginalPackage {
   readonly bytes: Bytes;
   readonly readOnly: boolean;
   readonly workbook: string;
+  readonly externalLinks: readonly string[];
   readonly sheets: readonly OriginalSheet[];
   readonly parts: readonly { readonly name: string; readonly kind: 'parsed' | 'opaque' }[];
 }

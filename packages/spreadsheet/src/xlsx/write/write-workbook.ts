@@ -1,6 +1,6 @@
 import type { Calculator } from '../../core/calc/calculator';
 import { nextTask } from '../../core/calc/tasks';
-import type { Sheet, SheetTable, Workbook } from '../../core/workbook';
+import type { ExternalBook, Sheet, SheetTable, Workbook } from '../../core/workbook';
 import { readRelationships, relationshipsOf, type Relationship } from '../read/ooxml';
 import type { OriginalPackage, OriginalSheet } from '../read/read.types';
 import { readTablePart, type TableEntry } from '../read/table-part';
@@ -12,6 +12,7 @@ import {
   OFFICE,
   TYPES,
   contentTypesXml,
+  externalLinkXml,
   relationshipsXml,
   relativeTarget,
   tableXml,
@@ -432,6 +433,41 @@ const writeBookParts = async (writing: Writing): Promise<void> => {
   });
 };
 
+const writeExternal = (writing: Writing, external: ExternalBook): string => {
+  const { output } = writing;
+  const taken = new Set([...(writing.original?.archive.names ?? []), ...output.written]);
+  const part = freshName(taken, (index) => `xl/externalLinks/externalLink${String(index)}.xml`);
+
+  output.entries.push(
+    textEntry(part, externalLinkXml(external)),
+    textEntry(
+      relationshipsOf(part),
+      relationshipsXml([
+        {
+          id: 'rId1',
+          type: officeType('externalLinkPath'),
+          target: external.target,
+          external: true,
+        },
+      ]),
+    ),
+  );
+
+  output.overrides.set(part, TYPES.externalLink);
+  output.written.add(part);
+  output.written.add(relationshipsOf(part));
+  bookRelationship(writing, 'externalLink', part, () => false);
+  return writing.workbookRelationships.at(-1)?.id ?? '';
+};
+
+const writeExternals = (writing: Writing): string[] => {
+  const kept = writing.original?.source.externalLinks ?? [];
+
+  return writing.book.externals.map(
+    (external, index) => kept[index] ?? writeExternal(writing, external),
+  );
+};
+
 const writeWorkbookPart = async (writing: Writing): Promise<void> => {
   const { original, output, workbookPart } = writing;
   const workbookText = original === undefined ? '' : await partText(original.archive, workbookPart);
@@ -445,6 +481,8 @@ const writeWorkbookPart = async (writing: Writing): Promise<void> => {
 
   writing.workbookRelationships.push(...keptBook.map((item) => toPlanned(item, workbookPart)));
 
+  const externals = writeExternals(writing);
+
   output.roots.push(
     ...keptBook,
     ...rootRelationships.filter((item) => item.kind !== 'officeDocument'),
@@ -456,6 +494,7 @@ const writeWorkbookPart = async (writing: Writing): Promise<void> => {
       workbookXml(writing.book, writing.sheets, {
         properties: elementSlice(workbookText, 'workbookPr'),
         recalculate: writing.totals.stale > 0,
+        externals,
       }),
     ),
     textEntry(relationshipsOf(workbookPart), relationshipsXml(writing.workbookRelationships)),

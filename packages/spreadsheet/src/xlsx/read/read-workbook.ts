@@ -6,12 +6,15 @@ import { nextTask } from '../../core/calc/tasks';
 import { ORIGIN } from '../../core/formula/origin';
 import { EN_FORMULAS } from '../../core/formula/locale';
 import { parseFormula } from '../../core/formula/parser';
+import { mapReferences } from '../../core/formula/references';
+import type { FormulaNode } from '../../core/formula/formula.types';
 import { EN_LOCALE } from '../../core/locale';
 import { validColumns } from '../../core/tables';
 import {
   createWorkbook,
   validDefinedName,
   validSheetName,
+  type ExternalName,
   type Sheet,
   type Workbook,
 } from '../../core/workbook';
@@ -33,6 +36,7 @@ import type {
   XlsxRead,
   XlsxRejection,
 } from './read.types';
+import { readExternalPart, type ExternalNameEntry } from './external-part';
 import { readSharedStrings, type SharedStrings } from './shared-strings';
 import { readSheetPart, type SheetCounts } from './sheet-part';
 import { readStyles, type CellStyles } from './styles';
@@ -49,7 +53,7 @@ const COMPOUND_FILE = [0xd0, 0xcf, 0x11, 0xe0];
 
 const READ_ONLY = new Set<XlsxLimitationCode>([
   'date-1904',
-  'external-links',
+  'linked-objects',
   'pivot-tables',
   'data-tables',
   'formula-syntax',
@@ -164,6 +168,64 @@ const setTables = async (
   return refused;
 };
 
+const BROKEN: FormulaNode = { kind: 'error', code: '#REF!' };
+
+const inBook = (ast: FormulaNode, book: number): FormulaNode =>
+  mapReferences(ast, (reference) =>
+    reference.kind === 'name' || reference.kind === 'structured' ? BROKEN : { ...reference, book },
+  );
+
+const externalNames = (
+  entries: readonly ExternalNameEntry[],
+  sheets: readonly string[],
+  book: number,
+): ExternalName[] =>
+  entries.map((entry) => {
+    const parsed = parseFormula(entry.text, EN_FORMULAS, ORIGIN);
+
+    return {
+      name: entry.name,
+      sheet: entry.sheet === undefined ? undefined : sheets[entry.sheet],
+      ast: parsed.ok ? inBook(parsed.ast, book) : undefined,
+    };
+  });
+
+const loadExternals = async (
+  load: Load,
+  links: readonly string[],
+  relationships: readonly Relationship[],
+  strings: readonly string[],
+): Promise<void> => {
+  for (const link of links) {
+    const part = relationships.find((item) => item.id === link && !item.external)?.target;
+
+    const read =
+      part !== undefined && load.archive.has(part)
+        ? await readExternalPart(load.archive, part, strings, load.parts)
+        : { kind: 'linked' as const };
+
+    if (part !== undefined) {
+      load.parsed.add(part);
+    }
+    if (read.kind === 'book') {
+      const book = load.book.externals.length + 1;
+
+      const external = load.book.addExternal({
+        target: read.target,
+        sheets: read.sheets,
+        names: externalNames(read.names, read.sheets, book),
+      });
+
+      read.cells.forEach((cell) => {
+        external.sheets[cell.sheet]?.cells.set(cell.row, cell.col, cell.value);
+      });
+    } else {
+      load.book.addExternal({ target: '', sheets: [], names: [] });
+      load.totals.linked += 1;
+    }
+  }
+};
+
 const sizeOf = (archive: ZipArchive, part: string | undefined): number =>
   part === undefined ? 0 : (archive.raw(part)?.size ?? 0);
 
@@ -176,7 +238,12 @@ interface Load {
   readonly report: Report;
   readonly parsed: Set<string>;
   readonly parts: PartOptions;
-  readonly totals: { formulas: number; kept: number; readonly unknown: Set<string> };
+  readonly totals: {
+    formulas: number;
+    kept: number;
+    linked: number;
+    readonly unknown: Set<string>;
+  };
 }
 
 interface BookContext {
@@ -258,7 +325,8 @@ const addBookLimits = (load: Load, workbook: WorkbookPart, context: BookContext)
 
   report.add('date-1904', workbook.date1904 ? 1 : 0);
   report.add('strict-format', workbook.strict ? 1 : 0);
-  report.add('external-links', workbook.externalLinks);
+  report.add('external-links', load.book.externals.length - load.totals.linked);
+  report.add('linked-objects', load.totals.linked);
   report.add('pivot-tables', workbook.pivotCaches);
   report.add('unsupported-functions', load.totals.kept, undefined, load.totals.unknown);
   report.add('cell-styles', context.styles.unmodeled);
@@ -328,7 +396,7 @@ const readBook = async (
       [stringsPart, stylesPart, ...sheetParts.map(({ part }) => part)],
       options,
     ),
-    totals: { formulas: 0, kept: 0, unknown: new Set() },
+    totals: { formulas: 0, kept: 0, linked: 0, unknown: new Set() },
   };
 
   const sheets = sheetParts.map(({ entry }) => book.addSheet(entry.name));
@@ -350,6 +418,7 @@ const readBook = async (
     }
   });
 
+  await loadExternals(load, workbook.externalLinks, relationships, strings.strings);
   setNames(load.calculator, workbook, sheets);
 
   for (const [index, sheet] of sheets.entries()) {
@@ -375,6 +444,7 @@ const readBook = async (
       bytes,
       readOnly: summary.readOnly,
       workbook: office,
+      externalLinks: workbook.externalLinks,
       sheets: sheets.map((sheet, index) => ({
         sheet: sheet.id,
         name: sheet.name,

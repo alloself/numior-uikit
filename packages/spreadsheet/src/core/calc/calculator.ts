@@ -10,6 +10,7 @@ import { formulaReferences } from '../formula/references';
 import { EMPTY, errorValue, numberValue } from '../values';
 import { structuredRange, tableData } from '../tables';
 import {
+  localSheet,
   tableFor,
   type DefinedName,
   type Sheet,
@@ -172,7 +173,7 @@ const definedFor = (
   sheet: Sheet,
   node: Extract<FormulaNode, { readonly kind: 'name' }>,
 ): DefinedName | undefined => {
-  const home = node.sheet === undefined ? sheet : workbook.sheet(node.sheet);
+  const home = localSheet(workbook, node, sheet);
 
   return home === undefined ? undefined : workbook.names.resolve(node.name, home);
 };
@@ -212,7 +213,7 @@ const collectLinks = (
       return;
     }
 
-    const target = found.sheet === undefined ? record.sheet : workbook.sheet(found.sheet);
+    const target = localSheet(workbook, found, record.sheet);
     const range = referenceRange(found, record);
 
     if (target !== undefined && range !== undefined) {
@@ -228,6 +229,10 @@ const nameLinks = (
   links: Links,
   seen: Set<DefinedName>,
 ): void => {
+  if (found.book !== undefined) {
+    return;
+  }
+
   const defined = definedFor(workbook, record.sheet, found);
   const table = found.sheet === undefined ? workbook.tables.get(found.name) : undefined;
 

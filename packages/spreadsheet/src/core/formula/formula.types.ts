@@ -50,32 +50,55 @@ export type BinaryOperator =
   | '<='
   | '>=';
 
+export interface SheetPlace {
+  readonly book?: number | undefined;
+  readonly sheet?: string | undefined;
+}
+
 export type FormulaNode =
   | { readonly kind: 'number'; readonly value: number }
   | { readonly kind: 'string'; readonly value: string }
   | { readonly kind: 'boolean'; readonly value: boolean }
   | { readonly kind: 'error'; readonly code: CellError }
-  | { readonly kind: 'cell'; readonly sheet?: string | undefined; readonly ref: CellRef }
+  | {
+      readonly kind: 'cell';
+      readonly book?: number | undefined;
+      readonly sheet?: string | undefined;
+      readonly ref: CellRef;
+    }
   | {
       readonly kind: 'range';
+      readonly book?: number | undefined;
       readonly sheet?: string | undefined;
       readonly from: CellRef;
       readonly to: CellRef;
     }
   | {
       readonly kind: 'columns';
+      readonly book?: number | undefined;
       readonly sheet?: string | undefined;
       readonly from: LineRef;
       readonly to: LineRef;
     }
   | {
       readonly kind: 'rows';
+      readonly book?: number | undefined;
       readonly sheet?: string | undefined;
       readonly from: LineRef;
       readonly to: LineRef;
     }
-  | { readonly kind: 'spill'; readonly sheet?: string | undefined; readonly ref: CellRef }
-  | { readonly kind: 'name'; readonly sheet?: string | undefined; readonly name: string }
+  | {
+      readonly kind: 'spill';
+      readonly book?: number | undefined;
+      readonly sheet?: string | undefined;
+      readonly ref: CellRef;
+    }
+  | {
+      readonly kind: 'name';
+      readonly book?: number | undefined;
+      readonly sheet?: string | undefined;
+      readonly name: string;
+    }
   | {
       readonly kind: 'structured';
       readonly table?: string | undefined;

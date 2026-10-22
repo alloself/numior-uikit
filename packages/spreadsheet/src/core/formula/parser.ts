@@ -8,6 +8,7 @@ import type {
   FormulaNode,
   FormulaParse,
   LineRef,
+  SheetPlace,
 } from './formula.types';
 import { tokenize, type Token } from './lexer';
 import { EN_FORMULAS } from './locale';
@@ -102,51 +103,51 @@ const createParser = (tokens: readonly Token[], locale: FormulaLocale, offset: n
       return left;
     };
 
-  const cellRange = (sheet: string | undefined, from: CellRef): FormulaNode => {
+  const cellRange = (place: SheetPlace, from: CellRef): FormulaNode => {
     next();
     const end = parseCell(next().text);
 
     return end === undefined
       ? fail(peek(-1), 'reference')
-      : { kind: 'range', sheet, from, to: end };
+      : { kind: 'range', ...place, from, to: end };
   };
 
   const lineRange = (
     kind: 'columns' | 'rows',
-    sheet: string | undefined,
+    place: SheetPlace,
     from: LineRef,
     read: (token: Token) => LineRef | undefined,
   ): FormulaNode => {
     next();
     const to = read(next());
 
-    return to === undefined ? fail(peek(-1), 'reference') : { kind, sheet, from, to };
+    return to === undefined ? fail(peek(-1), 'reference') : { kind, ...place, from, to };
   };
 
-  const cellReference = (sheet: string | undefined, ref: CellRef): FormulaNode => {
+  const cellReference = (place: SheetPlace, ref: CellRef): FormulaNode => {
     if (isOp(':')) {
-      return cellRange(sheet, ref);
+      return cellRange(place, ref);
     }
     if (peek().kind === 'hash') {
       next();
-      return { kind: 'spill', sheet, ref };
+      return { kind: 'spill', ...place, ref };
     }
-    return { kind: 'cell', sheet, ref };
+    return { kind: 'cell', ...place, ref };
   };
 
-  const reference = (sheet: string | undefined, token: Token): FormulaNode | undefined => {
+  const reference = (place: SheetPlace, token: Token): FormulaNode | undefined => {
     const cell = token.kind === 'word' ? parseCell(token.text) : undefined;
     const column = token.kind === 'word' ? columnLine(token.text) : undefined;
     const row = token.kind === 'word' ? rowLine(token.text) : lineOf(token);
 
     if (cell !== undefined) {
-      return cellReference(sheet, cell);
+      return cellReference(place, cell);
     }
     if (column !== undefined && isOp(':')) {
-      return lineRange('columns', sheet, column, (end) => columnLine(end.text));
+      return lineRange('columns', place, column, (end) => columnLine(end.text));
     }
     if (row !== undefined && isOp(':')) {
-      return lineRange('rows', sheet, row, (end) => rowLine(end.text));
+      return lineRange('rows', place, row, (end) => rowLine(end.text));
     }
     return undefined;
   };
@@ -214,15 +215,13 @@ const createParser = (tokens: readonly Token[], locale: FormulaLocale, offset: n
       next();
       return { kind: 'call', name: canonicalFunction(token.text, locale), args: argumentsOf() };
     }
-    return (
-      booleanOf(token, locale) ?? reference(undefined, token) ?? { kind: 'name', name: token.text }
-    );
+    return booleanOf(token, locale) ?? reference({}, token) ?? { kind: 'name', name: token.text };
   };
 
-  const sheetItem = (sheet: string, token: Token): FormulaNode =>
-    reference(sheet, token) ??
+  const sheetItem = (place: SheetPlace, token: Token): FormulaNode =>
+    reference(place, token) ??
     (token.kind === 'word' && !isPunct('(') && booleanOf(token, locale) === undefined
-      ? { kind: 'name', sheet, name: token.text }
+      ? { kind: 'name', ...place, name: token.text }
       : fail(token, 'reference'));
 
   const primary = (): FormulaNode => {
@@ -230,14 +229,14 @@ const createParser = (tokens: readonly Token[], locale: FormulaLocale, offset: n
 
     switch (token.kind) {
       case 'number':
-        return reference(undefined, token) ?? { kind: 'number', value: token.value };
+        return reference({}, token) ?? { kind: 'number', value: token.value };
       case 'string':
       case 'error':
         return constant(token);
       case 'word':
         return word(token);
       case 'sheet':
-        return sheetItem(token.text, next());
+        return sheetItem(placeOf(token), next());
       case 'structured':
         return parseStructured(token.text, locale) ?? fail(token, 'reference');
       case 'punct':
@@ -298,6 +297,12 @@ const createParser = (tokens: readonly Token[], locale: FormulaLocale, offset: n
       return ast;
     },
   };
+};
+
+const placeOf = (token: Token): SheetPlace => {
+  const sheet = token.text === '' ? {} : { sheet: token.text };
+
+  return token.value > 0 ? { book: token.value, ...sheet } : sheet;
 };
 
 const booleanOf = (token: Token, locale: FormulaLocale): FormulaNode | undefined => {

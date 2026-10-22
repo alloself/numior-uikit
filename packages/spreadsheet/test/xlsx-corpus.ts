@@ -140,6 +140,15 @@ export const modelOf = (
     sheets: read.book.sheets.map((sheet) => ({ name: sheet.name, cells: cellsOf(read, sheet) })),
     names,
     tables,
+    externals: read.book.externals.map((external) => ({
+      target: external.target,
+      sheets: external.sheets.map((sheet) => ({ name: sheet.name, cells: cellsOf(read, sheet) })),
+      names: external.names.map((entry) => ({
+        name: entry.name,
+        sheet: entry.sheet,
+        formula: entry.ast === undefined ? undefined : printFormula(entry.ast, EN_FORMULAS),
+      })),
+    })),
   };
 };
 

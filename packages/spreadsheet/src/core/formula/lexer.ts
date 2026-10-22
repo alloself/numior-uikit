@@ -26,6 +26,8 @@ export interface LexFailure {
 
 const LONGEST_ERROR = 12;
 
+const LONGEST_BOOK = 12;
+
 const WORD_START = /[\p{L}_$]/u;
 
 const WORD_PART = /[\p{L}\p{N}_.$]/u;
@@ -33,6 +35,8 @@ const WORD_PART = /[\p{L}\p{N}_.$]/u;
 const DIGIT = /\d/u;
 
 const SPACE = /\s/u;
+
+const BOOK = /^\[(\d+)\]/u;
 
 const OPERATORS = ['<>', '<=', '>=', '+', '-', '*', '/', '^', '&', '=', '<', '>', '%', ':'];
 
@@ -156,9 +160,36 @@ const scanQuoted = (source: string, at: number): Scan => {
   if (quote === '"') {
     return { token: token('string', text, at), next: end + 1 };
   }
-  return source[end + 1] === '!'
+
+  const book = BOOK.exec(text);
+
+  if (source[end + 1] !== '!') {
+    return { position: end + 1 };
+  }
+  return book === null
     ? { token: token('sheet', text, at), next: end + 2 }
-    : { position: end + 1 };
+    : {
+        token: token('sheet', text.slice(book[0].length), at, Number(book[1])),
+        next: end + 2,
+      };
+};
+
+const scanBook = (source: string, at: number): Scan | undefined => {
+  const book = BOOK.exec(source.slice(at, at + LONGEST_BOOK));
+  const after = book === null ? at : at + book[0].length;
+
+  if (book === null) {
+    return undefined;
+  }
+  if (source[after] === '!') {
+    return { token: token('sheet', '', at, Number(book[1])), next: after + 1 };
+  }
+
+  const end = WORD_START.test(source[after] ?? '') ? wordEnd(source, after) : after;
+
+  return end > after && source[end] === '!'
+    ? { token: token('sheet', source.slice(after, end), at, Number(book[1])), next: end + 1 }
+    : undefined;
 };
 
 const scanWord = (source: string, at: number): Scan => {
@@ -178,7 +209,7 @@ const scanSymbol = (source: string, at: number, locale: FormulaLocale): Scan => 
   const operator = OPERATORS.find((candidate) => source.startsWith(candidate, at));
 
   if (char === '[') {
-    return scanStructured(source, at, at);
+    return scanBook(source, at) ?? scanStructured(source, at, at);
   }
   if (char === '#') {
     return errorAt(source, at, locale) ?? { token: token('hash', '#', at), next: at + 1 };

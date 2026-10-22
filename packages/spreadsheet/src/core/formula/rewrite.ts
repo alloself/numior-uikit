@@ -65,7 +65,12 @@ const onChangedSheet = (
   reference: LocatedReference,
   change: LineChange,
   onSheet: boolean,
-): boolean => (reference.sheet === undefined ? onSheet : sameName(reference.sheet, change.sheet));
+): boolean => {
+  if (reference.book !== undefined) {
+    return false;
+  }
+  return reference.sheet === undefined ? onSheet : sameName(reference.sheet, change.sheet);
+};
 
 const targetDelta = (line: number, change: LineChange): number | undefined => {
   if (line < change.at) {
@@ -304,7 +309,10 @@ export type StructuredReference = Extract<FormulaReference, { readonly kind: 'st
 const ownedBy = (reference: FormulaReference, table: string): boolean =>
   reference.kind === 'structured'
     ? reference.table !== undefined && sameName(reference.table, table)
-    : reference.kind === 'name' && reference.sheet === undefined && sameName(reference.name, table);
+    : reference.kind === 'name' &&
+      reference.sheet === undefined &&
+      reference.book === undefined &&
+      sameName(reference.name, table);
 
 export const mapStructured = (
   node: FormulaNode,

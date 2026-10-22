@@ -1,17 +1,11 @@
 {
-  "kind": "read-only",
+  "kind": "editable",
   "report": {
-    "staleFormulas": 0,
+    "staleFormulas": 8,
     "items": [
       {
-        "code": "formula-syntax",
-        "severity": "read-only",
-        "count": 1,
-        "names": []
-      },
-      {
         "code": "external-links",
-        "severity": "read-only",
+        "severity": "info",
         "count": 1,
         "names": []
       }
@@ -36,11 +30,150 @@
           "value": {
             "kind": "number",
             "value": 9
-          }
+          },
+          "formula": "[1]Other!$A$1",
+          "state": "imported"
+        },
+        "B1": {
+          "value": {
+            "kind": "number",
+            "value": 2
+          },
+          "formula": "Outside*2",
+          "state": "imported"
+        },
+        "A2": {
+          "value": {
+            "kind": "number",
+            "value": 12
+          },
+          "formula": "SUM([1]Other!$A$1:$A$3)",
+          "state": "imported"
+        },
+        "A3": {
+          "value": {
+            "kind": "number",
+            "value": 20
+          },
+          "formula": "[1]!Rate*100",
+          "state": "imported"
+        },
+        "A4": {
+          "value": {
+            "kind": "number",
+            "value": 200
+          },
+          "formula": "'[1]Q1 data'!A1+'[1]Q1 data'!Base",
+          "state": "imported"
+        },
+        "A5": {
+          "value": {
+            "kind": "string",
+            "value": "pen"
+          },
+          "formula": "VLOOKUP(9,[1]Other!$A$1:$C$1,3,FALSE)",
+          "state": "imported"
+        },
+        "A6": {
+          "value": {
+            "kind": "number",
+            "value": 0
+          },
+          "formula": "[1]Other!$Z$9",
+          "state": "imported"
+        },
+        "A7": {
+          "value": {
+            "kind": "error",
+            "code": "#N/A"
+          },
+          "formula": "IF('[1]Q1 data'!B1,'[1]Q1 data'!C1)",
+          "state": "imported"
         }
       }
     }
   ],
-  "names": [],
-  "tables": []
+  "names": [
+    {
+      "name": "Outside",
+      "formula": "[1]Other!$A$2"
+    }
+  ],
+  "tables": [],
+  "externals": [
+    {
+      "target": "other.xlsx",
+      "sheets": [
+        {
+          "name": "Other",
+          "cells": {
+            "A1": {
+              "value": {
+                "kind": "number",
+                "value": 9
+              }
+            },
+            "B1": {
+              "value": {
+                "kind": "number",
+                "value": 0.2
+              }
+            },
+            "C1": {
+              "value": {
+                "kind": "string",
+                "value": "pen"
+              }
+            },
+            "A2": {
+              "value": {
+                "kind": "number",
+                "value": 1
+              }
+            },
+            "A3": {
+              "value": {
+                "kind": "number",
+                "value": 2
+              }
+            }
+          }
+        },
+        {
+          "name": "Q1 data",
+          "cells": {
+            "A1": {
+              "value": {
+                "kind": "number",
+                "value": 100
+              }
+            },
+            "B1": {
+              "value": {
+                "kind": "boolean",
+                "value": true
+              }
+            },
+            "C1": {
+              "value": {
+                "kind": "error",
+                "code": "#N/A"
+              }
+            }
+          }
+        }
+      ],
+      "names": [
+        {
+          "name": "Rate",
+          "formula": "[1]Other!$B$1"
+        },
+        {
+          "name": "Base",
+          "sheet": "Q1 data",
+          "formula": "'[1]Q1 data'!$A$1"
+        }
+      ]
+    }
+  ]
 }

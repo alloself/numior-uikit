@@ -95,7 +95,7 @@ const emptyCounts = (): SheetCounts => ({
 
 const upperLetter = (code: number): boolean => code >= 65 && code <= 90;
 
-const cellOf = (reference: string): { row: number; col: number } | undefined => {
+export const cellOf = (reference: string): { row: number; col: number } | undefined => {
   let col = 0;
   let index = 0;
 
@@ -111,7 +111,10 @@ const cellOf = (reference: string): { row: number; col: number } | undefined => 
     : { row: row - 1, col: col - 1 };
 };
 
-const valueOf = (cell: Cell, strings: readonly string[]): CellValue => {
+export const valueOf = (
+  cell: Pick<Cell, 'type' | 'value' | 'inline'>,
+  strings: readonly string[],
+): CellValue => {
   switch (cell.type) {
     case 's':
       return textValue(strings[numberOf(cell.value, -1)] ?? '');

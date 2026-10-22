@@ -14,6 +14,7 @@ export const onSheetNamed = (
   name: string,
 ): reference is SheetReference =>
   reference.kind !== 'structured' &&
+  reference.book === undefined &&
   reference.sheet !== undefined &&
   reference.sheet.toLowerCase() === name.toLowerCase();
 

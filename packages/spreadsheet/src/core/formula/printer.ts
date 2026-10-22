@@ -1,6 +1,12 @@
 import { columnName, formatCell } from '../address';
 import type { CellAddress, CellRef } from '../cell.types';
-import type { BinaryOperator, FormulaLocale, FormulaNode, LineRef } from './formula.types';
+import type {
+  BinaryOperator,
+  FormulaLocale,
+  FormulaNode,
+  LineRef,
+  SheetPlace,
+} from './formula.types';
 import { EN_FORMULAS } from './locale';
 import { ORIGIN, absoluteFormula } from './origin';
 import { localFunction } from './localization';
@@ -44,13 +50,16 @@ const precedenceOf = (node: FormulaNode): number => {
   }
 };
 
-const sheetPrefix = (sheet: string | undefined): string => {
+const plainSheet = (sheet: string): boolean =>
+  PLAIN_SHEET.test(sheet) && !LOOKS_LIKE_REFERENCE.test(sheet);
+
+const sheetPrefix = ({ book, sheet }: SheetPlace): string => {
+  const prefix = book === undefined ? '' : `[${String(book)}]`;
+
   if (sheet === undefined) {
-    return '';
+    return prefix === '' ? '' : `${prefix}!`;
   }
-  return PLAIN_SHEET.test(sheet) && !LOOKS_LIKE_REFERENCE.test(sheet)
-    ? `${sheet}!`
-    : `'${sheet.replaceAll("'", "''")}'!`;
+  return plainSheet(sheet) ? `${prefix}${sheet}!` : `'${(prefix + sheet).replaceAll("'", "''")}'!`;
 };
 
 const numberText = (value: number, locale: FormulaLocale): string =>
@@ -89,17 +98,17 @@ const constantText = (node: FormulaNode, locale: FormulaLocale): string | undefi
 const referenceText = (node: FormulaNode): string | undefined => {
   switch (node.kind) {
     case 'cell':
-      return `${sheetPrefix(node.sheet)}${cellText(node.ref)}`;
+      return `${sheetPrefix(node)}${cellText(node.ref)}`;
     case 'range':
-      return `${sheetPrefix(node.sheet)}${cellText(node.from)}:${cellText(node.to)}`;
+      return `${sheetPrefix(node)}${cellText(node.from)}:${cellText(node.to)}`;
     case 'columns':
-      return `${sheetPrefix(node.sheet)}${columnText(node.from)}:${columnText(node.to)}`;
+      return `${sheetPrefix(node)}${columnText(node.from)}:${columnText(node.to)}`;
     case 'rows':
-      return `${sheetPrefix(node.sheet)}${rowText(node.from)}:${rowText(node.to)}`;
+      return `${sheetPrefix(node)}${rowText(node.from)}:${rowText(node.to)}`;
     case 'spill':
-      return `${sheetPrefix(node.sheet)}${cellText(node.ref)}#`;
+      return `${sheetPrefix(node)}${cellText(node.ref)}#`;
     case 'name':
-      return `${sheetPrefix(node.sheet)}${node.name}`;
+      return `${sheetPrefix(node)}${node.name}`;
     default:
       return undefined;
   }
