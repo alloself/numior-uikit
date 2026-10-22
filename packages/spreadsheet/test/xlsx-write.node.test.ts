@@ -494,8 +494,15 @@ describe('writing xlsx', () => {
     );
   });
 
-  it('refuses to move rows under positioned parts unless losses are allowed', async () => {
-    const read = await opened(await xlsxPackage());
+  it('refuses to move rows under elements it does not model unless losses are allowed', async () => {
+    const scenarios =
+      '<scenarios><scenario name="Low" count="1"><inputCell r="B2" val="1"/></scenario></scenarios><mergeCells';
+
+    const read = await opened(
+      await xlsxPackage({
+        'xl/worksheets/sheet1.xml': SALES_SHEET.replace('<mergeCells', scenarios),
+      }),
+    );
 
     const moved = createStepper(read.book, read.calculator).apply({
       kind: 'insertLines',
@@ -520,7 +527,57 @@ describe('writing xlsx', () => {
     const bytes = lossy.ok ? lossy.bytes : new Uint8Array();
 
     expect(lossy.ok).toBe(true);
-    expect(await partOf(bytes, 'xl/worksheets/sheet1.xml')).not.toContain('hyperlink');
+    expect(await partOf(bytes, 'xl/worksheets/sheet1.xml')).not.toContain('scenario');
+  });
+
+  it('moves the sheet view, validations, links, breaks and filters with lines and sheet names', async () => {
+    const validations = `<dataValidations count="2"><dataValidation type="list" sqref="B2:B4"><formula1>$A$2:$A$4</formula1></dataValidation><dataValidation type="whole" sqref="H9"><formula1>B2</formula1></dataValidation></dataValidations>`;
+    const links = `<hyperlinks><hyperlink ref="A2" r:id="rId2"/><hyperlink ref="A4" location="Rates!B1" display="Rate"/></hyperlinks>`;
+    const breaks = `<rowBreaks count="2" manualBreakCount="2"><brk id="3" max="16383" man="1"/><brk id="9" max="16383" man="1"/></rowBreaks>`;
+    const filter = `<autoFilter ref="F1:H4"><filterColumn colId="2"><filters><filter val="6"/></filters></filterColumn></autoFilter>`;
+    const extension = `<extLst><ext uri="{CCE6A557-97BC-4b89-ADB6-D9C93CAAB3DF}" xmlns:x14="http://schemas.microsoft.com/office/spreadsheetml/2009/9/main"><x14:dataValidations count="1" xmlns:xm="http://schemas.microsoft.com/office/excel/2006/main"><x14:dataValidation type="list"><x14:formula1><xm:f>Rates!$A$1:$A$3</xm:f></x14:formula1><xm:sqref>C2:C4</xm:sqref></x14:dataValidation></x14:dataValidations></ext></extLst>`;
+
+    const sheet = SALES_SHEET.replace(
+      'state="frozen"/>',
+      'state="frozen"/><selection pane="bottomLeft" activeCell="B3" sqref="B3:C4"/>',
+    )
+      .replace('<mergeCells', `${filter}<mergeCells`)
+      .replace('<hyperlinks><hyperlink ref="A2" r:id="rId2"/></hyperlinks>', validations + links)
+      .replace('<tableParts', `${breaks}<tableParts`)
+      .replace('</worksheet>', `${extension}</worksheet>`);
+
+    const read = await opened(await xlsxPackage({ 'xl/worksheets/sheet1.xml': sheet }));
+    const stepper = createStepper(read.book, read.calculator);
+    const original = sheetOf(read, 'Sales').layout.xml;
+
+    const results = [
+      stepper.apply({ kind: 'insertLines', sheet: 'Sales', axis: 'rows', at: 2, count: 2 }),
+      stepper.apply({ kind: 'deleteLines', sheet: 'Sales', axis: 'cols', at: 5, count: 1 }),
+      stepper.apply({ kind: 'insertLines', sheet: 'Rates', axis: 'rows', at: 0, count: 1 }),
+      stepper.apply({ kind: 'renameSheet', from: 'Rates', to: 'Prices' }),
+    ];
+
+    expect(results.every((result) => result.ok)).toBe(true);
+
+    const text = await partOf(await written(read, read.source), 'xl/worksheets/sheet1.xml');
+
+    [
+      '<pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"></pane><selection pane="bottomLeft" activeCell="B5" sqref="B5:C6"></selection>',
+      '<autoFilter ref="F1:G6"><filterColumn colId="1">',
+      '<dataValidation type="list" sqref="B2:B6"><formula1>$A$2:$A$6</formula1>',
+      '<dataValidation type="whole" sqref="G11"><formula1>B2</formula1>',
+      '<hyperlink ref="A6" location="Prices!B2" display="Rate">',
+      '<brk id="5" max="16383" man="1"></brk><brk id="11" max="16383" man="1"></brk>',
+      '<xm:f>Prices!$A$2:$A$4</xm:f></x14:formula1><xm:sqref>C2:C6</xm:sqref>',
+    ].forEach((piece) => {
+      expect(text).toContain(piece);
+    });
+
+    results.toReversed().forEach((result) => {
+      expect(result.ok && stepper.apply(result.inverse).ok).toBe(true);
+    });
+
+    expect(sheetOf(read, 'Sales').layout.xml).toBe(original);
   });
 
   it('gives back the original bytes of a read-only book', async () => {

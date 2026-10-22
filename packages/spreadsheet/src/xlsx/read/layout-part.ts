@@ -150,6 +150,11 @@ export const createLayoutCollector = (styles: LayoutStyles): LayoutCollector => 
         merges.push(range);
       }
     },
-    layout: () => ({ rows: lineLayoutsOf(rows), cols: lineLayoutsOf(cols), merges }),
+    layout: () => ({
+      rows: lineLayoutsOf(rows),
+      cols: lineLayoutsOf(cols),
+      merges,
+      xml: undefined,
+    }),
   };
 };

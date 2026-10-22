@@ -19,6 +19,7 @@ import type { DifferentialStyle } from '../../core/conditional/conditional.types
 import type { XmlAttribute } from '../xml/xml.types';
 import { X14, createConditionalCollector, createExtensionCollector } from './conditional-part';
 import { decodeXstring } from '../xml/xstring';
+import { createFragmentRecorder } from './fragment-part';
 import { createLayoutCollector } from './layout-part';
 import type { ZipArchive } from '../zip/zip.types';
 import { MAIN, attributeOf, numberOf, readPart, type PartOptions } from './ooxml';
@@ -193,6 +194,9 @@ export const readSheetPart = async (
   const conditional = createConditionalCollector(context.differentials);
   const extensions = createExtensionCollector();
   const layout = createLayoutCollector(context);
+  const recorder = createFragmentRecorder();
+  let depth = 0;
+  let inData = false;
 
   const astOf = (current: Cell): FormulaNode | undefined => {
     const formula = current.formula;
@@ -353,6 +357,12 @@ export const readSheetPart = async (
     part,
     {
       open: (element, attributes) => {
+        if (depth === 1 && element.local === 'sheetData') {
+          inData = true;
+        } else if (depth >= 1 && !inData) {
+          recorder.open(element, attributes);
+        }
+        depth += 1;
         if (
           conditional.inside() ||
           (element.local === 'conditionalFormatting' && MAIN.has(element.uri))
@@ -368,6 +378,9 @@ export const readSheetPart = async (
         }
       },
       text: (text) => {
+        if (depth >= 2 && !inData) {
+          recorder.text(text);
+        }
         if (conditional.inside()) {
           conditional.text(text);
           return;
@@ -396,6 +409,13 @@ export const readSheetPart = async (
         }
       },
       close: (element) => {
+        depth -= 1;
+        if (inData && depth === 1) {
+          inData = false;
+          recorder.tail();
+        } else if (depth >= 1 && !inData) {
+          recorder.close(element);
+        }
         if (conditional.inside()) {
           conditional.close(element);
           return;
@@ -428,7 +448,7 @@ export const readSheetPart = async (
   );
 
   sheet.conditional = [...conditional.formats(), ...extensions.formats()];
-  sheet.layout = layout.layout();
+  sheet.layout = { ...layout.layout(), xml: recorder.result() };
   counts.conditional = conditional.foreign();
   return counts;
 };

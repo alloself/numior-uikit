@@ -56,6 +56,12 @@ export const elementSlice = (text: string, local: string): string | undefined =>
 const withoutElement = (text: string, local: string): string =>
   text.replace(elementPattern(local), '');
 
+export const cleanHead = (text: string): string =>
+  withoutElement(withoutElement(text, 'dimension'), 'cols');
+
+export const cleanTail = (text: string): string =>
+  withoutElement(withoutElement(text, 'tableParts'), 'mergeCells');
+
 export const partText = async (archive: ZipArchive, part: string): Promise<string> =>
   decoder.decode(await archive.bytes(part));
 
@@ -180,8 +186,8 @@ export const readSheetExtras = async (
     : {
         root: head.root,
         prefix: head.prefix,
-        before: withoutElement(withoutElement(head.before, 'dimension'), 'cols'),
-        after: withoutElement(withoutElement(after, 'tableParts'), 'mergeCells'),
+        before: cleanHead(head.before),
+        after: cleanTail(after),
       };
 };
 

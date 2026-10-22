@@ -1,7 +1,7 @@
 import type { CellAddress, CellRange } from '../cell.types';
 import type { FormulaNode } from '../formula/formula.types';
 import { shiftFormula, type LineChange } from '../formula/rewrite';
-import { shiftRanges } from '../layout/shift-ranges';
+import { shiftRanges, survivorOf } from '../layout/shift-ranges';
 import type {
   ConditionalEntry,
   ConditionalFormat,
@@ -55,18 +55,6 @@ const anchorOf = (ranges: readonly CellRange[]): CellAddress => ({
   row: ranges[0]?.top ?? 0,
   col: ranges[0]?.left ?? 0,
 });
-
-const previousLine = (line: number, change: LineChange): number => {
-  if (change.count > 0) {
-    return line >= change.at + change.count ? line - change.count : line;
-  }
-  return line >= change.at ? line - change.count : line;
-};
-
-const survivorOf = (anchor: CellAddress, change: LineChange): CellAddress =>
-  change.axis === 'rows'
-    ? { row: previousLine(anchor.row, change), col: anchor.col }
-    : { row: anchor.row, col: previousLine(anchor.col, change) };
 
 const shiftedFormat = (
   format: ConditionalFormat,

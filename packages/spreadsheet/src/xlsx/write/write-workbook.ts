@@ -1,5 +1,6 @@
 import type { Calculator } from '../../core/calc/calculator';
 import { nextTask } from '../../core/calc/tasks';
+import type { SheetXml } from '../../core/layout/fragments.types';
 import type { ExternalBook, Sheet, SheetTable, Workbook } from '../../core/workbook';
 import { readRelationships, relationshipsOf, type Relationship } from '../read/ooxml';
 import type { OriginalPackage, OriginalSheet } from '../read/read.types';
@@ -22,7 +23,10 @@ import {
 } from './book-parts';
 import { withoutConditional, withoutExtensions } from './conditional-part';
 import { createStringTable, writeSheetPart, type StringTable } from './sheet-part';
+import { fragmentXml } from './fragment-xml';
 import {
+  cleanHead,
+  cleanTail,
   elementSlice,
   partText,
   reachableParts,
@@ -78,20 +82,6 @@ interface Writing {
 
 const REGENERATED = new Set(['worksheet', 'styles', 'sharedStrings', 'calcChain', 'sheetMetadata']);
 
-const KEEPS_POSITION = new Set([
-  'pageMargins',
-  'pageSetup',
-  'printOptions',
-  'headerFooter',
-  'extLst',
-  'sheetPr',
-  'sheetFormatPr',
-  'tabColor',
-  'pageSetUpPr',
-  'outlinePr',
-  'ext',
-]);
-
 const FIRST_TABLE_ID = 1000;
 
 const officeType = (kind: string): string => `${OFFICE}/${kind}`;
@@ -132,9 +122,6 @@ const freshName = (taken: Set<string>, pattern: (index: number) => string): stri
 
 const freshId = (taken: Set<string>): string => freshName(taken, (index) => `rId${String(index)}`);
 
-const elementNames = (text: string): string[] =>
-  [...text.matchAll(/<(?:[\w.-]+:)?([\w.-]+)(?=[\s/>])/gu)].map((match) => match[1] ?? '');
-
 const lossOf = (
   sheet: Sheet,
   original: OriginalSheet | undefined,
@@ -147,7 +134,7 @@ const lossOf = (
 
   const text = withoutExtensions(withoutConditional(extras.before + extras.after));
 
-  if (sheet.shifts > 0 && elementNames(text).some((name) => !KEEPS_POSITION.has(name))) {
+  if (sheet.shifts > 0 && (sheet.layout.xml?.opaque.length ?? 0) > 0) {
     return { sheet: sheet.name, reason: 'moved-lines' };
   }
   return original.name !== sheet.name && (text.includes(`${original.name}!`) || charts)
@@ -189,10 +176,12 @@ const planSheet = async (
   const part =
     known?.part ?? freshName(context.taken, (index) => `xl/worksheets/sheet${String(index)}.xml`);
 
-  const extras =
+  const raw =
     known === undefined || original === undefined
       ? undefined
       : await readSheetExtras(original.archive, part);
+
+  const extras = currentExtras(raw, known, sheet.layout.xml);
 
   const loss = lossOf(sheet, known, extras, context.charts);
 
@@ -213,6 +202,19 @@ const planSheet = async (
     },
   };
 };
+
+const currentExtras = (
+  raw: SheetExtras | undefined,
+  known: OriginalSheet | undefined,
+  xml: SheetXml | undefined,
+): SheetExtras | undefined =>
+  raw === undefined || xml === undefined || known?.xml === xml
+    ? raw
+    : {
+        ...raw,
+        before: cleanHead(fragmentXml(xml.head)),
+        after: cleanTail(fragmentXml(xml.tail)),
+      };
 
 const toPlanned = (relationship: Relationship, from: string): PlannedRelationship => ({
   id: relationship.id,

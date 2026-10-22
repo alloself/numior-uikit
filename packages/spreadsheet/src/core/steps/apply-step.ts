@@ -6,7 +6,7 @@ import type { ConditionalFormat } from '../conditional/conditional.types';
 import type { FormulaNode } from '../formula/formula.types';
 import { formulaReferences, onSheetNamed } from '../formula/references';
 import type { SheetLayout } from '../layout/layout.types';
-import { shiftLayout } from '../layout/line-layouts';
+import { mapLayoutFormulas, shiftLayout } from '../layout/line-layouts';
 import { dropSheetFromFormula, renameInFormula, type LineChange } from '../formula/rewrite';
 import { validDefinedName, validSheetName, type Sheet, type Workbook } from '../workbook';
 import { createRewriter, formulaEdits, nameEdits } from './rewrites';
@@ -249,7 +249,11 @@ export const createStepper = (book: Workbook, calculator: Calculator): Stepper =
     const names = calculator.shiftNames(change);
 
     moveConditional(sheet, change);
-    sheet.layout = shiftLayout(sheet.layout, change);
+
+    book.sheets.forEach((each) => {
+      each.layout = shiftLayout(each.layout, change, each === sheet);
+    });
+
     sheet.formats.shiftLines(change.axis, change.at, change.count);
     sheet.decorations.shiftLines(change.axis, change.at, change.count);
     sheet.shifts += 1;
@@ -352,6 +356,8 @@ export const createStepper = (book: Workbook, calculator: Calculator): Stepper =
       each.conditional = mapConditionalFormulas(each.conditional, (ast) =>
         dropSheetFromFormula(ast, sheet.name),
       );
+
+      each.layout = mapLayoutFormulas(each.layout, (ast) => dropSheetFromFormula(ast, sheet.name));
     });
 
     return done({
@@ -384,6 +390,8 @@ export const createStepper = (book: Workbook, calculator: Calculator): Stepper =
       each.conditional = mapConditionalFormulas(each.conditional, (ast) =>
         renameInFormula(ast, from, to),
       );
+
+      each.layout = mapLayoutFormulas(each.layout, (ast) => renameInFormula(ast, from, to));
     });
 
     return done({ kind: 'renameSheet', from: to, to: from });

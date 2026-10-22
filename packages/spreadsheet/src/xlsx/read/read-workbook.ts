@@ -461,6 +461,7 @@ const readBook = async (
         sheetId: sheetParts[index]?.entry.sheetId ?? index + 1,
         hidden: sheetParts[index]?.entry.hidden ?? false,
         conditional: sheet.conditional,
+        xml: sheet.layout.xml,
       })),
       differentials: styles.differentials,
       parts: archive.names.map((name) => ({

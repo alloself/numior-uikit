@@ -2,6 +2,8 @@ import { limitOf, type LineMove } from '../lines';
 import type { LineChange } from '../formula/rewrite';
 import type { LineLayout, LineLayouts, SheetLayout } from './layout.types';
 import { shiftMerges } from './shift-ranges';
+import { mapSheetXmlFormulas, shiftSheetXml } from './fragments';
+import type { FormulaNode } from '../formula/formula.types';
 
 const lowerBound = (lines: Int32Array, value: number): number => {
   let low = 0;
@@ -81,7 +83,12 @@ const createLineLayouts = (lines: Int32Array, layouts: readonly LineLayout[]): L
 
 const EMPTY_LINES = createLineLayouts(new Int32Array(0), []);
 
-export const EMPTY_LAYOUT: SheetLayout = { rows: EMPTY_LINES, cols: EMPTY_LINES, merges: [] };
+export const EMPTY_LAYOUT: SheetLayout = {
+  rows: EMPTY_LINES,
+  cols: EMPTY_LINES,
+  merges: [],
+  xml: undefined,
+};
 
 export const lineLayoutsOf = (
   entries: readonly (readonly [line: number, layout: LineLayout])[],
@@ -96,8 +103,25 @@ export const lineLayoutsOf = (
       );
 };
 
-export const shiftLayout = (layout: SheetLayout, change: LineChange): SheetLayout => ({
-  rows: change.axis === 'rows' ? layout.rows.shifted(change) : layout.rows,
-  cols: change.axis === 'cols' ? layout.cols.shifted(change) : layout.cols,
-  merges: shiftMerges(layout.merges, change),
-});
+export const shiftLayout = (layout: SheetLayout, change: LineChange, own: boolean): SheetLayout => {
+  const xml = layout.xml === undefined ? undefined : shiftSheetXml(layout.xml, change, own);
+
+  if (!own) {
+    return xml === layout.xml ? layout : { ...layout, xml };
+  }
+  return {
+    rows: change.axis === 'rows' ? layout.rows.shifted(change) : layout.rows,
+    cols: change.axis === 'cols' ? layout.cols.shifted(change) : layout.cols,
+    merges: shiftMerges(layout.merges, change),
+    xml,
+  };
+};
+
+export const mapLayoutFormulas = (
+  layout: SheetLayout,
+  map: (ast: FormulaNode) => FormulaNode,
+): SheetLayout => {
+  const xml = layout.xml === undefined ? undefined : mapSheetXmlFormulas(layout.xml, map);
+
+  return xml === layout.xml ? layout : { ...layout, xml };
+};

@@ -1,4 +1,4 @@
-import type { CellRange } from '../cell.types';
+import type { CellAddress, CellRange } from '../cell.types';
 import { shiftSpan, type LineChange } from '../formula/rewrite';
 
 const shiftRange = (range: CellRange, change: LineChange): CellRange | undefined => {
@@ -35,3 +35,15 @@ export const shiftMerges = (merges: readonly CellRange[], change: LineChange): C
     }
     return kept;
   }, []);
+
+const previousLine = (line: number, change: LineChange): number => {
+  if (change.count > 0) {
+    return line >= change.at + change.count ? line - change.count : line;
+  }
+  return line >= change.at ? line - change.count : line;
+};
+
+export const survivorOf = (anchor: CellAddress, change: LineChange): CellAddress =>
+  change.axis === 'rows'
+    ? { row: previousLine(anchor.row, change), col: anchor.col }
+    : { row: anchor.row, col: previousLine(anchor.col, change) };
