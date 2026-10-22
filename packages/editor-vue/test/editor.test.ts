@@ -46,7 +46,26 @@ describe('NuiEditor', () => {
       expect.objectContaining({ type: 'paragraph', content: [{ text: 'Hi' }] }),
     ]);
 
-    expect(editor.changes).toBe(2);
+    expect(editor.changes).toBe(1);
+  });
+
+  it('publishes the document once per frame after the paint and right away on blur', async () => {
+    const editor = mounted();
+
+    editor.focus();
+    await editor.type('Hi');
+
+    expect(editor.emittedSoFar('change')).toBe(0);
+
+    await editor.nextPaint();
+
+    expect(editor.emittedSoFar('change')).toBe(1);
+
+    await editor.type('!');
+    await editor.blur();
+
+    expect(editor.emittedSoFar('change')).toBe(2);
+    expect(editor.emittedSoFar('update:modelValue')).toBe(2);
   });
 
   it('keeps its history over its own echoes and starts over on a new document', async () => {

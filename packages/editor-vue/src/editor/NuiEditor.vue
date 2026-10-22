@@ -233,6 +233,7 @@ import { handlePlacement } from '../blocks/handle-placement';
 import { createNodeViewHost } from '../blocks/node-view-host';
 import { createNodeViews } from '../blocks/node-views';
 import NuiEditorNodeViews from '../blocks/NuiEditorNodeViews.vue';
+import { afterPaint } from './after-paint';
 import NuiEditorBubble from '../bubble/NuiEditorBubble.vue';
 import NuiEditorLinkPanel from '../link/NuiEditorLinkPanel.vue';
 import NuiEditorToolbar from '../toolbar/NuiEditorToolbar.vue';
@@ -320,7 +321,7 @@ const {
   }),
   {
     commit: () => {
-      sync.flush();
+      settleValue();
     },
   },
 );
@@ -627,15 +628,37 @@ const onPaste = (event: ClipboardEvent): void => {
   }
 };
 
-const publish = (state: EditorState): void => {
-  const json = toJSON(state.doc);
+let publishing = false;
 
-  empty.value = isEmptyDoc(state.doc);
+const publishNow = (): void => {
+  if (!publishing) {
+    return;
+  }
+  publishing = false;
+
+  const json = toJSON(current.value.doc);
+
   sync.changed(json);
   emit('change', json);
 };
 
+const publish = (state: EditorState): void => {
+  empty.value = isEmptyDoc(state.doc);
+  sync.paused();
+
+  if (!publishing) {
+    publishing = true;
+    void afterPaint().then(publishNow);
+  }
+};
+
+const settleValue = (): void => {
+  publishNow();
+  sync.flush();
+};
+
 const replace = (doc: Doc): void => {
+  publishing = false;
   empty.value = isEmptyDoc(doc);
   current.value = createState({ doc, plugins });
   view?.update(current.value);
@@ -652,7 +675,7 @@ const onFocus = (event: FocusEvent): void => {
 };
 
 const onBlur = (event: FocusEvent): void => {
-  sync.flush();
+  settleValue();
   emit('blur', event);
 };
 
@@ -697,6 +720,9 @@ const editor: NuiEditorApi = {
   state: () => view?.state,
   run,
   focus: () => view?.focus(),
+  flush: () => {
+    settleValue();
+  },
 };
 
 const toolbarShown = computed(
@@ -827,6 +853,7 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
+  settleValue();
   code.stop();
   links.stop();
   nodeViews.stop();

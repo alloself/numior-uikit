@@ -8,6 +8,7 @@ import {
   type DocJSON,
 } from '@numior/editor-core';
 import type { DraftCommits } from '@numior/primitives';
+import { promiseTimeout } from '@vueuse/core';
 import { createSSRApp, nextTick } from 'vue';
 import { renderToString as renderAppToString } from 'vue/server-renderer';
 import {
@@ -27,7 +28,11 @@ const isDocument = (value: unknown): value is DocJSON =>
   typeof value === 'object' && value !== null && 'format' in value && 'root' in value;
 
 const isApi = (value: unknown): value is NuiEditorApi =>
-  typeof value === 'object' && value !== null && 'run' in value && 'state' in value;
+  typeof value === 'object' &&
+  value !== null &&
+  'run' in value &&
+  'state' in value &&
+  'flush' in value;
 
 const labelOf = (item: Element): string =>
   (item.textContent ?? '')
@@ -196,17 +201,35 @@ export class EditorDriver {
   }
 
   get documents(): readonly DocJSON[] {
+    this.api.flush();
+
     return (this.wrapper.emitted('update:modelValue') ?? []).flatMap(([value]: unknown[]) =>
       isDocument(value) ? [value] : [],
     );
   }
 
   get changes(): number {
+    this.api.flush();
+
     return this.wrapper.emitted('change')?.length ?? 0;
   }
 
   emitted(name: string): number {
+    this.api.flush();
+
     return this.wrapper.emitted(name)?.length ?? 0;
+  }
+
+  emittedSoFar(name: string): number {
+    return this.wrapper.emitted(name)?.length ?? 0;
+  }
+
+  async nextPaint(): Promise<void> {
+    await new Promise((resolve) => {
+      requestAnimationFrame(resolve);
+    });
+
+    await promiseTimeout(0);
   }
 
   textOf(id: string): string {

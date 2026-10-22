@@ -76,12 +76,15 @@ const docs: DocsMap = {
     },
     models: {
       'v-model': {
-        ru: 'Документ в формате из `format`: строка HTML (по умолчанию) или JSON формата 1. Тип значения выводится из привязки. HTML обновляется через 300 мс после правки, сразу при уходе фокуса и при отправке формы, JSON — на каждую правку; значение, заданное снаружи, читается схемой и начинает историю заново.',
-        en: 'The document in the `format` encoding: an HTML string (the default) or format 1 JSON. The value type follows the binding. HTML updates 300 ms after an edit, right away on blur and when a form submits, JSON on every edit; a value set from outside is read through the schema and restarts the history.',
+        ru: 'Документ в формате из `format`: строка HTML (по умолчанию) или JSON формата 1. Тип значения выводится из привязки. HTML обновляется через 300 мс после правки, JSON — после ближайшего кадра (правки одного кадра дают одно значение); оба — сразу при уходе фокуса, при отправке формы и по `editor.flush()`; значение, заданное снаружи, читается схемой и начинает историю заново.',
+        en: 'The document in the `format` encoding: an HTML string (the default) or format 1 JSON. The value type follows the binding. HTML updates 300 ms after an edit, JSON after the next frame (edits of one frame give one value); both right away on blur, when a form submits and on `editor.flush()`; a value set from outside is read through the schema and restarts the history.',
       },
     },
     events: {
-      change: { ru: 'Документ изменился.', en: 'The document changed.' },
+      change: {
+        ru: 'Документ изменился; приходит вместе с JSON после ближайшего кадра, одно событие на кадр.',
+        en: 'The document changed; comes with the JSON after the next frame, one event per frame.',
+      },
       focus: { ru: 'Редактор получил фокус.', en: 'The editor received focus.' },
       blur: { ru: 'Редактор потерял фокус.', en: 'The editor lost focus.' },
       paste: {

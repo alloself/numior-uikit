@@ -37,22 +37,18 @@ const visitRange = (
   visit: NodeVisitor,
 ): void => {
   const offsets = childOffsets(node);
-  const startOf = (index: number): number => start + (offsets[index] ?? 0);
+  const { content } = node;
+  let index = childIndexAt(node, Math.max(0, from - start));
+  let childStart = start + (offsets[index] ?? 0);
 
-  for (
-    let index = childIndexAt(node, Math.max(0, from - start));
-    index < node.content.length && startOf(index) < to;
-    index += 1
-  ) {
-    const child = node.content[index];
+  while (index < content.length && childStart < to) {
+    const child = content[index];
 
-    if (
-      child !== undefined &&
-      visit(child, startOf(index), node, index) &&
-      child.kind === 'element'
-    ) {
-      visitRange(child, startOf(index) + 1, from, to, visit);
+    if (child !== undefined && visit(child, childStart, node, index) && child.kind === 'element') {
+      visitRange(child, childStart + 1, from, to, visit);
     }
+    index += 1;
+    childStart = start + (offsets[index] ?? 0);
   }
 };
 
@@ -80,19 +76,19 @@ const cutChild = (
 
 const cutContent = (node: ElementNode, start: number, from: number, to: number): ContentNode[] => {
   const offsets = childOffsets(node);
-  const startOf = (index: number): number => start + (offsets[index] ?? 0);
+  const { content } = node;
   const cut: ContentNode[] = [];
+  let index = childIndexAt(node, Math.max(0, from - start));
+  let childStart = start + (offsets[index] ?? 0);
 
-  for (
-    let index = childIndexAt(node, Math.max(0, from - start));
-    index < node.content.length && startOf(index) < to;
-    index += 1
-  ) {
-    const child = node.content[index];
+  while (index < content.length && childStart < to) {
+    const child = content[index];
 
     if (child !== undefined) {
-      cut.push(...cutChild(child, startOf(index), from, to));
+      cut.push(...cutChild(child, childStart, from, to));
     }
+    index += 1;
+    childStart = start + (offsets[index] ?? 0);
   }
   return cut;
 };

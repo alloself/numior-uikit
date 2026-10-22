@@ -36,6 +36,7 @@ export interface NuiEditorApi {
   state(): EditorState | undefined;
   run(command: Command): boolean;
   focus(): void;
+  flush(): void;
 }
 
 export interface NuiEditorPaste {

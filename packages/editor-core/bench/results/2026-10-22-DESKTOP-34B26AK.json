@@ -1,0 +1,128 @@
+{
+  "recordedAt": "2026-10-22T01:47:43.136Z",
+  "dataset": "10000 generated mixed blocks (fixture schema, seed 1), 1347501 positions",
+  "device": {
+    "host": "DESKTOP-34B26AK",
+    "cpu": "13th Gen Intel(R) Core(TM) i9-13900KF",
+    "cores": 32,
+    "memoryGb": 31,
+    "platform": "linux 6.18.54.1-microsoft-standard-WSL2",
+    "node": "v24.21.0"
+  },
+  "browser": null,
+  "heapUsedMb": 1031,
+  "operations": [
+    {
+      "name": "generate a 10,000 block document",
+      "samples": 5,
+      "meanMs": 66.23771640000001,
+      "p50Ms": 66.41546200000005,
+      "p95Ms": 82.17175100000003,
+      "maxMs": 82.17175100000003
+    },
+    {
+      "name": "check a 10,000 block document against the schema",
+      "samples": 5,
+      "meanMs": 17.00082299999997,
+      "p50Ms": 13.948329999999942,
+      "p95Ms": 24.84094499999992,
+      "maxMs": 24.84094499999992
+    },
+    {
+      "name": "resolve 1,000 random positions",
+      "samples": 20,
+      "meanMs": 1.3697967500000003,
+      "p50Ms": 1.1168810000000349,
+      "p95Ms": 2.0640409999999747,
+      "maxMs": 3.316032000000064
+    },
+    {
+      "name": "find 1,000 blocks by id in a fresh document",
+      "samples": 20,
+      "meanMs": 8.78053635,
+      "p50Ms": 8.400759999999991,
+      "p95Ms": 10.474321999999916,
+      "maxMs": 12.410225999999966
+    },
+    {
+      "name": "type one character in the middle of the document",
+      "samples": 20,
+      "meanMs": 0.014825749999999971,
+      "p50Ms": 0.014112000000068292,
+      "p95Ms": 0.01817500000004202,
+      "maxMs": 0.02093600000000606
+    },
+    {
+      "name": "type 1,000 characters one step at a time",
+      "samples": 5,
+      "meanMs": 95.95853959999995,
+      "p50Ms": 96.35655999999994,
+      "p95Ms": 104.75598500000001,
+      "maxMs": 104.75598500000001
+    },
+    {
+      "name": "split and join a paragraph in the middle",
+      "samples": 20,
+      "meanMs": 2.4687416500000268,
+      "p50Ms": 2.0268029999999726,
+      "p95Ms": 4.007654000000002,
+      "maxMs": 6.541294000000107
+    },
+    {
+      "name": "bold and unbold a range of 1,000 blocks",
+      "samples": 5,
+      "meanMs": 12.202307199999996,
+      "p50Ms": 12.866700000000037,
+      "p95Ms": 14.789230999999972,
+      "maxMs": 14.789230999999972
+    },
+    {
+      "name": "cut 1,000 blocks and paste them back",
+      "samples": 5,
+      "meanMs": 12.072660400000085,
+      "p50Ms": 11.99605200000019,
+      "p95Ms": 12.850310000000036,
+      "maxMs": 12.850310000000036
+    },
+    {
+      "name": "check the toolbar block commands with the cursor in a fresh document",
+      "samples": 20,
+      "meanMs": 2.3917171999999596,
+      "p50Ms": 2.128586999999925,
+      "p95Ms": 3.1484530000000177,
+      "maxMs": 4.0501939999999195
+    },
+    {
+      "name": "check the toolbar block commands on a whole-document selection",
+      "samples": 20,
+      "meanMs": 0.21573955000001205,
+      "p50Ms": 0.20747300000016367,
+      "p95Ms": 0.23918000000003303,
+      "maxMs": 0.2651929999999538
+    },
+    {
+      "name": "turn every textblock of the document into a heading",
+      "samples": 5,
+      "meanMs": 30.183381999999984,
+      "p50Ms": 31.31058299999995,
+      "p95Ms": 38.73038599999995,
+      "maxMs": 38.73038599999995
+    },
+    {
+      "name": "invert and apply 1,000 typing steps",
+      "samples": 5,
+      "meanMs": 105.02537539999994,
+      "p50Ms": 90.84324699999979,
+      "p95Ms": 156.27031599999964,
+      "maxMs": 156.27031599999964
+    },
+    {
+      "name": "map 10,000 positions through 1,000 step maps",
+      "samples": 5,
+      "meanMs": 192.0687532000001,
+      "p50Ms": 192.14988700000004,
+      "p95Ms": 195.26960199999985,
+      "maxMs": 195.26960199999985
+    }
+  ]
+}

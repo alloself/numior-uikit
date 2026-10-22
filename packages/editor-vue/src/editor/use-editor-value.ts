@@ -22,6 +22,7 @@ export interface EditorValueOptions<V extends NuiEditorValue | undefined> {
 
 export interface EditorValue {
   readonly initial: Doc;
+  paused(): void;
   changed(json: DocJSON): void;
   flush(): void;
 }
@@ -94,14 +95,18 @@ export const useEditorValue = <V extends NuiEditorValue | undefined>(
 
   return {
     initial: docOf(options.schema, written),
-    changed: (json) => {
-      stop();
-      if (options.format() === 'json') {
-        pending = false;
-        publish(json);
-      } else {
+    paused: () => {
+      if (options.format() !== 'json') {
+        stop();
         pending = true;
         timer = setTimeout(flush, PAUSE_MS);
+      }
+    },
+    changed: (json) => {
+      if (options.format() === 'json') {
+        stop();
+        pending = false;
+        publish(json);
       }
     },
     flush,
