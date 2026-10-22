@@ -107,7 +107,7 @@ export type FormulaNode =
       readonly columns?: StructuredColumns | undefined;
     }
   | { readonly kind: 'call'; readonly name: string; readonly args: readonly FormulaNode[] }
-  | { readonly kind: 'unary'; readonly op: '-' | '+'; readonly operand: FormulaNode }
+  | { readonly kind: 'unary'; readonly op: '-' | '+' | '@'; readonly operand: FormulaNode }
   | { readonly kind: 'percent'; readonly operand: FormulaNode }
   | {
       readonly kind: 'binary';

@@ -25,6 +25,31 @@ describe('formula evaluation', () => {
     expect(evaluated('=Total')).toEqual({ kind: 'error', code: '#NAME?' });
   });
 
+  it('intersects a range with the row or column of the formula through @', () => {
+    const sheet = openSheet();
+
+    ['A1', 'A2', 'A3'].forEach((address, index) => {
+      sheet.enter(address, index + 1);
+    });
+
+    ['C1', 'D1', 'E1'].forEach((address, index) => {
+      sheet.enter(address, (index + 1) * 10);
+    });
+
+    sheet.enter('B2', '=@A1:A3*2');
+    sheet.enter('D3', '=@C1:E1');
+    sheet.enter('B5', '=@A1:A3');
+    sheet.enter('B6', '=@{7,8}');
+    sheet.enter('B7', '=SINGLE(A1:A3)');
+    sheet.recalc();
+
+    expect(sheet.value('B2')).toEqual(numberValue(4));
+    expect(sheet.value('D3')).toEqual(numberValue(20));
+    expect(sheet.value('B5')).toEqual({ kind: 'error', code: '#VALUE!' });
+    expect(sheet.value('B6')).toEqual(numberValue(7));
+    expect(sheet.value('B7')).toEqual({ kind: 'error', code: '#VALUE!' });
+  });
+
   it('compares numbers, texts and logicals in the Excel order', () => {
     expect(evaluated('=1<"a"')).toEqual({ kind: 'boolean', value: true });
     expect(evaluated('="a"<TRUE')).toEqual({ kind: 'boolean', value: true });

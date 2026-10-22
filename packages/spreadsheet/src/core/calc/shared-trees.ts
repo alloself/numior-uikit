@@ -8,7 +8,7 @@ export interface TreeSharing {
 const isRecord = (value: unknown): value is Readonly<Record<string, unknown>> =>
   typeof value === 'object' && value !== null;
 
-const sameTree = (left: unknown, right: unknown): boolean => {
+export const sameTree = (left: unknown, right: unknown): boolean => {
   if (left === right) {
     return true;
   }

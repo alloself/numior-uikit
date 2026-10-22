@@ -337,6 +337,7 @@ export const FINANCIAL_FUNCTIONS: readonly FunctionSpec[] = [
   }),
   defineFunction({
     name: 'XNPV',
+    arrays: [1, 2],
     min: 3,
     max: 3,
     lift: [0],
@@ -349,6 +350,7 @@ export const FINANCIAL_FUNCTIONS: readonly FunctionSpec[] = [
   }),
   defineFunction({
     name: 'IRR',
+    arrays: [0],
     min: 1,
     max: 2,
     lift: [1],
@@ -360,6 +362,7 @@ export const FINANCIAL_FUNCTIONS: readonly FunctionSpec[] = [
   }),
   defineFunction({
     name: 'XIRR',
+    arrays: [0, 1],
     min: 2,
     max: 3,
     lift: [2],
@@ -371,6 +374,7 @@ export const FINANCIAL_FUNCTIONS: readonly FunctionSpec[] = [
   }),
   defineFunction({
     name: 'MIRR',
+    arrays: [0],
     min: 3,
     max: 3,
     lift: [1, 2],

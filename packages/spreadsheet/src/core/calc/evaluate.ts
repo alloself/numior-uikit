@@ -411,11 +411,38 @@ const spilled = (
   return range === undefined ? raise('#REF!') : { kind: 'reference', sheet, range };
 };
 
+const intersection = (range: CellRange, here: FormulaPlace): CellRange | undefined => {
+  if (single(range)) {
+    return range;
+  }
+  if (range.left === range.right && here.row >= range.top && here.row <= range.bottom) {
+    return { top: here.row, bottom: here.row, left: range.left, right: range.left };
+  }
+  if (range.top === range.bottom && here.col >= range.left && here.col <= range.right) {
+    return { top: range.top, bottom: range.top, left: here.col, right: here.col };
+  }
+  return undefined;
+};
+
+const intersected = (value: EvalValue, context: EvalContext): EvalValue => {
+  switch (value.kind) {
+    case 'reference':
+      return { ...value, range: intersection(value.range, context.here()) ?? raise('#VALUE!') };
+    case 'array':
+      return value.rows[0]?.[0] ?? VALUE_ERROR;
+    default:
+      return value;
+  }
+};
+
 const operation = (node: FormulaNode, context: EvalContext): EvalValue => {
   switch (node.kind) {
     case 'call':
       return call(node, context);
     case 'unary':
+      if (node.op === '@') {
+        return intersected(evaluate(node.operand, context), context);
+      }
       return applied([operandOf(node.operand, context)], ([operand = EMPTY]) =>
         node.op === '-' ? numberValue(-toNumber(operand, context.locale)) : operand,
       );

@@ -72,6 +72,7 @@ export interface FunctionSpec {
   readonly max: number;
   readonly volatile?: boolean | undefined;
   readonly array?: boolean | undefined;
+  readonly arrays?: readonly number[] | 'all' | undefined;
   readonly lift?: readonly number[] | undefined;
   readonly broadcast?: readonly number[] | undefined;
   evaluate(args: FunctionArgs): EvalValue;

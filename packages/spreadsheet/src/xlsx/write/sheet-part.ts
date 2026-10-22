@@ -1,5 +1,11 @@
 import { MAX_COLS, formatCell, formatRange } from '../../core/address';
-import { needsArrayEvaluation } from '../../core/calc/array-formula';
+import {
+  bookArrays,
+  needsArrayEvaluation,
+  withImplicitIntersections,
+  withoutIntersections,
+} from '../../core/calc/array-formula';
+import { sameTree } from '../../core/calc/shared-trees';
 import type { Calculator } from '../../core/calc/calculator';
 import { CHUNK_ROWS } from '../../core/cell-store';
 import { nextTask } from '../../core/calc/tasks';
@@ -48,6 +54,11 @@ interface Sink {
 interface CellCounts {
   stale: number;
   spills: number;
+}
+
+interface FileFormula {
+  readonly ast: FormulaNode;
+  readonly array: CellRange | undefined;
 }
 
 const MAIN = 'http://schemas.openxmlformats.org/spreadsheetml/2006/main';
@@ -231,29 +242,28 @@ const createSink = (signal: AbortSignal | undefined): Sink => {
 const multiCell = (range: CellRange | undefined): range is CellRange =>
   range !== undefined && (range.bottom > range.top || range.right > range.left);
 
-const arrayRange = (
+const fileFormula = (
   writing: SheetWriting,
   place: { readonly row: number; readonly col: number },
   ast: FormulaNode,
-): CellRange | undefined => {
+): FileFormula => {
   const { sheet, calculator } = writing;
   const spill = calculator.spillOf(sheet, place.row, place.col);
+  const context = bookArrays(writing.book, calculator.functions, sheet);
 
   if (multiCell(spill)) {
-    return spill;
+    return { ast, array: spill };
   }
 
-  const array = needsArrayEvaluation(ast, {
-    functions: calculator.functions,
-    name: (node) =>
-      node.sheet === undefined
-        ? writing.book.names.resolve(node.name, sheet)?.ast
-        : writing.book.names.get(node.name, writing.book.sheet(node.sheet))?.ast,
-  });
+  const legacy = withoutIntersections(ast);
 
-  return array
-    ? { top: place.row, left: place.col, bottom: place.row, right: place.col }
-    : undefined;
+  if (sameTree(withImplicitIntersections(legacy, context), ast)) {
+    return { ast: legacy, array: undefined };
+  }
+
+  const self = { top: place.row, left: place.col, bottom: place.row, right: place.col };
+
+  return { ast, array: needsArrayEvaluation(ast, context) ? self : undefined };
 };
 
 const formulaCellXml = (
@@ -269,8 +279,9 @@ const formulaCellXml = (
     return undefined;
   }
 
-  const text = escapeText(printFormula(withFuturePrefixes(formula.ast), FILE_FORMULAS, place));
-  const spill = arrayRange(writing, place, formula.ast);
+  const written = fileFormula(writing, place, formula.ast);
+  const text = escapeText(printFormula(withFuturePrefixes(written.ast), FILE_FORMULAS, place));
+  const spill = written.array;
   const fresh = formula.state === 'fresh' || formula.state === 'imported';
   const known = fresh && !writing.outdated(sheet, place.row, place.col);
   const value = sheet.cells.get(place.row, place.col);

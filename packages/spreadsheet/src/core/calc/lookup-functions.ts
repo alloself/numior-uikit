@@ -342,13 +342,13 @@ const lookup = (args: FunctionArgs): EvalValue => {
 };
 
 export const LOOKUP_FUNCTIONS: readonly FunctionSpec[] = [
-  defineFunction({ name: 'VLOOKUP', min: 3, max: 4, lift: [0], evaluate: vlookup }),
-  defineFunction({ name: 'HLOOKUP', min: 3, max: 4, lift: [0], evaluate: hlookup }),
-  defineFunction({ name: 'MATCH', min: 2, max: 3, lift: [0], evaluate: match }),
-  defineFunction({ name: 'XMATCH', min: 2, max: 4, lift: [0], evaluate: xmatch }),
-  defineFunction({ name: 'XLOOKUP', min: 3, max: 6, lift: [0], evaluate: xlookup }),
-  defineFunction({ name: 'INDEX', min: 2, max: 3, evaluate: indexAt }),
-  defineFunction({ name: 'LOOKUP', min: 2, max: 3, lift: [0], evaluate: lookup }),
+  defineFunction({ name: 'VLOOKUP', min: 3, max: 4, lift: [0], arrays: [1], evaluate: vlookup }),
+  defineFunction({ name: 'HLOOKUP', min: 3, max: 4, lift: [0], arrays: [1], evaluate: hlookup }),
+  defineFunction({ name: 'MATCH', min: 2, max: 3, lift: [0], arrays: [1], evaluate: match }),
+  defineFunction({ name: 'XMATCH', min: 2, max: 4, lift: [0], arrays: [1], evaluate: xmatch }),
+  defineFunction({ name: 'XLOOKUP', min: 3, max: 6, lift: [0], arrays: [1, 2], evaluate: xlookup }),
+  defineFunction({ name: 'INDEX', min: 2, max: 3, arrays: [0], evaluate: indexAt }),
+  defineFunction({ name: 'LOOKUP', min: 2, max: 3, lift: [0], arrays: [1, 2], evaluate: lookup }),
   defineFunction({
     name: 'CHOOSE',
     min: 2,

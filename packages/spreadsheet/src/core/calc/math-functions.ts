@@ -190,7 +190,7 @@ export const MATH_FUNCTIONS: readonly FunctionSpec[] = [
     evaluate: (args) =>
       numberValue(numbersOf(args).reduce((total, value) => total + value * value, 0)),
   }),
-  defineFunction({ name: 'SUMPRODUCT', min: 1, max: MANY, evaluate: sumProduct }),
+  defineFunction({ name: 'SUMPRODUCT', min: 1, max: MANY, arrays: 'all', evaluate: sumProduct }),
   defineFunction({
     name: 'SUMIF',
     min: 2,

@@ -37,6 +37,7 @@ export const ARRAY_FUNCTIONS: readonly FunctionSpec[] = [
   defineFunction({
     name: 'TRANSPOSE',
     array: true,
+    arrays: [0],
     min: 1,
     max: 1,
     evaluate: (args) => {

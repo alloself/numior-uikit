@@ -1,4 +1,5 @@
 import { MAX_COLS, MAX_ROWS, parseRange } from '../../core/address';
+import { bookArrays, withImplicitIntersections } from '../../core/calc/array-formula';
 import type { Calculator } from '../../core/calc/calculator';
 import type { CellRange, CellValue } from '../../core/cell.types';
 import type { FormulaNode } from '../../core/formula/formula.types';
@@ -201,10 +202,19 @@ export const readSheetPart = async (
     if (!parsed.ok) {
       return undefined;
     }
+
+    const ast =
+      formula.kind === 'array'
+        ? parsed.ast
+        : withImplicitIntersections(
+            parsed.ast,
+            bookArrays(context.book, calculator.functions, sheet),
+          );
+
     if (formula.kind === 'shared' && formula.shared !== undefined) {
-      shared.set(formula.shared, parsed.ast);
+      shared.set(formula.shared, ast);
     }
-    return parsed.ast;
+    return ast;
   };
 
   const commitFormula = (current: Cell, value: CellValue): void => {

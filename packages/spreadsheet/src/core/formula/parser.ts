@@ -222,7 +222,14 @@ const createParser = (tokens: readonly Token[], locale: FormulaLocale, offset: n
   const word = (token: Token): FormulaNode => {
     if (isPunct('(')) {
       next();
-      return { kind: 'call', name: canonicalFunction(token.text, locale), args: argumentsOf() };
+
+      const name = canonicalFunction(token.text, locale);
+      const args = argumentsOf();
+      const [only] = args;
+
+      return name === 'SINGLE' && args.length === 1 && only !== undefined
+        ? { kind: 'unary', op: '@', operand: only }
+        : { kind: 'call', name, args };
     }
     return booleanOf(token, locale) ?? reference({}, token) ?? { kind: 'name', name: token.text };
   };
@@ -271,7 +278,7 @@ const createParser = (tokens: readonly Token[], locale: FormulaLocale, offset: n
   const unary = (): FormulaNode => {
     const token = peek();
 
-    if (token.kind === 'op' && (token.text === '-' || token.text === '+')) {
+    if (token.kind === 'op' && (token.text === '-' || token.text === '+' || token.text === '@')) {
       next();
       return { kind: 'unary', op: token.text, operand: unary() };
     }

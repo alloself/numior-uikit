@@ -179,6 +179,10 @@ export const withFuturePrefixes = (node: FormulaNode): FormulaNode => {
     case 'percent': {
       const operand = withFuturePrefixes(node.operand);
 
+      if (node.kind === 'unary' && node.op === '@') {
+        return { kind: 'call', name: '_xlfn.SINGLE', args: [operand] };
+      }
+
       return operand === node.operand ? node : { ...node, operand };
     }
     case 'binary': {

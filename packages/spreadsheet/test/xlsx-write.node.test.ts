@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vite-plus/test';
 import { createCellEditor, createStepper, parseCell, type Sheet } from '../src/core';
 import { readWorkbook, readZip, writeWorkbook, type Bytes, type XlsxRead } from '../src/xlsx';
 import { openBook } from './book-harness';
-import { workbookWith, xlsxPackage } from './xlsx-package';
+import { SALES_SHEET, workbookWith, xlsxPackage } from './xlsx-package';
 
 type Opened = Extract<XlsxRead, { readonly kind: 'editable' | 'read-only' }>;
 
@@ -166,6 +166,37 @@ describe('writing xlsx', () => {
     expect(sheet).toContain('<c r="D3"><f>SUMPRODUCT(A2:A3,Prices)</f>');
     expect(sheet).toContain('<c r="D4" cm="1"><f t="array" ref="D4">MAX(Prices*2)</f>');
     expect(sheet).toContain('<f>Lines[[#This Row],[Qty]]*Lines[[#This Row],[Price]]</f>');
+  });
+
+  it('reads legacy formulas with implicit intersection and writes them back the way it read them', async () => {
+    const source = await xlsxPackage({
+      'xl/worksheets/sheet1.xml': SALES_SHEET.replace(
+        '<c r="H2" s="1"><v>45658</v></c>',
+        '<c r="H2"><f>B2:B4*2</f><v>6</v></c><c r="I2"><f>SUM(B2:B4*2)</f><v>6</v></c><c r="K2"><f>SUMPRODUCT(--(B2:B4&gt;1))</f><v>2</v></c>',
+      ),
+    });
+
+    const read = await opened(source);
+    const view = viewOf(read, 'Sales');
+    const sales = sheetOf(read, 'Sales');
+
+    expect([view.input('H2'), view.input('I2'), view.shown('I2')]).toEqual([
+      '=@B2:B4*2',
+      '=SUM(@B2:B4*2)',
+      '6',
+    ]);
+
+    expect([view.input('K2'), view.shown('K2')]).toEqual(['=SUMPRODUCT(--(B2:B4>1))', '2']);
+
+    read.calculator.setFormula(sales, at('J2').row, at('J2').col, '=SUM(@B2:B4)');
+    read.calculator.recalculate({ budgetMs: Number.POSITIVE_INFINITY });
+
+    const sheet = await partOf(await written(read, read.source), 'xl/worksheets/sheet1.xml');
+
+    expect(sheet).toContain('<c r="H2"><f>B2:B4*2</f>');
+    expect(sheet).toContain('<c r="I2"><f>SUM(B2:B4*2)</f>');
+    expect(sheet).toContain('<c r="J2"><f>SUM(_xlfn.SINGLE(B2:B4))</f>');
+    expect(sheet).toContain('<c r="K2"><f>SUMPRODUCT(--(B2:B4&gt;1))</f>');
   });
 
   it('keeps what it does not understand byte for byte when nothing changed', async () => {

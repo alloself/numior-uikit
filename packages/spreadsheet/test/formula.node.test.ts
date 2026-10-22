@@ -313,6 +313,12 @@ describe('formula parser', () => {
     expect(failureOf('=[1]Other')).toEqual({ position: 4, reason: 'token' });
   });
 
+  it('reads the implicit intersection operator and its file form', () => {
+    expect(astOf('=@A1:A3*2')).toEqual(astOf('=SINGLE(A1:A3)*2'));
+    expect(astOf('=@A1:A3')).toMatchObject({ kind: 'unary', op: '@', operand: { kind: 'range' } });
+    expect(printFormula(astOf('=-@A1:A3+SINGLE(B1:B2)'))).toBe('-@A1:A3+@B1:B2');
+  });
+
   it('points at the place where a formula breaks', () => {
     expect(failureOf('=1+')).toEqual({ position: 3, reason: 'end' });
     expect(failureOf('=1+)')).toEqual({ position: 3, reason: 'token' });
