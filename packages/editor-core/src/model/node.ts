@@ -12,7 +12,18 @@ interface SeededIds extends IdSource {
   reserve(id: NodeId): void;
 }
 
+interface OffsetShift {
+  readonly base: readonly number[];
+  readonly from: number;
+  readonly to: number;
+  readonly start: number;
+  readonly middle: readonly ContentNode[];
+  readonly delta: number;
+}
+
 const offsetCache = new WeakMap<ElementNode, readonly number[]>();
+
+const offsetShifts = new WeakMap<ElementNode, OffsetShift>();
 
 export const nodeSize = (node: ContentNode): number =>
   node.kind === 'text' ? node.text.length : node.size;
@@ -70,39 +81,43 @@ export const withContent = (node: ElementNode, content: readonly ContentNode[]):
   return { ...node, content: normalized, size: contentSize(normalized) + 2 };
 };
 
-const spliceOffsets = (
+const shiftedOffsets = ({ base, from, to, start, middle, delta }: OffsetShift): number[] => {
+  const same = middle.length === to - from;
+  const offsets = same ? base.slice() : base.slice(0, from);
+  let offset = start;
+
+  middle.forEach((child, index) => {
+    offsets[from + index] = offset;
+    offset += nodeSize(child);
+  });
+
+  if (!same) {
+    return offsets.concat(base.slice(to).map((value) => value + delta));
+  }
+  for (let at = to; at < offsets.length; at += 1) {
+    offsets[at] = (offsets[at] ?? 0) + delta;
+  }
+  return offsets;
+};
+
+const startOf = (node: ElementNode, known: readonly number[], index: number): number => {
+  const last = node.content.at(-1);
+
+  return index < known.length
+    ? (known[index] ?? 0)
+    : (known.at(-1) ?? 0) + (last === undefined ? 0 : nodeSize(last));
+};
+
+const shiftOffsets = (
   node: ElementNode,
   next: ElementNode,
-  splice: {
-    readonly from: number;
-    readonly to: number;
-    readonly middle: readonly ContentNode[];
-    readonly delta: number;
-  },
+  splice: Omit<OffsetShift, 'base' | 'start'>,
 ): void => {
   const known = offsetCache.get(node);
 
-  if (known === undefined) {
-    return;
+  if (known !== undefined) {
+    offsetShifts.set(next, { ...splice, base: known, start: startOf(node, known, splice.from) });
   }
-
-  const { from, to, middle, delta } = splice;
-  const offsets: number[] = known.slice(0, from);
-  const last = node.content.at(-1);
-
-  let offset =
-    from < known.length
-      ? (known[from] ?? 0)
-      : (known.at(-1) ?? 0) + (last === undefined ? 0 : nodeSize(last));
-
-  for (const child of middle) {
-    offsets.push(offset);
-    offset += nodeSize(child);
-  }
-  for (let at = to; at < known.length; at += 1) {
-    offsets.push((known[at] ?? 0) + delta);
-  }
-  offsetCache.set(next, offsets);
 };
 
 export const spliceContent = (
@@ -130,8 +145,19 @@ export const spliceContent = (
     size: node.size + delta,
   };
 
-  spliceOffsets(node, next, { from, to, middle, delta });
+  shiftOffsets(node, next, { from, to, middle, delta });
   return next;
+};
+
+const freshOffsets = (node: ElementNode): number[] => {
+  const offsets: number[] = [];
+  let offset = 0;
+
+  for (const child of node.content) {
+    offsets.push(offset);
+    offset += nodeSize(child);
+  }
+  return offsets;
 };
 
 export const childOffsets = (node: ElementNode): readonly number[] => {
@@ -140,13 +166,11 @@ export const childOffsets = (node: ElementNode): readonly number[] => {
   if (cached !== undefined) {
     return cached;
   }
-  const offsets: number[] = [];
-  let offset = 0;
 
-  for (const child of node.content) {
-    offsets.push(offset);
-    offset += nodeSize(child);
-  }
+  const shift = offsetShifts.get(node);
+  const offsets = shift === undefined ? freshOffsets(node) : shiftedOffsets(shift);
+
+  offsetShifts.delete(node);
   offsetCache.set(node, offsets);
   return offsets;
 };
@@ -158,21 +182,16 @@ export const inheritOffsets = (
   delta: number,
 ): void => {
   const known = offsetCache.get(from);
+  const child = to.content[index];
 
-  if (known === undefined || known.length !== to.content.length) {
+  if (known === undefined || known.length !== to.content.length || child === undefined) {
     return;
   }
   if (delta === 0) {
     offsetCache.set(to, known);
-    return;
+  } else {
+    shiftOffsets(from, to, { from: index, to: index + 1, middle: [child], delta });
   }
-
-  const next = known.slice();
-
-  for (let at = index + 1; at < next.length; at += 1) {
-    next[at] = (next[at] ?? 0) + delta;
-  }
-  offsetCache.set(to, next);
 };
 
 export const childIndexAt = (node: ElementNode, offset: number): number => {

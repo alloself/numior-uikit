@@ -66,31 +66,20 @@ export const fits = (schema: Schema, node: ElementNode): boolean => {
   );
 };
 
-const sharedEnds = (before: ElementNode, after: ElementNode): readonly [number, number] => {
-  const shortest = Math.min(before.content.length, after.content.length);
-  let prefix = 0;
-  let suffix = 0;
-
-  while (prefix < shortest && before.content[prefix] === after.content[prefix]) {
-    prefix += 1;
-  }
-  while (
-    suffix < shortest - prefix &&
-    before.content.at(-1 - suffix) === after.content.at(-1 - suffix)
-  ) {
-    suffix += 1;
-  }
-  return [prefix, suffix];
-};
-
-const fitsEdited = (schema: Schema, before: ElementNode, after: ElementNode): boolean => {
+const fitsEdited = (
+  schema: Schema,
+  before: ElementNode,
+  after: ElementNode,
+  region: Region,
+): boolean => {
   const type = schema.nodes.get(after.type);
 
-  if (type === undefined || before.type !== after.type) {
+  if (type === undefined) {
     return fits(schema, after);
   }
 
-  const [prefix, suffix] = sharedEnds(before, after);
+  const prefix = Math.max(0, region.first - 1);
+  const suffix = before.content.length - Math.min(before.content.length, region.last + 1);
   const inserted = after.content.slice(prefix, after.content.length - suffix);
 
   return (
@@ -182,7 +171,7 @@ export const applyPlan = (doc: Doc, plan: ReplacePlan, fresh: ReadonlySet<NodeId
   const next = spliceContent(node, region.first, region.last, built.content);
 
   if (
-    !fitsEdited(doc.schema, node, next) ||
+    !fitsEdited(doc.schema, node, next, region) ||
     !built.rebuilt.every((element) => fits(doc.schema, element))
   ) {
     return failed('content');
