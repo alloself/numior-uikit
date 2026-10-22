@@ -14,6 +14,7 @@ export interface CellFormats {
   setRange(range: CellRange, id: number): void;
   forEachInRange(range: CellRange, visit: (row: number, col: number, id: number) => void): void;
   shiftLines(axis: 'rows' | 'cols', at: number, count: number): void;
+  lastRow(): number;
   readonly size: number;
 }
 
@@ -120,6 +121,12 @@ export const createCellFormats = (): CellFormats => {
         });
       });
     },
+    lastRow: () =>
+      [...chunks.keys()].reduce(
+        (last, key) =>
+          Math.max(last, Math.floor(key / CHUNKS_PER_ROW) * CHUNK_ROWS + CHUNK_ROWS - 1),
+        -1,
+      ),
     get size() {
       return size;
     },

@@ -1,5 +1,5 @@
 {
-  "recordedAt": "2026-10-22T04:15:24.172Z",
+  "recordedAt": "2026-10-22T04:55:56.189Z",
   "dataset": "20000 × 50 generated values (seed 1); ledger of 100050 formulas on 20000 rows with a 5,000 row lookup table",
   "device": {
     "host": "DESKTOP-34B26AK",
@@ -13,116 +13,132 @@
   "heapUsedMb": 17,
   "operations": [
     {
-      "name": "fill a 20,000 × 50 sheet with 1,000,000 values",
-      "samples": 5,
-      "meanMs": 55.73165079999999,
-      "p50Ms": 54.946406000000025,
-      "p95Ms": 58.05705299999997,
-      "maxMs": 58.05705299999997
-    },
-    {
-      "name": "read every cell of a 1,000,000 cell sheet",
-      "samples": 5,
-      "meanMs": 10.514257999999995,
-      "p50Ms": 9.507030999999984,
-      "p95Ms": 13.108376000000021,
-      "maxMs": 13.108376000000021
-    },
-    {
-      "name": "parse 100,050 formulas",
-      "samples": 5,
-      "meanMs": 181.111603,
-      "p50Ms": 182.36796900000002,
-      "p95Ms": 188.01556799999992,
-      "maxMs": 188.01556799999992
-    },
-    {
-      "name": "enter 100,050 formulas with their dependencies",
-      "samples": 5,
-      "meanMs": 447.4356120000002,
-      "p50Ms": 452.2921070000002,
-      "p95Ms": 476.44473000000016,
-      "maxMs": 476.44473000000016
-    },
-    {
-      "name": "longest main-thread slice while loading 100,050 formulas",
-      "samples": 5,
-      "meanMs": 11.666790200000104,
-      "p50Ms": 11.410805999999866,
-      "p95Ms": 13.113890999999967,
-      "maxMs": 13.113890999999967
-    },
-    {
-      "name": "recalculate 100,050 formulas from scratch",
-      "samples": 5,
-      "meanMs": 233.89242940000003,
-      "p50Ms": 217.21537499999977,
-      "p95Ms": 308.38629200000014,
-      "maxMs": 308.38629200000014
-    },
-    {
-      "name": "insert a row in the middle of the 100,050 formula ledger",
-      "samples": 5,
-      "meanMs": 41.86662179999985,
-      "p50Ms": 41.985898000000816,
-      "p95Ms": 48.72688599999856,
-      "maxMs": 48.72688599999856
-    },
-    {
-      "name": "edit the head of a 20,000 deep chain to the first chunk",
-      "samples": 30,
-      "meanMs": 53.92968083333326,
-      "p50Ms": 52.30154000000039,
-      "p95Ms": 63.02095399999962,
-      "maxMs": 68.29476799999975
-    },
-    {
-      "name": "change a lookup rate to the first chunk",
-      "samples": 30,
-      "meanMs": 28.720162933333146,
-      "p50Ms": 28.745727000001352,
-      "p95Ms": 30.618909000000713,
-      "maxMs": 30.852340000001277
-    },
-    {
-      "name": "edit an unrelated cell",
-      "samples": 30,
-      "meanMs": 0.001724633333045252,
-      "p50Ms": 0.0014569999984814785,
-      "p95Ms": 0.0034989999985555187,
-      "maxMs": 0.0035360000001674052
-    },
-    {
-      "name": "finish the recalculation after editing the chain head",
-      "samples": 5,
-      "meanMs": 97.1600050000001,
-      "p50Ms": 95.61327299999903,
-      "p95Ms": 100.61552400000073,
-      "maxMs": 100.61552400000073
-    },
-    {
-      "name": "rename a table column read by 20,000 row formulas",
-      "samples": 30,
-      "meanMs": 12.429282799999903,
-      "p50Ms": 12.206653999997798,
-      "p95Ms": 15.435516999998072,
-      "maxMs": 17.653261999999813
-    },
-    {
       "name": "read a 1,000,000 cell xlsx with 20,000 formulas",
       "samples": 5,
-      "meanMs": 1201.5821218000006,
-      "p50Ms": 1209.3217900000018,
-      "p95Ms": 1239.616944999998,
-      "maxMs": 1239.616944999998
+      "meanMs": 1095.295536,
+      "p50Ms": 1099.5643930000006,
+      "p95Ms": 1104.6582760000001,
+      "maxMs": 1104.6582760000001
     },
     {
       "name": "longest main-thread gap while reading a 1,000,000 cell xlsx",
       "samples": 5,
-      "meanMs": 3.094540599999891,
-      "p50Ms": 2.907742999999755,
-      "p95Ms": 4.135568999998213,
-      "maxMs": 4.135568999998213
+      "meanMs": 3.7371641999996426,
+      "p50Ms": 3.443020999999135,
+      "p95Ms": 4.3366189999997005,
+      "maxMs": 4.3366189999997005
+    },
+    {
+      "name": "write a 1,000,000 cell xlsx with 20,000 formulas",
+      "samples": 5,
+      "meanMs": 934.1583407999999,
+      "p50Ms": 931.4735359999995,
+      "p95Ms": 950.9512029999987,
+      "maxMs": 950.9512029999987
+    },
+    {
+      "name": "longest main-thread gap while writing a 1,000,000 cell xlsx",
+      "samples": 5,
+      "meanMs": 9.85579339999931,
+      "p50Ms": 9.766465999999127,
+      "p95Ms": 10.926758999999947,
+      "maxMs": 10.926758999999947
+    },
+    {
+      "name": "fill a 20,000 × 50 sheet with 1,000,000 values",
+      "samples": 5,
+      "meanMs": 51.420002000000025,
+      "p50Ms": 53.36591200000112,
+      "p95Ms": 56.4520420000008,
+      "maxMs": 56.4520420000008
+    },
+    {
+      "name": "read every cell of a 1,000,000 cell sheet",
+      "samples": 5,
+      "meanMs": 11.267186599999695,
+      "p50Ms": 11.323757000000114,
+      "p95Ms": 11.538236999998844,
+      "maxMs": 11.538236999998844
+    },
+    {
+      "name": "parse 100,050 formulas",
+      "samples": 5,
+      "meanMs": 176.04312159999935,
+      "p50Ms": 176.25081500000124,
+      "p95Ms": 181.9031879999984,
+      "maxMs": 181.9031879999984
+    },
+    {
+      "name": "enter 100,050 formulas with their dependencies",
+      "samples": 5,
+      "meanMs": 417.13216480000085,
+      "p50Ms": 418.3980260000026,
+      "p95Ms": 440.48477000000094,
+      "maxMs": 440.48477000000094
+    },
+    {
+      "name": "longest main-thread slice while loading 100,050 formulas",
+      "samples": 5,
+      "meanMs": 11.914598400000978,
+      "p50Ms": 10.980852000000596,
+      "p95Ms": 15.558352000000014,
+      "maxMs": 15.558352000000014
+    },
+    {
+      "name": "recalculate 100,050 formulas from scratch",
+      "samples": 5,
+      "meanMs": 224.6249996000006,
+      "p50Ms": 223.14808899999844,
+      "p95Ms": 257.08935500000007,
+      "maxMs": 257.08935500000007
+    },
+    {
+      "name": "insert a row in the middle of the 100,050 formula ledger",
+      "samples": 5,
+      "meanMs": 42.01132660000003,
+      "p50Ms": 44.005881999997655,
+      "p95Ms": 49.23747200000071,
+      "maxMs": 49.23747200000071
+    },
+    {
+      "name": "edit the head of a 20,000 deep chain to the first chunk",
+      "samples": 30,
+      "meanMs": 48.18245393333309,
+      "p50Ms": 46.63113399999929,
+      "p95Ms": 54.99088699999993,
+      "maxMs": 60.88809299999775
+    },
+    {
+      "name": "change a lookup rate to the first chunk",
+      "samples": 30,
+      "meanMs": 26.43228539999994,
+      "p50Ms": 26.186141999998654,
+      "p95Ms": 30.327103999996325,
+      "maxMs": 30.90320199999769
+    },
+    {
+      "name": "edit an unrelated cell",
+      "samples": 30,
+      "meanMs": 0.0018679333341424353,
+      "p50Ms": 0.0015639999983250163,
+      "p95Ms": 0.004195000001345761,
+      "maxMs": 0.004469999999855645
+    },
+    {
+      "name": "finish the recalculation after editing the chain head",
+      "samples": 5,
+      "meanMs": 87.40888779999804,
+      "p50Ms": 85.96902499999851,
+      "p95Ms": 92.3109059999988,
+      "maxMs": 92.3109059999988
+    },
+    {
+      "name": "rename a table column read by 20,000 row formulas",
+      "samples": 30,
+      "meanMs": 12.773366566667391,
+      "p50Ms": 12.908051999998861,
+      "p95Ms": 14.471538999998302,
+      "maxMs": 15.319160000006377
     }
   ]
 }

@@ -39,8 +39,19 @@ export interface LimitationsReport {
   readonly items: readonly XlsxLimitation[];
 }
 
+export interface OriginalSheet {
+  readonly sheet: number;
+  readonly name: string;
+  readonly part: string;
+  readonly sheetId: number;
+  readonly hidden: boolean;
+}
+
 export interface OriginalPackage {
   readonly bytes: Bytes;
+  readonly readOnly: boolean;
+  readonly workbook: string;
+  readonly sheets: readonly OriginalSheet[];
   readonly parts: readonly { readonly name: string; readonly kind: 'parsed' | 'opaque' }[];
 }
 

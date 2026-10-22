@@ -206,6 +206,7 @@ export const createStepper = (book: Workbook, calculator: Calculator): Stepper =
 
     sheet.formats.shiftLines(change.axis, change.at, change.count);
     sheet.decorations.shiftLines(change.axis, change.at, change.count);
+    sheet.shifts += 1;
     tables.move(sheet, moves, change);
     return { deleted, rewrites, names, drops, restores: tables.restores(moves) };
   };

@@ -29,6 +29,7 @@ export interface CellStore {
   has(row: number, col: number): boolean;
   forEachInRange(range: CellRange, visit: CellVisitor): void;
   usedRange(): CellRange | undefined;
+  lastRow(): number;
   nextEdge(row: number, col: number, rowStep: -1 | 0 | 1, colStep: -1 | 0 | 1): number;
   shiftLines(axis: 'rows' | 'cols', at: number, count: number): void;
   readonly size: number;
@@ -333,7 +334,14 @@ export const createCellStore = (strings: SharedStrings): CellStore => {
       }
     },
     usedRange: () => {
-      let found: CellRange | undefined;
+      const bounds = [Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY, -1, -1];
+
+      const widen = (row: number, col: number): void => {
+        bounds[0] = Math.min(bounds[0] ?? row, row);
+        bounds[1] = Math.min(bounds[1] ?? col, col);
+        bounds[2] = Math.max(bounds[2] ?? row, row);
+        bounds[3] = Math.max(bounds[3] ?? col, col);
+      };
 
       for (const [key, chunk] of chunks) {
         const band = { row: Math.floor(key / CHUNKS_PER_ROW), col: key % CHUNKS_PER_ROW };
@@ -345,17 +353,19 @@ export const createCellStore = (strings: SharedStrings): CellStore => {
           right: band.col * CHUNK_COLS + CHUNK_COLS - 1,
         };
 
-        visitChunk(chunk, band, whole, (row, col) => {
-          found = {
-            top: Math.min(found?.top ?? row, row),
-            left: Math.min(found?.left ?? col, col),
-            bottom: Math.max(found?.bottom ?? row, row),
-            right: Math.max(found?.right ?? col, col),
-          };
-        });
+        visitChunk(chunk, band, whole, widen);
       }
-      return found;
+
+      const [top = 0, left = 0, bottom = -1, right = -1] = bounds;
+
+      return bottom < 0 ? undefined : { top, left, bottom, right };
     },
+    lastRow: () =>
+      [...chunks.keys()].reduce(
+        (last, key) =>
+          Math.max(last, Math.floor(key / CHUNKS_PER_ROW) * CHUNK_ROWS + CHUNK_ROWS - 1),
+        -1,
+      ),
     nextEdge: (row, col, rowStep, colStep) => {
       const nextFilled =
         inside(row + rowStep, col + colStep) && filled(row + rowStep, col + colStep);

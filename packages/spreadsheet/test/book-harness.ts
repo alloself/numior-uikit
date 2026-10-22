@@ -78,6 +78,7 @@ export const openBook = (locale = EN_LOCALE) => {
 
   return {
     book,
+    calculator,
     first,
     rates,
     history,

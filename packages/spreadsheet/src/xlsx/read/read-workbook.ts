@@ -371,6 +371,15 @@ const readBook = async (
     report: summary,
     source: {
       bytes,
+      readOnly: summary.readOnly,
+      workbook: office,
+      sheets: sheets.map((sheet, index) => ({
+        sheet: sheet.id,
+        name: sheet.name,
+        part: sheetParts[index]?.part ?? '',
+        sheetId: sheetParts[index]?.entry.sheetId ?? index + 1,
+        hidden: sheetParts[index]?.entry.hidden ?? false,
+      })),
       parts: archive.names.map((name) => ({
         name,
         kind: load.parsed.has(name) ? 'parsed' : 'opaque',

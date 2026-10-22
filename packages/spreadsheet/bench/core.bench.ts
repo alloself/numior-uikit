@@ -6,7 +6,7 @@ import {
   numberValue,
   parseFormula,
 } from '@numior/spreadsheet/core';
-import { readWorkbook } from '@numior/spreadsheet/xlsx';
+import { readWorkbook, writeWorkbook } from '@numior/spreadsheet/xlsx';
 import {
   filledSheet,
   ledger,
@@ -82,6 +82,96 @@ console.log(
 );
 
 const operations: Operation[] = [];
+
+const xlsxOperations = async (): Promise<Operation[]> => {
+  const found: Operation[] = [];
+
+  const xlsx = await xlsxBook(ROWS, COLS);
+  const readSlices: number[] = [];
+
+  found.push(
+    await measure(
+      'read a 1,000,000 cell xlsx with 20,000 formulas',
+      async () => {
+        globalThis.gc?.();
+
+        let longest = 0;
+        let last = performance.now();
+
+        const timer = setInterval(() => {
+          const now = performance.now();
+
+          longest = Math.max(longest, now - last);
+          last = now;
+        }, 1);
+
+        const read = await readWorkbook(xlsx);
+
+        clearInterval(timer);
+        readSlices.push(longest);
+        if (read.kind === 'rejected') {
+          throw new Error(`the bench book was rejected: ${read.reason}`);
+        }
+      },
+      heavy,
+    ),
+  );
+
+  found.push(
+    summarize(
+      'longest main-thread gap while reading a 1,000,000 cell xlsx',
+      readSlices.slice(heavy.warmup),
+    ),
+  );
+
+  const opened = await readWorkbook(xlsx);
+  const writeSlices: number[] = [];
+
+  if (opened.kind === 'rejected') {
+    throw new Error('the bench book was rejected');
+  }
+
+  found.push(
+    await measure(
+      'write a 1,000,000 cell xlsx with 20,000 formulas',
+      async () => {
+        globalThis.gc?.();
+
+        let longest = 0;
+        let last = performance.now();
+
+        const timer = setInterval(() => {
+          const now = performance.now();
+
+          longest = Math.max(longest, now - last);
+          last = now;
+        }, 1);
+
+        const result = await writeWorkbook(opened.book, opened.calculator, {
+          source: opened.source,
+        });
+
+        clearInterval(timer);
+        writeSlices.push(longest);
+        if (!result.ok) {
+          throw new Error('the bench book was refused');
+        }
+      },
+      heavy,
+    ),
+  );
+
+  found.push(
+    summarize(
+      'longest main-thread gap while writing a 1,000,000 cell xlsx',
+      writeSlices.slice(heavy.warmup),
+    ),
+  );
+
+  return found;
+};
+
+operations.push(...(await xlsxOperations()));
 
 operations.push(
   await measure(
@@ -247,44 +337,6 @@ operations.push(
       throw new Error('the header edit was refused');
     }
   }),
-);
-
-const xlsx = await xlsxBook(ROWS, COLS);
-const readSlices: number[] = [];
-
-operations.push(
-  await measure(
-    'read a 1,000,000 cell xlsx with 20,000 formulas',
-    async () => {
-      globalThis.gc?.();
-
-      let longest = 0;
-      let last = performance.now();
-
-      const timer = setInterval(() => {
-        const now = performance.now();
-
-        longest = Math.max(longest, now - last);
-        last = now;
-      }, 1);
-
-      const read = await readWorkbook(xlsx);
-
-      clearInterval(timer);
-      readSlices.push(longest);
-      if (read.kind === 'rejected') {
-        throw new Error(`the bench book was rejected: ${read.reason}`);
-      }
-    },
-    heavy,
-  ),
-);
-
-operations.push(
-  summarize(
-    'longest main-thread gap while reading a 1,000,000 cell xlsx',
-    readSlices.slice(heavy.warmup),
-  ),
 );
 
 const file = await record(

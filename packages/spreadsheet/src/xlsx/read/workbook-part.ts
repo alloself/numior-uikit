@@ -12,6 +12,7 @@ import {
 
 export interface SheetEntry {
   readonly name: string;
+  readonly sheetId: number;
   readonly relationship: string;
   readonly hidden: boolean;
 }
@@ -54,6 +55,7 @@ export const readWorkbookPart = async (
           case 'sheet':
             sheets.push({
               name: decodeXstring(attributeOf(attributes, 'name') ?? ''),
+              sheetId: numberOf(attributeOf(attributes, 'sheetId'), sheets.length + 1),
               relationship: attributeOf(attributes, 'id', RELATIONSHIP_ATTRIBUTES) ?? '',
               hidden: (attributeOf(attributes, 'state') ?? 'visible') !== 'visible',
             });

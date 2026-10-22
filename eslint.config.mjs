@@ -173,7 +173,7 @@ export default [
   },
   {
     files: ['packages/*/src/**/*.ts', 'packages/*/src/**/*.vue'],
-    ignores: ['**/*.messages.ts'],
+    ignores: ['**/*.messages.ts', 'packages/spreadsheet/src/xlsx/**'],
     rules: catalogTexts,
   },
   {

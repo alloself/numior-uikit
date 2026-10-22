@@ -13,6 +13,7 @@ export interface Sheet {
   readonly cells: CellStore;
   readonly formats: CellFormats;
   readonly decorations: CellFormats;
+  shifts: number;
 }
 
 export interface DefinedName {
@@ -195,6 +196,7 @@ export const createWorkbook = (): Workbook => {
         cells: createCellStore(strings),
         formats: createCellFormats(),
         decorations: createCellFormats(),
+        shifts: 0,
       };
 
       next += 1;

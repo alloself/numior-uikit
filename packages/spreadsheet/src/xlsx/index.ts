@@ -31,6 +31,7 @@ export { readWorkbook } from './read/read-workbook';
 export type {
   LimitationsReport,
   OriginalPackage,
+  OriginalSheet,
   ReadOptions,
   XlsxLimitation,
   XlsxLimitationCode,
@@ -38,3 +39,5 @@ export type {
   XlsxRead,
   XlsxRejection,
 } from './read/read.types';
+export { writeWorkbook } from './write/write-workbook';
+export type { WriteOptions, WriteReport, XlsxLoss, XlsxWrite } from './write/write.types';

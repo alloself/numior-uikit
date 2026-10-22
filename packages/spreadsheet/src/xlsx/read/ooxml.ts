@@ -5,6 +5,7 @@ import type { ZipArchive } from '../zip/zip.types';
 
 export interface Relationship {
   readonly id: string;
+  readonly type: string;
   readonly kind: string;
   readonly target: string;
   readonly external: boolean;
@@ -121,10 +122,12 @@ export const readRelationships = async (
 
         const external = attributeOf(attributes, 'TargetMode') === 'External';
         const target = attributeOf(attributes, 'Target') ?? '';
+        const type = attributeOf(attributes, 'Type') ?? '';
 
         found.push({
           id: attributeOf(attributes, 'Id') ?? '',
-          kind: relationKind(attributeOf(attributes, 'Type') ?? ''),
+          type,
+          kind: relationKind(type),
           target: external ? target : resolvePart(part, target),
           external,
         });

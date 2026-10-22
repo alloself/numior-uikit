@@ -55,6 +55,7 @@ export interface Calculator {
   ): FormulaParse;
   setValue(sheet: Sheet, row: number, col: number, value: CellValue): void;
   importValue(sheet: Sheet, row: number, col: number, value: CellValue): void;
+  outdated(): (sheet: Sheet, row: number, col: number) => boolean;
   importFormula(
     sheet: Sheet,
     row: number,
@@ -997,6 +998,15 @@ export const createCalculator = (
     },
     setValue,
     importValue: write,
+    outdated: () => {
+      const planned = new Set(pending.size === 0 ? [] : planRecalc(pending, graph, locate).order);
+
+      return (sheet, row, col) => {
+        const id = idAt(sheet.id, row, col);
+
+        return id !== undefined && planned.has(id);
+      };
+    },
     importFormula: (sheet, row, col, ast, imported) => {
       setParsed(sheet, row, col, ast);
 
