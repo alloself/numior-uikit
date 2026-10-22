@@ -1,0 +1,41 @@
+{
+  "kind": "editable",
+  "report": {
+    "staleFormulas": 1,
+    "items": []
+  },
+  "defaultFont": {
+    "size": 11,
+    "color": {
+      "kind": "theme",
+      "theme": 1,
+      "tint": 0
+    },
+    "name": "Calibri",
+    "family": 2,
+    "scheme": "minor"
+  },
+  "sheets": [
+    {
+      "name": "Prefixed",
+      "cells": {
+        "A1": {
+          "value": {
+            "kind": "string",
+            "value": "Prefixed"
+          }
+        },
+        "B1": {
+          "value": {
+            "kind": "number",
+            "value": 6
+          },
+          "formula": "2*3",
+          "state": "imported"
+        }
+      }
+    }
+  ],
+  "names": [],
+  "tables": []
+}

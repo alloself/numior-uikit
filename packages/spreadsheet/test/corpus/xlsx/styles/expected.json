@@ -1,0 +1,261 @@
+{
+  "kind": "editable",
+  "report": {
+    "staleFormulas": 0,
+    "items": [
+      {
+        "code": "conditional-formats",
+        "severity": "info",
+        "count": 1,
+        "names": []
+      }
+    ]
+  },
+  "defaultFont": {
+    "size": 11,
+    "color": {
+      "kind": "theme",
+      "theme": 1,
+      "tint": 0
+    },
+    "name": "Calibri",
+    "family": 2,
+    "scheme": "minor"
+  },
+  "sheets": [
+    {
+      "name": "Styles",
+      "cells": {
+        "A1": {
+          "value": {
+            "kind": "number",
+            "value": 1234.5
+          },
+          "format": "\"₽\"#,##0.00",
+          "decoration": {
+            "font": {
+              "bold": true,
+              "italic": true,
+              "underline": "double",
+              "size": 14,
+              "color": {
+                "kind": "theme",
+                "theme": 4,
+                "tint": -0.499984740745262
+              },
+              "name": "Calibri",
+              "family": 2,
+              "scheme": "minor"
+            },
+            "fill": {
+              "pattern": "solid",
+              "foreground": {
+                "kind": "theme",
+                "theme": 5,
+                "tint": 0.7999816888943144
+              },
+              "background": {
+                "kind": "indexed",
+                "index": 64
+              }
+            },
+            "border": {
+              "left": {
+                "style": "thin",
+                "color": {
+                  "kind": "indexed",
+                  "index": 64
+                }
+              },
+              "right": {
+                "style": "medium",
+                "color": {
+                  "kind": "auto"
+                }
+              },
+              "top": {
+                "style": "dashed",
+                "color": {
+                  "kind": "rgb",
+                  "argb": "FF0070C0"
+                }
+              },
+              "bottom": {
+                "style": "double",
+                "color": {
+                  "kind": "theme",
+                  "theme": 1,
+                  "tint": 0
+                }
+              }
+            }
+          }
+        },
+        "B1": {
+          "value": {
+            "kind": "number",
+            "value": -3.25
+          },
+          "format": "[Red]0.0;[Blue]\\-0.0",
+          "decoration": {
+            "font": {
+              "strike": true,
+              "script": "superscript",
+              "size": 9,
+              "color": {
+                "kind": "indexed",
+                "index": 10
+              },
+              "name": "Arial"
+            },
+            "fill": {
+              "pattern": "darkGrid",
+              "foreground": {
+                "kind": "rgb",
+                "argb": "FFFF0000"
+              },
+              "background": {
+                "kind": "rgb",
+                "argb": "FFFFFF00"
+              }
+            },
+            "border": {
+              "diagonalUp": true,
+              "diagonalDown": true,
+              "diagonal": {
+                "style": "thin",
+                "color": {
+                  "kind": "indexed",
+                  "index": 64
+                }
+              }
+            }
+          }
+        },
+        "C1": {
+          "value": {
+            "kind": "number",
+            "value": 45658
+          },
+          "format": "m/d/yyyy"
+        },
+        "D1": {
+          "value": {
+            "kind": "number",
+            "value": 45658.75
+          },
+          "format": "m/d/yyyy h:mm"
+        },
+        "E1": {
+          "value": {
+            "kind": "number",
+            "value": 0.125
+          },
+          "format": "0.00%",
+          "decoration": {
+            "alignment": {
+              "horizontal": "centerContinuous",
+              "vertical": "center",
+              "indent": 2,
+              "rotation": 90,
+              "shrink": true
+            }
+          }
+        },
+        "F1": {
+          "value": {
+            "kind": "string",
+            "value": "0042"
+          },
+          "format": "@",
+          "decoration": {
+            "protection": {
+              "locked": false,
+              "hidden": true
+            }
+          }
+        },
+        "G1": {
+          "value": {
+            "kind": "string",
+            "value": "code()"
+          },
+          "decoration": {
+            "font": {
+              "size": 11,
+              "color": {
+                "kind": "rgb",
+                "argb": "FF00B050"
+              },
+              "name": "Consolas",
+              "family": 3
+            }
+          }
+        },
+        "H1": {
+          "format": "\"₽\"#,##0.00",
+          "decoration": {
+            "font": {
+              "bold": true,
+              "italic": true,
+              "underline": "double",
+              "size": 14,
+              "color": {
+                "kind": "theme",
+                "theme": 4,
+                "tint": -0.499984740745262
+              },
+              "name": "Calibri",
+              "family": 2,
+              "scheme": "minor"
+            },
+            "fill": {
+              "pattern": "solid",
+              "foreground": {
+                "kind": "theme",
+                "theme": 5,
+                "tint": 0.7999816888943144
+              },
+              "background": {
+                "kind": "indexed",
+                "index": 64
+              }
+            },
+            "border": {
+              "left": {
+                "style": "thin",
+                "color": {
+                  "kind": "indexed",
+                  "index": 64
+                }
+              },
+              "right": {
+                "style": "medium",
+                "color": {
+                  "kind": "auto"
+                }
+              },
+              "top": {
+                "style": "dashed",
+                "color": {
+                  "kind": "rgb",
+                  "argb": "FF0070C0"
+                }
+              },
+              "bottom": {
+                "style": "double",
+                "color": {
+                  "kind": "theme",
+                  "theme": 1,
+                  "tint": 0
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
+  "names": [],
+  "tables": []
+}

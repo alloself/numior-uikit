@@ -1,0 +1,46 @@
+{
+  "kind": "read-only",
+  "report": {
+    "staleFormulas": 0,
+    "items": [
+      {
+        "code": "formula-syntax",
+        "severity": "read-only",
+        "count": 1,
+        "names": []
+      },
+      {
+        "code": "external-links",
+        "severity": "read-only",
+        "count": 1,
+        "names": []
+      }
+    ]
+  },
+  "defaultFont": {
+    "size": 11,
+    "color": {
+      "kind": "theme",
+      "theme": 1,
+      "tint": 0
+    },
+    "name": "Calibri",
+    "family": 2,
+    "scheme": "minor"
+  },
+  "sheets": [
+    {
+      "name": "Linked",
+      "cells": {
+        "A1": {
+          "value": {
+            "kind": "number",
+            "value": 9
+          }
+        }
+      }
+    }
+  ],
+  "names": [],
+  "tables": []
+}

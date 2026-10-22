@@ -55,6 +55,7 @@ export default defineConfig({
       '**/.nuxt/**',
       '**/.output/**',
       'tests/e2e/fixtures/paste/**',
+      'packages/spreadsheet/test/corpus/xlsx/**',
     ],
   },
   lint: {

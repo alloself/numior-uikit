@@ -29,8 +29,22 @@ const decoder = new TextDecoder();
 const elementPattern = (local: string): RegExp =>
   new RegExp(`<(${NAME})${local}(?=[\\s/>])[^>]*?(?:/>|>[\\s\\S]*?</\\1${local}>)`, 'u');
 
-export const elementSlice = (text: string, local: string): string | undefined =>
-  elementPattern(local).exec(text)?.[0];
+const MAIN_DECLARATION =
+  /xmlns:([\w.-]+)="http:\/\/schemas\.openxmlformats\.org\/spreadsheetml\/2006\/main"/u;
+
+const unprefixed = (text: string, slice: string): string => {
+  const prefix = MAIN_DECLARATION.exec(text)?.[1];
+
+  return prefix === undefined
+    ? slice
+    : slice.replaceAll(new RegExp(`<(/?)${prefix}:`, 'gu'), '<$1');
+};
+
+export const elementSlice = (text: string, local: string): string | undefined => {
+  const slice = elementPattern(local).exec(text)?.[0];
+
+  return slice === undefined ? undefined : unprefixed(text, slice);
+};
 
 const withoutElement = (text: string, local: string): string =>
   text.replace(elementPattern(local), '');

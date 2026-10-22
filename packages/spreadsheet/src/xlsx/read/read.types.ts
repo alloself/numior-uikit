@@ -23,6 +23,7 @@ export type XlsxLimitationCode =
   | 'hidden-sheets'
   | 'protection'
   | 'macros'
+  | 'strict-format'
   | 'tables';
 
 export interface XlsxLimitation {

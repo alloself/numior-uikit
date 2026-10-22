@@ -1,0 +1,40 @@
+{
+  "kind": "editable",
+  "report": {
+    "staleFormulas": 0,
+    "items": [
+      {
+        "code": "macros",
+        "severity": "info",
+        "count": 1,
+        "names": []
+      }
+    ]
+  },
+  "defaultFont": {
+    "size": 11,
+    "color": {
+      "kind": "theme",
+      "theme": 1,
+      "tint": 0
+    },
+    "name": "Calibri",
+    "family": 2,
+    "scheme": "minor"
+  },
+  "sheets": [
+    {
+      "name": "Macro",
+      "cells": {
+        "A1": {
+          "value": {
+            "kind": "number",
+            "value": 1
+          }
+        }
+      }
+    }
+  ],
+  "names": [],
+  "tables": []
+}

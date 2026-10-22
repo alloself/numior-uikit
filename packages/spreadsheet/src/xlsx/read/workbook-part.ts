@@ -10,6 +10,8 @@ import {
   type PartOptions,
 } from './ooxml';
 
+const STRICT_MAIN = 'http://purl.oclc.org/ooxml/spreadsheetml/main';
+
 export interface SheetEntry {
   readonly name: string;
   readonly sheetId: number;
@@ -29,6 +31,7 @@ export interface WorkbookPart {
   readonly date1904: boolean;
   readonly externalLinks: number;
   readonly pivotCaches: number;
+  readonly strict: boolean;
 }
 
 export const readWorkbookPart = async (
@@ -41,6 +44,7 @@ export const readWorkbookPart = async (
   let date1904 = false;
   let externalLinks = 0;
   let pivotCaches = 0;
+  let strict = false;
   let name: { name: string; sheet: number | undefined; text: string } | undefined;
 
   await readPart(
@@ -52,6 +56,9 @@ export const readWorkbookPart = async (
           return;
         }
         switch (element.local) {
+          case 'workbook':
+            strict = element.uri === STRICT_MAIN;
+            break;
           case 'sheet':
             sheets.push({
               name: decodeXstring(attributeOf(attributes, 'name') ?? ''),
@@ -100,5 +107,5 @@ export const readWorkbookPart = async (
     options,
   );
 
-  return { sheets, names, date1904, externalLinks, pivotCaches };
+  return { sheets, names, date1904, externalLinks, pivotCaches, strict };
 };

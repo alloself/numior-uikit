@@ -1,0 +1,327 @@
+{
+  "kind": "editable",
+  "report": {
+    "staleFormulas": 18,
+    "items": [
+      {
+        "code": "unsupported-functions",
+        "severity": "info",
+        "count": 2,
+        "names": [
+          "SUBTOTAL"
+        ]
+      }
+    ]
+  },
+  "defaultFont": {
+    "size": 11,
+    "color": {
+      "kind": "theme",
+      "theme": 1,
+      "tint": 0
+    },
+    "name": "Calibri",
+    "family": 2,
+    "scheme": "minor"
+  },
+  "sheets": [
+    {
+      "name": "Sales",
+      "cells": {
+        "A1": {
+          "value": {
+            "kind": "string",
+            "value": "Item"
+          }
+        },
+        "B1": {
+          "value": {
+            "kind": "string",
+            "value": "Qty"
+          }
+        },
+        "C1": {
+          "value": {
+            "kind": "string",
+            "value": "Price"
+          }
+        },
+        "D1": {
+          "value": {
+            "kind": "string",
+            "value": "Total"
+          }
+        },
+        "E1": {
+          "value": {
+            "kind": "number",
+            "value": 2
+          }
+        },
+        "A2": {
+          "value": {
+            "kind": "string",
+            "value": "Pen"
+          }
+        },
+        "B2": {
+          "value": {
+            "kind": "number",
+            "value": 3
+          }
+        },
+        "C2": {
+          "value": {
+            "kind": "number",
+            "value": 10
+          }
+        },
+        "D2": {
+          "value": {
+            "kind": "number",
+            "value": 30
+          },
+          "formula": "Table1[@Qty]*Table1[@Price]",
+          "state": "imported"
+        },
+        "F2": {
+          "value": {
+            "kind": "number",
+            "value": 6
+          },
+          "formula": "$B2*E$1",
+          "state": "imported"
+        },
+        "G2": {
+          "value": {
+            "kind": "number",
+            "value": 0
+          },
+          "formula": "$B2*F$1",
+          "state": "imported"
+        },
+        "A3": {
+          "value": {
+            "kind": "string",
+            "value": "Ink"
+          }
+        },
+        "B3": {
+          "value": {
+            "kind": "number",
+            "value": 1
+          }
+        },
+        "C3": {
+          "value": {
+            "kind": "number",
+            "value": 20
+          }
+        },
+        "D3": {
+          "value": {
+            "kind": "number",
+            "value": 20
+          },
+          "formula": "Table1[@Qty]*Table1[@Price]",
+          "state": "imported"
+        },
+        "F3": {
+          "value": {
+            "kind": "number",
+            "value": 2
+          },
+          "formula": "$B3*E$1",
+          "state": "imported"
+        },
+        "G3": {
+          "value": {
+            "kind": "number",
+            "value": 0
+          },
+          "formula": "$B3*F$1",
+          "state": "imported"
+        },
+        "A4": {
+          "value": {
+            "kind": "string",
+            "value": "Pad"
+          }
+        },
+        "B4": {
+          "value": {
+            "kind": "number",
+            "value": 2
+          }
+        },
+        "C4": {
+          "value": {
+            "kind": "number",
+            "value": 5
+          }
+        },
+        "D4": {
+          "value": {
+            "kind": "number",
+            "value": 10
+          },
+          "formula": "Table1[@Qty]*Table1[@Price]",
+          "state": "imported"
+        },
+        "F4": {
+          "value": {
+            "kind": "number",
+            "value": 4
+          },
+          "formula": "$B4*E$1",
+          "state": "imported"
+        },
+        "G4": {
+          "value": {
+            "kind": "number",
+            "value": 0
+          },
+          "formula": "$B4*F$1",
+          "state": "imported"
+        },
+        "A5": {
+          "value": {
+            "kind": "string",
+            "value": "Sum"
+          }
+        },
+        "B5": {
+          "value": {
+            "kind": "number",
+            "value": 6
+          },
+          "formula": "SUBTOTAL(109,Table1[Qty])",
+          "state": "imported"
+        },
+        "D5": {
+          "value": {
+            "kind": "number",
+            "value": 60
+          },
+          "formula": "SUBTOTAL(109,Table1[Total])",
+          "state": "imported"
+        },
+        "A7": {
+          "value": {
+            "kind": "number",
+            "value": 60
+          },
+          "formula": "SUM(B2:B4*C2:C4)",
+          "state": "imported"
+        },
+        "B7": {
+          "value": {
+            "kind": "number",
+            "value": 1
+          },
+          "formula": "SEQUENCE(3)",
+          "state": "imported"
+        },
+        "C7": {
+          "value": {
+            "kind": "number",
+            "value": 20
+          },
+          "formula": "XLOOKUP(\"Ink\",A2:A4,C2:C4)",
+          "state": "imported"
+        },
+        "D7": {
+          "value": {
+            "kind": "string",
+            "value": "big"
+          },
+          "formula": "IFS(B2>2,\"big\",TRUE,\"small\")",
+          "state": "imported"
+        },
+        "E7": {
+          "value": {
+            "kind": "boolean",
+            "value": true
+          },
+          "formula": "ISNUMBER(B2)",
+          "state": "imported"
+        },
+        "F7": {
+          "value": {
+            "kind": "error",
+            "code": "#DIV/0!"
+          },
+          "formula": "1/0",
+          "state": "imported"
+        },
+        "G7": {
+          "value": {
+            "kind": "number",
+            "value": 0.5
+          },
+          "formula": "Rate*Rates!Local",
+          "state": "imported"
+        },
+        "B8": {
+          "value": {
+            "kind": "number",
+            "value": 2
+          }
+        },
+        "B9": {
+          "value": {
+            "kind": "number",
+            "value": 3
+          }
+        }
+      }
+    },
+    {
+      "name": "Rates",
+      "cells": {
+        "A1": {
+          "value": {
+            "kind": "number",
+            "value": 2
+          }
+        },
+        "B1": {
+          "value": {
+            "kind": "number",
+            "value": 0.25
+          }
+        }
+      }
+    }
+  ],
+  "names": [
+    {
+      "name": "Local",
+      "scope": "Rates",
+      "formula": "Rates!$A$1"
+    },
+    {
+      "name": "Rate",
+      "formula": "Rates!$B$1"
+    },
+    {
+      "name": "Secret",
+      "formula": "Rates!$B$1*2"
+    }
+  ],
+  "tables": [
+    {
+      "name": "Table1",
+      "range": "A1:D5",
+      "columns": [
+        "Item",
+        "Qty",
+        "Price",
+        "Total"
+      ],
+      "headers": true,
+      "totals": true,
+      "sheet": "Sales"
+    }
+  ]
+}

@@ -53,6 +53,7 @@ const READ_ONLY = new Set<XlsxLimitationCode>([
   'pivot-tables',
   'data-tables',
   'formula-syntax',
+  'strict-format',
 ]);
 
 const SHEET_COUNTS: readonly (readonly [keyof Omit<SheetCounts, 'unknown'>, XlsxLimitationCode])[] =
@@ -256,6 +257,7 @@ const addBookLimits = (load: Load, workbook: WorkbookPart, context: BookContext)
   const { report } = load;
 
   report.add('date-1904', workbook.date1904 ? 1 : 0);
+  report.add('strict-format', workbook.strict ? 1 : 0);
   report.add('external-links', workbook.externalLinks);
   report.add('pivot-tables', workbook.pivotCaches);
   report.add('unsupported-functions', load.totals.kept, undefined, load.totals.unknown);
