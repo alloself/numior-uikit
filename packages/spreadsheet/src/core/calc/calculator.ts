@@ -22,6 +22,7 @@ import type {
   ArrayValue,
   CellContent,
   FormulaCell,
+  FormulaPlace,
   FormulaResult,
   FunctionRegistry,
   Limitation,
@@ -88,6 +89,7 @@ export interface Calculator {
   formulaAt(sheet: Sheet, row: number, col: number): FormulaCell | undefined;
   spillOf(sheet: Sheet, row: number, col: number): CellRange | undefined;
   recalculate(options?: RecalcOptions): Recalculation;
+  evaluateAt(sheet: Sheet, row: number, col: number, ast: FormulaNode): CellValue;
   setLocale(locale: BookLocale): void;
   readonly locale: BookLocale;
   readonly functions: FunctionRegistry;
@@ -451,8 +453,8 @@ export const createCalculator = (
   const nameUsers = new Map<string, Set<number>>();
   let current: Run | undefined;
   let locale = initialLocale;
-  let now = 0;
-  let evaluating: FormulaRecord | undefined;
+  let now = serialOf(clock());
+  let evaluating: FormulaPlace | undefined;
   const dynamic: Precedent[] = [];
 
   const positionsOf = (sheet: number): Map<number, number> => {
@@ -1194,6 +1196,18 @@ export const createCalculator = (
       formulas.forEach((record) => {
         visit(record.sheet, record.row, record.col, record.cell.ast);
       });
+    },
+    evaluateAt: (sheet, row, col, ast) => {
+      const before = evaluating;
+      const tracked = dynamic.length;
+
+      evaluating = { sheet, row, col };
+
+      const result = evaluateFormula(ast, contextFor(sheet));
+
+      evaluating = before;
+      dynamic.length = tracked;
+      return result.kind === 'array' ? (result.rows[0]?.[0] ?? EMPTY) : result;
     },
     setLocale: (next) => {
       interrupt();

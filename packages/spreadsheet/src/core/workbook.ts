@@ -1,6 +1,7 @@
 import { parseCell } from './address';
 import { createCellFormats, type CellFormats } from './cell-formats';
 import { createCellStore, type CellStore } from './cell-store';
+import type { ConditionalFormat } from './conditional/conditional.types';
 import { createDecorations, type CellDecorations } from './decorations';
 import { createNumberFormats, type NumberFormats } from './number-formats';
 import type { BookIndexOf, BookLabelOf, FormulaNode, SheetPlace } from './formula/formula.types';
@@ -14,6 +15,7 @@ export interface Sheet {
   readonly formats: CellFormats;
   readonly decorations: CellFormats;
   shifts: number;
+  conditional: readonly ConditionalFormat[];
 }
 
 export interface DefinedName {
@@ -246,6 +248,7 @@ const blankSheet = (id: number, name: string, strings: SharedStrings): Sheet => 
   formats: createCellFormats(),
   decorations: createCellFormats(),
   shifts: 0,
+  conditional: [],
 });
 
 const externalBook = (init: ExternalBookInit, sheets: readonly Sheet[]): ExternalBook => ({

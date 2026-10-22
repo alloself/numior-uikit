@@ -9,20 +9,25 @@ interface Chunk {
   numbers: Float64Array | undefined;
   refs: Uint32Array | undefined;
   count: number;
+  stamp: number;
 }
 
 export type CellVisitor = (row: number, col: number, value: CellValue) => void;
+
+export type ChunkVisitor = (stamp: number, area: CellRange) => void;
 
 export interface CellStore {
   get(row: number, col: number): CellValue;
   set(row: number, col: number, value: CellValue): void;
   has(row: number, col: number): boolean;
   forEachInRange(range: CellRange, visit: CellVisitor): void;
+  forEachChunk(range: CellRange, visit: ChunkVisitor): void;
   usedRange(): CellRange | undefined;
   lastRow(): number;
   nextEdge(row: number, col: number, rowStep: -1 | 0 | 1, colStep: -1 | 0 | 1): number;
   shiftLines(axis: 'rows' | 'cols', at: number, count: number): void;
   readonly size: number;
+  readonly revision: number;
   readonly chunks: number;
 }
 
@@ -60,6 +65,7 @@ const newChunk = (): Chunk => ({
   numbers: undefined,
   refs: undefined,
   count: 0,
+  stamp: 0,
 });
 
 const numbersOf = (chunk: Chunk): Float64Array => {
@@ -255,6 +261,8 @@ export const createCellStore = (strings: SharedStrings): CellStore => {
     return taken;
   };
 
+  let revision = 0;
+
   const putRaw = (row: number, col: number, kind: number, number: number, ref: number): void => {
     const key = chunkKey(row, col);
     const chunk = chunks.get(key) ?? newChunk();
@@ -267,6 +275,7 @@ export const createCellStore = (strings: SharedStrings): CellStore => {
       refsOf(chunk)[slot] = ref;
     }
     chunk.count += 1;
+    chunk.stamp = revision;
     size += 1;
     chunks.set(key, chunk);
   };
@@ -274,6 +283,8 @@ export const createCellStore = (strings: SharedStrings): CellStore => {
   return {
     shiftLines: (axis, at, count) => {
       const change: LineMove = { axis, at, count };
+
+      revision += 1;
       const taken = takeLines(axis, at);
 
       taken.rows.forEach((row, index) => {
@@ -299,6 +310,8 @@ export const createCellStore = (strings: SharedStrings): CellStore => {
     has: filled,
     set: (row, col, value) => {
       const key = chunkKey(row, col);
+
+      revision += 1;
       const slot = slotOf(row, col);
       const chunk = chunks.get(key) ?? (value.kind === 'empty' ? undefined : newChunk());
 
@@ -308,6 +321,7 @@ export const createCellStore = (strings: SharedStrings): CellStore => {
       const was = chunk.kinds[slot] !== Kind.Empty;
 
       write(chunk, slot, value, strings);
+      chunk.stamp = revision;
       const now = value.kind !== 'empty';
 
       chunk.count += Number(now) - Number(was);
@@ -330,6 +344,24 @@ export const createCellStore = (strings: SharedStrings): CellStore => {
 
         if (present.length > 0) {
           visitBand(present, band, range, visit);
+        }
+      }
+    },
+    forEachChunk: (range, visit) => {
+      const columns = bandsOf(range.left, range.right, CHUNK_COLS);
+
+      for (const band of bandsOf(range.top, range.bottom, CHUNK_ROWS)) {
+        for (const col of columns) {
+          const chunk = chunks.get(band * CHUNKS_PER_ROW + col);
+
+          if (chunk !== undefined) {
+            visit(chunk.stamp, {
+              top: Math.max(range.top, band * CHUNK_ROWS),
+              left: Math.max(range.left, col * CHUNK_COLS),
+              bottom: Math.min(range.bottom, band * CHUNK_ROWS + CHUNK_ROWS - 1),
+              right: Math.min(range.right, col * CHUNK_COLS + CHUNK_COLS - 1),
+            });
+          }
         }
       }
     },
@@ -374,6 +406,9 @@ export const createCellStore = (strings: SharedStrings): CellStore => {
     },
     get size() {
       return size;
+    },
+    get revision() {
+      return revision;
     },
     get chunks() {
       return chunks.size;

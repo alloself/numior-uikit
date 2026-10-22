@@ -2,6 +2,7 @@ import { MAX_COLS, MAX_ROWS, containsCell } from '../address';
 import type { Calculator } from '../calc/calculator';
 import type { CellContent, ShiftedFormulaCell, ShiftedName } from '../calc/calc.types';
 import type { CellRange } from '../cell.types';
+import type { ConditionalFormat } from '../conditional/conditional.types';
 import type { FormulaNode } from '../formula/formula.types';
 import { formulaReferences, onSheetNamed } from '../formula/references';
 import { dropSheetFromFormula, renameInFormula, type LineChange } from '../formula/rewrite';
@@ -9,6 +10,11 @@ import { validDefinedName, validSheetName, type Sheet, type Workbook } from '../
 import { createRewriter, formulaEdits, nameEdits } from './rewrites';
 import type { CellEdit, LineAxis, StepRefusal, StepResult, WorkbookStep } from './step.types';
 import { createTableSteps, specOf, type TableDrops } from './table-steps';
+import {
+  mapConditionalFormulas,
+  shiftConditional,
+  shiftConditionalReferences,
+} from '../conditional/shift';
 
 export interface Stepper {
   apply(step: WorkbookStep): StepResult;
@@ -41,6 +47,13 @@ const done = (inverse: WorkbookStep, changes: readonly LineChange[] = NO_CHANGES
 
 const mentions = (ast: FormulaNode, name: string): boolean =>
   formulaReferences(ast).some((reference) => onSheetNamed(reference, name));
+
+const setConditional = (sheet: Sheet, formats: readonly ConditionalFormat[]): StepResult => {
+  const previous = sheet.conditional;
+
+  sheet.conditional = formats;
+  return done({ kind: 'setConditional', sheet: sheet.name, formats: previous });
+};
 
 export const createStepper = (book: Workbook, calculator: Calculator): Stepper => {
   const rewriter = createRewriter(book, calculator);
@@ -159,6 +172,22 @@ export const createStepper = (book: Workbook, calculator: Calculator): Stepper =
     });
   };
 
+  const conditionalSnapshot = (): WorkbookStep[] =>
+    book.sheets.map((each) => ({
+      kind: 'setConditional',
+      sheet: each.name,
+      formats: each.conditional,
+    }));
+
+  const moveConditional = (sheet: Sheet, change: LineChange): void => {
+    book.sheets.forEach((each) => {
+      each.conditional =
+        each === sheet
+          ? shiftConditional(each.conditional, change)
+          : shiftConditionalReferences(each.conditional, change);
+    });
+  };
+
   const occupied = (sheet: Sheet, range: CellRange): boolean => {
     let found = calculator.hasFormulaIn(sheet, range);
 
@@ -204,6 +233,7 @@ export const createStepper = (book: Workbook, calculator: Calculator): Stepper =
     const rewrites = calculator.shiftLines(sheet, change);
     const names = calculator.shiftNames(change);
 
+    moveConditional(sheet, change);
     sheet.formats.shiftLines(change.axis, change.at, change.count);
     sheet.decorations.shiftLines(change.axis, change.at, change.count);
     sheet.shifts += 1;
@@ -219,13 +249,21 @@ export const createStepper = (book: Workbook, calculator: Calculator): Stepper =
     }
 
     const change: LineChange = { sheet: sheet.name, axis, at, count };
+    const conditional = conditionalSnapshot();
 
     moveLines(sheet, change);
-    return done({ kind: 'deleteLines', sheet: sheet.name, axis, at, count }, [change]);
+    return done(
+      {
+        kind: 'batch',
+        steps: [{ kind: 'deleteLines', sheet: sheet.name, axis, at, count }, ...conditional],
+      },
+      [change],
+    );
   };
 
   const deleteLines = (sheet: Sheet, axis: LineAxis, at: number, count: number): StepResult => {
     const change: LineChange = { sheet: sheet.name, axis, at, count: -count };
+    const conditional = conditionalSnapshot();
     const { deleted, rewrites, names, drops, restores } = moveLines(sheet, change);
 
     return done(
@@ -239,6 +277,7 @@ export const createStepper = (book: Workbook, calculator: Calculator): Stepper =
           ...formulaEdits(drops.rewrites),
           ...nameEdits(drops.names),
           ...restores,
+          ...conditional,
         ],
       },
       [change],
@@ -273,6 +312,7 @@ export const createStepper = (book: Workbook, calculator: Calculator): Stepper =
 
     const index = book.sheets.indexOf(sheet);
     const contents = [...contentsIn(sheet, WHOLE_SHEET).values()];
+    const conditional = conditionalSnapshot();
     const removed = book.tables.on(sheet);
 
     removed.forEach((table) => {
@@ -291,6 +331,13 @@ export const createStepper = (book: Workbook, calculator: Calculator): Stepper =
 
     clear(sheet, contents);
     book.removeSheet(sheet);
+
+    book.sheets.forEach((each) => {
+      each.conditional = mapConditionalFormulas(each.conditional, (ast) =>
+        dropSheetFromFormula(ast, sheet.name),
+      );
+    });
+
     return done({
       kind: 'batch',
       steps: [
@@ -303,6 +350,7 @@ export const createStepper = (book: Workbook, calculator: Calculator): Stepper =
         })),
         ...formulaEdits(rewrites),
         ...nameEdits(names),
+        ...conditional,
       ],
     });
   };
@@ -315,6 +363,13 @@ export const createStepper = (book: Workbook, calculator: Calculator): Stepper =
     }
     rewriter.formulas((_owner, ast) => renameInFormula(ast, from, to));
     rewriter.names((defined) => renameInFormula(defined.ast, from, to));
+
+    book.sheets.forEach((each) => {
+      each.conditional = mapConditionalFormulas(each.conditional, (ast) =>
+        renameInFormula(ast, from, to),
+      );
+    });
+
     return done({ kind: 'renameSheet', from: to, to: from });
   };
 
@@ -367,6 +422,8 @@ export const createStepper = (book: Workbook, calculator: Calculator): Stepper =
         return tables.set(step.name, step.table);
       case 'renameTable':
         return tables.rename(step.from, step.to);
+      case 'setConditional':
+        return onSheet(step.sheet, (sheet) => setConditional(sheet, step.formats));
       case 'batch':
         return applyBatch(step.steps);
     }

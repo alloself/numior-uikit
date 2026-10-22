@@ -1,5 +1,6 @@
 import {
   createCalculator,
+  createConditionalPainter,
   createStepper,
   createWorkbook,
   loadCells,
@@ -199,6 +200,61 @@ operations.push(
       if (count !== ROWS * COLS) {
         throw new Error(`read ${String(count)} cells`);
       }
+    },
+    heavy,
+  ),
+);
+
+const painted = createCalculator(filled.workbook);
+const painter = createConditionalPainter(painted);
+const viewport = { top: 9_980, left: 0, bottom: 10_019, right: 19 };
+
+filled.sheet.conditional = [
+  {
+    ranges: [{ top: 0, left: 0, bottom: ROWS - 1, right: COLS - 1 }],
+    rules: [
+      {
+        priority: 1,
+        stopIfTrue: false,
+        rule: {
+          kind: 'colorScale',
+          stops: [
+            { threshold: { kind: 'min' }, color: { kind: 'rgb', argb: 'FFF8696B' } },
+            { threshold: { kind: 'max' }, color: { kind: 'rgb', argb: 'FF63BE7B' } },
+          ],
+        },
+      },
+      {
+        priority: 2,
+        stopIfTrue: false,
+        rule: {
+          kind: 'top',
+          rank: 10,
+          percent: true,
+          bottom: false,
+          style: { font: { bold: true } },
+        },
+      },
+    ],
+  },
+];
+
+operations.push(
+  await measure(
+    'paint a 40 × 20 viewport of 1,000,000 cells under a colour scale after an edit',
+    async () => {
+      filled.sheet.cells.set(0, 0, numberValue(Math.random()));
+      painter.looks(filled.sheet, viewport);
+    },
+    heavy,
+  ),
+);
+
+operations.push(
+  await measure(
+    'paint a 40 × 20 viewport of 1,000,000 cells under a colour scale',
+    async () => {
+      painter.looks(filled.sheet, viewport);
     },
     heavy,
   ),

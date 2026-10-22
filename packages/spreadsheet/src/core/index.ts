@@ -14,7 +14,7 @@ export {
   rangeSize,
 } from './address';
 export { CHUNK_COLS, CHUNK_ROWS, createCellStore } from './cell-store';
-export type { CellStore, CellVisitor } from './cell-store';
+export type { CellStore, CellVisitor, ChunkVisitor } from './cell-store';
 export type { CellAddress, CellError, CellRange, CellRef, CellValue } from './cell.types';
 export { createSharedStrings } from './strings';
 export type { SharedStrings } from './strings';
@@ -29,6 +29,22 @@ export {
   textValue,
 } from './values';
 export { createWorkbook, validDefinedName, validSheetName } from './workbook';
+export { createConditionalPainter, type ConditionalPainter } from './conditional/looks';
+export type {
+  BarLook,
+  CellIsOperator,
+  ConditionalEntry,
+  ConditionalFormat,
+  ConditionalLook,
+  ConditionalRule,
+  DifferentialStyle,
+  IconLook,
+  ScaleLook,
+  ScaleStop,
+  TextOperator,
+  Threshold,
+  TimePeriod,
+} from './conditional/conditional.types';
 export { EN_LOCALE, RU_LOCALE, type BookLocale } from './locale';
 export { createCellEditor, editText, readInput } from './cell-input';
 export type { CellEditor, CellInput, EntryResult, NameOptions, TableOptions } from './cell-input';

@@ -1,5 +1,6 @@
 import type { CellContent } from '../calc/calc.types';
 import type { CellRange } from '../cell.types';
+import type { ConditionalFormat } from '../conditional/conditional.types';
 import type { CellDecoration } from '../decorations';
 import type { FormulaNode } from '../formula/formula.types';
 import type { LineChange } from '../formula/rewrite';
@@ -46,6 +47,11 @@ export type WorkbookStep =
   | { readonly kind: 'addTable'; readonly name: string; readonly table: TableSpec }
   | { readonly kind: 'setTable'; readonly name: string; readonly table: TableSpec | undefined }
   | { readonly kind: 'renameTable'; readonly from: string; readonly to: string }
+  | {
+      readonly kind: 'setConditional';
+      readonly sheet: string;
+      readonly formats: readonly ConditionalFormat[];
+    }
   | { readonly kind: 'batch'; readonly steps: readonly WorkbookStep[] };
 
 export type StepRefusal =

@@ -12,6 +12,12 @@
     "enter 100,050 formulas with their dependencies": {
       "p95Ms": 580
     },
+    "paint a 40 × 20 viewport of 1,000,000 cells under a colour scale after an edit": {
+      "p95Ms": 16
+    },
+    "paint a 40 × 20 viewport of 1,000,000 cells under a colour scale": {
+      "p95Ms": 4
+    },
     "longest main-thread slice while loading 100,050 formulas": {
       "p95Ms": 16
     },
