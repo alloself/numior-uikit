@@ -102,6 +102,22 @@
     },
     {
       "formula": "=INDIRECT(\"R1C1\",FALSE)",
+      "expected": 1
+    },
+    {
+      "formula": "=INDIRECT(\"R[2]C[-25]\",FALSE)",
+      "expected": 30
+    },
+    {
+      "formula": "=SUM(INDIRECT(\"R1C1:R3C2\",FALSE))",
+      "expected": 66
+    },
+    {
+      "formula": "=SUM(INDIRECT(\"C1\",FALSE))",
+      "expected": 6
+    },
+    {
+      "formula": "=INDIRECT(\"R0C1\",FALSE)",
       "expected": {
         "error": "#REF!"
       }

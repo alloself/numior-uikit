@@ -101,6 +101,6 @@ export const REFERENCE_FUNCTIONS: readonly FunctionSpec[] = [
     min: 1,
     max: 2,
     volatile: true,
-    evaluate: (args) => (args.logical(1, true) ? args.indirect(args.text(0)) : raise('#REF!')),
+    evaluate: (args) => args.indirect(args.text(0), args.logical(1, true)),
   }),
 ];

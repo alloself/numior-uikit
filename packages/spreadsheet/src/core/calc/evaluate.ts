@@ -4,6 +4,7 @@ import type { FormulaNode, SheetPlace } from '../formula/formula.types';
 import { colOf, referenceRange, rowOf } from '../formula/origin';
 import { EN_FORMULAS } from '../formula/locale';
 import { parseFormula } from '../formula/parser';
+import { a1FromR1c1 } from '../formula/r1c1';
 import { structuredRange, tableData } from '../tables';
 import { EMPTY, errorValue, numberValue, textValue } from '../values';
 import { tableFor, type DefinedName, type Sheet, type Workbook } from '../workbook';
@@ -293,16 +294,17 @@ const argumentsFrom = (
       context.track(sheet, range);
       return { kind: 'reference', sheet, range };
     },
-    indirect: (text) => indirect(text, context),
+    indirect: (text, a1) => indirect(text, a1, context),
     subtotalAt: (sheet, row, col) => context.subtotalAt(sheet, row, col),
   };
 };
 
 const REFERENCE_KINDS = new Set(['cell', 'range', 'columns', 'rows']);
 
-const indirect = (text: string, context: EvalContext): EvalValue => {
+const indirect = (text: string, a1: boolean, context: EvalContext): EvalValue => {
   const here = context.here();
-  const parsed = parseFormula(text, EN_FORMULAS, here);
+  const address = a1 ? text : (a1FromR1c1(text, here) ?? raise('#REF!'));
+  const parsed = parseFormula(address, EN_FORMULAS, here);
 
   if (!parsed.ok || !REFERENCE_KINDS.has(parsed.ast.kind)) {
     return raise('#REF!');

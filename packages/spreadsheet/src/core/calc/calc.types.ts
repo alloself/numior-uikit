@@ -56,7 +56,7 @@ export interface FunctionArgs {
   random(): number;
   here(): FormulaPlace;
   refer(sheet: Sheet, range: CellRange): EvalValue;
-  indirect(text: string): EvalValue;
+  indirect(text: string, a1: boolean): EvalValue;
   subtotalAt(sheet: Sheet, row: number, col: number): boolean;
 }
 
