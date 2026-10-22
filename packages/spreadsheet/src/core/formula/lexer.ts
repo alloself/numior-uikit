@@ -7,6 +7,7 @@ export type TokenKind =
   | 'error'
   | 'word'
   | 'sheet'
+  | 'structured'
   | 'op'
   | 'punct'
   | 'hash'
@@ -108,6 +109,34 @@ const wordEnd = (source: string, at: number): number => {
 
 type Scan = { readonly token: Token; readonly next: number } | LexFailure;
 
+const bracketEnd = (source: string, at: number): number | undefined => {
+  let depth = 0;
+
+  for (let index = at; index < source.length; index += 1) {
+    const char = source[index];
+
+    if (char === "'") {
+      index += 1;
+    } else if (char === '[') {
+      depth += 1;
+    } else if (char === ']') {
+      depth -= 1;
+      if (depth === 0) {
+        return index;
+      }
+    }
+  }
+  return undefined;
+};
+
+const scanStructured = (source: string, at: number, open: number): Scan => {
+  const end = bracketEnd(source, open);
+
+  return end === undefined
+    ? { position: open }
+    : { token: token('structured', source.slice(at, end + 1), at), next: end + 1 };
+};
+
 const scanQuoted = (source: string, at: number): Scan => {
   const quote = source[at] ?? '"';
   const end = quotedEnd(source, at, quote);
@@ -129,6 +158,9 @@ const scanWord = (source: string, at: number): Scan => {
   const end = wordEnd(source, at);
   const text = source.slice(at, end);
 
+  if (source[end] === '[') {
+    return scanStructured(source, at, end);
+  }
   return source[end] === '!'
     ? { token: token('sheet', text, at), next: end + 1 }
     : { token: token('word', text, at), next: end };
@@ -138,6 +170,9 @@ const scanSymbol = (source: string, at: number): Scan => {
   const char = source[at] ?? '';
   const operator = OPERATORS.find((candidate) => source.startsWith(candidate, at));
 
+  if (char === '[') {
+    return scanStructured(source, at, at);
+  }
   if (char === '#') {
     const error = errorAt(source, at);
 

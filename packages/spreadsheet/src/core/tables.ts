@@ -1,4 +1,5 @@
-import type { CellRange } from './cell.types';
+import type { CellError, CellRange } from './cell.types';
+import type { StructuredArea, StructuredColumns } from './formula/formula.types';
 import { shiftSpan, type LineChange } from './formula/rewrite';
 
 export interface TableShape {
@@ -29,6 +30,68 @@ export const dataRows = (table: TableShape): number => {
   const data = tableData(table);
 
   return data.bottom - data.top + 1;
+};
+
+export interface StructuredPart {
+  readonly area: StructuredArea;
+  readonly columns?: StructuredColumns | undefined;
+}
+
+const columnOf = (table: TableShape, name: string): number | undefined => {
+  const wanted = name.toLowerCase();
+  const index = table.columns.findIndex((column) => column.toLowerCase() === wanted);
+
+  return index < 0 ? undefined : index;
+};
+
+const areaRows = (
+  table: TableShape,
+  area: StructuredArea,
+  row: number,
+): readonly [number, number] | CellError => {
+  const data = tableData(table);
+
+  switch (area) {
+    case 'all':
+      return [table.range.top, table.range.bottom];
+    case 'data':
+      return [data.top, data.bottom];
+    case 'headers':
+      return table.headers ? [table.range.top, table.range.top] : '#REF!';
+    case 'totals':
+      return table.totals ? [table.range.bottom, table.range.bottom] : '#REF!';
+    case 'headers-data':
+      return [table.range.top, data.bottom];
+    case 'data-totals':
+      return [data.top, table.range.bottom];
+    case 'row':
+      return row >= data.top && row <= data.bottom ? [row, row] : '#VALUE!';
+  }
+};
+
+export const structuredRange = (
+  table: TableShape,
+  part: StructuredPart,
+  row: number,
+): CellRange | CellError => {
+  const rows = areaRows(table, part.area, row);
+  const from = part.columns === undefined ? 0 : columnOf(table, part.columns.from);
+
+  const to =
+    part.columns === undefined ? table.columns.length - 1 : columnOf(table, part.columns.to);
+
+  if (typeof rows === 'string') {
+    return rows;
+  }
+  if (from === undefined || to === undefined) {
+    return '#REF!';
+  }
+  return {
+    top: rows[0],
+    bottom: rows[1],
+    left: table.range.left + Math.min(from, to),
+    right: table.range.left + Math.max(from, to),
+  };
 };
 
 export const rangesMeet = (left: CellRange, right: CellRange): boolean =>

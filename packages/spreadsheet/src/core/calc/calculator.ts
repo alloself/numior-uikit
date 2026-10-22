@@ -8,8 +8,14 @@ import { parseFormula } from '../formula/parser';
 import { changesMeaning, shiftFormula, shiftSpan, type LineChange } from '../formula/rewrite';
 import { formulaReferences } from '../formula/references';
 import { EMPTY, errorValue, numberValue } from '../values';
-import { tableData } from '../tables';
-import type { DefinedName, Sheet, SheetTable, Workbook } from '../workbook';
+import { structuredRange, tableData } from '../tables';
+import {
+  tableFor,
+  type DefinedName,
+  type Sheet,
+  type SheetTable,
+  type Workbook,
+} from '../workbook';
 import type {
   ArrayValue,
   CellContent,
@@ -30,6 +36,8 @@ import { createFunctionRegistry } from './registry';
 import { nextTask } from './tasks';
 import { createSpills, forEachSpillCell, type SpillArea, type SpillCell } from './spills';
 
+export type UserRewrite = (sheet: Sheet, row: number, col: number, ast: FormulaNode) => FormulaNode;
+
 export interface Calculator {
   setFormula(
     sheet: Sheet,
@@ -42,10 +50,14 @@ export interface Calculator {
   setContent(sheet: Sheet, row: number, col: number, content: CellContent): void;
   contentAt(sheet: Sheet, row: number, col: number): CellContent;
   forEachFormula(visit: (sheet: Sheet, row: number, col: number, ast: FormulaNode) => void): void;
+  forEachUser(
+    name: string,
+    visit: (sheet: Sheet, row: number, col: number, ast: FormulaNode) => void,
+  ): void;
   shiftLines(sheet: Sheet, change: LineChange): readonly ShiftedFormulaCell[];
   shiftNames(change: LineChange): readonly ShiftedName[];
   setName(name: string, scope: Sheet | undefined, ast: FormulaNode | undefined): void;
-  setTable(name: string, table: SheetTable | undefined): void;
+  setTable(name: string, table: SheetTable | undefined, rewrite?: UserRewrite): void;
   hasFormulaIn(sheet: Sheet, range: CellRange): boolean;
   formulaAt(sheet: Sheet, row: number, col: number): FormulaCell | undefined;
   spillOf(sheet: Sheet, row: number, col: number): CellRange | undefined;
@@ -149,6 +161,24 @@ const definedFor = (
   return home === undefined ? undefined : workbook.names.resolve(node.name, home);
 };
 
+const structuredLinks = (
+  found: Extract<FormulaNode, { readonly kind: 'structured' }>,
+  record: Placed,
+  workbook: Workbook,
+  links: Links,
+): void => {
+  const table = tableFor(workbook, found.table, record.sheet, record.row, record.col);
+  const owner = found.table ?? table?.name;
+  const range = table === undefined ? undefined : structuredRange(table, found, record.row);
+
+  if (owner !== undefined) {
+    links.names.add(owner.toLowerCase());
+  }
+  if (table !== undefined && typeof range === 'object') {
+    links.precedents.push({ sheet: table.sheet.id, range });
+  }
+};
+
 const collectLinks = (
   ast: FormulaNode,
   record: Placed,
@@ -157,18 +187,12 @@ const collectLinks = (
   seen: Set<DefinedName>,
 ): void => {
   formulaReferences(ast).forEach((found) => {
+    if (found.kind === 'structured') {
+      structuredLinks(found, record, workbook, links);
+      return;
+    }
     if (found.kind === 'name') {
-      const defined = definedFor(workbook, record.sheet, found);
-
-      const table = found.sheet === undefined ? workbook.tables.get(found.name) : undefined;
-
-      links.names.add(found.name.toLowerCase());
-      if (defined !== undefined && !seen.has(defined)) {
-        seen.add(defined);
-        collectLinks(defined.ast, record, workbook, links, seen);
-      } else if (defined === undefined && table !== undefined) {
-        links.precedents.push({ sheet: table.sheet.id, range: tableData(table) });
-      }
+      nameLinks(found, record, workbook, links, seen);
       return;
     }
 
@@ -180,6 +204,43 @@ const collectLinks = (
     }
   });
 };
+
+const nameLinks = (
+  found: Extract<FormulaNode, { readonly kind: 'name' }>,
+  record: Placed,
+  workbook: Workbook,
+  links: Links,
+  seen: Set<DefinedName>,
+): void => {
+  const defined = definedFor(workbook, record.sheet, found);
+  const table = found.sheet === undefined ? workbook.tables.get(found.name) : undefined;
+
+  links.names.add(found.name.toLowerCase());
+  if (defined !== undefined && !seen.has(defined)) {
+    seen.add(defined);
+    collectLinks(defined.ast, record, workbook, links, seen);
+  } else if (defined === undefined && table !== undefined) {
+    links.precedents.push({ sheet: table.sheet.id, range: tableData(table) });
+  }
+};
+
+const samePrecedents = (left: readonly Precedent[], right: readonly Precedent[]): boolean =>
+  left.length === right.length &&
+  left.every((precedent, index) => {
+    const other = right[index];
+
+    return (
+      other !== undefined &&
+      other.sheet === precedent.sheet &&
+      other.range.top === precedent.range.top &&
+      other.range.left === precedent.range.left &&
+      other.range.bottom === precedent.range.bottom &&
+      other.range.right === precedent.range.right
+    );
+  });
+
+const sameNames = (left: ReadonlySet<string>, right: ReadonlySet<string>): boolean =>
+  left.size === right.size && [...left].every((name) => right.has(name));
 
 const linksOf = (ast: FormulaNode, record: Placed, workbook: Workbook): Links => {
   const links: Links = { precedents: [], names: new Set() };
@@ -725,7 +786,7 @@ export const createCalculator = (
     }
   };
 
-  const relinkName = (name: string): void => {
+  const relinkName = (name: string, rewrite?: UserRewrite): void => {
     [...(nameUsers.get(name) ?? [])].forEach((key) => {
       const record = formulas.get(key);
 
@@ -733,15 +794,31 @@ export const createCalculator = (
         return;
       }
 
-      const links = linksOf(record.cell.ast, record, workbook);
+      const ast =
+        rewrite === undefined
+          ? record.cell.ast
+          : rewrite(record.sheet, record.row, record.col, record.cell.ast);
 
-      unregister(key, record.names);
-      register(key, links.names);
-      record.precedents = links.precedents;
-      record.names = links.names;
-      graph.set(key, links.precedents);
-      record.cell.state = 'stale';
-      pending.add(key);
+      if (ast !== record.cell.ast) {
+        record.cell = { ast, state: record.cell.state };
+      }
+
+      const links = linksOf(ast, record, workbook);
+      const kept = samePrecedents(links.precedents, record.precedents);
+
+      if (!sameNames(links.names, record.names)) {
+        unregister(key, record.names);
+        register(key, links.names);
+        record.names = links.names;
+      }
+      if (!kept) {
+        record.precedents = links.precedents;
+        graph.set(key, links.precedents);
+      }
+      if (rewrite === undefined || !kept) {
+        record.cell.state = 'stale';
+        pending.add(key);
+      }
     });
   };
 
@@ -755,14 +832,14 @@ export const createCalculator = (
     relinkName(name.toLowerCase());
   };
 
-  const setTable = (name: string, table: SheetTable | undefined): void => {
+  const setTable = (name: string, table: SheetTable | undefined, rewrite?: UserRewrite): void => {
     interrupt();
     if (table === undefined) {
       workbook.tables.delete(name);
     } else {
       workbook.tables.set(table);
     }
-    relinkName(name.toLowerCase());
+    relinkName(name.toLowerCase(), rewrite);
   };
 
   const shiftNames = (change: LineChange): ShiftedName[] => {
@@ -931,6 +1008,15 @@ export const createCalculator = (
     shiftNames,
     setName,
     setTable,
+    forEachUser: (name, visit) => {
+      [...(nameUsers.get(name.toLowerCase()) ?? [])].forEach((key) => {
+        const record = formulas.get(key);
+
+        if (record !== undefined) {
+          visit(record.sheet, record.row, record.col, record.cell.ast);
+        }
+      });
+    },
     hasFormulaIn: (sheet, range) => {
       for (const cell of positions.get(sheet.id)?.keys() ?? []) {
         if (containsCell(range, Math.floor(cell / MAX_COLS), cell % MAX_COLS)) {

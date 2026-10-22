@@ -36,6 +36,7 @@ export interface SheetTable extends TableShape {
 export interface SheetTables {
   get(name: string): SheetTable | undefined;
   on(sheet: Sheet): readonly SheetTable[];
+  at(sheet: Sheet, row: number, col: number): SheetTable | undefined;
   set(table: SheetTable): void;
   delete(name: string): void;
   forEach(visit: (table: SheetTable) => void): void;
@@ -119,6 +120,15 @@ const createSheetTables = (): SheetTables => {
         }
         return found;
       }, []),
+    at: (sheet, row, col) =>
+      [...tables.values()].find(
+        (table) =>
+          table.sheet === sheet &&
+          row >= table.range.top &&
+          row <= table.range.bottom &&
+          col >= table.range.left &&
+          col <= table.range.right,
+      ),
     set: (table) => {
       tables.set(table.name.toLowerCase(), table);
     },
@@ -130,6 +140,15 @@ const createSheetTables = (): SheetTables => {
     },
   };
 };
+
+export const tableFor = (
+  book: Workbook,
+  table: string | undefined,
+  sheet: Sheet,
+  row: number,
+  col: number,
+): SheetTable | undefined =>
+  table === undefined ? book.tables.at(sheet, row, col) : book.tables.get(table);
 
 export const createWorkbook = (): Workbook => {
   const strings = createSharedStrings();

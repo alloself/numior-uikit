@@ -6,7 +6,7 @@ import {
   numberValue,
   parseFormula,
 } from '@numior/spreadsheet/core';
-import { filledSheet, ledger, ledgerFormulas, type Ledger } from './fixtures.ts';
+import { filledSheet, ledger, ledgerFormulas, orderTable, type Ledger } from './fixtures.ts';
 import { measure, record, summarize, type Operation } from '../../../scripts/bench-harness.ts';
 
 const ROWS = 20_000;
@@ -14,7 +14,7 @@ const COLS = 50;
 const heavy = { iterations: 5, warmup: 1 };
 const light = { iterations: 30, warmup: 3 };
 
-const settle = (book: Ledger): void => {
+const settle = (book: Pick<Ledger, 'calculator'>): void => {
   book.calculator.recalculate({ budgetMs: Number.POSITIVE_INFINITY });
 };
 
@@ -46,7 +46,7 @@ const sampled = async (
 
 const repeated = async (
   name: string,
-  book: Ledger,
+  book: Pick<Ledger, 'calculator'>,
   edit: (index: number) => void,
 ): Promise<Operation> => {
   const samples: number[] = [];
@@ -225,6 +225,20 @@ operations.push(
     },
     settle,
   ),
+);
+
+const orders = orderTable(ROWS);
+
+settle(orders);
+
+operations.push(
+  await repeated('rename a table column read by 20,000 row formulas', orders, (index) => {
+    const entry = orders.editor.input(orders.sheet, 0, 0, index % 2 === 0 ? 'Qty' : 'Amount');
+
+    if (!entry.ok || !orders.stepper.apply(entry.step).ok) {
+      throw new Error('the header edit was refused');
+    }
+  }),
 );
 
 const file = await record(

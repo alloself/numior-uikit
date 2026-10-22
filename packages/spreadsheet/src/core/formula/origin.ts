@@ -1,9 +1,9 @@
 import { MAX_COLS, MAX_ROWS } from '../address';
 import type { CellAddress, CellRange, CellRef } from '../cell.types';
 import type { FormulaNode, LineRef } from './formula.types';
-import { mapReferences, type FormulaReference } from './references';
+import { isSymbolic, mapReferences, type FormulaReference } from './references';
 
-export type LocatedReference = Exclude<FormulaReference, { readonly kind: 'name' }>;
+export type LocatedReference = Exclude<FormulaReference, { readonly kind: 'name' | 'structured' }>;
 
 export const ORIGIN: CellAddress = { row: 0, col: 0 };
 
@@ -117,12 +117,12 @@ export const relativeFormula = (node: FormulaNode, origin: CellAddress): Formula
   atOrigin(origin)
     ? node
     : mapReferences(node, (reference) =>
-        reference.kind === 'name' ? reference : moveOrigin(reference, ORIGIN, origin),
+        isSymbolic(reference) ? reference : moveOrigin(reference, ORIGIN, origin),
       );
 
 export const absoluteFormula = (node: FormulaNode, origin: CellAddress): FormulaNode =>
   mapReferences(node, (reference) => {
-    if (reference.kind === 'name') {
+    if (isSymbolic(reference)) {
       return reference;
     }
     return referenceRange(reference, origin) === undefined

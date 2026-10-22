@@ -43,7 +43,14 @@ export type {
   Workbook,
 } from './workbook';
 export { tableData, type TableShape } from './tables';
-export { EN_FORMULAS, RU_FORMULAS, formulaReferences, parseFormula, printFormula } from './formula';
+export {
+  EN_FORMULAS,
+  RU_FORMULAS,
+  formulaReferences,
+  isSymbolic,
+  parseFormula,
+  printFormula,
+} from './formula';
 export type {
   BinaryOperator,
   FormulaFailure,

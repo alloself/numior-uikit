@@ -1,5 +1,21 @@
 import type { CellError, CellRef } from '../cell.types';
 
+export type StructuredSpecial = 'all' | 'data' | 'headers' | 'totals' | 'row';
+
+export type StructuredArea =
+  | 'data'
+  | 'all'
+  | 'headers'
+  | 'totals'
+  | 'headers-data'
+  | 'data-totals'
+  | 'row';
+
+export interface StructuredColumns {
+  readonly from: string;
+  readonly to: string;
+}
+
 export interface FormulaLocale {
   readonly argument: string;
   readonly decimal: string;
@@ -7,6 +23,7 @@ export interface FormulaLocale {
   readonly arrayRow: string;
   readonly defaultTable: string;
   readonly defaultColumn: string;
+  readonly specials: Readonly<Record<StructuredSpecial, string>>;
 }
 
 export interface LineRef {
@@ -54,6 +71,12 @@ export type FormulaNode =
     }
   | { readonly kind: 'spill'; readonly sheet?: string | undefined; readonly ref: CellRef }
   | { readonly kind: 'name'; readonly sheet?: string | undefined; readonly name: string }
+  | {
+      readonly kind: 'structured';
+      readonly table?: string | undefined;
+      readonly area: StructuredArea;
+      readonly columns?: StructuredColumns | undefined;
+    }
   | { readonly kind: 'call'; readonly name: string; readonly args: readonly FormulaNode[] }
   | { readonly kind: 'unary'; readonly op: '-' | '+'; readonly operand: FormulaNode }
   | { readonly kind: 'percent'; readonly operand: FormulaNode }

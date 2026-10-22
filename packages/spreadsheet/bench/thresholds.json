@@ -32,6 +32,9 @@
     },
     "finish the recalculation after editing the chain head": {
       "p95Ms": 140
+    },
+    "rename a table column read by 20,000 row formulas": {
+      "p95Ms": 100
     }
   }
 }

@@ -4,9 +4,9 @@ import type { FormulaNode } from '../formula/formula.types';
 import { colOf, referenceRange, rowOf } from '../formula/origin';
 import { EN_FORMULAS } from '../formula/locale';
 import { parseFormula } from '../formula/parser';
-import { tableData } from '../tables';
+import { structuredRange, tableData } from '../tables';
 import { EMPTY, errorValue, numberValue, textValue } from '../values';
-import type { DefinedName, Sheet, Workbook } from '../workbook';
+import { tableFor, type DefinedName, type Sheet, type Workbook } from '../workbook';
 import {
   blankAsZero,
   broadcastShape,
@@ -368,6 +368,24 @@ const reference = (
   range,
 });
 
+const structured = (
+  node: Extract<FormulaNode, { readonly kind: 'structured' }>,
+  context: EvalContext,
+): EvalValue => {
+  const here = context.here();
+  const table = tableFor(context.workbook, node.table, here.sheet, here.row, here.col);
+
+  if (table === undefined) {
+    return raise('#REF!');
+  }
+
+  const range = structuredRange(table, node, here.row);
+
+  return typeof range === 'string'
+    ? raise(range)
+    : { kind: 'reference', sheet: table.sheet, range };
+};
+
 const spilled = (
   node: Extract<FormulaNode, { readonly kind: 'spill' }>,
   context: EvalContext,
@@ -414,6 +432,8 @@ const evaluate = (node: FormulaNode, context: EvalContext): EvalValue => {
       return spilled(node, context);
     case 'name':
       return named(node, context);
+    case 'structured':
+      return structured(node, context);
     default:
       return operation(node, context);
   }

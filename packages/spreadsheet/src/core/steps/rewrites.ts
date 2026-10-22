@@ -8,8 +8,11 @@ export interface Rewrite extends ShiftedFormulaCell {
   readonly after: FormulaNode;
 }
 
+type FormulaRewrite = (sheet: Sheet, ast: FormulaNode, row: number, col: number) => FormulaNode;
+
 export interface Rewriter {
-  formulas(rewrite: (sheet: Sheet, ast: FormulaNode) => FormulaNode): Rewrite[];
+  formulas(rewrite: FormulaRewrite): Rewrite[];
+  users(name: string, rewrite: FormulaRewrite): Rewrite[];
   names(rewrite: (defined: DefinedName) => FormulaNode | undefined): ShiftedName[];
 }
 
@@ -39,27 +42,36 @@ export const formulaEdits = (rewrites: readonly ShiftedFormulaCell[]): WorkbookS
   return [...bySheet].map(([sheet, cells]) => ({ kind: 'setCells', sheet: sheet.name, cells }));
 };
 
+const rewriteEach = (
+  calculator: Calculator,
+  each: (visit: (sheet: Sheet, row: number, col: number, ast: FormulaNode) => void) => void,
+  rewrite: FormulaRewrite,
+): Rewrite[] => {
+  const found: Rewrite[] = [];
+
+  each((sheet, row, col, before) => {
+    const after = rewrite(sheet, before, row, col);
+
+    if (after !== before) {
+      found.push({ sheet, row, col, before, after });
+    }
+  });
+
+  found.forEach((change) => {
+    calculator.setContent(change.sheet, change.row, change.col, {
+      kind: 'formula',
+      ast: change.after,
+    });
+  });
+
+  return found;
+};
+
 export const createRewriter = (book: Workbook, calculator: Calculator): Rewriter => ({
-  formulas: (rewrite) => {
-    const found: Rewrite[] = [];
-
-    calculator.forEachFormula((sheet, row, col, before) => {
-      const after = rewrite(sheet, before);
-
-      if (after !== before) {
-        found.push({ sheet, row, col, before, after });
-      }
-    });
-
-    found.forEach((change) => {
-      calculator.setContent(change.sheet, change.row, change.col, {
-        kind: 'formula',
-        ast: change.after,
-      });
-    });
-
-    return found;
-  },
+  formulas: (rewrite) =>
+    rewriteEach(calculator, (visit) => calculator.forEachFormula(visit), rewrite),
+  users: (name, rewrite) =>
+    rewriteEach(calculator, (visit) => calculator.forEachUser(name, visit), rewrite),
   names: (rewrite) => {
     const changed: ShiftedName[] = [];
 

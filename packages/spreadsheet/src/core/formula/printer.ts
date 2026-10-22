@@ -3,6 +3,7 @@ import type { CellAddress, CellRef } from '../cell.types';
 import type { BinaryOperator, FormulaLocale, FormulaNode, LineRef } from './formula.types';
 import { EN_FORMULAS } from './locale';
 import { ORIGIN, absoluteFormula } from './origin';
+import { printStructured } from './structured';
 
 const PRECEDENCE: Readonly<Record<BinaryOperator, number>> = {
   '=': 1,
@@ -126,7 +127,9 @@ const operationText = (node: FormulaNode, locale: FormulaLocale): string => {
 };
 
 const printNode = (node: FormulaNode, locale: FormulaLocale): string =>
-  constantText(node, locale) ?? referenceText(node) ?? operationText(node, locale);
+  node.kind === 'structured'
+    ? printStructured(node, locale)
+    : (constantText(node, locale) ?? referenceText(node) ?? operationText(node, locale));
 
 export const printFormula = (
   node: FormulaNode,

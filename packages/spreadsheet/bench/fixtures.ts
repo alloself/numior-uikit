@@ -1,12 +1,16 @@
 import {
   columnName,
   createCalculator,
+  createCellEditor,
+  createStepper,
   createWorkbook,
   numberValue,
   textValue,
   type Calculator,
+  type CellEditor,
   type CellValue,
   type Sheet,
+  type Stepper,
   type Workbook,
 } from '@numior/spreadsheet/core';
 
@@ -21,6 +25,14 @@ export interface Ledger {
   readonly rates: Sheet;
   readonly calculator: Calculator;
   readonly formulas: readonly LedgerFormula[];
+}
+
+export interface OrderTable {
+  readonly workbook: Workbook;
+  readonly sheet: Sheet;
+  readonly calculator: Calculator;
+  readonly editor: CellEditor;
+  readonly stepper: Stepper;
 }
 
 export interface LedgerFormula {
@@ -129,4 +141,27 @@ export const ledger = (rows: number, seed = 1): Ledger => {
   });
 
   return { workbook, sheet, rates, calculator, formulas };
+};
+
+export const orderTable = (rows: number): OrderTable => {
+  const workbook = createWorkbook();
+  const sheet = workbook.addSheet('Orders');
+  const calculator = createCalculator(workbook);
+  const editor = createCellEditor(workbook, calculator);
+  const stepper = createStepper(workbook, calculator);
+
+  ['Amount', 'Price', 'Total'].forEach((name, col) => {
+    calculator.setValue(sheet, 0, col, textValue(name));
+  });
+
+  for (let row = 1; row <= rows; row += 1) {
+    calculator.setValue(sheet, row, 0, numberValue(row % 97));
+    calculator.setValue(sheet, row, 1, numberValue(row % 13));
+  }
+  stepper.apply(editor.tableStep(sheet, { top: 0, left: 0, bottom: rows, right: 2 }));
+  for (let row = 1; row <= rows; row += 1) {
+    calculator.setFormula(sheet, row, 2, '=[@Amount]*[@Price]');
+  }
+
+  return { workbook, sheet, calculator, editor, stepper };
 };

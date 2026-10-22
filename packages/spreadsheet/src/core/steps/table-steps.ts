@@ -1,8 +1,16 @@
-import { MAX_COLS, MAX_ROWS } from '../address';
-import type { Calculator } from '../calc/calculator';
+import { MAX_COLS, MAX_ROWS, containsCell } from '../address';
+import type { Calculator, UserRewrite } from '../calc/calculator';
 import type { CellContent, ShiftedName } from '../calc/calc.types';
 import type { FormulaNode } from '../formula/formula.types';
-import { dropNameFromFormula, renameNameInFormula, type LineChange } from '../formula/rewrite';
+import {
+  BROKEN,
+  dropTableFromFormula,
+  mapStructured,
+  renameTableInFormula,
+  sameName,
+  type LineChange,
+  type StructuredReference,
+} from '../formula/rewrite';
 import {
   columnNameAt,
   dataRows,
@@ -32,7 +40,7 @@ export interface TableSteps {
   rename(from: string, to: string): StepResult;
   syncHeaders(sheet: Sheet, cells: readonly CellEdit[]): void;
   plan(sheet: Sheet, change: LineChange): TableMoves;
-  drop(tables: readonly SheetTable[]): TableDrops;
+  drop(moves: TableMoves): TableDrops;
   move(sheet: Sheet, moves: TableMoves, change: LineChange): void;
   restores(moves: TableMoves): WorkbookStep[];
   strip(tables: readonly SheetTable[], ast: FormulaNode): FormulaNode;
@@ -107,7 +115,106 @@ const renamedColumns = (
   }, undefined);
 
 const strip = (tables: readonly SheetTable[], ast: FormulaNode): FormulaNode =>
-  tables.reduce((current, table) => dropNameFromFormula(current, table.name), ast);
+  tables.reduce((current, table) => dropTableFromFormula(current, table.name), ast);
+
+interface Loss {
+  readonly table: SheetTable;
+  readonly lost: ReadonlySet<string> | undefined;
+}
+
+const aimsAt = (
+  table: SheetTable,
+  reference: StructuredReference,
+  sheet: Sheet | undefined,
+  row: number,
+  col: number,
+): boolean =>
+  reference.table === undefined
+    ? sheet === table.sheet && containsCell(table.range, row, col)
+    : sameName(reference.table, table.name);
+
+const renamedReference = (
+  reference: StructuredReference,
+  renames: ReadonlyMap<string, string>,
+): StructuredReference => {
+  const { columns } = reference;
+
+  if (columns === undefined) {
+    return reference;
+  }
+
+  const from = renames.get(columns.from.toLowerCase()) ?? columns.from;
+  const to = renames.get(columns.to.toLowerCase()) ?? columns.to;
+
+  return from === columns.from && to === columns.to
+    ? reference
+    : { ...reference, columns: { from, to } };
+};
+
+const columnRenames = (before: readonly string[], after: readonly string[]): Map<string, string> =>
+  before.reduce((renames, name, index) => {
+    const next = after[index];
+
+    if (next !== undefined && next !== name) {
+      renames.set(name.toLowerCase(), next);
+    }
+    return renames;
+  }, new Map<string, string>());
+
+const renamingIn = (
+  table: SheetTable,
+  renames: ReadonlyMap<string, string>,
+): UserRewrite | undefined =>
+  renames.size === 0
+    ? undefined
+    : (owner, row, col, ast) =>
+        mapStructured(ast, (reference) =>
+          aimsAt(table, reference, owner, row, col)
+            ? renamedReference(reference, renames)
+            : reference,
+        );
+
+const lostColumns = (table: SheetTable, shape: TableShape): Set<string> =>
+  table.columns.reduce((lost, name) => {
+    if (!shape.columns.includes(name)) {
+      lost.add(name.toLowerCase());
+    }
+    return lost;
+  }, new Set<string>());
+
+const loses = (reference: StructuredReference, lost: ReadonlySet<string> | undefined): boolean =>
+  lost === undefined ||
+  (reference.columns !== undefined &&
+    (lost.has(reference.columns.from.toLowerCase()) ||
+      lost.has(reference.columns.to.toLowerCase())));
+
+const broken = (
+  loss: Loss,
+  ast: FormulaNode,
+  sheet: Sheet | undefined,
+  row: number,
+  col: number,
+): FormulaNode =>
+  mapStructured(
+    loss.lost === undefined ? dropTableFromFormula(ast, loss.table.name) : ast,
+    (reference) =>
+      aimsAt(loss.table, reference, sheet, row, col) && loses(reference, loss.lost)
+        ? BROKEN
+        : reference,
+  );
+
+const lossesOf = (moves: TableMoves): Loss[] =>
+  moves.moved.reduce<Loss[]>(
+    (losses, { table, shape }) => {
+      const lost = lostColumns(table, shape);
+
+      if (lost.size > 0) {
+        losses.push({ table, lost });
+      }
+      return losses;
+    },
+    moves.removed.map((table) => ({ table, lost: undefined })),
+  );
 
 const restores = (moves: TableMoves): WorkbookStep[] => [
   ...moves.removed.map(restoreOf),
@@ -203,8 +310,8 @@ export const createTableSteps = (
     }
     calculator.setTable(table.name, undefined);
     calculator.setTable(to, { ...table, name: to });
-    rewriter.formulas((_sheet, ast) => renameNameInFormula(ast, table.name, to));
-    rewriter.names((defined) => renameNameInFormula(defined.ast, table.name, to));
+    rewriter.users(table.name, (_sheet, ast) => renameTableInFormula(ast, table.name, to));
+    rewriter.names((defined) => renameTableInFormula(defined.ast, table.name, to));
     return { ok: true, inverse: { kind: 'renameTable', from: to, to: table.name }, changes: [] };
   };
 
@@ -229,7 +336,20 @@ export const createTableSteps = (
         }
       });
 
-      calculator.setTable(table.name, { ...table, columns });
+      const renames = columnRenames(table.columns, columns);
+
+      calculator.setTable(table.name, { ...table, columns }, renamingIn(table, renames));
+      if (renames.size === 0) {
+        return;
+      }
+
+      rewriter.names((defined) =>
+        mapStructured(defined.ast, (reference) =>
+          aimsAt(table, reference, undefined, 0, 0)
+            ? renamedReference(reference, renames)
+            : reference,
+        ),
+      );
     });
   };
 
@@ -251,19 +371,26 @@ export const createTableSteps = (
       { removed: [], moved: [] },
     );
 
-  const drop = (tables: readonly SheetTable[]): TableDrops => {
-    if (tables.length === 0) {
+  const drop = (moves: TableMoves): TableDrops => {
+    const losses = lossesOf(moves);
+
+    if (losses.length === 0) {
       return NO_DROPS;
     }
 
-    tables.forEach((table) => {
+    const rewrites = losses.flatMap((loss) =>
+      rewriter.users(loss.table.name, (owner, ast, row, col) => broken(loss, ast, owner, row, col)),
+    );
+
+    const names = rewriter.names((defined) =>
+      losses.reduce((ast, loss) => broken(loss, ast, undefined, 0, 0), defined.ast),
+    );
+
+    moves.removed.forEach((table) => {
       calculator.setTable(table.name, undefined);
     });
 
-    return {
-      rewrites: rewriter.formulas((_sheet, ast) => strip(tables, ast)),
-      names: rewriter.names((defined) => strip(tables, defined.ast)),
-    };
+    return { rewrites: rewrites.toReversed(), names };
   };
 
   const move = (sheet: Sheet, moves: TableMoves, change: LineChange): void => {

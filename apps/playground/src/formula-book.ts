@@ -11,6 +11,7 @@ import {
   loadCells,
   numberValue,
   formulaReferences,
+  isSymbolic,
   parseCell,
   parseFormula,
   parseRange,
@@ -146,7 +147,7 @@ const onSheet = (sheet: Sheet, name: string | undefined): boolean =>
 const visibleRange = (sheet: Sheet, found: FormulaReference): NuiTableRange[] => {
   const range = referenceRange(found);
 
-  return range !== undefined && found.kind !== 'name' && onSheet(sheet, found.sheet)
+  return range !== undefined && !isSymbolic(found) && onSheet(sheet, found.sheet)
     ? [asRange(range)]
     : [];
 };

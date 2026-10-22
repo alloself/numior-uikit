@@ -10,7 +10,12 @@ import type { FormulaFailure, FormulaNode } from './formula/formula.types';
 import { ORIGIN, referenceRange } from './formula/origin';
 import { parseFormula } from './formula/parser';
 import { printFormula } from './formula/printer';
-import { formulaReferences, mapReferences, type FormulaReference } from './formula/references';
+import {
+  formulaReferences,
+  isSymbolic,
+  mapReferences,
+  type FormulaReference,
+} from './formula/references';
 import type { BookLocale } from './locale';
 import { booleanValue, numberValue, textValue } from './values';
 import { createStepper } from './steps/apply-step';
@@ -291,7 +296,7 @@ const referencedFormat = (
 
 const qualified = (ast: FormulaNode, sheet: Sheet): FormulaNode =>
   mapReferences(ast, (reference) =>
-    reference.kind === 'name' || reference.sheet !== undefined
+    isSymbolic(reference) || reference.sheet !== undefined
       ? reference
       : { ...reference, sheet: sheet.name },
   );

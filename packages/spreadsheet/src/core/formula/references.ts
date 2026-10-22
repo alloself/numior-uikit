@@ -2,19 +2,42 @@ import type { FormulaNode } from './formula.types';
 
 export type FormulaReference = Extract<
   FormulaNode,
-  { readonly kind: 'cell' | 'range' | 'columns' | 'rows' | 'spill' | 'name' }
+  { readonly kind: 'cell' | 'range' | 'columns' | 'rows' | 'spill' | 'name' | 'structured' }
 >;
 
+export type SymbolicReference = Extract<FormulaReference, { readonly kind: 'name' | 'structured' }>;
+
+export type SheetReference = Exclude<FormulaReference, { readonly kind: 'structured' }>;
+
+export const onSheetNamed = (
+  reference: FormulaReference,
+  name: string,
+): reference is SheetReference =>
+  reference.kind !== 'structured' &&
+  reference.sheet !== undefined &&
+  reference.sheet.toLowerCase() === name.toLowerCase();
+
+export const isSymbolic = (reference: FormulaReference): reference is SymbolicReference =>
+  reference.kind === 'name' || reference.kind === 'structured';
+
+const REFERENCE_KINDS = new Set<FormulaNode['kind']>([
+  'cell',
+  'range',
+  'columns',
+  'rows',
+  'spill',
+  'name',
+  'structured',
+]);
+
+const isReference = (node: FormulaNode): node is FormulaReference => REFERENCE_KINDS.has(node.kind);
+
 const collect = (node: FormulaNode, found: FormulaReference[]): void => {
+  if (isReference(node)) {
+    found.push(node);
+    return;
+  }
   switch (node.kind) {
-    case 'cell':
-    case 'range':
-    case 'columns':
-    case 'rows':
-    case 'spill':
-    case 'name':
-      found.push(node);
-      return;
     case 'call':
       node.args.forEach((arg) => collect(arg, found));
       return;
@@ -50,14 +73,10 @@ const mapNodes = (
 type Visitor = (reference: FormulaReference) => FormulaNode;
 
 const walk = (current: FormulaNode, visit: Visitor): FormulaNode => {
+  if (isReference(current)) {
+    return visit(current);
+  }
   switch (current.kind) {
-    case 'cell':
-    case 'range':
-    case 'columns':
-    case 'rows':
-    case 'spill':
-    case 'name':
-      return visit(current);
     case 'call': {
       const args = mapNodes(current.args, (arg) => walk(arg, visit));
 

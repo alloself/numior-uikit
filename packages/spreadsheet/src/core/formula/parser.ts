@@ -12,6 +12,7 @@ import type {
 import { tokenize, type Token } from './lexer';
 import { EN_FORMULAS } from './locale';
 import { ORIGIN, relativeFormula } from './origin';
+import { parseStructured } from './structured';
 
 class FormulaSyntaxError extends Error {
   readonly failure: FormulaFailure;
@@ -234,6 +235,8 @@ const createParser = (tokens: readonly Token[], locale: FormulaLocale, offset: n
         return word(token);
       case 'sheet':
         return sheetItem(token.text, next());
+      case 'structured':
+        return parseStructured(token.text, locale) ?? fail(token, 'reference');
       case 'punct':
         return group(token);
       default:

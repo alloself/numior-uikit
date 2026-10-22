@@ -9,7 +9,13 @@ import {
   storedReference,
   type LocatedReference,
 } from './origin';
-import { formulaReferences, mapReferences, type FormulaReference } from './references';
+import {
+  formulaReferences,
+  isSymbolic,
+  mapReferences,
+  onSheetNamed,
+  type FormulaReference,
+} from './references';
 
 export interface LineChange extends LineMove {
   readonly sheet: string;
@@ -17,7 +23,7 @@ export interface LineChange extends LineMove {
 
 type Span = readonly [number, number];
 
-const BROKEN: FormulaNode = { kind: 'error', code: '#REF!' };
+export const BROKEN: FormulaNode = { kind: 'error', code: '#REF!' };
 
 export const sameName = (left: string, right: string): boolean =>
   left.toLowerCase() === right.toLowerCase();
@@ -237,7 +243,7 @@ export const shiftFormula = (
   const after = (onSheet ? movedOrigin(origin, change) : origin) ?? origin;
 
   return mapReferences(node, (reference) => {
-    if (reference.kind === 'name') {
+    if (isSymbolic(reference)) {
       return reference;
     }
 
@@ -260,7 +266,7 @@ const meaningOf = (
   onSheet: boolean,
   origin: CellAddress,
 ): boolean => {
-  if (reference.kind === 'name' || !onChangedSheet(reference, change, onSheet)) {
+  if (isSymbolic(reference) || !onChangedSheet(reference, change, onSheet)) {
     return false;
   }
 
@@ -287,25 +293,37 @@ export const changesMeaning = (
 
 export const renameInFormula = (node: FormulaNode, from: string, to: string): FormulaNode =>
   mapReferences(node, (reference) =>
-    reference.sheet !== undefined && sameName(reference.sheet, from)
-      ? { ...reference, sheet: to }
-      : reference,
+    onSheetNamed(reference, from) ? { ...reference, sheet: to } : reference,
   );
 
 export const dropSheetFromFormula = (node: FormulaNode, name: string): FormulaNode =>
+  mapReferences(node, (reference) => (onSheetNamed(reference, name) ? BROKEN : reference));
+
+export type StructuredReference = Extract<FormulaReference, { readonly kind: 'structured' }>;
+
+const ownedBy = (reference: FormulaReference, table: string): boolean =>
+  reference.kind === 'structured'
+    ? reference.table !== undefined && sameName(reference.table, table)
+    : reference.kind === 'name' && reference.sheet === undefined && sameName(reference.name, table);
+
+export const mapStructured = (
+  node: FormulaNode,
+  visit: (reference: StructuredReference) => FormulaNode,
+): FormulaNode =>
   mapReferences(node, (reference) =>
-    reference.sheet !== undefined && sameName(reference.sheet, name) ? BROKEN : reference,
+    reference.kind === 'structured' ? visit(reference) : reference,
   );
 
-type NameReference = Extract<FormulaReference, { readonly kind: 'name' }>;
+export const renameTableInFormula = (node: FormulaNode, from: string, to: string): FormulaNode =>
+  mapReferences(node, (reference) => {
+    if (!ownedBy(reference, from)) {
+      return reference;
+    }
+    if (reference.kind === 'structured') {
+      return { ...reference, table: to };
+    }
+    return reference.kind === 'name' ? { ...reference, name: to } : reference;
+  });
 
-const isBookName = (reference: FormulaReference, name: string): reference is NameReference =>
-  reference.kind === 'name' && reference.sheet === undefined && sameName(reference.name, name);
-
-export const renameNameInFormula = (node: FormulaNode, from: string, to: string): FormulaNode =>
-  mapReferences(node, (reference) =>
-    isBookName(reference, from) ? { ...reference, name: to } : reference,
-  );
-
-export const dropNameFromFormula = (node: FormulaNode, name: string): FormulaNode =>
-  mapReferences(node, (reference) => (isBookName(reference, name) ? BROKEN : reference));
+export const dropTableFromFormula = (node: FormulaNode, table: string): FormulaNode =>
+  mapReferences(node, (reference) => (ownedBy(reference, table) ? BROKEN : reference));

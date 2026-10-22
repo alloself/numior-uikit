@@ -9,4 +9,4 @@ export type {
 export { EN_FORMULAS, RU_FORMULAS } from './locale';
 export { parseFormula } from './parser';
 export { printFormula } from './printer';
-export { formulaReferences, type FormulaReference } from './references';
+export { formulaReferences, isSymbolic, type FormulaReference } from './references';

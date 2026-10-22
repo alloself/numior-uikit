@@ -3,13 +3,8 @@ import type { Calculator } from '../calc/calculator';
 import type { CellContent, ShiftedFormulaCell, ShiftedName } from '../calc/calc.types';
 import type { CellRange } from '../cell.types';
 import type { FormulaNode } from '../formula/formula.types';
-import { formulaReferences } from '../formula/references';
-import {
-  dropSheetFromFormula,
-  renameInFormula,
-  sameName,
-  type LineChange,
-} from '../formula/rewrite';
+import { formulaReferences, onSheetNamed } from '../formula/references';
+import { dropSheetFromFormula, renameInFormula, type LineChange } from '../formula/rewrite';
 import { validDefinedName, validSheetName, type Sheet, type Workbook } from '../workbook';
 import { createRewriter, formulaEdits, nameEdits } from './rewrites';
 import type { CellEdit, LineAxis, StepRefusal, StepResult, WorkbookStep } from './step.types';
@@ -45,9 +40,7 @@ const done = (inverse: WorkbookStep, changes: readonly LineChange[] = NO_CHANGES
 });
 
 const mentions = (ast: FormulaNode, name: string): boolean =>
-  formulaReferences(ast).some(
-    (reference) => reference.sheet !== undefined && sameName(reference.sheet, name),
-  );
+  formulaReferences(ast).some((reference) => onSheetNamed(reference, name));
 
 export const createStepper = (book: Workbook, calculator: Calculator): Stepper => {
   const rewriter = createRewriter(book, calculator);
@@ -187,7 +180,7 @@ export const createStepper = (book: Workbook, calculator: Calculator): Stepper =
         : [];
 
     const moves = tables.plan(sheet, change);
-    const drops = tables.drop(moves.removed);
+    const drops = tables.drop(moves);
     const rewrites = calculator.shiftLines(sheet, change);
     const names = calculator.shiftNames(change);
 
