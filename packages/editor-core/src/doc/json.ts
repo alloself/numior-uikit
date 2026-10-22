@@ -7,8 +7,17 @@ import type {
   Mark,
   TextNode,
 } from '../model/node.types';
-import { childLink, pathOf, type PathLink } from '../model/path';
-import type { AttrSpecs, Schema } from '../schema/schema.types';
+import {
+  checkIdentity,
+  checkOwn,
+  checkResult,
+  checkText,
+  checkTop,
+  createCheckContext,
+  elementTypeOf,
+  type CheckContext,
+} from '../schema/check';
+import type { AttrSpecs, NodeType, Schema } from '../schema/schema.types';
 import { specEntries } from '../schema/spec-entries';
 import { createDoc } from './doc';
 import type { Doc } from './doc.types';
@@ -26,6 +35,7 @@ type Fields = Readonly<Record<string, unknown>>;
 interface Reader {
   readonly schema: Schema;
   readonly issues: DocJSONIssue[];
+  readonly check: CheckContext;
 }
 
 const isFields = (value: unknown): value is Fields =>
@@ -80,19 +90,18 @@ export const toJSON = (doc: Doc): DocJSON => ({
   root: elementToJSON(doc.root),
 });
 
-const readAttrs = (
-  reader: Reader,
-  at: PathLink | undefined,
-  value: unknown,
-  specs: AttrSpecs,
-): Attrs => {
-  const given = value ?? {};
+const isAttrFields = (value: unknown): value is Fields =>
+  isFields(value) && Object.values(value).every(isAttrValue);
+
+const shapeIssue = (reader: Reader, field: string): void => {
+  reader.issues.push({ kind: 'shape', path: [...reader.check.path], field });
+};
+
+const readAttrs = (reader: Reader, value: unknown, specs: AttrSpecs): Attrs => {
   const attrs: Record<string, AttrValue> = {};
 
-  const keys = isFields(given) ? Object.keys(given) : undefined;
-
-  if (!isFields(given) || keys?.every((key) => isAttrValue(given[key])) !== true) {
-    reader.issues.push({ kind: 'shape', path: pathOf(at), field: 'attrs' });
+  if (value !== undefined && value !== null && !isAttrFields(value)) {
+    shapeIssue(reader, 'attrs');
     return attrs;
   }
   for (const [key, spec] of specEntries(specs)) {
@@ -100,109 +109,161 @@ const readAttrs = (
       attrs[key] = spec.default;
     }
   }
-  for (const key of keys) {
-    const entry = given[key];
+  if (isFields(value)) {
+    for (const key of Object.keys(value)) {
+      const entry = value[key];
 
-    if (isAttrValue(entry)) {
-      attrs[key] = entry;
+      if (isAttrValue(entry)) {
+        attrs[key] = entry;
+      }
     }
   }
   return attrs;
 };
 
-const readMark = (reader: Reader, at: PathLink | undefined, value: unknown): Mark | undefined => {
+const readMark = (reader: Reader, value: unknown): Mark | undefined => {
   if (!isFields(value) || typeof value.type !== 'string') {
-    reader.issues.push({ kind: 'shape', path: pathOf(at), field: 'marks' });
+    shapeIssue(reader, 'marks');
     return undefined;
   }
   const specs = reader.schema.marks.get(value.type)?.attrs ?? {};
 
-  return { type: value.type, attrs: readAttrs(reader, at, value.attrs, specs) };
+  return { type: value.type, attrs: readAttrs(reader, value.attrs, specs) };
 };
 
-const readText = (reader: Reader, at: PathLink | undefined, value: Fields): TextNode => {
+const rankOf = (schema: Schema, mark: Mark): number =>
+  schema.marks.get(mark.type)?.rank ?? Number.POSITIVE_INFINITY;
+
+const readMarks = (reader: Reader, marks: readonly unknown[]): Mark[] => {
+  const read = marks.reduce<Mark[]>((found, mark) => {
+    const next = readMark(reader, mark);
+
+    if (next !== undefined) {
+      found.push(next);
+    }
+    return found;
+  }, []);
+
+  return read.length > 1
+    ? read.toSorted((left, right) => rankOf(reader.schema, left) - rankOf(reader.schema, right))
+    : read;
+};
+
+const readText = (reader: Reader, value: Fields): TextNode => {
   const marks = value.marks ?? [];
 
-  const rank = (mark: Mark): number =>
-    reader.schema.marks.get(mark.type)?.rank ?? Number.POSITIVE_INFINITY;
-
   if (typeof value.text !== 'string') {
-    reader.issues.push({ kind: 'shape', path: pathOf(at), field: 'text' });
+    shapeIssue(reader, 'text');
   }
   if (!Array.isArray(marks)) {
-    reader.issues.push({ kind: 'shape', path: pathOf(at), field: 'marks' });
+    shapeIssue(reader, 'marks');
   }
   return {
     kind: 'text',
     text: typeof value.text === 'string' ? value.text : '',
-    marks:
-      Array.isArray(marks) && marks.length > 0
-        ? marks
-            .flatMap((mark: unknown) => {
-              const read = readMark(reader, at, mark);
-
-              return read === undefined ? [] : [read];
-            })
-            .toSorted((left, right) => rank(left) - rank(right))
-        : [],
+    marks: Array.isArray(marks) && marks.length > 0 ? readMarks(reader, marks) : [],
   };
 };
 
-const readContent = (reader: Reader, at: PathLink | undefined, value: unknown): ContentNode[] => {
+const readContent = (
+  reader: Reader,
+  value: unknown,
+  parent: NodeType | undefined,
+): ContentNode[] => {
   if (value === undefined) {
     return [];
   }
   if (!Array.isArray(value)) {
-    reader.issues.push({ kind: 'shape', path: pathOf(at), field: 'content' });
+    shapeIssue(reader, 'content');
     return [];
   }
   const content: ContentNode[] = [];
 
   value.forEach((child: unknown, index) => {
-    const node = readNode(reader, childLink(at, index), child);
+    reader.check.path.push(index);
 
-    if (node !== undefined) {
-      content.push(node);
+    const node = readNode(reader, child, parent !== undefined);
+
+    reader.check.path.pop();
+    if (node === undefined) {
+      return;
     }
+    if (parent !== undefined && node.kind === 'text') {
+      const previous = content.at(-1);
+
+      checkText(
+        reader.check,
+        index,
+        node,
+        parent,
+        previous?.kind === 'text' ? previous : undefined,
+      );
+    }
+    content.push(node);
   });
 
   return content;
 };
 
-const readElement = (reader: Reader, at: PathLink | undefined, value: Fields): ElementNode => {
+const checkOwnAt = (
+  context: CheckContext,
+  node: ElementNode,
+  type: NodeType | undefined,
+  mark: number,
+): void => {
+  const before = context.issues.length;
+
+  checkOwn(context, node, type);
+
+  if (context.issues.length > before && before > mark) {
+    context.issues.splice(mark, 0, ...context.issues.splice(before));
+  }
+};
+
+const readElement = (reader: Reader, value: Fields, checking: boolean): ElementNode => {
   const type = typeof value.type === 'string' ? value.type : '';
   const id = typeof value.id === 'string' ? value.id : '';
   const nodeType = reader.schema.nodes.get(type);
-  const content = readContent(reader, at, value.content);
+  const checked = checking ? elementTypeOf(reader.check, type) : undefined;
 
-  for (const field of ['id', 'type'] as const) {
-    if (typeof value[field] !== 'string') {
-      reader.issues.push({ kind: 'shape', path: pathOf(at), field });
-    }
+  if (checking) {
+    checkIdentity(reader.check, id);
   }
-  return {
+
+  const mark = reader.check.issues.length;
+  const content = readContent(reader, value.content, checked);
+
+  if (typeof value.id !== 'string') {
+    shapeIssue(reader, 'id');
+  }
+  if (typeof value.type !== 'string') {
+    shapeIssue(reader, 'type');
+  }
+
+  const node: ElementNode = {
     kind: 'element',
     id,
     type,
-    attrs: readAttrs(reader, at, value.attrs, nodeType?.attrs ?? {}),
+    attrs: readAttrs(reader, value.attrs, nodeType?.attrs ?? {}),
     content,
     leaf: nodeType?.leaf ?? false,
     size: nodeType?.leaf === true ? 1 : contentSize(content) + 2,
   };
+
+  if (checking) {
+    checkOwnAt(reader.check, node, checked, mark);
+  }
+  return node;
 };
 
-const readNode = (
-  reader: Reader,
-  at: PathLink | undefined,
-  value: unknown,
-): ContentNode | undefined => {
+const readNode = (reader: Reader, value: unknown, checking: boolean): ContentNode | undefined => {
   if (!isFields(value)) {
-    reader.issues.push({ kind: 'shape', path: pathOf(at), field: 'node' });
+    shapeIssue(reader, 'node');
     return undefined;
   }
   return Object.hasOwn(value, 'text')
-    ? readText(reader, at, value)
-    : readElement(reader, at, value);
+    ? readText(reader, value)
+    : readElement(reader, value, checking);
 };
 
 const stampIssue = (schema: Schema, found: unknown): DocJSONIssue | undefined => {
@@ -229,8 +290,14 @@ export const fromJSON = (schema: Schema, value: unknown): DocJSONResult => {
   if (!isFields(value)) {
     return { ok: false, issues: [{ kind: 'format' }] };
   }
-  const reader: Reader = { schema, issues: headerIssues(schema, value) };
-  const root = reader.issues.length === 0 ? readNode(reader, undefined, value.root) : undefined;
+
+  const reader: Reader = {
+    schema,
+    issues: headerIssues(schema, value),
+    check: createCheckContext(schema),
+  };
+
+  const root = reader.issues.length === 0 ? readNode(reader, value.root, true) : undefined;
 
   if (root === undefined || root.kind !== 'element' || reader.issues.length > 0) {
     return {
@@ -239,7 +306,9 @@ export const fromJSON = (schema: Schema, value: unknown): DocJSONResult => {
         reader.issues.length > 0 ? reader.issues : [{ kind: 'shape', path: [], field: 'root' }],
     };
   }
-  const check = schema.check(root);
+  checkTop(reader.check, root);
+
+  const check = checkResult(reader.check);
 
   return check.ok
     ? { ok: true, doc: createDoc(schema, root) }

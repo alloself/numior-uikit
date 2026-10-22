@@ -3,6 +3,7 @@ import {
   createMapping,
   createState,
   createTransform,
+  fromJSON,
   insertDivider,
   invertStep,
   liftListItem,
@@ -10,6 +11,7 @@ import {
   sinkListItem,
   toggleList,
   toggleWrapper,
+  toJSON,
   type Doc,
   type Transaction,
   type Transform,
@@ -77,6 +79,24 @@ operations.push(
       fixtureSchema.check(doc.root);
     },
     heavy,
+  ),
+);
+
+const written = JSON.stringify(toJSON(doc));
+
+const parsed: unknown[] = Array.from({ length: heavy.iterations + heavy.warmup }, () =>
+  JSON.parse(written),
+);
+
+operations.push(
+  await measure(
+    `read a ${BLOCKS.toLocaleString('en-US')} block document from JSON`,
+    async () => {
+      if (!fromJSON(fixtureSchema, parsed.pop()).ok) {
+        throw new Error('The written document does not read back');
+      }
+    },
+    { ...heavy, fresh: true },
   ),
 );
 

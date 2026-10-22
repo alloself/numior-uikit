@@ -6,6 +6,9 @@
     "check a 10,000 block document against the schema": {
       "p95Ms": 30
     },
+    "read a 10,000 block document from JSON": {
+      "p95Ms": 50
+    },
     "resolve 1,000 random positions": {
       "p95Ms": 3
     },
