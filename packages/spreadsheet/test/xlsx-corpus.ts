@@ -140,6 +140,7 @@ export const modelOf = (
 ): { readonly sheets: SheetModel[]; readonly [key: string]: unknown } => {
   const names: unknown[] = [];
   const tables: unknown[] = [];
+  const pivots: unknown[] = [];
 
   read.book.names.forEach((defined) => {
     names.push({
@@ -151,6 +152,15 @@ export const modelOf = (
 
   read.book.tables.forEach((table) => {
     tables.push({ ...table, sheet: table.sheet.name, range: formatRange(table.range) });
+  });
+
+  read.book.pivots.forEach((pivot) => {
+    pivots.push({
+      name: pivot.name,
+      sheet: pivot.sheet.name,
+      footprint: pivot.footprint === undefined ? undefined : formatRange(pivot.footprint),
+      definition: pivot.definition,
+    });
   });
 
   return {
@@ -165,6 +175,7 @@ export const modelOf = (
     })),
     names,
     tables,
+    ...(pivots.length === 0 ? {} : { pivots }),
     externals: read.book.externals.map((external) => ({
       target: external.target,
       sheets: external.sheets.map((sheet) => ({ name: sheet.name, cells: cellsOf(read, sheet) })),

@@ -4,12 +4,24 @@ import {
   createCellEditor,
   createStepper,
   formatRange,
+  numberValue,
+  pivotCaptions,
+  textValue,
+  type PivotDefinition,
   parseCell,
   parseFormula,
   type Sheet,
 } from '../src/core';
-import { readWorkbook, readZip, writeWorkbook, type Bytes, type XlsxRead } from '../src/xlsx';
+import {
+  readWorkbook,
+  readZip,
+  writeWorkbook,
+  writeZip,
+  type Bytes,
+  type XlsxRead,
+} from '../src/xlsx';
 import { openBook } from './book-harness';
+import { corpusSource } from './corpus-files';
 import { corpusPackage, layoutOf } from './xlsx-corpus';
 import { SALES_SHEET, workbookWith, xlsxPackage } from './xlsx-package';
 
@@ -668,6 +680,254 @@ describe('writing xlsx', () => {
 
     expect(shapes.startsWith('<?xml')).toBe(true);
     expect(await partOf(bytes, 'xl/charts/chart1.xml')).toContain('<c:f>Sales!$B$2:$B$9</c:f>');
+  });
+
+  it('writes pivot tables with their caches and reads them back as the same definitions', async () => {
+    const sheet = openBook();
+
+    [
+      ['Region', 'City', 'Year', 'Sales'],
+      ['East', 'Boston', '2021', '100'],
+      ['East', 'NYC', '2021', '200'],
+      ['West', 'LA', '2022', '70'],
+    ].forEach((row, index) => {
+      row.forEach((text, col) => {
+        sheet.type(`${'ABCD'.charAt(col)}${String(index + 1)}`, text);
+      });
+    });
+
+    const definition: PivotDefinition = {
+      source: { kind: 'range', sheet: 'Sheet1', range: { top: 0, left: 0, bottom: 3, right: 3 } },
+      rows: [0, 1],
+      columns: [2],
+      filters: [],
+      values: [
+        {
+          field: 3,
+          aggregate: 'sum',
+          name: 'Sum of Sales',
+          showAs: { kind: 'normal' },
+          format: '#,##0.00',
+        },
+      ],
+      fields: [
+        { order: [textValue('West')], hidden: [], sort: 'manual', subtotal: true },
+        { order: [], hidden: [textValue('NYC')], sort: 'descending', subtotal: true },
+      ],
+      layout: 'outline',
+      rowTotals: true,
+      columnTotals: false,
+      captions: pivotCaptions('en'),
+    };
+
+    expect(
+      sheet.commit({
+        kind: 'setPivot',
+        sheet: 'Rates',
+        name: 'Sales',
+        pivot: { anchor: { row: 3, col: 1 }, definition },
+      }).ok,
+    ).toBe(true);
+
+    const bytes = await written(sheet);
+    const again = await opened(bytes);
+    const pivot = again.book.pivots.get(sheetOf(again, 'Rates'), 'Sales');
+
+    expect(again.kind).toBe('editable');
+    expect(pivot?.anchor).toEqual({ row: 3, col: 1 });
+    expect(pivot?.footprint).toEqual(sheet.book.pivots.get(sheet.rates, 'Sales')?.footprint);
+
+    expect(pivot?.definition).toEqual({
+      ...definition,
+      fields: [
+        {
+          order: [textValue('West'), textValue('East')],
+          hidden: [],
+          sort: 'manual',
+          subtotal: true,
+        },
+        {
+          order: [textValue('NYC'), textValue('LA'), textValue('Boston')],
+          hidden: [textValue('NYC')],
+          sort: 'descending',
+          subtotal: true,
+        },
+        {
+          order: [numberValue(2021), numberValue(2022)],
+          hidden: [],
+          sort: 'manual',
+          subtotal: true,
+        },
+        { order: [], hidden: [], sort: 'manual', subtotal: true },
+      ],
+    });
+
+    expect(await partOf(bytes, 'xl/workbook.xml')).toContain(
+      '<pivotCaches><pivotCache cacheId="1" r:id="',
+    );
+
+    expect(viewOf(again, 'Rates').shown('B6')).toBe('West');
+  });
+
+  it('reads back page filters and values shown against a base item', async () => {
+    const sheet = openBook();
+
+    [
+      ['Region', 'Year', 'Sales'],
+      ['East', '2021', '100'],
+      ['West', '2021', '150'],
+      ['East', '2022', '50'],
+    ].forEach((row, index) => {
+      row.forEach((text, col) => {
+        sheet.type(`${'ABC'.charAt(col)}${String(index + 1)}`, text);
+      });
+    });
+
+    const values: PivotDefinition['values'] = [
+      {
+        field: 2,
+        aggregate: 'sum',
+        name: 'Change',
+        showAs: { kind: 'difference', field: 1, item: 'previous' },
+        format: undefined,
+      },
+      {
+        field: 2,
+        aggregate: 'sum',
+        name: 'Against 2021',
+        showAs: { kind: 'percent', field: 1, item: numberValue(2021) },
+        format: undefined,
+      },
+    ];
+
+    sheet.commit({
+      kind: 'setPivot',
+      sheet: 'Rates',
+      name: 'Years',
+      pivot: {
+        anchor: { row: 0, col: 0 },
+        definition: {
+          source: {
+            kind: 'range',
+            sheet: 'Sheet1',
+            range: { top: 0, left: 0, bottom: 3, right: 2 },
+          },
+          rows: [1],
+          columns: [],
+          filters: [{ field: 0, selected: textValue('East') }],
+          values,
+          fields: [],
+          layout: 'compact',
+          rowTotals: true,
+          columnTotals: true,
+          captions: pivotCaptions('en'),
+        },
+      },
+    });
+
+    const again = await opened(await written(sheet));
+    const definition = again.book.pivots.get(sheetOf(again, 'Rates'), 'Years')?.definition;
+
+    expect(definition?.filters).toEqual([{ field: 0, selected: textValue('East') }]);
+    expect(definition?.values).toEqual(values);
+  });
+
+  it('refreshes a pivot read from a file into the cells the file shows', async () => {
+    const read = await opened(await corpusPackage('pivot-tables'));
+    const report = sheetOf(read, 'Report');
+    const view = viewOf(read, 'Report');
+    const shown = (): string[] => ['A3', 'B3', 'A4', 'B4', 'A5', 'B5', 'A6', 'B6'].map(view.shown);
+    const before = shown();
+
+    expect(read.kind).toBe('editable');
+
+    expect(
+      createStepper(read.book, read.calculator).apply({
+        kind: 'refreshPivot',
+        sheet: 'Report',
+        name: 'PivotTable1',
+      }).ok,
+    ).toBe(true);
+
+    expect(shown()).toEqual(before);
+    expect(read.book.pivots.on(report)).toHaveLength(1);
+  });
+
+  it('keeps Russian default captions and rewrites a moved pivot without its old cache', async () => {
+    const source = corpusSource('pivot-tables');
+    const encoder = new TextEncoder();
+    const decoder = new TextDecoder();
+
+    const parts =
+      source.kind === 'parts'
+        ? source.parts.map((part) =>
+            part.name === 'xl/worksheets/sheet2.xml'
+              ? {
+                  name: part.name,
+                  data: encoder.encode(
+                    decoder
+                      .decode(part.data)
+                      .replace('Row Labels', 'Названия строк')
+                      .replace('Grand Total', 'Общий итог'),
+                  ),
+                }
+              : part,
+          )
+        : [];
+
+    const read = await opened(await writeZip(parts));
+    const stepper = createStepper(read.book, read.calculator);
+
+    expect(
+      read.book.pivots.get(sheetOf(read, 'Report'), 'PivotTable1')?.definition.captions,
+    ).toEqual({ ...pivotCaptions('ru'), values: 'Values' });
+
+    stepper.apply({ kind: 'insertLines', sheet: 'Report', axis: 'rows', at: 0, count: 1 });
+
+    const bytes = await written(read, read.source);
+    const zip = readZip(bytes);
+    const again = await opened(bytes);
+    const pivot = again.book.pivots.get(sheetOf(again, 'Report'), 'PivotTable1');
+
+    expect(zip.ok && zip.archive.names.some((name) => name.includes('pivotCacheRecords'))).toBe(
+      false,
+    );
+
+    expect(pivot?.footprint === undefined ? '' : formatRange(pivot.footprint)).toBe('A4:B7');
+    expect(pivot?.definition.captions.rows).toBe('Названия строк');
+  });
+
+  it('keeps a book read-only when a pivot shows values through Excel 2010 extensions', async () => {
+    const source = corpusSource('pivot-tables');
+    const encoder = new TextEncoder();
+    const decoder = new TextDecoder();
+    const x14 = 'http://schemas.microsoft.com/office/spreadsheetml/2009/9/main';
+
+    const parts =
+      source.kind === 'parts'
+        ? source.parts.map((part) =>
+            part.name === 'xl/pivotTables/pivotTable1.xml'
+              ? {
+                  name: part.name,
+                  data: encoder.encode(
+                    decoder
+                      .decode(part.data)
+                      .replace(
+                        'baseItem="0"/>',
+                        `baseItem="0"><extLst><ext uri="{E15A36E0-9728-4e99-A89B-3F7291B0FE68}" xmlns:x14="${x14}"><x14:dataField pivotShowAs="percentOfParentRow"/></ext></extLst></dataField>`,
+                      ),
+                  ),
+                }
+              : part,
+          )
+        : [];
+
+    const read = await readWorkbook(await writeZip(parts));
+
+    expect(read).toMatchObject({
+      kind: 'read-only',
+      report: { items: [{ code: 'pivot-tables', names: ['PivotTable1'] }] },
+    });
   });
 
   it('gives back the original bytes of a read-only book', async () => {

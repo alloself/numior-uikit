@@ -133,6 +133,7 @@ export interface PivotOutput {
   readonly firstDataRow: number;
   readonly firstDataCol: number;
   readonly pageRows: number;
+  readonly width: number;
 }
 
 export interface PivotSpec {

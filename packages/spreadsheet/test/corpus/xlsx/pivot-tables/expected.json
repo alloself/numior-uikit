@@ -1,15 +1,8 @@
 {
-  "kind": "read-only",
+  "kind": "editable",
   "report": {
     "staleFormulas": 0,
-    "items": [
-      {
-        "code": "pivot-tables",
-        "severity": "read-only",
-        "count": 1,
-        "names": []
-      }
-    ]
+    "items": []
   },
   "defaultFont": {
     "size": 11,
@@ -49,11 +42,146 @@
             "kind": "number",
             "value": 3
           }
+        },
+        "A3": {
+          "value": {
+            "kind": "string",
+            "value": "Ink"
+          }
+        },
+        "B3": {
+          "value": {
+            "kind": "number",
+            "value": 5
+          }
+        }
+      }
+    },
+    {
+      "name": "Report",
+      "cells": {
+        "A3": {
+          "value": {
+            "kind": "string",
+            "value": "Row Labels"
+          }
+        },
+        "B3": {
+          "value": {
+            "kind": "string",
+            "value": "Sum of Qty"
+          }
+        },
+        "A4": {
+          "value": {
+            "kind": "string",
+            "value": "Pen"
+          }
+        },
+        "B4": {
+          "value": {
+            "kind": "number",
+            "value": 3
+          }
+        },
+        "A5": {
+          "value": {
+            "kind": "string",
+            "value": "Ink"
+          }
+        },
+        "B5": {
+          "value": {
+            "kind": "number",
+            "value": 5
+          }
+        },
+        "A6": {
+          "value": {
+            "kind": "string",
+            "value": "Grand Total"
+          }
+        },
+        "B6": {
+          "value": {
+            "kind": "number",
+            "value": 8
+          }
         }
       }
     }
   ],
   "names": [],
   "tables": [],
+  "pivots": [
+    {
+      "name": "PivotTable1",
+      "sheet": "Report",
+      "footprint": "A3:B6",
+      "definition": {
+        "source": {
+          "kind": "range",
+          "sheet": "Data",
+          "range": {
+            "top": 0,
+            "left": 0,
+            "bottom": 2,
+            "right": 1
+          }
+        },
+        "rows": [
+          0
+        ],
+        "columns": [],
+        "filters": [],
+        "values": [
+          {
+            "field": 1,
+            "aggregate": "sum",
+            "name": "Sum of Qty",
+            "showAs": {
+              "kind": "normal"
+            }
+          }
+        ],
+        "fields": [
+          {
+            "order": [
+              {
+                "kind": "string",
+                "value": "Pen"
+              },
+              {
+                "kind": "string",
+                "value": "Ink"
+              }
+            ],
+            "hidden": [],
+            "sort": "manual",
+            "subtotal": true
+          },
+          {
+            "order": [],
+            "hidden": [],
+            "sort": "manual",
+            "subtotal": true
+          }
+        ],
+        "layout": "compact",
+        "rowTotals": true,
+        "columnTotals": true,
+        "captions": {
+          "rows": "Row Labels",
+          "columns": "Column Labels",
+          "values": "Values",
+          "total": "Total",
+          "grandTotal": "Grand Total",
+          "blank": "(blank)",
+          "all": "(All)",
+          "multiple": "(Multiple Items)"
+        }
+      }
+    }
+  ],
   "externals": []
 }

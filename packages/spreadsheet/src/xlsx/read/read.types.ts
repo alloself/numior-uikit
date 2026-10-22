@@ -6,7 +6,7 @@ import type {
 import type { PartXml, SheetXml } from '../../core/layout/fragments.types';
 import type { FunctionRegistry } from '../../core/calc/calc.types';
 import type { BookLocale } from '../../core/locale';
-import type { Workbook } from '../../core/workbook';
+import type { SheetPivot, Workbook } from '../../core/workbook';
 import type { Bytes, ZipCodec } from '../zip/zip.types';
 
 export type XlsxLimitationCode =
@@ -66,6 +66,7 @@ export interface OriginalPackage {
   readonly externalLinks: readonly string[];
   readonly differentials: readonly DifferentialStyle[];
   readonly sheets: readonly OriginalSheet[];
+  readonly pivots: readonly SheetPivot[];
   readonly parts: readonly { readonly name: string; readonly kind: 'parsed' | 'opaque' }[];
 }
 

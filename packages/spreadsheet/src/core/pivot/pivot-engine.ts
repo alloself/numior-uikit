@@ -50,33 +50,45 @@ const DIVIDE_BY_ZERO = errorValue('#DIV/0!');
 
 const MANUAL: PivotField = { order: [], hidden: [], sort: 'manual', subtotal: true };
 
-const fieldOf = (definition: PivotDefinition, field: number): PivotField =>
+export const pivotFieldOf = (definition: PivotDefinition, field: number): PivotField =>
   definition.fields[field] ?? MANUAL;
 
-const ranksOf = (field: PivotField, items: readonly CellValue[]): Int32Array => {
-  const hidden = new Set(field.hidden.map(pivotKey));
+export const itemOrder = (field: PivotField, items: readonly CellValue[]): number[] => {
   const indices = items.map((_, index) => index);
 
-  const manual = field.order.reduce<number[]>((found, value) => {
-    const index = items.findIndex((item) => pivotKey(item) === pivotKey(value));
+  if (field.sort !== 'manual') {
+    const compare = ordered(field.sort === 'ascending' ? 1 : -1);
 
-    if (index >= 0 && !found.includes(index)) {
+    return indices.toSorted((left, right) => compare(items[left] ?? EMPTY, items[right] ?? EMPTY));
+  }
+
+  const positions = new Map(items.map((item, index) => [pivotKey(item), index]));
+  const placed = new Set<number>();
+
+  const manual = field.order.reduce<number[]>((found, value) => {
+    const index = positions.get(pivotKey(value));
+
+    if (index !== undefined && !placed.has(index)) {
+      placed.add(index);
       found.push(index);
     }
     return found;
   }, []);
 
-  const order =
-    field.sort === 'manual'
-      ? [...manual, ...indices.filter((index) => !manual.includes(index))]
-      : indices.toSorted((left, right) =>
-          ordered(field.sort === 'ascending' ? 1 : -1)(items[left] ?? EMPTY, items[right] ?? EMPTY),
-        );
+  return indices.reduce((order, index) => {
+    if (!placed.has(index)) {
+      order.push(index);
+    }
+    return order;
+  }, manual);
+};
 
+const ranksOf = (field: PivotField, items: readonly CellValue[]): Int32Array => {
+  const hidden = new Set(field.hidden.map(pivotKey));
   const ranks = new Int32Array(items.length).fill(-1);
   let rank = 0;
 
-  for (const index of order) {
+  for (const index of itemOrder(field, items)) {
     if (!hidden.has(pivotKey(items[index] ?? EMPTY))) {
       ranks[index] = rank;
       rank += 1;
@@ -237,7 +249,7 @@ const linesOf = (
 
     return (
       field !== VALUES_FIELD &&
-      fieldOf(definition, field).subtotal &&
+      pivotFieldOf(definition, field).subtotal &&
       levels.slice(level + 1).some((deeper) => deeper !== VALUES_FIELD)
     );
   };
@@ -538,7 +550,7 @@ export const computePivot = (input: PivotDefinition, cache: PivotCache): PivotRe
         items !== undefined &&
         !found.some(([known]) => known === field)
       ) {
-        found.push([field, ranksOf(fieldOf(definition, field), items)]);
+        found.push([field, ranksOf(pivotFieldOf(definition, field), items)]);
       }
       return found;
     }, []),

@@ -22,6 +22,7 @@ export interface CellStyles {
   readonly differentials: readonly DifferentialStyle[];
   readonly defaultFont: FontStyle | undefined;
   readonly unmodeled: number;
+  readonly numberFormat: (id: number) => string;
 }
 
 type Mutable<T> = { -readonly [Key in keyof T]: T[Key] };
@@ -228,7 +229,14 @@ export const readStyles = async (
   let unmodeled = 0;
 
   if (part === undefined || !archive.has(part)) {
-    return { formats: [], decorations: [], differentials: [], defaultFont: undefined, unmodeled };
+    return {
+      formats: [],
+      decorations: [],
+      differentials: [],
+      defaultFont: undefined,
+      unmodeled,
+      numberFormat: (id) => builtinFormat(id, locale) ?? GENERAL,
+    };
   }
 
   const borderPart = (element: string, attributes: readonly XmlAttribute[]): void => {
@@ -430,5 +438,6 @@ export const readStyles = async (
     differentials,
     defaultFont: fonts[0],
     unmodeled,
+    numberFormat: (id) => custom.get(id) ?? builtinFormat(id, locale) ?? GENERAL,
   };
 };

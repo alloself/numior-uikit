@@ -23,6 +23,7 @@ export interface StyleExtras {
 
 export interface StyleBook {
   xf(format: number, decoration: number): number;
+  numberFormat(code: string): number;
   differential(style: DifferentialStyle): number;
   xml(extras: StyleExtras): string;
 }
@@ -270,23 +271,23 @@ export const createStyleBook = (
     return entries.length - 1;
   };
 
+  const custom = new Map<number, number>();
+
+  const numberFormatOf = (format: number): number => {
+    const code = book.formats.code(format);
+    const builtin = builtins.get(code);
+
+    if (builtin !== undefined) {
+      return builtin;
+    }
+
+    const known = custom.get(format) ?? FIRST_CUSTOM + custom.size;
+
+    custom.set(format, known);
+    return known;
+  };
+
   const xml = (extras: StyleExtras): string => {
-    const custom = new Map<number, number>();
-
-    const numberFormatOf = (format: number): number => {
-      const code = book.formats.code(format);
-      const builtin = builtins.get(code);
-
-      if (builtin !== undefined) {
-        return builtin;
-      }
-
-      const known = custom.get(format) ?? FIRST_CUSTOM + custom.size;
-
-      custom.set(format, known);
-      return known;
-    };
-
     const cellFormats = entries.map((entry) => xfXml(entry, numberFormatOf(entry.format)));
 
     const numberFormats = [...custom].map(
@@ -312,5 +313,10 @@ export const createStyleBook = (
     ].join('');
   };
 
-  return { xf, differential, xml };
+  return {
+    xf,
+    numberFormat: (code) => numberFormatOf(book.formats.id(code)),
+    differential,
+    xml,
+  };
 };

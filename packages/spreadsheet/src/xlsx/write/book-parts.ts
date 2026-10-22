@@ -42,6 +42,9 @@ export const TYPES = {
   table: 'application/vnd.openxmlformats-officedocument.spreadsheetml.table+xml',
   metadata: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheetMetadata+xml',
   externalLink: 'application/vnd.openxmlformats-officedocument.spreadsheetml.externalLink+xml',
+  pivotTable: 'application/vnd.openxmlformats-officedocument.spreadsheetml.pivotTable+xml',
+  pivotCache:
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.pivotCacheDefinition+xml',
   relationships: 'application/vnd.openxmlformats-package.relationships+xml',
   xml: 'application/xml',
 } as const;
@@ -77,6 +80,7 @@ export const workbookXml = (
     readonly properties: string | undefined;
     readonly recalculate: boolean;
     readonly externals: readonly string[];
+    readonly pivotCaches: string;
   },
 ): string =>
   [
@@ -92,6 +96,7 @@ export const workbookXml = (
     externalReferencesXml(options.externals),
     definedNamesXml(book),
     `<calcPr calcId="191029"${options.recalculate ? ' fullCalcOnLoad="1"' : ''}/>`,
+    options.pivotCaches,
     '</workbook>',
   ].join('');
 

@@ -37,6 +37,10 @@ import {
   type SheetExtras,
 } from './source';
 import { createStyleBook, type StyleBook } from './styles-part';
+import { pivotXml } from './pivot-part';
+import { buildPivotCache, pivotSource } from '../../core/pivot/pivot-cache';
+import { computePivot } from '../../core/pivot/pivot-engine';
+import { renderPivot } from '../../core/pivot/pivot-render';
 import type { WriteOptions, XlsxLoss, XlsxWrite } from './write.types';
 
 interface Original {
@@ -80,6 +84,12 @@ interface Writing {
   readonly signal: AbortSignal | undefined;
   readonly totals: { stale: number; spills: number };
   readonly recalculateOnOpen: boolean;
+  readonly pivots: PivotWriting;
+}
+
+interface PivotWriting {
+  readonly keep: boolean;
+  readonly caches: { readonly cacheId: number; readonly relationship: string }[];
 }
 
 const REGENERATED = new Set(['worksheet', 'styles', 'sharedStrings', 'calcChain', 'sheetMetadata']);
@@ -177,7 +187,12 @@ const sameTable = (entry: TableEntry | undefined, table: SheetTable): boolean =>
 const planSheet = async (
   sheet: Sheet,
   original: Original | undefined,
-  context: { readonly lossy: boolean; readonly charts: boolean; readonly taken: Set<string> },
+  context: {
+    readonly lossy: boolean;
+    readonly charts: boolean;
+    readonly taken: Set<string>;
+    readonly keepPivots: boolean;
+  },
 ): Promise<{ readonly plan: SheetPlan; readonly loss: XlsxLoss | undefined }> => {
   const known = original?.source.sheets.find((entry) => entry.sheet === sheet.id);
 
@@ -205,7 +220,11 @@ const planSheet = async (
       original: known,
       part,
       extras: loss === undefined ? extras : undefined,
-      kept: relationships.filter((relationship) => relationship.kind !== 'table'),
+      kept: relationships.filter(
+        (relationship) =>
+          relationship.kind !== 'table' &&
+          (context.keepPivots || relationship.kind !== 'pivotTable'),
+      ),
       tables: relationships.filter((relationship) => relationship.kind === 'table'),
     },
   };
@@ -362,25 +381,143 @@ const defaultsOf = (original: Original | undefined, output: Output): Map<string,
   return defaults;
 };
 
+const samePivots = (book: Workbook, original: Original | undefined): boolean => {
+  const known = original?.source.pivots ?? [];
+  let same = original !== undefined;
+  let count = 0;
+
+  book.pivots.forEach((pivot) => {
+    count += 1;
+    same &&= known.includes(pivot);
+  });
+
+  return same && count === known.length;
+};
+
+const pivotLosses = (book: Workbook): XlsxLoss[] => {
+  const losses: XlsxLoss[] = [];
+
+  book.pivots.forEach((pivot) => {
+    if (pivotSource(book, pivot.definition.source) === undefined) {
+      losses.push({ sheet: pivot.sheet.name, reason: 'pivot-source' });
+    }
+  });
+
+  return losses;
+};
+
 const planAll = async (
   book: Workbook,
   original: Original | undefined,
   lossy: boolean,
-): Promise<{ readonly plans: SheetPlan[]; readonly losses: XlsxLoss[] }> => {
+): Promise<{
+  readonly plans: SheetPlan[];
+  readonly losses: XlsxLoss[];
+  readonly keepPivots: boolean;
+}> => {
   const taken = new Set(original?.archive.names ?? []);
-  const charts = original?.archive.names.some((name) => /\/(?:charts|pivot)/u.test(name)) ?? false;
+  const keepPivots = samePivots(book, original);
+
+  const charts = book.sheets.some((sheet) =>
+    sheet.layout.parts.some((part) => part.opaque.length > 0),
+  );
+
   const plans: SheetPlan[] = [];
-  const losses: XlsxLoss[] = [];
+  const losses: XlsxLoss[] = keepPivots ? [] : pivotLosses(book);
 
   for (const sheet of book.sheets) {
-    const { plan, loss } = await planSheet(sheet, original, { lossy, charts, taken });
+    const { plan, loss } = await planSheet(sheet, original, { lossy, charts, taken, keepPivots });
 
     plans.push(plan);
     if (loss !== undefined) {
       losses.push(loss);
     }
   }
-  return { plans, losses };
+  return { plans, losses, keepPivots };
+};
+
+const writePivots = (
+  writing: Writing,
+  plan: SheetPlan,
+  ids: Set<string>,
+): PlannedRelationship[] => {
+  const { output } = writing;
+
+  if (writing.pivots.keep) {
+    return [];
+  }
+
+  return writing.book.pivots.on(plan.sheet).reduce<PlannedRelationship[]>((planned, pivot) => {
+    const table = pivotSource(writing.book, pivot.definition.source);
+    const cache = table === undefined ? undefined : buildPivotCache(table);
+
+    if (cache === undefined) {
+      return planned;
+    }
+
+    const names = new Set([...(writing.original?.archive.names ?? []), ...output.written]);
+
+    const cachePart = freshName(
+      names,
+      (index) => `xl/pivotCache/pivotCacheDefinition${String(index)}.xml`,
+    );
+
+    const tablePart = freshName(names, (index) => `xl/pivotTables/pivotTable${String(index)}.xml`);
+    const cacheId = writing.pivots.caches.length + 1;
+    const rendered = renderPivot(pivot.definition, cache, computePivot(pivot.definition, cache));
+    const xml = pivotXml(pivot, cache, rendered, { cacheId, styles: writing.styles });
+
+    output.entries.push(
+      textEntry(cachePart, xml.cache),
+      textEntry(tablePart, xml.table),
+      textEntry(
+        relationshipsOf(tablePart),
+        relationshipsXml([
+          {
+            id: 'rId1',
+            type: officeType('pivotCacheDefinition'),
+            target: relativeTarget(tablePart, cachePart),
+          },
+        ]),
+      ),
+    );
+
+    output.overrides.set(cachePart, TYPES.pivotCache);
+    output.overrides.set(tablePart, TYPES.pivotTable);
+
+    [cachePart, tablePart, relationshipsOf(tablePart)].forEach((part) => {
+      output.written.add(part);
+    });
+
+    bookRelationship(writing, 'pivotCacheDefinition', cachePart, () => false);
+
+    writing.pivots.caches.push({
+      cacheId,
+      relationship: writing.workbookRelationships.at(-1)?.id ?? '',
+    });
+
+    planned.push({
+      id: freshId(ids),
+      type: officeType('pivotTable'),
+      target: relativeTarget(plan.part, tablePart),
+    });
+
+    return planned;
+  }, []);
+};
+
+const pivotCachesXml = (writing: Writing, workbookText: string): string => {
+  if (writing.pivots.keep) {
+    return elementSlice(workbookText, 'pivotCaches') ?? '';
+  }
+  return writing.pivots.caches.length === 0
+    ? ''
+    : `<pivotCaches>${writing.pivots.caches
+        .map(
+          (cache) =>
+            `<pivotCache cacheId="${String(cache.cacheId)}" r:id="${cache.relationship}"/>`,
+        )
+        .join('')}</pivotCaches>`;
 };
 
 const bookRelationship = (
@@ -417,7 +554,13 @@ const writeSheet = async (writing: Writing, plan: SheetPlan, firstNewId: number)
     signal: writing.signal,
   });
 
-  const relationships = [...plan.kept.map((item) => toPlanned(item, plan.part)), ...tables];
+  const ids = new Set([...plan.kept, ...tables].map((relationship) => relationship.id));
+
+  const relationships = [
+    ...plan.kept.map((item) => toPlanned(item, plan.part)),
+    ...tables,
+    ...writePivots(writing, plan, ids),
+  ];
 
   await writeParts(writing, plan);
 
@@ -522,7 +665,8 @@ const writeWorkbookPart = async (writing: Writing): Promise<void> => {
   const workbookText = original === undefined ? '' : await partText(original.archive, workbookPart);
 
   const keptBook = (original?.workbookRelationships ?? []).filter(
-    (item) => !REGENERATED.has(item.kind),
+    (item) =>
+      !REGENERATED.has(item.kind) && (writing.pivots.keep || item.kind !== 'pivotCacheDefinition'),
   );
 
   const rootRelationships =
@@ -542,6 +686,7 @@ const writeWorkbookPart = async (writing: Writing): Promise<void> => {
       workbookPart,
       workbookXml(writing.book, writing.sheets, {
         properties: elementSlice(workbookText, 'workbookPr'),
+        pivotCaches: pivotCachesXml(writing, workbookText),
         recalculate: writing.totals.stale > 0 || writing.recalculateOnOpen,
         externals,
       }),
@@ -574,7 +719,7 @@ export const writeWorkbook = async (
   await nextTask();
 
   const original = source === undefined ? undefined : await openOriginal(source);
-  const { plans, losses } = await planAll(book, original, options.lossy === true);
+  const { plans, losses, keepPivots } = await planAll(book, original, options.lossy === true);
 
   if (losses.length > 0 && options.lossy !== true) {
     return { ok: false, report: { staleFormulas: 0, losses, copiedParts: 0 } };
@@ -601,6 +746,7 @@ export const writeWorkbook = async (
     signal: options.signal,
     totals: { stale: 0, spills: 0 },
     recalculateOnOpen: options.recalculateOnOpen === true,
+    pivots: { keep: keepPivots, caches: [] },
   };
 
   const firstNewId = Math.max(0, ...(source?.sheets.map((entry) => entry.sheetId) ?? [])) + 1;

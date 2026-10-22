@@ -1,3 +1,4 @@
+import type { XmlAttribute } from '../xml/xml.types';
 import { decodeXstring } from '../xml/xstring';
 import type { ZipArchive } from '../zip/zip.types';
 import {
@@ -23,17 +24,44 @@ export interface NameEntry {
   readonly text: string;
 }
 
+export interface PivotCacheEntry {
+  readonly cacheId: number;
+  readonly relationship: string;
+}
+
 export interface WorkbookPart {
   readonly sheets: readonly SheetEntry[];
   readonly names: readonly NameEntry[];
   readonly date1904: boolean;
   readonly recalcOnLoad: boolean;
   readonly externalLinks: readonly string[];
-  readonly pivotCaches: number;
+  readonly pivotCaches: readonly PivotCacheEntry[];
   readonly strict: boolean;
 }
 
 const STRICT_MAIN = 'http://purl.oclc.org/ooxml/spreadsheetml/main';
+
+const relationshipOf = (attributes: readonly XmlAttribute[]): string =>
+  attributeOf(attributes, 'id', RELATIONSHIP_ATTRIBUTES) ?? '';
+
+const sheetEntryOf = (attributes: readonly XmlAttribute[], fallbackId: number): SheetEntry => ({
+  name: decodeXstring(attributeOf(attributes, 'name') ?? ''),
+  sheetId: numberOf(attributeOf(attributes, 'sheetId'), fallbackId),
+  relationship: relationshipOf(attributes),
+  hidden: (attributeOf(attributes, 'state') ?? 'visible') !== 'visible',
+});
+
+const nameEntryOf = (
+  attributes: readonly XmlAttribute[],
+): { name: string; sheet: number | undefined; text: string } => {
+  const local = attributeOf(attributes, 'localSheetId');
+
+  return {
+    name: attributeOf(attributes, 'name') ?? '',
+    sheet: local === undefined ? undefined : numberOf(local, 0),
+    text: '',
+  };
+};
 
 export const readWorkbookPart = async (
   archive: ZipArchive,
@@ -45,7 +73,7 @@ export const readWorkbookPart = async (
   let date1904 = false;
   let recalcOnLoad = false;
   const externalLinks: string[] = [];
-  let pivotCaches = 0;
+  const pivotCaches: PivotCacheEntry[] = [];
   let strict = false;
   let name: { name: string; sheet: number | undefined; text: string } | undefined;
 
@@ -62,13 +90,7 @@ export const readWorkbookPart = async (
             strict = element.uri === STRICT_MAIN;
             break;
           case 'sheet':
-            sheets.push({
-              name: decodeXstring(attributeOf(attributes, 'name') ?? ''),
-              sheetId: numberOf(attributeOf(attributes, 'sheetId'), sheets.length + 1),
-              relationship: attributeOf(attributes, 'id', RELATIONSHIP_ATTRIBUTES) ?? '',
-              hidden: (attributeOf(attributes, 'state') ?? 'visible') !== 'visible',
-            });
-
+            sheets.push(sheetEntryOf(attributes, sheets.length + 1));
             break;
           case 'workbookPr':
             date1904 = truthy(attributeOf(attributes, 'date1904'));
@@ -76,22 +98,18 @@ export const readWorkbookPart = async (
           case 'calcPr':
             recalcOnLoad = truthy(attributeOf(attributes, 'fullCalcOnLoad'));
             break;
-          case 'definedName': {
-            const local = attributeOf(attributes, 'localSheetId');
-
-            name = {
-              name: attributeOf(attributes, 'name') ?? '',
-              sheet: local === undefined ? undefined : numberOf(local, 0),
-              text: '',
-            };
-
+          case 'definedName':
+            name = nameEntryOf(attributes);
             break;
-          }
           case 'externalReference':
-            externalLinks.push(attributeOf(attributes, 'id', RELATIONSHIP_ATTRIBUTES) ?? '');
+            externalLinks.push(relationshipOf(attributes));
             break;
           case 'pivotCache':
-            pivotCaches += 1;
+            pivotCaches.push({
+              cacheId: numberOf(attributeOf(attributes, 'cacheId'), -1),
+              relationship: relationshipOf(attributes),
+            });
+
             break;
           default:
             break;

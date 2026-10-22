@@ -271,5 +271,6 @@ export const renderPivot = (
     firstDataRow: header,
     firstDataCol: labelCols,
     pageRows,
+    width: Math.max(labelCols + result.columns.length, 1),
   };
 };

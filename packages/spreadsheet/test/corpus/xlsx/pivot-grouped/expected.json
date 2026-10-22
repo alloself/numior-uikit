@@ -1,0 +1,126 @@
+{
+  "kind": "read-only",
+  "report": {
+    "staleFormulas": 0,
+    "items": [
+      {
+        "code": "pivot-tables",
+        "severity": "read-only",
+        "count": 1,
+        "names": [
+          "PivotTable1"
+        ]
+      }
+    ]
+  },
+  "defaultFont": {
+    "size": 11,
+    "color": {
+      "kind": "theme",
+      "theme": 1,
+      "tint": 0
+    },
+    "name": "Calibri",
+    "family": 2,
+    "scheme": "minor"
+  },
+  "sheets": [
+    {
+      "name": "Data",
+      "cells": {
+        "A1": {
+          "value": {
+            "kind": "string",
+            "value": "Item"
+          }
+        },
+        "B1": {
+          "value": {
+            "kind": "string",
+            "value": "Qty"
+          }
+        },
+        "A2": {
+          "value": {
+            "kind": "string",
+            "value": "Pen"
+          }
+        },
+        "B2": {
+          "value": {
+            "kind": "number",
+            "value": 3
+          }
+        },
+        "A3": {
+          "value": {
+            "kind": "string",
+            "value": "Ink"
+          }
+        },
+        "B3": {
+          "value": {
+            "kind": "number",
+            "value": 5
+          }
+        }
+      }
+    },
+    {
+      "name": "Report",
+      "cells": {
+        "A3": {
+          "value": {
+            "kind": "string",
+            "value": "Row Labels"
+          }
+        },
+        "B3": {
+          "value": {
+            "kind": "string",
+            "value": "Sum of Qty"
+          }
+        },
+        "A4": {
+          "value": {
+            "kind": "string",
+            "value": "Pen"
+          }
+        },
+        "B4": {
+          "value": {
+            "kind": "number",
+            "value": 3
+          }
+        },
+        "A5": {
+          "value": {
+            "kind": "string",
+            "value": "Ink"
+          }
+        },
+        "B5": {
+          "value": {
+            "kind": "number",
+            "value": 5
+          }
+        },
+        "A6": {
+          "value": {
+            "kind": "string",
+            "value": "Grand Total"
+          }
+        },
+        "B6": {
+          "value": {
+            "kind": "number",
+            "value": 8
+          }
+        }
+      }
+    }
+  ],
+  "names": [],
+  "tables": [],
+  "externals": []
+}

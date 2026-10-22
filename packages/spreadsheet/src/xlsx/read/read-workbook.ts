@@ -16,6 +16,7 @@ import {
   validSheetName,
   type ExternalName,
   type Sheet,
+  type SheetPivot,
   type Workbook,
 } from '../../core/workbook';
 import { readZip } from '../zip/read-zip';
@@ -38,6 +39,8 @@ import type {
 } from './read.types';
 import { readExternalPart, type ExternalNameEntry } from './external-part';
 import { readSharedStrings, type SharedStrings } from './shared-strings';
+import { readPivotCache, readPivotTable, type CacheEntry } from './pivot-part';
+import { pivotOf } from './pivot-model';
 import { readPositionalParts } from './positional-parts';
 import { readSheetPart, type SheetCounts } from './sheet-part';
 import { readStyles, type CellStyles } from './styles';
@@ -87,6 +90,13 @@ interface BookContext {
 interface SheetPart {
   readonly entry: SheetEntry;
   readonly part: string | undefined;
+}
+
+interface PivotLoad {
+  readonly load: Load;
+  readonly caches: Map<string, CacheEntry | undefined>;
+  readonly cacheParts: ReadonlyMap<number, string | undefined>;
+  readonly styles: CellStyles;
 }
 
 const COMPOUND_FILE = [0xd0, 0xcf, 0x11, 0xe0];
@@ -340,11 +350,105 @@ const addBookLimits = (load: Load, workbook: WorkbookPart, context: BookContext)
   report.add('strict-format', workbook.strict ? 1 : 0);
   report.add('external-links', load.book.externals.length - load.totals.linked);
   report.add('linked-objects', load.totals.linked);
-  report.add('pivot-tables', workbook.pivotCaches);
   report.add('unsupported-functions', load.totals.kept, undefined, load.totals.unknown);
   report.add('cell-styles', context.styles.unmodeled);
   report.add('rich-text', context.strings.rich);
   report.add('macros', load.archive.names.some((name) => name.endsWith('vbaProject.bin')) ? 1 : 0);
+};
+
+const pivotsOf = (book: Workbook): SheetPivot[] => {
+  const pivots: SheetPivot[] = [];
+
+  book.pivots.forEach((pivot) => {
+    pivots.push(pivot);
+  });
+
+  return pivots;
+};
+
+const cachedEntry = async (
+  load: Load,
+  caches: Map<string, CacheEntry | undefined>,
+  part: string | undefined,
+): Promise<CacheEntry | undefined> => {
+  if (part === undefined || !load.archive.has(part)) {
+    return undefined;
+  }
+  if (!caches.has(part)) {
+    caches.set(part, await readPivotCache(load.archive, part, load.options).catch(() => undefined));
+    load.parsed.add(part);
+  }
+  return caches.get(part);
+};
+
+const loadPivot = async (
+  context: PivotLoad,
+  sheet: Sheet,
+  part: string,
+): Promise<string | undefined> => {
+  const { load } = context;
+  const table = await readPivotTable(load.archive, part, load.options).catch(() => undefined);
+
+  const cache = await cachedEntry(
+    load,
+    context.caches,
+    table === undefined ? undefined : context.cacheParts.get(table.cacheId),
+  );
+
+  const reading =
+    table === undefined || cache === undefined
+      ? undefined
+      : pivotOf(table, cache, {
+          book: load.book,
+          sheet,
+          numberFormat: context.styles.numberFormat,
+        });
+
+  load.parsed.add(part);
+  if (reading?.ok === true) {
+    load.book.pivots.set(reading.pivot);
+    return undefined;
+  }
+  return table?.name ?? part;
+};
+
+const loadPivots = async (
+  load: Load,
+  workbook: WorkbookPart,
+  context: { readonly relationships: readonly Relationship[]; readonly styles: CellStyles },
+  sheets: readonly { readonly sheet: Sheet; readonly part: string | undefined }[],
+): Promise<string[]> => {
+  const refused: string[] = [];
+
+  const pivots: PivotLoad = {
+    load,
+    caches: new Map(),
+    styles: context.styles,
+    cacheParts: new Map(
+      workbook.pivotCaches.map((entry) => [
+        entry.cacheId,
+        context.relationships.find((relationship) => relationship.id === entry.relationship)
+          ?.target,
+      ]),
+    ),
+  };
+
+  for (const { sheet, part } of sheets) {
+    const relationships =
+      part === undefined ? [] : await readRelationships(load.archive, part, load.options);
+
+    for (const relationship of relationships) {
+      const failed =
+        relationship.kind === 'pivotTable' && load.archive.has(relationship.target)
+          ? await loadPivot(pivots, sheet, relationship.target)
+          : undefined;
+
+      if (failed !== undefined) {
+        refused.push(failed);
+      }
+    }
+  }
+  return refused;
 };
 
 const recalculated = async (load: Load): Promise<void> => {
@@ -441,6 +545,15 @@ const readBook = async (
       return rejected('damaged', sheet.name);
     }
   }
+
+  const refusedPivots = await loadPivots(
+    load,
+    workbook,
+    { relationships, styles },
+    sheets.map((sheet, index) => ({ sheet, part: sheetParts[index]?.part })),
+  );
+
+  load.report.add('pivot-tables', refusedPivots.length, undefined, refusedPivots);
   addBookLimits(load, workbook, context);
   await recalculated(load);
 
@@ -471,6 +584,7 @@ const readBook = async (
         parts: sheet.layout.parts,
       })),
       differentials: styles.differentials,
+      pivots: pivotsOf(book),
       parts: archive.names.map((name) => ({
         name,
         kind: load.parsed.has(name) ? 'parsed' : 'opaque',
