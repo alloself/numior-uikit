@@ -515,7 +515,6 @@ const {
   cellSelection = false,
   contextMenu = undefined,
   copyLimit = COPY_LIMIT,
-  warmup = true,
   clipboard: clipboardHooks,
   commands,
   controls,
@@ -724,7 +723,7 @@ rowCount.value = engine.value.count();
 const warming = useTableWarmup({
   engine,
   columns: () => tree.value.leaves,
-  enabled: () => warmup && source === undefined,
+  enabled: () => source === undefined,
 });
 
 const active = ref<TableCellPosition>({ row: rowCount.value > 0 ? 0 : -1, col: 0 });

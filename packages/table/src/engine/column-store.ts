@@ -1,5 +1,7 @@
 import { CHECK_INTERVAL, type SliceJob } from './slicer';
-import { createSortJob, identityIndices } from './sort';
+import { createCollatedSortJob } from './collated-sort';
+import { workerRankHost, type RankHost } from './rank-host';
+import { identityIndices } from './sort';
 import type { ColumnStore, TableEngineColumn, StoreNeed, StringCodes } from './engine.types';
 
 export interface StoreJob extends SliceJob {
@@ -114,7 +116,11 @@ const createCodesJob = <T>(
   };
 };
 
-export const createRankJob = (source: StringCodes, collator: Intl.Collator): StoreJob => {
+export const createRankJob = (
+  source: StringCodes,
+  collator: Intl.Collator,
+  host: RankHost | undefined = workerRankHost,
+): StoreJob => {
   const { codes, dictionary } = source;
   const length = codes.length;
   const order = identityIndices(dictionary.length);
@@ -122,9 +128,7 @@ export const createRankJob = (source: StringCodes, collator: Intl.Collator): Sto
   let rankOf: Uint32Array | null = null;
   let ranked = 0;
 
-  const sorting = createSortJob(order, (a, b) =>
-    collator.compare(dictionary[a] ?? '', dictionary[b] ?? ''),
-  );
+  const sorting = createCollatedSortJob(order, dictionary, collator, host);
 
   const rankTable = (): Uint32Array => {
     if (rankOf === null) {
@@ -141,6 +145,7 @@ export const createRankJob = (source: StringCodes, collator: Intl.Collator): Sto
   return {
     total: () => sorting.total() + length,
     done: () => sorting.done() + ranked,
+    waiting: () => sorting.waiting?.(),
     work: (deadline) => {
       if (!sorting.work(deadline)) {
         return false;
@@ -174,6 +179,7 @@ const createRankedStringJob = (codes: CodesJob, collator: Intl.Collator): StoreJ
   return {
     total: () => codes.total() + (ranking?.total() ?? codes.total()),
     done: () => codes.done() + (ranking?.done() ?? 0),
+    waiting: () => ranking?.waiting?.(),
     work: (deadline) => {
       if (ranking === null) {
         if (!codes.work(deadline)) {
@@ -231,6 +237,7 @@ export const createStoresJob = <T>(
   return {
     total: () => Math.max(1, requests.length * size),
     done: () => position * size + (current?.done() ?? 0),
+    waiting: () => current?.waiting?.(),
     work: (deadline) => {
       for (let job = currentJob(); job !== null; job = currentJob()) {
         if (!job.work(deadline)) {

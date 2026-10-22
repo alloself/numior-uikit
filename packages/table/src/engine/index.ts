@@ -9,6 +9,7 @@ export { runSliced, yieldToHost } from './slicer';
 export { flattenTree } from './tree';
 export type { SliceJob, SliceOptions } from './slicer';
 export type { StoreJob, StoreRequest } from './column-store';
+export type { RankHost, RankSession } from './rank-host';
 export type { FilterJob, FilterSetup, FilterSources, RowTest } from './filter';
 export type { AggregateColumn, GroupJob, GroupLevel, GroupRecord, GroupTable } from './group';
 export type { RadixLane } from './radix';

@@ -1,0 +1,32 @@
+{
+  "recordedAt": "2026-10-21T22:45:06.608Z",
+  "dataset": "1000000 generated rows, sort by 1000000 unique emails on cold stores, viewport 1440×900",
+  "device": {
+    "host": "c4f18f792ef3",
+    "cpu": "13th Gen Intel(R) Core(TM) i9-13900KF",
+    "cores": 32,
+    "memoryGb": 31,
+    "platform": "linux 6.18.54.1-microsoft-standard-WSL2",
+    "node": "v24.20.0"
+  },
+  "browser": "chromium 153.0.8010.12",
+  "heapUsedMb": 89,
+  "operations": [
+    {
+      "name": "first sort of a column of unique strings without warmup to the painted result",
+      "samples": 1,
+      "meanMs": 1768.5,
+      "p50Ms": 1768.5,
+      "p95Ms": 1768.5,
+      "maxMs": 1768.5
+    },
+    {
+      "name": "longest main-thread task while it sorts",
+      "samples": 1,
+      "meanMs": 0,
+      "p50Ms": 0,
+      "p95Ms": 0,
+      "maxMs": 0
+    }
+  ]
+}

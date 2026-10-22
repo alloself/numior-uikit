@@ -151,5 +151,10 @@
     "move the row window by a viewport, main-thread ms": {
       "p95Ms": 45
     }
+  },
+  "unique": {
+    "longest main-thread task while it sorts": {
+      "maxMs": 50
+    }
   }
 }

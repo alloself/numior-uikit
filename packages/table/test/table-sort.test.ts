@@ -23,7 +23,7 @@ afterEach(() => {
   }
 });
 
-const readsOnSort = async (warmup: boolean): Promise<number> => {
+const readsOnSort = async (afterPause: boolean): Promise<number> => {
   let reads = 0;
 
   const columns = PEOPLE_COLUMNS.map((column): NuiTableColumn<Person> =>
@@ -38,13 +38,15 @@ const readsOnSort = async (warmup: boolean): Promise<number> => {
       : column,
   );
 
-  const grid = mountPeople({ columns, props: { warmup } });
+  const grid = mountPeople({ columns });
 
-  await vi.waitFor(() => {
-    expect(reads).toBeGreaterThanOrEqual(warmup ? 1000 : 0);
-  });
+  if (afterPause) {
+    await vi.waitFor(() => {
+      expect(reads).toBeGreaterThanOrEqual(1000);
+    });
 
-  await grid.idle();
+    await grid.idle();
+  }
 
   const before = reads;
 
@@ -132,7 +134,7 @@ describe('NuiTable sorting', () => {
     expect(grid.rowCount).toBe(11);
   });
 
-  it('builds column keys while the page is idle so the first sort does not read every row', async () => {
+  it('builds column keys after a pause so a later first sort does not read every row', async () => {
     expect(await readsOnSort(true)).toBeLessThan(1000);
     expect(await readsOnSort(false)).toBeGreaterThanOrEqual(1000);
   });

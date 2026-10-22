@@ -2,6 +2,7 @@ export interface SliceJob {
   total(): number;
   done(): number;
   work(deadline: number): boolean;
+  waiting?(): Promise<unknown> | undefined;
 }
 
 export interface SliceOptions {
@@ -62,18 +63,19 @@ export const runSliced = async (job: SliceJob, options: SliceOptions): Promise<b
   if (interrupted(options)) {
     return false;
   }
-  for (;;) {
-    if (job.work(performance.now() + options.sliceMs)) {
-      options.onProgress?.(job.total(), job.total());
-      return true;
-    }
+  let finished = job.work(performance.now() + options.sliceMs);
+
+  while (!finished) {
     options.onProgress?.(job.done(), job.total());
-    await options.yieldTo();
+    await (job.waiting?.() ?? options.yieldTo());
 
     if (interrupted(options)) {
       return false;
     }
+    finished = job.work(performance.now() + options.sliceMs);
   }
+  options.onProgress?.(job.total(), job.total());
+  return true;
 };
 
 export const CHECK_INTERVAL = 2048;

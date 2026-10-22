@@ -3,6 +3,7 @@ import {
   createRankJob,
   createStoreJob,
   type ColumnStore,
+  type RankHost,
   type TableEngineColumn,
   type StoreJob,
   type StoreNeed,
@@ -104,5 +105,92 @@ describe('createStoreJob', () => {
     expect(ranked.dictionary).toBe(coded.dictionary);
     expect(Array.from(ranked.sortedCodes)).toEqual([1, 2, 0, 4, 3]);
     expect(Array.from(ranked.ranks)).toEqual([2, 0, 1, 0, 2, 4, 3]);
+  });
+
+  it('sorts a large dictionary in the rank host and falls back to the page when the host fails', async () => {
+    const dictionary = Array.from(
+      { length: 12_000 },
+      (_, index) => `item ${(index * 7919) % 12_000}`,
+    );
+
+    const codes = new Uint32Array(dictionary.length).map((_, index) => index);
+
+    const coded = {
+      kind: 'codes' as const,
+      codes,
+      nulls: new Uint8Array(codes.length),
+      dictionary,
+    };
+
+    const sent: string[] = [];
+    const opened: number[] = [];
+
+    const hostAnswering = (fails: boolean): RankHost => ({
+      open: () => {
+        opened.push(1);
+        return {
+          send: (text) => {
+            sent.push(text);
+          },
+          finish: async (lengths) => {
+            await Promise.resolve();
+
+            if (fails) {
+              return undefined;
+            }
+
+            const words = Array.from(lengths, () => '');
+            let offset = 0;
+
+            lengths.forEach((length, index) => {
+              words[index] = sent.join('').slice(offset, offset + length);
+              offset += length;
+            });
+
+            return Uint32Array.from(
+              Array.from(words.keys()).toSorted((a, b) =>
+                collator.compare(words[a] ?? '', words[b] ?? ''),
+              ),
+            );
+          },
+        };
+      },
+    });
+
+    const settled = async (host: RankHost): Promise<number[]> => {
+      const job = createRankJob(coded, collator, host);
+      let waits = 0;
+
+      while (!job.work(performance.now() + 50)) {
+        const waiting = job.waiting?.();
+
+        waits += waiting === undefined ? 0 : 1;
+        await waiting;
+      }
+      expect(waits).toBeGreaterThan(0);
+      return Array.from(stringStore(job.result()).sortedCodes);
+    };
+
+    const local = Array.from(
+      stringStore(finish(createRankJob(coded, collator, undefined))).sortedCodes,
+    );
+
+    expect(await settled(hostAnswering(false))).toEqual(local);
+    expect(sent.join('')).toBe(dictionary.join(''));
+
+    sent.length = 0;
+    expect(await settled(hostAnswering(true))).toEqual(local);
+
+    opened.length = 0;
+
+    finish(
+      createRankJob(
+        { ...coded, dictionary: dictionary.slice(0, 50), codes: codes.slice(0, 50) },
+        collator,
+        hostAnswering(false),
+      ),
+    );
+
+    expect(opened).toEqual([]);
   });
 });

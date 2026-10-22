@@ -1,4 +1,4 @@
-import { defaultDocument, useEventListener } from '@vueuse/core';
+import { promiseTimeout, until, useIdle } from '@vueuse/core';
 import type { TableEngine, TableStoreWish } from '../engine';
 import { onMounted, onScopeDispose, type ShallowRef } from 'vue';
 import type { NuiTableColumn } from './table.types';
@@ -17,62 +17,62 @@ const SLICE_MS = 5;
 const QUIET_MS = 500;
 const IDLE_TIMEOUT = 2000;
 const FALLBACK_DELAY = 16;
-const INPUTS = ['pointerdown', 'keydown', 'wheel', 'touchstart'] as const;
+const INPUTS = ['pointerdown', 'keydown', 'input', 'wheel', 'touchstart'] as const;
+
+interface WishGroups {
+  readonly codes: TableStoreWish[];
+  readonly numbers: TableStoreWish[];
+  readonly ranks: TableStoreWish[];
+}
 
 const wishesOf = <T>(columns: readonly NuiTableColumn<T>[]): TableStoreWish[] => {
-  const texts = columns.filter((column) => column.type === 'text');
-  const sortable = columns.filter((column) => column.sortable !== false);
+  const groups = columns.reduce<WishGroups>(
+    (found, column) => {
+      const sortable = column.sortable !== false;
 
-  return [
-    ...texts.map((column): TableStoreWish => ({ key: column.key, need: 'codes' })),
-    ...sortable
-      .filter((column) => column.type !== 'text')
-      .map((column): TableStoreWish => ({ key: column.key, need: 'codes' })),
-    ...sortable
-      .filter((column) => column.type === 'text')
-      .map((column): TableStoreWish => ({ key: column.key, need: 'ranks' })),
-  ];
+      if (column.type === 'text') {
+        found.codes.push({ key: column.key, need: 'codes' });
+
+        if (sortable) {
+          found.ranks.push({ key: column.key, need: 'ranks' });
+        }
+      } else if (sortable) {
+        found.numbers.push({ key: column.key, need: 'codes' });
+      }
+      return found;
+    },
+    { codes: [], numbers: [], ranks: [] },
+  );
+
+  return [...groups.codes, ...groups.numbers, ...groups.ranks];
 };
 
-const later = (ms: number): Promise<void> =>
-  new Promise((resolve) => {
-    setTimeout(resolve, ms);
+const nextIdle = async (): Promise<IdleDeadline | undefined> => {
+  if (typeof requestIdleCallback !== 'function') {
+    await promiseTimeout(FALLBACK_DELAY);
+    return undefined;
+  }
+  return new Promise((resolve) => {
+    requestIdleCallback(resolve, { timeout: IDLE_TIMEOUT });
   });
-
-const nextIdle = (): Promise<IdleDeadline | undefined> =>
-  new Promise((resolve) => {
-    if (typeof requestIdleCallback === 'function') {
-      requestIdleCallback(resolve, { timeout: IDLE_TIMEOUT });
-    } else {
-      setTimeout(resolve, FALLBACK_DELAY);
-    }
-  });
+};
 
 export const useTableWarmup = <T>(options: TableWarmupOptions<T>): TableWarmup => {
+  const { idle } = useIdle(QUIET_MS, { events: [...INPUTS], listenForVisibilityChange: false });
   let running: AbortController | undefined;
   let mounted = false;
-  let lastInput = 0;
-
-  const quietFor = (): number => QUIET_MS - (performance.now() - lastInput);
 
   const createYield = (): (() => Promise<void>) => {
     let deadline: IdleDeadline | undefined;
 
     return async () => {
-      for (;;) {
-        if (quietFor() > 0) {
-          deadline = undefined;
-          await later(quietFor());
-        } else if (deadline !== undefined && deadline.timeRemaining() > SLICE_MS) {
-          return;
-        } else {
-          deadline = await nextIdle();
-
-          if (quietFor() <= 0) {
-            return;
-          }
-        }
+      if (idle.value && deadline !== undefined && deadline.timeRemaining() > SLICE_MS) {
+        return;
       }
+      do {
+        await until(idle).toBe(true);
+        deadline = await nextIdle();
+      } while (!idle.value);
     };
   };
 
@@ -99,15 +99,6 @@ export const useTableWarmup = <T>(options: TableWarmupOptions<T>): TableWarmup =
           }),
     );
   };
-
-  useEventListener(
-    defaultDocument,
-    [...INPUTS],
-    () => {
-      lastInput = performance.now();
-    },
-    { capture: true, passive: true },
-  );
 
   onMounted(() => {
     mounted = true;

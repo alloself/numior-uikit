@@ -5,6 +5,7 @@ import { TableBenchPage } from './pages/table-bench';
 
 const ROWS = 1_000_000;
 const READING_PAUSE = 2000;
+const EMAIL_COLUMN = 2;
 const RESULTS = new URL('../../packages/table/bench/results/', import.meta.url);
 
 test('the data table keeps input and frames within budget on a million rows', async ({
@@ -162,4 +163,32 @@ test('the data table keeps input and frames within budget on a million rows', as
 
   console.log(`bench: recorded ${operations.length} operations to ${file}`);
   expect(operations.every((operation) => operation.samples > 0)).toBe(true);
+});
+
+test('the data table sorts a million unique strings without blocking the page', async ({
+  page,
+  browser,
+}) => {
+  test.setTimeout(600_000);
+  const bench = new TableBenchPage(page);
+  await bench.open(ROWS);
+
+  const { latency, longTasks } = await bench.sortWithLongTasks(EMAIL_COLUMN);
+
+  const operations: Operation[] = [
+    summarize('first sort of a column of unique strings right after mount to the painted result', [
+      latency,
+    ]),
+    summarize('longest main-thread task while it sorts', [Math.max(0, ...longTasks)]),
+  ];
+
+  const file = await record(
+    RESULTS,
+    `${ROWS} generated rows, sort by ${ROWS} unique emails on cold stores, viewport 1440×900`,
+    operations,
+    { suffix: 'unique', browser: `chromium ${browser.version()}` },
+  );
+
+  console.log(`bench: recorded ${operations.length} operations to ${file}`);
+  expect(Number.isFinite(latency)).toBe(true);
 });

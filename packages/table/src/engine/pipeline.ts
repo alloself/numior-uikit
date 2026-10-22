@@ -25,6 +25,7 @@ export const createPipeline = (
     phase: () => (stage ?? last).phase,
     total: () => (stage ?? last).job.total(),
     done: () => (stage ?? last).job.done(),
+    waiting: () => stage?.job.waiting?.(),
     work: (deadline) => {
       while (stage !== null) {
         if (!stage.job.work(deadline)) {

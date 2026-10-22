@@ -92,6 +92,14 @@ export default defineConfig({
       'vite-plus/prefer-vite-plus-imports': 'error',
       'typescript/consistent-return': 'off',
     },
+    overrides: [
+      {
+        files: ['packages/table/src/engine/rank-host.ts'],
+        rules: {
+          'import/default': 'off',
+        },
+      },
+    ],
     options: {
       typeAware: true,
       typeCheck: true,

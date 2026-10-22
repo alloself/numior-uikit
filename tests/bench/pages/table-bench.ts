@@ -63,6 +63,23 @@ export class TableBenchPage extends BenchPage {
     return this.settles();
   }
 
+  async sortWithLongTasks(col: number): Promise<{ latency: number; longTasks: number[] }> {
+    await this.page.evaluate(() => {
+      window.numiorLongTasks = [];
+
+      new PerformanceObserver((list) => {
+        for (const entry of list.getEntries()) {
+          window.numiorLongTasks?.push(entry.duration);
+        }
+      }).observe({ type: 'longtask' });
+    });
+
+    const [latency = Number.NaN] = await this.sortLatencies(col, 1);
+    const longTasks = await this.page.evaluate(() => [...(window.numiorLongTasks ?? [])]);
+
+    return { latency, longTasks };
+  }
+
   private async openFilter(col: number): Promise<void> {
     await this.header(col).hover();
     await this.header(col).locator('.nui-table__menu').click();
