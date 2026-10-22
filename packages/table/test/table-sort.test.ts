@@ -167,4 +167,30 @@ describe('NuiTable sorting', () => {
       expect(reads).toBeGreaterThanOrEqual(1000);
     });
   });
+
+  it('leaves columns that can neither be sorted nor filtered out of the idle key building', async () => {
+    let reads = 0;
+
+    const columns = PEOPLE_COLUMNS.map((column): NuiTableColumn<Person> =>
+      column.key === 'city' && column.type === 'text'
+        ? {
+            ...column,
+            sortable: false,
+            filter: false,
+            value: (row) => {
+              reads += 1;
+              return row.city;
+            },
+          }
+        : column,
+    );
+
+    const grid = mountPeople({ columns });
+
+    await grid.idle();
+    await grid.idle();
+
+    expect(reads).toBeLessThan(1000);
+    expect(grid.sortable(2)).toBe(false);
+  });
 });
