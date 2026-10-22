@@ -72,6 +72,7 @@ interface Writing {
   readonly outdated: (sheet: Sheet, row: number, col: number) => boolean;
   readonly signal: AbortSignal | undefined;
   readonly totals: { stale: number; spills: number };
+  readonly recalculateOnOpen: boolean;
 }
 
 const REGENERATED = new Set(['worksheet', 'styles', 'sharedStrings', 'calcChain', 'sheetMetadata']);
@@ -494,7 +495,7 @@ const writeWorkbookPart = async (writing: Writing): Promise<void> => {
       workbookPart,
       workbookXml(writing.book, writing.sheets, {
         properties: elementSlice(workbookText, 'workbookPr'),
-        recalculate: writing.totals.stale > 0,
+        recalculate: writing.totals.stale > 0 || writing.recalculateOnOpen,
         externals,
       }),
     ),
@@ -546,6 +547,7 @@ export const writeWorkbook = async (
     outdated: calculator.outdated(),
     signal: options.signal,
     totals: { stale: 0, spills: 0 },
+    recalculateOnOpen: options.recalculateOnOpen === true,
   };
 
   const firstNewId = Math.max(0, ...(source?.sheets.map((entry) => entry.sheetId) ?? [])) + 1;

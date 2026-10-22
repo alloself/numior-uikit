@@ -6,6 +6,7 @@ export interface WriteOptions {
   readonly lossy?: boolean | undefined;
   readonly codec?: ZipCodec | undefined;
   readonly signal?: AbortSignal | undefined;
+  readonly recalculateOnOpen?: boolean | undefined;
 }
 
 export interface XlsxLoss {
