@@ -215,6 +215,12 @@ const createParser = (tokens: readonly Token[], locale: FormulaLocale, offset: n
     return booleanOf(token) ?? reference(undefined, token) ?? { kind: 'name', name: token.text };
   };
 
+  const sheetItem = (sheet: string, token: Token): FormulaNode =>
+    reference(sheet, token) ??
+    (token.kind === 'word' && !isPunct('(') && booleanOf(token) === undefined
+      ? { kind: 'name', sheet, name: token.text }
+      : fail(token, 'reference'));
+
   const primary = (): FormulaNode => {
     const token = next();
 
@@ -227,7 +233,7 @@ const createParser = (tokens: readonly Token[], locale: FormulaLocale, offset: n
       case 'word':
         return word(token);
       case 'sheet':
-        return reference(token.text, next()) ?? fail(peek(-1), 'reference');
+        return sheetItem(token.text, next());
       case 'punct':
         return group(token);
       default:

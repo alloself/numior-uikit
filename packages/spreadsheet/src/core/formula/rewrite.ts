@@ -287,14 +287,12 @@ export const changesMeaning = (
 
 export const renameInFormula = (node: FormulaNode, from: string, to: string): FormulaNode =>
   mapReferences(node, (reference) =>
-    reference.kind !== 'name' && reference.sheet !== undefined && sameName(reference.sheet, from)
+    reference.sheet !== undefined && sameName(reference.sheet, from)
       ? { ...reference, sheet: to }
       : reference,
   );
 
 export const dropSheetFromFormula = (node: FormulaNode, name: string): FormulaNode =>
   mapReferences(node, (reference) =>
-    reference.kind !== 'name' && reference.sheet !== undefined && sameName(reference.sheet, name)
-      ? BROKEN
-      : reference,
+    reference.sheet !== undefined && sameName(reference.sheet, name) ? BROKEN : reference,
   );

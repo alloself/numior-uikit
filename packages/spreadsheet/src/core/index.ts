@@ -28,13 +28,13 @@ export {
   sameValue,
   textValue,
 } from './values';
-export { createWorkbook, validSheetName } from './workbook';
+export { createWorkbook, validDefinedName, validSheetName } from './workbook';
 export { EN_LOCALE, RU_LOCALE, type BookLocale } from './locale';
 export { createCellEditor, editText, readInput } from './cell-input';
-export type { CellEditor, CellInput, EntryResult } from './cell-input';
+export type { CellEditor, CellInput, EntryResult, NameOptions } from './cell-input';
 export type { CellFormats } from './cell-formats';
 export type { NumberFormats } from './number-formats';
-export type { Sheet, Workbook } from './workbook';
+export type { DefinedName, DefinedNames, Sheet, Workbook } from './workbook';
 export { EN_FORMULAS, RU_FORMULAS, formulaReferences, parseFormula, printFormula } from './formula';
 export type {
   BinaryOperator,

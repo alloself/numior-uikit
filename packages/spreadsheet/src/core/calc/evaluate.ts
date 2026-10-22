@@ -5,7 +5,7 @@ import { colOf, referenceRange, rowOf } from '../formula/origin';
 import { EN_FORMULAS } from '../formula/locale';
 import { parseFormula } from '../formula/parser';
 import { EMPTY, errorValue, numberValue, textValue } from '../values';
-import type { Sheet, Workbook } from '../workbook';
+import type { DefinedName, Sheet, Workbook } from '../workbook';
 import {
   blankAsZero,
   broadcastShape,
@@ -39,11 +39,33 @@ export interface EvalContext {
   random(): number;
   here(): FormulaPlace;
   track(sheet: Sheet, range: CellRange): void;
+  definedName(node: NameNode): DefinedName | undefined;
 }
 
 type Binary = Extract<FormulaNode, { readonly kind: 'binary' }>;
 
 type Call = Extract<FormulaNode, { readonly kind: 'call' }>;
+
+type NameNode = Extract<FormulaNode, { readonly kind: 'name' }>;
+
+const resolving = new Set<DefinedName>();
+
+const named = (node: NameNode, context: EvalContext): EvalValue => {
+  const defined = context.definedName(node);
+
+  if (defined === undefined) {
+    return raise('#NAME?');
+  }
+  if (resolving.has(defined)) {
+    return raise('#REF!');
+  }
+  resolving.add(defined);
+  try {
+    return evaluate(defined.ast, context);
+  } finally {
+    resolving.delete(defined);
+  }
+};
 
 type Operand = CellValue | ArrayValue;
 
@@ -386,7 +408,7 @@ const evaluate = (node: FormulaNode, context: EvalContext): EvalValue => {
     case 'spill':
       return spilled(node, context);
     case 'name':
-      return raise('#NAME?');
+      return named(node, context);
     default:
       return operation(node, context);
   }

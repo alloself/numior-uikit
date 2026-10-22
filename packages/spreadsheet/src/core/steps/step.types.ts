@@ -1,5 +1,6 @@
 import type { CellContent } from '../calc/calc.types';
 import type { CellRange } from '../cell.types';
+import type { FormulaNode } from '../formula/formula.types';
 import type { LineChange } from '../formula/rewrite';
 
 export type LineAxis = LineChange['axis'];
@@ -29,9 +30,20 @@ export type WorkbookStep =
   | { readonly kind: 'addSheet'; readonly name: string; readonly index: number }
   | { readonly kind: 'removeSheet'; readonly name: string }
   | { readonly kind: 'renameSheet'; readonly from: string; readonly to: string }
+  | {
+      readonly kind: 'setName';
+      readonly name: string;
+      readonly scope?: string | undefined;
+      readonly ast: FormulaNode | undefined;
+    }
   | { readonly kind: 'batch'; readonly steps: readonly WorkbookStep[] };
 
-export type StepRefusal = 'missing-sheet' | 'sheet-full' | 'name-taken' | 'last-sheet';
+export type StepRefusal =
+  | 'missing-sheet'
+  | 'sheet-full'
+  | 'name-taken'
+  | 'last-sheet'
+  | 'invalid-name';
 
 export type StepResult =
   | {

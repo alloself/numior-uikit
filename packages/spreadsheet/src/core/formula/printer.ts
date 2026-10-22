@@ -97,7 +97,7 @@ const referenceText = (node: FormulaNode): string | undefined => {
     case 'spill':
       return `${sheetPrefix(node.sheet)}${cellText(node.ref)}#`;
     case 'name':
-      return node.name;
+      return `${sheetPrefix(node.sheet)}${node.name}`;
     default:
       return undefined;
   }

@@ -1,6 +1,8 @@
+import { parseCell } from './address';
 import { createCellFormats, type CellFormats } from './cell-formats';
 import { createCellStore, type CellStore } from './cell-store';
 import { createNumberFormats, type NumberFormats } from './number-formats';
+import type { FormulaNode } from './formula/formula.types';
 import { createSharedStrings, type SharedStrings } from './strings';
 
 export interface Sheet {
@@ -10,9 +12,24 @@ export interface Sheet {
   readonly formats: CellFormats;
 }
 
+export interface DefinedName {
+  readonly name: string;
+  readonly scope: Sheet | undefined;
+  readonly ast: FormulaNode;
+}
+
+export interface DefinedNames {
+  get(name: string, scope: Sheet | undefined): DefinedName | undefined;
+  resolve(name: string, sheet: Sheet): DefinedName | undefined;
+  set(name: string, scope: Sheet | undefined, ast: FormulaNode): DefinedName;
+  delete(name: string, scope: Sheet | undefined): void;
+  forEach(visit: (name: DefinedName) => void): void;
+}
+
 export interface Workbook {
   readonly strings: SharedStrings;
   readonly formats: NumberFormats;
+  readonly names: DefinedNames;
   readonly sheets: readonly Sheet[];
   addSheet(name?: string, index?: number): Sheet;
   removeSheet(sheet: Sheet): void;
@@ -22,6 +39,12 @@ export interface Workbook {
 
 const FORBIDDEN = /[[\]:*?/\\]/u;
 
+const DEFINED_NAME = /^[\p{L}_][\p{L}\p{N}_.]*$/u;
+
+const R1C1_NAME = /^(?:[RrCc]|[Rr]\d*[Cc]\d*|[Rr]\d+|[Cc]\d+)$/u;
+
+const MAX_DEFINED_NAME = 255;
+
 const MAX_NAME = 31;
 
 export const validSheetName = (name: string): boolean =>
@@ -30,6 +53,38 @@ export const validSheetName = (name: string): boolean =>
   !FORBIDDEN.test(name) &&
   !name.startsWith("'") &&
   !name.endsWith("'");
+
+export const validDefinedName = (name: string): boolean =>
+  name.length <= MAX_DEFINED_NAME &&
+  DEFINED_NAME.test(name) &&
+  !R1C1_NAME.test(name) &&
+  parseCell(name) === undefined &&
+  !['true', 'false'].includes(name.toLowerCase());
+
+const nameKey = (name: string, scope: Sheet | undefined): string =>
+  `${String(scope?.id ?? 0)}:${name.toLowerCase()}`;
+
+const createDefinedNames = (): DefinedNames => {
+  const names = new Map<string, DefinedName>();
+
+  return {
+    get: (name, scope) => names.get(nameKey(name, scope)),
+    resolve: (name, sheet) =>
+      names.get(nameKey(name, sheet)) ?? names.get(nameKey(name, undefined)),
+    set: (name, scope, ast) => {
+      const defined: DefinedName = { name, scope, ast };
+
+      names.set(nameKey(name, scope), defined);
+      return defined;
+    },
+    delete: (name, scope) => {
+      names.delete(nameKey(name, scope));
+    },
+    forEach: (visit) => {
+      [...names.values()].forEach(visit);
+    },
+  };
+};
 
 export const createWorkbook = (): Workbook => {
   const strings = createSharedStrings();
@@ -55,6 +110,7 @@ export const createWorkbook = (): Workbook => {
   return {
     strings,
     formats,
+    names: createDefinedNames(),
     sheets,
     sheet,
     addSheet: (name, index = sheets.length) => {

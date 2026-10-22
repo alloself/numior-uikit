@@ -29,6 +29,12 @@ export interface ShiftedFormulaCell {
   readonly before: FormulaNode;
 }
 
+export interface ShiftedName {
+  readonly name: string;
+  readonly scope: Sheet | undefined;
+  readonly before: FormulaNode;
+}
+
 export interface FormulaCell {
   readonly ast: FormulaNode;
   state: FormulaState;

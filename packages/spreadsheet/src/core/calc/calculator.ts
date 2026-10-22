@@ -3,12 +3,12 @@ import type { CellRange, CellValue } from '../cell.types';
 import type { FormulaLocale, FormulaNode, FormulaParse } from '../formula/formula.types';
 import { EN_LOCALE, type BookLocale } from '../locale';
 import { shiftIndex } from '../lines';
-import { referenceRange } from '../formula/origin';
+import { ORIGIN, referenceRange } from '../formula/origin';
 import { parseFormula } from '../formula/parser';
 import { changesMeaning, shiftFormula, shiftSpan, type LineChange } from '../formula/rewrite';
 import { formulaReferences } from '../formula/references';
 import { EMPTY, errorValue, numberValue } from '../values';
-import type { Sheet, Workbook } from '../workbook';
+import type { DefinedName, Sheet, Workbook } from '../workbook';
 import type {
   ArrayValue,
   CellContent,
@@ -19,6 +19,7 @@ import type {
   RecalcOptions,
   Recalculation,
   ShiftedFormulaCell,
+  ShiftedName,
 } from './calc.types';
 import { lookupKey } from './coerce';
 import { evaluateFormula, type EvalContext } from './evaluate';
@@ -41,6 +42,8 @@ export interface Calculator {
   contentAt(sheet: Sheet, row: number, col: number): CellContent;
   forEachFormula(visit: (sheet: Sheet, row: number, col: number, ast: FormulaNode) => void): void;
   shiftLines(sheet: Sheet, change: LineChange): readonly ShiftedFormulaCell[];
+  shiftNames(change: LineChange): readonly ShiftedName[];
+  setName(name: string, scope: Sheet | undefined, ast: FormulaNode | undefined): void;
   hasFormulaIn(sheet: Sheet, range: CellRange): boolean;
   formulaAt(sheet: Sheet, row: number, col: number): FormulaCell | undefined;
   spillOf(sheet: Sheet, row: number, col: number): CellRange | undefined;
@@ -65,6 +68,7 @@ interface FormulaRecord {
   row: number;
   col: number;
   precedents: readonly Precedent[];
+  names: ReadonlySet<string>;
   dynamic: boolean;
 }
 
@@ -108,6 +112,8 @@ const BASE_REGISTRY = createFunctionRegistry(BASE_FUNCTIONS);
 
 const SPILL_ERROR = errorValue('#SPILL!');
 
+const NO_NAMES: ReadonlySet<string> = new Set();
+
 const serialOf = (date: Date): number =>
   (Date.UTC(
     date.getFullYear(),
@@ -124,20 +130,57 @@ const serialOf = (date: Date): number =>
 const oneCell = (range: CellRange): boolean =>
   range.top === range.bottom && range.left === range.right;
 
-const precedentsOf = (
-  record: Pick<FormulaRecord, 'cell' | 'sheet' | 'row' | 'col'>,
+interface Links {
+  readonly precedents: Precedent[];
+  readonly names: Set<string>;
+}
+
+type Placed = Pick<FormulaRecord, 'sheet' | 'row' | 'col'>;
+
+const definedFor = (
   workbook: Workbook,
-): Precedent[] =>
-  formulaReferences(record.cell.ast).flatMap((found) => {
+  sheet: Sheet,
+  node: Extract<FormulaNode, { readonly kind: 'name' }>,
+): DefinedName | undefined => {
+  const home = node.sheet === undefined ? sheet : workbook.sheet(node.sheet);
+
+  return home === undefined ? undefined : workbook.names.resolve(node.name, home);
+};
+
+const collectLinks = (
+  ast: FormulaNode,
+  record: Placed,
+  workbook: Workbook,
+  links: Links,
+  seen: Set<DefinedName>,
+): void => {
+  formulaReferences(ast).forEach((found) => {
     if (found.kind === 'name') {
-      return [];
+      const defined = definedFor(workbook, record.sheet, found);
+
+      links.names.add(found.name.toLowerCase());
+      if (defined !== undefined && !seen.has(defined)) {
+        seen.add(defined);
+        collectLinks(defined.ast, record, workbook, links, seen);
+      }
+      return;
     }
 
     const target = found.sheet === undefined ? record.sheet : workbook.sheet(found.sheet);
     const range = referenceRange(found, record);
 
-    return target === undefined || range === undefined ? [] : [{ sheet: target.id, range }];
+    if (target !== undefined && range !== undefined) {
+      links.precedents.push({ sheet: target.id, range });
+    }
   });
+};
+
+const linksOf = (ast: FormulaNode, record: Placed, workbook: Workbook): Links => {
+  const links: Links = { precedents: [], names: new Set() };
+
+  collectLinks(ast, record, workbook, links, new Set());
+  return links;
+};
 
 const usesVolatile = (node: FormulaNode, functions: FunctionRegistry): boolean => {
   switch (node.kind) {
@@ -258,6 +301,7 @@ export const createCalculator = (
   const lookups = new Map<string, LookupIndex>();
   const unknown = new Set<string>();
   const contexts = new Map<Sheet, EvalContext>();
+  const nameUsers = new Map<string, Set<number>>();
   let current: Run | undefined;
   let locale = initialLocale;
   let now = 0;
@@ -340,6 +384,7 @@ export const createCalculator = (
       track: (target, range) => {
         dynamic.push({ sheet: target.id, range });
       },
+      definedName: (node) => definedFor(workbook, (evaluating ?? home).sheet, node),
     };
 
     contexts.set(sheet, context);
@@ -592,10 +637,36 @@ export const createCalculator = (
   const proceed = (run: Run, yieldTo: () => Promise<void>): Promise<void> =>
     yieldTo().then(() => (step(run) || run.cancelled ? undefined : proceed(run, yieldTo)));
 
+  const usersOf = (name: string): Set<number> => {
+    const known = nameUsers.get(name);
+
+    if (known !== undefined) {
+      return known;
+    }
+
+    const created = new Set<number>();
+
+    nameUsers.set(name, created);
+    return created;
+  };
+
+  const register = (key: number, names: ReadonlySet<string>): void => {
+    names.forEach((name) => {
+      usersOf(name).add(key);
+    });
+  };
+
+  const unregister = (key: number, names: ReadonlySet<string>): void => {
+    names.forEach((name) => {
+      nameUsers.get(name)?.delete(key);
+    });
+  };
+
   const forget = (sheet: Sheet, row: number, col: number): void => {
     const id = idAt(sheet.id, row, col);
 
     if (id !== undefined) {
+      unregister(id, formulas.get(id)?.names ?? NO_NAMES);
       formulas.delete(id);
       positions.get(sheet.id)?.delete(cellIndex(row, col));
       graph.remove(id);
@@ -617,6 +688,7 @@ export const createCalculator = (
     const known = idAt(sheet.id, row, col);
     const key = known ?? nextId;
     const cell: FormulaCell = { ast, state: 'stale' };
+    const links = linksOf(ast, { sheet, row, col }, workbook);
 
     const record: FormulaRecord = {
       id: key,
@@ -624,11 +696,14 @@ export const createCalculator = (
       sheet,
       row,
       col,
-      precedents: precedentsOf({ cell, sheet, row, col }, workbook),
+      precedents: links.precedents,
+      names: links.names,
       dynamic: false,
     };
 
     interrupt();
+    unregister(key, (known === undefined ? undefined : formulas.get(known))?.names ?? NO_NAMES);
+    register(key, links.names);
     if (known === undefined) {
       nextId += 1;
       positionsOf(sheet.id).set(cellIndex(row, col), key);
@@ -642,6 +717,51 @@ export const createCalculator = (
     } else {
       volatiles.delete(key);
     }
+  };
+
+  const relinkName = (name: string): void => {
+    [...(nameUsers.get(name) ?? [])].forEach((key) => {
+      const record = formulas.get(key);
+
+      if (record === undefined) {
+        return;
+      }
+
+      const links = linksOf(record.cell.ast, record, workbook);
+
+      unregister(key, record.names);
+      register(key, links.names);
+      record.precedents = links.precedents;
+      record.names = links.names;
+      graph.set(key, links.precedents);
+      record.cell.state = 'stale';
+      pending.add(key);
+    });
+  };
+
+  const setName = (name: string, scope: Sheet | undefined, ast: FormulaNode | undefined): void => {
+    interrupt();
+    if (ast === undefined) {
+      workbook.names.delete(name, scope);
+    } else {
+      workbook.names.set(name, scope, ast);
+    }
+    relinkName(name.toLowerCase());
+  };
+
+  const shiftNames = (change: LineChange): ShiftedName[] => {
+    const shifted: ShiftedName[] = [];
+
+    workbook.names.forEach((defined) => {
+      const ast = shiftFormula(defined.ast, change, false, ORIGIN);
+
+      if (ast !== defined.ast) {
+        shifted.push({ name: defined.name, scope: defined.scope, before: defined.ast });
+        setName(defined.name, defined.scope, ast);
+      }
+    });
+
+    return shifted;
   };
 
   const releaseCrossing = (sheet: Sheet, change: LineChange): void => {
@@ -792,6 +912,8 @@ export const createCalculator = (
         : { kind: 'value', value };
     },
     shiftLines,
+    shiftNames,
+    setName,
     hasFormulaIn: (sheet, range) => {
       for (const cell of positions.get(sheet.id)?.keys() ?? []) {
         if (containsCell(range, Math.floor(cell / MAX_COLS), cell % MAX_COLS)) {

@@ -7,10 +7,10 @@ import type { FormatToken, FormattedValue, NumberLocale } from './format/format.
 import { currencyFormat } from './format/number-locale';
 import { readValueText } from './format/read-value';
 import type { FormulaFailure, FormulaNode } from './formula/formula.types';
-import { referenceRange } from './formula/origin';
+import { ORIGIN, referenceRange } from './formula/origin';
 import { parseFormula } from './formula/parser';
 import { printFormula } from './formula/printer';
-import { formulaReferences, type FormulaReference } from './formula/references';
+import { formulaReferences, mapReferences, type FormulaReference } from './formula/references';
 import type { BookLocale } from './locale';
 import { booleanValue, numberValue, textValue } from './values';
 import { createStepper } from './steps/apply-step';
@@ -21,6 +21,12 @@ export type CellInput =
   | { readonly kind: 'empty' }
   | { readonly kind: 'formula'; readonly text: string }
   | { readonly kind: 'value'; readonly value: CellValue; readonly format: string | undefined };
+
+export interface NameOptions {
+  readonly scope?: Sheet | undefined;
+  readonly anchor?: CellAddress | undefined;
+  readonly locale?: BookLocale | undefined;
+}
 
 export type EntryResult =
   | { readonly ok: true; readonly step: WorkbookStep }
@@ -36,6 +42,8 @@ export interface CellEditor {
   ): FormulaFailure | undefined;
   input(sheet: Sheet, row: number, col: number, text: string, locale?: BookLocale): EntryResult;
   formatStep(sheet: Sheet, range: CellRange, code: string): WorkbookStep;
+  nameStep(name: string, text: string, sheet: Sheet, options?: NameOptions): EntryResult;
+  nameText(name: string, scope?: Sheet, anchor?: CellAddress): string | undefined;
   inputText(sheet: Sheet, row: number, col: number): string;
   shown(sheet: Sheet, row: number, col: number): FormattedValue;
   formatAt(sheet: Sheet, row: number, col: number): string;
@@ -273,6 +281,13 @@ const referencedFormat = (
   return id === 0 ? undefined : book.formats.code(id);
 };
 
+const qualified = (ast: FormulaNode, sheet: Sheet): FormulaNode =>
+  mapReferences(ast, (reference) =>
+    reference.kind === 'name' || reference.sheet !== undefined
+      ? reference
+      : { ...reference, sheet: sheet.name },
+  );
+
 const formatStep = (sheet: Sheet, range: CellRange, code: string): WorkbookStep => ({
   kind: 'setFormat',
   sheet: sheet.name,
@@ -334,8 +349,39 @@ export const createCellEditor = (book: Workbook, calculator: Calculator): CellEd
     }
   };
 
+  const nameStep = (
+    name: string,
+    text: string,
+    sheet: Sheet,
+    options: NameOptions = {},
+  ): EntryResult => {
+    const scope = options.scope?.name;
+
+    if (text.trim() === '') {
+      return { ok: true, step: { kind: 'setName', name, scope, ast: undefined } };
+    }
+
+    const parsed = parseFormula(
+      text,
+      (options.locale ?? calculator.locale).formulas,
+      options.anchor ?? ORIGIN,
+    );
+
+    return parsed.ok
+      ? { ok: true, step: { kind: 'setName', name, scope, ast: qualified(parsed.ast, sheet) } }
+      : parsed;
+  };
+
   return {
     input,
+    nameStep,
+    nameText: (name, scope, anchor = ORIGIN) => {
+      const defined = book.names.get(name, scope);
+
+      return defined === undefined
+        ? undefined
+        : `=${printFormula(defined.ast, calculator.locale.formulas, anchor)}`;
+    },
     enter: (sheet, row, col, text, locale) => {
       const result = input(sheet, row, col, text, locale);
 

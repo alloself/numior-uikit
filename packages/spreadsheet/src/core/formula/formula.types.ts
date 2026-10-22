@@ -51,7 +51,7 @@ export type FormulaNode =
       readonly to: LineRef;
     }
   | { readonly kind: 'spill'; readonly sheet?: string | undefined; readonly ref: CellRef }
-  | { readonly kind: 'name'; readonly name: string }
+  | { readonly kind: 'name'; readonly sheet?: string | undefined; readonly name: string }
   | { readonly kind: 'call'; readonly name: string; readonly args: readonly FormulaNode[] }
   | { readonly kind: 'unary'; readonly op: '-' | '+'; readonly operand: FormulaNode }
   | { readonly kind: 'percent'; readonly operand: FormulaNode }

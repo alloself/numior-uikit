@@ -1,6 +1,6 @@
 import { MAX_COLS, MAX_ROWS, containsCell } from '../address';
 import type { Calculator } from '../calc/calculator';
-import type { CellContent, ShiftedFormulaCell } from '../calc/calc.types';
+import type { CellContent, ShiftedFormulaCell, ShiftedName } from '../calc/calc.types';
 import type { CellRange } from '../cell.types';
 import type { FormulaNode } from '../formula/formula.types';
 import { formulaReferences } from '../formula/references';
@@ -10,7 +10,13 @@ import {
   sameName,
   type LineChange,
 } from '../formula/rewrite';
-import { validSheetName, type Sheet, type Workbook } from '../workbook';
+import {
+  validDefinedName,
+  validSheetName,
+  type DefinedName,
+  type Sheet,
+  type Workbook,
+} from '../workbook';
 import type { CellEdit, LineAxis, StepRefusal, StepResult, WorkbookStep } from './step.types';
 
 export interface Stepper {
@@ -53,6 +59,14 @@ const done = (inverse: WorkbookStep, changes: readonly LineChange[] = NO_CHANGES
   changes,
 });
 
+const nameEdits = (names: readonly ShiftedName[]): WorkbookStep[] =>
+  names.map((shifted) => ({
+    kind: 'setName',
+    name: shifted.name,
+    scope: shifted.scope?.name,
+    ast: shifted.before,
+  }));
+
 const formulaEdits = (rewrites: readonly ShiftedFormulaCell[]): WorkbookStep[] => {
   const bySheet = new Map<Sheet, CellEdit[]>();
 
@@ -73,8 +87,7 @@ const formulaEdits = (rewrites: readonly ShiftedFormulaCell[]): WorkbookStep[] =
 
 const mentions = (ast: FormulaNode, name: string): boolean =>
   formulaReferences(ast).some(
-    (reference) =>
-      reference.kind !== 'name' && reference.sheet !== undefined && sameName(reference.sheet, name),
+    (reference) => reference.sheet !== undefined && sameName(reference.sheet, name),
   );
 
 export const createStepper = (book: Workbook, calculator: Calculator): Stepper => {
@@ -142,6 +155,38 @@ export const createStepper = (book: Workbook, calculator: Calculator): Stepper =
     return found;
   };
 
+  const rewriteNames = (
+    rewrite: (defined: DefinedName) => FormulaNode | undefined,
+  ): ShiftedName[] => {
+    const changed: ShiftedName[] = [];
+
+    book.names.forEach((defined) => {
+      const after = rewrite(defined);
+
+      if (after !== defined.ast) {
+        changed.push({ name: defined.name, scope: defined.scope, before: defined.ast });
+        calculator.setName(defined.name, defined.scope, after);
+      }
+    });
+
+    return changed;
+  };
+
+  const setName = (
+    name: string,
+    scope: Sheet | undefined,
+    ast: FormulaNode | undefined,
+  ): StepResult => {
+    if (!validDefinedName(name)) {
+      return refused('invalid-name');
+    }
+
+    const previous = book.names.get(name, scope);
+
+    calculator.setName(previous?.name ?? name, scope, ast);
+    return done({ kind: 'setName', name, scope: scope?.name, ast: previous?.ast });
+  };
+
   const setCells = (sheet: Sheet, cells: readonly CellEdit[]): StepResult => {
     const previous = cells
       .map((cell): CellEdit => ({
@@ -194,7 +239,11 @@ export const createStepper = (book: Workbook, calculator: Calculator): Stepper =
   const moveLines = (
     sheet: Sheet,
     change: LineChange,
-  ): { deleted: CellEdit[]; rewrites: readonly ShiftedFormulaCell[] } => {
+  ): {
+    deleted: CellEdit[];
+    rewrites: readonly ShiftedFormulaCell[];
+    names: readonly ShiftedName[];
+  } => {
     const removed = Math.max(-change.count, 0);
 
     const deleted =
@@ -208,9 +257,10 @@ export const createStepper = (book: Workbook, calculator: Calculator): Stepper =
         : [];
 
     const rewrites = calculator.shiftLines(sheet, change);
+    const names = calculator.shiftNames(change);
 
     sheet.formats.shiftLines(change.axis, change.at, change.count);
-    return { deleted, rewrites };
+    return { deleted, rewrites, names };
   };
 
   const insertLines = (sheet: Sheet, axis: LineAxis, at: number, count: number): StepResult => {
@@ -228,7 +278,7 @@ export const createStepper = (book: Workbook, calculator: Calculator): Stepper =
 
   const deleteLines = (sheet: Sheet, axis: LineAxis, at: number, count: number): StepResult => {
     const change: LineChange = { sheet: sheet.name, axis, at, count: -count };
-    const { deleted, rewrites } = moveLines(sheet, change);
+    const { deleted, rewrites, names } = moveLines(sheet, change);
 
     return done(
       {
@@ -237,6 +287,7 @@ export const createStepper = (book: Workbook, calculator: Calculator): Stepper =
           { kind: 'insertLines', sheet: sheet.name, axis, at, count },
           { kind: 'setCells', sheet: sheet.name, cells: deleted },
           ...formulaEdits(rewrites),
+          ...nameEdits(names),
         ],
       },
       [change],
@@ -255,6 +306,12 @@ export const createStepper = (book: Workbook, calculator: Calculator): Stepper =
       }
     });
 
+    book.names.forEach((defined) => {
+      if (mentions(defined.ast, name)) {
+        calculator.setName(defined.name, defined.scope, defined.ast);
+      }
+    });
+
     return done({ kind: 'removeSheet', name });
   };
 
@@ -270,6 +327,10 @@ export const createStepper = (book: Workbook, calculator: Calculator): Stepper =
       owner === sheet ? ast : dropSheetFromFormula(ast, sheet.name),
     );
 
+    const names = rewriteNames((defined) =>
+      defined.scope === sheet ? undefined : dropSheetFromFormula(defined.ast, sheet.name),
+    );
+
     clear(sheet, contents);
     rewrites.forEach(rewriteInPlace);
     book.removeSheet(sheet);
@@ -279,6 +340,7 @@ export const createStepper = (book: Workbook, calculator: Calculator): Stepper =
         { kind: 'addSheet', name: sheet.name, index },
         { kind: 'setCells', sheet: sheet.name, cells: contents },
         ...formulaEdits(rewrites),
+        ...nameEdits(names),
       ],
     });
   };
@@ -290,6 +352,7 @@ export const createStepper = (book: Workbook, calculator: Calculator): Stepper =
       return refused('name-taken');
     }
     rewriteAll((_owner, ast) => renameInFormula(ast, from, to)).forEach(rewriteInPlace);
+    rewriteNames((defined) => renameInFormula(defined.ast, from, to));
     return done({ kind: 'renameSheet', from: to, to: from });
   };
 
@@ -332,6 +395,10 @@ export const createStepper = (book: Workbook, calculator: Calculator): Stepper =
         return onSheet(step.name, removeSheet);
       case 'renameSheet':
         return onSheet(step.from, (sheet) => renameSheet(sheet, step.to));
+      case 'setName':
+        return step.scope === undefined
+          ? setName(step.name, undefined, step.ast)
+          : onSheet(step.scope, (sheet) => setName(step.name, sheet, step.ast));
       case 'batch':
         return applyBatch(step.steps);
     }
