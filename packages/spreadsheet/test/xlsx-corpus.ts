@@ -2,6 +2,7 @@ import {
   EN_FORMULAS,
   MAX_COLS,
   MAX_ROWS,
+  columnName,
   formatCell,
   formatRange,
   printFormula,
@@ -20,6 +21,7 @@ interface SheetModel {
   readonly name: string;
   readonly cells: Record<string, unknown>;
   readonly conditional?: unknown;
+  readonly layout?: unknown;
 }
 
 const WHOLE: CellRange = { top: 0, left: 0, bottom: MAX_ROWS - 1, right: MAX_COLS - 1 };
@@ -73,6 +75,34 @@ const cellsOf = (read: Opened, sheet: Sheet): Record<string, unknown> => {
       ]),
   );
 };
+
+const linesOf = (
+  book: Opened['book'],
+  lines: Sheet['layout']['rows'],
+  label: (line: number) => string,
+): Record<string, unknown> => {
+  const found: Record<string, unknown> = {};
+
+  lines.forEach((line, layout) => {
+    found[label(line)] = {
+      ...layout,
+      style:
+        layout.style === undefined
+          ? undefined
+          : {
+              format: book.formats.code(layout.style.format),
+              decoration: book.decorations.get(layout.style.decoration),
+            },
+    };
+  });
+
+  return found;
+};
+
+export const layoutOf = (book: Opened['book'], sheet: Sheet): unknown => ({
+  rows: linesOf(book, sheet.layout.rows, (line) => String(line + 1)),
+  cols: linesOf(book, sheet.layout.cols, (line) => columnName(line)),
+});
 
 const conditionalOf = (sheet: Sheet): unknown =>
   sheet.conditional.map((format) => {
@@ -128,6 +158,9 @@ export const modelOf = (
       name: sheet.name,
       cells: cellsOf(read, sheet),
       ...(sheet.conditional.length === 0 ? {} : { conditional: conditionalOf(sheet) }),
+      ...(sheet.layout.rows.size + sheet.layout.cols.size === 0
+        ? {}
+        : { layout: layoutOf(read.book, sheet) }),
     })),
     names,
     tables,

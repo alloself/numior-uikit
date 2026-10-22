@@ -9,7 +9,7 @@ import {
 } from '../src/core';
 import { readWorkbook, readZip, writeWorkbook, type Bytes, type XlsxRead } from '../src/xlsx';
 import { openBook } from './book-harness';
-import { corpusPackage } from './xlsx-corpus';
+import { corpusPackage, layoutOf } from './xlsx-corpus';
 import { SALES_SHEET, workbookWith, xlsxPackage } from './xlsx-package';
 
 type Opened = Extract<XlsxRead, { readonly kind: 'editable' | 'read-only' }>;
@@ -282,6 +282,72 @@ describe('writing xlsx', () => {
     expect(JSON.stringify(sheetOf(again, 'Rules').conditional)).toBe(
       JSON.stringify(sheetOf(read, 'Rules').conditional),
     );
+  });
+
+  it('keeps row heights, hidden lines and line styles and moves them with lines', async () => {
+    const sheet = SALES_SHEET.replace(
+      '<cols><col min="1" max="1" width="14" customWidth="1"/></cols>',
+      '<cols><col min="1" max="1" width="14" customWidth="1"/><col min="3" max="4" width="9" style="2" hidden="1" outlineLevel="1"/></cols>',
+    )
+      .replace(
+        '<row r="3" spans="1:8">',
+        '<row r="3" spans="1:8" ht="30" customHeight="1" x14ac:dyDescent="0.3">',
+      )
+      .replace('</sheetData>', '<row r="9" s="3" customFormat="1" hidden="1"/></sheetData>');
+
+    const read = await opened(await xlsxPackage({ 'xl/worksheets/sheet1.xml': sheet }));
+    const sales = sheetOf(read, 'Sales');
+    const before = layoutOf(read.book, sales);
+
+    expect(before).toMatchObject({
+      rows: {
+        '3': { size: 30, custom: true, extra: [['x14ac:dyDescent', '0.3']] },
+        '9': { hidden: true, style: { format: '0.0%' } },
+      },
+      cols: { A: { size: 14 }, C: { hidden: true, level: 1, style: { format: '0.0%' } } },
+    });
+
+    const stepper = createStepper(read.book, read.calculator);
+
+    stepper.apply({
+      kind: 'setCells',
+      sheet: 'Sales',
+      cells: [
+        { ...at('A1'), content: { kind: 'value', value: { kind: 'string', value: 'Name' } } },
+      ],
+    });
+
+    const again = await opened(await written(read, read.source));
+
+    expect(layoutOf(again.book, sheetOf(again, 'Sales'))).toEqual(before);
+
+    const moved = stepper.apply({
+      kind: 'insertLines',
+      sheet: 'Sales',
+      axis: 'rows',
+      at: 1,
+      count: 2,
+    });
+
+    expect(moved.ok).toBe(true);
+    expect(sales.layout.rows.get(4)?.size).toBe(30);
+    expect(sales.layout.rows.get(10)?.hidden).toBe(true);
+
+    const narrowed = stepper.apply({
+      kind: 'deleteLines',
+      sheet: 'Sales',
+      axis: 'cols',
+      at: 2,
+      count: 1,
+    });
+
+    expect([sales.layout.cols.get(2)?.hidden, sales.layout.cols.get(3)]).toEqual([true, undefined]);
+
+    [narrowed, moved].forEach((result) => {
+      expect(result.ok && stepper.apply(result.inverse).ok).toBe(true);
+    });
+
+    expect(layoutOf(read.book, sales)).toEqual(before);
   });
 
   it('writes the conditional formats of a new book with their styles', async () => {

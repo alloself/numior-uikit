@@ -20,6 +20,7 @@ import { concatBytes } from '../zip/streams';
 import type { Bytes } from '../zip/zip.types';
 import { withFuturePrefixes } from './future-functions';
 import { conditionalXml, extensionXml, withConditional, withExtensions } from './conditional-part';
+import { colsXml, rowAttributes } from './layout-part';
 import type { SheetExtras } from './source';
 import type { StyleBook } from './styles-part';
 
@@ -159,6 +160,7 @@ const lastRowOf = (sheet: Sheet, formulas: ReadonlyMap<number, number[]>): numbe
     sheet.cells.lastRow(),
     sheet.formats.lastRow(),
     sheet.decorations.lastRow(),
+    sheet.layout.rows.last(),
     ...[...formulas.keys()].map((band) => band * CHUNK_ROWS + CHUNK_ROWS - 1),
   );
 
@@ -339,27 +341,49 @@ const writeRows = async (
   cellXml: (row: number, col: number) => string,
   q: string,
 ): Promise<void> => {
+  const { rows } = writing.sheet.layout;
   const formulas = formulaBands(writing.sheet, writing.calculator);
   const lastBand = Math.floor(lastRowOf(writing.sheet, formulas) / CHUNK_ROWS);
   let row = -1;
 
+  const open = (next: number): void => {
+    sink.push(row < 0 ? '' : `</${q}row>`);
+    sink.push(`<${q}row r="${String(next + 1)}"${rowAttributes(rows.get(next), writing.styles)}>`);
+    row = next;
+  };
+
   for (let band = 0; band <= lastBand; band += 1) {
     const keys = bandKeys(writing.sheet, band, formulas);
+    const range = bandRange(band);
+    const bare: number[] = [];
+    let pending = 0;
+
+    rows.forEachIn(range.top, range.bottom, (line) => {
+      bare.push(line);
+    });
+
+    const openBefore = (limit: number): void => {
+      while (pending < bare.length && (bare[pending] ?? limit) < limit) {
+        open(bare[pending] ?? limit);
+        pending += 1;
+      }
+    };
 
     await sink.pause();
     for (const [index, key] of keys.entries()) {
       const cellRow = Math.floor(key / MAX_COLS);
 
       if (cellRow !== row) {
-        sink.push(row < 0 ? '' : `</${q}row>`);
-        sink.push(`<${q}row r="${String(cellRow + 1)}">`);
-        row = cellRow;
+        openBefore(cellRow);
+        pending += bare[pending] === cellRow ? 1 : 0;
+        open(cellRow);
       }
       sink.push(cellXml(cellRow, key % MAX_COLS));
       if (index % CHECK_EVERY === 0) {
         await sink.pause();
       }
     }
+    openBefore(range.bottom + 1);
   }
   sink.push(row < 0 ? '' : `</${q}row>`);
 };
@@ -373,6 +397,7 @@ export const writeSheetPart = async (writing: SheetWriting): Promise<SheetOutput
   sink.push(HEADER);
   sink.push(extras?.root ?? `<worksheet xmlns="${MAIN}" xmlns:r="${RELATIONSHIPS}">`);
   sink.push(extras?.before ?? '');
+  sink.push(colsXml(writing.sheet.layout.cols, writing.styles, q));
   sink.push(`<${q}sheetData>`);
   await writeRows(writing, sink, cellXmlOf(writing, counts, q), q);
   sink.push(`</${q}sheetData>`);

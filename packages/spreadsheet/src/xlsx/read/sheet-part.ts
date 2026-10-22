@@ -19,6 +19,7 @@ import type { DifferentialStyle } from '../../core/conditional/conditional.types
 import type { XmlAttribute } from '../xml/xml.types';
 import { X14, createConditionalCollector, createExtensionCollector } from './conditional-part';
 import { decodeXstring } from '../xml/xstring';
+import { createLayoutCollector } from './layout-part';
 import type { ZipArchive } from '../zip/zip.types';
 import { MAIN, attributeOf, numberOf, readPart, type PartOptions } from './ooxml';
 
@@ -77,7 +78,6 @@ const COUNTED: Readonly<Record<string, keyof Omit<SheetCounts, 'unknown'>>> = {
   hyperlink: 'hyperlinks',
   drawing: 'drawings',
   legacyDrawing: 'comments',
-  col: 'layout',
   pane: 'layout',
   sheetProtection: 'protection',
 };
@@ -193,6 +193,7 @@ export const readSheetPart = async (
   let phonetic = 0;
   const conditional = createConditionalCollector(context.differentials);
   const extensions = createExtensionCollector();
+  const layout = createLayoutCollector(context);
 
   const astOf = (current: Cell): FormulaNode | undefined => {
     const formula = current.formula;
@@ -305,6 +306,11 @@ export const readSheetPart = async (
         row = numberOf(attributeOf(attributes, 'r'), row + 2) - 1;
         col = -1;
         counts.layout += attributeOf(attributes, 'customHeight') === '1' ? 1 : 0;
+        layout.row(row, attributes);
+        return;
+      case 'col':
+        counts.layout += 1;
+        layout.col(attributes);
         return;
       case 'c':
         openCell(attributes);
@@ -419,6 +425,7 @@ export const readSheetPart = async (
   );
 
   sheet.conditional = [...conditional.formats(), ...extensions.formats()];
+  sheet.layout = layout.layout();
   counts.conditional = conditional.foreign();
   return counts;
 };

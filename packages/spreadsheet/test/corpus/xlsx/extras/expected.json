@@ -116,7 +116,29 @@
             }
           ]
         }
-      ]
+      ],
+      "layout": {
+        "rows": {
+          "1": {
+            "size": 24,
+            "custom": true,
+            "hidden": false,
+            "level": 0,
+            "collapsed": false,
+            "extra": []
+          }
+        },
+        "cols": {
+          "A": {
+            "size": 20.7109375,
+            "custom": true,
+            "hidden": false,
+            "level": 0,
+            "collapsed": false,
+            "extra": []
+          }
+        }
+      }
     },
     {
       "name": "Notes",

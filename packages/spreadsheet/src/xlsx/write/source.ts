@@ -180,7 +180,7 @@ export const readSheetExtras = async (
     : {
         root: head.root,
         prefix: head.prefix,
-        before: withoutElement(head.before, 'dimension'),
+        before: withoutElement(withoutElement(head.before, 'dimension'), 'cols'),
         after: withoutElement(after, 'tableParts'),
       };
 };

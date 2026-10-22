@@ -3,6 +3,7 @@ import type { CellRange } from '../cell.types';
 import type { ConditionalFormat } from '../conditional/conditional.types';
 import type { CellDecoration } from '../decorations';
 import type { FormulaNode } from '../formula/formula.types';
+import type { SheetLayout } from '../layout/layout.types';
 import type { LineChange } from '../formula/rewrite';
 import type { TableShape } from '../tables';
 
@@ -52,7 +53,10 @@ export type WorkbookStep =
       readonly sheet: string;
       readonly formats: readonly ConditionalFormat[];
     }
+  | { readonly kind: 'setLayout'; readonly sheet: string; readonly layout: SheetLayout }
   | { readonly kind: 'batch'; readonly steps: readonly WorkbookStep[] };
+
+export type SheetStep = Extract<WorkbookStep, { readonly sheet: string }>;
 
 export type StepRefusal =
   | 'missing-sheet'
