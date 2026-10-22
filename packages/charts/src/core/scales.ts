@@ -30,6 +30,8 @@ const ZERO_RATIO = 5 / 6;
 
 const TINY = 1e-200;
 
+const RESOLUTION = 1e-9;
+
 const cleaned = (value: number): number => (Math.abs(value) < TINY ? 0 : value);
 
 export const niceStep = (span: number, count: number): number => {
@@ -76,7 +78,8 @@ export const niceDomain = (low: number, high: number, options: DomainOptions = {
   const lower = options.min ?? from;
 
   const degenerate =
-    (options.max ?? to) - lower <= Number.EPSILON * Math.max(Math.abs(lower), TINY);
+    (options.max ?? to) - lower <=
+    RESOLUTION * Math.max(Math.abs(lower), Math.abs(options.max ?? to), TINY);
 
   const span = degenerate ? Math.abs(lower) || 1 : (options.max ?? to) - lower;
   const upper = options.max ?? (degenerate ? lower + span : to);

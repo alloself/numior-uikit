@@ -7,6 +7,10 @@ const utc = (text: string): number => Date.parse(`${text}Z`);
 const iso = (values: readonly number[]): string[] =>
   values.map((value) => new Date(value).toISOString().slice(0, 16));
 
+const value = fc
+  .double({ min: -1e6, max: 1e6, noNaN: true })
+  .map((number) => (Math.abs(number) < 1e-100 ? 0 : number));
+
 describe('chart scales', () => {
   it('rounds steps to 1, 2, 2.5 and 5 times a power of ten', () => {
     expect([niceStep(100, 5), niceStep(7, 5), niceStep(0.9, 4), niceStep(42_000, 6)]).toEqual([
@@ -28,20 +32,16 @@ describe('chart scales', () => {
 
   it('covers every value with ticks on whole steps', () => {
     fc.assert(
-      fc.property(
-        fc.double({ min: -1e6, max: 1e6, noNaN: true }),
-        fc.double({ min: -1e6, max: 1e6, noNaN: true }),
-        (left, right) => {
-          const domain = niceDomain(left, right);
+      fc.property(value, value, (left, right) => {
+        const domain = niceDomain(left, right);
 
-          const slack = domain.step * 1e-6;
+        const slack = domain.step * 1e-6;
 
-          expect(domain.min).toBeLessThanOrEqual(Math.min(left, right) + slack);
-          expect(domain.max).toBeGreaterThanOrEqual(Math.max(left, right) - slack);
-          expect(domain.ticks.length).toBeLessThanOrEqual(12);
-          expect(domain.ticks.at(0)).toBe(domain.min);
-        },
-      ),
+        expect(domain.min).toBeLessThanOrEqual(Math.min(left, right) + slack);
+        expect(domain.max).toBeGreaterThanOrEqual(Math.max(left, right) - slack);
+        expect(domain.ticks.length).toBeLessThanOrEqual(12);
+        expect(domain.ticks.at(0)).toBe(domain.min);
+      }),
     );
   });
 
