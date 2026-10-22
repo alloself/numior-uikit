@@ -24,6 +24,7 @@ export interface SheetContext {
   readonly sheet: Sheet;
   readonly strings: readonly string[];
   readonly formats: readonly string[];
+  readonly decorations: readonly number[];
   readonly known: (name: string) => boolean;
   readonly recalculate: boolean;
 }
@@ -241,8 +242,13 @@ export const readSheetPart = async (
     } else if (value.kind !== 'empty') {
       calculator.importValue(sheet, current.row, current.col, value);
     }
+    const decoration = context.decorations[current.style] ?? 0;
+
     if (format !== undefined && format !== 'General') {
       sheet.formats.set(current.row, current.col, context.book.formats.id(format));
+    }
+    if (decoration !== 0) {
+      sheet.decorations.set(current.row, current.col, decoration);
     }
   };
 

@@ -142,6 +142,29 @@ describe('reading xlsx', () => {
     expect([sales.state('G3'), sales.shown('G3')]).toEqual(['fresh', '2']);
   });
 
+  it('reads fonts, fills, borders and alignment into cell decorations', async () => {
+    const read = await opened();
+    const sheet = sheetOf(read, 'Sales');
+
+    const decorationAt = (address: string) =>
+      read.book.decorations.get(sheet.decorations.get(at(address).row, at(address).col));
+
+    expect(decorationAt('C4')).toEqual({
+      font: {
+        bold: true,
+        size: 11,
+        name: 'Calibri',
+        color: { kind: 'theme', theme: 1, tint: -0.25 },
+      },
+      fill: { pattern: 'solid', foreground: { kind: 'rgb', argb: 'FFFFFF00' } },
+      border: { bottom: { style: 'thin', color: { kind: 'indexed', index: 64 } } },
+      alignment: { horizontal: 'center', wrap: true },
+    });
+
+    expect(decorationAt('C2')).toEqual({});
+    expect(read.book.decorations.defaultFont).toEqual({ size: 11, name: 'Calibri' });
+  });
+
   it('reports what the book holds beyond the model', async () => {
     const { report } = await opened();
 
@@ -149,7 +172,6 @@ describe('reading xlsx', () => {
       Object.fromEntries(report.items.map((item) => [item.code, [item.severity, item.count]])),
     ).toEqual({
       'unsupported-functions': ['info', 1],
-      'cell-styles': ['info', 1],
       'rich-text': ['info', 1],
       'merged-cells': ['info', 1],
       'conditional-formats': ['info', 1],

@@ -1,6 +1,7 @@
 import { parseCell } from './address';
 import { createCellFormats, type CellFormats } from './cell-formats';
 import { createCellStore, type CellStore } from './cell-store';
+import { createDecorations, type CellDecorations } from './decorations';
 import { createNumberFormats, type NumberFormats } from './number-formats';
 import type { FormulaNode } from './formula/formula.types';
 import { createSharedStrings, type SharedStrings } from './strings';
@@ -11,6 +12,7 @@ export interface Sheet {
   name: string;
   readonly cells: CellStore;
   readonly formats: CellFormats;
+  readonly decorations: CellFormats;
 }
 
 export interface DefinedName {
@@ -45,6 +47,7 @@ export interface SheetTables {
 export interface Workbook {
   readonly strings: SharedStrings;
   readonly formats: NumberFormats;
+  readonly decorations: CellDecorations;
   readonly names: DefinedNames;
   readonly tables: SheetTables;
   readonly sheets: readonly Sheet[];
@@ -174,6 +177,7 @@ export const createWorkbook = (): Workbook => {
   return {
     strings,
     formats,
+    decorations: createDecorations(),
     names: createDefinedNames(),
     tables: createSheetTables(),
     sheets,
@@ -190,6 +194,7 @@ export const createWorkbook = (): Workbook => {
         name: title,
         cells: createCellStore(strings),
         formats: createCellFormats(),
+        decorations: createCellFormats(),
       };
 
       next += 1;

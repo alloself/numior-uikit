@@ -55,14 +55,22 @@ export const createStepper = (book: Workbook, calculator: Calculator): Stepper =
     const add = (row: number, col: number): void => {
       const content = calculator.contentAt(sheet, row, col);
       const format = sheet.formats.get(row, col);
+      const decoration = sheet.decorations.get(row, col);
 
-      if (content.kind !== 'empty' || format !== 0) {
-        found.set(keyOf(row, col), { row, col, content, format: book.formats.code(format) });
+      if (content.kind !== 'empty' || format !== 0 || decoration !== 0) {
+        found.set(keyOf(row, col), {
+          row,
+          col,
+          content,
+          format: book.formats.code(format),
+          decoration: decoration === 0 ? undefined : book.decorations.get(decoration),
+        });
       }
     };
 
     sheet.cells.forEachInRange(range, add);
     sheet.formats.forEachInRange(range, add);
+    sheet.decorations.forEachInRange(range, add);
 
     calculator.forEachFormula((owner, row, col) => {
       if (owner === sheet && containsCell(range, row, col)) {
@@ -77,6 +85,7 @@ export const createStepper = (book: Workbook, calculator: Calculator): Stepper =
     for (const cell of cells) {
       calculator.setContent(sheet, cell.row, cell.col, EMPTY_CONTENT);
       sheet.formats.set(cell.row, cell.col, 0);
+      sheet.decorations.set(cell.row, cell.col, 0);
     }
   };
 
@@ -86,6 +95,9 @@ export const createStepper = (book: Workbook, calculator: Calculator): Stepper =
     }
     if (cell.format !== undefined) {
       sheet.formats.set(cell.row, cell.col, book.formats.id(cell.format));
+    }
+    if (cell.decoration !== undefined) {
+      sheet.decorations.set(cell.row, cell.col, book.decorations.id(cell.decoration));
     }
   };
 
@@ -115,6 +127,10 @@ export const createStepper = (book: Workbook, calculator: Calculator): Stepper =
         content:
           cell.content === undefined ? undefined : calculator.contentAt(sheet, cell.row, cell.col),
         format: cell.format === undefined ? undefined : formatCode(sheet, cell.row, cell.col),
+        decoration:
+          cell.decoration === undefined
+            ? undefined
+            : book.decorations.get(sheet.decorations.get(cell.row, cell.col)),
       }))
       .toReversed();
 
@@ -154,6 +170,10 @@ export const createStepper = (book: Workbook, calculator: Calculator): Stepper =
       found = true;
     });
 
+    sheet.decorations.forEachInRange(range, () => {
+      found = true;
+    });
+
     return found;
   };
 
@@ -185,6 +205,7 @@ export const createStepper = (book: Workbook, calculator: Calculator): Stepper =
     const names = calculator.shiftNames(change);
 
     sheet.formats.shiftLines(change.axis, change.at, change.count);
+    sheet.decorations.shiftLines(change.axis, change.at, change.count);
     tables.move(sheet, moves, change);
     return { deleted, rewrites, names, drops, restores: tables.restores(moves) };
   };

@@ -33,6 +33,18 @@ export { EN_LOCALE, RU_LOCALE, type BookLocale } from './locale';
 export { createCellEditor, editText, readInput } from './cell-input';
 export type { CellEditor, CellInput, EntryResult, NameOptions, TableOptions } from './cell-input';
 export type { CellFormats } from './cell-formats';
+export type {
+  AlignmentStyle,
+  BorderSide,
+  BorderStyle,
+  CellDecoration,
+  CellDecorations,
+  FillStyle,
+  FontStyle,
+  ProtectionStyle,
+  StyleColor,
+  UnderlineStyle,
+} from './decorations';
 export type { NumberFormats } from './number-formats';
 export type {
   DefinedName,

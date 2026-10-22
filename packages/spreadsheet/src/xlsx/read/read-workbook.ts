@@ -178,6 +178,12 @@ interface Load {
   readonly totals: { formulas: number; kept: number; readonly unknown: Set<string> };
 }
 
+interface BookContext {
+  readonly strings: SharedStrings;
+  readonly styles: CellStyles;
+  readonly decorations: readonly number[];
+}
+
 interface SheetPart {
   readonly entry: SheetEntry;
   readonly part: string | undefined;
@@ -204,7 +210,7 @@ const loadSheet = async (
   load: Load,
   sheet: Sheet,
   { entry, part }: SheetPart,
-  context: { readonly strings: SharedStrings; readonly styles: CellStyles },
+  context: BookContext,
 ): Promise<boolean> => {
   if (part === undefined || !load.archive.has(part)) {
     return false;
@@ -229,6 +235,7 @@ const loadSheet = async (
       sheet,
       strings: context.strings.strings,
       formats: context.styles.formats,
+      decorations: context.decorations,
       known: (name) => load.functions.get(name) !== undefined,
       recalculate: load.options.recalc === 'chunked',
     },
@@ -245,18 +252,14 @@ const loadSheet = async (
   return true;
 };
 
-const addBookLimits = (
-  load: Load,
-  workbook: WorkbookPart,
-  context: { readonly strings: SharedStrings; readonly styles: CellStyles },
-): void => {
+const addBookLimits = (load: Load, workbook: WorkbookPart, context: BookContext): void => {
   const { report } = load;
 
   report.add('date-1904', workbook.date1904 ? 1 : 0);
   report.add('external-links', workbook.externalLinks);
   report.add('pivot-tables', workbook.pivotCaches);
   report.add('unsupported-functions', load.totals.kept, undefined, load.totals.unknown);
-  report.add('cell-styles', context.styles.decorated);
+  report.add('cell-styles', context.styles.unmodeled);
   report.add('rich-text', context.strings.rich);
   report.add('macros', load.archive.names.some((name) => name.endsWith('vbaProject.bin')) ? 1 : 0);
 };
@@ -328,10 +331,16 @@ const readBook = async (
 
   const sheets = sheetParts.map(({ entry }) => book.addSheet(entry.name));
 
-  const context = {
-    strings: await readSharedStrings(archive, stringsPart, load.parts),
-    styles: await readStyles(archive, stylesPart, locale.numbers, load.parts),
+  const strings = await readSharedStrings(archive, stringsPart, load.parts);
+  const styles = await readStyles(archive, stylesPart, locale.numbers, load.parts);
+
+  const context: BookContext = {
+    strings,
+    styles,
+    decorations: styles.decorations.map((decoration) => book.decorations.id(decoration)),
   };
+
+  book.decorations.defaultFont = styles.defaultFont ?? book.decorations.defaultFont;
 
   [stringsPart, stylesPart].forEach((part) => {
     if (part !== undefined) {

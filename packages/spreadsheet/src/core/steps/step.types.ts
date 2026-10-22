@@ -1,5 +1,6 @@
 import type { CellContent } from '../calc/calc.types';
 import type { CellRange } from '../cell.types';
+import type { CellDecoration } from '../decorations';
 import type { FormulaNode } from '../formula/formula.types';
 import type { LineChange } from '../formula/rewrite';
 import type { TableShape } from '../tables';
@@ -11,6 +12,7 @@ export interface CellEdit {
   readonly col: number;
   readonly content?: CellContent | undefined;
   readonly format?: string | undefined;
+  readonly decoration?: CellDecoration | undefined;
 }
 
 export interface TableSpec extends TableShape {
