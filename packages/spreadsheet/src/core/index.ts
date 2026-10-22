@@ -72,6 +72,7 @@ export type {
   Calculator,
   CellContent,
   CalculatorOptions,
+  ImportedFormula,
   EvalValue,
   FormulaResult,
   FormulaCell,

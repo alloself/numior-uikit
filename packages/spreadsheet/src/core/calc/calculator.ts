@@ -36,6 +36,13 @@ import { createFunctionRegistry } from './registry';
 import { nextTask } from './tasks';
 import { createSpills, forEachSpillCell, type SpillArea, type SpillCell } from './spills';
 
+export interface ImportedFormula {
+  readonly value: CellValue;
+  readonly spill?: CellRange | undefined;
+  readonly recalculate: boolean;
+  readonly keep?: boolean | undefined;
+}
+
 export type UserRewrite = (sheet: Sheet, row: number, col: number, ast: FormulaNode) => FormulaNode;
 
 export interface Calculator {
@@ -47,6 +54,14 @@ export interface Calculator {
     locale?: FormulaLocale,
   ): FormulaParse;
   setValue(sheet: Sheet, row: number, col: number, value: CellValue): void;
+  importValue(sheet: Sheet, row: number, col: number, value: CellValue): void;
+  importFormula(
+    sheet: Sheet,
+    row: number,
+    col: number,
+    ast: FormulaNode,
+    imported: ImportedFormula,
+  ): void;
   setContent(sheet: Sheet, row: number, col: number, content: CellContent): void;
   contentAt(sheet: Sheet, row: number, col: number): CellContent;
   forEachFormula(visit: (sheet: Sheet, row: number, col: number, ast: FormulaNode) => void): void;
@@ -364,6 +379,7 @@ export const createCalculator = (
   let nextId = 0;
   const pending = new Set<number>();
   const volatiles = new Set<number>();
+  const kept = new Set<number>();
   const versions = new Map<number, number>();
   const lookups = new Map<string, LookupIndex>();
   const unknown = new Set<string>();
@@ -582,7 +598,7 @@ export const createCalculator = (
     const listed = pending.delete(key);
     const record = formulas.get(key);
 
-    if (record === undefined || !listed) {
+    if (record === undefined || !listed || kept.has(key)) {
       return;
     }
     if (cycles.has(key)) {
@@ -659,7 +675,7 @@ export const createCalculator = (
       const record = formulas.get(key);
 
       pending.add(key);
-      if (record !== undefined) {
+      if (record !== undefined && !kept.has(key)) {
         record.cell.state = 'stale';
       }
     });
@@ -733,6 +749,7 @@ export const createCalculator = (
     const id = idAt(sheet.id, row, col);
 
     if (id !== undefined) {
+      kept.delete(id);
       unregister(id, formulas.get(id)?.names ?? NO_NAMES);
       formulas.delete(id);
       positions.get(sheet.id)?.delete(cellIndex(row, col));
@@ -769,6 +786,7 @@ export const createCalculator = (
     };
 
     interrupt();
+    kept.delete(key);
     unregister(key, (known === undefined ? undefined : formulas.get(known))?.names ?? NO_NAMES);
     register(key, links.names);
     if (known === undefined) {
@@ -804,18 +822,18 @@ export const createCalculator = (
       }
 
       const links = linksOf(ast, record, workbook);
-      const kept = samePrecedents(links.precedents, record.precedents);
+      const unchanged = samePrecedents(links.precedents, record.precedents);
 
       if (!sameNames(links.names, record.names)) {
         unregister(key, record.names);
         register(key, links.names);
         record.names = links.names;
       }
-      if (!kept) {
+      if (!unchanged) {
         record.precedents = links.precedents;
         graph.set(key, links.precedents);
       }
-      if (rewrite === undefined || !kept) {
+      if (rewrite === undefined || !unchanged) {
         record.cell.state = 'stale';
         pending.add(key);
       }
@@ -978,6 +996,28 @@ export const createCalculator = (
       return parsed;
     },
     setValue,
+    importValue: write,
+    importFormula: (sheet, row, col, ast, imported) => {
+      setParsed(sheet, row, col, ast);
+
+      const key = idAt(sheet.id, row, col);
+      const record = key === undefined ? undefined : formulas.get(key);
+
+      if (key === undefined || record === undefined) {
+        return;
+      }
+      if (!imported.recalculate || imported.keep === true) {
+        pending.delete(key);
+      }
+      if (imported.keep === true) {
+        kept.add(key);
+      }
+      record.cell.state = 'imported';
+      write(sheet, row, col, imported.value);
+      if (imported.spill !== undefined && !oneCell(imported.spill)) {
+        spills.occupy(key, { sheet, range: imported.spill });
+      }
+    },
     setContent: (sheet, row, col, content) => {
       switch (content.kind) {
         case 'formula':

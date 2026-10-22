@@ -15,7 +15,7 @@ export type EvalValue =
 
 export type FormulaResult = CellValue | ArrayValue;
 
-export type FormulaState = 'fresh' | 'stale' | 'cycle';
+export type FormulaState = 'fresh' | 'stale' | 'cycle' | 'imported';
 
 export type CellContent =
   | { readonly kind: 'empty' }

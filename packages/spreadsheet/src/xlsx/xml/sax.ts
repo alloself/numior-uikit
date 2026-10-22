@@ -1,4 +1,3 @@
-import { eachChunk } from '../zip/streams';
 import type {
   XmlAttribute,
   XmlFailure,
@@ -44,6 +43,8 @@ const ATTRIBUTE_NEEDS = /[&\t\n\r]/u;
 const LINE_BREAK = /\r\n?/gu;
 
 const ATTRIBUTE_SPACE = /[\t\n\r]/gu;
+
+const PIECE = 32_768;
 
 const SLASH = 47;
 
@@ -360,20 +361,39 @@ export const createXmlParser = (handlers: XmlHandlers): XmlParser => {
   };
 };
 
+export interface XmlStreamOptions {
+  readonly signal?: AbortSignal | undefined;
+  readonly budgetMs?: number | undefined;
+  readonly yieldTo?: (() => Promise<void>) | undefined;
+  readonly onBytes?: ((bytes: number) => void) | undefined;
+}
+
 export const parseXmlStream = async (
   stream: ReadableStream<Uint8Array>,
   handlers: XmlHandlers,
-  signal?: AbortSignal,
+  options: XmlStreamOptions = {},
 ): Promise<XmlFailure | undefined> => {
   const parser = createXmlParser(handlers);
   const decoder = new TextDecoder('utf-8', { fatal: true });
+  const reader = stream.getReader();
+  let started = performance.now();
+
+  const feed = async (text: string): Promise<void> => {
+    for (let at = 0; at < text.length; at += PIECE) {
+      parser.write(text.slice(at, at + PIECE));
+      if (options.yieldTo !== undefined && performance.now() - started > (options.budgetMs ?? 8)) {
+        await options.yieldTo();
+        started = performance.now();
+      }
+    }
+  };
 
   try {
-    await eachChunk(stream, (chunk) => {
-      signal?.throwIfAborted();
-      parser.write(decoder.decode(chunk, { stream: true }));
-    });
-
+    for (let next = await reader.read(); !next.done; next = await reader.read()) {
+      options.signal?.throwIfAborted();
+      await feed(decoder.decode(next.value, { stream: true }));
+      options.onBytes?.(next.value.length);
+    }
     parser.write(decoder.decode());
   } catch (error) {
     if (error instanceof TypeError) {

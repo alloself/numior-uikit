@@ -13,6 +13,7 @@ import {
   type Stepper,
   type Workbook,
 } from '@numior/spreadsheet/core';
+import { writeZip, xmlStream, type Bytes } from '@numior/spreadsheet/xlsx';
 
 export interface FilledSheet {
   readonly workbook: Workbook;
@@ -164,4 +165,56 @@ export const orderTable = (rows: number): OrderTable => {
   }
 
   return { workbook, sheet, calculator, editor, stepper };
+};
+
+const SPREADSHEET_MAIN = 'http://schemas.openxmlformats.org/spreadsheetml/2006/main';
+
+const OFFICE_RELATIONSHIPS = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
+
+const packageRelationships = (type: string, target: string): string =>
+  `<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="${OFFICE_RELATIONSHIPS}/${type}" Target="${target}"/></Relationships>`;
+
+export const xlsxBook = async (rows: number, cols: number): Promise<Bytes> => {
+  const encoder = new TextEncoder();
+  const names = Array.from({ length: cols + 1 }, (_, col) => columnName(col));
+
+  const sheet = xmlStream((writer) => {
+    writer.open('worksheet', [['xmlns', SPREADSHEET_MAIN]]);
+    writer.open('sheetData');
+    for (let row = 1; row <= rows; row += 1) {
+      writer.open('row', [['r', row]]);
+
+      names.slice(0, cols).forEach((name, col) => {
+        writer.open('c', [['r', `${name}${String(row)}`]]);
+        writer.element('v', String((row * 31 + col) % 997));
+        writer.close();
+      });
+
+      writer.open('c', [['r', `${names[cols] ?? ''}${String(row)}`]]);
+      writer.element('f', `SUM(A${String(row)}:E${String(row)})`);
+      writer.element('v', '0');
+      writer.close();
+      writer.close();
+    }
+    writer.close();
+    writer.close();
+  });
+
+  return writeZip([
+    {
+      name: '_rels/.rels',
+      data: encoder.encode(packageRelationships('officeDocument', 'xl/workbook.xml')),
+    },
+    {
+      name: 'xl/workbook.xml',
+      data: encoder.encode(
+        `<workbook xmlns="${SPREADSHEET_MAIN}" xmlns:r="${OFFICE_RELATIONSHIPS}"><sheets><sheet name="Data" sheetId="1" r:id="rId1"/></sheets></workbook>`,
+      ),
+    },
+    {
+      name: 'xl/_rels/workbook.xml.rels',
+      data: encoder.encode(packageRelationships('worksheet', 'worksheets/sheet1.xml')),
+    },
+    { name: 'xl/worksheets/sheet1.xml', data: sheet },
+  ]);
 };

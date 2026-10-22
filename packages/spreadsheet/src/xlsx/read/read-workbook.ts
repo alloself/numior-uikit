@@ -1,0 +1,394 @@
+import { createCalculator, type Calculator } from '../../core/calc/calculator';
+import type { FunctionRegistry } from '../../core/calc/calc.types';
+import { BASE_FUNCTIONS } from '../../core/calc/functions';
+import { createFunctionRegistry } from '../../core/calc/registry';
+import { nextTask } from '../../core/calc/tasks';
+import { ORIGIN } from '../../core/formula/origin';
+import { EN_FORMULAS } from '../../core/formula/locale';
+import { parseFormula } from '../../core/formula/parser';
+import { EN_LOCALE } from '../../core/locale';
+import { validColumns } from '../../core/tables';
+import {
+  createWorkbook,
+  validDefinedName,
+  validSheetName,
+  type Sheet,
+  type Workbook,
+} from '../../core/workbook';
+import { readZip } from '../zip/read-zip';
+import { ZipError } from '../zip/streams';
+import type { Bytes, ZipArchive } from '../zip/zip.types';
+import {
+  XlsxPartError,
+  readRelationships,
+  relationshipsOf,
+  type PartOptions,
+  type Relationship,
+} from './ooxml';
+import type {
+  LimitationsReport,
+  ReadOptions,
+  XlsxLimitation,
+  XlsxLimitationCode,
+  XlsxRead,
+  XlsxRejection,
+} from './read.types';
+import { readSharedStrings, type SharedStrings } from './shared-strings';
+import { readSheetPart, type SheetCounts } from './sheet-part';
+import { readStyles, type CellStyles } from './styles';
+import { readTablePart } from './table-part';
+import { readWorkbookPart, type SheetEntry, type WorkbookPart } from './workbook-part';
+
+interface Found {
+  count: number;
+  readonly sheets: Set<string>;
+  readonly names: Set<string>;
+}
+
+const COMPOUND_FILE = [0xd0, 0xcf, 0x11, 0xe0];
+
+const READ_ONLY = new Set<XlsxLimitationCode>([
+  'date-1904',
+  'external-links',
+  'pivot-tables',
+  'data-tables',
+  'formula-syntax',
+]);
+
+const SHEET_COUNTS: readonly (readonly [keyof Omit<SheetCounts, 'unknown'>, XlsxLimitationCode])[] =
+  [
+    ['unparsed', 'formula-syntax'],
+    ['dataTables', 'data-tables'],
+    ['merges', 'merged-cells'],
+    ['conditional', 'conditional-formats'],
+    ['validations', 'data-validation'],
+    ['hyperlinks', 'hyperlinks'],
+    ['drawings', 'drawings'],
+    ['comments', 'comments'],
+    ['layout', 'sheet-layout'],
+    ['protection', 'protection'],
+  ];
+
+const rejected = (reason: XlsxRejection, detail?: string): XlsxRead => ({
+  kind: 'rejected',
+  reason,
+  detail,
+});
+
+const compound = (bytes: Bytes): boolean =>
+  COMPOUND_FILE.every((byte, index) => bytes[index] === byte);
+
+interface Report {
+  readonly add: (
+    code: XlsxLimitationCode,
+    count: number,
+    sheet?: string,
+    names?: Iterable<string>,
+  ) => void;
+  readonly build: (staleFormulas: number) => LimitationsReport;
+}
+
+const createReport = (): Report => {
+  const found = new Map<XlsxLimitationCode, Found>();
+
+  return {
+    add: (code, count, sheet, names = []) => {
+      if (count <= 0) {
+        return;
+      }
+
+      const entry = found.get(code) ?? { count: 0, sheets: new Set(), names: new Set() };
+
+      entry.count += count;
+      if (sheet !== undefined) {
+        entry.sheets.add(sheet);
+      }
+      [...names].forEach((name) => entry.names.add(name));
+      found.set(code, entry);
+    },
+    build: (staleFormulas) => {
+      const items = [...found].map(([code, entry]): XlsxLimitation => ({
+        code,
+        severity: READ_ONLY.has(code) ? 'read-only' : 'info',
+        count: entry.count,
+        sheets: [...entry.sheets],
+        names: [...entry.names].toSorted(),
+      }));
+
+      return {
+        readOnly: items.some((item) => item.severity === 'read-only'),
+        staleFormulas,
+        items,
+      };
+    },
+  };
+};
+
+const targetOf = (relationships: readonly Relationship[], kind: string): string | undefined =>
+  relationships.find((relationship) => relationship.kind === kind && !relationship.external)
+    ?.target;
+
+const setNames = (calculator: Calculator, part: WorkbookPart, sheets: readonly Sheet[]): void => {
+  part.names.forEach((entry) => {
+    const parsed = parseFormula(entry.text.replaceAll(/_xl(?:fn|ws)\./gu, ''), EN_FORMULAS, ORIGIN);
+    const scope = entry.sheet === undefined ? undefined : sheets[entry.sheet];
+
+    if (parsed.ok && validDefinedName(entry.name)) {
+      calculator.setName(entry.name, scope, parsed.ast);
+    }
+  });
+};
+
+const setTables = async (
+  archive: ZipArchive,
+  calculator: Calculator,
+  sheet: Sheet,
+  relationships: readonly Relationship[],
+  options: PartOptions,
+): Promise<number> => {
+  let refused = 0;
+
+  for (const relationship of relationships) {
+    const table =
+      relationship.kind === 'table' && !relationship.external && archive.has(relationship.target)
+        ? await readTablePart(archive, relationship.target, options)
+        : undefined;
+
+    if (table !== undefined && validColumns(table) && validDefinedName(table.name)) {
+      calculator.setTable(table.name, { ...table, sheet });
+    } else if (relationship.kind === 'table') {
+      refused += 1;
+    }
+  }
+  return refused;
+};
+
+const sizeOf = (archive: ZipArchive, part: string | undefined): number =>
+  part === undefined ? 0 : (archive.raw(part)?.size ?? 0);
+
+interface Load {
+  readonly archive: ZipArchive;
+  readonly options: ReadOptions;
+  readonly book: Workbook;
+  readonly calculator: Calculator;
+  readonly functions: FunctionRegistry;
+  readonly report: Report;
+  readonly parsed: Set<string>;
+  readonly parts: PartOptions;
+  readonly totals: { formulas: number; kept: number; readonly unknown: Set<string> };
+}
+
+interface SheetPart {
+  readonly entry: SheetEntry;
+  readonly part: string | undefined;
+}
+
+const progressOf = (
+  archive: ZipArchive,
+  parts: readonly (string | undefined)[],
+  options: ReadOptions,
+): PartOptions => {
+  const total = parts.reduce((sum, part) => sum + sizeOf(archive, part), 0);
+  let done = 0;
+
+  return {
+    signal: options.signal,
+    onBytes: (bytesRead) => {
+      done += bytesRead;
+      options.onProgress?.({ phase: 'read', done, total });
+    },
+  };
+};
+
+const loadSheet = async (
+  load: Load,
+  sheet: Sheet,
+  { entry, part }: SheetPart,
+  context: { readonly strings: SharedStrings; readonly styles: CellStyles },
+): Promise<boolean> => {
+  if (part === undefined || !load.archive.has(part)) {
+    return false;
+  }
+
+  const relationships = await readRelationships(load.archive, part, load.options);
+
+  const refused = await setTables(
+    load.archive,
+    load.calculator,
+    sheet,
+    relationships,
+    load.options,
+  );
+
+  const counts = await readSheetPart(
+    load.archive,
+    part,
+    {
+      book: load.book,
+      calculator: load.calculator,
+      sheet,
+      strings: context.strings.strings,
+      formats: context.styles.formats,
+      known: (name) => load.functions.get(name) !== undefined,
+      recalculate: load.options.recalc === 'chunked',
+    },
+    load.parts,
+  );
+
+  load.parsed.add(part);
+  load.totals.formulas += counts.formulas;
+  load.totals.kept += counts.kept;
+  counts.unknown.forEach((name) => load.totals.unknown.add(name));
+  load.report.add('tables', refused, entry.name);
+  load.report.add('hidden-sheets', entry.hidden ? 1 : 0, entry.name);
+  SHEET_COUNTS.forEach(([key, code]) => load.report.add(code, counts[key], entry.name));
+  return true;
+};
+
+const addBookLimits = (
+  load: Load,
+  workbook: WorkbookPart,
+  context: { readonly strings: SharedStrings; readonly styles: CellStyles },
+): void => {
+  const { report } = load;
+
+  report.add('date-1904', workbook.date1904 ? 1 : 0);
+  report.add('external-links', workbook.externalLinks);
+  report.add('pivot-tables', workbook.pivotCaches);
+  report.add('unsupported-functions', load.totals.kept, undefined, load.totals.unknown);
+  report.add('cell-styles', context.styles.decorated);
+  report.add('rich-text', context.strings.rich);
+  report.add('macros', load.archive.names.some((name) => name.endsWith('vbaProject.bin')) ? 1 : 0);
+};
+
+const recalculated = async (load: Load): Promise<void> => {
+  if (load.options.recalc !== 'chunked') {
+    return;
+  }
+
+  const run = load.calculator.recalculate({ budgetMs: 8, yieldTo: nextTask });
+
+  load.options.onProgress?.({ phase: 'recalculate', done: 0, total: run.total });
+  await run.settled;
+  load.options.onProgress?.({ phase: 'recalculate', done: run.total, total: run.total });
+};
+
+const officeOf = async (archive: ZipArchive, options: ReadOptions): Promise<string | XlsxRead> => {
+  const office = targetOf(await readRelationships(archive, '', options), 'officeDocument');
+
+  if (office === undefined || !archive.has(office)) {
+    return rejected(archive.has('xl/workbook.bin') ? 'binary' : 'damaged', 'workbook');
+  }
+  return office.endsWith('.bin') ? rejected('binary') : office;
+};
+
+const readBook = async (
+  archive: ZipArchive,
+  bytes: Bytes,
+  options: ReadOptions,
+): Promise<XlsxRead> => {
+  const office = await officeOf(archive, options);
+
+  if (typeof office !== 'string') {
+    return office;
+  }
+
+  const locale = options.locale ?? EN_LOCALE;
+  const functions = options.functions ?? createFunctionRegistry(BASE_FUNCTIONS);
+  const book: Workbook = createWorkbook();
+  const relationships = await readRelationships(archive, office, options);
+  const workbook = await readWorkbookPart(archive, office, options);
+  const stringsPart = targetOf(relationships, 'sharedStrings');
+  const stylesPart = targetOf(relationships, 'styles');
+
+  const sheetParts: SheetPart[] = workbook.sheets.map((entry) => ({
+    entry,
+    part: relationships.find((relationship) => relationship.id === entry.relationship)?.target,
+  }));
+
+  if (sheetParts.some(({ entry }) => !validSheetName(entry.name))) {
+    return rejected('damaged', 'sheet names');
+  }
+
+  const load: Load = {
+    archive,
+    options,
+    book,
+    calculator: createCalculator(book, { locale, functions }),
+    functions,
+    report: createReport(),
+    parsed: new Set(['_rels/.rels', office, relationshipsOf(office)]),
+    parts: progressOf(
+      archive,
+      [stringsPart, stylesPart, ...sheetParts.map(({ part }) => part)],
+      options,
+    ),
+    totals: { formulas: 0, kept: 0, unknown: new Set() },
+  };
+
+  const sheets = sheetParts.map(({ entry }) => book.addSheet(entry.name));
+
+  const context = {
+    strings: await readSharedStrings(archive, stringsPart, load.parts),
+    styles: await readStyles(archive, stylesPart, locale.numbers, load.parts),
+  };
+
+  [stringsPart, stylesPart].forEach((part) => {
+    if (part !== undefined) {
+      load.parsed.add(part);
+    }
+  });
+
+  setNames(load.calculator, workbook, sheets);
+
+  for (const [index, sheet] of sheets.entries()) {
+    const part = sheetParts[index];
+
+    if (part === undefined || !(await loadSheet(load, sheet, part, context))) {
+      return rejected('damaged', sheet.name);
+    }
+  }
+  addBookLimits(load, workbook, context);
+  await recalculated(load);
+
+  const summary = load.report.build(
+    options.recalc === 'chunked' ? load.totals.kept : load.totals.formulas,
+  );
+
+  return {
+    kind: summary.readOnly ? 'read-only' : 'editable',
+    book,
+    calculator: load.calculator,
+    report: summary,
+    source: {
+      bytes,
+      parts: archive.names.map((name) => ({
+        name,
+        kind: load.parsed.has(name) ? 'parsed' : 'opaque',
+      })),
+    },
+  };
+};
+
+export const readWorkbook = async (bytes: Bytes, options: ReadOptions = {}): Promise<XlsxRead> => {
+  if (compound(bytes)) {
+    return rejected('encrypted');
+  }
+
+  const zip = readZip(bytes, options.codec);
+
+  if (!zip.ok) {
+    return rejected(zip.reason === 'not-zip' ? 'not-xlsx' : 'damaged', zip.reason);
+  }
+  try {
+    return await readBook(zip.archive, bytes, options);
+  } catch (error) {
+    if (error instanceof XlsxPartError) {
+      return rejected('damaged', error.message);
+    }
+    if (error instanceof ZipError) {
+      return rejected(error.reason === 'encrypted' ? 'encrypted' : 'damaged', error.reason);
+    }
+    throw error;
+  }
+};

@@ -6,7 +6,15 @@ import {
   numberValue,
   parseFormula,
 } from '@numior/spreadsheet/core';
-import { filledSheet, ledger, ledgerFormulas, orderTable, type Ledger } from './fixtures.ts';
+import { readWorkbook } from '@numior/spreadsheet/xlsx';
+import {
+  filledSheet,
+  ledger,
+  ledgerFormulas,
+  orderTable,
+  xlsxBook,
+  type Ledger,
+} from './fixtures.ts';
 import { measure, record, summarize, type Operation } from '../../../scripts/bench-harness.ts';
 
 const ROWS = 20_000;
@@ -239,6 +247,44 @@ operations.push(
       throw new Error('the header edit was refused');
     }
   }),
+);
+
+const xlsx = await xlsxBook(ROWS, COLS);
+const readSlices: number[] = [];
+
+operations.push(
+  await measure(
+    'read a 1,000,000 cell xlsx with 20,000 formulas',
+    async () => {
+      globalThis.gc?.();
+
+      let longest = 0;
+      let last = performance.now();
+
+      const timer = setInterval(() => {
+        const now = performance.now();
+
+        longest = Math.max(longest, now - last);
+        last = now;
+      }, 1);
+
+      const read = await readWorkbook(xlsx);
+
+      clearInterval(timer);
+      readSlices.push(longest);
+      if (read.kind === 'rejected') {
+        throw new Error(`the bench book was rejected: ${read.reason}`);
+      }
+    },
+    heavy,
+  ),
+);
+
+operations.push(
+  summarize(
+    'longest main-thread gap while reading a 1,000,000 cell xlsx',
+    readSlices.slice(heavy.warmup),
+  ),
 );
 
 const file = await record(

@@ -39,7 +39,7 @@ export const concatBytes = (chunks: readonly Bytes[]): Bytes => {
   return joined;
 };
 
-export const eachChunk = async <T>(
+const eachChunk = async <T>(
   stream: ReadableStream<T>,
   visit: (chunk: T) => void,
 ): Promise<void> => {

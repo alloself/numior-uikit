@@ -13,7 +13,7 @@ export type {
   ZipRead,
   ZipWriteEntry,
 } from './zip/zip.types';
-export { XML_NAMESPACE, createXmlParser, parseXmlStream } from './xml/sax';
+export { XML_NAMESPACE, createXmlParser, parseXmlStream, type XmlStreamOptions } from './xml/sax';
 export { createXmlWriter, escapeAttribute, escapeText, xmlStream } from './xml/writer';
 export type { XmlWriterOptions } from './xml/writer';
 export { decodeXstring, encodeXstring } from './xml/xstring';
@@ -27,3 +27,14 @@ export type {
   XmlParser,
   XmlWriter,
 } from './xml/xml.types';
+export { readWorkbook } from './read/read-workbook';
+export type {
+  LimitationsReport,
+  OriginalPackage,
+  ReadOptions,
+  XlsxLimitation,
+  XlsxLimitationCode,
+  XlsxProgress,
+  XlsxRead,
+  XlsxRejection,
+} from './read/read.types';

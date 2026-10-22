@@ -35,6 +35,12 @@
     },
     "rename a table column read by 20,000 row formulas": {
       "p95Ms": 100
+    },
+    "read a 1,000,000 cell xlsx with 20,000 formulas": {
+      "p95Ms": 2500
+    },
+    "longest main-thread gap while reading a 1,000,000 cell xlsx": {
+      "p95Ms": 16
     }
   }
 }
