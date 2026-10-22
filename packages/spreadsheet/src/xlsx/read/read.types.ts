@@ -3,7 +3,7 @@ import type {
   ConditionalFormat,
   DifferentialStyle,
 } from '../../core/conditional/conditional.types';
-import type { SheetXml } from '../../core/layout/fragments.types';
+import type { PartXml, SheetXml } from '../../core/layout/fragments.types';
 import type { FunctionRegistry } from '../../core/calc/calc.types';
 import type { BookLocale } from '../../core/locale';
 import type { Workbook } from '../../core/workbook';
@@ -56,6 +56,7 @@ export interface OriginalSheet {
   readonly hidden: boolean;
   readonly conditional: readonly ConditionalFormat[];
   readonly xml: SheetXml | undefined;
+  readonly parts: readonly PartXml[];
 }
 
 export interface OriginalPackage {

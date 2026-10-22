@@ -2,7 +2,14 @@ import type { CellAddress, CellRange } from '../cell.types';
 import type { FormulaNode } from '../formula/formula.types';
 import { shiftFormula, type LineChange } from '../formula/rewrite';
 import { limitOf, shiftIndex } from '../lines';
-import type { Fragment, FragmentPiece, FragmentSlot, SheetXml } from './fragments.types';
+import type {
+  Fragment,
+  FragmentPiece,
+  FragmentSlot,
+  PartXml,
+  SheetXml,
+  SlotAxis,
+} from './fragments.types';
 import { shiftRanges, survivorOf } from './shift-ranges';
 
 interface Frame {
@@ -163,10 +170,48 @@ const shiftFormulaSlot = (
   return ast === slot.ast ? slot : { ...slot, ast };
 };
 
+const followed = (
+  slot: Extract<FragmentSlot, { readonly kind: 'line' }>,
+  change: LineChange,
+  delta: number,
+): FragmentSlot => {
+  const line = Math.min(Math.max(slot.line + delta, 0), limitOf(change.axis) - 1);
+
+  return line === slot.line ? slot : { ...slot, line };
+};
+
+const shiftLine = (
+  slot: Extract<FragmentSlot, { readonly kind: 'line' }>,
+  change: LineChange,
+  deltas: Map<SlotAxis, number>,
+): FragmentSlot | undefined => {
+  const delta = deltas.get(slot.axis);
+
+  if (slot.policy === 'follow' && delta !== undefined) {
+    return followed(slot, change, delta);
+  }
+
+  const moved = shiftLineSlot(slot, change);
+
+  if (moved?.kind === 'line' && slot.policy !== 'follow') {
+    deltas.set(slot.axis, moved.line - slot.line);
+  }
+  return moved;
+};
+
+const shiftSplit = (
+  slot: Extract<FragmentSlot, { readonly kind: 'split' }>,
+  change: LineChange,
+): FragmentSlot => {
+  const count = slot.axis === change.axis ? boundaryOf(slot.count, change) : slot.count;
+
+  return count === slot.count ? slot : { ...slot, count };
+};
+
 const shiftSlot = (
   slot: FragmentSlot,
   shift: Shift,
-  frames: { readonly own: Frame; readonly parent: Frame },
+  frames: { readonly own: Frame; readonly parent: Frame; readonly deltas: Map<SlotAxis, number> },
 ): FragmentSlot | undefined => {
   const { change } = shift;
 
@@ -182,12 +227,9 @@ const shiftSlot = (
     case 'ranges':
       return shiftRangesSlot(slot, change);
     case 'line':
-      return slot.axis === change.axis ? shiftLineSlot(slot, change) : slot;
-    case 'split': {
-      const count = slot.axis === change.axis ? boundaryOf(slot.count, change) : slot.count;
-
-      return count === slot.count ? slot : { ...slot, count };
-    }
+      return slot.axis === change.axis ? shiftLine(slot, change, frames.deltas) : slot;
+    case 'split':
+      return shiftSplit(slot, change);
     case 'offset':
       return change.axis === 'cols' ? shiftOffset(slot, change, frames.parent) : slot;
     case 'count':
@@ -213,13 +255,14 @@ const shiftPieces = (
   parent: Frame,
 ): FragmentPiece[] | undefined => {
   const own = frameOf(fragment, shift);
+  const deltas = new Map<SlotAxis, number>();
   const pieces: FragmentPiece[] = [];
 
   for (const piece of fragment.pieces) {
     if (typeof piece === 'string') {
       pieces.push(piece);
     } else if (isSlot(piece)) {
-      const moved = shiftSlot(piece, shift, { own, parent });
+      const moved = shiftSlot(piece, shift, { own, parent, deltas });
 
       if (moved === undefined) {
         return undefined;
@@ -289,4 +332,31 @@ export const mapSheetXmlFormulas = (xml: SheetXml, map: FormulaMap): SheetXml =>
   const tail = mapPieces(xml.tail, map);
 
   return head === xml.head && tail === xml.tail ? xml : { ...xml, head, tail };
+};
+
+const sameParts = (left: readonly PartXml[], right: readonly PartXml[]): boolean =>
+  left.every((part, index) => part === right[index]);
+
+export const shiftParts = (
+  parts: readonly PartXml[],
+  change: LineChange,
+  own: boolean,
+): readonly PartXml[] => {
+  const moved = parts.map((part) => {
+    const root = shiftRoot(part.root, { change, own });
+
+    return root === part.root ? part : { ...part, root };
+  });
+
+  return sameParts(moved, parts) ? parts : moved;
+};
+
+export const mapPartFormulas = (parts: readonly PartXml[], map: FormulaMap): readonly PartXml[] => {
+  const mapped = parts.map((part) => {
+    const root = mapPieces(part.root, map);
+
+    return root === part.root ? part : { ...part, root };
+  });
+
+  return sameParts(mapped, parts) ? parts : mapped;
 };

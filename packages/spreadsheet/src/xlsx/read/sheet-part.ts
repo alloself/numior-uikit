@@ -20,6 +20,7 @@ import type { XmlAttribute } from '../xml/xml.types';
 import { X14, createConditionalCollector, createExtensionCollector } from './conditional-part';
 import { decodeXstring } from '../xml/xstring';
 import { createFragmentRecorder } from './fragment-part';
+import { SHEET_SPECS, opaqueInSheet } from './fragment-specs';
 import { createLayoutCollector } from './layout-part';
 import type { ZipArchive } from '../zip/zip.types';
 import { MAIN, attributeOf, numberOf, readPart, type PartOptions } from './ooxml';
@@ -68,6 +69,8 @@ interface Cell {
 }
 
 const PREFIXES = /_xl(?:fn|ws|pm)\./gu;
+
+const SPREADSHEET = 'http://schemas.openxmlformats.org/spreadsheetml/2006/main';
 
 const DAY_MS = 86_400_000;
 
@@ -194,7 +197,13 @@ export const readSheetPart = async (
   const conditional = createConditionalCollector(context.differentials);
   const extensions = createExtensionCollector();
   const layout = createLayoutCollector(context);
-  const recorder = createFragmentRecorder();
+
+  const recorder = createFragmentRecorder({
+    specs: SHEET_SPECS,
+    inherit: SPREADSHEET,
+    opaqueTop: opaqueInSheet,
+  });
+
   let depth = 0;
   let inData = false;
 

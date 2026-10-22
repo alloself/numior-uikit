@@ -2,7 +2,7 @@ import { limitOf, type LineMove } from '../lines';
 import type { LineChange } from '../formula/rewrite';
 import type { LineLayout, LineLayouts, SheetLayout } from './layout.types';
 import { shiftMerges } from './shift-ranges';
-import { mapSheetXmlFormulas, shiftSheetXml } from './fragments';
+import { mapPartFormulas, mapSheetXmlFormulas, shiftParts, shiftSheetXml } from './fragments';
 import type { FormulaNode } from '../formula/formula.types';
 
 const lowerBound = (lines: Int32Array, value: number): number => {
@@ -88,6 +88,7 @@ export const EMPTY_LAYOUT: SheetLayout = {
   cols: EMPTY_LINES,
   merges: [],
   xml: undefined,
+  parts: [],
 };
 
 export const lineLayoutsOf = (
@@ -105,15 +106,17 @@ export const lineLayoutsOf = (
 
 export const shiftLayout = (layout: SheetLayout, change: LineChange, own: boolean): SheetLayout => {
   const xml = layout.xml === undefined ? undefined : shiftSheetXml(layout.xml, change, own);
+  const parts = shiftParts(layout.parts, change, own);
 
   if (!own) {
-    return xml === layout.xml ? layout : { ...layout, xml };
+    return xml === layout.xml && parts === layout.parts ? layout : { ...layout, xml, parts };
   }
   return {
     rows: change.axis === 'rows' ? layout.rows.shifted(change) : layout.rows,
     cols: change.axis === 'cols' ? layout.cols.shifted(change) : layout.cols,
     merges: shiftMerges(layout.merges, change),
     xml,
+    parts,
   };
 };
 
@@ -122,6 +125,7 @@ export const mapLayoutFormulas = (
   map: (ast: FormulaNode) => FormulaNode,
 ): SheetLayout => {
   const xml = layout.xml === undefined ? undefined : mapSheetXmlFormulas(layout.xml, map);
+  const parts = mapPartFormulas(layout.parts, map);
 
-  return xml === layout.xml ? layout : { ...layout, xml };
+  return xml === layout.xml && parts === layout.parts ? layout : { ...layout, xml, parts };
 };

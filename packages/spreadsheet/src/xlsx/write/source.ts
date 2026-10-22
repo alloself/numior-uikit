@@ -62,6 +62,17 @@ export const cleanHead = (text: string): string =>
 export const cleanTail = (text: string): string =>
   withoutElement(withoutElement(text, 'tableParts'), 'mergeCells');
 
+const ROOT_TAG = /<(?![?!])[^>]*>/u;
+
+export const splicePart = (text: string, content: string): string => {
+  const root = ROOT_TAG.exec(text);
+  const close = text.lastIndexOf('</');
+
+  return root === null || close < root.index
+    ? text
+    : text.slice(0, root.index + root[0].length) + content + text.slice(close);
+};
+
 export const partText = async (archive: ZipArchive, part: string): Promise<string> =>
   decoder.decode(await archive.bytes(part));
 

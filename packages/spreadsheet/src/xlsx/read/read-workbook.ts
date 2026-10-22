@@ -38,6 +38,7 @@ import type {
 } from './read.types';
 import { readExternalPart, type ExternalNameEntry } from './external-part';
 import { readSharedStrings, type SharedStrings } from './shared-strings';
+import { readPositionalParts } from './positional-parts';
 import { readSheetPart, type SheetCounts } from './sheet-part';
 import { readStyles, type CellStyles } from './styles';
 import { readTablePart } from './table-part';
@@ -315,6 +316,11 @@ const loadSheet = async (
     load.parts,
   );
 
+  sheet.layout = {
+    ...sheet.layout,
+    parts: await readPositionalParts(load.archive, relationships, load.options),
+  };
+
   load.parsed.add(part);
   load.totals.formulas += counts.formulas;
   load.totals.kept += counts.kept;
@@ -462,6 +468,7 @@ const readBook = async (
         hidden: sheetParts[index]?.entry.hidden ?? false,
         conditional: sheet.conditional,
         xml: sheet.layout.xml,
+        parts: sheet.layout.parts,
       })),
       differentials: styles.differentials,
       parts: archive.names.map((name) => ({

@@ -1,7 +1,7 @@
 import type { CellAddress, CellRange } from '../cell.types';
 import type { FormulaNode } from '../formula/formula.types';
 
-export type SlotPolicy = 'drop' | 'clamp';
+export type SlotPolicy = 'drop' | 'clamp' | 'follow';
 
 export type SlotAxis = 'rows' | 'cols';
 
@@ -34,5 +34,11 @@ export interface Fragment {
 export interface SheetXml {
   readonly head: Fragment;
   readonly tail: Fragment;
+  readonly opaque: readonly string[];
+}
+
+export interface PartXml {
+  readonly path: string;
+  readonly root: Fragment;
   readonly opaque: readonly string[];
 }

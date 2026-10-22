@@ -580,6 +580,96 @@ describe('writing xlsx', () => {
     expect(sheetOf(read, 'Sales').layout.xml).toBe(original);
   });
 
+  it('moves pictures and comments with lines and drops the comments of deleted rows', async () => {
+    const read = await opened(await corpusPackage('extras'));
+    const stepper = createStepper(read.book, read.calculator);
+    const parts = ['xl/drawings/drawing1.xml', 'xl/comments1.xml', 'xl/drawings/vmlDrawing1.vml'];
+
+    const texts = async (): Promise<string[]> => {
+      const bytes = await written(read, read.source);
+
+      expect(readZip(bytes).ok && (await partOf(bytes, 'xl/media/image1.png')) !== '').toBe(true);
+      return Promise.all(parts.map((part) => partOf(bytes, part)));
+    };
+
+    const inserted = stepper.apply({
+      kind: 'insertLines',
+      sheet: 'Data',
+      axis: 'rows',
+      at: 0,
+      count: 2,
+    });
+
+    const [drawing = '', comments = '', vml = ''] = await texts();
+
+    expect([drawing, comments, vml]).toEqual([
+      expect.stringContaining('<xdr:row>3</xdr:row>'),
+      expect.stringContaining('<comment ref="B3" authorId="0">'),
+      expect.stringContaining('<x:Row>2</x:Row><x:Column>1</x:Column>'),
+    ]);
+
+    expect(inserted.ok && stepper.apply(inserted.inverse).ok).toBe(true);
+    stepper.apply({ kind: 'deleteLines', sheet: 'Data', axis: 'rows', at: 0, count: 1 });
+
+    const [moved = '', emptied = '', shapes = ''] = await texts();
+
+    expect(moved).toContain('<xdr:row>0</xdr:row>');
+    expect(emptied).not.toContain('<comment ');
+    expect(shapes).not.toContain('<v:shape');
+  });
+
+  it('keeps the size of one-cell anchors and moves chart series and linked text', async () => {
+    const drawing = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<xdr:wsDr xmlns:xdr="http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:c="http://schemas.openxmlformats.org/drawingml/2006/chart" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><xdr:twoCellAnchor editAs="oneCell"><xdr:from><xdr:col>5</xdr:col><xdr:colOff>0</xdr:colOff><xdr:row>2</xdr:row><xdr:rowOff>0</xdr:rowOff></xdr:from><xdr:to><xdr:col>8</xdr:col><xdr:colOff>0</xdr:colOff><xdr:row>6</xdr:row><xdr:rowOff>0</xdr:rowOff></xdr:to><xdr:sp macro="" textlink="$B$3"><xdr:nvSpPr><xdr:cNvPr id="2" name="Total"/><xdr:cNvSpPr/></xdr:nvSpPr><xdr:spPr/></xdr:sp><xdr:clientData/></xdr:twoCellAnchor><xdr:twoCellAnchor><xdr:from><xdr:col>0</xdr:col><xdr:colOff>0</xdr:colOff><xdr:row>3</xdr:row><xdr:rowOff>0</xdr:rowOff></xdr:from><xdr:to><xdr:col>4</xdr:col><xdr:colOff>0</xdr:colOff><xdr:row>9</xdr:row><xdr:rowOff>0</xdr:rowOff></xdr:to><xdr:graphicFrame macro=""><xdr:nvGraphicFramePr><xdr:cNvPr id="3" name="Chart"/><xdr:cNvGraphicFramePr/></xdr:nvGraphicFramePr><xdr:xfrm/><a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/chart"><c:chart r:id="rId1"/></a:graphicData></a:graphic></xdr:graphicFrame><xdr:clientData/></xdr:twoCellAnchor></xdr:wsDr>`;
+
+    const chart = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<c:chartSpace xmlns:c="http://schemas.openxmlformats.org/drawingml/2006/chart"><c:chart><c:plotArea><c:barChart><c:ser><c:val><c:numRef><c:f>Sales!$B$2:$B$6</c:f></c:numRef></c:val></c:ser></c:barChart></c:plotArea></c:chart></c:chartSpace>`;
+
+    const office = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
+    const packageRelationships = 'http://schemas.openxmlformats.org/package/2006/relationships';
+
+    const read = await opened(
+      await xlsxPackage({
+        'xl/worksheets/sheet1.xml': SALES_SHEET.replace(
+          '<tableParts',
+          '<drawing r:id="rId3"/><tableParts',
+        ),
+        'xl/worksheets/_rels/sheet1.xml.rels': `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="${packageRelationships}"><Relationship Id="rId1" Type="${office}/table" Target="../tables/table1.xml"/><Relationship Id="rId2" Type="${office}/hyperlink" Target="https://example.com/" TargetMode="External"/><Relationship Id="rId3" Type="${office}/drawing" Target="../drawings/drawing1.xml"/></Relationships>`,
+        'xl/drawings/drawing1.xml': drawing,
+        'xl/drawings/_rels/drawing1.xml.rels': `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="${packageRelationships}"><Relationship Id="rId1" Type="${office}/chart" Target="../charts/chart1.xml"/></Relationships>`,
+        'xl/charts/chart1.xml': chart,
+      }),
+    );
+
+    expect(
+      createStepper(read.book, read.calculator).apply({
+        kind: 'insertLines',
+        sheet: 'Sales',
+        axis: 'rows',
+        at: 4,
+        count: 3,
+      }).ok,
+    ).toBe(true);
+
+    const bytes = await written(read, read.source);
+    const shapes = await partOf(bytes, 'xl/drawings/drawing1.xml');
+
+    expect(shapes).toContain(
+      '<xdr:from><xdr:col>5</xdr:col><xdr:colOff>0</xdr:colOff><xdr:row>2</xdr:row><xdr:rowOff>0</xdr:rowOff></xdr:from><xdr:to><xdr:col>8</xdr:col><xdr:colOff>0</xdr:colOff><xdr:row>6</xdr:row>',
+    );
+
+    expect(shapes).toContain('textlink="$B$3"');
+
+    expect(shapes).toContain(
+      '<xdr:row>3</xdr:row><xdr:rowOff>0</xdr:rowOff></xdr:from><xdr:to><xdr:col>4</xdr:col><xdr:colOff>0</xdr:colOff><xdr:row>12</xdr:row>',
+    );
+
+    expect(shapes.startsWith('<?xml')).toBe(true);
+    expect(await partOf(bytes, 'xl/charts/chart1.xml')).toContain('<c:f>Sales!$B$2:$B$9</c:f>');
+  });
+
   it('gives back the original bytes of a read-only book', async () => {
     const source = await xlsxPackage({ 'xl/workbook.xml': workbookWith(' date1904="1"') });
     const read = await opened(source);

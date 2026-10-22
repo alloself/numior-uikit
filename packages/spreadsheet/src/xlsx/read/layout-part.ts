@@ -155,6 +155,7 @@ export const createLayoutCollector = (styles: LayoutStyles): LayoutCollector => 
       cols: lineLayoutsOf(cols),
       merges,
       xml: undefined,
+      parts: [],
     }),
   };
 };

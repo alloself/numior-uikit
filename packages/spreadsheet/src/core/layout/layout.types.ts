@@ -1,6 +1,6 @@
 import type { CellRange } from '../cell.types';
 import type { LineMove } from '../lines';
-import type { SheetXml } from './fragments.types';
+import type { PartXml, SheetXml } from './fragments.types';
 
 export interface LineStyle {
   readonly format: number;
@@ -31,4 +31,5 @@ export interface SheetLayout {
   readonly cols: LineLayouts;
   readonly merges: readonly CellRange[];
   readonly xml: SheetXml | undefined;
+  readonly parts: readonly PartXml[];
 }

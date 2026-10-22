@@ -32,6 +32,7 @@ import {
   reachableParts,
   readContentTypes,
   readSheetExtras,
+  splicePart,
   type ContentTypes,
   type SheetExtras,
 } from './source';
@@ -58,6 +59,7 @@ interface Output {
   readonly entries: ZipWriteEntry[];
   readonly overrides: Map<string, string>;
   readonly written: Set<string>;
+  readonly rewritten: Set<string>;
   readonly roots: Relationship[];
 }
 
@@ -122,6 +124,12 @@ const freshName = (taken: Set<string>, pattern: (index: number) => string): stri
 
 const freshId = (taken: Set<string>): string => freshName(taken, (index) => `rId${String(index)}`);
 
+const opaqueOf = (sheet: Sheet): number =>
+  sheet.layout.parts.reduce(
+    (count, part) => count + part.opaque.length,
+    sheet.layout.xml?.opaque.length ?? 0,
+  );
+
 const lossOf = (
   sheet: Sheet,
   original: OriginalSheet | undefined,
@@ -134,7 +142,7 @@ const lossOf = (
 
   const text = withoutExtensions(withoutConditional(extras.before + extras.after));
 
-  if (sheet.shifts > 0 && (sheet.layout.xml?.opaque.length ?? 0) > 0) {
+  if (sheet.shifts > 0 && opaqueOf(sheet) > 0) {
     return { sheet: sheet.name, reason: 'moved-lines' };
   }
   return original.name !== sheet.name && (text.includes(`${original.name}!`) || charts)
@@ -270,12 +278,23 @@ const copyParts = async (original: Original | undefined, output: Output): Promis
     return 0;
   }
 
-  const parts = await reachableParts(original.archive, output.roots, output.written);
+  const skip = new Set(output.written);
+
+  output.rewritten.forEach((part) => {
+    skip.delete(part);
+  });
+
+  const parts = await reachableParts(original.archive, output.roots, skip);
+  let copied = 0;
 
   parts.forEach((part) => {
     const raw = original.archive.raw(part);
     const type = original.types.overrides.get(part);
 
+    if (output.rewritten.has(part)) {
+      return;
+    }
+    copied += 1;
     if (raw !== undefined) {
       output.entries.push({ name: part, copy: raw });
     }
@@ -284,7 +303,29 @@ const copyParts = async (original: Original | undefined, output: Output): Promis
     }
   });
 
-  return parts.size;
+  return copied;
+};
+
+const writeParts = async (writing: Writing, plan: SheetPlan): Promise<void> => {
+  const { original, output } = writing;
+  const known = plan.original?.parts ?? [];
+
+  if (original === undefined || plan.extras === undefined) {
+    return;
+  }
+  for (const part of plan.sheet.layout.parts) {
+    if (!known.includes(part) && !output.written.has(part.path)) {
+      const text = await partText(original.archive, part.path);
+      const type = original.types.overrides.get(part.path);
+
+      output.entries.push(textEntry(part.path, splicePart(text, fragmentXml(part.root))));
+      output.written.add(part.path);
+      output.rewritten.add(part.path);
+      if (type !== undefined) {
+        output.overrides.set(part.path, type);
+      }
+    }
+  }
 };
 
 const metadataParts = (spills: number, part: string): GeneratedPart[] =>
@@ -377,6 +418,8 @@ const writeSheet = async (writing: Writing, plan: SheetPlan, firstNewId: number)
   });
 
   const relationships = [...plan.kept.map((item) => toPlanned(item, plan.part)), ...tables];
+
+  await writeParts(writing, plan);
 
   writing.totals.stale += sheetOutput.stale;
   writing.totals.spills += sheetOutput.spills;
@@ -541,7 +584,13 @@ export const writeWorkbook = async (
     book,
     calculator,
     original,
-    output: { entries: [], overrides: new Map(), written: new Set(), roots: [] },
+    output: {
+      entries: [],
+      overrides: new Map(),
+      written: new Set(),
+      rewritten: new Set(),
+      roots: [],
+    },
     workbookPart: source?.workbook ?? 'xl/workbook.xml',
     workbookIds: new Set(original?.workbookRelationships.map((item) => item.id) ?? []),
     workbookRelationships: [],

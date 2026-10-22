@@ -7,14 +7,13 @@ import type {
   FragmentSlot,
   SheetXml,
   SlotAxis,
-  SlotPolicy,
 } from '../../core/layout/fragments.types';
 import { EN_FORMULAS } from '../../core/formula/locale';
 import { parseFormula } from '../../core/formula/parser';
 import type { XmlAttribute, XmlName } from '../xml/xml.types';
 import { escapeAttribute, escapeText } from '../xml/writer';
-import { X14 } from './conditional-part';
-import { MAIN } from './ooxml';
+import type { ElementSpec, RecorderOptions, SlotSpec } from './fragment.types';
+import { spaceOf } from './fragment-specs';
 
 export interface FragmentRecorder {
   open(name: XmlName, attributes: readonly XmlAttribute[]): void;
@@ -24,25 +23,14 @@ export interface FragmentRecorder {
   result(): SheetXml;
 }
 
-type SlotSpec =
-  | { readonly kind: 'cell' | 'ranges'; readonly policy: SlotPolicy }
-  | { readonly kind: 'line'; readonly base: number; readonly policy: SlotPolicy }
-  | { readonly kind: 'split'; readonly axis: SlotAxis }
-  | { readonly kind: 'offset' | 'formula' | 'count' };
-
-interface ElementSpec {
-  readonly fragment?: 'item' | 'group';
-  readonly attributes?: Readonly<Record<string, SlotSpec>>;
-  readonly text?: SlotSpec;
-  readonly raw?: boolean;
-}
-
 interface Pending {
   readonly kind: 'pending';
   readonly text: string;
 }
 
 type Recorded = FragmentPiece | Pending;
+
+type AnchorMode = 'twoCell' | 'oneCell' | 'absolute' | undefined;
 
 interface Frame {
   readonly pieces: Recorded[];
@@ -54,6 +42,9 @@ interface Open {
   readonly spec: ElementSpec | undefined;
   readonly frame: Frame | undefined;
   readonly axis: SlotAxis;
+  readonly mode: AnchorMode;
+  readonly inTo: boolean;
+  readonly inherit: string;
   text: string | undefined;
 }
 
@@ -64,115 +55,16 @@ interface Top {
   readonly prefixes: Map<string, string>;
 }
 
-const XM = 'http://schemas.microsoft.com/office/excel/2006/main';
-
 const PREFIXES = /_xl(?:fn|ws|pm)\./gu;
-
-const DROP_RANGES: SlotSpec = { kind: 'ranges', policy: 'drop' };
-
-const FORMULA: SlotSpec = { kind: 'formula' };
-
-const COUNT: SlotSpec = { kind: 'count' };
-
-const ITEM_RANGES = (name: string): ElementSpec => ({
-  fragment: 'item',
-  attributes: { [name]: DROP_RANGES },
-});
-
-const GROUP: ElementSpec = { fragment: 'group' };
-
-const BREAKS: ElementSpec = {
-  fragment: 'group',
-  attributes: { count: COUNT, manualBreakCount: COUNT },
-};
-
-const SPECS: Readonly<Record<string, ElementSpec>> = {
-  'main:sheetView': { fragment: 'item' },
-  'main:pane': {
-    attributes: {
-      topLeftCell: { kind: 'cell', policy: 'clamp' },
-      xSplit: { kind: 'split', axis: 'cols' },
-      ySplit: { kind: 'split', axis: 'rows' },
-    },
-  },
-  'main:selection': {
-    attributes: {
-      activeCell: { kind: 'cell', policy: 'clamp' },
-      sqref: { kind: 'ranges', policy: 'clamp' },
-    },
-  },
-  'main:dataValidations': { fragment: 'group', attributes: { count: COUNT } },
-  'main:dataValidation': ITEM_RANGES('sqref'),
-  'main:formula1': { text: FORMULA },
-  'main:formula2': { text: FORMULA },
-  'main:hyperlinks': GROUP,
-  'main:hyperlink': { fragment: 'item', attributes: { ref: DROP_RANGES, location: FORMULA } },
-  'main:protectedRanges': GROUP,
-  'main:protectedRange': ITEM_RANGES('sqref'),
-  'main:ignoredErrors': GROUP,
-  'main:ignoredError': ITEM_RANGES('sqref'),
-  'main:rowBreaks': BREAKS,
-  'main:colBreaks': BREAKS,
-  'main:brk': { fragment: 'item', attributes: { id: { kind: 'line', base: 0, policy: 'drop' } } },
-  'main:cellWatches': GROUP,
-  'main:cellWatch': { fragment: 'item', attributes: { r: { kind: 'cell', policy: 'drop' } } },
-  'main:autoFilter': ITEM_RANGES('ref'),
-  'main:filterColumn': { fragment: 'item', attributes: { colId: { kind: 'offset' } } },
-  'main:sortState': ITEM_RANGES('ref'),
-  'main:sortCondition': ITEM_RANGES('ref'),
-  'x14:conditionalFormattings': { raw: true },
-  'x14:dataValidations': { fragment: 'group', attributes: { count: COUNT } },
-  'x14:dataValidation': { fragment: 'item' },
-  'x14:sparklineGroups': GROUP,
-  'x14:sparklineGroup': GROUP,
-  'x14:sparkline': { fragment: 'item' },
-  'xm:sqref': { text: DROP_RANGES },
-  'xm:f': { text: FORMULA },
-};
-
-const FREE = new Set([
-  'sheetPr',
-  'dimension',
-  'sheetViews',
-  'sheetFormatPr',
-  'cols',
-  'sheetCalcPr',
-  'sheetProtection',
-  'protectedRanges',
-  'autoFilter',
-  'sortState',
-  'mergeCells',
-  'phoneticPr',
-  'conditionalFormatting',
-  'dataValidations',
-  'hyperlinks',
-  'printOptions',
-  'pageMargins',
-  'pageSetup',
-  'headerFooter',
-  'rowBreaks',
-  'colBreaks',
-  'customProperties',
-  'cellWatches',
-  'ignoredErrors',
-  'legacyDrawingHF',
-  'drawingHF',
-  'picture',
-  'tableParts',
-  'extLst',
-]);
 
 const FROZEN = new Set(['frozen', 'frozenSplit']);
 
-const spaceOf = (uri: string): string => {
-  if (MAIN.has(uri)) {
-    return 'main';
-  }
-  if (uri === X14) {
-    return 'x14';
-  }
-  return uri === XM ? 'xm' : 'other';
-};
+const ANCHOR_LINES: ReadonlyMap<number, SlotAxis> = new Map([
+  [0, 'cols'],
+  [2, 'rows'],
+  [4, 'cols'],
+  [6, 'rows'],
+]);
 
 const rangesOf = (text: string): CellRange[] | undefined => {
   const parts = text.trim().split(/\s+/u);
@@ -215,7 +107,13 @@ const slotOf = (spec: SlotSpec, value: string, axis: SlotAxis): Recorded | undef
 
       return line === undefined
         ? undefined
-        : { kind: 'line', axis, line: line - spec.base, base: spec.base, policy: spec.policy };
+        : {
+            kind: 'line',
+            axis: spec.axis ?? axis,
+            line: line - spec.base,
+            base: spec.base,
+            policy: spec.policy,
+          };
     }
     case 'split': {
       const count = wholeNumber(value);
@@ -231,7 +129,58 @@ const slotOf = (spec: SlotSpec, value: string, axis: SlotAxis): Recorded | undef
       return { kind: 'pending', text: value };
     case 'count':
       return { kind: 'count' };
+    case 'anchor':
+      return undefined;
   }
+};
+
+const anchorPieces = (text: string): Recorded[] | undefined => {
+  const values = text.split(',').map((value) => value.trim());
+
+  const pieces = values.flatMap((value, index): Recorded[] => {
+    const axis = ANCHOR_LINES.get(index);
+
+    const slot =
+      axis === undefined
+        ? undefined
+        : slotOf({ kind: 'line', base: 0, policy: 'clamp', axis }, value, axis);
+
+    return [index === 0 ? '' : ', ', slot ?? escapeText(value)];
+  });
+
+  return values.length === 8 && values.every((value) => wholeNumber(value) !== undefined)
+    ? pieces
+    : undefined;
+};
+
+const modeOf = (
+  name: XmlName,
+  attributes: readonly XmlAttribute[],
+  parent: AnchorMode,
+): AnchorMode => {
+  if (name.local === 'oneCellAnchor') {
+    return 'oneCell';
+  }
+  if (name.local !== 'twoCellAnchor') {
+    return parent;
+  }
+
+  const edit = attributes.find((attribute) => attribute.name.local === 'editAs')?.value;
+
+  return edit === 'oneCell' || edit === 'absolute' ? edit : 'twoCell';
+};
+
+const adjusted = (
+  spec: SlotSpec | undefined,
+  open: Pick<Open, 'mode' | 'inTo'>,
+): SlotSpec | undefined => {
+  if (spec?.kind !== 'line' || open.mode === undefined) {
+    return spec;
+  }
+  if (open.mode === 'absolute') {
+    return undefined;
+  }
+  return open.mode === 'oneCell' && open.inTo ? { ...spec, policy: 'follow' } : spec;
 };
 
 const isPending = (piece: Recorded): piece is Pending =>
@@ -265,7 +214,7 @@ const settled = (frame: Frame, opaque: string[]): Fragment => {
   };
 };
 
-export const createFragmentRecorder = (): FragmentRecorder => {
+export const createFragmentRecorder = (options: RecorderOptions): FragmentRecorder => {
   const opaque: string[] = [];
   const head: Frame = { pieces: [], group: false };
   const tail: Frame = { pieces: [], group: false };
@@ -286,14 +235,6 @@ export const createFragmentRecorder = (): FragmentRecorder => {
 
     if (top !== undefined && prefix !== '' && prefix !== 'xml') {
       top.prefixes.set(prefix, name.uri);
-    }
-  };
-
-  const markOpaque = (name: XmlName): void => {
-    const space = spaceOf(name.uri);
-
-    if (space !== 'main' || !FREE.has(name.local)) {
-      opaque.push(name.local);
     }
   };
 
@@ -326,8 +267,8 @@ export const createFragmentRecorder = (): FragmentRecorder => {
   };
 
   const begin = (name: XmlName, spec: ElementSpec | undefined): void => {
-    if (stack.length === 0) {
-      markOpaque(name);
+    if (stack.length === 0 && options.opaqueTop?.(name) === true) {
+      opaque.push(name.local);
     }
     if (spec?.fragment !== undefined) {
       frames.push({ pieces: [], group: spec.fragment === 'group' });
@@ -346,7 +287,7 @@ export const createFragmentRecorder = (): FragmentRecorder => {
     name: XmlName,
     attributes: readonly XmlAttribute[],
     spec: ElementSpec | undefined,
-    axis: SlotAxis,
+    context: { readonly axis: SlotAxis; readonly inherit: string },
   ): void => {
     const frozen = FROZEN.has(
       attributes.find((attribute) => attribute.name.local === 'state')?.value ?? '',
@@ -354,33 +295,68 @@ export const createFragmentRecorder = (): FragmentRecorder => {
 
     note(name);
     push(`<${name.qname}`);
-    if (!name.qname.includes(':') && spaceOf(name.uri) !== 'main') {
+    if (!name.qname.includes(':') && name.uri !== context.inherit) {
       push(` xmlns="${escapeAttribute(name.uri)}"`);
     }
 
     attributes.forEach((attribute) => {
-      attributeXml(attribute, spec, { axis, frozen });
+      attributeXml(attribute, spec, { axis: context.axis, frozen });
     });
 
     push('>');
   };
 
+  const textSlots = (open: Open): Recorded[] | undefined => {
+    const spec = adjusted(open.spec?.text, open);
+    const text = open.text ?? '';
+
+    if (spec === undefined) {
+      return [escapeText(text)];
+    }
+    if (spec.kind === 'anchor') {
+      return anchorPieces(text);
+    }
+
+    const slot = slotOf(spec, text.trim(), open.axis);
+
+    return slot === undefined ? undefined : [slot];
+  };
+
+  const openOf = (
+    name: XmlName,
+    attributes: readonly XmlAttribute[],
+    spec: ElementSpec | undefined,
+    parent: Open | undefined,
+  ): Open => {
+    const inherit = parent?.inherit ?? options.inherit;
+
+    return {
+      name,
+      spec,
+      frame: undefined,
+      axis: parent?.name.local === 'colBreaks' ? 'cols' : 'rows',
+      mode: modeOf(name, attributes, parent?.mode),
+      inTo: name.local === 'to' || parent?.inTo === true,
+      inherit: name.qname.includes(':') ? inherit : name.uri,
+      text: spec?.text === undefined ? undefined : '',
+    };
+  };
+
   return {
     open: (name, attributes) => {
-      const spec = raw > 0 ? undefined : SPECS[`${spaceOf(name.uri)}:${name.local}`];
-      const axis: SlotAxis = stack.at(-1)?.name.local === 'colBreaks' ? 'cols' : 'rows';
+      const parent = stack.at(-1);
+      const spec = raw > 0 ? undefined : options.specs[`${spaceOf(name.uri)}:${name.local}`];
+      const entry = openOf(name, attributes, spec, parent);
 
       begin(name, spec);
-      openingXml(name, attributes, spec, axis);
-      raw += spec?.raw === true || raw > 0 ? 1 : 0;
 
-      stack.push({
-        name,
-        spec,
-        frame: spec?.fragment === undefined ? undefined : current(),
-        axis,
-        text: spec?.text === undefined ? undefined : '',
+      openingXml(name, attributes, spec, {
+        axis: entry.axis,
+        inherit: parent?.inherit ?? options.inherit,
       });
+
+      raw += spec?.raw === true || raw > 0 ? 1 : 0;
+      stack.push({ ...entry, frame: spec?.fragment === undefined ? undefined : current() });
     },
     text: (text) => {
       const open = stack.at(-1);
@@ -393,16 +369,15 @@ export const createFragmentRecorder = (): FragmentRecorder => {
     },
     close: (name) => {
       const open = stack.pop();
-      const slotSpec = open?.spec?.text;
 
       raw -= raw > 0 ? 1 : 0;
-      if (open?.text !== undefined && slotSpec !== undefined) {
-        const slot = slotOf(slotSpec, open.text.trim(), open.axis);
+      if (open?.text !== undefined) {
+        const pieces = textSlots(open);
 
-        if (slot === undefined) {
+        if (pieces === undefined) {
           opaque.push(open.name.local);
         }
-        push(slot ?? escapeText(open.text));
+        (pieces ?? [escapeText(open.text)]).forEach(push);
       }
       push(`</${name.qname}>`);
 
