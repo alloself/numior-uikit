@@ -2,6 +2,7 @@ import { columnName, formatCell } from '../address';
 import type { CellAddress, CellRef } from '../cell.types';
 import type {
   BinaryOperator,
+  BookLabelOf,
   FormulaLocale,
   FormulaNode,
   LineRef,
@@ -13,12 +14,11 @@ import { localFunction } from './localization';
 import { printStructured } from './structured';
 
 export interface PrintOptions {
-  readonly books?: ((index: number) => string | undefined) | undefined;
+  readonly books?: BookLabelOf | undefined;
 }
 
-interface Printing {
+interface Printing extends PrintOptions {
   readonly locale: FormulaLocale;
-  readonly books?: ((index: number) => string | undefined) | undefined;
 }
 
 const PRECEDENCE: Readonly<Record<BinaryOperator, number>> = {
@@ -135,11 +135,9 @@ const referenceText = (node: FormulaNode, printing: Printing): string | undefine
 };
 
 const operationText = (node: FormulaNode, printing: Printing): string => {
-  const { locale } = printing;
-
   switch (node.kind) {
     case 'call':
-      return `${localFunction(node.name, locale)}(${node.args.map((arg) => printNode(arg, printing)).join(locale.argument)})`;
+      return `${localFunction(node.name, printing.locale)}(${node.args.map((arg) => printNode(arg, printing)).join(printing.locale.argument)})`;
     case 'unary':
       return `${node.op}${wrapped(node.operand, printing, UNARY)}`;
     case 'percent':
@@ -151,8 +149,10 @@ const operationText = (node: FormulaNode, printing: Printing): string => {
     }
     case 'array':
       return `{${node.rows
-        .map((row) => row.map((item) => printNode(item, printing)).join(locale.arrayColumn))
-        .join(locale.arrayRow)}}`;
+        .map((row) =>
+          row.map((item) => printNode(item, printing)).join(printing.locale.arrayColumn),
+        )
+        .join(printing.locale.arrayRow)}}`;
     default:
       return '';
   }

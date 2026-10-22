@@ -3,7 +3,7 @@ import { createCellFormats, type CellFormats } from './cell-formats';
 import { createCellStore, type CellStore } from './cell-store';
 import { createDecorations, type CellDecorations } from './decorations';
 import { createNumberFormats, type NumberFormats } from './number-formats';
-import type { FormulaNode, SheetPlace } from './formula/formula.types';
+import type { BookIndexOf, BookLabelOf, FormulaNode, SheetPlace } from './formula/formula.types';
 import { createSharedStrings, type SharedStrings } from './strings';
 import type { TableShape } from './tables';
 
@@ -81,11 +81,11 @@ export interface Workbook {
 }
 
 export interface BookNames {
-  readonly books: (name: string) => number | undefined;
+  readonly books: BookIndexOf;
 }
 
 export interface BookLabels {
-  readonly books: (index: number) => string | undefined;
+  readonly books: BookLabelOf;
 }
 
 const FORBIDDEN = /[[\]:*?/\\]/u;

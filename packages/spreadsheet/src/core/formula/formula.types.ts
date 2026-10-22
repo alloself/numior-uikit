@@ -51,6 +51,10 @@ export type BinaryOperator =
   | '<='
   | '>=';
 
+export type BookIndexOf = (name: string) => number | undefined;
+
+export type BookLabelOf = (index: number) => string | undefined;
+
 export interface SheetPlace {
   readonly book?: number | undefined;
   readonly sheet?: string | undefined;

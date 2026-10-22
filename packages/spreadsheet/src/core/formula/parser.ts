@@ -3,6 +3,7 @@ import type { CellAddress, CellRef } from '../cell.types';
 import { isCellError } from '../values';
 import type {
   BinaryOperator,
+  BookIndexOf,
   FormulaFailure,
   FormulaLocale,
   FormulaNode,
@@ -17,7 +18,7 @@ import { booleanFromWord, canonicalFunction } from './localization';
 import { parseStructured } from './structured';
 
 export interface ParseOptions {
-  readonly books?: ((name: string) => number | undefined) | undefined;
+  readonly books?: BookIndexOf | undefined;
 }
 
 interface Parser {
