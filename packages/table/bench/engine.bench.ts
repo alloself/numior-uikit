@@ -12,11 +12,16 @@ import {
   type BenchNode,
   type BenchRow,
 } from './dataset.ts';
-import { measure, record, type Operation } from '../../../scripts/bench-harness.ts';
+import {
+  measure,
+  record,
+  type MeasureOptions,
+  type Operation,
+} from '../../../scripts/bench-harness.ts';
 
 const ROWS = 1_000_000;
 const rows = generateRows(ROWS);
-const heavy = { iterations: 3, warmup: 1 };
+const heavy = { iterations: 3, warmup: 1, fresh: true };
 const light = { iterations: 20, warmup: 1 };
 
 const yieldTo = (): Promise<void> =>
@@ -38,7 +43,11 @@ const warmed = async (...sort: TableSort[]): Promise<TableEngine<BenchRow>> => {
   return engine;
 };
 
-const coldSort = (name: string, sort: TableSort, options = heavy): Promise<Operation> =>
+const coldSort = (
+  name: string,
+  sort: TableSort,
+  options: MeasureOptions = heavy,
+): Promise<Operation> =>
   measure(
     name,
     async () => {
@@ -82,7 +91,7 @@ operations.push(
   await coldSort(
     'build a unique string store and sort',
     { key: 'email', direction: 'asc' },
-    { iterations: 1, warmup: 0 },
+    { iterations: 1, warmup: 0, fresh: true },
   ),
 );
 

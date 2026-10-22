@@ -14,6 +14,7 @@ export interface Operation {
 export interface MeasureOptions {
   readonly iterations: number;
   readonly warmup?: number;
+  readonly fresh?: boolean | undefined;
 }
 
 export interface RecordVariant {
@@ -87,7 +88,9 @@ export const measure = async (
   const samples: number[] = [];
 
   for (let index = 0; index < options.iterations; index += 1) {
-    collectGarbage();
+    if (options.fresh === true) {
+      collectGarbage();
+    }
 
     const started = performance.now();
     await run();
