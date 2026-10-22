@@ -3,20 +3,12 @@ import type { CellValue } from '../cell.types';
 import { EMPTY, errorValue } from '../values';
 import { MANY } from './aggregate';
 import type { EvalValue, FunctionArgs, FunctionSpec } from './calc.types';
-import { compareValues, lookupKey, raise, toLogical } from './coerce';
+import { lookupKey, ordered, raise, toLogical } from './coerce';
 import { defineFunction } from './registry';
 
 type Rows = readonly (readonly CellValue[])[];
 
 const MISSING_ITEM = errorValue('#N/A');
-
-const RANK: Readonly<Record<CellValue['kind'], number>> = {
-  number: 0,
-  string: 1,
-  boolean: 2,
-  error: 3,
-  empty: 4,
-};
 
 const widthOf = (rows: Rows): number => rows[0]?.length ?? 0;
 
@@ -28,19 +20,6 @@ const arrayOf = (rows: Rows): EvalValue =>
 
 const oriented = (rows: Rows, byCol: boolean, change: (rows: Rows) => Rows): EvalValue =>
   arrayOf(byCol ? transpose(change(transpose(rows))) : change(rows));
-
-const sortOrder = (left: CellValue, right: CellValue): number =>
-  left.kind === right.kind && left.kind !== 'error' && left.kind !== 'empty'
-    ? compareValues(left, right)
-    : RANK[left.kind] - RANK[right.kind];
-
-const ordered =
-  (direction: number) =>
-  (left: CellValue, right: CellValue): number => {
-    const blanks = Number(left.kind === 'empty') - Number(right.kind === 'empty');
-
-    return blanks === 0 ? direction * sortOrder(left, right) : blanks;
-  };
 
 const directionOf = (value: number): number =>
   value === 1 || value === -1 ? value : raise('#VALUE!');

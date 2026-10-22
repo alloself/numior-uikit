@@ -69,11 +69,31 @@ export type {
   ExternalBookInit,
   ExternalName,
   Sheet,
+  SheetPivot,
+  SheetPivots,
   SheetTable,
   SheetTables,
   Workbook,
 } from './workbook';
 export { tableData, type TableShape } from './tables';
+export { pivotCaptions, pivotValueName } from './pivot/pivot.messages';
+export { VALUES_FIELD } from './pivot/pivot-engine';
+export type {
+  PivotAggregate,
+  PivotBaseItem,
+  PivotCaptions,
+  PivotDefinition,
+  PivotField,
+  PivotFilter,
+  PivotLanguage,
+  PivotLayout,
+  PivotShowAs,
+  PivotSort,
+  PivotSource,
+  PivotSpec,
+  PivotState,
+  PivotValue,
+} from './pivot/pivot.types';
 export {
   EN_FORMULAS,
   RU_FORMULAS,

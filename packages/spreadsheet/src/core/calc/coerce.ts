@@ -134,3 +134,24 @@ export const lookupKey = (value: CellValue): string | undefined => {
       return undefined;
   }
 };
+
+const SORT_RANK: Readonly<Record<CellValue['kind'], number>> = {
+  number: 0,
+  string: 1,
+  boolean: 2,
+  error: 3,
+  empty: 4,
+};
+
+const sortOrder = (left: CellValue, right: CellValue): number =>
+  left.kind === right.kind && left.kind !== 'error' && left.kind !== 'empty'
+    ? compareValues(left, right)
+    : SORT_RANK[left.kind] - SORT_RANK[right.kind];
+
+export const ordered =
+  (direction: number) =>
+  (left: CellValue, right: CellValue): number => {
+    const blanks = Number(left.kind === 'empty') - Number(right.kind === 'empty');
+
+    return blanks === 0 ? direction * sortOrder(left, right) : blanks;
+  };

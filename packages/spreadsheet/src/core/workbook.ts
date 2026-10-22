@@ -1,7 +1,9 @@
 import { parseCell } from './address';
 import { createCellFormats, type CellFormats } from './cell-formats';
 import { createCellStore, type CellStore } from './cell-store';
+import type { CellAddress, CellRange } from './cell.types';
 import type { ConditionalFormat } from './conditional/conditional.types';
+import type { PivotDefinition } from './pivot/pivot.types';
 import type { SheetLayout } from './layout/layout.types';
 import { EMPTY_LAYOUT } from './layout/line-layouts';
 import { createDecorations, type CellDecorations } from './decorations';
@@ -50,6 +52,22 @@ export interface SheetTables {
   forEach(visit: (table: SheetTable) => void): void;
 }
 
+export interface SheetPivot {
+  readonly name: string;
+  readonly sheet: Sheet;
+  readonly anchor: CellAddress;
+  readonly definition: PivotDefinition;
+  readonly footprint: CellRange | undefined;
+}
+
+export interface SheetPivots {
+  get(sheet: Sheet, name: string): SheetPivot | undefined;
+  on(sheet: Sheet): readonly SheetPivot[];
+  set(pivot: SheetPivot): void;
+  delete(pivot: SheetPivot): void;
+  forEach(visit: (pivot: SheetPivot) => void): void;
+}
+
 export interface ExternalName {
   readonly name: string;
   readonly sheet: string | undefined;
@@ -76,6 +94,7 @@ export interface Workbook {
   readonly decorations: CellDecorations;
   readonly names: DefinedNames;
   readonly tables: SheetTables;
+  readonly pivots: SheetPivots;
   readonly sheets: readonly Sheet[];
   readonly externals: readonly ExternalBook[];
   addSheet(name?: string, index?: number): Sheet;
@@ -179,6 +198,35 @@ const createSheetTables = (): SheetTables => {
     forEach: (visit) => {
       tables.forEach((table) => {
         visit(table);
+      });
+    },
+  };
+};
+
+const pivotKey = (sheet: Sheet, name: string): string =>
+  `${String(sheet.id)}:${name.toLowerCase()}`;
+
+const createSheetPivots = (): SheetPivots => {
+  const pivots = new Map<string, SheetPivot>();
+
+  return {
+    get: (sheet, name) => pivots.get(pivotKey(sheet, name)),
+    on: (sheet) =>
+      [...pivots.values()].reduce<SheetPivot[]>((found, pivot) => {
+        if (pivot.sheet === sheet) {
+          found.push(pivot);
+        }
+        return found;
+      }, []),
+    set: (pivot) => {
+      pivots.set(pivotKey(pivot.sheet, pivot.name), pivot);
+    },
+    delete: (pivot) => {
+      pivots.delete(pivotKey(pivot.sheet, pivot.name));
+    },
+    forEach: (visit) => {
+      pivots.forEach((pivot) => {
+        visit(pivot);
       });
     },
   };
@@ -295,6 +343,7 @@ export const createWorkbook = (): Workbook => {
     decorations: createDecorations(),
     names: createDefinedNames(),
     tables: createSheetTables(),
+    pivots: createSheetPivots(),
     sheets,
     externals,
     sheet,

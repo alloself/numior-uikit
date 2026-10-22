@@ -18,6 +18,7 @@ import type {
   StepResult,
   WorkbookStep,
 } from './step.types';
+import { createPivotSteps } from './pivot-steps';
 import { createTableSteps, specOf, type TableDrops } from './table-steps';
 import {
   mapConditionalFormulas,
@@ -188,11 +189,15 @@ export const createStepper = (book: Workbook, calculator: Calculator): Stepper =
     });
   };
 
-  const snapshot = (): WorkbookStep[] =>
-    book.sheets.flatMap((each): WorkbookStep[] => [
+  const pivots = createPivotSteps(book, { contentsIn, write });
+
+  const snapshot = (): WorkbookStep[] => [
+    ...book.sheets.flatMap((each): WorkbookStep[] => [
       { kind: 'setConditional', sheet: each.name, formats: each.conditional },
       { kind: 'setLayout', sheet: each.name, layout: each.layout },
-    ]);
+    ]),
+    ...pivots.snapshot(),
+  ];
 
   const moveConditional = (sheet: Sheet, change: LineChange): void => {
     book.sheets.forEach((each) => {
@@ -258,6 +263,7 @@ export const createStepper = (book: Workbook, calculator: Calculator): Stepper =
     sheet.decorations.shiftLines(change.axis, change.at, change.count);
     sheet.shifts += 1;
     tables.move(sheet, moves, change);
+    pivots.move(sheet, change);
     return { deleted, rewrites, names, drops, restores: tables.restores(moves) };
   };
 
@@ -269,6 +275,11 @@ export const createStepper = (book: Workbook, calculator: Calculator): Stepper =
     }
 
     const change: LineChange = { sheet: sheet.name, axis, at, count };
+
+    if (pivots.crossed(sheet, change)) {
+      return refused('pivot-overlap');
+    }
+
     const saved = snapshot();
 
     moveLines(sheet, change);
@@ -283,6 +294,11 @@ export const createStepper = (book: Workbook, calculator: Calculator): Stepper =
 
   const deleteLines = (sheet: Sheet, axis: LineAxis, at: number, count: number): StepResult => {
     const change: LineChange = { sheet: sheet.name, axis, at, count: -count };
+
+    if (pivots.crossed(sheet, change)) {
+      return refused('pivot-overlap');
+    }
+
     const saved = snapshot();
     const { deleted, rewrites, names, drops, restores } = moveLines(sheet, change);
 
@@ -350,6 +366,7 @@ export const createStepper = (book: Workbook, calculator: Calculator): Stepper =
     );
 
     clear(sheet, contents);
+    pivots.dropSheet(sheet);
     book.removeSheet(sheet);
 
     book.sheets.forEach((each) => {
@@ -385,6 +402,7 @@ export const createStepper = (book: Workbook, calculator: Calculator): Stepper =
     }
     rewriter.formulas((_owner, ast) => renameInFormula(ast, from, to));
     rewriter.names((defined) => renameInFormula(defined.ast, from, to));
+    pivots.rename(from, to);
 
     book.sheets.forEach((each) => {
       each.conditional = mapConditionalFormulas(each.conditional, (ast) =>
@@ -434,6 +452,12 @@ export const createStepper = (book: Workbook, calculator: Calculator): Stepper =
         return setConditional(sheet, step.formats);
       case 'setLayout':
         return setLayout(sheet, step.layout);
+      case 'setPivot':
+        return pivots.set(sheet, step.name, step.pivot);
+      case 'refreshPivot':
+        return pivots.refresh(sheet, step.name);
+      case 'putPivot':
+        return pivots.put(sheet, step.name, step.pivot);
     }
   };
 

@@ -6,6 +6,8 @@ import {
   loadCells,
   numberValue,
   parseFormula,
+  pivotCaptions,
+  pivotValueName,
 } from '@numior/spreadsheet/core';
 import { readWorkbook, writeWorkbook } from '@numior/spreadsheet/xlsx';
 import {
@@ -13,6 +15,7 @@ import {
   ledger,
   ledgerFormulas,
   orderTable,
+  pivotSales,
   xlsxBook,
   type Ledger,
 } from './fixtures.ts';
@@ -255,6 +258,53 @@ operations.push(
     'paint a 40 × 20 viewport of 1,000,000 cells under a colour scale',
     async () => {
       painter.looks(filled.sheet, viewport);
+    },
+    heavy,
+  ),
+);
+
+const sales = pivotSales(100_000);
+
+const pivotStep = {
+  kind: 'setPivot',
+  sheet: 'Report',
+  name: 'Sales',
+  pivot: {
+    anchor: { row: 2, col: 0 },
+    definition: {
+      source: {
+        kind: 'range',
+        sheet: 'Sales',
+        range: { top: 0, left: 0, bottom: 100_000, right: 3 },
+      },
+      rows: [0, 1],
+      columns: [2],
+      filters: [],
+      values: [
+        {
+          field: 3,
+          aggregate: 'sum',
+          name: pivotValueName('sum', 'Amount', 'en'),
+          showAs: { kind: 'normal' },
+          format: undefined,
+        },
+      ],
+      fields: [],
+      layout: 'compact',
+      rowTotals: true,
+      columnTotals: true,
+      captions: pivotCaptions('en'),
+    },
+  },
+} as const;
+
+sales.stepper.apply(pivotStep);
+
+operations.push(
+  await measure(
+    'refresh a pivot of 100,000 source rows by region, city and year',
+    async () => {
+      sales.stepper.apply({ kind: 'refreshPivot', sheet: 'Report', name: 'Sales' });
     },
     heavy,
   ),

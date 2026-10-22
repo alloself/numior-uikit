@@ -167,6 +167,30 @@ export const orderTable = (rows: number): OrderTable => {
   return { workbook, sheet, calculator, editor, stepper };
 };
 
+export const pivotSales = (rows: number): OrderTable => {
+  const workbook = createWorkbook();
+  const sheet = workbook.addSheet('Sales');
+  const calculator = createCalculator(workbook);
+  const editor = createCellEditor(workbook, calculator);
+  const stepper = createStepper(workbook, calculator);
+  const random = splitmix(7);
+
+  workbook.addSheet('Report');
+
+  ['Region', 'City', 'Year', 'Amount'].forEach((name, col) => {
+    calculator.setValue(sheet, 0, col, textValue(name));
+  });
+
+  for (let row = 1; row <= rows; row += 1) {
+    calculator.setValue(sheet, row, 0, textValue(`Region ${String(row % 20)}`));
+    calculator.setValue(sheet, row, 1, textValue(`City ${String(row % 500)}`));
+    calculator.setValue(sheet, row, 2, numberValue(2015 + (row % 8)));
+    calculator.setValue(sheet, row, 3, numberValue(Math.round(random() * 10_000) / 100));
+  }
+
+  return { workbook, sheet, calculator, editor, stepper };
+};
+
 const SPREADSHEET_MAIN = 'http://schemas.openxmlformats.org/spreadsheetml/2006/main';
 
 const OFFICE_RELATIONSHIPS = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';

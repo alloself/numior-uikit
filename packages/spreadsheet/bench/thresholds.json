@@ -56,6 +56,9 @@
     },
     "longest main-thread gap while writing a 1,000,000 cell xlsx": {
       "p95Ms": 16
+    },
+    "refresh a pivot of 100,000 source rows by region, city and year": {
+      "p95Ms": 100
     }
   }
 }
