@@ -2,14 +2,7 @@
   "kind": "editable",
   "report": {
     "staleFormulas": 0,
-    "items": [
-      {
-        "code": "conditional-formats",
-        "severity": "info",
-        "count": 1,
-        "names": []
-      }
-    ]
+    "items": []
   },
   "defaultFont": {
     "size": 11,
@@ -253,7 +246,46 @@
             }
           }
         }
-      }
+      },
+      "conditional": [
+        {
+          "ranges": [
+            "A1:B1"
+          ],
+          "rules": [
+            {
+              "rule": {
+                "kind": "cellIs",
+                "operator": "lessThan",
+                "formulas": [
+                  {
+                    "kind": "string",
+                    "value": "0"
+                  }
+                ],
+                "style": {
+                  "font": {
+                    "bold": true,
+                    "color": {
+                      "kind": "rgb",
+                      "argb": "FF9C0006"
+                    }
+                  },
+                  "fill": {
+                    "pattern": "solid",
+                    "background": {
+                      "kind": "rgb",
+                      "argb": "FFFFC7CE"
+                    }
+                  }
+                }
+              },
+              "priority": 1,
+              "stopIfTrue": false
+            }
+          ]
+        }
+      ]
     }
   ],
   "names": [],

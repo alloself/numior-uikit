@@ -20,6 +20,7 @@ import {
   type PlannedRelationship,
   type PlannedSheet,
 } from './book-parts';
+import { withoutConditional } from './conditional-part';
 import { createStringTable, writeSheetPart, type StringTable } from './sheet-part';
 import {
   elementSlice,
@@ -144,7 +145,7 @@ const lossOf = (
     return undefined;
   }
 
-  const text = extras.before + extras.after;
+  const text = withoutConditional(extras.before + extras.after);
 
   if (sheet.shifts > 0 && elementNames(text).some((name) => !KEEPS_POSITION.has(name))) {
     return { sheet: sheet.name, reason: 'moved-lines' };
@@ -369,6 +370,7 @@ const writeSheet = async (writing: Writing, plan: SheetPlan, firstNewId: number)
     strings: writing.strings,
     extras: plan.extras,
     tables: tables.map((table) => table.id),
+    keepConditional: plan.original?.conditional === plan.sheet.conditional,
     signal: writing.signal,
   });
 
@@ -542,7 +544,7 @@ export const writeWorkbook = async (
     workbookIds: new Set(original?.workbookRelationships.map((item) => item.id) ?? []),
     workbookRelationships: [],
     sheets: [],
-    styles: createStyleBook(book, calculator.locale.numbers),
+    styles: createStyleBook(book, calculator.locale.numbers, source?.differentials),
     strings: createStringTable(),
     outdated: calculator.outdated(),
     signal: options.signal,

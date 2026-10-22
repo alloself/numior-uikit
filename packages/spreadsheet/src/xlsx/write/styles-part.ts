@@ -9,6 +9,7 @@ import type {
   StyleColor,
 } from '../../core/decorations';
 import { builtinFormat } from '../../core/format/builtin-formats';
+import type { DifferentialStyle } from '../../core/conditional/conditional.types';
 import type { NumberLocale } from '../../core/format/format.types';
 import type { Workbook } from '../../core/workbook';
 import { escapeAttribute } from '../xml/writer';
@@ -22,6 +23,7 @@ export interface StyleExtras {
 
 export interface StyleBook {
   xf(format: number, decoration: number): number;
+  differential(style: DifferentialStyle): number;
   xml(extras: StyleExtras): string;
 }
 
@@ -57,7 +59,7 @@ const attribute = (name: string, value: string | number | boolean | undefined): 
   return ` ${name}="${escapeAttribute(String(value))}"`;
 };
 
-const colorXml = (element: string, color: StyleColor | undefined): string => {
+export const colorXml = (element: string, color: StyleColor | undefined): string => {
   if (color === undefined) {
     return '';
   }
@@ -148,6 +150,44 @@ const builtinIds = (locale: NumberLocale): Map<string, number> =>
     return ids;
   }, new Map<string, number>());
 
+const FIRST_DIFFERENTIAL_FORMAT = 400;
+
+const dxfFillXml = (fill: FillStyle): string =>
+  `<fill><patternFill${fill.pattern === 'solid' ? '' : attribute('patternType', fill.pattern)}>${colorXml('fgColor', fill.foreground)}${colorXml('bgColor', fill.background)}</patternFill></fill>`;
+
+const dxfXml = (
+  style: DifferentialStyle,
+  id: number,
+  builtins: ReadonlyMap<string, number>,
+): string => {
+  const format =
+    style.format === undefined
+      ? ''
+      : `<numFmt numFmtId="${String(builtins.get(style.format) ?? id)}" formatCode="${escapeAttribute(encodeXstring(style.format))}"/>`;
+
+  return [
+    '<dxf>',
+    style.font === undefined ? '' : fontXml(style.font),
+    format,
+    style.fill === undefined ? '' : dxfFillXml(style.fill),
+    style.border === undefined ? '' : borderXml(style.border),
+    '</dxf>',
+  ].join('');
+};
+
+const withDifferentials = (original: string | undefined, added: readonly string[]): string => {
+  if (added.length === 0) {
+    return original ?? '<dxfs count="0"/>';
+  }
+
+  const count = Number(/count="(\d+)"/u.exec(original ?? '')?.[1] ?? '0') + added.length;
+
+  const inner =
+    original === undefined ? '' : original.replace(/^<dxfs[^>]*?(?:\/>|>)|<\/dxfs>$/gu, '');
+
+  return `<dxfs count="${String(count)}">${inner}${added.join('')}</dxfs>`;
+};
+
 const xfXml = (entry: CellFormatEntry, numberFormat: number): string => {
   const { decoration } = entry;
   const inner = alignmentXml(decoration.alignment) + protectionXml(decoration.protection);
@@ -166,7 +206,11 @@ const xfXml = (entry: CellFormatEntry, numberFormat: number): string => {
   return inner === '' ? `${head}/>` : `${head}>${inner}</xf>`;
 };
 
-export const createStyleBook = (book: Workbook, locale: NumberLocale): StyleBook => {
+export const createStyleBook = (
+  book: Workbook,
+  locale: NumberLocale,
+  originals: readonly DifferentialStyle[] = [],
+): StyleBook => {
   const fonts = [fontXml(book.decorations.defaultFont)];
   const fills = [NONE_FILL, GRAY_FILL];
   const borders = [EMPTY_BORDER];
@@ -181,6 +225,27 @@ export const createStyleBook = (book: Workbook, locale: NumberLocale): StyleBook
   const entries: CellFormatEntry[] = [{ format: 0, font: 0, fill: 0, border: 0, decoration: {} }];
   const entryIds = new Map([['0:0', 0]]);
   const builtins = builtinIds(locale);
+
+  const differentialIds = new Map<string, number>(
+    originals.map((style, index) => [JSON.stringify(style), index]),
+  );
+
+  const addedDifferentials: string[] = [];
+
+  const differential = (style: DifferentialStyle): number => {
+    const key = JSON.stringify(style);
+    const known = differentialIds.get(key);
+
+    if (known !== undefined) {
+      return known;
+    }
+
+    const id = originals.length + addedDifferentials.length;
+
+    addedDifferentials.push(dxfXml(style, FIRST_DIFFERENTIAL_FORMAT + id, builtins));
+    differentialIds.set(key, id);
+    return id;
+  };
 
   const xf = (format: number, decoration: number): number => {
     const key = `${String(format)}:${String(decoration)}`;
@@ -239,7 +304,7 @@ export const createStyleBook = (book: Workbook, locale: NumberLocale): StyleBook
       '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>',
       listXml('cellXfs', cellFormats),
       '<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>',
-      extras.dxfs ?? '<dxfs count="0"/>',
+      withDifferentials(extras.dxfs, addedDifferentials),
       extras.tableStyles ??
         '<tableStyles count="0" defaultTableStyle="TableStyleMedium2" defaultPivotStyle="PivotStyleLight16"/>',
       extras.colors ?? '',
@@ -247,5 +312,5 @@ export const createStyleBook = (book: Workbook, locale: NumberLocale): StyleBook
     ].join('');
   };
 
-  return { xf, xml };
+  return { xf, differential, xml };
 };

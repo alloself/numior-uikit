@@ -1,4 +1,8 @@
 import type { Calculator } from '../../core/calc/calculator';
+import type {
+  ConditionalFormat,
+  DifferentialStyle,
+} from '../../core/conditional/conditional.types';
 import type { FunctionRegistry } from '../../core/calc/calc.types';
 import type { BookLocale } from '../../core/locale';
 import type { Workbook } from '../../core/workbook';
@@ -49,6 +53,7 @@ export interface OriginalSheet {
   readonly part: string;
   readonly sheetId: number;
   readonly hidden: boolean;
+  readonly conditional: readonly ConditionalFormat[];
 }
 
 export interface OriginalPackage {
@@ -56,6 +61,7 @@ export interface OriginalPackage {
   readonly readOnly: boolean;
   readonly workbook: string;
   readonly externalLinks: readonly string[];
+  readonly differentials: readonly DifferentialStyle[];
   readonly sheets: readonly OriginalSheet[];
   readonly parts: readonly { readonly name: string; readonly kind: 'parsed' | 'opaque' }[];
 }

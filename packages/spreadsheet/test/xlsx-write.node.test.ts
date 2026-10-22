@@ -1,7 +1,15 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { createCellEditor, createStepper, parseCell, type Sheet } from '../src/core';
+import {
+  EN_FORMULAS,
+  createCellEditor,
+  createStepper,
+  parseCell,
+  parseFormula,
+  type Sheet,
+} from '../src/core';
 import { readWorkbook, readZip, writeWorkbook, type Bytes, type XlsxRead } from '../src/xlsx';
 import { openBook } from './book-harness';
+import { corpusPackage } from './xlsx-corpus';
 import { SALES_SHEET, workbookWith, xlsxPackage } from './xlsx-package';
 
 type Opened = Extract<XlsxRead, { readonly kind: 'editable' | 'read-only' }>;
@@ -197,6 +205,107 @@ describe('writing xlsx', () => {
     expect(sheet).toContain('<c r="I2"><f>SUM(B2:B4*2)</f>');
     expect(sheet).toContain('<c r="J2"><f>SUM(_xlfn.SINGLE(B2:B4))</f>');
     expect(sheet).toContain('<c r="K2"><f>SUMPRODUCT(--(B2:B4&gt;1))</f>');
+  });
+
+  it('writes conditional formats from the model once they change and reads them back the same', async () => {
+    const read = await opened(await corpusPackage('conditional'));
+    const rules = sheetOf(read, 'Rules');
+    const stepper = createStepper(read.book, read.calculator);
+
+    stepper.apply({
+      kind: 'setConditional',
+      sheet: 'Rules',
+      formats: [
+        ...rules.conditional,
+        {
+          ranges: [{ top: 0, left: 5, bottom: 5, right: 5 }],
+          rules: [
+            {
+              rule: { kind: 'errors', style: { font: { italic: true } } },
+              priority: 13,
+              stopIfTrue: false,
+            },
+          ],
+        },
+      ],
+    });
+
+    const bytes = await written(read, read.source);
+    const sheet = await partOf(bytes, 'xl/worksheets/sheet1.xml');
+    const styles = await partOf(bytes, 'xl/styles.xml');
+
+    expect(sheet).toContain('<conditionalFormatting sqref="A1:A6">');
+    expect(sheet).toContain('<conditionalFormatting sqref="C1:C3 E1">');
+    expect(sheet).toContain('<formula>$A1&gt;$D$1</formula>');
+
+    expect(sheet).toContain(
+      '<cfRule type="expression" dxfId="0" priority="12"><formula>NOPE(</formula></cfRule>',
+    );
+
+    expect(sheet).toContain('<x14:id>{78C3B1A1-0000-4000-8000-000000000001}</x14:id>');
+
+    expect(sheet).toContain(
+      '<cfRule type="containsErrors" dxfId="4" priority="13"><formula>ISERROR(F1)</formula></cfRule>',
+    );
+
+    expect(sheet.indexOf('<conditionalFormatting')).toBeLessThan(sheet.indexOf('<pageMargins'));
+    expect(styles).toContain('<dxfs count="5">');
+
+    const again = await opened(bytes);
+
+    expect(JSON.stringify(sheetOf(again, 'Rules').conditional)).toBe(
+      JSON.stringify(sheetOf(read, 'Rules').conditional),
+    );
+  });
+
+  it('writes the conditional formats of a new book with their styles', async () => {
+    const book = openBook();
+
+    book.type('A1', '5');
+    book.type('A2', '15');
+
+    const parsed = parseFormula('=10', EN_FORMULAS);
+
+    book.commit({
+      kind: 'setConditional',
+      sheet: 'Sheet1',
+      formats: [
+        {
+          ranges: [{ top: 0, left: 0, bottom: 1, right: 0 }],
+          rules: [
+            {
+              rule: {
+                kind: 'cellIs',
+                operator: 'greaterThan',
+                formulas: parsed.ok ? [parsed.ast] : [],
+                style: {
+                  font: { bold: true },
+                  fill: { pattern: 'solid', background: { kind: 'rgb', argb: 'FFFFC7CE' } },
+                },
+              },
+              priority: 1,
+              stopIfTrue: true,
+            },
+            {
+              rule: { kind: 'text', operator: 'beginsWith', text: 'a"b', style: { format: '0.0' } },
+              priority: 2,
+              stopIfTrue: false,
+            },
+          ],
+        },
+      ],
+    });
+
+    const bytes = await written({ book: book.book, calculator: book.calculator });
+    const again = await opened(bytes);
+
+    expect(await partOf(bytes, 'xl/worksheets/sheet1.xml')).toContain(
+      '<formula>LEFT(A1,LEN("a""b"))="a""b"</formula>',
+    );
+
+    expect(JSON.stringify(sheetOf(again, 'Sheet1').conditional)).toBe(
+      JSON.stringify(book.first.conditional),
+    );
   });
 
   it('keeps what it does not understand byte for byte when nothing changed', async () => {

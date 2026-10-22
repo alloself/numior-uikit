@@ -1,0 +1,461 @@
+{
+  "kind": "editable",
+  "report": {
+    "staleFormulas": 0,
+    "items": [
+      {
+        "code": "conditional-formats",
+        "severity": "info",
+        "count": 1,
+        "names": []
+      }
+    ]
+  },
+  "defaultFont": {
+    "size": 11,
+    "color": {
+      "kind": "theme",
+      "theme": 1,
+      "tint": 0
+    },
+    "name": "Calibri",
+    "family": 2,
+    "scheme": "minor"
+  },
+  "sheets": [
+    {
+      "name": "Rules",
+      "cells": {
+        "A1": {
+          "value": {
+            "kind": "number",
+            "value": 1
+          }
+        },
+        "B1": {
+          "value": {
+            "kind": "string",
+            "value": "pen"
+          }
+        },
+        "C1": {
+          "value": {
+            "kind": "number",
+            "value": 46290
+          }
+        },
+        "D1": {
+          "value": {
+            "kind": "number",
+            "value": 10
+          }
+        },
+        "A2": {
+          "value": {
+            "kind": "number",
+            "value": 2
+          }
+        },
+        "B2": {
+          "value": {
+            "kind": "string",
+            "value": "Ink"
+          }
+        },
+        "C2": {
+          "value": {
+            "kind": "number",
+            "value": 46300
+          }
+        },
+        "D2": {
+          "value": {
+            "kind": "number",
+            "value": 20
+          }
+        },
+        "A3": {
+          "value": {
+            "kind": "number",
+            "value": 3
+          }
+        },
+        "B3": {
+          "value": {
+            "kind": "string",
+            "value": "pen"
+          }
+        },
+        "C3": {
+          "value": {
+            "kind": "number",
+            "value": 46317
+          }
+        },
+        "D3": {
+          "value": {
+            "kind": "number",
+            "value": 30
+          }
+        },
+        "A4": {
+          "value": {
+            "kind": "number",
+            "value": 4
+          }
+        },
+        "B4": {
+          "value": {
+            "kind": "string",
+            "value": "ink pot"
+          }
+        },
+        "D4": {
+          "value": {
+            "kind": "number",
+            "value": 40
+          }
+        },
+        "A5": {
+          "value": {
+            "kind": "number",
+            "value": 5
+          }
+        },
+        "B5": {
+          "value": {
+            "kind": "string",
+            "value": "cap"
+          }
+        },
+        "D5": {
+          "value": {
+            "kind": "number",
+            "value": 50
+          }
+        },
+        "A6": {
+          "value": {
+            "kind": "number",
+            "value": 6
+          }
+        },
+        "B6": {
+          "value": {
+            "kind": "string",
+            "value": " "
+          }
+        },
+        "D6": {
+          "value": {
+            "kind": "number",
+            "value": 60
+          }
+        }
+      },
+      "conditional": [
+        {
+          "ranges": [
+            "A1:A6"
+          ],
+          "rules": [
+            {
+              "rule": {
+                "kind": "cellIs",
+                "operator": "between",
+                "formulas": [
+                  {
+                    "kind": "string",
+                    "value": "2"
+                  },
+                  {
+                    "kind": "string",
+                    "value": "4"
+                  }
+                ],
+                "style": {
+                  "font": {
+                    "color": {
+                      "kind": "rgb",
+                      "argb": "FF9C0006"
+                    }
+                  },
+                  "fill": {
+                    "pattern": "solid",
+                    "background": {
+                      "kind": "rgb",
+                      "argb": "FFFFC7CE"
+                    }
+                  }
+                }
+              },
+              "priority": 1,
+              "stopIfTrue": false
+            },
+            {
+              "rule": {
+                "kind": "top",
+                "rank": 2,
+                "percent": false,
+                "bottom": false,
+                "style": {
+                  "font": {
+                    "bold": true
+                  }
+                }
+              },
+              "priority": 2,
+              "stopIfTrue": false
+            },
+            {
+              "rule": {
+                "kind": "aboveAverage",
+                "below": true,
+                "equal": true,
+                "deviations": 0,
+                "style": {
+                  "font": {
+                    "bold": true
+                  }
+                }
+              },
+              "priority": 3,
+              "stopIfTrue": false
+            }
+          ]
+        },
+        {
+          "ranges": [
+            "A1:A6"
+          ],
+          "rules": [
+            {
+              "rule": {
+                "kind": "colorScale",
+                "stops": [
+                  {
+                    "threshold": {
+                      "kind": "min"
+                    },
+                    "color": {
+                      "kind": "rgb",
+                      "argb": "FFF8696B"
+                    }
+                  },
+                  {
+                    "threshold": {
+                      "kind": "percentile",
+                      "value": {
+                        "kind": "string",
+                        "value": "50"
+                      }
+                    },
+                    "color": {
+                      "kind": "rgb",
+                      "argb": "FFFFEB84"
+                    }
+                  },
+                  {
+                    "threshold": {
+                      "kind": "max"
+                    },
+                    "color": {
+                      "kind": "theme",
+                      "theme": 6,
+                      "tint": -0.249977111117893
+                    }
+                  }
+                ]
+              },
+              "priority": 4,
+              "stopIfTrue": false
+            }
+          ]
+        },
+        {
+          "ranges": [
+            "D1:D6"
+          ],
+          "rules": [
+            {
+              "rule": {
+                "kind": "dataBar",
+                "min": {
+                  "kind": "min"
+                },
+                "max": {
+                  "kind": "max"
+                },
+                "color": {
+                  "kind": "rgb",
+                  "argb": "FF638EC6"
+                },
+                "showValue": true
+              },
+              "priority": 5,
+              "stopIfTrue": false,
+              "extra": "<extLst xmlns:x14=\"http://schemas.microsoft.com/office/spreadsheetml/2009/9/main\"><ext uri=\"{B025F937-C7B1-47D3-B67F-A62EFF666E3E}\"><x14:id>{78C3B1A1-0000-4000-8000-000000000001}</x14:id></ext></extLst>"
+            },
+            {
+              "rule": {
+                "kind": "iconSet",
+                "set": "3Arrows",
+                "thresholds": [
+                  {
+                    "kind": "percent",
+                    "value": {
+                      "kind": "string",
+                      "value": "0"
+                    }
+                  },
+                  {
+                    "kind": "percent",
+                    "value": {
+                      "kind": "string",
+                      "value": "33"
+                    }
+                  },
+                  {
+                    "kind": "percent",
+                    "value": {
+                      "kind": "string",
+                      "value": "67"
+                    }
+                  }
+                ],
+                "reverse": false,
+                "showValue": false
+              },
+              "priority": 6,
+              "stopIfTrue": false
+            }
+          ]
+        },
+        {
+          "ranges": [
+            "B1:B6"
+          ],
+          "rules": [
+            {
+              "rule": {
+                "kind": "text",
+                "operator": "contains",
+                "text": "ink",
+                "style": {
+                  "fill": {
+                    "pattern": "solid",
+                    "background": {
+                      "kind": "rgb",
+                      "argb": "FFFFFF00"
+                    }
+                  }
+                }
+              },
+              "priority": 7,
+              "stopIfTrue": false
+            },
+            {
+              "rule": {
+                "kind": "duplicates",
+                "style": {
+                  "font": {
+                    "color": {
+                      "kind": "rgb",
+                      "argb": "FF9C0006"
+                    }
+                  },
+                  "fill": {
+                    "pattern": "solid",
+                    "background": {
+                      "kind": "rgb",
+                      "argb": "FFFFC7CE"
+                    }
+                  }
+                }
+              },
+              "priority": 8,
+              "stopIfTrue": false
+            },
+            {
+              "rule": {
+                "kind": "blanks",
+                "style": {
+                  "format": "@",
+                  "border": {
+                    "bottom": {
+                      "style": "thin",
+                      "color": {
+                        "kind": "indexed",
+                        "index": 64
+                      }
+                    }
+                  }
+                }
+              },
+              "priority": 9,
+              "stopIfTrue": false
+            }
+          ]
+        },
+        {
+          "ranges": [
+            "C1:C3",
+            "E1"
+          ],
+          "rules": [
+            {
+              "rule": {
+                "kind": "timePeriod",
+                "period": "lastMonth",
+                "style": {
+                  "font": {
+                    "color": {
+                      "kind": "rgb",
+                      "argb": "FF9C0006"
+                    }
+                  },
+                  "fill": {
+                    "pattern": "solid",
+                    "background": {
+                      "kind": "rgb",
+                      "argb": "FFFFC7CE"
+                    }
+                  }
+                }
+              },
+              "priority": 10,
+              "stopIfTrue": false
+            },
+            {
+              "rule": {
+                "kind": "expression",
+                "formula": {
+                  "kind": "string",
+                  "value": "$A1>$D$1"
+                },
+                "style": {
+                  "font": {
+                    "bold": true
+                  }
+                }
+              },
+              "priority": 11,
+              "stopIfTrue": true
+            },
+            {
+              "rule": {
+                "kind": "foreign",
+                "xml": "<cfRule type=\"expression\" dxfId=\"0\" priority=\"12\"><formula>NOPE(</formula></cfRule>"
+              },
+              "priority": 12,
+              "stopIfTrue": false
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "names": [],
+  "tables": [],
+  "externals": []
+}

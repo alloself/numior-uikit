@@ -8,6 +8,7 @@ import type {
   StyleColor,
   UnderlineStyle,
 } from '../../core/decorations';
+import type { DifferentialStyle } from '../../core/conditional/conditional.types';
 import { builtinFormat } from '../../core/format/builtin-formats';
 import type { NumberLocale } from '../../core/format/format.types';
 import type { XmlAttribute } from '../xml/xml.types';
@@ -18,13 +19,21 @@ import { MAIN, attributeOf, numberOf, readPart, type PartOptions } from './ooxml
 export interface CellStyles {
   readonly formats: readonly string[];
   readonly decorations: readonly CellDecoration[];
+  readonly differentials: readonly DifferentialStyle[];
   readonly defaultFont: FontStyle | undefined;
   readonly unmodeled: number;
 }
 
 type Mutable<T> = { -readonly [Key in keyof T]: T[Key] };
 
-type Section = 'fonts' | 'fills' | 'borders' | 'cellXfs' | 'other';
+type Section = 'fonts' | 'fills' | 'borders' | 'cellXfs' | 'dxfs' | 'other';
+
+interface Differential {
+  font?: Mutable<FontStyle> | undefined;
+  fill?: Mutable<FillStyle> | undefined;
+  border?: Mutable<BorderStyle> | undefined;
+  format?: string | undefined;
+}
 
 type BorderEdge = 'left' | 'right' | 'top' | 'bottom' | 'diagonal';
 
@@ -39,7 +48,7 @@ interface CellFormat {
 
 const GENERAL = 'General';
 
-const SECTIONS = new Set<string>(['fonts', 'fills', 'borders', 'cellXfs']);
+const SECTIONS = new Set<string>(['fonts', 'fills', 'borders', 'cellXfs', 'dxfs']);
 
 const EDGES: Readonly<Record<string, BorderEdge>> = {
   left: 'left',
@@ -67,6 +76,7 @@ const sectionOf = (element: string): Section => {
     case 'fills':
     case 'borders':
     case 'cellXfs':
+    case 'dxfs':
       return element;
     default:
       return 'other';
@@ -85,7 +95,7 @@ const optionalFlag = (text: string | undefined): boolean | undefined =>
 const optionalNumber = (text: string | undefined): number | undefined =>
   text === undefined ? undefined : numberOf(text, 0);
 
-const colorOf = (attributes: readonly XmlAttribute[]): StyleColor | undefined => {
+export const colorOf = (attributes: readonly XmlAttribute[]): StyleColor | undefined => {
   const rgb = attributeOf(attributes, 'rgb');
   const theme = attributeOf(attributes, 'theme');
   const indexed = attributeOf(attributes, 'indexed');
@@ -212,33 +222,20 @@ export const readStyles = async (
   const fills: Mutable<FillStyle>[] = [];
   const borders: Mutable<BorderStyle>[] = [];
   const formats: CellFormat[] = [];
+  const differentials: Differential[] = [];
   let section: Section = 'other';
   let edge: BorderEdge | undefined;
   let unmodeled = 0;
 
   if (part === undefined || !archive.has(part)) {
-    return { formats: [], decorations: [], defaultFont: undefined, unmodeled };
+    return { formats: [], decorations: [], differentials: [], defaultFont: undefined, unmodeled };
   }
 
   const borderPart = (element: string, attributes: readonly XmlAttribute[]): void => {
     const border = borders.at(-1);
-    const side = EDGES[element];
 
-    if (border === undefined) {
-      return;
-    }
-    if (side !== undefined) {
-      const style = attributeOf(attributes, 'style');
-
-      edge = side;
-      border[side] = style === undefined || style === 'none' ? undefined : { style };
-      return;
-    }
-
-    const current = edge === undefined ? undefined : border[edge];
-
-    if (element === 'color' && edge !== undefined && current !== undefined) {
-      border[edge] = { ...current, color: colorOf(attributes) };
+    if (border !== undefined) {
+      borderSide(border, element, attributes);
     }
   };
 
@@ -283,8 +280,81 @@ export const readStyles = async (
     }
   };
 
+  const differentialPart = (element: string, attributes: readonly XmlAttribute[]): void => {
+    const differential = differentials.at(-1);
+
+    if (element === 'dxf') {
+      differentials.push({});
+      edge = undefined;
+      return;
+    }
+    if (differential === undefined) {
+      return;
+    }
+    switch (element) {
+      case 'font':
+        differential.font = {};
+        return;
+      case 'fill':
+        differential.fill = { pattern: 'solid' };
+        return;
+      case 'border':
+        differential.border = {};
+        edge = undefined;
+        return;
+      case 'numFmt':
+        differential.format = decodeXstring(attributeOf(attributes, 'formatCode') ?? GENERAL);
+        return;
+      default:
+        differentialDetail(differential, element, attributes);
+    }
+  };
+
+  const differentialDetail = (
+    differential: Differential,
+    element: string,
+    attributes: readonly XmlAttribute[],
+  ): void => {
+    const { fill, border } = differential;
+
+    if (border !== undefined && (EDGES[element] !== undefined || element === 'color')) {
+      borderSide(border, element, attributes);
+    } else if (fill !== undefined && element === 'patternFill') {
+      fill.pattern = attributeOf(attributes, 'patternType') ?? 'solid';
+    } else if (fill !== undefined && (element === 'fgColor' || element === 'bgColor')) {
+      fill[element === 'fgColor' ? 'foreground' : 'background'] = colorOf(attributes);
+    } else if (differential.font !== undefined) {
+      fontPart(differential.font, element, attributes);
+    }
+  };
+
+  const borderSide = (
+    border: Mutable<BorderStyle>,
+    element: string,
+    attributes: readonly XmlAttribute[],
+  ): void => {
+    const side = EDGES[element];
+
+    if (side !== undefined) {
+      const style = attributeOf(attributes, 'style');
+
+      edge = side;
+      border[side] = style === undefined || style === 'none' ? undefined : { style };
+      return;
+    }
+
+    const current = edge === undefined ? undefined : border[edge];
+
+    if (element === 'color' && edge !== undefined && current !== undefined) {
+      border[edge] = { ...current, color: colorOf(attributes) };
+    }
+  };
+
   const sectionPart = (element: string, attributes: readonly XmlAttribute[]): void => {
     switch (section) {
+      case 'dxfs':
+        differentialPart(element, attributes);
+        return;
       case 'fonts':
         if (element === 'font') {
           fonts.push({});
@@ -333,7 +403,7 @@ export const readStyles = async (
         }
         if (SECTIONS.has(element.local)) {
           section = sectionOf(element.local);
-        } else if (element.local === 'numFmt') {
+        } else if (element.local === 'numFmt' && section !== 'dxfs') {
           custom.set(
             numberOf(attributeOf(attributes, 'numFmtId'), 0),
             decodeXstring(attributeOf(attributes, 'formatCode') ?? GENERAL),
@@ -357,6 +427,7 @@ export const readStyles = async (
         custom.get(format.numberFormat) ?? builtinFormat(format.numberFormat, locale) ?? GENERAL,
     ),
     decorations: formats.map((format) => decorationOf(format, { fonts, fills, borders })),
+    differentials,
     defaultFont: fonts[0],
     unmodeled,
   };

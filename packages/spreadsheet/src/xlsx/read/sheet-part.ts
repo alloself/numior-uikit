@@ -15,7 +15,9 @@ import {
   textValue,
 } from '../../core/values';
 import type { Sheet, Workbook } from '../../core/workbook';
+import type { DifferentialStyle } from '../../core/conditional/conditional.types';
 import type { XmlAttribute } from '../xml/xml.types';
+import { createConditionalCollector } from './conditional-part';
 import { decodeXstring } from '../xml/xstring';
 import type { ZipArchive } from '../zip/zip.types';
 import { MAIN, attributeOf, numberOf, readPart, type PartOptions } from './ooxml';
@@ -27,6 +29,7 @@ export interface SheetContext {
   readonly strings: readonly string[];
   readonly formats: readonly string[];
   readonly decorations: readonly number[];
+  readonly differentials: readonly DifferentialStyle[];
   readonly known: (name: string) => boolean;
   readonly recalculate: boolean;
 }
@@ -70,7 +73,6 @@ const EPOCH_SERIAL = 25_569;
 
 const COUNTED: Readonly<Record<string, keyof Omit<SheetCounts, 'unknown'>>> = {
   mergeCell: 'merges',
-  conditionalFormatting: 'conditional',
   dataValidation: 'validations',
   hyperlink: 'hyperlinks',
   drawing: 'drawings',
@@ -189,6 +191,7 @@ export const readSheetPart = async (
   let cell: Cell | undefined;
   let capture: 'value' | 'formula' | 'inline' | undefined;
   let phonetic = 0;
+  const conditional = createConditionalCollector(context.differentials);
 
   const astOf = (current: Cell): FormulaNode | undefined => {
     const formula = current.formula;
@@ -295,53 +298,65 @@ export const readSheetPart = async (
     };
   };
 
+  const openMain = (local: string, attributes: readonly XmlAttribute[]): void => {
+    switch (local) {
+      case 'row':
+        row = numberOf(attributeOf(attributes, 'r'), row + 2) - 1;
+        col = -1;
+        counts.layout += attributeOf(attributes, 'customHeight') === '1' ? 1 : 0;
+        return;
+      case 'c':
+        openCell(attributes);
+        return;
+      case 'v':
+        capture = 'value';
+        return;
+      case 'f':
+        capture = 'formula';
+        if (cell !== undefined) {
+          cell.formula = {
+            kind: formulaKind(attributeOf(attributes, 't')),
+            ref: attributeOf(attributes, 'ref'),
+            shared: attributeOf(attributes, 'si'),
+            text: '',
+          };
+        }
+        return;
+      case 't':
+        capture = cell !== undefined && phonetic === 0 ? 'inline' : undefined;
+        return;
+      case 'rPh':
+        phonetic += 1;
+        return;
+      default: {
+        const counted = COUNTED[local];
+
+        if (counted !== undefined) {
+          counts[counted] += 1;
+        }
+      }
+    }
+  };
+
   await readPart(
     archive,
     part,
     {
       open: (element, attributes) => {
-        if (!MAIN.has(element.uri)) {
-          return;
-        }
-        switch (element.local) {
-          case 'row':
-            row = numberOf(attributeOf(attributes, 'r'), row + 2) - 1;
-            col = -1;
-            counts.layout += attributeOf(attributes, 'customHeight') === '1' ? 1 : 0;
-            return;
-          case 'c':
-            openCell(attributes);
-            return;
-          case 'v':
-            capture = 'value';
-            return;
-          case 'f':
-            capture = 'formula';
-            if (cell !== undefined) {
-              cell.formula = {
-                kind: formulaKind(attributeOf(attributes, 't')),
-                ref: attributeOf(attributes, 'ref'),
-                shared: attributeOf(attributes, 'si'),
-                text: '',
-              };
-            }
-            return;
-          case 't':
-            capture = cell !== undefined && phonetic === 0 ? 'inline' : undefined;
-            return;
-          case 'rPh':
-            phonetic += 1;
-            return;
-          default: {
-            const counted = COUNTED[element.local];
-
-            if (counted !== undefined) {
-              counts[counted] += 1;
-            }
-          }
+        if (
+          conditional.inside() ||
+          (element.local === 'conditionalFormatting' && MAIN.has(element.uri))
+        ) {
+          conditional.open(element, attributes);
+        } else if (MAIN.has(element.uri)) {
+          openMain(element.local, attributes);
         }
       },
       text: (text) => {
+        if (conditional.inside()) {
+          conditional.text(text);
+          return;
+        }
         if (cell === undefined) {
           return;
         }
@@ -362,6 +377,10 @@ export const readSheetPart = async (
         }
       },
       close: (element) => {
+        if (conditional.inside()) {
+          conditional.close(element);
+          return;
+        }
         switch (element.local) {
           case 'c':
             if (cell !== undefined) {
@@ -385,5 +404,7 @@ export const readSheetPart = async (
     options,
   );
 
+  sheet.conditional = conditional.formats();
+  counts.conditional = conditional.foreign();
   return counts;
 };

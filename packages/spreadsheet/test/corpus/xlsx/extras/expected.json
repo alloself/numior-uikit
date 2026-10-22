@@ -10,12 +10,6 @@
         "names": []
       },
       {
-        "code": "conditional-formats",
-        "severity": "info",
-        "count": 1,
-        "names": []
-      },
-      {
         "code": "data-validation",
         "severity": "info",
         "count": 1,
@@ -86,7 +80,43 @@
             "value": 7
           }
         }
-      }
+      },
+      "conditional": [
+        {
+          "ranges": [
+            "B1:B2"
+          ],
+          "rules": [
+            {
+              "rule": {
+                "kind": "colorScale",
+                "stops": [
+                  {
+                    "threshold": {
+                      "kind": "min"
+                    },
+                    "color": {
+                      "kind": "rgb",
+                      "argb": "FFF8696B"
+                    }
+                  },
+                  {
+                    "threshold": {
+                      "kind": "max"
+                    },
+                    "color": {
+                      "kind": "rgb",
+                      "argb": "FF63BE7B"
+                    }
+                  }
+                ]
+              },
+              "priority": 1,
+              "stopIfTrue": false
+            }
+          ]
+        }
+      ]
     },
     {
       "name": "Notes",

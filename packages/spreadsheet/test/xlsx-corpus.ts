@@ -8,6 +8,7 @@ import {
   type CellRange,
   type Sheet,
 } from '../src/core';
+import { mapConditionalFormulas } from '../src/core/conditional/shift';
 import { writeZip, type Bytes, type XlsxRead } from '../src/xlsx';
 import { corpusSource } from './corpus-files';
 
@@ -18,6 +19,7 @@ type Opened = Extract<XlsxRead, { readonly kind: 'editable' | 'read-only' }>;
 interface SheetModel {
   readonly name: string;
   readonly cells: Record<string, unknown>;
+  readonly conditional?: unknown;
 }
 
 const WHOLE: CellRange = { top: 0, left: 0, bottom: MAX_ROWS - 1, right: MAX_COLS - 1 };
@@ -72,6 +74,18 @@ const cellsOf = (read: Opened, sheet: Sheet): Record<string, unknown> => {
   );
 };
 
+const conditionalOf = (sheet: Sheet): unknown =>
+  sheet.conditional.map((format) => {
+    const origin = { row: format.ranges[0]?.top ?? 0, col: format.ranges[0]?.left ?? 0 };
+
+    const [printed] = mapConditionalFormulas([format], (ast) => ({
+      kind: 'string',
+      value: printFormula(ast, EN_FORMULAS, origin),
+    }));
+
+    return { ranges: format.ranges.map(formatRange), rules: printed?.rules };
+  });
+
 const valueOf = (cell: unknown): string =>
   typeof cell === 'object' && cell !== null && 'value' in cell ? JSON.stringify(cell.value) : '';
 
@@ -110,7 +124,11 @@ export const modelOf = (
 
   return {
     defaultFont: read.book.decorations.defaultFont,
-    sheets: read.book.sheets.map((sheet) => ({ name: sheet.name, cells: cellsOf(read, sheet) })),
+    sheets: read.book.sheets.map((sheet) => ({
+      name: sheet.name,
+      cells: cellsOf(read, sheet),
+      ...(sheet.conditional.length === 0 ? {} : { conditional: conditionalOf(sheet) }),
+    })),
     names,
     tables,
     externals: read.book.externals.map((external) => ({

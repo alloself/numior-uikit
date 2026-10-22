@@ -19,6 +19,7 @@ import { encodeXstring } from '../xml/xstring';
 import { concatBytes } from '../zip/streams';
 import type { Bytes } from '../zip/zip.types';
 import { withFuturePrefixes } from './future-functions';
+import { conditionalXml, withConditional } from './conditional-part';
 import type { SheetExtras } from './source';
 import type { StyleBook } from './styles-part';
 
@@ -36,6 +37,7 @@ export interface SheetWriting {
   readonly strings: StringTable;
   readonly extras: SheetExtras | undefined;
   readonly tables: readonly string[];
+  readonly keepConditional: boolean;
   readonly signal?: AbortSignal | undefined;
 }
 
@@ -374,7 +376,13 @@ export const writeSheetPart = async (writing: SheetWriting): Promise<SheetOutput
   sink.push(`<${q}sheetData>`);
   await writeRows(writing, sink, cellXmlOf(writing, counts, q), q);
   sink.push(`</${q}sheetData>`);
-  sink.push(withTables(extras?.after ?? '', tablePartsXml(writing.tables, q), q));
+  const after = extras?.after ?? '';
+
+  const tail = writing.keepConditional
+    ? after
+    : withConditional(after, conditionalXml(writing.sheet.conditional, writing.styles, q));
+
+  sink.push(withTables(tail, tablePartsXml(writing.tables, q), q));
   sink.push(`</${q}worksheet>`);
 
   return { chunks: sink.chunks(), ...counts };

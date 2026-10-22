@@ -308,6 +308,7 @@ const loadSheet = async (
       strings: context.strings.strings,
       formats: context.styles.formats,
       decorations: context.decorations,
+      differentials: context.styles.differentials,
       known: (name) => load.functions.get(name) !== undefined,
       recalculate: load.options.recalc === 'chunked',
     },
@@ -459,7 +460,9 @@ const readBook = async (
         part: sheetParts[index]?.part ?? '',
         sheetId: sheetParts[index]?.entry.sheetId ?? index + 1,
         hidden: sheetParts[index]?.entry.hidden ?? false,
+        conditional: sheet.conditional,
       })),
+      differentials: styles.differentials,
       parts: archive.names.map((name) => ({
         name,
         kind: load.parsed.has(name) ? 'parsed' : 'opaque',
