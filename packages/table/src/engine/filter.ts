@@ -69,9 +69,46 @@ const loweredAt = (dictionary: readonly string[], lowered: string[], code: numbe
   if (known !== undefined) {
     return known;
   }
-  const next = (dictionary[code] ?? '').toLocaleLowerCase();
+  const next = (dictionary[code] ?? '').toLowerCase();
   lowered[code] = next;
   return next;
+};
+
+export const createLoweringJob = (dictionaries: readonly (readonly string[])[]): SliceJob => {
+  const total = dictionaries.reduce((sum, dictionary) => sum + dictionary.length, 0);
+  let current = 0;
+  let code = 0;
+  let done = 0;
+
+  return {
+    total: () => Math.max(1, total),
+    done: () => done,
+    work: (deadline) => {
+      for (
+        let dictionary = dictionaries[current];
+        dictionary !== undefined;
+        dictionary = dictionaries[current]
+      ) {
+        const lowered = loweredOf(dictionary);
+
+        while (code < dictionary.length) {
+          const stop = Math.min(dictionary.length, code + CHECK_INTERVAL);
+
+          for (let at = code; at < stop; at += 1) {
+            loweredAt(dictionary, lowered, at);
+          }
+          done += stop - code;
+          code = stop;
+          if (performance.now() >= deadline) {
+            return false;
+          }
+        }
+        current += 1;
+        code = 0;
+      }
+      return true;
+    },
+  };
 };
 
 const scanHit = (scan: DictionaryScan, lowered: string[], code: number): boolean => {
@@ -133,7 +170,7 @@ const exactScan = (dictionary: readonly string[], wanted: ReadonlySet<string>): 
 });
 
 const textMatcher = (filter: Extract<TableFilter, { kind: 'text' }>): TextMatch => {
-  const needle = filter.value.toLocaleLowerCase();
+  const needle = filter.value.toLowerCase();
 
   switch (filter.op) {
     case 'contains':
@@ -240,7 +277,7 @@ const setPending = (store: ColumnStore, values: readonly TableFilterValue[]): Pe
 };
 
 const quickPending = (value: string, stores: readonly StringCodes[]): PendingTest => {
-  const needle = value.toLocaleLowerCase();
+  const needle = value.toLowerCase();
 
   if (needle === '') {
     return ready(() => true);

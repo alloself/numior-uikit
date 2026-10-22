@@ -38,7 +38,7 @@ const wishesOf = <T>(columns: readonly NuiTableColumn<T>[]): TableStoreWish[] =>
           found.ranks.push({ key: column.key, need: 'ranks' });
         }
       } else if (sortable) {
-        found.numbers.push({ key: column.key, need: 'codes' });
+        found.numbers.push({ key: column.key, need: 'ranks' });
       }
       return found;
     },

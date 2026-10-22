@@ -5,10 +5,11 @@ import {
   type StoreRequest,
 } from './column-store';
 import { createDistinctNumbersJob, distinctStrings } from './distinct';
-import { compactPass, createFilterJob, createFilterSetup } from './filter';
+import { compactPass, createFilterJob, createFilterSetup, createLoweringJob } from './filter';
 import { createGroupJob, type AggregateColumn, type GroupLevel, type GroupTable } from './group';
 import { createPipeline, type Pipeline, type PipelineStage } from './pipeline';
 import { runSliced, yieldToHost, type SliceJob } from './slicer';
+import { createNumberRankJob, numberRanksOf } from './number-ranks';
 import { createOrderJob, type OrderKey } from './order';
 import { identityIndices } from './sort';
 import {
@@ -37,6 +38,7 @@ import type {
   TableRunResult,
   TableSiblings,
   TableSort,
+  TableStoreWish,
 } from './engine.types';
 
 interface Prepared {
@@ -190,6 +192,20 @@ export const createTableEngine = <T>(options: TableEngineOptions<T>): TableEngin
     const job = storesJob(needs);
 
     return job === null ? next() : { phase: 'keys', job, next };
+  };
+
+  const finishingJob = (wish: TableStoreWish): SliceJob | null => {
+    const store = stores.get(wish.key);
+
+    if (store === undefined) {
+      return null;
+    }
+    if (store.kind !== 'number') {
+      return wish.need === 'codes' ? createLoweringJob([store.dictionary]) : null;
+    }
+    return wish.need === 'ranks' && numberRanksOf(store) === undefined
+      ? createNumberRankJob(store)
+      : null;
   };
 
   const quickKeys = (keys: readonly string[] | undefined): readonly string[] => {
@@ -762,19 +778,27 @@ export const createTableEngine = <T>(options: TableEngineOptions<T>): TableEngin
     prepare: async (wishes, prepareOptions = {}) => {
       const version = rowsVersion;
 
-      const job = storesJob(
-        wishes.flatMap((wish) => (columns.has(wish.key) ? [[wish.key, wish.need] as const] : [])),
-      );
+      const slicing = {
+        sliceMs: prepareOptions.sliceMs ?? sliceMs,
+        yieldTo: prepareOptions.yieldTo ?? yieldTo,
+        signal: prepareOptions.signal,
+        isStale: () => version !== rowsVersion,
+      };
 
-      return (
-        job === null ||
-        runSliced(job, {
-          sliceMs: prepareOptions.sliceMs ?? sliceMs,
-          yieldTo: prepareOptions.yieldTo ?? yieldTo,
-          signal: prepareOptions.signal,
-          isStale: () => version !== rowsVersion,
-        })
-      );
+      for (const wish of wishes) {
+        const storing = columns.has(wish.key) ? storesJob([[wish.key, wish.need]]) : null;
+
+        if (storing !== null && !(await runSliced(storing, slicing))) {
+          return false;
+        }
+
+        const finishing = columns.has(wish.key) ? finishingJob(wish) : null;
+
+        if (finishing !== null && !(await runSliced(finishing, slicing))) {
+          return false;
+        }
+      }
+      return true;
     },
     visibleIndices: () => prepared.filtered,
     nodeAt,
