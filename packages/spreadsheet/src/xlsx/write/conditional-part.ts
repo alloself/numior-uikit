@@ -59,6 +59,25 @@ const FOLLOWERS = [
 
 const FOLLOWER = new RegExp(`<${NAME}(?:${FOLLOWERS.join('|')})(?=[\\s/>])`, 'u');
 
+const EXTENSION_URI = '{78C0D931-6437-407d-A8EE-F0AAD7539E65}';
+
+const X14 = 'http://schemas.microsoft.com/office/spreadsheetml/2009/9/main';
+
+const XM = 'http://schemas.microsoft.com/office/excel/2006/main';
+
+const EXTENSION = new RegExp(
+  `<(${NAME})ext(?=[\\s>])[^>]*uri="${EXTENSION_URI.replaceAll(/[{}]/gu, '\\$&')}"[\\s\\S]*?</\\1ext>`,
+  'gu',
+);
+
+const EMPTY_LIST = new RegExp(`<(${NAME})extLst>\\s*</\\1extLst>`, 'u');
+
+const LIST_END = new RegExp(`</${NAME}extLst>`, 'gu');
+
+const BLOCK_END = /conditionalFormatting>/gu;
+
+const EXTENSION_FORMULA = /<((?:[\w.-]+:)?)f>[\s\S]*?<\/\1f>/gu;
+
 const TEXT_TYPES: Readonly<Record<string, string>> = {
   contains: 'containsText',
   notContains: 'notContainsText',
@@ -274,20 +293,96 @@ const ruleXml = (entry: ConditionalEntry, writing: Writing, styles: StyleBook): 
     : `<${q}cfRule type="${shape.type}"${style} priority="${String(entry.priority)}"${stop}${shape.attributes}>${shape.body}${entry.extra ?? ''}</${q}cfRule>`;
 };
 
+const extensionRuleXml = (entry: ConditionalEntry, anchor: CellAddress): string => {
+  const { rule } = entry;
+
+  if (rule.kind !== 'foreign') {
+    return '';
+  }
+
+  let index = 0;
+
+  return rule.formulas === undefined
+    ? rule.xml
+    : rule.xml.replace(EXTENSION_FORMULA, (whole: string, prefix: string) => {
+        const formula = rule.formulas?.[index];
+
+        index += 1;
+        return formula === undefined
+          ? whole
+          : `<${prefix}f>${escapeText(formulaText(formula, anchor))}</${prefix}f>`;
+      });
+};
+
+export const extensionXml = (formats: readonly ConditionalFormat[]): string => {
+  const blocks = formats.reduce<string[]>((found, format) => {
+    const anchor = { row: format.ranges[0]?.top ?? 0, col: format.ranges[0]?.left ?? 0 };
+
+    if (format.extension === true) {
+      found.push(
+        `<x14:conditionalFormatting xmlns:xm="${XM}">${format.rules
+          .map((entry) => extensionRuleXml(entry, anchor))
+          .join(
+            '',
+          )}<xm:sqref>${format.ranges.map(formatRange).join(' ')}</xm:sqref></x14:conditionalFormatting>`,
+      );
+    }
+    return found;
+  }, []);
+
+  return blocks.length === 0
+    ? ''
+    : `<ext uri="${EXTENSION_URI}" xmlns:x14="${X14}"><x14:conditionalFormattings>${blocks.join('')}</x14:conditionalFormattings></ext>`;
+};
+
+export const withoutExtensions = (text: string): string => text.replace(EXTENSION, '');
+
+const lastEnd = (text: string, pattern: RegExp): number => {
+  let found = -1;
+
+  for (const match of text.matchAll(pattern)) {
+    found = match.index + match[0].length;
+  }
+  return found;
+};
+
+const sheetListEnd = (tail: string): number => {
+  const after = Math.max(lastEnd(tail, BLOCK_END), 0);
+  const end = tail.slice(after).search(LIST_END);
+
+  return end < 0 ? -1 : after + end;
+};
+
+export const withExtensions = (tail: string, xml: string, q: string): string => {
+  const stripped = withoutExtensions(tail);
+
+  if (xml === '') {
+    return stripped.replace(EMPTY_LIST, '');
+  }
+
+  const end = sheetListEnd(stripped);
+
+  return end < 0
+    ? `${stripped}<${q}extLst>${xml}</${q}extLst>`
+    : stripped.slice(0, end) + xml + stripped.slice(end);
+};
+
 export const conditionalXml = (
   formats: readonly ConditionalFormat[],
   styles: StyleBook,
   q: string,
 ): string =>
-  formats
-    .map((format) => {
-      const anchor = { row: format.ranges[0]?.top ?? 0, col: format.ranges[0]?.left ?? 0 };
+  formats.reduce((xml, format) => {
+    if (format.extension === true) {
+      return xml;
+    }
 
-      return `<${q}conditionalFormatting sqref="${format.ranges.map(formatRange).join(' ')}">${format.rules
-        .map((entry) => ruleXml(entry, { anchor, q }, styles))
-        .join('')}</${q}conditionalFormatting>`;
-    })
-    .join('');
+    const anchor = { row: format.ranges[0]?.top ?? 0, col: format.ranges[0]?.left ?? 0 };
+
+    return `${xml}<${q}conditionalFormatting sqref="${format.ranges.map(formatRange).join(' ')}">${format.rules
+      .map((entry) => ruleXml(entry, { anchor, q }, styles))
+      .join('')}</${q}conditionalFormatting>`;
+  }, '');
 
 export const withoutConditional = (text: string): string => text.replace(BLOCK, '');
 

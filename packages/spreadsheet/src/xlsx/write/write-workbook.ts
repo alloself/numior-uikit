@@ -20,7 +20,7 @@ import {
   type PlannedRelationship,
   type PlannedSheet,
 } from './book-parts';
-import { withoutConditional } from './conditional-part';
+import { withoutConditional, withoutExtensions } from './conditional-part';
 import { createStringTable, writeSheetPart, type StringTable } from './sheet-part';
 import {
   elementSlice,
@@ -145,7 +145,7 @@ const lossOf = (
     return undefined;
   }
 
-  const text = withoutConditional(extras.before + extras.after);
+  const text = withoutExtensions(withoutConditional(extras.before + extras.after));
 
   if (sheet.shifts > 0 && elementNames(text).some((name) => !KEEPS_POSITION.has(name))) {
     return { sheet: sheet.name, reason: 'moved-lines' };

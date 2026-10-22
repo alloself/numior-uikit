@@ -19,7 +19,7 @@ import { encodeXstring } from '../xml/xstring';
 import { concatBytes } from '../zip/streams';
 import type { Bytes } from '../zip/zip.types';
 import { withFuturePrefixes } from './future-functions';
-import { conditionalXml, withConditional } from './conditional-part';
+import { conditionalXml, extensionXml, withConditional, withExtensions } from './conditional-part';
 import type { SheetExtras } from './source';
 import type { StyleBook } from './styles-part';
 
@@ -380,7 +380,11 @@ export const writeSheetPart = async (writing: SheetWriting): Promise<SheetOutput
 
   const tail = writing.keepConditional
     ? after
-    : withConditional(after, conditionalXml(writing.sheet.conditional, writing.styles, q));
+    : withExtensions(
+        withConditional(after, conditionalXml(writing.sheet.conditional, writing.styles, q)),
+        extensionXml(writing.sheet.conditional),
+        q,
+      );
 
   sink.push(withTables(tail, tablePartsXml(writing.tables, q), q));
   sink.push(`</${q}worksheet>`);

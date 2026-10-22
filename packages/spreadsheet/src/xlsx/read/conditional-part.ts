@@ -28,6 +28,14 @@ export interface ConditionalCollector {
   foreign(): number;
 }
 
+interface ExtensionRule {
+  readonly raw: Recorder;
+  readonly attributes: readonly XmlAttribute[];
+  readonly formulas: string[];
+  formula: string | undefined;
+  depth: number;
+}
+
 interface Recorder {
   open(name: XmlName, attributes: readonly XmlAttribute[]): void;
   text(text: string): void;
@@ -61,6 +69,12 @@ interface Drafting {
 type RuleReader = (draft: RuleDraft, drafting: Drafting) => ConditionalRule | undefined;
 
 const PREFIXES = /_xl(?:fn|ws|pm)\./gu;
+
+export const X14 = 'http://schemas.microsoft.com/office/spreadsheetml/2009/9/main';
+
+const XM = 'http://schemas.microsoft.com/office/excel/2006/main';
+
+const EXTENSION_FORMULA = /<((?:[\w.-]+:)?)f>[\s\S]*?<\/\1f>/gu;
 
 const OPERATORS: readonly CellIsOperator[] = [
   'between',
@@ -463,5 +477,97 @@ export const createConditionalCollector = (
     },
     formats: () => formats,
     foreign: () => foreign,
+  };
+};
+
+const extensionEntry = (rule: ExtensionRule, anchor: CellAddress): ConditionalEntry => {
+  const formulas = rule.formulas.map((text) => formulaOf(text, anchor));
+  const parsed = formulas.every((item) => item !== undefined);
+
+  const xml = rule.raw.result();
+
+  return {
+    rule: {
+      kind: 'foreign',
+      xml: parsed ? xml.replace(EXTENSION_FORMULA, '<$1f></$1f>') : xml,
+      formulas: parsed ? formulas.filter((item) => item !== undefined) : undefined,
+    },
+    priority: numberOf(attributeOf(rule.attributes, 'priority'), 0),
+    stopIfTrue: false,
+  };
+};
+
+export const createExtensionCollector = (): ConditionalCollector => {
+  const formats: ConditionalFormat[] = [];
+  let rules: ExtensionRule[] | undefined;
+  let rule: ExtensionRule | undefined;
+  let sqref: string | undefined;
+
+  const openRule = (current: ExtensionRule, name: XmlName, attributes: readonly XmlAttribute[]) => {
+    current.raw.open(name, attributes);
+    current.depth += 1;
+    if (name.local === 'f' && name.uri === XM) {
+      current.formula = '';
+    }
+  };
+
+  const closeRule = (current: ExtensionRule, name: XmlName): void => {
+    current.raw.close(name);
+    current.depth -= 1;
+    if (name.local === 'f' && name.uri === XM && current.formula !== undefined) {
+      current.formulas.push(current.formula);
+      current.formula = undefined;
+    }
+  };
+
+  const finished = (): void => {
+    const ranges = rangesOf(sqref ?? '');
+    const anchor = { row: ranges[0]?.top ?? 0, col: ranges[0]?.left ?? 0 };
+
+    formats.push({
+      ranges,
+      rules: (rules ?? []).map((item) => extensionEntry(item, anchor)),
+      extension: true,
+    });
+
+    rules = undefined;
+    sqref = undefined;
+  };
+
+  return {
+    inside: () => rules !== undefined,
+    open: (name, attributes) => {
+      if (rules === undefined) {
+        rules = [];
+      } else if (rule !== undefined) {
+        openRule(rule, name, attributes);
+      } else if (name.local === 'cfRule' && name.uri === X14) {
+        rule = { raw: createRecorder(), attributes, formulas: [], formula: undefined, depth: 1 };
+        rule.raw.open(name, attributes);
+      } else if (name.local === 'sqref' && name.uri === XM) {
+        sqref = '';
+      }
+    },
+    text: (text) => {
+      rule?.raw.text(text);
+      if (rule?.formula !== undefined) {
+        rule.formula += text;
+      } else if (rule === undefined && sqref !== undefined) {
+        sqref += text;
+      }
+    },
+    close: (name) => {
+      if (rule !== undefined && rule.depth === 1) {
+        rule.raw.close(name);
+        rules?.push(rule);
+        rule = undefined;
+      } else if (rule !== undefined) {
+        closeRule(rule, name);
+      } else if (name.local === 'conditionalFormatting' && name.uri === X14) {
+        finished();
+      }
+    },
+    formats: () => formats,
+    foreign: () => 0,
   };
 };

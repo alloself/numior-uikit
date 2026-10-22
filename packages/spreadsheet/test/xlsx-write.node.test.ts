@@ -216,7 +216,7 @@ describe('writing xlsx', () => {
       kind: 'setConditional',
       sheet: 'Rules',
       formats: [
-        ...rules.conditional,
+        ...rules.conditional.filter((format) => format.extension !== true),
         {
           ranges: [{ top: 0, left: 5, bottom: 5, right: 5 }],
           rules: [
@@ -227,6 +227,7 @@ describe('writing xlsx', () => {
             },
           ],
         },
+        ...rules.conditional.filter((format) => format.extension === true),
       ],
     });
 
@@ -252,6 +253,31 @@ describe('writing xlsx', () => {
     expect(styles).toContain('<dxfs count="5">');
 
     const again = await opened(bytes);
+
+    expect(JSON.stringify(sheetOf(again, 'Rules').conditional)).toBe(
+      JSON.stringify(sheetOf(read, 'Rules').conditional),
+    );
+  });
+
+  it('moves the Excel 2010 rule extensions with inserted rows', async () => {
+    const read = await opened(await corpusPackage('conditional'));
+
+    createStepper(read.book, read.calculator).apply({
+      kind: 'insertLines',
+      sheet: 'Rules',
+      axis: 'rows',
+      at: 0,
+      count: 1,
+    });
+
+    const bytes = await written(read, read.source);
+    const sheet = await partOf(bytes, 'xl/worksheets/sheet1.xml');
+    const again = await opened(bytes);
+
+    expect(sheet).toContain('<conditionalFormatting sqref="D2:D7">');
+    expect(sheet).toContain('<xm:f>$A$2&lt;D2</xm:f>');
+    expect(sheet.match(/<xm:sqref>D2:D7<\/xm:sqref>/gu)?.length).toBe(2);
+    expect(sheet).toContain('<x14:id>{78C3B1A1-0000-4000-8000-000000000001}</x14:id>');
 
     expect(JSON.stringify(sheetOf(again, 'Rules').conditional)).toBe(
       JSON.stringify(sheetOf(read, 'Rules').conditional),

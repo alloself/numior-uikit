@@ -97,7 +97,11 @@ export type ConditionalRule =
       readonly style: DifferentialStyle;
     }
   | { readonly kind: 'timePeriod'; readonly period: TimePeriod; readonly style: DifferentialStyle }
-  | { readonly kind: 'foreign'; readonly xml: string };
+  | {
+      readonly kind: 'foreign';
+      readonly xml: string;
+      readonly formulas?: readonly FormulaNode[] | undefined;
+    };
 
 export interface ConditionalEntry {
   readonly rule: ConditionalRule;
@@ -109,6 +113,7 @@ export interface ConditionalEntry {
 export interface ConditionalFormat {
   readonly ranges: readonly CellRange[];
   readonly rules: readonly ConditionalEntry[];
+  readonly extension?: boolean | undefined;
 }
 
 export interface ScaleLook {

@@ -451,6 +451,43 @@
               "stopIfTrue": false
             }
           ]
+        },
+        {
+          "ranges": [
+            "D1:D6"
+          ],
+          "rules": [
+            {
+              "rule": {
+                "kind": "foreign",
+                "xml": "<x14:cfRule xmlns:x14=\"http://schemas.microsoft.com/office/spreadsheetml/2009/9/main\" type=\"dataBar\" id=\"{78C3B1A1-0000-4000-8000-000000000001}\"><x14:dataBar minLength=\"0\" maxLength=\"100\" gradient=\"0\"><x14:cfvo type=\"autoMin\"></x14:cfvo><x14:cfvo type=\"autoMax\"></x14:cfvo><x14:negativeFillColor rgb=\"FFFF0000\"></x14:negativeFillColor><x14:axisColor rgb=\"FF000000\"></x14:axisColor></x14:dataBar></x14:cfRule>",
+                "formulas": []
+              },
+              "priority": 0,
+              "stopIfTrue": false
+            }
+          ]
+        },
+        {
+          "ranges": [
+            "D1:D6"
+          ],
+          "rules": [
+            {
+              "rule": {
+                "kind": "foreign",
+                "xml": "<x14:cfRule xmlns:x14=\"http://schemas.microsoft.com/office/spreadsheetml/2009/9/main\" xmlns:xm=\"http://schemas.microsoft.com/office/excel/2006/main\" type=\"expression\" priority=\"13\" id=\"{78C3B1A1-0000-4000-8000-000000000002}\"><xm:f></xm:f><x14:dxf><font><b></b></font></x14:dxf></x14:cfRule>",
+                "formulas": [
+                  {
+                    "kind": "string",
+                    "value": "$A$1<D1"
+                  }
+                ]
+              },
+              "priority": 13,
+              "stopIfTrue": false
+            }
+          ]
         }
       ]
     }

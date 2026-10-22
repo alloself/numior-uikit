@@ -31,6 +31,8 @@ const mappedRule = (rule: ConditionalRule, map: FormulaMap): ConditionalRule => 
       return { ...rule, min: mappedThreshold(rule.min, map), max: mappedThreshold(rule.max, map) };
     case 'iconSet':
       return { ...rule, thresholds: rule.thresholds.map((item) => mappedThreshold(item, map)) };
+    case 'foreign':
+      return rule.formulas === undefined ? rule : { ...rule, formulas: rule.formulas.map(map) };
     default:
       return rule;
   }

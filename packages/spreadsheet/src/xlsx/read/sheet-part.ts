@@ -17,7 +17,7 @@ import {
 import type { Sheet, Workbook } from '../../core/workbook';
 import type { DifferentialStyle } from '../../core/conditional/conditional.types';
 import type { XmlAttribute } from '../xml/xml.types';
-import { createConditionalCollector } from './conditional-part';
+import { X14, createConditionalCollector, createExtensionCollector } from './conditional-part';
 import { decodeXstring } from '../xml/xstring';
 import type { ZipArchive } from '../zip/zip.types';
 import { MAIN, attributeOf, numberOf, readPart, type PartOptions } from './ooxml';
@@ -192,6 +192,7 @@ export const readSheetPart = async (
   let capture: 'value' | 'formula' | 'inline' | undefined;
   let phonetic = 0;
   const conditional = createConditionalCollector(context.differentials);
+  const extensions = createExtensionCollector();
 
   const astOf = (current: Cell): FormulaNode | undefined => {
     const formula = current.formula;
@@ -348,6 +349,11 @@ export const readSheetPart = async (
           (element.local === 'conditionalFormatting' && MAIN.has(element.uri))
         ) {
           conditional.open(element, attributes);
+        } else if (
+          extensions.inside() ||
+          (element.local === 'conditionalFormatting' && element.uri === X14)
+        ) {
+          extensions.open(element, attributes);
         } else if (MAIN.has(element.uri)) {
           openMain(element.local, attributes);
         }
@@ -355,6 +361,10 @@ export const readSheetPart = async (
       text: (text) => {
         if (conditional.inside()) {
           conditional.text(text);
+          return;
+        }
+        if (extensions.inside()) {
+          extensions.text(text);
           return;
         }
         if (cell === undefined) {
@@ -381,6 +391,10 @@ export const readSheetPart = async (
           conditional.close(element);
           return;
         }
+        if (extensions.inside()) {
+          extensions.close(element);
+          return;
+        }
         switch (element.local) {
           case 'c':
             if (cell !== undefined) {
@@ -404,7 +418,7 @@ export const readSheetPart = async (
     options,
   );
 
-  sheet.conditional = conditional.formats();
+  sheet.conditional = [...conditional.formats(), ...extensions.formats()];
   counts.conditional = conditional.foreign();
   return counts;
 };
