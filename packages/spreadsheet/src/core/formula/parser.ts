@@ -16,6 +16,10 @@ import { ORIGIN, relativeFormula } from './origin';
 import { booleanFromWord, canonicalFunction } from './localization';
 import { parseStructured } from './structured';
 
+export interface ParseOptions {
+  readonly books?: ((name: string) => number | undefined) | undefined;
+}
+
 interface Parser {
   formula(): FormulaNode;
 }
@@ -57,7 +61,12 @@ const rowLine = (text: string): LineRef | undefined => {
 const lineOf = (token: Token): LineRef | undefined =>
   token.kind === 'number' && /^\d+$/u.test(token.text) ? rowLine(token.text) : undefined;
 
-const createParser = (tokens: readonly Token[], locale: FormulaLocale, offset: number): Parser => {
+const createParser = (
+  tokens: readonly Token[],
+  locale: FormulaLocale,
+  offset: number,
+  books: ParseOptions['books'],
+): Parser => {
   let at = 0;
 
   const peek = (ahead = 0): Token =>
@@ -109,7 +118,9 @@ const createParser = (tokens: readonly Token[], locale: FormulaLocale, offset: n
     if (token.kind !== 'sheet') {
       return token;
     }
-    return samePlace(placeOf(token), place) ? next() : fail(token, 'reference');
+    const end = placeOf(token, books);
+
+    return end !== undefined && samePlace(end, place) ? next() : fail(token, 'reference');
   };
 
   const cellRange = (place: SheetPlace, from: CellRef): FormulaNode => {
@@ -251,8 +262,11 @@ const createParser = (tokens: readonly Token[], locale: FormulaLocale, offset: n
         return constant(token);
       case 'word':
         return word(token);
-      case 'sheet':
-        return sheetItem(placeOf(token), next());
+      case 'sheet': {
+        const place = placeOf(token, books);
+
+        return place === undefined ? fail(token, 'reference') : sheetItem(place, next());
+      }
       case 'structured':
         return parseStructured(token.text, locale) ?? fail(token, 'reference');
       case 'punct':
@@ -315,10 +329,14 @@ const createParser = (tokens: readonly Token[], locale: FormulaLocale, offset: n
   };
 };
 
-const placeOf = (token: Token): SheetPlace => {
+const placeOf = (token: Token, books: ParseOptions['books']): SheetPlace | undefined => {
   const sheet = token.text === '' ? {} : { sheet: token.text };
+  const book = token.book === undefined ? token.value : books?.(token.book);
 
-  return token.value > 0 ? { book: token.value, ...sheet } : sheet;
+  if (book === undefined) {
+    return undefined;
+  }
+  return book > 0 ? { book, ...sheet } : sheet;
 };
 
 const samePlace = (left: SheetPlace, right: SheetPlace): boolean =>
@@ -336,6 +354,7 @@ export const parseFormula = (
   text: string,
   locale: FormulaLocale = EN_FORMULAS,
   origin: CellAddress = ORIGIN,
+  { books }: ParseOptions = {},
 ): FormulaParse => {
   const source = text.startsWith('=') ? text.slice(1) : text;
   const offset = text.length - source.length;
@@ -347,7 +366,7 @@ export const parseFormula = (
   try {
     return {
       ok: true,
-      ast: relativeFormula(createParser(tokens, locale, offset).formula(), origin),
+      ast: relativeFormula(createParser(tokens, locale, offset, books).formula(), origin),
     };
   } catch (error) {
     if (error instanceof FormulaSyntaxError) {

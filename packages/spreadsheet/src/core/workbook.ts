@@ -80,6 +80,14 @@ export interface Workbook {
   renameSheet(sheet: Sheet, name: string): boolean;
 }
 
+export interface BookNames {
+  readonly books: (name: string) => number | undefined;
+}
+
+export interface BookLabels {
+  readonly books: (index: number) => string | undefined;
+}
+
 const FORBIDDEN = /[[\]:*?/\\]/u;
 
 const DEFINED_NAME = /^[\p{L}_][\p{L}\p{N}_.]*$/u;
@@ -166,6 +174,40 @@ const createSheetTables = (): SheetTables => {
     },
   };
 };
+
+const fileName = (target: string): string => {
+  const base = target.slice(Math.max(target.lastIndexOf('/'), target.lastIndexOf('\\')) + 1);
+
+  try {
+    return decodeURIComponent(base);
+  } catch {
+    return base;
+  }
+};
+
+const externalFiles = (book: Workbook): string[] =>
+  book.externals.map((external) => fileName(external.target).toLowerCase());
+
+const onlyOne = (files: readonly string[], name: string): boolean =>
+  name !== '' && files.includes(name) && files.indexOf(name) === files.lastIndexOf(name);
+
+export const bookNames = (book: Workbook): BookNames => ({
+  books: (name) => {
+    const files = externalFiles(book);
+    const wanted = name.toLowerCase();
+
+    return onlyOne(files, wanted) ? files.indexOf(wanted) + 1 : undefined;
+  },
+});
+
+export const bookLabels = (book: Workbook): BookLabels => ({
+  books: (index) => {
+    const external = book.externals[index - 1];
+    const name = external === undefined ? '' : fileName(external.target);
+
+    return onlyOne(externalFiles(book), name.toLowerCase()) ? name : undefined;
+  },
+});
 
 export const localSheet = (
   book: Workbook,

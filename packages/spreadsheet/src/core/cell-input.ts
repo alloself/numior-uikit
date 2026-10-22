@@ -22,7 +22,7 @@ import { booleanValue, errorValue, numberValue, textValue } from './values';
 import { createStepper } from './steps/apply-step';
 import type { CellEdit, WorkbookStep } from './steps/step.types';
 import { uniqueColumns } from './tables';
-import { localSheet, type Sheet, type Workbook } from './workbook';
+import { bookLabels, bookNames, localSheet, type Sheet, type Workbook } from './workbook';
 
 export type CellInput =
   | { readonly kind: 'empty' }
@@ -326,7 +326,7 @@ export const createCellEditor = (book: Workbook, calculator: Calculator): CellEd
     text: string,
     locale: BookLocale,
   ): EntryResult => {
-    const parsed = parseFormula(text, locale.formulas, position);
+    const parsed = parseFormula(text, locale.formulas, position, bookNames(book));
 
     if (!parsed.ok) {
       return parsed;
@@ -395,6 +395,7 @@ export const createCellEditor = (book: Workbook, calculator: Calculator): CellEd
       text,
       (options.locale ?? calculator.locale).formulas,
       options.anchor ?? ORIGIN,
+      bookNames(book),
     );
 
     return parsed.ok
@@ -464,7 +465,7 @@ export const createCellEditor = (book: Workbook, calculator: Calculator): CellEd
 
       return defined === undefined
         ? undefined
-        : `=${printFormula(defined.ast, calculator.locale.formulas, anchor)}`;
+        : `=${printFormula(defined.ast, calculator.locale.formulas, anchor, bookLabels(book))}`;
     },
     enter: (sheet, row, col, text, locale) => {
       const result = input(sheet, row, col, text, locale);
@@ -481,7 +482,7 @@ export const createCellEditor = (book: Workbook, calculator: Calculator): CellEd
 
       return formula === undefined
         ? editText(sheet.cells.get(row, col), formatAt(sheet, row, col), locale.numbers)
-        : `=${printFormula(formula.ast, locale.formulas, { row, col })}`;
+        : `=${printFormula(formula.ast, locale.formulas, { row, col }, bookLabels(book))}`;
     },
     shown,
     formatAt,

@@ -45,7 +45,7 @@ describe('references into other books', () => {
     expect(sheet.shown('A4')).toBe('20');
     expect(sheet.shown('A5')).toBe('#ССЫЛКА!');
     expect(sheet.shown('A6')).toBe('#ССЫЛКА!');
-    expect(sheet.input('A2')).toBe('=СУММ([1]Other!A1:A3)');
+    expect(sheet.input('A2')).toBe('=СУММ([other.xlsx]Other!A1:A3)');
   });
 
   it('keeps them in place when lines, sheets and tables of this book change', () => {
@@ -61,12 +61,31 @@ describe('references into other books', () => {
     sheet.insert('1', 2);
     sheet.insert('1', 3, 'Other');
 
-    expect(sheet.input('B3')).toBe('=[1]Other!A1+Other!A4');
+    expect(sheet.input('B3')).toBe('=[other.xlsx]Other!A1+Other!A4');
     expect(sheet.shown('B3')).toBe('14');
 
     sheet.commit({ kind: 'removeSheet', name: 'Other' });
 
-    expect(sheet.input('B3')).toBe('=[1]Other!A1+#ССЫЛКА!');
+    expect(sheet.input('B3')).toBe('=[other.xlsx]Other!A1+#ССЫЛКА!');
+  });
+
+  it('names the other book by its file and reads that name back', () => {
+    const sheet = withOtherBook();
+
+    sheet.type('A1', "='[OTHER.xlsx]Q1 data'!A1");
+    sheet.type('A2', '=[other.xlsx]!Rate*100');
+
+    expect(sheet.shown('A1')).toBe('pen');
+    expect(sheet.shown('A2')).toBe('20');
+    expect(sheet.input('A1')).toBe("='[other.xlsx]Q1 data'!A1");
+
+    expect(() => {
+      sheet.type('A3', '=[missing.xlsx]Other!A1');
+    }).toThrow('does not parse');
+
+    sheet.book.addExternal({ target: 'C:\\Archive\\other.xlsx', sheets: ['Other'], names: [] });
+
+    expect(sheet.input('A1')).toBe("='[1]Q1 data'!A1");
   });
 
   it('writes the cached books it has no source for and reads them back', async () => {

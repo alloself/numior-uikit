@@ -10,6 +10,7 @@ import { formulaReferences } from '../formula/references';
 import { EMPTY, errorValue, numberValue } from '../values';
 import { structuredRange, tableData } from '../tables';
 import {
+  bookNames,
   localSheet,
   tableFor,
   type DefinedName,
@@ -1095,7 +1096,7 @@ export const createCalculator = (
 
   return {
     setFormula: (sheet, row, col, text, syntax = locale.formulas) => {
-      const parsed = parseFormula(text, syntax, { row, col });
+      const parsed = parseFormula(text, syntax, { row, col }, bookNames(workbook));
 
       if (parsed.ok) {
         setParsed(sheet, row, col, parsed.ast);

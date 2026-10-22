@@ -18,6 +18,7 @@ export interface Token {
   readonly text: string;
   readonly start: number;
   readonly value: number;
+  readonly book?: string | undefined;
 }
 
 export interface LexFailure {
@@ -28,8 +29,6 @@ type Scan = { readonly token: Token; readonly next: number } | LexFailure;
 
 const LONGEST_ERROR = 12;
 
-const LONGEST_BOOK = 12;
-
 const WORD_START = /[\p{L}_$]/u;
 
 const WORD_PART = /[\p{L}\p{N}_.$]/u;
@@ -38,7 +37,9 @@ const DIGIT = /\d/u;
 
 const SPACE = /\s/u;
 
-const BOOK = /^\[(\d+)\]/u;
+const BOOK = /^\[([^[\]]+)\]/u;
+
+const LINK = /^\d+$/u;
 
 const OPERATORS = ['<>', '<=', '>=', '+', '-', '*', '/', '^', '&', '=', '<', '>', '%', ':', '@'];
 
@@ -148,6 +149,14 @@ const scanStructured = (source: string, at: number, open: number): Scan => {
     : { token: token('structured', source.slice(at, end + 1), at), next: end + 1 };
 };
 
+const bookSheet = (book: RegExpExecArray, sheet: string, at: number): Token => {
+  const link = book[1] ?? '';
+
+  return LINK.test(link)
+    ? token('sheet', sheet, at, Number(link))
+    : { ...token('sheet', sheet, at), book: link };
+};
+
 const scanQuoted = (source: string, at: number): Scan => {
   const quote = source[at] ?? '"';
   const end = quotedEnd(source, at, quote);
@@ -168,27 +177,24 @@ const scanQuoted = (source: string, at: number): Scan => {
   }
   return book === null
     ? { token: token('sheet', text, at), next: end + 2 }
-    : {
-        token: token('sheet', text.slice(book[0].length), at, Number(book[1])),
-        next: end + 2,
-      };
+    : { token: bookSheet(book, text.slice(book[0].length), at), next: end + 2 };
 };
 
 const scanBook = (source: string, at: number): Scan | undefined => {
-  const book = BOOK.exec(source.slice(at, at + LONGEST_BOOK));
+  const book = BOOK.exec(source.slice(at));
   const after = book === null ? at : at + book[0].length;
 
   if (book === null) {
     return undefined;
   }
   if (source[after] === '!') {
-    return { token: token('sheet', '', at, Number(book[1])), next: after + 1 };
+    return { token: bookSheet(book, '', at), next: after + 1 };
   }
 
   const end = WORD_START.test(source[after] ?? '') ? wordEnd(source, after) : after;
 
   return end > after && source[end] === '!'
-    ? { token: token('sheet', source.slice(after, end), at, Number(book[1])), next: end + 1 }
+    ? { token: bookSheet(book, source.slice(after, end), at), next: end + 1 }
     : undefined;
 };
 

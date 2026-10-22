@@ -7,7 +7,7 @@ import { parseFormula } from '../formula/parser';
 import { a1FromR1c1 } from '../formula/r1c1';
 import { structuredRange, tableData } from '../tables';
 import { EMPTY, errorValue, numberValue, textValue } from '../values';
-import { tableFor, type DefinedName, type Sheet, type Workbook } from '../workbook';
+import { bookNames, tableFor, type DefinedName, type Sheet, type Workbook } from '../workbook';
 import {
   blankAsZero,
   broadcastShape,
@@ -304,7 +304,7 @@ const REFERENCE_KINDS = new Set(['cell', 'range', 'columns', 'rows']);
 const indirect = (text: string, a1: boolean, context: EvalContext): EvalValue => {
   const here = context.here();
   const address = a1 ? text : (a1FromR1c1(text, here) ?? raise('#REF!'));
-  const parsed = parseFormula(address, EN_FORMULAS, here);
+  const parsed = parseFormula(address, EN_FORMULAS, here, bookNames(context.workbook));
 
   if (!parsed.ok || !REFERENCE_KINDS.has(parsed.ast.kind)) {
     return raise('#REF!');

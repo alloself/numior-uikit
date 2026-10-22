@@ -12,6 +12,15 @@ import { ORIGIN, absoluteFormula } from './origin';
 import { localFunction } from './localization';
 import { printStructured } from './structured';
 
+export interface PrintOptions {
+  readonly books?: ((index: number) => string | undefined) | undefined;
+}
+
+interface Printing {
+  readonly locale: FormulaLocale;
+  readonly books?: ((index: number) => string | undefined) | undefined;
+}
+
 const PRECEDENCE: Readonly<Record<BinaryOperator, number>> = {
   '=': 1,
   '<>': 1,
@@ -53,13 +62,24 @@ const precedenceOf = (node: FormulaNode): number => {
 const plainSheet = (sheet: string): boolean =>
   PLAIN_SHEET.test(sheet) && !LOOKS_LIKE_REFERENCE.test(sheet);
 
-const sheetPrefix = ({ book, sheet }: SheetPlace): string => {
-  const prefix = book === undefined ? '' : `[${String(book)}]`;
+const bookPrefix = (book: number | undefined, printing: Printing): string => {
+  if (book === undefined) {
+    return '';
+  }
+  return `[${printing.books?.(book) ?? String(book)}]`;
+};
+
+const sheetPrefix = ({ book, sheet }: SheetPlace, printing: Printing): string => {
+  const prefix = bookPrefix(book, printing);
+  const name = book === undefined ? undefined : printing.books?.(book);
+  const plainBook = name === undefined || PLAIN_SHEET.test(name);
 
   if (sheet === undefined) {
     return prefix === '' ? '' : `${prefix}!`;
   }
-  return plainSheet(sheet) ? `${prefix}${sheet}!` : `'${(prefix + sheet).replaceAll("'", "''")}'!`;
+  return plainSheet(sheet) && plainBook
+    ? `${prefix}${sheet}!`
+    : `'${(prefix + sheet).replaceAll("'", "''")}'!`;
 };
 
 const numberText = (value: number, locale: FormulaLocale): string =>
@@ -72,8 +92,8 @@ const columnText = (line: LineRef): string =>
 
 const rowText = (line: LineRef): string => `${line.absolute ? '$' : ''}${String(line.index + 1)}`;
 
-const wrapped = (node: FormulaNode, locale: FormulaLocale, above: number): string => {
-  const text = printNode(node, locale);
+const wrapped = (node: FormulaNode, printing: Printing, above: number): string => {
+  const text = printNode(node, printing);
 
   return precedenceOf(node) < above ? `(${text})` : text;
 };
@@ -95,54 +115,59 @@ const constantText = (node: FormulaNode, locale: FormulaLocale): string | undefi
   }
 };
 
-const referenceText = (node: FormulaNode): string | undefined => {
+const referenceText = (node: FormulaNode, printing: Printing): string | undefined => {
   switch (node.kind) {
     case 'cell':
-      return `${sheetPrefix(node)}${cellText(node.ref)}`;
+      return `${sheetPrefix(node, printing)}${cellText(node.ref)}`;
     case 'range':
-      return `${sheetPrefix(node)}${cellText(node.from)}:${cellText(node.to)}`;
+      return `${sheetPrefix(node, printing)}${cellText(node.from)}:${cellText(node.to)}`;
     case 'columns':
-      return `${sheetPrefix(node)}${columnText(node.from)}:${columnText(node.to)}`;
+      return `${sheetPrefix(node, printing)}${columnText(node.from)}:${columnText(node.to)}`;
     case 'rows':
-      return `${sheetPrefix(node)}${rowText(node.from)}:${rowText(node.to)}`;
+      return `${sheetPrefix(node, printing)}${rowText(node.from)}:${rowText(node.to)}`;
     case 'spill':
-      return `${sheetPrefix(node)}${cellText(node.ref)}#`;
+      return `${sheetPrefix(node, printing)}${cellText(node.ref)}#`;
     case 'name':
-      return `${sheetPrefix(node)}${node.name}`;
+      return `${sheetPrefix(node, printing)}${node.name}`;
     default:
       return undefined;
   }
 };
 
-const operationText = (node: FormulaNode, locale: FormulaLocale): string => {
+const operationText = (node: FormulaNode, printing: Printing): string => {
+  const { locale } = printing;
+
   switch (node.kind) {
     case 'call':
-      return `${localFunction(node.name, locale)}(${node.args.map((arg) => printNode(arg, locale)).join(locale.argument)})`;
+      return `${localFunction(node.name, locale)}(${node.args.map((arg) => printNode(arg, printing)).join(locale.argument)})`;
     case 'unary':
-      return `${node.op}${wrapped(node.operand, locale, UNARY)}`;
+      return `${node.op}${wrapped(node.operand, printing, UNARY)}`;
     case 'percent':
-      return `${wrapped(node.operand, locale, PERCENT)}%`;
+      return `${wrapped(node.operand, printing, PERCENT)}%`;
     case 'binary': {
       const level = PRECEDENCE[node.op];
 
-      return `${wrapped(node.left, locale, level)}${node.op}${wrapped(node.right, locale, level + 1)}`;
+      return `${wrapped(node.left, printing, level)}${node.op}${wrapped(node.right, printing, level + 1)}`;
     }
     case 'array':
       return `{${node.rows
-        .map((row) => row.map((item) => printNode(item, locale)).join(locale.arrayColumn))
+        .map((row) => row.map((item) => printNode(item, printing)).join(locale.arrayColumn))
         .join(locale.arrayRow)}}`;
     default:
       return '';
   }
 };
 
-const printNode = (node: FormulaNode, locale: FormulaLocale): string =>
+const printNode = (node: FormulaNode, printing: Printing): string =>
   node.kind === 'structured'
-    ? printStructured(node, locale)
-    : (constantText(node, locale) ?? referenceText(node) ?? operationText(node, locale));
+    ? printStructured(node, printing.locale)
+    : (constantText(node, printing.locale) ??
+      referenceText(node, printing) ??
+      operationText(node, printing));
 
 export const printFormula = (
   node: FormulaNode,
   locale: FormulaLocale = EN_FORMULAS,
   origin: CellAddress = ORIGIN,
-): string => printNode(absoluteFormula(node, origin), locale);
+  { books }: PrintOptions = {},
+): string => printNode(absoluteFormula(node, origin), { locale, books });
