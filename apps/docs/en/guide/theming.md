@@ -95,6 +95,7 @@ or a sidebar can be more compact than the page.
 | Spacing    | `--nui-space-1…6`, `--nui-space-8` (0.25rem step)                                                                                                                    |
 | Typography | `--nui-font`, `--nui-font-mono`, `--nui-font-size-xs…4xl`, `--nui-font-weight-*`, `--nui-line-height`, `-tight`, `-relaxed`, `--nui-tracking-tight`, `--nui-measure` |
 | Code       | `--nui-syntax-keyword`, `-string`, `-number`, `-function`, `-type`, `-tag`, `-attribute`, `-property`, `-comment`, `-variable`, `-punctuation`, `-highlight`         |
+| Charts     | `--nui-chart-1…8` (categorical palette checked for colour blindness in both themes), `--nui-chart-other`, `--nui-chart-grid`, `--nui-chart-axis`                     |
 | Shadows    | `--nui-shadow-sm`, `--nui-shadow-md`, `--nui-shadow-lg`                                                                                                              |
 | Motion     | `--nui-duration-fast`, `--nui-duration-normal`, `--nui-duration-slow`, `--nui-easing`; under `prefers-reduced-motion` the durations are 0                            |
 | Layers     | `--nui-z-dropdown`, `--nui-z-overlay`, `--nui-z-toast`                                                                                                               |

@@ -10,6 +10,7 @@ const ROOTS = [
   'packages/content/test',
   'packages/editor-vue/test',
   'packages/spreadsheet/test',
+  'packages/charts/test',
 ];
 
 const RULES = [

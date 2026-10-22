@@ -295,6 +295,26 @@ for (const file of await localImports(resolve('packages/spreadsheet/dist/xlsx.js
   );
 }
 
+const chartsCore = await import(pathToFileURL(resolve('packages/charts/dist/core.js')).href);
+
+assert.equal(typeof chartsCore.layoutChart, 'function', 'charts/core must export the layout');
+
+for (const file of await localImports(resolve('packages/charts/dist/core.js'))) {
+  const source = await readFile(file, 'utf8');
+
+  assert.doesNotMatch(
+    source,
+    /from ['"](?:vue|@vueuse\/[\w-]+|@numior\/[\w-]+)['"]/,
+    `charts/core must stay free of Vue and UI packages: ${file}`,
+  );
+
+  assert.doesNotMatch(
+    source,
+    /\b(?:document|window|navigator)\./,
+    `charts/core must not touch the DOM: ${file}`,
+  );
+}
+
 const contentCode = await importBuild('content', [
   'NuiContent',
   'contentSchema',

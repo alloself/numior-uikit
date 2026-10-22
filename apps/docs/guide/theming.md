@@ -92,6 +92,7 @@ custom property вычисляется там, где она объявлена,
 | Отступы     | `--nui-space-1…6`, `--nui-space-8` (шаг 0.25rem)                                                                                                                     |
 | Типографика | `--nui-font`, `--nui-font-mono`, `--nui-font-size-xs…4xl`, `--nui-font-weight-*`, `--nui-line-height`, `-tight`, `-relaxed`, `--nui-tracking-tight`, `--nui-measure` |
 | Код         | `--nui-syntax-keyword`, `-string`, `-number`, `-function`, `-type`, `-tag`, `-attribute`, `-property`, `-comment`, `-variable`, `-punctuation`, `-highlight`         |
+| Графики     | `--nui-chart-1…8` (категориальная палитра, проверена на дальтонизм в обеих темах), `--nui-chart-other`, `--nui-chart-grid`, `--nui-chart-axis`                       |
 | Тени        | `--nui-shadow-sm`, `--nui-shadow-md`, `--nui-shadow-lg`                                                                                                              |
 | Движение    | `--nui-duration-fast`, `--nui-duration-normal`, `--nui-duration-slow`, `--nui-easing`; при `prefers-reduced-motion` длительности равны 0                             |
 | Слои        | `--nui-z-dropdown`, `--nui-z-overlay`, `--nui-z-toast`                                                                                                               |

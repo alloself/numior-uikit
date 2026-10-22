@@ -1,0 +1,24 @@
+{
+  "name": "@numior/charts",
+  "version": "0.0.0",
+  "private": true,
+  "license": "MIT",
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    "./core": {
+      "@numior/source": "./src/core/index.ts",
+      "types": "./dist/core/index.d.ts",
+      "import": "./dist/core.js"
+    }
+  },
+  "scripts": {
+    "build": "vp build && vue-tsc -p tsconfig.build.json"
+  },
+  "devDependencies": {
+    "fast-check": "4.10.2"
+  }
+}

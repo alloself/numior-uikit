@@ -33,7 +33,7 @@ export default defineConfig({
       reportsDirectory: 'node_modules/.cache/coverage',
       clean: false,
       include: [
-        'packages/{primitives,vue,forms,table,editor-core,content,editor-vue,spreadsheet}/src/**/*.{ts,vue}',
+        'packages/{primitives,vue,forms,table,editor-core,content,editor-vue,spreadsheet,charts}/src/**/*.{ts,vue}',
         'apps/docs/.vitepress/{content,examples,markdown,reference,theme}/**/*.{ts,vue}',
       ],
       exclude: ['**/*.types.ts', '**/*.d.ts'],

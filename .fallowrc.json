@@ -16,6 +16,7 @@
     "packages/editor-vue/src/index.ts",
     "packages/spreadsheet/src/core/index.ts",
     "packages/spreadsheet/src/xlsx/index.ts",
+    "packages/charts/src/core/index.ts",
     "apps/playground/src/tailwind.css",
     "scripts/vite-package-assets.ts",
     "scripts/build-css.ts",
@@ -118,6 +119,10 @@
         "patterns": ["packages/spreadsheet/**"]
       },
       {
+        "name": "charts",
+        "patterns": ["packages/charts/**"]
+      },
+      {
         "name": "nuxt",
         "patterns": ["packages/nuxt/**"]
       },
@@ -194,6 +199,10 @@
         "allow": ["spreadsheet"]
       },
       {
+        "from": "charts",
+        "allow": ["charts"]
+      },
+      {
         "from": "nuxt",
         "allow": ["tokens", "primitives", "vue", "forms", "table", "nuxt"]
       },
@@ -213,6 +222,7 @@
           "content-media",
           "editor-vue",
           "spreadsheet",
+          "charts",
           "nuxt",
           "apps"
         ]
@@ -233,6 +243,7 @@
           "content-media",
           "editor-vue",
           "spreadsheet",
+          "charts",
           "nuxt",
           "apps",
           "tests"
