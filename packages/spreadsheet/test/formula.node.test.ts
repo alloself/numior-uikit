@@ -218,6 +218,13 @@ describe('formula parser', () => {
     });
   });
 
+  it('reads a range that names its sheet at both ends', () => {
+    expect(astOf("='Q1 data'!A12:'q1 DATA'!$B$12")).toEqual(astOf("='Q1 data'!A12:$B$12"));
+    expect(astOf('=[1]Other!A:[1]Other!B')).toEqual(astOf('=[1]Other!A:B'));
+    expect(failureOf('=Other!A1:Sheet1!B2')).toEqual({ position: 10, reason: 'reference' });
+    expect(failureOf('=A1:Sheet1!B2')).toEqual({ position: 4, reason: 'reference' });
+  });
+
   it('keeps missing arguments and reads array constants', () => {
     expect(astOf('=IF(A1,,)')).toEqual({
       kind: 'call',

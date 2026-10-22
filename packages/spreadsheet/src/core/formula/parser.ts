@@ -103,9 +103,18 @@ const createParser = (tokens: readonly Token[], locale: FormulaLocale, offset: n
       return left;
     };
 
+  const rangeEnd = (place: SheetPlace): Token => {
+    const token = next();
+
+    if (token.kind !== 'sheet') {
+      return token;
+    }
+    return samePlace(placeOf(token), place) ? next() : fail(token, 'reference');
+  };
+
   const cellRange = (place: SheetPlace, from: CellRef): FormulaNode => {
     next();
-    const end = parseCell(next().text);
+    const end = parseCell(rangeEnd(place).text);
 
     return end === undefined
       ? fail(peek(-1), 'reference')
@@ -119,7 +128,7 @@ const createParser = (tokens: readonly Token[], locale: FormulaLocale, offset: n
     read: (token: Token) => LineRef | undefined,
   ): FormulaNode => {
     next();
-    const to = read(next());
+    const to = read(rangeEnd(place));
 
     return to === undefined ? fail(peek(-1), 'reference') : { kind, ...place, from, to };
   };
@@ -304,6 +313,11 @@ const placeOf = (token: Token): SheetPlace => {
 
   return token.value > 0 ? { book: token.value, ...sheet } : sheet;
 };
+
+const samePlace = (left: SheetPlace, right: SheetPlace): boolean =>
+  left.book === right.book &&
+  left.sheet !== undefined &&
+  left.sheet.toLowerCase() === right.sheet?.toLowerCase();
 
 const booleanOf = (token: Token, locale: FormulaLocale): FormulaNode | undefined => {
   const value = token.kind === 'word' ? booleanFromWord(token.text, locale) : undefined;
