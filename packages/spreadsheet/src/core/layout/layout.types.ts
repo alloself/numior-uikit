@@ -1,3 +1,4 @@
+import type { CellRange } from '../cell.types';
 import type { LineMove } from '../lines';
 
 export interface LineStyle {
@@ -27,4 +28,5 @@ export interface LineLayouts {
 export interface SheetLayout {
   readonly rows: LineLayouts;
   readonly cols: LineLayouts;
+  readonly merges: readonly CellRange[];
 }

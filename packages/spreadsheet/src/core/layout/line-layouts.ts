@@ -1,5 +1,7 @@
 import { limitOf, type LineMove } from '../lines';
+import type { LineChange } from '../formula/rewrite';
 import type { LineLayout, LineLayouts, SheetLayout } from './layout.types';
+import { shiftMerges } from './shift-ranges';
 
 const lowerBound = (lines: Int32Array, value: number): number => {
   let low = 0;
@@ -79,7 +81,7 @@ const createLineLayouts = (lines: Int32Array, layouts: readonly LineLayout[]): L
 
 const EMPTY_LINES = createLineLayouts(new Int32Array(0), []);
 
-export const EMPTY_LAYOUT: SheetLayout = { rows: EMPTY_LINES, cols: EMPTY_LINES };
+export const EMPTY_LAYOUT: SheetLayout = { rows: EMPTY_LINES, cols: EMPTY_LINES, merges: [] };
 
 export const lineLayoutsOf = (
   entries: readonly (readonly [line: number, layout: LineLayout])[],
@@ -94,7 +96,8 @@ export const lineLayoutsOf = (
       );
 };
 
-export const shiftLayout = (layout: SheetLayout, change: LineMove): SheetLayout =>
-  change.axis === 'rows'
-    ? { ...layout, rows: layout.rows.shifted(change) }
-    : { ...layout, cols: layout.cols.shifted(change) };
+export const shiftLayout = (layout: SheetLayout, change: LineChange): SheetLayout => ({
+  rows: change.axis === 'rows' ? layout.rows.shifted(change) : layout.rows,
+  cols: change.axis === 'cols' ? layout.cols.shifted(change) : layout.cols,
+  merges: shiftMerges(layout.merges, change),
+});

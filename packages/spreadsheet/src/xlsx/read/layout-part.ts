@@ -1,4 +1,5 @@
-import { MAX_COLS } from '../../core/address';
+import { MAX_COLS, parseRange } from '../../core/address';
+import type { CellRange } from '../../core/cell.types';
 import type { LineLayout, LineStyle, SheetLayout } from '../../core/layout/layout.types';
 import { lineLayoutsOf } from '../../core/layout/line-layouts';
 import type { Workbook } from '../../core/workbook';
@@ -8,6 +9,7 @@ import { attributeOf, numberOf, truthy } from './ooxml';
 export interface LayoutCollector {
   row(row: number, attributes: readonly XmlAttribute[]): void;
   col(attributes: readonly XmlAttribute[]): void;
+  merge(reference: string | undefined): void;
   layout(): SheetLayout;
 }
 
@@ -102,6 +104,7 @@ export const createLayoutCollector = (styles: LayoutStyles): LayoutCollector => 
   const interned = new Map<string, LineLayout>();
   const rows: [number, LineLayout][] = [];
   const cols: [number, LineLayout][] = [];
+  const merges: CellRange[] = [];
 
   const shared = (layout: LineLayout): LineLayout => {
     const key = JSON.stringify(layout);
@@ -140,6 +143,13 @@ export const createLayoutCollector = (styles: LayoutStyles): LayoutCollector => 
         cols.push([col, kept]);
       }
     },
-    layout: () => ({ rows: lineLayoutsOf(rows), cols: lineLayoutsOf(cols) }),
+    merge: (reference) => {
+      const range = reference === undefined ? undefined : parseRange(reference);
+
+      if (range !== undefined) {
+        merges.push(range);
+      }
+    },
+    layout: () => ({ rows: lineLayoutsOf(rows), cols: lineLayoutsOf(cols), merges }),
   };
 };

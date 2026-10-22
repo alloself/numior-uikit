@@ -102,6 +102,7 @@ const linesOf = (
 export const layoutOf = (book: Opened['book'], sheet: Sheet): unknown => ({
   rows: linesOf(book, sheet.layout.rows, (line) => String(line + 1)),
   cols: linesOf(book, sheet.layout.cols, (line) => columnName(line)),
+  merges: sheet.layout.merges.map(formatRange),
 });
 
 const conditionalOf = (sheet: Sheet): unknown =>
@@ -158,7 +159,7 @@ export const modelOf = (
       name: sheet.name,
       cells: cellsOf(read, sheet),
       ...(sheet.conditional.length === 0 ? {} : { conditional: conditionalOf(sheet) }),
-      ...(sheet.layout.rows.size + sheet.layout.cols.size === 0
+      ...(sheet.layout.rows.size + sheet.layout.cols.size + sheet.layout.merges.length === 0
         ? {}
         : { layout: layoutOf(read.book, sheet) }),
     })),

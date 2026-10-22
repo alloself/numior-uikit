@@ -181,7 +181,7 @@ export const readSheetExtras = async (
         root: head.root,
         prefix: head.prefix,
         before: withoutElement(withoutElement(head.before, 'dimension'), 'cols'),
-        after: withoutElement(after, 'tableParts'),
+        after: withoutElement(withoutElement(after, 'tableParts'), 'mergeCells'),
       };
 };
 

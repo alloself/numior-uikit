@@ -3,6 +3,7 @@ import {
   EN_FORMULAS,
   createCellEditor,
   createStepper,
+  formatRange,
   parseCell,
   parseFormula,
   type Sheet,
@@ -350,6 +351,52 @@ describe('writing xlsx', () => {
     expect(layoutOf(read.book, sales)).toEqual(before);
   });
 
+  it('moves merged cells with lines, drops the ones that shrink to a cell and restores them', async () => {
+    const read = await opened(await xlsxPackage());
+    const sales = sheetOf(read, 'Sales');
+    const stepper = createStepper(read.book, read.calculator);
+    const merges = (): string[] => sales.layout.merges.map(formatRange);
+
+    expect(merges()).toEqual(['F4:G4']);
+
+    const moved = stepper.apply({
+      kind: 'insertLines',
+      sheet: 'Sales',
+      axis: 'rows',
+      at: 1,
+      count: 1,
+    });
+
+    expect(merges()).toEqual(['F5:G5']);
+
+    const lossy = await writeWorkbook(read.book, read.calculator, {
+      source: read.source,
+      lossy: true,
+    });
+
+    const text = lossy.ok ? await partOf(lossy.bytes, 'xl/worksheets/sheet1.xml') : '';
+
+    expect(text).toMatch(
+      /<mergeCells count="1"><mergeCell ref="F5:G5"\/><\/mergeCells><conditionalFormatting/u,
+    );
+
+    const narrowed = stepper.apply({
+      kind: 'deleteLines',
+      sheet: 'Sales',
+      axis: 'cols',
+      at: 5,
+      count: 1,
+    });
+
+    expect(merges()).toEqual([]);
+
+    [narrowed, moved].forEach((result) => {
+      expect(result.ok && stepper.apply(result.inverse).ok).toBe(true);
+    });
+
+    expect(merges()).toEqual(['F4:G4']);
+  });
+
   it('writes the conditional formats of a new book with their styles', async () => {
     const book = openBook();
 
@@ -473,7 +520,7 @@ describe('writing xlsx', () => {
     const bytes = lossy.ok ? lossy.bytes : new Uint8Array();
 
     expect(lossy.ok).toBe(true);
-    expect(await partOf(bytes, 'xl/worksheets/sheet1.xml')).not.toContain('mergeCell');
+    expect(await partOf(bytes, 'xl/worksheets/sheet1.xml')).not.toContain('hyperlink');
   });
 
   it('gives back the original bytes of a read-only book', async () => {

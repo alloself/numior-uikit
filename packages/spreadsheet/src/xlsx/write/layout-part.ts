@@ -1,3 +1,5 @@
+import { formatRange } from '../../core/address';
+import type { CellRange } from '../../core/cell.types';
 import type { LineLayout, LineLayouts } from '../../core/layout/layout.types';
 import { escapeAttribute } from '../xml/writer';
 import type { StyleBook } from './styles-part';
@@ -60,3 +62,10 @@ export const colsXml = (cols: LineLayouts, styles: StyleBook, q: string): string
     ? ''
     : `<${q}cols>${runs.map((run) => colXml(run, styles, q)).join('')}</${q}cols>`;
 };
+
+export const mergesXml = (merges: readonly CellRange[], q: string): string =>
+  merges.length === 0
+    ? ''
+    : `<${q}mergeCells count="${String(merges.length)}">${merges
+        .map((merge) => `<${q}mergeCell ref="${formatRange(merge)}"/>`)
+        .join('')}</${q}mergeCells>`;

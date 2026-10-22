@@ -73,7 +73,6 @@ const DAY_MS = 86_400_000;
 const EPOCH_SERIAL = 25_569;
 
 const COUNTED: Readonly<Record<string, keyof Omit<SheetCounts, 'unknown'>>> = {
-  mergeCell: 'merges',
   dataValidation: 'validations',
   hyperlink: 'hyperlinks',
   drawing: 'drawings',
@@ -311,6 +310,10 @@ export const readSheetPart = async (
       case 'col':
         counts.layout += 1;
         layout.col(attributes);
+        return;
+      case 'mergeCell':
+        counts.merges += 1;
+        layout.merge(attributeOf(attributes, 'ref'));
         return;
       case 'c':
         openCell(attributes);

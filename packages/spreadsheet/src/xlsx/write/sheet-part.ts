@@ -20,7 +20,8 @@ import { concatBytes } from '../zip/streams';
 import type { Bytes } from '../zip/zip.types';
 import { withFuturePrefixes } from './future-functions';
 import { conditionalXml, extensionXml, withConditional, withExtensions } from './conditional-part';
-import { colsXml, rowAttributes } from './layout-part';
+import { colsXml, mergesXml, rowAttributes } from './layout-part';
+import { placeInTail } from './tail';
 import type { SheetExtras } from './source';
 import type { StyleBook } from './styles-part';
 
@@ -403,13 +404,15 @@ export const writeSheetPart = async (writing: SheetWriting): Promise<SheetOutput
   sink.push(`</${q}sheetData>`);
   const after = extras?.after ?? '';
 
-  const tail = writing.keepConditional
+  const conditional = writing.keepConditional
     ? after
     : withExtensions(
         withConditional(after, conditionalXml(writing.sheet.conditional, writing.styles, q)),
         extensionXml(writing.sheet.conditional),
         q,
       );
+
+  const tail = placeInTail(conditional, mergesXml(writing.sheet.layout.merges, q), 'mergeCells');
 
   sink.push(withTables(tail, tablePartsXml(writing.tables, q), q));
   sink.push(`</${q}worksheet>`);

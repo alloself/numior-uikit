@@ -13,6 +13,7 @@ import { printFormula } from '../../core/formula/printer';
 import { escapeAttribute, escapeText } from '../xml/writer';
 import { withFuturePrefixes } from './future-functions';
 import { colorXml, type StyleBook } from './styles-part';
+import { followerAt } from './tail';
 
 interface RuleXml {
   readonly type: string;
@@ -32,32 +33,6 @@ const BLOCK = new RegExp(
   `<(${NAME})conditionalFormatting(?=[\\s/>])[^>]*?(?:/>|>[\\s\\S]*?</\\1conditionalFormatting>)`,
   'gu',
 );
-
-const FOLLOWERS = [
-  'dataValidations',
-  'hyperlinks',
-  'printOptions',
-  'pageMargins',
-  'pageSetup',
-  'headerFooter',
-  'rowBreaks',
-  'colBreaks',
-  'customProperties',
-  'cellWatches',
-  'ignoredErrors',
-  'smartTags',
-  'drawing',
-  'legacyDrawing',
-  'legacyDrawingHF',
-  'picture',
-  'oleObjects',
-  'controls',
-  'webPublishItems',
-  'tableParts',
-  'extLst',
-];
-
-const FOLLOWER = new RegExp(`<${NAME}(?:${FOLLOWERS.join('|')})(?=[\\s/>])`, 'u');
 
 const EXTENSION_URI = '{78C0D931-6437-407d-A8EE-F0AAD7539E65}';
 
@@ -389,8 +364,7 @@ export const withoutConditional = (text: string): string => text.replace(BLOCK, 
 export const withConditional = (tail: string, xml: string): string => {
   const first = tail.search(BLOCK);
   const stripped = withoutConditional(tail);
-  const follower = stripped.search(FOLLOWER);
-  const at = first >= 0 ? first : follower >= 0 ? follower : stripped.length;
+  const at = first >= 0 ? first : followerAt(stripped, 'conditionalFormatting');
 
   return stripped.slice(0, at) + xml + stripped.slice(at);
 };

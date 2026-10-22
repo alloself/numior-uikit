@@ -1,6 +1,7 @@
 import type { CellAddress, CellRange } from '../cell.types';
 import type { FormulaNode } from '../formula/formula.types';
-import { shiftFormula, shiftSpan, type LineChange } from '../formula/rewrite';
+import { shiftFormula, type LineChange } from '../formula/rewrite';
+import { shiftRanges } from '../layout/shift-ranges';
 import type {
   ConditionalEntry,
   ConditionalFormat,
@@ -55,18 +56,6 @@ const anchorOf = (ranges: readonly CellRange[]): CellAddress => ({
   col: ranges[0]?.left ?? 0,
 });
 
-const shiftedRange = (range: CellRange, change: LineChange): CellRange | undefined => {
-  const rows = change.axis === 'rows';
-  const span = shiftSpan(rows ? [range.top, range.bottom] : [range.left, range.right], change);
-
-  if (span === undefined) {
-    return undefined;
-  }
-  return rows
-    ? { ...range, top: span[0], bottom: span[1] }
-    : { ...range, left: span[0], right: span[1] };
-};
-
 const previousLine = (line: number, change: LineChange): number => {
   if (change.count > 0) {
     return line >= change.at + change.count ? line - change.count : line;
@@ -83,14 +72,7 @@ const shiftedFormat = (
   format: ConditionalFormat,
   change: LineChange,
 ): ConditionalFormat | undefined => {
-  const ranges = format.ranges.reduce<CellRange[]>((kept, range) => {
-    const moved = shiftedRange(range, change);
-
-    if (moved !== undefined) {
-      kept.push(moved);
-    }
-    return kept;
-  }, []);
+  const ranges = shiftRanges(format.ranges, change);
 
   if (ranges.length === 0) {
     return undefined;

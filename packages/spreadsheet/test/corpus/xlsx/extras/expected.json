@@ -137,7 +137,10 @@
             "collapsed": false,
             "extra": []
           }
-        }
+        },
+        "merges": [
+          "A1:A2"
+        ]
       }
     },
     {
