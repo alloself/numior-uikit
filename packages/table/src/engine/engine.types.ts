@@ -119,6 +119,7 @@ export type TableRunResult =
 
 export interface TableRunOptions {
   readonly signal?: AbortSignal | undefined;
+  readonly yieldTo?: (() => Promise<void>) | undefined;
   readonly onProgress?: ((progress: TableProgress) => void) | undefined;
 }
 

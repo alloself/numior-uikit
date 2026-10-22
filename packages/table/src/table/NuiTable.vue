@@ -706,6 +706,10 @@ const query = useTableQuery({
     }
     emit('settle', { rows: count });
   },
+  onTotals: (ran) => {
+    totals.take(ran);
+  },
+  deferTotals: () => source === undefined,
   onProgress: (progress) => {
     emit('progress', progress);
   },

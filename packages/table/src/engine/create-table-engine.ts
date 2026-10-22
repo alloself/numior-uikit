@@ -747,7 +747,7 @@ export const createTableEngine = <T>(options: TableEngineOptions<T>): TableEngin
         pipeline === null ||
         (await runSliced(pipeline, {
           sliceMs,
-          yieldTo,
+          yieldTo: runOptions.yieldTo ?? yieldTo,
           signal: runOptions.signal,
           isStale: () => mine !== generation,
           onProgress: (done, total) => {

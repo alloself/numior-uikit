@@ -1857,6 +1857,15 @@ export class TableDriver<T> {
     await promiseTimeout(IDLE_WAIT);
   }
 
+  async nextPaint(): Promise<void> {
+    await new Promise((resolve) => {
+      requestAnimationFrame(resolve);
+    });
+
+    await promiseTimeout(0);
+    await flushPromises();
+  }
+
   async scroll(position: { readonly top?: number; readonly left?: number }): Promise<void> {
     if (position.top !== undefined) {
       defineValue(this.element, 'scrollTop', position.top);

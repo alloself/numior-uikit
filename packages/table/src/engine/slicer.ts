@@ -46,14 +46,15 @@ const channelYield = (): (() => Promise<void>) => {
 
 let fallbackYield: (() => Promise<void>) | null = null;
 
+export const yieldInLine = (): Promise<void> => {
+  fallbackYield ??= channelYield();
+  return fallbackYield();
+};
+
 export const yieldToHost = (): Promise<void> => {
   const scheduler = schedulerOf();
 
-  if (scheduler) {
-    return scheduler.yield();
-  }
-  fallbackYield ??= channelYield();
-  return fallbackYield();
+  return scheduler === null ? yieldInLine() : scheduler.yield();
 };
 
 const interrupted = (options: SliceOptions): boolean =>

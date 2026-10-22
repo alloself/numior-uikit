@@ -130,7 +130,7 @@ describe('NuiTable groups and totals', () => {
       slots: { 'footer-m1': BoldTotal },
     });
 
-    await grid.settle();
+    await grid.nextPaint();
     expect(grid.role).toBe('grid');
     expect(grid.rowCount).toBe(1002);
     expect(grid.cellText(1000, 1)).toBe('Всего1\u00a0000 строк');
@@ -147,5 +147,30 @@ describe('NuiTable groups and totals', () => {
     expect(grid.cellText(111, 0)).toBe('111');
     await grid.scroll({ top: 0 });
     expect(grid.cellText(0, 0)).toBe('199');
+  });
+
+  it('fills the totals row after mounting instead of before the first paint', async () => {
+    let reads = 0;
+
+    const columns = TOTALS_COLUMNS.map((column): NuiTableColumn<Person> =>
+      column.key === 'm1' && column.type === 'number'
+        ? {
+            ...column,
+            value: (row) => {
+              reads += 1;
+              return column.value(row);
+            },
+          }
+        : column,
+    );
+
+    const grid = mountPeople({ columns });
+
+    expect(reads).toBeLessThan(1000);
+
+    await grid.nextPaint();
+
+    expect(reads).toBeGreaterThanOrEqual(1000);
+    expect(grid.cellText(1000, 7)).toContain('4\u00a0995\u00a0000');
   });
 });

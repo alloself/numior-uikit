@@ -1,5 +1,5 @@
 import { promiseTimeout, until, useIdle } from '@vueuse/core';
-import type { TableEngine, TableStoreWish } from '../engine';
+import { yieldInLine, type TableEngine, type TableStoreWish } from '../engine';
 import { onMounted, onScopeDispose, type ShallowRef } from 'vue';
 import type { NuiTableColumn } from './table.types';
 
@@ -13,7 +13,7 @@ export interface TableWarmup {
   restart(): void;
 }
 
-const SLICE_MS = 5;
+const SLICE_MS = 8;
 const QUIET_MS = 500;
 const IDLE_TIMEOUT = 2000;
 const FALLBACK_DELAY = 16;
@@ -47,10 +47,19 @@ const wishesOf = <T>(columns: readonly NuiTableColumn<T>[]): TableStoreWish[] =>
   return [...groups.codes, ...groups.numbers, ...groups.ranks];
 };
 
-const nextIdle = async (): Promise<IdleDeadline | undefined> => {
+const fallbackDeadline = (): IdleDeadline => {
+  const started = performance.now();
+
+  return {
+    didTimeout: false,
+    timeRemaining: () => Math.max(0, FALLBACK_DELAY - (performance.now() - started)),
+  };
+};
+
+const nextIdle = async (): Promise<IdleDeadline> => {
   if (typeof requestIdleCallback !== 'function') {
     await promiseTimeout(FALLBACK_DELAY);
-    return undefined;
+    return fallbackDeadline();
   }
   return new Promise((resolve) => {
     requestIdleCallback(resolve, { timeout: IDLE_TIMEOUT });
@@ -62,18 +71,19 @@ export const useTableWarmup = <T>(options: TableWarmupOptions<T>): TableWarmup =
   let running: AbortController | undefined;
   let mounted = false;
 
-  const createYield = (): (() => Promise<void>) => {
-    let deadline: IdleDeadline | undefined;
+  let deadline: IdleDeadline | undefined;
 
-    return async () => {
-      if (idle.value && deadline !== undefined && deadline.timeRemaining() > SLICE_MS) {
-        return;
-      }
-      do {
-        await until(idle).toBe(true);
-        deadline = await nextIdle();
-      } while (!idle.value);
-    };
+  const roomLeft = (): boolean =>
+    idle.value && deadline !== undefined && deadline.timeRemaining() > SLICE_MS;
+
+  const yieldTo = async (): Promise<void> => {
+    if (roomLeft()) {
+      await yieldInLine();
+    }
+    while (!roomLeft()) {
+      await until(idle).toBe(true);
+      deadline = await nextIdle();
+    }
   };
 
   const restart = (): void => {
@@ -85,7 +95,6 @@ export const useTableWarmup = <T>(options: TableWarmupOptions<T>): TableWarmup =
     }
 
     const own = new AbortController();
-    const yieldTo = createYield();
 
     running = own;
 

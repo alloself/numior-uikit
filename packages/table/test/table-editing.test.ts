@@ -42,7 +42,7 @@ describe('NuiTable edits', () => {
   it('clears editable cells with Delete, keeps read-only ones and undoes and redoes the change', async () => {
     const rows = staff(20);
     const grid = mountStaff({ rows });
-    await grid.settle();
+    await grid.nextPaint();
 
     expect(grid.cellText(20, 3)).toBe('21 900');
     await grid.dragRange({ row: 1, col: 1 }, { row: 2, col: 3 });

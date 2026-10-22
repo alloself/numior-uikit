@@ -5,7 +5,7 @@ export { createFilterJob, createFilterSetup, compactPass } from './filter';
 export { createGroupJob } from './group';
 export { createRadixSortJob } from './radix';
 export { createSortJob, identityIndices } from './sort';
-export { runSliced, yieldToHost } from './slicer';
+export { runSliced, yieldInLine, yieldToHost } from './slicer';
 export { flattenTree } from './tree';
 export type { SliceJob, SliceOptions } from './slicer';
 export type { StoreJob, StoreRequest } from './column-store';
