@@ -1,13 +1,19 @@
 import { flushPromises, mount, type VueWrapper } from '@vue/test-utils';
 import { createNuiConfig, type NuiConfigOptions } from '@numior/primitives';
 import { nextTick } from 'vue';
-import { NuiChart, type ChartSpec, type NuiChartProps } from '../../src';
+import { NuiChart, type ChartHit, type ChartSpec, type NuiChartProps } from '../../src';
 
 export interface ChartMountOptions {
   readonly spec: ChartSpec;
   readonly label?: string;
   readonly props?: Omit<NuiChartProps, 'spec' | 'label'>;
   readonly config?: NuiConfigOptions;
+}
+
+export interface ChartTooltipView {
+  readonly title: string;
+  readonly rows: readonly string[];
+  readonly shown: boolean;
 }
 
 const BAR_SLOT = /nui-chart__bar--slot-(\d)/;
@@ -22,16 +28,94 @@ const textsOf = (wrapper: VueWrapper, selector: string): string[] =>
   wrapper.findAll(selector).map((item) => item.text());
 
 export class ChartDriver {
-  private constructor(private readonly wrapper: VueWrapper) {}
+  readonly selections: (ChartHit | null)[] = [];
 
-  static mount({ spec, label = 'Revenue', props = {}, config }: ChartMountOptions): ChartDriver {
-    return new ChartDriver(
-      mount(NuiChart, {
-        props: { spec, label, ...props },
-        global: { plugins: config === undefined ? [] : [createNuiConfig(config)] },
-        attachTo: document.body,
-      }),
-    );
+  private readonly wrapper: VueWrapper;
+
+  private constructor({ spec, label = 'Revenue', props = {}, config }: ChartMountOptions) {
+    this.wrapper = mount(NuiChart, {
+      props: {
+        spec,
+        label,
+        ...props,
+        selected: null,
+        'onUpdate:selected': (hit: ChartHit | null) => {
+          this.selections.push(hit);
+          void this.wrapper.setProps({ selected: hit });
+        },
+      },
+      global: { plugins: config === undefined ? [] : [createNuiConfig(config)] },
+      attachTo: document.body,
+    });
+  }
+
+  static mount(options: ChartMountOptions): ChartDriver {
+    return new ChartDriver(options);
+  }
+
+  get tooltip(): ChartTooltipView | undefined {
+    const tooltip = this.wrapper.find('.nui-chart__tooltip');
+
+    return tooltip.exists()
+      ? {
+          title: tooltip.find('.nui-chart__tooltip-title').text(),
+          rows: tooltip
+            .findAll('.nui-chart__tooltip-row')
+            .map(
+              (row) =>
+                `${row.find('.nui-chart__tooltip-name').text()} ${row.find('.nui-chart__tooltip-value').text()}`,
+            ),
+          shown: tooltip.classes().includes('nui-chart__tooltip--shown'),
+        }
+      : undefined;
+  }
+
+  get announcement(): string {
+    return this.wrapper.find('.nui-chart__live').text();
+  }
+
+  get mutedMarks(): number {
+    return this.wrapper.findAll(
+      '.nui-chart__bar--muted, .nui-chart__slice--muted, .nui-chart__point--muted',
+    ).length;
+  }
+
+  get activePoints(): number {
+    return this.wrapper.findAll('.nui-chart__point--active').length;
+  }
+
+  get crosshairX(): number | undefined {
+    const line = this.wrapper.find('.nui-chart__crosshair');
+
+    return line.exists() ? Number(line.attributes('x1')) : undefined;
+  }
+
+  get focusable(): boolean {
+    return this.wrapper.find('.nui-chart').attributes('tabindex') === '0';
+  }
+
+  async hover(x: number, y: number): Promise<void> {
+    await this.pointAt('pointermove', x, y);
+  }
+
+  async leave(): Promise<void> {
+    await this.wrapper.find('.nui-chart__frame').trigger('pointerleave');
+  }
+
+  async clickAt(x: number, y: number): Promise<void> {
+    await this.pointAt('click', x, y);
+  }
+
+  private async pointAt(type: 'pointermove' | 'click', x: number, y: number): Promise<void> {
+    this.wrapper
+      .find('.nui-chart__frame')
+      .element.dispatchEvent(new MouseEvent(type, { clientX: x, clientY: y, bubbles: true }));
+
+    await nextTick();
+  }
+
+  async press(key: string): Promise<void> {
+    await this.wrapper.find('.nui-chart').trigger('keydown', { key });
   }
 
   get label(): string | undefined {

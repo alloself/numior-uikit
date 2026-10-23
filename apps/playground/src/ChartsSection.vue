@@ -6,12 +6,16 @@
     </div>
     <NuiSwitch v-model="showTable" label="Показать таблицу данных" data-testid="charts-table" />
     <div class="charts-grid">
-      <NuiChart
-        :spec="revenue"
-        label="Выручка по кварталам, млн ₽"
-        :show-table="showTable"
-        data-testid="chart-columns"
-      />
+      <div class="charts-cell">
+        <NuiChart
+          v-model:selected="quarter"
+          :spec="revenue"
+          label="Выручка по кварталам, млн ₽"
+          :show-table="showTable"
+          data-testid="chart-columns"
+        />
+        <p class="charts-note" data-testid="charts-selected">{{ selectedText }}</p>
+      </div>
       <NuiChart
         :spec="channels"
         label="Доля каналов продаж по регионам"
@@ -56,15 +60,24 @@
 </template>
 
 <script setup lang="ts">
-import { NuiChart, type ChartSpec } from '@numior/charts';
+import { NuiChart, type ChartHit, type ChartSpec } from '@numior/charts';
 import { NuiSwitch } from '@numior/vue';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 
 const showTable = ref(false);
+const quarter = ref<ChartHit | null>(null);
+
+const QUARTERS = ['I кв.', 'II кв.', 'III кв.', 'IV кв.'];
+
+const selectedText = computed(() =>
+  quarter.value === null
+    ? 'Щёлкните по кварталу, чтобы выбрать его'
+    : `Выбран квартал: ${QUARTERS[quarter.value.index] ?? ''}`,
+);
 
 const revenue: ChartSpec = {
   kind: 'column',
-  categories: { kind: 'text', labels: ['I кв.', 'II кв.', 'III кв.', 'IV кв.'] },
+  categories: { kind: 'text', labels: QUARTERS },
   series: [
     { id: 'online', name: 'Онлайн', values: [42, 51, 58, 73] },
     { id: 'stores', name: 'Магазины', values: [65, 61, 59, 66] },

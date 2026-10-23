@@ -84,6 +84,49 @@ test.describe('charts', () => {
     await expect(charts.rows(charts.scatter).first()).toHaveText(/5\s*3\s*2/);
   });
 
+  test('shows the values under the pointer and selects a quarter by click', async ({
+    page,
+    isMobile,
+  }) => {
+    const playground = new PlaygroundPage(page);
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    const { charts } = playground;
+    await charts.columns.scrollIntoViewIfNeeded();
+    if (!isMobile) {
+      await charts.pointAt(charts.columns, 'II кв.');
+      await expect(charts.tooltip(charts.columns)).toBeVisible();
+      await expect(charts.tooltip(charts.columns)).toContainText('II кв.');
+      await expect(charts.tooltip(charts.columns)).toContainText('Магазины');
+    }
+    await expect(charts.selectedNote).toHaveText('Щёлкните по кварталу, чтобы выбрать его');
+    await charts.pick(charts.columns, 'III кв.');
+    await expect(charts.selectedNote).toHaveText('Выбран квартал: III кв.');
+  });
+
+  test('walks quarters from the keyboard and announces their values', async ({
+    page,
+    isMobile,
+  }) => {
+    test.skip(isMobile, 'keyboard scenario');
+    const playground = new PlaygroundPage(page);
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    const { charts } = playground;
+    await charts.columns.focus();
+    await page.keyboard.press('ArrowRight');
+
+    await expect(charts.announcement(charts.columns)).toHaveText(
+      'I кв.: Онлайн 42, Магазины 65, Партнёры 18',
+    );
+
+    await page.keyboard.press('End');
+    await page.keyboard.press('Enter');
+    await expect(charts.selectedNote).toHaveText('Выбран квартал: IV кв.');
+    await page.keyboard.press('Enter');
+    await expect(charts.selectedNote).toHaveText('Щёлкните по кварталу, чтобы выбрать его');
+  });
+
   test('keeps value labels apart on a narrow screen', async ({ page }) => {
     const playground = new PlaygroundPage(page);
     await playground.emulate({ reducedMotion: 'reduce' });
@@ -119,6 +162,8 @@ test.describe('charts', () => {
     await playground.open();
     const { charts } = playground;
     await charts.showTable();
+    await charts.columns.focus();
+    await page.keyboard.press('ArrowRight');
     for (const theme of ['light', 'dark'] as const) {
       await playground.setTheme(theme);
 

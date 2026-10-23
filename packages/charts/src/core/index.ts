@@ -1,3 +1,4 @@
+export { anchorOf, hitAt, hitsOf, type SceneAnchor, type ScenePosition } from './hit';
 export { layoutChart } from './layout';
 export {
   bandScale,
@@ -16,6 +17,7 @@ export type {
   Box,
   ChartCategories,
   ChartCategoryAxis,
+  ChartHit,
   ChartKind,
   ChartScene,
   ChartSeries,
@@ -26,6 +28,7 @@ export type {
   ChartValue,
   ChartValueAxis,
   LayoutOptions,
+  SceneAxis,
   SceneBar,
   SceneLine,
   ScenePath,

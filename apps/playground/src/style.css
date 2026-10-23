@@ -426,3 +426,15 @@ footer {
   gap: var(--nui-space-6);
   margin-block-start: var(--nui-space-4);
 }
+
+.charts-cell {
+  display: grid;
+  gap: var(--nui-space-2);
+  min-inline-size: 0;
+}
+
+.charts-note {
+  margin: 0;
+  color: var(--nui-text-muted);
+  font-size: var(--nui-font-size-sm);
+}

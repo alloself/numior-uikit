@@ -1,4 +1,4 @@
-import type { ChartScene, ChartSlot, ChartSpec } from '../core';
+import type { ChartHit, ChartScene, ChartSlot, ChartSpec } from '../core';
 
 export interface NuiChartProps {
   spec: ChartSpec;
@@ -21,6 +21,35 @@ export interface NuiChartLegendProps {
 
 export interface NuiChartSceneProps {
   readonly scene: ChartScene;
+  readonly focus: ChartHit | undefined;
+}
+
+export interface NuiChartTooltipRow {
+  readonly key: string;
+  readonly slot: ChartSlot | undefined;
+  readonly name: string;
+  readonly value: string;
+}
+
+export interface NuiChartTooltipContent {
+  readonly title: string;
+  readonly rows: readonly NuiChartTooltipRow[];
+}
+
+export interface NuiChartTooltipSlot {
+  readonly hit: ChartHit;
+  readonly content: NuiChartTooltipContent;
+}
+
+export type NuiChartTooltipSide = 'start' | 'end' | 'above' | 'below';
+
+export interface NuiChartTooltipProps {
+  readonly content: NuiChartTooltipContent;
+  readonly x: number;
+  readonly y: number;
+  readonly side: NuiChartTooltipSide;
+  readonly reach: number;
+  readonly shown: boolean;
 }
 
 export interface NuiChartTableProps {

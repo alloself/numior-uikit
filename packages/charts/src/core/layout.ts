@@ -384,6 +384,7 @@ const scatterScene = (frame: Frame): ChartScene => {
     bars: [],
     paths: [],
     slices: [],
+    axis: undefined,
     points: layoutLines(
       {
         area: false,
@@ -516,16 +517,19 @@ const sceneOf = (
   const count = frame.categoryTexts.length;
 
   if (linear(frame.spec)) {
+    const at = pointAt(frame.spec, band);
+
     return {
       width: frame.size.width,
       height: frame.size.height,
       plot,
       bars: [],
       slices: [],
+      axis: { horizontal, positions: Array.from({ length: count }, (_unused, index) => at(index)) },
       ...layoutLines(
         {
           area: frame.spec.kind === 'area',
-          at: pointAt(frame.spec, band),
+          at,
           value,
           baseline,
           slots,
@@ -548,6 +552,10 @@ const sceneOf = (
     paths: [],
     points: [],
     slices: [],
+    axis: {
+      horizontal,
+      positions: Array.from({ length: count }, (_unused, index) => band.center(index)),
+    },
     bars: layoutBars(
       {
         horizontal,
@@ -587,6 +595,7 @@ const pieScene = (spec: ChartSpec, size: ChartSize): ChartScene => {
     bars: [],
     paths: [],
     points: [],
+    axis: undefined,
     slices: layoutSlices(
       { cx: size.width / 2, cy: size.height / 2, radius, hole: radius * hole, slots },
       spec.kind === 'pie' ? spec.series.slice(0, 1) : spec.series,

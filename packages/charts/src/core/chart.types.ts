@@ -93,6 +93,10 @@ export interface SceneSlice {
   readonly index: number;
   readonly value: number;
   readonly share: number;
+  readonly from: number;
+  readonly to: number;
+  readonly inner: number;
+  readonly outer: number;
   readonly slot: ChartSlot;
   readonly path: string;
   readonly x: number;
@@ -117,6 +121,16 @@ export interface SceneText {
   readonly rotate?: number | undefined;
 }
 
+export interface SceneAxis {
+  readonly horizontal: boolean;
+  readonly positions: readonly number[];
+}
+
+export interface ChartHit {
+  readonly index: number;
+  readonly series: number | undefined;
+}
+
 export interface ChartScene {
   readonly width: number;
   readonly height: number;
@@ -125,6 +139,7 @@ export interface ChartScene {
   readonly paths: readonly ScenePath[];
   readonly points: readonly ScenePoint[];
   readonly slices: readonly SceneSlice[];
+  readonly axis: SceneAxis | undefined;
   readonly lines: readonly SceneLine[];
   readonly texts: readonly SceneText[];
   readonly slots: readonly ChartSlot[];

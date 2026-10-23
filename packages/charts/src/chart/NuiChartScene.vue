@@ -20,14 +20,14 @@
       v-for="slice in scene.slices"
       :key="`slice-${slice.series}-${slice.index}`"
       class="nui-chart__slice"
-      :class="`nui-chart__slice--slot-${slice.slot}`"
+      :class="sliceClass(slice)"
       :d="slice.path"
     />
     <path
       v-for="bar in scene.bars"
       :key="`${bar.series}-${bar.index}`"
       class="nui-chart__bar"
-      :class="`nui-chart__bar--slot-${bar.slot}`"
+      :class="barClass(bar)"
       :d="bar.path"
     />
     <path
@@ -53,14 +53,22 @@
       :class="`nui-chart__stroke--slot-${stroke.slot}`"
       :d="stroke.d"
     />
+    <line
+      v-if="crosshair !== undefined"
+      class="nui-chart__crosshair"
+      :x1="crosshair"
+      :y1="scene.plot.y"
+      :x2="crosshair"
+      :y2="scene.plot.y + scene.plot.height"
+    />
     <circle
       v-for="point in markers"
       :key="`point-${point.series}-${point.index}`"
       class="nui-chart__point"
-      :class="`nui-chart__point--slot-${point.slot}`"
+      :class="pointClass(point)"
       :cx="point.x"
       :cy="point.y"
-      r="4"
+      :r="active(point) ? 5 : 4"
     />
     <text
       v-for="(text, index) in labels"
@@ -80,10 +88,10 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import type { SceneText } from '../core';
+import type { SceneBar, ScenePoint, SceneSlice, SceneText } from '../core';
 import type { NuiChartSceneProps } from './chart.types';
 
-const { scene } = defineProps<NuiChartSceneProps>();
+const { scene, focus } = defineProps<NuiChartSceneProps>();
 
 const BASELINES: Readonly<Record<SceneText['baseline'], string>> = {
   top: 'hanging',
@@ -101,7 +109,36 @@ const labels = computed(() =>
 
 const areas = computed(() => scene.paths.filter((path) => path.role === 'area'));
 const strokes = computed(() => scene.paths.filter((path) => path.role === 'line'));
-const markers = computed(() => scene.points.filter((point) => point.marker));
+const lined = computed(() => scene.axis !== undefined && scene.bars.length === 0);
+
+const active = (point: ScenePoint): boolean =>
+  focus !== undefined &&
+  point.index === focus.index &&
+  (focus.series === undefined ? lined.value : point.series === focus.series);
+
+const markers = computed(() => scene.points.filter((point) => point.marker || active(point)));
+
+const crosshair = computed(() =>
+  lined.value && focus !== undefined ? scene.axis?.positions[focus.index] : undefined,
+);
+
+const barClass = (bar: SceneBar): string[] =>
+  focus === undefined || bar.index === focus.index
+    ? [`nui-chart__bar--slot-${bar.slot}`]
+    : [`nui-chart__bar--slot-${bar.slot}`, 'nui-chart__bar--muted'];
+
+const sliceClass = (slice: SceneSlice): string[] =>
+  focus === undefined || (slice.index === focus.index && slice.series === focus.series)
+    ? [`nui-chart__slice--slot-${slice.slot}`]
+    : [`nui-chart__slice--slot-${slice.slot}`, 'nui-chart__slice--muted'];
+
+const pointClass = (point: ScenePoint): Record<string, boolean> => ({
+  [`nui-chart__point--slot-${point.slot}`]: true,
+  'nui-chart__point--active': active(point),
+  'nui-chart__point--muted':
+    focus?.series !== undefined && scene.axis === undefined && !active(point),
+});
+
 const grid = computed(() => scene.lines.filter((line) => line.role === 'grid'));
 const baselines = computed(() => scene.lines.filter((line) => line.role === 'baseline'));
 </script>

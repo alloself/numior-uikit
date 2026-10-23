@@ -28,6 +28,8 @@ afterEach(() => {
   document.documentElement.removeAttribute('dir');
 });
 
+const MIDDLE = 150;
+
 describe('NuiChart', () => {
   it('names the figure, draws a mark per value and keeps series in palette order', () => {
     const chart = chartOf({ spec: revenue, label: 'Revenue by quarter' });
@@ -60,6 +62,91 @@ describe('NuiChart', () => {
     expect(chart.legend).toEqual(['Q1', 'Q2', 'Q3']);
     expect(chart.valueTicks).toEqual([]);
     expect(chart.tableHeaders).toEqual(['Quarter', 'Online', 'Stores']);
+  });
+
+  it('shows the values of the category under the pointer and mutes the other columns', async () => {
+    const chart = chartOf({ spec: revenue, config: { locale: 'en-US' } });
+
+    expect(chart.tooltip).toBeUndefined();
+    await chart.hover(chart.categoryTickX('Q2') + 6, MIDDLE);
+
+    expect(chart.tooltip).toEqual({
+      title: 'Q2',
+      rows: ['Online 51.5', 'Stores 61'],
+      shown: true,
+    });
+
+    expect(chart.mutedMarks).toBe(3);
+    await chart.leave();
+
+    expect(chart.tooltip?.shown).toBe(false);
+    expect(chart.tooltip?.title).toBe('Q2');
+    expect(chart.mutedMarks).toBe(0);
+  });
+
+  it('follows a crosshair on lines and marks the points it crosses', async () => {
+    const chart = chartOf({ spec: { ...revenue, kind: 'line' } });
+    const x = chart.categoryTickX('Q3');
+
+    await chart.hover(x - 4, MIDDLE);
+
+    expect(chart.crosshairX).toBeCloseTo(x);
+    expect(chart.activePoints).toBe(1);
+    expect(chart.tooltip?.rows).toEqual(['Online —', 'Stores 59']);
+  });
+
+  it('walks categories with the arrow keys, announces them and selects with Enter', async () => {
+    const chart = chartOf({ spec: revenue, config: { locale: 'en-US' } });
+
+    expect(chart.focusable).toBe(true);
+    await chart.press('ArrowRight');
+
+    expect(chart.announcement).toBe('Q1: Online 42, Stores 1,200');
+    await chart.press('End');
+    await chart.press('Enter');
+
+    expect(chart.selections).toEqual([{ index: 2, series: undefined }]);
+    expect(chart.mutedMarks).toBe(4);
+    await chart.press('Escape');
+
+    expect(chart.announcement).toBe('');
+    expect(chart.mutedMarks).toBe(4);
+    await chart.clickAt(chart.categoryTickX('Q3'), MIDDLE);
+
+    expect(chart.selections).toEqual([{ index: 2, series: undefined }, null]);
+    expect(chart.mutedMarks).toBe(0);
+  });
+
+  it('describes a slice with its share and walks slices in right-to-left layouts', async () => {
+    const chart = chartOf({
+      spec: { ...revenue, kind: 'pie' },
+      config: { locale: 'en-US', dir: 'rtl' },
+    });
+
+    await chart.press('ArrowLeft');
+    await chart.press('ArrowLeft');
+
+    expect(chart.announcement).toBe('Q2: Online 51.5 · 55.1%');
+    expect(chart.mutedMarks).toBe(1);
+  });
+
+  it('shows the pair of a scatter point under the pointer', async () => {
+    const chart = chartOf({
+      spec: {
+        kind: 'scatter',
+        categories: { kind: 'number', values: [1, 2] },
+        series: [{ id: 'a', name: 'Ratio', values: [3, 4] }],
+        categoryAxis: { title: 'Size' },
+      },
+    });
+
+    await chart.press('ArrowRight');
+    await chart.press('ArrowRight');
+
+    expect(chart.tooltip?.title).toBe('Ratio');
+    expect(chart.tooltip?.rows).toEqual(['Size 2', 'Y 4']);
+    expect(chart.activePoints).toBe(1);
+    expect(chart.mutedMarks).toBe(1);
   });
 
   it('shows a legend only for two series or more', async () => {

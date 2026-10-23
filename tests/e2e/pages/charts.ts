@@ -6,6 +6,9 @@ export interface ChartTextBox {
   readonly right: number;
 }
 
+const exactly = (text: string): RegExp =>
+  new RegExp(`^\\s*${text.replaceAll(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*$`);
+
 export class ChartsSection {
   readonly section: Locator;
   readonly columns: Locator;
@@ -16,6 +19,7 @@ export class ChartsSection {
   readonly doughnut: Locator;
   readonly scatter: Locator;
   readonly tableSwitch: Locator;
+  readonly selectedNote: Locator;
 
   constructor(page: Page) {
     this.section = page.locator('section[aria-labelledby="charts-title"]');
@@ -27,6 +31,37 @@ export class ChartsSection {
     this.doughnut = page.getByTestId('chart-doughnut');
     this.scatter = page.getByTestId('chart-scatter');
     this.tableSwitch = page.getByRole('switch', { name: 'Показать таблицу данных' });
+    this.selectedNote = page.getByTestId('charts-selected');
+  }
+
+  tooltip(chart: Locator): Locator {
+    return chart.locator('.nui-chart__tooltip--shown');
+  }
+
+  announcement(chart: Locator): Locator {
+    return chart.locator('.nui-chart__live');
+  }
+
+  async categoryPoint(chart: Locator, label: string): Promise<{ x: number; y: number }> {
+    const x = await chart
+      .locator('.nui-chart__text--category-tick', { hasText: exactly(label) })
+      .getAttribute('x');
+
+    const frame = await chart.locator('.nui-chart__frame').boundingBox();
+
+    return { x: Number(x), y: (frame?.height ?? 0) / 2 };
+  }
+
+  async pointAt(chart: Locator, label: string): Promise<void> {
+    await chart
+      .locator('.nui-chart__frame')
+      .hover({ position: await this.categoryPoint(chart, label) });
+  }
+
+  async pick(chart: Locator, label: string): Promise<void> {
+    await chart
+      .locator('.nui-chart__frame')
+      .click({ position: await this.categoryPoint(chart, label) });
   }
 
   marks(chart: Locator): Locator {

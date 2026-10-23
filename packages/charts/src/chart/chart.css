@@ -11,7 +11,22 @@
   font-family: var(--nui-font);
 }
 
+.nui-chart--interactive {
+  outline: none;
+}
+
+.nui-chart--interactive .nui-chart__svg {
+  cursor: pointer;
+}
+
+.nui-chart--interactive:focus-visible {
+  border-radius: var(--nui-radius-md);
+  outline: var(--nui-focus-ring-width) solid var(--nui-focus);
+  outline-offset: var(--nui-focus-ring-offset);
+}
+
 .nui-chart__frame {
+  position: relative;
   box-sizing: border-box;
   inline-size: 100%;
   min-inline-size: 0;
@@ -42,6 +57,7 @@
   fill: var(--_fill);
   transition:
     fill var(--nui-duration-fast) var(--nui-easing),
+    opacity var(--nui-duration-fast) var(--nui-easing),
     d var(--nui-duration-normal) var(--nui-easing);
 }
 
@@ -133,6 +149,7 @@
   stroke-linejoin: round;
   transition:
     fill var(--nui-duration-fast) var(--nui-easing),
+    opacity var(--nui-duration-fast) var(--nui-easing),
     d var(--nui-duration-normal) var(--nui-easing);
 }
 
@@ -161,8 +178,108 @@
   stroke-width: 2;
   transition:
     fill var(--nui-duration-fast) var(--nui-easing),
+    opacity var(--nui-duration-fast) var(--nui-easing),
+    r var(--nui-duration-fast) var(--nui-easing),
     cx var(--nui-duration-normal) var(--nui-easing),
     cy var(--nui-duration-normal) var(--nui-easing);
+}
+
+.nui-chart__bar--muted,
+.nui-chart__slice--muted,
+.nui-chart__point--muted {
+  opacity: 0.35;
+}
+
+.nui-chart__crosshair {
+  stroke: var(--nui-chart-axis);
+  stroke-width: 1;
+  shape-rendering: crispEdges;
+  pointer-events: none;
+}
+
+.nui-chart__tooltip {
+  --_shift: calc(var(--_reach) + 0.5rem);
+
+  box-sizing: border-box;
+  position: absolute;
+  z-index: 1;
+  min-inline-size: 8rem;
+  max-inline-size: min(16rem, 50%);
+  padding: var(--nui-space-2) var(--nui-space-3);
+  border: 1px solid var(--nui-border);
+  border-radius: var(--nui-radius-md);
+  background: var(--nui-surface-elevated);
+  box-shadow: var(--nui-shadow-md);
+  color: var(--nui-text);
+  font-size: var(--nui-font-size-sm);
+  pointer-events: none;
+  opacity: 0;
+  transition:
+    opacity var(--nui-duration-fast) var(--nui-easing),
+    left var(--nui-duration-normal) var(--nui-easing),
+    top var(--nui-duration-normal) var(--nui-easing),
+    translate var(--nui-duration-normal) var(--nui-easing);
+}
+
+.nui-chart__tooltip--side-end {
+  translate: var(--_shift) -50%;
+}
+
+.nui-chart__tooltip--side-start {
+  translate: calc(-100% - var(--_shift)) -50%;
+}
+
+.nui-chart__tooltip--side-above {
+  translate: -50% calc(-100% - var(--_shift));
+}
+
+.nui-chart__tooltip--side-below {
+  translate: -50% var(--_shift);
+}
+
+.nui-chart__tooltip--shown {
+  opacity: 1;
+}
+
+.nui-chart__tooltip-title {
+  margin: 0 0 var(--nui-space-1);
+  font-weight: 500;
+}
+
+.nui-chart__tooltip-rows {
+  display: grid;
+  gap: var(--nui-space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.nui-chart__tooltip-row {
+  display: flex;
+  align-items: center;
+  gap: var(--nui-space-2);
+}
+
+.nui-chart__tooltip-name {
+  flex: 1;
+  color: var(--nui-text-muted);
+}
+
+.nui-chart__tooltip-value {
+  margin-inline-start: auto;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+.nui-chart__live {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  margin: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 .nui-chart__text {
