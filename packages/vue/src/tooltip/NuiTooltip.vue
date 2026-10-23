@@ -88,13 +88,13 @@ const onFocus = (): void => {
 const onBlur = (): void => delay.closeNow();
 
 const onDocumentKeydown = (event: KeyboardEvent): void => {
-  if (event.key === 'Escape' && open.value) {
+  if (event.key === 'Escape') {
     delay.closeNow();
   }
 };
 
-const pageDocument = (): Document | undefined =>
-  typeof document === 'undefined' ? undefined : document;
+const openDocument = (): Document | undefined =>
+  open.value && typeof document !== 'undefined' ? document : undefined;
 
 watch(
   () => disabled,
@@ -112,7 +112,7 @@ useEventListener(anchorOf, 'pointerleave', onPointerleave);
 useEventListener(anchorOf, 'pointerdown', onPointerdown);
 useEventListener(anchorOf, 'focus', onFocus);
 useEventListener(anchorOf, 'blur', onBlur);
-useEventListener(pageDocument, 'keydown', onDocumentKeydown);
+useEventListener(openDocument, 'keydown', onDocumentKeydown);
 
 const triggerAttrs = computed<NuiTooltipTriggerAttrs>(() => ({
   'aria-describedby': disabled ? undefined : tooltipId.value,

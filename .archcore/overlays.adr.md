@@ -15,6 +15,8 @@ status: accepted
   `showModal()`: браузер даёт modal focus trap, inert-фон, Esc, `::backdrop` и возврат
   фокуса. `NuiPopover` и `NuiTooltip` — Popover API: `popover="auto"` с light dismiss для
   поповера, `popover="manual"` для подсказки. Teleport и z-index не используются.
+- Подсказка слушает Escape на документе только пока открыта (2026-10-23): панель редактора держит
+  ~15 подсказок, и каждая обрабатывала каждое нажатие при наборе.
 - Элементы остаются в DOM инициатора, поэтому тема, density и `dir` наследуются в top layer
   сами; это проверяется e2e диалогом внутри вложенной тёмной зоны.
 - Шкала ширины `NuiDrawer` своя: шаги диалога `sm`, `md`, `lg` и `xl` (40rem) для редактора,
