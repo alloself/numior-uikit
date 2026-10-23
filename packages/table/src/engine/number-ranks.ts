@@ -23,7 +23,14 @@ interface Assigning {
   readonly reversed: boolean;
 }
 
+interface PendingRanks {
+  readonly sorting: KeptRadixJob;
+  readonly descending: boolean;
+}
+
 const known = new WeakMap<Float64Array, NumberRanks>();
+
+const pending = new WeakMap<Float64Array, PendingRanks>();
 
 export const numberRanksOf = (store: NumberKeys): NumberRanks | undefined => known.get(store.keys);
 
@@ -116,26 +123,44 @@ export const createThenJob = (first: SliceJob, next: () => SliceJob): SliceJob =
   };
 };
 
-const rankingJob = (indices: Uint32Array, store: NumberKeys, descending: boolean): SliceJob => {
+const sortedPending = (store: NumberKeys): PendingRanks | undefined => {
+  const waiting = pending.get(store.keys);
+
+  return waiting?.sorting.sorted() === undefined ? undefined : waiting;
+};
+
+export const hasPendingRanks = (store: NumberKeys): boolean => sortedPending(store) !== undefined;
+
+export const createNumberRankJob = (store: NumberKeys): SliceJob => {
+  const waiting = sortedPending(store);
+
+  if (waiting !== undefined) {
+    pending.delete(store.keys);
+    return createAssignJob({ sorting: waiting.sorting, store, reversed: waiting.descending });
+  }
+
   const sorting = createKeptRadixJob(
-    indices,
-    [{ kind: 'float', keys: store.keys, nulls: store.nulls, descending }],
+    identityIndices(store.keys.length),
+    [{ kind: 'float', keys: store.keys, nulls: store.nulls, descending: false }],
     true,
   );
 
-  return createThenJob(sorting, () => createAssignJob({ sorting, store, reversed: descending }));
+  return createThenJob(sorting, () => createAssignJob({ sorting, store, reversed: false }));
 };
-
-export const createNumberRankJob = (store: NumberKeys): SliceJob =>
-  rankingJob(identityIndices(store.keys.length), store, false);
 
 export const createRankingSortJob = (
   indices: Uint32Array,
   store: NumberKeys,
   descending: boolean,
-): SliceJob =>
-  indices.length === store.keys.length
-    ? rankingJob(indices, store, descending)
-    : createRadixSortJob(indices, [
-        { kind: 'float', keys: store.keys, nulls: store.nulls, descending },
-      ]);
+): SliceJob => {
+  const lane = { kind: 'float', keys: store.keys, nulls: store.nulls, descending } as const;
+
+  if (indices.length !== store.keys.length) {
+    return createRadixSortJob(indices, [lane]);
+  }
+
+  const sorting = createKeptRadixJob(indices, [lane], true);
+
+  pending.set(store.keys, { sorting, descending });
+  return sorting;
+};

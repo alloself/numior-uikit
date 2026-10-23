@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vite-plus/test';
 import { createSortJob, identityIndices, type SliceJob } from '../src/engine';
-import { numberRanksOf } from '../src/engine/number-ranks';
+import { createNumberRankJob, hasPendingRanks, numberRanksOf } from '../src/engine/number-ranks';
 import { createOrderJob, type OrderKey } from '../src/engine/order';
 import { mulberry32 } from '../bench/dataset';
 
@@ -74,7 +74,7 @@ const ordered = (indices: Uint32Array, keys: readonly OrderKey[]): number[] => {
 };
 
 describe('number ranks', () => {
-  it('sorts a number column before and after it learns its ranks', () => {
+  it('sorts a number column, keeps its sorted keys and ranks them without sorting again', () => {
     const store = numbers();
     const all = identityIndices(LENGTH);
     const half = all.filter((row) => row % 2 === 0);
@@ -83,11 +83,17 @@ describe('number ranks', () => {
       expected(half, [{ store, descending: false }]),
     );
 
-    expect(numberRanksOf(store)).toBeUndefined();
+    expect(hasPendingRanks(store)).toBe(false);
 
     expect(ordered(all, [{ store, descending: true }])).toEqual(
       expected(all, [{ store, descending: true }]),
     );
+
+    expect(numberRanksOf(store)).toBeUndefined();
+    expect(hasPendingRanks(store)).toBe(true);
+    finish(createNumberRankJob(store));
+
+    expect(hasPendingRanks(store)).toBe(false);
 
     expect(numberRanksOf(store)?.size).toBe(
       new Set(store.keys.filter((_, row) => store.nulls[row] !== 1)).size,

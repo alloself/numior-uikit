@@ -700,6 +700,7 @@ const query = useTableQuery({
     totals.take(ran);
     rearrange();
     clampActive();
+    warming.rankSoon((ran.sort ?? []).map((entry) => entry.key));
 
     if (rowsIntent.take() === 'rows') {
       announcement.value = messages.value.rowsShown({ count });

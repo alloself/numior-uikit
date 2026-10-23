@@ -11,6 +11,7 @@ export interface TableWarmupOptions<T> {
 
 export interface TableWarmup {
   restart(): void;
+  rankSoon(keys: readonly string[]): void;
 }
 
 interface WishGroups {
@@ -70,6 +71,7 @@ const nextIdle = async (): Promise<IdleDeadline> => {
 export const useTableWarmup = <T>(options: TableWarmupOptions<T>): TableWarmup => {
   const { idle } = useIdle(QUIET_MS, { events: [...INPUTS], listenForVisibilityChange: false });
   let running: AbortController | undefined;
+  let soon: AbortController | undefined;
   let mounted = false;
 
   let deadline: IdleDeadline | undefined;
@@ -110,6 +112,37 @@ export const useTableWarmup = <T>(options: TableWarmupOptions<T>): TableWarmup =
     );
   };
 
+  const rankWhenIdle = async (wishes: TableStoreWish[], signal: AbortSignal): Promise<void> => {
+    await nextIdle();
+    if (!signal.aborted) {
+      await options.engine.value.prepare(wishes, {
+        sliceMs: SLICE_MS,
+        yieldTo: yieldInLine,
+        signal,
+      });
+    }
+  };
+
+  const rankSoon = (keys: readonly string[]): void => {
+    const numeric = new Set(
+      options.columns().flatMap((column) => (column.type === 'text' ? [] : [column.key])),
+    );
+
+    const wishes = keys.flatMap((key): TableStoreWish[] =>
+      numeric.has(key) ? [{ key, need: 'ranks' }] : [],
+    );
+
+    if (!mounted || !options.enabled() || wishes.length === 0) {
+      return;
+    }
+    soon?.abort();
+
+    const own = new AbortController();
+
+    soon = own;
+    void rankWhenIdle(wishes, own.signal);
+  };
+
   onMounted(() => {
     mounted = true;
     restart();
@@ -117,7 +150,8 @@ export const useTableWarmup = <T>(options: TableWarmupOptions<T>): TableWarmup =
 
   onScopeDispose(() => {
     running?.abort();
+    soon?.abort();
   });
 
-  return { restart };
+  return { restart, rankSoon };
 };
