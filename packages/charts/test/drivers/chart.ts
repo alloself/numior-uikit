@@ -16,6 +16,8 @@ const STROKE_SLOT = /nui-chart__stroke--slot-(\d)/;
 
 const AREA_SLOT = /nui-chart__area--slot-(\d)/;
 
+const SLICE_SLOT = /nui-chart__slice--slot-(\d)/;
+
 const textsOf = (wrapper: VueWrapper, selector: string): string[] =>
   wrapper.findAll(selector).map((item) => item.text());
 
@@ -54,6 +56,10 @@ export class ChartDriver {
 
   get areaSlots(): number[] {
     return this.slotsOf('.nui-chart__area', AREA_SLOT);
+  }
+
+  get sliceSlots(): number[] {
+    return this.slotsOf('.nui-chart__slice', SLICE_SLOT);
   }
 
   get markerCount(): number {

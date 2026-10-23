@@ -31,6 +31,20 @@
         :show-table="showTable"
         data-testid="chart-areas"
       />
+      <NuiChart
+        :spec="share"
+        label="Доля каналов в выручке за год"
+        :height="260"
+        :show-table="showTable"
+        data-testid="chart-pie"
+      />
+      <NuiChart
+        :spec="costs"
+        label="Структура расходов за год"
+        :height="260"
+        :show-table="showTable"
+        data-testid="chart-doughnut"
+      />
     </div>
   </section>
 </template>
@@ -98,5 +112,17 @@ const income: ChartSpec = {
     { id: 'partners', name: 'Партнёры', values: [6, 8, 7, 9, 11, 10] },
   ],
   valueAxis: { title: 'млн ₽' },
+};
+
+const share: ChartSpec = {
+  kind: 'pie',
+  categories: { kind: 'text', labels: ['Онлайн', 'Магазины', 'Партнёры', 'Опт'] },
+  series: [{ id: 'revenue', name: 'Выручка, млн ₽', values: [224, 251, 73, 41] }],
+};
+
+const costs: ChartSpec = {
+  kind: 'doughnut',
+  categories: { kind: 'text', labels: ['Зарплаты', 'Аренда', 'Маркетинг', 'Логистика', 'Прочее'] },
+  series: [{ id: 'fact', name: 'Расходы, млн ₽', values: [48, 17, 14, 12, 9] }],
 };
 </script>

@@ -49,6 +49,7 @@
 .nui-chart__area--slot-0,
 .nui-chart__stroke--slot-0,
 .nui-chart__point--slot-0,
+.nui-chart__slice--slot-0,
 .nui-chart__swatch--slot-0 {
   --_fill: var(--nui-chart-other);
 }
@@ -57,6 +58,7 @@
 .nui-chart__area--slot-1,
 .nui-chart__stroke--slot-1,
 .nui-chart__point--slot-1,
+.nui-chart__slice--slot-1,
 .nui-chart__swatch--slot-1 {
   --_fill: var(--nui-chart-1);
 }
@@ -65,6 +67,7 @@
 .nui-chart__area--slot-2,
 .nui-chart__stroke--slot-2,
 .nui-chart__point--slot-2,
+.nui-chart__slice--slot-2,
 .nui-chart__swatch--slot-2 {
   --_fill: var(--nui-chart-2);
 }
@@ -73,6 +76,7 @@
 .nui-chart__area--slot-3,
 .nui-chart__stroke--slot-3,
 .nui-chart__point--slot-3,
+.nui-chart__slice--slot-3,
 .nui-chart__swatch--slot-3 {
   --_fill: var(--nui-chart-3);
 }
@@ -81,6 +85,7 @@
 .nui-chart__area--slot-4,
 .nui-chart__stroke--slot-4,
 .nui-chart__point--slot-4,
+.nui-chart__slice--slot-4,
 .nui-chart__swatch--slot-4 {
   --_fill: var(--nui-chart-4);
 }
@@ -89,6 +94,7 @@
 .nui-chart__area--slot-5,
 .nui-chart__stroke--slot-5,
 .nui-chart__point--slot-5,
+.nui-chart__slice--slot-5,
 .nui-chart__swatch--slot-5 {
   --_fill: var(--nui-chart-5);
 }
@@ -97,6 +103,7 @@
 .nui-chart__area--slot-6,
 .nui-chart__stroke--slot-6,
 .nui-chart__point--slot-6,
+.nui-chart__slice--slot-6,
 .nui-chart__swatch--slot-6 {
   --_fill: var(--nui-chart-6);
 }
@@ -105,6 +112,7 @@
 .nui-chart__area--slot-7,
 .nui-chart__stroke--slot-7,
 .nui-chart__point--slot-7,
+.nui-chart__slice--slot-7,
 .nui-chart__swatch--slot-7 {
   --_fill: var(--nui-chart-7);
 }
@@ -113,8 +121,19 @@
 .nui-chart__area--slot-8,
 .nui-chart__stroke--slot-8,
 .nui-chart__point--slot-8,
+.nui-chart__slice--slot-8,
 .nui-chart__swatch--slot-8 {
   --_fill: var(--nui-chart-8);
+}
+
+.nui-chart__slice {
+  fill: var(--_fill);
+  stroke: var(--nui-surface);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  transition:
+    fill var(--nui-duration-fast) var(--nui-easing),
+    d var(--nui-duration-normal) var(--nui-easing);
 }
 
 .nui-chart__area {

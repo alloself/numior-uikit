@@ -1,4 +1,4 @@
-export type ChartKind = 'column' | 'bar' | 'line' | 'area';
+export type ChartKind = 'column' | 'bar' | 'line' | 'area' | 'pie' | 'doughnut';
 
 export type ChartStacking = 'none' | 'stacked' | 'percent';
 
@@ -36,6 +36,7 @@ export interface ChartSpec {
   readonly stacking?: ChartStacking | undefined;
   readonly valueAxis?: ChartValueAxis | undefined;
   readonly categoryAxis?: ChartCategoryAxis | undefined;
+  readonly hole?: number | undefined;
 }
 
 export interface ChartSize {
@@ -86,6 +87,17 @@ export interface ScenePoint {
   readonly marker: boolean;
 }
 
+export interface SceneSlice {
+  readonly series: number;
+  readonly index: number;
+  readonly value: number;
+  readonly share: number;
+  readonly slot: ChartSlot;
+  readonly path: string;
+  readonly x: number;
+  readonly y: number;
+}
+
 export interface SceneLine {
   readonly role: 'grid' | 'baseline';
   readonly x1: number;
@@ -111,6 +123,7 @@ export interface ChartScene {
   readonly bars: readonly SceneBar[];
   readonly paths: readonly ScenePath[];
   readonly points: readonly ScenePoint[];
+  readonly slices: readonly SceneSlice[];
   readonly lines: readonly SceneLine[];
   readonly texts: readonly SceneText[];
   readonly slots: readonly ChartSlot[];

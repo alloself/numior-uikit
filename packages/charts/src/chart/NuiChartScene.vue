@@ -17,6 +17,13 @@
       :y2="line.y2"
     />
     <path
+      v-for="slice in scene.slices"
+      :key="`slice-${slice.series}-${slice.index}`"
+      class="nui-chart__slice"
+      :class="`nui-chart__slice--slot-${slice.slot}`"
+      :d="slice.path"
+    />
+    <path
       v-for="bar in scene.bars"
       :key="`${bar.series}-${bar.index}`"
       class="nui-chart__bar"

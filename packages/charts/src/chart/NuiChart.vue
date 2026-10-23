@@ -23,6 +23,7 @@ import { layoutChart } from '../core';
 import NuiChartLegend from './NuiChartLegend.vue';
 import NuiChartScene from './NuiChartScene.vue';
 import NuiChartTable from './NuiChartTable.vue';
+import { categoryTexts } from './chart-table';
 import { chartMessages } from './chart.messages';
 import type { NuiChartLegendItem, NuiChartProps } from './chart.types';
 import { useChartFrame } from './use-chart-frame';
@@ -31,7 +32,6 @@ const { spec, label, height = 300, locale, showTable = false } = defineProps<Nui
 
 const FALLBACK_WIDTH = 640;
 const FONT_SIZE = 12;
-const SLOTS = [1, 2, 3, 4, 5, 6, 7, 8] as const;
 
 const frameElement = useTemplateRef<HTMLElement>('frame');
 const texts = useMessages(chartMessages, () => locale);
@@ -46,14 +46,6 @@ const empty = computed(
     (spec.categories.kind === 'text'
       ? spec.categories.labels.length === 0
       : spec.categories.values.length === 0),
-);
-
-const legend = computed((): NuiChartLegendItem[] =>
-  spec.series.map((series, index) => ({
-    id: series.id,
-    name: series.name,
-    slot: series.slot ?? SLOTS[index] ?? 0,
-  })),
 );
 
 const rtl = computed(() => {
@@ -73,6 +65,23 @@ const scene = computed(() =>
     },
   ),
 );
+
+const legend = computed((): NuiChartLegendItem[] => {
+  const { slots } = scene.value;
+
+  if (spec.kind === 'pie' || spec.kind === 'doughnut') {
+    return categoryTexts(spec, resolvedLocale.value).map((name, index) => ({
+      id: `category-${String(index)}`,
+      name,
+      slot: slots[index] ?? 0,
+    }));
+  }
+  return spec.series.map((series, index) => ({
+    id: series.id,
+    name: series.name,
+    slot: slots[index] ?? 0,
+  }));
+});
 
 const documentRoot = (): HTMLElement | undefined =>
   typeof document === 'undefined' ? undefined : document.documentElement;

@@ -51,6 +51,25 @@ test.describe('charts', () => {
     await expect(charts.rows(charts.lines).nth(3)).toHaveText(/51\s*—/);
   });
 
+  test('cuts pies and doughnut rings by category and lists the categories', async ({ page }) => {
+    const playground = new PlaygroundPage(page);
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    const { charts } = playground;
+    await charts.pie.scrollIntoViewIfNeeded();
+    await expect(charts.slices(charts.pie)).toHaveCount(4);
+
+    await expect(charts.legend(charts.pie).getByRole('listitem')).toHaveText([
+      'Онлайн',
+      'Магазины',
+      'Партнёры',
+      'Опт',
+    ]);
+
+    await expect(charts.slices(charts.doughnut)).toHaveCount(5);
+    await expect(charts.legend(charts.doughnut).getByRole('listitem')).toHaveCount(5);
+  });
+
   test('keeps value labels apart on a narrow screen', async ({ page }) => {
     const playground = new PlaygroundPage(page);
     await playground.emulate({ reducedMotion: 'reduce' });

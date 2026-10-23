@@ -53,6 +53,15 @@ describe('NuiChart', () => {
     expect(chart.markerCount).toBe(6);
   });
 
+  it('cuts pies by category and names the categories in the legend', () => {
+    const chart = chartOf({ spec: { ...revenue, kind: 'pie' } });
+
+    expect(chart.sliceSlots).toEqual([1, 2]);
+    expect(chart.legend).toEqual(['Q1', 'Q2', 'Q3']);
+    expect(chart.valueTicks).toEqual([]);
+    expect(chart.tableHeaders).toEqual(['Quarter', 'Online', 'Stores']);
+  });
+
   it('shows a legend only for two series or more', async () => {
     const chart = chartOf({ spec: revenue });
 

@@ -30,6 +30,7 @@ export type {
   SceneLine,
   ScenePath,
   ScenePoint,
+  SceneSlice,
   SceneText,
   TimeUnit,
 } from './chart.types';

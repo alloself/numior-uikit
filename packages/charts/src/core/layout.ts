@@ -1,5 +1,6 @@
 import { layoutBars } from './bars';
 import { layoutLines, stackedLineExtent } from './lines';
+import { layoutSlices } from './pies';
 import type {
   Box,
   ChartScene,
@@ -45,6 +46,8 @@ const SLOTS: readonly ChartSlot[] = [1, 2, 3, 4, 5, 6, 7, 8];
 const CATEGORY_SHARE = 0.4;
 
 const MARKER_ROOM = 40;
+
+const HOLE = 0.6;
 
 const MOST_TICKS = 5;
 
@@ -417,6 +420,7 @@ const sceneOf = (
       height: frame.size.height,
       plot,
       bars: [],
+      slices: [],
       ...layoutLines(
         {
           area: frame.spec.kind === 'area',
@@ -442,6 +446,7 @@ const sceneOf = (
     plot,
     paths: [],
     points: [],
+    slices: [],
     bars: layoutBars(
       {
         horizontal,
@@ -457,6 +462,36 @@ const sceneOf = (
     ),
     lines: valueLines(frame, plot, value, horizontal),
     texts,
+    slots,
+  };
+};
+
+const pieSlots = (spec: ChartSpec): ChartSlot[] =>
+  Array.from({ length: categoryCount(spec) }, (_unused, index) => SLOTS[index] ?? 0);
+
+const pieScene = (spec: ChartSpec, size: ChartSize): ChartScene => {
+  const radius = Math.max(Math.min(size.width, size.height) / 2 - PADDING, 1);
+  const slots = pieSlots(spec);
+  const hole = spec.kind === 'doughnut' ? Math.min(Math.max(spec.hole ?? HOLE, 0), 0.9) : 0;
+
+  return {
+    width: size.width,
+    height: size.height,
+    plot: {
+      x: size.width / 2 - radius,
+      y: size.height / 2 - radius,
+      width: radius * 2,
+      height: radius * 2,
+    },
+    bars: [],
+    paths: [],
+    points: [],
+    slices: layoutSlices(
+      { cx: size.width / 2, cy: size.height / 2, radius, hole: radius * hole, slots },
+      spec.kind === 'pie' ? spec.series.slice(0, 1) : spec.series,
+    ),
+    lines: [],
+    texts: [],
     slots,
   };
 };
@@ -484,6 +519,10 @@ export const layoutChart = (
   size: ChartSize,
   options: LayoutOptions = {},
 ): ChartScene => {
+  if (spec.kind === 'pie' || spec.kind === 'doughnut') {
+    return pieScene(spec, size);
+  }
+
   const frame = fittedFrame(spec, size, options);
 
   return spec.kind === 'bar' ? barScene(frame) : columnScene(frame);
