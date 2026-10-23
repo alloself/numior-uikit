@@ -44,9 +44,9 @@
 </template>
 
 <script setup lang="ts">
-import { useDirection, useLocale, useMessages } from '@numior/primitives';
-import { useMutationObserver } from '@vueuse/core';
-import { computed, ref, useTemplateRef, watch } from 'vue';
+import { DIRECTION_KEY, useDirection, useLocale, useMessages } from '@numior/primitives';
+import { useMounted, useMutationObserver } from '@vueuse/core';
+import { computed, inject, ref, useTemplateRef, watch } from 'vue';
 import { anchorOf, layoutChart, type ChartHit, type ChartScene, type SceneAnchor } from '../core';
 import NuiChartLegend from './NuiChartLegend.vue';
 import NuiChartScene from './NuiChartScene.vue';
@@ -90,9 +90,12 @@ const empty = computed(
       : spec.categories.values.length === 0),
 );
 
+const configuredDirection = inject(DIRECTION_KEY, null);
+const mounted = useMounted();
+
 const rtl = computed(() => {
   void directionRevision.value;
-  return direction.isRtl();
+  return mounted.value ? direction.isRtl() : configuredDirection?.value === 'rtl';
 });
 
 const scene = computed(() =>

@@ -171,5 +171,7 @@ test.describe('charts', () => {
         [],
       );
     }
+    await playground.setDirection('rtl');
+    expect(await playground.wcagViolations('section[aria-labelledby="charts-title"]')).toEqual([]);
   });
 });

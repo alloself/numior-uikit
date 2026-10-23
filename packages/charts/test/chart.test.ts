@@ -212,6 +212,14 @@ describe('NuiChart', () => {
     expect(ltr.categoryTickX('Q1')).toBeLessThan(ltr.categoryTickX('Q3'));
   });
 
+  it('hydrates server markup of every kind without mismatches, even on a right-to-left page', async () => {
+    const kinds = ['column', 'bar', 'line', 'area', 'pie', 'doughnut'] as const;
+
+    for (const kind of kinds) {
+      expect(await ChartDriver.hydrate({ ...revenue, kind }, 'rtl')).toEqual([]);
+    }
+  });
+
   it('follows a direction set on the page after mounting', async () => {
     const chart = chartOf({ spec: revenue });
 

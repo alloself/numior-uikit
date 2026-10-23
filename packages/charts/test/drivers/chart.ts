@@ -1,6 +1,7 @@
 import { flushPromises, mount, type VueWrapper } from '@vue/test-utils';
+import { renderToString } from 'vue/server-renderer';
 import { createNuiConfig, type NuiConfigOptions } from '@numior/primitives';
-import { nextTick } from 'vue';
+import { createSSRApp, nextTick } from 'vue';
 import { NuiChart, type ChartHit, type ChartSpec, type NuiChartProps } from '../../src';
 
 export interface ChartMountOptions {
@@ -51,6 +52,27 @@ export class ChartDriver {
 
   static mount(options: ChartMountOptions): ChartDriver {
     return new ChartDriver(options);
+  }
+
+  static async hydrate(spec: ChartSpec, dir: 'ltr' | 'rtl'): Promise<readonly string[]> {
+    const host = document.createElement('div');
+    const warnings: string[] = [];
+
+    host.innerHTML = await renderToString(createSSRApp(NuiChart, { spec, label: 'Revenue' }));
+    document.body.append(host);
+    document.documentElement.dir = dir;
+
+    const app = createSSRApp(NuiChart, { spec, label: 'Revenue' });
+
+    app.config.warnHandler = (message) => {
+      warnings.push(message);
+    };
+
+    app.mount(host);
+    await flushPromises();
+    app.unmount();
+    host.remove();
+    return warnings;
   }
 
   get tooltip(): ChartTooltipView | undefined {
