@@ -233,7 +233,7 @@ import { handlePlacement } from '../blocks/handle-placement';
 import { createNodeViewHost } from '../blocks/node-view-host';
 import { createNodeViews } from '../blocks/node-views';
 import NuiEditorNodeViews from '../blocks/NuiEditorNodeViews.vue';
-import { afterPaint } from './after-paint';
+import { afterIdle, afterPaint } from './after-paint';
 import NuiEditorBubble from '../bubble/NuiEditorBubble.vue';
 import NuiEditorLinkPanel from '../link/NuiEditorLinkPanel.vue';
 import NuiEditorToolbar from '../toolbar/NuiEditorToolbar.vue';
@@ -829,6 +829,13 @@ watch(
   { flush: 'post' },
 );
 
+const highlightWhenIdle = async (): Promise<void> => {
+  await afterIdle();
+  if (view !== undefined) {
+    code.update(current.value);
+  }
+};
+
 onMounted(() => {
   const element = contentElement.value;
 
@@ -845,8 +852,10 @@ onMounted(() => {
     chunks: nodeViews.chunks,
   });
 
-  code.update(current.value);
   ready.value = true;
+
+  void highlightWhenIdle();
+
   if (autofocus) {
     view.focus();
   }

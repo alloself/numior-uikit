@@ -1,5 +1,7 @@
 <template>
   <NuiMenu
+    lazy
+    v-model:open="open"
     :label="insert.label"
     class="nui-editor-toolbar__menu nui-editor-insert"
     :items="entries"
@@ -23,7 +25,7 @@
 <script setup lang="ts">
 import type { Command } from '@numior/editor-core';
 import { NuiButton, NuiMenu, type NuiMenuEntry } from '@numior/vue';
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import type { SlashItem } from '../slash/slash-items';
 import type { NuiEditorInsertMenuProps } from './toolbar.types';
 
@@ -33,6 +35,8 @@ const emit = defineEmits<{
   run: [command: Command];
   open: [item: SlashItem];
 }>();
+
+const open = ref(false);
 
 const choose = (item: SlashItem): void => {
   switch (item.kind) {
@@ -46,12 +50,12 @@ const choose = (item: SlashItem): void => {
 };
 
 const entries = computed((): NuiMenuEntry[] =>
-  insert.entries.map((entry) => ({
-    label: entry.item.label,
-    icon: entry.item.icon,
-    disabled: entry.disabled,
+  insert.items.map((item) => ({
+    label: item.label,
+    icon: item.icon,
+    disabled: open.value && item.kind === 'command' && !item.command(insert.state),
     onSelect: () => {
-      choose(entry.item);
+      choose(item);
     },
   })),
 );

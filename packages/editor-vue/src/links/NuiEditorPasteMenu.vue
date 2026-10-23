@@ -1,5 +1,6 @@
 <template>
   <NuiMenu
+    lazy
     ref="menu"
     v-model:open="open"
     class="nui-editor-paste"

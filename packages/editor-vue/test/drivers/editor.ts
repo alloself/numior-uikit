@@ -33,6 +33,15 @@ type EditorMountProps = Omit<NuiEditorProps, 'format'> & {
   readonly modelValue?: string;
 };
 
+export type EditorMenu = 'blocks' | 'insert' | 'colours' | 'handle';
+
+const MENU_SELECTORS: Readonly<Record<EditorMenu, string>> = {
+  blocks: '.nui-editor-blocks',
+  insert: '.nui-editor-insert',
+  colours: '.nui-editor-colours',
+  handle: '.nui-editor-handle [role="menu"]',
+};
+
 const withoutComments = (html: string): string => html.replaceAll(/<!--[\s\S]*?-->/g, '');
 
 const isDocument = (value: unknown): value is DocJSON =>
@@ -336,17 +345,32 @@ export class EditorDriver {
     await nextTick();
   }
 
+  async openMenu(menu: EditorMenu): Promise<void> {
+    const content = this.find(MENU_SELECTORS[menu]);
+    const trigger = this.root.querySelector(`[aria-controls="${content.id}"]`);
+
+    if (!(trigger instanceof HTMLElement)) {
+      throw new Error(`The ${menu} menu has no trigger`);
+    }
+    if (trigger.getAttribute('aria-expanded') !== 'true') {
+      trigger.dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true, cancelable: true }),
+      );
+
+      await nextTick();
+    }
+  }
+
   async chooseBlock(label: string): Promise<void> {
-    const trigger = this.root.querySelector('.nui-editor-toolbar__blocks');
+    await this.openMenu('blocks');
 
     const option = [
       ...this.root.querySelectorAll('.nui-editor-blocks [role="menuitemradio"]'),
     ].find((item) => item.getAttribute('aria-label') === label);
 
-    if (!(trigger instanceof HTMLElement) || !(option instanceof HTMLElement)) {
+    if (!(option instanceof HTMLElement)) {
       throw new Error(`No block type option reads ${label}`);
     }
-    trigger.click();
     option.click();
     await nextTick();
   }
@@ -358,6 +382,8 @@ export class EditorDriver {
   }
 
   async chooseInsert(label: string): Promise<void> {
+    await this.openMenu('insert');
+
     const option = [...this.root.querySelectorAll('.nui-editor-insert [role^="menuitem"]')].find(
       (item) => item.textContent?.trim() === label,
     );
@@ -617,6 +643,8 @@ export class EditorDriver {
   }
 
   async blockAction(...path: readonly string[]): Promise<void> {
+    await this.openMenu('handle');
+
     for (const label of path) {
       const item = [...this.root.querySelectorAll('.nui-editor-handle [role^="menuitem"]')].find(
         (candidate) => candidate.textContent?.trim() === label,
@@ -719,6 +747,8 @@ export class EditorDriver {
   }
 
   async chooseColour(group: number, label: string): Promise<void> {
+    await this.openMenu('colours');
+
     const radios = this.find('.nui-editor-colours').querySelectorAll('[role="group"]')[group];
 
     const option = [...(radios?.querySelectorAll('[role="menuitemradio"]') ?? [])].find(

@@ -125,6 +125,8 @@ describe('NuiEditor slash menu', () => {
 
     const slash = editor.slashOptions;
 
+    await editor.openMenu('insert');
+
     expect(editor.insertOptions).toEqual(slash);
     expect(slash).toEqual(expect.arrayContaining(['Callout', 'Table', 'Image', 'File']));
 

@@ -5,10 +5,13 @@ import type { EditorDriver } from './editor';
 const SCOPE = 'nui-content__token--scope-';
 
 export class EditorCodeDriver {
-  constructor(private readonly wrapper: VueWrapper) {}
+  constructor(
+    private readonly wrapper: VueWrapper,
+    private readonly editor: EditorDriver,
+  ) {}
 
   static of(editor: EditorDriver): EditorCodeDriver {
-    return new EditorCodeDriver(editor.vueWrapper);
+    return new EditorCodeDriver(editor.vueWrapper, editor);
   }
 
   private block(index: number): Element {
@@ -43,6 +46,7 @@ export class EditorCodeDriver {
   }
 
   async settle(): Promise<void> {
+    await this.editor.nextPaint();
     await flushPromises();
   }
 

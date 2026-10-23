@@ -7,6 +7,7 @@
     }"
   >
     <NuiMenu
+      lazy
       v-model:open="open"
       :items="entries"
       :label="texts.blockActions"

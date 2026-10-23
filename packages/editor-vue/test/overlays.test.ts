@@ -88,6 +88,8 @@ describe('NuiEditor links, colours and bubble', () => {
       highlights: ['yellow'],
     });
 
+    await editor.openMenu('colours');
+
     expect(editor.colourOptions).toEqual(['Default', 'Red', 'Blue', 'None', 'Yellow']);
 
     await editor.select(1, 6);

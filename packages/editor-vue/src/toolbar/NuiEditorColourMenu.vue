@@ -1,5 +1,5 @@
 <template>
-  <NuiMenu :label="texts.colour" class="nui-editor-colours">
+  <NuiMenu :label="texts.colour" class="nui-editor-colours" lazy>
     <template #trigger="{ attrs }">
       <NuiButton
         v-bind="attrs"

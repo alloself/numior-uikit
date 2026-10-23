@@ -98,12 +98,8 @@ export interface ToolbarInsert {
   readonly kind: 'insert';
   readonly key: 'insert';
   readonly label: string;
-  readonly entries: readonly ToolbarInsertEntry[];
-}
-
-export interface ToolbarInsertEntry {
-  readonly item: SlashItem;
-  readonly disabled: boolean;
+  readonly state: EditorState;
+  readonly items: readonly SlashItem[];
 }
 
 export type ToolbarItem =
@@ -370,10 +366,8 @@ const insertItems = (
           kind: 'insert',
           key: 'insert',
           label: texts.insert,
-          entries: inserts.map((item) => ({
-            item,
-            disabled: item.kind === 'command' && !item.command(state),
-          })),
+          state,
+          items: inserts,
         },
       ];
 
