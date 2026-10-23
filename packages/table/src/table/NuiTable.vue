@@ -912,8 +912,21 @@ const rootStyle = computed(() => ({
   '--_start': `${layout.value.startWidth}px`,
   '--_end': `${layout.value.endWidth}px`,
   '--_canvas': `${layout.value.canvasWidth}px`,
-  ...(room.value > 0 ? { '--_room': `${room.value}px` } : {}),
 }));
+
+const slack = computed(() => room.value > layout.value.canvasWidth);
+
+watch(
+  room,
+  (width) => {
+    if (width > 0) {
+      root.value?.style.setProperty('--_room', `${width}px`);
+    } else {
+      root.value?.style.removeProperty('--_room');
+    }
+  },
+  { flush: 'post' },
+);
 
 const bodySpan = computed(() =>
   Math.max(
@@ -962,7 +975,7 @@ const rootClass = computed(() => [
     'nui-table--paged': paginationProps.value !== undefined,
     'nui-table--striped': striped,
     'nui-table--bordered': bordered,
-    'nui-table--slack': room.value > layout.value.canvasWidth,
+    'nui-table--slack': slack.value,
     'nui-table--loading': loadingNow.value,
     'nui-table--underlay': windowed.value && (pinnedCount.value > 0 || frozenCount.value > 0),
     'nui-table--resizing': resize.active.value !== undefined,
