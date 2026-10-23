@@ -3,6 +3,7 @@
     <NuiIcon v-if="loading" icon="loader" class="nui-table__spinner" />
     <span
       v-else-if="expandable"
+      :key="node"
       class="nui-table__toggle nui-table__toggle--expandable"
       @mousedown.prevent
       @click="emit('toggle')"
@@ -17,7 +18,7 @@
 import { NuiIcon } from '@numior/vue';
 import type { NuiTableTreeToggleProps } from './table.types';
 
-const { level, expandable, loading } = defineProps<NuiTableTreeToggleProps>();
+const { node, level, expandable, loading } = defineProps<NuiTableTreeToggleProps>();
 
 const emit = defineEmits<{ toggle: [] }>();
 </script>

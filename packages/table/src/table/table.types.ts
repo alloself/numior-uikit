@@ -724,6 +724,7 @@ export interface TableDetailSpot {
 export interface TableBodyRow {
   readonly index: number;
   readonly key: number | string;
+  readonly node: TableNodeId | undefined;
   readonly part: TableBodyPart;
   readonly revision: number;
   readonly sized: Readonly<Record<string, string>> | undefined;
@@ -749,7 +750,12 @@ export interface NuiTableUtilityCellProps {
 }
 
 export type TableGroupCell =
-  | { readonly kind: 'toggle'; readonly text: string; readonly count: string }
+  | {
+      readonly kind: 'toggle';
+      readonly node: TableNodeId;
+      readonly text: string;
+      readonly count: string;
+    }
   | { readonly kind: 'value'; readonly text: string };
 
 export interface TableGroupRow {
@@ -796,6 +802,7 @@ export interface NuiTableDetailRowProps {
 }
 
 export interface NuiTableTreeToggleProps {
+  node: TableNodeId | undefined;
   level: number;
   expandable: boolean;
   loading: boolean;

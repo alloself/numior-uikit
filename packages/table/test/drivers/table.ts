@@ -710,6 +710,10 @@ export class TableDriver<T> {
     return caption.exists() ? caption.attributes('id') : undefined;
   }
 
+  chevron(position: number): Element | null {
+    return this.row(position)?.querySelector('.nui-table__chevron') ?? null;
+  }
+
   get labelledBy(): string | undefined {
     return this.grid.attributes('aria-labelledby');
   }

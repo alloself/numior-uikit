@@ -1264,6 +1264,7 @@ const bodyRows = computed((): TableBodyRow[] => {
     return {
       index: item.index,
       key: detail ? `detail-${node.id}` : item.slot,
+      node: node?.id,
       part: detail ? 'detail' : 'body',
       revision: current,
       sized: sizedOf(node),
@@ -2268,6 +2269,7 @@ const leadsOf = (item: TableBodyRow, column: string): TableCellLead[] => {
         ...grip,
         {
           kind: 'toggle',
+          node: item.node,
           level: treeLevelOf(item),
           expandable: item.expanded !== undefined,
           loading: item.loading,

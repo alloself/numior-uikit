@@ -2,6 +2,21 @@ import { afterEach, describe, expect, it } from 'vite-plus/test';
 import { TableDriver, type TableMountOptions } from './drivers/table';
 import { FILE_COLUMNS, FILES, type FileNode } from './support/files';
 
+const SIBLINGS: readonly FileNode[] = [
+  {
+    path: 'a',
+    name: 'a',
+    size: null,
+    items: [{ path: 'a/inner', name: 'inner', size: null, lazy: true }],
+  },
+  {
+    path: 'b',
+    name: 'b',
+    size: null,
+    items: [{ path: 'b/file', name: 'file', size: 1 }],
+  },
+];
+
 const mounted: Array<{ unmount(): void }> = [];
 
 const mountFiles = (options: Partial<TableMountOptions<FileNode>> = {}): TableDriver<FileNode> => {
@@ -102,5 +117,19 @@ describe('NuiTable tree rows', () => {
     expect(grid.cellText(2, 0)).toBe('docs');
     expect(grid.cellText(3, 0)).toBe('plan.md');
     expect(grid.cellText(4, 0)).toBe('old');
+  });
+
+  it('gives a row that moves into another place its own chevron instead of the previous one', async () => {
+    const grid = mountFiles({ rows: SIBLINGS, expanded: ['a', 'b'] });
+    await grid.settle();
+
+    expect(grid.cellText(1, 0)).toBe('inner');
+    const innerChevron = grid.chevron(1);
+    await grid.toggleRow(0);
+
+    expect(grid.cellText(1, 0)).toBe('b');
+    expect(grid.rowExpanded(1)).toBe('true');
+    expect(grid.chevron(1)).not.toBeNull();
+    expect(grid.chevron(1)).not.toBe(innerChevron);
   });
 });

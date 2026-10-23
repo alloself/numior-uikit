@@ -12,6 +12,7 @@
       />
       <NuiTableTreeToggle
         v-else
+        :node="lead.node"
         :level="lead.level"
         :expandable="lead.expandable"
         :loading="lead.loading"

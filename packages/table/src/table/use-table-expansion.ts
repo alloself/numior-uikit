@@ -88,6 +88,7 @@ export const useTableExpansion = <T>(options: TableExpansionOptions<T>): TableEx
     if (key === node.key) {
       return {
         kind: 'toggle',
+        node: node.id,
         text: groupLabel(node, current),
         count: `(${formatNumber(node.count, current.locale)})`,
       };

@@ -1,6 +1,6 @@
 <template>
   <span v-if="cell?.kind === 'toggle'" class="nui-table__group" @click="emit('toggle')">
-    <span class="nui-table__toggle" aria-hidden="true">
+    <span :key="cell.node" class="nui-table__toggle" aria-hidden="true">
       <NuiIcon icon="chevron-right" class="nui-table__chevron" />
     </span>
     <span class="nui-table__text">{{ cell.text }}</span>
