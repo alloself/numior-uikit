@@ -43,6 +43,10 @@ const docs: DocsMap = {
         ru: 'Ширина по пунктам без минимума — для списков из одних иконок.',
         en: 'Fits the width to the items without a minimum, for icon-only lists.',
       },
+      lazy: {
+        ru: 'Пункты появляются при первом открытии и дальше остаются смонтированными. Для тяжёлых меню в редакторах и таблицах; на сервере такое меню рендерится без пунктов, поэтому навигации оно не подходит.',
+        en: 'Items mount on the first open and stay mounted afterwards. Meant for heavy menus in editors and tables; on the server such a menu renders without items, so it does not suit navigation.',
+      },
       anchor: {
         ru: 'Внешний элемент вместо слота trigger: ячейка, строка или точка контекстного меню. Такое меню открывает метод show(focus) через ссылку на компонент, а после закрытия фокус возвращается в якорь.',
         en: 'An external element instead of the trigger slot: a cell, a row or a context menu point. The show(focus) method opens such a menu through a component ref, and focus returns to the anchor after it closes.',

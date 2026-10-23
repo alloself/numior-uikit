@@ -10,13 +10,15 @@
     :aria-labelledby="label === undefined ? triggerId : undefined"
     v-bind="{ ...contentAttrs, ...surfaceAttrs, ...$attrs }"
   >
-    <NuiMenuEntries v-if="items" :items="items" />
-    <slot />
+    <template v-if="!lazy || opened">
+      <NuiMenuEntries v-if="items" :items="items" />
+      <slot />
+    </template>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, useTemplateRef } from 'vue';
+import { computed, ref, useTemplateRef, watch } from 'vue';
 import { useControlId } from '@numior/primitives';
 import { useTriggerElement } from '../shared/trigger-ref';
 import NuiMenuEntries from './NuiMenuEntries.vue';
@@ -42,9 +44,12 @@ const {
   label,
   anchor,
   compact = false,
+  lazy = false,
 } = defineProps<NuiMenuProps>();
 
 const open = defineModel<boolean>('open', { default: false });
+const opened = ref(open.value);
+
 defineSlots<{ trigger(props: NuiMenuTriggerSlot): unknown; default(): unknown }>();
 
 const { trigger, setTrigger } = useTriggerElement();
@@ -71,6 +76,11 @@ const {
 });
 
 provideMenu(context);
+
+watch(open, (value) => {
+  opened.value ||= value;
+});
+
 const contentAttrs = control.contentAttrs;
 
 const onTriggerKeydown = (event: KeyboardEvent): void => {
