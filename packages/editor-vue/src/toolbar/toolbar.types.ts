@@ -50,3 +50,19 @@ export interface ColourOption {
   readonly label: string;
   readonly modifier: string | undefined;
 }
+
+export interface ToolbarHints {
+  readonly register: (element: Element, face: () => ToolbarFace) => void;
+  readonly release: (element: Element) => void;
+  readonly faceOf: (element: HTMLElement | null) => ToolbarFace | undefined;
+}
+
+export interface NuiEditorToolbarHintsProps {
+  anchor: HTMLElement | null;
+  hints: ToolbarHints;
+  disabled?: boolean | undefined;
+}
+
+export interface NuiEditorToolbarHintProps {
+  face?: ToolbarFace | undefined;
+}

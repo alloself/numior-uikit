@@ -22,6 +22,7 @@
         @colour="(mark, name) => emit('colour', mark, name)"
       />
     </div>
+    <NuiEditorToolbarHints :anchor="root" :hints="hints" :disabled="disabled" />
   </div>
 </template>
 
@@ -31,6 +32,8 @@ import { useListNavigation, useMessages } from '@numior/primitives';
 import { computed, onMounted, useTemplateRef } from 'vue';
 import { editorMessages } from '../editor/editor.messages';
 import NuiEditorToolbarGroup from './NuiEditorToolbarGroup.vue';
+import NuiEditorToolbarHints from './NuiEditorToolbarHints.vue';
+import { provideToolbarHints } from './toolbar-hints';
 import type { SlashItem } from '../slash/slash-items';
 import { toolbarGroups } from './toolbar-items';
 import { useKeyboardInset } from './use-keyboard-inset';
@@ -54,6 +57,7 @@ const emit = defineEmits<{
 }>();
 
 const root = useTemplateRef<HTMLElement>('root');
+const hints = provideToolbarHints();
 const texts = useMessages(editorMessages);
 const groups = computed(() => toolbarGroups(state, texts.value, { ...options, docked }, inserts));
 

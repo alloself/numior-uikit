@@ -25,6 +25,7 @@
         @colour="(mark, name) => emit('colour', mark, name)"
       />
     </div>
+    <NuiEditorToolbarHints :anchor="bar" :hints="hints" />
   </NuiPopover>
 </template>
 
@@ -35,6 +36,8 @@ import { NuiPopover } from '@numior/vue';
 import { computed, ref, useTemplateRef, watch } from 'vue';
 import { editorMessages } from '../editor/editor.messages';
 import NuiEditorToolbarGroup from '../toolbar/NuiEditorToolbarGroup.vue';
+import NuiEditorToolbarHints from '../toolbar/NuiEditorToolbarHints.vue';
+import { provideToolbarHints } from '../toolbar/toolbar-hints';
 import { toolbarGroups } from '../toolbar/toolbar-items';
 import type { ColourMark } from '../toolbar/toolbar.types';
 import type { NuiEditorBubbleProps } from './bubble.types';
@@ -49,6 +52,7 @@ const emit = defineEmits<{
 }>();
 
 const bar = useTemplateRef<HTMLElement>('bar');
+const hints = provideToolbarHints();
 const shown = ref(open);
 const texts = useMessages(editorMessages);
 
