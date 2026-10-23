@@ -15,8 +15,8 @@ export interface DomainOptions {
 export interface BandScale {
   readonly step: number;
   readonly width: number;
-  start(index: number): number;
-  center(index: number): number;
+  readonly start: (index: number) => number;
+  readonly center: (index: number) => number;
 }
 
 export interface BandOptions {

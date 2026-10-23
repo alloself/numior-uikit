@@ -46,40 +46,104 @@
 }
 
 .nui-chart__bar--slot-0,
+.nui-chart__area--slot-0,
+.nui-chart__stroke--slot-0,
+.nui-chart__point--slot-0,
 .nui-chart__swatch--slot-0 {
   --_fill: var(--nui-chart-other);
 }
+
 .nui-chart__bar--slot-1,
+.nui-chart__area--slot-1,
+.nui-chart__stroke--slot-1,
+.nui-chart__point--slot-1,
 .nui-chart__swatch--slot-1 {
   --_fill: var(--nui-chart-1);
 }
+
 .nui-chart__bar--slot-2,
+.nui-chart__area--slot-2,
+.nui-chart__stroke--slot-2,
+.nui-chart__point--slot-2,
 .nui-chart__swatch--slot-2 {
   --_fill: var(--nui-chart-2);
 }
+
 .nui-chart__bar--slot-3,
+.nui-chart__area--slot-3,
+.nui-chart__stroke--slot-3,
+.nui-chart__point--slot-3,
 .nui-chart__swatch--slot-3 {
   --_fill: var(--nui-chart-3);
 }
+
 .nui-chart__bar--slot-4,
+.nui-chart__area--slot-4,
+.nui-chart__stroke--slot-4,
+.nui-chart__point--slot-4,
 .nui-chart__swatch--slot-4 {
   --_fill: var(--nui-chart-4);
 }
+
 .nui-chart__bar--slot-5,
+.nui-chart__area--slot-5,
+.nui-chart__stroke--slot-5,
+.nui-chart__point--slot-5,
 .nui-chart__swatch--slot-5 {
   --_fill: var(--nui-chart-5);
 }
+
 .nui-chart__bar--slot-6,
+.nui-chart__area--slot-6,
+.nui-chart__stroke--slot-6,
+.nui-chart__point--slot-6,
 .nui-chart__swatch--slot-6 {
   --_fill: var(--nui-chart-6);
 }
+
 .nui-chart__bar--slot-7,
+.nui-chart__area--slot-7,
+.nui-chart__stroke--slot-7,
+.nui-chart__point--slot-7,
 .nui-chart__swatch--slot-7 {
   --_fill: var(--nui-chart-7);
 }
+
 .nui-chart__bar--slot-8,
+.nui-chart__area--slot-8,
+.nui-chart__stroke--slot-8,
+.nui-chart__point--slot-8,
 .nui-chart__swatch--slot-8 {
   --_fill: var(--nui-chart-8);
+}
+
+.nui-chart__area {
+  fill: var(--_fill);
+  fill-opacity: 0.24;
+  transition:
+    fill var(--nui-duration-fast) var(--nui-easing),
+    d var(--nui-duration-normal) var(--nui-easing);
+}
+
+.nui-chart__stroke {
+  fill: none;
+  stroke: var(--_fill);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition:
+    stroke var(--nui-duration-fast) var(--nui-easing),
+    d var(--nui-duration-normal) var(--nui-easing);
+}
+
+.nui-chart__point {
+  fill: var(--_fill);
+  stroke: var(--nui-surface);
+  stroke-width: 2;
+  transition:
+    fill var(--nui-duration-fast) var(--nui-easing),
+    cx var(--nui-duration-normal) var(--nui-easing),
+    cy var(--nui-duration-normal) var(--nui-easing);
 }
 
 .nui-chart__text {

@@ -28,6 +28,8 @@ export type {
   LayoutOptions,
   SceneBar,
   SceneLine,
+  ScenePath,
+  ScenePoint,
   SceneText,
   TimeUnit,
 } from './chart.types';

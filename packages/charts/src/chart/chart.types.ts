@@ -1,4 +1,4 @@
-import type { ChartSlot, ChartSpec } from '../core';
+import type { ChartScene, ChartSlot, ChartSpec } from '../core';
 
 export interface NuiChartProps {
   spec: ChartSpec;
@@ -17,6 +17,10 @@ export interface NuiChartLegendItem {
 export interface NuiChartLegendProps {
   readonly items: readonly NuiChartLegendItem[];
   readonly label: string;
+}
+
+export interface NuiChartSceneProps {
+  readonly scene: ChartScene;
 }
 
 export interface NuiChartTableProps {

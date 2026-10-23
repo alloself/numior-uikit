@@ -1,4 +1,5 @@
 import { layoutBars } from './bars';
+import { layoutLines, stackedLineExtent } from './lines';
 import type {
   Box,
   ChartScene,
@@ -43,6 +44,8 @@ const SLOTS: readonly ChartSlot[] = [1, 2, 3, 4, 5, 6, 7, 8];
 
 const CATEGORY_SHARE = 0.4;
 
+const MARKER_ROOM = 40;
+
 const MOST_TICKS = 5;
 
 const FEWEST_TICKS = 2;
@@ -58,6 +61,20 @@ const categoryCount = (spec: ChartSpec): number =>
 
 const extent = (values: readonly number[]): readonly [number, number] =>
   values.length === 0 ? [0, 1] : [Math.min(...values), Math.max(...values)];
+
+const linear = (spec: ChartSpec): boolean => spec.kind === 'line' || spec.kind === 'area';
+
+const pointAt = (spec: ChartSpec, band: BandScale): ((index: number) => number) => {
+  if (!linear(spec) || spec.categories.kind === 'text' || spec.categories.values.length < 2) {
+    return band.center;
+  }
+
+  const { values } = spec.categories;
+  const [first, last] = extent(values);
+  const position = linearScale([first, last], [band.center(0), band.center(values.length - 1)]);
+
+  return (index) => position(values[index] ?? first);
+};
 
 const stackedExtent = (spec: ChartSpec, count: number): readonly [number, number] => {
   const sums = Array.from({ length: count }, (_unused, index) =>
@@ -82,6 +99,17 @@ const stackedExtent = (spec: ChartSpec, count: number): readonly [number, number
 const valuesOf = (spec: ChartSpec): number[] =>
   spec.series.flatMap((item) => item.values.filter(finite));
 
+const stackedOrPlain = (
+  spec: ChartSpec,
+  count: number,
+  lines: boolean,
+): readonly [number, number] => {
+  if ((spec.stacking ?? 'none') === 'none') {
+    return extent(valuesOf(spec));
+  }
+  return lines ? extent(stackedLineExtent(spec, count)) : stackedExtent(spec, count);
+};
+
 const domainOf = (
   spec: ChartSpec,
   count: number,
@@ -89,9 +117,10 @@ const domainOf = (
 ): { domain: NiceDomain; log: boolean } => {
   const axis = spec.valueAxis ?? {};
   const stacking = spec.stacking ?? 'none';
+  const lines = linear(spec);
 
   if (stacking === 'percent') {
-    const [low] = stackedExtent(spec, count);
+    const [low] = lines ? extent(stackedLineExtent(spec, count)) : stackedExtent(spec, count);
 
     return {
       domain: niceDomain(low < 0 ? -1 : 0, 1, { min: low < 0 ? -1 : 0, max: 1, count: ticks }),
@@ -107,10 +136,15 @@ const domainOf = (
     return { domain: logDomain(axis.min ?? low, axis.max ?? high), log: true };
   }
 
-  const [low, high] = stacking === 'stacked' ? stackedExtent(spec, count) : extent(valuesOf(spec));
+  const [low, high] = stackedOrPlain(spec, count, lines);
 
   return {
-    domain: niceDomain(low, high, { zero: true, min: axis.min, max: axis.max, count: ticks }),
+    domain: niceDomain(low, high, {
+      zero: spec.kind !== 'line',
+      min: axis.min,
+      max: axis.max,
+      count: ticks,
+    }),
     log: false,
   };
 };
@@ -242,6 +276,7 @@ const columnScene = (frame: Frame): ChartScene => {
   const value = valueMapper(frame, [plot.y + plot.height, plot.y]);
   const every = thinned(frame, band, frame.categoryTexts);
   const tickX = rtl ? plot.x + plot.width + TICK_GAP : plot.x - TICK_GAP;
+  const at = pointAt(frame.spec, band);
   const texts: SceneText[] = [];
 
   frame.domain.ticks.forEach((tick, index) => {
@@ -260,7 +295,7 @@ const columnScene = (frame: Frame): ChartScene => {
       texts.push({
         role: 'category-tick',
         text: truncated(text, band.step * every - TICK_GAP, frame.fontSize, frame.measure),
-        x: band.center(index),
+        x: at(index),
         y: plot.y + plot.height + TICK_GAP,
         anchor: 'middle',
         baseline: 'top',
@@ -372,23 +407,53 @@ const sceneOf = (
   horizontal: boolean,
 ): ChartScene => {
   const slots = slotsOf(frame.spec.series);
+  const baseline = baselineOf(frame, value);
+  const stacking = frame.spec.stacking ?? 'none';
+  const count = frame.categoryTexts.length;
+
+  if (linear(frame.spec)) {
+    return {
+      width: frame.size.width,
+      height: frame.size.height,
+      plot,
+      bars: [],
+      ...layoutLines(
+        {
+          area: frame.spec.kind === 'area',
+          at: pointAt(frame.spec, band),
+          value,
+          baseline,
+          slots,
+          markers: plot.width / Math.max(count, 1) >= MARKER_ROOM,
+        },
+        frame.spec.series,
+        count,
+        stacking,
+      ),
+      lines: valueLines(frame, plot, value, horizontal),
+      texts,
+      slots,
+    };
+  }
 
   return {
     width: frame.size.width,
     height: frame.size.height,
     plot,
+    paths: [],
+    points: [],
     bars: layoutBars(
       {
         horizontal,
         mirrored: frame.rtl && !horizontal,
         band,
         value,
-        baseline: baselineOf(frame, value),
-        stacking: frame.spec.stacking ?? 'none',
+        baseline,
+        stacking,
         slots,
       },
       frame.spec.series,
-      frame.categoryTexts.length,
+      count,
     ),
     lines: valueLines(frame, plot, value, horizontal),
     texts,

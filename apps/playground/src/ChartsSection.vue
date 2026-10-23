@@ -19,6 +19,18 @@
         :show-table="showTable"
         data-testid="chart-bars"
       />
+      <NuiChart
+        :spec="visits"
+        label="Посещения за две недели, тыс."
+        :show-table="showTable"
+        data-testid="chart-lines"
+      />
+      <NuiChart
+        :spec="income"
+        label="Выручка по каналам за полгода, млн ₽"
+        :show-table="showTable"
+        data-testid="chart-areas"
+      />
     </div>
   </section>
 </template>
@@ -51,5 +63,40 @@ const channels: ChartSpec = {
     { id: 'stores', name: 'Магазины', values: [37, 44, 52, 55] },
     { id: 'partners', name: 'Партнёры', values: [15, 15, 15, 16] },
   ],
+};
+
+const DAY = 86_400_000;
+
+const FIRST_DAY = Date.UTC(2026, 9, 5);
+
+const days = Array.from({ length: 14 }, (_unused, index) => FIRST_DAY + index * DAY);
+
+const visits: ChartSpec = {
+  kind: 'line',
+  categories: { kind: 'time', values: days },
+  series: [
+    {
+      id: 'site',
+      name: 'Сайт',
+      values: [42, 45, 44, 51, 56, 38, 35, 47, 52, 55, 58, 61, 43, 40],
+    },
+    {
+      id: 'app',
+      name: 'Приложение',
+      values: [28, 30, 33, null, null, 41, 44, 36, 37, 39, 42, 45, 52, 55],
+    },
+  ],
+};
+
+const income: ChartSpec = {
+  kind: 'area',
+  stacking: 'stacked',
+  categories: { kind: 'text', labels: ['Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь'] },
+  series: [
+    { id: 'online', name: 'Онлайн', values: [14, 16, 19, 18, 22, 26] },
+    { id: 'stores', name: 'Магазины', values: [21, 20, 22, 24, 23, 25] },
+    { id: 'partners', name: 'Партнёры', values: [6, 8, 7, 9, 11, 10] },
+  ],
+  valueAxis: { title: 'млн ₽' },
 };
 </script>

@@ -10,7 +10,11 @@ export interface ChartMountOptions {
   readonly config?: NuiConfigOptions;
 }
 
-const SLOT = /nui-chart__bar--slot-(\d)/;
+const BAR_SLOT = /nui-chart__bar--slot-(\d)/;
+
+const STROKE_SLOT = /nui-chart__stroke--slot-(\d)/;
+
+const AREA_SLOT = /nui-chart__area--slot-(\d)/;
 
 const textsOf = (wrapper: VueWrapper, selector: string): string[] =>
   wrapper.findAll(selector).map((item) => item.text());
@@ -41,9 +45,19 @@ export class ChartDriver {
   }
 
   get barSlots(): number[] {
-    return this.wrapper
-      .findAll('.nui-chart__bar')
-      .map((bar) => Number(SLOT.exec(bar.attributes('class') ?? '')?.[1] ?? -1));
+    return this.slotsOf('.nui-chart__bar', BAR_SLOT);
+  }
+
+  get strokeSlots(): number[] {
+    return this.slotsOf('.nui-chart__stroke', STROKE_SLOT);
+  }
+
+  get areaSlots(): number[] {
+    return this.slotsOf('.nui-chart__area', AREA_SLOT);
+  }
+
+  get markerCount(): number {
+    return this.wrapper.findAll('.nui-chart__point').length;
   }
 
   get valueTicks(): string[] {
@@ -88,6 +102,12 @@ export class ChartDriver {
 
   get drawn(): boolean {
     return this.wrapper.find('.nui-chart__svg').exists();
+  }
+
+  private slotsOf(selector: string, pattern: RegExp): number[] {
+    return this.wrapper
+      .findAll(selector)
+      .map((mark) => Number(pattern.exec(mark.attributes('class') ?? '')?.[1] ?? -1));
   }
 
   async show(spec: ChartSpec): Promise<void> {

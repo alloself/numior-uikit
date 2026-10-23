@@ -10,17 +10,29 @@ export class ChartsSection {
   readonly section: Locator;
   readonly columns: Locator;
   readonly bars: Locator;
+  readonly lines: Locator;
+  readonly areas: Locator;
   readonly tableSwitch: Locator;
 
   constructor(page: Page) {
     this.section = page.locator('section[aria-labelledby="charts-title"]');
     this.columns = page.getByTestId('chart-columns');
     this.bars = page.getByTestId('chart-bars');
+    this.lines = page.getByTestId('chart-lines');
+    this.areas = page.getByTestId('chart-areas');
     this.tableSwitch = page.getByRole('switch', { name: 'Показать таблицу данных' });
   }
 
   marks(chart: Locator): Locator {
     return chart.locator('.nui-chart__bar');
+  }
+
+  strokes(chart: Locator): Locator {
+    return chart.locator('.nui-chart__stroke');
+  }
+
+  areaFills(chart: Locator): Locator {
+    return chart.locator('.nui-chart__area');
   }
 
   legend(chart: Locator): Locator {
@@ -43,7 +55,7 @@ export class ChartsSection {
     return (await chart.locator('.nui-chart__data').boundingBox())?.width ?? 0;
   }
 
-  fills(chart: Locator): Promise<string[]> {
+  colours(chart: Locator): Promise<string[]> {
     return this.marks(chart).evaluateAll((marks) =>
       marks.map((mark) => getComputedStyle(mark).fill),
     );

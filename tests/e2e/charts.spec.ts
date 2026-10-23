@@ -27,13 +27,28 @@ test.describe('charts', () => {
       'Партнёры',
     ]);
 
-    expect(new Set(await charts.fills(charts.columns)).size).toBe(3);
+    expect(new Set(await charts.colours(charts.columns)).size).toBe(3);
     await expect(charts.table(charts.columns)).toHaveAccessibleName('Выручка по кварталам, млн ₽');
     expect(await charts.tableWidth(charts.columns)).toBeLessThanOrEqual(1);
     await charts.showTable();
     await expect(charts.table(charts.columns)).toBeVisible();
     await expect(charts.rows(charts.columns)).toHaveCount(4);
     await expect(charts.rows(charts.columns).nth(2)).toHaveText(/III кв\.\s*58\s*59\s*—/);
+  });
+
+  test('breaks lines at missing days and stacks areas under their lines', async ({ page }) => {
+    const playground = new PlaygroundPage(page);
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    const { charts } = playground;
+    await charts.lines.scrollIntoViewIfNeeded();
+    await expect(charts.strokes(charts.lines)).toHaveCount(3);
+    await expect(charts.areaFills(charts.lines)).toHaveCount(0);
+    await expect(charts.areaFills(charts.areas)).toHaveCount(3);
+    await expect(charts.strokes(charts.areas)).toHaveCount(3);
+    await charts.showTable();
+    await expect(charts.rows(charts.lines)).toHaveCount(14);
+    await expect(charts.rows(charts.lines).nth(3)).toHaveText(/51\s*—/);
   });
 
   test('keeps value labels apart on a narrow screen', async ({ page }) => {

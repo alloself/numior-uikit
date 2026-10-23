@@ -39,6 +39,20 @@ describe('NuiChart', () => {
     expect(chart.valueTicks[0]).toBe('0');
   });
 
+  it('draws lines with markers and stacked areas under their lines', async () => {
+    const chart = chartOf({ spec: { ...revenue, kind: 'line' } });
+
+    expect(chart.barSlots).toEqual([]);
+    expect(chart.strokeSlots).toEqual([1, 2]);
+    expect(chart.areaSlots).toEqual([]);
+    expect(chart.markerCount).toBe(5);
+    await chart.show({ ...revenue, kind: 'area', stacking: 'stacked' });
+
+    expect(chart.areaSlots).toEqual([1, 2]);
+    expect(chart.strokeSlots).toEqual([1, 2]);
+    expect(chart.markerCount).toBe(6);
+  });
+
   it('shows a legend only for two series or more', async () => {
     const chart = chartOf({ spec: revenue });
 

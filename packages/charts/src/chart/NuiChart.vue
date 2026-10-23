@@ -3,54 +3,7 @@
     <NuiChartLegend v-if="legend.length > 1" :items="legend" :label="texts.legend" />
     <div ref="frame" class="nui-chart__frame">
       <p v-if="empty" class="nui-chart__empty">{{ texts.empty }}</p>
-      <svg
-        v-else
-        class="nui-chart__svg"
-        :width="scene.width"
-        :height="scene.height"
-        :viewBox="`0 0 ${scene.width} ${scene.height}`"
-        aria-hidden="true"
-        focusable="false"
-      >
-        <line
-          v-for="(line, index) in grid"
-          :key="`grid-${index}`"
-          class="nui-chart__line nui-chart__line--grid"
-          :x1="line.x1"
-          :y1="line.y1"
-          :x2="line.x2"
-          :y2="line.y2"
-        />
-        <path
-          v-for="bar in scene.bars"
-          :key="`${bar.series}-${bar.index}`"
-          class="nui-chart__bar"
-          :class="`nui-chart__bar--slot-${bar.slot}`"
-          :d="bar.path"
-        />
-        <line
-          v-for="(line, index) in baselines"
-          :key="`baseline-${index}`"
-          class="nui-chart__line nui-chart__line--baseline"
-          :x1="line.x1"
-          :y1="line.y1"
-          :x2="line.x2"
-          :y2="line.y2"
-        />
-        <text
-          v-for="(text, index) in labels"
-          :key="`text-${index}`"
-          class="nui-chart__text"
-          :class="`nui-chart__text--${text.role}`"
-          :x="text.x"
-          :y="text.y"
-          :text-anchor="text.anchor"
-          :dominant-baseline="text.dominant"
-          :transform="text.transform"
-        >
-          {{ text.text }}
-        </text>
-      </svg>
+      <NuiChartScene v-else :scene="scene" />
     </div>
     <NuiChartTable
       :spec="spec"
@@ -66,8 +19,9 @@
 import { useDirection, useLocale, useMessages } from '@numior/primitives';
 import { useMutationObserver } from '@vueuse/core';
 import { computed, ref, useTemplateRef } from 'vue';
-import { layoutChart, type SceneText } from '../core';
+import { layoutChart } from '../core';
 import NuiChartLegend from './NuiChartLegend.vue';
+import NuiChartScene from './NuiChartScene.vue';
 import NuiChartTable from './NuiChartTable.vue';
 import { chartMessages } from './chart.messages';
 import type { NuiChartLegendItem, NuiChartProps } from './chart.types';
@@ -78,12 +32,6 @@ const { spec, label, height = 300, locale, showTable = false } = defineProps<Nui
 const FALLBACK_WIDTH = 640;
 const FONT_SIZE = 12;
 const SLOTS = [1, 2, 3, 4, 5, 6, 7, 8] as const;
-
-const BASELINES: Readonly<Record<SceneText['baseline'], string>> = {
-  top: 'hanging',
-  middle: 'central',
-  bottom: 'text-after-edge',
-};
 
 const frameElement = useTemplateRef<HTMLElement>('frame');
 const texts = useMessages(chartMessages, () => locale);
@@ -136,15 +84,4 @@ useMutationObserver(
   },
   { attributes: true, attributeFilter: ['dir'], subtree: true },
 );
-
-const labels = computed(() =>
-  scene.value.texts.map((text) => ({
-    ...text,
-    dominant: BASELINES[text.baseline],
-    transform: text.rotate === undefined ? undefined : `rotate(${text.rotate} ${text.x} ${text.y})`,
-  })),
-);
-
-const grid = computed(() => scene.value.lines.filter((line) => line.role === 'grid'));
-const baselines = computed(() => scene.value.lines.filter((line) => line.role === 'baseline'));
 </script>

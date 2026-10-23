@@ -1,4 +1,4 @@
-export type ChartKind = 'column' | 'bar';
+export type ChartKind = 'column' | 'bar' | 'line' | 'area';
 
 export type ChartStacking = 'none' | 'stacked' | 'percent';
 
@@ -69,6 +69,23 @@ export interface SceneBar extends Box {
   readonly path: string;
 }
 
+export interface ScenePath {
+  readonly role: 'line' | 'area';
+  readonly series: number;
+  readonly slot: ChartSlot;
+  readonly d: string;
+}
+
+export interface ScenePoint {
+  readonly series: number;
+  readonly index: number;
+  readonly value: number;
+  readonly x: number;
+  readonly y: number;
+  readonly slot: ChartSlot;
+  readonly marker: boolean;
+}
+
 export interface SceneLine {
   readonly role: 'grid' | 'baseline';
   readonly x1: number;
@@ -92,6 +109,8 @@ export interface ChartScene {
   readonly height: number;
   readonly plot: Box;
   readonly bars: readonly SceneBar[];
+  readonly paths: readonly ScenePath[];
+  readonly points: readonly ScenePoint[];
   readonly lines: readonly SceneLine[];
   readonly texts: readonly SceneText[];
   readonly slots: readonly ChartSlot[];
