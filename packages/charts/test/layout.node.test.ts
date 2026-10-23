@@ -43,6 +43,12 @@ const zeroOf = (scene: ChartScene): number =>
     0,
   ).y1;
 
+const tickGaps = (scene: ChartScene): number[] => {
+  const ticks = scene.texts.filter((text) => text.role === 'value-tick');
+
+  return ticks.slice(1).map((text, index) => text.x - nth(ticks, index).x);
+};
+
 describe('chart layout', () => {
   it('lays out clustered columns inside the plot with value and category ticks', () => {
     const scene = layoutChart(quarters, SIZE);
@@ -190,5 +196,24 @@ describe('chart layout', () => {
     );
 
     expect(texts(scene, 'value-tick')).toEqual(['1', '10', '100', '1K', '10K']);
+  });
+
+  it('drops value ticks until their labels fit along a narrow axis', () => {
+    const shares: ChartSpec = {
+      kind: 'bar',
+      stacking: 'percent',
+      categories: { kind: 'text', labels: ['Moscow', 'Kazan'] },
+      series: [
+        { id: 'online', name: 'Online', values: [48, 33] },
+        { id: 'stores', name: 'Stores', values: [52, 67] },
+      ],
+    };
+
+    const wide = layoutChart(shares, { width: 640, height: 240 }, { locale: 'ru-RU' });
+    const narrow = layoutChart(shares, { width: 260, height: 240 }, { locale: 'ru-RU' });
+
+    expect(texts(wide, 'value-tick')).toHaveLength(6);
+    expect(texts(narrow, 'value-tick').length).toBeLessThan(6);
+    expect(Math.min(...tickGaps(narrow))).toBeGreaterThan(40);
   });
 });

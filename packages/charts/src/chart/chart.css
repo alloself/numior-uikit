@@ -1,0 +1,166 @@
+.nui-chart {
+  --_height: 18.75rem;
+
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: var(--nui-space-3);
+  min-inline-size: 0;
+  margin: 0;
+  color: var(--nui-text-muted);
+  font-family: var(--nui-font);
+}
+
+.nui-chart__frame {
+  box-sizing: border-box;
+  inline-size: 100%;
+  min-inline-size: 0;
+  block-size: var(--_height);
+}
+
+.nui-chart__svg {
+  display: block;
+  overflow: visible;
+  direction: ltr;
+}
+
+.nui-chart__line {
+  stroke-width: 1;
+  shape-rendering: crispEdges;
+  transition: stroke var(--nui-duration-fast) var(--nui-easing);
+}
+
+.nui-chart__line--grid {
+  stroke: var(--nui-chart-grid);
+}
+
+.nui-chart__line--baseline {
+  stroke: var(--nui-chart-axis);
+}
+
+.nui-chart__bar {
+  fill: var(--_fill);
+  transition:
+    fill var(--nui-duration-fast) var(--nui-easing),
+    d var(--nui-duration-normal) var(--nui-easing);
+}
+
+.nui-chart__bar--slot-0,
+.nui-chart__swatch--slot-0 {
+  --_fill: var(--nui-chart-other);
+}
+.nui-chart__bar--slot-1,
+.nui-chart__swatch--slot-1 {
+  --_fill: var(--nui-chart-1);
+}
+.nui-chart__bar--slot-2,
+.nui-chart__swatch--slot-2 {
+  --_fill: var(--nui-chart-2);
+}
+.nui-chart__bar--slot-3,
+.nui-chart__swatch--slot-3 {
+  --_fill: var(--nui-chart-3);
+}
+.nui-chart__bar--slot-4,
+.nui-chart__swatch--slot-4 {
+  --_fill: var(--nui-chart-4);
+}
+.nui-chart__bar--slot-5,
+.nui-chart__swatch--slot-5 {
+  --_fill: var(--nui-chart-5);
+}
+.nui-chart__bar--slot-6,
+.nui-chart__swatch--slot-6 {
+  --_fill: var(--nui-chart-6);
+}
+.nui-chart__bar--slot-7,
+.nui-chart__swatch--slot-7 {
+  --_fill: var(--nui-chart-7);
+}
+.nui-chart__bar--slot-8,
+.nui-chart__swatch--slot-8 {
+  --_fill: var(--nui-chart-8);
+}
+
+.nui-chart__text {
+  fill: currentColor;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.nui-chart__text--value-title,
+.nui-chart__text--category-title {
+  fill: var(--nui-text);
+  font-weight: 500;
+}
+
+.nui-chart__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--nui-space-2) var(--nui-space-4);
+  margin: 0;
+  padding: 0;
+  color: var(--nui-text);
+  font-size: var(--nui-font-size-sm);
+  list-style: none;
+}
+
+.nui-chart__legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--nui-space-2);
+}
+
+.nui-chart__swatch {
+  box-sizing: border-box;
+  inline-size: 0.625rem;
+  block-size: 0.625rem;
+  border-radius: 2px;
+  background: var(--_fill);
+}
+
+.nui-chart__empty {
+  display: grid;
+  place-items: center;
+  block-size: 100%;
+  margin: 0;
+  font-size: var(--nui-font-size-sm);
+}
+
+.nui-chart__data:not(.nui-chart__data--shown) {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.nui-chart__table {
+  box-sizing: border-box;
+  inline-size: 100%;
+  border-collapse: collapse;
+  color: var(--nui-text);
+  font-size: var(--nui-font-size-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+.nui-chart__caption {
+  padding-block-end: var(--nui-space-2);
+  color: var(--nui-text-muted);
+  text-align: start;
+}
+
+.nui-chart__table :is(th, td) {
+  padding: var(--nui-space-1) var(--nui-space-2);
+  border-block-end: 1px solid var(--nui-border);
+  text-align: end;
+}
+
+.nui-chart__table :is(thead th, tbody th) {
+  font-weight: 500;
+}
+
+.nui-chart__table :is(thead th:first-child, tbody th) {
+  text-align: start;
+}

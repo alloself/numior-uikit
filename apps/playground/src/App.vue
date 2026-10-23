@@ -108,6 +108,7 @@
     <LayoutSection />
     <DataSection />
     <TreeSection />
+    <ChartsSection />
     <TableSection />
     <TableDetailSection />
     <TableSheetSection />
@@ -157,6 +158,7 @@
 import { ref, useTemplateRef } from 'vue';
 import { NuiButton, NuiDialog, NuiSkipLink, useColorScheme } from '@numior/vue';
 import TypographySection from './TypographySection.vue';
+import ChartsSection from './ChartsSection.vue';
 import ChromeSection from './ChromeSection.vue';
 import FormsSection from './FormsSection.vue';
 import SignupSection from './SignupSection.vue';

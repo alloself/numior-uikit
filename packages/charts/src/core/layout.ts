@@ -43,6 +43,10 @@ const SLOTS: readonly ChartSlot[] = [1, 2, 3, 4, 5, 6, 7, 8];
 
 const CATEGORY_SHARE = 0.4;
 
+const MOST_TICKS = 5;
+
+const FEWEST_TICKS = 2;
+
 const slotsOf = (series: readonly ChartSeries[]): ChartSlot[] =>
   series.map((item, index) => item.slot ?? SLOTS[index] ?? 0);
 
@@ -78,7 +82,11 @@ const stackedExtent = (spec: ChartSpec, count: number): readonly [number, number
 const valuesOf = (spec: ChartSpec): number[] =>
   spec.series.flatMap((item) => item.values.filter(finite));
 
-const domainOf = (spec: ChartSpec, count: number): { domain: NiceDomain; log: boolean } => {
+const domainOf = (
+  spec: ChartSpec,
+  count: number,
+  ticks: number,
+): { domain: NiceDomain; log: boolean } => {
   const axis = spec.valueAxis ?? {};
   const stacking = spec.stacking ?? 'none';
 
@@ -86,7 +94,7 @@ const domainOf = (spec: ChartSpec, count: number): { domain: NiceDomain; log: bo
     const [low] = stackedExtent(spec, count);
 
     return {
-      domain: niceDomain(low < 0 ? -1 : 0, 1, { min: low < 0 ? -1 : 0, max: 1 }),
+      domain: niceDomain(low < 0 ? -1 : 0, 1, { min: low < 0 ? -1 : 0, max: 1, count: ticks }),
       log: false,
     };
   }
@@ -102,7 +110,7 @@ const domainOf = (spec: ChartSpec, count: number): { domain: NiceDomain; log: bo
   const [low, high] = stacking === 'stacked' ? stackedExtent(spec, count) : extent(valuesOf(spec));
 
   return {
-    domain: niceDomain(low, high, { zero: true, min: axis.min, max: axis.max }),
+    domain: niceDomain(low, high, { zero: true, min: axis.min, max: axis.max, count: ticks }),
     log: false,
   };
 };
@@ -120,11 +128,16 @@ const categoryTextsOf = (spec: ChartSpec, options: LayoutOptions, locale: string
   return values.map((value) => format(value, unit));
 };
 
-const frameOf = (spec: ChartSpec, size: ChartSize, options: LayoutOptions): Frame => {
+const frameOf = (
+  spec: ChartSpec,
+  size: ChartSize,
+  options: LayoutOptions,
+  ticks: number,
+): Frame => {
   const locale = options.locale ?? 'en';
   const fontSize = options.fontSize ?? 12;
   const count = categoryCount(spec);
-  const { domain, log } = domainOf(spec, count);
+  const { domain, log } = domainOf(spec, count, ticks);
   const largest = Math.max(Math.abs(domain.min), Math.abs(domain.max));
 
   const format =
@@ -260,24 +273,29 @@ const columnScene = (frame: Frame): ChartScene => {
   return sceneOf(frame, plot, band, value, texts, false);
 };
 
-const barScene = (frame: Frame): ChartScene => {
+const barCategoryWidth = (frame: Frame): number =>
+  Math.min(widest(frame, frame.categoryTexts), frame.size.width * CATEGORY_SHARE) + TICK_GAP;
+
+const barPlot = (frame: Frame): Box => {
   const { size, rtl, line } = frame;
-
-  const categoryWidth =
-    Math.min(widest(frame, frame.categoryTexts), size.width * CATEGORY_SHARE) + TICK_GAP;
-
-  const side = categoryWidth + titleRoom(frame, frame.spec.categoryAxis?.title);
+  const side = barCategoryWidth(frame) + titleRoom(frame, frame.spec.categoryAxis?.title);
   const bottom = line + TICK_GAP + titleRoom(frame, frame.spec.valueAxis?.title);
   const overhang = frame.measure(frame.valueTexts.at(-1) ?? '', frame.fontSize) / 2;
   const left = PADDING + (rtl ? overhang : side);
   const right = size.width - PADDING - (rtl ? side : overhang);
 
-  const plot: Box = {
+  return {
     x: left,
     y: PADDING,
     width: Math.max(right - left, 1),
     height: Math.max(size.height - PADDING * 2 - bottom, 1),
   };
+};
+
+const barScene = (frame: Frame): ChartScene => {
+  const { rtl } = frame;
+  const plot = barPlot(frame);
+  const categoryWidth = barCategoryWidth(frame);
 
   const band = bandScale(frame.categoryTexts.length, [plot.y, plot.y + plot.height]);
 
@@ -378,12 +396,30 @@ const sceneOf = (
   };
 };
 
+const ticksFit = (frame: Frame): boolean => {
+  const count = frame.domain.ticks.length;
+
+  if (frame.spec.kind === 'bar') {
+    return (widest(frame, frame.valueTexts) + TICK_GAP * 2) * count <= barPlot(frame).width;
+  }
+  return (frame.line + TICK_GAP) * count <= frame.size.height;
+};
+
+const fittedFrame = (spec: ChartSpec, size: ChartSize, options: LayoutOptions): Frame => {
+  let frame = frameOf(spec, size, options, MOST_TICKS);
+
+  for (let ticks = MOST_TICKS - 1; ticks >= FEWEST_TICKS && !ticksFit(frame); ticks -= 1) {
+    frame = frameOf(spec, size, options, ticks);
+  }
+  return frame;
+};
+
 export const layoutChart = (
   spec: ChartSpec,
   size: ChartSize,
   options: LayoutOptions = {},
 ): ChartScene => {
-  const frame = frameOf(spec, size, options);
+  const frame = fittedFrame(spec, size, options);
 
   return spec.kind === 'bar' ? barScene(frame) : columnScene(frame);
 };

@@ -16,6 +16,7 @@
     "packages/editor-vue/src/index.ts",
     "packages/spreadsheet/src/core/index.ts",
     "packages/spreadsheet/src/xlsx/index.ts",
+    "packages/charts/src/index.ts",
     "packages/charts/src/core/index.ts",
     "apps/playground/src/tailwind.css",
     "scripts/vite-package-assets.ts",
@@ -202,7 +203,7 @@
       },
       {
         "from": "charts",
-        "allow": ["charts"]
+        "allow": ["primitives", "charts"]
       },
       {
         "from": "nuxt",

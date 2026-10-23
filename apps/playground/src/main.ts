@@ -7,6 +7,7 @@ import '@numior/tokens/accents.css';
 import '@numior/vue/styles.css';
 import '@numior/forms/styles.css';
 import '@numior/table/styles.css';
+import '@numior/charts/styles.css';
 import '@numior/content/styles.css';
 import '@numior/editor-vue/styles.css';
 import '@numior/tokens/prose.css';

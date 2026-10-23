@@ -295,11 +295,13 @@ for (const file of await localImports(resolve('packages/spreadsheet/dist/xlsx.js
   );
 }
 
-const chartsCore = await import(pathToFileURL(resolve('packages/charts/dist/core.js')).href);
+await importBuild('charts', ['NuiChart', 'chartMessages']);
+
+const chartsCore = await import(pathToFileURL(resolve('packages/charts/dist/core/index.js')).href);
 
 assert.equal(typeof chartsCore.layoutChart, 'function', 'charts/core must export the layout');
 
-for (const file of await localImports(resolve('packages/charts/dist/core.js'))) {
+for (const file of await localImports(resolve('packages/charts/dist/core/index.js'))) {
   const source = await readFile(file, 'utf8');
 
   assert.doesNotMatch(

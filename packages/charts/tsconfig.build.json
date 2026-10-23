@@ -9,6 +9,6 @@
     "rootDir": "./src",
     "customConditions": []
   },
-  "include": ["src/**/*.ts"],
+  "include": ["src/**/*.ts", "src/**/*.vue"],
   "exclude": ["src/**/*.test.ts"]
 }

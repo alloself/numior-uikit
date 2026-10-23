@@ -7,18 +7,42 @@
     "dist"
   ],
   "type": "module",
-  "sideEffects": false,
+  "sideEffects": [
+    "**/*.css"
+  ],
   "exports": {
+    ".": {
+      "@numior/source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
     "./core": {
       "@numior/source": "./src/core/index.ts",
       "types": "./dist/core/index.d.ts",
-      "import": "./dist/core.js"
+      "import": "./dist/core/index.js"
+    },
+    "./styles.css": {
+      "@numior/source": "./src/styles.css",
+      "default": "./dist/styles.css"
+    },
+    "./styles/*.css": {
+      "@numior/source": "./src/*/*.css",
+      "default": "./dist/styles/*.css"
     }
   },
   "scripts": {
     "build": "vp build && vue-tsc -p tsconfig.build.json"
   },
+  "dependencies": {
+    "@numior/primitives": "workspace:*",
+    "@vueuse/core": "15.0.0"
+  },
   "devDependencies": {
+    "@vue/test-utils": "2.5.1",
     "fast-check": "4.10.2"
+  },
+  "peerDependencies": {
+    "@numior/tokens": "workspace:*",
+    "vue": "^3.5.0"
   }
 }

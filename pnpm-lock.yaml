@@ -164,6 +164,9 @@ importers:
       '@lucide/vue':
         specifier: 1.50.0
         version: 1.50.0(vue@3.5.43(typescript@5.9.3))
+      '@numior/charts':
+        specifier: workspace:*
+        version: link:../../packages/charts
       '@numior/content':
         specifier: workspace:*
         version: link:../../packages/content
@@ -206,7 +209,23 @@ importers:
         version: 4.3.3
 
   packages/charts:
+    dependencies:
+      '@numior/primitives':
+        specifier: workspace:*
+        version: link:../primitives
+      '@numior/tokens':
+        specifier: workspace:*
+        version: link:../tokens
+      '@vueuse/core':
+        specifier: 15.0.0
+        version: 15.0.0(vue@3.5.43(typescript@5.9.3))
+      vue:
+        specifier: ^3.5.0
+        version: 3.5.43(typescript@5.9.3)
     devDependencies:
+      '@vue/test-utils':
+        specifier: 2.5.1
+        version: 2.5.1(@vue/compiler-dom@3.5.43)(@vue/server-renderer@3.5.43)(vue@3.5.43(typescript@5.9.3))
       fast-check:
         specifier: 4.10.2
         version: 4.10.2

@@ -419,3 +419,10 @@ footer {
 .task-status__label {
   color: var(--nui-text-muted);
 }
+
+.charts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
+  gap: var(--nui-space-6);
+  margin-block-start: var(--nui-space-4);
+}
