@@ -36,19 +36,21 @@ const visitRange = (
   to: number,
   visit: NodeVisitor,
 ): void => {
-  const offsets = childOffsets(node);
   const { content } = node;
-  let index = childIndexAt(node, Math.max(0, from - start));
-  let childStart = start + (offsets[index] ?? 0);
+  let index = from <= start ? 0 : childIndexAt(node, from - start);
+  let childStart = index === 0 ? start : start + (childOffsets(node)[index] ?? 0);
 
   while (index < content.length && childStart < to) {
     const child = content[index];
 
-    if (child !== undefined && visit(child, childStart, node, index) && child.kind === 'element') {
+    if (child === undefined) {
+      return;
+    }
+    if (visit(child, childStart, node, index) && child.kind === 'element') {
       visitRange(child, childStart + 1, from, to, visit);
     }
     index += 1;
-    childStart = start + (offsets[index] ?? 0);
+    childStart += nodeSize(child);
   }
 };
 
