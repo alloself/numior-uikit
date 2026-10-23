@@ -274,7 +274,7 @@ import {
   useTemplateRef,
   watch,
 } from 'vue';
-import { clamp, onLongPress, useDevicePixelRatio, useElementSize } from '@vueuse/core';
+import { clamp, onLongPress, useDevicePixelRatio, useResizeObserver } from '@vueuse/core';
 import { formRulesMessages } from '@numior/forms';
 import {
   createIntent,
@@ -732,7 +732,14 @@ const warming = useTableWarmup({
 
 const active = ref<TableCellPosition>({ row: rowCount.value > 0 ? 0 : -1, col: 0 });
 
-const { width: room } = useElementSize(viewport);
+const room = shallowRef(0);
+
+const measureRoom = (): void => {
+  room.value = viewport.value?.clientWidth ?? 0;
+};
+
+useResizeObserver(viewport, measureRoom);
+onMounted(measureRoom);
 const { pixelRatio } = useDevicePixelRatio();
 const scale = shallowRef(1);
 

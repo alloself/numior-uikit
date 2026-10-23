@@ -20,6 +20,8 @@ type RunKind = 'query' | 'totals';
 
 const BUSY_DELAY = 120;
 
+const IDLE_TIMEOUT = 200;
+
 const nextPaint = async (): Promise<void> => {
   if (typeof requestAnimationFrame === 'function') {
     await new Promise((resolve) => {
@@ -27,6 +29,15 @@ const nextPaint = async (): Promise<void> => {
     });
   }
   await promiseTimeout(0);
+};
+
+const afterIdle = async (): Promise<void> => {
+  await nextPaint();
+  if (typeof requestIdleCallback === 'function') {
+    await new Promise((resolve) => {
+      requestIdleCallback(resolve, { timeout: IDLE_TIMEOUT });
+    });
+  }
 };
 
 const shapesRows = (query: TableQuery): boolean =>
@@ -69,7 +80,7 @@ export const useTableQuery = <T>(options: TableQueryOptions<T>): TableQueryRunne
 
     try {
       if (kind === 'totals') {
-        await nextPaint();
+        await afterIdle();
       }
       if (own.signal.aborted) {
         return;
