@@ -173,4 +173,33 @@ describe('NuiTable groups and totals', () => {
     expect(reads).toBeGreaterThanOrEqual(1000);
     expect(grid.cellText(1000, 7)).toContain('4\u00a0995\u00a0000');
   });
+
+  it('stops counting the totals once the table leaves the page', async () => {
+    let reads = 0;
+
+    const columns = TOTALS_COLUMNS.map((column): NuiTableColumn<Person> =>
+      column.key === 'm1' && column.type === 'number'
+        ? {
+            ...column,
+            value: (row) => {
+              reads += 1;
+              return column.value(row);
+            },
+          }
+        : column,
+    );
+
+    const grid = TableDriver.mount<Person>({
+      columns,
+      rows: people(1000),
+      config: { locale: 'ru-RU' },
+      width: 2400,
+    });
+
+    grid.unmount();
+    reads = 0;
+    await grid.nextPaint();
+
+    expect(reads).toBe(0);
+  });
 });

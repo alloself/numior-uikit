@@ -1,5 +1,5 @@
 import { isClient, promiseTimeout } from '@vueuse/core';
-import { ref, watch, type Ref, type ShallowRef } from 'vue';
+import { onScopeDispose, ref, watch, type Ref, type ShallowRef } from 'vue';
 import { yieldInLine, type TableEngine, type TableProgress, type TableQuery } from '../engine';
 
 export interface TableQueryOptions<T> {
@@ -103,6 +103,8 @@ export const useTableQuery = <T>(options: TableQueryOptions<T>): TableQueryRunne
   watch(options.query, (next) => {
     void run(next);
   });
+
+  onScopeDispose(stop);
 
   return { busy, runNow };
 };
