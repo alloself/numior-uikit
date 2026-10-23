@@ -1,4 +1,4 @@
-import type { ResolvedPos } from '../doc/doc.types';
+import type { Doc, ResolvedPos } from '../doc/doc.types';
 import { emptyTextblock } from '../doc/empty';
 import { nodeSize, withContent } from '../model/node';
 import type { AttrValue, ContentNode, ElementNode } from '../model/node.types';
@@ -6,12 +6,14 @@ import { matchesSplice } from '../schema/content-match';
 import type { Schema } from '../schema/schema.types';
 import { isCursor, textPosition, textSelection } from '../state/selection';
 import type { Command, EditorState, Transaction } from '../state/state.types';
-import { attempt } from './attempt';
+import { attempt, probe } from './attempt';
 import { ancestorTypes, sequence } from './format';
 import { isBlockAtom } from './atoms';
 import { insertAtGap } from './gap';
 
 type Attrs = Readonly<Record<string, AttrValue>>;
+
+type WrapTypes = readonly { readonly type: string; readonly attrs?: Attrs | undefined }[];
 
 interface ItemSpot {
   readonly $pos: ResolvedPos;
@@ -62,39 +64,49 @@ const firstItemOf = (schema: Schema, listType: string): string | undefined =>
 const defaultsOf = (schema: Schema, type: string): Attrs =>
   schema.element(type, { id: 'defaults' }).attrs;
 
-export const wrapTextblock = (
-  tr: Transaction,
-  pos: number,
-  types: readonly { readonly type: string; readonly attrs?: Attrs | undefined }[],
-): boolean => {
-  const { schema } = tr.doc;
-  const $pos = tr.doc.resolve(pos);
+const wrapped = (
+  schema: Schema,
+  types: WrapTypes,
+  inside: readonly ContentNode[],
+  idOf: () => string,
+): readonly ContentNode[] =>
+  types.reduceRight<readonly ContentNode[]>(
+    (inner, entry) => [
+      schema.element(entry.type, { id: idOf(), attrs: entry.attrs, content: inner }),
+    ],
+    inside,
+  );
+
+const nestedValid = (
+  schema: Schema,
+  node: ContentNode | undefined,
+  textblock: ElementNode,
+): boolean =>
+  node?.kind !== 'element' ||
+  node === textblock ||
+  (schema.nodes.get(node.type)?.content.matchContent(node.content)?.validEnd === true &&
+    node.content.every((child) => nestedValid(schema, child, textblock)));
+
+const wrapFits = (doc: Doc, pos: number, types: WrapTypes, idOf: () => string): boolean => {
+  const { schema } = doc;
+  const $pos = doc.resolve(pos);
   const textblock = $pos.parent;
   const parent = $pos.node($pos.depth - 1);
+  const wrapper = wrapped(schema, types, [textblock], idOf);
 
-  const build = (inside: readonly ContentNode[]): readonly ContentNode[] =>
-    types.reduceRight<readonly ContentNode[]>(
-      (inner, entry) => [
-        schema.element(entry.type, { id: tr.newId(), attrs: entry.attrs, content: inner }),
-      ],
-      inside,
-    );
+  return (
+    $pos.depth >= 1 &&
+    fits(schema, parent, $pos.indexAt($pos.depth - 1), wrapper) &&
+    nestedValid(schema, wrapper[0], textblock)
+  );
+};
 
-  const wrapper = build([textblock]);
-
-  const nested = (node: ContentNode | undefined): boolean =>
-    node?.kind !== 'element' ||
-    node === textblock ||
-    (schema.nodes.get(node.type)?.content.matchContent(node.content)?.validEnd === true &&
-      node.content.every(nested));
-
-  if (
-    $pos.depth < 1 ||
-    !fits(schema, parent, $pos.indexAt($pos.depth - 1), wrapper) ||
-    !nested(wrapper[0])
-  ) {
+export const wrapTextblock = (tr: Transaction, pos: number, types: WrapTypes): boolean => {
+  if (!wrapFits(tr.doc, pos, types, () => tr.newId())) {
     return false;
   }
+
+  const $pos = tr.doc.resolve(pos);
   const from = $pos.before($pos.depth);
   const to = $pos.after($pos.depth);
 
@@ -104,7 +116,11 @@ export const wrapTextblock = (
     to,
     gapFrom: from,
     gapTo: to,
-    slice: { content: build([]), openStart: 0, openEnd: 0 },
+    slice: {
+      content: wrapped(tr.doc.schema, types, [], () => tr.newId()),
+      openStart: 0,
+      openEnd: 0,
+    },
     insert: types.length,
   });
 
@@ -129,6 +145,27 @@ const joinSiblings = (tr: Transaction, pos: number): void => {
   }
 };
 
+const listTypesAt = (
+  doc: Doc,
+  pos: number,
+  listType: string,
+  attrs: Attrs,
+  itemAttrs: Attrs,
+): WrapTypes | undefined => {
+  const { schema } = doc;
+  const itemType = firstItemOf(schema, listType);
+  const $pos = doc.resolve(pos);
+
+  return itemType === undefined ||
+    $pos.depth < 1 ||
+    ($pos.depth >= 2 && isList(schema, $pos.node($pos.depth - 2)))
+    ? undefined
+    : [
+        { type: listType, attrs },
+        { type: itemType, attrs: itemAttrs },
+      ];
+};
+
 export const wrapInList = (
   tr: Transaction,
   pos: number,
@@ -136,24 +173,25 @@ export const wrapInList = (
   attrs: Attrs = {},
   itemAttrs: Attrs = {},
 ): boolean => {
-  const { schema } = tr.doc;
-  const itemType = firstItemOf(schema, listType);
+  const types = listTypesAt(tr.doc, pos, listType, attrs, itemAttrs);
   const $pos = tr.doc.resolve(pos);
   const first = tr.steps.length;
 
-  if (
-    itemType === undefined ||
-    $pos.depth < 1 ||
-    ($pos.depth >= 2 && isList(schema, $pos.node($pos.depth - 2))) ||
-    !wrapTextblock(tr, pos, [
-      { type: listType, attrs },
-      { type: itemType, attrs: itemAttrs },
-    ])
-  ) {
+  if (types === undefined || !wrapTextblock(tr, pos, types)) {
     return false;
   }
   joinSiblings(tr, tr.mapping.slice(first).map($pos.before($pos.depth), -1));
   return true;
+};
+
+const PROBE_ID = 'probe';
+
+const probeId = (): string => PROBE_ID;
+
+const canWrapInList = (doc: Doc, pos: number, listType: string, attrs: Attrs): boolean => {
+  const types = listTypesAt(doc, pos, listType, attrs, {});
+
+  return types !== undefined && wrapFits(doc, pos, types, probeId);
 };
 
 export const retypeTextblock = (
@@ -449,18 +487,32 @@ export const liftAtStart: Command = (state, dispatch) => {
 };
 
 const toggleWrap =
-  (wrap: (tr: Transaction, pos: number) => boolean): Command =>
+  (
+    wrap: (tr: Transaction, pos: number) => boolean,
+    fitsAt: (doc: Doc, pos: number) => boolean,
+  ): Command =>
   (state, dispatch) => {
     const head = headOf(state);
 
-    return head !== undefined && attempt(state, dispatch, (tr) => wrap(tr, head));
+    if (head === undefined) {
+      return false;
+    }
+    return dispatch === undefined
+      ? probe(() => fitsAt(state.doc, head))
+      : attempt(state, dispatch, (tr) => wrap(tr, head));
   };
 
 export const turnIntoList = (listType: string, attrs: Attrs = {}): Command =>
-  toggleWrap((tr, pos) => wrapInList(tr, pos, listType, attrs));
+  toggleWrap(
+    (tr, pos) => wrapInList(tr, pos, listType, attrs),
+    (doc, pos) => canWrapInList(doc, pos, listType, attrs),
+  );
 
 export const wrapInBlock = (type: string, attrs: Attrs = {}): Command =>
-  toggleWrap((tr, pos) => wrapTextblock(tr, pos, [{ type, attrs }]));
+  toggleWrap(
+    (tr, pos) => wrapTextblock(tr, pos, [{ type, attrs }]),
+    (doc, pos) => wrapFits(doc, pos, [{ type, attrs }], probeId),
+  );
 
 const listTypeAt = (state: EditorState): string | undefined =>
   ancestorTypes(state).find((type) => state.doc.schema.nodes.get(type)?.groups.has('list'));

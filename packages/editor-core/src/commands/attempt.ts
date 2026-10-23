@@ -20,3 +20,14 @@ export const attempt = (
   dispatch?.(tr);
   return true;
 };
+
+export const probe = (check: () => boolean): boolean => {
+  try {
+    return check();
+  } catch (error) {
+    if (error instanceof RangeError) {
+      return false;
+    }
+    throw error;
+  }
+};
