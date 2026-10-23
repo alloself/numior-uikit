@@ -17,7 +17,9 @@ test('the editor keeps typing within budget on ten thousand blocks', async ({ pa
     summarize('generate the document and its JSON in the page', [await bench.dataMs()]),
   );
 
-  operations.push(summarize('cold mount to the first painted block', [await bench.coldStart()]));
+  operations.push(
+    summarize('cold mount to the first painted block', await bench.coldStarts(browser)),
+  );
 
   const warm: number[] = [];
 

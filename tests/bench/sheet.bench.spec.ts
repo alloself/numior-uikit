@@ -15,7 +15,10 @@ test('a sheet of 1 048 576 rows and 16 384 columns keeps input and frames within
   const operations: Operation[] = [];
 
   operations.push(summarize('build the cell adapter of the sheet', [await bench.dataMs()]));
-  operations.push(summarize('cold mount to the first painted row', [await bench.coldStart()]));
+
+  operations.push(
+    summarize('cold mount to the first painted row', await bench.coldStarts(browser)),
+  );
 
   const warm: number[] = [];
 

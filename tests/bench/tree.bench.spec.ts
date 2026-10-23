@@ -18,7 +18,9 @@ test('the tree keeps window moves and frames within budget on a hundred thousand
     summarize('generate a hundred thousand nodes in the page', [await bench.dataMs()]),
   );
 
-  operations.push(summarize('cold mount to the first painted row', [await bench.coldStart()]));
+  operations.push(
+    summarize('cold mount to the first painted row', await bench.coldStarts(browser)),
+  );
 
   const warm: number[] = [];
 

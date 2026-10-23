@@ -18,7 +18,10 @@ test('the data table keeps input and frames within budget on a million rows', as
   const operations: Operation[] = [];
 
   operations.push(summarize('generate a million rows in the page', [await bench.dataMs()]));
-  operations.push(summarize('cold mount to the first painted row', [await bench.coldStart()]));
+
+  operations.push(
+    summarize('cold mount to the first painted row', await bench.coldStarts(browser)),
+  );
 
   const warm: number[] = [];
 
