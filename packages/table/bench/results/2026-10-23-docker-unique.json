@@ -1,5 +1,5 @@
 {
-  "recordedAt": "2026-10-23T14:27:15.779Z",
+  "recordedAt": "2026-10-23T22:24:36.647Z",
   "dataset": "1000000 generated rows, sort by 1000000 unique emails on cold stores, viewport 1440×900",
   "device": {
     "host": "docker",
@@ -10,15 +10,15 @@
     "node": "v24.20.0"
   },
   "browser": "chromium 153.0.8010.12",
-  "heapUsedMb": 75,
+  "heapUsedMb": 72,
   "operations": [
     {
       "name": "first sort of a column of unique strings right after mount to the painted result",
       "samples": 1,
-      "meanMs": 1624.699999988079,
-      "p50Ms": 1624.699999988079,
-      "p95Ms": 1624.699999988079,
-      "maxMs": 1624.699999988079
+      "meanMs": 1592.7000000178814,
+      "p50Ms": 1592.7000000178814,
+      "p95Ms": 1592.7000000178814,
+      "maxMs": 1592.7000000178814
     },
     {
       "name": "longest main-thread task while it sorts",
