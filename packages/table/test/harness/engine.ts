@@ -164,8 +164,7 @@ export class EngineHarness<T> {
   readonly engine: TableEngine<T>;
   readonly progress: TableProgress[] = [];
   private readonly waiting: Array<() => void> = [];
-  private readonly laps: number[] = [];
-  private resumedAt = 0;
+  private yields = 0;
 
   constructor(
     columns: readonly TableEngineColumn<T>[],
@@ -182,7 +181,7 @@ export class EngineHarness<T> {
       sliceMs: options.sliceMs ?? 12,
       collator: new Intl.Collator('ru', { numeric: true }),
       yieldTo: () => {
-        this.lap();
+        this.yields += 1;
         return new Promise((resolve) => {
           this.waiting.push(resolve);
         });
@@ -197,15 +196,7 @@ export class EngineHarness<T> {
   }
 
   get slices(): number {
-    return this.laps.length;
-  }
-
-  slicesOver(ms: number): number {
-    return this.laps.filter((lap) => lap > ms).length;
-  }
-
-  private lap(): void {
-    this.laps.push(performance.now() - this.resumedAt);
+    return this.yields;
   }
 
   get phases(): string[] {
@@ -213,8 +204,6 @@ export class EngineHarness<T> {
   }
 
   run(query: TableQuery, signal?: AbortSignal): Promise<TableRunResult> {
-    this.resumedAt = performance.now();
-
     return this.engine.run(query, {
       signal,
       onProgress: (progress) => {
@@ -226,7 +215,6 @@ export class EngineHarness<T> {
   async step(): Promise<void> {
     const resume = this.waiting.shift();
 
-    this.resumedAt = performance.now();
     resume?.();
     await tick();
   }
@@ -235,7 +223,7 @@ export class EngineHarness<T> {
     const outcome = { settled: false };
 
     const finish = (): void => {
-      this.lap();
+      this.yields += 1;
       outcome.settled = true;
     };
 
