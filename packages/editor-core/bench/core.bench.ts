@@ -10,6 +10,7 @@ import {
   setBlockType,
   sinkListItem,
   toggleList,
+  toggleMark,
   toggleWrapper,
   toJSON,
   type Doc,
@@ -229,6 +230,19 @@ operations.push(
       }
     },
     light,
+  ),
+);
+
+operations.push(
+  await measure(
+    'toggle bold over the whole document',
+    async () => {
+      const produced: Transaction[] = [];
+
+      toggleMark('bold')(everything, (tr) => produced.push(tr));
+      everything.apply(produced[0] ?? everything.tr);
+    },
+    heavy,
   ),
 );
 

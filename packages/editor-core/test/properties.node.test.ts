@@ -169,6 +169,12 @@ const scenario = fc.record({
   changes: fc.array(change, { minLength: 1, maxLength: 8 }),
 });
 
+const wideScenario = fc.record({
+  blocks: fc.integer({ min: 64, max: 90 }),
+  seed: fc.integer({ min: 1, max: 1_000_000 }),
+  changes: fc.array(change, { minLength: 1, maxLength: 8 }),
+});
+
 const replay = (blocks: number, seed: number, changes: readonly Change[]): Transform => {
   const transform = createTransform(generateDoc(fixtureSchema, { blocks, seed }));
 
@@ -218,7 +224,7 @@ const staleOffsets = (doc: Doc): number => {
 
 describe('step properties', () => {
   it('derives child offsets when children are spliced into empty and filled nodes', () => {
-    const { root } = generateDoc(fixtureSchema, { blocks: 4, seed: 3 });
+    const { root } = generateDoc(fixtureSchema, { blocks: 70, seed: 3 });
     const blocks = root.content;
     const empty: ElementNode = { ...root, content: [], size: 2 };
 
@@ -226,6 +232,7 @@ describe('step properties', () => {
       [empty, 0, 0, blocks.slice(0, 2)],
       [root, 0, 0, blocks.slice(1, 2)],
       [root, 2, 3, blocks.slice(0, 3)],
+      [root, 40, 45, blocks.slice(0, 1)],
       [root, blocks.length, blocks.length, blocks.slice(0, 1)],
     ] as const;
 
@@ -240,7 +247,7 @@ describe('step properties', () => {
 
   it('keeps the child offsets it derives for new nodes equal to fresh sums', () => {
     fc.assert(
-      fc.property(scenario, ({ blocks, seed, changes }) => {
+      fc.property(wideScenario, ({ blocks, seed, changes }) => {
         const transform = replay(blocks, seed, changes);
 
         expect([...transform.docs, transform.doc].map(staleOffsets)).toEqual(

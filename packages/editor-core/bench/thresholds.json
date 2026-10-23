@@ -36,6 +36,9 @@
     "check the toolbar block commands on a whole-document selection": {
       "p95Ms": 10
     },
+    "toggle bold over the whole document": {
+      "p95Ms": 100
+    },
     "turn every textblock of the document into a heading": {
       "p95Ms": 50
     },

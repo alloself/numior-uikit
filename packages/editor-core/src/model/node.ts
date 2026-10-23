@@ -25,6 +25,8 @@ const offsetCache = new WeakMap<ElementNode, readonly number[]>();
 
 const offsetShifts = new WeakMap<ElementNode, OffsetShift>();
 
+const WIDE = 64;
+
 export const nodeSize = (node: ContentNode): number =>
   node.kind === 'text' ? node.text.length : node.size;
 
@@ -113,7 +115,7 @@ const shiftOffsets = (
   next: ElementNode,
   splice: Omit<OffsetShift, 'base' | 'start'>,
 ): void => {
-  const known = offsetCache.get(node);
+  const known = node.content.length < WIDE ? undefined : offsetCache.get(node);
 
   if (known !== undefined) {
     offsetShifts.set(next, { ...splice, base: known, start: startOf(node, known, splice.from) });
@@ -189,7 +191,7 @@ export const inheritOffsets = (
   }
   if (delta === 0) {
     offsetCache.set(to, known);
-  } else {
+  } else if (known.length >= WIDE) {
     shiftOffsets(from, to, { from: index, to: index + 1, middle: [child], delta });
   }
 };
