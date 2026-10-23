@@ -1,0 +1,32 @@
+{
+  "recordedAt": "2026-10-23T13:42:55.474Z",
+  "dataset": "1000000 generated rows, sort by 1000000 unique emails on cold stores, viewport 1440×900",
+  "device": {
+    "host": "docker",
+    "cpu": "13th Gen Intel(R) Core(TM) i9-13900KF",
+    "cores": 32,
+    "memoryGb": 31,
+    "platform": "linux 6.18.54.1-microsoft-standard-WSL2",
+    "node": "v24.20.0"
+  },
+  "browser": "chromium 153.0.8010.12",
+  "heapUsedMb": 71,
+  "operations": [
+    {
+      "name": "first sort of a column of unique strings right after mount to the painted result",
+      "samples": 1,
+      "meanMs": 1580.7999999821186,
+      "p50Ms": 1580.7999999821186,
+      "p95Ms": 1580.7999999821186,
+      "maxMs": 1580.7999999821186
+    },
+    {
+      "name": "longest main-thread task while it sorts",
+      "samples": 1,
+      "meanMs": 0,
+      "p50Ms": 0,
+      "p95Ms": 0,
+      "maxMs": 0
+    }
+  ]
+}
