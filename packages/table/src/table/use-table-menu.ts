@@ -28,7 +28,7 @@ export interface TableMenuOptions<T> {
   readonly leaves: () => readonly NuiTableColumn<T>[];
   readonly layout: () => TableLayout;
   readonly columnAt: (key: string) => NuiTableColumn<T>;
-  readonly heads: () => Readonly<Record<string, TableHeadState>>;
+  readonly head: (key: string) => TableHeadState | undefined;
   readonly sort: Ref<NuiTableSort>;
   readonly groupBy: Ref<NuiTableGroupBy>;
   readonly pins: Ref<NuiTablePins>;
@@ -87,7 +87,7 @@ export const useTableMenu = <T>(options: TableMenuOptions<T>): TableMenu => {
 
   const stateOf = (key: string): ColumnMenuState => {
     const column = options.columnAt(key);
-    const head = options.heads()[key];
+    const head = options.head(key);
     const shown = shownKeys();
 
     return {

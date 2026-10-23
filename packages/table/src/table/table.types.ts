@@ -790,7 +790,7 @@ export interface NuiTableRowProps {
   sizing?: boolean | undefined;
   frozen?: number | undefined;
   edge?: boolean | undefined;
-  heads?: Readonly<Record<string, TableHeadState>> | undefined;
+  head?: ((key: string) => TableHeadState | undefined) | undefined;
 }
 
 export interface NuiTableDetailRowProps {

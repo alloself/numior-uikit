@@ -31,7 +31,7 @@
               :cells="band"
               :row-index="level + 1"
               part="band"
-              :heads="header.heads.value"
+              :head="header.head"
               @resize="resize.start"
             >
               <template #default="{ column }">
@@ -44,7 +44,7 @@
               part="head"
               :active="focus.activeIn(-1)"
               :marks="columnMarks"
-              :heads="header.heads.value"
+              :head="header.head"
               @resize="resize.start"
             >
               <template #utility="{ column }">
@@ -55,7 +55,7 @@
                   <span class="nui-table__text">{{ columnAt(column).label }}</span>
                 </slot>
                 <NuiTableHeaderMarks
-                  :state="header.heads.value[column]"
+                  :state="header.head(column)"
                   :hint="header.sortHint(column)"
                   :filter-label="messages.filterColumn({ column: columnAt(column).label })"
                   :expanded="header.expanded(column)"
@@ -1200,7 +1200,7 @@ const menu: TableMenu = useTableMenu({
   leaves: () => tree.value.leaves,
   layout: () => layout.value,
   columnAt,
-  heads: () => header.heads.value,
+  head: header.head,
   sort,
   groupBy,
   pins,
@@ -1651,7 +1651,7 @@ const rangeSelect = useTableRanges({
   isRtl: direction.isRtl,
   anchor: rangeAnchor,
   cursor: () => activeData(),
-  sorts: (col) => header.heads.value[dataKeys.value[col] ?? '']?.sortable === true,
+  sorts: (col) => header.head(dataKeys.value[col] ?? '')?.sortable === true,
   merges: () => mergeIndex.value,
   edge: edgeOfData,
   focus: (position) => {

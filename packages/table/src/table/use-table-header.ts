@@ -1,6 +1,6 @@
 import { computed, ref, shallowRef, type ComputedRef, type Ref, type ShallowRef } from 'vue';
 import { filterKindOf, filterOf, withFilter } from './table-filter';
-import { headStates, nextSort } from './table-sort';
+import { headStateOf, nextSort, type HeadStateInput } from './table-sort';
 import type { NuiTableMessages } from './table.messages';
 import type {
   TableHeadState,
@@ -37,7 +37,7 @@ export interface TableHeaderOptions<T> {
 }
 
 export interface TableHeader<T> {
-  readonly heads: ComputedRef<Readonly<Record<string, TableHeadState>>>;
+  head(key: string): TableHeadState | undefined;
   readonly target: Readonly<ShallowRef<TableFilterTarget | null>>;
   readonly open: Ref<boolean>;
   scope(key: string): NuiTableHeaderSlot<T>;
@@ -76,19 +76,21 @@ export const useTableHeader = <T>(options: TableHeaderOptions<T>): TableHeader<T
   const target = shallowRef<TableFilterTarget | null>(null);
   const open = ref(false);
 
-  const heads = computed(() =>
-    headStates({
-      keys: options.keys(),
-      sort: options.sort.value,
-      sortable: (key) => options.columnAt(key).sortable !== false,
-      filterable: (key) => filterKindOf(options.columnAt(key)) !== undefined,
-      filtered: (key) => filterOf(options.filters.value, key) !== undefined,
-      resizable: options.resizable,
-      resizing: options.resizing,
-      reorderable: options.reorderable,
-      dragging: options.dragging,
-    }),
-  );
+  const known = computed(() => new Set(options.keys()));
+
+  const input: HeadStateInput = {
+    sorting: () => options.sort.value,
+    sortable: (key) => options.columnAt(key).sortable !== false,
+    filterable: (key) => filterKindOf(options.columnAt(key)) !== undefined,
+    filtered: (key) => filterOf(options.filters.value, key) !== undefined,
+    resizable: options.resizable,
+    resizing: options.resizing,
+    reorderable: options.reorderable,
+    dragging: options.dragging,
+  };
+
+  const head = (key: string): TableHeadState | undefined =>
+    known.value.has(key) ? headStateOf(input, key) : undefined;
 
   const keyOf = (cell: HTMLElement | null): string | undefined =>
     cell === null ? undefined : options.keyAt(Number(cell.getAttribute('aria-colindex')) - 1);
@@ -110,7 +112,7 @@ export const useTableHeader = <T>(options: TableHeaderOptions<T>): TableHeader<T
   };
 
   const toggleSort = (key: string, multi: boolean): void => {
-    if (heads.value[key]?.sortable !== true) {
+    if (head(key)?.sortable !== true) {
       return;
     }
     const next = nextSort(options.sort.value, key, multi);
@@ -134,7 +136,7 @@ export const useTableHeader = <T>(options: TableHeaderOptions<T>): TableHeader<T
       event.preventDefault();
       return true;
     }
-    if (heads.value[key]?.filterable === true) {
+    if (head(key)?.filterable === true) {
       event.preventDefault();
       openFor(key, cell);
       return true;
@@ -161,12 +163,12 @@ export const useTableHeader = <T>(options: TableHeaderOptions<T>): TableHeader<T
   };
 
   return {
-    heads,
+    head,
     target,
     open,
-    scope: (key) => ({ column: options.columnAt(key), direction: heads.value[key]?.direction }),
+    scope: (key) => ({ column: options.columnAt(key), direction: head(key)?.direction }),
     sortHint: (key) => {
-      const order = heads.value[key]?.order;
+      const order = head(key)?.order;
       return order === undefined ? '' : options.messages.value.sortKey({ order });
     },
     filterOf: (key) => filterOf(options.filters.value, key),
