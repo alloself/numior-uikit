@@ -1,4 +1,4 @@
-export type ChartKind = 'column' | 'bar' | 'line' | 'area' | 'pie' | 'doughnut';
+export type ChartKind = 'column' | 'bar' | 'line' | 'area' | 'pie' | 'doughnut' | 'scatter';
 
 export type ChartStacking = 'none' | 'stacked' | 'percent';
 
@@ -15,7 +15,8 @@ export interface ChartSeries {
 
 export type ChartCategories =
   | { readonly kind: 'text'; readonly labels: readonly string[] }
-  | { readonly kind: 'time'; readonly values: readonly number[] };
+  | { readonly kind: 'time'; readonly values: readonly number[] }
+  | { readonly kind: 'number'; readonly values: readonly number[] };
 
 export interface ChartValueAxis {
   readonly title?: string | undefined;

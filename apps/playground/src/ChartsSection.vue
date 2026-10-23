@@ -45,6 +45,12 @@
         :show-table="showTable"
         data-testid="chart-doughnut"
       />
+      <NuiChart
+        :spec="discounts"
+        label="Скидка и прирост продаж по акциям"
+        :show-table="showTable"
+        data-testid="chart-scatter"
+      />
     </div>
   </section>
 </template>
@@ -124,5 +130,16 @@ const costs: ChartSpec = {
   kind: 'doughnut',
   categories: { kind: 'text', labels: ['Зарплаты', 'Аренда', 'Маркетинг', 'Логистика', 'Прочее'] },
   series: [{ id: 'fact', name: 'Расходы, млн ₽', values: [48, 17, 14, 12, 9] }],
+};
+
+const discounts: ChartSpec = {
+  kind: 'scatter',
+  categories: { kind: 'number', values: [5, 7, 10, 12, 15, 18, 20, 25, 30, 35] },
+  series: [
+    { id: 'online', name: 'Онлайн', values: [3, 6, 8, 7, 12, 15, 14, 19, 21, 22] },
+    { id: 'stores', name: 'Магазины', values: [2, 2, 5, 6, 6, 9, 11, 10, 12, 16] },
+  ],
+  valueAxis: { title: 'Прирост, %' },
+  categoryAxis: { title: 'Скидка, %' },
 };
 </script>

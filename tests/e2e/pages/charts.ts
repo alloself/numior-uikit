@@ -14,6 +14,7 @@ export class ChartsSection {
   readonly areas: Locator;
   readonly pie: Locator;
   readonly doughnut: Locator;
+  readonly scatter: Locator;
   readonly tableSwitch: Locator;
 
   constructor(page: Page) {
@@ -24,6 +25,7 @@ export class ChartsSection {
     this.areas = page.getByTestId('chart-areas');
     this.pie = page.getByTestId('chart-pie');
     this.doughnut = page.getByTestId('chart-doughnut');
+    this.scatter = page.getByTestId('chart-scatter');
     this.tableSwitch = page.getByRole('switch', { name: 'Показать таблицу данных' });
   }
 
@@ -33,6 +35,10 @@ export class ChartsSection {
 
   strokes(chart: Locator): Locator {
     return chart.locator('.nui-chart__stroke');
+  }
+
+  points(chart: Locator): Locator {
+    return chart.locator('.nui-chart__point');
   }
 
   slices(chart: Locator): Locator {

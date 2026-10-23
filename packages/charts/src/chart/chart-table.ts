@@ -21,10 +21,16 @@ const dateFormat = (locale: string): Intl.DateTimeFormat => {
   return known;
 };
 
-export const categoryTexts = (spec: ChartSpec, locale: string): readonly string[] =>
-  spec.categories.kind === 'text'
-    ? spec.categories.labels
-    : spec.categories.values.map((value) => dateFormat(locale).format(value));
+export const categoryTexts = (spec: ChartSpec, locale: string): readonly string[] => {
+  switch (spec.categories.kind) {
+    case 'text':
+      return spec.categories.labels;
+    case 'number':
+      return spec.categories.values.map((value) => numberFormat(locale).format(value));
+    default:
+      return spec.categories.values.map((value) => dateFormat(locale).format(value));
+  }
+};
 
 export const valueText = (value: ChartValue | undefined, locale: string): string =>
   value === null || value === undefined || !Number.isFinite(value)

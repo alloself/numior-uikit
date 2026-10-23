@@ -70,6 +70,20 @@ test.describe('charts', () => {
     await expect(charts.legend(charts.doughnut).getByRole('listitem')).toHaveCount(5);
   });
 
+  test('places a marker per pair on a scatter chart and lists the pairs in the table', async ({
+    page,
+  }) => {
+    const playground = new PlaygroundPage(page);
+    await playground.emulate({ reducedMotion: 'reduce' });
+    await playground.open();
+    const { charts } = playground;
+    await charts.scatter.scrollIntoViewIfNeeded();
+    await expect(charts.points(charts.scatter)).toHaveCount(20);
+    await expect(charts.strokes(charts.scatter)).toHaveCount(0);
+    await charts.showTable();
+    await expect(charts.rows(charts.scatter).first()).toHaveText(/5\s*3\s*2/);
+  });
+
   test('keeps value labels apart on a narrow screen', async ({ page }) => {
     const playground = new PlaygroundPage(page);
     await playground.emulate({ reducedMotion: 'reduce' });
