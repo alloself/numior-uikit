@@ -44,6 +44,7 @@ import { pivotOf } from './pivot-model';
 import { readPositionalParts } from './positional-parts';
 import { readSheetPart, type SheetCounts } from './sheet-part';
 import { readStyles, type CellStyles } from './styles';
+import { readTheme } from './theme-part';
 import { readTablePart } from './table-part';
 import { readWorkbookPart, type SheetEntry, type WorkbookPart } from './workbook-part';
 
@@ -490,6 +491,7 @@ const readBook = async (
   const workbook = await readWorkbookPart(archive, office, options);
   const stringsPart = targetOf(relationships, 'sharedStrings');
   const stylesPart = targetOf(relationships, 'styles');
+  const themePart = targetOf(relationships, 'theme');
 
   const sheetParts: SheetPart[] = workbook.sheets.map((entry) => ({
     entry,
@@ -528,6 +530,7 @@ const readBook = async (
   };
 
   book.decorations.defaultFont = styles.defaultFont ?? book.decorations.defaultFont;
+  book.decorations.theme = await readTheme(archive, themePart, load.parts);
 
   [stringsPart, stylesPart].forEach((part) => {
     if (part !== undefined) {

@@ -26,10 +26,26 @@ export interface LineLayouts {
   shifted(change: LineMove): LineLayouts;
 }
 
+export interface SheetView {
+  readonly frozenRows: number;
+  readonly frozenCols: number;
+  readonly gridlines: boolean;
+  readonly rightToLeft: boolean;
+  readonly zoom: number;
+}
+
+export interface SheetDefaults {
+  readonly rowHeight: number | undefined;
+  readonly colWidth: number | undefined;
+  readonly baseColWidth: number;
+}
+
 export interface SheetLayout {
   readonly rows: LineLayouts;
   readonly cols: LineLayouts;
   readonly merges: readonly CellRange[];
+  readonly view: SheetView;
+  readonly defaults: SheetDefaults;
   readonly xml: SheetXml | undefined;
   readonly parts: readonly PartXml[];
 }

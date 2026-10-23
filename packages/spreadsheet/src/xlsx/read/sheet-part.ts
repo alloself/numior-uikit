@@ -85,6 +85,12 @@ const COUNTED: Readonly<Record<string, keyof Omit<SheetCounts, 'unknown'>>> = {
   sheetProtection: 'protection',
 };
 
+const VIEW_ELEMENTS: Readonly<Record<string, 'view' | 'pane' | 'format'>> = {
+  sheetView: 'view',
+  pane: 'pane',
+  sheetFormatPr: 'format',
+};
+
 const emptyCounts = (): SheetCounts => ({
   formulas: 0,
   kept: 0,
@@ -328,6 +334,7 @@ export const readSheetPart = async (
         counts.merges += 1;
         layout.merge(attributeOf(attributes, 'ref'));
         return;
+
       case 'c':
         openCell(attributes);
         return;
@@ -353,9 +360,13 @@ export const readSheetPart = async (
         return;
       default: {
         const counted = COUNTED[local];
+        const view = VIEW_ELEMENTS[local];
 
         if (counted !== undefined) {
           counts[counted] += 1;
+        }
+        if (view !== undefined) {
+          layout[view](attributes);
         }
       }
     }

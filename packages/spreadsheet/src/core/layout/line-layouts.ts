@@ -1,8 +1,20 @@
 import { limitOf, type LineMove } from '../lines';
 import type { LineChange } from '../formula/rewrite';
-import type { LineLayout, LineLayouts, SheetLayout } from './layout.types';
+import type {
+  LineLayout,
+  LineLayouts,
+  SheetDefaults,
+  SheetLayout,
+  SheetView,
+} from './layout.types';
 import { shiftMerges } from './shift-ranges';
-import { mapPartFormulas, mapSheetXmlFormulas, shiftParts, shiftSheetXml } from './fragments';
+import {
+  mapPartFormulas,
+  mapSheetXmlFormulas,
+  shiftParts,
+  shiftSheetXml,
+  splitBoundary,
+} from './fragments';
 import type { FormulaNode } from '../formula/formula.types';
 
 const lowerBound = (lines: Int32Array, value: number): number => {
@@ -83,10 +95,26 @@ const createLineLayouts = (lines: Int32Array, layouts: readonly LineLayout[]): L
 
 const EMPTY_LINES = createLineLayouts(new Int32Array(0), []);
 
+export const DEFAULT_VIEW: SheetView = {
+  frozenRows: 0,
+  frozenCols: 0,
+  gridlines: true,
+  rightToLeft: false,
+  zoom: 100,
+};
+
+export const DEFAULT_SIZES: SheetDefaults = {
+  rowHeight: undefined,
+  colWidth: undefined,
+  baseColWidth: 8,
+};
+
 export const EMPTY_LAYOUT: SheetLayout = {
   rows: EMPTY_LINES,
   cols: EMPTY_LINES,
   merges: [],
+  view: DEFAULT_VIEW,
+  defaults: DEFAULT_SIZES,
   xml: undefined,
   parts: [],
 };
@@ -104,6 +132,18 @@ export const lineLayoutsOf = (
       );
 };
 
+const shiftView = (view: SheetView, change: LineChange): SheetView => {
+  const frozenRows =
+    change.axis === 'rows' ? splitBoundary(view.frozenRows, change) : view.frozenRows;
+
+  const frozenCols =
+    change.axis === 'cols' ? splitBoundary(view.frozenCols, change) : view.frozenCols;
+
+  return frozenRows === view.frozenRows && frozenCols === view.frozenCols
+    ? view
+    : { ...view, frozenRows, frozenCols };
+};
+
 export const shiftLayout = (layout: SheetLayout, change: LineChange, own: boolean): SheetLayout => {
   const xml = layout.xml === undefined ? undefined : shiftSheetXml(layout.xml, change, own);
   const parts = shiftParts(layout.parts, change, own);
@@ -115,6 +155,8 @@ export const shiftLayout = (layout: SheetLayout, change: LineChange, own: boolea
     rows: change.axis === 'rows' ? layout.rows.shifted(change) : layout.rows,
     cols: change.axis === 'cols' ? layout.cols.shifted(change) : layout.cols,
     merges: shiftMerges(layout.merges, change),
+    view: shiftView(layout.view, change),
+    defaults: layout.defaults,
     xml,
     parts,
   };

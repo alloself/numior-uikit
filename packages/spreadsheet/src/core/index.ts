@@ -29,6 +29,7 @@ export {
   textValue,
 } from './values';
 export { createWorkbook, validDefinedName, validSheetName } from './workbook';
+export { OFFICE_THEME, colorHex, tinted, type ThemePalette } from './theme';
 export { createConditionalPainter, type ConditionalPainter } from './conditional/looks';
 export type {
   BarLook,
@@ -49,6 +50,13 @@ export { EN_LOCALE, RU_LOCALE, type BookLocale } from './locale';
 export { createCellEditor, editText, readInput } from './cell-input';
 export type { CellEditor, CellInput, EntryResult, NameOptions, TableOptions } from './cell-input';
 export type { CellFormats } from './cell-formats';
+export type {
+  LineLayout,
+  LineLayouts,
+  SheetDefaults,
+  SheetLayout,
+  SheetView,
+} from './layout/layout.types';
 export type {
   AlignmentStyle,
   BorderSide,

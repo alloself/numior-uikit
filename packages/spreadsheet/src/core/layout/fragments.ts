@@ -79,7 +79,7 @@ const sameRanges = (left: readonly CellRange[], right: readonly CellRange[]): bo
       range.right === right[index]?.right,
   );
 
-const boundaryOf = (count: number, change: LineChange): number => {
+export const splitBoundary = (count: number, change: LineChange): number => {
   if (change.count > 0) {
     return change.at < count ? Math.min(count + change.count, limitOf(change.axis)) : count;
   }
@@ -203,7 +203,7 @@ const shiftSplit = (
   slot: Extract<FragmentSlot, { readonly kind: 'split' }>,
   change: LineChange,
 ): FragmentSlot => {
-  const count = slot.axis === change.axis ? boundaryOf(slot.count, change) : slot.count;
+  const count = slot.axis === change.axis ? splitBoundary(slot.count, change) : slot.count;
 
   return count === slot.count ? slot : { ...slot, count };
 };

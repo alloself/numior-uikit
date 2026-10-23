@@ -153,6 +153,25 @@ describe('reference rewriting', () => {
 });
 
 describe('workbook steps and history', () => {
+  it('keeps frozen panes over the same lines when lines move inside or beyond them', () => {
+    const book = openBook();
+
+    book.first.layout = {
+      ...book.first.layout,
+      view: { ...book.first.layout.view, frozenRows: 2, frozenCols: 1 },
+    };
+
+    book.commit({ kind: 'insertLines', sheet: 'Sheet1', axis: 'rows', at: 1, count: 2 });
+
+    expect(book.first.layout.view).toMatchObject({ frozenRows: 4, frozenCols: 1 });
+    book.commit({ kind: 'insertLines', sheet: 'Sheet1', axis: 'rows', at: 9, count: 1 });
+    book.commit({ kind: 'deleteLines', sheet: 'Sheet1', axis: 'cols', at: 0, count: 1 });
+
+    expect(book.first.layout.view).toMatchObject({ frozenRows: 4, frozenCols: 0 });
+    expect(book.history.undo()).toMatchObject({ ok: true });
+    expect(book.first.layout.view).toMatchObject({ frozenRows: 4, frozenCols: 1 });
+  });
+
   it('inserts rows with values, formulas and formats, and undoes and redoes them', () => {
     const book = openBook();
 

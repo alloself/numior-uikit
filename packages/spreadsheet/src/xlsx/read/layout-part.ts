@@ -1,7 +1,13 @@
 import { MAX_COLS, parseRange } from '../../core/address';
 import type { CellRange } from '../../core/cell.types';
-import type { LineLayout, LineStyle, SheetLayout } from '../../core/layout/layout.types';
-import { lineLayoutsOf } from '../../core/layout/line-layouts';
+import type {
+  LineLayout,
+  LineStyle,
+  SheetDefaults,
+  SheetLayout,
+  SheetView,
+} from '../../core/layout/layout.types';
+import { DEFAULT_SIZES, DEFAULT_VIEW, lineLayoutsOf } from '../../core/layout/line-layouts';
 import type { Workbook } from '../../core/workbook';
 import type { XmlAttribute } from '../xml/xml.types';
 import { attributeOf, numberOf, truthy } from './ooxml';
@@ -10,6 +16,9 @@ export interface LayoutCollector {
   row(row: number, attributes: readonly XmlAttribute[]): void;
   col(attributes: readonly XmlAttribute[]): void;
   merge(reference: string | undefined): void;
+  view(attributes: readonly XmlAttribute[]): void;
+  pane(attributes: readonly XmlAttribute[]): void;
+  format(attributes: readonly XmlAttribute[]): void;
   layout(): SheetLayout;
 }
 
@@ -91,6 +100,29 @@ const layoutOf = (
   };
 };
 
+const FROZEN = new Set(['frozen', 'frozenSplit']);
+
+const sizeOf = (text: string | undefined): number | undefined => {
+  const size = text === undefined ? Number.NaN : Number(text);
+
+  return Number.isFinite(size) && size > 0 ? size : undefined;
+};
+
+const splitOf = (text: string | undefined): number => Math.max(0, Math.round(numberOf(text, 0)));
+
+const viewOf = (attributes: readonly XmlAttribute[]): SheetView => ({
+  ...DEFAULT_VIEW,
+  gridlines: attributeOf(attributes, 'showGridLines') !== '0',
+  rightToLeft: truthy(attributeOf(attributes, 'rightToLeft')),
+  zoom: sizeOf(attributeOf(attributes, 'zoomScale')) ?? DEFAULT_VIEW.zoom,
+});
+
+const defaultsOf = (attributes: readonly XmlAttribute[]): SheetDefaults => ({
+  rowHeight: sizeOf(attributeOf(attributes, 'defaultRowHeight')),
+  colWidth: sizeOf(attributeOf(attributes, 'defaultColWidth')),
+  baseColWidth: sizeOf(attributeOf(attributes, 'baseColWidth')) ?? DEFAULT_SIZES.baseColWidth,
+});
+
 const blank = (layout: LineLayout): boolean =>
   layout.size === undefined &&
   !layout.custom &&
@@ -105,6 +137,9 @@ export const createLayoutCollector = (styles: LayoutStyles): LayoutCollector => 
   const rows: [number, LineLayout][] = [];
   const cols: [number, LineLayout][] = [];
   const merges: CellRange[] = [];
+  let view: SheetView | undefined;
+  let views = 0;
+  let defaults = DEFAULT_SIZES;
 
   const shared = (layout: LineLayout): LineLayout => {
     const key = JSON.stringify(layout);
@@ -150,10 +185,34 @@ export const createLayoutCollector = (styles: LayoutStyles): LayoutCollector => 
         merges.push(range);
       }
     },
+    view: (attributes) => {
+      views += 1;
+      view = views === 1 ? viewOf(attributes) : view;
+    },
+    pane: (attributes) => {
+      if (
+        views !== 1 ||
+        view === undefined ||
+        !FROZEN.has(attributeOf(attributes, 'state') ?? '')
+      ) {
+        return;
+      }
+
+      view = {
+        ...view,
+        frozenRows: splitOf(attributeOf(attributes, 'ySplit')),
+        frozenCols: splitOf(attributeOf(attributes, 'xSplit')),
+      };
+    },
+    format: (attributes) => {
+      defaults = defaultsOf(attributes);
+    },
     layout: () => ({
       rows: lineLayoutsOf(rows),
       cols: lineLayoutsOf(cols),
       merges,
+      view: view ?? DEFAULT_VIEW,
+      defaults,
       xml: undefined,
       parts: [],
     }),

@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { RU_LOCALE, createCellEditor, parseCell, type Sheet } from '../src/core';
+import {
+  OFFICE_THEME,
+  RU_LOCALE,
+  colorHex,
+  createCellEditor,
+  parseCell,
+  type Sheet,
+} from '../src/core';
 import {
   readWorkbook,
   writeZip,
@@ -7,7 +14,14 @@ import {
   type XlsxProgress,
   type XlsxRead,
 } from '../src/xlsx';
-import { SALES_SHEET, workbookWith, xlsxPackage } from './xlsx-package';
+import {
+  RATES_SHEET_WITH_SPLIT,
+  SALES_SHEET,
+  THEME,
+  WORKBOOK_RELATIONSHIPS_WITH_THEME,
+  workbookWith,
+  xlsxPackage,
+} from './xlsx-package';
 
 type Opened = Extract<XlsxRead, { readonly kind: 'editable' | 'read-only' }>;
 
@@ -180,6 +194,93 @@ describe('reading xlsx', () => {
 
     expect(decorationAt('C2')).toEqual({});
     expect(read.book.decorations.defaultFont).toEqual({ size: 11, name: 'Calibri' });
+  });
+
+  it('reads the first sheet view, its frozen pane and the default line sizes', async () => {
+    const plain = await opened();
+
+    expect(sheetOf(plain, 'Sales').layout.view).toEqual({
+      frozenRows: 1,
+      frozenCols: 0,
+      gridlines: true,
+      rightToLeft: false,
+      zoom: 100,
+    });
+
+    expect(sheetOf(plain, 'Sales').layout.defaults).toEqual({
+      rowHeight: 15,
+      colWidth: undefined,
+      baseColWidth: 8,
+    });
+
+    expect(sheetOf(plain, 'Rates').layout.view.frozenRows).toBe(0);
+
+    const viewed = await opened({
+      'xl/worksheets/sheet1.xml': SALES_SHEET.replace(
+        /<sheetViews>.*<\/sheetViews>/u,
+        '<sheetViews><sheetView showGridLines="0" rightToLeft="1" zoomScale="85" workbookViewId="0"><pane xSplit="2" ySplit="3" topLeftCell="C4" state="frozen"/></sheetView><sheetView workbookViewId="1"><pane ySplit="9" state="frozen"/></sheetView></sheetViews>',
+      ).replace(
+        '<sheetFormatPr defaultRowHeight="15"',
+        '<sheetFormatPr baseColWidth="10" defaultColWidth="12.5" defaultRowHeight="18"',
+      ),
+      'xl/worksheets/sheet2.xml': RATES_SHEET_WITH_SPLIT,
+    });
+
+    expect(sheetOf(viewed, 'Sales').layout.view).toEqual({
+      frozenRows: 3,
+      frozenCols: 2,
+      gridlines: false,
+      rightToLeft: true,
+      zoom: 85,
+    });
+
+    expect(sheetOf(viewed, 'Sales').layout.defaults).toEqual({
+      rowHeight: 18,
+      colWidth: 12.5,
+      baseColWidth: 10,
+    });
+
+    expect(sheetOf(viewed, 'Rates').layout.view.frozenRows).toBe(0);
+  });
+
+  it('reads the colour scheme of the book theme and falls back to the Office palette', async () => {
+    expect((await opened()).book.decorations.theme[4]).toBe('4472C4');
+
+    const themed = await opened({
+      'xl/_rels/workbook.xml.rels': WORKBOOK_RELATIONSHIPS_WITH_THEME,
+      'xl/theme/theme1.xml': THEME,
+    });
+
+    expect(themed.book.decorations.theme.slice(0, 5)).toEqual([
+      '101010',
+      'FAFAFA',
+      '44546A',
+      'E7E6E6',
+      '112233',
+    ]);
+
+    expect(colorHex({ kind: 'theme', theme: 0, tint: 0 }, themed.book.decorations.theme)).toBe(
+      'FAFAFA',
+    );
+  });
+
+  it('turns theme, indexed and rgb colours into hex with Excel tints', () => {
+    expect(colorHex({ kind: 'theme', theme: 0, tint: -0.0499893185216834 }, OFFICE_THEME)).toBe(
+      'F2F2F2',
+    );
+
+    expect(colorHex({ kind: 'theme', theme: 4, tint: -0.249977111117893 }, OFFICE_THEME)).toBe(
+      '2F5597',
+    );
+
+    expect(colorHex({ kind: 'theme', theme: 5, tint: 0.3999755851924192 }, OFFICE_THEME)).toBe(
+      'F4B183',
+    );
+
+    expect(colorHex({ kind: 'indexed', index: 10 }, OFFICE_THEME)).toBe('FF0000');
+    expect(colorHex({ kind: 'indexed', index: 64 }, OFFICE_THEME)).toBeUndefined();
+    expect(colorHex({ kind: 'rgb', argb: 'ff00b050' }, OFFICE_THEME)).toBe('00B050');
+    expect(colorHex({ kind: 'auto' }, OFFICE_THEME)).toBeUndefined();
   });
 
   it('reports what the book holds beyond the model', async () => {

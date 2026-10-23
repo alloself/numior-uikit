@@ -1,3 +1,5 @@
+import { OFFICE_THEME, type ThemePalette } from './theme';
+
 export type StyleColor =
   | { readonly kind: 'rgb'; readonly argb: string }
   | { readonly kind: 'theme'; readonly theme: number; readonly tint: number }
@@ -66,6 +68,7 @@ export interface CellDecorations {
   id(decoration: CellDecoration): number;
   get(id: number): CellDecoration;
   defaultFont: FontStyle;
+  theme: ThemePalette;
   readonly size: number;
 }
 
@@ -117,6 +120,7 @@ export const createDecorations = (): CellDecorations => {
     },
     get: (id) => items[id] ?? NONE,
     defaultFont: DEFAULT_FONT,
+    theme: OFFICE_THEME,
     get size() {
       return items.length;
     },
