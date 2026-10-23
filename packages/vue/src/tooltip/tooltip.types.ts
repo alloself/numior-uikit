@@ -8,7 +8,12 @@ export interface NuiTooltipProps {
   openDelay?: number | undefined;
   closeDelay?: number | undefined;
   disabled?: boolean | undefined;
-  anchor?: HTMLElement | null | undefined;
+  anchor?: HTMLElement | NuiTooltipTargets | null | undefined;
+}
+
+export interface NuiTooltipTargets {
+  readonly within?: HTMLElement | null | undefined;
+  readonly selector: string;
 }
 
 export interface NuiTooltipTriggerAttrs {
@@ -21,7 +26,20 @@ export interface NuiTooltipTriggerAttrs {
   readonly onBlur: () => void;
 }
 
+export interface NuiTooltipTargetsAttrs {
+  readonly ref: NuiTriggerRef;
+  readonly onPointerover: (event: PointerEvent) => void;
+  readonly onPointerout: (event: PointerEvent) => void;
+  readonly onPointerdown: () => void;
+  readonly onFocusin: (event: FocusEvent) => void;
+  readonly onFocusout: (event: FocusEvent) => void;
+}
+
 export interface NuiTooltipTriggerSlot {
-  readonly attrs: NuiTooltipTriggerAttrs;
+  readonly attrs: NuiTooltipTriggerAttrs | NuiTooltipTargetsAttrs;
   readonly open: boolean;
+}
+
+export interface NuiTooltipContentSlot {
+  readonly target: HTMLElement | null;
 }

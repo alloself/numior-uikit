@@ -176,6 +176,9 @@ export type {
 export { default as NuiTooltip } from './tooltip/NuiTooltip.vue';
 export type {
   NuiTooltipProps,
+  NuiTooltipTargets,
+  NuiTooltipContentSlot,
+  NuiTooltipTargetsAttrs,
   NuiTooltipTriggerAttrs,
   NuiTooltipTriggerSlot,
 } from './tooltip/tooltip.types';

@@ -21,7 +21,10 @@ const docs: DocsMap = {
         en: 'Delay before hiding after the pointer leaves, ms.',
       },
       disabled: { ru: 'Не показывать подсказку.', en: 'Never show the tooltip.' },
-      anchor: { ru: 'Элемент-триггер вместо слота.', en: 'Trigger element instead of the slot.' },
+      anchor: {
+        ru: 'Элемент-триггер вместо слота или цели { within, selector }: одна подсказка обслуживает все элементы по селектору внутри within (без within — внутри слота trigger), между соседними переходит без новой задержки и ставит aria-describedby на текущую цель.',
+        en: 'A trigger element instead of the slot, or targets { within, selector }: one tooltip serves every element matching the selector inside within (the trigger slot without it), moves between neighbours without a new delay and puts aria-describedby on the current target.',
+      },
     },
     models: {
       'v-model:open': { ru: 'Показана ли подсказка.', en: 'Whether the tooltip is shown.' },
@@ -31,7 +34,10 @@ const docs: DocsMap = {
         ru: 'Элемент, который описывает подсказка; получает attrs для v-bind.',
         en: 'Element the tooltip describes; receives attrs for v-bind.',
       },
-      default: { ru: 'Текст подсказки.', en: 'Tooltip text.' },
+      default: {
+        ru: 'Текст подсказки; с целями в anchor получает target — текущую цель.',
+        en: 'Tooltip text; with targets in anchor it receives target, the current target.',
+      },
     },
     keyboard: [
       {

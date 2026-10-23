@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test';
-import { TooltipDriver } from './drivers/tooltip';
+import { TooltipTargetsDriver, TooltipDriver } from './drivers/tooltip';
 
 describe('NuiTooltip', () => {
   beforeEach(() => vi.useFakeTimers());
@@ -83,5 +83,49 @@ describe('NuiTooltip', () => {
     await silent.focus();
     expect(silent.modelOpen).toBe(false);
     silent.unmount();
+  });
+
+  it('serves every target of a container with one tooltip and moves between them at once', async () => {
+    const hint = TooltipTargetsDriver.mount();
+
+    await hint.ready();
+
+    await hint.hover('Bold');
+    await hint.hover('Bold', null, true);
+    await hint.advance(299);
+    expect(hint.open).toBe(false);
+    await hint.advance(1);
+    expect(hint.open).toBe(true);
+    expect(hint.text).toBe('Bold');
+    expect(hint.describedBy('Bold')).toBe('hint');
+    await hint.hover('Italic', 'Bold');
+
+    expect(hint.open).toBe(true);
+    expect(hint.text).toBe('Italic');
+    expect(hint.describedBy('Bold')).toBeNull();
+    expect(hint.describedBy('Italic')).toBe('hint');
+    await hint.hoverGap('Italic');
+    await hint.advance(100);
+
+    expect(hint.open).toBe(false);
+    hint.unmount();
+  });
+
+  it('follows the focus between the targets of a container and closes when it leaves them', async () => {
+    const hint = TooltipTargetsDriver.mount();
+
+    await hint.ready();
+
+    await hint.focus('Bold');
+    expect(hint.open).toBe(true);
+    expect(hint.text).toBe('Bold');
+    await hint.focus('Italic', 'Bold');
+
+    expect(hint.open).toBe(true);
+    expect(hint.text).toBe('Italic');
+    await hint.blur('Italic');
+
+    expect(hint.open).toBe(false);
+    hint.unmount();
   });
 });
