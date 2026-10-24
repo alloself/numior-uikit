@@ -65,4 +65,20 @@ describe('NuiTable invalidate', () => {
     await grid.invalidate();
     expect(sheet.reads.size).toBeGreaterThan(2);
   });
+
+  it('re-renders only the rows the active cell leaves and enters', async () => {
+    const sheet = countedSheet();
+    const grid = mountSheet(sheet);
+    await grid.settle();
+    await grid.focusCell(3, 2);
+
+    sheet.reads.clear();
+    await grid.press('ArrowDown');
+
+    expect([...sheet.reads].toSorted((a, b) => a - b)).toEqual([3, 4]);
+    sheet.reads.clear();
+    await grid.press('ArrowRight');
+
+    expect([...sheet.reads]).toEqual([4]);
+  });
 });

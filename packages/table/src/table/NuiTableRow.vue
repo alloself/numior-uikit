@@ -38,14 +38,25 @@
         :style="styleOf(cell)"
       >
         <div class="nui-table__content">
-          <slot v-if="cell.kind !== 'data'" name="utility" :column="cell.key" />
-          <slot v-else :column="cell.key" :merge="leadOf(cell)" :revision="ownRevision" />
+          <slot
+            v-if="cell.kind !== 'data'"
+            name="utility"
+            :column="cell.key"
+            :position="position"
+          />
+          <slot
+            v-else
+            :column="cell.key"
+            :merge="leadOf(cell)"
+            :revision="ownRevision"
+            :position="position"
+          />
         </div>
         <NuiTableResizer
           v-if="resizerOf(cell)"
           v-bind="resizerOf(cell)"
-          @grab="emit('resize', handleOf(cell), $event)"
-          @reset="emit('resetSize', handleOf(cell))"
+          @grab="emit('resize', handleOf(cell), $event, position)"
+          @reset="emit('resetSize', handleOf(cell), position)"
         />
       </component>
     </template>
@@ -97,13 +108,18 @@ const {
 } = defineProps<NuiTableRowProps>();
 
 const emit = defineEmits<{
-  resize: [key: string, event: PointerEvent];
-  resetSize: [key: string];
+  resize: [key: string, event: PointerEvent, position: number | undefined];
+  resetSize: [key: string, position: number | undefined];
 }>();
 
 defineSlots<{
-  default(props: { column: string; merge: TableLeadSpan | undefined; revision: number }): unknown;
-  utility(props: { column: string }): unknown;
+  default(props: {
+    column: string;
+    merge: TableLeadSpan | undefined;
+    revision: number;
+    position: number | undefined;
+  }): unknown;
+  utility(props: { column: string; position: number | undefined }): unknown;
 }>();
 
 const shownCells = computed(() =>

@@ -110,66 +110,20 @@
                 <NuiSkeleton v-bind="TEXT_SKELETON" />
               </template>
             </NuiTableRow>
-            <template v-for="item in bodyRows" :key="item.key">
-              <NuiTableDetailRow
-                v-if="item.part === 'detail'"
-                :row-index="item.index + pinnedCount + headRows + 1"
-                :span="layout.visual.length"
-                :colspan="rowCells.tracks.length"
-                :level="item.level"
-                :active="focus.activeIn(item.index + pinnedCount) > 0"
-              >
-                <slot name="detail" v-bind="detailScope(item.index)" />
-              </NuiTableDetailRow>
-              <NuiTableRow
-                v-else
-                :cells="rowCells"
-                :row-index="item.index + pinnedCount + headRows + 1"
-                :position="item.index"
-                :paint="bodyPaint"
-                :active="focus.activeIn(item.index + pinnedCount)"
-                :revision="item.revision"
-                :revision-of="revisionOf"
-                :level="item.level"
-                :group="item.group"
-                :expanded="item.expanded"
-                :loading="item.loading"
-                :selected="item.selected"
-                :stripe="item.stripe"
-                :dragging="rowDrag.dragging.value === item.index"
-                :ranged="rangedOf(item)"
-                :ranged-at="rangedAt"
-                :spans="spansOf(item)"
-                :ally="allyOf(item)"
-                :sized="item.sized"
-                :frozen="item.frozen"
-                :edge="item.edge"
-                :sizable="sizableOf(item)"
-                :sizing="rowResize.active.value === item.index"
-                @resize="(_, event) => rowResize.start(item.index, event)"
-                @reset-size="rowResize.reset(item.index)"
-              >
-                <template #utility="{ column }">
-                  <NuiTableUtilityCell
-                    v-bind="rowUtility(item, column)"
-                    @toggle="selection.toggle(rowAt(item.index))"
-                  />
-                </template>
-                <template #default="{ column, merge }">
-                  <NuiTableCellContent
-                    :view="cellViewOf(item, column, merge)"
-                    :editor="editorProps"
-                    @toggle="expansion.toggle(item.index)"
-                    @grab="(event: PointerEvent) => rowDrag.grab(item.index, event)"
-                    @update="onEditorUpdate"
-                  >
-                    <template #content="scope">
-                      <slot :name="`cell-${scope.column.key}`" v-bind="scope" />
-                    </template>
-                  </NuiTableCellContent>
-                </template>
-              </NuiTableRow>
-            </template>
+            <NuiTableBodyRow
+              v-for="item in bodyRows"
+              :key="item.key"
+              :view="bodyRowView(item)"
+              :slotted="cellSlotted"
+              :context="bodyContext"
+            >
+              <template #detail="scope">
+                <slot name="detail" v-bind="scope" />
+              </template>
+              <template v-for="name in cellSlots" :key="name" #[name]="scope">
+                <slot :name="name" v-bind="scope" />
+              </template>
+            </NuiTableBodyRow>
           </tbody>
           <tbody v-if="status" class="nui-table__status">
             <tr class="nui-table__empty" role="row" :aria-rowindex="headRows + 1">
@@ -307,9 +261,9 @@ import {
   type TableNode,
   type TableNodeId,
 } from '../engine';
-import NuiTableCellContent from './NuiTableCellContent.vue';
-import NuiTableDetailRow from './NuiTableDetailRow.vue';
 import NuiTableDragLayer from './NuiTableDragLayer.vue';
+import { keptRows } from './kept-rows';
+import NuiTableBodyRow from './NuiTableBodyRow.vue';
 import NuiTableRow from './NuiTableRow.vue';
 import NuiTableTracks from './NuiTableTracks.vue';
 import NuiTableUtilityCell from './NuiTableUtilityCell.vue';
@@ -433,6 +387,9 @@ import type {
   NuiTableRowHeights,
   NuiTableWidths,
   TableRowRanges,
+  NuiTableRowProps,
+  TableBodyRowContext,
+  TableBodyRowView,
 } from './table.types';
 
 const ROW_SIZES = { sm: 32, md: 40, lg: 48 } as const;
@@ -1266,7 +1223,7 @@ const skeletonRows = computed((): TableSkeletonRow[] =>
   })),
 );
 
-const bodyRows = computed((): TableBodyRow[] => {
+const bodyRows = computed((previous?: readonly TableBodyRow[]): readonly TableBodyRow[] => {
   const current = revision.value;
 
   if (loadingNow.value) {
@@ -1276,7 +1233,7 @@ const bodyRows = computed((): TableBodyRow[] => {
   const spots = detailSpots.value;
   const frozen = frozenCount.value;
 
-  return rowWindow.items.value.map((item) => {
+  const fresh = rowWindow.items.value.map((item): TableBodyRow => {
     const node = engine.value.nodeAt(pageStart.value + item.index);
     const level = levelOf(node);
     const unloaded = engine.value.pendingAt(pageStart.value + item.index);
@@ -1301,6 +1258,8 @@ const bodyRows = computed((): TableBodyRow[] => {
       stripe: striped && !detail && (item.index - detailsBefore(spots, item.index)) % 2 === 1,
     };
   });
+
+  return keptRows(fresh, previous);
 });
 
 const bodyPosition = (row: number): number | undefined => {
@@ -2318,6 +2277,118 @@ const cellViewOf = (
     editing: editsCell(cell, merge),
     scope: scopeOf(cell.row, cell.position, cell.key, false),
   };
+};
+
+const bodyItems = computed(
+  () => new Map(bodyRows.value.map((item): [number, TableBodyRow] => [item.index, item])),
+);
+
+const bodyItemAt = (position: number | undefined): TableBodyRow | undefined =>
+  position === undefined ? undefined : bodyItems.value.get(position);
+
+const cellViewAt = (
+  position: number | undefined,
+  column: string,
+  merge: TableLeadSpan | undefined,
+): TableCellView<T> => {
+  const item = bodyItemAt(position);
+
+  return item === undefined ? { kind: 'skeleton' } : cellViewOf(item, column, merge);
+};
+
+const utilityAt = (position: number | undefined, column: string): NuiTableUtilityCellProps => {
+  const item = bodyItemAt(position);
+
+  return item === undefined ? NO_UTILITY : rowUtility(item, column);
+};
+
+const selectAt = (position: number | undefined): void => {
+  if (position !== undefined) {
+    selection.toggle(rowAt(position));
+  }
+};
+
+const expandAt = (position: number | undefined): void => {
+  if (position !== undefined) {
+    expansion.toggle(position);
+  }
+};
+
+const grabAt = (position: number | undefined, event: PointerEvent): void => {
+  if (position !== undefined) {
+    rowDrag.grab(position, event);
+  }
+};
+
+const isCellSlot = (name: string): name is `cell-${string}` => name.startsWith('cell-');
+
+const cellSlots = Object.keys(rawSlots).filter(isCellSlot);
+
+const cellSlotted = cellSlots.length > 0;
+
+const bodyRowView = (item: TableBodyRow): TableBodyRowView<T> =>
+  item.part === 'detail'
+    ? {
+        kind: 'detail',
+        props: {
+          rowIndex: item.index + pinnedCount.value + headRows.value + 1,
+          span: layout.value.visual.length,
+          colspan: rowCells.value.tracks.length,
+          level: item.level,
+          active: focus.activeIn(item.index + pinnedCount.value) > 0,
+        },
+        scope: detailScope(item.index),
+      }
+    : { kind: 'row', props: bodyRowProps(item) };
+
+const bodyRowProps = (item: TableBodyRow): NuiTableRowProps => ({
+  cells: rowCells.value,
+  rowIndex: item.index + pinnedCount.value + headRows.value + 1,
+  position: item.index,
+  paint: bodyPaint.value,
+  active: focus.activeIn(item.index + pinnedCount.value),
+  revision: item.revision,
+  revisionOf,
+  level: item.level,
+  group: item.group,
+  expanded: item.expanded,
+  loading: item.loading,
+  selected: item.selected,
+  stripe: item.stripe,
+  dragging: rowDrag.dragging.value === item.index,
+  ranged: rangedOf(item),
+  rangedAt: rangedAt.value,
+  spans: spansOf(item),
+  ally: allyOf(item),
+  sized: item.sized,
+  frozen: item.frozen,
+  edge: item.edge,
+  sizable: sizableOf(item),
+  sizing: rowResize.active.value === item.index,
+});
+
+const onRowResize = (_key: string, event: PointerEvent, position: number | undefined): void => {
+  if (position !== undefined) {
+    rowResize.start(position, event);
+  }
+};
+
+const onRowResetSize = (_key: string, position: number | undefined): void => {
+  if (position !== undefined) {
+    rowResize.reset(position);
+  }
+};
+
+const bodyContext: TableBodyRowContext<T> = {
+  utilityAt,
+  cellViewAt,
+  editor: () => editorProps.value,
+  selectAt,
+  expandAt,
+  grabAt,
+  resize: onRowResize,
+  resetSize: onRowResetSize,
+  update: onEditorUpdate,
 };
 
 const neededRange = computed(() => {

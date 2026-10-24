@@ -490,6 +490,36 @@ export interface NuiTableCellContentProps<T> {
   editor?: NuiTableCellEditorProps | undefined;
 }
 
+export interface TableBodyRowContext<T> {
+  readonly utilityAt: (position: number | undefined, column: string) => NuiTableUtilityCellProps;
+  readonly cellViewAt: (
+    position: number | undefined,
+    column: string,
+    merge: TableLeadSpan | undefined,
+  ) => TableCellView<T>;
+  readonly editor: () => NuiTableCellEditorProps | undefined;
+  readonly selectAt: (position: number | undefined) => void;
+  readonly expandAt: (position: number | undefined) => void;
+  readonly grabAt: (position: number | undefined, event: PointerEvent) => void;
+  readonly resize: (key: string, event: PointerEvent, position: number | undefined) => void;
+  readonly resetSize: (key: string, position: number | undefined) => void;
+  readonly update: (value: unknown) => void;
+}
+
+export type TableBodyRowView<T> =
+  | { readonly kind: 'row'; readonly props: NuiTableRowProps }
+  | {
+      readonly kind: 'detail';
+      readonly props: NuiTableDetailRowProps;
+      readonly scope: NuiTableDetailSlot<T>;
+    };
+
+export interface NuiTableBodyRowProps<T> {
+  view: TableBodyRowView<T>;
+  slotted: boolean;
+  context: TableBodyRowContext<T>;
+}
+
 export interface TableCellContent<T> {
   readonly position: number;
   readonly key: string;
