@@ -1,6 +1,6 @@
 {
   "node": {
-    "fill a 20,000 × 50 sheet with 1,000,000 values": {
+    "fill a 20,000 \u00d7 50 sheet with 1,000,000 values": {
       "p95Ms": 90
     },
     "read every cell of a 1,000,000 cell sheet": {
@@ -12,10 +12,10 @@
     "enter 100,050 formulas with their dependencies": {
       "p95Ms": 580
     },
-    "paint a 40 × 20 viewport of 1,000,000 cells under a colour scale after an edit": {
+    "paint a 40 \u00d7 20 viewport of 1,000,000 cells under a colour scale after an edit": {
       "p95Ms": 16
     },
-    "paint a 40 × 20 viewport of 1,000,000 cells under a colour scale": {
+    "paint a 40 \u00d7 20 viewport of 1,000,000 cells under a colour scale": {
       "p95Ms": 4
     },
     "longest main-thread slice while loading 100,050 formulas": {
@@ -59,6 +59,29 @@
     },
     "refresh a pivot of 100,000 source rows by region, city and year": {
       "p95Ms": 100
+    }
+  },
+  "book": {
+    "cold mount to the first painted row": {
+      "p95Ms": 200
+    },
+    "arrow down to the next paint": {
+      "p95Ms": 100
+    },
+    "arrow across columns to the next paint": {
+      "p95Ms": 100
+    },
+    "page down to the next paint": {
+      "p95Ms": 100
+    },
+    "jump between the first and the last cell of the sheet to the next paint": {
+      "p95Ms": 100
+    },
+    "frame time while wheeling through rows": {
+      "p95Ms": 32
+    },
+    "frame time while wheeling across columns": {
+      "p95Ms": 32
     }
   }
 }

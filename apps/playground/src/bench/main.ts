@@ -7,6 +7,7 @@ import '@numior/vue/styles.css';
 import '@numior/table/styles.css';
 import '@numior/content/styles.css';
 import '@numior/editor-vue/styles.css';
+import '@numior/spreadsheet/styles.css';
 import './bench.css';
 import BenchApp from './BenchApp.vue';
 

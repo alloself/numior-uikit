@@ -8,9 +8,9 @@ export class SheetBenchPage extends BenchPage {
   readonly sheet: Locator;
   readonly viewport: Locator;
 
-  constructor(page: Page) {
-    super(page, 'view=sheet&');
-    this.sheet = page.getByTestId('bench-sheet');
+  constructor(page: Page, view: 'sheet' | 'book' = 'sheet') {
+    super(page, `view=${view}&`);
+    this.sheet = page.getByTestId(`bench-${view}`);
     this.viewport = this.sheet.locator('.nui-table__viewport');
   }
 

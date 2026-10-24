@@ -27,6 +27,13 @@
       label="Бенчмарк дерева"
       data-testid="bench-tree"
     />
+    <NuiSpreadsheet
+      v-else-if="shown && book"
+      :book="book"
+      height="calc(100dvh - 5rem)"
+      label="Бенчмарк книги"
+      data-testid="bench-book"
+    />
     <NuiTable
       v-else-if="shown && cells"
       v-bind="cells"
@@ -57,11 +64,12 @@
 </template>
 
 <script setup lang="ts">
-import { nextTick, onMounted, ref } from 'vue';
+import { markRaw, nextTick, onMounted, ref } from 'vue';
 import { contentSchema } from '@numior/content';
 import { toJSON, type DocJSON } from '@numior/editor-core';
 import { generateDoc } from '@numior/editor-core/fixtures';
 import { NuiEditor } from '@numior/editor-vue';
+import { NuiSpreadsheet } from '@numior/spreadsheet';
 import { NuiInput, NuiTree } from '@numior/vue';
 import {
   NuiTable,
@@ -71,6 +79,7 @@ import {
   type NuiTableFilters,
 } from '@numior/table';
 import { TABLE_COLUMNS, generateRows } from '../../../../packages/table/bench/dataset';
+import { styledSheet } from '../../../../packages/spreadsheet/bench/fixtures';
 import { generateTreeNodes } from '../../../../packages/vue/bench/dataset';
 import { bigSheet, SHEET_COLS, SHEET_ROWS } from '../sheet-source';
 import {
@@ -83,22 +92,21 @@ import {
   type InputClock,
 } from './bench-hooks';
 
-type BenchView = 'table' | 'tree' | 'sheet' | 'editor';
+type BenchView = 'table' | 'tree' | 'sheet' | 'book' | 'editor';
+
+const VIEWS: readonly BenchView[] = ['table', 'tree', 'sheet', 'book', 'editor'];
 
 const DEFAULT_ROWS = 1_000_000;
 
 const DEFAULT_BLOCKS = 10_000;
 
-const viewOf = (value: string | null): BenchView => {
-  switch (value) {
-    case 'tree':
-    case 'sheet':
-    case 'editor':
-      return value;
-    default:
-      return 'table';
-  }
-};
+const BOOK_ROWS = 20_000;
+
+const BOOK_COLS = 50;
+
+const isView = (value: string | null): value is BenchView => VIEWS.some((view) => view === value);
+
+const viewOf = (value: string | null): BenchView => (isView(value) ? value : 'table');
 
 const params = new URL(window.location.href).searchParams;
 const view = viewOf(params.get('view'));
@@ -108,6 +116,7 @@ const generating = performance.now();
 const rows = view === 'table' ? generateRows(count) : [];
 const nodes = view === 'tree' ? generateTreeNodes(count) : [];
 const cells = view === 'sheet' ? tableCells(bigSheet) : undefined;
+const book = view === 'book' ? markRaw(styledSheet(BOOK_ROWS, BOOK_COLS).workbook) : undefined;
 const blocks = Number(params.get('blocks'));
 const seed = Number(params.get('seed'));
 
@@ -132,6 +141,7 @@ const CAPTIONS: Readonly<Record<BenchView, () => string>> = {
   editor: () => `${blocksShown().toLocaleString('ru-RU')} блоков`,
   sheet: () =>
     `${SHEET_ROWS.toLocaleString('ru-RU')} строк × ${SHEET_COLS.toLocaleString('ru-RU')} колонок`,
+  book: () => `книга ${BOOK_ROWS.toLocaleString('ru-RU')} × ${BOOK_COLS} с оформлением`,
   table: () => `${count.toLocaleString('ru-RU')} строк × ${TABLE_COLUMNS.length} колонок`,
 };
 
@@ -164,6 +174,7 @@ const ROWS: Readonly<Record<BenchView, () => number>> = {
   tree: () => count,
   editor: blocksShown,
   sheet: () => SHEET_ROWS,
+  book: () => BOOK_ROWS,
   table: () => count,
 };
 

@@ -1,5 +1,6 @@
 import {
   columnName,
+  lineLayoutsOf,
   createCalculator,
   createCellEditor,
   createStepper,
@@ -8,7 +9,9 @@ import {
   textValue,
   type Calculator,
   type CellEditor,
+  type CellDecoration,
   type CellValue,
+  type LineLayout,
   type Sheet,
   type Stepper,
   type Workbook,
@@ -90,6 +93,73 @@ export const filledSheet = (rows: number, cols: number, seed = 1): FilledSheet =
     }
   }
   return { workbook, sheet };
+};
+
+const STYLED_LOOKS: readonly CellDecoration[] = [
+  { fill: { pattern: 'solid', foreground: { kind: 'theme', theme: 4, tint: 0.7999816888943144 } } },
+  {
+    border: {
+      top: { style: 'thin', color: { kind: 'indexed', index: 23 } },
+      bottom: { style: 'thin', color: { kind: 'indexed', index: 23 } },
+      left: { style: 'thin', color: { kind: 'indexed', index: 23 } },
+      right: { style: 'thin', color: { kind: 'indexed', index: 23 } },
+    },
+  },
+  {
+    font: { bold: true },
+    fill: { pattern: 'solid', foreground: { kind: 'rgb', argb: 'FFFFF2CC' } },
+    border: { bottom: { style: 'medium', color: { kind: 'theme', theme: 5, tint: 0 } } },
+  },
+  { font: { italic: true, color: { kind: 'theme', theme: 9, tint: -0.249977111117893 } } },
+];
+
+const HEADER_LOOK: CellDecoration = {
+  font: { bold: true, color: { kind: 'theme', theme: 0, tint: 0 } },
+  fill: { pattern: 'solid', foreground: { kind: 'theme', theme: 4, tint: 0 } },
+};
+
+const WIDE_COLUMN: LineLayout = {
+  size: 16,
+  custom: true,
+  hidden: false,
+  level: 0,
+  collapsed: false,
+  style: undefined,
+  extra: [],
+};
+
+export const styledSheet = (rows: number, cols: number, seed = 1): FilledSheet => {
+  const filled = filledSheet(rows, cols, seed);
+  const { workbook, sheet } = filled;
+  const random = splitmix(seed + 1);
+  const looks = STYLED_LOOKS.map((look) => workbook.decorations.id(look));
+  const header = workbook.decorations.id(HEADER_LOOK);
+  const money = workbook.formats.id('#,##0.00');
+
+  for (let col = 0; col < cols; col += 1) {
+    sheet.cells.set(0, col, textValue(`Column ${columnName(col)}`));
+    sheet.decorations.set(0, col, header);
+  }
+  for (let row = 1; row < rows; row += 1) {
+    for (let col = 0; col < cols; col += 1) {
+      const roll = random();
+
+      if (roll < 0.3) {
+        sheet.decorations.set(row, col, looks[Math.floor((roll / 0.3) * looks.length)] ?? 0);
+      }
+      if (sheet.cells.get(row, col).kind === 'number' && roll > 0.5) {
+        sheet.formats.set(row, col, money);
+      }
+    }
+  }
+
+  sheet.layout = {
+    ...sheet.layout,
+    cols: lineLayoutsOf([[0, WIDE_COLUMN]]),
+    view: { ...sheet.layout.view, frozenRows: 1, frozenCols: 1 },
+  };
+
+  return filled;
 };
 
 const rowFormulas = (row: number): LedgerFormula[] => {
