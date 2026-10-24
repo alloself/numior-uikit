@@ -1,5 +1,5 @@
 {
-  "recordedAt": "2026-10-24T00:26:38.956Z",
+  "recordedAt": "2026-10-24T01:34:17.587Z",
   "dataset": "NuiSpreadsheet over a 20 000 × 50 book (70 % numbers, 25 % texts, 5 % dates; 30 % of cells with fills, borders or fonts; frozen header row and first column), viewport 1440×900",
   "device": {
     "host": "docker",
@@ -15,82 +15,82 @@
     {
       "name": "generate the styled book",
       "samples": 1,
-      "meanMs": 91.59999999403954,
-      "p50Ms": 91.59999999403954,
-      "p95Ms": 91.59999999403954,
-      "maxMs": 91.59999999403954
+      "meanMs": 87.5,
+      "p50Ms": 87.5,
+      "p95Ms": 87.5,
+      "maxMs": 87.5
     },
     {
       "name": "cold mount to the first painted row",
       "samples": 5,
-      "meanMs": 158.0399999976158,
-      "p50Ms": 157.7999999821186,
-      "p95Ms": 162.80000001192093,
-      "maxMs": 162.80000001192093
+      "meanMs": 166.9600000023842,
+      "p50Ms": 163.80000001192093,
+      "p95Ms": 175.40000000596046,
+      "maxMs": 175.40000000596046
     },
     {
       "name": "warm remount to the first painted row",
       "samples": 5,
-      "meanMs": 103.56000000238419,
-      "p50Ms": 103.40000000596046,
-      "p95Ms": 117.09999999403954,
-      "maxMs": 117.09999999403954
+      "meanMs": 110.06000000238419,
+      "p50Ms": 108.5,
+      "p95Ms": 134.09999999403954,
+      "maxMs": 134.09999999403954
     },
     {
       "name": "arrow down to the next paint",
       "samples": 200,
-      "meanMs": 45.9159999999404,
-      "p50Ms": 49.60000002384186,
-      "p95Ms": 57,
-      "maxMs": 60.900000005960464
+      "meanMs": 41.73650000005961,
+      "p50Ms": 42,
+      "p95Ms": 57.599999994039536,
+      "maxMs": 76.19999998807907
     },
     {
       "name": "arrow across columns to the next paint",
       "samples": 40,
-      "meanMs": 33.892500000447036,
-      "p50Ms": 35.099999994039536,
-      "p95Ms": 44.5,
-      "maxMs": 51.30000001192093
+      "meanMs": 30.367500001937152,
+      "p50Ms": 34.70000001788139,
+      "p95Ms": 42.599999994039536,
+      "maxMs": 43.60000002384186
     },
     {
       "name": "page down to the next paint",
       "samples": 50,
-      "meanMs": 93.43200000226497,
-      "p50Ms": 92.80000001192093,
-      "p95Ms": 101,
-      "maxMs": 103
+      "meanMs": 87.86600000083446,
+      "p50Ms": 85.2999999821186,
+      "p95Ms": 105.69999998807907,
+      "maxMs": 108.80000001192093
     },
     {
       "name": "jump between the first and the last cell of the sheet to the next paint",
       "samples": 40,
-      "meanMs": 17.42250000014901,
-      "p50Ms": 15.199999988079071,
-      "p95Ms": 15.700000017881393,
-      "maxMs": 63
+      "meanMs": 17.089999996870755,
+      "p50Ms": 14.899999976158142,
+      "p95Ms": 15.5,
+      "maxMs": 66.39999997615814
     },
     {
       "name": "frame time while wheeling through rows",
-      "samples": 489,
-      "meanMs": 20.857873210633947,
+      "samples": 497,
+      "meanMs": 21.15935613682093,
       "p50Ms": 16.700000000000728,
-      "p95Ms": 33.39999999999782,
+      "p95Ms": 33.400000000001455,
       "maxMs": 50.10000000000218
     },
     {
       "name": "frame time while wheeling across columns",
-      "samples": 364,
-      "meanMs": 16.894873626373617,
+      "samples": 365,
+      "meanMs": 16.939638356164387,
       "p50Ms": 16.69999999999709,
-      "p95Ms": 16.700000000004366,
-      "maxMs": 33.39999999999418
+      "p95Ms": 16.799999999995634,
+      "maxMs": 33.400000000001455
     },
     {
       "name": "move the row window by a viewport, main-thread ms",
       "samples": 20,
-      "meanMs": 29.187199999999997,
-      "p50Ms": 29.145,
-      "p95Ms": 32.244,
-      "maxMs": 36.214
+      "meanMs": 29.0323,
+      "p50Ms": 29.219,
+      "p95Ms": 31.149,
+      "maxMs": 34.78
     }
   ]
 }
