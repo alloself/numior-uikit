@@ -19,7 +19,7 @@ export type {
 } from './field/useFieldControl';
 export { RADIO_GROUP_KEY, provideRadioGroup, useRadioGroup } from './radio/radio-group-context';
 export type { RadioGroupContext } from './radio/radio-group-context';
-export { ICONS_KEY, lazyIcon, provideIcons, useIcons } from './icons/icon-registry';
+export { ICONS_KEY, iconPending, lazyIcon, provideIcons, useIcons } from './icons/icon-registry';
 export type { IconAlias, IconLoader, IconRegistry, IconSource } from './icons/icon-registry';
 export { iconAliases } from './icons/icon-aliases';
 export { createNuiConfig, provideNuiConfig } from './config/nui-config';

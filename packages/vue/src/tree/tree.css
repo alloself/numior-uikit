@@ -62,9 +62,6 @@
   position: sticky;
   inset-block: var(--_window-clamp-start) var(--_window-clamp-end);
 }
-.nui-tree--virtual .nui-icon__glyph {
-  animation: none;
-}
 .nui-tree .nui-list-item {
   --_min-size: var(--_row);
 

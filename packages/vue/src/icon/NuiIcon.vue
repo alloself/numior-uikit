@@ -1,11 +1,12 @@
 <template>
-  <span class="nui-icon" :style="transformStyle" aria-hidden="true">
+  <span ref="root" class="nui-icon" :style="transformStyle" aria-hidden="true">
     <component :is="glyph" v-if="glyph" class="nui-icon__glyph" focusable="false" />
   </span>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { iconPending } from '@numior/primitives';
+import { computed, onMounted, useTemplateRef } from 'vue';
 import { useIcon } from './use-icon';
 import type { NuiIconProps } from './icon.types';
 
@@ -20,5 +21,12 @@ const transformStyle = computed(() =>
       },
 );
 
+const root = useTemplateRef<HTMLElement>('root');
 const glyph = useIcon(() => icon);
+
+onMounted(() => {
+  if (iconPending(glyph.value)) {
+    root.value?.classList.add('nui-icon--appearing');
+  }
+});
 </script>

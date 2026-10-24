@@ -23,6 +23,24 @@ export const useIcons = (): IconRegistry => {
   return inject(ICONS_KEY, EMPTY);
 };
 
+const loading = new WeakMap<Component, { done: boolean }>();
+
 export const lazyIcon = (loader: IconLoader): Component => {
-  return defineAsyncComponent<Component>({ loader, suspensible: false });
+  const state = { done: false };
+
+  const icon = defineAsyncComponent<Component>({
+    loader: async () => {
+      const glyph = await loader();
+
+      state.done = true;
+      return glyph;
+    },
+    suspensible: false,
+  });
+
+  loading.set(icon, state);
+  return icon;
 };
+
+export const iconPending = (icon: Component | undefined): boolean =>
+  icon !== undefined && loading.get(icon)?.done === false;
