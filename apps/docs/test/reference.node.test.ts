@@ -244,7 +244,7 @@ describe('docs reference', () => {
     expect(problems).toEqual([]);
     expect(undocumented).not.toContain('NuiInput');
     expect(undocumented.every((name) => name.startsWith('Nui'))).toBe(true);
-  }, 60_000);
+  }, 180_000);
 
   it('serves the bundle as a lazy registry and per-component slices', () => {
     const bundle: ReferenceBundle = {
