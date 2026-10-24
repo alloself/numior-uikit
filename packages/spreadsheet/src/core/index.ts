@@ -30,6 +30,7 @@ export {
 } from './values';
 export { createWorkbook, validDefinedName, validSheetName } from './workbook';
 export { OFFICE_THEME, colorHex, tinted, type ThemePalette } from './theme';
+export { lineLayoutsOf } from './layout/line-layouts';
 export { createConditionalPainter, type ConditionalPainter } from './conditional/looks';
 export type {
   BarLook,

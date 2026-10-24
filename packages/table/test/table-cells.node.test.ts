@@ -91,6 +91,20 @@ describe('tableCells', () => {
     expect(cells.nextEdge({ row: 0, col: 3 }, 'next')).toEqual({ row: 0, col: 29 });
   });
 
+  it('labels rows and columns by the source when it skips hidden lines', () => {
+    const cells = tableCells({
+      rows: 3,
+      cols: 3,
+      cellAt: () => undefined,
+      rowLabel: (row) => String(row * 2 + 1),
+      columnLabel: (col) => columnName(col * 2),
+    });
+
+    expect(cells.columns.map((column) => column.label)).toEqual(['A', 'C', 'E']);
+    expect(cells.columns.map((column) => column.key)).toEqual(['A', 'B', 'C']);
+    expect(cells.rowHeaders.label?.(2, 0)).toBe('5');
+  });
+
   it('reads a cell once per render for its text and its style and afresh outside renders', async () => {
     const reads: string[] = [];
     let text = 'old';

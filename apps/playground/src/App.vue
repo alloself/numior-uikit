@@ -112,6 +112,7 @@
     <TableSection />
     <TableDetailSection />
     <TableSheetSection />
+    <BookSection />
     <TableCellsSection />
     <FormulaSection />
     <EditorSection />
@@ -158,6 +159,7 @@
 import { ref, useTemplateRef } from 'vue';
 import { NuiButton, NuiDialog, NuiSkipLink, useColorScheme } from '@numior/vue';
 import TypographySection from './TypographySection.vue';
+import BookSection from './BookSection.vue';
 import ChartsSection from './ChartsSection.vue';
 import ChromeSection from './ChromeSection.vue';
 import FormsSection from './FormsSection.vue';

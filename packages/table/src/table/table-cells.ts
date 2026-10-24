@@ -22,6 +22,8 @@ export interface NuiTableCellSource {
   cellAt(row: number, col: number): NuiTableSourceCell | undefined;
   nextEdge?(from: TableCellPosition, direction: NuiTableEdgeDirection): TableCellPosition;
   columnWidth?(col: number): number | undefined;
+  rowLabel?(row: number): string;
+  columnLabel?(col: number): string;
 }
 
 export interface NuiTableCells {
@@ -177,7 +179,7 @@ export const tableCells = (source: NuiTableCellSource): NuiTableCells => {
 
     return {
       key,
-      label: key,
+      label: source.columnLabel?.(col) ?? key,
       type: 'text',
       width: source.columnWidth?.(col) ?? COLUMN_WIDTH,
       sortable: false,
@@ -201,6 +203,6 @@ export const tableCells = (source: NuiTableCellSource): NuiTableCells => {
     nextEdge: (from, direction) =>
       source.nextEdge?.(from, direction) ??
       cellEdge((row, col) => source.cellAt(row, col), source, from, direction),
-    rowHeaders: { label: (row) => String(row + 1) },
+    rowHeaders: { label: (row) => source.rowLabel?.(row) ?? String(row + 1) },
   };
 };

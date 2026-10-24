@@ -1,0 +1,195 @@
+import type { NuiTableCellStyle, NuiTableRange, NuiTableSourceCell } from '@numior/table';
+import {
+  EN_LOCALE,
+  MAX_COLS,
+  MAX_ROWS,
+  columnName,
+  formatValue,
+  type CellValue,
+  type LineLayouts,
+  type Sheet,
+  type Workbook,
+} from '../core';
+import { createLineIndex, type LineIndex } from './line-index';
+import { sheetStyle } from './sheet-style';
+import type { SheetCells, SheetCellsOptions, StyleCache, ValueShape } from './sheet.types';
+
+const MDW = 7;
+
+const DEFAULT_COLUMN = 64;
+
+const DEFAULT_ROW_POINTS = 15;
+
+const POINT = 96 / 72;
+
+const SHAPES: Readonly<Record<CellValue['kind'], ValueShape>> = {
+  number: 'number',
+  string: 'text',
+  boolean: 'logical',
+  error: 'logical',
+  empty: 'empty',
+};
+
+export const charsToPixels = (chars: number): number =>
+  Math.trunc(((256 * chars + Math.trunc(128 / MDW)) / 256) * MDW);
+
+export const pointsToPixels = (points: number): number => Math.round(points * POINT);
+
+const hiddenLines = (lines: LineLayouts): number[] => {
+  const hidden: number[] = [];
+
+  lines.forEach((line, layout) => {
+    if (layout.hidden) {
+      hidden.push(line);
+    }
+  });
+
+  return hidden;
+};
+
+const decorationAt = (sheet: Sheet, row: number, col: number): number => {
+  const own = sheet.decorations.get(row, col);
+
+  return (
+    (own === 0 ? undefined : own) ??
+    sheet.layout.rows.get(row)?.style?.decoration ??
+    sheet.layout.cols.get(col)?.style?.decoration ??
+    0
+  );
+};
+
+const formatAt = (sheet: Sheet, row: number, col: number): number => {
+  const own = sheet.formats.get(row, col);
+
+  return (
+    (own === 0 ? undefined : own) ??
+    sheet.layout.rows.get(row)?.style?.format ??
+    sheet.layout.cols.get(col)?.style?.format ??
+    0
+  );
+};
+
+const firstShown = (index: LineIndex, from: number, to: number): number | undefined => {
+  for (let line = from; line <= to; line += 1) {
+    const position = index.positionOf(line);
+
+    if (position !== undefined) {
+      return position;
+    }
+  }
+  return undefined;
+};
+
+const lastShown = (index: LineIndex, from: number, to: number): number | undefined => {
+  for (let line = to; line >= from; line -= 1) {
+    const position = index.positionOf(line);
+
+    if (position !== undefined) {
+      return position;
+    }
+  }
+  return undefined;
+};
+
+const mergesOf = (sheet: Sheet, rows: LineIndex, cols: LineIndex): NuiTableRange[] =>
+  sheet.layout.merges.reduce<NuiTableRange[]>((found, merge) => {
+    const top = firstShown(rows, merge.top, merge.bottom);
+    const left = firstShown(cols, merge.left, merge.right);
+    const bottom = lastShown(rows, merge.top, merge.bottom);
+    const right = lastShown(cols, merge.left, merge.right);
+
+    if (top !== undefined && left !== undefined && bottom !== undefined && right !== undefined) {
+      found.push({ from: { row: top, col: left }, to: { row: bottom, col: right } });
+    }
+    return found;
+  }, []);
+
+const frozenOf = (index: LineIndex, count: number): number =>
+  count <= 0 ? 0 : (index.positionOf(count - 1) ?? firstShown(index, 0, count - 1) ?? -1) + 1;
+
+const rowHeightsOf = (sheet: Sheet, rows: LineIndex): Record<number, number> => {
+  const heights: Record<number, number> = {};
+
+  sheet.layout.rows.forEach((row, layout) => {
+    const position = rows.positionOf(row);
+
+    if (position !== undefined && layout.size !== undefined) {
+      heights[position] = pointsToPixels(layout.size);
+    }
+  });
+
+  return heights;
+};
+
+const columnWidthOf = (sheet: Sheet, col: number): number => {
+  const size = sheet.layout.cols.get(col)?.size ?? sheet.layout.defaults.colWidth;
+
+  return size === undefined ? DEFAULT_COLUMN : charsToPixels(size);
+};
+
+const createStyles = (book: Workbook): StyleCache => {
+  const known = new Map<string, NuiTableCellStyle | undefined>();
+
+  return (decoration: number, shape: ValueShape, color: number | undefined) => {
+    const key = `${String(decoration)}:${shape}:${String(color)}`;
+
+    if (known.has(key)) {
+      return known.get(key);
+    }
+
+    const style = sheetStyle({
+      decoration: book.decorations.get(decoration),
+      theme: book.decorations.theme,
+      base: book.decorations.defaultFont,
+      shape,
+      formatColor: color,
+    });
+
+    known.set(key, style);
+    return style;
+  };
+};
+
+export const defaultRowHeight = (sheet: Sheet): number =>
+  pointsToPixels(sheet.layout.defaults.rowHeight ?? DEFAULT_ROW_POINTS);
+
+export const sheetCells = ({ book, sheet, locale = EN_LOCALE }: SheetCellsOptions): SheetCells => {
+  const rows = createLineIndex(MAX_ROWS, hiddenLines(sheet.layout.rows));
+  const cols = createLineIndex(MAX_COLS, hiddenLines(sheet.layout.cols));
+  const styles = createStyles(book);
+  const { view } = sheet.layout;
+
+  const cellAt = (position: number, column: number): NuiTableSourceCell | undefined => {
+    const row = rows.lineAt(position);
+    const col = cols.lineAt(column);
+    const value = sheet.cells.get(row, col);
+    const decoration = decorationAt(sheet, row, col);
+
+    if (value.kind === 'empty' && decoration === 0) {
+      return undefined;
+    }
+
+    const shown = formatValue(value, book.formats.code(formatAt(sheet, row, col)), locale.numbers);
+
+    return { text: shown.text, style: styles(decoration, SHAPES[value.kind], shown.color) };
+  };
+
+  return {
+    source: {
+      rows: rows.count,
+      cols: cols.count,
+      cellAt,
+      columnWidth: (column) => columnWidthOf(sheet, cols.lineAt(column)),
+      rowLabel: (position) => String(rows.lineAt(position) + 1),
+      columnLabel: (column) => columnName(cols.lineAt(column)),
+    },
+    merges: mergesOf(sheet, rows, cols),
+    frozenRows: frozenOf(rows, view.frozenRows),
+    frozenCols: frozenOf(cols, view.frozenCols),
+    rowHeights: rowHeightsOf(sheet, rows),
+    gridlines: view.gridlines,
+    rightToLeft: view.rightToLeft,
+    rowAt: rows.lineAt,
+    colAt: cols.lineAt,
+  };
+};

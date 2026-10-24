@@ -17,6 +17,7 @@ import { FormulasSection } from './formulas';
 import { TableCellsSection } from './table-cells';
 import { TreeSection } from './tree';
 import { ChartsSection } from './charts';
+import { BookSection } from './book';
 import { UploadSection } from './upload';
 import { WizardSection } from './wizard';
 import { LayoutSection } from './layout';
@@ -188,6 +189,7 @@ export class PlaygroundPage {
   readonly data: DataSection;
   readonly tree: TreeSection;
   readonly charts: ChartsSection;
+  readonly book: BookSection;
   readonly table: TableSection;
   readonly tableDetail: TableDetailSection;
   readonly tableSheet: TableSheetSection;
@@ -236,6 +238,7 @@ export class PlaygroundPage {
     this.data = new DataSection(page);
     this.tree = new TreeSection(page);
     this.charts = new ChartsSection(page);
+    this.book = new BookSection(page);
     this.table = new TableSection(page);
     this.tableDetail = new TableDetailSection(page);
     this.tableSheet = new TableSheetSection(page);

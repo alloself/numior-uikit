@@ -242,7 +242,7 @@ for (const entry of ['index.js', 'fixtures.js']) {
 }
 
 const spreadsheetCore = await import(
-  pathToFileURL(resolve('packages/spreadsheet/dist/core.js')).href
+  pathToFileURL(resolve('packages/spreadsheet/dist/core/index.js')).href
 );
 
 assert.equal(
@@ -251,7 +251,7 @@ assert.equal(
   'spreadsheet/core must export the workbook',
 );
 
-for (const file of await localImports(resolve('packages/spreadsheet/dist/core.js'))) {
+for (const file of await localImports(resolve('packages/spreadsheet/dist/core/index.js'))) {
   const source = await readFile(file, 'utf8');
 
   assert.doesNotMatch(
@@ -268,7 +268,7 @@ for (const file of await localImports(resolve('packages/spreadsheet/dist/core.js
 }
 
 const spreadsheetXlsx = await import(
-  pathToFileURL(resolve('packages/spreadsheet/dist/xlsx.js')).href
+  pathToFileURL(resolve('packages/spreadsheet/dist/xlsx/index.js')).href
 );
 
 assert.deepEqual(
@@ -279,7 +279,7 @@ assert.deepEqual(
   'spreadsheet/xlsx must export the zip codec and the XML reader and writer',
 );
 
-for (const file of await localImports(resolve('packages/spreadsheet/dist/xlsx.js'))) {
+for (const file of await localImports(resolve('packages/spreadsheet/dist/xlsx/index.js'))) {
   const source = await readFile(file, 'utf8');
 
   assert.doesNotMatch(
@@ -296,6 +296,7 @@ for (const file of await localImports(resolve('packages/spreadsheet/dist/xlsx.js
 }
 
 await importBuild('charts', ['NuiChart', 'chartMessages']);
+await importBuild('spreadsheet', ['NuiSpreadsheet', 'sheetCells']);
 
 const chartsCore = await import(pathToFileURL(resolve('packages/charts/dist/core/index.js')).href);
 

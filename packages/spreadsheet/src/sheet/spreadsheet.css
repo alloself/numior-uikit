@@ -1,0 +1,5 @@
+.nui-spreadsheet {
+  box-sizing: border-box;
+  min-inline-size: 0;
+  font-variant-numeric: tabular-nums;
+}
