@@ -38,8 +38,11 @@
         :style="styleOf(cell)"
       >
         <div class="nui-table__content">
+          <span v-if="plainOf(cell) !== undefined" class="nui-table__text">{{
+            plainOf(cell)
+          }}</span>
           <slot
-            v-if="cell.kind !== 'data'"
+            v-else-if="cell.kind !== 'data'"
             name="utility"
             :column="cell.key"
             :position="position"
@@ -105,6 +108,7 @@ const {
   frozen,
   edge = false,
   head,
+  plainText,
 } = defineProps<NuiTableRowProps>();
 
 const emit = defineEmits<{
@@ -309,6 +313,28 @@ const cellSelected = (cell: TableDataCell): 'true' | undefined =>
   rangeClass(cell) === undefined ? undefined : 'true';
 
 const ownRevision = computed(() => (position === undefined ? 0 : (revisionOf?.(position) ?? 0)));
+
+const plainTexts = computed((): ReadonlyMap<string, string> | undefined => {
+  void revision;
+  void ownRevision.value;
+
+  if (plainText === undefined || position === undefined) {
+    return undefined;
+  }
+  return shownCells.value.reduce((texts, cell) => {
+    const text =
+      cell.kind === 'data' && leadOf(cell) === undefined
+        ? plainText(position, cell.key)
+        : undefined;
+
+    if (text !== undefined) {
+      texts.set(cell.key, text);
+    }
+    return texts;
+  }, new Map<string, string>());
+});
+
+const plainOf = (cell: TableCellLayout): string | undefined => plainTexts.value?.get(cell.key);
 
 const paints = computed(() => {
   void revision;

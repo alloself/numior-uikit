@@ -5,6 +5,7 @@ import { TableDriver } from './drivers/table';
 interface CountedSheet {
   readonly source: NuiTableCellSource;
   readonly reads: Set<number>;
+  readonly labels: Set<number>;
   readonly texts: Map<string, string>;
 }
 
@@ -12,10 +13,12 @@ const mounted: TableDriver<number>[] = [];
 
 const countedSheet = (): CountedSheet => {
   const reads = new Set<number>();
+  const labels = new Set<number>();
   const texts = new Map<string, string>();
 
   return {
     reads,
+    labels,
     texts,
     source: {
       rows: 200,
@@ -23,6 +26,10 @@ const countedSheet = (): CountedSheet => {
       cellAt: (row, col) => {
         reads.add(row);
         return { text: texts.get(`${row}:${col}`) ?? `${row}:${col}` };
+      },
+      rowLabel: (row) => {
+        labels.add(row);
+        return String(row + 1);
       },
     },
   };
@@ -66,19 +73,22 @@ describe('NuiTable invalidate', () => {
     expect(sheet.reads.size).toBeGreaterThan(2);
   });
 
-  it('re-renders only the rows the active cell leaves and enters', async () => {
+  it('re-renders only the rows the active cell leaves and enters and reads no cells again', async () => {
     const sheet = countedSheet();
     const grid = mountSheet(sheet);
     await grid.settle();
     await grid.focusCell(3, 2);
 
     sheet.reads.clear();
+    sheet.labels.clear();
     await grid.press('ArrowDown');
 
-    expect([...sheet.reads].toSorted((a, b) => a - b)).toEqual([3, 4]);
-    sheet.reads.clear();
+    expect([...sheet.labels].toSorted((a, b) => a - b)).toEqual([3, 4]);
+    expect([...sheet.reads]).toEqual([]);
+    sheet.labels.clear();
     await grid.press('ArrowRight');
 
-    expect([...sheet.reads]).toEqual([4]);
+    expect([...sheet.labels]).toEqual([4]);
+    expect([...sheet.reads]).toEqual([]);
   });
 });

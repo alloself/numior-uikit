@@ -2341,6 +2341,14 @@ const bodyRowView = (item: TableBodyRow): TableBodyRowView<T> =>
       }
     : { kind: 'row', props: bodyRowProps(item) };
 
+const plainTextAt = (position: number, key: string): string | undefined => {
+  const item = bodyItemAt(position);
+
+  return item === undefined || item.pending || item.group !== undefined || item.part !== 'body'
+    ? undefined
+    : plainText(rowAt(position), position, key);
+};
+
 const bodyRowProps = (item: TableBodyRow): NuiTableRowProps => ({
   cells: rowCells.value,
   rowIndex: item.index + pinnedCount.value + headRows.value + 1,
@@ -2365,6 +2373,7 @@ const bodyRowProps = (item: TableBodyRow): NuiTableRowProps => ({
   edge: item.edge,
   sizable: sizableOf(item),
   sizing: rowResize.active.value === item.index,
+  plainText: plainTextAt,
 });
 
 const onRowResize = (_key: string, event: PointerEvent, position: number | undefined): void => {

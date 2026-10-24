@@ -821,6 +821,7 @@ export interface NuiTableRowProps {
   frozen?: number | undefined;
   edge?: boolean | undefined;
   head?: ((key: string) => TableHeadState | undefined) | undefined;
+  plainText?: ((position: number, key: string) => string | undefined) | undefined;
 }
 
 export interface NuiTableDetailRowProps {
