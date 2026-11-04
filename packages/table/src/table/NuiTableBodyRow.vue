@@ -10,13 +10,13 @@
   >
     <template #utility="{ column, position }">
       <NuiTableUtilityCell
-        v-bind="context.utilityAt(position, column)"
+        v-bind="context.utilityAt(view.item, column)"
         @toggle="context.selectAt(position)"
       />
     </template>
     <template #default="{ column, merge, position }">
       <NuiTableCellContent
-        :view="context.cellViewAt(position, column, merge)"
+        :view="context.cellViewAt(view.item, column, merge)"
         :editor="context.editor()"
         @toggle="context.expandAt(position)"
         @grab="(event: PointerEvent) => context.grabAt(position, event)"
@@ -31,13 +31,13 @@
   <NuiTableRow v-else v-bind="view.props" @resize="context.resize" @reset-size="context.resetSize">
     <template #utility="{ column, position }">
       <NuiTableUtilityCell
-        v-bind="context.utilityAt(position, column)"
+        v-bind="context.utilityAt(view.item, column)"
         @toggle="context.selectAt(position)"
       />
     </template>
     <template #default="{ column, merge, position }">
       <NuiTableCellContent
-        :view="context.cellViewAt(position, column, merge)"
+        :view="context.cellViewAt(view.item, column, merge)"
         :editor="context.editor()"
         @toggle="context.expandAt(position)"
         @grab="(event: PointerEvent) => context.grabAt(position, event)"

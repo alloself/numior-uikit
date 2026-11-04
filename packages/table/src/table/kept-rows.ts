@@ -1,4 +1,4 @@
-import type { TableBodyRow } from './table.types';
+import { TableBodyRowViewKind, type TableBodyRow, type TableBodyRowView } from './table.types';
 
 const sameStyle = (
   left: Readonly<Record<string, string>> | undefined,
@@ -50,4 +50,51 @@ export const keptRows = (
   });
 
   return kept ? previous : rows;
+};
+
+const sameEntries = (left: object, right: object): boolean => {
+  const other = new Map(Object.entries(right));
+  const entries = Object.entries(left);
+
+  return (
+    entries.length === other.size &&
+    entries.every(([name, value]) => other.has(name) && other.get(name) === value)
+  );
+};
+
+const sameView = <T>(left: TableBodyRowView<T>, right: TableBodyRowView<T>): boolean => {
+  if (left.item !== right.item || !sameEntries(left.props, right.props)) {
+    return false;
+  }
+  switch (left.kind) {
+    case TableBodyRowViewKind.Row:
+      return right.kind === TableBodyRowViewKind.Row;
+    case TableBodyRowViewKind.Detail:
+      return right.kind === TableBodyRowViewKind.Detail && sameEntries(left.scope, right.scope);
+  }
+};
+
+export const keptViews = <T>(
+  next: readonly TableBodyRowView<T>[],
+  previous: readonly TableBodyRowView<T>[] | undefined,
+): readonly TableBodyRowView<T>[] => {
+  if (previous === undefined) {
+    return next;
+  }
+
+  const byKey = new Map(
+    previous.map((view): [TableBodyRow['key'], TableBodyRowView<T>] => [view.item.key, view]),
+  );
+
+  let kept = next.length === previous.length;
+
+  const views = next.map((view, index) => {
+    const old = byKey.get(view.item.key);
+    const same = old !== undefined && sameView(old, view);
+
+    kept &&= same && previous[index] === old;
+    return same ? old : view;
+  });
+
+  return kept ? previous : views;
 };

@@ -33,6 +33,7 @@ export const useTextMeasure = (
   const metrics = new Map<string, TextMetrics>();
   const widths = new Map<string, number>();
   let context: OffscreenCanvasRenderingContext2D | null = null;
+  let contextFont = '';
   let waiting = false;
 
   const retry = (): void => {
@@ -67,7 +68,10 @@ export const useTextMeasure = (
     if (known !== undefined || context === null) {
       return known ?? Number.POSITIVE_INFINITY;
     }
-    context.font = font;
+    if (contextFont !== font) {
+      context.font = font;
+      contextFont = font;
+    }
     const width = context.measureText(text).width;
 
     widths.set(id, width);

@@ -12,13 +12,13 @@ export interface TableFloodCells {
   readonly paneAt: (index: number) => TablePaneName | undefined;
   readonly widthAt: (index: number) => number;
   readonly freeAt: (index: number) => boolean;
+  readonly needAt?: ((index: number) => number) | undefined;
 }
 
 export interface TableFloodRow extends TableFloodCells {
   readonly keyAt: (index: number) => string | undefined;
   readonly alignAt: (index: number) => NuiTableAlign;
   readonly flowsAt: (index: number) => boolean;
-  readonly needAt: (index: number) => number;
 }
 
 export interface TableFlood {
@@ -43,28 +43,31 @@ export const paneOfCell = (cell: TableCellLayout | undefined): TablePaneName | u
 export const alignOfCell = (cell: TableCellLayout | undefined): NuiTableAlign =>
   cell === undefined || cell.kind === TablePlacementKind.Gap ? 'start' : cell.align;
 
+const takes = (cells: TableFloodCells, index: number): boolean =>
+  index >= 0 &&
+  index < cells.count &&
+  cells.paneAt(index) === TablePaneName.Centre &&
+  cells.freeAt(index);
+
 export const floodOf = (
   cells: TableFloodCells,
   origin: number,
   align: NuiTableAlign,
-  need = Number.POSITIVE_INFINITY,
 ): TableFlood | undefined => {
-  if (align === NuiTableAlign.Center || cells.paneAt(origin) !== TablePaneName.Centre) {
+  const step = align === NuiTableAlign.End ? -1 : 1;
+
+  if (
+    align === NuiTableAlign.Center ||
+    cells.paneAt(origin) !== TablePaneName.Centre ||
+    !takes(cells, origin + step)
+  ) {
     return undefined;
   }
-  const step = align === NuiTableAlign.End ? -1 : 1;
+  const need = cells.needAt?.(origin) ?? Number.POSITIVE_INFINITY;
   let edge = origin;
   let width = cells.widthAt(origin);
 
-  for (
-    let index = origin + step;
-    width < need &&
-    index >= 0 &&
-    index < cells.count &&
-    cells.paneAt(index) === TablePaneName.Centre &&
-    cells.freeAt(index);
-    index += step
-  ) {
+  for (let index = origin + step; width < need && takes(cells, index); index += step) {
     edge = index;
     width += cells.widthAt(index);
   }
@@ -94,7 +97,7 @@ const originAt = (
   if (key === undefined || paint?.overflow !== true || !row.flowsAt(at)) {
     return undefined;
   }
-  const flood = floodOf(cells, at, paint.align ?? row.alignAt(at), row.needAt(at));
+  const flood = floodOf(cells, at, paint.align ?? row.alignAt(at));
 
   return flood === undefined ? undefined : { key, paint, flood };
 };

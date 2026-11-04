@@ -514,9 +514,9 @@ export interface NuiTableCellContentProps<T> {
 }
 
 export interface TableBodyRowContext<T> {
-  readonly utilityAt: (position: number | undefined, column: string) => NuiTableUtilityCellProps;
+  readonly utilityAt: (item: TableBodyRow | undefined, column: string) => NuiTableUtilityCellProps;
   readonly cellViewAt: (
-    position: number | undefined,
+    item: TableBodyRow | undefined,
     column: string,
     merge: TableLeadSpan | undefined,
   ) => TableCellView<T>;
@@ -530,9 +530,14 @@ export interface TableBodyRowContext<T> {
 }
 
 export type TableBodyRowView<T> =
-  | { readonly kind: typeof TableBodyRowViewKind.Row; readonly props: NuiTableRowProps }
+  | {
+      readonly kind: typeof TableBodyRowViewKind.Row;
+      readonly item: TableBodyRow;
+      readonly props: NuiTableRowProps;
+    }
   | {
       readonly kind: typeof TableBodyRowViewKind.Detail;
+      readonly item: TableBodyRow;
       readonly props: NuiTableDetailRowProps;
       readonly scope: NuiTableDetailSlot<T>;
     };

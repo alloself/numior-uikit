@@ -111,9 +111,9 @@
               </template>
             </NuiTableRow>
             <NuiTableBodyRow
-              v-for="item in bodyRows"
-              :key="item.key"
-              :view="bodyRowView(item)"
+              v-for="view in bodyViews"
+              :key="view.item.key"
+              :view="view"
               :slotted="cellSlotted"
               :context="bodyContext"
             >
@@ -265,7 +265,7 @@ import {
   type TableQuery,
 } from '../engine';
 import NuiTableDragLayer from './NuiTableDragLayer.vue';
-import { keptRows } from './kept-rows';
+import { keptRows, keptViews } from './kept-rows';
 import NuiTableBodyRow from './NuiTableBodyRow.vue';
 import NuiTableRow from './NuiTableRow.vue';
 import NuiTableTracks from './NuiTableTracks.vue';
@@ -2293,28 +2293,15 @@ const cellViewOf = (
   };
 };
 
-const bodyItems = computed(
-  () => new Map(bodyRows.value.map((item): [number, TableBodyRow] => [item.index, item])),
-);
-
-const bodyItemAt = (position: number | undefined): TableBodyRow | undefined =>
-  position === undefined ? undefined : bodyItems.value.get(position);
-
 const cellViewAt = (
-  position: number | undefined,
+  item: TableBodyRow | undefined,
   column: string,
   merge: TableLeadSpan | undefined,
-): TableCellView<T> => {
-  const item = bodyItemAt(position);
+): TableCellView<T> =>
+  item === undefined ? { kind: 'skeleton' } : cellViewOf(item, column, merge);
 
-  return item === undefined ? { kind: 'skeleton' } : cellViewOf(item, column, merge);
-};
-
-const utilityAt = (position: number | undefined, column: string): NuiTableUtilityCellProps => {
-  const item = bodyItemAt(position);
-
-  return item === undefined ? NO_UTILITY : rowUtility(item, column);
-};
+const utilityAt = (item: TableBodyRow | undefined, column: string): NuiTableUtilityCellProps =>
+  item === undefined ? NO_UTILITY : rowUtility(item, column);
 
 const selectAt = (position: number | undefined): void => {
   if (position !== undefined) {
@@ -2344,6 +2331,7 @@ const bodyRowView = (item: TableBodyRow): TableBodyRowView<T> =>
   item.part === TableBodyPart.Detail
     ? {
         kind: 'detail',
+        item,
         props: {
           rowIndex: item.index + pinnedCount.value + headRows.value + 1,
           span: layout.value.visual.length,
@@ -2353,17 +2341,19 @@ const bodyRowView = (item: TableBodyRow): TableBodyRowView<T> =>
         },
         scope: detailScope(item.index),
       }
-    : { kind: 'row', props: bodyRowProps(item) };
+    : { kind: 'row', item, props: bodyRowProps(item) };
+
+const bodyViews = computed((previous: readonly TableBodyRowView<T>[] | undefined) =>
+  keptViews(bodyRows.value.map(bodyRowView), previous),
+);
 
 const plainTextAt = (position: number, key: string): string | undefined => {
-  const item = bodyItemAt(position);
+  const at = pageStart.value + position;
+  const node = engine.value.nodeAt(at);
 
-  return item === undefined ||
-    item.pending ||
-    item.group !== undefined ||
-    item.part !== TableBodyPart.Body
+  return node?.kind !== TableNodeKind.Row || engine.value.pendingAt(at)
     ? undefined
-    : plainText(rowAt(position), position, key);
+    : plainText(node.row, position, key);
 };
 
 const bodyRowProps = (item: TableBodyRow): NuiTableRowProps => ({

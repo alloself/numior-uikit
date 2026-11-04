@@ -34,7 +34,43 @@ afterEach(() => {
   }
 });
 
+const labelLog = (): {
+  readonly positions: number[];
+  readonly label: (row: Staff, position: number) => string;
+} => {
+  const positions: number[] = [];
+
+  return {
+    positions,
+    label: (_row, position) => {
+      positions.push(position);
+      return String(position + 1);
+    },
+  };
+};
+
+const newcomers = (before: readonly number[], after: readonly number[]): number[] =>
+  after.filter((position) => !before.includes(position));
+
+const ascending = (positions: readonly number[]): number[] =>
+  positions.toSorted((left, right) => left - right);
+
 describe('NuiTable row headers', () => {
+  it('renders only the rows that enter the window when it moves', async () => {
+    const labels = labelLog();
+
+    const grid = mountStaff({ props: { rowHeaders: { label: labels.label } } });
+    await grid.settle();
+    const before = grid.renderedRows;
+    labels.positions.splice(0);
+
+    await grid.scroll({ top: 400 });
+    const entered = newcomers(before, grid.renderedRows);
+
+    expect(entered.length).toBeGreaterThan(0);
+    expect(ascending(labels.positions)).toEqual(entered);
+  });
+
   it('numbers the rows in a pinned header column whatever the order and the page', async () => {
     const grid = mountStaff({ props: { rowHeaders: true, pagination: { pageSizes: [20] } } });
     await grid.settle();

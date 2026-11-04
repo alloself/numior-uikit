@@ -21,11 +21,15 @@ const cell = (pane: TablePaneName | undefined, width: number, text = ''): Cell =
   text,
 });
 
-const cellsOf = (row: readonly Cell[]): TableFloodCells => ({
+const cellsOf = (
+  row: readonly Cell[],
+  needs: Readonly<Record<number, number>> = {},
+): TableFloodCells => ({
   count: row.length,
   paneAt: (index) => row[index]?.pane,
   widthAt: (index) => row[index]?.width ?? 0,
   freeAt: (index) => row[index]?.text === '',
+  needAt: (index) => needs[index] ?? Number.POSITIVE_INFINITY,
 });
 
 const ROW = [
@@ -47,11 +51,10 @@ const rowOf = (
   aligns: Readonly<Record<number, NuiTableAlign>> = {},
   needs: Readonly<Record<number, number>> = {},
 ): TableFloodRow => ({
-  ...cellsOf(row),
+  ...cellsOf(row, needs),
   keyAt: (index) => KEYS[index],
   alignAt: (index) => aligns[index] ?? 'start',
   flowsAt: (index) => (row[index]?.text ?? '') !== '',
-  needAt: (index) => needs[index] ?? Number.POSITIVE_INFINITY,
 });
 
 const paintsOf = (keys: string): Map<string, TableCellPaint> =>
@@ -84,9 +87,14 @@ describe('table text flood', () => {
   });
 
   it('takes only as many empty cells as the text needs and none when it fits', () => {
-    expect(floodOf(cellsOf(ROW), 1, 'start', 200)).toEqual({ first: 1, last: 2, width: 220 });
-    expect(floodOf(cellsOf(ROW), 1, 'start', 120)).toBeUndefined();
-    expect(floodOf(cellsOf(ROW), 4, 'end', 150)).toEqual({ first: 3, last: 4, width: 200 });
+    expect(floodOf(cellsOf(ROW, { 1: 200 }), 1, 'start')).toEqual({
+      first: 1,
+      last: 2,
+      width: 220,
+    });
+
+    expect(floodOf(cellsOf(ROW, { 1: 120 }), 1, 'start')).toBeUndefined();
+    expect(floodOf(cellsOf(ROW, { 4: 150 }), 4, 'end')).toEqual({ first: 3, last: 4, width: 200 });
 
     const painted = floodRow(paintsOf('b'), rowOf(ROW, {}, { 1: 90 }));
 
