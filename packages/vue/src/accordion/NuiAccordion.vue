@@ -13,7 +13,7 @@
 
 <script setup lang="ts">
 import { computed, useTemplateRef } from 'vue';
-import { useListNavigation } from '@numior/primitives';
+import { createCollection, useListNavigation } from '@numior/primitives';
 import { provideAccordion } from './accordion-context';
 import type { NuiAccordionProps } from './accordion.types';
 
@@ -37,9 +37,10 @@ const openValues = computed(() =>
   multiple ? new Set(values.value) : new Set(model.value === null ? [] : [model.value]),
 );
 
+const triggers = createCollection<string>();
+
 const navigation = useListNavigation(root, {
-  selector: '.nui-collapsible__trigger',
-  scope: '.nui-accordion',
+  items: triggers.elements,
   orientation: 'vertical',
   loop: true,
   typeahead: false,
@@ -60,6 +61,7 @@ const toggleOne = (value: string, open: boolean): void => {
 };
 
 provideAccordion({
+  triggers,
   variant: computed(() => variant),
   headingLevel: computed(() => headingLevel),
   disabled: computed(() => disabled),

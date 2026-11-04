@@ -64,7 +64,7 @@ const groups = computed(() => toolbarGroups(state, texts.value, { ...options, do
 useKeyboardInset(root, () => docked);
 
 const navigation = useListNavigation(root, {
-  selector: '.nui-editor-toolbar__control',
+  items: hints.controls.elements,
   orientation: 'horizontal',
   typeahead: false,
 });

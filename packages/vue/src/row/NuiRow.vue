@@ -4,7 +4,7 @@
       <slot name="leading"><NuiIcon v-if="icon" :icon="icon" /></slot>
     </span>
     <span class="nui-row__body">
-      <span class="nui-row__title"
+      <span ref="titleElement" class="nui-row__title"
         ><slot>{{ title }}</slot></span
       >
       <span v-if="description || $slots.description" class="nui-row__description">
@@ -19,6 +19,7 @@
 </template>
 
 <script setup lang="ts">
+import { useTemplateRef } from 'vue';
 import NuiIcon from '../icon/NuiIcon.vue';
 import type { NuiRowProps } from './row.types';
 
@@ -30,4 +31,8 @@ const {
   nowrap = false,
   inline = false,
 } = defineProps<NuiRowProps>();
+
+const titleElement = useTemplateRef<HTMLElement>('titleElement');
+
+defineExpose({ titleElement });
 </script>

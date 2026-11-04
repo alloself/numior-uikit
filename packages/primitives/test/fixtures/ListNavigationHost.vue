@@ -10,6 +10,7 @@
         v-for="(label, index) in labels"
         :id="`item-${index}`"
         :key="label"
+        :ref="collection.ref(label)"
         type="button"
         :role="role"
         tabindex="-1"
@@ -24,6 +25,7 @@
 <script setup lang="ts">
 import { shallowRef } from 'vue';
 import {
+  createCollection,
   useListNavigation,
   type ListFocusMode,
   type ListNavigation,
@@ -55,9 +57,10 @@ const emit = defineEmits<{
 }>();
 
 const container = shallowRef<HTMLElement | null>(null);
+const collection = createCollection<string>();
 
 const navigation = useListNavigation(container, {
-  selector: `[role="${role}"]`,
+  items: collection.elements,
   mode: () => mode,
   orientation: () => orientation,
   loop: () => loop,

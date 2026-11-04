@@ -2,7 +2,7 @@
   <span class="nui-tab-item" role="presentation">
     <button
       :id="tabs.tabId(value)"
-      ref="root"
+      :ref="list.tabs.ref(value)"
       type="button"
       role="tab"
       class="nui-tab"
@@ -41,7 +41,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onUnmounted, useTemplateRef } from 'vue';
+import { computed, onBeforeUnmount, onUnmounted } from 'vue';
 import NuiButton from '../button/NuiButton.vue';
 import NuiIcon from '../icon/NuiIcon.vue';
 import { useTabList, useTabs } from './tabs-context';
@@ -56,7 +56,6 @@ const emit = defineEmits<{ close: [] }>();
 
 const tabs = useTabs();
 const list = useTabList();
-const root = useTemplateRef<HTMLButtonElement>('root');
 const selected = computed(() => tabs.modelValue.value === value);
 const closes = computed(() => closable && !disabled);
 
@@ -104,7 +103,9 @@ const onAuxclick = (event: MouseEvent): void => {
 };
 
 onBeforeUnmount(() => {
-  focusedOnLeave = root.value !== null && document.activeElement === root.value;
+  const element = list.tabs.get(value);
+
+  focusedOnLeave = element !== undefined && document.activeElement === element;
 });
 
 onUnmounted(() => {

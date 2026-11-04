@@ -1,5 +1,11 @@
 <template>
-  <NuiMenu :label="texts.blockType" class="nui-editor-toolbar__menu nui-editor-blocks" compact lazy>
+  <NuiMenu
+    ref="menu"
+    :label="texts.blockType"
+    class="nui-editor-toolbar__menu nui-editor-blocks"
+    compact
+    lazy
+  >
     <template #trigger="{ attrs }">
       <NuiButton
         v-bind="attrs"
@@ -28,6 +34,8 @@
 </template>
 
 <script setup lang="ts">
+import { useTemplateRef } from 'vue';
+import { useToolbarControl } from './toolbar-hints';
 import type { Command } from '@numior/editor-core';
 import { useMessages } from '@numior/primitives';
 import { NuiButton, NuiMenu, NuiMenuRadioGroup, NuiMenuRadioItem } from '@numior/vue';
@@ -52,4 +60,8 @@ const choose = (key: string | undefined): void => {
     emit('run', option.command);
   }
 };
+
+const menu = useTemplateRef<InstanceType<typeof NuiMenu>>('menu');
+
+useToolbarControl(() => menu.value?.trigger);
 </script>

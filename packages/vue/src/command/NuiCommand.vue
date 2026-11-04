@@ -59,6 +59,8 @@ import { computed, onMounted, shallowRef, useTemplateRef, watch } from 'vue';
 import { useControlId, useListNavigation, useMessages } from '@numior/primitives';
 import NuiIcon from '../icon/NuiIcon.vue';
 import NuiList from '../list/NuiList.vue';
+import { provideListItems } from '../list/list-context';
+import { createListItems } from '../list/list-items';
 import { isComposing } from '../shared/composition';
 import {
   defaultOptionKey,
@@ -118,9 +120,12 @@ const filtered = computed(() => {
   return filterOptions(items, (item) => keep(item, query.value));
 });
 
+const listItems = createListItems();
+
+provideListItems(listItems);
+
 const navigation = useListNavigation(listElement, {
-  selector: '[role="option"]',
-  scope: '.nui-list',
+  items: listItems.elements.elements,
   mode: 'virtual',
   loop: () => loop,
   typeahead: false,
@@ -164,10 +169,9 @@ const onKeydown = (event: KeyboardEvent): void => {
 };
 
 const activateHovered = (event: PointerEvent): void => {
-  const option =
-    event.target instanceof HTMLElement ? event.target.closest('[role="option"]') : null;
+  const option = navigation.itemFrom(event.target);
 
-  if (option instanceof HTMLElement && option !== navigation.activeElement()) {
+  if (option !== null && option !== navigation.activeElement()) {
     navigation.setActive(option, { focus: false });
   }
 };

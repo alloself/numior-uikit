@@ -64,6 +64,10 @@ const docs: DocsMap = {
     },
     models: { 'v-model:open': { ru: 'Открыто ли меню.', en: 'Whether the menu is open.' } },
     exposed: {
+      trigger: {
+        ru: 'Элемент кнопки из слота `trigger`, пока меню смонтировано.',
+        en: 'The `trigger` slot button element while the menu is mounted.',
+      },
       show: {
         ru: 'Открывает меню. С `first` или `last` ставит фокус на первый или последний пункт.',
         en: 'Opens the menu. With `first` or `last`, focuses the first or last item.',

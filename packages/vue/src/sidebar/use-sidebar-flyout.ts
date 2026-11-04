@@ -17,6 +17,8 @@ import {
   usePopover,
   type PopoverContentAttrs,
 } from '@numior/primitives';
+import { provideListItems } from '../list/list-context';
+import { createListItems } from '../list/list-items';
 
 export interface SidebarFlyoutOptions {
   readonly enabled: Readonly<Ref<boolean>>;
@@ -72,8 +74,12 @@ export const useSidebarFlyout = (options: SidebarFlyoutOptions): SidebarFlyout =
     enabled: open,
   });
 
+  const items = createListItems();
+
+  provideListItems(items);
+
   const navigation = useListNavigation(options.content, {
-    selector: '.nui-list-item__action',
+    items: items.elements.elements,
     loop: () => true,
     typeahead: () => false,
   });

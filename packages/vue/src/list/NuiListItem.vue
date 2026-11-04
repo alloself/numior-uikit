@@ -1,13 +1,15 @@
 <template>
   <li
     :id="id"
+    :ref="setRoot"
     class="nui-list-item"
     :class="classes()"
     v-bind="{ ...roleAttrs(), ...rootAttrs() }"
     @click="onClick"
   >
-    <component :is="innerIs()" :ref="setAction" class="nui-list-item__inner" v-bind="innerAttrs()">
+    <component :is="innerIs()" :ref="bindAction" class="nui-list-item__inner" v-bind="innerAttrs()">
       <NuiRow
+        ref="row"
         :icon="icon"
         :title="label"
         :description="description"
@@ -39,14 +41,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed, useAttrs } from 'vue';
+import { computed, onUpdated, useAttrs, useTemplateRef, type ComponentPublicInstance } from 'vue';
 import { useSplitAttrs, type AttrRecord } from '@numior/primitives';
 import NuiBadge from '../badge/NuiBadge.vue';
 import NuiKbd from '../kbd/NuiKbd.vue';
 import NuiLink from '../link/NuiLink.vue';
 import NuiRow from '../row/NuiRow.vue';
 import { useTriggerElement } from '../shared/trigger-ref';
-import { useList } from './list-context';
+import { useList, type ListItemKey } from './list-context';
 import type { NuiListItemProps } from './list.types';
 
 type ListItemMode = 'treeitem' | 'option' | 'link' | 'button' | 'plain';
@@ -106,6 +108,58 @@ const mode = (): ListItemMode => {
 
 const isOption = (): boolean => mode() === 'option';
 const hasAction = (): boolean => mode() === 'link' || mode() === 'button';
+
+const row = useTemplateRef<InstanceType<typeof NuiRow>>('row');
+const ownKey = Symbol('list-item');
+let rootElement: HTMLElement | null = null;
+let registered: ListItemKey | undefined;
+let registeredElement: HTMLElement | null = null;
+
+const titleText = (): string => row.value?.titleElement?.textContent ?? label ?? '';
+
+const navigable = (): HTMLElement | null => {
+  switch (mode()) {
+    case 'option':
+      return rootElement;
+    case 'link':
+    case 'button':
+      return action.value;
+    case 'treeitem':
+    case 'plain':
+      return null;
+  }
+};
+
+const register = (): void => {
+  if (list?.kind !== 'list') {
+    return;
+  }
+
+  const key = isOption() && value !== undefined ? list.keyOf(value) : ownKey;
+  const element = navigable();
+
+  if (registered !== undefined && (registered !== key || element !== registeredElement)) {
+    list.items.elements.release(registered, registeredElement);
+  }
+
+  registered = element === null ? undefined : key;
+  registeredElement = element;
+
+  if (element !== null) {
+    list.items.elements.set(key, element);
+    list.items.titles.set(element, titleText);
+  }
+};
+
+const setRoot = (element: Element | ComponentPublicInstance | null): void => {
+  rootElement = element instanceof HTMLElement ? element : null;
+  register();
+};
+
+const bindAction = (element: Element | ComponentPublicInstance | null): void => {
+  setAction(element);
+  register();
+};
 
 const showsCheck = (): boolean =>
   isOption() ||
@@ -212,6 +266,8 @@ const onClick = (): void => {
     list.select(value);
   }
 };
+
+onUpdated(register);
 
 defineExpose({ action });
 </script>

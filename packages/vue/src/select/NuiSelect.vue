@@ -257,7 +257,7 @@ const { listboxElement, setListbox, control, navigation, activateHovered, restAc
     placement: () => placement,
     loop: () => loop,
     typeahead: true,
-    restOnSelected: true,
+    isSelected: (key) => selectedKeys.value.has(key),
   });
 
 const opening = createIntent<OpenFocus>();

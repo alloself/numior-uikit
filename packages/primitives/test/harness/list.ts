@@ -1,6 +1,5 @@
 import { mount, type VueWrapper } from '@vue/test-utils';
 import { vi } from 'vite-plus/test';
-import { nextTick } from 'vue';
 import { type ListFocusMode, type ListNavigation, type ListOrientation } from '../../src';
 import ListNavigationHost from '../fixtures/ListNavigationHost.vue';
 
@@ -84,17 +83,6 @@ export class ListHarness {
     vi.advanceTimersByTime(ms);
   }
 
-  appendNow(label: string): void {
-    const button = document.createElement('button');
-
-    button.type = 'button';
-    button.setAttribute('role', 'option');
-    button.id = `item-${this.buttons.length}`;
-    button.tabIndex = -1;
-    button.textContent = label;
-    this.container.append(button);
-  }
-
   disableNow(index: number): void {
     this.buttons[index]?.setAttribute('aria-disabled', 'true');
   }
@@ -107,20 +95,29 @@ export class ListHarness {
     }
   }
 
-  countQueries(run: () => void): number {
-    const spy = vi.spyOn(this.container, 'querySelectorAll');
+  countIndexBuilds(run: () => void): number {
+    const spies = this.buttons.map((button) => vi.spyOn(button, 'getAttribute'));
 
     run();
 
-    const count = spy.mock.calls.length;
+    const reads = spies.reduce(
+      (count, spy) =>
+        count + spy.mock.calls.reduce((own, [name]) => own + Number(name === 'aria-disabled'), 0),
+      0,
+    );
 
-    spy.mockRestore();
-    return count;
+    for (const spy of spies) {
+      spy.mockRestore();
+    }
+    return reads / this.buttons.length;
   }
 
   async remove(index: number): Promise<void> {
-    this.buttons[index]?.remove();
-    await nextTick();
+    const labels = this.wrapper.props('labels');
+
+    await this.wrapper.setProps({
+      labels: labels.filter((_, position) => position !== index),
+    });
   }
 
   async append(...labels: string[]): Promise<void> {

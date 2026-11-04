@@ -79,7 +79,8 @@ import NuiIcon from '../icon/NuiIcon.vue';
 import { flattenEntries, groupEntries, type NuiListEntry } from '../shared/options';
 import { useOptionSelection } from '../shared/use-option-selection';
 import NuiListEntries from './NuiListEntries.vue';
-import { provideList } from './list-context';
+import { provideList, provideListItems, useListItems } from './list-context';
+import { createListItems, titleOf } from './list-items';
 import { listMessages } from './list.messages';
 import type { NuiListProps } from './list.types';
 
@@ -161,8 +162,13 @@ const select = (value: T): void => {
   }
 };
 
+const listItems = useListItems() ?? createListItems();
+
+provideListItems(null);
+
 provideList<T>({
   kind: 'list',
+  items: listItems,
   selectable: computed(() => selectable),
   variant: computed(() => variant),
   size: computed(() => size),
@@ -173,27 +179,19 @@ provideList<T>({
   select,
 });
 
-const itemTitle = (element: HTMLElement): string =>
-  element.querySelector('.nui-row__title')?.textContent ?? '';
-
-const firstSelected = (): HTMLElement | null => {
-  const found = rootElement.value?.querySelector('[role="option"][aria-selected="true"]');
-  return found instanceof HTMLElement ? found : null;
-};
-
 const navigation = useListNavigation(rootElement, {
-  selector: '[role="option"]',
-  scope: '.nui-list',
+  items: listItems.elements.elements,
   loop: () => loop,
   typeahead: () => typeahead,
-  resting: firstSelected,
-  itemText: itemTitle,
+  resting: () =>
+    listItems.elements.first((key) => typeof key === 'string' && selectedKeys.value.has(key)),
+  itemText: (element) => titleOf(listItems, element),
 });
 
 const owns = (): boolean => keyboard && selectable !== undefined;
 
 const isOption = (target: EventTarget | null): target is HTMLElement =>
-  target instanceof HTMLElement && target.getAttribute('role') === 'option';
+  target instanceof HTMLElement && navigation.has(target);
 
 const onKeydown = (event: KeyboardEvent): void => {
   if (!owns()) {

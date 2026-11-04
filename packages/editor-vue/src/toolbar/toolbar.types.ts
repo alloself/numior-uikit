@@ -1,3 +1,4 @@
+import type { ElementCollection } from '@numior/primitives';
 import type { EditorState } from '@numior/editor-core';
 import type {
   ToolbarBlocks,
@@ -52,6 +53,7 @@ export interface ColourOption {
 }
 
 export interface ToolbarHints {
+  readonly controls: ElementCollection<symbol>;
   readonly register: (element: Element, face: () => ToolbarFace) => void;
   readonly release: (element: Element) => void;
   readonly faceOf: (element: HTMLElement | null) => ToolbarFace | undefined;

@@ -23,8 +23,7 @@ export type { ListOrientation } from './moves';
 export type ListFocusMode = 'roving' | 'virtual';
 
 export interface ListNavigationOptions {
-  readonly selector: string;
-  readonly scope?: string | undefined;
+  readonly items: () => readonly HTMLElement[];
   readonly mode?: MaybeRefOrGetter<ListFocusMode | undefined>;
   readonly orientation?: MaybeRefOrGetter<ListOrientation | undefined>;
   readonly loop?: MaybeRefOrGetter<boolean | undefined>;
@@ -46,6 +45,7 @@ export interface ListNavigation {
   readonly typeaheadQuery: ComputedRef<string>;
   items(): readonly HTMLElement[];
   has(element: HTMLElement): boolean;
+  itemFrom(target: EventTarget | null): HTMLElement | null;
   activeElement(): HTMLElement | null;
   setActive(target: ListActiveTarget, options?: SetActiveOptions): void;
   reveal(): void;
@@ -60,6 +60,7 @@ export interface ListNavigation {
 }
 
 interface ItemIndex {
+  readonly source: readonly HTMLElement[];
   readonly list: readonly HTMLElement[];
   readonly positions: ReadonlyMap<HTMLElement, number>;
   readonly ids: ReadonlyMap<string, HTMLElement>;
@@ -80,6 +81,7 @@ const WATCHED: MutationObserverInit = {
 };
 
 const EMPTY_INDEX: ItemIndex = {
+  source: [],
   list: [],
   positions: new Map(),
   ids: new Map(),
@@ -91,29 +93,22 @@ const isUsable = (element: HTMLElement): boolean =>
   !element.hasAttribute('disabled') &&
   !element.hidden;
 
-const collect = (
-  container: HTMLElement,
-  selector: string,
-  scope: string | undefined,
-): HTMLElement[] =>
-  Array.from(container.querySelectorAll(selector)).filter(
-    (node): node is HTMLElement =>
-      node instanceof HTMLElement &&
-      isUsable(node) &&
-      (scope === undefined || node.closest(scope) === container),
-  );
-
 const defaultText = (element: HTMLElement): string =>
   (element.getAttribute('aria-label') ?? element.textContent ?? '').trim();
 
-const indexItems = (list: readonly HTMLElement[]): ItemIndex => ({
-  list,
-  positions: new Map(list.map((element, position) => [element, position] as const)),
-  ids: new Map(
-    list.flatMap((element) => (element.id === '' ? [] : [[element.id, element] as const])),
-  ),
-  lowered: undefined,
-});
+const indexItems = (source: readonly HTMLElement[]): ItemIndex => {
+  const list = source.filter(isUsable);
+
+  return {
+    source,
+    list,
+    positions: new Map(list.map((element, position) => [element, position] as const)),
+    ids: new Map(
+      list.flatMap((element) => (element.id === '' ? [] : [[element.id, element] as const])),
+    ),
+    lowered: undefined,
+  };
+};
 
 const observe = (watch: ItemWatch, root: HTMLElement): void => {
   watch.observer?.disconnect();
@@ -130,8 +125,12 @@ const observe = (watch: ItemWatch, root: HTMLElement): void => {
   watch.observer?.observe(root, WATCHED);
 };
 
-const settledIndex = (watch: ItemWatch): ItemIndex | null =>
-  watch.observer === null || watch.observer.takeRecords().length > 0 ? null : watch.index;
+const settledIndex = (watch: ItemWatch, source: readonly HTMLElement[]): ItemIndex | null =>
+  watch.observer === null ||
+  watch.observer.takeRecords().length > 0 ||
+  watch.index?.source !== source
+    ? null
+    : watch.index;
 
 const applyTabStop = (
   previous: HTMLElement | null,
@@ -204,9 +203,18 @@ const idOf = (element: HTMLElement | null): string | undefined =>
 const isPrintable = (event: KeyboardEvent): boolean =>
   event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey;
 
-const itemFrom = (target: EventTarget | null, selector: string): HTMLElement | null => {
-  const item = target instanceof HTMLElement ? target.closest(selector) : null;
-  return item instanceof HTMLElement ? item : null;
+const itemFrom = (
+  target: EventTarget | null,
+  root: HTMLElement | null | undefined,
+  index: ItemIndex,
+): HTMLElement | null => {
+  let node = target instanceof HTMLElement ? target : null;
+
+  while (node !== null && node !== root && !index.positions.has(node)) {
+    node = node.parentElement;
+  }
+
+  return node === null || node === root ? null : node;
 };
 
 const resolveTarget = (target: ListActiveTarget, index: ItemIndex): HTMLElement | null => {
@@ -242,7 +250,8 @@ export const useListNavigation = (
       observe(watch, root);
     }
 
-    const index = settledIndex(watch) ?? indexItems(collect(root, options.selector, options.scope));
+    const source = options.items();
+    const index = settledIndex(watch, source) ?? indexItems(source);
 
     watch.index = index;
     return index;
@@ -347,9 +356,10 @@ export const useListNavigation = (
   };
 
   const onFocusin = (event: FocusEvent): void => {
-    const item = itemFrom(event.target, options.selector);
+    const index = itemIndex();
+    const item = itemFrom(event.target, toValue(container), index);
 
-    if (roving() && item && item !== activeElement() && itemIndex().positions.has(item)) {
+    if (roving() && item && item !== activeElement()) {
       setActive(item, { focus: false });
     }
   };
@@ -365,6 +375,7 @@ export const useListNavigation = (
     typeaheadQuery: computed(() => typeahead.value.query),
     items,
     has: (element) => itemIndex().positions.has(element),
+    itemFrom: (target) => itemFrom(target, toValue(container), itemIndex()),
     activeElement,
     setActive,
     reveal,

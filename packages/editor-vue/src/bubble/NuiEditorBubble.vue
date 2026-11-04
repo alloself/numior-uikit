@@ -61,7 +61,7 @@ const group = computed(() =>
 );
 
 const navigation = useListNavigation(bar, {
-  selector: '.nui-editor-toolbar__control',
+  items: hints.controls.elements,
   orientation: 'horizontal',
   typeahead: false,
 });

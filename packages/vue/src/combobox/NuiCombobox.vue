@@ -249,7 +249,6 @@ const { listboxElement, setListbox, control, navigation, activateHovered, restAc
     focus: 'virtual',
     loop: true,
     typeahead: false,
-    restOnSelected: false,
   });
 
 const opening = createIntent<'first' | 'last'>();

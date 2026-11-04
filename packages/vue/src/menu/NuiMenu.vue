@@ -102,6 +102,9 @@ const triggerAttrs = computed<NuiMenuTriggerAttrs>(() => ({
 }));
 
 defineExpose<NuiMenuExposed>({
+  get trigger() {
+    return trigger.value;
+  },
   show: (focus) => {
     context.requestFocus(focus ?? 'none');
     control.show();

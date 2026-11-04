@@ -11,6 +11,7 @@
       <NuiButton
         v-for="(tool, index) in tools"
         :key="tool"
+        :ref="buttons.ref(tool)"
         variant="ghost"
         tone="neutral"
         size="sm"
@@ -27,11 +28,16 @@
 <script setup lang="ts">
 import { ref, useTemplateRef } from 'vue';
 import { NuiButton } from '@numior/vue';
-import { useListNavigation } from '@numior/primitives';
+import { createCollection, useListNavigation } from '@numior/primitives';
 
 const toolbar = useTemplateRef<HTMLElement>('toolbar');
 const last = ref('');
 const tools = ['Жирный', 'Курсив', 'Подчёркнутый', 'Ссылка', 'Код'];
 
-const navigation = useListNavigation(toolbar, { selector: 'button', orientation: 'horizontal' });
+const buttons = createCollection<string>();
+
+const navigation = useListNavigation(toolbar, {
+  items: buttons.elements,
+  orientation: 'horizontal',
+});
 </script>

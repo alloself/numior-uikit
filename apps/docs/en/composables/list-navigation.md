@@ -12,13 +12,15 @@ ArrowRight swap.
 
 ## Signature
 
-<SignatureReference :names="['useListNavigation', 'ListNavigationOptions', 'ListNavigation']" />
+<SignatureReference :names="['useListNavigation', 'ListNavigationOptions', 'ListNavigation', 'createCollection', 'ElementCollection']" />
 
 ## Behaviour
 
-`selector` picks the items inside the container, for example `'[role="option"]'`. `scope` is
-for nested lists: an item counts only when its closest element matching `scope` is the
-container itself. `resting` returns the item Tab lands on while no item is active.
+`items` returns the items in page order. The easiest way to gather them is
+`createCollection()`: pass `collection.ref(key)` to each item's `:ref` and
+`collection.elements` to `items`. Disabled and hidden items are skipped.
+
+`resting` returns the item Tab lands on while no item is active.
 
 Put `onKeydown` and `onFocusin` on the container. `setActive`, `focusNext` and the other methods
 move the active item from code. The Numior UI list, tree, menu, tabs and toggle group are built

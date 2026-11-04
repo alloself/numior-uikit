@@ -15,6 +15,7 @@
 
 <script setup lang="ts">
 import NuiCollapsible from '../collapsible/NuiCollapsible.vue';
+import { provideCollapsibleTrigger } from '../collapsible/collapsible-context';
 import type { NuiCollapsibleTriggerSlot } from '../collapsible/collapsible.types';
 import { useAccordion } from './accordion-context';
 import type { NuiAccordionItemProps } from './accordion.types';
@@ -24,4 +25,6 @@ const { value, label, disabled = false } = defineProps<NuiAccordionItemProps>();
 defineSlots<{ trigger?(props: NuiCollapsibleTriggerSlot): unknown; default?(): unknown }>();
 
 const accordion = useAccordion();
+
+provideCollapsibleTrigger((element) => accordion.triggers.ref(value)(element));
 </script>

@@ -1,9 +1,11 @@
 import { inject, provide, type ComputedRef, type InjectionKey, type Ref } from 'vue';
+import type { ElementCollection } from '@numior/primitives';
 
 export type MenuFocusRequest = 'first' | 'last' | 'none';
 
 export interface MenuContext {
   readonly level: number;
+  readonly items: ElementCollection<symbol>;
   readonly closeOnSelect: ComputedRef<boolean>;
   close(): void;
   closeAll(): void;

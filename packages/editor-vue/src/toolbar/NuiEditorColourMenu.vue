@@ -1,5 +1,5 @@
 <template>
-  <NuiMenu :label="texts.colour" class="nui-editor-colours" lazy>
+  <NuiMenu ref="menu" :label="texts.colour" class="nui-editor-colours" lazy>
     <template #trigger="{ attrs }">
       <NuiButton
         v-bind="attrs"
@@ -63,6 +63,8 @@
 </template>
 
 <script setup lang="ts">
+import { useTemplateRef } from 'vue';
+import { useToolbarControl } from './toolbar-hints';
 import { Baseline } from '@lucide/vue';
 import { useMessages } from '@numior/primitives';
 import {
@@ -106,4 +108,8 @@ const fillOptions = computed(() => optionsOf(colours.highlights, 'fill', texts.v
 const choose = (mark: ColourMark, value: string | undefined): void => {
   emit('choose', mark, value === undefined || value === '' ? null : value);
 };
+
+const menu = useTemplateRef<InstanceType<typeof NuiMenu>>('menu');
+
+useToolbarControl(() => menu.value?.trigger);
 </script>

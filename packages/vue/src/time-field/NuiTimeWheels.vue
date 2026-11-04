@@ -11,7 +11,7 @@
         {{ column.separator }}
       </span>
       <NuiTimeWheel
-        ref="wheel"
+        :ref="bindWheel(column.type)"
         :options="column.options"
         :selected="column.selected"
         :label="labels[column.type]"
@@ -25,10 +25,25 @@
 
 <script setup lang="ts">
 import { computed, useTemplateRef } from 'vue';
-import { useListNavigation, type TimeSegmentType } from '@numior/primitives';
+import {
+  createCollection,
+  useListNavigation,
+  type ElementRef,
+  type TimeSegmentType,
+} from '@numior/primitives';
 import NuiTimeWheel from './NuiTimeWheel.vue';
 import type { NuiTimeWheelsProps } from './time-field.types';
 import { hasWheelTimes } from './time-wheels';
+
+interface WheelHandle {
+  reveal(): void;
+}
+
+const isWheel = (value: unknown): value is WheelHandle =>
+  typeof value === 'object' &&
+  value !== null &&
+  'reveal' in value &&
+  typeof value.reveal === 'function';
 
 const { columns, labels, emptyText } = defineProps<NuiTimeWheelsProps>();
 
@@ -38,12 +53,38 @@ const emit = defineEmits<{
 }>();
 
 const wheelsElement = useTemplateRef<HTMLDivElement>('wheels');
-const wheelRefs = useTemplateRef<{ reveal: () => void }[]>('wheel');
+const wheelItems = createCollection<TimeSegmentType>();
+const reveals = new Map<TimeSegmentType, () => void>();
+const binders = new Map<TimeSegmentType, ElementRef>();
+
+const bindWheel = (type: TimeSegmentType): ElementRef => {
+  const known = binders.get(type);
+
+  if (known !== undefined) {
+    return known;
+  }
+
+  const register = wheelItems.ref(type);
+
+  const bind: ElementRef = (value) => {
+    register(value);
+
+    if (isWheel(value)) {
+      reveals.set(type, () => value.reveal());
+    } else {
+      reveals.delete(type);
+    }
+  };
+
+  binders.set(type, bind);
+
+  return bind;
+};
 
 const available = computed(() => hasWheelTimes(columns));
 
 const navigation = useListNavigation(wheelsElement, {
-  selector: '.nui-time-field__wheel',
+  items: wheelItems.elements,
   orientation: 'horizontal',
   loop: false,
   typeahead: false,
@@ -66,8 +107,8 @@ const focus = (type: TimeSegmentType): void => {
 };
 
 const reveal = (): void => {
-  for (const wheel of wheelRefs.value ?? []) {
-    wheel.reveal();
+  for (const revealWheel of reveals.values()) {
+    revealWheel();
   }
 };
 

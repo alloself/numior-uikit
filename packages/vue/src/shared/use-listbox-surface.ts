@@ -9,6 +9,8 @@ import {
   type PopoverControl,
   type PopoverMode,
 } from '@numior/primitives';
+import { provideListItems } from '../list/list-context';
+import { createListItems } from '../list/list-items';
 import { useTriggerElement, type NuiTriggerRef } from './trigger-ref';
 
 export interface ListboxSurfaceOptions {
@@ -21,7 +23,7 @@ export interface ListboxSurfaceOptions {
   readonly focus?: ListFocusMode | undefined;
   readonly loop: MaybeRefOrGetter<boolean>;
   readonly typeahead: boolean;
-  readonly restOnSelected: boolean;
+  readonly isSelected?: ((key: string) => boolean) | undefined;
 }
 
 export interface ListboxSurface {
@@ -32,11 +34,6 @@ export interface ListboxSurface {
   activateHovered(event: PointerEvent): void;
   restActive(): void;
 }
-
-const selectedOptionIn = (container: HTMLElement | null): HTMLElement | null => {
-  const found = container?.querySelector('[role="option"][aria-selected="true"]');
-  return found instanceof HTMLElement ? found : null;
-};
 
 export const useListboxSurface = (options: ListboxSurfaceOptions): ListboxSurface => {
   const { trigger: listboxElement, setTrigger: setListbox } = useTriggerElement();
@@ -54,19 +51,26 @@ export const useListboxSurface = (options: ListboxSurfaceOptions): ListboxSurfac
     enabled: options.open,
   });
 
+  const items = createListItems();
+
+  provideListItems(items);
+
+  const selected = options.isSelected;
+
   const navigation = useListNavigation(listboxElement, {
-    selector: '[role="option"]',
+    items: items.elements.elements,
     mode: options.focus,
     loop: () => toValue(options.loop),
     typeahead: options.typeahead,
-    ...(options.restOnSelected ? { resting: () => selectedOptionIn(listboxElement.value) } : {}),
+    ...(selected === undefined
+      ? {}
+      : { resting: () => items.elements.first((key) => typeof key === 'string' && selected(key)) }),
   });
 
   const activateHovered = (event: PointerEvent): void => {
-    const option =
-      event.target instanceof HTMLElement ? event.target.closest('[role="option"]') : null;
+    const option = navigation.itemFrom(event.target);
 
-    if (option instanceof HTMLElement && option !== navigation.activeElement()) {
+    if (option !== null && option !== navigation.activeElement()) {
       navigation.setActive(option);
     }
   };

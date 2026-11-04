@@ -1,6 +1,6 @@
 <template>
   <button
-    ref="trigger"
+    :ref="bindTrigger"
     :id="triggerId"
     type="button"
     role="menuitem"
@@ -40,7 +40,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, useTemplateRef } from 'vue';
+import { ref, shallowRef, useTemplateRef } from 'vue';
 import { useControlId, useDelayedOpen, useDirection } from '@numior/primitives';
 import NuiIcon from '../icon/NuiIcon.vue';
 import NuiMenuRow from './NuiMenuRow.vue';
@@ -61,7 +61,12 @@ defineSlots<{ label(): unknown; default(): unknown }>();
 
 const parent = useMenu();
 const open = ref(false);
-const triggerElement = useTemplateRef<HTMLElement>('trigger');
+const triggerElement = shallowRef<HTMLElement | null>(null);
+
+const bindTrigger = parent.items.ref(Symbol('menu-sub'), (element) => {
+  triggerElement.value = element instanceof HTMLElement ? element : null;
+});
+
 const direction = useDirection(triggerElement);
 const contentElement = useTemplateRef<HTMLElement>('content');
 const triggerId = useControlId(() => (id === undefined ? undefined : `${id}-trigger`));

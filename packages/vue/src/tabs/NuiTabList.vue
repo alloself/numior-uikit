@@ -18,14 +18,9 @@
 <script setup lang="ts">
 import { computed, onMounted, shallowRef, useTemplateRef, watch } from 'vue';
 import { useMutationObserver, useResizeObserver } from '@vueuse/core';
-import { useListNavigation } from '@numior/primitives';
+import { createCollection, useListNavigation } from '@numior/primitives';
 import { provideTabList, useTabs } from './tabs-context';
 import type { NuiTabListProps } from './tabs.types';
-
-const TAB = '[role="tab"]';
-
-const tabsOf = (list: HTMLElement | null): HTMLElement[] =>
-  Array.from(list?.querySelectorAll<HTMLElement>(TAB) ?? []);
 
 const inlineStartOf = (list: HTMLElement, tab: HTMLElement): number =>
   getComputedStyle(list).direction === 'rtl'
@@ -37,23 +32,26 @@ const tabs = useTabs();
 const orientation = computed(() => tabs.orientation.value);
 const listElement = useTemplateRef<HTMLElement>('list');
 const tabElements = shallowRef<HTMLElement[]>([]);
+const items = createCollection<string>();
+let seenTabs: readonly HTMLElement[] = [];
 
-const selectedTab = (): HTMLElement | null => {
-  const found = listElement.value?.querySelector(`${TAB}[aria-selected="true"]`);
-  return found instanceof HTMLElement ? found : null;
+const selectedTab = (): HTMLElement | undefined => {
+  const value = tabs.modelValue.value;
+
+  return value === undefined ? undefined : items.get(value);
 };
 
 const collect = (): void => {
-  const found = tabsOf(listElement.value);
-  const known = tabElements.value;
+  const found = items.elements();
 
-  if (found.length !== known.length || found.some((tab, index) => tab !== known[index])) {
-    tabElements.value = found;
+  if (found !== seenTabs) {
+    seenTabs = found;
+    tabElements.value = [...found];
   }
 };
 
 const navigation = useListNavigation(listElement, {
-  selector: TAB,
+  items: items.elements,
   orientation,
   loop: true,
   typeahead: false,
@@ -93,8 +91,9 @@ const onFocusout = (event: FocusEvent): void => {
 };
 
 provideTabList({
+  tabs: items,
   restoreFocus: () => {
-    (selectedTab() ?? tabsOf(listElement.value)[0])?.focus();
+    (selectedTab() ?? items.elements()[0])?.focus();
   },
 });
 

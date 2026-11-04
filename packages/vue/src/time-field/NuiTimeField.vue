@@ -37,6 +37,7 @@
           </span>
           <NuiTimeSegment
             v-else
+            :ref="segments.ref(segment.type)"
             :type="segment.type"
             :text="segmentText(segment.type)"
             :label="labels[segment.type]"
@@ -59,6 +60,7 @@
         </template>
       </div>
       <NuiButton
+        ref="clock"
         variant="ghost"
         tone="neutral"
         size="xs"
@@ -97,6 +99,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, useTemplateRef, watch } from 'vue';
 import {
+  createCollection,
   formatSegment,
   formatTimeModel,
   parseTime,
@@ -200,8 +203,11 @@ const times = useTimeDraft({
 const rootElement = useTemplateRef<HTMLDivElement>('root');
 const groupElement = useTemplateRef<HTMLDivElement>('group');
 
+const segments = createCollection<TimeSegmentType>();
+const clock = useTemplateRef<InstanceType<typeof NuiButton>>('clock');
+
 const navigation = useListNavigation(groupElement, {
-  selector: '.nui-time-field__segment',
+  items: segments.elements,
   orientation: 'horizontal',
   loop: false,
   typeahead: false,
@@ -263,18 +269,26 @@ const onChar = (type: TimeSegmentType, char: string): void => {
 };
 
 const segmentTypeOf = (target: EventTarget | null): TimeSegmentType | undefined =>
-  target instanceof HTMLElement
-    ? segmentTypes.value.find((type) =>
-        target.classList.contains(`nui-time-field__segment--type-${type}`),
-      )
-    : undefined;
+  segmentTypes.value.find((type) => segments.get(type) === target);
 
 const focusSegment = (type: TimeSegmentType): void => {
-  const segment = groupElement.value?.querySelector(`.nui-time-field__segment--type-${type}`);
-  if (segment instanceof HTMLElement) {
+  const segment = segments.get(type);
+
+  if (segment !== undefined) {
     navigation.setActive(segment);
   }
 };
+
+const clockElement = (): Element | null => {
+  const element: unknown = clock.value?.$el;
+
+  return element instanceof Element ? element : null;
+};
+
+const isInteractive = (target: Element): boolean =>
+  navigation.itemFrom(target) !== null ||
+  clockElement()?.contains(target) === true ||
+  panelElement.value?.contains(target) === true;
 
 const focusHour = (): void => {
   focusSegment('hour');
@@ -302,8 +316,7 @@ const focusFromClick = (): void => {
 
 const onRootPointerdown = (event: PointerEvent): void => {
   const target = event.target;
-  const interactive = '.nui-time-field__segment, .nui-time-field__clock, .nui-time-field__panel';
-  if (isDisabled.value || !(target instanceof Element) || target.closest(interactive)) {
+  if (isDisabled.value || !(target instanceof Element) || isInteractive(target)) {
     return;
   }
   event.preventDefault();

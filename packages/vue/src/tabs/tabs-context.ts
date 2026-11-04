@@ -1,4 +1,5 @@
 import { inject, provide, type ComputedRef, type InjectionKey, type Ref } from 'vue';
+import type { ElementCollection } from '@numior/primitives';
 import type { NuiTabsActivation, NuiTabsOrientation } from './tabs.types';
 
 export interface TabsContext {
@@ -14,6 +15,7 @@ export interface TabsContext {
 }
 
 export interface TabListContext {
+  readonly tabs: ElementCollection<string>;
   restoreFocus(): void;
 }
 

@@ -1,7 +1,9 @@
 import { inject, provide, type InjectionKey, type Ref } from 'vue';
+import type { ElementCollection } from '@numior/primitives';
 import type { NuiCollapsibleVariant, NuiHeadingLevel } from '../collapsible/collapsible.types';
 
 export interface AccordionContext {
+  readonly triggers: ElementCollection<string>;
   readonly variant: Ref<NuiCollapsibleVariant>;
   readonly headingLevel: Ref<NuiHeadingLevel | undefined>;
   readonly disabled: Ref<boolean>;

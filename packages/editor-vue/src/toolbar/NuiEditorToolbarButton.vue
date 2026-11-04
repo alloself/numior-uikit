@@ -17,7 +17,7 @@
 <script setup lang="ts">
 import { NuiButton } from '@numior/vue';
 import { onBeforeUnmount, onMounted, useTemplateRef } from 'vue';
-import { useToolbarHints } from './toolbar-hints';
+import { useToolbarControl, useToolbarHints } from './toolbar-hints';
 import type { NuiEditorToolbarButtonProps } from './toolbar.types';
 
 const { action, disabled = false } = defineProps<NuiEditorToolbarButtonProps>();
@@ -34,6 +34,8 @@ const elementOf = (): Element | undefined => {
 
   return element instanceof Element ? element : undefined;
 };
+
+useToolbarControl(elementOf);
 
 onMounted(() => {
   const element = elementOf();

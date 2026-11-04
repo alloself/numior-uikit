@@ -8,6 +8,7 @@ import {
   type ShallowRef,
 } from 'vue';
 import {
+  createCollection,
   createIntent,
   useFloating,
   useListNavigation,
@@ -49,22 +50,12 @@ export interface MenuSurface {
   readonly attrs: MenuSurfaceAttrs;
 }
 
-const MENU_ITEMS = '[role="menuitem"], [role="menuitemcheckbox"], [role="menuitemradio"]';
-
-const itemAt = (target: EventTarget | null): HTMLElement | null => {
-  const item = target instanceof HTMLElement ? target.closest(MENU_ITEMS) : null;
-  return item instanceof HTMLElement ? item : null;
-};
-
 const focusElement = (element: HTMLElement | null | undefined): void => {
   element?.focus({ preventScroll: true });
 };
 
 const holdsOpenSubmenu = (element: HTMLElement | null): boolean =>
   element?.getAttribute('aria-expanded') === 'true';
-
-const labelOf = (element: HTMLElement): string =>
-  (element.querySelector('.nui-menu-item__label')?.textContent ?? element.textContent ?? '').trim();
 
 export const useMenuSurface = (options: MenuSurfaceOptions): MenuSurface => {
   const control = usePopover(options.content, { open: options.open, id: options.id, mode: 'auto' });
@@ -76,12 +67,12 @@ export const useMenuSurface = (options: MenuSurfaceOptions): MenuSurface => {
     enabled: options.open,
   });
 
+  const menuItems = createCollection<symbol>();
+
   const navigation = useListNavigation(options.content, {
-    selector: MENU_ITEMS,
-    scope: '[role="menu"]',
+    items: menuItems.elements,
     loop: options.loop,
     typeahead: options.typeahead,
-    itemText: labelOf,
   });
 
   const opening = createIntent<Exclude<MenuFocusRequest, 'none'>>();
@@ -97,6 +88,7 @@ export const useMenuSurface = (options: MenuSurfaceOptions): MenuSurface => {
   };
 
   const context: MenuContext = {
+    items: menuItems,
     level: (options.parent?.level ?? -1) + 1,
     closeOnSelect: computed(() => toValue(options.closeOnSelect)),
     close,
@@ -203,8 +195,8 @@ export const useMenuSurface = (options: MenuSurfaceOptions): MenuSurface => {
         }
       },
       onPointermove: (event) => {
-        const item = itemAt(event.target);
-        if (item && item !== navigation.activeElement() && navigation.has(item)) {
+        const item = navigation.itemFrom(event.target);
+        if (item && item !== navigation.activeElement()) {
           pointer = true;
           navigation.setActive(item);
         }

@@ -1,6 +1,7 @@
 <template>
   <button
     type="button"
+    :ref="itemRef"
     role="menuitemcheckbox"
     tabindex="-1"
     class="nui-menu-item"
@@ -28,6 +29,7 @@ const { icon, disabled = false, closeOnSelect = false } = defineProps<NuiMenuChe
 const checked = defineModel<boolean>('checked', { default: false });
 const emit = defineEmits<{ select: [] }>();
 const menu = useMenu();
+const itemRef = menu.items.ref(Symbol('menu-item'));
 
 const toggle = (): void => {
   if (disabled) {

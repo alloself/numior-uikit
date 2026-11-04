@@ -1,5 +1,6 @@
 <template>
   <NuiMenu
+    ref="menu"
     lazy
     v-model:open="open"
     :label="insert.label"
@@ -23,6 +24,8 @@
 </template>
 
 <script setup lang="ts">
+import { useTemplateRef } from 'vue';
+import { useToolbarControl } from './toolbar-hints';
 import type { Command } from '@numior/editor-core';
 import { NuiButton, NuiMenu, type NuiMenuEntry } from '@numior/vue';
 import { computed, ref } from 'vue';
@@ -59,4 +62,8 @@ const entries = computed((): NuiMenuEntry[] =>
     },
   })),
 );
+
+const menu = useTemplateRef<InstanceType<typeof NuiMenu>>('menu');
+
+useToolbarControl(() => menu.value?.trigger);
 </script>

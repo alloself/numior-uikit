@@ -91,6 +91,7 @@ export interface NuiMenuProps {
 export type NuiMenuFocus = 'first' | 'last';
 
 export interface NuiMenuExposed {
+  readonly trigger: HTMLElement | null;
   show(focus?: NuiMenuFocus): void;
 }
 

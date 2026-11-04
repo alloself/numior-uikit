@@ -26,7 +26,7 @@
           type="button"
           class="nui-toggle-group__item"
           :class="{ 'nui-toggle-group__item--selected': isSelected(item.value) }"
-          v-bind="{ ...itemAttrs(item), ...attrs }"
+          v-bind="{ ...itemAttrs(item), ...attrs, ref: buttons.ref(keyOf(item.value), attrs.ref) }"
           @click="toggle(item.value)"
         >
           <slot name="item" :item="item" :selected="isSelected(item.value)">
@@ -42,7 +42,7 @@
 
 <script setup lang="ts" generic="T">
 import { computed, onMounted, useTemplateRef } from 'vue';
-import { useListNavigation, type AttrRecord } from '@numior/primitives';
+import { createCollection, useListNavigation, type AttrRecord } from '@numior/primitives';
 import NuiIcon from '../icon/NuiIcon.vue';
 import NuiTooltip from '../tooltip/NuiTooltip.vue';
 import { useOptionSelection } from '../shared/use-option-selection';
@@ -76,19 +76,7 @@ const { keyOf, selectedKeys, choose, clear } = useOptionSelection<T>({
   getKey: () => getKey,
 });
 
-const selectedItem = (): HTMLElement | null => {
-  const found = root.value?.querySelector('.nui-toggle-group__item--selected');
-
-  return found instanceof HTMLElement ? found : null;
-};
-
-const navigation = useListNavigation(root, {
-  selector: '.nui-toggle-group__item',
-  orientation: () => orientation,
-  loop: true,
-  typeahead: false,
-  resting: selectedItem,
-});
+const buttons = createCollection<string>();
 
 const isSelected = (value: T): boolean => selectedKeys.value.has(keyOf(value));
 
@@ -106,6 +94,14 @@ const restingKey = computed(() => {
   }
 
   return first === undefined ? undefined : keyOf(first.value);
+});
+
+const navigation = useListNavigation(root, {
+  items: buttons.elements,
+  orientation: () => orientation,
+  loop: true,
+  typeahead: false,
+  resting: () => (restingKey.value === undefined ? undefined : buttons.get(restingKey.value)),
 });
 
 const itemAttrs = (item: NuiToggleItem<T>): AttrRecord => {

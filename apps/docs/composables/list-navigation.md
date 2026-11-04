@@ -12,13 +12,15 @@ ArrowRight меняются местами.
 
 ## Сигнатура
 
-<SignatureReference :names="['useListNavigation', 'ListNavigationOptions', 'ListNavigation']" />
+<SignatureReference :names="['useListNavigation', 'ListNavigationOptions', 'ListNavigation', 'createCollection', 'ElementCollection']" />
 
 ## Поведение
 
-`selector` выбирает пункты внутри контейнера, например `'[role="option"]'`. `scope` нужен для
-вложенных списков: пункт учитывается, только если ближайший к нему элемент по `scope` — сам
-контейнер. `resting` возвращает пункт, на который попадает Tab, пока активного пункта нет.
+`items` возвращает пункты в порядке на странице. Удобнее всего собрать их через
+`createCollection()`: передайте `collection.ref(key)` в `:ref` каждого пункта, а
+`collection.elements` — в `items`. Выключенные и скрытые пункты пропускаются.
+
+`resting` возвращает пункт, на который попадает Tab, пока активного пункта нет.
 
 Повесьте `onKeydown` и `onFocusin` на контейнер. `setActive`, `focusNext` и другие методы
 переводят активный пункт из кода. На этом композабле работают список, дерево, меню, вкладки и

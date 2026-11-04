@@ -8,6 +8,7 @@
   >
     <component :is="headingTag" class="nui-collapsible__heading">
       <button
+        :ref="registerTrigger"
         type="button"
         class="nui-collapsible__trigger"
         :aria-expanded="open ? 'true' : 'false'"
@@ -38,6 +39,7 @@
 import { computed, ref, watch } from 'vue';
 import { useControlId } from '@numior/primitives';
 import NuiIcon from '../icon/NuiIcon.vue';
+import { provideCollapsibleTrigger, useCollapsibleTrigger } from './collapsible-context';
 import type { NuiCollapsibleProps, NuiCollapsibleTriggerSlot } from './collapsible.types';
 
 const {
@@ -51,6 +53,10 @@ const {
 const open = defineModel<boolean>('open', { default: false });
 
 defineSlots<{ trigger?(props: NuiCollapsibleTriggerSlot): unknown; default?(): unknown }>();
+
+const registerTrigger = useCollapsibleTrigger();
+
+provideCollapsibleTrigger(null);
 
 const baseId = useControlId(() => id);
 const contentId = computed(() => `${baseId.value}-content`);

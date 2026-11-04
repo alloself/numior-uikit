@@ -1,6 +1,7 @@
 <template>
   <button
     type="button"
+    :ref="itemRef"
     role="menuitemradio"
     tabindex="-1"
     class="nui-menu-item"
@@ -34,6 +35,7 @@ const {
 
 const emit = defineEmits<{ select: [] }>();
 const menu = useMenu();
+const itemRef = menu.items.ref(Symbol('menu-item'));
 const radio = useMenuRadio();
 const selected = computed(() => radio.modelValue.value === value);
 

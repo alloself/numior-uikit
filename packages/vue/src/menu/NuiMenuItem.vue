@@ -6,6 +6,7 @@
     :to="to"
     tone="neutral"
     underline="none"
+    :ref="itemRef"
     role="menuitem"
     tabindex="-1"
     class="nui-menu-item"
@@ -22,6 +23,7 @@
   <button
     v-else
     type="button"
+    :ref="itemRef"
     role="menuitem"
     tabindex="-1"
     class="nui-menu-item"
@@ -58,6 +60,7 @@ const emit = defineEmits<{ select: [] }>();
 
 defineSlots<{ default(): unknown; trailing?(): unknown }>();
 const menu = useMenu();
+const itemRef = menu.items.ref(Symbol('menu-item'));
 
 const classes = computed(() => [
   `nui-menu-item--tone-${tone}`,

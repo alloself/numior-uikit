@@ -1,4 +1,5 @@
 import { inject, provide, type ComputedRef, type InjectionKey } from 'vue';
+import type { ElementCollection } from '@numior/primitives';
 import type { NuiSize } from '../shared/scale.types';
 import type { NuiListSelectable, NuiListVariant } from './list.types';
 
@@ -20,8 +21,16 @@ interface ListShellContext<T> {
   isSelected(value: T): boolean;
 }
 
+export type ListItemKey = string | symbol;
+
+export interface ListItems {
+  readonly elements: ElementCollection<ListItemKey>;
+  readonly titles: WeakMap<HTMLElement, () => string>;
+}
+
 export interface ListboxContext<T = unknown> extends ListShellContext<T> {
   readonly kind: 'list';
+  readonly items: ListItems;
   readonly tabStopKey: ComputedRef<string | undefined>;
   select(value: T): void;
 }
@@ -40,3 +49,11 @@ export const provideList = <T>(context: ListContext<T>): void => {
 };
 
 export const useList = (): ListContext | null => inject(LIST_KEY, null);
+
+const LIST_ITEMS_KEY: InjectionKey<ListItems | null> = Symbol('nui:list-items');
+
+export const provideListItems = (items: ListItems | null): void => {
+  provide(LIST_ITEMS_KEY, items);
+};
+
+export const useListItems = (): ListItems | null => inject(LIST_ITEMS_KEY, null);

@@ -76,10 +76,10 @@ describe('useListNavigation', () => {
     list.unmount();
   });
 
-  it('sees items added, disabled or renamed in the same tick', () => {
+  it('sees items added by a render, and disabled or renamed in the same tick', async () => {
     const list = ListHarness.mount();
     list.press('End');
-    list.appendNow('Elderberry');
+    await list.append('Elderberry');
     list.press('ArrowDown');
     expect(list.focusedText).toBe('Elderberry');
     list.disableNow(3);
@@ -93,17 +93,17 @@ describe('useListNavigation', () => {
     list.unmount();
   });
 
-  it('walks and searches without reading the DOM again while the items stay the same', () => {
+  it('walks and searches without indexing the items again while they stay the same', () => {
     const list = ListHarness.mount();
 
-    const queries = list.countQueries(() => {
+    const builds = list.countIndexBuilds(() => {
       list.press('ArrowDown');
       list.press('ArrowDown');
       list.type('c');
       list.press('End');
     });
 
-    expect(queries).toBe(1);
+    expect(builds).toBe(1);
     expect(list.focusedText).toBe('Date');
     list.unmount();
   });
@@ -120,10 +120,10 @@ describe('useListNavigation', () => {
 
   it('adopts a pointer-focused item and starts over when the active one leaves', async () => {
     const list = ListHarness.mount();
-    list.focusItem(3);
-    expect(list.activeText).toBe('Cherry');
-    expect(list.tabIndexes).toEqual([-1, -1, -1, 0, -1]);
-    await list.remove(3);
+    list.focusItem(4);
+    expect(list.activeText).toBe('Date');
+    expect(list.tabIndexes).toEqual([-1, -1, -1, -1, 0]);
+    await list.remove(4);
     expect(list.activeText).toBeUndefined();
     list.press('ArrowDown');
     expect(list.focusedText).toBe('Apple');

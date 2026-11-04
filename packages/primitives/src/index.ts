@@ -210,6 +210,8 @@ export type { Hotkey } from './hotkey/hotkey';
 export { useScrollSpy } from './scroll-spy/useScrollSpy';
 export type { ScrollSpyOptions } from './scroll-spy/useScrollSpy';
 export { useListNavigation } from './list/useListNavigation';
+export { createCollection } from './list/collection';
+export type { ElementCollection, ElementRef } from './list/collection.types';
 export type {
   ListFocusMode,
   ListNavigation,
