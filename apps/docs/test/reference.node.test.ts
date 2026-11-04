@@ -1,10 +1,13 @@
 import { fileURLToPath } from 'node:url';
 import { beforeAll, describe, expect, it } from 'vite-plus/test';
-import { createChecker, type MetaCheckerOptions } from 'vue-component-meta';
 import { catalogReference } from '../.vitepress/reference/catalogs';
 import { parseBlocks, parseTokens } from '../.vitepress/reference/css';
 import { enumerationMembers, exportedDeclarations } from '../.vitepress/reference/declarations';
-import { buildReference } from '../.vitepress/reference/build';
+import {
+  buildReference,
+  createReferenceChecker,
+  type ReferenceChecker,
+} from '../.vitepress/reference/build';
 import { applyDocs, checkDocs, loadDocsDir } from '../.vitepress/reference/docs';
 import { parseIconAliases } from '../.vitepress/reference/icons';
 import { componentReference } from '../.vitepress/reference/meta';
@@ -16,12 +19,6 @@ import type { ComponentReference, ReferenceBundle } from '../.vitepress/referenc
 
 const ROOT = fileURLToPath(new URL('../../..', import.meta.url));
 const VUE_INDEX = `${ROOT}packages/vue/src/index.ts`;
-
-const CHECKER_OPTIONS: MetaCheckerOptions = {
-  forceUseTs: true,
-  printer: { newLine: 1 },
-  schema: { ignore: ['HTMLElement', 'Element'] },
-};
 
 const BUTTON_CSS = `
 .nui-button { --_tone: var(--nui-primary); color: var(--nui-text); }
@@ -60,11 +57,11 @@ const buttonEntry = () => {
 };
 
 describe('docs reference', () => {
-  let checker: ReturnType<typeof createChecker>;
+  let checker: ReferenceChecker;
   let button: ComponentReference;
 
   beforeAll(() => {
-    checker = createChecker(`${ROOT}tsconfig.json`, CHECKER_OPTIONS);
+    checker = createReferenceChecker(ROOT);
     const entry = buttonEntry();
 
     button = componentReference(
@@ -244,7 +241,7 @@ describe('docs reference', () => {
 
   it('builds the whole bundle from the kit sources and the description files', async () => {
     const docs = await loadDocsDir(`${ROOT}apps/docs/api`);
-    const { bundle, problems, undocumented } = await buildReference(ROOT, docs);
+    const { bundle, problems, undocumented } = await buildReference(ROOT, docs, checker);
 
     expect(Object.keys(docs)).toContain('NuiButton');
 

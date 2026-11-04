@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { createChecker } from 'vue-component-meta';
+import { createChecker, type MetaCheckerOptions } from 'vue-component-meta';
 import { catalogReference } from './catalogs.ts';
 import { parseBlocks, parseTokens } from './css.ts';
 import { enumerationMembers, exportedDeclarations } from './declarations.ts';
@@ -18,6 +18,8 @@ import type {
   ReferenceBundle,
   ReferenceStyles,
 } from './reference.types.ts';
+
+export type ReferenceChecker = ReturnType<typeof createChecker>;
 
 export interface ReferenceBuild {
   readonly bundle: ReferenceBundle;
@@ -41,6 +43,15 @@ const PACKAGES = [
 
 const PRIMITIVES = { name: '@numior/primitives', dir: 'packages/primitives' } as const;
 
+const CHECKER_OPTIONS: MetaCheckerOptions = {
+  forceUseTs: true,
+  printer: { newLine: 1 },
+  schema: { ignore: ['HTMLElement', 'Element'] },
+};
+
+export const createReferenceChecker = (root: string): ReferenceChecker =>
+  createChecker(join(root, 'tsconfig.reference.json'), CHECKER_OPTIONS);
+
 const stylesOf = (entry: ComponentEntry): ReferenceStyles | undefined => {
   const file = familyFile(entry, '.css');
   const importPath = familyStyleImport(entry);
@@ -57,7 +68,7 @@ const loadCatalog = async (file: string): Promise<CatalogReference | undefined> 
   catalogReference(await import(pathToFileURL(file).href));
 
 const collectComponent = async (
-  checker: ReturnType<typeof createChecker>,
+  checker: ReferenceChecker,
   entry: ComponentEntry,
   docs: DocsMap,
   members: ReadonlyMap<string, string>,
@@ -96,13 +107,11 @@ const unresolvedDefaults = (component: ComponentReference): string[] =>
 const allEntries = (root: string): ComponentEntry[] =>
   PACKAGES.flatMap((pkg) => componentEntries(join(root, pkg.dir, 'src/index.ts'), pkg.name));
 
-export const buildReference = async (root: string, docs: DocsMap): Promise<ReferenceBuild> => {
-  const checker = createChecker(join(root, 'tsconfig.json'), {
-    forceUseTs: true,
-    printer: { newLine: 1 },
-    schema: { ignore: ['HTMLElement', 'Element'] },
-  });
-
+export const buildReference = async (
+  root: string,
+  docs: DocsMap,
+  checker: ReferenceChecker = createReferenceChecker(root),
+): Promise<ReferenceBuild> => {
   const members = new Map(
     [PRIMITIVES, ...PACKAGES].flatMap((pkg) => [
       ...enumerationMembers(join(root, pkg.dir, 'dist/index.d.ts')),

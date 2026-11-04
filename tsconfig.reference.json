@@ -1,0 +1,19 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "rootDirs": ["."]
+  },
+  "include": [
+    "packages/primitives/src/**/*.ts",
+    "packages/vue/src/**/*.ts",
+    "packages/vue/src/**/*.vue",
+    "packages/forms/src/**/*.ts",
+    "packages/forms/src/**/*.vue",
+    "packages/table/src/**/*.ts",
+    "packages/table/src/**/*.vue",
+    "packages/content/src/**/*.ts",
+    "packages/content/src/**/*.vue",
+    "packages/editor-vue/src/**/*.ts",
+    "packages/editor-vue/src/**/*.vue"
+  ]
+}
