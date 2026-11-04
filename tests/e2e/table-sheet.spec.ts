@@ -25,10 +25,12 @@ const TITLE_HEIGHT = 44;
 const FROZEN_BOTTOM = HEAD_HEIGHT + TITLE_HEIGHT + ROW;
 const BAND_SCROLLS = [97, 333];
 
-const expectSolidHeader = async (playground: PlaygroundPage): Promise<void> => {
+const expectSolidHeader = async (
+  playground: PlaygroundPage,
+  sheet: PlaygroundPage['tableSheet'],
+): Promise<void> => {
   await playground.emulate({ reducedMotion: 'reduce' });
   await playground.open();
-  const { tableSheet: sheet } = playground;
   await sheet.show();
   await sheet.windowSwitch.click();
   await sheet.paintLayers();
@@ -40,11 +42,11 @@ const expectSolidHeader = async (playground: PlaygroundPage): Promise<void> => {
 
 test.describe('table cell styles', () => {
   test('draws grid lines between the columns and keeps the pane edge without them', async ({
+    tableSheet: sheet,
     playground,
   }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
-    const { tableSheet: sheet } = playground;
     await sheet.show();
 
     expect(await sheet.lineAfter(SALES, 1)).toBe('1px');
@@ -56,11 +58,11 @@ test.describe('table cell styles', () => {
   });
 
   test('draws the borders a cell names over the grid and leaves the rows their height', async ({
+    tableSheet: sheet,
     playground,
   }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
-    const { tableSheet: sheet } = playground;
     await sheet.show();
 
     expect(await sheet.topEdge(INCOME_TOTAL, 2)).toEqual({ width: '1px', style: 'solid' });
@@ -79,11 +81,11 @@ test.describe('table cell styles', () => {
   });
 
   test('paints fills and text colours and lays the selection tint over a filled cell', async ({
+    tableSheet: sheet,
     playground,
   }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
-    const { tableSheet: sheet } = playground;
     await sheet.show();
 
     await expect(sheet.cell(RESULT, 1)).toHaveCSS('color', await sheet.tokenColor('--nui-error'));
@@ -101,11 +103,11 @@ test.describe('table cell styles', () => {
   });
 
   test('closes the last column with a line only while the table has spare room', async ({
+    tableSheet: sheet,
     playground,
   }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
-    const { tableSheet: sheet } = playground;
     await sheet.show();
 
     expect(await sheet.hasSpareRoom()).toBe(false);
@@ -122,12 +124,12 @@ test.describe('table cell styles', () => {
   });
 
   test('selects rows, columns and the whole sheet from the headers', async ({
+    tableSheet: sheet,
     playground,
     isMobile,
   }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
-    const { tableSheet: sheet } = playground;
     await sheet.show();
 
     await expect(sheet.rowHeader(SALES)).toHaveText('4');
@@ -160,6 +162,7 @@ test.describe('table cell styles', () => {
   });
 
   test('extends rows from their headers with Shift, a drag and the keyboard', async ({
+    tableSheet: sheet,
     playground,
     page,
     isMobile,
@@ -167,7 +170,6 @@ test.describe('table cell styles', () => {
     test.skip(isMobile, 'mouse and keyboard scenario');
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
-    const { tableSheet: sheet } = playground;
     await sheet.show();
     await sheet.rowHeader(SALES).click();
     await sheet.rowHeader(SALES + 2).click({ modifiers: ['Shift'] });
@@ -215,6 +217,7 @@ test.describe('table cell styles', () => {
   });
 
   test('resizes a row by the edge of its header and counts the height in the scroll', async ({
+    tableSheet: sheet,
     playground,
     page,
     isMobile,
@@ -222,7 +225,6 @@ test.describe('table cell styles', () => {
     test.skip(isMobile, 'mouse and keyboard scenario');
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
-    const { tableSheet: sheet } = playground;
     await sheet.show();
     await sheet.windowSwitch.click();
     await expect(sheet.rowHeader(SALES)).toBeVisible();
@@ -260,16 +262,17 @@ test.describe('table cell styles', () => {
 
   test('keeps scrolled cells from showing over the header at any pixel fraction', async ({
     playground,
+    tableSheet,
   }) => {
-    await expectSolidHeader(playground);
+    await expectSolidHeader(playground, tableSheet);
   });
 
   test('draws a merged range as one cell with its text wrapped in the middle', async ({
+    tableSheet: sheet,
     playground,
   }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
-    const { tableSheet: sheet } = playground;
     await sheet.show();
 
     await expect(sheet.cell(INCOME, 0)).toHaveText('Доходы');
@@ -287,6 +290,7 @@ test.describe('table cell styles', () => {
   });
 
   test('moves the cursor through a merged cell and selects it whole', async ({
+    tableSheet: sheet,
     playground,
     page,
     isMobile,
@@ -294,7 +298,6 @@ test.describe('table cell styles', () => {
     test.skip(isMobile, 'mouse and keyboard scenario');
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
-    const { tableSheet: sheet } = playground;
     await sheet.show();
     await sheet.scrollTo(0, CENTRE_WIDTH);
     await sheet.cell(SALES, LAST_COLUMN - 1).click();
@@ -319,11 +322,11 @@ test.describe('table cell styles', () => {
   });
 
   test('keeps both pieces of a merge split by the pinned column under one cursor', async ({
+    tableSheet: sheet,
     playground,
   }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
-    const { tableSheet: sheet } = playground;
     await sheet.show();
 
     expect(await sheet.fillLayers(INCOME, 0)).toBe(1);
@@ -341,11 +344,11 @@ test.describe('table cell styles', () => {
   });
 
   test('continues a tall merge through the row window without moving its content', async ({
+    tableSheet: sheet,
     playground,
   }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
-    const { tableSheet: sheet } = playground;
     await sheet.show();
     await sheet.longSwitch.click();
     await sheet.windowSwitch.click();
@@ -374,11 +377,11 @@ test.describe('table cell styles', () => {
   });
 
   test('keeps the first rows of the sheet under the header while the rest scroll', async ({
+    tableSheet: sheet,
     playground,
   }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
-    const { tableSheet: sheet } = playground;
     await sheet.show();
     await sheet.longSwitch.click();
     await sheet.windowSwitch.click();
@@ -415,12 +418,12 @@ test.describe('table cell styles', () => {
   });
 
   test('reveals the cursor below the frozen rows and leaves them where they are', async ({
+    tableSheet: sheet,
     playground,
     page,
   }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
-    const { tableSheet: sheet } = playground;
     await sheet.show();
     await sheet.longSwitch.click();
     await sheet.windowSwitch.click();
@@ -459,11 +462,11 @@ test.describe('table cell styles', () => {
   });
 
   test('holds the rendered rows under the frozen ones when the scroll runs ahead of the window', async ({
+    tableSheet: sheet,
     playground,
   }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
-    const { tableSheet: sheet } = playground;
     await sheet.show();
     await sheet.longSwitch.click();
     await sheet.windowSwitch.click();
@@ -481,10 +484,13 @@ test.describe('table cell styles', () => {
     expect(up.firstTop).toBe(up.frozenBottom);
   });
 
-  test('jumps to the edges of the sheet with Ctrl and the arrows', async ({ playground, page }) => {
+  test('jumps to the edges of the sheet with Ctrl and the arrows', async ({
+    tableSheet: sheet,
+    playground,
+    page,
+  }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
-    const { tableSheet: sheet } = playground;
     await sheet.show();
     await sheet.cell(SALES, 1).click();
     await page.keyboard.press('Control+ArrowDown');
@@ -503,11 +509,11 @@ test.describe('table cell styles', () => {
   });
 
   test('draws references over the cells they name and scrolls them under the header', async ({
+    tableSheet: sheet,
     playground,
   }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
-    const { tableSheet: sheet } = playground;
     await sheet.show();
     await sheet.windowSwitch.click();
     await sheet.refsSwitch.click();
@@ -536,11 +542,10 @@ test.describe('table cell styles', () => {
       .toBeLessThanOrEqual(3);
   });
 
-  test('names the cell under the pointer', async ({ playground, isMobile }) => {
+  test('names the cell under the pointer', async ({ tableSheet: sheet, playground, isMobile }) => {
     test.skip(isMobile, 'a hovering pointer');
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
-    const { tableSheet: sheet } = playground;
     await sheet.show();
     await sheet.cell(SALES + 1, 2).hover();
 
@@ -552,6 +557,7 @@ test.describe('table cell styles', () => {
   });
 
   test('mirrors the row headers, the references and the pointer name in RTL', async ({
+    tableSheet: sheet,
     playground,
     isMobile,
   }) => {
@@ -559,7 +565,6 @@ test.describe('table cell styles', () => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
     await playground.setDirection('rtl');
-    const { tableSheet: sheet } = playground;
     await sheet.show();
     await sheet.refsSwitch.click();
     await expect(sheet.references).toHaveCount(2);
@@ -577,11 +582,11 @@ test.describe('table cell styles', () => {
   });
 
   test('a painted sheet has no automatically detectable WCAG AA violations', async ({
+    tableSheet: sheet,
     playground,
   }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
-    const { tableSheet: sheet } = playground;
     await sheet.show();
     await sheet.heatSwitch.click();
     await expect.poll(() => sheet.fillLayers(SALES, 1)).toBe(1);
@@ -597,19 +602,23 @@ for (const ratio of PIXEL_RATIOS) {
   test.describe(`table header at a pixel ratio of ${ratio}`, () => {
     test.use({ deviceScaleFactor: ratio });
 
-    test('keeps scrolled cells from showing over the header', async ({ playground, isMobile }) => {
+    test('keeps scrolled cells from showing over the header', async ({
+      playground,
+      tableSheet,
+      isMobile,
+    }) => {
       test.skip(isMobile, 'pixel ratios of a desktop display');
-      await expectSolidHeader(playground);
+      await expectSolidHeader(playground, tableSheet);
     });
 
     test('keeps scrolled rows from showing between the frozen rows', async ({
+      tableSheet: sheet,
       playground,
       isMobile,
     }) => {
       test.skip(isMobile, 'pixel ratios of a desktop display');
       await playground.emulate({ reducedMotion: 'reduce' });
       await playground.open();
-      const { tableSheet: sheet } = playground;
       await sheet.show();
       await sheet.longSwitch.click();
       await sheet.windowSwitch.click();

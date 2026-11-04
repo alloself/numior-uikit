@@ -132,6 +132,13 @@ const BOXES = {
   message: 'Read element boxes through boxOf or renderedWidth from tests/e2e/helpers/geometry.ts.',
 };
 
+const PAGE_OBJECTS = '/^(playground|docs|app)$/';
+
+const SECTIONS = {
+  selector: `VariableDeclarator[id.type='ObjectPattern']:matches([init.name=${PAGE_OBJECTS}], [init.object.name=${PAGE_OBJECTS}])`,
+  message: 'Take sections and groups as fixtures destructured in the test parameters.',
+};
+
 const TIMERS = {
   selector: "NewExpression[callee.name='Promise'] CallExpression[callee.name='setTimeout']",
   message: 'Wait with promiseTimeout, until or useIdle from @vueuse/core.',
@@ -203,7 +210,7 @@ export default [
   {
     files: ['tests/**/*.ts'],
     ignores: ['tests/e2e/helpers/geometry.ts'],
-    rules: { 'no-restricted-syntax': ['error', ...CODE_SHAPE, BOXES] },
+    rules: { 'no-restricted-syntax': ['error', ...CODE_SHAPE, BOXES, SECTIONS] },
   },
   {
     files: ['tests/**/*.ts', '**/*.test.ts', '**/*.spec.ts'],

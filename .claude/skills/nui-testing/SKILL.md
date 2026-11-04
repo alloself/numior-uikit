@@ -12,7 +12,9 @@ stubs that need `this` use method shorthand), every block braced.
 A test body reads in phases: a blank line after each run of assertions before the next
 action, and around every `if`/`for`/`try` block (ESLint `numior/test-phases` in
 `scripts/eslint/test-phases.mjs`, autofixable). Section and group fixtures are destructured in the
-test parameters (`async ({ playground, buttons: { primary } }) =>`), never in the body.
+test parameters (`async ({ playground, buttons: { primary } }) =>`), never in the body
+(ESLint `no-restricted-syntax` rejects destructuring `playground`, `docs`, `app` or their members); a
+helper of one test reads the section through the fixture (`navigation.stepper`).
 
 ## Unit tests for components (`packages/vue/test`)
 

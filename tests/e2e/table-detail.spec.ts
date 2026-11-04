@@ -5,11 +5,11 @@ const ITEM_KINDS = 6;
 
 test.describe('table detail rows', () => {
   test('opens a detail with a nested table from the chevron and keeps its clicks to itself', async ({
+    tableDetail: detail,
     playground,
   }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
-    const { tableDetail: detail } = playground;
     await detail.root.scrollIntoViewIfNeeded();
 
     await expect(detail.grid).toHaveRole('treegrid');
@@ -38,11 +38,11 @@ test.describe('table detail rows', () => {
   });
 
   test('counts the measured detail in the scroll height of the row window', async ({
+    tableDetail: detail,
     playground,
   }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
-    const { tableDetail: detail } = playground;
     await detail.root.scrollIntoViewIfNeeded();
     const closed = await detail.scrollHeight();
 
@@ -64,11 +64,11 @@ test.describe('table detail rows', () => {
   });
 
   test('keeps the row under the header in place while details above it are measured', async ({
+    tableDetail: detail,
     playground,
   }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
-    const { tableDetail: detail } = playground;
     await detail.root.scrollIntoViewIfNeeded();
 
     await detail.scrollTo(40_000);
@@ -82,6 +82,7 @@ test.describe('table detail rows', () => {
   });
 
   test('walks into the detail and its nested table from the keyboard and back', async ({
+    tableDetail: detail,
     playground,
     page,
     isMobile,
@@ -89,7 +90,6 @@ test.describe('table detail rows', () => {
     test.skip(isMobile, 'keyboard scenario');
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
-    const { tableDetail: detail } = playground;
     await detail.root.scrollIntoViewIfNeeded();
 
     await detail.cell(1, 0).focus();
@@ -117,13 +117,13 @@ test.describe('table detail rows', () => {
   });
 
   test('keeps the detail inside the visible width while the table scrolls sideways', async ({
+    tableDetail: detail,
     playground,
     isMobile,
   }) => {
     test.skip(!isMobile, 'the columns overflow on a phone');
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
-    const { tableDetail: detail } = playground;
     await detail.root.scrollIntoViewIfNeeded();
 
     await detail.toggle(1).tap();
@@ -144,10 +144,12 @@ test.describe('table detail rows', () => {
     expect(await playground.hasHorizontalOverflow()).toBe(false);
   });
 
-  test('shows details in a paged table without a row window', async ({ playground }) => {
+  test('shows details in a paged table without a row window', async ({
+    tableDetail: detail,
+    playground,
+  }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
-    const { tableDetail: detail } = playground;
     await detail.root.scrollIntoViewIfNeeded();
 
     await detail.windowSwitch.click();
@@ -162,12 +164,12 @@ test.describe('table detail rows', () => {
   });
 
   test('sizes the rows of a window by their content and keeps the row under the header in place', async ({
+    tableDetail: detail,
     playground,
     page,
   }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
-    const { tableDetail: detail } = playground;
     await detail.root.scrollIntoViewIfNeeded();
     const plain = await boxOf(detail.row(1));
 
@@ -205,10 +207,12 @@ test.describe('table detail rows', () => {
       .toBeLessThanOrEqual(1);
   });
 
-  test('keeps a row among measured rows in place when its detail opens', async ({ playground }) => {
+  test('keeps a row among measured rows in place when its detail opens', async ({
+    tableDetail: detail,
+    playground,
+  }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
-    const { tableDetail: detail } = playground;
     await detail.root.scrollIntoViewIfNeeded();
     await detail.fluidSwitch.click();
     await detail.scrollTo(30_000);
@@ -237,6 +241,7 @@ test.describe('table detail rows', () => {
   });
 
   test('keeps the focused cell in view while the arrows walk rows of different heights', async ({
+    tableDetail: detail,
     playground,
     page,
     isMobile,
@@ -244,7 +249,6 @@ test.describe('table detail rows', () => {
     test.skip(isMobile, 'keyboard scenario');
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
-    const { tableDetail: detail } = playground;
     await detail.root.scrollIntoViewIfNeeded();
     await detail.fluidSwitch.click();
     await detail.cell(0, 1).click();
@@ -262,12 +266,12 @@ test.describe('table detail rows', () => {
   });
 
   test('open details have no automatically detectable WCAG AA violations', async ({
+    tableDetail: detail,
     playground,
     tableDetail,
   }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
-    const { tableDetail: detail } = playground;
     await detail.root.scrollIntoViewIfNeeded();
     await detail.openFirst.click();
     await expect(detail.panel(1)).toBeVisible();

@@ -21,12 +21,12 @@ const BLOCK: readonly (readonly [row: number, col: number])[] = [
 
 test.describe('table cell source', () => {
   test('shows a million rows and sixteen thousand columns as a sheet', async ({
+    tableCells: cells,
     playground,
     page,
   }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
-    const { tableCells: cells } = playground;
     await cells.show();
 
     await expect(cells.grid).toHaveAttribute('aria-rowcount', String(SHEET_ROWS + 1));
@@ -44,10 +44,13 @@ test.describe('table cell source', () => {
     await expect.poll(() => cells.spot()).toEqual({ row: '1', col: 'A' });
   });
 
-  test('jumps to the edges of the data with Ctrl and the arrows', async ({ playground, page }) => {
+  test('jumps to the edges of the data with Ctrl and the arrows', async ({
+    tableCells: cells,
+    playground,
+    page,
+  }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
-    const { tableCells: cells } = playground;
     await cells.show();
     await cells.cell(1, 1).click();
     await page.keyboard.press('Control+ArrowDown');
@@ -79,12 +82,12 @@ test.describe('table cell source', () => {
   });
 
   test('edits the active cell from the formula bar and shows the draft in the cell', async ({
+    tableCells: cells,
     playground,
     page,
   }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
-    const { tableCells: cells } = playground;
     await cells.show();
     await cells.cell(1, 1).click();
 
@@ -104,12 +107,12 @@ test.describe('table cell source', () => {
   });
 
   test('cancels a formula bar edit with Escape and fills a selection with Ctrl+Enter', async ({
+    tableCells: cells,
     playground,
     page,
   }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
-    const { tableCells: cells } = playground;
     await cells.show();
     await cells.cell(2, 2).click();
     await cells.formula.click();
@@ -130,12 +133,12 @@ test.describe('table cell source', () => {
   });
 
   test('picks references into a formula with the pointer and draws them over the cells', async ({
+    tableCells: cells,
     playground,
     page,
   }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
-    const { tableCells: cells } = playground;
     await cells.show();
     await cells.cell(1, 1).click();
     await cells.formula.click();
@@ -160,12 +163,12 @@ test.describe('table cell source', () => {
   });
 
   test('picks references with the arrows in the cell editor and starts again after an operator', async ({
+    tableCells: cells,
     playground,
     page,
   }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
-    const { tableCells: cells } = playground;
     await cells.show();
     await cells.cell(5, 2).click();
     await page.keyboard.type('=');
@@ -188,11 +191,15 @@ test.describe('table cell source', () => {
     await expect(cells.cell(5, 2)).toHaveText(C6);
   });
 
-  test('picks a reference with a tap on a phone', async ({ playground, page, isMobile }) => {
+  test('picks a reference with a tap on a phone', async ({
+    tableCells: cells,
+    playground,
+    page,
+    isMobile,
+  }) => {
     test.skip(!isMobile, 'touch only');
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
-    const { tableCells: cells } = playground;
     await cells.show();
     await cells.cell(1, 1).tap();
     await cells.formula.tap();
@@ -207,13 +214,13 @@ test.describe('table cell source', () => {
   });
 
   test('copies and pastes semicolon separated lines through the clipboard hooks', async ({
+    tableCells: cells,
     playground,
     page,
   }) => {
     await stubClipboard(page);
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
-    const { tableCells: cells } = playground;
     await cells.show();
     await cells.cell(1, 1).click();
     await cells.cell(2, 2).click({ modifiers: ['Shift'] });
@@ -229,12 +236,12 @@ test.describe('table cell source', () => {
   });
 
   test('undoes and redoes sheet edits through the history of the app', async ({
+    tableCells: cells,
     playground,
     page,
   }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
-    const { tableCells: cells } = playground;
     await cells.show();
     await cells.cell(1, 1).click();
     await page.keyboard.type('5');
@@ -250,11 +257,11 @@ test.describe('table cell source', () => {
   });
 
   test('redraws recalculated cells when the app invalidates their range', async ({
+    tableCells: cells,
     playground,
   }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
-    const { tableCells: cells } = playground;
     await cells.show();
     await cells.recalc.click();
 
@@ -267,6 +274,7 @@ test.describe('table cell source', () => {
   });
 
   test('mirrors the sheet in RTL: arrows follow the reading direction and boxes cover their cells', async ({
+    tableCells: cells,
     playground,
     page,
     isMobile,
@@ -275,7 +283,6 @@ test.describe('table cell source', () => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
     await playground.setDirection('rtl');
-    const { tableCells: cells } = playground;
     await cells.show();
 
     expect((await boxOf(cells.rowHeader(1))).x).toBeGreaterThan((await boxOf(cells.cell(1, 0))).x);
@@ -301,12 +308,12 @@ test.describe('table cell source', () => {
   });
 
   test('lets the note under the ledger flow over the empty cells and leaves them to the pointer', async ({
+    tableCells: cells,
     playground,
     page,
   }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
-    const { tableCells: cells } = playground;
     await cells.show();
     await cells.cell(1, 0).click();
     await page.keyboard.press('Control+ArrowDown');
@@ -328,6 +335,7 @@ test.describe('table cell source', () => {
   });
 
   test('starts the flowing note at its own cell in either direction', async ({
+    tableCells: cells,
     playground,
     page,
     isMobile,
@@ -335,7 +343,6 @@ test.describe('table cell source', () => {
     test.skip(isMobile, 'keyboard scenario');
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
-    const { tableCells: cells } = playground;
     await cells.show();
     await cells.cell(1, 0).click();
     await page.keyboard.press('Control+ArrowDown');
@@ -353,11 +360,11 @@ test.describe('table cell source', () => {
   });
 
   test('a sheet from a cell source has no automatically detectable WCAG AA violations', async ({
+    tableCells: cells,
     playground,
   }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
-    const { tableCells: cells } = playground;
     await cells.show();
     await expect(cells.cell(0, 0)).toHaveText('Показатель A');
 
