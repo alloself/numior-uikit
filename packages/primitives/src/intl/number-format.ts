@@ -1,5 +1,6 @@
 import { graphemesOf } from './graphemes';
 import { decimalPlaces } from './number-step';
+import { NumberStyle } from './intl.types';
 
 export interface NumberSymbols {
   readonly decimal: string;
@@ -9,6 +10,7 @@ export interface NumberSymbols {
   readonly literals: string;
 }
 
+const ASCII_DECIMAL = '.';
 const formatters = new Map<string, Intl.NumberFormat>();
 const BIDI_MARKS = /[؜‎‏‪-‮]/g;
 const LITERAL_PARTS = new Set(['currency', 'percentSign', 'literal', 'unit', 'plusSign']);
@@ -91,8 +93,11 @@ const asciiDigits = (text: string, symbols: NumberSymbols): string => {
     const digit = symbols.digits.indexOf(char);
     if (digit >= 0) {
       ascii += String(digit);
-    } else if (char === symbols.decimal || (char === '.' && symbols.group !== '.')) {
-      ascii += '.';
+    } else if (
+      char === symbols.decimal ||
+      (char === ASCII_DECIMAL && symbols.group !== ASCII_DECIMAL)
+    ) {
+      ascii += ASCII_DECIMAL;
     } else if (char >= '0' && char <= '9') {
       ascii += char;
     }
@@ -111,7 +116,11 @@ export const parseNumber = (
   const symbols = numberSymbols(locale, options);
   const cleaned = text.replace(BIDI_MARKS, '').trim();
   const ascii = asciiDigits(cleaned, symbols);
-  if (ascii === '' || ascii === '.' || ascii.indexOf('.') !== ascii.lastIndexOf('.')) {
+  if (
+    ascii === '' ||
+    ascii === ASCII_DECIMAL ||
+    ascii.indexOf(ASCII_DECIMAL) !== ascii.lastIndexOf(ASCII_DECIMAL)
+  ) {
     return null;
   }
   const magnitude = Number(ascii);
@@ -120,7 +129,7 @@ export const parseNumber = (
   }
   const signed = isNegative(cleaned, symbols) ? -magnitude : magnitude;
   const resolved = formatterFor(locale, options).resolvedOptions();
-  if (resolved.style === 'percent') {
+  if (resolved.style === NumberStyle.Percent) {
     return roundTo(signed / 100, (resolved.maximumFractionDigits ?? 0) + 2);
   }
   return signed;
@@ -145,7 +154,8 @@ export const withStepPrecision = (
 ): Intl.NumberFormatOptions => {
   const explicit =
     options !== undefined &&
-    (PRECISION_KEYS.some((key) => options[key] !== undefined) || options.style === 'currency');
+    (PRECISION_KEYS.some((key) => options[key] !== undefined) ||
+      options.style === NumberStyle.Currency);
 
   if (explicit) {
     return options;

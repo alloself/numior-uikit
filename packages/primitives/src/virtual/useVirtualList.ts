@@ -23,17 +23,15 @@ import {
   totalSizeOf,
   type ItemSize,
   type SizeModel,
-  type VirtualAlign,
   type VirtualRange,
 } from './offsets';
 import type { SizeIndex, VirtualSize } from './size-index';
 import { assignSlots, type SlotMap } from './slots';
+import { SizeModelKind, VirtualAlign, VirtualAxis } from './virtual.types';
 
 export type { VirtualFrame } from './frame';
-export type { ItemSize, VirtualAlign, VirtualRange } from './offsets';
+export type { ItemSize, VirtualRange } from './offsets';
 export type { VirtualSize } from './size-index';
-
-export type VirtualAxis = 'y' | 'x';
 
 export interface VirtualListOptions {
   readonly count: MaybeRefOrGetter<number>;
@@ -98,7 +96,7 @@ const slotsOf = (items: readonly VirtualItem[] = []): SlotMap =>
   new Map(items.map((item) => [item.index, item.slot]));
 
 const indexOf = (model: SizeModel): SizeIndex | undefined =>
-  model.kind === 'indexed' ? model.index : undefined;
+  model.kind === SizeModelKind.Indexed ? model.index : undefined;
 
 export const useVirtualList = (
   container: MaybeRefOrGetter<HTMLElement | null | undefined>,
@@ -109,7 +107,7 @@ export const useVirtualList = (
   const direction = useDirection(container);
   const model = computed(() => buildSizeModel(toValue(options.count), toValue(options.itemSize)));
   const enabled = (): boolean => toValue(options.enabled) ?? true;
-  const axis = (): VirtualAxis => toValue(options.axis) ?? 'y';
+  const axis = (): VirtualAxis => toValue(options.axis) ?? VirtualAxis.Y;
   const totalSize = computed(() => totalSizeOf(model.value));
   const span = computed(() => Math.max(0, viewport.value - (toValue(options.inset) ?? 0)));
 
@@ -190,10 +188,10 @@ export const useVirtualList = (
   });
 
   const readScroll = (element: HTMLElement): number =>
-    axis() === 'x' ? Math.abs(element.scrollLeft) : element.scrollTop;
+    axis() === VirtualAxis.X ? Math.abs(element.scrollLeft) : element.scrollTop;
 
   const writeScroll = (element: HTMLElement, value: number): void => {
-    if (axis() === 'x') {
+    if (axis() === VirtualAxis.X) {
       element.scrollLeft = direction.isRtl() ? -value : value;
     } else {
       element.scrollTop = value;
@@ -204,12 +202,15 @@ export const useVirtualList = (
     const element = toValue(container);
 
     if (element) {
-      viewport.value = axis() === 'x' ? element.clientWidth : element.clientHeight;
+      viewport.value = axis() === VirtualAxis.X ? element.clientWidth : element.clientHeight;
       physical.value = readScroll(element);
     }
   };
 
-  const scrollTo = (index: number, { align = 'auto' }: VirtualScrollOptions = {}): void => {
+  const scrollTo = (
+    index: number,
+    { align = VirtualAlign.Auto }: VirtualScrollOptions = {},
+  ): void => {
     const element = toValue(container);
 
     if (!element || index < frozen.value) {

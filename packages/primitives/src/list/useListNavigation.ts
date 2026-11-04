@@ -9,7 +9,10 @@ import {
   type Ref,
 } from 'vue';
 import { useDirection } from '../direction/direction-context';
-import { listMoveFor, listTargetIndex, type ListMove, type ListOrientation } from './moves';
+import { AriaValue } from '../aria/aria.types';
+import { Key } from '../keyboard/key.types';
+import { ListFocusMode, ListMove, ListOrientation } from './list.types';
+import { listMoveFor, listTargetIndex } from './moves';
 import {
   emptyTypeahead,
   extendTypeahead,
@@ -18,9 +21,6 @@ import {
   matchTypeahead,
   type TypeaheadState,
 } from './typeahead';
-
-export type { ListOrientation } from './moves';
-export type ListFocusMode = 'roving' | 'virtual';
 
 export interface ListNavigationOptions {
   readonly items: () => readonly HTMLElement[];
@@ -89,7 +89,7 @@ const EMPTY_INDEX: ItemIndex = {
 };
 
 const isUsable = (element: HTMLElement): boolean =>
-  element.getAttribute('aria-disabled') !== 'true' &&
+  element.getAttribute('aria-disabled') !== AriaValue.True &&
   !element.hasAttribute('disabled') &&
   !element.hidden;
 
@@ -238,7 +238,9 @@ export const useListNavigation = (
   const direction = useDirection(container);
   const held: { node: HTMLElement | null } = { node: null };
   const watch: ItemWatch = { root: null, observer: null, index: null };
-  const roving = (): boolean => (toValue(options.mode) ?? 'roving') === 'roving';
+
+  const roving = (): boolean =>
+    (toValue(options.mode) ?? ListFocusMode.Roving) === ListFocusMode.Roving;
 
   const itemIndex = (): ItemIndex => {
     const root = toValue(container);
@@ -335,14 +337,14 @@ export const useListNavigation = (
   const typing = (event: KeyboardEvent): boolean =>
     (toValue(options.typeahead) ?? true) &&
     isPrintable(event) &&
-    (event.key !== ' ' || isTypeaheadActive(typeahead.value, Date.now()));
+    (event.key !== Key.Space || isTypeaheadActive(typeahead.value, Date.now()));
 
   const onKeydown = (event: KeyboardEvent): void => {
     if (!toValue(container) || event.defaultPrevented) {
       return;
     }
 
-    const orientation = toValue(options.orientation) ?? 'vertical';
+    const orientation = toValue(options.orientation) ?? ListOrientation.Vertical;
     const rtl = toValue(options.rtl) ?? direction.isRtl();
     const kind = listMoveFor(event.key, orientation, rtl);
 
@@ -379,10 +381,10 @@ export const useListNavigation = (
     activeElement,
     setActive,
     reveal,
-    focusFirst: () => move('first'),
-    focusLast: () => move('last'),
-    focusNext: () => move('next'),
-    focusPrev: () => move('prev'),
+    focusFirst: () => move(ListMove.First),
+    focusLast: () => move(ListMove.Last),
+    focusNext: () => move(ListMove.Next),
+    focusPrev: () => move(ListMove.Prev),
     matchTypeahead: match,
     reset,
     onKeydown,

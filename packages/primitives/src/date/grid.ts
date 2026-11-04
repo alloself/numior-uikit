@@ -1,5 +1,7 @@
 import { clamp } from '@vueuse/core';
 import { addDays, addMonths, addYears, differenceInDays, firstOfMonth } from './arithmetic';
+import { Key } from '../keyboard/key.types';
+import { CellMove, GridMove } from './date.types';
 import { endOfWeek, isoWeekOf, startOfWeek, weekdayOf, type Weekday } from './week';
 
 export interface MonthGridOptions {
@@ -8,44 +10,22 @@ export interface MonthGridOptions {
   readonly fixedWeeks: boolean;
 }
 
-export type GridMove =
-  | 'prev-day'
-  | 'next-day'
-  | 'prev-week'
-  | 'next-week'
-  | 'week-start'
-  | 'week-end'
-  | 'prev-month'
-  | 'next-month'
-  | 'prev-year'
-  | 'next-year';
-
-export type CellMove =
-  | 'prev'
-  | 'next'
-  | 'up'
-  | 'down'
-  | 'first'
-  | 'last'
-  | 'page-prev'
-  | 'page-next';
-
 const FIXED_ROWS = 6;
 
 const GRID_KEYS: Record<string, GridMove> = {
-  ArrowUp: 'prev-week',
-  ArrowDown: 'next-week',
-  Home: 'week-start',
-  End: 'week-end',
+  [Key.ArrowUp]: GridMove.PrevWeek,
+  [Key.ArrowDown]: GridMove.NextWeek,
+  [Key.Home]: GridMove.WeekStart,
+  [Key.End]: GridMove.WeekEnd,
 };
 
 const CELL_KEYS: Record<string, CellMove> = {
-  ArrowUp: 'up',
-  ArrowDown: 'down',
-  Home: 'first',
-  End: 'last',
-  PageUp: 'page-prev',
-  PageDown: 'page-next',
+  [Key.ArrowUp]: CellMove.Up,
+  [Key.ArrowDown]: CellMove.Down,
+  [Key.Home]: CellMove.First,
+  [Key.End]: CellMove.Last,
+  [Key.PageUp]: CellMove.PagePrev,
+  [Key.PageDown]: CellMove.PageNext,
 };
 
 export const monthGrid = ({ month, weekStart, fixedWeeks }: MonthGridOptions): string[][] => {
@@ -68,40 +48,40 @@ export const weekNumberOfRow = (row: readonly string[]): number => {
 };
 
 export const gridMoveFor = (key: string, shift: boolean, rtl: boolean): GridMove | undefined => {
-  if (key === 'ArrowLeft' || key === 'ArrowRight') {
-    return (key === 'ArrowLeft') !== rtl ? 'prev-day' : 'next-day';
+  if (key === Key.ArrowLeft || key === Key.ArrowRight) {
+    return (key === Key.ArrowLeft) !== rtl ? GridMove.PrevDay : GridMove.NextDay;
   }
 
-  if (key === 'PageUp') {
-    return shift ? 'prev-year' : 'prev-month';
+  if (key === Key.PageUp) {
+    return shift ? GridMove.PrevYear : GridMove.PrevMonth;
   }
 
-  if (key === 'PageDown') {
-    return shift ? 'next-year' : 'next-month';
+  if (key === Key.PageDown) {
+    return shift ? GridMove.NextYear : GridMove.NextMonth;
   }
 
   return GRID_KEYS[key];
 };
 
 const GRID_TARGETS: Record<GridMove, (date: string, weekStart: Weekday) => string> = {
-  'prev-day': (date) => addDays(date, -1),
-  'next-day': (date) => addDays(date, 1),
-  'prev-week': (date) => addDays(date, -7),
-  'next-week': (date) => addDays(date, 7),
-  'week-start': (date, weekStart) => startOfWeek(date, weekStart),
-  'week-end': (date, weekStart) => endOfWeek(date, weekStart),
-  'prev-month': (date) => addMonths(date, -1),
-  'next-month': (date) => addMonths(date, 1),
-  'prev-year': (date) => addYears(date, -1),
-  'next-year': (date) => addYears(date, 1),
+  [GridMove.PrevDay]: (date) => addDays(date, -1),
+  [GridMove.NextDay]: (date) => addDays(date, 1),
+  [GridMove.PrevWeek]: (date) => addDays(date, -7),
+  [GridMove.NextWeek]: (date) => addDays(date, 7),
+  [GridMove.WeekStart]: (date, weekStart) => startOfWeek(date, weekStart),
+  [GridMove.WeekEnd]: (date, weekStart) => endOfWeek(date, weekStart),
+  [GridMove.PrevMonth]: (date) => addMonths(date, -1),
+  [GridMove.NextMonth]: (date) => addMonths(date, 1),
+  [GridMove.PrevYear]: (date) => addYears(date, -1),
+  [GridMove.NextYear]: (date) => addYears(date, 1),
 };
 
 export const gridTargetDate = (move: GridMove, date: string, weekStart: Weekday): string =>
   GRID_TARGETS[move](date, weekStart);
 
 export const cellMoveFor = (key: string, rtl: boolean): CellMove | undefined => {
-  if (key === 'ArrowLeft' || key === 'ArrowRight') {
-    return (key === 'ArrowLeft') !== rtl ? 'prev' : 'next';
+  if (key === Key.ArrowLeft || key === Key.ArrowRight) {
+    return (key === Key.ArrowLeft) !== rtl ? CellMove.Prev : CellMove.Next;
   }
 
   return CELL_KEYS[key];
@@ -116,14 +96,14 @@ export const cellTargetIndex = (
   const last = length - 1;
 
   const targets: Record<CellMove, number> = {
-    prev: index - 1,
-    next: index + 1,
-    up: index - columns,
-    down: index + columns,
-    first: 0,
-    last,
-    'page-prev': 0,
-    'page-next': last,
+    [CellMove.Prev]: index - 1,
+    [CellMove.Next]: index + 1,
+    [CellMove.Up]: index - columns,
+    [CellMove.Down]: index + columns,
+    [CellMove.First]: 0,
+    [CellMove.Last]: last,
+    [CellMove.PagePrev]: 0,
+    [CellMove.PageNext]: last,
   };
 
   return clamp(targets[move], 0, last);

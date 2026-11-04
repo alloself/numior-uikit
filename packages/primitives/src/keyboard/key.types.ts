@@ -1,0 +1,22 @@
+export type Key = (typeof Key)[keyof typeof Key];
+
+export const Key = {
+  Enter: 'Enter',
+  Space: ' ',
+  Escape: 'Escape',
+  Tab: 'Tab',
+  Backspace: 'Backspace',
+  Delete: 'Delete',
+  ArrowUp: 'ArrowUp',
+  ArrowDown: 'ArrowDown',
+  ArrowLeft: 'ArrowLeft',
+  ArrowRight: 'ArrowRight',
+  Home: 'Home',
+  End: 'End',
+  PageUp: 'PageUp',
+  PageDown: 'PageDown',
+  F2: 'F2',
+  F10: 'F10',
+  ContextMenu: 'ContextMenu',
+  Process: 'Process',
+} as const;

@@ -10,12 +10,9 @@ import {
   type MiddlewareData,
 } from '@floating-ui/dom';
 import { onMounted, toValue, watch, type MaybeRefOrGetter } from 'vue';
-
-export type FloatingSide = 'top' | 'bottom' | 'left' | 'right';
+import { FloatingSide, FloatingStrategy } from './floating.types';
 
 export type FloatingPlacement = FloatingSide | `${FloatingSide}-start` | `${FloatingSide}-end`;
-
-export type FloatingStrategy = 'fixed' | 'absolute';
 
 export interface FloatingSize {
   readonly matchWidth?: boolean | undefined;
@@ -43,22 +40,27 @@ interface SideVector {
 }
 
 const SIDE_VECTORS: Record<FloatingSide, SideVector> = {
-  top: { x: 0, y: -1 },
-  bottom: { x: 0, y: 1 },
-  left: { x: -1, y: 0 },
-  right: { x: 1, y: 0 },
+  [FloatingSide.Top]: { x: 0, y: -1 },
+  [FloatingSide.Bottom]: { x: 0, y: 1 },
+  [FloatingSide.Left]: { x: -1, y: 0 },
+  [FloatingSide.Right]: { x: 1, y: 0 },
 };
 
 const STATIC_SIDES: Record<FloatingSide, FloatingSide> = {
-  top: 'bottom',
-  bottom: 'top',
-  left: 'right',
-  right: 'left',
+  [FloatingSide.Top]: FloatingSide.Bottom,
+  [FloatingSide.Bottom]: FloatingSide.Top,
+  [FloatingSide.Left]: FloatingSide.Right,
+  [FloatingSide.Right]: FloatingSide.Left,
 };
+
+const SIDES: ReadonlySet<string> = new Set(Object.values(FloatingSide));
+
+const isSide = (value: string | undefined): value is FloatingSide =>
+  value !== undefined && SIDES.has(value);
 
 const sideOf = (placement: FloatingPlacement): FloatingSide => {
   const [side] = placement.split('-');
-  return side === 'top' || side === 'left' || side === 'right' ? side : 'bottom';
+  return isSide(side) ? side : FloatingSide.Bottom;
 };
 
 const roundToPixel = (value: number): number => {
@@ -130,7 +132,7 @@ const applyArrow = (
   side: FloatingSide,
   data: MiddlewareData['arrow'] | undefined,
 ): void => {
-  const vertical = side === 'top' || side === 'bottom';
+  const vertical = SIDE_VECTORS[side].y !== 0;
   const half = (vertical ? arrow.offsetHeight : arrow.offsetWidth) / 2;
 
   arrow.style.left = data?.x === undefined ? '' : `${roundToPixel(data.x)}px`;
@@ -145,8 +147,8 @@ export const useFloating = (
   floating: MaybeRefOrGetter<HTMLElement | null | undefined>,
   options: FloatingOptions = {},
 ): void => {
-  const strategy = options.strategy ?? 'fixed';
-  const requested = (): FloatingPlacement => toValue(options.placement) ?? 'bottom';
+  const strategy = options.strategy ?? FloatingStrategy.Fixed;
+  const requested = (): FloatingPlacement => toValue(options.placement) ?? FloatingSide.Bottom;
 
   const elements = (): Elements | null => {
     const referenceElement = toValue(reference);

@@ -5,7 +5,8 @@ import {
   useColorScheme,
   type ColorSchemeOptions,
 } from '../color-scheme/useColorScheme';
-import { DIRECTION_KEY, provideDirection, type Direction } from '../direction/direction-context';
+import { DIRECTION_KEY, provideDirection } from '../direction/direction-context';
+import type { Direction } from '../direction/direction.types';
 import { ICONS_KEY, provideIcons, type IconRegistry } from '../icons/icon-registry';
 import { LINK_KEY, provideLink, type NuiLinkComponent } from '../link/link-context';
 import { DEFAULT_LOCALE, LOCALE_KEY, provideLocale } from '../locale/locale-context';

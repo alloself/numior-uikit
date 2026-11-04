@@ -1,4 +1,5 @@
 export { useControlId } from './id/useControlId';
+export { Key } from './keyboard/key.types';
 export {
   FIELD_KEY,
   createFieldContext,
@@ -9,11 +10,11 @@ export type { FieldContext, FieldOptions } from './field/field-context';
 export { provideDraftCommits } from './field/draft-commits';
 export type { DraftCommits } from './field/draft-commits';
 export { useFieldControl } from './field/useFieldControl';
+export { FieldReadonlyAttr } from './field/field.types';
 export type {
   FieldControl,
   FieldControlAttrs,
   FieldControlOptions,
-  FieldReadonlyAttr,
   FieldControlProps,
   FieldFrame,
 } from './field/useFieldControl';
@@ -38,7 +39,8 @@ export type {
   NuiMessageParams,
   NuiTranslate,
 } from './messages/messages';
-export type { Direction, DirectionControl } from './direction/direction-context';
+export type { DirectionControl } from './direction/direction-context';
+export { Direction } from './direction/direction.types';
 export { applyMask, maskCaret } from './mask/mask';
 export {
   normalizeOtp,
@@ -49,7 +51,8 @@ export {
   selectOtpSlot,
   settleOtpCaret,
 } from './otp/otp';
-export type { OtpCharset, OtpDirection, OtpEdit, OtpSelection } from './otp/otp';
+export type { OtpEdit, OtpSelection } from './otp/otp';
+export { OtpCharset, OtpDirection } from './otp/otp.types';
 export { useWebOtp } from './otp/useWebOtp';
 export type { WebOtpControl, WebOtpOptions } from './otp/useWebOtp';
 export {
@@ -85,7 +88,8 @@ export {
   monthGrid,
   weekNumberOfRow,
 } from './date/grid';
-export type { CellMove, GridMove, MonthGridOptions } from './date/grid';
+export type { MonthGridOptions } from './date/grid';
+export { CellMove, DateField, DateMaskField, DateMaskPartKind, GridMove } from './date/date.types';
 export {
   formatDateLabel,
   formatDayNumber,
@@ -99,7 +103,7 @@ export type { MonthWidth, WeekdayWidth } from './date/locale';
 export { datePatternOf, formatDateText, parseDateText } from './date/text';
 export type { DateTextPart } from './date/text';
 export { dateMaskOf, maskDateText, typeIntoDateText } from './date/mask';
-export type { DateMaskField, DateMaskPart, MaskedDateText } from './date/mask';
+export type { DateMaskPart, MaskedDateText } from './date/mask';
 export { joinDateTime, splitDateTime } from './date/datetime';
 export type { DateTimeParts } from './date/datetime';
 export type { MaskResult } from './mask/mask';
@@ -138,14 +142,19 @@ export {
 export type {
   DigitEntry,
   DigitResult,
-  HourCycle,
   SegmentBounds,
   TimeDraft,
   TimeLayout,
   TimeLayoutOptions,
   TimeSegment,
-  TimeSegmentType,
 } from './intl/time-segments';
+export {
+  DateTimePart,
+  DayPeriod,
+  HourCycle,
+  NumberStyle,
+  TimeSegmentType,
+} from './intl/intl.types';
 export { formatFileSize } from './intl/file-size';
 export { validateFiles } from './upload/validate-files';
 export type { ValidateFilesOptions, ValidatedFiles } from './upload/validate-files';
@@ -161,28 +170,22 @@ export type {
   UploadError,
   UploadFile,
   UploadItem,
-  UploadReason,
   UploadState,
-  UploadStatus,
 } from './upload/upload.types';
+export { UploadReason, UploadStatus } from './upload/upload.types';
 export { useSplitAttrs } from './attrs/useSplitAttrs';
 export type { AttrRecord, SplitAttrs } from './attrs/useSplitAttrs';
 export { useFloating } from './floating/useFloating';
-export type {
-  FloatingOptions,
-  FloatingPlacement,
-  FloatingSide,
-  FloatingSize,
-  FloatingStrategy,
-} from './floating/useFloating';
+export type { FloatingOptions, FloatingPlacement, FloatingSize } from './floating/useFloating';
+export { FloatingSide, FloatingStrategy } from './floating/floating.types';
 export { usePopover } from './popover/usePopover';
 export type {
   PopoverContentAttrs,
   PopoverControl,
   PopoverInvokerAttrs,
-  PopoverMode,
   PopoverOptions,
 } from './popover/usePopover';
+export { PopoverMode, PopoverState } from './popover/popover.types';
 export { useDialog } from './dialog/useDialog';
 export type { DialogAttrs, DialogControl, DialogOptions } from './dialog/useDialog';
 export {
@@ -191,12 +194,9 @@ export {
   createColorSchemeControl,
   useColorScheme,
 } from './color-scheme/useColorScheme';
-export type {
-  ColorScheme,
-  ColorSchemeControl,
-  ColorSchemeOptions,
-  ResolvedColorScheme,
-} from './color-scheme/useColorScheme';
+export type { ColorSchemeControl, ColorSchemeOptions } from './color-scheme/useColorScheme';
+export { ColorScheme } from './color-scheme/color-scheme.types';
+export type { ResolvedColorScheme } from './color-scheme/color-scheme.types';
 export { useClipboard } from './clipboard/useClipboard';
 export type {
   ClipboardControl,
@@ -213,14 +213,13 @@ export { useListNavigation } from './list/useListNavigation';
 export { createCollection } from './list/collection';
 export type { ElementCollection, ElementRef } from './list/collection.types';
 export type {
-  ListFocusMode,
   ListNavigation,
   ListNavigationOptions,
-  ListOrientation,
   SetActiveOptions,
 } from './list/useListNavigation';
 export { listMoveFor, listTargetIndex } from './list/moves';
-export type { ListMove } from './list/moves';
+export { ListFocusMode, ListMove, ListOrientation } from './list/list.types';
+export { AriaValue } from './aria/aria.types';
 export {
   emptyTypeahead,
   extendTypeahead,
@@ -234,10 +233,9 @@ export { useVirtualFrame } from './virtual/useVirtualFrame';
 export type { VirtualFrameStyle, VirtualFrameStyles } from './virtual/useVirtualFrame';
 export { createSizeIndex } from './virtual/size-index';
 export type { SizeIndex } from './virtual/size-index';
+export { VirtualAlign, VirtualAxis } from './virtual/virtual.types';
 export type {
   ItemSize,
-  VirtualAlign,
-  VirtualAxis,
   VirtualFrame,
   VirtualItem,
   VirtualList,
@@ -305,14 +303,8 @@ export { useBlockSizeTween } from './motion/useBlockSizeTween';
 export { useReorder } from './reorder/useReorder';
 export { useEdgeScroll } from './reorder/useEdgeScroll';
 export type { EdgePoint, EdgeScroll, EdgeScrollOptions } from './reorder/useEdgeScroll';
-export type {
-  Reorder,
-  ReorderAxis,
-  ReorderEvent,
-  ReorderOptions,
-  ReorderPhase,
-  ReorderState,
-} from './reorder/useReorder';
+export type { Reorder, ReorderEvent, ReorderOptions, ReorderState } from './reorder/useReorder';
+export { ReorderAxis, ReorderEventType, ReorderPhase } from './reorder/reorder.types';
 export { useDelayedOpen } from './timing/useDelayedOpen';
 export { useMediaQuery } from './media/useMediaQuery';
 export type { DelayedOpen, DelayedOpenOptions } from './timing/useDelayedOpen';

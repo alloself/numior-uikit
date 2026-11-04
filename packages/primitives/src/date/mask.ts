@@ -1,18 +1,22 @@
 import { datePatternOf } from './text';
 import { graphemesOf } from '../intl/graphemes';
-
-export type DateMaskField = 'year' | 'month' | 'day' | 'hour' | 'minute';
+import { DateTimePart } from '../intl/intl.types';
+import { DateField, DateMaskField, DateMaskPartKind } from './date.types';
 
 export type DateMaskPart =
-  | { readonly kind: 'digits'; readonly field: DateMaskField; readonly length: number }
-  | { readonly kind: 'literal'; readonly text: string };
+  | {
+      readonly kind: typeof DateMaskPartKind.Digits;
+      readonly field: DateMaskField;
+      readonly length: number;
+    }
+  | { readonly kind: typeof DateMaskPartKind.Literal; readonly text: string };
 
 export interface MaskedDateText {
   readonly text: string;
   readonly caret: number;
 }
 
-type DigitsPart = Extract<DateMaskPart, { kind: 'digits' }>;
+type DigitsPart = Extract<DateMaskPart, { kind: typeof DateMaskPartKind.Digits }>;
 
 interface Segment {
   readonly part: DigitsPart;
@@ -35,13 +39,17 @@ const DIGIT = /^\p{Nd}$/u;
 const ASCII_DIGIT = /^[0-9]$/u;
 const SEPARATOR = /^[\p{P}\p{Zs}]$/u;
 
-const EARLY: Readonly<Partial<Record<DateMaskField, number>>> = { day: 3, month: 1, hour: 2 };
+const EARLY: Readonly<Partial<Record<DateMaskField, number>>> = {
+  [DateMaskField.Day]: 3,
+  [DateMaskField.Month]: 1,
+  [DateMaskField.Hour]: 2,
+};
 
 const TIME_PARTS: readonly DateMaskPart[] = [
-  { kind: 'literal', text: ' ' },
-  { kind: 'digits', field: 'hour', length: 2 },
-  { kind: 'literal', text: ':' },
-  { kind: 'digits', field: 'minute', length: 2 },
+  { kind: DateMaskPartKind.Literal, text: ' ' },
+  { kind: DateMaskPartKind.Digits, field: DateMaskField.Hour, length: 2 },
+  { kind: DateMaskPartKind.Literal, text: ':' },
+  { kind: DateMaskPartKind.Digits, field: DateMaskField.Minute, length: 2 },
 ];
 
 const masks = new Map<string, readonly DateMaskPart[]>();
@@ -66,9 +74,9 @@ export const dateMaskOf = (locale: string, time = false): readonly DateMaskPart[
   }
 
   const date = datePatternOf(locale).map((part): DateMaskPart =>
-    part.type === 'literal'
-      ? { kind: 'literal', text: part.text }
-      : { kind: 'digits', field: part.type, length: part.length },
+    part.type === DateTimePart.Literal
+      ? { kind: DateMaskPartKind.Literal, text: part.text }
+      : { kind: DateMaskPartKind.Digits, field: part.type, length: part.length },
   );
 
   const parts = time ? [...date, ...TIME_PARTS] : date;
@@ -101,7 +109,7 @@ const fillDigits = (run: MaskRun, part: DigitsPart): boolean => {
       placeDigit(run, char);
       count += 1;
     } else if (count > 0 && SEPARATOR.test(char)) {
-      return part.field !== 'year';
+      return part.field !== DateField.Year;
     }
   }
   return count === part.length;
@@ -116,10 +124,10 @@ const walkParts = (run: MaskRun, parts: readonly DateMaskPart[]): void => {
   let complete = true;
 
   for (const part of parts) {
-    if (part.kind === 'literal' && !literalFits(run, complete)) {
+    if (part.kind === DateMaskPartKind.Literal && !literalFits(run, complete)) {
       return;
     }
-    if (part.kind === 'literal') {
+    if (part.kind === DateMaskPartKind.Literal) {
       run.text += part.text;
     } else {
       complete = fillDigits(run, part);
@@ -161,7 +169,7 @@ const segmentsOf = (text: string, parts: readonly DateMaskPart[]): Segment[] => 
   let at = 0;
 
   parts.forEach((part, index) => {
-    if (part.kind === 'literal') {
+    if (part.kind === DateMaskPartKind.Literal) {
       at += text.startsWith(part.text, at) ? part.text.length : 0;
       return;
     }
@@ -176,7 +184,7 @@ const segmentsOf = (text: string, parts: readonly DateMaskPart[]): Segment[] => 
       part,
       start,
       end: at,
-      next: after?.kind === 'literal' ? after.text : undefined,
+      next: after?.kind === DateMaskPartKind.Literal ? after.text : undefined,
     });
   });
 
@@ -192,7 +200,7 @@ const closeSegment = (text: string, segment: Segment): MaskedDateText => {
   const count = segment.end - segment.start;
 
   const pad =
-    segment.part.field === 'year' || !ASCII_DIGIT.test(text[segment.start] ?? '')
+    segment.part.field === DateField.Year || !ASCII_DIGIT.test(text[segment.start] ?? '')
       ? ''
       : '0'.repeat(segment.part.length - count);
 

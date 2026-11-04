@@ -1,4 +1,4 @@
-import type { HourCycle } from './time-segments';
+import type { HourCycle } from './intl.types';
 
 export interface TimeValue {
   readonly hour: number;

@@ -12,6 +12,24 @@ const kindOf = (declaration: ts.Declaration, type: string): DeclarationKind => {
   return ts.isFunctionDeclaration(declaration) || type.includes('=>') ? 'function' : 'value';
 };
 
+const DERIVED_TYPE = /\btypeof\b/;
+
+const typeText = (
+  checker: ts.TypeChecker,
+  symbol: ts.Symbol,
+  declaration: ts.Declaration,
+): string =>
+  ts.isTypeAliasDeclaration(declaration) && DERIVED_TYPE.test(declaration.type.getText())
+    ? `type ${symbol.name} = ${checker.typeToString(
+        checker.getDeclaredTypeOfSymbol(symbol),
+        declaration,
+        ts.TypeFormatFlags.NoTruncation | ts.TypeFormatFlags.InTypeAlias,
+      )};`
+    : declaration
+        .getText()
+        .replace(/^export\s+(declare\s+)?/, '')
+        .replaceAll(/^(?: {4})+/gm, (indent) => ' '.repeat(indent.length / 2));
+
 const signatureOf = (
   checker: ts.TypeChecker,
   symbol: ts.Symbol,
@@ -19,10 +37,7 @@ const signatureOf = (
   kind: DeclarationKind,
 ): string =>
   kind === 'type'
-    ? declaration
-        .getText()
-        .replace(/^export\s+(declare\s+)?/, '')
-        .replaceAll(/^(?: {4})+/gm, (indent) => ' '.repeat(indent.length / 2))
+    ? typeText(checker, symbol, declaration)
     : `${symbol.name}: ${checker.typeToString(
         checker.getTypeOfSymbolAtLocation(symbol, declaration),
         declaration,
@@ -50,7 +65,9 @@ export const exportedDeclarations = (
     const symbol =
       exported.flags & ts.SymbolFlags.Alias ? checker.getAliasedSymbol(exported) : exported;
 
-    const declaration = symbol.declarations?.[0];
+    const declaration =
+      symbol.declarations?.find((candidate) => ts.isTypeAliasDeclaration(candidate)) ??
+      symbol.declarations?.[0];
 
     if (declaration === undefined) {
       return [];

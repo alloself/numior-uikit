@@ -110,6 +110,22 @@ const CODE_SHAPE = [
   },
 ];
 
+const LITERAL_COMPARISON =
+  'Compare with a named constant of the enumeration (Key.Enter, Axis.X), not a string literal.';
+
+const NAMED_ENUMERATIONS = [
+  {
+    selector:
+      "BinaryExpression[operator=/^[!=]==?$/]:not([left.operator='typeof']):not([right.operator='typeof']):matches([left.value=/[^]/], [right.value=/[^]/])",
+    message: LITERAL_COMPARISON,
+  },
+  {
+    selector:
+      "SwitchStatement:not([discriminant.operator='typeof']) > SwitchCase[test.value=/[^]/]",
+    message: LITERAL_COMPARISON,
+  },
+];
+
 const TIMERS = {
   selector: "NewExpression[callee.name='Promise'] CallExpression[callee.name='setTimeout']",
   message: 'Wait with promiseTimeout, until or useIdle from @vueuse/core.',
@@ -117,26 +133,22 @@ const TIMERS = {
 
 const CATALOG_MESSAGE = 'User-facing texts live in *.messages.ts catalogs.';
 
-const catalogTexts = {
-  'no-restricted-syntax': [
-    'error',
-    {
-      selector:
-        "VariableDeclarator[init.callee.name='defineProps'] Property[key.name=/^(?:label|announce|[a-z][A-Za-z]*Label)$/] > AssignmentPattern:not([right.type='Identifier'][right.name='undefined'])",
-      message: 'Text props default to undefined; the dictionary supplies the built-in text.',
-    },
-    {
-      selector: 'Literal[value=/^[A-Z][a-z]+(?: [a-z]+)+$/]:not(NewExpression > Literal)',
-      message: CATALOG_MESSAGE,
-    },
-    {
-      selector:
-        'TemplateElement[value.raw=/[A-Za-z]{2,} [a-z]{2,}/]:not(NewExpression > TemplateLiteral > TemplateElement)',
-      message: CATALOG_MESSAGE,
-    },
-    ...CODE_SHAPE,
-  ],
-};
+const CATALOG = [
+  {
+    selector:
+      "VariableDeclarator[init.callee.name='defineProps'] Property[key.name=/^(?:label|announce|[a-z][A-Za-z]*Label)$/] > AssignmentPattern:not([right.type='Identifier'][right.name='undefined'])",
+    message: 'Text props default to undefined; the dictionary supplies the built-in text.',
+  },
+  {
+    selector: 'Literal[value=/^[A-Z][a-z]+(?: [a-z]+)+$/]:not(NewExpression > Literal)',
+    message: CATALOG_MESSAGE,
+  },
+  {
+    selector:
+      'TemplateElement[value.raw=/[A-Za-z]{2,} [a-z]{2,}/]:not(NewExpression > TemplateLiteral > TemplateElement)',
+    message: CATALOG_MESSAGE,
+  },
+];
 
 export default [
   {
@@ -190,7 +202,19 @@ export default [
   {
     files: ['packages/*/src/**/*.ts', 'packages/*/src/**/*.vue'],
     ignores: ['**/*.messages.ts', 'packages/spreadsheet/src/xlsx/**'],
-    rules: catalogTexts,
+    rules: { 'no-restricted-syntax': ['error', ...CATALOG, ...CODE_SHAPE] },
+  },
+  {
+    files: ['packages/{primitives,vue,table,editor-vue}/src/**/*.{ts,vue}'],
+    ignores: ['**/*.messages.ts', 'packages/table/src/engine/**'],
+    rules: { 'no-restricted-syntax': ['error', ...CATALOG, ...CODE_SHAPE, TIMERS] },
+  },
+  {
+    files: ['packages/primitives/src/**/*.{ts,vue}'],
+    ignores: ['**/*.messages.ts'],
+    rules: {
+      'no-restricted-syntax': ['error', ...CATALOG, ...CODE_SHAPE, TIMERS, ...NAMED_ENUMERATIONS],
+    },
   },
   {
     files: ['packages/*/src/**/*.vue'],

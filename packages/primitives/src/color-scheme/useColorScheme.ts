@@ -12,10 +12,7 @@ import {
   type MaybeRefOrGetter,
   type Ref,
 } from 'vue';
-
-export type ColorScheme = 'system' | 'light' | 'dark';
-
-export type ResolvedColorScheme = 'light' | 'dark';
+import { ColorScheme, type ResolvedColorScheme } from './color-scheme.types';
 
 export interface ColorSchemeOptions {
   readonly scope?: MaybeRefOrGetter<HTMLElement | null | undefined>;
@@ -41,10 +38,16 @@ export interface ColorSchemeHandle extends ColorSchemeControl {
 
 export const COLOR_SCHEME_KEY: InjectionKey<ColorSchemeControl> = Symbol('nui-color-scheme');
 
-const CYCLE: readonly ColorScheme[] = ['light', 'dark', 'system'];
+const CYCLE: readonly ColorScheme[] = [ColorScheme.Light, ColorScheme.Dark, ColorScheme.System];
 
-const isColorScheme = (value: unknown): value is ColorScheme =>
-  value === 'system' || value === 'light' || value === 'dark';
+const SCHEMES: ReadonlySet<unknown> = new Set(CYCLE);
+
+const OPPOSITE: Record<ResolvedColorScheme, ResolvedColorScheme> = {
+  [ColorScheme.Light]: ColorScheme.Dark,
+  [ColorScheme.Dark]: ColorScheme.Light,
+};
+
+const isColorScheme = (value: unknown): value is ColorScheme => SCHEMES.has(value);
 
 const readStored = (key: string | undefined): ColorScheme | undefined => {
   if (!key) {
@@ -70,12 +73,16 @@ const writeStored = (key: string | undefined, value: ColorScheme): void => {
 };
 
 const createColorScheme = (options: ColorSchemeOptions, run: StartRunner): ColorSchemeControl => {
-  const scheme = ref<ColorScheme>(options.initial ?? 'system');
+  const scheme = ref<ColorScheme>(options.initial ?? ColorScheme.System);
   const systemDark = ref(false);
   let started = false;
 
   const resolved = computed<ResolvedColorScheme>(() =>
-    scheme.value === 'system' ? (systemDark.value ? 'dark' : 'light') : scheme.value,
+    scheme.value === ColorScheme.System
+      ? systemDark.value
+        ? ColorScheme.Dark
+        : ColorScheme.Light
+      : scheme.value,
   );
 
   const scopeElement = (): HTMLElement | null =>
@@ -124,11 +131,11 @@ const createColorScheme = (options: ColorSchemeOptions, run: StartRunner): Color
     },
     toggle: () => {
       start();
-      scheme.value = resolved.value === 'dark' ? 'light' : 'dark';
+      scheme.value = OPPOSITE[resolved.value];
     },
     cycle: () => {
       start();
-      scheme.value = CYCLE[(CYCLE.indexOf(scheme.value) + 1) % CYCLE.length] ?? 'system';
+      scheme.value = CYCLE[(CYCLE.indexOf(scheme.value) + 1) % CYCLE.length] ?? ColorScheme.System;
     },
   };
 };
@@ -159,4 +166,4 @@ export const useColorScheme = (options?: ColorSchemeOptions): ColorSchemeControl
 };
 
 export const colorSchemeScript = (storageKey: string, initial?: ColorScheme): string =>
-  `(function(){var s=${JSON.stringify(initial ?? null)};try{var v=localStorage.getItem(${JSON.stringify(storageKey)});if(v==='light'||v==='dark'||v==='system'){s=v}}catch(e){}if(s){document.documentElement.setAttribute('data-nui-theme',s)}})()`;
+  `(function(){var s=${JSON.stringify(initial ?? null)};try{var v=localStorage.getItem(${JSON.stringify(storageKey)});if(${JSON.stringify(CYCLE)}.indexOf(v)>=0){s=v}}catch(e){}if(s){document.documentElement.setAttribute('data-nui-theme',s)}})()`;

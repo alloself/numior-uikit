@@ -8,8 +8,7 @@ import {
   type MaybeRefOrGetter,
 } from 'vue';
 import { DEFAULT_LOCALE, useLocale } from '../locale/locale-context';
-
-type BuiltInLocale = 'en' | 'ru';
+import { BuiltInLocale } from './messages.types';
 
 export interface NuiMessageCatalog<M extends object> {
   readonly namespace: string;
@@ -79,10 +78,12 @@ const localeChain = (locale: string): readonly string[] => {
   const subtags = baseName(locale).split('-');
   const tags = subtags.map((_, index) => subtags.slice(0, index + 1).join('-'));
 
-  return ['en', ...tags.filter((tag) => tag !== 'en')];
+  return [BuiltInLocale.En, ...tags.filter((tag) => tag !== BuiltInLocale.En)];
 };
 
-const isBuiltInLocale = (tag: string): tag is BuiltInLocale => tag === 'en' || tag === 'ru';
+const BUILT_IN: ReadonlySet<string> = new Set(Object.values(BuiltInLocale));
+
+const isBuiltInLocale = (tag: string): tag is BuiltInLocale => BUILT_IN.has(tag);
 
 const builtIn = <M extends object>(catalog: NuiMessageCatalog<M>, tag: string): M | undefined =>
   isBuiltInLocale(tag) ? catalog[tag] : undefined;

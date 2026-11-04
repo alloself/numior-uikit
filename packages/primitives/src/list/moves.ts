@@ -1,18 +1,24 @@
 import { clamp } from '@vueuse/core';
+import { Key } from '../keyboard/key.types';
+import { ListMove, ListOrientation } from './list.types';
 
-export type ListOrientation = 'vertical' | 'horizontal' | 'both';
-export type ListMove = 'first' | 'last' | 'next' | 'prev' | 'page-next' | 'page-prev';
+const horizontalMoves = (rtl: boolean): Record<string, ListMove> => ({
+  [rtl ? Key.ArrowLeft : Key.ArrowRight]: ListMove.Next,
+  [rtl ? Key.ArrowRight : Key.ArrowLeft]: ListMove.Prev,
+});
 
-const horizontalMoves = (rtl: boolean): Record<string, ListMove> =>
-  rtl ? { ArrowLeft: 'next', ArrowRight: 'prev' } : { ArrowRight: 'next', ArrowLeft: 'prev' };
+const VERTICAL_MOVES: Readonly<Record<string, ListMove>> = {
+  [Key.ArrowDown]: ListMove.Next,
+  [Key.ArrowUp]: ListMove.Prev,
+};
 
 const movesFor = (orientation: ListOrientation, rtl: boolean): Record<string, ListMove> => ({
-  ...(orientation === 'horizontal' ? {} : { ArrowDown: 'next', ArrowUp: 'prev' }),
-  ...(orientation === 'vertical' ? {} : horizontalMoves(rtl)),
-  Home: 'first',
-  End: 'last',
-  PageDown: 'page-next',
-  PageUp: 'page-prev',
+  ...(orientation === ListOrientation.Horizontal ? {} : VERTICAL_MOVES),
+  ...(orientation === ListOrientation.Vertical ? {} : horizontalMoves(rtl)),
+  [Key.Home]: ListMove.First,
+  [Key.End]: ListMove.Last,
+  [Key.PageDown]: ListMove.PageNext,
+  [Key.PageUp]: ListMove.PagePrev,
 });
 
 export const listMoveFor = (
@@ -34,12 +40,12 @@ export const listTargetIndex = (
   const last = length - 1;
 
   const targets: Record<ListMove, number> = {
-    first: 0,
-    last,
-    next: current < 0 ? 0 : wrapIndex(current + 1, length, loop),
-    prev: current < 0 ? last : wrapIndex(current - 1, length, loop),
-    'page-next': clamp(Math.max(0, current) + page, 0, last),
-    'page-prev': Math.max(0, current - page),
+    [ListMove.First]: 0,
+    [ListMove.Last]: last,
+    [ListMove.Next]: current < 0 ? 0 : wrapIndex(current + 1, length, loop),
+    [ListMove.Prev]: current < 0 ? last : wrapIndex(current - 1, length, loop),
+    [ListMove.PageNext]: clamp(Math.max(0, current) + page, 0, last),
+    [ListMove.PagePrev]: Math.max(0, current - page),
   };
 
   return targets[move];

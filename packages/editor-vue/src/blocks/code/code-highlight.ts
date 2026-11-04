@@ -12,6 +12,7 @@ import {
   type Schema,
   type Transaction,
 } from '@numior/editor-core';
+import { promiseTimeout } from '@vueuse/core';
 import { highlightCode, type NuiCodeTokens, type NuiHighlighter } from '@numior/primitives';
 import { codeTextOf } from './code-text';
 
@@ -259,10 +260,7 @@ const changedCode = (
 
 const keyOf = (block: CodeBlock): string => `${block.language ?? ''}\n${block.text}`;
 
-const nextTask = (): Promise<void> =>
-  new Promise((resolve) => {
-    setTimeout(resolve, 0);
-  });
+const nextTask = (): Promise<void> => promiseTimeout(0);
 
 export const createCodeHighlighter = (
   highlighter: () => NuiHighlighter | null,

@@ -7,38 +7,36 @@ import {
   type MaybeRefOrGetter,
   type Ref,
 } from 'vue';
+import { Key } from '../keyboard/key.types';
 import { useEdgeScroll } from './useEdgeScroll';
-
-export type ReorderAxis = 'x' | 'y';
+import { ReorderAxis, ReorderEventType, ReorderPhase } from './reorder.types';
 
 export type ReorderState =
-  | { readonly phase: 'idle' }
+  | { readonly phase: typeof ReorderPhase.Idle }
   | {
-      readonly phase: 'pending';
+      readonly phase: typeof ReorderPhase.Pending;
       readonly from: number;
       readonly pointerId: number;
       readonly origin: number;
     }
   | {
-      readonly phase: 'dragging';
+      readonly phase: typeof ReorderPhase.Dragging;
       readonly from: number;
       readonly to: number;
       readonly pointerId: number;
       readonly position: number;
     }
-  | { readonly phase: 'keyboard'; readonly from: number; readonly to: number };
-
-export type ReorderPhase = ReorderState['phase'];
+  | { readonly phase: typeof ReorderPhase.Keyboard; readonly from: number; readonly to: number };
 
 export type ReorderEvent =
-  | { readonly type: 'grabbed'; readonly from: number }
-  | { readonly type: 'moved'; readonly from: number; readonly to: number }
-  | { readonly type: 'dropped'; readonly from: number; readonly to: number }
-  | { readonly type: 'cancelled'; readonly from: number };
+  | { readonly type: typeof ReorderEventType.Grabbed; readonly from: number }
+  | { readonly type: typeof ReorderEventType.Moved; readonly from: number; readonly to: number }
+  | { readonly type: typeof ReorderEventType.Dropped; readonly from: number; readonly to: number }
+  | { readonly type: typeof ReorderEventType.Cancelled; readonly from: number };
 
 type PointerState = Extract<ReorderState, { readonly pointerId: number }>;
 
-type KeyboardState = Extract<ReorderState, { readonly phase: 'keyboard' }>;
+type KeyboardState = Extract<ReorderState, { readonly phase: typeof ReorderPhase.Keyboard }>;
 
 export interface ReorderOptions {
   readonly axis: ReorderAxis;
@@ -61,23 +59,23 @@ export interface Reorder {
   cancel(): void;
 }
 
-const IDLE: ReorderState = { phase: 'idle' };
+const IDLE: ReorderState = { phase: ReorderPhase.Idle };
 const DEFAULT_THRESHOLD = 5;
 
-const isSelectKey = (key: string): boolean => key === ' ' || key === 'Enter';
+const isSelectKey = (key: string): boolean => key === Key.Space || key === Key.Enter;
 
 const isPointer = (state: ReorderState): state is PointerState =>
-  state.phase === 'pending' || state.phase === 'dragging';
+  state.phase === ReorderPhase.Pending || state.phase === ReorderPhase.Dragging;
 
 const clientOf = (event: PointerEvent, axis: ReorderAxis): number =>
-  axis === 'x' ? event.clientX : event.clientY;
+  axis === ReorderAxis.X ? event.clientX : event.clientY;
 
 const stepFor = (key: string, axis: ReorderAxis, rtl: boolean): number => {
-  if (axis === 'y') {
-    return key === 'ArrowUp' ? -1 : key === 'ArrowDown' ? 1 : 0;
+  if (axis === ReorderAxis.Y) {
+    return key === Key.ArrowUp ? -1 : key === Key.ArrowDown ? 1 : 0;
   }
-  const forward = rtl ? 'ArrowLeft' : 'ArrowRight';
-  const backward = rtl ? 'ArrowRight' : 'ArrowLeft';
+  const forward = rtl ? Key.ArrowLeft : Key.ArrowRight;
+  const backward = rtl ? Key.ArrowRight : Key.ArrowLeft;
   return key === forward ? 1 : key === backward ? -1 : 0;
 };
 
@@ -86,7 +84,7 @@ export const useReorder = (options: ReorderOptions): Reorder => {
 
   const source = computed(() => {
     const current = state.value;
-    return current.phase === 'idle' ? undefined : current.from;
+    return current.phase === ReorderPhase.Idle ? undefined : current.from;
   });
 
   const publish = (next: ReorderState): void => {
@@ -104,7 +102,7 @@ export const useReorder = (options: ReorderOptions): Reorder => {
   const retarget = (): void => {
     const current = state.value;
 
-    if (current.phase !== 'dragging') {
+    if (current.phase !== ReorderPhase.Dragging) {
       return;
     }
     const target = options.indexAt(current.position, current.from);
@@ -135,13 +133,13 @@ export const useReorder = (options: ReorderOptions): Reorder => {
   const cancel = (): void => {
     const current = state.value;
 
-    if (current.phase === 'idle') {
+    if (current.phase === ReorderPhase.Idle) {
       return;
     }
     finish();
 
-    if (current.phase === 'keyboard') {
-      emit({ type: 'cancelled', from: current.from });
+    if (current.phase === ReorderPhase.Keyboard) {
+      emit({ type: ReorderEventType.Cancelled, from: current.from });
     }
   };
 
@@ -154,26 +152,26 @@ export const useReorder = (options: ReorderOptions): Reorder => {
     finish();
 
     if (moved) {
-      emit({ type: 'dropped', from: current.from, to });
-    } else if (current.phase === 'keyboard') {
-      emit({ type: 'cancelled', from: current.from });
+      emit({ type: ReorderEventType.Dropped, from: current.from, to });
+    } else if (current.phase === ReorderPhase.Keyboard) {
+      emit({ type: ReorderEventType.Cancelled, from: current.from });
     }
   };
 
   const track = (current: PointerState, event: PointerEvent): void => {
     const client = clientOf(event, options.axis);
     const target = options.indexAt(client, current.from);
-    const to = current.phase === 'dragging' ? current.to : current.from;
+    const to = current.phase === ReorderPhase.Dragging ? current.to : current.from;
 
     publish({
-      phase: 'dragging',
+      phase: ReorderPhase.Dragging,
       from: current.from,
       to: allowed(current.from, target) ? target : to,
       pointerId: current.pointerId,
       position: client,
     });
 
-    edge.follow(options.axis === 'x' ? { x: client } : { y: client });
+    edge.follow(options.axis === ReorderAxis.X ? { x: client } : { y: client });
   };
 
   const onPointermove = (event: PointerEvent): void => {
@@ -183,7 +181,7 @@ export const useReorder = (options: ReorderOptions): Reorder => {
       return;
     }
     if (
-      current.phase === 'pending' &&
+      current.phase === ReorderPhase.Pending &&
       Math.abs(clientOf(event, options.axis) - current.origin) <
         (options.threshold ?? DEFAULT_THRESHOLD)
     ) {
@@ -199,7 +197,7 @@ export const useReorder = (options: ReorderOptions): Reorder => {
     if (!isPointer(current) || event.pointerId !== current.pointerId) {
       return;
     }
-    if (current.phase === 'dragging') {
+    if (current.phase === ReorderPhase.Dragging) {
       drop(current, current.to);
     } else {
       finish();
@@ -207,18 +205,22 @@ export const useReorder = (options: ReorderOptions): Reorder => {
   };
 
   const onWindowKeydown = (event: KeyboardEvent): void => {
-    if (event.key === 'Escape' && isPointer(state.value)) {
+    if (event.key === Key.Escape && isPointer(state.value)) {
       cancel();
     }
   };
 
   const onPointerdown = (index: number, event: PointerEvent): void => {
-    if (event.button !== 0 || state.value.phase !== 'idle' || typeof window === 'undefined') {
+    if (
+      event.button !== 0 ||
+      state.value.phase !== ReorderPhase.Idle ||
+      typeof window === 'undefined'
+    ) {
       return;
     }
 
     publish({
-      phase: 'pending',
+      phase: ReorderPhase.Pending,
       from: index,
       pointerId: event.pointerId,
       origin: clientOf(event, options.axis),
@@ -246,7 +248,7 @@ export const useReorder = (options: ReorderOptions): Reorder => {
 
     if (to !== undefined) {
       publish({ ...current, to });
-      emit({ type: 'moved', from: current.from, to });
+      emit({ type: ReorderEventType.Moved, from: current.from, to });
     }
   };
 
@@ -255,7 +257,7 @@ export const useReorder = (options: ReorderOptions): Reorder => {
       drop(current, current.to);
       return true;
     }
-    if (key === 'Escape') {
+    if (key === Key.Escape) {
       cancel();
       return true;
     }
@@ -272,14 +274,14 @@ export const useReorder = (options: ReorderOptions): Reorder => {
     const current = state.value;
 
     switch (current.phase) {
-      case 'idle':
+      case ReorderPhase.Idle:
         if (!isSelectKey(event.key)) {
           return false;
         }
-        publish({ phase: 'keyboard', from: index, to: index });
-        emit({ type: 'grabbed', from: index });
+        publish({ phase: ReorderPhase.Keyboard, from: index, to: index });
+        emit({ type: ReorderEventType.Grabbed, from: index });
         return true;
-      case 'keyboard':
+      case ReorderPhase.Keyboard:
         return current.from === index && handleActive(current, event.key);
       default:
         return false;

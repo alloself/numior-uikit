@@ -1,6 +1,6 @@
-export type UploadStatus = 'queued' | 'uploading' | 'done' | 'error';
+export type UploadStatus = (typeof UploadStatus)[keyof typeof UploadStatus];
 
-export type UploadReason = 'type' | 'size' | 'count' | 'custom' | 'upload';
+export type UploadReason = (typeof UploadReason)[keyof typeof UploadReason];
 
 export interface UploadError {
   readonly reason: UploadReason;
@@ -17,10 +17,10 @@ export interface UploadFile {
 }
 
 export type UploadState<R = unknown> =
-  | { readonly status: 'queued' }
-  | { readonly status: 'uploading'; readonly progress: number }
-  | { readonly status: 'done'; readonly result?: R | undefined }
-  | { readonly status: 'error'; readonly error: UploadError };
+  | { readonly status: typeof UploadStatus.Queued }
+  | { readonly status: typeof UploadStatus.Uploading; readonly progress: number }
+  | { readonly status: typeof UploadStatus.Done; readonly result?: R | undefined }
+  | { readonly status: typeof UploadStatus.Error; readonly error: UploadError };
 
 export type UploadItem<R = unknown> = UploadFile & UploadState<R>;
 
@@ -40,3 +40,18 @@ export interface UploadEntry {
   readonly file: File;
   readonly error?: UploadError | undefined;
 }
+
+export const UploadStatus = {
+  Queued: 'queued',
+  Uploading: 'uploading',
+  Done: 'done',
+  Error: 'error',
+} as const;
+
+export const UploadReason = {
+  Type: 'type',
+  Size: 'size',
+  Count: 'count',
+  Custom: 'custom',
+  Upload: 'upload',
+} as const;

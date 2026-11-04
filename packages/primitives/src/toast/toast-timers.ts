@@ -1,3 +1,5 @@
+import { TimerState } from './toast.types';
+
 export interface Timers {
   start(id: string, ms: number, onDone: () => void): void;
   pause(id: string): void;
@@ -8,13 +10,17 @@ export interface Timers {
 
 type Entry =
   | {
-      readonly state: 'running';
+      readonly state: typeof TimerState.Running;
       readonly handle: ReturnType<typeof setTimeout>;
       readonly startedAt: number;
       readonly remaining: number;
       readonly onDone: () => void;
     }
-  | { readonly state: 'paused'; readonly remaining: number; readonly onDone: () => void };
+  | {
+      readonly state: typeof TimerState.Paused;
+      readonly remaining: number;
+      readonly onDone: () => void;
+    };
 
 export const createTimers = (): Timers => {
   const entries = new Map<string, Entry>();
@@ -25,13 +31,19 @@ export const createTimers = (): Timers => {
       onDone();
     }, remaining);
 
-    entries.set(id, { state: 'running', handle, startedAt: Date.now(), remaining, onDone });
+    entries.set(id, {
+      state: TimerState.Running,
+      handle,
+      startedAt: Date.now(),
+      remaining,
+      onDone,
+    });
   };
 
   const clear = (id: string): void => {
     const entry = entries.get(id);
 
-    if (entry?.state === 'running') {
+    if (entry?.state === TimerState.Running) {
       clearTimeout(entry.handle);
     }
     entries.delete(id);
@@ -45,13 +57,13 @@ export const createTimers = (): Timers => {
     pause: (id) => {
       const entry = entries.get(id);
 
-      if (entry?.state !== 'running') {
+      if (entry?.state !== TimerState.Running) {
         return;
       }
       clearTimeout(entry.handle);
 
       entries.set(id, {
-        state: 'paused',
+        state: TimerState.Paused,
         remaining: Math.max(0, entry.remaining - (Date.now() - entry.startedAt)),
         onDone: entry.onDone,
       });
@@ -59,7 +71,7 @@ export const createTimers = (): Timers => {
     resume: (id) => {
       const entry = entries.get(id);
 
-      if (entry?.state === 'paused') {
+      if (entry?.state === TimerState.Paused) {
         arm(id, entry.remaining, entry.onDone);
       }
     },

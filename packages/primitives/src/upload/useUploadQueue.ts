@@ -9,7 +9,14 @@ import {
   type MaybeRefOrGetter,
   type Ref,
 } from 'vue';
-import type { UploadAdapter, UploadEntry, UploadFile, UploadItem } from './upload.types';
+import {
+  UploadReason,
+  UploadStatus,
+  type UploadAdapter,
+  type UploadEntry,
+  type UploadFile,
+  type UploadItem,
+} from './upload.types';
 
 export interface UploadQueueOptions<R> {
   readonly items: Ref<UploadItem<R>[]>;
@@ -80,8 +87,8 @@ const itemFor = <R>(id: string, entry: UploadEntry): UploadItem<R> => {
   };
 
   return entry.error
-    ? { ...file, status: 'error', error: entry.error }
-    : { ...file, status: 'queued' };
+    ? { ...file, status: UploadStatus.Error, error: entry.error }
+    : { ...file, status: UploadStatus.Queued };
 };
 
 const fileOf = <R>(item: UploadItem<R>): UploadFile => ({
@@ -94,7 +101,7 @@ const fileOf = <R>(item: UploadItem<R>): UploadFile => ({
 });
 
 const isPending = (item: UploadItem): boolean =>
-  item.status === 'queued' || item.status === 'uploading';
+  item.status === UploadStatus.Queued || item.status === UploadStatus.Uploading;
 
 export const useUploadQueue = <R>(options: UploadQueueOptions<R>): UploadQueue<R> => {
   const base = useId();
@@ -148,7 +155,7 @@ export const useUploadQueue = <R>(options: UploadQueueOptions<R>): UploadQueue<R
       const position = state.positions.get(id);
       const current = position === undefined ? undefined : items[position];
 
-      if (position !== undefined && current?.status === 'uploading') {
+      if (position !== undefined && current?.status === UploadStatus.Uploading) {
         items[position] = { ...current, progress };
       }
     }
@@ -188,7 +195,12 @@ export const useUploadQueue = <R>(options: UploadQueueOptions<R>): UploadQueue<R
     const controller = new AbortController();
 
     controllers.set(item.id, controller);
-    replace(item.id, (current) => ({ ...fileOf(current), status: 'uploading', progress: 0 }));
+
+    replace(item.id, (current) => ({
+      ...fileOf(current),
+      status: UploadStatus.Uploading,
+      progress: 0,
+    }));
 
     const settled = (next: (item: UploadItem<R>) => UploadItem<R>): UploadItem<R> | undefined =>
       controller.signal.aborted ? undefined : finish(item.id, next);
@@ -204,7 +216,12 @@ export const useUploadQueue = <R>(options: UploadQueueOptions<R>): UploadQueue<R
 
     try {
       const result = await options.upload(file, context);
-      const done = settled((current) => ({ ...fileOf(current), status: 'done', result }));
+
+      const done = settled((current) => ({
+        ...fileOf(current),
+        status: UploadStatus.Done,
+        result,
+      }));
 
       if (done) {
         options.onDone?.(done);
@@ -213,8 +230,8 @@ export const useUploadQueue = <R>(options: UploadQueueOptions<R>): UploadQueue<R
     } catch (error: unknown) {
       const failed = settled((current) => ({
         ...fileOf(current),
-        status: 'error',
-        error: { reason: 'upload', message: messageOf(error) },
+        status: UploadStatus.Error,
+        error: { reason: UploadReason.Upload, message: messageOf(error) },
       }));
 
       if (failed) {
@@ -225,7 +242,10 @@ export const useUploadQueue = <R>(options: UploadQueueOptions<R>): UploadQueue<R
   };
 
   const firstQueued = (): number => {
-    while (state.cursor < state.items.length && state.items[state.cursor]?.status !== 'queued') {
+    while (
+      state.cursor < state.items.length &&
+      state.items[state.cursor]?.status !== UploadStatus.Queued
+    ) {
       state.cursor += 1;
     }
     return state.cursor;
@@ -241,7 +261,7 @@ export const useUploadQueue = <R>(options: UploadQueueOptions<R>): UploadQueue<R
 
       const item = state.items[position];
 
-      if (item?.status === 'queued' && item.file && !controllers.has(item.id)) {
+      if (item?.status === UploadStatus.Queued && item.file && !controllers.has(item.id)) {
         void run(item, item.file);
       }
     }
@@ -277,8 +297,12 @@ export const useUploadQueue = <R>(options: UploadQueueOptions<R>): UploadQueue<R
   const retry = (id: string): void => {
     const item = find(id);
 
-    if (item?.status === 'error' && item.error.reason === 'upload' && item.file) {
-      replace(id, (current) => ({ ...fileOf(current), status: 'queued' }));
+    if (
+      item?.status === UploadStatus.Error &&
+      item.error.reason === UploadReason.Upload &&
+      item.file
+    ) {
+      replace(id, (current) => ({ ...fileOf(current), status: UploadStatus.Queued }));
       state.cursor = Math.min(state.cursor, state.positions.get(id) ?? 0);
       fill();
     }

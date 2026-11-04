@@ -1,10 +1,15 @@
 import { clamp } from '@vueuse/core';
 import type { SizeIndex } from './size-index';
+import { SizeModelKind, VirtualAlign } from './virtual.types';
 
 export type SizeModel =
-  | { readonly kind: 'fixed'; readonly size: number; readonly count: number }
-  | { readonly kind: 'variable'; readonly offsets: readonly number[] }
-  | { readonly kind: 'indexed'; readonly index: SizeIndex; readonly revision: number };
+  | { readonly kind: typeof SizeModelKind.Fixed; readonly size: number; readonly count: number }
+  | { readonly kind: typeof SizeModelKind.Variable; readonly offsets: readonly number[] }
+  | {
+      readonly kind: typeof SizeModelKind.Indexed;
+      readonly index: SizeIndex;
+      readonly revision: number;
+    };
 
 export type ItemSize = number | ((index: number) => number) | SizeIndex;
 
@@ -12,8 +17,6 @@ export interface VirtualRange {
   readonly start: number;
   readonly end: number;
 }
-
-export type VirtualAlign = 'auto' | 'start' | 'center' | 'end';
 
 export interface CanvasScale {
   readonly canvas: number;
@@ -26,10 +29,10 @@ export const buildSizeModel = (count: number, itemSize: ItemSize): SizeModel => 
   const total = Math.max(0, Math.floor(count));
 
   if (typeof itemSize === 'number') {
-    return { kind: 'fixed', size: itemSize, count: total };
+    return { kind: SizeModelKind.Fixed, size: itemSize, count: total };
   }
   if (isSizeIndex(itemSize)) {
-    return { kind: 'indexed', index: itemSize, revision: itemSize.revision() };
+    return { kind: SizeModelKind.Indexed, index: itemSize, revision: itemSize.revision() };
   }
   const offsets = [0];
   let sum = 0;
@@ -38,27 +41,27 @@ export const buildSizeModel = (count: number, itemSize: ItemSize): SizeModel => 
     sum += itemSize(index);
     offsets.push(sum);
   }
-  return { kind: 'variable', offsets };
+  return { kind: SizeModelKind.Variable, offsets };
 };
 
 export const countOf = (model: SizeModel): number => {
   switch (model.kind) {
-    case 'fixed':
+    case SizeModelKind.Fixed:
       return model.count;
-    case 'variable':
+    case SizeModelKind.Variable:
       return model.offsets.length - 1;
-    case 'indexed':
+    case SizeModelKind.Indexed:
       return model.index.count;
   }
 };
 
 export const totalSizeOf = (model: SizeModel): number => {
   switch (model.kind) {
-    case 'fixed':
+    case SizeModelKind.Fixed:
       return model.size * model.count;
-    case 'variable':
+    case SizeModelKind.Variable:
       return model.offsets.at(-1) ?? 0;
-    case 'indexed':
+    case SizeModelKind.Indexed:
       return model.index.total();
   }
 };
@@ -67,22 +70,22 @@ export const offsetAt = (model: SizeModel, index: number): number => {
   const bounded = clamp(index, 0, countOf(model));
 
   switch (model.kind) {
-    case 'fixed':
+    case SizeModelKind.Fixed:
       return bounded * model.size;
-    case 'variable':
+    case SizeModelKind.Variable:
       return model.offsets[bounded] ?? 0;
-    case 'indexed':
+    case SizeModelKind.Indexed:
       return model.index.offsetAt(bounded);
   }
 };
 
 export const sizeAt = (model: SizeModel, index: number): number => {
   switch (model.kind) {
-    case 'fixed':
+    case SizeModelKind.Fixed:
       return model.size;
-    case 'variable':
+    case SizeModelKind.Variable:
       return offsetAt(model, index + 1) - offsetAt(model, index);
-    case 'indexed':
+    case SizeModelKind.Indexed:
       return model.index.sizeAt(index);
   }
 };
@@ -112,17 +115,17 @@ export const indexAt = (model: SizeModel, position: number): number => {
   const last = count - 1;
 
   switch (model.kind) {
-    case 'fixed':
+    case SizeModelKind.Fixed:
       return model.size <= 0 ? 0 : clamp(Math.floor(position / model.size), 0, last);
-    case 'variable':
+    case SizeModelKind.Variable:
       return clamp(searchOffsets(model.offsets, Math.max(0, position)), 0, last);
-    case 'indexed':
+    case SizeModelKind.Indexed:
       return clamp(model.index.indexAt(Math.max(0, position)), 0, last);
   }
 };
 
 const lastVisible = (model: SizeModel, scrollTop: number, viewport: number): number =>
-  model.kind === 'fixed' && model.size > 0
+  model.kind === SizeModelKind.Fixed && model.size > 0
     ? indexAt(model, scrollTop) + Math.ceil(viewport / model.size)
     : indexAt(model, scrollTop + viewport);
 
@@ -155,13 +158,13 @@ export const scrollTargetFor = (
   const bounded = (value: number): number => clamp(value, 0, max);
 
   switch (align) {
-    case 'start':
+    case VirtualAlign.Start:
       return bounded(start);
-    case 'end':
+    case VirtualAlign.End:
       return bounded(end - viewport);
-    case 'center':
+    case VirtualAlign.Center:
       return bounded(start - (viewport - (end - start)) / 2);
-    case 'auto':
+    case VirtualAlign.Auto:
       if (start < scrollTop) {
         return bounded(start);
       }

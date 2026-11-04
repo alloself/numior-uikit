@@ -1,8 +1,5 @@
 import { graphemesOf } from '../intl/graphemes';
-
-export type OtpCharset = 'digits' | 'alphanumeric';
-
-export type OtpDirection = 'forward' | 'backward';
+import { OtpCharset, OtpDirection } from './otp.types';
 
 export interface OtpSelection {
   readonly start: number;
@@ -44,7 +41,7 @@ const acceptChar = (char: string, charset: OtpCharset): string => {
   if (digit !== undefined) {
     return digit;
   }
-  return charset === 'alphanumeric' && LATIN.test(plain) ? plain.toUpperCase() : '';
+  return charset === OtpCharset.Alphanumeric && LATIN.test(plain) ? plain.toUpperCase() : '';
 };
 
 export const normalizeOtp = (text: string, charset: OtpCharset): string => {
@@ -89,7 +86,7 @@ export const settleOtpCaret = (
   selectOtpSlot(
     value,
     length,
-    direction === 'backward' && caret < value.length ? caret - 1 : caret,
+    direction === OtpDirection.Backward && caret < value.length ? caret - 1 : caret,
   );
 
 export const reconcileOtp = (

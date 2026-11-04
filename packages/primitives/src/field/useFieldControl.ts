@@ -1,6 +1,7 @@
 import { computed, toValue, type ComputedRef, type MaybeRefOrGetter } from 'vue';
 import { useDraftCommit } from './draft-commits';
 import { createFieldContext, useFieldContext, type FieldContext } from './field-context';
+import { FieldReadonlyAttr } from './field.types';
 
 export interface FieldControlProps {
   readonly id?: string | undefined;
@@ -12,8 +13,6 @@ export interface FieldControlProps {
   readonly description?: string | undefined;
   readonly error?: string | undefined;
 }
-
-export type FieldReadonlyAttr = 'readonly' | 'aria-readonly';
 
 export interface FieldControlOptions {
   readonly group?: boolean | undefined;
@@ -123,7 +122,7 @@ export const useFieldControl = (
   );
 
   const describedBy = computed(() => field.value?.describedBy.value);
-  const readonlyAsAria = options.readonlyAttr === 'aria-readonly';
+  const readonlyAsAria = options.readonlyAttr === FieldReadonlyAttr.AriaReadonly;
 
   const attrs = computed<FieldControlAttrs>(() => ({
     id: id.value,

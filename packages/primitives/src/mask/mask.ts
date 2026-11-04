@@ -1,4 +1,5 @@
 import { graphemesOf } from '../intl/graphemes';
+import { MaskSlotKind } from './mask.types';
 
 export interface MaskResult {
   readonly masked: string;
@@ -7,12 +8,12 @@ export interface MaskResult {
 }
 
 interface TokenSlot {
-  readonly kind: 'token';
+  readonly kind: typeof MaskSlotKind.Token;
   readonly test: RegExp;
 }
 
 interface LiteralSlot {
-  readonly kind: 'literal';
+  readonly kind: typeof MaskSlotKind.Literal;
   readonly char: string;
 }
 
@@ -25,6 +26,8 @@ interface MaskWalk {
   readonly cursor: number;
 }
 
+const ESCAPE = '\\';
+
 const TOKENS = new Map<string, RegExp>([
   ['#', /\d/u],
   ['A', /\p{L}/u],
@@ -36,13 +39,13 @@ const parseMask = (mask: string): MaskSlot[] => {
   let escaped = false;
   for (const char of mask) {
     if (escaped) {
-      slots.push({ kind: 'literal', char });
+      slots.push({ kind: MaskSlotKind.Literal, char });
       escaped = false;
-    } else if (char === '\\') {
+    } else if (char === ESCAPE) {
       escaped = true;
     } else {
       const test = TOKENS.get(char);
-      slots.push(test ? { kind: 'token', test } : { kind: 'literal', char });
+      slots.push(test ? { kind: MaskSlotKind.Token, test } : { kind: MaskSlotKind.Literal, char });
     }
   }
   return slots;
@@ -75,7 +78,9 @@ const stepMask = (
   if (slot === undefined || char === undefined) {
     return undefined;
   }
-  return slot.kind === 'token' ? consumeToken(walk, slot, char) : consumeLiteral(walk, slot, char);
+  return slot.kind === MaskSlotKind.Token
+    ? consumeToken(walk, slot, char)
+    : consumeLiteral(walk, slot, char);
 };
 
 export const applyMask = (input: string, mask: string): MaskResult => {
@@ -85,7 +90,7 @@ export const applyMask = (input: string, mask: string): MaskResult => {
   for (let next = stepMask(walk, slots, chars); next; next = stepMask(next, slots, chars)) {
     walk = next;
   }
-  const tokens = slots.reduce((count, slot) => count + Number(slot.kind === 'token'), 0);
+  const tokens = slots.reduce((count, slot) => count + Number(slot.kind === MaskSlotKind.Token), 0);
   return {
     masked: walk.raw === '' ? '' : walk.masked,
     raw: walk.raw,
@@ -98,11 +103,11 @@ export const maskCaret = (mask: string, count: number, length: number): number =
   let index = 0;
   let seen = 0;
   for (const slot of slots) {
-    if (slot.kind === 'token' && seen === count) {
+    if (slot.kind === MaskSlotKind.Token && seen === count) {
       break;
     }
     index += 1;
-    if (slot.kind === 'token') {
+    if (slot.kind === MaskSlotKind.Token) {
       seen += 1;
       if (seen === count) {
         break;

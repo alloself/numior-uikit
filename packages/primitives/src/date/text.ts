@@ -1,12 +1,12 @@
 import { parseNumber } from '../intl/number-format';
 import { formatIsoDate, parseIsoDate, partsOf, toUtc } from './iso';
 import { graphemesOf } from '../intl/graphemes';
+import { DateTimePart } from '../intl/intl.types';
+import { DateField } from './date.types';
 
 export type DateTextPart =
-  | { readonly type: 'year' | 'month' | 'day'; readonly length: number }
-  | { readonly type: 'literal'; readonly text: string };
-
-type DateField = 'year' | 'month' | 'day';
+  | { readonly type: DateField; readonly length: number }
+  | { readonly type: typeof DateTimePart.Literal; readonly text: string };
 
 const PATTERN_DATE = Date.UTC(2001, 10, 22);
 
@@ -18,8 +18,9 @@ const patterns = new Map<string, DateTextPart[]>();
 
 const textFormatters = new Map<string, Intl.DateTimeFormat>();
 
-const isDatePart = (type: string): type is 'year' | 'month' | 'day' =>
-  type === 'year' || type === 'month' || type === 'day';
+const DATE_FIELDS: ReadonlySet<string> = new Set(Object.values(DateField));
+
+const isDatePart = (type: string): type is DateField => DATE_FIELDS.has(type);
 
 const formatterFor = (locale: string): Intl.DateTimeFormat => {
   let formatter = textFormatters.get(locale);
@@ -48,7 +49,7 @@ export const datePatternOf = (locale: string): DateTextPart[] => {
       .map((part) =>
         isDatePart(part.type)
           ? { type: part.type, length: graphemesOf(part.value).length }
-          : { type: 'literal', text: part.value },
+          : { type: DateTimePart.Literal, text: part.value },
       );
 
     patterns.set(locale, pattern);
@@ -64,7 +65,7 @@ export const formatDateText = (date: string, locale: string): string => {
 };
 
 const fieldOrder = (locale: string): DateField[] =>
-  datePatternOf(locale).flatMap((part) => (part.type === 'literal' ? [] : [part.type]));
+  datePatternOf(locale).flatMap((part) => (part.type === DateTimePart.Literal ? [] : [part.type]));
 
 const digitGroups = (text: string): string[] =>
   [...text.replace(BIDI_MARKS, '').matchAll(DIGIT_GROUPS)].map((match) => match[0]);
@@ -72,7 +73,7 @@ const digitGroups = (text: string): string[] =>
 const readField = (group: string, type: DateField, locale: string): number | null => {
   const value = parseNumber(group, locale);
 
-  return type === 'year' && graphemesOf(group).length < 4 ? null : value;
+  return type === DateField.Year && graphemesOf(group).length < 4 ? null : value;
 };
 
 const readFields = (groups: readonly string[], order: readonly DateField[], locale: string) => {

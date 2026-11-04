@@ -9,8 +9,7 @@ import {
   type Ref,
 } from 'vue';
 import { useControlId } from '../id/useControlId';
-
-export type PopoverMode = 'auto' | 'manual';
+import { PopoverMode, PopoverState } from './popover.types';
 
 export interface PopoverOptions {
   readonly open: Ref<boolean>;
@@ -52,7 +51,7 @@ export const usePopover = (
   options: PopoverOptions,
 ): PopoverControl => {
   const id = useControlId(options.id);
-  const mode = computed<PopoverMode>(() => toValue(options.mode) ?? 'auto');
+  const mode = computed<PopoverMode>(() => toValue(options.mode) ?? PopoverMode.Auto);
   const visible = ref(false);
 
   const setOpen = (next: boolean): void => {
@@ -87,7 +86,7 @@ export const usePopover = (
   };
 
   const onBeforetoggle = (event: Event): void => {
-    const next = 'newState' in event && event.newState === 'open';
+    const next = 'newState' in event && event.newState === PopoverState.Open;
     visible.value = next;
     setOpen(next);
   };

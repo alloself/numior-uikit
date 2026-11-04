@@ -1,14 +1,11 @@
 import { graphemesOf } from './graphemes';
 import { numberSymbols } from './number-format';
 import type { TimeValue } from './time-model';
-
-export type HourCycle = 'h12' | 'h23';
-
-export type TimeSegmentType = 'hour' | 'minute' | 'second' | 'dayPeriod';
+import { DateTimePart, DayPeriod, HourCycle, TimeSegmentType } from './intl.types';
 
 export type TimeSegment =
   | { readonly type: TimeSegmentType }
-  | { readonly type: 'literal'; readonly text: string };
+  | { readonly type: typeof DateTimePart.Literal; readonly text: string };
 
 export interface TimeLayout {
   readonly cycle: HourCycle;
@@ -26,7 +23,7 @@ export interface TimeDraft {
   readonly hour: number | null;
   readonly minute: number | null;
   readonly second: number | null;
-  readonly period: 'am' | 'pm' | null;
+  readonly period: DayPeriod | null;
 }
 
 export interface SegmentBounds {
@@ -56,21 +53,24 @@ const FALLBACK_LABELS: Record<TimeSegmentType, string> = {
 
 const SAMPLE = new Date(Date.UTC(2000, 0, 1, 13, 5, 9));
 
-const isSegmentType = (type: string): type is TimeSegmentType =>
-  type === 'hour' || type === 'minute' || type === 'second' || type === 'dayPeriod';
+const SEGMENT_TYPES: ReadonlySet<string> = new Set(Object.values(TimeSegmentType));
+
+const TWELVE_HOUR_CYCLES: ReadonlySet<string> = new Set(['h11', HourCycle.H12]);
+
+const isSegmentType = (type: string): type is TimeSegmentType => SEGMENT_TYPES.has(type);
 
 export const resolveHourCycle = (locale: string, explicit?: HourCycle): HourCycle => {
   if (explicit) {
     return explicit;
   }
   const cycle = new Intl.DateTimeFormat(locale, { hour: 'numeric' }).resolvedOptions().hourCycle;
-  return cycle === 'h11' || cycle === 'h12' ? 'h12' : 'h23';
+  return cycle !== undefined && TWELVE_HOUR_CYCLES.has(cycle) ? HourCycle.H12 : HourCycle.H23;
 };
 
 const periodOf = (formatter: Intl.DateTimeFormat, hour: number): string | undefined =>
   formatter
     .formatToParts(new Date(Date.UTC(2000, 0, 1, hour, 0, 0)))
-    .find((part) => part.type === 'dayPeriod')?.value;
+    .find((part) => part.type === DateTimePart.DayPeriod)?.value;
 
 export const timeLayout = (locale: string, options: TimeLayoutOptions): TimeLayout => {
   const cycle = resolveHourCycle(locale, options.hourCycle);
@@ -87,7 +87,9 @@ export const timeLayout = (locale: string, options: TimeLayoutOptions): TimeLayo
     if (isSegmentType(part.type)) {
       return [{ type: part.type }];
     }
-    return part.type === 'literal' ? [{ type: 'literal', text: part.value }] : [];
+    return part.type === DateTimePart.Literal
+      ? [{ type: DateTimePart.Literal, text: part.value }]
+      : [];
   });
 
   return {
@@ -104,14 +106,14 @@ export const timeToDraft = (time: TimeValue | null, cycle: HourCycle): TimeDraft
   if (!time) {
     return EMPTY_DRAFT;
   }
-  if (cycle === 'h23') {
+  if (cycle === HourCycle.H23) {
     return { hour: time.hour, minute: time.minute, second: time.second, period: null };
   }
   return {
     hour: time.hour % 12 === 0 ? 12 : time.hour % 12,
     minute: time.minute,
     second: time.second,
-    period: time.hour >= 12 ? 'pm' : 'am',
+    period: time.hour >= 12 ? DayPeriod.Pm : DayPeriod.Am,
   };
 };
 
@@ -124,21 +126,21 @@ export const draftToTime = (
     return null;
   }
   const second = draft.second ?? 0;
-  if (cycle === 'h23') {
+  if (cycle === HourCycle.H23) {
     return { hour: draft.hour, minute: draft.minute, second };
   }
   if (draft.period === null) {
     return null;
   }
   const base = draft.hour % 12;
-  return { hour: draft.period === 'pm' ? base + 12 : base, minute: draft.minute, second };
+  return { hour: draft.period === DayPeriod.Pm ? base + 12 : base, minute: draft.minute, second };
 };
 
 export const segmentBounds = (type: TimeSegmentType, cycle: HourCycle): SegmentBounds => {
-  if (type === 'hour') {
-    return cycle === 'h12' ? { min: 1, max: 12 } : { min: 0, max: 23 };
+  if (type === TimeSegmentType.Hour) {
+    return cycle === HourCycle.H12 ? { min: 1, max: 12 } : { min: 0, max: 23 };
   }
-  return type === 'dayPeriod' ? { min: 0, max: 12 } : { min: 0, max: 59 };
+  return type === TimeSegmentType.DayPeriod ? { min: 0, max: 12 } : { min: 0, max: 59 };
 };
 
 export const enterDigit = (

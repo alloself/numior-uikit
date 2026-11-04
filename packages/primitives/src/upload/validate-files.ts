@@ -1,4 +1,4 @@
-import type { FileRejection, UploadError } from './upload.types';
+import { UploadReason, type FileRejection, type UploadError } from './upload.types';
 
 export interface ValidateFilesOptions {
   readonly accept?: string | undefined;
@@ -43,20 +43,20 @@ const errorFor = (
   room: number,
 ): UploadError | undefined => {
   if (!isAccepted(file, tokens)) {
-    return { reason: 'type' };
+    return { reason: UploadReason.Type };
   }
 
   if (options.maxSize !== undefined && file.size > options.maxSize) {
-    return { reason: 'size' };
+    return { reason: UploadReason.Size };
   }
 
   if (room <= 0) {
-    return { reason: 'count' };
+    return { reason: UploadReason.Count };
   }
 
   const message = options.validate?.(file);
 
-  return message === undefined ? undefined : { reason: 'custom', message };
+  return message === undefined ? undefined : { reason: UploadReason.Custom, message };
 };
 
 export const validateFiles = (
