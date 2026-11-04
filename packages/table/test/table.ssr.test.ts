@@ -419,7 +419,6 @@ describe('NuiTable on the server', () => {
     });
 
     expect(html.match(/nui-table__row--frozen/g)).toHaveLength(2);
-    expect(html.match(/nui-table__row--edge/g)).toHaveLength(1);
     expect(html).toContain('--_frozen:80px');
     expect(html).toContain('--_top:calc(var(--_head-size) + 40px)');
     expect(html.match(/aria-rowindex/g)).toHaveLength(31);

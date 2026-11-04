@@ -538,9 +538,6 @@
 .nui-table__row--frozen > .nui-table__cell--overflow {
   --_cell-layer: 4;
 }
-.nui-table__row--edge > .nui-table__cell {
-  border-block-end-color: var(--nui-border-strong);
-}
 .nui-table--striped .nui-table__body > .nui-table__row--odd {
   --_row-bg: var(--_stripe);
 }

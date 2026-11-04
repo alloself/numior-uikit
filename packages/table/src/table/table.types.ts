@@ -786,7 +786,6 @@ export interface TableBodyRow {
   readonly revision: number;
   readonly sized: Readonly<Record<string, string>> | undefined;
   readonly frozen: number | undefined;
-  readonly edge: boolean;
   readonly level: number | undefined;
   readonly treeLevel: number;
   readonly group: TableGroupRow | undefined;
@@ -846,7 +845,6 @@ export interface NuiTableRowProps {
   sizable?: boolean | undefined;
   sizing?: boolean | undefined;
   frozen?: number | undefined;
-  edge?: boolean | undefined;
   head?: ((key: string) => TableHeadState | undefined) | undefined;
   plainText?: ((position: number, key: string) => string | undefined) | undefined;
 }

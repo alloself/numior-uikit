@@ -216,6 +216,10 @@ export class TableSheetSection {
     return this.viewport.evaluate((element) => element.scrollHeight);
   }
 
+  lineColorBelow(target: Locator): Promise<string> {
+    return target.evaluate((element) => getComputedStyle(element).borderBlockEndColor);
+  }
+
   lineAfter(position: number, col: number): Promise<string> {
     return this.cell(position, col).evaluate(
       (element) => getComputedStyle(element).borderInlineEndWidth,

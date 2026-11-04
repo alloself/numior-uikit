@@ -112,7 +112,6 @@ const {
   sizable = false,
   sizing = false,
   frozen,
-  edge = false,
   head,
   plainText,
 } = defineProps<NuiTableRowProps>();
@@ -234,7 +233,6 @@ const rowClass = computed(() => [
     'nui-table__row--odd': stripe,
     'nui-table__row--dragging': dragging,
     'nui-table__row--frozen': frozen !== undefined,
-    'nui-table__row--edge': edge,
   },
 ]);
 

@@ -17,7 +17,6 @@ const FIELDS = [
   'part',
   'revision',
   'frozen',
-  'edge',
   'level',
   'treeLevel',
   'group',

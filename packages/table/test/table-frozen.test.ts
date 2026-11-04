@@ -39,8 +39,6 @@ describe('NuiTable frozen rows', () => {
     expect(grid.rowFrozen(0)).toBe('calc(var(--_head-size) + 0px)');
     expect(grid.rowFrozen(1)).toBe('calc(var(--_head-size) + 40px)');
     expect(grid.rowFrozen(2)).toBeUndefined();
-    expect(grid.rowEdge(0)).toBe(false);
-    expect(grid.rowEdge(1)).toBe(true);
     expect(grid.frozenSize).toBe('80px');
 
     await grid.scroll({ top: 2000 });
@@ -108,7 +106,6 @@ describe('NuiTable frozen rows', () => {
     await grid.settle();
 
     expect(grid.renderedRows).toEqual(range(0, 100));
-    expect(grid.rowEdge(99)).toBe(true);
 
     await grid.receive({ frozenRows: 1, loading: true });
     expect(grid.frozenSize).toBe('0px');

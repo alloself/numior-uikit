@@ -384,8 +384,6 @@ test.describe('table cell styles', () => {
     await sheet.windowSwitch.click();
     await sheet.frozenSwitch.click();
 
-    await expect(sheet.row(HEAD)).toHaveClass(/nui-table__row--edge/);
-
     expect(await sheet.bandOf(sheet.rowHeader(TITLE))).toEqual({
       top: HEAD_HEIGHT,
       bottom: HEAD_HEIGHT + TITLE_HEIGHT,
@@ -407,6 +405,10 @@ test.describe('table cell styles', () => {
     expect(await sheet.rowAt(FROZEN_BOTTOM - 4)).toBe(HEAD);
     expect(await sheet.rowAt(FROZEN_BOTTOM + 4)).toBeGreaterThan(SALES);
     await expect(sheet.text(HEAD, 0)).toHaveText('Статья');
+
+    expect(await sheet.lineColorBelow(sheet.rowHeader(HEAD))).toBe(
+      await sheet.lineColorBelow(sheet.rowHeader(JOURNAL)),
+    );
 
     await sheet.frozenSwitch.click();
     await expect(sheet.row(HEAD)).toHaveCount(0);

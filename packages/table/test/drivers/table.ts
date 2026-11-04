@@ -765,10 +765,6 @@ export class TableDriver<T> {
       : undefined;
   }
 
-  rowEdge(position: number): boolean {
-    return this.row(position)?.classList.contains('nui-table__row--edge') ?? false;
-  }
-
   get frozenSize(): string {
     return this.wrapper.find<HTMLElement>('.nui-table').element.style.getPropertyValue('--_frozen');
   }
