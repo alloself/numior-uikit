@@ -2,9 +2,9 @@ import { formatNumber } from '../intl/number-format';
 import { parseIsoDate, toUtc } from './iso';
 import type { Weekday } from './week';
 
-export type WeekdayWidth = 'narrow' | 'short' | 'long';
+export type WeekdayWidth = NonNullable<Intl.DateTimeFormatOptions['weekday']>;
 
-export type MonthWidth = 'short' | 'long';
+export type MonthWidth = Extract<Intl.DateTimeFormatOptions['month'], 'short' | 'long'>;
 
 const SUNDAY_REGIONS = new Set([
   'AG',

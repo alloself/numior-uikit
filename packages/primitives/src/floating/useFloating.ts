@@ -10,9 +10,7 @@ import {
   type MiddlewareData,
 } from '@floating-ui/dom';
 import { onMounted, toValue, watch, type MaybeRefOrGetter } from 'vue';
-import { FloatingSide, FloatingStrategy } from './floating.types';
-
-export type FloatingPlacement = FloatingSide | `${FloatingSide}-start` | `${FloatingSide}-end`;
+import { FloatingPlacement, FloatingSide, FloatingStrategy } from './floating.types';
 
 export interface FloatingSize {
   readonly matchWidth?: boolean | undefined;
@@ -148,7 +146,7 @@ export const useFloating = (
   options: FloatingOptions = {},
 ): void => {
   const strategy = options.strategy ?? FloatingStrategy.Fixed;
-  const requested = (): FloatingPlacement => toValue(options.placement) ?? FloatingSide.Bottom;
+  const requested = (): FloatingPlacement => toValue(options.placement) ?? FloatingPlacement.Bottom;
 
   const elements = (): Elements | null => {
     const referenceElement = toValue(reference);

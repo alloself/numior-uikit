@@ -44,20 +44,47 @@ const signatureOf = (
         ts.TypeFormatFlags.NoTruncation,
       )}`;
 
-export const exportedDeclarations = (
-  file: string,
-  pkg: string,
-  skip: ReadonlySet<string>,
-): DeclarationReference[] => {
+const exportsOf = (file: string): { checker: ts.TypeChecker; exports: readonly ts.Symbol[] } => {
   const program = ts.createProgram([file], { skipLibCheck: true, noEmit: true });
   const checker = program.getTypeChecker();
   const source = program.getSourceFile(file);
   const moduleSymbol = source === undefined ? undefined : checker.getSymbolAtLocation(source);
 
-  if (moduleSymbol === undefined) {
-    return [];
+  return {
+    checker,
+    exports: moduleSymbol === undefined ? [] : checker.getExportsOfModule(moduleSymbol),
+  };
+};
+
+export const enumerationMembers = (file: string): ReadonlyMap<string, string> => {
+  const { checker, exports } = exportsOf(file);
+  const members = new Map<string, string>();
+
+  for (const exported of exports) {
+    const symbol =
+      exported.flags & ts.SymbolFlags.Alias ? checker.getAliasedSymbol(exported) : exported;
+
+    if (symbol.flags & ts.SymbolFlags.Variable) {
+      for (const member of checker.getTypeOfSymbol(symbol).getProperties()) {
+        const value = checker.getTypeOfSymbol(member);
+
+        if (value.isStringLiteral()) {
+          members.set(`${exported.name}.${member.name}`, JSON.stringify(value.value));
+        }
+      }
+    }
   }
-  return checker.getExportsOfModule(moduleSymbol).flatMap((exported) => {
+  return members;
+};
+
+export const exportedDeclarations = (
+  file: string,
+  pkg: string,
+  skip: ReadonlySet<string>,
+): DeclarationReference[] => {
+  const { checker, exports } = exportsOf(file);
+
+  return exports.flatMap((exported) => {
     if (skip.has(exported.name)) {
       return [];
     }

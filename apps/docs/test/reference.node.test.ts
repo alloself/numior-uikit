@@ -3,7 +3,7 @@ import { beforeAll, describe, expect, it } from 'vite-plus/test';
 import { createChecker, type MetaCheckerOptions } from 'vue-component-meta';
 import { catalogReference } from '../.vitepress/reference/catalogs';
 import { parseBlocks, parseTokens } from '../.vitepress/reference/css';
-import { exportedDeclarations } from '../.vitepress/reference/declarations';
+import { enumerationMembers, exportedDeclarations } from '../.vitepress/reference/declarations';
 import { buildReference } from '../.vitepress/reference/build';
 import { applyDocs, checkDocs, loadDocsDir } from '../.vitepress/reference/docs';
 import { parseIconAliases } from '../.vitepress/reference/icons';
@@ -202,6 +202,22 @@ describe('docs reference', () => {
     expect(hotkey?.signature).toContain('useHotkey: (');
     expect(alias?.kind).toBe('type');
     expect(alias?.signature.startsWith('type IconAlias =')).toBe(true);
+  });
+
+  it('prints an enumeration as its literal union and resolves its members', () => {
+    const file = `${ROOT}packages/primitives/dist/index.d.ts`;
+    const declarations = exportedDeclarations(file, '@numior/primitives', new Set());
+    const orientation = declarations.find((entry) => entry.name === 'ListOrientation');
+    const members = enumerationMembers(file);
+
+    expect(orientation?.kind).toBe('type');
+
+    expect(orientation?.signature).toBe(
+      'type ListOrientation = "vertical" | "horizontal" | "both";',
+    );
+
+    expect(members.get('ListOrientation.Horizontal')).toBe('"horizontal"');
+    expect(members.get('Key.Space')).toBe('" "');
   });
 
   it('merges descriptions and reports missing or stale ones', () => {

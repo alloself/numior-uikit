@@ -4,7 +4,7 @@ import { pathToFileURL } from 'node:url';
 import { createChecker } from 'vue-component-meta';
 import { catalogReference } from './catalogs.ts';
 import { parseBlocks, parseTokens } from './css.ts';
-import { exportedDeclarations } from './declarations.ts';
+import { enumerationMembers, exportedDeclarations } from './declarations.ts';
 import { applyDocs, checkDocs } from './docs.ts';
 import { parseIconAliases } from './icons.ts';
 import { componentReference } from './meta.ts';
@@ -60,6 +60,7 @@ const collectComponent = async (
   checker: ReturnType<typeof createChecker>,
   entry: ComponentEntry,
   docs: DocsMap,
+  members: ReadonlyMap<string, string>,
 ): Promise<CollectedComponent> => {
   const messagesFile = familyFile(entry, '.messages.ts');
   const catalog = messagesFile === undefined ? undefined : await loadCatalog(messagesFile);
@@ -69,6 +70,7 @@ const collectComponent = async (
     checker.getComponentMeta(entry.file),
     stylesOf(entry),
     catalog?.namespace,
+    members,
   );
 
   const componentDocs = docs[entry.name];
@@ -90,12 +92,18 @@ export const buildReference = async (root: string, docs: DocsMap): Promise<Refer
     schema: { ignore: ['HTMLElement', 'Element'] },
   });
 
+  const members = new Map(
+    [PRIMITIVES, ...PACKAGES].flatMap((pkg) => [
+      ...enumerationMembers(join(root, pkg.dir, 'dist/index.d.ts')),
+    ]),
+  );
+
   const components: Record<string, ComponentReference> = {};
   const catalogs: Record<string, CatalogReference> = {};
   const problems: string[] = [];
 
   for (const entry of allEntries(root)) {
-    const collected = await collectComponent(checker, entry, docs);
+    const collected = await collectComponent(checker, entry, docs, members);
 
     components[entry.name] = collected.component;
     problems.push(...collected.problems);

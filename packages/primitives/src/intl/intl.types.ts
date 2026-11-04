@@ -6,7 +6,7 @@ export type HourCycle = (typeof HourCycle)[keyof typeof HourCycle];
 
 export type DayPeriod = (typeof DayPeriod)[keyof typeof DayPeriod];
 
-export type NumberStyle = (typeof NumberStyle)[keyof typeof NumberStyle];
+export type NumberStyle = NonNullable<Intl.NumberFormatOptions['style']>;
 
 export const DateTimePart = {
   Literal: 'literal',
@@ -17,7 +17,7 @@ export const DateTimePart = {
   Minute: 'minute',
   Second: 'second',
   DayPeriod: 'dayPeriod',
-} as const;
+} as const satisfies Record<string, Intl.DateTimeFormatPartTypes>;
 
 export const TimeSegmentType = {
   Hour: DateTimePart.Hour,
@@ -26,7 +26,10 @@ export const TimeSegmentType = {
   DayPeriod: DateTimePart.DayPeriod,
 } as const;
 
-export const HourCycle = { H12: 'h12', H23: 'h23' } as const;
+export const HourCycle = {
+  H12: 'h12',
+  H23: 'h23',
+} as const satisfies Record<string, Intl.LocaleHourCycleKey>;
 
 export const DayPeriod = { Am: 'am', Pm: 'pm' } as const;
 
@@ -35,4 +38,4 @@ export const NumberStyle = {
   Percent: 'percent',
   Currency: 'currency',
   Unit: 'unit',
-} as const;
+} as const satisfies Record<string, NumberStyle>;

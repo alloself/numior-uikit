@@ -20,7 +20,7 @@ export interface FileDrop {
 interface FileTransfer {
   readonly files: ArrayLike<File>;
   readonly types: ArrayLike<string>;
-  dropEffect: string;
+  dropEffect: DataTransfer['dropEffect'];
 }
 
 const isFileTransfer = (value: unknown): value is FileTransfer =>

@@ -43,10 +43,15 @@ const kindOf = (type: string, values: readonly string[]): ReferencePropKind => {
   return bare === 'string' || bare === 'number' ? bare : 'other';
 };
 
-const defaultOf = (value: string | undefined): string | undefined =>
-  value === undefined || value === 'undefined' ? undefined : value;
+const NO_MEMBERS: ReadonlyMap<string, string> = new Map();
 
-const propOf = (prop: PropertyMeta): ReferenceProp => {
+const defaultOf = (
+  value: string | undefined,
+  members: ReadonlyMap<string, string>,
+): string | undefined =>
+  value === undefined || value === 'undefined' ? undefined : (members.get(value) ?? value);
+
+const propOf = (prop: PropertyMeta, members: ReadonlyMap<string, string>): ReferenceProp => {
   const values = literalValues(prop.schema);
   const kind = kindOf(prop.type, values);
 
@@ -55,7 +60,7 @@ const propOf = (prop: PropertyMeta): ReferenceProp => {
     type: prop.type.replace(OPTIONAL_SUFFIX, ''),
     kind,
     required: prop.required,
-    default: defaultOf(prop.default),
+    default: defaultOf(prop.default, members),
     values: kind === 'enum' ? values : undefined,
     description: undefined,
   };
@@ -67,7 +72,11 @@ const memberOf = (member: { name: string; type: string }): ReferenceMember => ({
   description: undefined,
 });
 
-const modelOf = (event: EventMeta, prop: PropertyMeta): ReferenceModel => {
+const modelOf = (
+  event: EventMeta,
+  prop: PropertyMeta,
+  members: ReadonlyMap<string, string>,
+): ReferenceModel => {
   const propName = event.name.slice(UPDATE_PREFIX.length);
 
   return {
@@ -75,7 +84,7 @@ const modelOf = (event: EventMeta, prop: PropertyMeta): ReferenceModel => {
     prop: propName,
     event: event.name,
     type: prop.type.replace(OPTIONAL_SUFFIX, ''),
-    default: defaultOf(prop.default),
+    default: defaultOf(prop.default, members),
     description: undefined,
   };
 };
@@ -85,13 +94,14 @@ export const componentReference = (
   meta: ComponentMeta,
   styles: ReferenceStyles | undefined,
   messages: string | undefined,
+  members: ReadonlyMap<string, string> = NO_MEMBERS,
 ): ComponentReference => {
   const own = meta.props.filter((prop) => !prop.global);
 
   const models = meta.events.flatMap((event) => {
     const prop = own.find((candidate) => `${UPDATE_PREFIX}${candidate.name}` === event.name);
 
-    return prop === undefined ? [] : [modelOf(event, prop)];
+    return prop === undefined ? [] : [modelOf(event, prop, members)];
   });
 
   const modelProps = new Set(models.map((model) => model.prop));
@@ -106,7 +116,7 @@ export const componentReference = (
     messages,
     props: own.reduce<ReferenceProp[]>((found, prop) => {
       if (!modelProps.has(prop.name)) {
-        found.push(propOf(prop));
+        found.push(propOf(prop, members));
       }
       return found;
     }, []),

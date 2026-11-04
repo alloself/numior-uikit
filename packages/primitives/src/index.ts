@@ -1,5 +1,6 @@
 export { useControlId } from './id/useControlId';
 export { Key } from './keyboard/key.types';
+export { PointerType } from './pointer/pointer.types';
 export {
   FIELD_KEY,
   createFieldContext,
@@ -176,8 +177,8 @@ export { UploadReason, UploadStatus } from './upload/upload.types';
 export { useSplitAttrs } from './attrs/useSplitAttrs';
 export type { AttrRecord, SplitAttrs } from './attrs/useSplitAttrs';
 export { useFloating } from './floating/useFloating';
-export type { FloatingOptions, FloatingPlacement, FloatingSize } from './floating/useFloating';
-export { FloatingSide, FloatingStrategy } from './floating/floating.types';
+export type { FloatingOptions, FloatingSize } from './floating/useFloating';
+export { FloatingPlacement, FloatingSide, FloatingStrategy } from './floating/floating.types';
 export { usePopover } from './popover/usePopover';
 export type {
   PopoverContentAttrs,
