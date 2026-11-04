@@ -9,6 +9,7 @@ import {
   shapeOf,
   type Guarded,
 } from '../../../packages/primitives/test/support/guards';
+import { sectionScope } from '../helpers/axe';
 
 export type SignupOutput = Guarded<typeof isSignupOutput>;
 
@@ -33,6 +34,8 @@ const FIELD = 'xpath=ancestor::*[contains(concat(" ", @class, " "), " nui-field 
 const CHECKBOX_BOX = 'xpath=following-sibling::*[contains(@class, "nui-checkbox__box")][1]';
 
 export class SignupSection {
+  readonly scope = sectionScope('signup');
+
   readonly form: Locator;
   readonly server: Locator;
   readonly reserve: Locator;

@@ -1,10 +1,10 @@
 import { type Locator } from '@playwright/test';
 import { expect, test } from './fixtures';
 
-test.beforeEach(async ({ playground }) => {
+test.beforeEach(async ({ playground, editor }) => {
   await playground.emulate({ reducedMotion: 'reduce' });
   await playground.open();
-  await playground.editor.root.scrollIntoViewIfNeeded();
+  await editor.root.scrollIntoViewIfNeeded();
 });
 
 const SAMPLE = '="/media/sunrise.svg"';

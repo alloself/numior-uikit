@@ -1,11 +1,11 @@
 import { expect, test } from './fixtures';
 import { boxOf } from './helpers/geometry';
 
-test.beforeEach(async ({ playground }) => {
+test.beforeEach(async ({ playground, editor }) => {
   await playground.emulate({ reducedMotion: 'reduce' });
   await playground.open();
   await playground.setDirection('rtl');
-  await playground.editor.root.scrollIntoViewIfNeeded();
+  await editor.root.scrollIntoViewIfNeeded();
 });
 
 test.describe('editor right to left', () => {

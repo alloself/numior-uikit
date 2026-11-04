@@ -7,6 +7,7 @@ import {
   shapeOf,
   type Guarded,
 } from '../../../packages/primitives/test/support/guards';
+import { sectionScope } from '../helpers/axe';
 
 export type LayoutOutput = Guarded<typeof isLayoutOutput>;
 
@@ -23,6 +24,8 @@ const parseLayoutOutput = (text: string): LayoutOutput =>
   parseAs(text, isLayoutOutput, 'layout output');
 
 export class LayoutSection {
+  readonly scope = sectionScope('layout');
+
   readonly root: Locator;
   readonly sidebar: Locator;
   readonly drawer: Locator;

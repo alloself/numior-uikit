@@ -7,6 +7,7 @@ import {
   type Guarded,
 } from '../../../packages/primitives/test/support/guards';
 import { boxOf, type Box } from '../helpers/geometry';
+import { sectionScope } from '../helpers/axe';
 
 export type NavigationOutput = Guarded<typeof isNavigationOutput>;
 
@@ -25,6 +26,8 @@ const parseNavigationOutput = (text: string): NavigationOutput =>
   parseAs(text, isNavigationOutput, 'navigation output');
 
 export class NavigationSection {
+  readonly scope = sectionScope('navigation');
+
   readonly menuTrigger: Locator;
   readonly menu: Locator;
   readonly subTrigger: Locator;

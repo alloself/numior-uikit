@@ -282,7 +282,6 @@ test.describe('navigation', () => {
     navigation,
     page,
   }) => {
-    test.slow();
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
 
@@ -290,7 +289,7 @@ test.describe('navigation', () => {
       await playground.setTheme(theme);
       await navigation.menuTrigger.click();
       await expect(navigation.menu).toBeVisible();
-      expect(await playground.wcagViolations()).toEqual([]);
+      expect(await playground.wcagViolations(navigation.scope)).toEqual([]);
 
       await page.keyboard.press('Escape');
       await expect(navigation.menu).toBeHidden();

@@ -263,8 +263,8 @@ test.describe('table detail rows', () => {
 
   test('open details have no automatically detectable WCAG AA violations', async ({
     playground,
+    tableDetail,
   }) => {
-    test.slow();
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
     const { tableDetail: detail } = playground;
@@ -274,7 +274,7 @@ test.describe('table detail rows', () => {
 
     for (const theme of ['light', 'dark'] as const) {
       await playground.setTheme(theme);
-      expect(await playground.wcagViolations()).toEqual([]);
+      expect(await playground.wcagViolations(tableDetail.scope)).toEqual([]);
     }
   });
 });

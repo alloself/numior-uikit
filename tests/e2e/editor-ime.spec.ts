@@ -1,10 +1,10 @@
 import { expect, test } from './fixtures';
 
-test.beforeEach(async ({ playground }) => {
+test.beforeEach(async ({ playground, editor }) => {
   await playground.emulate({ reducedMotion: 'reduce' });
   await playground.open();
-  await playground.editor.root.scrollIntoViewIfNeeded();
-  await playground.editor.clear();
+  await editor.root.scrollIntoViewIfNeeded();
+  await editor.clear();
 });
 
 test.describe('editor input methods', () => {

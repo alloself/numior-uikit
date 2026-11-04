@@ -237,7 +237,6 @@ test.describe('layers', () => {
     playground,
     overlays,
   }) => {
-    test.slow();
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
 
@@ -245,14 +244,14 @@ test.describe('layers', () => {
       await playground.setTheme(theme);
       await overlays.popoverTrigger.click();
       await expect(overlays.popover).toBeVisible();
-      expect(await playground.wcagViolations()).toEqual([]);
+      expect(await playground.wcagViolations(overlays.scope)).toEqual([]);
 
       await overlays.pressEscape();
       await expect(overlays.popover).toBeHidden();
 
       await overlays.dialogOpen.click();
       await expect(overlays.dialog).toBeVisible();
-      expect(await playground.wcagViolations()).toEqual([]);
+      expect(await playground.wcagViolations(overlays.scope)).toEqual([]);
 
       await overlays.pressEscape();
       await expect(overlays.dialog).toBeHidden();

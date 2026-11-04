@@ -1,5 +1,5 @@
 import type { Locator, Page } from '@playwright/test';
-import { wcagViolationsOf, type AxeViolations } from '../helpers/axe';
+import { sectionScope, wcagViolationsOf, type AxeViolations } from '../helpers/axe';
 import { DataSection } from './data';
 import { DatesSection } from './dates';
 import { FeedbackSection } from './feedback';
@@ -69,6 +69,8 @@ const parseFormsOutput = (text: string): FormsOutput =>
   parseAs(text, isFormsOutput, 'forms output');
 
 export class FormsSection {
+  readonly scope = sectionScope('forms');
+
   readonly root: Locator;
   readonly nameInput: Locator;
   readonly emailInput: Locator;

@@ -238,13 +238,12 @@ test.describe('signup form', () => {
     playground,
     signup,
   }) => {
-    test.slow();
     await signup.submit.click();
     await expect(signup.errorOf(signup.login)).toBeVisible();
 
     for (const theme of ['light', 'dark'] as const) {
       await playground.setTheme(theme);
-      expect(await playground.wcagViolations()).toEqual([]);
+      expect(await playground.wcagViolations(signup.scope)).toEqual([]);
     }
   });
 
@@ -256,6 +255,6 @@ test.describe('signup form', () => {
     await signup.fillValid();
     await signup.submit.click();
     await expect(signup.alert).toBeVisible();
-    expect(await playground.wcagViolations()).toEqual([]);
+    expect(await playground.wcagViolations(signup.scope)).toEqual([]);
   });
 });

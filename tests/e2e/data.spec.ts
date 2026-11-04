@@ -191,13 +191,14 @@ test.describe('data display', () => {
 
   test('data display has no automatically detectable WCAG AA violations', async ({
     playground,
+    data,
   }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
-    await expect(playground.data.cardLink).toBeVisible();
-    expect(await playground.wcagViolations()).toEqual([]);
+    await expect(data.cardLink).toBeVisible();
+    expect(await playground.wcagViolations(data.scope)).toEqual([]);
 
     await playground.setTheme('dark');
-    expect(await playground.wcagViolations()).toEqual([]);
+    expect(await playground.wcagViolations(data.scope)).toEqual([]);
   });
 });

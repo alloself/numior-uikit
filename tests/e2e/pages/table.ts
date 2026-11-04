@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { expect, type Locator, type Page } from '@playwright/test';
 import { copiedTexts, stubClipboard } from '../helpers/clipboard';
 import { boxOf, renderedWidth, type Box } from '../helpers/geometry';
+import { sectionScope } from '../helpers/axe';
 
 export interface TableCell {
   readonly row: number;
@@ -21,6 +22,8 @@ export interface TableScroll {
 const HEAD_ROWS = 2;
 
 export class TableSection {
+  readonly scope = sectionScope('table');
+
   readonly root: Locator;
   readonly viewport: Locator;
   readonly grid: Locator;

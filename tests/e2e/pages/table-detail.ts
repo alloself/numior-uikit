@@ -7,6 +7,7 @@ import {
   shapeOf,
   type Guarded,
 } from '../../../packages/primitives/test/support/guards';
+import { sectionScope } from '../helpers/axe';
 
 export type TableDetailOutput = Guarded<typeof isDetailOutput>;
 
@@ -30,6 +31,8 @@ const HEAD_ROWS = 1;
 const BODY_ROWS = ':scope > .nui-table__body > [role="row"]';
 
 export class TableDetailSection {
+  readonly scope = sectionScope('table-detail');
+
   readonly root: Locator;
   readonly viewport: Locator;
   readonly grid: Locator;

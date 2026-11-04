@@ -215,7 +215,7 @@ test.describe('smart form', () => {
 
     for (const theme of ['light', 'dark'] as const) {
       await playground.setTheme(theme);
-      expect(await playground.wcagViolations()).toEqual([]);
+      expect(await playground.wcagViolations(smartForm.scope)).toEqual([]);
     }
   });
 
@@ -237,7 +237,7 @@ test.describe('smart form', () => {
 
     await smartForm.control('name').focus();
     await expect(smartForm.control('name')).toBeFocused();
-    expect(await playground.wcagViolations()).toEqual([]);
+    expect(await playground.wcagViolations(smartForm.scope)).toEqual([]);
 
     await smartForm.readonlyToggle.uncheck();
     await expect(smartForm.control('name')).not.toHaveAttribute('readonly');

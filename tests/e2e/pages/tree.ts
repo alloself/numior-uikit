@@ -7,6 +7,7 @@ import {
   shapeOf,
   type Guarded,
 } from '../../../packages/primitives/test/support/guards';
+import { sectionScope } from '../helpers/axe';
 
 export type TreeOutput = Guarded<typeof isTreeOutput>;
 
@@ -26,6 +27,8 @@ const isTreeOutput = shapeOf({
 const parseTreeOutput = (text: string): TreeOutput => parseAs(text, isTreeOutput, 'tree output');
 
 export class TreeSection {
+  readonly scope = sectionScope('tree');
+
   readonly tree: Locator;
   readonly checkTree: Locator;
   readonly virtualTree: Locator;

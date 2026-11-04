@@ -3,11 +3,11 @@ import { PlaygroundPage } from './pages/playground';
 
 const VIDEO = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ';
 
-test.beforeEach(async ({ playground }) => {
+test.beforeEach(async ({ playground, editor }) => {
   await playground.emulate({ reducedMotion: 'reduce' });
   await playground.open();
-  await playground.editor.liveLinksSwitch().click();
-  await playground.editor.root.scrollIntoViewIfNeeded();
+  await editor.liveLinksSwitch().click();
+  await editor.root.scrollIntoViewIfNeeded();
 });
 
 const newLine = async (playground: PlaygroundPage): Promise<void> => {

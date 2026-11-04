@@ -131,9 +131,13 @@ test.describe('form controls', () => {
     await expectRgb(forms.wrapperOf(forms.nameInput), 'border-top-color', [67, 56, 202]);
   });
 
-  test('double-clicking a toggle label does not select its text', async ({ playground, page }) => {
+  test('double-clicking a toggle label does not select its text', async ({
+    playground,
+    forms,
+    page,
+  }) => {
     await playground.open();
-    await playground.forms.label('Принимаю условия').dblclick();
+    await forms.label('Принимаю условия').dblclick();
     expect(await page.evaluate(() => document.getSelection()?.isCollapsed ?? true)).toBe(true);
   });
 
@@ -160,15 +164,16 @@ test.describe('form controls', () => {
 
   test('forms with a visible error have no detectable WCAG AA violations', async ({
     playground,
+    forms,
   }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
-    await playground.forms.emailInput.fill('nope');
-    await expect(playground.forms.emailInput).toHaveAttribute('aria-invalid', 'true');
+    await forms.emailInput.fill('nope');
+    await expect(forms.emailInput).toHaveAttribute('aria-invalid', 'true');
 
     for (const theme of ['light', 'dark'] as const) {
       await playground.setTheme(theme);
-      expect(await playground.wcagViolations()).toEqual([]);
+      expect(await playground.wcagViolations(forms.scope)).toEqual([]);
     }
   });
 });

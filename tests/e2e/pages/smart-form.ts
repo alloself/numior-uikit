@@ -9,6 +9,7 @@ import {
   type Guarded,
 } from '../../../packages/primitives/test/support/guards';
 import { boxOf, type Point } from '../helpers/geometry';
+import { sectionScope } from '../helpers/axe';
 
 export type SmartFormOutput = Guarded<typeof isSmartFormOutput>;
 
@@ -37,6 +38,8 @@ const parseSmartFormOutput = (text: string): SmartFormOutput =>
 const FIELD = 'xpath=ancestor::*[contains(concat(" ", @class, " "), " nui-field ")][1]';
 
 export class SmartFormSection {
+  readonly scope = sectionScope('smart');
+
   readonly filter: Locator;
   readonly profile: Locator;
   readonly json: Locator;

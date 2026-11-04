@@ -7,6 +7,7 @@ import {
   shapeOf,
   type Guarded,
 } from '../../../packages/primitives/test/support/guards';
+import { sectionScope } from '../helpers/axe';
 
 export type OverlaysOutput = Guarded<typeof isOverlaysOutput>;
 
@@ -27,6 +28,8 @@ const parseOverlaysOutput = (text: string): OverlaysOutput =>
   parseAs(text, isOverlaysOutput, 'overlays output');
 
 export class OverlaysSection {
+  readonly scope = sectionScope('overlays');
+
   readonly dialogOpen: Locator;
   readonly dialog: Locator;
   readonly dialogConfirm: Locator;

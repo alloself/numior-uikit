@@ -8,6 +8,7 @@ import {
   type Guarded,
 } from '../../../packages/primitives/test/support/guards';
 import { type Box } from '../helpers/geometry';
+import { sectionScope } from '../helpers/axe';
 
 export type FeedbackOutput = Guarded<typeof isFeedbackOutput>;
 
@@ -30,6 +31,8 @@ const readBoxes = (elements: readonly Element[]): Box[] =>
 export const bottomOf = (box: Box): number => box.y + box.height;
 
 export class FeedbackSection {
+  readonly scope = sectionScope('feedback');
+
   readonly toaster: Locator;
   readonly stackItems: Locator;
   readonly toastShow: Locator;

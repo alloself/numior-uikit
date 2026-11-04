@@ -10,6 +10,7 @@ import {
   shapeOf,
   type Guarded,
 } from '../../../packages/primitives/test/support/guards';
+import { sectionScope } from '../helpers/axe';
 
 export type PickersOutput = Guarded<typeof isPickersOutput>;
 
@@ -32,6 +33,8 @@ const ROOT =
   'xpath=ancestor::*[contains(@class, "nui-select") or contains(@class, "nui-combobox")][1]';
 
 export class PickersSection {
+  readonly scope = sectionScope('pickers');
+
   readonly countryTrigger: Locator;
   readonly longTrigger: Locator;
   readonly tagsTrigger: Locator;

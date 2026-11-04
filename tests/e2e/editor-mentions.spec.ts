@@ -1,10 +1,10 @@
 import { expect, test } from './fixtures';
 import { PlaygroundPage } from './pages/playground';
 
-test.beforeEach(async ({ playground }) => {
+test.beforeEach(async ({ playground, editor }) => {
   await playground.emulate({ reducedMotion: 'reduce' });
   await playground.open();
-  await playground.editor.root.scrollIntoViewIfNeeded();
+  await editor.root.scrollIntoViewIfNeeded();
 });
 
 const newLine = async (playground: PlaygroundPage): Promise<void> => {

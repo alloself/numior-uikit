@@ -207,7 +207,7 @@ test.describe('upload', () => {
 
     for (const theme of ['light', 'dark'] as const) {
       await playground.setTheme(theme);
-      expect(await playground.wcagViolations()).toEqual([]);
+      expect(await playground.wcagViolations(upload.scope)).toEqual([]);
     }
   });
 });

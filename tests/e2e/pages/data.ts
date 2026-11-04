@@ -10,6 +10,7 @@ import {
   shapeOf,
   type Guarded,
 } from '../../../packages/primitives/test/support/guards';
+import { sectionScope } from '../helpers/axe';
 
 export type DataOutput = Guarded<typeof isDataOutput>;
 
@@ -25,6 +26,8 @@ const isDataOutput = shapeOf({
 const parseDataOutput = (text: string): DataOutput => parseAs(text, isDataOutput, 'data output');
 
 export class DataSection {
+  readonly scope = sectionScope('data');
+
   readonly badgeCount: Locator;
   readonly badgeDot: Locator;
   readonly badgeFloating: Locator;

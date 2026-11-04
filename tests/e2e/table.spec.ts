@@ -1158,37 +1158,39 @@ test.describe('table', () => {
     await expect(table.treeRow(0)).toHaveAttribute('aria-selected', 'true');
   });
 
-  test('data table has no automatically detectable WCAG AA violations', async ({ playground }) => {
-    test.slow();
+  test('data table has no automatically detectable WCAG AA violations', async ({
+    playground,
+    table,
+  }) => {
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
-    await playground.table.root.scrollIntoViewIfNeeded();
+    await table.root.scrollIntoViewIfNeeded();
 
     for (const theme of ['light', 'dark'] as const) {
       await playground.setTheme(theme);
-      expect(await playground.wcagViolations()).toEqual([]);
+      expect(await playground.wcagViolations(table.scope)).toEqual([]);
     }
   });
 
   test('column menu has no automatically detectable WCAG AA violations', async ({
     playground,
+    table,
     page,
   }) => {
-    test.slow();
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
-    await playground.table.root.scrollIntoViewIfNeeded();
+    await table.root.scrollIntoViewIfNeeded();
 
     for (const theme of ['light', 'dark'] as const) {
       await playground.setTheme(theme);
-      await playground.table.openMenu(10);
-      await playground.table.menuItem('Колонки').click();
-      await expect(playground.table.menuItem('Почта')).toBeVisible();
-      expect(await playground.wcagViolations()).toEqual([]);
+      await table.openMenu(10);
+      await table.menuItem('Колонки').click();
+      await expect(table.menuItem('Почта')).toBeVisible();
+      expect(await playground.wcagViolations(table.scope)).toEqual([]);
 
       await page.keyboard.press('Escape');
       await page.keyboard.press('Escape');
-      await expect(playground.table.menu).toBeHidden();
+      await expect(table.menu).toBeHidden();
     }
   });
 
@@ -1204,22 +1206,22 @@ test.describe('table', () => {
     await table.dragRange({ row: 1, col: 1 }, { row: 2, col: 2 });
     await table.cell(1, 1).click({ button: 'right' });
     await expect(table.cellMenu).toBeVisible();
-    expect(await playground.wcagViolations()).toEqual([]);
+    expect(await playground.wcagViolations(table.scope)).toEqual([]);
   });
 
   test('filter popover has no automatically detectable WCAG AA violations', async ({
     playground,
+    table,
   }) => {
-    test.slow();
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
-    await playground.table.root.scrollIntoViewIfNeeded();
-    await playground.table.openFilter(10);
-    await expect(playground.table.filterValue('Оплачен')).toBeVisible();
+    await table.root.scrollIntoViewIfNeeded();
+    await table.openFilter(10);
+    await expect(table.filterValue('Оплачен')).toBeVisible();
 
     for (const theme of ['light', 'dark'] as const) {
       await playground.setTheme(theme);
-      expect(await playground.wcagViolations()).toEqual([]);
+      expect(await playground.wcagViolations(table.scope)).toEqual([]);
     }
   });
 });

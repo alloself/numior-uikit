@@ -670,7 +670,7 @@ test.describe('editor', () => {
     page,
   }) => {
     await playground.open();
-    await playground.editor.root.scrollIntoViewIfNeeded();
+    await editor.root.scrollIntoViewIfNeeded();
 
     const fine = await page.evaluate(
       () => matchMedia('(hover: hover) and (pointer: fine)').matches,

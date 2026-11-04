@@ -14,10 +14,10 @@ const today = (): string => {
     .join('.');
 };
 
-test.beforeEach(async ({ playground }) => {
+test.beforeEach(async ({ playground, formulas }) => {
   await playground.emulate({ reducedMotion: 'reduce' });
   await playground.open();
-  await playground.formulas.show();
+  await formulas.show();
 });
 
 test.describe('formulas on the calc core', () => {
@@ -171,10 +171,13 @@ test.describe('formulas on the calc core', () => {
   });
 
   for (const theme of ['light', 'dark'] satisfies readonly Theme[]) {
-    test(`passes axe with the sheet open in the ${theme} theme`, async ({ playground }) => {
+    test(`passes axe with the sheet open in the ${theme} theme`, async ({
+      playground,
+      formulas,
+    }) => {
       test.slow();
       await playground.setTheme(theme);
-      await (await playground.formulas.reveal(1, 3)).click();
+      await (await formulas.reveal(1, 3)).click();
 
       expect(await playground.wcagViolations(SECTION)).toEqual([]);
     });

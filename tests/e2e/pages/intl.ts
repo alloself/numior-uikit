@@ -8,6 +8,7 @@ import {
   shapeOf,
   type Guarded,
 } from '../../../packages/primitives/test/support/guards';
+import { sectionScope } from '../helpers/axe';
 
 export type IntlOutput = Guarded<typeof isIntlOutput>;
 
@@ -25,6 +26,8 @@ const parseIntlOutput = (text: string): IntlOutput => parseAs(text, isIntlOutput
 const FIELD_ROOT = 'xpath=ancestor::*[contains(@class, "nui-number-field")][1]';
 
 export class IntlSection {
+  readonly scope = sectionScope('intl');
+
   readonly localeSelect: Locator;
   readonly price: Locator;
   readonly quantity: Locator;

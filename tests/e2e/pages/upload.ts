@@ -9,6 +9,7 @@ import {
   shapeOf,
   type Guarded,
 } from '../../../packages/primitives/test/support/guards';
+import { sectionScope } from '../helpers/axe';
 
 export type UploadDocumentOutput = Guarded<typeof isDocument>;
 
@@ -62,6 +63,8 @@ const payload = (file: FakeFile) => ({
 });
 
 export class UploadSection {
+  readonly scope = sectionScope('upload');
+
   readonly documents: Locator;
   readonly images: Locator;
   readonly report: Locator;

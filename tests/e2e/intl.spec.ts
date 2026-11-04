@@ -146,7 +146,7 @@ test.describe('numbers and time', () => {
 
     for (const theme of ['light', 'dark'] as const) {
       await playground.setTheme(theme);
-      expect(await playground.wcagViolations()).toEqual([]);
+      expect(await playground.wcagViolations(intl.scope)).toEqual([]);
     }
   });
 });

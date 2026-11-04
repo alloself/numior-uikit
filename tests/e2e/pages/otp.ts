@@ -8,6 +8,7 @@ import {
   shapeOf,
   type Guarded,
 } from '../../../packages/primitives/test/support/guards';
+import { sectionScope } from '../helpers/axe';
 
 export type OtpOutput = Guarded<typeof isOtpOutput>;
 
@@ -27,6 +28,8 @@ const isActiveHistory = listOf(listOf(isNumber));
 const FIELD_ROOT = 'xpath=ancestor::*[contains(concat(" ", @class, " "), " nui-otp-field ")][1]';
 
 export class OtpSection {
+  readonly scope = sectionScope('otp');
+
   readonly sms: Locator;
   readonly access: Locator;
   readonly pin: Locator;
@@ -45,6 +48,12 @@ export class OtpSection {
     this.readonlyCode = page.getByTestId('otp-readonly');
     this.resend = page.getByTestId('otp-resend');
     this.output = page.getByTestId('otp-output');
+  }
+
+  async passSeconds(seconds: number): Promise<void> {
+    for (let second = 0; second < seconds; second += 1) {
+      await this.page.clock.fastForward(1000);
+    }
   }
 
   static async stubWebOtp(page: Page, code: string): Promise<void> {

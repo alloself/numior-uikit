@@ -174,7 +174,7 @@ test.describe('feedback', () => {
       await feedback.toastShow.click();
       await feedback.toastError.click();
       await expect(feedback.toastByText('Не удалось сохранить')).toBeVisible();
-      expect(await playground.wcagViolations()).toEqual([]);
+      expect(await playground.wcagViolations(feedback.scope)).toEqual([]);
 
       await feedback.closeButtonOf(feedback.toastByText('Не удалось сохранить')).click();
     }

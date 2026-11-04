@@ -7,6 +7,7 @@ import {
   shapeOf,
   type Guarded,
 } from '../../../packages/primitives/test/support/guards';
+import { sectionScope } from '../helpers/axe';
 
 export type WizardOutput = Guarded<typeof isWizardOutput>;
 
@@ -20,6 +21,8 @@ const parseWizardOutput = (text: string): WizardOutput =>
 const FIELD = 'xpath=ancestor::*[contains(concat(" ", @class, " "), " nui-field ")][1]';
 
 export class WizardSection {
+  readonly scope = sectionScope('wizard');
+
   readonly form: Locator;
   readonly stepper: Locator;
   readonly summary: Locator;

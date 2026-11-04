@@ -8,6 +8,7 @@ import {
   shapeOf,
   type Guarded,
 } from '../../../packages/primitives/test/support/guards';
+import { sectionScope } from '../helpers/axe';
 
 export type DateRangeOutput = Guarded<typeof isRange>;
 
@@ -34,6 +35,8 @@ const PICKER_ROOT = 'xpath=ancestor::*[contains(@class, "nui-date-picker")][1]';
 const MONTH_PREFIX = 'YYYY-MM-'.length;
 
 export class DatesSection {
+  readonly scope = sectionScope('dates');
+
   readonly calendar: Locator;
   readonly multiple: Locator;
   readonly range: Locator;

@@ -103,7 +103,7 @@ test.describe('pickers', () => {
     await trigger.click();
     await expect(pickers.treeItem('Электроника')).toHaveAttribute('aria-expanded', 'true');
     await expect(pickers.treeItem('Ноутбуки')).toHaveAttribute('aria-selected', 'true');
-    expect(await playground.wcagViolations()).toEqual([]);
+    expect(await playground.wcagViolations(pickers.scope)).toEqual([]);
 
     await page.keyboard.press('Escape');
     await expect(pickers.tree).toBeHidden();
@@ -224,7 +224,7 @@ test.describe('pickers', () => {
       await playground.setTheme(theme);
       await pickers.countryTrigger.click();
       await expect(pickers.listbox).toBeVisible();
-      expect(await playground.wcagViolations()).toEqual([]);
+      expect(await playground.wcagViolations(pickers.scope)).toEqual([]);
 
       await page.keyboard.press('Escape');
       await expect(pickers.listbox).toBeHidden();

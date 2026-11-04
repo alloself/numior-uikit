@@ -139,7 +139,7 @@ test.describe('one-time code field', () => {
     await expect(otp.resend).toBeDisabled();
     await expect(otp.resend).toHaveText('Отправить ещё раз через 30 с');
 
-    await page.clock.runFor(30_000);
+    await otp.passSeconds(30);
     await expect(otp.resend).toBeEnabled();
     await expect(otp.resend).toHaveText('Отправить ещё раз');
 
@@ -178,7 +178,6 @@ test.describe('one-time code field', () => {
     otp,
     page,
   }) => {
-    test.slow();
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
     await otp.clickSlot(otp.spare, 0);
@@ -187,7 +186,7 @@ test.describe('one-time code field', () => {
 
     for (const theme of ['light', 'dark'] as const) {
       await playground.setTheme(theme);
-      expect(await playground.wcagViolations()).toEqual([]);
+      expect(await playground.wcagViolations(otp.scope)).toEqual([]);
     }
   });
 });

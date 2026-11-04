@@ -297,7 +297,7 @@ test.describe('layout', () => {
 
     for (const theme of ['light', 'dark'] as const) {
       await playground.setTheme(theme);
-      expect(await playground.wcagViolations()).toEqual([]);
+      expect(await playground.wcagViolations(layout.scope)).toEqual([]);
     }
   });
 
@@ -307,16 +307,15 @@ test.describe('layout', () => {
     isMobile,
   }) => {
     test.skip(isMobile, 'the icon rail is a desktop mode');
-    test.slow();
     await playground.emulate({ reducedMotion: 'reduce' });
     await playground.open();
     await layout.root.scrollIntoViewIfNeeded();
     await layout.trigger.click();
     await expect.poll(() => layout.sidebarWidth()).toBeLessThan(80);
-    expect(await playground.wcagViolations()).toEqual([]);
+    expect(await playground.wcagViolations(layout.scope)).toEqual([]);
 
     await layout.subToggle.click();
     await expect(layout.flyout).toBeVisible();
-    expect(await playground.wcagViolations()).toEqual([]);
+    expect(await playground.wcagViolations(layout.scope)).toEqual([]);
   });
 });

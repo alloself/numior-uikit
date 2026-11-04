@@ -136,7 +136,14 @@ that the label `for` matches the control id and that values render on the server
   section takes the fixture (`openEditor(playground)`), not `page`. A new root page object is
   added to the fixtures module.
 - Colors through `expectRgb` (`tests/e2e/helpers/color.ts`); axe through
-  `playground.wcagViolations()` after `playground.emulate({ reducedMotion: 'reduce' })`.
+  `playground.wcagViolations(section.scope)` after `playground.emulate({ reducedMotion: 'reduce' })`.
+  Every section page object has `readonly scope = sectionScope('<name>')`; layers in the top layer
+  stay inside their section's DOM, so the scope covers open menus, popovers and dialogs. Only
+  `foundation.spec.ts` scans the whole playground: a page-wide scan of every section is what
+  pushed Firefox and WebKit axe runs past the 30 s limit, so never cure it with `test.slow()`.
+- A fake clock (`page.clock.install()`) drives every section of the playground; step countdowns
+  with `fastForward(1000)` per second (`OtpSection.passSeconds`) instead of `runFor(30_000)`,
+  which plays thousands of animation frames and the deferred work of other sections.
 - Cover keyboard and tap (`isMobile`), RTL overflow, density steps, then run in Docker.
 - An element inside `aria-hidden` has an empty accessible name (the number field steppers), so
   assert its `aria-label` attribute instead of `toHaveAccessibleName`.
