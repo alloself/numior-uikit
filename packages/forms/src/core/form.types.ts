@@ -1,7 +1,7 @@
 import type { DeepReadonly, Reactive, UnwrapNestedRefs } from 'vue';
 import type { NuiFormRulesMessages } from '../rules/form-rules.messages';
 
-export type ValidateOn = 'submit' | 'blur' | 'change';
+export type ValidateOn = (typeof ValidateOn)[keyof typeof ValidateOn];
 
 export interface FieldRuleContext<V = unknown> {
   readonly name: string;
@@ -43,7 +43,7 @@ export interface FieldMeta {
   readonly validated: boolean;
 }
 
-export type SubmitStatus = 'submitted' | 'invalid' | 'rejected' | 'ignored' | 'aborted';
+export type SubmitStatus = (typeof SubmitStatus)[keyof typeof SubmitStatus];
 
 export interface SubmitResult {
   readonly status: SubmitStatus;
@@ -74,3 +74,13 @@ export interface ResetOptions<V> {
 }
 
 export type FormValues<V> = DeepReadonly<UnwrapNestedRefs<Reactive<V>>>;
+
+export const ValidateOn = { Submit: 'submit', Blur: 'blur', Change: 'change' } as const;
+
+export const SubmitStatus = {
+  Submitted: 'submitted',
+  Invalid: 'invalid',
+  Rejected: 'rejected',
+  Ignored: 'ignored',
+  Aborted: 'aborted',
+} as const;

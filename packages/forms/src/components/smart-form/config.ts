@@ -11,12 +11,13 @@ import type { FieldSelector } from '../../paths/selector';
 import { adaptRule } from '../../rules/adapt-rule';
 import type { AnyFieldRule } from '../../rules/async-rule';
 import { liftEntry } from './lift';
-import type {
-  NuiSmartFormArray,
-  NuiSmartFormEntry,
-  NuiSmartFormField,
-  NuiSmartFormPropsFactory,
-  NuiSmartFormSection,
+import {
+  NuiSmartFormEntryKind,
+  type NuiSmartFormArray,
+  type NuiSmartFormEntry,
+  type NuiSmartFormField,
+  type NuiSmartFormPropsFactory,
+  type NuiSmartFormSection,
 } from './smart-form.types';
 
 export interface SmartFieldConfig<S, R, C, M extends string = 'modelValue'> extends Omit<
@@ -58,7 +59,7 @@ const fieldEntry = <S, R>(
 
   return {
     ...rest,
-    kind: 'field',
+    kind: NuiSmartFormEntryKind.Field,
     component,
     ...(model === undefined ? {} : { model }),
     name,
@@ -90,7 +91,7 @@ export const formConfig = <S, R extends NuiControlRegistry = NuiControlRegistry>
   },
   section: (config: Omit<NuiSmartFormSection<S>, 'kind'>): NuiSmartFormSection<S> => ({
     ...config,
-    kind: 'section',
+    kind: NuiSmartFormEntryKind.Section,
   }),
   array: <Row>(
     name: FieldSelector<S, readonly Row[] | undefined>,
@@ -100,7 +101,7 @@ export const formConfig = <S, R extends NuiControlRegistry = NuiControlRegistry>
 
     return {
       ...rest,
-      kind: 'array',
+      kind: NuiSmartFormEntryKind.Array,
       name,
       rows: (row) => {
         const rowOf = (values: S): Row | undefined => {

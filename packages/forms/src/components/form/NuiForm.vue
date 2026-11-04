@@ -47,7 +47,7 @@ import { FORM_HOST, provideForm } from '../../form/form-context';
 import { focusAfter, type FormFocus } from './focus-after';
 import { provideFormScope } from './form-scope';
 import { formMessages } from './form.messages';
-import type { NuiFormProps } from './form.types';
+import { FormFocusKind, type NuiFormProps } from './form.types';
 
 const {
   form,
@@ -137,10 +137,10 @@ watch(
     const target = focus.take();
 
     switch (target?.kind) {
-      case 'field':
+      case FormFocusKind.Field:
         form.focusField(target.path);
         break;
-      case 'errors':
+      case FormFocusKind.Errors:
         errorsBox.value?.focus();
         break;
     }

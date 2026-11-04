@@ -7,6 +7,7 @@ import type { FormCore } from './form-core';
 import type { PendingTracker } from './pending';
 import type { Entry } from './registry';
 import { validatesOnChange } from './timing';
+import { AsyncPhaseKind } from './core.types';
 
 interface AsyncResult {
   readonly value: unknown;
@@ -15,9 +16,9 @@ interface AsyncResult {
 }
 
 type AsyncPhase =
-  | { readonly kind: 'idle' }
-  | { readonly kind: 'debouncing'; readonly wake: () => void }
-  | { readonly kind: 'running'; readonly controller: AbortController };
+  | { readonly kind: typeof AsyncPhaseKind.Idle }
+  | { readonly kind: typeof AsyncPhaseKind.Debouncing; readonly wake: () => void }
+  | { readonly kind: typeof AsyncPhaseKind.Running; readonly controller: AbortController };
 
 interface AsyncState {
   token: number;
@@ -35,7 +36,7 @@ export interface AsyncChecks<V extends object> {
   reset(): void;
 }
 
-const IDLE: AsyncPhase = { kind: 'idle' };
+const IDLE: AsyncPhase = { kind: AsyncPhaseKind.Idle };
 
 export const createAsyncChecks = <V extends object, O>(
   core: FormCore<V, O>,
@@ -75,13 +76,13 @@ export const createAsyncChecks = <V extends object, O>(
     freshResult(entry) === undefined;
 
   const settleAt = (entry: Entry<V>, state: AsyncState, phase: AsyncPhase): void => {
-    const held = state.phase.kind !== 'idle';
+    const held = state.phase.kind !== AsyncPhaseKind.Idle;
 
     state.phase = phase;
 
-    if (held && phase.kind === 'idle') {
+    if (held && phase.kind === AsyncPhaseKind.Idle) {
       pending.release(entry);
-    } else if (!held && phase.kind !== 'idle') {
+    } else if (!held && phase.kind !== AsyncPhaseKind.Idle) {
       pending.hold(entry);
     }
   };
@@ -98,13 +99,13 @@ export const createAsyncChecks = <V extends object, O>(
     state.token += 1;
 
     switch (phase.kind) {
-      case 'debouncing':
+      case AsyncPhaseKind.Debouncing:
         phase.wake();
         break;
-      case 'running':
+      case AsyncPhaseKind.Running:
         phase.controller.abort();
         break;
-      case 'idle':
+      case AsyncPhaseKind.Idle:
         break;
     }
     settleAt(entry, state, IDLE);
@@ -137,7 +138,7 @@ export const createAsyncChecks = <V extends object, O>(
       signal: controller.signal,
     };
 
-    settleAt(entry, state, { kind: 'running', controller });
+    settleAt(entry, state, { kind: AsyncPhaseKind.Running, controller });
 
     try {
       const message =
@@ -159,7 +160,7 @@ export const createAsyncChecks = <V extends object, O>(
       const timer = setTimeout(resolve, delay);
 
       settleAt(entry, state, {
-        kind: 'debouncing',
+        kind: AsyncPhaseKind.Debouncing,
         wake: () => {
           clearTimeout(timer);
           resolve();
@@ -200,7 +201,7 @@ export const createAsyncChecks = <V extends object, O>(
 
   const outdated = (entry: Entry<V>, state: AsyncState): boolean =>
     state.result !== undefined &&
-    state.phase.kind === 'idle' &&
+    state.phase.kind === AsyncPhaseKind.Idle &&
     entry.active() &&
     validatesOnChange(entry.validateOn(), entry.state.attempted.value) &&
     freshResult(entry) === undefined;

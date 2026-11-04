@@ -70,3 +70,5 @@ export type SubmittedValues<T> = T extends Opaque
     : { [K in keyof T]?: SubmittedValues<T[K]> };
 
 export type KeepValue<R> = undefined extends R ? boolean : true;
+
+export const PathToken = { Wildcard: '*' } as const;

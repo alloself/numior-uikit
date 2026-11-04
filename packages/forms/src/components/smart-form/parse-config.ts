@@ -12,7 +12,7 @@ import {
   type Guard,
   type NuiControlRegistry,
 } from '@numior/primitives';
-import type { FieldRule } from '../../core/form.types';
+import { ValidateOn, type FieldRule } from '../../core/form.types';
 import { byPath, type FieldSelector } from '../../paths/selector';
 import { adaptRule } from '../../rules/adapt-rule';
 import type { AnyFieldRule } from '../../rules/async-rule';
@@ -20,18 +20,25 @@ import { email, max, min, pattern, required } from '../../rules/rules';
 import { getAt } from '../../values/access';
 import { cloneValue } from '../../values/clone';
 import { formConfig } from './config';
-import type {
-  FormConfigIssue,
-  FormJsonArray,
-  FormJsonCondition,
-  FormJsonEntry,
-  FormJsonField,
-  FormJsonRule,
-  FormJsonSection,
-  ParsedFormConfig,
-  ParseFormConfigOptions,
+import {
+  FormConfigIssueCode,
+  FormConfigResultKind,
+  FormJsonRuleName,
+  type FormConfigIssue,
+  type FormJsonArray,
+  type FormJsonCondition,
+  type FormJsonEntry,
+  type FormJsonField,
+  type FormJsonRule,
+  type FormJsonSection,
+  type ParsedFormConfig,
+  type ParseFormConfigOptions,
 } from './parse-config.types';
-import type { NuiSmartFormCondition, NuiSmartFormEntry } from './smart-form.types';
+import {
+  NuiSmartFormEntryKind,
+  type NuiSmartFormCondition,
+  type NuiSmartFormEntry,
+} from './smart-form.types';
 
 type JsonRow = Readonly<Record<string, unknown>>;
 
@@ -45,10 +52,17 @@ const isList = listOf(isUnknown);
 const isRows = listOf(isRecord);
 
 const isJsonRule: Guard<FormJsonRule> = anyOf(
-  shapeOf({ rule: oneOf('required', 'email'), message: optional(isString) }),
-  shapeOf({ rule: oneOf('min', 'max'), limit: isNumber, message: optional(isString) }),
   shapeOf({
-    rule: oneOf('pattern'),
+    rule: oneOf(FormJsonRuleName.Required, FormJsonRuleName.Email),
+    message: optional(isString),
+  }),
+  shapeOf({
+    rule: oneOf(FormJsonRuleName.Min, FormJsonRuleName.Max),
+    limit: isNumber,
+    message: optional(isString),
+  }),
+  shapeOf({
+    rule: oneOf(FormJsonRuleName.Pattern),
     source: isString,
     flags: optional(isString),
     message: optional(isString),
@@ -61,7 +75,7 @@ const isCondition: Guard<FormJsonCondition> = anyOf(
 );
 
 const isJsonField: Guard<FormJsonField> = shapeOf({
-  kind: oneOf('field'),
+  kind: oneOf(NuiSmartFormEntryKind.Field),
   type: isString,
   name: isString,
   label: optional(isString),
@@ -74,7 +88,7 @@ const isJsonField: Guard<FormJsonField> = shapeOf({
   props: optional(isRecord),
   when: optional(isCondition),
   rules: optional(listOf(isJsonRule)),
-  validateOn: optional(oneOf('submit', 'blur', 'change')),
+  validateOn: optional(oneOf(ValidateOn.Submit, ValidateOn.Blur, ValidateOn.Change)),
   keepValue: optional(isBoolean),
 });
 
@@ -84,7 +98,7 @@ const isJsonEntry: Guard<FormJsonEntry> = (value): value is FormJsonEntry =>
 const isEntries = listOf((value: unknown): value is FormJsonEntry => isJsonEntry(value));
 
 const isJsonSection: Guard<FormJsonSection> = shapeOf({
-  kind: oneOf('section'),
+  kind: oneOf(NuiSmartFormEntryKind.Section),
   name: optional(isString),
   title: isString,
   description: optional(isString),
@@ -95,7 +109,7 @@ const isJsonSection: Guard<FormJsonSection> = shapeOf({
 });
 
 const isJsonArray: Guard<FormJsonArray> = shapeOf({
-  kind: oneOf('array'),
+  kind: oneOf(NuiSmartFormEntryKind.Array),
   name: isString,
   label: optional(isString),
   description: optional(isString),
@@ -112,15 +126,15 @@ const isJsonArray: Guard<FormJsonArray> = shapeOf({
 
 const ruleOf = (spec: FormJsonRule): FieldRule => {
   switch (spec.rule) {
-    case 'required':
+    case FormJsonRuleName.Required:
       return required({ message: spec.message });
-    case 'email':
+    case FormJsonRuleName.Email:
       return email({ message: spec.message });
-    case 'min':
+    case FormJsonRuleName.Min:
       return min(spec.limit, { message: spec.message });
-    case 'max':
+    case FormJsonRuleName.Max:
       return max(spec.limit, { message: spec.message });
-    case 'pattern':
+    case FormJsonRuleName.Pattern:
       return pattern(new RegExp(spec.source, spec.flags), { message: spec.message });
   }
 };
@@ -159,13 +173,23 @@ const buildField = <S extends object>(
   const entry = builder.controls[spec.type];
 
   if (entry === undefined) {
-    builder.issues.push({ path: `${at}.type`, code: 'unknown-type', type: spec.type });
+    builder.issues.push({
+      path: `${at}.type`,
+      code: FormConfigIssueCode.UnknownType,
+      type: spec.type,
+    });
+
     return undefined;
   }
   const props = spec.props ?? {};
 
   if (!entry.props(props)) {
-    builder.issues.push({ path: `${at}.props`, code: 'rejected-props', type: spec.type });
+    builder.issues.push({
+      path: `${at}.props`,
+      code: FormConfigIssueCode.RejectedProps,
+      type: spec.type,
+    });
+
     return undefined;
   }
   const { kind, type: _type, name, when, rules, props: _props, ...rest } = spec;
@@ -227,13 +251,13 @@ const createBuilder = <S extends object>(
         const here = `${at}.${index}`;
 
         switch (spec.kind) {
-          case 'field': {
+          case NuiSmartFormEntryKind.Field: {
             const built = buildField(builder, spec, here);
             return built === undefined ? [] : [built];
           }
-          case 'section':
+          case NuiSmartFormEntryKind.Section:
             return [buildSection(builder, spec, here)];
-          case 'array':
+          case NuiSmartFormEntryKind.Array:
             return [buildArray(builder, spec, here)];
         }
       }),
@@ -247,10 +271,10 @@ const rowBuilder = <S extends object>(parent: Builder<S>, _at: string): Builder<
 
 const shapeIssues = (input: unknown): FormConfigIssue[] => {
   if (!Array.isArray(input)) {
-    return [{ path: 'fields', code: 'not-a-list' }];
+    return [{ path: 'fields', code: FormConfigIssueCode.NotAList }];
   }
   return input.flatMap((entry: unknown, index) =>
-    isJsonEntry(entry) ? [] : [{ path: `fields.${index}`, code: 'invalid-entry' }],
+    isJsonEntry(entry) ? [] : [{ path: `fields.${index}`, code: FormConfigIssueCode.InvalidEntry }],
   );
 };
 
@@ -261,10 +285,12 @@ export const parseFormConfig = <S extends object>(
   const shape = shapeIssues(input);
 
   if (shape.length > 0 || !isEntries(input)) {
-    return { kind: 'error', issues: shape };
+    return { kind: FormConfigResultKind.Error, issues: shape };
   }
   const issues: FormConfigIssue[] = [];
   const fields = createBuilder<S>(options.controls, issues).entries(input, 'fields');
 
-  return issues.length > 0 ? { kind: 'error', issues } : { kind: 'ok', fields };
+  return issues.length > 0
+    ? { kind: FormConfigResultKind.Error, issues }
+    : { kind: FormConfigResultKind.Ok, fields };
 };

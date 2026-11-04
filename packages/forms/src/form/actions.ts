@@ -11,6 +11,7 @@ import { normalizePath } from '../paths/paths';
 import { getAt } from '../values/access';
 import type { FormContext } from './form-context';
 import { inertOf } from '../core/inert';
+import { EntryKind } from '../core/core.types';
 
 export type FormActions<V extends object> = Pick<
   FormContext<V>,
@@ -36,7 +37,7 @@ export const createActions = <V extends object, O>(
     const rules = createRuleSet(options.rules);
 
     const entry = host.add({
-      kind: options.kind ?? 'group',
+      kind: options.kind ?? EntryKind.Group,
       path: () => path.value,
       active: () => toValue(options.active) ?? true,
       inert: () => inertOf(options),

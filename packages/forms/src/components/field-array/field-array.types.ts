@@ -3,6 +3,10 @@ import type { FormContext, FormHandle } from '../../form/form-context';
 import type { FieldSelector } from '../../paths/selector';
 import type { AnyFieldRule } from '../../rules/async-rule';
 
+export type RowPart = (typeof RowPart)[keyof typeof RowPart];
+
+export type RowFocusKind = (typeof RowFocusKind)[keyof typeof RowFocusKind];
+
 export interface NuiFieldArrayProps<T extends object, Row> {
   form: FormContext<T>;
   name: FieldSelector<T, readonly Row[] | undefined>;
@@ -33,3 +37,7 @@ export interface NuiFieldArrayRowProps {
   moveLabel: string;
   removeLabel: string;
 }
+
+export const RowPart = { Control: 'control', Grip: 'grip' } as const;
+
+export const RowFocusKind = { Row: 'row', Add: 'add' } as const;

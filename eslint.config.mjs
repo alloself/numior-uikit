@@ -217,13 +217,18 @@ export default [
     },
   },
   {
+    files: ['packages/forms/src/**/*.{ts,vue}'],
+    ignores: ['**/*.messages.ts'],
+    rules: { 'no-restricted-syntax': ['error', ...CATALOG, ...CODE_SHAPE, ...NAMED_ENUMERATIONS] },
+  },
+  {
     files: ['packages/*/src/**/*.vue'],
     rules: {
       'vue/no-bare-strings-in-template': ['error', { allowlist: TEMPLATE_GLYPHS }],
     },
   },
   {
-    files: ['packages/{primitives,vue}/src/**/*.vue'],
+    files: ['packages/{primitives,vue,forms}/src/**/*.vue'],
     rules: { 'vue/no-restricted-syntax': ['error', ...NAMED_ENUMERATIONS] },
   },
 ];

@@ -8,7 +8,8 @@ import { cloneValue } from '../values/clone';
 import { createRegistry, type Registry } from './registry';
 import { createRuleLookup, type FormRules, type PathRules } from './rules';
 import { createTracker, type Tracker } from './tracker';
-import type { FormMessage, ValidateOn } from './form.types';
+import { ValidateOn, type FormMessage } from './form.types';
+import { SubmissionPhase } from './core.types';
 
 export interface ExternalError {
   readonly messages: readonly string[];
@@ -29,9 +30,9 @@ export interface Session {
 }
 
 export type Submission =
-  | { readonly phase: 'idle' }
-  | { readonly phase: 'running'; readonly controller: AbortController }
-  | { readonly phase: 'succeeded' };
+  | { readonly phase: typeof SubmissionPhase.Idle }
+  | { readonly phase: typeof SubmissionPhase.Running; readonly controller: AbortController }
+  | { readonly phase: typeof SubmissionPhase.Succeeded };
 
 export interface FormCoreOptions<V extends object, O> {
   readonly initialValues: V;
@@ -58,7 +59,7 @@ export interface FormCore<V extends object, O> {
   readonly session: Session;
 }
 
-export const IDLE_SUBMISSION: Submission = { phase: 'idle' };
+export const IDLE_SUBMISSION: Submission = { phase: SubmissionPhase.Idle };
 
 export const createFormCore = <V extends object, O>(
   options: FormCoreOptions<V, O>,
@@ -68,7 +69,7 @@ export const createFormCore = <V extends object, O>(
   tracker: createTracker(),
   schema: options.schema,
   rulesAt: createRuleLookup(options.rules ?? {}),
-  validateOn: options.validateOn ?? 'submit',
+  validateOn: options.validateOn ?? ValidateOn.Submit,
   messages: useMessages(formRulesMessages),
   initial: shallowRef(cloneValue(options.initialValues)),
   schemaFormErrors: shallowRef<readonly FormMessage[]>([]),

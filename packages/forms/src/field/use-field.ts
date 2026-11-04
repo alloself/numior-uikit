@@ -14,6 +14,7 @@ import { FORM_HOST, type FormContext } from '../form/form-context';
 import { readSelected, recordPath, type FieldSelector } from '../paths/selector';
 import { createRuleSet, type RuleSource } from './rule-set';
 import { inertOf } from '../core/inert';
+import { EntryKind } from '../core/core.types';
 
 export interface UseFieldOptions<V extends object, R> {
   readonly form: FormContext<V>;
@@ -63,7 +64,7 @@ export const useField = <V extends object, R>(
   const value = computed(() => readSelected(engine.values, select.value, path.value));
 
   const entry = host.add({
-    kind: 'field',
+    kind: EntryKind.Field,
     path: () => path.value,
     active: () => toValue(options.active) ?? true,
     inert: () => inertOf(options),

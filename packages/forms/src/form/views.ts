@@ -5,6 +5,7 @@ import type { FormMessage, FormMeta } from '../core/form.types';
 import type { AnyEntry } from '../core/registry';
 import { isUnder, normalizePath, prefixesOf } from '../paths/paths';
 import { isEqualValue } from '../values/equal';
+import { SubmissionPhase } from '../core/core.types';
 
 export interface FormViews {
   readonly errorBag: ComputedRef<Readonly<Record<string, readonly string[]>>>;
@@ -162,9 +163,9 @@ export const createViews = <V extends object, O>(core: FormCore<V, O>): FormView
         valid: Object.keys(errorBag.value).length === 0 && formErrors.value.length === 0,
         dirty: dirty.value,
         touched: core.registry.active().some((entry) => entry.state.touched.value),
-        pending: core.submission.value.phase === 'running',
+        pending: core.submission.value.phase === SubmissionPhase.Running,
         submitCount: core.engine.submitCount.value,
-        submitted: core.submission.value.phase === 'succeeded',
+        submitted: core.submission.value.phase === SubmissionPhase.Succeeded,
       };
 
       return previous !== undefined && sameMeta(previous, next) ? previous : next;

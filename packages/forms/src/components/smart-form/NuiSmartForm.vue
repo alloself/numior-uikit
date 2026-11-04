@@ -53,8 +53,8 @@
 <script setup lang="ts" generic="T extends object">
 import { computed, shallowRef, useSlots, useTemplateRef, watch } from 'vue';
 import { createIntent, useMessages } from '@numior/primitives';
-import { NuiButton } from '@numior/vue';
-import type { SubmitResult } from '../../core/form.types';
+import { NuiButton, NuiStepperStatus } from '@numior/vue';
+import { SubmitStatus, type SubmitResult } from '../../core/form.types';
 import { FORM_HOST } from '../../form/form-context';
 import NuiForm from '../form/NuiForm.vue';
 import { formMessages } from '../form/form.messages';
@@ -63,10 +63,14 @@ import NuiSmartFormEntries from './NuiSmartFormEntries.vue';
 import NuiSmartFormSteps from './NuiSmartFormSteps.vue';
 import { declareEntries } from './declarations';
 import { smartFormMessages } from './smart-form.messages';
-import type { NuiSmartFormProps, NuiSmartFormSlots } from './smart-form.types';
+import {
+  NuiSmartFormInline,
+  StepDirection,
+  StepFocus,
+  type NuiSmartFormProps,
+  type NuiSmartFormSlots,
+} from './smart-form.types';
 import { stepOf, stepPaths } from './steps';
-
-type StepFocus = 'control' | 'invalid';
 
 const {
   form,
@@ -96,7 +100,7 @@ const stepPanels = useTemplateRef<{ panel: (index: number) => HTMLElement | unde
 
 const localized = useMessages(smartFormMessages);
 const formTexts = useMessages(formMessages);
-const direction = shallowRef<'forward' | 'back' | undefined>(undefined);
+const direction = shallowRef<StepDirection | undefined>(undefined);
 const navigations = shallowRef(0);
 const stepFocus = createIntent<StepFocus>();
 
@@ -136,39 +140,39 @@ const stepText = computed(() => {
 
 const statuses = computed(() =>
   stepPathList.value.map((paths) =>
-    paths.some((path) => form.hasErrors(path)) ? 'error' : undefined,
+    paths.some((path) => form.hasErrors(path)) ? NuiStepperStatus.Error : undefined,
   ),
 );
 
 const classes = computed(() => ({
-  'nui-smart-form--inline': inline === true || inline === 'grow',
-  'nui-smart-form--grow': inline === 'grow',
+  'nui-smart-form--inline': inline === true || inline === NuiSmartFormInline.Grow,
+  'nui-smart-form--grow': inline === NuiSmartFormInline.Grow,
   'nui-smart-form--steps': steps !== undefined,
-  'nui-smart-form--back': direction.value === 'back',
+  'nui-smart-form--back': direction.value === StepDirection.Back,
   'nui-smart-form--navigated': direction.value !== undefined,
 }));
 
 const goTo = (index: number, target: StepFocus | undefined): void => {
-  direction.value = index < currentIndex.value ? 'back' : 'forward';
+  direction.value = index < currentIndex.value ? StepDirection.Back : StepDirection.Forward;
   stepFocus.set(target);
   step.value = stepList.value[index]?.value;
   navigations.value += 1;
 };
 
-const IGNORED: SubmitResult = { status: 'ignored', invalid: [], formErrors: [] };
+const IGNORED: SubmitResult = { status: SubmitStatus.Ignored, invalid: [], formErrors: [] };
 
 const STEP_TARGETS: Readonly<Record<StepFocus, string>> = {
-  control: FOCUSABLE,
-  invalid: '[aria-invalid="true"]',
+  [StepFocus.Control]: FOCUSABLE,
+  [StepFocus.Invalid]: '[aria-invalid="true"]',
 };
 
 const advance = async (): Promise<SubmitResult> => {
   const summary = await form.validate({ paths: stepPathList.value[currentIndex.value] ?? [] });
 
   if (summary.valid) {
-    goTo(currentIndex.value + 1, 'control');
+    goTo(currentIndex.value + 1, StepFocus.Control);
   } else {
-    stepFocus.set('invalid');
+    stepFocus.set(StepFocus.Invalid);
     navigations.value += 1;
   }
   return IGNORED;
@@ -189,7 +193,7 @@ const runStep = (): Promise<SubmitResult> => (last.value ? finish() : advance())
 
 const back = (): void => {
   if (!first.value) {
-    goTo(currentIndex.value - 1, 'control');
+    goTo(currentIndex.value - 1, StepFocus.Control);
   }
 };
 
@@ -197,7 +201,7 @@ const select = (value: string): void => {
   const index = stepList.value.findIndex((item) => item.value === value);
 
   if (index !== -1 && index !== currentIndex.value) {
-    goTo(index, 'control');
+    goTo(index, StepFocus.Control);
   }
 };
 

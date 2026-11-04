@@ -5,6 +5,7 @@ import type { FormCore } from './form-core';
 import { unique, writeErrors } from './messages';
 import { targetOf } from './owners';
 import type { AnyEntry } from './registry';
+import { IssueTargetKind } from './core.types';
 
 export interface ErrorControls {
   setFieldError(path: string, messages: readonly string[]): void;
@@ -42,7 +43,7 @@ export const createErrorControls = <V extends object, O>(core: FormCore<V, O>): 
     setFieldError: (rawPath, messages) => {
       const target = targetOf(normalizePath(rawPath), core.registry.index());
 
-      if (target.kind === 'owner') {
+      if (target.kind === IssueTargetKind.Owner) {
         setOwnerError(target.entry, messages);
       } else {
         setFormPathError(target.path, messages);

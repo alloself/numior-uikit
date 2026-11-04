@@ -4,6 +4,7 @@ import { writeErrors } from './messages';
 import type { AnyEntry } from './registry';
 import type { ResetOptions } from './form.types';
 import type { Validation } from './validation';
+import { SubmissionPhase } from './core.types';
 
 const clearState = (entry: AnyEntry): void => {
   entry.fieldEpoch += 1;
@@ -26,7 +27,7 @@ export const createReset =
 
     core.session.epoch += 1;
 
-    if (submission.phase === 'running') {
+    if (submission.phase === SubmissionPhase.Running) {
       submission.controller.abort();
     }
     validation.async.reset();

@@ -5,7 +5,8 @@ import { getAt } from '../values/access';
 import { isPathDirty } from './dirty';
 import type { FormCore } from './form-core';
 import { writeErrors } from './messages';
-import type { Entry, EntryKind } from './registry';
+import { Trigger, type ApplyScope, type EntryKind } from './core.types';
+import type { Entry } from './registry';
 import { validatesOnBlur, validatesOnChange } from './timing';
 import type {
   AsyncRuleContext,
@@ -14,7 +15,7 @@ import type {
   FieldValidation,
   ValidateOn,
 } from './form.types';
-import type { ApplyScope, Validation } from './validation';
+import type { Validation } from './validation';
 
 export interface EntrySpec<V extends object> {
   readonly kind: EntryKind;
@@ -117,7 +118,7 @@ export const createHost = <V extends object, O>(
 
     return due.length === 0
       ? Promise.resolve()
-      : validation.validateEntries(due, 'change', scope).then(toVoid);
+      : validation.validateEntries(due, Trigger.Change, scope).then(toVoid);
   };
 
   return {
@@ -170,7 +171,7 @@ export const createHost = <V extends object, O>(
     blur: (entry) => {
       entry.state.setTouched(true);
       return validatesOnBlur(entry.validateOn(), entry.state.attempted.value)
-        ? validation.validateEntries([entry], 'blur').then(toVoid)
+        ? validation.validateEntries([entry], Trigger.Blur).then(toVoid)
         : Promise.resolve();
     },
     validateEntry: async (entry) => {
@@ -186,7 +187,7 @@ export const createHost = <V extends object, O>(
       validation.async.forget(entry);
 
       return entry.state.attempted.value
-        ? core.tracker.track(validation.validateEntries([entry], 'change').then(toVoid))
+        ? core.tracker.track(validation.validateEntries([entry], Trigger.Change).then(toVoid))
         : Promise.resolve();
     },
     flush,

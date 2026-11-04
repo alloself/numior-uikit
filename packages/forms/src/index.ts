@@ -16,31 +16,35 @@ export type {
   SmartFieldConfig,
 } from './components/smart-form/config';
 export { parseFormConfig } from './components/smart-form/parse-config';
-export type {
-  FormConfigIssue,
+export {
+  type FormConfigIssue,
   FormConfigIssueCode,
-  FormJsonArray,
-  FormJsonCondition,
-  FormJsonEntry,
-  FormJsonField,
-  FormJsonRule,
-  FormJsonSection,
-  ParsedFormConfig,
-  ParseFormConfigOptions,
+  FormConfigResultKind,
+  type FormJsonArray,
+  type FormJsonCondition,
+  type FormJsonEntry,
+  type FormJsonField,
+  type FormJsonRule,
+  FormJsonRuleName,
+  type FormJsonSection,
+  type ParsedFormConfig,
+  type ParseFormConfigOptions,
 } from './components/smart-form/parse-config.types';
-export type {
-  NuiSmartFormActionsScope,
-  NuiSmartFormAfterScope,
-  NuiSmartFormArray,
-  NuiSmartFormCondition,
-  NuiSmartFormEntry,
-  NuiSmartFormField,
-  NuiSmartFormFieldScope,
-  NuiSmartFormProps,
-  NuiSmartFormPropsFactory,
-  NuiSmartFormSection,
-  NuiSmartFormSlots,
-  NuiSmartFormStep,
+export {
+  type NuiSmartFormActionsScope,
+  type NuiSmartFormAfterScope,
+  type NuiSmartFormArray,
+  type NuiSmartFormCondition,
+  type NuiSmartFormEntry,
+  NuiSmartFormEntryKind,
+  type NuiSmartFormField,
+  NuiSmartFormInline,
+  type NuiSmartFormFieldScope,
+  type NuiSmartFormProps,
+  type NuiSmartFormPropsFactory,
+  type NuiSmartFormSection,
+  type NuiSmartFormSlots,
+  type NuiSmartFormStep,
 } from './components/smart-form/smart-form.types';
 export type { NuiSmartFormMessages } from './components/smart-form/smart-form.messages';
 export { NuiFormError } from './core/form-error';
@@ -52,25 +56,25 @@ export type {
   FormEngineFactory,
 } from './engine/engine.types';
 export type { FormErrorMessages } from './core/form-error';
-export type { EntryKind } from './core/registry';
+export { EntryKind } from './core/core.types';
 export type { FormRules } from './core/rules';
 export type { SubmitHandler, SubmitHelpers } from './core/submit';
-export type {
-  AsyncRuleContext,
-  FieldFlush,
-  FieldMeta,
-  FieldRule,
-  FieldRuleContext,
-  FieldValidation,
-  FormMessage,
-  FormMeta,
-  FormValues,
-  ResetOptions,
-  SubmitResult,
+export {
+  type AsyncRuleContext,
+  type FieldFlush,
+  type FieldMeta,
+  type FieldRule,
+  type FieldRuleContext,
+  type FieldValidation,
+  type FormMessage,
+  type FormMeta,
+  type FormValues,
+  type ResetOptions,
+  type SubmitResult,
   SubmitStatus,
   ValidateOn,
-  ValidateOptions,
-  ValidationSummary,
+  type ValidateOptions,
+  type ValidationSummary,
 } from './core/form.types';
 export type {
   DeepPartial,

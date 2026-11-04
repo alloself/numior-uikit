@@ -2,8 +2,7 @@ import { computed, shallowRef } from 'vue';
 import type { EntryState } from '../engine/engine.types';
 import { patternOf, prefixesOf } from '../paths/paths';
 import type { AsyncRuleContext, FieldFlush, FieldRuleContext, ValidateOn } from './form.types';
-
-export type EntryKind = 'field' | 'array' | 'group';
+import type { EntryKind } from './core.types';
 
 export interface Entry<V extends object> {
   readonly id: number;

@@ -97,6 +97,9 @@
 import { computed, shallowRef, toRef, useTemplateRef, watch } from 'vue';
 import {
   createIntent,
+  ReorderAxis,
+  ReorderEventType,
+  ReorderPhase,
   useControlId,
   useMessages,
   useReorder,
@@ -108,7 +111,7 @@ import { useFieldArray } from '../../field/use-field-array';
 import { provideFormScope, useFormScope } from '../form/form-scope';
 import NuiFieldArrayRow from './NuiFieldArrayRow.vue';
 import { fieldArrayMessages } from './field-array.messages';
-import type { NuiFieldArrayProps } from './field-array.types';
+import { RowFocusKind, RowPart, type NuiFieldArrayProps } from './field-array.types';
 import {
   FOCUSABLE,
   focusRow,
@@ -227,16 +230,16 @@ const position = (from: number, to: number) => ({
 
 const announce = (event: ReorderEvent): void => {
   switch (event.type) {
-    case 'grabbed':
+    case ReorderEventType.Grabbed:
       announcement.value = localized.value.grabbed(position(event.from, event.from));
       break;
-    case 'moved':
+    case ReorderEventType.Moved:
       announcement.value = localized.value.moved(position(event.from, event.to));
       break;
-    case 'dropped':
+    case ReorderEventType.Dropped:
       announcement.value = localized.value.dropped(position(event.from, event.to));
       break;
-    case 'cancelled':
+    case ReorderEventType.Cancelled:
       announcement.value = localized.value.cancelled({ index: event.from + 1 });
       break;
   }
@@ -250,7 +253,7 @@ const place = (state: ReorderState): void => {
   }
 
   switch (state.phase) {
-    case 'dragging':
+    case ReorderPhase.Dragging:
       element.style.setProperty(
         '--_indicator',
         `${indicatorOffset(element, state.from, state.to)}px`,
@@ -258,28 +261,28 @@ const place = (state: ReorderState): void => {
 
       element.style.setProperty('--_ghost', `${pointerOffset(element, state.position)}px`);
       break;
-    case 'keyboard':
+    case ReorderPhase.Keyboard:
       element.style.setProperty(
         '--_indicator',
         `${indicatorOffset(element, state.from, state.to)}px`,
       );
 
       break;
-    case 'idle':
-    case 'pending':
+    case ReorderPhase.Idle:
+    case ReorderPhase.Pending:
       break;
   }
 };
 
 const reorder = useReorder({
-  axis: 'y',
+  axis: ReorderAxis.Y,
   count: () => rows.value.length,
   container: () => list.value,
   indexAt: (client, from) => targetIndex(rowsOf(list.value), from, client),
   onMove: (from, to) => {
     const key = rows.value[from]?.key;
 
-    focus.set(key === undefined ? undefined : { kind: 'row', key, part: 'grip' });
+    focus.set(key === undefined ? undefined : { kind: RowFocusKind.Row, key, part: RowPart.Grip });
     void array.move(from, to);
   },
   onChange: place,
@@ -288,7 +291,7 @@ const reorder = useReorder({
 
 const reordering = computed(() => {
   const { phase } = reorder.state.value;
-  return phase === 'dragging' || phase === 'keyboard';
+  return phase === ReorderPhase.Dragging || phase === ReorderPhase.Keyboard;
 });
 
 const classes = computed(() => ({
@@ -302,14 +305,14 @@ const classes = computed(() => ({
 const grabbedKey = computed(() => {
   const state = reorder.state.value;
 
-  return state.phase === 'dragging' || state.phase === 'keyboard'
+  return state.phase === ReorderPhase.Dragging || state.phase === ReorderPhase.Keyboard
     ? rows.value[state.from]?.key
     : undefined;
 });
 
 const ghostRow = computed(() => {
   const state = reorder.state.value;
-  return state.phase === 'dragging' ? state.from : undefined;
+  return state.phase === ReorderPhase.Dragging ? state.from : undefined;
 });
 
 const add = (): void => {
@@ -323,7 +326,7 @@ const add = (): void => {
 
   const key = rows.value[index]?.key;
 
-  focus.set(key === undefined ? undefined : { kind: 'row', key, part: 'control' });
+  focus.set(key === undefined ? undefined : { kind: RowFocusKind.Row, key, part: RowPart.Control });
   announcement.value = localized.value.added({ index: index + 1 });
 };
 
@@ -334,7 +337,12 @@ const remove = (index: number): void => {
 
   const next = rows.value[index + 1] ?? rows.value[index - 1];
 
-  focus.set(next ? { kind: 'row', key: next.key, part: 'control' } : { kind: 'add' });
+  focus.set(
+    next
+      ? { kind: RowFocusKind.Row, key: next.key, part: RowPart.Control }
+      : { kind: RowFocusKind.Add },
+  );
+
   announcement.value = localized.value.removed({ index: index + 1 });
   void array.remove(index);
 };
@@ -357,10 +365,10 @@ watch(
     const target = focus.take();
 
     switch (target?.kind) {
-      case 'add':
+      case RowFocusKind.Add:
         focusArray();
         break;
-      case 'row':
+      case RowFocusKind.Row:
         focusRow(list.value?.querySelector(`[id="${rowId(target.key)}"]`), target.part);
         break;
     }

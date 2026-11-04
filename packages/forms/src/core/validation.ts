@@ -11,10 +11,7 @@ import { createPendingTracker } from './pending';
 import { prune } from './prune';
 import type { Entry } from './registry';
 import { firstFailure } from './rules';
-
-export type Trigger = 'change' | 'blur';
-
-export type ApplyScope = 'attempted' | 'own';
+import { ApplyScope, Trigger } from './core.types';
 
 export interface RunResult<V, O> extends Classified {
   readonly baseline: V | undefined;
@@ -161,7 +158,7 @@ export const createValidation = <V extends object, O>(core: FormCore<V, O>): Val
       entry.state.setAttempted(true);
     }
 
-    const outcome = execute(scope === 'own' ? entries : undefined, keep);
+    const outcome = execute(scope === ApplyScope.Own ? entries : undefined, keep);
 
     if (!isPromise(outcome)) {
       return outcome;
@@ -181,7 +178,7 @@ export const createValidation = <V extends object, O>(core: FormCore<V, O>): Val
       if (result.byOwner.has(entry.path())) {
         asyncChecks.cancel(entry);
       } else {
-        asyncChecks.schedule(entry, trigger === 'change' ? entry.debounce() : 0);
+        asyncChecks.schedule(entry, trigger === Trigger.Change ? entry.debounce() : 0);
       }
     }
     asyncChecks.refresh(entries);

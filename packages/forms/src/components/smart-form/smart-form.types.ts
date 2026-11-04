@@ -7,6 +7,13 @@ import type { FormContext } from '../../form/form-context';
 import type { FieldSelector } from '../../paths/selector';
 import type { AnyFieldRule } from '../../rules/async-rule';
 
+export type NuiSmartFormEntryKind =
+  (typeof NuiSmartFormEntryKind)[keyof typeof NuiSmartFormEntryKind];
+
+export type StepDirection = (typeof StepDirection)[keyof typeof StepDirection];
+
+export type StepFocus = (typeof StepFocus)[keyof typeof StepFocus];
+
 export type SmartRow = FieldArrayRow<unknown>;
 
 export type NuiSmartFormCondition<S> = (values: S, row: SmartRow | undefined) => boolean;
@@ -14,7 +21,7 @@ export type NuiSmartFormCondition<S> = (values: S, row: SmartRow | undefined) =>
 export type NuiSmartFormPropsFactory<S, P = object> = (values: S) => P;
 
 export interface NuiSmartFormField<S> {
-  readonly kind: 'field';
+  readonly kind: typeof NuiSmartFormEntryKind.Field;
   readonly name: FieldSelector<S, unknown>;
   readonly component: Component;
   readonly model?: string | undefined;
@@ -33,7 +40,7 @@ export interface NuiSmartFormField<S> {
 }
 
 export interface NuiSmartFormSection<S> {
-  readonly kind: 'section';
+  readonly kind: typeof NuiSmartFormEntryKind.Section;
   readonly name?: string | undefined;
   readonly title: string;
   readonly description?: string | undefined;
@@ -44,7 +51,7 @@ export interface NuiSmartFormSection<S> {
 }
 
 export interface NuiSmartFormArray<S> {
-  readonly kind: 'array';
+  readonly kind: typeof NuiSmartFormEntryKind.Array;
   readonly name: FieldSelector<S, readonly unknown[] | undefined>;
   readonly label?: string | undefined;
   readonly description?: string | undefined;
@@ -111,7 +118,7 @@ export interface NuiSmartFormProps<T extends object> {
   fields?: readonly NuiSmartFormEntry<T>[] | undefined;
   steps?: readonly NuiSmartFormStep<T>[] | undefined;
   layout?: string | undefined;
-  inline?: boolean | 'grow' | undefined;
+  inline?: boolean | typeof NuiSmartFormInline.Grow | undefined;
   disabled?: boolean | undefined;
   readonly?: boolean | undefined;
   reserveError?: boolean | undefined;
@@ -147,3 +154,15 @@ export interface NuiSmartFormCellProps<T extends object> {
   row?: SmartRow | undefined;
   slots: Slots;
 }
+
+export const NuiSmartFormEntryKind = {
+  Field: 'field',
+  Section: 'section',
+  Array: 'array',
+} as const;
+
+export const NuiSmartFormInline = { Grow: 'grow' } as const;
+
+export const StepDirection = { Forward: 'forward', Back: 'back' } as const;
+
+export const StepFocus = { Control: 'control', Invalid: 'invalid' } as const;

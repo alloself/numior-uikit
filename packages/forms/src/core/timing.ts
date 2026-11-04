@@ -1,7 +1,7 @@
-import type { ValidateOn } from './form.types';
+import { ValidateOn } from './form.types';
 
 export const validatesOnChange = (mode: ValidateOn, attempted: boolean): boolean =>
-  mode === 'change' || attempted;
+  mode === ValidateOn.Change || attempted;
 
 export const validatesOnBlur = (mode: ValidateOn, attempted: boolean): boolean =>
-  mode !== 'submit' || attempted;
+  mode !== ValidateOn.Submit || attempted;

@@ -1,4 +1,5 @@
 import { toPath } from 'lodash-es';
+import { PathToken } from './paths.types';
 
 const INDEX = /^(?:0|[1-9]\d*)$/;
 
@@ -40,11 +41,12 @@ export const prefixesOf = (path: string): string[] => {
 
 export const patternOf = (path: string): string =>
   segmentsOf(path)
-    .map((segment) => (isIndexSegment(segment) ? '*' : segment))
+    .map((segment) => (isIndexSegment(segment) ? PathToken.Wildcard : segment))
     .join('.');
 
 const segmentMatches = (segment: string | undefined, expected: string): boolean =>
-  segment === expected || (expected === '*' && segment !== undefined && isIndexSegment(segment));
+  segment === expected ||
+  (expected === PathToken.Wildcard && segment !== undefined && isIndexSegment(segment));
 
 export const matchesPattern = (path: string, pattern: string): boolean => {
   const segments = segmentsOf(path);

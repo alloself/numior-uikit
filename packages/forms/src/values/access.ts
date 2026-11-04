@@ -1,6 +1,7 @@
 import { get, set } from 'lodash-es';
 import { isIndexSegment, joinPath, segmentsOf } from '../paths/paths';
 import { isObject, isPlainRecord } from './kinds';
+import { PathToken } from '../paths/paths.types';
 
 type Branch = readonly [path: string, value: unknown];
 
@@ -63,7 +64,7 @@ export const deleteAt = (target: object, path: string): void => {
 };
 
 const childrenOf = (value: unknown, segment: string): Branch[] => {
-  if (segment === '*') {
+  if (segment === PathToken.Wildcard) {
     return Array.isArray(value)
       ? value.map((child: unknown, index) => [String(index), child] as const)
       : [];

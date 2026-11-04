@@ -1,11 +1,12 @@
 import type { FieldSelector } from '../../paths/selector';
 import { adaptRule } from '../../rules/adapt-rule';
 import type { AnyFieldRule } from '../../rules/async-rule';
-import type {
-  NuiSmartFormCondition,
-  NuiSmartFormEntry,
-  NuiSmartFormPropsFactory,
-  SmartRow,
+import {
+  NuiSmartFormEntryKind,
+  type NuiSmartFormCondition,
+  type NuiSmartFormEntry,
+  type NuiSmartFormPropsFactory,
+  type SmartRow,
 } from './smart-form.types';
 
 export type RowReader<S, Row> = (values: S) => Row | undefined;
@@ -63,7 +64,7 @@ export const liftEntry = <S, Row>(
   const when = liftCondition(entry.when, rowOf, row);
 
   switch (entry.kind) {
-    case 'field':
+    case NuiSmartFormEntryKind.Field:
       return {
         ...entry,
         name: liftSelector(entry.name, rowOf),
@@ -71,9 +72,9 @@ export const liftEntry = <S, Row>(
         when,
         rules: entry.rules?.map((rule) => liftRule(rule, rowOf)),
       };
-    case 'section':
+    case NuiSmartFormEntryKind.Section:
       return { ...entry, when, fields: entry.fields.map((child) => liftEntry(child, rowOf, row)) };
-    case 'array':
+    case NuiSmartFormEntryKind.Array:
       return {
         ...entry,
         name: liftSelector(entry.name, rowOf),

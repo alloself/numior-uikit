@@ -14,7 +14,7 @@
   >
     <template v-for="item in ordered" :key="item.key">
       <NuiSmartFormCell
-        v-if="item.kind === 'field'"
+        v-if="item.kind === NuiSmartFormEntryKind.Field"
         :form="form"
         :entry="item.entry"
         :path="item.path"
@@ -23,7 +23,7 @@
         :slots="slots"
       />
       <fieldset
-        v-else-if="item.kind === 'section'"
+        v-else-if="item.kind === NuiSmartFormEntryKind.Section"
         class="nui-smart-form__cell nui-smart-form__section"
         :style="cellStyle(item)"
       >
@@ -79,7 +79,7 @@ import NuiSmartFormCell from './NuiSmartFormCell.vue';
 import { declareEntries, isShown } from './declarations';
 import { itemOf, type SmartItem } from './items';
 import { orderByArea, planLayout } from './layout';
-import type { NuiSmartFormEntriesProps } from './smart-form.types';
+import { NuiSmartFormEntryKind, type NuiSmartFormEntriesProps } from './smart-form.types';
 
 const {
   form,

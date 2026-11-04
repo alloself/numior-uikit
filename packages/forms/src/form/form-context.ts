@@ -1,6 +1,6 @@
 import { inject, provide, type ComputedRef, type InjectionKey, type MaybeRefOrGetter } from 'vue';
 import type { FormHost } from '../core/host';
-import type { EntryKind } from '../core/registry';
+import type { EntryKind } from '../core/core.types';
 import type { FormRules } from '../core/rules';
 import type { SubmitHandler } from '../core/submit';
 import type { DeepPartial, FormPath, FormPathValue } from '../paths/paths.types';

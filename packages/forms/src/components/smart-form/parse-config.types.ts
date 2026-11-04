@@ -1,12 +1,19 @@
 import type { NuiControlRegistry } from '@numior/primitives';
 import type { ValidateOn } from '../../core/form.types';
-import type { NuiSmartFormEntry } from './smart-form.types';
+import { NuiSmartFormEntryKind, type NuiSmartFormEntry } from './smart-form.types';
 
 export type FormJsonRule =
-  | { readonly rule: 'required' | 'email'; readonly message?: string | undefined }
-  | { readonly rule: 'min' | 'max'; readonly limit: number; readonly message?: string | undefined }
   | {
-      readonly rule: 'pattern';
+      readonly rule: typeof FormJsonRuleName.Required | typeof FormJsonRuleName.Email;
+      readonly message?: string | undefined;
+    }
+  | {
+      readonly rule: typeof FormJsonRuleName.Min | typeof FormJsonRuleName.Max;
+      readonly limit: number;
+      readonly message?: string | undefined;
+    }
+  | {
+      readonly rule: typeof FormJsonRuleName.Pattern;
       readonly source: string;
       readonly flags?: string | undefined;
       readonly message?: string | undefined;
@@ -17,7 +24,7 @@ export type FormJsonCondition =
   | { readonly path: string; readonly in: readonly unknown[] };
 
 export interface FormJsonField {
-  readonly kind: 'field';
+  readonly kind: typeof NuiSmartFormEntryKind.Field;
   readonly type: string;
   readonly name: string;
   readonly label?: string | undefined;
@@ -35,7 +42,7 @@ export interface FormJsonField {
 }
 
 export interface FormJsonSection {
-  readonly kind: 'section';
+  readonly kind: typeof NuiSmartFormEntryKind.Section;
   readonly name?: string | undefined;
   readonly title: string;
   readonly description?: string | undefined;
@@ -46,7 +53,7 @@ export interface FormJsonSection {
 }
 
 export interface FormJsonArray {
-  readonly kind: 'array';
+  readonly kind: typeof NuiSmartFormEntryKind.Array;
   readonly name: string;
   readonly label?: string | undefined;
   readonly description?: string | undefined;
@@ -63,11 +70,7 @@ export interface FormJsonArray {
 
 export type FormJsonEntry = FormJsonField | FormJsonSection | FormJsonArray;
 
-export type FormConfigIssueCode =
-  | 'unknown-type'
-  | 'rejected-props'
-  | 'not-a-list'
-  | 'invalid-entry';
+export type FormConfigIssueCode = (typeof FormConfigIssueCode)[keyof typeof FormConfigIssueCode];
 
 export interface FormConfigIssue {
   readonly path: string;
@@ -80,5 +83,28 @@ export interface ParseFormConfigOptions {
 }
 
 export type ParsedFormConfig<S extends object> =
-  | { readonly kind: 'ok'; readonly fields: readonly NuiSmartFormEntry<S>[] }
-  | { readonly kind: 'error'; readonly issues: readonly FormConfigIssue[] };
+  | {
+      readonly kind: typeof FormConfigResultKind.Ok;
+      readonly fields: readonly NuiSmartFormEntry<S>[];
+    }
+  | {
+      readonly kind: typeof FormConfigResultKind.Error;
+      readonly issues: readonly FormConfigIssue[];
+    };
+
+export const FormConfigIssueCode = {
+  UnknownType: 'unknown-type',
+  RejectedProps: 'rejected-props',
+  NotAList: 'not-a-list',
+  InvalidEntry: 'invalid-entry',
+} as const;
+
+export const FormJsonRuleName = {
+  Required: 'required',
+  Email: 'email',
+  Min: 'min',
+  Max: 'max',
+  Pattern: 'pattern',
+} as const;
+
+export const FormConfigResultKind = { Ok: 'ok', Error: 'error' } as const;

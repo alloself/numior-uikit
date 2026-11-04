@@ -14,6 +14,7 @@ import { joinPath } from '../paths/paths';
 import { readSelected, recordPath, type FieldSelector } from '../paths/selector';
 import { createRuleSet, type RuleSource } from './rule-set';
 import { inertOf } from '../core/inert';
+import { EntryKind } from '../core/core.types';
 
 export interface FieldArrayRow<Row> {
   readonly key: string;
@@ -68,7 +69,7 @@ export const useFieldArray = <V extends object, Row>(
   const list = computed(() => items(engine.values));
 
   const entry = host.add({
-    kind: 'array',
+    kind: EntryKind.Array,
     path: () => path.value,
     active: () => toValue(options.active) ?? true,
     inert: () => inertOf(options),

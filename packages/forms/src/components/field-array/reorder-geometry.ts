@@ -1,12 +1,11 @@
 import { FOCUSABLE } from '../form-field/focus-control';
+import { RowFocusKind, RowPart } from './field-array.types';
 
 export { FOCUSABLE };
 
-export type RowPart = 'control' | 'grip';
-
 export type RowFocus =
-  | { readonly kind: 'row'; readonly key: string; readonly part: RowPart }
-  | { readonly kind: 'add' };
+  | { readonly kind: typeof RowFocusKind.Row; readonly key: string; readonly part: RowPart }
+  | { readonly kind: typeof RowFocusKind.Add };
 
 const ROWS =
   ':scope > .nui-field-array__rows > .nui-field-array__row:not(.nui-field-array__row--leaving)';
@@ -47,7 +46,7 @@ export const pointerOffset = (list: HTMLElement, pointer: number): number =>
 
 export const focusRow = (row: Element | null | undefined, part: RowPart): void => {
   const element =
-    part === 'grip'
+    part === RowPart.Grip
       ? row?.querySelector('.nui-field-array__grip')
       : row?.querySelector('.nui-field-array__content')?.querySelector(FOCUSABLE);
 
