@@ -3,6 +3,16 @@
   --_tone-foreground: var(--nui-primary-foreground);
   --_tone-soft: var(--nui-primary-soft);
   --_tone-soft-foreground: var(--nui-primary-soft-foreground);
+  --_hover: oklch(from var(--_tone) calc(l - var(--nui-state-hover)) c h);
+  --_pressed: oklch(from var(--_tone) calc(l - var(--nui-state-pressed)) c h);
+  --_soft-hover: light-dark(
+    oklch(from var(--_tone-soft) calc(l - var(--nui-state-hover)) c h),
+    oklch(from var(--_tone-soft) calc(l + var(--nui-state-hover)) c h)
+  );
+  --_soft-pressed: light-dark(
+    oklch(from var(--_tone-soft) calc(l - var(--nui-state-pressed)) c h),
+    oklch(from var(--_tone-soft) calc(l + var(--nui-state-pressed)) c h)
+  );
   --_height: var(--nui-control-height-md);
   --_padding: var(--nui-control-padding-md);
   --_font-size: var(--nui-control-font-size-md);
@@ -26,11 +36,10 @@
   text-decoration: none;
   cursor: pointer;
   transition:
-    background-color var(--nui-duration-fast) var(--nui-easing),
-    border-color var(--nui-duration-fast) var(--nui-easing),
-    color var(--nui-duration-fast) var(--nui-easing),
-    opacity var(--nui-duration-fast) var(--nui-easing),
-    scale var(--nui-duration-fast) var(--nui-easing);
+    background-color var(--nui-duration-normal) var(--nui-easing-gentle),
+    border-color var(--nui-duration-normal) var(--nui-easing-gentle),
+    color var(--nui-duration-normal) var(--nui-easing-gentle),
+    opacity var(--nui-duration-fast) var(--nui-easing);
 }
 
 .nui-button--tone-secondary {
@@ -70,6 +79,13 @@
   --_tone-soft-foreground: var(--nui-neutral-soft-foreground);
 }
 
+.nui-button--size-inline {
+  --_height: 1.75em;
+  --_padding: 0.25em;
+  --_font-size: 0.875em;
+
+  padding-block: 0;
+}
 .nui-button--size-xs {
   --_height: var(--nui-control-height-xs);
   --_padding: var(--nui-control-padding-xs);
@@ -88,6 +104,9 @@
   --_font-size: var(--nui-control-font-size-lg);
 }
 
+.nui-button--round {
+  border-radius: var(--nui-radius-full);
+}
 .nui-button--icon-only {
   inline-size: var(--_height);
   padding-inline: 0;
@@ -106,6 +125,10 @@
   background: transparent;
   color: var(--_tone-soft-foreground);
 }
+.nui-button--variant-plain {
+  background: transparent;
+  color: var(--nui-text-muted);
+}
 .nui-button--variant-link {
   min-block-size: auto;
   padding: 0;
@@ -117,17 +140,17 @@
 }
 
 .nui-button:hover:not(:disabled, .nui-button--disabled, .nui-button--loading) {
-  background: color-mix(in oklab, var(--_tone), var(--nui-text) 10%);
+  background: var(--_hover);
 }
 .nui-button:active:not(:disabled, .nui-button--disabled, .nui-button--loading) {
-  background: color-mix(in oklab, var(--_tone), var(--nui-text) 16%);
-  scale: 0.97;
+  background: var(--_pressed);
+  transition-duration: var(--nui-duration-instant);
 }
 .nui-button--variant-soft:hover:not(:disabled, .nui-button--disabled, .nui-button--loading) {
-  background: color-mix(in oklab, var(--_tone-soft), var(--_tone) 10%);
+  background: var(--_soft-hover);
 }
 .nui-button--variant-soft:active:not(:disabled, .nui-button--disabled, .nui-button--loading) {
-  background: color-mix(in oklab, var(--_tone-soft), var(--_tone) 16%);
+  background: var(--_soft-pressed);
 }
 .nui-button--variant-outline:hover:not(:disabled, .nui-button--disabled, .nui-button--loading),
 .nui-button--variant-ghost:hover:not(:disabled, .nui-button--disabled, .nui-button--loading) {
@@ -135,12 +158,20 @@
 }
 .nui-button--variant-outline:active:not(:disabled, .nui-button--disabled, .nui-button--loading),
 .nui-button--variant-ghost:active:not(:disabled, .nui-button--disabled, .nui-button--loading) {
-  background: color-mix(in oklab, var(--_tone-soft), var(--_tone) 10%);
+  background: var(--_soft-hover);
+}
+.nui-button--variant-plain[aria-expanded='true'],
+.nui-button--variant-plain:hover:not(:disabled, .nui-button--disabled, .nui-button--loading) {
+  background: transparent;
+  color: var(--nui-text);
+}
+.nui-button--variant-plain:active:not(:disabled, .nui-button--disabled, .nui-button--loading) {
+  background: transparent;
+  color: var(--nui-primary);
 }
 .nui-button--variant-link:hover:not(:disabled, .nui-button--disabled, .nui-button--loading),
 .nui-button--variant-link:active:not(:disabled, .nui-button--disabled, .nui-button--loading) {
   background: transparent;
-  scale: 1;
   text-decoration-thickness: 2px;
 }
 

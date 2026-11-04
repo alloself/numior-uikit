@@ -95,14 +95,6 @@
 .nui-combobox__clear {
   margin-inline-start: auto;
 }
-.nui-combobox .nui-combobox__clear,
-.nui-combobox .nui-combobox__toggle {
-  --_tone-soft-foreground: var(--nui-text-muted);
-}
-.nui-combobox .nui-combobox__clear:hover,
-.nui-combobox .nui-combobox__toggle:hover {
-  --_tone-soft-foreground: var(--nui-text);
-}
 .nui-combobox__clear + .nui-combobox__toggle {
   margin-inline-start: 0;
 }

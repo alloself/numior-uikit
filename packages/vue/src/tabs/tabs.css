@@ -9,6 +9,7 @@
   gap: var(--nui-space-3);
   font-family: var(--nui-font);
   color: var(--nui-text);
+  isolation: isolate;
 }
 .nui-tabs--orientation-vertical {
   flex-direction: row;
@@ -54,8 +55,7 @@
 }
 
 .nui-tab-item {
-  --_close-size: calc(var(--_font-size) * 1.3125);
-  --_close-font: calc(var(--_font-size) * 0.875);
+  --_close-size: calc(var(--_font-size) * 1.53125);
   --_close-gap: calc(var(--_padding) / 2);
 
   display: inline-grid;
@@ -118,23 +118,10 @@
   padding-inline-end: calc(var(--_close-gap) + var(--_close-size) + var(--nui-space-1));
 }
 .nui-tab-item > .nui-tab__close {
-  --_height: var(--_close-size);
-  --_font-size: var(--_close-font);
-
   z-index: 2;
   align-self: center;
   justify-self: end;
-  block-size: var(--_height);
   margin-inline-end: var(--_close-gap);
-  padding-block: 0;
-  border-radius: var(--nui-radius-sm);
-  color: var(--nui-text-muted);
-}
-.nui-tab-item > .nui-tab__close:hover:not(:disabled) {
-  color: var(--nui-text);
-}
-.nui-tab-item > .nui-tab__close:active:not(:disabled) {
-  scale: 1;
 }
 
 .nui-tab-list__indicator {

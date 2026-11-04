@@ -18,8 +18,7 @@
     <slot />
     <NuiButton
       v-if="clearable"
-      variant="ghost"
-      tone="neutral"
+      variant="plain"
       size="xs"
       icon-only
       class="nui-date-picker__clear"
@@ -29,8 +28,7 @@
       @click="emit('clear')"
     />
     <NuiButton
-      variant="ghost"
-      tone="neutral"
+      variant="plain"
       size="xs"
       icon-only
       class="nui-date-picker__open"

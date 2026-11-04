@@ -9,6 +9,7 @@ export interface TabsMountOptions {
   readonly props?: NuiTabsProps;
   readonly modelValue?: string | undefined;
   readonly fromData?: boolean;
+  readonly switcher?: boolean;
   readonly dir?: 'ltr' | 'rtl';
   readonly lazyPanels?: readonly string[];
   readonly closable?: readonly string[];
@@ -37,6 +38,7 @@ export class TabsDriver extends ComponentDriver {
     props,
     modelValue,
     fromData,
+    switcher,
     dir,
     lazyPanels,
     closable,
@@ -51,6 +53,7 @@ export class TabsDriver extends ComponentDriver {
         descriptors: DESCRIPTORS,
         initialValue: modelValue,
         fromData,
+        switcher,
         dir,
         lazyPanels,
         closable,
@@ -135,6 +138,10 @@ export class TabsDriver extends ComponentDriver {
       throw new Error(`No tab labelled ${label}`);
     }
     return found;
+  }
+
+  get panelCount(): number {
+    return this.wrapper.findAll('[role="tabpanel"]').length;
   }
 
   panel(value: string): DOMWrapper<HTMLElement> {

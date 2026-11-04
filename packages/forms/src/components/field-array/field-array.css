@@ -11,6 +11,7 @@
   border: 0;
   color: var(--nui-text);
   font-family: var(--nui-font);
+  isolation: isolate;
 }
 
 .nui-field-array__label {

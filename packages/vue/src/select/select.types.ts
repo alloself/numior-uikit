@@ -14,6 +14,7 @@ export interface NuiSelectProps<T> extends NuiFieldControlProps {
   placement?: FloatingPlacement | undefined;
   emptyLabel?: string | undefined;
   clearLabel?: string | undefined;
+  toggleLabel?: string | undefined;
   countLabel?: ((count: number) => string) | undefined;
 }
 

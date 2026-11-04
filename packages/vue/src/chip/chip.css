@@ -6,7 +6,7 @@
   --_height: 1.75rem;
   --_padding: var(--nui-space-3);
   --_font-size: var(--nui-font-size-sm);
-  --_remove: 1.375rem;
+  --_remove: calc(var(--_font-size) * 1.53125);
 
   box-sizing: border-box;
   display: inline-flex;
@@ -33,7 +33,6 @@
   --_height: 1.5rem;
   --_padding: var(--nui-space-2);
   --_font-size: var(--nui-font-size-xs);
-  --_remove: 1.125rem;
 }
 .nui-chip--tone-primary {
   --_tone: var(--nui-primary);
@@ -92,25 +91,4 @@
 .nui-chip__label {
   overflow: hidden;
   text-overflow: ellipsis;
-}
-.nui-chip__remove {
-  --_height: var(--_remove);
-
-  block-size: var(--_height);
-  padding-block: 0;
-  border-radius: var(--nui-radius-full);
-  color: inherit;
-  font-size: 0.8rem;
-}
-.nui-chip--size-sm .nui-chip__remove {
-  font-size: 0.7rem;
-}
-.nui-chip__remove:hover:not(:disabled),
-.nui-chip__remove:active:not(:disabled) {
-  background: color-mix(in oklab, var(--_tone-soft), var(--_tone) 14%);
-  color: inherit;
-}
-.nui-chip--variant-solid .nui-chip__remove:hover:not(:disabled),
-.nui-chip--variant-solid .nui-chip__remove:active:not(:disabled) {
-  background: color-mix(in oklab, var(--_tone), var(--nui-text) 16%);
 }

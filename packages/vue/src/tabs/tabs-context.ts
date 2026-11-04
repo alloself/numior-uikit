@@ -10,6 +10,7 @@ export interface TabsContext {
   seen(value: string): boolean;
   tabId(value: string): string;
   panelId(value: string): string;
+  readonly panels: ComputedRef<boolean>;
 }
 
 export interface TabListContext {

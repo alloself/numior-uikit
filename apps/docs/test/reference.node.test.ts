@@ -92,7 +92,7 @@ describe('docs reference', () => {
       type: 'NuiButtonVariant',
       default: '"solid"',
       required: false,
-      values: ['solid', 'soft', 'outline', 'ghost', 'link'],
+      values: ['solid', 'soft', 'outline', 'ghost', 'plain', 'link'],
     });
 
     expect(loading).toMatchObject({ kind: 'boolean', default: 'false', values: undefined });

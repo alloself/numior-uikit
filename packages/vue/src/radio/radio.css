@@ -28,6 +28,7 @@
   cursor: pointer;
   -webkit-user-select: none;
   user-select: none;
+  isolation: isolate;
 }
 .nui-radio-group--size-sm .nui-radio {
   --_size: 1rem;

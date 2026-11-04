@@ -30,7 +30,8 @@
   inline-size: 100%;
   min-inline-size: 0;
   min-block-size: var(--_height);
-  padding: 0 var(--_padding);
+  padding-block: 0;
+  padding-inline: var(--_padding) calc(var(--_padding) + var(--_chevron) + var(--nui-space-2));
   border: 1px solid var(--nui-border);
   border-radius: var(--nui-radius);
   background: var(--nui-surface);
@@ -65,10 +66,8 @@
   outline-color: var(--nui-error);
 }
 .nui-select--readonly .nui-select__trigger {
+  padding-inline-end: var(--_padding);
   cursor: default;
-}
-.nui-select--readonly .nui-select__chevron {
-  display: none;
 }
 .nui-select--disabled .nui-select__trigger {
   opacity: var(--nui-disabled-opacity);
@@ -93,11 +92,11 @@
 .nui-select--open .nui-select__chevron {
   rotate: 180deg;
 }
-.nui-select .nui-select__clear {
-  --_tone-soft-foreground: var(--nui-text-muted);
-}
-.nui-select .nui-select__clear:hover {
-  --_tone-soft-foreground: var(--nui-text);
+.nui-select__toggle {
+  position: absolute;
+  inset-block-start: 50%;
+  inset-inline-end: calc(var(--_padding) - (var(--nui-control-height-xs) - var(--_chevron)) / 2);
+  translate: 0 -50%;
 }
 .nui-select__clear {
   position: absolute;

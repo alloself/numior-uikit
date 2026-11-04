@@ -3,13 +3,7 @@
   <span class="nui-menu-item__label"
     ><bdi><slot /></bdi
   ></span>
-  <NuiKbd
-    v-if="shortcut"
-    :keys="shortcut"
-    variant="plain"
-    size="sm"
-    class="nui-menu-item__shortcut"
-  />
+  <NuiKbd v-if="shortcut" :keys="shortcut" size="sm" class="nui-menu-item__shortcut" />
   <slot name="trailing" />
 </template>
 

@@ -20,6 +20,16 @@ describe('NuiTabs', () => {
     tabs.unmount();
   });
 
+  it('works as a switcher from data without panels and points at no panel then', async () => {
+    const tabs = TabsDriver.mount({ modelValue: 'general', fromData: true, switcher: true });
+
+    expect(tabs.panelCount).toBe(0);
+    expect(tabs.tab('General').attributes('aria-controls')).toBeUndefined();
+    await tabs.clickTab('Team');
+    expect(tabs.tab('Team').attributes('aria-selected')).toBe('true');
+    tabs.unmount();
+  });
+
   it('moves with arrows and activates automatically, skipping disabled tabs and looping', async () => {
     const tabs = TabsDriver.mount({ modelValue: 'general' });
     await tabs.focusTab('General');

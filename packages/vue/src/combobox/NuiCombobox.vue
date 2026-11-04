@@ -48,8 +48,7 @@
         />
         <NuiButton
           v-if="showClear"
-          variant="ghost"
-          tone="neutral"
+          variant="plain"
           size="xs"
           class="nui-combobox__clear"
           :aria-label="texts.clear"
@@ -58,8 +57,7 @@
           @click="clear"
         />
         <NuiButton
-          variant="ghost"
-          tone="neutral"
+          variant="plain"
           size="xs"
           class="nui-combobox__toggle"
           :aria-label="texts.toggle"

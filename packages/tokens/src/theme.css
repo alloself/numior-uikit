@@ -40,6 +40,8 @@
   --nui-focus-ring-width: 2px;
   --nui-focus-ring-offset: 2px;
   --nui-disabled-opacity: 0.5;
+  --nui-state-hover: 0.06;
+  --nui-state-pressed: 0.12;
 
   --nui-radius-base: 0.5rem;
   --nui-radius-sm: calc(var(--nui-radius-base) / 2);
@@ -108,10 +110,12 @@
   --nui-shadow-md: 0 4px 12px oklch(0 0 0 / 0.12);
   --nui-shadow-lg: 0 12px 32px oklch(0 0 0 / 0.18);
 
+  --nui-duration-instant: 60ms;
   --nui-duration-fast: 120ms;
   --nui-duration-normal: 200ms;
   --nui-duration-slow: 320ms;
   --nui-easing: cubic-bezier(0.2, 0, 0, 1);
+  --nui-easing-gentle: ease-out;
 
   --nui-z-dropdown: 1000;
   --nui-z-overlay: 1100;
@@ -202,6 +206,7 @@
 @media (prefers-reduced-motion: reduce) {
   :root,
   [data-nui-theme] {
+    --nui-duration-instant: 0ms;
     --nui-duration-fast: 0ms;
     --nui-duration-normal: 0ms;
     --nui-duration-slow: 0ms;

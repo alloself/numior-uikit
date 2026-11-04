@@ -8,7 +8,7 @@
       @update:model-value="model = $event"
       @close="close"
     >
-      <template #panel="{ tab }">{{ tab.label }} panel</template>
+      <template v-if="!switcher" #panel="{ tab }">{{ tab.label }} panel</template>
     </NuiTabs>
     <NuiTabs v-else v-bind="{ ...props, ...selected }" @update:model-value="model = $event">
       <NuiTabList label="Settings">
@@ -54,6 +54,7 @@ const {
   descriptors,
   initialValue = undefined,
   fromData = false,
+  switcher = false,
   dir = 'ltr',
   lazyPanels = [],
   closable = [],
@@ -63,6 +64,7 @@ const {
   descriptors: readonly NuiTabDescriptor[];
   initialValue?: string | undefined;
   fromData?: boolean | undefined;
+  switcher?: boolean | undefined;
   dir?: 'ltr' | 'rtl' | undefined;
   lazyPanels?: readonly string[] | undefined;
   closable?: readonly string[] | undefined;

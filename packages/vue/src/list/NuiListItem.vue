@@ -22,9 +22,14 @@
         <template v-if="$slots.description" #description><slot name="description" /></template>
         <template v-if="$slots.trailing || badge !== undefined || shortcut !== undefined" #trailing>
           <slot name="trailing">
-            <NuiKbd v-if="shortcut !== undefined" :keys="shortcut" variant="plain" size="sm" />
-            <NuiBadge v-else-if="typeof badge === 'number'" :count="badge" size="sm" />
-            <NuiBadge v-else size="sm">{{ badge }}</NuiBadge>
+            <NuiKbd v-if="shortcut !== undefined" :keys="shortcut" size="sm" />
+            <NuiBadge
+              v-else-if="typeof badge === 'number'"
+              :count="badge"
+              v-bind="badgeLook"
+              size="sm"
+            />
+            <NuiBadge v-else v-bind="badgeLook" size="sm">{{ badge }}</NuiBadge>
           </slot>
         </template>
       </NuiRow>
@@ -105,6 +110,10 @@ const hasAction = (): boolean => mode() === 'link' || mode() === 'button';
 const showsCheck = (): boolean =>
   isOption() ||
   (inTree && list?.variant.value === 'floating' && treeNode.value?.checked === undefined);
+
+const badgeLook = computed(() =>
+  current ? { tone: 'primary' as const, variant: 'solid' as const } : {},
+);
 
 const classes = () => [
   `nui-list-item--size-${size.value}`,

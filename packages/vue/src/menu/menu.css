@@ -115,7 +115,6 @@
 }
 .nui-menu-item__shortcut {
   margin-inline-start: auto;
-  color: var(--nui-text-muted);
 }
 .nui-menu-item__chevron {
   margin-inline-start: auto;

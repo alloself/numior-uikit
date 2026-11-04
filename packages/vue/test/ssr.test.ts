@@ -633,7 +633,8 @@ describe('server rendering', () => {
 
     expect(html.match(/nui-tab--closable/g)).toHaveLength(1);
     expect(html.match(/role="tab"/g)).toHaveLength(2);
-    expect(close).toContain('nui-button--variant-ghost');
+    expect(close).toContain('nui-button--variant-plain');
+    expect(close).toContain('nui-button--size-inline');
     expect(close).toContain('tabindex="-1"');
     expect(close).toContain('aria-hidden="true"');
     expect(html.match(/<button/g)).toHaveLength(3);

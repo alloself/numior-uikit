@@ -34,12 +34,25 @@
         <span class="nui-select__value">
           <slot name="value" :selected="selectedOptions">{{ displayLabel }}</slot>
         </span>
-        <NuiIcon icon="chevron-down" class="nui-select__chevron" />
       </button>
       <NuiButton
+        v-if="!isReadonly"
+        variant="plain"
+        size="xs"
+        class="nui-select__toggle"
+        :aria-label="toggleText"
+        :aria-expanded="open ? 'true' : 'false'"
+        :aria-controls="listboxId"
+        tabindex="-1"
+        :disabled="isDisabled"
+        @pointerdown.prevent
+        @click="openFromToggle"
+      >
+        <NuiIcon icon="chevron-down" class="nui-select__chevron" />
+      </NuiButton>
+      <NuiButton
         v-if="showClear"
-        variant="ghost"
-        tone="neutral"
+        variant="plain"
         size="xs"
         class="nui-select__clear"
         :aria-label="clearText"
@@ -152,6 +165,7 @@ const {
   placement = 'bottom-start',
   emptyLabel,
   clearLabel,
+  toggleLabel,
   countLabel,
 } = defineProps<NuiSelectProps<T>>();
 
@@ -218,6 +232,7 @@ const displayLabel = computed(() => {
 
 const emptyText = computed(() => emptyLabel ?? messages.value.empty);
 const clearText = computed(() => clearLabel ?? messages.value.clear);
+const toggleText = computed(() => toggleLabel ?? messages.value.toggle);
 
 const showClear = computed(
   () => clearable && selectedValues.value.length > 0 && !isDisabled.value && !isReadonly.value,
@@ -225,6 +240,12 @@ const showClear = computed(
 
 const open = ref(false);
 const triggerElement = useTemplateRef<HTMLButtonElement>('trigger');
+
+const openFromToggle = (): void => {
+  triggerElement.value?.focus();
+  triggerElement.value?.click();
+};
+
 const readonlyInvoker = computed(() => (isReadonly.value ? { popovertarget: undefined } : {}));
 
 const { listboxElement, setListbox, control, navigation, activateHovered, restActive } =

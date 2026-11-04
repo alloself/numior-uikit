@@ -1,5 +1,6 @@
 <template>
   <span
+    ref="root"
     class="nui-skeleton"
     :class="[`nui-skeleton--shape-${shape}`, { 'nui-skeleton--static': !animated }]"
     :style="sizing"
@@ -10,7 +11,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, onMounted, useTemplateRef, watch } from 'vue';
 import type { NuiSkeletonProps } from './skeleton.types';
 
 const {
@@ -21,10 +22,28 @@ const {
   animated = true,
 } = defineProps<NuiSkeletonProps>();
 
+const root = useTemplateRef<HTMLElement>('root');
+
 const lineCount = computed(() => (shape === 'text' ? Math.max(1, lines) : 0));
 
 const sizing = computed(() => ({
   ...(width === undefined ? {} : { '--_inline-size': width }),
   ...(height === undefined ? {} : { '--_block-size': height }),
 }));
+
+const syncAnimations = (): void => {
+  const element = root.value;
+
+  if (element === null || !('getAnimations' in element)) {
+    return;
+  }
+
+  element.getAnimations({ subtree: true }).forEach((animation) => {
+    animation.startTime = 0;
+  });
+};
+
+onMounted(syncAnimations);
+
+watch(lineCount, syncAnimations, { flush: 'post' });
 </script>

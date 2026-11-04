@@ -3,9 +3,9 @@ import type { NuiRouteLocation } from '../shared/destination';
 import type { Component } from 'vue';
 import type { NuiSize, NuiTone } from '../shared/scale.types';
 
-export type NuiButtonVariant = 'solid' | 'soft' | 'outline' | 'ghost' | 'link';
+export type NuiButtonVariant = 'solid' | 'soft' | 'outline' | 'ghost' | 'plain' | 'link';
 
-export type NuiButtonSize = 'xs' | NuiSize;
+export type NuiButtonSize = 'inline' | 'xs' | NuiSize;
 
 export interface NuiButtonProps {
   variant?: NuiButtonVariant | undefined;
@@ -15,6 +15,7 @@ export interface NuiButtonProps {
   disabled?: boolean | undefined;
   loading?: boolean | undefined;
   iconOnly?: boolean | undefined;
+  round?: boolean | undefined;
   icon?: IconSource | undefined;
   iconEnd?: IconSource | undefined;
   as?: string | Component | undefined;

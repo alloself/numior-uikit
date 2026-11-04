@@ -4,6 +4,7 @@
   --_radius: var(--nui-radius-sm);
   --_tint: color-mix(in oklab, var(--nui-text) 8%, transparent);
   --_shine: color-mix(in oklab, var(--nui-text) 13%, transparent);
+  --_sweep: 48rem;
 
   box-sizing: border-box;
   display: block;
@@ -19,8 +20,8 @@
   display: block;
   block-size: var(--_block-size);
   border-radius: var(--_radius);
-  background: linear-gradient(90deg, var(--_tint) 35%, var(--_shine) 50%, var(--_tint) 65%);
-  background-size: 200% 100%;
+  background: linear-gradient(90deg, var(--_tint) 40%, var(--_shine) 50%, var(--_tint) 60%) 0 0 /
+    var(--_sweep) 100% repeat-x;
   animation: nui-skeleton-shimmer 2s linear infinite;
 }
 .nui-skeleton__line:last-child:not(:only-child) {
@@ -42,10 +43,10 @@
 }
 @keyframes nui-skeleton-shimmer {
   from {
-    background-position: 150% 0;
+    background-position: calc(var(--_sweep) * -1) 0;
   }
   to {
-    background-position: -50% 0;
+    background-position: 0 0;
   }
 }
 @media (prefers-reduced-motion: reduce) {

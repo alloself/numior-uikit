@@ -51,7 +51,7 @@ const {
 
 const model = defineModel<string>();
 const emit = defineEmits<{ close: [value: string] }>();
-defineSlots<{ default(): unknown; panel(props: NuiTabsPanelSlot): unknown }>();
+const slots = defineSlots<{ default(): unknown; panel?(props: NuiTabsPanelSlot): unknown }>();
 
 const baseId = useControlId(() => id);
 const visited = shallowReactive(new Set<string>());
@@ -78,5 +78,6 @@ provideTabs({
   seen: (value) => visited.has(value),
   tabId: (value) => `${baseId.value}-tab-${encodeURIComponent(value)}`,
   panelId: (value) => `${baseId.value}-panel-${encodeURIComponent(value)}`,
+  panels: computed(() => tabs === undefined || slots.panel !== undefined),
 });
 </script>

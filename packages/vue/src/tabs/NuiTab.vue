@@ -12,7 +12,7 @@
         'nui-tab--closable': closable,
       }"
       :aria-selected="selected ? 'true' : 'false'"
-      :aria-controls="tabs.panelId(value)"
+      :aria-controls="tabs.panels.value ? tabs.panelId(value) : undefined"
       :aria-disabled="disabled || undefined"
       :tabindex="selected ? 0 : -1"
       @click="activate"
@@ -26,9 +26,8 @@
     </button>
     <NuiButton
       v-if="closable"
-      variant="ghost"
-      tone="neutral"
-      size="sm"
+      variant="plain"
+      size="inline"
       class="nui-tab__close"
       tabindex="-1"
       aria-hidden="true"

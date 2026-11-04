@@ -10,6 +10,7 @@
         'nui-button--loading': loading,
         'nui-button--disabled': disabled,
         'nui-button--icon-only': squared(),
+        'nui-button--round': round,
       },
     ]"
     v-bind="controlAttrs"
@@ -41,6 +42,7 @@ const {
   disabled = false,
   loading = false,
   iconOnly = undefined,
+  round = false,
   icon,
   iconEnd,
   as,

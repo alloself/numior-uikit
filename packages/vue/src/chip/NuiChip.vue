@@ -12,9 +12,10 @@
     <span class="nui-chip__label"><slot /></span>
     <NuiButton
       v-if="removable"
-      variant="ghost"
+      :variant="REMOVE_VARIANTS[variant]"
       :tone="tone"
-      size="sm"
+      size="inline"
+      round
       class="nui-chip__remove"
       :aria-label="removeText"
       :tabindex="removeTabbable ? undefined : -1"
@@ -31,7 +32,14 @@ import { useMessages } from '@numior/primitives';
 import NuiButton from '../button/NuiButton.vue';
 import NuiIcon from '../icon/NuiIcon.vue';
 import { chipMessages } from './chip.messages';
-import type { NuiChipProps } from './chip.types';
+import type { NuiButtonVariant } from '../button/button.types';
+import type { NuiChipProps, NuiChipVariant } from './chip.types';
+
+const REMOVE_VARIANTS: Readonly<Record<NuiChipVariant, NuiButtonVariant>> = {
+  soft: 'soft',
+  solid: 'solid',
+  outline: 'ghost',
+};
 
 const {
   tone = 'neutral',

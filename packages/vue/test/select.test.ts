@@ -71,6 +71,19 @@ describe('NuiSelect', () => {
     multiple.unmount();
   });
 
+  it('keeps the chevron a button beside the trigger that hands the click to the trigger', async () => {
+    const select = SelectDriver.mount({ modelValue: 'banana' });
+
+    expect(select.toggleButton.attributes('tabindex')).toBe('-1');
+    expect(select.toggleButton.attributes('aria-controls')).toBe(select.listbox.attributes('id'));
+    expect(select.toggleButton.attributes('aria-expanded')).toBe('false');
+    expect(select.toggleLabel).toBe('Show options');
+    expect(select.trigger.find('.nui-select__chevron').exists()).toBe(false);
+    await select.clickToggle();
+    expect(select.triggerFocused).toBe(true);
+    select.unmount();
+  });
+
   it('shows the empty state inside the listbox when there are no options', () => {
     const select = SelectDriver.mount({ props: { options: [] } });
     expect(select.emptyText).toBe('No options');
@@ -167,6 +180,7 @@ describe('NuiSelect', () => {
 
     expect(russian.valueText).toBe('Выбрано: 2');
     expect(russian.clearLabel).toBe('Очистить');
+    expect(russian.toggleLabel).toBe('Показать варианты');
     russian.unmount();
 
     const empty = SelectDriver.mount({ props: { options: [] }, config: { locale: 'ru-RU' } });
@@ -221,6 +235,7 @@ describe('NuiSelect', () => {
     expect(select.trigger.attributes('aria-controls')).toBeTruthy();
     expect(select.trigger.element.disabled).toBe(false);
     expect(select.clearButton.exists()).toBe(false);
+    expect(select.toggleButton.exists()).toBe(false);
     await select.pressTrigger('ArrowDown');
     expect(select.expanded).toBe(false);
     expect(select.valueText).toBe('Lime');

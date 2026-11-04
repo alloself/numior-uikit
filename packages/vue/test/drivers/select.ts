@@ -166,6 +166,18 @@ export class SelectDriver extends ComponentDriver {
     return this.clearButton.attributes('aria-label');
   }
 
+  get toggleButton(): DOMWrapper<Element> {
+    return this.wrapper.find('.nui-select__toggle');
+  }
+
+  get toggleLabel(): string | undefined {
+    return this.toggleButton.attributes('aria-label');
+  }
+
+  async clickToggle(): Promise<void> {
+    await this.toggleButton.trigger('click');
+  }
+
   private option(label: string): DOMWrapper<HTMLElement> {
     const found = this.wrapper
       .findAll<HTMLElement>('[role="option"]')

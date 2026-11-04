@@ -63,6 +63,7 @@
   font-family: var(--nui-font);
   font-size: var(--_font-size);
   line-height: var(--nui-line-height-tight);
+  isolation: isolate;
 }
 .nui-table::after {
   content: '';

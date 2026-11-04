@@ -27,6 +27,7 @@
     border-color var(--nui-duration-fast) var(--nui-easing),
     box-shadow var(--nui-duration-fast) var(--nui-easing),
     background-color var(--nui-duration-fast) var(--nui-easing);
+  isolation: isolate;
 }
 .nui-card--padding-xs {
   --_padding: var(--nui-space-3);

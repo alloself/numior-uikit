@@ -27,6 +27,7 @@
   cursor: pointer;
   -webkit-user-select: none;
   user-select: none;
+  isolation: isolate;
 }
 .nui-checkbox--size-sm {
   --_size: 1rem;
