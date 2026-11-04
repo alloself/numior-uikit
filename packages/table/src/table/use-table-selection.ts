@@ -1,7 +1,8 @@
 import { computed, type ComputedRef, type Ref, type ShallowRef } from 'vue';
 import type { CheckState } from '@numior/vue';
-import type { TableEngine, TableNodeId } from '../engine';
-import type { TableCellPosition, TablePageWindow, NuiTableSelection } from './table.types';
+import { TableNodeKind, type TableEngine, type TableNodeId } from '../engine';
+import { NuiTableSelection, type TableCellPosition, type TablePageWindow } from './table.types';
+import { Key } from '@numior/primitives';
 
 export type TableSelectionKey<T> = TableNodeId | T;
 
@@ -28,10 +29,10 @@ export interface TableSelection<T> {
 }
 
 const plainSpace = (event: KeyboardEvent): boolean =>
-  event.key === ' ' && !event.altKey && !event.ctrlKey && !event.metaKey && !event.shiftKey;
+  event.key === Key.Space && !event.altKey && !event.ctrlKey && !event.metaKey && !event.shiftKey;
 
 const plainToggleAll = (event: KeyboardEvent): boolean =>
-  (event.key === ' ' || event.key === 'Enter') &&
+  (event.key === Key.Space || event.key === Key.Enter) &&
   !event.altKey &&
   !event.ctrlKey &&
   !event.metaKey &&
@@ -39,7 +40,7 @@ const plainToggleAll = (event: KeyboardEvent): boolean =>
 
 export const useTableSelection = <T>(options: TableSelectionOptions<T>): TableSelection<T> => {
   const enabled = computed(() => options.mode() !== undefined);
-  const multiple = computed(() => options.mode() === 'multiple');
+  const multiple = computed(() => options.mode() === NuiTableSelection.Multiple);
 
   const keys = computed(() => new Set(options.selected.value.map(options.keyOf)));
 
@@ -50,7 +51,7 @@ export const useTableSelection = <T>(options: TableSelectionOptions<T>): TableSe
     for (let position = start; position < end; position += 1) {
       const node = options.engine.value.nodeAt(position);
 
-      if (node?.kind === 'row') {
+      if (node?.kind === TableNodeKind.Row) {
         rows.push(node.row);
       }
     }

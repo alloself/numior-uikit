@@ -7,7 +7,7 @@ import {
 import { createRadixSortJob, type RadixLane } from './radix';
 import { createSortJob } from './sort';
 import type { SliceJob } from './slicer';
-import type { RankedStore } from './engine.types';
+import { ColumnStoreKind, type RankedStore } from './engine.types';
 
 export interface OrderKey {
   readonly store: RankedStore;
@@ -19,7 +19,7 @@ const RADIX_FROM = 1024;
 const radixLaneOf = (key: OrderKey): RadixLane => {
   const { store, descending } = key;
 
-  if (store.kind !== 'number') {
+  if (store.kind !== ColumnStoreKind.Number) {
     return {
       kind: 'rank',
       keys: store.ranks,
@@ -41,7 +41,7 @@ const radixJob = (indices: Uint32Array, keys: readonly OrderKey[]): SliceJob => 
 
   if (
     keys.length === 1 &&
-    only?.store.kind === 'number' &&
+    only?.store.kind === ColumnStoreKind.Number &&
     numberRanksOf(only.store) === undefined
   ) {
     return createRankingSortJob(indices, only.store, only.descending);
@@ -52,7 +52,7 @@ const radixJob = (indices: Uint32Array, keys: readonly OrderKey[]): SliceJob => 
   return keys.reduceRight<() => SliceJob>((next, key) => {
     const { store } = key;
 
-    return store.kind === 'number' && numberRanksOf(store) === undefined
+    return store.kind === ColumnStoreKind.Number && numberRanksOf(store) === undefined
       ? () => createThenJob(createNumberRankJob(store), next)
       : next;
   }, sorting)();
@@ -66,7 +66,7 @@ const compareKey = (key: OrderKey, a: number, b: number): number => {
   if (nullA || nullB) {
     return nullA === nullB ? 0 : nullA ? 1 : -1;
   }
-  const keys = key.store.kind === 'number' ? key.store.keys : key.store.ranks;
+  const keys = key.store.kind === ColumnStoreKind.Number ? key.store.keys : key.store.ranks;
   const keyA = keys[a] ?? 0;
   const keyB = keys[b] ?? 0;
 

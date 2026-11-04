@@ -1,16 +1,17 @@
 import { computed, ref, type ComputedRef, type Ref } from 'vue';
-import { useReorder, type ReorderState } from '@numior/primitives';
+import { Key, ReorderPhase, useReorder, type ReorderState } from '@numior/primitives';
 import { OWN_HEAD_CELLS } from './table-dom';
 import type { PlacedColumn, TableLayout } from './table-layout';
 import { movedKeys, orderLeaves } from './table-order';
 import type { NuiTableMessages } from './table.messages';
-import type {
-  TableDropMark,
-  TableGhost,
+import {
+  TableColumnKind,
   TablePaneName,
-  NuiTableColumn,
-  NuiTableColumnOrder,
-  NuiTableGripProps,
+  type NuiTableColumn,
+  type NuiTableColumnOrder,
+  type NuiTableGripProps,
+  type TableDropMark,
+  type TableGhost,
 } from './table.types';
 
 export interface TableColumnOrderOptions<T> {
@@ -82,7 +83,7 @@ const grabOf = (event: PointerEvent, rtl: boolean): Grab => {
 };
 
 const slotsOf = (layout: TableLayout): PlacedColumn[] =>
-  layout.visual.filter((column) => column.kind === 'data');
+  layout.visual.filter((column) => column.kind === TableColumnKind.Data);
 
 const headCells = (viewport: HTMLElement | null, slots: readonly PlacedColumn[]): HeadCell[] => {
   const byVisual = new Map(
@@ -123,7 +124,7 @@ const hiddenPassed = (
       count +
       Number(
         slot !== from &&
-          column.pane === 'centre' &&
+          column.pane === TablePaneName.Centre &&
           ((before !== undefined && column.visual < before) ||
             (after !== undefined && column.visual > after)),
       ),
@@ -159,7 +160,7 @@ export const useTableColumnOrder = <T>(options: TableColumnOrderOptions<T>): Tab
 
     const { passed, first, last } = headCells(options.viewport(), slots).reduce<PassedCells>(
       (tally, cell) => {
-        const centre = cell.pane === 'centre';
+        const centre = cell.pane === TablePaneName.Centre;
 
         return {
           passed: tally.passed + Number(cell.slot !== from && past(centreOf(cell.rect))),
@@ -246,7 +247,7 @@ export const useTableColumnOrder = <T>(options: TableColumnOrderOptions<T>): Tab
   const follow = (state: ReorderState): void => {
     const frame = options.frame();
 
-    if (state.phase !== 'dragging' || frame === null) {
+    if (state.phase !== ReorderPhase.Dragging || frame === null) {
       drop.value = undefined;
       ghost.value = undefined;
       return;
@@ -279,7 +280,9 @@ export const useTableColumnOrder = <T>(options: TableColumnOrderOptions<T>): Tab
 
   const dragging = computed(() => {
     const state = reorder.state.value;
-    return state.phase === 'dragging' ? slotsOf(options.layout())[state.from]?.key : undefined;
+    return state.phase === ReorderPhase.Dragging
+      ? slotsOf(options.layout())[state.from]?.key
+      : undefined;
   });
 
   const slotOf = (key: string): number =>
@@ -297,7 +300,7 @@ export const useTableColumnOrder = <T>(options: TableColumnOrderOptions<T>): Tab
   };
 
   const onKeydown = (key: string, event: KeyboardEvent): boolean => {
-    const arrow = event.key === 'ArrowLeft' || event.key === 'ArrowRight';
+    const arrow = event.key === Key.ArrowLeft || event.key === Key.ArrowRight;
 
     if (!arrow || !event.altKey || !event.shiftKey || event.ctrlKey || event.metaKey) {
       return false;
@@ -305,7 +308,7 @@ export const useTableColumnOrder = <T>(options: TableColumnOrderOptions<T>): Tab
     event.preventDefault();
 
     const from = slotOf(key);
-    const forward = (event.key === 'ArrowRight') !== options.isRtl();
+    const forward = (event.key === Key.ArrowRight) !== options.isRtl();
     const to = from + (forward ? 1 : -1);
 
     if (!reorderable(key) || from < 0 || to < 0 || !withinPane(from, to)) {

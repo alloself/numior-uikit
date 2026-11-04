@@ -1,7 +1,7 @@
 import type { NuiMenuEntry } from '@numior/vue';
-import type { TableSortDirection } from '../engine';
 import type { NuiTableMessages } from './table.messages';
-import type { NuiTablePin } from './table.types';
+import { NuiTablePin } from './table.types';
+import { TableSortDirection } from '../engine';
 
 export interface MenuColumnChoice {
   readonly key: string;
@@ -33,7 +33,7 @@ export interface ColumnMenuActions {
 }
 
 const pinValue = (value: string): NuiTablePin | undefined =>
-  value === 'start' || value === 'end' ? value : undefined;
+  value === NuiTablePin.Start || value === NuiTablePin.End ? value : undefined;
 
 const sortSection = (
   state: ColumnMenuState,
@@ -48,14 +48,14 @@ const sortSection = (
         key: 'sort-asc',
         label: texts.menuSortAscending,
         icon: 'arrow-up',
-        disabled: state.direction === 'asc',
+        disabled: state.direction === TableSortDirection.Asc,
         onSelect: () => actions.sortBy('asc'),
       },
       {
         key: 'sort-desc',
         label: texts.menuSortDescending,
         icon: 'arrow-down',
-        disabled: state.direction === 'desc',
+        disabled: state.direction === TableSortDirection.Desc,
         onSelect: () => actions.sortBy('desc'),
       },
       {

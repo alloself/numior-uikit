@@ -10,16 +10,17 @@ import {
 } from '@numior/primitives';
 import { NuiDatePicker, NuiInput, NuiNumberField } from '@numior/vue';
 import { instantOf } from './table-format';
-import type {
-  NuiTableCellValue,
-  NuiTableColumn,
-  NuiTableColumnEditor,
-  NuiTableControlEditor,
-  NuiTableEditor,
-  NuiTableEditRefusalReason,
-  ParsedCell,
-  TableCellEditorSpec,
-  TableEditorPlan,
+import {
+  NuiTableColumnType,
+  type NuiTableCellValue,
+  type NuiTableColumn,
+  type NuiTableColumnEditor,
+  type NuiTableControlEditor,
+  type NuiTableEditor,
+  type NuiTableEditRefusalReason,
+  type ParsedCell,
+  type TableCellEditorSpec,
+  type TableEditorPlan,
 } from './table.types';
 
 export interface NuiTableEditorOptions<C, M extends string> {
@@ -103,11 +104,11 @@ const builtinOf = (
   locale: string,
 ): Omit<EditorSource, 'accepts'> => {
   switch (type) {
-    case 'text':
+    case NuiTableColumnType.Text:
       return { component: NuiInput, model: MODEL, props: {} };
-    case 'number':
+    case NuiTableColumnType.Number:
       return { component: NuiNumberField, model: MODEL, props: { locale, steppers: false } };
-    case 'date':
+    case NuiTableColumnType.Date:
       return { component: NuiDatePicker, model: MODEL, props: { locale } };
   }
 };
@@ -156,7 +157,7 @@ export const editorPlan = <T>(
   const conversion = CONVERSIONS[column.type];
 
   if (column.editor === undefined) {
-    return column.type === 'boolean'
+    return column.type === NuiTableColumnType.Boolean
       ? TOGGLE
       : { kind: 'editor', spec: { ...builtinOf(column.type, locale), ...conversion } };
   }

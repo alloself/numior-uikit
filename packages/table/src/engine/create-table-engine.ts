@@ -22,23 +22,28 @@ import {
   type TreeLists,
   type TreeTable,
 } from './tree';
-import type {
-  ColumnStore,
+import {
+  ColumnStoreKind,
   StoreNeed,
-  TableDistinct,
-  TableEngine,
-  TableEngineColumn,
-  TableEngineOptions,
-  TableFilter,
-  TableNode,
-  TableNodeId,
-  TableNodePosition,
-  TableQuery,
-  TableRunOptions,
-  TableRunResult,
-  TableSiblings,
-  TableSort,
-  TableStoreWish,
+  TableEngineColumnKind,
+  TableFilterKind,
+  TableNodeKind,
+  TableSortDirection,
+  type ColumnStore,
+  type TableDistinct,
+  type TableEngine,
+  type TableEngineColumn,
+  type TableEngineOptions,
+  type TableFilter,
+  type TableNode,
+  type TableNodeId,
+  type TableNodePosition,
+  type TableQuery,
+  type TableRunOptions,
+  type TableRunResult,
+  type TableSiblings,
+  type TableSort,
+  type TableStoreWish,
 } from './engine.types';
 
 interface Prepared {
@@ -69,7 +74,7 @@ const NO_DETAILS: readonly number[] = [];
 const hasCodes = (
   store: ColumnStore | undefined,
 ): store is Exclude<ColumnStore, { kind: 'number' }> =>
-  store !== undefined && store.kind !== 'number';
+  store !== undefined && store.kind !== ColumnStoreKind.Number;
 
 const emptyPrepared = (): Prepared => ({
   filtered: new Uint32Array(0),
@@ -109,7 +114,7 @@ export const createTableEngine = <T>(options: TableEngineOptions<T>): TableEngin
   );
 
   const stringKeys = options.columns.flatMap((column) =>
-    column.kind === 'string' ? [column.key] : [],
+    column.kind === TableEngineColumnKind.String ? [column.key] : [],
   );
 
   const aggregated = options.columns.filter((column) => column.aggregate !== undefined);
@@ -148,14 +153,16 @@ export const createTableEngine = <T>(options: TableEngineOptions<T>): TableEngin
 
   const missing = (key: string, need: StoreNeed): boolean => {
     const store = stores.get(key);
-    return store === undefined || (need === 'ranks' && store.kind === 'codes');
+    return (
+      store === undefined || (need === StoreNeed.Ranks && store.kind === ColumnStoreKind.Codes)
+    );
   };
 
   const storeJobOf = (request: StoreRequest<T>): StoreJob => {
     const key = request.column.key;
     const known = building.get(key);
 
-    if (known !== undefined && (known.need === 'ranks' || known.need === request.need)) {
+    if (known !== undefined && (known.need === StoreNeed.Ranks || known.need === request.need)) {
       return known.job;
     }
 
@@ -200,10 +207,10 @@ export const createTableEngine = <T>(options: TableEngineOptions<T>): TableEngin
     if (store === undefined) {
       return null;
     }
-    if (store.kind !== 'number') {
-      return wish.need === 'codes' ? createLoweringJob([store.dictionary]) : null;
+    if (store.kind !== ColumnStoreKind.Number) {
+      return wish.need === StoreNeed.Codes ? createLoweringJob([store.dictionary]) : null;
     }
-    return wish.need === 'ranks' && numberRanksOf(store) === undefined
+    return wish.need === StoreNeed.Ranks && numberRanksOf(store) === undefined
       ? createNumberRankJob(store)
       : null;
   };
@@ -218,13 +225,13 @@ export const createTableEngine = <T>(options: TableEngineOptions<T>): TableEngin
   };
 
   const filterKeys = (filter: TableFilter): readonly string[] =>
-    filter.kind === 'quick' ? quickKeys(filter.keys) : [columnOf(filter.key).key];
+    filter.kind === TableFilterKind.Quick ? quickKeys(filter.keys) : [columnOf(filter.key).key];
 
   const planOf = (query: TableQuery): Plan<T> => {
     const sort = query.sort ?? [];
 
     const filters = (query.filters ?? []).filter(
-      (filter) => filter.kind !== 'quick' || filter.value !== '',
+      (filter) => filter.kind !== TableFilterKind.Quick || filter.value !== '',
     );
 
     const groupBy = query.groupBy ?? [];
@@ -238,7 +245,7 @@ export const createTableEngine = <T>(options: TableEngineOptions<T>): TableEngin
     const want = (key: string, need: StoreNeed): void => {
       const resolved = columnOf(key).key;
 
-      if (needs.get(resolved) !== 'ranks') {
+      if (needs.get(resolved) !== StoreNeed.Ranks) {
         needs.set(resolved, need);
       }
     };
@@ -270,9 +277,9 @@ export const createTableEngine = <T>(options: TableEngineOptions<T>): TableEngin
     return [...leading, ...plan.sort].flatMap((sort) => {
       const store = stores.get(sort.key);
 
-      return store === undefined || store.kind === 'codes'
+      return store === undefined || store.kind === ColumnStoreKind.Codes
         ? []
-        : [{ store, descending: sort.direction === 'desc' }];
+        : [{ store, descending: sort.direction === TableSortDirection.Desc }];
     });
   };
 
@@ -645,12 +652,12 @@ export const createTableEngine = <T>(options: TableEngineOptions<T>): TableEngin
       case undefined:
         finish({ values: [], truncated: false });
         return null;
-      case 'codes':
+      case ColumnStoreKind.Codes:
         throw new Error(`Table engine lists values of "${column.key}" only from a ranked store`);
-      case 'string':
+      case ColumnStoreKind.String:
         finish(distinctStrings(store, limit));
         return null;
-      case 'number': {
+      case ColumnStoreKind.Number: {
         const job = createDistinctNumbersJob(column, store, limit);
 
         return {
@@ -811,8 +818,8 @@ export const createTableEngine = <T>(options: TableEngineOptions<T>): TableEngin
 
       if (
         node === undefined ||
-        node.kind === 'detail' ||
-        (node.kind === 'row' && !node.expandable)
+        node.kind === TableNodeKind.Detail ||
+        (node.kind === TableNodeKind.Row && !node.expandable)
       ) {
         return;
       }

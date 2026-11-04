@@ -1,5 +1,10 @@
 import { boxOf, type RangeBounds, type RangeBox } from './table-ranges';
-import type { NuiTableRange, NuiTableRanges, TableCellPosition } from './table.types';
+import {
+  type NuiTableRange,
+  type NuiTableRanges,
+  type PastePlanKind,
+  type TableCellPosition,
+} from './table.types';
 
 export interface PasteCell {
   readonly row: number;
@@ -8,10 +13,10 @@ export interface PasteCell {
 }
 
 export type PastePlan =
-  | { readonly kind: 'none' }
-  | { readonly kind: 'limit'; readonly count: number }
+  | { readonly kind: typeof PastePlanKind.None }
+  | { readonly kind: typeof PastePlanKind.Limit; readonly count: number }
   | {
-      readonly kind: 'cells';
+      readonly kind: typeof PastePlanKind.Cells;
       readonly cells: readonly PasteCell[];
       readonly area: NuiTableRange | undefined;
     };

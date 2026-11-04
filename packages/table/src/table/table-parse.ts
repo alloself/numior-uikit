@@ -6,7 +6,13 @@ import {
   parseNumber,
 } from '@numior/primitives';
 import type { BooleanTexts } from './table-format';
-import type { NuiTableCellValue, NuiTableColumn, ParsedCell } from './table.types';
+import {
+  DatePart,
+  NuiTableColumnType,
+  type NuiTableCellValue,
+  type NuiTableColumn,
+  type ParsedCell,
+} from './table.types';
 
 const INVALID: ParsedCell = { kind: 'invalid' };
 const EMPTY: ParsedCell = { kind: 'value', value: null };
@@ -22,8 +28,8 @@ const valueOf = (value: NuiTableCellValue): ParsedCell => ({ kind: 'value', valu
 const normalized = (word: string): string => word.toLocaleLowerCase().replaceAll('.', '');
 
 const monthPart = (format: Intl.DateTimeFormat, month: number): string =>
-  format.formatToParts(Date.UTC(2001, month, 15)).find((part) => part.type === 'month')?.value ??
-  '';
+  format.formatToParts(Date.UTC(2001, month, 15)).find((part) => part.type === DatePart.Month)
+    ?.value ?? '';
 
 const monthsOf = (locale: string): readonly (readonly string[])[] => {
   const cached = months.get(locale);
@@ -125,13 +131,13 @@ export const parseCell = <T>(
     return value === undefined ? INVALID : valueOf(value);
   }
   switch (column.type) {
-    case 'text':
+    case NuiTableColumnType.Text:
       return text === '' ? EMPTY : valueOf(text);
-    case 'number':
+    case NuiTableColumnType.Number:
       return parseNumberCell(text, locale);
-    case 'date':
+    case NuiTableColumnType.Date:
       return parseDateCell(text, locale);
-    case 'boolean':
+    case NuiTableColumnType.Boolean:
       return parseBooleanCell(text, texts);
   }
 };

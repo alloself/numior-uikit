@@ -1,10 +1,14 @@
 <template>
-  <NuiSkeleton v-if="view.kind === 'skeleton'" shape="text" width="100%" />
-  <NuiTableGroupCell v-else-if="view.kind === 'group'" :cell="view.cell" @toggle="emit('toggle')" />
+  <NuiSkeleton v-if="view.kind === TableCellViewKind.Skeleton" shape="text" width="100%" />
+  <NuiTableGroupCell
+    v-else-if="view.kind === TableCellViewKind.Group"
+    :cell="view.cell"
+    @toggle="emit('toggle')"
+  />
   <template v-else>
     <template v-for="lead in view.leads" :key="lead.kind">
       <NuiTableRowGrip
-        v-if="lead.kind === 'grip'"
+        v-if="lead.kind === TableCellLeadKind.Grip"
         :label="lead.label"
         :disabled="lead.disabled"
         :active="lead.active"
@@ -36,7 +40,12 @@ import NuiTableCellEditor from './NuiTableCellEditor.vue';
 import NuiTableGroupCell from './NuiTableGroupCell.vue';
 import NuiTableRowGrip from './NuiTableRowGrip.vue';
 import NuiTableTreeToggle from './NuiTableTreeToggle.vue';
-import type { NuiTableCellContentProps, NuiTableCellSlot } from './table.types';
+import {
+  TableCellLeadKind,
+  TableCellViewKind,
+  type NuiTableCellContentProps,
+  type NuiTableCellSlot,
+} from './table.types';
 
 const { view, editor } = defineProps<NuiTableCellContentProps<T>>();
 

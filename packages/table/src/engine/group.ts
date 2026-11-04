@@ -6,7 +6,13 @@ import {
   type Accumulator,
 } from './aggregate';
 import { CHECK_INTERVAL, type SliceJob } from './slicer';
-import type { ColumnStore, TableAggregate, TableEngineColumn } from './engine.types';
+import {
+  ColumnStoreKind,
+  TableAggregateKind,
+  type ColumnStore,
+  type TableAggregate,
+  type TableEngineColumn,
+} from './engine.types';
 
 export interface GroupRecord {
   readonly id: string;
@@ -54,7 +60,7 @@ interface Lane {
 }
 
 const laneOf = (store: ColumnStore): Lane =>
-  store.kind === 'number'
+  store.kind === ColumnStoreKind.Number
     ? { keys: store.keys, nulls: store.nulls }
     : { keys: store.codes, nulls: store.nulls };
 
@@ -221,7 +227,14 @@ export const createGroupJob = <T>(
       const target = targets[index];
 
       if (target !== undefined) {
-        accumulateRange(target, column.store, sorted, from, to, column.aggregate === 'count');
+        accumulateRange(
+          target,
+          column.store,
+          sorted,
+          from,
+          to,
+          column.aggregate === TableAggregateKind.Count,
+        );
       }
     });
   };

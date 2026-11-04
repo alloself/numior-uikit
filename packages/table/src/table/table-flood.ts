@@ -1,9 +1,10 @@
-import type {
+import {
   NuiTableAlign,
-  TableCellLayout,
-  TableCellPaint,
   TablePaneName,
-  TableRowPaint,
+  TablePlacementKind,
+  type TableCellLayout,
+  type TableCellPaint,
+  type TableRowPaint,
 } from './table.types';
 
 export interface TableFloodCells {
@@ -37,10 +38,10 @@ const SEAMLESS = 'nui-table__cell--seamless';
 const SEAM: TableCellPaint = { class: [SEAMLESS], style: {}, align: undefined, overflow: false };
 
 export const paneOfCell = (cell: TableCellLayout | undefined): TablePaneName | undefined =>
-  cell?.kind === 'data' ? (cell.pin ?? 'centre') : undefined;
+  cell?.kind === TablePlacementKind.Data ? (cell.pin ?? 'centre') : undefined;
 
 export const alignOfCell = (cell: TableCellLayout | undefined): NuiTableAlign =>
-  cell === undefined || cell.kind === 'gap' ? 'start' : cell.align;
+  cell === undefined || cell.kind === TablePlacementKind.Gap ? 'start' : cell.align;
 
 export const floodOf = (
   cells: TableFloodCells,
@@ -48,10 +49,10 @@ export const floodOf = (
   align: NuiTableAlign,
   need = Number.POSITIVE_INFINITY,
 ): TableFlood | undefined => {
-  if (align === 'center' || cells.paneAt(origin) !== 'centre') {
+  if (align === NuiTableAlign.Center || cells.paneAt(origin) !== TablePaneName.Centre) {
     return undefined;
   }
-  const step = align === 'end' ? -1 : 1;
+  const step = align === NuiTableAlign.End ? -1 : 1;
   let edge = origin;
   let width = cells.widthAt(origin);
 
@@ -60,7 +61,7 @@ export const floodOf = (
     width < need &&
     index >= 0 &&
     index < cells.count &&
-    cells.paneAt(index) === 'centre' &&
+    cells.paneAt(index) === TablePaneName.Centre &&
     cells.freeAt(index);
     index += step
   ) {

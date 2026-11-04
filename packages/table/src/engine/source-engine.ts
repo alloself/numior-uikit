@@ -4,23 +4,25 @@ import {
   createSourceLayouts,
   createSourceStore,
   storeOfBlockKey,
-  type SourceHolds,
   type SourceSpan,
   type SourceSpot,
   type SourceStore,
 } from './source-tree';
-import type {
-  TableEngine,
-  TableFetchResult,
-  TableFilter,
-  TableGroupsResult,
-  TableNode,
-  TableNodeId,
-  TableQuery,
-  TableRunResult,
-  TableSort,
-  TableSourceEngineOptions,
-  TableSourceGroup,
+import {
+  ErrorName,
+  SourceHolds,
+  TableNodeKind,
+  type TableEngine,
+  type TableFetchResult,
+  type TableFilter,
+  type TableGroupsResult,
+  type TableNode,
+  type TableNodeId,
+  type TableQuery,
+  type TableRunResult,
+  type TableSort,
+  type TableSourceEngineOptions,
+  type TableSourceGroup,
 } from './engine.types';
 
 interface SourceRange {
@@ -55,7 +57,7 @@ const keyOfQuery = (query: TableQuery): string =>
   JSON.stringify([query.sort ?? EMPTY_SORT, query.filters ?? EMPTY_FILTERS, groupsKeyOf(query)]);
 
 const isAbort = (error: unknown): boolean =>
-  typeof error === 'object' && error !== null && 'name' in error && error.name === 'AbortError';
+  typeof error === 'object' && error !== null && 'name' in error && error.name === ErrorName.Abort;
 
 const isGroups = <T>(result: TableFetchResult<T>): result is TableGroupsResult =>
   'groups' in result;
@@ -134,10 +136,12 @@ export const createSourceEngine = <T>(options: TableSourceEngineOptions<T>): Tab
     blocks.get(blockKeyOf(store.key, Math.floor(index / size)))?.[index % size];
 
   const rowIn = (spot: SourceSpot<T>): T | undefined =>
-    spot.store.holds === 'rows' ? entryIn(rowBlocks, spot.store, spot.index) : undefined;
+    spot.store.holds === SourceHolds.Rows ? entryIn(rowBlocks, spot.store, spot.index) : undefined;
 
   const groupIn = (spot: SourceSpot<T>): TableSourceGroup | undefined =>
-    spot.store.holds === 'groups' ? entryIn(groupBlocks, spot.store, spot.index) : undefined;
+    spot.store.holds === SourceHolds.Groups
+      ? entryIn(groupBlocks, spot.store, spot.index)
+      : undefined;
 
   const rowAt = (position: number): T | undefined => {
     const spot = layouts.locate(root, position);
@@ -179,7 +183,7 @@ export const createSourceEngine = <T>(options: TableSourceEngineOptions<T>): Tab
         level: store.level + 1,
         path,
         holds,
-        known: holds === 'rows' ? group.count : undefined,
+        known: holds === SourceHolds.Rows ? group.count : undefined,
         parent: undefined,
         owner: key,
       });
@@ -359,7 +363,7 @@ export const createSourceEngine = <T>(options: TableSourceEngineOptions<T>): Tab
   };
 
   const fits = (store: SourceStore<T>, result: TableFetchResult<T>): boolean =>
-    isGroups(result) === (store.holds === 'groups');
+    isGroups(result) === (store.holds === SourceHolds.Groups);
 
   const release = (run: SourceRun<T>): void => {
     const held = inflight.delete(blockKeyOf(run.store.key, run.first));
@@ -460,10 +464,10 @@ export const createSourceEngine = <T>(options: TableSourceEngineOptions<T>): Tab
   const missingIn = (span: SourceSpan<T>): SourceRun<T>[] => {
     const { store } = span;
 
-    if (store.holds === 'detail') {
+    if (store.holds === SourceHolds.Detail) {
       return [];
     }
-    const blocks = store.holds === 'rows' ? rowBlocks : groupBlocks;
+    const blocks = store.holds === SourceHolds.Rows ? rowBlocks : groupBlocks;
     const missing: number[] = [];
 
     for (
@@ -670,7 +674,7 @@ export const createSourceEngine = <T>(options: TableSourceEngineOptions<T>): Tab
   };
 
   const detailNode = ({ holds, parent, owner, level }: SourceStore<T>): TableNode<T> | undefined =>
-    holds === 'detail' && parent !== undefined && owner !== undefined
+    holds === SourceHolds.Detail && parent !== undefined && owner !== undefined
       ? { kind: 'detail', id: owner, row: parent, level }
       : undefined;
 
@@ -695,7 +699,7 @@ export const createSourceEngine = <T>(options: TableSourceEngineOptions<T>): Tab
 
     for (const [store, base] of layouts.bases(root)) {
       for (const [index, branch] of store.open) {
-        if (branch.store.holds === 'detail' && index < ownCount(store)) {
+        if (branch.store.holds === SourceHolds.Detail && index < ownCount(store)) {
           positions.push(layouts.flatOf(store, base, index) + 1);
         }
       }
@@ -722,7 +726,7 @@ export const createSourceEngine = <T>(options: TableSourceEngineOptions<T>): Tab
   };
 
   const rowCount = (): number =>
-    root.holds === 'rows'
+    root.holds === SourceHolds.Rows
       ? count() - detailsOf().length
       : groupBlocks
           .entries()
@@ -754,7 +758,7 @@ export const createSourceEngine = <T>(options: TableSourceEngineOptions<T>): Tab
 
     return (
       spot !== undefined &&
-      spot.store.holds !== 'detail' &&
+      spot.store.holds !== SourceHolds.Detail &&
       rowIn(spot) === undefined &&
       groupIn(spot) === undefined
     );
@@ -793,7 +797,10 @@ export const createSourceEngine = <T>(options: TableSourceEngineOptions<T>): Tab
     toggle: (position) => {
       const node = nodeAt(position);
 
-      if (node?.kind === 'group' || (node?.kind === 'row' && node.expandable)) {
+      if (
+        node?.kind === TableNodeKind.Group ||
+        (node?.kind === TableNodeKind.Row && node.expandable)
+      ) {
         setExpanded(node.id, !node.expanded);
       }
     },

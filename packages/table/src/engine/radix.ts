@@ -1,14 +1,15 @@
 import { CHECK_INTERVAL, type SliceJob } from './slicer';
+import { RadixGroupKind, RadixLaneKind } from './engine.types';
 
 export type RadixLane =
   | {
-      readonly kind: 'float';
+      readonly kind: typeof RadixLaneKind.Float;
       readonly keys: Float64Array;
       readonly nulls: Uint8Array;
       readonly descending: boolean;
     }
   | {
-      readonly kind: 'rank';
+      readonly kind: typeof RadixLaneKind.Rank;
       readonly keys: Uint32Array;
       readonly nulls: Uint8Array;
       readonly descending: boolean;
@@ -20,8 +21,12 @@ type RankLane = Extract<RadixLane, { readonly kind: 'rank' }>;
 type FloatLane = Extract<RadixLane, { readonly kind: 'float' }>;
 
 type Group =
-  | { readonly kind: 'float'; readonly lane: FloatLane }
-  | { readonly kind: 'packed'; readonly lanes: readonly Packed[]; readonly bits: number };
+  | { readonly kind: typeof RadixGroupKind.Float; readonly lane: FloatLane }
+  | {
+      readonly kind: typeof RadixGroupKind.Packed;
+      readonly lanes: readonly Packed[];
+      readonly bits: number;
+    };
 
 interface Packed {
   readonly lane: RankLane;
@@ -120,7 +125,7 @@ const groupsOf = (lanes: readonly RadixLane[]): Group[] =>
         }
       };
 
-      if (lane.kind === 'float') {
+      if (lane.kind === RadixLaneKind.Float) {
         close();
         state.groups.push({ kind: 'float', lane });
       } else {
@@ -140,7 +145,7 @@ const groupsOf = (lanes: readonly RadixLane[]): Group[] =>
   ).groups;
 
 const layoutOf = (group: Group): Layout => {
-  const bits = group.kind === 'float' ? GROUP_BITS : group.bits;
+  const bits = group.kind === RadixGroupKind.Float ? GROUP_BITS : group.bits;
   const digits = Math.max(1, Math.ceil(bits / MAX_DIGIT_BITS));
 
   return { digits, width: Math.ceil(bits / digits), bits };
@@ -188,7 +193,7 @@ const packedKey = (buffers: Buffers, at: number, lanes: readonly Packed[], row: 
 const writeKey = (group: Group, buffers: Buffers, at: number): void => {
   const row = buffers.idx[at] ?? 0;
 
-  if (group.kind === 'packed') {
+  if (group.kind === RadixGroupKind.Packed) {
     packedKey(buffers, at, group.lanes, row);
   } else if (group.lane.nulls[row] === 1) {
     buffers.hi[at] = ALL_ONES;

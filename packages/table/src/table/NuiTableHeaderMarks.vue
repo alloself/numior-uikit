@@ -5,7 +5,7 @@
     class="nui-table__sort"
     :class="{
       'nui-table__sort--active': state.direction !== undefined,
-      'nui-table__sort--desc': state.direction === 'desc',
+      'nui-table__sort--desc': state.direction === TableSortDirection.Desc,
     }"
     aria-hidden="true"
   >
@@ -48,6 +48,8 @@ import { computed } from 'vue';
 import { NuiIcon } from '@numior/vue';
 import NuiTableGrip from './NuiTableGrip.vue';
 import type { NuiTableHeaderMarksProps } from './table.types';
+import { AriaValue } from '@numior/primitives';
+import { TableSortDirection } from '../engine';
 
 const { state, hint, filterLabel, expanded, menuLabel, menuExpanded, grip } =
   defineProps<NuiTableHeaderMarksProps>();
@@ -61,6 +63,6 @@ const emit = defineEmits<{
 const showFilter = computed(
   () =>
     state?.filterable === true &&
-    (menuLabel === undefined || state.filtered || expanded === 'true'),
+    (menuLabel === undefined || state.filtered || expanded === AriaValue.True),
 );
 </script>

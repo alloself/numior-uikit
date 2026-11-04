@@ -1,10 +1,11 @@
 import type { Component } from 'vue';
 import type { FieldRule } from '@numior/forms';
-import type { Guard, NuiControlRegistry } from '@numior/primitives';
+import type { AriaValue, Guard, NuiControlRegistry, ReorderAxis } from '@numior/primitives';
 import type { NuiMenuEntry, NuiPaginationProps } from '@numior/vue';
 import type {
   TableAggregate,
   TableAggregateFn,
+  TableAggregateKind,
   TableDistinct,
   TableFilter,
   TableFilterValue,
@@ -15,24 +16,36 @@ import type {
   TableSource,
 } from '../engine';
 
-export type NuiTableSize = 'sm' | 'md' | 'lg';
+export type ClearKind = (typeof ClearKind)[keyof typeof ClearKind];
 
-export type NuiTableAlign = 'start' | 'center' | 'end';
+export type RunKind = (typeof RunKind)[keyof typeof RunKind];
 
-export type NuiTablePin = 'start' | 'end';
+export type SessionMode = (typeof SessionMode)[keyof typeof SessionMode];
 
-export type NuiTableSelection = 'single' | 'multiple';
+export type RowZone = (typeof RowZone)[keyof typeof RowZone];
+
+export type MergeSide = (typeof MergeSide)[keyof typeof MergeSide];
+
+export type NuiTableSize = (typeof NuiTableSize)[keyof typeof NuiTableSize];
+
+export type TableUtilityControl = (typeof TableUtilityControl)[keyof typeof TableUtilityControl];
+
+export type NuiTableAlign = (typeof NuiTableAlign)[keyof typeof NuiTableAlign];
+
+export type NuiTablePin = (typeof NuiTablePin)[keyof typeof NuiTablePin];
+
+export type NuiTableSelection = (typeof NuiTableSelection)[keyof typeof NuiTableSelection];
 
 export type NuiTablePagination = Partial<Omit<NuiPaginationProps, 'total' | 'size'>>;
 
-export type TableColumnKind = 'data' | 'select' | 'rowhead';
+export type TableColumnKind = (typeof TableColumnKind)[keyof typeof TableColumnKind];
 
 export interface TablePageWindow {
   readonly start: number;
   readonly end: number;
 }
 
-export type NuiTableFilterKind = 'text' | 'number' | 'date' | 'set';
+export type NuiTableFilterKind = (typeof NuiTableFilterKind)[keyof typeof NuiTableFilterKind];
 
 export type NuiTableColumnFilter = Exclude<TableFilter, { kind: 'quick' }>;
 
@@ -77,7 +90,7 @@ interface NuiTableColumnEditing<T, V, E = V> {
 
 export interface NuiTableTextColumn<T>
   extends NuiTableColumnBase, NuiTableColumnEditing<T, string> {
-  readonly type: 'text';
+  readonly type: typeof NuiTableColumnType.Text;
   readonly value: (row: T) => string | null | undefined;
   readonly format?: ((value: string, row: T | undefined) => string) | undefined;
   readonly aggregate?: 'count' | TableAggregateFn<T> | undefined;
@@ -85,7 +98,7 @@ export interface NuiTableTextColumn<T>
 
 export interface NuiTableNumberColumn<T>
   extends NuiTableColumnBase, NuiTableColumnEditing<T, number> {
-  readonly type: 'number';
+  readonly type: typeof NuiTableColumnType.Number;
   readonly value: (row: T) => number | null | undefined;
   readonly format?: ((value: number, row: T | undefined) => string) | undefined;
   readonly aggregate?: TableAggregate<T> | undefined;
@@ -93,15 +106,20 @@ export interface NuiTableNumberColumn<T>
 
 export interface NuiTableDateColumn<T>
   extends NuiTableColumnBase, NuiTableColumnEditing<T, Date | number, string> {
-  readonly type: 'date';
+  readonly type: typeof NuiTableColumnType.Date;
   readonly value: (row: T) => Date | number | null | undefined;
   readonly format?: ((value: Date, row: T | undefined) => string) | undefined;
-  readonly aggregate?: 'min' | 'max' | 'count' | TableAggregateFn<T> | undefined;
+  readonly aggregate?:
+    | typeof TableAggregateKind.Min
+    | typeof TableAggregateKind.Max
+    | typeof TableAggregateKind.Count
+    | TableAggregateFn<T>
+    | undefined;
 }
 
 export interface NuiTableBooleanColumn<T>
   extends NuiTableColumnBase, NuiTableColumnEditing<T, boolean> {
-  readonly type: 'boolean';
+  readonly type: typeof NuiTableColumnType.Boolean;
   readonly value: (row: T) => boolean | null | undefined;
   readonly format?: ((value: boolean, row: T | undefined) => string) | undefined;
   readonly aggregate?: 'count' | TableAggregateFn<T> | undefined;
@@ -131,7 +149,7 @@ export interface NuiTableProps<T> {
   getKey?: ((row: T) => TableNodeId) | undefined;
   id?: string | undefined;
   size?: NuiTableSize | undefined;
-  rowHeight?: number | 'auto' | undefined;
+  rowHeight?: number | typeof NuiTableRowHeight.Auto | undefined;
   height?: string | undefined;
   locale?: string | undefined;
   label?: string | undefined;
@@ -236,7 +254,8 @@ export type TableRowPaint = ReadonlyMap<string, TableCellPaint>;
 
 export type TableRowPainter = (position: number, spans?: TableRowSpan) => TableRowPaint | undefined;
 
-export type NuiTableEdgeDirection = 'up' | 'down' | 'previous' | 'next';
+export type NuiTableEdgeDirection =
+  (typeof NuiTableEdgeDirection)[keyof typeof NuiTableEdgeDirection];
 
 export interface NuiTableRect {
   readonly top: number;
@@ -325,7 +344,7 @@ export interface NuiTableCsvOptions {
   readonly signal?: AbortSignal | undefined;
 }
 
-export type NuiTableEditKind = 'edit' | 'clear' | 'cut' | 'paste' | 'undo' | 'redo';
+export type NuiTableEditKind = (typeof NuiTableEditKind)[keyof typeof NuiTableEditKind];
 
 export interface NuiTableEdit<T> {
   readonly row: T;
@@ -339,7 +358,8 @@ export interface NuiTableEditEvent<T> {
   readonly changes: readonly NuiTableEdit<T>[];
 }
 
-export type NuiTableEditRefusalReason = 'control' | 'props' | 'value';
+export type NuiTableEditRefusalReason =
+  (typeof NuiTableEditRefusalReason)[keyof typeof NuiTableEditRefusalReason];
 
 export interface NuiTableEditRefusal<T> {
   readonly row: T;
@@ -347,9 +367,9 @@ export interface NuiTableEditRefusal<T> {
   readonly reason: NuiTableEditRefusalReason;
 }
 
-export type NuiTableEditMove = 'down' | 'up' | 'next' | 'previous' | 'stay' | 'fill' | 'blur';
+export type NuiTableEditMove = (typeof NuiTableEditMove)[keyof typeof NuiTableEditMove];
 
-export type NuiTableEditMode = 'replace' | 'append';
+export type NuiTableEditMode = (typeof NuiTableEditMode)[keyof typeof NuiTableEditMode];
 
 export interface NuiTableStartEditOptions {
   readonly focus?: boolean | undefined;
@@ -363,8 +383,8 @@ export interface NuiTableDraft {
 }
 
 export type ParsedCell =
-  | { readonly kind: 'value'; readonly value: NuiTableCellValue }
-  | { readonly kind: 'invalid' };
+  | { readonly kind: typeof ParsedCellKind.Value; readonly value: NuiTableCellValue }
+  | { readonly kind: typeof ParsedCellKind.Invalid };
 
 export interface TableCellEditorSpec {
   readonly component: Component;
@@ -375,9 +395,12 @@ export interface TableCellEditorSpec {
 }
 
 export type TableEditorPlan =
-  | { readonly kind: 'editor'; readonly spec: TableCellEditorSpec }
-  | { readonly kind: 'toggle' }
-  | { readonly kind: 'refused'; readonly reason: NuiTableEditRefusalReason };
+  | { readonly kind: typeof TableEditorPlanKind.Editor; readonly spec: TableCellEditorSpec }
+  | { readonly kind: typeof TableEditorPlanKind.Toggle }
+  | {
+      readonly kind: typeof TableEditorPlanKind.Refused;
+      readonly reason: NuiTableEditRefusalReason;
+    };
 
 export interface TableEditSession<T> {
   readonly position: TableCellPosition;
@@ -409,9 +432,9 @@ export interface TableSpan {
   readonly end: number;
 }
 
-export type TableRangeLines = 'cells' | 'rows' | 'cols';
+export type TableRangeLines = (typeof TableRangeLines)[keyof typeof TableRangeLines];
 
-export type TableRevealAxis = 'both' | 'row' | 'col' | 'none';
+export type TableRevealAxis = (typeof TableRevealAxis)[keyof typeof TableRevealAxis];
 
 export interface TableReveal {
   readonly target: TableCellPosition;
@@ -427,7 +450,7 @@ export interface TableMergeSlot {
 }
 
 export interface TableLeadSpan {
-  readonly kind: 'lead';
+  readonly kind: typeof TableCellSpanKind.Lead;
   readonly row: number;
   readonly col: number;
   readonly rowspan: number;
@@ -444,7 +467,7 @@ export interface TableLeadSpan {
   readonly height: number;
 }
 
-export type TableCellSpan = TableLeadSpan | { readonly kind: 'covered' };
+export type TableCellSpan = TableLeadSpan | { readonly kind: typeof TableCellSpanKind.Covered };
 
 export type TableRowSpan = ReadonlyMap<string, TableCellSpan>;
 
@@ -472,14 +495,14 @@ export interface TableRangeSegment {
 export type TableRowRanges = readonly TableRangeSegment[];
 
 export type TableCellLead =
-  | ({ readonly kind: 'grip' } & Readonly<NuiTableRowGripProps>)
-  | ({ readonly kind: 'toggle' } & Readonly<NuiTableTreeToggleProps>);
+  | ({ readonly kind: typeof TableCellLeadKind.Grip } & Readonly<NuiTableRowGripProps>)
+  | ({ readonly kind: typeof TableCellLeadKind.Toggle } & Readonly<NuiTableTreeToggleProps>);
 
 export type TableCellView<T> =
-  | { readonly kind: 'skeleton' }
-  | { readonly kind: 'group'; readonly cell: TableGroupCell | undefined }
+  | { readonly kind: typeof TableCellViewKind.Skeleton }
+  | { readonly kind: typeof TableCellViewKind.Group; readonly cell: TableGroupCell | undefined }
   | {
-      readonly kind: 'data';
+      readonly kind: typeof TableCellViewKind.Data;
       readonly leads: readonly TableCellLead[];
       readonly editing: boolean;
       readonly scope: NuiTableCellSlot<T>;
@@ -507,9 +530,9 @@ export interface TableBodyRowContext<T> {
 }
 
 export type TableBodyRowView<T> =
-  | { readonly kind: 'row'; readonly props: NuiTableRowProps }
+  | { readonly kind: typeof TableBodyRowViewKind.Row; readonly props: NuiTableRowProps }
   | {
-      readonly kind: 'detail';
+      readonly kind: typeof TableBodyRowViewKind.Detail;
       readonly props: NuiTableDetailRowProps;
       readonly scope: NuiTableDetailSlot<T>;
     };
@@ -600,10 +623,14 @@ export interface TableDropInset {
 }
 
 export type TableDropMark =
-  | { readonly kind: 'line'; readonly start: number; readonly inset?: TableDropInset | undefined }
-  | { readonly kind: 'box'; readonly start: number; readonly size: number };
+  | {
+      readonly kind: typeof TableDropMarkKind.Line;
+      readonly start: number;
+      readonly inset?: TableDropInset | undefined;
+    }
+  | { readonly kind: typeof TableDropMarkKind.Box; readonly start: number; readonly size: number };
 
-export type TableBandRule = 'start' | 'end' | 'both';
+export type TableBandRule = (typeof TableBandRule)[keyof typeof TableBandRule];
 
 export interface NuiTableFilterProps {
   title: string;
@@ -646,7 +673,7 @@ export interface NuiTableExposed {
   invalidate(ranges?: NuiTableRanges): void;
 }
 
-export type TablePaneName = 'start' | 'centre' | 'end';
+export type TablePaneName = (typeof TablePaneName)[keyof typeof TablePaneName];
 
 export interface TableDataCell {
   readonly kind: TableColumnKind;
@@ -665,7 +692,7 @@ export interface TableDataCell {
 }
 
 export interface TableGapCell {
-  readonly kind: 'gap';
+  readonly kind: typeof TablePlacementKind.Gap;
   readonly key: string;
   readonly pin: NuiTablePin | undefined;
   readonly edge: boolean;
@@ -702,9 +729,9 @@ export interface NuiTableHeaderMarksProps {
   state: TableHeadState | undefined;
   hint: string;
   filterLabel: string;
-  expanded: 'true' | 'false';
+  expanded: typeof AriaValue.True | typeof AriaValue.False;
   menuLabel?: string | undefined;
-  menuExpanded: 'true' | 'false';
+  menuExpanded: typeof AriaValue.True | typeof AriaValue.False;
   grip?: NuiTableGripProps | undefined;
 }
 
@@ -713,7 +740,7 @@ export interface NuiTableGripProps {
 }
 
 export interface NuiTableDragLayerProps {
-  axis?: 'x' | 'y' | undefined;
+  axis?: ReorderAxis | undefined;
   drop?: TableDropMark | undefined;
   ghost?: TableGhost | undefined;
 }
@@ -730,21 +757,21 @@ export interface TableCellPosition {
 }
 
 export type TableHeaderTarget =
-  | { readonly kind: 'column'; readonly key: string }
-  | { readonly kind: 'slot'; readonly index: number };
+  | { readonly kind: typeof TableHeaderTargetKind.Column; readonly key: string }
+  | { readonly kind: typeof TableHeaderTargetKind.Slot; readonly index: number };
 
-export type TableRowPart = 'band' | 'head' | 'pinned' | 'body' | 'foot' | 'skeleton';
+export type TableRowPart = (typeof TableRowPart)[keyof typeof TableRowPart];
 
-export type TableStatusSlot = 'empty' | 'loading';
+export type TableStatusSlot = (typeof TableStatusSlot)[keyof typeof TableStatusSlot];
 
 export interface TableSkeletonRow {
   readonly index: number;
   readonly key: string;
 }
 
-export type TableBodyPart = 'body' | 'detail';
+export type TableBodyPart = (typeof TableBodyPart)[keyof typeof TableBodyPart];
 
-export type TableRowMode = 'flow' | 'fixed' | 'fluid';
+export type TableRowMode = (typeof TableRowMode)[keyof typeof TableRowMode];
 
 export interface TableDetailSpot {
   readonly position: number;
@@ -771,7 +798,7 @@ export interface TableBodyRow {
 }
 
 export interface NuiTableUtilityCellProps {
-  control: 'checkbox' | 'skeleton' | 'label' | 'corner' | 'none';
+  control: TableUtilityControl;
   checked?: boolean | undefined;
   indeterminate?: boolean | undefined;
   disabled?: boolean | undefined;
@@ -781,12 +808,12 @@ export interface NuiTableUtilityCellProps {
 
 export type TableGroupCell =
   | {
-      readonly kind: 'toggle';
+      readonly kind: typeof TableGroupCellKind.Toggle;
       readonly node: TableNodeId;
       readonly text: string;
       readonly count: string;
     }
-  | { readonly kind: 'value'; readonly text: string };
+  | { readonly kind: typeof TableGroupCellKind.Value; readonly text: string };
 
 export interface TableGroupRow {
   readonly id: string;
@@ -844,7 +871,7 @@ export interface NuiTableGroupCellProps {
 }
 
 export interface NuiTableResizerProps {
-  axis?: 'x' | 'y' | undefined;
+  axis?: ReorderAxis | undefined;
   start?: boolean | undefined;
   active?: boolean | undefined;
 }
@@ -852,3 +879,153 @@ export interface NuiTableResizerProps {
 export interface NuiTableTracksProps {
   tracks: readonly TableTrack[];
 }
+
+export const NuiTableSize = { Sm: 'sm', Md: 'md', Lg: 'lg' } as const;
+
+export const NuiTableAlign = { Start: 'start', Center: 'center', End: 'end' } as const;
+
+export const NuiTablePin = { Start: 'start', End: 'end' } as const;
+
+export const NuiTableSelection = { Single: 'single', Multiple: 'multiple' } as const;
+
+export const TableColumnKind = { Data: 'data', Select: 'select', Rowhead: 'rowhead' } as const;
+
+export const NuiTableFilterKind = {
+  Text: 'text',
+  Number: 'number',
+  Date: 'date',
+  Set: 'set',
+} as const;
+
+export const NuiTableEdgeDirection = {
+  Up: 'up',
+  Down: 'down',
+  Previous: 'previous',
+  Next: 'next',
+} as const;
+
+export const NuiTableEditKind = {
+  Edit: 'edit',
+  Clear: 'clear',
+  Cut: 'cut',
+  Paste: 'paste',
+  Undo: 'undo',
+  Redo: 'redo',
+} as const;
+
+export const NuiTableEditRefusalReason = {
+  Control: 'control',
+  Props: 'props',
+  Value: 'value',
+} as const;
+
+export const NuiTableEditMove = {
+  Down: 'down',
+  Up: 'up',
+  Next: 'next',
+  Previous: 'previous',
+  Stay: 'stay',
+  Fill: 'fill',
+  Blur: 'blur',
+} as const;
+
+export const NuiTableEditMode = { Replace: 'replace', Append: 'append' } as const;
+
+export const TableRangeLines = { Cells: 'cells', Rows: 'rows', Cols: 'cols' } as const;
+
+export const TableRevealAxis = { Both: 'both', Row: 'row', Col: 'col', None: 'none' } as const;
+
+export const TableBandRule = { Start: 'start', End: 'end', Both: 'both' } as const;
+
+export const TablePaneName = { Start: 'start', Centre: 'centre', End: 'end' } as const;
+
+export const TableRowPart = {
+  Band: 'band',
+  Head: 'head',
+  Pinned: 'pinned',
+  Body: 'body',
+  Foot: 'foot',
+  Skeleton: 'skeleton',
+} as const;
+
+export const TableStatusSlot = { Empty: 'empty', Loading: 'loading' } as const;
+
+export const TableBodyPart = { Body: 'body', Detail: 'detail' } as const;
+
+export const TableRowMode = { Flow: 'flow', Fixed: 'fixed', Fluid: 'fluid' } as const;
+
+export const MergeSide = { Top: 'top', Bottom: 'bottom', Start: 'start', End: 'end' } as const;
+
+export const RowZone = { Before: 'before', After: 'after', Inside: 'inside' } as const;
+
+export const SessionMode = { Plain: 'plain', Extend: 'extend', Add: 'add' } as const;
+
+export const RunKind = { Query: 'query', Totals: 'totals' } as const;
+
+export const ClearKind = { Clear: 'clear', Cut: 'cut' } as const;
+
+export const NuiTableRowHeight = { Auto: 'auto' } as const;
+
+export const TableUtilityControl = {
+  Checkbox: 'checkbox',
+  Skeleton: 'skeleton',
+  Label: 'label',
+  Corner: 'corner',
+  None: 'none',
+} as const;
+
+export const PastePlanKind = { None: 'none', Limit: 'limit', Cells: 'cells' } as const;
+
+export const CopyShapeKind = { Block: 'block', Disjoint: 'disjoint' } as const;
+
+export const NuiTableColumnType = {
+  Text: 'text',
+  Number: 'number',
+  Date: 'date',
+  Boolean: 'boolean',
+} as const;
+
+export const ParsedCellKind = { Value: 'value', Invalid: 'invalid' } as const;
+
+export const TableEditorPlanKind = {
+  Editor: 'editor',
+  Toggle: 'toggle',
+  Refused: 'refused',
+} as const;
+
+export const TableCellSpanKind = { Lead: 'lead', Covered: 'covered' } as const;
+
+export const TableCellLeadKind = { Grip: 'grip', Toggle: 'toggle' } as const;
+
+export const TableCellViewKind = { Skeleton: 'skeleton', Group: 'group', Data: 'data' } as const;
+
+export const TableBodyRowViewKind = { Row: 'row', Detail: 'detail' } as const;
+
+export const TableDropMarkKind = { Line: 'line', Box: 'box' } as const;
+
+export const TableHeaderTargetKind = { Column: 'column', Slot: 'slot' } as const;
+
+export const TableGroupCellKind = { Toggle: 'toggle', Value: 'value' } as const;
+
+export const TableOpeningKind = { Gesture: 'gesture', Typed: 'typed', Start: 'start' } as const;
+
+export const CopyPlanKind = { Cell: 'cell', Block: 'block', Disjoint: 'disjoint' } as const;
+
+export const SessionActionKind = { Shape: 'shape', Remove: 'remove' } as const;
+
+export const RangeOriginKind = { Lines: 'lines', All: 'all' } as const;
+
+export const TablePlacementKind = { ...TableColumnKind, Gap: 'gap' } as const;
+
+export const TsvChar = { Quote: '"', Tab: '\t', Return: '\r', Newline: '\n' } as const;
+
+export const KeyCode = { A: 'KeyA', C: 'KeyC' } as const;
+
+export const Letter = { A: 'a', C: 'c' } as const;
+
+export const DatePart = { Month: 'month' } as const satisfies Record<
+  string,
+  Intl.DateTimeFormatPartTypes
+>;
+
+export const CellOutcomeMark = { Skip: 'skip', Same: 'same' } as const;

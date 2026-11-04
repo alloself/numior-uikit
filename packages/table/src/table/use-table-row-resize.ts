@@ -1,6 +1,7 @@
 import { computed, onScopeDispose, shallowRef, type ComputedRef, type Ref } from 'vue';
 import type { NuiTableMessages } from './table.messages';
 import type { NuiTableRowHeights } from './table.types';
+import { Key } from '@numior/primitives';
 
 export interface TableRowResizeOptions {
   readonly enabled: () => boolean;
@@ -39,7 +40,7 @@ const renderedHeight = (target: EventTarget | null): number | undefined =>
   target instanceof Element ? target.closest('tr')?.getBoundingClientRect().height : undefined;
 
 const isSizeKey = (event: KeyboardEvent): boolean =>
-  (event.key === 'ArrowUp' || event.key === 'ArrowDown') &&
+  (event.key === Key.ArrowUp || event.key === Key.ArrowDown) &&
   event.altKey &&
   !event.shiftKey &&
   !event.ctrlKey &&
@@ -132,7 +133,7 @@ export const useTableRowResize = (options: TableRowResizeOptions): TableRowResiz
       return false;
     }
     const current = options.heights.value[key] ?? options.rowSize();
-    const next = clampHeight(current + (event.key === 'ArrowDown' ? STEP : -STEP));
+    const next = clampHeight(current + (event.key === Key.ArrowDown ? STEP : -STEP));
 
     event.preventDefault();
     write(key, next);

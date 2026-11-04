@@ -5,17 +5,23 @@ import { instantOf } from './table-format';
 import { planPaste, type PasteCell } from './table-paste';
 import { boxOf, type RangeBounds, type RangeBox } from './table-ranges';
 import type { NuiTableMessages } from './table.messages';
-import type {
-  NuiTableCellValue,
-  NuiTableClipboardBlock,
-  NuiTableClipboardData,
-  NuiTableCommandSink,
-  NuiTableEdit,
-  NuiTableEditEvent,
-  NuiTableRanges,
-  ParsedCell,
-  TableCellPosition,
+import {
+  CellOutcomeMark,
+  ClearKind,
+  NuiTableEditKind,
+  ParsedCellKind,
+  PastePlanKind,
+  type NuiTableCellValue,
+  type NuiTableClipboardBlock,
+  type NuiTableClipboardData,
+  type NuiTableCommandSink,
+  type NuiTableEdit,
+  type NuiTableEditEvent,
+  type NuiTableRanges,
+  type ParsedCell,
+  type TableCellPosition,
 } from './table.types';
+import { Key } from '@numior/primitives';
 
 export interface TableEditingOptions<T> {
   readonly enabled: () => boolean;
@@ -63,11 +69,9 @@ export interface TableEditing<T> {
   fillCells(value: NuiTableCellValue, accepts: (key: string) => boolean): boolean;
 }
 
-type ClearKind = 'clear' | 'cut';
-
 type EditKind = ClearKind | 'paste' | 'edit';
 
-type CellOutcome<T> = NuiTableEdit<T> | 'skip' | 'same';
+type CellOutcome<T> = NuiTableEdit<T> | (typeof CellOutcomeMark)[keyof typeof CellOutcomeMark];
 
 interface TableEditCommand<T> {
   readonly kind: EditKind;
@@ -98,7 +102,7 @@ const isChange = <T>(outcome: CellOutcome<T>): outcome is NuiTableEdit<T> =>
   typeof outcome !== 'string';
 
 const skippedOf = <T>(outcomes: readonly CellOutcome<T>[]): number =>
-  outcomes.reduce((count, outcome) => count + Number(outcome === 'skip'), 0);
+  outcomes.reduce((count, outcome) => count + Number(outcome === CellOutcomeMark.Skip), 0);
 
 const areaOf = (ranges: NuiTableRanges): number =>
   ranges.reduce((sum, range) => {
@@ -252,7 +256,7 @@ export const useTableEditing = <T>(options: TableEditingOptions<T>): TableEditin
     record(kind, changes);
 
     const texts = options.messages.value;
-    const done = kind === 'cut' ? texts.cutDone : texts.cleared;
+    const done = kind === ClearKind.Cut ? texts.cutDone : texts.cleared;
 
     options.announce(done({ count: changes.length, skipped: skippedOf(outcomes) }));
     return true;
@@ -273,14 +277,18 @@ export const useTableEditing = <T>(options: TableEditingOptions<T>): TableEditin
   };
 
   const replayOutside = (sink: NuiTableCommandSink<T>, kind: 'undo' | 'redo'): boolean => {
-    const count = kind === 'undo' ? sink.undo() : sink.redo();
+    const count = kind === NuiTableEditKind.Undo ? sink.undo() : sink.redo();
     const texts = options.messages.value;
 
     if (count === 0) {
       return false;
     }
     options.applied(options.keys());
-    options.announce(kind === 'undo' ? texts.undone({ count }) : texts.redone({ count }));
+
+    options.announce(
+      kind === NuiTableEditKind.Undo ? texts.undone({ count }) : texts.redone({ count }),
+    );
+
     return true;
   };
 
@@ -341,7 +349,10 @@ export const useTableEditing = <T>(options: TableEditingOptions<T>): TableEditin
     }
     const parsed = options.parse(row, key, cell.text);
 
-    if (parsed.kind === 'invalid' || options.check(row, key, parsed.value) !== undefined) {
+    if (
+      parsed.kind === ParsedCellKind.Invalid ||
+      options.check(row, key, parsed.value) !== undefined
+    ) {
       return 'skip';
     }
     const previous = options.valueOf(row, key);
@@ -392,12 +403,12 @@ export const useTableEditing = <T>(options: TableEditingOptions<T>): TableEditin
     );
 
     switch (plan.kind) {
-      case 'none':
+      case PastePlanKind.None:
         return false;
-      case 'limit':
+      case PastePlanKind.Limit:
         options.announce(options.messages.value.editLimit({ count: plan.count, limit }));
         return false;
-      case 'cells':
+      case PastePlanKind.Cells:
         return pasteCells(plan.cells, plan.area === undefined ? [] : [plan.area]);
     }
   };
@@ -465,7 +476,7 @@ export const useTableEditing = <T>(options: TableEditingOptions<T>): TableEditin
       if (event.ctrlKey || event.metaKey) {
         return onModified(event);
       }
-      if (!event.shiftKey && (event.key === 'Delete' || event.key === 'Backspace')) {
+      if (!event.shiftKey && (event.key === Key.Delete || event.key === Key.Backspace)) {
         event.preventDefault();
         clearCells('clear');
         return true;

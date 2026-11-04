@@ -1,12 +1,13 @@
 import type { RankHost, RankSession } from './rank-host';
 import type { SliceJob } from './slicer';
 import { createSortJob } from './sort';
+import { CollationStage } from './engine.types';
 
 type Stage =
-  | { readonly kind: 'pack'; readonly session: RankSession }
-  | { readonly kind: 'wait'; readonly answer: Promise<Uint32Array | undefined> }
-  | { readonly kind: 'local'; readonly job: SliceJob }
-  | { readonly kind: 'done' };
+  | { readonly kind: typeof CollationStage.Pack; readonly session: RankSession }
+  | { readonly kind: typeof CollationStage.Wait; readonly answer: Promise<Uint32Array | undefined> }
+  | { readonly kind: typeof CollationStage.Local; readonly job: SliceJob }
+  | { readonly kind: typeof CollationStage.Done };
 
 const WORKER_MIN = 10_000;
 const PART_SIZE = 8192;
@@ -70,18 +71,20 @@ export const createCollatedSortJob = (
 
   return {
     total: () => Math.max(1, size),
-    done: () => (stage.kind === 'done' ? size : Math.min(packed, size - 1)),
+    done: () => (stage.kind === CollationStage.Done ? size : Math.min(packed, size - 1)),
     waiting: () =>
-      stage.kind === 'wait' && answered === undefined && !failed ? stage.answer : undefined,
+      stage.kind === CollationStage.Wait && answered === undefined && !failed
+        ? stage.answer
+        : undefined,
     work: (deadline) => {
       switch (stage.kind) {
-        case 'pack':
+        case CollationStage.Pack:
           return pack(stage.session, deadline);
-        case 'wait':
+        case CollationStage.Wait:
           return answered === undefined && !failed ? false : settle();
-        case 'local':
+        case CollationStage.Local:
           return stage.job.work(deadline);
-        case 'done':
+        case CollationStage.Done:
           return true;
       }
     },

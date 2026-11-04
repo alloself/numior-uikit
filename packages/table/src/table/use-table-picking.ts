@@ -1,6 +1,7 @@
 import { onScopeDispose } from 'vue';
 import { edgeDirectionOf, stepCell, type TableSize } from './table-keys';
 import type { NuiTableEditMove, NuiTableRange, TableCellPosition } from './table.types';
+import { PointerType } from '@numior/primitives';
 
 export interface TablePickingOptions {
   readonly active: () => boolean;
@@ -61,7 +62,7 @@ export const useTablePicking = (options: TablePickingOptions): TablePicking => {
   };
 
   const onPointerdown = (event: PointerEvent): boolean => {
-    touched = event.pointerType === 'touch';
+    touched = event.pointerType === PointerType.Touch;
     const cell = touched || event.button !== 0 ? undefined : targetOf(event);
 
     if (cell === undefined) {

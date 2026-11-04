@@ -32,7 +32,7 @@
 
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from 'vue';
-import { provideDraftCommits } from '@numior/primitives';
+import { AriaValue, Direction, Key, PopoverState, provideDraftCommits } from '@numior/primitives';
 import { NuiTooltip } from '@numior/vue';
 import type { NuiTableCellEditorProps, NuiTableEditMove } from './table.types';
 
@@ -76,10 +76,10 @@ const bound = computed(() => ({
 }));
 
 const breaksLine = (event: KeyboardEvent): boolean =>
-  event.key === 'Enter' && event.shiftKey && event.target instanceof HTMLTextAreaElement;
+  event.key === Key.Enter && event.shiftKey && event.target instanceof HTMLTextAreaElement;
 
 const fills = (event: KeyboardEvent): boolean =>
-  event.key === 'Enter' && (event.ctrlKey || event.metaKey) && !event.altKey && !event.shiftKey;
+  event.key === Key.Enter && (event.ctrlKey || event.metaKey) && !event.altKey && !event.shiftKey;
 
 const moveOf = (event: KeyboardEvent): NuiTableEditMove | undefined => {
   if (fills(event)) {
@@ -89,9 +89,9 @@ const moveOf = (event: KeyboardEvent): NuiTableEditMove | undefined => {
     return undefined;
   }
   switch (event.key) {
-    case 'Tab':
+    case Key.Tab:
       return event.shiftKey ? 'previous' : 'next';
-    case 'Enter':
+    case Key.Enter:
       return event.shiftKey ? 'up' : 'down';
     default:
       return undefined;
@@ -109,7 +109,7 @@ const onKeydown = (event: KeyboardEvent): void => {
   if (move !== undefined) {
     event.preventDefault();
     finish(move);
-  } else if (event.key === 'Escape') {
+  } else if (event.key === Key.Escape) {
     event.preventDefault();
     settled = true;
     cancel();
@@ -140,7 +140,7 @@ const onBeforetoggle = (event: Event): void => {
   ) {
     return;
   }
-  popup = event.newState === 'open';
+  popup = event.newState === PopoverState.Open;
 };
 
 const unfold = (): void => {
@@ -149,10 +149,10 @@ const unfold = (): void => {
   if (
     trigger instanceof HTMLButtonElement &&
     trigger.hasAttribute('aria-haspopup') &&
-    trigger.getAttribute('aria-expanded') !== 'true'
+    trigger.getAttribute('aria-expanded') !== AriaValue.True
   ) {
     trigger.dispatchEvent(
-      new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true, cancelable: true }),
+      new KeyboardEvent('keydown', { key: Key.ArrowDown, bubbles: true, cancelable: true }),
     );
   }
 };
@@ -205,7 +205,7 @@ const reveal = (): void => {
     return;
   }
   const style = getComputedStyle(viewport);
-  const rtl = style.direction === 'rtl';
+  const rtl = style.direction === Direction.Rtl;
   const start = paddingOf(style.scrollPaddingInlineStart);
   const end = paddingOf(style.scrollPaddingInlineEnd);
   const inner = viewport.getBoundingClientRect().left + viewport.clientLeft;

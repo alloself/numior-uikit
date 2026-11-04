@@ -1,4 +1,4 @@
-import type { TableEngine } from '../engine';
+import { TableNodeKind, type TableEngine } from '../engine';
 import type { TableDetailSpot } from './table.types';
 
 export const NO_SPOTS: readonly TableDetailSpot[] = [];
@@ -14,7 +14,7 @@ export const detailSpotsOf = <T>(
     const inside = position >= start && position < start + count;
     const node = inside ? engine.nodeAt(position) : undefined;
 
-    return node?.kind === 'detail' ? [{ position: position - start, id: node.id }] : [];
+    return node?.kind === TableNodeKind.Detail ? [{ position: position - start, id: node.id }] : [];
   });
 
 export const sameSpots = (a: readonly TableDetailSpot[], b: readonly TableDetailSpot[]): boolean =>

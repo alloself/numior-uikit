@@ -1,9 +1,10 @@
 import { CHECK_INTERVAL, type SliceJob } from './slicer';
-import type {
-  ColumnStore,
-  TableDistinct,
-  TableEngineColumn,
-  TableFilterValue,
+import {
+  TableEngineColumnKind,
+  type ColumnStore,
+  type TableDistinct,
+  type TableEngineColumn,
+  type TableFilterValue,
 } from './engine.types';
 
 type NumberStore = Extract<ColumnStore, { kind: 'number' }>;
@@ -64,7 +65,7 @@ const insertBounded = (kept: number[], key: number, cap: number): void => {
 };
 
 const numberValue = <T>(column: TableEngineColumn<T>, key: number): TableFilterValue =>
-  column.kind === 'boolean' ? key === 1 : key;
+  column.kind === TableEngineColumnKind.Boolean ? key === 1 : key;
 
 export const createDistinctNumbersJob = <T>(
   column: TableEngineColumn<T>,

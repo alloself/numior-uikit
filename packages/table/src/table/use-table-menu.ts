@@ -1,21 +1,21 @@
 import { computed, ref, shallowRef, type ComputedRef, type Ref, type ShallowRef } from 'vue';
 import type { NuiMenuEntry, NuiMenuFocus } from '@numior/vue';
-import type { TableSortDirection } from '../engine';
 import type { NuiTableMessages } from './table.messages';
 import type { TableLayout } from './table-layout';
 import { dataKeysOf, pinOf } from './table-layout';
 import { columnMenuEntries, type ColumnMenuActions, type ColumnMenuState } from './table-menu';
-import type {
-  TableHeaderTarget,
-  TableHeadState,
-  NuiTableGroupBy,
-  NuiTableHidden,
-  NuiTablePins,
-  NuiTableSort,
-  NuiTableColumn,
+import {
   NuiTablePin,
-  NuiTableWidths,
+  type NuiTableColumn,
+  type NuiTableGroupBy,
+  type NuiTableHidden,
+  type NuiTablePins,
+  type NuiTableSort,
+  type NuiTableWidths,
+  type TableHeaderTarget,
+  type TableHeadState,
 } from './table.types';
+import { TableSortDirection } from '../engine';
 
 export interface TableMenuTarget {
   readonly key: string;
@@ -55,9 +55,9 @@ export interface TableMenu {
 
 const pinText = (texts: NuiTableMessages, pin: NuiTablePin | undefined, column: string) => {
   switch (pin) {
-    case 'start':
+    case NuiTablePin.Start:
       return texts.columnPinnedStart({ column });
-    case 'end':
+    case NuiTablePin.End:
       return texts.columnPinnedEnd({ column });
     case undefined:
       return texts.columnUnpinned({ column });
@@ -70,9 +70,9 @@ const sortText = (
   column: string,
 ): string => {
   switch (direction) {
-    case 'asc':
+    case TableSortDirection.Asc:
       return texts.sortedAscending({ column });
-    case 'desc':
+    case TableSortDirection.Desc:
       return texts.sortedDescending({ column });
     case undefined:
       return texts.sortCleared;

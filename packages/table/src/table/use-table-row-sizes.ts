@@ -8,9 +8,9 @@ import {
   type WatchSource,
 } from 'vue';
 import { createSizeIndex, type ItemSize, type VirtualSize } from '@numior/primitives';
-import type { TableEngine, TableNodeId } from '../engine';
+import { TableNodeKind, type TableEngine, type TableNodeId } from '../engine';
 import { OWN_BODY_ROWS, OWN_DETAIL_ROWS } from './table-dom';
-import type { NuiTableRowHeights, TableDetailSpot, TableRowMode } from './table.types';
+import { TableRowMode, type NuiTableRowHeights, type TableDetailSpot } from './table.types';
 
 export interface TableRowSizesOptions<T> {
   readonly viewport: Readonly<ShallowRef<HTMLElement | null>>;
@@ -36,11 +36,11 @@ const NO_POSITIONS: ReadonlyMap<string, number> = new Map();
 
 const measuredRows = (mode: TableRowMode, details: number): string | undefined => {
   switch (mode) {
-    case 'flow':
+    case TableRowMode.Flow:
       return undefined;
-    case 'fixed':
+    case TableRowMode.Fixed:
       return details === 0 ? undefined : OWN_DETAIL_ROWS;
-    case 'fluid':
+    case TableRowMode.Fluid:
       return OWN_BODY_ROWS;
   }
 };
@@ -71,7 +71,7 @@ export const useTableRowSizes = <T>(options: TableRowSizesOptions<T>): TableRowS
 
     void options.arrangement();
 
-    if (keys.size === 0 || options.mode() === 'fluid') {
+    if (keys.size === 0 || options.mode() === TableRowMode.Fluid) {
       return NO_POSITIONS;
     }
     const start = options.pageStart();
@@ -101,15 +101,15 @@ export const useTableRowSizes = <T>(options: TableRowSizesOptions<T>): TableRowS
 
   const sizeFor = (mode: TableRowMode, base: number): ItemSize => {
     switch (mode) {
-      case 'flow':
+      case TableRowMode.Flow:
         return sizedPositions.value.size === 0
           ? base
           : createSizeIndex(options.count(), base, sizedRows(base));
-      case 'fixed':
+      case TableRowMode.Fixed:
         return options.spots().length === 0 && sizedPositions.value.size === 0
           ? base
           : indexOf(base);
-      case 'fluid':
+      case TableRowMode.Fluid:
         void options.arrangement();
         return indexOf(base);
     }
@@ -120,7 +120,7 @@ export const useTableRowSizes = <T>(options: TableRowSizesOptions<T>): TableRowS
   const remember = (position: number, size: number): void => {
     const node = options.engine.value.nodeAt(options.pageStart() + position);
 
-    if (node?.kind === 'detail') {
+    if (node?.kind === TableNodeKind.Detail) {
       detailSizes.set(node.id, size);
       detailEstimate = size;
     }

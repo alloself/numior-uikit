@@ -1,14 +1,17 @@
 import { boxOf, type RangeBounds, type RangeBox } from './table-ranges';
-import type {
-  NuiTableEditMove,
-  NuiTableRange,
-  TableCellPosition,
-  TableCellSpan,
-  TableMergeLayout,
-  TableMergePiece,
-  TableMergeSlot,
-  TableRowSpan,
+import {
+  MergeSide,
+  TableCellSpanKind,
+  type NuiTableEditMove,
+  type NuiTableRange,
+  type TableCellPosition,
+  type TableCellSpan,
+  type TableMergeLayout,
+  type TableMergePiece,
+  type TableMergeSlot,
+  type TableRowSpan,
 } from './table.types';
+import { Key } from '@numior/primitives';
 
 export interface TableMergeIndex {
   readonly size: number;
@@ -25,8 +28,6 @@ interface Segment {
   readonly first: number;
   readonly last: number;
 }
-
-type MergeSide = 'top' | 'bottom' | 'start' | 'end';
 
 const BLOCK = 32;
 const NO_MERGES: readonly RangeBox[] = [];
@@ -160,13 +161,13 @@ const MOVE_SIDES: Readonly<Record<NuiTableEditMove, MergeSide | undefined>> = {
 
 const sideOfKey = (key: string, rtl: boolean): MergeSide | undefined => {
   switch (key) {
-    case 'ArrowDown':
+    case Key.ArrowDown:
       return 'bottom';
-    case 'ArrowUp':
+    case Key.ArrowUp:
       return 'top';
-    case 'ArrowRight':
+    case Key.ArrowRight:
       return rtl ? 'start' : 'end';
-    case 'ArrowLeft':
+    case Key.ArrowLeft:
       return rtl ? 'end' : 'start';
     default:
       return undefined;
@@ -175,13 +176,13 @@ const sideOfKey = (key: string, rtl: boolean): MergeSide | undefined => {
 
 const edgeOf = (merge: RangeBox, from: TableCellPosition, side: MergeSide): TableCellPosition => {
   switch (side) {
-    case 'bottom':
+    case MergeSide.Bottom:
       return { row: merge.bottom, col: from.col };
-    case 'top':
+    case MergeSide.Top:
       return { row: merge.top, col: from.col };
-    case 'end':
+    case MergeSide.End:
       return { row: from.row, col: merge.end };
-    case 'start':
+    case MergeSide.Start:
       return { row: from.row, col: merge.start };
   }
 };
@@ -335,7 +336,7 @@ const sameSpan = (a: TableCellSpan, b: TableCellSpan | undefined): boolean => {
   if (b === undefined || a.kind !== b.kind) {
     return false;
   }
-  if (a.kind === 'covered' || b.kind === 'covered') {
+  if (a.kind === TableCellSpanKind.Covered || b.kind === TableCellSpanKind.Covered) {
     return true;
   }
   return (

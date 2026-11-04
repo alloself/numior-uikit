@@ -1,14 +1,21 @@
 import { computed, onScopeDispose, ref, type ComputedRef, type Ref, type ShallowRef } from 'vue';
-import { useReorder, type ReorderState } from '@numior/primitives';
-import type { TableEngine, TableNode, TableRowNode, TableSiblings } from '../engine';
+import { Key, ReorderPhase, useReorder, type ReorderState } from '@numior/primitives';
+import {
+  TableNodeKind,
+  type TableEngine,
+  type TableNode,
+  type TableRowNode,
+  type TableSiblings,
+} from '../engine';
 import { OWN_BODY_ROWS } from './table-dom';
 import type { NuiTableMessages } from './table.messages';
-import type {
-  NuiTableReorderEvent,
-  TableCellPosition,
-  TableDropInset,
-  TableDropMark,
-  TableGhost,
+import {
+  RowZone,
+  type NuiTableReorderEvent,
+  type TableCellPosition,
+  type TableDropInset,
+  type TableDropMark,
+  type TableGhost,
 } from './table.types';
 
 export interface TableRowDragOptions<T> {
@@ -44,8 +51,6 @@ interface RowPlace<T> {
   readonly node: TableRowNode<T>;
   readonly siblings: TableSiblings<T>;
 }
-
-type RowZone = 'before' | 'after' | 'inside';
 
 interface RowTarget {
   readonly position: number;
@@ -84,7 +89,7 @@ const NO_GRAB: Grab = { offset: 0, size: 0 };
 const rowRect = (row: Element): DOMRect => (row.firstElementChild ?? row).getBoundingClientRect();
 
 const belongsTo = (node: TableNode<unknown> | undefined, level: number): boolean =>
-  node?.kind === 'detail' || (node?.kind === 'row' && node.level > level);
+  node?.kind === TableNodeKind.Detail || (node?.kind === TableNodeKind.Row && node.level > level);
 
 const grabOf = (event: PointerEvent, fallback: number): Grab => {
   const row = event.target instanceof Element ? event.target.closest(BODY_ROW) : null;
@@ -127,7 +132,7 @@ const rowUnder = (clientY: number, rows: readonly RenderedRow[]): RowTarget | un
 };
 
 const isArrow = (key: string): boolean =>
-  key === 'ArrowUp' || key === 'ArrowDown' || key === 'ArrowLeft' || key === 'ArrowRight';
+  key === Key.ArrowUp || key === Key.ArrowDown || key === Key.ArrowLeft || key === Key.ArrowRight;
 
 const isChord = (event: KeyboardEvent): boolean =>
   isArrow(event.key) && event.altKey && event.shiftKey && !event.ctrlKey && !event.metaKey;
@@ -146,7 +151,7 @@ export const useTableRowDrag = <T>(options: TableRowDragOptions<T>): TableRowDra
     const node = engine.nodeAt(options.pageStart() + position);
     const siblings = engine.siblingsAt(options.pageStart() + position);
 
-    return node?.kind === 'row' && siblings !== undefined
+    return node?.kind === TableNodeKind.Row && siblings !== undefined
       ? { position, node, siblings }
       : undefined;
   };
@@ -207,11 +212,11 @@ export const useTableRowDrag = <T>(options: TableRowDragOptions<T>): TableRowDra
     });
 
     switch (zone) {
-      case 'before':
+      case RowZone.Before:
         return beside(place.siblings.index);
-      case 'after':
+      case RowZone.After:
         return childAfter(place) === undefined ? beside(place.siblings.index + 1) : within(0);
-      case 'inside':
+      case RowZone.Inside:
         return within(options.childCount(place.node.row));
     }
   };
@@ -246,7 +251,7 @@ export const useTableRowDrag = <T>(options: TableRowDragOptions<T>): TableRowDra
     rect: DOMRect,
     clientY: number,
   ): RowZone => {
-    if (at.zone !== 'inside') {
+    if (at.zone !== RowZone.Inside) {
       hold = undefined;
       return at.zone;
     }
@@ -307,11 +312,11 @@ export const useTableRowDrag = <T>(options: TableRowDragOptions<T>): TableRowDra
     const top = frameTop(rendered.rect.top) ?? 0;
 
     switch (at.zone) {
-      case 'inside':
+      case RowZone.Inside:
         return { kind: 'box', start: top, size: rendered.rect.height };
-      case 'before':
+      case RowZone.Before:
         return { kind: 'line', start: top, inset: insetOf(rendered.element, place.node.level) };
-      case 'after': {
+      case RowZone.After: {
         const nested = childAfter(place) !== undefined;
 
         return {
@@ -372,7 +377,7 @@ export const useTableRowDrag = <T>(options: TableRowDragOptions<T>): TableRowDra
 
     last = state;
 
-    if (state.phase !== 'dragging' || frame === null) {
+    if (state.phase !== ReorderPhase.Dragging || frame === null) {
       clear();
       return;
     }
@@ -410,7 +415,7 @@ export const useTableRowDrag = <T>(options: TableRowDragOptions<T>): TableRowDra
 
   const dragging = computed(() => {
     const state = reorder.state.value;
-    return state.phase === 'dragging' ? state.from : undefined;
+    return state.phase === ReorderPhase.Dragging ? state.from : undefined;
   });
 
   const ancestorOf = (place: RowPlace<T>): RowPlace<T> | undefined => {
@@ -439,7 +444,7 @@ export const useTableRowDrag = <T>(options: TableRowDragOptions<T>): TableRowDra
   };
 
   const chordDestination = (source: RowPlace<T>, key: string): RowDestination<T> | undefined => {
-    const forward = options.isRtl() ? 'ArrowLeft' : 'ArrowRight';
+    const forward = options.isRtl() ? Key.ArrowLeft : Key.ArrowRight;
 
     const beside = (index: number): RowDestination<T> => ({
       parent: source.siblings.parent,
@@ -450,9 +455,9 @@ export const useTableRowDrag = <T>(options: TableRowDragOptions<T>): TableRowDra
     });
 
     switch (key) {
-      case 'ArrowUp':
+      case Key.ArrowUp:
         return source.siblings.index > 0 ? beside(source.siblings.index - 1) : undefined;
-      case 'ArrowDown':
+      case Key.ArrowDown:
         return source.siblings.index < source.siblings.count - 1
           ? beside(source.siblings.index + 1)
           : undefined;

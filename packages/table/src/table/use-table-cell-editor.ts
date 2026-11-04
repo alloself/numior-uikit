@@ -1,4 +1,4 @@
-import { graphemesOf } from '@numior/primitives';
+import { graphemesOf, Key, PointerType } from '@numior/primitives';
 import {
   ref,
   shallowRef,
@@ -11,16 +11,19 @@ import {
 import { stepCell } from './table-keys';
 import type { RangeBounds } from './table-ranges';
 import type { NuiTableMessages } from './table.messages';
-import type {
-  NuiTableCellValue,
-  NuiTableDraft,
+import {
   NuiTableEditMode,
   NuiTableEditMove,
-  NuiTableEditRefusalReason,
-  TableCellEditorSpec,
-  TableCellPosition,
-  TableEditorPlan,
-  TableEditSession,
+  ParsedCellKind,
+  TableEditorPlanKind,
+  TableOpeningKind,
+  type NuiTableCellValue,
+  type NuiTableDraft,
+  type NuiTableEditRefusalReason,
+  type TableCellEditorSpec,
+  type TableCellPosition,
+  type TableEditorPlan,
+  type TableEditSession,
 } from './table.types';
 
 export interface TableCellEditorOptions<T> {
@@ -83,9 +86,13 @@ interface TableEditTarget<T> {
 }
 
 type TableOpening =
-  | { readonly kind: 'gesture' }
-  | { readonly kind: 'typed'; readonly text: string }
-  | { readonly kind: 'start'; readonly mode: NuiTableEditMode; readonly focus: boolean };
+  | { readonly kind: typeof TableOpeningKind.Gesture }
+  | { readonly kind: typeof TableOpeningKind.Typed; readonly text: string }
+  | {
+      readonly kind: typeof TableOpeningKind.Start;
+      readonly mode: NuiTableEditMode;
+      readonly focus: boolean;
+    };
 
 const DOUBLE_TAP = 300;
 const TAP_GRACE = 500;
@@ -102,7 +109,7 @@ const isPlain = (event: KeyboardEvent): boolean =>
 
 const typedOf = (event: KeyboardEvent): string | undefined => {
   const chord = event.ctrlKey || event.altKey;
-  const printable = graphemesOf(event.key).length === 1 && event.key !== ' ';
+  const printable = graphemesOf(event.key).length === 1 && event.key !== Key.Space;
 
   return printable && !event.metaKey && (!chord || event.getModifierState('AltGraph'))
     ? event.key
@@ -110,7 +117,7 @@ const typedOf = (event: KeyboardEvent): string | undefined => {
 };
 
 const openingOf = (event: KeyboardEvent): TableOpening | undefined => {
-  if (event.key === 'Enter') {
+  if (event.key === Key.Enter) {
     return isPlain(event) ? GESTURE : undefined;
   }
   const typed = typedOf(event);
@@ -176,14 +183,15 @@ export const useTableCellEditor = <T>(options: TableCellEditorOptions<T>): Table
     spec: TableCellEditorSpec,
     opening: TableOpening,
   ): void => {
-    const blank = opening.kind === 'start' && opening.mode === 'replace';
+    const blank =
+      opening.kind === TableOpeningKind.Start && opening.mode === NuiTableEditMode.Replace;
 
     session.value = {
       ...target,
       label: options.labelOf(target.key),
       spec,
-      typed: opening.kind === 'typed' ? opening.text : undefined,
-      passive: opening.kind === 'start' && !opening.focus,
+      typed: opening.kind === TableOpeningKind.Typed ? opening.text : undefined,
+      passive: opening.kind === TableOpeningKind.Start && !opening.focus,
     };
 
     error.value = undefined;
@@ -201,12 +209,12 @@ export const useTableCellEditor = <T>(options: TableCellEditorOptions<T>): Table
     const plan = options.plan(row, key);
 
     switch (plan.kind) {
-      case 'toggle':
-        return opening.kind === 'gesture' && toggle(row, key);
-      case 'refused':
+      case TableEditorPlanKind.Toggle:
+        return opening.kind === TableOpeningKind.Gesture && toggle(row, key);
+      case TableEditorPlanKind.Refused:
         options.refuse(row, key, plan.reason);
         return false;
-      case 'editor':
+      case TableEditorPlanKind.Editor:
         begin({ position, row, key }, plan.spec, opening);
         return true;
     }
@@ -240,7 +248,7 @@ export const useTableCellEditor = <T>(options: TableCellEditorOptions<T>): Table
   const outcomeOf = (current: TableEditSession<T>, control: unknown): TableEditOutcome => {
     const parsed = current.spec.fromControl(control);
 
-    return parsed.kind === 'invalid'
+    return parsed.kind === ParsedCellKind.Invalid
       ? { value: null, failure: options.invalid() }
       : { value: parsed.value, failure: options.check(current.row, current.key, parsed.value) };
   };
@@ -250,7 +258,7 @@ export const useTableCellEditor = <T>(options: TableCellEditorOptions<T>): Table
     value: NuiTableCellValue,
     move: NuiTableEditMove,
   ): void => {
-    if (move === 'fill') {
+    if (move === NuiTableEditMove.Fill) {
       options.fill(current.key, value);
     } else {
       options.save(current.row, current.key, value);
@@ -268,7 +276,7 @@ export const useTableCellEditor = <T>(options: TableCellEditorOptions<T>): Table
     }
     const { value, failure } = outcomeOf(current, draft.value);
 
-    if (failure !== undefined && move !== 'blur') {
+    if (failure !== undefined && move !== NuiTableEditMove.Blur) {
       error.value = failure;
       strict = true;
       options.announce(failure);
@@ -281,7 +289,7 @@ export const useTableCellEditor = <T>(options: TableCellEditorOptions<T>): Table
     } else {
       options.announce(options.messages.value.editDiscarded({ error: failure }));
     }
-    if (move !== 'blur') {
+    if (move !== NuiTableEditMove.Blur) {
       options.focus(stepCell(options.leave(current.position, move), move, options.bounds()));
     }
     return true;
@@ -330,7 +338,7 @@ export const useTableCellEditor = <T>(options: TableCellEditorOptions<T>): Table
     ) {
       return false;
     }
-    if (event.key === 'F2' && isPlain(event)) {
+    if (event.key === Key.F2 && isPlain(event)) {
       event.preventDefault();
 
       if (!open(cell, GESTURE)) {
@@ -365,7 +373,7 @@ export const useTableCellEditor = <T>(options: TableCellEditorOptions<T>): Table
   };
 
   const onClick = (event: MouseEvent): void => {
-    const position = pointer === 'touch' ? locate(event.target) : undefined;
+    const position = pointer === PointerType.Touch ? locate(event.target) : undefined;
     const next = position === undefined ? undefined : { time: event.timeStamp, ...position };
 
     if (position !== undefined && next !== undefined && doubled(tap, next)) {

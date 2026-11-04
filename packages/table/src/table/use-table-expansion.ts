@@ -1,13 +1,21 @@
 import { computed, shallowRef, type ComputedRef, type Ref, type ShallowRef } from 'vue';
-import { formatNumber } from '@numior/primitives';
-import type { TableEngine, TableGroupNode, TableNode, TableNodeId, TableRowNode } from '../engine';
+import { formatNumber, Key } from '@numior/primitives';
+import {
+  TableNodeKind,
+  type TableEngine,
+  type TableGroupNode,
+  type TableNode,
+  type TableNodeId,
+  type TableRowNode,
+} from '../engine';
 import type { NuiTableMessages } from './table.messages';
 import { aggregateTextOf, cellTextOf, cellValueFrom, valueTextOf } from './table-format';
-import type {
-  TableCellPosition,
-  TableGroupCell,
-  TableGroupRow,
-  NuiTableColumn,
+import {
+  TableBodyRowViewKind,
+  type NuiTableColumn,
+  type TableCellPosition,
+  type TableGroupCell,
+  type TableGroupRow,
 } from './table.types';
 
 export interface TableExpansionOptions<T> {
@@ -43,7 +51,7 @@ interface GroupContext {
 }
 
 const plainToggle = (event: KeyboardEvent): boolean =>
-  (event.key === 'Enter' || event.key === ' ') &&
+  (event.key === Key.Enter || event.key === Key.Space) &&
   !event.altKey &&
   !event.ctrlKey &&
   !event.metaKey &&
@@ -123,7 +131,7 @@ export const useTableExpansion = <T>(options: TableExpansionOptions<T>): TableEx
       return known ?? undefined;
     }
     const node = options.engine.value.nodeAt(current.offset + position);
-    const row = node?.kind === 'group' ? build(node, current) : null;
+    const row = node?.kind === TableNodeKind.Group ? build(node, current) : null;
 
     current.rows.set(position, row);
     return row ?? undefined;
@@ -143,7 +151,7 @@ export const useTableExpansion = <T>(options: TableExpansionOptions<T>): TableEx
   const announceToggle = (node: TableRowNode<T> | TableGroupNode, opening: boolean): void => {
     const texts = options.messages.value;
 
-    if (node.kind === 'group') {
+    if (node.kind === TableNodeKind.Group) {
       const group = groupLabel(node, context.value);
       options.announce(opening ? texts.groupExpanded({ group }) : texts.groupCollapsed({ group }));
       return;
@@ -155,7 +163,11 @@ export const useTableExpansion = <T>(options: TableExpansionOptions<T>): TableEx
   const toggle = (position: number): void => {
     const node = options.engine.value.nodeAt(options.offset() + position);
 
-    if (node === undefined || node.kind === 'detail' || (node.kind === 'row' && !node.expandable)) {
+    if (
+      node === undefined ||
+      node.kind === TableNodeKind.Detail ||
+      (node.kind === TableNodeKind.Row && !node.expandable)
+    ) {
       return;
     }
     const opening = !node.expanded;
@@ -163,7 +175,7 @@ export const useTableExpansion = <T>(options: TableExpansionOptions<T>): TableEx
 
     options.expanded.value = opening ? [...ids, node.id] : ids.filter((id) => id !== node.id);
 
-    if (node.kind === 'row' && node.unloaded) {
+    if (node.kind === TableNodeKind.Row && node.unloaded) {
       setLoading(node.id, opening);
 
       if (opening) {
@@ -174,10 +186,14 @@ export const useTableExpansion = <T>(options: TableExpansionOptions<T>): TableEx
   };
 
   const togglesAt = (node: TableNode<T> | undefined, col: number): boolean => {
-    if (node?.kind === 'group') {
+    if (node?.kind === TableNodeKind.Group) {
       return true;
     }
-    return node?.kind === 'row' && node.expandable && options.keyAt(col) === options.treeKey();
+    return (
+      node?.kind === TableBodyRowViewKind.Row &&
+      node.expandable &&
+      options.keyAt(col) === options.treeKey()
+    );
   };
 
   return {

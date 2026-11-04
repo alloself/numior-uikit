@@ -1,5 +1,9 @@
 <template>
-  <span v-if="cell?.kind === 'toggle'" class="nui-table__group" @click="emit('toggle')">
+  <span
+    v-if="cell?.kind === TableGroupCellKind.Toggle"
+    class="nui-table__group"
+    @click="emit('toggle')"
+  >
     <span :key="cell.node" class="nui-table__toggle" aria-hidden="true">
       <NuiIcon icon="chevron-right" class="nui-table__chevron" />
     </span>
@@ -11,7 +15,7 @@
 
 <script setup lang="ts">
 import { NuiIcon } from '@numior/vue';
-import type { NuiTableGroupCellProps } from './table.types';
+import { TableGroupCellKind, type NuiTableGroupCellProps } from './table.types';
 
 const { cell } = defineProps<NuiTableGroupCellProps>();
 

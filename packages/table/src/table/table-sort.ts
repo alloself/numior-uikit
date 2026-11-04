@@ -1,4 +1,4 @@
-import type { TableSort } from '../engine';
+import { TableSortDirection, type TableSort } from '../engine';
 import type { TableHeadState } from './table.types';
 
 export interface HeadStateInput {
@@ -16,7 +16,7 @@ const cycle = (key: string, current: TableSort | undefined): TableSort | null =>
   if (current === undefined) {
     return { key, direction: 'asc' };
   }
-  return current.direction === 'asc' ? { key, direction: 'desc' } : null;
+  return current.direction === TableSortDirection.Asc ? { key, direction: 'desc' } : null;
 };
 
 export const nextSort = (

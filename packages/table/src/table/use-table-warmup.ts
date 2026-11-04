@@ -1,7 +1,7 @@
 import { promiseTimeout, until, useIdle } from '@vueuse/core';
 import { yieldInLine, type TableEngine, type TableStoreWish } from '../engine';
 import { onMounted, onScopeDispose, type ShallowRef } from 'vue';
-import type { NuiTableColumn } from './table.types';
+import { NuiTableColumnType, type NuiTableColumn } from './table.types';
 
 export interface TableWarmupOptions<T> {
   readonly engine: ShallowRef<TableEngine<T>>;
@@ -31,7 +31,7 @@ const wishesOf = <T>(columns: readonly NuiTableColumn<T>[]): TableStoreWish[] =>
     (found, column) => {
       const sortable = column.sortable !== false;
 
-      if (column.type === 'text') {
+      if (column.type === NuiTableColumnType.Text) {
         if (column.filter !== false) {
           found.codes.push({ key: column.key, need: 'codes' });
         }
@@ -125,7 +125,9 @@ export const useTableWarmup = <T>(options: TableWarmupOptions<T>): TableWarmup =
 
   const rankSoon = (keys: readonly string[]): void => {
     const numeric = new Set(
-      options.columns().flatMap((column) => (column.type === 'text' ? [] : [column.key])),
+      options
+        .columns()
+        .flatMap((column) => (column.type === NuiTableColumnType.Text ? [] : [column.key])),
     );
 
     const wishes = keys.flatMap((key): TableStoreWish[] =>

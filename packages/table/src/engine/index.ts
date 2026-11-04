@@ -7,6 +7,16 @@ export { createRadixSortJob } from './radix';
 export { createSortJob, identityIndices } from './sort';
 export { runSliced, yieldInLine, yieldToHost } from './slicer';
 export { flattenTree } from './tree';
+export {
+  TableAggregateKind,
+  TableFilterKind,
+  TableNodeKind,
+  TablePhase,
+  TableRunResultKind,
+  TableSortDirection,
+  TableTextOp,
+  StoreNeed,
+} from './engine.types';
 export type { SliceJob, SliceOptions } from './slicer';
 export type { StoreJob, StoreRequest } from './column-store';
 export type { RankHost, RankSession } from './rank-host';
@@ -19,7 +29,6 @@ export type {
   ColumnStore,
   TableAggregate,
   TableAggregateFn,
-  TableAggregateKind,
   TableChildrenRequest,
   TableDistinct,
   TableDetailNode,
@@ -43,7 +52,6 @@ export type {
   TableSourceGroup,
   TableTotalsRequest,
   TableValuesRequest,
-  TablePhase,
   TableProgress,
   TableQuery,
   TableRowNode,
@@ -51,10 +59,7 @@ export type {
   TableRunOptions,
   TableRunResult,
   TableSort,
-  TableSortDirection,
   TableStoreWish,
-  TableTextOp,
   RankedStore,
-  StoreNeed,
   StringCodes,
 } from './engine.types';

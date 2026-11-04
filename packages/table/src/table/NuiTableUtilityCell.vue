@@ -1,6 +1,6 @@
 <template>
   <NuiCheckbox
-    v-if="control === 'checkbox'"
+    v-if="control === TableUtilityControl.Checkbox"
     :model-value="checked"
     :indeterminate="indeterminate"
     :disabled="disabled"
@@ -9,14 +9,21 @@
     tabindex="-1"
     @update:model-value="emit('toggle')"
   />
-  <NuiSkeleton v-else-if="control === 'skeleton'" shape="rect" width="1rem" height="1rem" />
-  <span v-else-if="control === 'label'" class="nui-table__text">{{ text }}</span>
-  <span v-else-if="control === 'corner'" class="nui-table__hidden">{{ label }}</span>
+  <NuiSkeleton
+    v-else-if="control === TableUtilityControl.Skeleton"
+    shape="rect"
+    width="1rem"
+    height="1rem"
+  />
+  <span v-else-if="control === TableUtilityControl.Label" class="nui-table__text">{{ text }}</span>
+  <span v-else-if="control === TableUtilityControl.Corner" class="nui-table__hidden">{{
+    label
+  }}</span>
 </template>
 
 <script setup lang="ts">
 import { NuiCheckbox, NuiSkeleton } from '@numior/vue';
-import type { NuiTableUtilityCellProps } from './table.types';
+import { TableUtilityControl, type NuiTableUtilityCellProps } from './table.types';
 
 const {
   control,

@@ -2,13 +2,14 @@ import { computed, onMounted, watch, type ComputedRef, type ShallowRef } from 'v
 import type { VirtualList } from '@numior/primitives';
 import { boxOf } from './table-ranges';
 import type { PlacedColumn, TableLayout } from './table-layout';
-import type {
-  NuiTableOverlaySlot,
-  NuiTableRange,
-  NuiTableRect,
-  NuiTableWindow,
-  TableCellPosition,
+import {
+  TableColumnKind,
   TablePaneName,
+  type NuiTableOverlaySlot,
+  type NuiTableRange,
+  type NuiTableRect,
+  type NuiTableWindow,
+  type TableCellPosition,
 } from './table.types';
 
 export interface TableOverlayOptions {
@@ -36,11 +37,11 @@ const CELL = '.nui-table__cell';
 
 const paneBase = (layout: TableLayout, pane: TablePaneName): number => {
   switch (pane) {
-    case 'start':
+    case TablePaneName.Start:
       return 0;
-    case 'centre':
+    case TablePaneName.Centre:
       return layout.startWidth;
-    case 'end':
+    case TablePaneName.End:
       return layout.startWidth + layout.centreWidth;
   }
 };
@@ -60,7 +61,9 @@ export const useTableOverlay = (options: TableOverlayOptions): TableOverlay => {
   );
 
   const startData = computed(() =>
-    options.layout().start.reduce((count, column) => count + Number(column.kind === 'data'), 0),
+    options
+      .layout()
+      .start.reduce((count, column) => count + Number(column.kind === TableColumnKind.Data), 0),
   );
 
   const columnOf = (col: number): PlacedColumn | undefined => {

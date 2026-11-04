@@ -210,11 +210,15 @@ export default [
     rules: { 'no-restricted-syntax': ['error', ...CATALOG, ...CODE_SHAPE, TIMERS] },
   },
   {
-    files: ['packages/{primitives,vue}/src/**/*.{ts,vue}'],
-    ignores: ['**/*.messages.ts'],
+    files: ['packages/{primitives,vue,table}/src/**/*.{ts,vue}'],
+    ignores: ['**/*.messages.ts', 'packages/table/src/engine/**'],
     rules: {
       'no-restricted-syntax': ['error', ...CATALOG, ...CODE_SHAPE, TIMERS, ...NAMED_ENUMERATIONS],
     },
+  },
+  {
+    files: ['packages/table/src/engine/**/*.ts'],
+    rules: { 'no-restricted-syntax': ['error', ...CATALOG, ...CODE_SHAPE, ...NAMED_ENUMERATIONS] },
   },
   {
     files: ['packages/forms/src/**/*.{ts,vue}'],
@@ -228,7 +232,7 @@ export default [
     },
   },
   {
-    files: ['packages/{primitives,vue,forms}/src/**/*.vue'],
+    files: ['packages/{primitives,vue,forms,table}/src/**/*.vue'],
     rules: { 'vue/no-restricted-syntax': ['error', ...NAMED_ENUMERATIONS] },
   },
 ];

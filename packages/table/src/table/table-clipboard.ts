@@ -1,3 +1,5 @@
+import { TsvChar } from './table.types';
+
 interface TsvState {
   readonly rows: string[][];
   row: string[];
@@ -47,12 +49,12 @@ const endRow = (state: TsvState): void => {
 };
 
 const quotedStep = (state: TsvState, char: string, next: string | undefined): number => {
-  if (char !== '"') {
+  if (char !== TsvChar.Quote) {
     state.field += char;
     return 0;
   }
-  if (next === '"') {
-    state.field += '"';
+  if (next === TsvChar.Quote) {
+    state.field += TsvChar.Quote;
     return 1;
   }
   state.quoted = false;
@@ -61,17 +63,17 @@ const quotedStep = (state: TsvState, char: string, next: string | undefined): nu
 
 const plainStep = (state: TsvState, char: string, next: string | undefined): number => {
   switch (char) {
-    case '"':
+    case TsvChar.Quote:
       state.quoted = state.field === '';
       state.field += state.quoted ? '' : char;
       return 0;
-    case '\t':
+    case TsvChar.Tab:
       endField(state);
       return 0;
-    case '\r':
+    case TsvChar.Return:
       endRow(state);
-      return next === '\n' ? 1 : 0;
-    case '\n':
+      return next === TsvChar.Newline ? 1 : 0;
+    case TsvChar.Newline:
       endRow(state);
       return 0;
     default:

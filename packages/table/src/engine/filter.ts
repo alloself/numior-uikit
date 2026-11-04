@@ -1,10 +1,15 @@
 import { CHECK_INTERVAL, type SliceJob } from './slicer';
-import type {
-  ColumnStore,
-  TableEngineColumn,
-  TableFilter,
-  TableFilterValue,
-  StringCodes,
+import {
+  ColumnStoreKind,
+  DictionaryScanKind,
+  TableEngineColumnKind,
+  TableFilterKind,
+  TableTextOp,
+  type ColumnStore,
+  type StringCodes,
+  type TableEngineColumn,
+  type TableFilter,
+  type TableFilterValue,
 } from './engine.types';
 
 export type RowTest = (index: number) => boolean;
@@ -36,8 +41,11 @@ interface ScanState {
 }
 
 type DictionaryScan =
-  | (ScanState & { readonly kind: 'lowered'; readonly match: TextMatch })
-  | (ScanState & { readonly kind: 'exact'; readonly wanted: ReadonlySet<string> });
+  | (ScanState & { readonly kind: typeof DictionaryScanKind.Lowered; readonly match: TextMatch })
+  | (ScanState & {
+      readonly kind: typeof DictionaryScanKind.Exact;
+      readonly wanted: ReadonlySet<string>;
+    });
 
 interface PendingTest {
   readonly scans: readonly DictionaryScan[];
@@ -113,9 +121,9 @@ export const createLoweringJob = (dictionaries: readonly (readonly string[])[]):
 
 const scanHit = (scan: DictionaryScan, lowered: string[], code: number): boolean => {
   switch (scan.kind) {
-    case 'lowered':
+    case DictionaryScanKind.Lowered:
       return scan.match(loweredAt(scan.dictionary, lowered, code));
-    case 'exact':
+    case DictionaryScanKind.Exact:
       return scan.wanted.has(scan.dictionary[code] ?? '');
   }
 };
@@ -173,13 +181,13 @@ const textMatcher = (filter: Extract<TableFilter, { kind: 'text' }>): TextMatch 
   const needle = filter.value.toLowerCase();
 
   switch (filter.op) {
-    case 'contains':
+    case TableTextOp.Contains:
       return (candidate) => candidate.includes(needle);
-    case 'equals':
+    case TableTextOp.Equals:
       return (candidate) => candidate === needle;
-    case 'starts':
+    case TableTextOp.Starts:
       return (candidate) => candidate.startsWith(needle);
-    case 'empty':
+    case TableTextOp.Empty:
       return (candidate) => candidate === '';
   }
 };
@@ -266,7 +274,7 @@ const sourceOf = <T>(
 };
 
 const setPending = (store: ColumnStore, values: readonly TableFilterValue[]): PendingTest => {
-  if (store.kind === 'number') {
+  if (store.kind === ColumnStoreKind.Number) {
     return ready(numberSetTest(store, values));
   }
   const nullPasses = values.includes(null);
@@ -309,32 +317,32 @@ const textPending = (
   store: CodedStore,
 ): PendingTest => {
   const scan = loweredScan(store.dictionary, textMatcher(filter));
-  return { scans: [scan], test: () => codedTest(store, scan.map, filter.op === 'empty') };
+  return { scans: [scan], test: () => codedTest(store, scan.map, filter.op === TableTextOp.Empty) };
 };
 
 const pendingFor = <T>(filter: TableFilter, sources: FilterSources<T>): PendingTest => {
-  if (filter.kind === 'quick') {
+  if (filter.kind === TableFilterKind.Quick) {
     return quickPending(filter.value, sources.quickStores(filter.keys));
   }
   const { column, store } = sourceOf(sources, filter.key);
 
   switch (filter.kind) {
-    case 'text':
-      if (store.kind === 'number') {
+    case TableFilterKind.Text:
+      if (store.kind === ColumnStoreKind.Number) {
         throw mismatch(filter, 'a string');
       }
       return textPending(filter, store);
-    case 'number':
-      if (store.kind !== 'number' || column.kind === 'date') {
+    case TableFilterKind.Number:
+      if (store.kind !== ColumnStoreKind.Number || column.kind === TableEngineColumnKind.Date) {
         throw mismatch(filter, 'a number or boolean');
       }
       return ready(rangeTest(store, filter.min, filter.max));
-    case 'date':
-      if (store.kind !== 'number' || column.kind !== 'date') {
+    case TableFilterKind.Date:
+      if (store.kind !== ColumnStoreKind.Number || column.kind !== TableEngineColumnKind.Date) {
         throw mismatch(filter, 'a date');
       }
       return ready(rangeTest(store, filter.from, filter.to));
-    case 'set':
+    case TableFilterKind.Set:
       return setPending(store, filter.values);
   }
 };

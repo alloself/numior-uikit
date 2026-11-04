@@ -1,18 +1,19 @@
-import type {
-  TableCellLayout,
-  TableColumnKind,
-  TableDataCell,
-  TableGapCell,
-  TablePaneName,
-  TableRowCells,
-  TableRowMode,
-  TableTrack,
-  NuiTableHidden,
-  NuiTablePins,
-  NuiTableAlign,
-  NuiTableColumn,
+import {
+  NuiTableColumnType,
   NuiTablePin,
-  NuiTableWidths,
+  TableColumnKind,
+  TablePaneName,
+  TableRowMode,
+  type NuiTableAlign,
+  type NuiTableColumn,
+  type NuiTableHidden,
+  type NuiTablePins,
+  type NuiTableWidths,
+  type TableCellLayout,
+  type TableDataCell,
+  type TableGapCell,
+  type TableRowCells,
+  type TableTrack,
 } from './table.types';
 
 export interface PlacedColumn {
@@ -110,7 +111,7 @@ export const widthOf = <T>(column: NuiTableColumn<T>, widths: NuiTableWidths): n
   clampWidth(column, widths[column.key] ?? column.width ?? DEFAULT_WIDTH);
 
 const alignOf = <T>(column: NuiTableColumn<T>): NuiTableAlign =>
-  column.align ?? (column.type === 'number' ? 'end' : 'start');
+  column.align ?? (column.type === NuiTableColumnType.Number ? 'end' : 'start');
 
 const inputOf = <T>(column: NuiTableColumn<T>, options: LayoutOptions): PlaceInput => ({
   key: column.key,
@@ -142,11 +143,11 @@ export const pinStyleOf = (
   paneWidth: number,
 ): Readonly<Record<string, string>> | undefined => {
   switch (pane) {
-    case 'start':
+    case TablePaneName.Start:
       return { '--_pin': `${offset}px` };
-    case 'end':
+    case TablePaneName.End:
       return { '--_pin': `${paneWidth - offset - width}px` };
-    case 'centre':
+    case TablePaneName.Centre:
       return undefined;
   }
 };
@@ -202,12 +203,15 @@ const placePane = (
         colIndex: visual + 1,
         align: input.align,
         wrap: input.wrap,
-        pin: pane === 'centre' ? undefined : pane,
-        edge: pane === 'start' ? index === inputs.length - 1 : pane === 'end' && index === 0,
+        pin: pane === TablePaneName.Centre ? undefined : pane,
+        edge:
+          pane === TablePaneName.Start
+            ? index === inputs.length - 1
+            : pane === TablePaneName.End && index === 0,
         style: pinStyleOf(pane, offset, input.width, width),
         span: undefined,
         colspan: 1,
-        tail: pane === 'centre' && index === inputs.length - 1,
+        tail: pane === TablePaneName.Centre && index === inputs.length - 1,
       },
     });
 
@@ -237,9 +241,9 @@ const paneOf = (
   ends: PlaceInput[],
 ): PlaceInput[] => {
   switch (pin) {
-    case 'start':
+    case NuiTablePin.Start:
       return starts;
-    case 'end':
+    case NuiTablePin.End:
       return ends;
     case undefined:
       return centres;
@@ -298,18 +302,18 @@ export const tableLayout = <T>(
 };
 
 export const dataKeysOf = (layout: TableLayout): string[] =>
-  layout.visual.flatMap((column) => (column.kind === 'data' ? [column.key] : []));
+  layout.visual.flatMap((column) => (column.kind === TableColumnKind.Data ? [column.key] : []));
 
 export const dataKeyAt = (layout: TableLayout, visual: number): string | undefined => {
   const column = layout.visual[visual];
-  return column?.kind === 'data' ? column.key : undefined;
+  return column?.kind === TableColumnKind.Data ? column.key : undefined;
 };
 
 export const pinsFit = (layout: TableLayout, room: number): boolean =>
   room === 0 || layout.startWidth + layout.endWidth <= room - SMALLEST_WIDTH;
 
 export const centreIndexOf = (layout: TableLayout, visual: number): number | undefined =>
-  layout.visual[visual]?.pane === 'centre' ? visual - layout.start.length : undefined;
+  layout.visual[visual]?.pane === TablePaneName.Centre ? visual - layout.start.length : undefined;
 
 export const wrappedCentreOf = (layout: TableLayout): number[] =>
   layout.centre.flatMap((column, index) => (column.cell.wrap ? [index] : []));
@@ -318,7 +322,7 @@ export const sizedRowStyle = (
   height: number,
   mode: TableRowMode,
 ): Readonly<Record<string, string>> =>
-  mode === 'fixed'
+  mode === TableRowMode.Fixed
     ? { '--_row': `${height}px`, '--_body-size': `${height - 1}px` }
     : { '--_row': `${height}px`, '--_body-min': `${height - 1}px` };
 

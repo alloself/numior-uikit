@@ -1,6 +1,4 @@
-import type { TableNodeId } from './engine.types';
-
-export type SourceHolds = 'rows' | 'groups' | 'detail';
+import type { SourceHolds, TableNodeId } from './engine.types';
 
 export interface SourceBranch<T> {
   readonly id: TableNodeId;

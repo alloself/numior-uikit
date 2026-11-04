@@ -1,4 +1,5 @@
 import { collatedOrder, collatorOf, readRankMessage, unpackDictionary } from './rank-order';
+import { RankMessageKind } from './engine.types';
 
 const parts = new Map<number, string[]>();
 
@@ -8,7 +9,7 @@ self.addEventListener('message', (event: MessageEvent<unknown>) => {
   if (message === undefined) {
     return;
   }
-  if (message.kind === 'part') {
+  if (message.kind === RankMessageKind.Part) {
     const list = parts.get(message.id) ?? [];
 
     list.push(message.text);

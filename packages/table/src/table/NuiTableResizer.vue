@@ -2,7 +2,7 @@
   <span
     class="nui-table__resizer"
     :class="{
-      'nui-table__resizer--row': axis === 'y',
+      'nui-table__resizer--row': axis === ReorderAxis.Y,
       'nui-table__resizer--start': start,
       'nui-table__resizer--active': active,
     }"
@@ -14,6 +14,7 @@
 
 <script setup lang="ts">
 import type { NuiTableResizerProps } from './table.types';
+import { ReorderAxis } from '@numior/primitives';
 
 const { axis = 'x', start = false, active = false } = defineProps<NuiTableResizerProps>();
 

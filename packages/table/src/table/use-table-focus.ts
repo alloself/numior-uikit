@@ -1,8 +1,13 @@
 import { onMounted, ref, watch, type Ref, type ShallowRef } from 'vue';
-import { createIntent, type VirtualList } from '@numior/primitives';
+import { createIntent, Key, type VirtualList } from '@numior/primitives';
 import { DETAIL_CELL, OWN_ACTIVE_CELL } from './table-dom';
 import { nextCell, type TableEdgeOf } from './table-keys';
-import type { TableCellPosition, TableHeaderTarget, TableRevealAxis } from './table.types';
+import {
+  TableHeaderTargetKind,
+  TableRevealAxis,
+  type TableCellPosition,
+  type TableHeaderTarget,
+} from './table.types';
 
 export interface TableFocusOptions {
   readonly viewport: Readonly<ShallowRef<HTMLElement | null>>;
@@ -63,7 +68,7 @@ const samePosition = (a: TableCellPosition, b: TableCellPosition): boolean =>
   a.row === b.row && a.col === b.col;
 
 export const useTableFocus = (options: TableFocusOptions): TableFocus => {
-  const intent = createIntent<'cell'>();
+  const intent = createIntent<true>();
   const requests = ref(0);
   const placement = createIntent<TableHeaderTarget>();
   const placements = ref(0);
@@ -88,10 +93,10 @@ export const useTableFocus = (options: TableFocusOptions): TableFocus => {
     if (!options.windowed()) {
       return;
     }
-    if (axis === 'both' || axis === 'row') {
+    if (axis === TableRevealAxis.Both || axis === TableRevealAxis.Row) {
       revealRow(target.row);
     }
-    if (axis === 'both' || axis === 'col') {
+    if (axis === TableRevealAxis.Both || axis === TableRevealAxis.Col) {
       revealColumn(target.col);
     }
   };
@@ -102,7 +107,7 @@ export const useTableFocus = (options: TableFocusOptions): TableFocus => {
     if (scroll) {
       reveal(target);
     }
-    intent.set('cell');
+    intent.set(true);
     requests.value += 1;
   };
 
@@ -110,9 +115,9 @@ export const useTableFocus = (options: TableFocusOptions): TableFocus => {
     const last = Math.max(0, options.colCount() - 1);
 
     switch (target.kind) {
-      case 'column':
+      case TableHeaderTargetKind.Column:
         return Math.min(Math.max(0, options.columnIndexOf(target.key)), last);
-      case 'slot':
+      case TableHeaderTargetKind.Slot:
         return Math.min(target.index, last);
     }
   };
@@ -127,7 +132,7 @@ export const useTableFocus = (options: TableFocusOptions): TableFocus => {
     const target = nextCell({ key: event.key, ctrl: event.ctrlKey }, from, {
       rows: options.rowCount(),
       cols: options.colCount(),
-      page: options.pageRows(options.active.value.row, event.key === 'PageDown'),
+      page: options.pageRows(options.active.value.row, event.key === Key.PageDown),
       rtl: options.isRtl(),
       first: options.firstCol(),
       edge: options.edge,
@@ -139,7 +144,7 @@ export const useTableFocus = (options: TableFocusOptions): TableFocus => {
     event.preventDefault();
     options.active.value = target;
     reveal(target);
-    intent.set('cell');
+    intent.set(true);
   };
 
   const onFocusin = (target: EventTarget | null): void => {
@@ -165,7 +170,7 @@ export const useTableFocus = (options: TableFocusOptions): TableFocus => {
     watch(
       [options.active, requests],
       () => {
-        if (intent.take() === 'cell') {
+        if (intent.take() === true) {
           options.viewport.value
             ?.querySelector<HTMLElement>(OWN_ACTIVE_CELL)
             ?.focus({ preventScroll: options.windowed() });

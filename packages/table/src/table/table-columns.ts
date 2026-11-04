@@ -1,13 +1,15 @@
 import { pinStyleOf, TRAIL_KEY, type PlacedColumn, type TableLayout } from './table-layout';
-import type {
+import {
+  NuiTablePin,
+  TablePlacementKind,
+  type NuiTableColumn,
+  type NuiTableColumnDef,
+  type NuiTableColumnGroup,
   TableBandRule,
-  TableCellLayout,
-  TableDataCell,
-  TableGapCell,
-  TableRowCells,
-  NuiTableColumn,
-  NuiTableColumnDef,
-  NuiTableColumnGroup,
+  type TableCellLayout,
+  type TableDataCell,
+  type TableGapCell,
+  type TableRowCells,
 } from './table.types';
 
 export interface ColumnTree<T> {
@@ -71,10 +73,10 @@ const pinStyleOver = (
 };
 
 const isLabelled = <T>(band: OpenBand<T> | undefined): boolean =>
-  band !== undefined && band.group !== undefined && band.first.kind === 'data';
+  band !== undefined && band.group !== undefined && band.first.kind === TablePlacementKind.Data;
 
 const isPinEndEdge = (cell: TableCellLayout | undefined): boolean =>
-  cell !== undefined && cell.pin === 'end' && cell.edge;
+  cell !== undefined && cell.pin === NuiTablePin.End && cell.edge;
 
 const closesAtPinEnd = <T>(bands: readonly OpenBand<T>[], index: number): boolean => {
   const next = bands[index + 1];
@@ -105,17 +107,17 @@ const ruleOf = <T>(bands: readonly OpenBand<T>[], index: number): TableBandRule 
   const end = !band.last.edge && !closesAtPinEnd(bands, index);
 
   if (start && end) {
-    return 'both';
+    return TableBandRule.Both;
   }
   if (start) {
-    return 'start';
+    return TableBandRule.Start;
   }
-  return end ? 'end' : undefined;
+  return end ? TableBandRule.End : undefined;
 };
 
 const handleOf = <T>(band: OpenBand<T>): string | undefined => {
-  const cell = band.first.pin === 'end' ? band.first : band.last;
-  return cell.kind === 'data' ? cell.key : undefined;
+  const cell = band.first.pin === NuiTablePin.End ? band.first : band.last;
+  return cell.kind === TablePlacementKind.Data ? cell.key : undefined;
 };
 
 const bandCellOf = <T>(
@@ -125,12 +127,12 @@ const bandCellOf = <T>(
 ): TableDataCell | TableGapCell => {
   const shared = {
     pin: band.first.pin,
-    edge: band.first.pin === 'end' ? band.first.edge : band.last.edge,
+    edge: band.first.pin === NuiTablePin.End ? band.first.edge : band.last.edge,
     style,
     colspan: band.colspan,
   };
 
-  if (band.group === undefined || band.first.kind === 'gap') {
+  if (band.group === undefined || band.first.kind === TablePlacementKind.Gap) {
     return { kind: 'gap', key: `__band-${band.first.key}`, ...shared };
   }
   return {
@@ -140,7 +142,7 @@ const bandCellOf = <T>(
     align: 'start',
     wrap: false,
     span: band.span,
-    tail: band.last.kind === 'data' && band.last.tail === true,
+    tail: band.last.kind === TablePlacementKind.Data && band.last.tail === true,
     handle: handleOf(band),
     rule,
     ...shared,
@@ -152,7 +154,7 @@ const groupOf = <T>(
   cell: TableCellLayout,
   level: number,
 ): NuiTableColumnGroup<T> | undefined =>
-  cell.kind === 'data' ? tree.ancestors.get(cell.key)?.[level] : undefined;
+  cell.kind === TablePlacementKind.Data ? tree.ancestors.get(cell.key)?.[level] : undefined;
 
 const bandRowOf = <T>(
   layout: TableLayout,
@@ -171,14 +173,14 @@ const bandRowOf = <T>(
     if (open !== undefined && open.group === group && open.first.pin === cell.pin) {
       open.last = cell;
       open.colspan += 1;
-      open.span += cell.kind === 'data' ? 1 : 0;
+      open.span += cell.kind === TablePlacementKind.Data ? 1 : 0;
     } else {
       bands.push({
         group,
         first: cell,
         last: cell,
         colspan: 1,
-        span: cell.kind === 'data' ? 1 : 0,
+        span: cell.kind === TablePlacementKind.Data ? 1 : 0,
       });
     }
   }

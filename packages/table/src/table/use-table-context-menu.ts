@@ -7,6 +7,7 @@ import type {
   NuiTableRanges,
   TableCellPosition,
 } from './table.types';
+import { Key, PointerType } from '@numior/primitives';
 
 export interface TableContextMenuOptions<T> {
   readonly enabled: () => boolean;
@@ -50,7 +51,7 @@ const EDITOR = '.nui-table__editor';
 const TOUCH_GAP = 16;
 
 const isMenuKey = (event: KeyboardEvent): boolean =>
-  event.key === 'ContextMenu' || (event.key === 'F10' && event.shiftKey);
+  event.key === Key.ContextMenu || (event.key === Key.F10 && event.shiftKey);
 
 const afterRelease = (event: MouseEvent, action: () => void): void => {
   if (event.buttons === 0) {
@@ -216,7 +217,8 @@ export const useTableContextMenu = <T>(options: TableContextMenuOptions<T>): Tab
     onContextmenu: (event) => {
       openAtPoint(event, 0);
     },
-    onLongPress: (event) => event.pointerType !== 'mouse' && openAtPoint(event, TOUCH_GAP),
+    onLongPress: (event) =>
+      event.pointerType !== PointerType.Mouse && openAtPoint(event, TOUCH_GAP),
     onKeydown: (event) => {
       const cell = event.target instanceof HTMLElement ? cellOf(event.target) : null;
 

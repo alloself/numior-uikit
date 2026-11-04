@@ -1,6 +1,6 @@
 import { clamp } from '@vueuse/core';
-import { listMoveFor } from '@numior/primitives';
-import type { NuiTableEdgeDirection, NuiTableEditMove, TableCellPosition } from './table.types';
+import { Key, ListMove, listMoveFor } from '@numior/primitives';
+import { NuiTableEdgeDirection, NuiTableEditMove, type TableCellPosition } from './table.types';
 
 export type TableEdgeOf = (
   from: TableCellPosition,
@@ -40,17 +40,17 @@ export const stepCell = (
   size: TableSize,
 ): TableCellPosition => {
   switch (move) {
-    case 'down':
+    case NuiTableEditMove.Down:
       return { row: Math.min(from.row + 1, size.rows - 1), col: from.col };
-    case 'up':
+    case NuiTableEditMove.Up:
       return { row: Math.max(from.row - 1, 0), col: from.col };
-    case 'next':
+    case NuiTableEditMove.Next:
       return { row: from.row, col: Math.min(from.col + 1, size.cols - 1) };
-    case 'previous':
+    case NuiTableEditMove.Previous:
       return { row: from.row, col: Math.max(from.col - 1, 0) };
-    case 'stay':
-    case 'fill':
-    case 'blur':
+    case NuiTableEditMove.Stay:
+    case NuiTableEditMove.Fill:
+    case NuiTableEditMove.Blur:
       return from;
   }
 };
@@ -63,13 +63,13 @@ export const pageRowsOf = (viewport: number, size: number): number => {
 };
 
 export const edgeDirectionOf = (key: string, rtl: boolean): NuiTableEdgeDirection | undefined => {
-  if (key === 'ArrowDown' || key === 'ArrowUp') {
-    return key === 'ArrowDown' ? 'down' : 'up';
+  if (key === Key.ArrowDown || key === Key.ArrowUp) {
+    return key === Key.ArrowDown ? 'down' : 'up';
   }
   switch (listMoveFor(key, 'horizontal', rtl)) {
-    case 'next':
+    case ListMove.Next:
       return 'next';
-    case 'prev':
+    case ListMove.Prev:
       return 'previous';
     default:
       return undefined;
@@ -83,13 +83,13 @@ export const tableEdge = (
   cols: number,
 ): TableCellPosition => {
   switch (direction) {
-    case 'up':
+    case NuiTableEdgeDirection.Up:
       return { row: Math.min(from.row, 0), col: from.col };
-    case 'down':
+    case NuiTableEdgeDirection.Down:
       return { row: Math.max(from.row, rows - 1), col: from.col };
-    case 'previous':
+    case NuiTableEdgeDirection.Previous:
       return { row: from.row, col: 0 };
-    case 'next':
+    case NuiTableEdgeDirection.Next:
       return { row: from.row, col: Math.max(0, cols - 1) };
   }
 };
@@ -109,13 +109,13 @@ const verticalTarget = (
   const floor = from.row < 0 ? -1 : 0;
 
   switch (key) {
-    case 'ArrowDown':
+    case Key.ArrowDown:
       return Math.min(last, from.row + 1);
-    case 'ArrowUp':
+    case Key.ArrowUp:
       return Math.max(-1, from.row - 1);
-    case 'PageDown':
+    case Key.PageDown:
       return Math.min(last, from.row + bounds.page);
-    case 'PageUp':
+    case Key.PageUp:
       return Math.max(floor, from.row - bounds.page);
     default:
       return undefined;
@@ -130,11 +130,11 @@ const edgeTarget = (
   const lastCol = Math.max(0, bounds.cols - 1);
 
   switch (input.key) {
-    case 'Home':
+    case Key.Home:
       return input.ctrl
         ? { row: bounds.rows > 0 ? 0 : -1, col: bounds.first ?? 0 }
         : { row: from.row, col: 0 };
-    case 'End':
+    case Key.End:
       return input.ctrl
         ? { row: lastRowOf(bounds), col: lastCol }
         : { row: from.row, col: lastCol };
@@ -151,8 +151,8 @@ const horizontalTarget = (
   const move = listMoveFor(key, 'horizontal', bounds.rtl);
   const lastCol = Math.max(0, bounds.cols - 1);
 
-  if (move === 'next' || move === 'prev') {
-    return { row: from.row, col: clamp(from.col + (move === 'next' ? 1 : -1), 0, lastCol) };
+  if (move === ListMove.Next || move === ListMove.Prev) {
+    return { row: from.row, col: clamp(from.col + (move === ListMove.Next ? 1 : -1), 0, lastCol) };
   }
   return undefined;
 };

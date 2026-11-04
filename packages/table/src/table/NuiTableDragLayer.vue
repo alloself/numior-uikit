@@ -23,19 +23,19 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { NuiIcon } from '@numior/vue';
-import type { NuiTableDragLayerProps } from './table.types';
+import { TableDropMarkKind, type NuiTableDragLayerProps } from './table.types';
 
 const { axis = 'x', drop, ghost } = defineProps<NuiTableDragLayerProps>();
 
 const dropClass = computed(() =>
-  drop?.kind === 'box' ? 'nui-table__drop--box' : `nui-table__drop--${axis}`,
+  drop?.kind === TableDropMarkKind.Box ? 'nui-table__drop--box' : `nui-table__drop--${axis}`,
 );
 
 const dropStyle = computed(() => {
   if (drop === undefined) {
     return undefined;
   }
-  if (drop.kind === 'box') {
+  if (drop.kind === TableDropMarkKind.Box) {
     return { '--_drop': `${drop.start}px`, '--_size': `${drop.size}px` };
   }
   const inset = drop.inset;

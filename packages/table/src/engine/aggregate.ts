@@ -1,4 +1,4 @@
-import type { ColumnStore, TableAggregateKind } from './engine.types';
+import { ColumnStoreKind, TableAggregateKind, type ColumnStore } from './engine.types';
 
 export interface Accumulator {
   count: number;
@@ -26,7 +26,7 @@ export const accumulateRange = (
 ): void => {
   target.count += to - from;
 
-  if (store.kind !== 'number' || countOnly) {
+  if (store.kind !== ColumnStoreKind.Number || countOnly) {
     return;
   }
   const { keys, nulls } = store;
@@ -59,15 +59,15 @@ export const mergeAccumulator = (target: Accumulator, source: Accumulator): void
 
 export const finishAggregate = (kind: TableAggregateKind, source: Accumulator): unknown => {
   switch (kind) {
-    case 'count':
+    case TableAggregateKind.Count:
       return source.count;
-    case 'sum':
+    case TableAggregateKind.Sum:
       return source.sum;
-    case 'avg':
+    case TableAggregateKind.Avg:
       return source.filled === 0 ? null : source.sum / source.filled;
-    case 'min':
+    case TableAggregateKind.Min:
       return source.filled === 0 ? null : source.min;
-    case 'max':
+    case TableAggregateKind.Max:
       return source.filled === 0 ? null : source.max;
   }
 };

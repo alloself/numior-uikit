@@ -1,6 +1,6 @@
 import { onScopeDispose, ref, watch, type ComputedRef, type Ref, type WatchSource } from 'vue';
 import { useEventListener } from '@vueuse/core';
-import { useEdgeScroll, type EdgePoint } from '@numior/primitives';
+import { Key, PointerType, useEdgeScroll, type EdgePoint } from '@numior/primitives';
 import {
   allOf,
   boxOf,
@@ -22,13 +22,18 @@ import { OWN_DATA_ROWS, OWN_SPANNING_CELLS } from './table-dom';
 import type { TableEdgeOf } from './table-keys';
 import { expandToMerges, leaveMerge, spansLines, type TableMergeIndex } from './table-merges';
 import type { NuiTableMessages } from './table.messages';
-import type {
-  NuiTableRange,
-  NuiTableRanges,
-  TableCellPosition,
+import {
+  KeyCode,
+  Letter,
+  RangeOriginKind,
+  SessionActionKind,
+  SessionMode,
   TableRangeLines,
-  TableRevealAxis,
-  TableRowRanges,
+  type NuiTableRange,
+  type NuiTableRanges,
+  type TableCellPosition,
+  type TableRevealAxis,
+  type TableRowRanges,
 } from './table.types';
 
 export interface TableRangesOptions {
@@ -74,11 +79,9 @@ export interface TableRanges {
   replace(next: NuiTableRanges): void;
 }
 
-type SessionMode = 'plain' | 'extend' | 'add';
-
 type SessionAction =
-  | { readonly kind: 'shape' }
-  | { readonly kind: 'remove'; readonly base: NuiTableRanges };
+  | { readonly kind: typeof SessionActionKind.Shape }
+  | { readonly kind: typeof SessionActionKind.Remove; readonly base: NuiTableRanges };
 
 interface SessionStart {
   readonly from: TableCellPosition;
@@ -88,11 +91,11 @@ interface SessionStart {
 
 type RangeOrigin =
   | {
-      readonly kind: 'lines';
+      readonly kind: typeof RangeOriginKind.Lines;
       readonly lines: TableRangeLines;
       readonly position: TableCellPosition;
     }
-  | { readonly kind: 'all' };
+  | { readonly kind: typeof RangeOriginKind.All };
 
 interface RangeSession extends SessionStart {
   readonly pointerId: number;
@@ -118,15 +121,15 @@ const CORNER = `${HEAD_ROW} > .nui-table__cell--rowhead`;
 const HANDLE = '.nui-table__resizer, .nui-table__grip';
 const PINNED = ['nui-table__cell--pin-start', 'nui-table__cell--pin-end'];
 
-const NAVIGATION = new Set([
-  'ArrowUp',
-  'ArrowDown',
-  'ArrowLeft',
-  'ArrowRight',
-  'Home',
-  'End',
-  'PageUp',
-  'PageDown',
+const NAVIGATION: ReadonlySet<string> = new Set([
+  Key.ArrowUp,
+  Key.ArrowDown,
+  Key.ArrowLeft,
+  Key.ArrowRight,
+  Key.Home,
+  Key.End,
+  Key.PageUp,
+  Key.PageDown,
 ]);
 
 const INTERACTIVE =
@@ -172,13 +175,13 @@ const cellIn = (row: Element, x: number): Element | undefined => {
 };
 
 const isLineKey = (event: KeyboardEvent): boolean =>
-  (event.key === ' ' || event.key === 'Enter') &&
+  (event.key === Key.Space || event.key === Key.Enter) &&
   !event.shiftKey &&
   !event.ctrlKey &&
   !event.metaKey;
 
 const isAllKey = (event: KeyboardEvent): boolean =>
-  event.code === 'KeyA' || event.key.toLowerCase() === 'a';
+  event.code === KeyCode.A || event.key.toLowerCase() === Letter.A;
 
 const isCellTarget = (target: EventTarget | null): boolean =>
   target instanceof HTMLElement && target.matches('.nui-table__cell');
@@ -330,11 +333,11 @@ export const useTableRanges = (options: TableRangesOptions): TableRanges => {
     const cursor = options.cursor();
 
     switch (lines) {
-      case 'cells':
+      case TableRangeLines.Cells:
         return start;
-      case 'rows':
+      case TableRangeLines.Rows:
         return { row: start.row, col: cursor?.col ?? 0 };
-      case 'cols':
+      case TableRangeLines.Cols:
         return { row: cursor?.row ?? 0, col: start.col };
     }
   };
@@ -384,10 +387,10 @@ export const useTableRanges = (options: TableRangesOptions): TableRanges => {
     const swept = widen({ from: active.from, to: cell }, active.lines);
 
     switch (active.action.kind) {
-      case 'shape':
+      case SessionActionKind.Shape:
         shape(swept);
         break;
-      case 'remove':
+      case SessionActionKind.Remove:
         take(active.action.base, swept);
         break;
     }
@@ -397,11 +400,11 @@ export const useTableRanges = (options: TableRangesOptions): TableRanges => {
 
   const edgePoint = (lines: TableRangeLines): EdgePoint => {
     switch (lines) {
-      case 'cells':
+      case TableRangeLines.Cells:
         return point;
-      case 'rows':
+      case TableRangeLines.Rows:
         return { y: point.y };
-      case 'cols':
+      case TableRangeLines.Cols:
         return { x: point.x };
     }
   };
@@ -449,7 +452,7 @@ export const useTableRanges = (options: TableRangesOptions): TableRanges => {
     if (dragging.value) {
       swallow = true;
 
-      if (active.action.kind === 'shape') {
+      if (active.action.kind === SessionActionKind.Shape) {
         announceSize(latest());
       }
     }
@@ -502,7 +505,7 @@ export const useTableRanges = (options: TableRangesOptions): TableRanges => {
   const plainFrom = (start: TableCellPosition, lines: TableRangeLines): SessionStart => {
     clear();
 
-    return lines === 'cells'
+    return lines === TableRangeLines.Cells
       ? { from: start, action: SHAPE, lines }
       : claim(start, addFrom(start, undefined, lines));
   };
@@ -514,21 +517,21 @@ export const useTableRanges = (options: TableRangesOptions): TableRanges => {
     lines: TableRangeLines,
   ): SessionStart => {
     switch (mode) {
-      case 'extend':
+      case SessionMode.Extend:
         return claim(start, shiftFrom(start, anchor, lines));
-      case 'add':
+      case SessionMode.Add:
         return claim(
           start,
           inRanges(latest(), start) ? removeFrom(start, lines) : addFrom(start, anchor, lines),
         );
-      case 'plain':
+      case SessionMode.Plain:
         return plainFrom(start, lines);
     }
   };
 
   const selectOrigin = (origin: RangeOrigin): void => {
     const range =
-      origin.kind === 'all'
+      origin.kind === RangeOriginKind.All
         ? allOf(options.bounds())
         : widen({ from: origin.position, to: origin.position }, origin.lines);
 
@@ -545,7 +548,7 @@ export const useTableRanges = (options: TableRangesOptions): TableRanges => {
   const onPointerdown = (event: PointerEvent): void => {
     swallow = false;
     holdFocus = false;
-    touched = event.pointerType === 'touch';
+    touched = event.pointerType === PointerType.Touch;
 
     if (!options.enabled() || event.button !== 0 || touched || session) {
       return;
@@ -555,13 +558,13 @@ export const useTableRanges = (options: TableRangesOptions): TableRanges => {
     if (origin === undefined) {
       return;
     }
-    if (origin.kind === 'all') {
+    if (origin.kind === RangeOriginKind.All) {
       selectEverything(origin);
       return;
     }
     const begun = sessionFor(modeOf(event), origin.position, options.anchor(), origin.lines);
 
-    if (begun.lines !== 'cells' && begun.action.kind === 'shape') {
+    if (begun.lines !== TableRangeLines.Cells && begun.action.kind === SessionActionKind.Shape) {
       announceSize(latest());
     }
     session = { ...begun, pointerId: event.pointerId, x: event.clientX, y: event.clientY };
@@ -599,7 +602,7 @@ export const useTableRanges = (options: TableRangesOptions): TableRanges => {
       {
         key: event.key,
         ctrl: event.ctrlKey || event.metaKey,
-        page: options.pageRows(from.row, event.key === 'PageDown'),
+        page: options.pageRows(from.row, event.key === Key.PageDown),
         rtl: options.isRtl(),
         edge: options.edge,
       },
@@ -677,7 +680,7 @@ export const useTableRanges = (options: TableRangesOptions): TableRanges => {
     if (!options.enabled() || event.altKey || !isCellTarget(event.target)) {
       return false;
     }
-    if (event.key === 'Escape') {
+    if (event.key === Key.Escape) {
       return onEscape(event);
     }
     if (onHeaderKey(event)) {
@@ -693,7 +696,7 @@ export const useTableRanges = (options: TableRangesOptions): TableRanges => {
     if (NAVIGATION.has(event.key)) {
       return onNavigation(event, anchor);
     }
-    return event.key === ' ' && (event.shiftKey || ctrl) ? selectLines(event, anchor) : false;
+    return event.key === Key.Space && (event.shiftKey || ctrl) ? selectLines(event, anchor) : false;
   };
 
   const segments = (row: number): TableRowRanges | undefined => {

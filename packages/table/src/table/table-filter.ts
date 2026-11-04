@@ -1,15 +1,16 @@
-import type { TableFilterValue, TableTextOp } from '../engine';
-import type {
-  NuiTableColumn,
-  NuiTableColumnFilter as ColumnFilter,
+import { TableTextOp, type TableFilterValue } from '../engine';
+import {
+  NuiTableColumnType,
   NuiTableFilterKind,
+  type NuiTableColumn,
+  type NuiTableColumnFilter as ColumnFilter,
 } from './table.types';
 
 export type FilterDraft =
-  | { readonly kind: 'text'; op: TableTextOp; value: string }
-  | { readonly kind: 'number'; min: number | null; max: number | null }
-  | { readonly kind: 'date'; from: string | null; to: string | null }
-  | { readonly kind: 'set'; values: TableFilterValue[] };
+  | { readonly kind: typeof NuiTableFilterKind.Text; op: TableTextOp; value: string }
+  | { readonly kind: typeof NuiTableFilterKind.Number; min: number | null; max: number | null }
+  | { readonly kind: typeof NuiTableFilterKind.Date; from: string | null; to: string | null }
+  | { readonly kind: typeof NuiTableFilterKind.Set; values: TableFilterValue[] };
 
 const DAY = 86_400_000;
 
@@ -21,13 +22,13 @@ export const filterKindOf = <T>(column: NuiTableColumn<T>): NuiTableFilterKind |
     return column.filter;
   }
   switch (column.type) {
-    case 'text':
+    case NuiTableColumnType.Text:
       return 'text';
-    case 'number':
+    case NuiTableColumnType.Number:
       return 'number';
-    case 'date':
+    case NuiTableColumnType.Date:
       return 'date';
-    case 'boolean':
+    case NuiTableColumnType.Boolean:
       return 'set';
   }
 };
@@ -60,20 +61,20 @@ export const draftOf = (
   filter: ColumnFilter | undefined,
 ): FilterDraft => {
   switch (kind) {
-    case 'text':
-      return filter?.kind === 'text'
+    case NuiTableFilterKind.Text:
+      return filter?.kind === NuiTableFilterKind.Text
         ? { kind, op: filter.op, value: filter.value }
         : { kind, op: 'contains', value: '' };
-    case 'number':
-      return filter?.kind === 'number'
+    case NuiTableFilterKind.Number:
+      return filter?.kind === NuiTableFilterKind.Number
         ? { kind, min: filter.min ?? null, max: filter.max ?? null }
         : { kind, min: null, max: null };
-    case 'date':
-      return filter?.kind === 'date'
+    case NuiTableFilterKind.Date:
+      return filter?.kind === NuiTableFilterKind.Date
         ? { kind, from: isoDay(filter.from), to: isoDay(filter.to) }
         : { kind, from: null, to: null };
-    case 'set':
-      return { kind, values: filter?.kind === 'set' ? [...filter.values] : [] };
+    case NuiTableFilterKind.Set:
+      return { kind, values: filter?.kind === NuiTableFilterKind.Set ? [...filter.values] : [] };
   }
 };
 
@@ -81,7 +82,7 @@ const textFilter = (
   key: string,
   draft: Extract<FilterDraft, { kind: 'text' }>,
 ): ColumnFilter | null =>
-  draft.op !== 'empty' && draft.value.trim() === ''
+  draft.op !== TableTextOp.Empty && draft.value.trim() === ''
     ? null
     : { kind: 'text', key, op: draft.op, value: draft.value.trim() };
 
@@ -108,13 +109,13 @@ const dateFilter = (
 
 export const filterFromDraft = (key: string, draft: FilterDraft): ColumnFilter | null => {
   switch (draft.kind) {
-    case 'text':
+    case NuiTableFilterKind.Text:
       return textFilter(key, draft);
-    case 'number':
+    case NuiTableFilterKind.Number:
       return numberFilter(key, draft);
-    case 'date':
+    case NuiTableFilterKind.Date:
       return dateFilter(key, draft);
-    case 'set':
+    case NuiTableFilterKind.Set:
       return draft.values.length === 0 ? null : { kind: 'set', key, values: [...draft.values] };
   }
 };

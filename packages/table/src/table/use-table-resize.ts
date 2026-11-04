@@ -1,7 +1,13 @@
 import { computed, onScopeDispose, shallowRef, type ComputedRef, type Ref } from 'vue';
 import { clampWidth, widthOf, type PlacedColumn, type TableLayout } from './table-layout';
 import type { NuiTableMessages } from './table.messages';
-import type { NuiTableColumn, NuiTableWidths } from './table.types';
+import {
+  TableColumnKind,
+  TablePaneName,
+  type NuiTableColumn,
+  type NuiTableWidths,
+} from './table.types';
+import { Key } from '@numior/primitives';
 
 export interface TableResizeOptions<T> {
   readonly widths: Ref<NuiTableWidths>;
@@ -42,8 +48,8 @@ const placedOf = (layout: TableLayout, key: string): PlacedColumn | undefined =>
   layout.visual.find((column) => column.key === key);
 
 const partnerOf = (layout: TableLayout, placed: PlacedColumn): Partner | undefined => {
-  const next = layout.visual[placed.visual + (placed.pane === 'end' ? -1 : 1)];
-  return next?.kind === 'data' ? { key: next.key, width: next.width } : undefined;
+  const next = layout.visual[placed.visual + (placed.pane === TablePaneName.End ? -1 : 1)];
+  return next?.kind === TableColumnKind.Data ? { key: next.key, width: next.width } : undefined;
 };
 
 const withoutKey = (widths: NuiTableWidths, key: string): NuiTableWidths =>
@@ -134,7 +140,7 @@ export const useTableResize = <T>(options: TableResizeOptions<T>): TableResize =
       pointerId: event.pointerId,
       origin: event.clientX,
       width: placed.width,
-      sign: (options.isRtl() ? -1 : 1) * (placed.pane === 'end' ? -1 : 1),
+      sign: (options.isRtl() ? -1 : 1) * (placed.pane === TablePaneName.End ? -1 : 1),
       partner: fits ? partnerOf(layout, placed) : undefined,
     };
 
@@ -144,7 +150,7 @@ export const useTableResize = <T>(options: TableResizeOptions<T>): TableResize =
   };
 
   const onKeydown = (key: string, event: KeyboardEvent): boolean => {
-    const arrow = event.key === 'ArrowLeft' || event.key === 'ArrowRight';
+    const arrow = event.key === Key.ArrowLeft || event.key === Key.ArrowRight;
 
     if (!arrow || !event.altKey || event.shiftKey || event.ctrlKey || event.metaKey) {
       return false;
@@ -154,7 +160,7 @@ export const useTableResize = <T>(options: TableResizeOptions<T>): TableResize =
     if (!resizable(key)) {
       return true;
     }
-    const grow = (event.key === 'ArrowRight') !== options.isRtl();
+    const grow = (event.key === Key.ArrowRight) !== options.isRtl();
     const next = clampWidth(options.columnAt(key), currentWidth(key) + (grow ? STEP : -STEP));
 
     write({ [key]: next });

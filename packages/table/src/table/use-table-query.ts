@@ -1,6 +1,13 @@
 import { isClient, promiseTimeout } from '@vueuse/core';
 import { onScopeDispose, ref, watch, type Ref, type ShallowRef } from 'vue';
-import { yieldInLine, type TableEngine, type TableProgress, type TableQuery } from '../engine';
+import {
+  TableRunResultKind,
+  yieldInLine,
+  type TableEngine,
+  type TableProgress,
+  type TableQuery,
+} from '../engine';
+import { RunKind } from './table.types';
 
 export interface TableQueryOptions<T> {
   readonly engine: Readonly<ShallowRef<TableEngine<T>>>;
@@ -15,8 +22,6 @@ export interface TableQueryRunner {
   readonly busy: Readonly<Ref<boolean>>;
   runNow(): TableQuery;
 }
-
-type RunKind = 'query' | 'totals';
 
 const BUSY_DELAY = 120;
 
@@ -75,11 +80,11 @@ export const useTableQuery = <T>(options: TableQueryOptions<T>): TableQueryRunne
     running = own;
 
     const timer = setTimeout(() => {
-      busy.value = kind === 'query' && running === own;
+      busy.value = kind === RunKind.Query && running === own;
     }, BUSY_DELAY);
 
     try {
-      if (kind === 'totals') {
+      if (kind === RunKind.Totals) {
         await afterIdle();
       }
       if (own.signal.aborted) {
@@ -89,14 +94,14 @@ export const useTableQuery = <T>(options: TableQueryOptions<T>): TableQueryRunne
       const result = await options.engine.value.run(query, {
         signal: own.signal,
         onProgress: options.onProgress,
-        yieldTo: kind === 'totals' ? yieldInLine : undefined,
+        yieldTo: kind === RunKind.Totals ? yieldInLine : undefined,
       });
 
-      if (running === own && result.kind === 'done') {
+      if (running === own && result.kind === TableRunResultKind.Done) {
         running = null;
         busy.value = false;
 
-        if (kind === 'query') {
+        if (kind === RunKind.Query) {
           options.onSettled(result.rows, query);
         } else {
           options.onTotals(query);

@@ -1,6 +1,4 @@
-export type RankSensitivity = 'base' | 'accent' | 'case' | 'variant';
-
-export type RankCaseFirst = 'upper' | 'lower' | 'false';
+import { RankMessageKind, type RankCaseFirst, type RankSensitivity } from './engine.types';
 
 export interface RankCollation {
   readonly locale: string;
@@ -11,9 +9,9 @@ export interface RankCollation {
 }
 
 export type RankMessage =
-  | { readonly kind: 'part'; readonly id: number; readonly text: string }
+  | { readonly kind: typeof RankMessageKind.Part; readonly id: number; readonly text: string }
   | {
-      readonly kind: 'sort';
+      readonly kind: typeof RankMessageKind.Sort;
       readonly id: number;
       readonly lengths: Uint32Array;
       readonly collation: RankCollation;
@@ -83,7 +81,7 @@ export const readRankMessage = (value: unknown): RankMessage | undefined => {
   if (!isFields(value) || typeof value.id !== 'number') {
     return undefined;
   }
-  if (value.kind === 'part') {
+  if (value.kind === RankMessageKind.Part) {
     return typeof value.text === 'string'
       ? { kind: 'part', id: value.id, text: value.text }
       : undefined;
@@ -91,7 +89,9 @@ export const readRankMessage = (value: unknown): RankMessage | undefined => {
 
   const collation = readCollation(value.collation);
 
-  return value.kind === 'sort' && value.lengths instanceof Uint32Array && collation !== undefined
+  return value.kind === RankMessageKind.Sort &&
+    value.lengths instanceof Uint32Array &&
+    collation !== undefined
     ? { kind: 'sort', id: value.id, lengths: value.lengths, collation }
     : undefined;
 };

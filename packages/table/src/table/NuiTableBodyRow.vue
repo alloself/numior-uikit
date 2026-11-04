@@ -1,5 +1,5 @@
 <template>
-  <NuiTableDetailRow v-if="view.kind === 'detail'" v-bind="view.props">
+  <NuiTableDetailRow v-if="view.kind === TableBodyRowViewKind.Detail" v-bind="view.props">
     <slot name="detail" v-bind="view.scope" />
   </NuiTableDetailRow>
   <NuiTableRow
@@ -52,7 +52,12 @@ import NuiTableCellContent from './NuiTableCellContent.vue';
 import NuiTableDetailRow from './NuiTableDetailRow.vue';
 import NuiTableRow from './NuiTableRow.vue';
 import NuiTableUtilityCell from './NuiTableUtilityCell.vue';
-import type { NuiTableBodyRowProps, NuiTableCellSlot, NuiTableDetailSlot } from './table.types';
+import {
+  TableBodyRowViewKind,
+  type NuiTableBodyRowProps,
+  type NuiTableCellSlot,
+  type NuiTableDetailSlot,
+} from './table.types';
 
 const { view, slotted, context } = defineProps<NuiTableBodyRowProps<T>>();
 

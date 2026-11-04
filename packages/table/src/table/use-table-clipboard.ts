@@ -4,11 +4,15 @@ import { yieldToHost } from '../engine';
 import { copyShapeOf, spanItems, spanLength, type RangeSpan } from './table-ranges';
 import { htmlOf, tsvOf } from './table-clipboard';
 import type { NuiTableMessages } from './table.messages';
-import type {
-  NuiTableClipboardData,
-  NuiTableClipboardScope,
-  NuiTableRanges,
-  TableCellPosition,
+import {
+  CopyPlanKind,
+  CopyShapeKind,
+  KeyCode,
+  Letter,
+  type NuiTableClipboardData,
+  type NuiTableClipboardScope,
+  type NuiTableRanges,
+  type TableCellPosition,
 } from './table.types';
 
 export interface TableCopyCell<T> {
@@ -50,13 +54,13 @@ interface CopyJob<T> {
 }
 
 type CopyPlan<T> =
-  | { readonly kind: 'cell'; readonly cell: TableCopyCell<T> }
+  | { readonly kind: typeof CopyPlanKind.Cell; readonly cell: TableCopyCell<T> }
   | {
-      readonly kind: 'block';
+      readonly kind: typeof CopyPlanKind.Block;
       readonly keys: readonly string[];
       readonly spans: readonly RangeSpan[];
     }
-  | { readonly kind: 'disjoint' };
+  | { readonly kind: typeof CopyPlanKind.Disjoint };
 
 const SYNC_CELLS = 50_000;
 const CHUNK_CELLS = 20_000;
@@ -65,7 +69,7 @@ const isCopyKey = (event: KeyboardEvent): boolean =>
   (event.ctrlKey || event.metaKey) &&
   !event.shiftKey &&
   !event.altKey &&
-  (event.code === 'KeyC' || event.key.toLowerCase() === 'c');
+  (event.code === KeyCode.C || event.key.toLowerCase() === Letter.C);
 
 const isCellTarget = (target: EventTarget | null): boolean =>
   target instanceof HTMLElement && target.matches('.nui-table__cell');
@@ -121,7 +125,7 @@ export const useTableClipboard = <T>(options: TableClipboardOptions<T>): TableCl
     }
     const shape = copyShapeOf(ranges);
 
-    if (shape.kind === 'disjoint') {
+    if (shape.kind === CopyShapeKind.Disjoint) {
       return shape;
     }
 
@@ -201,7 +205,7 @@ export const useTableClipboard = <T>(options: TableClipboardOptions<T>): TableCl
   ): Promise<boolean> => {
     const ranges = scopeRanges();
     const shape = copyShapeOf(ranges);
-    const count = shape.kind === 'disjoint' ? 0 : spanLength(shape.rows);
+    const count = shape.kind === CopyShapeKind.Disjoint ? 0 : spanLength(shape.rows);
     const data = serialize({ ranges, headers, rowAt: options.rowAt, keyAt: options.keyAt });
     const copied = await clipboard.copyRich(data);
     const texts = options.messages.value;
@@ -214,22 +218,22 @@ export const useTableClipboard = <T>(options: TableClipboardOptions<T>): TableCl
     const plan = planOf();
     const serialize = options.serialize();
 
-    if (serialize !== undefined && plan !== undefined && plan.kind !== 'disjoint') {
+    if (serialize !== undefined && plan !== undefined && plan.kind !== CopyPlanKind.Disjoint) {
       return delegate(serialize, headers);
     }
     switch (plan?.kind) {
       case undefined:
         return Promise.resolve(false);
-      case 'disjoint':
+      case CopyPlanKind.Disjoint:
         options.announce(options.messages.value.copyDisjoint);
         return Promise.resolve(false);
-      case 'cell':
+      case CopyPlanKind.Cell:
         return write(
           headerOf([plan.cell.key], headers),
           [[options.textOf(plan.cell.row, plan.cell.key)]],
           options.messages.value.copied({ count: 1 }),
         );
-      case 'block':
+      case CopyPlanKind.Block:
         return copyBlock(plan, headers);
     }
   };
@@ -238,13 +242,13 @@ export const useTableClipboard = <T>(options: TableClipboardOptions<T>): TableCl
     busy,
     copyable: () => {
       const plan = planOf();
-      return plan !== undefined && plan.kind !== 'disjoint';
+      return plan !== undefined && plan.kind !== CopyPlanKind.Disjoint;
     },
     copy,
     onKeydown: (event) => {
       const plan = isCopyKey(event) && isCellTarget(event.target) ? planOf() : undefined;
 
-      if (plan === undefined || (plan.kind === 'cell' && selectsText(event.target))) {
+      if (plan === undefined || (plan.kind === CopyPlanKind.Cell && selectsText(event.target))) {
         return false;
       }
       event.preventDefault();

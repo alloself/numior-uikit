@@ -1,12 +1,13 @@
 import { formatNumber } from '@numior/primitives';
-import type { TableEngineColumn } from '../engine';
-import type {
-  NuiTableBooleanColumn,
-  NuiTableCellValue,
-  NuiTableColumn,
-  NuiTableDateColumn,
-  NuiTableNumberColumn,
-  NuiTableTextColumn,
+import { TableAggregateKind, type TableEngineColumn } from '../engine';
+import {
+  NuiTableColumnType,
+  type NuiTableBooleanColumn,
+  type NuiTableCellValue,
+  type NuiTableColumn,
+  type NuiTableDateColumn,
+  type NuiTableNumberColumn,
+  type NuiTableTextColumn,
 } from './table.types';
 
 export interface BooleanTexts {
@@ -104,13 +105,13 @@ export const valueTextOf = <T>(
   texts: BooleanTexts,
 ): string => {
   switch (column.type) {
-    case 'text':
+    case NuiTableColumnType.Text:
       return textValue(column, value, row);
-    case 'number':
+    case NuiTableColumnType.Number:
       return numberValue(column, value, row, locale);
-    case 'date':
+    case NuiTableColumnType.Date:
       return dateValue(column, value, row, locale);
-    case 'boolean':
+    case NuiTableColumnType.Boolean:
       return booleanValue(column, value, row, texts);
   }
 };
@@ -141,7 +142,9 @@ export const aggregateTextOf = <T>(
 ): string => {
   switch (typeof value) {
     case 'number':
-      return column.aggregate === 'count' || column.type === 'text' || column.type === 'boolean'
+      return column.aggregate === TableAggregateKind.Count ||
+        column.type === NuiTableColumnType.Text ||
+        column.type === NuiTableColumnType.Boolean
         ? formatNumber(value, locale)
         : valueTextOf(column, value, undefined, locale, texts);
     case 'string':
@@ -157,13 +160,13 @@ export const engineColumnOf = <T>(column: NuiTableColumn<T>): TableEngineColumn<
   const shared = { key: column.key, aggregate: column.aggregate };
 
   switch (column.type) {
-    case 'text':
+    case NuiTableColumnType.Text:
       return { ...shared, kind: 'string', value: column.value };
-    case 'number':
+    case NuiTableColumnType.Number:
       return { ...shared, kind: 'number', value: column.value };
-    case 'date':
+    case NuiTableColumnType.Date:
       return { ...shared, kind: 'date', value: column.value };
-    case 'boolean':
+    case NuiTableColumnType.Boolean:
       return { ...shared, kind: 'boolean', value: column.value };
   }
 };

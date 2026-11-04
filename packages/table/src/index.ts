@@ -8,6 +8,21 @@ export {
   rangeName,
   tableCells,
 } from './table/table-cells';
+export {
+  NuiTableAlign,
+  NuiTableColumnType,
+  NuiTableEdgeDirection,
+  NuiTableEditKind,
+  NuiTableEditMode,
+  NuiTableEditMove,
+  NuiTableEditRefusalReason,
+  NuiTableFilterKind,
+  NuiTablePin,
+  NuiTableRowHeight,
+  NuiTableSelection,
+  NuiTableSize,
+} from './table/table.types';
+export { TableAggregateKind, TableSortDirection, TableTextOp } from './engine';
 export type { NuiTableCellSource, NuiTableCells, NuiTableSourceCell } from './table/table-cells';
 export type { NuiTableEditorOptions } from './table/table-editors';
 export type { NuiTableMessages } from './table/table.messages';
@@ -34,10 +49,8 @@ export type {
   NuiTablePins,
   NuiTableProps,
   NuiTableSettled,
-  NuiTableSize,
   NuiTableSlots,
   NuiTableSort,
-  NuiTableAlign,
   NuiTableBooleanColumn,
   NuiTableCellValue,
   NuiTableColumn,
@@ -45,15 +58,11 @@ export type {
   NuiTableColumnFilter,
   NuiTableColumnGroup,
   NuiTableDateColumn,
-  NuiTableFilterKind,
   NuiTableNumberColumn,
-  NuiTablePin,
   NuiTableTextColumn,
   NuiTablePagination,
-  NuiTableSelection,
   NuiTableRange,
   NuiTableRanges,
-  NuiTableEdgeDirection,
   NuiTableNextEdge,
   NuiTableOverlaySlot,
   NuiTableRect,
@@ -72,22 +81,17 @@ export type {
   NuiTableCsvOptions,
   NuiTableEdit,
   NuiTableEditEvent,
-  NuiTableEditKind,
   NuiTableDraft,
-  NuiTableEditMode,
-  NuiTableEditMove,
   NuiTableStartEditOptions,
   NuiTableEditor,
   NuiTableControlEditor,
   NuiTableColumnEditor,
   NuiTableEditRefusal,
-  NuiTableEditRefusalReason,
   TableCellPosition,
 } from './table/table.types';
 export type {
   TableAggregate,
   TableAggregateFn,
-  TableAggregateKind,
   TableChildrenRequest,
   TableDistinct,
   TableFetchRequest,
@@ -103,7 +107,5 @@ export type {
   TableNodeId,
   TableProgress,
   TableSort,
-  TableSortDirection,
-  TableTextOp,
 } from './engine';
 export type { NuiTablePackageMessages } from './messages.types';

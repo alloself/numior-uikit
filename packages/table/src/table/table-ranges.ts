@@ -1,14 +1,15 @@
 import { clamp } from '@vueuse/core';
-import { listMoveFor } from '@numior/primitives';
+import { Key, ListMove, listMoveFor } from '@numior/primitives';
 import { edgeDirectionOf, tableEdge, type TableEdgeOf } from './table-keys';
-import type {
-  NuiTableRange,
-  NuiTableRanges,
-  TableCellPosition,
+import {
   TableRangeLines,
-  TableRangeSegment,
-  TableRevealAxis,
-  TableSpan,
+  type CopyShapeKind,
+  type NuiTableRange,
+  type NuiTableRanges,
+  type TableCellPosition,
+  type TableRangeSegment,
+  type TableRevealAxis,
+  type TableSpan,
 } from './table.types';
 
 export interface RangeBounds {
@@ -27,11 +28,11 @@ export type RangeSpan = TableSpan;
 
 export type CopyShape =
   | {
-      readonly kind: 'block';
+      readonly kind: typeof CopyShapeKind.Block;
       readonly rows: readonly RangeSpan[];
       readonly cols: readonly RangeSpan[];
     }
-  | { readonly kind: 'disjoint' };
+  | { readonly kind: typeof CopyShapeKind.Disjoint };
 
 export interface CornerKey {
   readonly key: string;
@@ -290,11 +291,11 @@ export const widenRange = (
   bounds: RangeBounds,
 ): NuiTableRange => {
   switch (lines) {
-    case 'cells':
+    case TableRangeLines.Cells:
       return range;
-    case 'rows':
+    case TableRangeLines.Rows:
       return rowsOf(range, bounds);
-    case 'cols':
+    case TableRangeLines.Cols:
       return colsOf(range, bounds);
   }
 };
@@ -331,9 +332,9 @@ const edgeCorner = (
   const lastCol = bounds.cols - 1;
 
   switch (input.key) {
-    case 'Home':
+    case Key.Home:
       return input.ctrl ? { row: 0, col: 0 } : { row: corner.row, col: 0 };
-    case 'End':
+    case Key.End:
       return input.ctrl ? { row: lastRow, col: lastCol } : { row: corner.row, col: lastCol };
     default:
       return undefined;
@@ -342,13 +343,13 @@ const edgeCorner = (
 
 const rowStep = (input: CornerKey, corner: TableCellPosition) => {
   switch (input.key) {
-    case 'ArrowUp':
+    case Key.ArrowUp:
       return corner.row - 1;
-    case 'ArrowDown':
+    case Key.ArrowDown:
       return corner.row + 1;
-    case 'PageUp':
+    case Key.PageUp:
       return corner.row - input.page;
-    case 'PageDown':
+    case Key.PageDown:
       return corner.row + input.page;
     default:
       return undefined;
@@ -357,9 +358,9 @@ const rowStep = (input: CornerKey, corner: TableCellPosition) => {
 
 const colStep = (input: CornerKey, corner: TableCellPosition) => {
   switch (listMoveFor(input.key, 'horizontal', input.rtl)) {
-    case 'next':
+    case ListMove.Next:
       return corner.col + 1;
-    case 'prev':
+    case ListMove.Prev:
       return corner.col - 1;
     default:
       return undefined;

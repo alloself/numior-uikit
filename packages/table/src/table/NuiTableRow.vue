@@ -14,7 +14,7 @@
     <template v-for="cell in shownCells" :key="cell.key">
       <component
         :is="tagOf(cell)"
-        v-if="cell.kind === 'gap'"
+        v-if="cell.kind === TablePlacementKind.Gap"
         class="nui-table__cell nui-table__cell--gap"
         :class="pinClass(cell)"
         role="presentation"
@@ -42,7 +42,7 @@
             plainOf(cell)
           }}</span>
           <slot
-            v-else-if="cell.kind !== 'data'"
+            v-else-if="cell.kind !== TablePlacementKind.Data"
             name="utility"
             :column="cell.key"
             :position="position"
@@ -70,20 +70,26 @@
 import { computed } from 'vue';
 import NuiTableResizer from './NuiTableResizer.vue';
 import { inSpans } from './table-ranges';
-import type {
-  TableCellLayout,
-  TableDataCell,
-  TableLeadSpan,
-  TableRangeSegment,
-  TableRowRanges,
-  NuiTableResizerProps,
-  NuiTableRowProps,
+import {
+  NuiTablePin,
+  TableCellSpanKind,
+  TablePlacementKind,
+  TableRowPart,
+  type NuiTableResizerProps,
+  type NuiTableRowProps,
+  type TableCellLayout,
+  type TableDataCell,
+  type TableLeadSpan,
+  type TableRangeSegment,
+  type TableRowRanges,
 } from './table.types';
+import { ReorderAxis } from '@numior/primitives';
+import { TableSortDirection } from '../engine';
 
 const {
   cells,
   rowIndex,
-  part = 'body',
+  part = TableRowPart.Body,
   wraps = true,
   position,
   paint,
@@ -129,13 +135,13 @@ defineSlots<{
 const shownCells = computed(() =>
   spans === undefined
     ? cells.cells
-    : cells.cells.filter((cell) => spans.get(cell.key)?.kind !== 'covered'),
+    : cells.cells.filter((cell) => spans.get(cell.key)?.kind !== TableCellSpanKind.Covered),
 );
 
 const leadOf = (cell: TableCellLayout): TableLeadSpan | undefined => {
   const span = spans?.get(cell.key);
 
-  return span?.kind === 'lead' ? span : undefined;
+  return span?.kind === TableCellSpanKind.Lead ? span : undefined;
 };
 
 const overOne = (count: number): number | undefined => (count > 1 ? count : undefined);
@@ -181,39 +187,43 @@ const spreadOf = (span: TableLeadSpan | undefined): Record<string, string> | und
   };
 };
 
-const heading = computed(() => part === 'head' || part === 'band');
+const heading = computed(() => part === TableRowPart.Head || part === TableRowPart.Band);
 
-const headScope = computed(() => (part === 'head' ? 'col' : 'colgroup'));
+const headScope = computed(() => (part === TableRowPart.Head ? 'col' : 'colgroup'));
 
 const tagOf = (cell: TableCellLayout): 'th' | 'td' =>
-  heading.value || cell.kind === 'rowhead' ? 'th' : 'td';
+  heading.value || cell.kind === TablePlacementKind.Rowhead ? 'th' : 'td';
 
 const roleOf = (cell: TableDataCell): 'columnheader' | 'rowheader' | 'gridcell' => {
   if (heading.value) {
     return 'columnheader';
   }
-  return cell.kind === 'rowhead' ? 'rowheader' : 'gridcell';
+  return cell.kind === TablePlacementKind.Rowhead ? 'rowheader' : 'gridcell';
 };
 
 const scopeOf = (cell: TableDataCell): 'col' | 'colgroup' | 'row' | undefined => {
   if (heading.value) {
     return headScope.value;
   }
-  return cell.kind === 'rowhead' ? 'row' : undefined;
+  return cell.kind === TablePlacementKind.Rowhead ? 'row' : undefined;
 };
 
 const markedOf = (cell: TableDataCell): boolean =>
-  cell.kind === 'rowhead'
+  cell.kind === TablePlacementKind.Rowhead
     ? ranged !== undefined
     : marks !== undefined && inSpans(marks, cell.colIndex - 1);
 
-const sticky = computed(() => part === 'head' || part === 'band' || part === 'pinned');
+const sticky = computed(
+  () => part === TableRowPart.Head || part === TableRowPart.Band || part === TableRowPart.Pinned,
+);
 
-const hiddenRow = computed(() => (part === 'skeleton' ? true : undefined));
+const hiddenRow = computed(() => (part === TableRowPart.Skeleton ? true : undefined));
 
 const busy = computed(() => loading || undefined);
 
-const wrapsText = computed(() => part === 'body' || (part === 'foot' && wraps));
+const wrapsText = computed(
+  () => part === TableRowPart.Body || (part === TableRowPart.Foot && wraps),
+);
 
 const rowClass = computed(() => [
   `nui-table__row--${part}`,
@@ -238,8 +248,8 @@ const rowStyle = computed(() => {
 });
 
 const pinClass = (cell: TableCellLayout): Record<string, boolean> => ({
-  'nui-table__cell--pin-start': cell.pin === 'start',
-  'nui-table__cell--pin-end': cell.pin === 'end',
+  'nui-table__cell--pin-start': cell.pin === NuiTablePin.Start,
+  'nui-table__cell--pin-end': cell.pin === NuiTablePin.End,
   'nui-table__cell--edge': cell.edge,
 });
 
@@ -249,7 +259,7 @@ const hitsIn = (segments: TableRowRanges | undefined, visual: number): TableRang
     : segments.filter((segment) => visual >= segment.from && visual <= segment.to);
 
 const hitsOf = (cell: TableDataCell): TableRangeSegment[] =>
-  cell.kind === 'data' ? hitsIn(ranged, cell.colIndex - 1) : [];
+  cell.kind === TablePlacementKind.Data ? hitsIn(ranged, cell.colIndex - 1) : [];
 
 const touches = (segments: TableRowRanges | undefined, from: number, to: number): boolean =>
   segments?.some((segment) => segment.from <= to && segment.to >= from) === true;
@@ -304,7 +314,7 @@ const plainRangeClass = (cell: TableDataCell): Record<string, boolean> | undefin
 };
 
 const rangeClass = (cell: TableDataCell): Record<string, boolean> | undefined => {
-  const lead = cell.kind === 'data' ? leadOf(cell) : undefined;
+  const lead = cell.kind === TablePlacementKind.Data ? leadOf(cell) : undefined;
 
   return lead === undefined ? plainRangeClass(cell) : leadRangeClass(lead, cell.colIndex - 1);
 };
@@ -323,7 +333,7 @@ const plainTexts = computed((): ReadonlyMap<string, string> | undefined => {
   }
   return shownCells.value.reduce((texts, cell) => {
     const text =
-      cell.kind === 'data' && leadOf(cell) === undefined
+      cell.kind === TablePlacementKind.Data && leadOf(cell) === undefined
         ? plainText(position, cell.key)
         : undefined;
 
@@ -370,18 +380,18 @@ const cellClass = (cell: TableDataCell): unknown[] => [
 const handleOf = (cell: TableDataCell): string => cell.handle ?? cell.key;
 
 const resizerOf = (cell: TableDataCell): NuiTableResizerProps | undefined => {
-  if (cell.kind === 'rowhead') {
-    return sizable ? { axis: 'y', active: sizing } : undefined;
+  if (cell.kind === TablePlacementKind.Rowhead) {
+    return sizable ? { axis: ReorderAxis.Y, active: sizing } : undefined;
   }
   const state = heading.value ? head?.(handleOf(cell)) : undefined;
 
   return state?.resizable === true
-    ? { start: cell.pin === 'end', active: state.resizing }
+    ? { start: cell.pin === NuiTablePin.End, active: state.resizing }
     : undefined;
 };
 
 const tabindexOf = (colIndex: number): number | undefined => {
-  if (part === 'band' || part === 'skeleton') {
+  if (part === TableRowPart.Band || part === TableRowPart.Skeleton) {
     return undefined;
   }
   return colIndex === active ? 0 : -1;
@@ -393,6 +403,6 @@ const ariaSortOf = (key: string): 'ascending' | 'descending' | undefined => {
   if (state?.primary !== true) {
     return undefined;
   }
-  return state.direction === 'desc' ? 'descending' : 'ascending';
+  return state.direction === TableSortDirection.Desc ? 'descending' : 'ascending';
 };
 </script>

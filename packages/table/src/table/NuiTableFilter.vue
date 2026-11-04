@@ -10,20 +10,20 @@
   >
     <form class="nui-table-filter__form" @submit.prevent="apply">
       <p class="nui-table-filter__title">{{ title }}</p>
-      <template v-if="draft.kind === 'text'">
+      <template v-if="draft.kind === NuiTableFilterKind.Text">
         <NuiSelect v-model="draft.op" :options="operators" :label="texts.operator" size="sm" />
         <NuiInput
-          v-if="draft.op !== 'empty'"
+          v-if="draft.op !== TableTextOp.Empty"
           v-model="draft.value"
           :label="texts.value"
           size="sm"
         />
       </template>
-      <template v-else-if="draft.kind === 'number'">
+      <template v-else-if="draft.kind === NuiTableFilterKind.Number">
         <NuiNumberField v-model="draft.min" :label="texts.min" :locale="locale" size="sm" />
         <NuiNumberField v-model="draft.max" :label="texts.max" :locale="locale" size="sm" />
       </template>
-      <template v-else-if="draft.kind === 'date'">
+      <template v-else-if="draft.kind === NuiTableFilterKind.Date">
         <NuiDatePicker v-model="draft.from" :label="texts.from" :locale="locale" size="sm" />
         <NuiDatePicker v-model="draft.to" :label="texts.to" :locale="locale" size="sm" />
       </template>
@@ -61,7 +61,13 @@
 
 <script setup lang="ts">
 import { computed, ref, shallowRef, useTemplateRef, watch } from 'vue';
-import { useFloating, useMessages, usePopover } from '@numior/primitives';
+import {
+  PopoverMode,
+  PopoverState,
+  useFloating,
+  useMessages,
+  usePopover,
+} from '@numior/primitives';
 import {
   NuiButton,
   NuiCheckbox,
@@ -70,10 +76,14 @@ import {
   NuiNumberField,
   NuiSelect,
 } from '@numior/vue';
-import type { TableFilterValue, TableTextOp } from '../engine';
+import { TableTextOp, type TableFilterValue } from '../engine';
 import { tableMessages } from './table.messages';
 import { draftOf, filterFromDraft, type FilterDraft } from './table-filter';
-import type { NuiTableFilterProps, NuiTableColumnFilter } from './table.types';
+import {
+  NuiTableFilterKind,
+  type NuiTableColumnFilter,
+  type NuiTableFilterProps,
+} from './table.types';
 
 interface ValueOption {
   readonly key: string;
@@ -94,7 +104,7 @@ const draft = ref<FilterDraft>(draftOf(kind, filter));
 const values = shallowRef<readonly TableFilterValue[]>([]);
 const truncated = ref(false);
 
-const { contentAttrs } = usePopover(content, { open, mode: 'auto' });
+const { contentAttrs } = usePopover(content, { open, mode: PopoverMode.Auto });
 
 useFloating(() => anchor, content, {
   placement: 'bottom-start',
@@ -134,7 +144,7 @@ const options = computed<readonly ValueOption[]>(() =>
 );
 
 const chosenValues = (): readonly TableFilterValue[] =>
-  draft.value.kind === 'set' ? draft.value.values : [];
+  draft.value.kind === NuiTableFilterKind.Set ? draft.value.values : [];
 
 const chosen = (value: TableFilterValue): boolean => chosenValues().includes(value);
 
@@ -147,7 +157,7 @@ const someChosen = computed(() => chosenValues().length > 0 && !allChosen.value)
 const toggle = (value: TableFilterValue): void => {
   const current = draft.value;
 
-  if (current.kind === 'set') {
+  if (current.kind === NuiTableFilterKind.Set) {
     current.values = chosen(value)
       ? current.values.filter((entry) => entry !== value)
       : [...current.values, value];
@@ -157,7 +167,7 @@ const toggle = (value: TableFilterValue): void => {
 const chooseAll = (checked: boolean): void => {
   const current = draft.value;
 
-  if (current.kind === 'set') {
+  if (current.kind === NuiTableFilterKind.Set) {
     current.values = checked ? options.value.map((option) => option.value) : [];
   }
 };
@@ -202,7 +212,7 @@ const onToggle = (event: Event): void => {
   if (!('newState' in event)) {
     return;
   }
-  if (event.newState === 'open') {
+  if (event.newState === PopoverState.Open) {
     firstControl()?.focus({ preventScroll: true });
   } else if (focusStrayed()) {
     anchor?.focus({ preventScroll: true });
@@ -215,7 +225,7 @@ watch(
     if (isOpen) {
       draft.value = draftOf(kind, filter);
 
-      if (kind === 'set') {
+      if (kind === NuiTableFilterKind.Set) {
         void load();
       }
     }

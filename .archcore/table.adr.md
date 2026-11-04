@@ -1526,3 +1526,16 @@ HEAD дал одни и те же медианы (группы по стране
 ячейки только двух строк, а стрелка вбок — одной; на прежнем коде он читал все 14 строк окна.
 С пользовательскими `cell-*` слотами строки по-прежнему обновляются вместе с таблицей, если её
 собственные слоты нестабильны (например, созданы в `v-for` у потребителя).
+
+## Именованные наборы значений (2026-11-04)
+
+Таблица следует правилу перечислений из `component-conventions.adr.md`: каждый фиксированный набор
+строк — константа `as const` в `table.types.ts` или `engine.types.ts`, сравнения и `case` идут
+через неё (ESLint `NAMED_ENUMERATIONS` включён для `packages/table/src`). Движок остаётся без Vue и
+DOM, поэтому файлы `src/engine/` берут только свои константы (`TableNodeKind`, `TableFilterKind`,
+`ColumnStoreKind`, `ErrorName`…), а `src/table/` импортирует их через индекс движка. Подмножества
+не заводят своих констант: `NumberColumn` пишет `typeof TableEngineColumnKind.Number`, хранилища
+рангов и кодов — члены `ColumnStoreKind`, размещения с пропуском — `TablePlacementKind`
+(`TableColumnKind` + `Gap`). Наборы платформы берут её тип: `RankSensitivity` и `RankCaseFirst`
+из `Intl.CollatorOptions`, `DatePart` проверяется `satisfies Intl.DateTimeFormatPartTypes`. Наружу
+значениями экспортируются только публичные `NuiTable*` и `Table*` движка.

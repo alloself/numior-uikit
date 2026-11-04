@@ -11,6 +11,8 @@ import type {
   NuiTableColumnFilter,
   NuiTableFilterKind,
 } from './table.types';
+import { Key } from '@numior/primitives';
+import { TableSortDirection } from '../engine';
 
 export interface TableFilterTarget {
   readonly key: string;
@@ -68,9 +70,9 @@ const plainKey = (event: KeyboardEvent): boolean =>
   !event.altKey && !event.ctrlKey && !event.metaKey;
 
 const isSortKey = (event: KeyboardEvent): boolean =>
-  (event.key === 'Enter' || event.key === ' ') && plainKey(event);
+  (event.key === Key.Enter || event.key === Key.Space) && plainKey(event);
 
-const isSideArrow = (key: string): boolean => key === 'ArrowLeft' || key === 'ArrowRight';
+const isSideArrow = (key: string): boolean => key === Key.ArrowLeft || key === Key.ArrowRight;
 
 export const useTableHeader = <T>(options: TableHeaderOptions<T>): TableHeader<T> => {
   const target = shallowRef<TableFilterTarget | null>(null);
@@ -104,7 +106,7 @@ export const useTableHeader = <T>(options: TableHeaderOptions<T>): TableHeader<T
       options.announce(texts.sortCleared);
     } else {
       options.announce(
-        entry.direction === 'asc'
+        entry.direction === TableSortDirection.Asc
           ? texts.sortedAscending({ column })
           : texts.sortedDescending({ column }),
       );
@@ -159,7 +161,7 @@ export const useTableHeader = <T>(options: TableHeaderOptions<T>): TableHeader<T
     if (event.altKey && isSideArrow(event.key)) {
       return event.shiftKey ? options.reorder(key, event) : options.resize(key, event);
     }
-    return event.altKey && event.key === 'ArrowDown' && openMenuOrFilter(key, cell, event);
+    return event.altKey && event.key === Key.ArrowDown && openMenuOrFilter(key, cell, event);
   };
 
   return {

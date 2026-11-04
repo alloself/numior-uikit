@@ -2,7 +2,14 @@ import { CHECK_INTERVAL, type SliceJob } from './slicer';
 import { createCollatedSortJob } from './collated-sort';
 import { workerRankHost, type RankHost } from './rank-host';
 import { identityIndices } from './sort';
-import type { ColumnStore, TableEngineColumn, StoreNeed, StringCodes } from './engine.types';
+import {
+  ColumnStoreKind,
+  StoreNeed,
+  TableEngineColumnKind,
+  type ColumnStore,
+  type StringCodes,
+  type TableEngineColumn,
+} from './engine.types';
 
 export interface StoreJob extends SliceJob {
   result(): ColumnStore;
@@ -27,14 +34,14 @@ const timeOf = (value: Date | number | null | undefined): number | null | undefi
 
 const numberReader = <T>(column: NumberColumn<T>): NumberRead<T> => {
   switch (column.kind) {
-    case 'number':
+    case TableEngineColumnKind.Number:
       return column.value;
-    case 'boolean':
+    case TableEngineColumnKind.Boolean:
       return (row) => {
         const value = column.value(row);
         return value === null || value === undefined ? value : value ? 1 : 0;
       };
-    case 'date':
+    case TableEngineColumnKind.Date:
       return (row) => timeOf(column.value(row));
   }
 };
@@ -199,11 +206,11 @@ export const createStoreJob = <T>(
   collator: Intl.Collator,
   need: StoreNeed,
 ): StoreJob => {
-  if (column.kind !== 'string') {
+  if (column.kind !== TableEngineColumnKind.String) {
     return createNumberStoreJob(rows, numberReader(column));
   }
   const codes = createCodesJob(rows, column.value);
-  return need === 'codes' ? codes : createRankedStringJob(codes, collator);
+  return need === StoreNeed.Codes ? codes : createRankedStringJob(codes, collator);
 };
 
 export const createRequestJob = <T>(
@@ -211,7 +218,7 @@ export const createRequestJob = <T>(
   rows: readonly T[],
   collator: Intl.Collator,
 ): StoreJob =>
-  request.need === 'ranks' && request.current?.kind === 'codes'
+  request.need === StoreNeed.Ranks && request.current?.kind === ColumnStoreKind.Codes
     ? createRankJob(request.current, collator)
     : createStoreJob(request.column, rows, collator, request.need);
 
